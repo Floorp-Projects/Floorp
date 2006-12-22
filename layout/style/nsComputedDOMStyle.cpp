@@ -113,7 +113,7 @@ GetContainingBlockFor(nsIFrame* aFrame) {
 }
 
 nsComputedDOMStyle::nsComputedDOMStyle()
-  : mInner(this), mDocumentWeak(nsnull), mT2P(0.0f)
+  : mInner(this), mDocumentWeak(nsnull), mFrame(nsnull), mT2P(0.0f)
 {
 }
 
@@ -310,7 +310,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
   nsIPresShell* presShell = document->GetShellAt(0);
   NS_ENSURE_TRUE(presShell, NS_ERROR_NOT_AVAILABLE);
 
-  nsIFrame *frame = presShell->GetPrimaryFrameFor(mContent);
+  mFrame = presShell->GetPrimaryFrameFor(mContent);
 
   nsresult rv = NS_OK;
 
@@ -322,7 +322,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
   for (; i < length; ++i) {
     if (prop == propMap[i].mProperty) {
       // Call our pointer-to-member-function.
-      rv = (this->*(propMap[i].mGetter))(frame, aReturn);
+      rv = (this->*(propMap[i].mGetter))(aReturn);
       break;
     }
   }
@@ -337,6 +337,8 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
   if (NS_FAILED(rv)) {
     *aReturn = nsnull;
   }
+
+  mFrame = nsnull;
 
   // Release the current style context for it should be re-resolved
   // whenever a frame is not available.
@@ -392,13 +394,12 @@ nsComputedDOMStyle::Item(PRUint32 aIndex, nsAString& aReturn)
 // Property getters...
 
 nsresult
-nsComputedDOMStyle::GetBinding(nsIFrame *aFrame,
-                               nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBinding(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleDisplay* display = GetStyleDisplay(aFrame);
+  const nsStyleDisplay* display = GetStyleDisplay();
 
   if (display && display->mBinding) {
     val->SetURI(display->mBinding);
@@ -410,13 +411,12 @@ nsComputedDOMStyle::GetBinding(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetClear(nsIFrame *aFrame,
-                             nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetClear(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleDisplay *display = GetStyleDisplay(aFrame);;
+  const nsStyleDisplay *display = GetStyleDisplay();;
 
   if (display && display->mBreakType != NS_STYLE_CLEAR_NONE) {
     const nsAFlatCString& clear =
@@ -431,13 +431,12 @@ nsComputedDOMStyle::GetClear(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetCssFloat(nsIFrame *aFrame,
-                                nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetCssFloat(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleDisplay* display = GetStyleDisplay(aFrame);
+  const nsStyleDisplay* display = GetStyleDisplay();
 
   if (display && display->mFloats != NS_STYLE_FLOAT_NONE) {
     const nsAFlatCString& cssFloat =
@@ -452,10 +451,9 @@ nsComputedDOMStyle::GetCssFloat(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetBottom(nsIFrame *aFrame,
-                              nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBottom(nsIDOMCSSValue** aValue)
 {
-  return GetOffsetWidthFor(NS_SIDE_BOTTOM, aFrame, aValue);
+  return GetOffsetWidthFor(NS_SIDE_BOTTOM, aValue);
 }
 
 nsDOMCSSRGBColor*
@@ -485,13 +483,12 @@ nsComputedDOMStyle::GetDOMCSSRGBColor(nscolor aColor)
 }
 
 nsresult
-nsComputedDOMStyle::GetColor(nsIFrame *aFrame,
-                             nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetColor(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleColor* color = GetStyleColor(aFrame);
+  const nsStyleColor* color = GetStyleColor();
 
   nsDOMCSSRGBColor *rgb = nsnull;
 
@@ -510,13 +507,12 @@ nsComputedDOMStyle::GetColor(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetOpacity(nsIFrame *aFrame,
-                               nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetOpacity(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleDisplay *display = GetStyleDisplay(aFrame);
+  const nsStyleDisplay *display = GetStyleDisplay();
 
   if (display) {
     val->SetNumber(display->mOpacity);
@@ -526,13 +522,12 @@ nsComputedDOMStyle::GetOpacity(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetColumnCount(nsIFrame *aFrame,
-                                   nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetColumnCount(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleColumn* column = GetStyleColumn(aFrame);
+  const nsStyleColumn* column = GetStyleColumn();
 
   if (column) {
     if (column->mColumnCount == NS_STYLE_COLUMN_COUNT_AUTO) {
@@ -546,13 +541,12 @@ nsComputedDOMStyle::GetColumnCount(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetColumnWidth(nsIFrame *aFrame,
-                                   nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetColumnWidth(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleColumn* column = GetStyleColumn(aFrame);
+  const nsStyleColumn* column = GetStyleColumn();
 
   if (column) {
     switch (column->mColumnWidth.GetUnit()) {
@@ -575,13 +569,12 @@ nsComputedDOMStyle::GetColumnWidth(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetColumnGap(nsIFrame *aFrame,
-                                 nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetColumnGap(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleColumn* column = GetStyleColumn(aFrame);
+  const nsStyleColumn* column = GetStyleColumn();
 
   if (column) {
     switch (column->mColumnGap.GetUnit()) {
@@ -589,8 +582,8 @@ nsComputedDOMStyle::GetColumnGap(nsIFrame *aFrame,
         val->SetTwips(column->mColumnGap.GetCoordValue());
         break;
       case eStyleUnit_Percent:
-        if (aFrame) {
-          val->SetTwips(column->mColumnGap.GetPercentValue()*aFrame->GetSize().width);
+        if (mFrame) {
+          val->SetTwips(column->mColumnGap.GetPercentValue()*mFrame->GetSize().width);
         } else {
           val->SetPercent(column->mColumnGap.GetPercentValue());
         }
@@ -606,10 +599,9 @@ nsComputedDOMStyle::GetColumnGap(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetCounterIncrement(nsIFrame *aFrame,
-                                        nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetCounterIncrement(nsIDOMCSSValue** aValue)
 {
-  const nsStyleContent *content = GetStyleContent(aFrame);
+  const nsStyleContent *content = GetStyleContent();
 
   if (content && content->CounterIncrementCount() == 0) {
     nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
@@ -655,10 +647,9 @@ nsComputedDOMStyle::GetCounterIncrement(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetCounterReset(nsIFrame *aFrame,
-                                    nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetCounterReset(nsIDOMCSSValue** aValue)
 {
-  const nsStyleContent *content = GetStyleContent(aFrame);
+  const nsStyleContent *content = GetStyleContent();
 
   if (content && content->CounterResetCount() == 0) {
     nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
@@ -704,13 +695,12 @@ nsComputedDOMStyle::GetCounterReset(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetFontFamily(nsIFrame *aFrame,
-                                  nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetFontFamily(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleFont* font = GetStyleFont(aFrame);
+  const nsStyleFont* font = GetStyleFont();
 
   if (font) {
     nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocumentWeak);
@@ -741,13 +731,12 @@ nsComputedDOMStyle::GetFontFamily(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetFontSize(nsIFrame *aFrame,
-                                nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetFontSize(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleFont* font = GetStyleFont(aFrame);
+  const nsStyleFont* font = GetStyleFont();
 
   // Note: font->mSize is the 'computed size'; font->mFont.size is the
   // 'actual size'
@@ -757,13 +746,12 @@ nsComputedDOMStyle::GetFontSize(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetFontSizeAdjust(nsIFrame *aFrame,
-                                      nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetFontSizeAdjust(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleFont *font = GetStyleFont(aFrame);
+  const nsStyleFont *font = GetStyleFont();
 
   if (font && font->mFont.sizeAdjust) {
     val->SetNumber(font->mFont.sizeAdjust);
@@ -775,13 +763,12 @@ nsComputedDOMStyle::GetFontSizeAdjust(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetFontStyle(nsIFrame *aFrame,
-                                 nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetFontStyle(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleFont* font = GetStyleFont(aFrame);
+  const nsStyleFont* font = GetStyleFont();
 
   if (font && font->mFont.style != NS_STYLE_FONT_STYLE_NORMAL) {
     const nsAFlatCString& style=
@@ -796,13 +783,12 @@ nsComputedDOMStyle::GetFontStyle(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetFontWeight(nsIFrame *aFrame,
-                                  nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetFontWeight(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleFont* font = GetStyleFont(aFrame);
+  const nsStyleFont* font = GetStyleFont();
 
   if (font) {
     const nsAFlatCString& str_weight=
@@ -819,13 +805,12 @@ nsComputedDOMStyle::GetFontWeight(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetFontVariant(nsIFrame *aFrame,
-                                   nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetFontVariant(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleFont* font = GetStyleFont(aFrame);
+  const nsStyleFont* font = GetStyleFont();
 
   if (font && font->mFont.variant != NS_STYLE_FONT_VARIANT_NORMAL) {
     const nsAFlatCString& variant=
@@ -840,13 +825,12 @@ nsComputedDOMStyle::GetFontVariant(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetBackgroundAttachment(nsIFrame *aFrame,
-                                            nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBackgroundAttachment(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleBackground *background = GetStyleBackground(aFrame);
+  const nsStyleBackground *background = GetStyleBackground();
 
   if (background) {
     const nsAFlatCString& backgroundAttachment =
@@ -859,13 +843,12 @@ nsComputedDOMStyle::GetBackgroundAttachment(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetBackgroundClip(nsIFrame *aFrame,
-                                      nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBackgroundClip(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleBackground *background = GetStyleBackground(aFrame);
+  const nsStyleBackground *background = GetStyleBackground();
 
   PRUint8 clip = NS_STYLE_BG_CLIP_BORDER;
   if (background) {
@@ -882,13 +865,12 @@ nsComputedDOMStyle::GetBackgroundClip(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetBackgroundColor(nsIFrame *aFrame,
-                                       nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBackgroundColor(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleBackground* color = GetStyleBackground(aFrame);
+  const nsStyleBackground* color = GetStyleBackground();
 
   if (color) {
     if (color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) {
@@ -913,13 +895,12 @@ nsComputedDOMStyle::GetBackgroundColor(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetBackgroundImage(nsIFrame *aFrame,
-                                       nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBackgroundImage(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleBackground* color = GetStyleBackground(aFrame);
+  const nsStyleBackground* color = GetStyleBackground();
 
   if (color) {
     if (color->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE) {
@@ -937,13 +918,12 @@ nsComputedDOMStyle::GetBackgroundImage(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetBackgroundInlinePolicy(nsIFrame *aFrame,
-                                              nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBackgroundInlinePolicy(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleBackground *background = GetStyleBackground(aFrame);
+  const nsStyleBackground *background = GetStyleBackground();
 
   PRUint8 policy = NS_STYLE_BG_INLINE_POLICY_CONTINUOUS;
   if (background) {
@@ -960,13 +940,12 @@ nsComputedDOMStyle::GetBackgroundInlinePolicy(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetBackgroundOrigin(nsIFrame *aFrame,
-                                        nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBackgroundOrigin(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleBackground *background = GetStyleBackground(aFrame);
+  const nsStyleBackground *background = GetStyleBackground();
 
   PRUint8 origin = NS_STYLE_BG_ORIGIN_PADDING;
   if (background) {
@@ -983,13 +962,12 @@ nsComputedDOMStyle::GetBackgroundOrigin(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetBackgroundRepeat(nsIFrame *aFrame,
-                                        nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBackgroundRepeat(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleBackground *background = GetStyleBackground(aFrame);
+  const nsStyleBackground *background = GetStyleBackground();
 
   if (background) {
     const nsAFlatCString& backgroundRepeat =
@@ -1002,8 +980,7 @@ nsComputedDOMStyle::GetBackgroundRepeat(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetPadding(nsIFrame *aFrame,
-                               nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetPadding(nsIDOMCSSValue** aValue)
 {
   // return null per spec.
   aValue = nsnull;
@@ -1012,41 +989,36 @@ nsComputedDOMStyle::GetPadding(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetPaddingTop(nsIFrame *aFrame,
-                                  nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetPaddingTop(nsIDOMCSSValue** aValue)
 {
-  return GetPaddingWidthFor(NS_SIDE_TOP, aFrame, aValue);
+  return GetPaddingWidthFor(NS_SIDE_TOP, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetPaddingBottom(nsIFrame *aFrame,
-                                     nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetPaddingBottom(nsIDOMCSSValue** aValue)
 {
-  return GetPaddingWidthFor(NS_SIDE_BOTTOM, aFrame, aValue);
+  return GetPaddingWidthFor(NS_SIDE_BOTTOM, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetPaddingLeft(nsIFrame *aFrame,
-                                   nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetPaddingLeft(nsIDOMCSSValue** aValue)
 {
-  return GetPaddingWidthFor(NS_SIDE_LEFT, aFrame, aValue);
+  return GetPaddingWidthFor(NS_SIDE_LEFT, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetPaddingRight(nsIFrame *aFrame,
-                                    nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetPaddingRight(nsIDOMCSSValue** aValue)
 {
-  return GetPaddingWidthFor(NS_SIDE_RIGHT, aFrame, aValue);
+  return GetPaddingWidthFor(NS_SIDE_RIGHT, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderCollapse(nsIFrame *aFrame,
-                                      nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderCollapse(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleTableBorder* table = GetStyleTableBorder(aFrame);
+  const nsStyleTableBorder* table = GetStyleTableBorder();
 
   if (table) {
     const nsAFlatCString& ident=
@@ -1059,13 +1031,12 @@ nsComputedDOMStyle::GetBorderCollapse(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderSpacing(nsIFrame *aFrame,
-                                     nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderSpacing(nsIDOMCSSValue** aValue)
 {
   nsDOMCSSValueList *valueList = GetROCSSValueList(PR_FALSE);
   NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleTableBorder *border = GetStyleTableBorder(aFrame);
+  const nsStyleTableBorder *border = GetStyleTableBorder();
   if (border) {
     nsROCSSPrimitiveValue* xSpacing = GetROCSSPrimitiveValue();
     if (!xSpacing) {
@@ -1099,13 +1070,12 @@ nsComputedDOMStyle::GetBorderSpacing(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetCaptionSide(nsIFrame *aFrame,
-                                   nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetCaptionSide(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleTableBorder *table = GetStyleTableBorder(aFrame);
+  const nsStyleTableBorder *table = GetStyleTableBorder();
 
   if (table) {
     const nsAFlatCString& side =
@@ -1118,13 +1088,12 @@ nsComputedDOMStyle::GetCaptionSide(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetEmptyCells(nsIFrame *aFrame,
-                                  nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetEmptyCells(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleTableBorder *table = GetStyleTableBorder(aFrame);
+  const nsStyleTableBorder *table = GetStyleTableBorder();
 
   if (table) {
     const nsAFlatCString& emptyCells =
@@ -1137,13 +1106,12 @@ nsComputedDOMStyle::GetEmptyCells(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetTableLayout(nsIFrame *aFrame,
-                                   nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetTableLayout(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleTable *table = GetStyleTable(aFrame);
+  const nsStyleTable *table = GetStyleTable();
 
   if (table && table->mLayoutStrategy != NS_STYLE_TABLE_LAYOUT_AUTO) {
     const nsAFlatCString& tableLayout =
@@ -1158,8 +1126,7 @@ nsComputedDOMStyle::GetTableLayout(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderStyle(nsIFrame *aFrame,
-                                   nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderStyle(nsIDOMCSSValue** aValue)
 {
   // return null per spec.
   aValue = nsnull;
@@ -1168,93 +1135,80 @@ nsComputedDOMStyle::GetBorderStyle(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderTopStyle(nsIFrame *aFrame,
-                                      nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderTopStyle(nsIDOMCSSValue** aValue)
 {
-  return GetBorderStyleFor(NS_SIDE_TOP, aFrame, aValue);
+  return GetBorderStyleFor(NS_SIDE_TOP, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderBottomStyle(nsIFrame *aFrame,
-                                         nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderBottomStyle(nsIDOMCSSValue** aValue)
 {
-  return GetBorderStyleFor(NS_SIDE_BOTTOM, aFrame, aValue);
+  return GetBorderStyleFor(NS_SIDE_BOTTOM, aValue);
 }
 nsresult
-nsComputedDOMStyle::GetBorderLeftStyle(nsIFrame *aFrame,
-                                       nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderLeftStyle(nsIDOMCSSValue** aValue)
 {
-  return GetBorderStyleFor(NS_SIDE_LEFT, aFrame, aValue);
+  return GetBorderStyleFor(NS_SIDE_LEFT, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderRightStyle(nsIFrame *aFrame,
-                                        nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderRightStyle(nsIDOMCSSValue** aValue)
 {
-  return GetBorderStyleFor(NS_SIDE_RIGHT, aFrame, aValue);
+  return GetBorderStyleFor(NS_SIDE_RIGHT, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderBottomColors(nsIFrame *aFrame,
-                                          nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderBottomColors(nsIDOMCSSValue** aValue)
 {
-  return GetBorderColorsFor(NS_SIDE_BOTTOM, aFrame, aValue);
+  return GetBorderColorsFor(NS_SIDE_BOTTOM, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderLeftColors(nsIFrame *aFrame,
-                                        nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderLeftColors(nsIDOMCSSValue** aValue)
 {
-  return GetBorderColorsFor(NS_SIDE_LEFT, aFrame, aValue);
+  return GetBorderColorsFor(NS_SIDE_LEFT, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderRightColors(nsIFrame *aFrame,
-                                         nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderRightColors(nsIDOMCSSValue** aValue)
 {
-  return GetBorderColorsFor(NS_SIDE_RIGHT, aFrame, aValue);
+  return GetBorderColorsFor(NS_SIDE_RIGHT, aValue);
 }
 
 
 nsresult
-nsComputedDOMStyle::GetBorderTopColors(nsIFrame *aFrame,
-                                       nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderTopColors(nsIDOMCSSValue** aValue)
 {
-  return GetBorderColorsFor(NS_SIDE_TOP, aFrame, aValue);
+  return GetBorderColorsFor(NS_SIDE_TOP, aValue);
 }
 
 
 nsresult
-nsComputedDOMStyle::GetBorderRadiusBottomLeft(nsIFrame *aFrame,
-                                              nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderRadiusBottomLeft(nsIDOMCSSValue** aValue)
 {
-  return GetBorderRadiusFor(NS_SIDE_LEFT, aFrame, aValue);
+  return GetBorderRadiusFor(NS_SIDE_LEFT, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderRadiusBottomRight(nsIFrame *aFrame,
-                                               nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderRadiusBottomRight(nsIDOMCSSValue** aValue)
 {
-  return GetBorderRadiusFor(NS_SIDE_BOTTOM, aFrame, aValue);
+  return GetBorderRadiusFor(NS_SIDE_BOTTOM, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderRadiusTopLeft(nsIFrame *aFrame,
-                                           nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderRadiusTopLeft(nsIDOMCSSValue** aValue)
 {
-  return GetBorderRadiusFor(NS_SIDE_TOP, aFrame, aValue);
+  return GetBorderRadiusFor(NS_SIDE_TOP, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderRadiusTopRight(nsIFrame *aFrame,
-                                            nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderRadiusTopRight(nsIDOMCSSValue** aValue)
 {
-  return GetBorderRadiusFor(NS_SIDE_RIGHT, aFrame, aValue);
+  return GetBorderRadiusFor(NS_SIDE_RIGHT, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderWidth(nsIFrame *aFrame,
-                                   nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderWidth(nsIDOMCSSValue** aValue)
 {
   // return null per spec.
   aValue = nsnull;
@@ -1263,64 +1217,55 @@ nsComputedDOMStyle::GetBorderWidth(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderTopWidth(nsIFrame *aFrame,
-                                      nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderTopWidth(nsIDOMCSSValue** aValue)
 {
-  return GetBorderWidthFor(NS_SIDE_TOP, aFrame, aValue);
+  return GetBorderWidthFor(NS_SIDE_TOP, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderBottomWidth(nsIFrame *aFrame,
-                                         nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderBottomWidth(nsIDOMCSSValue** aValue)
 {
-  return GetBorderWidthFor(NS_SIDE_BOTTOM, aFrame, aValue);
+  return GetBorderWidthFor(NS_SIDE_BOTTOM, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderLeftWidth(nsIFrame *aFrame,
-                                       nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderLeftWidth(nsIDOMCSSValue** aValue)
 {
-  return GetBorderWidthFor(NS_SIDE_LEFT, aFrame, aValue);
+  return GetBorderWidthFor(NS_SIDE_LEFT, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderRightWidth(nsIFrame *aFrame,
-                                        nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderRightWidth(nsIDOMCSSValue** aValue)
 {
-  return GetBorderWidthFor(NS_SIDE_RIGHT, aFrame, aValue);
+  return GetBorderWidthFor(NS_SIDE_RIGHT, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderTopColor(nsIFrame *aFrame,
-                                      nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderTopColor(nsIDOMCSSValue** aValue)
 {
-  return GetBorderColorFor(NS_SIDE_TOP, aFrame, aValue);
+  return GetBorderColorFor(NS_SIDE_TOP, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderBottomColor(nsIFrame *aFrame,
-                                         nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderBottomColor(nsIDOMCSSValue** aValue)
 {
-  return GetBorderColorFor(NS_SIDE_BOTTOM, aFrame, aValue);
+  return GetBorderColorFor(NS_SIDE_BOTTOM, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderLeftColor(nsIFrame *aFrame,
-                                       nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderLeftColor(nsIDOMCSSValue** aValue)
 {
-  return GetBorderColorFor(NS_SIDE_LEFT, aFrame, aValue);
+  return GetBorderColorFor(NS_SIDE_LEFT, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderRightColor(nsIFrame *aFrame,
-                                        nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderRightColor(nsIDOMCSSValue** aValue)
 {
-  return GetBorderColorFor(NS_SIDE_RIGHT, aFrame, aValue);
+  return GetBorderColorFor(NS_SIDE_RIGHT, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetMarginWidth(nsIFrame *aFrame,
-                                   nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetMarginWidth(nsIDOMCSSValue** aValue)
 {
   // return null per spec.
   aValue = nsnull;
@@ -1329,41 +1274,36 @@ nsComputedDOMStyle::GetMarginWidth(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetMarginTopWidth(nsIFrame *aFrame,
-                                      nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetMarginTopWidth(nsIDOMCSSValue** aValue)
 {
-  return GetMarginWidthFor(NS_SIDE_TOP, aFrame, aValue);
+  return GetMarginWidthFor(NS_SIDE_TOP, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetMarginBottomWidth(nsIFrame *aFrame,
-                                         nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetMarginBottomWidth(nsIDOMCSSValue** aValue)
 {
-  return GetMarginWidthFor(NS_SIDE_BOTTOM, aFrame, aValue);
+  return GetMarginWidthFor(NS_SIDE_BOTTOM, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetMarginLeftWidth(nsIFrame *aFrame,
-                                       nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetMarginLeftWidth(nsIDOMCSSValue** aValue)
 {
-  return GetMarginWidthFor(NS_SIDE_LEFT, aFrame, aValue);
+  return GetMarginWidthFor(NS_SIDE_LEFT, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetMarginRightWidth(nsIFrame *aFrame,
-                                        nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetMarginRightWidth(nsIDOMCSSValue** aValue)
 {
-  return GetMarginWidthFor(NS_SIDE_RIGHT, aFrame, aValue);
+  return GetMarginWidthFor(NS_SIDE_RIGHT, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetMarkerOffset(nsIFrame *aFrame,
-                                    nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetMarkerOffset(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleContent* content = GetStyleContent(aFrame);
+  const nsStyleContent* content = GetStyleContent();
 
   if (content) {
     switch (content->mMarkerOffset.GetUnit()) {
@@ -1387,8 +1327,7 @@ nsComputedDOMStyle::GetMarkerOffset(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetOutline(nsIFrame *aFrame,
-                               nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetOutline(nsIDOMCSSValue** aValue)
 {
   // return null per spec.
   aValue = nsnull;
@@ -1397,13 +1336,12 @@ nsComputedDOMStyle::GetOutline(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetOutlineWidth(nsIFrame *aFrame,
-                                    nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetOutlineWidth(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleOutline* outline = GetStyleOutline(aFrame);
+  const nsStyleOutline* outline = GetStyleOutline();
 
   if (outline) {
     nsStyleCoord coord;
@@ -1440,13 +1378,12 @@ nsComputedDOMStyle::GetOutlineWidth(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetOutlineStyle(nsIFrame *aFrame,
-                                    nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetOutlineStyle(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleOutline* outline = GetStyleOutline(aFrame);
+  const nsStyleOutline* outline = GetStyleOutline();
 
   if (outline) {
     PRUint8 outlineStyle = outline->GetOutlineStyle();
@@ -1469,13 +1406,12 @@ nsComputedDOMStyle::GetOutlineStyle(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetOutlineOffset(nsIFrame *aFrame,
-                                     nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetOutlineOffset(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleOutline* outline = GetStyleOutline(aFrame);
+  const nsStyleOutline* outline = GetStyleOutline();
 
   if (outline) {
     switch (outline->mOutlineOffset.GetUnit()) {
@@ -1497,41 +1433,36 @@ nsComputedDOMStyle::GetOutlineOffset(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetOutlineRadiusBottomLeft(nsIFrame *aFrame,
-                                              nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetOutlineRadiusBottomLeft(nsIDOMCSSValue** aValue)
 {
-  return GetOutlineRadiusFor(NS_SIDE_LEFT, aFrame, aValue);
+  return GetOutlineRadiusFor(NS_SIDE_LEFT, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetOutlineRadiusBottomRight(nsIFrame *aFrame,
-                                               nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetOutlineRadiusBottomRight(nsIDOMCSSValue** aValue)
 {
-  return GetOutlineRadiusFor(NS_SIDE_BOTTOM, aFrame, aValue);
+  return GetOutlineRadiusFor(NS_SIDE_BOTTOM, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetOutlineRadiusTopLeft(nsIFrame *aFrame,
-                                           nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetOutlineRadiusTopLeft(nsIDOMCSSValue** aValue)
 {
-  return GetOutlineRadiusFor(NS_SIDE_TOP, aFrame, aValue);
+  return GetOutlineRadiusFor(NS_SIDE_TOP, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetOutlineRadiusTopRight(nsIFrame *aFrame,
-                                            nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetOutlineRadiusTopRight(nsIDOMCSSValue** aValue)
 {
-  return GetOutlineRadiusFor(NS_SIDE_RIGHT, aFrame, aValue);
+  return GetOutlineRadiusFor(NS_SIDE_RIGHT, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetOutlineColor(nsIFrame *aFrame,
-                                    nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetOutlineColor(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleOutline* outline = GetStyleOutline(aFrame);
+  const nsStyleOutline* outline = GetStyleOutline();
 
   if (outline) {
     nscolor color;
@@ -1552,13 +1483,12 @@ nsComputedDOMStyle::GetOutlineColor(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetOutlineRadiusFor(PRUint8 aSide, nsIFrame *aFrame,
-                                        nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetOutlineRadiusFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleOutline *outline = GetStyleOutline(aFrame);
+  const nsStyleOutline *outline = GetStyleOutline();
 
   if (outline) {
     nsStyleCoord coord;
@@ -1569,8 +1499,8 @@ nsComputedDOMStyle::GetOutlineRadiusFor(PRUint8 aSide, nsIFrame *aFrame,
         val->SetTwips(coord.GetCoordValue());
         break;
       case eStyleUnit_Percent:
-        if (aFrame) {
-          val->SetTwips(coord.GetPercentValue() * aFrame->GetSize().width);
+        if (mFrame) {
+          val->SetTwips(coord.GetPercentValue() * mFrame->GetSize().width);
         } else {
           val->SetPercent(coord.GetPercentValue());
         }
@@ -1587,13 +1517,12 @@ nsComputedDOMStyle::GetOutlineRadiusFor(PRUint8 aSide, nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetZIndex(nsIFrame *aFrame,
-                              nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetZIndex(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStylePosition* position = GetStylePosition(aFrame);
+  const nsStylePosition* position = GetStylePosition();
 
   if (position) {
     switch (position->mZIndex.GetUnit()) {
@@ -1613,13 +1542,12 @@ nsComputedDOMStyle::GetZIndex(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetListStyleImage(nsIFrame *aFrame,
-                                      nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetListStyleImage(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleList* list = GetStyleList(aFrame);
+  const nsStyleList* list = GetStyleList();
 
   if (list) {
     if (!list->mListStyleImage) {
@@ -1637,13 +1565,12 @@ nsComputedDOMStyle::GetListStyleImage(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetListStylePosition(nsIFrame *aFrame,
-                                         nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetListStylePosition(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleList *list = GetStyleList(aFrame);
+  const nsStyleList *list = GetStyleList();
 
   if (list) {
     const nsAFlatCString& style =
@@ -1656,13 +1583,12 @@ nsComputedDOMStyle::GetListStylePosition(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetListStyleType(nsIFrame *aFrame,
-                                     nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetListStyleType(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleList *list = GetStyleList(aFrame);
+  const nsStyleList *list = GetStyleList();
 
   if (list) {
     if (list->mListStyleType == NS_STYLE_LIST_STYLE_NONE) {
@@ -1679,13 +1605,12 @@ nsComputedDOMStyle::GetListStyleType(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetImageRegion(nsIFrame *aFrame,
-                                   nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetImageRegion(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleList* list = GetStyleList(aFrame);
+  const nsStyleList* list = GetStyleList();
 
   nsresult rv = NS_OK;
   nsROCSSPrimitiveValue *topVal = nsnull;
@@ -1733,16 +1658,15 @@ nsComputedDOMStyle::GetImageRegion(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetLineHeight(nsIFrame *aFrame,
-                                  nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetLineHeight(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleText *text = GetStyleText(aFrame);
+  const nsStyleText *text = GetStyleText();
 
   nscoord lineHeight;
-  nsresult rv = GetLineHeightCoord(aFrame, text, lineHeight);
+  nsresult rv = GetLineHeightCoord(text, lineHeight);
 
   if (NS_SUCCEEDED(rv)) {
     val->SetTwips(lineHeight);
@@ -1767,13 +1691,12 @@ nsComputedDOMStyle::GetLineHeight(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetVerticalAlign(nsIFrame *aFrame,
-                                     nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetVerticalAlign(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleTextReset *text = GetStyleTextReset(aFrame);
+  const nsStyleTextReset *text = GetStyleTextReset();
 
   if (text) {
     switch (text->mVerticalAlign.GetUnit()) {
@@ -1790,10 +1713,10 @@ nsComputedDOMStyle::GetVerticalAlign(nsIFrame *aFrame,
         }
       case eStyleUnit_Percent:
         {
-          const nsStyleText *textData = GetStyleText(aFrame);
+          const nsStyleText *textData = GetStyleText();
 
           nscoord lineHeight = 0;
-          nsresult rv = GetLineHeightCoord(aFrame, textData, lineHeight);
+          nsresult rv = GetLineHeightCoord(textData, lineHeight);
 
           if (NS_SUCCEEDED(rv)) {
             val->SetTwips(lineHeight * text->mVerticalAlign.GetPercentValue());
@@ -1813,13 +1736,12 @@ nsComputedDOMStyle::GetVerticalAlign(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetTextAlign(nsIFrame *aFrame,
-                                 nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetTextAlign(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleText* text = GetStyleText(aFrame);
+  const nsStyleText* text = GetStyleText();
 
   if (text) {
     const nsAFlatCString& align=
@@ -1832,13 +1754,12 @@ nsComputedDOMStyle::GetTextAlign(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetTextDecoration(nsIFrame *aFrame,
-                                      nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetTextDecoration(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleTextReset* text = GetStyleTextReset(aFrame);
+  const nsStyleTextReset* text = GetStyleTextReset();
 
   if (text) {
     if (NS_STYLE_TEXT_DECORATION_NONE == text->mTextDecoration) {
@@ -1888,13 +1809,12 @@ nsComputedDOMStyle::GetTextDecoration(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetTextIndent(nsIFrame *aFrame,
-                                  nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetTextIndent(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleText *text = GetStyleText(aFrame);
+  const nsStyleText *text = GetStyleText();
 
   FlushPendingReflows();
 
@@ -1905,7 +1825,7 @@ nsComputedDOMStyle::GetTextIndent(nsIFrame *aFrame,
         break;
       case eStyleUnit_Percent:
         {
-          nsIFrame *container = GetContainingBlockFor(aFrame);
+          nsIFrame *container = GetContainingBlockFor(mFrame);
           if (container) {
             val->SetTwips(container->GetSize().width *
                           text->mTextIndent.GetPercentValue());
@@ -1925,13 +1845,12 @@ nsComputedDOMStyle::GetTextIndent(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetTextTransform(nsIFrame *aFrame,
-                                     nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetTextTransform(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleText *text = GetStyleText(aFrame);
+  const nsStyleText *text = GetStyleText();
 
   if (text && text->mTextTransform != NS_STYLE_TEXT_TRANSFORM_NONE) {
     const nsAFlatCString& textTransform =
@@ -1946,13 +1865,12 @@ nsComputedDOMStyle::GetTextTransform(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetLetterSpacing(nsIFrame *aFrame,
-                                     nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetLetterSpacing(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleText *text = GetStyleText(aFrame);
+  const nsStyleText *text = GetStyleText();
 
   if (text && text->mLetterSpacing.GetUnit() == eStyleUnit_Coord) {
     val->SetTwips(text->mLetterSpacing.GetCoordValue());
@@ -1964,13 +1882,12 @@ nsComputedDOMStyle::GetLetterSpacing(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetWordSpacing(nsIFrame *aFrame,
-                                   nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetWordSpacing(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleText *text = GetStyleText(aFrame);
+  const nsStyleText *text = GetStyleText();
 
   if (text && text->mWordSpacing.GetUnit() == eStyleUnit_Coord) {
     val->SetTwips(text->mWordSpacing.GetCoordValue());
@@ -1982,13 +1899,12 @@ nsComputedDOMStyle::GetWordSpacing(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetWhiteSpace(nsIFrame *aFrame,
-                                  nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetWhiteSpace(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleText *text = GetStyleText(aFrame);
+  const nsStyleText *text = GetStyleText();
 
   if (text && text->mWhiteSpace != NS_STYLE_WHITESPACE_NORMAL) {
     const nsAFlatCString& whiteSpace =
@@ -2003,13 +1919,12 @@ nsComputedDOMStyle::GetWhiteSpace(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetVisibility(nsIFrame *aFrame,
-                                  nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetVisibility(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleVisibility* visibility = GetStyleVisibility(aFrame);
+  const nsStyleVisibility* visibility = GetStyleVisibility();
 
   if (visibility) {
     const nsAFlatCString& value=
@@ -2022,13 +1937,12 @@ nsComputedDOMStyle::GetVisibility(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetDirection(nsIFrame *aFrame,
-                                 nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetDirection(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleVisibility *visibility = GetStyleVisibility(aFrame);
+  const nsStyleVisibility *visibility = GetStyleVisibility();
 
   if (visibility) {
     const nsAFlatCString & direction =
@@ -2041,13 +1955,12 @@ nsComputedDOMStyle::GetDirection(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetUnicodeBidi(nsIFrame *aFrame,
-                                   nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetUnicodeBidi(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleTextReset *text = GetStyleTextReset(aFrame);
+  const nsStyleTextReset *text = GetStyleTextReset();
 
   if (text && text->mUnicodeBidi != NS_STYLE_UNICODE_BIDI_NORMAL) {
     const nsAFlatCString& bidi =
@@ -2062,13 +1975,12 @@ nsComputedDOMStyle::GetUnicodeBidi(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetCursor(nsIFrame *aFrame,
-                              nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetCursor(nsIDOMCSSValue** aValue)
 {
   nsDOMCSSValueList *valueList = GetROCSSValueList(PR_TRUE);
   NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleUserInterface *ui = GetStyleUserInterface(aFrame);
+  const nsStyleUserInterface *ui = GetStyleUserInterface();
 
   if (ui) {
     for (nsCursorImage *item = ui->mCursorArray,
@@ -2136,13 +2048,12 @@ nsComputedDOMStyle::GetCursor(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetAppearance(nsIFrame *aFrame,
-                                  nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetAppearance(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleDisplay *displayData = GetStyleDisplay(aFrame);
+  const nsStyleDisplay *displayData = GetStyleDisplay();
 
   PRUint8 appearance = NS_THEME_NONE;
   if (displayData) {
@@ -2159,13 +2070,12 @@ nsComputedDOMStyle::GetAppearance(nsIFrame *aFrame,
 
 
 nsresult
-nsComputedDOMStyle::GetBoxAlign(nsIFrame *aFrame,
-                                nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBoxAlign(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleXUL *xul = GetStyleXUL(aFrame);
+  const nsStyleXUL *xul = GetStyleXUL();
 
   PRUint8 boxAlign = NS_STYLE_BOX_ALIGN_STRETCH;
   if (xul) {
@@ -2181,13 +2091,12 @@ nsComputedDOMStyle::GetBoxAlign(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetBoxDirection(nsIFrame *aFrame,
-                                    nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBoxDirection(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleXUL *xul = GetStyleXUL(aFrame);
+  const nsStyleXUL *xul = GetStyleXUL();
 
   PRUint8 boxDirection = NS_STYLE_BOX_DIRECTION_NORMAL;
   if (xul) {
@@ -2203,13 +2112,12 @@ nsComputedDOMStyle::GetBoxDirection(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetBoxFlex(nsIFrame *aFrame,
-                               nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBoxFlex(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleXUL *xul = GetStyleXUL(aFrame);
+  const nsStyleXUL *xul = GetStyleXUL();
 
   float boxFlex = 0.0f;
   if (xul) {
@@ -2222,13 +2130,12 @@ nsComputedDOMStyle::GetBoxFlex(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetBoxOrdinalGroup(nsIFrame *aFrame,
-                                       nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBoxOrdinalGroup(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleXUL *xul = GetStyleXUL(aFrame);
+  const nsStyleXUL *xul = GetStyleXUL();
 
   PRUint32 boxOrdinalGroup = 1;
   if (xul) {
@@ -2241,13 +2148,12 @@ nsComputedDOMStyle::GetBoxOrdinalGroup(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetBoxOrient(nsIFrame *aFrame,
-                                 nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBoxOrient(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleXUL *xul = GetStyleXUL(aFrame);
+  const nsStyleXUL *xul = GetStyleXUL();
 
   PRUint8 boxOrient = NS_STYLE_BOX_ORIENT_HORIZONTAL;
   if (xul) {
@@ -2263,13 +2169,12 @@ nsComputedDOMStyle::GetBoxOrient(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetBoxPack(nsIFrame *aFrame,
-                               nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBoxPack(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleXUL *xul = GetStyleXUL(aFrame);
+  const nsStyleXUL *xul = GetStyleXUL();
 
   PRUint8 boxPack = NS_STYLE_BOX_PACK_START;
   if (xul) {
@@ -2285,13 +2190,12 @@ nsComputedDOMStyle::GetBoxPack(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetBoxSizing(nsIFrame *aFrame,
-                                 nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBoxSizing(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStylePosition *positionData = GetStylePosition(aFrame);
+  const nsStylePosition *positionData = GetStylePosition();
 
   PRUint8 boxSizing = NS_STYLE_BOX_SIZING_CONTENT;
   if (positionData) {
@@ -2307,13 +2211,12 @@ nsComputedDOMStyle::GetBoxSizing(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetFloatEdge(nsIFrame *aFrame,
-                                 nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetFloatEdge(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleBorder *borderData = GetStyleBorder(aFrame);
+  const nsStyleBorder *borderData = GetStyleBorder();
 
   PRUint8 floatEdge = NS_STYLE_FLOAT_EDGE_CONTENT;
   if (borderData) {
@@ -2330,13 +2233,12 @@ nsComputedDOMStyle::GetFloatEdge(nsIFrame *aFrame,
 
 
 nsresult
-nsComputedDOMStyle::GetUserFocus(nsIFrame *aFrame,
-                                 nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetUserFocus(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleUserInterface *uiData = GetStyleUserInterface(aFrame);
+  const nsStyleUserInterface *uiData = GetStyleUserInterface();
 
   if (uiData && uiData->mUserFocus != NS_STYLE_USER_FOCUS_NONE) {
     if (uiData->mUserFocus == NS_STYLE_USER_FOCUS_NORMAL) {
@@ -2359,13 +2261,12 @@ nsComputedDOMStyle::GetUserFocus(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetUserInput(nsIFrame *aFrame,
-                                 nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetUserInput(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleUserInterface *uiData = GetStyleUserInterface(aFrame);
+  const nsStyleUserInterface *uiData = GetStyleUserInterface();
 
   if (uiData && uiData->mUserInput != NS_STYLE_USER_INPUT_AUTO) {
     if (uiData->mUserInput == NS_STYLE_USER_INPUT_NONE) {
@@ -2388,13 +2289,12 @@ nsComputedDOMStyle::GetUserInput(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetUserModify(nsIFrame *aFrame,
-                                  nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetUserModify(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleUserInterface *uiData = GetStyleUserInterface(aFrame);
+  const nsStyleUserInterface *uiData = GetStyleUserInterface();
 
   PRUint8 userModify = NS_STYLE_USER_MODIFY_READ_ONLY;
   if (uiData) {
@@ -2410,13 +2310,12 @@ nsComputedDOMStyle::GetUserModify(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetUserSelect(nsIFrame *aFrame,
-                                  nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetUserSelect(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleUIReset *uiData = GetStyleUIReset(aFrame);
+  const nsStyleUIReset *uiData = GetStyleUIReset();
 
   if (uiData && uiData->mUserSelect != NS_STYLE_USER_SELECT_AUTO) {
     if (uiData->mUserSelect == NS_STYLE_USER_SELECT_NONE) {
@@ -2439,13 +2338,12 @@ nsComputedDOMStyle::GetUserSelect(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetDisplay(nsIFrame *aFrame,
-                               nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetDisplay(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleDisplay *displayData = GetStyleDisplay(aFrame);
+  const nsStyleDisplay *displayData = GetStyleDisplay();
 
   if (displayData) {
     if (displayData->mDisplay == NS_STYLE_DISPLAY_NONE) {
@@ -2462,13 +2360,12 @@ nsComputedDOMStyle::GetDisplay(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetPosition(nsIFrame *aFrame,
-                                nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetPosition(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleDisplay* display = GetStyleDisplay(aFrame);
+  const nsStyleDisplay* display = GetStyleDisplay();
 
   if (display) {
     const nsAFlatCString& position =
@@ -2481,13 +2378,12 @@ nsComputedDOMStyle::GetPosition(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetClip(nsIFrame *aFrame,
-                            nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetClip(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleDisplay* display = GetStyleDisplay(aFrame);
+  const nsStyleDisplay* display = GetStyleDisplay();
 
   nsresult rv = NS_OK;
   nsROCSSPrimitiveValue *topVal = nsnull;
@@ -2559,10 +2455,9 @@ nsComputedDOMStyle::GetClip(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetOverflow(nsIFrame *aFrame,
-                                nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetOverflow(nsIDOMCSSValue** aValue)
 {
-  const nsStyleDisplay* display = GetStyleDisplay(aFrame);
+  const nsStyleDisplay* display = GetStyleDisplay();
 
   if (!display || display->mOverflowX != display->mOverflowY) {
     // No value to return.  We can't express this combination of
@@ -2587,13 +2482,12 @@ nsComputedDOMStyle::GetOverflow(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetOverflowX(nsIFrame *aFrame,
-                                 nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetOverflowX(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleDisplay* display = GetStyleDisplay(aFrame);
+  const nsStyleDisplay* display = GetStyleDisplay();
 
   if (display && display->mOverflowX != NS_STYLE_OVERFLOW_AUTO) {
     const nsAFlatCString& overflow =
@@ -2608,13 +2502,12 @@ nsComputedDOMStyle::GetOverflowX(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetOverflowY(nsIFrame *aFrame,
-                                 nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetOverflowY(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleDisplay* display = GetStyleDisplay(aFrame);
+  const nsStyleDisplay* display = GetStyleDisplay();
 
   if (display && display->mOverflowY != NS_STYLE_OVERFLOW_AUTO) {
     const nsAFlatCString& overflow =
@@ -2629,31 +2522,30 @@ nsComputedDOMStyle::GetOverflowY(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetHeight(nsIFrame *aFrame,
-                              nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetHeight(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   PRBool calcHeight = PR_FALSE;
   
-  if (aFrame) {
+  if (mFrame) {
     calcHeight = PR_TRUE;
 
     FlushPendingReflows();
   
-    const nsStyleDisplay* displayData = GetStyleDisplay(aFrame);
+    const nsStyleDisplay* displayData = GetStyleDisplay();
     if (displayData && displayData->mDisplay == NS_STYLE_DISPLAY_INLINE
-        && !(aFrame->IsFrameOfType(nsIFrame::eReplaced))) {
+        && !(mFrame->IsFrameOfType(nsIFrame::eReplaced))) {
       calcHeight = PR_FALSE;
     }
   }
 
   if (calcHeight) {
-    val->SetTwips(aFrame->GetContentRect().height);
+    val->SetTwips(mFrame->GetContentRect().height);
   } else {
     // Just return the value in the style context
-    const nsStylePosition* positionData = GetStylePosition(aFrame);
+    const nsStylePosition* positionData = GetStylePosition();
     if (positionData) {
       switch (positionData->mHeight.GetUnit()) {
         case eStyleUnit_Coord:
@@ -2677,31 +2569,30 @@ nsComputedDOMStyle::GetHeight(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetWidth(nsIFrame *aFrame,
-                             nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetWidth(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   PRBool calcWidth = PR_FALSE;
 
-  if (aFrame) {
+  if (mFrame) {
     calcWidth = PR_TRUE;
 
     FlushPendingReflows();
 
-    const nsStyleDisplay *displayData = GetStyleDisplay(aFrame);
+    const nsStyleDisplay *displayData = GetStyleDisplay();
     if (displayData && displayData->mDisplay == NS_STYLE_DISPLAY_INLINE
-        && !(aFrame->IsFrameOfType(nsIFrame::eReplaced))) {
+        && !(mFrame->IsFrameOfType(nsIFrame::eReplaced))) {
       calcWidth = PR_FALSE;
     }
   }
 
   if (calcWidth) {
-    val->SetTwips(aFrame->GetContentRect().width);
+    val->SetTwips(mFrame->GetContentRect().width);
   } else {
     // Just return the value in the style context
-    const nsStylePosition *positionData = GetStylePosition(aFrame);
+    const nsStylePosition *positionData = GetStylePosition();
     if (positionData) {
       switch (positionData->mWidth.GetUnit()) {
         case eStyleUnit_Coord:
@@ -2725,13 +2616,12 @@ nsComputedDOMStyle::GetWidth(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetMaxHeight(nsIFrame *aFrame,
-                                 nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetMaxHeight(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStylePosition *positionData = GetStylePosition(aFrame);
+  const nsStylePosition *positionData = GetStylePosition();
 
   FlushPendingReflows();
 
@@ -2741,7 +2631,7 @@ nsComputedDOMStyle::GetMaxHeight(nsIFrame *aFrame,
     nscoord minHeight = 0;
 
     if (positionData->mMinHeight.GetUnit() == eStyleUnit_Percent) {
-      container = GetContainingBlockFor(aFrame);
+      container = GetContainingBlockFor(mFrame);
       if (container) {
         size = container->GetSize();
         minHeight = nscoord(size.height *
@@ -2758,7 +2648,7 @@ nsComputedDOMStyle::GetMaxHeight(nsIFrame *aFrame,
         break;
       case eStyleUnit_Percent:
         if (!container) {
-          container = GetContainingBlockFor(aFrame);
+          container = GetContainingBlockFor(mFrame);
           if (container) {
             size = container->GetSize();
           } else {
@@ -2783,13 +2673,12 @@ nsComputedDOMStyle::GetMaxHeight(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetMaxWidth(nsIFrame *aFrame,
-                                nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetMaxWidth(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStylePosition *positionData = GetStylePosition(aFrame);
+  const nsStylePosition *positionData = GetStylePosition();
 
   FlushPendingReflows();
 
@@ -2799,7 +2688,7 @@ nsComputedDOMStyle::GetMaxWidth(nsIFrame *aFrame,
     nscoord minWidth = 0;
 
     if (positionData->mMinWidth.GetUnit() == eStyleUnit_Percent) {
-      container = GetContainingBlockFor(aFrame);
+      container = GetContainingBlockFor(mFrame);
       if (container) {
         size = container->GetSize();
         minWidth = nscoord(size.width *
@@ -2816,7 +2705,7 @@ nsComputedDOMStyle::GetMaxWidth(nsIFrame *aFrame,
         break;
       case eStyleUnit_Percent:
         if (!container) {
-          container = GetContainingBlockFor(aFrame);
+          container = GetContainingBlockFor(mFrame);
           if (container) {
             size = container->GetSize();
           } else {
@@ -2841,13 +2730,12 @@ nsComputedDOMStyle::GetMaxWidth(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetMinHeight(nsIFrame *aFrame,
-                                 nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetMinHeight(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStylePosition *positionData = GetStylePosition(aFrame);
+  const nsStylePosition *positionData = GetStylePosition();
 
   FlushPendingReflows();
 
@@ -2858,7 +2746,7 @@ nsComputedDOMStyle::GetMinHeight(nsIFrame *aFrame,
         val->SetTwips(positionData->mMinHeight.GetCoordValue());
         break;
       case eStyleUnit_Percent:
-        container = GetContainingBlockFor(aFrame);
+        container = GetContainingBlockFor(mFrame);
         if (container) {
           val->SetTwips(container->GetSize().height *
                         positionData->mMinHeight.GetPercentValue());
@@ -2879,13 +2767,12 @@ nsComputedDOMStyle::GetMinHeight(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetMinWidth(nsIFrame *aFrame,
-                                nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetMinWidth(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStylePosition *positionData = GetStylePosition(aFrame);
+  const nsStylePosition *positionData = GetStylePosition();
 
   FlushPendingReflows();
 
@@ -2896,7 +2783,7 @@ nsComputedDOMStyle::GetMinWidth(nsIFrame *aFrame,
         val->SetTwips(positionData->mMinWidth.GetCoordValue());
         break;
       case eStyleUnit_Percent:
-        container = GetContainingBlockFor(aFrame);
+        container = GetContainingBlockFor(mFrame);
         if (container) {
           val->SetTwips(container->GetSize().width *
                         positionData->mMinWidth.GetPercentValue());
@@ -2915,21 +2802,21 @@ nsComputedDOMStyle::GetMinWidth(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetLeft(nsIFrame *aFrame, nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetLeft(nsIDOMCSSValue** aValue)
 {
-  return GetOffsetWidthFor(NS_SIDE_LEFT, aFrame, aValue);
+  return GetOffsetWidthFor(NS_SIDE_LEFT, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetRight(nsIFrame *aFrame, nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetRight(nsIDOMCSSValue** aValue)
 {
-  return GetOffsetWidthFor(NS_SIDE_RIGHT, aFrame, aValue);
+  return GetOffsetWidthFor(NS_SIDE_RIGHT, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetTop(nsIFrame *aFrame, nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetTop(nsIDOMCSSValue** aValue)
 {
-  return GetOffsetWidthFor(NS_SIDE_TOP, aFrame, aValue);
+  return GetOffsetWidthFor(NS_SIDE_TOP, aValue);
 }
 
 nsROCSSPrimitiveValue*
@@ -2953,10 +2840,9 @@ nsComputedDOMStyle::GetROCSSValueList(PRBool aCommaDelimited)
 }
 
 nsresult
-nsComputedDOMStyle::GetOffsetWidthFor(PRUint8 aSide, nsIFrame* aFrame,
-                                      nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetOffsetWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
 {
-  const nsStyleDisplay* display = GetStyleDisplay(aFrame);
+  const nsStyleDisplay* display = GetStyleDisplay();
 
   FlushPendingReflows();
 
@@ -2964,14 +2850,14 @@ nsComputedDOMStyle::GetOffsetWidthFor(PRUint8 aSide, nsIFrame* aFrame,
   if (display) {
     switch (display->mPosition) {
       case NS_STYLE_POSITION_STATIC:
-        rv = GetStaticOffset(aSide, aFrame, aValue);
+        rv = GetStaticOffset(aSide, aValue);
         break;
       case NS_STYLE_POSITION_RELATIVE:
-        rv = GetRelativeOffset(aSide, aFrame, aValue);
+        rv = GetRelativeOffset(aSide, aValue);
         break;
       case NS_STYLE_POSITION_ABSOLUTE:
       case NS_STYLE_POSITION_FIXED:
-        rv = GetAbsoluteOffset(aSide, aFrame, aValue);
+        rv = GetAbsoluteOffset(aSide, aValue);
         break;
       default:
         NS_ERROR("Invalid position");
@@ -2983,18 +2869,17 @@ nsComputedDOMStyle::GetOffsetWidthFor(PRUint8 aSide, nsIFrame* aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetAbsoluteOffset(PRUint8 aSide, nsIFrame* aFrame,
-                                      nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetAbsoluteOffset(PRUint8 aSide, nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  nsIFrame* container = GetContainingBlockFor(aFrame);
+  nsIFrame* container = GetContainingBlockFor(mFrame);
   if (container) {
-    nsMargin margin = aFrame->GetUsedMargin();
+    nsMargin margin = mFrame->GetUsedMargin();
     nsMargin border = container->GetUsedBorder();
     nsMargin scrollbarSizes(0, 0, 0, 0);
-    nsRect rect = aFrame->GetRect();
+    nsRect rect = mFrame->GetRect();
     nsRect containerRect = container->GetRect();
       
     if (container->GetType() == nsLayoutAtoms::viewportFrame) {
@@ -3053,13 +2938,12 @@ nsComputedDOMStyle::GetAbsoluteOffset(PRUint8 aSide, nsIFrame* aFrame,
 #endif
 
 nsresult
-nsComputedDOMStyle::GetRelativeOffset(PRUint8 aSide, nsIFrame* aFrame,
-                                      nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetRelativeOffset(PRUint8 aSide, nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStylePosition* positionData = GetStylePosition(aFrame);
+  const nsStylePosition* positionData = GetStylePosition();
   if (positionData) {
     nsStyleCoord coord;
     PRInt32 sign = 1;
@@ -3075,7 +2959,7 @@ nsComputedDOMStyle::GetRelativeOffset(PRUint8 aSide, nsIFrame* aFrame,
         val->SetTwips(sign * coord.GetCoordValue());
         break;
       case eStyleUnit_Percent:
-        container = GetContainingBlockFor(aFrame);
+        container = GetContainingBlockFor(mFrame);
         if (container) {
           nsSize size = container->GetContentRect().Size();
           if (aSide == NS_SIDE_LEFT || aSide == NS_SIDE_RIGHT) {
@@ -3099,14 +2983,13 @@ nsComputedDOMStyle::GetRelativeOffset(PRUint8 aSide, nsIFrame* aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetStaticOffset(PRUint8 aSide, nsIFrame* aFrame,
-                                    nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetStaticOffset(PRUint8 aSide, nsIDOMCSSValue** aValue)
 
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStylePosition* positionData = GetStylePosition(aFrame);
+  const nsStylePosition* positionData = GetStylePosition();
   if (positionData) {
     nsStyleCoord coord;
     positionData->mOffset.Get(aSide, coord);
@@ -3145,18 +3028,20 @@ nsComputedDOMStyle::FlushPendingReflows()
 }
 
 const nsStyleStruct*
-nsComputedDOMStyle::GetStyleData(nsIFrame* aFrame, nsStyleStructID aSID)
+nsComputedDOMStyle::GetStyleData(nsStyleStructID aSID)
 {
-  if (aFrame && !mPseudo) {
-    nsIAtom* type = aFrame->GetType();
+  if (mFrame && !mPseudo) {
+    nsIAtom* type = mFrame->GetType();
+    nsIFrame* frame = mFrame;
     if (type == nsLayoutAtoms::tableOuterFrame) {
       // If the frame is an outer table frame then we should get the style
       // from the inner table frame.
-      aFrame = aFrame->GetFirstChild(nsnull);
-      NS_ASSERTION(!aFrame->GetNextSibling(),
+      frame = frame->GetFirstChild(nsnull);
+      NS_ASSERTION(frame, "Outer table must have an inner");
+      NS_ASSERTION(!frame->GetNextSibling(),
                    "Outer table frames should have just one child, the inner table");
     }
-    return aFrame->GetStyleData(aSID);
+    return frame->GetStyleData(aSID);
   }
   
   if (!mStyleContextHolder) {
@@ -3179,8 +3064,7 @@ nsComputedDOMStyle::GetStyleData(nsIFrame* aFrame, nsStyleStructID aSID)
 }
 
 nsresult
-nsComputedDOMStyle::GetPaddingWidthFor(PRUint8 aSide, nsIFrame *aFrame,
-                                       nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetPaddingWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
@@ -3189,8 +3073,8 @@ nsComputedDOMStyle::GetPaddingWidthFor(PRUint8 aSide, nsIFrame *aFrame,
   
   val->SetTwips(0);
 
-  if (!aFrame) {
-    const nsStylePadding* padding = GetStylePadding(aFrame);
+  if (!mFrame) {
+    const nsStylePadding* padding = GetStylePadding();
 
     if (padding) {
       nsStyleCoord c;
@@ -3207,21 +3091,20 @@ nsComputedDOMStyle::GetPaddingWidthFor(PRUint8 aSide, nsIFrame *aFrame,
       }
     }
   } else {
-    val->SetTwips(aFrame->GetUsedPadding().side(aSide));
+    val->SetTwips(mFrame->GetUsedPadding().side(aSide));
   }
 
   return CallQueryInterface(val, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetLineHeightCoord(nsIFrame *aFrame,
-                                       const nsStyleText *aText,
+nsComputedDOMStyle::GetLineHeightCoord(const nsStyleText *aText,
                                        nscoord& aCoord)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
   if (aText) {
-    const nsStyleFont *font = GetStyleFont(aFrame);
+    const nsStyleFont *font = GetStyleFont();
     switch (aText->mLineHeight.GetUnit()) {
       case eStyleUnit_Coord:
         aCoord = aText->mLineHeight.GetCoordValue();
@@ -3251,10 +3134,9 @@ nsComputedDOMStyle::GetLineHeightCoord(nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderColorsFor(PRUint8 aSide, nsIFrame *aFrame,
-                                       nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderColorsFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
 {
-  const nsStyleBorder *border = GetStyleBorder(aFrame);
+  const nsStyleBorder *border = GetStyleBorder();
 
   if (border && border->mBorderColors) {
     nsBorderColors* borderColors = border->mBorderColors[aSide];
@@ -3306,13 +3188,12 @@ nsComputedDOMStyle::GetBorderColorsFor(PRUint8 aSide, nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderRadiusFor(PRUint8 aSide, nsIFrame *aFrame,
-                                       nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderRadiusFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleBorder *border = GetStyleBorder(aFrame);
+  const nsStyleBorder *border = GetStyleBorder();
 
   if (border) {
     nsStyleCoord coord;
@@ -3323,8 +3204,8 @@ nsComputedDOMStyle::GetBorderRadiusFor(PRUint8 aSide, nsIFrame *aFrame,
         val->SetTwips(coord.GetCoordValue());
         break;
       case eStyleUnit_Percent:
-        if (aFrame) {
-          val->SetTwips(coord.GetPercentValue() * aFrame->GetSize().width);
+        if (mFrame) {
+          val->SetTwips(coord.GetPercentValue() * mFrame->GetSize().width);
         } else {
           val->SetPercent(coord.GetPercentValue());
         }
@@ -3341,13 +3222,12 @@ nsComputedDOMStyle::GetBorderRadiusFor(PRUint8 aSide, nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderWidthFor(PRUint8 aSide, nsIFrame *aFrame,
-                                      nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleBorder* border = GetStyleBorder(aFrame);
+  const nsStyleBorder* border = GetStyleBorder();
 
   if (border) {
     val->SetTwips(border->GetBorderWidth(aSide));
@@ -3357,13 +3237,12 @@ nsComputedDOMStyle::GetBorderWidthFor(PRUint8 aSide, nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderColorFor(PRUint8 aSide, nsIFrame *aFrame,
-                                      nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderColorFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleBorder* border = GetStyleBorder(aFrame);
+  const nsStyleBorder* border = GetStyleBorder();
 
   if (border) {
     nscolor color; 
@@ -3374,7 +3253,7 @@ nsComputedDOMStyle::GetBorderColorFor(PRUint8 aSide, nsIFrame *aFrame,
       val->SetIdent(nsLayoutAtoms::transparent);
     } else {
       if (foreground) {
-        const nsStyleColor* colorStruct = GetStyleColor(aFrame);
+        const nsStyleColor* colorStruct = GetStyleColor();
         color = colorStruct->mColor;
       }
 
@@ -3393,8 +3272,7 @@ nsComputedDOMStyle::GetBorderColorFor(PRUint8 aSide, nsIFrame *aFrame,
 }
 
 nsresult
-nsComputedDOMStyle::GetMarginWidthFor(PRUint8 aSide, nsIFrame *aFrame,
-                                      nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetMarginWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
@@ -3403,8 +3281,8 @@ nsComputedDOMStyle::GetMarginWidthFor(PRUint8 aSide, nsIFrame *aFrame,
 
   val->SetTwips(0);
 
-  if (!aFrame) {
-    const nsStyleMargin* margin = GetStyleMargin(aFrame);
+  if (!mFrame) {
+    const nsStyleMargin* margin = GetStyleMargin();
 
     if (margin) {
       nsStyleCoord c;
@@ -3424,20 +3302,19 @@ nsComputedDOMStyle::GetMarginWidthFor(PRUint8 aSide, nsIFrame *aFrame,
       }
     }
   } else {
-    val->SetTwips(aFrame->GetUsedMargin().side(aSide));
+    val->SetTwips(mFrame->GetUsedMargin().side(aSide));
   }
 
   return CallQueryInterface(val, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::GetBorderStyleFor(PRUint8 aSide, nsIFrame *aFrame,
-                                      nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetBorderStyleFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleBorder* border = GetStyleBorder(aFrame);
+  const nsStyleBorder* border = GetStyleBorder();
 
   PRUint8 borderStyle = NS_STYLE_BORDER_STYLE_NONE;
 
