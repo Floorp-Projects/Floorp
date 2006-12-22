@@ -116,12 +116,12 @@
 /* ::::: sidebar panel ::::: */
 
 .iframe-panel {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#iframe-miniscroll") !important;
   border-bottom: 6px solid;
   -moz-border-bottom-colors: #B9C4D0 #B9C4D0 #B9C4D0 #B9C4D0 #DAE3ED #96A7B8;
 }
 
 .browser-sidebar {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#browser-miniscroll") !important;
   border-bottom: 6px solid;
   -moz-border-bottom-colors: #B9C4D0 #B9C4D0 #B9C4D0 #B9C4D0 #DAE3ED #96A7B8;  
 }
