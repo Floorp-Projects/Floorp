@@ -1603,6 +1603,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
     if (gcLocked)
         JS_UNLOCK_GC(rt);
 #endif
+    JS_COUNT_OPERATION(cx, JSOW_ALLOCATION);
     return thing;
 
 fail:
