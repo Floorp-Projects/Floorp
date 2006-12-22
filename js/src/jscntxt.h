@@ -676,9 +676,6 @@ struct JSContext {
     JSBranchCallback    branchCallback;
     JSErrorReporter     errorReporter;
 
-    /* Counter of operations for branch callback calls. */
-    uint32              operationCounter;
-
     /* Client opaque pointer */
     void                *data;
 
@@ -969,53 +966,6 @@ extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
 #else
 # define JS_CHECK_STACK_SIZE(cx, lval)  ((jsuword)&(lval) > (cx)->stackLimit)
 #endif
-
-/* Relative operations weights. */
-#define JSOW_JUMP                   1
-#define JSOW_ALLOCATION             100
-#define JSOW_LOOKUP_PROPERTY        5
-#define JSOW_GET_PROPERTY           10
-#define JSOW_SET_PROPERTY           20
-#define JSOW_NEW_PROPERTY           200
-#define JSOW_DELETE_PROPERTY        30
-
-#define JSOW_BRANCH_CALLBACK        JS_BIT(12)
-
-/*
- * The implementation of JS_COUNT_OPERATION macro below assumes that
- * JSOW_BRANCH_CALLBACK is a power of two to ensures that an unsigned int
- * overflow does not bring the counter below JSOW_BRANCH_CALLBACK limit.
- */
-JS_STATIC_ASSERT((JSOW_BRANCH_CALLBACK & (JSOW_BRANCH_CALLBACK - 1)) == 0);
-
-/*
- * Update the operation counter according the specified weight. This macro
- * does not call the branch callback or any API.
- */
-#define JS_COUNT_OPERATION(cx, weight)                                        \
-    ((void)(JS_ASSERT((weight) > 0),                                          \
-            JS_ASSERT((weight) <= JSOW_BRANCH_CALLBACK),                      \
-            (cx)->operationCounter = (((cx)->operationCounter + (weight)) |   \
-                                      (~(JSOW_BRANCH_CALLBACK - 1) &          \
-                                       (cx)->operationCounter))))
-
-/*
- * Update the operation counter and call the branch callback when it reaches
- * JSOW_BRANCH_CALLBACK limit. This macro can run the full GC and arbitrary
- * scripts via generator close hooks. Return true if it is OK to continue and
- * false otherwise.
- */
-#define JS_CHECK_OPERATION_LIMIT(cx, weight)                                  \
-    (JS_COUNT_OPERATION(cx, weight),                                          \
-     ((cx)->operationCounter < JSOW_BRANCH_CALLBACK ||                        \
-     js_ResetOperationCounter(cx)))
-
-/*
- * Reset the operation counter and call branch callback assuming that the
- * operation limit is reached.
- */
-extern JSBool
-js_ResetOperationCounter(JSContext *cx);
 
 JS_END_EXTERN_C
 
