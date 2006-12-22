@@ -72,7 +72,6 @@
 #include "nsIViewManager.h"
 #include "nsIXULContentSink.h"
 #include "nsIXULDocument.h"
-#include "nsIXULPrototypeDocument.h"
 #include "nsIXULPrototypeCache.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsLayoutCID.h"
@@ -136,7 +135,7 @@ public:
     virtual nsISupports *GetTarget();
 
     // nsIXULContentSink
-    NS_IMETHOD Init(nsIDocument* aDocument, nsIXULPrototypeDocument* aPrototype);
+    NS_IMETHOD Init(nsIDocument* aDocument, nsXULPrototypeDocument* aPrototype);
 
 protected:
     // pseudo-constants
@@ -223,7 +222,7 @@ protected:
     nsWeakPtr              mDocument;             // [OWNER]
     nsCOMPtr<nsIURI>       mDocumentURL;          // [OWNER]
 
-    nsCOMPtr<nsIXULPrototypeDocument> mPrototype; // [OWNER]
+    nsRefPtr<nsXULPrototypeDocument> mPrototype;  // [OWNER]
     nsIParser*             mParser;               // [OWNER] We use regular pointer b/c of funky exports on nsIParser
     
     nsCOMPtr<nsICSSLoader> mCSSLoader;            // [OWNER]
@@ -486,7 +485,7 @@ XULContentSinkImpl::GetTarget()
 //
 
 NS_IMETHODIMP
-XULContentSinkImpl::Init(nsIDocument* aDocument, nsIXULPrototypeDocument* aPrototype)
+XULContentSinkImpl::Init(nsIDocument* aDocument, nsXULPrototypeDocument* aPrototype)
 {
     NS_PRECONDITION(aDocument != nsnull, "null ptr");
     if (! aDocument)
@@ -497,8 +496,7 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIXULPrototypeDocument* aProto
     mDocument    = do_GetWeakReference(aDocument);
     mPrototype   = aPrototype;
 
-    rv = mPrototype->GetURI(getter_AddRefs(mDocumentURL));
-    if (NS_FAILED(rv)) return rv;
+    mDocumentURL = mPrototype->GetURI();
 
     // XXX this presumes HTTP header info is already set in document
     // XXX if it isn't we need to set it here...
@@ -820,10 +818,7 @@ XULContentSinkImpl::HandleEndElement(const PRUnichar *aName)
         nsXULPrototypeElement* element =
             NS_STATIC_CAST(nsXULPrototypeElement*, node);
 
-        rv = mPrototype->SetRootElement(element);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set document root");
-        if (NS_FAILED(rv)) return rv;
-
+        mPrototype->SetRootElement(element);
         mState = eInEpilog;
     }
 

@@ -71,7 +71,6 @@
 
 #ifdef MOZ_XUL
 #include "nsIXULPrototypeCache.h"
-#include "nsIXULPrototypeDocument.h"
 #endif
 
 //----------------------------------------------------------------------
@@ -479,10 +478,10 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
     // document in the cache.
     nsCOMPtr<nsIXULPrototypeCache> cache
         (do_GetService(kXULPrototypeCacheCID));
-    nsCOMPtr<nsIXULPrototypeDocument> proto;
 
+    PRBool isCached = PR_FALSE;
     if (cache)
-        cache->GetPrototype(aURI, getter_AddRefs(proto));
+        isCached = cache->IsCached(aURI);
     else
         NS_WARNING("Unable to obtain the XUL prototype cache!");
 
@@ -502,7 +501,7 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
     //        loading chrome for the profile manager itself). This must be 
     //        parsed from disk. 
 
-    if (proto) {
+    if (isCached) {
         // ...in which case, we'll create a dummy stream that'll just
         // load the thing.
         result = new nsCachedChromeChannel(aURI);

@@ -20,6 +20,10 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Chris Waterson <waterson@netscape.com>
+ *   L. David Baron <dbaron@dbaron.org>
+ *   Ben Goodger <ben@netscape.com>
+ *   Mark Hammond <mhammond@skippinet.com.au>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,54 +39,53 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsIXULPrototypeDocument_h__
-#define nsIXULPrototypeDocument_h__
+#ifndef nsXULPrototypeDocument_h__
+#define nsXULPrototypeDocument_h__
 
-#include "nsISerializable.h"
+#include "nsAutoPtr.h"
+#include "nsCOMArray.h"
+#include "nsCOMPtr.h"
 #include "nsTArray.h"
-#include "nsAString.h"
+#include "nsIScriptGlobalObjectOwner.h"
+#include "nsISerializable.h"
 
 class nsIAtom;
 class nsIPrincipal;
 class nsIURI;
+class nsNodeInfoManager;
+class nsXULDocument;
 class nsXULPrototypeElement;
 class nsXULPrototypePI;
-class nsIXULDocument;
-class nsNodeInfoManager;
-class nsISupportsArray;
-
-#define NS_IXULPROTOTYPEDOCUMENT_IID \
-{ 0x054a0bfe, 0xe7bc, 0x44b0, \
- { 0x90, 0x97, 0x6c, 0x95, 0xe4, 0xd6, 0x5f, 0xa3 } }
+class nsXULPDGlobalObject;
 
 /**
  * A "prototype" document that stores shared document information
  * for the XUL cache.
+ * Among other things, stores the tree of nsXULPrototype*
+ * objects, from which the real DOM tree is built later in
+ * nsXULDocument::ResumeWalk.
  */
-class nsIXULPrototypeDocument : public nsISerializable
+class nsXULPrototypeDocument : public nsIScriptGlobalObjectOwner,
+                               public nsISerializable
 {
 public:
-    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXULPROTOTYPEDOCUMENT_IID)
+    static nsresult
+    Create(nsIURI* aURI, nsXULPrototypeDocument** aResult);
+
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
+
+    // nsISerializable interface
+    NS_DECL_NSISERIALIZABLE
+
+    nsresult InitPrincipal(nsIURI* aURI, nsIPrincipal* aPrincipal);
+    nsIURI* GetURI();
 
     /**
-     * Method to initialize a prototype document's principal.  Either this
-     * method or Read() must be called immediately after the prototype document
-     * is created.  aURI must be non-null.  aPrincipal is allowed to be null;
-     * in this case the prototype will get a null principal object.  If this
-     * method returns error, do NOT use the prototype document for anything.
+     * Get/set the root nsXULPrototypeElement of the document.
      */
-    NS_IMETHOD InitPrincipal(nsIURI* aURI, nsIPrincipal* aPrincipal) = 0;
-
-    /**
-     * Retrieve the URI of the document
-     */
-    NS_IMETHOD GetURI(nsIURI** aResult) = 0;
-
-    /**
-     * Access the root nsXULPrototypeElement of the document.
-     */
-    NS_IMETHOD GetRootElement(nsXULPrototypeElement** aResult) = 0;
-    NS_IMETHOD SetRootElement(nsXULPrototypeElement* aElement) = 0;
+    nsXULPrototypeElement* GetRootElement();
+    void SetRootElement(nsXULPrototypeElement* aElement);
 
     /**
      * Add a processing instruction to the prolog. Note that only
@@ -93,62 +96,82 @@ public:
      * @param aPI an already adrefed PI proto to add. This method takes
      *            ownership of the passed PI.
      */
-    NS_IMETHOD AddProcessingInstruction(nsXULPrototypePI* aPI) = 0;
+    nsresult AddProcessingInstruction(nsXULPrototypePI* aPI);
     /**
      * @note GetProcessingInstructions retains the ownership (the PI
      *       protos only get deleted when the proto document is deleted)
      */
-    virtual const nsTArray<nsXULPrototypePI*>&
-        GetProcessingInstructions() const = 0;
+    const nsTArray<nsXULPrototypePI*>& GetProcessingInstructions() const;
 
     /**
      * Access the array of style overlays for this document.
      *
-     * XXX shouldn't use nsISupportsArray here
+     * Style overlays are stylesheets that need to be applied to the
+     * document, but are not referenced from within the document. They
+     * are currently obtained from the chrome registry via
+     * nsIXULOverlayProvider::getStyleOverlays.)
      */
-    NS_IMETHOD AddStyleSheetReference(nsIURI* aStyleSheet) = 0;
-    NS_IMETHOD GetStyleSheetReferences(nsISupportsArray** aResult) = 0;
+    void AddStyleSheetReference(nsIURI* aStyleSheet);
+    const nsCOMArray<nsIURI>& GetStyleSheetReferences() const;
 
     /**
      * Access HTTP header data.
      * @note Not implemented.
      */
-    NS_IMETHOD GetHeaderData(nsIAtom* aField, nsAString& aData) const = 0;
-    NS_IMETHOD SetHeaderData(nsIAtom* aField, const nsAString& aData) = 0;
+    NS_IMETHOD GetHeaderData(nsIAtom* aField, nsAString& aData) const;
+    NS_IMETHOD SetHeaderData(nsIAtom* aField, const nsAString& aData);
 
-    // Guaranteed to return non-null for a properly-initialized prototype
-    // document.
-    virtual nsIPrincipal *DocumentPrincipal() = 0;
-
-    virtual nsNodeInfoManager *GetNodeInfoManager() = 0;
+    virtual nsIPrincipal *DocumentPrincipal();
+    void SetDocumentPrincipal(nsIPrincipal *aPrincipal);
 
     /**
      * If current prototype document has not yet finished loading,
      * appends aDocument to the list of documents to notify (via
-     * OnPrototypeLoadDone()) and sets aLoaded to PR_FALSE.
+     * nsXULDocument::OnPrototypeLoadDone()) and sets aLoaded to PR_FALSE.
      * Otherwise sets aLoaded to PR_TRUE.
      */
-    NS_IMETHOD AwaitLoadDone(nsIXULDocument* aDocument,
-                             PRBool* aLoaded) = 0;
+    nsresult AwaitLoadDone(nsXULDocument* aDocument, PRBool* aResult);
+
     /**
      * Notifies each document registered via AwaitLoadDone on this
      * prototype document that the prototype has finished loading.
      * The notification is performed by calling
      * nsIXULDocument::OnPrototypeLoadDone on the registered documents.
      */
-    NS_IMETHOD NotifyLoadDone() = 0;
+    nsresult NotifyLoadDone();
+
+    nsNodeInfoManager *GetNodeInfoManager();
+
+    // nsIScriptGlobalObjectOwner methods
+    virtual nsIScriptGlobalObject* GetScriptGlobalObject();
+
+protected:
+    nsCOMPtr<nsIURI> mURI;
+    nsXULPrototypeElement* mRoot;
+    nsTArray<nsXULPrototypePI*> mProcessingInstructions;
+    nsCOMArray<nsIURI> mStyleSheetReferences;
+
+    nsCOMPtr<nsIScriptGlobalObject> mGlobalObject;
+
+    PRPackedBool mLoaded;
+    nsTArray< nsRefPtr<nsXULDocument> > mPrototypeWaiters;
+
+    nsRefPtr<nsNodeInfoManager> mNodeInfoManager;
+
+    nsXULPrototypeDocument();
+    virtual ~nsXULPrototypeDocument();
+    nsresult Init();
+
+    friend NS_IMETHODIMP
+    NS_NewXULPrototypeDocument(nsXULPrototypeDocument** aResult);
+
+    nsresult NewXULPDGlobalObject(nsIScriptGlobalObject** aResult);
+
+    static nsIPrincipal* gSystemPrincipal;
+    static nsIScriptGlobalObject* gSystemGlobal;
+    static PRUint32 gRefCnt;
+
+    friend class nsXULPDGlobalObject;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIXULPrototypeDocument,
-                              NS_IXULPROTOTYPEDOCUMENT_IID)
-
-// CID for factory-based creation, used only for deserialization.
-#define NS_XULPROTOTYPEDOCUMENT_CLASSNAME "XUL Prototype Document"
-#define NS_XULPROTOTYPEDOCUMENT_CID \
-    {0xa08101ae,0xc0e8,0x4464,{0x99,0x9e,0xe5,0xa4,0xd7,0x09,0xa9,0x28}}
-
-
-NS_IMETHODIMP
-NS_NewXULPrototypeDocument(nsISupports* aOuter, REFNSIID aIID, void** aResult);
-
-#endif // nsIXULPrototypeDocument_h__
+#endif // nsXULPrototypeDocument_h__

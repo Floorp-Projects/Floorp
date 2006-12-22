@@ -39,30 +39,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
- * A "prototype" document that stores shared document information
- * for the XUL cache.
- */
 
-#include "nsCOMPtr.h"
+#include "nsXULPrototypeDocument.h"
+#include "nsXULDocument.h"
+
 #include "nsAString.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptRuntime.h"
 #include "nsIServiceManager.h"
-#include "nsISupportsArray.h" // deprecated array interface.
-#include "nsIArray.h"         // blessed array interface.
+#include "nsIArray.h"
 #include "nsIURI.h"
-#include "nsIXULDocument.h"
-#include "nsIXULPrototypeDocument.h"
 #include "jsapi.h"
 #include "nsString.h"
-#include "nsXULElement.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsIDOMScriptObjectFactory.h"
@@ -80,7 +73,7 @@ class nsXULPDGlobalObject : public nsIScriptGlobalObject,
                             public nsIScriptObjectPrincipal
 {
 public:
-    nsXULPDGlobalObject();
+    nsXULPDGlobalObject(nsXULPrototypeDocument* owner);
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
@@ -100,88 +93,16 @@ public:
 
     // nsIScriptObjectPrincipal methods
     virtual nsIPrincipal* GetPrincipal();
-    
+
 protected:
     virtual ~nsXULPDGlobalObject();
 
-    nsIScriptGlobalObjectOwner* mGlobalObjectOwner; // weak reference
+    nsXULPrototypeDocument* mGlobalObjectOwner; // weak reference
 
     nsCOMPtr<nsIScriptContext>  mScriptContexts[NS_STID_ARRAY_UBOUND];
     void *                      mScriptGlobals[NS_STID_ARRAY_UBOUND];
 
     static JSClass gSharedGlobalClass;
-};
-
-class nsXULPrototypeDocument : public nsIXULPrototypeDocument,
-                               public nsIScriptGlobalObjectOwner
-{
-public:
-    static nsresult
-    Create(nsIURI* aURI, nsXULPrototypeDocument** aResult);
-
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
-
-    // nsISerializable interface
-    NS_DECL_NSISERIALIZABLE
-
-    // nsIXULPrototypeDocument interface
-    NS_IMETHOD InitPrincipal(nsIURI* aURI, nsIPrincipal* aPrincipal);
-    
-    NS_IMETHOD GetURI(nsIURI** aResult);
-
-    NS_IMETHOD GetRootElement(nsXULPrototypeElement** aResult);
-    NS_IMETHOD SetRootElement(nsXULPrototypeElement* aElement);
-
-    NS_IMETHOD AddProcessingInstruction(nsXULPrototypePI* aPI);
-    const nsTArray<nsXULPrototypePI*>& GetProcessingInstructions() const;
-
-    NS_IMETHOD AddStyleSheetReference(nsIURI* aStyleSheet);
-    NS_IMETHOD GetStyleSheetReferences(nsISupportsArray** aResult);
-
-    NS_IMETHOD GetHeaderData(nsIAtom* aField, nsAString& aData) const;
-    NS_IMETHOD SetHeaderData(nsIAtom* aField, const nsAString& aData);
-
-    virtual nsIPrincipal *DocumentPrincipal();
-
-    NS_IMETHOD AwaitLoadDone(nsIXULDocument* aDocument, PRBool* aResult);
-    NS_IMETHOD NotifyLoadDone();
-    
-    virtual nsNodeInfoManager *GetNodeInfoManager();
-
-    // nsIScriptGlobalObjectOwner methods
-    virtual nsIScriptGlobalObject* GetScriptGlobalObject();
-
-    NS_DEFINE_STATIC_CID_ACCESSOR(NS_XULPROTOTYPEDOCUMENT_CID);
-
-protected:
-    nsCOMPtr<nsIURI> mURI;
-    nsXULPrototypeElement* mRoot;
-    nsTArray<nsXULPrototypePI*> mProcessingInstructions;
-    nsCOMPtr<nsISupportsArray> mStyleSheetReferences;
-
-    nsCOMPtr<nsIScriptGlobalObject> mGlobalObject;
-
-    PRPackedBool mLoaded;
-    nsCOMPtr<nsICollection> mPrototypeWaiters;
-
-    nsRefPtr<nsNodeInfoManager> mNodeInfoManager;
-
-    nsXULPrototypeDocument();
-    virtual ~nsXULPrototypeDocument();
-    nsresult Init();
-
-    friend NS_IMETHODIMP
-    NS_NewXULPrototypeDocument(nsISupports* aOuter, REFNSIID aIID,
-                               void** aResult);
-
-    nsresult NewXULPDGlobalObject(nsIScriptGlobalObject** aResult);
-
-    static nsIPrincipal* gSystemPrincipal;
-    static nsIScriptGlobalObject* gSystemGlobal;
-    static PRUint32 gRefCnt;
-
-    friend class nsXULPDGlobalObject;
 };
 
 nsIPrincipal* nsXULPrototypeDocument::gSystemPrincipal;
@@ -241,11 +162,6 @@ nsXULPrototypeDocument::nsXULPrototypeDocument()
 nsresult
 nsXULPrototypeDocument::Init()
 {
-    nsresult rv;
-
-    rv = NS_NewISupportsArray(getter_AddRefs(mStyleSheetReferences));
-    NS_ENSURE_SUCCESS(rv, rv);
-
     mNodeInfoManager = new nsNodeInfoManager();
     NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_OUT_OF_MEMORY);
 
@@ -274,33 +190,26 @@ nsXULPrototypeDocument::~nsXULPrototypeDocument()
     }
 }
 
-NS_IMPL_ISUPPORTS3(nsXULPrototypeDocument,
-                   nsIXULPrototypeDocument,
+NS_IMPL_ISUPPORTS2(nsXULPrototypeDocument,
                    nsIScriptGlobalObjectOwner,
                    nsISerializable)
 
 NS_IMETHODIMP
-NS_NewXULPrototypeDocument(nsISupports* aOuter, REFNSIID aIID, void** aResult)
+NS_NewXULPrototypeDocument(nsXULPrototypeDocument** aResult)
 {
-    NS_PRECONDITION(aOuter == nsnull, "no aggregation");
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    nsXULPrototypeDocument* result = new nsXULPrototypeDocument();
-    if (! result)
+    *aResult = new nsXULPrototypeDocument();
+    if (! *aResult)
         return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult rv;
-    rv = result->Init();
+    rv = (*aResult)->Init();
     if (NS_FAILED(rv)) {
-        delete result;
+        delete *aResult;
+        *aResult = nsnull;
         return rv;
     }
 
-    NS_ADDREF(result);
-    rv = result->QueryInterface(aIID, aResult);
-    NS_RELEASE(result);
-
+    NS_ADDREF(*aResult);
     return rv;
 }
 
@@ -319,17 +228,16 @@ nsXULPrototypeDocument::NewXULPDGlobalObject(nsIScriptGlobalObject** aResult)
     nsCOMPtr<nsIScriptGlobalObject> global;
     if (DocumentPrincipal() == gSystemPrincipal) {
         if (!gSystemGlobal) {
-            gSystemGlobal = new nsXULPDGlobalObject();
+            gSystemGlobal = new nsXULPDGlobalObject(nsnull);
             if (! gSystemGlobal)
                 return NS_ERROR_OUT_OF_MEMORY;
             NS_ADDREF(gSystemGlobal);
         }
         global = gSystemGlobal;
     } else {
-        global = new nsXULPDGlobalObject();
+        global = new nsXULPDGlobalObject(this); // does not refcount
         if (! global)
             return NS_ERROR_OUT_OF_MEMORY;
-        global->SetGlobalObjectOwner(this); // does not refcount
     }
     *aResult = global;
     NS_ADDREF(*aResult);
@@ -348,17 +256,15 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
 
     rv = aStream->ReadObject(PR_TRUE, getter_AddRefs(mURI));
 
-    PRUint32 referenceCount;
-    nsCOMPtr<nsIURI> referenceURI;
+    PRUint32 count, i;
+    nsCOMPtr<nsIURI> styleOverlayURI;
 
-    PRUint32 i;
-    // nsISupportsArray mStyleSheetReferences
-    rv |= aStream->Read32(&referenceCount);
+    rv |= aStream->Read32(&count);
     if (NS_FAILED(rv)) return rv;
-    for (i = 0; i < referenceCount; ++i) {
-        rv |= aStream->ReadObject(PR_TRUE, getter_AddRefs(referenceURI));
-        
-        mStyleSheetReferences->AppendElement(referenceURI);
+
+    for (i = 0; i < count; ++i) {
+        rv |= aStream->ReadObject(PR_TRUE, getter_AddRefs(styleOverlayURI));
+        mStyleSheetReferences.AppendObject(styleOverlayURI);
     }
 
 
@@ -380,9 +286,9 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
     // nsINodeInfo table
     nsCOMArray<nsINodeInfo> nodeInfos;
 
-    rv |= aStream->Read32(&referenceCount);
+    rv |= aStream->Read32(&count);
     nsAutoString namespaceURI, qualifiedName;
-    for (i = 0; i < referenceCount; ++i) {
+    for (i = 0; i < count; ++i) {
         rv |= aStream->ReadString(namespaceURI);
         rv |= aStream->ReadString(qualifiedName);
 
@@ -473,19 +379,15 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
 
     rv = aStream->WriteCompoundObject(mURI, NS_GET_IID(nsIURI), PR_TRUE);
     
-    PRUint32 referenceCount;
-    nsCOMPtr<nsIURI> referenceURI;
+    PRUint32 count;
+
+    count = mStyleSheetReferences.Count();
+    rv |= aStream->Write32(count);
 
     PRUint32 i;
-
-    // nsISupportsArray mStyleSheetReferences
-    mStyleSheetReferences->Count(&referenceCount);
-    rv |= aStream->Write32(referenceCount);
-    
-    for (i = 0; i < referenceCount; ++i) {
-        mStyleSheetReferences->QueryElementAt(i, NS_GET_IID(nsIURI), getter_AddRefs(referenceURI));
-        
-        rv |= aStream->WriteCompoundObject(referenceURI, NS_GET_IID(nsIURI), PR_TRUE);
+    for (i = 0; i < count; ++i) {
+        rv |= aStream->WriteCompoundObject(mStyleSheetReferences[i],
+                                           NS_GET_IID(nsIURI), PR_TRUE);
     }
 
     // nsIPrincipal mNodeInfoManager->mPrincipal
@@ -499,8 +401,8 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
 
     PRInt32 nodeInfoCount = nodeInfos.Count();
     rv |= aStream->Write32(nodeInfoCount);
-    for (PRInt32 j = 0; j < nodeInfoCount; ++j) {
-        nsINodeInfo *nodeInfo = nodeInfos[j];
+    for (i = 0; i < nodeInfoCount; ++i) {
+        nsINodeInfo *nodeInfo = nodeInfos[i];
         NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
 
         nsAutoString namespaceURI;
@@ -516,8 +418,8 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
     nsIScriptGlobalObject* globalObject = GetScriptGlobalObject();
     NS_ENSURE_TRUE(globalObject, NS_ERROR_UNEXPECTED);
 
-    referenceCount = mProcessingInstructions.Length();
-    for (i = 0; i < referenceCount; ++i) {
+    count = mProcessingInstructions.Length();
+    for (i = 0; i < count; ++i) {
         nsXULPrototypePI* pi = mProcessingInstructions[i];
         rv |= pi->Serialize(aStream, globalObject, &nodeInfos);
     }
@@ -531,10 +433,8 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
 
 //----------------------------------------------------------------------
 //
-// nsIXULPrototypeDocument methods
-//
 
-NS_IMETHODIMP
+nsresult
 nsXULPrototypeDocument::InitPrincipal(nsIURI* aURI, nsIPrincipal* aPrincipal)
 {
     NS_ENSURE_ARG_POINTER(aURI);
@@ -545,31 +445,28 @@ nsXULPrototypeDocument::InitPrincipal(nsIURI* aURI, nsIPrincipal* aPrincipal)
 }
     
 
-NS_IMETHODIMP
-nsXULPrototypeDocument::GetURI(nsIURI** aResult)
+nsIURI*
+nsXULPrototypeDocument::GetURI()
 {
-    *aResult = mURI;
-    NS_IF_ADDREF(*aResult);
-    return NS_OK;
+    NS_ASSERTION(mURI, "null URI");
+    return mURI;
 }
 
 
-NS_IMETHODIMP
-nsXULPrototypeDocument::GetRootElement(nsXULPrototypeElement** aResult)
+nsXULPrototypeElement*
+nsXULPrototypeDocument::GetRootElement()
 {
-    *aResult = mRoot;
-    return NS_OK;
+    return mRoot;
 }
 
 
-NS_IMETHODIMP
+void
 nsXULPrototypeDocument::SetRootElement(nsXULPrototypeElement* aElement)
 {
     mRoot = aElement;
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsXULPrototypeDocument::AddProcessingInstruction(nsXULPrototypePI* aPI)
 {
     NS_PRECONDITION(aPI, "null ptr");
@@ -585,23 +482,20 @@ nsXULPrototypeDocument::GetProcessingInstructions() const
     return mProcessingInstructions;
 }
 
-NS_IMETHODIMP
+void
 nsXULPrototypeDocument::AddStyleSheetReference(nsIURI* aURI)
 {
     NS_PRECONDITION(aURI, "null ptr");
-    if (! aURI)
-        return NS_ERROR_NULL_POINTER;
-
-    return mStyleSheetReferences->AppendElement(aURI);
+    if (!mStyleSheetReferences.AppendObject(aURI)) {
+        NS_WARNING("mStyleSheetReferences->AppendElement() failed."
+                   "Stylesheet overlay dropped.");
+    }
 }
 
-
-NS_IMETHODIMP
-nsXULPrototypeDocument::GetStyleSheetReferences(nsISupportsArray** aResult)
+const nsCOMArray<nsIURI>&
+nsXULPrototypeDocument::GetStyleSheetReferences() const
 {
-    *aResult = mStyleSheetReferences;
-    NS_ADDREF(*aResult);
-    return NS_OK;
+    return mStyleSheetReferences;
 }
 
 NS_IMETHODIMP
@@ -637,30 +531,23 @@ nsXULPrototypeDocument::GetNodeInfoManager()
 }
 
 
-NS_IMETHODIMP
-nsXULPrototypeDocument::AwaitLoadDone(nsIXULDocument* aDocument, PRBool* aResult)
+nsresult
+nsXULPrototypeDocument::AwaitLoadDone(nsXULDocument* aDocument, PRBool* aResult)
 {
     nsresult rv = NS_OK;
 
     *aResult = mLoaded;
 
     if (!mLoaded) {
-        if (!mPrototypeWaiters) {
-            nsCOMPtr<nsISupportsArray> supportsArray;
-            rv = NS_NewISupportsArray(getter_AddRefs(supportsArray));
-            if (NS_FAILED(rv)) return rv;
-
-            mPrototypeWaiters = do_QueryInterface(supportsArray);
-        }
-
-        rv = mPrototypeWaiters->AppendElement(aDocument);
+        rv = mPrototypeWaiters.AppendElement(aDocument)
+              ? NS_OK : NS_ERROR_OUT_OF_MEMORY; // addrefs
     }
 
     return rv;
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsXULPrototypeDocument::NotifyLoadDone()
 {
     // Call back to each XUL document that raced to start the same
@@ -672,24 +559,14 @@ nsXULPrototypeDocument::NotifyLoadDone()
 
     mLoaded = PR_TRUE;
 
-    if (mPrototypeWaiters) {
-        PRUint32 n;
-        rv = mPrototypeWaiters->Count(&n);
-        if (NS_SUCCEEDED(rv)) {
-            for (PRUint32 i = 0; i < n; i++) {
-                nsCOMPtr<nsIXULDocument> doc;
-                rv = mPrototypeWaiters->GetElementAt(i, getter_AddRefs(doc));
-                if (NS_FAILED(rv)) break;
-
-                // PR_TRUE means that OnPrototypeLoadDone will also
-                // call ResumeWalk().
-                rv = doc->OnPrototypeLoadDone(PR_TRUE);
-                if (NS_FAILED(rv)) break;
-            }
-        }
-
-        mPrototypeWaiters = nsnull;
+    for (PRUint32 i = mPrototypeWaiters.Length(); i > 0; ) {
+        --i;
+        // PR_TRUE means that OnPrototypeLoadDone will also
+        // call ResumeWalk().
+        rv = mPrototypeWaiters[i]->OnPrototypeLoadDone(PR_TRUE);
+        if (NS_FAILED(rv)) break;
     }
+    mPrototypeWaiters.Clear();
 
     return rv;
 }
@@ -713,8 +590,8 @@ nsXULPrototypeDocument::GetScriptGlobalObject()
 // nsXULPDGlobalObject
 //
 
-nsXULPDGlobalObject::nsXULPDGlobalObject()
-    :  mGlobalObjectOwner(nsnull)
+nsXULPDGlobalObject::nsXULPDGlobalObject(nsXULPrototypeDocument* owner)
+    :  mGlobalObjectOwner(owner)
 {
   memset(mScriptGlobals, 0, sizeof(mScriptGlobals));
 }
@@ -851,19 +728,18 @@ nsXULPDGlobalObject::GetScriptGlobal(PRUint32 lang_id)
 void
 nsXULPDGlobalObject::SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner)
 {
-    if (aOwner == nsnull) {
-        // this means we should cleanup
-        PRUint32 lang_ndx;
-        NS_STID_FOR_INDEX(lang_ndx) {
-            if (mScriptContexts[lang_ndx]) {
-                mScriptContexts[lang_ndx]->FinalizeContext();
-                mScriptContexts[lang_ndx] = nsnull;
-            }
-        }
+  if (!aOwner) {
+    PRUint32 lang_ndx;
+    NS_STID_FOR_INDEX(lang_ndx) {
+      if (mScriptContexts[lang_ndx]) {
+          mScriptContexts[lang_ndx]->FinalizeContext();
+          mScriptContexts[lang_ndx] = nsnull;
+      }
     }
-    mGlobalObjectOwner = aOwner; // weak reference
+  } else {
+    NS_NOTREACHED("You can only set an owner when constructing the object.");
+  }
 }
-
 
 nsIScriptGlobalObjectOwner *
 nsXULPDGlobalObject::GetGlobalObjectOwner()
@@ -910,9 +786,7 @@ nsXULPDGlobalObject::GetPrincipal()
         }
         return nsnull;
     }
-    nsCOMPtr<nsIXULPrototypeDocument> protoDoc
-      = do_QueryInterface(mGlobalObjectOwner);
 
-    return protoDoc->DocumentPrincipal();
+    return mGlobalObjectOwner->DocumentPrincipal();
 }
 

@@ -85,7 +85,6 @@ class nsIDocument;
 class nsIRDFService;
 class nsISupportsArray;
 class nsIXULContentUtils;
-class nsIXULPrototypeDocument;
 class nsString;
 class nsVoidArray;
 class nsIDocShell;
@@ -94,6 +93,7 @@ class nsICSSStyleRule;
 
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
+class nsIScriptGlobalObjectOwner;
 
 static NS_DEFINE_CID(kCSSParserCID, NS_CSSPARSER_CID);
 
@@ -346,7 +346,7 @@ public:
     nsresult Compile(const PRUnichar* aText, PRInt32 aTextLength,
                      nsIURI* aURI, PRUint32 aLineNo,
                      nsIDocument* aDocument,
-                     nsIXULPrototypeDocument* aPrototypeDocument);
+                     nsIScriptGlobalObjectOwner* aGlobalOwner);
 
     nsCOMPtr<nsIURI>         mSrcURI;
     PRUint32                 mLineNo;

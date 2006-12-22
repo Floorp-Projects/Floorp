@@ -162,8 +162,6 @@ static NS_DEFINE_CID(kWindowCommandTableCID, NS_WINDOWCOMMANDTABLE_CID);
 #include "nsIXULDocument.h"
 #include "nsIXULPopupListener.h"
 #include "nsIXULPrototypeCache.h"
-#include "nsIXULPrototypeDocument.h"
-#include "nsIXULPrototypeDocument.h"
 #include "nsIXULSortService.h"
 
 #ifndef MOZ_NO_INSPECTOR_APIS
@@ -1137,10 +1135,6 @@ static const nsModuleComponentInfo gComponents[] = {
     "@mozilla.org/xul/xul-prototype-cache;1",
     NS_NewXULPrototypeCache },
 
-  { NS_XULPROTOTYPEDOCUMENT_CLASSNAME,
-    NS_XULPROTOTYPEDOCUMENT_CID,
-    nsnull,
-    NS_NewXULPrototypeDocument },
 #endif
 
 #ifdef MOZ_XTF

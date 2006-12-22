@@ -48,7 +48,6 @@
 #include "nsISupports.h"
 class nsICSSStyleSheet;
 class nsIURI;
-class nsIXULPrototypeDocument;
 class nsIXULDocument;
 class nsCString;
 class nsIDocument;
@@ -59,18 +58,21 @@ class nsIFastLoadService;
 #define NS_XULPROTOTYPECACHE_CID \
 { 0x3a0a0fc1, 0x8349, 0x11d3, { 0xbe, 0x47, 0x0, 0x10, 0x4b, 0xde, 0x60, 0x48 } }
 
-// {F53A6C7E-0344-4543-9213-AFFFD30AC2BE}
+// {f023a1fd-9869-4e91-8e6d-3255b75aec70}
 #define NS_IXULPROTOTYPECACHE_IID \
-{ 0xf53a6c7e, 0x344, 0x4543, { 0x92, 0x13, 0xaf, 0xff, 0xd3, 0xa, 0xc2, 0xbe } }
+{ 0xf023a1fd, 0x9869, 0x4e91, { 0x8e, 0x6d, 0x32, 0x55, 0xb7, 0x5a, 0xec, 0x70 } }
 
+// Need to deCOMtaminate this - bug 364329
 
 class nsIXULPrototypeCache : public nsISupports
 {
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXULPROTOTYPECACHE_IID)
 
-    NS_IMETHOD GetPrototype(nsIURI* aURI, nsIXULPrototypeDocument** _result) = 0;
-    NS_IMETHOD PutPrototype(nsIXULPrototypeDocument* aDocument) = 0;
+    /**
+     * Whether the document at the specified URI is in the cache.
+     */
+    virtual PRBool IsCached(nsIURI* aURI) = 0;
     NS_IMETHOD FlushPrototypes() = 0;
 
     NS_IMETHOD GetStyleSheet(nsIURI* aURI, nsICSSStyleSheet** _result) = 0;
@@ -111,11 +113,6 @@ public:
      * Remove a XULDocument from the set of loading documents
      */
     NS_IMETHOD RemoveFromFastLoadSet(nsIURI* aDocumentURI) = 0;
-
-    /** 
-     * Write Prototype Document to FastLoad file
-     */
-    NS_IMETHOD WritePrototype(nsIXULPrototypeDocument* aDocument) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIXULPrototypeCache, NS_IXULPROTOTYPECACHE_IID)

@@ -110,7 +110,6 @@
 #include "nsIWidget.h"
 #include "nsIXULDocument.h"
 #include "nsIXULPopupListener.h"
-#include "nsIXULPrototypeDocument.h"
 #include "nsIXULTemplateBuilder.h"
 #include "nsIXBLService.h"
 #include "nsLayoutCID.h"
@@ -690,13 +689,11 @@ nsXULElement::nsScriptEventHandlerOwnerTearoff::CompileEventHandler(
         // keeps the global object alive, so if we use this document's
         // global object, we'll be putting something in the prototype
         // that protects this document's global object from GC.
-        nsCOMPtr<nsIXULPrototypeDocument> protodoc;
-        rv = xuldoc->GetMasterPrototype(getter_AddRefs(protodoc));
+        nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner;
+        rv = xuldoc->GetScriptGlobalObjectOwner(getter_AddRefs(globalOwner));
         NS_ENSURE_SUCCESS(rv, rv);
-        NS_ENSURE_TRUE(protodoc, NS_ERROR_UNEXPECTED);
+        NS_ENSURE_TRUE(globalOwner, NS_ERROR_UNEXPECTED);
 
-        nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner =
-            do_QueryInterface(protodoc);
         nsIScriptGlobalObject* global = globalOwner->GetScriptGlobalObject();
         NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
 
@@ -3055,7 +3052,7 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
                               nsIURI* aURI,
                               PRUint32 aLineNo,
                               nsIDocument* aDocument,
-                              nsIXULPrototypeDocument* aPrototypeDocument)
+                              nsIScriptGlobalObjectOwner* aGlobalOwner)
 {
     // We'll compile the script using the prototype document's special
     // script object as the parent. This ensures that we won't end up
@@ -3073,9 +3070,7 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
     nsIScriptContext *context;
 
     {
-        nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner =
-            do_QueryInterface(aPrototypeDocument);
-        nsIScriptGlobalObject* global = globalOwner->GetScriptGlobalObject();
+        nsIScriptGlobalObject* global = aGlobalOwner->GetScriptGlobalObject();
         NS_ASSERTION(global != nsnull, "prototype doc has no script global");
         if (! global)
             return NS_ERROR_UNEXPECTED;
