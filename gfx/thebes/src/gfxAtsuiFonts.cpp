@@ -139,9 +139,10 @@ gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
     mMetrics.xHeight = atsMetrics.xHeight * size;
 
     if (atsMetrics.avgAdvanceWidth != 0.0)
-        mMetrics.aveCharWidth = atsMetrics.avgAdvanceWidth * size;
+        mMetrics.aveCharWidth =
+            PR_MIN(atsMetrics.avgAdvanceWidth * size, GetCharWidth('x'));
     else
-        mMetrics.aveCharWidth = GetCharWidth('a');
+        mMetrics.aveCharWidth = GetCharWidth('x');
 
     mMetrics.underlineOffset = atsMetrics.underlinePosition * size;
     mMetrics.underlineSize = atsMetrics.underlineThickness * size;

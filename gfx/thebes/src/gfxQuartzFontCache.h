@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir@pobox.com>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,6 +46,55 @@
 #include "nsUnicharUtils.h"
 #include "nsVoidArray.h"
 
+class NSFontManager;
+class NSString;
+class NSFont;
+
+class FamilyEntry
+{
+public:
+    THEBES_INLINE_DECL_REFCOUNTING(FamilyEntry)
+
+    FamilyEntry(nsString &aName) :
+        mName(aName)
+    {
+    }
+
+    const nsString& Name() { return mName; }
+protected:
+    nsString mName;
+    // XXX we need to add the variables for generic family and lang group.
+};
+
+class FontEntry
+{
+public:
+    THEBES_INLINE_DECL_REFCOUNTING(FontEntry)
+
+    FontEntry(nsString &aName) :
+        mName(aName)
+    {
+        Init();
+    }
+
+    const nsString& Name() { return mName; }
+    PRInt32 Weight() { return mWeight; }
+    PRUint32 Traits() { return mTraits; }
+    PRBool IsFixedPitch();
+    PRBool IsItalicStyle();
+    PRBool IsBold();
+    NSFont* GetNSFont(float aSize);
+
+protected:
+    void Init();
+    void GetStringForNSString(const NSString *aSrc, nsAString& aDist);
+    NSString* GetNSStringForString(const nsAString& aSrc);
+
+    nsString mName;
+    PRInt32 mWeight;
+    PRUint32 mTraits;
+};
+
 class gfxQuartzFontCache {
 public:
     static gfxQuartzFontCache* SharedFontCache() {
@@ -61,10 +111,34 @@ public:
     void GetFontList (const nsACString& aLangGroup,
                       const nsACString& aGenericFamily,
                       nsStringArray& aListOfFonts);
+    PRBool ResolveFontName(const nsAString& aFontName,
+                           nsAString& aResolvedFontName);
+    void UpdateFontList() { InitFontList(); }
 private:
     static gfxQuartzFontCache *sSharedFontCache;
 
     gfxQuartzFontCache();
+
+    void InitFontList();
+    PRBool AppendFontFamily(NSFontManager *aFontManager,
+                            NSString *aName, PRBool aNameIsPostscriptName);
+    NSFont* FindFontWeight(NSFontManager *aFontManager,
+                           FontEntry *aOriginalFont,
+                           NSFont *aFont,
+                           const gfxFontStyle *aStyle);
+    NSFont* FindAnotherWeightMemberFont(NSFontManager *aFontManager,
+                                        FontEntry *aOriginalFont,
+                                        NSFont *aFont,
+                                        const gfxFontStyle *aStyle,
+                                        PRBool aBolder);
+    void GenerateFontListKey(const nsAString& aKeyName, nsAString& aResult);
+    static void ATSNotification(ATSFontNotificationInfoRef aInfo,
+                                void* aUserArg);
+
+    static PLDHashOperator PR_CALLBACK
+        HashEnumFuncForFamilies(nsStringHashKey::KeyType aKey,
+                                nsRefPtr<FamilyEntry>& aFamilyEntry,
+                                void* aUserArg);
 
     ATSUFontID FindFromSystem (const nsAString& aFamily,
                                const gfxFontStyle* aStyle);
@@ -111,6 +185,9 @@ private:
     };
 
     nsDataHashtable<FontAndFamilyKey, ATSUFontID> mCache;
+    nsDataHashtable<nsStringHashKey, nsRefPtr<FamilyEntry> > mFamilies;
+    nsDataHashtable<nsStringHashKey, nsRefPtr<FontEntry> > mPostscriptFonts;
+    nsDataHashtable<nsStringHashKey, nsString> mAllFontNames;
 };
 
 #endif /* GFXQUARTZFONTCACHE_H_ */

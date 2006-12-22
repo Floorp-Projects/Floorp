@@ -141,8 +141,13 @@ gfxPlatformMac::ResolveFontName(const nsAString& aFontName,
                                 FontResolverCallback aCallback,
                                 void *aClosure, PRBool& aAborted)
 {
-    // XXX Implement me with GetFontList!
-    aAborted = !(*aCallback)(aFontName, aClosure);
+    nsAutoString resolvedName;
+    if (!gfxQuartzFontCache::SharedFontCache()->
+             ResolveFontName(aFontName, resolvedName)) {
+        aAborted = PR_FALSE;
+        return NS_OK;
+    }
+    aAborted = !(*aCallback)(resolvedName, aClosure);
     return NS_OK;
 }
 
@@ -151,6 +156,14 @@ gfxPlatformMac::GetFontList(const nsACString& aLangGroup,
                             const nsACString& aGenericFamily,
                             nsStringArray& aListOfFonts)
 {
-    gfxQuartzFontCache::SharedFontCache()->GetFontList(aLangGroup, aGenericFamily, aListOfFonts);
+    gfxQuartzFontCache::SharedFontCache()->
+        GetFontList(aLangGroup, aGenericFamily, aListOfFonts);
+    return NS_OK;
+}
+
+nsresult
+gfxPlatformMac::UpdateFontList()
+{
+    gfxQuartzFontCache::SharedFontCache()->UpdateFontList();
     return NS_OK;
 }
