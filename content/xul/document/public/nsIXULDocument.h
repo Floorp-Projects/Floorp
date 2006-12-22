@@ -47,16 +47,16 @@ class nsIDOMElement;
 class nsIPrincipal;
 class nsIRDFResource;
 class nsISupportsArray;
-class nsIXULPrototypeDocument;
 class nsIXULTemplateBuilder;
 class nsIURI;
 class nsIContent;
 class nsIRDFDataSource;
+class nsIScriptGlobalObjectOwner;
 
-// {96736e80-4bd1-4a4e-974e-5d3d8e663f43}
+// {694439d3-c03b-43d7-9dc5-dd6687e5949f}
 #define NS_IXULDOCUMENT_IID \
-{ 0x96736e80, 0x4bd1, 0x4a4e, \
- { 0x97, 0x4e, 0x5d, 0x3d, 0x8e, 0x66, 0x3f, 0x43 } }
+{ 0x694439d3, 0xc03b, 0x43d7, \
+  { 0x9d, 0xc5, 0xdd, 0x66, 0x87, 0xe5, 0x94, 0x9f } }
 
 /*
  * An XUL-specific extension to nsIDocument. Includes methods for
@@ -100,19 +100,9 @@ public:
   NS_IMETHOD ResolveForwardReferences() = 0;
 
   /**
-   * Set the master prototype.
+   * Get the nsIScriptGlobalObjectOwner for this document.
    */
-  NS_IMETHOD SetMasterPrototype(nsIXULPrototypeDocument* aDocument) = 0;
-
-  /**
-   * Get the master prototype.
-   */
-  NS_IMETHOD GetMasterPrototype(nsIXULPrototypeDocument** aPrototypeDocument) = 0;
-
-  /**
-   * Set the current prototype
-   */
-  NS_IMETHOD SetCurrentPrototype(nsIXULPrototypeDocument* aDocument) = 0;
+  NS_IMETHOD GetScriptGlobalObjectOwner(nsIScriptGlobalObjectOwner** aGlobalOwner) = 0;
 
   /**
    * Notify the XUL document that a subtree has been added

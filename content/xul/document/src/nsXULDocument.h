@@ -41,6 +41,10 @@
 #define nsXULDocument_h__
 
 #include "nsCOMPtr.h"
+#include "nsXULPrototypeDocument.h"
+#include "nsXULPrototypeCache.h"
+#include "nsTArray.h"
+
 #include "nsXMLDocument.h"
 #include "nsElementMap.h"
 #include "nsForwardReference.h"
@@ -52,7 +56,6 @@
 #include "nsCOMArray.h"
 #include "nsIURI.h"
 #include "nsIXULDocument.h"
-#include "nsIXULPrototypeDocument.h"
 #include "nsScriptLoader.h"
 #include "nsIStreamListener.h"
 #include "nsICSSLoaderObserver.h"
@@ -135,9 +138,7 @@ public:
                                 nsISupportsArray* aElements);
     NS_IMETHOD AddForwardReference(nsForwardReference* aRef);
     NS_IMETHOD ResolveForwardReferences();
-    NS_IMETHOD SetMasterPrototype(nsIXULPrototypeDocument* aDocument);
-    NS_IMETHOD GetMasterPrototype(nsIXULPrototypeDocument** aDocument);
-    NS_IMETHOD SetCurrentPrototype(nsIXULPrototypeDocument* aDocument);
+    NS_IMETHOD GetScriptGlobalObjectOwner(nsIScriptGlobalObjectOwner** aGlobalOwner);
     NS_IMETHOD AddSubtreeToDocument(nsIContent* aElement);
     NS_IMETHOD RemoveSubtreeFromDocument(nsIContent* aElement);
     NS_IMETHOD SetTemplateBuilderFor(nsIContent* aContent,
@@ -244,7 +245,7 @@ protected:
     static nsIRDFResource* kNC_attribute;
     static nsIRDFResource* kNC_value;
 
-    static nsIXULPrototypeCache* gXULCache;
+    static nsXULPrototypeCache* gXULCache;
 
     static PRLogModuleInfo* gXULLog;
 
@@ -528,19 +529,19 @@ protected:
      * The current prototype that we are walking to construct the
      * content model.
      */
-    nsCOMPtr<nsIXULPrototypeDocument> mCurrentPrototype;
+    nsRefPtr<nsXULPrototypeDocument> mCurrentPrototype;
 
     /**
      * The master document (outermost, .xul) prototype, from which
      * all subdocuments get their security principals.
      */
-    nsCOMPtr<nsIXULPrototypeDocument> mMasterPrototype;
+    nsRefPtr<nsXULPrototypeDocument> mMasterPrototype;
 
     /**
      * Owning references to all of the prototype documents that were
      * used to construct this document.
      */
-    nsCOMArray<nsIXULPrototypeDocument> mPrototypes;
+    nsTArray< nsRefPtr<nsXULPrototypeDocument> > mPrototypes;
 
     /**
      * Prepare to walk the current prototype.

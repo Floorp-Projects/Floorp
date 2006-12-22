@@ -174,7 +174,7 @@ nsIRDFResource* nsXULDocument::kNC_persist;
 nsIRDFResource* nsXULDocument::kNC_attribute;
 nsIRDFResource* nsXULDocument::kNC_value;
 
-nsIXULPrototypeCache* nsXULDocument::gXULCache;
+nsXULPrototypeCache* nsXULDocument::gXULCache;
 
 PRLogModuleInfo* nsXULDocument::gXULLog;
 
@@ -386,9 +386,9 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
 
     // Look in the chrome cache: we've got this puppy loaded
     // already.
-    nsCOMPtr<nsIXULPrototypeDocument> proto;
+    nsRefPtr<nsXULPrototypeDocument> proto;
     if (IsChromeURI(mDocumentURI))
-        gXULCache->GetPrototype(mDocumentURI, getter_AddRefs(proto));
+        proto = gXULCache->GetPrototype(mDocumentURI);
 
     // Same comment as nsChromeProtocolHandler::NewChannel and
     // nsXULDocument::ResumeWalk
@@ -461,8 +461,7 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
         // overlay loading will break; search for PutPrototype in ResumeWalk
         // and see the comment there.
         if (fillXULCache) {
-            rv = gXULCache->PutPrototype(mCurrentPrototype);
-            if (NS_FAILED(rv)) return rv;
+            gXULCache->PutPrototype(mCurrentPrototype);
         }
     }
 
@@ -484,10 +483,7 @@ nsXULDocument::EndLoad()
     // Whack the prototype document into the cache so that the next
     // time somebody asks for it, they don't need to load it by hand.
 
-    nsCOMPtr<nsIURI> uri;
-    rv = mCurrentPrototype->GetURI(getter_AddRefs(uri));
-    if (NS_FAILED(rv)) return;
-
+    nsCOMPtr<nsIURI> uri = mCurrentPrototype->GetURI();
     PRBool isChrome = IsChromeURI(uri);
 
     // Remember if the XUL cache is on
@@ -569,17 +565,13 @@ nsXULDocument::OnDocumentParserError()
 {
   // don't report errors that are from overlays
   if (mCurrentPrototype && mMasterPrototype != mCurrentPrototype) {
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = mCurrentPrototype->GetURI(getter_AddRefs(uri));
-    if (NS_SUCCEEDED(rv)) {
-      PRBool isChrome = IsChromeURI(uri);
-      if (isChrome) {
-        nsCOMPtr<nsIObserverService> os(
-          do_GetService("@mozilla.org/observer-service;1"));
-        if (os)
-          os->NotifyObservers(uri, "xul-overlay-parsererror",
-                              EmptyString().get());
-      }
+    nsCOMPtr<nsIURI> uri = mCurrentPrototype->GetURI();
+    if (IsChromeURI(uri)) {
+      nsCOMPtr<nsIObserverService> os(
+        do_GetService("@mozilla.org/observer-service;1"));
+      if (os)
+        os->NotifyObservers(uri, "xul-overlay-parsererror",
+                            EmptyString().get());
     }
 
     return PR_FALSE;
@@ -1087,24 +1079,9 @@ nsXULDocument::ResolveForwardReferences()
 }
 
 NS_IMETHODIMP
-nsXULDocument::SetMasterPrototype(nsIXULPrototypeDocument* aDocument)
+nsXULDocument::GetScriptGlobalObjectOwner(nsIScriptGlobalObjectOwner** aGlobalOwner)
 {
-    mMasterPrototype = aDocument;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULDocument::GetMasterPrototype(nsIXULPrototypeDocument** aDocument)
-{
-    *aDocument = mMasterPrototype;
-    NS_IF_ADDREF(*aDocument);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULDocument::SetCurrentPrototype(nsIXULPrototypeDocument* aDocument)
-{
-    mCurrentPrototype = aDocument;
+    NS_IF_ADDREF(*aGlobalOwner = mMasterPrototype);
     return NS_OK;
 }
 
@@ -1919,8 +1896,12 @@ nsXULDocument::Init()
         gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "value"),
                                  &kNC_value);
 
-        rv = CallGetService(kXULPrototypeCacheCID, &gXULCache);
+        nsIXULPrototypeCache* cache;
+
+        rv = CallGetService(kXULPrototypeCacheCID, &cache);
         if (NS_FAILED(rv)) return rv;
+
+        gXULCache = NS_STATIC_CAST(nsXULPrototypeCache*, cache);
     }
 
 #ifdef PR_LOGGING
@@ -2050,8 +2031,6 @@ nsXULDocument::PrepareToLoad(nsISupports* aContainer,
                              nsILoadGroup* aLoadGroup,
                              nsIParser** aResult)
 {
-    nsresult rv;
-
     // Get the document's principal
     nsCOMPtr<nsIPrincipal> principal;
     nsContentUtils::GetSecurityManager()->
@@ -2068,9 +2047,7 @@ nsXULDocument::PrepareToLoadPrototype(nsIURI* aURI, const char* aCommand,
     nsresult rv;
 
     // Create a new prototype document.
-    rv = NS_NewXULPrototypeDocument(nsnull,
-                                    NS_GET_IID(nsIXULPrototypeDocument),
-                                    getter_AddRefs(mCurrentPrototype));
+    rv = NS_NewXULPrototypeDocument(getter_AddRefs(mCurrentPrototype));
     if (NS_FAILED(rv)) return rv;
 
     rv = mCurrentPrototype->InitPrincipal(aURI, aDocumentPrincipal);
@@ -2371,21 +2348,16 @@ nsXULDocument::PrepareToWalk()
 
     // Keep an owning reference to the prototype document so that its
     // elements aren't yanked from beneath us.
-    mPrototypes.AppendObject(mCurrentPrototype);
+    mPrototypes.AppendElement(mCurrentPrototype);
 
     // Get the prototype's root element and initialize the context
     // stack for the prototype walk.
-    nsXULPrototypeElement* proto;
-    rv = mCurrentPrototype->GetRootElement(&proto);
-    if (NS_FAILED(rv)) return rv;
-
+    nsXULPrototypeElement* proto = mCurrentPrototype->GetRootElement();
 
     if (! proto) {
 #ifdef PR_LOGGING
         if (PR_LOG_TEST(gXULLog, PR_LOG_ERROR)) {
-            nsCOMPtr<nsIURI> url;
-            rv = mCurrentPrototype->GetURI(getter_AddRefs(url));
-            if (NS_FAILED(rv)) return rv;
+            nsCOMPtr<nsIURI> url = mCurrentPrototype->GetURI();
 
             nsCAutoString urlspec;
             rv = url->GetSpec(urlspec);
@@ -2502,12 +2474,7 @@ nsXULDocument::InsertXMLStylesheetPI(const nsXULPrototypePI* aProtoPI,
     // We want to be notified when the style sheet finishes loading, so
     // disable style sheet loading for now.
     ssle->SetEnableUpdates(PR_FALSE);
-
-    nsCOMPtr<nsIURI> baseURI;
-    rv = mCurrentPrototype->GetURI(getter_AddRefs(baseURI));
-    if (NS_FAILED(rv)) return rv;
-
-    ssle->OverrideBaseURI(baseURI);
+    ssle->OverrideBaseURI(mCurrentPrototype->GetURI());
 
     rv = aParent->InsertChildAt(aPINode, aIndex, PR_FALSE);
     if (NS_FAILED(rv)) return rv;
@@ -2553,14 +2520,11 @@ nsXULDocument::InsertXULOverlayPI(const nsXULPrototypePI* aProtoPI,
         return NS_OK;
     }
 
-    nsCOMPtr<nsIURI> baseURI;
-    rv = mCurrentPrototype->GetURI(getter_AddRefs(baseURI));
-    if (NS_FAILED(rv)) return rv;
-
     // Add the overlay to our list of overlays that need to be processed.
     nsCOMPtr<nsIURI> uri;
 
-    rv = NS_NewURI(getter_AddRefs(uri), href, nsnull, baseURI);
+    rv = NS_NewURI(getter_AddRefs(uri), href, nsnull,
+                   mCurrentPrototype->GetURI());
     if (NS_SUCCEEDED(rv)) {
         // We insert overlays into mUnloadedOverlays at the same index in
         // document order, so they end up in the reverse of the document
@@ -2583,9 +2547,7 @@ nsXULDocument::AddChromeOverlays()
 {
     nsresult rv;
 
-    nsCOMPtr<nsIURI> docUri;
-    rv = mCurrentPrototype->GetURI(getter_AddRefs(docUri));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIURI> docUri = mCurrentPrototype->GetURI();
 
     /* overlays only apply to chrome, skip all content URIs */
     if (!IsChromeURI(docUri)) return NS_OK;
@@ -2696,10 +2658,7 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic,
 
     // Look in the prototype cache for the prototype document with
     // the specified overlay URI.
-    if (overlayIsChrome)
-        gXULCache->GetPrototype(aURI, getter_AddRefs(mCurrentPrototype));
-    else
-        mCurrentPrototype = nsnull;
+    mCurrentPrototype = overlayIsChrome ? gXULCache->GetPrototype(aURI) : nsnull;
 
     // Same comment as nsChromeProtocolHandler::NewChannel and
     // nsXULDocument::StartDocumentLoad
@@ -2801,8 +2760,7 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic,
         // or chrome code will wrongly create a cached chrome channel
         // instead of a real one.
         if (useXULCache && overlayIsChrome) {
-            rv = gXULCache->PutPrototype(mCurrentPrototype);
-            if (NS_FAILED(rv)) return rv;
+            gXULCache->PutPrototype(mCurrentPrototype);
         }
 
         // Return to the main event loop and eagerly await the
@@ -3012,8 +2970,7 @@ nsXULDocument::ResumeWalk()
 
                     const PRUnichar* params[] = { piProto->mTarget.get() };
 
-                    nsCOMPtr<nsIURI> overlayURI;
-                    mCurrentPrototype->GetURI(getter_AddRefs(overlayURI));
+                    nsCOMPtr<nsIURI> overlayURI = mCurrentPrototype->GetURI();
 
                     nsContentUtils::ReportToConsole(
                                         nsContentUtils::eXUL_PROPERTIES,
@@ -3161,8 +3118,7 @@ nsXULDocument::DoneWalking()
     }
     else {
         if (mOverlayLoadObservers.IsInitialized()) {
-            nsCOMPtr<nsIURI> overlayURI;
-            mCurrentPrototype->GetURI(getter_AddRefs(overlayURI));
+            nsCOMPtr<nsIURI> overlayURI = mCurrentPrototype->GetURI();
             nsCOMPtr<nsIObserver> obs;
             if (mInitialLayoutComplete) {
                 // We have completed initial layout, so just send the notification.
@@ -3438,10 +3394,8 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
                 // Ignore the return value, as we don't need to propagate
                 // a failure to write to the FastLoad file, because this
                 // method aborts that whole process on error.
-                nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner =
-                  do_QueryInterface(mCurrentPrototype);
-                nsIScriptGlobalObject* global = 
-                  globalOwner->GetScriptGlobalObject();
+                nsIScriptGlobalObject* global =
+                    mCurrentPrototype->GetScriptGlobalObject();
 
                 NS_ASSERTION(global != nsnull, "master prototype w/o global?!");
                 if (global) {
@@ -3771,18 +3725,10 @@ nsXULDocument::AddPrototypeSheets()
 {
     nsresult rv;
 
-    nsCOMPtr<nsISupportsArray> sheets;
-    rv = mCurrentPrototype->GetStyleSheetReferences(getter_AddRefs(sheets));
-    if (NS_FAILED(rv)) return rv;
+    const nsCOMArray<nsIURI>& sheets = mCurrentPrototype->GetStyleSheetReferences();
 
-    PRUint32 count;
-    sheets->Count(&count);
-    for (PRUint32 i = 0; i < count; ++i) {
-        nsISupports* isupports = sheets->ElementAt(i);
-        nsCOMPtr<nsIURI> uri = do_QueryInterface(isupports);
-        NS_IF_RELEASE(isupports);
-
-        NS_ASSERTION(uri, "not a URI!!!");
+    for (PRInt32 i = 0; i < sheets.Count(); i++) {
+        nsCOMPtr<nsIURI> uri = sheets[i];
 
         nsCOMPtr<nsICSSStyleSheet> incompleteSheet;
         rv = CSSLoader()->LoadSheet(uri, this, getter_AddRefs(incompleteSheet));

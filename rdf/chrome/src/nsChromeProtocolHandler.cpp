@@ -65,7 +65,6 @@
 #include "nsIStreamListener.h"
 #ifdef MOZ_XUL
 #include "nsIXULPrototypeCache.h"
-#include "nsIXULPrototypeDocument.h"
 #endif
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -603,8 +602,8 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
              do_GetService(kXULPrototypeCacheCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIXULPrototypeDocument> proto;
-    cache->GetPrototype(aURI, getter_AddRefs(proto));
+    PRBool isCached = PR_FALSE;
+    isCached = cache->IsCached(aURI);
 
     // Same comment as nsXULDocument::StartDocumentLoad and
     // nsXULDocument::ResumeWalk
@@ -622,7 +621,7 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
     //        loading chrome for the profile manager itself). This must be 
     //        parsed from disk. 
 
-    if (proto) {
+    if (isCached) {
         // ...in which case, we'll create a dummy stream that'll just
         // load the thing.
         rv = nsCachedChromeChannel::Create(aURI, getter_AddRefs(result));
