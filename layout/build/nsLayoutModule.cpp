@@ -109,7 +109,6 @@
 #include "nsXPathEvaluator.h"
 #include "txMozillaXSLTProcessor.h"
 #include "txNodeSetAdaptor.h"
-#include "txXSLTProcessor.h"
 #include "nsXPath1Scheme.h"
 
 #include "nsDOMParser.h"
