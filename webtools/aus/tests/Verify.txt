@@ -1,7 +1,7 @@
 !1 Variables
 !define COMMAND_PATTERN {python %m -v %p}
 !define TEST_RUNNER {/home/morgamic/pyfit/fit/FitServer.py}
-!define host {http://khan-vm.mozilla.org/~morgamic/austest/update/}
+!define host {http://khan-vm.mozilla.org/~morgamic/austest/update}
 !define updateVersion {2}
 !define product {Synthetic}
 !define version {1.0}
