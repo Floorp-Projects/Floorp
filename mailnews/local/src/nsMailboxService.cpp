@@ -228,7 +228,7 @@ nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
 
     // this happens with forward inline of message/rfc822 attachment
     // opened in a stand-alone msg window.
-    PRInt32 typeIndex = typeIndex = uriString.Find("&type=application/x-message-display");
+    PRInt32 typeIndex = uriString.Find("&type=application/x-message-display");
     if (typeIndex != kNotFound)
     {
       uriString.Cut(typeIndex, sizeof("&type=application/x-message-display") - 1);
