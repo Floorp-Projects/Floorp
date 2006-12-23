@@ -1969,8 +1969,11 @@ NS_IMETHODIMP nsMsgDBView::GetSuppressCommandUpdating(PRBool * aSuppressCommandU
 
 NS_IMETHODIMP nsMsgDBView::SetSuppressMsgDisplay(PRBool aSuppressDisplay)
 {
+  PRUint32 numSelected = 0;
+  GetNumSelected(&numSelected);
+ 
   PRBool forceDisplay = PR_FALSE;
-  if (mSuppressMsgDisplay && (mSuppressMsgDisplay != aSuppressDisplay))
+  if (mSuppressMsgDisplay && !aSuppressDisplay && numSelected == 1)
     forceDisplay = PR_TRUE;
 
   mSuppressMsgDisplay = aSuppressDisplay;
