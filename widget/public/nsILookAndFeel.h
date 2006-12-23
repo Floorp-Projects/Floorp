@@ -44,10 +44,10 @@
 struct nsSize;
 
 
-// {CE295E90-FF53-4013-96AE-67B5762292A9}
+// {BEC234D0-AAA5-430D-8435-B10100F78003}
 #define NS_ILOOKANDFEEL_IID \
-{ 0xce295e90, 0xff53, 0x4013, \
-    { 0x96, 0xae, 0x67, 0xb5, 0x76, 0x22, 0x92, 0xa9 } }
+{ 0xbec234d0, 0xaaa5, 0x430d, \
+    { 0x84, 0x35, 0xb1, 0x01, 0x00, 0xf7, 0x80, 0x03} }
 
 
 class nsILookAndFeel: public nsISupports {
@@ -199,9 +199,6 @@ public:
     eMetric_ScrollArrowStyle,                             // position of scroll arrows in a scrollbar
     eMetric_ScrollSliderStyle,                            // is scroll thumb proportional or fixed?
 
-    eMetric_ScrollbarWidth,                               // width of a vertical scrollbar
-    eMetric_ScrollbarHeight,                              // height of horizontal scrollbar
- 
     eMetric_ScrollButtonLeftMouseButtonAction,            // each button can take one of four values:
     eMetric_ScrollButtonMiddleMouseButtonAction,          // 0 - scrolls one  line, 1 - scrolls one page
     eMetric_ScrollButtonRightMouseButtonAction,           // 2 - scrolls to end, 3 - button ignored

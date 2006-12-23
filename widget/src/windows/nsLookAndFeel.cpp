@@ -423,12 +423,6 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_ScrollSliderStyle:
         aMetric = eMetric_ScrollThumbStyleProportional;
         break;
-    case eMetric_ScrollbarHeight:
-        aMetric = ::GetSystemMetrics(SM_CXVSCROLL);
-        break;
-    case eMetric_ScrollbarWidth:
-        aMetric = ::GetSystemMetrics(SM_CXHSCROLL);
-        break;
     case eMetric_TreeOpenDelay:
         aMetric = 1000;
         break;
