@@ -111,6 +111,17 @@ static nsRect cocoaRectToGeckoRect(const NSRect &cocoaRect)
 }
 
 
+// returns the height of the title bar for a given cocoa NSWindow
+static float titleBarHeightForWindow(NSWindow* aWindow)
+{
+  NS_ASSERTION(aWindow, "Must have a window to calculate a title bar height!");
+  
+  NSRect frameRect = [aWindow frame];
+  NSRect contentRect = [aWindow contentRectForFrameRect:frameRect];
+  return (frameRect.size.height - contentRect.size.height);
+}
+
+
 //
 // nsCocoaWindow constructor
 //
@@ -760,7 +771,7 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRep
     // being shown as a sheet the content area and window frame differ.
     float newHeight = (float)aHeight;
     if (mWindowType != eWindowType_popup && ![mWindow isSheet])
-      newHeight += (float)kTitleBarHeight; // add height of title bar
+      newHeight += titleBarHeightForWindow(mWindow); // add height of title bar
     // Now we need to adjust for the fact that gecko wants the top of the window
     // to remain in the same place.
     newFrame.origin.y += newFrame.size.height - newHeight;

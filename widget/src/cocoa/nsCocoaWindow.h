@@ -64,11 +64,10 @@ class nsChildView;
 class nsCocoaWindow : public nsBaseWidget, public nsPIWidgetCocoa
 {
 private:
+  
   typedef nsBaseWidget Inherited;
 
 public:
-
-    enum { kTitleBarHeight = 22 };
 
     nsCocoaWindow();
     virtual ~nsCocoaWindow();
