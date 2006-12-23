@@ -140,7 +140,8 @@ CSRCS   += cairo-base85-stream.c \
            cairo-ps-surface.c \
 	   cairo-type1-subset.c \
 	   cairo-type1-fallback.c \
-	   cairo-truetype-subset.c
+	   cairo-truetype-subset.c \
+	   cairo-cff-subset.c
 EXPORTS += cairo-ps.h cairo-pdf.h
 endif
 
