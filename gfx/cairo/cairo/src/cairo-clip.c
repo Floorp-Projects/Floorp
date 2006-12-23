@@ -563,7 +563,12 @@ _cairo_clip_init_deep_copy (cairo_clip_t    *clip,
         }
 
         if (other->surface) {
-            _cairo_surface_clone_similar (target, other->surface, &clip->surface);
+            _cairo_surface_clone_similar (target, other->surface,
+					  other->surface_rect.x,
+					  other->surface_rect.y,
+					  other->surface_rect.width,
+					  other->surface_rect.height,
+					  &clip->surface);
             clip->surface_rect = other->surface_rect;
         }
 
@@ -649,6 +654,16 @@ _cairo_clip_copy_rectangles (cairo_clip_t *clip, cairo_gstate_t *gstate)
     return list;
 }
 
+/**
+ * cairo_rectangle_list_destroy:
+ * @rectangle_list: a rectangle list, as obtained from cairo_copy_clip_rectangles()
+ *
+ * Unconditionally frees @rectangle_list and all associated
+ * references. After this call, the @rectangle_list pointer must not
+ * be dereferenced.
+ *
+ * Since: 1.4
+ **/
 void
 cairo_rectangle_list_destroy (cairo_rectangle_list_t *rectangle_list)
 {

@@ -41,21 +41,21 @@
 
 #if CAIRO_HAS_XCB_SURFACE
 
-#include <X11/XCB/xcb.h>
+#include <xcb/xcb.h>
 
 CAIRO_BEGIN_DECLS
 
 cairo_public cairo_surface_t *
-cairo_xcb_surface_create (XCBConnection *c,
-			  XCBDRAWABLE	 drawable,
-			  XCBVISUALTYPE *visual,
+cairo_xcb_surface_create (xcb_connection_t *c,
+			  xcb_drawable_t	 drawable,
+			  xcb_visualtype_t *visual,
 			  int		 width,
 			  int		 height);
 
 cairo_public cairo_surface_t *
-cairo_xcb_surface_create_for_bitmap (XCBConnection *c,
-				     XCBPIXMAP	    bitmap,
-				     XCBSCREEN	   *screen,
+cairo_xcb_surface_create_for_bitmap (xcb_connection_t *c,
+				     xcb_pixmap_t	    bitmap,
+				     xcb_screen_t	   *screen,
 				     int	    width,
 				     int	    height);
 

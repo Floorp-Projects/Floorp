@@ -289,7 +289,7 @@ cairo_surface_write_to_png_stream (cairo_surface_t	*surface,
 }
 slim_hidden_def (cairo_surface_write_to_png_stream);
 
-static INLINE int
+static inline int
 multiply_alpha (int alpha, int color)
 {
     int temp = (alpha * color) + 0x80;

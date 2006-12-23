@@ -63,6 +63,7 @@ CSRCS   = \
         cairo-analysis-surface.c \
         cairo-arc.c \
         cairo-array.c \
+        cairo-bentley-ottmann.c \
         cairo-cache.c \
         cairo-clip.c \
         cairo-color.c \
@@ -70,6 +71,7 @@ CSRCS   = \
         cairo-fixed.c \
         cairo-font.c \
         cairo-font-options.c \
+        cairo-freelist.c \
         cairo-gstate.c \
         cairo-hash.c \
         cairo-hull.c \
@@ -82,8 +84,8 @@ CSRCS   = \
         cairo-paginated-surface.c \
         cairo-path.c \
         cairo-path-bounds.c \
-        cairo-path-data.c \
         cairo-path-fill.c \
+        cairo-path-fixed.c \
         cairo-path-stroke.c \
         cairo-pattern.c \
         cairo-pen.c \
@@ -92,6 +94,7 @@ CSRCS   = \
         cairo-region.c \
         cairo-scaled-font.c \
         cairo-scaled-font-subsets.c \
+        cairo-skiplist.c \
         cairo-slope.c \
         cairo-spline.c \
         cairo-stroke-style.c \

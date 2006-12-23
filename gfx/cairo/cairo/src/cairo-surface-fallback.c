@@ -548,10 +548,6 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
 	     * _cairo_surface_fill_rectangles() or to drawing with a
 	     * clip region, then we have an additional region to clear.
 	     */
-	    status = _cairo_surface_get_extents (dst, &extents);
-	    if (status)
-		return status;
-
 	    clear_region = _cairo_region_create_from_rectangle (&extents);
 	    if (clear_region == NULL)
 		return CAIRO_STATUS_NO_MEMORY;
@@ -843,7 +839,7 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
 
 typedef struct {
     cairo_scaled_font_t *font;
-    const cairo_glyph_t *glyphs;
+    cairo_glyph_t *glyphs;
     int num_glyphs;
 } cairo_show_glyphs_info_t;
 
@@ -911,7 +907,7 @@ cairo_status_t
 _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
 				     cairo_operator_t		 op,
 				     cairo_pattern_t		*source,
-				     const cairo_glyph_t	*glyphs,
+				     cairo_glyph_t		*glyphs,
 				     int			 num_glyphs,
 				     cairo_scaled_font_t	*scaled_font)
 {

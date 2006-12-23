@@ -40,6 +40,16 @@
 
 #if CAIRO_HAS_WIN32_SURFACE
 
+#define WIN32_LEAN_AND_MEAN
+/* We require Windows 2000 features. Although we don't use them here, things
+ * should still work if this header file ends up being the one to include
+ * windows.h into a source file, so: */
+#if !defined(WINVER) || (WINVER < 0x0500)
+# define WINVER 0x0500
+#endif
+#if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
+# define _WIN32_WINNT 0x0500
+#endif
 #include <windows.h>
 
 CAIRO_BEGIN_DECLS

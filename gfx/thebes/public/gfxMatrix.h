@@ -245,14 +245,14 @@ public:
     }
 
     gfxRect TransformBounds(const gfxRect& rect) const {
-        double x = rect.pos.x;
-        double y = rect.pos.y;
-        double width = rect.size.width;
-        double height = rect.size.height;
+        double x0 = rect.pos.x;
+        double y0 = rect.pos.y;
+        double x1 = rect.pos.x + rect.size.width;
+        double y1 = rect.pos.y + rect.size.height;
 
-        cairo_matrix_transform_bounding_box (&mat, &x, &y, &width, &height, NULL);
+        cairo_matrix_transform_bounding_box (&mat, &x0, &y0, &x1, &y1, NULL);
 
-        return gfxRect(x, y, width, height);
+        return gfxRect(x0, y0, x1 - x0, y1 - y0);
     }
 
     /**

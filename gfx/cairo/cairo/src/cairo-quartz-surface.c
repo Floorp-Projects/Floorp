@@ -55,11 +55,9 @@ _cairo_quartz_surface_acquire_source_image(void *abstract_surface,
 {
   cairo_quartz_surface_t *surface = abstract_surface;
 
-#if 0
   if (CGBitmapContextGetBitmapInfo (surface->context) != 0) {
     /* XXX: We can create an image out of the bitmap here */
   }
-#endif
 
   return CAIRO_INT_STATUS_UNSUPPORTED;
 }
@@ -249,19 +247,11 @@ cairo_surface_t *cairo_quartz_surface_create(CGContextRef context,
     surface->clip_region = NULL;
     surface->y_grows_down = y_grows_down;
 
-#if 0
-    /* 10.3 or later */
     clip_box = CGContextGetClipBoundingBox (context);
     surface->extents.x = clip_box.origin.x;
     surface->extents.y = clip_box.origin.y;
     surface->extents.width = clip_box.size.width;
     surface->extents.height = clip_box.size.height;
-#else
-    surface->extents.x = 0;
-    surface->extents.y = 0;
-    surface->extents.width = width;
-    surface->extents.height = height;
-#endif
 
     return (cairo_surface_t *) surface;
 }

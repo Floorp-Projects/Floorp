@@ -33,6 +33,7 @@
  *
  * Contributor(s):
  *	Carl D. Worth <cworth@cworth.org>
+ *	Behdad Esfahbod <behdad@behdad.org>
  */
 
 #include "cairoint.h"
@@ -69,7 +70,7 @@ static cairo_int_status_t
 _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 				 cairo_operator_t     op,
 				 cairo_pattern_t     *src_pattern,
-				 const cairo_glyph_t *glyphs,
+				 cairo_glyph_t       *glyphs,
 				 int		      num_glyphs,
 				 cairo_scaled_font_t *scaled_font);
 
@@ -744,6 +745,10 @@ _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface)
 static cairo_status_t
 _draw_image_surface (cairo_xlib_surface_t   *surface,
 		     cairo_image_surface_t  *image,
+		     int                    src_x,
+		     int                    src_y,
+		     int                    width,
+		     int                    height,
 		     int                    dst_x,
 		     int                    dst_y)
 {
@@ -774,8 +779,8 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 
     _cairo_xlib_surface_ensure_gc (surface);
     XPutImage(surface->dpy, surface->drawable, surface->gc,
-	      &ximage, 0, 0, dst_x, dst_y,
-	      image->width, image->height);
+	      &ximage, src_x, src_y, dst_x, dst_y,
+	      width, height);
 
     return CAIRO_STATUS_SUCCESS;
 
@@ -839,7 +844,8 @@ _cairo_xlib_surface_release_dest_image (void                    *abstract_surfac
     cairo_xlib_surface_t *surface = abstract_surface;
 
     /* ignore errors */
-    _draw_image_surface (surface, image, image_rect->x, image_rect->y);
+    _draw_image_surface (surface, image, 0, 0, image->width, image->height,
+			 image_rect->x, image_rect->y);
 
     cairo_surface_destroy (&image->base);
 }
@@ -859,6 +865,10 @@ _cairo_xlib_surface_same_screen (cairo_xlib_surface_t *dst,
 static cairo_status_t
 _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 				   cairo_surface_t	*src,
+				   int                   src_x,
+				   int                   src_y,
+				   int                   width,
+				   int                   height,
 				   cairo_surface_t     **clone_out)
 {
     cairo_xlib_surface_t *surface = abstract_surface;
@@ -884,7 +894,8 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 	if (clone->base.status)
 	    return CAIRO_STATUS_NO_MEMORY;
 
-	_draw_image_surface (clone, image_src, 0, 0);
+	_draw_image_surface (clone, image_src, src_x, src_y,
+			     width, height, src_x, src_y);
 
 	*clone_out = &clone->base;
 
@@ -2008,6 +2019,7 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
     return _cairo_xlib_surface_create_internal (dpy, drawable, screen,
 						NULL, format, width, height, 0);
 }
+slim_hidden_def (cairo_xlib_surface_create_with_xrender_format);
 
 /**
  * cairo_xlib_surface_set_size:
@@ -2397,12 +2409,12 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
      */
 
     /* XXX: FRAGILE: We're ignore device_transform scaling here. A bug? */
-    glyph_info.x = - (int) floor(glyph_surface->base.device_transform.x0 + 0.5);
-    glyph_info.y = - (int) floor(glyph_surface->base.device_transform.y0 + 0.5);
+    glyph_info.x = - _cairo_lround (glyph_surface->base.device_transform.x0);
+    glyph_info.y = - _cairo_lround (glyph_surface->base.device_transform.y0);
     glyph_info.width = glyph_surface->width;
     glyph_info.height = glyph_surface->height;
-    glyph_info.xOff = 0;
-    glyph_info.yOff = 0;
+    glyph_info.xOff = scaled_glyph->x_advance;
+    glyph_info.yOff = scaled_glyph->y_advance;
 
     data = glyph_surface->data;
 
@@ -2485,200 +2497,301 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
     return status;
 }
 
-#define N_STACK_BUF 1024
+typedef void (*cairo_xrender_composite_text_func_t)
+	      (Display                      *dpy,
+	       int                          op,
+	       Picture                      src,
+	       Picture                      dst,
+	       _Xconst XRenderPictFormat    *maskFormat,
+	       int                          xSrc,
+	       int                          ySrc,
+	       int                          xDst,
+	       int                          yDst,
+	       _Xconst XGlyphElt8           *elts,
+	       int                          nelt);
+
+/* Build a struct of the same size of cairo_glyph_t that can be used both as
+ * an input glyph with double coordinates, and as "working" glyph with
+ * integer from-current-point offsets. */
+typedef struct {
+  unsigned long index;
+  union {
+    struct {
+      double x;
+      double y;
+    } d;
+    struct {
+      int x;
+      int y;
+    } i;
+  } p;
+} cairo_xlib_glyph_t;
+
+#define GLYPH_INDEX_SKIP ((unsigned long) -1)
+#define STACK_ELTS_LEN ((int) (CAIRO_STACK_BUFFER_SIZE / sizeof (XGlyphElt8)))
 
 static cairo_status_t
-_cairo_xlib_surface_show_glyphs8  (cairo_xlib_surface_t *dst,
-                                   cairo_operator_t op,
-                                   cairo_xlib_surface_t *src,
-                                   int src_x_offset, int src_y_offset,
-                                   const cairo_glyph_t *glyphs,
-                                   int num_glyphs,
-                                   cairo_scaled_font_t *scaled_font)
+_cairo_xlib_surface_emit_glyphs_chunk (cairo_xlib_surface_t *dst,
+				       cairo_xlib_glyph_t *glyphs,
+				       int num_glyphs,
+				       int width,
+				       int num_elts,
+				       cairo_scaled_font_t *scaled_font,
+				       cairo_operator_t op,
+				       cairo_xlib_surface_t *src,
+				       cairo_surface_attributes_t *attributes)
 {
-    cairo_xlib_surface_font_private_t *font_private = scaled_font->surface_private;
-    XGlyphElt8 *elts = NULL;
-    XGlyphElt8 stack_elts [N_STACK_BUF];
+    /* Which XRenderCompositeText function to use */
+    cairo_xrender_composite_text_func_t composite_text_func;
+    int size;
 
-    char *chars = NULL;
-    char stack_chars [N_STACK_BUF];
+    /* Element buffer stuff */
+    XGlyphElt8 *elts;
+    XGlyphElt8 stack_elts[STACK_ELTS_LEN];
+
+    /* Reuse the input glyph array for output char generation */
+    char *char8 = (char *) glyphs;
+    unsigned short *char16 = (unsigned short *) glyphs;
+    unsigned int *char32 = (unsigned int *) glyphs;
 
     int i;
-    int thisX, thisY;
-    int lastX = 0, lastY = 0;
+    int nelt; /* Element index */
+    int n; /* Num output glyphs in current element */
+    int j; /* Num output glyphs so far */
 
-    /* Acquire arrays of suitable sizes. */
-    if (num_glyphs < N_STACK_BUF) {
-	elts = stack_elts;
-	chars = stack_chars;
+    cairo_xlib_surface_font_private_t *font_private = scaled_font->surface_private;
+
+    switch (width) {
+    case 1:
+	/* don't cast the 8-variant, to catch possible mismatches */
+	composite_text_func = XRenderCompositeText8;
+	size = sizeof (char);
+	break;
+    case 2:
+	composite_text_func = (cairo_xrender_composite_text_func_t) XRenderCompositeText16;
+	size = sizeof (unsigned short);
+	break;
+    default:
+    case 4:
+	composite_text_func = (cairo_xrender_composite_text_func_t) XRenderCompositeText32;
+	size = sizeof (unsigned int);
+    }
+
+    /* Allocate element array */
+    if (num_elts <= STACK_ELTS_LEN) {
+      elts = stack_elts;
     } else {
-	elts = malloc (num_glyphs * sizeof (XGlyphElt8) +
-		       num_glyphs * sizeof (unsigned char));
-	if (elts == NULL)
-	    return CAIRO_STATUS_NO_MEMORY;
-
-	chars = (char *) (elts + num_glyphs);
+      elts = malloc (num_elts * sizeof (XGlyphElt8));
+      if (elts == NULL)
+	  return CAIRO_STATUS_NO_MEMORY;
     }
 
-    for (i = 0; i < num_glyphs; ++i) {
-	chars[i] = glyphs[i].index;
-	elts[i].chars = &(chars[i]);
-	elts[i].nchars = 1;
-	elts[i].glyphset = font_private->glyphset;
-	thisX = (int) floor (glyphs[i].x + 0.5);
-	thisY = (int) floor (glyphs[i].y + 0.5);
-	elts[i].xOff = thisX - lastX;
-	elts[i].yOff = thisY - lastY;
-	lastX = thisX;
-	lastY = thisY;
+    /* Fill them in */
+    nelt = 0;
+    n = 0;
+    j = 0;
+    for (i = 0; i < num_glyphs; i++) {
+
+      /* Skip glyphs marked so */
+      if (glyphs[i].index == GLYPH_INDEX_SKIP)
+	continue;
+
+      /* Start a new element for first output glyph, and for glyphs with
+       * unexpected position */
+      if (!j || glyphs[i].p.i.x || glyphs[i].p.i.y) {
+	  if (j) {
+	    elts[nelt].nchars = n;
+	    nelt++;
+	    n = 0;
+	  }
+	  elts[nelt].chars = char8 + size * j;
+	  elts[nelt].glyphset = font_private->glyphset;
+	  elts[nelt].xOff = glyphs[i].p.i.x;
+	  elts[nelt].yOff = glyphs[i].p.i.y;
+      }
+
+      switch (width) {
+      case 1: char8 [j] = (char)           glyphs[i].index; break;
+      case 2: char16[j] = (unsigned short) glyphs[i].index; break;
+      default:
+      case 4: char32[j] = (unsigned int)   glyphs[i].index; break;
+      }
+
+      n++;
+      j++;
     }
 
-    XRenderCompositeText8  (dst->dpy,
-			    _render_operator (op),
-			    src->src_picture,
-			    dst->dst_picture,
-			    font_private->xrender_format,
-                            src_x_offset + elts[0].xOff, src_y_offset + elts[0].yOff,
-                            elts[0].xOff, elts[0].yOff,
-			    elts, num_glyphs);
+    if (n) {
+	elts[nelt].nchars = n;
+	nelt++;
+	n = 0;
+    }
+
+    composite_text_func (dst->dpy,
+			 _render_operator (op),
+			 src->src_picture,
+			 dst->dst_picture,
+			 font_private->xrender_format,
+			 attributes->x_offset + elts[0].xOff,
+			 attributes->y_offset + elts[0].yOff,
+			 elts[0].xOff, elts[0].yOff,
+			 (XGlyphElt8 *) elts, nelt);
 
     if (elts != stack_elts)
-	free (elts);
+      free (elts);
 
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
-_cairo_xlib_surface_show_glyphs16 (cairo_xlib_surface_t *dst,
-                                   cairo_operator_t op,
-                                   cairo_xlib_surface_t *src,
-                                   int src_x_offset, int src_y_offset,
-                                   const cairo_glyph_t *glyphs,
-                                   int num_glyphs,
-                                   cairo_scaled_font_t *scaled_font)
-{
-    cairo_xlib_surface_font_private_t *font_private = scaled_font->surface_private;
-    XGlyphElt16 *elts = NULL;
-    XGlyphElt16 stack_elts [N_STACK_BUF];
-
-    unsigned short *chars = NULL;
-    unsigned short stack_chars [N_STACK_BUF];
-
-    int i;
-    int thisX, thisY;
-    int lastX = 0, lastY = 0;
-
-    /* Acquire arrays of suitable sizes. */
-    if (num_glyphs < N_STACK_BUF) {
-	elts = stack_elts;
-	chars = stack_chars;
-    } else {
-	elts = malloc (num_glyphs * sizeof (XGlyphElt16) +
-		       num_glyphs * sizeof (unsigned short));
-	if (elts == NULL)
-	    return CAIRO_STATUS_NO_MEMORY;
-
-	chars = (unsigned short *) (elts + num_glyphs);
-    }
-
-    for (i = 0; i < num_glyphs; ++i) {
-	chars[i] = glyphs[i].index;
-	elts[i].chars = &(chars[i]);
-	elts[i].nchars = 1;
-	elts[i].glyphset = font_private->glyphset;
-	thisX = (int) floor (glyphs[i].x + 0.5);
-	thisY = (int) floor (glyphs[i].y + 0.5);
-	elts[i].xOff = thisX - lastX;
-	elts[i].yOff = thisY - lastY;
-	lastX = thisX;
-	lastY = thisY;
-    }
-
-    XRenderCompositeText16 (dst->dpy,
-			    _render_operator (op),
-			    src->src_picture,
-			    dst->dst_picture,
-			    font_private->xrender_format,
-                            src_x_offset + elts[0].xOff, src_y_offset + elts[0].yOff,
-                            elts[0].xOff, elts[0].yOff,
-			    elts, num_glyphs);
-
-    if (elts != stack_elts)
-	free (elts);
-
-    return CAIRO_STATUS_SUCCESS;
-}
+#undef STACK_ELTS_LEN
 
 static cairo_status_t
-_cairo_xlib_surface_show_glyphs32 (cairo_xlib_surface_t *dst,
-                                   cairo_operator_t op,
-                                   cairo_xlib_surface_t *src,
-                                   int src_x_offset, int src_y_offset,
-                                   const cairo_glyph_t *glyphs,
-                                   int num_glyphs,
-                                   cairo_scaled_font_t *scaled_font)
+_cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
+				 cairo_xlib_glyph_t *glyphs,
+				 int num_glyphs,
+				 cairo_scaled_font_t *scaled_font,
+				 cairo_operator_t op,
+				 cairo_xlib_surface_t *src,
+				 cairo_surface_attributes_t *attributes)
 {
-    cairo_xlib_surface_font_private_t *font_private = scaled_font->surface_private;
-    XGlyphElt32 *elts = NULL;
-    XGlyphElt32 stack_elts [N_STACK_BUF];
-
-    unsigned int *chars = NULL;
-    unsigned int stack_chars [N_STACK_BUF];
-
     int i;
-    int thisX, thisY;
-    int lastX = 0, lastY = 0;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_scaled_glyph_t *scaled_glyph;
+    cairo_fixed_t x = 0, y = 0;
 
-    /* Acquire arrays of suitable sizes. */
-    if (num_glyphs < N_STACK_BUF) {
-	elts = stack_elts;
-	chars = stack_chars;
-    } else {
-	elts = malloc (num_glyphs * sizeof (XGlyphElt32) +
-		       num_glyphs * sizeof (unsigned int));
-	if (elts == NULL)
-	    return CAIRO_STATUS_NO_MEMORY;
+    unsigned long max_index = 0;
+    int width = 1;
+    int num_elts = 0;
+    int num_out_glyphs = 0;
 
-	chars = (unsigned int *) (elts + num_glyphs);
+    int max_request_size = XMaxRequestSize (dst->dpy)
+			 - MAX (sz_xRenderCompositeGlyphs8Req,
+				MAX(sz_xRenderCompositeGlyphs16Req,
+				    sz_xRenderCompositeGlyphs32Req));
+    int request_size = 0;
+
+    _cairo_xlib_surface_ensure_dst_picture (dst);
+
+    for (i = 0; i < num_glyphs; i++) {
+	int this_x, this_y;
+	int old_width;
+
+	status = _cairo_scaled_glyph_lookup (scaled_font,
+					     glyphs[i].index,
+					     CAIRO_SCALED_GLYPH_INFO_SURFACE |
+					     CAIRO_SCALED_GLYPH_INFO_METRICS,
+					     &scaled_glyph);
+	if (status != CAIRO_STATUS_SUCCESS)
+	    return status;
+
+	this_x = _cairo_lround (glyphs[i].p.d.x);
+	this_y = _cairo_lround (glyphs[i].p.d.y);
+
+	/* Glyph skipping:
+	 *
+	 * We skip any initial size-zero glyphs to avoid an X server bug (present
+	 * in at least Xorg 7.1 without EXA) which stops rendering glyphs after
+	 * the first zero-size glyph.  However, we don't skip all size-zero
+	 * glyphs, since that will force a new element at every space.  We
+	 * skip initial size-zero glyphs and hope that it's enough.  Since
+	 * Xft never exposed that bug, this assumptation should be correct.
+	 *
+	 * We also skip any glyph that hav troublesome coordinates.  We want
+	 * to make sure that (glyph2.x - (glyph1.x + glyph1.width)) fits in
+	 * a signed 16bit integer, otherwise it will overflow in the render
+	 * protocol.
+	 * To ensure this, we'll make sure that (glyph2.x - glyph1.x) fits in
+	 * a signed 15bit integer.  The trivial option would be to allow
+	 * coordinates -8192..8192, but that's kinda dull.  It probably will
+	 * take a decade or so to get monitors 8192x4096 or something.  A
+	 * negative value of -8192 on the other hand, is absolutely useless.
+	 * Note that we do want to allow some negative positions.  The glyph
+	 * may start off the screen but part of it make it to the screen.
+	 * Anyway, we will allow positions in the range -1024..15359.  That
+	 * will buy us a few more years before this stops working.
+	 */
+	if ((!num_out_glyphs && !(scaled_glyph->surface->width && scaled_glyph->surface->height)) ||
+	    (((this_x+1024)|(this_y+1024))&~0x3fffu)) {
+	    glyphs[i].index = GLYPH_INDEX_SKIP;
+	    continue;
+	}
+
+	old_width = width;
+
+	/* Update max glyph index */
+	if (glyphs[i].index > max_index) {
+	    max_index = glyphs[i].index;
+	    if (max_index >= 65536)
+	      width = 4;
+	    else if (max_index >= 256)
+	      width = 2;
+	    if (width != old_width)
+	      request_size += (width - old_width) * num_out_glyphs;
+	}
+
+	/* If we will pass the max request size by adding this glyph,
+	 * flush current glyphs.  Note that we account for a
+	 * possible element being added below. */
+	if (request_size + width > max_request_size - sz_xGlyphElt) {
+	    status = _cairo_xlib_surface_emit_glyphs_chunk (dst, glyphs, i,
+							    old_width, num_elts,
+							    scaled_font, op, src, attributes);
+	    if (status != CAIRO_STATUS_SUCCESS)
+		return status;
+
+	    glyphs += i;
+	    num_glyphs -= i;
+	    i = 0;
+	    max_index = glyphs[i].index;
+	    width = max_index < 256 ? 1 : max_index < 65536 ? 2 : 4;
+	    request_size = 0;
+	    num_elts = 0;
+	    num_out_glyphs = 0;
+	    x = y = 0;
+
+	}
+
+	/* Convert absolute glyph position to relative-to-current-point
+	 * position */
+	glyphs[i].p.i.x = this_x - x;
+	glyphs[i].p.i.y = this_y - y;
+
+	/* Start a new element for the first glyph, or for any glyph that
+	 * has unexpected position */
+	if (!num_out_glyphs || glyphs[i].p.i.x || glyphs[i].p.i.y) {
+	    num_elts++;
+	    request_size += sz_xGlyphElt;
+	}
+
+	/* Send unsent glyphs to the server */
+	if (scaled_glyph->surface_private == NULL) {
+	    _cairo_xlib_surface_add_glyph (dst->dpy, scaled_font, scaled_glyph);
+	    scaled_glyph->surface_private = (void *) 1;
+	}
+
+	/* adjust current-position */
+	x = this_x + scaled_glyph->x_advance;
+	y = this_y + scaled_glyph->y_advance;
+
+	num_out_glyphs++;
+	request_size += width;
     }
 
-    for (i = 0; i < num_glyphs; ++i) {
-	chars[i] = glyphs[i].index;
-	elts[i].chars = &(chars[i]);
-	elts[i].nchars = 1;
-	elts[i].glyphset = font_private->glyphset;
-	thisX = (int) floor (glyphs[i].x + 0.5);
-	thisY = (int) floor (glyphs[i].y + 0.5);
-	elts[i].xOff = thisX - lastX;
-	elts[i].yOff = thisY - lastY;
-	lastX = thisX;
-	lastY = thisY;
-    }
+    if (num_elts)
+	status = _cairo_xlib_surface_emit_glyphs_chunk (dst, glyphs, num_glyphs,
+							width, num_elts,
+							scaled_font, op, src, attributes);
 
-    XRenderCompositeText32 (dst->dpy,
-			    _render_operator (op),
-			    src->src_picture,
-			    dst->dst_picture,
-			    font_private->xrender_format,
-                            src_x_offset + elts[0].xOff, src_y_offset + elts[0].yOff,
-                            elts[0].xOff, elts[0].yOff,
-			    elts, num_glyphs);
-
-    if (elts != stack_elts)
-	free (elts);
-
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
-typedef cairo_status_t (*cairo_xlib_surface_show_glyphs_func_t)
-    (cairo_xlib_surface_t *, cairo_operator_t, cairo_xlib_surface_t *, int, int,
-     const cairo_glyph_t *, int, cairo_scaled_font_t *);
+#undef GLYPH_INDEX_SKIP
 
 static cairo_int_status_t
 _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 				 cairo_operator_t     op,
 				 cairo_pattern_t     *src_pattern,
-				 const cairo_glyph_t *glyphs,
+				 cairo_glyph_t       *glyphs,
 				 int		      num_glyphs,
 				 cairo_scaled_font_t *scaled_font)
 {
@@ -2689,16 +2802,7 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
     cairo_surface_attributes_t attributes;
     cairo_xlib_surface_t *src = NULL;
 
-    cairo_glyph_t *output_glyphs;
-    const cairo_glyph_t *glyphs_chunk;
-    int glyphs_remaining, chunk_size, max_chunk_size;
-    cairo_scaled_glyph_t *scaled_glyph;
     cairo_xlib_surface_font_private_t *font_private;
-
-    int i, o;
-    unsigned long max_index = 0;
-
-    cairo_xlib_surface_show_glyphs_func_t show_glyphs_func;
 
     cairo_pattern_union_t solid_pattern;
 
@@ -2738,13 +2842,6 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 	 scaled_font->surface_backend != &cairo_xlib_surface_backend) ||
 	(font_private != NULL && font_private->dpy != dst->dpy))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    /* We make a copy of the glyphs so that we can elide any size-zero
-     * glyphs to workaround an X server bug, (present in at least Xorg
-     * 7.1 without EXA). */
-    output_glyphs = malloc (num_glyphs * sizeof (cairo_glyph_t));
-    if (output_glyphs == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
 
     /* After passing all those tests, we're now committed to rendering
      * these glyphs or to fail trying. We first upload any glyphs to
@@ -2803,60 +2900,11 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
     if (status)
         goto BAIL;
 
-    /* Send all unsent glyphs to the server, and count the max of the glyph indices */
-    for (i = 0, o = 0; i < num_glyphs; i++) {
-	if (glyphs[i].index > max_index)
-	    max_index = glyphs[i].index;
-	status = _cairo_scaled_glyph_lookup (scaled_font,
-					     glyphs[i].index,
-					     CAIRO_SCALED_GLYPH_INFO_SURFACE,
-					     &scaled_glyph);
-	if (status != CAIRO_STATUS_SUCCESS)
-	    goto BAIL;
-	/* Don't put any size-zero glyphs into output_glyphs to avoid
-	 * an X server bug which stops rendering glyphs after the
-	 * first size-zero glyph. */
-	if (scaled_glyph->surface->width && scaled_glyph->surface->height) {
-	    output_glyphs[o++] = glyphs[i];
-	    if (scaled_glyph->surface_private == NULL) {
-		_cairo_xlib_surface_add_glyph (dst->dpy, scaled_font, scaled_glyph);
-		scaled_glyph->surface_private = (void *) 1;
-	    }
-	}
-    }
-    num_glyphs = o;
-
-    _cairo_xlib_surface_ensure_dst_picture (dst);
-
-    max_chunk_size = XMaxRequestSize (dst->dpy);
-    if (max_index < 256) {
-	max_chunk_size -= sz_xRenderCompositeGlyphs8Req;
-	show_glyphs_func = _cairo_xlib_surface_show_glyphs8;
-    } else if (max_index < 65536) {
-	max_chunk_size -= sz_xRenderCompositeGlyphs16Req;
-	show_glyphs_func = _cairo_xlib_surface_show_glyphs16;
-    } else {
-	max_chunk_size -= sz_xRenderCompositeGlyphs32Req;
-	show_glyphs_func = _cairo_xlib_surface_show_glyphs32;
-    }
-    max_chunk_size /= sz_xGlyphElt;
-
-    for (glyphs_remaining = num_glyphs, glyphs_chunk = output_glyphs;
-	 glyphs_remaining;
-	 glyphs_remaining -= chunk_size, glyphs_chunk += chunk_size)
-    {
-	chunk_size = MIN (glyphs_remaining, max_chunk_size);
-
-	status = show_glyphs_func (dst, op, src,
-                                   attributes.x_offset, attributes.y_offset,
-                                   glyphs_chunk, chunk_size, scaled_font);
-	if (status != CAIRO_STATUS_SUCCESS)
-	    break;
-    }
+    _cairo_xlib_surface_emit_glyphs (dst, (cairo_xlib_glyph_t *) glyphs, num_glyphs,
+				     scaled_font, op, src, &attributes);
 
   BAIL:
     _cairo_scaled_font_thaw_cache (scaled_font);
-    free (output_glyphs);
 
     if (src)
         _cairo_pattern_release_surface (src_pattern, &src->base, &attributes);

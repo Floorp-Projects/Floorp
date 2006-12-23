@@ -179,6 +179,46 @@ _cairo_scaled_font_subsets_foreach (cairo_scaled_font_subsets_t			*font_subsets,
 				    cairo_scaled_font_subset_callback_func_t	 font_subset_callback,
 				    void					*closure);
 
+typedef struct _cairo_cff_subset {
+    char *base_font;
+    int *widths;
+    long x_min, y_min, x_max, y_max;
+    long ascent, descent;
+    char *data;
+    unsigned long data_length;
+} cairo_cff_subset_t;
+
+/**
+ * _cairo_cff_subset_init:
+ * @cff_subset: a #cairo_cff_subset_t to initialize
+ * @font_subset: the #cairo_scaled_font_subset_t to initialize from
+ *
+ * If possible (depending on the format of the underlying
+ * cairo_scaled_font_t and the font backend in use) generate a
+ * cff file corresponding to @font_subset and initialize
+ * @cff_subset with information about the subset and the cff
+ * data.
+ *
+ * Return value: CAIRO_STATUS_SUCCESS if successful,
+ * CAIRO_INT_STATUS_UNSUPPORTED if the font can't be subset as a
+ * cff file, or an non-zero value indicating an error.  Possible
+ * errors include CAIRO_STATUS_NO_MEMORY.
+ **/
+cairo_private cairo_status_t
+_cairo_cff_subset_init (cairo_cff_subset_t          *cff_subset,
+                        const char                  *name,
+                        cairo_scaled_font_subset_t  *font_subset);
+
+/**
+ * _cairo_cff_subset_fini:
+ * @cff_subset: a #cairo_cff_subset_t
+ *
+ * Free all resources associated with @cff_subset.  After this
+ * call, @cff_subset should not be used again without a
+ * subsequent call to _cairo_cff_subset_init() again first.
+ **/
+cairo_private void
+_cairo_cff_subset_fini (cairo_cff_subset_t *cff_subset);
 
 typedef struct _cairo_truetype_subset {
     char *base_font;
@@ -269,14 +309,15 @@ cairo_private void
 _cairo_type1_subset_fini (cairo_type1_subset_t *subset);
 
 /**
- * _cairo_type1_fallback_init:
+ * _cairo_type1_fallback_init_binary:
  * @type1_subset: a #cairo_type1_subset_t to initialize
  * @font_subset: the #cairo_scaled_font_subset_t to initialize from
  *
  * If possible (depending on the format of the underlying
  * cairo_scaled_font_t and the font backend in use) generate a type1
  * file corresponding to @font_subset and initialize @type1_subset
- * with information about the subset and the type1 data.
+ * with information about the subset and the type1 data.  The encrypted
+ * part of the font is binary encoded.
  *
  * Return value: CAIRO_STATUS_SUCCESS if successful,
  * CAIRO_INT_STATUS_UNSUPPORTED if the font can't be subset as a type1
@@ -284,9 +325,30 @@ _cairo_type1_subset_fini (cairo_type1_subset_t *subset);
  * include CAIRO_STATUS_NO_MEMORY.
  **/
 cairo_private cairo_status_t
-_cairo_type1_fallback_init (cairo_type1_subset_t		*type_subset,
-			  const char			*name,
-			  cairo_scaled_font_subset_t	*font_subset);
+_cairo_type1_fallback_init_binary (cairo_type1_subset_t	      *type_subset,
+                                   const char		      *name,
+                                   cairo_scaled_font_subset_t *font_subset);
+
+/**
+ * _cairo_type1_fallback_init_hexencode:
+ * @type1_subset: a #cairo_type1_subset_t to initialize
+ * @font_subset: the #cairo_scaled_font_subset_t to initialize from
+ *
+ * If possible (depending on the format of the underlying
+ * cairo_scaled_font_t and the font backend in use) generate a type1
+ * file corresponding to @font_subset and initialize @type1_subset
+ * with information about the subset and the type1 data. The encrypted
+ * part of the font is hex encoded.
+ *
+ * Return value: CAIRO_STATUS_SUCCESS if successful,
+ * CAIRO_INT_STATUS_UNSUPPORTED if the font can't be subset as a type1
+ * file, or an non-zero value indicating an error.  Possible errors
+ * include CAIRO_STATUS_NO_MEMORY.
+ **/
+cairo_private cairo_status_t
+_cairo_type1_fallback_init_hex (cairo_type1_subset_t	   *type_subset,
+                                const char		   *name,
+                                cairo_scaled_font_subset_t *font_subset);
 
 /**
  * _cairo_type1_fallback_fini:

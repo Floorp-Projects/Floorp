@@ -1,4 +1,4 @@
-/* $Id: cairo-scaled-font.c,v 1.11 2006/09/26 22:21:55 vladimir%pobox.com Exp $
+/* $Id: cairo-scaled-font.c,v 1.12 2006/12/23 01:15:53 vladimir%pobox.com Exp $
  *
  * Copyright © 2005 Keith Packard
  *
@@ -698,7 +698,7 @@ cairo_scaled_font_text_extents (cairo_scaled_font_t   *scaled_font,
  **/
 void
 cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
-				 cairo_glyph_t         *glyphs,
+				 const cairo_glyph_t   *glyphs,
 				 int                    num_glyphs,
 				 cairo_text_extents_t  *extents)
 {
@@ -834,7 +834,7 @@ _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     int i;
     int min_x = INT16_MAX, max_x = INT16_MIN;
-    int	min_y = INT16_MAX, max_y = INT16_MAX;
+    int	min_y = INT16_MAX, max_y = INT16_MIN;
 
     if (scaled_font->status)
 	return scaled_font->status;
@@ -855,8 +855,8 @@ _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
 	}
 
 	/* glyph images are snapped to pixel locations */
-	x = (int) floor (glyphs[i].x + 0.5);
-	y = (int) floor (glyphs[i].y + 0.5);
+	x = _cairo_lround (glyphs[i].x);
+	y = _cairo_lround (glyphs[i].y);
 
 	left   = x + _cairo_fixed_integer_floor(scaled_glyph->bbox.p1.x);
 	top    = y + _cairo_fixed_integer_floor (scaled_glyph->bbox.p1.y);
@@ -891,7 +891,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 				int			dest_y,
 				unsigned int		width,
 				unsigned int		height,
-				const cairo_glyph_t    *glyphs,
+				cairo_glyph_t	       *glyphs,
 				int                     num_glyphs)
 {
     cairo_status_t status;
@@ -964,12 +964,10 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 
 	/* round glyph locations to the nearest pixel */
 	/* XXX: FRAGILE: We're ignoring device_transform scaling here. A bug? */
-	x = (int) floor (glyphs[i].x +
-                         glyph_surface->base.device_transform.x0 +
-                         0.5);
-	y = (int) floor (glyphs[i].y +
-                         glyph_surface->base.device_transform.y0 +
-                         0.5);
+	x = _cairo_lround (glyphs[i].x +
+                           glyph_surface->base.device_transform.x0);
+	y = _cairo_lround (glyphs[i].y +
+                           glyph_surface->base.device_transform.y0);
 
 	_cairo_pattern_init_for_surface (&glyph_pattern, &glyph_surface->base);
 
@@ -1213,6 +1211,7 @@ _cairo_scaled_glyph_set_metrics (cairo_scaled_glyph_t *scaled_glyph,
     double hm, wm;
     double min_user_x = 0.0, max_user_x = 0.0, min_user_y = 0.0, max_user_y = 0.0;
     double min_device_x = 0.0, max_device_x = 0.0, min_device_y = 0.0, max_device_y = 0.0;
+    double device_x_advance, device_y_advance;
 
     for (hm = 0.0; hm <= 1.0; hm += 1.0)
 	for (wm = 0.0; wm <= 1.0; wm += 1.0) {
@@ -1261,10 +1260,19 @@ _cairo_scaled_glyph_set_metrics (cairo_scaled_glyph_t *scaled_glyph,
 				     &scaled_glyph->metrics.x_advance,
 				     &scaled_glyph->metrics.y_advance);
 
+    device_x_advance = fs_metrics->x_advance;
+    device_y_advance = fs_metrics->y_advance;
+    cairo_matrix_transform_distance (&scaled_font->scale,
+				     &device_x_advance,
+				     &device_y_advance);
+
     scaled_glyph->bbox.p1.x = _cairo_fixed_from_double (min_device_x);
     scaled_glyph->bbox.p1.y = _cairo_fixed_from_double (min_device_y);
     scaled_glyph->bbox.p2.x = _cairo_fixed_from_double (max_device_x);
     scaled_glyph->bbox.p2.y = _cairo_fixed_from_double (max_device_y);
+
+    scaled_glyph->x_advance = _cairo_lround (device_x_advance);
+    scaled_glyph->y_advance = _cairo_lround (device_y_advance);
 }
 
 void

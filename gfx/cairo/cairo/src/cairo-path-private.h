@@ -1,6 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2003 University of Southern California
+ * Copyright © 2005 Red Hat, Inc.
+ * Copyright © 2006 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,66 +28,32 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is University of Southern
- * California.
+ * The Initial Developer of the Original Code is Red Hat, Inc.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@cworth.org>
+ *	Carl D. Worth <cworth@redhat.com>
  */
 
-#ifndef CAIRO_FEATURES_H
-#define CAIRO_FEATURES_H
+#ifndef CAIRO_PATH_PRIVATE_H
+#define CAIRO_PATH_PRIVATE_H
 
-#include "cairo-platform.h"
+#include "cairoint.h"
 
-#ifdef  __cplusplus
-# define CAIRO_BEGIN_DECLS  extern "C" {
-# define CAIRO_END_DECLS    }
-#else
-# define CAIRO_BEGIN_DECLS
-# define CAIRO_END_DECLS
-#endif
+extern const cairo_private cairo_path_t _cairo_path_nil;
 
-#ifndef cairo_public
-# define cairo_public
-#endif
+cairo_private cairo_path_t *
+_cairo_path_create (cairo_path_fixed_t *path,
+		    cairo_gstate_t     *gstate);
 
-#define CAIRO_VERSION_MAJOR 1
-#define CAIRO_VERSION_MINOR 3
-#define CAIRO_VERSION_MICRO 8
+cairo_private cairo_path_t *
+_cairo_path_create_flat (cairo_path_fixed_t *path,
+			 cairo_gstate_t     *gstate);
 
-#define CAIRO_VERSION_STRING "1.3.8"
+cairo_private cairo_path_t *
+_cairo_path_create_in_error (cairo_status_t status);
 
-@PS_SURFACE_FEATURE@
+cairo_private cairo_status_t
+_cairo_path_append_to_context (const cairo_path_t	*path,
+			       cairo_t			*cr);
 
-@PDF_SURFACE_FEATURE@
-
-@SVG_SURFACE_FEATURE@
-
-@XLIB_SURFACE_FEATURE@
-
-@QUARTZ_SURFACE_FEATURE@
-
-@NQUARTZ_SURFACE_FEATURE@
-
-@XCB_SURFACE_FEATURE@
-
-@WIN32_SURFACE_FEATURE@
-
-@OS2_SURFACE_FEATURE@
-
-@BEOS_SURFACE_FEATURE@
-
-@GLITZ_SURFACE_FEATURE@
-
-@DIRECTFB_SURFACE_FEATURE@
-
-@FT_FONT_FEATURE@
-
-@WIN32_FONT_FEATURE@
-
-@ATSUI_FONT_FEATURE@
-
-@PNG_FUNCTIONS_FEATURE@
-
-#endif
+#endif /* CAIRO_PATH_DATA_PRIVATE_H */

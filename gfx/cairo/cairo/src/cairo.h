@@ -169,7 +169,7 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_FILE_NOT_FOUND: file not found
  * @CAIRO_STATUS_INVALID_DASH: invalid value for a dash setting
  * @CAIRO_STATUS_INVALID_DSC_COMMENT: invalid value for a DSC comment (Since 1.2)
- * @CAIRO_STATUS_INVALID_INDEX: invalid index passed to getter
+ * @CAIRO_STATUS_INVALID_INDEX: invalid index passed to getter (Since 1.4)
  * @CAIRO_STATUS_CLIP_NOT_REPRESENTABLE: clip region not representable in desired format (Since 1.4)
  *
  * #cairo_status_t is used to indicate errors that can occur when
@@ -600,6 +600,8 @@ cairo_clip_extents (cairo_t *cr,
  * cairo_rectangle_t:
  * 
  * A data structure for holding a rectangle.
+ *
+ * Since: 1.4
  */
 typedef struct _cairo_rectangle {
     double x, y, width, height;
@@ -610,6 +612,8 @@ typedef struct _cairo_rectangle {
  * 
  * A data structure for holding a dynamically allocated
  * array of rectangles.
+ *
+ * Since: 1.4
  */
 typedef struct _cairo_rectangle_list {
     cairo_status_t     status;
@@ -950,7 +954,7 @@ cairo_text_extents (cairo_t              *cr,
 
 cairo_public void
 cairo_glyph_extents (cairo_t               *cr,
-		     cairo_glyph_t         *glyphs,
+		     const cairo_glyph_t   *glyphs,
 		     int                   num_glyphs,
 		     cairo_text_extents_t  *extents);
 
@@ -958,7 +962,7 @@ cairo_public void
 cairo_text_path  (cairo_t *cr, const char *utf8);
 
 cairo_public void
-cairo_glyph_path (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs);
+cairo_glyph_path (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs);
 
 /* Generic identifier for a font style */
 
@@ -1058,7 +1062,7 @@ cairo_scaled_font_text_extents (cairo_scaled_font_t  *scaled_font,
 
 cairo_public void
 cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
-				 cairo_glyph_t         *glyphs,
+				 const cairo_glyph_t   *glyphs,
 				 int                   num_glyphs,
 				 cairo_text_extents_t  *extents);
 
@@ -1233,8 +1237,8 @@ cairo_public cairo_path_t *
 cairo_copy_path_flat (cairo_t *cr);
 
 cairo_public void
-cairo_append_path (cairo_t	*cr,
-		   cairo_path_t *path);
+cairo_append_path (cairo_t		*cr,
+		   const cairo_path_t	*path);
 
 cairo_public void
 cairo_path_destroy (cairo_path_t *path);
@@ -1672,9 +1676,9 @@ cairo_matrix_transform_point (const cairo_matrix_t *matrix,
 
 cairo_public void
 cairo_matrix_transform_bounding_box (const cairo_matrix_t *matrix,
-                                     double *x, double *y,
-                                     double *width, double *height,
-                                     cairo_bool_t *is_tight);
+				     double *x1, double *y1,
+				     double *x2, double *y2,
+				     cairo_bool_t *is_tight);
 
 /* Functions to be used while debugging (not intended for use in production code) */
 cairo_public void

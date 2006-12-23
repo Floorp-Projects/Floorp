@@ -357,35 +357,30 @@ slim_hidden_def(cairo_matrix_transform_point);
 
 void
 cairo_matrix_transform_bounding_box (const cairo_matrix_t *matrix,
-                                     double *x, double *y,
-                                     double *width, double *height,
+                                     double *x1, double *y1,
+                                     double *x2, double *y2,
                                      cairo_bool_t *is_tight)
 {
     int i;
     double quad_x[4], quad_y[4];
-    double dx1, dy1;
-    double dx2, dy2;
     double min_x, max_x;
     double min_y, max_y;
 
-    quad_x[0] = *x;
-    quad_y[0] = *y;
+    quad_x[0] = *x1;
+    quad_y[0] = *y1;
     cairo_matrix_transform_point (matrix, &quad_x[0], &quad_y[0]);
 
-    dx1 = *width;
-    dy1 = 0;
-    cairo_matrix_transform_distance (matrix, &dx1, &dy1);
-    quad_x[1] = quad_x[0] + dx1;
-    quad_y[1] = quad_y[0] + dy1;
+    quad_x[1] = *x2;
+    quad_y[1] = *y1;
+    cairo_matrix_transform_point (matrix, &quad_x[1], &quad_y[1]);
 
-    dx2 = 0;
-    dy2 = *height;
-    cairo_matrix_transform_distance (matrix, &dx2, &dy2);
-    quad_x[2] = quad_x[0] + dx2;
-    quad_y[2] = quad_y[0] + dy2;
+    quad_x[2] = *x1;
+    quad_y[2] = *y2;
+    cairo_matrix_transform_point (matrix, &quad_x[2], &quad_y[2]);
 
-    quad_x[3] = quad_x[0] + dx1 + dx2;
-    quad_y[3] = quad_y[0] + dy1 + dy2;
+    quad_x[3] = *x2;
+    quad_y[3] = *y2;
+    cairo_matrix_transform_point (matrix, &quad_x[3], &quad_y[3]);
 
     min_x = max_x = quad_x[0];
     min_y = max_y = quad_y[0];
@@ -402,10 +397,10 @@ cairo_matrix_transform_bounding_box (const cairo_matrix_t *matrix,
 	    max_y = quad_y[i];
     }
 
-    *x = min_x;
-    *y = min_y;
-    *width = max_x - min_x;
-    *height = max_y - min_y;
+    *x1 = min_x;
+    *y1 = min_y;
+    *x2 = max_x;
+    *y2 = max_y;
     
     if (is_tight) {
         /* it's tight if and only if the four corner points form an axis-aligned
@@ -555,31 +550,34 @@ _cairo_matrix_is_identity (const cairo_matrix_t *matrix)
 }
 
 cairo_bool_t
-_cairo_matrix_is_integer_translation(const cairo_matrix_t *m,
-				     int *itx, int *ity)
+_cairo_matrix_is_translation (const cairo_matrix_t *matrix)
 {
-    cairo_bool_t is_integer_translation;
-    cairo_fixed_t x0_fixed, y0_fixed;
+    return (matrix->xx == 1.0 && matrix->yx == 0.0 &&
+	    matrix->xy == 0.0 && matrix->yy == 1.0);
+}
 
-    x0_fixed = _cairo_fixed_from_double (m->x0);
-    y0_fixed = _cairo_fixed_from_double (m->y0);
+cairo_bool_t
+_cairo_matrix_is_integer_translation (const cairo_matrix_t *matrix,
+				      int *itx, int *ity)
+{
+    if (_cairo_matrix_is_translation (matrix))
+    {
+        cairo_fixed_t x0_fixed = _cairo_fixed_from_double (matrix->x0);
+        cairo_fixed_t y0_fixed = _cairo_fixed_from_double (matrix->y0);
 
-    is_integer_translation = ((m->xx == 1.0) &&
-			      (m->yx == 0.0) &&
-			      (m->xy == 0.0) &&
-			      (m->yy == 1.0) &&
-			      (_cairo_fixed_is_integer(x0_fixed)) &&
-			      (_cairo_fixed_is_integer(y0_fixed)));
+        if (_cairo_fixed_is_integer (x0_fixed) &&
+            _cairo_fixed_is_integer (y0_fixed))
+        {
+            if (itx)
+                *itx = _cairo_fixed_integer_part (x0_fixed);
+            if (ity)
+                *ity = _cairo_fixed_integer_part (y0_fixed);
 
-    if (! is_integer_translation)
-	return FALSE;
+            return TRUE;
+        }
+    }
 
-    if (itx)
-	*itx = _cairo_fixed_integer_part(x0_fixed);
-    if (ity)
-	*ity = _cairo_fixed_integer_part(y0_fixed);
-
-    return TRUE;
+    return FALSE;
 }
 
 /*
@@ -728,15 +726,26 @@ void
 _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
 				pixman_transform_t	*pixman_transform)
 {
-    pixman_transform->matrix[0][0] = _cairo_fixed_from_double (matrix->xx);
-    pixman_transform->matrix[0][1] = _cairo_fixed_from_double (matrix->xy);
-    pixman_transform->matrix[0][2] = _cairo_fixed_from_double (matrix->x0);
+    static const pixman_transform_t pixman_identity_transform = {{
+        {1 << 16,        0,       0},
+        {       0, 1 << 16,       0},
+        {       0,       0, 1 << 16}
+    }};
 
-    pixman_transform->matrix[1][0] = _cairo_fixed_from_double (matrix->yx);
-    pixman_transform->matrix[1][1] = _cairo_fixed_from_double (matrix->yy);
-    pixman_transform->matrix[1][2] = _cairo_fixed_from_double (matrix->y0);
+    if (_cairo_matrix_is_identity (matrix)) {
+        *pixman_transform = pixman_identity_transform;
+    }
+    else {
+        pixman_transform->matrix[0][0] = _cairo_fixed_from_double (matrix->xx);
+        pixman_transform->matrix[0][1] = _cairo_fixed_from_double (matrix->xy);
+        pixman_transform->matrix[0][2] = _cairo_fixed_from_double (matrix->x0);
 
-    pixman_transform->matrix[2][0] = 0;
-    pixman_transform->matrix[2][1] = 0;
-    pixman_transform->matrix[2][2] = _cairo_fixed_from_double (1);
+        pixman_transform->matrix[1][0] = _cairo_fixed_from_double (matrix->yx);
+        pixman_transform->matrix[1][1] = _cairo_fixed_from_double (matrix->yy);
+        pixman_transform->matrix[1][2] = _cairo_fixed_from_double (matrix->y0);
+
+        pixman_transform->matrix[2][0] = 0;
+        pixman_transform->matrix[2][1] = 0;
+        pixman_transform->matrix[2][2] = 1 << 16;
+    }
 }

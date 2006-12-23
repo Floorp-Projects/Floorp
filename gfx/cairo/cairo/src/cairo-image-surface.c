@@ -36,6 +36,52 @@
 
 #include "cairoint.h"
 
+const cairo_image_surface_t _cairo_image_surface_nil_invalid_format = {
+    {
+	&cairo_image_surface_backend,	/* backend */
+	CAIRO_SURFACE_TYPE_IMAGE,
+	CAIRO_CONTENT_COLOR,
+	CAIRO_REF_COUNT_INVALID,	/* ref_count */
+	CAIRO_STATUS_INVALID_FORMAT,	/* status */
+	FALSE,				/* finished */
+	{ 0,	/* size */
+	  0,	/* num_elements */
+	  0,	/* element_size */
+	  NULL,	/* elements */
+	},				/* user_data */
+	{ 1.0, 0.0,
+	  0.0, 1.0,
+	  0.0, 0.0
+	},				/* device_transform */
+	{ 1.0, 0.0,
+	  0.0, 1.0,
+	  0.0, 0.0
+	},				/* device_transform_inverse */
+	0.0,				/* x_fallback_resolution */
+	0.0,				/* y_fallback_resolution */
+	NULL,				/* clip */
+	0,				/* next_clip_serial */
+	0,				/* current_clip_serial */
+	FALSE,				/* is_snapshot */
+	FALSE,				/* has_font_options */
+	{ CAIRO_ANTIALIAS_DEFAULT,
+	  CAIRO_SUBPIXEL_ORDER_DEFAULT,
+	  CAIRO_HINT_STYLE_DEFAULT,
+	  CAIRO_HINT_METRICS_DEFAULT
+	}				/* font_options */
+    },					/* base */
+    CAIRO_FORMAT_ARGB32,		/* format */
+    NULL,				/* data */
+    FALSE,				/* owns_data */
+    FALSE,				/* has_clip */
+    0,					/* width */
+    0,					/* height */
+    0,					/* stride */
+    0,					/* depth */
+    NULL				/* pixman_image */
+};
+
+
 static int
 _cairo_format_bpp (cairo_format_t format)
 {
@@ -248,8 +294,10 @@ cairo_image_surface_create (cairo_format_t	format,
     pixman_format_t *pixman_format;
     pixman_image_t *pixman_image;
 
-    if (! CAIRO_FORMAT_VALID (format))
-	return (cairo_surface_t*) &_cairo_surface_nil;
+    if (! CAIRO_FORMAT_VALID (format)) {
+	_cairo_error (CAIRO_STATUS_INVALID_FORMAT);
+	return (cairo_surface_t*) &_cairo_image_surface_nil_invalid_format;
+    }
 
     pixman_format = _create_pixman_format (format);
     if (pixman_format == NULL) {
@@ -617,6 +665,10 @@ _cairo_image_surface_release_dest_image (void                    *abstract_surfa
 static cairo_status_t
 _cairo_image_surface_clone_similar (void		*abstract_surface,
 				    cairo_surface_t	*src,
+				    int                  src_x,
+				    int                  src_y,
+				    int                  width,
+				    int                  height,
 				    cairo_surface_t    **clone_out)
 {
     cairo_image_surface_t *surface = abstract_surface;

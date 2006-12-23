@@ -106,6 +106,6 @@ cairo_bool_t
 _cairo_surface_is_win32 (cairo_surface_t *surface);
 
 void
-_cairo_win32_initialize ();
+_cairo_win32_initialize (void);
 
 #endif /* CAIRO_WIN32_PRIVATE_H */
