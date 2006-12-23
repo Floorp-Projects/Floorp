@@ -238,20 +238,6 @@
   return [[BookmarkManager sharedBookmarkManager] contextMenuForItems:theItemArray fromView:nil target:self];
 }
 
-//
-// context menu has only what we need
-//
-- (BOOL)validateMenuItem:(NSMenuItem*)aMenuItem
-{
-  if ([[self bookmarkItem] isKindOfClass:[Bookmark class]] && [(Bookmark *)[self bookmarkItem] isSeparator]) {
-    SEL action = [aMenuItem action];
-    if (action != @selector(deleteBookmarks:))
-      return NO;
-  }
-
-  return YES;
-}
-
 - (void)showFolderPopupAction:(id)aSender
 {
   [self showFolderPopup:[NSApp currentEvent]];

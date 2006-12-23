@@ -507,7 +507,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
       else
         [mBookmarksOutlineView expandItem:curItem];
     }
-    else {
+    else if (![curItem isSeparator]) {
       // otherwise follow the standard bookmark opening behavior
       BOOL shiftKeyDown = ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask) != 0;
       EBookmarkOpenBehavior behavior = eBookmarkOpenBehavior_Preferred;
@@ -536,7 +536,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
       [[NetworkServices sharedNetworkServices] attemptResolveService:[(RendezvousBookmark*)curItem serviceID] forSender:curItem];
       mOpenActionFlag = eOpenInNewTabAction;
     }
-    else {
+    else if (![curItem isSeparator]) {
       // otherwise follow the standard bookmark opening behavior
       BOOL reverseBackgroundPref = NO;
       if ([aSender isAlternate])
@@ -570,7 +570,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
       mOpenActionFlag = eOpenInNewTabAction;
     }
     else {
-      if ([curItem isKindOfClass:[Bookmark class]])
+      if ([curItem isKindOfClass:[Bookmark class]] && ![curItem isSeparator])
         [urlArray addObject:[curItem url]];
       else if ([curItem isKindOfClass:[BookmarkFolder class]])
         [urlArray addObjectsFromArray:[curItem childURLs]];
@@ -603,7 +603,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
       [[NetworkServices sharedNetworkServices] attemptResolveService:[(RendezvousBookmark*)curItem serviceID] forSender:curItem];
       mOpenActionFlag = eOpenInNewWindowAction;
     }
-    else {
+    else if (![curItem isSeparator]) {
       // otherwise follow the standard bookmark opening behavior
       BOOL reverseBackgroundPref = NO;
       if ([aSender isAlternate])
@@ -1605,20 +1605,18 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
 
     BookmarkItem* selItem = [self selectedBookmarkItem];
 
-    if (action == @selector(openBookmark:))
+    if ((action == @selector(openBookmark:)) ||
+        (action == @selector(openBookmarkInNewTab:)) ||
+        (action == @selector(openBookmarkInNewWindow:)) ||
+        (action == @selector(deleteBookmarks:)) ||
+        (action == @selector(showBookmarkInfo:)))
+    {
       return (selItem != nil);
+    }
 
-    if (action == @selector(openBookmarkInNewTab:))
-      return (selItem != nil);
-
-    if (action == @selector(openBookmarkInNewWindow:))
-      return (selItem != nil);
-
-    if (action == @selector(deleteBookmarks:))
-      return (selItem != nil);
-
-    if (action == @selector(showBookmarkInfo:))
-      return (selItem != nil);
+    // getInfo: is passed here from BrowserWindowController
+    if (action == @selector(getInfo:))
+      return ((selItem != nil) && ![selItem isSeparator]);
 
     if (action == @selector(arrange:)) {
       BookmarkFolder* activeCollection = [self activeCollection];

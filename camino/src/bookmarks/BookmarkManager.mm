@@ -719,10 +719,12 @@ static BookmarkManager* gBookmarkManager = nil;
 // or from a bookmark button, which should pass a nil outlineView
 - (NSMenu *)contextMenuForItems:(NSArray*)items fromView:(BookmarkOutlineView *)outlineView target:(id)target
 {
-  if ([items count] == 0) return nil;
+  if ([items count] == 0)
+    return nil;
 
   BOOL itemsContainsFolder = NO;
   BOOL itemsContainsBookmark = NO;
+  BOOL itemsAllSeparators = YES;
   BOOL multipleItems = ([items count] > 1);
 
   NSEnumerator* itemsEnum = [items objectEnumerator];
@@ -730,64 +732,71 @@ static BookmarkManager* gBookmarkManager = nil;
   while ((curItem = [itemsEnum nextObject])) {
     itemsContainsFolder   |= [curItem isKindOfClass:[BookmarkFolder class]];
     itemsContainsBookmark |= [curItem isKindOfClass:[Bookmark class]];
+    itemsAllSeparators    &= [curItem isSeparator];
   }
 
   // All the methods in this context menu need to be able to handle > 1 item
-  // being selected, and the selected items containing a mixture of folders
-  // and bookmarks.
-  NSMenu * contextMenu = [[[NSMenu alloc] initWithTitle:@"notitle"] autorelease];
-  NSString * menuTitle = nil;
+  // being selected, and the selected items containing a mixture of folders,
+  // bookmarks, and separators.
+  NSMenu* contextMenu = [[[NSMenu alloc] initWithTitle:@"notitle"] autorelease];
+  NSString* menuTitle = nil;
+  NSMenuItem* menuItem = nil;
+  NSMenuItem* shiftMenuItem = nil;
 
-  // open in new window(s)
-  if (itemsContainsFolder && [items count] == 1)
-    menuTitle = NSLocalizedString(@"Open Tabs in New Window", nil);
-  else if (multipleItems)
-    menuTitle = NSLocalizedString(@"Open in New Windows", nil);
-  else
-    menuTitle = NSLocalizedString(@"Open in New Window", nil);
+  // Selections with only separators shouldn't have these CM items at all.
+  // We rely on the called selectors to do the Right Thing(tm) with embedded separators.
+  if (!itemsAllSeparators) {
+    // open in new window(s)
+    if (itemsContainsFolder && !multipleItems)
+      menuTitle = NSLocalizedString(@"Open Tabs in New Window", nil);
+    else if (multipleItems)
+      menuTitle = NSLocalizedString(@"Open in New Windows", nil);
+    else
+      menuTitle = NSLocalizedString(@"Open in New Window", nil);
 
-  NSMenuItem *menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openBookmarkInNewWindow:) keyEquivalent:@""] autorelease];
-  [menuItem setTarget:target];
-  [menuItem setKeyEquivalentModifierMask:0]; //Needed since by default NSMenuItems have NSCommandKeyMask
-  [contextMenu addItem:menuItem];
+    menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openBookmarkInNewWindow:) keyEquivalent:@""] autorelease];
+    [menuItem setTarget:target];
+    [menuItem setKeyEquivalentModifierMask:0]; //Needed since by default NSMenuItems have NSCommandKeyMask
+    [contextMenu addItem:menuItem];
 
-  NSMenuItem *shiftMenuItem = [NSMenuItem alternateMenuItemWithTitle:menuTitle action:@selector(openBookmarkInNewWindow:) target:target modifiers:NSShiftKeyMask];
-  [contextMenu addItem:shiftMenuItem];
+    shiftMenuItem = [NSMenuItem alternateMenuItemWithTitle:menuTitle action:@selector(openBookmarkInNewWindow:) target:target modifiers:NSShiftKeyMask];
+    [contextMenu addItem:shiftMenuItem];
 
-  // open in new tabs in new window
-  if (multipleItems) {
-    menuTitle = NSLocalizedString(@"Open in Tabs in New Window", nil);
+    // open in new tabs in new window
+    if (multipleItems) {
+      menuTitle = NSLocalizedString(@"Open in Tabs in New Window", nil);
 
-    menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openBookmarksInTabsInNewWindow:) keyEquivalent:@""] autorelease];
+      menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openBookmarksInTabsInNewWindow:) keyEquivalent:@""] autorelease];
+      [menuItem setKeyEquivalentModifierMask:0];
+      [menuItem setTarget:target];
+      [contextMenu addItem:menuItem];
+
+      shiftMenuItem = [NSMenuItem alternateMenuItemWithTitle:menuTitle action:@selector(openBookmarksInTabsInNewWindow:) target:target modifiers:NSShiftKeyMask];
+      [contextMenu addItem:shiftMenuItem];
+    }
+
+    // open in new tab in current window
+    if (itemsContainsFolder || multipleItems)
+      menuTitle = NSLocalizedString(@"Open in New Tabs", nil);
+    else
+      menuTitle = NSLocalizedString(@"Open in New Tab", nil);
+
+    menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openBookmarkInNewTab:) keyEquivalent:@""] autorelease];
     [menuItem setKeyEquivalentModifierMask:0];
     [menuItem setTarget:target];
     [contextMenu addItem:menuItem];
 
-    shiftMenuItem = [NSMenuItem alternateMenuItemWithTitle:menuTitle action:@selector(openBookmarksInTabsInNewWindow:) target:target modifiers:NSShiftKeyMask];
+    shiftMenuItem = [NSMenuItem alternateMenuItemWithTitle:menuTitle action:@selector(openBookmarkInNewTab:) target:target modifiers:NSShiftKeyMask];
     [contextMenu addItem:shiftMenuItem];
   }
-
-  // open in new tab in current window
-  if (itemsContainsFolder || multipleItems)
-    menuTitle = NSLocalizedString(@"Open in New Tabs", nil);
-  else
-    menuTitle = NSLocalizedString(@"Open in New Tab", nil);
-
-  menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openBookmarkInNewTab:) keyEquivalent:@""] autorelease];
-  [menuItem setKeyEquivalentModifierMask:0];
-  [menuItem setTarget:target];
-  [contextMenu addItem:menuItem];
-
-  shiftMenuItem = [NSMenuItem alternateMenuItemWithTitle:menuTitle action:@selector(openBookmarkInNewTab:) target:target modifiers:NSShiftKeyMask];
-  [contextMenu addItem:shiftMenuItem];
 
   BookmarkFolder* collection = [target isKindOfClass:[BookmarkViewController class]] ? [target activeCollection] : nil;
   // We only want a "Reveal" menu item if the CM is on a BookmarkButton,
   // if the user is searching somewhere other than the History folder,
   // or if the Top 10 is the active collection.
   if ((!outlineView) ||
-      (([items count] == 1) && (([self searchActive] && !(collection == [self historyFolder])) ||
-                                (collection == [self top10Folder]))))
+      (!multipleItems && (([self searchActive] && !(collection == [self historyFolder])) ||
+                          (collection == [self top10Folder]))))
   {
     menuTitle = NSLocalizedString(@"Reveal in Bookmark Manager", nil);
     menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(revealBookmark:) keyEquivalent:@""] autorelease];
@@ -795,25 +804,32 @@ static BookmarkManager* gBookmarkManager = nil;
     [contextMenu addItem:menuItem];
   }
 
-  [contextMenu addItem:[NSMenuItem separatorItem]];
+  if (!itemsAllSeparators) {
+    [contextMenu addItem:[NSMenuItem separatorItem]];
 
-  if (!outlineView || ([items count] == 1)) {
-    menuTitle = NSLocalizedString(@"Bookmark Info", nil);
-    menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(showBookmarkInfo:) keyEquivalent:@""] autorelease];
+    if (!outlineView || !multipleItems) {
+      menuTitle = NSLocalizedString(@"Bookmark Info", nil);
+      menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(showBookmarkInfo:) keyEquivalent:@""] autorelease];
+      [menuItem setTarget:target];
+      [contextMenu addItem:menuItem];
+    }
+  }
+
+  // copy URL(s) to clipboard
+  // This makes no sense for separators, which have no URL.
+  // We rely on |copyURLs:| to handle the selector-embedded-in-multiple-items case.
+  if (!itemsAllSeparators) {
+    if (itemsContainsFolder || multipleItems)
+      menuTitle = NSLocalizedString(@"Copy URLs to Clipboard", nil);
+    else
+      menuTitle = NSLocalizedString(@"Copy URL to Clipboard", nil);
+
+    menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(copyURLs:) keyEquivalent:@""] autorelease];
     [menuItem setTarget:target];
     [contextMenu addItem:menuItem];
   }
 
-  // copy URL(s) to clipboard
-  if (itemsContainsFolder || multipleItems)
-    menuTitle = NSLocalizedString(@"Copy URLs to Clipboard", nil);
-  else
-    menuTitle = NSLocalizedString(@"Copy URL to Clipboard", nil);
-  menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(copyURLs:) keyEquivalent:@""] autorelease];
-  [menuItem setTarget:target];
-  [contextMenu addItem:menuItem];
-
-  if (([items count] == 1) && itemsContainsFolder) {
+  if (!multipleItems && itemsContainsFolder) {
     menuTitle = NSLocalizedString(@"Use as Dock Menu", nil);
     menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(toggleIsDockMenu:) keyEquivalent:@""] autorelease];
     [menuItem setTarget:[items objectAtIndex:0]];
@@ -828,11 +844,13 @@ static BookmarkManager* gBookmarkManager = nil;
 
   // if we're not in a smart collection (other than history)
   if (!outlineView ||
-      ![target isKindOfClass:[BookmarkViewController class]] ||
       ![[target activeCollection] isSmartFolder] ||
-      ([target activeCollection] == [self historyFolder])) {
-    // space
-    [contextMenu addItem:[NSMenuItem separatorItem]];
+      ([target activeCollection] == [self historyFolder]))
+  {
+    if ([contextMenu numberOfItems] != 0)
+      // only add a separator if it won't be the first item in the menu
+      [contextMenu addItem:[NSMenuItem separatorItem]];
+
     // delete
     menuTitle = NSLocalizedString(@"Delete", nil);
     menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(deleteBookmarks:) keyEquivalent:@""] autorelease];
@@ -850,10 +868,12 @@ static BookmarkManager* gBookmarkManager = nil;
     [contextMenu addItem:menuItem];
   }
 
-  // Arrange bookmarks items. these may get removed again by the caller, so
-  // we tag them.
+  // Arrange selections of multiple bookmark items or folders.
+  // These may get removed again by the caller, so we tag them.
   if ([target isKindOfClass:[BookmarkViewController class]] &&
-      ![[target activeCollection] isSmartFolder])
+      ![[target activeCollection] isSmartFolder] &&
+      (multipleItems || itemsContainsFolder) &&
+      !itemsAllSeparators)
   {
     NSMenuItem* separatorItem = [NSMenuItem separatorItem];
     [separatorItem setTag:kBookmarksContextMenuArrangeSeparatorTag];
@@ -906,6 +926,7 @@ static BookmarkManager* gBookmarkManager = nil;
 //
 // Copy a set of bookmarks URLs to the specified pasteboard.
 // We don't care about item titles here, nor do we care about format.
+// Separators have no URL and are ignored.
 //
 - (void)copyBookmarksURLs:(NSArray*)bookmarkItems toPasteboard:(NSPasteboard*)aPasteboard
 {
@@ -917,8 +938,7 @@ static BookmarkManager* gBookmarkManager = nil;
   NSEnumerator* bookmarkItemsEnum = [bookmarkItems objectEnumerator];
   BookmarkItem* curItem;
   while (curItem = [bookmarkItemsEnum nextObject]) {
-    // if it's a bookmark and we haven't seen it yet
-    if (([curItem isKindOfClass:[Bookmark class]]) && (![seenBookmarks containsObject:curItem])) {
+    if ([curItem isKindOfClass:[Bookmark class]] && ![curItem isSeparator] && ![seenBookmarks containsObject:curItem]) {
       [seenBookmarks addObject:curItem]; // now we've seen it
       [urlList addObject:[(Bookmark*)curItem url]];
     }
@@ -928,8 +948,7 @@ static BookmarkManager* gBookmarkManager = nil;
       NSEnumerator* childrenEnum = [children objectEnumerator];
       Bookmark* curChild;
       while (curChild = [childrenEnum nextObject]) {
-        // if we haven't seen it yet
-        if (![seenBookmarks containsObject:curChild]) {
+        if (![seenBookmarks containsObject:curChild] && ![curItem isSeparator]) {
           [seenBookmarks addObject:curChild]; // now we've seen it
           [urlList addObject:[curChild url]];
         }
