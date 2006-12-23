@@ -74,6 +74,52 @@ int main(int argc, char** argv)
   return 0;
 }
 
+char *
+htmlify(const char *in)
+{
+  const char *p = in;
+  char *out, *q;
+  int n = 0;
+  size_t newlen;
+
+  // Count the number of '<' and '>' in the input.
+  while ((p = strpbrk(p, "<>")))
+  {
+    ++n;
+    ++p;
+  }
+
+  // Knowing the number of '<' and '>', we can calculate the space
+  // needed for the output string.
+  newlen = strlen(in) + n * 3 + 1;
+  out = new char[newlen];
+
+  // Copy the input to the output, with substitutions.
+  p = in;
+  q = out;
+  do
+  {
+    if (*p == '<') 
+    {
+      strcpy(q, "&lt;");
+      q += 4;
+    }
+    else if (*p == '>')
+    {
+      strcpy(q, "&gt;");
+      q += 4;
+    }
+    else
+    {
+      *q++ = *p;
+    }
+    p++;
+  } while (*p);
+  *q = '\0';
+
+  return out;
+}
+
 leaky::leaky()
 {
   applicationName = NULL;
@@ -428,8 +474,11 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count)
     
     sp->cntP.printReport(fp, this);
 
+    char *symname = htmlify(sp->name);
     fprintf(fp, "%6d %3d <a name=%d>%8d</a> <b>%s</b>\n", rankingTable[i],
-    sp->timerHit, rankingTable[i], countArray[rankingTable[i]], sp->name);
+            sp->timerHit, rankingTable[i], countArray[rankingTable[i]],
+            symname);
+    delete [] symname;
 
     sp->cntC.printReport(fp, this);
 
@@ -477,9 +526,11 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count)
 
     Symbol *sp=&externalSymbols[rankingTable[i]];
     
+    char *symname = htmlify(sp->name);
     fprintf(fp, "<a href=\"#%d\">%3d   %-2.1f     %s</a>\n",
-    rankingTable[i], sp->timerHit,
-    ((float)sp->timerHit/(float)totalTimerHits)*100.0, sp->name);
+            rankingTable[i], sp->timerHit,
+            ((float)sp->timerHit/(float)totalTimerHits)*100.0, symname);
+    delete [] symname;
   }
 
   fprintf(fp,"</pre></body></html>\n");
@@ -566,8 +617,9 @@ void FunctionCount::printReport(FILE *fp, leaky *lk)
 	    int cnt = getCount(j);
 	    if(cnt==tmax) {
 		int idx = getIndex(j);
-		fprintf(fp, fmt, idx, getCount(j),
-		const_cast<char*>(lk->indexToName(idx)));
+		char *symname = htmlify(lk->indexToName(idx));
+		fprintf(fp, fmt, idx, getCount(j), symname);
+		delete [] symname;
 	    } else if(cnt<tmax && cnt>nmax) {
 	        nmax=cnt;
 	    }
