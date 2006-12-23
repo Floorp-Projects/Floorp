@@ -51,7 +51,7 @@
 [ptr] native FSRefPtr(FSRef);
       native CFURLRef(CFURLRef);
 
-[scriptable, uuid(FC93A109-7BF2-4CEF-B283-2E973E5DCF7E)]
+[scriptable, uuid(748f3ffe-27d9-4402-9de9-494badbeebf4)]
 interface nsILocalFileMac : nsILocalFile
 {
    /**
@@ -237,6 +237,13 @@ interface nsILocalFileMac : nsILocalFile
     * readable name of the application)
     */
    readonly attribute AString bundleDisplayName;
+
+   /**
+    * bundleIdentifier
+    *
+    * returns the identifier of the bundle
+    */
+   readonly attribute AUTF8String bundleIdentifier;
 };
 
 %{C++
