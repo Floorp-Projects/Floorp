@@ -185,9 +185,24 @@ private:
     };
 
     nsDataHashtable<FontAndFamilyKey, ATSUFontID> mCache;
+    // The keys are the localized family names of cocoa.
     nsDataHashtable<nsStringHashKey, nsRefPtr<FamilyEntry> > mFamilies;
+    // The keys are the localized postscript names.
     nsDataHashtable<nsStringHashKey, nsRefPtr<FontEntry> > mPostscriptFonts;
+    // The keys are all family names (including alias family names).
+    // The datas are postscript name, therefore,
+    // you can resolve |all family names| to |postscript nams| 
+    nsDataHashtable<nsStringHashKey, nsString> mAllFamilyNames;
+    // The keys are all font names (including alias font names).
+    // The datas are postscript name, therefore,
+    // you can resolve |all font names| to |postscript name|
     nsDataHashtable<nsStringHashKey, nsString> mAllFontNames;
+    // Note that |mAllFamilyNames| and |mAllFontNames| can have same key
+    // for different fonts. Because a family name shared in one or more fonts.
+    // So, if you want to resolve the name, you MUST check as following order:
+    // 1. mPostscriptFont
+    // 2. mAllFamilyNames
+    // 3. mAllFontNames
 };
 
 #endif /* GFXQUARTZFONTCACHE_H_ */

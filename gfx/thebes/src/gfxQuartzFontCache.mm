@@ -75,6 +75,18 @@
 #define INDEX_FONT_WEIGHT 2
 #define INDEX_FONT_TRAITS 3
 
+static void GetStringForNSString(const NSString *aSrc, nsAString& aDist)
+{
+    aDist.SetLength([aSrc length]);
+    [aSrc getCharacters:aDist.BeginWriting()];
+}
+
+static NSString* GetNSStringForString(const nsAString& aSrc)
+{
+    return [NSString stringWithCharacters:aSrc.BeginReading()
+                     length:aSrc.Length()];
+}
+
 /* FontEntry */
 
 NSFont*
@@ -114,15 +126,13 @@ FontEntry::Init()
 void
 FontEntry::GetStringForNSString(const NSString *aSrc, nsAString& aDist)
 {
-    aDist.SetLength([aSrc length]);
-    [aSrc getCharacters:aDist.BeginWriting()];
+    ::GetStringForNSString(aSrc, aDist);
 }
 
 NSString*
 FontEntry::GetNSStringForString(const nsAString& aSrc)
 {
-    return [NSString stringWithCharacters:aSrc.BeginReading()
-                     length:aSrc.Length()];
+    return ::GetNSStringForString(aSrc);
 }
 
 /* gfxQuartzFontCache */
@@ -133,6 +143,7 @@ gfxQuartzFontCache::gfxQuartzFontCache()
 {
     mCache.Init();
     mFamilies.Init(30);
+    mAllFamilyNames.Init(60);
     mPostscriptFonts.Init(60);
     mAllFontNames.Init(100);
     InitFontList();
@@ -159,27 +170,73 @@ gfxQuartzFontCache::AppendFontFamily(NSFontManager *aFontManager,
                                      NSString *aName,
                                      PRBool aNameIsPostscriptName)
 {
-    NSString *name;
+    nsAutoString displayName, key;
     if (aNameIsPostscriptName) {
         // we should use display name that is localized the family name and
         // extra name. (e.g., "mono")
         NSFont *font = [NSFont fontWithName:aName size:10.0];
-        name = [font displayName];
+        GetStringForNSString([font displayName], displayName);
     } else {
-        // we should use localzed simple family name.
-        name = [aFontManager localizedNameForFamily:aName face:nil];
+        // we should use localized simple family name.
+        NSString *name = [aFontManager localizedNameForFamily:aName face:nil];
+        GetStringForNSString(name, displayName);
+
+        // Cache only the original name of the family.
+        // (the localized names and display names will be appended)
+        NSString *psName = [[NSFont fontWithName:aName size:10.0] fontName];
+        nsAutoString strPsName, strFamilyName;
+        GetStringForNSString(psName, strPsName);
+        GetStringForNSString(aName, strFamilyName);
+        GenerateFontListKey(strFamilyName, key);
+        mAllFamilyNames.Put(key, strPsName);
     }
-    nsAutoString str;
-    str.SetLength([name length]);
-    [name getCharacters:str.BeginWriting()];
-    nsAutoString key;
-    GenerateFontListKey(str, key);
+
+    GenerateFontListKey(displayName, key);
     nsRefPtr<FamilyEntry> fe;
     if (mFamilies.Get(key, &fe))
         return PR_FALSE;
-    fe = new FamilyEntry(str);
+    fe = new FamilyEntry(displayName);
     mFamilies.Put(key, fe);
+
     return PR_TRUE;
+}
+
+static PRBool GetFontNameFromBuffer(const char *aBuf,
+                                    ByteCount aLength,
+                                    FontPlatformCode aPlatformCode,
+                                    FontScriptCode aScriptCode,
+                                    FontLanguageCode aLangCode,
+                                    nsAString &aResult)
+{
+    if (aPlatformCode == kFontMacintoshPlatform) {
+        TextEncoding encoding;
+        OSStatus err = ::GetTextEncodingFromScriptInfo(aScriptCode, aLangCode,
+                                                       kTextRegionDontCare,
+                                                       &encoding);
+        if (err != noErr)
+            return PR_FALSE;
+        TECObjectRef converter;
+        err = ::TECCreateConverter(&converter, encoding, sUTF8Encoding);
+        if (err != noErr)
+            return PR_FALSE;
+        const ByteCount kBufLength = 1024;
+        char name[kBufLength];
+        ByteCount actualInputLength, actualOutputLength;
+        err = ::TECConvertText(converter,
+                               (UInt8*)aBuf, aLength, &actualInputLength,
+                               (UInt8*)name, kBufLength, &actualOutputLength);
+        ::TECDisposeConverter(converter);
+        if (err != noErr)
+            return PR_FALSE;
+        name[actualOutputLength] = '\0';
+        aResult = NS_ConvertUTF8toUTF16(name);
+    } else if (aPlatformCode == kFontUnicodePlatform ||
+               aPlatformCode == kFontMicrosoftPlatform) {
+        aResult.Assign((PRUnichar*)aBuf, aLength / sizeof(PRUnichar));
+    } else {
+        return PR_FALSE;
+    }
+    return !aResult.IsEmpty();
 }
 
 void
@@ -187,6 +244,7 @@ gfxQuartzFontCache::InitFontList()
 {
     mCache.Clear();
     mFamilies.Clear();
+    mAllFamilyNames.Clear();
     mPostscriptFonts.Clear();
     mAllFontNames.Clear();
 
@@ -240,6 +298,8 @@ gfxQuartzFontCache::InitFontList()
                 mShouldProgress = PR_FALSE;
             }
             nsStringArray mNames;
+            nsStringArray mFamilyNames;
+            nsString mFamily;
             nsString mPostscriptName;
             PRBool mShouldProgress;
         };
@@ -255,13 +315,12 @@ gfxQuartzFontCache::InitFontList()
                                        nsnull, nsnull, nsnull, nsnull);
             if (err != noErr || len == 0)
                 continue;
-            char buf[len];
+            char buf[len + 1];
             FontNameCode nameCode;
             FontPlatformCode platformCode;
             FontScriptCode scriptCode;
             FontLanguageCode langCode;
-            err = ::ATSUGetIndFontName(fontIDs[i], j, len,
-                                       buf, &len,
+            err = ::ATSUGetIndFontName(fontIDs[i], j, len, buf, &len,
                                        &nameCode, &platformCode,
                                        &scriptCode, &langCode);
             if (err != noErr || len == 0)
@@ -275,33 +334,9 @@ gfxQuartzFontCache::InitFontList()
                     continue;
             }
             nsAutoString fontName;
-            if (platformCode == kFontMacintoshPlatform) {
-                CFStringEncoding encoding;
-                err = ::GetTextEncodingFromScriptInfo(scriptCode, langCode,
-                                                      kTextRegionDontCare,
-                                                      &encoding);
-                if (err != noErr)
-                    continue;
-                CFStringRef cfName =
-                    ::CFStringCreateWithBytes(nsnull, (UInt8*)buf, len,
-                                              encoding, false);
-                fontName.Assign(::CFStringGetCharactersPtr(cfName),
-                                ::CFStringGetLength(cfName));
-                // If the font name is not east asian name,
-                // the fontName is empty. We should retry with UTF8 string.
-                // Don't swap this order.
-                if (fontName.IsEmpty()) {
-                    nsCAutoString cName(::CFStringGetCStringPtr(cfName,
-                                                                sUTF8Encoding));
-                    fontName = NS_ConvertUTF8toUTF16(cName);
-                }
-                ::CFRelease(cfName);
-            } else if (platformCode == kFontUnicodePlatform ||
-                       platformCode == kFontMicrosoftPlatform) {
-                fontName.Assign((PRUnichar*)buf, len / sizeof(PRUnichar));
-            } else {
+            if (!GetFontNameFromBuffer(buf, len, platformCode, scriptCode,
+                                       langCode, fontName))
                 continue;
-            }
 
             if (fontName[0] == PRUnichar('.') ||
                 fontName[0] == PRUnichar('%')) {
@@ -313,11 +348,21 @@ gfxQuartzFontCache::InitFontList()
 
             switch (nameCode) {
                 case kFontFamilyName:
+                    names.mFamilyNames.AppendString(fontName);
+                    // Find the family name of cocoa
+                    if (names.mFamily.IsEmpty()) {
+                        GenerateFontListKey(fontName, key);
+                        nsAutoString s;
+                        if (mAllFamilyNames.Get(key, &s))
+                            names.mFamily = s;
+                    }
+                    break;
                 case kFontFullName:
                     names.mNames.AppendString(fontName);
                     break;
                 case kFontPostscriptName:
-                    NS_ASSERTION(names.mPostscriptName.IsEmpty(),
+                    NS_ASSERTION(names.mPostscriptName.IsEmpty() ||
+                                 names.mPostscriptName.Equals(fontName),
                                  "A font id has two or more postscript name!");
                     names.mPostscriptName = fontName;
                     break;
@@ -332,12 +377,30 @@ gfxQuartzFontCache::InitFontList()
         GenerateFontListKey(names.mPostscriptName, key);
         mPostscriptFonts.Put(key, psFont);
 
-        for (PRInt32 i = 0; i < names.mNames.Count(); i++) {
-            GenerateFontListKey(*names.mNames[i], key);
+        for (PRInt32 j = 0; j < names.mNames.Count(); j++) {
+            GenerateFontListKey(*names.mNames[j], key);
             nsAutoString str;
             if (mAllFontNames.Get(key, &str))
                 continue;
             mAllFontNames.Put(key, psFont->Name());
+        }
+
+        if (names.mFamily.IsEmpty()) {
+            NSFont *font = psFont->GetNSFont(10.0);
+            nsAutoString str;
+            GetStringForNSString([font familyName], str);
+            if (str.IsEmpty()) {
+                NS_ERROR("Why I cannot find the family name?");
+                continue;
+            }
+            names.mFamily = str;
+        }
+        for (PRInt32 j = 0; j < names.mFamilyNames.Count(); j++) {
+            nsAutoString str;
+            GenerateFontListKey(*names.mFamilyNames[j], key);
+            if (mAllFamilyNames.Get(key, &str))
+                continue;
+            mAllFamilyNames.Put(key, names.mFamily);
         }
     }
 }
@@ -462,7 +525,7 @@ gfxQuartzFontCache::FindFontWeight(NSFontManager *aFontManager,
     // The last resort. Some fonts cannot be bold by "font-weight: bold;".
     // E.g., "Hiragino Kaku Gothic Pro".
     // Maybe, we can remove this, if cairo supports the bold and italic font
-    // dinamic generating.
+    // dynamic generating.
     if (aStyle->weight < CSS_NORMAL_WEIGHT_BASE &&
         [aFontManager weightOfFont:newFont] >= aOriginalFont->Weight()) {
         newFont = FindAnotherWeightMemberFont(aFontManager, aOriginalFont,
@@ -542,13 +605,16 @@ gfxQuartzFontCache::FindFromSystem (const nsAString& aFamily,
                                     const gfxFontStyle *aStyle)
 {
     nsAutoString key, fontName;
-    GenerateFontListKey(aFamily, key);
-    if (!mAllFontNames.Get(key, &fontName))
-        return kATSUInvalidFontID;
     nsRefPtr<FontEntry> fe;
-    GenerateFontListKey(fontName, key);
-    if (!mPostscriptFonts.Get(key, &fe))
-        return kATSUInvalidFontID;
+    GenerateFontListKey(aFamily, key);
+    if (!mPostscriptFonts.Get(key, &fe)) {
+        if (!mAllFamilyNames.Get(key, &fontName) &&
+            !mAllFontNames.Get(key, &fontName))
+            return kATSUInvalidFontID;
+        GenerateFontListKey(fontName, key);
+        if (!mPostscriptFonts.Get(key, &fe))
+            return kATSUInvalidFontID;
+    }
     NSFont *font = fe->GetNSFont(aStyle->size);
 
     PRUint32 desiredTraits = 0;
@@ -626,9 +692,15 @@ gfxQuartzFontCache::ResolveFontName(const nsAString& aFontName,
                                     nsAString& aResolvedFontName)
 {
     nsAutoString name, key;
+    nsRefPtr<FontEntry> fe;
     GenerateFontListKey(aFontName, key);
-    if (!mAllFontNames.Get(key, &name))
-        return PR_FALSE;
-    aResolvedFontName = name;
-    return PR_TRUE;
+    if (mPostscriptFonts.Get(key, &fe)) {
+        aResolvedFontName = fe->Name();
+        return PR_TRUE;
+    }
+    if (mAllFamilyNames.Get(key, &name) || mAllFontNames.Get(key, &name)) {
+        aResolvedFontName = name;
+        return PR_TRUE;
+    }
+    return PR_FALSE;
 }
