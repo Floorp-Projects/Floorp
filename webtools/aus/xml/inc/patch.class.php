@@ -60,7 +60,7 @@ class Patch extends AUS_Object {
     var $build;
 
     // Array that maps versions onto their respective branches.
-    var $branchVersions;
+    var $productBranchVersions;
 
     // Array the defines which channels are flagged as 'nightly' channels.
     var $nightlyChannels;
@@ -84,8 +84,8 @@ class Patch extends AUS_Object {
     /**
      * Constructor.
      */
-    function Patch($branchVersions=array(),$nightlyChannels,$type='complete') {
-        $this->setBranchVersions($branchVersions);
+    function Patch($productBranchVersions=array(),$nightlyChannels,$type='complete') {
+        $this->setProductBranchVersions($productBranchVersions);
         $this->setNightlyChannels($nightlyChannels);
         $this->setVar('isPatch',false);
         $this->setVar('patchType',$type); 
@@ -254,7 +254,7 @@ class Patch extends AUS_Object {
         } 
 
         // Determine the branch of the client's version.
-        $branchVersion = $this->getBranch($version);
+        $branchVersion = $this->getBranch($product,$version);
 
         // Otherwise, if it is a complete patch and a nightly channel, force the complete update to take the user to the latest build.
         if ($this->isComplete() && $this->isNightlyChannel($channel)) {
@@ -294,13 +294,13 @@ class Patch extends AUS_Object {
     }
 
     /**
-     * Set the branch versions array.
+     * Set the product & branch versions array.
      *
-     * @param array $branchVersions
+     * @param array $productBranchVersions
      * @return boolean
      */
-    function setBranchVersions($branchVersions) {
-        return $this->setVar('branchVersions',$branchVersions);
+    function setProductBranchVersions($productBranchVersions) {
+        return $this->setVar('productBranchVersions',$productBranchVersions);
     }
 
     /**
@@ -328,11 +328,25 @@ class Patch extends AUS_Object {
     /**
      * Determine whether or not the incoming version is a product BRANCH.
      *
+     * @param string $product
      * @param string $version
      * @return string|false
      */
-    function getBranch($version) {
-       return (isset($this->branchVersions[$version])) ? $this->branchVersions[$version] : false;
+    function getBranch($product,$version) {
+        if (!isset ($this->productBranchVersions[$product])) {
+            return false;
+        }
+        foreach ($this->productBranchVersions[$product] as $versionPattern => $branch) {
+            // No need to create a regular expression if there's no wildcard
+            if (strpos ($versionPattern, '*') === false) {
+                if ($versionPattern == $version) {
+                    return $branch;
+                }
+            } elseif (preg_match('/^'. str_replace('\\*', '.*', preg_quote($versionPattern, '/')) .'$/', $version)) {
+                return $branch;
+            }
+        }
+        return false;
     }
 
     /**

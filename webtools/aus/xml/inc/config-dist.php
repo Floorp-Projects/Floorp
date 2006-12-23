@@ -64,52 +64,26 @@ $nightlyChannels = array(
     'nightly'
 );
 
-// This hash defines the version->patch relationships for nightlies
+// This hash defines the product->version->patch relationships for nightlies
 // It determines which patches are associated to which incoming client versions.
 // @todo replace this with a better datasource that can be easily managed via a GUI.
-$branchVersions = array(
-    '0.4a1'      =>  'trunk',
-    '0.5'        =>  'trunk',
-    '1.0+'       =>  '1.5',
-    '1.4'        =>  '1.5',
-    '1.4.1'      =>  '1.5',
-    '1.5'        =>  '1.5',
-    '1.5.0.1'    =>  '1.5.0.x',
-    '1.5.0.2'    =>  '1.5.0.x',
-    '1.5.0.3'    =>  '1.5.0.x',
-    '1.5.0.4'    =>  '1.5.0.x',
-    '1.5.0.5'    =>  '1.5.0.x',
-    '1.5.0.6'    =>  '1.5.0.x',
-    '1.5.0.7pre' =>  '1.5.0.x',
-    '1.5.0.7'    =>  '1.5.0.x',
-    '1.5.0.8pre' =>  '1.5.0.x',
-    '1.5.0.8'    =>  '1.5.0.x',
-    '1.5.0.9pre' =>  '1.5.0.x',
-    '1.5.0.9'    =>  '1.5.0.x',
-    '1.5.0.10pre'=>  '1.5.0.x',
-    '1.5.0.10'   =>  '1.5.0.x',
-    '1.5.0.11pre'=>  '1.5.0.x',
-    '1.5.0.11'   =>  '1.5.0.x',
-    '1.6a1'      =>  'trunk',
-    '2.0'        =>  '2.0',
-    '2.0.0.1pre' =>  '2.0',
-    '2.0.0.1'    =>  '2.0',
-    '2.0.0.2pre' =>  '2.0',
-    '2.0.0.2'    =>  '2.0',
-    '2.0.0.3pre' =>  '2.0',
-    '2.0.0.3'    =>  '2.0',
-    '2.0a1'      =>  '2.0',
-    '2.0a2'      =>  '2.0',
-    '2.0a3'      =>  '2.0',
-    '2.0b1'      =>  '2.0',
-    '2.0b1pre'   =>  '2.0',
-    '2.0b2'      =>  '2.0',
-    '2.0b2pre'   =>  '2.0',
-    '3.0a1'      =>  'trunk',
-    '3.0a2pre'   =>  'trunk',
-    '3.0a2'      =>  'trunk',
-    '3.0a3pre'   =>  'trunk',
-    '3.0a3'      =>  'trunk'
+$productBranchVersions = array(
+    'Firefox'     =>  array(
+        '1.5.0.*' =>  '1.5.0.x',
+        '1.6a1'   =>  'trunk',
+        '1.*'     =>  '1.5',
+        '2.0*'    =>  '2.0',
+        '3.0a*'   =>  'trunk'
+    ),
+    'Thunderbird' =>  array(
+        '1.5.0.*' =>  '1.5.0.x',
+        '2.0*'    =>  '2.0',
+        '3.0a*'   =>  'trunk'
+    ),
+    'Sunbird'     =>  array(
+        '0.4a1'   =>  'trunk',
+        '0.5'     =>  'trunk'
+    )
 );
 
 // Array that defines which %OS_VERSION% values are no longer supported.

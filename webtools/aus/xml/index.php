@@ -117,7 +117,7 @@ switch ($clean['updateVersion']) {
         $update = new Update();
 
         // Instantiate our complete patch.
-        $completePatch = new Patch($branchVersions,$nightlyChannels,'complete');
+        $completePatch = new Patch($productBranchVersions,$nightlyChannels,'complete');
 
         // If our complete patch exists and is valid, set the patch line.
         if ($completePatch->findPatch($clean['product'],$clean['platform'],$clean['locale'],$clean['version'],$clean['build'],$clean['channel']) && $completePatch->isPatch()) {
@@ -149,7 +149,7 @@ switch ($clean['updateVersion']) {
         }
 
         // Instantiate our partial patch.
-        $partialPatch = new Patch($branchVersions,$nightlyChannels,'partial');
+        $partialPatch = new Patch($productBranchVersions,$nightlyChannels,'partial');
 
         // If our partial patch exists and is valid, set the patch line.
         if ($partialPatch->findPatch($clean['product'],$clean['platform'],$clean['locale'],$clean['version'],$clean['build'],$clean['channel']) 
@@ -177,7 +177,7 @@ switch ($clean['updateVersion']) {
         $update = new Update();
 
         // Instantiate Patch object and set Path based on passed args.
-        $patch = new Patch($branchVersions,$nightlyChannels,'complete');
+        $patch = new Patch($productBranchVersions,$nightlyChannels,'complete');
 
         $patch->findPatch($clean['product'],$clean['platform'],$clean['locale'],$clean['version'],$clean['build'],null);
 
