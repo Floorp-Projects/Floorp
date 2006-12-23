@@ -2019,7 +2019,9 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
     return _cairo_xlib_surface_create_internal (dpy, drawable, screen,
 						NULL, format, width, height, 0);
 }
+#if 0
 slim_hidden_def (cairo_xlib_surface_create_with_xrender_format);
+#endif
 
 /**
  * cairo_xlib_surface_set_size:

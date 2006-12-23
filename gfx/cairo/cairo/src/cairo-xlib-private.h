@@ -54,7 +54,9 @@ _cairo_xlib_screen_info_get (Display *display, Screen *screen);
 #if CAIRO_HAS_XLIB_XRENDER_SURFACE
 
 #include "cairo-xlib-xrender.h"
+#if 0
 slim_hidden_proto (cairo_xlib_surface_create_with_xrender_format);
+#endif
 
 #endif
 
