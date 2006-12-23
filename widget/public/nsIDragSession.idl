@@ -101,8 +101,6 @@ interface nsIDragSession : nsISupports
 
    /**
     * Check to set if any of the native data on the clipboard matches this data flavor
-    *
-    * @result NS_OK if if the data flavor is supported and, NS_ERROR_FAILURE is it is not
     */
   boolean isDataFlavorSupported ( in string aDataFlavor ) ;
   

@@ -482,8 +482,6 @@ nsDragService::GetData(nsITransferable* aTransferable, PRUint32 aItemIndex)
 }
 
 
-// For some reason this is supposed to return NS_ERROR_FAILURE if the flavor is not
-// present. Might be good to clean up this API quirk some day.
 NS_IMETHODIMP
 nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
 {
@@ -509,10 +507,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
       *_retval = PR_TRUE;
   }
 
-  if (*_retval)
-    return NS_OK;
-  else
-    return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 
