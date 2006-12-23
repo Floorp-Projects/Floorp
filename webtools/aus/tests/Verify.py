@@ -16,6 +16,7 @@ urllib2.install_opener(opener)
 class Verify(ColumnFixture):
 
     _typeDict={"host": "String",
+               "updateVersion": "String",
                "product": "String",
                "version": "String",
                "build": "String",
@@ -39,14 +40,15 @@ class Verify(ColumnFixture):
 
     def __init__(self):
         super(Verify, self).__init__()
-        self.osVersion = "osVersion"
 
         # Variables that are typically set in the FitNesse wiki params.
+        self.updateVersion = ""
         self.host = ""
         self.product = ""
         self.version = ""
         self.platform = ""
         self.locale = ""
+        self.osVersion = ""
 
         # For storign the last retrieved AUS XML and its URI.
         self.lastURI = ""
@@ -119,11 +121,20 @@ class Verify(ColumnFixture):
         # Assign class variables from FitNesse arguments if they 
         # are not passed in from the row.
         if (not self.host): self.host = self.args[0]
-        if (not self.product): self.product = self.args[1]
-        if (not self.version): self.version = self.args[2]
-        if (not self.platform): self.platform = self.args[3]
-        if (not self.locale): self.locale = self.args[4]
+        if (not self.updateVersion): self.updateVersion = self.args[1]
+        if (not self.product): self.product = self.args[2]
+        if (not self.version): self.version = self.args[3]
+        if (not self.platform): self.platform = self.args[4]
+        if (not self.locale): self.locale = self.args[5]
+        if (not self.osVersion): self.osVersion = self.args[6]
 
-        return '/'.join((self.host, self.product, self.version,     \
-                        self.build, self.platform, self.locale,     \
-                        self.channel, self.osVersion, "update.xml"))
+        if (self.osVersion != "NULL"):
+            return '/'.join((self.host, self.updateVersion, self.product, self.version,     \
+                            self.build, self.platform, self.locale,     \
+                            self.channel, self.osVersion, "update.xml"))
+        else:
+             return '/'.join((self.host, self.updateVersion, self.product, self.version,     \
+                            self.build, self.platform, self.locale,     \
+                            self.channel, "update.xml"))
+           
+
