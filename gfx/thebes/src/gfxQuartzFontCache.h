@@ -72,21 +72,28 @@ public:
     THEBES_INLINE_DECL_REFCOUNTING(FontEntry)
 
     FontEntry(nsString &aName) :
-        mName(aName)
+        mName(aName), mWeight(0), mTraits(0)
     {
-        Init();
     }
 
     const nsString& Name() { return mName; }
-    PRInt32 Weight() { return mWeight; }
-    PRUint32 Traits() { return mTraits; }
+    PRInt32 Weight() {
+        if (!mWeight)
+            RealizeWeightAndTraits();
+        return mWeight;
+    }
+    PRUint32 Traits() {
+        if (!mWeight)
+            RealizeWeightAndTraits();
+        return mTraits;
+    }
     PRBool IsFixedPitch();
     PRBool IsItalicStyle();
     PRBool IsBold();
     NSFont* GetNSFont(float aSize);
 
 protected:
-    void Init();
+    void RealizeWeightAndTraits();
     void GetStringForNSString(const NSString *aSrc, nsAString& aDist);
     NSString* GetNSStringForString(const nsAString& aSrc);
 

@@ -99,23 +99,23 @@ FontEntry::GetNSFont(float aSize)
 PRBool
 FontEntry::IsFixedPitch()
 {
-    return mTraits & NSFixedPitchFontMask ? PR_TRUE : PR_FALSE;
+    return Traits() & NSFixedPitchFontMask ? PR_TRUE : PR_FALSE;
 }
 
 PRBool
 FontEntry::IsItalicStyle()
 {
-    return mTraits & NSItalicFontMask ? PR_TRUE : PR_FALSE;
+    return Traits() & NSItalicFontMask ? PR_TRUE : PR_FALSE;
 }
 
 PRBool
 FontEntry::IsBold()
 {
-    return mWeight >= APPLE_BOLD_WEIGHT ? PR_TRUE : PR_FALSE;
+    return Weight() >= APPLE_BOLD_WEIGHT ? PR_TRUE : PR_FALSE;
 }
 
 void
-FontEntry::Init()
+FontEntry::RealizeWeightAndTraits()
 {
     NSFont *font = GetNSFont(10.0);
     NSFontManager *fontManager = [NSFontManager sharedFontManager];
@@ -206,6 +206,8 @@ static PRBool GetFontNameFromBuffer(const char *aBuf,
                                     FontPlatformCode aPlatformCode,
                                     FontScriptCode aScriptCode,
                                     FontLanguageCode aLangCode,
+                                    TECObjectRef &aConverter,
+                                    TextEncoding &aEncodingOfConverter,
                                     nsAString &aResult)
 {
     if (aPlatformCode == kFontMacintoshPlatform) {
@@ -215,17 +217,20 @@ static PRBool GetFontNameFromBuffer(const char *aBuf,
                                                        &encoding);
         if (err != noErr)
             return PR_FALSE;
-        TECObjectRef converter;
-        err = ::TECCreateConverter(&converter, encoding, sUTF8Encoding);
-        if (err != noErr)
-            return PR_FALSE;
+        if (!aConverter || aEncodingOfConverter != encoding) {
+            if (aConverter)
+                ::TECDisposeConverter(aConverter);
+            err = ::TECCreateConverter(&aConverter, encoding, sUTF8Encoding);
+            if (err != noErr)
+                return PR_FALSE;
+            aEncodingOfConverter = encoding;
+        }
         const ByteCount kBufLength = 1024;
         char name[kBufLength];
         ByteCount actualInputLength, actualOutputLength;
-        err = ::TECConvertText(converter,
+        err = ::TECConvertText(aConverter,
                                (UInt8*)aBuf, aLength, &actualInputLength,
                                (UInt8*)name, kBufLength, &actualOutputLength);
-        ::TECDisposeConverter(converter);
         if (err != noErr)
             return PR_FALSE;
         name[actualOutputLength] = '\0';
@@ -292,6 +297,8 @@ gfxQuartzFontCache::InitFontList()
     err = ::ATSUGetFontIDs(fontIDs, arraySize, &fontCount);
     if (err != noErr)
         return;
+    TextEncoding encoding = 0;
+    TECObjectRef converter = nsnull;
     for (ItemCount i = 0; i < fontCount; i++) {
         struct FontNames {
             FontNames() {
@@ -310,17 +317,16 @@ gfxQuartzFontCache::InitFontList()
         if (err != noErr || nameCount == 0)
             continue;
         for (ItemCount j = 0; j < nameCount; j++) {
+            // In principle, we should get actual length of font name,
+            // but we can skip it by the enough buffer length.
             ByteCount len;
-            err = ::ATSUGetIndFontName(fontIDs[i], j, 0, nsnull, &len,
-                                       nsnull, nsnull, nsnull, nsnull);
-            if (err != noErr || len == 0)
-                continue;
-            char buf[len + 1];
+            const ByteCount kBufLength = 1024;
+            char buf[kBufLength];
             FontNameCode nameCode;
             FontPlatformCode platformCode;
             FontScriptCode scriptCode;
             FontLanguageCode langCode;
-            err = ::ATSUGetIndFontName(fontIDs[i], j, len, buf, &len,
+            err = ::ATSUGetIndFontName(fontIDs[i], j, kBufLength, buf, &len,
                                        &nameCode, &platformCode,
                                        &scriptCode, &langCode);
             if (err != noErr || len == 0)
@@ -335,7 +341,7 @@ gfxQuartzFontCache::InitFontList()
             }
             nsAutoString fontName;
             if (!GetFontNameFromBuffer(buf, len, platformCode, scriptCode,
-                                       langCode, fontName))
+                                       langCode, converter, encoding, fontName))
                 continue;
 
             if (fontName[0] == PRUnichar('.') ||
@@ -403,6 +409,8 @@ gfxQuartzFontCache::InitFontList()
             mAllFamilyNames.Put(key, names.mFamily);
         }
     }
+    if (converter)
+        ::TECDisposeConverter(converter);
 }
 
 void
