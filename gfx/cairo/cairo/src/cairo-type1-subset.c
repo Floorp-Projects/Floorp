@@ -280,7 +280,7 @@ cairo_type1_font_subset_write_header (cairo_type1_font_subset_t *font,
     _cairo_output_stream_printf (font->output,
 				 "/Encoding 256 array\n"
 				 "0 1 255 {1 index exch /.notdef put} for\n");
-    for (i = 0; i < font->base.num_glyphs; i++) {
+    for (i = 1; i < font->base.num_glyphs; i++) {
 	if (font->glyphs[i].subset_index < 0)
 	    continue;
 	_cairo_output_stream_printf (font->output,
@@ -1007,6 +1007,9 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
     /* XXX: Need to fix this to work with a general cairo_unscaled_font_t. */
     if (!_cairo_scaled_font_is_ft (scaled_font_subset->scaled_font))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (_cairo_ft_scaled_font_is_vertical (scaled_font_subset->scaled_font))
+        return CAIRO_INT_STATUS_UNSUPPORTED;
 
     unscaled_font = _cairo_ft_scaled_font_get_unscaled_font (scaled_font_subset->scaled_font);
 

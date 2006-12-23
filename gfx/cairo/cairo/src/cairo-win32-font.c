@@ -151,7 +151,8 @@ _compute_transform (cairo_win32_scaled_font_t *scaled_font,
 	    scaled_font->y_scale = - scaled_font->y_scale;
 
 	scaled_font->logical_scale = WIN32_FONT_LOGICAL_SCALE * scaled_font->y_scale;
-	scaled_font->logical_size = WIN32_FONT_LOGICAL_SCALE * floor (scaled_font->y_scale + 0.5);
+	scaled_font->logical_size = WIN32_FONT_LOGICAL_SCALE *
+                                    _cairo_lround (scaled_font->y_scale);
     }
 
     /* The font matrix has x and y "scale" components which we extract and
@@ -165,7 +166,8 @@ _compute_transform (cairo_win32_scaled_font_t *scaled_font,
 					     &scaled_font->x_scale, &scaled_font->y_scale,
 					     TRUE);	/* XXX: Handle vertical text */
 
-	scaled_font->logical_size = floor (WIN32_FONT_LOGICAL_SCALE * scaled_font->y_scale + 0.5);
+	scaled_font->logical_size = _cairo_lround (WIN32_FONT_LOGICAL_SCALE *
+                                                   scaled_font->y_scale);
 	scaled_font->logical_scale = WIN32_FONT_LOGICAL_SCALE * scaled_font->y_scale;
     }
 
@@ -864,8 +866,8 @@ _cairo_win32_scaled_font_glyph_bbox (void		 *abstract_font,
             glyph_index_option = 0;
 
 	for (i = 0; i < num_glyphs; i++) {
-	    int x = floor (0.5 + glyphs[i].x);
-	    int y = floor (0.5 + glyphs[i].y);
+	    int x = _cairo_lround (glyphs[i].x);
+	    int y = _cairo_lround (glyphs[i].y);
 
 	    GetGlyphOutlineW (hdc, glyphs[i].index, GGO_METRICS | glyph_index_option,
 			     &metrics, 0, NULL, &matrix);
@@ -966,8 +968,8 @@ _add_glyph (cairo_glyph_state_t *state,
 
     cairo_matrix_transform_point (&state->scaled_font->device_to_logical, &user_x, &user_y);
 
-    logical_x = floor (user_x + 0.5);
-    logical_y = floor (user_y + 0.5);
+    logical_x = _cairo_lround (user_x);
+    logical_y = _cairo_lround (user_y);
 
     if (state->glyphs.num_elements > 0) {
 	int dx;
@@ -1149,7 +1151,7 @@ _cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
 				      int			dest_y,
 				      unsigned int		width,
 				      unsigned int		height,
-				      const cairo_glyph_t      *glyphs,
+				      cairo_glyph_t	       *glyphs,
 				      int                 	num_glyphs)
 {
     cairo_win32_scaled_font_t *scaled_font = abstract_font;

@@ -154,7 +154,7 @@ static cairo_int_status_t
 _cairo_analysis_surface_show_glyphs (void		  *abstract_surface,
 				     cairo_operator_t	   op,
 				     cairo_pattern_t	  *source,
-				     const cairo_glyph_t  *glyphs,
+				     cairo_glyph_t	  *glyphs,
 				     int		   num_glyphs,
 				     cairo_scaled_font_t  *scaled_font)
 {

@@ -82,4 +82,8 @@
 #include "cairo-rename.h"
 #endif
 
+#ifdef IS_BIG_ENDIAN
+#define FLOAT_WORDS_BIGENDIAN
+#endif
+
 #endif /* CAIRO_PLATFORM_H */

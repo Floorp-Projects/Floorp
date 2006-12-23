@@ -270,7 +270,12 @@ _cairo_pen_vertices_needed (double	    tolerance,
 	/* number of vertices must be even */
 	if (num_vertices % 2)
 	    num_vertices++;
+
+	/* And we must always have at least 4 vertices. */
+	if (num_vertices < 4)
+	    num_vertices = 4;
     }
+
     return num_vertices;
 }
 
@@ -314,6 +319,8 @@ _cairo_pen_find_active_cw_vertex_index (cairo_pen_t *pen,
 	    && _cairo_slope_counter_clockwise (slope, &pen->vertices[i].slope_cw))
 	    break;
     }
+
+    assert (i < pen->num_vertices);
 
     *active = i;
 
@@ -441,7 +448,7 @@ _cairo_pen_stroke_spline (cairo_pen_t		*pen,
 	return status;
 
     _cairo_polygon_close (&polygon);
-    _cairo_traps_tessellate_polygon (traps, &polygon, CAIRO_FILL_RULE_WINDING);
+    _cairo_bentley_ottmann_tessellate_polygon (traps, &polygon, CAIRO_FILL_RULE_WINDING);
     _cairo_polygon_fini (&polygon);
 
     return CAIRO_STATUS_SUCCESS;

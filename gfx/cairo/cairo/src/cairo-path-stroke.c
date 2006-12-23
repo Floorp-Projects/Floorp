@@ -201,7 +201,6 @@ _cairo_stroker_face_clockwise (cairo_stroke_face_t *in, cairo_stroke_face_t *out
 static cairo_status_t
 _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_stroke_face_t *out)
 {
-    cairo_status_t	status;
     int			clockwise = _cairo_stroker_face_clockwise (out, in);
     cairo_point_t	*inpt, *outpt;
 
@@ -296,8 +295,8 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	    double		x1, y1, x2, y2;
 	    double		mx, my;
 	    double		dx1, dx2, dy1, dy2;
-	    cairo_polygon_t	polygon;
 	    cairo_point_t	outer;
+	    cairo_point_t	quad[4];
 
 	    /*
 	     * we've got the points already transformed to device
@@ -339,18 +338,13 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	     */
 	    outer.x = _cairo_fixed_from_double (mx);
 	    outer.y = _cairo_fixed_from_double (my);
-	    _cairo_polygon_init (&polygon);
-	    _cairo_polygon_move_to (&polygon, &in->point);
-	    _cairo_polygon_line_to (&polygon, inpt);
-	    _cairo_polygon_line_to (&polygon, &outer);
-	    _cairo_polygon_line_to (&polygon, outpt);
-	    _cairo_polygon_close (&polygon);
-	    status = _cairo_traps_tessellate_polygon (stroker->traps,
-						      &polygon,
-						      CAIRO_FILL_RULE_WINDING);
-	    _cairo_polygon_fini (&polygon);
 
-	    return status;
+	    quad[0] = in->point;
+	    quad[1] = *inpt;
+	    quad[2] = outer;
+	    quad[3] = *outpt;
+
+	    return _cairo_traps_tessellate_convex_quad (stroker->traps, quad);
 	}
 	/* fall through ... */
     }
@@ -424,7 +418,7 @@ _cairo_stroker_add_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
 	_cairo_polygon_line_to (&polygon, &f->ccw);
 	_cairo_polygon_close (&polygon);
 
-	status = _cairo_traps_tessellate_polygon (stroker->traps, &polygon, CAIRO_FILL_RULE_WINDING);
+	status = _cairo_bentley_ottmann_tessellate_polygon (stroker->traps, &polygon, CAIRO_FILL_RULE_WINDING);
 	_cairo_polygon_fini (&polygon);
 
 	return status;
@@ -573,8 +567,7 @@ _cairo_stroker_add_sub_edge (cairo_stroker_t *stroker, cairo_point_t *p1, cairo_
 			     cairo_slope_t *slope, cairo_stroke_face_t *start,
 			     cairo_stroke_face_t *end)
 {
-    cairo_status_t status;
-    cairo_polygon_t polygon;
+    cairo_point_t rectangle[4];
 
     _compute_face (p1, slope, stroker, start);
 
@@ -586,30 +579,12 @@ _cairo_stroker_add_sub_edge (cairo_stroker_t *stroker, cairo_point_t *p1, cairo_
     if (p1->x == p2->x && p1->y == p2->y)
 	return CAIRO_STATUS_SUCCESS;
 
-    /* XXX: I should really check the return value of the
-       move_to/line_to functions here to catch out of memory
-       conditions. But since that would be ugly, I'd prefer to add a
-       status flag to the polygon object that I could check only once
-       at then end of this sequence, (like we do with cairo_t
-       already). */
-    _cairo_polygon_init (&polygon);
-    _cairo_polygon_move_to (&polygon, &start->cw);
-    _cairo_polygon_line_to (&polygon, &start->ccw);
-    _cairo_polygon_line_to (&polygon, &end->ccw);
-    _cairo_polygon_line_to (&polygon, &end->cw);
-    _cairo_polygon_close (&polygon);
+    rectangle[0] = start->cw;
+    rectangle[1] = start->ccw;
+    rectangle[2] = end->ccw;
+    rectangle[3] = end->cw;
 
-    /* XXX: We can't use tessellate_rectangle as the matrix may have
-       skewed this into a non-rectangular shape. Perhaps it would be
-       worth checking the matrix for skew so that the common case
-       could use the faster tessellate_rectangle rather than
-       tessellate_polygon? */
-    status = _cairo_traps_tessellate_polygon (stroker->traps,
-					      &polygon, CAIRO_FILL_RULE_WINDING);
-
-    _cairo_polygon_fini (&polygon);
-
-    return status;
+    return _cairo_traps_tessellate_convex_quad (stroker->traps, rectangle);
 }
 
 static cairo_status_t

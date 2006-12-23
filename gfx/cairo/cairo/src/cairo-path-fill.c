@@ -194,9 +194,9 @@ _cairo_path_fixed_fill_to_traps (cairo_path_fixed_t *path,
     if (status)
 	goto BAIL;
 
-    status = _cairo_traps_tessellate_polygon (filler.traps,
-					      &filler.polygon,
-					      fill_rule);
+    status = _cairo_bentley_ottmann_tessellate_polygon (filler.traps,
+							&filler.polygon,
+							fill_rule);
     if (status)
 	goto BAIL;
 

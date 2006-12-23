@@ -602,18 +602,18 @@ nsThebesRenderingContext::DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoo
 }
 
 
-/* Clamp r to (0,0) (32766,32766);
+/* Clamp r to (0,0) (16384,16384);
  * these are to be device coordinates.
  *
  * Returns PR_FALSE if the rectangle is completely out of bounds, PR_TRUE otherwise.
  */
+#define CAIRO_COORD_MAX (16384.0)
+
 static PRBool
 ConditionRect(gfxRect& r) {
-    const double COORD_MAX = 32766.0;
-
     // if either x or y is way out of bounds;
     // note that we don't handle negative w/h here
-    if (r.pos.x > COORD_MAX || r.pos.y > COORD_MAX)
+    if (r.pos.x > CAIRO_COORD_MAX || r.pos.y > CAIRO_COORD_MAX)
         return PR_FALSE;
 
     if (r.pos.x < 0.0) {
@@ -621,8 +621,8 @@ ConditionRect(gfxRect& r) {
         r.pos.x = 0.0;
     }
 
-    if (r.pos.x + r.size.width > COORD_MAX) {
-        r.size.width = COORD_MAX - r.pos.x;
+    if (r.pos.x + r.size.width > CAIRO_COORD_MAX) {
+        r.size.width = CAIRO_COORD_MAX - r.pos.x;
     }
 
     if (r.pos.y < 0.0) {
@@ -630,8 +630,8 @@ ConditionRect(gfxRect& r) {
         r.pos.y = 0.0;
     }
 
-    if (r.pos.y + r.size.height > COORD_MAX) {
-        r.size.height = COORD_MAX - r.pos.y;
+    if (r.pos.y + r.size.height > CAIRO_COORD_MAX) {
+        r.size.height = CAIRO_COORD_MAX - r.pos.y;
     }
     return PR_TRUE;
 }
@@ -644,7 +644,7 @@ nsThebesRenderingContext::FillRect(const nsRect& aRect)
     gfxRect r(GFX_RECT_FROM_TWIPS_RECT(aRect));
 
     /* Clamp coordinates to work around a design bug in cairo */
-    nscoord bigval = (nscoord)(32766*mP2T);
+    nscoord bigval = (nscoord)(CAIRO_COORD_MAX*mP2T);
     if (aRect.width > bigval ||
         aRect.height > bigval ||
         aRect.x < -bigval ||
@@ -661,12 +661,17 @@ nsThebesRenderingContext::FillRect(const nsRect& aRect)
 
         mThebes->IdentityMatrix();
         mThebes->NewPath();
+
+        PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::FillRect conditioned to [%f,%f,%f,%f]\n", this, r.pos.x, r.pos.y, r.size.width, r.size.height));
+
         mThebes->Rectangle(r, PR_TRUE);
         mThebes->Fill();
         mThebes->SetMatrix(mat);
 
         return NS_OK;
     }
+
+    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::FillRect raw [%f,%f,%f,%f]\n", this, r.pos.x, r.pos.y, r.size.width, r.size.height));
 
     mThebes->NewPath();
     mThebes->Rectangle(r, PR_TRUE);

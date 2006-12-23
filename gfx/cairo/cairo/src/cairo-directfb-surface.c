@@ -548,6 +548,10 @@ _cairo_directfb_surface_release_dest_image (void                  *abstract_surf
 static cairo_status_t
 _cairo_directfb_surface_clone_similar (void             *abstract_surface,
                                        cairo_surface_t  *src,
+				       int               src_x,
+				       int               src_y,
+				       int               width,
+				       int               height,
                                        cairo_surface_t **clone_out)
 {
     cairo_directfb_surface_t *surface = abstract_surface;
@@ -583,19 +587,23 @@ _cairo_directfb_surface_clone_similar (void             *abstract_surface,
             cairo_surface_destroy ((cairo_surface_t *)clone);
             return CAIRO_STATUS_NO_MEMORY;
         }
+
+	dst += pitch * src_y;
+	src += image_src->stride * src_y;
         
         if (image_src->format == CAIRO_FORMAT_A1) {
             /* A1 -> A8 */
-            for (i = 0; i < image_src->height; i++) {
-                for (j = 0; j < image_src->width; j++)
+            for (i = 0; i < height; i++) {
+                for (j = src_x; j < src_x + width; j++)
                     dst[j] = (src[j>>3] & (1 << (j&7))) ? 0xff : 0x00;
                 dst += pitch;
                 src += image_src->stride;
             }
         }
-        else {     
-            for (i = 0; i < image_src->height; i++) {
-                direct_memcpy( dst, src, image_src->stride );
+        else {
+	    /* A8 -> A8 */
+            for (i = 0; i < height; i++) {
+                direct_memcpy( dst+src_x, src+src_x, sizeof(*dst)*width );
                 dst += pitch;
                 src += image_src->stride;
             }
@@ -881,10 +889,10 @@ _cairo_directfb_surface_composite (cairo_operator_t  op,
                 TRANSFORM_POINT (m, sr.x, sr.y, x1, y1);
                 TRANSFORM_POINT (m, sr.x+sr.w, sr.y+sr.h, x2, y2);
                 
-                dr.x = floor (x1+.5);
-                dr.y = floor (y1+.5);
-                dr.w = floor (x2-x1+.5);
-                dr.h = floor (y2-y1+.5);
+                dr.x = _cairo_lround (x1);
+                dr.y = _cairo_lround (y1);
+                dr.w = _cairo_lround (x2-x1);
+                dr.h = _cairo_lround (y2-y1);
         
                 D_DEBUG_AT (Cairo_DirectFB, "Running StretchBlit().\n");
 
@@ -1275,8 +1283,8 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
                 return CAIRO_INT_STATUS_UNSUPPORTED;
         }
         
-        points[n].x = floor (glyphs[i].x + img->base.device_transform.x0 + .5);
-        points[n].y = floor (glyphs[i].y + img->base.device_transform.y0 + .5);
+        points[n].x = _cairo_lround (glyphs[i].x + img->base.device_transform.x0);
+        points[n].y = _cairo_lround (glyphs[i].y + img->base.device_transform.y0);
         
         if (points[n].x >= surface->width  ||
             points[n].y >= surface->height ||
@@ -1442,7 +1450,7 @@ static cairo_int_status_t
 _cairo_directfb_surface_show_glyphs ( void                 *abstract_dst,
                                      cairo_operator_t      op,
                                      cairo_pattern_t      *pattern,
-                                     const cairo_glyph_t  *glyphs,
+                                     cairo_glyph_t	  *glyphs,
                                      int                   num_glyphs,
                                      cairo_scaled_font_t  *scaled_font)
 {

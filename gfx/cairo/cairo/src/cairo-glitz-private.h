@@ -1,4 +1,4 @@
-/* cairo - a vector graphics library with display and print output
+/* Cairo - a vector graphics library with display and print output
  *
  * Copyright © 2005 Red Hat, Inc.
  *
@@ -28,28 +28,14 @@
  * The Original Code is the cairo graphics library.
  *
  * The Initial Developer of the Original Code is Red Hat, Inc.
- *
- * Contributor(s):
- *	Carl D. Worth <cworth@redhat.com>
  */
 
-#ifndef CAIRO_PATH_DATA_PRIVATE_H
-#define CAIRO_PATH_DATA_PRIVATE_H
+#ifndef CAIRO_GLITZ_PRIVATE_H
+#define CAIRO_GLITZ_PRIVATE_H
 
 #include "cairoint.h"
+#include "cairo-glitz.h"
 
-extern const cairo_private cairo_path_t _cairo_path_nil;
+slim_hidden_proto (cairo_glitz_surface_create);
 
-cairo_private cairo_path_t *
-_cairo_path_data_create (cairo_path_fixed_t *path,
-			 cairo_gstate_t     *gstate);
-
-cairo_private cairo_path_t *
-_cairo_path_data_create_flat (cairo_path_fixed_t *path,
-			      cairo_gstate_t     *gstate);
-
-cairo_private cairo_status_t
-_cairo_path_data_append_to_context (cairo_path_t *path,
-				    cairo_t	 *cr);
-
-#endif /* CAIRO_PATH_DATA_PRIVATE_H */
+#endif /* CAIRO_GLITZ_PRIVATE_H */

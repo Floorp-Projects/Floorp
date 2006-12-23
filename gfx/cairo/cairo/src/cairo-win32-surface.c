@@ -1473,7 +1473,7 @@ static cairo_int_status_t
 _cairo_win32_surface_show_glyphs (void			*surface,
 				  cairo_operator_t	 op,
 				  cairo_pattern_t	*source,
-				  const cairo_glyph_t	*glyphs,
+				  cairo_glyph_t		*glyphs,
 				  int			 num_glyphs,
 				  cairo_scaled_font_t	*scaled_font)
 {
@@ -1481,18 +1481,20 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 
     WORD glyph_buf_stack[STACK_GLYPH_SIZE];
     WORD *glyph_buf = glyph_buf_stack;
-    int dx_buf_stack[STACK_GLYPH_SIZE];
-    int *dx_buf = dx_buf_stack;
+    int dxy_buf_stack[2 * STACK_GLYPH_SIZE];
+    int *dxy_buf = dxy_buf_stack;
 
     BOOL win_result = 0;
-    int i;
-    double last_y = glyphs[0].y;
+    int i, j;
 
     cairo_solid_pattern_t *solid_pattern;
     COLORREF color;
-    int output_count = 0;
 
     cairo_matrix_t device_to_logical;
+
+    int start_x, start_y;
+    double user_x, user_y;
+    int logical_x, logical_y;
 
     /* We can only handle win32 fonts */
     if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_WIN32)
@@ -1531,58 +1533,68 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 
     if (num_glyphs > STACK_GLYPH_SIZE) {
 	glyph_buf = (WORD *)malloc(num_glyphs * sizeof(WORD));
-	dx_buf = (int *)malloc(num_glyphs * sizeof(int));
+        dxy_buf = (int *)malloc(num_glyphs * 2 * sizeof(int));
     }
 
-    for (i = 0; i < num_glyphs; ++i) {
-	output_count++;
+    /* It is vital that dx values for dxy_buf are calculated from the delta of
+     * _logical_ x coordinates (not user x coordinates) or else the sum of all
+     * previous dx values may start to diverge from the current glyph's x
+     * coordinate due to accumulated rounding error. As a result strings could
+     * be painted shorter or longer than expected. */
 
-	glyph_buf[i] = (WORD) glyphs[i].index;
-	if (i == num_glyphs - 1)
-	    dx_buf[i] = 0;
-	else
-	    dx_buf[i] = (int) floor(((glyphs[i+1].x - glyphs[i].x) * WIN32_FONT_LOGICAL_SCALE) + 0.5);
+    user_x = glyphs[0].x;
+    user_y = glyphs[0].y;
 
-	if (i == num_glyphs - 1 || glyphs[i].y != glyphs[i+1].y) {
-	    const int offset = (i - output_count) + 1;
-	    double user_x = glyphs[offset].x;
-	    double user_y = last_y;
-	    int logical_x, logical_y;
+    cairo_matrix_transform_point(&device_to_logical,
+                                 &user_x, &user_y);
 
-	    cairo_matrix_transform_point(&device_to_logical,
-					 &user_x, &user_y);
+    logical_x = _cairo_lround (user_x);
+    logical_y = _cairo_lround (user_y);
 
-	    logical_x = (int) floor(user_x + 0.5);
-	    logical_y = (int) floor(user_y + 0.5);
+    start_x = logical_x;
+    start_y = logical_y;
 
-	    win_result = ExtTextOutW(dst->dc,
-				     logical_x,
-				     logical_y,
-				     ETO_GLYPH_INDEX,
-				     NULL,
-				     glyph_buf + offset,
-				     output_count,
-				     dx_buf + offset);
-	    if (!win_result) {
-		_cairo_win32_print_gdi_error("_cairo_win32_surface_show_glyphs(ExtTextOutW failed)");
-		goto FAIL;
-	    }
+    for (i = 0, j = 0; i < num_glyphs; ++i, j = 2 * i) {
+        glyph_buf[i] = (WORD) glyphs[i].index;
+        if (i == num_glyphs - 1) {
+            dxy_buf[j] = 0;
+            dxy_buf[j+1] = 0;
+        } else {
+            double next_user_x = glyphs[i+1].x;
+            double next_user_y = glyphs[i+1].y;
+            int next_logical_x, next_logical_y;
 
-	    output_count = 0;
+            cairo_matrix_transform_point(&device_to_logical,
+                                         &next_user_x, &next_user_y);
 
-	    if (i < num_glyphs - 1)
-		last_y = glyphs[i+1].y;
-	} else {
-	    last_y = glyphs[i].y;
-	}
+            next_logical_x = _cairo_lround (next_user_x);
+            next_logical_y = _cairo_lround (next_user_y);
+
+            dxy_buf[j] = _cairo_lround ((next_logical_x - logical_x) * WIN32_FONT_LOGICAL_SCALE);
+            dxy_buf[j+1] = _cairo_lround ((logical_y - start_y) * WIN32_FONT_LOGICAL_SCALE);
+
+            logical_x = next_logical_x;
+            logical_y = next_logical_y;
+        }
     }
 
-FAIL:
+    win_result = ExtTextOutW(dst->dc,
+                             start_x,
+                             start_y,
+                             ETO_GLYPH_INDEX | ETO_PDY,
+                             NULL,
+                             glyph_buf,
+                             num_glyphs,
+                             dxy_buf);
+    if (!win_result) {
+        _cairo_win32_print_gdi_error("_cairo_win32_surface_show_glyphs(ExtTextOutW failed)");
+    }
+
     RestoreDC(dst->dc, -1);
 
     if (glyph_buf != glyph_buf_stack) {
 	free(glyph_buf);
-	free(dx_buf);
+        free(dxy_buf);
     }
     return (win_result) ? CAIRO_STATUS_SUCCESS : CAIRO_INT_STATUS_UNSUPPORTED;
 }

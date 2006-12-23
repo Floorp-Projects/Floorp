@@ -987,6 +987,10 @@ _cairo_surface_release_dest_image (cairo_surface_t         *surface,
  * _cairo_surface_clone_similar:
  * @surface: a #cairo_surface_t
  * @src: the source image
+ * @src_x: extent for the rectangle in src we actually care about
+ * @src_y: extent for the rectangle in src we actually care about
+ * @width: extent for the rectangle in src we actually care about
+ * @height: extent for the rectangle in src we actually care about
  * @clone_out: location to store a surface compatible with @surface
  *   and with contents identical to @src. The caller must call
  *   cairo_surface_destroy() on the result.
@@ -1002,6 +1006,10 @@ _cairo_surface_release_dest_image (cairo_surface_t         *surface,
 cairo_status_t
 _cairo_surface_clone_similar (cairo_surface_t  *surface,
 			      cairo_surface_t  *src,
+			      int               src_x,
+			      int               src_y,
+			      int               width,
+			      int               height,
 			      cairo_surface_t **clone_out)
 {
     cairo_status_t status;
@@ -1014,7 +1022,8 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
     if (surface->backend->clone_similar == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    status = surface->backend->clone_similar (surface, src, clone_out);
+    status = surface->backend->clone_similar (surface, src, src_x, src_y,
+					      width, height, clone_out);
     if (status == CAIRO_STATUS_SUCCESS)
         (*clone_out)->device_transform = src->device_transform;
 
@@ -1025,7 +1034,8 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
     if (status != CAIRO_STATUS_SUCCESS)
 	return status;
 
-    status = surface->backend->clone_similar (surface, &image->base, clone_out);
+    status = surface->backend->clone_similar (surface, &image->base, src_x,
+					      src_y, width, height, clone_out);
     if (status == CAIRO_STATUS_SUCCESS)
         (*clone_out)->device_transform = src->device_transform;
 
@@ -1785,7 +1795,7 @@ cairo_status_t
 _cairo_surface_show_glyphs (cairo_surface_t	*surface,
 			    cairo_operator_t	 op,
 			    cairo_pattern_t	*source,
-			    const cairo_glyph_t	*glyphs,
+			    cairo_glyph_t	*glyphs,
 			    int			 num_glyphs,
 			    cairo_scaled_font_t	*scaled_font)
 {
@@ -1863,7 +1873,7 @@ _cairo_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
 				int			 dest_y,
 				unsigned int		 width,
 				unsigned int		 height,
-				const cairo_glyph_t	*glyphs,
+				cairo_glyph_t		*glyphs,
 				int			 num_glyphs)
 {
     cairo_status_t status;
