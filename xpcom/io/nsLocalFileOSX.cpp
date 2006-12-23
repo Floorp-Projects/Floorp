@@ -2016,6 +2016,28 @@ nsLocalFile::GetBundleDisplayName(nsAString& outBundleName)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsLocalFile::GetBundleIdentifier(nsACString& outBundleIdentifier)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  CFURLRef urlRef;
+  if (NS_SUCCEEDED(GetCFURL(&urlRef))) {
+    CFBundleRef bundle = ::CFBundleCreate(NULL, urlRef);
+    if (bundle) {
+      CFStringRef bundleIdentifier = ::CFBundleGetIdentifier(bundle);
+      if (bundleIdentifier)
+        rv = CFStringReftoUTF8(bundleIdentifier, outBundleIdentifier);
+
+      ::CFRelease(bundle);
+    }
+    ::CFRelease(urlRef);
+  }
+
+  return rv;
+}
+
+
 //*****************************************************************************
 //  nsLocalFile Methods
 //*****************************************************************************
