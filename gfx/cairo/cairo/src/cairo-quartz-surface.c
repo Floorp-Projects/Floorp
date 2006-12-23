@@ -55,9 +55,11 @@ _cairo_quartz_surface_acquire_source_image(void *abstract_surface,
 {
   cairo_quartz_surface_t *surface = abstract_surface;
 
+#if 0
   if (CGBitmapContextGetBitmapInfo (surface->context) != 0) {
     /* XXX: We can create an image out of the bitmap here */
   }
+#endif
 
   return CAIRO_INT_STATUS_UNSUPPORTED;
 }
