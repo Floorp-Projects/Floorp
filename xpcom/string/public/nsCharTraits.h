@@ -98,7 +98,7 @@
 #define NS_IS_HIGH_SURROGATE(u) ((PRUint32(u) & 0xFFFFFC00) == 0xD800)
 // Low surrogates are in the range 0xDC00 -- 0xDFFF
 #define NS_IS_LOW_SURROGATE(u)  ((PRUint32(u) & 0xFFFFFC00) == 0xDC00)
-// Faster than testing IS_HIGH_SURROGATE || IS_LOW_SURROGATE
+// Faster than testing NS_IS_HIGH_SURROGATE || NS_IS_LOW_SURROGATE
 #define IS_SURROGATE(u)      ((PRUint32(u) & 0xFFFFF800) == 0xD800)
 
 // Everything else is not a surrogate: 0x000 -- 0xD7FF, 0xE000 -- 0xFFFF
