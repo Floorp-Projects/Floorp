@@ -45,6 +45,7 @@
     windowtype="irc:chatzilla:channels"
     buttons="cancel"
     onload="onLoad(); runFilter()"
+    onunload="onUnload()"
     ondialogaccept="return joinChannel()"
     title="&window.title;">
 

@@ -1276,7 +1276,7 @@ function my_263 (e)
         this._list.done = true;
         this._list.error = e.decodeParam(2);
         // Return early for this one if we're saving it.
-        if ("saveTo" in this._list)
+        if ("file" in this._list)
             return true;
     }
 
@@ -1407,7 +1407,7 @@ function my_list_init ()
         this._list.count = 0;
     }
 
-    if (!("saveTo" in this._list))
+    if (!("file" in this._list))
     {
         this._list.displayed = 0;
         if (client.currentObject != this)
@@ -1429,7 +1429,7 @@ function my_321 (e)
 {
     this.listInit();
 
-    if (!("saveTo" in this._list))
+    if (!("file" in this._list))
         this.displayHere (e.params[2] + " " + e.params[3], "321");
 }
 
