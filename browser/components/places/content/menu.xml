@@ -736,7 +736,7 @@
         <body><![CDATA[
           // When right clicking an item in a bookmarks menu the places commands
           // need to be updated for the context menu to appear correctly.
-          window.updateCommands("select");
+          PlacesUtils.updateAllCommands();
           this.controller.buildContextMenu(aPopup);
         ]]></body>
       </method>
@@ -745,7 +745,7 @@
       <handler event="popupshowing">
         if (event.target == this) {
           this._enableEditCommands = true;
-          window.updateCommands("select");
+          PlacesUtils.updateAllCommands();
           this.onPopupShowing();
         }
       </handler>
@@ -760,7 +760,7 @@
           // when the folder closes because it is no longer applicable.
           this.removeAttribute("autoopened");
           this._enableEditCommands = false;
-          window.updateCommands("select");
+          PlacesUtils.updateAllCommands();
         }
       </handler>
       <!-- Set selected node/active view on mousedown/DOMMenuItemActive events

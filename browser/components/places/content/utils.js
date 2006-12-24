@@ -644,5 +644,13 @@ var PlacesUtils = {
     }
 
     return null;
+  },
+
+  /**
+   * Update both edit and places-specific commands
+   */
+  updateAllCommands: function() {
+    window.updateCommands("select");
+    window.updateCommands("places-select");
   }
 };

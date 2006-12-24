@@ -1005,9 +1005,12 @@
       </method>
     </implementation>
     <handlers>
-      <handler event="select"><![CDATA[
-        window.updateCommands("select");
-      ]]></handler>
+      <!-- Edit commands are updated by the global focus command updater
+           in editMenuOverlay -->
+      <handler event="focus" action="window.updateCommands('places-select')"/>
+      <handler event="blur" action="window.updateCommands('places-select')"/>
+
+      <handler event="select" action="PlacesUtils.updateAllCommands();"/>
       <handler event="draggesture"><![CDATA[
         // XXXben ew.
         if (event.target.localName == "treechildren")
