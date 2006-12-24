@@ -36,7 +36,7 @@
 
 <commandset id="placesCommands" 
             commandupdater="true"
-            events="focus,select"
+            events="places-select"
             oncommandupdate="goUpdatePlacesCommands();">>
     <command id="placesCmd_open"
              label="&cmd.open.label;"
