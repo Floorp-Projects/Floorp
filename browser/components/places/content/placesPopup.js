@@ -210,7 +210,7 @@ var PlacesPopup = {
    */
   onLinkDoubleClicked: function PP_onLinkDoubleClicked(event) {
     // Load the link and hide the places window.
-    PlacesController.mouseLoadURI(event);
+    this._tree.controller.openSelectedNodeInBrowser(event);
     window.opener.PlacesCommandHook.hidePlacesPopup();
   }
 };
