@@ -3101,6 +3101,7 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
      */
     CHECK_FOR_STRING_INDEX(id);
 
+    JS_COUNT_OPERATION(cx, JSOW_LOOKUP_PROPERTY);
     /* Search scopes starting with obj and following the prototype link. */
     start = obj;
     for (;;) {
@@ -3359,6 +3360,7 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
      */
     CHECK_FOR_STRING_INDEX(id);
 
+    JS_COUNT_OPERATION(cx, JSOW_GET_PROPERTY);
     if (!js_LookupProperty(cx, obj, id, &obj2, &prop))
         return JS_FALSE;
     if (!prop) {
@@ -3472,6 +3474,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
      */
     CHECK_FOR_STRING_INDEX(id);
 
+    JS_COUNT_OPERATION(cx, JSOW_SET_PROPERTY);
     if (!js_LookupProperty(cx, obj, id, &pobj, &prop))
         return JS_FALSE;
 
@@ -3730,6 +3733,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
      */
     CHECK_FOR_STRING_INDEX(id);
 
+    JS_COUNT_OPERATION(cx, JSOW_DELETE_PROPERTY);
     if (!js_LookupProperty(cx, obj, id, &proto, &prop))
         return JS_FALSE;
     if (!prop || proto != obj) {
