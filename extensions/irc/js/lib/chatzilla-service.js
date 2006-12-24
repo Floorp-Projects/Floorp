@@ -80,6 +80,12 @@ const ASS_CONTRACTID =
 const RDFS_CONTRACTID =
     "@mozilla.org/rdf/rdf-service;1";
 
+//XXXgijs: Because necko is annoying and doesn't expose this error flag, we
+//         define our own constant for it. Throwing something else will show
+//         ugly errors instead of seeminly doing nothing.
+const NS_ERROR_MODULE_NETWORK_BASE = 0x804b0000;
+const NS_ERROR_NO_CONTENT = NS_ERROR_MODULE_NETWORK_BASE + 17;
+
 /* interfaces used in this file */
 const nsIWindowMediator  = Components.interfaces.nsIWindowMediator;
 const nsICmdLineHandler  = Components.interfaces.nsICmdLineHandler;
@@ -354,7 +360,9 @@ BogusChannel.prototype.asyncOpen =
 function bc_open(observer, ctxt)
 {
     spawnChatZilla(this.URI.spec);
-    throw Components.results.NS_ERROR_NO_CONTENT;
+    // We don't throw this (a number, not a real 'resultcode') because it
+    // upsets xpconnect if we do (error in the js console).
+    Components.returnCode = NS_ERROR_NO_CONTENT;
 }
 
 BogusChannel.prototype.asyncRead =
