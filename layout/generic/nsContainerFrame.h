@@ -58,11 +58,19 @@ class nsContainerFrame : public nsSplittableFrame
 {
 public:
   // nsIFrame overrides
-  NS_IMETHOD Init(nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIFrame*        aPrevInFlow);
-  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
+  NS_IMETHOD Init(nsIContent* aContent,
+                  nsIFrame*   aParent,
+                  nsIFrame*   aPrevInFlow);
+  NS_IMETHOD SetInitialChildList(nsIAtom*  aListName,
+                                 nsIFrame* aChildList);
+  NS_IMETHOD AppendFrames(nsIAtom*  aListName,
+                          nsIFrame* aFrameList);
+  NS_IMETHOD InsertFrames(nsIAtom*  aListName,
+                          nsIFrame* aPrevFrame,
+                          nsIFrame* aFrameList);
+  NS_IMETHOD RemoveFrame(nsIAtom*  aListName,
+                         nsIFrame* aOldFrame);
+
   virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
   virtual void Destroy();

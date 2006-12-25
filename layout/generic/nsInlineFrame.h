@@ -88,13 +88,6 @@ public:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   // nsIFrame overrides
-  NS_IMETHOD AppendFrames(nsIAtom*        aListName,
-                          nsIFrame*       aFrameList);
-  NS_IMETHOD InsertFrames(nsIAtom*        aListName,
-                          nsIFrame*       aPrevFrame,
-                          nsIFrame*       aFrameList);
-  NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
-                         nsIFrame*       aOldFrame);
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
