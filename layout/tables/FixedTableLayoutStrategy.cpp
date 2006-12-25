@@ -179,7 +179,7 @@ FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
         tableWidth -= subtract;
     } else {
         // No Columns - nothing to compute
-	return;
+        return;
     }
 
     // XXX This ignores the 'min-width' and 'max-width' properties
