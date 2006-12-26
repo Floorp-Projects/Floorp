@@ -309,13 +309,13 @@ PlacesController.prototype = {
       this.selectAll();
       break;
     case "placesCmd_open":
-      this.openLinkInCurrentWindow();
+      this.openSelectedNodeIn("current");
       break;
     case "placesCmd_open:window":
-      this.openLinkInNewWindow();
+      this.openSelectedNodeIn("window");
       break;
     case "placesCmd_open:tab":
-      this.openLinkInNewTab();
+      this.openSelectedNodeIn("tab");
       break;
     case "placesCmd_open:tabs":
       this.openLinksInTabs();
@@ -855,15 +855,20 @@ PlacesController.prototype = {
    *          The DOM Mouse event with modifier keys set that track the user's
    *          preferred destination window or tab.
    */
-  openSelectedNodeInBrowser: function PC_openSelectedNodeInBrowser(aEvent) {
+  openSelectedNodeWithEvent: function PC_openSelectedNodeWithEvent(aEvent) {
     var node = this._view.selectedURINode;
-    if (node) {
-      var browser = this._getBrowserWindow();
-      if (browser)
-        browser.openUILink(node.uri, aEvent, false, false);
-      else
-        this._openBrowserWith(node.uri);
-    }
+    if (node)
+      openUILink(node.uri, aEvent);
+  },
+
+  /**
+   * Loads the selected node's URL in the appropriate tab or window.
+   * @see openUILinkIn
+   */
+  openSelectedNodeIn: function PC_openSelectedNodeIn(aWhere) {
+    var node = this._view.selectedURINode;
+    if (node)
+      openUILinkIn(node.uri, aWhere);
   },
 
   /**
@@ -919,65 +924,6 @@ PlacesController.prototype = {
     }
   },
 
-  /**
-   * Gets the current active browser window.
-   */
-  _getBrowserWindow: function PC__getBrowserWindow() {
-    var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-             getService(Ci.nsIWindowMediator);
-    return wm.getMostRecentWindow("navigator:browser");
-  },
-  
-  /**
-   * Opens a new browser window, showing the specified url. 
-   */
-  _openBrowserWith: function PC__openBrowserWith(url) {
-    openDialog("chrome://browser/content/browser.xul", "_blank", 
-               "chrome,all,dialog=no", url, null, null);
-  },
-
-  /**
-   * Loads the selected URL in a new tab. 
-   */
-  openLinkInNewTab: function PC_openLinkInNewTab() {
-    var node = this._view.selectedURINode;
-    if (node) {
-      var browser = this._getBrowserWindow();
-      if (browser) 
-        browser.openNewTabWith(node.uri, null, null);
-      else
-        this._openBrowserWith(node.uri);
-    }
-  },
-
-  /**
-   * Loads the selected URL in a new window.
-   */
-  openLinkInNewWindow: function PC_openLinkInNewWindow() {
-    var node = this._view.selectedURINode;
-    if (node) {
-      var browser = this._getBrowserWindow();
-      if (browser) 
-        browser.openNewWindowWith(node.uri, null, null, false);
-      else
-        this._openBrowserWith(node.uri);
-    }
-  },
-
-  /**
-   * Loads the selected URL in the current window, replacing the Places page.
-   */
-  openLinkInCurrentWindow: function PC_openLinkInCurrentWindow() {
-    var node = this._view.selectedURINode;
-    if (node) {
-      var browser = this._getBrowserWindow();
-      if (browser)
-        browser.loadURI(node.uri, null, null, false);
-      else
-        this._openBrowserWith(node.uri);
-    }
-  },
-  
   /**
    * Gives the user a chance to cancel loading lots of tabs at once
    */
@@ -1041,7 +987,7 @@ PlacesController.prototype = {
       // Get the start index to open tabs at
 
       // XXX todo: no-browser-window-case
-      var browserWindow = this._getBrowserWindow();
+      var browserWindow = getTopWin();
       var browser = browserWindow.getBrowser();
       var tabPanels = browser.browsers;
       var tabCount = tabPanels.length;
@@ -1140,7 +1086,7 @@ PlacesController.prototype = {
 
       for (var i = 0; i < nodes.length; ++i) {
         if (PlacesUtils.nodeIsURI(nodes[i]))
-          this._getBrowserWindow().openNewTabWith(nodes[i].uri, null, null);
+          getTopWin().openNewTabWith(nodes[i].uri, null, null);
       }
     }
   },

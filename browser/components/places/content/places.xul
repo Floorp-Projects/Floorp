@@ -60,6 +60,8 @@
 
   <script type="application/x-javascript"
           src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/x-javascript"
+          src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/x-javascript" 
           src="chrome://browser/content/places/utils.js"/>
   <script type="application/x-javascript"
@@ -335,7 +337,7 @@
 #include advancedSearch.inc          
           <tree id="placeContent" class="placesTree" context="placesContext" 
                 flex="1" type="places" 
-                ondblclick="this.controller.openSelectedNodeInBrowser(event);"
+                ondblclick="this.controller.openSelectedNodeWithEvent(event);"
                 onclick="PlacesOrganizer.onTreeClick(event);">
             <treecols id="placeContentColumns">
               <treecol label="&col.title.label;" id="title" flex="5" primary="true" 
