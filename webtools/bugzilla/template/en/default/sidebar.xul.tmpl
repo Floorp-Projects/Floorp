@@ -94,7 +94,7 @@ function normal_keypress_handler( aEvent ) {
   [%- IF user.groups.bz_canusewhines %]
       <text class="text-link" onclick="load_relative_url('editwhines.cgi')" value="edit whining"/>
   [%- END %]
-  [%- IF user.groups.tweakparams %]
+  [%- IF user.groups.editcomponents %]
       <text class="text-link" onclick="load_relative_url('sanitycheck.cgi')" value="sanity check"/>
   [%- END %]
   [%- IF user.authorizer.can_logout %]

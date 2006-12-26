@@ -48,6 +48,8 @@
           <li><span class="separator">[% sep %]</span><a href="editparams.cgi">Parameters</a></li>
           [% sep = "| " %]
           <li><span class="separator">[% sep %]</span><a href="editsettings.cgi">User Preferences</a></li>
+        [% END %]
+        [% IF user.groups.editcomponents %]
           <li><span class="separator">[% sep %]</span><a href="sanitycheck.cgi">Sanity Check</a></li>
         [% END %]
         [% IF user.groups.editusers || user.can_bless %]
