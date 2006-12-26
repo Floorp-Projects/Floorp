@@ -545,6 +545,8 @@ class nsTArray : public nsTArray_base {
     // @param start  The starting index of the elements to remove.
     // @param count  The number of elements to remove.
     void RemoveElementsAt(index_type start, size_type count) {
+      NS_ASSERTION(count == 0 || start < Length(), "Invalid start index");
+      NS_ASSERTION(start + count <= Length(), "Invalid length");
       DestructRange(start, count);
       ShiftData(start, count, 0, sizeof(elem_type));
     }
