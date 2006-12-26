@@ -124,7 +124,7 @@ nsContainerFrame::AppendFrames(nsIAtom*  aListName,
 {
   if (nsnull != aListName) {
 #ifdef IBMBIDI
-    if (aListName != nsLayoutAtoms::nextBidi)
+    if (aListName != nsGkAtoms::nextBidi)
 #endif
     {
       NS_ERROR("unexpected child list");
@@ -157,7 +157,7 @@ nsContainerFrame::InsertFrames(nsIAtom*  aListName,
 
   if (nsnull != aListName) {
 #ifdef IBMBIDI
-    if (aListName != nsLayoutAtoms::nextBidi)
+    if (aListName != nsGkAtoms::nextBidi)
 #endif
     {
       NS_ERROR("unexpected child list");
@@ -185,7 +185,7 @@ nsContainerFrame::RemoveFrame(nsIAtom*  aListName,
 {
   if (nsnull != aListName) {
 #ifdef IBMBIDI
-    if (nsLayoutAtoms::nextBidi != aListName)
+    if (nsGkAtoms::nextBidi != aListName)
 #endif
     {
       NS_ERROR("unexpected child list");
@@ -199,12 +199,12 @@ nsContainerFrame::RemoveFrame(nsIAtom*  aListName,
     // the line the brFrame was on can attempt to pull up any frames
     // that can fit from lines below it.
     PRBool generateReflowCommand =
-      aOldFrame->GetType() == nsLayoutAtoms::brFrame;
+      aOldFrame->GetType() == nsGkAtoms::brFrame;
 
     nsContainerFrame* parent = NS_STATIC_CAST(nsContainerFrame*, aOldFrame->GetParent());
     while (aOldFrame) {
 #ifdef IBMBIDI
-      if (nsLayoutAtoms::nextBidi != aListName) {
+      if (nsGkAtoms::nextBidi != aListName) {
 #endif
       // If the frame being removed has zero size then don't bother
       // generating a reflow command, otherwise make sure we do.
