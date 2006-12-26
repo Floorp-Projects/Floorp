@@ -192,6 +192,7 @@ PlacesController.prototype = {
     case "cmd_cut":
     case "cmd_delete":
       return this._view.enableEditCommands &&
+             !this._rootNodeIsSelected() && 
              !this._selectionOverlapsSystemArea() &&
              this._hasRemovableSelection();
     case "cmd_copy":
@@ -441,7 +442,22 @@ PlacesController.prototype = {
     // commands may be enabled for history views when nothing is selected. 
     return !PlacesUtils.nodeIsReadOnly(root);
   },
-  
+
+  /**
+   * Determines whether or not the root node for the view is selected
+   */
+  _rootNodeIsSelected: function PC__rootNodeIsSelected() {
+    if (this._view.hasSelection) {
+      var nodes = this._view.getSelectionNodes();
+      var root = this._view.getResult().root;
+      for (var i = 0; i < nodes.length; ++i) {
+        if (nodes[i] == root)
+          return true;      
+      }
+    }
+    return false;
+  },
+
   /**
    * Determines whether or not the selection intersects the read only "system"
    * portion of the display. 
