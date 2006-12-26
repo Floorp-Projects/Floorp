@@ -42,7 +42,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMNodeList.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIWidget.h"
 #include "nsPresContext.h"
 #include "nsPIDOMWindow.h"
@@ -50,7 +50,6 @@
 #include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsDisplayList.h"
-#include "nsXULAtoms.h"
 
 //
 // NS_NewTitleBarFrame
@@ -100,8 +99,8 @@ nsTitleBarFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
 {
   // override, since we don't want children to get events
   if (aBuilder->IsForEventDelivery()) {
-    if (!mContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::allowevents,
-                               nsXULAtoms::_true, eCaseMatters))
+    if (!mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::allowevents,
+                               nsGkAtoms::_true, eCaseMatters))
       return NS_OK;
   }
   return nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);

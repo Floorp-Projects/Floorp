@@ -49,8 +49,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsXULAtoms.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsMenuFrame.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
@@ -317,7 +316,7 @@ nsMenuBarFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent)
     if (IsValidItem(current)) {
       // Get the shortcut attribute.
       nsAutoString shortcutKey;
-      current->GetAttr(kNameSpaceID_None, nsXULAtoms::accesskey, shortcutKey);
+      current->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, shortcutKey);
       if (!shortcutKey.IsEmpty()) {
         // We've got something.
         PRUnichar letter = PRUnichar(charCode); // throw away the high-zero-fill
@@ -806,16 +805,16 @@ nsMenuBarFrame::IsValidItem(nsIContent* aContent)
 {
   nsIAtom *tag = aContent->Tag();
 
-  return ((tag == nsXULAtoms::menu ||
-           tag == nsXULAtoms::menuitem) &&
+  return ((tag == nsGkAtoms::menu ||
+           tag == nsGkAtoms::menuitem) &&
           !IsDisabled(aContent));
 }
 
 PRBool 
 nsMenuBarFrame::IsDisabled(nsIContent* aContent)
 {
-  return aContent->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::disabled,
-                               nsHTMLAtoms::_true, eCaseMatters);
+  return aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
+                               nsGkAtoms::_true, eCaseMatters);
 }
 
 void

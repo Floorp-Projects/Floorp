@@ -162,7 +162,7 @@ nsColumnSetFrame::nsColumnSetFrame(nsStyleContext* aContext)
 nsIAtom*
 nsColumnSetFrame::GetType() const
 {
-  return nsLayoutAtoms::columnSetFrame;
+  return nsGkAtoms::columnSetFrame;
 }
 
 NS_IMETHODIMP

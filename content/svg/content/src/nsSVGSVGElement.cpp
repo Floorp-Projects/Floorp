@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsSVGLength.h"
 #include "nsSVGAngle.h"
 #include "nsCOMPtr.h"
@@ -130,7 +130,7 @@ nsSVGSVGElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedRect(getter_AddRefs(mViewBox), viewbox);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::viewBox, mViewBox);
+    rv = AddMappedSVGValue(nsGkAtoms::viewBox, mViewBox);
     NS_ENSURE_SUCCESS(rv,rv);
     // initialize coordinate context with viewbox:
     SetCoordCtxRect(viewbox);
@@ -145,7 +145,7 @@ nsSVGSVGElement::Init()
                                           getter_AddRefs(mPreserveAspectRatio),
                                           preserveAspectRatio);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::preserveAspectRatio,
+    rv = AddMappedSVGValue(nsGkAtoms::preserveAspectRatio,
                            mPreserveAspectRatio);
     NS_ENSURE_SUCCESS(rv,rv);
   }
@@ -154,8 +154,8 @@ nsSVGSVGElement::Init()
 
   // Define enumeration mappings
   static struct nsSVGEnumMapping zoomMap[] = {
-        {&nsSVGAtoms::disable, nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_DISABLE},
-        {&nsSVGAtoms::magnify, nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY},
+        {&nsGkAtoms::disable, nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_DISABLE},
+        {&nsGkAtoms::magnify, nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY},
         {nsnull, 0}
   };
 
@@ -164,7 +164,7 @@ nsSVGSVGElement::Init()
     rv = NS_NewSVGEnum(getter_AddRefs(mZoomAndPan),
                        nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY, zoomMap);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::zoomAndPan, mZoomAndPan);
+    rv = AddMappedSVGValue(nsGkAtoms::zoomAndPan, mZoomAndPan);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -1230,9 +1230,9 @@ nsSVGSVGElement::IsEventName(nsIAtom* aName)
      question will always be the outermost 'svg' element, this shouldn't cause
      any real problems.
   */
-         aName == nsSVGAtoms::onunload    ||
-         aName == nsSVGAtoms::onscroll    ||
-         aName == nsSVGAtoms::onzoom;
+         aName == nsGkAtoms::onunload    ||
+         aName == nsGkAtoms::onscroll    ||
+         aName == nsGkAtoms::onzoom;
 }
 
 //----------------------------------------------------------------------

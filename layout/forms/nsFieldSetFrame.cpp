@@ -52,7 +52,6 @@
 #include "nsPresContext.h"
 #include "nsFrameManager.h"
 #include "nsHTMLParts.h"
-#include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsFont.h"
@@ -146,7 +145,7 @@ nsFieldSetFrame::nsFieldSetFrame(nsStyleContext* aContext)
 nsIAtom*
 nsFieldSetFrame::GetType() const
 {
-  return nsLayoutAtoms::fieldSetFrame;
+  return nsGkAtoms::fieldSetFrame;
 }
 
 PRBool
@@ -332,7 +331,7 @@ nsFieldSetFrame::PaintBorderBackground(nsIRenderingContext& aRenderingContext,
   }
 }
 
-// XXXbz This duplicates code in nsLayoutAtoms (near IntrinsicForContainer)
+// XXXbz This duplicates code in nsGkAtoms (near IntrinsicForContainer)
 
 static nscoord GetCoord(const nsStyleCoord& aCoord, nscoord aIfNotCoord)
 {
@@ -728,7 +727,7 @@ NS_IMETHODIMP nsFieldSetFrame::GetAccessible(nsIAccessible** aAccessible)
 nsIFrame*
 nsFieldSetFrame::MaybeSetLegend(nsIFrame* aFrameList, nsIAtom* aListName)
 {
-  if (!mLegendFrame && aFrameList->GetType() == nsLayoutAtoms::legendFrame) {
+  if (!mLegendFrame && aFrameList->GetType() == nsGkAtoms::legendFrame) {
     NS_ASSERTION(!aListName, "Unexpected frame list when adding legend frame");
     mLegendFrame = aFrameList;
     aFrameList = mLegendFrame->GetNextSibling();

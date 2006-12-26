@@ -41,7 +41,7 @@
 #include "nsFrame.h"
 #include "nsLineLayout.h"
 #include "nsPresContext.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsUnitConversion.h"
 #include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"
@@ -186,9 +186,9 @@ SpacerFrame::GetType()
 {
   PRUint8 type = TYPE_WORD;
   static nsIContent::AttrValuesArray strings[] =
-    {&nsHTMLAtoms::line, &nsHTMLAtoms::vert, &nsHTMLAtoms::vertical,
-     &nsHTMLAtoms::block, nsnull};
-  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsHTMLAtoms::type,
+    {&nsGkAtoms::line, &nsGkAtoms::vert, &nsGkAtoms::vertical,
+     &nsGkAtoms::block, nsnull};
+  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::type,
                                     strings, eIgnoreCase)) {
     case 0:
     case 1:

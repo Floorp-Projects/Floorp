@@ -37,8 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXMLElement.h"
-#include "nsGkAtoms.h"
-#include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDocument.h"
 #include "nsIAtom.h"
@@ -66,12 +64,11 @@
 #include "nsIDOMViewCSS.h"
 #include "nsIXBLService.h"
 #include "nsIBindingManager.h"
-#include "nsLayoutAtoms.h"
 #include "nsEventDispatcher.h"
 #include "nsContentErrors.h"
 
 static nsIContent::AttrValuesArray strings[] =
-  {&nsLayoutAtoms::_new, &nsLayoutAtoms::replace, &nsLayoutAtoms::embed, nsnull};
+  {&nsGkAtoms::_new, &nsGkAtoms::replace, &nsGkAtoms::embed, nsnull};
 
 nsresult
 NS_NewXMLElement(nsIContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
@@ -139,7 +136,7 @@ nsresult
 nsXMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
                       const nsAString& aValue, PRBool aNotify)
 {
-  if (aNameSpaceID == kNameSpaceID_XLink && aName == nsHTMLAtoms::type) { 
+  if (aNameSpaceID == kNameSpaceID_XLink && aName == nsGkAtoms::type) { 
 
     // NOTE: This really is a link according to the XLink spec,
     //       we do not need to check other attributes. If there
@@ -199,8 +196,8 @@ nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
   if (mIsLink) {
     do {
       // actuate="onLoad" ?
-      if (AttrValueIs(kNameSpaceID_XLink, nsLayoutAtoms::actuate,
-                      nsLayoutAtoms::onLoad, eCaseMatters)) {
+      if (AttrValueIs(kNameSpaceID_XLink, nsGkAtoms::actuate,
+                      nsGkAtoms::onLoad, eCaseMatters)) {
 
         // Disable in Mail/News for now. We may want a pref to control
         // this at some point.
@@ -223,7 +220,7 @@ nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
         PRBool stop = PR_FALSE;
 
         // XXX Should probably do this using atoms 
-        switch (FindAttrValueIn(kNameSpaceID_XLink, nsLayoutAtoms::show,
+        switch (FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::show,
                                 strings, eCaseMatters)) {
           // We should just act like an HTML link with target="_blank" and if
           // someone diverts or blocks those, that's fine with us.  We don't
@@ -301,7 +298,7 @@ nsXMLElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           }
 
           // XXX Should probably do this using atoms 
-          switch (FindAttrValueIn(kNameSpaceID_XLink, nsLayoutAtoms::show,
+          switch (FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::show,
                                   strings, eCaseMatters)) {
             case 0: verb = eLinkVerb_New; break;
             case 1: verb = eLinkVerb_Replace; break;
@@ -309,7 +306,7 @@ nsXMLElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           }
 
           nsAutoString target;
-          GetAttr(kNameSpaceID_XLink, nsLayoutAtoms::_moz_target, target);
+          GetAttr(kNameSpaceID_XLink, nsGkAtoms::_moz_target, target);
           rv = TriggerLink(aVisitor.mPresContext, verb, uri,
                            target, PR_TRUE, PR_TRUE);
 

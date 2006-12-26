@@ -63,7 +63,7 @@
 #include "nsIScrollableView.h"
 #include "nsIContentViewer.h"
 #include "nsIAtom.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptGlobalObject.h"
@@ -300,7 +300,7 @@ nsContentSink::ProcessHTTPHeaders(nsIChannel* aChannel)
   nsresult rv = httpchannel->GetResponseHeader(NS_LITERAL_CSTRING("link"),
                                                linkHeader);
   if (NS_SUCCEEDED(rv) && !linkHeader.IsEmpty()) {
-    ProcessHeaderData(nsHTMLAtoms::link,
+    ProcessHeaderData(nsGkAtoms::link,
                       NS_ConvertASCIItoUTF16(linkHeader));
   }
   
@@ -316,7 +316,7 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
 
   mDocument->SetHeaderData(aHeader, aValue);
 
-  if (aHeader == nsHTMLAtoms::setcookie) {
+  if (aHeader == nsGkAtoms::setcookie) {
     // Note: Necko already handles cookies set via the channel.  We can't just
     // call SetCookie on the channel because we want to do some security checks
     // here and want to use the prompt associated to our current window, not
@@ -357,10 +357,10 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
       return rv;
     }
   }
-  else if (aHeader == nsHTMLAtoms::link) {
+  else if (aHeader == nsGkAtoms::link) {
     rv = ProcessLinkHeader(aContent, aValue);
   }
-  else if (aHeader == nsHTMLAtoms::msthemecompatible) {
+  else if (aHeader == nsGkAtoms::msthemecompatible) {
     // Disable theming for the presshell if the value is no.
     // XXXbz don't we want to support this as an HTTP header too?
     nsAutoString value(aValue);
@@ -373,7 +373,7 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
   }
   // Don't report "refresh" headers back to necko, since our document handles
   // them
-  else if (aHeader != nsHTMLAtoms::refresh && mParser) {
+  else if (aHeader != nsGkAtoms::refresh && mParser) {
     // we also need to report back HTTP-EQUIV headers to the channel
     // so that it can process things like pragma: no-cache or other
     // cache-control headers. Ideally this should also be the way for
@@ -662,10 +662,10 @@ nsContentSink::ProcessMETATag(nsIContent* aContent)
 
   // set any HTTP-EQUIV data into document's header data as well as url
   nsAutoString header;
-  aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::httpEquiv, header);
+  aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
   if (!header.IsEmpty()) {
     nsAutoString result;
-    aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::content, result);
+    aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::content, result);
     if (!result.IsEmpty()) {
       ToLowerCase(header);
       nsCOMPtr<nsIAtom> fieldAtom(do_GetAtom(header));

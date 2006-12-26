@@ -55,7 +55,7 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsDOMEvent.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIEditorDocShell.h"
 #include "nsIFormControl.h"
 #include "nsIComboboxControlFrame.h"
@@ -98,7 +98,6 @@
 #include "nsIChromeEventHandler.h"
 #include "nsIFocusController.h"
 
-#include "nsXULAtoms.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMKeyEvent.h"
@@ -121,7 +120,6 @@
 
 #include "nsIFrameFrame.h"
 #include "nsIFrameTraversal.h"
-#include "nsLayoutAtoms.h"
 #include "nsLayoutCID.h"
 #include "nsLayoutUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -1190,12 +1188,12 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
       // if it's a XUL element...
       if (content->IsNodeOfType(nsINode::eXUL)) {
         // find out what type of content node this is
-        if (content->Tag() == nsXULAtoms::label) {
+        if (content->Tag() == nsGkAtoms::label) {
           // If anything fails, this will be null ...
           nsCOMPtr<nsIDOMElement> element;
 
           nsAutoString control;
-          content->GetAttr(kNameSpaceID_None, nsXULAtoms::control, control);
+          content->GetAttr(kNameSpaceID_None, nsGkAtoms::control, control);
           if (!control.IsEmpty()) {
             nsCOMPtr<nsIDOMDocument> domDocument =
               do_QueryInterface(content->GetDocument());
@@ -1229,10 +1227,10 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
             nsIAtom *atom = content->Tag();
 
             // define behavior for each type of XUL element:
-            if (atom == nsXULAtoms::textbox || atom == nsXULAtoms::menulist) {
+            if (atom == nsGkAtoms::textbox || atom == nsGkAtoms::menulist) {
               // if it's a text box or menulist, give it focus
               element->Focus();
-            } else if (atom == nsXULAtoms::toolbarbutton) {
+            } else if (atom == nsGkAtoms::toolbarbutton) {
               // if it's a toolbar button, just click
               element->Click();
             } else {
@@ -1246,7 +1244,7 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
         // It's hard to say what HTML4 wants us to do in all cases.
         // So for now we'll settle for A) Set focus (except for <label>s
         // which focus their control in nsHTMLLabelElement::PostHandleEvent)
-        if (content->Tag() != nsHTMLAtoms::label || !sKeyCausesActivation) {
+        if (content->Tag() != nsGkAtoms::label || !sKeyCausesActivation) {
           ChangeFocusWith(content, eEventFocusedByKey);
         }
         if (sKeyCausesActivation) {
@@ -1383,11 +1381,11 @@ nsEventStateManager::CreateClickHoldTimer(nsPresContext* inPresContext,
   if (mGestureDownContent) {
     // check for the |popup| attribute
     if (nsContentUtils::HasNonEmptyAttr(mGestureDownContent, kNameSpaceID_None,
-                                        nsXULAtoms::popup))
+                                        nsGkAtoms::popup))
       return;
     
     // check for a <menubutton> like bookmarks
-    if (mGestureDownContent->Tag() == nsXULAtoms::menubutton)
+    if (mGestureDownContent->Tag() == nsGkAtoms::menubutton)
       return;
   }
 
@@ -1482,21 +1480,21 @@ nsEventStateManager::FireContextClick()
       PRBool allowedToDispatch = PR_TRUE;
 
       if (mGestureDownContent->IsNodeOfType(nsINode::eXUL)) {
-        if (tag == nsXULAtoms::scrollbar ||
-            tag == nsXULAtoms::scrollbarbutton ||
-            tag == nsXULAtoms::button)
+        if (tag == nsGkAtoms::scrollbar ||
+            tag == nsGkAtoms::scrollbarbutton ||
+            tag == nsGkAtoms::button)
           allowedToDispatch = PR_FALSE;
-        else if (tag == nsXULAtoms::toolbarbutton) {
+        else if (tag == nsGkAtoms::toolbarbutton) {
           // a <toolbarbutton> that has the container attribute set
           // will already have its own dropdown.
           if (nsContentUtils::HasNonEmptyAttr(mGestureDownContent,
-                  kNameSpaceID_None, nsXULAtoms::container)) {
+                  kNameSpaceID_None, nsGkAtoms::container)) {
             allowedToDispatch = PR_FALSE;
           } else {
             // If the toolbar button has an open menu, don't attempt to open
             // a second menu
-            if (mGestureDownContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::open,
-                                                 nsXULAtoms::_true, eCaseMatters)) {
+            if (mGestureDownContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::open,
+                                                 nsGkAtoms::_true, eCaseMatters)) {
               allowedToDispatch = PR_FALSE;
             }
           }
@@ -1515,9 +1513,9 @@ nsEventStateManager::FireContextClick()
                                type == NS_FORM_INPUT_FILE ||
                                type == NS_FORM_TEXTAREA);
         }
-        else if (tag == nsHTMLAtoms::applet ||
-                 tag == nsHTMLAtoms::embed  ||
-                 tag == nsHTMLAtoms::object) {
+        else if (tag == nsGkAtoms::applet ||
+                 tag == nsGkAtoms::embed  ||
+                 tag == nsGkAtoms::object) {
           allowedToDispatch = PR_FALSE;
         }
       }
@@ -3345,7 +3343,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
   // point was given.
   if (!aStart && itemType != nsIDocShellTreeItem::typeChrome) {
     // We're going to tab from the selection position
-    if (!mCurrentFocus || (mLastFocusedWith != eEventFocusedByMouse && mCurrentFocus->Tag() != nsHTMLAtoms::area)) {
+    if (!mCurrentFocus || (mLastFocusedWith != eEventFocusedByMouse && mCurrentFocus->Tag() != nsGkAtoms::area)) {
       nsCOMPtr<nsIContent> selectionContent, endSelectionContent;  // We won't be using this, need arg for method call
       PRUint32 selectionOffset; // We won't be using this either, need arg for method call
       GetDocSelectionLocation(getter_AddRefs(selectionContent), getter_AddRefs(endSelectionContent), &selectionFrame, &selectionOffset);
@@ -3387,7 +3385,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
   }
 
   if (aStart) {
-    if (aStart->HasAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex)) {
+    if (aStart->HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex)) {
       aStart->IsFocusable(&mCurrentTabIndex);
     } else {
       ignoreTabIndex = PR_TRUE; // ignore current tabindex, bug 81481
@@ -3646,7 +3644,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
                                  PR_TRUE   // aFollowOOFs
                                  );
     NS_ENSURE_SUCCESS(rv, rv);
-    if (!aStartContent || aStartContent->Tag() != nsHTMLAtoms::area ||
+    if (!aStartContent || aStartContent->Tag() != nsGkAtoms::area ||
         !aStartContent->IsNodeOfType(nsINode::eHTML)) {
       // Need to do special check in case we're in an imagemap which has multiple
       // content per frame, so don't skip over the starting frame.
@@ -3674,8 +3672,8 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
     nsIContent* currentContent = (*aResultFrame)->GetContent();
     (*aResultFrame)->IsFocusable(&tabIndex);
     if (tabIndex >= 0) {
-      if (currentContent->Tag() == nsHTMLAtoms::img &&
-          currentContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::usemap)) {
+      if (currentContent->Tag() == nsGkAtoms::img &&
+          currentContent->HasAttr(kNameSpaceID_None, nsGkAtoms::usemap)) {
         // Must be an image w/ a map -- it's tabbable but no tabindex is specified
         // Special case for image maps: they don't get walked by nsIFrameTraversal
         nsIContent *areaContent = GetNextTabbableMapArea(forward, currentContent);
@@ -3712,7 +3710,7 @@ nsEventStateManager::GetNextTabbableMapArea(PRBool aForward,
                                             nsIContent *aImageContent)
 {
   nsAutoString useMap;
-  aImageContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::usemap, useMap);
+  aImageContent->GetAttr(kNameSpaceID_None, nsGkAtoms::usemap, useMap);
 
   nsCOMPtr<nsIDocument> doc = aImageContent->GetDocument();
   if (doc) {
@@ -3761,7 +3759,7 @@ nsEventStateManager::GetNextTabIndex(nsIContent* aParent, PRBool forward)
       }
 
       nsAutoString tabIndexStr;
-      child->GetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabIndexStr);
+      child->GetAttr(kNameSpaceID_None, nsGkAtoms::tabindex, tabIndexStr);
       PRInt32 ec, val = tabIndexStr.ToInteger(&ec);
       if (NS_SUCCEEDED (ec) && val > mCurrentTabIndex && val != tabIndex) {
         tabIndex = (tabIndex == 0 || val < tabIndex) ? val : tabIndex;
@@ -3779,7 +3777,7 @@ nsEventStateManager::GetNextTabIndex(nsIContent* aParent, PRBool forward)
       }
 
       nsAutoString tabIndexStr;
-      child->GetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabIndexStr);
+      child->GetAttr(kNameSpaceID_None, nsGkAtoms::tabindex, tabIndexStr);
       PRInt32 ec, val = tabIndexStr.ToInteger(&ec);
       if (NS_SUCCEEDED (ec)) {
         if ((mCurrentTabIndex == 0 && val > tabIndex) ||
@@ -4212,7 +4210,7 @@ IsFocusable(nsIPresShell* aPresShell, nsIContent* aContent)
     return focusFrame->AreAncestorViewsVisible();
   }
 
-  if (aContent->Tag() != nsHTMLAtoms::area) {
+  if (aContent->Tag() != nsGkAtoms::area) {
     return focusFrame->IsFocusable();
   }
   // HTML areas do not have their own frame, and the img frame we get from
@@ -4460,7 +4458,7 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
     }
 
     nsAutoString tabIndex;
-    aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabIndex);
+    aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::tabindex, tabIndex);
     PRInt32 ec, val = tabIndex.ToInteger(&ec);
     if (NS_SUCCEEDED (ec)) {
       mCurrentTabIndex = val;
@@ -4785,7 +4783,7 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
       // points to (the current focus), not relative to the label itself.
       nsIContent *parentContent = startContent;
       while ((parentContent = parentContent->GetParent()) != nsnull) {
-        if (parentContent->Tag() == nsHTMLAtoms::label) {
+        if (parentContent->Tag() == nsGkAtoms::label) {
           return NS_OK; // Don't return selection location, we're on a label
         }
       }
@@ -4963,16 +4961,16 @@ nsEventStateManager::MoveFocusToCaret(PRBool aCanFocusDoc,
     nsIAtom *tag = testContent->Tag();
 
     // Add better focusable test here later if necessary ...
-    if (tag == nsHTMLAtoms::a &&
+    if (tag == nsGkAtoms::a &&
         testContent->IsNodeOfType(nsINode::eHTML)) {
       *aIsSelectionWithFocus = PR_TRUE;
     }
     else {
       // Xlink must be type="simple"
       *aIsSelectionWithFocus =
-        testContent->HasAttr(kNameSpaceID_XLink, nsHTMLAtoms::href) &&
-        testContent->AttrValueIs(kNameSpaceID_XLink, nsHTMLAtoms::type,
-                                 nsHTMLAtoms::simple, eCaseMatters);
+        testContent->HasAttr(kNameSpaceID_XLink, nsGkAtoms::href) &&
+        testContent->AttrValueIs(kNameSpaceID_XLink, nsGkAtoms::type,
+                                 nsGkAtoms::simple, eCaseMatters);
     }
 
     if (*aIsSelectionWithFocus) {
@@ -5006,7 +5004,7 @@ nsEventStateManager::MoveFocusToCaret(PRBool aCanFocusDoc,
     // Right now we only look for elements with the <a> tag.
     // Add better focusable test here later if necessary ...
     if (testContent) {
-      if (testContent->Tag() == nsHTMLAtoms::a &&
+      if (testContent->Tag() == nsGkAtoms::a &&
           testContent->IsNodeOfType(nsINode::eHTML)) {
         *aIsSelectionWithFocus = PR_TRUE;
         FocusElementButNotDocument(testContent);
@@ -5256,7 +5254,7 @@ nsEventStateManager::IsFrameSetDoc(nsIDocShell* aDocShell)
           nsINodeInfo *ni = childContent->NodeInfo();
 
           if (childContent->IsNodeOfType(nsINode::eHTML) &&
-              ni->Equals(nsHTMLAtoms::frameset)) {
+              ni->Equals(nsGkAtoms::frameset)) {
             isFrameSet = PR_TRUE;
             break;
           }
@@ -5289,7 +5287,7 @@ nsEventStateManager::IsIFrameDoc(nsIDocShell* aDocShell)
     return PR_FALSE;
   }
 
-  return docContent->Tag() == nsHTMLAtoms::iframe;
+  return docContent->Tag() == nsGkAtoms::iframe;
 }
 
 //-------------------------------------------------------

@@ -56,7 +56,7 @@
 #include "nsFrameManager.h"
 #include "nsStyleChangeList.h"
 
-#include "nsMathMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsMathMLParts.h"
 #include "nsMathMLChar.h"
 #include "nsMathMLContainerFrame.h"
@@ -621,7 +621,7 @@ nsMathMLContainerFrame::PropagateScriptStyleFor(nsIFrame*       aFrame,
       // unset any -moz-math-font-size attribute without notifying that we want a reflow
       // (but leave it to the primary frame to do that, a child pseudo can't overrule)
       if (!aFrame->GetParent() || aFrame->GetParent()->GetContent() != content)
-        content->UnsetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZfontsize, PR_FALSE);
+        content->UnsetAttr(kNameSpaceID_None, nsGkAtoms::MOZfontsize, PR_FALSE);
     }
     else {
       // By default scriptminsize=8pt and scriptsizemultiplier=0.71
@@ -635,7 +635,7 @@ nsMathMLContainerFrame::PropagateScriptStyleFor(nsIFrame*       aFrame,
 
        // see if there is a scriptminsize attribute on a <mstyle> that wraps us
        GetAttribute(nsnull, presentationData.mstyle,
-                        nsMathMLAtoms::scriptminsize_, fontsize);
+                        nsGkAtoms::scriptminsize_, fontsize);
        if (!fontsize.IsEmpty()) {
          nsCSSValue cssValue;
          if (ParseNumericValue(fontsize, cssValue)) {
@@ -676,7 +676,7 @@ nsMathMLContainerFrame::PropagateScriptStyleFor(nsIFrame*       aFrame,
       }
 
       // set the -moz-math-font-size attribute without notifying that we want a reflow
-      content->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZfontsize,
+      content->SetAttr(kNameSpaceID_None, nsGkAtoms::MOZfontsize,
                        fontsize, PR_FALSE);
     }
 
@@ -818,7 +818,7 @@ nsMathMLContainerFrame::ReLayoutChildren(nsIFrame* aParentFrame)
     if (!content)
       break;
     // XXXldb This should check namespaces too.
-    if (content->Tag() == nsMathMLAtoms::math)
+    if (content->Tag() == nsGkAtoms::math)
       break;
 
     // mark the frame dirty, and continue to climb up
@@ -1242,7 +1242,7 @@ nsMathMLContainerFrame::Place(nsIRenderingContext& aRenderingContext,
       // update to include the left correction
       // but leave <msqrt> alone because the sqrt glyph itself is there first
 
-      if (mContent->Tag() == nsMathMLAtoms::msqrt_)
+      if (mContent->Tag() == nsGkAtoms::msqrt_)
         leftCorrection = 0;
       else
         mBoundingMetrics.leftBearing += leftCorrection;
@@ -1297,7 +1297,7 @@ nsMathMLContainerFrame::Place(nsIRenderingContext& aRenderingContext,
       if (0 == count) {
         // for <msqrt>, the sqrt glyph itself is there first
 
-        if (mContent->Tag() == nsMathMLAtoms::msqrt_)
+        if (mContent->Tag() == nsGkAtoms::msqrt_)
           leftCorrection = 0;
       }
       else {
@@ -1365,8 +1365,8 @@ nsMathMLContainerFrame::FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
   nsIContent* parentContent = mParent->GetContent();
   // XXXldb This should check namespaces too.
   nsIAtom *parentTag = parentContent->Tag();
-  if (parentTag == nsMathMLAtoms::math ||
-      parentTag == nsMathMLAtoms::mtd_) {
+  if (parentTag == nsGkAtoms::math ||
+      parentTag == nsGkAtoms::mtd_) {
     gap = GetInterFrameSpacingFor(mPresentationData.scriptLevel, mParent, this);
     // add our own italic correction
     nscoord leftCorrection = 0, italicCorrection = 0;

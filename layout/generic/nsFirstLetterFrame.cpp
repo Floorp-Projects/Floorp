@@ -43,7 +43,6 @@
 #include "nsStyleContext.h"
 #include "nsIContent.h"
 #include "nsLineLayout.h"
-#include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
@@ -110,7 +109,7 @@ nsFirstLetterFrame::GetFrameName(nsAString& aResult) const
 nsIAtom*
 nsFirstLetterFrame::GetType() const
 {
-  return nsLayoutAtoms::letterFrame;
+  return nsGkAtoms::letterFrame;
 }
 
 PRBool

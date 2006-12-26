@@ -39,7 +39,7 @@
 #include "nsSVGStylableElement.h"
 #include "nsICSSOMFactory.h"
 #include "nsSVGAnimatedString.h"
-#include "nsSVGAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsIDOMClassInfo.h"
 
@@ -76,7 +76,7 @@ nsSVGStylableElement::Init()
   {
     mClassName = new nsSVGClassValue;
     NS_ENSURE_TRUE(mClassName, NS_ERROR_OUT_OF_MEMORY);
-    rv = AddMappedSVGValue(nsSVGAtoms::_class,
+    rv = AddMappedSVGValue(nsGkAtoms::_class,
 			   NS_STATIC_CAST(nsIDOMSVGAnimatedString*, mClassName),
 			   kNameSpaceID_None);
     NS_ENSURE_SUCCESS(rv, rv);

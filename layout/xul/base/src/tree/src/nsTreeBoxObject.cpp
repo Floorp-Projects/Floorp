@@ -49,7 +49,7 @@
 #include "nsIFrame.h"
 #include "nsIAtom.h"
 #include "nsINodeInfo.h"
-#include "nsXULAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsChildIterator.h"
 #include "nsContentUtils.h"
 #include "nsDOMError.h"
@@ -116,13 +116,13 @@ static void FindBodyElement(nsIContent* aParent, nsIContent** aResult)
     nsCOMPtr<nsIContent> content = *iter;
 
     nsINodeInfo *ni = content->NodeInfo();
-    if (ni->Equals(nsXULAtoms::treechildren, kNameSpaceID_XUL)) {
+    if (ni->Equals(nsGkAtoms::treechildren, kNameSpaceID_XUL)) {
       *aResult = content;
       NS_ADDREF(*aResult);
       break;
     }
     else if (content->IsNodeOfType(nsINode::eELEMENT) &&
-             !ni->Equals(nsXULAtoms::_template, kNameSpaceID_XUL)) {
+             !ni->Equals(nsGkAtoms::_template, kNameSpaceID_XUL)) {
       FindBodyElement(content, aResult);
       if (*aResult)
         break;

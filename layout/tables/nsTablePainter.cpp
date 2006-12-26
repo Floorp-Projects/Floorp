@@ -505,7 +505,7 @@ TableBackgroundPainter::PaintRowGroup(nsTableRowGroupFrame* aFrame,
 
   // Sadly, it seems like there may be non-row frames in there... or something?
   // There are certainly null-checks in GetFirstRow() and GetNextRow().  :(
-  while (cursor && cursor->GetType() != nsLayoutAtoms::tableRowFrame) {
+  while (cursor && cursor->GetType() != nsGkAtoms::tableRowFrame) {
     cursor = cursor->GetNextSibling();
   }
 

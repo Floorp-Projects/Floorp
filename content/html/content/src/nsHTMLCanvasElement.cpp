@@ -39,7 +39,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsSize.h"
 #include "nsIFrame.h"
 #include "nsIDocument.h"
@@ -168,13 +168,13 @@ nsHTMLCanvasElement::GetWidthHeight()
   nsIntSize size(0,0);
   const nsAttrValue* value;
 
-  if ((value = GetParsedAttr(nsHTMLAtoms::width)) &&
+  if ((value = GetParsedAttr(nsGkAtoms::width)) &&
       value->Type() == nsAttrValue::eInteger)
   {
       size.width = value->GetIntegerValue();
   }
 
-  if ((value = GetParsedAttr(nsHTMLAtoms::height)) &&
+  if ((value = GetParsedAttr(nsGkAtoms::height)) &&
       value->Type() == nsAttrValue::eInteger)
   {
       size.height = value->GetIntegerValue();
@@ -199,7 +199,7 @@ nsHTMLCanvasElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
                                               aNotify);
   if (NS_SUCCEEDED(rv) && mCurrentContext &&
-      (aName == nsHTMLAtoms::width || aName == nsHTMLAtoms::height))
+      (aName == nsGkAtoms::width || aName == nsGkAtoms::height))
   {
     rv = UpdateContext();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -214,8 +214,8 @@ nsHTMLCanvasElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 {
   nsChangeHint retval =
     nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType);
-  if (aAttribute == nsHTMLAtoms::width ||
-      aAttribute == nsHTMLAtoms::height)
+  if (aAttribute == nsGkAtoms::width ||
+      aAttribute == nsGkAtoms::height)
   {
     NS_UpdateHint(retval, NS_STYLE_HINT_REFLOW);
   }
@@ -238,8 +238,8 @@ nsHTMLCanvasElement::GetAttributeMappingFunction() const
 
 static const nsGenericElement::MappedAttributeEntry
 sImageMarginAttributeMap[] = {
-  { &nsHTMLAtoms::hspace },
-  { &nsHTMLAtoms::vspace },
+  { &nsGkAtoms::hspace },
+  { &nsGkAtoms::vspace },
   { nsnull }
 };
 
@@ -262,8 +262,8 @@ nsHTMLCanvasElement::ParseAttribute(PRInt32 aNamespaceID,
 {
   if (aNamespaceID == kNameSpaceID_None)
   {
-    if ((aAttribute == nsHTMLAtoms::width) ||
-        (aAttribute == nsHTMLAtoms::height))
+    if ((aAttribute == nsGkAtoms::width) ||
+        (aAttribute == nsGkAtoms::height))
     {
       return aResult.ParseIntWithBounds(aValue, 0);
     }

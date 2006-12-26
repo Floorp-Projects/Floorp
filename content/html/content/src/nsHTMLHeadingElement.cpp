@@ -37,7 +37,7 @@
 #include "nsIDOMHTMLHeadingElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsMappedAttributes.h"
@@ -111,7 +111,7 @@ nsHTMLHeadingElement::ParseAttribute(PRInt32 aNamespaceID,
                                      const nsAString& aValue,
                                      nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::align && aNamespaceID == kNameSpaceID_None) {
+  if (aAttribute == nsGkAtoms::align && aNamespaceID == kNameSpaceID_None) {
     return ParseDivAlignValue(aValue, aResult);
   }
 

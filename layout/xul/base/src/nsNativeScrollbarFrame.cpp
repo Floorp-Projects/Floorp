@@ -37,7 +37,7 @@
 
 
 #include "nsNativeScrollbarFrame.h"
-#include "nsXULAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsBoxLayoutState.h"
 #include "nsComponentManagerUtils.h"
 #include "nsGUIEvent.h"
@@ -147,7 +147,7 @@ nsNativeScrollbarFrame::FindParts()
   for (f = GetParent(); f; f = f->GetParent()) {
     nsIContent* currContent = f->GetContent();
 
-    if (currContent && currContent->Tag() == nsXULAtoms::scrollbar) {
+    if (currContent && currContent->Tag() == nsGkAtoms::scrollbar) {
       nsIScrollbarFrame* sb;
       CallQueryInterface(f, &sb);
       if (sb)
@@ -195,10 +195,10 @@ nsNativeScrollbarFrame::AttributeChanged(PRInt32 aNameSpaceID,
   nsresult rv = nsBoxFrame::AttributeChanged(aNameSpaceID, aAttribute,
                                              aModType);
   
-  if (  aAttribute == nsXULAtoms::curpos ||
-        aAttribute == nsXULAtoms::maxpos || 
-        aAttribute == nsXULAtoms::pageincrement ||
-        aAttribute == nsXULAtoms::increment ) {
+  if (  aAttribute == nsGkAtoms::curpos ||
+        aAttribute == nsGkAtoms::maxpos || 
+        aAttribute == nsGkAtoms::pageincrement ||
+        aAttribute == nsGkAtoms::increment ) {
     nsAutoString valueStr;
     mContent->GetAttr(aNameSpaceID, aAttribute, valueStr);
     
@@ -209,7 +209,7 @@ nsNativeScrollbarFrame::AttributeChanged(PRInt32 aNameSpaceID,
 
     nsCOMPtr<nsINativeScrollbar> scrollbar(do_QueryInterface(mScrollbar));
     if (scrollbar) {
-      if (aAttribute == nsXULAtoms::maxpos) {
+      if (aAttribute == nsGkAtoms::maxpos) {
         // bounds check it
         PRUint32 maxValue = (PRUint32)value;
         PRUint32 current;
@@ -227,17 +227,17 @@ nsNativeScrollbarFrame::AttributeChanged(PRInt32 aNameSpaceID,
           nsAutoString currentStr;
           currentStr.AppendInt(curPosition);
           parts.mScrollbarFrame->GetContent()->
-            SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, currentStr, PR_TRUE);
+            SetAttr(kNameSpaceID_None, nsGkAtoms::curpos, currentStr, PR_TRUE);
         }
       }
       
-      if ( aAttribute == nsXULAtoms::curpos )
+      if ( aAttribute == nsGkAtoms::curpos )
         scrollbar->SetPosition(value);
-      else if ( aAttribute == nsXULAtoms::maxpos )
+      else if ( aAttribute == nsGkAtoms::maxpos )
         scrollbar->SetMaxRange(value);
-      else if ( aAttribute == nsXULAtoms::pageincrement )   // poorly named, actually the height of the visible view area
+      else if ( aAttribute == nsGkAtoms::pageincrement )   // poorly named, actually the height of the visible view area
         scrollbar->SetViewSize(value);
-     else if ( aAttribute == nsXULAtoms::increment )
+     else if ( aAttribute == nsGkAtoms::increment )
         scrollbar->SetLineIncrement(value);
     }
   }
@@ -313,7 +313,7 @@ nsNativeScrollbarFrame::Hookup()
   // node. If so, notify the scrollbar.
 
   nsAutoString value;
-  scrollbarContent->GetAttr(kNameSpaceID_None, nsXULAtoms::curpos, value);
+  scrollbarContent->GetAttr(kNameSpaceID_None, nsGkAtoms::curpos, value);
 
   PRInt32 error;
   PRUint32 curpos = value.ToInteger(&error);

@@ -45,7 +45,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocument.h"
-#include "nsHTMLAtoms.h" // XXX only needed for nsHTMLAtoms::id
+#include "nsLayoutAtoms.h" // XXX only needed for nsGkAtoms::id
 #include "nsIEventListenerManager.h"
 #include "nsIDOMEvent.h"
 #include "nsGUIEvent.h"
@@ -53,7 +53,6 @@
 #include "nsIXTFService.h"
 #include "nsDOMAttributeMap.h"
 #include "nsUnicharUtils.h"
-#include "nsLayoutAtoms.h"
 #include "nsEventDispatcher.h"
 #include "nsIProgrammingLanguage.h"
 #include "nsIXPConnect.h"
@@ -65,7 +64,7 @@ nsXTFElementWrapper::nsXTFElementWrapper(nsINodeInfo* aNodeInfo,
       mXTFElement(aXTFElement),
       mNotificationMask(0),
       mIntrinsicState(0),
-      mTmpAttrName(nsLayoutAtoms::_asterix) // XXX this is a hack, but names
+      mTmpAttrName(nsGkAtoms::_asterix) // XXX this is a hack, but names
                                             // have to have a value
 {
 }
@@ -256,7 +255,7 @@ nsIAtom *
 nsXTFElementWrapper::GetIDAttributeName() const
 {
   // XXX:
-  return nsHTMLAtoms::id;
+  return nsGkAtoms::id;
 }
 
 nsresult

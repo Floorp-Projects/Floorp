@@ -54,8 +54,7 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsIContent.h"
-#include "nsHTMLAtoms.h"
-#include "nsXULAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsIXBLDocumentInfo.h"
 #include "nsIDocument.h"
@@ -64,7 +63,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMNSDocument.h"
 #include "nsISelectionController.h"
-#include "nsXULAtoms.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsContentUtils.h"
@@ -289,7 +287,7 @@ nsXBLWindowHandler::WalkHandlersInternal(nsIDOMEvent* aEvent,
     if (el) {
       // We are.  Obtain our command attribute.
       nsAutoString command;
-      elt->GetAttr(kNameSpaceID_None, nsXULAtoms::command, command);
+      elt->GetAttr(kNameSpaceID_None, nsGkAtoms::command, command);
       if (!command.IsEmpty()) {
         // Locate the command element in question.  Note that we
         // know "elt" is in a doc if we're dealing with it here.

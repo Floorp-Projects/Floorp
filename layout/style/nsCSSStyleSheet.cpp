@@ -232,7 +232,7 @@ PRBool
 nsMediaList::Matches(nsPresContext* aPresContext)
 {
   if (-1 != mArray.IndexOf(aPresContext->Medium()) ||
-      -1 != mArray.IndexOf(nsLayoutAtoms::all))
+      -1 != mArray.IndexOf(nsGkAtoms::all))
     return PR_TRUE;
   return mArray.Count() == 0;
 }

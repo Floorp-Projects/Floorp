@@ -71,8 +71,8 @@ nsMathMLmunderoverFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                           nsIAtom*        aAttribute,
                                           PRInt32         aModType)
 {
-  if (nsMathMLAtoms::accent_ == aAttribute ||
-      nsMathMLAtoms::accentunder_ == aAttribute) {
+  if (nsGkAtoms::accent_ == aAttribute ||
+      nsGkAtoms::accentunder_ == aAttribute) {
     // When we have automatic data to update within ourselves, we ask our
     // parent to re-layout its children
     return ReLayoutChildren(mParent);
@@ -197,10 +197,10 @@ nsMathMLmunderoverFrame::TransmitAutomaticData()
     mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTUNDER;
 
   static nsIContent::AttrValuesArray strings[] =
-    {&nsMathMLAtoms::_true, &nsMathMLAtoms::_false, nsnull};
+    {&nsGkAtoms::_true, &nsGkAtoms::_false, nsnull};
 
   // if we have an accentunder attribute, it overrides what the underscript said
-  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsMathMLAtoms::accentunder_,
+  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::accentunder_,
                                     strings, eCaseMatters)) {
     case 0: mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTUNDER; break;
     case 1: mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTUNDER; break;
@@ -215,7 +215,7 @@ nsMathMLmunderoverFrame::TransmitAutomaticData()
     mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTOVER;
 
   // if we have an accent attribute, it overrides what the overscript said
-  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsMathMLAtoms::accent_,
+  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::accent_,
                                     strings, eCaseMatters)) {
     case 0: mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTOVER; break;
     case 1: mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTOVER; break;

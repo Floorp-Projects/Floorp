@@ -66,7 +66,7 @@ nsSVGPolyElement::Init()
   // points #IMPLIED
   rv = nsSVGPointList::Create(getter_AddRefs(mPoints));
   NS_ENSURE_SUCCESS(rv,rv);
-  rv = AddMappedSVGValue(nsSVGAtoms::points, mPoints);
+  rv = AddMappedSVGValue(nsGkAtoms::points, mPoints);
   NS_ENSURE_SUCCESS(rv,rv);
 
   return rv;

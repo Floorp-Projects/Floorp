@@ -71,7 +71,7 @@ nsMathMLmunderFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                       nsIAtom*        aAttribute,
                                       PRInt32         aModType)
 {
-  if (nsMathMLAtoms::accentunder_ == aAttribute) {
+  if (nsGkAtoms::accentunder_ == aAttribute) {
     // When we have automatic data to update within ourselves, we ask our
     // parent to re-layout its children
     return ReLayoutChildren(mParent);
@@ -194,8 +194,8 @@ XXX The winner is the outermost setting in conflicting settings like these:
 
   // if we have an accentunder attribute, it overrides what the underscript said
   static nsIContent::AttrValuesArray strings[] =
-    {&nsMathMLAtoms::_true, &nsMathMLAtoms::_false, nsnull};
-  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsMathMLAtoms::accentunder_,
+    {&nsGkAtoms::_true, &nsGkAtoms::_false, nsnull};
+  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::accentunder_,
                                     strings, eCaseMatters)) {
     case 0: mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTUNDER; break;
     case 1: mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTUNDER; break;

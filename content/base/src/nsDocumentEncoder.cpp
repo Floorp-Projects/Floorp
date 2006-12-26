@@ -65,7 +65,7 @@
 #include "nsIDOMRange.h"
 #include "nsIDOMDocument.h"
 #include "nsICharsetConverterManager.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsIEnumerator.h"
 #include "nsISelectionPrivate.h"
@@ -1112,13 +1112,13 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
   {
     // checking for selection inside a plaintext form widget
     nsIAtom *atom = selContent->Tag();
-    if (atom == nsHTMLAtoms::input ||
-        atom == nsHTMLAtoms::textarea)
+    if (atom == nsGkAtoms::input ||
+        atom == nsGkAtoms::textarea)
     {
       mIsTextWidget = PR_TRUE;
       break;
     }
-    else if (atom == nsHTMLAtoms::body)
+    else if (atom == nsGkAtoms::body)
     {
       // check for moz prewrap style on body.  If it's there we are 
       // in a plaintext editor.  This is pretty cheezy but I haven't 
@@ -1260,32 +1260,32 @@ nsHTMLCopyEncoder::IncludeInContext(nsIDOMNode *aNode)
 
   nsIAtom *tag = content->Tag();
 
-  return (tag == nsHTMLAtoms::b        ||
-          tag == nsHTMLAtoms::i        ||
-          tag == nsHTMLAtoms::u        ||
-          tag == nsHTMLAtoms::a        ||
-          tag == nsHTMLAtoms::tt       ||
-          tag == nsHTMLAtoms::s        ||
-          tag == nsHTMLAtoms::big      ||
-          tag == nsHTMLAtoms::small    ||
-          tag == nsHTMLAtoms::strike   ||
-          tag == nsHTMLAtoms::em       ||
-          tag == nsHTMLAtoms::strong   ||
-          tag == nsHTMLAtoms::dfn      ||
-          tag == nsHTMLAtoms::code     ||
-          tag == nsHTMLAtoms::cite     ||
-          tag == nsHTMLAtoms::variable ||
-          tag == nsHTMLAtoms::abbr     ||
-          tag == nsHTMLAtoms::font     ||
-          tag == nsHTMLAtoms::script   ||
-          tag == nsHTMLAtoms::span     ||
-          tag == nsHTMLAtoms::pre      ||
-          tag == nsHTMLAtoms::h1       ||
-          tag == nsHTMLAtoms::h2       ||
-          tag == nsHTMLAtoms::h3       ||
-          tag == nsHTMLAtoms::h4       ||
-          tag == nsHTMLAtoms::h5       ||
-          tag == nsHTMLAtoms::h6);
+  return (tag == nsGkAtoms::b        ||
+          tag == nsGkAtoms::i        ||
+          tag == nsGkAtoms::u        ||
+          tag == nsGkAtoms::a        ||
+          tag == nsGkAtoms::tt       ||
+          tag == nsGkAtoms::s        ||
+          tag == nsGkAtoms::big      ||
+          tag == nsGkAtoms::small    ||
+          tag == nsGkAtoms::strike   ||
+          tag == nsGkAtoms::em       ||
+          tag == nsGkAtoms::strong   ||
+          tag == nsGkAtoms::dfn      ||
+          tag == nsGkAtoms::code     ||
+          tag == nsGkAtoms::cite     ||
+          tag == nsGkAtoms::variable ||
+          tag == nsGkAtoms::abbr     ||
+          tag == nsGkAtoms::font     ||
+          tag == nsGkAtoms::script   ||
+          tag == nsGkAtoms::span     ||
+          tag == nsGkAtoms::pre      ||
+          tag == nsGkAtoms::h1       ||
+          tag == nsGkAtoms::h2       ||
+          tag == nsGkAtoms::h3       ||
+          tag == nsGkAtoms::h4       ||
+          tag == nsGkAtoms::h5       ||
+          tag == nsGkAtoms::h6);
 }
 
 
@@ -1582,7 +1582,7 @@ nsHTMLCopyEncoder::GetChildAt(nsIDOMNode *aParent, PRInt32 aOffset)
 PRBool 
 nsHTMLCopyEncoder::IsMozBR(nsIDOMNode* aNode)
 {
-  if (IsTag(aNode, nsHTMLAtoms::br))
+  if (IsTag(aNode, nsGkAtoms::br))
   {
     nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(aNode);
     if (elem)
@@ -1628,11 +1628,11 @@ nsHTMLCopyEncoder::IsRoot(nsIDOMNode* aNode)
   if (aNode)
   {
     if (mIsTextWidget) 
-      return (IsTag(aNode, nsHTMLAtoms::div));
+      return (IsTag(aNode, nsGkAtoms::div));
     else
-      return (IsTag(aNode, nsHTMLAtoms::body) || 
-              IsTag(aNode, nsHTMLAtoms::td)   ||
-              IsTag(aNode, nsHTMLAtoms::th));
+      return (IsTag(aNode, nsGkAtoms::body) || 
+              IsTag(aNode, nsGkAtoms::td)   ||
+              IsTag(aNode, nsGkAtoms::th));
   }
   return PR_FALSE;
 }

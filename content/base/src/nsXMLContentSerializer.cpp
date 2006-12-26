@@ -43,7 +43,7 @@
 
 #include "nsXMLContentSerializer.h"
 
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIDOMText.h"
 #include "nsIDOMCDATASection.h"
 #include "nsIDOMProcessingInstruction.h"
@@ -60,7 +60,6 @@
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsContentUtils.h"
-#include "nsLayoutAtoms.h"
 #include "nsAttrName.h"
 
 typedef struct {
@@ -619,7 +618,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
         // XXXbz what if we have both "xmlns" in the null namespace and "xmlns"
         // in the xmlns namespace?
         (namespaceID == kNameSpaceID_None &&
-         attrName == nsLayoutAtoms::xmlns)) {
+         attrName == nsGkAtoms::xmlns)) {
       content->GetAttr(namespaceID, attrName, uriStr);
 
       if (!name->GetPrefix()) {
@@ -875,86 +874,86 @@ nsXMLContentSerializer::IsShorthandAttr(const nsIAtom* aAttrName,
                                         const nsIAtom* aElementName)
 {
   // checked
-  if ((aAttrName == nsHTMLAtoms::checked) &&
-      (aElementName == nsHTMLAtoms::input)) {
+  if ((aAttrName == nsGkAtoms::checked) &&
+      (aElementName == nsGkAtoms::input)) {
     return PR_TRUE;
   }
 
   // compact
-  if ((aAttrName == nsHTMLAtoms::compact) &&
-      (aElementName == nsHTMLAtoms::dir || 
-       aElementName == nsHTMLAtoms::dl ||
-       aElementName == nsHTMLAtoms::menu ||
-       aElementName == nsHTMLAtoms::ol ||
-       aElementName == nsHTMLAtoms::ul)) {
+  if ((aAttrName == nsGkAtoms::compact) &&
+      (aElementName == nsGkAtoms::dir || 
+       aElementName == nsGkAtoms::dl ||
+       aElementName == nsGkAtoms::menu ||
+       aElementName == nsGkAtoms::ol ||
+       aElementName == nsGkAtoms::ul)) {
     return PR_TRUE;
   }
 
   // declare
-  if ((aAttrName == nsHTMLAtoms::declare) &&
-      (aElementName == nsHTMLAtoms::object)) {
+  if ((aAttrName == nsGkAtoms::declare) &&
+      (aElementName == nsGkAtoms::object)) {
     return PR_TRUE;
   }
 
   // defer
-  if ((aAttrName == nsHTMLAtoms::defer) &&
-      (aElementName == nsHTMLAtoms::script)) {
+  if ((aAttrName == nsGkAtoms::defer) &&
+      (aElementName == nsGkAtoms::script)) {
     return PR_TRUE;
   }
 
   // disabled
-  if ((aAttrName == nsHTMLAtoms::disabled) &&
-      (aElementName == nsHTMLAtoms::button ||
-       aElementName == nsHTMLAtoms::input ||
-       aElementName == nsHTMLAtoms::optgroup ||
-       aElementName == nsHTMLAtoms::option ||
-       aElementName == nsHTMLAtoms::select ||
-       aElementName == nsHTMLAtoms::textarea)) {
+  if ((aAttrName == nsGkAtoms::disabled) &&
+      (aElementName == nsGkAtoms::button ||
+       aElementName == nsGkAtoms::input ||
+       aElementName == nsGkAtoms::optgroup ||
+       aElementName == nsGkAtoms::option ||
+       aElementName == nsGkAtoms::select ||
+       aElementName == nsGkAtoms::textarea)) {
     return PR_TRUE;
   }
 
   // ismap
-  if ((aAttrName == nsHTMLAtoms::ismap) &&
-      (aElementName == nsHTMLAtoms::img ||
-       aElementName == nsHTMLAtoms::input)) {
+  if ((aAttrName == nsGkAtoms::ismap) &&
+      (aElementName == nsGkAtoms::img ||
+       aElementName == nsGkAtoms::input)) {
     return PR_TRUE;
   }
 
   // multiple
-  if ((aAttrName == nsHTMLAtoms::multiple) &&
-      (aElementName == nsHTMLAtoms::select)) {
+  if ((aAttrName == nsGkAtoms::multiple) &&
+      (aElementName == nsGkAtoms::select)) {
     return PR_TRUE;
   }
 
   // noresize
-  if ((aAttrName == nsHTMLAtoms::noresize) &&
-      (aElementName == nsHTMLAtoms::frame)) {
+  if ((aAttrName == nsGkAtoms::noresize) &&
+      (aElementName == nsGkAtoms::frame)) {
     return PR_TRUE;
   }
 
   // noshade
-  if ((aAttrName == nsHTMLAtoms::noshade) &&
-      (aElementName == nsHTMLAtoms::hr)) {
+  if ((aAttrName == nsGkAtoms::noshade) &&
+      (aElementName == nsGkAtoms::hr)) {
     return PR_TRUE;
   }
 
   // nowrap
-  if ((aAttrName == nsHTMLAtoms::nowrap) &&
-      (aElementName == nsHTMLAtoms::td ||
-       aElementName == nsHTMLAtoms::th)) {
+  if ((aAttrName == nsGkAtoms::nowrap) &&
+      (aElementName == nsGkAtoms::td ||
+       aElementName == nsGkAtoms::th)) {
     return PR_TRUE;
   }
 
   // readonly
-  if ((aAttrName == nsHTMLAtoms::readonly) &&
-      (aElementName == nsHTMLAtoms::input ||
-       aElementName == nsHTMLAtoms::textarea)) {
+  if ((aAttrName == nsGkAtoms::readonly) &&
+      (aElementName == nsGkAtoms::input ||
+       aElementName == nsGkAtoms::textarea)) {
     return PR_TRUE;
   }
 
   // selected
-  if ((aAttrName == nsHTMLAtoms::selected) &&
-      (aElementName == nsHTMLAtoms::option)) {
+  if ((aAttrName == nsGkAtoms::selected) &&
+      (aElementName == nsGkAtoms::option)) {
     return PR_TRUE;
   }
 

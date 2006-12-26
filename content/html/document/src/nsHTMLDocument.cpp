@@ -50,7 +50,6 @@
 #include "nsIXMLContentSink.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLStyleSheet.h"
-#include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
@@ -1233,7 +1232,7 @@ nsHTMLDocument::AttributeWillChange(nsIContent* aContent, PRInt32 aNameSpaceID,
   NS_ABORT_IF_FALSE(aContent, "Null content!");
   NS_PRECONDITION(aAttribute, "Must have an attribute that's changing!");
 
-  if (!IsXHTML() && aAttribute == nsHTMLAtoms::name &&
+  if (!IsXHTML() && aAttribute == nsGkAtoms::name &&
       aNameSpaceID == kNameSpaceID_None) {
     nsIAtom* name = IsNamedItem(aContent);
     if (name) {
@@ -1265,7 +1264,7 @@ nsHTMLDocument::AttributeChanged(nsIDocument* aDocument,
   NS_ABORT_IF_FALSE(aContent, "Null content!");
   NS_PRECONDITION(aAttribute, "Must have an attribute that's changing!");
 
-  if (!IsXHTML() && aAttribute == nsHTMLAtoms::name &&
+  if (!IsXHTML() && aAttribute == nsGkAtoms::name &&
       aNameSpaceID == kNameSpaceID_None) {
 
     nsIAtom* name = IsNamedItem(aContent);
@@ -1685,8 +1684,8 @@ nsHTMLDocument::SetBody(nsIDOMHTMLElement* aBody)
   nsCOMPtr<nsIDOMElement> root(do_QueryInterface(mRootContent));
 
   // The body element must be either a body tag or a frameset tag.
-  if (!body || !root || !(body->Tag() == nsHTMLAtoms::body ||
-                          body->Tag() == nsHTMLAtoms::frameset)) {
+  if (!body || !root || !(body->Tag() == nsGkAtoms::body ||
+                          body->Tag() == nsGkAtoms::frameset)) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
@@ -1707,7 +1706,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetImages(nsIDOMHTMLCollection** aImages)
 {
   if (!mImages) {
-    mImages = new nsContentList(this, nsHTMLAtoms::img, mDefaultNamespaceID);
+    mImages = new nsContentList(this, nsGkAtoms::img, mDefaultNamespaceID);
     if (!mImages) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1723,7 +1722,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetApplets(nsIDOMHTMLCollection** aApplets)
 {
   if (!mApplets) {
-    mApplets = new nsContentList(this, nsHTMLAtoms::applet,
+    mApplets = new nsContentList(this, nsGkAtoms::applet,
                                  mDefaultNamespaceID);
     if (!mApplets) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -1761,8 +1760,8 @@ nsHTMLDocument::MatchLinks(nsIContent *aContent, PRInt32 aNamespaceID,
 
     nsIAtom *localName = ni->NameAtom();
     if (ni->NamespaceID() == namespaceID &&
-        (localName == nsHTMLAtoms::a || localName == nsHTMLAtoms::area)) {
-      return aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::href);
+        (localName == nsGkAtoms::a || localName == nsGkAtoms::area)) {
+      return aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::href);
     }
   }
 
@@ -1803,8 +1802,8 @@ nsHTMLDocument::MatchAnchors(nsIContent *aContent, PRInt32 aNamespaceID,
 #endif
 
   PRInt32 namespaceID = aContent->GetCurrentDoc()->GetDefaultNamespaceID();
-  if (aContent->NodeInfo()->Equals(nsHTMLAtoms::a, namespaceID)) {
-    return aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::name);
+  if (aContent->NodeInfo()->Equals(nsGkAtoms::a, namespaceID)) {
+    return aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::name);
   }
 
   return PR_FALSE;
@@ -2538,7 +2537,7 @@ nsHTMLDocument::MatchNameAttribute(nsIContent* aContent, PRInt32 aNamespaceID,
 {
   NS_PRECONDITION(aContent, "Must have content node to work with!");
   
-  return aContent->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::name, aData,
+  return aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, aData,
                                eCaseMatters);
 }
 
@@ -2884,7 +2883,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetEmbeds(nsIDOMHTMLCollection** aEmbeds)
 {
   if (!mEmbeds) {
-    mEmbeds = new nsContentList(this, nsHTMLAtoms::embed, mDefaultNamespaceID);
+    mEmbeds = new nsContentList(this, nsGkAtoms::embed, mDefaultNamespaceID);
     if (!mEmbeds) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -3075,15 +3074,15 @@ IsNamedItem(nsIContent* aContent)
   }
 
   nsIAtom* tag = elm->Tag();
-  if (tag != nsHTMLAtoms::img    &&
-      tag != nsHTMLAtoms::form   &&
-      tag != nsHTMLAtoms::applet &&
-      tag != nsHTMLAtoms::embed  &&
-      tag != nsHTMLAtoms::object) {
+  if (tag != nsGkAtoms::img    &&
+      tag != nsGkAtoms::form   &&
+      tag != nsGkAtoms::applet &&
+      tag != nsGkAtoms::embed  &&
+      tag != nsGkAtoms::object) {
     return nsnull;
   }
 
-  const nsAttrValue* val = elm->GetParsedAttr(nsHTMLAtoms::name);
+  const nsAttrValue* val = elm->GetParsedAttr(nsGkAtoms::name);
   if (val && val->Type() == nsAttrValue::eAtom) {
     return val->GetAtomValue();
   }
@@ -3440,10 +3439,10 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
   if (e && e != ID_NOT_IN_DOCUMENT && e->IsNodeOfType(nsINode::eHTML)) {
     nsIAtom *tag = e->Tag();
 
-    if ((tag == nsHTMLAtoms::embed  ||
-         tag == nsHTMLAtoms::img    ||
-         tag == nsHTMLAtoms::object ||
-         tag == nsHTMLAtoms::applet) &&
+    if ((tag == nsGkAtoms::embed  ||
+         tag == nsGkAtoms::img    ||
+         tag == nsGkAtoms::object ||
+         tag == nsGkAtoms::applet) &&
         (!aForm || nsContentUtils::BelongsInForm(aForm, e))) {
       NS_ADDREF(*aResult = e);
     }
@@ -3467,7 +3466,7 @@ nsHTMLDocument::GetBodyContent()
     nsIContent *child = mRootContent->GetChildAt(i);
     NS_ENSURE_TRUE(child, NS_ERROR_UNEXPECTED);
 
-    if (child->NodeInfo()->Equals(nsHTMLAtoms::body, mDefaultNamespaceID) &&
+    if (child->NodeInfo()->Equals(nsGkAtoms::body, mDefaultNamespaceID) &&
         child->IsNodeOfType(nsINode::eHTML)) {
       mBodyContent = do_QueryInterface(child);
 
@@ -3509,7 +3508,7 @@ nsContentList*
 nsHTMLDocument::GetForms()
 {
   if (!mForms)
-    mForms = new nsContentList(this, nsHTMLAtoms::form, mDefaultNamespaceID);
+    mForms = new nsContentList(this, nsGkAtoms::form, mDefaultNamespaceID);
 
   return mForms;
 }

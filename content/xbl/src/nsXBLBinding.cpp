@@ -87,8 +87,7 @@
 #include "nsIDOMEventGroup.h"
 #include "nsAttrName.h"
 
-#include "nsXBLAtoms.h"
-#include "nsXULAtoms.h"
+#include "nsGkAtoms.h"
 
 #include "nsIDOMAttr.h"
 #include "nsIDOMNamedNodeMap.h"
@@ -443,7 +442,7 @@ nsXBLBinding::GenerateAnonymousContent()
 {
   // Fetch the content element for this binding.
   nsIContent* content =
-    mPrototypeBinding->GetImmediateChild(nsXBLAtoms::content);
+    mPrototypeBinding->GetImmediateChild(nsGkAtoms::content);
 
   if (!content) {
     // We have no anonymous content.
@@ -464,7 +463,7 @@ nsXBLBinding::GenerateAnonymousContent()
 #ifdef DEBUG
   // See if there's an includes attribute.
   if (nsContentUtils::HasNonEmptyAttr(content, kNameSpaceID_None,
-                                      nsXBLAtoms::includes)) {
+                                      nsGkAtoms::includes)) {
     nsCAutoString id;
     mPrototypeBinding->GetID(id);
     nsCAutoString message("An XBL Binding with an id of ");
@@ -506,8 +505,8 @@ nsXBLBinding::GenerateAnonymousContent()
         nsINodeInfo *ni = childContent->NodeInfo();
         nsIAtom *localName = ni->NameAtom();
         if (ni->NamespaceID() != kNameSpaceID_XUL ||
-            (localName != nsXULAtoms::observes &&
-             localName != nsXULAtoms::_template)) {
+            (localName != nsGkAtoms::observes &&
+             localName != nsGkAtoms::_template)) {
           hasContent = PR_FALSE;
           break;
         }
@@ -590,8 +589,8 @@ nsXBLBinding::GenerateAnonymousContent()
                 nsINodeInfo *ni = childContent->NodeInfo();
                 nsIAtom *localName = ni->NameAtom();
                 if (ni->NamespaceID() != kNameSpaceID_XUL ||
-                    (localName != nsXULAtoms::observes &&
-                     localName != nsXULAtoms::_template)) {
+                    (localName != nsGkAtoms::observes &&
+                     localName != nsGkAtoms::_template)) {
                   // Kill all anonymous content.
                   mContent = nsnull;
                   bindingManager->SetContentListFor(mBoundElement, nsnull);
@@ -642,7 +641,7 @@ nsXBLBinding::GenerateAnonymousContent()
     PRInt32 namespaceID = attrName->NamespaceID();
     nsIAtom* name = attrName->LocalName();
 
-    if (name != nsXBLAtoms::includes) {
+    if (name != nsGkAtoms::includes) {
       if (!nsContentUtils::HasNonEmptyAttr(mBoundElement, namespaceID, name)) {
         nsAutoString value2;
         content->GetAttr(namespaceID, name, value2);
@@ -678,9 +677,9 @@ nsXBLBinding::InstallEventHandlers()
         // Fetch the event type.
         nsCOMPtr<nsIAtom> eventAtom = curr->GetEventName();
         if (!eventAtom ||
-            eventAtom == nsXBLAtoms::keyup ||
-            eventAtom == nsXBLAtoms::keydown ||
-            eventAtom == nsXBLAtoms::keypress)
+            eventAtom == nsGkAtoms::keyup ||
+            eventAtom == nsGkAtoms::keydown ||
+            eventAtom == nsGkAtoms::keypress)
           continue;
 
         nsAutoString type;
@@ -830,9 +829,9 @@ nsXBLBinding::UnhookEventHandlers()
       if (handler) {
         nsCOMPtr<nsIAtom> eventAtom = curr->GetEventName();
         if (!eventAtom ||
-            eventAtom == nsXBLAtoms::keyup ||
-            eventAtom == nsXBLAtoms::keydown ||
-            eventAtom == nsXBLAtoms::keypress)
+            eventAtom == nsGkAtoms::keyup ||
+            eventAtom == nsGkAtoms::keydown ||
+            eventAtom == nsGkAtoms::keypress)
           continue;
 
         nsAutoString type;
@@ -899,7 +898,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
     if (mIsStyleBinding) {
       // Now the binding dies.  Unhook our prototypes.
       nsIContent* interfaceElement =
-        mPrototypeBinding->GetImmediateChild(nsXBLAtoms::implementation);
+        mPrototypeBinding->GetImmediateChild(nsGkAtoms::implementation);
 
       if (interfaceElement) { 
         nsIScriptGlobalObject *global = aOldDocument->GetScriptGlobalObject();

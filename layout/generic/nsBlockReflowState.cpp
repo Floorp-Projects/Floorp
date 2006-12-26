@@ -52,7 +52,6 @@
 #include "nsFrameManager.h"
 
 #include "nsINameSpaceManager.h"
-#include "nsHTMLAtoms.h"
 
 
 #ifdef DEBUG
@@ -143,7 +142,7 @@ nsBlockReflowState::SetupOverflowPlaceholdersProperty()
 {
   if (mReflowState.availableHeight != NS_UNCONSTRAINEDSIZE ||
       !mOverflowPlaceholders.IsEmpty()) {
-    mBlock->SetProperty(nsLayoutAtoms::overflowPlaceholdersProperty,
+    mBlock->SetProperty(nsGkAtoms::overflowPlaceholdersProperty,
                         &mOverflowPlaceholders, nsnull);
     mBlock->AddStateBits(NS_BLOCK_HAS_OVERFLOW_PLACEHOLDERS);
   }
@@ -162,7 +161,7 @@ nsBlockReflowState::~nsBlockReflowState()
   }
 
   if (mBlock->GetStateBits() & NS_BLOCK_HAS_OVERFLOW_PLACEHOLDERS) {
-    mBlock->UnsetProperty(nsLayoutAtoms::overflowPlaceholdersProperty);
+    mBlock->UnsetProperty(nsGkAtoms::overflowPlaceholdersProperty);
     mBlock->RemoveStateBits(NS_BLOCK_HAS_OVERFLOW_PLACEHOLDERS);
   }
 }
@@ -209,7 +208,7 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
   if ((NS_FRAME_SPLITTABLE_NON_RECTANGULAR == splitType ||     // normal blocks 
        NS_FRAME_NOT_SPLITTABLE == splitType) &&                // things like images mapped to display: block
       !(aFrame->IsFrameOfType(nsIFrame::eReplaced)) &&         // but not replaced elements
-      aFrame->GetType() != nsLayoutAtoms::scrollFrame)         // or scroll frames
+      aFrame->GetType() != nsGkAtoms::scrollFrame)         // or scroll frames
   {
     if (mBand.GetFloatCount()) {
       // Use the float-edge property to determine how the child block
@@ -411,7 +410,7 @@ nsBlockReflowState::RecoverFloats(nsLineList::iterator aLine,
       if (NS_STYLE_POSITION_RELATIVE == kid->GetStyleDisplay()->mPosition) {
         nsPoint *offsets = NS_STATIC_CAST(nsPoint*,
           mPresContext->PropertyTable()->GetProperty(kid,
-                                       nsLayoutAtoms::computedOffsetProperty));
+                                       nsGkAtoms::computedOffsetProperty));
 
         if (offsets) {
           tx -= offsets->x;
@@ -793,14 +792,14 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
       
       if(prevFrame) {
         //get the frame type
-        if (nsLayoutAtoms::tableOuterFrame == prevFrame->GetType()) {
+        if (nsGkAtoms::tableOuterFrame == prevFrame->GetType()) {
           //see if it has "align="
           // IE makes a difference between align and he float property
           nsIContent* content = prevFrame->GetContent();
           if (content) {
             // we're interested only if previous frame is align=left
             // IE messes things up when "right" (overlapping frames) 
-            if (content->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::align,
+            if (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::align,
                                      NS_LITERAL_STRING("left"), eIgnoreCase)) {
               keepFloatOnSameLine = PR_TRUE;
               // don't advance to next line (IE quirkie behaviour)

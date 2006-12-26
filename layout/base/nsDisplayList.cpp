@@ -117,14 +117,14 @@ static void MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame
   if (!dirty.IntersectRect(dirty, overflowRect))
     return;
   // if "new nsRect" fails, this won't do anything, but that's okay
-  aFrame->SetProperty(nsLayoutAtoms::outOfFlowDirtyRectProperty,
+  aFrame->SetProperty(nsGkAtoms::outOfFlowDirtyRectProperty,
                       new nsRect(dirty), DestroyRectFunc);
 
   MarkFrameForDisplay(aFrame, aDirtyFrame);
 }
 
 static void UnmarkFrameForDisplay(nsIFrame* aFrame) {
-  aFrame->DeleteProperty(nsLayoutAtoms::outOfFlowDirtyRectProperty);
+  aFrame->DeleteProperty(nsGkAtoms::outOfFlowDirtyRectProperty);
 
   nsFrameManager* frameManager = aFrame->GetPresContext()->PresShell()->FrameManager();
 

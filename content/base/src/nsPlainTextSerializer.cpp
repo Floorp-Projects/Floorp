@@ -46,7 +46,7 @@
 #include "nsPlainTextSerializer.h"
 #include "nsLWBrkCIID.h"
 #include "nsIServiceManager.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDOMText.h"
 #include "nsIDOMCDATASection.h"
 #include "nsIDOMElement.h"
@@ -567,7 +567,7 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
   // newlines before the text.
   if (aTag == eHTMLTag_blockquote) {
     nsAutoString value;
-    nsresult rv = GetAttributeValue(aNode, nsHTMLAtoms::type, value);
+    nsresult rv = GetAttributeValue(aNode, nsGkAtoms::type, value);
     isInCiteBlockquote = NS_SUCCEEDED(rv) && value.EqualsIgnoreCase("cite");
   }
 
@@ -596,7 +596,7 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
     // (which arguably we should only do if told to do so).
     nsAutoString style;
     PRInt32 whitespace;
-    if(NS_SUCCEEDED(GetAttributeValue(aNode, nsHTMLAtoms::style, style)) &&
+    if(NS_SUCCEEDED(GetAttributeValue(aNode, nsGkAtoms::style, style)) &&
        (kNotFound != (whitespace = style.Find("white-space:")))) {
 
       if (kNotFound != style.Find("-moz-pre-wrap", PR_TRUE, whitespace)) {
@@ -694,7 +694,7 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
     if (mOLStackIndex < OLStackSize) {
       nsAutoString startAttr;
       PRInt32 startVal = 1;
-      if(NS_SUCCEEDED(GetAttributeValue(aNode, nsHTMLAtoms::start, startAttr))){
+      if(NS_SUCCEEDED(GetAttributeValue(aNode, nsGkAtoms::start, startAttr))){
         PRInt32 rv = 0;
         startVal = startAttr.ToInteger(&rv);
         if (NS_FAILED(rv))
@@ -708,7 +708,7 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
     if (mTagStackIndex > 1 && IsInOL()) {
       if (mOLStackIndex > 0) {
         nsAutoString valueAttr;
-        if(NS_SUCCEEDED(GetAttributeValue(aNode, nsHTMLAtoms::value, valueAttr))){
+        if(NS_SUCCEEDED(GetAttributeValue(aNode, nsGkAtoms::value, valueAttr))){
           PRInt32 rv = 0;
           PRInt32 valueAttrVal = valueAttr.ToInteger(&rv);
           if (NS_SUCCEEDED(rv))
@@ -815,7 +815,7 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
   }
   else if (type == eHTMLTag_a && !currentNodeIsConverted) {
     nsAutoString url;
-    if (NS_SUCCEEDED(GetAttributeValue(aNode, nsHTMLAtoms::href, url))
+    if (NS_SUCCEEDED(GetAttributeValue(aNode, nsGkAtoms::href, url))
         && !url.IsEmpty()) {
       mURL = url;
     }
@@ -1101,7 +1101,7 @@ nsPlainTextSerializer::DoAddLeaf(const nsIParserNode *aNode, PRInt32 aTag,
     // Another egregious editor workaround, see bug 38194:
     // ignore the bogus br tags that the editor sticks here and there.
     nsAutoString typeAttr;
-    if (NS_FAILED(GetAttributeValue(aNode, nsHTMLAtoms::type, typeAttr))
+    if (NS_FAILED(GetAttributeValue(aNode, nsGkAtoms::type, typeAttr))
         || !typeAttr.EqualsLiteral("_moz")) {
       EnsureVerticalSpace(mEmptyLines+1);
     }
@@ -1159,12 +1159,12 @@ nsPlainTextSerializer::DoAddLeaf(const nsIParserNode *aNode, PRInt32 aTag,
     // See <http://www.w3.org/TR/REC-html40/struct/objects.html#edef-IMG>
     nsAutoString imageDescription;
     if (NS_SUCCEEDED(GetAttributeValue(aNode,
-                                       nsHTMLAtoms::alt,
+                                       nsGkAtoms::alt,
                                        imageDescription))) {
       // If the alt attribute has an empty value (|alt=""|), output nothing
     }
     else if (NS_SUCCEEDED(GetAttributeValue(aNode,
-                                            nsHTMLAtoms::title,
+                                            nsGkAtoms::title,
                                             imageDescription))
              && !imageDescription.IsEmpty()) {
       imageDescription = NS_LITERAL_STRING(" [") +
@@ -1797,7 +1797,7 @@ PRBool
 nsPlainTextSerializer::IsCurrentNodeConverted(const nsIParserNode* aNode)
 {
   nsAutoString value;
-  nsresult rv = GetAttributeValue(aNode, nsHTMLAtoms::_class, value);
+  nsresult rv = GetAttributeValue(aNode, nsGkAtoms::_class, value);
   return (NS_SUCCEEDED(rv) &&
           (value.EqualsIgnoreCase("moz-txt", 7) ||
            value.EqualsIgnoreCase("\"moz-txt", 8)));

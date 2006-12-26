@@ -54,7 +54,7 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsWidgetsCID.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIScrollableView.h"
 #include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
@@ -72,7 +72,6 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
-#include "nsLayoutAtoms.h"
 #include "nsIContent.h"
 #include "nsDisplayList.h"
 #include "nsNodeUtils.h"
@@ -278,7 +277,7 @@ nsHTMLFramesetFrame::FrameResizePrefCallback(const char* aPref, void* aClosure)
   if (doc) {
     doc->AttributeWillChange(frame->mContent,
                              kNameSpaceID_None,
-                             nsHTMLAtoms::frameborder);
+                             nsGkAtoms::frameborder);
   }
 
   frame->mForceFrameResizability =
@@ -289,7 +288,7 @@ nsHTMLFramesetFrame::FrameResizePrefCallback(const char* aPref, void* aClosure)
   if (doc) {
     nsNodeUtils::AttributeChanged(frame->GetContent(),
                                   kNameSpaceID_None,
-                                  nsHTMLAtoms::frameborder,
+                                  nsGkAtoms::frameborder,
                                   nsIDOMMutationEvent::MODIFICATION);
   }
 
@@ -397,12 +396,12 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
       continue;
 
     nsIAtom *tag = child->Tag();
-    if (tag == nsHTMLAtoms::frameset || tag == nsHTMLAtoms::frame) {
+    if (tag == nsGkAtoms::frameset || tag == nsGkAtoms::frame) {
       nsRefPtr<nsStyleContext> kidSC;
       nsresult result;
 
       kidSC = shell->StyleSet()->ResolveStyleFor(child, mStyleContext);
-      if (tag == nsHTMLAtoms::frameset) {
+      if (tag == nsGkAtoms::frameset) {
         frame = NS_NewHTMLFramesetFrame(shell, kidSC);
         if (NS_UNLIKELY(!frame))
           return NS_ERROR_OUT_OF_MEMORY;
@@ -669,7 +668,7 @@ PRInt32 nsHTMLFramesetFrame::GetBorderWidth(nsPresContext* aPresContext,
   nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
 
   if (content) {
-    const nsAttrValue* attr = content->GetParsedAttr(nsHTMLAtoms::border);
+    const nsAttrValue* attr = content->GetParsedAttr(nsGkAtoms::border);
     if (attr) {
       PRInt32 intVal = 0;
       if (attr->Type() == nsAttrValue::eInteger) {
@@ -738,7 +737,7 @@ nsHTMLFramesetFrame* nsHTMLFramesetFrame::GetFramesetParent(nsIFrame* aChild)
     nsCOMPtr<nsIContent> contentParent = content->GetParent();
 
     if (contentParent && contentParent->IsNodeOfType(nsINode::eHTML) &&
-        contentParent->Tag() == nsHTMLAtoms::frameset) {
+        contentParent->Tag() == nsGkAtoms::frameset) {
       nsIFrame* fptr = aChild->GetParent();
       parent = (nsHTMLFramesetFrame*) fptr;
     }
@@ -892,7 +891,7 @@ static
 nsFrameborder GetFrameBorderHelper(nsGenericHTMLElement* aContent)
 {
   if (nsnull != aContent) {
-    const nsAttrValue* attr = aContent->GetParsedAttr(nsHTMLAtoms::frameborder);
+    const nsAttrValue* attr = aContent->GetParsedAttr(nsGkAtoms::frameborder);
     if (attr && attr->Type() == nsAttrValue::eEnum) {
       switch (attr->GetEnumValue())
       {
@@ -945,7 +944,7 @@ nscolor nsHTMLFramesetFrame::GetBorderColor()
   nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
 
   if (content) {
-    const nsAttrValue* attr = content->GetParsedAttr(nsHTMLAtoms::bordercolor);
+    const nsAttrValue* attr = content->GetParsedAttr(nsGkAtoms::bordercolor);
     if (attr) {
       nscolor color;
       if (attr->GetColorValue(color)) {
@@ -962,7 +961,7 @@ nscolor nsHTMLFramesetFrame::GetBorderColor(nsIContent* aContent)
   nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(aContent);
 
   if (content) {
-    const nsAttrValue* attr = content->GetParsedAttr(nsHTMLAtoms::bordercolor);
+    const nsAttrValue* attr = content->GetParsedAttr(nsGkAtoms::bordercolor);
     if (attr) {
       nscolor color;
       if (attr->GetColorValue(color)) {
@@ -1278,7 +1277,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
 nsIAtom*
 nsHTMLFramesetFrame::GetType() const
 {
-  return nsLayoutAtoms::frameSetFrame;
+  return nsGkAtoms::frameSetFrame;
 }
 
 #ifdef DEBUG
@@ -1341,7 +1340,7 @@ nsHTMLFramesetFrame::GetNoResize(nsIFrame* aChildFrame)
 {
   nsIContent* content = aChildFrame->GetContent();
 
-  return content && content->HasAttr(kNameSpaceID_None, nsHTMLAtoms::noresize);
+  return content && content->HasAttr(kNameSpaceID_None, nsGkAtoms::noresize);
 }
 
 PRBool 
@@ -1382,9 +1381,9 @@ nsHTMLFramesetFrame::RecalculateBorderResize()
     if (child->IsNodeOfType(nsINode::eHTML)) {
       nsINodeInfo *ni = child->NodeInfo();
 
-      if (ni->Equals(nsHTMLAtoms::frameset)) {
+      if (ni->Equals(nsGkAtoms::frameset)) {
         childTypes[frameOrFramesetChildIndex++] = FRAMESET;
-      } else if (ni->Equals(nsHTMLAtoms::frame)) {
+      } else if (ni->Equals(nsGkAtoms::frame)) {
         childTypes[frameOrFramesetChildIndex++] = FRAME;
       }
       // Don't overflow childTypes array
@@ -1531,7 +1530,7 @@ nsHTMLFramesetFrame::MouseDrag(nsPresContext* aPresContext,
       GenerateRowCol(aPresContext, width, mNumCols, colSpecs, mColSizes,
                      newColAttr);
       // Setting the attr will trigger a reflow
-      mContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::cols, newColAttr, PR_TRUE);
+      mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::cols, newColAttr, PR_TRUE);
     }
   } else {
     change = NSIntPixelsToTwips(aEvent->refPoint.y - mFirstDragPoint.y, p2t);
@@ -1554,7 +1553,7 @@ nsHTMLFramesetFrame::MouseDrag(nsPresContext* aPresContext,
       GenerateRowCol(aPresContext, height, mNumRows, rowSpecs, mRowSizes,
                      newRowAttr);
       // Setting the attr will trigger a reflow
-      mContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::rows, newRowAttr, PR_TRUE);
+      mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::rows, newRowAttr, PR_TRUE);
     }
   }
 

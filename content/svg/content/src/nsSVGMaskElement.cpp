@@ -39,7 +39,7 @@
 #include "nsIDOMSVGAnimatedEnum.h"
 #include "nsCOMPtr.h"
 #include "nsISVGSVGElement.h"
-#include "nsSVGAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsSVGMaskElement.h"
 
 //--------------------- Masks ------------------------
@@ -84,8 +84,8 @@ nsSVGMaskElement::Init()
 
   // Define enumeration mappings
   static struct nsSVGEnumMapping pUnitMap[] = {
-        {&nsSVGAtoms::objectBoundingBox, nsIDOMSVGMaskElement::SVG_MUNITS_OBJECTBOUNDINGBOX},
-        {&nsSVGAtoms::userSpaceOnUse, nsIDOMSVGMaskElement::SVG_MUNITS_USERSPACEONUSE},
+        {&nsGkAtoms::objectBoundingBox, nsIDOMSVGMaskElement::SVG_MUNITS_OBJECTBOUNDINGBOX},
+        {&nsGkAtoms::userSpaceOnUse, nsIDOMSVGMaskElement::SVG_MUNITS_USERSPACEONUSE},
         {nsnull, 0}
   };
 
@@ -99,7 +99,7 @@ nsSVGMaskElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mMaskUnits), units);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::maskUnits, mMaskUnits);
+    rv = AddMappedSVGValue(nsGkAtoms::maskUnits, mMaskUnits);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -111,7 +111,7 @@ nsSVGMaskElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mMaskContentUnits), units);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::maskContentUnits, mMaskContentUnits);
+    rv = AddMappedSVGValue(nsGkAtoms::maskContentUnits, mMaskContentUnits);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 

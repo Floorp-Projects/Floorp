@@ -39,6 +39,5 @@
 #define nsXULAtoms_h___
 
 #include "nsGkAtoms.h"
-typedef class nsGkAtoms nsXULAtoms;
 
 #endif /* nsXULAtoms_h___ */

@@ -302,7 +302,7 @@ HasTextFrameDescendant(nsPresContext* aPresContext, nsIFrame* aParent)
   for (nsIFrame* kid = aParent->GetFirstChild(nsnull); kid;
        kid = kid->GetNextSibling())
   {
-    if (kid->GetType() == nsLayoutAtoms::textFrame) {
+    if (kid->GetType() == nsGkAtoms::textFrame) {
       // This is only a candidate. We need to determine if this text
       // frame is empty, as in containing only (non-pre) whitespace.
       // See bug 20163.

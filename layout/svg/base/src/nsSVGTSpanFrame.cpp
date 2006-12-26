@@ -71,7 +71,7 @@ NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent,
 nsIAtom *
 nsSVGTSpanFrame::GetType() const
 {
-  return nsLayoutAtoms::svgTSpanFrame;
+  return nsGkAtoms::svgTSpanFrame;
 }
 
 //----------------------------------------------------------------------

@@ -61,9 +61,8 @@
 #include "nsCSSRendering.h"
 #include "nsStyleConsts.h"
 #include "nsIView.h"
-#include "nsHTMLAtoms.h"
-#include "nsCSSAnonBoxes.h"
 #include "nsLayoutAtoms.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsIPresShell.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLElement.h"
@@ -174,7 +173,7 @@ nsTableFrame::GetParentStyleContextFrame(nsPresContext* aPresContext,
 nsIAtom*
 nsTableFrame::GetType() const
 {
-  return nsLayoutAtoms::tableFrame; 
+  return nsGkAtoms::tableFrame; 
 }
 
 
@@ -314,8 +313,8 @@ nsTableFrame::RePositionViews(nsIFrame* aFrame)
 static PRBool
 IsRepeatedFrame(nsIFrame* kidFrame)
 {
-  return (kidFrame->GetType() == nsLayoutAtoms::tableRowFrame ||
-          kidFrame->GetType() == nsLayoutAtoms::tableRowGroupFrame) &&
+  return (kidFrame->GetType() == nsGkAtoms::tableRowFrame ||
+          kidFrame->GetType() == nsGkAtoms::tableRowGroupFrame) &&
          (kidFrame->GetStateBits() & NS_REPEATED_ROW_OR_ROWGROUP);
 }
 
@@ -375,7 +374,7 @@ nsTableFrame::SetInitialChildList(nsIAtom*        aListName,
     }
     else if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
     {
-      NS_ASSERTION(nsLayoutAtoms::tableColGroupFrame == childFrame->GetType(),
+      NS_ASSERTION(nsGkAtoms::tableColGroupFrame == childFrame->GetType(),
                    "This is not a colgroup");
       if (mColGroups.IsEmpty())
         mColGroups.SetFrames(childFrame);
@@ -428,8 +427,8 @@ void nsTableFrame::AttributeChangedFor(nsIFrame*       aFrame,
                                        nsIAtom*        aAttribute)
 {
   if (IS_TABLE_CELL(aFrame->GetType())) {
-    if ((nsHTMLAtoms::rowspan == aAttribute) || 
-        (nsHTMLAtoms::colspan == aAttribute)) {
+    if ((nsGkAtoms::rowspan == aAttribute) || 
+        (nsGkAtoms::colspan == aAttribute)) {
       nsTableCellMap* cellMap = GetCellMap();
       if (cellMap) {
         // for now just remove the cell from the map and reinsert it
@@ -629,7 +628,7 @@ void nsTableFrame::InsertColGroups(PRInt32         aStartColIndex,
   nsIFrame* kidFrame = aFirstFrame;
   PRBool didLastFrame = PR_FALSE;
   while (kidFrame) {
-    if (nsLayoutAtoms::tableColGroupFrame == kidFrame->GetType()) {
+    if (nsGkAtoms::tableColGroupFrame == kidFrame->GetType()) {
       if (didLastFrame) {
         firstColGroupToReset = (nsTableColGroupFrame*)kidFrame;
         break;
@@ -758,7 +757,7 @@ nsTableFrame::CreateAnonymousColFrames(PRInt32         aNumColsToAdd,
   nsTableColGroupFrame* colGroupFrame = nsnull;
   nsIFrame* childFrame = mColGroups.FirstChild();
   while (childFrame) {
-    if (nsLayoutAtoms::tableColGroupFrame == childFrame->GetType()) {
+    if (nsGkAtoms::tableColGroupFrame == childFrame->GetType()) {
       colGroupFrame = (nsTableColGroupFrame *)childFrame;
     }
     childFrame = childFrame->GetNextSibling();
@@ -821,7 +820,7 @@ nsTableFrame::CreateAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
   // Get the last col frame
   nsIFrame* childFrame = aColGroupFrame->GetFirstChild(nsnull);
   while (childFrame) {
-    if (nsLayoutAtoms::tableColFrame == childFrame->GetType()) {
+    if (nsGkAtoms::tableColFrame == childFrame->GetType()) {
       lastColFrame = (nsTableColGroupFrame *)childFrame;
     }
     childFrame = childFrame->GetNextSibling();
@@ -878,7 +877,7 @@ nsTableFrame::CreateAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
     if (aPrevFrameIn) {
       nsTableColFrame* colFrame = 
         (nsTableColFrame*)nsTableFrame::GetFrameAtOrBefore((nsIFrame*) aColGroupFrame, aPrevFrameIn, 
-                                                           nsLayoutAtoms::tableColFrame);
+                                                           nsGkAtoms::tableColFrame);
       if (colFrame) {
         startColIndex = colFrame->GetColIndex() + 1;
       }
@@ -1150,16 +1149,16 @@ nsTableFrame::GetRowGroupFrame(nsIFrame* aFrame,
   if (!aFrameTypeIn) {
     frameType = aFrame->GetType();
   }
-  if (nsLayoutAtoms::tableRowGroupFrame == frameType) {
+  if (nsGkAtoms::tableRowGroupFrame == frameType) {
     rgFrame = aFrame;
   }
-  else if (nsLayoutAtoms::scrollFrame == frameType) {
+  else if (nsGkAtoms::scrollFrame == frameType) {
     nsIScrollableFrame* scrollable = nsnull;
     nsresult rv = CallQueryInterface(aFrame, &scrollable);
     if (NS_SUCCEEDED(rv) && (scrollable)) {
       nsIFrame* scrolledFrame = scrollable->GetScrolledFrame();
       if (scrolledFrame) {
-        if (nsLayoutAtoms::tableRowGroupFrame == scrolledFrame->GetType()) {
+        if (nsGkAtoms::tableRowGroupFrame == scrolledFrame->GetType()) {
           rgFrame = scrolledFrame;
         }
       }
@@ -1179,7 +1178,7 @@ nsTableFrame::CollectRows(nsIFrame*       aFrame,
   if (rgFrame) {
     nsIFrame* childFrame = rgFrame->GetFirstChild(nsnull);
     while (childFrame) {
-      if (nsLayoutAtoms::tableRowFrame == childFrame->GetType()) {
+      if (nsGkAtoms::tableRowFrame == childFrame->GetType()) {
         aCollection.AppendElement(childFrame);
         numRows++;
       }
@@ -1278,7 +1277,7 @@ nsTableFrame::InsertRowGroups(nsIFrame* aFirstRowGroupFrame,
 nsIFrame*
 nsTableFrame::GetFirstChild(nsIAtom* aListName) const
 {
-  if (aListName == nsLayoutAtoms::colGroupList) {
+  if (aListName == nsGkAtoms::colGroupList) {
     return mColGroups.FirstChild();
   }
 
@@ -1289,10 +1288,10 @@ nsIAtom*
 nsTableFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 {
   if (aIndex == NS_TABLE_FRAME_COLGROUP_LIST_INDEX) {
-    return nsLayoutAtoms::colGroupList;
+    return nsGkAtoms::colGroupList;
   }
   if (aIndex == NS_TABLE_FRAME_OVERFLOW_LIST_INDEX) {
-    return nsLayoutAtoms::overflowList;
+    return nsGkAtoms::overflowList;
   } 
   return nsnull;
 }
@@ -1451,7 +1450,7 @@ nsTableFrame::PaintTableBorderBackground(nsIRenderingContext& aRenderingContext,
       GET_PIXELS_TO_TWIPS(presContext, p2t);
       BCPropertyData* propData =
         (BCPropertyData*)nsTableFrame::GetProperty((nsIFrame*)this,
-                                                   nsLayoutAtoms::tableBCProperty,
+                                                   nsGkAtoms::tableBCProperty,
                                                    PR_FALSE);
       if (propData) {
         deflate.top    = BC_BORDER_TOP_HALF_COORD(p2t, propData->mTopBorderWidth);
@@ -1594,7 +1593,7 @@ ProcessRowInserted(nsTableFrame&   aTableFrame,
     nsIFrame* childFrame = rgFrame->GetFirstChild(nsnull);
     // find the row that was inserted first
     while (childFrame) {
-      if (nsLayoutAtoms::tableRowFrame == childFrame->GetType()) {
+      if (nsGkAtoms::tableRowFrame == childFrame->GetType()) {
         nsTableRowFrame* rowFrame = (nsTableRowFrame*)childFrame;
         if (rowFrame->IsFirstInserted()) {
           rowFrame->SetFirstInserted(PR_FALSE);
@@ -1750,13 +1749,13 @@ AncestorsHaveStyleHeight(const nsHTMLReflowState& aReflowState)
        parentRS = parentRS->parentReflowState) {
     nsIAtom* frameType = parentRS->frame->GetType();
     if (IS_TABLE_CELL(frameType)                         ||
-        (nsLayoutAtoms::tableRowFrame      == frameType) ||
-        (nsLayoutAtoms::tableRowGroupFrame == frameType)) {
+        (nsGkAtoms::tableRowFrame      == frameType) ||
+        (nsGkAtoms::tableRowGroupFrame == frameType)) {
       if (::IsPctStyleHeight(parentRS->mStylePosition) || ::IsFixedStyleHeight(parentRS->mStylePosition)) {
         return PR_TRUE;
       }
     }
-    else if (nsLayoutAtoms::tableFrame == frameType) {
+    else if (nsGkAtoms::tableFrame == frameType) {
       // we reached the containing table, so always return
       if (::IsPctStyleHeight(parentRS->mStylePosition) || ::IsFixedStyleHeight(parentRS->mStylePosition)) {
         return PR_TRUE;
@@ -1792,13 +1791,13 @@ nsTableFrame::RequestSpecialHeightReflow(const nsHTMLReflowState& aReflowState)
   for (const nsHTMLReflowState* rs = &aReflowState; rs && rs->frame; rs = rs->parentReflowState) {
     nsIAtom* frameType = rs->frame->GetType();
     NS_ASSERTION(IS_TABLE_CELL(frameType) ||
-                 nsLayoutAtoms::tableRowFrame == frameType ||
-                 nsLayoutAtoms::tableRowGroupFrame == frameType ||
-                 nsLayoutAtoms::tableFrame == frameType,
+                 nsGkAtoms::tableRowFrame == frameType ||
+                 nsGkAtoms::tableRowGroupFrame == frameType ||
+                 nsGkAtoms::tableFrame == frameType,
                  "unexpected frame type");
                  
     rs->frame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
-    if (nsLayoutAtoms::tableFrame == frameType) {
+    if (nsGkAtoms::tableFrame == frameType) {
       NS_ASSERTION(rs != &aReflowState,
                    "should not request special height reflow for table");
       // always stop when we reach a table
@@ -2099,7 +2098,7 @@ nsTableFrame::PushChildren(const nsAutoVoidArray& aFrames,
   for (childX = aPushFrom; childX < aFrames.Count(); ++childX) {
     nsIFrame* f = NS_STATIC_CAST(nsIFrame*, aFrames.FastElementAt(childX));
     // Don't push repeatable frames, do push non-rowgroup frames
-    if (f->GetType() != nsLayoutAtoms::tableRowGroupFrame ||
+    if (f->GetType() != nsGkAtoms::tableRowGroupFrame ||
         !NS_STATIC_CAST(nsTableRowGroupFrame*, f)->IsRepeatable()) {
       mFrames.RemoveFrame(f, prevSiblingHint);
       frames.InsertFrame(nsnull, lastFrame, f);
@@ -2240,7 +2239,7 @@ NS_IMETHODIMP
 nsTableFrame::AppendFrames(nsIAtom*        aListName,
                            nsIFrame*       aFrameList)
 {
-  NS_ASSERTION(!aListName || aListName == nsLayoutAtoms::colGroupList,
+  NS_ASSERTION(!aListName || aListName == nsGkAtoms::colGroupList,
                "unexpected child list");
 
   // Because we actually have two child lists, one for col group frames and one
@@ -2361,7 +2360,7 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
     }
   }
   if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay) {
-    NS_ASSERTION(!aListName || aListName == nsLayoutAtoms::colGroupList,
+    NS_ASSERTION(!aListName || aListName == nsGkAtoms::colGroupList,
                  "unexpected child list");
     // Insert the column group frame
     nsFrameList frames(aFrameList); // convience for getting last frame
@@ -2372,7 +2371,7 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
     if (aPrevFrame) {
       nsTableColGroupFrame* prevColGroup = 
         (nsTableColGroupFrame*)GetFrameAtOrBefore(this, aPrevFrame,
-                                                  nsLayoutAtoms::tableColGroupFrame);
+                                                  nsGkAtoms::tableColGroupFrame);
       if (prevColGroup) {
         startColIndex = prevColGroup->GetStartColumnIndex() + prevColGroup->GetColCount();
       }
@@ -2414,7 +2413,7 @@ nsTableFrame::RemoveFrame(nsIAtom*        aListName,
   // XXX The frame construction code should be separating out child frames
   // based on the type, bug 343048.
   if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay) {
-    NS_ASSERTION(!aListName || aListName == nsLayoutAtoms::colGroupList,
+    NS_ASSERTION(!aListName || aListName == nsGkAtoms::colGroupList,
                  "unexpected child list");
     nsIFrame* nextColGroupFrame = aOldFrame->GetNextSibling();
     nsTableColGroupFrame* colGroup = (nsTableColGroupFrame*)aOldFrame;
@@ -2520,7 +2519,7 @@ nsTableFrame::GetOuterBCBorder() const
   nsMargin border(0, 0, 0, 0);
   GET_PIXELS_TO_TWIPS(GetPresContext(), p2t);
   BCPropertyData* propData = 
-    (BCPropertyData*)nsTableFrame::GetProperty((nsIFrame*)this, nsLayoutAtoms::tableBCProperty, PR_FALSE);
+    (BCPropertyData*)nsTableFrame::GetProperty((nsIFrame*)this, nsGkAtoms::tableBCProperty, PR_FALSE);
   if (propData) {
     border.top += BC_BORDER_TOP_HALF_COORD(p2t, propData->mTopBorderWidth);
     border.right += BC_BORDER_RIGHT_HALF_COORD(p2t, propData->mRightBorderWidth);
@@ -2574,7 +2573,7 @@ nsTableFrame::GetChildAreaOffset(const nsHTMLReflowState* aReflowState) const
       nsTableFrame* firstInFlow = (nsTableFrame*)GetFirstInFlow(); if (!firstInFlow) ABORT1(offset);
       GET_PIXELS_TO_TWIPS(presContext, p2t);
       BCPropertyData* propData = 
-        (BCPropertyData*)nsTableFrame::GetProperty((nsIFrame*)firstInFlow, nsLayoutAtoms::tableBCProperty, PR_FALSE);
+        (BCPropertyData*)nsTableFrame::GetProperty((nsIFrame*)firstInFlow, nsGkAtoms::tableBCProperty, PR_FALSE);
       if (!propData) ABORT1(offset);
 
       offset.top += BC_BORDER_TOP_HALF_COORD(p2t, propData->mTopBorderWidth);
@@ -3388,7 +3387,7 @@ nsTableFrame::GetBorderPadding(const nsHTMLReflowState& aReflowState,
     const nsHTMLReflowState* parentRS = aReflowState.parentReflowState;
     while (parentRS) {
       if (parentRS->frame) {
-        if (nsLayoutAtoms::tableFrame == parentRS->frame->GetType()) {
+        if (nsGkAtoms::tableFrame == parentRS->frame->GetType()) {
           nsSize basis(parentRS->mComputedWidth, parentRS->mComputedHeight);
           GetPaddingFor(basis, *paddingData, padding);
           break;
@@ -3476,7 +3475,7 @@ nsTableFrame::GetTableFrame(nsIFrame* aSourceFrame)
     // "result" is the result of intermediate calls, not the result we return from this method
     for (nsIFrame* parentFrame = aSourceFrame->GetParent(); parentFrame;
          parentFrame = parentFrame->GetParent()) {
-      if (nsLayoutAtoms::tableFrame == parentFrame->GetType()) {
+      if (nsGkAtoms::tableFrame == parentFrame->GetType()) {
         return (nsTableFrame*)parentFrame;
       }
     }
@@ -3591,7 +3590,7 @@ nsTableFrame::DumpRowGroup(nsIFrame* aKidFrame)
   if (rgFrame) {
     nsIFrame* rowFrame = rgFrame->GetFirstChild(nsnull);
     while (rowFrame) {
-      if (nsLayoutAtoms::tableRowFrame == rowFrame->GetType()) {
+      if (nsGkAtoms::tableRowFrame == rowFrame->GetType()) {
         printf("row(%d)=%p ", ((nsTableRowFrame*)rowFrame)->GetRowIndex(), rowFrame);
         nsIFrame* cellFrame = rowFrame->GetFirstChild(nsnull);
         while (cellFrame) {
@@ -3663,7 +3662,7 @@ nsTableFrame::Dump(PRBool          aDumpRows,
     printf("\n colgroups->");
     for (nsIFrame* childFrame = mColGroups.FirstChild(); childFrame;
          childFrame = childFrame->GetNextSibling()) {
-      if (nsLayoutAtoms::tableColGroupFrame == childFrame->GetType()) {
+      if (nsGkAtoms::tableColGroupFrame == childFrame->GetType()) {
         nsTableColGroupFrame* colGroupFrame = (nsTableColGroupFrame *)childFrame;
         colGroupFrame->Dump(1);
       }
@@ -3904,7 +3903,7 @@ nsTableFrame::SetBCDamageArea(const nsRect& aValue)
   }
   SetNeedToCalcBCBorders(PR_TRUE);
   // Get the property 
-  BCPropertyData* value = (BCPropertyData*)nsTableFrame::GetProperty(this, nsLayoutAtoms::tableBCProperty, PR_TRUE);
+  BCPropertyData* value = (BCPropertyData*)nsTableFrame::GetProperty(this, nsGkAtoms::tableBCProperty, PR_TRUE);
   if (value) {
     // for now just construct a union of the new and old damage areas
     value->mDamageArea.UnionRect(value->mDamageArea, newRect);
@@ -5079,7 +5078,7 @@ nsTableFrame::CalcBCBorders()
 
   // Get the property holding the table damage area and border widths
   BCPropertyData* propData = 
-    (BCPropertyData*)nsTableFrame::GetProperty(this, nsLayoutAtoms::tableBCProperty, PR_FALSE);
+    (BCPropertyData*)nsTableFrame::GetProperty(this, nsGkAtoms::tableBCProperty, PR_FALSE);
   if (!propData) ABORT0();
 
   PRBool tableIsLTR = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR;
@@ -6542,19 +6541,19 @@ GetFrameTypeName(nsIAtom* aFrameType,
                  char*    aName)
 {
   PRBool isTable = PR_FALSE;
-  if (nsLayoutAtoms::tableOuterFrame == aFrameType) 
+  if (nsGkAtoms::tableOuterFrame == aFrameType) 
     strcpy(aName, "Tbl");
-  else if (nsLayoutAtoms::tableFrame == aFrameType) {
+  else if (nsGkAtoms::tableFrame == aFrameType) {
     strcpy(aName, "Tbl");
     isTable = PR_TRUE;
   }
-  else if (nsLayoutAtoms::tableRowGroupFrame == aFrameType) 
+  else if (nsGkAtoms::tableRowGroupFrame == aFrameType) 
     strcpy(aName, "RowG");
-  else if (nsLayoutAtoms::tableRowFrame == aFrameType) 
+  else if (nsGkAtoms::tableRowFrame == aFrameType) 
     strcpy(aName, "Row");
   else if (IS_TABLE_CELL(aFrameType)) 
     strcpy(aName, "Cell");
-  else if (nsLayoutAtoms::blockFrame == aFrameType) 
+  else if (nsGkAtoms::blockFrame == aFrameType) 
     strcpy(aName, "Block");
   else 
     NS_ASSERTION(PR_FALSE, "invalid call to GetFrameTypeName");
@@ -6651,15 +6650,15 @@ nsTableFrame::GetProperty(nsIFrame*            aFrame,
     // The property isn't set yet, so allocate a new value, set the property,
     // and return the newly allocated value
     NSPropertyDtorFunc dtorFunc = nsnull;
-    if (aPropertyName == nsLayoutAtoms::collapseOffsetProperty) {
+    if (aPropertyName == nsGkAtoms::collapseOffsetProperty) {
       value = new nsPoint(0, 0);
       dtorFunc = DestroyPointFunc;
     }
-    else if (aPropertyName == nsLayoutAtoms::rowUnpaginatedHeightProperty) {
+    else if (aPropertyName == nsGkAtoms::rowUnpaginatedHeightProperty) {
       value = new nscoord;
       dtorFunc = DestroyCoordFunc;
     }
-    else if (aPropertyName == nsLayoutAtoms::tableBCProperty) {
+    else if (aPropertyName == nsGkAtoms::tableBCProperty) {
       value = new BCPropertyData;
       dtorFunc = DestroyBCPropertyDataFunc;
     }
@@ -6699,9 +6698,9 @@ void DumpTableFramesRecur(nsIFrame*       aFrame,
   }
   printf("\n");
 
-  if (nsLayoutAtoms::tableFrame         == fType ||
-      nsLayoutAtoms::tableRowGroupFrame == fType ||
-      nsLayoutAtoms::tableRowFrame      == fType ||
+  if (nsGkAtoms::tableFrame         == fType ||
+      nsGkAtoms::tableRowGroupFrame == fType ||
+      nsGkAtoms::tableRowFrame      == fType ||
       IS_TABLE_CELL(fType)) {
     nsIFrame* child = aFrame->GetFirstChild(nsnull);
     while(child) {
@@ -6716,7 +6715,7 @@ nsTableFrame::DumpTableFrames(nsIFrame* aFrame)
 {
   nsTableFrame* tableFrame = nsnull;
 
-  if (nsLayoutAtoms::tableFrame == aFrame->GetType()) { 
+  if (nsGkAtoms::tableFrame == aFrame->GetType()) { 
     tableFrame = NS_STATIC_CAST(nsTableFrame*, aFrame);
   }
   else {

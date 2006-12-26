@@ -50,7 +50,7 @@
 #include "nsRDFCID.h"
 #include "nsIServiceManager.h"
 #include "nsINameSpaceManager.h"
-#include "nsXULAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDocument.h"
 #include "nsIXULDocument.h"
 #include "nsUnicharUtils.h"
@@ -258,7 +258,7 @@ nsXULTemplateQueryProcessorRDF::CompileQuery(nsIXULTemplateBuilder* aBuilder,
 
     nsCOMPtr<nsIContent> content = do_QueryInterface(aQueryNode);
 
-    if (content->NodeInfo()->Equals(nsXULAtoms::_template, kNameSpaceID_XUL)) {
+    if (content->NodeInfo()->Equals(nsGkAtoms::_template, kNameSpaceID_XUL)) {
         // simplified syntax with no rules
 
         query->SetSimple();
@@ -269,7 +269,7 @@ nsXULTemplateQueryProcessorRDF::CompileQuery(nsIXULTemplateBuilder* aBuilder,
         else
             rv = NS_ERROR_FAILURE;
     }
-    else if (content->NodeInfo()->Equals(nsXULAtoms::rule, kNameSpaceID_XUL)) {
+    else if (content->NodeInfo()->Equals(nsGkAtoms::rule, kNameSpaceID_XUL)) {
         // simplified syntax with at least one rule
         query->SetSimple();
         rv = CompileSimpleQuery(query, content, &lastnode);
@@ -1033,7 +1033,7 @@ nsXULTemplateQueryProcessorRDF::ComputeContainmentProperties(nsIDOMNode* aRootNo
     nsCOMPtr<nsIContent> content = do_QueryInterface(aRootNode);
 
     nsAutoString containment;
-    content->GetAttr(kNameSpaceID_None, nsXULAtoms::containment, containment);
+    content->GetAttr(kNameSpaceID_None, nsGkAtoms::containment, containment);
 
     PRUint32 len = containment.Length();
     PRUint32 offset = 0;
@@ -1102,11 +1102,11 @@ nsXULTemplateQueryProcessorRDF::CompileExtendedQuery(nsRDFQuery* aQuery,
         nsIContent *condition = aConditions->GetChildAt(i);
 
         // the <content> condition should always be the first child
-        if (condition->Tag() == nsXULAtoms::content && !i) {
+        if (condition->Tag() == nsGkAtoms::content && !i) {
             // check for <content tag='tag'/> which indicates that matches
             // should only be generated for items inside content with that tag
             nsAutoString tagstr;
-            condition->GetAttr(kNameSpaceID_None, nsXULAtoms::tag, tagstr);
+            condition->GetAttr(kNameSpaceID_None, nsGkAtoms::tag, tagstr);
 
             nsCOMPtr<nsIAtom> tag;
             if (! tagstr.IsEmpty()) {
@@ -1150,10 +1150,10 @@ nsXULTemplateQueryProcessorRDF::CompileQueryChild(nsIAtom* aTag,
 {
     nsresult rv;
 
-    if (aTag == nsXULAtoms::triple) {
+    if (aTag == nsGkAtoms::triple) {
         rv = CompileTripleCondition(aQuery, aCondition, aParentNode, aResult);
     }
-    else if (aTag == nsXULAtoms::member) {
+    else if (aTag == nsGkAtoms::member) {
         rv = CompileMemberCondition(aQuery, aCondition, aParentNode, aResult);
     }
     else {
@@ -1220,7 +1220,7 @@ nsXULTemplateQueryProcessorRDF::CompileTripleCondition(nsRDFQuery* aQuery,
 
     // subject
     nsAutoString subject;
-    aCondition->GetAttr(kNameSpaceID_None, nsXULAtoms::subject, subject);
+    aCondition->GetAttr(kNameSpaceID_None, nsGkAtoms::subject, subject);
 
     nsCOMPtr<nsIAtom> svar;
     nsCOMPtr<nsIRDFResource> sres;
@@ -1231,7 +1231,7 @@ nsXULTemplateQueryProcessorRDF::CompileTripleCondition(nsRDFQuery* aQuery,
 
     // predicate
     nsAutoString predicate;
-    aCondition->GetAttr(kNameSpaceID_None, nsXULAtoms::predicate, predicate);
+    aCondition->GetAttr(kNameSpaceID_None, nsGkAtoms::predicate, predicate);
 
     nsCOMPtr<nsIRDFResource> pres;
     if (!predicate.IsEmpty() && predicate[0] == PRUnichar('?')) {
@@ -1246,7 +1246,7 @@ nsXULTemplateQueryProcessorRDF::CompileTripleCondition(nsRDFQuery* aQuery,
 
     // object
     nsAutoString object;
-    aCondition->GetAttr(kNameSpaceID_None, nsXULAtoms::object, object);
+    aCondition->GetAttr(kNameSpaceID_None, nsGkAtoms::object, object);
 
     nsCOMPtr<nsIAtom> ovar;
     nsCOMPtr<nsIRDFNode> onode;
@@ -1261,7 +1261,7 @@ nsXULTemplateQueryProcessorRDF::CompileTripleCondition(nsRDFQuery* aQuery,
     }
     else {
         nsAutoString parseType;
-        aCondition->GetAttr(kNameSpaceID_None, nsXULAtoms::parsetype, parseType);
+        aCondition->GetAttr(kNameSpaceID_None, nsGkAtoms::parsetype, parseType);
         nsresult rv = ParseLiteral(parseType, object, getter_AddRefs(onode));
         if (NS_FAILED(rv))
             return rv;
@@ -1317,7 +1317,7 @@ nsXULTemplateQueryProcessorRDF::CompileMemberCondition(nsRDFQuery* aQuery,
 
     // container
     nsAutoString container;
-    aCondition->GetAttr(kNameSpaceID_None, nsXULAtoms::container, container);
+    aCondition->GetAttr(kNameSpaceID_None, nsGkAtoms::container, container);
 
     if (!container.IsEmpty() && container[0] != PRUnichar('?')) {
         PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
@@ -1330,7 +1330,7 @@ nsXULTemplateQueryProcessorRDF::CompileMemberCondition(nsRDFQuery* aQuery,
 
     // child
     nsAutoString child;
-    aCondition->GetAttr(kNameSpaceID_None, nsXULAtoms::child, child);
+    aCondition->GetAttr(kNameSpaceID_None, nsGkAtoms::child, child);
 
     if (!child.IsEmpty() && child[0] != PRUnichar('?')) {
         PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
@@ -1444,10 +1444,10 @@ nsXULTemplateQueryProcessorRDF::CompileSimpleQuery(nsRDFQuery* aQuery,
         // Note: some attributes must be skipped on XUL template query subtree
 
         // never compare against rdf:property, rdf:instanceOf, {}:id or {}:parsetype attribute
-        if (name->Equals(nsXULAtoms::property, kNameSpaceID_RDF) ||
-            name->Equals(nsXULAtoms::instanceOf, kNameSpaceID_RDF) ||
-            name->Equals(nsXULAtoms::id, kNameSpaceID_None) ||
-            name->Equals(nsXULAtoms::parsetype, kNameSpaceID_None)) {
+        if (name->Equals(nsGkAtoms::property, kNameSpaceID_RDF) ||
+            name->Equals(nsGkAtoms::instanceOf, kNameSpaceID_RDF) ||
+            name->Equals(nsGkAtoms::id, kNameSpaceID_None) ||
+            name->Equals(nsGkAtoms::parsetype, kNameSpaceID_None)) {
             continue;
         }
 
@@ -1459,8 +1459,8 @@ nsXULTemplateQueryProcessorRDF::CompileSimpleQuery(nsRDFQuery* aQuery,
 
         TestNode* testnode = nsnull;
 
-        if (name->Equals(nsXULAtoms::iscontainer, kNameSpaceID_None) ||
-            name->Equals(nsXULAtoms::isempty, kNameSpaceID_None)) {
+        if (name->Equals(nsGkAtoms::iscontainer, kNameSpaceID_None) ||
+            name->Equals(nsGkAtoms::isempty, kNameSpaceID_None)) {
             // Tests about containerhood and emptiness. These can be
             // globbed together, mostly. Check to see if we've already
             // added a container test: we only need one.
@@ -1471,9 +1471,9 @@ nsXULTemplateQueryProcessorRDF::CompileSimpleQuery(nsRDFQuery* aQuery,
                 nsRDFConInstanceTestNode::eDontCare;
 
             static nsIContent::AttrValuesArray strings[] =
-              {&nsXULAtoms::_true, &nsXULAtoms::_false, nsnull};
+              {&nsGkAtoms::_true, &nsGkAtoms::_false, nsnull};
             switch (aQueryElement->FindAttrValueIn(kNameSpaceID_None,
-                                                   nsXULAtoms::iscontainer,
+                                                   nsGkAtoms::iscontainer,
                                                    strings, eCaseMatters)) {
                 case 0: iscontainer = nsRDFConInstanceTestNode::eTrue; break;
                 case 1: iscontainer = nsRDFConInstanceTestNode::eFalse; break;
@@ -1483,7 +1483,7 @@ nsXULTemplateQueryProcessorRDF::CompileSimpleQuery(nsRDFQuery* aQuery,
                 nsRDFConInstanceTestNode::eDontCare;
 
             switch (aQueryElement->FindAttrValueIn(kNameSpaceID_None,
-                                                   nsXULAtoms::isempty,
+                                                   nsGkAtoms::isempty,
                                                    strings, eCaseMatters)) {
                 case 0: isempty = nsRDFConInstanceTestNode::eTrue; break;
                 case 1: isempty = nsRDFConInstanceTestNode::eFalse; break;
@@ -1508,7 +1508,7 @@ nsXULTemplateQueryProcessorRDF::CompileSimpleQuery(nsRDFQuery* aQuery,
             if (NS_FAILED(rv))
                 return rv;
         }
-        else if (attrNameSpaceID != kNameSpaceID_None || attr != nsXULAtoms::parent) {
+        else if (attrNameSpaceID != kNameSpaceID_None || attr != nsGkAtoms::parent) {
             // It's a simple RDF test
             nsCOMPtr<nsIRDFResource> property;
             rv = nsXULContentUtils::GetResource(attrNameSpaceID, attr, getter_AddRefs(property));
@@ -1527,7 +1527,7 @@ nsXULTemplateQueryProcessorRDF::CompileSimpleQuery(nsRDFQuery* aQuery,
             }
             else {                
               nsAutoString parseType;
-              aQueryElement->GetAttr(kNameSpaceID_None, nsXULAtoms::parsetype, parseType);
+              aQueryElement->GetAttr(kNameSpaceID_None, nsGkAtoms::parsetype, parseType);
               rv = ParseLiteral(parseType, value, getter_AddRefs(target));
               if (NS_FAILED(rv))
                   return rv;

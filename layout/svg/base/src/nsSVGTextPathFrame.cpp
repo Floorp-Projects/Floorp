@@ -60,7 +60,7 @@ NS_NewSVGTextPathFrame(nsIPresShell* aPresShell, nsIContent* aContent,
                        nsIFrame* parentFrame, nsStyleContext* aContext)
 {
   NS_ASSERTION(parentFrame, "null parent");
-  if (parentFrame->GetType() != nsLayoutAtoms::svgTextFrame) {
+  if (parentFrame->GetType() != nsGkAtoms::svgTextFrame) {
     NS_ERROR("trying to construct an SVGTextPathFrame for an invalid container");
     return nsnull;
   }
@@ -134,7 +134,7 @@ nsSVGTextPathFrame::Init(nsIContent*      aContent,
 nsIAtom *
 nsSVGTextPathFrame::GetType() const
 {
-  return nsLayoutAtoms::svgTextPathFrame;
+  return nsGkAtoms::svgTextPathFrame;
 }
 
 

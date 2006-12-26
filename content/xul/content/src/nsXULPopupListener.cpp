@@ -45,7 +45,7 @@
  */
 
 #include "nsCOMPtr.h"
-#include "nsXULAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMNodeList.h"
@@ -267,7 +267,7 @@ XULPopupListenerImpl::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
   if (popupType == eXULPopupType_popup) {
     nsCOMPtr<nsIContent> targetContent = do_QueryInterface(target);
     nsIAtom *tag = targetContent->Tag();
-    if (tag == nsXULAtoms::menu || tag == nsXULAtoms::menuitem)
+    if (tag == nsGkAtoms::menu || tag == nsGkAtoms::menuitem)
       return NS_OK;
   }
 
@@ -530,7 +530,7 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
   if (identifier.EqualsLiteral("_child")) {
     nsCOMPtr<nsIContent> popup;
 
-    GetImmediateChild(content, nsXULAtoms::menupopup, getter_AddRefs(popup));
+    GetImmediateChild(content, nsGkAtoms::menupopup, getter_AddRefs(popup));
     if (popup)
       popupContent = do_QueryInterface(popup);
     else {
@@ -545,7 +545,7 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
           list->Item(ctr, getter_AddRefs(node));
           nsCOMPtr<nsIContent> childContent(do_QueryInterface(node));
 
-          if (childContent->NodeInfo()->Equals(nsXULAtoms::menupopup,
+          if (childContent->NodeInfo()->Equals(nsGkAtoms::menupopup,
                                                kNameSpaceID_XUL)) {
             popupContent = do_QueryInterface(childContent);
             break;

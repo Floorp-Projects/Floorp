@@ -161,7 +161,7 @@ static nsListControlFrame* GetEnclosingListFrame(nsIFrame* aSelectsAreaFrame)
 {
   nsIFrame* frame = aSelectsAreaFrame->GetParent();
   while (frame) {
-    if (frame->GetType() == nsLayoutAtoms::listControlFrame)
+    if (frame->GetType() == nsGkAtoms::listControlFrame)
       return NS_STATIC_CAST(nsListControlFrame*, frame);
     frame = frame->GetParent();
   }

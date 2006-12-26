@@ -111,7 +111,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
 
-#include "nsXULAtoms.h"
+#include "nsGkAtoms.h"
 
 // for radio group stuff
 #include "nsIDOMHTMLInputElement.h"
@@ -124,7 +124,6 @@
 
 static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 
-#include "nsHTMLAtoms.h"
 #include "nsIDOMUserDataHandler.h"
 #include "nsScriptEventManager.h"
 #include "nsIDOMXPathEvaluator.h"
@@ -1498,12 +1497,12 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
     }
   }
 
-  if (aHeaderField == nsHTMLAtoms::headerContentLanguage) {
+  if (aHeaderField == nsGkAtoms::headerContentLanguage) {
     CopyUTF16toUTF8(aData, mContentLanguage);
   }
 
   // Set the default script-type on the root element.
-  if (aHeaderField == nsHTMLAtoms::headerContentScriptType) {
+  if (aHeaderField == nsGkAtoms::headerContentScriptType) {
     nsIContent *root = GetRootContent();
     if (root) {
       // Get the script-type ID for this value.
@@ -1518,7 +1517,7 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
     }
   }
 
-  if (aHeaderField == nsHTMLAtoms::headerDefaultStyle) {
+  if (aHeaderField == nsGkAtoms::headerDefaultStyle) {
     // switch alternate style sheets based on default
     // XXXldb What if we don't have all the sheets yet?  Should this use
     // the DOM API for preferred stylesheet set that's "coming soon"?
@@ -1545,7 +1544,7 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
     }
   }
 
-  if (aHeaderField == nsHTMLAtoms::refresh) {
+  if (aHeaderField == nsGkAtoms::refresh) {
     // We get into this code before we have a script global yet, so get to
     // our container via mDocumentContainer.
     nsCOMPtr<nsIRefreshURI> refresher = do_QueryReferent(mDocumentContainer);
@@ -3239,21 +3238,21 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
 
   nsCAutoString contractID("@mozilla.org/layout/xul-boxobject");
   if (namespaceID == kNameSpaceID_XUL) {
-    if (tag == nsXULAtoms::browser ||
-        tag == nsXULAtoms::editor ||
-        tag == nsXULAtoms::iframe)
+    if (tag == nsGkAtoms::browser ||
+        tag == nsGkAtoms::editor ||
+        tag == nsGkAtoms::iframe)
       contractID += "-container";
-    else if (tag == nsXULAtoms::menu)
+    else if (tag == nsGkAtoms::menu)
       contractID += "-menu";
-    else if (tag == nsXULAtoms::popup ||
-             tag == nsXULAtoms::menupopup ||
-             tag == nsXULAtoms::tooltip)
+    else if (tag == nsGkAtoms::popup ||
+             tag == nsGkAtoms::menupopup ||
+             tag == nsGkAtoms::tooltip)
       contractID += "-popup";
-    else if (tag == nsXULAtoms::tree)
+    else if (tag == nsGkAtoms::tree)
       contractID += "-tree";
-    else if (tag == nsXULAtoms::listbox)
+    else if (tag == nsGkAtoms::listbox)
       contractID += "-listbox";
-    else if (tag == nsXULAtoms::scrollbox)
+    else if (tag == nsGkAtoms::scrollbox)
       contractID += "-scrollbox";
   }
   contractID += ";1";
@@ -4719,7 +4718,7 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
         nsCAutoString contentDisp;
         rv = partChannel->GetContentDisposition(contentDisp);
         if (NS_SUCCEEDED(rv) && !contentDisp.IsEmpty()) {
-          SetHeaderData(nsHTMLAtoms::headerContentDisposition,
+          SetHeaderData(nsGkAtoms::headerContentDisposition,
                         NS_ConvertASCIItoUTF16(contentDisp));
         }
       }
@@ -5170,7 +5169,7 @@ nsDocument::OnPageShow(PRBool aPersisted)
   if (aPersisted && mRootContent) {
     // Send out notifications that our <link> elements are attached.
     nsRefPtr<nsContentList> links = NS_GetContentList(mRootContent,
-                                                      nsHTMLAtoms::link,
+                                                      nsGkAtoms::link,
                                                       kNameSpaceID_Unknown);
 
     if (links) {
@@ -5195,7 +5194,7 @@ nsDocument::OnPageHide(PRBool aPersisted)
   // but only if this is not a full unload.
   if (aPersisted && mRootContent) {
     nsRefPtr<nsContentList> links = NS_GetContentList(mRootContent,
-                                                      nsHTMLAtoms::link,
+                                                      nsGkAtoms::link,
                                                       kNameSpaceID_Unknown);
 
     if (links) {

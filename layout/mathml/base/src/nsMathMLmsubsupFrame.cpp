@@ -98,7 +98,7 @@ nsMathMLmsubsupFrame::Place(nsIRenderingContext& aRenderingContext,
   nsAutoString value;
   nscoord subScriptShift = 0;
   GetAttribute(mContent, mPresentationData.mstyle,
-               nsMathMLAtoms::subscriptshift_, value);
+               nsGkAtoms::subscriptshift_, value);
   if (!value.IsEmpty()) {
     nsCSSValue cssValue;
     if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
@@ -108,7 +108,7 @@ nsMathMLmsubsupFrame::Place(nsIRenderingContext& aRenderingContext,
   // check if the superscriptshift attribute is there
   nscoord supScriptShift = 0;
   GetAttribute(mContent, mPresentationData.mstyle,
-               nsMathMLAtoms::superscriptshift_, value);
+               nsGkAtoms::superscriptshift_, value);
   if (!value.IsEmpty()) {
     nsCSSValue cssValue;
     if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {

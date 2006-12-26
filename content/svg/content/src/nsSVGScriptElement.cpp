@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGElement.h"
-#include "nsSVGAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDOMSVGScriptElement.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsCOMPtr.h"
@@ -147,7 +147,7 @@ nsSVGScriptElement::Init()
   {
     rv = NS_NewSVGAnimatedString(getter_AddRefs(mHref));
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::href, mHref, kNameSpaceID_XLink);
+    rv = AddMappedSVGValue(nsGkAtoms::href, mHref, kNameSpaceID_XLink);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -166,7 +166,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGScriptElement)
 NS_IMETHODIMP
 nsSVGScriptElement::GetType(nsAString & aType)
 {
-  GetAttr(kNameSpaceID_None, nsSVGAtoms::type, aType);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::type, aType);
 
   return NS_OK;
 }

@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsSVGAnimatedAngle.h"
 #include "nsSVGAnimatedRect.h"
 #include "nsSVGLength.h"
@@ -92,8 +92,8 @@ nsSVGMarkerElement::Init()
 
   // enumeration mappings
   static struct nsSVGEnumMapping gMarkerUnits[] = {
-    {&nsSVGAtoms::strokeWidth, SVG_MARKERUNITS_STROKEWIDTH},
-    {&nsSVGAtoms::userSpaceOnUse, SVG_MARKERUNITS_USERSPACEONUSE},
+    {&nsGkAtoms::strokeWidth, SVG_MARKERUNITS_STROKEWIDTH},
+    {&nsGkAtoms::userSpaceOnUse, SVG_MARKERUNITS_USERSPACEONUSE},
     {nsnull, 0}
   };
   
@@ -106,7 +106,7 @@ nsSVGMarkerElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mMarkerUnits), units);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::markerUnits, mMarkerUnits);
+    rv = AddMappedSVGValue(nsGkAtoms::markerUnits, mMarkerUnits);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -117,7 +117,7 @@ nsSVGMarkerElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedAngle(getter_AddRefs(mOrient), angle);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::orient, mOrient);
+    rv = AddMappedSVGValue(nsGkAtoms::orient, mOrient);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -128,7 +128,7 @@ nsSVGMarkerElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedRect(getter_AddRefs(mViewBox), viewbox);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::viewBox, mViewBox);
+    rv = AddMappedSVGValue(nsGkAtoms::viewBox, mViewBox);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -141,7 +141,7 @@ nsSVGMarkerElement::Init()
       getter_AddRefs(mPreserveAspectRatio),
       preserveAspectRatio);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::preserveAspectRatio,
+    rv = AddMappedSVGValue(nsGkAtoms::preserveAspectRatio,
                            mPreserveAspectRatio);
     NS_ENSURE_SUCCESS(rv,rv);
   }
@@ -213,7 +213,7 @@ NS_IMETHODIMP nsSVGMarkerElement::GetMarkerHeight(nsIDOMSVGAnimatedLength * *aMa
 NS_IMETHODIMP nsSVGMarkerElement::GetOrientType(nsIDOMSVGAnimatedEnumeration * *aOrientType)
 {
   static struct nsSVGEnumMapping gOrientType[] = {
-    {&nsSVGAtoms::_auto, SVG_MARKER_ORIENT_AUTO},
+    {&nsGkAtoms::_auto, SVG_MARKER_ORIENT_AUTO},
     {nsnull, 0}
   };
 

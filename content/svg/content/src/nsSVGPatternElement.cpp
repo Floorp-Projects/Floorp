@@ -44,7 +44,7 @@
 #include "nsSVGAnimatedString.h"
 #include "nsCOMPtr.h"
 #include "nsISVGSVGElement.h"
-#include "nsSVGAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsSVGAnimatedRect.h"
 #include "nsSVGRect.h"
 #include "nsSVGMatrix.h"
@@ -99,8 +99,8 @@ nsSVGPatternElement::Init()
 
   // Define enumeration mappings
   static struct nsSVGEnumMapping pUnitMap[] = {
-        {&nsSVGAtoms::objectBoundingBox, nsIDOMSVGPatternElement::SVG_PUNITS_OBJECTBOUNDINGBOX},
-        {&nsSVGAtoms::userSpaceOnUse, nsIDOMSVGPatternElement::SVG_PUNITS_USERSPACEONUSE},
+        {&nsGkAtoms::objectBoundingBox, nsIDOMSVGPatternElement::SVG_PUNITS_OBJECTBOUNDINGBOX},
+        {&nsGkAtoms::userSpaceOnUse, nsIDOMSVGPatternElement::SVG_PUNITS_USERSPACEONUSE},
         {nsnull, 0}
   };
 
@@ -114,7 +114,7 @@ nsSVGPatternElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mPatternUnits), units);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::patternUnits, mPatternUnits);
+    rv = AddMappedSVGValue(nsGkAtoms::patternUnits, mPatternUnits);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -126,7 +126,7 @@ nsSVGPatternElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mPatternContentUnits), units);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::patternContentUnits, mPatternContentUnits);
+    rv = AddMappedSVGValue(nsGkAtoms::patternContentUnits, mPatternContentUnits);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -138,7 +138,7 @@ nsSVGPatternElement::Init()
     rv = NS_NewSVGAnimatedTransformList(getter_AddRefs(mPatternTransform),
                                         transformList);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::patternTransform, mPatternTransform);
+    rv = AddMappedSVGValue(nsGkAtoms::patternTransform, mPatternTransform);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -148,7 +148,7 @@ nsSVGPatternElement::Init()
   {
     rv = NS_NewSVGAnimatedString(getter_AddRefs(mHref));
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::href, mHref, kNameSpaceID_XLink);
+    rv = AddMappedSVGValue(nsGkAtoms::href, mHref, kNameSpaceID_XLink);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -161,7 +161,7 @@ nsSVGPatternElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedRect(getter_AddRefs(mViewBox), viewbox);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::viewBox, mViewBox);
+    rv = AddMappedSVGValue(nsGkAtoms::viewBox, mViewBox);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -174,7 +174,7 @@ nsSVGPatternElement::Init()
                                           getter_AddRefs(mPreserveAspectRatio),
                                           preserveAspectRatio);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::preserveAspectRatio,
+    rv = AddMappedSVGValue(nsGkAtoms::preserveAspectRatio,
                            mPreserveAspectRatio);
     NS_ENSURE_SUCCESS(rv,rv);
   }

@@ -72,8 +72,6 @@
 #include "nsIScriptError.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "nsXULAtoms.h"
-#include "nsXBLAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsGUIEvent.h"
 #include "nsIXPConnect.h"
@@ -83,7 +81,6 @@
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsXBLEventHandler.h"
-#include "nsHTMLAtoms.h"
 #include "nsEventDispatcher.h"
 #include "nsDOMScriptObjectHolder.h"
 
@@ -328,15 +325,15 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
       // we need to check the parent node too.
       if (focusedContent) {
         while (content) {
-          if (content->Tag() == nsHTMLAtoms::a &&
+          if (content->Tag() == nsGkAtoms::a &&
               content->IsNodeOfType(nsINode::eHTML)) {
             isLink = PR_TRUE;
             break;
           }
 
-          if (content->HasAttr(kNameSpaceID_XLink, nsHTMLAtoms::type)) {
-            isLink = content->AttrValueIs(kNameSpaceID_XLink, nsHTMLAtoms::type,
-                                          nsHTMLAtoms::simple, eCaseMatters);
+          if (content->HasAttr(kNameSpaceID_XLink, nsGkAtoms::type)) {
+            isLink = content->AttrValueIs(kNameSpaceID_XLink, nsGkAtoms::type,
+                                          nsGkAtoms::simple, eCaseMatters);
 
             if (isLink) {
               break;
@@ -366,8 +363,8 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
   // command element, if applicable, and executing the event handler.
   if (isXULKey) {
     if (mHandlerElement->AttrValueIs(kNameSpaceID_None,
-                                     nsXULAtoms::disabled,
-                                     nsXULAtoms::_true,
+                                     nsGkAtoms::disabled,
+                                     nsGkAtoms::_true,
                                      eCaseMatters)) {
       // Don't dispatch command events for disabled keys.
       return NS_OK;
@@ -773,7 +770,7 @@ PRInt32 nsXBLPrototypeHandler::KeyToMask(PRInt32 key)
 void
 nsXBLPrototypeHandler::GetEventType(nsAString& aEvent)
 {
-  mHandlerElement->GetAttr(kNameSpaceID_None, nsXBLAtoms::event, aEvent);
+  mHandlerElement->GetAttr(kNameSpaceID_None, nsGkAtoms::event, aEvent);
   
   if (aEvent.IsEmpty() && (mType & NS_HANDLER_TYPE_XUL))
     // If no type is specified for a XUL <key> element, let's assume that we're "keypress".
@@ -849,7 +846,7 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
   // Modifiers are supported by both types of handlers (XUL and XBL).  
   nsAutoString modifiers(aModifiers);
   if (mType & NS_HANDLER_TYPE_XUL)
-    mHandlerElement->GetAttr(kNameSpaceID_None, nsXBLAtoms::modifiers, modifiers);
+    mHandlerElement->GetAttr(kNameSpaceID_None, nsGkAtoms::modifiers, modifiers);
   
   if (!modifiers.IsEmpty()) {
     mKeyMask = cAllModifiers;
@@ -881,9 +878,9 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
   nsAutoString key(aCharCode);
   if (key.IsEmpty()) {
     if (mType & NS_HANDLER_TYPE_XUL) {
-      mHandlerElement->GetAttr(kNameSpaceID_None, nsXBLAtoms::key, key);
+      mHandlerElement->GetAttr(kNameSpaceID_None, nsGkAtoms::key, key);
       if (key.IsEmpty()) 
-        mHandlerElement->GetAttr(kNameSpaceID_None, nsXBLAtoms::charcode, key);
+        mHandlerElement->GetAttr(kNameSpaceID_None, nsGkAtoms::charcode, key);
     }
   }
 
@@ -910,7 +907,7 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
   else {
     key.Assign(aKeyCode);
     if (mType & NS_HANDLER_TYPE_XUL)
-      mHandlerElement->GetAttr(kNameSpaceID_None, nsXBLAtoms::keycode, key);
+      mHandlerElement->GetAttr(kNameSpaceID_None, nsGkAtoms::keycode, key);
     
     if (!key.IsEmpty()) {
       if (mKeyMask == 0)

@@ -47,8 +47,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
-#include "nsHTMLAtoms.h"
-#include "nsXULAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsStyleContext.h"
@@ -127,7 +126,7 @@ nsLeafBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
   nsresult rv = nsLeafFrame::AttributeChanged(aNameSpaceID, aAttribute,
                                               aModType);
 
-  if (aAttribute == nsXULAtoms::mousethrough) 
+  if (aAttribute == nsGkAtoms::mousethrough) 
     UpdateMouseThrough();
 
   return rv;
@@ -137,9 +136,9 @@ void nsLeafBoxFrame::UpdateMouseThrough()
 {
   if (mContent) {
     static nsIContent::AttrValuesArray strings[] =
-      {&nsXULAtoms::never, &nsXULAtoms::always, nsnull};
+      {&nsGkAtoms::never, &nsGkAtoms::always, nsnull};
     switch (mContent->FindAttrValueIn(kNameSpaceID_None,
-                                      nsXULAtoms::mousethrough,
+                                      nsGkAtoms::mousethrough,
                                       strings, eCaseMatters)) {
       case 0: mMouseThrough = never; break;
       case 1: mMouseThrough = always; break;

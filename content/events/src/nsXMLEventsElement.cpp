@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXMLElement.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDocument.h"
 
 class nsXMLEventsElement : public nsXMLElement {
@@ -65,8 +65,8 @@ nsXMLEventsElement::~nsXMLEventsElement()
 nsIAtom *
 nsXMLEventsElement::GetIDAttributeName() const
 {
-  if (mNodeInfo->Equals(nsHTMLAtoms::listener))
-    return nsHTMLAtoms::id;
+  if (mNodeInfo->Equals(nsGkAtoms::listener))
+    return nsGkAtoms::id;
   return nsXMLElement::GetIDAttributeName();
 }
 
@@ -74,9 +74,9 @@ nsresult
 nsXMLEventsElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
                             const nsAString& aValue, PRBool aNotify)
 {
-  if (mNodeInfo->Equals(nsHTMLAtoms::listener) && 
+  if (mNodeInfo->Equals(nsGkAtoms::listener) && 
       mNodeInfo->GetDocument() && aNameSpaceID == kNameSpaceID_None && 
-      aName == nsHTMLAtoms::event)
+      aName == nsGkAtoms::event)
     mNodeInfo->GetDocument()->AddXMLEventsContent(this);
   return nsXMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
                                    aNotify);

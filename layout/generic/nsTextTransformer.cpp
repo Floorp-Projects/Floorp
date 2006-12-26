@@ -220,7 +220,7 @@ nsTextTransformer::Init(nsIFrame* aFrame,
    */
   if (mPresContext->BidiEnabled()) {
     SetFrameIsRTL(NS_GET_EMBEDDING_LEVEL(aFrame) & 1);
-    mCharType = (nsCharType)NS_PTR_TO_INT32(mPresContext->PropertyTable()->GetProperty(aFrame, nsLayoutAtoms::charType));
+    mCharType = (nsCharType)NS_PTR_TO_INT32(mPresContext->PropertyTable()->GetProperty(aFrame, nsGkAtoms::charType));
     if (mCharType == eCharType_RightToLeftArabic) {
       if (aForceArabicShaping) {
         SetNeedsArabicShaping(PR_TRUE);

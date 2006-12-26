@@ -48,10 +48,8 @@
 #include "nsIPresShell.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsINameSpaceManager.h"
-#include "nsHTMLAtoms.h"
-#include "nsFrameManager.h"
 #include "nsLayoutAtoms.h"
-#include "nsXULAtoms.h"
+#include "nsFrameManager.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMAttr.h"
@@ -338,7 +336,7 @@ nsBox::SetBounds(nsBoxLayoutState& aState, const nsRect& aRect, PRBool aRemoveOv
     if (aRemoveOverflowArea && (GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN)) {
       // remove the previously stored overflow area
       GetPresContext()->PropertyTable()->
-        DeleteProperty(this, nsLayoutAtoms::overflowAreaProperty);
+        DeleteProperty(this, nsGkAtoms::overflowAreaProperty);
       RemoveStateBits(NS_FRAME_OUTSIDE_CHILDREN);
     }
 
@@ -791,7 +789,7 @@ nsIBox::AddCSSPrefSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
         nsAutoString value;
         PRInt32 error;
 
-        content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::width, value);
+        content->GetAttr(kNameSpaceID_None, nsGkAtoms::width, value);
         if (!value.IsEmpty()) {
             value.Trim("%");
 
@@ -800,7 +798,7 @@ nsIBox::AddCSSPrefSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
             widthSet = PR_TRUE;
         }
 
-        content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::height, value);
+        content->GetAttr(kNameSpaceID_None, nsGkAtoms::height, value);
         if (!value.IsEmpty()) {
             value.Trim("%");
 
@@ -882,7 +880,7 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
         nsAutoString value;
         PRInt32 error;
 
-        content->GetAttr(kNameSpaceID_None, nsXULAtoms::minwidth, value);
+        content->GetAttr(kNameSpaceID_None, nsGkAtoms::minwidth, value);
         if (!value.IsEmpty())
         {
             value.Trim("%");
@@ -894,7 +892,7 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
             widthSet = PR_TRUE;
         }
 
-        content->GetAttr(kNameSpaceID_None, nsXULAtoms::minheight, value);
+        content->GetAttr(kNameSpaceID_None, nsGkAtoms::minheight, value);
         if (!value.IsEmpty())
         {
             value.Trim("%");
@@ -941,7 +939,7 @@ nsIBox::AddCSSMaxSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
         nsAutoString value;
         PRInt32 error;
 
-        content->GetAttr(kNameSpaceID_None, nsXULAtoms::maxwidth, value);
+        content->GetAttr(kNameSpaceID_None, nsGkAtoms::maxwidth, value);
         if (!value.IsEmpty()) {
             value.Trim("%");
 
@@ -951,7 +949,7 @@ nsIBox::AddCSSMaxSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
             widthSet = PR_TRUE;
         }
 
-        content->GetAttr(kNameSpaceID_None, nsXULAtoms::maxheight, value);
+        content->GetAttr(kNameSpaceID_None, nsGkAtoms::maxheight, value);
         if (!value.IsEmpty()) {
             value.Trim("%");
 
@@ -977,7 +975,7 @@ nsIBox::AddCSSFlex(nsBoxLayoutState& aState, nsIBox* aBox, nscoord& aFlex)
         PRInt32 error;
         nsAutoString value;
 
-        content->GetAttr(kNameSpaceID_None, nsXULAtoms::flex, value);
+        content->GetAttr(kNameSpaceID_None, nsGkAtoms::flex, value);
         if (!value.IsEmpty()) {
             value.Trim("%");
             aFlex = value.ToInteger(&error);
@@ -1021,7 +1019,7 @@ nsIBox::AddCSSOrdinal(nsBoxLayoutState& aState, nsIBox* aBox, PRUint32& aOrdinal
     PRInt32 error;
     nsAutoString value;
 
-    content->GetAttr(kNameSpaceID_None, nsXULAtoms::ordinal, value);
+    content->GetAttr(kNameSpaceID_None, nsGkAtoms::ordinal, value);
     if (!value.IsEmpty()) {
       aOrdinal = value.ToInteger(&error);
       ordinalSet = PR_TRUE;

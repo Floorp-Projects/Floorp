@@ -46,9 +46,8 @@
 #include "nsStyleConsts.h"
 #include "nsIContent.h"
 #include "nsIView.h"
-#include "nsHTMLAtoms.h"
-#include "nsIPresShell.h"
 #include "nsLayoutAtoms.h"
+#include "nsIPresShell.h"
 #include "nsCSSRendering.h"
 #include "nsHTMLParts.h"
 #include "nsCSSFrameConstructor.h"
@@ -325,7 +324,7 @@ nsTableRowGroupFrame::InitChildReflowState(nsPresContext&    aPresContext,
   nsMargin* pCollapseBorder = nsnull;
   if (aBorderCollapse) {
     if (aReflowState.frame) {
-      if (nsLayoutAtoms::tableRowFrame == aReflowState.frame->GetType()) {
+      if (nsGkAtoms::tableRowFrame == aReflowState.frame->GetType()) {
         nsTableRowFrame* rowFrame = (nsTableRowFrame*)aReflowState.frame;
         pCollapseBorder = rowFrame->GetBCBorderWidth(aPixelsToTwips, collapseBorder);
       }
@@ -378,7 +377,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*        aPresContext,
 
   for (nsIFrame* kidFrame = mFrames.FirstChild(); kidFrame;
        kidFrame = kidFrame->GetNextSibling()) {
-    if (kidFrame->GetType() != nsLayoutAtoms::tableRowFrame) {
+    if (kidFrame->GetType() != nsGkAtoms::tableRowFrame) {
       // XXXldb nsCSSFrameConstructor needs to enforce this!
       NS_NOTREACHED("yikes, a non-row child");
       continue;
@@ -504,7 +503,7 @@ nsTableRowGroupFrame::GetFirstRow()
 {
   for (nsIFrame* childFrame = GetFirstFrame(); childFrame;
        childFrame = childFrame->GetNextSibling()) {
-    if (nsLayoutAtoms::tableRowFrame == childFrame->GetType()) {
+    if (nsGkAtoms::tableRowFrame == childFrame->GetType()) {
       return (nsTableRowFrame*)childFrame;
     }
   }
@@ -1334,7 +1333,7 @@ nsTableRowGroupFrame::AppendFrames(nsIAtom*        aListName,
   nsAutoVoidArray rows;
   for (nsIFrame* rowFrame = aFrameList; rowFrame;
        rowFrame = rowFrame->GetNextSibling()) {
-    if (nsLayoutAtoms::tableRowFrame == rowFrame->GetType()) {
+    if (nsGkAtoms::tableRowFrame == rowFrame->GetType()) {
       rows.AppendElement(rowFrame);
     }
   }
@@ -1377,7 +1376,7 @@ nsTableRowGroupFrame::InsertFrames(nsIAtom*        aListName,
   PRBool gotFirstRow = PR_FALSE;
   for (nsIFrame* rowFrame = aFrameList; rowFrame;
        rowFrame = rowFrame->GetNextSibling()) {
-    if (nsLayoutAtoms::tableRowFrame == rowFrame->GetType()) {
+    if (nsGkAtoms::tableRowFrame == rowFrame->GetType()) {
       rows.AppendElement(rowFrame);
       if (!gotFirstRow) {
         ((nsTableRowFrame*)rowFrame)->SetFirstInserted(PR_TRUE);
@@ -1393,7 +1392,7 @@ nsTableRowGroupFrame::InsertFrames(nsIAtom*        aListName,
 
   PRInt32 numRows = rows.Count();
   if (numRows > 0) {
-    nsTableRowFrame* prevRow = (nsTableRowFrame *)nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, nsLayoutAtoms::tableRowFrame);
+    nsTableRowFrame* prevRow = (nsTableRowFrame *)nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, nsGkAtoms::tableRowFrame);
     PRInt32 rowIndex = (prevRow) ? prevRow->GetRowIndex() + 1 : startRowIndex;
     tableFrame->InsertRows(*this, rows, rowIndex, PR_TRUE);
 
@@ -1415,7 +1414,7 @@ nsTableRowGroupFrame::RemoveFrame(nsIAtom*        aListName,
 
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (tableFrame) {
-    if (nsLayoutAtoms::tableRowFrame == aOldFrame->GetType()) {
+    if (nsGkAtoms::tableRowFrame == aOldFrame->GetType()) {
       // remove the rows from the table (and flag a rebalance)
       tableFrame->RemoveRows((nsTableRowFrame &)*aOldFrame, 1, PR_TRUE);
 
@@ -1479,7 +1478,7 @@ nsTableRowGroupFrame::IsSimpleRowFrame(nsTableFrame* aTableFrame,
                                        nsIFrame*     aFrame)
 {
   // Make sure it's a row frame and not a row group frame
-  if (aFrame->GetType() == nsLayoutAtoms::tableRowFrame) {
+  if (aFrame->GetType() == nsGkAtoms::tableRowFrame) {
     PRInt32 rowIndex = ((nsTableRowFrame*)aFrame)->GetRowIndex();
     
     // It's a simple row frame if there are no cells that span into or
@@ -1497,7 +1496,7 @@ nsTableRowGroupFrame::IsSimpleRowFrame(nsTableFrame* aTableFrame,
 nsIAtom*
 nsTableRowGroupFrame::GetType() const
 {
-  return nsLayoutAtoms::tableRowGroupFrame;
+  return nsGkAtoms::tableRowGroupFrame;
 }
 
 
@@ -1644,7 +1643,7 @@ nsTableRowGroupFrame::FindLineContaining(nsIFrame* aFrame,
 
   // make sure it is a rowFrame in the RowGroup
   // - it should be, but we do not validate in every case (see bug 88849)
-  if (aFrame->GetType() != nsLayoutAtoms::tableRowFrame) {
+  if (aFrame->GetType() != nsGkAtoms::tableRowFrame) {
     NS_WARNING("RowGroup contains a frame that is not a row");
     *aLineNumberResult = 0;
     return NS_ERROR_FAILURE;
@@ -1824,7 +1823,7 @@ nsTableRowGroupFrame::ClearRowCursor()
     return;
 
   RemoveStateBits(NS_ROWGROUP_HAS_ROW_CURSOR);
-  DeleteProperty(nsLayoutAtoms::rowCursorProperty);
+  DeleteProperty(nsGkAtoms::rowCursorProperty);
 }
 
 nsTableRowGroupFrame::FrameCursorData*
@@ -1848,7 +1847,7 @@ nsTableRowGroupFrame::SetupRowCursor()
   FrameCursorData* data = new FrameCursorData();
   if (!data)
     return nsnull;
-  nsresult rv = SetProperty(nsLayoutAtoms::rowCursorProperty, data,
+  nsresult rv = SetProperty(nsGkAtoms::rowCursorProperty, data,
                             DestroyFrameCursorData);
   if (NS_FAILED(rv)) {
     delete data;
@@ -1865,7 +1864,7 @@ nsTableRowGroupFrame::GetFirstRowContaining(nscoord aY, nscoord* aOverflowAbove)
     return nsnull;
 
   FrameCursorData* property = NS_STATIC_CAST(FrameCursorData*,
-    GetProperty(nsLayoutAtoms::rowCursorProperty));
+    GetProperty(nsGkAtoms::rowCursorProperty));
   PRUint32 cursorIndex = property->mCursorIndex;
   PRUint32 frameCount = property->mFrames.Length();
   if (cursorIndex >= frameCount)

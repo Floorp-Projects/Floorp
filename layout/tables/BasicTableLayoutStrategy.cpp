@@ -255,7 +255,7 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
         // each column in the group, not the group as a whole.
         // XXX Should we be doing this when we have widths on the column?
         NS_ASSERTION(colFrame->GetParent()->GetType() ==
-                         nsLayoutAtoms::tableColGroupFrame,
+                         nsGkAtoms::tableColGroupFrame,
                      "expected a column-group");
         colInfo = GetColWidthInfo(aRenderingContext, colFrame->GetParent());
         colInfo.minCoord = nsTableFrame::RoundToPixel(colInfo.minCoord, p2t);

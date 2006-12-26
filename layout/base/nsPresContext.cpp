@@ -206,11 +206,11 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
 
   mLanguageSpecificTransformType = eLanguageSpecificTransformType_Unknown;
   if (aType == eContext_Galley) {
-    mMedium = nsLayoutAtoms::screen;
+    mMedium = nsGkAtoms::screen;
   } else {
     SetBackgroundImageDraw(PR_FALSE);
     SetBackgroundColorDraw(PR_FALSE);
-    mMedium = nsLayoutAtoms::print;
+    mMedium = nsGkAtoms::print;
     mPaginated = PR_TRUE;
   }
 
@@ -815,7 +815,7 @@ nsPresContext::UpdateCharSet(const nsAFlatCString& aCharSet)
     NS_IF_RELEASE(mLangGroup);
     mLangGroup = mLangService->LookupCharSet(aCharSet.get()).get();  // addrefs
 
-    if (mLangGroup == nsLayoutAtoms::Japanese && mEnableJapaneseTransform) {
+    if (mLangGroup == nsGkAtoms::Japanese && mEnableJapaneseTransform) {
       mLanguageSpecificTransformType =
         eLanguageSpecificTransformType_Japanese;
     }
@@ -825,7 +825,7 @@ nsPresContext::UpdateCharSet(const nsAFlatCString& aCharSet)
     }
     // bug 39570: moved from nsLanguageAtomService::LookupCharSet()
 #if !defined(XP_BEOS) 
-    if (mLangGroup == nsLayoutAtoms::Unicode) {
+    if (mLangGroup == nsGkAtoms::Unicode) {
       NS_RELEASE(mLangGroup);
       NS_IF_ADDREF(mLangGroup = mLangService->GetLocaleLanguageGroup()); 
     }
@@ -1345,7 +1345,7 @@ nsPresContext::SetPaginatedScrolling(PRBool aPaginated)
 void
 nsPresContext::SetPrintSettings(nsIPrintSettings *aPrintSettings)
 {
-  if (mMedium == nsLayoutAtoms::print)
+  if (mMedium == nsGkAtoms::print)
     mPrintSettings = aPrintSettings;
 }
 

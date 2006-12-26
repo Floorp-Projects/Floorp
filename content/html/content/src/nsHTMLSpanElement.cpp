@@ -37,7 +37,7 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsIAtom.h"
@@ -98,8 +98,8 @@ NS_IMPL_ELEMENT_CLONE(nsHTMLSpanElement)
 nsresult
 nsHTMLSpanElement::GetInnerHTML(nsAString& aInnerHTML)
 {
-  if (mNodeInfo->Equals(nsHTMLAtoms::xmp) ||
-      mNodeInfo->Equals(nsHTMLAtoms::plaintext)) {
+  if (mNodeInfo->Equals(nsGkAtoms::xmp) ||
+      mNodeInfo->Equals(nsGkAtoms::plaintext)) {
     nsContentUtils::GetNodeTextContent(this, PR_FALSE, aInnerHTML);
     return NS_OK;
   }
@@ -110,8 +110,8 @@ nsHTMLSpanElement::GetInnerHTML(nsAString& aInnerHTML)
 nsresult
 nsHTMLSpanElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
-  if (mNodeInfo->Equals(nsHTMLAtoms::xmp) ||
-      mNodeInfo->Equals(nsHTMLAtoms::plaintext)) {
+  if (mNodeInfo->Equals(nsGkAtoms::xmp) ||
+      mNodeInfo->Equals(nsGkAtoms::plaintext)) {
     return nsContentUtils::SetNodeTextContent(this, aInnerHTML, PR_TRUE);
   }
 

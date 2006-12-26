@@ -40,6 +40,5 @@
 #define nsMathMLAtoms_h___
 
 #include "nsGkAtoms.h"
-typedef class nsGkAtoms nsMathMLAtoms;
 
 #endif /* nsMathMLAtoms_h___ */

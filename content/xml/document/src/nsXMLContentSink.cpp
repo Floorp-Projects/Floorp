@@ -62,9 +62,8 @@
 #include "nsCRT.h"
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
-#include "nsHTMLAtoms.h"
-#include "nsContentUtils.h"
 #include "nsLayoutAtoms.h"
+#include "nsContentUtils.h"
 #include "nsIScriptContext.h"
 #include "nsINameSpaceManager.h"
 #include "nsIServiceManager.h"
@@ -88,7 +87,6 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIChannel.h"
 #include "nsIPrincipal.h"
-#include "nsXBLAtoms.h"
 #include "nsXMLPrettyPrinter.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
@@ -99,7 +97,6 @@
 #include "nsNodeUtils.h"
 
 #ifdef MOZ_SVG
-#include "nsSVGAtoms.h"
 #include "nsGUIEvent.h"
 #endif
 
@@ -464,9 +461,9 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
                      aNodeInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aNodeInfo->Equals(nsHTMLAtoms::script, kNameSpaceID_XHTML)
+  if (aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XHTML)
 #ifdef MOZ_SVG
-      || aNodeInfo->Equals(nsSVGAtoms::script, kNameSpaceID_SVG)
+      || aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_SVG)
 #endif
     ) {
     nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(content);
@@ -495,29 +492,29 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
     }
   }
 
-  if (aNodeInfo->Equals(nsHTMLAtoms::title, kNameSpaceID_XHTML)) {
+  if (aNodeInfo->Equals(nsGkAtoms::title, kNameSpaceID_XHTML)) {
     if (mDocument && mDocument->GetDocumentTitle().IsVoid()) {
       mInTitle = PR_TRUE; // The first title wins
     }
   }
 #ifdef MOZ_SVG
-  else if (aNodeInfo->Equals(nsSVGAtoms::title, kNameSpaceID_SVG)) {
+  else if (aNodeInfo->Equals(nsGkAtoms::title, kNameSpaceID_SVG)) {
     nsIContent* parent = GetCurrentContent();
     if (mDocument && mDocument->GetDocumentTitle().IsVoid() &&
         parent && parent == mDocElement &&
-        parent->NodeInfo()->Equals(nsSVGAtoms::svg, kNameSpaceID_SVG)) {
+        parent->NodeInfo()->Equals(nsGkAtoms::svg, kNameSpaceID_SVG)) {
       mInTitle = PR_TRUE; // The first title wins
     }
   }
 #endif // MOZ_SVG
-  else if (aNodeInfo->Equals(nsHTMLAtoms::link, kNameSpaceID_XHTML) ||
-           aNodeInfo->Equals(nsHTMLAtoms::style, kNameSpaceID_XHTML) ||
-           aNodeInfo->Equals(nsHTMLAtoms::style, kNameSpaceID_SVG)) {
+  else if (aNodeInfo->Equals(nsGkAtoms::link, kNameSpaceID_XHTML) ||
+           aNodeInfo->Equals(nsGkAtoms::style, kNameSpaceID_XHTML) ||
+           aNodeInfo->Equals(nsGkAtoms::style, kNameSpaceID_SVG)) {
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(content));
     if (ssle) {
       ssle->InitStyleLinkElement(mParser, PR_FALSE);
       ssle->SetEnableUpdates(PR_FALSE);
-      if (!aNodeInfo->Equals(nsHTMLAtoms::link, kNameSpaceID_XHTML)) {
+      if (!aNodeInfo->Equals(nsGkAtoms::link, kNameSpaceID_XHTML)) {
         ssle->SetLineNumber(aLineNumber);
       }
     }
@@ -539,10 +536,10 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
   // Some HTML nodes need DoneAddingChildren() called to initialize
   // properly (eg form state restoration).
   if ((nodeInfo->NamespaceID() == kNameSpaceID_XHTML &&
-       (nodeInfo->NameAtom() == nsHTMLAtoms::select ||
-        nodeInfo->NameAtom() == nsHTMLAtoms::textarea ||
-        nodeInfo->NameAtom() == nsHTMLAtoms::object ||
-        nodeInfo->NameAtom() == nsHTMLAtoms::applet))
+       (nodeInfo->NameAtom() == nsGkAtoms::select ||
+        nodeInfo->NameAtom() == nsGkAtoms::textarea ||
+        nodeInfo->NameAtom() == nsGkAtoms::object ||
+        nodeInfo->NameAtom() == nsGkAtoms::applet))
 #ifdef MOZ_XTF
       || nodeInfo->NamespaceID() > kNameSpaceID_LastBuiltin
 #endif
@@ -557,9 +554,9 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
 
   nsresult rv = NS_OK;
 
-  if (nodeInfo->Equals(nsHTMLAtoms::script, kNameSpaceID_XHTML)
+  if (nodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XHTML)
 #ifdef MOZ_SVG
-      || nodeInfo->Equals(nsSVGAtoms::script, kNameSpaceID_SVG)
+      || nodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_SVG)
 #endif
     ) {
     mConstrainSize = PR_TRUE; 
@@ -587,9 +584,9 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
     return rv;
   }
   
-  if ((nodeInfo->Equals(nsHTMLAtoms::title, kNameSpaceID_XHTML)
+  if ((nodeInfo->Equals(nsGkAtoms::title, kNameSpaceID_XHTML)
 #ifdef MOZ_SVG
-       || nodeInfo->Equals(nsSVGAtoms::title, kNameSpaceID_SVG)
+       || nodeInfo->Equals(nsGkAtoms::title, kNameSpaceID_SVG)
 #endif // MOZ_SVG
       ) && mInTitle) {
     NS_ASSERTION(mDocument, "How did mInTitle get to be true if mDocument is null?");
@@ -599,21 +596,21 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
     dom_doc->SetTitle(mTitleText);
     mInTitle = PR_FALSE;
   }
-  else if (nodeInfo->Equals(nsHTMLAtoms::base, kNameSpaceID_XHTML) &&
+  else if (nodeInfo->Equals(nsGkAtoms::base, kNameSpaceID_XHTML) &&
            !mHasProcessedBase) {
     // The first base wins
     rv = ProcessBASETag(aContent);
     mHasProcessedBase = PR_TRUE;
   }
-  else if (nodeInfo->Equals(nsHTMLAtoms::meta, kNameSpaceID_XHTML) &&
+  else if (nodeInfo->Equals(nsGkAtoms::meta, kNameSpaceID_XHTML) &&
            // Need to check here to make sure this meta tag does not set
            // mPrettyPrintXML to false when we have a special root!
            (!mPrettyPrintXML || !mPrettyPrintHasSpecialRoot)) {
     rv = ProcessMETATag(aContent);
   }
-  else if (nodeInfo->Equals(nsHTMLAtoms::link, kNameSpaceID_XHTML) ||
-           nodeInfo->Equals(nsHTMLAtoms::style, kNameSpaceID_XHTML) ||
-           nodeInfo->Equals(nsHTMLAtoms::style, kNameSpaceID_SVG)) {
+  else if (nodeInfo->Equals(nsGkAtoms::link, kNameSpaceID_XHTML) ||
+           nodeInfo->Equals(nsGkAtoms::style, kNameSpaceID_XHTML) ||
+           nodeInfo->Equals(nsGkAtoms::style, kNameSpaceID_SVG)) {
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(aContent));
     if (ssle) {
       ssle->SetEnableUpdates(PR_TRUE);
@@ -759,11 +756,11 @@ nsXMLContentSink::ProcessBASETag(nsIContent* aContent)
   if (mDocument) {
     nsAutoString value;
   
-    if (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, value)) {
+    if (aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::target, value)) {
       mDocument->SetBaseTarget(value);
     }
 
-    if (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, value)) {
+    if (aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::href, value)) {
       nsCOMPtr<nsIURI> baseURI;
       rv = NS_NewURI(getter_AddRefs(baseURI), value);
       if (NS_SUCCEEDED(rv)) {
@@ -890,7 +887,7 @@ NS_NewMathMLElement(nsIContent** aResult, nsINodeInfo* aNodeInfo)
 {
   static const char kMathMLStyleSheetURI[] = "resource://gre/res/mathml.css";
 
-  aNodeInfo->SetIDAttributeAtom(nsHTMLAtoms::id);
+  aNodeInfo->SetIDAttributeAtom(nsGkAtoms::id);
   
   // this bit of code is to load mathml.css on demand
   nsIDocument *doc = aNodeInfo->GetDocument();
@@ -915,10 +912,10 @@ nsXMLContentSink::SetDocElement(PRInt32 aNameSpaceID,
   // check for root elements that needs special handling for
   // prettyprinting
   if ((aNameSpaceID == kNameSpaceID_XBL &&
-       aTagName == nsXBLAtoms::bindings) ||
+       aTagName == nsGkAtoms::bindings) ||
       (aNameSpaceID == kNameSpaceID_XSLT &&
-       (aTagName == nsLayoutAtoms::stylesheet ||
-        aTagName == nsLayoutAtoms::transform))) {
+       (aTagName == nsGkAtoms::stylesheet ||
+        aTagName == nsGkAtoms::transform))) {
     mPrettyPrintHasSpecialRoot = PR_TRUE;
     if (mPrettyPrintXML) {
       // In this case, disable script execution, stylesheet
@@ -1023,8 +1020,8 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
   // Some HTML nodes need DoneCreatingElement() called to initialize
   // properly (eg form state restoration).
   if (nodeInfo->NamespaceID() == kNameSpaceID_XHTML &&
-      (nodeInfo->NameAtom() == nsHTMLAtoms::input ||
-       nodeInfo->NameAtom() == nsHTMLAtoms::button)) {
+      (nodeInfo->NameAtom() == nsGkAtoms::input ||
+       nodeInfo->NameAtom() == nsGkAtoms::button)) {
     content->DoneCreatingElement();
   }
 
@@ -1066,7 +1063,7 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
 
 #ifdef MOZ_SVG
   if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
-      content->HasAttr(kNameSpaceID_None, nsSVGAtoms::onload)) {
+      content->HasAttr(kNameSpaceID_None, nsGkAtoms::onload)) {
     nsEventStatus status = nsEventStatus_eIgnore;
     nsEvent event(PR_TRUE, NS_SVG_LOAD);
     event.eventStructType = NS_SVG_EVENT;

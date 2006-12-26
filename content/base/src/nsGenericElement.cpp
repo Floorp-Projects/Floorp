@@ -95,7 +95,6 @@
 #include "nsIDOMNSDocument.h"
 
 #include "nsLayoutAtoms.h"
-#include "nsHTMLAtoms.h"
 #include "nsContentUtils.h"
 #include "nsIJSContextStack.h"
 
@@ -412,7 +411,7 @@ nsNode3Tearoff::AreNodesEqual(nsIContent* aContent1,
     return PR_FALSE;
   }
 
-  if (aContent1->Tag() == nsLayoutAtoms::documentTypeNodeName) {
+  if (aContent1->Tag() == nsGkAtoms::documentTypeNodeName) {
     nsCOMPtr<nsIDOMDocumentType> docType1 = do_QueryInterface(aContent1);
     nsCOMPtr<nsIDOMDocumentType> docType2 = do_QueryInterface(aContent2);
 
@@ -580,7 +579,7 @@ nsNode3Tearoff::LookupPrefix(const nsAString& aNamespaceURI,
                                aNamespaceURI, eCaseMatters)) {
         // If the localName is "xmlns", the prefix we output should be
         // null.
-        if (name->LocalName() != nsLayoutAtoms::xmlns) {
+        if (name->LocalName() != nsGkAtoms::xmlns) {
           name->LocalName()->ToString(aPrefix);
         }
 
@@ -1860,7 +1859,7 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     // anonymous content that the document is changing.
     document->BindingManager()->ChangeDocumentFor(this, document, nsnull);
 
-    if (HasAttr(kNameSpaceID_XLink, nsHTMLAtoms::href)) {
+    if (HasAttr(kNameSpaceID_XLink, nsGkAtoms::href)) {
       document->ForgetLink(this);
     }
 
@@ -2105,7 +2104,7 @@ nsGenericElement::GetBaseURI() const
   
   // Now check for an xml:base attr 
   nsAutoString value;
-  GetAttr(kNameSpaceID_XML, nsHTMLAtoms::base, value);
+  GetAttr(kNameSpaceID_XML, nsGkAtoms::base, value);
   if (value.IsEmpty()) {
     // No xml:base, so we just use the parent's base URL
     nsIURI *base = nsnull;
@@ -3153,7 +3152,7 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                "Don't call SetAttr with unknown namespace");
 
   nsIDocument* doc = GetCurrentDoc();
-  if (kNameSpaceID_XLink == aNamespaceID && nsHTMLAtoms::href == aName) {
+  if (kNameSpaceID_XLink == aNamespaceID && nsGkAtoms::href == aName) {
     // XLink URI(s) might be changing. Drop the link from the map. If it
     // is still style relevant it will be re-added by
     // nsStyleUtil::IsSimpleXlink. Make sure to keep the style system
@@ -3288,7 +3287,7 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
   }
   
   if (aNamespaceID == kNameSpaceID_XMLEvents && 
-      aName == nsHTMLAtoms::event && mNodeInfo->GetDocument()) {
+      aName == nsGkAtoms::event && mNodeInfo->GetDocument()) {
     mNodeInfo->GetDocument()->AddXMLEventsContent(this);
   }
 
@@ -3448,7 +3447,7 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   nsIDocument *document = GetCurrentDoc();    
   mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
   if (document) {
-    if (kNameSpaceID_XLink == aNameSpaceID && nsHTMLAtoms::href == aName) {
+    if (kNameSpaceID_XLink == aNameSpaceID && nsGkAtoms::href == aName) {
       // XLink URI might be changing.
       document->ForgetLink(this);
     }

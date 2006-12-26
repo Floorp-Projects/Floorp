@@ -86,7 +86,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsContentUtils.h"
 #include "nsIFrame.h"
 #include "nsIChannel.h"
@@ -717,10 +717,10 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
     const nsAString& v =
       nsContentUtils::TrimCharsInSet(
         (nodeType == eHTMLTag_input &&
-          keyAtom == nsHTMLAtoms::value) ?
+          keyAtom == nsGkAtoms::value) ?
         "" : kWhitespace, aNode.GetValueAt(i));
 
-    if (nodeType == eHTMLTag_a && keyAtom == nsHTMLAtoms::name) {
+    if (nodeType == eHTMLTag_a && keyAtom == nsGkAtoms::name) {
       NS_ConvertUTF16toUTF8 cname(v);
       NS_ConvertUTF8toUTF16 uv(nsUnescape(cname.BeginWriting()));
 
@@ -1983,7 +1983,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mMaxTextRun = nsContentUtils::GetIntPref("content.maxtextrun", 8191);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::html, nsnull,
+  rv = mNodeInfoManager->GetNodeInfo(nsGkAtoms::html, nsnull,
                                      kNameSpaceID_None,
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2012,7 +2012,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   }
 
   // Make head part
-  rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::head,
+  rv = mNodeInfoManager->GetNodeInfo(nsGkAtoms::head,
                                      nsnull, kNameSpaceID_None,
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3394,7 +3394,7 @@ HTMLContentSink::AddBaseTagInfo(nsIContent* aContent)
 {
   nsresult rv;
   if (mBaseHref) {
-    rv = aContent->SetProperty(nsHTMLAtoms::htmlBaseHref, mBaseHref,
+    rv = aContent->SetProperty(nsGkAtoms::htmlBaseHref, mBaseHref,
                                nsPropertyTable::SupportsDtorFunc, PR_TRUE);
     if (NS_SUCCEEDED(rv)) {
       // circumvent nsDerivedSafe
@@ -3402,7 +3402,7 @@ HTMLContentSink::AddBaseTagInfo(nsIContent* aContent)
     }
   }
   if (mBaseTarget) {
-    rv = aContent->SetProperty(nsHTMLAtoms::htmlBaseTarget, mBaseTarget,
+    rv = aContent->SetProperty(nsGkAtoms::htmlBaseTarget, mBaseTarget,
                                nsPropertyTable::SupportsDtorFunc, PR_TRUE);
     if (NS_SUCCEEDED(rv)) {
       // circumvent nsDerivedSafe
@@ -3465,7 +3465,7 @@ HTMLContentSink::ProcessBASEElement(nsGenericHTMLElement* aElement)
 {
   // href attribute
   nsAutoString attrValue;
-  if (aElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, attrValue)) {
+  if (aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::href, attrValue)) {
     //-- Make sure this page is allowed to load this URI
     nsresult rv;
     nsCOMPtr<nsIURI> baseHrefURI;
@@ -3499,7 +3499,7 @@ HTMLContentSink::ProcessBASEElement(nsGenericHTMLElement* aElement)
   }
 
   // target attribute
-  if (aElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, attrValue)) {
+  if (aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::target, attrValue)) {
     if (!mBody) {
       // still in real HEAD
       mDocument->SetBaseTarget(attrValue);
@@ -3524,7 +3524,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
     // Create content object
     nsCOMPtr<nsIContent> element;
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::link, nsnull, kNameSpaceID_None,
+    mNodeInfoManager->GetNodeInfo(nsGkAtoms::link, nsnull, kNameSpaceID_None,
                                   getter_AddRefs(nodeInfo));
 
     result = NS_NewHTMLElement(getter_AddRefs(element), nodeInfo);
@@ -3557,7 +3557,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
 
       // look for <link rel="next" href="url">
       nsAutoString relVal;
-      element->GetAttr(kNameSpaceID_None, nsHTMLAtoms::rel, relVal);
+      element->GetAttr(kNameSpaceID_None, nsGkAtoms::rel, relVal);
       if (!relVal.IsEmpty()) {
         // XXX seems overkill to generate this string array
         nsStringArray linkTypes;
@@ -3565,7 +3565,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
         PRBool hasPrefetch = (linkTypes.IndexOf(NS_LITERAL_STRING("prefetch")) != -1);
         if (hasPrefetch || linkTypes.IndexOf(NS_LITERAL_STRING("next")) != -1) {
           nsAutoString hrefVal;
-          element->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, hrefVal);
+          element->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
           if (!hrefVal.IsEmpty()) {
             PrefetchHref(hrefVal, hasPrefetch);
           }

@@ -37,7 +37,7 @@
 #include "nsIDOMHTMLDivElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsMappedAttributes.h"
@@ -112,22 +112,22 @@ nsHTMLDivElement::ParseAttribute(PRInt32 aNamespaceID,
                                  nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (mNodeInfo->Equals(nsHTMLAtoms::marquee)) {
-      if ((aAttribute == nsHTMLAtoms::width) ||
-          (aAttribute == nsHTMLAtoms::height)) {
+    if (mNodeInfo->Equals(nsGkAtoms::marquee)) {
+      if ((aAttribute == nsGkAtoms::width) ||
+          (aAttribute == nsGkAtoms::height)) {
         return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
       }
-      if (aAttribute == nsHTMLAtoms::bgcolor) {
+      if (aAttribute == nsGkAtoms::bgcolor) {
         return aResult.ParseColor(aValue, GetOwnerDoc());
       }
-      if ((aAttribute == nsHTMLAtoms::hspace) ||
-          (aAttribute == nsHTMLAtoms::vspace)) {
+      if ((aAttribute == nsGkAtoms::hspace) ||
+          (aAttribute == nsGkAtoms::vspace)) {
         return aResult.ParseIntWithBounds(aValue, 0);
       }
     }
 
-    if (mNodeInfo->Equals(nsHTMLAtoms::div) &&
-        aAttribute == nsHTMLAtoms::align) {
+    if (mNodeInfo->Equals(nsGkAtoms::div) &&
+        aAttribute == nsGkAtoms::align) {
       return ParseDivAlignValue(aValue, aResult);
     }
   }
@@ -155,14 +155,14 @@ MapMarqueeAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* 
 NS_IMETHODIMP_(PRBool)
 nsHTMLDivElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
-  if (mNodeInfo->Equals(nsHTMLAtoms::div)) {
+  if (mNodeInfo->Equals(nsGkAtoms::div)) {
     static const MappedAttributeEntry* const map[] = {
       sDivAlignAttributeMap,
       sCommonAttributeMap
     };
     return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
   }
-  if (mNodeInfo->Equals(nsHTMLAtoms::marquee)) {  
+  if (mNodeInfo->Equals(nsGkAtoms::marquee)) {  
     static const MappedAttributeEntry* const map[] = {
       sImageMarginSizeAttributeMap,
       sBackgroundColorAttributeMap,
@@ -177,10 +177,10 @@ nsHTMLDivElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 nsMapRuleToAttributesFunc
 nsHTMLDivElement::GetAttributeMappingFunction() const
 {
-  if (mNodeInfo->Equals(nsHTMLAtoms::div)) {
+  if (mNodeInfo->Equals(nsGkAtoms::div)) {
     return &MapAttributesIntoRule;
   }
-  if (mNodeInfo->Equals(nsHTMLAtoms::marquee)) {
+  if (mNodeInfo->Equals(nsGkAtoms::marquee)) {
     return &MapMarqueeAttributesIntoRule;
   }  
   return nsGenericHTMLElement::GetAttributeMappingFunction();

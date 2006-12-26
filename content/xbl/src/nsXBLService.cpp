@@ -61,7 +61,7 @@
 #include "nsIXMLContentSink.h"
 #include "nsContentCID.h"
 #include "nsXMLDocument.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIMemory.h"
 #include "nsIObserverService.h"
 #include "nsIDOMNodeList.h"
@@ -69,8 +69,6 @@
 #include "nsXBLBinding.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsIXBLDocumentInfo.h"
-#include "nsXBLAtoms.h"
-#include "nsXULAtoms.h"
 #include "nsCRT.h"
 #include "nsContentUtils.h"
 #include "nsSyncLoadService.h"
@@ -927,8 +925,8 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
   else if (hasBase) {
     // Check for the presence of 'extends' and 'display' attributes
     nsAutoString display, extends;
-    child->GetAttr(kNameSpaceID_None, nsXBLAtoms::display, display);
-    child->GetAttr(kNameSpaceID_None, nsXBLAtoms::extends, extends);
+    child->GetAttr(kNameSpaceID_None, nsGkAtoms::display, display);
+    child->GetAttr(kNameSpaceID_None, nsGkAtoms::extends, extends);
     PRBool hasDisplay = !display.IsEmpty();
     PRBool hasExtends = !extends.IsEmpty();
     
@@ -971,7 +969,7 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
               // We extend some widget/frame. We don't really have a
               // base binding.
               protoBinding->SetHasBasePrototype(PR_FALSE);
-              //child->UnsetAttr(kNameSpaceID_None, nsXBLAtoms::extends, PR_FALSE);
+              //child->UnsetAttr(kNameSpaceID_None, nsGkAtoms::extends, PR_FALSE);
             }
 
             PRInt32 nameSpaceID =
@@ -1022,8 +1020,8 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
           // Make sure to set the base prototype.
           baseProto = baseBinding->PrototypeBinding();
           protoBinding->SetBasePrototype(baseProto);
-          child->UnsetAttr(kNameSpaceID_None, nsXBLAtoms::extends, PR_FALSE);
-          child->UnsetAttr(kNameSpaceID_None, nsXBLAtoms::display, PR_FALSE);
+          child->UnsetAttr(kNameSpaceID_None, nsGkAtoms::extends, PR_FALSE);
+          child->UnsetAttr(kNameSpaceID_None, nsGkAtoms::display, PR_FALSE);
         }
       }
     }
@@ -1097,10 +1095,10 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
       ni = aBoundElement->NodeInfo();
 
     if (!info && bindingManager &&
-        (!ni || !(ni->Equals(nsXULAtoms::scrollbar, kNameSpaceID_XUL) ||
-                  ni->Equals(nsXULAtoms::thumb, kNameSpaceID_XUL) ||
-                  ((ni->Equals(nsHTMLAtoms::input) ||
-                    ni->Equals(nsHTMLAtoms::select)) &&
+        (!ni || !(ni->Equals(nsGkAtoms::scrollbar, kNameSpaceID_XUL) ||
+                  ni->Equals(nsGkAtoms::thumb, kNameSpaceID_XUL) ||
+                  ((ni->Equals(nsGkAtoms::input) ||
+                    ni->Equals(nsGkAtoms::select)) &&
                    aBoundElement->IsNodeOfType(nsINode::eHTML)))) &&
         !aForceSyncLoad) {
       // The third line of defense is to investigate whether or not the

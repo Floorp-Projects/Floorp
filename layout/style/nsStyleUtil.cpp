@@ -41,7 +41,7 @@
 #include "nsStyleConsts.h"
 #include "nsUnitConversion.h"
 
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsILinkHandler.h"
 #include "nsILink.h"
 #include "nsIXMLContent.h"
@@ -428,9 +428,9 @@ PRBool nsStyleUtil::IsHTMLLink(nsIContent *aContent, nsIAtom *aTag, nsPresContex
 
   PRBool result = PR_FALSE;
 
-  if ((aTag == nsHTMLAtoms::a) ||
-      (aTag == nsHTMLAtoms::link) ||
-      (aTag == nsHTMLAtoms::area)) {
+  if ((aTag == nsGkAtoms::a) ||
+      (aTag == nsGkAtoms::link) ||
+      (aTag == nsGkAtoms::area)) {
 
     nsCOMPtr<nsILink> link( do_QueryInterface(aContent) );
     // In XML documents, this can be null.

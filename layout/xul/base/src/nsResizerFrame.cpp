@@ -42,7 +42,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMNodeList.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsINameSpaceManager.h"
 
 #include "nsIWidget.h"
@@ -53,7 +53,6 @@
 #include "nsIBaseWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIViewManager.h"
-#include "nsXULAtoms.h"
 #include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
 
@@ -311,7 +310,7 @@ nsResizerFrame::GetInitialDirection(eDirection& aDirection)
   if (!content)
      return PR_FALSE;
 
-  if (content->GetAttr(kNameSpaceID_None, nsXULAtoms::dir, value)) {
+  if (content->GetAttr(kNameSpaceID_None, nsGkAtoms::dir, value)) {
      return EvalDirection(value,aDirection);
   }
 
@@ -327,7 +326,7 @@ nsResizerFrame::AttributeChanged(PRInt32 aNameSpaceID,
   nsresult rv = nsTitleBarFrame::AttributeChanged(aNameSpaceID, aAttribute,
                                                   aModType);
 
-  if (aAttribute == nsXULAtoms::dir) {
+  if (aAttribute == nsGkAtoms::dir) {
     GetInitialDirection(mDirection);
   }
 

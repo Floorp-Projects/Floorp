@@ -86,13 +86,13 @@ nsMathMLFrame::GetMathMLFrameType()
 nsMathMLFrame::FindAttrDisplaystyle(nsIContent*         aContent,
                                     nsPresentationData& aPresentationData)
 {
-  NS_ASSERTION(aContent->Tag() == nsMathMLAtoms::mstyle_ ||
-               aContent->Tag() == nsMathMLAtoms::mtable_, "bad caller");
+  NS_ASSERTION(aContent->Tag() == nsGkAtoms::mstyle_ ||
+               aContent->Tag() == nsGkAtoms::mtable_, "bad caller");
   static nsIContent::AttrValuesArray strings[] =
-    {&nsMathMLAtoms::_false, &nsMathMLAtoms::_true, nsnull};
+    {&nsGkAtoms::_false, &nsGkAtoms::_true, nsnull};
   // see if the explicit displaystyle attribute is there
   switch (aContent->FindAttrValueIn(kNameSpaceID_None,
-    nsMathMLAtoms::displaystyle_, strings, eCaseMatters)) {
+    nsGkAtoms::displaystyle_, strings, eCaseMatters)) {
   case 0:
     aPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
     aPresentationData.flags |= NS_MATHML_EXPLICIT_DISPLAYSTYLE;
@@ -237,7 +237,7 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
     if (!content)
       break;
 
-    if (content->Tag() == nsMathMLAtoms::math) {
+    if (content->Tag() == nsGkAtoms::math) {
       const nsStyleDisplay* display = frame->GetStyleDisplay();
       if (display->mDisplay == NS_STYLE_DISPLAY_BLOCK) {
         aPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
@@ -497,31 +497,31 @@ nsMathMLFrame::ParseNamedSpaceValue(nsIFrame*   aMathMLmstyleFrame,
   nsIAtom* namedspaceAtom = nsnull;
   if (aString.EqualsLiteral("veryverythinmathspace")) {
     i = 1;
-    namedspaceAtom = nsMathMLAtoms::veryverythinmathspace_;
+    namedspaceAtom = nsGkAtoms::veryverythinmathspace_;
   }
   else if (aString.EqualsLiteral("verythinmathspace")) {
     i = 2;
-    namedspaceAtom = nsMathMLAtoms::verythinmathspace_;
+    namedspaceAtom = nsGkAtoms::verythinmathspace_;
   }
   else if (aString.EqualsLiteral("thinmathspace")) {
     i = 3;
-    namedspaceAtom = nsMathMLAtoms::thinmathspace_;
+    namedspaceAtom = nsGkAtoms::thinmathspace_;
   }
   else if (aString.EqualsLiteral("mediummathspace")) {
     i = 4;
-    namedspaceAtom = nsMathMLAtoms::mediummathspace_;
+    namedspaceAtom = nsGkAtoms::mediummathspace_;
   }
   else if (aString.EqualsLiteral("thickmathspace")) {
     i = 5;
-    namedspaceAtom = nsMathMLAtoms::thickmathspace_;
+    namedspaceAtom = nsGkAtoms::thickmathspace_;
   }
   else if (aString.EqualsLiteral("verythickmathspace")) {
     i = 6;
-    namedspaceAtom = nsMathMLAtoms::verythickmathspace_;
+    namedspaceAtom = nsGkAtoms::verythickmathspace_;
   }
   else if (aString.EqualsLiteral("veryverythickmathspace")) {
     i = 7;
-    namedspaceAtom = nsMathMLAtoms::veryverythickmathspace_;
+    namedspaceAtom = nsGkAtoms::veryverythickmathspace_;
   }
 
   if (0 != i) {
@@ -626,16 +626,16 @@ nsMathMLFrame::MapCommonAttributesIntoCSS(nsPresContext* aPresContext,
   if (!attrCount)
     return 0;
 
-  // need to initialize here -- i.e., after registering nsMathMLAtoms
+  // need to initialize here -- i.e., after registering nsGkAtoms
   static const nsCSSMapping
   kCSSMappingTable[] = {
-    {kMathMLversion2, nsMathMLAtoms::mathcolor_,      "color:"},
-    {kMathMLversion1, nsMathMLAtoms::color,           "color:"},
-    {kMathMLversion2, nsMathMLAtoms::mathsize_,       "font-size:"},
-    {kMathMLversion1, nsMathMLAtoms::fontsize_,       "font-size:"},
-    {kMathMLversion1, nsMathMLAtoms::fontfamily_,     "font-family:"},
-    {kMathMLversion2, nsMathMLAtoms::mathbackground_, "background-color:"},
-    {kMathMLversion1, nsMathMLAtoms::background,      "background-color:"},
+    {kMathMLversion2, nsGkAtoms::mathcolor_,      "color:"},
+    {kMathMLversion1, nsGkAtoms::color,           "color:"},
+    {kMathMLversion2, nsGkAtoms::mathsize_,       "font-size:"},
+    {kMathMLversion1, nsGkAtoms::fontsize_,       "font-size:"},
+    {kMathMLversion1, nsGkAtoms::fontfamily_,     "font-family:"},
+    {kMathMLversion2, nsGkAtoms::mathbackground_, "background-color:"},
+    {kMathMLversion1, nsGkAtoms::background,      "background-color:"},
     {0, nsnull, nsnull}
   };
 
@@ -669,7 +669,7 @@ nsMathMLFrame::MapCommonAttributesIntoCSS(nsPresContext* aPresContext,
 
     // don't add rules that are already in mathml.css
     // (this will also clean up whitespace before units - see bug 125303)
-    if (attrAtom == nsMathMLAtoms::fontsize_ || attrAtom == nsMathMLAtoms::mathsize_) {
+    if (attrAtom == nsGkAtoms::fontsize_ || attrAtom == nsGkAtoms::mathsize_) {
       nsCSSValue cssValue;
       nsAutoString numericValue(attrValue);
       if (!ParseNumericValue(numericValue, cssValue))
@@ -782,13 +782,13 @@ nsMathMLFrame::CommonAttributeChangedFor(nsPresContext* aPresContext,
                                          nsIContent*    aContent,
                                          nsIAtom*       aAttribute)
 {
-  if (aAttribute == nsMathMLAtoms::mathcolor_      ||
-      aAttribute == nsMathMLAtoms::color           ||
-      aAttribute == nsMathMLAtoms::mathsize_       ||
-      aAttribute == nsMathMLAtoms::fontsize_       ||
-      aAttribute == nsMathMLAtoms::fontfamily_     ||
-      aAttribute == nsMathMLAtoms::mathbackground_ ||
-      aAttribute == nsMathMLAtoms::background) {
+  if (aAttribute == nsGkAtoms::mathcolor_      ||
+      aAttribute == nsGkAtoms::color           ||
+      aAttribute == nsGkAtoms::mathsize_       ||
+      aAttribute == nsGkAtoms::fontsize_       ||
+      aAttribute == nsGkAtoms::fontfamily_     ||
+      aAttribute == nsGkAtoms::mathbackground_ ||
+      aAttribute == nsGkAtoms::background) {
 
     MapCommonAttributesIntoCSS(aPresContext, aContent);
 

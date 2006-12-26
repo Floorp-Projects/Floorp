@@ -59,7 +59,7 @@ NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
 
   nsCOMPtr<nsINodeInfo> ni;
   nsresult rv =
-    aNodeInfoManager->GetNodeInfo(nsLayoutAtoms::processingInstructionTagName,
+    aNodeInfoManager->GetNodeInfo(nsGkAtoms::processingInstructionTagName,
                                   nsnull, kNameSpaceID_None,
                                   getter_AddRefs(ni));
   NS_ENSURE_SUCCESS(rv, rv);

@@ -298,7 +298,7 @@ nsContainerFrame::GetFirstChild(nsIAtom* aListName) const
   // list
   if (nsnull == aListName) {
     return mFrames.FirstChild();
-  } else if (nsLayoutAtoms::overflowList == aListName) {
+  } else if (nsGkAtoms::overflowList == aListName) {
     return GetOverflowFrames(GetPresContext(), PR_FALSE);
   } else {
     return nsnull;
@@ -309,7 +309,7 @@ nsIAtom*
 nsContainerFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 {
   if (aIndex == 0) {
-    return nsLayoutAtoms::overflowList;
+    return nsGkAtoms::overflowList;
   } else {
     return nsnull;
   }
@@ -817,8 +817,8 @@ nsContainerFrame::FrameNeedsView(nsIFrame* aFrame)
     // in that case, because adding a view for box frames seems to cause
     // problems for XUL...
     nsIAtom* frameType = aFrame->GetType();
-    if ((frameType == nsLayoutAtoms::blockFrame) ||
-        (frameType == nsLayoutAtoms::areaFrame)) {
+    if ((frameType == nsGkAtoms::blockFrame) ||
+        (frameType == nsGkAtoms::areaFrame)) {
       return PR_TRUE;
     }
   }
@@ -1116,11 +1116,11 @@ nsContainerFrame::GetOverflowFrames(nsPresContext* aPresContext,
   nsPropertyTable *propTable = aPresContext->PropertyTable();
   if (aRemoveProperty) {
     return (nsIFrame*) propTable->UnsetProperty(this,
-                                              nsLayoutAtoms::overflowProperty);
+                                              nsGkAtoms::overflowProperty);
   }
 
   return (nsIFrame*) propTable->GetProperty(this,
-                                            nsLayoutAtoms::overflowProperty);
+                                            nsGkAtoms::overflowProperty);
 }
 
 // Destructor function for the overflow frame property
@@ -1143,7 +1143,7 @@ nsContainerFrame::SetOverflowFrames(nsPresContext* aPresContext,
 {
   nsresult rv =
     aPresContext->PropertyTable()->SetProperty(this,
-                                               nsLayoutAtoms::overflowProperty,
+                                               nsGkAtoms::overflowProperty,
                                                aOverflowFrames,
                                                DestroyOverflowFrames,
                                                nsnull);

@@ -70,7 +70,7 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsINameSpaceManager.h"
 
 // Bug 136580: Limit to the number of nested content frames that can have the
@@ -314,13 +314,13 @@ nsFrameLoader::EnsureDocShell()
 
   PRInt32 namespaceID = mOwnerContent->GetNameSpaceID();
   if (namespaceID == kNameSpaceID_XHTML) {
-    mOwnerContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, frameName);
+    mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::id, frameName);
   } else {
-    mOwnerContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, frameName);
+    mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::name, frameName);
     // XXX if no NAME then use ID, after a transition period this will be
     // changed so that XUL only uses ID too (bug 254284).
     if (frameName.IsEmpty() && namespaceID == kNameSpaceID_XUL) {
-      mOwnerContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, frameName);
+      mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::id, frameName);
     }
   }
 
@@ -347,7 +347,7 @@ nsFrameLoader::EnsureDocShell()
     PRBool isContent = PR_FALSE;
 
     if (mOwnerContent->IsNodeOfType(nsINode::eXUL)) {
-      mOwnerContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, value);
+      mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, value);
     }
 
     // we accept "content" and "content-xxx" values.
@@ -449,10 +449,10 @@ nsFrameLoader::GetURL(nsString& aURI)
 {
   aURI.Truncate();
 
-  if (mOwnerContent->Tag() == nsHTMLAtoms::object) {
-    mOwnerContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, aURI);
+  if (mOwnerContent->Tag() == nsGkAtoms::object) {
+    mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::data, aURI);
   } else {
-    mOwnerContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, aURI);
+    mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::src, aURI);
   }
 }
 

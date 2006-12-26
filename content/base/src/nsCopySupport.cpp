@@ -60,7 +60,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIHTMLDocument.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 
 // image copy stuff
 #include "nsIImageLoadingContent.h"
@@ -329,14 +329,14 @@ nsresult nsCopySupport::IsPlainTextContext(nsISelection *aSel, nsIDocument *aDoc
 
     nsIAtom *atom = selContent->Tag();
 
-    if (atom == nsHTMLAtoms::input ||
-        atom == nsHTMLAtoms::textarea)
+    if (atom == nsGkAtoms::input ||
+        atom == nsGkAtoms::textarea)
     {
       *aIsPlainTextContext = PR_TRUE;
       break;
     }
 
-    if (atom == nsHTMLAtoms::body)
+    if (atom == nsGkAtoms::body)
     {
       // check for moz prewrap style on body.  If it's there we are 
       // in a plaintext editor.  This is pretty cheezy but I haven't 

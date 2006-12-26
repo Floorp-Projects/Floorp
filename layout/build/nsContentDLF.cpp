@@ -38,7 +38,7 @@
 #include "nsCOMPtr.h"
 #include "nsContentDLF.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsICategoryManager.h"
@@ -349,17 +349,17 @@ nsContentDLF::CreateBlankDocument(nsILoadGroup *aLoadGroup,
     nsCOMPtr<nsINodeInfo> htmlNodeInfo;
 
     // generate an html html element
-    nim->GetNodeInfo(nsHTMLAtoms::html, 0, kNameSpaceID_None,
+    nim->GetNodeInfo(nsGkAtoms::html, 0, kNameSpaceID_None,
                      getter_AddRefs(htmlNodeInfo));
     nsCOMPtr<nsIContent> htmlElement = NS_NewHTMLHtmlElement(htmlNodeInfo);
 
     // generate an html head element
-    nim->GetNodeInfo(nsHTMLAtoms::head, 0, kNameSpaceID_None,
+    nim->GetNodeInfo(nsGkAtoms::head, 0, kNameSpaceID_None,
                      getter_AddRefs(htmlNodeInfo));
     nsCOMPtr<nsIContent> headElement = NS_NewHTMLHeadElement(htmlNodeInfo);
 
     // generate an html body element
-    nim->GetNodeInfo(nsHTMLAtoms::body, 0, kNameSpaceID_None,
+    nim->GetNodeInfo(nsGkAtoms::body, 0, kNameSpaceID_None,
                      getter_AddRefs(htmlNodeInfo));
     nsCOMPtr<nsIContent> bodyElement = NS_NewHTMLBodyElement(htmlNodeInfo);
 

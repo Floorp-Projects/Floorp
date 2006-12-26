@@ -50,8 +50,6 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsGfxScrollFrame.h"
 #include "nsLayoutAtoms.h"
-#include "nsXULAtoms.h"
-#include "nsHTMLAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsISupportsArray.h"
 #include "nsIDocument.h"
@@ -228,7 +226,7 @@ nsHTMLScrollFrame::GetSkipSides() const
 nsIAtom*
 nsHTMLScrollFrame::GetType() const
 {
-  return nsLayoutAtoms::scrollFrame; 
+  return nsGkAtoms::scrollFrame; 
 }
 
 /**
@@ -1031,7 +1029,7 @@ nsXULScrollFrame::GetSkipSides() const
 nsIAtom*
 nsXULScrollFrame::GetType() const
 {
-  return nsLayoutAtoms::scrollFrame; 
+  return nsGkAtoms::scrollFrame; 
 }
 
 NS_IMETHODIMP
@@ -1580,7 +1578,7 @@ nsGfxScrollFrameInner::ReloadChildFrames()
       mScrolledFrame = frame;
     } else {
       nsAutoString value;
-      content->GetAttr(kNameSpaceID_None, nsXULAtoms::orient, value);
+      content->GetAttr(kNameSpaceID_None, nsGkAtoms::orient, value);
       if (!value.IsEmpty()) {
         // probably a scrollbar then
         if (value.LowerCaseEqualsLiteral("horizontal")) {
@@ -1656,27 +1654,27 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildr
   nsNodeInfoManager *nodeInfoManager =
     presContext->Document()->NodeInfoManager();
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nodeInfoManager->GetNodeInfo(nsXULAtoms::scrollbar, nsnull,
+  nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollbar, nsnull,
                                kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
 
   nsCOMPtr<nsIContent> content;
 
   if (canHaveHorizontal) {
     NS_NewElement(getter_AddRefs(content), kNameSpaceID_XUL, nodeInfo);
-    content->SetAttr(kNameSpaceID_None, nsXULAtoms::orient,
+    content->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
                      NS_LITERAL_STRING("horizontal"), PR_FALSE);
     aAnonymousChildren.AppendElement(content);
   }
 
   if (canHaveVertical) {
     NS_NewElement(getter_AddRefs(content), kNameSpaceID_XUL, nodeInfo);
-    content->SetAttr(kNameSpaceID_None, nsXULAtoms::orient,
+    content->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
                      NS_LITERAL_STRING("vertical"), PR_FALSE);
     aAnonymousChildren.AppendElement(content);
   }
 
   if (canHaveHorizontal && canHaveVertical) {
-    nodeInfoManager->GetNodeInfo(nsXULAtoms::scrollcorner, nsnull,
+    nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollcorner, nsnull,
                                  kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
     NS_NewElement(getter_AddRefs(content), kNameSpaceID_XUL, nodeInfo);
     aAnonymousChildren.AppendElement(content);
@@ -1700,11 +1698,11 @@ void
 nsGfxScrollFrameInner::InternalScrollPositionDidChange(nscoord aX, nscoord aY)
 {
   if (mVScrollbarBox)
-    SetCoordAttribute(mVScrollbarBox, nsXULAtoms::curpos,
+    SetCoordAttribute(mVScrollbarBox, nsGkAtoms::curpos,
                       aY - GetScrolledRect(GetScrollPortSize()).y);
   
   if (mHScrollbarBox)
-    SetCoordAttribute(mHScrollbarBox, nsXULAtoms::curpos,
+    SetCoordAttribute(mHScrollbarBox, nsGkAtoms::curpos,
                       aX - GetScrolledRect(GetScrollPortSize()).x);
 }
 
@@ -1766,10 +1764,10 @@ void nsGfxScrollFrameInner::CurPosAttributeChanged(nsIContent* aContent)
 
   nsRect scrolledRect = GetScrolledRect(GetScrollPortSize());
 
-  nscoord x = GetCoordAttribute(mHScrollbarBox, nsXULAtoms::curpos,
+  nscoord x = GetCoordAttribute(mHScrollbarBox, nsGkAtoms::curpos,
                                 -scrolledRect.x) +
               scrolledRect.x;
-  nscoord y = GetCoordAttribute(mVScrollbarBox, nsXULAtoms::curpos,
+  nscoord y = GetCoordAttribute(mVScrollbarBox, nsGkAtoms::curpos,
                                 -scrolledRect.y) +
               scrolledRect.y;
 
@@ -1785,7 +1783,7 @@ void nsGfxScrollFrameInner::CurPosAttributeChanged(nsIContent* aContent)
     if (x == curPosX && y == curPosY)
       return;
 
-    PRBool isSmooth = aContent->HasAttr(kNameSpaceID_None, nsXULAtoms::smooth);
+    PRBool isSmooth = aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::smooth);
         
     if (isSmooth) {
       // Make sure an attribute-setting callback occurs even if the view
@@ -2318,11 +2316,11 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     nscoord curPosX, curPosY;
     scrollable->GetScrollPosition(curPosX, curPosY);
     // Scrollbars assume zero is the minimum position, so translate for them.
-    SetCoordAttribute(mVScrollbarBox, nsXULAtoms::curpos, curPosY - minY);
+    SetCoordAttribute(mVScrollbarBox, nsGkAtoms::curpos, curPosY - minY);
     SetScrollbarEnabled(mVScrollbarBox, maxY - minY);
-    SetCoordAttribute(mVScrollbarBox, nsXULAtoms::maxpos, maxY - minY);
-    SetCoordAttribute(mVScrollbarBox, nsXULAtoms::pageincrement, nscoord(aScrollArea.height - fontHeight));
-    SetCoordAttribute(mVScrollbarBox, nsXULAtoms::increment, fontHeight);
+    SetCoordAttribute(mVScrollbarBox, nsGkAtoms::maxpos, maxY - minY);
+    SetCoordAttribute(mVScrollbarBox, nsGkAtoms::pageincrement, nscoord(aScrollArea.height - fontHeight));
+    SetCoordAttribute(mVScrollbarBox, nsGkAtoms::increment, fontHeight);
 
     nsRect vRect(aScrollArea);
     vRect.width = aContentArea.width - aScrollArea.width;
@@ -2338,11 +2336,11 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     nscoord curPosX, curPosY;
     scrollable->GetScrollPosition(curPosX, curPosY);
     // Scrollbars assume zero is the minimum position, so translate for them.
-    SetCoordAttribute(mHScrollbarBox, nsXULAtoms::curpos, curPosX - minX);
+    SetCoordAttribute(mHScrollbarBox, nsGkAtoms::curpos, curPosX - minX);
     SetScrollbarEnabled(mHScrollbarBox, maxX - minX);
-    SetCoordAttribute(mHScrollbarBox, nsXULAtoms::maxpos, maxX - minX);
-    SetCoordAttribute(mHScrollbarBox, nsXULAtoms::pageincrement, nscoord(float(aScrollArea.width)*0.8));
-    SetCoordAttribute(mHScrollbarBox, nsXULAtoms::increment, 10*mOnePixel);
+    SetCoordAttribute(mHScrollbarBox, nsGkAtoms::maxpos, maxX - minX);
+    SetCoordAttribute(mHScrollbarBox, nsGkAtoms::pageincrement, nscoord(float(aScrollArea.width)*0.8));
+    SetCoordAttribute(mHScrollbarBox, nsGkAtoms::increment, 10*mOnePixel);
 
     nsRect hRect(aScrollArea);
     hRect.height = aContentArea.height - aScrollArea.height;
@@ -2407,7 +2405,7 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
       mIsRoot) {
     nsIFrame* parentFrame = mOuter->GetParent();
     for (nsIFrame *fixedChild =
-           parentFrame->GetFirstChild(nsLayoutAtoms::fixedList);
+           parentFrame->GetFirstChild(nsGkAtoms::fixedList);
          fixedChild; fixedChild = fixedChild->GetNextSibling()) {
       // force a reflow of the fixed child
       fixedChild->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
@@ -2432,7 +2430,7 @@ nsGfxScrollFrameInner::SetScrollbarEnabled(nsIBox* aBox, nscoord aMaxPos, PRBool
   mOuter->GetPresContext()->PresShell()->PostAttributeChange(
     aBox->GetContent(),
     kNameSpaceID_None,
-    nsHTMLAtoms::disabled,
+    nsGkAtoms::disabled,
     NS_LITERAL_STRING("true"),
     aReflow,
     aMaxPos ? eChangeType_Remove : eChangeType_Set);

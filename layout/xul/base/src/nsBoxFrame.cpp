@@ -71,8 +71,7 @@
 #include "nsCOMPtr.h"
 #include "nsUnitConversion.h"
 #include "nsINameSpaceManager.h"
-#include "nsHTMLAtoms.h"
-#include "nsXULAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIContent.h"
 #include "nsSpaceManager.h"
 #include "nsHTMLParts.h"
@@ -88,7 +87,6 @@
 #include "nsIBindingManager.h"
 #include "nsIScrollableFrame.h"
 #include "nsWidgetsCID.h"
-#include "nsLayoutAtoms.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsIScrollableView.h"
 #include "nsHTMLContainerFrame.h"
@@ -256,10 +254,10 @@ void nsBoxFrame::UpdateMouseThrough()
 {
   if (mContent) {
     static nsIContent::AttrValuesArray strings[] =
-      {&nsXULAtoms::never, &nsXULAtoms::always, nsnull};
+      {&nsGkAtoms::never, &nsGkAtoms::always, nsnull};
     static const eMouseThrough values[] = {never, always};
     PRInt32 index = mContent->FindAttrValueIn(kNameSpaceID_None,
-        nsXULAtoms::mousethrough, strings, eCaseMatters);
+        nsGkAtoms::mousethrough, strings, eCaseMatters);
     if (index >= 0) {
       mMouseThrough = values[index];
     }
@@ -361,9 +359,9 @@ nsBoxFrame::GetInitialDebug(PRBool& aDebug)
     return PR_FALSE;
 
   static nsIContent::AttrValuesArray strings[] =
-    {&nsXULAtoms::_false, &nsXULAtoms::_true, nsnull};
+    {&nsGkAtoms::_false, &nsGkAtoms::_true, nsnull};
   PRInt32 index = content->FindAttrValueIn(kNameSpaceID_None,
-      nsXULAtoms::debug, strings, eCaseMatters);
+      nsGkAtoms::debug, strings, eCaseMatters);
   if (index >= 0) {
     aDebug = index == 1;
     return PR_TRUE;
@@ -383,9 +381,9 @@ nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
 
   // XXXdwh Everything inside this if statement is deprecated code.
   static nsIContent::AttrValuesArray alignStrings[] =
-    {&nsXULAtoms::left, &nsXULAtoms::right, nsnull};
+    {&nsGkAtoms::left, &nsGkAtoms::right, nsnull};
   static const Halignment alignValues[] = {hAlign_Left, hAlign_Right};
-  PRInt32 index = content->FindAttrValueIn(kNameSpaceID_None, nsHTMLAtoms::align,
+  PRInt32 index = content->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::align,
       alignStrings, eCaseMatters);
   if (index >= 0) {
     aHalign = alignValues[index];
@@ -395,9 +393,9 @@ nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
   // Now that the deprecated stuff is out of the way, we move on to check the appropriate 
   // attribute.  For horizontal boxes, we are checking the PACK attribute.  For vertical boxes
   // we are checking the ALIGN attribute.
-  nsIAtom* attrName = IsHorizontal() ? nsXULAtoms::pack : nsHTMLAtoms::align;
+  nsIAtom* attrName = IsHorizontal() ? nsGkAtoms::pack : nsGkAtoms::align;
   static nsIContent::AttrValuesArray strings[] =
-    {&nsXULAtoms::_empty, &nsXULAtoms::start, &nsXULAtoms::center, &nsXULAtoms::end, nsnull};
+    {&nsGkAtoms::_empty, &nsGkAtoms::start, &nsGkAtoms::center, &nsGkAtoms::end, nsnull};
   static const Halignment values[] =
     {hAlign_Left/*not used*/, hAlign_Left, hAlign_Center, hAlign_Right};
   index = content->FindAttrValueIn(kNameSpaceID_None, attrName,
@@ -459,10 +457,10 @@ nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
     return PR_FALSE;
 
   static nsIContent::AttrValuesArray valignStrings[] =
-    {&nsXULAtoms::top, &nsXULAtoms::baseline, &nsXULAtoms::middle, &nsXULAtoms::bottom, nsnull};
+    {&nsGkAtoms::top, &nsGkAtoms::baseline, &nsGkAtoms::middle, &nsGkAtoms::bottom, nsnull};
   static const Valignment valignValues[] =
     {vAlign_Top, vAlign_BaseLine, vAlign_Middle, vAlign_Bottom};
-  PRInt32 index = content->FindAttrValueIn(kNameSpaceID_None, nsHTMLAtoms::valign,
+  PRInt32 index = content->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::valign,
       valignStrings, eCaseMatters);
   if (index >= 0) {
     aValign = valignValues[index];
@@ -472,10 +470,10 @@ nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
   // Now that the deprecated stuff is out of the way, we move on to check the appropriate 
   // attribute.  For horizontal boxes, we are checking the ALIGN attribute.  For vertical boxes
   // we are checking the PACK attribute.
-  nsIAtom* attrName = IsHorizontal() ? nsHTMLAtoms::align : nsXULAtoms::pack;
+  nsIAtom* attrName = IsHorizontal() ? nsGkAtoms::align : nsGkAtoms::pack;
   static nsIContent::AttrValuesArray strings[] =
-    {&nsXULAtoms::_empty, &nsXULAtoms::start, &nsXULAtoms::center,
-     &nsXULAtoms::baseline, &nsXULAtoms::end, nsnull};
+    {&nsGkAtoms::_empty, &nsGkAtoms::start, &nsGkAtoms::center,
+     &nsGkAtoms::baseline, &nsGkAtoms::end, nsnull};
   static const Valignment values[] =
     {vAlign_Top/*not used*/, vAlign_Top, vAlign_Middle, vAlign_BaseLine, vAlign_Bottom};
   index = content->FindAttrValueIn(kNameSpaceID_None, attrName,
@@ -550,8 +548,8 @@ nsBoxFrame::GetInitialOrientation(PRBool& aIsHorizontal)
   // Now see if we have an attribute.  The attribute overrides
   // the style system value.
   static nsIContent::AttrValuesArray strings[] =
-    {&nsXULAtoms::vertical, &nsXULAtoms::horizontal, nsnull};
-  PRInt32 index = content->FindAttrValueIn(kNameSpaceID_None, nsXULAtoms::orient,
+    {&nsGkAtoms::vertical, &nsGkAtoms::horizontal, nsnull};
+  PRInt32 index = content->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::orient,
       strings, eCaseMatters);
   if (index >= 0) {
     aIsHorizontal = index == 1;
@@ -583,8 +581,8 @@ nsBoxFrame::GetInitialDirection(PRBool& aIsNormal)
   // Now see if we have an attribute.  The attribute overrides
   // the style system value.
   static nsIContent::AttrValuesArray strings[] =
-    {&nsXULAtoms::reverse, &nsXULAtoms::ltr, &nsXULAtoms::rtl, nsnull};
-  PRInt32 index = content->FindAttrValueIn(kNameSpaceID_None, nsXULAtoms::dir,
+    {&nsGkAtoms::reverse, &nsGkAtoms::ltr, &nsGkAtoms::rtl, nsnull};
+  PRInt32 index = content->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::dir,
       strings, eCaseMatters);
   if (index >= 0) {
     PRPackedBool values[] = {!aIsNormal, PR_TRUE, PR_FALSE};
@@ -604,8 +602,8 @@ nsBoxFrame::GetInitialEqualSize(PRBool& aEqualSize)
   if (!content)
      return PR_FALSE;
   
-  if (content->AttrValueIs(kNameSpaceID_None, nsXULAtoms::equalsize,
-                           nsLayoutAtoms::always, eCaseMatters)) {
+  if (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::equalsize,
+                           nsGkAtoms::always, eCaseMatters)) {
     aEqualSize = PR_TRUE;
     return PR_TRUE;
   } 
@@ -626,8 +624,8 @@ nsBoxFrame::GetInitialAutoStretch(PRBool& aStretch)
   
   // Check the align attribute.
   static nsIContent::AttrValuesArray strings[] =
-    {&nsXULAtoms::_empty, &nsXULAtoms::stretch, nsnull};
-  PRInt32 index = content->FindAttrValueIn(kNameSpaceID_None, nsHTMLAtoms::align,
+    {&nsGkAtoms::_empty, &nsGkAtoms::stretch, nsnull};
+  PRInt32 index = content->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::align,
       strings, eCaseMatters);
   if (index != nsIContent::ATTR_MISSING && index != 0) {
     aStretch = index == 1;
@@ -1180,43 +1178,43 @@ nsBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
   // Ignore 'width', 'height', 'screenX', 'screenY' and 'sizemode' on a
   // <window>.
   nsIAtom *tag = mContent->Tag();
-  if ((tag == nsXULAtoms::window ||
-       tag == nsXULAtoms::page ||
-       tag == nsXULAtoms::dialog ||
-       tag == nsXULAtoms::wizard) &&
-      (nsXULAtoms::width == aAttribute ||
-       nsXULAtoms::height == aAttribute ||
-       nsXULAtoms::screenX == aAttribute ||
-       nsXULAtoms::screenY == aAttribute ||
-       nsXULAtoms::sizemode == aAttribute)) {
+  if ((tag == nsGkAtoms::window ||
+       tag == nsGkAtoms::page ||
+       tag == nsGkAtoms::dialog ||
+       tag == nsGkAtoms::wizard) &&
+      (nsGkAtoms::width == aAttribute ||
+       nsGkAtoms::height == aAttribute ||
+       nsGkAtoms::screenX == aAttribute ||
+       nsGkAtoms::screenY == aAttribute ||
+       nsGkAtoms::sizemode == aAttribute)) {
     return rv;
   }
 
-  if (aAttribute == nsHTMLAtoms::width       ||
-      aAttribute == nsHTMLAtoms::height      ||
-      aAttribute == nsHTMLAtoms::align       ||
-      aAttribute == nsHTMLAtoms::valign      ||
-      aAttribute == nsHTMLAtoms::left        ||
-      aAttribute == nsHTMLAtoms::top         ||
-      aAttribute == nsXULAtoms::minwidth     ||
-      aAttribute == nsXULAtoms::maxwidth     ||
-      aAttribute == nsXULAtoms::minheight    ||
-      aAttribute == nsXULAtoms::maxheight    ||
-      aAttribute == nsXULAtoms::flex         ||
-      aAttribute == nsXULAtoms::orient       ||
-      aAttribute == nsXULAtoms::pack         ||
-      aAttribute == nsXULAtoms::dir          ||
-      aAttribute == nsXULAtoms::mousethrough ||
-      aAttribute == nsXULAtoms::equalsize) {
+  if (aAttribute == nsGkAtoms::width       ||
+      aAttribute == nsGkAtoms::height      ||
+      aAttribute == nsGkAtoms::align       ||
+      aAttribute == nsGkAtoms::valign      ||
+      aAttribute == nsGkAtoms::left        ||
+      aAttribute == nsGkAtoms::top         ||
+      aAttribute == nsGkAtoms::minwidth     ||
+      aAttribute == nsGkAtoms::maxwidth     ||
+      aAttribute == nsGkAtoms::minheight    ||
+      aAttribute == nsGkAtoms::maxheight    ||
+      aAttribute == nsGkAtoms::flex         ||
+      aAttribute == nsGkAtoms::orient       ||
+      aAttribute == nsGkAtoms::pack         ||
+      aAttribute == nsGkAtoms::dir          ||
+      aAttribute == nsGkAtoms::mousethrough ||
+      aAttribute == nsGkAtoms::equalsize) {
 
-    if (aAttribute == nsHTMLAtoms::align  ||
-        aAttribute == nsHTMLAtoms::valign ||
-        aAttribute == nsXULAtoms::orient  ||
-        aAttribute == nsXULAtoms::pack    ||
+    if (aAttribute == nsGkAtoms::align  ||
+        aAttribute == nsGkAtoms::valign ||
+        aAttribute == nsGkAtoms::orient  ||
+        aAttribute == nsGkAtoms::pack    ||
 #ifdef DEBUG_LAYOUT
-        aAttribute == nsXULAtoms::debug   ||
+        aAttribute == nsGkAtoms::debug   ||
 #endif
-        aAttribute == nsXULAtoms::dir) {
+        aAttribute == nsGkAtoms::dir) {
 
       mValign = nsBoxFrame::vAlign_Top;
       mHalign = nsBoxFrame::hAlign_Left;
@@ -1267,11 +1265,11 @@ nsBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
       else
         mState &= ~NS_STATE_AUTO_STRETCH;
     }
-    else if (aAttribute == nsHTMLAtoms::left ||
-             aAttribute == nsHTMLAtoms::top) {
+    else if (aAttribute == nsGkAtoms::left ||
+             aAttribute == nsGkAtoms::top) {
       mState &= ~NS_STATE_STACK_NOT_POSITIONED;
     }
-    else if (aAttribute == nsXULAtoms::mousethrough) {
+    else if (aAttribute == nsGkAtoms::mousethrough) {
       UpdateMouseThrough();
     }
 
@@ -1279,7 +1277,7 @@ nsBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
     GetPresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eStyleChange);
   }
-  else if (aAttribute == nsXULAtoms::ordinal) {
+  else if (aAttribute == nsGkAtoms::ordinal) {
     nsBoxLayoutState state(GetPresContext());
 
     nsIFrame* frameToMove = this;
@@ -1303,7 +1301,7 @@ nsBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
   }
   // If the accesskey changed, register for the new value
   // The old value has been unregistered in nsXULElement::SetAttr
-  else if (aAttribute == nsXULAtoms::accesskey) {
+  else if (aAttribute == nsGkAtoms::accesskey) {
     RegUnregAccessKey(PR_TRUE);
   }
 
@@ -1588,7 +1586,7 @@ nsBoxFrame::GetFrameName(nsAString& aResult) const
 nsIAtom*
 nsBoxFrame::GetType() const
 {
-  return nsLayoutAtoms::boxFrame;
+  return nsGkAtoms::boxFrame;
 }
 
 PRBool
@@ -2124,17 +2122,17 @@ nsBoxFrame::RegUnregAccessKey(PRBool aDoReg)
   nsIAtom *atom = mContent->Tag();
 
   // only support accesskeys for the following elements
-  if (atom != nsXULAtoms::button &&
-      atom != nsXULAtoms::toolbarbutton &&
-      atom != nsXULAtoms::checkbox &&
-      atom != nsXULAtoms::textbox &&
-      atom != nsXULAtoms::tab &&
-      atom != nsXULAtoms::radio) {
+  if (atom != nsGkAtoms::button &&
+      atom != nsGkAtoms::toolbarbutton &&
+      atom != nsGkAtoms::checkbox &&
+      atom != nsGkAtoms::textbox &&
+      atom != nsGkAtoms::tab &&
+      atom != nsGkAtoms::radio) {
     return NS_OK;
   }
 
   nsAutoString accessKey;
-  mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::accesskey, accessKey);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accessKey);
 
   if (accessKey.IsEmpty())
     return NS_OK;
@@ -2406,8 +2404,8 @@ nsIFrame* nsDisplayXULEventRedirector::HitTest(nsDisplayListBuilder* aBuilder,
   for (nsIContent* content = frame->GetContent();
        content && content != mTargetFrame->GetContent();
        content = content->GetParent()) {
-    if (content->AttrValueIs(kNameSpaceID_None, nsXULAtoms::allowevents,
-                             nsXULAtoms::_true, eCaseMatters)) {
+    if (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::allowevents,
+                             nsGkAtoms::_true, eCaseMatters)) {
       // Events are allowed on 'frame', so let it go.
       return frame;
     }

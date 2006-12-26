@@ -107,7 +107,7 @@ nsMathMLmactionFrame::Init(nsIContent*      aContent,
   nsRefPtr<nsStyleContext> newStyleContext;
 
   mActionType = NS_MATHML_ACTION_TYPE_NONE;
-  aContent->GetAttr(kNameSpaceID_None, nsMathMLAtoms::actiontype_, value);
+  aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::actiontype_, value);
   if (!value.IsEmpty()) {
     if (value.EqualsLiteral("toggle"))
       mActionType = NS_MATHML_ACTION_TYPE_TOGGLE;
@@ -138,7 +138,7 @@ nsMathMLmactionFrame::Init(nsIContent*      aContent,
 
         // So... first, remove the attribute actiontype="restyle#id"
         PRBool notify = PR_FALSE; // don't trigger a reflow yet!
-        aContent->UnsetAttr(kNameSpaceID_None, nsMathMLAtoms::actiontype_, notify);
+        aContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::actiontype_, notify);
 
         // then, re-resolve our style
         nsStyleContext* parentStyleContext = aParent->GetStyleContext();
@@ -180,7 +180,7 @@ nsMathMLmactionFrame::GetSelectedFrame()
   nsAutoString value;
   PRInt32 selection; 
 
-  mContent->GetAttr(kNameSpaceID_None, nsMathMLAtoms::selection_, value);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::selection_, value);
   if (!value.IsEmpty()) {
     PRInt32 errorCode;
     selection = value.ToInteger(&errorCode);
@@ -352,7 +352,7 @@ nsMathMLmactionFrame::MouseOver(nsIDOMEvent* aMouseEvent)
   // see if we should display a status message
   if (NS_MATHML_ACTION_TYPE_STATUSLINE == mActionType) {
     nsAutoString value;
-    mContent->GetAttr(kNameSpaceID_None, nsMathMLAtoms::actiontype_, value);
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::actiontype_, value);
     // expected statusline prefix (11ch)...
     if (11 < value.Length() && 0 == value.Find("statusline#")) {
       value.Cut(0, 11);
@@ -385,7 +385,7 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
       PR_snprintf(cbuf, sizeof(cbuf), "%d", selection);
       value.AssignASCII(cbuf);
       PRBool notify = PR_FALSE; // don't yet notify the document
-      mContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::selection_, value, notify);
+      mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::selection_, value, notify);
 
       // Now trigger a content-changed reflow...
       mSelectedFrame->AddStateBits(NS_FRAME_IS_DIRTY);
@@ -398,7 +398,7 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
       nsCOMPtr<nsIDOMElement> node( do_QueryInterface(mContent) );
       if (node.get()) {
         if (nsContentUtils::HasNonEmptyAttr(mContent, kNameSpaceID_None,
-                                            nsMathMLAtoms::actiontype_))
+                                            nsGkAtoms::actiontype_))
           node->RemoveAttribute(NS_LITERAL_STRING("actiontype"));
         else
           node->SetAttribute(NS_LITERAL_STRING("actiontype"), mRestyle);

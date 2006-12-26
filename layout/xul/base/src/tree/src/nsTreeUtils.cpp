@@ -44,7 +44,7 @@
 #include "nsCRT.h"
 #include "nsIAtom.h"
 #include "nsINameSpaceManager.h"
-#include "nsXULAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsINodeInfo.h"
 
 nsresult
@@ -133,13 +133,13 @@ nsTreeUtils::GetDescendantChild(nsIContent* aContainer, nsIAtom* aTag, nsIConten
 nsresult
 nsTreeUtils::UpdateSortIndicators(nsIContent* aColumn, const nsAString& aDirection)
 {
-  aColumn->SetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, aDirection, PR_TRUE);
-  aColumn->SetAttr(kNameSpaceID_None, nsXULAtoms::sortActive, NS_LITERAL_STRING("true"), PR_TRUE);
+  aColumn->SetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection, aDirection, PR_TRUE);
+  aColumn->SetAttr(kNameSpaceID_None, nsGkAtoms::sortActive, NS_LITERAL_STRING("true"), PR_TRUE);
 
   // Unset sort attribute(s) on the other columns
   nsCOMPtr<nsIContent> parentContent = aColumn->GetParent();
   if (parentContent &&
-      parentContent->NodeInfo()->Equals(nsXULAtoms::treecols,
+      parentContent->NodeInfo()->Equals(nsGkAtoms::treecols,
                                         kNameSpaceID_XUL)) {
     PRUint32 i, numChildren = parentContent->GetChildCount();
     for (i = 0; i < numChildren; ++i) {
@@ -147,12 +147,12 @@ nsTreeUtils::UpdateSortIndicators(nsIContent* aColumn, const nsAString& aDirecti
 
       if (childContent &&
           childContent != aColumn &&
-          childContent->NodeInfo()->Equals(nsXULAtoms::treecol,
+          childContent->NodeInfo()->Equals(nsGkAtoms::treecol,
                                            kNameSpaceID_XUL)) {
         childContent->UnsetAttr(kNameSpaceID_None,
-                                nsXULAtoms::sortDirection, PR_TRUE);
+                                nsGkAtoms::sortDirection, PR_TRUE);
         childContent->UnsetAttr(kNameSpaceID_None,
-                                nsXULAtoms::sortActive, PR_TRUE);
+                                nsGkAtoms::sortActive, PR_TRUE);
       }
     }
   }
@@ -165,14 +165,14 @@ nsTreeUtils::GetColumnIndex(nsIContent* aColumn, PRInt32* aResult)
 {
   nsIContent* parentContent = aColumn->GetParent();
   if (parentContent &&
-      parentContent->NodeInfo()->Equals(nsXULAtoms::treecols,
+      parentContent->NodeInfo()->Equals(nsGkAtoms::treecols,
                                         kNameSpaceID_XUL)) {
     PRUint32 i, numChildren = parentContent->GetChildCount();
     PRInt32 colIndex = 0;
     for (i = 0; i < numChildren; ++i) {
       nsIContent *childContent = parentContent->GetChildAt(i);
       if (childContent &&
-          childContent->NodeInfo()->Equals(nsXULAtoms::treecol,
+          childContent->NodeInfo()->Equals(nsGkAtoms::treecol,
                                            kNameSpaceID_XUL)) {
         if (childContent == aColumn) {
           *aResult = colIndex;

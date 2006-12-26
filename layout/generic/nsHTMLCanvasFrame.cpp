@@ -250,7 +250,7 @@ nsHTMLCanvasFrame::GetContentForEvent(nsPresContext* aPresContext,
 nsIAtom*
 nsHTMLCanvasFrame::GetType() const
 {
-  return nsLayoutAtoms::HTMLCanvasFrame;
+  return nsGkAtoms::HTMLCanvasFrame;
 }
 
 PRBool

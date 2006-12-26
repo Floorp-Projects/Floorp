@@ -929,12 +929,12 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
   NS_IMETHODIMP                                                      \
   _class::Get##_method(nsAString& aValue)                            \
   {                                                                  \
-    return GetAttrHelper(nsHTMLAtoms::_atom, aValue);                \
+    return GetAttrHelper(nsGkAtoms::_atom, aValue);                \
   }                                                                  \
   NS_IMETHODIMP                                                      \
   _class::Set##_method(const nsAString& aValue)                      \
   {                                                                  \
-    return SetAttrHelper(nsHTMLAtoms::_atom, aValue);                \
+    return SetAttrHelper(nsGkAtoms::_atom, aValue);                \
   }
 
 /**
@@ -946,12 +946,12 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
   NS_IMETHODIMP                                                      \
   _class::Get##_method(nsAString& aValue)                            \
   {                                                                  \
-    return GetStringAttrWithDefault(nsHTMLAtoms::_atom, _default, aValue);\
+    return GetStringAttrWithDefault(nsGkAtoms::_atom, _default, aValue);\
   }                                                                  \
   NS_IMETHODIMP                                                      \
   _class::Set##_method(const nsAString& aValue)                      \
   {                                                                  \
-    return SetAttrHelper(nsHTMLAtoms::_atom, aValue);                \
+    return SetAttrHelper(nsGkAtoms::_atom, aValue);                \
   }
 
 /**
@@ -963,12 +963,12 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
   NS_IMETHODIMP                                                       \
   _class::Get##_method(PRBool* aValue)                                \
   {                                                                   \
-    return GetBoolAttr(nsHTMLAtoms::_atom, aValue);                   \
+    return GetBoolAttr(nsGkAtoms::_atom, aValue);                   \
   }                                                                   \
   NS_IMETHODIMP                                                       \
   _class::Set##_method(PRBool aValue)                                 \
   {                                                                   \
-    return SetBoolAttr(nsHTMLAtoms::_atom, aValue);                   \
+    return SetBoolAttr(nsGkAtoms::_atom, aValue);                   \
   }
 
 /**
@@ -983,12 +983,12 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
   NS_IMETHODIMP                                                           \
   _class::Get##_method(PRInt32* aValue)                                   \
   {                                                                       \
-    return GetIntAttr(nsHTMLAtoms::_atom, _default, aValue);              \
+    return GetIntAttr(nsGkAtoms::_atom, _default, aValue);              \
   }                                                                       \
   NS_IMETHODIMP                                                           \
   _class::Set##_method(PRInt32 aValue)                                    \
   {                                                                       \
-    return SetIntAttr(nsHTMLAtoms::_atom, aValue);                        \
+    return SetIntAttr(nsGkAtoms::_atom, aValue);                        \
   }
 
 /**
@@ -1002,24 +1002,24 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
   NS_IMETHODIMP                                                     \
   _class::Get##_method(nsAString& aValue)                           \
   {                                                                 \
-    return GetURIAttr(nsHTMLAtoms::_atom, nsnull, aValue);          \
+    return GetURIAttr(nsGkAtoms::_atom, nsnull, aValue);          \
   }                                                                 \
   NS_IMETHODIMP                                                     \
   _class::Set##_method(const nsAString& aValue)                     \
   {                                                                 \
-    return SetAttrHelper(nsHTMLAtoms::_atom, aValue);               \
+    return SetAttrHelper(nsGkAtoms::_atom, aValue);               \
   }
 
 #define NS_IMPL_URI_ATTR_WITH_BASE(_class, _method, _atom, _base_atom)       \
   NS_IMETHODIMP                                                              \
   _class::Get##_method(nsAString& aValue)                                    \
   {                                                                          \
-    return GetURIAttr(nsHTMLAtoms::_atom, nsHTMLAtoms::_base_atom, aValue);  \
+    return GetURIAttr(nsGkAtoms::_atom, nsGkAtoms::_base_atom, aValue);  \
   }                                                                          \
   NS_IMETHODIMP                                                              \
   _class::Set##_method(const nsAString& aValue)                              \
   {                                                                          \
-    return SetAttrHelper(nsHTMLAtoms::_atom, aValue);                        \
+    return SetAttrHelper(nsGkAtoms::_atom, aValue);                        \
   }
 
 /**
@@ -1069,11 +1069,11 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
 
 #define NS_INTERFACE_MAP_ENTRY_IF_TAG(_interface, _tag)                       \
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(_interface,                              \
-                                     mNodeInfo->Equals(nsHTMLAtoms::_tag))
+                                     mNodeInfo->Equals(nsGkAtoms::_tag))
 
 
 #define NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO_IF_TAG(_class, _tag)         \
-  if (mNodeInfo->Equals(nsHTMLAtoms::_tag) &&                                 \
+  if (mNodeInfo->Equals(nsGkAtoms::_tag) &&                                 \
       aIID.Equals(NS_GET_IID(nsIClassInfo))) {                                \
     foundInterface =                                                          \
       nsContentUtils::GetClassInfoInstance(eDOMClassInfo_##_class##_id);      \

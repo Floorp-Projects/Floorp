@@ -65,7 +65,7 @@
 #include "nsIViewManager.h"
 #include "nsWidgetsCID.h"
 #include "nsViewsCID.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIScrollableView.h"
 #include "nsStyleCoord.h"
 #include "nsStyleContext.h"
@@ -75,7 +75,6 @@
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIDOMXULElement.h"
 #include "nsIFrameLoader.h"
-#include "nsLayoutAtoms.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsXPIDLString.h"
 #include "nsIScrollable.h"
@@ -357,7 +356,7 @@ NS_IMETHODIMP nsSubDocumentFrame::GetFrameName(nsAString& aResult) const
 nsIAtom*
 nsSubDocumentFrame::GetType() const
 {
-  return nsLayoutAtoms::subDocumentFrame;
+  return nsGkAtoms::subDocumentFrame;
 }
 
 PRBool
@@ -482,16 +481,16 @@ nsSubDocumentFrame::AttributeChanged(PRInt32 aNameSpaceID,
     return NS_OK;
   }
   
-  if (aAttribute == nsHTMLAtoms::src) {
+  if (aAttribute == nsGkAtoms::src) {
     if (mOwnsFrameLoader && mFrameLoader) {
       mFrameLoader->LoadFrame();
     }
   }
   // If the noResize attribute changes, dis/allow frame to be resized
-  else if (aAttribute == nsHTMLAtoms::noresize) {
+  else if (aAttribute == nsGkAtoms::noresize) {
     // Note that we're not doing content type checks, but that's ok -- if
     // they'd fail we will just end up with a null framesetFrame.
-    if (mContent->GetParent()->Tag() == nsHTMLAtoms::frameset) {
+    if (mContent->GetParent()->Tag() == nsGkAtoms::frameset) {
       nsIFrame* parentFrame = GetParent();
 
       if (parentFrame) {
@@ -507,7 +506,7 @@ nsSubDocumentFrame::AttributeChanged(PRInt32 aNameSpaceID,
       }
     }
   }
-  else if (aAttribute == nsHTMLAtoms::type) {
+  else if (aAttribute == nsGkAtoms::type) {
     if (!mFrameLoader) 
       return NS_OK;
 
@@ -543,7 +542,7 @@ nsSubDocumentFrame::AttributeChanged(PRInt32 aNameSpaceID,
     parentItem->GetTreeOwner(getter_AddRefs(parentTreeOwner));
     if (parentTreeOwner) {
       nsAutoString value;
-      mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, value);
+      mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, value);
 
       PRBool is_primary = value.LowerCaseEqualsLiteral("content-primary");
 
@@ -632,10 +631,10 @@ nsSize nsSubDocumentFrame::GetMargin()
   nsSize result(-1, -1);
   nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
   if (content) {
-    const nsAttrValue* attr = content->GetParsedAttr(nsHTMLAtoms::marginwidth);
+    const nsAttrValue* attr = content->GetParsedAttr(nsGkAtoms::marginwidth);
     if (attr && attr->Type() == nsAttrValue::eInteger)
       result.width = attr->GetIntegerValue();
-    attr = content->GetParsedAttr(nsHTMLAtoms::marginheight);
+    attr = content->GetParsedAttr(nsGkAtoms::marginheight);
     if (attr && attr->Type() == nsAttrValue::eInteger)
       result.height = attr->GetIntegerValue();
   }

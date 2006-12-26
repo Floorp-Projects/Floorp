@@ -153,7 +153,7 @@ nsSVGGradientFrame::RemoveFrame(nsIAtom*        aListName,
 nsIAtom*
 nsSVGGradientFrame::GetType() const
 {
-  return nsLayoutAtoms::svgGradientFrame;
+  return nsGkAtoms::svgGradientFrame;
 }
 
 NS_IMETHODIMP
@@ -561,7 +561,7 @@ nsSVGGradientFrame::GetGradientUnits()
 nsIAtom*
 nsSVGLinearGradientFrame::GetType() const
 {
-  return nsLayoutAtoms::svgLinearGradientFrame;
+  return nsGkAtoms::svgLinearGradientFrame;
 }
 
 NS_IMETHODIMP
@@ -633,7 +633,7 @@ nsSVGLinearGradientFrame::CreateGradient()
 nsIAtom*
 nsSVGRadialGradientFrame::GetType() const
 {
-  return nsLayoutAtoms::svgRadialGradientFrame;
+  return nsGkAtoms::svgRadialGradientFrame;
 }
 
 NS_IMETHODIMP

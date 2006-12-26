@@ -39,7 +39,7 @@
 #include "nsSimplePageSequence.h"
 #include "nsPresContext.h"
 #include "nsIRenderingContext.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIDeviceContext.h"
 #include "nsIViewManager.h"
 #include "nsIPresShell.h"
@@ -48,7 +48,6 @@
 #include "nsPageFrame.h"
 #include "nsStyleConsts.h"
 #include "nsRegion.h"
-#include "nsLayoutAtoms.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
@@ -227,7 +226,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 
   // See if we can get a Print Settings from the Context
   if (!mPageData->mPrintSettings &&
-      aPresContext->Medium() == nsLayoutAtoms::print) {
+      aPresContext->Medium() == nsGkAtoms::print) {
       mPageData->mPrintSettings = aPresContext->GetPrintSettings();
   }
 
@@ -773,7 +772,7 @@ nsSimplePageSequenceFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 nsIAtom*
 nsSimplePageSequenceFrame::GetType() const
 {
-  return nsLayoutAtoms::sequenceFrame; 
+  return nsGkAtoms::sequenceFrame; 
 }
 
 //------------------------------------------------------------------------------

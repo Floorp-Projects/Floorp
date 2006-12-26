@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsMediaDocument.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsRect.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -233,7 +233,7 @@ nsMediaDocument::CreateSyntheticDocument()
   nsresult rv;
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::html, nsnull,
+  rv = mNodeInfoManager->GetNodeInfo(nsGkAtoms::html, nsnull,
                                      kNameSpaceID_None,
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -247,7 +247,7 @@ nsMediaDocument::CreateSyntheticDocument()
   rv = AppendChildTo(root, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::body, nsnull,
+  rv = mNodeInfoManager->GetNodeInfo(nsGkAtoms::body, nsnull,
                                      kNameSpaceID_None,
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);

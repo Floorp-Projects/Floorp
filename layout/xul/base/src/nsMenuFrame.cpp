@@ -39,8 +39,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsXULAtoms.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsMenuFrame.h"
 #include "nsBoxFrame.h"
@@ -52,7 +51,6 @@
 #include "nsStyleContext.h"
 #include "nsCSSRendering.h"
 #include "nsINameSpaceManager.h"
-#include "nsLayoutAtoms.h"
 #include "nsMenuPopupFrame.h"
 #include "nsMenuBarFrame.h"
 #include "nsIView.h"
@@ -273,7 +271,7 @@ nsMenuFrame::~nsMenuFrame()
 nsIFrame*
 nsMenuFrame::GetFirstChild(nsIAtom* aListName) const
 {
-  if (nsLayoutAtoms::popupList == aListName) {
+  if (nsGkAtoms::popupList == aListName) {
     return mPopupFrames.FirstChild();
   }
   return nsBoxFrame::GetFirstChild(aListName);
@@ -284,7 +282,7 @@ nsMenuFrame::SetInitialChildList(nsIAtom*        aListName,
                                  nsIFrame*       aChildList)
 {
   nsresult rv = NS_OK;
-  if (nsLayoutAtoms::popupList == aListName) {
+  if (nsGkAtoms::popupList == aListName) {
     mPopupFrames.SetFrames(aChildList);
   } else {
 
@@ -321,7 +319,7 @@ nsIAtom*
 nsMenuFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 {
   if (NS_MENU_POPUP_LIST_INDEX == aIndex) {
-    return nsLayoutAtoms::popupList;
+    return nsGkAtoms::popupList;
   }
 
   return nsnull;
@@ -622,13 +620,13 @@ nsMenuFrame::SelectMenu(PRBool aActivateFlag)
       }
     }
     // Highlight the menu.
-    mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, NS_LITERAL_STRING("true"), PR_TRUE);
+    mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::menuactive, NS_LITERAL_STRING("true"), PR_TRUE);
     // The menuactivated event is used by accessibility to track the user's movements through menus
     domEventToFire.AssignLiteral("DOMMenuItemActive");
   }
   else {
     // Unhighlight the menu.
-    mContent->UnsetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
+    mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::menuactive, PR_TRUE);
     domEventToFire.AssignLiteral("DOMMenuItemInactive");
   }
 
@@ -648,7 +646,7 @@ PRBool nsMenuFrame::IsGenerated()
   // a menu forevermore.
   if (child &&
       !nsContentUtils::HasNonEmptyAttr(child, kNameSpaceID_None,
-                                       nsXULAtoms::menugenerated)) {
+                                       nsGkAtoms::menugenerated)) {
     return PR_FALSE;
   }
 
@@ -666,8 +664,8 @@ nsMenuFrame::MarkAsGenerated()
   // a menu forevermore.
   if (child &&
       !nsContentUtils::HasNonEmptyAttr(child, kNameSpaceID_None,
-                                       nsXULAtoms::menugenerated)) {
-    child->SetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated,
+                                       nsGkAtoms::menugenerated)) {
+    child->SetAttr(kNameSpaceID_None, nsGkAtoms::menugenerated,
                    NS_LITERAL_STRING("true"), PR_TRUE);
   }
 
@@ -682,8 +680,8 @@ nsMenuFrame::UngenerateMenu()
   
   if (child &&
       nsContentUtils::HasNonEmptyAttr(child, kNameSpaceID_None,
-                                      nsXULAtoms::menugenerated)) {
-    child->UnsetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated, PR_TRUE);
+                                      nsGkAtoms::menugenerated)) {
+    child->UnsetAttr(kNameSpaceID_None, nsGkAtoms::menugenerated, PR_TRUE);
   }
 
   return NS_OK;
@@ -750,16 +748,16 @@ nsMenuFrame::AttributeChanged(PRInt32 aNameSpaceID,
 {
   nsAutoString value;
 
-  if (aAttribute == nsHTMLAtoms::checked) {
+  if (aAttribute == nsGkAtoms::checked) {
     if (mType != eMenuType_Normal)
         UpdateMenuSpecialState(GetPresContext());
-  } else if (aAttribute == nsXULAtoms::acceltext) {
+  } else if (aAttribute == nsGkAtoms::acceltext) {
     // someone reset the accelText attribute, so clear the bit that says *we* set it
     AddStateBits(NS_STATE_ACCELTEXT_IS_DERIVED);
     BuildAcceleratorText();
-  } else if (aAttribute == nsXULAtoms::key) {
+  } else if (aAttribute == nsGkAtoms::key) {
     BuildAcceleratorText();
-  } else if ( aAttribute == nsHTMLAtoms::type || aAttribute == nsHTMLAtoms::name )
+  } else if ( aAttribute == nsGkAtoms::type || aAttribute == nsGkAtoms::name )
     UpdateMenuType(GetPresContext());
 
   return NS_OK;
@@ -778,12 +776,12 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
     MarkAsGenerated();
     NS_ENSURE_TRUE(weakFrame.IsAlive(), NS_OK);
 
-    mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::open, NS_LITERAL_STRING("true"), PR_TRUE);
+    mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::open, NS_LITERAL_STRING("true"), PR_TRUE);
     NS_ENSURE_TRUE(weakFrame.IsAlive(), NS_OK);
     FireDOMEventSynch(NS_LITERAL_STRING("DOMMenuItemActive"));
   }
   else {
-    mContent->UnsetAttr(kNameSpaceID_None, nsXULAtoms::open, PR_TRUE);
+    mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::open, PR_TRUE);
   }
 
   NS_ENSURE_TRUE(weakFrame.IsAlive(), NS_OK);
@@ -857,8 +855,8 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
       // Sync up the view.
       nsAutoString popupAnchor, popupAlign;
       
-      menuPopupContent->GetAttr(kNameSpaceID_None, nsXULAtoms::popupanchor, popupAnchor);
-      menuPopupContent->GetAttr(kNameSpaceID_None, nsXULAtoms::popupalign, popupAlign);
+      menuPopupContent->GetAttr(kNameSpaceID_None, nsGkAtoms::popupanchor, popupAnchor);
+      menuPopupContent->GetAttr(kNameSpaceID_None, nsGkAtoms::popupalign, popupAlign);
 
       ConvertPosition(menuPopupContent, popupAnchor, popupAlign);
 
@@ -998,7 +996,7 @@ nsMenuFrame::GetMenuChildrenElement(nsIContent** aResult)
 {
   *aResult = nsContentUtils::FindFirstChildWithResolvedTag(mContent,
                                                            kNameSpaceID_XUL,
-                                                           nsXULAtoms::menupopup);
+                                                           nsGkAtoms::menupopup);
   NS_IF_ADDREF(*aResult);
 }
 
@@ -1006,11 +1004,11 @@ PRBool
 nsMenuFrame::IsSizedToPopup(nsIContent* aContent, PRBool aRequireAlways)
 {
   PRBool sizeToPopup;
-  if (aContent->Tag() == nsHTMLAtoms::select)
+  if (aContent->Tag() == nsGkAtoms::select)
     sizeToPopup = PR_TRUE;
   else {
     nsAutoString sizedToPopup;
-    aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::sizetopopup, sizedToPopup);
+    aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::sizetopopup, sizedToPopup);
     sizeToPopup = sizedToPopup.EqualsLiteral("always") ||
                   !aRequireAlways && sizedToPopup.EqualsLiteral("pref");
   }
@@ -1148,12 +1146,12 @@ void
 nsMenuFrame::ConvertPosition(nsIContent* aPopupElt, nsString& aAnchor, nsString& aAlign)
 {
   static nsIContent::AttrValuesArray strings[] =
-    {&nsXULAtoms::_empty, &nsXULAtoms::before_start, &nsXULAtoms::before_end,
-     &nsXULAtoms::after_start, &nsXULAtoms::after_end, &nsXULAtoms::start_before,
-     &nsXULAtoms::start_after, &nsXULAtoms::end_before, &nsXULAtoms::end_after,
-     &nsXULAtoms::overlap, nsnull};
+    {&nsGkAtoms::_empty, &nsGkAtoms::before_start, &nsGkAtoms::before_end,
+     &nsGkAtoms::after_start, &nsGkAtoms::after_end, &nsGkAtoms::start_before,
+     &nsGkAtoms::start_after, &nsGkAtoms::end_before, &nsGkAtoms::end_after,
+     &nsGkAtoms::overlap, nsnull};
 
-  switch (aPopupElt->FindAttrValueIn(kNameSpaceID_None, nsXULAtoms::position,
+  switch (aPopupElt->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::position,
                                      strings, eCaseMatters)) {
     case nsIContent::ATTR_MISSING:
     case 0:
@@ -1209,8 +1207,8 @@ nsMenuFrame::RePositionPopup(nsBoxLayoutState& aState)
     nsIContent* menuPopupContent = menuPopup->GetContent();
     nsAutoString popupAnchor, popupAlign;
       
-    menuPopupContent->GetAttr(kNameSpaceID_None, nsXULAtoms::popupanchor, popupAnchor);
-    menuPopupContent->GetAttr(kNameSpaceID_None, nsXULAtoms::popupalign, popupAlign);
+    menuPopupContent->GetAttr(kNameSpaceID_None, nsGkAtoms::popupanchor, popupAnchor);
+    menuPopupContent->GetAttr(kNameSpaceID_None, nsGkAtoms::popupalign, popupAlign);
 
     ConvertPosition(menuPopupContent, popupAnchor, popupAlign);
 
@@ -1352,8 +1350,8 @@ nsMenuFrame::Notify(nsITimer* aTimer)
         mMenuParent->GetIsContextMenu(parentIsContextMenu);
 
       if (ctxMenu == nsnull || parentIsContextMenu) {
-        if (mContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::menuactive,
-                                  nsXULAtoms::_true, eCaseMatters)) {
+        if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::menuactive,
+                                  nsGkAtoms::_true, eCaseMatters)) {
           // We're still the active menu. Make sure all submenus/timers are closed
           // before opening this one
           mMenuParent->KillPendingTimers();
@@ -1372,27 +1370,27 @@ nsMenuFrame::Notify(nsITimer* aTimer)
 PRBool 
 nsMenuFrame::IsDisabled()
 {
-  return mContent->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::disabled,
-                               nsHTMLAtoms::_true, eCaseMatters);
+  return mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
+                               nsGkAtoms::_true, eCaseMatters);
 }
 
 void
 nsMenuFrame::UpdateMenuType(nsPresContext* aPresContext)
 {
   static nsIContent::AttrValuesArray strings[] =
-    {&nsHTMLAtoms::checkbox, &nsHTMLAtoms::radio, nsnull};
-  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsHTMLAtoms::type,
+    {&nsGkAtoms::checkbox, &nsGkAtoms::radio, nsnull};
+  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::type,
                                     strings, eCaseMatters)) {
     case 0: mType = eMenuType_Checkbox; break;
     case 1:
       mType = eMenuType_Radio;
-      mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, mGroupName);
+      mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::name, mGroupName);
       break;
 
     default:
       if (mType != eMenuType_Normal) {
         nsWeakFrame weakFrame(this);
-        mContent->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::checked,
+        mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::checked,
                             PR_TRUE);
         ENSURE_TRUE(weakFrame.IsAlive());
       }
@@ -1406,8 +1404,8 @@ nsMenuFrame::UpdateMenuType(nsPresContext* aPresContext)
 void
 nsMenuFrame::UpdateMenuSpecialState(nsPresContext* aPresContext) {
   PRBool newChecked =
-    mContent->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::checked,
-                          nsHTMLAtoms::_true, eCaseMatters); 
+    mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::checked,
+                          nsGkAtoms::_true, eCaseMatters); 
 
   if (newChecked == mChecked) {
     /* checked state didn't change */
@@ -1473,7 +1471,7 @@ nsMenuFrame::UpdateMenuSpecialState(nsPresContext* aPresContext) {
         (sibMenu->GetRadioGroupName(sibGroup), sibGroup == mGroupName)) {
       
       /* uncheck the old item */
-      sib->GetContent()->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::checked,
+      sib->GetContent()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::checked,
                                    PR_TRUE);
 
       /* XXX in DEBUG, check to make sure that there aren't two checked items */
@@ -1490,7 +1488,7 @@ nsMenuFrame::BuildAcceleratorText()
   nsAutoString accelText;
 
   if ((GetStateBits() & NS_STATE_ACCELTEXT_IS_DERIVED) == 0) {
-    mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::acceltext, accelText);
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::acceltext, accelText);
     if (!accelText.IsEmpty())
       return;
   }
@@ -1501,12 +1499,12 @@ nsMenuFrame::BuildAcceleratorText()
 
   // If anything below fails, just leave the accelerator text blank.
   nsWeakFrame weakFrame(this);
-  mContent->UnsetAttr(kNameSpaceID_None, nsXULAtoms::acceltext, PR_FALSE);
+  mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::acceltext, PR_FALSE);
   ENSURE_TRUE(weakFrame.IsAlive());
 
   // See if we have a key node and use that instead.
   nsAutoString keyValue;
-  mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::key, keyValue);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::key, keyValue);
   if (keyValue.IsEmpty())
     return;
 
@@ -1528,16 +1526,16 @@ nsMenuFrame::BuildAcceleratorText()
   // check the key element's attributes in this order:
   // |keytext|, |key|, |keycode|
   nsAutoString accelString;
-  keyElement->GetAttr(kNameSpaceID_None, nsXULAtoms::keytext, accelString);
+  keyElement->GetAttr(kNameSpaceID_None, nsGkAtoms::keytext, accelString);
 
   if (accelString.IsEmpty()) {
-    keyElement->GetAttr(kNameSpaceID_None, nsXULAtoms::key, accelString);
+    keyElement->GetAttr(kNameSpaceID_None, nsGkAtoms::key, accelString);
 
     if (!accelString.IsEmpty()) {
       ToUpperCase(accelString);
     } else {
       nsAutoString keyCode;
-      keyElement->GetAttr(kNameSpaceID_None, nsXULAtoms::keycode, keyCode);
+      keyElement->GetAttr(kNameSpaceID_None, nsGkAtoms::keycode, keyCode);
       ToUpperCase(keyCode);
 
       nsresult rv;
@@ -1578,7 +1576,7 @@ nsMenuFrame::BuildAcceleratorText()
   }
 
   nsAutoString modifiers;
-  keyElement->GetAttr(kNameSpaceID_None, nsXULAtoms::modifiers, modifiers);
+  keyElement->GetAttr(kNameSpaceID_None, nsGkAtoms::modifiers, modifiers);
   
   char* str = ToNewCString(modifiers);
   char* newStr;
@@ -1620,7 +1618,7 @@ nsMenuFrame::BuildAcceleratorText()
 
   accelText += accelString;
   
-  mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::acceltext, accelText, PR_FALSE);
+  mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::acceltext, accelText, PR_FALSE);
 }
 
 void
@@ -1629,15 +1627,15 @@ nsMenuFrame::Execute(nsGUIEvent *aEvent)
   nsWeakFrame weakFrame(this);
   // flip "checked" state if we're a checkbox menu, or an un-checked radio menu
   if (mType == eMenuType_Checkbox || (mType == eMenuType_Radio && !mChecked)) {
-    if (!mContent->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::autocheck,
-                               nsHTMLAtoms::_false, eCaseMatters)) {
+    if (!mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::autocheck,
+                               nsGkAtoms::_false, eCaseMatters)) {
       if (mChecked) {
-        mContent->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::checked,
+        mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::checked,
                             PR_TRUE);
         ENSURE_TRUE(weakFrame.IsAlive());
       }
       else {
-        mContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::checked, NS_LITERAL_STRING("true"),
+        mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::checked, NS_LITERAL_STRING("true"),
                           PR_TRUE);
         ENSURE_TRUE(weakFrame.IsAlive());
       }        
@@ -1747,10 +1745,10 @@ nsMenuFrame::OnCreate()
     for (PRUint32 i = 0; i < count; i++) {
       nsCOMPtr<nsIContent> grandChild = child->GetChildAt(i);
 
-      if (grandChild->Tag() == nsXULAtoms::menuitem) {
+      if (grandChild->Tag() == nsGkAtoms::menuitem) {
         // See if we have a command attribute.
         nsAutoString command;
-        grandChild->GetAttr(kNameSpaceID_None, nsXULAtoms::command, command);
+        grandChild->GetAttr(kNameSpaceID_None, nsGkAtoms::command, command);
         if (!command.IsEmpty()) {
           // We do! Look it up in our document
           nsCOMPtr<nsIDOMElement> commandElt;
@@ -1760,22 +1758,22 @@ nsMenuFrame::OnCreate()
           if ( commandContent ) {
             nsAutoString commandAttr;
             // The menu's disabled state needs to be updated to match the command.
-            if (commandContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, commandAttr))
-              grandChild->SetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, commandAttr, PR_TRUE);
+            if (commandContent->GetAttr(kNameSpaceID_None, nsGkAtoms::disabled, commandAttr))
+              grandChild->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled, commandAttr, PR_TRUE);
             else
-              grandChild->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, PR_TRUE);
+              grandChild->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, PR_TRUE);
 
             // The menu's label, accesskey and checked states need to be updated
             // to match the command. Note that unlike the disabled state if the
             // command has *no* value, we assume the menu is supplying its own.
-            if (commandContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::checked, commandAttr))
-              grandChild->SetAttr(kNameSpaceID_None, nsHTMLAtoms::checked, commandAttr, PR_TRUE);
+            if (commandContent->GetAttr(kNameSpaceID_None, nsGkAtoms::checked, commandAttr))
+              grandChild->SetAttr(kNameSpaceID_None, nsGkAtoms::checked, commandAttr, PR_TRUE);
 
-            if (commandContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, commandAttr))
-              grandChild->SetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, commandAttr, PR_TRUE);
+            if (commandContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, commandAttr))
+              grandChild->SetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, commandAttr, PR_TRUE);
 
-            if (commandContent->GetAttr(kNameSpaceID_None, nsXULAtoms::label, commandAttr))
-              grandChild->SetAttr(kNameSpaceID_None, nsXULAtoms::label, commandAttr, PR_TRUE);
+            if (commandContent->GetAttr(kNameSpaceID_None, nsGkAtoms::label, commandAttr))
+              grandChild->SetAttr(kNameSpaceID_None, nsGkAtoms::label, commandAttr, PR_TRUE);
           }
         }
       }
@@ -1996,7 +1994,7 @@ nsMenuFrame::SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize)
         GetMenuChildrenElement(getter_AddRefs(child));
         if (child &&
             !nsContentUtils::HasNonEmptyAttr(child, kNameSpaceID_None,
-                                             nsXULAtoms::menugenerated)) {
+                                             nsGkAtoms::menugenerated)) {
           nsCOMPtr<nsIRunnable> ev =
             new nsASyncMenuGeneration(this);
           NS_DispatchToCurrentThread(ev);

@@ -62,14 +62,14 @@ eMathMLFrameType
 nsMathMLTokenFrame::GetMathMLFrameType()
 {
   // treat everything other than <mi> as ordinary...
-  if (mContent->Tag() != nsMathMLAtoms::mi_) {
+  if (mContent->Tag() != nsGkAtoms::mi_) {
     return eMathMLFrameType_Ordinary;
   }
 
   // for <mi>, distinguish between italic and upright...
   // treat invariant the same as italic to inherit its inter-space properties
-  return mContent->AttrValueIs(kNameSpaceID_None, nsMathMLAtoms::MOZfontstyle,
-                               nsMathMLAtoms::normal, eCaseMatters)
+  return mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::MOZfontstyle,
+                               nsGkAtoms::normal, eCaseMatters)
     ? eMathMLFrameType_UprightIdentifier
     : eMathMLFrameType_ItalicIdentifier;
 }
@@ -230,8 +230,8 @@ nsMathMLTokenFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                      nsIAtom*        aAttribute,
                                      PRInt32         aModType)
 {
-  if (nsMathMLAtoms::lquote_ == aAttribute ||
-      nsMathMLAtoms::rquote_ == aAttribute) {
+  if (nsGkAtoms::lquote_ == aAttribute ||
+      nsGkAtoms::rquote_ == aAttribute) {
     SetQuotes();
   }
 
@@ -268,7 +268,7 @@ nsMathMLTokenFrame::ProcessTextData(PRBool aComputeStyleChange)
 PRBool
 nsMathMLTokenFrame::SetTextStyle()
 {
-  if (mContent->Tag() != nsMathMLAtoms::mi_)
+  if (mContent->Tag() != nsGkAtoms::mi_)
     return PR_FALSE;
 
   if (!mFrames.FirstChild())
@@ -283,7 +283,7 @@ nsMathMLTokenFrame::SetTextStyle()
 
   // attributes may override the default behavior
   nsAutoString fontstyle;
-  GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::fontstyle_, fontstyle);
+  GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::fontstyle_, fontstyle);
   if (1 == length && nsMathMLOperators::LookupInvariantChar(data[0])) {
     // bug 65951 - a non-stylable character has its own intrinsic appearance
     fontstyle.AssignLiteral("invariant");
@@ -293,9 +293,9 @@ nsMathMLTokenFrame::SetTextStyle()
   }
 
   // set the -moz-math-font-style attribute without notifying that we want a reflow
-  if (!mContent->AttrValueIs(kNameSpaceID_None, nsMathMLAtoms::MOZfontstyle,
+  if (!mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::MOZfontstyle,
                              fontstyle, eCaseMatters)) {
-    mContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZfontstyle, fontstyle, PR_FALSE);
+    mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::MOZfontstyle, fontstyle, PR_FALSE);
     return PR_TRUE;
   }
 
@@ -325,7 +325,7 @@ SetQuote(nsIFrame*       aFrame,
     // walk down the hierarchy of first children because they could be wrapped
     textFrame = aFrame->GetFirstChild(nsnull);
     if (textFrame) {
-      if (textFrame->GetType() == nsMathMLAtoms::textFrame)
+      if (textFrame->GetType() == nsGkAtoms::textFrame)
         break;
     }
     aFrame = textFrame;
@@ -341,7 +341,7 @@ SetQuote(nsIFrame*       aFrame,
 void
 nsMathMLTokenFrame::SetQuotes()
 {
-  if (mContent->Tag() != nsMathMLAtoms::ms_)
+  if (mContent->Tag() != nsGkAtoms::ms_)
     return;
 
   nsIFrame* rightFrame = nsnull;
@@ -357,12 +357,12 @@ nsMathMLTokenFrame::SetQuotes()
   nsAutoString value;
   // lquote
   if (GetAttribute(mContent, mPresentationData.mstyle,
-                   nsMathMLAtoms::lquote_, value)) {
+                   nsGkAtoms::lquote_, value)) {
     SetQuote(leftFrame, value);
   }
   // rquote
   if (GetAttribute(mContent, mPresentationData.mstyle,
-                   nsMathMLAtoms::rquote_, value)) {
+                   nsGkAtoms::rquote_, value)) {
     SetQuote(rightFrame, value);
   }
 }

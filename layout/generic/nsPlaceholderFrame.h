@@ -127,7 +127,7 @@ public:
   /**
    * Get the "type" of the frame
    *
-   * @see nsLayoutAtoms::placeholderFrame
+   * @see nsGkAtoms::placeholderFrame
    */
   virtual nsIAtom* GetType() const;
 
@@ -155,7 +155,7 @@ public:
    */
   static nsIFrame* GetRealFrameFor(nsIFrame* aFrame) {
     NS_PRECONDITION(aFrame, "Must have a frame to work with");
-    if (aFrame->GetType() == nsLayoutAtoms::placeholderFrame) {
+    if (aFrame->GetType() == nsGkAtoms::placeholderFrame) {
       return GetRealFrameForPlaceholder(aFrame);
     }
     return aFrame;
@@ -165,7 +165,7 @@ public:
    * @return the out-of-flow for aFrame, which is known to be a placeholder
    */
   static nsIFrame* GetRealFrameForPlaceholder(nsIFrame* aFrame) {
-    NS_PRECONDITION(aFrame->GetType() == nsLayoutAtoms::placeholderFrame,
+    NS_PRECONDITION(aFrame->GetType() == nsGkAtoms::placeholderFrame,
                     "Must have placeholder frame as input");
     nsIFrame* outOfFlow =
       NS_STATIC_CAST(nsPlaceholderFrame*, aFrame)->GetOutOfFlowFrame();

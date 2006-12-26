@@ -60,7 +60,7 @@ class nsPresContext;
  * All functions include as the first argument the frame that is delegating
  * the request
  *
- * @see nsLayoutAtoms::absoluteList
+ * @see nsGkAtoms::absoluteList
  */
 class nsAbsoluteContainingBlock
 {
@@ -69,7 +69,7 @@ public:
 
   virtual ~nsAbsoluteContainingBlock() { } // useful for debugging
 
-  virtual nsIAtom* GetChildListName() const { return nsLayoutAtoms::absoluteList; }
+  virtual nsIAtom* GetChildListName() const { return nsGkAtoms::absoluteList; }
 
   nsresult FirstChild(const nsIFrame* aDelegatingFrame,
                       nsIAtom*        aListName,

@@ -43,12 +43,11 @@
 #include "nsFrameManager.h"
 #include "nsFormControlFrame.h"
 #include "nsGfxButtonControlFrame.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsHTMLParts.h"
 #include "nsIFormControl.h"
 #include "nsINameSpaceManager.h"
-#include "nsLayoutAtoms.h"
 #include "nsIDOMElement.h"
 #include "nsIListControlFrame.h"
 #include "nsIDOMHTMLCollection.h" 
@@ -713,7 +712,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
 nsIAtom*
 nsComboboxControlFrame::GetType() const
 {
-  return nsLayoutAtoms::comboboxControlFrame; 
+  return nsGkAtoms::comboboxControlFrame; 
 }
 
 PRBool
@@ -737,7 +736,7 @@ nsComboboxControlFrame::GetFrameName(nsAString& aResult) const
 void
 nsComboboxControlFrame::ShowDropDown(PRBool aDoDropDown) 
 {
-  if (mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
     return;
   }
 
@@ -960,7 +959,7 @@ nsComboboxControlFrame::HandleEvent(nsPresContext* aPresContext,
   if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
     return NS_OK;
   }
-  if (mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
     return NS_OK;
   }
 
@@ -1044,7 +1043,7 @@ nsComboboxControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
     ActuallyDisplayText(PR_FALSE);
 
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    nimgr->GetNodeInfo(nsHTMLAtoms::input, nsnull, kNameSpaceID_None,
+    nimgr->GetNodeInfo(nsGkAtoms::input, nsnull, kNameSpaceID_None,
                        getter_AddRefs(nodeInfo));
 
     aChildList.AppendElement(mDisplayContent);
@@ -1062,9 +1061,9 @@ nsComboboxControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
        eventReceiver->AddEventListenerByIID(mButtonListener, NS_GET_IID(nsIDOMMouseListener));
     }
 
-    btnContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("button"), PR_FALSE);
+    btnContent->SetAttr(kNameSpaceID_None, nsGkAtoms::type, NS_LITERAL_STRING("button"), PR_FALSE);
     // Set tabindex="-1" so that the button is not tabbable
-    btnContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex,
+    btnContent->SetAttr(kNameSpaceID_None, nsGkAtoms::tabindex,
                         NS_LITERAL_STRING("-1"), PR_FALSE);
 
     aChildList.AppendElement(btnContent);
@@ -1249,7 +1248,7 @@ nsComboboxControlFrame::Destroy()
 nsIFrame*
 nsComboboxControlFrame::GetFirstChild(nsIAtom* aListName) const
 {
-  if (nsLayoutAtoms::popupList == aListName) {
+  if (nsGkAtoms::popupList == aListName) {
     return mPopupFrames.FirstChild();
   }
   return nsAreaFrame::GetFirstChild(aListName);
@@ -1260,7 +1259,7 @@ nsComboboxControlFrame::SetInitialChildList(nsIAtom*        aListName,
                                             nsIFrame*       aChildList)
 {
   nsresult rv = NS_OK;
-  if (nsLayoutAtoms::popupList == aListName) {
+  if (nsGkAtoms::popupList == aListName) {
     mPopupFrames.SetFrames(aChildList);
   } else {
     rv = nsAreaFrame::SetInitialChildList(aListName, aChildList);
@@ -1290,7 +1289,7 @@ nsComboboxControlFrame::GetAdditionalChildListName(PRInt32 aIndex) const
   }
   
   if (NS_COMBO_FRAME_POPUP_LIST_INDEX == aIndex) {
-    return nsLayoutAtoms::popupList;
+    return nsGkAtoms::popupList;
   }
   return nsnull;
 }
@@ -1402,7 +1401,7 @@ void nsComboboxControlFrame::PaintFocus(nsIRenderingContext& aRenderingContext,
   /////////////////////
   // draw focus
   // XXX This is only temporary
-  if (!mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled) &&
+  if (!mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled) &&
       mFocused == this) {
     aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
     aRenderingContext.SetColor(GetStyleColor()->mColor);

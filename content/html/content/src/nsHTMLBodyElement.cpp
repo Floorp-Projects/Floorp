@@ -40,7 +40,7 @@
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -59,7 +59,6 @@
 #include "nsIEditorDocShell.h"
 #include "nsCOMPtr.h"
 #include "nsIView.h"
-#include "nsLayoutAtoms.h"
 #include "nsRuleWalker.h"
 #include "nsIViewManager.h"
 
@@ -157,7 +156,7 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
   const nsAttrValue* value;
   if (mPart->GetAttrCount() > 0) {
     // if marginwidth/marginheight are set, reflect them as 'margin'
-    value = mPart->GetParsedAttr(nsHTMLAtoms::marginwidth);
+    value = mPart->GetParsedAttr(nsGkAtoms::marginwidth);
     if (value && value->Type() == nsAttrValue::eInteger) {
       bodyMarginWidth = value->GetIntegerValue();
       if (bodyMarginWidth < 0) bodyMarginWidth = 0;
@@ -168,7 +167,7 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
         margin.mRight.SetFloatValue((float)bodyMarginWidth, eCSSUnit_Pixel);
     }
 
-    value = mPart->GetParsedAttr(nsHTMLAtoms::marginheight);
+    value = mPart->GetParsedAttr(nsGkAtoms::marginheight);
     if (value && value->Type() == nsAttrValue::eInteger) {
       bodyMarginHeight = value->GetIntegerValue();
       if (bodyMarginHeight < 0) bodyMarginHeight = 0;
@@ -181,7 +180,7 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
 
     if (eCompatibility_NavQuirks == mode){
       // topmargin (IE-attribute)
-      value = mPart->GetParsedAttr(nsHTMLAtoms::topmargin);
+      value = mPart->GetParsedAttr(nsGkAtoms::topmargin);
       if (value && value->Type() == nsAttrValue::eInteger) {
         bodyTopMargin = value->GetIntegerValue();
         if (bodyTopMargin < 0) bodyTopMargin = 0;
@@ -191,7 +190,7 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
       }
 
       // bottommargin (IE-attribute)
-      value = mPart->GetParsedAttr(nsHTMLAtoms::bottommargin);
+      value = mPart->GetParsedAttr(nsGkAtoms::bottommargin);
       if (value && value->Type() == nsAttrValue::eInteger) {
         bodyBottomMargin = value->GetIntegerValue();
         if (bodyBottomMargin < 0) bodyBottomMargin = 0;
@@ -201,7 +200,7 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
       }
 
       // leftmargin (IE-attribute)
-      value = mPart->GetParsedAttr(nsHTMLAtoms::leftmargin);
+      value = mPart->GetParsedAttr(nsGkAtoms::leftmargin);
       if (value && value->Type() == nsAttrValue::eInteger) {
         bodyLeftMargin = value->GetIntegerValue();
         if (bodyLeftMargin < 0) bodyLeftMargin = 0;
@@ -211,7 +210,7 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
       }
 
       // rightmargin (IE-attribute)
-      value = mPart->GetParsedAttr(nsHTMLAtoms::rightmargin);
+      value = mPart->GetParsedAttr(nsGkAtoms::rightmargin);
       if (value && value->Type() == nsAttrValue::eInteger) {
         bodyRightMargin = value->GetIntegerValue();
         if (bodyRightMargin < 0) bodyRightMargin = 0;
@@ -319,7 +318,7 @@ nsHTMLBodyElement::Get##func_(nsAString& aColor)                    \
   aColor.Truncate();                                                \
   nsAutoString color;                                               \
   nscolor attrColor;                                                \
-  if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::attr_, color)) {     \
+  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::attr_, color)) {     \
                                                                     \
     nsPresContext *presContext = GetPresContext();                  \
     if (presContext) {                                              \
@@ -336,7 +335,7 @@ nsHTMLBodyElement::Get##func_(nsAString& aColor)                    \
 NS_IMETHODIMP                                                       \
 nsHTMLBodyElement::Set##func_(const nsAString& aColor)              \
 {                                                                   \
-  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::attr_, aColor,     \
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::attr_, aColor,     \
                  PR_TRUE);                                          \
 }
 
@@ -357,7 +356,7 @@ nsHTMLBodyElement::GetBgColor(nsAString& aBgColor)
 
   // If we don't have an attribute, find the actual color used for
   // (generally from the user agent style sheet) for compatibility
-  if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::bgcolor, attr)) {
+  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::bgcolor, attr)) {
     // Make sure the style is up-to-date, since we need it
     nsIFrame* frame = GetPrimaryFrame(Flush_Style);
     
@@ -382,7 +381,7 @@ nsHTMLBodyElement::GetBgColor(nsAString& aBgColor)
 NS_IMETHODIMP 
 nsHTMLBodyElement::SetBgColor(const nsAString& aBgColor)
 {
-  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::bgcolor, aBgColor, PR_TRUE); 
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::bgcolor, aBgColor, PR_TRUE); 
 }
 
 PRBool
@@ -392,19 +391,19 @@ nsHTMLBodyElement::ParseAttribute(PRInt32 aNamespaceID,
                                   nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsHTMLAtoms::bgcolor ||
-        aAttribute == nsHTMLAtoms::text ||
-        aAttribute == nsHTMLAtoms::link ||
-        aAttribute == nsHTMLAtoms::alink ||
-        aAttribute == nsHTMLAtoms::vlink) {
+    if (aAttribute == nsGkAtoms::bgcolor ||
+        aAttribute == nsGkAtoms::text ||
+        aAttribute == nsGkAtoms::link ||
+        aAttribute == nsGkAtoms::alink ||
+        aAttribute == nsGkAtoms::vlink) {
       return aResult.ParseColor(aValue, GetOwnerDoc());
     }
-    if (aAttribute == nsHTMLAtoms::marginwidth ||
-        aAttribute == nsHTMLAtoms::marginheight ||
-        aAttribute == nsHTMLAtoms::topmargin ||
-        aAttribute == nsHTMLAtoms::bottommargin ||
-        aAttribute == nsHTMLAtoms::leftmargin ||
-        aAttribute == nsHTMLAtoms::rightmargin) {
+    if (aAttribute == nsGkAtoms::marginwidth ||
+        aAttribute == nsGkAtoms::marginheight ||
+        aAttribute == nsGkAtoms::topmargin ||
+        aAttribute == nsGkAtoms::bottommargin ||
+        aAttribute == nsGkAtoms::leftmargin ||
+        aAttribute == nsGkAtoms::rightmargin) {
       return aResult.ParseIntWithBounds(aValue, 0);
     }
   }
@@ -439,17 +438,17 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
         if (styleSheet) {
           const nsAttrValue* value;
           nscolor color;
-          value = aAttributes->GetAttr(nsHTMLAtoms::link);
+          value = aAttributes->GetAttr(nsGkAtoms::link);
           if (value && value->GetColorValue(color)) {
             styleSheet->SetLinkColor(color);
           }
 
-          value = aAttributes->GetAttr(nsHTMLAtoms::alink);
+          value = aAttributes->GetAttr(nsGkAtoms::alink);
           if (value && value->GetColorValue(color)) {
             styleSheet->SetActiveLinkColor(color);
           }
 
-          value = aAttributes->GetAttr(nsHTMLAtoms::vlink);
+          value = aAttributes->GetAttr(nsGkAtoms::vlink);
           if (value && value->GetColorValue(color)) {
             styleSheet->SetVisitedLinkColor(color);
           }
@@ -462,7 +461,7 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
     if (aData->mColorData->mColor.GetUnit() == eCSSUnit_Null) {
       // color: color
       nscolor color;
-      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::text);
+      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::text);
       if (value && value->GetColorValue(color))
         aData->mColorData->mColor.SetColorValue(color);
     }
@@ -499,16 +498,16 @@ NS_IMETHODIMP_(PRBool)
 nsHTMLBodyElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
-    { &nsHTMLAtoms::link },
-    { &nsHTMLAtoms::vlink },
-    { &nsHTMLAtoms::alink },
-    { &nsHTMLAtoms::text },
+    { &nsGkAtoms::link },
+    { &nsGkAtoms::vlink },
+    { &nsGkAtoms::alink },
+    { &nsGkAtoms::text },
     // These aren't mapped through attribute mapping, but they are
     // mapped through a style rule, so it is attribute dependent style.
     // XXXldb But we don't actually replace the body rule when we have
     // dynamic changes...
-    { &nsHTMLAtoms::marginwidth },
-    { &nsHTMLAtoms::marginheight },
+    { &nsGkAtoms::marginwidth },
+    { &nsGkAtoms::marginheight },
     { nsnull },
   };
 

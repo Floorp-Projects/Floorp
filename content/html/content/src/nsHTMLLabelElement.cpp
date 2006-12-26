@@ -39,7 +39,7 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsIFormControl.h"
@@ -290,7 +290,7 @@ nsresult
 nsHTMLLabelElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
                             const nsAString& aValue, PRBool aNotify)
 {
-  if (aName == nsHTMLAtoms::accesskey && kNameSpaceID_None == aNameSpaceID) {
+  if (aName == nsGkAtoms::accesskey && kNameSpaceID_None == aNameSpaceID) {
     RegUnRegAccessKey(PR_FALSE);
   }
 
@@ -298,7 +298,7 @@ nsHTMLLabelElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPref
       nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
                                     aNotify);
 
-  if (aName == nsHTMLAtoms::accesskey && kNameSpaceID_None == aNameSpaceID &&
+  if (aName == nsGkAtoms::accesskey && kNameSpaceID_None == aNameSpaceID &&
       !aValue.IsEmpty()) {
     RegUnRegAccessKey(PR_TRUE);
   }
@@ -310,7 +310,7 @@ nsresult
 nsHTMLLabelElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                               PRBool aNotify)
 {
-  if (aAttribute == nsHTMLAtoms::accesskey &&
+  if (aAttribute == nsGkAtoms::accesskey &&
       kNameSpaceID_None == aNameSpaceID) {
     RegUnRegAccessKey(PR_FALSE);
   }
@@ -321,7 +321,7 @@ nsHTMLLabelElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 inline PRBool IsNonLabelFormControl(nsIContent *aContent)
 {
   return aContent->IsNodeOfType(nsINode::eHTML_FORM_CONTROL) &&
-         aContent->Tag() != nsHTMLAtoms::label;
+         aContent->Tag() != nsGkAtoms::label;
 }
 
 already_AddRefed<nsIContent>

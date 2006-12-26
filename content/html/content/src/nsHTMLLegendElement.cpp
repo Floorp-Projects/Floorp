@@ -39,7 +39,7 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsIForm.h"
@@ -163,7 +163,7 @@ nsHTMLLegendElement::ParseAttribute(PRInt32 aNamespaceID,
                                     const nsAString& aValue,
                                     nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::align && aNamespaceID == kNameSpaceID_None) {
+  if (aAttribute == nsGkAtoms::align && aNamespaceID == kNameSpaceID_None) {
     return aResult.ParseEnumValue(aValue, kAlignTable);
   }
 
@@ -177,7 +177,7 @@ nsHTMLLegendElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 {
   nsChangeHint retval =
       nsGenericHTMLFormElement::GetAttributeChangeHint(aAttribute, aModType);
-  if (aAttribute == nsHTMLAtoms::align) {
+  if (aAttribute == nsGkAtoms::align) {
     NS_UpdateHint(retval, NS_STYLE_HINT_REFLOW);
   }
   return retval;
@@ -188,7 +188,7 @@ nsHTMLLegendElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              nsIAtom* aPrefix, const nsAString& aValue,
                              PRBool aNotify)
 {
-  PRBool accesskey = (aAttribute == nsHTMLAtoms::accesskey &&
+  PRBool accesskey = (aAttribute == nsGkAtoms::accesskey &&
                       aNameSpaceID == kNameSpaceID_None);
   if (accesskey) {
     RegUnRegAccessKey(PR_FALSE);
@@ -208,7 +208,7 @@ nsresult
 nsHTMLLegendElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                PRBool aNotify)
 {
-  if (aAttribute == nsHTMLAtoms::accesskey &&
+  if (aAttribute == nsGkAtoms::accesskey &&
       aNameSpaceID == kNameSpaceID_None) {
     RegUnRegAccessKey(PR_FALSE);
   }

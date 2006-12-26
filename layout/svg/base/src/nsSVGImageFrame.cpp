@@ -105,7 +105,7 @@ public:
   /**
    * Get the "type" of the frame
    *
-   * @see nsLayoutAtoms::svgImageFrame
+   * @see nsGkAtoms::svgImageFrame
    */
   virtual nsIAtom* GetType() const;
 
@@ -325,7 +325,7 @@ nsSVGImageFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
 nsIAtom *
 nsSVGImageFrame::GetType() const
 {
-  return nsLayoutAtoms::svgImageFrame;
+  return nsGkAtoms::svgImageFrame;
 }
 
 //----------------------------------------------------------------------

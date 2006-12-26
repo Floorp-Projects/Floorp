@@ -268,8 +268,8 @@ static PRBool
 IsRootFrame(nsIFrame* aFrame)
 {
   nsIAtom* atom = aFrame->GetType();
-  return (atom == nsLayoutAtoms::canvasFrame) ||
-         (atom == nsLayoutAtoms::rootFrame);
+  return (atom == nsGkAtoms::canvasFrame) ||
+         (atom == nsGkAtoms::rootFrame);
 }
 
 NS_IMETHODIMP
@@ -328,7 +328,7 @@ nsFrameIterator::Next()
       else {
         result = GetParentFrame(parent);
         if (!result || IsRootFrame(result) ||
-            (mLockScroll && result->GetType() == nsLayoutAtoms::scrollFrame)) {
+            (mLockScroll && result->GetType() == nsGkAtoms::scrollFrame)) {
           result = nsnull;
           break;
         }
@@ -384,7 +384,7 @@ nsFrameIterator::Prev()
       } else {
         result = GetParentFrame(parent);
         if (!result || IsRootFrame(result) ||
-            (mLockScroll && result->GetType() == nsLayoutAtoms::scrollFrame)) {
+            (mLockScroll && result->GetType() == nsGkAtoms::scrollFrame)) {
           result = nsnull;
           break;
         }

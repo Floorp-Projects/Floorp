@@ -56,7 +56,6 @@
 #include "nsTemplateMap.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
-#include "nsXULAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsXULContentUtils.h"
 #include "nsXULElement.h"
@@ -621,7 +620,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             // We identify the resource element by presence of a
             // "uri='rdf:*'" attribute. (We also support the older
             // "uri='...'" syntax.)
-            if (tmplKid->HasAttr(kNameSpaceID_None, nsXULAtoms::uri) && aMatch->IsActive()) {
+            if (tmplKid->HasAttr(kNameSpaceID_None, nsGkAtoms::uri) && aMatch->IsActive()) {
                 isGenerationElement = PR_TRUE;
                 isUnique = PR_FALSE;
             }
@@ -712,7 +711,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             if (NS_FAILED(rv))
                 return rv;
 
-            rv = realKid->SetAttr(kNameSpaceID_None, nsXULAtoms::id, id, PR_FALSE);
+            rv = realKid->SetAttr(kNameSpaceID_None, nsGkAtoms::id, id, PR_FALSE);
             if (NS_FAILED(rv))
                 return rv;
 
@@ -730,7 +729,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             // Set up the element's 'container' and 'empty' attributes.
             SetContainerAttrs(realKid, aChild, PR_TRUE, PR_FALSE);
         }
-        else if (tag == nsXULAtoms::textnode &&
+        else if (tag == nsGkAtoms::textnode &&
                  nameSpaceID == kNameSpaceID_XUL) {
             // <xul:text value="..."> is replaced by text of the
             // actual value of the 'rdf:resource' attribute for the
@@ -739,7 +738,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             // so make sure to modify both when changing this
             PRUnichar attrbuf[128];
             nsFixedString attrValue(attrbuf, NS_ARRAY_LENGTH(attrbuf), 0);
-            tmplKid->GetAttr(kNameSpaceID_None, nsXULAtoms::value, attrValue);
+            tmplKid->GetAttr(kNameSpaceID_None, nsGkAtoms::value, attrValue);
             if (!attrValue.IsEmpty()) {
                 nsAutoString value;
                 rv = SubstituteText(aChild, attrValue, value);
@@ -891,7 +890,7 @@ nsXULContentBuilder::CopyAttributesToElement(nsIContent* aTemplateNode,
         nsIAtom* attribName = name->LocalName();
 
         // XXXndeakin ignore namespaces until bug 321182 is fixed
-        if (attribName != nsXULAtoms::id && attribName != nsXULAtoms::uri) {
+        if (attribName != nsGkAtoms::id && attribName != nsGkAtoms::uri) {
             // Create a buffer here, because there's a chance that an
             // attribute in the template is going to be an RDF URI, which is
             // usually longish.
@@ -938,7 +937,7 @@ nsXULContentBuilder::AddPersistentAttributes(nsIContent* aTemplateNode,
     if (NS_FAILED(rv)) return rv;
 
     nsAutoString attribute, persist;
-    aTemplateNode->GetAttr(kNameSpaceID_None, nsXULAtoms::persist, persist);
+    aTemplateNode->GetAttr(kNameSpaceID_None, nsGkAtoms::persist, persist);
 
     while (!persist.IsEmpty()) {
         attribute.Truncate();
@@ -1041,11 +1040,11 @@ nsXULContentBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
 
             // check for text nodes and update them accordingly.
             // This code is similar to that in BuildContentFromTemplate
-            if (tmplKid->NodeInfo()->Equals(nsXULAtoms::textnode,
+            if (tmplKid->NodeInfo()->Equals(nsGkAtoms::textnode,
                                             kNameSpaceID_XUL)) {
                 PRUnichar attrbuf[128];
                 nsFixedString attrValue(attrbuf, NS_ARRAY_LENGTH(attrbuf), 0);
-                tmplKid->GetAttr(kNameSpaceID_None, nsXULAtoms::value, attrValue);
+                tmplKid->GetAttr(kNameSpaceID_None, nsGkAtoms::value, attrValue);
                 if (!attrValue.IsEmpty()) {
                     nsAutoString value;
                     rv = SubstituteText(aResult, attrValue, value);
@@ -1123,7 +1122,7 @@ nsXULContentBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
     if (aElement == mRoot) {
         if (! mRootResult) {
             nsAutoString ref;
-            mRoot->GetAttr(kNameSpaceID_None, nsXULAtoms::ref, ref);
+            mRoot->GetAttr(kNameSpaceID_None, nsGkAtoms::ref, ref);
 
             if (! ref.IsEmpty()) {
                 nsresult rv = mQueryProcessor->TranslateRef(mDB, ref,
@@ -1483,14 +1482,14 @@ nsXULContentBuilder::IsOpen(nsIContent* aElement)
     // Treat the 'root' element as always open, -unless- it's a
     // menu/menupopup. We don't need to "fake" these as being open.
     if ((aElement == mRoot) && aElement->IsNodeOfType(nsINode::eXUL) &&
-        (tag != nsXULAtoms::menu) &&
-        (tag != nsXULAtoms::menubutton) &&
-        (tag != nsXULAtoms::toolbarbutton) &&
-        (tag != nsXULAtoms::button))
+        (tag != nsGkAtoms::menu) &&
+        (tag != nsGkAtoms::menubutton) &&
+        (tag != nsGkAtoms::toolbarbutton) &&
+        (tag != nsGkAtoms::button))
       return PR_TRUE;
 
-    return aElement->AttrValueIs(kNameSpaceID_None, nsXULAtoms::open,
-                                 nsXULAtoms::_true, eCaseMatters);
+    return aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::open,
+                                 nsGkAtoms::_true, eCaseMatters);
 }
 
 nsresult
@@ -1519,7 +1518,7 @@ nsXULContentBuilder::RemoveGeneratedContent(nsIContent* aElement)
             // to even check this subtree.
             // XXX should this check |child| rather than |element|? Otherwise
             //     it should be moved outside the inner loop. Bug 297290.
-            if (element->NodeInfo()->Equals(nsXULAtoms::_template,
+            if (element->NodeInfo()->Equals(nsGkAtoms::_template,
                                             kNameSpaceID_XUL) ||
                 !element->IsNodeOfType(nsINode::eELEMENT))
                 continue;
@@ -1564,12 +1563,12 @@ nsXULContentBuilder::IsLazyWidgetItem(nsIContent* aElement)
 
     nsIAtom *tag = aElement->Tag();
 
-    return (tag == nsXULAtoms::menu ||
-            tag == nsXULAtoms::menulist ||
-            tag == nsXULAtoms::menubutton ||
-            tag == nsXULAtoms::toolbarbutton ||
-            tag == nsXULAtoms::button ||
-            tag == nsXULAtoms::treeitem);
+    return (tag == nsGkAtoms::menu ||
+            tag == nsGkAtoms::menulist ||
+            tag == nsGkAtoms::menubutton ||
+            tag == nsGkAtoms::toolbarbutton ||
+            tag == nsGkAtoms::button ||
+            tag == nsGkAtoms::treeitem);
 }
 
 nsresult
@@ -1636,7 +1635,7 @@ nsXULContentBuilder::SetContainerAttrs(nsIContent *aElement,
     const nsAString& newcontainer =
         iscontainer ? true_ : false_;
 
-    aElement->SetAttr(kNameSpaceID_None, nsXULAtoms::container,
+    aElement->SetAttr(kNameSpaceID_None, nsGkAtoms::container,
                       newcontainer, aNotify);
 
     if (iscontainer && !(mFlags & eDontTestEmpty)) {
@@ -1646,7 +1645,7 @@ nsXULContentBuilder::SetContainerAttrs(nsIContent *aElement,
         const nsAString& newempty =
             (iscontainer && isempty) ? true_ : false_;
 
-        aElement->SetAttr(kNameSpaceID_None, nsXULAtoms::empty,
+        aElement->SetAttr(kNameSpaceID_None, nsGkAtoms::empty,
                           newempty, aNotify);
     }
 
@@ -1769,20 +1768,20 @@ nsXULContentBuilder::AttributeChanged(nsIDocument* aDocument,
     // we've notified the observer, so that content is already created
     // for the frame system to walk.
     if ((aContent->GetNameSpaceID() == kNameSpaceID_XUL) &&
-        (aAttribute == nsXULAtoms::open)) {
+        (aAttribute == nsGkAtoms::open)) {
         // We're on a XUL tag, and an ``open'' attribute changed.
-        if (aContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::open,
-                                  nsXULAtoms::_true, eCaseMatters))
+        if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::open,
+                                  nsGkAtoms::_true, eCaseMatters))
             OpenContainer(aContent);
         else
             CloseContainer(aContent);
     }
 
     if ((aNameSpaceID == kNameSpaceID_XUL) &&
-        ((aAttribute == nsXULAtoms::sort) ||
-         (aAttribute == nsXULAtoms::sortDirection) ||
-         (aAttribute == nsXULAtoms::sortResource) ||
-         (aAttribute == nsXULAtoms::sortResource2)))
+        ((aAttribute == nsGkAtoms::sort) ||
+         (aAttribute == nsGkAtoms::sortDirection) ||
+         (aAttribute == nsGkAtoms::sortResource) ||
+         (aAttribute == nsGkAtoms::sortResource2)))
         mSortState.initialized = PR_FALSE;
 
     // Pass along to the generic template builder.
@@ -2193,7 +2192,7 @@ nsXULContentBuilder::InsertSortedNode(nsIContent* aContainer,
         PRInt32 staticCount = 0;
 
         nsAutoString staticValue;
-        aContainer->GetAttr(kNameSpaceID_None, nsXULAtoms::staticHint, staticValue);
+        aContainer->GetAttr(kNameSpaceID_None, nsGkAtoms::staticHint, staticValue);
         if (!staticValue.IsEmpty())
         {
             // found "static" XUL element count hint
@@ -2206,7 +2205,7 @@ nsXULContentBuilder::InsertSortedNode(nsIContent* aContainer,
             for (PRUint32 childLoop = 0; childLoop < numChildren; ++childLoop) {
                 child = aContainer->GetChildAt(childLoop);
                 if (nsContentUtils::HasNonEmptyAttr(child, kNameSpaceID_None,
-                                                    nsXULAtoms::_template))
+                                                    nsGkAtoms::_template))
                     break;
                 else
                     ++staticCount;
@@ -2221,7 +2220,7 @@ nsXULContentBuilder::InsertSortedNode(nsIContent* aContainer,
             // save the "static" XUL element count hint
             nsAutoString valueStr;
             valueStr.AppendInt(staticCount);
-            aContainer->SetAttr(kNameSpaceID_None, nsXULAtoms::staticHint, valueStr, PR_FALSE);
+            aContainer->SetAttr(kNameSpaceID_None, nsGkAtoms::staticHint, valueStr, PR_FALSE);
         }
 
         if (staticCount <= 0) {

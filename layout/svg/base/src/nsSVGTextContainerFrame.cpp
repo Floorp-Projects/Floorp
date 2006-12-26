@@ -55,7 +55,7 @@ NS_IMETHODIMP_(nsSVGTextFrame *)
 nsSVGTextContainerFrame::GetTextFrame()
 {
   for (nsIFrame *frame = this; frame != nsnull; frame = frame->GetParent()) {
-    if (frame->GetType() == nsLayoutAtoms::svgTextFrame) {
+    if (frame->GetType() == nsGkAtoms::svgTextFrame) {
       return NS_STATIC_CAST(nsSVGTextFrame*, frame);
     }
   }

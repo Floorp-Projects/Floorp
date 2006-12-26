@@ -224,7 +224,7 @@ nsImageLoader::RedrawDirtyFrame(const nsRect* aDamageRect)
 
   nsRect bounds(nsPoint(0, 0), mFrame->GetSize());
 
-  if (mFrame->GetType() == nsLayoutAtoms::canvasFrame) {
+  if (mFrame->GetType() == nsGkAtoms::canvasFrame) {
     // The canvas's background covers the whole viewport.
     bounds = mFrame->GetOverflowRect();
   }

@@ -48,7 +48,7 @@
 #include "nsICharsetConverterManager.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIContent.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsNetUtil.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
@@ -190,8 +190,8 @@ IsScriptEventHandler(nsIScriptElement *aScriptElement)
   NS_ASSERTION(contElement, "nsIScriptElement isn't nsIContent");
 
   nsAutoString forAttr, eventAttr;
-  if (!contElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::_for, forAttr) ||
-      !contElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::event, eventAttr)) {
+  if (!contElement->GetAttr(kNameSpaceID_None, nsGkAtoms::_for, forAttr) ||
+      !contElement->GetAttr(kNameSpaceID_None, nsGkAtoms::event, eventAttr)) {
     return PR_FALSE;
   }
 

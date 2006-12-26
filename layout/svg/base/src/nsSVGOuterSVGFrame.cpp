@@ -123,7 +123,7 @@ nsSVGMutationObserver::UpdateTextFragmentTrees(nsIFrame *aFrame)
 {
   nsIFrame* kid = aFrame->GetFirstChild(nsnull);
   while (kid) {
-    if (kid->GetType() == nsLayoutAtoms::svgTextFrame) {
+    if (kid->GetType() == nsGkAtoms::svgTextFrame) {
       nsSVGTextFrame* textFrame = NS_STATIC_CAST(nsSVGTextFrame*, kid);
       textFrame->NotifyGlyphMetricsChange();
     } else {
@@ -518,7 +518,7 @@ nsSVGOuterSVGFrame::Paint(nsIRenderingContext& aRenderingContext,
 nsIAtom *
 nsSVGOuterSVGFrame::GetType() const
 {
-  return nsLayoutAtoms::svgOuterSVGFrame;
+  return nsGkAtoms::svgOuterSVGFrame;
 }
 
 //----------------------------------------------------------------------

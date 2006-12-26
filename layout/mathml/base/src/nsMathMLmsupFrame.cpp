@@ -93,7 +93,7 @@ nsMathMLmsupFrame::Place(nsIRenderingContext& aRenderingContext,
   nsAutoString value;
   nscoord supScriptShift = 0;
   GetAttribute(mContent, mPresentationData.mstyle,
-               nsMathMLAtoms::superscriptshift_, value);
+               nsGkAtoms::superscriptshift_, value);
   if (!value.IsEmpty()) {
     nsCSSValue cssValue;
     if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {

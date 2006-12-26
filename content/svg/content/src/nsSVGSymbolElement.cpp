@@ -43,7 +43,7 @@
 #include "nsIDOMSVGFitToViewBox.h"
 #include "nsSVGRect.h"
 #include "nsSVGAnimatedRect.h"
-#include "nsSVGAtoms.h"
+#include "nsGkAtoms.h"
 
 typedef nsSVGStylableElement nsSVGSymbolElementBase;
 
@@ -120,7 +120,7 @@ nsSVGSymbolElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedRect(getter_AddRefs(mViewBox), viewbox);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::viewBox, mViewBox);
+    rv = AddMappedSVGValue(nsGkAtoms::viewBox, mViewBox);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -133,7 +133,7 @@ nsSVGSymbolElement::Init()
                                           getter_AddRefs(mPreserveAspectRatio),
                                           preserveAspectRatio);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::preserveAspectRatio,
+    rv = AddMappedSVGValue(nsGkAtoms::preserveAspectRatio,
                            mPreserveAspectRatio);
     NS_ENSURE_SUCCESS(rv,rv);
   }

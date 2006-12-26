@@ -93,7 +93,7 @@ nsMathMLmsubFrame::Place (nsIRenderingContext& aRenderingContext,
   nscoord subScriptShift = 0;
   nsAutoString value;
   GetAttribute(mContent, mPresentationData.mstyle,
-               nsMathMLAtoms::subscriptshift_, value);
+               nsGkAtoms::subscriptshift_, value);
   if (!value.IsEmpty()) {
     nsCSSValue cssValue;
     if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {

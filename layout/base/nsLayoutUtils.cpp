@@ -178,7 +178,7 @@ nsIFrame*
 nsLayoutUtils::GetPageFrame(nsIFrame* aFrame)
 {
   for (nsIFrame* frame = aFrame; frame; frame = frame->GetParent()) {
-    if (frame->GetType() == nsLayoutAtoms::pageFrame) {
+    if (frame->GetType() == nsGkAtoms::pageFrame) {
       return frame;
     }
   }
@@ -187,7 +187,7 @@ nsLayoutUtils::GetPageFrame(nsIFrame* aFrame)
 
 nsIFrame*
 nsLayoutUtils::GetFloatFromPlaceholder(nsIFrame* aFrame) {
-  if (nsLayoutAtoms::placeholderFrame != aFrame->GetType()) {
+  if (nsGkAtoms::placeholderFrame != aFrame->GetType()) {
     return nsnull;
   }
 
@@ -1187,7 +1187,7 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
 #endif
   }
       
-  if (aFrame->GetType() == nsLayoutAtoms::tableFrame) {
+  if (aFrame->GetType() == nsGkAtoms::tableFrame) {
     // Tables can't shrink smaller than their intrinsic minimum width,
     // no matter what.
     min = aFrame->GetMinWidth(aRenderingContext);

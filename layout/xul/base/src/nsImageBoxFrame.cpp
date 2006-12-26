@@ -45,8 +45,7 @@
 #include "nsImageBoxFrame.h"
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
-#include "nsHTMLAtoms.h"
-#include "nsXULAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsCOMPtr.h"
@@ -61,8 +60,6 @@
 #include "nsIPresShell.h"
 #include "nsIImage.h"
 #include "nsIWidget.h"
-#include "nsHTMLAtoms.h"
-#include "nsLayoutAtoms.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsStyleConsts.h"
@@ -175,13 +172,13 @@ nsImageBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
   nsresult rv = nsLeafBoxFrame::AttributeChanged(aNameSpaceID, aAttribute,
                                                  aModType);
 
-  if (aAttribute == nsHTMLAtoms::src) {
+  if (aAttribute == nsGkAtoms::src) {
     UpdateImage();
     AddStateBits(NS_FRAME_IS_DIRTY);
     GetPresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eStyleChange);
   }
-  else if (aAttribute == nsXULAtoms::validate)
+  else if (aAttribute == nsGkAtoms::validate)
     UpdateLoadFlags();
 
   return rv;
@@ -257,7 +254,7 @@ nsImageBoxFrame::UpdateImage()
 
   // get the new image src
   nsAutoString src;
-  mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, src);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src);
   mUseSrcAttr = !src.IsEmpty();
   if (mUseSrcAttr) {
     nsIDocument* doc = mContent->GetDocument();
@@ -301,8 +298,8 @@ void
 nsImageBoxFrame::UpdateLoadFlags()
 {
   static nsIContent::AttrValuesArray strings[] =
-    {&nsXULAtoms::always, &nsXULAtoms::never, nsnull};
-  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsXULAtoms::validate,
+    {&nsGkAtoms::always, &nsGkAtoms::never, nsnull};
+  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::validate,
                                     strings, eCaseMatters)) {
     case 0:
       mLoadFlags = nsIRequest::VALIDATE_ALWAYS;
@@ -514,7 +511,7 @@ nsImageBoxFrame::GetAscent(nsBoxLayoutState& aState, nscoord& aCoord)
 nsIAtom*
 nsImageBoxFrame::GetType() const
 {
-  return nsLayoutAtoms::imageBoxFrame;
+  return nsGkAtoms::imageBoxFrame;
 }
 
 #ifdef DEBUG

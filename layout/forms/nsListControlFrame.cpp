@@ -43,7 +43,7 @@
 #include "nsUnicharUtils.h"
 #include "nsListControlFrame.h"
 #include "nsFormControlFrame.h" // for COMPARE macro
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIFormControl.h"
 #include "nsIDeviceContext.h" 
 #include "nsIDocument.h"
@@ -71,7 +71,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
 #include "nsILookAndFeel.h"
-#include "nsLayoutAtoms.h"
 #include "nsIFontMetrics.h"
 #include "nsIScrollableFrame.h"
 #include "nsIDOMEventTarget.h"
@@ -439,14 +438,14 @@ GetMaxOptionHeight(nsIFrame* aContainer)
 static inline PRBool
 IsOptGroup(nsIContent *aContent)
 {
-  return (aContent->NodeInfo()->Equals(nsHTMLAtoms::optgroup) &&
+  return (aContent->NodeInfo()->Equals(nsGkAtoms::optgroup) &&
           aContent->IsNodeOfType(nsINode::eHTML));
 }
 
 static inline PRBool
 IsOption(nsIContent *aContent)
 {
-  return (aContent->NodeInfo()->Equals(nsHTMLAtoms::option) &&
+  return (aContent->NodeInfo()->Equals(nsGkAtoms::option) &&
           aContent->IsNodeOfType(nsINode::eHTML));
 }
 
@@ -1077,7 +1076,7 @@ nsListControlFrame::HandleEvent(nsPresContext* aPresContext,
   if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE || uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
     return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 
-  if (mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled))
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled))
     return NS_OK;
 
   return nsHTMLScrollFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
@@ -1721,9 +1720,9 @@ nsresult
 nsListControlFrame::SetFormProperty(nsIAtom* aName,
                                 const nsAString& aValue)
 {
-  if (nsHTMLAtoms::selected == aName) {
+  if (nsGkAtoms::selected == aName) {
     return NS_ERROR_INVALID_ARG; // Selected is readonly according to spec.
-  } else if (nsHTMLAtoms::selectedindex == aName) {
+  } else if (nsGkAtoms::selectedindex == aName) {
     // You shouldn't be calling me for this!!!
     return NS_ERROR_INVALID_ARG;
   }
@@ -1739,7 +1738,7 @@ nsresult
 nsListControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) const
 {
   // Get the selected value of option from local cache (optimization vs. widget)
-  if (nsHTMLAtoms::selected == aName) {
+  if (nsGkAtoms::selected == aName) {
     nsAutoString val(aValue);
     PRInt32 error = 0;
     PRBool selected = PR_FALSE;
@@ -1750,7 +1749,7 @@ nsListControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) const
     aValue.Assign(selected ? NS_LITERAL_STRING("1") : NS_LITERAL_STRING("0"));
     
   // For selectedIndex, get the value from the widget
-  } else if (nsHTMLAtoms::selectedindex == aName) {
+  } else if (nsGkAtoms::selectedindex == aName) {
     // You shouldn't be calling me for this!!!
     return NS_ERROR_INVALID_ARG;
   }
@@ -1840,7 +1839,7 @@ nsListControlFrame::DidReflow(nsPresContext*           aPresContext,
 nsIAtom*
 nsListControlFrame::GetType() const
 {
-  return nsLayoutAtoms::listControlFrame; 
+  return nsGkAtoms::listControlFrame; 
 }
 
 PRBool
@@ -2005,7 +2004,7 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
 
   mButtonDown = PR_FALSE;
 
-  if (mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
     return NS_OK;
   }
 
@@ -2248,7 +2247,7 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 
   mButtonDown = PR_TRUE;
 
-  if (mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
     return NS_OK;
   }
 
@@ -2576,7 +2575,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 {
   NS_ASSERTION(aKeyEvent, "keyEvent is null.");
 
-  if (mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled))
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled))
     return NS_OK;
 
   // Start by making sure we can query for a key event

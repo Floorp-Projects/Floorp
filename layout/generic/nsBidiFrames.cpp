@@ -60,12 +60,12 @@ nsDirectionalFrame::GetChar(void) const
 /**
  * Get the "type" of the frame
  *
- * @see nsLayoutAtoms::directionalFrame
+ * @see nsGkAtoms::directionalFrame
  */
 nsIAtom*
 nsDirectionalFrame::GetType() const
 { 
-  return nsLayoutAtoms::directionalFrame; 
+  return nsGkAtoms::directionalFrame; 
 }
   
 NS_IMETHODIMP

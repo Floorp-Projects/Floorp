@@ -62,9 +62,9 @@ nsXMLNameSpaceMap::Create()
   nsXMLNameSpaceMap *map = new nsXMLNameSpaceMap();
   NS_ENSURE_TRUE(map, nsnull);
 
-  nsresult rv = map->AddPrefix(nsLayoutAtoms::xmlns,
+  nsresult rv = map->AddPrefix(nsGkAtoms::xmlns,
                                kNameSpaceID_XMLNS);
-  rv |= map->AddPrefix(nsLayoutAtoms::xml, kNameSpaceID_XML);
+  rv |= map->AddPrefix(nsGkAtoms::xml, kNameSpaceID_XML);
 
   if (NS_FAILED(rv)) {
     delete map;

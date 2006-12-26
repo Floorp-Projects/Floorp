@@ -57,7 +57,6 @@
 #include "nsTransform2D.h"
 #include "nsIDeviceContext.h"
 #include "nsIContent.h"
-#include "nsHTMLAtoms.h"
 #include "nsIDocument.h"
 #include "nsIScrollableFrame.h"
 #include "imgIRequest.h"
@@ -1587,8 +1586,8 @@ PRBool GetBGColorForHTMLElement( nsPresContext *aPresContext,
         // make sure that this is the HTML element
         nsIAtom *tag = pContent->Tag();
         NS_ASSERTION(tag, "Tag could not be retrieved from root content element");
-        if (tag == nsHTMLAtoms::html ||
-            tag == nsHTMLAtoms::body) {
+        if (tag == nsGkAtoms::html ||
+            tag == nsGkAtoms::body) {
           // use this guy's color
           nsIFrame *pFrame = shell->GetPrimaryFrameFor(pContent);
           if (pFrame) {
@@ -2506,11 +2505,11 @@ GetRootScrollableFrame(nsPresContext* aPresContext, nsIFrame* aRootFrame)
 {
   nsIScrollableFrame* scrollableFrame = nsnull;
 
-  if (nsLayoutAtoms::viewportFrame == aRootFrame->GetType()) {
+  if (nsGkAtoms::viewportFrame == aRootFrame->GetType()) {
     nsIFrame* childFrame = aRootFrame->GetFirstChild(nsnull);
 
     if (childFrame) {
-      if (nsLayoutAtoms::scrollFrame == childFrame->GetType()) {
+      if (nsGkAtoms::scrollFrame == childFrame->GetType()) {
         // Use this frame, even if we are using GFX frames for the
         // viewport, which contains another scroll frame below this
         // frame, since the GFX scrollport frame does not implement
@@ -2597,12 +2596,12 @@ inline nsIFrame*
 IsCanvasFrame(nsIFrame *aFrame)
 {
   nsIAtom* frameType = aFrame->GetType();
-  if (frameType == nsLayoutAtoms::canvasFrame ||
-      frameType == nsLayoutAtoms::rootFrame ||
-      frameType == nsLayoutAtoms::pageFrame ||
-      frameType == nsLayoutAtoms::pageContentFrame) {
+  if (frameType == nsGkAtoms::canvasFrame ||
+      frameType == nsGkAtoms::rootFrame ||
+      frameType == nsGkAtoms::pageFrame ||
+      frameType == nsGkAtoms::pageContentFrame) {
     return aFrame;
-  } else if (frameType == nsLayoutAtoms::viewportFrame) {
+  } else if (frameType == nsGkAtoms::viewportFrame) {
     nsIFrame* firstChild = aFrame->GetFirstChild(nsnull);
     if (firstChild) {
       return firstChild;
@@ -2623,7 +2622,7 @@ FindCanvasBackground(nsIFrame* aForFrame,
     const nsStyleBackground* result = firstChild->GetStyleBackground();
     nsIFrame* topFrame = aForFrame;
 
-    if (firstChild->GetType() == nsLayoutAtoms::pageContentFrame) {
+    if (firstChild->GetType() == nsGkAtoms::pageContentFrame) {
       topFrame = firstChild->GetFirstChild(nsnull);
       NS_ASSERTION(topFrame,
                    "nsPageContentFrame is missing a normal flow child");
@@ -2706,7 +2705,7 @@ FindElementBackground(nsIFrame* aForFrame,
   if (!parentFrame)
     return PR_TRUE; // no parent to look at
 
-  if (content->Tag() != nsHTMLAtoms::body)
+  if (content->Tag() != nsGkAtoms::body)
     return PR_TRUE; // not frame for <BODY> element
 
   // We should only look at the <html> background if we're in an HTML document
@@ -2978,8 +2977,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   nsRect bgOriginArea;
 
   nsIAtom* frameType = aForFrame->GetType();
-  if (frameType == nsLayoutAtoms::inlineFrame ||
-      frameType == nsLayoutAtoms::positionedInlineFrame) {
+  if (frameType == nsGkAtoms::inlineFrame ||
+      frameType == nsGkAtoms::positionedInlineFrame) {
     switch (aColor.mBackgroundInlinePolicy) {
     case NS_STYLE_BG_INLINE_POLICY_EACH_BOX:
       bgOriginArea = aBorderArea;
@@ -3124,7 +3123,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     // relative to aForFrame
     anchor -= aForFrame->GetOffsetTo(rootFrame);
   } else {
-    if (frameType == nsLayoutAtoms::canvasFrame) {
+    if (frameType == nsGkAtoms::canvasFrame) {
       // If the frame is the canvas, the image is placed relative to
       // the root element's (first) frame (see bug 46446)
       nsRect firstRootElementFrameArea;

@@ -37,7 +37,7 @@
 #include "nsIDOMHTMLLIElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsMappedAttributes.h"
@@ -130,12 +130,12 @@ nsHTMLLIElement::ParseAttribute(PRInt32 aNamespaceID,
                                 nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsHTMLAtoms::type) {
+    if (aAttribute == nsGkAtoms::type) {
       return aResult.ParseEnumValue(aValue, kOrderedListItemTypeTable,
                                     PR_TRUE) ||
              aResult.ParseEnumValue(aValue, kUnorderedListItemTypeTable);
     }
-    if (aAttribute == nsHTMLAtoms::value) {
+    if (aAttribute == nsGkAtoms::value) {
       return aResult.ParseIntWithBounds(aValue, 0);
     }
   }
@@ -151,7 +151,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   if (aData->mSID == eStyleStruct_List) {
     if (aData->mListData->mType.GetUnit() == eCSSUnit_Null) {
       // type: enum
-      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::type);
+      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::type);
       if (value && value->Type() == nsAttrValue::eEnum)
         aData->mListData->mType.SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
     }
@@ -164,7 +164,7 @@ NS_IMETHODIMP_(PRBool)
 nsHTMLLIElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
-    { &nsHTMLAtoms::type },
+    { &nsGkAtoms::type },
     { nsnull },
   };
 

@@ -45,7 +45,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
 #include "nsEventStateManager.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsIDocument.h"
@@ -586,7 +586,7 @@ nsHTMLFormElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify)
 {
-  if ((aName == nsHTMLAtoms::action || aName == nsHTMLAtoms::target) &&
+  if ((aName == nsGkAtoms::action || aName == nsGkAtoms::target) &&
       aNameSpaceID == kNameSpaceID_None) {
     if (mPendingSubmission) {
       // aha, there is a pending submission that means we're in
@@ -613,24 +613,24 @@ NS_IMPL_STRING_ATTR(nsHTMLFormElement, Name, name)
 NS_IMETHODIMP
 nsHTMLFormElement::GetAction(nsAString& aValue)
 {
-  GetAttr(kNameSpaceID_None, nsHTMLAtoms::action, aValue);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::action, aValue);
   if (aValue.IsEmpty()) {
     // Avoid resolving action="" to the base uri, bug 297761.
     return NS_OK;
   }
-  return GetURIAttr(nsHTMLAtoms::action, nsnull, aValue);
+  return GetURIAttr(nsGkAtoms::action, nsnull, aValue);
 }
 
 NS_IMETHODIMP
 nsHTMLFormElement::SetAction(const nsAString& aValue)
 {
-  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::action, aValue, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::action, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
 nsHTMLFormElement::GetTarget(nsAString& aValue)
 {
-  if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, aValue)) {
+  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue)) {
     GetBaseTarget(aValue);
   }
   return NS_OK;
@@ -639,7 +639,7 @@ nsHTMLFormElement::GetTarget(nsAString& aValue)
 NS_IMETHODIMP
 nsHTMLFormElement::SetTarget(const nsAString& aValue)
 {
-  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::target, aValue, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -689,10 +689,10 @@ nsHTMLFormElement::ParseAttribute(PRInt32 aNamespaceID,
                                   nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsHTMLAtoms::method) {
+    if (aAttribute == nsGkAtoms::method) {
       return aResult.ParseEnumValue(aValue, kFormMethodTable);
     }
-    if (aAttribute == nsHTMLAtoms::enctype) {
+    if (aAttribute == nsGkAtoms::enctype) {
       return aResult.ParseEnumValue(aValue, kFormEnctypeTable);
     }
   }
@@ -1816,7 +1816,7 @@ nsHTMLFormElement::WalkRadioGroup(const nsAString& aName,
       if (control->GetType() == NS_FORM_INPUT_RADIO) {
         nsCOMPtr<nsIContent> controlContent(do_QueryInterface(control));
         if (controlContent) {
-          if (controlContent->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::name,
+          if (controlContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
                                           EmptyString(), eCaseMatters)) {
             aVisitor->Visit(control, &stopIterating);
             if (stopIterating) {

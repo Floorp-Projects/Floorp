@@ -39,7 +39,7 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIPresShell.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
@@ -259,7 +259,7 @@ nsHTMLButtonElement::SetFocus(nsPresContext* aPresContext)
     return;
 
   // first see if we are disabled or not. If disabled then do nothing.
-  if (HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
     return;
   }
 
@@ -286,7 +286,7 @@ nsHTMLButtonElement::ParseAttribute(PRInt32 aNamespaceID,
                                     const nsAString& aValue,
                                     nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::type && kNameSpaceID_None == aNamespaceID) {
+  if (aAttribute == nsGkAtoms::type && kNameSpaceID_None == aNamespaceID) {
     // XXX ARG!! This is major evilness. ParseAttribute
     // shouldn't set members. Override SetAttr instead
     PRBool res = aResult.ParseEnumValue(aValue, kButtonTypeTable);
@@ -516,14 +516,14 @@ nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 nsresult
 nsHTMLButtonElement::GetDefaultValue(nsAString& aDefaultValue)
 {
-  GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aDefaultValue);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::value, aDefaultValue);
   return NS_OK;
 }
 
 nsresult
 nsHTMLButtonElement::SetDefaultValue(const nsAString& aDefaultValue)
 {
-  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aDefaultValue, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::value, aDefaultValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -558,7 +558,7 @@ nsHTMLButtonElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   // Get the name (if no name, no submit)
   //
   nsAutoString name;
-  if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, name)) {
+  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::name, name)) {
     return NS_OK;
   }
 
@@ -590,7 +590,7 @@ nsresult
 nsHTMLButtonElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                    const nsAString* aValue, PRBool aNotify)
 {
-  if (aNotify && aName == nsHTMLAtoms::disabled &&
+  if (aNotify && aName == nsGkAtoms::disabled &&
       aNameSpaceID == kNameSpaceID_None) {
     mDisabledChanged = PR_TRUE;
   }

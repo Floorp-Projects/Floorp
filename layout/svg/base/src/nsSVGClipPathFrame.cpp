@@ -39,7 +39,7 @@
 #include "nsIDOMSVGClipPathElement.h"
 #include "nsSVGClipPathFrame.h"
 #include "nsIDOMSVGAnimatedEnum.h"
-#include "nsSVGAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsSVGUtils.h"
 #include "nsSVGGraphicElement.h"
 #include "gfxContext.h"
@@ -85,7 +85,7 @@ NS_GetSVGClipPathFrame(nsSVGClipPathFrame **aResult,
     return NS_ERROR_FAILURE;
 
   nsIAtom* frameType = cpframe->GetType();
-  if (frameType != nsLayoutAtoms::svgClipPathFrame)
+  if (frameType != nsGkAtoms::svgClipPathFrame)
     return NS_ERROR_FAILURE;
 
   *aResult = (nsSVGClipPathFrame *)cpframe;
@@ -221,7 +221,7 @@ nsSVGClipPathFrame::IsTrivial(PRBool *aTrivial)
 nsIAtom *
 nsSVGClipPathFrame::GetType() const
 {
-  return nsLayoutAtoms::svgClipPathFrame;
+  return nsGkAtoms::svgClipPathFrame;
 }
 
 already_AddRefed<nsIDOMSVGMatrix>

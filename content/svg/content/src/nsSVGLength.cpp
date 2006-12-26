@@ -39,7 +39,7 @@
 
 #include "nsSVGLength.h"
 #include "nsIDOMSVGMatrix.h"
-#include "nsSVGAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsSVGValue.h"
 #include "nsTextFormatter.h"
 #include "prdtoa.h"
@@ -338,31 +338,31 @@ nsSVGLength::GetValueAsString(nsAString & aValueAsString)
     case SVG_LENGTHTYPE_NUMBER:
       return NS_OK;
     case SVG_LENGTHTYPE_PX:
-      UnitAtom = nsSVGAtoms::px;
+      UnitAtom = nsGkAtoms::px;
       break;
     case SVG_LENGTHTYPE_MM:
-      UnitAtom = nsSVGAtoms::mm;
+      UnitAtom = nsGkAtoms::mm;
       break;
     case SVG_LENGTHTYPE_CM:
-      UnitAtom = nsSVGAtoms::cm;
+      UnitAtom = nsGkAtoms::cm;
       break;
     case SVG_LENGTHTYPE_IN:
-      UnitAtom = nsSVGAtoms::in;
+      UnitAtom = nsGkAtoms::in;
       break;
     case SVG_LENGTHTYPE_PT:
-      UnitAtom = nsSVGAtoms::pt;
+      UnitAtom = nsGkAtoms::pt;
       break;
     case SVG_LENGTHTYPE_PC:
-      UnitAtom = nsSVGAtoms::pc;
+      UnitAtom = nsGkAtoms::pc;
       break;
     case SVG_LENGTHTYPE_EMS:
-      UnitAtom = nsSVGAtoms::em;
+      UnitAtom = nsGkAtoms::em;
       break;
     case SVG_LENGTHTYPE_EXS:
-      UnitAtom = nsSVGAtoms::ex;
+      UnitAtom = nsGkAtoms::ex;
       break;
     case SVG_LENGTHTYPE_PERCENTAGE:
-      UnitAtom = nsSVGAtoms::percentage;
+      UnitAtom = nsGkAtoms::percentage;
       break;
     default:
       NS_NOTREACHED("Unknown unit");
@@ -398,23 +398,23 @@ nsSVGLength::SetValueAsString(const nsAString & aValueAsString)
       }
       else {
         nsCOMPtr<nsIAtom> unitAtom = do_GetAtom(unitStr);
-        if (unitAtom == nsSVGAtoms::px)
+        if (unitAtom == nsGkAtoms::px)
           unitType = SVG_LENGTHTYPE_PX;
-        else if (unitAtom == nsSVGAtoms::mm)
+        else if (unitAtom == nsGkAtoms::mm)
           unitType = SVG_LENGTHTYPE_MM;
-        else if (unitAtom == nsSVGAtoms::cm)
+        else if (unitAtom == nsGkAtoms::cm)
           unitType = SVG_LENGTHTYPE_CM;
-        else if (unitAtom == nsSVGAtoms::in)
+        else if (unitAtom == nsGkAtoms::in)
           unitType = SVG_LENGTHTYPE_IN;
-        else if (unitAtom == nsSVGAtoms::pt)
+        else if (unitAtom == nsGkAtoms::pt)
           unitType = SVG_LENGTHTYPE_PT;
-        else if (unitAtom == nsSVGAtoms::pc)
+        else if (unitAtom == nsGkAtoms::pc)
           unitType = SVG_LENGTHTYPE_PC;
-        else if (unitAtom == nsSVGAtoms::em)
+        else if (unitAtom == nsGkAtoms::em)
           unitType = SVG_LENGTHTYPE_EMS;
-        else if (unitAtom == nsSVGAtoms::ex)
+        else if (unitAtom == nsGkAtoms::ex)
           unitType = SVG_LENGTHTYPE_EXS;
-        else if (unitAtom == nsSVGAtoms::percentage)
+        else if (unitAtom == nsGkAtoms::percentage)
           unitType = SVG_LENGTHTYPE_PERCENTAGE;
       }
       if (IsValidUnitType(unitType)){

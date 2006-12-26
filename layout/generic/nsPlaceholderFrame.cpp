@@ -147,7 +147,7 @@ nsPlaceholderFrame::GetSplittableType() const
 nsIAtom*
 nsPlaceholderFrame::GetType() const
 {
-  return nsLayoutAtoms::placeholderFrame; 
+  return nsGkAtoms::placeholderFrame; 
 }
 
 /* virtual */ PRBool

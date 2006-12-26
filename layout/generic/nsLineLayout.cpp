@@ -64,7 +64,6 @@
 #include "nsIContent.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
-#include "nsHTMLAtoms.h"
 #include "nsTextFragment.h"
 #include "nsBidiUtils.h"
 #include "nsLayoutUtils.h"
@@ -108,7 +107,7 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
     mTextIndent(0)
 {
   NS_ASSERTION(aSpaceManager || aOuterReflowState->frame->GetType() ==
-                                  nsLayoutAtoms::letterFrame,
+                                  nsGkAtoms::letterFrame,
                "space manager should be present");
   MOZ_COUNT_CTOR(nsLineLayout);
 
@@ -347,7 +346,7 @@ nsLineLayout::UpdateBand(nscoord aX, nscoord aY,
   SetFlag(LL_IMPACTEDBYFLOATS, PR_TRUE);
 
   SetFlag(LL_LASTFLOATWASLETTERFRAME,
-          nsLayoutAtoms::letterFrame == aFloatFrame->GetType());
+          nsGkAtoms::letterFrame == aFloatFrame->GetType());
 
   // Now update all of the open spans...
   mRootSpan->mContainsFloat = PR_TRUE;              // make sure mRootSpan gets updated too
@@ -827,7 +826,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // the float.
   PRBool placedFloat = PR_FALSE;
   if (frameType) {
-    if (nsLayoutAtoms::placeholderFrame == frameType) {
+    if (nsGkAtoms::placeholderFrame == frameType) {
       pfd->SetFlag(PFD_SKIPWHENTRIMMINGWHITESPACE, PR_TRUE);
       nsIFrame* outOfFlowFrame = nsLayoutUtils::GetFloatFromPlaceholder(aFrame);
       if (outOfFlowFrame) {
@@ -844,12 +843,12 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         if (!placedFloat) {
           aReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
         }
-        if (outOfFlowFrame->GetType() == nsLayoutAtoms::letterFrame) {
+        if (outOfFlowFrame->GetType() == nsGkAtoms::letterFrame) {
           SetFlag(LL_FIRSTLETTERSTYLEOK, PR_FALSE);
         }
       }
     }
-    else if (nsLayoutAtoms::textFrame == frameType) {
+    else if (nsGkAtoms::textFrame == frameType) {
       // Note non-empty text-frames for inline frame compatibility hackery
       pfd->SetFlag(PFD_ISTEXTFRAME, PR_TRUE);
       // XXX An empty text frame at the end of the line seems not
@@ -872,7 +871,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
                               *(frag->Get2b() + frag->GetLength() - 1) :*/ *frag->Get2b();
               if (IS_BIDI_DIACRITIC(ch)) {
                 mPresContext->PropertyTable()->SetProperty(aFrame,
-                           nsLayoutAtoms::endsInDiacritic, NS_INT32_TO_PTR(ch),
+                           nsGkAtoms::endsInDiacritic, NS_INT32_TO_PTR(ch),
                                                            nsnull, nsnull);
               }
             }
@@ -881,10 +880,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         }
       }
     }
-    else if (nsLayoutAtoms::letterFrame==frameType) {
+    else if (nsGkAtoms::letterFrame==frameType) {
       pfd->SetFlag(PFD_ISLETTERFRAME, PR_TRUE);
     }
-    else if (nsLayoutAtoms::brFrame == frameType) {
+    else if (nsGkAtoms::brFrame == frameType) {
       pfd->SetFlag(PFD_SKIPWHENTRIMMINGWHITESPACE, PR_TRUE);
     }
   }
@@ -1149,7 +1148,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
 
 #ifdef FIX_BUG_50257
   // another special case:  always place a BR
-  if (nsLayoutAtoms::brFrame == pfd->mFrame->GetType()) {
+  if (nsGkAtoms::brFrame == pfd->mFrame->GetType()) {
 #ifdef NOISY_CAN_PLACE_FRAME
     printf("   ==> BR frame fits\n");
 #endif
@@ -1340,8 +1339,8 @@ nsLineLayout::IsPercentageAwareReplacedElement(nsPresContext *aPresContext,
   if (aFrame->IsFrameOfType(nsIFrame::eReplaced))
   {
     nsIAtom* frameType = aFrame->GetType();
-    if (nsLayoutAtoms::brFrame != frameType && 
-        nsLayoutAtoms::textFrame != frameType)
+    if (nsGkAtoms::brFrame != frameType && 
+        nsGkAtoms::textFrame != frameType)
     {
       const nsStyleMargin* margin = aFrame->GetStyleMargin();
       if (IsPercentageUnitSides(&margin->mMargin)) {
@@ -2063,7 +2062,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
           // Check if it's a BR frame that is not alone on its line (it
           // is given a height of zero to indicate this), and if so reset
           // yTop and yBottom so that BR frames don't influence the line.
-          if (nsLayoutAtoms::brFrame == frame->GetType()) {
+          if (nsGkAtoms::brFrame == frame->GetType()) {
             yTop = VERTICAL_ALIGN_FRAMES_NO_MINIMUM;
             yBottom = VERTICAL_ALIGN_FRAMES_NO_MAXIMUM;
           }
@@ -2113,7 +2112,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       if (blockContent) {
         nsIAtom *blockTagAtom = blockContent->Tag();
         // (2) above, if the first line of LI
-        if (isFirstLine && blockTagAtom == nsHTMLAtoms::li) {
+        if (isFirstLine && blockTagAtom == nsGkAtoms::li) {
           // if the line is empty, then don't force the min height
           // (see bug 75963)
           if (!IsZeroHeight()) {
@@ -2123,9 +2122,9 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         }
         // (3) above, if the last line of LI, DT, or DD
         else if (!applyMinLH && isLastLine &&
-                 ((blockTagAtom == nsHTMLAtoms::li) ||
-                  (blockTagAtom == nsHTMLAtoms::dt) ||
-                  (blockTagAtom == nsHTMLAtoms::dd))) {
+                 ((blockTagAtom == nsGkAtoms::li) ||
+                  (blockTagAtom == nsGkAtoms::dt) ||
+                  (blockTagAtom == nsGkAtoms::dd))) {
           applyMinLH = PR_TRUE;
         }
       }

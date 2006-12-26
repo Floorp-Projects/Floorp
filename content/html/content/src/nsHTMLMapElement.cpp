@@ -37,7 +37,7 @@
 #include "nsIDOMHTMLMapElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsContentList.h"
@@ -140,7 +140,7 @@ nsHTMLMapElement::GetAreas(nsIDOMHTMLCollection** aAreas)
   if (!mAreas) {
     // Not using NS_GetContentList because this should not be cached
     mAreas = new nsContentList(this,
-                               nsHTMLAtoms::area,
+                               nsGkAtoms::area,
                                mNodeInfo->NamespaceID(),
                                PR_FALSE);
 
