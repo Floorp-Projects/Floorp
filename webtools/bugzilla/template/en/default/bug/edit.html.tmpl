@@ -793,7 +793,7 @@
 
 [% BLOCK select %]
   <td>
-    [% IF bug.check_can_change_field(selname, 0, 1) %]
+    [% IF bug.check_can_change_field(selname, 0, 1) AND bug.choices.${selname}.size > 1 %]
       <select id="[% selname %]" name="[% selname %]">
         [% FOREACH x = bug.choices.${selname} %]
           <option value="[% x FILTER html %]"
