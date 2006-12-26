@@ -52,6 +52,7 @@
 #include "nsContentUtils.h"
 
 #include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 
 // Form related includes
 #include "nsIDOMHTMLFormElement.h"
