@@ -272,6 +272,24 @@ var PlacesOrganizer = {
                 getService(Ci.nsINavBookmarksService);
       bms.exportBookmarksHTML(fp.file);
     }
+  },
+
+  updateStatusBarForView: function G_updateStatusBarForView(aView) {
+    var statusText = "";
+    var selectedNode = aView.selectedNode;
+    if (selectedNode) {
+      if (PlacesUtils.nodeIsFolder(selectedNode)) {
+        var strings = document.getElementById("placeBundle");
+        var childsCount =
+          PlacesUtils.getFolderContents(asFolder(selectedNode).folderId)
+                     .childCount;
+        statusText = strings.getFormattedString("status_foldercount",
+                                                [childsCount]);
+      }
+      else if (PlacesUtils.nodeIsBookmark(selectedNode))
+        statusText = selectedNode.uri;
+    }
+    document.getElementById("status").label = statusText;
   }
 };
 
