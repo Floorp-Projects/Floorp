@@ -2050,12 +2050,19 @@ void nsCellMap::ShrinkWithoutCell(nsTableCellMap&   aMap,
   // remove the deleted cell and cellData entries for it
   for (rowX = aRowIndex; rowX <= endRowIndex; rowX++) {
     CellDataArray& row = mRows[rowX];
-    // Shift things by 1 so the aColIndex == 0 case works right with
-    // our unsigned int colX.
-    for (colX = endColIndex + 1; colX > PRUint32(aColIndex); colX--) {
-      DestroyCellData(row[colX-1]);
+
+    // endIndexForRow points at the first slot we don't want to clean up.  This
+    // makes the aColIndex == 0 case work right with our unsigned int colX.
+    NS_ASSERTION(endColIndex + 1 <= row.Length(), "span beyond the row size!");
+    PRUint32 endIndexForRow = PR_MIN(endColIndex + 1, row.Length());
+
+    // Since endIndexForRow <= row.Length(), enough to compare aColIndex to it.
+    if (PRUint32(aColIndex) < endIndexForRow) {
+      for (colX = endIndexForRow; colX > PRUint32(aColIndex); colX--) {
+        DestroyCellData(row[colX-1]);
+      }
+      row.RemoveElementsAt(aColIndex, endIndexForRow - aColIndex);
     }
-    row.RemoveElementsAt(aColIndex, endColIndex - aColIndex + 1);
   }
 
   numCols = aMap.GetColCount();
