@@ -47,7 +47,6 @@
 #include "nsIAtom.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLParts.h"
-#include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsFont.h"
@@ -68,7 +67,7 @@ NS_NewLegendFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 nsIAtom*
 nsLegendFrame::GetType() const
 {
-  return nsLayoutAtoms::legendFrame; 
+  return nsGkAtoms::legendFrame; 
 }
 
 void
@@ -121,7 +120,7 @@ PRInt32 nsLegendFrame::GetAlign()
   nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
 
   if (content) {
-    const nsAttrValue* attr = content->GetParsedAttr(nsHTMLAtoms::align);
+    const nsAttrValue* attr = content->GetParsedAttr(nsGkAtoms::align);
     if (attr && attr->Type() == nsAttrValue::eEnum) {
       intValue = attr->GetEnumValue();
     }

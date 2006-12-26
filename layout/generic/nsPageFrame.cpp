@@ -94,7 +94,7 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,
   nsIFrame*           firstFrame  = mFrames.FirstChild();
   nsPageContentFrame* contentPage = NS_STATIC_CAST(nsPageContentFrame*, firstFrame);
   NS_ASSERTION(contentPage, "There should always be a content page");
-  NS_ASSERTION(nsLayoutAtoms::pageContentFrame == firstFrame->GetType(),
+  NS_ASSERTION(nsGkAtoms::pageContentFrame == firstFrame->GetType(),
                "This frame isn't a pageContentFrame");
 
   if (contentPage && GetPrevInFlow() && !contentPage->GetFirstChild(nsnull)) {
@@ -181,7 +181,7 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,
 nsIAtom*
 nsPageFrame::GetType() const
 {
-  return nsLayoutAtoms::pageFrame; 
+  return nsGkAtoms::pageFrame; 
 }
 
 #ifdef DEBUG
@@ -655,7 +655,7 @@ nsPageBreakFrame::Reflow(nsPresContext*          aPresContext,
 nsIAtom*
 nsPageBreakFrame::GetType() const
 {
-  return nsLayoutAtoms::pageBreakFrame; 
+  return nsGkAtoms::pageBreakFrame; 
 }
 
 

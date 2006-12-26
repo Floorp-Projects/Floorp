@@ -38,7 +38,7 @@
 #include "nsIDOMHTMLFontElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDeviceContext.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
@@ -143,7 +143,7 @@ nsHTMLFontElement::ParseAttribute(PRInt32 aNamespaceID,
                                   nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsHTMLAtoms::size) {
+    if (aAttribute == nsGkAtoms::size) {
       nsAutoString tmp(aValue);
       tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
       PRUnichar ch = tmp.IsEmpty() ? 0 : tmp.First();
@@ -154,11 +154,11 @@ nsHTMLFontElement::ParseAttribute(PRInt32 aNamespaceID,
 
       return aResult.ParseIntValue(aValue);
     }
-    if (aAttribute == nsHTMLAtoms::pointSize ||
-        aAttribute == nsHTMLAtoms::fontWeight) {
+    if (aAttribute == nsGkAtoms::pointSize ||
+        aAttribute == nsGkAtoms::fontWeight) {
       return aResult.ParseIntValue(aValue);
     }
-    if (aAttribute == nsHTMLAtoms::color) {
+    if (aAttribute == nsGkAtoms::color) {
       return aResult.ParseColor(aValue, GetOwnerDoc());
     }
   }
@@ -176,7 +176,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     
     // face: string list
     if (font.mFamily.GetUnit() == eCSSUnit_Null) {
-      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::face);
+      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::face);
       if (value && value->Type() == nsAttrValue::eString &&
           !value->IsEmptyString()) {
         font.mFamily.SetStringValue(value->GetStringValue(), eCSSUnit_String);
@@ -186,12 +186,12 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 
     // pointSize: int
     if (font.mSize.GetUnit() == eCSSUnit_Null) {
-      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::pointSize);
+      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::pointSize);
       if (value && value->Type() == nsAttrValue::eInteger)
         font.mSize.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Point);
       else {
         // size: int, enum , 
-        value = aAttributes->GetAttr(nsHTMLAtoms::size);
+        value = aAttributes->GetAttr(nsGkAtoms::size);
         if (value) {
           nsAttrValue::ValueType unit = value->Type();
           if (unit == nsAttrValue::eInteger || unit == nsAttrValue::eEnum) { 
@@ -210,7 +210,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 
     // fontWeight: int
     if (font.mWeight.GetUnit() == eCSSUnit_Null) {
-      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::fontWeight);
+      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::fontWeight);
       if (value && value->Type() == nsAttrValue::eInteger) // +/-
         font.mWeight.SetIntValue(value->GetIntegerValue(), eCSSUnit_Integer);
     }
@@ -218,7 +218,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   else if (aData->mSID == eStyleStruct_Color) {
     if (aData->mColorData->mColor.GetUnit() == eCSSUnit_Null) {
       // color: color
-      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::color);
+      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::color);
       nscolor color;
       if (value && value->GetColorValue(color)) {
         aData->mColorData->mColor.SetColorValue(color);
@@ -229,7 +229,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     // Make <a><font color="red">text</font></a> give the text a red underline
     // in quirks mode.  The NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL flag only
     // affects quirks mode rendering.
-    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::color);
+    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::color);
     nscolor color;
     if (value && value->GetColorValue(color)) {
       nsCSSValue& decoration = aData->mTextData->mDecoration;
@@ -248,11 +248,11 @@ NS_IMETHODIMP_(PRBool)
 nsHTMLFontElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
-    { &nsHTMLAtoms::face },
-    { &nsHTMLAtoms::pointSize },
-    { &nsHTMLAtoms::size },
-    { &nsHTMLAtoms::fontWeight },
-    { &nsHTMLAtoms::color },
+    { &nsGkAtoms::face },
+    { &nsGkAtoms::pointSize },
+    { &nsGkAtoms::size },
+    { &nsGkAtoms::fontWeight },
+    { &nsGkAtoms::color },
     { nsnull }
   };
 

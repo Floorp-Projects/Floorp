@@ -43,7 +43,7 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsIFormControl.h"
@@ -64,7 +64,6 @@
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsNodeInfoManager.h"
 #include "nsCOMPtr.h"
-#include "nsLayoutAtoms.h"
 #include "nsIEventStateManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
@@ -158,7 +157,7 @@ NS_NewHTMLOptionElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
       do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
     NS_ENSURE_TRUE(doc, nsnull);
 
-    rv = doc->NodeInfoManager()->GetNodeInfo(nsHTMLAtoms::option, nsnull,
+    rv = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::option, nsnull,
                                              kNameSpaceID_None,
                                              getter_AddRefs(nodeInfo));
     NS_ENSURE_SUCCESS(rv, nsnull);
@@ -233,7 +232,7 @@ nsHTMLOptionElement::SetSelectedInternal(PRBool aValue, PRBool aNotify)
 NS_IMETHODIMP
 nsHTMLOptionElement::SetValue(const nsAString& aValue)
 {
-  SetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aValue, PR_TRUE);
+  SetAttr(kNameSpaceID_None, nsGkAtoms::value, aValue, PR_TRUE);
   return NS_OK;
 }
 
@@ -242,7 +241,7 @@ nsHTMLOptionElement::GetValue(nsAString& aValue)
 {
   // If the value attr is there, that is *exactly* what we use.  If it is
   // not, we compress whitespace .text.
-  if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aValue)) {
+  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::value, aValue)) {
     GetText(aValue);
   }
 
@@ -344,8 +343,8 @@ nsHTMLOptionElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
   nsChangeHint retval =
       nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType);
 
-  if (aAttribute == nsHTMLAtoms::label ||
-      aAttribute == nsHTMLAtoms::text) {
+  if (aAttribute == nsGkAtoms::label ||
+      aAttribute == nsGkAtoms::text) {
     NS_UpdateHint(retval, NS_STYLE_HINT_REFLOW);
   }
   return retval;
@@ -390,7 +389,7 @@ nsHTMLOptionElement::IntrinsicState() const
   }
 
   PRBool disabled;
-  GetBoolAttr(nsHTMLAtoms::disabled, &disabled);
+  GetBoolAttr(nsGkAtoms::disabled, &disabled);
   if (disabled) {
     state |= NS_EVENT_STATE_DISABLED;
     state &= ~NS_EVENT_STATE_ENABLED;
@@ -409,10 +408,10 @@ nsHTMLOptionElement::GetSelect()
   nsIContent* parent = this;
   while ((parent = parent->GetParent()) &&
          parent->IsNodeOfType(eHTML)) {
-    if (parent->Tag() == nsHTMLAtoms::select) {
+    if (parent->Tag() == nsGkAtoms::select) {
       return parent;
     }
-    if (parent->Tag() != nsHTMLAtoms::optgroup) {
+    if (parent->Tag() != nsGkAtoms::optgroup) {
       break;
     }
   }
@@ -425,9 +424,9 @@ nsHTMLOptionElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                   const nsAString* aValue, PRBool aNotify)
 {
   if (aNotify && aNameSpaceID == kNameSpaceID_None &&
-      (aName == nsHTMLAtoms::disabled || aName == nsHTMLAtoms::selected)) {
+      (aName == nsGkAtoms::disabled || aName == nsGkAtoms::selected)) {
     PRInt32 states;
-    if (aName == nsHTMLAtoms::disabled) {
+    if (aName == nsGkAtoms::disabled) {
       states = NS_EVENT_STATE_DISABLED | NS_EVENT_STATE_ENABLED;
     } else {
       states = NS_EVENT_STATE_DEFAULT;
@@ -483,7 +482,7 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
         nsAutoString value(NS_REINTERPRET_CAST(const PRUnichar*,
                                                JS_GetStringChars(jsstr)));
 
-        result = SetAttr(kNameSpaceID_None, nsHTMLAtoms::value, value,
+        result = SetAttr(kNameSpaceID_None, nsGkAtoms::value, value,
                          PR_FALSE);
         if (NS_FAILED(result)) {
           return result;
@@ -497,7 +496,7 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
                                           argv[2],
                                           &defaultSelected)) &&
             (JS_TRUE == defaultSelected)) {
-          result = SetAttr(kNameSpaceID_None, nsHTMLAtoms::selected,
+          result = SetAttr(kNameSpaceID_None, nsGkAtoms::selected,
                            EmptyString(), PR_FALSE);
           NS_ENSURE_SUCCESS(result, result);
         }

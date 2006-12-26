@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
@@ -127,19 +127,19 @@ nsHTMLFrameElement::ParseAttribute(PRInt32 aNamespaceID,
                                    nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsHTMLAtoms::bordercolor) {
+    if (aAttribute == nsGkAtoms::bordercolor) {
       return aResult.ParseColor(aValue, GetOwnerDoc());
     }
-    if (aAttribute == nsHTMLAtoms::frameborder) {
+    if (aAttribute == nsGkAtoms::frameborder) {
       return ParseFrameborderValue(aValue, aResult);
     }
-    if (aAttribute == nsHTMLAtoms::marginwidth) {
+    if (aAttribute == nsGkAtoms::marginwidth) {
       return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
     }
-    if (aAttribute == nsHTMLAtoms::marginheight) {
+    if (aAttribute == nsGkAtoms::marginheight) {
       return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
     }
-    if (aAttribute == nsHTMLAtoms::scrolling) {
+    if (aAttribute == nsGkAtoms::scrolling) {
       return ParseScrollingValue(aValue, aResult);
     }
   }

@@ -48,7 +48,7 @@
 #include "nsIPresShell.h"
 #include "nsIImage.h"
 #include "nsIWidget.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
 #include "nsContentUtils.h"
@@ -76,7 +76,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsTextFragment.h"
 #include "nsIDOMHTMLMapElement.h"
-#include "nsLayoutAtoms.h"
 #include "nsImageMapUtils.h"
 #include "nsIScriptSecurityManager.h"
 #ifdef ACCESSIBILITY
@@ -486,9 +485,9 @@ nsImageFrame::ShouldCreateImageFrameFor(nsIContent* aContent,
       // Use a sized box if we have no alt text.  This means no alt attribute
       // and the node is not an object or an input (since those always have alt
       // text).
-      if (!aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::alt) &&
-          localName != nsHTMLAtoms::object &&
-          localName != nsHTMLAtoms::input) {
+      if (!aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::alt) &&
+          localName != nsGkAtoms::object &&
+          localName != nsGkAtoms::input) {
         useSizedBox = PR_TRUE;
       }
       else {
@@ -876,7 +875,7 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
       NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight && 
       aMetrics.height > aReflowState.availableHeight) { 
     // split an image frame but not an image control frame
-    if (nsLayoutAtoms::imageFrame == GetType()) {
+    if (nsGkAtoms::imageFrame == GetType()) {
       // our desired height was greater than 0, so to avoid infinite splitting, use 1 pixel as the min
       aMetrics.height = PR_MAX(NSToCoordRound(aPresContext->ScaledPixelsToTwips()), aReflowState.availableHeight);
       aStatus = NS_FRAME_NOT_COMPLETE;
@@ -1418,7 +1417,7 @@ nsImageFrame::GetImageMap(nsPresContext* aPresContext)
     }
 
     nsAutoString usemap;
-    mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::usemap, usemap);
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::usemap, usemap);
 
     nsCOMPtr<nsIDOMHTMLMapElement> map = nsImageMapUtils::FindImageMap(doc,usemap);
     if (map) {
@@ -1474,7 +1473,7 @@ nsImageFrame::TriggerLink(nsPresContext* aPresContext,
 PRBool
 nsImageFrame::IsServerImageMap()
 {
-  return mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::ismap);
+  return mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::ismap);
 }
 
 // Translate an point that is relative to our frame
@@ -1662,7 +1661,7 @@ nsImageFrame::AttributeChanged(PRInt32 aNameSpaceID,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  if (nsHTMLAtoms::alt == aAttribute)
+  if (nsGkAtoms::alt == aAttribute)
   {
     AddStateBits(NS_FRAME_IS_DIRTY);
     GetPresContext()->PresShell()->FrameNeedsReflow(
@@ -1676,7 +1675,7 @@ nsImageFrame::AttributeChanged(PRInt32 aNameSpaceID,
 nsIAtom*
 nsImageFrame::GetType() const
 {
-  return nsLayoutAtoms::imageFrame;
+  return nsGkAtoms::imageFrame;
 }
 
 PRBool

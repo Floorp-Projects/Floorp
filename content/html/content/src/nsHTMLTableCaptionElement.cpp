@@ -37,7 +37,7 @@
 #include "nsIDOMHTMLTableCaptionElem.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsMappedAttributes.h"
@@ -121,7 +121,7 @@ nsHTMLTableCaptionElement::ParseAttribute(PRInt32 aNamespaceID,
                                           const nsAString& aValue,
                                           nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::align && aNamespaceID == kNameSpaceID_None) {
+  if (aAttribute == nsGkAtoms::align && aNamespaceID == kNameSpaceID_None) {
     return aResult.ParseEnumValue(aValue, kCaptionAlignTable);
   }
 
@@ -134,7 +134,7 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
 {
   if (aData->mSID == eStyleStruct_TableBorder) {
     if (aData->mTableData->mCaptionSide.GetUnit() == eCSSUnit_Null) {
-      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::align);
+      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
       if (value && value->Type() == nsAttrValue::eEnum)
         aData->mTableData->mCaptionSide.SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
     }
@@ -147,7 +147,7 @@ NS_IMETHODIMP_(PRBool)
 nsHTMLTableCaptionElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
-    { &nsHTMLAtoms::align },
+    { &nsGkAtoms::align },
     { nsnull }
   };
 

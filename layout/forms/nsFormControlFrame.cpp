@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsFormControlFrame.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIEventStateManager.h"
 #include "nsIScrollableView.h"
@@ -163,7 +163,7 @@ nsFormControlFrame::RegUnRegAccessKey(nsIFrame * aFrame, PRBool aDoReg)
   nsAutoString accessKey;
 
   nsIContent* content = aFrame->GetContent();
-  content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, accessKey);
+  content->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accessKey);
   if (!accessKey.IsEmpty()) {
     nsIEventStateManager *stateManager = presContext->EventStateManager();
     if (aDoReg) {

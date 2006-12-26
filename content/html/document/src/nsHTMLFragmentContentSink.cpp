@@ -42,7 +42,7 @@
 #include "nsIHTMLContentSink.h"
 #include "nsIParser.h"
 #include "nsIParserService.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsHTMLTokens.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMText.h"
@@ -306,7 +306,7 @@ void
 nsHTMLFragmentContentSink::ProcessBaseTag(nsIContent* aContent)
 {
   nsAutoString value;
-  if (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, value)) {
+  if (aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::href, value)) {
     nsCOMPtr<nsIURI> baseHrefURI;
     nsresult rv = 
       nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(baseHrefURI),
@@ -328,7 +328,7 @@ nsHTMLFragmentContentSink::ProcessBaseTag(nsIContent* aContent)
       mBaseHref = baseHrefURI;
     }
   }
-  if (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, value)) {
+  if (aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::target, value)) {
     mBaseTarget = do_GetAtom(value);
   }
 }
@@ -342,7 +342,7 @@ nsHTMLFragmentContentSink::AddBaseTagInfo(nsIContent* aContent)
 
   nsresult rv;
   if (mBaseHref) {
-    rv = aContent->SetProperty(nsHTMLAtoms::htmlBaseHref, mBaseHref,
+    rv = aContent->SetProperty(nsGkAtoms::htmlBaseHref, mBaseHref,
                                nsPropertyTable::SupportsDtorFunc, PR_TRUE);
     if (NS_SUCCEEDED(rv)) {
       // circumvent nsDerivedSafe
@@ -350,7 +350,7 @@ nsHTMLFragmentContentSink::AddBaseTagInfo(nsIContent* aContent)
     }
   }
   if (mBaseTarget) {
-    rv = aContent->SetProperty(nsHTMLAtoms::htmlBaseTarget, mBaseTarget,
+    rv = aContent->SetProperty(nsGkAtoms::htmlBaseTarget, mBaseTarget,
                                nsPropertyTable::SupportsDtorFunc, PR_TRUE);
     if (NS_SUCCEEDED(rv)) {
       // circumvent nsDerivedSafe
@@ -822,7 +822,7 @@ nsHTMLFragmentContentSink::AddAttributes(const nsIParserNode& aNode,
     const nsAString& v =
       nsContentUtils::TrimCharsInSet(kWhitespace, aNode.GetValueAt(i));
 
-    if (nodeType == eHTMLTag_a && keyAtom == nsHTMLAtoms::name) {
+    if (nodeType == eHTMLTag_a && keyAtom == nsGkAtoms::name) {
       NS_ConvertUTF16toUTF8 cname(v);
       NS_ConvertUTF8toUTF16 uv(nsUnescape(cname.BeginWriting()));
 
@@ -1054,7 +1054,7 @@ nsHTMLParanoidFragmentSink::AddAttributes(const nsIParserNode& aNode,
       continue;
     }
 
-    if (nodeType == eHTMLTag_a && keyAtom == nsHTMLAtoms::name) {
+    if (nodeType == eHTMLTag_a && keyAtom == nsGkAtoms::name) {
       NS_ConvertUTF16toUTF8 cname(v);
       NS_ConvertUTF8toUTF16 uv(nsUnescape(cname.BeginWriting()));
       // Add attribute to content
@@ -1144,7 +1144,7 @@ nsHTMLParanoidFragmentSink::AddLeaf(const nsIParserNode& aNode)
 
 #ifdef MOZILLA_1_8_BRANCH
     // we have to do this on the branch for some late 90s reason
-    if (name == nsHTMLAtoms::script || name == nsHTMLAtoms::style) {
+    if (name == nsGkAtoms::script || name == nsGkAtoms::style) {
       nsCOMPtr<nsIDTD> dtd;
       mParser->GetDTD(getter_AddRefs(dtd));
       NS_ENSURE_TRUE(dtd, NS_ERROR_FAILURE);
@@ -1157,7 +1157,7 @@ nsHTMLParanoidFragmentSink::AddLeaf(const nsIParserNode& aNode)
 
     // We will process base tags, but we won't include them
     // in the output
-    if (name == nsHTMLAtoms::base) {
+    if (name == nsGkAtoms::base) {
       nsCOMPtr<nsIContent> content;
       nsCOMPtr<nsINodeInfo> nodeInfo;
       nsIParserService* parserService = nsContentUtils::GetParserService();

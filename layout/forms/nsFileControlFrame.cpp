@@ -41,7 +41,7 @@
 #include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsPresContext.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsWidgetsCID.h"
 #include "nsIComponentManager.h"
 #include "nsIView.h"
@@ -141,7 +141,7 @@ nsFileControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
   nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  doc->NodeInfoManager()->GetNodeInfo(nsHTMLAtoms::input, nsnull,
+  doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::input, nsnull,
                                       kNameSpaceID_None,
                                       getter_AddRefs(nodeInfo));
 
@@ -153,7 +153,7 @@ nsFileControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
   content.swap(mTextContent);
 
   if (mTextContent) {
-    mTextContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("text"), PR_FALSE);
+    mTextContent->SetAttr(kNameSpaceID_None, nsGkAtoms::type, NS_LITERAL_STRING("text"), PR_FALSE);
 
     nsCOMPtr<nsIDOMHTMLInputElement> textControl = do_QueryInterface(mTextContent);
     if (textControl) {
@@ -185,7 +185,7 @@ nsFileControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 
   mBrowse = do_QueryInterface(content);
   if (mBrowse) {
-    mBrowse->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("button"), PR_FALSE);
+    mBrowse->SetAttr(kNameSpaceID_None, nsGkAtoms::type, NS_LITERAL_STRING("button"), PR_FALSE);
     nsCOMPtr<nsIDOMHTMLInputElement> fileContent = do_QueryInterface(mContent);
     nsCOMPtr<nsIDOMHTMLInputElement> browseControl = do_QueryInterface(mBrowse);
     if (fileContent && browseControl) {
@@ -206,8 +206,8 @@ nsFileControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
                                     NS_GET_IID(nsIDOMMouseListener));
   }
 
-  SyncAttr(kNameSpaceID_None, nsHTMLAtoms::size,     SYNC_TEXT);
-  SyncAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, SYNC_BOTH);
+  SyncAttr(kNameSpaceID_None, nsGkAtoms::size,     SYNC_TEXT);
+  SyncAttr(kNameSpaceID_None, nsGkAtoms::disabled, SYNC_BOTH);
 
   return NS_OK;
 }
@@ -288,7 +288,7 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
 
   // Set default directry and filename
   nsAutoString defaultName;
-  GetFormProperty(nsHTMLAtoms::value, defaultName);
+  GetFormProperty(nsGkAtoms::value, defaultName);
 
   nsCOMPtr<nsILocalFile> currentFile = do_CreateInstance("@mozilla.org/file/local;1");
   if (currentFile && !defaultName.IsEmpty()) {
@@ -339,7 +339,7 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
       // while it has focus and not fire onchange when it should.
       PRBool hasFocus = mTextFrame->GetHasFocus();
       mTextFrame->SetHasFocus(PR_FALSE);
-      mTextFrame->SetFormProperty(nsHTMLAtoms::value, unicodePath);
+      mTextFrame->SetFormProperty(nsGkAtoms::value, unicodePath);
       mTextFrame->SetHasFocus(hasFocus);
       nsCOMPtr<nsIFileControlElement> fileControl = do_QueryInterface(mContent);
       if (fileControl) {
@@ -380,7 +380,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsPresContext*          aPresContext,
     mTextFrame = GetTextControlFrame(aPresContext, this);
     NS_ENSURE_TRUE(mTextFrame, NS_ERROR_UNEXPECTED);
     if (mCachedState) {
-      mTextFrame->SetFormProperty(nsHTMLAtoms::value, *mCachedState);
+      mTextFrame->SetFormProperty(nsGkAtoms::value, *mCachedState);
       delete mCachedState;
       mCachedState = nsnull;
     }
@@ -511,11 +511,11 @@ nsFileControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
 {
   // propagate disabled to text / button inputs
   if (aNameSpaceID == kNameSpaceID_None &&
-      aAttribute == nsHTMLAtoms::disabled) {
+      aAttribute == nsGkAtoms::disabled) {
     SyncAttr(aNameSpaceID, aAttribute, SYNC_BOTH);
   // propagate size to text
   } else if (aNameSpaceID == kNameSpaceID_None &&
-             aAttribute == nsHTMLAtoms::size) {
+             aAttribute == nsGkAtoms::size) {
     SyncAttr(aNameSpaceID, aAttribute, SYNC_TEXT);
   }
 
@@ -540,7 +540,7 @@ nsresult
 nsFileControlFrame::SetFormProperty(nsIAtom* aName,
                                     const nsAString& aValue)
 {
-  if (nsHTMLAtoms::value == aName) {
+  if (nsGkAtoms::value == aName) {
     if (mTextFrame) {
       mTextFrame->SetValue(aValue);
     } else {
@@ -557,7 +557,7 @@ nsFileControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) const
 {
   aValue.Truncate();  // initialize out param
 
-  if (nsHTMLAtoms::value == aName) {
+  if (nsGkAtoms::value == aName) {
     NS_ASSERTION(!mCachedState || !mTextFrame,
                  "If we have a cached state, we better have no mTextFrame");
     if (mCachedState) {
@@ -594,7 +594,7 @@ nsFileControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // just to catch events
   // REVIEW: I'm not sure why we do this, but that's what nsFileControlFrame::
   // GetFrameForPoint was doing
-  if (mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled) && 
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled) && 
       IsVisibleForPainting(aBuilder)) {
     nsDisplayItem* item = new (aBuilder) nsDisplayEventReceiver(this);
     if (!item)

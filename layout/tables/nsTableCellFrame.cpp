@@ -49,9 +49,8 @@
 #include "nsIContent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLParts.h"
-#include "nsHTMLAtoms.h"
-#include "nsIView.h"
 #include "nsLayoutAtoms.h"
+#include "nsIView.h"
 #include "nsIPresShell.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMHTMLTableCellElement.h"
@@ -168,7 +167,7 @@ nsTableCellFrame::NeedsToObserve(const nsHTMLReflowState& aReflowState)
   // We always need to let the percent height observer be propagated
   // from an outer table frame to an inner table frame.
   nsIAtom *fType = aReflowState.frame->GetType();
-  if (fType == nsLayoutAtoms::tableFrame) {
+  if (fType == nsGkAtoms::tableFrame) {
     return PR_TRUE;
   }
 
@@ -177,7 +176,7 @@ nsTableCellFrame::NeedsToObserve(const nsHTMLReflowState& aReflowState)
   // tables in standards mode.
   return rs->frame == this &&
          (GetPresContext()->CompatibilityMode() == eCompatibility_NavQuirks ||
-          fType == nsLayoutAtoms::tableOuterFrame);
+          fType == nsGkAtoms::tableOuterFrame);
 }
 
 nsresult 
@@ -624,7 +623,7 @@ PRInt32 nsTableCellFrame::GetRowSpan()
   nsGenericHTMLElement *hc = nsGenericHTMLElement::FromContent(mContent);
 
   if (hc) {
-    const nsAttrValue* attr = hc->GetParsedAttr(nsHTMLAtoms::rowspan); 
+    const nsAttrValue* attr = hc->GetParsedAttr(nsGkAtoms::rowspan); 
     if (attr && attr->Type() == nsAttrValue::eInteger) { 
        rowSpan = attr->GetIntegerValue(); 
     }
@@ -638,7 +637,7 @@ PRInt32 nsTableCellFrame::GetColSpan()
   nsGenericHTMLElement *hc = nsGenericHTMLElement::FromContent(mContent);
 
   if (hc) {
-    const nsAttrValue* attr = hc->GetParsedAttr(nsHTMLAtoms::colspan); 
+    const nsAttrValue* attr = hc->GetParsedAttr(nsGkAtoms::colspan); 
     if (attr && attr->Type() == nsAttrValue::eInteger) { 
        colSpan = attr->GetIntegerValue(); 
     }
@@ -953,7 +952,7 @@ nsTableCellFrame::GetBorderWidth(float      aPixelsToTwips,
 nsIAtom*
 nsTableCellFrame::GetType() const
 {
-  return nsLayoutAtoms::tableCellFrame;
+  return nsGkAtoms::tableCellFrame;
 }
 
 #ifdef DEBUG
@@ -979,7 +978,7 @@ nsBCTableCellFrame::~nsBCTableCellFrame()
 nsIAtom*
 nsBCTableCellFrame::GetType() const
 {
-  return nsLayoutAtoms::bcTableCellFrame;
+  return nsGkAtoms::bcTableCellFrame;
 }
 
 /* virtual */ nsMargin

@@ -40,7 +40,7 @@
 #include "nsCOMPtr.h"
 #include "nsInlineFrame.h"
 #include "nsBlockFrame.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsStyleContext.h"
 #include "nsIPresShell.h"
@@ -48,7 +48,6 @@
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
 #include "nsAbsoluteContainingBlock.h"
-#include "nsLayoutAtoms.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsAutoPtr.h"
 #include "nsFrameManager.h"
@@ -101,7 +100,7 @@ nsInlineFrame::GetFrameName(nsAString& aResult) const
 nsIAtom*
 nsInlineFrame::GetType() const
 {
-  return nsLayoutAtoms::inlineFrame;
+  return nsGkAtoms::inlineFrame;
 }
 
 PRBool
@@ -627,7 +626,7 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
     }
   }
   else if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
-    if (nsLayoutAtoms::placeholderFrame == aFrame->GetType()) {
+    if (nsGkAtoms::placeholderFrame == aFrame->GetType()) {
       nsBlockReflowState* blockRS = lineLayout->mBlockRS;
       blockRS->mBlock->SplitPlaceholder(*blockRS, aFrame);
       // Allow the parent to continue reflowing
@@ -738,17 +737,17 @@ NS_IMETHODIMP nsInlineFrame::GetAccessible(nsIAccessible** aAccessible)
   // replaces the image or image control frame with an inline frame
   *aAccessible = nsnull;
   nsIAtom *tagAtom = mContent->Tag();
-  if ((tagAtom == nsHTMLAtoms::img || tagAtom == nsHTMLAtoms::input || 
-       tagAtom == nsHTMLAtoms::label) && mContent->IsNodeOfType(nsINode::eHTML)) {
+  if ((tagAtom == nsGkAtoms::img || tagAtom == nsGkAtoms::input || 
+       tagAtom == nsGkAtoms::label) && mContent->IsNodeOfType(nsINode::eHTML)) {
     // Only get accessibility service if we're going to use it
     nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
     if (!accService)
       return NS_ERROR_FAILURE;
-    if (tagAtom == nsHTMLAtoms::input)  // Broken <input type=image ... />
+    if (tagAtom == nsGkAtoms::input)  // Broken <input type=image ... />
       return accService->CreateHTMLButtonAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
-    else if (tagAtom == nsHTMLAtoms::img)  // Create accessible for broken <img>
+    else if (tagAtom == nsGkAtoms::img)  // Create accessible for broken <img>
       return accService->CreateHTMLImageAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
-    else if (tagAtom == nsHTMLAtoms::label)  // Creat accessible for <label>
+    else if (tagAtom == nsGkAtoms::label)  // Creat accessible for <label>
       return accService->CreateHTMLLabelAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
   }
 
@@ -791,7 +790,7 @@ nsFirstLineFrame::GetFrameName(nsAString& aResult) const
 nsIAtom*
 nsFirstLineFrame::GetType() const
 {
-  return nsLayoutAtoms::lineFrame;
+  return nsGkAtoms::lineFrame;
 }
 
 void
@@ -1032,7 +1031,7 @@ nsPositionedInlineFrame::GetFirstChild(nsIAtom* aListName) const
 nsIAtom*
 nsPositionedInlineFrame::GetType() const
 {
-  return nsLayoutAtoms::positionedInlineFrame;
+  return nsGkAtoms::positionedInlineFrame;
 }
 
 NS_IMETHODIMP

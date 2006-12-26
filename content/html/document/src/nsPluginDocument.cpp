@@ -37,7 +37,7 @@
 
 #include "nsMediaDocument.h"
 #include "nsIPluginDocument.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIPresShell.h"
 #include "nsIObjectFrame.h"
 #include "nsIPluginInstance.h"
@@ -231,13 +231,13 @@ nsPluginDocument::CreateSyntheticPluginDocument()
 
   // remove margins from body
   NS_NAMED_LITERAL_STRING(zero, "0");
-  body->SetAttr(kNameSpaceID_None, nsHTMLAtoms::marginwidth, zero, PR_FALSE);
-  body->SetAttr(kNameSpaceID_None, nsHTMLAtoms::marginheight, zero, PR_FALSE);
+  body->SetAttr(kNameSpaceID_None, nsGkAtoms::marginwidth, zero, PR_FALSE);
+  body->SetAttr(kNameSpaceID_None, nsGkAtoms::marginheight, zero, PR_FALSE);
 
 
   // make plugin content
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::embed, nsnull,
+  rv = mNodeInfoManager->GetNodeInfo(nsGkAtoms::embed, nsnull,
                                      kNameSpaceID_None,
                                     getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -245,24 +245,24 @@ nsPluginDocument::CreateSyntheticPluginDocument()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // make it a named element
-  mPluginContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::name,
+  mPluginContent->SetAttr(kNameSpaceID_None, nsGkAtoms::name,
                           NS_LITERAL_STRING("plugin"), PR_FALSE);
 
   // fill viewport and auto-resize
   NS_NAMED_LITERAL_STRING(percent100, "100%");
-  mPluginContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::width, percent100,
+  mPluginContent->SetAttr(kNameSpaceID_None, nsGkAtoms::width, percent100,
                           PR_FALSE);
-  mPluginContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::height, percent100,
+  mPluginContent->SetAttr(kNameSpaceID_None, nsGkAtoms::height, percent100,
                           PR_FALSE);
 
   // set URL
   nsCAutoString src;
   mDocumentURI->GetSpec(src);
-  mPluginContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::src,
+  mPluginContent->SetAttr(kNameSpaceID_None, nsGkAtoms::src,
                           NS_ConvertUTF8toUTF16(src), PR_FALSE);
 
   // set mime type
-  mPluginContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type,
+  mPluginContent->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
                           NS_ConvertUTF8toUTF16(mMimeType), PR_FALSE);
 
   // This will not start the load because nsObjectLoadingContent checks whether

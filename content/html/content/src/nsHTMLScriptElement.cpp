@@ -38,7 +38,7 @@
 #include "nsIDOMHTMLScriptElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsIDocument.h"
 #include "nsScriptElement.h"
@@ -545,7 +545,7 @@ nsHTMLScriptElement::MaybeProcessScript()
     NS_ENSURE_TRUE(mScriptEventHandler, NS_ERROR_OUT_OF_MEMORY);
 
     nsAutoString event_val;
-    GetAttr(kNameSpaceID_None, nsHTMLAtoms::event, event_val);
+    GetAttr(kNameSpaceID_None, nsGkAtoms::event, event_val);
     mScriptEventHandler->ParseEventString(event_val);
   }
 

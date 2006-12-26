@@ -48,7 +48,6 @@
 #include "nsDOMString.h"
 #include "nsIDOM3Node.h"
 #include "nsNodeInfoManager.h"
-#include "nsLayoutAtoms.h"
 #include "nsIDocument.h"
 #include "nsIXPConnect.h"
 #include "nsIDOMDocument.h"
@@ -86,7 +85,7 @@ NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
   }
 
   nsCOMPtr<nsINodeInfo> ni;
-  rv = nimgr->GetNodeInfo(nsLayoutAtoms::documentTypeNodeName, nsnull,
+  rv = nimgr->GetNodeInfo(nsGkAtoms::documentTypeNodeName, nsnull,
                           kNameSpaceID_None, getter_AddRefs(ni));
   NS_ENSURE_SUCCESS(rv, rv);
 

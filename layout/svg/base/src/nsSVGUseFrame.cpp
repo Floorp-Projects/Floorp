@@ -70,7 +70,7 @@ public:
   /**
    * Get the "type" of the frame
    *
-   * @see nsLayoutAtoms::svgUseFrame
+   * @see nsGkAtoms::svgUseFrame
    */
   virtual nsIAtom* GetType() const;
 
@@ -109,7 +109,7 @@ NS_NewSVGUseFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext
 nsIAtom *
 nsSVGUseFrame::GetType() const
 {
-  return nsLayoutAtoms::svgUseFrame;
+  return nsGkAtoms::svgUseFrame;
 }
 
 //----------------------------------------------------------------------

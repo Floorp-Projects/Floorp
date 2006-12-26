@@ -97,7 +97,6 @@
 #include "nsIDOM3Node.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMElement.h"
-#include "nsHTMLAtoms.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
@@ -2097,7 +2096,7 @@ PresShell::SetPrefNoScriptRule()
     ((mPresContext->Type() == nsPresContext::eContext_PrintPreview || 
       mPresContext->Type() == nsPresContext::eContext_Print) &&
      NS_PTR_TO_INT32(mDocument->GetProperty(
-                       nsLayoutAtoms::scriptEnabledBeforePrintPreview)));
+                       nsGkAtoms::scriptEnabledBeforePrintPreview)));
 
   if (scriptEnabled) {
     if (!mPrefStyleSheet) {
@@ -3145,13 +3144,13 @@ PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
   do 
   {
     frameType = frame->GetType();
-    if (frameType != nsLayoutAtoms::areaFrame)
+    if (frameType != nsGkAtoms::areaFrame)
     {
       frame = frame->GetFirstChild(nsnull);
       if (!frame)
         break;
     }
-  }while(frameType != nsLayoutAtoms::areaFrame);
+  }while(frameType != nsGkAtoms::areaFrame);
   
   if (!frame)
     return NS_ERROR_FAILURE; //could not find an area frame.
@@ -3297,10 +3296,10 @@ nsIPresShell::GetRootScrollFrame() const
 {
   nsIFrame* rootFrame = FrameManager()->GetRootFrame();
   // Ensure root frame is a viewport frame
-  if (!rootFrame || nsLayoutAtoms::viewportFrame != rootFrame->GetType())
+  if (!rootFrame || nsGkAtoms::viewportFrame != rootFrame->GetType())
     return nsnull;
   nsIFrame* theFrame = rootFrame->GetFirstChild(nsnull);
-  if (!theFrame || nsLayoutAtoms::scrollFrame != theFrame->GetType())
+  if (!theFrame || nsGkAtoms::scrollFrame != theFrame->GetType())
     return nsnull;
   return theFrame;
 }
@@ -3740,7 +3739,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
         // Ensure it's an anchor element
         content = do_QueryInterface(node);
         if (content) {
-          if (content->Tag() == nsHTMLAtoms::a &&
+          if (content->Tag() == nsGkAtoms::a &&
               content->IsNodeOfType(nsINode::eHTML)) {
             break;
           }
@@ -4109,14 +4108,14 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
     nsIFrame *frame = aFrame;
 
     while (frame &&
-           (frameType = frame->GetType()) == nsLayoutAtoms::inlineFrame) {
+           (frameType = frame->GetType()) == nsGkAtoms::inlineFrame) {
       prevFrame = frame;
       frame = prevFrame->GetParent();
     }
 
     if (frame != aFrame &&
         frame &&
-        frameType == nsLayoutAtoms::blockFrame) {
+        frameType == nsGkAtoms::blockFrame) {
       // find the line containing aFrame and increase the top of |offset|.
       nsCOMPtr<nsILineIterator> lines( do_QueryInterface(frame) );
 
@@ -6337,7 +6336,7 @@ PR_STATIC_CALLBACK(PRBool)
 ReframeImageBoxes(nsIFrame *aFrame, void *aClosure)
 {
   nsStyleChangeList *list = NS_STATIC_CAST(nsStyleChangeList*, aClosure);
-  if (aFrame->GetType() == nsLayoutAtoms::imageBoxFrame) {
+  if (aFrame->GetType() == nsGkAtoms::imageBoxFrame) {
     list->AppendChange(aFrame, aFrame->GetContent(),
                        NS_STYLE_HINT_FRAMECHANGE);
     return PR_FALSE; // don't walk descendants
@@ -6622,11 +6621,11 @@ CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
         // verify that neither frame has a space manager,
         // or they both do and the space managers are equivalent
         nsSpaceManager *sm1 = NS_STATIC_CAST(nsSpaceManager*,
-                         k1->GetProperty(nsLayoutAtoms::spaceManagerProperty));
+                         k1->GetProperty(nsGkAtoms::spaceManagerProperty));
 
         // look at the test frame
         nsSpaceManager *sm2 = NS_STATIC_CAST(nsSpaceManager*,
-                         k2->GetProperty(nsLayoutAtoms::spaceManagerProperty));
+                         k2->GetProperty(nsGkAtoms::spaceManagerProperty));
 
         // now compare the space managers
         if (((nsnull == sm1) && (nsnull != sm2)) ||

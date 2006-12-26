@@ -71,7 +71,6 @@
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
 #include "nsDocShellCID.h"
-#include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
@@ -898,7 +897,7 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
   PRBool hasID = PR_FALSE;
   if (caps & eSupportClassID) {
     nsAutoString classid;
-    thisContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::classid, classid);
+    thisContent->GetAttr(kNameSpaceID_None, nsGkAtoms::classid, classid);
     if (!classid.IsEmpty()) {
       hasID = PR_TRUE;
       isSupportedClassID = NS_SUCCEEDED(TypeForClassID(classid, typeForID));
@@ -1270,7 +1269,7 @@ nsObjectLoadingContent::GetObjectBaseURI(nsIContent* thisContent, nsIURI** aURI)
   // For plugins, the codebase attribute is the base URI
   nsCOMPtr<nsIURI> baseURI = thisContent->GetBaseURI();
   nsAutoString codebase;
-  thisContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::codebase,
+  thisContent->GetAttr(kNameSpaceID_None, nsGkAtoms::codebase,
                        codebase);
   if (!codebase.IsEmpty()) {
     nsContentUtils::NewURIWithDocumentCharset(aURI, codebase,
@@ -1380,8 +1379,8 @@ nsObjectLoadingContent::GetPluginSupportState(nsIContent* aContent,
     return ePluginOtherState;
   }
 
-  if (aContent->Tag() == nsHTMLAtoms::embed ||
-      aContent->Tag() == nsHTMLAtoms::applet) {
+  if (aContent->Tag() == nsGkAtoms::embed ||
+      aContent->Tag() == nsGkAtoms::applet) {
     return GetPluginDisabledState(aContentType);
   }
 
@@ -1392,8 +1391,8 @@ nsObjectLoadingContent::GetPluginSupportState(nsIContent* aContent,
     NS_ASSERTION(child, "GetChildCount lied!");
 
     if (child->IsNodeOfType(nsINode::eHTML) &&
-        child->Tag() == nsHTMLAtoms::param &&
-        child->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::name,
+        child->Tag() == nsGkAtoms::param &&
+        child->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
                            NS_LITERAL_STRING("pluginurl"), eIgnoreCase)) {
       return GetPluginDisabledState(aContentType);
     }

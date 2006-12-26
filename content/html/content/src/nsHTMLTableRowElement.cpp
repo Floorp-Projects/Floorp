@@ -43,7 +43,7 @@
 #include "nsMappedAttributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsContentList.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsHTMLParts.h"
@@ -255,7 +255,7 @@ IsCell(nsIContent *aContent, PRInt32 aNamespaceID,
 {
   nsIAtom* tag = aContent->Tag();
 
-  return ((tag == nsHTMLAtoms::td || tag == nsHTMLAtoms::th) &&
+  return ((tag == nsGkAtoms::td || tag == nsGkAtoms::th) &&
           aContent->IsNodeOfType(nsINode::eHTML));
 }
 
@@ -301,7 +301,7 @@ nsHTMLTableRowElement::InsertCell(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
 
   // create the cell
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nsContentUtils::NameChanged(mNodeInfo, nsHTMLAtoms::td,
+  nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::td,
                               getter_AddRefs(nodeInfo));
 
   nsCOMPtr<nsIContent> cellContent = NS_NewHTMLTableCellElement(nodeInfo);
@@ -390,22 +390,22 @@ nsHTMLTableRowElement::ParseAttribute(PRInt32 aNamespaceID,
    */
 
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsHTMLAtoms::charoff) {
+    if (aAttribute == nsGkAtoms::charoff) {
       return aResult.ParseIntWithBounds(aValue, 0);
     }
-    if (aAttribute == nsHTMLAtoms::height) {
+    if (aAttribute == nsGkAtoms::height) {
       return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
     }
-    if (aAttribute == nsHTMLAtoms::width) {
+    if (aAttribute == nsGkAtoms::width) {
       return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
     }
-    if (aAttribute == nsHTMLAtoms::align) {
+    if (aAttribute == nsGkAtoms::align) {
       return ParseTableCellHAlignValue(aValue, aResult);
     }
-    if (aAttribute == nsHTMLAtoms::bgcolor) {
+    if (aAttribute == nsGkAtoms::bgcolor) {
       return aResult.ParseColor(aValue, GetOwnerDoc());
     }
-    if (aAttribute == nsHTMLAtoms::valign) {
+    if (aAttribute == nsGkAtoms::valign) {
       return ParseTableVAlignValue(aValue, aResult);
     }
   }
@@ -420,7 +420,7 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
   if (aData->mSID == eStyleStruct_Position) {
     // height: value
     if (aData->mPositionData->mHeight.GetUnit() == eCSSUnit_Null) {
-      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::height);
+      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::height);
       if (value && value->Type() == nsAttrValue::eInteger)
         aData->mPositionData->mHeight.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
       else if (value && value->Type() == nsAttrValue::ePercent)
@@ -430,7 +430,7 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
   else if (aData->mSID == eStyleStruct_Text) {
     if (aData->mTextData->mTextAlign.GetUnit() == eCSSUnit_Null) {
       // align: enum
-      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::align);
+      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
       if (value && value->Type() == nsAttrValue::eEnum)
         aData->mTextData->mTextAlign.SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
     }
@@ -438,7 +438,7 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
   else if (aData->mSID == eStyleStruct_TextReset) {
     if (aData->mTextData->mVerticalAlign.GetUnit() == eCSSUnit_Null) {
       // valign: enum
-      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::valign);
+      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::valign);
       if (value && value->Type() == nsAttrValue::eEnum)
         aData->mTextData->mVerticalAlign.SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
     }
@@ -452,9 +452,9 @@ NS_IMETHODIMP_(PRBool)
 nsHTMLTableRowElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
-    { &nsHTMLAtoms::align },
-    { &nsHTMLAtoms::valign }, 
-    { &nsHTMLAtoms::height },
+    { &nsGkAtoms::align },
+    { &nsGkAtoms::valign }, 
+    { &nsGkAtoms::height },
     { nsnull }
   };
 

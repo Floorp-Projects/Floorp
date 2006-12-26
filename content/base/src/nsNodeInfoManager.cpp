@@ -268,7 +268,7 @@ already_AddRefed<nsINodeInfo>
 nsNodeInfoManager::GetTextNodeInfo()
 {
   if (!mTextNodeInfo) {
-    GetNodeInfo(nsLayoutAtoms::textTagName, nsnull, kNameSpaceID_None,
+    GetNodeInfo(nsGkAtoms::textTagName, nsnull, kNameSpaceID_None,
                 &mTextNodeInfo);
   }
   else {
@@ -282,7 +282,7 @@ already_AddRefed<nsINodeInfo>
 nsNodeInfoManager::GetCommentNodeInfo()
 {
   if (!mCommentNodeInfo) {
-    GetNodeInfo(nsLayoutAtoms::commentTagName, nsnull, kNameSpaceID_None,
+    GetNodeInfo(nsGkAtoms::commentTagName, nsnull, kNameSpaceID_None,
                 &mCommentNodeInfo);
   }
   else {
@@ -296,7 +296,7 @@ already_AddRefed<nsINodeInfo>
 nsNodeInfoManager::GetDocumentNodeInfo()
 {
   if (!mDocumentNodeInfo) {
-    GetNodeInfo(nsLayoutAtoms::documentNodeName, nsnull, kNameSpaceID_None,
+    GetNodeInfo(nsGkAtoms::documentNodeName, nsnull, kNameSpaceID_None,
                 &mDocumentNodeInfo);
   }
   else {

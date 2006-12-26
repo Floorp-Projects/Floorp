@@ -83,7 +83,6 @@
 #include "nsTextTransformer.h"
 
 #include "nsTextFragment.h"
-#include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsFrameSelection.h"
 #include "nsISelection.h"
@@ -316,7 +315,7 @@ public:
   /**
     * Get the "type" of the frame
    *
-   * @see nsLayoutAtoms::textFrame
+   * @see nsGkAtoms::textFrame
    */
   virtual nsIAtom* GetType() const;
 
@@ -1442,14 +1441,14 @@ nsContinuingTextFrame::Init(nsIContent*      aContent,
       aPrevInFlow->GetOffsets(start, mContentOffset);
 
       nsPropertyTable *propTable = GetPresContext()->PropertyTable();
-      propTable->SetProperty(this, nsLayoutAtoms::embeddingLevel,
-            propTable->GetProperty(aPrevInFlow, nsLayoutAtoms::embeddingLevel),
+      propTable->SetProperty(this, nsGkAtoms::embeddingLevel,
+            propTable->GetProperty(aPrevInFlow, nsGkAtoms::embeddingLevel),
                              nsnull, nsnull);
-      propTable->SetProperty(this, nsLayoutAtoms::baseLevel,
-                propTable->GetProperty(aPrevInFlow, nsLayoutAtoms::baseLevel),
+      propTable->SetProperty(this, nsGkAtoms::baseLevel,
+                propTable->GetProperty(aPrevInFlow, nsGkAtoms::baseLevel),
                              nsnull, nsnull);
-      propTable->SetProperty(this, nsLayoutAtoms::charType,
-                 propTable->GetProperty(aPrevInFlow, nsLayoutAtoms::charType),
+      propTable->SetProperty(this, nsGkAtoms::charType,
+                 propTable->GetProperty(aPrevInFlow, nsGkAtoms::charType),
                              nsnull, nsnull);
       if (nextContinuation) {
         SetNextContinuation(nextContinuation);
@@ -1893,9 +1892,9 @@ nsTextFrame::GetCursor(const nsPoint& aPoint,
     nsIFrame *ancestorFrame = this;
     while ((ancestorFrame = ancestorFrame->GetParent()) != nsnull) {
       nsIContent *ancestorContent = ancestorFrame->GetContent();
-      if (ancestorContent && ancestorContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex)) {
+      if (ancestorContent && ancestorContent->HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex)) {
         nsAutoString tabIndexStr;
-        ancestorContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabIndexStr);
+        ancestorContent->GetAttr(kNameSpaceID_None, nsGkAtoms::tabindex, tabIndexStr);
         if (!tabIndexStr.IsEmpty()) {
           PRInt32 rv, tabIndexVal = tabIndexStr.ToInteger(&rv);
           if (NS_SUCCEEDED(rv) && tabIndexVal >= 0) {
@@ -2071,10 +2070,10 @@ PRBool
 nsTextFrame::IsChineseJapaneseLangGroup()
 {
   const nsStyleVisibility* visibility = mStyleContext->GetStyleVisibility();
-  if (visibility->mLangGroup == nsLayoutAtoms::Japanese
-      || visibility->mLangGroup == nsLayoutAtoms::Chinese
-      || visibility->mLangGroup == nsLayoutAtoms::Taiwanese
-      || visibility->mLangGroup == nsLayoutAtoms::HongKongChinese)
+  if (visibility->mLangGroup == nsGkAtoms::Japanese
+      || visibility->mLangGroup == nsGkAtoms::Chinese
+      || visibility->mLangGroup == nsGkAtoms::Taiwanese
+      || visibility->mLangGroup == nsGkAtoms::HongKongChinese)
     return PR_TRUE;
 
   return PR_FALSE;
@@ -2931,7 +2930,7 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
     if (aPresContext->BidiEnabled()) {
       isBidiSystem = aPresContext->IsBidiSystem();
       isOddLevel = NS_GET_EMBEDDING_LEVEL(this) & 1;
-      charType = (nsCharType)NS_PTR_TO_INT32(aPresContext->PropertyTable()->GetProperty(this, nsLayoutAtoms::charType));
+      charType = (nsCharType)NS_PTR_TO_INT32(aPresContext->PropertyTable()->GetProperty(this, nsGkAtoms::charType));
 
       isRightToLeftOnBidiPlatform = (isBidiSystem &&
                                      (eCharType_RightToLeft == charType ||
@@ -3663,7 +3662,7 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
 
       if (bidiUtils) {
         isOddLevel = NS_GET_EMBEDDING_LEVEL(this) & 1;
-        charType = (nsCharType)NS_PTR_TO_INT32(aPresContext->PropertyTable()->GetProperty(this, nsLayoutAtoms::charType));
+        charType = (nsCharType)NS_PTR_TO_INT32(aPresContext->PropertyTable()->GetProperty(this, nsGkAtoms::charType));
 #ifdef DEBUG
         PRInt32 rememberTextLength = textLength;
 #endif
@@ -5925,7 +5924,7 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
     nsCharType charType = eCharType_LeftToRight;
     PRUint32 hints = 0;
     aReflowState.rendContext->GetHints(hints);
-    charType = (nsCharType)NS_PTR_TO_INT32(aPresContext->PropertyTable()->GetProperty(this, nsLayoutAtoms::charType));
+    charType = (nsCharType)NS_PTR_TO_INT32(aPresContext->PropertyTable()->GetProperty(this, nsGkAtoms::charType));
     if ((eCharType_RightToLeftArabic == charType &&
         (hints & NS_RENDERING_HINT_ARABIC_SHAPING) == NS_RENDERING_HINT_ARABIC_SHAPING) ||
         (eCharType_RightToLeft == charType &&
@@ -6290,7 +6289,7 @@ nsTextFrame::ToCString(nsString& aBuf, PRInt32* aTotalContentLength) const
 nsIAtom*
 nsTextFrame::GetType() const
 {
-  return nsLayoutAtoms::textFrame;
+  return nsGkAtoms::textFrame;
 }
 
 PRBool

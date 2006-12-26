@@ -56,7 +56,7 @@
 #include "nsIPrintSession.h"
 #include "nsGfxCIID.h"
 #include "nsIServiceManager.h"
-#include "nsHTMLAtoms.h" // XXX until atoms get factored into nsLayoutAtoms
+#include "nsLayoutAtoms.h" // XXX until atoms get factored into nsGkAtoms
 #include "nsISimpleEnumerator.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -102,7 +102,6 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 
 // FrameSet
 #include "nsIDocument.h"
-#include "nsHTMLAtoms.h"
 
 // Focus
 #include "nsIDOMEventReceiver.h"
@@ -149,7 +148,6 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsIBaseWindow.h"
 #include "nsIFrameDebug.h"
 #include "nsILayoutHistoryState.h"
-#include "nsLayoutAtoms.h"
 #include "nsFrameManager.h"
 #include "nsIParser.h"
 #include "nsGUIEvent.h"
@@ -2842,7 +2840,7 @@ PRBool nsPrintEngine::HasFramesetChild(nsIContent* aContent)
   // do a breadth search across all siblings
   for (PRUint32 i = 0; i < numChildren; ++i) {
     nsIContent *child = aContent->GetChildAt(i);
-    if (child->Tag() == nsHTMLAtoms::frameset &&
+    if (child->Tag() == nsGkAtoms::frameset &&
         child->IsNodeOfType(nsINode::eHTML)) {
       return PR_TRUE;
     }
@@ -3240,18 +3238,18 @@ nsPrintEngine::TurnScriptingOn(PRBool aDoTurnOn)
       nsIScriptContext *scx = scriptGlobalObj->GetContext();
       NS_ASSERTION(scx, "Can't get nsIScriptContext");
       if (aDoTurnOn) {
-        doc->DeleteProperty(nsLayoutAtoms::scriptEnabledBeforePrintPreview);
+        doc->DeleteProperty(nsGkAtoms::scriptEnabledBeforePrintPreview);
       } else {
         // Have to be careful, because people call us over and over again with
         // aDoTurnOn == PR_FALSE.  So don't set the property if it's already
         // set, since in that case we'd set it to the wrong value.
         nsresult propThere;
-        doc->GetProperty(nsLayoutAtoms::scriptEnabledBeforePrintPreview,
+        doc->GetProperty(nsGkAtoms::scriptEnabledBeforePrintPreview,
                          &propThere);
         if (propThere == NS_PROPTABLE_PROP_NOT_THERE) {
           // Stash the current value of IsScriptEnabled on the document, so
           // that layout code running in print preview doesn't get confused.
-          doc->SetProperty(nsLayoutAtoms::scriptEnabledBeforePrintPreview,
+          doc->SetProperty(nsGkAtoms::scriptEnabledBeforePrintPreview,
                            NS_INT32_TO_PTR(doc->IsScriptEnabled()));
         }
       }

@@ -43,10 +43,9 @@
 #include "nsPresContext.h"
 #include "nsLineLayout.h"
 #include "nsStyleConsts.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIFontMetrics.h"
 #include "nsIRenderingContext.h"
-#include "nsLayoutAtoms.h"
 #include "nsTextTransformer.h"
 
 #ifdef ACCESSIBILITY
@@ -223,7 +222,7 @@ BRFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
 nsIAtom*
 BRFrame::GetType() const
 {
-  return nsLayoutAtoms::brFrame;
+  return nsGkAtoms::brFrame;
 }
 
 PRBool

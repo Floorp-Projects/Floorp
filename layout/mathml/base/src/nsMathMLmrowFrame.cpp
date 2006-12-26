@@ -81,11 +81,11 @@ nsMathMLmrowFrame::AttributeChanged(PRInt32  aNameSpaceID,
   // Special for <mtable>: In the frame construction code, we also use
   // this frame class as a wrapper for mtable. Hence, we should pass the
   // notification to the real mtable
-  if (mContent->Tag() == nsMathMLAtoms::mtable_) {
+  if (mContent->Tag() == nsGkAtoms::mtable_) {
     nsIFrame* frame = mFrames.FirstChild();
     for ( ; frame; frame = frame->GetFirstChild(nsnull)) {
       // drill down to the real mtable
-      if (frame->GetType() == nsLayoutAtoms::tableOuterFrame)
+      if (frame->GetType() == nsGkAtoms::tableOuterFrame)
         return frame->AttributeChanged(aNameSpaceID, aAttribute, aModType);
     }
     NS_NOTREACHED("mtable wrapper without the real table frame");
@@ -101,11 +101,11 @@ nsMathMLmrowFrame::GetContentInsertionFrame()
   // this frame class as a wrapper for mtable. Hence, if we are asked 
   // for the insertion frame in the context where we are such a wrapper,
   // we should return the real frame intended for mtable
-  if (mContent->Tag() == nsMathMLAtoms::mtable_) {
+  if (mContent->Tag() == nsGkAtoms::mtable_) {
     nsIFrame* frame = mFrames.FirstChild();
     for ( ; frame; frame = frame->GetFirstChild(nsnull)) {
       // drill down to the real mtable
-      if (frame->GetType() == nsLayoutAtoms::tableOuterFrame)
+      if (frame->GetType() == nsGkAtoms::tableOuterFrame)
         return frame->GetContentInsertionFrame();
     }
     NS_NOTREACHED("mtable wrapper without the real table frame");

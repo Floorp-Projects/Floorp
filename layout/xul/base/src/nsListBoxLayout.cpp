@@ -46,7 +46,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsIReflowCallback.h"
 #include "nsINameSpaceManager.h"
-#include "nsXULAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsContentUtils.h"
 
 nsListBoxLayout::nsListBoxLayout(nsIPresShell* aPresShell)
@@ -73,7 +73,7 @@ nsListBoxLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, ns
       aSize.height += remainder;
     }
     if (nsContentUtils::HasNonEmptyAttr(frame->GetContent(), kNameSpaceID_None,
-                                        nsXULAtoms::sizemode)) {
+                                        nsGkAtoms::sizemode)) {
       nscoord width = frame->ComputeIntrinsicWidth(aBoxLayoutState);
       if (width > aSize.width)
         aSize.width = width;
@@ -99,7 +99,7 @@ nsListBoxLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsS
       aSize.height += remainder;
     }
     if (nsContentUtils::HasNonEmptyAttr(frame->GetContent(), kNameSpaceID_None,
-                                        nsXULAtoms::sizemode)) {
+                                        nsGkAtoms::sizemode)) {
       nscoord width = frame->ComputeIntrinsicWidth(aBoxLayoutState);
       if (width > aSize.width)
         aSize.width = width;

@@ -38,8 +38,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsTreeColFrame.h"
-#include "nsXULAtoms.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsStyleContext.h"
 #include "nsINameSpaceManager.h" 
@@ -144,7 +143,7 @@ nsDisplayXULTreeColSplitterTarget::HitTest(nsDisplayListBuilder* aBuilder,
     else
       child = mFrame->GetNextSibling();
 
-    if (child && child->GetContent()->NodeInfo()->Equals(nsXULAtoms::splitter,
+    if (child && child->GetContent()->NodeInfo()->Equals(nsGkAtoms::splitter,
                                                          kNameSpaceID_XUL)) {
       return child;
     }
@@ -180,7 +179,7 @@ nsTreeColFrame::AttributeChanged(PRInt32 aNameSpaceID,
   nsresult rv = nsBoxFrame::AttributeChanged(aNameSpaceID, aAttribute,
                                              aModType);
 
-  if (aAttribute == nsXULAtoms::ordinal || aAttribute == nsXULAtoms::primary) {
+  if (aAttribute == nsGkAtoms::ordinal || aAttribute == nsGkAtoms::primary) {
     EnsureColumns();
     if (mColumns)
       mColumns->InvalidateColumns();

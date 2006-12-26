@@ -53,7 +53,7 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsMappedAttributes.h"
@@ -252,7 +252,7 @@ protected:
    * @param true if the name existed, false if not
    */
   PRBool GetNameIfExists(nsAString& aName) {
-    return GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, aName);
+    return GetAttr(kNameSpaceID_None, nsGkAtoms::name, aName);
   }
 
   /**
@@ -269,8 +269,8 @@ protected:
   void SelectAll(nsPresContext* aPresContext);
   PRBool IsImage() const
   {
-    return AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::type,
-                       nsHTMLAtoms::image, eIgnoreCase);
+    return AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                       nsGkAtoms::image, eIgnoreCase);
   }
 
   /**
@@ -457,16 +457,16 @@ nsHTMLInputElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     // (type changes are handled in the form itself currently)
     // If the parser is not done creating the radio, we also should not do it.
     //
-    if ((aName == nsHTMLAtoms::name ||
-         (aName == nsHTMLAtoms::type && !mForm)) &&
+    if ((aName == nsGkAtoms::name ||
+         (aName == nsGkAtoms::type && !mForm)) &&
         mType == NS_FORM_INPUT_RADIO &&
         (mForm || !(GET_BOOLBIT(mBitField, BF_PARSER_CREATING)))) {
       WillRemoveFromRadioGroup();
-    } else if (aNotify && aName == nsHTMLAtoms::src &&
+    } else if (aNotify && aName == nsGkAtoms::src &&
                aValue && mType == NS_FORM_INPUT_IMAGE) {
       // Null value means the attr got unset; don't trigger on that
       LoadImage(*aValue, PR_TRUE, aNotify);
-    } else if (aNotify && aName == nsHTMLAtoms::disabled) {
+    } else if (aNotify && aName == nsGkAtoms::disabled) {
       SET_BOOLBIT(mBitField, BF_DISABLED_CHANGED, PR_TRUE);
     }
   }
@@ -486,8 +486,8 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     // (type changes are handled in the form itself currently)
     // If the parser is not done creating the radio, we also should not do it.
     //
-    if ((aName == nsHTMLAtoms::name ||
-         (aName == nsHTMLAtoms::type && !mForm)) &&
+    if ((aName == nsGkAtoms::name ||
+         (aName == nsGkAtoms::type && !mForm)) &&
         mType == NS_FORM_INPUT_RADIO &&
         (mForm || !(GET_BOOLBIT(mBitField, BF_PARSER_CREATING)))) {
       AddedToRadioGroup();
@@ -502,7 +502,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     // We only really need to call reset for the value so that the text control
     // knows the new value.  No other reason.
     //
-    if (aName == nsHTMLAtoms::value &&
+    if (aName == nsGkAtoms::value &&
         !GET_BOOLBIT(mBitField, BF_VALUE_CHANGED) &&
         (mType == NS_FORM_INPUT_TEXT ||
          mType == NS_FORM_INPUT_PASSWORD ||
@@ -512,7 +512,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     //
     // Checked must be set no matter what type of control it is, since
     // GetChecked() must reflect the new value
-    if (aName == nsHTMLAtoms::checked) {
+    if (aName == nsGkAtoms::checked) {
       if (aNotify &&
           (mType == NS_FORM_INPUT_RADIO || mType == NS_FORM_INPUT_CHECKBOX)) {
         // the checked attribute being changed, no matter the current checked
@@ -537,7 +537,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       }
     }
 
-    if (aName == nsHTMLAtoms::type) {
+    if (aName == nsGkAtoms::type) {
       if (!aValue) {
         // We're now a text input.  Note that we have to handle this manually,
         // since removing an attribute (which is what happened, since aValue is
@@ -551,7 +551,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
           mType != NS_FORM_INPUT_TEXT &&
           mType != NS_FORM_INPUT_PASSWORD &&
           mType != NS_FORM_INPUT_FILE) {
-        SetAttr(kNameSpaceID_None, nsHTMLAtoms::value,
+        SetAttr(kNameSpaceID_None, nsGkAtoms::value,
                 NS_ConvertUTF8toUTF16(mValue), PR_FALSE);
         if (mValue) {
           nsMemory::Free(mValue);
@@ -568,7 +568,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         // We just got switched to be an image input; we should see
         // whether we have an image to load;
         nsAutoString src;
-        if (GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, src)) {
+        if (GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
           LoadImage(src, PR_FALSE, aNotify);
         }
       }
@@ -608,7 +608,7 @@ NS_IMPL_STRING_ATTR(nsHTMLInputElement, UseMap, usemap)
 NS_IMETHODIMP
 nsHTMLInputElement::GetDefaultValue(nsAString& aValue)
 {
-  GetAttrHelper(nsHTMLAtoms::value, aValue);
+  GetAttrHelper(nsGkAtoms::value, aValue);
 
   if (mType != NS_FORM_INPUT_HIDDEN) {
     // Bug 114997: trim \n, etc. for non-hidden inputs
@@ -621,13 +621,13 @@ nsHTMLInputElement::GetDefaultValue(nsAString& aValue)
 NS_IMETHODIMP
 nsHTMLInputElement::SetDefaultValue(const nsAString& aValue)
 {
-  return SetAttrHelper(nsHTMLAtoms::value, aValue);
+  return SetAttrHelper(nsGkAtoms::value, aValue);
 }
 
 NS_IMETHODIMP
 nsHTMLInputElement::GetSize(PRUint32* aValue)
 {
-  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsHTMLAtoms::size);
+  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsGkAtoms::size);
   if (attrVal && attrVal->Type() == nsAttrValue::eInteger) {
     *aValue = attrVal->GetIntegerValue();
   }
@@ -644,7 +644,7 @@ nsHTMLInputElement::SetSize(PRUint32 aValue)
   nsAutoString val;
   val.AppendInt(aValue);
 
-  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::size, val, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::size, val, PR_TRUE);
 }
 
 NS_IMETHODIMP 
@@ -670,7 +670,7 @@ nsHTMLInputElement::GetValue(nsAString& aValue)
     }
 
     if (frameOwnsValue) {
-      formControlFrame->GetFormProperty(nsHTMLAtoms::value, aValue);
+      formControlFrame->GetFormProperty(nsGkAtoms::value, aValue);
     } else {
       if (!GET_BOOLBIT(mBitField, BF_VALUE_CHANGED) || !mValue) {
         GetDefaultValue(aValue);
@@ -694,7 +694,7 @@ nsHTMLInputElement::GetValue(nsAString& aValue)
   }
 
   // Treat value == defaultValue for other input elements
-  if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aValue) &&
+  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::value, aValue) &&
       (mType == NS_FORM_INPUT_RADIO || mType == NS_FORM_INPUT_CHECKBOX)) {
     // The default value of a radio or checkbox input is "on".
     aValue.AssignLiteral("on");
@@ -798,7 +798,7 @@ nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
     }
     // If the frame owns the value, set the value in the frame
     if (frameOwnsValue) {
-      formControlFrame->SetFormProperty(nsHTMLAtoms::value, aValue);
+      formControlFrame->SetFormProperty(nsGkAtoms::value, aValue);
       return NS_OK;
     }
 
@@ -828,7 +828,7 @@ nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
 
   // Treat value == defaultValue for other input elements.
   return nsGenericHTMLFormElement::SetAttr(kNameSpaceID_None,
-                                           nsHTMLAtoms::value, aValue,
+                                           nsGkAtoms::value, aValue,
                                            PR_TRUE);
 }
 
@@ -1132,7 +1132,7 @@ nsHTMLInputElement::SetFocus(nsPresContext* aPresContext)
     return;
 
   // first see if we are disabled or not. If disabled then do nothing.
-  if (HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
     return;
   }
  
@@ -1174,7 +1174,7 @@ nsHTMLInputElement::Select()
     return NS_OK;
 
   // first see if we are disabled or not. If disabled then do nothing.
-  if (HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
     return NS_OK;
   }
 
@@ -1256,7 +1256,7 @@ nsHTMLInputElement::SelectAll(nsPresContext* aPresContext)
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
   if (formControlFrame) {
-    formControlFrame->SetFormProperty(nsHTMLAtoms::select, EmptyString());
+    formControlFrame->SetFormProperty(nsGkAtoms::select, EmptyString());
   }
 }
 
@@ -1270,7 +1270,7 @@ nsHTMLInputElement::Click()
 
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
-  if (HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
     return NS_OK;
   }
 
@@ -1676,8 +1676,8 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
                 do_QueryInterface(aVisitor.mEvent->originalTarget);
               if (maybeButton) {
                 isButton = maybeButton->AttrValueIs(kNameSpaceID_None,
-                                                    nsHTMLAtoms::type,
-                                                    nsHTMLAtoms::button,
+                                                    nsGkAtoms::type,
+                                                    nsGkAtoms::button,
                                                     eCaseMatters);
               }
             }
@@ -1795,7 +1795,7 @@ nsHTMLInputElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // Our base URI may have changed; claim that our URI changed, and the
     // nsImageLoadingContent will decide whether a new image load is warranted.
     nsAutoString uri;
-    if (GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, uri)) {
+    if (GetAttr(kNameSpaceID_None, nsGkAtoms::src, uri)) {
       // Note: no need to notify here; since we're just now being bound
       // we don't have any frames or anything yet.
       LoadImage(uri, PR_FALSE, PR_FALSE);
@@ -1847,7 +1847,7 @@ nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
                                    nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsHTMLAtoms::type) {
+    if (aAttribute == nsGkAtoms::type) {
       // XXX ARG!! This is major evilness. ParseAttribute
       // shouldn't set members. Override SetAttr instead
       if (!aResult.ParseEnumValue(aValue, kInputTypeTable)) {
@@ -1874,22 +1874,22 @@ nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
 
       return PR_TRUE;
     }
-    if (aAttribute == nsHTMLAtoms::width) {
+    if (aAttribute == nsGkAtoms::width) {
       return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
     }
-    if (aAttribute == nsHTMLAtoms::height) {
+    if (aAttribute == nsGkAtoms::height) {
       return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
     }
-    if (aAttribute == nsHTMLAtoms::maxlength) {
+    if (aAttribute == nsGkAtoms::maxlength) {
       return aResult.ParseIntWithBounds(aValue, 0);
     }
-    if (aAttribute == nsHTMLAtoms::size) {
+    if (aAttribute == nsGkAtoms::size) {
       return aResult.ParseIntWithBounds(aValue, 0);
     }
-    if (aAttribute == nsHTMLAtoms::border) {
+    if (aAttribute == nsGkAtoms::border) {
       return aResult.ParseIntWithBounds(aValue, 0);
     }
-    if (aAttribute == nsHTMLAtoms::align) {
+    if (aAttribute == nsGkAtoms::align) {
       return ParseAlignValue(aValue, aResult);
     }
     if (ParseImageAttribute(aAttribute, aValue, aResult)) {
@@ -1930,14 +1930,14 @@ nsHTMLInputElement::GetType(nsAString& aValue)
 NS_IMETHODIMP
 nsHTMLInputElement::SetType(const nsAString& aValue)
 {
-  return SetAttrHelper(nsHTMLAtoms::type, aValue);
+  return SetAttrHelper(nsGkAtoms::type, aValue);
 }
 
 static void
 MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
-  const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::type);
+  const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::type);
   if (value && value->Type() == nsAttrValue::eEnum &&
       value->GetEnumValue() == NS_FORM_INPUT_IMAGE) {
     nsGenericHTMLFormElement::MapImageBorderAttributeInto(aAttributes, aData);
@@ -1956,11 +1956,11 @@ nsHTMLInputElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 {
   nsChangeHint retval =
     nsGenericHTMLFormElement::GetAttributeChangeHint(aAttribute, aModType);
-  if (aAttribute == nsHTMLAtoms::type) {
+  if (aAttribute == nsGkAtoms::type) {
     NS_UpdateHint(retval, NS_STYLE_HINT_FRAMECHANGE);
-  } else if (aAttribute == nsHTMLAtoms::value) {
+  } else if (aAttribute == nsGkAtoms::value) {
     NS_UpdateHint(retval, NS_STYLE_HINT_REFLOW);
-  } else if (aAttribute == nsHTMLAtoms::size &&
+  } else if (aAttribute == nsGkAtoms::size &&
              (mType == NS_FORM_INPUT_TEXT ||
               mType == NS_FORM_INPUT_PASSWORD)) {
     NS_UpdateHint(retval, NS_STYLE_HINT_REFLOW);
@@ -1972,8 +1972,8 @@ NS_IMETHODIMP_(PRBool)
 nsHTMLInputElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
-    { &nsHTMLAtoms::align },
-    { &nsHTMLAtoms::type },
+    { &nsGkAtoms::align },
+    { &nsGkAtoms::type },
     { nsnull },
   };
 
@@ -2321,7 +2321,7 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   }
 
   if (mType == NS_FORM_INPUT_SUBMIT && value.IsEmpty() &&
-      !HasAttr(kNameSpaceID_None, nsHTMLAtoms::value)) {
+      !HasAttr(kNameSpaceID_None, nsGkAtoms::value)) {
     // Get our default value, which is the same as our default label
     nsXPIDLString defaultValue;
     nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,

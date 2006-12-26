@@ -41,7 +41,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsINameSpaceManager.h" 
-#include "nsXULAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsDisplayList.h"
 
 NS_IMETHODIMP_(nsrefcnt) 
@@ -90,8 +90,8 @@ nsListItemFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                              const nsDisplayListSet& aLists)
 {
   if (aBuilder->IsForEventDelivery()) {
-    if (!mContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::allowevents,
-                               nsXULAtoms::_true, eCaseMatters))
+    if (!mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::allowevents,
+                               nsGkAtoms::_true, eCaseMatters))
       return NS_OK;
   }
   

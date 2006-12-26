@@ -39,7 +39,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
 #include "nsILink.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsIDOMStyleSheet.h"
@@ -262,11 +262,11 @@ nsHTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
   // doing the "right" thing costs virtually nothing here, even if it doesn't
   // make much sense.
   static nsIContent::AttrValuesArray strings[] =
-    {&nsHTMLAtoms::_empty, &nsHTMLAtoms::stylesheet, nsnull};
+    {&nsGkAtoms::_empty, &nsGkAtoms::stylesheet, nsnull};
 
   if (!nsContentUtils::HasNonEmptyAttr(this, kNameSpaceID_None,
-                                       nsHTMLAtoms::rev) &&
-      FindAttrValueIn(kNameSpaceID_None, nsHTMLAtoms::rel,
+                                       nsGkAtoms::rev) &&
+      FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::rel,
                       strings, eIgnoreCase) != ATTR_VALUE_NO_MATCH)
     return;
 
@@ -280,7 +280,7 @@ nsHTMLLinkElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify)
 {
-  if (aName == nsHTMLAtoms::href && kNameSpaceID_None == aNameSpaceID) {
+  if (aName == nsGkAtoms::href && kNameSpaceID_None == aNameSpaceID) {
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
       doc->ForgetLink(this);
@@ -296,10 +296,10 @@ nsHTMLLinkElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   if (NS_SUCCEEDED(rv)) {
     UpdateStyleSheet(nsnull, nsnull,
                      aNameSpaceID == kNameSpaceID_None &&
-                     (aName == nsHTMLAtoms::rel ||
-                      aName == nsHTMLAtoms::title ||
-                      aName == nsHTMLAtoms::media ||
-                      aName == nsHTMLAtoms::type));
+                     (aName == nsGkAtoms::rel ||
+                      aName == nsGkAtoms::title ||
+                      aName == nsGkAtoms::media ||
+                      aName == nsGkAtoms::type));
   }
 
   return rv;
@@ -314,10 +314,10 @@ nsHTMLLinkElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   if (NS_SUCCEEDED(rv)) {
     UpdateStyleSheet(nsnull, nsnull,
                      aNameSpaceID == kNameSpaceID_None &&
-                     (aAttribute == nsHTMLAtoms::rel ||
-                      aAttribute == nsHTMLAtoms::title ||
-                      aAttribute == nsHTMLAtoms::media ||
-                      aAttribute == nsHTMLAtoms::type));
+                     (aAttribute == nsGkAtoms::rel ||
+                      aAttribute == nsGkAtoms::title ||
+                      aAttribute == nsGkAtoms::media ||
+                      aAttribute == nsGkAtoms::type));
   }
 
   return rv;
@@ -371,7 +371,7 @@ nsHTMLLinkElement::GetStyleSheetInfo(nsAString& aTitle,
 
   nsAutoString rel;
   nsStringArray linkTypes(4);
-  GetAttr(kNameSpaceID_None, nsHTMLAtoms::rel, rel);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::rel, rel);
   nsStyleLinkElement::ParseLinkTypes(rel, linkTypes);
   // Is it a stylesheet link?
   if (linkTypes.IndexOf(NS_LITERAL_STRING("stylesheet")) < 0) {
@@ -379,7 +379,7 @@ nsHTMLLinkElement::GetStyleSheetInfo(nsAString& aTitle,
   }
 
   nsAutoString title;
-  GetAttr(kNameSpaceID_None, nsHTMLAtoms::title, title);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::title, title);
   title.CompressWhitespace();
   aTitle.Assign(title);
 
@@ -392,12 +392,12 @@ nsHTMLLinkElement::GetStyleSheetInfo(nsAString& aTitle,
     }
   }
 
-  GetAttr(kNameSpaceID_None, nsHTMLAtoms::media, aMedia);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::media, aMedia);
   ToLowerCase(aMedia); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
 
   nsAutoString mimeType;
   nsAutoString notUsed;
-  GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, aType);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::type, aType);
   nsParserUtils::SplitMimeType(aType, mimeType, notUsed);
   if (!mimeType.IsEmpty() && !mimeType.LowerCaseEqualsLiteral("text/css")) {
     return;

@@ -42,11 +42,10 @@
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsHTMLParts.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsCSSRendering.h"
 #include "nsIPresShell.h"
-#include "nsLayoutAtoms.h"
 
 #define COL_GROUP_TYPE_BITS          0xC0000000 // uses bits 31-32 from mState
 #define COL_GROUP_TYPE_OFFSET        30
@@ -70,7 +69,7 @@ void nsTableColGroupFrame::ResetColIndices(nsIFrame*       aFirstColGroup,
   nsTableColGroupFrame* colGroupFrame = (nsTableColGroupFrame*)aFirstColGroup;
   PRInt32 colIndex = aFirstColIndex;
   while (colGroupFrame) {
-    if (nsLayoutAtoms::tableColGroupFrame == colGroupFrame->GetType()) {
+    if (nsGkAtoms::tableColGroupFrame == colGroupFrame->GetType()) {
       // reset the starting col index for the first cg only if we should reset
       // the whole colgroup (aStartColFrame defaults to nsnull) or if
       // aFirstColIndex is smaller than the existing starting col index
@@ -84,7 +83,7 @@ void nsTableColGroupFrame::ResetColIndices(nsIFrame*       aFirstColGroup,
         colFrame = colGroupFrame->GetFirstChild(nsnull);
       }
       while (colFrame) {
-        if (nsLayoutAtoms::tableColFrame == colFrame->GetType()) {
+        if (nsGkAtoms::tableColFrame == colFrame->GetType()) {
           ((nsTableColFrame*)colFrame)->SetColIndex(colIndex);
           colIndex++;
         }
@@ -113,7 +112,7 @@ nsTableColGroupFrame::AddColsToTable(PRInt32          aFirstColIndex,
   nsIFrame* kidFrame = aFirstFrame;
   PRBool foundLastFrame = PR_FALSE;
   while (kidFrame) {
-    if (nsLayoutAtoms::tableColFrame == kidFrame->GetType()) {
+    if (nsGkAtoms::tableColFrame == kidFrame->GetType()) {
       ((nsTableColFrame*)kidFrame)->SetColIndex(colIndex);
       if (!foundLastFrame) {
         mColCount++;
@@ -251,7 +250,7 @@ nsTableColGroupFrame::InsertFrames(nsIAtom*        aListName,
 
   mFrames.InsertFrames(this, aPrevFrame, aFrameList);
   nsIFrame* prevFrame = nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame,
-                                                         nsLayoutAtoms::tableColFrame);
+                                                         nsGkAtoms::tableColFrame);
 
   PRInt32 colIndex = (prevFrame) ? ((nsTableColFrame*)prevFrame)->GetColIndex() + 1 : GetStartColumnIndex();
   InsertColsReflow(colIndex, aFrameList, lastFrame);
@@ -315,7 +314,7 @@ nsTableColGroupFrame::RemoveFrame(nsIAtom*        aListName,
 
   if (!aOldFrame) return NS_OK;
 
-  if (nsLayoutAtoms::tableColFrame == aOldFrame->GetType()) {
+  if (nsGkAtoms::tableColFrame == aOldFrame->GetType()) {
     nsTableColFrame* colFrame = (nsTableColFrame*)aOldFrame;
     PRInt32 colIndex = colFrame->GetColIndex();
     RemoveChild(*colFrame, PR_TRUE);
@@ -502,7 +501,7 @@ nsTableColGroupFrame::Init(nsIContent*      aContent,
 nsIAtom*
 nsTableColGroupFrame::GetType() const
 {
-  return nsLayoutAtoms::tableColGroupFrame;
+  return nsGkAtoms::tableColGroupFrame;
 }
 
 #ifdef DEBUG

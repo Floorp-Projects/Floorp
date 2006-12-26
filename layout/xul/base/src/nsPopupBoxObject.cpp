@@ -49,8 +49,7 @@
 #include "nsIDOMElement.h"
 #include "nsIFrame.h"
 #include "nsINameSpaceManager.h"
-#include "nsHTMLAtoms.h"
-#include "nsXULAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsMenuPopupFrame.h"
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
@@ -129,8 +128,8 @@ nsPopupBoxObject::ShowPopup(nsIDOMElement* aSrcContent,
   // Use |left| and |top| dimension attributes to position the popup if
   // present, as they may have been persisted. 
   nsAutoString left, top;
-  popupContent->GetAttr(kNameSpaceID_None, nsXULAtoms::left, left);
-  popupContent->GetAttr(kNameSpaceID_None, nsXULAtoms::top, top);
+  popupContent->GetAttr(kNameSpaceID_None, nsGkAtoms::left, left);
+  popupContent->GetAttr(kNameSpaceID_None, nsGkAtoms::top, top);
   
   PRInt32 err;
   if (!left.IsEmpty()) {
@@ -167,8 +166,8 @@ nsPopupBoxObject::SizeTo(PRInt32 aWidth, PRInt32 aHeight)
   height.AppendInt(aHeight);
 
   nsCOMPtr<nsIContent> content = mContent;
-  content->SetAttr(kNameSpaceID_None, nsHTMLAtoms::width, width, PR_FALSE);
-  content->SetAttr(kNameSpaceID_None, nsHTMLAtoms::height, height, PR_TRUE);
+  content->SetAttr(kNameSpaceID_None, nsGkAtoms::width, width, PR_FALSE);
+  content->SetAttr(kNameSpaceID_None, nsGkAtoms::height, height, PR_TRUE);
 
   return NS_OK;
 }

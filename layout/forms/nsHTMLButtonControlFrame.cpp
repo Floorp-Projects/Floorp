@@ -50,7 +50,7 @@
 #include "nsLeafFrame.h"
 #include "nsCSSRendering.h"
 #include "nsISupports.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsIImage.h"
 #include "nsStyleConsts.h"
@@ -69,7 +69,6 @@
 #include "nsIAccessibilityService.h"
 #endif
 #include "nsDisplayList.h"
-#include "nsLayoutAtoms.h"
 
 nsIFrame*
 NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -156,7 +155,7 @@ NS_IMETHODIMP nsHTMLButtonControlFrame::GetAccessible(nsIAccessible** aAccessibl
 nsIAtom*
 nsHTMLButtonControlFrame::GetType() const
 {
-  return nsLayoutAtoms::HTMLButtonControlFrame;
+  return nsGkAtoms::HTMLButtonControlFrame;
 }
 
 PRBool
@@ -438,8 +437,8 @@ nsHTMLButtonControlFrame::GetSkipSides() const
 
 nsresult nsHTMLButtonControlFrame::SetFormProperty(nsIAtom* aName, const nsAString& aValue)
 {
-  if (nsHTMLAtoms::value == aName) {
-    return mContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::value,
+  if (nsGkAtoms::value == aName) {
+    return mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::value,
                              aValue, PR_TRUE);
   }
   return NS_OK;
@@ -447,8 +446,8 @@ nsresult nsHTMLButtonControlFrame::SetFormProperty(nsIAtom* aName, const nsAStri
 
 nsresult nsHTMLButtonControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) const
 {
-  if (nsHTMLAtoms::value == aName)
-    mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aValue);
+  if (nsGkAtoms::value == aName)
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aValue);
 
   return NS_OK;
 }

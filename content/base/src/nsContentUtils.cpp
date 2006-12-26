@@ -90,9 +90,8 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
-#include "nsHTMLAtoms.h"
-#include "nsISupportsPrimitives.h"
 #include "nsLayoutAtoms.h"
+#include "nsISupportsPrimitives.h"
 #include "imgIDecoderObserver.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
@@ -132,7 +131,6 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsXBLPrototypeBinding.h"
 #include "nsEscape.h"
 #include "nsICharsetConverterManager.h"
-#include "nsXULAtoms.h"
 #include "nsIEventListenerManager.h"
 #include "nsAttrName.h"
 #include "nsIDOMUserDataHandler.h"
@@ -1655,7 +1653,7 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
 
       // Append the control name
       nsAutoString name;
-      aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, name);
+      aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
       KeyAppendString(name, aKey);
     }
   }
@@ -1725,7 +1723,7 @@ nsContentUtils::BelongsInForm(nsIDOMHTMLFormElement *aForm,
       return PR_TRUE;
     }
 
-    if (content->Tag() == nsHTMLAtoms::form &&
+    if (content->Tag() == nsGkAtoms::form &&
         content->IsNodeOfType(nsINode::eHTML)) {
       // The child is contained within a form, but not the right form
       // so we ignore it.
@@ -1830,7 +1828,7 @@ nsContentUtils::LookupNamespaceURI(nsIContent* aNamespaceResolver,
     NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
   }
   else {
-    name = nsLayoutAtoms::xmlns;
+    name = nsGkAtoms::xmlns;
   }
   // Trace up the content parent chain looking for the namespace
   // declaration that declares aNamespacePrefix.
@@ -2144,7 +2142,7 @@ nsContentUtils::GetXLinkURI(nsIContent* aContent)
                             nsGkAtoms::simple, eCaseMatters)) {
     nsAutoString value;
     // Check that we have a URI
-    if (aContent->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::href, value)) {
+    if (aContent->GetAttr(kNameSpaceID_XLink, nsGkAtoms::href, value)) {
       //  Resolve it relative to aContent's base URI.
       nsCOMPtr<nsIURI> baseURI = aContent->GetBaseURI();
 
@@ -2278,7 +2276,7 @@ nsContentUtils::GetEventArgNames(PRInt32 aNameSpaceID,
   // nsJSEventListener is what does the arg magic for onerror, and it does
   // not seem to take the namespace into account.  So we let onerror in all
   // namespaces get the 3 arg names.
-  if (aEventName == nsLayoutAtoms::onerror) {
+  if (aEventName == nsGkAtoms::onerror) {
     SET_EVENT_ARG_NAMES(gOnErrorNames);
   } else if (aNameSpaceID == kNameSpaceID_SVG) {
     SET_EVENT_ARG_NAMES(gSVGEventNames);
@@ -2869,7 +2867,7 @@ PRBool
 nsContentUtils::HasNonEmptyAttr(nsIContent* aContent, PRInt32 aNameSpaceID,
                                 nsIAtom* aName)
 {
-  static nsIContent::AttrValuesArray strings[] = {&nsXULAtoms::_empty, nsnull};
+  static nsIContent::AttrValuesArray strings[] = {&nsGkAtoms::_empty, nsnull};
   return aContent->FindAttrValueIn(aNameSpaceID, aName, strings, eCaseMatters)
     == nsIContent::ATTR_VALUE_NO_MATCH;
 }

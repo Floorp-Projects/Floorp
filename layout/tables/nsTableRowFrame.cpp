@@ -41,13 +41,12 @@
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIContent.h"
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsIView.h"
 #include "nsCSSRendering.h"
-#include "nsLayoutAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsTableColGroupFrame.h"
 #include "nsTableColFrame.h"
@@ -219,7 +218,7 @@ nsTableRowFrame::InsertFrames(nsIAtom*        aListName,
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   
   // gather the new frames (only those which are cells) into an array
-  nsIAtom* cellFrameType = (tableFrame->IsBorderCollapse()) ? nsLayoutAtoms::bcTableCellFrame : nsLayoutAtoms::tableCellFrame;
+  nsIAtom* cellFrameType = (tableFrame->IsBorderCollapse()) ? nsGkAtoms::bcTableCellFrame : nsGkAtoms::tableCellFrame;
   nsTableCellFrame* prevCellFrame = (nsTableCellFrame *)nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, cellFrameType);
   nsVoidArray cellChildren;
   for (nsIFrame* childFrame = aFrameList; childFrame;
@@ -306,7 +305,7 @@ GetHeightOfRowsSpannedBelowFirst(nsTableCellFrame& aTableCellFrame,
   // add in height of rows spanned beyond the 1st one
   nsIFrame* nextRow = aTableCellFrame.GetParent()->GetNextSibling();
   for (PRInt32 rowX = 1; ((rowX < rowSpan) && nextRow);) {
-    if (nsLayoutAtoms::tableRowFrame == nextRow->GetType()) {
+    if (nsGkAtoms::tableRowFrame == nextRow->GetType()) {
       height += nextRow->GetSize().height;
       rowX++;
     }
@@ -1320,7 +1319,7 @@ nsTableRowFrame::RemoveCellFrame(nsTableCellFrame* aFrame)
 nsIAtom*
 nsTableRowFrame::GetType() const
 {
-  return nsLayoutAtoms::tableRowFrame;
+  return nsGkAtoms::tableRowFrame;
 }
 
 nsTableRowFrame*  
@@ -1328,7 +1327,7 @@ nsTableRowFrame::GetNextRow() const
 {
   nsIFrame* childFrame = GetNextSibling();
   while (childFrame) {
-    if (nsLayoutAtoms::tableRowFrame == childFrame->GetType()) {
+    if (nsGkAtoms::tableRowFrame == childFrame->GetType()) {
 	  NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_ROW == childFrame->GetStyleDisplay()->mDisplay, "wrong display type on rowframe");
       return (nsTableRowFrame*)childFrame;
     }
@@ -1343,7 +1342,7 @@ nsTableRowFrame::SetUnpaginatedHeight(nsPresContext* aPresContext,
 {
   NS_ASSERTION(!GetPrevInFlow(), "program error");
   // Get the property 
-  nscoord* value = (nscoord*)nsTableFrame::GetProperty(this, nsLayoutAtoms::rowUnpaginatedHeightProperty, PR_TRUE);
+  nscoord* value = (nscoord*)nsTableFrame::GetProperty(this, nsGkAtoms::rowUnpaginatedHeightProperty, PR_TRUE);
   if (value) {
     *value = aValue;
   }
@@ -1353,7 +1352,7 @@ nscoord
 nsTableRowFrame::GetUnpaginatedHeight(nsPresContext* aPresContext)
 {
   // See if the property is set
-  nscoord* value = (nscoord*)nsTableFrame::GetProperty(GetFirstInFlow(), nsLayoutAtoms::rowUnpaginatedHeightProperty);
+  nscoord* value = (nscoord*)nsTableFrame::GetProperty(GetFirstInFlow(), nsGkAtoms::rowUnpaginatedHeightProperty);
   if (value) 
     return *value;
   else 

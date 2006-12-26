@@ -49,11 +49,10 @@
 #include "nsIDOMEvent.h"
 #include "nsStyleConsts.h"
 #include "nsIViewManager.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIEventStateManager.h"
 #include "nsIDeviceContext.h"
 #include "nsIScrollableView.h"
-#include "nsLayoutAtoms.h"
 #include "nsIPresShell.h"
 #include "nsBoxFrame.h"
 #include "nsStackLayout.h"
@@ -61,7 +60,6 @@
 #include "nsIContent.h"
 #include "nsXULTooltipListener.h"
 #include "nsFrameManager.h"
-#include "nsXULAtoms.h"
 
 // Interface IDs
 
@@ -129,7 +127,7 @@ public:
   /**
    * Get the "type" of the frame
    *
-   * @see nsLayoutAtoms::rootFrame
+   * @see nsGkAtoms::rootFrame
    */
   virtual nsIAtom* GetType() const;
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
@@ -279,7 +277,7 @@ nsRootBoxFrame::HandleEvent(nsPresContext* aPresContext,
 nsIAtom*
 nsRootBoxFrame::GetType() const
 {
-  return nsLayoutAtoms::rootFrame;
+  return nsGkAtoms::rootFrame;
 }
 
 PRBool
@@ -343,7 +341,7 @@ nsRootBoxFrame::AddTooltipSupport(nsIContent* aNode)
   NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
   nsRefPtr<nsXULTooltipListener> listener =
     NS_STATIC_CAST(nsXULTooltipListener*,
-                   aNode->GetProperty(nsXULAtoms::tooltiplistener));
+                   aNode->GetProperty(nsGkAtoms::tooltiplistener));
   if (listener) {
     // Tooltip listener is already installed.
     return NS_OK;
@@ -354,7 +352,7 @@ nsRootBoxFrame::AddTooltipSupport(nsIContent* aNode)
     return NS_ERROR_OUT_OF_MEMORY;
 
   if (NS_SUCCEEDED(listener->Init(aNode))) {
-    nsresult rv = aNode->SetProperty(nsXULAtoms::tooltiplistener, listener,
+    nsresult rv = aNode->SetProperty(nsGkAtoms::tooltiplistener, listener,
                                      TooltipListenerPropertyDtor, PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
     nsXULTooltipListener* listenerRef = listener;

@@ -38,8 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsXULAtoms.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsPopupSetFrame.h"
 #include "nsIMenuParent.h"
 #include "nsMenuFrame.h"
@@ -51,7 +50,6 @@
 #include "nsStyleContext.h"
 #include "nsCSSRendering.h"
 #include "nsINameSpaceManager.h"
-#include "nsLayoutAtoms.h"
 #include "nsMenuPopupFrame.h"
 #include "nsMenuBarFrame.h"
 #include "nsIView.h"
@@ -457,7 +455,7 @@ nsPopupSetFrame::HidePopup(nsIFrame* aPopup)
     // If we are a context menu, and if we are attached to a
     // menupopup, then hiding us should also hide the parent menu
     // popup.
-    if (entry->mElementContent->Tag() == nsXULAtoms::menupopup) {
+    if (entry->mElementContent->Tag() == nsGkAtoms::menupopup) {
       nsIFrame* popupFrame = GetPresContext()->PresShell()
         ->GetPrimaryFrameFor(entry->mElementContent);
       if (popupFrame) {
@@ -489,7 +487,7 @@ nsPopupSetFrame::DestroyPopup(nsIFrame* aPopup, PRBool aDestroyEntireChain)
         // If we are a context menu, and if we are attached to a
         // menupopup, then destroying us should also dismiss the parent
         // menu popup.
-        if (entry->mElementContent->Tag() == nsXULAtoms::menupopup) {
+        if (entry->mElementContent->Tag() == nsGkAtoms::menupopup) {
           nsIFrame* popupFrame = GetPresContext()->PresShell()
             ->GetPrimaryFrameFor(entry->mElementContent);
           if (popupFrame) {
@@ -510,7 +508,7 @@ nsPopupSetFrame::DestroyPopup(nsIFrame* aPopup, PRBool aDestroyEntireChain)
       entry->mLastPref.height = -1;
     }
     // ungenerate the popup.
-    popupContent->UnsetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated, PR_TRUE);
+    popupContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::menugenerated, PR_TRUE);
   }
 
   return NS_OK;
@@ -521,10 +519,10 @@ nsPopupSetFrame::MarkAsGenerated(nsIContent* aPopupContent)
 {
   // Set our attribute, but only if we aren't already generated.
   // Retrieve the menugenerated attribute.
-  if (!aPopupContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::menugenerated,
-                                  nsXULAtoms::_true, eCaseMatters)) {
+  if (!aPopupContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::menugenerated,
+                                  nsGkAtoms::_true, eCaseMatters)) {
     // Generate this element.
-    aPopupContent->SetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated, NS_LITERAL_STRING("true"),
+    aPopupContent->SetAttr(kNameSpaceID_None, nsGkAtoms::menugenerated, NS_LITERAL_STRING("true"),
                            PR_TRUE);
   }
 }
@@ -550,8 +548,8 @@ nsPopupSetFrame::OpenPopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
       // Tooltips don't get keyboard navigation
       if (childPopup && !nsMenuDismissalListener::sInstance) {
         // First check and make sure this popup wants keyboard navigation
-        if (!popupContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::ignorekeys,
-                                       nsXULAtoms::_true, eCaseMatters))
+        if (!popupContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::ignorekeys,
+                                       nsGkAtoms::_true, eCaseMatters))
           childPopup->InstallKeyboardNavigator();
       }
 
@@ -598,13 +596,13 @@ nsPopupSetFrame::ActivatePopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
     // but now we do it ourselves. 
     if (aActivateFlag)
       // XXXben hook in |width| and |height| usage here? 
-      aEntry->mPopupContent->SetAttr(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, NS_LITERAL_STRING("true"), PR_TRUE);
+      aEntry->mPopupContent->SetAttr(kNameSpaceID_None, nsGkAtoms::menutobedisplayed, NS_LITERAL_STRING("true"), PR_TRUE);
     else {
       nsWeakFrame weakFrame(this);
       nsWeakFrame weakActiveChild(aEntry->mPopupFrame);
       nsCOMPtr<nsIContent> content = aEntry->mPopupContent;
-      content->UnsetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
-      content->UnsetAttr(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, PR_TRUE);
+      content->UnsetAttr(kNameSpaceID_None, nsGkAtoms::menuactive, PR_TRUE);
+      content->UnsetAttr(kNameSpaceID_None, nsGkAtoms::menutobedisplayed, PR_TRUE);
 
       // get rid of the reflows we just created. If we leave them hanging around, we
       // can get into trouble if a dialog with a modal event loop comes along and
@@ -670,10 +668,10 @@ nsPopupSetFrame::OnCreate(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
     for (PRUint32 i = 0; i < count; i++) {
       nsCOMPtr<nsIContent> grandChild = aPopupContent->GetChildAt(i);
 
-      if (grandChild->Tag() == nsXULAtoms::menuitem) {
+      if (grandChild->Tag() == nsGkAtoms::menuitem) {
         // See if we have a command attribute.
         nsAutoString command;
-        grandChild->GetAttr(kNameSpaceID_None, nsXULAtoms::command, command);
+        grandChild->GetAttr(kNameSpaceID_None, nsGkAtoms::command, command);
         if (!command.IsEmpty()) {
           // We do! Look it up in our document
           nsCOMPtr<nsIDOMElement> commandElt;
@@ -682,22 +680,22 @@ nsPopupSetFrame::OnCreate(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
           if ( commandContent ) {
             nsAutoString commandValue;
             // The menu's disabled state needs to be updated to match the command.
-            if (commandContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, commandValue))
-              grandChild->SetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, commandValue, PR_TRUE);
+            if (commandContent->GetAttr(kNameSpaceID_None, nsGkAtoms::disabled, commandValue))
+              grandChild->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled, commandValue, PR_TRUE);
             else
-              grandChild->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, PR_TRUE);
+              grandChild->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, PR_TRUE);
 
             // The menu's label, accesskey and checked states need to be updated
             // to match the command. Note that unlike the disabled state if the
             // command has *no* value, we assume the menu is supplying its own.
-            if (commandContent->GetAttr(kNameSpaceID_None, nsXULAtoms::label, commandValue))
-              grandChild->SetAttr(kNameSpaceID_None, nsXULAtoms::label, commandValue, PR_TRUE);
+            if (commandContent->GetAttr(kNameSpaceID_None, nsGkAtoms::label, commandValue))
+              grandChild->SetAttr(kNameSpaceID_None, nsGkAtoms::label, commandValue, PR_TRUE);
 
-            if (commandContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, commandValue))
-              grandChild->SetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, commandValue, PR_TRUE);
+            if (commandContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, commandValue))
+              grandChild->SetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, commandValue, PR_TRUE);
 
-            if (commandContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::checked, commandValue))
-              grandChild->SetAttr(kNameSpaceID_None, nsHTMLAtoms::checked, commandValue, PR_TRUE);
+            if (commandContent->GetAttr(kNameSpaceID_None, nsGkAtoms::checked, commandValue))
+              grandChild->SetAttr(kNameSpaceID_None, nsGkAtoms::checked, commandValue, PR_TRUE);
           }
         }
       }

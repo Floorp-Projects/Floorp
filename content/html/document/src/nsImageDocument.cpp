@@ -48,7 +48,7 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMEventListener.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "imgIRequest.h"
 #include "imgILoader.h"
 #include "imgIContainer.h"
@@ -239,7 +239,7 @@ ImageListener::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
     imgDoc->mStringBundle->FormatStringFromName(str.get(), formatString, 1,
                                                 getter_Copies(errorMsg));
     
-    imgDoc->mImageContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::alt, errorMsg, PR_FALSE);
+    imgDoc->mImageContent->SetAttr(kNameSpaceID_None, nsGkAtoms::alt, errorMsg, PR_FALSE);
   }
 
   return nsMediaDocumentStreamListener::OnStopRequest(request, ctxt, status);
@@ -409,7 +409,7 @@ nsImageDocument::ShrinkToFit()
   image->SetWidth(PR_MAX(1, NSToCoordFloor(GetRatio() * mImageWidth)));
   image->SetHeight(PR_MAX(1, NSToCoordFloor(GetRatio() * mImageHeight)));
   
-  mImageContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::style,
+  mImageContent->SetAttr(kNameSpaceID_None, nsGkAtoms::style,
                          NS_LITERAL_STRING("cursor: -moz-zoom-in"), PR_TRUE);
   
   mImageIsResized = PR_TRUE;
@@ -458,15 +458,15 @@ nsImageDocument::RestoreImageTo(PRInt32 aX, PRInt32 aY)
 NS_IMETHODIMP
 nsImageDocument::RestoreImage()
 {
-  mImageContent->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::width, PR_TRUE);
-  mImageContent->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::height, PR_TRUE);
+  mImageContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::width, PR_TRUE);
+  mImageContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::height, PR_TRUE);
   
   if (mImageIsOverflowing) {
-    mImageContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::style,
+    mImageContent->SetAttr(kNameSpaceID_None, nsGkAtoms::style,
                            NS_LITERAL_STRING("cursor: -moz-zoom-out"), PR_TRUE);
   }
   else {
-    mImageContent->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::style, PR_TRUE);
+    mImageContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::style, PR_TRUE);
   }
   
   mImageIsResized = PR_FALSE;
@@ -569,7 +569,7 @@ nsImageDocument::CreateSyntheticDocument()
   }
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::img, nsnull,
+  rv = mNodeInfoManager->GetNodeInfo(nsGkAtoms::img, nsnull,
                                      kNameSpaceID_None,
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -587,8 +587,8 @@ nsImageDocument::CreateSyntheticDocument()
   NS_ConvertUTF8toUTF16 srcString(src);
   // Make sure not to start the image load from here...
   imageLoader->SetLoadingEnabled(PR_FALSE);
-  mImageContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::src, srcString, PR_FALSE);
-  mImageContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::alt, srcString, PR_FALSE);
+  mImageContent->SetAttr(kNameSpaceID_None, nsGkAtoms::src, srcString, PR_FALSE);
+  mImageContent->SetAttr(kNameSpaceID_None, nsGkAtoms::alt, srcString, PR_FALSE);
 
   body->AppendChildTo(mImageContent, PR_FALSE);
   imageLoader->SetLoadingEnabled(PR_TRUE);

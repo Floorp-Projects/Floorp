@@ -660,7 +660,7 @@ public:
   const nscoord* GetBorderWidthTable() { return mBorderWidthTable; }
 
   PRBool IsDynamic() { return (mType == eContext_PageLayout || mType == eContext_Galley); };
-  PRBool IsScreen() { return (mMedium == nsLayoutAtoms::screen ||
+  PRBool IsScreen() { return (mMedium == nsGkAtoms::screen ||
                               mType == eContext_PageLayout ||
                               mType == eContext_PrintPreview); };
 

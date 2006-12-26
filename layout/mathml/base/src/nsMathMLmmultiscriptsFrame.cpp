@@ -84,7 +84,7 @@ nsMathMLmmultiscriptsFrame::TransmitAutomaticData()
   nsAutoVoidArray subScriptFrames;
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    if (childFrame->GetContent()->Tag() == nsMathMLAtoms::mprescripts_) {
+    if (childFrame->GetContent()->Tag() == nsGkAtoms::mprescripts_) {
       // mprescripts frame
     }
     else if (0 == count) {
@@ -122,7 +122,7 @@ nsMathMLmmultiscriptsFrame::ProcessAttributes()
   // check if the subscriptshift attribute is there
   nsAutoString value;
   GetAttribute(mContent, mPresentationData.mstyle,
-               nsMathMLAtoms::subscriptshift_, value);
+               nsGkAtoms::subscriptshift_, value);
   if (!value.IsEmpty()) {
     nsCSSValue cssValue;
     if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
@@ -131,7 +131,7 @@ nsMathMLmmultiscriptsFrame::ProcessAttributes()
   }
   // check if the superscriptshift attribute is there
   GetAttribute(mContent, mPresentationData.mstyle,
-               nsMathMLAtoms::superscriptshift_, value);
+               nsGkAtoms::superscriptshift_, value);
   if (!value.IsEmpty()) {
     nsCSSValue cssValue;
     if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
@@ -263,7 +263,7 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
 
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    if (childFrame->GetContent()->Tag() == nsMathMLAtoms::mprescripts_) {
+    if (childFrame->GetContent()->Tag() == nsGkAtoms::mprescripts_) {
       if (mprescriptsFrame) {
         // duplicate <mprescripts/> found
         // report an error, encourage people to get their markups in order

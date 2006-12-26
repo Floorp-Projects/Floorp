@@ -52,7 +52,6 @@
 #include "nsContentUtils.h"
 
 #include "nsLayoutAtoms.h"
-#include "nsHTMLAtoms.h" // XXX until atoms get factored into nsLayoutAtoms
 
 // Form related includes
 #include "nsIDOMHTMLFormElement.h"
@@ -302,7 +301,7 @@ nsContentList::nsContentList(nsINode* aRootNode,
     mFuncMayDependOnAttr(PR_FALSE)
 {
   NS_ASSERTION(mRootNode, "Must have root");
-  if (nsLayoutAtoms::_asterix == mMatchAtom) {
+  if (nsGkAtoms::_asterix == mMatchAtom) {
     mMatchAll = PR_TRUE;
   }
   else {
@@ -412,9 +411,9 @@ nsContentList::NamedItem(const nsAString& aName, PRBool aDoFlush)
     nsIContent *content = mElements[i];
     // XXX Should this pass eIgnoreCase?
     if (content &&
-        (content->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::name,
+        (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
                               name, eCaseMatters) ||
-         content->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::id,
+         content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id,
                               name, eCaseMatters))) {
       return content;
     }

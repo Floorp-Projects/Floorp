@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGGraphicElement.h"
-#include "nsSVGAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDOMSVGTextElement.h"
 #include "nsCOMPtr.h"
 #include "nsSVGAnimatedLengthList.h"
@@ -139,7 +139,7 @@ nsSVGTextElement::Init()
     rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mX),
                                      lengthList);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::x, mX);
+    rv = AddMappedSVGValue(nsGkAtoms::x, mX);
     NS_ENSURE_SUCCESS(rv,rv);
   }
   
@@ -151,7 +151,7 @@ nsSVGTextElement::Init()
     rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mY),
                                      lengthList);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::y, mY);
+    rv = AddMappedSVGValue(nsGkAtoms::y, mY);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -163,7 +163,7 @@ nsSVGTextElement::Init()
     rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mdX),
                                      lengthList);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::dx, mdX);
+    rv = AddMappedSVGValue(nsGkAtoms::dx, mdX);
     NS_ENSURE_SUCCESS(rv,rv);
   }
   
@@ -175,7 +175,7 @@ nsSVGTextElement::Init()
     rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mdY),
                                      lengthList);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::dy, mdY);
+    rv = AddMappedSVGValue(nsGkAtoms::dy, mdY);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 

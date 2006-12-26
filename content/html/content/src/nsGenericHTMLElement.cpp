@@ -99,7 +99,6 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsLayoutAtoms.h"
-#include "nsHTMLAtoms.h"
 #include "nsIEventStateManager.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMNSEvent.h"
@@ -125,7 +124,6 @@
 #include "nsRuleWalker.h"
 
 #include "nsIObjectFrame.h"
-#include "nsLayoutAtoms.h"
 #include "xptinfo.h"
 #include "nsIInterfaceInfoManager.h"
 #include "nsIServiceManager.h"
@@ -284,7 +282,7 @@ nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst) const
   for (i = 0; i < count; ++i) {
     const nsAttrName *name = mAttrsAndChildren.AttrNameAt(i);
     const nsAttrValue *value = mAttrsAndChildren.AttrAt(i);
-    if (name->Equals(nsHTMLAtoms::style, kNameSpaceID_None) &&
+    if (name->Equals(nsGkAtoms::style, kNameSpaceID_None) &&
         value->Type() == nsAttrValue::eCSSStyleRule) {
       // We can't just set this as a string, because that will fail
       // to reparse the string into style data until the node is
@@ -311,15 +309,15 @@ nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst) const
 
   // Copy the baseuri and basetarget
   void* prop;
-  if ((prop = GetProperty(nsHTMLAtoms::htmlBaseHref))) {
-    rv = aDst->SetProperty(nsHTMLAtoms::htmlBaseHref, prop,
+  if ((prop = GetProperty(nsGkAtoms::htmlBaseHref))) {
+    rv = aDst->SetProperty(nsGkAtoms::htmlBaseHref, prop,
                            nsPropertyTable::SupportsDtorFunc, PR_TRUE);
     if (NS_SUCCEEDED(rv)) {
       NS_ADDREF(NS_STATIC_CAST(nsIURI*, prop));
     }
   }
-  if ((prop = GetProperty(nsHTMLAtoms::htmlBaseTarget))) {
-    rv = aDst->SetProperty(nsHTMLAtoms::htmlBaseTarget, prop,
+  if ((prop = GetProperty(nsGkAtoms::htmlBaseTarget))) {
+    rv = aDst->SetProperty(nsGkAtoms::htmlBaseTarget, prop,
                            nsPropertyTable::SupportsDtorFunc, PR_TRUE);
     if (NS_SUCCEEDED(rv)) {
       NS_ADDREF(NS_STATIC_CAST(nsIAtom*, prop));
@@ -423,42 +421,42 @@ nsGenericHTMLElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
 nsresult
 nsGenericHTMLElement::GetId(nsAString& aId)
 {
-  GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, aId);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::id, aId);
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::SetId(const nsAString& aId)
 {
-  SetAttr(kNameSpaceID_None, nsHTMLAtoms::id, aId, PR_TRUE);
+  SetAttr(kNameSpaceID_None, nsGkAtoms::id, aId, PR_TRUE);
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::GetTitle(nsAString& aTitle)
 {
-  GetAttr(kNameSpaceID_None, nsHTMLAtoms::title, aTitle);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::title, aTitle);
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::SetTitle(const nsAString& aTitle)
 {
-  SetAttr(kNameSpaceID_None, nsHTMLAtoms::title, aTitle, PR_TRUE);
+  SetAttr(kNameSpaceID_None, nsGkAtoms::title, aTitle, PR_TRUE);
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::GetLang(nsAString& aLang)
 {
-  GetAttr(kNameSpaceID_None, nsHTMLAtoms::lang, aLang);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::lang, aLang);
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::SetLang(const nsAString& aLang)
 {
-  SetAttr(kNameSpaceID_None, nsHTMLAtoms::lang, aLang, PR_TRUE);
+  SetAttr(kNameSpaceID_None, nsGkAtoms::lang, aLang, PR_TRUE);
   return NS_OK;
 }
 
@@ -471,7 +469,7 @@ static const nsAttrValue::EnumTable kDirTable[] = {
 nsresult
 nsGenericHTMLElement::GetDir(nsAString& aDir)
 {
-  const nsAttrValue* attr = mAttrsAndChildren.GetAttr(nsHTMLAtoms::dir);
+  const nsAttrValue* attr = mAttrsAndChildren.GetAttr(nsGkAtoms::dir);
 
   if (attr && attr->Type() == nsAttrValue::eEnum) {
     attr->ToString(aDir);
@@ -486,21 +484,21 @@ nsGenericHTMLElement::GetDir(nsAString& aDir)
 nsresult
 nsGenericHTMLElement::SetDir(const nsAString& aDir)
 {
-  SetAttr(kNameSpaceID_None, nsHTMLAtoms::dir, aDir, PR_TRUE);
+  SetAttr(kNameSpaceID_None, nsGkAtoms::dir, aDir, PR_TRUE);
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::GetClassName(nsAString& aClassName)
 {
-  GetAttr(kNameSpaceID_None, nsHTMLAtoms::_class, aClassName);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::_class, aClassName);
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::SetClassName(const nsAString& aClassName)
 {
-  SetAttr(kNameSpaceID_None, nsHTMLAtoms::_class, aClassName, PR_TRUE);
+  SetAttr(kNameSpaceID_None, nsGkAtoms::_class, aClassName, PR_TRUE);
   return NS_OK;
 }
 
@@ -557,7 +555,7 @@ nsGenericHTMLElement::RecreateFrames()
 static PRBool
 IsBody(nsIContent *aContent)
 {
-  return (aContent->NodeInfo()->Equals(nsHTMLAtoms::body) &&
+  return (aContent->NodeInfo()->Equals(nsGkAtoms::body) &&
           aContent->IsNodeOfType(nsINode::eHTML));
 }
 
@@ -566,9 +564,9 @@ IsOffsetParent(nsIContent *aContent)
 {
   nsINodeInfo *ni = aContent->NodeInfo();
 
-  return ((ni->Equals(nsHTMLAtoms::td) ||
-           ni->Equals(nsHTMLAtoms::table) ||
-           ni->Equals(nsHTMLAtoms::th)) &&
+  return ((ni->Equals(nsGkAtoms::td) ||
+           ni->Equals(nsGkAtoms::table) ||
+           ni->Equals(nsGkAtoms::th)) &&
           aContent->IsNodeOfType(nsINode::eHTML));
 }
 
@@ -975,8 +973,8 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
     }
 
     PRBool quirksMode = InNavQuirksMode(document);
-    if ((quirksMode && mNodeInfo->Equals(nsHTMLAtoms::body)) ||
-        (!quirksMode && mNodeInfo->Equals(nsHTMLAtoms::html))) {
+    if ((quirksMode && mNodeInfo->Equals(nsGkAtoms::body)) ||
+        (!quirksMode && mNodeInfo->Equals(nsGkAtoms::html))) {
       // In quirks mode, the scroll info for the body element should map to the
       // scroll info for the nearest scrollable frame above the body element
       // (i.e. the root scrollable frame).  This is what IE6 does in quirks
@@ -1254,9 +1252,9 @@ nsGenericHTMLElement::GetSpellcheck(PRBool* aSpellcheck)
   for (node = this; node; node = node->GetNodeParent()) {
     if (node->IsNodeOfType(nsINode::eHTML)) {
       static nsIContent::AttrValuesArray strings[] =
-        {&nsHTMLAtoms::_true, &nsHTMLAtoms::_false, nsnull};
+        {&nsGkAtoms::_true, &nsGkAtoms::_false, nsnull};
       switch (NS_STATIC_CAST(nsIContent*, node)->
-              FindAttrValueIn(kNameSpaceID_None, nsHTMLAtoms::spellcheck,
+              FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::spellcheck,
                               strings, eCaseMatters)) {
         case 0:                         // spellcheck = "true"
           *aSpellcheck = PR_TRUE;
@@ -1322,10 +1320,10 @@ NS_IMETHODIMP
 nsGenericHTMLElement::SetSpellcheck(PRBool aSpellcheck)
 {
   if (aSpellcheck) {
-    return SetAttrHelper(nsHTMLAtoms::spellcheck, NS_LITERAL_STRING("true"));
+    return SetAttrHelper(nsGkAtoms::spellcheck, NS_LITERAL_STRING("true"));
   }
 
-  return SetAttrHelper(nsHTMLAtoms::spellcheck, NS_LITERAL_STRING("false"));
+  return SetAttrHelper(nsGkAtoms::spellcheck, NS_LITERAL_STRING("false"));
 }
 
 PRBool
@@ -1366,7 +1364,7 @@ nsGenericHTMLElement::FindForm(nsIForm* aCurrentForm)
   nsIContent* content = this;
   while (content) {
     // If the current ancestor is a form, return it as our form
-    if (content->Tag() == nsHTMLAtoms::form &&
+    if (content->Tag() == nsGkAtoms::form &&
         content->IsNodeOfType(nsINode::eHTML)) {
       nsIDOMHTMLFormElement* form;
       CallQueryInterface(content, &form);
@@ -1419,7 +1417,7 @@ nsGenericHTMLElement::FindForm(nsIForm* aCurrentForm)
 static PRBool
 IsArea(nsIContent *aContent)
 {
-  return (aContent->Tag() == nsHTMLAtoms::area &&
+  return (aContent->Tag() == nsGkAtoms::area &&
           aContent->IsNodeOfType(nsINode::eHTML));
 }
 
@@ -1528,7 +1526,7 @@ nsGenericHTMLElement::PostHandleEventForAnchors(nsEventChainPostVisitor& aVisito
       case NS_UI_ACTIVATE:
         {
           nsAutoString target;
-          GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, target);
+          GetAttr(kNameSpaceID_None, nsGkAtoms::target, target);
           if (target.IsEmpty()) {
             GetBaseTarget(target);
           }
@@ -1558,7 +1556,7 @@ nsGenericHTMLElement::PostHandleEventForAnchors(nsEventChainPostVisitor& aVisito
       case NS_FOCUS_CONTENT:
       {
         nsAutoString target;
-        GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, target);
+        GetAttr(kNameSpaceID_None, nsGkAtoms::target, target);
         if (target.IsEmpty()) {
           GetBaseTarget(target);
         }
@@ -1593,7 +1591,7 @@ nsGenericHTMLElement::GetHrefURIForAnchors(nsIURI** aURI)
   // Get href= attribute (relative URI).
 
   // We use the nsAttrValue's copy of the URI string to avoid copying.
-  const nsAttrValue* attr = mAttrsAndChildren.GetAttr(nsHTMLAtoms::href);
+  const nsAttrValue* attr = mAttrsAndChildren.GetAttr(nsGkAtoms::href);
   if (attr) {
     // Get base URI.
     nsCOMPtr<nsIURI> baseURI = GetBaseURI();
@@ -1624,44 +1622,44 @@ PRBool nsGenericHTMLElement::IsEventName(nsIAtom* aName)
     return PR_FALSE;
   }
 
-  return (aName == nsLayoutAtoms::onclick                       ||
-          aName == nsLayoutAtoms::ondblclick                    ||
-          aName == nsLayoutAtoms::onmousedown                   ||
-          aName == nsLayoutAtoms::onmouseup                     ||
-          aName == nsLayoutAtoms::onmouseover                   ||
-          aName == nsLayoutAtoms::onmouseout                    ||
-          aName == nsLayoutAtoms::onkeydown                     ||
-          aName == nsLayoutAtoms::onkeyup                       ||
-          aName == nsLayoutAtoms::onkeypress                    ||
-          aName == nsLayoutAtoms::onmousemove                   ||
-          aName == nsLayoutAtoms::onload                        ||
-          aName == nsLayoutAtoms::onunload                      ||
-          aName == nsLayoutAtoms::onbeforeunload                ||
-          aName == nsLayoutAtoms::onpageshow                    ||
-          aName == nsLayoutAtoms::onpagehide                    ||
-          aName == nsLayoutAtoms::onabort                       ||
-          aName == nsLayoutAtoms::onerror                       ||
-          aName == nsLayoutAtoms::onfocus                       ||
-          aName == nsLayoutAtoms::onblur                        ||
-          aName == nsLayoutAtoms::onsubmit                      ||
-          aName == nsLayoutAtoms::onreset                       ||
-          aName == nsLayoutAtoms::onchange                      ||
-          aName == nsLayoutAtoms::onselect                      || 
-          aName == nsLayoutAtoms::onpaint                       ||
-          aName == nsLayoutAtoms::onresize                      ||
-          aName == nsLayoutAtoms::onscroll                      ||
-          aName == nsLayoutAtoms::oninput                       ||
-          aName == nsLayoutAtoms::oncontextmenu                 ||
-          aName == nsLayoutAtoms::onDOMAttrModified             ||
-          aName == nsLayoutAtoms::onDOMCharacterDataModified    || 
-          aName == nsLayoutAtoms::onDOMSubtreeModified          ||
-          aName == nsLayoutAtoms::onDOMNodeInsertedIntoDocument || 
-          aName == nsLayoutAtoms::onDOMNodeRemovedFromDocument  ||
-          aName == nsLayoutAtoms::onDOMNodeInserted             || 
-          aName == nsLayoutAtoms::onDOMNodeRemoved              ||
-          aName == nsLayoutAtoms::onDOMActivate                 ||
-          aName == nsLayoutAtoms::onDOMFocusIn                  ||
-          aName == nsLayoutAtoms::onDOMFocusOut);
+  return (aName == nsGkAtoms::onclick                       ||
+          aName == nsGkAtoms::ondblclick                    ||
+          aName == nsGkAtoms::onmousedown                   ||
+          aName == nsGkAtoms::onmouseup                     ||
+          aName == nsGkAtoms::onmouseover                   ||
+          aName == nsGkAtoms::onmouseout                    ||
+          aName == nsGkAtoms::onkeydown                     ||
+          aName == nsGkAtoms::onkeyup                       ||
+          aName == nsGkAtoms::onkeypress                    ||
+          aName == nsGkAtoms::onmousemove                   ||
+          aName == nsGkAtoms::onload                        ||
+          aName == nsGkAtoms::onunload                      ||
+          aName == nsGkAtoms::onbeforeunload                ||
+          aName == nsGkAtoms::onpageshow                    ||
+          aName == nsGkAtoms::onpagehide                    ||
+          aName == nsGkAtoms::onabort                       ||
+          aName == nsGkAtoms::onerror                       ||
+          aName == nsGkAtoms::onfocus                       ||
+          aName == nsGkAtoms::onblur                        ||
+          aName == nsGkAtoms::onsubmit                      ||
+          aName == nsGkAtoms::onreset                       ||
+          aName == nsGkAtoms::onchange                      ||
+          aName == nsGkAtoms::onselect                      || 
+          aName == nsGkAtoms::onpaint                       ||
+          aName == nsGkAtoms::onresize                      ||
+          aName == nsGkAtoms::onscroll                      ||
+          aName == nsGkAtoms::oninput                       ||
+          aName == nsGkAtoms::oncontextmenu                 ||
+          aName == nsGkAtoms::onDOMAttrModified             ||
+          aName == nsGkAtoms::onDOMCharacterDataModified    || 
+          aName == nsGkAtoms::onDOMSubtreeModified          ||
+          aName == nsGkAtoms::onDOMNodeInsertedIntoDocument || 
+          aName == nsGkAtoms::onDOMNodeRemovedFromDocument  ||
+          aName == nsGkAtoms::onDOMNodeInserted             || 
+          aName == nsGkAtoms::onDOMNodeRemoved              ||
+          aName == nsGkAtoms::onDOMActivate                 ||
+          aName == nsGkAtoms::onDOMFocusIn                  ||
+          aName == nsGkAtoms::onDOMFocusOut);
 }
 
 nsresult
@@ -1673,7 +1671,7 @@ nsGenericHTMLElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
       nsresult rv = AddScriptEventListener(aName, *aValue);
       NS_ENSURE_SUCCESS(rv, rv);
     }
-    else if (aNotify && aName == nsHTMLAtoms::spellcheck) {
+    else if (aNotify && aName == nsGkAtoms::spellcheck) {
       SyncEditorsOnSubtree(this);
     }
   }
@@ -1688,8 +1686,8 @@ nsGenericHTMLElement::GetEventListenerManagerForAttr(nsIEventListenerManager** a
                                                      PRBool* aDefer)
 {
   // Attributes on the body and frameset tags get set on the global object
-  if (mNodeInfo->Equals(nsHTMLAtoms::body) ||
-      mNodeInfo->Equals(nsHTMLAtoms::frameset)) {
+  if (mNodeInfo->Equals(nsGkAtoms::body) ||
+      mNodeInfo->Equals(nsGkAtoms::frameset)) {
     nsPIDOMWindow *win;
 
     // If we have a document, and it has a window, add the event
@@ -1743,19 +1741,19 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 const nsAttrValue*
 nsGenericHTMLElement::GetClasses() const
 {
-  return mAttrsAndChildren.GetAttr(nsHTMLAtoms::_class);
+  return mAttrsAndChildren.GetAttr(nsGkAtoms::_class);
 }
 
 nsIAtom *
 nsGenericHTMLElement::GetIDAttributeName() const
 {
-  return nsHTMLAtoms::id;
+  return nsGkAtoms::id;
 }
 
 nsIAtom *
 nsGenericHTMLElement::GetClassAttributeName() const
 {
-  return nsHTMLAtoms::_class;
+  return nsGkAtoms::_class;
 }
 
 nsresult
@@ -1768,12 +1766,12 @@ nsGenericHTMLElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 nsICSSStyleRule*
 nsGenericHTMLElement::GetInlineStyleRule()
 { 
-  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsHTMLAtoms::style);
+  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsGkAtoms::style);
   
   if (attrVal) {
     if (attrVal->Type() != nsAttrValue::eCSSStyleRule) {
       ReparseStyleAttribute();
-      attrVal = mAttrsAndChildren.GetAttr(nsHTMLAtoms::style);
+      attrVal = mAttrsAndChildren.GetAttr(nsGkAtoms::style);
       // hopefully attrVal->Type() is now nsAttrValue::eCSSStyleRule
     }
 
@@ -1804,16 +1802,16 @@ nsGenericHTMLElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule,
     // save the old attribute so we can set up the mutation event properly
     // XXXbz if the old rule points to the same declaration as the new one,
     // this is getting the new attr value, not the old one....
-    modification = GetAttr(kNameSpaceID_None, nsHTMLAtoms::style,
+    modification = GetAttr(kNameSpaceID_None, nsGkAtoms::style,
                            oldValueStr);
   }
   else if (aNotify && IsInDoc()) {
-    modification = !!mAttrsAndChildren.GetAttr(nsHTMLAtoms::style);
+    modification = !!mAttrsAndChildren.GetAttr(nsGkAtoms::style);
   }
 
   nsAttrValue attrValue(aStyleRule);
 
-  return SetAttrAndNotify(kNameSpaceID_None, nsHTMLAtoms::style, nsnull, oldValueStr,
+  return SetAttrAndNotify(kNameSpaceID_None, nsGkAtoms::style, nsnull, oldValueStr,
                           attrValue, modification, hasListeners, aNotify);
 }
 
@@ -1823,7 +1821,7 @@ nsGenericHTMLElement::GetBaseURI() const
   nsIDocument* doc = GetOwnerDoc();
 
   void* prop;
-  if (HasFlag(NODE_HAS_PROPERTIES) && (prop = GetProperty(nsHTMLAtoms::htmlBaseHref))) {
+  if (HasFlag(NODE_HAS_PROPERTIES) && (prop = GetProperty(nsGkAtoms::htmlBaseHref))) {
     nsIURI* uri = NS_STATIC_CAST(nsIURI*, prop);
     NS_ADDREF(uri);
     
@@ -1850,7 +1848,7 @@ void
 nsGenericHTMLElement::GetBaseTarget(nsAString& aBaseTarget) const
 {
   void* prop;
-  if (HasFlag(NODE_HAS_PROPERTIES) && (prop = GetProperty(nsHTMLAtoms::htmlBaseTarget))) {
+  if (HasFlag(NODE_HAS_PROPERTIES) && (prop = GetProperty(nsGkAtoms::htmlBaseTarget))) {
     NS_STATIC_CAST(nsIAtom*, prop)->ToString(aBaseTarget);
     
     return;
@@ -1970,25 +1968,25 @@ nsGenericHTMLElement::ParseAttribute(PRInt32 aNamespaceID,
                                      nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsHTMLAtoms::dir) {
+    if (aAttribute == nsGkAtoms::dir) {
       return aResult.ParseEnumValue(aValue, kDirTable);
     }
-    if (aAttribute == nsHTMLAtoms::style) {
+    if (aAttribute == nsGkAtoms::style) {
       ParseStyleAttribute(this, mNodeInfo->NamespaceEquals(kNameSpaceID_XHTML),
                           aValue, aResult);
       return PR_TRUE;
     }
-    if (aAttribute == nsHTMLAtoms::_class) {
+    if (aAttribute == nsGkAtoms::_class) {
       aResult.ParseAtomArray(aValue);
 
       return PR_TRUE;
     }
   
-    if (aAttribute == nsHTMLAtoms::tabindex) {
+    if (aAttribute == nsGkAtoms::tabindex) {
       return aResult.ParseIntWithBounds(aValue, -32768, 32767);
     }
 
-    if (aAttribute == nsHTMLAtoms::name && !aValue.IsEmpty()) {
+    if (aAttribute == nsGkAtoms::name && !aValue.IsEmpty()) {
       // Store name as an atom.  name="" means that the element has no name,
       // not that it has an emptystring as the name.
       aResult.ParseAtom(aValue);
@@ -2334,13 +2332,13 @@ nsGenericHTMLElement::ParseImageAttribute(nsIAtom* aAttribute,
                                           const nsAString& aString,
                                           nsAttrValue& aResult)
 {
-  if ((aAttribute == nsHTMLAtoms::width) ||
-      (aAttribute == nsHTMLAtoms::height)) {
+  if ((aAttribute == nsGkAtoms::width) ||
+      (aAttribute == nsGkAtoms::height)) {
     return aResult.ParseSpecialIntValue(aString, PR_TRUE, PR_FALSE);
   }
-  else if ((aAttribute == nsHTMLAtoms::hspace) ||
-           (aAttribute == nsHTMLAtoms::vspace) ||
-           (aAttribute == nsHTMLAtoms::border)) {
+  else if ((aAttribute == nsGkAtoms::hspace) ||
+           (aAttribute == nsGkAtoms::vspace) ||
+           (aAttribute == nsGkAtoms::border)) {
     return aResult.ParseIntWithBounds(aString, 0);
   }
   return PR_FALSE;
@@ -2363,7 +2361,7 @@ nsGenericHTMLElement::ParseScrollingValue(const nsAString& aString,
 nsresult
 nsGenericHTMLElement::ReparseStyleAttribute()
 {
-  const nsAttrValue* oldVal = mAttrsAndChildren.GetAttr(nsHTMLAtoms::style);
+  const nsAttrValue* oldVal = mAttrsAndChildren.GetAttr(nsGkAtoms::style);
   
   if (oldVal && oldVal->Type() != nsAttrValue::eCSSStyleRule) {
     nsAttrValue attrValue;
@@ -2373,7 +2371,7 @@ nsGenericHTMLElement::ReparseStyleAttribute()
                         stringValue, attrValue);
     // Don't bother going through SetInlineStyleRule, we don't want to fire off
     // mutation events or document notifications anyway
-    nsresult rv = mAttrsAndChildren.SetAndTakeAttr(nsHTMLAtoms::style, attrValue);
+    nsresult rv = mAttrsAndChildren.SetAndTakeAttr(nsGkAtoms::style, attrValue);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   
@@ -2395,7 +2393,7 @@ nsGenericHTMLElement::ParseStyleAttribute(nsIContent* aContent,
     if (!aContent->IsNativeAnonymous()) {  // native anonymous content
                                            // always assumes CSS
       nsAutoString styleType;
-      doc->GetHeaderData(nsHTMLAtoms::headerContentStyleType, styleType);
+      doc->GetHeaderData(nsGkAtoms::headerContentStyleType, styleType);
       if (!styleType.IsEmpty()) {
         static const char textCssStr[] = "text/css";
         isCSS = (styleType.EqualsIgnoreCase(textCssStr, sizeof(textCssStr) - 1));
@@ -2435,7 +2433,7 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
                                               nsRuleData* aData)
 {
   if (aData->mSID == eStyleStruct_Visibility) {
-    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::lang);
+    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::lang);
     if (value && value->Type() == nsAttrValue::eString) {
       aData->mDisplayData->mLang.SetStringValue(value->GetStringValue(),
                                                 eCSSUnit_String);
@@ -2447,53 +2445,53 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
 
 /* static */ const nsGenericHTMLElement::MappedAttributeEntry
 nsGenericHTMLElement::sCommonAttributeMap[] = {
-  { &nsHTMLAtoms::lang },
+  { &nsGkAtoms::lang },
   { nsnull }
 };
 
 /* static */ const nsGenericElement::MappedAttributeEntry
 nsGenericHTMLElement::sImageMarginSizeAttributeMap[] = {
-  { &nsHTMLAtoms::width },
-  { &nsHTMLAtoms::height },
-  { &nsHTMLAtoms::hspace },
-  { &nsHTMLAtoms::vspace },
+  { &nsGkAtoms::width },
+  { &nsGkAtoms::height },
+  { &nsGkAtoms::hspace },
+  { &nsGkAtoms::vspace },
   { nsnull }
 };
 
 /* static */ const nsGenericElement::MappedAttributeEntry
 nsGenericHTMLElement::sImageAlignAttributeMap[] = {
-  { &nsHTMLAtoms::align },
+  { &nsGkAtoms::align },
   { nsnull }
 };
 
 /* static */ const nsGenericElement::MappedAttributeEntry
 nsGenericHTMLElement::sDivAlignAttributeMap[] = {
-  { &nsHTMLAtoms::align },
+  { &nsGkAtoms::align },
   { nsnull }
 };
 
 /* static */ const nsGenericElement::MappedAttributeEntry
 nsGenericHTMLElement::sImageBorderAttributeMap[] = {
-  { &nsHTMLAtoms::border },
+  { &nsGkAtoms::border },
   { nsnull }
 };
 
 /* static */ const nsGenericElement::MappedAttributeEntry
 nsGenericHTMLElement::sBackgroundAttributeMap[] = {
-  { &nsHTMLAtoms::background },
-  { &nsHTMLAtoms::bgcolor },
+  { &nsGkAtoms::background },
+  { &nsGkAtoms::bgcolor },
   { nsnull }
 };
 
 /* static */ const nsGenericElement::MappedAttributeEntry
 nsGenericHTMLElement::sBackgroundColorAttributeMap[] = {
-  { &nsHTMLAtoms::bgcolor },
+  { &nsGkAtoms::bgcolor },
   { nsnull }
 };
 
 /* static */ const nsGenericElement::MappedAttributeEntry
 nsGenericHTMLElement::sScrollingAttributeMap[] = {
-  { &nsHTMLAtoms::scrolling },
+  { &nsGkAtoms::scrolling },
   { nsnull }
 };
 
@@ -2502,7 +2500,7 @@ nsGenericHTMLElement::MapImageAlignAttributeInto(const nsMappedAttributes* aAttr
                                                  nsRuleData* aRuleData)
 {
   if (aRuleData->mSID == eStyleStruct_Display || aRuleData->mSID == eStyleStruct_TextReset) {
-    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::align);
+    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
     if (value && value->Type() == nsAttrValue::eEnum) {
       PRInt32 align = value->GetEnumValue();
       if (aRuleData->mSID == eStyleStruct_Display && aRuleData->mDisplayData->mFloat.GetUnit() == eCSSUnit_Null) {
@@ -2532,7 +2530,7 @@ nsGenericHTMLElement::MapDivAlignAttributeInto(const nsMappedAttributes* aAttrib
   if (aRuleData->mSID == eStyleStruct_Text) {
     if (aRuleData->mTextData->mTextAlign.GetUnit() == eCSSUnit_Null) {
       // align: enum
-      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::align);
+      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
       if (value && value->Type() == nsAttrValue::eEnum)
         aRuleData->mTextData->mTextAlign.SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
     }
@@ -2550,7 +2548,7 @@ nsGenericHTMLElement::MapImageMarginAttributeInto(const nsMappedAttributes* aAtt
   const nsAttrValue* value;
 
   // hspace: value
-  value = aAttributes->GetAttr(nsHTMLAtoms::hspace);
+  value = aAttributes->GetAttr(nsGkAtoms::hspace);
   if (value) {
     nsCSSValue hval;
     if (value->Type() == nsAttrValue::eInteger)
@@ -2568,7 +2566,7 @@ nsGenericHTMLElement::MapImageMarginAttributeInto(const nsMappedAttributes* aAtt
   }
 
   // vspace: value
-  value = aAttributes->GetAttr(nsHTMLAtoms::vspace);
+  value = aAttributes->GetAttr(nsGkAtoms::vspace);
   if (value) {
     nsCSSValue vval;
     if (value->Type() == nsAttrValue::eInteger)
@@ -2595,7 +2593,7 @@ nsGenericHTMLElement::MapImageSizeAttributesInto(const nsMappedAttributes* aAttr
 
   // width: value
   if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
-    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::width);
+    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::width);
     if (value && value->Type() == nsAttrValue::eInteger)
       aData->mPositionData->mWidth.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
     else if (value && value->Type() == nsAttrValue::ePercent)
@@ -2604,7 +2602,7 @@ nsGenericHTMLElement::MapImageSizeAttributesInto(const nsMappedAttributes* aAttr
 
   // height: value
   if (aData->mPositionData->mHeight.GetUnit() == eCSSUnit_Null) {
-    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::height);
+    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::height);
     if (value && value->Type() == nsAttrValue::eInteger)
       aData->mPositionData->mHeight.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel); 
     else if (value && value->Type() == nsAttrValue::ePercent)
@@ -2620,7 +2618,7 @@ nsGenericHTMLElement::MapImageBorderAttributeInto(const nsMappedAttributes* aAtt
     return;
 
   // border: pixels
-  const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::border);
+  const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::border);
   if (!value)
     return;
   
@@ -2668,7 +2666,7 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
 
   if (aData->mColorData->mBackImage.GetUnit() == eCSSUnit_Null) {
     // background
-    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::background);
+    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::background);
     if (value && value->Type() == nsAttrValue::eString) {
       const nsString& spec = value->GetStringValue();
       if (!spec.IsEmpty()) {
@@ -2716,7 +2714,7 @@ nsGenericHTMLElement::MapBGColorInto(const nsMappedAttributes* aAttributes,
     return;
 
   if (aData->mColorData->mBackColor.GetUnit() == eCSSUnit_Null) {
-    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::bgcolor);
+    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::bgcolor);
     nscolor color;
     if (value && value->GetColorValue(color)) {
       aData->mColorData->mBackColor.SetColorValue(color);
@@ -2746,7 +2744,7 @@ nsGenericHTMLElement::MapScrollingAttributeInto(const nsMappedAttributes* aAttri
   };
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(overflowValues); ++i) {
     if (overflowValues[i]->GetUnit() == eCSSUnit_Null) {
-      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::scrolling);
+      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::scrolling);
       if (value && value->Type() == nsAttrValue::eEnum) {
         PRInt32 mappedValue;
         switch (value->GetEnumValue()) {
@@ -2979,8 +2977,8 @@ nsGenericHTMLFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
   nsAutoString nameVal, idVal;
 
   if (aForm || (mForm && aRemoveFromForm)) {
-    GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, nameVal);
-    GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, idVal);
+    GetAttr(kNameSpaceID_None, nsGkAtoms::name, nameVal);
+    GetAttr(kNameSpaceID_None, nsGkAtoms::id, idVal);
   }
 
   if (mForm && aRemoveFromForm) {
@@ -3146,7 +3144,7 @@ nsGenericHTMLFormElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
     // remove the control from the hashtable as needed
 
-    if (mForm && (aName == nsHTMLAtoms::name || aName == nsHTMLAtoms::id)) {
+    if (mForm && (aName == nsGkAtoms::name || aName == nsGkAtoms::id)) {
       GetAttr(kNameSpaceID_None, aName, tmp);
 
       if (!tmp.IsEmpty()) {
@@ -3154,14 +3152,14 @@ nsGenericHTMLFormElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       }
     }
 
-    if (mForm && aName == nsHTMLAtoms::type) {
-      GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, tmp);
+    if (mForm && aName == nsGkAtoms::type) {
+      GetAttr(kNameSpaceID_None, nsGkAtoms::name, tmp);
 
       if (!tmp.IsEmpty()) {
         mForm->RemoveElementFromTable(this, tmp);
       }
 
-      GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, tmp);
+      GetAttr(kNameSpaceID_None, nsGkAtoms::id, tmp);
 
       if (!tmp.IsEmpty()) {
         mForm->RemoveElementFromTable(this, tmp);
@@ -3182,23 +3180,23 @@ nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   if (aNameSpaceID == kNameSpaceID_None) {
     // add the control to the hashtable as needed
 
-    if (mForm && (aName == nsHTMLAtoms::name || aName == nsHTMLAtoms::id) &&
+    if (mForm && (aName == nsGkAtoms::name || aName == nsGkAtoms::id) &&
         aValue) {
       if (!aValue->IsEmpty()) {
         mForm->AddElementToTable(this, *aValue);
       }
     }
 
-    if (mForm && aName == nsHTMLAtoms::type) {
+    if (mForm && aName == nsGkAtoms::type) {
       nsAutoString tmp;
 
-      GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, tmp);
+      GetAttr(kNameSpaceID_None, nsGkAtoms::name, tmp);
 
       if (!tmp.IsEmpty()) {
         mForm->AddElementToTable(this, tmp);
       }
 
-      GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, tmp);
+      GetAttr(kNameSpaceID_None, nsGkAtoms::id, tmp);
 
       if (!tmp.IsEmpty()) {
         mForm->AddElementToTable(this, tmp);
@@ -3209,7 +3207,7 @@ nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
     // And notify on content state changes, if any
     
-    if (aNotify && aName == nsHTMLAtoms::disabled && CanBeDisabled()) {
+    if (aNotify && aName == nsGkAtoms::disabled && CanBeDisabled()) {
       nsIDocument* document = GetCurrentDoc();
       if (document) {
         mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, PR_TRUE);
@@ -3274,7 +3272,7 @@ nsGenericHTMLFormElement::IntrinsicState() const
   if (CanBeDisabled()) {
     // :enabled/:disabled
     PRBool disabled;
-    GetBoolAttr(nsHTMLAtoms::disabled, &disabled);
+    GetBoolAttr(nsGkAtoms::disabled, &disabled);
     if (disabled) {
       state |= NS_EVENT_STATE_DISABLED;
       state &= ~NS_EVENT_STATE_ENABLED;
@@ -3450,7 +3448,7 @@ nsGenericHTMLFrameElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                               aValue, aNotify);
   
   if (NS_SUCCEEDED(rv) && aNameSpaceID == kNameSpaceID_None &&
-      aName == nsHTMLAtoms::src) {
+      aName == nsGkAtoms::src) {
     return LoadSrc();
   }
 
@@ -3542,7 +3540,7 @@ nsGenericHTMLElement::IsFocusable(PRInt32 *aTabIndex)
   GetTabIndex(&tabIndex);
 
   // Just check for disabled attribute on all HTML elements
-  PRBool disabled = HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled);
+  PRBool disabled = HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
   if (disabled) {
     tabIndex = -1;
   }
@@ -3552,7 +3550,7 @@ nsGenericHTMLElement::IsFocusable(PRInt32 *aTabIndex)
   }
 
   // If a tabindex is specified at all, or the default tabindex is 0, we're focusable
-  return tabIndex >= 0 || (!disabled && HasAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex));
+  return tabIndex >= 0 || (!disabled && HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex));
 }
 
 void
@@ -3560,7 +3558,7 @@ nsGenericHTMLElement::RegUnRegAccessKey(PRBool aDoReg)
 {
   // first check to see if we have an access key
   nsAutoString accessKey;
-  GetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, accessKey);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accessKey);
   if (accessKey.IsEmpty()) {
     return;
   }

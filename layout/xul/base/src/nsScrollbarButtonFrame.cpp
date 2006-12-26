@@ -48,8 +48,7 @@
 #include "nsCOMPtr.h"
 #include "nsUnitConversion.h"
 #include "nsINameSpaceManager.h"
-#include "nsHTMLAtoms.h"
-#include "nsXULAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsSliderFrame.h"
 #include "nsIScrollbarFrame.h"
 #include "nsIScrollbarMediator.h"
@@ -128,7 +127,7 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
 
   // get the scrollbar control
   nsIFrame* scrollbar;
-  GetParentWithTag(nsXULAtoms::scrollbar, this, scrollbar);
+  GetParentWithTag(nsGkAtoms::scrollbar, this, scrollbar);
 
   if (scrollbar == nsnull)
     return PR_FALSE;
@@ -136,11 +135,11 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
   // get the scrollbars content node
   nsIContent* content = scrollbar->GetContent();
 
-  static nsIContent::AttrValuesArray strings[] = { &nsXULAtoms::increment,
-                                                   &nsXULAtoms::decrement,
+  static nsIContent::AttrValuesArray strings[] = { &nsGkAtoms::increment,
+                                                   &nsGkAtoms::decrement,
                                                    nsnull };
   PRInt32 index = mContent->FindAttrValueIn(kNameSpaceID_None,
-                                            nsHTMLAtoms::type,
+                                            nsGkAtoms::type,
                                             strings, eCaseMatters);
   PRInt32 direction;
   if (index == 0) 
@@ -186,7 +185,7 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
   }
   // set this attribute so we can style it later
   nsWeakFrame weakFrame(this);
-  mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::active, NS_LITERAL_STRING("true"), PR_TRUE);
+  mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::active, NS_LITERAL_STRING("true"), PR_TRUE);
 
   if (weakFrame.IsAlive()) {
     DoButtonAction(smoothScroll);
@@ -202,7 +201,7 @@ nsScrollbarButtonFrame::HandleRelease(nsPresContext* aPresContext,
                                       nsEventStatus*  aEventStatus)
 {
   // we're not active anymore
-  mContent->UnsetAttr(kNameSpaceID_None, nsXULAtoms::active, PR_TRUE);
+  mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::active, PR_TRUE);
   nsRepeatService::GetInstance()->Stop();
   return NS_OK;
 }
@@ -228,7 +227,7 @@ nsScrollbarButtonFrame::DoButtonAction(PRBool aSmoothScroll)
 {
   // get the scrollbar control
   nsIFrame* scrollbar;
-  GetParentWithTag(nsXULAtoms::scrollbar, this, scrollbar);
+  GetParentWithTag(nsGkAtoms::scrollbar, this, scrollbar);
 
   if (scrollbar == nsnull)
     return;
@@ -268,10 +267,10 @@ nsScrollbarButtonFrame::DoButtonAction(PRBool aSmoothScroll)
   curposStr.AppendInt(curpos);
 
   if (aSmoothScroll)
-    content->SetAttr(kNameSpaceID_None, nsXULAtoms::smooth, NS_LITERAL_STRING("true"), PR_FALSE);
-  content->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, curposStr, PR_TRUE);
+    content->SetAttr(kNameSpaceID_None, nsGkAtoms::smooth, NS_LITERAL_STRING("true"), PR_FALSE);
+  content->SetAttr(kNameSpaceID_None, nsGkAtoms::curpos, curposStr, PR_TRUE);
   if (aSmoothScroll)
-    content->UnsetAttr(kNameSpaceID_None, nsXULAtoms::smooth, PR_FALSE);
+    content->UnsetAttr(kNameSpaceID_None, nsGkAtoms::smooth, PR_FALSE);
 }
 
 nsresult

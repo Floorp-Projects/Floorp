@@ -45,8 +45,7 @@
 #include "nsGridRowGroupLayout.h"
 #include "nsISupportsArray.h"
 #include "nsIServiceManager.h"
-#include "nsXULAtoms.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDocument.h"
@@ -281,7 +280,7 @@ nsListBoxBodyFrame::Destroy()
     nsIDocument *doc;
 
     if (content &&
-        content->NodeInfo()->Equals(nsXULAtoms::listbox, kNameSpaceID_XUL) &&
+        content->NodeInfo()->Equals(nsGkAtoms::listbox, kNameSpaceID_XUL) &&
         (doc = content->GetDocument())) {
       nsCOMPtr<nsIDOMElement> e(do_QueryInterface(content));
       nsCOMPtr<nsIDOMNSDocument> nsdoc(do_QueryInterface(doc));
@@ -308,9 +307,9 @@ nsListBoxBodyFrame::AttributeChanged(PRInt32 aNameSpaceID,
 {
   nsresult rv = NS_OK;
 
-  if (aAttribute == nsXULAtoms::rows) {
+  if (aAttribute == nsGkAtoms::rows) {
     nsAutoString rows;
-    mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::rows, rows);
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::rows, rows);
     
     if (!rows.IsEmpty()) {
       PRInt32 dummy;
@@ -322,7 +321,7 @@ nsListBoxBodyFrame::AttributeChanged(PRInt32 aNameSpaceID,
       rowHeight = NSTwipsToIntPixels(rowHeight, t2p);
       nsAutoString value;
       value.AppendInt(rowHeight*count);
-      mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::minheight, value, PR_FALSE);
+      mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::minheight, value, PR_FALSE);
 
       AddStateBits(NS_FRAME_IS_DIRTY);
       GetPresContext()->PresShell()->
@@ -371,7 +370,7 @@ nsListBoxBodyFrame::GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState)
 {
   nsSize result(0, 0);
   if (nsContentUtils::HasNonEmptyAttr(GetContent(), kNameSpaceID_None,
-                                      nsXULAtoms::sizemode)) {
+                                      nsGkAtoms::sizemode)) {
     GetPrefSize(aBoxLayoutState, result);
     result.height = 0;
     nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(this);
@@ -643,7 +642,7 @@ nsListBoxBodyFrame::GetIndexOfItem(nsIDOMElement* aItem, PRInt32* _retval)
     nsIContent *child = listbox->GetChildAt(childIndex);
 
     // we hit a treerow, count it
-    if (child->Tag() == nsXULAtoms::listitem) {
+    if (child->Tag() == nsGkAtoms::listitem) {
       // is this it?
       if (child == itemContent)
         return NS_OK;
@@ -673,7 +672,7 @@ nsListBoxBodyFrame::GetItemAtIndex(PRInt32 aIndex, nsIDOMElement** aItem)
     nsIContent *child = listbox->GetChildAt(childIndex);
 
     // we hit a treerow, count it
-    if (child->Tag() == nsXULAtoms::listitem) {
+    if (child->Tag() == nsGkAtoms::listitem) {
       // is this it?
       if (itemCount == aIndex) {
         return CallQueryInterface(child, aItem);
@@ -702,11 +701,11 @@ nsListBoxBodyFrame::GetFixedRowSize()
   PRInt32 dummy;
 
   nsAutoString rows;
-  mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::rows, rows);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::rows, rows);
   if (!rows.IsEmpty())
     return rows.ToInteger(&dummy);
  
-  mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::size, rows);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::size, rows);
 
   if (!rows.IsEmpty())
     return rows.ToInteger(&dummy);
@@ -721,9 +720,9 @@ nsListBoxBodyFrame::SetRowHeight(nscoord aRowHeight)
     mRowHeight = aRowHeight;
     
     nsAutoString rows;
-    mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::rows, rows);
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::rows, rows);
     if (rows.IsEmpty())
-      mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::size, rows);
+      mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::size, rows);
     
     if (!rows.IsEmpty()) {
       PRInt32 dummy;
@@ -733,7 +732,7 @@ nsListBoxBodyFrame::SetRowHeight(nscoord aRowHeight)
       PRInt32 rowHeight = NSTwipsToIntPixels(aRowHeight, t2p);
       nsAutoString value;
       value.AppendInt(rowHeight*count);
-      mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::minheight, value, PR_FALSE);
+      mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::minheight, value, PR_FALSE);
     }
 
     // signal we need to dirty everything 
@@ -795,7 +794,7 @@ nsListBoxBodyFrame::ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutState)
     for (PRUint32 i = 0; i < childCount && i < 100; ++i) {
       nsIContent *child = listbox->GetChildAt(i);
 
-      if (child->Tag() == nsXULAtoms::listitem) {
+      if (child->Tag() == nsGkAtoms::listitem) {
         nsIRenderingContext* rendContext = aBoxLayoutState.GetRenderingContext();
         if (rendContext) {
           nsAutoString value;
@@ -836,7 +835,7 @@ nsListBoxBodyFrame::ComputeTotalRowCount()
 
   PRUint32 childCount = listbox->GetChildCount();
   for (PRUint32 i = 0; i < childCount; i++) {
-    if (listbox->GetChildAt(i)->Tag() == nsXULAtoms::listitem)
+    if (listbox->GetChildAt(i)->Tag() == nsGkAtoms::listitem)
       ++mRowCount;
   }
 }
@@ -1422,7 +1421,7 @@ nsListBoxBodyFrame::GetListItemContentAt(PRInt32 aIndex, nsIContent** aContent)
   for (PRUint32 i = 0; i < childCount; ++i) {
     nsIContent *kid = listboxContent->GetChildAt(i);
 
-    if (kid->Tag() == nsXULAtoms::listitem) {
+    if (kid->Tag() == nsGkAtoms::listitem) {
       ++itemsFound;
       if (itemsFound-1 == aIndex) {
         *aContent = kid;
@@ -1447,7 +1446,7 @@ nsListBoxBodyFrame::GetListItemNextSibling(nsIContent* aListItem, nsIContent** a
   for (PRUint32 i = 0; i < childCount; ++i) {
     nsIContent *kid = listboxContent->GetChildAt(i);
 
-    if (kid->Tag() == nsXULAtoms::listitem) {
+    if (kid->Tag() == nsGkAtoms::listitem) {
       ++aSiblingIndex;
       if (prevKid == aListItem) {
         *aContent = kid;

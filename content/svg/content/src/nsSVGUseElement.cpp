@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIDOMSVGGElement.h"
-#include "nsSVGAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDOMSVGAnimatedLength.h"
 #include "nsISVGSVGElement.h"
 #include "nsSVGCoordCtxProvider.h"
@@ -189,7 +189,7 @@ nsSVGUseElement::Init()
   {
     rv = NS_NewSVGAnimatedString(getter_AddRefs(mHref));
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::href, mHref, kNameSpaceID_XLink);
+    rv = AddMappedSVGValue(nsGkAtoms::href, mHref, kNameSpaceID_XLink);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -362,19 +362,19 @@ nsSVGUseElement::CreateAnonymousContent(nsPresContext*    aPresContext,
   // make sure target is valid type for <use>
   // QIable nsSVGGraphicsElement would eliminate enumerating all elements
   nsIAtom *tag = targetContent->Tag();
-  if (tag != nsSVGAtoms::svg &&
-      tag != nsSVGAtoms::symbol &&
-      tag != nsSVGAtoms::g &&
-      tag != nsSVGAtoms::path &&
-      tag != nsSVGAtoms::text &&
-      tag != nsSVGAtoms::rect &&
-      tag != nsSVGAtoms::circle &&
-      tag != nsSVGAtoms::ellipse &&
-      tag != nsSVGAtoms::line &&
-      tag != nsSVGAtoms::polyline &&
-      tag != nsSVGAtoms::polygon &&
-      tag != nsSVGAtoms::image &&
-      tag != nsSVGAtoms::use)
+  if (tag != nsGkAtoms::svg &&
+      tag != nsGkAtoms::symbol &&
+      tag != nsGkAtoms::g &&
+      tag != nsGkAtoms::path &&
+      tag != nsGkAtoms::text &&
+      tag != nsGkAtoms::rect &&
+      tag != nsGkAtoms::circle &&
+      tag != nsGkAtoms::ellipse &&
+      tag != nsGkAtoms::line &&
+      tag != nsGkAtoms::polyline &&
+      tag != nsGkAtoms::polygon &&
+      tag != nsGkAtoms::image &&
+      tag != nsGkAtoms::use)
     return NS_ERROR_FAILURE;
 
   // circular loop detection
@@ -424,7 +424,7 @@ nsSVGUseElement::CreateAnonymousContent(nsPresContext*    aPresContext,
       return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    nodeInfoManager->GetNodeInfo(nsSVGAtoms::svg, nsnull, kNameSpaceID_SVG,
+    nodeInfoManager->GetNodeInfo(nsGkAtoms::svg, nsnull, kNameSpaceID_SVG,
                                  getter_AddRefs(nodeInfo));
     if (!nodeInfo)
       return NS_ERROR_FAILURE;
@@ -435,10 +435,10 @@ nsSVGUseElement::CreateAnonymousContent(nsPresContext*    aPresContext,
     if (!svgNode)
       return NS_ERROR_FAILURE;
     
-    if (newcontent->HasAttr(kNameSpaceID_None, nsSVGAtoms::viewBox)) {
+    if (newcontent->HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
       nsAutoString viewbox;
-      newcontent->GetAttr(kNameSpaceID_None, nsSVGAtoms::viewBox, viewbox);
-      svgNode->SetAttr(kNameSpaceID_None, nsSVGAtoms::viewBox, viewbox, PR_FALSE);
+      newcontent->GetAttr(kNameSpaceID_None, nsGkAtoms::viewBox, viewbox);
+      svgNode->SetAttr(kNameSpaceID_None, nsGkAtoms::viewBox, viewbox, PR_FALSE);
     }
 
     // copy attributes
@@ -465,16 +465,16 @@ nsSVGUseElement::CreateAnonymousContent(nsPresContext*    aPresContext,
   }
 
   if (symbol || svg) {
-    if (HasAttr(kNameSpaceID_None, nsSVGAtoms::width)) {
+    if (HasAttr(kNameSpaceID_None, nsGkAtoms::width)) {
       nsAutoString width;
-      GetAttr(kNameSpaceID_None, nsSVGAtoms::width, width);
-      newcontent->SetAttr(kNameSpaceID_None, nsSVGAtoms::width, width, PR_FALSE);
+      GetAttr(kNameSpaceID_None, nsGkAtoms::width, width);
+      newcontent->SetAttr(kNameSpaceID_None, nsGkAtoms::width, width, PR_FALSE);
     }
 
-    if (HasAttr(kNameSpaceID_None, nsSVGAtoms::height)) {
+    if (HasAttr(kNameSpaceID_None, nsGkAtoms::height)) {
       nsAutoString height;
-      GetAttr(kNameSpaceID_None, nsSVGAtoms::height, height);
-      newcontent->SetAttr(kNameSpaceID_None, nsSVGAtoms::height, height, PR_FALSE);
+      GetAttr(kNameSpaceID_None, nsGkAtoms::height, height);
+      newcontent->SetAttr(kNameSpaceID_None, nsGkAtoms::height, height, PR_FALSE);
     }
   }
 
@@ -507,12 +507,12 @@ nsSVGUseElement::SyncWidthHeight(PRUint8 aAttrEnum)
     if (symbol || svg) {
       if (aAttrEnum == WIDTH) {
         nsAutoString width;
-        GetAttr(kNameSpaceID_None, nsSVGAtoms::width, width);
-        mClone->SetAttr(kNameSpaceID_None, nsSVGAtoms::width, width, PR_FALSE);
+        GetAttr(kNameSpaceID_None, nsGkAtoms::width, width);
+        mClone->SetAttr(kNameSpaceID_None, nsGkAtoms::width, width, PR_FALSE);
       } else if (aAttrEnum == HEIGHT) {
         nsAutoString height;
-        GetAttr(kNameSpaceID_None, nsSVGAtoms::height, height);
-        mClone->SetAttr(kNameSpaceID_None, nsSVGAtoms::height, height, PR_FALSE);
+        GetAttr(kNameSpaceID_None, nsGkAtoms::height, height);
+        mClone->SetAttr(kNameSpaceID_None, nsGkAtoms::height, height, PR_FALSE);
       }
     }
   }

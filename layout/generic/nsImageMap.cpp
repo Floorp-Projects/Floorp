@@ -56,7 +56,7 @@
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
@@ -69,7 +69,6 @@
 #include "nsIStringBundle.h"
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
-#include "nsHTMLAtoms.h"
 
 static NS_DEFINE_CID(kCStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
@@ -116,7 +115,7 @@ Area::GetHREF(nsAString& aHref) const
 {
   aHref.Truncate();
   if (mArea) {
-    mArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, aHref);
+    mArea->GetAttr(kNameSpaceID_None, nsGkAtoms::href, aHref);
   }
 }
  
@@ -810,7 +809,7 @@ nsImageMap::SearchForAreas(nsIContent* aParent, PRBool& aFoundArea,
     if (child->IsNodeOfType(nsINode::eHTML)) {
       // If we haven't determined that the map element contains an
       // <a> element yet, then look for <area>.
-      if (!aFoundAnchor && child->Tag() == nsHTMLAtoms::area) {
+      if (!aFoundAnchor && child->Tag() == nsGkAtoms::area) {
         aFoundArea = PR_TRUE;
         rv = AddArea(child);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -823,7 +822,7 @@ nsImageMap::SearchForAreas(nsIContent* aParent, PRBool& aFoundArea,
       }
       // If we haven't determined that the map element contains an
       // <area> element yet, then look for <a>.
-      if (!aFoundArea && child->Tag() == nsHTMLAtoms::a) {
+      if (!aFoundArea && child->Tag() == nsGkAtoms::a) {
         aFoundAnchor = PR_TRUE;
         rv = AddArea(child);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -858,14 +857,14 @@ nsImageMap::AddArea(nsIContent* aArea)
 {
   nsAutoString coords;
   static nsIContent::AttrValuesArray strings[] =
-    {&nsHTMLAtoms::_empty, &nsHTMLAtoms::rect, &nsHTMLAtoms::rectangle,
-     &nsHTMLAtoms::poly, &nsHTMLAtoms::polygon, &nsHTMLAtoms::circle,
-     &nsHTMLAtoms::circ, &nsHTMLAtoms::_default, nsnull};
+    {&nsGkAtoms::_empty, &nsGkAtoms::rect, &nsGkAtoms::rectangle,
+     &nsGkAtoms::poly, &nsGkAtoms::polygon, &nsGkAtoms::circle,
+     &nsGkAtoms::circ, &nsGkAtoms::_default, nsnull};
 
-  aArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::coords, coords);
+  aArea->GetAttr(kNameSpaceID_None, nsGkAtoms::coords, coords);
 
   Area* area;
-  switch (aArea->FindAttrValueIn(kNameSpaceID_None, nsHTMLAtoms::shape,
+  switch (aArea->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::shape,
                                  strings, eIgnoreCase)) {
     case nsIContent::ATTR_MISSING:
     case 0:
@@ -953,12 +952,12 @@ nsImageMap::AttributeChanged(nsIDocument* aDocument,
   // the map.  But only do this if the node is an HTML <area> or <a>
   // and the attribute that's changing is "shape" or "coords" -- those
   // are the only cases we care about.
-  if ((aContent->NodeInfo()->Equals(nsHTMLAtoms::area) ||
-       aContent->NodeInfo()->Equals(nsHTMLAtoms::a)) &&
+  if ((aContent->NodeInfo()->Equals(nsGkAtoms::area) ||
+       aContent->NodeInfo()->Equals(nsGkAtoms::a)) &&
       aContent->IsNodeOfType(nsINode::eHTML) &&
       aNameSpaceID == kNameSpaceID_None &&
-      (aAttribute == nsHTMLAtoms::shape ||
-       aAttribute == nsHTMLAtoms::coords)) {
+      (aAttribute == nsGkAtoms::shape ||
+       aAttribute == nsGkAtoms::coords)) {
     MaybeUpdateAreas(aContent->GetParent());
   }
 }

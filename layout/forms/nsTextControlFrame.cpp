@@ -74,7 +74,7 @@
 #include "nsIPrintContext.h"
 #include "nsIPrintPreviewContext.h"
 #endif // USE_QI_IN_SUPPRESS_EVENT_HANDLERS
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsLayoutUtils.h"
 #include "nsIComponentManager.h"
 #include "nsIView.h"
@@ -86,7 +86,6 @@
 #include "nsIComponentManager.h"
 
 #include "nsBoxLayoutState.h"
-#include "nsLayoutAtoms.h" //getframetype
 //for keylistener for "return" check
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEventReceiver.h"
@@ -171,9 +170,9 @@ GetWrapPropertyEnum(nsIContent* aContent, nsHTMLTextWrap& aWrapProp)
   nsAutoString wrap;
   if (aContent->IsNodeOfType(nsINode::eHTML)) {
     static nsIContent::AttrValuesArray strings[] =
-      {&nsHTMLAtoms::HARD, &nsHTMLAtoms::OFF, nsnull};
+      {&nsGkAtoms::HARD, &nsGkAtoms::OFF, nsnull};
 
-    switch (aContent->FindAttrValueIn(kNameSpaceID_None, nsHTMLAtoms::wrap,
+    switch (aContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::wrap,
                                       strings, eIgnoreCase)) {
       case 0: aWrapProp = eHTMLTextWrap_Hard; break;
       case 1: aWrapProp = eHTMLTextWrap_Off; break;
@@ -910,7 +909,7 @@ nsTextInputSelectionImpl::CompleteMove(PRBool aForward, PRBool aExtend)
     {
       nsIContent *child = parentDIV->GetChildAt(offset - 1);
 
-      if (child->Tag() == nsHTMLAtoms::br)
+      if (child->Tag() == nsGkAtoms::br)
       {
         --offset;
         hint = nsFrameSelection::HINTRIGHT; // for Bug 106855
@@ -1209,7 +1208,7 @@ nsTextControlFrame::RemovedAsPrimaryFrame()
 nsIAtom*
 nsTextControlFrame::GetType() const 
 { 
-  return nsLayoutAtoms::textInputFrame;
+  return nsGkAtoms::textInputFrame;
 } 
 
 // XXX: wouldn't it be nice to get this from the style context!
@@ -1225,7 +1224,7 @@ PRBool nsTextControlFrame::IsSingleLineTextControl() const
 
 PRBool nsTextControlFrame::IsTextArea() const
 {
-  return mContent && mContent->Tag() == nsHTMLAtoms::textarea;
+  return mContent && mContent->Tag() == nsGkAtoms::textarea;
 }
 
 // XXX: wouldn't it be nice to get this from the style context!
@@ -1249,7 +1248,7 @@ nsTextControlFrame::GetCols()
   NS_ASSERTION(content, "Content is not HTML content!");
 
   if (IsTextArea()) {
-    const nsAttrValue* attr = content->GetParsedAttr(nsHTMLAtoms::cols);
+    const nsAttrValue* attr = content->GetParsedAttr(nsGkAtoms::cols);
     if (attr) {
       PRInt32 cols = attr->Type() == nsAttrValue::eInteger ?
                      attr->GetIntegerValue() : 0;
@@ -1258,7 +1257,7 @@ nsTextControlFrame::GetCols()
     }
   } else {
     // Else we know (assume) it is an input with size attr
-    const nsAttrValue* attr = content->GetParsedAttr(nsHTMLAtoms::size);
+    const nsAttrValue* attr = content->GetParsedAttr(nsGkAtoms::size);
     if (attr && attr->Type() == nsAttrValue::eInteger) {
       PRInt32 cols = attr->GetIntegerValue();
       if (cols > 0) {
@@ -1279,7 +1278,7 @@ nsTextControlFrame::GetRows()
       nsGenericHTMLElement::FromContent(mContent);
     NS_ASSERTION(content, "Content is not HTML content!");
 
-    const nsAttrValue* attr = content->GetParsedAttr(nsHTMLAtoms::rows);
+    const nsAttrValue* attr = content->GetParsedAttr(nsGkAtoms::rows);
     if (attr && attr->Type() == nsAttrValue::eInteger) {
       PRInt32 rows = attr->GetIntegerValue();
       return (rows <= 0) ? DEFAULT_ROWS_TEXTAREA : rows;
@@ -1562,12 +1561,12 @@ nsTextControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
 
     // Check if the readonly attribute is set.
 
-    if (mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::readonly))
+    if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::readonly))
       editorFlags |= nsIPlaintextEditor::eEditorReadonlyMask;
 
     // Check if the disabled attribute is set.
 
-    if (mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) 
+    if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) 
       editorFlags |= nsIPlaintextEditor::eEditorDisabledMask;
 
     // Disable the selection if necessary.
@@ -1697,7 +1696,7 @@ nsTextControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 
   // Now create a DIV and add it to the anonymous content child list.
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nsresult rv = doc->NodeInfoManager()->GetNodeInfo(nsHTMLAtoms::div, nsnull,
+  nsresult rv = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::div, nsnull,
                                                     kNameSpaceID_XHTML,
                                                     getter_AddRefs(nodeInfo));
 
@@ -1722,7 +1721,7 @@ nsTextControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 
   // Set the necessary style attributes on the text control.
 
-  rv = divContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::_class,
+  rv = divContent->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
                            NS_LITERAL_STRING("anonymous-div"), PR_FALSE);
 
   if (!IsSingleLineTextControl()) {
@@ -1733,7 +1732,7 @@ nsTextControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
     const nsStyleDisplay* disp = GetStyleDisplay();
     if (disp->mOverflowX != NS_STYLE_OVERFLOW_VISIBLE &&
         disp->mOverflowX != NS_STYLE_OVERFLOW_CLIP) {
-      rv = divContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::style,
+      rv = divContent->SetAttr(kNameSpaceID_None, nsGkAtoms::style,
                                NS_LITERAL_STRING("overflow: inherit;"),
                                PR_FALSE);
     }
@@ -1742,7 +1741,7 @@ nsTextControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
   if (NS_FAILED(rv))
     return rv;
 
-  // rv = divContent->SetAttr(kNameSpaceID_None,nsXULAtoms::debug, NS_LITERAL_STRING("true"), PR_FALSE);
+  // rv = divContent->SetAttr(kNameSpaceID_None,nsGkAtoms::debug, NS_LITERAL_STRING("true"), PR_FALSE);
   return aChildList.AppendElement(divContent);
 }
 
@@ -1926,7 +1925,7 @@ nsresult nsTextControlFrame::SetFormProperty(nsIAtom* aName, const nsAString& aV
   {
     mIsProcessing = PR_TRUE;
     
-    if (nsHTMLAtoms::value == aName) 
+    if (nsGkAtoms::value == aName) 
     {
       if (mEditor && mUseEditor) {
         // If the editor exists, the control needs to be informed that the value
@@ -1935,7 +1934,7 @@ nsresult nsTextControlFrame::SetFormProperty(nsIAtom* aName, const nsAString& aV
       }
       SetValue(aValue);   // set new text value
     }
-    else if (nsHTMLAtoms::select == aName)
+    else if (nsGkAtoms::select == aName)
     {
       // Select all the text.
       //
@@ -1958,7 +1957,7 @@ nsTextControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) const
   // Return the value of the property from the widget it is not null.
   // If widget is null, assume the widget is GFX-rendered and return a member variable instead.
 
-  if (nsHTMLAtoms::value == aName) {
+  if (nsGkAtoms::value == aName) {
     GetValue(aValue, PR_FALSE);
   }
   return NS_OK;
@@ -2044,7 +2043,7 @@ nsTextControlFrame::SelectAllContents()
     // br under the root node!
     nsIContent *child = rootContent->GetChildAt(numChildren - 1);
     if (child) {
-      if (child->Tag() == nsHTMLAtoms::br)
+      if (child->Tag() == nsGkAtoms::br)
         --numChildren;
     }
   }
@@ -2384,7 +2383,7 @@ nsTextControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
     return NS_ERROR_NOT_INITIALIZED;
   nsresult rv = NS_OK;
 
-  if (nsHTMLAtoms::maxlength == aAttribute) 
+  if (nsGkAtoms::maxlength == aAttribute) 
   {
     PRInt32 maxLength;
     PRBool maxDefined = GetMaxLength(&maxLength);
@@ -2403,11 +2402,11 @@ nsTextControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
     }
     rv = NS_OK; // don't propagate the error
   } 
-  else if (nsHTMLAtoms::readonly == aAttribute) 
+  else if (nsGkAtoms::readonly == aAttribute) 
   {
     PRUint32 flags;
     mEditor->GetFlags(&flags);
-    if (AttributeExists(nsHTMLAtoms::readonly))
+    if (AttributeExists(nsGkAtoms::readonly))
     { // set readonly
       flags |= nsIPlaintextEditor::eEditorReadonlyMask;
       if (IsFocusedContent(GetPresContext(), mContent))
@@ -2422,11 +2421,11 @@ nsTextControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
     }    
     mEditor->SetFlags(flags);
   }
-  else if (mEditor && nsHTMLAtoms::disabled == aAttribute) 
+  else if (mEditor && nsGkAtoms::disabled == aAttribute) 
   {
     PRUint32 flags;
     mEditor->GetFlags(&flags);
-    if (AttributeExists(nsHTMLAtoms::disabled))
+    if (AttributeExists(nsGkAtoms::disabled))
     { // set disabled
       flags |= nsIPlaintextEditor::eEditorDisabledMask;
       mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_OFF);
@@ -2506,7 +2505,7 @@ nsTextControlFrame::GetMaxLength(PRInt32* aSize)
 
   nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
   if (content) {
-    const nsAttrValue* attr = content->GetParsedAttr(nsHTMLAtoms::maxlength);
+    const nsAttrValue* attr = content->GetParsedAttr(nsGkAtoms::maxlength);
     if (attr && attr->Type() == nsAttrValue::eInteger) {
       *aSize = attr->GetIntegerValue();
 

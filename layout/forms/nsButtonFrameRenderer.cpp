@@ -40,7 +40,7 @@
 #include "nsPresContext.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsCSSPseudoElements.h"
 #include "nsINameSpaceManager.h"
 #include "nsStyleSet.h"
@@ -77,10 +77,10 @@ void
 nsButtonFrameRenderer::SetDisabled(PRBool aDisabled, PRBool notify)
 {
   if (aDisabled)
-    mFrame->GetContent()->SetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, EmptyString(),
+    mFrame->GetContent()->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled, EmptyString(),
                                   notify);
   else
-    mFrame->GetContent()->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, notify);
+    mFrame->GetContent()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, notify);
 }
 
 PRBool
@@ -88,7 +88,7 @@ nsButtonFrameRenderer::isDisabled()
 {
   // get the content
   return mFrame->GetContent()->HasAttr(kNameSpaceID_None,
-                                       nsHTMLAtoms::disabled);
+                                       nsGkAtoms::disabled);
 }
 
 class nsDisplayButtonBorderBackground : public nsDisplayItem {

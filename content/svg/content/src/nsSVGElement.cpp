@@ -52,9 +52,7 @@
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIServiceManager.h"
 #include "nsIXBLService.h"
-#include "nsSVGAtoms.h"
 #include "nsLayoutAtoms.h"
-#include "nsHTMLAtoms.h"
 #include "nsICSSStyleRule.h"
 #include "nsISVGSVGElement.h"
 #include "nsRuleWalker.h"
@@ -157,13 +155,13 @@ nsSVGElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 nsIAtom *
 nsSVGElement::GetIDAttributeName() const
 {
-  return nsSVGAtoms::id;
+  return nsGkAtoms::id;
 }
 
 nsIAtom *
 nsSVGElement::GetClassAttributeName() const
 {
-  return nsSVGAtoms::_class;
+  return nsGkAtoms::_class;
 }
 
 nsresult
@@ -247,7 +245,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
   }
 
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsSVGAtoms::style) {
+    if (aAttribute == nsGkAtoms::style) {
       nsGenericHTMLElement::ParseStyleAttribute(this, PR_TRUE,
                                                 aValue, aResult);
       return PR_TRUE;
@@ -375,23 +373,23 @@ nsSVGElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify)
     // save the old attribute so we can set up the mutation event properly
     // XXXbz if the old rule points to the same declaration as the new one,
     // this is getting the new attr value, not the old one....
-    modification = GetAttr(kNameSpaceID_None, nsHTMLAtoms::style,
+    modification = GetAttr(kNameSpaceID_None, nsGkAtoms::style,
                            oldValueStr);
   }
   else if (aNotify && IsInDoc()) {
-    modification = !!mAttrsAndChildren.GetAttr(nsHTMLAtoms::style);
+    modification = !!mAttrsAndChildren.GetAttr(nsGkAtoms::style);
   }
 
   nsAttrValue attrValue(aStyleRule);
 
-  return SetAttrAndNotify(kNameSpaceID_None, nsHTMLAtoms::style, nsnull, oldValueStr,
+  return SetAttrAndNotify(kNameSpaceID_None, nsGkAtoms::style, nsnull, oldValueStr,
                           attrValue, modification, hasListeners, aNotify);
 }
 
 nsICSSStyleRule*
 nsSVGElement::GetInlineStyleRule()
 {
-  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsSVGAtoms::style);
+  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsGkAtoms::style);
 
   if (attrVal && attrVal->Type() == nsAttrValue::eCSSStyleRule) {
     return attrVal->GetCSSStyleRuleValue();
@@ -403,98 +401,98 @@ nsSVGElement::GetInlineStyleRule()
 // PresentationAttributes-FillStroke
 /* static */ const nsGenericElement::MappedAttributeEntry
 nsSVGElement::sFillStrokeMap[] = {
-  { &nsSVGAtoms::fill },
-  { &nsSVGAtoms::fill_opacity },
-  { &nsSVGAtoms::fill_rule },
-  { &nsSVGAtoms::stroke },
-  { &nsSVGAtoms::stroke_dasharray },
-  { &nsSVGAtoms::stroke_dashoffset },
-  { &nsSVGAtoms::stroke_linecap },
-  { &nsSVGAtoms::stroke_linejoin },
-  { &nsSVGAtoms::stroke_miterlimit },
-  { &nsSVGAtoms::stroke_opacity },
-  { &nsSVGAtoms::stroke_width },
+  { &nsGkAtoms::fill },
+  { &nsGkAtoms::fill_opacity },
+  { &nsGkAtoms::fill_rule },
+  { &nsGkAtoms::stroke },
+  { &nsGkAtoms::stroke_dasharray },
+  { &nsGkAtoms::stroke_dashoffset },
+  { &nsGkAtoms::stroke_linecap },
+  { &nsGkAtoms::stroke_linejoin },
+  { &nsGkAtoms::stroke_miterlimit },
+  { &nsGkAtoms::stroke_opacity },
+  { &nsGkAtoms::stroke_width },
   { nsnull }
 };
 
 // PresentationAttributes-Graphics
 /* static */ const nsGenericElement::MappedAttributeEntry
 nsSVGElement::sGraphicsMap[] = {
-  { &nsSVGAtoms::clip_path },
-  { &nsSVGAtoms::clip_rule },
-  { &nsSVGAtoms::cursor },
-  { &nsSVGAtoms::display },
-  { &nsSVGAtoms::filter },
-  { &nsSVGAtoms::image_rendering },
-  { &nsSVGAtoms::mask },
-  { &nsSVGAtoms::opacity },
-  { &nsSVGAtoms::pointer_events },
-  { &nsSVGAtoms::shape_rendering },
-  { &nsSVGAtoms::text_rendering },
-  { &nsSVGAtoms::visibility },
+  { &nsGkAtoms::clip_path },
+  { &nsGkAtoms::clip_rule },
+  { &nsGkAtoms::cursor },
+  { &nsGkAtoms::display },
+  { &nsGkAtoms::filter },
+  { &nsGkAtoms::image_rendering },
+  { &nsGkAtoms::mask },
+  { &nsGkAtoms::opacity },
+  { &nsGkAtoms::pointer_events },
+  { &nsGkAtoms::shape_rendering },
+  { &nsGkAtoms::text_rendering },
+  { &nsGkAtoms::visibility },
   { nsnull }
 };
 
 // PresentationAttributes-TextContentElements
 /* static */ const nsGenericElement::MappedAttributeEntry
 nsSVGElement::sTextContentElementsMap[] = {
-  { &nsSVGAtoms::alignment_baseline },
-  { &nsSVGAtoms::baseline_shift },
-  { &nsSVGAtoms::direction },
-  { &nsSVGAtoms::dominant_baseline },
-  { &nsSVGAtoms::glyph_orientation_horizontal },
-  { &nsSVGAtoms::glyph_orientation_vertical },
-  { &nsSVGAtoms::kerning },
-  { &nsSVGAtoms::letter_spacing },
-  { &nsSVGAtoms::text_anchor },
-  { &nsSVGAtoms::text_decoration },
-  { &nsSVGAtoms::unicode_bidi },
-  { &nsSVGAtoms::word_spacing },
+  { &nsGkAtoms::alignment_baseline },
+  { &nsGkAtoms::baseline_shift },
+  { &nsGkAtoms::direction },
+  { &nsGkAtoms::dominant_baseline },
+  { &nsGkAtoms::glyph_orientation_horizontal },
+  { &nsGkAtoms::glyph_orientation_vertical },
+  { &nsGkAtoms::kerning },
+  { &nsGkAtoms::letter_spacing },
+  { &nsGkAtoms::text_anchor },
+  { &nsGkAtoms::text_decoration },
+  { &nsGkAtoms::unicode_bidi },
+  { &nsGkAtoms::word_spacing },
   { nsnull }
 };
 
 // PresentationAttributes-FontSpecification
 /* static */ const nsGenericElement::MappedAttributeEntry
 nsSVGElement::sFontSpecificationMap[] = {
-  { &nsSVGAtoms::font_family },
-  { &nsSVGAtoms::font_size },
-  { &nsSVGAtoms::font_size_adjust },
-  { &nsSVGAtoms::font_stretch },
-  { &nsSVGAtoms::font_style },
-  { &nsSVGAtoms::font_variant },
-  { &nsSVGAtoms::fontWeight },  
+  { &nsGkAtoms::font_family },
+  { &nsGkAtoms::font_size },
+  { &nsGkAtoms::font_size_adjust },
+  { &nsGkAtoms::font_stretch },
+  { &nsGkAtoms::font_style },
+  { &nsGkAtoms::font_variant },
+  { &nsGkAtoms::fontWeight },  
   { nsnull }
 };
 
 // PresentationAttributes-GradientStop
 /* static */ const nsGenericElement::MappedAttributeEntry
 nsSVGElement::sGradientStopMap[] = {
-  { &nsSVGAtoms::stop_color },
-  { &nsSVGAtoms::stop_opacity },
+  { &nsGkAtoms::stop_color },
+  { &nsGkAtoms::stop_opacity },
   { nsnull }
 };
 
 // PresentationAttributes-Viewports
 /* static */ const nsGenericElement::MappedAttributeEntry
 nsSVGElement::sViewportsMap[] = {
-  { &nsSVGAtoms::overflow },
-  { &nsSVGAtoms::clip },
+  { &nsGkAtoms::overflow },
+  { &nsGkAtoms::clip },
   { nsnull }
 };
 
 // PresentationAttributes-Makers
 /* static */ const nsGenericElement::MappedAttributeEntry
 nsSVGElement::sMarkersMap[] = {
-  { &nsSVGAtoms::marker_end },
-  { &nsSVGAtoms::marker_mid },
-  { &nsSVGAtoms::marker_start },
+  { &nsGkAtoms::marker_end },
+  { &nsGkAtoms::marker_mid },
+  { &nsGkAtoms::marker_start },
   { nsnull }
 };
 
 // PresentationAttributes-Color
 /* static */ const nsGenericElement::MappedAttributeEntry
 nsSVGElement::sColorMap[] = {
-  { &nsSVGAtoms::color },
+  { &nsGkAtoms::color },
   { nsnull }
 };
 
@@ -521,14 +519,14 @@ nsSVGElement::IsSupported(const nsAString& aFeature, const nsAString& aVersion, 
 /* attribute DOMString id; */
 NS_IMETHODIMP nsSVGElement::GetId(nsAString & aId)
 {
-  GetAttr(kNameSpaceID_None, nsSVGAtoms::id, aId);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::id, aId);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsSVGElement::SetId(const nsAString & aId)
 {
-  return SetAttr(kNameSpaceID_None, nsSVGAtoms::id, aId, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::id, aId, PR_TRUE);
 }
 
 /* readonly attribute nsIDOMSVGSVGElement ownerSVGElement; */
@@ -838,34 +836,34 @@ nsSVGElement::IsGraphicElementEventName(nsIAtom* aName)
     return PR_FALSE;
   }
 
-  return (aName == nsSVGAtoms::onabort     ||
-          aName == nsSVGAtoms::onclick     ||
-          aName == nsSVGAtoms::onerror     ||
-          aName == nsSVGAtoms::onload      ||
-          aName == nsSVGAtoms::onmousedown ||
-          aName == nsSVGAtoms::onmouseup   ||
-          aName == nsSVGAtoms::onmouseover ||
-          aName == nsSVGAtoms::onmousemove ||
-          aName == nsSVGAtoms::onmouseout);
+  return (aName == nsGkAtoms::onabort     ||
+          aName == nsGkAtoms::onclick     ||
+          aName == nsGkAtoms::onerror     ||
+          aName == nsGkAtoms::onload      ||
+          aName == nsGkAtoms::onmousedown ||
+          aName == nsGkAtoms::onmouseup   ||
+          aName == nsGkAtoms::onmouseover ||
+          aName == nsGkAtoms::onmousemove ||
+          aName == nsGkAtoms::onmouseout);
 }
 
 /* static */
 nsIAtom* nsSVGElement::GetEventNameForAttr(nsIAtom* aAttr)
 {
-  if (aAttr == nsSVGAtoms::onload)
-    return nsLayoutAtoms::onSVGLoad;
-  if (aAttr == nsSVGAtoms::onunload)
-    return nsLayoutAtoms::onSVGUnload;
-  if (aAttr == nsSVGAtoms::onabort)
-    return nsLayoutAtoms::onSVGAbort;
-  if (aAttr == nsSVGAtoms::onerror)
-    return nsLayoutAtoms::onSVGError;
-  if (aAttr == nsSVGAtoms::onresize)
-    return nsLayoutAtoms::onSVGResize;
-  if (aAttr == nsSVGAtoms::onscroll)
-    return nsLayoutAtoms::onSVGScroll;
-  if (aAttr == nsSVGAtoms::onzoom)
-    return nsLayoutAtoms::onSVGZoom;
+  if (aAttr == nsGkAtoms::onload)
+    return nsGkAtoms::onSVGLoad;
+  if (aAttr == nsGkAtoms::onunload)
+    return nsGkAtoms::onSVGUnload;
+  if (aAttr == nsGkAtoms::onabort)
+    return nsGkAtoms::onSVGAbort;
+  if (aAttr == nsGkAtoms::onerror)
+    return nsGkAtoms::onSVGError;
+  if (aAttr == nsGkAtoms::onresize)
+    return nsGkAtoms::onSVGResize;
+  if (aAttr == nsGkAtoms::onscroll)
+    return nsGkAtoms::onSVGScroll;
+  if (aAttr == nsGkAtoms::onzoom)
+    return nsGkAtoms::onSVGZoom;
 
   return aAttr;
 }

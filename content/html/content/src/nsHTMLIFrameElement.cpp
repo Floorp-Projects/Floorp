@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
@@ -128,25 +128,25 @@ nsHTMLIFrameElement::ParseAttribute(PRInt32 aNamespaceID,
                                     nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsHTMLAtoms::marginwidth) {
+    if (aAttribute == nsGkAtoms::marginwidth) {
       return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
     }
-    if (aAttribute == nsHTMLAtoms::marginheight) {
+    if (aAttribute == nsGkAtoms::marginheight) {
       return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
     }
-    if (aAttribute == nsHTMLAtoms::width) {
+    if (aAttribute == nsGkAtoms::width) {
       return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
     }
-    if (aAttribute == nsHTMLAtoms::height) {
+    if (aAttribute == nsGkAtoms::height) {
       return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
     }
-    if (aAttribute == nsHTMLAtoms::frameborder) {
+    if (aAttribute == nsGkAtoms::frameborder) {
       return ParseFrameborderValue(aValue, aResult);
     }
-    if (aAttribute == nsHTMLAtoms::scrolling) {
+    if (aAttribute == nsGkAtoms::scrolling) {
       return ParseScrollingValue(aValue, aResult);
     }
-    if (aAttribute == nsHTMLAtoms::align) {
+    if (aAttribute == nsGkAtoms::align) {
       return ParseAlignValue(aValue, aResult);
     }
   }
@@ -163,7 +163,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     // frameborder: 0 | 1 (| NO | YES in quirks mode)
     // If frameborder is 0 or No, set border to 0
     // else leave it as the value set in html.css
-    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::frameborder);
+    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::frameborder);
     if (value && value->Type() == nsAttrValue::eEnum) {
       PRInt32 frameborder = value->GetEnumValue();
       if (NS_STYLE_FRAME_0 == frameborder ||
@@ -183,7 +183,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   else if (aData->mSID == eStyleStruct_Position) {
     // width: value
     if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
-      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::width);
+      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::width);
       if (value && value->Type() == nsAttrValue::eInteger)
         aData->mPositionData->mWidth.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
       else if (value && value->Type() == nsAttrValue::ePercent)
@@ -192,7 +192,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 
     // height: value
     if (aData->mPositionData->mHeight.GetUnit() == eCSSUnit_Null) {
-      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::height);
+      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::height);
       if (value && value->Type() == nsAttrValue::eInteger)
         aData->mPositionData->mHeight.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
       else if (value && value->Type() == nsAttrValue::ePercent)
@@ -209,9 +209,9 @@ NS_IMETHODIMP_(PRBool)
 nsHTMLIFrameElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
-    { &nsHTMLAtoms::width },
-    { &nsHTMLAtoms::height },
-    { &nsHTMLAtoms::frameborder },
+    { &nsGkAtoms::width },
+    { &nsGkAtoms::height },
+    { &nsGkAtoms::frameborder },
     { nsnull },
   };
 

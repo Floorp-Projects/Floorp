@@ -78,7 +78,7 @@
 #include "nsICSSParser.h"
 #include "nsICSSImportRule.h"
 #include "nsThreadUtils.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 
 #ifdef MOZ_XUL
 #include "nsIXULPrototypeCache.h"
@@ -868,7 +868,7 @@ CSSLoaderImpl::IsAlternate(const nsAString& aTitle, PRBool aHasAlternateRel)
     // XXXbz maybe this should be checking IsVoid(), actually, since the
     // preferred set can be explicitly set to the empty string.  Look into
     // this.
-    mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle, aTitle);
+    mDocument->SetHeaderData(nsGkAtoms::headerDefaultStyle, aTitle);
     // We're definitely not an alternate
     return PR_FALSE;
   }

@@ -165,13 +165,13 @@ MapRowAttributesIntoCSS(nsIFrame* aTableFrame,
   PRUnichar* attr;
 
   // see if the rowalign attribute is not already set
-  if (!rowContent->HasAttr(kNameSpaceID_None, nsMathMLAtoms::rowalign_) &&
-      !rowContent->HasAttr(kNameSpaceID_None, nsMathMLAtoms::MOZrowalign)) {
+  if (!rowContent->HasAttr(kNameSpaceID_None, nsGkAtoms::rowalign_) &&
+      !rowContent->HasAttr(kNameSpaceID_None, nsGkAtoms::MOZrowalign)) {
     // see if the rowalign attribute was specified on the table
-    attr = GetValueAt(aTableFrame, nsMathMLAtoms::rowalign_, rowIndex);
+    attr = GetValueAt(aTableFrame, nsGkAtoms::rowalign_, rowIndex);
     if (attr) {
       // set our special -moz attribute on the row without notifying a reflow
-      rowContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZrowalign,
+      rowContent->SetAttr(kNameSpaceID_None, nsGkAtoms::MOZrowalign,
                           nsDependentString(attr), PR_FALSE);
     }
   }
@@ -182,11 +182,11 @@ MapRowAttributesIntoCSS(nsIFrame* aTableFrame,
   // This way of doing so allows us to handle selective lines, [row]\hline[row][row]',
   // and cases of spanning cells without further complications.
   if (rowIndex > 0 &&
-      !rowContent->HasAttr(kNameSpaceID_None, nsMathMLAtoms::MOZrowline)) {
-    attr = GetValueAt(aTableFrame, nsMathMLAtoms::rowlines_, rowIndex-1);
+      !rowContent->HasAttr(kNameSpaceID_None, nsGkAtoms::MOZrowline)) {
+    attr = GetValueAt(aTableFrame, nsGkAtoms::rowlines_, rowIndex-1);
     if (attr) {
       // set our special -moz attribute on the row without notifying a reflow
-      rowContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZrowline,
+      rowContent->SetAttr(kNameSpaceID_None, nsGkAtoms::MOZrowline,
                           nsDependentString(attr), PR_FALSE);
     }
   }
@@ -208,17 +208,17 @@ MapColAttributesIntoCSS(nsIFrame* aTableFrame,
   PRUnichar* attr;
 
   // see if the columnalign attribute is not already set
-  if (!cellContent->HasAttr(kNameSpaceID_None, nsMathMLAtoms::columnalign_) &&
-      !cellContent->HasAttr(kNameSpaceID_None, nsMathMLAtoms::MOZcolumnalign)) {
+  if (!cellContent->HasAttr(kNameSpaceID_None, nsGkAtoms::columnalign_) &&
+      !cellContent->HasAttr(kNameSpaceID_None, nsGkAtoms::MOZcolumnalign)) {
     // see if the columnalign attribute was specified on the row
-    attr = GetValueAt(aRowFrame, nsMathMLAtoms::columnalign_, colIndex);
+    attr = GetValueAt(aRowFrame, nsGkAtoms::columnalign_, colIndex);
     if (!attr) {
       // see if the columnalign attribute was specified on the table
-      attr = GetValueAt(aTableFrame, nsMathMLAtoms::columnalign_, colIndex);
+      attr = GetValueAt(aTableFrame, nsGkAtoms::columnalign_, colIndex);
     }
     if (attr) {
       // set our special -moz attribute without notifying a reflow
-      cellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZcolumnalign,
+      cellContent->SetAttr(kNameSpaceID_None, nsGkAtoms::MOZcolumnalign,
                            nsDependentString(attr), PR_FALSE);
     }
   }
@@ -229,11 +229,11 @@ MapColAttributesIntoCSS(nsIFrame* aTableFrame,
   // of the previous cell. This way of doing so allows us to handle selective lines,
   // e.g., 'r|cl', and cases of spanning cells without further complications.
   if (colIndex > 0 &&
-      !cellContent->HasAttr(kNameSpaceID_None, nsMathMLAtoms::MOZcolumnline)) {
-    attr = GetValueAt(aTableFrame, nsMathMLAtoms::columnlines_, colIndex-1);
+      !cellContent->HasAttr(kNameSpaceID_None, nsGkAtoms::MOZcolumnline)) {
+    attr = GetValueAt(aTableFrame, nsGkAtoms::columnlines_, colIndex-1);
     if (attr) {
       // set our special -moz attribute without notifying a reflow
-      cellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZcolumnline,
+      cellContent->SetAttr(kNameSpaceID_None, nsGkAtoms::MOZcolumnline,
                            nsDependentString(attr), PR_FALSE);
     }
   }
@@ -370,7 +370,7 @@ nsMathMLmtableOuterFrame::InheritAutomaticData(nsIFrame* aParent)
   nsMathMLFrame::InheritAutomaticData(aParent);
 
   // see if the displaystyle attribute is there and let it override what we inherited
-  if (mContent->Tag() == nsMathMLAtoms::mtable_)
+  if (mContent->Tag() == nsGkAtoms::mtable_)
     nsMathMLFrame::FindAttrDisplaystyle(mContent, mPresentationData);
 
   return NS_OK;
@@ -446,7 +446,7 @@ nsMathMLmtableOuterFrame::AttributeChanged(PRInt32  aNameSpaceID,
     return NS_OK;
 
   // align - just need to issue a dirty (resize) reflow command
-  if (aAttribute == nsMathMLAtoms::align) {
+  if (aAttribute == nsGkAtoms::align) {
     GetPresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eResize);
     return NS_OK;
@@ -455,7 +455,7 @@ nsMathMLmtableOuterFrame::AttributeChanged(PRInt32  aNameSpaceID,
   // displaystyle - may seem innocuous, but it is actually very harsh --
   // like changing an unit. Blow away and recompute all our automatic
   // presentational data, and issue a style-changed reflow request
-  if (aAttribute == nsMathMLAtoms::displaystyle_) {
+  if (aAttribute == nsGkAtoms::displaystyle_) {
     nsMathMLContainerFrame::RebuildAutomaticDataForChildren(mParent);
     nsMathMLContainerFrame::PropagateScriptStyleFor(tableFrame, mPresentationData.scriptLevel);
     GetPresContext()->PresShell()->
@@ -466,14 +466,14 @@ nsMathMLmtableOuterFrame::AttributeChanged(PRInt32  aNameSpaceID,
   // ...and the other attributes affect rows or columns in one way or another
   nsIAtom* MOZrowAtom = nsnull;
   nsIAtom* MOZcolAtom = nsnull;
-  if (aAttribute == nsMathMLAtoms::rowalign_)
-    MOZrowAtom = nsMathMLAtoms::MOZrowalign;
-  else if (aAttribute == nsMathMLAtoms::rowlines_)
-    MOZrowAtom = nsMathMLAtoms::MOZrowline;
-  else if (aAttribute == nsMathMLAtoms::columnalign_)
-    MOZcolAtom = nsMathMLAtoms::MOZcolumnalign;
-  else if (aAttribute == nsMathMLAtoms::columnlines_)
-    MOZcolAtom = nsMathMLAtoms::MOZcolumnline;
+  if (aAttribute == nsGkAtoms::rowalign_)
+    MOZrowAtom = nsGkAtoms::MOZrowalign;
+  else if (aAttribute == nsGkAtoms::rowlines_)
+    MOZrowAtom = nsGkAtoms::MOZrowline;
+  else if (aAttribute == nsGkAtoms::columnalign_)
+    MOZcolAtom = nsGkAtoms::MOZcolumnalign;
+  else if (aAttribute == nsGkAtoms::columnlines_)
+    MOZcolAtom = nsGkAtoms::MOZcolumnline;
 
   if (!MOZrowAtom && !MOZcolAtom)
     return NS_OK;
@@ -564,7 +564,7 @@ nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
   // XXX should we also check <mstyle> ?
   PRInt32 rowIndex = 0;
   eAlign tableAlign = eAlign_axis;
-  GetAttribute(mContent, nsnull, nsMathMLAtoms::align, value);
+  GetAttribute(mContent, nsnull, nsGkAtoms::align, value);
   if (!value.IsEmpty()) {
     ParseAlignAttribute(value, tableAlign, rowIndex);
   }
@@ -749,15 +749,15 @@ nsMathMLmtrFrame::AttributeChanged(PRInt32  aNameSpaceID,
   //               pick it up and nsCSSFrameConstructor will issue a PostRestyleEvent().
   // columnalign : Need an explicit re-style call.
 
-  if (aAttribute == nsMathMLAtoms::rowalign_) {
+  if (aAttribute == nsGkAtoms::rowalign_) {
     // unset any -moz attribute that we may have set earlier, and re-sync
-    mContent->UnsetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZrowalign, PR_FALSE);
+    mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::MOZrowalign, PR_FALSE);
     MapRowAttributesIntoCSS(nsTableFrame::GetTableFrame(this), this);
     // That's all - see comment above.
     return NS_OK;
   }
 
-  if (aAttribute != nsMathMLAtoms::columnalign_)
+  if (aAttribute != nsGkAtoms::columnalign_)
     return NS_OK;
 
   // Clear any cached columnalign's nsValueList for this row
@@ -770,7 +770,7 @@ nsMathMLmtrFrame::AttributeChanged(PRInt32  aNameSpaceID,
   for ( ; cellFrame; cellFrame = cellFrame->GetNextSibling()) {
     if (IS_TABLE_CELL(cellFrame->GetType())) {
       cellFrame->GetContent()->
-        UnsetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZcolumnalign, PR_FALSE);
+        UnsetAttr(kNameSpaceID_None, nsGkAtoms::MOZcolumnalign, PR_FALSE);
       MapColAttributesIntoCSS(tableFrame, this, cellFrame);
     }
   }
@@ -814,7 +814,7 @@ nsMathMLmtdFrame::GetRowSpan()
 {
   PRInt32 rowspan = 1;
   nsAutoString value;
-  mContent->GetAttr(kNameSpaceID_None, nsMathMLAtoms::rowspan, value);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::rowspan, value);
   if (!value.IsEmpty()) {
     PRInt32 error;
     rowspan = value.ToInteger(&error);
@@ -829,7 +829,7 @@ nsMathMLmtdFrame::GetColSpan()
 {
   PRInt32 colspan = 1;
   nsAutoString value;
-  mContent->GetAttr(kNameSpaceID_None, nsMathMLAtoms::columnspan_, value);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::columnspan_, value);
   if (!value.IsEmpty()) {
     PRInt32 error;
     colspan = value.ToInteger(&error);
@@ -861,18 +861,18 @@ nsMathMLmtdFrame::AttributeChanged(PRInt32  aNameSpaceID,
   // rowspan     : here
   // columnspan  : here
 
-  if (aAttribute == nsMathMLAtoms::columnalign_) {
+  if (aAttribute == nsGkAtoms::columnalign_) {
     // unset any -moz attribute that we may have set earlier, and re-sync
-    mContent->UnsetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZcolumnalign, PR_FALSE);
+    mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::MOZcolumnalign, PR_FALSE);
     MapColAttributesIntoCSS(nsTableFrame::GetTableFrame(this), mParent, this);
     return NS_OK;
   }
 
-  if (aAttribute == nsMathMLAtoms::rowspan ||
-      aAttribute == nsMathMLAtoms::columnspan_) {
+  if (aAttribute == nsGkAtoms::rowspan ||
+      aAttribute == nsGkAtoms::columnspan_) {
     // use the naming expected by the base class 
-    if (aAttribute == nsMathMLAtoms::columnspan_)
-      aAttribute = nsMathMLAtoms::colspan;
+    if (aAttribute == nsGkAtoms::columnspan_)
+      aAttribute = nsGkAtoms::colspan;
     return nsTableCellFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
   }
 

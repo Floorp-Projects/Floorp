@@ -50,8 +50,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
-#include "nsHTMLAtoms.h"
-#include "nsXULAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsStyleContext.h"
@@ -134,7 +133,7 @@ nsTextBoxFrame::AttributeChanged(PRInt32         aNameSpaceID,
 
     // If the accesskey changed, register for the new value
     // The old value has been unregistered in nsXULElement::SetAttr
-    if (aAttribute == nsXULAtoms::accesskey || aAttribute == nsXULAtoms::control)
+    if (aAttribute == nsGkAtoms::accesskey || aAttribute == nsGkAtoms::control)
         RegUnregAccessKey(PR_TRUE);
 
     return NS_OK;
@@ -216,12 +215,12 @@ nsTextBoxFrame::UpdateAttributes(nsIAtom*         aAttribute,
     aResize = PR_FALSE;
     aRedraw = PR_FALSE;
 
-    if (aAttribute == nsnull || aAttribute == nsXULAtoms::crop) {
+    if (aAttribute == nsnull || aAttribute == nsGkAtoms::crop) {
         static nsIContent::AttrValuesArray strings[] =
-          {&nsXULAtoms::left, &nsXULAtoms::start, &nsXULAtoms::center,
-           &nsXULAtoms::right, &nsXULAtoms::end, nsnull};
+          {&nsGkAtoms::left, &nsGkAtoms::start, &nsGkAtoms::center,
+           &nsGkAtoms::right, &nsGkAtoms::end, nsnull};
         CroppingStyle cropType;
-        switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsXULAtoms::crop,
+        switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::crop,
                                           strings, eCaseMatters)) {
           case 0:
           case 1:
@@ -245,24 +244,24 @@ nsTextBoxFrame::UpdateAttributes(nsIAtom*         aAttribute,
         }
     }
 
-    if (aAttribute == nsnull || aAttribute == nsHTMLAtoms::value) {
-        mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, mTitle);
+    if (aAttribute == nsnull || aAttribute == nsGkAtoms::value) {
+        mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, mTitle);
         doUpdateTitle = PR_TRUE;
     }
 
-    if (aAttribute == nsnull || aAttribute == nsXULAtoms::accesskey) {
+    if (aAttribute == nsnull || aAttribute == nsGkAtoms::accesskey) {
         nsAutoString accesskey;
         nsCOMPtr<nsIDOMXULLabelElement> labelElement = do_QueryInterface(mContent);
         if (labelElement) {
           labelElement->GetAccessKey(accesskey);  // Accesskey may be stored on control
         }
         else {
-          mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::accesskey, accesskey);
+          mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accesskey);
         }
         if (!accesskey.Equals(mAccessKey)) {
             if (!doUpdateTitle) {
                 // Need to get clean mTitle and didn't already
-                mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, mTitle);
+                mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, mTitle);
                 doUpdateTitle = PR_TRUE;
             }
             mAccessKey = accesskey;
@@ -936,12 +935,12 @@ nsTextBoxFrame::RegUnregAccessKey(PRBool aDoReg)
     // in e.g. <menu>, <menuitem>, <button>. These <label>s inherit
     // |accesskey| and would otherwise register themselves, overwriting
     // the content we really meant to be registered.
-    if (!mContent->HasAttr(kNameSpaceID_None, nsXULAtoms::control))
+    if (!mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::control))
         return NS_OK;
 
     // see if we even have an access key
     nsAutoString accessKey;
-    mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::accesskey, accessKey);
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accessKey);
 
     if (accessKey.IsEmpty())
         return NS_OK;

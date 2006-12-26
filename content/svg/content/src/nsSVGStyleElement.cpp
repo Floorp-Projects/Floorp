@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGElement.h"
-#include "nsSVGAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDOMSVGStyleElement.h"
 #include "nsUnicharUtils.h"
 #include "nsIDocument.h"
@@ -200,9 +200,9 @@ nsSVGStyleElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   if (NS_SUCCEEDED(rv)) {
     UpdateStyleSheet(nsnull, nsnull,
                      aNameSpaceID == kNameSpaceID_None &&
-                     (aName == nsSVGAtoms::title ||
-                      aName == nsSVGAtoms::media ||
-                      aName == nsSVGAtoms::type));
+                     (aName == nsGkAtoms::title ||
+                      aName == nsGkAtoms::media ||
+                      aName == nsGkAtoms::type));
   }
 
   return rv;
@@ -217,9 +217,9 @@ nsSVGStyleElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   if (NS_SUCCEEDED(rv)) {
     UpdateStyleSheet(nsnull, nsnull,
                      aNameSpaceID == kNameSpaceID_None &&
-                     (aAttribute == nsSVGAtoms::title ||
-                      aAttribute == nsSVGAtoms::media ||
-                      aAttribute == nsSVGAtoms::type));
+                     (aAttribute == nsGkAtoms::title ||
+                      aAttribute == nsGkAtoms::media ||
+                      aAttribute == nsGkAtoms::type));
   }
 
   return rv;
@@ -231,49 +231,49 @@ nsSVGStyleElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 /* attribute DOMString xmlspace; */
 NS_IMETHODIMP nsSVGStyleElement::GetXmlspace(nsAString & aXmlspace)
 {
-  GetAttr(kNameSpaceID_XML, nsSVGAtoms::space, aXmlspace);
+  GetAttr(kNameSpaceID_XML, nsGkAtoms::space, aXmlspace);
 
   return NS_OK;
 }
 NS_IMETHODIMP nsSVGStyleElement::SetXmlspace(const nsAString & aXmlspace)
 {
-  return SetAttr(kNameSpaceID_XML, nsSVGAtoms::space, aXmlspace, PR_TRUE);
+  return SetAttr(kNameSpaceID_XML, nsGkAtoms::space, aXmlspace, PR_TRUE);
 }
 
 /* attribute DOMString type; */
 NS_IMETHODIMP nsSVGStyleElement::GetType(nsAString & aType)
 {
-  GetAttr(kNameSpaceID_None, nsSVGAtoms::type, aType);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::type, aType);
 
   return NS_OK;
 }
 NS_IMETHODIMP nsSVGStyleElement::SetType(const nsAString & aType)
 {
-  return SetAttr(kNameSpaceID_None, nsSVGAtoms::type, aType, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::type, aType, PR_TRUE);
 }
 
 /* attribute DOMString media; */
 NS_IMETHODIMP nsSVGStyleElement::GetMedia(nsAString & aMedia)
 {
-  GetAttr(kNameSpaceID_None, nsSVGAtoms::media, aMedia);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::media, aMedia);
 
   return NS_OK;
 }
 NS_IMETHODIMP nsSVGStyleElement::SetMedia(const nsAString & aMedia)
 {
-  return SetAttr(kNameSpaceID_XML, nsSVGAtoms::media, aMedia, PR_TRUE);
+  return SetAttr(kNameSpaceID_XML, nsGkAtoms::media, aMedia, PR_TRUE);
 }
 
 /* attribute DOMString title; */
 NS_IMETHODIMP nsSVGStyleElement::GetTitle(nsAString & aTitle)
 {
-  GetAttr(kNameSpaceID_None, nsSVGAtoms::title, aTitle);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::title, aTitle);
 
   return NS_OK;
 }
 NS_IMETHODIMP nsSVGStyleElement::SetTitle(const nsAString & aTitle)
 {
-  return SetAttr(kNameSpaceID_XML, nsSVGAtoms::title, aTitle, PR_TRUE);
+  return SetAttr(kNameSpaceID_XML, nsGkAtoms::title, aTitle, PR_TRUE);
 }
 
 //----------------------------------------------------------------------
@@ -298,16 +298,16 @@ nsSVGStyleElement::GetStyleSheetInfo(nsAString& aTitle,
   *aIsAlternate = PR_FALSE;
 
   nsAutoString title;
-  GetAttr(kNameSpaceID_None, nsSVGAtoms::title, title);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::title, title);
   title.CompressWhitespace();
   aTitle.Assign(title);
 
-  GetAttr(kNameSpaceID_None, nsSVGAtoms::media, aMedia);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::media, aMedia);
   // SVG spec refers to the HTML4.0 spec which is inconsistent, make it
   // case INSENSITIVE
   ToLowerCase(aMedia);
 
-  GetAttr(kNameSpaceID_None, nsSVGAtoms::type, aType);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::type, aType);
 
   return;
 }

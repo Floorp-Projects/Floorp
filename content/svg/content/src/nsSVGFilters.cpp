@@ -37,9 +37,8 @@
 #include "nsSVGElement.h"
 #include "nsSVGAnimatedString.h"
 #include "nsSVGLength.h"
-#include "nsSVGAtoms.h"
-#include "nsSVGNumber2.h"
 #include "nsGkAtoms.h"
+#include "nsSVGNumber2.h"
 #include "nsIDOMSVGFilters.h"
 #include "nsCOMPtr.h"
 #include "nsISVGFilter.h"
@@ -91,7 +90,7 @@ nsSVGFE::Init()
   {
     rv = NS_NewSVGAnimatedString(getter_AddRefs(mResult));
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::result, mResult);
+    rv = AddMappedSVGValue(nsGkAtoms::result, mResult);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -539,7 +538,7 @@ nsSVGFEGaussianBlurElement::Init()
   {
     rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::in, mIn1);
+    rv = AddMappedSVGValue(nsGkAtoms::in, mIn1);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -589,7 +588,7 @@ nsSVGFEGaussianBlurElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                                            const nsAString& aValue,
                                            nsAttrValue& aResult)
 {
-  if (aName == nsSVGAtoms::stdDeviation && aNameSpaceID == kNameSpaceID_None) {
+  if (aName == nsGkAtoms::stdDeviation && aNameSpaceID == kNameSpaceID_None) {
     return ScanDualValueAttribute(aValue, nsGkAtoms::stdDeviation,
                                   &mNumberAttributes[STD_DEV_X],
                                   &mNumberAttributes[STD_DEV_Y],
@@ -885,11 +884,11 @@ nsSVGFEBlendElement::Init()
   NS_ENSURE_SUCCESS(rv,rv);
 
   static struct nsSVGEnumMapping gModeTypes[] = {
-    {&nsSVGAtoms::normal, nsSVGFEBlendElement::SVG_MODE_NORMAL},
-    {&nsSVGAtoms::multiply, nsSVGFEBlendElement::SVG_MODE_MULTIPLY},
-    {&nsSVGAtoms::screen, nsSVGFEBlendElement::SVG_MODE_SCREEN},
-    {&nsSVGAtoms::darken, nsSVGFEBlendElement::SVG_MODE_DARKEN},
-    {&nsSVGAtoms::lighten, nsSVGFEBlendElement::SVG_MODE_LIGHTEN},
+    {&nsGkAtoms::normal, nsSVGFEBlendElement::SVG_MODE_NORMAL},
+    {&nsGkAtoms::multiply, nsSVGFEBlendElement::SVG_MODE_MULTIPLY},
+    {&nsGkAtoms::screen, nsSVGFEBlendElement::SVG_MODE_SCREEN},
+    {&nsGkAtoms::darken, nsSVGFEBlendElement::SVG_MODE_DARKEN},
+    {&nsGkAtoms::lighten, nsSVGFEBlendElement::SVG_MODE_LIGHTEN},
     {nsnull, 0}
   };
 
@@ -903,7 +902,7 @@ nsSVGFEBlendElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mMode), modes);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::mode, mMode);
+    rv = AddMappedSVGValue(nsGkAtoms::mode, mMode);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -911,7 +910,7 @@ nsSVGFEBlendElement::Init()
   {
     rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::in, mIn1);
+    rv = AddMappedSVGValue(nsGkAtoms::in, mIn1);
     NS_ENSURE_SUCCESS(rv,rv);
   }
   
@@ -919,7 +918,7 @@ nsSVGFEBlendElement::Init()
   {
     rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn2));
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::in2, mIn2);
+    rv = AddMappedSVGValue(nsGkAtoms::in2, mIn2);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -1123,12 +1122,12 @@ nsSVGFECompositeElement::Init()
   NS_ENSURE_SUCCESS(rv,rv);
 
   static struct nsSVGEnumMapping gOperatorTypes[] = {
-    {&nsSVGAtoms::over, nsSVGFECompositeElement::SVG_OPERATOR_OVER},
-    {&nsSVGAtoms::in, nsSVGFECompositeElement::SVG_OPERATOR_IN},
-    {&nsSVGAtoms::out, nsSVGFECompositeElement::SVG_OPERATOR_OUT},
-    {&nsSVGAtoms::atop, nsSVGFECompositeElement::SVG_OPERATOR_ATOP},
-    {&nsSVGAtoms::xor_, nsSVGFECompositeElement::SVG_OPERATOR_XOR},
-    {&nsSVGAtoms::arithmetic, nsSVGFECompositeElement::SVG_OPERATOR_ARITHMETIC},
+    {&nsGkAtoms::over, nsSVGFECompositeElement::SVG_OPERATOR_OVER},
+    {&nsGkAtoms::in, nsSVGFECompositeElement::SVG_OPERATOR_IN},
+    {&nsGkAtoms::out, nsSVGFECompositeElement::SVG_OPERATOR_OUT},
+    {&nsGkAtoms::atop, nsSVGFECompositeElement::SVG_OPERATOR_ATOP},
+    {&nsGkAtoms::xor_, nsSVGFECompositeElement::SVG_OPERATOR_XOR},
+    {&nsGkAtoms::arithmetic, nsSVGFECompositeElement::SVG_OPERATOR_ARITHMETIC},
     {nsnull, 0}
   };
   
@@ -1142,7 +1141,7 @@ nsSVGFECompositeElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mOperator), operators);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::_operator, mOperator);
+    rv = AddMappedSVGValue(nsGkAtoms::_operator, mOperator);
     NS_ENSURE_SUCCESS(rv,rv);
   }
     
@@ -1150,7 +1149,7 @@ nsSVGFECompositeElement::Init()
   {
     rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::in, mIn1);
+    rv = AddMappedSVGValue(nsGkAtoms::in, mIn1);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -1158,7 +1157,7 @@ nsSVGFECompositeElement::Init()
   {
     rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn2));
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::in2, mIn2);
+    rv = AddMappedSVGValue(nsGkAtoms::in2, mIn2);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -1418,7 +1417,7 @@ nsSVGFEComponentTransferElement::Init()
   {
     rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::in, mIn1);
+    rv = AddMappedSVGValue(nsGkAtoms::in, mIn1);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -1614,15 +1613,15 @@ nsSVGComponentTransferFunctionElement::Init()
 
   // enumeration mappings
   static struct nsSVGEnumMapping gComponentTransferTypes[] = {
-    {&nsSVGAtoms::identity,
+    {&nsGkAtoms::identity,
      nsIDOMSVGComponentTransferFunctionElement::SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY},
-    {&nsSVGAtoms::table,
+    {&nsGkAtoms::table,
      nsIDOMSVGComponentTransferFunctionElement::SVG_FECOMPONENTTRANSFER_TYPE_TABLE},
-    {&nsSVGAtoms::discrete,
+    {&nsGkAtoms::discrete,
      nsIDOMSVGComponentTransferFunctionElement::SVG_FECOMPONENTTRANSFER_TYPE_DISCRETE},
-    {&nsSVGAtoms::linear,
+    {&nsGkAtoms::linear,
      nsIDOMSVGComponentTransferFunctionElement::SVG_FECOMPONENTTRANSFER_TYPE_LINEAR},
-    {&nsSVGAtoms::gamma,
+    {&nsGkAtoms::gamma,
      nsIDOMSVGComponentTransferFunctionElement::SVG_FECOMPONENTTRANSFER_TYPE_GAMMA},
     {nsnull, 0}
   };
@@ -1638,7 +1637,7 @@ nsSVGComponentTransferFunctionElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mType), types);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::type, mType);
+    rv = AddMappedSVGValue(nsGkAtoms::type, mType);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -1649,7 +1648,7 @@ nsSVGComponentTransferFunctionElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedNumberList(getter_AddRefs(mTableValues), values);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::tableValues, mTableValues);
+    rv = AddMappedSVGValue(nsGkAtoms::tableValues, mTableValues);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -2236,7 +2235,7 @@ nsSVGFEMergeNodeElement::Init()
   {
     rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::in, mIn1);
+    rv = AddMappedSVGValue(nsGkAtoms::in, mIn1);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -2378,7 +2377,7 @@ nsSVGFEOffsetElement::Init()
   {
     rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::in, mIn1);
+    rv = AddMappedSVGValue(nsGkAtoms::in, mIn1);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -2568,8 +2567,8 @@ nsSVGFEMorphologyElement::Init()
   NS_ENSURE_SUCCESS(rv,rv);
 
   static struct nsSVGEnumMapping gOperatorTypes[] = {
-    {&nsSVGAtoms::erode, nsSVGFEMorphologyElement::SVG_OPERATOR_ERODE},
-    {&nsSVGAtoms::dilate, nsSVGFEMorphologyElement::SVG_OPERATOR_DILATE},
+    {&nsGkAtoms::erode, nsSVGFEMorphologyElement::SVG_OPERATOR_ERODE},
+    {&nsGkAtoms::dilate, nsSVGFEMorphologyElement::SVG_OPERATOR_DILATE},
     {nsnull, 0}
   };
 
@@ -2583,7 +2582,7 @@ nsSVGFEMorphologyElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mOperator), operators);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::_operator, mOperator);
+    rv = AddMappedSVGValue(nsGkAtoms::_operator, mOperator);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -2591,7 +2590,7 @@ nsSVGFEMorphologyElement::Init()
   {
     rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::in, mIn1);
+    rv = AddMappedSVGValue(nsGkAtoms::in, mIn1);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -2649,7 +2648,7 @@ nsSVGFEMorphologyElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                                          const nsAString& aValue,
                                          nsAttrValue& aResult)
 {
-  if (aName == nsSVGAtoms::radius && aNameSpaceID == kNameSpaceID_None) {
+  if (aName == nsGkAtoms::radius && aNameSpaceID == kNameSpaceID_None) {
     return ScanDualValueAttribute(aValue, nsGkAtoms::radius,
                                   &mNumberAttributes[RADIUS_X],
                                   &mNumberAttributes[RADIUS_Y],

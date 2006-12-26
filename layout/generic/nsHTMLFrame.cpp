@@ -48,10 +48,9 @@
 #include "nsIRenderingContext.h"
 #include "nsGUIEvent.h"
 #include "nsStyleConsts.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIEventStateManager.h"
 #include "nsIDeviceContext.h"
-#include "nsLayoutAtoms.h"
 #include "nsIPresShell.h"
 #include "nsIScrollPositionListener.h"
 #include "nsDisplayList.h"
@@ -124,7 +123,7 @@ public:
   /**
    * Get the "type" of the frame
    *
-   * @see nsLayoutAtoms::canvasFrame
+   * @see nsGkAtoms::canvasFrame
    */
   virtual nsIAtom* GetType() const;
 
@@ -633,7 +632,7 @@ CanvasFrame::GetSkipSides() const
 nsIAtom*
 CanvasFrame::GetType() const
 {
-  return nsLayoutAtoms::canvasFrame;
+  return nsGkAtoms::canvasFrame;
 }
 
 NS_IMETHODIMP 

@@ -171,7 +171,7 @@ nsSVGGlyphFrame::IsSelectable(PRBool* aIsSelectable,
 nsIAtom *
 nsSVGGlyphFrame::GetType() const
 {
-  return nsLayoutAtoms::svgGlyphFrame;
+  return nsGkAtoms::svgGlyphFrame;
 }
 
 PRBool
@@ -995,9 +995,9 @@ nsSVGGlyphFrame::FindTextPathParent()
        frame != nsnull;
        frame = frame->GetParent()) {
     nsIAtom* type = frame->GetType();
-    if (type == nsLayoutAtoms::svgTextPathFrame) {
+    if (type == nsGkAtoms::svgTextPathFrame) {
       return NS_STATIC_CAST(nsSVGTextPathFrame*, frame);
-    } else if (type == nsLayoutAtoms::svgTextFrame)
+    } else if (type == nsGkAtoms::svgTextFrame)
       return nsnull;
   }
   return nsnull;
@@ -1079,7 +1079,7 @@ nsSVGGlyphFrame::IsAbsolutelyPositioned()
       break;
 
     // textPath is always absolutely positioned for our purposes
-    if (frame->GetType() == nsLayoutAtoms::svgTextPathFrame)
+    if (frame->GetType() == nsGkAtoms::svgTextPathFrame)
       return PR_TRUE;
         
     if (frame &&
@@ -1087,7 +1087,7 @@ nsSVGGlyphFrame::IsAbsolutelyPositioned()
          frame->GetContent()->HasAttr(kNameSpaceID_None, nsGkAtoms::y)))
         return PR_TRUE;
 
-    if (frame->GetType() == nsLayoutAtoms::svgTextFrame)
+    if (frame->GetType() == nsGkAtoms::svgTextFrame)
       break;
   }
 

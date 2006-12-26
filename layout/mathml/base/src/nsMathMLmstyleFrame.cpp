@@ -79,7 +79,7 @@ nsMathMLmstyleFrame::InheritAutomaticData(nsIFrame* aParent)
 
   // see if the scriptlevel attribute is there
   nsAutoString value;
-  mContent->GetAttr(kNameSpaceID_None, nsMathMLAtoms::scriptlevel_, value);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::scriptlevel_, value);
   if (!value.IsEmpty()) {
     PRInt32 errorCode, userValue;
     userValue = value.ToInteger(&errorCode); 

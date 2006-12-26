@@ -39,7 +39,6 @@
 #define nsSVGAtoms_h___
 
 #include "nsGkAtoms.h"
-typedef class nsGkAtoms nsSVGAtoms;
 
 #endif /* nsSVGAtoms_h___ */
 

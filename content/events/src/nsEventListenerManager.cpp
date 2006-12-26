@@ -62,7 +62,7 @@
 #ifdef MOZ_SVG
 #include "nsIDOMSVGListener.h"
 #include "nsIDOMSVGZoomListener.h"
-#include "nsSVGAtoms.h"
+#include "nsLayoutAtoms.h"
 #endif // MOZ_SVG
 #include "nsIEventStateManager.h"
 #include "nsPIDOMWindow.h"
@@ -71,7 +71,6 @@
 #include "prmem.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptRuntime.h"
-#include "nsLayoutAtoms.h"
 #include "nsLayoutUtils.h"
 #ifdef MOZ_XUL
 // XXXbz the fact that this is ifdef MOZ_XUL is good indication that
@@ -1160,20 +1159,20 @@ nsEventListenerManager::CompileEventHandlerInternal(nsIScriptContext *aContext,
       nsAutoString handlerBody;
       nsIAtom* attrName = aName;
 #ifdef MOZ_SVG
-      if (aName == nsLayoutAtoms::onSVGLoad)
-        attrName = nsSVGAtoms::onload;
-      else if (aName == nsLayoutAtoms::onSVGUnload)
-        attrName = nsSVGAtoms::onunload;
-      else if (aName == nsLayoutAtoms::onSVGAbort)
-        attrName = nsSVGAtoms::onabort;
-      else if (aName == nsLayoutAtoms::onSVGError)
-        attrName = nsSVGAtoms::onerror;
-      else if (aName == nsLayoutAtoms::onSVGResize)
-        attrName = nsSVGAtoms::onresize;
-      else if (aName == nsLayoutAtoms::onSVGScroll)
-        attrName = nsSVGAtoms::onscroll;
-      else if (aName == nsLayoutAtoms::onSVGZoom)
-        attrName = nsSVGAtoms::onzoom;
+      if (aName == nsGkAtoms::onSVGLoad)
+        attrName = nsGkAtoms::onload;
+      else if (aName == nsGkAtoms::onSVGUnload)
+        attrName = nsGkAtoms::onunload;
+      else if (aName == nsGkAtoms::onSVGAbort)
+        attrName = nsGkAtoms::onabort;
+      else if (aName == nsGkAtoms::onSVGError)
+        attrName = nsGkAtoms::onerror;
+      else if (aName == nsGkAtoms::onSVGResize)
+        attrName = nsGkAtoms::onresize;
+      else if (aName == nsGkAtoms::onSVGScroll)
+        attrName = nsGkAtoms::onscroll;
+      else if (aName == nsGkAtoms::onSVGZoom)
+        attrName = nsGkAtoms::onzoom;
 #endif // MOZ_SVG
 
       content->GetAttr(kNameSpaceID_None, attrName, handlerBody);

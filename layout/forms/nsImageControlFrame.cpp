@@ -47,14 +47,13 @@
 #include "nsLeafFrame.h"
 #include "nsCSSRendering.h"
 #include "nsISupports.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
 #include "nsIImage.h"
 #include "nsStyleConsts.h"
 #include "nsFormControlFrame.h"
 #include "nsGUIEvent.h"
-#include "nsLayoutAtoms.h"
 #include "nsIServiceManager.h"
 #include "nsContainerFrame.h"
 #include "nsLayoutUtils.h"
@@ -164,10 +163,10 @@ NS_IMETHODIMP nsImageControlFrame::GetAccessible(nsIAccessible** aAccessible)
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
 
   if (accService) {
-    if (mContent->Tag() == nsHTMLAtoms::button) {
+    if (mContent->Tag() == nsGkAtoms::button) {
       return accService->CreateHTML4ButtonAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
     }
-    else if (mContent->Tag() == nsHTMLAtoms::input) {
+    else if (mContent->Tag() == nsGkAtoms::input) {
       return accService->CreateHTMLButtonAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
     }
   }
@@ -191,7 +190,7 @@ nsrefcnt nsImageControlFrame::Release(void)
 nsIAtom*
 nsImageControlFrame::GetType() const
 {
-  return nsLayoutAtoms::imageControlFrame; 
+  return nsGkAtoms::imageControlFrame; 
 }
 
 PRBool
@@ -231,7 +230,7 @@ nsImageControlFrame::HandleEvent(nsPresContext* aPresContext,
   if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE || uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
     return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 
-  if (mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) { // XXX cache disabled
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) { // XXX cache disabled
     return NS_OK;
   }
 

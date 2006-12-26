@@ -45,7 +45,7 @@
 #include "nsIHTMLDocument.h"
 #include "nsGenericHTMLElement.h"
 #include "nsILink.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsIEventStateManager.h"
@@ -263,7 +263,7 @@ nsHTMLAnchorElement::IsFocusable(PRInt32 *aTabIndex)
     return PR_FALSE;
   }
 
-  if (!HasAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex)) {
+  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex)) {
     // check whether we're actually a link
     nsCOMPtr<nsIURI> linkURI = nsContentUtils::GetLinkURI(this);
     if (!linkURI) {
@@ -292,7 +292,7 @@ nsHTMLAnchorElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 NS_IMETHODIMP
 nsHTMLAnchorElement::GetTarget(nsAString& aValue)
 {
-  if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, aValue)) {
+  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue)) {
     GetBaseTarget(aValue);
   }
   return NS_OK;
@@ -301,7 +301,7 @@ nsHTMLAnchorElement::GetTarget(nsAString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchorElement::SetTarget(const nsAString& aValue)
 {
-  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::target, aValue, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP    
@@ -549,13 +549,13 @@ nsHTMLAnchorElement::ToString(nsAString& aSource)
 NS_IMETHODIMP    
 nsHTMLAnchorElement::GetPing(nsAString& aValue)
 {
-  return GetURIListAttr(nsHTMLAtoms::ping, aValue);
+  return GetURIListAttr(nsGkAtoms::ping, aValue);
 }
 
 NS_IMETHODIMP
 nsHTMLAnchorElement::SetPing(const nsAString& aValue)
 {
-  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::ping, aValue, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::ping, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -583,7 +583,7 @@ nsHTMLAnchorElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                              nsIAtom* aPrefix, const nsAString& aValue,
                              PRBool aNotify)
 {
-  if (aName == nsHTMLAtoms::href && kNameSpaceID_None == aNameSpaceID) {
+  if (aName == nsGkAtoms::href && kNameSpaceID_None == aNameSpaceID) {
     nsAutoString val;
     GetHref(val);
     if (!val.Equals(aValue)) {
@@ -598,14 +598,14 @@ nsHTMLAnchorElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     }
   }
 
-  if (aName == nsHTMLAtoms::accesskey && kNameSpaceID_None == aNameSpaceID) {
+  if (aName == nsGkAtoms::accesskey && kNameSpaceID_None == aNameSpaceID) {
     RegUnRegAccessKey(PR_FALSE);
   }
 
   nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
                                               aValue, aNotify);
 
-  if (aName == nsHTMLAtoms::accesskey && kNameSpaceID_None == aNameSpaceID &&
+  if (aName == nsGkAtoms::accesskey && kNameSpaceID_None == aNameSpaceID &&
       !aValue.IsEmpty()) {
     RegUnRegAccessKey(PR_TRUE);
   }
@@ -617,11 +617,11 @@ nsresult
 nsHTMLAnchorElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                PRBool aNotify)
 {
-  if (aAttribute == nsHTMLAtoms::href && kNameSpaceID_None == aNameSpaceID) {
+  if (aAttribute == nsGkAtoms::href && kNameSpaceID_None == aNameSpaceID) {
     SetLinkState(eLinkState_Unknown);
   }
 
-  if (aAttribute == nsHTMLAtoms::accesskey &&
+  if (aAttribute == nsGkAtoms::accesskey &&
       kNameSpaceID_None == aNameSpaceID) {
     RegUnRegAccessKey(PR_FALSE);
   }

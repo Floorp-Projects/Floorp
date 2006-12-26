@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsSVGLength.h"
 #include "nsCOMPtr.h"
 #include "nsISVGSVGElement.h"
@@ -85,8 +85,8 @@ nsSVGFilterElement::Init()
 
   // Define enumeration mappings
   static struct nsSVGEnumMapping gUnitMap[] = {
-        {&nsSVGAtoms::objectBoundingBox, nsIDOMSVGFilterElement::SVG_FUNITS_OBJECTBOUNDINGBOX},
-        {&nsSVGAtoms::userSpaceOnUse, nsIDOMSVGFilterElement::SVG_FUNITS_USERSPACEONUSE},
+        {&nsGkAtoms::objectBoundingBox, nsIDOMSVGFilterElement::SVG_FUNITS_OBJECTBOUNDINGBOX},
+        {&nsGkAtoms::userSpaceOnUse, nsIDOMSVGFilterElement::SVG_FUNITS_USERSPACEONUSE},
         {nsnull, 0}
   };
 
@@ -100,7 +100,7 @@ nsSVGFilterElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mFilterUnits), units);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::filterUnits, mFilterUnits);
+    rv = AddMappedSVGValue(nsGkAtoms::filterUnits, mFilterUnits);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -112,7 +112,7 @@ nsSVGFilterElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mPrimitiveUnits), units);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::primitiveUnits, mPrimitiveUnits);
+    rv = AddMappedSVGValue(nsGkAtoms::primitiveUnits, mPrimitiveUnits);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -239,7 +239,7 @@ nsSVGFilterElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   nsresult rv = nsSVGFilterElementBase::SetAttr(aNameSpaceID, aName, aPrefix,
                                                 aValue, aNotify);
 
-  if (aName == nsSVGAtoms::filterRes && aNameSpaceID == kNameSpaceID_None) {
+  if (aName == nsGkAtoms::filterRes && aNameSpaceID == kNameSpaceID_None) {
     PRUint32 resX, resY;
     char *str;
     str = ToNewCString(aValue);

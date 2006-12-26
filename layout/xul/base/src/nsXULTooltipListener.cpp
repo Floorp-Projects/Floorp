@@ -43,7 +43,7 @@
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDocument.h"
-#include "nsXULAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsIMenuFrame.h"
@@ -283,7 +283,7 @@ nsXULTooltipListener::Init(nsIContent* aSourceNode)
 #ifdef MOZ_XUL
   // if the target is an treechildren, we may have some special
   // case handling to do
-  mIsSourceTree = mSourceNode->Tag() == nsXULAtoms::treechildren;
+  mIsSourceTree = mSourceNode->Tag() == nsGkAtoms::treechildren;
 #endif
 
   // get the initial value of the pref
@@ -474,7 +474,7 @@ SetTitletipLabel(nsITreeBoxObject* aTreeBox, nsIContent* aTooltip,
   nsAutoString label;
   view->GetCellText(aRow, aCol, label);
   
-  aTooltip->SetAttr(nsnull, nsXULAtoms::label, label, PR_TRUE);
+  aTooltip->SetAttr(nsnull, nsGkAtoms::label, label, PR_TRUE);
 }
 #endif
 
@@ -506,9 +506,9 @@ nsXULTooltipListener::LaunchTooltip(nsIContent* aTarget, PRInt32 aX, PRInt32 aY)
 #endif
 
       SetTitletipLabel(obx, mCurrentTooltip, mLastTreeRow, mLastTreeCol);
-      mCurrentTooltip->SetAttr(nsnull, nsXULAtoms::titletip, NS_LITERAL_STRING("true"), PR_TRUE);
+      mCurrentTooltip->SetAttr(nsnull, nsGkAtoms::titletip, NS_LITERAL_STRING("true"), PR_TRUE);
     } else
-      mCurrentTooltip->UnsetAttr(nsnull, nsXULAtoms::titletip, PR_TRUE);
+      mCurrentTooltip->UnsetAttr(nsnull, nsGkAtoms::titletip, PR_TRUE);
 #endif
 
     nsCOMPtr<nsIDOMElement> targetEl(do_QueryInterface(aTarget));
@@ -582,7 +582,7 @@ nsXULTooltipListener::FindTooltip(nsIContent* aTarget, nsIContent** aTooltip)
   }
 
   nsAutoString tooltipText;
-  aTarget->GetAttr(kNameSpaceID_None, nsXULAtoms::tooltiptext, tooltipText);
+  aTarget->GetAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext, tooltipText);
   if (!tooltipText.IsEmpty()) {
     // specifying tooltiptext means we will always use the default tooltip
     nsIRootBox* rootBox = nsIRootBox::GetRootBox(document->GetShellAt(0));
@@ -590,17 +590,17 @@ nsXULTooltipListener::FindTooltip(nsIContent* aTarget, nsIContent** aTooltip)
     *aTooltip = rootBox->GetDefaultTooltip();
     if (*aTooltip) {
       NS_ADDREF(*aTooltip);
-      (*aTooltip)->SetAttr(kNameSpaceID_None, nsXULAtoms::label, tooltipText, PR_TRUE);
+      (*aTooltip)->SetAttr(kNameSpaceID_None, nsGkAtoms::label, tooltipText, PR_TRUE);
     }
     return NS_OK;
   }
 
   nsAutoString tooltipId;
-  aTarget->GetAttr(kNameSpaceID_None, nsXULAtoms::tooltip, tooltipId);
+  aTarget->GetAttr(kNameSpaceID_None, nsGkAtoms::tooltip, tooltipId);
 
   // if tooltip == _child, look for first <tooltip> child
   if (tooltipId.EqualsLiteral("_child")) {
-    GetImmediateChild(aTarget, nsXULAtoms::tooltip, aTooltip);
+    GetImmediateChild(aTarget, nsGkAtoms::tooltip, aTooltip);
     return NS_OK;
   }
 

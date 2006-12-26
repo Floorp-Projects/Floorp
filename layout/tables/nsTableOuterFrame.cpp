@@ -75,7 +75,7 @@ nsTableCaptionFrame::~nsTableCaptionFrame()
 nsIAtom*
 nsTableCaptionFrame::GetType() const
 {
-  return nsLayoutAtoms::tableCaptionFrame;
+  return nsGkAtoms::tableCaptionFrame;
 }
 
 inline PRBool IsSideCaption(nsIFrame* aCaptionFrame)
@@ -184,7 +184,7 @@ nsTableOuterFrame::Destroy()
 nsIFrame*
 nsTableOuterFrame::GetFirstChild(nsIAtom* aListName) const
 {
-  if (nsLayoutAtoms::captionList == aListName) {
+  if (nsGkAtoms::captionList == aListName) {
     return mCaptionFrames.FirstChild();
   }
   if (!aListName) {
@@ -197,7 +197,7 @@ nsIAtom*
 nsTableOuterFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 {
   if (aIndex == NS_TABLE_FRAME_CAPTION_LIST_INDEX) {
-    return nsLayoutAtoms::captionList;
+    return nsGkAtoms::captionList;
   }
   return nsnull;
 }
@@ -206,7 +206,7 @@ NS_IMETHODIMP
 nsTableOuterFrame::SetInitialChildList(nsIAtom*        aListName,
                                        nsIFrame*       aChildList)
 {
-  if (nsLayoutAtoms::captionList == aListName) {
+  if (nsGkAtoms::captionList == aListName) {
     // the frame constructor already checked for table-caption display type
     mCaptionFrames.SetFrames(aChildList);
     mCaptionFrame  = mCaptionFrames.FirstChild();
@@ -217,7 +217,7 @@ nsTableOuterFrame::SetInitialChildList(nsIAtom*        aListName,
     mFrames.SetFrames(aChildList);
     mInnerTableFrame = nsnull;
     if (aChildList) {
-      if (nsLayoutAtoms::tableFrame == aChildList->GetType()) {
+      if (nsGkAtoms::tableFrame == aChildList->GetType()) {
         mInnerTableFrame = (nsTableFrame*)aChildList;
       }
       else {
@@ -238,9 +238,9 @@ nsTableOuterFrame::AppendFrames(nsIAtom*        aListName,
 
   // We only have two child frames: the inner table and a caption frame.
   // The inner frame is provided when we're initialized, and it cannot change
-  if (nsLayoutAtoms::captionList == aListName) {
+  if (nsGkAtoms::captionList == aListName) {
     NS_ASSERTION(!aFrameList ||
-                 aFrameList->GetType() == nsLayoutAtoms::tableCaptionFrame,
+                 aFrameList->GetType() == nsGkAtoms::tableCaptionFrame,
                  "appending non-caption frame to captionList");
     mCaptionFrames.AppendFrames(this, aFrameList);
     mCaptionFrame = mCaptionFrames.FirstChild();
@@ -266,11 +266,11 @@ nsTableOuterFrame::InsertFrames(nsIAtom*        aListName,
                                 nsIFrame*       aPrevFrame,
                                 nsIFrame*       aFrameList)
 {
-  if (nsLayoutAtoms::captionList == aListName) {
+  if (nsGkAtoms::captionList == aListName) {
     NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                  "inserting after sibling frame with different parent");
     NS_ASSERTION(!aFrameList ||
-                 aFrameList->GetType() == nsLayoutAtoms::tableCaptionFrame,
+                 aFrameList->GetType() == nsGkAtoms::tableCaptionFrame,
                  "inserting non-caption frame into captionList");
     mCaptionFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
     mCaptionFrame = mCaptionFrames.FirstChild();
@@ -288,7 +288,7 @@ nsTableOuterFrame::RemoveFrame(nsIAtom*        aListName,
 {
   // We only have two child frames: the inner table and one caption frame.
   // The inner frame can't be removed so this should be the caption
-  NS_PRECONDITION(nsLayoutAtoms::captionList == aListName, "can't remove inner frame");
+  NS_PRECONDITION(nsGkAtoms::captionList == aListName, "can't remove inner frame");
 
   PRUint8 captionSide = GetCaptionSide();
 
@@ -1040,7 +1040,7 @@ nsTableOuterFrame::IsNested(const nsHTMLReflowState& aReflowState) const
   // Walk up the reflow state chain until we find a cell or the root
   const nsHTMLReflowState* rs = aReflowState.parentReflowState;
   while (rs) {
-    if (nsLayoutAtoms::tableFrame == rs->frame->GetType()) {
+    if (nsGkAtoms::tableFrame == rs->frame->GetType()) {
       return PR_TRUE;
     }
     rs = rs->parentReflowState;
@@ -1337,7 +1337,7 @@ void nsTableOuterFrame::DeleteChildsNextInFlow(nsPresContext* aPresContext,
 nsIAtom*
 nsTableOuterFrame::GetType() const
 {
-  return nsLayoutAtoms::tableOuterFrame;
+  return nsGkAtoms::tableOuterFrame;
 }
 
 /* ----- global methods ----- */

@@ -136,7 +136,7 @@ nsSVGTextFrame::DidSetStyleContext()
 nsIAtom *
 nsSVGTextFrame::GetType() const
 {
-  return nsLayoutAtoms::svgTextFrame;
+  return nsGkAtoms::svgTextFrame;
 }
 
 //----------------------------------------------------------------------

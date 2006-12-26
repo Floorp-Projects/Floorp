@@ -57,7 +57,7 @@
 #include "nsILink.h"
 #include "nsIFrame.h"
 #include "nsStyleContext.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsPresContext.h"
 #include "nsIEventStateManager.h"
 #include "nsIDocument.h"
@@ -440,7 +440,7 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
       nsIAtom* tag = aData->mContentTag;
 
       // if we have anchor colors, check if this is an anchor with an href
-      if (tag == nsHTMLAtoms::a) {
+      if (tag == nsGkAtoms::a) {
         if (mLinkRule || mVisitedRule || mActiveRule) {
           if (aData->mIsHTMLLink) {
             switch (aData->mLinkState) {
@@ -463,28 +463,28 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
         } // end link/visited/active rules
       } // end A tag
       // add the rule to handle text-align for a <th>
-      else if (tag == nsHTMLAtoms::th) {
+      else if (tag == nsGkAtoms::th) {
         ruleWalker->Forward(mTableTHRule);
       }
-      else if (tag == nsHTMLAtoms::tr) {
+      else if (tag == nsGkAtoms::tr) {
         ruleWalker->Forward(mTableRowRule);
       }
-      else if ((tag == nsHTMLAtoms::thead) || (tag == nsHTMLAtoms::tbody) || (tag == nsHTMLAtoms::tfoot)) {
+      else if ((tag == nsGkAtoms::thead) || (tag == nsGkAtoms::tbody) || (tag == nsGkAtoms::tfoot)) {
         ruleWalker->Forward(mTableTbodyRule);
       }
-      else if (tag == nsHTMLAtoms::col) {
+      else if (tag == nsGkAtoms::col) {
         nsIContent* parent = aData->mParentContent;
         if (parent && parent->IsNodeOfType(nsIContent::eHTML) &&
-            parent->Tag() == nsHTMLAtoms::colgroup) {
+            parent->Tag() == nsGkAtoms::colgroup) {
           ruleWalker->Forward(mTableColRule);
         } else {
           ruleWalker->Forward(mTableUngroupedColRule);
         }
       }
-      else if (tag == nsHTMLAtoms::colgroup) {
+      else if (tag == nsGkAtoms::colgroup) {
         ruleWalker->Forward(mTableColgroupRule);
       }
-      else if (tag == nsHTMLAtoms::table) {
+      else if (tag == nsGkAtoms::table) {
         if (aData->mCompatMode == eCompatibility_NavQuirks) {
           nscolor bodyColor;
           nsresult rv =
@@ -520,7 +520,7 @@ nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData,
   if (aData->mContent &&
       aData->mIsHTMLContent &&
       aData->mIsHTMLLink &&
-      aData->mContentTag == nsHTMLAtoms::a &&
+      aData->mContentTag == nsGkAtoms::a &&
       ((mActiveRule && (aData->mStateMask & NS_EVENT_STATE_ACTIVE)) ||
        (mLinkRule && (aData->mStateMask & NS_EVENT_STATE_VISITED)) ||
        (mVisitedRule && (aData->mStateMask & NS_EVENT_STATE_VISITED)))) {
@@ -538,11 +538,11 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
 {
   // Result is true for |href| changes on HTML links if we have link rules.
   nsIContent *content = aData->mContent;
-  if (aData->mAttribute == nsHTMLAtoms::href &&
+  if (aData->mAttribute == nsGkAtoms::href &&
       (mLinkRule || mVisitedRule || mActiveRule) &&
       content &&
       content->IsNodeOfType(nsINode::eHTML) &&
-      aData->mContentTag == nsHTMLAtoms::a) {
+      aData->mContentTag == nsGkAtoms::a) {
     *aResult = eReStyle_Self;
     return NS_OK;
   }

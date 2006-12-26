@@ -41,9 +41,8 @@
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
-#include "nsHTMLAtoms.h"
-#include "nsCSSRendering.h"
 #include "nsLayoutAtoms.h"
+#include "nsCSSRendering.h"
 #include "nsIContent.h"
 #include "nsIDOMHTMLTableColElement.h"
 
@@ -185,7 +184,7 @@ nsTableColFrame::GetNextCol() const
 {
   nsIFrame* childFrame = GetNextSibling();
   while (childFrame) {
-    if (nsLayoutAtoms::tableColFrame == childFrame->GetType()) {
+    if (nsGkAtoms::tableColFrame == childFrame->GetType()) {
       return (nsTableColFrame*)childFrame;
     }
     childFrame = childFrame->GetNextSibling();
@@ -196,7 +195,7 @@ nsTableColFrame::GetNextCol() const
 nsIAtom*
 nsTableColFrame::GetType() const
 {
-  return nsLayoutAtoms::tableColFrame;
+  return nsGkAtoms::tableColFrame;
 }
 
 #ifdef DEBUG

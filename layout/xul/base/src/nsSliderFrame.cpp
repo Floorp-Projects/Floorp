@@ -50,12 +50,10 @@
 #include "nsCOMPtr.h"
 #include "nsUnitConversion.h"
 #include "nsINameSpaceManager.h"
-#include "nsXULAtoms.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
 #include "nsCSSRendering.h"
-#include "nsHTMLAtoms.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
@@ -66,8 +64,6 @@
 #include "nsIScrollbarMediator.h"
 #include "nsIScrollbarFrame.h"
 #include "nsISupportsArray.h"
-#include "nsXULAtoms.h"
-#include "nsHTMLAtoms.h"
 #include "nsIScrollableView.h"
 #include "nsRepeatService.h"
 #include "nsBoxLayoutState.h"
@@ -176,32 +172,32 @@ nsSliderFrame::AppendFrames(nsIAtom*        aListName,
 PRInt32
 nsSliderFrame::GetCurrentPosition(nsIContent* content)
 {
-  return GetIntegerAttribute(content, nsXULAtoms::curpos, 0);
+  return GetIntegerAttribute(content, nsGkAtoms::curpos, 0);
 }
 
 PRInt32
 nsSliderFrame::GetMinPosition(nsIContent* content)
 {
-  return GetIntegerAttribute(content, nsXULAtoms::minpos, 0);
+  return GetIntegerAttribute(content, nsGkAtoms::minpos, 0);
 }
 
 PRInt32
 nsSliderFrame::GetMaxPosition(nsIContent* content)
 {
-  return GetIntegerAttribute(content, nsXULAtoms::maxpos, 100);
+  return GetIntegerAttribute(content, nsGkAtoms::maxpos, 100);
 }
 
 PRInt32
 nsSliderFrame::GetIncrement(nsIContent* content)
 {
-  return GetIntegerAttribute(content, nsXULAtoms::increment, 1);
+  return GetIntegerAttribute(content, nsGkAtoms::increment, 1);
 }
 
 
 PRInt32
 nsSliderFrame::GetPageIncrement(nsIContent* content)
 {
-  return GetIntegerAttribute(content, nsXULAtoms::pageincrement, 10);
+  return GetIntegerAttribute(content, nsGkAtoms::pageincrement, 10);
 }
 
 PRInt32
@@ -228,13 +224,13 @@ nsSliderFrame::AttributeChanged(PRInt32 aNameSpaceID,
   nsresult rv = nsBoxFrame::AttributeChanged(aNameSpaceID, aAttribute,
                                              aModType);
   // if the current position changes
-  if (aAttribute == nsXULAtoms::curpos) {
+  if (aAttribute == nsGkAtoms::curpos) {
      rv = CurrentPositionChanged(GetPresContext());
      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to change position");
      if (NS_FAILED(rv))
         return rv;
-  } else if (aAttribute == nsXULAtoms::minpos ||
-             aAttribute == nsXULAtoms::maxpos) {
+  } else if (aAttribute == nsGkAtoms::minpos ||
+             aAttribute == nsGkAtoms::maxpos) {
       // bounds check it.
 
       nsIBox* scrollbarBox = GetScrollbar();
@@ -262,14 +258,14 @@ nsSliderFrame::AttributeChanged(PRInt32 aNameSpaceID,
 
         nsAutoString currentStr;
         currentStr.AppendInt(current);
-        scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, currentStr, PR_TRUE);
+        scrollbar->SetAttr(kNameSpaceID_None, nsGkAtoms::curpos, currentStr, PR_TRUE);
       }
   }
 
-  if (aAttribute == nsXULAtoms::minpos ||
-      aAttribute == nsXULAtoms::maxpos ||
-      aAttribute == nsXULAtoms::pageincrement ||
-      aAttribute == nsXULAtoms::increment) {
+  if (aAttribute == nsGkAtoms::minpos ||
+      aAttribute == nsGkAtoms::maxpos ||
+      aAttribute == nsGkAtoms::pageincrement ||
+      aAttribute == nsGkAtoms::increment) {
 
       AddStateBits(NS_FRAME_IS_DIRTY);
       GetPresContext()->PresShell()->
@@ -519,8 +515,8 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
 
        // if snap="true", then the slider may only be set to min + (increment * x).
        // Otherwise, the slider may be set to any positive integer.
-       if (mContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::snap,
-                                 nsXULAtoms::_true, eCaseMatters)) {
+       if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::snap,
+                                 nsGkAtoms::_true, eCaseMatters)) {
          PRInt32 increment = GetIncrement(scrollbar);
          pospx = NSToCoordRound(pospx / (float)increment) * increment;
        }
@@ -613,7 +609,7 @@ nsSliderFrame::GetScrollbar()
   // if we are in a scrollbar then return the scrollbar's content node
   // if we are not then return ours.
    nsIFrame* scrollbar;
-   nsScrollbarButtonFrame::GetParentWithTag(nsXULAtoms::scrollbar, this, scrollbar);
+   nsScrollbarButtonFrame::GetParentWithTag(nsGkAtoms::scrollbar, this, scrollbar);
 
    if (scrollbar == nsnull)
        return this;
@@ -713,11 +709,11 @@ static void UpdateAttribute(nsIContent* aScrollbar, nscoord aNewPos, PRBool aNot
   str.AppendInt(aNewPos);
   
   if (aIsSmooth) {
-    aScrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::smooth, NS_LITERAL_STRING("true"), PR_FALSE);
+    aScrollbar->SetAttr(kNameSpaceID_None, nsGkAtoms::smooth, NS_LITERAL_STRING("true"), PR_FALSE);
   }
-  aScrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, str, aNotify);
+  aScrollbar->SetAttr(kNameSpaceID_None, nsGkAtoms::curpos, str, aNotify);
   if (aIsSmooth) {
-    aScrollbar->UnsetAttr(kNameSpaceID_None, nsXULAtoms::smooth, PR_FALSE);
+    aScrollbar->UnsetAttr(kNameSpaceID_None, nsGkAtoms::smooth, PR_FALSE);
   }
 }
 
@@ -799,8 +795,8 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 {
   //printf("Begin dragging\n");
 
-  if (mContent->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::disabled,
-                            nsXULAtoms::_true, eCaseMatters))
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
+                            nsGkAtoms::_true, eCaseMatters))
     return NS_OK;
 
   PRBool isHorizontal = IsHorizontal();
@@ -968,8 +964,8 @@ nsSliderFrame::HandlePress(nsPresContext* aPresContext,
   if (!thumbFrame) // display:none?
     return NS_OK;
 
-  if (mContent->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::disabled,
-                            nsXULAtoms::_true, eCaseMatters))
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
+                            nsGkAtoms::_true, eCaseMatters))
     return NS_OK;
   
   nsRect thumbRect = thumbFrame->GetRect();

@@ -123,7 +123,7 @@ SplitInlineAncestors(nsPresContext* aPresContext,
     
     // The new parent adopts the new frame
     frame->SetNextSibling(nsnull);
-    rv = newParent->InsertFrames(nsLayoutAtoms::nextBidi, nsnull, newFrame);
+    rv = newParent->InsertFrames(nsGkAtoms::nextBidi, nsnull, newFrame);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -134,8 +134,8 @@ SplitInlineAncestors(nsPresContext* aPresContext,
       return rv;
     }
     
-    // The list name nsLayoutAtoms::nextBidi would indicate we don't want reflow
-    rv = grandparent->InsertFrames(nsLayoutAtoms::nextBidi, parent, newParent);
+    // The list name nsGkAtoms::nextBidi would indicate we don't want reflow
+    rv = grandparent->InsertFrames(nsGkAtoms::nextBidi, parent, newParent);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -170,8 +170,8 @@ CreateBidiContinuation(nsPresContext* aPresContext,
     return rv;
   }
   
-  // The list name nsLayoutAtoms::nextBidi would indicate we don't want reflow
-  rv = parent->InsertFrames(nsLayoutAtoms::nextBidi, aFrame, *aNewFrame);
+  // The list name nsGkAtoms::nextBidi would indicate we don't want reflow
+  rv = parent->InsertFrames(nsGkAtoms::nextBidi, aFrame, *aNewFrame);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -347,7 +347,7 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
       frame = (nsIFrame*) (mLogicalFrames[frameIndex]);
       frameType = frame->GetType();
       lineNeedsUpdate = PR_TRUE;
-      if (nsLayoutAtoms::textFrame == frameType) {
+      if (nsGkAtoms::textFrame == frameType) {
         content = frame->GetContent();
         if (!content) {
           mSuccess = NS_OK;
@@ -381,22 +381,22 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
       }
     } // if (runLength <= 0)
 
-    if (nsLayoutAtoms::directionalFrame == frameType) {
+    if (nsGkAtoms::directionalFrame == frameType) {
       frame->Destroy();
       frame = nsnull;
       ++lineOffset;
     }
     else {
-      propTable->SetProperty(frame, nsLayoutAtoms::embeddingLevel,
+      propTable->SetProperty(frame, nsGkAtoms::embeddingLevel,
                              NS_INT32_TO_PTR(embeddingLevel), nsnull, nsnull);
-      propTable->SetProperty(frame, nsLayoutAtoms::baseLevel,
+      propTable->SetProperty(frame, nsGkAtoms::baseLevel,
                              NS_INT32_TO_PTR(paraLevel), nsnull, nsnull);
       if (isTextFrame) {
         PRInt32 typeLimit = PR_MIN(logicalLimit, lineOffset + fragmentLength);
         CalculateCharType(lineOffset, typeLimit, logicalLimit, runLength,
                            runCount, charType, prevType);
         // IBMBIDI - Egypt - Start
-        propTable->SetProperty(frame, nsLayoutAtoms::charType,
+        propTable->SetProperty(frame, nsGkAtoms::charType,
                                NS_INT32_TO_PTR(charType), nsnull, nsnull);
         // IBMBIDI - Egypt - End
 
@@ -569,7 +569,7 @@ nsBidiPresUtils::CreateBlockBuffer(nsPresContext* aPresContext)
     frame = (nsIFrame*) (mLogicalFrames[i]);
     nsIAtom* frameType = frame->GetType();
 
-    if (nsLayoutAtoms::textFrame == frameType) {
+    if (nsGkAtoms::textFrame == frameType) {
       nsIContent* content = frame->GetContent();
       if (!content) {
         mSuccess = NS_OK;
@@ -581,11 +581,11 @@ nsBidiPresUtils::CreateBlockBuffer(nsPresContext* aPresContext)
       prevContent = content;
       content->AppendTextTo(mBuffer);
     }
-    else if (nsLayoutAtoms::brFrame == frameType) { // break frame
+    else if (nsGkAtoms::brFrame == frameType) { // break frame
       // Append line separator
       mBuffer.Append( (PRUnichar) kLineSeparator);
     }
-    else if (nsLayoutAtoms::directionalFrame == frameType) {
+    else if (nsGkAtoms::directionalFrame == frameType) {
       nsDirectionalFrame* dirFrame;
       frame->QueryInterface(NS_GET_IID(nsDirectionalFrame),
                             (void**) &dirFrame);
@@ -1013,7 +1013,7 @@ nsBidiPresUtils::EnsureBidiContinuation(nsPresContext* aPresContext,
   *aNewFrame = nsnull;
   nsBidiLevel embeddingLevel = NS_GET_EMBEDDING_LEVEL(aFrame);
   nsBidiLevel baseLevel = NS_GET_BASE_LEVEL(aFrame);
-  nsCharType charType = (nsCharType)NS_PTR_TO_INT32(aFrame->GetProperty(nsLayoutAtoms::charType));
+  nsCharType charType = (nsCharType)NS_PTR_TO_INT32(aFrame->GetProperty(nsGkAtoms::charType));
   
   // Skip fluid continuations
   while (aFrameIndex + 1 < mLogicalFrames.Count()) {
@@ -1026,9 +1026,9 @@ nsBidiPresUtils::EnsureBidiContinuation(nsPresContext* aPresContext,
       }
       break;
     }
-    frame->SetProperty(nsLayoutAtoms::embeddingLevel, NS_INT32_TO_PTR(embeddingLevel));
-    frame->SetProperty(nsLayoutAtoms::baseLevel, NS_INT32_TO_PTR(baseLevel));
-    frame->SetProperty(nsLayoutAtoms::charType, NS_INT32_TO_PTR(charType));
+    frame->SetProperty(nsGkAtoms::embeddingLevel, NS_INT32_TO_PTR(embeddingLevel));
+    frame->SetProperty(nsGkAtoms::baseLevel, NS_INT32_TO_PTR(baseLevel));
+    frame->SetProperty(nsGkAtoms::charType, NS_INT32_TO_PTR(charType));
     frame->AddStateBits(NS_FRAME_IS_BIDI);
     aFrameIndex++;
     aFrame = frame;
@@ -1054,25 +1054,25 @@ nsBidiPresUtils::RemoveBidiContinuation(nsPresContext* aPresContext,
   aOffset = 0;
 
   nsresult rv;
-  nsBidiLevel embeddingLevel = (nsCharType)NS_PTR_TO_INT32(aFrame->GetProperty(nsLayoutAtoms::embeddingLevel, &rv));
+  nsBidiLevel embeddingLevel = (nsCharType)NS_PTR_TO_INT32(aFrame->GetProperty(nsGkAtoms::embeddingLevel, &rv));
   NS_ASSERTION(NS_SUCCEEDED(rv), "embeddingLevel attribute missing from aFrame");
-  nsBidiLevel baseLevel = (nsCharType)NS_PTR_TO_INT32(aFrame->GetProperty(nsLayoutAtoms::baseLevel, &rv));
+  nsBidiLevel baseLevel = (nsCharType)NS_PTR_TO_INT32(aFrame->GetProperty(nsGkAtoms::baseLevel, &rv));
   NS_ASSERTION(NS_SUCCEEDED(rv), "baseLevel attribute missing from aFrame");
-  nsCharType charType = (nsCharType)NS_PTR_TO_INT32(aFrame->GetProperty(nsLayoutAtoms::charType, &rv));
+  nsCharType charType = (nsCharType)NS_PTR_TO_INT32(aFrame->GetProperty(nsGkAtoms::charType, &rv));
   NS_ASSERTION(NS_SUCCEEDED(rv), "charType attribute missing from aFrame");
   
   for (PRInt32 index = aFirstIndex + 1; index <= aLastIndex; index++) {
     nsIFrame* frame = (nsIFrame*) mLogicalFrames[index];
-    if (nsLayoutAtoms::directionalFrame == frame->GetType()) {
+    if (nsGkAtoms::directionalFrame == frame->GetType()) {
       frame->Destroy();
       ++aOffset;
     }
     else {
       // Make the frame and its continuation ancestors fluid,
       // so they can be reused or deleted by normal reflow code
-      frame->SetProperty(nsLayoutAtoms::embeddingLevel, NS_INT32_TO_PTR(embeddingLevel));
-      frame->SetProperty(nsLayoutAtoms::baseLevel, NS_INT32_TO_PTR(baseLevel));
-      frame->SetProperty(nsLayoutAtoms::charType, NS_INT32_TO_PTR(charType));
+      frame->SetProperty(nsGkAtoms::embeddingLevel, NS_INT32_TO_PTR(embeddingLevel));
+      frame->SetProperty(nsGkAtoms::baseLevel, NS_INT32_TO_PTR(baseLevel));
+      frame->SetProperty(nsGkAtoms::charType, NS_INT32_TO_PTR(charType));
       frame->AddStateBits(NS_FRAME_IS_BIDI);
       while (frame) {
         nsIFrame* prev = frame->GetPrevContinuation();

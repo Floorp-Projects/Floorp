@@ -88,7 +88,6 @@
 #include "nsLayoutAtoms.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
-#include "nsHTMLAtoms.h"
 #include "nsIHTMLContentSink.h" 
 #include "nsCSSFrameConstructor.h"
 
@@ -697,7 +696,7 @@ nsIFrame::GetUsedMargin() const
   nsMargin margin(0, 0, 0, 0);
   if (!GetStyleMargin()->GetMargin(margin)) {
     nsMargin *m = NS_STATIC_CAST(nsMargin*,
-                    GetProperty(nsLayoutAtoms::usedMarginProperty));
+                    GetProperty(nsGkAtoms::usedMarginProperty));
     NS_ASSERTION(m, "used margin property missing (out of memory?)");
     if (m) {
       margin = *m;
@@ -728,7 +727,7 @@ nsIFrame::GetUsedPadding() const
   nsMargin padding(0, 0, 0, 0);
   if (!GetStylePadding()->GetPadding(padding)) {
     nsMargin *p = NS_STATIC_CAST(nsMargin*,
-                    GetProperty(nsLayoutAtoms::usedPaddingProperty));
+                    GetProperty(nsGkAtoms::usedPaddingProperty));
     NS_ASSERTION(p, "used padding property missing (out of memory?)");
     if (p) {
       padding = *p;
@@ -1090,7 +1089,7 @@ static PRBool ApplyAbsPosClipping(nsDisplayListBuilder* aBuilder,
   // situation.
   if (aBuilder->HasMovingFrames() &&
       aFrame->GetPresContext()->FrameManager()->GetRootFrame()->
-          GetFirstChild(nsLayoutAtoms::fixedList) &&
+          GetFirstChild(nsGkAtoms::fixedList) &&
       aBuilder->IsMovingFrame(aFrame))
     return PR_FALSE;
 
@@ -1116,9 +1115,9 @@ static PRBool ApplyOverflowHiddenClipping(nsIFrame* aFrame,
   // CSS 2.1 so I removed them. Also, we used to clip at tableOuterFrame
   // but we should actually clip at tableFrame (as per discussion with Hixie and
   // bz).
-  return type == nsLayoutAtoms::tableFrame ||
-       type == nsLayoutAtoms::tableCellFrame ||
-       type == nsLayoutAtoms::bcTableCellFrame;
+  return type == nsGkAtoms::tableFrame ||
+       type == nsGkAtoms::tableCellFrame ||
+       type == nsGkAtoms::bcTableCellFrame;
 }
 
 static PRBool ApplyOverflowClipping(nsDisplayListBuilder* aBuilder,
@@ -1391,7 +1390,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   nsRect dirty = aDirtyRect - aChild->GetOffsetTo(this);
 
   nsIAtom* childType = aChild->GetType();
-  if (childType == nsLayoutAtoms::placeholderFrame) {
+  if (childType == nsGkAtoms::placeholderFrame) {
     nsPlaceholderFrame* placeholder = NS_STATIC_CAST(nsPlaceholderFrame*, aChild);
     aChild = placeholder->GetOutOfFlowFrame();
     NS_ASSERTION(aChild, "No out of flow frame?");
@@ -1407,7 +1406,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     if (aChild->GetStateBits() & NS_FRAME_IS_UNFLOWABLE)
       return NS_OK;
     nsRect* savedDirty = NS_STATIC_CAST(nsRect*,
-        aChild->GetProperty(nsLayoutAtoms::outOfFlowDirtyRectProperty));
+        aChild->GetProperty(nsGkAtoms::outOfFlowDirtyRectProperty));
     if (savedDirty) {
       dirty = *savedDirty;
     } else {
@@ -2377,12 +2376,12 @@ static FrameContentRange GetRangeForFrame(nsIFrame* aFrame) {
     return FrameContentRange(nsnull, -1, -1);
   }
   nsIAtom* type = aFrame->GetType();
-  if (type == nsLayoutAtoms::textFrame) {
+  if (type == nsGkAtoms::textFrame) {
     PRInt32 offset, offsetEnd;
     aFrame->GetOffsets(offset, offsetEnd);
     return FrameContentRange(content, offset, offsetEnd);
   }
-  if (type == nsLayoutAtoms::brFrame) {
+  if (type == nsGkAtoms::brFrame) {
     parent = content->GetParent();
     PRInt32 beginOffset = parent->IndexOf(content);
     return FrameContentRange(parent, beginOffset, beginOffset);
@@ -3315,7 +3314,7 @@ nsIFrame::GetView() const
 
   // Check for a property on the frame
   nsresult rv;
-  void *value = GetProperty(nsLayoutAtoms::viewProperty, &rv);
+  void *value = GetProperty(nsGkAtoms::viewProperty, &rv);
 
   NS_ENSURE_SUCCESS(rv, nsnull);
   NS_ASSERTION(value, "frame state bit was set but frame has no view");
@@ -3335,7 +3334,7 @@ nsIFrame::SetView(nsIView* aView)
     aView->SetClientData(this);
 
     // Set a property on the frame
-    nsresult rv = SetProperty(nsLayoutAtoms::viewProperty, aView, nsnull);
+    nsresult rv = SetProperty(nsGkAtoms::viewProperty, aView, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Set the frame state bit that says the frame has a view
@@ -4352,7 +4351,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
         isEditor = isEditor == nsISelectionDisplay::DISPLAY_ALL;
         if ( isEditor ) 
         {
-          if (resultFrame->GetType() == nsLayoutAtoms::tableOuterFrame)
+          if (resultFrame->GetType() == nsGkAtoms::tableOuterFrame)
           {
             if (((point.x - offset.x + tempRect.x)<0) ||  ((point.x - offset.x+ tempRect.x)>tempRect.width))//off left/right side
             {
@@ -4516,7 +4515,7 @@ FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
   // of the inline frames they were created from. The first/last child of
   // such frames is the real block frame we're looking for.
   if (NS_SUCCEEDED(rv) && !(aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) ||
-      aFrame->GetType() == nsLayoutAtoms::brFrame) {
+      aFrame->GetType() == nsGkAtoms::brFrame) {
     nsIContent* content = aFrame->GetContent();
     result.mContent = content->GetParent();
     result.mOffset = result.mContent->IndexOf(content) + 
@@ -4800,8 +4799,8 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
   if we hit a header or footer that's ok just go into them,
 */
             PRBool searchTableBool = PR_FALSE;
-            if (aPos->mResultFrame->GetType() == nsLayoutAtoms::tableOuterFrame ||
-                aPos->mResultFrame->GetType() == nsLayoutAtoms::tableCellFrame)
+            if (aPos->mResultFrame->GetType() == nsGkAtoms::tableOuterFrame ||
+                aPos->mResultFrame->GetType() == nsGkAtoms::tableCellFrame)
             {
               nsIFrame *frame = aPos->mResultFrame->GetFirstChild(nsnull);
               //got the table frame now
@@ -5185,7 +5184,7 @@ nsIFrame::GetOverflowAreaProperty(PRBool aCreateIfNecessary)
 
   nsPropertyTable *propTable = GetPresContext()->PropertyTable();
   void *value = propTable->GetProperty(this,
-                                       nsLayoutAtoms::overflowAreaProperty);
+                                       nsGkAtoms::overflowAreaProperty);
 
   if (value) {
     return (nsRect*)value;  // the property already exists
@@ -5193,7 +5192,7 @@ nsIFrame::GetOverflowAreaProperty(PRBool aCreateIfNecessary)
     // The property isn't set yet, so allocate a new rect, set the property,
     // and return the newly allocated rect
     nsRect*  overflow = new nsRect(0, 0, 0, 0);
-    propTable->SetProperty(this, nsLayoutAtoms::overflowAreaProperty,
+    propTable->SetProperty(this, nsGkAtoms::overflowAreaProperty,
                            overflow, DestroyRectFunc, nsnull);
     return overflow;
   }
@@ -5240,7 +5239,7 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
   else {
     if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
       // remove the previously stored overflow area 
-      DeleteProperty(nsLayoutAtoms::overflowAreaProperty);
+      DeleteProperty(nsGkAtoms::overflowAreaProperty);
     }
     mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
   }   
@@ -5298,14 +5297,14 @@ GetIBSpecialSibling(nsPresContext* aPresContext,
   aFrame = aFrame->GetFirstInFlow();
 
   /*
-   * Now look up the nsLayoutAtoms::IBSplitSpecialPrevSibling
+   * Now look up the nsGkAtoms::IBSplitSpecialPrevSibling
    * property, which is only set on the anonymous block frames we're
    * interested in.
    */
   nsresult rv;
   nsIFrame *specialSibling = NS_STATIC_CAST(nsIFrame*,
                              aPresContext->PropertyTable()->GetProperty(aFrame,
-                               nsLayoutAtoms::IBSplitSpecialPrevSibling, &rv));
+                               nsGkAtoms::IBSplitSpecialPrevSibling, &rv));
 
   if (NS_OK == rv) {
     NS_ASSERTION(specialSibling, "null special sibling");
@@ -5582,10 +5581,10 @@ nsIFrame::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
       }
       isFocusable = mContent->IsFocusable(&tabIndex);
       if (!isFocusable && !aWithMouse &&
-          GetType() == nsLayoutAtoms::scrollFrame &&
+          GetType() == nsGkAtoms::scrollFrame &&
           mContent->IsNodeOfType(nsINode::eHTML) &&
           !mContent->IsNativeAnonymous() && mContent->GetParent() &&
-          !mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex)) {
+          !mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex)) {
         // Elements with scrollable view are focusable with script & tabbable
         // Otherwise you couldn't scroll them with keyboard, which is
         // an accessibility issue (e.g. Section 508 rules)
@@ -6252,7 +6251,7 @@ nsBoxLayoutMetrics*
 nsFrame::BoxMetrics() const
 {
   nsBoxLayoutMetrics* metrics =
-    NS_STATIC_CAST(nsBoxLayoutMetrics*, GetProperty(nsLayoutAtoms::boxMetricsProperty));
+    NS_STATIC_CAST(nsBoxLayoutMetrics*, GetProperty(nsGkAtoms::boxMetricsProperty));
   NS_ASSERTION(metrics, "A box layout method was called but InitBoxMetrics was never called");
   return metrics;
 }
@@ -6265,7 +6264,7 @@ nsFrame::SetParent(const nsIFrame* aParent)
   if (!wasBoxWrapped && IsBoxWrapped())
     InitBoxMetrics(PR_TRUE);
   else if (wasBoxWrapped && !IsBoxWrapped())
-    DeleteProperty(nsLayoutAtoms::boxMetricsProperty);
+    DeleteProperty(nsGkAtoms::boxMetricsProperty);
 
   if (aParent && aParent->IsBoxFrame()) {
     PRBool needsWidget = PR_FALSE;
@@ -6294,10 +6293,10 @@ void
 nsFrame::InitBoxMetrics(PRBool aClear)
 {
   if (aClear)
-    DeleteProperty(nsLayoutAtoms::boxMetricsProperty);
+    DeleteProperty(nsGkAtoms::boxMetricsProperty);
 
   nsBoxLayoutMetrics *metrics = new nsBoxLayoutMetrics();
-  SetProperty(nsLayoutAtoms::boxMetricsProperty, metrics, DeleteBoxMetrics);
+  SetProperty(nsGkAtoms::boxMetricsProperty, metrics, DeleteBoxMetrics);
 
   nsFrame::MarkIntrinsicWidthsDirty();
   metrics->mBlockAscent = 0;
@@ -6876,38 +6875,38 @@ DR_FrameTypeInfo* DR_State::GetFrameTypeInfo(char* aFrameName)
 
 void DR_State::InitFrameTypeTable()
 {  
-  AddFrameTypeInfo(nsLayoutAtoms::areaFrame,             "area",      "area");
-  AddFrameTypeInfo(nsLayoutAtoms::blockFrame,            "block",     "block");
-  AddFrameTypeInfo(nsLayoutAtoms::brFrame,               "br",        "br");
-  AddFrameTypeInfo(nsLayoutAtoms::bulletFrame,           "bullet",    "bullet");
-  AddFrameTypeInfo(nsLayoutAtoms::gfxButtonControlFrame, "button",    "gfxButtonControl");
-  AddFrameTypeInfo(nsLayoutAtoms::HTMLButtonControlFrame, "HTMLbutton",    "HTMLButtonControl");
-  AddFrameTypeInfo(nsLayoutAtoms::HTMLCanvasFrame,       "HTMLCanvas","HTMLCanvas");
-  AddFrameTypeInfo(nsLayoutAtoms::subDocumentFrame,      "subdoc",    "subDocument");
-  AddFrameTypeInfo(nsLayoutAtoms::imageFrame,            "img",       "image");
-  AddFrameTypeInfo(nsLayoutAtoms::inlineFrame,           "inline",    "inline");
-  AddFrameTypeInfo(nsLayoutAtoms::letterFrame,           "letter",    "letter");
-  AddFrameTypeInfo(nsLayoutAtoms::lineFrame,             "line",      "line");
-  AddFrameTypeInfo(nsLayoutAtoms::listControlFrame,      "select",    "select");
-  AddFrameTypeInfo(nsLayoutAtoms::objectFrame,           "obj",       "object");
-  AddFrameTypeInfo(nsLayoutAtoms::pageFrame,             "page",      "page");
-  AddFrameTypeInfo(nsLayoutAtoms::placeholderFrame,      "place",     "placeholder");
-  AddFrameTypeInfo(nsLayoutAtoms::positionedInlineFrame, "posInline", "positionedInline");
-  AddFrameTypeInfo(nsLayoutAtoms::canvasFrame,           "canvas",    "canvas");
-  AddFrameTypeInfo(nsLayoutAtoms::rootFrame,             "root",      "root");
-  AddFrameTypeInfo(nsLayoutAtoms::scrollFrame,           "scroll",    "scroll");
-  AddFrameTypeInfo(nsLayoutAtoms::tableCaptionFrame,     "caption",   "tableCaption");
-  AddFrameTypeInfo(nsLayoutAtoms::tableCellFrame,        "cell",      "tableCell");
-  AddFrameTypeInfo(nsLayoutAtoms::bcTableCellFrame,      "bcCell",    "bcTableCell");
-  AddFrameTypeInfo(nsLayoutAtoms::tableColFrame,         "col",       "tableCol");
-  AddFrameTypeInfo(nsLayoutAtoms::tableColGroupFrame,    "colG",      "tableColGroup");
-  AddFrameTypeInfo(nsLayoutAtoms::tableFrame,            "tbl",       "table");
-  AddFrameTypeInfo(nsLayoutAtoms::tableOuterFrame,       "tblO",      "tableOuter");
-  AddFrameTypeInfo(nsLayoutAtoms::tableRowGroupFrame,    "rowG",      "tableRowGroup");
-  AddFrameTypeInfo(nsLayoutAtoms::tableRowFrame,         "row",       "tableRow");
-  AddFrameTypeInfo(nsLayoutAtoms::textInputFrame,        "textCtl",   "textInput");
-  AddFrameTypeInfo(nsLayoutAtoms::textFrame,             "text",      "text");
-  AddFrameTypeInfo(nsLayoutAtoms::viewportFrame,         "VP",        "viewport");
+  AddFrameTypeInfo(nsGkAtoms::areaFrame,             "area",      "area");
+  AddFrameTypeInfo(nsGkAtoms::blockFrame,            "block",     "block");
+  AddFrameTypeInfo(nsGkAtoms::brFrame,               "br",        "br");
+  AddFrameTypeInfo(nsGkAtoms::bulletFrame,           "bullet",    "bullet");
+  AddFrameTypeInfo(nsGkAtoms::gfxButtonControlFrame, "button",    "gfxButtonControl");
+  AddFrameTypeInfo(nsGkAtoms::HTMLButtonControlFrame, "HTMLbutton",    "HTMLButtonControl");
+  AddFrameTypeInfo(nsGkAtoms::HTMLCanvasFrame,       "HTMLCanvas","HTMLCanvas");
+  AddFrameTypeInfo(nsGkAtoms::subDocumentFrame,      "subdoc",    "subDocument");
+  AddFrameTypeInfo(nsGkAtoms::imageFrame,            "img",       "image");
+  AddFrameTypeInfo(nsGkAtoms::inlineFrame,           "inline",    "inline");
+  AddFrameTypeInfo(nsGkAtoms::letterFrame,           "letter",    "letter");
+  AddFrameTypeInfo(nsGkAtoms::lineFrame,             "line",      "line");
+  AddFrameTypeInfo(nsGkAtoms::listControlFrame,      "select",    "select");
+  AddFrameTypeInfo(nsGkAtoms::objectFrame,           "obj",       "object");
+  AddFrameTypeInfo(nsGkAtoms::pageFrame,             "page",      "page");
+  AddFrameTypeInfo(nsGkAtoms::placeholderFrame,      "place",     "placeholder");
+  AddFrameTypeInfo(nsGkAtoms::positionedInlineFrame, "posInline", "positionedInline");
+  AddFrameTypeInfo(nsGkAtoms::canvasFrame,           "canvas",    "canvas");
+  AddFrameTypeInfo(nsGkAtoms::rootFrame,             "root",      "root");
+  AddFrameTypeInfo(nsGkAtoms::scrollFrame,           "scroll",    "scroll");
+  AddFrameTypeInfo(nsGkAtoms::tableCaptionFrame,     "caption",   "tableCaption");
+  AddFrameTypeInfo(nsGkAtoms::tableCellFrame,        "cell",      "tableCell");
+  AddFrameTypeInfo(nsGkAtoms::bcTableCellFrame,      "bcCell",    "bcTableCell");
+  AddFrameTypeInfo(nsGkAtoms::tableColFrame,         "col",       "tableCol");
+  AddFrameTypeInfo(nsGkAtoms::tableColGroupFrame,    "colG",      "tableColGroup");
+  AddFrameTypeInfo(nsGkAtoms::tableFrame,            "tbl",       "table");
+  AddFrameTypeInfo(nsGkAtoms::tableOuterFrame,       "tblO",      "tableOuter");
+  AddFrameTypeInfo(nsGkAtoms::tableRowGroupFrame,    "rowG",      "tableRowGroup");
+  AddFrameTypeInfo(nsGkAtoms::tableRowFrame,         "row",       "tableRow");
+  AddFrameTypeInfo(nsGkAtoms::textInputFrame,        "textCtl",   "textInput");
+  AddFrameTypeInfo(nsGkAtoms::textFrame,             "text",      "text");
+  AddFrameTypeInfo(nsGkAtoms::viewportFrame,         "VP",        "viewport");
   AddFrameTypeInfo(nsnull,                               "unknown",   "unknown");
 }
 

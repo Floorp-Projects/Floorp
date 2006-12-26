@@ -36,7 +36,7 @@
 
 #include "nsSVGGraphicElement.h"
 #include "nsIDOMSVGClipPathElement.h"
-#include "nsSVGAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsSVGAnimatedEnumeration.h"
 #include "nsSVGEnum.h"
 
@@ -109,8 +109,8 @@ nsSVGClipPathElement::Init()
 
   // Define enumeration mappings
   static struct nsSVGEnumMapping gUnitMap[] = {
-    {&nsSVGAtoms::objectBoundingBox, nsIDOMSVGClipPathElement::SVG_CPUNITS_OBJECTBOUNDINGBOX},
-    {&nsSVGAtoms::userSpaceOnUse, nsIDOMSVGClipPathElement::SVG_CPUNITS_USERSPACEONUSE},
+    {&nsGkAtoms::objectBoundingBox, nsIDOMSVGClipPathElement::SVG_CPUNITS_OBJECTBOUNDINGBOX},
+    {&nsGkAtoms::userSpaceOnUse, nsIDOMSVGClipPathElement::SVG_CPUNITS_USERSPACEONUSE},
     {nsnull, 0}
   };
 
@@ -123,7 +123,7 @@ nsSVGClipPathElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mClipPathUnits), units);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::clipPathUnits, mClipPathUnits);
+    rv = AddMappedSVGValue(nsGkAtoms::clipPathUnits, mClipPathUnits);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 

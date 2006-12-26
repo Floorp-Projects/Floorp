@@ -42,10 +42,9 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsFrame.h"
 #include "nsIContent.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
-#include "nsLayoutAtoms.h"
 #include "nsIDeviceContext.h"
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
@@ -230,7 +229,7 @@ nsHTMLReflowState::Init(nsPresContext* aPresContext,
 
   NS_ASSERTION((mFrameType == NS_CSS_FRAME_TYPE_INLINE &&
                 !frame->IsFrameOfType(nsIFrame::eReplaced)) ||
-               frame->GetType() == nsLayoutAtoms::textFrame ||
+               frame->GetType() == nsGkAtoms::textFrame ||
                mComputedWidth != NS_UNCONSTRAINEDSIZE,
                "shouldn't use unconstrained widths anymore");
 }
@@ -597,7 +596,7 @@ GetIntrinsicSizeFor(nsIFrame* aFrame, nsSize& aIntrinsicSize)
   // size for is an image frame
   // XXX We should add back the GetReflowMetrics() function and one of the
   // things should be the intrinsic size...
-  if (aFrame->GetType() == nsLayoutAtoms::imageFrame) {
+  if (aFrame->GetType() == nsGkAtoms::imageFrame) {
     nsImageFrame* imageFrame = (nsImageFrame*)aFrame;
 
     imageFrame->GetIntrinsicImageSize(aIntrinsicSize);
@@ -1238,11 +1237,11 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState* aCBReflowState)
     nsIAtom* frameType = rs->frame->GetType();
     // if the ancestor is auto height then skip it and continue up if it 
     // is the first block/area frame and possibly the body/html
-    if (nsLayoutAtoms::blockFrame == frameType ||
-        nsLayoutAtoms::areaFrame == frameType ||
-        nsLayoutAtoms::scrollFrame == frameType) {
+    if (nsGkAtoms::blockFrame == frameType ||
+        nsGkAtoms::areaFrame == frameType ||
+        nsGkAtoms::scrollFrame == frameType) {
       
-      if (nsLayoutAtoms::areaFrame == frameType) {
+      if (nsGkAtoms::areaFrame == frameType) {
         // Skip over scrolled-content area frames
         if (rs->frame->GetStyleContext()->GetPseudoType() ==
             nsCSSAnonBoxes::scrolledContent) {
@@ -1265,15 +1264,15 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState* aCBReflowState)
         }
       }
     }
-    else if (nsLayoutAtoms::canvasFrame == frameType) {
+    else if (nsGkAtoms::canvasFrame == frameType) {
       // Use scroll frames' computed height if we have one, this will
       // allow us to get viewport height for native scrollbars.
       nsHTMLReflowState* scrollState = (nsHTMLReflowState *)rs->parentReflowState;
-      if (nsLayoutAtoms::scrollFrame == scrollState->frame->GetType()) {
+      if (nsGkAtoms::scrollFrame == scrollState->frame->GetType()) {
         rs = scrollState;
       }
     }
-    else if (nsLayoutAtoms::pageContentFrame == frameType) {
+    else if (nsGkAtoms::pageContentFrame == frameType) {
       nsIFrame* prevInFlow = rs->frame->GetPrevInFlow();
       // only use the page content frame for a height basis if it is the first in flow
       if (prevInFlow) 
@@ -1285,15 +1284,15 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState* aCBReflowState)
 
     // if the ancestor is the page content frame then the percent base is 
     // the avail height, otherwise it is the computed height
-    result = (nsLayoutAtoms::pageContentFrame == frameType)
+    result = (nsGkAtoms::pageContentFrame == frameType)
              ? rs->availableHeight : rs->mComputedHeight;
     // if unconstrained - don't sutract borders - would result in huge height
     if (NS_AUTOHEIGHT == result) return result;
 
     // if we got to the canvas or page content frame, then subtract out 
     // margin/border/padding for the BODY and HTML elements
-    if ((nsLayoutAtoms::canvasFrame == frameType) || 
-        (nsLayoutAtoms::pageContentFrame == frameType)) {
+    if ((nsGkAtoms::canvasFrame == frameType) || 
+        (nsGkAtoms::pageContentFrame == frameType)) {
 
       result -= GetVerticalMarginBorderPadding(firstAncestorRS); 
       result -= GetVerticalMarginBorderPadding(secondAncestorRS); 
@@ -1304,14 +1303,14 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState* aCBReflowState)
         nsIContent* frameContent = firstAncestorRS->frame->GetContent();
         if (frameContent) {
           nsIAtom *contentTag = frameContent->Tag();
-          NS_ASSERTION(contentTag == nsHTMLAtoms::html, "First ancestor is not HTML");
+          NS_ASSERTION(contentTag == nsGkAtoms::html, "First ancestor is not HTML");
         }
       }
       if (secondAncestorRS) {
         nsIContent* frameContent = secondAncestorRS->frame->GetContent();
         if (frameContent) {
           nsIAtom *contentTag = frameContent->Tag();
-          NS_ASSERTION(contentTag == nsHTMLAtoms::body, "Second ancestor is not BODY");
+          NS_ASSERTION(contentTag == nsGkAtoms::body, "Second ancestor is not BODY");
         }
       }
 #endif
@@ -1319,9 +1318,9 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState* aCBReflowState)
     }
     // if we got to the html frame, then subtract out 
     // margin/border/padding for the BODY element
-    else if (nsLayoutAtoms::areaFrame == frameType) {
+    else if (nsGkAtoms::areaFrame == frameType) {
       // make sure it is the body
-      if (nsLayoutAtoms::canvasFrame == rs->parentReflowState->frame->GetType()) {
+      if (nsGkAtoms::canvasFrame == rs->parentReflowState->frame->GetType()) {
         result -= GetVerticalMarginBorderPadding(secondAncestorRS);
       }
     }
@@ -1489,7 +1488,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
       if (cbrs->parentReflowState) {
         nsIFrame* f = cbrs->parentReflowState->frame;
         fType = f->GetType();
-        if (nsLayoutAtoms::scrollFrame == fType) {
+        if (nsGkAtoms::scrollFrame == fType) {
           // Use the scroll frame's computed height instead
           aContainingBlockHeight = cbrs->parentReflowState->mComputedHeight;
         }
@@ -1623,7 +1622,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
         NS_CSS_FRAME_TYPE_BLOCK == NS_FRAME_GET_TYPE(mFrameType) &&
         // Hack to work around the fact that we have some tables that
         // _should_ be inline-table but aren't
-        (frame->GetType() != nsLayoutAtoms::tableOuterFrame ||
+        (frame->GetType() != nsGkAtoms::tableOuterFrame ||
          !parentReflowState ||
          NS_CSS_FRAME_TYPE_BLOCK == NS_FRAME_GET_TYPE(parentReflowState->mFrameType));
       nsSize size =
@@ -1684,7 +1683,7 @@ nsCSSOffsetState::InitOffsets(nscoord aContainingBlockWidth,
   }
   mComputedBorderPadding += mComputedPadding;
 
-  if (frame->GetType() == nsLayoutAtoms::tableFrame) {
+  if (frame->GetType() == nsGkAtoms::tableFrame) {
     nsTableFrame *tableFrame = NS_STATIC_CAST(nsTableFrame*, frame);
 
     if (tableFrame->IsBorderCollapse()) {
@@ -1749,8 +1748,8 @@ nsHTMLReflowState::CalculateBlockSideMargins(nscoord aAvailWidth,
     // ignore
     // First check if there is an HTML alignment that we should honor
     const nsHTMLReflowState* prs = parentReflowState;
-    if (frame->GetType() == nsLayoutAtoms::tableFrame) {
-      NS_ASSERTION(prs->frame->GetType() == nsLayoutAtoms::tableOuterFrame,
+    if (frame->GetType() == nsGkAtoms::tableFrame) {
+      NS_ASSERTION(prs->frame->GetType() == nsGkAtoms::tableOuterFrame,
                    "table not inside outer table");
       // Center the table within the outer table based on the alignment
       // of the outer table's parent.
@@ -1940,7 +1939,7 @@ nsCSSOffsetState::ComputeMargin(nscoord aContainingBlockWidth)
                                mComputedMargin.bottom);
 
     // XXX We need to include 'auto' horizontal margins in this too!
-    frame->SetProperty(nsLayoutAtoms::usedMarginProperty,
+    frame->SetProperty(nsGkAtoms::usedMarginProperty,
                        new nsMargin(mComputedMargin),
                        DestroyMarginFunc);
   }
@@ -1971,17 +1970,17 @@ nsCSSOffsetState::ComputePadding(nscoord aContainingBlockWidth)
                                stylePadding->mPadding.GetBottom(bottom),
                                mComputedPadding.bottom);
 
-    frame->SetProperty(nsLayoutAtoms::usedPaddingProperty,
+    frame->SetProperty(nsGkAtoms::usedPaddingProperty,
                        new nsMargin(mComputedPadding),
                        DestroyMarginFunc);
   }
   // a table row/col group, row/col doesn't have padding
   // XXXldb Neither do border-collapse tables.
   nsIAtom* frameType = frame->GetType();
-  if (nsLayoutAtoms::tableRowGroupFrame == frameType ||
-      nsLayoutAtoms::tableColGroupFrame == frameType ||
-      nsLayoutAtoms::tableRowFrame      == frameType ||
-      nsLayoutAtoms::tableColFrame      == frameType) {
+  if (nsGkAtoms::tableRowGroupFrame == frameType ||
+      nsGkAtoms::tableColGroupFrame == frameType ||
+      nsGkAtoms::tableRowFrame      == frameType ||
+      nsGkAtoms::tableColFrame      == frameType) {
     mComputedPadding.top    = 0;
     mComputedPadding.right  = 0;
     mComputedPadding.bottom = 0;

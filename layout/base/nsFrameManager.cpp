@@ -62,7 +62,6 @@
 #include "nsLayoutAtoms.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
-#include "nsHTMLAtoms.h"
 #ifdef NS_DEBUG
 #include "nsISupportsArray.h"
 #include "nsIStyleRule.h"
@@ -321,7 +320,7 @@ nsFrameManager::GetCanvasFrame()
       // get each sibling of the child and check them, startig at the child
       nsIFrame *siblingFrame = childFrame;
       while (siblingFrame) {
-        if (siblingFrame->GetType() == nsLayoutAtoms::canvasFrame) {
+        if (siblingFrame->GetType() == nsGkAtoms::canvasFrame) {
           // this is it
           return siblingFrame;
         } else {
@@ -504,7 +503,7 @@ nsresult
 nsFrameManager::RegisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
 {
   NS_PRECONDITION(aPlaceholderFrame, "null param unexpected");
-  NS_PRECONDITION(nsLayoutAtoms::placeholderFrame == aPlaceholderFrame->GetType(),
+  NS_PRECONDITION(nsGkAtoms::placeholderFrame == aPlaceholderFrame->GetType(),
                   "unexpected frame type");
   if (!mPlaceholderMap.ops) {
     if (!PL_DHashTableInit(&mPlaceholderMap, &PlaceholderMapOps, nsnull,
@@ -530,7 +529,7 @@ void
 nsFrameManager::UnregisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
 {
   NS_PRECONDITION(aPlaceholderFrame, "null param unexpected");
-  NS_PRECONDITION(nsLayoutAtoms::placeholderFrame == aPlaceholderFrame->GetType(),
+  NS_PRECONDITION(nsGkAtoms::placeholderFrame == aPlaceholderFrame->GetType(),
                   "unexpected frame type");
 
   if (mPlaceholderMap.ops) {
@@ -870,7 +869,7 @@ VerifyStyleTree(nsPresContext* aPresContext, nsIFrame* aFrame,
     while (child) {
       if (NS_FRAME_OUT_OF_FLOW != (child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
         // only do frames that are in flow
-        if (nsLayoutAtoms::placeholderFrame == child->GetType()) { 
+        if (nsGkAtoms::placeholderFrame == child->GetType()) { 
           // placeholder: first recurse and verify the out of flow frame,
           // then verify the placeholder's context
           nsIFrame* outOfFlowFrame =
@@ -965,7 +964,7 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
           while (child) {
             // only do frames that are in flow
             if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
-              if (nsLayoutAtoms::placeholderFrame == child->GetType()) {
+              if (nsGkAtoms::placeholderFrame == child->GetType()) {
                 // get out of flow frame and recurse there
                 nsIFrame* outOfFlowFrame =
                   nsPlaceholderFrame::GetRealFrameForPlaceholder(child);
@@ -999,7 +998,7 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
         // oldContext)" check will prevent us from redoing work.
         if ((aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) &&
             !aFrame->GetPrevInFlow()) {
-          nsIFrame* sib = NS_STATIC_CAST(nsIFrame*, aFrame->GetProperty(nsLayoutAtoms::IBSplitSpecialSibling));
+          nsIFrame* sib = NS_STATIC_CAST(nsIFrame*, aFrame->GetProperty(nsGkAtoms::IBSplitSpecialSibling));
           if (sib) {
             ReParentStyleContext(sib);
           }
@@ -1339,7 +1338,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
         while (child) {
           if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
             // only do frames that are in flow
-            if (nsLayoutAtoms::placeholderFrame == child->GetType()) { // placeholder
+            if (nsGkAtoms::placeholderFrame == child->GetType()) { // placeholder
               // get out of flow frame and recur there
               nsIFrame* outOfFlowFrame =
                 nsPlaceholderFrame::GetRealFrameForPlaceholder(child);
@@ -1456,7 +1455,7 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
     }
     
     frame2 = NS_STATIC_CAST(nsIFrame*,
-         propTable->GetProperty(frame2, nsLayoutAtoms::IBSplitSpecialSibling));
+         propTable->GetProperty(frame2, nsGkAtoms::IBSplitSpecialSibling));
     frame = frame2;
   } while (frame2);
   return topLevelChange;
@@ -1473,7 +1472,7 @@ nsFrameManager::HasAttributeDependentStyle(nsIContent *aContent,
                                                              aAttribute,
                                                              aModType);
 
-  if (aAttribute == nsHTMLAtoms::style) {
+  if (aAttribute == nsGkAtoms::style) {
     // Perhaps should check that it's XUL, SVG, (or HTML) namespace, but
     // it doesn't really matter.  Or we could even let
     // HTMLCSSStyleSheetImpl::HasAttributeDependentStyle handle it.

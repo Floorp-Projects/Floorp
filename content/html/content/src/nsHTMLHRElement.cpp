@@ -38,7 +38,7 @@
 #include "nsIDOMNSHTMLHRElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsMappedAttributes.h"
@@ -128,16 +128,16 @@ nsHTMLHRElement::ParseAttribute(PRInt32 aNamespaceID,
                                 nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsHTMLAtoms::width) {
+    if (aAttribute == nsGkAtoms::width) {
       return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
     }
-    if (aAttribute == nsHTMLAtoms::size) {
+    if (aAttribute == nsGkAtoms::size) {
       return aResult.ParseIntWithBounds(aValue, 1, 1000);
     }
-    if (aAttribute == nsHTMLAtoms::align) {
+    if (aAttribute == nsGkAtoms::align) {
       return aResult.ParseEnumValue(aValue, kAlignTable);
     }
-    if (aAttribute == nsHTMLAtoms::color) {
+    if (aAttribute == nsGkAtoms::color) {
       return aResult.ParseColor(aValue, GetOwnerDoc());
     }
   }
@@ -152,7 +152,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 {
   PRBool noshade = PR_FALSE;
 
-  const nsAttrValue* colorValue = aAttributes->GetAttr(nsHTMLAtoms::color);
+  const nsAttrValue* colorValue = aAttributes->GetAttr(nsGkAtoms::color);
   nscolor color;
   PRBool colorIsSet = colorValue && colorValue->GetColorValue(color);
 
@@ -161,13 +161,13 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     if (colorIsSet) {
       noshade = PR_TRUE;
     } else {
-      noshade = !!aAttributes->GetAttr(nsHTMLAtoms::noshade);
+      noshade = !!aAttributes->GetAttr(nsGkAtoms::noshade);
     }
   }
 
   if (aData->mSID == eStyleStruct_Margin) {
     // align: enum
-    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::align);
+    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
     if (value && value->Type() == nsAttrValue::eEnum) {
       // Map align attribute into auto side margins
       nsCSSRect& margin = aData->mMarginData->mMargin;
@@ -196,7 +196,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   else if (aData->mSID == eStyleStruct_Position) {
     // width: integer, percent
     if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
-      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::width);
+      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::width);
       if (value && value->Type() == nsAttrValue::eInteger) {
         aData->mPositionData->mWidth.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
       } else if (value && value->Type() == nsAttrValue::ePercent) {
@@ -214,7 +214,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
         // the height includes the top and bottom borders that are initially 1px.
         // for size=1, html.css has a special case rule that makes this work by
         // removing all but the top border.
-        const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::size);
+        const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::size);
         if (value && value->Type() == nsAttrValue::eInteger) {
           aData->mPositionData->mHeight.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
         } // else use default value from html.css
@@ -226,7 +226,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     // if a size is set, use half of it per side, otherwise, use 1px per side
     float sizePerSide;
     PRBool allSides = PR_TRUE;
-    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::size);
+    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::size);
     if (value && value->Type() == nsAttrValue::eInteger) {
       sizePerSide = (float)value->GetIntegerValue() / 2.0f;
       if (sizePerSide < 1.0f) {
@@ -309,11 +309,11 @@ NS_IMETHODIMP_(PRBool)
 nsHTMLHRElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
-    { &nsHTMLAtoms::align },
-    { &nsHTMLAtoms::width },
-    { &nsHTMLAtoms::size },
-    { &nsHTMLAtoms::color },
-    { &nsHTMLAtoms::noshade },
+    { &nsGkAtoms::align },
+    { &nsGkAtoms::width },
+    { &nsGkAtoms::size },
+    { &nsGkAtoms::color },
+    { &nsGkAtoms::noshade },
     { nsnull },
   };
   

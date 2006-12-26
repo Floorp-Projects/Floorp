@@ -295,7 +295,7 @@ nsMathMLmoFrame::ProcessOperatorData()
       mEmbellishData.flags |= NS_MATHML_EMBELLISH_MOVABLELIMITS;
 
     // see if the accent attribute is there
-    GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::accent_,
+    GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::accent_,
                  value);
     if (value.EqualsLiteral("true"))
       mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
@@ -304,7 +304,7 @@ nsMathMLmoFrame::ProcessOperatorData()
 
     // see if the movablelimits attribute is there
     GetAttribute(mContent, mPresentationData.mstyle,
-                 nsMathMLAtoms::movablelimits_, value);
+                 nsGkAtoms::movablelimits_, value);
     if (value.EqualsLiteral("true"))
       mEmbellishData.flags |= NS_MATHML_EMBELLISH_MOVABLELIMITS;
     else if (value.EqualsLiteral("false"))
@@ -358,7 +358,7 @@ nsMathMLmoFrame::ProcessOperatorData()
 
     // find our form
     form = NS_MATHML_OPERATOR_FORM_INFIX;
-    GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::form,
+    GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::form,
                  value);
     if (!value.IsEmpty()) {
       if (value.EqualsLiteral("prefix"))
@@ -415,7 +415,7 @@ nsMathMLmoFrame::ProcessOperatorData()
 
   // lspace = number h-unit | namedspace
   nscoord leftSpace = mEmbellishData.leftSpace;
-  GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::lspace_,
+  GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::lspace_,
                value);
   if (!value.IsEmpty()) {
     nsCSSValue cssValue;
@@ -432,7 +432,7 @@ nsMathMLmoFrame::ProcessOperatorData()
 
   // rspace = number h-unit | namedspace
   nscoord rightSpace = mEmbellishData.rightSpace;
-  GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::rspace_,
+  GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::rspace_,
                value);
   if (!value.IsEmpty()) {
     nsCSSValue cssValue;
@@ -472,29 +472,29 @@ nsMathMLmoFrame::ProcessOperatorData()
 
   if (NS_MATHML_OPERATOR_IS_STRETCHY(mFlags)) {
     GetAttribute(mContent, mPresentationData.mstyle,
-                 nsMathMLAtoms::stretchy_, value);
+                 nsGkAtoms::stretchy_, value);
     if (value.EqualsLiteral("false"))
       mFlags &= ~NS_MATHML_OPERATOR_STRETCHY;
   }
   if (NS_MATHML_OPERATOR_IS_FENCE(mFlags)) {
     GetAttribute(mContent, mPresentationData.mstyle,
-                 nsMathMLAtoms::fence_, value);
+                 nsGkAtoms::fence_, value);
     if (value.EqualsLiteral("false"))
       mFlags &= ~NS_MATHML_OPERATOR_FENCE;
   }
   if (NS_MATHML_OPERATOR_IS_LARGEOP(mFlags)) {
     GetAttribute(mContent, mPresentationData.mstyle,
-                 nsMathMLAtoms::largeop_, value);
+                 nsGkAtoms::largeop_, value);
     if (value.EqualsLiteral("false"))
       mFlags &= ~NS_MATHML_OPERATOR_LARGEOP;
   }
   if (NS_MATHML_OPERATOR_IS_SEPARATOR(mFlags)) {
     GetAttribute(mContent, mPresentationData.mstyle,
-                 nsMathMLAtoms::separator_, value);
+                 nsGkAtoms::separator_, value);
     if (value.EqualsLiteral("false"))
       mFlags &= ~NS_MATHML_OPERATOR_SEPARATOR;
   }
-  GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::symmetric_,
+  GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::symmetric_,
                value);
   if (value.EqualsLiteral("false"))
     mFlags &= ~NS_MATHML_OPERATOR_SYMMETRIC;
@@ -503,7 +503,7 @@ nsMathMLmoFrame::ProcessOperatorData()
 
   // minsize = number [ v-unit | h-unit ] | namedspace
   mMinSize = float(NS_UNCONSTRAINEDSIZE);
-  GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::minsize_,
+  GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::minsize_,
                value);
   if (!value.IsEmpty()) {
     nsCSSValue cssValue;
@@ -523,7 +523,7 @@ nsMathMLmoFrame::ProcessOperatorData()
       if ((eCSSUnit_Number == unit) || (eCSSUnit_Percent == unit)) {
         // see if the multiplicative inheritance should be from <mstyle>
         GetAttribute(nsnull, mPresentationData.mstyle,
-                     nsMathMLAtoms::minsize_, value);
+                     nsGkAtoms::minsize_, value);
         if (!value.IsEmpty()) {
           if (ParseNumericValue(value, cssValue)) {
             if (cssValue.IsLengthUnit()) {
@@ -538,7 +538,7 @@ nsMathMLmoFrame::ProcessOperatorData()
 
   // maxsize = number [ v-unit | h-unit ] | namedspace | infinity
   mMaxSize = float(NS_UNCONSTRAINEDSIZE);
-  GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::maxsize_,
+  GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::maxsize_,
                value);
   if (!value.IsEmpty()) {
     nsCSSValue cssValue;
@@ -558,7 +558,7 @@ nsMathMLmoFrame::ProcessOperatorData()
       if ((eCSSUnit_Number == unit) || (eCSSUnit_Percent == unit)) {
         // see if the multiplicative inheritance should be from <mstyle>
         GetAttribute(nsnull, mPresentationData.mstyle,
-                     nsMathMLAtoms::maxsize_, value);
+                     nsGkAtoms::maxsize_, value);
         if (!value.IsEmpty()) {
           if (ParseNumericValue(value, cssValue)) {
             if (cssValue.IsLengthUnit()) {
@@ -984,8 +984,8 @@ nsMathMLmoFrame::AttributeChanged(PRInt32         aNameSpaceID,
 {
   // check if this is an attribute that can affect the embellished hierarchy
   // in a significant way and re-layout the entire hierarchy.
-  if (nsMathMLAtoms::accent_ == aAttribute ||
-      nsMathMLAtoms::movablelimits_ == aAttribute) {
+  if (nsGkAtoms::accent_ == aAttribute ||
+      nsGkAtoms::movablelimits_ == aAttribute) {
 
     // set the target as the parent of our outermost embellished container
     // (we ensure that we are the core, not just a sibling of the core)

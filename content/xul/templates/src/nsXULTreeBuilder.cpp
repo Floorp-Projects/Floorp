@@ -56,8 +56,7 @@
 #include "nsTreeRows.h"
 #include "nsTemplateRule.h"
 #include "nsTemplateMatch.h"
-#include "nsXULAtoms.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsXULContentUtils.h"
 #include "nsXULTemplateBuilder.h"
 #include "nsVoidArray.h"
@@ -379,12 +378,12 @@ nsXULTreeBuilder::Sort(nsIDOMElement* aElement)
     if (! header)
         return NS_ERROR_FAILURE;
 
-    if (header->AttrValueIs(kNameSpaceID_None, nsXULAtoms::sortLocked,
-                            nsXULAtoms::_true, eCaseMatters))
+    if (header->AttrValueIs(kNameSpaceID_None, nsGkAtoms::sortLocked,
+                            nsGkAtoms::_true, eCaseMatters))
         return NS_OK;
 
     nsAutoString sort;
-    header->GetAttr(kNameSpaceID_None, nsXULAtoms::sort, sort);
+    header->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, sort);
 
     if (sort.IsEmpty())
         return NS_OK;
@@ -394,7 +393,7 @@ nsXULTreeBuilder::Sort(nsIDOMElement* aElement)
 
     // Cycle the sort direction
     nsAutoString dir;
-    header->GetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, dir);
+    header->GetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection, dir);
 
     if (dir.EqualsLiteral("ascending")) {
         dir.AssignLiteral("descending");
@@ -458,7 +457,7 @@ nsXULTreeBuilder::GetRowProperties(PRInt32 aIndex, nsISupportsArray* aProperties
     GetTemplateActionRowFor(aIndex, getter_AddRefs(row));
     if (row) {
         nsAutoString raw;
-        row->GetAttr(kNameSpaceID_None, nsXULAtoms::properties, raw);
+        row->GetAttr(kNameSpaceID_None, nsGkAtoms::properties, raw);
 
         if (!raw.IsEmpty()) {
             nsAutoString cooked;
@@ -484,7 +483,7 @@ nsXULTreeBuilder::GetCellProperties(PRInt32 aRow, nsITreeColumn* aCol, nsISuppor
     GetTemplateActionCellFor(aRow, aCol, getter_AddRefs(cell));
     if (cell) {
         nsAutoString raw;
-        cell->GetAttr(kNameSpaceID_None, nsXULAtoms::properties, raw);
+        cell->GetAttr(kNameSpaceID_None, nsGkAtoms::properties, raw);
 
         if (!raw.IsEmpty()) {
             nsAutoString cooked;
@@ -669,7 +668,7 @@ nsXULTreeBuilder::GetImageSrc(PRInt32 aRow, nsITreeColumn* aCol, nsAString& aRes
     GetTemplateActionCellFor(aRow, aCol, getter_AddRefs(cell));
     if (cell) {
         nsAutoString raw;
-        cell->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, raw);
+        cell->GetAttr(kNameSpaceID_None, nsGkAtoms::src, raw);
 
         SubstituteText(mRows[aRow]->mMatch->mResult, raw, aResult);
     }
@@ -695,7 +694,7 @@ nsXULTreeBuilder::GetProgressMode(PRInt32 aRow, nsITreeColumn* aCol, PRInt32* aR
     GetTemplateActionCellFor(aRow, aCol, getter_AddRefs(cell));
     if (cell) {
         nsAutoString raw;
-        cell->GetAttr(kNameSpaceID_None, nsXULAtoms::mode, raw);
+        cell->GetAttr(kNameSpaceID_None, nsGkAtoms::mode, raw);
 
         nsAutoString mode;
         SubstituteText(mRows[aRow]->mMatch->mResult, raw, mode);
@@ -722,7 +721,7 @@ nsXULTreeBuilder::GetCellValue(PRInt32 aRow, nsITreeColumn* aCol, nsAString& aRe
     GetTemplateActionCellFor(aRow, aCol, getter_AddRefs(cell));
     if (cell) {
         nsAutoString raw;
-        cell->GetAttr(kNameSpaceID_None, nsXULAtoms::value, raw);
+        cell->GetAttr(kNameSpaceID_None, nsGkAtoms::value, raw);
 
         SubstituteText(mRows[aRow]->mMatch->mResult, raw, aResult);
     }
@@ -745,7 +744,7 @@ nsXULTreeBuilder::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAString& aRes
     GetTemplateActionCellFor(aRow, aCol, getter_AddRefs(cell));
     if (cell) {
         nsAutoString raw;
-        cell->GetAttr(kNameSpaceID_None, nsXULAtoms::label, raw);
+        cell->GetAttr(kNameSpaceID_None, nsGkAtoms::label, raw);
 
         SubstituteText(mRows[aRow]->mMatch->mResult, raw, aResult);
 
@@ -773,7 +772,7 @@ nsXULTreeBuilder::SetTree(nsITreeBoxObject* aTree)
     if (NS_SUCCEEDED(rv) && isTrusted) {
         // Get the datasource we intend to use to remember open state.
         nsAutoString datasourceStr;
-        mRoot->GetAttr(kNameSpaceID_None, nsXULAtoms::statedatasource, datasourceStr);
+        mRoot->GetAttr(kNameSpaceID_None, nsGkAtoms::statedatasource, datasourceStr);
 
         // since we are trusted, use the user specified datasource
         // if non specified, use localstore, which gives us
@@ -952,7 +951,7 @@ nsXULTreeBuilder::IsEditable(PRInt32 aRow, nsITreeColumn* aCol, PRBool* _retval)
     GetTemplateActionCellFor(aRow, aCol, getter_AddRefs(cell));
     if (cell) {
         nsAutoString raw;
-        cell->GetAttr(kNameSpaceID_None, nsXULAtoms::editable, raw);
+        cell->GetAttr(kNameSpaceID_None, nsGkAtoms::editable, raw);
 
         nsAutoString editable;
         SubstituteText(mRows[aRow]->mMatch->mResult, raw, editable);
@@ -978,7 +977,7 @@ nsXULTreeBuilder::IsSelectable(PRInt32 aRow, nsITreeColumn* aCol, PRBool* _retva
     GetTemplateActionCellFor(aRow, aCol, getter_AddRefs(cell));
     if (cell) {
         nsAutoString raw;
-        cell->GetAttr(kNameSpaceID_None, nsXULAtoms::selectable, raw);
+        cell->GetAttr(kNameSpaceID_None, nsGkAtoms::selectable, raw);
 
         nsAutoString selectable;
         SubstituteText(mRows[aRow]->mMatch->mResult, raw, selectable);
@@ -1299,7 +1298,7 @@ nsXULTreeBuilder::EnsureSortVariables()
     nsCOMPtr<nsIContent> treecols;
  
     nsXULContentUtils::FindChildByTag(mRoot, kNameSpaceID_XUL,
-                                      nsXULAtoms::treecols,
+                                      nsGkAtoms::treecols,
                                       getter_AddRefs(treecols));
 
     if (!treecols)
@@ -1309,19 +1308,19 @@ nsXULTreeBuilder::EnsureSortVariables()
     for (PRUint32 i = 0; i < count; ++i) {
         nsIContent *child = treecols->GetChildAt(i);
 
-        if (child->NodeInfo()->Equals(nsXULAtoms::treecol,
+        if (child->NodeInfo()->Equals(nsGkAtoms::treecol,
                                       kNameSpaceID_XUL)) {
-            if (child->AttrValueIs(kNameSpaceID_None, nsXULAtoms::sortActive,
-                                   nsXULAtoms::_true, eCaseMatters)) {
+            if (child->AttrValueIs(kNameSpaceID_None, nsGkAtoms::sortActive,
+                                   nsGkAtoms::_true, eCaseMatters)) {
                 nsAutoString sort;
-                child->GetAttr(kNameSpaceID_None, nsXULAtoms::sort, sort);
+                child->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, sort);
                 if (! sort.IsEmpty()) {
                     mSortVariable = do_GetAtom(sort);
 
                     static nsIContent::AttrValuesArray strings[] =
-                      {&nsXULAtoms::ascending, &nsXULAtoms::descending, nsnull};
+                      {&nsGkAtoms::ascending, &nsGkAtoms::descending, nsnull};
                     switch (child->FindAttrValueIn(kNameSpaceID_None,
-                                                   nsXULAtoms::sortDirection,
+                                                   nsGkAtoms::sortDirection,
                                                    strings, eCaseMatters)) {
                        case 0: mSortDirection = eDirection_Ascending; break;
                        case 1: mSortDirection = eDirection_Descending; break;
@@ -1371,7 +1370,7 @@ nsXULTreeBuilder::RebuildAll()
 
     // Seed the rule network with assignments for the tree row variable
     nsAutoString ref;
-    mRoot->GetAttr(kNameSpaceID_None, nsXULAtoms::ref, ref);
+    mRoot->GetAttr(kNameSpaceID_None, nsGkAtoms::ref, ref);
 
     if (! ref.IsEmpty()) {
         rv = mQueryProcessor->TranslateRef(mDB, ref, getter_AddRefs(mRootResult));
@@ -1416,17 +1415,17 @@ nsXULTreeBuilder::GetTemplateActionRowFor(PRInt32 aRow, nsIContent** aResult)
 
             nsCOMPtr<nsIContent> children;
             nsXULContentUtils::FindChildByTag(action, kNameSpaceID_XUL,
-                                              nsXULAtoms::treechildren,
+                                              nsGkAtoms::treechildren,
                                               getter_AddRefs(children));
             if (children) {
                 nsCOMPtr<nsIContent> item;
                 nsXULContentUtils::FindChildByTag(children, kNameSpaceID_XUL,
-                                                  nsXULAtoms::treeitem,
+                                                  nsGkAtoms::treeitem,
                                                   getter_AddRefs(item));
                 if (item)
                     return nsXULContentUtils::FindChildByTag(item,
                                                              kNameSpaceID_XUL,
-                                                             nsXULAtoms::treerow,
+                                                             nsGkAtoms::treerow,
                                                              aResult);
             }
         }
@@ -1458,10 +1457,10 @@ nsXULTreeBuilder::GetTemplateActionCellFor(PRInt32 aRow,
         for (PRUint32 i = 0; i < count; ++i) {
             nsIContent *child = row->GetChildAt(i);
 
-            if (child->NodeInfo()->Equals(nsXULAtoms::treecell,
+            if (child->NodeInfo()->Equals(nsGkAtoms::treecell,
                                           kNameSpaceID_XUL)) {
                 if (colAtom &&
-                    child->AttrValueIs(kNameSpaceID_None, nsXULAtoms::ref,
+                    child->AttrValueIs(kNameSpaceID_None, nsGkAtoms::ref,
                                        colAtom, eCaseMatters)) {
                     *aResult = child;
                     break;

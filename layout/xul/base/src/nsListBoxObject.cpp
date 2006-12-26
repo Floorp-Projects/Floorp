@@ -45,7 +45,7 @@
 #include "nsIBindingManager.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
-#include "nsXULAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIScrollableFrame.h"
 
 class nsListBoxObject : public nsPIListBoxObject, public nsBoxObject
@@ -163,7 +163,7 @@ nsListBoxObject::GetIndexOfItem(nsIDOMElement* aElement, PRInt32 *aResult)
 static void
 FindBodyContent(nsIContent* aParent, nsIContent** aResult)
 {
-  if (aParent->Tag() == nsXULAtoms::listboxbody) {
+  if (aParent->Tag() == nsGkAtoms::listboxbody) {
     *aResult = aParent;
     NS_IF_ADDREF(*aResult);
   }

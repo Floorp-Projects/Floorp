@@ -55,7 +55,7 @@ public:
 
   virtual ~nsFixedContainingBlock() { } // useful for debugging
 
-  virtual nsIAtom* GetChildListName() const { return nsLayoutAtoms::fixedList; }
+  virtual nsIAtom* GetChildListName() const { return nsGkAtoms::fixedList; }
 };
 
 /**
@@ -108,7 +108,7 @@ public:
   /**
    * Get the "type" of the frame
    *
-   * @see nsLayoutAtoms::viewportFrame
+   * @see nsGkAtoms::viewportFrame
    */
   virtual nsIAtom* GetType() const;
   

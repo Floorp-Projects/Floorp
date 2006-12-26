@@ -75,7 +75,7 @@ public:
   /**
    * Get the "type" of the frame
    *
-   * @see nsLayoutAtoms::svgInnerSVGFrame
+   * @see nsGkAtoms::svgInnerSVGFrame
    */
   virtual nsIAtom* GetType() const;
 
@@ -165,7 +165,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGInnerSVGFrameBase)
 nsIAtom *
 nsSVGInnerSVGFrame::GetType() const
 {
-  return nsLayoutAtoms::svgInnerSVGFrame;
+  return nsGkAtoms::svgInnerSVGFrame;
 }
 
 //----------------------------------------------------------------------

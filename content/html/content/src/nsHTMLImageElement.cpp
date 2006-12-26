@@ -39,7 +39,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
 #include "nsImageLoadingContent.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -58,7 +58,6 @@
 #include "nsContentUtils.h"
 #include "nsIFrame.h"
 #include "nsIImageFrame.h"
-#include "nsLayoutAtoms.h"
 #include "nsNodeInfoManager.h"
 #include "nsGUIEvent.h"
 #include "nsContentPolicyUtils.h"
@@ -169,7 +168,7 @@ NS_NewHTMLImageElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
       do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
     NS_ENSURE_TRUE(doc, nsnull);
 
-    rv = doc->NodeInfoManager()->GetNodeInfo(nsHTMLAtoms::img, nsnull,
+    rv = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::img, nsnull,
                                              kNameSpaceID_None,
                                              getter_AddRefs(nodeInfo));
     NS_ENSURE_SUCCESS(rv, nsnull);
@@ -363,14 +362,14 @@ nsHTMLImageElement::GetWidthHeight()
       mCurrentRequest->GetImage(getter_AddRefs(image));
     }
 
-    if ((value = GetParsedAttr(nsHTMLAtoms::width)) &&
+    if ((value = GetParsedAttr(nsGkAtoms::width)) &&
         value->Type() == nsAttrValue::eInteger) {
       size.width = value->GetIntegerValue();
     } else if (image) {
       image->GetWidth(&size.width);
     }
 
-    if ((value = GetParsedAttr(nsHTMLAtoms::height)) &&
+    if ((value = GetParsedAttr(nsGkAtoms::height)) &&
         value->Type() == nsAttrValue::eInteger) {
       size.height = value->GetIntegerValue();
     } else if (image) {
@@ -395,7 +394,7 @@ nsHTMLImageElement::SetHeight(PRInt32 aHeight)
   nsAutoString val;
   val.AppendInt(aHeight);
 
-  return nsGenericHTMLElement::SetAttr(kNameSpaceID_None, nsHTMLAtoms::height,
+  return nsGenericHTMLElement::SetAttr(kNameSpaceID_None, nsGkAtoms::height,
                                        val, PR_TRUE);
 }
 
@@ -413,7 +412,7 @@ nsHTMLImageElement::SetWidth(PRInt32 aWidth)
   nsAutoString val;
   val.AppendInt(aWidth);
 
-  return nsGenericHTMLElement::SetAttr(kNameSpaceID_None, nsHTMLAtoms::width,
+  return nsGenericHTMLElement::SetAttr(kNameSpaceID_None, nsGkAtoms::width,
                                        val, PR_TRUE);
 }
 
@@ -424,10 +423,10 @@ nsHTMLImageElement::ParseAttribute(PRInt32 aNamespaceID,
                                    nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsHTMLAtoms::align) {
+    if (aAttribute == nsGkAtoms::align) {
       return ParseAlignValue(aValue, aResult);
     }
-    if (aAttribute == nsHTMLAtoms::src) {
+    if (aAttribute == nsGkAtoms::src) {
       static const char* kWhitespace = " \n\r\t\b";
       aResult.SetTo(nsContentUtils::TrimCharsInSet(kWhitespace, aValue));
       return PR_TRUE;
@@ -458,8 +457,8 @@ nsHTMLImageElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 {
   nsChangeHint retval =
     nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType);
-  if (aAttribute == nsHTMLAtoms::usemap ||
-      aAttribute == nsHTMLAtoms::ismap) {
+  if (aAttribute == nsGkAtoms::usemap ||
+      aAttribute == nsGkAtoms::ismap) {
     NS_UpdateHint(retval, NS_STYLE_HINT_FRAMECHANGE);
   }
   return retval;
@@ -550,7 +549,7 @@ nsHTMLImageElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   // get bound after all the attributes have been set, so we'll do the
   // image load from BindToTree.  Skip the LoadImage call in that case.
   if (aNotify &&
-      aNameSpaceID == kNameSpaceID_None && aName == nsHTMLAtoms::src) {
+      aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::src) {
 
     // If caller is not chrome and dom.disable_image_src_set is true,
     // prevent setting image.src by exiting early
@@ -595,7 +594,7 @@ nsHTMLImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   // Our base URI may have changed; claim that our URI changed, and the
   // nsImageLoadingContent will decide whether a new image load is warranted.
   nsAutoString uri;
-  if (GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, uri)) {
+  if (GetAttr(kNameSpaceID_None, nsGkAtoms::src, uri)) {
     // Note: no need to notify here; since we're just now being bound
     // we don't have any frames or anything yet.
     LoadImage(uri, PR_FALSE, PR_FALSE);
@@ -626,7 +625,7 @@ nsHTMLImageElement::Initialize(JSContext* aContext, JSObject *aObj,
   JSBool ret = JS_ValueToInt32(aContext, argv[0], &width);
   NS_ENSURE_TRUE(ret, NS_ERROR_INVALID_ARG);
 
-  nsresult rv = SetIntAttr(nsHTMLAtoms::width, NS_STATIC_CAST(PRInt32, width));
+  nsresult rv = SetIntAttr(nsGkAtoms::width, NS_STATIC_CAST(PRInt32, width));
 
   if (NS_SUCCEEDED(rv) && (argc > 1)) {
     // The second (optional) argument is the height of the image
@@ -634,7 +633,7 @@ nsHTMLImageElement::Initialize(JSContext* aContext, JSObject *aObj,
     ret = JS_ValueToInt32(aContext, argv[1], &height);
     NS_ENSURE_TRUE(ret, NS_ERROR_INVALID_ARG);
 
-    rv = SetIntAttr(nsHTMLAtoms::height, NS_STATIC_CAST(PRInt32, height));
+    rv = SetIntAttr(nsGkAtoms::height, NS_STATIC_CAST(PRInt32, height));
   }
 
   return rv;

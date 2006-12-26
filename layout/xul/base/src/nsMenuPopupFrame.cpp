@@ -42,8 +42,7 @@
 
 
 #include "nsMenuPopupFrame.h"
-#include "nsXULAtoms.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
@@ -236,7 +235,7 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
   nsIAtom *tag = nsnull;
   if (parentContent)
     tag = parentContent->Tag();
-  widgetData.mDropShadow = !(viewHasTransparentContent || tag == nsXULAtoms::menulist);
+  widgetData.mDropShadow = !(viewHasTransparentContent || tag == nsGkAtoms::menulist);
   
 #if defined(XP_MACOSX) || defined(XP_BEOS)
   static NS_DEFINE_IID(kCPopupCID,  NS_POPUP_CID);
@@ -372,7 +371,7 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
   // nsXULPopupListener).
 
   nsCOMPtr<nsIDOMNode> targetNode;
-  if (mContent->Tag() == nsXULAtoms::tooltip)
+  if (mContent->Tag() == nsGkAtoms::tooltip)
     inPopupDoc->TrustedGetTooltipNode(getter_AddRefs(targetNode));
   else
     inPopupDoc->TrustedGetPopupNode(getter_AddRefs(targetNode));
@@ -632,11 +631,11 @@ public:
 
   NS_IMETHOD Run() {
     if (mContent &&
-        !mContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::menuactive,
-                               nsXULAtoms::_true, eCaseMatters) &&
-        mContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::menutobedisplayed,
-                              nsXULAtoms::_true, eCaseMatters)) {
-      mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::menuactive,
+        !mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::menuactive,
+                               nsGkAtoms::_true, eCaseMatters) &&
+        mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::menutobedisplayed,
+                              nsGkAtoms::_true, eCaseMatters)) {
+      mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::menuactive,
                         NS_LITERAL_STRING("true"), PR_TRUE);
     }
     return NS_OK;
@@ -696,7 +695,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsPresContext* aPresContext,
   nsIPresShell *presShell = aPresContext->PresShell();
   nsIDocument *document = presShell->GetDocument();
 
-  PRBool sizedToPopup = (mContent->Tag() != nsXULAtoms::tooltip) &&
+  PRBool sizedToPopup = (mContent->Tag() != nsGkAtoms::tooltip) &&
     (nsMenuFrame::IsSizedToPopup(aFrame->GetContent(), PR_FALSE));
 
   // If we stick to our parent's width, set it here before we move the
@@ -1022,10 +1021,10 @@ nsMenuPopupFrame::SyncViewWithFrame(nsPresContext* aPresContext,
       SetBounds(state, nsRect(mRect.x, mRect.y, parentRect.width, mRect.height));
   }
     
-  if (!mContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::menuactive,
-                             nsXULAtoms::_true, eCaseMatters) &&
-      mContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::menutobedisplayed,
-                            nsXULAtoms::_true, eCaseMatters)) {
+  if (!mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::menuactive,
+                             nsGkAtoms::_true, eCaseMatters) &&
+      mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::menutobedisplayed,
+                            nsGkAtoms::_true, eCaseMatters)) {
     nsCOMPtr<nsIRunnable> ev =
       new nsASyncMenuActivation(mContent);
     NS_DispatchToCurrentThread(ev);
@@ -1183,19 +1182,19 @@ NS_IMETHODIMP nsMenuPopupFrame::ConsumeOutsideClicks(PRBool& aConsumeOutsideClic
 
   if (parentContent) {
     nsIAtom *parentTag = parentContent->Tag();
-    if (parentTag == nsXULAtoms::menulist)
+    if (parentTag == nsGkAtoms::menulist)
       return NS_OK;  // Consume outside clicks for combo boxes on all platforms
-    if (parentTag == nsXULAtoms::menu || parentTag == nsXULAtoms::popupset) {
+    if (parentTag == nsGkAtoms::menu || parentTag == nsGkAtoms::popupset) {
 #if defined(XP_WIN) || defined(XP_OS2)
       // Don't consume outside clicks for menus in Windows
       aConsumeOutsideClicks = PR_FALSE;
 #endif
       return NS_OK;
     }
-    if (parentTag == nsXULAtoms::textbox) {
+    if (parentTag == nsGkAtoms::textbox) {
       // Don't consume outside clicks for autocomplete widget
-      if (parentContent->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::type,
-                                     nsHTMLAtoms::autocomplete, eCaseMatters))
+      if (parentContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                     nsGkAtoms::autocomplete, eCaseMatters))
         aConsumeOutsideClicks = PR_FALSE;
     }
   }
@@ -1409,7 +1408,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doActi
   nsIContent* parentContent = mContent->GetParent();
 
   PRBool isMenu =
-    parentContent && parentContent->Tag() != nsXULAtoms::menulist;
+    parentContent && parentContent->Tag() != nsGkAtoms::menulist;
 
   static DOMTimeStamp lastKeyTime = 0;
   DOMTimeStamp keyTime;
@@ -1471,12 +1470,12 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doActi
     if (IsValidItem(current)) {
       nsAutoString textKey;
       // Get the shortcut attribute.
-      current->GetAttr(kNameSpaceID_None, nsXULAtoms::accesskey, textKey);
+      current->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, textKey);
       if (textKey.IsEmpty()) { // No shortcut, try first letter
         isShortcut = PR_FALSE;
-        current->GetAttr(kNameSpaceID_None, nsXULAtoms::label, textKey);
+        current->GetAttr(kNameSpaceID_None, nsGkAtoms::label, textKey);
         if (textKey.IsEmpty()) // No label, try another attribute (value)
-          current->GetAttr(kNameSpaceID_None, nsXULAtoms::value, textKey);
+          current->GetAttr(kNameSpaceID_None, nsGkAtoms::value, textKey);
       }
       else
         isShortcut = PR_TRUE;
@@ -1510,8 +1509,8 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doActi
       }
 
       // Get the active status
-      if (current->AttrValueIs(kNameSpaceID_None, nsXULAtoms::menuactive,
-                               nsXULAtoms::_true, eCaseMatters)) {
+      if (current->AttrValueIs(kNameSpaceID_None, nsGkAtoms::menuactive,
+                               nsGkAtoms::_true, eCaseMatters)) {
         foundActive = PR_TRUE;
         if (stringLength > 1) {
           // If there is more than one char typed, the current item has highest priority,
@@ -1845,9 +1844,9 @@ nsMenuPopupFrame::IsValidItem(nsIContent* aContent)
     GetMetric(nsILookAndFeel::eMetric_SkipNavigatingDisabledMenuItem,
               skipNavigatingDisabledMenuItem);
 
-  PRBool result = (tag == nsXULAtoms::menu ||
-                   tag == nsXULAtoms::menuitem ||
-                   tag == nsHTMLAtoms::option);
+  PRBool result = (tag == nsGkAtoms::menu ||
+                   tag == nsGkAtoms::menuitem ||
+                   tag == nsGkAtoms::option);
   if (skipNavigatingDisabledMenuItem)
     result = result && !IsDisabled(aContent);
 
@@ -1857,8 +1856,8 @@ nsMenuPopupFrame::IsValidItem(nsIContent* aContent)
 PRBool 
 nsMenuPopupFrame::IsDisabled(nsIContent* aContent)
 {
-  return aContent->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::disabled,
-                               nsHTMLAtoms::_true, eCaseMatters);
+  return aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
+                               nsGkAtoms::_true, eCaseMatters);
 }
 
 NS_IMETHODIMP 
@@ -1870,7 +1869,7 @@ nsMenuPopupFrame::AttributeChanged(PRInt32 aNameSpaceID,
   nsresult rv = nsBoxFrame::AttributeChanged(aNameSpaceID, aAttribute,
                                              aModType);
   
-  if (aAttribute == nsXULAtoms::left || aAttribute == nsXULAtoms::top)
+  if (aAttribute == nsGkAtoms::left || aAttribute == nsGkAtoms::top)
     MoveToAttributePosition();
   
   return rv;
@@ -1884,8 +1883,8 @@ nsMenuPopupFrame::MoveToAttributePosition()
   // of FE notifications and is likely to be slow as molasses. Use |moveTo| on
   // nsIPopupBoxObject if possible. 
   nsAutoString left, top;
-  mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::left, left);
-  mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::top, top);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::left, left);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::top, top);
   PRInt32 err1, err2, xPos, yPos;
   xPos = left.ToInteger(&err1);
   yPos = top.ToInteger(&err2);
@@ -2034,11 +2033,11 @@ nsMenuPopupFrame::MoveTo(PRInt32 aLeft, PRInt32 aTop)
   top.AppendInt(aTop);
 
   nsWeakFrame weakFrame(this);
-  mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::left, left, PR_FALSE);
+  mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::left, left, PR_FALSE);
   if (!weakFrame.IsAlive()) {
     return;
   }
-  mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::top, top, PR_FALSE);
+  mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::top, top, PR_FALSE);
   if (!weakFrame.IsAlive()) {
     return;
   }

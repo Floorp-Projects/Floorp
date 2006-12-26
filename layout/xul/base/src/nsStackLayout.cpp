@@ -48,8 +48,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsBox.h"
 #include "nsBoxFrame.h"
-#include "nsHTMLAtoms.h"
-#include "nsXULAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
 
@@ -223,7 +222,7 @@ nsStackLayout::AddOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsSize& aSize
     nsAutoString value;
     PRInt32 error;
 
-    content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::left, value);
+    content->GetAttr(kNameSpaceID_None, nsGkAtoms::left, value);
     if (!value.IsEmpty()) {
       value.Trim("%");
       offset.width = NSIntPixelsToTwips(value.ToInteger(&error),
@@ -231,7 +230,7 @@ nsStackLayout::AddOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsSize& aSize
       offsetSpecified = PR_TRUE;
     }
 
-    content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::top, value);
+    content->GetAttr(kNameSpaceID_None, nsGkAtoms::top, value);
     if (!value.IsEmpty()) {
       value.Trim("%");
       offset.height = NSIntPixelsToTwips(value.ToInteger(&error),

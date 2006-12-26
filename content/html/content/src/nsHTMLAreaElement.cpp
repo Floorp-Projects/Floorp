@@ -41,7 +41,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsILink.h"
 #include "nsIPresShell.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsIEventStateManager.h"
@@ -156,7 +156,7 @@ NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLAreaElement, TabIndex, tabindex, 0)
 NS_IMETHODIMP
 nsHTMLAreaElement::GetTarget(nsAString& aValue)
 {
-  if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, aValue)) {
+  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue)) {
     GetBaseTarget(aValue);
   }
   return NS_OK;
@@ -165,7 +165,7 @@ nsHTMLAreaElement::GetTarget(nsAString& aValue)
 NS_IMETHODIMP
 nsHTMLAreaElement::SetTarget(const nsAString& aValue)
 {
-  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::target, aValue, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue, PR_TRUE);
 }
 
 nsresult
@@ -236,11 +236,11 @@ nsHTMLAreaElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify)
 {
-  if (aName == nsHTMLAtoms::accesskey && aNameSpaceID == kNameSpaceID_None) {
+  if (aName == nsGkAtoms::accesskey && aNameSpaceID == kNameSpaceID_None) {
     RegUnRegAccessKey(PR_FALSE);
   }
 
-  if (aName == nsHTMLAtoms::href && aNameSpaceID == kNameSpaceID_None) {
+  if (aName == nsGkAtoms::href && aNameSpaceID == kNameSpaceID_None) {
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
       doc->ForgetLink(this);
@@ -254,7 +254,7 @@ nsHTMLAreaElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   nsresult rv =
     nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue, aNotify);
 
-  if (aName == nsHTMLAtoms::accesskey && aNameSpaceID == kNameSpaceID_None &&
+  if (aName == nsGkAtoms::accesskey && aNameSpaceID == kNameSpaceID_None &&
       !aValue.IsEmpty()) {
     RegUnRegAccessKey(PR_TRUE);
   }
@@ -266,7 +266,7 @@ nsresult
 nsHTMLAreaElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify)
 {
-  if (aAttribute == nsHTMLAtoms::accesskey &&
+  if (aAttribute == nsGkAtoms::accesskey &&
       aNameSpaceID == kNameSpaceID_None) {
     RegUnRegAccessKey(PR_FALSE);
   }
@@ -482,13 +482,13 @@ nsHTMLAreaElement::ToString(nsAString& aSource)
 NS_IMETHODIMP    
 nsHTMLAreaElement::GetPing(nsAString& aValue)
 {
-  return GetURIListAttr(nsHTMLAtoms::ping, aValue);
+  return GetURIListAttr(nsGkAtoms::ping, aValue);
 }
 
 NS_IMETHODIMP
 nsHTMLAreaElement::SetPing(const nsAString& aValue)
 {
-  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::ping, aValue, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::ping, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP

@@ -56,7 +56,6 @@
 #include "nsIServiceManager.h"
 #include "nsIDocumentEncoder.h"
 #include "nsLayoutAtoms.h"
-#include "nsHTMLAtoms.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsEscape.h"
@@ -440,8 +439,8 @@ nsHTMLContentSerializer::AppendDocumentStart(nsIDOMDocument *aDocument,
 PRBool
 nsHTMLContentSerializer::IsJavaScript(nsIAtom* aAttrNameAtom, const nsAString& aValueString)
 {
-  if (aAttrNameAtom == nsHTMLAtoms::href ||
-      aAttrNameAtom == nsHTMLAtoms::src) {
+  if (aAttrNameAtom == nsGkAtoms::href ||
+      aAttrNameAtom == nsGkAtoms::src) {
     static const char kJavaScript[] = "javascript";
     PRInt32 pos = aValueString.FindChar(':');
     if (pos < (PRInt32)(sizeof kJavaScript - 1))
@@ -456,24 +455,24 @@ nsHTMLContentSerializer::IsJavaScript(nsIAtom* aAttrNameAtom, const nsAString& a
   }
 
   PRBool result = 
-                 (aAttrNameAtom == nsLayoutAtoms::onblur)      || (aAttrNameAtom == nsLayoutAtoms::onchange)
-              || (aAttrNameAtom == nsLayoutAtoms::onclick)     || (aAttrNameAtom == nsLayoutAtoms::ondblclick)
-              || (aAttrNameAtom == nsLayoutAtoms::onfocus)     || (aAttrNameAtom == nsLayoutAtoms::onkeydown)
-              || (aAttrNameAtom == nsLayoutAtoms::onkeypress)  || (aAttrNameAtom == nsLayoutAtoms::onkeyup)
-              || (aAttrNameAtom == nsLayoutAtoms::onload)      || (aAttrNameAtom == nsLayoutAtoms::onmousedown)
-              || (aAttrNameAtom == nsLayoutAtoms::onpageshow)  || (aAttrNameAtom == nsLayoutAtoms::onpagehide)
-              || (aAttrNameAtom == nsLayoutAtoms::onmousemove) || (aAttrNameAtom == nsLayoutAtoms::onmouseout)
-              || (aAttrNameAtom == nsLayoutAtoms::onmouseover) || (aAttrNameAtom == nsLayoutAtoms::onmouseup)
-              || (aAttrNameAtom == nsLayoutAtoms::onreset)     || (aAttrNameAtom == nsLayoutAtoms::onselect)
-              || (aAttrNameAtom == nsLayoutAtoms::onsubmit)    || (aAttrNameAtom == nsLayoutAtoms::onunload)
-              || (aAttrNameAtom == nsLayoutAtoms::onabort)     || (aAttrNameAtom == nsLayoutAtoms::onerror)
-              || (aAttrNameAtom == nsLayoutAtoms::onpaint)     || (aAttrNameAtom == nsLayoutAtoms::onresize)
-              || (aAttrNameAtom == nsLayoutAtoms::onscroll)    || (aAttrNameAtom == nsLayoutAtoms::onbroadcast)
-              || (aAttrNameAtom == nsLayoutAtoms::onclose)     || (aAttrNameAtom == nsLayoutAtoms::oncontextmenu)
-              || (aAttrNameAtom == nsLayoutAtoms::oncommand)   || (aAttrNameAtom == nsLayoutAtoms::oncommandupdate)
-              || (aAttrNameAtom == nsLayoutAtoms::ondragdrop)  || (aAttrNameAtom == nsLayoutAtoms::ondragenter)
-              || (aAttrNameAtom == nsLayoutAtoms::ondragexit)  || (aAttrNameAtom == nsLayoutAtoms::ondraggesture)
-              || (aAttrNameAtom == nsLayoutAtoms::ondragover)  || (aAttrNameAtom == nsLayoutAtoms::oninput);
+                 (aAttrNameAtom == nsGkAtoms::onblur)      || (aAttrNameAtom == nsGkAtoms::onchange)
+              || (aAttrNameAtom == nsGkAtoms::onclick)     || (aAttrNameAtom == nsGkAtoms::ondblclick)
+              || (aAttrNameAtom == nsGkAtoms::onfocus)     || (aAttrNameAtom == nsGkAtoms::onkeydown)
+              || (aAttrNameAtom == nsGkAtoms::onkeypress)  || (aAttrNameAtom == nsGkAtoms::onkeyup)
+              || (aAttrNameAtom == nsGkAtoms::onload)      || (aAttrNameAtom == nsGkAtoms::onmousedown)
+              || (aAttrNameAtom == nsGkAtoms::onpageshow)  || (aAttrNameAtom == nsGkAtoms::onpagehide)
+              || (aAttrNameAtom == nsGkAtoms::onmousemove) || (aAttrNameAtom == nsGkAtoms::onmouseout)
+              || (aAttrNameAtom == nsGkAtoms::onmouseover) || (aAttrNameAtom == nsGkAtoms::onmouseup)
+              || (aAttrNameAtom == nsGkAtoms::onreset)     || (aAttrNameAtom == nsGkAtoms::onselect)
+              || (aAttrNameAtom == nsGkAtoms::onsubmit)    || (aAttrNameAtom == nsGkAtoms::onunload)
+              || (aAttrNameAtom == nsGkAtoms::onabort)     || (aAttrNameAtom == nsGkAtoms::onerror)
+              || (aAttrNameAtom == nsGkAtoms::onpaint)     || (aAttrNameAtom == nsGkAtoms::onresize)
+              || (aAttrNameAtom == nsGkAtoms::onscroll)    || (aAttrNameAtom == nsGkAtoms::onbroadcast)
+              || (aAttrNameAtom == nsGkAtoms::onclose)     || (aAttrNameAtom == nsGkAtoms::oncontextmenu)
+              || (aAttrNameAtom == nsGkAtoms::oncommand)   || (aAttrNameAtom == nsGkAtoms::oncommandupdate)
+              || (aAttrNameAtom == nsGkAtoms::ondragdrop)  || (aAttrNameAtom == nsGkAtoms::ondragenter)
+              || (aAttrNameAtom == nsGkAtoms::ondragexit)  || (aAttrNameAtom == nsGkAtoms::ondraggesture)
+              || (aAttrNameAtom == nsGkAtoms::ondragover)  || (aAttrNameAtom == nsGkAtoms::oninput);
   return result;
 }
 
@@ -482,7 +481,7 @@ nsHTMLContentSerializer::EscapeURI(const nsAString& aURI, nsAString& aEscapedURI
 {
   // URL escape %xx cannot be used in JS.
   // No escaping if the scheme is 'javascript'.
-  if (IsJavaScript(nsHTMLAtoms::href, aURI)) {
+  if (IsJavaScript(nsGkAtoms::href, aURI)) {
     aEscapedURI = aURI;
     return NS_OK;
   }
@@ -576,20 +575,20 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
     // Filter out special case of <br type="_moz"> or <br _moz*>,
     // used by the editor.  Bug 16988.  Yuck.
     //
-    if (aTagName == nsHTMLAtoms::br && attrName == nsHTMLAtoms::type &&
+    if (aTagName == nsGkAtoms::br && attrName == nsGkAtoms::type &&
         StringBeginsWith(valueStr, _mozStr)) {
       continue;
     }
 
-    if (mIsCopying && mIsFirstChildOfOL && (aTagName == nsHTMLAtoms::li) && 
-        (attrName == nsHTMLAtoms::value)){
+    if (mIsCopying && mIsFirstChildOfOL && (aTagName == nsGkAtoms::li) && 
+        (attrName == nsGkAtoms::value)){
       // This is handled separately in SerializeLIValueAttribute()
       continue;
     }
     PRBool isJS = IsJavaScript(attrName, valueStr);
     
-    if (((attrName == nsHTMLAtoms::href) || 
-         (attrName == nsHTMLAtoms::src))) {
+    if (((attrName == nsGkAtoms::href) || 
+         (attrName == nsGkAtoms::src))) {
       // Make all links absolute when converting only the selection:
       if (mFlags & nsIDocumentEncoder::OutputAbsoluteLinks) {
         // Would be nice to handle OBJECT and APPLET tags,
@@ -648,11 +647,11 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   // indicate that this element should be pretty printed
   // even if we're not in pretty printing mode
   PRBool hasDirtyAttr = content->HasAttr(kNameSpaceID_None,
-                                         nsLayoutAtoms::mozdirty);
+                                         nsGkAtoms::mozdirty);
 
   nsIAtom *name = content->Tag();
 
-  if (name == nsHTMLAtoms::br && mPreLevel > 0
+  if (name == nsGkAtoms::br && mPreLevel > 0
       && (mFlags & nsIDocumentEncoder::OutputNoFormattingInPre)) {
     AppendToString(mLineBreak, aStr);
     mMayIgnoreLineBreakSequence = PR_TRUE;
@@ -660,7 +659,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
     return NS_OK;
   }
 
-  if (name == nsHTMLAtoms::body) {
+  if (name == nsGkAtoms::body) {
     mInBody = PR_TRUE;
   }
 
@@ -683,9 +682,9 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
 
   StartIndentation(name, hasDirtyAttr, aStr);
 
-  if (name == nsHTMLAtoms::pre ||
-      name == nsHTMLAtoms::script ||
-      name == nsHTMLAtoms::style) {
+  if (name == nsGkAtoms::pre ||
+      name == nsGkAtoms::script ||
+      name == nsGkAtoms::style) {
     mPreLevel++;
   }
   
@@ -697,7 +696,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
 
   // Need to keep track of OL and LI elements in order to get ordinal number 
   // for the LI.
-  if (mIsCopying && name == nsHTMLAtoms::ol){
+  if (mIsCopying && name == nsGkAtoms::ol){
     // We are copying and current node is an OL;
     // Store it's start attribute value in olState->startVal.
     nsAutoString start;
@@ -719,7 +718,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
       mOLStateStack.AppendElement(state);
   }
 
-  if (mIsCopying && name == nsHTMLAtoms::li) {
+  if (mIsCopying && name == nsGkAtoms::li) {
     mIsFirstChildOfOL = IsFirstChildOfOL(aOriginalElement);
     if (mIsFirstChildOfOL){
       // If OL is parent of this LI, serialize attributes in different manner.
@@ -739,10 +738,10 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
     mColPos = 0;
   }
 
-  if (name == nsHTMLAtoms::script ||
-      name == nsHTMLAtoms::style ||
-      name == nsHTMLAtoms::noscript ||
-      name == nsHTMLAtoms::noframes) {
+  if (name == nsGkAtoms::script ||
+      name == nsGkAtoms::style ||
+      name == nsGkAtoms::noscript ||
+      name == nsGkAtoms::noframes) {
     mInCDATA = PR_TRUE;
   }
 
@@ -759,11 +758,11 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
   if (!content) return NS_ERROR_FAILURE;
 
   PRBool hasDirtyAttr = content->HasAttr(kNameSpaceID_None,
-                                         nsLayoutAtoms::mozdirty);
+                                         nsGkAtoms::mozdirty);
 
   nsIAtom *name = content->Tag();
 
-  if (name == nsHTMLAtoms::script) {
+  if (name == nsGkAtoms::script) {
     nsCOMPtr<nsIScriptElement> script = do_QueryInterface(aElement);
     NS_ASSERTION(script, "What kind of weird script element is this?");
 
@@ -775,13 +774,13 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
     }
   }
 
-  if (name == nsHTMLAtoms::pre ||
-      name == nsHTMLAtoms::script ||
-      name == nsHTMLAtoms::style) {
+  if (name == nsGkAtoms::pre ||
+      name == nsGkAtoms::script ||
+      name == nsGkAtoms::style) {
     mPreLevel--;
   }
 
-  if (mIsCopying && (name == nsHTMLAtoms::ol)){
+  if (mIsCopying && (name == nsGkAtoms::ol)){
     NS_ASSERTION((mOLStateStack.Count() > 0), "Cannot have an empty OL Stack");
     /* Though at this point we must always have an state to be deleted as all 
     the OL opening tags are supposed to push an olState object to the stack*/
@@ -794,7 +793,7 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
   
   nsIParserService* parserService = nsContentUtils::GetParserService();
 
-  if (parserService && (name != nsHTMLAtoms::style)) {
+  if (parserService && (name != nsGkAtoms::style)) {
     PRBool isContainer;
 
     parserService->IsContainer(parserService->HTMLAtomTagToId(name),
@@ -1043,14 +1042,14 @@ nsHTMLContentSerializer::LineBreakBeforeOpen(nsIAtom* aName,
     return PR_FALSE;
   }
         
-  if (aName == nsHTMLAtoms::title ||
-      aName == nsHTMLAtoms::meta  ||
-      aName == nsHTMLAtoms::link  ||
-      aName == nsHTMLAtoms::style ||
-      aName == nsHTMLAtoms::select ||
-      aName == nsHTMLAtoms::option ||
-      aName == nsHTMLAtoms::script ||
-      aName == nsHTMLAtoms::html) {
+  if (aName == nsGkAtoms::title ||
+      aName == nsGkAtoms::meta  ||
+      aName == nsGkAtoms::link  ||
+      aName == nsGkAtoms::style ||
+      aName == nsGkAtoms::select ||
+      aName == nsGkAtoms::option ||
+      aName == nsGkAtoms::script ||
+      aName == nsGkAtoms::html) {
     return PR_TRUE;
   }
   else {
@@ -1075,23 +1074,23 @@ nsHTMLContentSerializer::LineBreakAfterOpen(nsIAtom* aName,
     return PR_FALSE;
   }
 
-  if ((aName == nsHTMLAtoms::html) ||
-      (aName == nsHTMLAtoms::head) ||
-      (aName == nsHTMLAtoms::body) ||
-      (aName == nsHTMLAtoms::ul) ||
-      (aName == nsHTMLAtoms::ol) ||
-      (aName == nsHTMLAtoms::dl) ||
-      (aName == nsHTMLAtoms::table) ||
-      (aName == nsHTMLAtoms::tbody) ||
-      (aName == nsHTMLAtoms::tr) ||
-      (aName == nsHTMLAtoms::br) ||
-      (aName == nsHTMLAtoms::meta) ||
-      (aName == nsHTMLAtoms::link) ||
-      (aName == nsHTMLAtoms::script) ||
-      (aName == nsHTMLAtoms::select) ||
-      (aName == nsHTMLAtoms::map) ||
-      (aName == nsHTMLAtoms::area) ||
-      (aName == nsHTMLAtoms::style)) {
+  if ((aName == nsGkAtoms::html) ||
+      (aName == nsGkAtoms::head) ||
+      (aName == nsGkAtoms::body) ||
+      (aName == nsGkAtoms::ul) ||
+      (aName == nsGkAtoms::ol) ||
+      (aName == nsGkAtoms::dl) ||
+      (aName == nsGkAtoms::table) ||
+      (aName == nsGkAtoms::tbody) ||
+      (aName == nsGkAtoms::tr) ||
+      (aName == nsGkAtoms::br) ||
+      (aName == nsGkAtoms::meta) ||
+      (aName == nsGkAtoms::link) ||
+      (aName == nsGkAtoms::script) ||
+      (aName == nsGkAtoms::select) ||
+      (aName == nsGkAtoms::map) ||
+      (aName == nsGkAtoms::area) ||
+      (aName == nsGkAtoms::style)) {
     return PR_TRUE;
   }
 
@@ -1107,15 +1106,15 @@ nsHTMLContentSerializer::LineBreakBeforeClose(nsIAtom* aName,
     return PR_FALSE;
   }
 
-  if ((aName == nsHTMLAtoms::html) ||
-      (aName == nsHTMLAtoms::head) ||
-      (aName == nsHTMLAtoms::body) ||
-      (aName == nsHTMLAtoms::ul) ||
-      (aName == nsHTMLAtoms::ol) ||
-      (aName == nsHTMLAtoms::dl) ||
-      (aName == nsHTMLAtoms::select) ||
-      (aName == nsHTMLAtoms::table) ||
-      (aName == nsHTMLAtoms::tbody)) {
+  if ((aName == nsGkAtoms::html) ||
+      (aName == nsGkAtoms::head) ||
+      (aName == nsGkAtoms::body) ||
+      (aName == nsGkAtoms::ul) ||
+      (aName == nsGkAtoms::ol) ||
+      (aName == nsGkAtoms::dl) ||
+      (aName == nsGkAtoms::select) ||
+      (aName == nsGkAtoms::table) ||
+      (aName == nsGkAtoms::tbody)) {
     return PR_TRUE;
   }
   
@@ -1131,23 +1130,23 @@ nsHTMLContentSerializer::LineBreakAfterClose(nsIAtom* aName,
     return PR_FALSE;
   }
 
-  if ((aName == nsHTMLAtoms::html) ||
-      (aName == nsHTMLAtoms::head) ||
-      (aName == nsHTMLAtoms::body) ||
-      (aName == nsHTMLAtoms::tr) ||
-      (aName == nsHTMLAtoms::th) ||
-      (aName == nsHTMLAtoms::td) ||
-      (aName == nsHTMLAtoms::pre) ||
-      (aName == nsHTMLAtoms::title) ||
-      (aName == nsHTMLAtoms::li) ||
-      (aName == nsHTMLAtoms::dt) ||
-      (aName == nsHTMLAtoms::dd) ||
-      (aName == nsHTMLAtoms::blockquote) ||
-      (aName == nsHTMLAtoms::select) ||
-      (aName == nsHTMLAtoms::option) ||
-      (aName == nsHTMLAtoms::p) ||
-      (aName == nsHTMLAtoms::map) ||
-      (aName == nsHTMLAtoms::div)) {
+  if ((aName == nsGkAtoms::html) ||
+      (aName == nsGkAtoms::head) ||
+      (aName == nsGkAtoms::body) ||
+      (aName == nsGkAtoms::tr) ||
+      (aName == nsGkAtoms::th) ||
+      (aName == nsGkAtoms::td) ||
+      (aName == nsGkAtoms::pre) ||
+      (aName == nsGkAtoms::title) ||
+      (aName == nsGkAtoms::li) ||
+      (aName == nsGkAtoms::dt) ||
+      (aName == nsGkAtoms::dd) ||
+      (aName == nsGkAtoms::blockquote) ||
+      (aName == nsGkAtoms::select) ||
+      (aName == nsGkAtoms::option) ||
+      (aName == nsGkAtoms::p) ||
+      (aName == nsGkAtoms::map) ||
+      (aName == nsGkAtoms::div)) {
     return PR_TRUE;
   }
   else {
@@ -1174,19 +1173,19 @@ nsHTMLContentSerializer::StartIndentation(nsIAtom* aName,
     }
   }
 
-  if ((aName == nsHTMLAtoms::head) ||
-      (aName == nsHTMLAtoms::table) ||
-      (aName == nsHTMLAtoms::tr) ||
-      (aName == nsHTMLAtoms::ul) ||
-      (aName == nsHTMLAtoms::ol) ||
-      (aName == nsHTMLAtoms::dl) ||
-      (aName == nsHTMLAtoms::tbody) ||
-      (aName == nsHTMLAtoms::form) ||
-      (aName == nsHTMLAtoms::frameset) ||
-      (aName == nsHTMLAtoms::blockquote) ||
-      (aName == nsHTMLAtoms::li) ||
-      (aName == nsHTMLAtoms::dt) ||
-      (aName == nsHTMLAtoms::dd)) {
+  if ((aName == nsGkAtoms::head) ||
+      (aName == nsGkAtoms::table) ||
+      (aName == nsGkAtoms::tr) ||
+      (aName == nsGkAtoms::ul) ||
+      (aName == nsGkAtoms::ol) ||
+      (aName == nsGkAtoms::dl) ||
+      (aName == nsGkAtoms::tbody) ||
+      (aName == nsGkAtoms::form) ||
+      (aName == nsGkAtoms::frameset) ||
+      (aName == nsGkAtoms::blockquote) ||
+      (aName == nsGkAtoms::li) ||
+      (aName == nsGkAtoms::dt) ||
+      (aName == nsGkAtoms::dd)) {
     mIndent++;
   }
 }
@@ -1196,19 +1195,19 @@ nsHTMLContentSerializer::EndIndentation(nsIAtom* aName,
                                         PRBool aHasDirtyAttr,
                                         nsAString& aStr)
 {
-  if ((aName == nsHTMLAtoms::head) ||
-      (aName == nsHTMLAtoms::table) ||
-      (aName == nsHTMLAtoms::tr) ||
-      (aName == nsHTMLAtoms::ul) ||
-      (aName == nsHTMLAtoms::ol) ||
-      (aName == nsHTMLAtoms::dl) ||
-      (aName == nsHTMLAtoms::li) ||
-      (aName == nsHTMLAtoms::tbody) ||
-      (aName == nsHTMLAtoms::form) ||
-      (aName == nsHTMLAtoms::blockquote) ||
-      (aName == nsHTMLAtoms::dt) ||
-      (aName == nsHTMLAtoms::dd) ||
-      (aName == nsHTMLAtoms::frameset)) {
+  if ((aName == nsGkAtoms::head) ||
+      (aName == nsGkAtoms::table) ||
+      (aName == nsGkAtoms::tr) ||
+      (aName == nsGkAtoms::ul) ||
+      (aName == nsGkAtoms::ol) ||
+      (aName == nsGkAtoms::dl) ||
+      (aName == nsGkAtoms::li) ||
+      (aName == nsGkAtoms::tbody) ||
+      (aName == nsGkAtoms::form) ||
+      (aName == nsGkAtoms::blockquote) ||
+      (aName == nsGkAtoms::dt) ||
+      (aName == nsGkAtoms::dd) ||
+      (aName == nsGkAtoms::frameset)) {
     mIndent--;
   }
 

@@ -38,6 +38,5 @@
 #define nsHTMLAtoms_h___
 
 #include "nsGkAtoms.h"
-typedef class nsGkAtoms nsHTMLAtoms;
 
 #endif /* nsHTMLAtoms_h___ */

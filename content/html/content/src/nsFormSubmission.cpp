@@ -43,7 +43,7 @@
 #include "nsIForm.h"
 #include "nsILinkHandler.h"
 #include "nsIDocument.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIHTMLDocument.h"
 #include "nsIFormControl.h"
 #include "nsIDOMHTMLFormElement.h"
@@ -199,7 +199,7 @@ public:
   /**
    * Get an attribute of a form as int, provided that it is an enumerated value.
    * @param aForm the form in question
-   * @param aAtom the attribute (for example, nsHTMLAtoms::enctype) to get
+   * @param aAtom the attribute (for example, nsGkAtoms::enctype) to get
    * @param aValue the result (will not be set at all if the attribute does not
    *        exist on the form, so *make sure you provide a default value*.)
    *        [OUT]
@@ -1147,11 +1147,11 @@ GetSubmissionFromForm(nsGenericHTMLElement* aForm,
 
   // Get encoding type (default: urlencoded)
   PRInt32 enctype = NS_FORM_ENCTYPE_URLENCODED;
-  nsFormSubmission::GetEnumAttr(aForm, nsHTMLAtoms::enctype, &enctype);
+  nsFormSubmission::GetEnumAttr(aForm, nsGkAtoms::enctype, &enctype);
 
   // Get method (default: GET)
   PRInt32 method = NS_FORM_METHOD_GET;
-  nsFormSubmission::GetEnumAttr(aForm, nsHTMLAtoms::method, &method);
+  nsFormSubmission::GetEnumAttr(aForm, nsGkAtoms::method, &method);
 
   // Get charset
   nsCAutoString charset;
@@ -1185,7 +1185,7 @@ GetSubmissionFromForm(nsGenericHTMLElement* aForm,
     if (enctype == NS_FORM_ENCTYPE_MULTIPART ||
         enctype == NS_FORM_ENCTYPE_TEXTPLAIN) {
       nsAutoString enctypeStr;
-      aForm->GetAttr(kNameSpaceID_None, nsHTMLAtoms::enctype, enctypeStr);
+      aForm->GetAttr(kNameSpaceID_None, nsGkAtoms::enctype, enctypeStr);
       SendJSWarning(aForm, "ForgotPostWarning", PromiseFlatString(enctypeStr));
     }
     *aFormSubmission = new nsFSURLEncoded(charset, encoder,
@@ -1239,7 +1239,7 @@ nsFormSubmission::GetSubmitCharset(nsGenericHTMLElement* aForm,
 
   nsresult rv = NS_OK;
   nsAutoString acceptCharsetValue;
-  aForm->GetAttr(kNameSpaceID_None, nsHTMLAtoms::acceptcharset,
+  aForm->GetAttr(kNameSpaceID_None, nsGkAtoms::acceptcharset,
                  acceptCharsetValue);
 
   PRInt32 charsetLen = acceptCharsetValue.Length();

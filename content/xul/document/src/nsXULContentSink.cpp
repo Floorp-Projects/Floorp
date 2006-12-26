@@ -95,13 +95,11 @@
 
 #include "nsIExpatSink.h"
 #include "nsUnicharUtils.h"
-#include "nsXULAtoms.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentUtils.h"
 #include "nsAttrName.h"
 #include "nsXMLContentSink.h"
-#include "nsLayoutAtoms.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 
@@ -502,12 +500,12 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsXULPrototypeDocument* aProtot
     // XXX if it isn't we need to set it here...
     // XXXbz not like GetHeaderData on the proto doc _does_ anything....
     nsAutoString preferredStyle;
-    rv = mPrototype->GetHeaderData(nsHTMLAtoms::headerDefaultStyle,
+    rv = mPrototype->GetHeaderData(nsGkAtoms::headerDefaultStyle,
                                    preferredStyle);
     if (NS_FAILED(rv)) return rv;
 
     if (!preferredStyle.IsEmpty()) {
-        aDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle,
+        aDocument->SetHeaderData(nsGkAtoms::headerDefaultStyle,
                                  preferredStyle);
     }
 
@@ -570,8 +568,8 @@ XULContentSinkImpl::FlushText(PRBool aCreateTextNode)
                 NS_STATIC_CAST(nsXULPrototypeElement*, node)->mNodeInfo;
 
             if (nodeInfo->NamespaceEquals(kNameSpaceID_XUL))
-                stripWhitespace = !nodeInfo->Equals(nsXULAtoms::label) &&
-                                  !nodeInfo->Equals(nsXULAtoms::description);
+                stripWhitespace = !nodeInfo->Equals(nsGkAtoms::label) &&
+                                  !nodeInfo->Equals(nsGkAtoms::description);
         }
 
         // Don't bother if there's nothing but whitespace.
@@ -1043,8 +1041,8 @@ XULContentSinkImpl::OpenRoot(const PRUnichar** aAttributes,
 
     nsresult rv;
 
-    if (aNodeInfo->Equals(nsHTMLAtoms::script, kNameSpaceID_XHTML) || 
-        aNodeInfo->Equals(nsHTMLAtoms::script, kNameSpaceID_XUL)) {
+    if (aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XHTML) || 
+        aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XUL)) {
         PR_LOG(gLog, PR_LOG_ERROR,
                ("xul: script tag not allowed as root content element"));
 
@@ -1131,8 +1129,8 @@ XULContentSinkImpl::OpenTag(const PRUnichar** aAttributes,
 
     children->AppendElement(element);
 
-    if (aNodeInfo->Equals(nsHTMLAtoms::script, kNameSpaceID_XHTML) || 
-        aNodeInfo->Equals(nsHTMLAtoms::script, kNameSpaceID_XUL)) {
+    if (aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XHTML) || 
+        aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XUL)) {
         // Do scripty things now.  Set a script language for the element,
         // even though it is ignored (the nsPrototypeScriptElement
         // has its own script-type).

@@ -44,7 +44,7 @@
 
 #include "nsScrollbarFrame.h"
 #include "nsScrollbarButtonFrame.h"
-#include "nsXULAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIScrollableFrame.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
@@ -128,7 +128,7 @@ nsScrollbarFrame::AttributeChanged(PRInt32 aNameSpaceID,
 
   // if the current position changes, notify any nsGfxScrollFrame
   // parent we may have
-  if (aAttribute != nsXULAtoms::curpos)
+  if (aAttribute != nsGkAtoms::curpos)
     return rv;
 
   nsIFrame* parent = GetParent();

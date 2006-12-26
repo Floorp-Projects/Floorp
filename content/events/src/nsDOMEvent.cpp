@@ -377,101 +377,101 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
   mEvent->message = NS_USER_DEFINED_EVENT;
 
   if (mEvent->eventStructType == NS_MOUSE_EVENT) {
-    if (atom == nsLayoutAtoms::onmousedown)
+    if (atom == nsGkAtoms::onmousedown)
       mEvent->message = NS_MOUSE_BUTTON_DOWN;
-    else if (atom == nsLayoutAtoms::onmouseup)
+    else if (atom == nsGkAtoms::onmouseup)
       mEvent->message = NS_MOUSE_BUTTON_UP;
-    else if (atom == nsLayoutAtoms::onclick)
+    else if (atom == nsGkAtoms::onclick)
       mEvent->message = NS_MOUSE_CLICK;
-    else if (atom == nsLayoutAtoms::ondblclick)
+    else if (atom == nsGkAtoms::ondblclick)
       mEvent->message = NS_MOUSE_DOUBLECLICK;
-    else if (atom == nsLayoutAtoms::onmouseover)
+    else if (atom == nsGkAtoms::onmouseover)
       mEvent->message = NS_MOUSE_ENTER_SYNTH;
-    else if (atom == nsLayoutAtoms::onmouseout)
+    else if (atom == nsGkAtoms::onmouseout)
       mEvent->message = NS_MOUSE_EXIT_SYNTH;
-    else if (atom == nsLayoutAtoms::onmousemove)
+    else if (atom == nsGkAtoms::onmousemove)
       mEvent->message = NS_MOUSE_MOVE;
-    else if (atom == nsLayoutAtoms::oncontextmenu)
+    else if (atom == nsGkAtoms::oncontextmenu)
       mEvent->message = NS_CONTEXTMENU;
   } else if (mEvent->eventStructType == NS_KEY_EVENT) {
-    if (atom == nsLayoutAtoms::onkeydown)
+    if (atom == nsGkAtoms::onkeydown)
       mEvent->message = NS_KEY_DOWN;
-    else if (atom == nsLayoutAtoms::onkeyup)
+    else if (atom == nsGkAtoms::onkeyup)
       mEvent->message = NS_KEY_UP;
-    else if (atom == nsLayoutAtoms::onkeypress)
+    else if (atom == nsGkAtoms::onkeypress)
       mEvent->message = NS_KEY_PRESS;
   } else if (mEvent->eventStructType == NS_COMPOSITION_EVENT) {
-    if (atom == nsLayoutAtoms::oncompositionstart)
+    if (atom == nsGkAtoms::oncompositionstart)
       mEvent->message = NS_COMPOSITION_START;
-    else if (atom == nsLayoutAtoms::oncompositionend)
+    else if (atom == nsGkAtoms::oncompositionend)
       mEvent->message = NS_COMPOSITION_END;
   } else if (mEvent->eventStructType == NS_EVENT) {
-    if (atom == nsLayoutAtoms::onfocus)
+    if (atom == nsGkAtoms::onfocus)
       mEvent->message = NS_FOCUS_CONTENT;
-    else if (atom == nsLayoutAtoms::onblur)
+    else if (atom == nsGkAtoms::onblur)
       mEvent->message = NS_BLUR_CONTENT;
-    else if (atom == nsLayoutAtoms::onsubmit)
+    else if (atom == nsGkAtoms::onsubmit)
       mEvent->message = NS_FORM_SUBMIT;
-    else if (atom == nsLayoutAtoms::onreset)
+    else if (atom == nsGkAtoms::onreset)
       mEvent->message = NS_FORM_RESET;
-    else if (atom == nsLayoutAtoms::onchange)
+    else if (atom == nsGkAtoms::onchange)
       mEvent->message = NS_FORM_CHANGE;
-    else if (atom == nsLayoutAtoms::onselect)
+    else if (atom == nsGkAtoms::onselect)
       mEvent->message = NS_FORM_SELECTED;
-    else if (atom == nsLayoutAtoms::onload)
+    else if (atom == nsGkAtoms::onload)
       mEvent->message = NS_LOAD;
-    else if (atom == nsLayoutAtoms::onunload)
+    else if (atom == nsGkAtoms::onunload)
       mEvent->message = NS_PAGE_UNLOAD;
-    else if (atom == nsLayoutAtoms::onabort)
+    else if (atom == nsGkAtoms::onabort)
       mEvent->message = NS_IMAGE_ABORT;
-    else if (atom == nsLayoutAtoms::onerror)
+    else if (atom == nsGkAtoms::onerror)
       mEvent->message = NS_LOAD_ERROR;
   } else if (mEvent->eventStructType == NS_MUTATION_EVENT) {
-    if (atom == nsLayoutAtoms::onDOMAttrModified)
+    if (atom == nsGkAtoms::onDOMAttrModified)
       mEvent->message = NS_MUTATION_ATTRMODIFIED;
-    else if (atom == nsLayoutAtoms::onDOMCharacterDataModified)
+    else if (atom == nsGkAtoms::onDOMCharacterDataModified)
       mEvent->message = NS_MUTATION_CHARACTERDATAMODIFIED;
-    else if (atom == nsLayoutAtoms::onDOMNodeInserted)
+    else if (atom == nsGkAtoms::onDOMNodeInserted)
       mEvent->message = NS_MUTATION_NODEINSERTED;
-    else if (atom == nsLayoutAtoms::onDOMNodeRemoved)
+    else if (atom == nsGkAtoms::onDOMNodeRemoved)
       mEvent->message = NS_MUTATION_NODEREMOVED;
-    else if (atom == nsLayoutAtoms::onDOMNodeInsertedIntoDocument)
+    else if (atom == nsGkAtoms::onDOMNodeInsertedIntoDocument)
       mEvent->message = NS_MUTATION_NODEINSERTEDINTODOCUMENT;
-    else if (atom == nsLayoutAtoms::onDOMNodeRemovedFromDocument)
+    else if (atom == nsGkAtoms::onDOMNodeRemovedFromDocument)
       mEvent->message = NS_MUTATION_NODEREMOVEDFROMDOCUMENT;
-    else if (atom == nsLayoutAtoms::onDOMSubtreeModified)
+    else if (atom == nsGkAtoms::onDOMSubtreeModified)
       mEvent->message = NS_MUTATION_SUBTREEMODIFIED;
   } else if (mEvent->eventStructType == NS_UI_EVENT) {
-    if (atom == nsLayoutAtoms::onDOMActivate)
+    if (atom == nsGkAtoms::onDOMActivate)
       mEvent->message = NS_UI_ACTIVATE;
-    else if (atom == nsLayoutAtoms::onDOMFocusIn)
+    else if (atom == nsGkAtoms::onDOMFocusIn)
       mEvent->message = NS_UI_FOCUSIN;
-    else if (atom == nsLayoutAtoms::onDOMFocusOut)
+    else if (atom == nsGkAtoms::onDOMFocusOut)
       mEvent->message = NS_UI_FOCUSOUT;
-    else if (atom == nsLayoutAtoms::oninput)
+    else if (atom == nsGkAtoms::oninput)
       mEvent->message = NS_FORM_INPUT;
   } else if (mEvent->eventStructType == NS_PAGETRANSITION_EVENT) {
-    if (atom == nsLayoutAtoms::onpageshow)
+    if (atom == nsGkAtoms::onpageshow)
       mEvent->message = NS_PAGE_SHOW;
-    else if (atom == nsLayoutAtoms::onpagehide)
+    else if (atom == nsGkAtoms::onpagehide)
       mEvent->message = NS_PAGE_HIDE;
   }
 #ifdef MOZ_SVG
   else if (mEvent->eventStructType == NS_SVG_EVENT) {
-    if (atom == nsLayoutAtoms::onSVGLoad)
+    if (atom == nsGkAtoms::onSVGLoad)
       mEvent->message = NS_SVG_LOAD;
-    else if (atom == nsLayoutAtoms::onSVGUnload)
+    else if (atom == nsGkAtoms::onSVGUnload)
       mEvent->message = NS_SVG_UNLOAD;
-    else if (atom == nsLayoutAtoms::onSVGAbort)
+    else if (atom == nsGkAtoms::onSVGAbort)
       mEvent->message = NS_SVG_ABORT;
-    else if (atom == nsLayoutAtoms::onSVGError)
+    else if (atom == nsGkAtoms::onSVGError)
       mEvent->message = NS_SVG_ERROR;
-    else if (atom == nsLayoutAtoms::onSVGResize)
+    else if (atom == nsGkAtoms::onSVGResize)
       mEvent->message = NS_SVG_RESIZE;
-    else if (atom == nsLayoutAtoms::onSVGScroll)
+    else if (atom == nsGkAtoms::onSVGScroll)
       mEvent->message = NS_SVG_SCROLL;
   } else if (mEvent->eventStructType == NS_SVGZOOM_EVENT) {
-    if (atom == nsLayoutAtoms::onSVGZoom)
+    if (atom == nsGkAtoms::onSVGZoom)
       mEvent->message = NS_SVG_ZOOM;
   }
 #endif // MOZ_SVG

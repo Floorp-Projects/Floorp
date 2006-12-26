@@ -64,11 +64,10 @@
 #include "nsIView.h"
 #include "nsIFontMetrics.h"
 #include "nsHTMLParts.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIDOMEvent.h"
 #include "nsGenericHTMLElement.h"
 #include "prprf.h"
-#include "nsLayoutAtoms.h"
 #include "nsStyleChangeList.h"
 #include "nsFrameSelection.h"
 #include "nsSpaceManager.h"
@@ -475,7 +474,7 @@ nsBlockFrame::GetFrameName(nsAString& aResult) const
 nsIAtom*
 nsBlockFrame::GetType() const
 {
-  return nsLayoutAtoms::blockFrame;
+  return nsGkAtoms::blockFrame;
 }
 
 void
@@ -514,17 +513,17 @@ nsBlockFrame::GetFirstChild(nsIAtom* aListName) const
   else if (nsnull == aListName) {
     return (mLines.empty()) ? nsnull : mLines.front()->mFirstChild;
   }
-  else if (aListName == nsLayoutAtoms::overflowList) {
+  else if (aListName == nsGkAtoms::overflowList) {
     nsLineList* overflowLines = GetOverflowLines();
     return overflowLines ? overflowLines->front()->mFirstChild : nsnull;
   }
-  else if (aListName == nsLayoutAtoms::overflowOutOfFlowList) {
+  else if (aListName == nsGkAtoms::overflowOutOfFlowList) {
     return GetOverflowOutOfFlows().FirstChild();
   }
-  else if (aListName == nsLayoutAtoms::floatList) {
+  else if (aListName == nsGkAtoms::floatList) {
     return mFloats.FirstChild();
   }
-  else if (aListName == nsLayoutAtoms::bulletList) {
+  else if (aListName == nsGkAtoms::bulletList) {
     if (HaveOutsideBullet()) {
       return mBullet;
     }
@@ -537,13 +536,13 @@ nsBlockFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 {
   switch (aIndex) {
   case NS_BLOCK_FRAME_FLOAT_LIST_INDEX:
-    return nsLayoutAtoms::floatList;
+    return nsGkAtoms::floatList;
   case NS_BLOCK_FRAME_BULLET_LIST_INDEX:
-    return nsLayoutAtoms::bulletList;
+    return nsGkAtoms::bulletList;
   case NS_BLOCK_FRAME_OVERFLOW_LIST_INDEX:
-    return nsLayoutAtoms::overflowList;
+    return nsGkAtoms::overflowList;
   case NS_BLOCK_FRAME_OVERFLOW_OOF_LIST_INDEX:
-    return nsLayoutAtoms::overflowOutOfFlowList;
+    return nsGkAtoms::overflowOutOfFlowList;
   case NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX:
     return mAbsoluteContainer.GetChildListName();
   default:
@@ -566,7 +565,7 @@ nsBlockFrame::IsFloatContainingBlock() const
 static PRBool IsContinuationPlaceholder(nsIFrame* aFrame)
 {
   return aFrame->GetPrevInFlow() &&
-    nsLayoutAtoms::placeholderFrame == aFrame->GetType();
+    nsGkAtoms::placeholderFrame == aFrame->GetType();
 }
 
 static void ReparentFrame(nsIFrame* aFrame, nsIFrame* aOldParent,
@@ -901,7 +900,7 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
            ancestorRS = ancestorRS->parentReflowState) {
         nsIFrame* ancestor = ancestorRS->frame;
         nsIAtom* fType = ancestor->GetType();
-        if ((nsLayoutAtoms::blockFrame == fType || nsLayoutAtoms::areaFrame == fType) &&
+        if ((nsGkAtoms::blockFrame == fType || nsGkAtoms::areaFrame == fType) &&
             aReflowState.mSpaceManager == ancestorRS->mSpaceManager) {
           // Put the continued floats in ancestor since it uses the same space manager
           nsFrameList* ancestorPlace =
@@ -1008,7 +1007,7 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
     nsIPresShell *shell = aPresContext->GetPresShell();
     if (shell) {
       nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
-      rv = SetProperty(nsLayoutAtoms::spaceManagerProperty,
+      rv = SetProperty(nsGkAtoms::spaceManagerProperty,
                        reflowState.mSpaceManager,
                        nsnull /* should be nsSpaceManagerDestroyer*/);
 
@@ -2410,7 +2409,7 @@ nsBlockFrame::AttributeChanged(PRInt32         aNameSpaceID,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  if (nsHTMLAtoms::start == aAttribute) {
+  if (nsGkAtoms::start == aAttribute) {
     nsPresContext* presContext = GetPresContext();
 
     // XXX Not sure if this is necessary anymore
@@ -2419,7 +2418,7 @@ nsBlockFrame::AttributeChanged(PRInt32         aNameSpaceID,
     presContext->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eStyleChange);
   }
-  else if (nsHTMLAtoms::value == aAttribute) {
+  else if (nsGkAtoms::value == aAttribute) {
     const nsStyleDisplay* styleDisplay = GetStyleDisplay();
     if (NS_STYLE_DISPLAY_LIST_ITEM == styleDisplay->mDisplay) {
       nsIFrame* nextAncestor = mParent;
@@ -2968,8 +2967,8 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
             // first case.
             if (!madeContinuation) {
               nsBlockFrame* nifBlock = NS_STATIC_CAST(nsBlockFrame*, nextFrame->GetParent());
-              NS_ASSERTION(nifBlock->GetType() == nsLayoutAtoms::blockFrame
-                           || nifBlock->GetType() == nsLayoutAtoms::areaFrame,
+              NS_ASSERTION(nifBlock->GetType() == nsGkAtoms::blockFrame
+                           || nifBlock->GetType() == nsGkAtoms::areaFrame,
                            "A block's child's next in flow's parent must be a block!");
               for (line_iterator line = nifBlock->begin_lines(),
                      line_end = nifBlock->end_lines(); line != line_end; ++line) {
@@ -3569,7 +3568,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
     // Create a continuation for the incomplete frame. Note that the
     // frame may already have a continuation.
     PRBool madeContinuation;
-    rv = (nsLayoutAtoms::placeholderFrame == frameType)
+    rv = (nsGkAtoms::placeholderFrame == frameType)
          ? SplitPlaceholder(aState, aFrame)
          : CreateContinuationFor(aState, aLine, aFrame, madeContinuation);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -3582,10 +3581,10 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
     // If we are reflowing the first letter frame or a placeholder then 
     // don't split the line and don't stop the line reflow...
     PRBool splitLine = !reflowingFirstLetter && 
-      nsLayoutAtoms::placeholderFrame != frameType;
+      nsGkAtoms::placeholderFrame != frameType;
     if (reflowingFirstLetter) {
-      if ((nsLayoutAtoms::inlineFrame == frameType) ||
-          (nsLayoutAtoms::lineFrame == frameType)) {
+      if ((nsGkAtoms::inlineFrame == frameType) ||
+          (nsGkAtoms::lineFrame == frameType)) {
         splitLine = PR_TRUE;
       }
     }
@@ -3607,7 +3606,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   else if (NS_FRAME_IS_TRUNCATED(frameReflowStatus)) {
     // if the frame is a placeholder and was complete but truncated (and not at the top
     // of page), the entire line will be pushed to give it another chance to not truncate.
-    if (nsLayoutAtoms::placeholderFrame == aFrame->GetType()) {
+    if (nsGkAtoms::placeholderFrame == aFrame->GetType()) {
       *aLineReflowStatus = LINE_REFLOW_TRUNCATED;
     }
   }  
@@ -4090,7 +4089,7 @@ PRBool
 nsBlockFrame::HandleOverflowPlaceholdersForPulledFrame(
   nsBlockReflowState& aState, nsIFrame* aFrame)
 {
-  if (nsLayoutAtoms::placeholderFrame != aFrame->GetType()) {
+  if (nsGkAtoms::placeholderFrame != aFrame->GetType()) {
     // Descend into children that are not float containing blocks.
     // We should encounter only first-in-flow placeholders, so the
     // frame subtree rooted at aFrame should not change.
@@ -4452,7 +4451,7 @@ nsBlockFrame::GetOverflowLines() const
     return nsnull;
   }
   nsLineList* lines = NS_STATIC_CAST(nsLineList*,
-    GetProperty(nsLayoutAtoms::overflowLinesProperty));
+    GetProperty(nsGkAtoms::overflowLinesProperty));
   NS_ASSERTION(lines && !lines->empty(),
                "value should always be stored and non-empty when state set");
   return lines;
@@ -4465,7 +4464,7 @@ nsBlockFrame::RemoveOverflowLines()
     return nsnull;
   }
   nsLineList* lines = NS_STATIC_CAST(nsLineList*,
-    UnsetProperty(nsLayoutAtoms::overflowLinesProperty));
+    UnsetProperty(nsGkAtoms::overflowLinesProperty));
   NS_ASSERTION(lines && !lines->empty(),
                "value should always be stored and non-empty when state set");
   RemoveStateBits(NS_BLOCK_HAS_OVERFLOW_LINES);
@@ -4499,7 +4498,7 @@ nsBlockFrame::SetOverflowLines(nsLineList* aOverflowLines)
 
   nsPresContext *presContext = GetPresContext();
   nsresult rv = presContext->PropertyTable()->
-    SetProperty(this, nsLayoutAtoms::overflowLinesProperty, aOverflowLines,
+    SetProperty(this, nsGkAtoms::overflowLinesProperty, aOverflowLines,
                 DestroyOverflowLines, presContext);
   // Verify that we didn't overwrite an existing overflow list
   NS_ASSERTION(rv != NS_PROPTABLE_PROP_OVERWRITTEN, "existing overflow list");
@@ -4514,7 +4513,7 @@ nsBlockFrame::GetOverflowOutOfFlows() const
     return nsFrameList();
   }
   nsIFrame* result = NS_STATIC_CAST(nsIFrame*,
-    GetProperty(nsLayoutAtoms::overflowOutOfFlowsProperty));
+    GetProperty(nsGkAtoms::overflowOutOfFlowsProperty));
   NS_ASSERTION(result, "value should always be non-empty when state set");
   return nsFrameList(result);
 }
@@ -4528,11 +4527,11 @@ nsBlockFrame::SetOverflowOutOfFlows(const nsFrameList& aList)
       return;
     }
     nsIFrame* result = NS_STATIC_CAST(nsIFrame*,
-                                      UnsetProperty(nsLayoutAtoms::overflowOutOfFlowsProperty));
+                                      UnsetProperty(nsGkAtoms::overflowOutOfFlowsProperty));
     NS_ASSERTION(result, "value should always be non-empty when state set");
     RemoveStateBits(NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS);
   } else {
-    SetProperty(nsLayoutAtoms::overflowOutOfFlowsProperty,
+    SetProperty(nsGkAtoms::overflowOutOfFlowsProperty,
                 aList.FirstChild(), nsnull);
     AddStateBits(NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS);
   }
@@ -4545,7 +4544,7 @@ nsBlockFrame::GetOverflowPlaceholders() const
     return nsnull;
   }
   nsFrameList* result = NS_STATIC_CAST(nsFrameList*,
-    GetProperty(nsLayoutAtoms::overflowPlaceholdersProperty));
+    GetProperty(nsGkAtoms::overflowPlaceholdersProperty));
   NS_ASSERTION(result, "value should always be non-empty when state set");
   return result;
 }
@@ -4573,7 +4572,7 @@ nsBlockFrame::AppendFrames(nsIAtom*  aListName,
     if (mAbsoluteContainer.GetChildListName() == aListName) {
       return mAbsoluteContainer.AppendFrames(this, aListName, aFrameList);
     }
-    else if (nsLayoutAtoms::floatList == aListName) {
+    else if (nsGkAtoms::floatList == aListName) {
       mFloats.AppendFrames(nsnull, aFrameList);
       return NS_OK;
     }
@@ -4623,12 +4622,12 @@ nsBlockFrame::InsertFrames(nsIAtom*  aListName,
       return mAbsoluteContainer.InsertFrames(this, aListName, aPrevFrame,
                                              aFrameList);
     }
-    else if (nsLayoutAtoms::floatList == aListName) {
+    else if (nsGkAtoms::floatList == aListName) {
       mFloats.InsertFrames(this, aPrevFrame, aFrameList);
       return NS_OK;
     }
 #ifdef IBMBIDI
-    else if (nsLayoutAtoms::nextBidi == aListName) {}
+    else if (nsGkAtoms::nextBidi == aListName) {}
 #endif // IBMBIDI
     else {
       NS_ERROR("unexpected child list");
@@ -4648,7 +4647,7 @@ nsBlockFrame::InsertFrames(nsIAtom*  aListName,
 #endif
   nsresult rv = AddFrames(aFrameList, aPrevFrame);
 #ifdef IBMBIDI
-  if (aListName != nsLayoutAtoms::nextBidi)
+  if (aListName != nsGkAtoms::nextBidi)
 #endif // IBMBIDI
   if (NS_SUCCEEDED(rv)) {
     AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
@@ -4662,12 +4661,12 @@ static PRBool
 ShouldPutNextSiblingOnNewLine(nsIFrame* aLastFrame)
 {
   nsIAtom* type = aLastFrame->GetType();
-  if (type == nsLayoutAtoms::brFrame)
+  if (type == nsGkAtoms::brFrame)
     return PR_TRUE;
-  if (type == nsLayoutAtoms::textFrame)
+  if (type == nsGkAtoms::textFrame)
     return aLastFrame->HasTerminalNewline() &&
            aLastFrame->GetStyleText()->WhiteSpaceIsSignificant();
-  if (type == nsLayoutAtoms::placeholderFrame)
+  if (type == nsGkAtoms::placeholderFrame)
     return IsContinuationPlaceholder(aLastFrame);
   return PR_FALSE;
 }
@@ -4874,7 +4873,7 @@ static PRBool BlockHasAnyFloats(nsIFrame* aFrame)
   if (NS_FAILED(aFrame->QueryInterface(kBlockFrameCID, &bf)))
     return PR_FALSE;
   nsBlockFrame* block = NS_STATIC_CAST(nsBlockFrame*, aFrame);
-  if (block->GetFirstChild(nsLayoutAtoms::floatList))
+  if (block->GetFirstChild(nsGkAtoms::floatList))
     return PR_TRUE;
     
   nsLineList::iterator line = block->begin_lines();
@@ -4910,12 +4909,12 @@ nsBlockFrame::RemoveFrame(nsIAtom*  aListName,
   else if (mAbsoluteContainer.GetChildListName() == aListName) {
     return mAbsoluteContainer.RemoveFrame(this, aListName, aOldFrame);
   }
-  else if (nsLayoutAtoms::floatList == aListName) {
+  else if (nsGkAtoms::floatList == aListName) {
     RemoveFloat(aOldFrame);
     MarkSameSpaceManagerLinesDirty(this);
   }
 #ifdef IBMBIDI
-  else if (nsLayoutAtoms::nextBidi == aListName) {
+  else if (nsGkAtoms::nextBidi == aListName) {
     // Skip the call to |FrameNeedsReflow| below by returning now.
     return DoRemoveFrame(aOldFrame, PR_TRUE, PR_FALSE);
   }
@@ -4985,8 +4984,8 @@ static nsresult RemoveBlockChild(nsIFrame* aFrame, PRBool aDestroyFrames)
     return NS_OK;
 
   nsBlockFrame* nextBlock = NS_STATIC_CAST(nsBlockFrame*, aFrame->GetParent());
-  NS_ASSERTION(nextBlock->GetType() == nsLayoutAtoms::blockFrame ||
-               nextBlock->GetType() == nsLayoutAtoms::areaFrame,
+  NS_ASSERTION(nextBlock->GetType() == nsGkAtoms::blockFrame ||
+               nextBlock->GetType() == nsGkAtoms::areaFrame,
                "Our child's continuation's parent is not a block?");
   return nextBlock->DoRemoveFrame(aFrame, aDestroyFrames);
 }
@@ -5014,7 +5013,7 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRBool aDestroyFrames,
   nsPresContext* presContext = GetPresContext();
   nsIPresShell* presShell = presContext->PresShell();
 
-  PRBool isPlaceholder = nsLayoutAtoms::placeholderFrame == aDeletedFrame->GetType();
+  PRBool isPlaceholder = nsGkAtoms::placeholderFrame == aDeletedFrame->GetType();
   if (isPlaceholder) {
     nsFrameList* overflowPlaceholders = GetOverflowPlaceholders();
     if (overflowPlaceholders && overflowPlaceholders->RemoveFrame(aDeletedFrame)) {
@@ -5344,7 +5343,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
     aState.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
   }
 
-  if (floatFrame->GetType() == nsLayoutAtoms::letterFrame) {
+  if (floatFrame->GetType() == nsGkAtoms::letterFrame) {
     // We never split floating first letters; an incomplete state for
     // such frames simply means that there is more content to be
     // reflowed on the line.
@@ -5401,7 +5400,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
     PRBool lastPlaceholder = PR_TRUE;
     nsIFrame* next = aPlaceholder->GetNextSibling();
     if (next) {
-      if (nsLayoutAtoms::placeholderFrame == next->GetType()) {
+      if (nsGkAtoms::placeholderFrame == next->GetType()) {
         lastPlaceholder = PR_FALSE;
       }
     }
@@ -5724,7 +5723,7 @@ NS_IMETHODIMP nsBlockFrame::GetAccessible(nsIAccessible** aAccessible)
   NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
 
   // block frame may be for <hr>
-  if (mContent->Tag() == nsHTMLAtoms::hr) {
+  if (mContent->Tag() == nsGkAtoms::hr) {
     return accService->CreateHTMLHRAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
   }
 
@@ -5776,7 +5775,7 @@ void nsBlockFrame::ClearLineCursor() {
     return;
   }
 
-  UnsetProperty(nsLayoutAtoms::lineCursorProperty);
+  UnsetProperty(nsGkAtoms::lineCursorProperty);
   RemoveStateBits(NS_BLOCK_HAS_LINE_CURSOR);
 }
 
@@ -5786,7 +5785,7 @@ void nsBlockFrame::SetupLineCursor() {
     return;
   }
    
-  SetProperty(nsLayoutAtoms::lineCursorProperty,
+  SetProperty(nsGkAtoms::lineCursorProperty,
               mLines.front(), nsnull);
   AddStateBits(NS_BLOCK_HAS_LINE_CURSOR);
 }
@@ -5797,7 +5796,7 @@ nsLineBox* nsBlockFrame::GetFirstLineContaining(nscoord y) {
   }
 
   nsLineBox* property = NS_STATIC_CAST(nsLineBox*,
-    GetProperty(nsLayoutAtoms::lineCursorProperty));
+    GetProperty(nsGkAtoms::lineCursorProperty));
   line_iterator cursor = mLines.begin(property);
   nsRect cursorArea = cursor->GetCombinedArea();
 
@@ -5813,7 +5812,7 @@ nsLineBox* nsBlockFrame::GetFirstLineContaining(nscoord y) {
   }
 
   if (cursor.get() != property) {
-    SetProperty(nsLayoutAtoms::lineCursorProperty,
+    SetProperty(nsGkAtoms::lineCursorProperty,
                 cursor.get(), nsnull);
   }
 
@@ -5897,7 +5896,7 @@ nsBlockFrame::IsChild(nsIFrame* aFrame)
   PRBool skipLineList    = PR_FALSE;
   PRBool skipSiblingList = PR_FALSE;
   nsIFrame* prevInFlow = aFrame->GetPrevInFlow();
-  PRBool isPlaceholder = nsLayoutAtoms::placeholderFrame == aFrame->GetType();
+  PRBool isPlaceholder = nsGkAtoms::placeholderFrame == aFrame->GetType();
   if (prevInFlow) {
     nsFrameState state = aFrame->GetStateBits();
     skipLineList    = (state & NS_FRAME_OUT_OF_FLOW); 
@@ -5967,7 +5966,7 @@ nsBlockFrame::SetInitialChildList(nsIAtom*        aListName,
   if (mAbsoluteContainer.GetChildListName() == aListName) {
     mAbsoluteContainer.SetInitialChildList(this, aListName, aChildList);
   }
-  else if (nsLayoutAtoms::floatList == aListName) {
+  else if (nsGkAtoms::floatList == aListName) {
     mFloats.SetFrames(aChildList);
   }
   else {
@@ -6050,10 +6049,10 @@ nsBlockFrame::FrameStartsCounterScope(nsIFrame* aFrame)
     return PR_FALSE;
 
   nsIAtom *localName = content->NodeInfo()->NameAtom();
-  return localName == nsHTMLAtoms::ol ||
-         localName == nsHTMLAtoms::ul ||
-         localName == nsHTMLAtoms::dir ||
-         localName == nsHTMLAtoms::menu;
+  return localName == nsGkAtoms::ol ||
+         localName == nsGkAtoms::ul ||
+         localName == nsGkAtoms::dir ||
+         localName == nsGkAtoms::menu;
 }
 
 void
@@ -6072,7 +6071,7 @@ nsBlockFrame::RenumberLists(nsPresContext* aPresContext)
   nsGenericHTMLElement *hc = nsGenericHTMLElement::FromContent(mContent);
 
   if (hc) {
-    const nsAttrValue* attr = hc->GetParsedAttr(nsHTMLAtoms::start);
+    const nsAttrValue* attr = hc->GetParsedAttr(nsGkAtoms::start);
     if (attr && attr->Type() == nsAttrValue::eInteger) {
       ordinal = attr->GetIntegerValue();
     }

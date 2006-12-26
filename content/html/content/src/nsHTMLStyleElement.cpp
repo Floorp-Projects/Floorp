@@ -39,7 +39,7 @@
 #include "nsIDOMLinkStyle.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsIDOMStyleSheet.h"
@@ -232,9 +232,9 @@ nsHTMLStyleElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   if (NS_SUCCEEDED(rv)) {
     UpdateStyleSheet(nsnull, nsnull,
                      aNameSpaceID == kNameSpaceID_None &&
-                     (aName == nsHTMLAtoms::title ||
-                      aName == nsHTMLAtoms::media ||
-                      aName == nsHTMLAtoms::type));
+                     (aName == nsGkAtoms::title ||
+                      aName == nsGkAtoms::media ||
+                      aName == nsGkAtoms::type));
   }
 
   return rv;
@@ -249,9 +249,9 @@ nsHTMLStyleElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   if (NS_SUCCEEDED(rv)) {
     UpdateStyleSheet(nsnull, nsnull,
                      aNameSpaceID == kNameSpaceID_None &&
-                     (aAttribute == nsHTMLAtoms::title ||
-                      aAttribute == nsHTMLAtoms::media ||
-                      aAttribute == nsHTMLAtoms::type));
+                     (aAttribute == nsGkAtoms::title ||
+                      aAttribute == nsGkAtoms::media ||
+                      aAttribute == nsGkAtoms::type));
   }
 
   return rv;
@@ -282,7 +282,7 @@ nsHTMLStyleElement::GetStyleSheetURL(PRBool* aIsInline,
                                      nsIURI** aURI)
 {
   *aURI = nsnull;
-  *aIsInline = !HasAttr(kNameSpaceID_None, nsHTMLAtoms::src);
+  *aIsInline = !HasAttr(kNameSpaceID_None, nsGkAtoms::src);
   if (*aIsInline) {
     return;
   }
@@ -309,14 +309,14 @@ nsHTMLStyleElement::GetStyleSheetInfo(nsAString& aTitle,
   *aIsAlternate = PR_FALSE;
 
   nsAutoString title;
-  GetAttr(kNameSpaceID_None, nsHTMLAtoms::title, title);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::title, title);
   title.CompressWhitespace();
   aTitle.Assign(title);
 
-  GetAttr(kNameSpaceID_None, nsHTMLAtoms::media, aMedia);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::media, aMedia);
   ToLowerCase(aMedia); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
 
-  GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, aType);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::type, aType);
 
   nsAutoString mimeType;
   nsAutoString notUsed;

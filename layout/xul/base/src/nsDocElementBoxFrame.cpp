@@ -49,12 +49,10 @@
 #include "nsIDOMEvent.h"
 #include "nsStyleConsts.h"
 #include "nsIViewManager.h"
-#include "nsHTMLAtoms.h"
-#include "nsXULAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIEventStateManager.h"
 #include "nsIDeviceContext.h"
 #include "nsIScrollableView.h"
-#include "nsLayoutAtoms.h"
 #include "nsIPresShell.h"
 #include "nsBoxFrame.h"
 #include "nsStackLayout.h"
@@ -113,7 +111,7 @@ nsDocElementBoxFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 
   // create the top-secret popupgroup node. shhhhh!
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nsresult rv = nodeInfoManager->GetNodeInfo(nsXULAtoms::popupgroup,
+  nsresult rv = nodeInfoManager->GetNodeInfo(nsGkAtoms::popupgroup,
                                              nsnull, kNameSpaceID_XUL,
                                              getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -125,14 +123,14 @@ nsDocElementBoxFrame::CreateAnonymousContent(nsPresContext* aPresContext,
   aAnonymousItems.AppendElement(content);
 
   // create the top-secret default tooltip node. shhhhh!
-  rv = nodeInfoManager->GetNodeInfo(nsXULAtoms::tooltip, nsnull,
+  rv = nodeInfoManager->GetNodeInfo(nsGkAtoms::tooltip, nsnull,
                                     kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = NS_NewXULElement(getter_AddRefs(content), nodeInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  content->SetAttr(nsnull, nsXULAtoms::_default, NS_LITERAL_STRING("true"), PR_FALSE);
+  content->SetAttr(nsnull, nsGkAtoms::_default, NS_LITERAL_STRING("true"), PR_FALSE);
   aAnonymousItems.AppendElement(content);
   
   return NS_OK;

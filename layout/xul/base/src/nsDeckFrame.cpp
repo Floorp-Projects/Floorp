@@ -49,7 +49,7 @@
 #include "nsCOMPtr.h"
 #include "nsUnitConversion.h"
 #include "nsINameSpaceManager.h"
-#include "nsXULAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
 #include "nsCSSRendering.h"
@@ -100,7 +100,7 @@ nsDeckFrame::AttributeChanged(PRInt32         aNameSpaceID,
 
 
    // if the index changed hide the old element and make the new element visible
-  if (aAttribute == nsXULAtoms::selectedIndex) {
+  if (aAttribute == nsGkAtoms::selectedIndex) {
     IndexChanged(GetPresContext());
   }
 
@@ -177,7 +177,7 @@ nsDeckFrame::GetSelectedIndex()
 
   // get the index attribute
   nsAutoString value;
-  if (mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::selectedIndex, value))
+  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::selectedIndex, value))
   {
     PRInt32 error;
 

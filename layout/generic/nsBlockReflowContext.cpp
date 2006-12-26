@@ -80,7 +80,7 @@ nsBlockReflowContext::nsBlockReflowContext(nsPresContext* aPresContext,
 static nsIFrame* DescendIntoBlockLevelFrame(nsIFrame* aFrame)
 {
   nsIAtom* type = aFrame->GetType();
-  if (type == nsLayoutAtoms::columnSetFrame)
+  if (type == nsGkAtoms::columnSetFrame)
     return DescendIntoBlockLevelFrame(aFrame->GetFirstChild(nsnull));
   return aFrame;
 }
@@ -265,14 +265,14 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
     nsPropertyTable *propTable = mPresContext->PropertyTable();
 
     nsPoint *offsets = NS_STATIC_CAST(nsPoint*,
-        propTable->GetProperty(mFrame, nsLayoutAtoms::computedOffsetProperty));
+        propTable->GetProperty(mFrame, nsGkAtoms::computedOffsetProperty));
 
     if (offsets)
       offsets->MoveTo(aComputedOffsets.left, aComputedOffsets.top);
     else {
       offsets = new nsPoint(aComputedOffsets.left, aComputedOffsets.top);
       if (offsets)
-        propTable->SetProperty(mFrame, nsLayoutAtoms::computedOffsetProperty,
+        propTable->SetProperty(mFrame, nsGkAtoms::computedOffsetProperty,
                                offsets, nsPointDtor, nsnull);
     }
   }

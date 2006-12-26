@@ -41,11 +41,10 @@
 #define nsLayoutAtoms_h___
 
 #include "nsGkAtoms.h"
-typedef class nsGkAtoms nsLayoutAtoms;
 
 static inline PRBool IS_TABLE_CELL(nsIAtom* frameType) {
-  return nsLayoutAtoms::tableCellFrame == frameType ||
-    nsLayoutAtoms::bcTableCellFrame == frameType;
+  return nsGkAtoms::tableCellFrame == frameType ||
+    nsGkAtoms::bcTableCellFrame == frameType;
 }
 
 #endif /* nsLayoutAtoms_h___ */

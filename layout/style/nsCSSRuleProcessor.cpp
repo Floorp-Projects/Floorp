@@ -60,7 +60,7 @@
 #include "nsIDocument.h"
 #include "nsPresContext.h"
 #include "nsIEventStateManager.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
 #include "nsVoidArray.h"
@@ -850,10 +850,10 @@ const nsString* RuleProcessorData::GetLang()
         // xml:lang has precedence over lang on HTML elements (see
         // XHTML1 section C.7).
         nsAutoString value;
-        PRBool hasAttr = content->GetAttr(kNameSpaceID_XML, nsHTMLAtoms::lang,
+        PRBool hasAttr = content->GetAttr(kNameSpaceID_XML, nsGkAtoms::lang,
                                           value);
         if (!hasAttr && content->IsNodeOfType(nsINode::eHTML)) {
-          hasAttr = content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::lang,
+          hasAttr = content->GetAttr(kNameSpaceID_None, nsGkAtoms::lang,
                                      value);
         }
         if (hasAttr) {
@@ -907,15 +907,15 @@ inline PRBool IsLinkPseudo(nsIAtom* aAtom)
 // Return whether we should apply a "global" (i.e., universal-tag)
 // selector for event states in quirks mode.  Note that
 // |data.mIsHTMLLink| is checked separately by the caller, so we return
-// false for |nsHTMLAtoms::a|, which here means a named anchor.
+// false for |nsGkAtoms::a|, which here means a named anchor.
 inline PRBool IsQuirkEventSensitive(nsIAtom *aContentTag)
 {
-  return PRBool ((nsHTMLAtoms::button == aContentTag) ||
-                 (nsHTMLAtoms::img == aContentTag)    ||
-                 (nsHTMLAtoms::input == aContentTag)  ||
-                 (nsHTMLAtoms::label == aContentTag)  ||
-                 (nsHTMLAtoms::select == aContentTag) ||
-                 (nsHTMLAtoms::textarea == aContentTag));
+  return PRBool ((nsGkAtoms::button == aContentTag) ||
+                 (nsGkAtoms::img == aContentTag)    ||
+                 (nsGkAtoms::input == aContentTag)  ||
+                 (nsGkAtoms::label == aContentTag)  ||
+                 (nsGkAtoms::select == aContentTag) ||
+                 (nsGkAtoms::textarea == aContentTag));
 }
 
 
@@ -1097,8 +1097,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         do {
           child = element->GetChildAt(++index);
           if (child && child->IsNodeOfType(nsINode::eHTML) &&
-              child->Tag() == nsHTMLAtoms::param &&
-              child->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::name,
+              child->Tag() == nsGkAtoms::param &&
+              child->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
                                  NS_LITERAL_STRING("pluginurl"), eIgnoreCase)) {
             result = PR_TRUE;
             break;
@@ -1754,11 +1754,11 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
   // Since we always have :-moz-any-link (and almost always have :link
   // and :visited rules from prefs), rather than hacking AddRule below
   // to add |href| to the hash, we'll just handle it here.
-  if (aData->mAttribute == nsHTMLAtoms::href &&
+  if (aData->mAttribute == nsGkAtoms::href &&
       aData->mIsHTMLContent &&
-      (aData->mContentTag == nsHTMLAtoms::a ||
-       aData->mContentTag == nsHTMLAtoms::area ||
-       aData->mContentTag == nsHTMLAtoms::link)) {
+      (aData->mContentTag == nsGkAtoms::a ||
+       aData->mContentTag == nsGkAtoms::area ||
+       aData->mContentTag == nsGkAtoms::link)) {
     data.change = nsReStyleHint(data.change | eReStyle_Self);
   }
   // XXX What about XLinks?

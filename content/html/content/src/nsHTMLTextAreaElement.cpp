@@ -52,7 +52,7 @@
 #include "nsIFormSubmission.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsMappedAttributes.h"
@@ -258,7 +258,7 @@ nsHTMLTextAreaElement::SetFocus(nsPresContext* aPresContext)
     return;
 
   // first see if we are disabled or not. If disabled then do nothing.
-  if (HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
     return;
   }
 
@@ -299,7 +299,7 @@ nsHTMLTextAreaElement::Select()
   nsresult rv = NS_OK;
 
   // first see if we are disabled or not. If disabled then do nothing.
-  if (HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
     return rv;
   }
 
@@ -367,7 +367,7 @@ nsHTMLTextAreaElement::SelectAll(nsPresContext* aPresContext)
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
   if (formControlFrame) {
-    formControlFrame->SetFormProperty(nsHTMLAtoms::select, EmptyString());
+    formControlFrame->SetFormProperty(nsGkAtoms::select, EmptyString());
   }
 
   return NS_OK;
@@ -459,7 +459,7 @@ nsHTMLTextAreaElement::SetValueInternal(const nsAString& aValue,
     textControlFrame->OwnsValue(&frameOwnsValue);
   }
   if (frameOwnsValue) {
-    formControlFrame->SetFormProperty(nsHTMLAtoms::value, aValue);
+    formControlFrame->SetFormProperty(nsGkAtoms::value, aValue);
   }
   else {
     if (mValue) {
@@ -541,10 +541,10 @@ nsHTMLTextAreaElement::ParseAttribute(PRInt32 aNamespaceID,
                                       nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsHTMLAtoms::cols) {
+    if (aAttribute == nsGkAtoms::cols) {
       return aResult.ParseIntWithBounds(aValue, 0);
     }
-    if (aAttribute == nsHTMLAtoms::rows) {
+    if (aAttribute == nsGkAtoms::rows) {
       return aResult.ParseIntWithBounds(aValue, 0);
     }
   }
@@ -566,8 +566,8 @@ nsHTMLTextAreaElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 {
   nsChangeHint retval =
       nsGenericHTMLFormElement::GetAttributeChangeHint(aAttribute, aModType);
-  if (aAttribute == nsHTMLAtoms::rows ||
-      aAttribute == nsHTMLAtoms::cols) {
+  if (aAttribute == nsGkAtoms::rows ||
+      aAttribute == nsGkAtoms::cols) {
     NS_UpdateHint(retval, NS_STYLE_HINT_REFLOW);
   }
   return retval;
@@ -836,7 +836,7 @@ nsHTMLTextAreaElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   // Get the name (if no name, no submit)
   //
   nsAutoString name;
-  if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, name)) {
+  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::name, name)) {
     return NS_OK;
   }
 
@@ -921,7 +921,7 @@ nsresult
 nsHTMLTextAreaElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                      const nsAString* aValue, PRBool aNotify)
 {
-  if (aNotify && aName == nsHTMLAtoms::disabled &&
+  if (aNotify && aName == nsGkAtoms::disabled &&
       aNameSpaceID == kNameSpaceID_None) {
     mDisabledChanged = PR_TRUE;
   }

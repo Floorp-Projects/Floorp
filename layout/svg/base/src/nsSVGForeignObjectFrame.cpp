@@ -56,7 +56,6 @@
 #include "nsSVGRect.h"
 #include "nsSVGMatrix.h"
 #include "nsINameSpaceManager.h"
-#include "nsGkAtoms.h"
 #include "nsSVGForeignObjectElement.h"
 #include "nsSVGContainerFrame.h"
 #include "gfxContext.h"
@@ -106,7 +105,7 @@ void nsSVGForeignObjectFrame::Destroy()
 nsIAtom *
 nsSVGForeignObjectFrame::GetType() const
 {
-  return nsLayoutAtoms::svgForeignObjectFrame;
+  return nsGkAtoms::svgForeignObjectFrame;
 }
 
 PRBool

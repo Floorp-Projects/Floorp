@@ -39,7 +39,6 @@
 #include "nsIContent.h"
 #include "nsPresContext.h"
 #include "nsIRenderingContext.h"
-#include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsIPresShell.h"
 #include "nsIDeviceContext.h"
@@ -141,7 +140,7 @@ NS_IMETHODIMP nsPageContentFrame::Reflow(nsPresContext*   aPresContext,
 nsIAtom*
 nsPageContentFrame::GetType() const
 {
-  return nsLayoutAtoms::pageContentFrame; 
+  return nsGkAtoms::pageContentFrame; 
 }
 
 #ifdef DEBUG

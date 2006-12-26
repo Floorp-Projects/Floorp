@@ -40,7 +40,7 @@
 #include "nsSVGGraphicElement.h"
 #include "nsSVGTransformList.h"
 #include "nsSVGAnimatedTransformList.h"
-#include "nsSVGAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsSVGMatrix.h"
 #include "nsISVGSVGElement.h"
 #include "nsIDOMEventTarget.h"
@@ -328,7 +328,7 @@ nsSVGGraphicElement::CreateTransformList()
   rv = NS_NewSVGAnimatedTransformList(getter_AddRefs(mTransforms),
                                       transformList);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = AddMappedSVGValue(nsSVGAtoms::transform, mTransforms);
+  rv = AddMappedSVGValue(nsGkAtoms::transform, mTransforms);
   if (NS_FAILED(rv)) {
     mTransforms = nsnull;
     return rv;

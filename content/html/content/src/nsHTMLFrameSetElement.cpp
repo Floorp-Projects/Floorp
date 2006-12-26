@@ -37,7 +37,7 @@
 #include "nsIDOMHTMLFrameSetElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsIFrameSetElement.h"
@@ -168,14 +168,14 @@ nsHTMLFrameSetElement::SetAttr(PRInt32 aNameSpaceID,
    *  Once nsGenericHTMLElement::SetAttr returns, we want to go back to our
    *  normal hint, which is NS_STYLE_HINT_REFLOW.
    */
-  if (aAttribute == nsHTMLAtoms::rows && aNameSpaceID == kNameSpaceID_None) {
+  if (aAttribute == nsGkAtoms::rows && aNameSpaceID == kNameSpaceID_None) {
     PRInt32 oldRows = mNumRows;
     ParseRowCol(aValue, mNumRows, getter_Transfers(mRowSpecs));
     
     if (mNumRows != oldRows) {
       mCurrentRowColHint = NS_STYLE_HINT_FRAMECHANGE;
     }
-  } else if (aAttribute == nsHTMLAtoms::cols &&
+  } else if (aAttribute == nsGkAtoms::cols &&
              aNameSpaceID == kNameSpaceID_None) {
     PRInt32 oldCols = mNumCols;
     ParseRowCol(aValue, mNumCols, getter_Transfers(mColSpecs));
@@ -202,7 +202,7 @@ nsHTMLFrameSetElement::GetRowSpec(PRInt32 *aNumValues,
   *aSpecs = nsnull;
   
   if (!mRowSpecs) {
-    const nsAttrValue* value = GetParsedAttr(nsHTMLAtoms::rows);
+    const nsAttrValue* value = GetParsedAttr(nsGkAtoms::rows);
     if (value && value->Type() == nsAttrValue::eString) {
       nsresult rv = ParseRowCol(value->GetStringValue(), mNumRows,
                                 getter_Transfers(mRowSpecs));
@@ -236,7 +236,7 @@ nsHTMLFrameSetElement::GetColSpec(PRInt32 *aNumValues,
   *aSpecs = nsnull;
 
   if (!mColSpecs) {
-    const nsAttrValue* value = GetParsedAttr(nsHTMLAtoms::cols);
+    const nsAttrValue* value = GetParsedAttr(nsGkAtoms::cols);
     if (value && value->Type() == nsAttrValue::eString) {
       nsresult rv = ParseRowCol(value->GetStringValue(), mNumCols,
                                 getter_Transfers(mColSpecs));
@@ -268,13 +268,13 @@ nsHTMLFrameSetElement::ParseAttribute(PRInt32 aNamespaceID,
                                       nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsHTMLAtoms::bordercolor) {
+    if (aAttribute == nsGkAtoms::bordercolor) {
       return aResult.ParseColor(aValue, GetOwnerDoc());
     }
-    if (aAttribute == nsHTMLAtoms::frameborder) {
+    if (aAttribute == nsGkAtoms::frameborder) {
       return nsGenericHTMLElement::ParseFrameborderValue(aValue, aResult);
     }
-    if (aAttribute == nsHTMLAtoms::border) {
+    if (aAttribute == nsGkAtoms::border) {
       return aResult.ParseIntWithBounds(aValue, 0, 100);
     }
   }
@@ -289,8 +289,8 @@ nsHTMLFrameSetElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 {
   nsChangeHint retval =
     nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType);
-  if (aAttribute == nsHTMLAtoms::rows ||
-      aAttribute == nsHTMLAtoms::cols) {
+  if (aAttribute == nsGkAtoms::rows ||
+      aAttribute == nsGkAtoms::cols) {
     NS_UpdateHint(retval, mCurrentRowColHint);
   }
   return retval;

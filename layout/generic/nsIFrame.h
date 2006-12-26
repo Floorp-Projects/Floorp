@@ -1405,7 +1405,7 @@ public:
   /**
    * Get the "type" of the frame. May return a NULL atom pointer
    *
-   * @see nsLayoutAtoms
+   * @see nsGkAtoms
    */
   virtual nsIAtom* GetType() const = 0;
   
@@ -1746,10 +1746,10 @@ public:
                                   nsresult* aStatus = nsnull) const;
 
 #define NS_GET_BASE_LEVEL(frame) \
-NS_PTR_TO_INT32(frame->GetProperty(nsLayoutAtoms::baseLevel))
+NS_PTR_TO_INT32(frame->GetProperty(nsGkAtoms::baseLevel))
 
 #define NS_GET_EMBEDDING_LEVEL(frame) \
-NS_PTR_TO_INT32(frame->GetProperty(nsLayoutAtoms::embeddingLevel))
+NS_PTR_TO_INT32(frame->GetProperty(nsGkAtoms::embeddingLevel))
 
   /** Create or retrieve the previously stored overflow area, if the frame does 
     * not overflow and no creation is required return nsnull.

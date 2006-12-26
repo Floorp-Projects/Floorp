@@ -104,7 +104,6 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsIDocument.h"
 
 #include "nsISelectionController.h"//for the enums
-#include "nsHTMLAtoms.h"
 #include "nsAutoCopyListener.h"
 #include "nsCopySupport.h"
 #include "nsIClipboard.h"
@@ -1189,7 +1188,7 @@ GetCellParent(nsIDOMNode *aDomNode)
     while(current)
     {
       tag = GetTag(current);
-      if (tag == nsHTMLAtoms::td || tag == nsHTMLAtoms::th)
+      if (tag == nsGkAtoms::td || tag == nsGkAtoms::th)
         return current;
       if (NS_FAILED(ParentOffset(current,getter_AddRefs(parent),&childOffset)) || !parent)
         return 0;
@@ -1409,7 +1408,7 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
     weakNodeUsed = mDomSelections[index]->FetchFocusNode();
     offsetused = mDomSelections[index]->FetchFocusOffset();
     mDomSelections[index]->Collapse(weakNodeUsed, offsetused);
-    if (frame->GetType() == nsLayoutAtoms::brFrame) {
+    if (frame->GetType() == nsGkAtoms::brFrame) {
       tHint = mHint;    // 1: make the line below restore the original hint
     }
     else {
@@ -1977,11 +1976,11 @@ nsFrameSelection::GetPrevNextBidiLevels(nsIContent *aNode,
   // If not jumping lines, disregard br frames, since they might be positioned incorrectly.
   // XXX This could be removed once bug 339786 is fixed.
   if (!aJumpLines) {
-    if (currentFrame->GetType() == nsLayoutAtoms::brFrame) {
+    if (currentFrame->GetType() == nsGkAtoms::brFrame) {
       currentFrame = nsnull;
       currentLevel = baseLevel;
     }
-    if (newFrame && newFrame->GetType() == nsLayoutAtoms::brFrame) {
+    if (newFrame && newFrame->GetType() == nsGkAtoms::brFrame) {
       newFrame = nsnull;
       newLevel = baseLevel;
     }
@@ -2834,8 +2833,8 @@ nsFrameSelection::NotifySelectionListeners(SelectionType aType)
 
 static PRBool IsCell(nsIContent *aContent)
 {
-  return ((aContent->Tag() == nsHTMLAtoms::td ||
-           aContent->Tag() == nsHTMLAtoms::th) &&
+  return ((aContent->Tag() == nsGkAtoms::td ||
+           aContent->Tag() == nsGkAtoms::th) &&
           aContent->IsNodeOfType(nsINode::eHTML));
 }
 
@@ -3607,7 +3606,7 @@ nsFrameSelection::GetParentTable(nsIContent *aCell, nsIContent **aTable)
 
   for (nsIContent* parent = aCell->GetParent(); parent;
        parent = parent->GetParent()) {
-    if (parent->Tag() == nsHTMLAtoms::table &&
+    if (parent->Tag() == nsGkAtoms::table &&
         parent->IsNodeOfType(nsINode::eHTML)) {
       *aTable = parent;
       NS_ADDREF(*aTable);
@@ -3781,7 +3780,7 @@ nsTypedSelection::GetTableSelectionType(nsIDOMRange* aRange, PRInt32* aTableSele
 
   nsIAtom *tag = content->Tag();
 
-  if (tag == nsHTMLAtoms::tr)
+  if (tag == nsGkAtoms::tr)
   {
     *aTableSelectionType = nsISelectionPrivate::TABLESELECTION_CELL;
   }
@@ -3793,9 +3792,9 @@ nsTypedSelection::GetTableSelectionType(nsIDOMRange* aRange, PRInt32* aTableSele
 
     tag = child->Tag();
 
-    if (tag == nsHTMLAtoms::table)
+    if (tag == nsGkAtoms::table)
       *aTableSelectionType = nsISelectionPrivate::TABLESELECTION_TABLE;
-    else if (tag == nsHTMLAtoms::tr)
+    else if (tag == nsGkAtoms::tr)
       *aTableSelectionType = nsISelectionPrivate::TABLESELECTION_ROW;
   }
 
@@ -6037,7 +6036,7 @@ nsTypedSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, 
 
   // if end node is a tbody then all bets are off we cannot select "rows"
   nsIAtom *atom = GetTag(endNode);
-  if (atom == nsHTMLAtoms::tbody)
+  if (atom == nsGkAtoms::tbody)
     return NS_ERROR_FAILURE; //cannot select INTO row node ony cells
 
   //get common parent
@@ -6083,7 +6082,7 @@ nsTypedSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, 
       while (tempNode != parent)
       {
         atom = GetTag(tempNode);
-        if (atom == nsHTMLAtoms::table) //select whole table  if in cell mode, wait for cell
+        if (atom == nsGkAtoms::table) //select whole table  if in cell mode, wait for cell
         {
           result = ParentOffset(tempNode, getter_AddRefs(startNode), &startOffset);
           if (NS_FAILED(result))
@@ -6093,8 +6092,8 @@ nsTypedSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, 
           dirtystart = PR_TRUE;
           cellMode = PR_FALSE;
         }
-        else if (atom == nsHTMLAtoms::td ||
-                 atom == nsHTMLAtoms::th) //you are in "cell" mode put selection to end of cell
+        else if (atom == nsGkAtoms::td ||
+                 atom == nsGkAtoms::th) //you are in "cell" mode put selection to end of cell
         {
           cellMode = PR_TRUE;
           result = ParentOffset(tempNode, getter_AddRefs(startNode), &startOffset);
@@ -6121,7 +6120,7 @@ nsTypedSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, 
       while (tempNode != parent)
       {
         atom = GetTag(tempNode);
-        if (atom == nsHTMLAtoms::table) //select whole table  if in cell mode, wait for cell
+        if (atom == nsGkAtoms::table) //select whole table  if in cell mode, wait for cell
         {
           if (!cellMode)
           {
@@ -6135,8 +6134,8 @@ nsTypedSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, 
           else
             found = PR_FALSE; //didn't find the right cell yet
         }
-        else if (atom == nsHTMLAtoms::td ||
-                 atom == nsHTMLAtoms::th) //you are in "cell" mode put selection to end of cell
+        else if (atom == nsGkAtoms::td ||
+                 atom == nsGkAtoms::th) //you are in "cell" mode put selection to end of cell
         {
           result = ParentOffset(tempNode, getter_AddRefs(endNode), &endOffset);
           if (NS_FAILED(result))

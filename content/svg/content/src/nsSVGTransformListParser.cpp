@@ -40,7 +40,7 @@
 #include "nsSVGTransform.h"
 #include "nsSVGMatrix.h"
 #include "nsDOMError.h"
-#include "nsSVGAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsCOMArray.h"
@@ -153,22 +153,22 @@ nsSVGTransformListParser::MatchTransform()
   nsresult rv = GetTransformToken(getter_AddRefs(keyatom), PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (keyatom == nsSVGAtoms::translate) {
+  if (keyatom == nsGkAtoms::translate) {
      ENSURE_MATCHED(MatchTranslate());
   }
-  else if (keyatom == nsSVGAtoms::scale) {
+  else if (keyatom == nsGkAtoms::scale) {
      ENSURE_MATCHED(MatchScale());
   }
-  else if (keyatom == nsSVGAtoms::rotate) {
+  else if (keyatom == nsGkAtoms::rotate) {
      ENSURE_MATCHED(MatchRotate());
   }
-  else if (keyatom == nsSVGAtoms::skewX) {
+  else if (keyatom == nsGkAtoms::skewX) {
       ENSURE_MATCHED(MatchSkewX());
   }
-  else if (keyatom == nsSVGAtoms::skewY) {
+  else if (keyatom == nsGkAtoms::skewY) {
      ENSURE_MATCHED(MatchSkewY());
    }
-  else if (keyatom == nsSVGAtoms::matrix) {
+  else if (keyatom == nsGkAtoms::matrix) {
      ENSURE_MATCHED(MatchMatrix());
   }
   else {
@@ -187,12 +187,12 @@ nsSVGTransformListParser::IsTokenTransformStarter()
   nsresult rv = GetTransformToken(getter_AddRefs(keyatom), PR_FALSE);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
-  if (keyatom == nsSVGAtoms::translate ||
-      keyatom == nsSVGAtoms::scale     ||
-      keyatom == nsSVGAtoms::rotate    ||
-      keyatom == nsSVGAtoms::skewX     ||
-      keyatom == nsSVGAtoms::skewY     ||
-      keyatom == nsSVGAtoms::matrix) {
+  if (keyatom == nsGkAtoms::translate ||
+      keyatom == nsGkAtoms::scale     ||
+      keyatom == nsGkAtoms::rotate    ||
+      keyatom == nsGkAtoms::skewX     ||
+      keyatom == nsGkAtoms::skewY     ||
+      keyatom == nsGkAtoms::matrix) {
       return PR_TRUE;
   }
 

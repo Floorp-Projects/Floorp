@@ -37,7 +37,7 @@
 #include "nsIDOMHTMLPreElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsMappedAttributes.h"
@@ -118,10 +118,10 @@ nsHTMLPreElement::ParseAttribute(PRInt32 aNamespaceID,
                                  nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsHTMLAtoms::cols) {
+    if (aAttribute == nsGkAtoms::cols) {
       return aResult.ParseIntWithBounds(aValue, 0);
     }
-    if (aAttribute == nsHTMLAtoms::width) {
+    if (aAttribute == nsGkAtoms::width) {
       return aResult.ParseIntWithBounds(aValue, 0);
     }
   }
@@ -136,17 +136,17 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 {
   if (aData->mSID == eStyleStruct_Font) {
     // variable
-    if (aAttributes->GetAttr(nsHTMLAtoms::variable))
+    if (aAttributes->GetAttr(nsGkAtoms::variable))
       aData->mFontData->mFamily.SetStringValue(NS_LITERAL_STRING("serif"),
                                                eCSSUnit_String);
   }
   else if (aData->mSID == eStyleStruct_Position) {
     if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
       // width: int (html4 attribute == nav4 cols)
-      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::width);
+      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::width);
       if (!value || value->Type() != nsAttrValue::eInteger) {
         // cols: int (nav4 attribute)
-        value = aAttributes->GetAttr(nsHTMLAtoms::cols);
+        value = aAttributes->GetAttr(nsGkAtoms::cols);
       }
 
       if (value && value->Type() == nsAttrValue::eInteger)
@@ -156,14 +156,14 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   else if (aData->mSID == eStyleStruct_Text) {
     if (aData->mTextData->mWhiteSpace.GetUnit() == eCSSUnit_Null) {
       // wrap: empty
-      if (aAttributes->GetAttr(nsHTMLAtoms::wrap))
+      if (aAttributes->GetAttr(nsGkAtoms::wrap))
         aData->mTextData->mWhiteSpace.SetIntValue(NS_STYLE_WHITESPACE_MOZ_PRE_WRAP, eCSSUnit_Enumerated);
 
       // width: int (html4 attribute == nav4 cols)
-      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::width);
+      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::width);
       if (!value || value->Type() != nsAttrValue::eInteger) {
         // cols: int (nav4 attribute)
-        value = aAttributes->GetAttr(nsHTMLAtoms::cols);
+        value = aAttributes->GetAttr(nsGkAtoms::cols);
       }
 
       if (value && value->Type() == nsAttrValue::eInteger) {
@@ -181,10 +181,10 @@ NS_IMETHODIMP_(PRBool)
 nsHTMLPreElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
-    { &nsHTMLAtoms::variable },
-    { &nsHTMLAtoms::wrap },
-    { &nsHTMLAtoms::cols },
-    { &nsHTMLAtoms::width },
+    { &nsGkAtoms::variable },
+    { &nsGkAtoms::wrap },
+    { &nsGkAtoms::cols },
+    { &nsGkAtoms::width },
     { nsnull },
   };
   

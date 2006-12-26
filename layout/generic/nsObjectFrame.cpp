@@ -57,7 +57,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "prmem.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
 #include "nsIURL.h"
@@ -72,7 +72,6 @@
 #include "nsIScrollableView.h"
 #include "nsIScrollPositionListener.h"
 #include "nsITimer.h"
-#include "nsLayoutAtoms.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsDocShellCID.h"
@@ -502,7 +501,7 @@ nsObjectFrame::Destroy()
 nsIAtom*
 nsObjectFrame::GetType() const
 {
-  return nsLayoutAtoms::objectFrame; 
+  return nsGkAtoms::objectFrame; 
 }
 
 PRBool
@@ -604,7 +603,7 @@ nsObjectFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 
   if (!IsHidden(PR_FALSE)) {
     nsIAtom *atom = mContent->Tag();
-    if (atom == nsHTMLAtoms::applet || atom == nsHTMLAtoms::embed) {
+    if (atom == nsGkAtoms::applet || atom == nsGkAtoms::embed) {
       float p2t = GetPresContext()->ScaledPixelsToTwips();
       result = NSIntPixelsToTwips(EMBED_DEF_WIDTH, p2t);
     }
@@ -640,7 +639,7 @@ nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
 
   // for EMBED and APPLET, default to 240x200 for compatibility
   nsIAtom *atom = mContent->Tag();
-  if (atom == nsHTMLAtoms::applet || atom == nsHTMLAtoms::embed) {
+  if (atom == nsGkAtoms::applet || atom == nsGkAtoms::embed) {
     float p2t = aPresContext->ScaledPixelsToTwips();
     if (aMetrics.width == NS_UNCONSTRAINEDSIZE) {
       aMetrics.width = PR_MIN(PR_MAX(NSIntPixelsToTwips(EMBED_DEF_WIDTH, p2t),
@@ -713,7 +712,7 @@ nsObjectFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   // if we are printing or print previewing, bail for now
-  if (aPresContext->Medium() == nsLayoutAtoms::print) {
+  if (aPresContext->Medium() == nsGkAtoms::print) {
     aStatus = NS_FRAME_COMPLETE;
     return NS_OK;
   }
@@ -820,7 +819,7 @@ nsObjectFrame::IsHidden(PRBool aCheckVisibilityStyle) const
   }
 
   // only <embed> tags support the HIDDEN attribute
-  if (mContent->Tag() == nsHTMLAtoms::embed) {
+  if (mContent->Tag() == nsGkAtoms::embed) {
     // Yes, these are really the kooky ways that you could tell 4.x
     // not to hide the <embed> once you'd put the 'hidden' attribute
     // on the tag...
@@ -829,7 +828,7 @@ nsObjectFrame::IsHidden(PRBool aCheckVisibilityStyle) const
     // compatibility w/ 4.x and IE so we don't create a non-painting
     // widget in layout. See bug 188959.
     nsAutoString hidden;
-    if (mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden) &&
+    if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::hidden, hidden) &&
        (hidden.IsEmpty() ||
         !hidden.LowerCaseEqualsLiteral("false") &&
         !hidden.LowerCaseEqualsLiteral("no") &&
@@ -1977,11 +1976,11 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetTagType(nsPluginTagType *result)
 
   nsIAtom *atom = mContent->Tag();
 
-  if (atom == nsHTMLAtoms::applet)
+  if (atom == nsGkAtoms::applet)
     *result = nsPluginTagType_Applet;
-  else if (atom == nsHTMLAtoms::embed)
+  else if (atom == nsGkAtoms::embed)
     *result = nsPluginTagType_Embed;
-  else if (atom == nsHTMLAtoms::object)
+  else if (atom == nsGkAtoms::object)
     *result = nsPluginTagType_Object;
 
   return NS_OK;
@@ -2469,9 +2468,9 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   // to the bottom of the array if there isn't already a "src" specified.
   PRInt16 numRealAttrs = mNumCachedAttrs;
   nsAutoString data;
-  if (mContent->Tag() == nsHTMLAtoms::object
-    && !mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::src)
-    && mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data)) {
+  if (mContent->Tag() == nsGkAtoms::object
+    && !mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::src)
+    && mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::data, data)) {
       mNumCachedAttrs++;
   }
 

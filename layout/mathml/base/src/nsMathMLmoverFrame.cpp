@@ -71,7 +71,7 @@ nsMathMLmoverFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                      nsIAtom*        aAttribute,
                                      PRInt32         aModType)
 {
-  if (nsMathMLAtoms::accent_ == aAttribute) {
+  if (nsGkAtoms::accent_ == aAttribute) {
     // When we have automatic data to update within ourselves, we ask our
     // parent to re-layout its children
     return ReLayoutChildren(mParent);
@@ -194,8 +194,8 @@ XXX The winner is the outermost in conflicting settings like these:
 
   // if we have an accent attribute, it overrides what the overscript said
   static nsIContent::AttrValuesArray strings[] =
-    {&nsMathMLAtoms::_true, &nsMathMLAtoms::_false, nsnull};
-  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsMathMLAtoms::accent_,
+    {&nsGkAtoms::_true, &nsGkAtoms::_false, nsnull};
+  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::accent_,
                                     strings, eCaseMatters)) {
     case 0: mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTOVER; break;
     case 1: mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTOVER; break;

@@ -77,7 +77,7 @@ NS_GetSVGMarkerFrame(nsSVGMarkerFrame **aResult,
     return NS_ERROR_FAILURE;
 
   nsIAtom* frameType = marker->GetType();
-  if (frameType != nsLayoutAtoms::svgMarkerFrame)
+  if (frameType != nsGkAtoms::svgMarkerFrame)
     return NS_ERROR_FAILURE;
 
   *aResult = (nsSVGMarkerFrame *)marker;
@@ -303,7 +303,7 @@ nsSVGMarkerFrame::RegionMark(nsSVGPathGeometryFrame *aMarkedFrame,
 nsIAtom *
 nsSVGMarkerFrame::GetType() const
 {
-  return nsLayoutAtoms::svgMarkerFrame;
+  return nsGkAtoms::svgMarkerFrame;
 }
 
 void

@@ -88,7 +88,7 @@ PRBool
 nsMathMLmfracFrame::IsBevelled()
 {
   nsAutoString value;
-  GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::bevelled_,
+  GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::bevelled_,
                value);
   return value.EqualsLiteral("true");
 }
@@ -311,7 +311,7 @@ nsMathMLmfracFrame::Place(nsIRenderingContext& aRenderingContext,
 
   // see if the linethickness attribute is there 
   nsAutoString value;
-  GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::linethickness_, value);
+  GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::linethickness_, value);
   mLineRect.height = CalcLineThickness(presContext, mStyleContext, value,
                                        onePixel, defaultRuleThickness);
   nscoord numShift = 0;
@@ -395,7 +395,7 @@ nsMathMLmfracFrame::Place(nsIRenderingContext& aRenderingContext,
   width += leftSpace + rightSpace;
 
   // see if the numalign attribute is there 
-  GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::numalign_,
+  GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::numalign_,
                value);
   if (value.EqualsLiteral("left"))
     dxNum = leftSpace;
@@ -403,7 +403,7 @@ nsMathMLmfracFrame::Place(nsIRenderingContext& aRenderingContext,
     dxNum = width - rightSpace - sizeNum.width;
 
   // see if the denomalign attribute is there 
-  GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::denomalign_,
+  GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::denomalign_,
                value);
   if (value.EqualsLiteral("left"))
     dxDen = leftSpace;
@@ -452,7 +452,7 @@ nsMathMLmfracFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                      nsIAtom*        aAttribute,
                                      PRInt32         aModType)
 {
-  if (nsMathMLAtoms::bevelled_ == aAttribute) {
+  if (nsGkAtoms::bevelled_ == aAttribute) {
     if (!IsBevelled()) {
       // disable the bevelled rendering
       if (mSlashChar) {

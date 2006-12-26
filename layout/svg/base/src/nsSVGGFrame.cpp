@@ -71,7 +71,7 @@ NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* 
 nsIAtom *
 nsSVGGFrame::GetType() const
 {
-  return nsLayoutAtoms::svgGFrame;
+  return nsGkAtoms::svgGFrame;
 }
 
 //----------------------------------------------------------------------

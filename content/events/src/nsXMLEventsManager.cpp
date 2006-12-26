@@ -38,7 +38,7 @@
 
 #include "nsIDOMMutationEvent.h"
 #include "nsXMLEventsManager.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventReceiver.h"
@@ -47,7 +47,6 @@
 #include "nsIDOMEventListener.h"
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
-#include "nsLayoutAtoms.h"
 
 PRBool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
                                                   nsXMLEventsManager * aManager,
@@ -57,13 +56,13 @@ PRBool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
   PRInt32 nameSpaceID;
   if (aContent->GetDocument() != aDocument)
     return PR_FALSE;
-  if (aContent->NodeInfo()->Equals(nsHTMLAtoms::listener,
+  if (aContent->NodeInfo()->Equals(nsGkAtoms::listener,
                                    kNameSpaceID_XMLEvents))
     nameSpaceID = kNameSpaceID_None;
   else
     nameSpaceID = kNameSpaceID_XMLEvents;
   nsAutoString eventType;
-  aContent->GetAttr(nameSpaceID, nsHTMLAtoms::event, eventType);
+  aContent->GetAttr(nameSpaceID, nsGkAtoms::event, eventType);
   if (eventType.IsEmpty())
     return PR_FALSE;
   nsAutoString handlerURIStr;
@@ -72,7 +71,7 @@ PRBool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
   nsAutoString observerID;
   nsAutoString targetIdref;
   
-  if (aContent->GetAttr(nameSpaceID, nsHTMLAtoms::handler, handlerURIStr)) {
+  if (aContent->GetAttr(nameSpaceID, nsGkAtoms::handler, handlerURIStr)) {
     hasHandlerURI = PR_TRUE;
     nsCAutoString handlerRef;
     nsCOMPtr<nsIURI> handlerURI;
@@ -104,22 +103,22 @@ PRBool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
   if (!handler)
     return PR_FALSE;
 
-  aContent->GetAttr(nameSpaceID, nsHTMLAtoms::target, targetIdref);
+  aContent->GetAttr(nameSpaceID, nsGkAtoms::target, targetIdref);
 
   PRBool hasObserver = 
-    aContent->GetAttr(nameSpaceID, nsHTMLAtoms::observer, observerID);
+    aContent->GetAttr(nameSpaceID, nsGkAtoms::observer, observerID);
 
   PRBool capture =
-    aContent->AttrValueIs(nameSpaceID, nsHTMLAtoms::phase,
-                          nsLayoutAtoms::capture, eCaseMatters);
+    aContent->AttrValueIs(nameSpaceID, nsGkAtoms::phase,
+                          nsGkAtoms::capture, eCaseMatters);
 
   PRBool stopPropagation = 
-    aContent->AttrValueIs(nameSpaceID, nsHTMLAtoms::propagate,
-                          nsLayoutAtoms::stop, eCaseMatters);
+    aContent->AttrValueIs(nameSpaceID, nsGkAtoms::propagate,
+                          nsGkAtoms::stop, eCaseMatters);
 
   PRBool cancelDefault = 
-    aContent->AttrValueIs(nameSpaceID, nsHTMLAtoms::defaultAction,
-                          nsLayoutAtoms::cancel, eCaseMatters);
+    aContent->AttrValueIs(nameSpaceID, nsGkAtoms::defaultAction,
+                          nsGkAtoms::cancel, eCaseMatters);
 
   nsCOMPtr<nsIContent> observer;
   if (!hasObserver) {
@@ -360,18 +359,18 @@ nsXMLEventsManager::AttributeChanged(nsIDocument* aDocument,
                                      PRInt32 aModType)
 {
   if (aNameSpaceID == kNameSpaceID_XMLEvents &&
-      (aAttribute == nsHTMLAtoms::event ||
-       aAttribute == nsHTMLAtoms::handler ||
-       aAttribute == nsHTMLAtoms::target ||
-       aAttribute == nsHTMLAtoms::observer ||
-       aAttribute == nsHTMLAtoms::phase ||
-       aAttribute == nsHTMLAtoms::propagate)) {
+      (aAttribute == nsGkAtoms::event ||
+       aAttribute == nsGkAtoms::handler ||
+       aAttribute == nsGkAtoms::target ||
+       aAttribute == nsGkAtoms::observer ||
+       aAttribute == nsGkAtoms::phase ||
+       aAttribute == nsGkAtoms::propagate)) {
     RemoveListener(aContent);
     AddXMLEventsContent(aContent);
     nsXMLEventsListener::InitXMLEventsListener(aDocument, this, aContent);
   }
   else {
-    if (aContent->NodeInfo()->Equals(nsHTMLAtoms::listener,
+    if (aContent->NodeInfo()->Equals(nsGkAtoms::listener,
                                      kNameSpaceID_XMLEvents)) {
       RemoveListener(aContent);
       AddXMLEventsContent(aContent);

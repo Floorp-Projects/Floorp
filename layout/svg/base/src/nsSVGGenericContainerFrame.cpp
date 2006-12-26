@@ -69,7 +69,7 @@ nsSVGGenericContainerFrame::AttributeChanged(PRInt32         aNameSpaceID,
 nsIAtom *
 nsSVGGenericContainerFrame::GetType() const
 {
-  return nsLayoutAtoms::svgGenericContainerFrame;
+  return nsGkAtoms::svgGenericContainerFrame;
 }
 
 //----------------------------------------------------------------------

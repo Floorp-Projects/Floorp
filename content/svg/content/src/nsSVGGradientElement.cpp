@@ -47,7 +47,7 @@
 #include "nsCOMPtr.h"
 #include "nsISVGSVGElement.h"
 #include "nsSVGStylableElement.h"
-#include "nsSVGAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsSVGGradientElement.h"
 
 //--------------------- Gradients------------------------
@@ -78,15 +78,15 @@ nsSVGGradientElement::Init()
 
   // Define enumeration mappings
   static struct nsSVGEnumMapping gUnitMap[] = {
-        {&nsSVGAtoms::objectBoundingBox, nsIDOMSVGGradientElement::SVG_GRUNITS_OBJECTBOUNDINGBOX},
-        {&nsSVGAtoms::userSpaceOnUse, nsIDOMSVGGradientElement::SVG_GRUNITS_USERSPACEONUSE},
+        {&nsGkAtoms::objectBoundingBox, nsIDOMSVGGradientElement::SVG_GRUNITS_OBJECTBOUNDINGBOX},
+        {&nsGkAtoms::userSpaceOnUse, nsIDOMSVGGradientElement::SVG_GRUNITS_USERSPACEONUSE},
         {nsnull, 0}
   };
 
   static struct nsSVGEnumMapping gSpreadMap[] = {
-        {&nsSVGAtoms::pad, nsIDOMSVGGradientElement::SVG_SPREADMETHOD_PAD},
-        {&nsSVGAtoms::reflect, nsIDOMSVGGradientElement::SVG_SPREADMETHOD_REFLECT},
-        {&nsSVGAtoms::repeat, nsIDOMSVGGradientElement::SVG_SPREADMETHOD_REPEAT},
+        {&nsGkAtoms::pad, nsIDOMSVGGradientElement::SVG_SPREADMETHOD_PAD},
+        {&nsGkAtoms::reflect, nsIDOMSVGGradientElement::SVG_SPREADMETHOD_REFLECT},
+        {&nsGkAtoms::repeat, nsIDOMSVGGradientElement::SVG_SPREADMETHOD_REPEAT},
         {nsnull, 0}
   };
 
@@ -100,7 +100,7 @@ nsSVGGradientElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mGradientUnits), units);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::gradientUnits, mGradientUnits);
+    rv = AddMappedSVGValue(nsGkAtoms::gradientUnits, mGradientUnits);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -112,7 +112,7 @@ nsSVGGradientElement::Init()
     rv = NS_NewSVGAnimatedTransformList(getter_AddRefs(mGradientTransform),
                                         transformList);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::gradientTransform, mGradientTransform);
+    rv = AddMappedSVGValue(nsGkAtoms::gradientTransform, mGradientTransform);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -124,7 +124,7 @@ nsSVGGradientElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mSpreadMethod), spread);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::spreadMethod, mSpreadMethod);
+    rv = AddMappedSVGValue(nsGkAtoms::spreadMethod, mSpreadMethod);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -134,7 +134,7 @@ nsSVGGradientElement::Init()
   {
     rv = NS_NewSVGAnimatedString(getter_AddRefs(mHref));
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::href, mHref, kNameSpaceID_XLink);
+    rv = AddMappedSVGValue(nsGkAtoms::href, mHref, kNameSpaceID_XLink);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 

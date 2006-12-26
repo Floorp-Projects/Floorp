@@ -46,7 +46,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIXMLContent.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsINodeInfo.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
@@ -644,8 +644,8 @@ nsXHTMLParanoidFragmentSink::HandleStartElement(const PRUnichar *aName,
   // <script> or <style>
   nsCOMPtr<nsIAtom> name = nodeInfo->NameAtom();
   if (mSkipLevel != 0 ||
-      name == nsHTMLAtoms::script ||
-      name == nsHTMLAtoms::style) {
+      name == nsGkAtoms::script ||
+      name == nsGkAtoms::style) {
     ++mSkipLevel; // track this so we don't spew script text
     return NS_OK;
   }  
@@ -668,7 +668,7 @@ nsXHTMLParanoidFragmentSink::HandleStartElement(const PRUnichar *aName,
         nameSpaceID == kNameSpaceID_XML ||
         nameSpaceID == kNameSpaceID_WAIProperties ||
         (nameSpaceID == kNameSpaceID_XHTML2_Unofficial &&
-         name == nsHTMLAtoms::role) ||
+         name == nsGkAtoms::role) ||
         sAllowedAttributes && sAllowedAttributes->GetEntry(name)) {
       allowedAttrs.AppendElement(aAtts[i]);
       allowedAttrs.AppendElement(aAtts[i + 1]);

@@ -51,7 +51,6 @@
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
 #include "nsContentUtils.h"
-#include "nsHTMLAtoms.h"
 // MouseEvent suppression in PP
 #include "nsGUIEvent.h"
 #include "nsContentCreatorFunctions.h"
@@ -75,7 +74,7 @@ NS_NewGfxButtonControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 nsIAtom*
 nsGfxButtonControlFrame::GetType() const
 {
-  return nsLayoutAtoms::gfxButtonControlFrame;
+  return nsGkAtoms::gfxButtonControlFrame;
 }
 
 // Special check for the browse button of a file input.
@@ -282,7 +281,7 @@ nsGfxButtonControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
   nsresult rv = NS_OK;
 
   // If the value attribute is set, update the text of the label
-  if (nsHTMLAtoms::value == aAttribute) {
+  if (nsGkAtoms::value == aAttribute) {
     if (mTextContent && mContent) {
       nsXPIDLString label;
       rv = GetLabel(label);

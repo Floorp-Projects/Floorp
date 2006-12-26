@@ -45,7 +45,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsLayoutUtils.h"
@@ -722,7 +722,7 @@ nsHTMLSelectElement::RemoveOptionsFromList(nsIContent* aOptions,
 
 static PRBool IsOptGroup(nsIContent *aContent)
 {
-  return (aContent->NodeInfo()->Equals(nsHTMLAtoms::optgroup) &&
+  return (aContent->NodeInfo()->Equals(nsGkAtoms::optgroup) &&
           aContent->IsNodeOfType(nsINode::eHTML));
 }
 
@@ -1107,7 +1107,7 @@ nsHTMLSelectElement::SetLength(PRUint32 aLength)
     // This violates the W3C DOM but we do this for backwards compatibility
     nsCOMPtr<nsINodeInfo> nodeInfo;
 
-    nsContentUtils::NameChanged(mNodeInfo, nsHTMLAtoms::option,
+    nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::option,
                                 getter_AddRefs(nodeInfo));
 
     nsCOMPtr<nsIContent> element = NS_NewHTMLOptionElement(nodeInfo);
@@ -1612,7 +1612,7 @@ nsHTMLSelectElement::SetFocus(nsPresContext* aPresContext)
     return;
 
   // first see if we are disabled or not. If disabled then do nothing.
-  if (HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
     return;
   }
 
@@ -1690,7 +1690,7 @@ nsresult
 nsHTMLSelectElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                    const nsAString* aValue, PRBool aNotify)
 {
-  if (aNotify && aName == nsHTMLAtoms::disabled &&
+  if (aNotify && aName == nsGkAtoms::disabled &&
       aNameSpaceID == kNameSpaceID_None) {
     mDisabledChanged = PR_TRUE;
   }
@@ -1704,7 +1704,7 @@ nsHTMLSelectElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                PRBool aNotify)
 {
   if (aNotify && aNameSpaceID == kNameSpaceID_None &&
-      aAttribute == nsHTMLAtoms::multiple) {
+      aAttribute == nsGkAtoms::multiple) {
     // We're changing from being a multi-select to a single-select.
     // Make sure we only have one option selected before we do that.
     // Note that this needs to come before we really unset the attr,
@@ -1721,7 +1721,7 @@ nsHTMLSelectElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aNotify && aNameSpaceID == kNameSpaceID_None &&
-      aAttribute == nsHTMLAtoms::multiple) {
+      aAttribute == nsGkAtoms::multiple) {
     // We might have become a combobox; make sure _something_ gets
     // selected in that case
     CheckSelectSomething();
@@ -1771,7 +1771,7 @@ nsHTMLSelectElement::ParseAttribute(PRInt32 aNamespaceID,
                                     const nsAString& aValue,
                                     nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::size && kNameSpaceID_None == aNamespaceID) {
+  if (aAttribute == nsGkAtoms::size && kNameSpaceID_None == aNamespaceID) {
     return aResult.ParseIntWithBounds(aValue, 0);
   }
   return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
@@ -1792,8 +1792,8 @@ nsHTMLSelectElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 {
   nsChangeHint retval =
       nsGenericHTMLFormElement::GetAttributeChangeHint(aAttribute, aModType);
-  if (aAttribute == nsHTMLAtoms::multiple ||
-      aAttribute == nsHTMLAtoms::size) {
+  if (aAttribute == nsGkAtoms::multiple ||
+      aAttribute == nsGkAtoms::size) {
     NS_UpdateHint(retval, NS_STYLE_HINT_FRAMECHANGE);
   }
   return retval;
@@ -2045,7 +2045,7 @@ nsHTMLSelectElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   // Get the name (if no name, no submit)
   //
   nsAutoString name;
-  if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, name)) {
+  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::name, name)) {
     return NS_OK;
   }
 
@@ -2354,9 +2354,9 @@ nsHTMLOptionCollection::NamedItem(const nsAString& aName,
     nsCOMPtr<nsIContent> content = do_QueryInterface(mElements.ObjectAt(i));
 
     if (content) {
-      if (content->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::name, aName,
+      if (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, aName,
                                eCaseMatters) ||
-          content->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::id, aName,
+          content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id, aName,
                                eCaseMatters)) {
         rv = CallQueryInterface(content, aReturn);
 

@@ -52,7 +52,7 @@
 #include "nsIDocument.h"
 #include "nsGUIEvent.h"
 #include "nsINameSpaceManager.h"
-#include "nsXULAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsPLDOMEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsAutoPtr.h"
@@ -307,10 +307,10 @@ NS_IMETHODIMP nsTreeSelection::GetSingle(PRBool* aSingle)
   nsCOMPtr<nsIContent> content = do_QueryInterface(element);
 
   static nsIContent::AttrValuesArray strings[] =
-    {&nsXULAtoms::single, &nsXULAtoms::cell, &nsXULAtoms::text, nsnull};
+    {&nsGkAtoms::single, &nsGkAtoms::cell, &nsGkAtoms::text, nsnull};
 
   *aSingle = content->FindAttrValueIn(kNameSpaceID_None,
-                                      nsXULAtoms::seltype,
+                                      nsGkAtoms::seltype,
                                       strings, eCaseMatters) >= 0;
 
   return NS_OK;

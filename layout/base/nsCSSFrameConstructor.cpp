@@ -52,7 +52,7 @@
 #include "nsIHTMLDocument.h"
 #include "nsIStyleRule.h"
 #include "nsIFrame.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsPresContext.h"
 #include "nsILinkHandler.h"
 #include "nsIDocument.h"
@@ -73,7 +73,6 @@
 #include "nsIDOMXULElement.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsINameSpaceManager.h"
-#include "nsLayoutAtoms.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLLegendElement.h"
 #include "nsIComboboxControlFrame.h"
@@ -113,7 +112,6 @@
 #include "nsLayoutErrors.h"
 #include "nsLayoutUtils.h"
 #include "nsAutoPtr.h"
-#include "nsXULAtoms.h"
 #include "nsBoxFrame.h"
 #include "nsIBoxLayout.h"
 #include "nsImageFrame.h"
@@ -147,7 +145,6 @@
 #undef NOISY_FIRST_LETTER
 
 #ifdef MOZ_MATHML
-#include "nsMathMLAtoms.h"
 #include "nsMathMLParts.h"
 #endif
 
@@ -155,7 +152,6 @@ nsIFrame*
 NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 #ifdef MOZ_SVG
-#include "nsSVGAtoms.h"
 #include "nsISVGTextContentMetrics.h"
 #include "nsStyleUtil.h"
 
@@ -453,7 +449,7 @@ GetSpecialSibling(nsFrameManager* aFrameManager, nsIFrame* aFrame, nsIFrame** aR
   // frame in the flow. Walk back to find that frame now.
   aFrame = aFrame->GetFirstInFlow();
 
-  void* value = aFrame->GetProperty(nsLayoutAtoms::IBSplitSpecialSibling);
+  void* value = aFrame->GetProperty(nsGkAtoms::IBSplitSpecialSibling);
 
   *aResult = NS_STATIC_CAST(nsIFrame*, value);
 }
@@ -501,7 +497,7 @@ SetFrameIsSpecial(nsIFrame* aFrame, nsIFrame* aSpecialSibling)
 
     // Store the "special sibling" (if we were given one) with the
     // first frame in the flow.
-    aFrame->SetProperty(nsLayoutAtoms::IBSplitSpecialSibling, aSpecialSibling);
+    aFrame->SetProperty(nsGkAtoms::IBSplitSpecialSibling, aSpecialSibling);
   }
 }
 
@@ -636,7 +632,7 @@ MarkIBSpecialPrevSibling(nsPresContext* aPresContext,
                          nsIFrame *aSpecialParent)
 {
   aPresContext->PropertyTable()->SetProperty(aAnonymousFrame,
-                                      nsLayoutAtoms::IBSplitSpecialPrevSibling,
+                                      nsGkAtoms::IBSplitSpecialPrevSibling,
                                              aSpecialParent, nsnull, nsnull);
 }
 
@@ -653,7 +649,7 @@ DoCleanupFrameReferences(nsFrameManager*  aFrameManager,
 {
   nsIContent* content = aFrameIn->GetContent();
 
-  if (aFrameIn->GetType() == nsLayoutAtoms::placeholderFrame) {
+  if (aFrameIn->GetType() == nsGkAtoms::placeholderFrame) {
     nsPlaceholderFrame* placeholder = NS_STATIC_CAST(nsPlaceholderFrame*,
                                                      aFrameIn);
     // if the frame is a placeholder use the out of flow frame
@@ -976,7 +972,7 @@ nsPseudoFrames::Dump()
   }
   else {
     if (mTableOuter.mFrame || mTableOuter.mChildList.childList || mTableOuter.mChildList2.childList) {
-      if (nsLayoutAtoms::tableOuterFrame == mLowestType) {
+      if (nsGkAtoms::tableOuterFrame == mLowestType) {
         printf("LOW OuterTable\n");
       }
       else {
@@ -985,7 +981,7 @@ nsPseudoFrames::Dump()
       mTableOuter.Dump();
     }
     if (mTableInner.mFrame || mTableInner.mChildList.childList || mTableInner.mChildList2.childList) {
-      if (nsLayoutAtoms::tableFrame == mLowestType) {
+      if (nsGkAtoms::tableFrame == mLowestType) {
         printf("LOW InnerTable\n");
       }
       else {
@@ -994,7 +990,7 @@ nsPseudoFrames::Dump()
       mTableInner.Dump();
     }
     if (mColGroup.mFrame || mColGroup.mChildList.childList || mColGroup.mChildList2.childList) {
-      if (nsLayoutAtoms::tableColGroupFrame == mLowestType) {
+      if (nsGkAtoms::tableColGroupFrame == mLowestType) {
         printf("LOW ColGroup\n");
       }
       else {
@@ -1003,7 +999,7 @@ nsPseudoFrames::Dump()
       mColGroup.Dump();
     }
     if (mRowGroup.mFrame || mRowGroup.mChildList.childList || mRowGroup.mChildList2.childList) {
-      if (nsLayoutAtoms::tableRowGroupFrame == mLowestType) {
+      if (nsGkAtoms::tableRowGroupFrame == mLowestType) {
         printf("LOW RowGroup\n");
       }
       else {
@@ -1012,7 +1008,7 @@ nsPseudoFrames::Dump()
       mRowGroup.Dump();
     }
     if (mRow.mFrame || mRow.mChildList.childList || mRow.mChildList2.childList) {
-      if (nsLayoutAtoms::tableRowFrame == mLowestType) {
+      if (nsGkAtoms::tableRowFrame == mLowestType) {
         printf("LOW Row\n");
       }
       else {
@@ -1212,9 +1208,9 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
 
 nsFrameConstructorState::~nsFrameConstructorState()
 {
-  ProcessFrameInsertions(mAbsoluteItems, nsLayoutAtoms::absoluteList);
-  ProcessFrameInsertions(mFixedItems, nsLayoutAtoms::fixedList);
-  ProcessFrameInsertions(mFloatedItems, nsLayoutAtoms::floatList);
+  ProcessFrameInsertions(mAbsoluteItems, nsGkAtoms::absoluteList);
+  ProcessFrameInsertions(mFixedItems, nsGkAtoms::fixedList);
+  ProcessFrameInsertions(mFloatedItems, nsGkAtoms::floatList);
 }
 
 static nsIFrame*
@@ -1235,7 +1231,7 @@ nsFrameConstructorState::PushAbsoluteContainingBlock(nsIFrame* aNewAbsoluteConta
 {
   aSaveState.mItems = &mAbsoluteItems;
   aSaveState.mSavedItems = mAbsoluteItems;
-  aSaveState.mChildListName = nsLayoutAtoms::absoluteList;
+  aSaveState.mChildListName = nsGkAtoms::absoluteList;
   aSaveState.mState = this;
   mAbsoluteItems = 
     nsAbsoluteItems(AdjustAbsoluteContainingBlock(mPresContext,
@@ -1261,7 +1257,7 @@ nsFrameConstructorState::PushFloatContainingBlock(nsIFrame* aNewFloatContainingB
   aSaveState.mSavedItems = mFloatedItems;
   aSaveState.mSavedFirstLetterStyle = mFirstLetterStyle;
   aSaveState.mSavedFirstLineStyle = mFirstLineStyle;
-  aSaveState.mChildListName = nsLayoutAtoms::floatList;
+  aSaveState.mChildListName = nsGkAtoms::floatList;
   aSaveState.mState = this;
   mFloatedItems = nsAbsoluteItems(aNewFloatContainingBlock);
   mFirstLetterStyle = aFirstLetterStyle;
@@ -1412,11 +1408,11 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
                                                 nsIAtom* aChildListName)
 {
   NS_PRECONDITION((&aFrameItems == &mFloatedItems &&
-                   aChildListName == nsLayoutAtoms::floatList) ||
+                   aChildListName == nsGkAtoms::floatList) ||
                   (&aFrameItems == &mAbsoluteItems &&
-                   aChildListName == nsLayoutAtoms::absoluteList) ||
+                   aChildListName == nsGkAtoms::absoluteList) ||
                   (&aFrameItems == &mFixedItems &&
-                   aChildListName == nsLayoutAtoms::fixedList),
+                   aChildListName == nsGkAtoms::fixedList),
                   "Unexpected aFrameItems/aChildListName combination");
 
   nsIFrame* firstNewFrame = aFrameItems.childList;
@@ -1516,7 +1512,7 @@ static
 PRBool IsBorderCollapse(nsIFrame* aFrame)
 {
   for (nsIFrame* frame = aFrame; frame; frame = frame->GetParent()) {
-    if (nsLayoutAtoms::tableFrame == frame->GetType()) {
+    if (nsGkAtoms::tableFrame == frame->GetType()) {
       return ((nsTableFrame*)frame)->IsBorderCollapse();
     }
   }
@@ -1803,9 +1799,9 @@ GetChildListNameFor(nsIFrame*       aChildFrame)
     const nsStyleDisplay* disp = aChildFrame->GetStyleDisplay();
     
     if (NS_STYLE_POSITION_ABSOLUTE == disp->mPosition) {
-      listName = nsLayoutAtoms::absoluteList;
+      listName = nsGkAtoms::absoluteList;
     } else if (NS_STYLE_POSITION_FIXED == disp->mPosition) {
-      listName = nsLayoutAtoms::fixedList;
+      listName = nsGkAtoms::fixedList;
 #ifdef MOZ_XUL
     } else if (NS_STYLE_DISPLAY_POPUP == disp->mDisplay) {
       // Out-of-flows that are DISPLAY_POPUP must be kids of the root popup set
@@ -1827,7 +1823,7 @@ GetChildListNameFor(nsIFrame*       aChildFrame)
     } else {
       NS_ASSERTION(aChildFrame->GetStyleDisplay()->IsFloating(),
                    "not a floated frame");
-      listName = nsLayoutAtoms::floatList;
+      listName = nsGkAtoms::floatList;
     }
 
   } else {
@@ -2019,7 +2015,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
     // XXX Check if it's an image type we can handle...
 
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    mDocument->NodeInfoManager()->GetNodeInfo(nsHTMLAtoms::img, nsnull,
+    mDocument->NodeInfoManager()->GetNodeInfo(nsGkAtoms::img, nsnull,
                                               kNameSpaceID_None,
                                               getter_AddRefs(nodeInfo));
 
@@ -2158,16 +2154,16 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
         // <input>, try the value attribute and then fall back to some default
         // localized text we have.
         nsresult rv = NS_OK;
-        if (aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::alt)) {
+        if (aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::alt)) {
           rv = CreateAttributeContent(aContent, aParentFrame,
-                                      kNameSpaceID_None, nsHTMLAtoms::alt,
+                                      kNameSpaceID_None, nsGkAtoms::alt,
                                       aStyleContext, getter_AddRefs(content),
                                       aFrame);
         } else if (aContent->IsNodeOfType(nsINode::eHTML) &&
-                   aContent->NodeInfo()->Equals(nsHTMLAtoms::input)) {
-          if (aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::value)) {
+                   aContent->NodeInfo()->Equals(nsGkAtoms::input)) {
+          if (aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::value)) {
             rv = CreateAttributeContent(aContent, aParentFrame,
-                                        kNameSpaceID_None, nsHTMLAtoms::value,
+                                        kNameSpaceID_None, nsGkAtoms::value,
                                         aStyleContext, getter_AddRefs(content),
                                         aFrame);
           } else {
@@ -2475,15 +2471,15 @@ static PRBool
 IsTableRelated(nsIAtom* aParentType,
                PRBool   aIncludeSpecial)
 {
-  if ((nsLayoutAtoms::tableFrame         == aParentType)  ||
-      (nsLayoutAtoms::tableRowGroupFrame == aParentType)  ||
-      (nsLayoutAtoms::tableRowFrame      == aParentType)) {
+  if ((nsGkAtoms::tableFrame         == aParentType)  ||
+      (nsGkAtoms::tableRowGroupFrame == aParentType)  ||
+      (nsGkAtoms::tableRowFrame      == aParentType)) {
     return PR_TRUE;
   }
   else if (aIncludeSpecial && 
-           ((nsLayoutAtoms::tableCaptionFrame  == aParentType)  ||
-            (nsLayoutAtoms::tableColGroupFrame == aParentType)  ||
-            (nsLayoutAtoms::tableColFrame      == aParentType)  ||
+           ((nsGkAtoms::tableCaptionFrame  == aParentType)  ||
+            (nsGkAtoms::tableColGroupFrame == aParentType)  ||
+            (nsGkAtoms::tableColFrame      == aParentType)  ||
             IS_TABLE_CELL(aParentType))) {
     return PR_TRUE;
   }
@@ -2493,7 +2489,7 @@ IsTableRelated(nsIAtom* aParentType,
 static nsIFrame*
 AdjustCaptionParentFrame(nsIFrame* aParentFrame) 
 {
-  if (nsLayoutAtoms::tableFrame == aParentFrame->GetType()) {
+  if (nsGkAtoms::tableFrame == aParentFrame->GetType()) {
     return aParentFrame->GetParent();;
   }
   return aParentFrame;
@@ -2513,7 +2509,7 @@ GetCaptionAdjustedParent(nsIFrame*        aParentFrame,
   *aAdjParentFrame = aParentFrame;
   PRBool haveCaption = PR_FALSE;
 
-  if (nsLayoutAtoms::tableCaptionFrame == aChildFrame->GetType()) {
+  if (nsGkAtoms::tableCaptionFrame == aChildFrame->GetType()) {
     haveCaption = PR_TRUE;
     *aAdjParentFrame = AdjustCaptionParentFrame(aParentFrame);
   }
@@ -2576,7 +2572,7 @@ ProcessPseudoTableFrame(nsPseudoFrames& aPseudoFrames,
   }
   nsFrameItems* captions = &aPseudoFrames.mTableOuter.mChildList2;
   if (captions && captions->childList) {
-    rv = aParent->SetInitialChildList(nsLayoutAtoms::captionList, captions->childList);
+    rv = aParent->SetInitialChildList(nsGkAtoms::captionList, captions->childList);
   }
   aPseudoFrames.mTableOuter.Reset();
   return rv;
@@ -2614,13 +2610,13 @@ ProcessPseudoFrames(nsFrameConstructorState& aState,
 
   nsPseudoFrames& pseudoFrames = aState.mPseudoFrames;
 
-  if (nsLayoutAtoms::tableFrame == pseudoFrames.mLowestType) {
+  if (nsGkAtoms::tableFrame == pseudoFrames.mLowestType) {
     if (pseudoFrames.mColGroup.mFrame) {
       rv = ProcessPseudoFrame(pseudoFrames.mColGroup, aHighestFrame);
-      if (nsLayoutAtoms::tableColGroupFrame == aHighestType) return rv;
+      if (nsGkAtoms::tableColGroupFrame == aHighestType) return rv;
     }
     rv = ProcessPseudoTableFrame(pseudoFrames, aHighestFrame);
-    if (nsLayoutAtoms::tableOuterFrame == aHighestType) return rv;
+    if (nsGkAtoms::tableOuterFrame == aHighestType) return rv;
     
     if (pseudoFrames.mCellOuter.mFrame) {
       rv = ProcessPseudoCellFrame(pseudoFrames, aHighestFrame);
@@ -2628,21 +2624,21 @@ ProcessPseudoFrames(nsFrameConstructorState& aState,
     }
     if (pseudoFrames.mRow.mFrame) {
       rv = ProcessPseudoFrame(pseudoFrames.mRow, aHighestFrame);
-      if (nsLayoutAtoms::tableRowFrame == aHighestType) return rv;
+      if (nsGkAtoms::tableRowFrame == aHighestType) return rv;
     }
     if (pseudoFrames.mRowGroup.mFrame) {
       rv = ProcessPseudoRowGroupFrame(pseudoFrames.mRowGroup, aHighestFrame);
-      if (nsLayoutAtoms::tableRowGroupFrame == aHighestType) return rv;
+      if (nsGkAtoms::tableRowGroupFrame == aHighestType) return rv;
     }
   }
-  else if (nsLayoutAtoms::tableRowGroupFrame == pseudoFrames.mLowestType) {
+  else if (nsGkAtoms::tableRowGroupFrame == pseudoFrames.mLowestType) {
     rv = ProcessPseudoRowGroupFrame(pseudoFrames.mRowGroup, aHighestFrame);
-    if (nsLayoutAtoms::tableRowGroupFrame == aHighestType) return rv;
+    if (nsGkAtoms::tableRowGroupFrame == aHighestType) return rv;
     if (pseudoFrames.mColGroup.mFrame) {
       nsIFrame* colGroupHigh;
       rv = ProcessPseudoFrame(pseudoFrames.mColGroup, colGroupHigh);
       if (aHighestFrame &&
-          nsLayoutAtoms::tableRowGroupFrame == aHighestFrame->GetType() &&
+          nsGkAtoms::tableRowGroupFrame == aHighestFrame->GetType() &&
           !pseudoFrames.mTableInner.mFrame) {
         // table frames are special they can have two types of pseudo frames as
         // children that need to be processed in one pass, we only need to link
@@ -2651,11 +2647,11 @@ ProcessPseudoFrames(nsFrameConstructorState& aState,
         colGroupHigh->SetNextSibling(aHighestFrame); 
       }
       aHighestFrame = colGroupHigh;
-      if (nsLayoutAtoms::tableColGroupFrame == aHighestType) return rv;
+      if (nsGkAtoms::tableColGroupFrame == aHighestType) return rv;
     }
     if (pseudoFrames.mTableOuter.mFrame) {
       rv = ProcessPseudoTableFrame(pseudoFrames, aHighestFrame);
-      if (nsLayoutAtoms::tableOuterFrame == aHighestType) return rv;
+      if (nsGkAtoms::tableOuterFrame == aHighestType) return rv;
     }
     if (pseudoFrames.mCellOuter.mFrame) {
       rv = ProcessPseudoCellFrame(pseudoFrames, aHighestFrame);
@@ -2663,22 +2659,22 @@ ProcessPseudoFrames(nsFrameConstructorState& aState,
     }
     if (pseudoFrames.mRow.mFrame) {
       rv = ProcessPseudoFrame(pseudoFrames.mRow, aHighestFrame);
-      if (nsLayoutAtoms::tableRowFrame == aHighestType) return rv;
+      if (nsGkAtoms::tableRowFrame == aHighestType) return rv;
     }
   }
-  else if (nsLayoutAtoms::tableRowFrame == pseudoFrames.mLowestType) {
+  else if (nsGkAtoms::tableRowFrame == pseudoFrames.mLowestType) {
     rv = ProcessPseudoFrame(pseudoFrames.mRow, aHighestFrame);
-    if (nsLayoutAtoms::tableRowFrame == aHighestType) return rv;
+    if (nsGkAtoms::tableRowFrame == aHighestType) return rv;
 
     if (pseudoFrames.mRowGroup.mFrame) {
       rv = ProcessPseudoRowGroupFrame(pseudoFrames.mRowGroup, aHighestFrame);
-      if (nsLayoutAtoms::tableRowGroupFrame == aHighestType) return rv;
+      if (nsGkAtoms::tableRowGroupFrame == aHighestType) return rv;
     }
     if (pseudoFrames.mColGroup.mFrame) {
       nsIFrame* colGroupHigh;
       rv = ProcessPseudoFrame(pseudoFrames.mColGroup, colGroupHigh);
       if (aHighestFrame &&
-          nsLayoutAtoms::tableRowGroupFrame == aHighestFrame->GetType() &&
+          nsGkAtoms::tableRowGroupFrame == aHighestFrame->GetType() &&
           !pseudoFrames.mTableInner.mFrame) {
         // table frames are special they can have two types of pseudo frames as
         // children that need to be processed in one pass, we only need to link
@@ -2687,11 +2683,11 @@ ProcessPseudoFrames(nsFrameConstructorState& aState,
         colGroupHigh->SetNextSibling(aHighestFrame); 
       }
       aHighestFrame = colGroupHigh;
-      if (nsLayoutAtoms::tableColGroupFrame == aHighestType) return rv;
+      if (nsGkAtoms::tableColGroupFrame == aHighestType) return rv;
     }
     if (pseudoFrames.mTableOuter.mFrame) {
       rv = ProcessPseudoTableFrame(pseudoFrames, aHighestFrame);
-      if (nsLayoutAtoms::tableOuterFrame == aHighestType) return rv;
+      if (nsGkAtoms::tableOuterFrame == aHighestType) return rv;
     }
     if (pseudoFrames.mCellOuter.mFrame) {
       rv = ProcessPseudoCellFrame(pseudoFrames, aHighestFrame);
@@ -2704,17 +2700,17 @@ ProcessPseudoFrames(nsFrameConstructorState& aState,
 
     if (pseudoFrames.mRow.mFrame) {
       rv = ProcessPseudoFrame(pseudoFrames.mRow, aHighestFrame);
-      if (nsLayoutAtoms::tableRowFrame == aHighestType) return rv;
+      if (nsGkAtoms::tableRowFrame == aHighestType) return rv;
     }
     if (pseudoFrames.mRowGroup.mFrame) {
       rv = ProcessPseudoRowGroupFrame(pseudoFrames.mRowGroup, aHighestFrame);
-      if (nsLayoutAtoms::tableRowGroupFrame == aHighestType) return rv;
+      if (nsGkAtoms::tableRowGroupFrame == aHighestType) return rv;
     }
     if (pseudoFrames.mColGroup.mFrame) {
       nsIFrame* colGroupHigh;
       rv = ProcessPseudoFrame(pseudoFrames.mColGroup, colGroupHigh);
       if (aHighestFrame &&
-          nsLayoutAtoms::tableRowGroupFrame == aHighestFrame->GetType() &&
+          nsGkAtoms::tableRowGroupFrame == aHighestFrame->GetType() &&
           !pseudoFrames.mTableInner.mFrame) {
         // table frames are special they can have two types of pseudo frames as
         // children that need to be processed in one pass, we only need to link
@@ -2723,7 +2719,7 @@ ProcessPseudoFrames(nsFrameConstructorState& aState,
         colGroupHigh->SetNextSibling(aHighestFrame); 
       }
       aHighestFrame = colGroupHigh;
-      if (nsLayoutAtoms::tableColGroupFrame == aHighestType) return rv;
+      if (nsGkAtoms::tableColGroupFrame == aHighestType) return rv;
     }
     if (pseudoFrames.mTableOuter.mFrame) {
       rv = ProcessPseudoTableFrame(pseudoFrames, aHighestFrame);
@@ -2773,15 +2769,15 @@ ProcessPseudoFrames(nsFrameConstructorState& aState,
 #ifdef DEBUG
   if (gTablePseudoFrame) {
     printf("*** ProcessPseudoFrames limited enter highest:");
-    if (nsLayoutAtoms::tableOuterFrame == aHighestType) 
+    if (nsGkAtoms::tableOuterFrame == aHighestType) 
       printf("OuterTable");
-    else if (nsLayoutAtoms::tableFrame == aHighestType) 
+    else if (nsGkAtoms::tableFrame == aHighestType) 
       printf("InnerTable");
-    else if (nsLayoutAtoms::tableColGroupFrame == aHighestType) 
+    else if (nsGkAtoms::tableColGroupFrame == aHighestType) 
       printf("ColGroup");
-    else if (nsLayoutAtoms::tableRowGroupFrame == aHighestType) 
+    else if (nsGkAtoms::tableRowGroupFrame == aHighestType) 
       printf("RowGroup");
-    else if (nsLayoutAtoms::tableRowFrame == aHighestType) 
+    else if (nsGkAtoms::tableRowFrame == aHighestType) 
       printf("Row");
     else if (IS_TABLE_CELL(aHighestType)) 
       printf("Cell");
@@ -2841,7 +2837,7 @@ nsCSSFrameConstructor::CreatePseudoTableFrame(nsTableCreator&          aTableCre
 
   // set pseudo data for the newly created frames
   pseudoOuter.mChildList.AddChild(pseudoInner.mFrame);
-  aState.mPseudoFrames.mLowestType = nsLayoutAtoms::tableFrame;
+  aState.mPseudoFrames.mLowestType = nsGkAtoms::tableFrame;
 
   // set pseudo data for the parent
   if (aState.mPseudoFrames.mCellInner.mFrame) {
@@ -2888,7 +2884,7 @@ nsCSSFrameConstructor::CreatePseudoRowGroupFrame(nsTableCreator&          aTable
   if (NS_FAILED(rv)) return rv;
 
   // set pseudo data for the newly created frames
-  aState.mPseudoFrames.mLowestType = nsLayoutAtoms::tableRowGroupFrame;
+  aState.mPseudoFrames.mLowestType = nsGkAtoms::tableRowGroupFrame;
 
   // set pseudo data for the parent
   if (aState.mPseudoFrames.mTableInner.mFrame) {
@@ -2985,7 +2981,7 @@ nsCSSFrameConstructor::CreatePseudoRowFrame(nsTableCreator&          aTableCreat
                               PR_TRUE, items, pseudo.mFrame, pseudoParent);
   if (NS_FAILED(rv)) return rv;
 
-  aState.mPseudoFrames.mLowestType = nsLayoutAtoms::tableRowFrame;
+  aState.mPseudoFrames.mLowestType = nsGkAtoms::tableRowFrame;
 
   // set pseudo data for the parent
   if (aState.mPseudoFrames.mRowGroup.mFrame) {
@@ -3035,8 +3031,8 @@ nsCSSFrameConstructor::CreatePseudoCellFrame(nsTableCreator&          aTableCrea
 
   // set pseudo data for the newly created frames
   pseudoOuter.mChildList.AddChild(pseudoInner.mFrame);
-  // give it nsLayoutAtoms::tableCellFrame, if it is really nsLayoutAtoms::bcTableCellFrame, it will match later
-  aState.mPseudoFrames.mLowestType = nsLayoutAtoms::tableCellFrame;
+  // give it nsGkAtoms::tableCellFrame, if it is really nsGkAtoms::bcTableCellFrame, it will match later
+  aState.mPseudoFrames.mLowestType = nsGkAtoms::tableCellFrame;
 
   // set pseudo data for the parent
   if (aState.mPseudoFrames.mRow.mFrame) {
@@ -3064,12 +3060,12 @@ nsCSSFrameConstructor::GetPseudoTableFrame(nsTableCreator&          aTableCreato
 
   if (pseudoFrames.IsEmpty()) {
     PRBool created = PR_FALSE;
-    if (nsLayoutAtoms::tableRowGroupFrame == parentFrameType) { // row group parent
+    if (nsGkAtoms::tableRowGroupFrame == parentFrameType) { // row group parent
       rv = CreatePseudoRowFrame(aTableCreator, aState, &aParentFrameIn);
       if (NS_FAILED(rv)) return rv;
       created = PR_TRUE;
     }
-    if (created || (nsLayoutAtoms::tableRowFrame == parentFrameType)) { // row parent
+    if (created || (nsGkAtoms::tableRowFrame == parentFrameType)) { // row parent
       rv = CreatePseudoCellFrame(aTableCreator, aState, &aParentFrameIn);
       if (NS_FAILED(rv)) return rv;
     }
@@ -3104,16 +3100,16 @@ nsCSSFrameConstructor::GetPseudoColGroupFrame(nsTableCreator&          aTableCre
 
   if (pseudoFrames.IsEmpty()) {
     PRBool created = PR_FALSE;
-    if (nsLayoutAtoms::tableRowGroupFrame == parentFrameType) {  // row group parent
+    if (nsGkAtoms::tableRowGroupFrame == parentFrameType) {  // row group parent
       rv = CreatePseudoRowFrame(aTableCreator, aState, &aParentFrameIn);
       created = PR_TRUE;
     }
-    if (created || (nsLayoutAtoms::tableRowFrame == parentFrameType)) { // row parent
+    if (created || (nsGkAtoms::tableRowFrame == parentFrameType)) { // row parent
       rv = CreatePseudoCellFrame(aTableCreator, aState, &aParentFrameIn);
       created = PR_TRUE;
     }
     if (created || IS_TABLE_CELL(parentFrameType) || // cell parent
-        (nsLayoutAtoms::tableCaptionFrame == parentFrameType)  || // caption parent
+        (nsGkAtoms::tableCaptionFrame == parentFrameType)  || // caption parent
         !IsTableRelated(parentFrameType, PR_TRUE)) { // block parent
       rv = CreatePseudoTableFrame(aTableCreator, aState, &aParentFrameIn);
     }
@@ -3151,12 +3147,12 @@ nsCSSFrameConstructor::GetPseudoRowGroupFrame(nsTableCreator&          aTableCre
 
   if (!pseudoFrames.mLowestType) {
     PRBool created = PR_FALSE;
-    if (nsLayoutAtoms::tableRowFrame == parentFrameType) {  // row parent
+    if (nsGkAtoms::tableRowFrame == parentFrameType) {  // row parent
       rv = CreatePseudoCellFrame(aTableCreator, aState, &aParentFrameIn);
       created = PR_TRUE;
     }
     if (created || IS_TABLE_CELL(parentFrameType) || // cell parent
-        (nsLayoutAtoms::tableCaptionFrame == parentFrameType)  || // caption parent
+        (nsGkAtoms::tableCaptionFrame == parentFrameType)  || // caption parent
         !IsTableRelated(parentFrameType, PR_TRUE)) { // block parent
       rv = CreatePseudoTableFrame(aTableCreator, aState, &aParentFrameIn);
     }
@@ -3190,12 +3186,12 @@ nsCSSFrameConstructor::GetPseudoRowFrame(nsTableCreator&          aTableCreator,
   if (!pseudoFrames.mLowestType) {
     PRBool created = PR_FALSE;
     if (IS_TABLE_CELL(parentFrameType) || // cell parent
-       (nsLayoutAtoms::tableCaptionFrame == parentFrameType)  || // caption parent
+       (nsGkAtoms::tableCaptionFrame == parentFrameType)  || // caption parent
         !IsTableRelated(parentFrameType, PR_TRUE)) { // block parent
       rv = CreatePseudoTableFrame(aTableCreator, aState, &aParentFrameIn);
       created = PR_TRUE;
     }
-    if (created || (nsLayoutAtoms::tableFrame == parentFrameType)) { // table parent
+    if (created || (nsGkAtoms::tableFrame == parentFrameType)) { // table parent
       rv = CreatePseudoRowGroupFrame(aTableCreator, aState, &aParentFrameIn);
     }
     rv = CreatePseudoRowFrame(aTableCreator, aState, &aParentFrameIn);
@@ -3227,11 +3223,11 @@ nsCSSFrameConstructor::GetPseudoCellFrame(nsTableCreator&          aTableCreator
 
   if (!pseudoFrames.mLowestType) {
     PRBool created = PR_FALSE;
-    if (nsLayoutAtoms::tableFrame == parentFrameType) { // table parent
+    if (nsGkAtoms::tableFrame == parentFrameType) { // table parent
       rv = CreatePseudoRowGroupFrame(aTableCreator, aState, &aParentFrameIn);
       created = PR_TRUE;
     }
-    if (created || (nsLayoutAtoms::tableRowGroupFrame == parentFrameType)) { // row group parent
+    if (created || (nsGkAtoms::tableRowGroupFrame == parentFrameType)) { // row group parent
       rv = CreatePseudoRowFrame(aTableCreator, aState, &aParentFrameIn);
       created = PR_TRUE;
     }
@@ -3265,60 +3261,60 @@ nsCSSFrameConstructor::GetParentFrame(nsTableCreator&          aTableCreator,
   aParentFrame = &aParentFrameIn;
   aIsPseudoParent = PR_FALSE;
 
-  if (nsLayoutAtoms::tableOuterFrame == aChildFrameType) { // table child
+  if (nsGkAtoms::tableOuterFrame == aChildFrameType) { // table child
     if (IsTableRelated(parentFrameType, PR_TRUE) &&
-        (nsLayoutAtoms::tableCaptionFrame != parentFrameType) ) { // need pseudo cell parent
+        (nsGkAtoms::tableCaptionFrame != parentFrameType) ) { // need pseudo cell parent
       rv = GetPseudoCellFrame(aTableCreator, aState, aParentFrameIn);
       if (NS_FAILED(rv)) return rv;
       pseudoParentFrame = pseudoFrames.mCellInner.mFrame;
     }
   } 
-  else if (nsLayoutAtoms::tableCaptionFrame == aChildFrameType) { // caption child
-    if (nsLayoutAtoms::tableOuterFrame != parentFrameType) { // need pseudo table parent
+  else if (nsGkAtoms::tableCaptionFrame == aChildFrameType) { // caption child
+    if (nsGkAtoms::tableOuterFrame != parentFrameType) { // need pseudo table parent
       rv = GetPseudoTableFrame(aTableCreator, aState, aParentFrameIn);
       if (NS_FAILED(rv)) return rv;
       pseudoParentFrame = pseudoFrames.mTableOuter.mFrame;
     }
   }
-  else if (nsLayoutAtoms::tableColGroupFrame == aChildFrameType) { // col group child
-    if (nsLayoutAtoms::tableFrame != parentFrameType) { // need pseudo table parent
+  else if (nsGkAtoms::tableColGroupFrame == aChildFrameType) { // col group child
+    if (nsGkAtoms::tableFrame != parentFrameType) { // need pseudo table parent
       rv = GetPseudoTableFrame(aTableCreator, aState, aParentFrameIn);
       if (NS_FAILED(rv)) return rv;
       pseudoParentFrame = pseudoFrames.mTableInner.mFrame;
     }
   }
-  else if (nsLayoutAtoms::tableColFrame == aChildFrameType) { // col child
-    if (nsLayoutAtoms::tableColGroupFrame != parentFrameType) { // need pseudo col group parent
+  else if (nsGkAtoms::tableColFrame == aChildFrameType) { // col child
+    if (nsGkAtoms::tableColGroupFrame != parentFrameType) { // need pseudo col group parent
       rv = GetPseudoColGroupFrame(aTableCreator, aState, aParentFrameIn);
       if (NS_FAILED(rv)) return rv;
       pseudoParentFrame = pseudoFrames.mColGroup.mFrame;
     }
   }
-  else if (nsLayoutAtoms::tableRowGroupFrame == aChildFrameType) { // row group child
+  else if (nsGkAtoms::tableRowGroupFrame == aChildFrameType) { // row group child
     // XXX can this go away?
-    if (nsLayoutAtoms::tableFrame != parentFrameType) {
+    if (nsGkAtoms::tableFrame != parentFrameType) {
       // trees allow row groups to contain row groups, so don't create pseudo frames
         rv = GetPseudoTableFrame(aTableCreator, aState, aParentFrameIn);
         if (NS_FAILED(rv)) return rv;
         pseudoParentFrame = pseudoFrames.mTableInner.mFrame;
      }
   }
-  else if (nsLayoutAtoms::tableRowFrame == aChildFrameType) { // row child
-    if (nsLayoutAtoms::tableRowGroupFrame != parentFrameType) { // need pseudo row group parent
+  else if (nsGkAtoms::tableRowFrame == aChildFrameType) { // row child
+    if (nsGkAtoms::tableRowGroupFrame != parentFrameType) { // need pseudo row group parent
       rv = GetPseudoRowGroupFrame(aTableCreator, aState, aParentFrameIn);
       if (NS_FAILED(rv)) return rv;
       pseudoParentFrame = pseudoFrames.mRowGroup.mFrame;
     }
   }
   else if (IS_TABLE_CELL(aChildFrameType)) { // cell child
-    if (nsLayoutAtoms::tableRowFrame != parentFrameType) { // need pseudo row parent
+    if (nsGkAtoms::tableRowFrame != parentFrameType) { // need pseudo row parent
       rv = GetPseudoRowFrame(aTableCreator, aState, aParentFrameIn);
       if (NS_FAILED(rv)) return rv;
       pseudoParentFrame = pseudoFrames.mRow.mFrame;
     }
   }
-  else if (nsLayoutAtoms::tableFrame == aChildFrameType) { // invalid
-    NS_ASSERTION(PR_FALSE, "GetParentFrame called on nsLayoutAtoms::tableFrame child");
+  else if (nsGkAtoms::tableFrame == aChildFrameType) { // invalid
+    NS_ASSERTION(PR_FALSE, "GetParentFrame called on nsGkAtoms::tableFrame child");
   }
   else { // foreign frame
     if (IsTableRelated(parentFrameType, PR_FALSE)) { // need pseudo cell parent
@@ -3350,7 +3346,7 @@ IsSpecialContent(nsIContent*     aContent,
     // XXXbz this is duplicating some logic from ConstructHTMLFrame....
     // Would be nice to avoid that.  :(
 
-    if (aTag == nsHTMLAtoms::input) {
+    if (aTag == nsGkAtoms::input) {
       nsCOMPtr<nsIFormControl> control = do_QueryInterface(aContent);
       if (control) {
         PRInt32 type = control->GetType();
@@ -3365,70 +3361,70 @@ IsSpecialContent(nsIContent*     aContent,
       return PR_TRUE;
     }
 
-    if (aTag == nsHTMLAtoms::img) {
+    if (aTag == nsGkAtoms::img) {
       return nsImageFrame::ShouldCreateImageFrameFor(aContent, aStyleContext);
     }
 
-    if (aTag == nsHTMLAtoms::object ||
-        aTag == nsHTMLAtoms::applet ||
-        aTag == nsHTMLAtoms::embed) {
+    if (aTag == nsGkAtoms::object ||
+        aTag == nsGkAtoms::applet ||
+        aTag == nsGkAtoms::embed) {
       return !(aContent->IntrinsicState() &
              (NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED |
               NS_EVENT_STATE_SUPPRESSED));
     }
 
     return
-      aTag == nsHTMLAtoms::br ||
-      aTag == nsHTMLAtoms::wbr ||
-      aTag == nsHTMLAtoms::textarea ||
-      aTag == nsHTMLAtoms::select ||
-      aTag == nsHTMLAtoms::fieldset ||
-      aTag == nsHTMLAtoms::legend ||
-      aTag == nsHTMLAtoms::frameset ||
-      aTag == nsHTMLAtoms::iframe ||
-      aTag == nsHTMLAtoms::spacer ||
-      aTag == nsHTMLAtoms::button ||
-      aTag == nsHTMLAtoms::isindex ||
-      aTag == nsHTMLAtoms::canvas;
+      aTag == nsGkAtoms::br ||
+      aTag == nsGkAtoms::wbr ||
+      aTag == nsGkAtoms::textarea ||
+      aTag == nsGkAtoms::select ||
+      aTag == nsGkAtoms::fieldset ||
+      aTag == nsGkAtoms::legend ||
+      aTag == nsGkAtoms::frameset ||
+      aTag == nsGkAtoms::iframe ||
+      aTag == nsGkAtoms::spacer ||
+      aTag == nsGkAtoms::button ||
+      aTag == nsGkAtoms::isindex ||
+      aTag == nsGkAtoms::canvas;
   }
 
 
   if (aNameSpaceID == kNameSpaceID_XUL)
     return
 #ifdef MOZ_XUL
-      aTag == nsXULAtoms::button ||
-      aTag == nsXULAtoms::checkbox ||
-      aTag == nsXULAtoms::radio ||
-      aTag == nsXULAtoms::autorepeatbutton ||
-      aTag == nsXULAtoms::titlebar ||
-      aTag == nsXULAtoms::resizer ||
-      aTag == nsXULAtoms::image ||
-      aTag == nsXULAtoms::spring ||
-      aTag == nsHTMLAtoms::spacer ||
-      aTag == nsXULAtoms::treechildren ||
-      aTag == nsXULAtoms::treecol ||
-      aTag == nsXULAtoms::text ||
-      aTag == nsXULAtoms::description ||
-      aTag == nsHTMLAtoms::label ||
-      aTag == nsXULAtoms::menu ||
-      aTag == nsXULAtoms::menuitem ||
-      aTag == nsXULAtoms::menubutton ||
+      aTag == nsGkAtoms::button ||
+      aTag == nsGkAtoms::checkbox ||
+      aTag == nsGkAtoms::radio ||
+      aTag == nsGkAtoms::autorepeatbutton ||
+      aTag == nsGkAtoms::titlebar ||
+      aTag == nsGkAtoms::resizer ||
+      aTag == nsGkAtoms::image ||
+      aTag == nsGkAtoms::spring ||
+      aTag == nsGkAtoms::spacer ||
+      aTag == nsGkAtoms::treechildren ||
+      aTag == nsGkAtoms::treecol ||
+      aTag == nsGkAtoms::text ||
+      aTag == nsGkAtoms::description ||
+      aTag == nsGkAtoms::label ||
+      aTag == nsGkAtoms::menu ||
+      aTag == nsGkAtoms::menuitem ||
+      aTag == nsGkAtoms::menubutton ||
   #ifndef XP_MACOSX
       // keep this in sync  with ConstructXULFrame especially for the MAC
-      aTag == nsXULAtoms::menubar ||
+      aTag == nsGkAtoms::menubar ||
   #endif
-      aTag == nsXULAtoms::popupgroup ||
-      aTag == nsXULAtoms::iframe ||
-      aTag == nsXULAtoms::editor ||
-      aTag == nsXULAtoms::browser ||
-      aTag == nsXULAtoms::progressmeter ||
+      aTag == nsGkAtoms::popupgroup ||
+      aTag == nsGkAtoms::iframe ||
+      aTag == nsGkAtoms::editor ||
+      aTag == nsGkAtoms::browser ||
+      aTag == nsGkAtoms::progressmeter ||
 #endif
-      aTag == nsXULAtoms::slider ||
-      aTag == nsXULAtoms::scrollbar ||
-      aTag == nsXULAtoms::nativescrollbar ||
-      aTag == nsXULAtoms::scrollbarbutton ||
+      aTag == nsGkAtoms::slider ||
+      aTag == nsGkAtoms::scrollbar ||
+      aTag == nsGkAtoms::nativescrollbar ||
+      aTag == nsGkAtoms::scrollbarbutton ||
 #ifdef MOZ_XUL
-      aTag == nsXULAtoms::splitter ||
+      aTag == nsGkAtoms::splitter ||
 #endif
       PR_FALSE;
 
@@ -3442,31 +3438,31 @@ IsSpecialContent(nsIContent*     aContent,
 #ifdef MOZ_MATHML
   if (aNameSpaceID == kNameSpaceID_MathML)
     return
-      aTag == nsMathMLAtoms::mi_ ||
-      aTag == nsMathMLAtoms::mn_ ||
-      aTag == nsMathMLAtoms::ms_ ||
-      aTag == nsMathMLAtoms::mtext_ ||
-      aTag == nsMathMLAtoms::mo_ ||
-      aTag == nsMathMLAtoms::mfrac_ ||
-      aTag == nsMathMLAtoms::msup_ ||
-      aTag == nsMathMLAtoms::msub_ ||
-      aTag == nsMathMLAtoms::msubsup_ ||
-      aTag == nsMathMLAtoms::munder_ ||
-      aTag == nsMathMLAtoms::mover_ ||
-      aTag == nsMathMLAtoms::munderover_ ||
-      aTag == nsMathMLAtoms::mphantom_ ||
-      aTag == nsMathMLAtoms::mpadded_ ||
-      aTag == nsMathMLAtoms::mspace_ ||
-      aTag == nsMathMLAtoms::mfenced_ ||
-      aTag == nsMathMLAtoms::mmultiscripts_ ||
-      aTag == nsMathMLAtoms::mstyle_ ||
-      aTag == nsMathMLAtoms::msqrt_ ||
-      aTag == nsMathMLAtoms::mroot_ ||
-      aTag == nsMathMLAtoms::maction_ ||
-      aTag == nsMathMLAtoms::mrow_   ||
-      aTag == nsMathMLAtoms::merror_ ||
-      aTag == nsMathMLAtoms::none   ||
-      aTag == nsMathMLAtoms::mprescripts_;
+      aTag == nsGkAtoms::mi_ ||
+      aTag == nsGkAtoms::mn_ ||
+      aTag == nsGkAtoms::ms_ ||
+      aTag == nsGkAtoms::mtext_ ||
+      aTag == nsGkAtoms::mo_ ||
+      aTag == nsGkAtoms::mfrac_ ||
+      aTag == nsGkAtoms::msup_ ||
+      aTag == nsGkAtoms::msub_ ||
+      aTag == nsGkAtoms::msubsup_ ||
+      aTag == nsGkAtoms::munder_ ||
+      aTag == nsGkAtoms::mover_ ||
+      aTag == nsGkAtoms::munderover_ ||
+      aTag == nsGkAtoms::mphantom_ ||
+      aTag == nsGkAtoms::mpadded_ ||
+      aTag == nsGkAtoms::mspace_ ||
+      aTag == nsGkAtoms::mfenced_ ||
+      aTag == nsGkAtoms::mmultiscripts_ ||
+      aTag == nsGkAtoms::mstyle_ ||
+      aTag == nsGkAtoms::msqrt_ ||
+      aTag == nsGkAtoms::mroot_ ||
+      aTag == nsGkAtoms::maction_ ||
+      aTag == nsGkAtoms::mrow_   ||
+      aTag == nsGkAtoms::merror_ ||
+      aTag == nsGkAtoms::none   ||
+      aTag == nsGkAtoms::mprescripts_;
 #endif
   return PR_FALSE;
 }
@@ -3495,7 +3491,7 @@ nsCSSFrameConstructor::AdjustParentFrame(nsFrameConstructorState&     aState,
   // Only use the outer table frame as parent if the child is going to use a
   // tableCaptionFrame, otherwise the inner table frame is the parent
   // (bug 341858).
-  if (aParentFrame->GetType() == nsLayoutAtoms::tableOuterFrame) {
+  if (aParentFrame->GetType() == nsGkAtoms::tableOuterFrame) {
     childIsSpecialContent = IsSpecialContent(aChildContent, aTag, aNameSpaceID,
                                              aChildStyle);
     if (childIsSpecialContent ||
@@ -3574,7 +3570,7 @@ nsCSSFrameConstructor::ConstructTableFrame(nsFrameConstructorState& aState,
   if (!aIsPseudo) {
     // this frame may have a pseudo parent
     PRBool hasPseudoParent = PR_FALSE;
-    GetParentFrame(aTableCreator, *parentFrame, nsLayoutAtoms::tableOuterFrame,
+    GetParentFrame(aTableCreator, *parentFrame, nsGkAtoms::tableOuterFrame,
                    aState, parentFrame, hasPseudoParent);
     if (!hasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aChildItems);
@@ -3584,7 +3580,7 @@ nsCSSFrameConstructor::ConstructTableFrame(nsFrameConstructorState& aState,
                                       PR_FALSE, PR_FALSE);
       frameItems = &aState.mPseudoFrames.mCellInner.mChildList;
       if (aState.mPseudoFrames.mTableOuter.mFrame) {
-        ProcessPseudoFrames(aState, nsLayoutAtoms::tableOuterFrame);
+        ProcessPseudoFrames(aState, nsGkAtoms::tableOuterFrame);
       }
     }
   }
@@ -3636,7 +3632,7 @@ nsCSSFrameConstructor::ConstructTableFrame(nsFrameConstructorState& aState,
 
     // Set the outer table frame's primary and option lists
     if (captionFrame) {
-      aNewOuterFrame->SetInitialChildList(nsLayoutAtoms::captionList,
+      aNewOuterFrame->SetInitialChildList(nsGkAtoms::captionList,
                                           captionFrame);
     }
   }
@@ -3662,7 +3658,7 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsFrameConstructorState& aStat
   aIsPseudoParent = PR_FALSE;
   // this frame may have a pseudo parent
   GetParentFrame(aTableCreator, *aParentFrameIn, 
-                 nsLayoutAtoms::tableCaptionFrame, aState, parentFrame,
+                 nsGkAtoms::tableCaptionFrame, aState, parentFrame,
                  aIsPseudoParent);
   if (!aIsPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
     ProcessPseudoFrames(aState, aChildItems);
@@ -3717,13 +3713,13 @@ nsCSSFrameConstructor::ConstructTableRowGroupFrame(nsFrameConstructorState& aSta
   if (!aIsPseudo) {
     // this frame may have a pseudo parent
     GetParentFrame(aTableCreator, *aParentFrameIn, 
-                   nsLayoutAtoms::tableRowGroupFrame, aState, parentFrame,
+                   nsGkAtoms::tableRowGroupFrame, aState, parentFrame,
                    aIsPseudoParent);
     if (!aIsPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aChildItems);
     }
     if (!aIsPseudo && aIsPseudoParent && aState.mPseudoFrames.mRowGroup.mFrame) {
-      ProcessPseudoFrames(aState, nsLayoutAtoms::tableRowGroupFrame);
+      ProcessPseudoFrames(aState, nsGkAtoms::tableRowGroupFrame);
     }
   }
 
@@ -3793,13 +3789,13 @@ nsCSSFrameConstructor::ConstructTableColGroupFrame(nsFrameConstructorState& aSta
   if (!aIsPseudo) {
     // this frame may have a pseudo parent
     GetParentFrame(aTableCreator, *aParentFrameIn, 
-                   nsLayoutAtoms::tableColGroupFrame, aState, parentFrame,
+                   nsGkAtoms::tableColGroupFrame, aState, parentFrame,
                    aIsPseudoParent);
     if (!aIsPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aChildItems);
     }
     if (!aIsPseudo && aIsPseudoParent && aState.mPseudoFrames.mColGroup.mFrame) {
-      ProcessPseudoFrames(aState, nsLayoutAtoms::tableColGroupFrame);
+      ProcessPseudoFrames(aState, nsGkAtoms::tableColGroupFrame);
     }
   }
 
@@ -3843,13 +3839,13 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsFrameConstructorState& aState,
   if (!aIsPseudo) {
     // this frame may have a pseudo parent
     GetParentFrame(aTableCreator, *aParentFrameIn,
-                   nsLayoutAtoms::tableRowFrame, aState, parentFrame,
+                   nsGkAtoms::tableRowFrame, aState, parentFrame,
                    aIsPseudoParent);
     if (!aIsPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aChildItems);
     }
     if (!aIsPseudo && aIsPseudoParent && aState.mPseudoFrames.mRow.mFrame) {
-      ProcessPseudoFrames(aState, nsLayoutAtoms::tableRowFrame);
+      ProcessPseudoFrames(aState, nsGkAtoms::tableRowFrame);
     }
   }
 
@@ -3898,7 +3894,7 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsFrameConstructorState& aState,
   if (!aIsPseudo) {
     // this frame may have a pseudo parent
     GetParentFrame(aTableCreator, *aParentFrameIn, 
-                   nsLayoutAtoms::tableColFrame, aState, parentFrame,
+                   nsGkAtoms::tableColFrame, aState, parentFrame,
                    aIsPseudoParent);
     if (!aIsPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aChildItems);
@@ -3959,15 +3955,15 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsFrameConstructorState& aState,
   aIsPseudoParent = PR_FALSE;
   if (!aIsPseudo) {
     // this frame may have a pseudo parent
-    // use nsLayoutAtoms::tableCellFrame which will match if it is really nsLayoutAtoms::bcTableCellFrame
+    // use nsGkAtoms::tableCellFrame which will match if it is really nsGkAtoms::bcTableCellFrame
     GetParentFrame(aTableCreator, *aParentFrameIn, 
-                   nsLayoutAtoms::tableCellFrame, aState, parentFrame,
+                   nsGkAtoms::tableCellFrame, aState, parentFrame,
                    aIsPseudoParent);
     if (!aIsPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aChildItems);
     }
     if (!aIsPseudo && aIsPseudoParent && aState.mPseudoFrames.mCellOuter.mFrame) {
-      ProcessPseudoFrames(aState, nsLayoutAtoms::tableCellFrame);
+      ProcessPseudoFrames(aState, nsGkAtoms::tableCellFrame);
     }
   }
 
@@ -4069,7 +4065,7 @@ nsCSSFrameConstructor::ConstructTableForeignFrame(nsFrameConstructorState& aStat
     // this frame may have a pseudo parent, use block frame type to
     // trigger foreign
     rv = GetParentFrame(aTableCreator,
-                        *aParentFrameIn, nsLayoutAtoms::blockFrame,
+                        *aParentFrameIn, nsGkAtoms::blockFrame,
                         aState, parentFrame, hasPseudoParent);
     NS_ASSERTION(NS_SUCCEEDED(rv), "GetParentFrame failed!");
     if (!hasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
@@ -4083,7 +4079,7 @@ nsCSSFrameConstructor::ConstructTableForeignFrame(nsFrameConstructorState& aStat
   // foreign frames
   // a) inner table cell, which is a pseudo frame
   // b) caption frame which will be always a real frame.
-  NS_ASSERTION(nsLayoutAtoms::tableCaptionFrame == parentFrame->GetType() ||
+  NS_ASSERTION(nsGkAtoms::tableCaptionFrame == parentFrame->GetType() ||
                parentFrame == aState.mPseudoFrames.mCellInner.mFrame,
                "Weird parent in ConstructTableForeignFrame");
 
@@ -4196,7 +4192,7 @@ nsCSSFrameConstructor::TableProcessChild(nsFrameConstructorState& aState,
   // Resolve the style context and get its display
   childStyleContext = ResolveStyleContext(aParentFrame, aChildContent);
   const nsStyleDisplay* childDisplay = childStyleContext->GetStyleDisplay();
-  if (nsLayoutAtoms::tableColGroupFrame == aParentFrameType &&
+  if (nsGkAtoms::tableColGroupFrame == aParentFrameType &&
       NS_STYLE_DISPLAY_TABLE_COLUMN != childDisplay->mDisplay)
       return rv; // construct only table columns below colgroups
 
@@ -4402,7 +4398,7 @@ nsCSSFrameConstructor::PropagateScrollToViewport()
   nsCOMPtr<nsIContent> bodyElement = do_QueryInterface(body);
   
   if (!bodyElement ||
-      !bodyElement->NodeInfo()->Equals(nsHTMLAtoms::body)) {
+      !bodyElement->NodeInfo()->Equals(nsGkAtoms::body)) {
     // The body is not a <body> tag, it's a <frameset>.
     return nsnull;
   }
@@ -5008,7 +5004,7 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
   *aNewFrame = nsnull;
   nsIFrame* buttonFrame = nsnull;
   
-  if (nsHTMLAtoms::button == aTag) {
+  if (nsGkAtoms::button == aTag) {
     buttonFrame = NS_NewHTMLButtonControlFrame(mPresShell, aStyleContext);
   }
   else {
@@ -5206,7 +5202,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
       // element (the scrollbars).
 
       nsFrameItems childItems;
-      CreateAnonymousFrames(nsHTMLAtoms::combobox, aState, aContent,
+      CreateAnonymousFrames(nsGkAtoms::combobox, aState, aContent,
                             comboboxFrame, PR_TRUE, childItems);
   
       comboboxFrame->SetInitialChildList(nsnull, childItems.childList);
@@ -5215,7 +5211,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
       // dropdown list frame.
       nsFrameItems popupItems;
       popupItems.AddChild(listFrame);
-      comboboxFrame->SetInitialChildList(nsLayoutAtoms::popupList,
+      comboboxFrame->SetInitialChildList(nsGkAtoms::popupList,
                                          popupItems.childList);
 
       aNewFrame = comboboxFrame;
@@ -5540,7 +5536,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
   const nsStyleDisplay* display = aStyleContext->GetStyleDisplay();
 
   // Create a frame based on the tag
-  if (nsHTMLAtoms::img == aTag) {
+  if (nsGkAtoms::img == aTag) {
     // Make sure to keep IsSpecialContent in synch with this code
     rv = CreateHTMLImageFrame(aContent, aStyleContext, NS_NewImageFrame,
                               &newFrame);
@@ -5550,7 +5546,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
       }
     }
   }
-  else if (nsHTMLAtoms::br == aTag) {
+  else if (nsGkAtoms::br == aTag) {
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems); 
     }
@@ -5562,14 +5558,14 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     // of the hash table, and it's doubtful we need the mapping anyway
     addToHashTable = PR_FALSE;
   }
-  else if (nsHTMLAtoms::wbr == aTag) {
+  else if (nsGkAtoms::wbr == aTag) {
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems); 
     }
     newFrame = NS_NewWBRFrame(mPresShell, aStyleContext);
     triedFrame = PR_TRUE;
   }
-  else if (nsHTMLAtoms::input == aTag) {
+  else if (nsGkAtoms::input == aTag) {
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
         ProcessPseudoFrames(aState, aFrameItems); 
     }
@@ -5579,14 +5575,14 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
                           display, frameHasBeenInitialized,
                           addedToFrameList, aFrameItems);  
   }
-  else if (nsHTMLAtoms::textarea == aTag) {
+  else if (nsGkAtoms::textarea == aTag) {
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems); 
     }
     newFrame = NS_NewTextControlFrame(mPresShell, aStyleContext);
     triedFrame = PR_TRUE;
   }
-  else if (nsHTMLAtoms::select == aTag) {
+  else if (nsGkAtoms::select == aTag) {
     if (!gUseXBLForms) {
       if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
         ProcessPseudoFrames(aState, aFrameItems); 
@@ -5603,9 +5599,9 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
       }
     }
   }
-  else if (nsHTMLAtoms::object == aTag ||
-           nsHTMLAtoms::applet == aTag ||
-           nsHTMLAtoms::embed == aTag) {
+  else if (nsGkAtoms::object == aTag ||
+           nsGkAtoms::applet == aTag ||
+           nsGkAtoms::embed == aTag) {
     // Make sure to keep IsSpecialContent in synch with this code
     if (!(aContent->IntrinsicState() &
           (NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED |
@@ -5645,7 +5641,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
       triedFrame = PR_TRUE;
     }
   }
-  else if (nsHTMLAtoms::fieldset == aTag) {
+  else if (nsGkAtoms::fieldset == aTag) {
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems); 
     }
@@ -5657,7 +5653,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
                  "Frame didn't get added to aFrameItems?");
     addedToFrameList = PR_TRUE;
   }
-  else if (nsHTMLAtoms::legend == aTag) {
+  else if (nsGkAtoms::legend == aTag) {
     NS_ASSERTION(!display->IsAbsolutelyPositioned() && !display->IsFloating(),
                  "Legends should not be positioned and should not float");
     
@@ -5669,7 +5665,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
 
     isFloatContainer = PR_TRUE;
   }
-  else if (nsHTMLAtoms::frameset == aTag) {
+  else if (nsGkAtoms::frameset == aTag) {
     NS_ASSERTION(!display->IsAbsolutelyPositioned() && !display->IsFloating(),
                  "Framesets should not be positioned and should not float");
     
@@ -5680,7 +5676,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     newFrame = NS_NewHTMLFramesetFrame(mPresShell, aStyleContext);
     triedFrame = PR_TRUE;
   }
-  else if (nsHTMLAtoms::iframe == aTag) {
+  else if (nsGkAtoms::iframe == aTag) {
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems); 
     }
@@ -5698,7 +5694,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
                     aParentFrame, nsnull, nsnull);
     }
   }
-  else if (nsHTMLAtoms::spacer == aTag) {
+  else if (nsGkAtoms::spacer == aTag) {
     NS_ASSERTION(!display->IsAbsolutelyPositioned() && !display->IsFloating(),
                  "Spacers should not be positioned and should not float");
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
@@ -5707,7 +5703,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     newFrame = NS_NewSpacerFrame(mPresShell, aStyleContext);
     triedFrame = PR_TRUE;
   }
-  else if (nsHTMLAtoms::button == aTag) {
+  else if (nsGkAtoms::button == aTag) {
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems); 
     }
@@ -5723,14 +5719,14 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     addedToFrameList = PR_TRUE;
     isFloatContainer = PR_TRUE;
   }
-  else if (nsHTMLAtoms::isindex == aTag) {
+  else if (nsGkAtoms::isindex == aTag) {
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems);
     }
     newFrame = NS_NewIsIndexFrame(mPresShell, aStyleContext);
     triedFrame = PR_TRUE;
   }
-  else if (nsHTMLAtoms::canvas == aTag) {
+  else if (nsGkAtoms::canvas == aTag) {
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems); 
     }
@@ -5842,13 +5838,13 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIAtom*                 aTag,
   // nsGenericElement::SetDocument ought to keep a list like this one,
   // but it can't because scroll frames get around this.
   if (!aIsRoot &&
-      aTag != nsHTMLAtoms::input &&
-      aTag != nsHTMLAtoms::textarea &&
-      aTag != nsHTMLAtoms::combobox &&
-      aTag != nsHTMLAtoms::isindex &&
-      aTag != nsXULAtoms::scrollbar
+      aTag != nsGkAtoms::input &&
+      aTag != nsGkAtoms::textarea &&
+      aTag != nsGkAtoms::combobox &&
+      aTag != nsGkAtoms::isindex &&
+      aTag != nsGkAtoms::scrollbar
 #ifdef MOZ_SVG
-      && aTag != nsSVGAtoms::use
+      && aTag != nsGkAtoms::use
 #endif
       )
     return NS_OK;
@@ -5929,8 +5925,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
       nsINodeInfo *ni = content->NodeInfo();
       nsIAtom *localName = ni->NameAtom();
       if (ni->NamespaceID() == kNameSpaceID_XUL &&
-          (localName == nsXULAtoms::scrollbar ||
-           localName == nsXULAtoms::scrollcorner)) {
+          (localName == nsGkAtoms::scrollbar ||
+           localName == nsGkAtoms::scrollcorner)) {
         nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(aDocument));
         if (xulDoc)
           bindingParent = aParent;
@@ -5941,7 +5937,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
       // least-surprise CSS binding until we do the SVG specified
       // cascading rules for <svg:use> - bug 265894
       if (aParent &&
-          aParent->NodeInfo()->Equals(nsSVGAtoms::use, kNameSpaceID_SVG))
+          aParent->NodeInfo()->Equals(nsGkAtoms::use, kNameSpaceID_SVG))
         bindingParent = aParent;
       else
 #endif
@@ -6056,14 +6052,14 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       // Make sure to keep IsSpecialContent in synch with this code
 #ifdef MOZ_XUL
       // BUTTON CONSTRUCTION
-      if (aTag == nsXULAtoms::button || aTag == nsXULAtoms::checkbox || aTag == nsXULAtoms::radio) {
+      if (aTag == nsGkAtoms::button || aTag == nsGkAtoms::checkbox || aTag == nsGkAtoms::radio) {
         newFrame = NS_NewButtonBoxFrame(mPresShell, aStyleContext);
 
         // Boxes can scroll.
         mayBeScrollable = PR_TRUE;
       } // End of BUTTON CONSTRUCTION logic
       // AUTOREPEATBUTTON CONSTRUCTION
-      else if (aTag == nsXULAtoms::autorepeatbutton) {
+      else if (aTag == nsGkAtoms::autorepeatbutton) {
         newFrame = NS_NewAutoRepeatBoxFrame(mPresShell, aStyleContext);
 
         // Boxes can scroll.
@@ -6071,7 +6067,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       } // End of AUTOREPEATBUTTON CONSTRUCTION logic
 
       // TITLEBAR CONSTRUCTION
-      else if (aTag == nsXULAtoms::titlebar) {
+      else if (aTag == nsGkAtoms::titlebar) {
         newFrame = NS_NewTitleBarFrame(mPresShell, aStyleContext);
 
         // Boxes can scroll.
@@ -6079,31 +6075,31 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       } // End of TITLEBAR CONSTRUCTION logic
 
       // RESIZER CONSTRUCTION
-      else if (aTag == nsXULAtoms::resizer) {
+      else if (aTag == nsGkAtoms::resizer) {
         newFrame = NS_NewResizerFrame(mPresShell, aStyleContext);
 
         // Boxes can scroll.
         mayBeScrollable = PR_TRUE;
       } // End of RESIZER CONSTRUCTION logic
 
-      else if (aTag == nsXULAtoms::image) {
+      else if (aTag == nsGkAtoms::image) {
         newFrame = NS_NewImageBoxFrame(mPresShell, aStyleContext);
       }
-      else if (aTag == nsXULAtoms::spring ||
-               aTag == nsHTMLAtoms::spacer) {
+      else if (aTag == nsGkAtoms::spring ||
+               aTag == nsGkAtoms::spacer) {
         newFrame = NS_NewLeafBoxFrame(mPresShell, aStyleContext);
       }
-       else if (aTag == nsXULAtoms::treechildren) {
+       else if (aTag == nsGkAtoms::treechildren) {
         newFrame = NS_NewTreeBodyFrame(mPresShell, aStyleContext);
       }
-      else if (aTag == nsXULAtoms::treecol) {
+      else if (aTag == nsGkAtoms::treecol) {
         newFrame = NS_NewTreeColFrame(mPresShell, aStyleContext);
       }
       // TEXT CONSTRUCTION
-      else if (aTag == nsXULAtoms::text || aTag == nsHTMLAtoms::label ||
-               aTag == nsXULAtoms::description) {
-        if ((aTag == nsHTMLAtoms::label || aTag == nsXULAtoms::description) && 
-            (! aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::value))) {
+      else if (aTag == nsGkAtoms::text || aTag == nsGkAtoms::label ||
+               aTag == nsGkAtoms::description) {
+        if ((aTag == nsGkAtoms::label || aTag == nsGkAtoms::description) && 
+            (! aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::value))) {
           newFrame = NS_NewAreaFrame(mPresShell, aStyleContext,
             NS_BLOCK_SPACE_MGR | NS_BLOCK_SHRINK_WRAP | NS_BLOCK_MARGIN_ROOT);
         }
@@ -6114,16 +6110,16 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       // End of TEXT CONSTRUCTION logic
 
        // Menu Construction    
-      else if (aTag == nsXULAtoms::menu ||
-               aTag == nsXULAtoms::menuitem || 
-               aTag == nsXULAtoms::menubutton) {
+      else if (aTag == nsGkAtoms::menu ||
+               aTag == nsGkAtoms::menuitem || 
+               aTag == nsGkAtoms::menubutton) {
         // A derived class box frame
         // that has custom reflow to prevent menu children
         // from becoming part of the flow.
         newFrame = NS_NewMenuFrame(mPresShell, aStyleContext,
-          (aTag != nsXULAtoms::menuitem));
+          (aTag != nsGkAtoms::menuitem));
       }
-      else if (aTag == nsXULAtoms::menubar) {
+      else if (aTag == nsGkAtoms::menubar) {
   #ifdef XP_MACOSX
         // On Mac OS X, we use the system menubar for any root chrome shell
         // XUL menubars.
@@ -6151,45 +6147,45 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 
         newFrame = NS_NewMenuBarFrame(mPresShell, aStyleContext);
       }
-      else if (aTag == nsXULAtoms::popupgroup) {
+      else if (aTag == nsGkAtoms::popupgroup) {
         // This frame contains child popups
         newFrame = NS_NewPopupSetFrame(mPresShell, aStyleContext);
       }
-      else if (aTag == nsXULAtoms::iframe || aTag == nsXULAtoms::editor ||
-               aTag == nsXULAtoms::browser) {
+      else if (aTag == nsGkAtoms::iframe || aTag == nsGkAtoms::editor ||
+               aTag == nsGkAtoms::browser) {
         newFrame = NS_NewSubDocumentFrame(mPresShell, aStyleContext);
       }
       // PROGRESS METER CONSTRUCTION
-      else if (aTag == nsXULAtoms::progressmeter) {
+      else if (aTag == nsGkAtoms::progressmeter) {
         newFrame = NS_NewProgressMeterFrame(mPresShell, aStyleContext);
       }
       // End of PROGRESS METER CONSTRUCTION logic
       else
 #endif
       // SLIDER CONSTRUCTION
-      if (aTag == nsXULAtoms::slider) {
+      if (aTag == nsGkAtoms::slider) {
         newFrame = NS_NewSliderFrame(mPresShell, aStyleContext);
       }
       // End of SLIDER CONSTRUCTION logic
 
       // SCROLLBAR CONSTRUCTION
-      else if (aTag == nsXULAtoms::scrollbar) {
+      else if (aTag == nsGkAtoms::scrollbar) {
         newFrame = NS_NewScrollbarFrame(mPresShell, aStyleContext);
       }
-      else if (aTag == nsXULAtoms::nativescrollbar) {
+      else if (aTag == nsGkAtoms::nativescrollbar) {
         newFrame = NS_NewNativeScrollbarFrame(mPresShell, aStyleContext);
       }
       // End of SCROLLBAR CONSTRUCTION logic
 
       // SCROLLBUTTON CONSTRUCTION
-      else if (aTag == nsXULAtoms::scrollbarbutton) {
+      else if (aTag == nsGkAtoms::scrollbarbutton) {
         newFrame = NS_NewScrollbarButtonFrame(mPresShell, aStyleContext);
       }
       // End of SCROLLBUTTON CONSTRUCTION logic
 
 #ifdef MOZ_XUL
       // SPLITTER CONSTRUCTION
-      else if (aTag == nsXULAtoms::splitter) {
+      else if (aTag == nsGkAtoms::splitter) {
         newFrame = NS_NewSplitterFrame(mPresShell, aStyleContext);
       }
       // End of SPLITTER CONSTRUCTION logic
@@ -6229,7 +6225,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       else if (display->mDisplay == NS_STYLE_DISPLAY_GRID_GROUP) {
         nsCOMPtr<nsIBoxLayout> layout;
       
-        if (aTag == nsXULAtoms::listboxbody) {
+        if (aTag == nsGkAtoms::listboxbody) {
           NS_NewListBoxLayout(mPresShell, layout);
           newFrame = NS_NewListBoxBodyFrame(mPresShell, aStyleContext, PR_FALSE, layout);
         }
@@ -6261,7 +6257,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 
         NS_NewGridRowLeafLayout(mPresShell, getter_AddRefs(layout));
 
-        if (aTag == nsXULAtoms::listitem)
+        if (aTag == nsGkAtoms::listitem)
           newFrame = NS_NewListItemFrame(mPresShell, aStyleContext, PR_FALSE, layout);
         else
           newFrame = NS_NewGridRowLeafFrame(mPresShell, aStyleContext, PR_FALSE, layout);
@@ -6316,9 +6312,9 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
         // This is its own frame that derives from box.
         newFrame = NS_NewMenuPopupFrame(mPresShell, aStyleContext);
 
-        if (aTag == nsXULAtoms::tooltip) {
-          if (aContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::_default,
-                                    nsXULAtoms::_true, eIgnoreCase)) {
+        if (aTag == nsGkAtoms::tooltip) {
+          if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::_default,
+                                    nsGkAtoms::_true, eIgnoreCase)) {
             // Tell the root box about the tooltip.
             if (aState.mRootBox)
               aState.mRootBox->SetDefaultTooltip(aContent);
@@ -6393,8 +6389,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       // do not support the absolute positioning of their children. While html blocks
       // that's why we call different things here.
       nsIAtom* frameType = geometricParent->GetType();
-      if ((frameType == nsLayoutAtoms::blockFrame) ||
-          (frameType == nsLayoutAtoms::areaFrame)) {
+      if ((frameType == nsGkAtoms::blockFrame) ||
+          (frameType == nsGkAtoms::areaFrame)) {
       */
         // See if we need to create a view, e.g. the frame is absolutely positioned
         nsHTMLContainerFrame::CreateViewForFrame(newFrame, aParentFrame, PR_FALSE);
@@ -6440,9 +6436,9 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 
 #ifdef MOZ_XUL
   // register tooltip support if needed
-  if (aTag == nsXULAtoms::treechildren || // trees always need titletips
-      aContent->HasAttr(kNameSpaceID_None, nsXULAtoms::tooltiptext) ||
-      aContent->HasAttr(kNameSpaceID_None, nsXULAtoms::tooltip))
+  if (aTag == nsGkAtoms::treechildren || // trees always need titletips
+      aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext) ||
+      aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::tooltip))
   {
     nsIRootBox* rootBox = nsIRootBox::GetRootBox(mPresShell);
     if (rootBox)
@@ -6486,7 +6482,7 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
     aState.mPresContext->Type() == nsPresContext::eContext_PrintPreview;
 
   if (isPrintPreview) {
-    noScalingOfTwips = aParentFrame->GetType() == nsLayoutAtoms::viewportFrame;
+    noScalingOfTwips = aParentFrame->GetType() == nsGkAtoms::viewportFrame;
     if (noScalingOfTwips) {
       aState.mPresContext->SetScalingOfTwips(PR_FALSE);
     }
@@ -6644,7 +6640,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
   // it might have dynamically changed from scrollable to not scrollable,
   // and that might need to be propagated.
   PRBool propagatedScrollToViewport = PR_FALSE;
-  if (aContent->NodeInfo()->Equals(nsHTMLAtoms::body) &&
+  if (aContent->NodeInfo()->Equals(nsGkAtoms::body) &&
       aContent->IsNodeOfType(nsINode::eHTML)) {
     propagatedScrollToViewport =
       PropagateScrollToViewport() == aContent;
@@ -6850,8 +6846,8 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
       nsIFrame* parentFrame = aParentFrame;
       nsIFrame* outerFrame = aParentFrame->GetParent();
       if (outerFrame) {
-        if ((nsLayoutAtoms::tableOuterFrame == outerFrame->GetType()) &&
-            (nsLayoutAtoms::tableFrame == parentFrame->GetType())) {
+        if ((nsGkAtoms::tableOuterFrame == outerFrame->GetType()) &&
+            (nsGkAtoms::tableFrame == parentFrame->GetType())) {
           parentFrame = outerFrame;
         }
       }
@@ -7038,7 +7034,7 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
   // Leverage IsSpecialContent to check if one of the |if aTag| below will
   // surely match (knowing that aNameSpaceID == kNameSpaceID_MathML here)
   if (IsSpecialContent(aContent, aTag, aNameSpaceID, aStyleContext) ||
-      (aTag == nsMathMLAtoms::mtable_ && 
+      (aTag == nsGkAtoms::mtable_ && 
        disp->mDisplay == NS_STYLE_DISPLAY_TABLE)) {
     // process pending pseudo frames
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
@@ -7046,52 +7042,52 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
     }
   }
 
-  if (aTag == nsMathMLAtoms::mi_ ||
-      aTag == nsMathMLAtoms::mn_ ||
-      aTag == nsMathMLAtoms::ms_ ||
-      aTag == nsMathMLAtoms::mtext_)
+  if (aTag == nsGkAtoms::mi_ ||
+      aTag == nsGkAtoms::mn_ ||
+      aTag == nsGkAtoms::ms_ ||
+      aTag == nsGkAtoms::mtext_)
     newFrame = NS_NewMathMLTokenFrame(mPresShell, aStyleContext);
-  else if (aTag == nsMathMLAtoms::mo_)
+  else if (aTag == nsGkAtoms::mo_)
     newFrame = NS_NewMathMLmoFrame(mPresShell, aStyleContext);
-  else if (aTag == nsMathMLAtoms::mfrac_)
+  else if (aTag == nsGkAtoms::mfrac_)
     newFrame = NS_NewMathMLmfracFrame(mPresShell, aStyleContext);
-  else if (aTag == nsMathMLAtoms::msup_)
+  else if (aTag == nsGkAtoms::msup_)
     newFrame = NS_NewMathMLmsupFrame(mPresShell, aStyleContext);
-  else if (aTag == nsMathMLAtoms::msub_)
+  else if (aTag == nsGkAtoms::msub_)
     newFrame = NS_NewMathMLmsubFrame(mPresShell, aStyleContext);
-  else if (aTag == nsMathMLAtoms::msubsup_)
+  else if (aTag == nsGkAtoms::msubsup_)
     newFrame = NS_NewMathMLmsubsupFrame(mPresShell, aStyleContext);
-  else if (aTag == nsMathMLAtoms::munder_)
+  else if (aTag == nsGkAtoms::munder_)
     newFrame = NS_NewMathMLmunderFrame(mPresShell, aStyleContext);
-  else if (aTag == nsMathMLAtoms::mover_)
+  else if (aTag == nsGkAtoms::mover_)
     newFrame = NS_NewMathMLmoverFrame(mPresShell, aStyleContext);
-  else if (aTag == nsMathMLAtoms::munderover_)
+  else if (aTag == nsGkAtoms::munderover_)
     newFrame = NS_NewMathMLmunderoverFrame(mPresShell, aStyleContext);
-  else if (aTag == nsMathMLAtoms::mphantom_)
+  else if (aTag == nsGkAtoms::mphantom_)
     newFrame = NS_NewMathMLmphantomFrame(mPresShell, aStyleContext);
-  else if (aTag == nsMathMLAtoms::mpadded_)
+  else if (aTag == nsGkAtoms::mpadded_)
     newFrame = NS_NewMathMLmpaddedFrame(mPresShell, aStyleContext);
-  else if (aTag == nsMathMLAtoms::mspace_ ||
-           aTag == nsMathMLAtoms::none    ||
-           aTag == nsMathMLAtoms::mprescripts_)
+  else if (aTag == nsGkAtoms::mspace_ ||
+           aTag == nsGkAtoms::none    ||
+           aTag == nsGkAtoms::mprescripts_)
     newFrame = NS_NewMathMLmspaceFrame(mPresShell, aStyleContext);
-  else if (aTag == nsMathMLAtoms::mfenced_)
+  else if (aTag == nsGkAtoms::mfenced_)
     newFrame = NS_NewMathMLmfencedFrame(mPresShell, aStyleContext);
-  else if (aTag == nsMathMLAtoms::mmultiscripts_)
+  else if (aTag == nsGkAtoms::mmultiscripts_)
     newFrame = NS_NewMathMLmmultiscriptsFrame(mPresShell, aStyleContext);
-  else if (aTag == nsMathMLAtoms::mstyle_)
+  else if (aTag == nsGkAtoms::mstyle_)
     newFrame = NS_NewMathMLmstyleFrame(mPresShell, aStyleContext);
-  else if (aTag == nsMathMLAtoms::msqrt_)
+  else if (aTag == nsGkAtoms::msqrt_)
     newFrame = NS_NewMathMLmsqrtFrame(mPresShell, aStyleContext);
-  else if (aTag == nsMathMLAtoms::mroot_)
+  else if (aTag == nsGkAtoms::mroot_)
     newFrame = NS_NewMathMLmrootFrame(mPresShell, aStyleContext);
-  else if (aTag == nsMathMLAtoms::maction_)
+  else if (aTag == nsGkAtoms::maction_)
     newFrame = NS_NewMathMLmactionFrame(mPresShell, aStyleContext);
-  else if (aTag == nsMathMLAtoms::mrow_ ||
-           aTag == nsMathMLAtoms::merror_)
+  else if (aTag == nsGkAtoms::mrow_ ||
+           aTag == nsGkAtoms::merror_)
     newFrame = NS_NewMathMLmrowFrame(mPresShell, aStyleContext);
   // CONSTRUCTION of MTABLE elements
-  else if (aTag == nsMathMLAtoms::mtable_ &&
+  else if (aTag == nsGkAtoms::mtable_ &&
            disp->mDisplay == NS_STYLE_DISPLAY_TABLE) {
     // <mtable> is an inline-table -- but this isn't yet supported.
     // What we do here is to wrap the table in an anonymous containing
@@ -7161,7 +7157,7 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
   }
   // End CONSTRUCTION of MTABLE elements 
 
-  else if (aTag == nsMathMLAtoms::math) { 
+  else if (aTag == nsGkAtoms::math) { 
     // root <math> element
     const nsStyleDisplay* display = aStyleContext->GetStyleDisplay();
     PRBool isBlock = (NS_STYLE_DISPLAY_BLOCK == display->mDisplay);
@@ -7181,7 +7177,7 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
 
     // Only <math> elements can be floated or positioned.  All other MathML
     // should be in-flow.
-    PRBool isMath = aTag == nsMathMLAtoms::math;
+    PRBool isMath = aTag == nsGkAtoms::math;
 
     nsIFrame* geometricParent =
       isMath ? aState.GetGeometricParent(disp, aParentFrame) : aParentFrame;
@@ -7256,11 +7252,11 @@ nsCSSFrameConstructor::TestSVGConditions(nsIContent* aContent,
   // them available. Empty-string should always set aHasRequiredExtensions to
   // false.
   aHasRequiredExtensions = !aContent->HasAttr(kNameSpaceID_None,
-                                              nsSVGAtoms::requiredExtensions);
+                                              nsGkAtoms::requiredExtensions);
 
   // Required Features
   aHasRequiredFeatures = PR_TRUE;
-  if (aContent->GetAttr(kNameSpaceID_None, nsSVGAtoms::requiredFeatures, value)) {
+  if (aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::requiredFeatures, value)) {
     aHasRequiredFeatures = !value.IsEmpty() && NS_SVG_TestFeatures(value);
   }
 
@@ -7272,7 +7268,7 @@ nsCSSFrameConstructor::TestSVGConditions(nsIContent* aContent,
   // prefix of one of the languages given in the value of this parameter such
   // that the first tag character following the prefix is "-".
   aHasSystemLanguage = PR_TRUE;
-  if (aContent->GetAttr(kNameSpaceID_None, nsSVGAtoms::systemLanguage,
+  if (aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::systemLanguage,
                         value)) {
     // Get our language preferences
     nsAutoString langPrefs(nsContentUtils::GetLocalizedStringPref("intl.accept_languages"));
@@ -7410,12 +7406,12 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
                   // content within svg:foreignObject at all (SVG 1.1, section
                   // 23.2), but if it does, it better be svg:svg.  So given that
                   // we're allowing it, treat it as a non-SVG parent.
-                  && parentTag != nsSVGAtoms::foreignObject
+                  && parentTag != nsGkAtoms::foreignObject
 #endif
                   ;
   }
 
-  if ((aTag != nsSVGAtoms::svg && !parentIsSVG) ||
+  if ((aTag != nsGkAtoms::svg && !parentIsSVG) ||
       (aTag == nsGkAtoms::desc || aTag == nsGkAtoms::title)) {
     // Sections 5.1 and G.4 of SVG 1.1 say that SVG elements other than
     // svg:svg not contained within svg:svg are incorrect, although they
@@ -7434,10 +7430,10 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
   
   // See if this element supports conditionals & if it does,
   // handle it
-  if (((aContent->HasAttr(kNameSpaceID_None, nsSVGAtoms::requiredFeatures) ||
-        aContent->HasAttr(kNameSpaceID_None, nsSVGAtoms::requiredExtensions)) &&
+  if (((aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::requiredFeatures) ||
+        aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::requiredExtensions)) &&
         NS_SVG_TestsSupported(aTag)) ||
-      (aContent->HasAttr(kNameSpaceID_None, nsSVGAtoms::systemLanguage) &&
+      (aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::systemLanguage) &&
        NS_SVG_LangSupported(aTag))) {
 
     PRBool hasRequiredExtentions = PR_FALSE;
@@ -7459,7 +7455,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
   }
 
   // Make sure to keep IsSpecialContent in synch with this code
-  if (aTag == nsSVGAtoms::svg) {
+  if (aTag == nsGkAtoms::svg) {
     if (!parentIsSVG) {
       // This is the outermost <svg> element.
       isOuterSVGNode = PR_TRUE;
@@ -7475,69 +7471,69 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
       newFrame = NS_NewSVGInnerSVGFrame(mPresShell, aContent, aStyleContext);
     }
   }
-  else if (aTag == nsSVGAtoms::g) {
+  else if (aTag == nsGkAtoms::g) {
     newFrame = NS_NewSVGGFrame(mPresShell, aContent, aStyleContext);
   }
-  else if (aTag == nsSVGAtoms::polygon ||
-           aTag == nsSVGAtoms::polyline ||
-           aTag == nsSVGAtoms::circle ||
-           aTag == nsSVGAtoms::ellipse ||
-           aTag == nsSVGAtoms::line ||
-           aTag == nsSVGAtoms::rect ||
-           aTag == nsSVGAtoms::path)
+  else if (aTag == nsGkAtoms::polygon ||
+           aTag == nsGkAtoms::polyline ||
+           aTag == nsGkAtoms::circle ||
+           aTag == nsGkAtoms::ellipse ||
+           aTag == nsGkAtoms::line ||
+           aTag == nsGkAtoms::rect ||
+           aTag == nsGkAtoms::path)
     newFrame = NS_NewSVGPathGeometryFrame(mPresShell, aContent, aStyleContext);
-  else if (aTag == nsSVGAtoms::defs) {
+  else if (aTag == nsGkAtoms::defs) {
     newFrame = NS_NewSVGContainerFrame(mPresShell, aContent, aStyleContext);
   }
 #ifdef MOZ_SVG_FOREIGNOBJECT
-  else if (aTag == nsSVGAtoms::foreignObject) {
+  else if (aTag == nsGkAtoms::foreignObject) {
     newFrame = NS_NewSVGForeignObjectFrame(mPresShell, aContent, aStyleContext);
   }
 #endif
-  else if (aTag == nsSVGAtoms::text) {
+  else if (aTag == nsGkAtoms::text) {
     newFrame = NS_NewSVGTextFrame(mPresShell, aContent, aStyleContext);
   }
-  else if (aTag == nsSVGAtoms::tspan) {
+  else if (aTag == nsGkAtoms::tspan) {
     nsISVGTextContentMetrics* metrics;
     CallQueryInterface(aParentFrame, &metrics);
     if (metrics) {
       newFrame = NS_NewSVGTSpanFrame(mPresShell, aContent, aParentFrame, aStyleContext);
     }
   }
-  else if (aTag == nsSVGAtoms::linearGradient) {
+  else if (aTag == nsGkAtoms::linearGradient) {
     newFrame = NS_NewSVGLinearGradientFrame(mPresShell, aContent, aStyleContext);
   }
-  else if (aTag == nsSVGAtoms::radialGradient) {
+  else if (aTag == nsGkAtoms::radialGradient) {
     newFrame = NS_NewSVGRadialGradientFrame(mPresShell, aContent, aStyleContext);
   }
-  else if (aTag == nsSVGAtoms::stop) {
+  else if (aTag == nsGkAtoms::stop) {
     newFrame = NS_NewSVGStopFrame(mPresShell, aContent, aParentFrame, aStyleContext);
   }
-  else if (aTag == nsSVGAtoms::use) {
+  else if (aTag == nsGkAtoms::use) {
     newFrame = NS_NewSVGUseFrame(mPresShell, aContent, aStyleContext);
   }
-  else if (aTag == nsSVGAtoms::marker) {
+  else if (aTag == nsGkAtoms::marker) {
     newFrame = NS_NewSVGMarkerFrame(mPresShell, aContent, aStyleContext);
   }
-  else if (aTag == nsSVGAtoms::image) {
+  else if (aTag == nsGkAtoms::image) {
     newFrame = NS_NewSVGImageFrame(mPresShell, aContent, aStyleContext);
   }
-  else if (aTag == nsSVGAtoms::clipPath) {
+  else if (aTag == nsGkAtoms::clipPath) {
     newFrame = NS_NewSVGClipPathFrame(mPresShell, aContent, aStyleContext);
   }
-  else if (aTag == nsSVGAtoms::textPath) {
+  else if (aTag == nsGkAtoms::textPath) {
     if (aParentFrame &&
-        aParentFrame->GetType() == nsLayoutAtoms::svgTextFrame) {
+        aParentFrame->GetType() == nsGkAtoms::svgTextFrame) {
       newFrame = NS_NewSVGTextPathFrame(mPresShell, aContent, aParentFrame, aStyleContext);
     }
   }
-  else if (aTag == nsSVGAtoms::filter) {
+  else if (aTag == nsGkAtoms::filter) {
     newFrame = NS_NewSVGFilterFrame(mPresShell, aContent, aStyleContext);
   }
-  else if (aTag == nsSVGAtoms::pattern) {
+  else if (aTag == nsGkAtoms::pattern) {
     newFrame = NS_NewSVGPatternFrame(mPresShell, aContent, aStyleContext);
   }
-  else if (aTag == nsSVGAtoms::mask) {
+  else if (aTag == nsGkAtoms::mask) {
     newFrame = NS_NewSVGMaskFrame(mPresShell, aContent, aStyleContext);
   }
   else if (aTag == nsGkAtoms::feDistantLight ||
@@ -7597,7 +7593,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
 
     nsFrameItems childItems;
 #ifdef MOZ_SVG_FOREIGNOBJECT
-    if (aTag == nsSVGAtoms::foreignObject) { 
+    if (aTag == nsGkAtoms::foreignObject) { 
       // Resolve pseudo style and create an inner block frame
       // XXX this breaks style inheritance
       nsRefPtr<nsStyleContext> innerPseudoStyle;
@@ -7627,7 +7623,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     {
       // Process the child content if requested.
       if (!newFrame->IsLeaf()) {
-        if (aTag == nsSVGAtoms::svgSwitch) {
+        if (aTag == nsGkAtoms::svgSwitch) {
           rv = SVGSwitchProcessChildren(aState, aContent, newFrame,
                                         childItems);
         } else {
@@ -7912,7 +7908,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsFrameConstructorState& aState,
 inline PRBool
 IsRootBoxFrame(nsIFrame *aFrame)
 {
-  return (aFrame->GetType() == nsLayoutAtoms::rootFrame);
+  return (aFrame->GetType() == nsGkAtoms::rootFrame);
 }
 
 nsresult
@@ -8036,11 +8032,11 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame)
       for (nsIFrame* wrappedFrame = aFrame; wrappedFrame != frame->GetParent();
            wrappedFrame = wrappedFrame->GetParent()) {
         nsIAtom* frameType = wrappedFrame->GetType();
-        if (nsLayoutAtoms::areaFrame == frameType ||
-            nsLayoutAtoms::blockFrame == frameType ||
-            nsLayoutAtoms::positionedInlineFrame == frameType) {
+        if (nsGkAtoms::areaFrame == frameType ||
+            nsGkAtoms::blockFrame == frameType ||
+            nsGkAtoms::positionedInlineFrame == frameType) {
           containingBlock = wrappedFrame;
-        } else if (nsLayoutAtoms::fieldSetFrame == frameType) {
+        } else if (nsGkAtoms::fieldSetFrame == frameType) {
           // If the positioned frame is a fieldset, use the area frame inside it.
           // We don't use GetContentInsertionFrame for fieldsets yet.
           containingBlock = GetFieldSetAreaFrame(wrappedFrame);
@@ -8339,13 +8335,13 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aParentFrame,
              (NS_STYLE_DISPLAY_TABLE_CAPTION      == aDisplay);
     }
   }
-  else if (nsLayoutAtoms::fieldSetFrame == aParentFrame->GetType()) {
+  else if (nsGkAtoms::fieldSetFrame == aParentFrame->GetType()) {
     // Legends can be sibling of legends but not of other content in the fieldset
     nsIAtom* sibType = aSibling.GetType();
     nsCOMPtr<nsIDOMHTMLLegendElement> legendContent(do_QueryInterface(&aContent));
 
-    if ((legendContent  && (nsLayoutAtoms::legendFrame != sibType)) ||
-        (!legendContent && (nsLayoutAtoms::legendFrame == sibType)))
+    if ((legendContent  && (nsGkAtoms::legendFrame != sibType)) ||
+        (!legendContent && (nsGkAtoms::legendFrame == sibType)))
       return PR_FALSE;
   }
 
@@ -8480,11 +8476,11 @@ ShouldIgnoreSelectChild(nsIContent* aContainer)
   // Ignore options and optgroups inside a select (size > 1)
   nsIAtom *containerTag = aContainer->Tag();
 
-  if (containerTag == nsHTMLAtoms::optgroup ||
-      containerTag == nsHTMLAtoms::select) {
+  if (containerTag == nsGkAtoms::optgroup ||
+      containerTag == nsGkAtoms::select) {
     nsIContent* selectContent = aContainer;
 
-    while (containerTag != nsHTMLAtoms::select) {
+    while (containerTag != nsGkAtoms::select) {
       selectContent = selectContent->GetParent();
       if (!selectContent) {
         break;
@@ -8495,7 +8491,7 @@ ShouldIgnoreSelectChild(nsIContent* aContainer)
     nsCOMPtr<nsISelectElement> selectElement = do_QueryInterface(selectContent);
     if (selectElement) {
       nsAutoString selSize;
-      aContainer->GetAttr(kNameSpaceID_None, nsHTMLAtoms::size, selSize);
+      aContainer->GetAttr(kNameSpaceID_None, nsGkAtoms::size, selSize);
       if (!selSize.IsEmpty()) {
         PRInt32 err;
         return (selSize.ToInteger(&err) > 1);
@@ -8517,14 +8513,14 @@ GetAdjustedParentFrame(nsIFrame*       aParentFrame,
   nsIContent *childContent = aParentContent->GetChildAt(aChildIndex);
   nsIFrame* newParent = nsnull;
 
-  if (nsLayoutAtoms::tableOuterFrame == aParentFrameType) {
+  if (nsGkAtoms::tableOuterFrame == aParentFrameType) {
     nsCOMPtr<nsIDOMHTMLTableCaptionElement> captionContent(do_QueryInterface(childContent));
     // If the parent frame is an outer table, use the innner table
     // as the parent unless the new content is a caption.
     if (!captionContent) 
       newParent = aParentFrame->GetFirstChild(nsnull);
   }
-  else if (nsLayoutAtoms::fieldSetFrame == aParentFrameType) {
+  else if (nsGkAtoms::fieldSetFrame == aParentFrameType) {
     // If the parent is a fieldSet, use the fieldSet's area frame as the
     // parent unless the new content is a legend. 
     nsCOMPtr<nsIDOMHTMLLegendElement> legendContent(do_QueryInterface(childContent));
@@ -8561,9 +8557,9 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
                                             getter_AddRefs(tag));
 
     // Just ignore tree tags, anyway we don't create any frames for them.
-    if (tag == nsXULAtoms::treechildren ||
-        tag == nsXULAtoms::treeitem ||
-        tag == nsXULAtoms::treerow ||
+    if (tag == nsGkAtoms::treechildren ||
+        tag == nsGkAtoms::treeitem ||
+        tag == nsGkAtoms::treerow ||
         (namespaceID == kNameSpaceID_XUL && gUseXBLForms &&
          ShouldIgnoreSelectChild(aContainer)))
       return NS_OK;
@@ -8666,7 +8662,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
 
   parentFrame = insertionPoint;
 
-  if (parentFrame->GetType() == nsLayoutAtoms::frameSetFrame) {
+  if (parentFrame->GetType() == nsGkAtoms::frameSetFrame) {
     // Just reframe the parent, since framesets are weird like that.
     return RecreateFramesForContent(parentFrame->GetContent());
   }
@@ -8788,11 +8784,11 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
     nsIContent *childContent = aContainer->GetChildAt(i);
     // lookup the table child frame type as it is much more difficult to remove a frame
     // and all it descendants (abs. pos. for instance) than to prevent the frame creation.
-    if (nsLayoutAtoms::tableFrame == frameType) {
+    if (nsGkAtoms::tableFrame == frameType) {
       nsFrameItems tempItems;
       ConstructFrame(state, childContent, parentFrame, tempItems);
       if (tempItems.childList) {
-        if (nsLayoutAtoms::tableCaptionFrame == tempItems.childList->GetType()) {
+        if (nsGkAtoms::tableCaptionFrame == tempItems.childList->GetType()) {
           captionItems.AddChild(tempItems.childList);
         }
         else {
@@ -8801,7 +8797,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
         newFrame = tempItems.childList;
       }
     }
-    else if (nsLayoutAtoms::tableColGroupFrame == frameType) {
+    else if (nsGkAtoms::tableColGroupFrame == frameType) {
       nsRefPtr<nsStyleContext> childStyleContext;
       childStyleContext = ResolveStyleContext(parentFrame, childContent);
       if (childStyleContext->GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_TABLE_COLUMN)
@@ -8854,12 +8850,12 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
     }
 
     // Append the flowed frames to the principal child list, tables need special treatment
-    if (nsLayoutAtoms::tableFrame == frameType) {
+    if (nsGkAtoms::tableFrame == frameType) {
       if (captionItems.childList) { // append the caption to the outer table
         nsIFrame* outerTable = parentFrame->GetParent();
         if (outerTable) { 
           state.mFrameManager->AppendFrames(outerTable,
-                                            nsLayoutAtoms::captionList,
+                                            nsGkAtoms::captionList,
                                             captionItems.childList);
         }
       }
@@ -9031,8 +9027,8 @@ PRBool NotifyListBoxBody(nsPresContext*    aPresContext,
 
   if (aContainer->IsNodeOfType(nsINode::eXUL) &&
       aChild->IsNodeOfType(nsINode::eXUL) &&
-      aContainer->Tag() == nsXULAtoms::listbox &&
-      aChild->Tag() == nsXULAtoms::listitem) {
+      aContainer->Tag() == nsGkAtoms::listbox &&
+      aChild->Tag() == nsGkAtoms::listitem) {
     nsCOMPtr<nsIDOMXULElement> xulElement = do_QueryInterface(aContainer);
     nsCOMPtr<nsIBoxObject> boxObject;
     xulElement->GetBoxObject(getter_AddRefs(boxObject));
@@ -9063,9 +9059,9 @@ PRBool NotifyListBoxBody(nsPresContext*    aPresContext,
                                           getter_AddRefs(tag));
 
   // Just ignore tree tags, anyway we don't create any frames for them.
-  if (tag == nsXULAtoms::treechildren ||
-      tag == nsXULAtoms::treeitem ||
-      tag == nsXULAtoms::treerow ||
+  if (tag == nsGkAtoms::treechildren ||
+      tag == nsGkAtoms::treeitem ||
+      tag == nsGkAtoms::treerow ||
       (namespaceID == kNameSpaceID_XUL && aUseXBLForms &&
        ShouldIgnoreSelectChild(aContainer)))
     return PR_TRUE;
@@ -9236,7 +9232,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
                                           &appendAfterFrame);
   }
 
-  if (parentFrame->GetType() == nsLayoutAtoms::frameSetFrame) {
+  if (parentFrame->GetType() == nsGkAtoms::frameSetFrame) {
     // Just reframe the parent, since framesets are weird like that.
     return RecreateFramesForContent(parentFrame->GetContent());
   }
@@ -9308,7 +9304,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     if (haveFirstLetterStyle) {
       // Get the correct parentFrame and prevSibling - if a
       // letter-frame is present, use its parent.
-      if (parentFrame->GetType() == nsLayoutAtoms::letterFrame) {
+      if (parentFrame->GetType() == nsGkAtoms::letterFrame) {
         parentFrame = parentFrame->GetParent();
         container = parentFrame->GetContent();
       }
@@ -9378,7 +9374,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   if (frameItems.childList) {
     InvalidateCanvasIfNeeded(frameItems.childList);
     
-    if (nsLayoutAtoms::tableCaptionFrame == frameItems.childList->GetType()) {
+    if (nsGkAtoms::tableCaptionFrame == frameItems.childList->GetType()) {
       NS_ASSERTION(frameItems.childList == frameItems.lastChild ,
                    "adding a non caption frame to the caption childlist?");
       captionItems.AddChild(frameItems.childList);
@@ -9476,17 +9472,17 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
         // If the parent is not a outer table frame we will try to add frames
         // to a named child list that the parent does not honour and the frames
         // will get lost
-        NS_ASSERTION(nsLayoutAtoms::tableOuterFrame == outerTableFrame->GetType(),
+        NS_ASSERTION(nsGkAtoms::tableOuterFrame == outerTableFrame->GetType(),
                      "Pseudo frame construction failure, "
                      "a caption can be only a child of a outer table frame");
         if (isAppend) {
           state.mFrameManager->AppendFrames(outerTableFrame,
-                                            nsLayoutAtoms::captionList,
+                                            nsGkAtoms::captionList,
                                             newCaptionFrame);
         }
         else {
           state.mFrameManager->InsertFrames(outerTableFrame,
-                                            nsLayoutAtoms::captionList,
+                                            nsGkAtoms::captionList,
                                             prevSibling, newCaptionFrame);
         }
       }
@@ -9574,7 +9570,7 @@ DoDeletingFrameSubtree(nsFrameManager* aFrameManager,
     // Walk aFrame's normal flow child frames looking for placeholder frames.
     nsIFrame* childFrame = aFrame->GetFirstChild(childListName);
     for (; childFrame; childFrame = childFrame->GetNextSibling()) {
-      if (NS_LIKELY(nsLayoutAtoms::placeholderFrame != childFrame->GetType())) {
+      if (NS_LIKELY(nsGkAtoms::placeholderFrame != childFrame->GetType())) {
         DoDeletingFrameSubtree(aFrameManager, aDestroyQueue,
                                aRemovedFrame, childFrame);
 
@@ -9613,9 +9609,9 @@ DoDeletingFrameSubtree(nsFrameManager* aFrameManager,
     // a placeholder for.
     do {
       childListName = aFrame->GetAdditionalChildListName(childListIndex++);
-    } while (childListName == nsLayoutAtoms::floatList    ||
-             childListName == nsLayoutAtoms::absoluteList ||
-             childListName == nsLayoutAtoms::fixedList);
+    } while (childListName == nsGkAtoms::floatList    ||
+             childListName == nsGkAtoms::absoluteList ||
+             childListName == nsGkAtoms::fixedList);
   } while (childListName);
 
   return NS_OK;
@@ -9748,7 +9744,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
     // Get the childFrame's parent frame
     nsIFrame* parentFrame = childFrame->GetParent();
 
-    if (parentFrame->GetType() == nsLayoutAtoms::frameSetFrame) {
+    if (parentFrame->GetType() == nsGkAtoms::frameSetFrame) {
       // Just reframe the parent, since framesets are weird like that.
       return RecreateFramesForContent(parentFrame->GetContent());
     }
@@ -9844,7 +9840,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
       nsIFrame* outerTableFrame; 
       if (GetCaptionAdjustedParent(parentFrame, childFrame, &outerTableFrame)) {
         rv = frameManager->RemoveFrame(outerTableFrame,
-                                       nsLayoutAtoms::captionList,
+                                       nsGkAtoms::captionList,
                                        childFrame);
       }
       else {
@@ -9927,7 +9923,7 @@ UpdateViewsForTree(nsIFrame* aFrame, nsIViewManager* aViewManager,
     while (child) {
       if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
         // only do frames that are in flow
-        if (nsLayoutAtoms::placeholderFrame == child->GetType()) { // placeholder
+        if (nsGkAtoms::placeholderFrame == child->GetType()) { // placeholder
           // get out of flow frame and start over there
           nsIFrame* outOfFlowFrame =
             nsPlaceholderFrame::GetRealFrameForPlaceholder(child);
@@ -10053,7 +10049,7 @@ InvalidateCanvasIfNeeded(nsIFrame* aFrame)
     }
 
     // Check whether it's an HTML body
-    if (node->Tag() != nsHTMLAtoms::body ||
+    if (node->Tag() != nsGkAtoms::body ||
         !node->IsNodeOfType(nsINode::eHTML)) {
       return;
     }
@@ -10073,7 +10069,7 @@ InvalidateCanvasIfNeeded(nsIFrame* aFrame)
     NS_ASSERTION(ancestor, "canvas must paint");
   }
 
-  if (ancestor->GetType() == nsLayoutAtoms::canvasFrame) {
+  if (ancestor->GetType() == nsGkAtoms::canvasFrame) {
     // The canvas frame's dimensions are not meaningful; invalidate the
     // viewport instead.
     ancestor = ancestor->GetParent();
@@ -10196,7 +10192,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
     aChangeList.ChangeAt(index, &changeData);
     if (changeData->mFrame) {
       propTable->SetProperty(changeData->mFrame,
-                             nsLayoutAtoms::changeListProperty,
+                             nsGkAtoms::changeListProperty,
                              nsnull, nsnull, nsnull);
     }
   }
@@ -10212,7 +10208,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
     if (frame) {
       nsresult res;
 
-      propTable->GetProperty(frame, nsLayoutAtoms::changeListProperty, &res);
+      propTable->GetProperty(frame, nsGkAtoms::changeListProperty, &res);
 
       if (NS_PROPTABLE_PROP_NOT_THERE == res)
         continue;
@@ -10255,7 +10251,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
     aChangeList.ChangeAt(index, &changeData);
     if (changeData->mFrame) {
       propTable->DeleteProperty(changeData->mFrame,
-                                nsLayoutAtoms::changeListProperty);
+                                nsGkAtoms::changeListProperty);
     }
   }
 
@@ -10403,13 +10399,13 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
                                             getter_AddRefs(tag));
 
     if (namespaceID == kNameSpaceID_XUL &&
-        (tag == nsXULAtoms::listitem ||
-         tag == nsXULAtoms::listcell))
+        (tag == nsGkAtoms::listitem ||
+         tag == nsGkAtoms::listcell))
       return NS_OK;
   }
 
-  if (aAttribute == nsXULAtoms::tooltiptext ||
-      aAttribute == nsXULAtoms::tooltip) 
+  if (aAttribute == nsGkAtoms::tooltiptext ||
+      aAttribute == nsGkAtoms::tooltip) 
   {
     nsIRootBox* rootBox = nsIRootBox::GetRootBox(mPresShell);
     if (rootBox) {
@@ -10456,17 +10452,17 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
   // when the menugenerated or menuactive attribute changes, so make
   // sure to process that immediately
   if (aNameSpaceID == kNameSpaceID_None &&
-      ((aAttribute == nsXULAtoms::menugenerated &&
+      ((aAttribute == nsGkAtoms::menugenerated &&
         aModType != nsIDOMMutationEvent::REMOVAL) ||
-       aAttribute == nsXULAtoms::menuactive)) {
+       aAttribute == nsGkAtoms::menuactive)) {
     PRInt32 namespaceID;
     nsCOMPtr<nsIAtom> tag;
     mDocument->BindingManager()->ResolveTag(aContent, &namespaceID,
                                             getter_AddRefs(tag));
 
     if (namespaceID == kNameSpaceID_XUL &&
-        (tag == nsXULAtoms::menupopup || tag == nsXULAtoms::popup ||
-         tag == nsXULAtoms::tooltip || tag == nsXULAtoms::menu)) {
+        (tag == nsGkAtoms::menupopup || tag == nsGkAtoms::popup ||
+         tag == nsGkAtoms::tooltip || tag == nsGkAtoms::menu)) {
       nsIViewManager* viewManager = mPresShell->GetViewManager();
       viewManager->BeginUpdateViewBatch();
       ProcessOneRestyle(aContent, rshint, hint);
@@ -10534,11 +10530,11 @@ void nsCSSFrameConstructor::GetAlternateTextFor(nsIContent*    aContent,
 
   // If there's no "alt" attribute, and aContent is an input    
   // element, then use the value of the "value" attribute
-  if (!aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::alt, aAltText) &&
-      nsHTMLAtoms::input == aTag) {
+  if (!aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aAltText) &&
+      nsGkAtoms::input == aTag) {
     // If there's no "value" attribute either, then use the localized string 
     // for "Submit" as the alternate text.
-    if (!aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aAltText)) {
+    if (!aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aAltText)) {
       nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
                                          "Submit", aAltText);      
     }
@@ -10682,7 +10678,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
   NS_ASSERTION(aFrame->GetSplittableType() != NS_FRAME_NOT_SPLITTABLE,
                "why CreateContinuingFrame for a non-splittable frame?");
   
-  if (nsLayoutAtoms::textFrame == frameType) {
+  if (nsGkAtoms::textFrame == frameType) {
     newFrame = NS_NewContinuingTextFrame(shell, styleContext);
 
     if (newFrame) {
@@ -10691,7 +10687,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
       nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
     }
     
-  } else if (nsLayoutAtoms::inlineFrame == frameType) {
+  } else if (nsGkAtoms::inlineFrame == frameType) {
     newFrame = NS_NewInlineFrame(shell, styleContext);
 
     if (newFrame) {
@@ -10700,7 +10696,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
       nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
     }
   
-  } else if (nsLayoutAtoms::blockFrame == frameType) {
+  } else if (nsGkAtoms::blockFrame == frameType) {
     newFrame = NS_NewBlockFrame(shell, styleContext);
 
     if (newFrame) {
@@ -10709,7 +10705,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
       nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
     }
   
-  } else if (nsLayoutAtoms::areaFrame == frameType) {
+  } else if (nsGkAtoms::areaFrame == frameType) {
     newFrame = NS_NewAreaFrame(shell, styleContext, 0);
 
     if (newFrame) {
@@ -10718,7 +10714,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
       nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
     }
   
-  } else if (nsLayoutAtoms::columnSetFrame == frameType) {
+  } else if (nsGkAtoms::columnSetFrame == frameType) {
     newFrame = NS_NewColumnSetFrame(shell, styleContext, 0);
 
     if (newFrame) {
@@ -10727,7 +10723,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
       nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
     }
   
-  } else if (nsLayoutAtoms::positionedInlineFrame == frameType) {
+  } else if (nsGkAtoms::positionedInlineFrame == frameType) {
     newFrame = NS_NewPositionedInlineFrame(shell, styleContext);
 
     if (newFrame) {
@@ -10736,19 +10732,19 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
       nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
     }
 
-  } else if (nsLayoutAtoms::pageFrame == frameType) {
+  } else if (nsGkAtoms::pageFrame == frameType) {
     nsIFrame* pageContentFrame;
     rv = ConstructPageFrame(shell, aPresContext, aParentFrame, aFrame,
                             newFrame, pageContentFrame);
-  } else if (nsLayoutAtoms::tableOuterFrame == frameType) {
+  } else if (nsGkAtoms::tableOuterFrame == frameType) {
     rv = CreateContinuingOuterTableFrame(shell, aPresContext, aFrame, aParentFrame,
                                          content, styleContext, &newFrame);
 
-  } else if (nsLayoutAtoms::tableFrame == frameType) {
+  } else if (nsGkAtoms::tableFrame == frameType) {
     rv = CreateContinuingTableFrame(shell, aPresContext, aFrame, aParentFrame,
                                     content, styleContext, &newFrame);
 
-  } else if (nsLayoutAtoms::tableRowGroupFrame == frameType) {
+  } else if (nsGkAtoms::tableRowGroupFrame == frameType) {
     newFrame = NS_NewTableRowGroupFrame(shell, styleContext);
 
     if (newFrame) {
@@ -10757,7 +10753,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
       nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
     }
 
-  } else if (nsLayoutAtoms::tableRowFrame == frameType) {
+  } else if (nsGkAtoms::tableRowFrame == frameType) {
     newFrame = NS_NewTableRowFrame(shell, styleContext);
 
     if (newFrame) {
@@ -10813,7 +10809,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
       newFrame->SetInitialChildList(nsnull, continuingAreaFrame);
     }
   
-  } else if (nsLayoutAtoms::lineFrame == frameType) {
+  } else if (nsGkAtoms::lineFrame == frameType) {
     newFrame = NS_NewFirstLineFrame(shell, styleContext);
 
     if (newFrame) {
@@ -10822,7 +10818,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
       nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
     }
   
-  } else if (nsLayoutAtoms::letterFrame == frameType) {
+  } else if (nsGkAtoms::letterFrame == frameType) {
     newFrame = NS_NewFirstLetterFrame(shell, styleContext);
 
     if (newFrame) {
@@ -10831,13 +10827,13 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
       nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
     }
 
-  } else if (nsLayoutAtoms::imageFrame == frameType) {
+  } else if (nsGkAtoms::imageFrame == frameType) {
     newFrame = NS_NewImageFrame(shell, styleContext);
 
     if (newFrame) {
       newFrame->Init(content, aParentFrame, aFrame);
     }
-  } else if (nsLayoutAtoms::placeholderFrame == frameType) {
+  } else if (nsGkAtoms::placeholderFrame == frameType) {
     // create a continuing out of flow frame
     nsIFrame* oofFrame = nsPlaceholderFrame::GetRealFrameForPlaceholder(aFrame);
     nsIFrame* oofContFrame;
@@ -10856,7 +10852,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
       return rv;
     }
     newFrame->Init(content, aParentFrame, aFrame);
-  } else if (nsLayoutAtoms::fieldSetFrame == frameType) {
+  } else if (nsGkAtoms::fieldSetFrame == frameType) {
     newFrame = NS_NewFieldSetFrame(shell, styleContext);
 
     if (newFrame) {
@@ -10910,7 +10906,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  if (aParentFrame->GetType() != nsLayoutAtoms::pageContentFrame) {
+  if (aParentFrame->GetType() != nsGkAtoms::pageContentFrame) {
     if (nextInFlow) {
       nextInFlow->SetPrevInFlow(newFrame);
       newFrame->SetNextInFlow(nextInFlow);
@@ -10947,7 +10943,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
   }
   
   nsFrameItems fixedPlaceholders;
-  nsIFrame* firstFixed = prevPageContentFrame->GetFirstChild(nsLayoutAtoms::fixedList);
+  nsIFrame* firstFixed = prevPageContentFrame->GetFirstChild(nsGkAtoms::fixedList);
   if (!firstFixed) {
     return NS_OK;
   }
@@ -11289,7 +11285,7 @@ nsCSSFrameConstructor::GetInsertionPoint(nsIFrame*     aParentFrame,
   if (aMultiple && !*aMultiple) {
     nsIContent* content = insertionElement ? insertionElement : container;
     if (content->IsNodeOfType(nsINode::eHTML) &&
-        content->Tag() == nsHTMLAtoms::fieldset) {
+        content->Tag() == nsGkAtoms::fieldset) {
       *aMultiple = PR_TRUE;
     }
   }
@@ -11708,7 +11704,7 @@ nsCSSFrameConstructor::AppendFirstLineFrames(
   nsresult rv = NS_OK;
   nsFrameList blockFrames(blockKid);
   nsIFrame* lastBlockKid = blockFrames.LastChild();
-  if (lastBlockKid->GetType() != nsLayoutAtoms::lineFrame) {
+  if (lastBlockKid->GetType() != nsGkAtoms::lineFrame) {
     // No first-line frame at the end of the list, therefore there is
     // an interveening block between any first-line frame the frames
     // we are appending. Therefore, we don't need any special
@@ -11782,7 +11778,7 @@ nsCSSFrameConstructor::InsertFirstLineFrames(
     // Insertion will become the first frame. Two cases: we either
     // already have a first-line frame or we don't.
     nsIFrame* firstBlockKid = aBlockFrame->GetFirstChild(nsnull);
-    if (firstBlockKid->GetType() == nsLayoutAtoms::lineFrame) {
+    if (firstBlockKid->GetType() == nsGkAtoms::lineFrame) {
       // We already have a first-line frame
       nsIFrame* lineFrame = firstBlockKid;
 
@@ -12182,7 +12178,7 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
     nsIFrame* nextFrame = frame->GetNextSibling();
 
     nsIAtom* frameType = frame->GetType();
-    if (nsLayoutAtoms::textFrame == frameType) {
+    if (nsGkAtoms::textFrame == frameType) {
       // Wrap up first-letter content in a letter frame
       nsIContent* textContent = frame->GetContent();
       if (IsFirstLetterContent(textContent)) {
@@ -12201,9 +12197,9 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
         return NS_OK;
       }
     }
-    else if ((nsLayoutAtoms::inlineFrame == frameType) ||
-             (nsLayoutAtoms::lineFrame == frameType) ||
-             (nsLayoutAtoms::positionedInlineFrame == frameType)) {
+    else if ((nsGkAtoms::inlineFrame == frameType) ||
+             (nsGkAtoms::lineFrame == frameType) ||
+             (nsGkAtoms::positionedInlineFrame == frameType)) {
       nsIFrame* kids = frame->GetFirstChild(nsnull);
       WrapFramesInFirstLetterFrame(aState, frame, kids,
                                    aModifiedParent, aTextFrame,
@@ -12239,10 +12235,10 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
   PRBool* aStopLooking)
 {
   // First look for the float frame that is a letter frame
-  nsIFrame* floatFrame = aBlockFrame->GetFirstChild(nsLayoutAtoms::floatList);
+  nsIFrame* floatFrame = aBlockFrame->GetFirstChild(nsGkAtoms::floatList);
   while (floatFrame) {
     // See if we found a floating letter frame
-    if (nsLayoutAtoms::letterFrame == floatFrame->GetType()) {
+    if (nsGkAtoms::letterFrame == floatFrame->GetType()) {
       break;
     }
     floatFrame = floatFrame->GetNextSibling();
@@ -12332,7 +12328,7 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
 
   // Remove the float frame
   ::DeletingFrameSubtree(aFrameManager, floatFrame);
-  aFrameManager->RemoveFrame(aBlockFrame, nsLayoutAtoms::floatList,
+  aFrameManager->RemoveFrame(aBlockFrame, nsGkAtoms::floatList,
                              floatFrame);
 
   // Remove placeholder frame
@@ -12357,7 +12353,7 @@ nsCSSFrameConstructor::RemoveFirstLetterFrames(nsPresContext* aPresContext,
 
   while (kid) {
     nsIAtom* frameType = kid->GetType();
-    if (nsLayoutAtoms::letterFrame == frameType) {
+    if (nsGkAtoms::letterFrame == frameType) {
       // Bingo. Found it. First steal away the text frame.
       nsIFrame* textFrame = kid->GetFirstChild(nsnull);
       if (!textFrame) {
@@ -12391,9 +12387,9 @@ nsCSSFrameConstructor::RemoveFirstLetterFrames(nsPresContext* aPresContext,
       *aStopLooking = PR_TRUE;
       break;
     }
-    else if ((nsLayoutAtoms::inlineFrame == frameType) ||
-             (nsLayoutAtoms::lineFrame == frameType) ||
-             (nsLayoutAtoms::positionedInlineFrame == frameType)) {
+    else if ((nsGkAtoms::inlineFrame == frameType) ||
+             (nsGkAtoms::lineFrame == frameType) ||
+             (nsGkAtoms::positionedInlineFrame == frameType)) {
       // Look inside child inline frame for the letter frame
       RemoveFirstLetterFrames(aPresContext, aPresShell, aFrameManager, kid,
                               aStopLooking);
@@ -12928,9 +12924,9 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
   // block it runs into and we might be inserting one in the middle of it.
   // Whether we have "a block" is tested for by AreAllKidsInline.
   nsIAtom* frameType = aFrame->GetType();
-  if ((frameType != nsLayoutAtoms::inlineFrame &&
-       frameType != nsLayoutAtoms::positionedInlineFrame &&
-       frameType != nsLayoutAtoms::lineFrame) ||
+  if ((frameType != nsGkAtoms::inlineFrame &&
+       frameType != nsGkAtoms::positionedInlineFrame &&
+       frameType != nsGkAtoms::lineFrame) ||
       AreAllKidsInline(aFrameList))
     return PR_FALSE;
 
@@ -13078,7 +13074,7 @@ nsresult nsCSSFrameConstructor::RemoveFixedItems(const nsFrameConstructorState& 
   if (mFixedContainingBlock) {
     nsIFrame *fixedChild = nsnull;
     do {
-      fixedChild = mFixedContainingBlock->GetFirstChild(nsLayoutAtoms::fixedList);
+      fixedChild = mFixedContainingBlock->GetFirstChild(nsGkAtoms::fixedList);
       if (fixedChild) {
         // Remove the placeholder so it doesn't end up sitting about pointing
         // to the removed fixed frame.
@@ -13086,7 +13082,7 @@ nsresult nsCSSFrameConstructor::RemoveFixedItems(const nsFrameConstructorState& 
         mPresShell->GetPlaceholderFrameFor(fixedChild, &placeholderFrame);
         NS_ASSERTION(placeholderFrame, "no placeholder for fixed-pos frame");
         NS_ASSERTION(placeholderFrame->GetType() ==
-                     nsLayoutAtoms::placeholderFrame,
+                     nsGkAtoms::placeholderFrame,
                      "Wrong type");
         aState.mFrameManager->UnregisterPlaceholderFrame(
           NS_STATIC_CAST(nsPlaceholderFrame*, placeholderFrame));
@@ -13101,7 +13097,7 @@ nsresult nsCSSFrameConstructor::RemoveFixedItems(const nsFrameConstructorState& 
 
         ::DeletingFrameSubtree(aState.mFrameManager, fixedChild);
         rv = aState.mFrameManager->RemoveFrame(mFixedContainingBlock,
-                                               nsLayoutAtoms::fixedList,
+                                               nsGkAtoms::fixedList,
                                                fixedChild);
         if (NS_FAILED(rv)) {
           NS_WARNING("Error removing frame from fixed containing block in RemoveFixedItems");

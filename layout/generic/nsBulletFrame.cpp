@@ -39,7 +39,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsBulletFrame.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsIFontMetrics.h"
@@ -51,7 +51,6 @@
 #include "nsILoadGroup.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
-#include "nsLayoutAtoms.h"
 #include "prprf.h"
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -121,7 +120,7 @@ nsBulletFrame::GetFrameName(nsAString& aResult) const
 nsIAtom*
 nsBulletFrame::GetType() const
 {
-  return nsLayoutAtoms::bulletFrame;
+  return nsGkAtoms::bulletFrame;
 }
 
 NS_IMETHODIMP
@@ -425,7 +424,7 @@ nsBulletFrame::SetListItemOrdinal(PRInt32 aNextOrdinal,
     nsGenericHTMLElement *hc =
       nsGenericHTMLElement::FromContent(parentContent);
     if (hc) {
-      const nsAttrValue* attr = hc->GetParsedAttr(nsHTMLAtoms::value);
+      const nsAttrValue* attr = hc->GetParsedAttr(nsGkAtoms::value);
       if (attr && attr->Type() == nsAttrValue::eInteger) {
         // Use ordinal specified by the value attribute
         mOrdinal = attr->GetIntegerValue();

@@ -41,7 +41,7 @@
 #include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsPresContext.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsPresState.h"
 #include "nsWidgetsCID.h"
 #include "nsIComponentManager.h"
@@ -115,7 +115,7 @@ nsIsIndexFrame::UpdatePromptLabel()
   // If it is zero length, set it to a default value (localized)
   nsXPIDLString prompt;
   if (mContent)
-    mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::prompt, prompt);
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::prompt, prompt);
 
   if (prompt.IsEmpty()) {
     // Generate localized label.
@@ -188,7 +188,7 @@ nsIsIndexFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 
   // Create an hr
   nsCOMPtr<nsINodeInfo> hrInfo;
-  nimgr->GetNodeInfo(nsHTMLAtoms::hr, nsnull, kNameSpaceID_None,
+  nimgr->GetNodeInfo(nsGkAtoms::hr, nsnull, kNameSpaceID_None,
                      getter_AddRefs(hrInfo));
 
   nsCOMPtr<nsIContent> prehr;
@@ -211,13 +211,13 @@ nsIsIndexFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 
   // Create text input field
   nsCOMPtr<nsINodeInfo> inputInfo;
-  nimgr->GetNodeInfo(nsHTMLAtoms::input, nsnull, kNameSpaceID_None,
+  nimgr->GetNodeInfo(nsGkAtoms::input, nsnull, kNameSpaceID_None,
                      getter_AddRefs(inputInfo));
 
   result = NS_NewHTMLElement(getter_AddRefs(mInputContent), inputInfo);
   NS_ENSURE_SUCCESS(result, result);
 
-  mInputContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("text"), PR_FALSE);
+  mInputContent->SetAttr(kNameSpaceID_None, nsGkAtoms::type, NS_LITERAL_STRING("text"), PR_FALSE);
 
   aChildList.AppendElement(mInputContent);
 
@@ -291,7 +291,7 @@ nsIsIndexFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                  PRInt32         aModType)
 {
   nsresult rv = NS_OK;
-  if (nsHTMLAtoms::prompt == aAttribute) {
+  if (nsGkAtoms::prompt == aAttribute) {
     rv = UpdatePromptLabel();
   } else {
     rv = nsAreaFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);

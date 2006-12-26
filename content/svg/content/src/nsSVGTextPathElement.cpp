@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGStylableElement.h"
-#include "nsSVGAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDOMSVGTextPathElement.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsISVGTextContentMetrics.h"
@@ -134,14 +134,14 @@ nsSVGTextPathElement::Init()
 
   // enumeration mappings
   static struct nsSVGEnumMapping methodMap[] = {
-    {&nsSVGAtoms::align, TEXTPATH_METHODTYPE_ALIGN},
-    {&nsSVGAtoms::stretch, TEXTPATH_METHODTYPE_STRETCH},
+    {&nsGkAtoms::align, TEXTPATH_METHODTYPE_ALIGN},
+    {&nsGkAtoms::stretch, TEXTPATH_METHODTYPE_STRETCH},
     {nsnull, 0}
   };
   
   static struct nsSVGEnumMapping spacingMap[] = {
-    {&nsSVGAtoms::_auto, TEXTPATH_SPACINGTYPE_AUTO},
-    {&nsSVGAtoms::exact, TEXTPATH_SPACINGTYPE_EXACT},
+    {&nsGkAtoms::_auto, TEXTPATH_SPACINGTYPE_AUTO},
+    {&nsGkAtoms::exact, TEXTPATH_SPACINGTYPE_EXACT},
     {nsnull, 0}
   };
 
@@ -155,7 +155,7 @@ nsSVGTextPathElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mMethod), units);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::method, mMethod);
+    rv = AddMappedSVGValue(nsGkAtoms::method, mMethod);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -167,7 +167,7 @@ nsSVGTextPathElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mSpacing), units);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::spacing, mSpacing);
+    rv = AddMappedSVGValue(nsGkAtoms::spacing, mSpacing);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -178,7 +178,7 @@ nsSVGTextPathElement::Init()
   {
     rv = NS_NewSVGAnimatedString(getter_AddRefs(mHref));
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::href, mHref, kNameSpaceID_XLink);
+    rv = AddMappedSVGValue(nsGkAtoms::href, mHref, kNameSpaceID_XLink);
     NS_ENSURE_SUCCESS(rv,rv);
   }
   
