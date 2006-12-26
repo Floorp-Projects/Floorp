@@ -256,10 +256,6 @@
   'content', 
 ],
 
-'global/common-links.html.tmpl' => [
-  'email', 
-],
-
 'global/useful-links.html.tmpl' => [
   'sep',
 ],

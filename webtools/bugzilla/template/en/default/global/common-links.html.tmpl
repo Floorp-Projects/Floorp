@@ -42,9 +42,8 @@
   <li>
     <span class="separator">| </span>
     [% IF user.id %]
-      [% email = user.login FILTER url_quote %]
-      <a href="request.cgi?requester=[% email %]&amp;requestee=
-               [% email %]&amp;do_union=1&amp;group=type">My Requests</a>
+      <a href="request.cgi?requester=[% user.login FILTER url_quote %]&amp;requestee=
+               [% user.login FILTER url_quote %]&amp;do_union=1&amp;group=type">My Requests</a>
     [% ELSE %]
       <a href="request.cgi">Requests</a>
     [% END %]
