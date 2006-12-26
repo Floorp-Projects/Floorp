@@ -1167,7 +1167,6 @@ PlacesController.prototype = {
       var txn = new PlacesCreateFolderTransaction(value.value, ip.folderId, 
                                                   ip.index);
       PlacesUtils.tm.doTransaction(txn);
-      this._view.focus();
       view.restoreSelection();
     }
   },
@@ -1181,7 +1180,6 @@ PlacesController.prototype = {
       throw Cr.NS_ERROR_NOT_AVAILABLE;
     var txn = new PlacesCreateSeparatorTransaction(ip.folderId, ip.index);
     PlacesUtils.tm.doTransaction(txn);
-    this._view.focus();
   },
 
   /**
