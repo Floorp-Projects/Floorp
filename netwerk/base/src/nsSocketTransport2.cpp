@@ -67,6 +67,7 @@
 #include "nsISocketProvider.h"
 #include "nsISSLSocketControl.h"
 #include "nsIPipe.h"
+#include "nsIProgrammingLanguage.h"
 
 #if defined(XP_WIN)
 #include "nsNativeConnectionHelper.h"
@@ -1572,10 +1573,15 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
 //-----------------------------------------------------------------------------
 // xpcom api
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsSocketTransport,
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsSocketTransport,
                               nsISocketTransport,
                               nsITransport,
-                              nsIDNSListener)
+                              nsIDNSListener,
+                              nsIClassInfo)
+NS_IMPL_CI_INTERFACE_GETTER3(nsSocketTransport,
+                             nsISocketTransport,
+                             nsITransport,
+                             nsIDNSListener)
 
 NS_IMETHODIMP
 nsSocketTransport::OpenInputStream(PRUint32 flags,
@@ -1848,6 +1854,61 @@ nsSocketTransport::OnLookupComplete(nsICancelable *request,
 
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsSocketTransport::GetInterfaces(PRUint32 *count, nsIID * **array)
+{
+    return NS_CI_INTERFACE_GETTER_NAME(nsSocketTransport)(count, array);
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetHelperForLanguage(PRUint32 language, nsISupports **_retval)
+{
+    *_retval = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetContractID(char * *aContractID)
+{
+    *aContractID = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetClassDescription(char * *aClassDescription)
+{
+    *aClassDescription = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetClassID(nsCID * *aClassID)
+{
+    *aClassID = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
+{
+    *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetFlags(PRUint32 *aFlags)
+{
+    *aFlags = nsIClassInfo::THREADSAFE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
+{
+    return NS_ERROR_NOT_AVAILABLE;
+}
+
 
 #ifdef ENABLE_SOCKET_TRACING
 
