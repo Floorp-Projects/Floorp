@@ -41,16 +41,15 @@
   is "too complex". Please think carefully before adding any custom fields.
   It may be the case that [% terms.Bugzilla %] already does what you need,
   and you just haven't enabled the correct feature yet.
-
-  <ul>
-    <li>Custom field names must begin with "cf_" to distinguish them from
-        standard fields. If you omit "cf_" from the beginning of the name, it
-        will be added for you.</li>
-    <li>Descriptions are a very short string describing the field and will be
-        used as the label for this field in the user interface.</li>
-  </ul>
-  <br>
 </p>
+
+<ul>
+  <li>Custom field names must begin with "cf_" to distinguish them from
+      standard fields. If you omit "cf_" from the beginning of the name, it
+      will be added for you.</li>
+  <li>Descriptions are a very short string describing the field and will be
+      used as the label for this field in the user interface.</li>
+</ul>
 
 <form id="add_field" action="editfields.cgi" method="GET">
   <table border="0" cellspacing="0" cellpadding="5">
@@ -101,10 +100,11 @@
       <td>&nbsp;</td>
     </tr>
   </table>
-  <br>
-  <input type="hidden" name="action" value="new">
-  <input type="hidden" name="token" value="[% token FILTER html %]">
-  <input type="submit" id="create" value="Create">
+  <p>
+    <input type="hidden" name="action" value="new">
+    <input type="hidden" name="token" value="[% token FILTER html %]">
+    <input type="submit" id="create" value="Create">
+  </p>
 </form>
 
 <p>
