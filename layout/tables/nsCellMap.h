@@ -510,7 +510,7 @@ protected:
   CellData* AllocCellData(nsTableCellFrame* aOrigCell);
 
   /** an array containing, for each row, the CellDatas for the cells
-    * in that row.  It can be larger than mRowCount due to row spans
+    * in that row.  It can be larger than mContentRowCount due to row spans
     * extending beyond the table */
   // XXXbz once we have auto TArrays, we should probably use them here.
   nsTArray<CellDataArray> mRows; 
@@ -519,7 +519,7 @@ protected:
     * number of rows in the cell map due to row spans extending beyond the end
     * of thetable (dead rows) or empty tr tags 
     */
-  PRInt32 mRowCount;
+  PRInt32 mContentRowCount;
 
   // the row group that corresponds to this map
   nsTableRowGroupFrame* mRowGroupFrame;
@@ -557,7 +557,7 @@ inline nsTableRowGroupFrame* nsCellMap::GetRowGroup() const
 
 inline PRInt32 nsCellMap::GetRowCount(PRBool aConsiderDeadRowSpanRows) const
 { 
-  PRInt32 rowCount = (aConsiderDeadRowSpanRows) ? mRows.Length() : mRowCount;
+  PRInt32 rowCount = (aConsiderDeadRowSpanRows) ? mRows.Length() : mContentRowCount;
   return rowCount; 
 }
 
