@@ -47,6 +47,15 @@ use constant SPECIAL_KEYS => {
     profile_setting   => 'user_id,setting_name',
     profiles_activity => 'userid,profiles_when,fieldid',
     setting_value     => 'name,value',
+    # longdescs didn't used to have a PK, before 2.20.
+    longdescs         => 'bug_id,bug_when',
+    # The 2.16 versions table lacked a PK
+    versions          => 'product_id,value',
+    # These are all for earlier versions of Bugzilla. On a modern
+    # version of Bugzilla, this script will ignore these (thanks to
+    # code further down).
+    components        => 'program,value',
+    products          => 'product',
 };
 
 ###############
@@ -192,13 +201,20 @@ foreach my $table ($dbh->bz_table_list_real) {
     my @columns = $dbh->bz_table_columns($table);
 
     my $pk = SPECIAL_KEYS->{$table};
+    if ($pk) {
+        # Assure that we're on a version of Bugzilla where those keys
+        # actually exist.
+        foreach my $column (split ',', $pk) {
+            $pk = undef if !$dbh->bz_column_info($table, $column);
+        }
+    }
 
     # Figure out the primary key.
     foreach my $column (@columns) {
         my $def = $dbh->bz_column_info($table, $column);
         $pk = $column if $def->{PRIMARYKEY};
     }
-    # If there's no PK, it's defined by the a UNIQUE index.
+    # If there's no PK, it's defined by a UNIQUE index.
     if (!$pk) {
         foreach my $column (@columns) {
             my $index = $dbh->bz_index_info($table, "${table}_${column}_idx");
@@ -213,6 +229,12 @@ foreach my $table ($dbh->bz_table_list_real) {
         my $def = $dbh->bz_column_info($table, $column);
         # If this is a text column, it may need work.
         if ($def->{TYPE} =~ /text|char/i) {
+            # If there's still no PK, we're upgrading from 2.14 or earlier.
+            # We can't reliably determine the PK (or at least, I don't want to
+            # maintain code to record what the PK was at all points in history).
+            # So instead we just use the field itself.
+            $pk = $column if !$pk;
+
             print "Converting $table.$column...\n";
             my $sth = $dbh->prepare("SELECT $column, $pk FROM $table 
                                       WHERE $column IS NOT NULL
