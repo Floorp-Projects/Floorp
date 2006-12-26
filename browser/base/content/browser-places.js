@@ -373,7 +373,7 @@ var BookmarksEventHandler = {
     else
       PlacesUtils.getViewForNode(event.target)
                  .controller
-                 .openSelectedNodeInBrowser(event);
+                 .openSelectedNodeWithEvent(event);
   },
 
   /**

@@ -231,7 +231,7 @@ var PlacesOrganizer = {
     }
     if (currentView.hasSingleSelection && event.button == 1) {
       if (PlacesUtils.nodeIsURI(currentView.selectedNode))
-        controller.openSelectedNodeInBrowser(event);
+        controller.openSelectedNodeWithEvent(event);
       else if (PlacesUtils.nodeIsContainer(currentView.selectedNode)) {
         // The command execution function will take care of seeing the 
         // selection is a folder/container and loading its contents in 
