@@ -201,7 +201,8 @@ sub DoEmail {
         my $watched_ref = $dbh->selectcol_arrayref(
             "SELECT profiles.login_name FROM watch INNER JOIN profiles" .
             " ON watch.watched = profiles.userid" .
-            " WHERE watcher = ?",
+            " WHERE watcher = ?" .
+            " ORDER BY profiles.login_name",
             undef, $user->id);
         $vars->{'watchedusers'} = $watched_ref;
 
