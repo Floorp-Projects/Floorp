@@ -3037,14 +3037,17 @@ switch (op) {
                     // would gain in performance due to potentially
                     // bad iteraction with GC.
                     callParentFrame = frame.parentFrame;
-                }
+                    // Release the current frame. See Bug #344501 to see why
+                    // it is being done here.
+                    // TODO: If using the graphical debugger, tail call 
+                    // optimization will create a "hole" in the context stack. 
+                    // The correct thing to do may be to disable tail call 
+                    // optimization if the code is being debugged.
+                    exitFrame(cx, frame, null);                }
                 initFrame(cx, calleeScope, funThisObj, stack, sDbl,
                           stackTop + 2, indexReg, ifun, callParentFrame,
                           calleeFrame);
-                if (op == Icode_TAIL_CALL) {
-                    // Release the parent
-                    exitFrame(cx, frame, null);
-                } else {
+                if (op != Icode_TAIL_CALL) {
                     frame.savedStackTop = stackTop;
                     frame.savedCallOp = op;
                 }
