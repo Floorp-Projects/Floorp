@@ -77,7 +77,7 @@ var LOG_TIMEZONE = null;
 var LOG_FILE_STREAM = null;
 
 // whether alarms are by default turned on/off:
-var SUPPRESS_ALARMS = false;
+var SUPPRESS_ALARMS = true;
 
 function initWcapProvider()
 {
@@ -142,7 +142,7 @@ function initWcapProvider()
                         "#################################" );
         }
         
-        SUPPRESS_ALARMS = getPref("calendar.wcap.suppress_alarms", false);
+        SUPPRESS_ALARMS = getPref("calendar.wcap.suppress_alarms", true);
         logMessage("calendar.wcap.suppress_alarms",
                    SUPPRESS_ALARMS.toString());
         

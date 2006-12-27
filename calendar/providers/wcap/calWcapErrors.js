@@ -64,14 +64,23 @@ function getErrorModule( rc ) {
 // is in the offline state.
 const NS_ERROR_OFFLINE = generateNetFailure(16);
 
-// The async request failed for some unknown reason.
+// The async request completed successfully.
+const NS_BINDING_SUCCEEDED = Components.results.NS_OK;
+
 const NS_BINDING_FAILED = generateNetFailure(1);
+const NS_BINDING_ABORTED = generateNetFailure(2);
+const NS_BINDING_REDIRECTED = generateNetFailure(3);
+const NS_BINDING_RETARGETED = generateNetFailure(4);
 
 const g_nsNetErrorCodes = [
     NS_BINDING_FAILED,
     "The async request failed for some unknown reason.",
-    /*NS_BINDING_ABORTED*/ generateNetFailure(2),
+    NS_BINDING_ABORTED,
     "The async request failed because it was aborted by some user action.",
+    NS_BINDING_REDIRECTED,
+    "The async request has been redirected to a different async request.",
+    NS_BINDING_RETARGETED,
+    "The async request has been retargeted to a different handler.",
     /*NS_ERROR_MALFORMED_URI*/ generateNetFailure(10),
     "The URI is malformed.",
     /*NS_ERROR_UNKNOWN_PROTOCOL*/ generateNetFailure(18),

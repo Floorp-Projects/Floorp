@@ -47,6 +47,7 @@ function calWcapSession() {
     this.m_calIdToCalendar = {};
     this.m_asyncQueue = new AsyncQueue();
     this.m_calPropsTimer = new Timer();
+    this.m_reconnectTimer = new Timer();
     
     // init queued calls:
     this.getFreeBusyTimes = makeQueuedCall(
@@ -252,6 +253,7 @@ calWcapSession.prototype = {
     m_sessionId: null,
     m_bNoLoginsAnymore: false,
     m_calPropsTimer: null,
+    m_reconnectTimer: null,
     
     getSessionId:
     function( timedOutSessionId )
@@ -318,6 +320,41 @@ calWcapSession.prototype = {
                 this.m_bNoLoginsAnymore = true;
                 this.logError( exc );
                 this.log( "no logins anymore." );
+                if (!testResultCode(exc, Components.interfaces.
+                                   calIWcapErrors.WCAP_LOGIN_FAILED) &&
+                    this.sessionUri)
+                {
+                    // reconnect failure, sessionUri is known:
+                    this.log("probing " + this.sessionUri.spec +
+                             " in 2 minutes...");
+                    var this_ = this;
+                    this.m_reconnectTimer.initWithCallback(
+                    { // nsITimerCallback:
+                        notify: function(timer_) {
+                            try {
+                                this_.log("probing " +
+                                          this_.sessionUri.spec +
+                                          "...");
+                                issueAsyncRequest(
+                                    this_.sessionUri.spec +
+                                    "version.wcap?fmt-out=text%2Fcalendar",
+                                    function(str) {
+                                        if (str.indexOf("BEGIN:VCALENDAR") >= 0)
+                                        {
+                                            this_.log(this_.sessionUri.spec +
+                                                      " ok again.");
+                                            timer_.cancel();
+                                            this_.m_bNoLoginsAnymore = false;
+                                        }
+                                    });
+                            }
+                            catch (exc) { // again in 2 minutes
+                            }
+                        }
+                    },
+                    120 * 1000,
+                    Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
+                }
                 throw exc;
             }
             
@@ -373,6 +410,9 @@ calWcapSession.prototype = {
         }
     },
     
+    m_loginUser: null,
+    m_loginPW: null,
+    
     getSessionId_:
     function( sessionUri )
     {
@@ -382,6 +422,8 @@ calWcapSession.prototype = {
         this.log( "attempting to get a session id for " + sessionUri.spec );
         var outUser = { value: this.userId };
         var outPW = { value: null };
+        if (this.m_loginUser == outUser.value)
+            outPW.value = this.m_loginPW;
         
         var passwordManager =
             Components.classes["@mozilla.org/passwordmanager;1"]
@@ -391,46 +433,53 @@ calWcapSession.prototype = {
         var pwHost = sessionUri.spec;
         if (pwHost[pwHost.length - 1] == '/')
             pwHost = pwHost.substr(0, pwHost.length - 1);
-        this.log( "looking in pw db for: " + pwHost );
-        try {
-            var enumerator = passwordManager.enumerator;
-            while (enumerator.hasMoreElements()) {
-                var pwEntry = enumerator.getNext().QueryInterface(
-                    Components.interfaces.nsIPassword );
-                if (LOG_LEVEL > 1) {
-                    this.log( "pw entry:\n\thost=" + pwEntry.host +
-                              "\n\tuser=" + pwEntry.user );
-                }
-                if (pwEntry.host == pwHost) {
-                    // found an entry matching URI:
-                    outUser.value = pwEntry.user;
-                    outPW.value = pwEntry.password;
-                    break;
+        if (!outPW.value) {
+            this.log( "looking in pw db for: " + pwHost );
+            try {
+                var enumerator = passwordManager.enumerator;
+                while (enumerator.hasMoreElements()) {
+                    var pwEntry = enumerator.getNext().QueryInterface(
+                        Components.interfaces.nsIPassword );
+                    if (LOG_LEVEL > 1) {
+                        this.log( "pw entry:\n\thost=" + pwEntry.host +
+                                  "\n\tuser=" + pwEntry.user );
+                    }
+                    if (pwEntry.host == pwHost) {
+                        // found an entry matching URI:
+                        outUser.value = pwEntry.user;
+                        outPW.value = pwEntry.password;
+                        break;
+                    }
                 }
             }
-        }
-        catch (exc) { // just log error
-            this.logError(exc, "password manager lookup");
+            catch (exc) { // just log error
+                this.logError(exc, "password manager lookup");
+            }
+            
+            if (outPW.value) {
+                this.log( "password entry found for host " + pwHost +
+                          "\nuser is " + outUser.value );
+            }
+            else
+                this.log( "no password entry found for " + pwHost );
         }
         
         if (outPW.value) {
-            this.log( "password entry found for host " + pwHost +
-                      "\nuser is " + outUser.value );
             this.assureSecureLogin(sessionUri);
             this.login_( sessionUri, outUser.value, outPW.value );
         }
-        else
-            this.log( "no password entry found for " + pwHost );
         
         if (!this.m_sessionId) {
             if (outPW.value) {
-                // login failed before, so try to remove from pw db:
-                try {
-                    passwordManager.removeUser( pwHost, outUser.value );
-                    this.log( "removed from pw db: " + pwHost );
-                }
-                catch (exc) {
-                    this.logError( "error removing from pw db: " + exc );
+                if (outPW.value != this.m_loginPW) { // pw came from manager:
+                    // login failed before, so try to remove from pw db:
+                    try {
+                        passwordManager.removeUser( pwHost, outUser.value );
+                        this.log( "removed from pw db: " + pwHost );
+                    }
+                    catch (exc) {
+                        this.logError( "error removing from pw db: " + exc );
+                    }
                 }
             }
             else // if not already checked in pw manager run
@@ -458,6 +507,9 @@ calWcapSession.prototype = {
                         Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED);
                 }
             }
+            // for next login in same process run:
+            this.m_loginUser = outUser.value;
+            this.m_loginPW = outPW.value;
             if (savePW.value) {
                 try { // save pw under session uri:
                     passwordManager.addUser( pwHost,
@@ -683,6 +735,8 @@ calWcapSession.prototype = {
     get defaultCalId() {
         if (this.m_defaultCalId)
             return this.m_defaultCalId;
+        if (!this.isLoggedIn)
+            return null;
         var list = this.getUserPreferences("X-NSCP-WCAP-PREF-icsCalendar", {});
         return ((list && list.length > 0) ? list[0] : this.userId);
     },
@@ -735,6 +789,8 @@ calWcapSession.prototype = {
         
         this.m_sessionUri = null;
         this.m_userId = null;
+        this.m_loginUser = null;
+        this.m_loginPW = null;
         this.m_userPrefs = null; // reread prefs
         this.m_defaultCalId = null;
         this.m_bNoLoginsAnymore = false;
@@ -1217,14 +1273,13 @@ calWcapSession.prototype = {
     {
         try {
             cal = cal.QueryInterface(Components.interfaces.calIWcapCalendar);
+            if (cal && cal.session.wrappedJSObject == this &&
+                cal.calId == this.defaultCalId) {
+                // calendar is to be deleted, so logout before:
+                this.logout();
+            }
         }
         catch (exc) {
-            cal = null;
-        }
-        if (cal && cal.session.wrappedJSObject == this &&
-            cal.calId == this.defaultCalId) {
-            // calendar is to be deleted, so logout before:
-            this.logout();
         }
     },
     

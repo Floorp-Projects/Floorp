@@ -216,12 +216,64 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
         url += "&storetype=1";
     }
     
+    url += "&fetch=1&relativealarm=1&compressed=1&recurring=1";
+    url += "&replace=1"; // (update) don't append to any lists
+    url += "&fmt-out=text%2Fcalendar";
+    
+    // xxx todo: alarm mimic of todos currently different:
+    //           WCAP offsets relate to DUE
+    if (bIsEvent) {
+
+    // alarm support:
+    var alarmStart = item.alarmOffset;
+    if (alarmStart) {
+        var alarmRelated = item.alarmRelated;
+        if (alarmRelated==Components.interfaces.calIItemBase.ALARM_RELATED_END){
+            // cs does not support explicit RELATED=END when
+            // both dtstart/due are written
+            var dur = item.duration;
+            if (dur) { // dtstart+due given
+                alarmStart = alarmStart.clone();
+                dur = dur.clone();
+                dur.isNegative = !dur.isNegative;
+                alarmStart.addDuration(dur);
+            } // else only dtend is set
+        }
+        
+        var emails = "";
+        if (item.hasProperty("alarmEmailAddress"))
+            emails = encodeURIComponent(item.getProperty("alarmEmailAddress"));
+        else {
+            // minimal alarm server support:
+            // Alarms are currently off by default,
+            // so let server at least send reminder eMails...
+            this.session.getDefaultAlarmEmails({}).forEach(
+                function(email) {
+                    if (emails.length > 0)
+                        emails += ";";
+                    emails += encodeURIComponent(email);
+                } );
+        }
+        url += ("&alarmStart=" + alarmStart.icalString);
+        url += ("&alarmEmails=" + emails);
+        url += "&alarmPopup=";
+        if (emails.length == 0)
+            url += alarmStart.icalString;
+        // xxx todo: missing: alarm triggers for flashing, etc.
+    }
+    else {
+        // clear popup, emails:
+        url += "&alarmStart=&alarmPopup=&alarmEmails=";
+    }
+
+    } // if (bIsEvent)
+
     var ownerId = this.ownerId;
     var orgUID = ((item.organizer && item.organizer.id)
                   ? item.organizer.id : ownerId);
     
     var bOrgRequest = false;
-    
+
     // attendees:
     var attendees =  item.getAttendees({});
     if (attendees.length > 0) {
@@ -246,30 +298,35 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
         }
         else { // in modifyItem(), attendee's calendar:
             var attendee = item.getAttendeeById(ownerId);
-            if (attendee) {
-                this.log( "attendee: " + attendee.icalProperty.icalString );
-                var oldAttendee = oldItem.getAttendeeById(ownerId);
-                if (!oldAttendee ||
-                    attendee.participationStatus !=
-                    oldAttendee.participationStatus)
-                {
-                    // REPLY first for just this calendar owner:
-                    var replyUrl = (url + "&method=4&attendees=PARTSTAT=" +
-                                    attendee.participationStatus);
-                    replyUrl += ("^" + ownerId);
-                    this.session.issueSyncRequest(
-                        replyUrl + "&fmt-out=text%2Fcalendar", stringToIcal );
-                }
-            }
-            // continue with UPDATE of attendee's copy of item:
-            url += "&method=256";
+            if (!attendee)
+                return false;
+            this.log( "attendee: " + attendee.icalProperty.icalString );
+            // REPLY first for just this calendar owner:
+            url += "&method=4";
+//             var oldAttendee = oldItem.getAttendeeById(ownerId);
+//             if (!oldAttendee ||
+//                 attendee.participationStatus != oldAttendee.participationStatus)
+//             {
+                url += ("&attendees=PARTSTAT=" + attendee.participationStatus);
+                url += ("^" + ownerId);
+//             }
+//             else {
+//                 function getAlarmStart(item) {
+//                     if (!item)
+//                         return null;
+//                     if (!item.alarmStart)
+//                         return "";
+//                     return item.alarmStart.icalString;
+//                 }
+//                 if (getAlarmStart(item) == getAlarmStart(oldItem))
+//                     return false; // no changes need to be written
+//             }
+            this.session.issueAsyncRequest(url, stringToIcal, receiverFunc);
+            return true;
         }
     }
     else
         url += "&orgUID=&attendees="; // using just PUBLISH (method=1)
-    
-    url += "&fetch=1&relativealarm=1&compressed=1&recurring=1";
-    url += "&replace=1"; // (update) don't append to any lists
     
     // xxx todo: default prio is 0 (5 in sjs cs)
     // save PRIORITY only if actually set, else delete:
@@ -419,53 +476,6 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
                     this.getAlignedTimezone(dtstart.timezone)));
     }
     
-    // xxx todo: alarm mimic of todos currently different:
-    //           WCAP offsets relate to DUE
-    if (bIsEvent) {
-
-    // alarm support:
-    var alarmStart = item.alarmOffset;
-    if (alarmStart) {
-        var alarmRelated = item.alarmRelated;
-        if (alarmRelated==Components.interfaces.calIItemBase.ALARM_RELATED_END){
-            // cs does not support explicit RELATED=END when
-            // both dtstart/due are written
-            var dur = item.duration;
-            if (dur) { // dtstart+due given
-                alarmStart = alarmStart.clone();
-                alarmStart.addDuration(dur);
-            } // else only dtend is set
-        }
-    }
-    if (alarmStart) {
-        var emails = "";
-        if (item.hasProperty("alarmEmailAddress"))
-            emails = encodeURIComponent(item.getProperty("alarmEmailAddress"));
-        else {
-            // minimal alarm server support:
-            // Alarms are currently off by default,
-            // so let server at least send reminder eMails...
-            this.session.getDefaultAlarmEmails({}).forEach(
-                function(email) {
-                    if (emails.length > 0)
-                        emails += ";";
-                    emails += encodeURIComponent(email);
-                } );
-        }
-        url += ("&alarmStart=" + alarmStart.icalString);
-        url += ("&alarmEmails=" + emails);
-        url += "&alarmPopup=";
-        if (emails.length == 0)
-            url += alarmStart.icalString;
-        // xxx todo: missing: alarm triggers for flashing, etc.
-    }
-    else {
-        // clear popup, emails:
-        url += "&alarmStart=&alarmPopup=&alarmEmails=";
-    }
-
-    } // if (bIsEvent)
-    
     // xxx todo: however, sometimes socs just returns an empty calendar when
     //           nothing or only optional props like attendee ROLE has changed,
     //           although fetch=1.
@@ -498,7 +508,8 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
         url += this.encodeRecurrenceParams( item, oldItem );
     
     this.session.issueAsyncRequest(
-        url + "&fmt-out=text%2Fcalendar", stringToIcal, receiverFunc );
+        url, stringToIcal, receiverFunc );
+    return true;
 };
 
 calWcapCalendar.prototype.tunnelXProps = function( destItem, srcItem )
@@ -575,11 +586,20 @@ calWcapCalendar.prototype.adoptItem_queued = function( item, listener )
         }
         
         var this_ = this;
-        this.storeItem(
-            item, oldItem,
-            function( wcapResponse ) {
-                this_.adoptItem_resp( wcapResponse, item, listener );
-            } );
+        if (!this.storeItem(
+                item, oldItem,
+                function( wcapResponse ) {
+                    this_.adoptItem_resp( wcapResponse, item, listener );
+                } ))
+        {
+            if (listener) {
+                listener.onOperationComplete(
+                    this.superCalendar, Components.results.NS_OK,
+                    Components.interfaces.calIOperationListener.ADD,
+                    item.id, item );
+            }
+            this.notifyObservers( "onAddItem", [item] );
+        }
     }
     catch (exc) {
         if (listener != null) {
@@ -648,11 +668,22 @@ calWcapCalendar.prototype.modifyItem_queued = function(
             throw new Components.Exception("new item has no id!");
         
         var this_ = this;
-        this.storeItem(
-            newItem, oldItem,
-            function( wcapResponse ) {
-                this_.modifyItem_resp(wcapResponse, newItem, oldItem, listener);
-            } );
+        if (!this.storeItem(
+                newItem, oldItem,
+                function( wcapResponse ) {
+                    this_.modifyItem_resp(
+                        wcapResponse, newItem, oldItem, listener);
+                } ))
+        {
+            // nothing has changed, just notify item:
+            if (listener) {
+                listener.onOperationComplete(
+                    this.superCalendar, Components.results.NS_OK,
+                    Components.interfaces.calIOperationListener.MODIFY,
+                    oldItem.id, oldItem );
+            }
+            this.notifyObservers( "onModifyItem", [oldItem, oldItem] );
+        }
     }
     catch (exc) {
         if (listener != null) {
@@ -862,6 +893,7 @@ calWcapCalendar.prototype.parseItems_ = function(
                 item.calendar = this_.superCalendar;
                 var rid = item.recurrenceId;
                 if (rid) {
+                    item.recurrenceInfo = null;
                     var startDate = (isEvent(item)
                                      ? item.startDate : item.entryDate);
                     if (startDate.isDate && !rid.isDate) {
@@ -909,6 +941,10 @@ calWcapCalendar.prototype.parseItems_ = function(
                            "item.id=" + item.id );
             // xxx todo: due to a server bug, in some scenarions the returned
             //           data is lacking the parent item, leave parentItem open
+            if ((itemFilter & Components.interfaces.calICalendar
+                 .ITEM_FILTER_CLASS_OCCURRENCES) == 0) {
+                item.recurrenceId = null;
+            }
             if (!bLeaveMutable)
                 item.makeImmutable();
             receiverFunc( [item] );
@@ -1195,7 +1231,7 @@ calWcapCalendar.prototype.getItems_queued = function(
     }
     var zRangeStart = getIcalUTC(rangeStart);
     var zRangeEnd = getIcalUTC(rangeEnd);
-    this.log( "getItems():\n\titemFilter=" + itemFilter +
+    this.log( "getItems():\n\titemFilter=0x" + itemFilter.toString(16) +
               ",\n\tmaxResult=" + maxResult +
               ",\n\trangeStart=" + zRangeStart +
               ",\n\trangeEnd=" + zRangeEnd );
@@ -1257,8 +1293,9 @@ SyncState.prototype = {
         /*this.checkAborted();*/
         --this.m_state;
 //         logMessage( "sync-state", "m_state = " + this.m_state );
-        if (this.m_state == 0) {
+        if (this.m_state == 0 && this.m_finishFunc) {
             this.m_finishFunc();
+            this.m_finishFunc = null;
         }
     },
     
@@ -1270,7 +1307,10 @@ SyncState.prototype = {
     abort: function( exc ) {
         if (!this.isAborted) // store only first error that has occurred
             this.m_exc = exc;
-        this.m_abortFunc( exc );
+        if (this.m_abortFunc) {
+            this.m_abortFunc( exc );
+            this.m_abortFunc = null;
+        }
     }
 };
 
@@ -1325,29 +1365,29 @@ calWcapCalendar.prototype.syncChangesTo_resp = function(
 calWcapCalendar.prototype.syncChangesTo_queued = function(
     destCal, itemFilter, dtFrom_, listener )
 {
-    var dtFrom = dtFrom_;
-    if (dtFrom) {
-        dtFrom = dtFrom.clone();
-        // assure DATETIMEs:
-        if (dtFrom.isDate)
-            dtFrom.isDate = false;
-        dtFrom = this.session.getServerTime(dtFrom);
-    }
-    var zdtFrom = getIcalUTC(dtFrom);
-    this.log( "syncChangesTo():\n\titemFilter=" + itemFilter +
-              "\n\tdtFrom=" + zdtFrom );
-    
-    var calObserver = null;
-    try {
-        calObserver = listener.QueryInterface(
-            Components.interfaces.calIObserver );
-    }
-    catch (exc) {
-    }
-    
     const SYNC = Components.interfaces.calIWcapCalendar.SYNC;
     
     try {
+        var dtFrom = dtFrom_;
+        if (dtFrom) {
+            dtFrom = dtFrom.clone();
+            // assure DATETIMEs:
+            if (dtFrom.isDate)
+                dtFrom.isDate = false;
+            dtFrom = this.session.getServerTime(dtFrom);
+        }
+        var zdtFrom = getIcalUTC(dtFrom);
+        this.log( "syncChangesTo():\n\titemFilter=0x" + itemFilter.toString(16)+
+                  "\n\tdtFrom=" + zdtFrom );
+        
+        var calObserver = null;
+        try {
+            calObserver = listener.QueryInterface(
+                Components.interfaces.calIObserver );
+        }
+        catch (exc) {
+        }
+        
         this.assureAccess(Components.interfaces.calIWcapCalendar.AC_COMP_READ);
         
         var this_ = this;
@@ -1358,14 +1398,7 @@ calWcapCalendar.prototype.syncChangesTo_queued = function(
             // finishFunc:
             function() {
                 if (listener) {
-                    if (syncState.isAborted) {
-                        this_.log( "firing SYNC failed!" );
-                        listener.onOperationComplete(
-                            this_.superCalendar,
-                            Components.results.NS_ERROR_FAILURE,
-                            SYNC, null, syncState.m_exc );
-                    }
-                    else {
+                    if (!syncState.isAborted) {
                         this_.log( "firing SYNC succeeded." );
                         listener.onOperationComplete(
                             this_.superCalendar, Components.results.NS_OK,
@@ -1377,11 +1410,14 @@ calWcapCalendar.prototype.syncChangesTo_queued = function(
             function( exc ) {
                 if (listener) {
                     listener.onOperationComplete(
-                        this_.superCalendar,
-                        Components.results.NS_ERROR_FAILURE,
-                        SYNC, null, exc );
+                        this_.superCalendar, Components.results.NS_OK,
+                        SYNC, null, dtFrom_ /* pass original stamp:
+                                               => empty sync range */ );
+//                     listener.onOperationComplete(
+//                         this_.superCalendar,
+//                         Components.results.NS_ERROR_FAILURE,
+//                         SYNC, null, exc );
                 }
-                this_.logError( exc );
             } );
         
         var addItemListener = new FinishListener(
@@ -1488,8 +1524,8 @@ calWcapCalendar.prototype.syncChangesTo_queued = function(
             } );
     }
     catch (exc) {
-        if (testResultCode(exc, Components.interfaces.
-                           calIWcapErrors.WCAP_LOGIN_FAILED)) {
+//         if (testResultCode(exc, Components.interfaces.
+//                            calIWcapErrors.WCAP_LOGIN_FAILED)) {
             // silently ignore login failed, no calIObserver UI,
             // state everything ok and return empty range:
             if (listener) {
@@ -1499,15 +1535,15 @@ calWcapCalendar.prototype.syncChangesTo_queued = function(
                                            => empty sync range */ );
             }
             this.logError("ignored: " + errorToString(exc), "syncChangesTo()");
-        }
-        else {
-            if (listener) {
-                listener.onOperationComplete(
-                    this.superCalendar, Components.results.NS_ERROR_FAILURE,
-                    SYNC, null, exc );
-            }
-            this.notifyError( exc );
-        }
+//         }
+//         else {
+//             if (listener) {
+//                 listener.onOperationComplete(
+//                     this.superCalendar, Components.results.NS_ERROR_FAILURE,
+//                     SYNC, null, exc );
+//             }
+//             this.notifyError( exc );
+//         }
     }
     this.log( "finished.", "syncChangesTo()" );
 };

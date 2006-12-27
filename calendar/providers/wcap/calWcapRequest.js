@@ -124,10 +124,12 @@ UnicharReader.prototype = {
     onStreamComplete:
     function( loader, context, status, /* nsIUnicharInputStream */ unicharData )
     {
-        if (status == Components.results.NS_OK) {
+        switch (status) {
+        case NS_BINDING_SUCCEEDED: {
             if (LOG_LEVEL > 2) {
+                var channel = loader.channel;
                 logMessage( "issueAsyncRequest( \"" +
-                            loader.channel.URI.spec + "\" )",
+                            (channel ? channel.URI.spec : "<unknown>") + "\" )",
                             "received stream." );
             }
             var str = "";
@@ -138,12 +140,28 @@ UnicharReader.prototype = {
                 }
             }
             if (LOG_LEVEL > 1) {
+                var channel = loader.channel;
                 logMessage( "issueAsyncRequest( \"" +
-                            loader.channel.URI.spec + "\" )",
+                            (channel ? channel.URI.spec : "<unknown>") + "\" )",
                             "contentCharset = " + loader.channel.contentCharset+
                             "\nrequest result:\n" + str );
             }
             this.m_receiverFunc( str );
+            break;
+        }
+        case NS_BINDING_REDIRECTED:
+        case NS_BINDING_RETARGETED:
+            // just status
+            break;
+        default: // errors:
+            if (LOG_LEVEL > 0) {
+                var channel = loader.channel;
+                logMessage("issueAsyncRequest( \"" +
+                           (channel ? channel.URI.spec : "<unknown>") + "\" )",
+                           "error: " + errorToString(status));
+            }
+            this.m_receiverFunc(""); // will lead to timeout
+            break;
         }
     }
 };

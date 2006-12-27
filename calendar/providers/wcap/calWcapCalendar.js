@@ -291,7 +291,9 @@ calWcapCalendar.prototype = {
     function( wcapCommand )
     {
         var url = this.session.getCommandUrl(wcapCommand);
-        url += ("&calid=" + encodeURIComponent(this.calId));
+        var calId = this.calId;
+        if (calId)
+            url += ("&calid=" + encodeURIComponent(calId));
         return url;
     },
     
@@ -313,7 +315,6 @@ calWcapCalendar.prototype = {
     get calId() {
         if (this.m_calId)
             return this.m_calId;
-//         this.session.assureLoggedIn();
         return this.session.defaultCalId;
     },
     set calId( id ) {
