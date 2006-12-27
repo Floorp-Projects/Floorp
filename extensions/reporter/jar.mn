@@ -6,8 +6,8 @@ reporter.jar:
 % overlay chrome://global/content/customizeToolbar.xul chrome://reporter/content/reporterOverlay.xul
 % skin reporter classic/1.0 %skin/classic/reporter/
 #else
- content/reporter/contents.rdf                           (resources/content/reporter/contents.rdf)
- skin/classic/reporter/contents.rdf                      (resources/skin/classic/reporter/contents.rdf)
+* content/reporter/contents.rdf                          (resources/content/reporter/contents.rdf)
+  skin/classic/reporter/contents.rdf                     (resources/skin/classic/reporter/contents.rdf)
 #endif
  content/reporter/reportWizard.xul                       (resources/content/reporter/reportWizard.xul)
  content/reporter/reportWizard.js                        (resources/content/reporter/reportWizard.js)
