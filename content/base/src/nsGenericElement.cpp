@@ -3574,10 +3574,39 @@ nsGenericElement::AppendTextTo(nsAString& aResult)
 
 #ifdef DEBUG
 void
-nsGenericElement::List(FILE* out, PRInt32 aIndent) const
+nsGenericElement::ListAttributes(FILE* out) const
+{
+  PRUint32 index, count = mAttrsAndChildren.AttrCount();
+  for (index = 0; index < count; index++) {
+    nsAutoString buffer;
+
+    // name
+    mAttrsAndChildren.AttrNameAt(index)->GetQualifiedName(buffer);
+
+    // value
+    buffer.AppendLiteral("=\"");
+    nsAutoString value;
+    mAttrsAndChildren.AttrAt(index)->ToString(value);
+    for (int i = value.Length(); i >= 0; --i) {
+      if (value[i] == PRUnichar('"'))
+        value.Insert(PRUnichar('\\'), PRUint32(i));
+    }
+    buffer.Append(value);
+    buffer.AppendLiteral("\"");
+
+    fputs(" ", out);
+    fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
+  }
+}
+
+void
+nsGenericElement::List(FILE* out, PRInt32 aIndent,
+                       const nsCString& aPrefix) const
 {
   PRInt32 indent;
   for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
+
+  fputs(aPrefix.get(), out);
 
   nsAutoString buf;
   mNodeInfo->GetQualifiedName(buf);
@@ -3585,52 +3614,64 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent) const
 
   fprintf(out, "@%p", (void *)this);
 
-  PRUint32 index, attrcount = mAttrsAndChildren.AttrCount();
-  for (index = 0; index < attrcount; index++) {
-    nsAutoString buffer;
-
-    // name
-    mAttrsAndChildren.AttrNameAt(index)->GetQualifiedName(buffer);
-
-    // value
-    buffer.AppendLiteral("=");
-    nsAutoString value;
-    mAttrsAndChildren.AttrAt(index)->ToString(value);
-    buffer.Append(value);
-
-    fputs(" ", out);
-    fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
-  }
+  ListAttributes(out);
 
   fprintf(out, " intrinsicstate=[%08x]", IntrinsicState());
   fprintf(out, " refcount=%d<", mRefCnt.get());
 
-  fputs("\n", out);
-  PRUint32 kids = GetChildCount();
+  PRUint32 i, length = GetChildCount();
+  if (length > 0) {
+    fputs("\n", out);
 
-  for (index = 0; index < kids; index++) {
-    nsIContent *kid = GetChildAt(index);
-    kid->List(out, aIndent + 1);
+    for (i = 0; i < length; ++i) {
+      nsIContent *kid = GetChildAt(i);
+      kid->List(out, aIndent + 1);
+    }
+
+    for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
   }
-  for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
 
   fputs(">\n", out);
 
+  // XXX sXBL/XBL2 issue! Owner or current document?
   nsIDocument *document = GetOwnerDoc();
   if (document) {
+    nsIPresShell *shell = document->GetShellAt(0);
+    nsCOMPtr<nsISupportsArray> anonymousElements;
+    if (shell) {
+      shell->GetAnonymousContentFor(NS_CONST_CAST(nsGenericElement*, this),
+                                    getter_AddRefs(anonymousElements));
+    }
+
+    if (anonymousElements) {
+      anonymousElements->Count(&length);
+      if (length > 0) {
+        for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
+        fputs("native-anonymous-children<\n", out);
+
+        for (i = 0; i < length; ++i) {
+          nsCOMPtr<nsIDOMNode> node = do_QueryElementAt(anonymousElements, i);
+          nsCOMPtr<nsIContent> child = do_QueryInterface(node);
+          child->List(out, aIndent + 1);
+        }
+
+        for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
+        fputs(">\n", out);
+      }
+    }
+
     nsIBindingManager* bindingManager = document->BindingManager();
     nsCOMPtr<nsIDOMNodeList> anonymousChildren;
     bindingManager->GetAnonymousNodesFor(NS_CONST_CAST(nsGenericElement*, this),
                                          getter_AddRefs(anonymousChildren));
 
     if (anonymousChildren) {
-      PRUint32 length;
       anonymousChildren->GetLength(&length);
-      if (length) {
+      if (length > 0) {
         for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
         fputs("anonymous-children<\n", out);
 
-        for (PRUint32 i = 0; i < length; ++i) {
+        for (i = 0; i < length; ++i) {
           nsCOMPtr<nsIDOMNode> node;
           anonymousChildren->Item(i, getter_AddRefs(node));
           nsCOMPtr<nsIContent> child = do_QueryInterface(node);
@@ -3653,13 +3694,12 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent) const
 
       NS_ASSERTION(contentList != nsnull, "oops, binding manager lied");
 
-      PRUint32 length;
       contentList->GetLength(&length);
-      if (length) {
+      if (length > 0) {
         for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
         fputs("content-list<\n", out);
 
-        for (PRUint32 i = 0; i < length; ++i) {
+        for (i = 0; i < length; ++i) {
           nsCOMPtr<nsIDOMNode> node;
           contentList->Item(i, getter_AddRefs(node));
           nsCOMPtr<nsIContent> child = do_QueryInterface(node);
@@ -3677,6 +3717,32 @@ void
 nsGenericElement::DumpContent(FILE* out, PRInt32 aIndent,
                               PRBool aDumpAll) const
 {
+  PRInt32 indent;
+  for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
+
+  nsAutoString buf;
+  mNodeInfo->GetQualifiedName(buf);
+  fputs("<", out);
+  fputs(NS_LossyConvertUTF16toASCII(buf).get(), out);
+
+  if(aDumpAll) ListAttributes(out);
+
+  fputs(">", out);
+
+  if(aIndent) fputs("\n", out);
+
+  PRInt32 index, kids = GetChildCount();
+  for (index = 0; index < kids; index++) {
+    nsIContent *kid = GetChildAt(index);
+    PRInt32 indent = aIndent ? aIndent + 1 : 0;
+    kid->DumpContent(out, indent, aDumpAll);
+  }
+  for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
+  fputs("</", out);
+  fputs(NS_LossyConvertUTF16toASCII(buf).get(), out);
+  fputs(">", out);
+
+  if(aIndent) fputs("\n", out);
 }
 #endif
 

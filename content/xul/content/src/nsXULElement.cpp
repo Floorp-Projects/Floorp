@@ -1526,115 +1526,16 @@ nsXULElement::GetAttrCount() const
 
 
 #ifdef DEBUG
-static void
-rdf_Indent(FILE* out, PRInt32 aIndent)
-{
-    for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
-}
-
 void
 nsXULElement::List(FILE* out, PRInt32 aIndent) const
 {
-    PRUint32 i;
-
-    rdf_Indent(out, aIndent);
-    fputs("<XUL", out);
-    if (HasSlots()) fputs("*", out);
-    fputs(" ", out);
-
-    nsAutoString as;
-    mNodeInfo->GetQualifiedName(as);
-    fputs(NS_LossyConvertUTF16toASCII(as).get(), out);
-
-    fprintf(out, "@%p", (void *)this);
-
-    PRUint32 nattrs = GetAttrCount();
-
-    for (i = 0; i < nattrs; ++i) {
-        const nsAttrName* name = GetAttrNameAt(i);
-
-        nsAutoString v;
-        GetAttr(name->NamespaceID(), name->LocalName(), v);
-
-        fputs(" ", out);
-
-        nsAutoString s;
-        name->GetQualifiedName(s);
-
-        fputs(NS_LossyConvertUTF16toASCII(s).get(), out);
-        fputs("=", out);
-        fputs(NS_LossyConvertUTF16toASCII(v).get(), out);
+    nsCString prefix("<XUL");
+    if (HasSlots()) {
+      prefix.Append('*');
     }
+    prefix.Append(' ');
 
-    PRUint32 nchildren = GetChildCount();
-
-    if (nchildren) {
-        fputs("\n", out);
-
-        for (i = 0; i < nchildren; ++i) {
-            GetChildAt(i)->List(out, aIndent + 1);
-        }
-
-        rdf_Indent(out, aIndent);
-    }
-    fputs(">\n", out);
-
-    // XXX sXBL/XBL2 issue! Owner or current document?
-    nsIDocument* doc = GetCurrentDoc();
-    if (doc) {
-        nsIBindingManager *bindingManager = doc->BindingManager();
-        nsCOMPtr<nsIDOMNodeList> anonymousChildren;
-        bindingManager->GetAnonymousNodesFor(NS_STATIC_CAST(nsIContent*, NS_CONST_CAST(nsXULElement*, this)),
-                                             getter_AddRefs(anonymousChildren));
-
-        if (anonymousChildren) {
-            PRUint32 length;
-            anonymousChildren->GetLength(&length);
-            if (length) {
-                rdf_Indent(out, aIndent);
-                fputs("anonymous-children<\n", out);
-
-                for (PRUint32 i2 = 0; i2 < length; ++i2) {
-                    nsCOMPtr<nsIDOMNode> node;
-                    anonymousChildren->Item(i2, getter_AddRefs(node));
-                    nsCOMPtr<nsIContent> child = do_QueryInterface(node);
-                    child->List(out, aIndent + 1);
-                }
-
-                rdf_Indent(out, aIndent);
-                fputs(">\n", out);
-            }
-        }
-
-        PRBool hasContentList;
-        bindingManager->HasContentListFor(NS_STATIC_CAST(nsIContent*, NS_CONST_CAST(nsXULElement*, this)),
-                                          &hasContentList);
-
-        if (hasContentList) {
-            nsCOMPtr<nsIDOMNodeList> contentList;
-            bindingManager->GetContentListFor(NS_STATIC_CAST(nsIContent*, NS_CONST_CAST(nsXULElement*, this)),
-                                              getter_AddRefs(contentList));
-
-            NS_ASSERTION(contentList != nsnull, "oops, binding manager lied");
-
-            PRUint32 length;
-            contentList->GetLength(&length);
-            if (length) {
-                rdf_Indent(out, aIndent);
-                fputs("content-list<\n", out);
-
-                for (PRUint32 i2 = 0; i2 < length; ++i2) {
-                    nsCOMPtr<nsIDOMNode> node;
-                    contentList->Item(i2, getter_AddRefs(node));
-                    nsCOMPtr<nsIContent> child = do_QueryInterface(node);
-                    child->List(out, aIndent + 1);
-                }
-
-                rdf_Indent(out, aIndent);
-                fputs(">\n", out);
-            }
-        }
-    }
+    nsGenericElement::List(out, aIndent, prefix);
 }
 #endif
 

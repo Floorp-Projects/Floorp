@@ -189,10 +189,6 @@ public:
                               PRBool aCompileEventHandlers);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                              PRBool aNotify);
-#ifdef DEBUG
-  virtual void List(FILE* out, PRInt32 aIndent) const;
-  virtual void DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
-#endif
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
   virtual void RemoveFocus(nsPresContext *aPresContext);
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
@@ -239,10 +235,6 @@ public:
    * @param aBaseTarget the base target [OUT]
    */
   void GetBaseTarget(nsAString& aBaseTarget) const;
-
-#ifdef DEBUG
-  void ListAttributes(FILE* out) const;
-#endif
 
   /**
    * Get the primary form control frame for this content (see

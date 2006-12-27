@@ -434,8 +434,13 @@ public:
   virtual nsresult SetScriptTypeID(PRUint32 aLang);
 
 #ifdef DEBUG
-  virtual void List(FILE* out, PRInt32 aIndent) const;
-  virtual void DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
+  virtual void List(FILE* out, PRInt32 aIndent) const
+  {
+    List(out, aIndent, EmptyCString());
+  }
+  virtual void DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const;
+  void List(FILE* out, PRInt32 aIndent, const nsCString& aPrefix) const;
+  void ListAttributes(FILE* out) const;
 #endif
 
   virtual nsIAtom* GetID() const;
