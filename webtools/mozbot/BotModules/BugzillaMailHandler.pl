@@ -362,8 +362,8 @@ sub parse_mail ($) {
 
     # Duplicate
     my $dupid;
-    if (($dupid) = grep /marked as a duplicate of \d+/, @body_lines) {
-        $dupid =~ /marked as a duplicate of (\d+)/;
+    if (($dupid) = grep /marked as a duplicate of (?:bug\s)?\d+/, @body_lines) {
+        $dupid =~ /marked as a duplicate of (?:bug\s)?(\d+)/;
         $bug_info{'dup_of'} = $1;
         debug_print("Got dup_of: $bug_info{dup_of}");
     }
