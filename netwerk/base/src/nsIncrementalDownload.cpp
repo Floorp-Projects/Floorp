@@ -145,6 +145,8 @@ private:
   nsresult StartTimer(PRInt32 interval);
   nsresult ProcessTimeout();
   nsresult ReadCurrentSize();
+  nsresult ClearRequestHeader(nsIHttpChannel *channel, 
+                              const nsACString &header);
 
   nsCOMPtr<nsIRequestObserver>   mObserver;
   nsCOMPtr<nsISupports>          mObserverContext;
@@ -267,6 +269,12 @@ nsIncrementalDownload::ProcessTimeout()
 
   NS_ASSERTION(mCurrentSize != nsInt64(-1),
       "we should know the current file size by now");
+
+  // We don't support encodings -- they make the Content-Length not equal
+  // to the actual size of the data.
+  rv = ClearRequestHeader(http, NS_LITERAL_CSTRING("Accept-Encoding"));
+  if (NS_FAILED(rv))
+    return rv;
 
   // Don't bother making a range request if we are just going to fetch the
   // entire document.
@@ -610,6 +618,11 @@ nsIncrementalDownload::OnStartRequest(nsIRequest *request,
 
   // Adjust mChunkSize accordingly if mCurrentSize is close to mTotalSize.
   nsInt64 diff = mTotalSize - mCurrentSize;
+  if (diff <= nsInt64(0)) {
+    NS_WARNING("about to set a bogus chunk size; giving up");
+    return NS_ERROR_UNEXPECTED;
+  }
+
   if (diff < nsInt64(mChunkSize))
     mChunkSize = PRUint32(diff);
 
@@ -726,6 +739,15 @@ nsIncrementalDownload::GetInterface(const nsIID &iid, void **result)
   return NS_ERROR_NO_INTERFACE;
 }
 
+nsresult 
+nsIncrementalDownload::ClearRequestHeader(nsIHttpChannel *channel,
+                                          const nsACString &header)
+{
+  NS_ENSURE_ARG(channel);
+  return channel->SetRequestHeader(header,
+                                   NS_LITERAL_CSTRING(""), PR_FALSE);
+}
+
 // nsIChannelEventSink
 
 NS_IMETHODIMP
@@ -739,18 +761,23 @@ nsIncrementalDownload::OnChannelRedirect(nsIChannel *oldChannel,
   nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(oldChannel);
   NS_ENSURE_STATE(http);
 
+  nsCOMPtr<nsIHttpChannel> newHttpChannel = do_QueryInterface(newChannel);
+  NS_ENSURE_STATE(newHttpChannel);
+
   NS_NAMED_LITERAL_CSTRING(rangeHdr, "Range");
 
-  nsresult rv = NS_OK;
+  // We don't support encodings -- they make the Content-Length not equal
+  // to the actual size of the data.
+  nsresult rv = ClearRequestHeader(newHttpChannel, 
+                                   NS_LITERAL_CSTRING("Accept-Encoding"));
+  if (NS_FAILED(rv))
+    return rv;
 
   // If we didn't have a Range header, then we must be doing a full download.
   nsCAutoString rangeVal;
   http->GetRequestHeader(rangeHdr, rangeVal);
   if (!rangeVal.IsEmpty()) {
-    http = do_QueryInterface(newChannel);
-    NS_ENSURE_STATE(http);
-
-    rv = http->SetRequestHeader(rangeHdr, rangeVal, PR_FALSE);
+    rv = newHttpChannel->SetRequestHeader(rangeHdr, rangeVal, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
