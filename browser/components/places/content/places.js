@@ -185,8 +185,12 @@ var PlacesOrganizer = {
     var node = asQuery(this._places.selectedNode);
     LOG("Node URI: " + node.uri);
     var queries = node.getQueries({});
+
+    // Items are only excluded on the left pane
+    var options = node.queryOptions.clone();
+    options.excludeItems = false;
     this._content.load(queries, 
-                       OptionsFilter.filter(queries, node.queryOptions, null));
+                       OptionsFilter.filter(queries, options, null));
     
     // Make sure the query builder is hidden.
     PlacesQueryBuilder.hide();

@@ -128,10 +128,6 @@
         <parameter name="queries"/>
         <parameter name="options"/>
         <body><![CDATA[ 
-          // override with our local options
-          options.excludeItems = this.excludeItems;
-          options.excludeQueries = this.excludeQueries;
-          options.expandQueries = this.expandQueries;
           var result = PlacesUtils.history.executeQueries(queries, queries.length, 
                                                    options);
 
@@ -516,15 +512,6 @@
       <field name="childDropTypes">ViewConfig.GENERIC_DROP_TYPES</field>
       
       <!-- nsIPlacesView -->
-      <field name="excludeItems">false</field>
-      
-      <!-- nsIPlacesView -->
-      <field name="excludeQueries">false</field>
-      
-      <!-- nsIPlacesView -->
-      <field name="expandQueries">false</field>
-      
-      <!-- nsIPlacesView -->
       <method name="selectAll">
         <body><![CDATA[ 
           this.view.selection.selectAll();
@@ -731,15 +718,11 @@
         Gets the nsINavHistoryResultNode adjacent to the specified InsertionPoint.
         @param    insertionPoint
                   The InsertionPoint where items are being inserted
-        @param    excludeItems
-                  true if leaf nodes should be excluded for this view, false 
-                  otherwise.
         @returns  a nsINavHistoryResultNode that is adjacent to the specified
                   InsertionPoint 
         -->
       <method name="_getInsertionNode">
         <parameter name="insertionPoint"/>
-        <parameter name="excludeItems"/>
         <body><![CDATA[ 
           // The InsertionPoint defines a place within the view hierarchy where 
           // items may be inserted. This function returns the node adjacent to 
@@ -808,13 +791,7 @@
       <method name="_getInsertionIndex">
         <parameter name="insertionPoint"/>
         <body><![CDATA[
-          // Insert index of insertion and number of rows to insert
-          var excludeItems = this.excludeItems;
-          // This is a bit of a hack. Assume any container you drop into is 
-          // itself showing all item types, not just folders or items. 
-          if (insertionPoint.orientation == NHRVO.DROP_ON)
-            excludeItems = false;
-          var node = this._getInsertionNode(insertionPoint, excludeItems);
+          var node = this._getInsertionNode(insertionPoint);
           // This is the insertion index of the pivot. 
           if (node)
             return this.getResultView().treeIndexForNode(node);
