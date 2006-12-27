@@ -229,18 +229,9 @@ var folderListener = {
              }
            }
            if (uri == gCurrentLoadingFolderURI) {
-             // NOTE,
-             // if you change the scrolling code below,
-             // double check the scrolling logic in
-             // searchBar.js, restorePreSearchView()
              viewDebug("uri == current loading folder uri\n");
              gCurrentLoadingFolderURI = "";
-
-             // If we didn't just scroll,
-             // scroll to the first new message
-             // but don't select it
-             if (!scrolled && pref.getBoolPref("mailnews.scroll_to_new_message"))
-                scrolled = ScrollToMessageAfterFolderLoad(msgFolder);
+             scrolled = ScrollToMessageAfterFolderLoad(msgFolder);
              SetBusyCursor(window, false);
            }
            if (gNotifyDefaultInboxLoadedOnStartup && (folder.flags & 0x1000))
