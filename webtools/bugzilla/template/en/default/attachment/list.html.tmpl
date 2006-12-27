@@ -25,6 +25,7 @@
   function toggle_display(link) {
     var table = document.getElementById("attachment_table");
     var rows = table.getElementsByTagName("tr");
+    var originalHeight = table.offsetHeight; // Store current height for scrolling
 
     var toggle;
     if (link.innerHTML == "Show Obsolete") {
@@ -40,7 +41,11 @@
       if (rows[i].className.match('bz_tr_obsolete'))
         rows[i].style.display = toggle;
     }
-    return true;
+
+    var newHeight = table.offsetHeight;
+    window.scrollBy(0, newHeight - originalHeight);
+
+    return false;
   }
   //-->
 </script>
