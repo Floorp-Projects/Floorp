@@ -99,6 +99,9 @@ $vars->{'bugs'} = \@bugs;
 $vars->{'marks'} = \%marks;
 $vars->{'use_keywords'} = 1 if Bugzilla::Keyword::keyword_count();
 
+my @bugids = map {$_->bug_id} @bugs;
+$vars->{'bugids'} = join(", ", @bugids);
+
 # Next bug in list (if there is one)
 my @bug_list;
 if ($cgi->cookie("BUGLIST")) {

@@ -93,7 +93,8 @@
         </span>
         <span id="lob_direction">to</span>
         [%+ terms.bugs %]
-        <input type="text" name="bug_ids" size="12" maxlength="80">
+        <input type="text" name="bug_ids" size="12" maxlength="80"
+         [%- " value=\"$bugids\"" IF bugids %]>
         <input type="submit" value="Commit" id="commit_list_of_bugs">
       </form>
     </li></ul>
