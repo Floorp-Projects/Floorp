@@ -1571,7 +1571,7 @@ _cairo_win32_surface_show_glyphs (void			*surface,
             next_logical_y = _cairo_lround (next_user_y);
 
             dxy_buf[j] = _cairo_lround ((next_logical_x - logical_x) * WIN32_FONT_LOGICAL_SCALE);
-            dxy_buf[j+1] = _cairo_lround ((logical_y - start_y) * WIN32_FONT_LOGICAL_SCALE);
+            dxy_buf[j+1] = _cairo_lround ((next_logical_y - logical_y) * WIN32_FONT_LOGICAL_SCALE);
 
             logical_x = next_logical_x;
             logical_y = next_logical_y;
