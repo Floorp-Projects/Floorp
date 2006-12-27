@@ -1338,7 +1338,7 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
   NS_ASSERTION(!!aMap.mBCInfo == mIsBC, "BC state mismatch");
   PRInt32 origNumMapRows = mRows.Length();
   PRInt32 origNumCols = aMap.GetColCount();
-  PRBool  zeroRowSpan;
+  PRBool  zeroRowSpan = PR_FALSE;
   PRInt32 rowSpan = (aCellFrame) ? GetRowSpanForNewCell(aCellFrame, aRowIndex,
                                                         zeroRowSpan) : 1;
   // add new rows if necessary
@@ -1377,7 +1377,7 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
   if (aColToBeginSearch)
     *aColToBeginSearch =  startColIndex + 1; 
   
-  PRBool  zeroColSpan;
+  PRBool  zeroColSpan = PR_FALSE;
   PRInt32 colSpan = (aCellFrame) ?
                     GetColSpanForNewCell(*aCellFrame, zeroColSpan) : 1;
   if (zeroColSpan) {
