@@ -226,10 +226,10 @@ function handleWantsAttachment(wants_attachment) {
   </tr>
 
   <tr>
-    [% sel = { description => 'Platform', name => 'rep_platform' } %]
+    [% sel = { description => 'Severity', name => 'bug_severity' } %]
     [% INCLUDE select %]
 
-    [% sel = { description => 'OS', name => 'op_sys' } %]
+    [% sel = { description => 'Platform', name => 'rep_platform' } %]
     [% INCLUDE select %]
   </tr>
 
@@ -243,7 +243,7 @@ function handleWantsAttachment(wants_attachment) {
       </td>
     [% END %]
 
-    [% sel = { description => 'Severity', name => 'bug_severity' } %]
+    [% sel = { description => 'OS', name => 'op_sys' } %]
     [% INCLUDE select %]
   </tr>
 
