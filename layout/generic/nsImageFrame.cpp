@@ -1035,8 +1035,8 @@ nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
 }
 
 struct nsRecessedBorder : public nsStyleBorder {
-  nsRecessedBorder(nscoord aBorderWidth)
-    : nsStyleBorder()
+  nsRecessedBorder(nscoord aBorderWidth, nsPresContext* aPresContext)
+    : nsStyleBorder(aPresContext)
   {
     NS_FOR_CSS_SIDES(side) {
       // Note: use SetBorderColor here because we want to make sure
@@ -1076,7 +1076,7 @@ nsImageFrame::DisplayAltFeedback(nsIRenderingContext& aRenderingContext,
   }
 
   // Paint the border
-  nsRecessedBorder recessedBorder(borderEdgeWidth);
+  nsRecessedBorder recessedBorder(borderEdgeWidth, GetPresContext());
   nsCSSRendering::PaintBorder(GetPresContext(), aRenderingContext, this, inner,
                               inner, recessedBorder, mStyleContext, 0);
 

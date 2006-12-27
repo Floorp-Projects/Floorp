@@ -3230,7 +3230,7 @@ nsComputedDOMStyle::GetBorderWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
   const nsStyleBorder* border = GetStyleBorder();
 
   if (border) {
-    val->SetTwips(border->GetBorderWidth(aSide));
+    val->SetTwips(border->GetComputedBorderWidth(aSide));
   }
 
   return CallQueryInterface(val, aValue);

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -310,8 +311,12 @@ struct nsBorderColors {
   }
 };
 
+// Border widths are rounded to the nearest integer number of pixels, but values
+// between zero and one device pixels are always rounded up to one device pixel.
+#define NS_ROUND_BORDER_TO_PIXELS(l,tpp) \
+    ((l) == 0) ? 0 : PR_MAX((tpp), ((l) + ((tpp) / 2)) / (tpp) * (tpp))
+
 struct nsStyleBorder: public nsStyleStruct {
-  nsStyleBorder() :mBorderColors(nsnull) {};
   nsStyleBorder(nsPresContext* aContext);
   nsStyleBorder(const nsStyleBorder& aBorder);
   ~nsStyleBorder(void) {
@@ -362,22 +367,33 @@ struct nsStyleBorder: public nsStyleStruct {
   {
     mBorder.side(aSide) = aBorderWidth;
     if (IsVisibleStyle(GetBorderStyle(aSide))) {
-      mComputedBorder.side(aSide) = aBorderWidth;
+      mActualBorder.side(aSide) =
+        NS_ROUND_BORDER_TO_PIXELS(aBorderWidth, mTwipsPerPixel);
     }
   }
 
-  // Get the computed border, in twips.
+  // Get the actual border, in twips.
   const nsMargin& GetBorder() const
   {
-    return mComputedBorder;
+    return mActualBorder;
+  }
+
+  // Get the actual border width for a particular side, in twips.  Note that
+  // this is zero if and only if there is no border to be painted for this
+  // side.  That is, this value takes into account the border style and the
+  // value is rounded to the nearest device pixel by NS_ROUND_BORDER_TO_PIXELS.
+  nscoord GetBorderWidth(PRUint8 aSide) const
+  {
+    return mActualBorder.side(aSide);
   }
 
   // Get the computed border width for a particular side, in twips.  Note that
   // this is zero if and only if there is no border to be painted for this
-  // side.  That is, this value takes into account the border style.
-  nscoord GetBorderWidth(PRUint8 aSide) const
+  // side.  That is, this value takes into account the border style and the
+  // value is rounded to the nearest device pixel by NS_ROUND_BORDER_TO_PIXELS.
+  nscoord GetComputedBorderWidth(PRUint8 aSide) const
   {
-    return mComputedBorder.side(aSide);
+    return mActualBorder.side(aSide) ? mBorder.side(aSide) : 0;
   }
 
   PRUint8 GetBorderStyle(PRUint8 aSide) const
@@ -392,9 +408,10 @@ struct nsStyleBorder: public nsStyleStruct {
     mBorderStyle[aSide] &= ~BORDER_STYLE_MASK; 
     mBorderStyle[aSide] |= (aStyle & BORDER_STYLE_MASK);
     if (IsVisibleStyle(aStyle)) {
-      mComputedBorder.side(aSide) = mBorder.side(aSide);
+      mActualBorder.side(aSide) =
+        NS_ROUND_BORDER_TO_PIXELS(mBorder.side(aSide), mTwipsPerPixel);
     } else {
-      mComputedBorder.side(aSide) = 0;
+      mActualBorder.side(aSide) = 0;
     }
   }
 
@@ -456,10 +473,10 @@ struct nsStyleBorder: public nsStyleStruct {
   }
 
 protected:
-  // mComputedBorder holds the CSS2.1 computed border-width values.  In
+  // mActualBorder holds the CSS2.1 actual border-width values.  In
   // particular, these widths take into account the border-style for the
-  // relevant side.
-  nsMargin      mComputedBorder;
+  // relevant side and the values are rounded to the nearest device pixel.
+  nsMargin      mActualBorder;
 
   // mBorder holds the nscoord values for the border widths as they would be if
   // all the border-style values were visible (not hidden or none).  This
@@ -469,12 +486,14 @@ protected:
   // setting the border style.  Note that this isn't quite the CSS specified
   // value, since this has had the enumerated border widths converted to
   // lengths, and all lengths converted to twips.  But it's not quite the
-  // computed value either; mComputedBorder is that.
+  // computed value either.
   nsMargin      mBorder;
 
   PRUint8       mBorderStyle[4];  // [reset] See nsStyleConsts.h
   nscolor       mBorderColor[4];  // [reset] the colors to use for a simple border.  not used
                                   // if -moz-border-colors is specified
+
+  nscoord       mTwipsPerPixel;
 };
 
 
@@ -500,13 +519,17 @@ struct nsStyleOutline: public nsStyleStruct {
   nsStyleSides  mOutlineRadius;    // [reset] length, percent
   																// (top=topLeft, right=topRight, bottom=bottomRight, left=bottomLeft)
 
+  // Note that these are specified values.  You can get the actual values with
+  // GetOutlineWidth and GetOutlineOffset.  You cannot get the computed values
+  // directly.
   nsStyleCoord  mOutlineOffset;   // [reset] length
   nsStyleCoord  mOutlineWidth;    // [reset] length, enum (see nsStyleConsts.h)
 
   PRBool GetOutlineOffset(nscoord& aOffset) const
   {
     if (mOutlineOffset.GetUnit() == eStyleUnit_Coord) {
-      aOffset = mOutlineOffset.GetCoordValue();
+      nscoord offset = mOutlineOffset.GetCoordValue();
+      aOffset = NS_ROUND_BORDER_TO_PIXELS(offset, mTwipsPerPixel);
       return PR_TRUE;
     } else {
       NS_NOTYETIMPLEMENTED("GetOutlineOffset: eStyleUnit_Chars");
@@ -562,12 +585,16 @@ struct nsStyleOutline: public nsStyleStruct {
   }
 
 protected:
+  // This value is the actual value, so it's rounded to the nearest device
+  // pixel.
   nscoord       mCachedOutlineWidth;
 
   nscolor       mOutlineColor;    // [reset] 
 
   PRPackedBool  mHasCachedOutline;
   PRUint8       mOutlineStyle;    // [reset] See nsStyleConsts.h
+
+  nscoord       mTwipsPerPixel;
 };
 
 
