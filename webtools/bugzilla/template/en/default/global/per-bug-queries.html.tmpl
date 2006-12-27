@@ -71,7 +71,13 @@
             <option value="remove">Remove</option>
           [% END %]
         </select>
-        <a href="[% Param('docs_urlbase') %]query.html#individual-buglists">the named tag</a>
+
+        [% IF Param('docs_urlbase') %]
+          <a href="[% Param('docs_urlbase') %]query.html#individual-buglists">the named tag</a>
+        [% ELSE %]
+          the named tag
+        [% END %]
+
         [% IF lists_of_bugs.size %]
           <select id="lob_oldqueryname" name="oldqueryname">
             [% FOREACH query = lists_of_bugs %]
