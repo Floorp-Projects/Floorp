@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifdef DEBUG_smontagu
+#define DEBUG_pavlov
+#endif
 
 #define FORCE_PR_LOG
 
@@ -574,6 +577,14 @@ gfxWindowsTextRun::MeasureOrDrawReallyFast(gfxContext *aContext,
     HFONT hfont = currentFont->GetHFONT();
     SelectObject(aDC, hfont);
 
+    /* GetGlyphIndices is buggy for bitmap fonts, so send them to uniscribe */
+    if (!mIsASCII) {
+        TEXTMETRIC metrics;
+        GetTextMetrics(aDC, &metrics);
+        if ((metrics.tmPitchAndFamily & (TMPF_VECTOR | TMPF_TRUETYPE)) == 0)
+            return -1;
+    }
+
     /* check to see if all the glyphs are in this font or not */
     WORD glyphBuf[512];
     LPWORD glyphs = glyphBuf;
@@ -1080,10 +1091,24 @@ public:
         GenerateAlternativeString();
     }
 
+    /* 
+     * Fonts are hopelessly inconsistent about how they handle characters that
+     * they don't have glyphs for.
+     * Some will return the glyph which ScriptFontProperties() lists as
+     * wgDefault; some will return the glyph listed as wgInvalid.
+     * Some list the same glyph as both wgInvalid and wgBlank, and use this
+     * glyph for valid whitespace characters.
+     * In some cases wgBlank with zero width represents a missing glyph,
+     * but in other cases, especially in complex scripts, wgBlank with zero
+     * width represents a valid zero width character such a zero width joiner
+     * or non-joiner.
+     */
     PRBool IsMissingGlyphs() {
-        const DWORD invalidGlyph = ScriptProperties()->fInvalidGlyph;
+        SCRIPT_FONTPROPERTIES sfp;
+        ScriptFontProperties(&sfp);
         for (int i = 0; i < mNumGlyphs; ++i) {
-            if (mGlyphs[i] == invalidGlyph)
+            if (mGlyphs[i] == sfp.wgDefault ||
+                (mGlyphs[i] == sfp.wgInvalid && mGlyphs[i] != sfp.wgBlank))
                 return PR_TRUE;
             // I'm not sure that claiming glyphs are missing if they're zero width is valid
             // but we're seeing cases where some fonts return glyphs such as 0x03 and 0x04
@@ -1096,8 +1121,6 @@ public:
             }
 #ifdef DEBUG_pavlov // excess debugging code
             else {
-                SCRIPT_FONTPROPERTIES sfp;
-                ScriptFontProperties(&sfp);
                 PR_LOG(gFontLog, PR_LOG_DEBUG, ("%04x %04x %04x", sfp.wgBlank, sfp.wgDefault, sfp.wgInvalid));
                 PR_LOG(gFontLog, PR_LOG_DEBUG, ("glyph%d - 0x%04x", i, mGlyphs[i]));
                 PR_LOG(gFontLog, PR_LOG_DEBUG, ("%04x  --  %04x -- %04x", ScriptProperties()->fInvalidGlyph, mScriptItem->a.fNoGlyphIndex, mAttr[i].fZeroWidth));
@@ -1152,15 +1175,19 @@ public:
         return gScriptProperties[mScript];
     }
 
-#ifdef DEBUG_pavlov
     void ScriptFontProperties(SCRIPT_FONTPROPERTIES *sfp) {
         HRESULT rv;
 
-        SelectFont();
-        rv = ScriptGetFontProperties(mDC, mCurrentFont->ScriptCache(),
+        memset(sfp, 0, sizeof(SCRIPT_FONTPROPERTIES));
+        sfp->cBytes = sizeof(SCRIPT_FONTPROPERTIES);
+        rv = ScriptGetFontProperties(NULL, mCurrentFont->ScriptCache(),
                                      sfp);
+        if (rv == E_PENDING) {
+            SelectFont();
+            rv = ScriptGetFontProperties(mDC, mCurrentFont->ScriptCache(),
+                                         sfp);
+        }
     }
-#endif
 
     cairo_glyph_t *GetCairoGlyphs(const gfxPoint& pt, gfxFloat &offset, PRUint32 *nglyphs) {
         const double cairoToPixels = 1.0;
