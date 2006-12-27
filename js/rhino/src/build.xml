@@ -39,7 +39,7 @@ Build file for Rhino using Ant (see http://jakarta.apache.org/ant/index.html)
 Requires Ant version 1.2
 -->
 <project name="src" default="compile" basedir="..">
-
+ 
   <property file="build.properties"/>
 
   <target name="compile">
