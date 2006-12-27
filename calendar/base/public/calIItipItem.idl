@@ -132,5 +132,5 @@ interface calIItipItem : nsISupports
      * @arg in parameter - AString containing attendee address
      * @arg in parameter - AString contianing the new attendee status
      */
-    void setAttendeeStatus(in AString attendeeID, in AString status);
+    void setAttendeeStatus(in AString attendeeId, in AString status);
 };
