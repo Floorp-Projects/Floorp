@@ -220,14 +220,16 @@ sub Send {
     my $diffheader = "";
     my @diffparts;
     my $lastwho = "";
+    my $fullwho;
     my @changedfields;
     foreach my $ref (@$diffs) {
         my ($who, $whoname, $what, $when, $old, $new, $attachid, $fieldname) = (@$ref);
         my $diffpart = {};
         if ($who ne $lastwho) {
             $lastwho = $who;
-            $diffheader = "\n$whoname <$who" . Bugzilla->params->{'emailsuffix'}
-                          . "> changed:\n\n";
+            $fullwho = $whoname ? "$whoname <$who" . Bugzilla->params->{'emailsuffix'} . ">" :
+                                  "$who" . Bugzilla->params->{'emailsuffix'};
+            $diffheader = "\n$fullwho changed:\n\n";
             $diffheader .= FormatTriple("What    ", "Removed", "Added");
             $diffheader .= ('-' x 76) . "\n";
         }
@@ -691,9 +693,14 @@ sub prepare_comments {
     my $result = "";
     foreach my $comment (@$raw_comments) {
         if ($count) {
-            $result .= "\n\n--- Comment #$count from " . $comment->{'name'} . " <" .
-                       $comment->{'email'} . Bugzilla->params->{'emailsuffix'} . ">  " .
-                       format_time($comment->{'time'}) . " ---\n";
+            $result .= "\n\n--- Comment #$count from ";
+            if ($comment->{'name'} eq $comment->{'email'}) {
+                $result .= $comment->{'email'} . Bugzilla->params->{'emailsuffix'};
+            } else {
+                $result .= $comment->{'name'} . " <" . $comment->{'email'} .
+                           Bugzilla->params->{'emailsuffix'} . ">";
+            }
+            $result .= "  " . format_time($comment->{'time'}) . " ---\n";
         }
         # Format language specific comments. We don't update $comment->{'body'}
         # directly, otherwise it would grow everytime you call format_comment()
