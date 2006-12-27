@@ -85,6 +85,7 @@
         </label>
         [% safe_assigned_to = FILTER js; bug.assigned_to.login; END %]
         [% INCLUDE global/userselect.html.tmpl
+             id => "assigned_to"
              name => "assigned_to"
              value => bug.assigned_to.login
              size => 32
