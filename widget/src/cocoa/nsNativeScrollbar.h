@@ -39,6 +39,9 @@
 #ifndef nsNativeScrollbar_h__
 #define nsNativeScrollbar_h__
 
+#import <Carbon/Carbon.h>
+#import <Cocoa/Cocoa.h>
+
 #include "mozView.h"
 #include "nsChildView.h"
 
