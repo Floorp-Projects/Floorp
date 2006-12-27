@@ -58,22 +58,29 @@
   [% global.seen = {} %]
   [%# Display the tree of bugs that this bug depends on. %]
   <h3>
-    [% ids.size %] 
-    [% IF hide_resolved %]
-      Open [% terms.bugs %]
-    [% ELSE %]
-      [% terms.Bugs %]
-    [%- END %] 
-    that <a href="show_bug.cgi?id=[% bugid %]">[% terms.bug %] [%+ bugid %]</a> 
+    <a href="show_bug.cgi?id=[% bugid %]">[% terms.Bug %] [%+ bugid %]</a> 
     [% IF type == 1 %]
         [% tree_name = "dependson_tree" %]
-        depends on
+        [% IF ids.size %]
+            depends on 
+        [% ELSE %]
+            does not depend on any [% terms.bugs %].
+        [% END %]
     [% ELSIF type == 2 %]
         [% tree_name = "blocked_tree" %]
-        blocks
+        [% IF ids.size %] 
+            blocks 
+        [% ELSE %]
+            does not block any [% terms.bugs %].
+        [% END %]
     [% END %]
+    [% IF ids.size %]
+        [%+ (ids.size == 1) ? "one" : ids.size %]
+        [%+ IF hide_resolved %]open[% END %]
+        [%+ (ids.size == 1) ? terms.bug : terms.bugs %]:
+    [% END %] 
   </h3>
-  [% IF ids.size > 0 %]
+  [% IF ids.size %]
     ([% IF maxdepth -%]Up to [% maxdepth %] level[% "s" IF maxdepth > 1 %] deep | [% END -%]
     <a href="buglist.cgi?bug_id=[% ids.join(",") %]">view as [% terms.bug %] list</a>
     [% IF user.groups.editbugs && ids.size > 1 %]
@@ -82,9 +89,6 @@
     <ul class="tree">
       [% INCLUDE display_tree tree=$tree_name %]
     </ul>
-    <p>
-  [% ELSE %]
-    <p>None</p>
   [% END %]
 [% END %]
 
@@ -208,7 +212,7 @@
                        : ( maxdepth ? maxdepth - 1 : realdepth - 1 )
      %]">
      <input name="hide_resolved" type="hidden" value="[% hide_resolved %]">
-     <input type="submit" id="decrase_depth" value="&nbsp;&lt;&nbsp;"
+     <input type="submit" id="decrease_depth" value="&nbsp;&lt;&nbsp;"
        [% "disabled" IF realdepth < 2 || ( maxdepth && maxdepth < 2 ) %]>
    </form>
    </td>
@@ -241,8 +245,7 @@
      [% END %]
      <input name="hide_resolved" type="hidden" value="[% hide_resolved %]">
      <input type="submit" id="increase_depth" value="&nbsp;&gt;&nbsp;" 
-        [% "disabled" IF realdepth < 2 || !maxdepth || maxdepth >= realdepth %]
-    %]>
+        [% "disabled" IF realdepth < 2 || !maxdepth || maxdepth >= realdepth %]>
    </form>
    </td>
 
