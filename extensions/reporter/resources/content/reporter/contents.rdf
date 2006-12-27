@@ -11,6 +11,7 @@
         chrome:authorURL="http://reporter.mozilla.org/"
         chrome:extension="true"
         chrome:description="Broken Web Site Reporting Tool"
+#expand         chrome:localeVersion="__MOZILLA_LOCALE_VERSION__"
         chrome:name="reporter"
         chrome:xpcNativeWrappers="true">
   </RDF:Description>
