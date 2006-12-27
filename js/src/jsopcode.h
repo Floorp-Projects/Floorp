@@ -92,22 +92,23 @@ typedef enum JSOpLength {
 #define JOF_NAME          0x0010  /* name operation */
 #define JOF_PROP          0x0020  /* obj.prop operation */
 #define JOF_ELEM          0x0030  /* obj[index] operation */
-#define JOF_MODEMASK      0x0030  /* mask for above addressing modes */
-#define JOF_SET           0x0040  /* set (i.e., assignment) operation */
-#define JOF_DEL           0x0080  /* delete operation */
-#define JOF_DEC           0x0100  /* decrement (--, not ++) opcode */
-#define JOF_INC           0x0200  /* increment (++, not --) opcode */
-#define JOF_INCDEC        0x0300  /* increment or decrement opcode */
-#define JOF_POST          0x0400  /* postorder increment or decrement */
-#define JOF_IMPORT        0x0800  /* import property op */
-#define JOF_FOR           0x1000  /* for-in property op */
+#define JOF_XMLNAME       0x0040  /* XML name: *, a::b, @a, @a::b, etc. */
+#define JOF_VARPROP       0x0050  /* x.prop for arg, var, or local x */
+#define JOF_MODEMASK      0x0070  /* mask for above addressing modes */
+#define JOF_SET           0x0080  /* set (i.e., assignment) operation */
+#define JOF_DEL           0x0100  /* delete operation */
+#define JOF_DEC           0x0200  /* decrement (--, not ++) opcode */
+#define JOF_INC           0x0400  /* increment (++, not --) opcode */
+#define JOF_INCDEC        0x0600  /* increment or decrement opcode */
+#define JOF_POST          0x0800  /* postorder increment or decrement */
+#define JOF_IMPORT        0x1000  /* import property op */
+#define JOF_FOR           0x2000  /* for-in property op */
 #define JOF_ASSIGNING     JOF_SET /* hint for JSClass.resolve, used for ops
                                      that do simplex assignment */
-#define JOF_DETECTING     0x2000  /* object detection flag for JSNewResolveOp */
-#define JOF_BACKPATCH     0x4000  /* backpatch placeholder during codegen */
-#define JOF_LEFTASSOC     0x8000  /* left-associative operator */
-#define JOF_DECLARING    0x10000  /* var, const, or function declaration op */
-#define JOF_XMLNAME      0x20000  /* XML name: *, a::b, @a, @a::b, etc. */
+#define JOF_DETECTING     0x4000  /* object detection flag for JSNewResolveOp */
+#define JOF_BACKPATCH     0x8000  /* backpatch placeholder during codegen */
+#define JOF_LEFTASSOC    0x10000  /* left-associative operator */
+#define JOF_DECLARING    0x20000  /* var, const, or function declaration op */
 
 #define JOF_TYPE_IS_EXTENDED_JUMP(t) \
     ((unsigned)((t) - JOF_JUMPX) <= (unsigned)(JOF_LOOKUPSWITCHX - JOF_JUMPX))
