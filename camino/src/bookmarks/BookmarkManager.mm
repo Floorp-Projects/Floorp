@@ -920,6 +920,16 @@ static BookmarkManager* gBookmarkManager = nil;
     [contextMenu setSubmenu:arrangeSubmenu forItem:menuItem];
   }
 
+  // Disable context menu items if the parent window is currently showing a sheet.
+  if ((outlineView && [[outlineView window] attachedSheet]) ||
+      (target && [target respondsToSelector:@selector(window)] && [[target window] attachedSheet]))
+  {
+    NSArray* menuArray = [contextMenu itemArray];
+    for (unsigned i = 0; i < [menuArray count]; i++) {
+      [[menuArray objectAtIndex:i] setEnabled:NO];
+    }
+  }
+
   return contextMenu;
 }
 

@@ -1676,9 +1676,15 @@ enum BWCOpenDest {
 #pragma mark -
 
 
--(BOOL)validateMenuItem: (NSMenuItem*)aMenuItem
+- (BOOL)validateMenuItem:(NSMenuItem*)aMenuItem
 {
   SEL action = [aMenuItem action];
+
+  // Disable all window-specific menu items while a sheet is showing.
+  // We don't do this in validateActionBySelector: because toolbar items shouldn't
+  // suddenly get a disabled look when a sheet appears (they aren't clickable anyway).
+  if ([[self window] attachedSheet])
+    return NO;
 
   if (action == @selector(reloadSendersTab:)) {
     BrowserTabViewItem* sendersTab = [[self getTabBrowser] itemWithTag:[aMenuItem tag]];
@@ -4134,6 +4140,14 @@ enum BWCOpenDest {
                                                                     modifiers:(NSCommandKeyMask | NSShiftKeyMask)];
         [result insertItem:cmdShiftMenuItem atIndex:(i + 2)];
       }
+    }
+  }
+
+  // Disable context menu items if the window is currently showing a sheet.
+  if ([[self window] attachedSheet]) {
+    NSArray* menuArray = [result itemArray];
+    for (unsigned i = 0; i < [menuArray count]; i++) {
+      [[menuArray objectAtIndex:i] setEnabled:NO];
     }
   }
 

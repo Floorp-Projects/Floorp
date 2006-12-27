@@ -422,6 +422,21 @@ static const unsigned int kMaxTitleLength = 50;
   [self rebuildHistoryItems];
 }
 
+- (BOOL)validateMenuItem:(NSMenuItem*)aMenuItem
+{
+  BrowserWindowController* browserController = [(MainController *)[NSApp delegate] getMainWindowBrowserController];
+  SEL action = [aMenuItem action];
+
+  // disable history if a sheet is up
+  if (browserController && [[browserController window] attachedSheet] &&
+      (action == @selector(openHistoryItem:)))
+  {
+    return NO;
+  }
+
+  return YES;
+}
+
 - (void)openHistoryItem:(id)sender
 {
   id repObject = [sender representedObject];

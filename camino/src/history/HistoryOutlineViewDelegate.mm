@@ -470,6 +470,10 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
 
 - (BOOL)validateMenuItem:(NSMenuItem*)menuItem
 {
+  // Window actions are disabled while a sheet is showing
+  if ([[mBrowserWindowController window] attachedSheet])
+    return NO;  
+
   SEL action = [menuItem action];
 
   if (action == @selector(openHistoryItem:) ||

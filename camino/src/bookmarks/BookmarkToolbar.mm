@@ -482,6 +482,10 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
 //
 - (BOOL)validateMenuItem:(NSMenuItem*)aMenuItem
 {
+  // Window actions are disabled while a sheet is showing
+  if ([[self window] attachedSheet])
+    return NO;
+
   return YES;
 }
 

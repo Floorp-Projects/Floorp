@@ -1285,6 +1285,10 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 
 -(BOOL)validateMenuItem: (NSMenuItem*)aMenuItem
 {
+  // Window actions are disabled while a sheet is showing
+  if ([[self window] attachedSheet])
+    return NO;
+
   // update first responder items based on the selection
   SEL action = [aMenuItem action];
   if (action == @selector(cut:))

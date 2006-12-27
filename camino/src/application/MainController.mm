@@ -118,6 +118,7 @@ const int kReuseWindowOnAE = 2;
 - (void)menuWillDisplay:(NSNotification*)inNotification;
 - (void)showCertificatesNotification:(NSNotification*)inNotification;
 - (void)openPanelDidEnd:(NSOpenPanel*)inOpenPanel returnCode:(int)inReturnCode contextInfo:(void*)inContextInfo;
+- (void)loadApplicationPage:(NSString*)pageURL;
 - (NSArray*)browserWindows;
 + (NSURL*)decodeLocalFileURL:(NSURL*)url;
 
@@ -630,6 +631,17 @@ const int kReuseWindowOnAE = 2;
     controller = [self openBrowserWindowWithURL:inURLString andReferrer:aReferrer behind:nil allowPopups:NO];
 }
 
+// Convenience function for loading application pages either in a new window or a new
+// tab as appropriate for the user prefs and the current browser state.
+- (void)loadApplicationPage:(NSString*)pageURL
+{
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController && [[browserController window] attachedSheet])
+    [self openBrowserWindowWithURL:pageURL andReferrer:nil behind:nil allowPopups:NO];
+  else
+    [self openNewWindowOrTabWithURL:pageURL andReferrer:nil alwaysInFront:YES];
+}
+
 - (BOOL)application:(NSApplication*)theApplication openFile:(NSString*)filename
 {
   // We can get called before -applicationDidFinishLaunching, so make sure gecko
@@ -808,7 +820,7 @@ const int kReuseWindowOnAE = 2;
 {
   NSString* pageToLoad = NSLocalizedStringFromTable(@"FeedbackPageDefault", @"WebsiteDefaults", nil);
   if (![pageToLoad isEqualToString:@"FeedbackPageDefault"])
-    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil alwaysInFront:YES];
+    [self loadApplicationPage:pageToLoad];
 }
 
 - (IBAction)displayPreferencesWindow:(id)sender
@@ -1397,7 +1409,7 @@ const int kReuseWindowOnAE = 2;
 {
   NSString* pageToLoad = NSLocalizedStringFromTable(@"RendezvousPageDefault", @"WebsiteDefaults", nil);
   if (![pageToLoad isEqualToString:@"RendezvousPageDefault"])
-    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil alwaysInFront:YES];
+    [self loadApplicationPage:pageToLoad];
 }
 
 - (IBAction)connectToServer:(id)aSender
@@ -1446,40 +1458,40 @@ const int kReuseWindowOnAE = 2;
 {
   NSString* pageToLoad = NSLocalizedStringFromTable(@"SupportPageDefault", @"WebsiteDefaults", nil);
   if (![pageToLoad isEqualToString:@"SupportPageDefault"])
-    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil alwaysInFront:YES];
+    [self loadApplicationPage:pageToLoad];
 }
 
 - (IBAction)infoLink:(id)aSender
 {
   NSString* pageToLoad = NSLocalizedStringFromTable(@"InfoPageDefault", @"WebsiteDefaults", nil);
   if (![pageToLoad isEqualToString:@"InfoPageDefault"])
-    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil alwaysInFront:YES];
+    [self loadApplicationPage:pageToLoad];
 }
 
 - (IBAction)aboutPlugins:(id)aSender
 {
-  [self openNewWindowOrTabWithURL:@"about:plugins" andReferrer:nil alwaysInFront:YES];
+  [self loadApplicationPage:@"about:plugins"];
 }
 
 - (IBAction)releaseNoteLink:(id)aSender
 {
   NSString* pageToLoad = NSLocalizedStringFromTable(@"ReleaseNotesDefault", @"WebsiteDefaults", nil);
   if (![pageToLoad isEqualToString:@"ReleaseNotesDefault"])
-    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil alwaysInFront:YES];
+    [self loadApplicationPage:pageToLoad];
 }
 
 - (IBAction)tipsTricksLink:(id)aSender
 {
   NSString* pageToLoad = NSLocalizedStringFromTable(@"TipsTricksPageDefault", @"WebsiteDefaults", nil);
   if (![pageToLoad isEqualToString:@"TipsTricksPageDefault"])
-    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil alwaysInFront:YES];
+    [self loadApplicationPage:pageToLoad];
 }
 
 - (IBAction)searchCustomizeLink:(id)aSender
 {
   NSString* pageToLoad = NSLocalizedStringFromTable(@"SearchCustomPageDefault", @"WebsiteDefaults", nil);
   if (![pageToLoad isEqualToString:@"SearchCustomPageDefault"])
-    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil alwaysInFront:YES];
+    [self loadApplicationPage:pageToLoad];
 }
 
 #pragma mark -
@@ -1492,19 +1504,34 @@ const int kReuseWindowOnAE = 2;
 
   // NSLog(@"MainController validateMenuItem for %@ (%s)", [aMenuItem title], action);
 
+  // disable window-related menu items if a sheet is up
+  if (browserController && [[browserController window] attachedSheet] &&
+      (action == @selector(openFile:) ||
+       action == @selector(openLocation:) ||
+       action == @selector(savePage:) ||
+       action == @selector(newTab:) ||
+       action == @selector(doSearch:) ||
+       action == @selector(toggleBookmarksToolbar:) ||
+       action == @selector(goHome:) ||
+       action == @selector(showHistory:) ||
+       action == @selector(manageBookmarks:) ||
+       action == @selector(openMenuBookmark:) ||
+       action == @selector(connectToServer:)))
+  {
+    return NO;
+  }
+
   // check what the state of the personal toolbar should be, but only if there is a browser
   // window open. Popup windows that have the personal toolbar removed should always gray
   // out this menu.
   if (action == @selector(toggleBookmarksToolbar:)) {
     if (browserController) {
-      NSView* bookmarkToolbar = [browserController bookmarkToolbar];
+      BookmarkToolbar* bookmarkToolbar = [browserController bookmarkToolbar];
       if (bookmarkToolbar) {
-        float height = [bookmarkToolbar frame].size.height;
-        BOOL toolbarShowing = (height > 0);
-        if (toolbarShowing)
-          [mBookmarksToolbarMenuItem setTitle:NSLocalizedString(@"Hide Bookmarks Toolbar",@"")];
+        if ([bookmarkToolbar isVisible])
+          [mBookmarksToolbarMenuItem setTitle:NSLocalizedString(@"Hide Bookmarks Toolbar", nil)];
         else
-          [mBookmarksToolbarMenuItem setTitle:NSLocalizedString(@"Show Bookmarks Toolbar",@"")];
+          [mBookmarksToolbarMenuItem setTitle:NSLocalizedString(@"Show Bookmarks Toolbar", nil)];
         return YES;
       }
     }
@@ -1527,12 +1554,6 @@ const int kReuseWindowOnAE = 2;
       [aMenuItem setTitle:NSLocalizedString(@"Open in Tabs in New Window", nil)];
   }
 
-  // disable open menu items if a sheet is up (maybe disable others too)
-  if (action == @selector(openFile:) ||
-      action == @selector(openLocation:)) {
-    return (!browserController || [[browserController window] attachedSheet] == nil);
-  }
-
   // only enable newTab if there is a browser window frontmost, or if there is no window
   // (i.e., disable it for non-browser windows).
   if (action == @selector(newTab:))
@@ -1550,7 +1571,17 @@ const int kReuseWindowOnAE = 2;
   // BrowserWindowController decides about actions that are just sent on to
   // the front window's BrowserWindowController. This works because the selectors
   // of these actions are the same here and in BrowserWindowController.
+
+  // goBack: and goForward: don't match; for now we translate them, but eventually
+  // BrowserWindowController's methods should be renamed.
+  if (action == @selector(goBack:))
+    action = @selector(back:);
+  if (action == @selector(goForward:))
+    action = @selector(forward:);
+
   if (action == @selector(stop:) ||
+      action == @selector(back:) ||
+      action == @selector(forward:) ||
       action == @selector(reload:) ||
       action == @selector(reloadAllTabs:) ||
       action == @selector(nextTab:) ||
@@ -1564,14 +1595,10 @@ const int kReuseWindowOnAE = 2;
       action == @selector(printDocument:) ||
       action == @selector(pageSetup:))
   {
+    if (browserController && [[browserController window] attachedSheet])
+      return NO;
     return (browserController && [browserController validateActionBySelector:action]);
   }
-  // goBack: and goForward: don't match; for now we translate them, but eventually
-  // BrowserWindowController's methods should be renamed.
-  if (action == @selector(goBack:))
-    return (browserController && [browserController validateActionBySelector:@selector(back:)]);
-  if (action == @selector(goForward:))
-    return (browserController && [browserController validateActionBySelector:@selector(forward:)]);
 
   // default return
   return YES;
@@ -1589,6 +1616,7 @@ const int kReuseWindowOnAE = 2;
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
   if (browserController && ![browserController bookmarkManagerIsVisible] &&
+      ![[browserController window] attachedSheet] &&
       [[[browserController getBrowserWrapper] getBrowserView] isTextBasedContent])
   {
     // enable all items

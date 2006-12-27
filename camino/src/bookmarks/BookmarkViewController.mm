@@ -1595,6 +1595,10 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
 
 - (BOOL)validateMenuItem:(NSMenuItem*)menuItem
 {
+  // Window actions are disabled while a sheet is showing
+  if ([[mBrowserWindowController window] attachedSheet])
+    return NO;
+
   SEL action = [menuItem action];
 
   if ([self activeOutlineView] == mBookmarksOutlineView) {
