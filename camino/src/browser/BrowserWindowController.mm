@@ -4605,26 +4605,36 @@ enum BWCOpenDest {
 //
 - (BOOL)loadBookmarkBarIndex:(unsigned short)inIndex openBehavior:(EBookmarkOpenBehavior)inBehavior
 {
+  // We don't want to trigger bookmark bar loads if the bookmark bar isn't visible
+  if (![mPersonalToolbar isVisible])
+    return NO;
+
   NSArray* bookmarkBarChildren   = [[[BookmarkManager sharedBookmarkManager] toolbarFolder] childArray];
-  unsigned int loadableItemIndex = 0; // holds the number of loadable items we've cycled through
-  NSEnumerator* enumerator       = [bookmarkBarChildren objectEnumerator];
-  id item;
+  unsigned int bookmarkBarCount = [bookmarkBarChildren count];
+  unsigned int i;
+  int loadableItemIndex = -1;
+  BookmarkItem* item;
 
   // We cycle through all the toolbar items.  When we've skipped enough loadable items
-  // (ie loadableItemIndex > inIndex), we've gotten there and |item| is the bookmark we want to load.
-  while ((loadableItemIndex <= inIndex) && (item = [enumerator nextObject])) {
-    // Only if it's a real non-seperator bookmark, or a tab group
+  // (i.e., loadableItemIndex == inIndex), we've gotten there and |item| is the bookmark we want to load.
+  for (i = 0; i < bookmarkBarCount; ++i) {
+    item = [bookmarkBarChildren objectAtIndex:i];
+    // Only real (non-seperator) bookmarks and tab groups count
     if (([item isKindOfClass:[Bookmark class]] && ![(Bookmark *)item isSeparator]) || 
         ([item isKindOfClass:[BookmarkFolder class]] && [(BookmarkFolder *)item isGroup]))
-      ++loadableItemIndex;
+    {
+      if (++loadableItemIndex == inIndex)
+        break;
+    }
   }
 
-  if (item)
+  if (loadableItemIndex == inIndex) {
     [[NSApp delegate] loadBookmark:item withBWC:self openBehavior:inBehavior reverseBgToggle:NO];
-  else // We ran out of toolbar items before finding the nth loadable one
-    NSBeep();
-
-  return YES;
+    [mPersonalToolbar momentarilyHighlightButtonAtIndex:i];
+    return YES;
+  }
+  // We ran out of toolbar items before finding the nth loadable one
+  return NO;
 }
 
 //

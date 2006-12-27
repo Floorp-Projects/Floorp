@@ -73,4 +73,6 @@
 
 - (IBAction)addFolder:(id)aSender;
 
+- (void)momentarilyHighlightButtonAtIndex:(int)aIndex;
+
 @end
