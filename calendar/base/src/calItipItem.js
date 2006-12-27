@@ -177,7 +177,7 @@ calItipItem.prototype = {
                     this.mItemList.push(todo);
                     break;
                 default:
-                    // Nothing -- Bug 185537: Implement Freebusy, VJournal etc.
+                    // Nothing -- Bug 185537: Implement VFREEBUSY, VJOURNAL
                 }
                 subComp = calComp.getNextSubcomponent("ANY");
             }
@@ -185,6 +185,7 @@ calItipItem.prototype = {
         }
         this.mIsInitialized = true;
     },
+
     getFirstItem: function() {
         if (!this.mIsInitialized || (this.mItemList.length == 0)) {
             throw Components.results.NS_ERROR_NOT_INITIALIZED;
@@ -192,6 +193,7 @@ calItipItem.prototype = {
         this.mCurrentItemIndex = 0;
         return this.mItemList[0];
     },
+
     getNextItem: function() {
         if (!this.mIsInitialized || (this.mItemList.length == 0)) {
             throw Components.results.NS_ERROR_NOT_INITIALIZED;
@@ -203,22 +205,22 @@ calItipItem.prototype = {
             return null;
         }
     },
-    setAttendeeStatus: function (attendeeID, status) {        
+
+    setAttendeeStatus: function (attendeeID, status) {
         // Note that this code forces the user to respond to all items
         // in the same way, which is a current limitation of the spec
         if (attendeeID.match(/mailto:/i)) {
             attendeeID = "mailto:" + attendeeID; // prepend mailto
         }
         for (var i=0; i < this.mItemList.length; ++i) {
-            var anItem = this.mItemList[i];
-            var attendee = anItem.getAttendeeById(attendeeID);
+            var item = this.mItemList[i];
+            var attendee = item.getAttendeeById(attendeeID);
             if (attendee) {
                 // XXX BUG 351589: workaround for updating an attendee
-                anItem.removeAttendee(attendee);
+                item.removeAttendee(attendee);
                 attendee.participationStatus = status;
-                anItem.addAttendee(attendee);
+                item.addAttendee(attendee);
             }
         }
     }
 };
-
