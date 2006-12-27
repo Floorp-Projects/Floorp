@@ -112,13 +112,9 @@ InsertionPoint.prototype.toString = function IP_toString() {
 /** 
  * A View Configuration
  */
-function ViewConfig(peerDropTypes, childDropTypes, excludeItems, excludeQueries, 
-                    expandQueries, peerDropIndex) {
+function ViewConfig(peerDropTypes, childDropTypes, peerDropIndex) {
   this.peerDropTypes = peerDropTypes;
   this.childDropTypes = childDropTypes;
-  this.excludeItems = excludeItems;
-  this.excludeQueries = excludeQueries;
-  this.expandQueries = expandQueries;
   this.peerDropIndex = peerDropIndex;
 }
 ViewConfig.GENERIC_DROP_TYPES = 
@@ -137,8 +133,7 @@ ViewConfig.GENERIC_DROP_TYPES =
 var ViewConfigurator = {
   rules: { 
     "folder=1": new ViewConfig([TYPE_X_MOZ_PLACE_CONTAINER], 
-                               ViewConfig.GENERIC_DROP_TYPES,
-                               true, false, false, 4)
+                               ViewConfig.GENERIC_DROP_TYPES, 4)
   },
   
   /**

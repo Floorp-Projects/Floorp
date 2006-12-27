@@ -433,15 +433,6 @@
       <field name="childDropTypes">ViewConfig.GENERIC_DROP_TYPES</field>
       
       <!-- nsIPlacesView -->
-      <field name="excludeItems">false</field>
-      
-      <!-- nsIPlacesView -->
-      <field name="excludeQueries">false</field>
-      
-      <!-- nsIPlacesView -->
-      <field name="expandQueries">false</field>
-      
-      <!-- nsIPlacesView -->
       <method name="selectAll">
         <body><![CDATA[ 
           // Nothing
