@@ -41,14 +41,17 @@
 
   <script type="application/x-javascript"
           src="chrome://help/content/contextHelp.js"/>
+  <script type="application/x-javascript">
+    setHelpFileURI('chrome://communicator/locale/help/suitehelp.rdf');
+  </script>
 
   <dialog id="editDirectories"
           buttons="accept,cancel,help"
-          ondialoghelp="return doHelpButton();"/>
+          ondialoghelp="return openHelp('mail-ldap-properties');"/>
 
   <dialog id="addDirectory"
           buttons="accept,cancel,help"
-          ondialoghelp="return doHelpButton();"/>
+          ondialoghelp="return openHelp('mail-ldap-properties');"/>
 
   <dialog id="accountManager"
           buttons="accept,cancel,help"
@@ -56,33 +59,33 @@
 
   <dialog id="FilterEditor"
           buttons="accept,cancel,help"
-          ondialoghelp="return doHelpButton();"/>
+          ondialoghelp="return openHelp('mail-filters');"/>
 
   <dialog id="junkMailInfo"
           buttons="accept,help"
-          ondialoghelp="return openHelp('mail-junk', 'chrome://communicator/locale/help/suitehelp.rdf');"/>
+          ondialoghelp="return openHelp('mail-junk');"/>
 
   <dialog id="select-offline"
           buttons="accept,cancel,help"
-          ondialoghelp="return doHelpButton();"/>
+          ondialoghelp="return openHelp('mail-offline-items');"/>
 
   <dialog id="subscribeWindow"
           buttons="accept,cancel,help"
-          ondialoghelp="return doHelpButton();"/>
+          ondialoghelp="return openHelp('mail-subscribe');"/>
 
   <dialog id="mailViewListDialog"
           buttons="accept,help"
-          ondialoghelp="return openHelp('message-views-using', 'chrome://communicator/locale/help/suitehelp.rdf');"/>
+          ondialoghelp="return openHelp('message-views-using');"/>
 
   <dialog id="mailViewSetupDialog"
           buttons="accept,cancel,help"
-          ondialoghelp="return doHelpButton();"/>
+          ondialoghelp="return openHelp('message-views-create-new');"/>
 
   <dialog id="msgCompSecurityInfo"
           buttons="accept,help"
-          ondialoghelp="return doHelpButton();"/>
+          ondialoghelp="return openHelp('compose_security');"/>
 
   <dialog id="msgReadSecurityInfo"
           buttons="accept,help"
-          ondialoghelp="return doHelpButton();"/>
+          ondialoghelp="return openHelp('received_security');"/>
 </overlay>
