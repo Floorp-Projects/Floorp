@@ -3821,8 +3821,7 @@ interrupt:
             DO_NEXT_OP(len);
           }
 
-          BEGIN_CASE(JSOP_GETTHISPROP)
-            atom = GET_ATOM(cx, script, pc);
+          BEGIN_LITOPX_CASE(JSOP_GETTHISPROP, 0)
             id = ATOM_TO_JSID(atom);
             obj = fp->thisp;
             SAVE_SP_AND_PC(fp);
@@ -3830,16 +3829,40 @@ interrupt:
             if (!ok)
                 goto out;
             PUSH_OPND(rval);
-          END_CASE(JSOP_GETTHISPROP)
+          END_LITOPX_CASE(JSOP_GETTHISPROP)
+
+          BEGIN_LITOPX_CASE(JSOP_GETARGPROP, ARGNO_LEN)
+            slot = GET_ARGNO(pc);
+            JS_ASSERT(slot < fp->fun->nargs);
+            PUSH_OPND(fp->argv[slot]);
+            len = JSOP_GETARGPROP_LENGTH;
+            goto do_getprop_body;
+
+          BEGIN_LITOPX_CASE(JSOP_GETVARPROP, VARNO_LEN)
+            slot = GET_VARNO(pc);
+            JS_ASSERT(slot < fp->fun->u.i.nvars);
+            PUSH_OPND(fp->vars[slot]);
+            len = JSOP_GETVARPROP_LENGTH;
+            goto do_getprop_body;
+
+          BEGIN_LITOPX_CASE(JSOP_GETLOCALPROP, 2)
+            slot = GET_UINT16(pc);
+            JS_ASSERT(slot < (uintN)depth);
+            PUSH_OPND(fp->spbase[slot]);
+            len = JSOP_GETLOCALPROP_LENGTH;
+            goto do_getprop_body;
 
           BEGIN_CASE(JSOP_GETPROP)
           BEGIN_CASE(JSOP_GETXPROP)
             /* Get an immediate atom naming the property. */
             atom = GET_ATOM(cx, script, pc);
+            len = JSOP_GETPROP_LENGTH;
+
+          do_getprop_body:
             lval = FETCH_OPND(-1);
-            if (JSVAL_IS_STRING(lval) &&
-                atom == cx->runtime->atomState.lengthAtom) {
-                rval = INT_TO_JSVAL(JSSTRING_LENGTH(JSVAL_TO_STRING(lval)));
+            if (JSVAL_IS_STRING(lval) && atom == rt->atomState.lengthAtom) {
+                str = JSVAL_TO_STRING(lval);
+                rval = INT_TO_JSVAL(JSSTRING_LENGTH(str));
                 obj = NULL;
             } else {
                 id = ATOM_TO_JSID(atom);
@@ -3851,7 +3874,7 @@ interrupt:
                     goto out;
             }
             STORE_OPND(-1, rval);
-          END_CASE(JSOP_GETPROP)
+          END_VARLEN_CASE
 
           BEGIN_CASE(JSOP_SETPROP)
             /* Pop the right-hand side into rval for OBJ_SET_PROPERTY. */
@@ -4301,6 +4324,10 @@ interrupt:
               case JSOP_XMLPI:        goto do_JSOP_XMLPI;
 #endif
               case JSOP_ENTERBLOCK:   goto do_JSOP_ENTERBLOCK;
+              case JSOP_GETTHISPROP:  goto do_JSOP_GETTHISPROP;
+              case JSOP_GETARGPROP:   goto do_JSOP_GETARGPROP;
+              case JSOP_GETVARPROP:   goto do_JSOP_GETVARPROP;
+              case JSOP_GETLOCALPROP: goto do_JSOP_GETLOCALPROP;
               default:                JS_ASSERT(0);
             }
             /* NOTREACHED */
