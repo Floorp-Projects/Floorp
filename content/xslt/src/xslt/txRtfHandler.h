@@ -52,7 +52,7 @@ public:
 
     TX_DECL_EXPRRESULT
 
-    nsresult flushToHandler(txAXMLEventHandler* aHandler);
+    nsresult flushToHandler(txAXMLEventHandler** aHandler);
 
     void setNode(const txXPathNode* aNode)
     {

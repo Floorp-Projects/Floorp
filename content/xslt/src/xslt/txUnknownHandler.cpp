@@ -160,5 +160,5 @@ nsresult txUnknownHandler::createHandlerAndFlush(PRBool aHTMLRoot,
     mEs->mOutputHandler = handler;
     mEs->mResultHandler = handler;
 
-    return mBuffer->flushToHandler(handler);
+    return mBuffer->flushToHandler(&handler);
 }
