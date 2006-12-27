@@ -431,7 +431,7 @@ txCopyOf::execute(txExecutionState& aEs)
             txResultTreeFragment* rtf =
                 NS_STATIC_CAST(txResultTreeFragment*,
                                NS_STATIC_CAST(txAExprResult*, exprRes));
-            return rtf->flushToHandler(aEs.mResultHandler);
+            return rtf->flushToHandler(&aEs.mResultHandler);
         }
         default:
         {
