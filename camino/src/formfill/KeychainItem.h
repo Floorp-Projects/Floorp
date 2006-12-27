@@ -46,19 +46,51 @@
   BOOL mDataLoaded;
   NSString* mUsername;                 // strong
   NSString* mPassword;                 // strong
+  NSString* mHost;                     // strong
+  NSString* mComment;                  // strong
+  SecProtocolType mPort;
   SecProtocolType mProtocol;
   SecAuthenticationType mAuthenticationType;
+  OSType mCreator;
 }
 
-+ (KeychainItem*)keychainItemForHost:(NSString*)host port:(UInt16)port protocol:(SecProtocolType)protocol authenticationType:(SecAuthenticationType)authType;
+// Returns the first keychain item matching the given criteria.
++ (KeychainItem*)keychainItemForHost:(NSString*)host
+                                port:(UInt16)port
+                            protocol:(SecProtocolType)protocol
+                  authenticationType:(SecAuthenticationType)authType;
+
+// Returns an array of all keychain items matching the given criteria.
+// Pass 0/nil (or kAnyPort for port) to ignore a given field.
++ (NSArray*)allKeychainItemsForHost:(NSString*)host
+                               port:(UInt16)port
+                           protocol:(SecProtocolType)protocol
+                 authenticationType:(SecAuthenticationType)authType
+                            creator:(OSType)creator;
+
+// Creates and returns a new keychain item
++ (KeychainItem*)addKeychainItemForHost:(NSString*)host
+                                   port:(UInt16)port
+                               protocol:(SecProtocolType)protocol
+                     authenticationType:(SecAuthenticationType)authType
+                           withUsername:(NSString*)username
+                               password:(NSString*)password;
 
 - (NSString*)username;
 - (NSString*)password;
 - (void)setUsername:(NSString*)username password:(NSString*)password;
+- (NSString*)host;
+- (void)setHost:(NSString*)host;
+- (UInt16)port;
+- (void)setPort:(UInt16)port;
 - (SecProtocolType)protocol;
 - (void)setProtocol:(SecProtocolType)protocol;
 - (SecAuthenticationType)authenticationType;
 - (void)setAuthenticationType:(SecAuthenticationType)authType;
+- (OSType)creator;
+- (void)setCreator:(OSType)creator;
+- (NSString*)comment;
+- (void)setComment:(NSString*)comment;
 
 - (void)removeFromKeychain;
 

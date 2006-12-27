@@ -76,8 +76,21 @@ enum KeychainPromptResult { kSave, kDontRemember, kNeverRemember } ;
 - (KeychainPromptResult)confirmStorePassword:(NSWindow*)parent;
 - (BOOL)confirmChangedPassword:(NSWindow*)parent;
 
-- (KeychainItem*)findKeychainEntryForHost:(NSString*)host port:(PRInt32)port;
-- (void)storeUsername:(NSString*)username password:(NSString*)password forHost:(NSString*)host port:(PRInt32)port;
+- (KeychainItem*)findKeychainEntryForHost:(NSString*)host
+                                     port:(PRInt32)port
+                                   scheme:(NSString*)scheme
+                                   isForm:(BOOL)isForm;
+- (void)storeUsername:(NSString*)username
+             password:(NSString*)password
+              forHost:(NSString*)host
+                 port:(PRInt32)port
+               scheme:(NSString*)scheme
+               isForm:(BOOL)isForm;
+- (void)updateKeychainEntry:(KeychainItem*)keychainItem
+               withUsername:(NSString*)username
+                   password:(NSString*)password
+                     scheme:(NSString*)scheme
+                     isForm:(BOOL)isForm;
 - (void)removeAllUsernamesAndPasswords;
 
 - (void)addListenerToView:(CHBrowserView*)view;

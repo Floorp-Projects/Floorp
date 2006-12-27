@@ -41,12 +41,16 @@
 @interface KeychainItem(Private)
 - (KeychainItem*)initWithRef:(SecKeychainItemRef)ref;
 - (void)loadKeychainData;
+- (BOOL)setAttributeType:(SecKeychainAttrType)type toString:(NSString*)value;
 - (BOOL)setAttributeType:(SecKeychainAttrType)type toValue:(void*)valuePtr withLength:(UInt32)length;
 @end
 
 @implementation KeychainItem
 
-+ (KeychainItem*)keychainItemForHost:(NSString*)host port:(UInt16)port protocol:(SecProtocolType)protocol authenticationType:(SecAuthenticationType)authType
++ (KeychainItem*)keychainItemForHost:(NSString*)host
+                                port:(UInt16)port
+                            protocol:(SecProtocolType)protocol
+                  authenticationType:(SecAuthenticationType)authType
 {
   SecKeychainItemRef itemRef;
   const char* serverName = host ? [host UTF8String] : NULL;
@@ -58,6 +62,96 @@
       return nil;
 
   return [[[KeychainItem alloc] initWithRef:itemRef] autorelease];
+}
+
+// Returns an array of all keychain items matching the given criteria.
++ (NSArray*)allKeychainItemsForHost:(NSString*)host
+                               port:(UInt16)port
+                           protocol:(SecProtocolType)protocol
+                 authenticationType:(SecAuthenticationType)authType
+                            creator:(OSType)creator
+{
+  SecKeychainAttribute attributes[5];
+  unsigned int usedAttributes = 0;
+
+  const char* hostString = [host UTF8String];
+  if (hostString) {
+    attributes[usedAttributes].tag = kSecServerItemAttr;
+    attributes[usedAttributes].data = (void*)(hostString);
+    attributes[usedAttributes].length = strlen(hostString);
+    ++usedAttributes;
+  }
+  if (port != kAnyPort) {
+    attributes[usedAttributes].tag = kSecPortItemAttr;
+    attributes[usedAttributes].data = (void*)(&port);
+    attributes[usedAttributes].length = sizeof(port);
+    ++usedAttributes;
+  }
+  if (protocol) {
+    attributes[usedAttributes].tag = kSecProtocolItemAttr;
+    attributes[usedAttributes].data = (void*)(&protocol);
+    attributes[usedAttributes].length = sizeof(protocol);
+    ++usedAttributes;
+  }
+  if (authType) {
+    attributes[usedAttributes].tag = kSecAuthenticationTypeItemAttr;
+    attributes[usedAttributes].data = (void*)(&authType);
+    attributes[usedAttributes].length = sizeof(authType);
+    ++usedAttributes;
+  }
+  if (creator) {
+    attributes[usedAttributes].tag = kSecCreatorItemAttr;
+    attributes[usedAttributes].data = (void*)(&creator);
+    attributes[usedAttributes].length = sizeof(creator);
+    ++usedAttributes;
+  }
+
+  SecKeychainAttributeList searchCriteria;
+  searchCriteria.count = usedAttributes;
+  searchCriteria.attr = attributes;
+
+  SecKeychainSearchRef searchRef;
+  OSStatus status = SecKeychainSearchCreateFromAttributes(NULL, kSecInternetPasswordItemClass, &searchCriteria, &searchRef);
+  if (status != noErr) {
+    NSLog(@"Keychain search for host '%@' failed", host);
+    return nil;
+  }
+
+  NSMutableArray* matchingItems = [NSMutableArray array];
+  SecKeychainItemRef keychainItemRef;
+  while ((status = SecKeychainSearchCopyNext(searchRef, &keychainItemRef)) == noErr) {
+    [matchingItems addObject:[[KeychainItem alloc] initWithRef:keychainItemRef]];
+  }
+  CFRelease(searchRef);
+
+  return matchingItems;
+}
+
++ (KeychainItem*)addKeychainItemForHost:(NSString*)host
+                                   port:(UInt16)port
+                               protocol:(SecProtocolType)protocol
+                     authenticationType:(SecAuthenticationType)authType
+                           withUsername:(NSString*)username
+                               password:(NSString*)password
+{
+  const char* serverName = [host UTF8String];
+  UInt32 serverLength = serverName ? strlen(serverName) : 0;
+  const char* accountName = [username UTF8String];
+  UInt32 accountLength = accountName ? strlen(accountName) : 0;
+  const char* passwordData = [password UTF8String];
+  UInt32 passwordLength = passwordData ? strlen(passwordData) : 0;
+  SecKeychainItemRef keychainItemRef;
+  OSStatus result = SecKeychainAddInternetPassword(NULL, serverLength, serverName, 0, NULL,
+                                                   accountLength, accountName, 0, NULL,
+                                                   (UInt16)port, protocol, authType,
+                                                   passwordLength, passwordData, &keychainItemRef);
+  if (result != noErr) {
+    NSLog(@"Couldn't add keychain item");
+    return nil;
+  }
+
+  KeychainItem* item = [[[KeychainItem alloc] initWithRef:keychainItemRef] autorelease];
+  return item;
 }
 
 - (KeychainItem*)initWithRef:(SecKeychainItemRef)ref
@@ -83,10 +177,14 @@
   if (!mKeychainItemRef)
     return;
   SecKeychainAttributeInfo attrInfo;
-  UInt32 tags[3];
+  UInt32 tags[7];
   tags[0] = kSecAccountItemAttr;
-  tags[1] = kSecProtocolItemAttr;
-  tags[2] = kSecAuthenticationTypeItemAttr;
+  tags[1] = kSecServerItemAttr;
+  tags[2] = kSecPortItemAttr;
+  tags[3] = kSecProtocolItemAttr;
+  tags[4] = kSecAuthenticationTypeItemAttr;
+  tags[5] = kSecCreatorItemAttr;
+  tags[6] = kSecCommentItemAttr;
   attrInfo.count = sizeof(tags)/sizeof(UInt32);
   attrInfo.tag = tags;
   attrInfo.format = NULL;
@@ -101,11 +199,17 @@
   mUsername = nil;
   [mPassword autorelease];
   mPassword = nil;
+  [mHost autorelease];
+  mHost = nil;
+  [mComment autorelease];
+  mComment = nil;
 
   if (result != noErr) {
     NSLog(@"Couldn't load keychain data");
     mUsername = [[NSString alloc] init];
     mPassword = [[NSString alloc] init];
+    mHost = [[NSString alloc] init];
+    mComment = [[NSString alloc] init];
     return;
   }
 
@@ -113,10 +217,18 @@
     SecKeychainAttribute attr = attrList->attr[i];
     if (attr.tag == kSecAccountItemAttr)
       mUsername = [[NSString alloc] initWithBytes:(char*)(attr.data) length:attr.length encoding:NSUTF8StringEncoding];
+    else if (attr.tag == kSecServerItemAttr)
+      mHost = [[NSString alloc] initWithBytes:(char*)(attr.data) length:attr.length encoding:NSUTF8StringEncoding];
+    else if (attr.tag == kSecCommentItemAttr)
+      mComment = [[NSString alloc] initWithBytes:(char*)(attr.data) length:attr.length encoding:NSUTF8StringEncoding];
+    else if (attr.tag == kSecPortItemAttr)
+      mPort = *((UInt16*)(attr.data));
     else if (attr.tag == kSecProtocolItemAttr)
       mProtocol = *((SecProtocolType*)(attr.data));
     else if (attr.tag == kSecAuthenticationTypeItemAttr)
       mAuthenticationType = *((SecAuthenticationType*)(attr.data));
+    else if (attr.tag == kSecCreatorItemAttr)
+      mCreator = attr.data ? *((OSType*)(attr.data)) : 0;
   }
   mPassword = [[NSString alloc] initWithBytes:passwordData length:passwordLength encoding:NSUTF8StringEncoding];
   SecKeychainItemFreeAttributesAndData(attrList, (void*)passwordData);
@@ -159,6 +271,39 @@
   }
 }
 
+- (NSString*)host
+{
+  if (!mDataLoaded)
+    [self loadKeychainData];
+  return mHost;
+}
+
+- (void)setHost:(NSString*)host
+{
+  if ([self setAttributeType:kSecServerItemAttr toString:host]) {
+    [mHost autorelease];
+    mHost = [host copy];
+  }
+  else {
+    NSLog(@"Couldn't update keychain item host");
+  }
+}
+
+- (UInt16)port
+{
+  if (!mDataLoaded)
+    [self loadKeychainData];
+  return mPort;
+}
+
+- (void)setPort:(UInt16)port
+{
+  if ([self setAttributeType:kSecPortItemAttr toValue:&port withLength:sizeof(UInt16)])
+    mPort = port;
+  else
+    NSLog(@"Couldn't update keychain item port");
+}
+
 - (SecProtocolType)protocol
 {
   if (!mDataLoaded)
@@ -168,10 +313,10 @@
 
 - (void)setProtocol:(SecProtocolType)protocol
 {
-  if(![self setAttributeType:kSecProtocolItemAttr toValue:&protocol withLength:sizeof(SecProtocolType)])
-    NSLog(@"Couldn't update keychain item protocol");
-  else
+  if ([self setAttributeType:kSecProtocolItemAttr toValue:&protocol withLength:sizeof(SecProtocolType)])
     mProtocol = protocol;
+  else
+    NSLog(@"Couldn't update keychain item protocol");
 }
 
 - (SecAuthenticationType)authenticationType
@@ -183,10 +328,49 @@
 
 - (void)setAuthenticationType:(SecAuthenticationType)authType
 {
-  if(![self setAttributeType:kSecAuthenticationTypeItemAttr toValue:&authType withLength:sizeof(SecAuthenticationType)])
-    NSLog(@"Couldn't update keychain item auth type");
-  else
+  if ([self setAttributeType:kSecAuthenticationTypeItemAttr toValue:&authType withLength:sizeof(SecAuthenticationType)])
     mAuthenticationType = authType;
+  else
+    NSLog(@"Couldn't update keychain item auth type");
+}
+
+- (OSType)creator
+{
+  if (!mDataLoaded)
+    [self loadKeychainData];
+  return mCreator;
+}
+
+- (void)setCreator:(OSType)creator
+{
+  if ([self setAttributeType:kSecCreatorItemAttr toValue:&creator withLength:sizeof(OSType)])
+    mCreator = creator;
+  else
+    NSLog(@"Couldn't update keychain item creator");
+}
+
+- (NSString*)comment
+{
+  if (!mDataLoaded)
+    [self loadKeychainData];
+  return mComment;
+}
+
+- (void)setComment:(NSString*)comment
+{
+  if ([self setAttributeType:kSecCommentItemAttr toString:comment]) {
+    [mComment autorelease];
+    mComment = [comment copy];
+  }
+  else {
+    NSLog(@"Couldn't update keychain item comment");
+  }
+}
+
+- (BOOL)setAttributeType:(SecKeychainAttrType)type toString:(NSString*)value {
+  const char* cString = [value UTF8String];
+  UInt32 length = cString ? strlen(cString) : 0;
+  return [self setAttributeType:type toValue:(void*)cString withLength:length];
 }
 
 - (BOOL)setAttributeType:(SecKeychainAttrType)type toValue:(void*)valuePtr withLength:(UInt32)length
