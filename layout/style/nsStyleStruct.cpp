@@ -332,7 +332,7 @@ nsChangeHint nsStylePadding::MaxDifference()
 #endif
 
 nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
-  : mComputedBorder(0, 0, 0, 0)
+  : mActualBorder(0, 0, 0, 0)
 {
   nscoord medium =
     (aPresContext->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM];
@@ -346,6 +346,8 @@ nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
   mBorderColors = nsnull;
 
   mFloatEdge = NS_STYLE_FLOAT_EDGE_CONTENT;
+
+  mTwipsPerPixel = NSIntPixelsToTwips(1, aPresContext->PixelsToTwips());
 }
 
 nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
@@ -381,7 +383,8 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
 {
   // Note that differences in mBorder don't affect rendering (which should only
   // use mComputedBorder), so don't need to be tested for here.
-  if (mComputedBorder == aOther.mComputedBorder && 
+  if (mTwipsPerPixel == aOther.mTwipsPerPixel &&
+      mActualBorder == aOther.mActualBorder && 
       mFloatEdge == aOther.mFloatEdge) {
     // Note that mBorderStyle stores not only the border style but also
     // color-related flags.  Given that we've already done an mComputedBorder
@@ -442,6 +445,7 @@ nsStyleOutline::nsStyleOutline(nsPresContext* aPresContext)
   mOutlineColor = NS_RGB(0, 0, 0);
 
   mHasCachedOutline = PR_FALSE;
+  mTwipsPerPixel = NSIntPixelsToTwips(1, aPresContext->PixelsToTwips());
 }
 
 nsStyleOutline::nsStyleOutline(const nsStyleOutline& aSrc) {
@@ -455,7 +459,10 @@ nsStyleOutline::RecalcData(nsPresContext* aContext)
     mCachedOutlineWidth = 0;
     mHasCachedOutline = PR_TRUE;
   } else if (IsFixedUnit(mOutlineWidth.GetUnit(), PR_TRUE)) {
-    mCachedOutlineWidth = CalcCoord(mOutlineWidth, aContext->GetBorderWidthTable(), 3);
+    mCachedOutlineWidth =
+      CalcCoord(mOutlineWidth, aContext->GetBorderWidthTable(), 3);
+    mCachedOutlineWidth =
+      NS_ROUND_BORDER_TO_PIXELS(mCachedOutlineWidth, mTwipsPerPixel);
     mHasCachedOutline = PR_TRUE;
   }
   else
@@ -470,7 +477,8 @@ nsChangeHint nsStyleOutline::CalcDifference(const nsStyleOutline& aOther) const
     aOther.mCachedOutlineWidth > 0 && aOther.mOutlineStyle != NS_STYLE_BORDER_STYLE_NONE;
   if (outlineWasVisible != outlineIsVisible ||
       (outlineIsVisible && (mOutlineOffset != aOther.mOutlineOffset ||
-                            mOutlineWidth != aOther.mOutlineWidth))) {
+                            mOutlineWidth != aOther.mOutlineWidth ||
+                            mTwipsPerPixel != aOther.mTwipsPerPixel))) {
     return NS_CombineHint(nsChangeHint_ReflowFrame, nsChangeHint_RepaintFrame);
   }
   if ((mOutlineStyle != aOther.mOutlineStyle) ||

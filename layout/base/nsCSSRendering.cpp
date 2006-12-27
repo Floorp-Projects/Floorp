@@ -1825,7 +1825,7 @@ void nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
     }
   }
   /* Get our conversion values */
-  nscoord twipsPerPixel = aPresContext->IntScaledPixelsToTwips(1);
+  nscoord twipsPerPixel = NSIntPixelsToTwips(1, aPresContext->PixelsToTwips());
 
   static PRUint8 sideOrder[] = { NS_SIDE_BOTTOM, NS_SIDE_LEFT, NS_SIDE_TOP, NS_SIDE_RIGHT };
   nscolor sideColor;
@@ -2188,11 +2188,7 @@ nscoord width, offset;
 
   // Draw all the other sides
 
-  /* XXX something is misnamed here!!!! */
-  nscoord twipsPerPixel;/* XXX */
-  float p2t;/* XXX */
-  p2t = aPresContext->PixelsToTwips();/* XXX */
-  twipsPerPixel = (nscoord) p2t;/* XXX */
+  nscoord twipsPerPixel = NSIntPixelsToTwips(1, aPresContext->PixelsToTwips());
 
   // default to current color in case it is invert color
   // and the platform does not support that
@@ -2234,7 +2230,7 @@ nscoord width, offset;
              outlineColor,
              bgColor->mBackgroundColor,outside, inside,aSkipSides,
              twipsPerPixel, aGap);
-             
+
     if(modeChanged ) {
       aRenderingContext.SetPenMode(nsPenMode_kNone);
     }  
@@ -3544,8 +3540,7 @@ nsCSSRendering::PaintRoundedBorder(nsPresContext* aPresContext,
   }
 
   // needed for our border thickness
-  p2t = aPresContext->PixelsToTwips();
-  twipsPerPixel = NSToCoordRound(p2t);
+  twipsPerPixel = NSIntPixelsToTwips(1, aPresContext->PixelsToTwips());
 
   // Base our thickness check on the segment being less than a pixel and 1/2
   qtwips = twipsPerPixel >> 2;
