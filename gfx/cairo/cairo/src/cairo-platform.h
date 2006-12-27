@@ -82,7 +82,11 @@
 #include "cairo-rename.h"
 #endif
 
-#ifdef IS_BIG_ENDIAN
+// Nothing guarantees any of these are defined; this is a total hack
+// just to get the Mac build working again.  Somebody should decide
+// whether we want to pull in prcpucfg.h or use autoconf for this.
+#if defined(IS_BIG_ENDIAN) || defined(__BIG_ENDIAN__)
+#define WORDS_BIGENDIAN
 #define FLOAT_WORDS_BIGENDIAN
 #endif
 
