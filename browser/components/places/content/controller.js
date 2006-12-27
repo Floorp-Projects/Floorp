@@ -923,17 +923,15 @@ PlacesController.prototype = {
    * Gives the user a chance to cancel loading lots of tabs at once
    */
   _confirmOpenTabs: function(numTabsToOpen) {
-    var pref = 
-        Components.classes["@mozilla.org/preferences-service;1"].
-        getService(Components.interfaces.nsIPrefBranch);
+    var pref = Cc["@mozilla.org/preferences-service;1"].
+               getService(Ci.nsIPrefBranch);
 
     const kWarnOnOpenPref = "browser.tabs.warnOnOpen";
     var reallyOpen = true;
     if (pref.getBoolPref(kWarnOnOpenPref)) {
       if (numTabsToOpen >= pref.getIntPref("browser.tabs.maxOpenBeforeWarn")) {
-        var promptService =
-            Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
-            getService(Components.interfaces.nsIPromptService);
+        var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+                            getService(Ci.nsIPromptService);
 
         // default to true: if it were false, we wouldn't get this far
         var warnOnOpen = { value: true };
@@ -1004,43 +1002,27 @@ PlacesController.prototype = {
 
       // Open each uri in the folder in a tab.
       var index = firstIndex;
-      asFolder(node);
-      var wasOpen = node.containerOpen;
-      node.containerOpen = true;
-      var cc = node.childCount;
-
-      // we can't just use |cc| as that might include
-      // folders, separators, deleted bookmarks, etc.
-      var numTabsToOpen = 0;
-      for (var i = 0; i < cc; ++i) {
-        var childNode = node.getChild(i);
-        if (PlacesUtils.nodeIsURI(childNode))
-          ++numTabsToOpen;
+      var urlsToOpen = [];
+      var contents = PlacesUtils.getFolderContents(asFolder(node).folderId,
+                                                   false, false);
+      for (var i = 0; i < contents.childCount; ++i) {
+        var child = contents.getChild(i);
+        if (PlacesUtils.nodeIsURI(child))
+          urlsToOpen.push(child.uri);
       }
 
-      // restore the original state (temporarily) so that if we prompt
-      // the user, the will not see a change to the open state.
-      node.containerOpen = wasOpen;
-      if (!this._confirmOpenTabs(numTabsToOpen))
+      if (!this._confirmOpenTabs(urlsToOpen.length))
         return;
-      // ensure the container is open, we'll restore it again
-      // to the original state when we are done
-      node.containerOpen = true;
 
-      for (var i = 0; i < cc; ++i) {
-        var childNode = node.getChild(i);
-        if (PlacesUtils.nodeIsURI(childNode)) {
-          // If there are tabs to load over, load the uri into the next tab.
-          if (index < tabCount)
-            tabPanels[index].loadURI(childNode.uri);
-          // Otherwise, create a new tab to load the uri into.
-          else
-            browser.addTab(childNode.uri);
-          ++index;
-        }
+      for (var i = 0; i < urlsToOpen.length; ++i) {
+        if (index < tabCount)
+          tabPanels[index].loadURI(urlsToOpen[i]);
+        // Otherwise, create a new tab to load the uri into.
+        else
+          browser.addTab(urlsToOpen[i]);
+        ++index;
       }
-      node.containerOpen = wasOpen;
-      
+
       // If no bookmarks were loaded, just bail.
       if (index == firstIndex)
         return;
@@ -1066,22 +1048,19 @@ PlacesController.prototype = {
       browserWindow.content.focus();
     }
     else {
+      var urlsToOpen = [];
       var nodes = this._view.getSelectionNodes();
 
-      // we can't just use |nodes.length| as that might include
-      // folders, separators, deleted bookmarks, etc.
-      var numTabsToOpen = 0;
       for (var i = 0; i < nodes.length; ++i) {
         if (PlacesUtils.nodeIsURI(nodes[i]))
-          ++numTabsToOpen;
+          urlsToOpen.push(nodes[i].uri);
       }
 
-      if (!this._confirmOpenTabs(numTabsToOpen))
+      if (!this._confirmOpenTabs(urlsToOpen.length))
         return;
 
       for (var i = 0; i < nodes.length; ++i) {
-        if (PlacesUtils.nodeIsURI(nodes[i]))
-          getTopWin().openNewTabWith(nodes[i].uri, null, null);
+        getTopWin().openNewTabWith(urlsToOpen[i], null, null);
       }
     }
   },
