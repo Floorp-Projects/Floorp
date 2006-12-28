@@ -153,6 +153,11 @@
             <input type="checkbox" name="grp-[% group.grpid FILTER html %]" [% group.grpmember ? "checked " : "" %]value="1">
             <input type="hidden" name="oldgrp-[% group.grpid FILTER html %]" value="[% group.grpmember FILTER html %]">
           </td>
+          <td align="left" class="groupname">
+            <a href="[% "editgroups.cgi?action=changeform&group=${group.grpid}" FILTER html %]">
+              [% group.grpnam FILTER html %]
+            </a>
+          </td>
         [% ELSE %]
           <td>
             <input type="hidden" name="oldbless-[% group.grpid FILTER html %]" value="0">
@@ -160,12 +165,12 @@
           <td>
             <input type="hidden" name="oldgrp-[% group.grpid FILTER html %]" value="0">
           </td>
+          <td align="left" class="groupname">
+            <em>
+              [% group.grpnam FILTER html %]
+            </em>
+          </td>
         [% END %]
-        <td align="left" class="groupname">
-          <a href="[% "editgroups.cgi?action=changeform&group=${group.grpid}" FILTER html %]">
-            [% group.grpnam FILTER html %]
-          </a>
-        </td>
         <td align="left" class="groupdesc">[% group.grpdesc FILTER html_light %]</td>
       </tr>
     [% END %]
