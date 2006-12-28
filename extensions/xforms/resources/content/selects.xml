@@ -51,11 +51,22 @@
   select-xhtml.xml.
 -->
 
-  <!-- BASE for select/select1 elements. -->
+  <!-- BASE for select/select1 elements.
+    Right now this binding is used only by full appearance select/select1
+    elements. Be care with this accessible type and implementation logic if you
+    want to use this binding for other types of select/select1 elements.
+  -->
   <binding id="selectcontrols-base"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
 
-    <implementation implements="nsIXFormsUIWidget">
+    <implementation implements="nsIAccessibleProvider">
+
+    <!-- nsIAccessibleProvider -->
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsSelectFull;
+        </getter>
+      </property>
 
     <!-- nsIXFormsUIWidget -->
       <method name="refresh">
@@ -759,6 +770,18 @@
         </getter>
       </property>
       <field name="_selectControl">null</field>
+    </implementation>
+  </binding>
+
+
+  <!-- CHOICES element of FULL APPEARANCE SELECT/SELECT1 -->
+  <binding id="choices">
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsChoices;
+        </getter>
+      </property>
     </implementation>
   </binding>
 

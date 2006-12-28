@@ -149,7 +149,13 @@
       <children/>
     </content>
 
-    <implementation>
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsItemCheckgroup;
+        </getter>
+      </property>
+
       <property name="selected"
                 onget="return this.control.checked;"
                 onset="this.control.checked = val;"/>
@@ -204,7 +210,13 @@
       </xul:hbox>
     </content>
 
-    <implementation>
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsItemRadiogroup;
+        </getter>
+      </property>
+
       <property name="selected">
         <getter>
           return this.control.selected;

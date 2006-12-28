@@ -497,6 +497,12 @@ select1 itemset, select itemset {
   -moz-binding: url('chrome://xforms/content/selects.xml#itemset');
 }
 
+  /* choices widget */
+select[appearance='full'] choices,
+select1[appearance='full'] choices {
+  -moz-binding: url('chrome://xforms/content/selects.xml#choices');
+}
+
   /* select1 appearance='minimal' (default) */
 html|*:root select1:not([appearance]),
 html|*:root select1[appearance='minimal'] {

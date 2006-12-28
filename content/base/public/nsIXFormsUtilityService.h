@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Aaron Reed <aaronr@us.ibm.com>
+ *  Alexander Surkov <surkov.alexander@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,6 +43,7 @@
 #include "nsISupports.h"
 
 class nsIDOMNode;
+class nsIDOMNodeList;
 class nsIEditor;
 
 /* For IDL files that don't want to include root IDL files. */
@@ -50,10 +52,10 @@ class nsIEditor;
 #endif
 
 /* nsIXFormsUtilityService */
-#define NS_IXFORMSUTILITYSERVICE_IID_STR "43ad19a6-5639-4b05-8305-1eb729063912"
+#define NS_IXFORMSUTILITYSERVICE_IID_STR "88d9eaa9-1498-4ffb-85a6-44267595cb20"
 #define NS_IXFORMSUTILITYSERVICE_IID \
-{ 0x43ad19a6, 0x5639, 0x4b05, \
-  { 0x83, 0x5, 0x1e, 0xb7, 0x29, 0x6, 0x39, 0x12 } }
+{ 0x88d9eaa9, 0x1498, 0x4ffb, \
+  { 0x85, 0xa6, 0x44, 0x26, 0x75, 0x95, 0xcb, 0x20 } }
 
 /**
  * Private interface implemented by the nsXFormsUtilityService in XForms
@@ -99,7 +101,8 @@ public:
   NS_IMETHOD IsInRange(nsIDOMNode *aElement, PRUint32 *aState) = 0;
 
   /**
-   * Return value of instance node that element is bound to.
+   * Return value of instance node that given node is bound to. If given node is
+   * xforms:item element then the method returns item value.
    */
   NS_IMETHOD GetValue(nsIDOMNode *aElement, nsAString& aValue) = 0;
 
@@ -130,20 +133,84 @@ public:
    * Return nsIEditor for xforms element if element is editable, null if it is
    * not editable. Failure if given element doesn't support editing.
    */
-   NS_IMETHOD GetEditor(nsIDOMNode *aElement, nsIEditor **aEditor) = 0;
+  NS_IMETHOD GetEditor(nsIDOMNode *aElement, nsIEditor **aEditor) = 0;
 
-   /**
-    * Return true if dropmarker is in open state, otherwise false. Failure if
-    * given element is not dropmarker or its parent element isn't supposed to
-    * have dropmarker.
-    */
-   NS_IMETHOD IsDropmarkerOpen(nsIDOMNode *aElement, PRBool* aIsOpen) = 0;
+  /**
+   * Return true if dropmarker is in open state, otherwise false. Failure if
+   * given element is not dropmarker or its parent element isn't supposed to
+   * have dropmarker.
+   */
+  NS_IMETHOD IsDropmarkerOpen(nsIDOMNode *aElement, PRBool* aIsOpen) = 0;
 
-   /**
-    * Toggles dropmarker state. Failure if given element is not dropmarker or
-    * its parent element isn't supposed to have dropmarker.
-    */
-   NS_IMETHOD ToggleDropmarkerState(nsIDOMNode *aElement) = 0;
+  /**
+   * Toggles dropmarker state. Failure if given element is not dropmarker or
+   * its parent element isn't supposed to have dropmarker.
+   */
+  NS_IMETHOD ToggleDropmarkerState(nsIDOMNode *aElement) = 0;
+
+  /**
+   * Get selected xforms:item element for xforms:select1. Failure if
+   * given 'aElement' node is not xforms:select1.
+   */
+  NS_IMETHOD GetSelectedItemForSelect1(nsIDOMNode *aElement,
+                                       nsIDOMNode ** aItem) = 0;
+
+  /**
+   * Set selected xforms:item element for xforms:select1. Failure if
+   * given 'aElement' node is not xforms:select1.
+   */
+  NS_IMETHOD SetSelectedItemForSelect1(nsIDOMNode *aElement,
+                                       nsIDOMNode *aItem) = 0;
+
+  /**
+   * Get the list of selected xforms:item elements from the xforms:select.
+   * Failure if given 'aElement' node is not xforms:select.
+   */
+  NS_IMETHOD GetSelectedItemsForSelect(nsIDOMNode *aElement,
+                                       nsIDOMNodeList **aItems) = 0;
+
+  /**
+   * Add xforms:item element to selection of xforms:select. Failure if
+   * given 'aElement' node is not xforms:select.
+   */
+  NS_IMETHOD AddItemToSelectionForSelect(nsIDOMNode *aElement,
+                                         nsIDOMNode *Item) = 0;
+
+  /**
+   * Remove xforms:item element from selection of xforms:select. Failure if
+   * given 'aElement' node is not xforms:select.
+   */
+  NS_IMETHOD RemoveItemFromSelectionForSelect(nsIDOMNode *aElement,
+                                              nsIDOMNode *Item) = 0;
+
+  /**
+   * Deslect all xforms:item elements contained in the given xforms:select.
+   * Failure if given 'aElement' node is not xforms:select.
+   */
+  NS_IMETHOD ClearSelectionForSelect(nsIDOMNode *aElement) = 0;
+
+  /**
+   * Select all xforms:item elements of xforms:select. Failure if
+   * given 'aElement' node is not xforms:select.
+   */
+  NS_IMETHOD SelectAllItemsForSelect(nsIDOMNode *aElement) = 0;
+
+  /**
+   * Return true if given xforms:item element of xforms:select is selected,
+   * otherwise return false. Failure if given 'aElement' node is not
+   * xforms:select.
+   */
+  NS_IMETHOD IsSelectItemSelected(nsIDOMNode *aElement, nsIDOMNode *aItem,
+                                  PRBool *aIsSelected) = 0;
+
+  /**
+   * Return the list of xforms:item or xforms:choices elements that are children
+   * of the given 'aElement' node. 'aElement' node may be a xforms:select,
+   * xforms:select1, xforms:choices or xforms:itemset element. Otherwise
+   * failure.
+   */
+  NS_IMETHOD GetSelectChildrenFor(nsIDOMNode *aElement,
+                                  nsIDOMNodeList **aNodeList) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIXFormsUtilityService,

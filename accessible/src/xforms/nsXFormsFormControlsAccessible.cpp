@@ -422,3 +422,143 @@ nsXFormsSelectAccessible::GetState(PRUint32 *aState)
   return NS_OK;
 }
 
+
+
+// nsXFormsChoicesAccessible
+
+nsXFormsChoicesAccessible::
+  nsXFormsChoicesAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell):
+  nsXFormsAccessible(aNode, aShell)
+{
+}
+
+NS_IMETHODIMP
+nsXFormsChoicesAccessible::GetRole(PRUint32 *aRole)
+{
+  NS_ENSURE_ARG_POINTER(aRole);
+
+  *aRole = ROLE_GROUPING;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsChoicesAccessible::GetValue(nsAString& aValue)
+{
+  aValue.Truncate();
+  return NS_OK;
+}
+
+void
+nsXFormsChoicesAccessible::CacheChildren()
+{
+  CacheSelectChildren();
+}
+
+
+// nsXFormsSelectFullAccessible
+
+nsXFormsSelectFullAccessible::
+  nsXFormsSelectFullAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell):
+  nsXFormsSelectableAccessible(aNode, aShell)
+{
+}
+
+NS_IMETHODIMP
+nsXFormsSelectFullAccessible::GetRole(PRUint32 *aRole)
+{
+  NS_ENSURE_ARG_POINTER(aRole);
+
+  *aRole = ROLE_GROUPING;
+  return NS_OK;
+}
+
+void
+nsXFormsSelectFullAccessible::CacheChildren()
+{
+  CacheSelectChildren();
+}
+
+
+// nsXFormsItemCheckgroupAccessible
+
+nsXFormsItemCheckgroupAccessible::
+  nsXFormsItemCheckgroupAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell):
+  nsXFormsSelectableItemAccessible(aNode, aShell)
+{
+}
+
+NS_IMETHODIMP
+nsXFormsItemCheckgroupAccessible::GetRole(PRUint32 *aRole)
+{
+  NS_ENSURE_ARG_POINTER(aRole);
+
+  *aRole = ROLE_CHECKBUTTON;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsItemCheckgroupAccessible::GetState(PRUint32 *aState)
+{
+  nsresult rv = nsXFormsSelectableItemAccessible::GetState(aState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (IsItemSelected())
+    *aState |= STATE_CHECKED;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsItemCheckgroupAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+{
+  if (aIndex != eAction_Click)
+    return NS_ERROR_INVALID_ARG;
+
+  if (IsItemSelected())
+    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("uncheck"), aName);
+  else
+    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("check"), aName);
+
+  return NS_OK;
+}
+
+
+// nsXFormsItemRadiogroupAccessible
+
+nsXFormsItemRadiogroupAccessible::
+  nsXFormsItemRadiogroupAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell):
+  nsXFormsSelectableItemAccessible(aNode, aShell)
+{
+}
+
+NS_IMETHODIMP
+nsXFormsItemRadiogroupAccessible::GetRole(PRUint32 *aRole)
+{
+  NS_ENSURE_ARG_POINTER(aRole);
+
+  *aRole = ROLE_RADIOBUTTON;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsItemRadiogroupAccessible::GetState(PRUint32 *aState)
+{
+  nsresult rv = nsXFormsSelectableItemAccessible::GetState(aState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (IsItemSelected())
+    *aState |= STATE_CHECKED;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsItemRadiogroupAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+{
+  if (aIndex != eAction_Click)
+    return NS_ERROR_INVALID_ARG;
+
+  nsAccessible::GetTranslatedString(NS_LITERAL_STRING("select"), aName);
+  return NS_OK;
+}
+

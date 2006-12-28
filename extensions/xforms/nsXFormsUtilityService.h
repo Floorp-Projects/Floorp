@@ -39,6 +39,12 @@
 
 #include "nsIXFormsUtilityService.h"
 
+#include "nsIDOMNodeList.h"
+#include "nsIContent.h"
+#include "nsCOMArray.h"
+
+class nsNodeList;
+
 /**
  * The class implements "@mozilla.org/xforms-utility-service;1" XPCOM object
  * that is used outside XForms extension by core modules, for example by
@@ -67,5 +73,56 @@ public:
 
   NS_IMETHOD IsDropmarkerOpen(nsIDOMNode *aElement, PRBool* aIsOpen);
   NS_IMETHOD ToggleDropmarkerState(nsIDOMNode *aElement);
+
+  NS_IMETHOD GetSelectedItemForSelect1(nsIDOMNode *aElement,
+                                       nsIDOMNode ** aItem);
+  NS_IMETHOD SetSelectedItemForSelect1(nsIDOMNode *aElement, nsIDOMNode *aItem);
+
+  NS_IMETHOD GetSelectedItemsForSelect(nsIDOMNode *aElement,
+                                       nsIDOMNodeList **aItems);
+  NS_IMETHOD AddItemToSelectionForSelect(nsIDOMNode *aElement,
+                                         nsIDOMNode *aItem);
+  NS_IMETHOD RemoveItemFromSelectionForSelect(nsIDOMNode *aElement,
+                                              nsIDOMNode *aItem);
+  NS_IMETHOD ClearSelectionForSelect(nsIDOMNode *aElement);
+  NS_IMETHOD SelectAllItemsForSelect(nsIDOMNode *aElement);
+  NS_IMETHOD IsSelectItemSelected(nsIDOMNode *aElement, nsIDOMNode *aItem,
+                                  PRBool *aIsSelected);
+
+  NS_IMETHOD GetSelectChildrenFor(nsIDOMNode *aElement,
+                                  nsIDOMNodeList **aItemsList);
+
+protected:
+  // Append select child item/choices elements to given node list that are
+  // hosted inside xforms:select, xforms:select1, xforms:choices or
+  // xforms:itemset.
+  nsresult GetSelectChildrenForNode(nsIDOMNode *aElement,
+                                    nsNodeList *aNodeList);
+
+  // Append select child item/choices elements to given node list that are
+  // hosted inside xforms:select, xforms:select1, xforms:choices.
+  nsresult GetSelectChildrenForNodeInternal(nsIDOMNode *aElement,
+                                            nsNodeList *aNodeList);
+};
+
+
+/**
+ * Implementation of nsIDOMNodeList interface.
+ */
+class nsNodeList : public nsIDOMNodeList
+{
+public:
+  nsNodeList();
+  ~nsNodeList();
+
+  NS_DECL_ISUPPORTS
+
+  // nsIDOMNodeList
+  NS_DECL_NSIDOMNODELIST
+
+  void AppendElement(nsIContent *aContent);
+
+protected:
+  nsCOMArray<nsIContent> mElements;
 };
 

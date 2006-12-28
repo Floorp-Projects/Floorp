@@ -68,6 +68,12 @@ nsIAtom* nsXFormsAtoms::externalMessagesProperty;
 nsIAtom* nsXFormsAtoms::deferredEventListProperty;
 nsIAtom* nsXFormsAtoms::attrBased;
 
+nsIAtom* nsXFormsAtoms::choices;
+nsIAtom* nsXFormsAtoms::item;
+nsIAtom* nsXFormsAtoms::itemset;
+nsIAtom* nsXFormsAtoms::select;
+nsIAtom* nsXFormsAtoms::select1;
+
 const nsStaticAtom nsXFormsAtoms::Atoms_info[] = {
   { "src",                      &nsXFormsAtoms::src },
   { "bind",                     &nsXFormsAtoms::bind },
@@ -96,7 +102,13 @@ const nsStaticAtom nsXFormsAtoms::Atoms_info[] = {
   { "instanceDocumentOwner",    &nsXFormsAtoms::instanceDocumentOwner },
   { "ExternalMessagesProperty", &nsXFormsAtoms::externalMessagesProperty },
   { "DeferredEventListProperty",&nsXFormsAtoms::deferredEventListProperty },
-  { "attrBased",                &nsXFormsAtoms::attrBased }
+  { "attrBased",                &nsXFormsAtoms::attrBased },
+
+  { "choices",                  &nsXFormsAtoms::choices },
+  { "item",                     &nsXFormsAtoms::item },
+  { "itemset",                  &nsXFormsAtoms::itemset },
+  { "select",                   &nsXFormsAtoms::select },
+  { "select1",                  &nsXFormsAtoms::select1 }
 };
 
 void

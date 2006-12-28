@@ -88,6 +88,7 @@ ACCESSIBILITY_ATOM(blockquote, "blockquote")
 ACCESSIBILITY_ATOM(br, "br")
 ACCESSIBILITY_ATOM(body, "body")
 ACCESSIBILITY_ATOM(caption, "caption")
+ACCESSIBILITY_ATOM(choices, "choices") // XForms
 ACCESSIBILITY_ATOM(description, "description")    // XUL
 ACCESSIBILITY_ATOM(dd, "dd")
 ACCESSIBILITY_ATOM(div, "div")
@@ -100,6 +101,8 @@ ACCESSIBILITY_ATOM(h3, "h3")
 ACCESSIBILITY_ATOM(h4, "h4")
 ACCESSIBILITY_ATOM(h5, "h5")
 ACCESSIBILITY_ATOM(h6, "h6")
+ACCESSIBILITY_ATOM(item, "item") // XForms
+ACCESSIBILITY_ATOM(itemset, "itemset") // XForms
 ACCESSIBILITY_ATOM(img, "img")
 ACCESSIBILITY_ATOM(input, "input")
 ACCESSIBILITY_ATOM(label, "label")
@@ -115,6 +118,7 @@ ACCESSIBILITY_ATOM(optgroup, "optgroup")
 ACCESSIBILITY_ATOM(option, "option")
 ACCESSIBILITY_ATOM(q, "q")
 ACCESSIBILITY_ATOM(select, "select")
+ACCESSIBILITY_ATOM(select1, "select1") // XForms
 ACCESSIBILITY_ATOM(svg, "svg")
 ACCESSIBILITY_ATOM(table, "table")
 ACCESSIBILITY_ATOM(tbody, "tbody")

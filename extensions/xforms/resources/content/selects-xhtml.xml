@@ -135,6 +135,14 @@
       <children/>
     </content>
 
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsItemCheckgroup;
+        </getter>
+      </property>
+    </implementation>
+
     <handlers>
       <handler event="click">
         if (this.disabled)
@@ -160,6 +168,14 @@
       <html:input type="radio" anonid="control"/>
       <children/>
     </content>
+
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsItemRadiogroup;
+        </getter>
+      </property>
+    </implementation>
 
     <handlers>
       <handler event="click">
