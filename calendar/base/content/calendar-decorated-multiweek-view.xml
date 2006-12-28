@@ -212,11 +212,16 @@
             <method name="moveView">
                 <parameter name="aNumber"/>
                 <body><![CDATA[
-                    var d1 = this.selectedDay.clone();
+                    var d1 = this.startDay.clone();
+                    var savedSelectedDay = this.selectedDay.clone();
                     // aNumber only corresponds to the number of weeks to move
                     d1.day += 7*aNumber;
                     d1.normalize();
                     this.goToDay(d1);
+                    var viewElement = document.getAnonymousElementByAttribute(this, "anonid", "view-element");
+                    savedSelectedDay.day += 7*aNumber;
+                    savedSelectedDay.normalize();
+                    viewElement.selectedDay = savedSelectedDay;
                 ]]></body>
             </method>
             <method name="setNavLabels">
