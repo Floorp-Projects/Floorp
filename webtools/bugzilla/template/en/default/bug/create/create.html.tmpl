@@ -50,17 +50,16 @@ var flags = new Array([% product.components.size %]);
 [%- FOREACH c = product.components %]
     components[[% count %]] = "[% c.name FILTER js %]";
     initialowners[[% count %]] = "[% c.default_assignee.login FILTER js %]";
-    var flag_list = new Array([% c.flag_types.bug.size + c.flag_types.attachment.size %]);
-    [% flag_count = 0 %]
+    [% flag_list = [] %]
     [% FOREACH f = c.flag_types.bug %]
-      flag_list[[% flag_count %]] = "[% f.id %]";
-      [% flag_count = flag_count + 1 %]
+      [% NEXT UNLESS f.is_active %]
+      [% flag_list.push(f.id) %]
     [% END %]
     [% FOREACH f = c.flag_types.attachment %]
-      flag_list[[% flag_count %]] = "[% f.id %]";
-      [% flag_count = flag_count + 1 %]
+      [% NEXT UNLESS f.is_active %]
+      [% flag_list.push(f.id) %]
     [% END %]
-    flags[[% count %]] = flag_list;
+    flags[[% count %]] = [[% flag_list.join(",") FILTER js %]];
     [% IF Param("useqacontact") %]
         initialqacontacts[[% count %]] = "[% c.default_qa_contact.login FILTER js %]";
     [% END %]
