@@ -67,10 +67,7 @@
       <method name="_init">
         <body><![CDATA[
           this._controller = new PlacesController(this);
-          top.controllers.appendController(this._controller);
-
-          if (!this.hasAttribute("place"))
-            return;
+          this.controllers.appendController(this._controller);
 
           // This function should only be called for top-level menus like the bookmarks menu.
           // Submenus get their _result and _resultNode from their parents.
@@ -715,30 +712,29 @@
       </method>
       
       <property name="selType" onget="return 'single';"/>
-
-      <!-- Edit commands are only enabled when the menu is open -->
-      <field name="_enableEditCommands">false</field>
-      <property name="enableEditCommands"
-                readonly="true"
-                onget="return this._enableEditCommands;"/>
                 
       <method name="buildContextMenu">
         <parameter name="aPopup"/>
         <body><![CDATA[
-          // When right clicking an item in a bookmarks menu the places commands
-          // need to be updated for the context menu to appear correctly.
-          PlacesUtils.updateAllCommands();
+          this.focus();
           this.controller.buildContextMenu(aPopup);
         ]]></body>
+      </method>
+
+      <method name="destroyContextMenu">
+        <parameter name="aPopup"/>
+        <body>
+          <![CDATA[
+            if (window.content)
+              window.content.focus();
+          ]]>
+        </body>
       </method>
     </implementation>
     <handlers>
       <handler event="popupshowing">
-        if (event.target == this) {
-          this._enableEditCommands = true;
-          PlacesUtils.updateAllCommands();
+        if (event.target == this)
           this.onPopupShowing();
-        }
       </handler>
       <handler event="popuphidden">
         if (event.target == this) {
@@ -750,8 +746,6 @@
           // automatically opened when dragged over.  Turn off this attribute
           // when the folder closes because it is no longer applicable.
           this.removeAttribute("autoopened");
-          this._enableEditCommands = false;
-          PlacesUtils.updateAllCommands();
         }
       </handler>
       <!-- Set selected node/active view on mousedown/DOMMenuItemActive events

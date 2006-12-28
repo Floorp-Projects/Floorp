@@ -181,33 +181,28 @@ PlacesController.prototype = {
   isCommandEnabled: function PC_isCommandEnabled(command) {
     switch (command) {
     case "cmd_undo":
-      return this._view.enableEditCommands && PlacesUtils.tm.numberOfUndoItems > 0;
+      return PlacesUtils.tm.numberOfUndoItems > 0;
     case "cmd_redo":
-      return this._view.enableEditCommands && PlacesUtils.tm.numberOfRedoItems > 0;
+      return PlacesUtils.tm.numberOfRedoItems > 0;
     case "cmd_cut":
     case "cmd_delete":
-      return this._view.enableEditCommands &&
-             !this._rootNodeIsSelected() && 
+      return !this._rootNodeIsSelected() && 
              !this._selectionOverlapsSystemArea() &&
              this._hasRemovableSelection();
     case "cmd_copy":
-      return this._view.enableEditCommands &&
-             !this._selectionOverlapsSystemArea() &&
+      return !this._selectionOverlapsSystemArea() &&
              this._view.hasSelection;
     case "cmd_paste":
-      return this._view.enableEditCommands &&
-             !this._selectionOverlapsSystemArea() &&
+      return !this._selectionOverlapsSystemArea() &&
              this._canInsert() && 
              this._hasClipboardData() && this._canPaste();
     case "cmd_selectAll":
-      if (this._view.enableEditCommands) {
-        if (this._view.selType != "single") {
-          var result = this._view.getResult();
-          if (result) {
-            var container = asContainer(result.root);
-            if (container.childCount > 0);
-              return true;
-          }
+      if (this._view.selType != "single") {
+        var result = this._view.getResult();
+        if (result) {
+          var container = asContainer(result.root);
+          if (container.childCount > 0);
+            return true;
         }
       }
       return false;

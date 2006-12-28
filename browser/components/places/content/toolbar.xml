@@ -85,7 +85,7 @@
       </xul:vbox>
     </content>
     
-    <implementation implements="nsIDOMEventListener">
+    <implementation>
       <constructor><![CDATA[
         // Support an asyncinit attribute that causes the view to populate 
         // itself only after the window has been shown. This is to ensure we
@@ -114,7 +114,7 @@
       <method name="_init">
         <body><![CDATA[
         this._controller = new PlacesController(this);
-        top.controllers.appendController(this._controller);
+        this.controllers.appendController(this._controller);
 
         PlacesUtils.bookmarks.addObserver(this._observer, false);
         var t = this;
@@ -882,33 +882,22 @@
 
       <property name="selType" onget="return 'single';"/>
 
-      <!-- Edit commands are only enabled when the context menu is oepn -->
-      <field name="_enableEditCommands">false</field>
-      <property name="enableEditCommands"
-                readonly="true"
-                onget="return this._enableEditCommands;"/>
-
       <method name="buildContextMenu">
         <parameter name="aPopup"/>
         <body><![CDATA[
-          this._enableEditCommands = true;
-          PlacesUtils.updateAllCommands();
-          aPopup.addEventListener("popuphiding", this, true);
+          this.focus();
           this.controller.buildContextMenu(aPopup);
         ]]></body>
       </method>
 
-      <!-- nsIDOMEventListener -->
-      <method name="handleEvent">
-        <parameter name="aEvent"/>
-        <body><![CDATA[
-          if (aEvent.type == "popuphiding" &&
-              aEvent.eventPhase == Event.AT_TARGET) {
-            this._enableEditCommands = false;
-            PlacesUtils.updateAllCommands();
-            aEvent.target.removeEventListener("popuphiding", this, true);
-          }
-        ]]></body>
+      <method name="destroyContextMenu">
+        <parameter name="aPopup"/>
+        <body>
+          <![CDATA[
+            if (window.content)
+              window.content.focus();
+          ]]>
+        </body>
       </method>
     </implementation>
     <handlers>
@@ -920,8 +909,6 @@
           this._selection = event.target.node;
         else 
           this._selection = this.getResult().root;
-
-        window.updateCommands("places-select");
       ]]></handler>
       <handler event="draggesture"><![CDATA[
         if (event.target.localName == "toolbarbutton")
