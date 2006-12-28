@@ -333,14 +333,14 @@ sub init {
                     push(@l, "bugs.creation_ts <= $sql_chto") if($sql_chto);
                     $bug_creation_clause = "(" . join(' AND ', @l) . ")";
                 } else {
-                    push(@actlist, "actcheck.fieldid = " . get_field_id($f));
+                    push(@actlist, get_field_id($f));
                 }
             }
 
             # @actlist won't have any elements if the only field being searched
             # is [Bug creation] (in which case we don't need bugs_activity).
             if(@actlist) {
-                my $extra = " AND actcheck.bug_id = bugs.bug_id";
+                my $extra = " actcheck.bug_id = bugs.bug_id";
                 push(@list, "(actcheck.bug_when IS NOT NULL)");
                 if($sql_chfrom) {
                     $extra .= " AND actcheck.bug_when >= $sql_chfrom";
@@ -352,7 +352,8 @@ sub init {
                     $extra .= " AND actcheck.added = $sql_chvalue";
                 }
                 push(@supptables, "LEFT JOIN bugs_activity AS actcheck " .
-                                  "ON (" . join(" OR ", @actlist) . "$extra )");
+                                  "ON $extra AND actcheck.fieldid IN (" .
+                                  join(",", @actlist) . ")");
             }
 
             # Now that we're done using @list to determine if there are any
