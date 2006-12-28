@@ -229,10 +229,7 @@ function historyAddBookmarks()
     return;
   
 #ifdef MOZ_PLACES_BOOKMARKS
-  var uri = Components.classes["@mozilla.org/network/io-service;1"]
-                      .getService(Ci.nsIIOService)
-                      .newURI(node.uri, null, null);
-  PlacesController.showAddBookmarkUI(uri, node.title);
+  PlacesUtils.showAddBookmarkUI(PlacesUtils._uri(node.uri), node.title);
 #else
   BookmarksUtils.addBookmark(node.uri, node.title, undefined);
 #endif
