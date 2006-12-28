@@ -153,13 +153,11 @@ function weekPrint_format(aStream, aStart, aEnd, aCount, aItems, aTitle) {
         var mainWeek = <table width='100%' height="90%" border='solid 1px;'/>
 
         // Create the <td> for each day, and put it into an array.
-        date.day -= 1; // Compensate for the increment in the loop.
-        date.normalize();
         var dayTds = new Array();
         for (var i = 0; i < 7 ; i++) {
+            dayTds[date.weekday] = this.getDayTd(date, sortedList);
             date.day += 1;
             date.normalize();
-            dayTds[date.weekday] = this.getDayTd(date, sortedList);
         }
 
         var monRow = <tr height="33%"/>;
@@ -194,10 +192,6 @@ function weekPrint_format(aStream, aStart, aEnd, aCount, aItems, aTitle) {
         body.appendChild(mainWeek);
         // Make sure each month gets put on its own page
         body.appendChild(<br style="page-break-after: always;"/>);
-
-        // Move to the next Sunday
-        date.day += 7;
-        date.normalize();
     }
     html.appendChild(body);
 
