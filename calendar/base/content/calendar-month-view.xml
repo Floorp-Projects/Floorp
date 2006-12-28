@@ -162,6 +162,28 @@
         }
         this.parentBox.addDropShadows();
 
+        // Mozilla doesn't provide any generic way for us to listen for the
+        // drag-end.  Add this listener for a best approximation of listening
+        // for that case.
+        var monthbox = this.parentBox;
+        monthbox.monthView.dropListener = function checkStillDragging() {
+            var dragService = Components.classes["@mozilla.org/widget/dragservice;1"]
+                                        .getService(Components.interfaces.nsIDragService);
+            var session;
+            try {
+                session = dragService.getCurrentSession();
+            } catch (ex) {}
+            if (!session) {
+                monthbox.removeDropShadows();
+                monthbox.addItem(item);
+                window.removeEventListener("mouseover",
+                                           monthbox.monthView.dropListener,
+                                           true);
+            }
+        };
+        window.addEventListener("mouseover",
+                                monthbox.monthView.dropListener, true);
+
         dragService.invokeDragSession(this, supArray, null, action);
       ]]></handler>
     </handlers>
@@ -577,6 +599,10 @@
          }
 
          this.removeDropShadows();
+
+         window.removeEventListener("mouseover",
+                                    this.monthView.dropListener, true);
+
          this.monthView.controller.modifyOccurrence(item, newStart, newEnd);
       ]]></handler>
     </handlers>
