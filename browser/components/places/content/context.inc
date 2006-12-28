@@ -39,8 +39,9 @@
      and browser/components/places for the effect to appear in both the toolbar/
      menu and the places organizer. -->
 <popup id="placesContext"
-       onpopupshowing="PlacesUtils.getViewForNode(document.popupNode)
-                                  .buildContextMenu(this);">
+       onpopupshowing="this._view = PlacesUtils.getViewForNode(document.popupNode);
+                       this._view.buildContextMenu(this);"
+       onpopuphiding="this._view.destroyContextMenu();">
   <!-- the rules defined in the selection attribute control whether or not 
        the menu item is _visible_ regardless of whether or not the command
        is enabled. -->

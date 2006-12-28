@@ -980,14 +980,14 @@
           this.controller.buildContextMenu(aPopup);
         ]]></body>
       </method>
+
+      <method name="destroyContextMenu">
+        <parameter name="aPopup"/>
+        <body/>
+      </method>
     </implementation>
     <handlers>
-      <!-- Edit commands are updated by the global focus command updater
-           in editMenuOverlay -->
-      <handler event="focus" action="window.updateCommands('places-select')"/>
-      <handler event="blur" action="window.updateCommands('places-select')"/>
-
-      <handler event="select" action="PlacesUtils.updateAllCommands();"/>
+      <handler event="select" action="window.updateCommands('focus');"/>
       <handler event="draggesture"><![CDATA[
         // XXXben ew.
         if (event.target.localName == "treechildren")
