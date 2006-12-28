@@ -590,11 +590,9 @@ sub sendMail {
         $newcomments =~ s/(Created an attachment \(id=([0-9]+)\))/$1\n --> \(${showattachurlbase}$2\)/g;
     }
 
-    my $diffs;
+    my $diffs = $difftext . "\n\n" . $newcomments;
     if ($isnew) {
-        $diffs = $head . "\n\n" . $newcomments;
-    } else {
-        $diffs = $difftext . "\n\n" . $newcomments;
+        $diffs = $head . "\n\n" . $diffs;
     }
 
     my (@reasons, @reasons_watch);
