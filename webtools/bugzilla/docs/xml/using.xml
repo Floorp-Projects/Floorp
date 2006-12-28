@@ -1534,7 +1534,7 @@
 
       <para>
         The next step is to specify when the Event is to be run (the Schedule) 
-        and what searches are to be performed (the Queries).
+        and what searches are to be performed (the Searches).
       </para>
 
     </section>
@@ -1596,21 +1596,21 @@
     </section>
 
     <section id="whining-query">
-      <title>Whining Queries</title>
+      <title>Whining Searches</title>
 
       <para>
-        Each whining event is associated with zero or more queries.  A query is
-        a saved search that is executed on the schedule specified (see above).
-        You start out with zero queries attached to the event (which means that
-        the event will not run, as there will never be any results to return).
-        To add a query, press the "Add a new query" button.
+        Each whining event is associated with zero or more searches.  A search
+        is any saved search to be run as part of the specified schedule (see
+        above).  You start out without any searches associated with the event
+        (which means that the event will not run, as there will never be any
+        results to return).  To add a search, press the "Include search" button.
       </para>
 
       <para>
-        The first field to examine in your new query is the Sort field.  Queries
-        are executed, and results returned, in the order specified by the Sort 
-        field.  Queries with lower Sort values will run before queries with 
-        higher Sort values.
+        The first field to examine in your newly added search is the Sort field.
+        Searches are run, and results included, in the order specified by the
+        Sort field.  Searches with smaller Sort values will run before searches
+        with bigger Sort values.
       </para>
 
       <para>
