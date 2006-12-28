@@ -114,7 +114,7 @@ use constant SYSTEM_GROUPS => (
 
 use constant DEFAULT_CLASSIFICATION => {
     name        => 'Unclassified',
-    description => 'Unassigned to any classification'
+    description => 'Not assigned to any classification'
 };
 
 use constant DEFAULT_PRODUCT => {
