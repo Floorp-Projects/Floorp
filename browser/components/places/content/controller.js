@@ -1059,7 +1059,7 @@ PlacesController.prototype = {
       if (!this._confirmOpenTabs(urlsToOpen.length))
         return;
 
-      for (var i = 0; i < nodes.length; ++i) {
+      for (var i = 0; i < urlsToOpen.length; ++i) {
         getTopWin().openNewTabWith(urlsToOpen[i], null, null);
       }
     }
