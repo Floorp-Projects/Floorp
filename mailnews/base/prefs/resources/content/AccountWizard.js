@@ -671,58 +671,37 @@ function setDefaultCopiesAndFoldersPrefs(identity, server, accountData)
     // defaultCopiesAndFoldersPrefsToServer is true
 	// this since we are creating the server, it obviously hasn't been
     // opened, or in rdf.
-	//
-	// this makes the assumption that the server's draft, stationery fcc folder
-	// are at the top level (ie subfolders of the root folder.)  this works
+    //
+    // this makes the assumption that the server's draft, stationery fcc folder
+    // are at the top level (ie subfolders of the root folder.)  this works
     // because we happen to be doing things that way, and if the user changes
     // that, it will work because to change the folder, it must be in rdf,
     // coming from the folder cache, in the worst case.
-	var folders = rootFolder.GetSubFolders();
-	var msgFolder = rootFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
-	var numFolders = new Object();
-
-	var protocolInfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + msgFolder.server.type].getService(Components.interfaces.nsIMsgProtocolInfo);
+    var folders = rootFolder.GetSubFolders();
+    var msgFolder = rootFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
 
     /** 
-     * Check if this protocol service needs to create special folder URIs.
-     * In case of IMAP, when a new account is created, folders 'Sent', 'Drafts'
+     * When a new account is created, folders 'Sent', 'Drafts'
      * and 'Templates' are not created then, but created on demand at runtime. 
      * But we do need to present them as possible choices in the Copies and Folders 
      * UI. To do that, folder URIs have to be created and stored in the prefs file. 
      * So, if there is a need to build special folders, append the special folder 
      * names and create right URIs.
      */
-    if (protocolInfo.needToBuildSpecialFolderURIs)
-    {
-        var folderDelim = "/";
+    var folderDelim = "/";
 
-        /* we use internal names known to everyone like Sent, Templates and Drafts */
-        /* if folder names were already given in isp rdf, we use them,
-           otherwise we use internal names known to everyone like Sent, Templates and Drafts */
-	
-        var draftFolder = (accountData.identity && accountData.identity.draftFolder ? accountData.identity.draftFolder : "Drafts");
-	    var stationeryFolder = (accountData.identity && accountData.identity.stationeryFolder ? accountData.identity.stationeryFolder : "Templates");
-	    var fccFolder = (accountData.identity && accountData.identity.fccFolder ? accountData.identity.fccFolder : "Sent");
+    /* we use internal names known to everyone like Sent, Templates and Drafts */
+    /* if folder names were already given in isp rdf, we use them,
+       otherwise we use internal names known to everyone like Sent, Templates and Drafts */
+    
+    var draftFolder = (accountData.identity && accountData.identity.draftFolder ? accountData.identity.draftFolder : "Drafts");
+    var stationeryFolder = (accountData.identity && accountData.identity.stationeryFolder ? accountData.identity.stationeryFolder : "Templates");
+    var fccFolder = (accountData.identity && accountData.identity.fccFolder ? accountData.identity.fccFolder : "Sent");
 
-        identity.draftFolder = msgFolder.server.serverURI+ folderDelim + draftFolder;
-        identity.stationeryFolder = msgFolder.server.serverURI+ folderDelim + stationeryFolder;
-        identity.fccFolder = msgFolder.server.serverURI+ folderDelim + fccFolder;
-                
-    }
-    else {
-        // these hex values come from nsMsgFolderFlags.h
-	var draftFolder = msgFolder.getFoldersWithFlag(0x0400, 1, numFolders);
-	var stationeryFolder = msgFolder.getFoldersWithFlag(0x400000, 1, numFolders);
-	var fccFolder = msgFolder.getFoldersWithFlag(0x0200, 1, numFolders);
-
-	if (draftFolder) identity.draftFolder = draftFolder.URI;
-	if (stationeryFolder) identity.stationeryFolder = stationeryFolder.URI;
-	if (fccFolder) identity.fccFolder = fccFolder.URI;
-
-	dump("fccFolder = " + identity.fccFolder + "\n");
-	dump("draftFolder = " + identity.draftFolder + "\n");
-	dump("stationeryFolder = " + identity.stationeryFolder + "\n");
-    }
+    identity.draftFolder = msgFolder.server.serverURI+ folderDelim + draftFolder;
+    identity.stationeryFolder = msgFolder.server.serverURI+ folderDelim + stationeryFolder;
+    identity.fccFolder = msgFolder.server.serverURI+ folderDelim + fccFolder;
+            
 	
     identity.fccFolderPickerMode = (accountData.identity && accountData.identity.fccFolder ? 1 : gDefaultSpecialFolderPickerMode);
     identity.draftsFolderPickerMode = (accountData.identity && accountData.identity.draftFolder ? 1 : gDefaultSpecialFolderPickerMode);
