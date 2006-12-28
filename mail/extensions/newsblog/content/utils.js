@@ -190,21 +190,19 @@ function getRDFTargetValue(ds, source, property)
   return null;
 }
 
-var gFzSubscriptionsDS; // cache
 function getSubscriptionsDS(server) 
 {
-  if (gFzSubscriptionsDS)
-    return gFzSubscriptionsDS;
-
   var file = getSubscriptionsFile(server);
   var url = fileHandler.getURLSpecFromFile(file);
 
-  gFzSubscriptionsDS = rdf.GetDataSourceBlocking(url);
+  // GetDataSourceBlocking has a cache, so it's cheap to do this again
+  // once we've already done it once.
+  var ds = rdf.GetDataSourceBlocking(url);
 
-  if (!gFzSubscriptionsDS)
+  if (!ds)
     throw("can't get subscriptions data source");
 
-  return gFzSubscriptionsDS;
+  return ds;
 }
 
 function getSubscriptionsList(server) 
@@ -248,23 +246,22 @@ function createSubscriptionsFile(file)
   file.close();
 }
 
-var gFzItemsDS; // cache
 function getItemsDS(server) 
 {
-  if (gFzItemsDS)
-    return gFzItemsDS;
-
   var file = getItemsFile(server);
   var url = fileHandler.getURLSpecFromFile(file);
-  gFzItemsDS = rdf.GetDataSourceBlocking(url);
-  if (!gFzItemsDS)
+
+  // GetDataSourceBlocking has a cache, so it's cheap to do this again
+  // once we've already done it once.
+  var ds = rdf.GetDataSourceBlocking(url);
+  if (!ds)
     throw("can't get subscriptions data source");
 
   // Note that it this point the datasource may not be loaded yet.
   // You have to QueryInterface it to nsIRDFRemoteDataSource and check
   // its "loaded" property to be sure.  You can also attach an observer
   // which will get notified when the load is complete.
-  return gFzItemsDS;
+  return ds;
 }
 
 function getItemsFile(server) 
