@@ -175,5 +175,71 @@ public:
   NS_IMETHOD GetState(PRUint32 *aState);
 };
 
+
+/**
+ * Accessible object for xforms:choices.
+ */
+
+class nsXFormsChoicesAccessible : public nsXFormsAccessible
+{
+public:
+  nsXFormsChoicesAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+  NS_IMETHOD GetValue(nsAString& aValue);
+
+  void CacheChildren();
+};
+
+
+/**
+ * Accessible object for xforms:select/xforms:select1 of full appearance that
+ * may be represented by group of checkboxes or radiogroup.
+ */
+
+class nsXFormsSelectFullAccessible : public nsXFormsSelectableAccessible
+{
+public:
+  nsXFormsSelectFullAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+
+  void CacheChildren();
+};
+
+
+/**
+ * Accessible object for a xforms:item when it is represented by a checkbox.
+ * This occurs when the item is contained in a xforms:select with full
+ * appearance. Such a xforms:select is represented by a checkgroup.
+ */
+
+class nsXFormsItemCheckgroupAccessible : public nsXFormsSelectableItemAccessible
+{
+public:
+  nsXFormsItemCheckgroupAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+  NS_IMETHOD GetState(PRUint32 *aState);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
+};
+
+
+/**
+ * Accessible object for a xforms:item when it is represented by a radiobutton.
+ * This occurs when the item is contained in a xforms:select1 with full
+ * appearance. Such a xforms:select1 is represented as a radiogroup.
+ */
+
+class nsXFormsItemRadiogroupAccessible : public nsXFormsSelectableItemAccessible
+{
+public:
+  nsXFormsItemRadiogroupAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+  NS_IMETHOD GetState(PRUint32 *aState);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
+};
+
 #endif
 

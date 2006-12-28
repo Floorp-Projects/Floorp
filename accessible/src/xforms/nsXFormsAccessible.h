@@ -94,6 +94,13 @@ protected:
   // instance node.
   nsresult GetBoundChildElementValue(const nsAString& aTagName,
                                      nsAString& aValue);
+
+  // Cache accessible child item/choices elements. For example, the method is
+  // used for full appearance select/select1 elements or for their child choices
+  // element. Note, those select/select1 elements that use native widget
+  // for representation don't use the method since their item/choices elements
+  // are hidden and therefore aren't accessible.
+  void CacheSelectChildren();
 };
 
 
@@ -145,6 +152,41 @@ private:
   nsCOMPtr<nsIEditor> mEditor;
 };
 
+
+/**
+ * The class is base for accessible objects for XForms select and XForms
+ * select1 elements.
+ */
+class nsXFormsSelectableAccessible : public nsXFormsEditableAccessible
+{
+public:
+  nsXFormsSelectableAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIACCESSIBLESELECTABLE
+
+protected:
+  already_AddRefed<nsIDOMNode> GetItemByIndex(PRInt32 *aIndex,
+                                              nsIAccessible *aAccessible = nsnull);
+  PRBool mIsSelect1Element;
+};
+
+
+/**
+ * The class is base for accessible objects for XForms item elements.
+ */
+class nsXFormsSelectableItemAccessible : public nsXFormsAccessible
+{
+public:
+  nsXFormsSelectableItemAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+
+  NS_IMETHOD GetValue(nsAString& aValue);
+  NS_IMETHOD GetNumActions(PRUint8 *aCount);
+  NS_IMETHOD DoAction(PRUint8 aIndex);
+
+protected:
+  PRBool IsItemSelected();
+};
 
 #endif
 

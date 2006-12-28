@@ -1575,6 +1575,18 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
     case nsIAccessibleProvider::XFormsSelect:
       *aAccessible = new nsXFormsSelectAccessible(aNode, weakShell);
       break;
+    case nsIAccessibleProvider::XFormsChoices:
+      *aAccessible = new nsXFormsChoicesAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XFormsSelectFull:
+      *aAccessible = new nsXFormsSelectFullAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XFormsItemCheckgroup:
+      *aAccessible = new nsXFormsItemCheckgroupAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XFormsItemRadiogroup:
+      *aAccessible = new nsXFormsItemRadiogroupAccessible(aNode, weakShell);
+      break;
 
     case nsIAccessibleProvider::XFormsDropmarkerWidget:
       *aAccessible = new nsXFormsDropmarkerWidgetAccessible(aNode, weakShell);
