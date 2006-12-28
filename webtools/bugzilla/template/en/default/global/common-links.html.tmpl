@@ -76,7 +76,30 @@
       <li><span class="separator">| </span><a href="createaccount.cgi">New&nbsp;Account</a></li>
     [% END %]
     [% IF user.authorizer.can_login %]
-      <li><span class="separator">| </span><a href="index.cgi?GoAheadAndLogIn=1">Log&nbsp;In</a></li>
+      [%# Use the current script name. If an empty name is returned,
+        # then we are accessing the home page. %]
+
+      [% script_name = cgi.url(Relative => 1) %]
+
+      [% IF cgi.request_method == "POST" OR script_name.match("relogin") %]
+        [% script_name = "" %]
+      [% END %]
+
+      [%# If SSL is in use, use 'sslbase', else use 'urlbase'. %]
+      [% IF Param("sslbase") != "" && Param("ssl") != "never" %]
+        [% script_name = Param("sslbase") _ script_name %]
+      [% ELSE %]
+        [% script_name = Param("urlbase") _ script_name %]
+      [% END %]
+
+      [% IF cgi.request_method == "GET" AND cgi.query_string %]
+        [% script_name = script_name _ "?" _ cgi.query_string %]
+        [% script_name = script_name _ "&GoAheadAndLogIn=1" IF !cgi.query_string.match("GoAheadAndLogIn") %]
+      [% ELSE %]
+        [% script_name = script_name _ "?GoAheadAndLogIn=1" %]
+      [% END %]
+        
+      <li><span class="separator">| </span><a href="[% script_name FILTER html %]">Log&nbsp;In</a></li>
     [% END %]
   [% END %]
 </ul>
