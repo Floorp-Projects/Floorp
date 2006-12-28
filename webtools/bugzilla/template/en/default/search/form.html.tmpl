@@ -87,7 +87,9 @@ function doOnSelectProduct(selectmode) {
     var milestone = (typeof(f.target_milestone) == "undefined" ? 
                                                null : f.target_milestone);
     if (selectmode == 0) {
-        if (useclassification) {
+        // If there is no classification selected, give us a chance to fill
+        // the select fields with values from the possibly selected product.
+        if (useclassification && f.classification.selectedIndex > -1) {
             selectClassification(f.classification, f.product, f.component, f.version, milestone);
         } else {
             selectProduct(f.product, f.component, f.version, milestone);
