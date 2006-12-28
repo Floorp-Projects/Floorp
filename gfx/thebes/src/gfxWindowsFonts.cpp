@@ -577,11 +577,12 @@ gfxWindowsTextRun::MeasureOrDrawReallyFast(gfxContext *aContext,
     HFONT hfont = currentFont->GetHFONT();
     SelectObject(aDC, hfont);
 
-    /* GetGlyphIndices is buggy for bitmap fonts, so send them to uniscribe */
+    /* GetGlyphIndices is buggy for bitmap and vector fonts,
+       so send them to uniscribe */
     if (!mIsASCII) {
         TEXTMETRIC metrics;
         GetTextMetrics(aDC, &metrics);
-        if ((metrics.tmPitchAndFamily & (TMPF_VECTOR | TMPF_TRUETYPE)) == 0)
+        if ((metrics.tmPitchAndFamily & (TMPF_TRUETYPE)) == 0)
             return -1;
     }
 
