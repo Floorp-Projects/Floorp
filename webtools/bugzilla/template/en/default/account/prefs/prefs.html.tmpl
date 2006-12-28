@@ -67,18 +67,16 @@
 %]
 
 [% IF changes_saved %]
-  <p>
-    <font color="red">
-      The changes to your 
-      [% current_tab.label FILTER lower %] have been saved.
-    </font>
-  </p>
-  [% IF email_changes_saved %]
-    <p>
-      An email has been sent to both old and new email 
-      addresses to confirm the change of email address.
-    </p>
-  [% END %]
+  <div id="message">
+    The changes to your [% current_tab.label FILTER lower %] have been saved.
+
+    [% IF email_changes_saved %]
+      <p>
+        An email has been sent to both old and new email
+        addresses to confirm the change of email address.
+      </p>
+    [% END %]
+  </div>
 [% END %]
 
 <h3>[% current_tab.label %]</h3>
