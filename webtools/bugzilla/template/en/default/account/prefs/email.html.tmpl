@@ -262,9 +262,12 @@ If you watch a user, it is as if you are standing in their shoes for the
 purposes of getting email. Email is sent or not according to <u>your</u>
 preferences for <u>their</u> relationship to the [% terms.bug %] 
 (e.g. Assignee).
-[% IF watchedusers.size %]You are watching anyone on the following list:
-  </p>
+</p>
 
+<p>
+[% IF watchedusers.size %]
+You are watching everyone in the following list:
+  </p>
   <p>
     <select id="watched_by_you" name="watched_by_you" multiple="multiple" size="5">
         [% FOREACH w = watchedusers %]
