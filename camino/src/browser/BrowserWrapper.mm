@@ -34,6 +34,8 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+ 
+#include <math.h>
 
 #import "NSString+Utils.h"
 #import "NSView+Utils.h"
@@ -275,24 +277,28 @@ enum {
   // many tabs from being slow.
   // However, this requires us to do the resize on loadURI: below to make
   // sure that we maintain the scroll position in background tabs correctly.
-  if ([self window] || inResizeBrowser)
-  {
+  if ([self window] || inResizeBrowser) {
     NSRect bounds = [self bounds];
     if (mBlockedPopupView) {
-      // resize the browser view and move it down by the height of the block popup
-      // view. Recall we're flipped, so the origin is the top left. Also make sure
-      // to apply changes for our new frame.
+      // First resize the width of blockedPopupView to match this view.
+      // The blockedPopupView will, during its setFrame method, wrap information 
+      // text if necessary and adjust its own height to enclose that text.
+      // Then find out the actual (possibly adjusted) height of blockedPopupView 
+      // and resize the browser view accordingly.
+      // Recall that we're flipped, so the origin is the top left.
+
       NSRect popupBlockFrame = [mBlockedPopupView frame];
-      NSRect browserFrame = [mBrowserView frame];
-      browserFrame.origin.y = popupBlockFrame.size.height;
-      browserFrame.size.width = bounds.size.width;
-      browserFrame.size.height = bounds.size.height-popupBlockFrame.size.height;
-      
       popupBlockFrame.origin = NSZeroPoint;
       popupBlockFrame.size.width = bounds.size.width;
-      
-      [mBrowserView setFrame:browserFrame];
       [mBlockedPopupView setFrame:popupBlockFrame];
+
+      NSRect blockedPopupViewFrameAfterResized = [mBlockedPopupView frame];
+      NSRect browserFrame = [mBrowserView frame];
+      browserFrame.origin.y = blockedPopupViewFrameAfterResized.size.height;
+      browserFrame.size.width = bounds.size.width;
+      browserFrame.size.height = bounds.size.height-blockedPopupViewFrameAfterResized.size.height;
+
+      [mBrowserView setFrame:browserFrame];
     }
     else
       [mBrowserView setFrame:bounds];
@@ -1154,36 +1160,170 @@ enum {
 
 #pragma mark -
 
+// This value keeps the message text field from wrapping excessively.
+#define kMessageTextMinWidth 70
+
 @implementation InformationPanelView
 
-- (id)initWithFrame:(NSRect)frameRect
+- (void)awakeFromNib
 {
-  if ((self = [super initWithFrame:frameRect]))
-    mPopupBlockedBackgroundImage = [[NSImage imageNamed:@"popup_blocked_background"] retain];
-  
-  return self;
+  [self verticallyCenterAllSubviews];
+
+  // Padding & strut length are required when setting the panel's frame.
+  NSRect textFieldFrame = [mPopupBlockedMessageTextField frame];
+  mVerticalPadding = [mPopupBlockedMessageTextField frame].origin.y;
+  mMessageTextRightStrutLength = [self frame].size.width - NSMaxX(textFieldFrame);
+}
+
+//
+// -setFrame:
+// In addition to setting the panel's frame rectangle this method accounts
+// for wrapping of the message text field in response to this new frame and
+// adjusts to properly enclose the text, maintaining vertical padding.
+//
+- (void)setFrame:(NSRect)newPanelFrame
+{
+  NSRect existingPanelFrame = [self frame];
+  NSRect textFieldFrame = [mPopupBlockedMessageTextField frame];
+
+  // Resize the text field's width (based on its right strut).
+  float currentStrutLength = newPanelFrame.size.width - NSMaxX(textFieldFrame);
+  textFieldFrame.size.width -= mMessageTextRightStrutLength - currentStrutLength;
+
+  // Enforce a minimum size for the text field.
+  if (textFieldFrame.size.width < kMessageTextMinWidth)
+    textFieldFrame.size.width = kMessageTextMinWidth;
+
+  // Text field will wrap/resize when its new frame is applied.
+  [mPopupBlockedMessageTextField setFrame:textFieldFrame];
+  textFieldFrame = [mPopupBlockedMessageTextField frame];
+
+  newPanelFrame.size.height = textFieldFrame.size.height + 2 * mVerticalPadding;
+  [super setFrame:newPanelFrame];
+
+  [self verticallyCenterAllSubviews];
+}
+
+- (void)verticallyCenterAllSubviews
+{
+  NSRect panelFrame = [self frame];
+
+  NSEnumerator *subviewEnum = [[self subviews] objectEnumerator];
+  NSView *currentSubview;
+
+  while ((currentSubview = [subviewEnum nextObject])) {
+    NSRect currentSubviewFrame = [currentSubview frame];
+    // The panel's NSButtons draw incorrectly on non-integral pixel boundaries.
+    float verticallyCenteredYLocation = ceilf((panelFrame.size.height - currentSubviewFrame.size.height) / 2.0f);
+
+    [currentSubview setFrameOrigin:NSMakePoint(currentSubviewFrame.origin.x, verticallyCenteredYLocation)];
+  }
+}
+
+//
+// CalculateShadingValues
+//
+// Callback function; Generates a color based upon
+// the current interval (location) of the shading.
+//
+static void CalculateShadingValues(void *info, const float *in, float *out)
+{
+  static float beginTopHalf[4] =    { 0.364706f, 0.364706f, 0.364706f, 1.0f };
+  static float endTopHalf[4] =      { 0.298039f, 0.298039f, 0.298039f, 1.0f };
+  static float beginBottomHalf[4] = { 0.207843f, 0.207843f, 0.207843f, 1.0f };
+  static float endBottomHalf[4] =   { 0.290196f, 0.290196f, 0.290196f, 1.0f };
+
+  float *startColor;
+  float *endColor;
+
+  // The interval is the sole item in the input array.
+  // It ranges from 0 - 1.0.
+  float currentInterval = in[0];
+
+  // Determine which shading to draw based upon the interval and adjust
+  // that interval so each shading contains a full range of 0 - 1.0.
+  if (currentInterval < 0.5f) {
+    startColor = beginTopHalf;
+    endColor = endTopHalf;
+    currentInterval /= 0.5f;
+  }
+  else {
+    startColor = beginBottomHalf;
+    endColor = endBottomHalf;
+    currentInterval = (currentInterval - 0.5f) / 0.5f;
+  }
+
+  // Using the interval, compute and set each color component (RGBa) output.
+  for(int i = 0; i < 4; i++)
+    out[i] = (1.0f - currentInterval) * startColor[i] + currentInterval * endColor[i];
 }
 
 //
 // -drawRect:
 //
-// Draw a background color and shadowed border in addition to the contents.
+// Draws a shading behind the view's contents.
 //
 - (void)drawRect:(NSRect)aRect
 {
-  NSPoint patternOrigin = [self convertPoint:NSMakePoint(0.0f, 0.0f) toView:nil];
-  [mPopupBlockedBackgroundImage drawTiledInRect:aRect
-                                         origin:patternOrigin
-                                      operation:NSCompositeCopy];
-  
-  // Call our base class method to paint contents
-  [super drawRect:aRect];
-}
+  struct CGFunctionCallbacks shadingCallback = { 0, &CalculateShadingValues, NULL };
 
-- (void)dealloc
-{
-  [mPopupBlockedBackgroundImage release];
-  [super dealloc];
+  CGFunctionRef shadingFunction = CGFunctionCreate(NULL,              // void *info
+                                                   1,                 // number of inputs
+                                                   NULL,              // valid intervals of input values
+                                                   4,                 // number of outputs (4 = RGBa)
+                                                   NULL,              // valid intervals of output values
+                                                   &shadingCallback); // pointer to callback function
+
+  if (!shadingFunction) {
+    NSLog(@"Failed to create a shading function.");
+    return;
+  }
+
+  NSRect bounds = [self bounds];
+
+  // Start/end at the top/bottom midpoint
+  CGPoint startPoint = CGPointMake(NSMidX(bounds), NSMaxY(bounds));
+  CGPoint endPoint = CGPointMake(NSMidX(bounds), NSMinY(bounds));
+
+  // To preserve 10.3 compatibility, create a color space
+  // using the CGColorSpaceCreateDeviceRGB function.
+
+  // CGColorSpaceCreateDeviceRGB has two possible behaviors:
+  // 1. On 10.3 or earlier it returns a device-dependent color space.
+  // 2. On 10.4 or later it will map to a generic (and more accurate)
+  //    device-independent color space.
+  CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
+
+  if (!colorspace) {
+    NSLog(@"Failed to create a color space for the shading.");
+    CGFunctionRelease(shadingFunction);
+    return;
+  }
+
+  // Creates (but does not draw) the axial shading
+  CGShadingRef shading = CGShadingCreateAxial(colorspace,       // CGColorSpaceRef colorspace
+                                              startPoint,       // CGPoint start
+                                              endPoint,         // CGPoint end
+                                              shadingFunction,  // CGFunctionRef function
+                                              false,            // bool extendStart
+                                              false);           // bool extendEnd
+
+  if (!shading) {
+    NSLog(@"Failed to create the shading.");
+    CGFunctionRelease(shadingFunction);
+    CGColorSpaceRelease(colorspace);
+    return;
+  }
+
+  CGContextRef context = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
+
+  CGContextDrawShading(context, shading);
+
+  CGShadingRelease(shading);
+  CGColorSpaceRelease(colorspace);
+  CGFunctionRelease(shadingFunction);
+
+  [super drawRect:aRect];
 }
 
 @end

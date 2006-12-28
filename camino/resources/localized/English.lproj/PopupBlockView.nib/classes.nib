@@ -19,7 +19,12 @@
         }, 
         {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {CLASS = InformationPanel; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
-        {CLASS = InformationPanelView; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
+        {
+            CLASS = InformationPanelView; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mPopupBlockedMessageTextField = NSTextField; }; 
+            SUPERCLASS = NSView; 
+        }, 
         {CLASS = RolloverImageButton; LANGUAGE = ObjC; SUPERCLASS = NSButton; }
     ); 
     IBVersion = 1; 

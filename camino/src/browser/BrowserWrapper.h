@@ -251,12 +251,16 @@ class nsIArray;
 //
 // interface InformationPanelView
 //
-// A placard-style view for showing additional information to the user. Drawn
-// with a colored background and bottom shadow.
+// A placard-style view for showing additional information to the user.
+// Drawn with a shaded background.
 //
 
 @interface InformationPanelView : NSView
 {
-  NSImage* mPopupBlockedBackgroundImage;
+  IBOutlet NSTextField *mPopupBlockedMessageTextField;
+  float mVerticalPadding;
+  float mMessageTextRightStrutLength;
 }
+- (void)verticallyCenterAllSubviews;
+
 @end
