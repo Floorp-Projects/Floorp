@@ -251,6 +251,13 @@ foreach my $table ($dbh->bz_table_list_real) {
                 my $data = shift @result;
                 my $digest = md5_base64($data);
 
+                my @primary_keys = reverse split(',', $pk);
+                # We copy the array so that we can pop things from it without
+                # affecting the original.
+                my @pk_data = @result;
+                my $pk_line = join (', ',
+                    map { "$_ = " . pop @pk_data } @primary_keys);
+
                 my $encoding;
                 if ($switch{'guess'}) {
                     $encoding = do_guess($data);
@@ -261,7 +268,8 @@ foreach my $table ($dbh->bz_table_list_real) {
                         && !is_valid_utf8($data)) 
                     {
                         my $truncated = trunc($data);
-                        print "Failed to guess: Key: $digest",
+                        print "Row: [$pk_line]\n",
+                              "Failed to guess: Key: $digest",
                               " DATA: $truncated\n";
                     }
 
@@ -283,7 +291,8 @@ foreach my $table ($dbh->bz_table_list_real) {
                 if ($encoding && !grep($_ eq $encoding, IGNORE_ENCODINGS)) {
                     my $decoded = encode('utf8', decode($encoding, $data));
                     if ($switch{'dry-run'} && $data ne $decoded) {
-                        print "From: [" . trunc($data) . "] Key: $digest\n",
+                        print "Row:  [$pk_line]\n",
+                              "From: [" . trunc($data) . "] Key: $digest\n",
                               "To:   [" . trunc($decoded) . "]",
                               " Encoding : $encoding\n";
                     }
