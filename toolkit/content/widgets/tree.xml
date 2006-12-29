@@ -1069,10 +1069,18 @@
   </binding>
 
   <binding id="treecol-base" extends="chrome://global/content/bindings/tree.xml#tree-base">
-    <implementation>
+    <implementation implements="nsIAccessibleProvider">
       <constructor>
         this.parentNode.parentNode._columnsDirty = true;
       </constructor>
+
+      <property name="accessibleType" readonly="true">
+        <getter>
+          <![CDATA[
+            return Components.interfaces.nsIAccessibleProvider.XULTreeColumnitem;
+          ]]>
+        </getter>
+      </property>
 
       <property name="ordinal">
         <getter><![CDATA[
@@ -1254,15 +1262,6 @@
       <xul:label class="treecol-text" xbl:inherits="crop,value=label" flex="1" crop="right"/>
       <xul:image class="treecol-sortdirection" xbl:inherits="sortDirection,hidden=hideheader"/>
     </content>
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULTreeColumnitem;
-          ]]>
-        </getter>
-      </property>
-    </implementation>
   </binding>
 
   <binding id="treecol-image" extends="chrome://global/content/bindings/tree.xml#treecol-base">
