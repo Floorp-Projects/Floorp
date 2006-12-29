@@ -1351,6 +1351,36 @@ sub AppendComment {
              undef, $timestamp, $bugid);
 }
 
+sub update_comment {
+    my ($self, $comment_id, $new_comment) = @_;
+
+    # Some validation checks.
+    if ($self->{'error'}) {
+        ThrowCodeError("bug_error", { bug => $self });
+    }
+    detaint_natural($comment_id)
+      || ThrowCodeError('bad_arg', {argument => 'comment_id', function => 'update_comment'});
+
+    # The comment ID must belong to this bug.
+    my @current_comment_obj = grep {$_->{'id'} == $comment_id} @{$self->longdescs};
+    scalar(@current_comment_obj)
+      || ThrowCodeError('bad_arg', {argument => 'comment_id', function => 'update_comment'});
+
+    # If the new comment is undefined, then there is nothing to update.
+    # To delete a comment, an empty string should be passed.
+    return unless defined $new_comment;
+    $new_comment =~ s/\s*$//s;    # Remove trailing whitespaces.
+    $new_comment =~ s/\r\n?/\n/g; # Handle Windows and Mac-style line endings.
+    trick_taint($new_comment);
+
+    # We assume ValidateComment() has already been called earlier.
+    Bugzilla->dbh->do('UPDATE longdescs SET thetext = ? WHERE comment_id = ?',
+                       undef, ($new_comment, $comment_id));
+
+    # Update the comment object with this new text.
+    $current_comment_obj[0]->{'body'} = $new_comment;
+}
+
 # Represents which fields from the bugs table are handled by process_bug.cgi.
 sub editable_bug_fields {
     my @fields = Bugzilla->dbh->bz_table_columns('bugs');
@@ -1416,7 +1446,8 @@ sub GetComments {
     my @comments;
     my @args = ($id);
 
-    my $query = 'SELECT profiles.realname AS name, profiles.login_name AS email, ' .
+    my $query = 'SELECT longdescs.comment_id AS id, profiles.realname AS name,
+                        profiles.login_name AS email, ' .
                         $dbh->sql_date_format('longdescs.bug_when', '%Y.%m.%d %H:%i:%s') .
                       ' AS time, longdescs.thetext AS body, longdescs.work_time,
                         isprivate, already_wrapped, type, extra_data

@@ -187,10 +187,26 @@ if (defined $cgi->param('version')) {
 # Add an attachment if requested.
 if (defined($cgi->upload('data')) || $cgi->param('attachurl')) {
     $cgi->param('isprivate', $cgi->param('commentprivacy'));
-    Bugzilla::Attachment->insert_attachment_for_bug(!THROW_ERROR,
-                                                    $bug, $user, $timestamp,
-                                                    \$vars)
-        || ($vars->{'message'} = 'attachment_creation_failed');
+    my $attach_id = Bugzilla::Attachment->insert_attachment_for_bug(!THROW_ERROR,
+                                                  $bug, $user, $timestamp, \$vars);
+
+    if ($attach_id) {
+        # Update the comment to include the new attachment ID.
+        # This string is hardcoded here because Template::quoteUrls()
+        # expects to find this exact string.
+        my $new_comment = "Created an attachment (id=$attach_id)\n" .
+                          $cgi->param('description') . "\n";
+        # We can use $bug->longdescs here because we are sure that the bug
+        # description is of type CMT_NORMAL. No need to include it if it's
+        # empty, though.
+        if ($bug->longdescs->[0]->{'body'} !~ /^\s+$/) {
+            $new_comment .= "\n" . $bug->longdescs->[0]->{'body'};
+        }
+        $bug->update_comment($bug->longdescs->[0]->{'id'}, $new_comment);
+    }
+    else {
+        $vars->{'message'} = 'attachment_creation_failed';
+    }
 
     # Determine if Patch Viewer is installed, for Diff link
     eval {
