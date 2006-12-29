@@ -111,6 +111,7 @@ local our %default;
 # and ignore any multiple values.
 sub PrefillForm {
     my ($buf) = (@_);
+    $buf = new Bugzilla::CGI($buf);
     my $foundone = 0;
 
     # Nothing must be undef, otherwise the template complains.
@@ -132,26 +133,14 @@ sub PrefillForm {
                       "category", "subcategory", "name", "newcategory",
                       "newsubcategory", "public", "frequency") 
     {
-        # This is a bit of a hack. The default, empty list has 
-        # three entries to accommodate the needs of the email fields -
-        # we use each position to denote the relevant field. Array
-        # position 0 is unused for email fields because the form 
-        # parameters historically started at 1.
-        $default{$name} = ["", "", ""];
+        $default{$name} = [];
     }
  
  
     # Iterate over the URL parameters
-    foreach my $item (split(/\&/, $buf)) {
-        my @el = split(/=/, $item);
-        my $name = $el[0];
-        my $value;
-        if ($#el > 0) {
-            $value = Bugzilla::Util::url_decode($el[1]);
-        } else {
-            $value = "";
-        }
-        
+    foreach my $name ($buf->param()) {
+        my @values = $buf->param($name);
+
         # If the name begins with field, type, or value, then it is part of
         # the boolean charts. Because these are built different than the rest
         # of the form, we don't need to save a default value. We do, however,
@@ -165,21 +154,15 @@ sub PrefillForm {
         # positions to show the defaults for that number field.
         elsif ($name =~ m/^(.+)(\d)$/ && defined($default{$1})) {
             $foundone = 1;
-            $default{$1}->[$2] = $value;
+            $default{$1}->[$2] = $values[0];
         }
-        # If there's no default yet, we replace the blank string.
-        elsif (defined($default{$name}) && $default{$name}->[0] eq "") {
+        elsif (exists $default{$name}) {
             $foundone = 1;
-            $default{$name} = [$value]; 
-        } 
-        # If there's already a default, we push on the new value.
-        elsif (defined($default{$name})) {
-            push (@{$default{$name}}, $value);
-        }        
-    }        
+            push (@{$default{$name}}, @values);
+        }
+    }
     return $foundone;
 }
-
 
 if (!PrefillForm($buffer)) {
     # Ah-hah, there was no form stuff specified.  Do it again with the
@@ -335,7 +318,7 @@ if ($cgi->param('order')) { $deforder = $cgi->param('order') }
 
 $vars->{'userdefaultquery'} = $userdefaultquery;
 $vars->{'orders'} = \@orders;
-$default{'querytype'} = $deforder || 'Importance';
+$default{'order'} = [$deforder || 'Importance'];
 
 if (($cgi->param('query_format') || $cgi->param('format') || "")
     eq "create-series") {

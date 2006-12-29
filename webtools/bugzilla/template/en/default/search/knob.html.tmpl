@@ -57,8 +57,11 @@
   <input type="submit" id="[% button_name FILTER html %]"
          value="[% button_name FILTER html %]">
   [% IF known_name %]
-    <input type="hidden" name="query_based_on" 
-           value="[% known_name FILTER html %]">
+    [%# We store known_name in case the user add a boolean chart. %]
+    <input type="hidden" name="known_name" value="[% known_name FILTER html %]">
+
+    [%# The name of the existing query will be passed to buglist.cgi. %]
+    <input type="hidden" name="query_based_on" value="[% known_name FILTER html %]">
   [% END %]
 </p>
 
