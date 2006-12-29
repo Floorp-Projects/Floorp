@@ -141,25 +141,6 @@ function GroupBy(groupingType)
   searchHistory(gSearchBox.value);
 }
 
-var historyDNDObserver = {
-    onDragStart: function (aEvent, aXferData, aDragAction)
-    {
-        var node = gHistoryTree.selectedURINode;
-        if (!node)
-          return false;
-        
-        var url = node.uri;
-        var title = node.title;
-
-        var htmlString = "<A HREF='" + url + "'>" + title + "</A>";
-        aXferData.data = new TransferData();
-        aXferData.data.addDataForFlavour("text/unicode", url);
-        aXferData.data.addDataForFlavour("text/html", htmlString);
-        aXferData.data.addDataForFlavour("text/x-moz-url", url + "\n" + title);
-        return true;
-    }
-};
-
 function collapseExpand()
 {
   var currentIndex = gHistoryTree.currentIndex; 
