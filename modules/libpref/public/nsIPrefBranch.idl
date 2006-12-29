@@ -247,6 +247,13 @@ interface nsIPrefBranch : nsISupports
    * This method can be called on either a default or user branch but, in
    * effect, always operates on the user branch.
    *
+   * @note
+   * If a preference was manually set to a value that equals the default value,
+   * then the preference no longer has a user set value, i.e. it is
+   * considered reset to its default value.
+   * In particular, this method will return false for such a preference and
+   * the preference will not be saved to a file by nsIPrefService.savePrefFile.
+   *
    * @return boolean  true  The preference has a user set value.
    *                  false The preference only has a default value.
    */
