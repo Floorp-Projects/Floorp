@@ -19,7 +19,7 @@
   # Contributor(s): André Batosti <batosti@async.com.br>
   #%]
 
-[% PROCESS "global/field-descs.none.tmpl" %]
+[% PROCESS "global/variables.none.tmpl" %]
 From: [% Param('mailfrom') %]
 To: [% to %]
 Subject: [[% terms.Bug %] [%+ bugid %]] [% neworchanged %][%+ summary %]
