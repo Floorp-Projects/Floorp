@@ -38,6 +38,8 @@ treechildren::-moz-tree-image {
 treechildren::-moz-tree-image(title) {
   list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
   -moz-image-region: rect(0px, 16px, 16px, 0px);
+  width: 16px;
+  height: 16px;
 }
 
 treechildren::-moz-tree-image(title, container) {
@@ -87,7 +89,6 @@ treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
   margin-left: 0px;
   margin-top: 0px;
 }
-
 
 .commandGroupButton.first {
   margin-right: -10px;
