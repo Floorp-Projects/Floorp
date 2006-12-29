@@ -174,7 +174,7 @@ if (!PrefillForm($buffer)) {
     }
 }
 
-if ($default{'chfieldto'}->[0] eq "") {
+if (!scalar(@{$default{'chfieldto'}}) || $default{'chfieldto'}->[0] eq "") {
     $default{'chfieldto'} = ["Now"];
 }
 
