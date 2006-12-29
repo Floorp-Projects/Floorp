@@ -387,9 +387,9 @@ if ($cgi->param('cmdtype') eq "dorem") {
                                    scalar $cgi->param('sharer_id'));
         # If this is the user's own query, remember information about it
         # so that it can be modified easily.
+        $vars->{'searchname'} = $cgi->param('namedcmd');
         if (!$cgi->param('sharer_id') ||
             $cgi->param('sharer_id') == Bugzilla->user->id) {
-            $vars->{'searchname'} = $cgi->param('namedcmd');
             $vars->{'searchtype'} = "saved";
         }
         $params = new Bugzilla::CGI($buffer);
