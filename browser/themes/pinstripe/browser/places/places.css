@@ -37,6 +37,11 @@
   -moz-appearance: listbox;
 }
 
+treechildren::-moz-tree-image(title) {
+  width: 16px;
+  height: 16px;
+}
+
 treechildren::-moz-tree-image(title, container),
 treechildren::-moz-tree-image(title, open) {
   padding-right: 2px;
@@ -62,13 +67,6 @@ treechildren::-moz-tree-cell-text(date, session-continue) {
   color:white;
 }
 
-treechildren::-moz-tree-image(title, separator) {
-  list-style-image: none;
-  width: 0px !important;
-  height: 0px !important;
-  margin: 0px;
-}
-
 treechildren::-moz-tree-cell-text(title, separator) {
   color: ThreeDShadow;
   margin: 0px 5px;
@@ -87,7 +85,6 @@ treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
   margin-left: 0px;
   margin-top: 0px;
 }
-
 
 .commandGroupButton.first {
   margin-right: -10px;
