@@ -69,11 +69,13 @@ NS_IMETHODIMP nsXULTextAccessible::GetName(nsAString& aName)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULTextAccessible::GetState(PRUint32 *_retval)
+NS_IMETHODIMP nsXULTextAccessible::GetState(PRUint32 *aState)
 {
-  // Labels and description can only have read only state
+  nsHyperTextAccessible::GetState(aState);
+
+  // Labels and description have read only state
   // They are not focusable or selectable
-  *_retval = STATE_READONLY;
+  *aState |= STATE_READONLY;
   return NS_OK;
 }
 
