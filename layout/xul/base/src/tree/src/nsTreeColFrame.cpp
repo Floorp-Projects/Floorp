@@ -47,6 +47,7 @@
 #include "nsIBoxObject.h"
 #include "nsIDOMElement.h"
 #include "nsITreeBoxObject.h"
+#include "nsITreeColumns.h"
 #include "nsIDOMXULTreeElement.h"
 #include "nsDisplayList.h"
 
@@ -91,17 +92,14 @@ nsTreeColFrame::Init(nsIContent*      aContent,
                      nsIFrame*        aPrevInFlow)
 {
   nsresult rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
-  EnsureColumns();
-  if (mColumns)
-    mColumns->InvalidateColumns();
+  InvalidateColumns();
   return rv;
 }
 
 void                                                                
 nsTreeColFrame::Destroy()                          
 {
-  if (mColumns)
-    mColumns->InvalidateColumns();
+  InvalidateColumns();
   nsBoxFrame::Destroy();
 }
 
@@ -180,9 +178,7 @@ nsTreeColFrame::AttributeChanged(PRInt32 aNameSpaceID,
                                              aModType);
 
   if (aAttribute == nsGkAtoms::ordinal || aAttribute == nsGkAtoms::primary) {
-    EnsureColumns();
-    if (mColumns)
-      mColumns->InvalidateColumns();
+    InvalidateColumns();
   }
 
   return rv;
@@ -197,30 +193,43 @@ nsTreeColFrame::SetBounds(nsBoxLayoutState& aBoxLayoutState,
   nsresult rv = nsBoxFrame::SetBounds(aBoxLayoutState, aRect,
                                       aRemoveOverflowArea);
   if (mRect.width != oldWidth) {
-    EnsureColumns();
-    if (mColumns) {
-      nsCOMPtr<nsITreeBoxObject> tree;
-      mColumns->GetTree(getter_AddRefs(tree));
-      if (tree)
-        tree->Invalidate();
+    nsITreeBoxObject* treeBoxObject = GetTreeBoxObject();
+    if (treeBoxObject) {
+      treeBoxObject->Invalidate();
     }
   }
   return rv;
 }
 
-void
-nsTreeColFrame::EnsureColumns()
+nsITreeBoxObject*
+nsTreeColFrame::GetTreeBoxObject()
 {
-  if (!mColumns) {
-    // Get our parent node.
-    nsIContent* parent = mContent->GetParent();
-    if (parent) {
-      nsIContent* grandParent = parent->GetParent();
-      if (grandParent) {
-        nsCOMPtr<nsIDOMXULTreeElement> treeElement = do_QueryInterface(grandParent);
-        if (treeElement)
-          treeElement->GetColumns(getter_AddRefs(mColumns));
-      }
+  nsITreeBoxObject* result = nsnull;
+
+  nsIContent* parent = mContent->GetParent();
+  if (parent) {
+    nsIContent* grandParent = parent->GetParent();
+    nsCOMPtr<nsIDOMXULElement> treeElement = do_QueryInterface(grandParent);
+    if (treeElement) {
+      nsCOMPtr<nsIBoxObject> boxObject;
+      treeElement->GetBoxObject(getter_AddRefs(boxObject));
+
+      nsCOMPtr<nsITreeBoxObject> treeBoxObject = do_QueryInterface(boxObject);
+      result = treeBoxObject.get();
     }
+  }
+  return result;
+}
+
+void
+nsTreeColFrame::InvalidateColumns()
+{
+  nsITreeBoxObject* treeBoxObject = GetTreeBoxObject();
+  if (treeBoxObject) {
+    nsCOMPtr<nsITreeColumns> columns;
+    treeBoxObject->GetColumns(getter_AddRefs(columns));
+
+    if (columns)
+      columns->InvalidateColumns();
   }
 }
