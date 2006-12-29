@@ -37,7 +37,7 @@
 @import url("chrome://global/skin/");
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-toolbar toolbarbutton {
+#HelpToolbar toolbarbutton {
   -moz-box-orient: horizontal !important;
   min-width: 0px;
   list-style-image: url("chrome://help/skin/Toolbar.png");
@@ -45,7 +45,7 @@ toolbar toolbarbutton {
   padding: 4px 5px;
 }
 
-toolbar[chromedir="rtl"] toolbarbutton {
+#HelpToolbar[chromedir="rtl"] toolbarbutton {
   list-style-image: url("chrome://help/skin/Toolbar-rtl.png");
 }
 
@@ -100,7 +100,7 @@ toolbar[chromedir="rtl"] toolbarbutton {
   -moz-image-region: rect(48px 48px 72px 24px); 
 }
 
-#help-forward-button:not([disabled="true"]):active {
+#help-forward-button:not([disabled="true"]):hover:active {
   -moz-image-region: rect(72px 48px 96px 24px); 
 }
 
@@ -143,5 +143,5 @@ toolbar[chromedir="rtl"] toolbarbutton {
 /* ----- OTHER ----- */
 
 #context-copy[disabled="true"] {
-  visibility: collapse;
+  display: none;
 }
