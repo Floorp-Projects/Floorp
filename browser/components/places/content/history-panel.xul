@@ -151,7 +151,6 @@
         context="historyContextMenu"
         onkeypress="if (event.keyCode == 13) openURL(event);"
         hidecolumnpicker="true"
-        ondraggesture="if (event.originalTarget.localName == 'treechildren') nsDragAndDrop.startDrag(event, historyDNDObserver);"
         onclick="handleHistoryClick(event);">
     <treecols>
       <treecol id="title" flex="1" primary="true" hideheader="true"/>
