@@ -1864,8 +1864,8 @@ nsXULElement::GetBoxObject(nsIBoxObject** aResult)
 
   // XXX sXBL/XBL2 issue! Owner or current document?
   nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(GetCurrentDoc()));
-  NS_ENSURE_TRUE(nsDoc, NS_ERROR_FAILURE);
-  return nsDoc->GetBoxObjectFor(this, aResult);
+
+  return nsDoc ? nsDoc->GetBoxObjectFor(this, aResult) : NS_ERROR_FAILURE;
 }
 
 // Methods for setting/getting attributes from nsIDOMXULElement
