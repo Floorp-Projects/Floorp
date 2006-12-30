@@ -52,7 +52,7 @@
 
 [%# Whoever wrote the original version of boolean charts had a seriously twisted mind %]
 
-[% jsmagic = "onclick=\"document.forms[0].action='query.cgi#chart'; document.forms[0].method='POST'; return 1;\"" %]
+[% jsmagic = "onclick=\"this.form.action='query.cgi#chart'; this.form.method='POST'; return 1;\"" %]
 
 [% FOREACH chart = default.charts %]
   [% chartnum = loop.count - 1 %]
