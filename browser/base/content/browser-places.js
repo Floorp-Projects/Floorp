@@ -323,20 +323,22 @@ var BookmarksEventHandler = {
    * Only handle middle-click; left-click is handled in the onCommand function.
    * When items are middle-clicked, open them in tabs.
    * If the click came through a menu, close the menu.
-   * @param event DOMEvent for the click
+   * @param aEvent
+   *        DOMEvent for the click
    */
-  onClick: function BT_onClick(event) {
+  onClick: function BT_onClick(aEvent) {
     // Only handle middle-clicks.
-    if (event.button != 1)
+    if (aEvent.button != 1)
       return;
-    
-    PlacesUtils.getViewForNode(event.target).controller.openLinksInTabs();
+
+    var target = aEvent.originalTarget;
+    PlacesUtils.getViewForNode(target).controller.openLinksInTabs();
     
     // If this event bubbled up from a menu or menuitem,
     // close the menus.
-    if (event.target.localName == "menu" ||
-        event.target.localName == "menuitem") {
-      var node = event.target.parentNode;
+    if (target.localName == "menu" ||
+        target.localName == "menuitem") {
+      var node = target.parentNode;
       while (node && 
              (node.localName == "menu" || 
               node.localName == "menupopup")) {
@@ -359,21 +361,23 @@ var BookmarksEventHandler = {
    * Handler for command event for an item in the bookmarks toolbar.
    * Menus and submenus from the folder buttons bubble up to this handler.
    * Opens the item.
-   * @param event 
+   * @param aEvent 
    *        DOMEvent for the command
    */
-  onCommand: function BM_onCommand(event) {
+  onCommand: function BM_onCommand(aEvent) {
     // If this is the special "Open in Tabs" menuitem,
     // load all the menuitems in tabs.
-    if (event.target.hasAttribute("openInTabs"))
-      PlacesUtils.getViewForNode(event.target).controller.openLinksInTabs();
-    else if (event.target.hasAttribute("siteURI"))
-      openUILink(event.target.getAttribute("siteURI"), event);
+
+    var target = aEvent.originalTarget;
+    if (target.hasAttribute("openInTabs"))
+      PlacesUtils.getViewForNode(target).controller.openLinksInTabs();
+    else if (target.hasAttribute("siteURI"))
+      openUILink(target.getAttribute("siteURI"), aEvent);
     // If this is a normal bookmark, just load the bookmark's URI.
     else
-      PlacesUtils.getViewForNode(event.target)
+      PlacesUtils.getViewForNode(target)
                  .controller
-                 .openSelectedNodeWithEvent(event);
+                 .openSelectedNodeWithEvent(aEvent);
   },
 
   /**
