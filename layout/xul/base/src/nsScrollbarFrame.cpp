@@ -191,6 +191,17 @@ nsScrollbarFrame::GetScrollbarMediator()
     GetPresContext()->PresShell()->GetPrimaryFrameFor(mScrollbarMediator);
   if (!f)
     return nsnull;
+
+  // check if the frame is a scroll frame. If so, get the scrollable frame
+  // inside it.
+  nsIScrollableFrame* scrollFrame;
+  CallQueryInterface(f, &scrollFrame);
+  if (scrollFrame) {
+    f = scrollFrame->GetScrolledFrame();
+    if (!f)
+      return nsnull;
+  }
+
   nsIScrollbarMediator* sbm;
   CallQueryInterface(f, &sbm);
   return sbm;
