@@ -1,4 +1,4 @@
-# $Id: Config.pm,v 1.7 2006/12/30 02:42:27 reed%reedloden.com Exp $
+# $Id: Config.pm,v 1.8 2006/12/30 02:53:48 reed%reedloden.com Exp $
 
 package LXR::Config;
 
@@ -46,7 +46,7 @@ sub treeify {
             $self->{'treename'} = $1;
         }
         else {
-            die "Invalid treename in URL";
+            &fatal("Invalid treename in URL");
         }
 
         #Match the tree name against our list of trees and extract the proper
