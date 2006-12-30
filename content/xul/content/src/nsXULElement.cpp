@@ -2606,6 +2606,9 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                 // If we failed to deserialize, consider deleting 'script'?
                 break;
             }
+            default:
+                NS_NOTREACHED("Unexpected child type!");
+                rv = NS_ERROR_UNEXPECTED;
             }
 
             mChildren[i] = child;

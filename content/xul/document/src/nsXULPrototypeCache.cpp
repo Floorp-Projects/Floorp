@@ -209,6 +209,8 @@ nsXULPrototypeCache::GetPrototype(nsIURI* aURI)
                     PutPrototype(protoDoc);
 
                     gFastLoadService->EndMuxedDocument(aURI);
+                } else {
+                    NS_RELEASE(protoDoc);
                 }
 
                 RemoveFromFastLoadSet(aURI);
