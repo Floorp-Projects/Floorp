@@ -2031,13 +2031,8 @@ function MessageFcc(menuItem)
 
 function updatePriorityMenu(priorityMenu)
 {
-  if (gMsgCompose)
-  {
-    var msgCompFields = gMsgCompose.compFields;
-    if (msgCompFields && msgCompFields.priority)
-      priorityMenu.getElementsByAttribute("value", msgCompFields.priority)[0]
-                  .setAttribute("checked", "true");
-  }
+  var priority = (gMsgCompose && gMsgCompose.compFields && gMsgCompose.compFields.priority) || "Normal";
+  priorityMenu.getElementsByAttribute("value", priority)[0].setAttribute("checked", "true");
 }
 
 function PriorityMenuSelect(target)
