@@ -245,7 +245,7 @@ NS_IMETHODIMP nsAbLDAPDirectory::GetChildCards(nsISimpleEnumerator** result)
     rv = ioService->GetOffline(&offline);
     NS_ENSURE_SUCCESS(rv,rv);
     
-    if (mIsQueryURI && offline) {
+    if (offline) {
       nsCOMPtr <nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1",&rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -266,7 +266,9 @@ NS_IMETHODIMP nsAbLDAPDirectory::GetChildCards(nsISimpleEnumerator** result)
 
       // perform the same query, but on the local directory
       nsCAutoString localDirectoryURI;
-      localDirectoryURI = NS_LITERAL_CSTRING("moz-abmdbdirectory://") + fileName + NS_LITERAL_CSTRING("?") + mQueryString;
+      localDirectoryURI = NS_LITERAL_CSTRING("moz-abmdbdirectory://") + fileName;
+      if (mIsQueryURI)
+        localDirectoryURI += NS_LITERAL_CSTRING("?") + mQueryString;
       
       nsCOMPtr <nsIRDFResource> resource;
       rv = rdfService->GetResource(localDirectoryURI, getter_AddRefs(resource));
