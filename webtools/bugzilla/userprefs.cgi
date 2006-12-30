@@ -506,7 +506,7 @@ $cgi->param('Bugzilla_password', $bugzilla_password);
 
 $vars->{'changes_saved'} = $cgi->param('dosave');
 
-my $current_tab_name = $cgi->param('tab') || "account";
+my $current_tab_name = $cgi->param('tab') || "settings";
 
 # The SWITCH below makes sure that this is valid
 trick_taint($current_tab_name);
