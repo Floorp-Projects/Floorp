@@ -212,7 +212,7 @@ sub DiffDate {
 }
 
 sub LookupNamedQuery {
-    my ($name, $sharer_id) = @_;
+    my ($name, $sharer_id, $query_type) = @_;
     my $user = Bugzilla->login(LOGIN_REQUIRED);
     my $dbh = Bugzilla->dbh;
     my $owner_id;
@@ -230,10 +230,19 @@ sub LookupNamedQuery {
         $owner_id = $user->id;
     }
 
-    my ($id, $result) = $dbh->selectrow_array('SELECT id, query
+    my @args = ($owner_id, $name);
+    my $extra = '';
+    # If $query_type is defined, then we restrict our search.
+    if (defined $query_type) {
+        $extra = ' AND query_type = ? ';
+        detaint_natural($query_type);
+        push(@args, $query_type);
+    }
+    my ($id, $result) = $dbh->selectrow_array("SELECT id, query
                                                  FROM namedqueries
-                                                WHERE userid = ? AND name = ?',
-                                              undef, ($owner_id, $name));
+                                                WHERE userid = ? AND name = ?
+                                                      $extra",
+                                               undef, @args);
     defined($result)
         || ThrowUserError("missing_query", {'queryname' => $name,
                                             'sharer_id' => $sharer_id});
@@ -494,8 +503,10 @@ elsif (($cgi->param('cmdtype') eq "doit") && defined $cgi->param('remtype')) {
                 # No new query name has been given. We retrieve bug IDs
                 # currently set in the selected saved search.
                 $query_name = $cgi->param('oldqueryname');
-                my $old_query = LookupNamedQuery($query_name);
-                foreach my $bug_id (split(/[\s,=]+/, $old_query)) {
+                my $old_query = LookupNamedQuery($query_name, undef, LIST_OF_BUGS);
+                # We get the encoded query. We need to decode it.
+                my $old_cgi = new Bugzilla::CGI($old_query);
+                foreach my $bug_id (split /[\s,]+/, scalar $old_cgi->param('bug_id')) {
                     $bug_ids{$bug_id} = 1 if detaint_natural($bug_id);
                 }
             }
