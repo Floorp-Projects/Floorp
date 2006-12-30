@@ -85,6 +85,7 @@ private:
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 
+  // This never returns null
   const nsStyleStruct* GetStyleData(nsStyleStructID aSID);
 
   nsresult GetOffsetWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue);
