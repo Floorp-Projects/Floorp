@@ -5515,7 +5515,7 @@ nsBlockFrame::PaintTextDecorationLine(nsIRenderingContext& aRenderingContext,
         nsHTMLReflowState::GetContainingBlockFor(this);
       NS_ASSERTION(containingBlock, "Must have containing block!");
       indent = nscoord(styleText->mTextIndent.GetPercentValue() *
-                       containingBlock->GetRect().width);
+                       containingBlock->GetContentRect().width);
     }
 
     // Adjust the start position and the width of the decoration by the
