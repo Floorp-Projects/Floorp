@@ -1724,7 +1724,7 @@ void nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
     switch ( bordStyleRadius[i].GetUnit()) {
     case eStyleUnit_Percent:
       percent = bordStyleRadius[i].GetPercentValue();
-      borderRadii[i] = (nscoord)(percent * aBorderArea.width);
+      borderRadii[i] = (nscoord)(percent * aForFrame->GetSize().width);
       break;
     case eStyleUnit_Coord:
       borderRadii[i] = bordStyleRadius[i].GetCoordValue();
@@ -3347,7 +3347,8 @@ nsCSSRendering::PaintBackgroundColor(nsPresContext* aPresContext,
     borderRadii[side] = 0;
     switch (bordStyleRadius[side].GetUnit()) {
       case eStyleUnit_Percent:
-        borderRadii[side] = nscoord(bordStyleRadius[side].GetPercentValue() * aBgClipArea.width);
+        borderRadii[side] = nscoord(bordStyleRadius[side].GetPercentValue() *
+                                    aForFrame->GetSize().width);
         break;
       case eStyleUnit_Coord:
         borderRadii[side] = bordStyleRadius[side].GetCoordValue();
