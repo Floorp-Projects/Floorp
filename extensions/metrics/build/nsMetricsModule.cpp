@@ -42,6 +42,7 @@
 #include "nsWindowCollector.h"
 #include "nsProfileCollector.h"
 #include "nsUICommandCollector.h"
+#include "nsAutoCompleteCollector.h"
 #include "nsIGenericFactory.h"
 #include "nsICategoryManager.h"
 #include "nsServiceManagerUtils.h"
@@ -78,6 +79,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsLoadCollector, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowCollector)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsProfileCollector)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUICommandCollector)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteCollector)
 
 static const nsModuleComponentInfo components[] = {
   {
@@ -122,6 +124,12 @@ static const nsModuleComponentInfo components[] = {
     NS_UICOMMANDCOLLECTOR_CID,
     COLLECTOR_CONTRACTID("uielement"),
     nsUICommandCollectorConstructor
+  },
+  {
+    NS_AUTOCOMPLETECOLLECTOR_CLASSNAME,
+    NS_AUTOCOMPLETECOLLECTOR_CID,
+    COLLECTOR_CONTRACTID("autocomplete"),
+    nsAutoCompleteCollectorConstructor
   }
 };
 
