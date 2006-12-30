@@ -222,6 +222,9 @@ sub setup_patch_readers {
         && Bugzilla->params->{'cvsroot_get'}) 
     {
         require PatchReader::AddCVSContext;
+        # We need to set $cvsbin as global, because PatchReader::CVSClient
+        # needs it in order to find 'cvs'.
+        $main::cvsbin = Bugzilla->localconfig->{cvsbin};
         $last_reader->sends_data_to(
           new PatchReader::AddCVSContext($context, Bugzilla->params->{'cvsroot_get'}));
         $last_reader = $last_reader->sends_data_to;
