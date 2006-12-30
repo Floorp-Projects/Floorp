@@ -1,4 +1,4 @@
-# $Id: Config.pm,v 1.6 2005/11/20 22:10:40 timeless%mozdev.org Exp $
+# $Id: Config.pm,v 1.7 2006/12/30 02:42:27 reed%reedloden.com Exp $
 
 package LXR::Config;
 
@@ -42,8 +42,12 @@ sub treeify {
         #To compute which tree we're looking at, grab the second to last
         #component from the script name which will be of the form: 
         # /seamonkey/source
-        $self->{'treename'} = $ENV{'SCRIPT_NAME'};
-        $self->{'treename'} =~ s/.*\/([^\/]+)\/[\w]*/$1/;
+        if ($ENV{'SCRIPT_NAME'} =~ /.*\/([^\/]+)\/[\w]*$/) {
+            $self->{'treename'} = $1;
+        }
+        else {
+            die "Invalid treename in URL";
+        }
 
         #Match the tree name against our list of trees and extract the proper
         #directory. Set "sourceroot" to this directory.
