@@ -5693,6 +5693,11 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c spellcheck` -ne 0; then
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|spellcheck||g'`
 fi
 
+if test -n "$MOZ_NO_XPCOM_OBSOLETE" && test `echo "$MOZ_EXTENSIONS" | grep -c sroaming` -ne 0; then
+    AC_MSG_WARN([Cannot currently build sroaming without xpcom obsolete -- bug 249343. Removing sroaming from MOZ_EXTENSIONS.])
+    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|sroaming||'`
+fi
+
 dnl Remove dupes
 MOZ_EXTENSIONS=`${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_EXTENSIONS}`
 
