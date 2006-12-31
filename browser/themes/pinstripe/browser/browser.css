@@ -303,7 +303,7 @@ toolbar[mode="icons"] #forward-button .toolbarbutton-text-box {
 /* ----- DEFAULT BACK BUTTON DROPMARKER ----- */	
 
 #back-button .toolbarbutton-menubutton-dropmarker {
-  list-style-image: url("chrome://browser/skin/dropmark-nav.png");
+  list-style-image: url("chrome://global/skin/toolbar/dropmark-nav.png");
   -moz-image-region: rect(0px, 14px, 24px, 0px);
 }
 
@@ -313,7 +313,7 @@ toolbar[mode="icons"] #forward-button .toolbarbutton-text-box {
 }
 
 #back-button[disabled="true"] .toolbarbutton-menubutton-dropmarker {
-  list-style-image: url("chrome://browser/skin/dropmark-nav.png") !important;
+  list-style-image: url("chrome://global/skin/toolbar/dropmark-nav.png") !important;
   -moz-image-region: rect(48px, 14px, 72px, 0px) !important;
 }
 
@@ -347,7 +347,7 @@ toolbar[mode="icons"] #forward-button .toolbarbutton-text-box {
 /* ----- DEFAULT FORWARD BUTTON DROPMARKER ----- */	
 
 #forward-button .toolbarbutton-menubutton-dropmarker {
-  list-style-image: url("chrome://browser/skin/dropmark-nav.png");
+  list-style-image: url("chrome://global/skin/toolbar/dropmark-nav.png");
   -moz-image-region: rect(0px, 14px, 24px, 0px);
 }
 #forward-button:hover .toolbarbutton-menubutton-dropmarker, 
@@ -355,7 +355,7 @@ toolbar[mode="icons"] #forward-button .toolbarbutton-text-box {
   -moz-image-region: rect(24px, 14px, 48px, 0px);
 }
 #forward-button[disabled="true"] .toolbarbutton-menubutton-dropmarker {
-  list-style-image: url("chrome://browser/skin/dropmark-nav.png") !important;
+  list-style-image: url("chrome://global/skin/toolbar/dropmark-nav.png") !important;
   -moz-image-region: rect(48px, 14px, 72px, 0px) !important;
 }
 #forward-button:hover:active .toolbarbutton-menubutton-dropmarker, 
@@ -576,7 +576,7 @@ toolbar[iconsize="small"] #back-button[open="true"] {
 
 toolbar[iconsize="small"] #back-button .toolbarbutton-menubutton-dropmarker {
    margin-top: 0px;
-  list-style-image: url("chrome://browser/skin/dropmark-nav-small.png");
+  list-style-image: url("chrome://global/skin/toolbar/dropmark-nav-small.png");
   -moz-image-region: rect(0px, 14px, 16px, 0px);
 }
 
@@ -586,7 +586,7 @@ toolbar[iconsize="small"] #back-button[buttonover="true"] .toolbarbutton-menubut
 }
 
 toolbar[iconsize="small"] #back-button[disabled="true"] .toolbarbutton-menubutton-dropmarker {
-  list-style-image: url("chrome://browser/skin/dropmark-nav-small.png") !important;
+  list-style-image: url("chrome://global/skin/toolbar/dropmark-nav-small.png") !important;
   -moz-image-region: rect(32px, 14px, 48px, 0px) !important;
 }
 
@@ -617,7 +617,7 @@ toolbar[iconsize="small"] #forward-button[open="true"] {
 
 toolbar[iconsize="small"] #forward-button .toolbarbutton-menubutton-dropmarker { 
   margin-top: 0px; 
-  list-style-image: url("chrome://browser/skin/dropmark-nav-small.png");
+  list-style-image: url("chrome://global/skin/toolbar/dropmark-nav-small.png");
   -moz-image-region: rect(0px, 14px, 16px, 0px);
 }
 
@@ -627,7 +627,7 @@ toolbar[iconsize="small"] #forward-button[buttonover="true"] .toolbarbutton-menu
 }
 
 toolbar[iconsize="small"] #forward-button[disabled="true"] .toolbarbutton-menubutton-dropmarker {
-  list-style-image: url("chrome://browser/skin/dropmark-nav-small.png") !important;
+  list-style-image: url("chrome://global/skin/toolbar/dropmark-nav-small.png") !important;
   -moz-image-region: rect(32px, 14px, 48px, 0px) !important;
 }
 
