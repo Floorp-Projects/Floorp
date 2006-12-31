@@ -91,7 +91,9 @@
           [% attachment.attacher.name || attachment.attacher.login FILTER html %]
           </a>
         </td>
-        <td valign="top">[% attachment.attached FILTER time %]</td>
+        <td valign="top">
+          <a href="#attach_[% attachment.id %]">[% attachment.attached FILTER time %]</a>
+        </td>
         <td valign="top">
           [% IF attachment.datasize %]
             [% attachment.datasize FILTER unitconvert %]
