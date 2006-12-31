@@ -94,6 +94,8 @@ interface nsIPrompt : nsISupports
 
     const unsigned long STD_OK_CANCEL_BUTTONS      = (BUTTON_TITLE_OK * BUTTON_POS_0) +
                                                     (BUTTON_TITLE_CANCEL * BUTTON_POS_1);
+    const unsigned long STD_YES_NO_BUTTONS         = (BUTTON_TITLE_YES * BUTTON_POS_0) +
+                                                    (BUTTON_TITLE_NO * BUTTON_POS_1);
 
     PRInt32 confirmEx(in wstring dialogTitle,
                    in wstring text,
