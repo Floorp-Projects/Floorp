@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Dan Rosen <dr@netscape.com>
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -509,10 +510,10 @@ void DocumentViewerImpl::PrepareToStartLoad()
 // Note: operator new zeros our memory, so no need to init things to null.
 DocumentViewerImpl::DocumentViewerImpl(nsPresContext* aPresContext)
   : mPresContext(aPresContext),
+    mTextZoom(1.0),
     mIsSticky(PR_TRUE),
     mHintCharsetSource(kCharsetUninitialized),
-    mIsPageMode(PR_FALSE),
-    mTextZoom(1.0)
+    mIsPageMode(PR_FALSE)
 {
   PrepareToStartLoad();
 }
@@ -993,6 +994,9 @@ DocumentViewerImpl::DumpContentToPPM(const char* aFileName)
             }
             
             delete[] buf;
+          }
+          else {
+            status = "OOM";
           }
           surface->Unlock();
         }
@@ -3463,14 +3467,12 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
 
   nsCOMPtr<nsIPresShell> presShell;
   docShell->GetPresShell(getter_AddRefs(presShell));
-
-  if (!presShell) {
-    // A frame that's not displayed can't be printed!
-    PR_PL(("Printing Stopped - PreShell was NULL!"));
-    return NS_OK;
+  if (!presShell || !mDocument || !mDeviceContext || !mParentWidget) {
+    PR_PL(("Can't Print without pres shell, document etc"));
+    return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = NS_ERROR_FAILURE;
+  nsresult rv;
 
   // if we are printing another URL, then exit
   // the reason we check here is because this method can be called while
@@ -3493,13 +3495,19 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
     mPrintEngine = new nsPrintEngine();
     NS_ENSURE_TRUE(mPrintEngine, NS_ERROR_OUT_OF_MEMORY);
 
+    rv = mPrintEngine->Initialize(this, docShell, mDocument, 
+                                  mDeviceContext, mParentWidget,
 #ifdef NS_DEBUG
-    mPrintEngine->Initialize(this, docShell, mDocument, 
-                             mDeviceContext, mParentWidget, mDebugFile);
+                                  mDebugFile
 #else
-    mPrintEngine->Initialize(this, docShell, mDocument, 
-                             mDeviceContext, mParentWidget, nsnull);
+                                  nsnull
 #endif
+                                  );
+    if (NS_FAILED(rv)) {
+      mPrintEngine->Destroy();
+      mPrintEngine = nsnull;
+      return rv;
+    }
   }
 
   rv = mPrintEngine->Print(aPrintSettings, aWebProgressListener);
@@ -3539,19 +3547,32 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
   }
 #endif
 
+  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
+  NS_ASSERTION(docShell, "This has to be a docshell");
+  nsCOMPtr<nsIPresShell> presShell;
+  docShell->GetPresShell(getter_AddRefs(presShell));
+  if (!presShell || !mDocument || !mDeviceContext || !mParentWidget) {
+    PR_PL(("Can't Print Preview without pres shell, document etc"));
+    return NS_ERROR_FAILURE;
+  }
+
   if (!mPrintEngine) {
     mPrintEngine = new nsPrintEngine();
     NS_ENSURE_TRUE(mPrintEngine, NS_ERROR_OUT_OF_MEMORY);
 
-    mPrintEngine->Initialize(this,
-                             nsCOMPtr<nsISupports>(do_QueryReferent(mContainer)),
-                             mDocument, mDeviceContext, mParentWidget,
+    rv = mPrintEngine->Initialize(this, docShell, mDocument,
+                                  mDeviceContext, mParentWidget,
 #ifdef NS_DEBUG
-                             mDebugFile
+                                  mDebugFile
 #else
-                             nsnull
+                                  nsnull
 #endif
-                             );
+                                  );
+    if (NS_FAILED(rv)) {
+      mPrintEngine->Destroy();
+      mPrintEngine = nsnull;
+      return rv;
+    }
   }
 
   rv = mPrintEngine->PrintPreview(aPrintSettings, aChildDOMWin, aWebProgressListener);
