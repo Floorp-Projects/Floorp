@@ -81,6 +81,8 @@
   </stringbundleset>
   
   <commandset id="editMenuCommands"/>
+  <commandset id="baseMenuCommandSet"/>
+  <keyset id="baseMenuKeyset"/>
 
 #include commands.inc
   <commandset id="organizerCommandSet">
@@ -168,7 +170,13 @@
          command="placesCmd_reload" 
          key="&cmd.reload.key;" modifiers="accel"/>
   </keyset>
-  
+
+  <keyset id="editMenuKeys">
+#ifdef XP_MACOSX
+    <key id="key_delete2" keycode="VK_BACK" command="cmd_delete"/>
+#endif
+  </keyset>
+
   <popupset id="placesPopupset">
 #include context.inc
   </popupset>
@@ -257,16 +265,11 @@
                     oncommand="ViewMenu.setSortColumn(null, 'descending'); event.stopPropagation();"/>
         </menupopup>
       </menu>
-      <menu id="helpMenu">
-        <menupopup id="menu_HelpPopup">
-          <menuitem id="helpUsingBookmarks"
-                    label="&help.usingBookmarks.label;" accesskey="&help.usingBookmarks.accesskey;"/>
-          <menuitem id="helpUsingHistory"
-                    label="&help.usingHistory.label;" accesskey="&help.usingHistory.accesskey;"/>
-          <menuitem id="helpAdvancedTips"
-                    label="&help.advancedTips.label;" accesskey="&help.advancedTips.accesskey;"/>
-        </menupopup>
-      </menu>
+#ifdef XP_MACOSX
+      <menu id="windowMenu"/>
+      <menupopup id="menu_ToolsPopup"/>
+#endif
+      <menu id="helpMenu"/>
     </menubar>
     <toolbar class="chromeclass-toolbar">
       <textbox id="searchFilter" style="width: 23em;" timeout="500"
