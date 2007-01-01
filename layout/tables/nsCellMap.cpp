@@ -371,8 +371,7 @@ nsTableCellMap::GetEffectiveRowSpan(PRInt32 aRowIndex,
   nsCellMap* map = mFirstMap;
   while (map) {
     if (map->GetRowCount() > rowIndex) {
-      PRBool zeroRowSpan;
-      return map->GetRowSpan(rowIndex, aColIndex, PR_TRUE, zeroRowSpan);
+      return map->GetRowSpan(rowIndex, aColIndex, PR_TRUE);
     }
     rowIndex -= map->GetRowCount();
     map = map->GetNextSibling();
@@ -1762,7 +1761,11 @@ void nsCellMap::ExpandWithCells(nsTableCellMap& aMap,
       // Pre-allocate all the cells we'll need in this array, setting
       // them to null.
       // Have to have the cast to get the template to do the right thing.
-      if (!row.InsertElementsAt(aColIndex, endColIndex - aColIndex + 1,
+      PRUint32 insertionIndex = row.Length();
+      if (insertionIndex > aColIndex) {
+        insertionIndex = aColIndex;
+      }
+      if (!row.InsertElementsAt(insertionIndex, endColIndex - insertionIndex + 1,
                                 (CellData*)nsnull) &&
           rowX == aRowIndex) {
         // Failed to insert the slots, and this is the very first row.  That
@@ -1989,10 +1992,8 @@ nsCellMap::GetNumCellsOriginatingInRow(PRInt32 aRowIndex) const
 
 PRInt32 nsCellMap::GetRowSpan(PRInt32  aRowIndex,
                               PRInt32  aColIndex,
-                              PRBool   aGetEffective,
-                              PRBool&  aZeroRowSpan) const
+                              PRBool   aGetEffective) const
 {
-  aZeroRowSpan = PR_FALSE;
   PRInt32 rowSpan = 1;
   PRInt32 rowCount = (aGetEffective) ? mContentRowCount : mRows.Length();
   PRInt32 rowX;
@@ -2001,18 +2002,12 @@ PRInt32 nsCellMap::GetRowSpan(PRInt32  aRowIndex,
     if (data) {
       if (data->IsRowSpan()) {
         rowSpan++;
-        if (data->IsZeroRowSpan()) {
-          aZeroRowSpan = PR_TRUE;
-        }
       }
       else {
         break;
       }
     } 
     else break;
-  }
-  if (aZeroRowSpan && (rowX < rowCount)) {
-    rowSpan += rowCount - rowX;
   }
   return rowSpan;
 }
@@ -2027,9 +2022,9 @@ void nsCellMap::ShrinkWithoutCell(nsTableCellMap&   aMap,
   PRUint32 colX, rowX;
 
   // get the rowspan and colspan from the cell map since the content may have changed
-  PRBool  zeroRowSpan, zeroColSpan;
+  PRBool zeroColSpan;
   PRUint32 numCols = aMap.GetColCount();
-  PRInt32 rowSpan = GetRowSpan(aRowIndex, aColIndex, PR_FALSE, zeroRowSpan);
+  PRInt32 rowSpan = GetRowSpan(aRowIndex, aColIndex, PR_FALSE);
   PRUint32 colSpan = GetEffectiveColSpan(aMap, aRowIndex, aColIndex, zeroColSpan);
   PRUint32 endRowIndex = aRowIndex + rowSpan - 1;
   PRUint32 endColIndex = aColIndex + colSpan - 1;
@@ -2299,9 +2294,7 @@ void nsCellMap::RemoveCell(nsTableCellMap&   aMap,
     }
   }
 
-  PRBool isZeroRowSpan;
-  PRInt32 rowSpan = GetRowSpan(aRowIndex, startColIndex, PR_FALSE,
-                               isZeroRowSpan);
+  PRInt32 rowSpan = GetRowSpan(aRowIndex, startColIndex, PR_FALSE);
   // record whether removing the cells is going to cause complications due 
   // to existing row spans, col spans or table sizing. 
   PRBool spansCauseRebuild = CellsSpanInOrOut(aRowIndex,
