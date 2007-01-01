@@ -1,4 +1,4 @@
-#! /usr/bin/perl
+#! /usr/bin/perl -T
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public
@@ -264,7 +264,8 @@ sub get_filename {
     my $FILE_CHECKED = 0;
     my $file;
     my $partial_file;
-    my $path, $apath;
+    my $path;
+    my $apath;
     if ($flag_debug) {
         print STDERR "\n-- get_filename ------------------------\n";
     }
