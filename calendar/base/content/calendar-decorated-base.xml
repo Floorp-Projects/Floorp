@@ -252,12 +252,6 @@
                     throw NS_ERROR_NOT_IMPLEMENTED;
                 ]]></body>
             </method>
-            <method name="removeNonWorkdays">
-                <body><![CDATA[
-                    // No op
-                    return;
-                ]]></body>
-            </method>
         </implementation>
         <handlers>
           <handler event="move">

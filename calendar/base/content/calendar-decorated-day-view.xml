@@ -149,12 +149,6 @@
                     document.getAnonymousElementByAttribute(this, "anonid", "nav-control").setNames(nameArray);
                 ]]></body>
             </method>
-            <method name="removeNonWorkdays">
-                <body><![CDATA[
-                    // No op
-                    return;
-                ]]></body>
-            </method>
         </implementation>
     </binding>
 </bindings>

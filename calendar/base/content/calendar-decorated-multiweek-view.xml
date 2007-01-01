@@ -201,10 +201,6 @@
 
                     viewElement.setDateRange(d1,d2);
 
-                    if (this.mWorkdaysOnly) {
-                        this.removeNonWorkdays();
-                    }
-
                     viewElement.selectedDay = aDate;
                     this.setNavLabels(firstWeekDate);
                 ]]></body>
@@ -260,13 +256,6 @@
                         nameArray.push(weekTitle);
                     }
                     document.getAnonymousElementByAttribute(this, "anonid", "nav-control").setNames(nameArray);
-                ]]></body>
-            </method>
-            <method name="removeNonWorkdays">
-                <body><![CDATA[
-                    // This is handled by our pref observers and in the
-                    // embedded view.
-                    return;
                 ]]></body>
             </method>
 
