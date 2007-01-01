@@ -1876,9 +1876,10 @@ DocumentViewerImpl::SetBounds(const nsRect& aBounds)
     mPreviousViewer->SetBounds(aBounds);
 
 #if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
-  if (GetIsPrintPreview()) {
-    mPrintEngine->GetPrintPreviewWindow()->Resize(aBounds.x, aBounds.y, aBounds.width, aBounds.height,
-                    PR_FALSE);
+  if (GetIsPrintPreview() && !mPrintEngine->GetIsCreatingPrintPreview()) {
+    mPrintEngine->GetPrintPreviewWindow()->Resize(aBounds.x, aBounds.y,
+                                                  aBounds.width, aBounds.height,
+                                                  PR_FALSE);
   }
 #endif
   return NS_OK;
@@ -3589,11 +3590,14 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
 NS_IMETHODIMP
 DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
 {
-  if (!GetIsPrintPreview()) return NS_ERROR_FAILURE;
+  if (!GetIsPrintPreview() ||
+      mPrintEngine->GetIsCreatingPrintPreview())
+    return NS_ERROR_FAILURE;
 
   nsIScrollableView* scrollableView = nsnull;
   mPrintEngine->GetPrintPreviewViewManager()->GetRootScrollableView(&scrollableView);
-  if (scrollableView == nsnull) return NS_OK;
+  if (scrollableView == nsnull)
+    return NS_OK;
 
   // Check to see if we can short circut scrolling to the top
   if (aType == nsIWebBrowserPrint::PRINTPREVIEW_HOME ||
