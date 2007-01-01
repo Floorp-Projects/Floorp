@@ -517,10 +517,9 @@ PRInt32 nsTableFrame::GetEffectiveRowSpan(const nsTableCellFrame& aCell,
   PRInt32 colIndex, rowIndex;
   aCell.GetColIndex(colIndex);
   aCell.GetRowIndex(rowIndex);
-  PRBool ignore;
 
   if (aCellMap) 
-    return aCellMap->GetRowSpan(rowIndex, colIndex, PR_TRUE, ignore);
+    return aCellMap->GetRowSpan(rowIndex, colIndex, PR_TRUE);
   else
     return tableCellMap->GetEffectiveRowSpan(rowIndex, colIndex);
 }

@@ -376,10 +376,15 @@ public:
    */
   PRBool HasMoreThanOneCell(PRInt32 aRowIndex) const;
 
+  /* Get the rowspan for a cell starting at aRowIndex and aColIndex. 
+   * If aGetEffective is true the size will not exceed the last content based
+   * row. Cells can have a specified rowspan that extends below the last
+   * content based row. This is legitimate considering incr. reflow where the
+   * content rows will arive later. 
+   */
   PRInt32 GetRowSpan(PRInt32 aRowIndex,
                      PRInt32 aColIndex,
-                     PRBool  aGetEffective,
-                     PRBool& aIsZeroRowSpan) const;
+                     PRBool  aGetEffective) const;
 
   PRInt32 GetEffectiveColSpan(const nsTableCellMap& aMap,
                               PRInt32     aRowIndex,
