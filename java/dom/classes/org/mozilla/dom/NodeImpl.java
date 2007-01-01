@@ -26,6 +26,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Document;
 import org.w3c.dom.DOMException;
+import org.w3c.dom.UserDataHandler;
 import org.w3c.dom.events.Event;
 import org.w3c.dom.events.EventTarget;
 import org.w3c.dom.events.EventListener;
@@ -219,7 +220,7 @@ public class NodeImpl implements Node, EventTarget {
         throw new UnsupportedOperationException();
     };
 
-    /**** level 3 methods
+
 public short compareDocumentPosition(Node other)  {
   throw new UnsupportedOperationException();
 }
@@ -253,6 +254,9 @@ public void setTextContent(String textContent)  {
 public Object setUserData(String key, Object data, UserDataHandler handler)  {
   throw new UnsupportedOperationException();
 }
-****/
+public String getTextContent() throws DOMException {
+    throw new UnsupportedOperationException();
+}
+
 }
 

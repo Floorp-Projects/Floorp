@@ -22,7 +22,9 @@
 package org.mozilla.dom;
 
 import org.w3c.dom.Attr;
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Element;
+import org.w3c.dom.TypeInfo;
 
 public class AttrImpl extends NodeImpl implements Attr {
 
@@ -40,4 +42,13 @@ public class AttrImpl extends NodeImpl implements Attr {
      * @since DOM Level 2
      */
     public native Element getOwnerElement();
+
+    public boolean isId() {
+        throw new UnsupportedOperationException();
+    }
+
+    public TypeInfo getSchemaTypeInfo() {
+        throw new UnsupportedOperationException();
+    }
+
 }

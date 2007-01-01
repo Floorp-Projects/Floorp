@@ -25,6 +25,7 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.DOMException;
+import org.w3c.dom.TypeInfo;
 
 public class ElementImpl extends NodeImpl implements Element {
 
@@ -50,4 +51,20 @@ public class ElementImpl extends NodeImpl implements Element {
     public native NodeList getElementsByTagNameNS(String namespaceURI, String localName);
     public native boolean hasAttribute(String name);
     public native boolean hasAttributeNS(String namespaceURI, String localName);
+
+    public TypeInfo getSchemaTypeInfo() {
+        throw new UnsupportedOperationException();
+    }
+
+    public void setIdAttributeNS(String namespaceURI, String localName, boolean isId) throws DOMException {
+        throw new UnsupportedOperationException();
+    }
+
+    public void setIdAttribute(String name, boolean isId) throws DOMException {
+        throw new UnsupportedOperationException();
+    }
+
+    public void setIdAttributeNode(Attr idAttr, boolean isId) throws DOMException {
+        throw new UnsupportedOperationException();
+    }
 }

@@ -24,6 +24,7 @@ package org.mozilla.dom;
 import org.w3c.dom.Attr;
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.Comment;
+import org.w3c.dom.DOMConfiguration;
 import org.w3c.dom.Document;
 import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.Element;
@@ -75,4 +76,60 @@ public class DocumentImpl extends NodeImpl implements Document, DocumentEvent {
                                               throws DOMException {
         throw new UnsupportedOperationException();
     } 
+
+    public String getDocumentURI() {
+        throw new UnsupportedOperationException();
+    }
+
+    public DOMConfiguration getDomConfig() {
+        throw new UnsupportedOperationException();
+    }
+
+    public String getInputEncoding() {
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean getStrictErrorChecking() {
+        throw new UnsupportedOperationException();
+    }
+
+    public String getXmlEncoding() {
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean getXmlStandalone() {
+        throw new UnsupportedOperationException();
+    }
+
+    public String getXmlVersion() {
+        throw new UnsupportedOperationException();
+    }
+
+    public void normalizeDocument() {
+        throw new UnsupportedOperationException();
+    }
+
+    public Node renameNode(Node n, String namespaceURI, String qualifiedName) throws DOMException {
+        throw new UnsupportedOperationException();
+    }
+
+    public void setXmlVersion(String xmlVersion) throws DOMException {
+        throw new UnsupportedOperationException();
+    }
+
+    public void setDocumentURI(String documentURI) {
+        throw new UnsupportedOperationException();
+    }
+
+    public Node adoptNode(Node source) throws DOMException {
+        throw new UnsupportedOperationException();
+    }
+
+    public void setStrictErrorChecking(boolean strictErrorChecking) {
+        throw new UnsupportedOperationException();
+    }
+
+    public void setXmlStandalone(boolean xmlStandalone) throws DOMException {
+        throw new UnsupportedOperationException();
+    }
 }

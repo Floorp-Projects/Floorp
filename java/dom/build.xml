@@ -82,9 +82,6 @@
 
     <mkdir dir="${build.home}"/>
 
-    <unjar src="${basedir}/../external/dom2.jar" 
-           dest="${build.home}" />
-
   </target>
 
   <target name="compile.src">

@@ -59,4 +59,8 @@ public class DOMImplementationImpl implements DOMImplementation {
     public native Document createDocument(String namespaceURI,
 					  String qualifiedName,
 					  DocumentType doctype);
+
+    public Object getFeature(String feature, String version) {
+        throw new UnsupportedOperationException();
+    }
 }

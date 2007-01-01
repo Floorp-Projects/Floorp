@@ -31,4 +31,16 @@ public class EntityImpl extends NodeImpl implements Entity {
     public native String getPublicId();
     public native String getSystemId();
     public native String getNotationName();
+
+    public String getXmlVersion() {
+        throw new UnsupportedOperationException();
+    }
+
+    public String getXmlEncoding() {
+        throw new UnsupportedOperationException();
+    }
+
+    public String getInputEncoding() {
+        throw new UnsupportedOperationException();
+    }
 }
