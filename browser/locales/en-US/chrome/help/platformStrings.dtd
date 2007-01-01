@@ -37,3 +37,7 @@
 <!-- Image Location Base URL -->
 
 <!ENTITY images.baseURL     'http://www.mozilla.org/projects/firefox/help/2.0'>
+
+<!-- Copyright years -->
+
+<!ENTITY copyright.years    '2003-2007'>
