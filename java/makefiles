@@ -6,3 +6,4 @@ java/webclient/src_ie/Makefile
 java/webclient/src_share/Makefile
 java/plugins/src/Makefile
 java/plugins/jni/Makefile
+java/plugins/mozilla/Makefile
