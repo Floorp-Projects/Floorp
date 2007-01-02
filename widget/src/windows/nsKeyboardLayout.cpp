@@ -41,7 +41,10 @@
 #include "nsToolkit.h"
 #include "nsQuickSort.h"
 
+#include <winuser.h>
+#ifndef WINABLEAPI
 #include <winable.h>
+#endif
 
 #ifndef WINCE
 
