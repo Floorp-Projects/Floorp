@@ -83,9 +83,11 @@
     <command id="placesCmd_sortby:name"
              label="&cmd.sortby_name.label;"/>
 
-    <!-- XXX bug 364643: not implemented -->
     <command id="placesCmd_rename"
+             oncommand="goDoCommand('placesCmd_show:info');"
              label="&cmd.rename.label;"
-             accesskey="&cmd.rename.accesskey;"/>
+             accesskey="&cmd.rename.accesskey;">
+      <observes element="placesCmd_show:info" attribute="disabled"/>
+    </command>
 #endif
 </commandset>
