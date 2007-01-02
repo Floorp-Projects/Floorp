@@ -46,7 +46,7 @@ while (<STDIN>) {
 }
 close(FILE);
 chmod(0666, $filename);
-system("./addcheckin.pl",  $filename);
+system("/usr/bin/perl", "-w", "addcheckin.pl",  $filename);
 
 unlink($filename);
 

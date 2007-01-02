@@ -36,54 +36,57 @@ CO=@CO@
 RCSDIFF=@RCSDIFF@
 CVSGRAPH=@CVSGRAPH@
 
-FILES = CGI.pl			\
-	addcheckin.pl		\
-	admin.cgi		\
-	adminfuncs.pl		\
-	adminmail.pl		\
-	closemessage		\
-	contacthelp.html	\
-	countcheckins.cgi	\
-	createlegaldirs.pl	\
-	cvsblame.cgi		\
-	cvsblame.pl		\
-	cvsguess.cgi		\
-	cvsgraph.cgi		\
-	cvslog.cgi		\
-	cvsquery.cgi		\
-	cvsquery.pl		\
-	cvsqueryform.cgi	\
-	cvsregexp.html		\
-	cvsview2.cgi		\
-	defparams.pl		\
-	doadmin.cgi		\
-	doeditcheckin.cgi	\
-	doeditmessage.cgi	\
-	doeditparams.cgi	\
-	doeditwhiteboard.cgi	\
-	dolog.pl		\
-	dotweak.cgi		\
-	editcheckin.cgi		\
-	editmessage.cgi		\
-	editparams.cgi		\
-	editwhiteboard.cgi	\
-	get_line.pl		\
-	globals.pl		\
-	handleAdminMail.pl	\
-	handleCheckinMail.pl	\
-	index.html		\
-	maketables.sh		\
-	moduleanalyse.cgi	\
-	modules.pl		\
-	multidiff.cgi		\
-	openmessage		\
-	rebuildcvshistory.cgi	\
-	repophook.cgi		\
-	rview.cgi		\
-	showcheckins.cgi	\
-	switchtree.cgi		\
-	toplevel.cgi		\
-	viewold.cgi
+FILES =		CGI.pl			\
+		addcheckin.pl		\
+		adminfuncs.pl		\
+		adminmail.pl		\
+		bonsai.gif		\
+		bonsai.ico		\
+		closemessage		\
+		contacthelp.html	\
+		createlegaldirs.pl	\
+		cvsblame.pl		\
+		cvsquery.pl		\
+		cvsregexp.html		\
+		defparams.pl		\
+		dolog.pl		\
+		get_line.pl		\
+		globals.pl		\
+		handleAdminMail.pl	\
+		handleCheckinMail.pl	\
+		index.html		\
+		modules.pl		\
+		openmessage
+
+EXECFILES =	admin.cgi		\
+		countcheckins.cgi	\
+		cvsblame.cgi		\
+		cvsguess.cgi		\
+		cvsgraph.cgi		\
+		cvslog.cgi		\
+		cvsquery.cgi		\
+		cvsqueryform.cgi	\
+		cvsview2.cgi		\
+		doadmin.cgi		\
+		doeditcheckin.cgi	\
+		doeditmessage.cgi	\
+		doeditparams.cgi	\
+		doeditwhiteboard.cgi	\
+		dotweak.cgi		\
+		editcheckin.cgi		\
+		editmessage.cgi		\
+		editparams.cgi		\
+		editwhiteboard.cgi	\
+		maketables.sh		\
+		moduleanalyse.cgi	\
+		multidiff.cgi		\
+		rebuildcvshistory.cgi	\
+		repophook.cgi		\
+		rview.cgi		\
+		showcheckins.cgi	\
+		switchtree.cgi		\
+		toplevel.cgi		\
+		viewold.cgi
 
 all: treeconfig.pl params
 
@@ -104,11 +107,12 @@ install: all
 	  echo Installing $$I && \
           sed -e s#/usr/bin/perl#$(PERL)#g \
               $$I > $(PREFIX)/$$I && \
-	chmod 755 $(PREFIX)/$$I; done
-	cp bonsai.gif $(PREFIX)
-	chmod 644 $(PREFIX)/bonsai.gif
-	cp bonsai.ico $(PREFIX)
-	chmod 644 $(PREFIX)/bonsai.ico
+	  chmod 644 $(PREFIX)/$$I; done
+	@for I in $(EXECFILES); do \
+	  echo Installing CGI file $$I && \
+          sed -e s#/usr/bin/perl#$(PERL)#g \
+              $$I > $(PREFIX)/$$I && \
+	  chmod 755 $(PREFIX)/$$I; done
 	-mkdir -p $(PREFIX)/data && chmod 777 $(PREFIX)/data
 	cp htaccess-dist $(PREFIX)/data/.htaccess
 	chmod 644 $(PREFIX)/data/.htaccess

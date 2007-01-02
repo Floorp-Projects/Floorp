@@ -32,7 +32,7 @@
 $inprocess = "data/queue/processing-$$";
 
 foreach $file (sort(glob("data/queue/*.q"))) {
-    rename $file, $inprocess || die "Couldn't rename queue file.";
-    system "./dolog.pl < $inprocess";
-    rename $inprocess, "$file.done";
+    rename($file, $inprocess) || die "Couldn't rename queue file.";
+    system("/usr/bin/perl", "-T", "dolog.pl", "<", "$inprocess");
+    rename($inprocess, "$file.done");
 }

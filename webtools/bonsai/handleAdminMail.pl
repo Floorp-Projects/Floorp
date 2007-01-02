@@ -46,7 +46,7 @@ while (<STDIN>) {
 }
 close(FILE);
 chmod(0666, $filename);
-system("./adminmail.pl", $filename);
+system("/usr/bin/perl", "-w", "adminmail.pl", $filename);
 
 # unlink($filename);
 

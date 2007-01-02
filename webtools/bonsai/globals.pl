@@ -620,7 +620,7 @@ sub LoadDirList {
      if (-f $modules) {
           if ((!(-f $dirsfile)) ||
               ((-M $dirsfile) > (-M $modules))) {
-               system("./createlegaldirs.pl", $::TreeID);
+               system("/usr/bin/perl", "createlegaldirs.pl", $::TreeID);
           }
      }
 
