@@ -355,5 +355,5 @@ var gPhishingDetector = {
     }
 
     return true; // allow the link to load
-  },  
+  }
 };
