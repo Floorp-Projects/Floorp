@@ -5422,8 +5422,7 @@ nsDOMClassInfo::UnsetExternallyReferenced(nsIDOMGCParticipant *aParticipant)
 {
   NS_PRECONDITION(aParticipant, "unexpected null pointer");
 
-  NS_ASSERTION(sExternallyReferencedTable.ops,
-               "Unexpected null sExternallyReferencedTable.ops");
+  NS_ASSERTION(sExternallyReferencedTable.ops, "unbalanced call");
   if (sExternallyReferencedTable.ops) {
 #ifdef DEBUG
     PRUint32 count = sExternallyReferencedTable.entryCount;
@@ -5431,8 +5430,8 @@ nsDOMClassInfo::UnsetExternallyReferenced(nsIDOMGCParticipant *aParticipant)
     PL_DHashTableOperate(&sExternallyReferencedTable, aParticipant,
                          PL_DHASH_REMOVE);
 #ifdef DEBUG
-    NS_ASSERTION(count != sExternallyReferencedTable.entryCount,
-                 "DOMGCParticipant wasn't removed from sExternallyReferencedTable.");
+    NS_ASSERTION(count == sExternallyReferencedTable.entryCount + 1,
+                 "unbalanced call");
 #endif
   }
 
