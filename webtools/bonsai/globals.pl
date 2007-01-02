@@ -1503,14 +1503,14 @@ sub canonpath {
     my (@list);
 
     return "" if (!defined($path) || $path eq "");
-    my $nroot = split('/', $root);
+    my @nroot = split('/', $root);
     $path =~ s@//+@/@g;
     foreach my $dir (split('/', $path)) {
         if ($dir eq '.') {
             next;
         } elsif ($dir eq '..') {
             pop @list;
-            return "" if (@list < $nroot);
+            return "" if (@list < @nroot);
         } else {
             push @list, $dir;
         }
