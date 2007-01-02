@@ -93,7 +93,6 @@ create table users (
     id mediumint not null auto_increment primary key,
     email varchar(128) not null,
     realname varchar(255) not null,
-    pserverhosts varchar(255),
     passwd varchar(64) not null,
     gila_group enum("None", "webmonkey", "cvsadm") not null default "None",
     cvs_group enum("None", "cvsuser", "cvsadm") not null default "None",

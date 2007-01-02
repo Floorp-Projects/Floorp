@@ -23,3 +23,7 @@ older version of Despot.
 * If you installed before December 19, 2006...
   - Run the following commands on your MySQL database:
     ALTER TABLE partitions ADD ownerspagedisplay enum("Yes", "No") not null default "Yes" AFTER doclinks;
+
+* If you installed before January 2, 2007...
+  - Run the following commands on your MySQL database:
+    ALTER TABLE users DROP pserverhosts;

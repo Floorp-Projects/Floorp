@@ -326,13 +326,12 @@ sub AddUser {
     if ($row[0] < 1) {
         my $p = "";
         my $realname = "";
-        my $pserverhosts = "";
         my $plain = pickrandompassword();
         $p = cryptit($plain);
         my $feedback = "'" . tt($plain) . "'";
         my $mailwords = "of '$plain'";
-        my $sth = $::db->do("INSERT INTO users (email, passwd, neednewpassword, realname, pserverhosts) VALUES (?,?,?,?,?)",
-            undef, $email, $p, 'Yes', $realname, $pserverhosts);
+        my $sth = $::db->do("INSERT INTO users (email, passwd, neednewpassword, realname) VALUES (?,?,?,?)",
+            undef, $email, $p, 'Yes', $realname);
         PrintHeader();
         print p("New account created.  Password initialized to $feedback; " .
                 "please " .
