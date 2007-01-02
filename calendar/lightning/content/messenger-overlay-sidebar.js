@@ -44,14 +44,7 @@
 
 function ltnSidebarCalendarSelected(tree)
 {
-    var selectedCalendar = ltnSelectedCalendar();
-    if (selectedCalendar) {
-        var compositeCalendar = getCompositeCalendar();
-        if (!compositeCalendar.getCalendar(selectedCalendar.uri)) {
-            compositeCalendar.addCalendar(selectedCalendar);
-        }
-        compositeCalendar.defaultCalendar = selectedCalendar;
-    }
+   getCompositeCalendar().defaultCalendar = ltnSelectedCalendar();
 }
 
 function ltnSelectedCalendar()
