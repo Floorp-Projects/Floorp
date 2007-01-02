@@ -57,6 +57,7 @@ classic.jar:
         skin/classic/browser/places/toolbarDropMarker.png       (places/toolbarDropMarker.png)
         skin/classic/browser/places/folderDragOver.png          (places/folderDragOver.png)
         skin/classic/browser/places/bookmarkProperties.css      (places/bookmarkProperties.css)
+        skin/classic/browser/places/organizer-toolbar.png       (bookmarks/Bookmarks-toolbar.png)
 #else
         skin/classic/browser/Bookmarks-folder.png
         skin/classic/browser/bookmarks/addBookmark.css          (bookmarks/addBookmark.css)

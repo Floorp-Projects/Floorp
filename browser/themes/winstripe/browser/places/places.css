@@ -273,3 +273,115 @@ treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
   -moz-border-top-colors: ThreeDShadow ThreeDHighlight;
 }
 
+/**
+ * mainToolbar
+ * style rules are (mostly) copied over from bookmarkManager.css.
+ */
+#mainToolbar toolbarbutton {
+  list-style-image: url("chrome://browser/skin/places/organizer-toolbar.png");
+  -moz-box-orient: vertical;
+  min-width: 57px;
+  padding: 5px;
+}
+
+#mainToolbar toolbarbutton > .toolbarbutton-icon {
+  -moz-margin-end: 0px;
+}
+
+/* new bookmark */
+#newbookmark {
+  -moz-image-region: rect(0px 24px 24px 0px);
+}
+#newbookmark:not([disabled="true"]):hover {
+  -moz-image-region: rect(24px 24px 48px 0px);
+}
+#newbookmark[disabled="true"] {
+  -moz-image-region: rect(72px 24px 96px 0px);
+}
+#newbookmark:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(48px 24px 72px 0px);
+}
+
+/* new folder */
+#newfolder {
+  -moz-image-region: rect(0px 48px 24px 24px);
+}
+#newfolder:not([disabled="true"]):hover {
+  -moz-image-region: rect(24px 48px 48px 24px);
+}
+#newfolder[disabled="true"] {
+   -moz-image-region: rect(72px 48px 96px 24px);
+}
+#newfolder:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(48px 48px 72px 24px);
+}
+
+/* new separator */
+#newseparator {
+  -moz-image-region: rect(0px 72px 24px 48px);
+}
+#newseparator:not([disabled="true"]):hover {
+  -moz-image-region: rect(24px 72px 48px 48px);
+}
+#newseparator[disabled="true"] {
+  -moz-image-region: rect(72px 72px 96px 48px);
+}
+#newseparator:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(48px 72px 72px 48px);
+}
+
+/* move bookmark */
+#moveBookmark {
+  -moz-image-region: rect(0px 96px 24px 72px);
+}
+#moveBookmark:not([disabled="true"]):hover {
+  -moz-image-region: rect(24px 96px 48px 72px);
+}
+#moveBookmark[disabled="true"] {
+  -moz-image-region: rect(72px 96px 96px 72px);
+}
+#moveBookmark:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(48px 96px 72px 72px);
+}
+
+/* properties */
+#properties {
+  -moz-image-region: rect(0px 120px 24px 96px);
+}
+#properties:not([disabled="true"]):hover {
+  -moz-image-region: rect(24px 120px 48px 96px);
+}
+#properties[disabled="true"] {
+  -moz-image-region: rect(72px 120px 96px 96px);
+}
+#properties:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(48px 120px 72px 96px);
+}
+
+/* rename */
+#rename {
+  -moz-image-region: rect(0px 144px 24px 120px);
+}
+#rename:not([disabled="true"]):hover {
+  -moz-image-region: rect(24px 144px 48px 120px);
+}
+#rename[disabled="true"] {
+  -moz-image-region: rect(72px 144px 96px 120px);
+}
+#rename:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(48px 144px 72px 120px);
+}
+
+/* delete */
+#delete {
+  -moz-image-region: rect(0px 168px 24px 144px);
+}
+#delete:not([disabled="true"]):hover {
+  -moz-image-region: rect(24px 168px 48px 144px);
+}
+#delete[disabled="true"] {
+  -moz-image-region: rect(72px 168px 96px 144px);
+}
+#delete:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(48px 168px 72px 144px);
+}
