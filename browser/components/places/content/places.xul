@@ -47,7 +47,12 @@
 <?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://browser/locale/places/places.dtd">
+<!DOCTYPE window [
+<!ENTITY % placesDTD SYSTEM "chrome://browser/locale/places/places.dtd">
+%placesDTD;
+<!ENTITY % editMenuOverlayDTD SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
+%editMenuOverlayDTD;
+]>
 
 <window id="places"
         title="&places.title;" 
@@ -271,6 +276,26 @@
 #endif
       <menu id="helpMenu"/>
     </menubar>
+
+    <toolbar id="mainToolbar" class="chromeclass-toolbar">
+      <toolbarbutton id="newbookmark" command="placesCmd_new:bookmark"/>
+      <toolbarbutton id="newfolder" command="placesCmd_new:folder"/>
+      <toolbarbutton id="newseparator" command="placesCmd_new:separator"/>
+      <toolbarseparator/>
+      <!-- Not yet implemented 
+      <toolbarbutton id="moveBookmark" label="&command.moveBookmarkShort.label;"
+                     accesskey="&command.moveBookmark.accesskey;"
+                     command="cmd_bm_movebookmark"/>
+      <toolbarseparator/>
+      -->
+      <toolbarbutton id="properties" command="placesCmd_show:info"/>
+      <toolbarbutton id="rename" command="placesCmd_rename"/>
+      <toolbarbutton id="delete"
+                     command="cmd_delete"
+                     label="&deleteCmd.label;"
+                     accesskey="&deleteCmd.accesskey;" />
+    </toolbar>
+
     <toolbar class="chromeclass-toolbar">
       <textbox id="searchFilter" style="width: 23em;" timeout="500"
                oncommand="PlacesSearchBox.search(this.value);" 
@@ -286,8 +311,6 @@
           </menupopup>
         </button>
       </textbox>
-      <toolbarbutton id="toolbarNewFolder" command="placesCmd_new:folder" accesskey="&cmd.new_folder.accesskey;"/>
-      <toolbarbutton id="toolbarDelete" command="placesCmd_edit:delete"/>
       <spacer flex="1"/>
       <toolbarbutton id="toolbarGroupOff" type="radio" group="grouping" 
                      observes="placesBC_grouping:off"/>
@@ -400,4 +423,3 @@
     <statusbarpanel id="status" flex="1"/>
   </statusbar>
 </window>
-
