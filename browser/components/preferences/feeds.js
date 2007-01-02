@@ -187,8 +187,9 @@ var gFeedsPane = {
       row.setAttribute("webhandlerurl", handlers[i].uri);
 
       var uri = ios.newURI(handlers[i].uri, null, null);
-      row.setAttribute("image", uri.prePath + "/favicon.ico");
-      
+      if (/^https?/.test(uri.scheme))
+        row.setAttribute("image", uri.prePath + "/favicon.ico");
+
       readersList.appendChild(row);
     }
   },

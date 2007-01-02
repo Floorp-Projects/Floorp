@@ -715,7 +715,7 @@ FeedWriter.prototype = {
         // For privacy reasons we cannot set the image attribute directly
         // to the icon url, see Bug 358878
         var uri = makeURI(handlers[i].uri);
-        if (uri) 
+        if (uri && /^https?/.test(uri.scheme))
           new iconDataURIGenerator(uri.prePath + "/favicon.ico", menuItem)
       }
     }
