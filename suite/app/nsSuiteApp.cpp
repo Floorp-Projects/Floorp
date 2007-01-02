@@ -52,7 +52,7 @@ static const nsXREAppData kAppData = {
   NS_STRINGIFY(APP_VERSION),
   NS_STRINGIFY(BUILD_ID),
   "{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}",
-  "Copyright (c) 1998-2006 mozilla.org",
+  "Copyright (c) 1998-2007 mozilla.org",
   NS_XRE_ENABLE_PROFILE_MIGRATOR |
   NS_XRE_ENABLE_EXTENSION_MANAGER
 };
