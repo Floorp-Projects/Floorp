@@ -154,7 +154,7 @@ sub change_passwd {
           $outfile = DataDir() . '/treepasswd';
      }
 
-     $encoded = crypt($::FORM{'newpassword'}, "aa");
+     $encoded = bz_crypt($::FORM{'newpassword'});
      unless (open(PASSWD, ">$outfile")) {
           error_screen("Oops -- Couldn't write password file!",
                        "Couldn't open `<tt>$outfile</tt>': $!.");

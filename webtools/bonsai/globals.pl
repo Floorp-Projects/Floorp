@@ -1031,15 +1031,45 @@ sub PrettyDelta {
 ##  Routines to check and verify passwords
 ##
 
+sub bz_crypt {
+    my ($password) = @_;
+
+    # The list of characters that can appear in a salt.  Salts and hashes
+    # are both encoded as a sequence of characters from a set containing
+    # 64 characters, each one of which represents 6 bits of the salt/hash.
+    # The encoding is similar to BASE64, the difference being that the
+    # BASE64 plus sign (+) is replaced with a forward slash (/).
+    my @saltchars = (0..9, 'A'..'Z', 'a'..'z', '.', '/');
+
+    # Generate the salt.  We use an 8 character (48 bit) salt for maximum
+    # security on systems whose crypt uses MD5.  Systems with older
+    # versions of crypt will just use the first two characters of the salt.
+    my $salt = '';
+    for ( my $i=0 ; $i < 8 ; ++$i ) {
+        $salt .= $saltchars[rand(64)];
+    }
+
+    # Crypt the password.
+    my $cryptedpassword = crypt($password, $salt);
+
+    # Return the crypted password.
+    return $cryptedpassword;
+}
+
 # Confirm that the given password is right.  If not, generate HTML and exit.
 
 sub CheckGlobalPassword {
-     my ($password, $encoded) = @_;
+     my ($password) = @_;
 
-     my $correct = trim(`cat data/passwd`);
-     $encoded = crypt($password, "aa")
-          unless ($encoded);
+     my $pw_file = 'data/passwd';
+     # Default salt in case treepasswd doesn't exist.
+     my $correct = "xxxxxxxx";
 
+     if (-f $pw_file) {
+          $correct = trim(`cat $pw_file`);
+     }
+
+     my $encoded = crypt($password, $correct);
      unless ($correct eq $encoded) {
           print "<TITLE>Bzzzzt!</TITLE>
 
@@ -1054,15 +1084,16 @@ Please click the <b>Back</b> button and try again.";
 sub CheckPassword {
      my ($password) = @_;
 
-     my $encoded = crypt($password, "aa");
      my $pw_file = DataDir() . "/treepasswd";
-     my $correct = "xxx $encoded";
+     # Default salt in case treepasswd doesn't exist.
+     my $correct = "xxxxxxxx";
 
      if (-f $pw_file) {
           $correct = trim(`cat $pw_file`);
      }
 
-     CheckGlobalPassword($password, $encoded)
+     my $encoded = crypt($password, $correct);
+     CheckGlobalPassword($password)
           unless ($correct eq $encoded);
 }
 
