@@ -1,4 +1,4 @@
-# 
+#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -66,9 +66,9 @@ ifdef MOZ_MICROBEMBED_DYN
 MOZ_GTKEMBED_DYN = 1
 endif
 
-ifdef MOZ_GNOMEVFS_CFLAGS 
-DEFINES += -DMOZ_ENABLE_GNOMEVFS
-endif
+#ifdef MOZ_GNOMEVFS_CFLAGS
+#DEFINES += -DMOZ_ENABLE_GNOMEVFS
+#endif
 
 ifdef MOZ_GTKEMBED_DYN
 FORCE_SHARED_LIB = 1
@@ -122,7 +122,8 @@ REQUIRES	= xpcom \
 		  chardet \
 		  find \
 		  webbrowserpersist \
-	 	  cookie \
+		  cookie \
+		  nkcache \
 		  $(NULL)
 
 ifdef ACCESSIBILITY
@@ -218,10 +219,13 @@ EXTRA_DSO_LDOPTS += \
 		$(MOZ_GTK2_LIBS) \
 		$(XT_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
+		$(NULL)
+ifdef MOZ_GNOMEVFS_CFLAGS
+EXTRA_DSO_LDOPTS += \
 		$(MOZ_GNOMEVFS_LIBS) \
 		$(NULL)
 endif
-
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
@@ -237,8 +241,12 @@ DEFINES         += -D_TIME_H=1
 endif
 endif
 
-CXXFLAGS        += $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS) $(MOZ_GNOMEVFS_CFLAGS)
-CFLAGS          += $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS) $(MOZ_GNOMEVFS_CFLAGS)
+CXXFLAGS        += $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS)
+CFLAGS          += $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS)
+ifdef MOZ_GNOMEVFS_CFLAGS
+CXXFLAGS        += $(MOZ_GNOMEVFS_CFLAGS)
+CFLAGS          += $(MOZ_GNOMEVFS_CFLAGS)
+endif
 DEFINES         += -D_IMPL_GTKMOZEMBED
 
 

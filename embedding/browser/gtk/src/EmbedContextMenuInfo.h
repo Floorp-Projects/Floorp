@@ -50,8 +50,8 @@
 #include "nsIFrame.h"
 // for strings
 #ifdef MOZILLA_INTERNAL_API
-#include <nsXPIDLString.h>
-#include <nsReadableUtils.h>
+#include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #endif
 #include "EmbedWindow.h"
 #include "nsIDOMNSHTMLElement.h"
@@ -73,9 +73,11 @@ public:
   nsresult          GetElementForScroll(nsIDOMEvent *aEvent);
   nsresult          CheckDomImageElement(nsIDOMNode *node, nsString& aHref,
                                        PRInt32 *aWidth, PRInt32 *aHeight);
+  nsresult          GetImageRequest(imgIRequest **aRequest, nsIDOMNode *aDOMNode);
+
 
   PRInt32                 mX, mY, mObjWidth, mObjHeight, mCtxFrameNum;
-  nsString                mCtxURI, mCtxHref, mCtxImgHref;  
+  nsString                mCtxURI, mCtxHref, mCtxImgHref;
   PRUint32                mEmbedCtxType;
   PRInt32 mCtxFormType;
   nsCOMPtr<nsIDOMNode>    mEventNode;
@@ -93,7 +95,5 @@ private:
 
   EmbedPrivate           *mOwner;
   nsCOMPtr<nsIDOMNode>    mOrigNode;
-  nsString                mSOrigNode;
-  nsString                mSEventNode;
 }; // class EmbedContextMenuInfo
 #endif // EmbedContextMenuInfo_h__

@@ -23,7 +23,7 @@
  * Contributor(s):
  *   Terry Hayes <thayes@netscape.com>
  *   Javier Delgadillo <javi@netscape.com>
- *   Oleg Romashin <romaxa@gmail.com>  
+ *   Oleg Romashin <romaxa@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,7 +50,7 @@
 #include "nsCOMPtr.h"
 #ifdef MOZILLA_INTERNAL_API
 #include "nsString.h"
-#include <nsXPIDLString.h>
+#include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #else
 #include "nsStringAPI.h"
@@ -122,7 +122,7 @@ EmbedCertificates::SetPassword(nsIInterfaceRequestor *ctx,
 
 nsresult
 EmbedCertificates::GetPassword(nsIInterfaceRequestor *ctx,
-                          const PRUnichar *tokenName, 
+                          const PRUnichar *tokenName,
                           PRUnichar **_password,
                           PRBool* _canceled)
 {
@@ -137,41 +137,41 @@ EmbedCertificates::ConfirmUnknownIssuer(nsIInterfaceRequestor *socketInfo,
 {
   *outAddType = ADD_TRUSTED_FOR_SESSION;
   *_retval    = PR_TRUE;
-  return NS_OK; 
+  return NS_OK;
 }
 
-NS_IMETHODIMP 
-EmbedCertificates::ConfirmMismatchDomain(nsIInterfaceRequestor *socketInfo, 
-                                    const nsACString &targetURL, 
+NS_IMETHODIMP
+EmbedCertificates::ConfirmMismatchDomain(nsIInterfaceRequestor *socketInfo,
+                                    const nsACString &targetURL,
                                     nsIX509Cert *cert, PRBool *_retval)
 {
   *_retval = PR_TRUE;
-  return NS_OK;  
+  return NS_OK;
 }
 
-NS_IMETHODIMP 
-EmbedCertificates::ConfirmCertExpired(nsIInterfaceRequestor *socketInfo, 
+NS_IMETHODIMP
+EmbedCertificates::ConfirmCertExpired(nsIInterfaceRequestor *socketInfo,
                                  nsIX509Cert *cert, PRBool *_retval)
 {
   *_retval = PR_TRUE;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-EmbedCertificates::NotifyCrlNextupdate(nsIInterfaceRequestor *socketInfo, 
+NS_IMETHODIMP
+EmbedCertificates::NotifyCrlNextupdate(nsIInterfaceRequestor *socketInfo,
                                   const nsACString &targetURL, nsIX509Cert *cert)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 EmbedCertificates::CrlImportStatusDialog(nsIInterfaceRequestor *ctx, nsICRLInfo *crl)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-EmbedCertificates::ConfirmDownloadCACert(nsIInterfaceRequestor *ctx, 
+NS_IMETHODIMP
+EmbedCertificates::ConfirmDownloadCACert(nsIInterfaceRequestor *ctx,
                                     nsIX509Cert *cert,
                                     PRUint32 *_trust,
                                     PRBool *_retval)
@@ -183,7 +183,7 @@ EmbedCertificates::ConfirmDownloadCACert(nsIInterfaceRequestor *ctx,
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 EmbedCertificates::NotifyCACertExists(nsIInterfaceRequestor *ctx)
 {
   return NS_OK;
@@ -207,20 +207,20 @@ EmbedCertificates::ChooseCertificate(
 
 NS_IMETHODIMP
 EmbedCertificates::PickCertificate(
-  nsIInterfaceRequestor *ctx, 
-  const PRUnichar **certNickList, 
-  const PRUnichar **certDetailsList, 
-  PRUint32 count, 
-  PRInt32 *selectedIndex, 
+  nsIInterfaceRequestor *ctx,
+  const PRUnichar **certNickList,
+  const PRUnichar **certDetailsList,
+  PRUint32 count,
+  PRInt32 *selectedIndex,
   PRBool *canceled)
 {
   *canceled = PR_FALSE;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 EmbedCertificates::SetPKCS12FilePassword(
-  nsIInterfaceRequestor *ctx, 
+  nsIInterfaceRequestor *ctx,
   nsAString &_password,
   PRBool *_retval)
 {
@@ -231,9 +231,9 @@ EmbedCertificates::SetPKCS12FilePassword(
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 EmbedCertificates::GetPKCS12FilePassword(
-  nsIInterfaceRequestor *ctx, 
+  nsIInterfaceRequestor *ctx,
   nsAString &_password,
   PRBool *_retval)
 {
@@ -245,9 +245,9 @@ EmbedCertificates::GetPKCS12FilePassword(
 }
 
 /* void viewCert (in nsIX509Cert cert); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 EmbedCertificates::ViewCert(
-  nsIInterfaceRequestor *ctx, 
+  nsIInterfaceRequestor *ctx,
   nsIX509Cert *cert)
 {
   return NS_OK;
@@ -272,7 +272,7 @@ EmbedCertificates::ChooseToken(
 }
 
 /* boolean ConfirmKeyEscrow (in nsIX509Cert escrowAuthority); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 EmbedCertificates::ConfirmKeyEscrow(nsIX509Cert *escrowAuthority, PRBool *_retval)
 {
   *_retval = PR_TRUE;
@@ -299,9 +299,9 @@ EmbedCertificates::ConfirmBadCertificate(
   if (!parentWidget) {
     EmbedCommon * embedcommon = EmbedCommon::GetInstance();
     if (embedcommon)
-      common = embedcommon->mCommon;
+      common = GTK_MOZ_EMBED_COMMON(embedcommon->mCommon);
   }
-  
+
   if (!(aError & nsIX509Cert::VERIFIED_OK)) {
     pCert = (gpointer)cert;
     messint = GTK_MOZ_EMBED_CERT_VERIFIED_OK;
@@ -322,7 +322,7 @@ EmbedCertificates::ConfirmBadCertificate(
           return rv;
         if (LL_CMP(now, >, notAfter)) {
           messint |= GTK_MOZ_EMBED_CERT_EXPIRED;
-          timeToUse = notAfter; 
+          timeToUse = notAfter;
         } else {
           messint |= GTK_MOZ_EMBED_CERT_REVOKED;
           timeToUse = notBefore;

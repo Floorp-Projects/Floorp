@@ -39,14 +39,14 @@
 #include "EmbedFilePicker.h"
 #include "EmbedGtkTools.h"
 #include "gtkmozembed.h"
-#include <nsCOMPtr.h>
-#include <nsIServiceManager.h>
-#include <nsIURI.h>
-#include <nsIFileURL.h>
-#include <nsILocalFile.h>
-#include <nsIDOMWindow.h>
-#include <nsNetCID.h>
-#include <nsIDOMWindowInternal.h>
+#include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
+#include "nsIURI.h"
+#include "nsIFileURL.h"
+#include "nsILocalFile.h"
+#include "nsIDOMWindow.h"
+#include "nsNetCID.h"
+#include "nsIDOMWindowInternal.h"
 #ifndef MOZILLA_INTERNAL_API
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
@@ -208,7 +208,7 @@ NS_IMETHODIMP EmbedFilePicker::Show(PRInt16 *_retval)
     &response,
     NULL);
   if (response == 1 && mFilename != NULL)
-    *_retval = nsIFilePicker::returnOK; 
+    *_retval = nsIFilePicker::returnOK;
   else
     *_retval = nsIFilePicker::returnCancel;
   return NS_OK;

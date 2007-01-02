@@ -35,8 +35,8 @@
 #ifndef __EmbedFilePicker_h
 #define __EmbedFilePicker_h
 
-#include <nsIFilePicker.h>
-#include <nsISupports.h>
+#include "nsIFilePicker.h"
+#include "nsISupports.h"
 
 #define EMBED_FILEPICKER_CID           \
 { /* f097d33b-1c97-48a6-af4c-07022857eb7c */         \

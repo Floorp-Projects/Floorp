@@ -117,6 +117,7 @@ public:
   nsresult InsertLogin(const char* username, const char* password = nsnull);
   nsresult RemovePasswords(const char *aHostName, const char *aUserName);
   nsresult RemovePasswordsByIndex(PRUint32 aIndex);
+  nsresult IsEqualToLastHostQuery(nsCString& aHost);
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPASSWORDMANAGER
   NS_DECL_NSIPASSWORDMANAGERINTERNAL

@@ -55,34 +55,39 @@
 #include "EmbedGlobalHistory.h"
 //#include "EmbedDownloadMgr.h"
 // so we can do our get_nsIWebBrowser later...
-#include <nsIWebBrowser.h>
-#include <nsIComponentManager.h>
-#include <nsIServiceManager.h>
+#include "nsIWebBrowser.h"
+#include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
 #include "nsIPref.h"
-#include <nsICookieManager.h>
-#include <nsIPermissionManager.h>
-#include <nsNetCID.h>
-#include <nsICookie.h>
-#include <nsIX509Cert.h>
+#include "nsICookieManager.h"
+#include "nsIPermissionManager.h"
+#include "nsNetCID.h"
+#include "nsICookie.h"
+#include "nsIX509Cert.h"
 // for strings
 #ifdef MOZILLA_INTERNAL_API
-#include <nsXPIDLString.h>
-#include <nsReadableUtils.h>
+#include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #else
-#include <nsStringAPI.h>
+#include "nsStringAPI.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 #endif
 // for plugins
-#include <nsIDOMNavigator.h>
-#include <nsIDOMPluginArray.h>
-#include <nsIDOMPlugin.h>
+#include "nsIDOMNavigator.h"
+#include "nsIDOMPluginArray.h"
+#include "nsIDOMPlugin.h"
 #include <plugin/nsIPluginHost.h>
-#include <nsString.h>
-#include <nsIDOMMimeType.h>
+#include "nsString.h"
+#include "nsIDOMMimeType.h"
+#include "nsIObserverService.h"
 
 //for security
-#include <nsIWebProgressListener.h>
+#include "nsIWebProgressListener.h"
+
+//for cache
+#include "nsICacheService.h"
+#include "nsICache.h"
 
 #ifdef MOZ_WIDGET_GTK2
 #include "gtkmozembedmarshal.h"
@@ -113,6 +118,26 @@
 #define GET_TOOLKIT_STRING(x) NS_LossyConvertUTF16toASCII(x).get()
 #define GET_OBJECT_CLASS_TYPE(x) (GTK_OBJECT_CLASS(x)->type)
 #endif /* MOZ_WIDGET_GTK */
+
+#define UNACCEPTABLE_CRASHY_GLIB_ALLOCATION(newed) PR_BEGIN_MACRO \
+  /* OOPS this code is using a glib allocation function which     \
+   * will cause the application to crash when it runs out of      \
+   * memory. This is not cool. either g_try methods should be     \
+   * used or malloc, or new (note that gecko /will/ be replacing  \
+   * its operator new such that new will not throw exceptions).   \
+   * XXX please fix me.                                           \
+   */                                                             \
+  if (!newed) {                                                   \
+  }                                                               \
+  PR_END_MACRO
+
+#define ALLOC_NOT_CHECKED(newed) PR_BEGIN_MACRO \
+  /* This might not crash, but the code probably isn't really \
+   * designed to handle it, perhaps the code should be fixed? \
+   */                                                         \
+  if (!newed) {                                               \
+  }                                                           \
+  PR_END_MACRO
 
 // CID used to get the plugin manager
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
@@ -210,7 +235,7 @@ gtk_moz_embed_common_class_init(GtkMozEmbedCommonClass *klass)
                    GTK_TYPE_STRING | G_SIGNAL_TYPE_STATIC_SCOPE,
                    GTK_TYPE_BOOL,
                    GTK_TYPE_INT);
-/*  
+/*
   moz_embed_common_signals[COMMON_CERT_DIALOG] =
     gtk_signal_new("certificate-dialog",
                    GTK_RUN_LAST,
@@ -268,7 +293,7 @@ gtk_moz_embed_common_class_init(GtkMozEmbedCommonClass *klass)
                    gtkmozembed_INT__STRING_STRING_INT_INT_INT_INT,
                    G_TYPE_INT,
                    6,
-                   G_TYPE_STRING, G_TYPE_STRING, 
+                   G_TYPE_STRING, G_TYPE_STRING,
                    G_TYPE_INT, G_TYPE_INT,
                    G_TYPE_INT, G_TYPE_INT);
   */
@@ -344,9 +369,9 @@ gtk_moz_embed_common_set_pref(GtkType type, gchar *name, gpointer value)
     default:
       break;
     }
-    return ( NS_SUCCEEDED (rv) ? TRUE : FALSE );
+    return NS_SUCCEEDED(rv);
   }
-  return (FALSE);
+  return FALSE;
 }
 
 gboolean
@@ -377,9 +402,9 @@ gtk_moz_embed_common_get_pref(GtkType type, gchar *name, gpointer value)
     default:
       break;
     }
-    return ( NS_SUCCEEDED (rv) ? TRUE : FALSE );
+    return NS_SUCCEEDED(rv);
   }
-  return (FALSE);
+  return FALSE;
 }
 
 gboolean
@@ -390,7 +415,7 @@ gtk_moz_embed_common_save_prefs()
   if (prefService == nsnull)
     return FALSE;
   nsresult rv = prefService->SavePrefFile (nsnull);
-  return NS_SUCCEEDED (rv) ? TRUE : FALSE;
+  return NS_SUCCEEDED(rv);
 }
 
 gint
@@ -407,20 +432,21 @@ gtk_moz_embed_common_get_logins(const char* uri, GList **list)
        passwordEnumerator->HasMoreElements(&enumResult))
   {
     nsCOMPtr<nsIPassword> nsPassword;
-    result = passwordEnumerator->GetNext
-      (getter_AddRefs(nsPassword));
+    result = passwordEnumerator->GetNext (getter_AddRefs(nsPassword));
     if (NS_FAILED(result)) {
       /* this almost certainly leaks logins */
       return ret;
     }
-    nsCString transfer;
-    nsPassword->GetHost (transfer);
+    nsCString host;
+    nsPassword->GetHost (host);
     nsCString nsCURI(uri);
-    if (uri)
-      if (!StringBeginsWith (nsCURI, transfer)
-          // && !StringBeginsWith (transfer, nsCURI)
+    if (uri) {
+      if (!StringBeginsWith (nsCURI, host)
+          // && !StringBeginsWith (host, nsCURI)
           )
         continue;
+    } else if (!passwordManager->IsEqualToLastHostQuery(host))
+      continue;
 
     if (list) {
       nsString unicodeName;
@@ -428,9 +454,13 @@ gtk_moz_embed_common_get_logins(const char* uri, GList **list)
       nsPassword->GetUser (unicodeName);
       nsPassword->GetPassword (unicodePassword);
       GtkMozLogin * login = g_new0(GtkMozLogin, 1);
+      UNACCEPTABLE_CRASHY_GLIB_ALLOCATION(login);
       login->user = ToNewUTF8String(unicodeName);
+      ALLOC_NOT_CHECKED(login->user);
       login->pass = ToNewUTF8String(unicodePassword);
-      login->host = NS_strdup(transfer.get());
+      ALLOC_NOT_CHECKED(login->pass);
+      login->host = NS_strdup(host.get());
+      ALLOC_NOT_CHECKED(login->host);
       login->index = ret;
       *list = g_list_append(*list, login);
     }
@@ -463,16 +493,23 @@ gtk_moz_embed_common_get_history_list (GtkMozHistoryItem **GtkHI)
   return count;
 }
 
-gint 
-gtk_moz_embed_common_clean_all_history () {
+gint
+gtk_moz_embed_common_remove_history (gchar *url, gint time) {
   nsresult rv;
   // The global history service
   nsCOMPtr<nsIGlobalHistory2> globalHistory(do_GetService("@mozilla.org/browser/global-history;2"));
-  if (!globalHistory) return NS_ERROR_NULL_POINTER; 
+  if (!globalHistory) return NS_ERROR_NULL_POINTER;
   // The browser history interface
   nsCOMPtr<nsIObserver> myHistory = do_QueryInterface(globalHistory, &rv);
   if (!myHistory) return NS_ERROR_NULL_POINTER ;
-  myHistory->Observe(nsnull, "RemoveAllPages", nsnull);
+  if (!url)
+    myHistory->Observe(nsnull, "RemoveEntries", nsnull);
+  else {
+    EmbedGlobalHistory *history = EmbedGlobalHistory::GetInstance();
+    PRUnichar *uniurl = LocaleToUnicode(url);
+    rv = history->RemoveEntries (uniurl, time);
+    NS_Free(uniurl);
+  }
   return 1;
 }
 
@@ -496,6 +533,7 @@ gtk_moz_embed_common_get_cookie_list(void)
     result = cookieEnumerator->GetNext(getter_AddRefs(nsCookie));
     g_return_val_if_fail(NS_SUCCEEDED(result), NULL);
     c = g_new0(GtkMozCookieList, 1);
+    UNACCEPTABLE_CRASHY_GLIB_ALLOCATION(c);
     nsCAutoString transfer;
     nsCookie->GetHost(transfer);
     c->domain = g_strdup(transfer.get());
@@ -518,16 +556,6 @@ gtk_moz_embed_common_get_cookie_list(void)
 gint
 gtk_moz_embed_common_delete_all_cookies (GSList *deletedCookies)
 {
-  if (!deletedCookies) 
-    return 1;
-
-  nsCOMPtr<nsICookieManager> cookieManager =
-    do_GetService(NS_COOKIEMANAGER_CONTRACTID);
-
-  if (!cookieManager) 
-    return 1;
-  cookieManager->RemoveAll();
-
   nsCOMPtr<nsIPermissionManager> permissionManager =
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
 
@@ -535,6 +563,16 @@ gtk_moz_embed_common_delete_all_cookies (GSList *deletedCookies)
     return 1;
 
   permissionManager->RemoveAll ();
+
+  if (!deletedCookies)
+    return 1;
+
+  nsCOMPtr<nsICookieManager> cookieManager =
+    do_GetService(NS_COOKIEMANAGER_CONTRACTID);
+
+  if (!cookieManager)
+    return 1;
+  cookieManager->RemoveAll();
 
   g_slist_free (deletedCookies);
     return 0;//False in GWebStatus means OK, as opposed to gboolean in C
@@ -552,57 +590,76 @@ gtk_moz_embed_common_nsx509_to_raw(void *nsIX509Ptr, guint *len)
   return data;
 }
 
-void
-gtk_moz_embed_common_get_plugins_list (GtkMozPlugin **pluginArray, gint *num_plugins)
+gint
+gtk_moz_embed_common_get_plugins_list (GList **pluginArray)
 {
-  nsresult rv; 
-  nsCOMPtr<nsIPluginManager> pluginMan = 
+  nsresult rv;
+  nsCOMPtr<nsIPluginManager> pluginMan =
     do_GetService(kPluginManagerCID, &rv);
   if (NS_FAILED(rv)) {
     g_print("Could not get the plugin manager\n");
-    return;
+    return -1;
   }
-  pluginMan->ReloadPlugins(PR_TRUE);
-  nsCOMPtr<nsIPluginHost> pluginHost = 
+  pluginMan->ReloadPlugins(PR_TRUE);  //FIXME XXX MEMLEAK
+
+  nsCOMPtr<nsIPluginHost> pluginHost =
     do_GetService(kPluginManagerCID, &rv);
-  if (NS_FAILED(rv)) {
-    return;
-  }
+  if (NS_FAILED(rv))
+    return -1;
+
   PRUint32 aLength;
-  nsIDOMPlugin **aItem;
   pluginHost->GetPluginCount(&aLength);
-  *num_plugins = aLength;
-  gint size = aLength;
-  aItem = new nsIDOMPlugin*[aLength];
-  pluginHost->GetPlugins(aLength, aItem);
-  *pluginArray = (GtkMozPlugin*) g_try_malloc(size*sizeof(GtkMozPlugin));
-  for (int aIndex = 0; aIndex < (gint) aLength; aIndex++)
-  { 
-    nsAutoString aName;
-    aItem[aIndex]->GetName(aName);
-    NS_ConvertUTF16toUTF8 utf8ValueTitle(aName);
-    (*pluginArray)[aIndex].title = g_strdup((gchar *)utf8ValueTitle.get());
-    nsAutoString aFilename;
-    aItem[aIndex]->GetFilename(aFilename);
-    NS_ConvertUTF16toUTF8 utf8ValueFilename(aFilename);
-    (*pluginArray)[aIndex].path =g_strdup((gchar *)utf8ValueFilename.get());
-    nsCOMPtr<nsIDOMMimeType> mimeType;
-    aItem[aIndex]->Item(aIndex, getter_AddRefs(mimeType));
-    nsAutoString aDescription;
-    mimeType->GetDescription(aDescription);
-    NS_ConvertUTF16toUTF8 utf8ValueDescription(aDescription);
-    (*pluginArray)[aIndex].type = g_strdup((gchar *)utf8ValueDescription.get());
+
+  if (!pluginArray)
+    return (gint)aLength;
+
+  nsIDOMPlugin **aItems = nsnull;
+  aItems = new nsIDOMPlugin*[aLength];
+  if (!aItems)
+    return -1; //NO MEMORY
+
+  rv = pluginHost->GetPlugins(aLength, aItems);
+  if (NS_FAILED(rv)) {
+    delete [] aItems;
+    return -1;
   }
-  return;
+
+  nsString string;
+  for (int aIndex = 0; aIndex < (gint) aLength; aIndex++)
+  {
+    GtkMozPlugin *list_item = g_new0(GtkMozPlugin, 1);
+    UNACCEPTABLE_CRASHY_GLIB_ALLOCATION(list_item);
+
+    rv = aItems[aIndex]->GetName(string);
+    if (!NS_FAILED(rv))
+      list_item->title = g_strdup(NS_ConvertUTF16toUTF8(string).get());
+
+    aItems[aIndex]->GetFilename(string);
+    if (!NS_FAILED(rv))
+      list_item->path = g_strdup(NS_ConvertUTF16toUTF8(string).get());
+
+    nsCOMPtr<nsIDOMMimeType> mimeType;
+    rv = aItems[aIndex]->Item(aIndex, getter_AddRefs(mimeType));
+    if (NS_FAILED(rv))
+      continue;
+
+    rv = mimeType->GetDescription(string);
+    if (!NS_FAILED(rv))
+      list_item->type = g_strdup(NS_ConvertUTF16toUTF8(string).get());
+    if (!NS_FAILED(rv))
+      *pluginArray = g_list_append(*pluginArray, list_item);
+  }
+  delete [] aItems;
+  return (gint)aLength;
 }
 
 void
 gtk_moz_embed_common_reload_plugins ()
 {
   nsresult rv;
-  nsCOMPtr<nsIPluginManager> pluginMan = 
+  nsCOMPtr<nsIPluginManager> pluginMan =
     do_GetService(kPluginManagerCID, &rv);
-  pluginMan->ReloadPlugins(PR_TRUE);
+  pluginMan->ReloadPlugins(PR_TRUE); //FIXME XXX MEMLEAK
 }
 
 guint
@@ -642,3 +699,42 @@ gtk_moz_embed_common_get_security_mode (guint sec_state)
   return sec_mode;
 }
 
+gint
+gtk_moz_embed_common_clear_cache(void)
+{
+  nsCacheStoragePolicy storagePolicy;
+
+  nsCOMPtr<nsICacheService> cacheService = do_GetService (NS_CACHESERVICE_CONTRACTID);
+
+  if (cacheService)
+  {
+    //clean disk cache and memory cache
+    storagePolicy = nsICache::STORE_ANYWHERE;
+    cacheService->EvictEntries(storagePolicy);
+    return 0;
+  }
+  return 1;
+}
+
+gboolean
+gtk_moz_embed_common_observe(const gchar* service_id,
+                             gpointer object,
+                             const gchar* topic,
+                             gunichar* data)
+{
+  nsresult rv;
+  if (service_id) {
+    nsCOMPtr<nsISupports> service = do_GetService(service_id, &rv);
+    NS_ENSURE_SUCCESS(rv, FALSE);
+    nsCOMPtr<nsIObserver> Observer = do_QueryInterface(service, &rv);
+    NS_ENSURE_SUCCESS(rv, FALSE);
+    rv = Observer->Observe((nsISupports*)object, topic, (PRUnichar*)data);
+  } else {
+    //This is the correct?
+    nsCOMPtr<nsIObserverService> obsService =
+      do_GetService("@mozilla.org/observer-service;1", &rv);
+    if (obsService)
+      rv = obsService->NotifyObservers((nsISupports*)object, topic, (PRUnichar*)data);
+  }
+  return NS_FAILED(rv) ? FALSE : TRUE;
+}

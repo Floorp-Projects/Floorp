@@ -56,11 +56,11 @@ GtkWidget * GetGtkWidgetForDOMWindow(nsIDOMWindow* aDOMWindow)
 
   nsCOMPtr<nsIEmbeddingSiteWindow> siteWindow = nsnull;
   siteWindow = do_QueryInterface(chrome);
-  
+
   if (!siteWindow) {
     return GTK_WIDGET(EmbedCommon::GetAnyLiveWidget());
   }
-  
+
   GtkWidget* parentWidget;
   siteWindow->GetSiteWindow((void**)&parentWidget);
   if (GTK_IS_WIDGET(parentWidget))
@@ -90,7 +90,7 @@ nsresult GetContentViewer (nsIWebBrowser *webBrowser, nsIContentViewer **aViewer
 PRUnichar *LocaleToUnicode (const char *locStr)
 {
   if (!locStr)
-    return (NULL);
+    return NULL;
 
   nsAutoString autoStr;
 #ifdef MOZILLA_INTERNAL_API //FIXME?
@@ -101,5 +101,5 @@ PRUnichar *LocaleToUnicode (const char *locStr)
 #endif
   PRUnichar *uniStr = ToNewUnicode(autoStr);
 
-  return (uniStr);
+  return uniStr;
 }

@@ -40,39 +40,41 @@
 #ifndef __EmbedPrivate_h
 #define __EmbedPrivate_h
 
-#include <nsCOMPtr.h>
+#include "nsCOMPtr.h"
 #ifdef MOZILLA_INTERNAL_API
-#include <nsString.h>
+#include "nsString.h"
 #else
-#include <nsStringAPI.h>
+#include "nsStringAPI.h"
 #endif
-#include <nsIWebNavigation.h>
-#include <nsISHistory.h>
+#include "nsIWebNavigation.h"
+#include "nsISHistory.h"
 // for our one function that gets the EmbedPrivate via the chrome
 // object.
-#include <nsIWebBrowserChrome.h>
-#include <nsIAppShell.h>
-#include <nsIDOMEventReceiver.h>
-#include <nsVoidArray.h>
+#include "nsIWebBrowserChrome.h"
+#include "nsIAppShell.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsVoidArray.h"
 
 #ifndef MOZ_ENABLE_LIBXUL
 // for profiles
-#include <nsIPref.h>
+#include "nsIPref.h"
 #endif
 
 // app component registration
-#include <nsIGenericFactory.h>
-#include <nsIComponentRegistrar.h>
+#include "nsIGenericFactory.h"
+#include "nsIComponentRegistrar.h"
 
-#include <nsIDocCharset.h>
-#include <nsIMarkupDocumentViewer.h>
-#include <nsIInterfaceRequestorUtils.h>
-#include <nsIWebBrowserFind.h>
+#include "nsIDocCharset.h"
+#include "nsIMarkupDocumentViewer.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIWebBrowserFind.h"
 // for the focus hacking we need to do
-#include <nsIFocusController.h>
+#include "nsIFocusController.h"
 // for frames
-#include <nsIDOMWindowCollection.h>
+#include "nsIDOMWindowCollection.h"
 #include "gtkmozembedprivate.h"
+
+#include "nsICacheEntryDescriptor.h"
 
 #include "EmbedGtkTools.h"
 class EmbedProgress;
@@ -172,10 +174,16 @@ class EmbedPrivate {
   nsresult    ScrollToSelectedNode(nsIDOMNode *aDOMNode);
   nsresult    InsertTextToNode(nsIDOMNode *aDOMNode, const char *string);
   nsresult    GetFocusController(nsIFocusController **controller);
-  nsresult    GetZoom (gint *zoomLevel, gint *compareFramesZoomLevel);
-  nsresult    SetZoom (gint zoomLevel);
+  nsresult    GetDOMWindowByNode(nsIDOMNode *aNode, nsIDOMWindow * *aDOMWindow);
+  nsresult    GetZoom (PRInt32 *aZoomLevel, nsISupports *aContext = nsnull);
+  nsresult    SetZoom (PRInt32 aZoomLevel, nsISupports *aContext = nsnull);
   nsresult    HasFrames  (PRUint32 *numberOfFrames);
-  nsresult    GetMIMEInfo (nsString& info);
+  nsresult    GetMIMEInfo (const char **aMime, nsIDOMNode *aDOMNode = nsnull);
+  nsresult    GetCacheEntry (const char *aStorage,
+                             const char *aKeyName,
+                             PRUint32 aAccess,
+                             PRBool aIsBlocking,
+                             nsICacheEntryDescriptor **aDescriptor);
 
 #ifdef MOZ_ACCESSIBILITY_ATK
   void *GetAtkObjectForCurrentDocument();
@@ -238,9 +246,9 @@ class EmbedPrivate {
   // has the chrome finished loading?
   PRBool                         mChromeLoaded;
 
-  // has the network finished loading?  
+  // has the network finished loading?
   PRBool                         mLoadFinished;
-  
+
   // saved window ID for reparenting later
   GtkWidget                     *mMozWindowWidget;
   // has someone called Destroy() on us?
@@ -262,7 +270,7 @@ class EmbedPrivate {
 
   // this will get the PIDOMWindow for this widget
   nsresult        GetPIDOMWindow   (nsPIDOMWindow **aPIWin);
-  
+
   static nsresult RegisterAppComponents();
 
   // offscreen window methods and the offscreen widget
@@ -270,7 +278,7 @@ class EmbedPrivate {
   static void       DestroyOffscreenWindow(void);
   static GtkWidget *sOffscreenWindow;
   static GtkWidget *sOffscreenFixed;
- 
+
 };
 
 #endif /* __EmbedPrivate_h */

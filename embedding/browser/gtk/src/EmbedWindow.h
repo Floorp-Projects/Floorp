@@ -45,15 +45,15 @@
 #else
 #include "nsStringAPI.h"
 #endif
-#include <nsIWebBrowserChrome.h>
-#include <nsIWebBrowserChromeFocus.h>
-#include <nsIEmbeddingSiteWindow.h>
-//#include <nsITooltipListener.h>
-#include <nsISupports.h>
-#include <nsIWebBrowser.h>
-#include <nsIBaseWindow.h>
-#include <nsIInterfaceRequestor.h>
-#include <nsCOMPtr.h>
+#include "nsIWebBrowserChrome.h"
+#include "nsIWebBrowserChromeFocus.h"
+#include "nsIEmbeddingSiteWindow.h"
+//#include "nsITooltipListener.h"
+#include "nsISupports.h"
+#include "nsIWebBrowser.h"
+#include "nsIBaseWindow.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsCOMPtr.h"
 
 #include <gtk/gtk.h>
 
@@ -102,6 +102,6 @@ private:
   PRBool                   mIsModal;
 
 };
-  
+
 
 #endif /* __EmbedWindow_h */
