@@ -20,14 +20,14 @@
 # Contributor(s):
 # Chris Waterson <waterson@netscape.com>
 # 
-# $Id: balance.cgi,v 1.2 1999/11/17 19:15:00 waterson%netscape.com Exp $
+# $Id: balance.cgi,v 1.3 2007/01/02 22:54:24 timeless%mozdev.org Exp $
 #
 
 #
 # Builds a tree of reference counts
 #
 
-use 5.004;
+use 5.006;
 use strict;
 
 use CGI;
@@ -39,6 +39,7 @@ $::query = new CGI();
 $::opt_log                = $::query->param('log');
 $::opt_class              = $::query->param('class');
 $::opt_object             = $::query->param('object');
+# &exclude=a&exclude=b
 @::opt_exclude            = $::query->param('exclude');
 $::opt_show_balanced      = $::query->param('show-balanced');
 $::opt_subtree_size       = $::query->param('subtree-size');
@@ -46,20 +47,25 @@ $::opt_prune_depth        = $::query->param('prune-depth');
 $::opt_reverse            = $::query->param('reverse');
 $::opt_collapse_to_method = $::query->param('collapse-to-method');
 $::opt_collapse_to_class  = $::query->param('collapse-to-class');
+# old style clearly hasn't been supported for a while.
+$::opt_old_style          = 0;
 
-$::opt_log    || die;
-$::opt_class  || die;
-$::opt_object || die;
+defined $::opt_log || die "Must specifiy a log file";
+$::opt_log =~ m{^\w[\w\d\._-]*$} || die "Unexpected log file name";
+-f $::opt_log    || die "Can't find log file";
+$::opt_class =~ m/^\w[\w\d_]*$/i || die "Unexpected format for class name";
+$::opt_object =~ m/^\d+$/ || die "Unexpected format for object";
 
 # Make sure that values get initialized properly
 $::opt_prune_depth = 0        if (! $::opt_prune_depth);
 $::opt_subtree_size = 0       if (! $::opt_subtree_size);
-$::opt_collapse_to_class = 0  if (! $::opt_collapse_to_class);
-$::opt_collapse_to_method = 0 if (! $::opt_collapse_to_method);
+$::opt_reverse = 0            if (! $::opt_reverse);
+$::opt_collapse_to_class = 0  unless ($::opt_collapse_to_class || '') =~ /^\s*[01]\s*$/;
+$::opt_collapse_to_method = 0 unless ($::opt_collapse_to_method || '') =~ /^\s*[01]\s*$/;
 
 # Sanity checks
-$::opt_prune_depth = 0  if $::opt_prune_depth < 0;
-$::opt_subtree_size = 0 if $::opt_subtree_size < 0;
+$::opt_prune_depth = 0  unless $::opt_prune_depth =~ /^\s*[1-9]\d*\s*$/;
+$::opt_subtree_size = 0 unless $::opt_subtree_size =~ /^\s*[1-9]\d*\s*$/;
 
 
 print $::query->header;
@@ -120,7 +126,7 @@ $imbalance{'.root'} = 'n/a';
 
 # The main read loop.
 my $log = new Zip($::opt_log);
-$log || die('unable to open log $log');
+$log || die('unable to open log $::opt_log');
 
 my $logfile = "refcnt-" . $::opt_class . "-" . $::opt_object . ".log";
 

@@ -20,7 +20,7 @@
 # Contributor(s):
 # Chris Waterson <waterson@netscape.com>
 # 
-# $Id: handle-mail.pl,v 1.4 1999/11/18 03:38:24 waterson%netscape.com Exp $
+# $Id: handle-mail.pl,v 1.5 2007/01/02 22:54:24 timeless%mozdev.org Exp $
 #
 
 #
@@ -38,7 +38,7 @@
 # in a special directory; e.g., /etc/smrsh on a vanilla RH6.0 system.
 #
 
-use 5.004;
+use 5.006;
 use strict;
 use Getopt::Long;
 use File::Copy;
@@ -71,3 +71,4 @@ close(OUT);
 
 # Move to the data directory, if there is one.
 move($::file, $::opt_datadir) if $::opt_datadir;
+# $::opt_datadir does not seem to be set in current CVS.

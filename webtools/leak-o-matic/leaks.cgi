@@ -20,14 +20,14 @@
 # Contributor(s):
 # Chris Waterson <waterson@netscape.com>
 # 
-# $Id: leaks.cgi,v 1.3 1999/11/17 19:15:03 waterson%netscape.com Exp $
+# $Id: leaks.cgi,v 1.4 2007/01/02 22:54:24 timeless%mozdev.org Exp $
 #
 
 #
 # Expands a logfile into all of the leakers
 #
 
-use 5.004;
+use 5.006;
 use strict;
 use CGI;
 use POSIX;
@@ -37,6 +37,11 @@ $::query = new CGI();
 
 # The ZIP where all the log files are kept
 $::log = $::query->param('log');
+
+defined $::log || die "Must specifiy a log file";
+$::log =~ m{^\w[\w\d\._-]*$} || die "Unexpected log file name";
+-f $::log || die "Can't find log file";
+
 $::zip = new Zip($::log);
 
 print $::query->header;

@@ -20,7 +20,7 @@
 # Contributor(s):
 # Chris Waterson <waterson@netscape.com>
 #
-# $Id: logs.cgi,v 1.6 1999/11/17 22:19:07 leaf%mozilla.org Exp $
+# $Id: logs.cgi,v 1.7 2007/01/02 22:54:24 timeless%mozdev.org Exp $
 #
 
 #
@@ -28,13 +28,15 @@
 # available for perusal
 #
 
-use 5.004;
+use 5.006;
 use strict;
 use CGI;
 use POSIX;
 
 $::query = new CGI();
-$::logdir = $::query->param('logdir');
+# If you want to support specifying a different directory
+# you will need to change this code:
+#$::logdir = $::query->param('logdir');
 $::logdir = 'data' unless $::logdir; # default is 'data' subdir
 
 print $::query->header;
@@ -94,6 +96,6 @@ For more information on how to use the Leak-o-Matic, see the
 
 };
 
-print '<small>$Id: logs.cgi,v 1.6 1999/11/17 22:19:07 leaf%mozilla.org Exp $</small>';
+print '<small>$Id: logs.cgi,v 1.7 2007/01/02 22:54:24 timeless%mozdev.org Exp $</small>';
 print $::query->end_html;
 
