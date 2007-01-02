@@ -269,7 +269,7 @@ function PutDescription() {
     </td>
   </tr>
 
-  [% IF product.match("Firefox|Camino|Mozilla Application Suite") %]
+  [% IF product.name.match("Firefox|Camino|Mozilla Application Suite") %]
     [% matches = cgi.user_agent('Gecko/(\d+)') %]
     [% buildid = cgi.user_agent() IF matches %]
   [% END %]
