@@ -46,13 +46,13 @@
 #include "EmbedWindow.h"
 #include "EmbedDownloadMgr.h"
 // so we can do our get_nsIWebBrowser later...
-#include <nsIWebBrowser.h>
+#include "nsIWebBrowser.h"
 // for strings
 #ifdef MOZILLA_INTERNAL_API
-#include <nsXPIDLString.h>
-#include <nsReadableUtils.h>
+#include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #else
-#include <nsStringAPI.h>
+#include "nsStringAPI.h"
 #endif
 #ifdef MOZ_WIDGET_GTK2
 #include "gtkmozembedmarshal.h"
@@ -198,8 +198,8 @@ gtk_moz_embed_download_destroy(GtkObject *object)
 GtkObject *
 gtk_moz_embed_download_new(void)
 {
-  GtkObject *instance = (GtkObject *) gtk_type_new (gtk_moz_embed_download_get_type()); 
-  gtk_moz_embed_download_set_lastest_object (instance); 
+  GtkObject *instance = (GtkObject *) gtk_type_new (gtk_moz_embed_download_get_type());
+  gtk_moz_embed_download_set_lastest_object (instance);
   return instance;
 }
 GtkObject *
@@ -215,6 +215,7 @@ gtk_moz_embed_download_set_lastest_object (GtkObject *obj)
 }
 void gtk_moz_embed_download_do_command (GtkMozEmbedDownload *item, guint command)
 {
+  g_return_if_fail(item);
   EmbedDownload *download_priv = (EmbedDownload *) item->data;
   if (!download_priv) return ;
   if (command == GTK_MOZ_EMBED_DOWNLOAD_CANCEL) {
@@ -222,7 +223,7 @@ void gtk_moz_embed_download_do_command (GtkMozEmbedDownload *item, guint command
     if (download_priv->downloaded_size != -1)
         download_priv->launcher->Cancel (GTK_MOZ_EMBED_STATUS_FAILED_USERCANCELED);
     download_priv->launcher->SetWebProgressListener (nsnull);
-  } else if (command == GTK_MOZ_EMBED_DOWNLOAD_RESUME) {    
+  } else if (command == GTK_MOZ_EMBED_DOWNLOAD_RESUME) {
     download_priv->request->Resume ();
     download_priv->isPaused = FALSE;
   } else if (command == GTK_MOZ_EMBED_DOWNLOAD_PAUSE) {
@@ -230,30 +231,34 @@ void gtk_moz_embed_download_do_command (GtkMozEmbedDownload *item, guint command
     download_priv->isPaused = TRUE;
   } else if (command == GTK_MOZ_EMBED_DOWNLOAD_RELOAD) {
     if (download_priv->gtkMozEmbedParentWidget) {}
-  } 
+  }
   // FIXME: missing GTK_MOZ_EMBED_DOWNLOAD_STORE and GTK_MOZ_EMBED_DOWNLOAD_RESTORE implementation.
 }
 gchar * gtk_moz_embed_download_get_file_name (GtkMozEmbedDownload *item)
-{ 
+{
+  g_return_val_if_fail(item, nsnull);
   EmbedDownload *download_priv = (EmbedDownload *) item->data;
   if (!download_priv) return nsnull;
   return (gchar *) download_priv->file_name;
 }
 gchar * gtk_moz_embed_download_get_url (GtkMozEmbedDownload *item)
-{ 
+{
+  g_return_val_if_fail(item, nsnull);
   EmbedDownload *download_priv = (EmbedDownload *) item->data;
   if (!download_priv) return nsnull;
   // FIXME : 'server' is storing the wrong value. See EmbedDownloadMgr.cpp l. 189.
   return (gchar *) download_priv->server;
 }
 glong gtk_moz_embed_download_get_progress (GtkMozEmbedDownload *item)
-{ 
+{
+  g_return_val_if_fail(item, -1);
   EmbedDownload *download_priv = (EmbedDownload *) item->data;
   if (!download_priv) return -1;
   return (glong) download_priv->downloaded_size;
 }
 glong gtk_moz_embed_download_get_file_size (GtkMozEmbedDownload *item)
 {
+  g_return_val_if_fail(item, -1);
   EmbedDownload *download_priv = (EmbedDownload *) item->data;
   if (!download_priv) return -1;
   return (glong) download_priv->file_size;

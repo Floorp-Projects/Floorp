@@ -38,10 +38,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <nsIPromptService.h>
-#include <nsICookiePromptService.h>
-#include <nsICookie.h>
-#include <nsNetCID.h>
+#include "nsIPromptService.h"
+#include "nsICookiePromptService.h"
+#include "nsICookie.h"
+#include "nsNetCID.h"
 #include <gtk/gtk.h>
 #ifdef MOZILLA_INTERNAL_API
 #include "nsString.h"

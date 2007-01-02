@@ -78,14 +78,14 @@ EmbedWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
   } else {
     // Find the EmbedPrivate object for this web browser chrome object.
     EmbedPrivate *embedPrivate = EmbedPrivate::FindPrivateForBrowser(aParent);
-    
+
     if (!embedPrivate)
       return NS_ERROR_FAILURE;
-    
+
     gtk_signal_emit(GTK_OBJECT(embedPrivate->mOwningWidget),
         moz_embed_signals[NEW_WINDOW],
         &newEmbed, (guint)aChromeFlags);
-    
+
   }
 
   // check to make sure that we made a new window
@@ -97,7 +97,7 @@ EmbedWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
   // will do things like GetDocShell() and the widget has to be
   // realized before that can happen.
   gtk_widget_realize(GTK_WIDGET(newEmbed));
-  
+
   EmbedPrivate *newEmbedPrivate = NS_STATIC_CAST(EmbedPrivate *,
              newEmbed->data);
 
@@ -107,7 +107,7 @@ EmbedWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
 
   *_retval = NS_STATIC_CAST(nsIWebBrowserChrome *,
             (newEmbedPrivate->mWindow));
-  
+
   if (*_retval) {
     NS_ADDREF(*_retval);
     return NS_OK;

@@ -38,9 +38,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <nsCWebBrowser.h>
-#include <nsIComponentManager.h>
-#include <nsIDocShellTreeItem.h>
+#include "nsCWebBrowser.h"
+#include "nsIComponentManager.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIWidget.h"
 #ifdef MOZILLA_INTERNAL_API
 #include "nsReadableUtils.h"
@@ -77,7 +77,7 @@ EmbedWindow::Init(EmbedPrivate *aOwner)
     return NS_ERROR_FAILURE;
 
   mWebBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome *, this));
-  
+
   nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(mWebBrowser);
   item->SetItemType(nsIDocShellTreeItem::typeContentWrapper);
 
@@ -95,7 +95,7 @@ EmbedWindow::CreateWindow(void)
   mBaseWindow = do_QueryInterface(mWebBrowser);
   rv = mBaseWindow->InitWindow(GTK_WIDGET(mOwner->mOwningWidget),
              nsnull,
-             0, 0, 
+             0, 0,
              ownerAsWidget->allocation.width,
              ownerAsWidget->allocation.height);
   if (NS_FAILED(rv))
@@ -112,7 +112,7 @@ void
 EmbedWindow::ReleaseChildren(void)
 {
   ExitModalEventLoop(PR_FALSE);
-    
+
   mBaseWindow->Destroy();
   mBaseWindow = 0;
   mWebBrowser = 0;
@@ -138,9 +138,9 @@ NS_IMETHODIMP
 EmbedWindow::SetStatus(PRUint32 aStatusType, const PRUnichar *aStatus)
 {
   switch (aStatusType) {
-    case STATUS_SCRIPT: 
+    case STATUS_SCRIPT:
     {
-      mJSStatus = aStatus;
+      mJSStatus = aStatus; //FIXME MEMORY LEAK
       gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
           moz_embed_signals[JS_STATUS]);
     }
@@ -407,7 +407,7 @@ NS_IMETHODIMP
 EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
          const PRUnichar *aTipText)
 {
-  nsAutoString tipText ( aTipText );
+  nsAutoString tipText (aTipText);
 
 #ifdef MOZ_WIDGET_GTK
   const char* tipString = ToNewCString(tipText);
@@ -419,7 +419,7 @@ EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
 
   if (sTipWindow)
     gtk_widget_destroy(sTipWindow);
-  
+
   // get the root origin for this content window
   nsCOMPtr<nsIWidget> mainWidget;
   mBaseWindow->GetMainWidget(getter_AddRefs(mainWidget));
@@ -433,13 +433,13 @@ EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
   // tooltips vanish if they show up right at the origin of the
   // cursor.
   root_y += 10;
-  
+
   sTipWindow = gtk_window_new(GTK_WINDOW_POPUP);
   gtk_widget_set_app_paintable(sTipWindow, TRUE);
   gtk_window_set_policy(GTK_WINDOW(sTipWindow), FALSE, FALSE, TRUE);
   // needed to get colors + fonts etc correctly
   gtk_widget_set_name(sTipWindow, "gtk-tooltips");
-  
+
   // set up the popup window as a transient of the widget.
   GtkWidget *toplevel_window;
   toplevel_window = gtk_widget_get_toplevel(GTK_WIDGET(mOwner->mOwningWidget));
@@ -449,7 +449,7 @@ EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
   }
   gtk_window_set_transient_for(GTK_WINDOW(sTipWindow),
              GTK_WINDOW(toplevel_window));
-  
+
   // realize the widget
   gtk_widget_realize(sTipWindow);
 
@@ -472,8 +472,8 @@ EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
 #ifdef MOZ_WIDGET_GTK
   gtk_widget_popup(sTipWindow, aXCoords + root_x, aYCoords + root_y); */
 #endif /* MOZ_WIDGET_GTK */
-  
-  nsMemory::Free( (void*)tipString );
+
+  nsMemory::Free((void*)tipString);
 
   return NS_OK;
 }
@@ -494,7 +494,7 @@ NS_IMETHODIMP
 EmbedWindow::GetInterface(const nsIID &aIID, void** aInstancePtr)
 {
   nsresult rv;
-  
+
   rv = QueryInterface(aIID, aInstancePtr);
 
   // pass it up to the web browser object

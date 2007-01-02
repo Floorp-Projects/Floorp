@@ -49,11 +49,23 @@
 #else
 #include "nsStringAPI.h"
 #endif
-#include <nsIWindowWatcher.h>
-#include <nsIWebBrowserChrome.h>
-#include <nsIEmbeddingSiteWindow.h>
-#include <nsCOMPtr.h>
-#include <nsIServiceManager.h>
+#include "nsIWindowWatcher.h"
+#include "nsIWebBrowserChrome.h"
+#include "nsIEmbeddingSiteWindow.h"
+#include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
+
+#define UNACCEPTABLE_CRASHY_GLIB_ALLOCATION(newed) PR_BEGIN_MACRO \
+  /* OOPS this code is using a glib allocation function which     \
+   * will cause the application to crash when it runs out of      \
+   * memory. This is not cool. either g_try methods should be     \
+   * used or malloc, or new (note that gecko /will/ be replacing  \
+   * its operator new such that new will not throw exceptions).   \
+   * XXX please fix me.                                           \
+   */                                                             \
+  if (!newed) {                                                   \
+  }                                                               \
+  PR_END_MACRO
 
 GtkPromptService::GtkPromptService()
 {
@@ -68,7 +80,7 @@ NS_IMPL_ISUPPORTS2(GtkPromptService, nsIPromptService, nsICookiePromptService)
 NS_IMETHODIMP
 GtkPromptService::Alert(
   nsIDOMWindow* aParent,
-  const PRUnichar* aDialogTitle, 
+  const PRUnichar* aDialogTitle,
   const PRUnichar* aDialogText)
 {
   GtkWidget* parentWidget = GetGtkWidgetForDOMWindow(aParent);
@@ -85,7 +97,7 @@ GtkPromptService::Alert(
   EmbedPrompter prompter;
   prompter.SetTitle(aDialogTitle ? aDialogTitle : NS_LITERAL_STRING("Alert").get());
   prompter.SetMessageText(aDialogText);
-  prompter.Create(EmbedPrompter::TYPE_ALERT, 
+  prompter.Create(EmbedPrompter::TYPE_ALERT,
           GetGtkWindowForDOMWindow(aParent));
   prompter.Run();
 #endif
@@ -532,6 +544,7 @@ GtkPromptService::CookieDialog(
   nsCOMPtr<nsIDOMWindow> domWindow (do_QueryInterface (aParent));
   GtkMozEmbed *parentWidget = GTK_MOZ_EMBED(GetGtkWidgetForDOMWindow(domWindow));
   GtkMozEmbedCookie *cookie_struct = g_new0(GtkMozEmbedCookie, 1);
+  UNACCEPTABLE_CRASHY_GLIB_ALLOCATION(cookie_struct);
   if (parentWidget && cookie_struct) {
     g_signal_emit_by_name(
       GTK_OBJECT(parentWidget->common),

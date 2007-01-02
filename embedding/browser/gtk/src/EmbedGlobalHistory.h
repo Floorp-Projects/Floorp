@@ -38,12 +38,22 @@
  * ***** END LICENSE BLOCK ***** */
 #ifndef __EMBEDGLOBALHISTORY_h
 #define __EMBEDGLOBALHISTORY_h
-#include <nsIGlobalHistory2.h>
-#include <nsIObserver.h>
+#include "nsIGlobalHistory2.h"
+#include "nsIObserver.h"
 #include "EmbedPrivate.h"
 #include <prenv.h>
 #include <gtk/gtk.h>
-#include <nsDocShellCID.h>
+#include "nsDocShellCID.h"
+
+#ifdef MOZ_ENABLE_GNOMEVFS
+#include <libgnomevfs/gnome-vfs.h>
+#define OUTPUT_STREAM GnomeVFSHandle
+#define LOCAL_FILE GnomeVFSURI
+#else
+#define OUTPUT_STREAM nsIOutputStream
+#define LOCAL_FILE nsILocalFile
+#endif
+
 //#include "gtkmozembed_common.h"
 /* {2f977d51-5485-11d4-87e2-0010a4e75ef2} */
 #define NS_EMBEDGLOBALHISTORY_CID \
@@ -66,16 +76,16 @@ class EmbedGlobalHistory: public nsIGlobalHistory2,
     NS_DECL_ISUPPORTS
     NS_DECL_NSIGLOBALHISTORY2
     NS_DECL_NSIOBSERVER
-    nsresult RemoveAllPages();
+    nsresult RemoveEntries(const PRUnichar *url = nsnull, int time = 0);
 
     protected:
-    enum { 
+    enum {
         kFlushModeAppend,      /** < Add a new entry in the history file */
         kFlushModeFullWrite    /** < Rewrite all history file */
     };
 /** Initiates the history file
   * @return NS_OK on the success.
-  */  
+  */
     nsresult          InitFile();
 /** Loads the history file
   * @return NS_OK on the success.
@@ -86,13 +96,13 @@ class EmbedGlobalHistory: public nsIGlobalHistory2,
   * @param handle A Gnome VFS handle.
   * @return NS_OK on the success.
 */
-    nsresult          WriteEntryIfWritten(GList *list, void *file_handle);
+    nsresult          WriteEntryIfWritten(GList *list, OUTPUT_STREAM *file_handle);
 /** Writes entries in the history file
  * @param list The internal history list.
  * @param handle A Gnome VFS handle.
  * @return NS_OK on the success.
 */
-    nsresult          WriteEntryIfUnwritten(GList *list, void *file_handle);
+    nsresult          WriteEntryIfUnwritten(GList *list, OUTPUT_STREAM *file_handle);
 /** Writes entries in the history file
   * @param mode How to write in the history file
   * @return NS_OK on the success.
@@ -100,20 +110,20 @@ class EmbedGlobalHistory: public nsIGlobalHistory2,
     nsresult          FlushData(PRIntn mode = kFlushModeFullWrite);
  /** Remove entries from the URL table
   * @return NS_OK on the success.
-  */   
+  */
     nsresult          ResetData();
 /** Reads the history entries using GnomeVFS
   * @param vfs_handle A Gnome VFS handle.
   * @return NS_OK on the success.
   */
-    nsresult          ReadEntries(void *file_handle);
+    nsresult          ReadEntries(LOCAL_FILE *file_uri);
 /** Gets a history entry 
   * @param name The history entry name.
   * @return NS_OK if the history entry name was gotten.
   */
-    nsresult          GetEntry(gchar *);
+    nsresult          GetEntry(const char *);
     protected:
-    void             *handle;                 /** < The GnomeVFS handler */
+    OUTPUT_STREAM    *mFileHandle;             /** < The History File handle */
     PRBool            mDataIsLoaded;           /** < If the data is loaded */
     PRInt32           mEntriesAddedSinceFlush; /** < Number of entries added since flush */
     gchar*            mHistoryFile;            /** < The history file path */

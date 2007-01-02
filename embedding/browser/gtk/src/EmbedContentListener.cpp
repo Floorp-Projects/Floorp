@@ -148,7 +148,7 @@ EmbedContentListener::CanHandleContent(const char        *aContentType,
       nsresult rv =
         webNavInfo->IsTypeSupported(nsDependentCString(aContentType),
                                     mOwner ? mOwner->mNavigation.get() : nsnull,
-                                    &canHandle);
+                                    &canHandle); //FIXME XXX MEMLEAK
       NS_ENSURE_SUCCESS(rv, rv);
       *_retval = (canHandle != nsIWebNavigationInfo::UNSUPPORTED);
     }

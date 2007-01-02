@@ -94,7 +94,7 @@
 #include "gtkmozembedprivate.h"
 #ifdef MOZILLA_INTERNAL_API
 #include "nsString.h"
-#include <nsXPIDLString.h>
+#include "nsXPIDLString.h"
 #include "nsIForm.h"
 #else
 #include "nsDirectoryServiceUtils.h"
@@ -353,7 +353,7 @@ EmbedPasswordMgr::Register(nsIComponentManager* aCompMgr,
                            PR_TRUE,
                            PR_TRUE,
                            getter_Copies(prevEntry));
-  
+
   return NS_OK;
 }
 
@@ -550,6 +550,12 @@ EmbedPasswordMgr::RemoveReject(const nsACString& aHost)
   mRejectTable.Remove(aHost);
   WritePasswords(mSignonFile);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+EmbedPasswordMgr::IsEqualToLastHostQuery(nsCString& aHost)
+{
+  return StringBeginsWith (aHost, mLastHostQuery);
 }
 
 /* static */ PLDHashOperator PR_CALLBACK
@@ -886,7 +892,7 @@ EmbedPasswordMgr::OnStateChange(nsIWebProgress* aWebProgress,
   // check to see if we should formfill.  failure is non-fatal
   PRBool prefillForm = PR_TRUE;
   mPrefBranch->GetBoolPref("autofillForms", &prefillForm);
-  
+
   // We can auto-prefill the username and password if there is only
   // one stored login that matches the username and password field names
   // on the form in question.  Note that we only need to worry about a
@@ -1015,19 +1021,23 @@ EmbedPasswordMgr::OnStateChange(nsIWebProgress* aWebProgress,
             goto done;
         }
 
-        GList * logins = nsnull;
-        logins = g_list_append(logins, (char*)NS_ConvertUTF16toUTF8(buffer).get());
-        gint retval = -1;
-        gtk_signal_emit(GTK_OBJECT(mCommonObject->mCommon),
-                        moz_embed_common_signals[COMMON_SELECT_LOGIN],
-                        logins, &retval);      
-        g_list_free(logins);
+        if (!prefilledUser) {
+          GList * logins = nsnull;
+          NS_ConvertUTF16toUTF8 login(buffer);
+          logins = g_list_append(logins, login.get());
+          gint retval = -1;
+          gtk_signal_emit(GTK_OBJECT(mCommonObject->mCommon),
+                          moz_embed_common_signals[COMMON_SELECT_LOGIN],
+                          logins, &retval);
 
-        if (retval != -1) {
-          userField->SetValue(buffer);
-          if (NS_FAILED(DecryptData(firstMatch->passValue, buffer)))
-            goto done;
-          passField->SetValue(buffer);
+          g_list_free(logins);
+
+          if (retval != -1) {
+            userField->SetValue(buffer);
+            if (NS_FAILED(DecryptData(firstMatch->passValue, buffer)))
+              goto done;
+            passField->SetValue(buffer);
+          }
         }
       }
     }

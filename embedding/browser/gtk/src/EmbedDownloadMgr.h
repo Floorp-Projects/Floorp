@@ -40,12 +40,12 @@
 #ifndef __EmbedDownloadMgr_h
 #define __EmbedDownloadMgr_h
 #include "EmbedPrivate.h"
-#include <nsIHelperAppLauncherDialog.h>
-#include <nsIMIMEInfo.h>
-#include <nsCOMPtr.h>
-#include <nsIExternalHelperAppService.h>
-#include <nsIRequest.h>
-#include <nsILocalFile.h>
+#include "nsIHelperAppLauncherDialog.h"
+#include "nsIMIMEInfo.h"
+#include "nsCOMPtr.h"
+#include "nsIExternalHelperAppService.h"
+#include "nsIRequest.h"
+#include "nsILocalFile.h"
 #include "nsWeakReference.h"
 #define EMBED_DOWNLOADMGR_DESCRIPTION "MicroB Download Manager"
 #define EMBED_DOWNLOADMGR_CID {0x53df12a2, 0x1f4a, 0x4382, {0x99, 0x4e, 0xed, 0x62, 0xcf, 0x0d, 0x6b, 0x3a}}
@@ -58,7 +58,7 @@ typedef struct _EmbedDownload EmbedDownload;
 struct _EmbedDownload
 {
   GtkObject * parent;
-  GtkWidget* gtkMozEmbedParentWidget;/** Associated gtkmozembed widget */ 
+  GtkWidget* gtkMozEmbedParentWidget;/** Associated gtkmozembed widget */
   char* file_name;                   /** < The file's name */
   const char *file_name_with_path;        /** < The file's name */
   const char* server;                /** < The server's name */
@@ -72,7 +72,7 @@ struct _EmbedDownload
   nsIHelperAppLauncher* launcher;    /** < The mozilla's download dialog */
   nsIRequest* request;               /** < The download request */
   nsIFile* file_dest;                /** < The final file's name */
-  nsIFile* file_target;              /** < The target file's name */              
+  nsIFile* file_target;              /** < The target file's name */
 };
 class EmbedDownloadMgr : public nsIHelperAppLauncherDialog
 {

@@ -37,8 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <nsIDocShell.h>
-#include <nsIWebProgress.h>
+#include "nsIDocShell.h"
+#include "nsIWebProgress.h"
 #include "nsIWidget.h"
 #include "nsCRT.h"
 #include "nsNetUtil.h"
@@ -48,45 +48,45 @@
 #include "nsAppDirectoryServiceDefs.h"
 
 // for do_GetInterface
-#include <nsIInterfaceRequestor.h>
+#include "nsIInterfaceRequestor.h"
 // for do_CreateInstance
-#include <nsIComponentManager.h>
+#include "nsIComponentManager.h"
 
 // for initializing our window watcher service
-#include <nsIWindowWatcher.h>
+#include "nsIWindowWatcher.h"
 
-#include <nsILocalFile.h>
+#include "nsILocalFile.h"
 
 #include "nsXULAppAPI.h"
 
 // all of the crap that we need for event listeners
 // and when chrome windows finish loading
-#include <nsIDOMWindow.h>
-#include <nsPIDOMWindow.h>
-#include <nsIDOMWindowInternal.h>
-#include <nsIChromeEventHandler.h>
+#include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIChromeEventHandler.h"
 
 // For seting scrollbar visibilty
-#include <nsIDOMBarProp.h>
+#include "nsIDOMBarProp.h"
 
 // for the focus hacking we need to do
-#include <nsIFocusController.h>
+#include "nsIFocusController.h"
 
-#include <nsIFormControl.h>
+#include "nsIFormControl.h"
 // for the clipboard actions we need to do
 #include "nsIClipboardCommands.h"
 
 #ifndef MOZ_ENABLE_LIBXUL
 // for profiles
-#include <nsProfileDirServiceProvider.h>
-#include <nsEmbedAPI.h>
+#include "nsProfileDirServiceProvider.h"
+#include "nsEmbedAPI.h"
 // for NS_APPSHELL_CID
-#include <nsWidgetsCID.h>
+#include "nsWidgetsCID.h"
 #endif
 
 // app component registration
-#include <nsIGenericFactory.h>
-#include <nsIComponentRegistrar.h>
+#include "nsIGenericFactory.h"
+#include "nsIComponentRegistrar.h"
 
 // all of our local includes
 #include "EmbedPrivate.h"
@@ -128,6 +128,13 @@
 #include "nsEditorCID.h"
 
 #include "nsEmbedCID.h"
+
+//#include "nsICache.h"
+#include "nsICacheService.h"
+#include "nsICacheSession.h"
+//#include "nsICacheListener.h"
+static NS_DEFINE_CID(kCacheServiceCID,           NS_CACHESERVICE_CID);
+static nsICacheService* sCacheService;
 
 #ifdef MOZ_WIDGET_GTK2
 static EmbedCommon* sEmbedCommon = nsnull;
@@ -199,8 +206,8 @@ EmbedCommon::GetAnyLiveWidget()
 
   // Get the number of browser windows.
   PRInt32 count = EmbedPrivate::sWindowList->Count();
-  // This function doesn't get called very often at all ( only when
-  // creating a new window ) so it's OK to walk the list of open
+  // This function doesn't get called very often at all (only when
+  // creating a new window) so it's OK to walk the list of open
   // windows.
   //FIXME need to choose right window
   GtkMozEmbed *ret = nsnull;
@@ -437,7 +444,7 @@ EmbedPrivate::EmbedPrivate(void)
   mDoResizeEmbed    = PR_TRUE;
   mOpenBlock        = PR_FALSE;
   mNeedFav          = PR_FALSE;
-  
+
   PushStartup();
   if (!sWindowList) {
     sWindowList = new nsVoidArray();
@@ -492,7 +499,7 @@ EmbedPrivate::Init(GtkMozEmbed *aOwningWidget)
 
   // has the window creator service been set up?
   static int initialized = PR_FALSE;
-  // Set up our window creator ( only once )
+  // Set up our window creator (only once)
   if (!initialized) {
     // We set this flag here instead of on success.  If it failed we
     // don't want to keep trying and leaking window creator objects.
@@ -621,9 +628,9 @@ EmbedPrivate::Resize(PRUint32 aWidth, PRUint32 aHeight)
   } else {
 #ifdef MOZ_WIDGET_GTK2
     PRInt32 X, Y, W, H;
-    mWindow->GetDimensions( nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION, &X, &Y, &W, &H);
+    mWindow->GetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION, &X, &Y, &W, &H);
     if (Y < 0) {
-      mWindow->SetDimensions( nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION, 0, 0, nsnull, nsnull);
+      mWindow->SetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION, 0, 0, nsnull, nsnull);
       return;
     }
     EmbedContextMenuInfo * ctx_menu = mEventListener->GetContextInfo();
@@ -639,8 +646,8 @@ EmbedPrivate::Resize(PRUint32 aWidth, PRUint32 aHeight)
         PRInt32 sub = ctx_menu->mFormRect.y - height + ctx_menu->mFormRect.height;
         PRInt32 diff = ctx_menu->mFormRect.y - sub;
 //        printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!height: %i, Form.y: %i, Form.Height: %i, sub: %i, diff: %i\n", height, ctx_menu->mFormRect.y, ctx_menu->mFormRect.height, sub, diff);
-        if (sub > 0 && diff >= 0)  
-          mWindow->SetDimensions( nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION, 0, -sub, nsnull, nsnull);
+        if (sub > 0 && diff >= 0)
+          mWindow->SetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION, 0, -sub, nsnull, nsnull);
       }
     }
 #endif
@@ -721,7 +728,7 @@ EmbedPrivate::SetURI(const char *aURI)
 void
 EmbedPrivate::LoadCurrentURI(void)
 {
-  if (mURI.Length()) {
+  if (!mURI.IsEmpty()) {
     nsCOMPtr<nsPIDOMWindow> piWin;
     GetPIDOMWindow(getter_AddRefs(piWin));
 
@@ -888,13 +895,15 @@ EmbedPrivate::PopStartup(void)
 {
   sWidgetCount--;
   if (sWidgetCount == 0) {
+    NS_IF_RELEASE(sCacheService);
+
     // destroy the offscreen window
     DestroyOffscreenWindow();
-    
+
 #ifndef MOZ_ENABLE_LIBXUL
     // shut down the profiles
     ShutdownProfile();
-    
+
     if (sAppShell) {
 #ifdef MOZILLA_1_8_BRANCH
       // Shutdown the appshell service.
@@ -905,7 +914,7 @@ EmbedPrivate::PopStartup(void)
     }
 
     // shut down XPCOM/Embedding
-    NS_TermEmbedding();					
+    NS_TermEmbedding();
 #else
 
     // we no longer need a reference to the DirectoryServiceProvider
@@ -987,7 +996,7 @@ EmbedPrivate::SetProfilePath(const char *aDir, const char *aName)
       XRE_NotifyProfile();
 
     return;
-  }  
+  }
   NS_WARNING("Failed to lock profile.");
 
   // Failed
@@ -1079,8 +1088,8 @@ EmbedPrivate::FindPrivateForBrowser(nsIWebBrowserChrome *aBrowser)
 
   // Get the number of browser windows.
   PRInt32 count = sWindowList->Count();
-  // This function doesn't get called very often at all ( only when
-  // creating a new window ) so it's OK to walk the list of open
+  // This function doesn't get called very often at all (only when
+  // creating a new window) so it's OK to walk the list of open
   // windows.
   for (int i = 0; i < count; i++) {
     EmbedPrivate *tmpPrivate = NS_STATIC_CAST(EmbedPrivate *, sWindowList->ElementAt(i));
@@ -1147,7 +1156,7 @@ EmbedPrivate::ContentFinishedLoading(void)
     if (visibility)
       mWindow->SetVisibility(PR_TRUE);
   }
-  
+
 #ifdef MOZ_WIDGET_GTK2
 #ifdef MOZ_GTKPASSWORD_INTERFACE
   EmbedPasswordMgr *passwordManager = EmbedPasswordMgr::GetInstance();
@@ -1163,13 +1172,13 @@ EmbedPrivate::ContentFinishedLoading(void)
         GtkMozLogin * login = NS_STATIC_CAST(GtkMozLogin*, ptr->data);
         if (login && login->user) {
           users_list = g_list_append(users_list, NS_strdup(login->user));
-          g_free((void*)login->user);
+          NS_Free((void*)login->user);
           if (login->pass)
-            g_free((void*)login->pass);
+            NS_Free((void*)login->pass);
           if (login->host)
-            g_free((void*)login->host);
+            NS_Free((void*)login->host);
         }
-        else 
+        else
           break;
         ptr = ptr->next;
       }
@@ -1243,7 +1252,7 @@ EmbedPrivate::ChildFocusIn(void)
   nsCOMPtr<nsIWebBrowserFocus> webBrowserFocus(do_QueryInterface(webBrowser));
   if (!webBrowserFocus)
     return;
-  
+
   webBrowserFocus->Activate();
 #endif /* MOZ_WIDGET_GTK2 */
 
@@ -1274,7 +1283,7 @@ EmbedPrivate::ChildFocusOut(void)
   nsCOMPtr<nsIWebBrowserFocus> webBrowserFocus(do_QueryInterface(webBrowser));
   if (!webBrowserFocus)
     return;
-  
+
   webBrowserFocus->Deactivate();
 #endif /* MOZ_WIDGET_GTK2 */
 
@@ -1533,8 +1542,8 @@ EmbedPrivate::StartupProfile(void)
     pref = do_GetService(NS_PREF_CONTRACTID);
     if (!pref)
       return NS_ERROR_FAILURE;
-        sPrefs = pref.get();
-        NS_ADDREF(sPrefs);
+    sPrefs = pref.get();
+    NS_ADDREF(sPrefs);
   }
   return NS_OK;
 }
@@ -1546,12 +1555,8 @@ EmbedPrivate::ShutdownProfile(void)
   if (sProfileDirServiceProvider) {
     sProfileDirServiceProvider->Shutdown();
     NS_RELEASE(sProfileDirServiceProvider);
-    sProfileDirServiceProvider = 0;
   }
-  if (sPrefs) {
-    NS_RELEASE(sPrefs);
-    sPrefs = 0;
-  }
+  NS_IF_RELEASE(sPrefs);
 }
 #endif
 
@@ -1663,7 +1668,7 @@ EmbedPrivate::ClipBoardAction(GtkMozEmbedClipboard type)
       rv = clipboard->CanPaste (&canDo);
       break;
     }
-    case GTK_MOZ_EMBED_CAN_COPY:    
+    case GTK_MOZ_EMBED_CAN_COPY:
     {
       rv = clipboard->CanCopySelection (&canDo);
       break;
@@ -1712,11 +1717,12 @@ EmbedPrivate::FindText(const char *exp, PRBool  reverse,
                        PRBool  restart)
 {
   PRUnichar *text;
+  PRBool match;
   nsresult rv;
   nsCOMPtr<nsIWebBrowser> webBrowser;
   mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
   nsCOMPtr<nsIWebBrowserFind> finder(do_GetInterface (webBrowser));
-  g_return_val_if_fail( finder != NULL, FALSE);
+  g_return_val_if_fail(finder != NULL, FALSE);
   text = LocaleToUnicode (exp);
   finder->SetSearchString (text);
   finder->SetFindBackwards (reverse);
@@ -1724,9 +1730,12 @@ EmbedPrivate::FindText(const char *exp, PRBool  reverse,
   finder->SetEntireWord (whole_word);
   finder->SetSearchFrames(TRUE); //SearchInFrames
   finder->SetMatchCase (case_sensitive);
-  rv = finder->FindNext (&restart);
+  rv = finder->FindNext (&match);
   NS_Free(text);
-  return ( !rv );
+  if (NS_FAILED(rv))
+    return FALSE;
+
+  return match;
 }
 
 nsresult
@@ -1774,13 +1783,13 @@ EmbedPrivate::InsertTextToNode(nsIDOMNode *aDOMNode, const char *string)
     nsinput = do_QueryInterface(targetNode, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     nsinput->GetTextLength(&textLength);
-    if (textLength > 0) {  
+    if (textLength > 0) {
       NS_ENSURE_SUCCESS(rv, rv);
       rv = input->GetValue(buffer);
       nsinput->GetSelectionStart (&selectionStart);
       nsinput->GetSelectionEnd (&selectionEnd);
 
-      if (selectionStart != selectionEnd) 
+      if (selectionStart != selectionEnd)
         buffer.Cut(selectionStart, selectionEnd - selectionStart);
 #ifdef MOZILLA_INTERNAL_API
       buffer.Insert(UTF8ToNewUnicode(nsDependentCString(string)), selectionStart);
@@ -1815,13 +1824,13 @@ EmbedPrivate::InsertTextToNode(nsIDOMNode *aDOMNode, const char *string)
     NS_ENSURE_SUCCESS(rv, rv);
     nsinput->GetTextLength(&textLength);
 
-    if (textLength > 0) {  
+    if (textLength > 0) {
       NS_ENSURE_SUCCESS(rv, rv);
       rv = input->GetValue(buffer);
       nsinput->GetSelectionStart (&selectionStart);
       nsinput->GetSelectionEnd (&selectionEnd);
 
-      if (selectionStart != selectionEnd) {    
+      if (selectionStart != selectionEnd) {
         buffer.Cut(selectionStart, selectionEnd - selectionStart);
       }
 #ifdef MOZILLA_INTERNAL_API
@@ -1848,7 +1857,7 @@ EmbedPrivate::InsertTextToNode(nsIDOMNode *aDOMNode, const char *string)
     nsCOMPtr<nsIEditingSession> editingSession = do_GetInterface(retval);
     if (!editingSession)
       return NS_ERROR_FAILURE;
-  
+
     nsCOMPtr<nsIEditor> theEditor;
     nsCOMPtr<nsPIDOMWindow> piWin;
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(ctx_menu->mCtxDocument);
@@ -1859,7 +1868,7 @@ EmbedPrivate::InsertTextToNode(nsIDOMNode *aDOMNode, const char *string)
     if (!theEditor) {
       return NS_ERROR_FAILURE;
     }
-    
+
     nsCOMPtr<nsIHTMLEditor> htmlEditor;
     htmlEditor = do_QueryInterface(theEditor, &rv);
     if (!htmlEditor)
@@ -1875,70 +1884,109 @@ EmbedPrivate::InsertTextToNode(nsIDOMNode *aDOMNode, const char *string)
   return NS_OK;
 }
 
-#define GTK_MOZ_EMBED_DIFFERENT_ZOOM_LEVEL 0
-#define GTK_MOZ_EMBED_EQUAL_ZOOM_LEVEL 1
-
 nsresult
-EmbedPrivate::GetZoom (gint *zoomLevel, gint *compareFramesZoomLevel) {
-  // setting default zoom value.
-  *zoomLevel = 100;
-  nsCOMPtr<nsIWebBrowser> webBrowser;
-  nsresult rv = mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  // get main dom window
-  nsCOMPtr <nsIDOMWindow> DOMWindow;
-  rv = webBrowser->GetContentDOMWindow(getter_AddRefs(DOMWindow));
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  // get window/document zoom
-  float zoomLevelFloat;
-  rv = DOMWindow->GetTextZoom(&zoomLevelFloat);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  *zoomLevel = (int)round (zoomLevelFloat * 100.);
-  if (compareFramesZoomLevel) { 
-    *compareFramesZoomLevel = GTK_MOZ_EMBED_EQUAL_ZOOM_LEVEL;
-    // get frames.
-    nsCOMPtr <nsIDOMWindowCollection> frameCollection;
-    rv = DOMWindow->GetFrames (getter_AddRefs (frameCollection));
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    // comparing frames' zoom level
-    PRUint32 numberOfFrames;
-    frameCollection->GetLength (&numberOfFrames);
-    if (numberOfFrames) {
-      //gint mainFrameCurrentIntZoomLevel = ((float) zoomLevelFloat) * 100.;
-      //gint mainFrameCurrentIntZoomLevel = zoomLevel;
-      nsCOMPtr <nsIDOMWindow> currentFrameDOMWindow;
-      gint currentFrameIntZoomLevel;
-      gfloat currentFrameFloatZoomLevel;
-      for (guint i= 0; i < numberOfFrames; i++) {
-        frameCollection->Item(i, getter_AddRefs (currentFrameDOMWindow));
-        if (!currentFrameDOMWindow) continue;
-        currentFrameDOMWindow->GetTextZoom(&currentFrameFloatZoomLevel);
-        currentFrameIntZoomLevel = (gint)round(currentFrameFloatZoomLevel * 100.);
-        if (currentFrameIntZoomLevel != *zoomLevel) { 
-          *compareFramesZoomLevel = GTK_MOZ_EMBED_DIFFERENT_ZOOM_LEVEL;
-          break ;
-        }
-      } // for
-    } // if frames
-  } // if compareFramesZoomLevel
-  return NS_OK;
-}
-
-nsresult 
-EmbedPrivate::SetZoom (gint zoomLevel)
+EmbedPrivate::GetDOMWindowByNode(nsIDOMNode *aNode, nsIDOMWindow * *aDOMWindow)
 {
   nsresult rv;
+  nsCOMPtr <nsIDOMDocument> nodeDoc;
+  rv = aNode->GetOwnerDocument(getter_AddRefs(nodeDoc));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIWebBrowser> webBrowser;
   rv = mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  // get main dom window
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr <nsIDOMWindow> mainWindow;
+  rv = webBrowser->GetContentDOMWindow(getter_AddRefs(mainWindow));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMDocument> mainDoc;
+  rv = mainWindow->GetDocument (getter_AddRefs(mainDoc));
+  if (mainDoc == nodeDoc) {
+    *aDOMWindow = mainWindow;
+    NS_IF_ADDREF(*aDOMWindow);
+    return NS_OK;
+  }
+
+  nsCOMPtr <nsIDOMWindowCollection> frames;
+  rv = mainWindow->GetFrames(getter_AddRefs (frames));
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRUint32 frameCount = 0;
+  rv = frames->GetLength (&frameCount);
+  nsCOMPtr <nsIDOMWindow> curWindow;
+  for (unsigned int i= 0; i < frameCount; i++) {
+    rv = frames->Item(i, getter_AddRefs (curWindow));
+    if (!curWindow)
+      continue;
+    nsCOMPtr <nsIDOMDocument> currentDoc;
+    curWindow->GetDocument (getter_AddRefs(currentDoc));
+    if (currentDoc == nodeDoc) {
+      *aDOMWindow = curWindow;
+      NS_IF_ADDREF(*aDOMWindow);
+      break;
+    }
+  }
+  return rv;
+}
+
+nsresult
+EmbedPrivate::GetZoom (PRInt32 *aZoomLevel, nsISupports *aContext)
+{
+
+  NS_ENSURE_ARG_POINTER(aZoomLevel);
+
+  nsresult rv;
+  *aZoomLevel = 100;
+
   nsCOMPtr <nsIDOMWindow> DOMWindow;
-  rv = webBrowser->GetContentDOMWindow(getter_AddRefs(DOMWindow));
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  gfloat zoomLevelFloat; //, relativeScale;
-  zoomLevelFloat = (float) zoomLevel / 100.;
-  // performing text zooming first to get the user a faster visual response. 
-  rv = DOMWindow->SetTextZoom(zoomLevelFloat);
+  if (aContext) {
+    nsCOMPtr <nsIDOMNode> node = do_QueryInterface(aContext, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = GetDOMWindowByNode(node, getter_AddRefs(DOMWindow));
+  } else {
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    rv = mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = webBrowser->GetContentDOMWindow(getter_AddRefs(DOMWindow));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  float zoomLevelFloat;
+  if (DOMWindow)
+    rv = DOMWindow->GetTextZoom(&zoomLevelFloat);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aZoomLevel = (int)round (zoomLevelFloat * 100.);
+  return rv;
+}
+nsresult
+EmbedPrivate::SetZoom (PRInt32 aZoomLevel, nsISupports *aContext)
+{
+  nsresult rv;
+  nsCOMPtr <nsIDOMWindow> DOMWindow;
+
+  if (aContext) {
+    nsCOMPtr <nsIDOMNode> node = do_QueryInterface(aContext, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = GetDOMWindowByNode(node, getter_AddRefs(DOMWindow));
+  } else {
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    rv = mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = webBrowser->GetContentDOMWindow(getter_AddRefs(DOMWindow));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  float zoomLevelFloat;
+  zoomLevelFloat = (float) aZoomLevel / 100.;
+
+  if (DOMWindow)
+    rv = DOMWindow->SetTextZoom(zoomLevelFloat);
+
   return rv;
 }
 
@@ -1964,9 +2012,21 @@ EmbedPrivate::HasFrames  (PRUint32 *numberOfFrames)
 }
 
 nsresult
-EmbedPrivate::GetMIMEInfo (nsString& info)
+EmbedPrivate::GetMIMEInfo (const char **aMime, nsIDOMNode *aDOMNode)
 {
+  NS_ENSURE_ARG_POINTER(aMime);
   nsresult rv;
+  if (aDOMNode && mEventListener) {
+    EmbedContextMenuInfo * ctx = mEventListener->GetContextInfo();
+    if (!ctx)
+      return NS_ERROR_FAILURE;
+    nsCOMPtr<imgIRequest> request;
+    rv = ctx->GetImageRequest(getter_AddRefs(request), aDOMNode);
+    if (request)
+      rv = request->GetMimeType((char**)aMime);
+    return rv;
+  }
+
   nsCOMPtr<nsIWebBrowser> webBrowser;
   rv = mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
 
@@ -1977,9 +2037,48 @@ EmbedPrivate::GetMIMEInfo (nsString& info)
   rv = DOMWindow->GetDocument (getter_AddRefs(doc));
 
   nsCOMPtr<nsIDOMNSDocument> nsDoc = do_QueryInterface(doc);
-  
+
+  nsString nsmime;
   if (nsDoc)
-    rv = nsDoc->GetContentType(info);
+    rv = nsDoc->GetContentType(nsmime);
+  if (!NS_FAILED(rv) && !nsmime.IsEmpty())
+    *aMime = g_strdup((char*)NS_LossyConvertUTF16toASCII(nsmime).get());
   return rv;
 }
 
+nsresult
+EmbedPrivate::GetCacheEntry(const char *aStorage,
+                             const char *aKeyName,
+                             PRUint32 aAccess,
+                             PRBool aIsBlocking,
+                             nsICacheEntryDescriptor **aDescriptor)
+{
+  nsCOMPtr<nsICacheSession> session;
+  nsresult rv;
+
+  if (!sCacheService) {
+    nsCOMPtr<nsICacheService> cacheService
+      = do_GetService("@mozilla.org/network/cache-service;1", &rv);
+    if (NS_FAILED(rv) || !cacheService) {
+      NS_WARNING("do_GetService(kCacheServiceCID) failed\n");
+      return rv;
+    }
+    NS_ADDREF(sCacheService = cacheService);
+  }
+
+  rv = sCacheService->CreateSession("HTTP", 0, PR_TRUE,
+                                    getter_AddRefs(session));
+
+  if (NS_FAILED(rv)) {
+    NS_WARNING("nsCacheService::CreateSession() failed\n");
+    return rv;
+  }
+  rv = session->OpenCacheEntry(nsCString(aKeyName),
+                               nsICache::ACCESS_READ,
+                               PR_FALSE,
+                               aDescriptor);
+
+  if (rv != NS_ERROR_CACHE_KEY_NOT_FOUND)
+    NS_WARNING("OpenCacheEntry(ACCESS_READ) returned error for non-existent entry\n");
+  return rv;
+}

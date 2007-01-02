@@ -146,17 +146,17 @@ typedef enum
 typedef struct _GtkMozHistoryItem GtkMozHistoryItem;
 struct _GtkMozHistoryItem
 {
-    gchar *title;    /** < URL title */
-    gchar *url;      /** < URL */
-    long accessed;   /** < The last time that the URL was accessed */
+    const gchar *title; /** < URL title */
+    const gchar *url;   /** < URL */
+    long accessed;      /** < The last time that the URL was accessed */
 };
 typedef struct _GtkMozCookieList GtkMozCookieList;
 struct _GtkMozCookieList
 {
-    gchar *domain;   /** < The domain's name */
-    gchar *name;     /** < The cookie's name */
-    gchar *value;    /** < The cookie's value */
-    gchar *path;     /** < The cookie's path */
+    gchar *domain; /** < The domain's name */
+    gchar *name;   /** < The cookie's name */
+    gchar *value;  /** < The cookie's value */
+    gchar *path;   /** < The cookie's path */
 };
 typedef struct _GtkMozEmbedCookie GtkMozEmbedCookie;
 struct _GtkMozEmbedCookie
@@ -170,18 +170,18 @@ struct _GtkMozEmbedCookie
 typedef struct _GtkMozPlugin GtkMozPlugin;
 struct _GtkMozPlugin
 {
-    const gchar *title;     /** < Plugin title */
-    const gchar *path;      /** < Plugin path */
-    const gchar *type;      /** < Plugin type */
-    gboolean isDisabled;     /** < is plugin enabled */
+    const gchar *title;  /** < Plugin title */
+    const gchar *path;   /** < Plugin path */
+    const gchar *type;   /** < Plugin type */
+    gboolean isDisabled; /** < is plugin enabled */
 };
 
 typedef struct _GtkMozLogin GtkMozLogin;
 struct _GtkMozLogin
 {
-    const gchar *user;     /** < Plugin title */
+    const gchar *user; /** < Plugin title */
     const gchar *pass; /** < Plugin path */
-    const gchar *host;     /** < Plugin type */
+    const gchar *host; /** < Plugin type */
     guint index;
 };
 
@@ -194,13 +194,16 @@ GTKMOZEMBED_API(gboolean,   gtk_moz_embed_common_login,             (GtkWidget *
 GTKMOZEMBED_API(gboolean,   gtk_moz_embed_common_remove_passwords,  (const gchar *host, const gchar *user, gint index))
 GTKMOZEMBED_API(gint,       gtk_moz_embed_common_get_logins,        (const char* uri, GList **list))
 GTKMOZEMBED_API(gint,       gtk_moz_embed_common_get_history_list,  (GtkMozHistoryItem **GtkHI))
-GTKMOZEMBED_API(gint,       gtk_moz_embed_common_clean_all_history, (void))
+GTKMOZEMBED_API(gint,       gtk_moz_embed_common_remove_history,    (gchar *url, gint time))
 GTKMOZEMBED_API(GSList*,    gtk_moz_embed_common_get_cookie_list,   (void))
 GTKMOZEMBED_API(gint,       gtk_moz_embed_common_delete_all_cookies,(GSList *deletedCookies))
 GTKMOZEMBED_API(unsigned char*, gtk_moz_embed_common_nsx509_to_raw, (void *nsIX509Ptr, guint *len))
-GTKMOZEMBED_API(void,       gtk_moz_embed_common_get_plugins_list,  (GtkMozPlugin **pluginArray, gint*))
+GTKMOZEMBED_API(gint,       gtk_moz_embed_common_get_plugins_list,  (GList **pluginArray))
 GTKMOZEMBED_API(void,       gtk_moz_embed_common_reload_plugins,    (void))
 GTKMOZEMBED_API(guint,      gtk_moz_embed_common_get_security_mode, (guint sec_state))
+GTKMOZEMBED_API(gint,       gtk_moz_embed_common_clear_cache,       (void))
+GTKMOZEMBED_API(gboolean,   gtk_moz_embed_common_observe,           (const gchar*, gpointer, const gchar*, gunichar*))
+
 
 /*typedef struct _GtkMozEmbedCertContext GtkMozEmbedCertContext;
 struct _GtkMozEmbedCertContext
