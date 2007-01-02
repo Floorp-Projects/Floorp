@@ -1,5 +1,5 @@
 <?php
-/* SVN FILE: $Id: index.php,v 1.2 2006/11/01 23:10:21 timeless%mozdev.org Exp $ */
+/* SVN FILE: $Id: index.php,v 1.3 2007/01/02 19:39:46 wclouser%mozilla.com Exp $ */
 
 /**
  * Short description for file.
@@ -22,9 +22,9 @@
  * @package      cake
  * @subpackage   cake.app.webroot
  * @since        CakePHP v 0.2.9
- * @version      $Revision: 1.2 $
+ * @version      $Revision: 1.3 $
  * @modifiedby   $LastChangedBy: phpnut $
- * @lastmodified $Date: 2006/11/01 23:10:21 $
+ * @lastmodified $Date: 2007/01/02 19:39:46 $
  * @license      http://www.opensource.org/licenses/mit-license.php The MIT License
  */
 
@@ -45,14 +45,15 @@ if (!defined('DS'))
 if (!defined('ROOT'))
 {
 //define('ROOT', 'FULL PATH TO DIRECTORY WHERE APP DIRECTORY IS LOCATED DO NOT ADD A TRAILING DIRECTORY SEPARATOR';
-//You should also use the DS define to separate your directories
+//You should also use the DS define to seperate your directories
     define('ROOT', dirname(dirname(dirname(__FILE__))));
 }
 
 if (!defined('APP_DIR'))
 {
 //define('APP_DIR', 'DIRECTORY NAME OF APPLICATION';
-    define ('APP_DIR', basename(dirname(dirname(__FILE__))));
+    //define ('APP_DIR', basename(dirname(dirname(__FILE__))));
+    define ('APP_DIR', 'uninstall_survey');
 }
 
 /**
@@ -62,8 +63,9 @@ if (!defined('APP_DIR'))
 if (!defined('CAKE_CORE_INCLUDE_PATH'))
 {
 //define ('CAKE_CORE_INCLUDE_PATH', FULL PATH TO DIRECTORY WHERE CAKE CORE IS INSTALLED DO NOT ADD A TRAILING DIRECTORY SEPARATOR';
-//You should also use the DS define to separate your directories
-    define('CAKE_CORE_INCLUDE_PATH', ROOT);
+//You should also use the DS define to seperate your directories
+    define('CAKE_CORE_INCLUDE_PATH', DS.'usr'.DS.'local'.DS.'lib'.DS.'php'.DS.'cake');
+    //define('CAKE_CORE_INCLUDE_PATH', ROOT);
 }
 
 
