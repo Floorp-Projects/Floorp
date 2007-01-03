@@ -149,11 +149,11 @@ function onProfilesKey(aEvent)
 {
   switch( aEvent.keyCode ) 
   {
-  case 46:
-    confirmDelete();
+  case KeyEvent.DOM_VK_DELETE:
+    ConfirmDelete();
     break;
-  case "VK_F2":
-    renameProfile();
+  case KeyEvent.DOM_VK_F2:
+    RenameProfile();
     break;
   }
 }
@@ -226,9 +226,10 @@ function RenameProfile()
     }
 
     selectedItem.label = newName;
-    var tooltiptext =
-      gProfileManagerBundle.getFormattedString("profileTooltip", [newName, aProfile.rootDir.path]);
-    listitem.setAttribute("tooltiptext", tooltiptext);
+    var tiptext = gProfileManagerBundle.
+                  getFormattedString("profileTooltip",
+                                     [newName, selectedProfile.rootDir.path]);
+    selectedItem.setAttribute("tooltiptext", tiptext);
 
     return true;
   }
