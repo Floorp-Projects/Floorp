@@ -133,7 +133,8 @@ nsXBLPrototypeHandler::nsXBLPrototypeHandler(const PRUnichar* aEvent,
 }
 
 nsXBLPrototypeHandler::nsXBLPrototypeHandler(nsIContent* aHandlerElement)
-  : mLineNumber(0),
+  : mHandlerElement(nsnull),
+    mLineNumber(0),
     mNextHandler(nsnull),
     mPrototypeBinding(nsnull)
 {
@@ -149,8 +150,11 @@ nsXBLPrototypeHandler::nsXBLPrototypeHandler(nsIContent* aHandlerElement)
 nsXBLPrototypeHandler::~nsXBLPrototypeHandler()
 {
   --gRefCnt;
-  if (!(mType & NS_HANDLER_TYPE_XUL) && mHandlerText)
+  if (mType & NS_HANDLER_TYPE_XUL) {
+    NS_IF_RELEASE(mHandlerElement);
+  } else if (mHandlerText) {
     nsMemory::Free(mHandlerText);
+  }
 
   // We own the next handler in the chain, so delete it now.
   delete mNextHandler;
@@ -159,15 +163,14 @@ nsXBLPrototypeHandler::~nsXBLPrototypeHandler()
 already_AddRefed<nsIContent>
 nsXBLPrototypeHandler::GetHandlerElement()
 {
-  nsIContent* result;
   if (mType & NS_HANDLER_TYPE_XUL) {
-    result = mHandlerElement;
-    NS_IF_ADDREF(result);
+    nsCOMPtr<nsIContent> element = do_QueryReferent(mHandlerElement);
+    nsIContent* el = nsnull;
+    element.swap(el);
+    return el;
   }
-  else
-    result = nsnull;
 
-  return result;
+  return nsnull;
 }
 
 void
@@ -362,10 +365,12 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
   // event at the element.  It will take care of retargeting it to its
   // command element, if applicable, and executing the event handler.
   if (isXULKey) {
-    if (mHandlerElement->AttrValueIs(kNameSpaceID_None,
-                                     nsGkAtoms::disabled,
-                                     nsGkAtoms::_true,
-                                     eCaseMatters)) {
+    nsCOMPtr<nsIContent> handlerElement = GetHandlerElement();
+    NS_ENSURE_STATE(handlerElement);
+    if (handlerElement->AttrValueIs(kNameSpaceID_None,
+                                    nsGkAtoms::disabled,
+                                    nsGkAtoms::_true,
+                                    eCaseMatters)) {
       // Don't dispatch command events for disabled keys.
       return NS_OK;
     }
@@ -388,7 +393,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
     keyEvent->GetMetaKey(&event.isMeta);
     
     nsPresContext *pc = nsnull;
-    nsIDocument *doc = mHandlerElement->GetCurrentDoc();
+    nsIDocument *doc = handlerElement->GetCurrentDoc();
     if (doc) {
       nsIPresShell *shell = doc->GetShellAt(0);
       if (shell) {
@@ -396,7 +401,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
       }
     }
 
-    nsEventDispatcher::Dispatch(mHandlerElement, pc, &event, nsnull, &status);
+    nsEventDispatcher::Dispatch(handlerElement, pc, &event, nsnull, &status);
     return NS_OK;
   }
 
@@ -770,7 +775,12 @@ PRInt32 nsXBLPrototypeHandler::KeyToMask(PRInt32 key)
 void
 nsXBLPrototypeHandler::GetEventType(nsAString& aEvent)
 {
-  mHandlerElement->GetAttr(kNameSpaceID_None, nsGkAtoms::event, aEvent);
+  nsCOMPtr<nsIContent> handlerElement = GetHandlerElement();
+  if (!handlerElement) {
+    aEvent.Truncate();
+    return;
+  }
+  handlerElement->GetAttr(kNameSpaceID_None, nsGkAtoms::event, aEvent);
   
   if (aEvent.IsEmpty() && (mType & NS_HANDLER_TYPE_XUL))
     // If no type is specified for a XUL <key> element, let's assume that we're "keypress".
@@ -796,7 +806,11 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
 
   if (aKeyElement) {
     mType |= NS_HANDLER_TYPE_XUL;
-    mHandlerElement = aKeyElement;
+    nsCOMPtr<nsIWeakReference> weak = do_GetWeakReference(aKeyElement);
+    if (!weak) {
+      return;
+    }
+    weak.swap(mHandlerElement);
   }
   else {
     mType |= aCommand ? NS_HANDLER_TYPE_XBL_COMMAND : NS_HANDLER_TYPE_XBL_JS;
@@ -846,7 +860,7 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
   // Modifiers are supported by both types of handlers (XUL and XBL).  
   nsAutoString modifiers(aModifiers);
   if (mType & NS_HANDLER_TYPE_XUL)
-    mHandlerElement->GetAttr(kNameSpaceID_None, nsGkAtoms::modifiers, modifiers);
+    aKeyElement->GetAttr(kNameSpaceID_None, nsGkAtoms::modifiers, modifiers);
   
   if (!modifiers.IsEmpty()) {
     mKeyMask = cAllModifiers;
@@ -878,9 +892,9 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
   nsAutoString key(aCharCode);
   if (key.IsEmpty()) {
     if (mType & NS_HANDLER_TYPE_XUL) {
-      mHandlerElement->GetAttr(kNameSpaceID_None, nsGkAtoms::key, key);
+      aKeyElement->GetAttr(kNameSpaceID_None, nsGkAtoms::key, key);
       if (key.IsEmpty()) 
-        mHandlerElement->GetAttr(kNameSpaceID_None, nsGkAtoms::charcode, key);
+        aKeyElement->GetAttr(kNameSpaceID_None, nsGkAtoms::charcode, key);
     }
   }
 
@@ -907,7 +921,7 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
   else {
     key.Assign(aKeyCode);
     if (mType & NS_HANDLER_TYPE_XUL)
-      mHandlerElement->GetAttr(kNameSpaceID_None, nsGkAtoms::keycode, key);
+      aKeyElement->GetAttr(kNameSpaceID_None, nsGkAtoms::keycode, key);
     
     if (!key.IsEmpty()) {
       if (mKeyMask == 0)
