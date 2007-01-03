@@ -2305,7 +2305,14 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
 
         // Now, most importantly, we need to figure out what the content type is for
         // this attachment...If we can't, then just make it application/octet-stream
-
+        
+#ifdef MAC_OSX
+        //Mac always need to snarf the file to figure out how to send it, maybe we need to use apple double...
+        //  unless caller has already set the content type, in which case, trust them.
+        PRBool mustSnarfAttachment = PR_TRUE;
+#else
+        PRBool mustSnarfAttachment = PR_FALSE;
+#endif        
         PR_FREEIF(m_attachments[newLoc].m_type);
         element->GetContentType(&m_attachments[newLoc].m_type);
         if (!m_attachments[newLoc].m_type || !(*m_attachments[newLoc].m_type))
@@ -2359,15 +2366,13 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
           }
         }
         else
+        {
           element->GetContentTypeParam(&m_attachments[newLoc].m_type_param);
+          mustSnarfAttachment = PR_FALSE;
+        }
 
-#ifdef XP_MACOSX
-        //We always need to snarf the file to figure out how to send it, maybe we need to use apple double...
-        m_attachments[newLoc].m_done = PR_FALSE;
-        m_attachments[newLoc].SetMimeDeliveryState(this);
-#else
         //We need to snarf the file to figure out how to send it only if we don't have a content type...
-        if ((!m_attachments[newLoc].m_type) || (!*m_attachments[newLoc].m_type))
+        if (mustSnarfAttachment || (!m_attachments[newLoc].m_type) || (!*m_attachments[newLoc].m_type))
         {
           m_attachments[newLoc].m_done = PR_FALSE;
           m_attachments[newLoc].SetMimeDeliveryState(this);
@@ -2377,7 +2382,6 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
           m_attachments[newLoc].m_done = PR_TRUE;
           m_attachments[newLoc].SetMimeDeliveryState(nsnull);
         }
-#endif
         // For local files, if they are HTML docs and we don't have a charset, we should
         // sniff the file and see if we can figure it out.
         if ( (m_attachments[newLoc].m_type) &&  (*m_attachments[newLoc].m_type) ) 
