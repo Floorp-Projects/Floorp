@@ -40,7 +40,7 @@
 #include "nsIDOMSVGAnimatedNumber.h"
 #include "nsIDOMSVGAnimatedString.h"
 #include "nsIDOMSVGAnimTransformList.h"
-#include "nsIDOMSVGTransformList.h"
+#include "nsSVGTransformList.h"
 #include "nsSVGMatrix.h"
 #include "nsIDOMSVGStopElement.h"
 #include "nsSVGGradientElement.h"
@@ -295,8 +295,8 @@ nsSVGGradientFrame::GetGradientTransform(nsIDOMSVGMatrix **aGradientTransform,
   gradElement->GetGradientTransform(getter_AddRefs(animTrans));
   nsCOMPtr<nsIDOMSVGTransformList> trans;
   animTrans->GetAnimVal(getter_AddRefs(trans));
-  nsCOMPtr<nsIDOMSVGMatrix> gradientTransform;
-  trans->GetConsolidationMatrix(getter_AddRefs(gradientTransform));
+  nsCOMPtr<nsIDOMSVGMatrix> gradientTransform =
+    nsSVGTransformList::GetConsolidationMatrix(trans);
 
   if (!gradientTransform) {
     *aGradientTransform = bboxTransform;

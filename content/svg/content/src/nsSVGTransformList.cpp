@@ -103,6 +103,43 @@ nsSVGTransformList::AppendElement(nsIDOMSVGTransform* aElement)
   return rv;
 }
 
+already_AddRefed<nsIDOMSVGMatrix>
+nsSVGTransformList::GetConsolidationMatrix(nsIDOMSVGTransformList *transforms)
+{
+  PRUint32 count;
+  transforms->GetNumberOfItems(&count);
+
+  if (!count)
+    return nsnull;
+
+  nsCOMPtr<nsIDOMSVGTransform> transform;
+  nsCOMPtr<nsIDOMSVGMatrix> conmatrix;
+
+  // single transform common case - shortcut
+  if (count == 1) {
+    transforms->GetItem(0, getter_AddRefs(transform));
+    transform->GetMatrix(getter_AddRefs(conmatrix));
+  } else {
+    nsresult rv = NS_NewSVGMatrix(getter_AddRefs(conmatrix));
+    NS_ENSURE_SUCCESS(rv, nsnull);
+    
+    nsCOMPtr<nsIDOMSVGMatrix> temp1, temp2;
+    
+    for (PRInt32 i = 0; i < count; ++i) {
+      transforms->GetItem(i, getter_AddRefs(transform));
+      transform->GetMatrix(getter_AddRefs(temp1));
+      conmatrix->Multiply(temp1, getter_AddRefs(temp2));
+      if (!temp2)
+        return nsnull;
+      conmatrix = temp2;
+    }
+  }
+
+  nsIDOMSVGMatrix *_retval = nsnull;
+  conmatrix.swap(_retval);
+  return _retval;
+}
+
 //----------------------------------------------------------------------
 // XPConnect interface list
 NS_CLASSINFO_MAP_BEGIN(SVGTransformList)
@@ -376,13 +413,13 @@ NS_IMETHODIMP nsSVGTransformList::Consolidate(nsIDOMSVGTransform **_retval)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMSVGMatrix> conmatrix;
-  nsresult rv = GetConsolidationMatrix(getter_AddRefs(conmatrix));
-  if (NS_FAILED(rv))
-    return rv;
+  nsCOMPtr<nsIDOMSVGMatrix> conmatrix = GetConsolidationMatrix(this);
+  if (!conmatrix)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   nsCOMPtr<nsIDOMSVGTransform> consolidation;
-  rv = CreateSVGTransformFromMatrix(conmatrix, getter_AddRefs(consolidation));
+  nsresult rv = CreateSVGTransformFromMatrix(conmatrix,
+                                             getter_AddRefs(consolidation));
   if (NS_FAILED(rv))
     return rv;
 
@@ -392,45 +429,8 @@ NS_IMETHODIMP nsSVGTransformList::Consolidate(nsIDOMSVGTransform **_retval)
 
   *_retval = consolidation;
   NS_ADDREF(*_retval);
-  return rv;
-}
-
-/* nsIDOMSVGMatrix getConsolidation (); */
-NS_IMETHODIMP nsSVGTransformList::GetConsolidationMatrix(nsIDOMSVGMatrix **_retval)
-{
-  *_retval = nsnull;
-  PRInt32 count = mTransforms.Count();
-
-  if (!count)
-    return NS_OK;
-
-  nsCOMPtr<nsIDOMSVGMatrix> conmatrix;
-
-  // single transform common case - shortcut
-  if (count == 1) {
-    ElementAt(0)->GetMatrix(getter_AddRefs(conmatrix));
-  } else {
-    nsresult rv = NS_NewSVGMatrix(getter_AddRefs(conmatrix));
-    if (NS_FAILED(rv))
-      return rv;
-    
-    nsCOMPtr<nsIDOMSVGMatrix> temp1, temp2;
-    
-    for (PRInt32 i = 0; i < count; ++i) {
-      nsIDOMSVGTransform* transform = ElementAt(i);
-      transform->GetMatrix(getter_AddRefs(temp1));
-      conmatrix->Multiply(temp1, getter_AddRefs(temp2));
-      if (!temp2)
-        return NS_ERROR_OUT_OF_MEMORY;
-      conmatrix = temp2;
-    }
-  }
-
-  *_retval = conmatrix;
-  NS_ADDREF(*_retval);
   return NS_OK;
 }
-
 
 //----------------------------------------------------------------------
 // nsISVGValueObserver methods

@@ -40,7 +40,7 @@
 #include "nsIDOMSVGAnimatedEnum.h"
 #include "nsIDOMSVGAnimatedRect.h"
 #include "nsIDOMSVGAnimTransformList.h"
-#include "nsIDOMSVGTransformList.h"
+#include "nsSVGTransformList.h"
 #include "nsSVGAnimatedPreserveAspectRatio.h"
 #include "nsStyleContext.h"
 #include "nsINameSpaceManager.h"
@@ -379,7 +379,7 @@ nsresult
 nsSVGPatternFrame::GetPatternTransform(nsIDOMSVGMatrix **aPatternTransform)
 {
   *aPatternTransform = nsnull;
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   // See if we need to get the value from another pattern
   if (!checkURITarget(nsGkAtoms::patternTransform)) {
@@ -390,9 +390,14 @@ nsSVGPatternFrame::GetPatternTransform(nsIDOMSVGMatrix **aPatternTransform)
     patternElement->GetPatternTransform(getter_AddRefs(trans));
     nsCOMPtr<nsIDOMSVGTransformList> lTrans;
     trans->GetAnimVal(getter_AddRefs(lTrans));
-    rv = lTrans->GetConsolidationMatrix(aPatternTransform);
-    if (NS_FAILED(rv) || !*aPatternTransform)
+    nsCOMPtr<nsIDOMSVGMatrix> patternTransform =
+      nsSVGTransformList::GetConsolidationMatrix(lTrans);
+    if (patternTransform) {
+      *aPatternTransform = patternTransform;
+      NS_ADDREF(*aPatternTransform);
+    } else {
       rv = NS_NewSVGMatrix(aPatternTransform);
+    }
   } else {
     // Yes, get it from the target
     rv = mNextPattern->GetPatternTransform(aPatternTransform);

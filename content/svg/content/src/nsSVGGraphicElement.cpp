@@ -124,8 +124,8 @@ nsSVGGraphicElement::AppendLocalTransform(nsIDOMSVGMatrix *aCTM,
   nsCOMPtr<nsIDOMSVGTransformList> transforms;
   mTransforms->GetAnimVal(getter_AddRefs(transforms));
   NS_ENSURE_TRUE(transforms, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIDOMSVGMatrix> matrix;
-  transforms->GetConsolidationMatrix(getter_AddRefs(matrix));
+  nsCOMPtr<nsIDOMSVGMatrix> matrix =
+    nsSVGTransformList::GetConsolidationMatrix(transforms);
   if (!matrix) {
     *_retval = aCTM;
     NS_ADDREF(*_retval);
@@ -293,13 +293,7 @@ nsSVGGraphicElement::GetLocalTransformMatrix()
   rv = mTransforms->GetAnimVal(getter_AddRefs(transforms));
   NS_ENSURE_SUCCESS(rv, nsnull);
 
-  nsCOMPtr<nsIDOMSVGMatrix> localTM;
-  rv = transforms->GetConsolidationMatrix(getter_AddRefs(localTM));
-  NS_ENSURE_SUCCESS(rv, nsnull);
-
-  nsIDOMSVGMatrix *retval = localTM.get();
-  NS_IF_ADDREF(retval);
-  return retval;
+  return nsSVGTransformList::GetConsolidationMatrix(transforms);
 }
 
 nsresult
