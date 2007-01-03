@@ -189,7 +189,7 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
     return;
   }
 
-  BOOL loadInBackground = [BrowserWindowController shouldLoadInBackground:nil];
+  BOOL loadInBackground = [BrowserWindowController shouldLoadInBackground:sender];
   BOOL openInTabs       = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL];
   BOOL cmdKeyDown       = (([[NSApp currentEvent] modifierFlags] & NSCommandKeyMask) != 0);
   
@@ -250,7 +250,7 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
 {
   NSArray* itemsArray = [mHistoryOutlineView selectedItems];
 
-  BOOL backgroundLoad = [BrowserWindowController shouldLoadInBackground:nil];
+  BOOL backgroundLoad = [BrowserWindowController shouldLoadInBackground:aSender];
 
   NSEnumerator* itemsEnum = [itemsArray objectEnumerator];
   HistoryItem* curItem;
@@ -266,7 +266,7 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
 {
   NSArray* itemsArray = [mHistoryOutlineView selectedItems];
 
-  BOOL backgroundLoad = [BrowserWindowController shouldLoadInBackground:nil];
+  BOOL backgroundLoad = [BrowserWindowController shouldLoadInBackground:aSender];
 
   NSEnumerator* itemsEnum = [itemsArray objectEnumerator];
   HistoryItem* curItem;
@@ -283,20 +283,18 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
 
   // make url array
   NSMutableArray* urlArray = [NSMutableArray arrayWithCapacity:[itemsArray count]];
-  
+
   NSEnumerator* itemsEnum = [itemsArray objectEnumerator];
   id curItem;
-  while ((curItem = [itemsEnum nextObject]))
-  {
+  while ((curItem = [itemsEnum nextObject])) {
     if ([curItem isKindOfClass:[HistorySiteItem class]])
       [urlArray addObject:[curItem url]];
   }
 
   // make new window
-  BOOL loadNewTabsInBackgroundPref = [BrowserWindowController shouldLoadInBackground:nil];
-
+  BOOL loadInBackground = [BrowserWindowController shouldLoadInBackground:aSender];
   NSWindow* behindWindow = nil;
-  if (loadNewTabsInBackgroundPref)
+  if (loadInBackground)
     behindWindow = [mBrowserWindowController window];
 
   [[NSApp delegate] openBrowserWindowWithURLs:urlArray behind:behindWindow allowPopups:NO];
@@ -400,6 +398,7 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
 
   NSMenu*     contextMenu = [[[NSMenu alloc] initWithTitle:@"notitle"] autorelease];
   NSMenuItem* menuItem = nil;
+  NSMenuItem* shiftMenuItem = nil;
   NSString*   menuTitle = nil;
 
   if (numSiteItems > 1)
@@ -410,6 +409,12 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
   [menuItem setTarget:self];
   [contextMenu addItem:menuItem];
 
+  shiftMenuItem = [NSMenuItem alternateMenuItemWithTitle:menuTitle
+                                                  action:@selector(openHistoryItemInNewWindow:)
+                                                  target:self
+                                               modifiers:([menuItem keyEquivalentModifierMask] | NSShiftKeyMask)];
+  [contextMenu addItem:shiftMenuItem];
+
   if (numSiteItems > 1)
     menuTitle = NSLocalizedString(@"Open in New Tabs", @"");
   else
@@ -418,12 +423,24 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
   [menuItem setTarget:self];
   [contextMenu addItem:menuItem];
 
+  shiftMenuItem = [NSMenuItem alternateMenuItemWithTitle:menuTitle
+                                                  action:@selector(openHistoryItemInNewTab:)
+                                                  target:self
+                                               modifiers:([menuItem keyEquivalentModifierMask] | NSShiftKeyMask)];
+  [contextMenu addItem:shiftMenuItem];
+
   if (numSiteItems > 1)
   {
     menuTitle = NSLocalizedString(@"Open in Tabs in New Window", @"");
     menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openHistoryItemsInTabsInNewWindow:) keyEquivalent:@""] autorelease];
     [menuItem setTarget:self];
     [contextMenu addItem:menuItem];
+
+    shiftMenuItem = [NSMenuItem alternateMenuItemWithTitle:menuTitle
+                                                    action:@selector(openHistoryItemsInTabsInNewWindow:)
+                                                    target:self
+                                                 modifiers:([menuItem keyEquivalentModifierMask] | NSShiftKeyMask)];
+    [contextMenu addItem:shiftMenuItem];
   }
 
   // space
