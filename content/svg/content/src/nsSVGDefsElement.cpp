@@ -38,7 +38,6 @@
 
 #include "nsSVGGraphicElement.h"
 #include "nsIDOMSVGDefsElement.h"
-#include "nsSVGAtoms.h"
 
 typedef nsSVGGraphicElement nsSVGDefsElementBase;
 

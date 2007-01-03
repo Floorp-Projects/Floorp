@@ -40,7 +40,6 @@
 #include "nsIDOMSVGStopElement.h"
 #include "nsSVGAnimatedNumberList.h"
 #include "nsSVGNumber2.h"
-#include "nsSVGAtoms.h"
 #include "nsGenericHTMLElement.h"
 
 typedef nsSVGStylableElement nsSVGStopElementBase;

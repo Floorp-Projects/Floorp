@@ -162,7 +162,6 @@ EXPORTS =  			\
 	nsSVGRect.h                \
 	nsSVGPoint.h               \
 	nsSVGMatrix.h              \
-	nsSVGAtoms.h               \
 	nsISVGEnum.h               \
 	$(NULL)
 
