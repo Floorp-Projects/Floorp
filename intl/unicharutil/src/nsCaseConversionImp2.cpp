@@ -67,6 +67,8 @@ enum {
 #define CASE_MAP_CACHE_SIZE 0x40
 #define CASE_MAP_CACHE_MASK 0x3F
 
+nsCaseConversionImp2* gCaseConv = nsnull;
+
 struct nsCompressedMap {
   const PRUnichar *mTable;
   PRUint32 mSize;
@@ -149,16 +151,34 @@ struct nsCompressedMap {
   }
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsCaseConversionImp2, nsICaseConversion)
-
 static nsCompressedMap gUpperMap = {
   NS_REINTERPRET_CAST(const PRUnichar*, &gToUpper[0]),
   gToUpperItems
 };
+
 static nsCompressedMap gLowerMap = {
   NS_REINTERPRET_CAST(const PRUnichar*, &gToLower[0]),
   gToLowerItems
 };
+
+nsCaseConversionImp2* nsCaseConversionImp2::GetInstance()
+{
+  if (!gCaseConv)
+    NS_NEWXPCOM(gCaseConv, nsCaseConversionImp2);
+  return gCaseConv;
+}
+
+NS_IMETHODIMP_(nsrefcnt) nsCaseConversionImp2::AddRef(void)
+{
+  return (nsrefcnt)1;
+}
+
+NS_IMETHODIMP_(nsrefcnt) nsCaseConversionImp2::Release(void)
+{
+  return (nsrefcnt)1;
+}
+
+NS_IMPL_THREADSAFE_QUERY_INTERFACE1(nsCaseConversionImp2, nsICaseConversion)
 
 nsresult nsCaseConversionImp2::ToUpper(
   PRUnichar aChar, PRUnichar* aReturn
@@ -364,12 +384,4 @@ nsCaseConversionImp2::CaseInsensitiveCompare(const PRUnichar *aLeft,
     } while (--aCount != 0);
   }
   return NS_OK;
-}
-
-nsresult NS_NewCaseConversion(nsICaseConversion** oResult)
-{
-  NS_ENSURE_ARG_POINTER(oResult);
-  NS_NEWXPCOM(*oResult, nsCaseConversionImp2);
-  NS_IF_ADDREF(*oResult);
-  return *oResult ? NS_OK :NS_ERROR_OUT_OF_MEMORY; 
 }
