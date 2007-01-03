@@ -38,7 +38,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.36 2006/08/15 23:56:01 wtchang%redhat.com Exp $
+ * $Id: secasn1d.c,v 1.37 2007/01/03 12:57:41 nelson%bolyard.com Exp $
  */
 
 /* #define DEBUG_ASN1D_STATES 1 */
@@ -2021,7 +2021,7 @@ sec_asn1d_next_in_sequence (sec_asn1d_state *state)
 	}
 	state->top->current = child;
 	child = sec_asn1d_init_state_based_on_template (child);
-	if (child_missing) {
+	if (child_missing && child) {
 	    child->place = afterIdentifier;
 	    child->found_tag_modifiers = child_found_tag_modifiers;
 	    child->found_tag_number = child_found_tag_number;
