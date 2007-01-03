@@ -666,7 +666,7 @@ txMozillaXMLOutput::createTxWrapper()
     PRUint32 rootLocation = 0;
 #endif
     for (i = 0, j = 0; i < childCount; ++i) {
-        nsIContent* childContent = mDocument->GetChildAt(j);
+        nsCOMPtr<nsIContent> childContent = mDocument->GetChildAt(j);
 
 #ifdef DEBUG
         if (childContent->IsNodeOfType(nsINode::eELEMENT)) {
