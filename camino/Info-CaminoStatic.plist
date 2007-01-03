@@ -95,7 +95,7 @@
 	<key>CFBundleExecutable</key>
 	<string>Camino</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Camino 1.2+, © 1998-2006 Contributors</string>
+	<string>Camino 1.2+, © 1998-2007 Contributors</string>
 	<key>CFBundleIconFile</key>
 	<string>appicon.icns</string>
 	<key>CFBundleIdentifier</key>
