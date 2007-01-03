@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslcon.c,v 1.34 2006/11/14 01:09:54 wtchang%redhat.com Exp $ */
+/* $Id: sslcon.c,v 1.35 2007/01/03 05:30:33 nelson%bolyard.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -1579,33 +1579,23 @@ ssl2_ServerSetupSessionCypher(sslSocket *ss, int cipher, unsigned int keyBits,
 			 PRUint8 *ek, unsigned int ekLen,
 			 PRUint8 *ca, unsigned int caLen)
 {
-    PRUint8           *kk = NULL;
+    PRUint8      *    dk   = NULL; /* decrypted master key */
     sslSessionID *    sid;
+    sslServerCerts *  sc   = ss->serverCerts + kt_rsa;
     PRUint8       *   kbuf = 0;	/* buffer for RSA decrypted data. */
-    unsigned int      el1;	/* length of RSA decrypted data in kbuf */
+    unsigned int      ddLen;	/* length of RSA decrypted data in kbuf */
     unsigned int      keySize;
-    unsigned int      modulusLen;
+    unsigned int      dkLen;    /* decrypted key length in bytes */
+    int               modulusLen;
     SECStatus         rv;
+    PRUint16          allowed;  /* cipher kinds enabled and allowed by policy */
     PRUint8           mkbuf[SSL_MAX_MASTER_KEY_BYTES];
-    sslServerCerts  * sc = ss->serverCerts + kt_rsa;
 
     PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
     PORT_Assert( ss->opt.noLocks || ssl_HaveRecvBufLock(ss)   );
     PORT_Assert((sc->SERVERKEY != 0));
     PORT_Assert((ss->sec.ci.sid != 0));
     sid = ss->sec.ci.sid;
-
-    keySize = (keyBits + 7) >> 3;
-    /* Is the message just way too big? */
-    if (keySize > SSL_MAX_MASTER_KEY_BYTES) {
-	/* bummer */
-	SSL_DBG(("%d: SSL[%d]: keySize=%d ckLen=%d max session key size=%d",
-		 SSL_GETPID(), ss->fd, keySize, ckLen,
-		 SSL_MAX_MASTER_KEY_BYTES));
-	PORT_SetError(SSL_ERROR_BAD_CLIENT);
-	goto loser;
-    }
-
 
     /* Trying to cut down on all these switch statements that should be tables.
      * So, test cipherType once, here, and then use tables below. 
@@ -1626,50 +1616,71 @@ ssl2_ServerSetupSessionCypher(sslSocket *ss, int cipher, unsigned int keyBits,
 	goto loser;
     }
 
-    /* For export ciphers, make sure they didn't send too much key data. */
+    allowed = ss->allowedByPolicy & ss->chosenPreference & SSL_CB_IMPLEMENTED;
+    if (!(allowed & (1 << cipher))) {
+    	/* client chose a kind we don't allow! */
+	SSL_DBG(("%d: SSL[%d]: disallowed cipher=%d",
+		 SSL_GETPID(), ss->fd, cipher));
+	PORT_SetError(SSL_ERROR_BAD_CLIENT);
+	goto loser;
+    }
+
+    keySize = ssl_Specs[cipher].keyLen;
+    if (keyBits != keySize * BPB) {
+	SSL_DBG(("%d: SSL[%d]: invalid master secret key length=%d (bits)!",
+		 SSL_GETPID(), ss->fd, keyBits));
+	PORT_SetError(SSL_ERROR_BAD_CLIENT);
+	goto loser;
+    }
+
     if (ckLen != ssl_Specs[cipher].pubLen) {
-	SSL_DBG(("%d: SSL[%d]: odd secret key size, keySize=%d ckLen=%d!",
-		 SSL_GETPID(), ss->fd, keySize, ckLen));
-	/* Somebody tried to sneak by a strange secret key */
+	SSL_DBG(("%d: SSL[%d]: invalid clear key length, ckLen=%d (bytes)!",
+		 SSL_GETPID(), ss->fd, ckLen));
+	PORT_SetError(SSL_ERROR_BAD_CLIENT);
+	goto loser;
+    }
+
+    if (caLen != ssl_Specs[cipher].ivLen) {
+	SSL_DBG(("%d: SSL[%d]: invalid key args length, caLen=%d (bytes)!",
+		 SSL_GETPID(), ss->fd, caLen));
+	PORT_SetError(SSL_ERROR_BAD_CLIENT);
+	goto loser;
+    }
+
+    modulusLen = PK11_GetPrivateModulusLen(sc->SERVERKEY);
+    if (modulusLen == -1) {
+	/* XXX If the key is bad, then PK11_PubDecryptRaw will fail below. */
+	modulusLen = ekLen;
+    }
+    if (ekLen > modulusLen || ekLen + ckLen < keySize) {
+	SSL_DBG(("%d: SSL[%d]: invalid encrypted key length, ekLen=%d (bytes)!",
+		 SSL_GETPID(), ss->fd, ekLen));
 	PORT_SetError(SSL_ERROR_BAD_CLIENT);
 	goto loser;
     }
 
     /* allocate the buffer to hold the decrypted portion of the key. */
-    /* XXX Haven't done any range check on ekLen. */
-    kbuf = (PRUint8*) PORT_Alloc(ekLen);
+    kbuf = (PRUint8*)PORT_Alloc(modulusLen);
     if (!kbuf) {
 	goto loser;
     }
+    dkLen = keySize - ckLen;
+    dk    = kbuf + modulusLen - dkLen;
 
-    /*
-    ** Decrypt encrypted half of the key. Note that encrypted half has
-    ** been made to match the modulus size of our public key using
-    ** PKCS#1. keySize is the real size of the data that is interesting.
+    /* Decrypt encrypted half of the key. 
     ** NOTE: PK11_PubDecryptRaw will barf on a non-RSA key. This is
     ** desired behavior here.
     */
-    rv = PK11_PubDecryptRaw(sc->SERVERKEY, kbuf, &el1, ekLen, ek, ekLen);
+    rv = PK11_PubDecryptRaw(sc->SERVERKEY, kbuf, &ddLen, modulusLen, ek, ekLen);
     if (rv != SECSuccess) 
 	goto hide_loser;
 
-    modulusLen = PK11_GetPrivateModulusLen(sc->SERVERKEY);
-    if (modulusLen == -1) {
-	/* If the key was really bad, then PK11_pubDecryptRaw
-	 * would have failed, therefore the we must assume that the card
-	 * is just being a pain and not giving us the modulus... but it
-	 * should be the same size as the encrypted key length, so use it
-	 * and keep cranking */
-	modulusLen = ekLen;
-    }
-    /* Is the length of the decrypted data (el1) the expected value? */
-    if (modulusLen != el1) 
+    /* Is the length of the decrypted data (ddLen) the expected value? */
+    if (modulusLen != ddLen) 
 	goto hide_loser;
 
     /* Cheaply verify that PKCS#1 was used to format the encryption block */
-    kk = kbuf + modulusLen - (keySize - ckLen);
-    if ((kbuf[0] != 0x00) || (kbuf[1] != 0x02) || (kk[-1] != 0x00)) {
-	/* Tsk tsk. */
+    if ((kbuf[0] != 0x00) || (kbuf[1] != 0x02) || (dk[-1] != 0x00)) {
 	SSL_DBG(("%d: SSL[%d]: strange encryption block",
 		 SSL_GETPID(), ss->fd));
 	PORT_SetError(SSL_ERROR_BAD_CLIENT);
@@ -1678,10 +1689,10 @@ ssl2_ServerSetupSessionCypher(sslSocket *ss, int cipher, unsigned int keyBits,
 
     /* Make sure we're not subject to a version rollback attack. */
     if (ss->opt.enableSSL3 || ss->opt.enableTLS) {
-	PRUint8 threes[8] = { 0x03, 0x03, 0x03, 0x03,
-			      0x03, 0x03, 0x03, 0x03 };
+	static const PRUint8 threes[8] = { 0x03, 0x03, 0x03, 0x03,
+			                   0x03, 0x03, 0x03, 0x03 };
 	
-	if (PORT_Memcmp(kk - 8 - 1, threes, 8) == 0) {
+	if (PORT_Memcmp(dk - 8 - 1, threes, 8) == 0) {
 	    PORT_SetError(SSL_ERROR_BAD_CLIENT);
 	    goto hide_loser;
 	}
@@ -1693,10 +1704,7 @@ hide_loser:
 	 * was erroneous.  Don't send any error messages.
 	 * Instead, Generate a completely bogus master key .
 	 */
-	PK11_GenerateRandom(kbuf, ekLen);
-	if (!kk) {
-	    kk = kbuf + ekLen - (keySize-ckLen);
-	}
+	PK11_GenerateRandom(dk, dkLen);
     }
 
     /*
@@ -1705,7 +1713,7 @@ hide_loser:
     if (ckLen) {
 	PORT_Memcpy(mkbuf, ck, ckLen);
     }
-    PORT_Memcpy(mkbuf+ckLen, kk, keySize-ckLen);
+    PORT_Memcpy(mkbuf + ckLen, dk, dkLen);
 
     /* Fill in session-id */
     rv = ssl2_FillInSID(sid, cipher, mkbuf, keySize, ca, caLen,
@@ -1981,7 +1989,10 @@ ssl_FormatSSL2Block(unsigned modulusLen, SECItem *data)
     SECStatus rv;
     int i;
 
-    PORT_Assert (data->len <= (modulusLen - (3 + RSA_BLOCK_MIN_PAD_LEN)));
+    if (modulusLen < data->len + (3 + RSA_BLOCK_MIN_PAD_LEN)) {
+	PORT_SetError(SEC_ERROR_BAD_KEY);
+    	return NULL;
+    }
     block = (unsigned char *) PORT_Alloc(modulusLen);
     if (block == NULL)
 	return NULL;
@@ -3223,7 +3234,7 @@ ssl2_HandleClientSessionKeyMessage(sslSocket *ss)
     unsigned int     caLen;
     unsigned int     ckLen;
     unsigned int     ekLen;
-    unsigned int     keySize;
+    unsigned int     keyBits;
     int              cipher;
     SECStatus        rv;
 
@@ -3238,13 +3249,13 @@ ssl2_HandleClientSessionKeyMessage(sslSocket *ss)
 	goto bad_client;
     }
     cipher  = data[1];
-    keySize = (data[2] << 8) | data[3];
+    keyBits = (data[2] << 8) | data[3];
     ckLen   = (data[4] << 8) | data[5];
     ekLen   = (data[6] << 8) | data[7];
     caLen   = (data[8] << 8) | data[9];
 
-    SSL_TRC(5, ("%d: SSL[%d]: session-key, cipher=%d keySize=%d ckLen=%d ekLen=%d caLen=%d",
-		SSL_GETPID(), ss->fd, cipher, keySize, ckLen, ekLen, caLen));
+    SSL_TRC(5, ("%d: SSL[%d]: session-key, cipher=%d keyBits=%d ckLen=%d ekLen=%d caLen=%d",
+		SSL_GETPID(), ss->fd, cipher, keyBits, ckLen, ekLen, caLen));
 
     if (ss->gs.recordLen < 
     	    SSL_HL_CLIENT_MASTER_KEY_HBYTES + ckLen + ekLen + caLen) {
@@ -3254,8 +3265,7 @@ ssl2_HandleClientSessionKeyMessage(sslSocket *ss)
     }
 
     /* Use info from client to setup session key */
-    /* XXX should validate cipher&keySize are in our array */
-    rv = ssl2_ServerSetupSessionCypher(ss, cipher, keySize,
+    rv = ssl2_ServerSetupSessionCypher(ss, cipher, keyBits,
 		data + SSL_HL_CLIENT_MASTER_KEY_HBYTES,                 ckLen,
 		data + SSL_HL_CLIENT_MASTER_KEY_HBYTES + ckLen,         ekLen,
 		data + SSL_HL_CLIENT_MASTER_KEY_HBYTES + ckLen + ekLen, caLen);
@@ -3282,7 +3292,8 @@ ssl2_HandleClientSessionKeyMessage(sslSocket *ss)
     }
 
     SSL_TRC(5, ("%d: SSL[%d]: server: waiting for elements=0x%d",
-		SSL_GETPID(), ss->fd, ss->sec.ci.requiredElements ^ ss->sec.ci.elements));
+		SSL_GETPID(), ss->fd, 
+		ss->sec.ci.requiredElements ^ ss->sec.ci.elements));
     ss->handshake         = ssl_GatherRecord1stHandshake;
     ss->nextHandshake     = ssl2_HandleMessage;
 
