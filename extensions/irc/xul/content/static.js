@@ -3670,7 +3670,7 @@ function cli_say(msg)
 {
     if ("say" in client.currentObject)
     {
-        client.currentObject.dispatch("say " + msg);
+        client.currentObject.dispatch("say", {message: msg});
         return;
     }
 
