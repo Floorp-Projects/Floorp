@@ -599,7 +599,8 @@ P12U_ExportPKCS12Object(char *nn, char *outfile, PK11SlotInfo *inSlot,
 
     if ((SECSuccess != CERT_FilterCertListForUserCerts(certlist)) ||
         CERT_LIST_EMPTY(certlist)) {
-        SECU_PrintError(progName,"no user certs from given nickname");
+        PR_fprintf(PR_STDERR, "%s: no user certs from given nickname\n",
+                   progName);
         pk12uErrno = PK12UERR_FINDCERTBYNN;
         goto loser;
     }

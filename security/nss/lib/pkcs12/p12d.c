@@ -2824,11 +2824,15 @@ sec_pkcs12_install_bags(sec_PKCS12SafeBag **safeBags,
 		publicValue = sec_pkcs12_get_public_value_and_type(certList[0],
 							&keyType, &keyUsage);
 	    }
-	    rv = sec_pkcs12_add_key(keyList[i], publicValue, keyType, keyUsage,
-									wincx);
-	    if(publicValue) {
+            if(publicValue) {
+                rv = sec_pkcs12_add_key(keyList[i], publicValue, keyType,
+                                        keyUsage, wincx);
 		SECITEM_FreeItem(publicValue, PR_TRUE);
 	    }
+            else {
+                keyList[i]->error = SEC_ERROR_PKCS12_UNABLE_TO_IMPORT_KEY;
+                rv = SECFailure;
+            }
 	    if(rv != SECSuccess) {
 		PORT_SetError(keyList[i]->error);
 		return SECFailure;
