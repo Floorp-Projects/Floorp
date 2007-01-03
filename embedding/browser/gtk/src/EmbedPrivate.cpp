@@ -2016,6 +2016,7 @@ EmbedPrivate::GetMIMEInfo (const char **aMime, nsIDOMNode *aDOMNode)
 {
   NS_ENSURE_ARG_POINTER(aMime);
   nsresult rv;
+#ifdef MOZ_ENABLE_GTK2
   if (aDOMNode && mEventListener) {
     EmbedContextMenuInfo * ctx = mEventListener->GetContextInfo();
     if (!ctx)
@@ -2026,6 +2027,7 @@ EmbedPrivate::GetMIMEInfo (const char **aMime, nsIDOMNode *aDOMNode)
       rv = request->GetMimeType((char**)aMime);
     return rv;
   }
+#endif
 
   nsCOMPtr<nsIWebBrowser> webBrowser;
   rv = mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
