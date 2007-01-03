@@ -483,7 +483,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_DOCUMENT_ATTRIBUTES_CHANGED\n"));
         g_signal_emit_by_name (accWrap->GetAtkObject(),
-                               "attriubtes_changed");
+                               "attributes_changed");
         rv = NS_OK;
       } break;
 
