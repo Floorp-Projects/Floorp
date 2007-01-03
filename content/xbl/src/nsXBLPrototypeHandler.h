@@ -45,6 +45,7 @@
 #include "nsIController.h"
 #include "nsAutoPtr.h"
 #include "nsXBLEventHandler.h"
+#include "nsIWeakReference.h"
 
 class nsIDOMEvent;
 class nsIContent;
@@ -184,11 +185,11 @@ protected:
 
 protected:
   union {
-    nsIContent* mHandlerElement;  // For XUL <key> element handlers.
-    PRUnichar* mHandlerText;      // For XBL handlers (we don't build an
-                                  // element for the <handler>, and instead we
-                                  // cache the JS text or command name that we
-                                  // should use.
+    nsIWeakReference* mHandlerElement;  // For XUL <key> element handlers. [STRONG]
+    PRUnichar*        mHandlerText;     // For XBL handlers (we don't build an
+                                        // element for the <handler>, and instead
+                                        // we cache the JS text or command name
+                                        // that we should use.
   };
 
   PRUint32 mLineNumber;  // The line number we started at in the XBL file
