@@ -55,7 +55,6 @@
 class nsIDocument;
 struct nsFrameItems;
 struct nsAbsoluteItems;
-struct nsTableCreator;
 class nsStyleContext;
 struct nsStyleContent;
 struct nsStyleDisplay;
@@ -292,7 +291,7 @@ private:
                                nsIContent*              aContent,
                                nsIFrame*                aContentParent,
                                nsStyleContext*          aStyleContext,
-                               nsTableCreator&          aTableCreator,
+                               PRInt32                  aNameSpaceID,
                                PRBool                   aIsPseudo,
                                nsFrameItems&            aChildItems,
                                PRBool                   aAllowOutOfFlow,
@@ -303,7 +302,7 @@ private:
                                       nsIContent*              aContent,
                                       nsIFrame*                aParent,
                                       nsStyleContext*          aStyleContext,
-                                      nsTableCreator&          aTableCreator,
+                                      PRInt32                  aNameSpaceID,
                                       nsFrameItems&            aChildItems,
                                       nsIFrame*&               aNewFrame,
                                       PRBool&                  aIsPseudoParent);
@@ -312,7 +311,7 @@ private:
                                        nsIContent*              aContent,
                                        nsIFrame*                aParent,
                                        nsStyleContext*          aStyleContext,
-                                       nsTableCreator&          aTableCreator,
+                                       PRInt32                  aNameSpaceID,
                                        PRBool                   aIsPseudo,
                                        nsFrameItems&            aChildItems,
                                        nsIFrame*&               aNewFrame,
@@ -322,7 +321,7 @@ private:
                                        nsIContent*              aContent,
                                        nsIFrame*                aParent,
                                        nsStyleContext*          aStyleContext,
-                                       nsTableCreator&          aTableCreator,
+                                       PRInt32                  aNameSpaceID,
                                        PRBool                   aIsPseudo,
                                        nsFrameItems&            aChildItems,
                                        nsIFrame*&               aNewFrame,
@@ -332,7 +331,7 @@ private:
                                   nsIContent*              aContent,
                                   nsIFrame*                aParent,
                                   nsStyleContext*          aStyleContext,
-                                  nsTableCreator&          aTableCreator,
+                                  PRInt32                  aNameSpaceID,
                                   PRBool                   aIsPseudo,
                                   nsFrameItems&            aChildItems,
                                   nsIFrame*&               aNewFrame,
@@ -342,7 +341,7 @@ private:
                                   nsIContent*              aContent,
                                   nsIFrame*                aParent,
                                   nsStyleContext*          aStyleContext,
-                                  nsTableCreator&          aTableCreator,
+                                  PRInt32                  aNameSpaceID,
                                   PRBool                   aIsPseudo,
                                   nsFrameItems&            aChildItems,
                                   nsIFrame*&               aNewFrame,
@@ -352,68 +351,54 @@ private:
                                    nsIContent*              aContent,
                                    nsIFrame*                aParentFrame,
                                    nsStyleContext*          aStyleContext,
-                                   nsTableCreator&          aTableCreator,
+                                   PRInt32                  aNameSpaceID,
                                    PRBool                   aIsPseudo,
                                    nsFrameItems&            aChildItems,
                                    nsIFrame*&               aNewCellOuterFrame,
                                    nsIFrame*&               aNewCellInnerFrame,
                                    PRBool&                  aIsPseudoParent);
 
-  /**
-   * ConstructTableForeignFrame constructs the frame for a non-table-element
-   * child of a table-element frame (where "table-element" can mean rows,
-   * cells, etc).  This function will insert the new frame in the right child
-   * list automatically, create placeholders for it in the right places as
-   * needed, etc (hence does not return the new frame).
-   */
-  nsresult ConstructTableForeignFrame(nsFrameConstructorState& aState,
-                                      nsIContent*              aContent,
-                                      nsIFrame*                aParentFrameIn,
-                                      nsStyleContext*          aStyleContext,
-                                      nsTableCreator&          aTableCreator,
-                                      nsFrameItems&            aChildItems);
-
-  nsresult CreatePseudoTableFrame(nsTableCreator&          aTableCreator,
+  nsresult CreatePseudoTableFrame(PRInt32                  aNameSpaceID,
                                   nsFrameConstructorState& aState, 
                                   nsIFrame*                aParentFrameIn = nsnull);
 
-  nsresult CreatePseudoRowGroupFrame(nsTableCreator&          aTableCreator,
+  nsresult CreatePseudoRowGroupFrame(PRInt32                  aNameSpaceID,
                                      nsFrameConstructorState& aState, 
                                      nsIFrame*                aParentFrameIn = nsnull);
 
-  nsresult CreatePseudoColGroupFrame(nsTableCreator&          aTableCreator,
+  nsresult CreatePseudoColGroupFrame(PRInt32                  aNameSpaceID,
                                      nsFrameConstructorState& aState, 
                                      nsIFrame*                aParentFrameIn = nsnull);
 
-  nsresult CreatePseudoRowFrame(nsTableCreator&          aTableCreator,
+  nsresult CreatePseudoRowFrame(PRInt32                  aNameSpaceID,
                                 nsFrameConstructorState& aState, 
                                 nsIFrame*                aParentFrameIn = nsnull);
 
-  nsresult CreatePseudoCellFrame(nsTableCreator&          aTableCreator,
+  nsresult CreatePseudoCellFrame(PRInt32                  aNameSpaceID,
                                  nsFrameConstructorState& aState, 
                                  nsIFrame*                aParentFrameIn = nsnull);
 
-  nsresult GetPseudoTableFrame(nsTableCreator&          aTableCreator,
+  nsresult GetPseudoTableFrame(PRInt32                  aNameSpaceID,
                                nsFrameConstructorState& aState, 
                                nsIFrame&                aParentFrameIn);
 
-  nsresult GetPseudoColGroupFrame(nsTableCreator&          aTableCreator,
+  nsresult GetPseudoColGroupFrame(PRInt32                  aNameSpaceID,
                                   nsFrameConstructorState& aState, 
                                   nsIFrame&                aParentFrameIn);
 
-  nsresult GetPseudoRowGroupFrame(nsTableCreator&          aTableCreator,
+  nsresult GetPseudoRowGroupFrame(PRInt32                  aNameSpaceID,
                                   nsFrameConstructorState& aState, 
                                   nsIFrame&                aParentFrameIn);
 
-  nsresult GetPseudoRowFrame(nsTableCreator&          aTableCreator,
+  nsresult GetPseudoRowFrame(PRInt32                  aNameSpaceID,
                              nsFrameConstructorState& aState, 
                              nsIFrame&                aParentFrameIn);
 
-  nsresult GetPseudoCellFrame(nsTableCreator&          aTableCreator,
+  nsresult GetPseudoCellFrame(PRInt32                  aNameSpaceID,
                               nsFrameConstructorState& aState, 
                               nsIFrame&                aParentFrameIn);
 
-  nsresult GetParentFrame(nsTableCreator&          aTableCreator,
+  nsresult GetParentFrame(PRInt32                  aNameSpaceID,
                           nsIFrame&                aParentFrameIn, 
                           nsIAtom*                 aChildFrameType, 
                           nsFrameConstructorState& aState, 
@@ -435,6 +420,8 @@ private:
    *        pointer to point to the list the child frame should go into.
    * @param aSaveState the nsFrameConstructorSaveState we can use for pushing a
    *        float containing block if we have to do it.
+   * @param aSuppressFrame whether we should not create a frame below this
+   *        parent
    * @param aCreatedPseudo whether we had to create a pseudo-parent
    * @return NS_OK on success, NS_ERROR_OUT_OF_MEMORY and such as needed.
    */
@@ -450,24 +437,8 @@ private:
                              nsStyleContext*              aChildStyle,
                              nsFrameItems* &              aFrameItems,
                              nsFrameConstructorSaveState& aSaveState,
+                             PRBool&                      aSuppressFrame,
                              PRBool&                      aCreatedPseudo);
-  
-  nsresult TableProcessChildren(nsFrameConstructorState& aState,
-                                nsIContent*              aContent,
-                                nsIFrame*                aParentFrame,
-                                nsTableCreator&          aTableCreator,
-                                nsFrameItems&            aChildItems,
-                                nsIFrame*&               aCaption);
-
-  nsresult TableProcessChild(nsFrameConstructorState& aState,
-                             nsIContent*              aChildContent,
-                             nsIContent*              aParentContent,
-                             nsIFrame*                aParentFrame,
-                             nsIAtom*                 aParentFrameType,
-                             nsStyleContext*          aParentStyleContext,
-                             nsTableCreator&          aTableCreator,
-                             nsFrameItems&            aChildItems,
-                             nsIFrame*&               aCaption);
 
   const nsStyleDisplay* GetDisplay(nsIFrame* aFrame);
 
@@ -657,8 +628,7 @@ private:
                            nsIFrame*                aFrame,
                            PRBool                   aCanHaveGeneratedContent,
                            nsFrameItems&            aFrameItems,
-                           PRBool                   aParentIsBlock,
-                           nsTableCreator*          aTableCreator = nsnull);
+                           PRBool                   aParentIsBlock);
 
   // @param OUT aFrame the newly created frame
   nsresult CreateInputFrame(nsFrameConstructorState& aState,
