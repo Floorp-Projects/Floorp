@@ -295,7 +295,8 @@ NS_IMETHODIMP nsAbMDBDirectory::AddDirectory(const char *uriName, nsIAbDirectory
   nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(res, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mSubDirectories.AppendObject(directory);
+  if (mSubDirectories.IndexOf(directory) == kNotFound)
+    mSubDirectories.AppendObject(directory);
   NS_IF_ADDREF(*childDir = directory);
   return rv;
 }
