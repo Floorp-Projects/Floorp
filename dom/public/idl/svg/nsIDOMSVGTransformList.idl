@@ -41,7 +41,7 @@
 interface nsIDOMSVGTransform;
 interface nsIDOMSVGMatrix;
 
-[scriptable, uuid(df41474c-a4f8-4ec3-ae79-4342e6f56d8e)]
+[scriptable, uuid(cee0a9d4-8554-4bf6-bf9b-7d0cebb4269d)]
 interface nsIDOMSVGTransformList : nsISupports
 { 
   readonly attribute unsigned long numberOfItems;
@@ -64,7 +64,4 @@ interface nsIDOMSVGTransformList : nsISupports
       // raises( DOMException, SVGException );
   nsIDOMSVGTransform createSVGTransformFromMatrix(in nsIDOMSVGMatrix matrix);
   nsIDOMSVGTransform consolidate();
-
-  // Mozilla extension, not part of W3 SVG DOM:
-  nsIDOMSVGMatrix getConsolidationMatrix();
 };
