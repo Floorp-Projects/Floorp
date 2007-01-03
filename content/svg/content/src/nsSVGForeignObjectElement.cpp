@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGAtoms.h"
 #include "nsSVGLength.h"
 #include "nsCOMPtr.h"
 #include "nsISVGSVGElement.h"

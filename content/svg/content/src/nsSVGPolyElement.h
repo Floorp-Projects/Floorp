@@ -35,7 +35,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGPathGeometryElement.h"
-#include "nsSVGAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMSVGPoint.h"
 #include "nsSVGPointList.h"

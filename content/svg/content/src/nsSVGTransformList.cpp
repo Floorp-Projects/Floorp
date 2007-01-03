@@ -43,7 +43,6 @@
 #include "nsSVGMatrix.h"
 #include "nsDOMError.h"
 #include "prdtoa.h"
-#include "nsSVGAtoms.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsCOMArray.h"

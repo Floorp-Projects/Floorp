@@ -90,8 +90,6 @@
 #endif
 
 #ifdef MOZ_SVG
-#include "nsSVGAtoms.h"
-
 PRBool NS_SVGEnabled();
 #endif
 
