@@ -144,8 +144,11 @@ nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr,
       return;
 
     nsAutoString aStr(pDisplayNameStr);
-    aStr.Append(PRUnichar('@'));
-    aStr += mDefaultDomain;
+    if (aStr.FindChar('@') == kNotFound)
+    {
+      aStr.Append(PRUnichar('@'));
+      aStr += mDefaultDomain;
+    }
     fullAddrStr = ToNewUnicode(aStr);
   }
   else
