@@ -43,14 +43,13 @@
 
 #include "nsICaseConversion.h"
 
-nsresult NS_NewCaseConversion(nsISupports** oResult);
-
 class nsCaseConversionImp2 : public nsICaseConversion { 
   NS_DECL_ISUPPORTS 
 
 public:
   virtual ~nsCaseConversionImp2() { };
 
+  static nsCaseConversionImp2* GetInstance();
 
   NS_IMETHOD ToUpper(PRUnichar aChar, PRUnichar* aReturn);
 
@@ -67,5 +66,7 @@ public:
    
   NS_IMETHOD CaseInsensitiveCompare(const PRUnichar* aLeft, const PRUnichar* aRight, PRUint32 aLength, PRInt32 *aResult);
 };
+
+extern nsCaseConversionImp2* gCaseConv;
 
 #endif
