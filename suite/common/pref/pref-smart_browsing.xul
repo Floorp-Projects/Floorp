@@ -52,9 +52,6 @@
       onload="parent.initPanel('chrome://communicator/content/pref/pref-smart_browsing.xul');"
       headertitle="&pref.smartBrowsing.title;">
 
-  <stringbundle id="bundle_region"
-                src="chrome://global-region/locale/region.properties"/>
-
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-smart_browsing.js"/>
 
   <script type="application/x-javascript">

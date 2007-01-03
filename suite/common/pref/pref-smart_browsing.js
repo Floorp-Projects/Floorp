@@ -40,17 +40,17 @@
 function moreInfo()
 {
   var browserURL = null;
-  var regionBundle = document.getElementById("bundle_region");
-  var smartBrowsingURL = regionBundle.getString("smartBrowsingURL");
-  if (smartBrowsingURL) {
-    try {
-      browserURL = parent.hPrefWindow.getPref("string", "browser.chromeURL");
-    } catch(e) {
-    }
-    if (browserURL == null)
-      browserURL = "chrome://navigator/content/navigator.xul";
-    window.openDialog( browserURL, "_blank", "chrome,all,dialog=no", smartBrowsingURL );
+  try {
+    browserURL = parent.hPrefWindow.getPref("string", "browser.chromeURL");
+  } catch(e) {
   }
+  if (browserURL == null)
+    browserURL = "chrome://navigator/content/navigator.xul";
+
+  var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
+                            .getService(Components.interfaces.nsIURLFormatter);
+  window.openDialog(browserURL, "_blank", "chrome,all,dialog=no",
+                    formatter.formatURLPref("keyword.moreInfoURL"));
 }
    
 function showACAdvanced()
