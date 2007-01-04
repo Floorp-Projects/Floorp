@@ -569,6 +569,9 @@ typedef enum JSGCStatus {
 typedef JSBool
 (* JS_DLL_CALLBACK JSGCCallback)(JSContext *cx, JSGCStatus status);
 
+typedef void
+(* JS_DLL_CALLBACK JSGCThingCallback)(void *thing, uint8 flags, void *closure);
+
 typedef JSBool
 (* JS_DLL_CALLBACK JSBranchCallback)(JSContext *cx, JSScript *script);
 

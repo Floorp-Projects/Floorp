@@ -138,6 +138,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
 #endif
+#include "nsCycleCollectionParticipant.h"
 
 // for ReportToConsole
 #include "nsIStringBundle.h"
@@ -726,7 +727,9 @@ nsresult
 nsContentUtils::doReparentContentWrapper(nsIContent *aNode,
                                          JSContext *cx,
                                          JSObject *aOldGlobal,
-                                         JSObject *aNewGlobal)
+                                         JSObject *aNewGlobal,
+                                         nsIDocument *aOldDocument,
+                                         nsIDocument *aNewDocument)
 {
   nsCOMPtr<nsIXPConnectJSObjectHolder> old_wrapper;
 
@@ -736,6 +739,16 @@ nsContentUtils::doReparentContentWrapper(nsIContent *aNode,
                                                 aNode,
                                                 getter_AddRefs(old_wrapper));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aOldDocument) {
+    nsCOMPtr<nsISupports> old_ref = aOldDocument->RemoveReference(aNode);
+    
+    if (old_ref) {
+      // Transfer the reference from aOldDocument to aNewDocument
+      
+      aNewDocument->AddReference(aNode, old_ref);
+    }
+  }
 
   // Whether or not aChild is already wrapped we must iterate through
   // its descendants since there's no guarantee that a descendant isn't
@@ -749,7 +762,9 @@ nsContentUtils::doReparentContentWrapper(nsIContent *aNode,
     nsIContent *child = aNode->GetChildAt(i);
     NS_ENSURE_TRUE(child, NS_ERROR_UNEXPECTED);
 
-    rv = doReparentContentWrapper(child, cx, aOldGlobal, aNewGlobal);
+    rv = doReparentContentWrapper(child, cx, 
+                                  aOldGlobal, aNewGlobal,
+                                  aOldDocument, aNewDocument);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -803,7 +818,8 @@ nsContentUtils::ReparentContentWrapper(nsIContent *aContent,
     return NS_OK;
   }
 
-  return doReparentContentWrapper(aContent, cx, oldScope, newScope);
+  return doReparentContentWrapper(aContent, cx, oldScope, newScope, 
+                                  aOldDocument, aNewDocument);
 }
 
 // static
@@ -2874,6 +2890,24 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
 }
 
 /* static */
+void
+nsContentUtils::TraverseListenerManager(nsINode *aNode,
+                                        nsCycleCollectionTraversalCallback &cb)
+{
+  if (!sEventListenerManagersHash.ops) {
+    // We're already shut down, just return.
+    return;
+  }
+
+  EventListenerManagerMapEntry *entry =
+    NS_STATIC_CAST(EventListenerManagerMapEntry *,
+                   PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
+                                        PL_DHASH_LOOKUP));
+  if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+    cb.NoteXPCOMChild(entry->mListenerManager);
+  }
+}
+
 nsresult
 nsContentUtils::GetListenerManager(nsINode *aNode,
                                    PRBool aCreateIfNotFound,

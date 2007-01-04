@@ -62,6 +62,7 @@
 
 #include "nsDebug.h"
 #include "nsTraceRefcnt.h" 
+#include "nsCycleCollector.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Macros to help detect thread-safety:
@@ -87,6 +88,109 @@ private:
 #define NS_ASSERT_OWNINGTHREAD(_class)  ((void)0)
 
 #endif // NS_DEBUG
+
+#if PR_BITS_PER_WORD == 32
+#define NS_PURPLE_BIT ((PRUint32)(1 << 31))
+#elif PR_BITS_PER_WORD == 64
+#define NS_PURPLE_BIT ((PRUint64)(1 << 63))
+#endif
+
+#define NS_PURPLE_MASK (~NS_PURPLE_BIT)
+#define NS_PURPLE_BIT_SET(x) ((x) & (NS_PURPLE_BIT))
+#define NS_SET_PURPLE_BIT(x) ((x) |= (NS_PURPLE_BIT))
+#define NS_CLEAR_PURPLE_BIT(x) ((x) &= (NS_PURPLE_MASK))
+#define NS_VALUE_WITHOUT_PURPLE_BIT(x) ((x) & (NS_PURPLE_MASK))
+
+
+// Support for ISupports classes which interact with cycle collector.
+
+class nsCycleCollectingAutoRefCnt {
+
+ public:
+    nsCycleCollectingAutoRefCnt()
+      : mValue(0) 
+      {}
+
+    nsCycleCollectingAutoRefCnt(nsrefcnt aValue) 
+      : mValue(aValue) 
+      {
+	NS_CLEAR_PURPLE_BIT(mValue);
+      }
+
+    nsrefcnt incr(nsISupports *owner) 
+      { 
+	
+	if (NS_UNLIKELY(mValue == NS_PURPLE_BIT))
+	  {
+	    // The sentinel value "purple bit alone, refcount 0" means
+	    // that we're stabilized, during finalization. In this
+	    // state we lie about our actual refcount if anyone asks
+	    // and say it's 1, which is basically true: the caller who
+	    // is deleting us has a reference still.
+	    return 1;
+	  }
+	
+	nsrefcnt tmp = get();
+	PRBool purple = NS_STATIC_CAST(PRBool, NS_PURPLE_BIT_SET(mValue));
+	
+	if (NS_UNLIKELY(purple)) {
+	  NS_ASSERTION(tmp != 0, "purple ISupports pointer with zero refcnt");
+	  nsCycleCollector_forget(owner);
+	} 
+	
+	mValue = tmp + 1;
+	return mValue;
+      }
+
+    void stabilizeForDeletion(nsISupports *owner) 
+      { 
+	mValue = NS_PURPLE_BIT;
+      }
+
+    nsrefcnt decr(nsISupports *owner)
+      {
+	if (NS_UNLIKELY(mValue == NS_PURPLE_BIT))
+	  return 1;
+	
+	nsrefcnt tmp = get();
+	PRBool purple = NS_STATIC_CAST(PRBool, NS_PURPLE_BIT_SET(mValue));
+  
+	if (NS_UNLIKELY(tmp > 1 && !purple)) {
+	  nsCycleCollector_suspect(owner);
+	  purple = PR_TRUE;
+    
+	} else if (NS_UNLIKELY(tmp == 1 && purple)) {
+	  nsCycleCollector_forget(owner);
+	  purple = PR_FALSE;
+
+	} else {  
+	  NS_ASSERTION(tmp >= 1, "decr() called with zero refcnt");
+	}
+	
+	mValue = tmp - 1;
+	
+	if (purple)
+	  NS_SET_PURPLE_BIT(mValue);
+	
+	return get();
+      }
+
+    nsrefcnt get() const
+      {
+	if (NS_UNLIKELY(mValue == NS_PURPLE_BIT))
+	  return 1;
+
+	return NS_VALUE_WITHOUT_PURPLE_BIT(mValue); 
+      }
+
+    operator nsrefcnt() const
+      {  
+	return get();
+      }
+
+ private:
+    nsrefcnt mValue;
+};
 
 class nsAutoRefCnt {
 
@@ -123,6 +227,17 @@ public:                                                                       \
   NS_IMETHOD_(nsrefcnt) Release(void);                                        \
 protected:                                                                    \
   nsAutoRefCnt mRefCnt;                                                       \
+  NS_DECL_OWNINGTHREAD                                                        \
+public:
+
+#define NS_DECL_CYCLE_COLLECTING_ISUPPORTS                                    \
+public:                                                                       \
+  NS_IMETHOD QueryInterface(REFNSIID aIID,                                    \
+                            void** aInstancePtr);                             \
+  NS_IMETHOD_(nsrefcnt) AddRef(void);                                         \
+  NS_IMETHOD_(nsrefcnt) Release(void);                                        \
+protected:                                                                    \
+  nsCycleCollectingAutoRefCnt mRefCnt;                                        \
   NS_DECL_OWNINGTHREAD                                                        \
 public:
 
@@ -228,6 +343,46 @@ NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                \
   return (_aggregator)->Release();                                            \
 }
 
+
+#define NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(_class, _basetype)          \
+NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                                 \
+{                                                                             \
+  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");                   \
+  NS_ASSERT_OWNINGTHREAD(_class);                                             \
+  mRefCnt.incr(NS_STATIC_CAST(_basetype *, this));                            \
+  NS_LOG_ADDREF(this, mRefCnt, #_class, sizeof(*this));                       \
+  return mRefCnt;                                                             \
+}
+
+#define NS_IMPL_CYCLE_COLLECTING_ADDREF(_class)      \
+  NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(_class, _class)
+
+#define NS_IMPL_CYCLE_COLLECTING_RELEASE_FULL(_class, _basetype, _destroy)    \
+NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                \
+{                                                                             \
+  NS_PRECONDITION(0 != mRefCnt, "dup release");                               \
+  NS_ASSERT_OWNINGTHREAD(_class);                                             \
+  mRefCnt.decr(NS_STATIC_CAST(_basetype *, this));		              \
+  NS_LOG_RELEASE(this, mRefCnt, #_class);                                     \
+  if (mRefCnt == 0) {                                                         \
+    mRefCnt.stabilizeForDeletion(NS_STATIC_CAST(_basetype *, this));          \
+    _destroy;                                                                 \
+    return 0;                                                                 \
+  }                                                                           \
+  return mRefCnt;                                                             \
+}
+
+#define NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(_class, _destroy)       \
+  NS_IMPL_CYCLE_COLLECTING_RELEASE_FULL(_class, _class, _destroy)
+
+#define NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS_WITH_DESTROY(_class, _basetype, _destroy)         \
+  NS_IMPL_CYCLE_COLLECTING_RELEASE_FULL(_class, _basetype, _destroy)
+
+#define NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(_class, _basetype)         \
+  NS_IMPL_CYCLE_COLLECTING_RELEASE_FULL(_class, _basetype, NS_DELETEXPCOM(this))
+
+#define NS_IMPL_CYCLE_COLLECTING_RELEASE(_class)       \
+  NS_IMPL_CYCLE_COLLECTING_RELEASE_FULL(_class, _class, NS_DELETEXPCOM(this))
 
 
 ///////////////////////////////////////////////////////////////////////////////

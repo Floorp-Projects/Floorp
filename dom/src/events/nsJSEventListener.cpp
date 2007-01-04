@@ -56,16 +56,10 @@
 
 #include "nspr.h" // PR_fprintf
 
-PRInt32 nsIJSEventListener::sNumJSEventListeners = 0;
-
 class EventListenerCounter
 {
 public:
   ~EventListenerCounter() {
-    if (nsIJSEventListener::sNumJSEventListeners) {
-      PR_fprintf(PR_STDERR,"WARNING: LEAKED %d nsIJSEventListeners\n",
-                 nsIJSEventListener::sNumJSEventListeners);
-    }
   }
 };
 
@@ -93,15 +87,17 @@ nsJSEventListener::~nsJSEventListener()
   mContext->DropScriptObject(mScopeObject);
 }
 
+NS_IMPL_CYCLE_COLLECTION_1_AMBIGUOUS(nsJSEventListener, nsIDOMEventListener, mTarget)
+
 NS_INTERFACE_MAP_BEGIN(nsJSEventListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY(nsIJSEventListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventListener)
+  NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(nsJSEventListener)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsJSEventListener)
-
-NS_IMPL_RELEASE(nsJSEventListener)
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsJSEventListener, nsIDOMEventListener)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsJSEventListener, nsIDOMEventListener)
 
 //static nsString onPrefix = "on";
 
@@ -276,4 +272,3 @@ NS_NewJSEventListener(nsIScriptContext *aContext, void *aScopeObject,
 
   return NS_OK;
 }
-

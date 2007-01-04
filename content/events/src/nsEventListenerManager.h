@@ -41,11 +41,12 @@
 #include "nsIEventListenerManager.h"
 #include "jsapi.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOM3EventTarget.h"
 #include "nsHashtable.h"
 #include "nsIScriptContext.h"
-#include "nsJSUtils.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsIDOMEvent;
 class nsVoidArray;
@@ -53,21 +54,13 @@ class nsIAtom;
 struct EventTypeData;
 
 typedef struct {
-  // The nsMarkedJSFunctionHolder does magic to avoid holding strong
-  // references to listeners implemented in JS.  Instead, it protects
-  // them from garbage collection using nsDOMClassInfo::PreserveWrapper,
-  // which protects the event listener from garbage collection as long
-  // as it is still reachable from JS using C++ getters.  (It exposes
-  // reachability information to the JS GC instead of treating the C++
-  // reachability information as own-in root-out, which creates roots
-  // that cause reference cycles to entrain garbage.)
-  nsMarkedJSFunctionHolder<nsIDOMEventListener> mListener;
-  PRUint32                                      mEventType;
-  nsCOMPtr<nsIAtom>                             mTypeAtom;
-  PRUint16                                      mFlags;
-  PRUint16                                      mGroupFlags;
-  PRBool                                        mHandlerIsString;
-  const EventTypeData*                          mTypeData;
+  nsRefPtr<nsIDOMEventListener> mListener;
+  PRUint32                      mEventType;
+  nsCOMPtr<nsIAtom>             mTypeAtom;
+  PRUint16                      mFlags;
+  PRUint16                      mGroupFlags;
+  PRBool                        mHandlerIsString;
+  const EventTypeData*          mTypeData;
 } nsListenerStruct;
 
 /*
@@ -83,7 +76,7 @@ public:
   nsEventListenerManager();
   virtual ~nsEventListenerManager();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   /**
   * Sets events listeners of all types. 
@@ -158,6 +151,8 @@ public:
   NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup);
 
   static void Shutdown();
+
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsEventListenerManager)
 
 protected:
   nsresult HandleEventSubType(nsListenerStruct* aListenerStruct,

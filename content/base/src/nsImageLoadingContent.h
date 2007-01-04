@@ -238,15 +238,6 @@ private:
   class Event;
   friend class Event;
 
-  /**
-   * Manage the rooting and un-rooting in nsDOMClassInfo of the content
-   * node, so that things reachable from the node are protected from
-   * garbage collection while the onload or onerror handlers (which can
-   * make it reachable again) could fire.
-   */
-  void PreserveLoadHandlers();
-  void UnpreserveLoadHandlers();
-
   /* MEMBERS */
 protected:
   nsCOMPtr<imgIRequest> mCurrentRequest;
@@ -265,12 +256,6 @@ private:
   ImageObserver mObserverList;
 
   PRInt16 mImageBlockingStatus;
-  // This counts the number of operations that we're currently doing
-  // that require us to root in nsDOMClassInfo to say that there is
-  // currently network or other activity that could trigger onload or
-  // onerror handlers.  The number of things a single node can do at
-  // once is quite limited, so a PRUint8 should be quite sufficient.
-  PRUint8 mRootRefCount;
   PRPackedBool mLoadingEnabled : 1;
   PRPackedBool mStartingLoad : 1;
 
