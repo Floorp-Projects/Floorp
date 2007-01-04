@@ -11,7 +11,7 @@ echo "Mozilla tools directory: %MOZILLABUILD%"
 REM Get MSVC paths
 call "%MOZILLABUILD%\guess-msvc.bat"
 
-if "%VC6DIR%"=="Not Found" (
+if "%VC6DIR%"=="" (
     ECHO "Microsoft Visual C++ version 6 was not found. Exiting."
     pause
     EXIT /B 1
