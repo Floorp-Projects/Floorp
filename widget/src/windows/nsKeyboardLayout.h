@@ -44,16 +44,7 @@
 
 #define VK_OEM_1                0xBA   // ';:' for US
 #define VK_OEM_PLUS             0xBB   // '+' any country
-#define VK_OEM_COMMA            0xBC   // ',' any country
 #define VK_OEM_MINUS            0xBD   // '-' any country
-#define VK_OEM_PERIOD           0xBE   // '.' any country
-#define VK_OEM_2                0xBF   // '/?' for US
-#define VK_OEM_3                0xC0   // '`~' for US
-#define VK_OEM_4                0xDB   // '[{' for US
-#define VK_OEM_5                0xDC   // '\|' for US
-#define VK_OEM_6                0xDD   // ']}' for US
-#define VK_OEM_7                0xDE   // ''"' for US
-#define VK_OEM_8                0xDF
 
 
 
@@ -145,7 +136,6 @@ class KeyboardLayout
 
   #define NUM_OF_KEYS   50
 
-  UINT mCodePage;                         // Used for Win9x only
   HKL mKeyboardLayout;
 
   VirtualKey mVirtualKeys [NUM_OF_KEYS];
