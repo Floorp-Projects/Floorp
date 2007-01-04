@@ -1798,17 +1798,20 @@ nsXFormsModelElement::GetTypeFromNode(nsIDOMNode *aInstanceData,
   }
 
   if (separator == kNotFound) {
-    // no namespace prefix, which is valid;
+    // no namespace prefix, which is valid.  In this case we should follow
+    // http://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#src-qname and pick
+    // up the default namespace.  Which will happen by passing an empty string
+    // as first parameter to LookupNamespaceURI.
     prefix = EmptyString();
     aType.Assign(*typeVal);
   } else {
     prefix.Assign(Substring(*typeVal, 0, separator));
     aType.Assign(Substring(*typeVal, ++separator, typeVal->Length()));
-  }
 
-  if (prefix.IsEmpty()) {
-    aNSUri = EmptyString();
-    return NS_OK;
+    if (prefix.IsEmpty()) {
+      aNSUri = EmptyString();
+      return NS_OK;
+    }
   }
 
   // get the namespace url from the prefix using instance data node
