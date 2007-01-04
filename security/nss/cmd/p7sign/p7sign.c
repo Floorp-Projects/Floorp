@@ -38,7 +38,7 @@
  * p7sign -- A command to create a *detached* pkcs7 signature (over a given
  * input file).
  *
- * $Id: p7sign.c,v 1.10 2004/10/07 04:10:52 julien.pierre.bugs%sun.com Exp $
+ * $Id: p7sign.c,v 1.11 2007/01/04 22:42:40 alexei.volkov.bugs%sun.com Exp $
  */
 
 #include "nspr.h"
@@ -190,7 +190,7 @@ main(int argc, char **argv)
     char *progName;
     FILE *outFile;
     PRFileDesc *inFile;
-    char *keyName;
+    char *keyName = NULL;
     CERTCertDBHandle *certHandle;
     CERTCertificate *cert;
     PRBool encapsulated = PR_FALSE;
@@ -261,7 +261,7 @@ main(int argc, char **argv)
     rv = NSS_Init(SECU_ConfigDirectory(NULL));
     if (rv != SECSuccess) {
 	SECU_PrintPRandOSError(progName);
-	return -1;
+	goto loser;
     }
 
     PK11_SetPasswordFunc (MyPK11PasswordFunc);
@@ -269,7 +269,8 @@ main(int argc, char **argv)
     /* open cert database */
     certHandle = CERT_GetDefaultCertDB();
     if (certHandle == NULL) {
-	return -1;
+	rv = SECFailure;
+	goto loser;
     }
 
     /* find cert */
@@ -278,17 +279,35 @@ main(int argc, char **argv)
 	SECU_PrintError(progName,
 		        "the corresponding cert for key \"%s\" does not exist",
 			keyName);
-	return -1;
+	rv = SECFailure;
+	goto loser;
     }
 
     if (SignFile(outFile, inFile, cert, encapsulated)) {
 	SECU_PrintError(progName, "problem signing data");
-	return -1;
+	rv = SECFailure;
+	goto loser;
     }
 
+loser:
+    if (KeyDbPassword) {
+        PORT_Free(KeyDbPassword);
+    }
+    if (keyName) {
+        PORT_Free(keyName);
+    }
+    if (cert) {
+        CERT_DestroyCertificate(cert);
+    }
+    if (inFile && inFile != PR_STDIN) {
+        PR_Close(inFile);
+    }
+    if (outFile && outFile != stdout) {
+        fclose(outFile);
+    }
     if (NSS_Shutdown() != SECSuccess) {
         exit(1);
     }
 
-    return 0;
+    return (rv != SECSuccess);
 }
