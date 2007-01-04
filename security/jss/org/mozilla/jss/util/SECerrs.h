@@ -1,4 +1,3 @@
-/* General security error codes  */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,8 +33,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* Caller must #include "secerr.h" */
 
+/* General security error codes  */
+/* Caller must #include "secerr.h" */
 
 ER3(SEC_ERROR_IO,				SEC_ERROR_BASE + 0,
 "An I/O error occurred during security authorization.")
@@ -62,7 +62,7 @@ ER3(SEC_ERROR_INVALID_AVA,			SEC_ERROR_BASE + 7,
 "security library: invalid AVA.")
 
 ER3(SEC_ERROR_INVALID_TIME,			SEC_ERROR_BASE + 8,
-"security library: invalid time.")
+"Improperly formatted time string.")
 
 ER3(SEC_ERROR_BAD_DER,				SEC_ERROR_BASE + 9,
 "security library: improperly formatted DER-encoded message.")
@@ -358,7 +358,8 @@ ER3(SEC_ERROR_BAD_NICKNAME,			(SEC_ERROR_BASE + 103),
 ER3(SEC_ERROR_NOT_FORTEZZA_ISSUER,       	(SEC_ERROR_BASE + 104),
 "Peer FORTEZZA chain has a non-FORTEZZA Certificate.")
 
-/* ER3(SEC_ERROR_UNKNOWN, 			(SEC_ERROR_BASE + 105), */
+ER3(SEC_ERROR_CANNOT_MOVE_SENSITIVE_KEY, 	(SEC_ERROR_BASE + 105),
+"A sensitive key cannot be moved to the slot where it is needed.")
 
 ER3(SEC_ERROR_JS_INVALID_MODULE_NAME, 		(SEC_ERROR_BASE + 106),
 "Invalid module name.")
@@ -378,11 +379,138 @@ ER3(SEC_ERROR_OLD_KRL,	     			(SEC_ERROR_BASE + 110),
 ER3(SEC_ERROR_CKL_CONFLICT,	     		(SEC_ERROR_BASE + 111),
 "New CKL has different issuer than current CKL.  Delete current CKL.")
 
-#if 0 /* This was defined AFTER NSS 1.5 was released. */
 ER3(SEC_ERROR_CERT_NOT_IN_NAME_SPACE, 		(SEC_ERROR_BASE + 112),
-"The Certifying Authority for this certifcate is not permitted to issue a \
-certifcate with this name.")
-#endif
+"The Certifying Authority for this certificate is not permitted to issue a \
+certificate with this name.")
 
+ER3(SEC_ERROR_KRL_NOT_YET_VALID,		(SEC_ERROR_BASE + 113),
+"The key revocation list for this certificate is not yet valid.")
 
+ER3(SEC_ERROR_CRL_NOT_YET_VALID,		(SEC_ERROR_BASE + 114),
+"The certificate revocation list for this certificate is not yet valid.")
+
+ER3(SEC_ERROR_UNKNOWN_CERT,			(SEC_ERROR_BASE + 115),
+"The requested certificate could not be found.")
+
+ER3(SEC_ERROR_UNKNOWN_SIGNER,			(SEC_ERROR_BASE + 116),
+"The signer's certificate could not be found.")
+
+ER3(SEC_ERROR_CERT_BAD_ACCESS_LOCATION,		(SEC_ERROR_BASE + 117),
+"The location for the certificate status server has invalid format.")
+
+ER3(SEC_ERROR_OCSP_UNKNOWN_RESPONSE_TYPE,	(SEC_ERROR_BASE + 118),
+"The OCSP response cannot be fully decoded; it is of an unknown type.")
+
+ER3(SEC_ERROR_OCSP_BAD_HTTP_RESPONSE,		(SEC_ERROR_BASE + 119),
+"The OCSP server returned unexpected/invalid HTTP data.")
+
+ER3(SEC_ERROR_OCSP_MALFORMED_REQUEST,		(SEC_ERROR_BASE + 120),
+"The OCSP server found the request to be corrupted or improperly formed.")
+
+ER3(SEC_ERROR_OCSP_SERVER_ERROR,		(SEC_ERROR_BASE + 121),
+"The OCSP server experienced an internal error.")
+
+ER3(SEC_ERROR_OCSP_TRY_SERVER_LATER,		(SEC_ERROR_BASE + 122),
+"The OCSP server suggests trying again later.")
+
+ER3(SEC_ERROR_OCSP_REQUEST_NEEDS_SIG,		(SEC_ERROR_BASE + 123),
+"The OCSP server requires a signature on this request.")
+
+ER3(SEC_ERROR_OCSP_UNAUTHORIZED_REQUEST,	(SEC_ERROR_BASE + 124),
+"The OCSP server has refused this request as unauthorized.")
+
+ER3(SEC_ERROR_OCSP_UNKNOWN_RESPONSE_STATUS,	(SEC_ERROR_BASE + 125),
+"The OCSP server returned an unrecognizable status.")
+
+ER3(SEC_ERROR_OCSP_UNKNOWN_CERT,		(SEC_ERROR_BASE + 126),
+"The OCSP server has no status for the certificate.")
+
+ER3(SEC_ERROR_OCSP_NOT_ENABLED,			(SEC_ERROR_BASE + 127),
+"You must enable OCSP before performing this operation.")
+
+ER3(SEC_ERROR_OCSP_NO_DEFAULT_RESPONDER,	(SEC_ERROR_BASE + 128),
+"You must set the OCSP default responder before performing this operation.")
+
+ER3(SEC_ERROR_OCSP_MALFORMED_RESPONSE,		(SEC_ERROR_BASE + 129),
+"The response from the OCSP server was corrupted or improperly formed.")
+
+ER3(SEC_ERROR_OCSP_UNAUTHORIZED_RESPONSE,	(SEC_ERROR_BASE + 130),
+"The signer of the OCSP response is not authorized to give status for \
+this certificate.")
+
+ER3(SEC_ERROR_OCSP_FUTURE_RESPONSE,		(SEC_ERROR_BASE + 131),
+"The OCSP response is not yet valid (contains a date in the future).")
+
+ER3(SEC_ERROR_OCSP_OLD_RESPONSE,		(SEC_ERROR_BASE + 132),
+"The OCSP response contains out-of-date information.")
+
+ER3(SEC_ERROR_DIGEST_NOT_FOUND,			(SEC_ERROR_BASE + 133),
+"The CMS or PKCS #7 Digest was not found in signed message.")
+
+ER3(SEC_ERROR_UNSUPPORTED_MESSAGE_TYPE,		(SEC_ERROR_BASE + 134),
+"The CMS or PKCS #7 Message type is unsupported.")
+
+ER3(SEC_ERROR_MODULE_STUCK,			(SEC_ERROR_BASE + 135),
+"PKCS #11 module could not be removed because it is still in use.")
+
+ER3(SEC_ERROR_BAD_TEMPLATE,			(SEC_ERROR_BASE + 136),
+"Could not decode ASN.1 data. Specified template was invalid.")
+
+ER3(SEC_ERROR_CRL_NOT_FOUND,			(SEC_ERROR_BASE + 137),
+"No matching CRL was found.")
+
+ER3(SEC_ERROR_REUSED_ISSUER_AND_SERIAL,        (SEC_ERROR_BASE + 138),
+"You are attempting to import a cert with the same issuer/serial as \
+an existing cert, but that is not the same cert.")
+
+ER3(SEC_ERROR_BUSY,				(SEC_ERROR_BASE + 139),
+"NSS could not shutdown. Objects are still in use.")
+
+ER3(SEC_ERROR_EXTRA_INPUT,			(SEC_ERROR_BASE + 140),
+"DER-encoded message contained extra unused data.")
+
+ER3(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE,	(SEC_ERROR_BASE + 141),
+"Unsupported elliptic curve.")
+
+ER3(SEC_ERROR_UNSUPPORTED_EC_POINT_FORM,	(SEC_ERROR_BASE + 142),
+"Unsupported elliptic curve point form.")
+
+ER3(SEC_ERROR_UNRECOGNIZED_OID,			(SEC_ERROR_BASE + 143),
+"Unrecognized Object IDentifier.")
+
+ER3(SEC_ERROR_OCSP_INVALID_SIGNING_CERT,	(SEC_ERROR_BASE + 144),
+"Invalid OCSP signing certificate in OCSP response.")
+
+ER3(SEC_ERROR_REVOKED_CERTIFICATE_CRL,          (SEC_ERROR_BASE + 145),
+"Certificate is revoked in issuer's certificate revocation list.")
+
+ER3(SEC_ERROR_REVOKED_CERTIFICATE_OCSP,         (SEC_ERROR_BASE + 146),
+"Issuer's OCSP responder reports certificate is revoked.")
+
+ER3(SEC_ERROR_CRL_INVALID_VERSION,              (SEC_ERROR_BASE + 147),
+"Issuer's Certificate Revocation List has an unknown version number.")
+
+ER3(SEC_ERROR_CRL_V1_CRITICAL_EXTENSION,        (SEC_ERROR_BASE + 148),
+"Issuer's V1 Certificate Revocation List has a critical extension.")
+
+ER3(SEC_ERROR_CRL_UNKNOWN_CRITICAL_EXTENSION,   (SEC_ERROR_BASE + 149),
+"Issuer's V2 Certificate Revocation List has an unknown critical extension.")
+
+ER3(SEC_ERROR_UNKNOWN_OBJECT_TYPE,	        (SEC_ERROR_BASE + 150),
+"Unknown object type specified.")
+
+ER3(SEC_ERROR_INCOMPATIBLE_PKCS11,	        (SEC_ERROR_BASE + 151),
+"PKCS #11 driver violates the spec in an incompatible way.")
+
+ER3(SEC_ERROR_NO_EVENT,	        		(SEC_ERROR_BASE + 152),
+"No new slot event is available at this time.")
+
+ER3(SEC_ERROR_CRL_ALREADY_EXISTS,      		(SEC_ERROR_BASE + 153),
+"CRL already exists.")
+
+ER3(SEC_ERROR_NOT_INITIALIZED,      		(SEC_ERROR_BASE + 154),
+"NSS is not initialized.")
+
+ER3(SEC_ERROR_TOKEN_NOT_LOGGED_IN,  		(SEC_ERROR_BASE + 155),
+"The operation failed because the PKCS#11 token is not logged in.")
 

@@ -33,6 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /* SSL-specific security error codes  */
 /* caller must include "sslerr.h" */
 
@@ -195,7 +196,7 @@ ER3(SSL_ERROR_RX_UNEXPECTED_CERT_VERIFY     , (SSL_ERROR_BASE + 48),
 "SSL received an unexpected Certificate Verify handshake message.")
 
 ER3(SSL_ERROR_RX_UNEXPECTED_CLIENT_KEY_EXCH , (SSL_ERROR_BASE + 49),
-"SSL received an unexpected Cllient Key Exchange handshake message.")
+"SSL received an unexpected Client Key Exchange handshake message.")
 
 ER3(SSL_ERROR_RX_UNEXPECTED_FINISHED        , (SSL_ERROR_BASE + 50),
 "SSL received an unexpected Finished handshake message.")
@@ -324,3 +325,62 @@ ER3(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE      , (SSL_ERROR_BASE + 87),
 ER3(SSL_ERROR_CERT_KEA_MISMATCH             , (SSL_ERROR_BASE + 88),
 "The certificate provided cannot be used with the selected key exchange algorithm.")
 
+ER3(SSL_ERROR_NO_TRUSTED_SSL_CLIENT_CA	, (SSL_ERROR_BASE + 89),
+"No certificate authority is trusted for SSL client authentication.")
+
+ER3(SSL_ERROR_SESSION_NOT_FOUND		, (SSL_ERROR_BASE + 90),
+"Client's SSL session ID not found in server's session cache.")
+
+ER3(SSL_ERROR_DECRYPTION_FAILED_ALERT     , (SSL_ERROR_BASE + 91),
+"Peer was unable to decrypt an SSL record it received.")
+
+ER3(SSL_ERROR_RECORD_OVERFLOW_ALERT       , (SSL_ERROR_BASE + 92),
+"Peer received an SSL record that was longer than is permitted.")
+
+ER3(SSL_ERROR_UNKNOWN_CA_ALERT            , (SSL_ERROR_BASE + 93),
+"Peer does not recognize and trust the CA that issued your certificate.")
+
+ER3(SSL_ERROR_ACCESS_DENIED_ALERT         , (SSL_ERROR_BASE + 94),
+"Peer received a valid certificate, but access was denied.")
+
+ER3(SSL_ERROR_DECODE_ERROR_ALERT          , (SSL_ERROR_BASE + 95),
+"Peer could not decode an SSL handshake message.")
+
+ER3(SSL_ERROR_DECRYPT_ERROR_ALERT         , (SSL_ERROR_BASE + 96),
+"Peer reports failure of signature verification or key exchange.")
+
+ER3(SSL_ERROR_EXPORT_RESTRICTION_ALERT    , (SSL_ERROR_BASE + 97),
+"Peer reports negotiation not in compliance with export regulations.")
+
+ER3(SSL_ERROR_PROTOCOL_VERSION_ALERT      , (SSL_ERROR_BASE + 98),
+"Peer reports incompatible or unsupported protocol version.")
+
+ER3(SSL_ERROR_INSUFFICIENT_SECURITY_ALERT , (SSL_ERROR_BASE + 99),
+"Server requires ciphers more secure than those supported by client.")
+
+ER3(SSL_ERROR_INTERNAL_ERROR_ALERT        , (SSL_ERROR_BASE + 100),
+"Peer reports it experienced an internal error.")
+
+ER3(SSL_ERROR_USER_CANCELED_ALERT         , (SSL_ERROR_BASE + 101),
+"Peer user canceled handshake.")
+
+ER3(SSL_ERROR_NO_RENEGOTIATION_ALERT      , (SSL_ERROR_BASE + 102),
+"Peer does not permit renegotiation of SSL security parameters.")
+
+ER3(SSL_ERROR_SERVER_CACHE_NOT_CONFIGURED , (SSL_ERROR_BASE + 103),
+"SSL server cache not configured and not disabled for this socket.")
+
+ER3(SSL_ERROR_UNSUPPORTED_EXTENSION_ALERT    , (SSL_ERROR_BASE + 104),
+"SSL peer does not support requested TLS hello extension.")
+
+ER3(SSL_ERROR_CERTIFICATE_UNOBTAINABLE_ALERT , (SSL_ERROR_BASE + 105),
+"SSL peer could not obtain your certificate from the supplied URL.")
+
+ER3(SSL_ERROR_UNRECOGNIZED_NAME_ALERT        , (SSL_ERROR_BASE + 106),
+"SSL peer has no certificate for the requested DNS name.")
+
+ER3(SSL_ERROR_BAD_CERT_STATUS_RESPONSE_ALERT , (SSL_ERROR_BASE + 107),
+"SSL peer was unable to get an OCSP response for its certificate.")
+
+ER3(SSL_ERROR_BAD_CERT_HASH_VALUE_ALERT      , (SSL_ERROR_BASE + 108),
+"SSL peer reported bad certificate hash value.")
