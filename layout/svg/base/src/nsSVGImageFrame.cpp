@@ -291,8 +291,15 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
       nsSVGUtils::SetClipRect(gfx, ctm, x, y, width, height);
     }
 
-    nsSVGUtils::CompositeSurfaceMatrix(gfx, thebesSurface, fini,
-                                       mStyleContext->GetStyleDisplay()->mOpacity);
+    // fill-opacity doesn't affect <image>, so if we're allowed to
+    // optimize group opacity, the opacity used for compositing the
+    // image into the current canvas is just the group opacity.
+    float opacity = 1.0f;
+    if (nsSVGUtils::CanOptimizeOpacity(this)) {
+      opacity = GetStyleDisplay()->mOpacity;
+    }
+
+    nsSVGUtils::CompositeSurfaceMatrix(gfx, thebesSurface, fini, opacity);
 
     if (GetStyleDisplay()->IsScrollableOverflow())
       gfx->Restore();
