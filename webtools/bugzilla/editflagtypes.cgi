@@ -387,8 +387,7 @@ sub update {
 
     # Clear existing flags for bugs/attachments in categories no longer on 
     # the list of inclusions or that have been added to the list of exclusions.
-    my $flags =    $dbh->selectall_arrayref('SELECT DISTINCT flags.id, flags.bug_id,
-                                                             flags.attach_id
+    my $flag_ids = $dbh->selectcol_arrayref('SELECT DISTINCT flags.id
                                                FROM flags
                                          INNER JOIN bugs
                                                  ON flags.bug_id = bugs.bug_id
@@ -401,14 +400,13 @@ sub update {
                                               WHERE flags.type_id = ?
                                                 AND i.type_id IS NULL',
                                              undef, $id);
+    my $flags = Bugzilla::Flag->new_from_list($flag_ids);
     foreach my $flag (@$flags) {
-        my ($flag_id, $bug_id, $attach_id) = @$flag;
-        my $bug = new Bugzilla::Bug($bug_id);
-        my $attachment = $attach_id ? Bugzilla::Attachment->get($attach_id) : undef;
-        Bugzilla::Flag::clear($flag_id, $bug, $attachment);
+        my $bug = new Bugzilla::Bug($flag->bug_id);
+        Bugzilla::Flag::clear($flag, $bug, $flag->attachment);
     }
 
-    $flags =    $dbh->selectall_arrayref('SELECT DISTINCT flags.id, flags.bug_id, flags.attach_id
+    $flag_ids = $dbh->selectcol_arrayref('SELECT DISTINCT flags.id
                                             FROM flags
                                       INNER JOIN bugs 
                                               ON flags.bug_id = bugs.bug_id
@@ -420,11 +418,10 @@ sub update {
                                              AND (bugs.component_id = e.component_id
                                                   OR e.component_id IS NULL)',
                                           undef, $id);
+    $flags = Bugzilla::Flag->new_from_list($flag_ids);
     foreach my $flag (@$flags) {
-        my ($flag_id, $bug_id, $attach_id) = @$flag;
-        my $bug = new Bugzilla::Bug($bug_id);
-        my $attachment = $attach_id ? Bugzilla::Attachment->get($attach_id) : undef;
-        Bugzilla::Flag::clear($flag_id, $bug, $attachment);
+        my $bug = new Bugzilla::Bug($flag->bug_id);
+        Bugzilla::Flag::clear($flag, $bug, $flag->attachment);
     }
 
     # Now silently remove requestees from flags which are no longer
