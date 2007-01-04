@@ -2803,8 +2803,7 @@ nsHttpChannel::ConfirmAuth(const nsString &bundleKey, PRBool doYesNoPrompt)
         PRInt32 choice;
         rv = prompt->ConfirmEx(nsnull, msg,
                                nsIPrompt::BUTTON_POS_1_DEFAULT +
-                               nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0 +
-                               nsIPrompt::BUTTON_TITLE_NO  * nsIPrompt::BUTTON_POS_1,
+                               nsIPrompt::STD_YES_NO_BUTTONS,
                                nsnull, nsnull, nsnull, nsnull, nsnull, &choice);
         if (NS_FAILED(rv))
             return PR_TRUE;

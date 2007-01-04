@@ -494,9 +494,7 @@ Wallet_ConfirmYN(PRUnichar * szMessage, nsIDOMWindowInternal* window) {
   PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
   PRUnichar * confirm_string = Wallet_Localize("Confirm");
 
-  res = dialog->ConfirmEx(confirm_string, szMessage,
-                          (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
-                          (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
+  res = dialog->ConfirmEx(confirm_string, szMessage, nsIPrompt::STD_YES_NO_BUTTONS,
                           nsnull, nsnull, nsnull, nsnull, nsnull, &buttonPressed);
 
   WALLET_FREE(confirm_string);
@@ -519,8 +517,7 @@ Wallet_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindowInternal* window)
 
   res = dialog->ConfirmEx(confirm_string, szMessage,
                           nsIPrompt::BUTTON_POS_1_DEFAULT +
-                          (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
-                          (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1) +
+                          nsIPrompt::STD_YES_NO_BUTTONS +
                           (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_2),
                           nsnull, nsnull, never_string, nsnull, nsnull, &buttonPressed);
 
@@ -572,9 +569,7 @@ Wallet_CheckConfirmYN
   PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
   PRUnichar * confirm_string = Wallet_Localize("Confirm");
 
-  res = dialog->ConfirmEx(confirm_string, szMessage,
-                          (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
-                          (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
+  res = dialog->ConfirmEx(confirm_string, szMessage, nsIPrompt::STD_YES_NO_BUTTONS,
                           nsnull, nsnull, nsnull, szCheckMessage, checkValue, &buttonPressed);
 
   if (NS_FAILED(res)) {
