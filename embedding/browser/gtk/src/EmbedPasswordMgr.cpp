@@ -1358,10 +1358,8 @@ EmbedPasswordMgr::Notify(nsIContent* aFormNode,
                                        formatArgs,
                                        1);
                     PRInt32 selection;
-                    prompt->ConfirmEx(dialogTitle.get(),
-                                      dialogText.get(),
-                                      (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
-                                      (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
+                    prompt->ConfirmEx(dialogTitle.get(), dialogText.get(),
+                                      nsIPrompt::STD_YES_NO_BUTTONS,
                                       nsnull, nsnull, nsnull, nsnull, nsnull,
                                       &selection);
                     if (selection == 0)

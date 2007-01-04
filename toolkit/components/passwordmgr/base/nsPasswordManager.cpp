@@ -1160,8 +1160,7 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
               PRInt32 selection;
               prompt->ConfirmEx(dialogTitle.get(),
                                 dialogText.get(),
-                                (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
-                                (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
+                                nsIPrompt::STD_YES_NO_BUTTONS,
                                 nsnull, nsnull, nsnull, nsnull, nsnull,
                                 &selection);
 
