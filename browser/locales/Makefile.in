@@ -114,13 +114,13 @@ endif
 PROFILE_CHROME = userChrome-example.css userContent-example.css
 
 libs:: $(addprefix $(LOCALE_SRCDIR)/,$(README_FILES))
-	$(INSTALL) $^ $(FINAL_TARGET)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
 
 libs:: $(addprefix $(LOCALE_SRCDIR)/profile/,$(PROFILE_FILES))
-	$(SYSINSTALL) $^ $(FINAL_TARGET)/defaults/profile
+	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/defaults/profile
 
 libs:: $(addprefix $(LOCALE_SRCDIR)/profile/chrome/,$(PROFILE_CHROME))
-	$(SYSINSTALL) $^ $(FINAL_TARGET)/defaults/profile/chrome
+	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/defaults/profile/chrome
 
 install:: $(addprefix $(LOCALE_SRCDIR)/profile/,$(PROFILE_FILES))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile
@@ -131,7 +131,7 @@ install:: $(addprefix $(LOCALE_SRCDIR)/profile/chrome/,$(PROFILE_CHROME))
 SEARCH_PLUGINS = $(shell cat $(LOCALE_SRCDIR)/searchplugins/list.txt)
 
 libs:: $(addsuffix .xml,$(SEARCH_PLUGINS))
-	$(INSTALL) $^ $(FINAL_TARGET)/searchplugins
+	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/searchplugins
 
 install:: $(addsuffix .xml,$(SEARCH_PLUGINS))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/searchplugins
@@ -142,7 +142,7 @@ MICROSUMMARY_GENERATOR_PREFIX = $(addprefix $(LOCALE_SRCDIR)/microsummary-genera
 libs::
 ifneq (,$(strip $(MICROSUMMARY_GENERATORS)))
         $(addsuffix .xml,$(MICROSUMMARY_GENERATOR_PREFIX))
-	$(INSTALL) $^ $(FINAL_TARGET)/microsummary-generators
+	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/microsummary-generators
 endif
 
 install::
@@ -283,9 +283,9 @@ ifeq ($(OS_ARCH),WINNT)
 	iconv -f UTF-8 -t $(WIN_INSTALLER_CHARSET) $< > $(FINAL_TARGET)/updater.ini
 else
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-	$(INSTALL) $^ $(FINAL_TARGET)/updater.app/Contents/MacOS
+	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/updater.app/Contents/MacOS
 else
-	$(INSTALL) $^ $(FINAL_TARGET)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
 endif
 endif
 endif
