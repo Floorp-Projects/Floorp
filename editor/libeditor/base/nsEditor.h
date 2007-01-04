@@ -616,13 +616,13 @@ protected:
   EDirection        mDirection;          // the current direction of editor action
   
   // data necessary to build IME transactions
-  nsIPrivateTextRangeList*      mIMETextRangeList; // IME special selection ranges
-  nsCOMPtr<nsIDOMCharacterData> mIMETextNode;      // current IME text node
-  PRUint32                      mIMETextOffset;    // offset in text node where IME comp string begins
-  PRUint32                      mIMEBufferLength;  // current length of IME comp string
-  PRPackedBool                  mInIMEMode;        // are we inside an IME composition?
-  PRPackedBool                  mIsIMEComposing;   // is IME in composition state?
-                                                   // This is different from mInIMEMode. see Bug 98434.
+  nsCOMPtr<nsIPrivateTextRangeList> mIMETextRangeList; // IME special selection ranges
+  nsCOMPtr<nsIDOMCharacterData>     mIMETextNode;      // current IME text node
+  PRUint32                          mIMETextOffset;    // offset in text node where IME comp string begins
+  PRUint32                          mIMEBufferLength;  // current length of IME comp string
+  PRPackedBool                      mInIMEMode;        // are we inside an IME composition?
+  PRPackedBool                      mIsIMEComposing;   // is IME in composition state?
+                                                       // This is different from mInIMEMode. see Bug 98434.
 
   PRPackedBool                  mShouldTxnSetSelection;  // turn off for conservative selection adjustment by txns
   PRPackedBool                  mDidPreDestroy;    // whether PreDestroy has been called

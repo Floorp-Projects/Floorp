@@ -39,6 +39,8 @@
 #define nsPrivateTextRange_h__
 
 #include "nsIPrivateTextRange.h"
+#include "nsTArray.h"
+#include "nsAutoPtr.h"
 
 class nsPrivateTextRange : public nsIPrivateTextRange 
 {
@@ -68,18 +70,15 @@ class nsPrivateTextRangeList: public nsIPrivateTextRangeList
 {
 	NS_DECL_ISUPPORTS
 public:
-	
-	nsPrivateTextRangeList(PRUint16 aLength, nsIPrivateTextRange** aList);
-	virtual ~nsPrivateTextRangeList(void);
+	nsPrivateTextRangeList(PRUint16 aLength) : mList(aLength) {}
+
+	void          AppendTextRange(nsRefPtr<nsPrivateTextRange>& aRange);
 
 	NS_IMETHOD    GetLength(PRUint16* aLength);
 
 	NS_IMETHOD    Item(PRUint16 aIndex, nsIPrivateTextRange** aReturn);
-
 protected:
-
-	PRUint16				mLength;
-	nsIPrivateTextRange**	mList;
+	nsTArray<nsRefPtr<nsPrivateTextRange> > mList;
 };
 
 

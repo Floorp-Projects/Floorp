@@ -452,15 +452,14 @@ nsTextEditorTextListener::HandleText(nsIDOMEvent* aTextEvent)
       return NS_OK;
    }
 
-   nsAutoString            composedText;
-   nsresult                result;
-   nsIPrivateTextRangeList *textRangeList;
-   nsTextEventReply        *textEventReply;
+   nsAutoString                      composedText;
+   nsresult                          result;
+   nsCOMPtr<nsIPrivateTextRangeList> textRangeList;
+   nsTextEventReply*                 textEventReply;
 
    textEvent->GetText(composedText);
-   textEvent->GetInputRange(&textRangeList);
+   textEvent->GetInputRange(getter_AddRefs(textRangeList));
    textEvent->GetEventReply(&textEventReply);
-   textRangeList->AddRef();
    nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(mEditor, &result);
    if (imeEditor) {
      PRUint32 flags;
