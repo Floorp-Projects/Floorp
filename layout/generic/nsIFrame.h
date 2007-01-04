@@ -1138,21 +1138,23 @@ public:
    * is responsible for adding padding, border, and margin and for
    * considering the effects of 'width', 'min-width', and 'max-width'.
    *
-   * This may be called on any frame.  For frames that do not
-   * participate in line breaking, the result will simply append the
-   * result of |GetMinWidth| to the current line.
+   * This may be called on any frame.  Frames that do not participate in
+   * line breaking can inherit the default implementation on nsFrame,
+   * which calls |GetMinWidth|.
    */
   virtual void
   AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
                     InlineMinWidthData *aData) = 0;
 
   /**
-   * Get the intrinsic width of a frame in a way suitable for
-   * use in inline layout.
+   * Add the intrinsic preferred width of a frame in a way suitable for
+   * use in inline layout to an |InlineIntrinsicWidthData| object that
+   * represents the intrinsic width information of all the previous
+   * frames in the inline layout region.
    *
-   * All the comments for |GetInlinePrefWidth| apply, except that this
-   * fills in an |InlineIntrinsicWidthData| structure based on using all
-   * *mandatory* breakpoints within the frame.
+   * All the comments for |AddInlineMinWidth| and |GetPrefWidth| apply,
+   * except that this fills in an |InlineIntrinsicWidthData| structure
+   * based on using all *mandatory* breakpoints within the frame.
    */
   virtual void
   AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
