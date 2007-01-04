@@ -2090,18 +2090,40 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
   nsCOMPtr<nsIDOMNode> startNode;
   nsCOMPtr<nsIContent> endContent;
   nsCOMPtr<nsIDOMNode> endNode;
+
+  nsIFrame* baseFrame = this;
+  PRInt32 baseOffset = aStartPos;
+  if (aAmountBack == eSelectWord) {
+    // To avoid selecting the previous word when at start of word,
+    // first move one character forward.
+    nsPeekOffsetStruct pos;
+    pos.SetData(eSelectCharacter,
+                eDirNext,
+                aStartPos,
+                0,
+                aJumpLines,
+                PR_TRUE,  //limit on scrolled views
+                PR_FALSE,
+                PR_FALSE);
+    rv = PeekOffset(&pos);
+    if (NS_SUCCEEDED(rv)) {
+      baseFrame = pos.mResultFrame;
+      baseOffset = pos.mContentOffset;
+    }
+  }
   nsPeekOffsetStruct startpos;
   startpos.SetData(aAmountBack,
                    eDirPrevious,
-                   aStartPos, 
+                   baseOffset, 
                    0,
                    aJumpLines,
                    PR_TRUE,  //limit on scrolled views
                    PR_FALSE,
                    PR_FALSE);
-  rv = PeekOffset(&startpos);
+  rv = baseFrame->PeekOffset(&startpos);
   if (NS_FAILED(rv))
     return rv;
+
   nsPeekOffsetStruct endpos;
   endpos.SetData(aAmountForward,
                  eDirNext,
