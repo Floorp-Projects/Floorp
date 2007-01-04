@@ -116,6 +116,14 @@ private:
   nsTreeColumn* mPrevious;
 };
 
+#define NS_TREECOLUMN_IMPL_CID                       \
+{ /* 02cd1963-4b5d-4a6c-9223-814d3ade93a3 */         \
+    0x02cd1963,                                      \
+    0x4b5d,                                          \
+    0x4a6c,                                          \
+    {0x92, 0x23, 0x81, 0x4d, 0x3a, 0xde, 0x93, 0xa3} \
+}
+
 class nsTreeColumns : public nsITreeColumns {
 public:
   nsTreeColumns(nsITreeBoxObject* aTree);

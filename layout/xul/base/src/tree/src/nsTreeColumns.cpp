@@ -49,6 +49,8 @@
 #include "nsINodeInfo.h"
 #include "nsContentUtils.h"
 
+static NS_DEFINE_CID(kTreeColumnImplCID, NS_TREECOLUMN_IMPL_CID);
+
 // Column class that caches all the info about our column.
 nsTreeColumn::nsTreeColumn(nsTreeColumns* aColumns, nsIFrame* aFrame)
   : mFrame(aFrame),
@@ -72,6 +74,9 @@ NS_INTERFACE_MAP_BEGIN(nsTreeColumn)
   NS_INTERFACE_MAP_ENTRY(nsITreeColumn)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(TreeColumn)
+  if (aIID.Equals(kTreeColumnImplCID))
+    foundInterface = NS_STATIC_CAST(nsITreeColumn*, this);
+  else
 NS_INTERFACE_MAP_END
                                                                                 
 NS_IMPL_ADDREF(nsTreeColumn)
