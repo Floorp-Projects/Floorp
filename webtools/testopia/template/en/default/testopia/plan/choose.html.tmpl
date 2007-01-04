@@ -23,20 +23,28 @@
 [% PROCESS global/variables.none.tmpl %]
 
 [% PROCESS global/header.html.tmpl
-   title = "Search by Test Plan Number"
+   title = "Choose a Test Plan"
  %]
 
 <form method="get" action="[% form_action %]">
   <p>
-    Please enter a plan id:
-    <input name="plan_id" size="6">
-    <input type="submit" value="Use This Test Plan">
     [% IF form_action == 'tr_new_run.cgi' %]
       <input type="hidden" name="case_status_id" value="2" />
     [% END %]
     [% IF type %]
       <input type="hidden" name="type" value="[% type FILTER none %]" />
     [% END %]
+    [% IF product %]
+      <input type="hidden" name="bug" value="[% bug_id FILTER none %]" />
+      [% PROCESS testopia/blocks.html.tmpl %]
+      [% PROCESS select sel = { name      => 'plan_id',
+                                list      =>  product.plans,
+                                accesskey => 'p' }%]
+    [% ELSE %]
+      Please enter a plan id:
+      <input name="plan_id" size="6">
+    [% END %]
+      <input type="submit" value="Use This Test Plan">
   </p>
 </form>
 

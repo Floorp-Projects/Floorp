@@ -32,11 +32,11 @@ $Bugzilla::Config::Admin::sortkey = "20";
 sub get_param_list {
   my $class = shift;
   my @param_list = (
-  {
-   name    => 'private-cases-log', 
-   type    => 'b',
-   default => 0,
-  },
+#  {
+#   name    => 'private-cases-log', 
+#   type    => 'b',
+#   default => 0,
+#  },
 
   {
    name    => 'allow-test-deletion', 
@@ -44,11 +44,11 @@ sub get_param_list {
    default => 0,
   },
 
-  {
-   name    => 'print-tag-in-case-log', 
-   type    => 'b',
-   default => 0,
-  },
+#  {
+#   name    => 'print-tag-in-case-log', 
+#   type    => 'b',
+#   default => 0,
+#  },
 
   {
    name    => 'new-case-action-template',
@@ -59,7 +59,7 @@ sub get_param_list {
   },
 
   {
-   name    => 'new-case-effect-template',
+   name    => 'new-case-results-template',
    type    => 'l',
    default => qq{<ol>
   <li></li>
@@ -69,19 +69,19 @@ sub get_param_list {
   {
    name    => 'bug-to-test-case-summary',
    type    => 'l',
-   default => 'Check bug %id%',
+   default => 'Test for bug %id% - %summary%',
   },
 
   {
    name    => 'bug-to-test-case-action',
    type    => 'l',
-   default => 'Verify if a bug %id% is fixed'
+   default => 'Verify that bug %id% is fixed: %description%'
   },
 
   {
-   name    => 'bug-to-test-case-effect',
+   name    => 'bug-to-test-case-results',
    type    => 'l',
-   default => 'Bug %id% is fixed',
+   default => '',
   },
 
   {
@@ -91,46 +91,46 @@ sub get_param_list {
    default => 'PROPOSED'
   },
 
-  {
-   name    => 'new-testrun-email-notif',
-   type    => 'l',
-   default => 'From: bugzilla-daemon'."\n".
-              'To: %to%'."\n".
-              'Subject: Test run started.'."\n".
-              "\n".
-              'Test run \'%summary%\' for product \'%product%\' and test plan \'%plan%\' has '.
-              'just been started.'
-  },
+#  {
+#   name    => 'new-testrun-email-notif',
+#   type    => 'l',
+#   default => 'From: bugzilla-daemon'."\n".
+#              'To: %to%'."\n".
+#              'Subject: Test run started.'."\n".
+#              "\n".
+#              'Test run \'%summary%\' for product \'%product%\' and test plan \'%plan%\' has '.
+#              'just been started.'
+#  },
 
-  {
-   name    => 'case-failed-email-notif',
-   type    => 'l',
-   default => 'From: bugzilla-daemon'."\n".
-              'To: %manager%'."\n".
-              'Subject: Case log \'%id%\' marked as failed.'."\n".
-              "\n".
-              'Test case log \'%id%\' in test run \'%test_run%\' was marked as \'failed\' by %tester%.'
-  },
+#  {
+#   name    => 'case-failed-email-notif',
+#   type    => 'l',
+#   default => 'From: bugzilla-daemon'."\n".
+#              'To: %manager%'."\n".
+#              'Subject: Case log \'%id%\' marked as failed.'."\n".
+#              "\n".
+#              'Test case log \'%id%\' in test run \'%test_run%\' was marked as \'failed\' by %tester%.'
+#  },
 
-  {
-   name    => 'tester-completed-email-notif',
-   type    => 'l',
-   default => 'From: bugzilla-daemon'."\n".
-              'To: %manager%'."\n".
-              'Subject: Test run completed for tester.'."\n".
-              "\n".
-              'Tester %tester% has completed the test run \'%test_run%\'.'
-  },
+#  {
+#   name    => 'tester-completed-email-notif',
+#   type    => 'l',
+#   default => 'From: bugzilla-daemon'."\n".
+#              'To: %manager%'."\n".
+#              'Subject: Test run completed for tester.'."\n".
+#              "\n".
+#              'Tester %tester% has completed the test run \'%test_run%\'.'
+#  },
 
-  {
-   name    => 'test-run-completed-email-notif',
-   type    => 'l',
-   default => 'From: bugzilla-daemon'."\n".
-              'To: %manager%'."\n".
-              'Subject: Test run completed.'."\n".
-              "\n".
-              'Test run \'%test_run%\' completed.'
-  }
+#  {
+#   name    => 'test-run-completed-email-notif',
+#   type    => 'l',
+#   default => 'From: bugzilla-daemon'."\n".
+#              'To: %manager%'."\n".
+#              'Subject: Test run completed.'."\n".
+#              "\n".
+#              'Test run \'%test_run%\' completed.'
+#  }
 );
 }
 1;

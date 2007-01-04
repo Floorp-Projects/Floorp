@@ -50,6 +50,8 @@ my $action = $cgi->param('action') || '';
 my @plan_id = $cgi->param('plan_id');
 
 unless ($plan_id[0]){
+  $vars->{'product'} = Bugzilla::Testopia::Product->new({'name' => $cgi->param('product')}) if ($cgi->param('product'));
+  $vars->{'bug_id'} = $cgi->param('bug');
   $vars->{'form_action'} = 'tr_new_case.cgi';
   $template->process("testopia/plan/choose.html.tmpl", $vars) 
       || ThrowTemplateError($template->error());
@@ -203,15 +205,47 @@ if ($action eq 'Add'){
 ### Display Form ###
 ####################
 else {
+    my $bug;
+    my $summary;
+    my $text;
+    if( $cgi->param('bug')){
+        $bug = Bugzilla::Bug->new($cgi->param('bug'),Bugzilla->user->id);
+        
+        my $bug_id = $bug->bug_id;
+        my $description = ${$bug->GetComments}[0];
+        my $short_desc = $bug->short_desc; 
+        
+        $summary   = Param('bug-to-test-case-summary');
+        my $action = Param('bug-to-test-case-action');
+        my $effect = Param('bug-to-test-case-results');
+        
+        $summary =~ s/%id%/$bug_id/g;
+        $summary =~ s/%summary%/$short_desc/g;
+        
+        $action  =~ s/%id%/<a href="show_bug.cgi?bug=$bug_id">$bug_id<\/a>/g;
+        $action  =~ s/%description%/$description/g;
+        
+        $effect  =~ s/%id%/<a href="show_bug.cgi?bug=$bug_id">$bug_id<\/a>/g;
+        
+        $text = {'action' => $action, 'effect' => $effect};
+    }
+    else {
+        $text = {'action' => Param('new-case-action-template'), 
+                 'effect' => Param('new-case-results-template')};
+    }
+        
     my $case = Bugzilla::Testopia::TestCase->new(
                         {'case_id' => 0, 
                          'plans' => \@plans, 
                          'category' => {'name' => 'Default'},
+                         'summary' =>  $summary,
+                         'text' => $text,
     });
     my @comps;
     foreach my $comp (@{$case->get_selectable_components(1)}){
         push @comps, $comp->default_qa_contact->login;
     }
+    
     $vars->{'case'} = $case;
     $vars->{'components'} = objToJson(\@comps);
     $vars->{'action'} = "Add";
