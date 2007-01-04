@@ -830,7 +830,7 @@ foreach my $field (Bugzilla->get_fields({custom => 1, obsolete => 0})) {
 }
 
 my $product;
-my $prod_changed;
+my $prod_changed = 0;
 my @newprod_ids;
 if ($cgi->param('product') ne $cgi->param('dontchange')) {
     $product = Bugzilla::Product::check_product(scalar $cgi->param('product'));
@@ -839,7 +839,14 @@ if ($cgi->param('product') ne $cgi->param('dontchange')) {
     $::query .= "product_id = ?";
     push(@values, $product->id);
     @newprod_ids = ($product->id);
-    $prod_changed = 1;
+    # If the bug remains in the same product, leave $prod_changed set to 0.
+    # Even with 'strict_isolation' turned on, we ignore users who already
+    # play a role for the bug; else you would never be able to edit it.
+    # If you want to move the bug to another product, then you first have to
+    # remove these users from the bug.
+    unless (defined $cgi->param('id') && $bug->product_id == $product->id) {
+        $prod_changed = 1;
+    }
 } else {
     @newprod_ids = @{$dbh->selectcol_arrayref("SELECT DISTINCT product_id
                                                FROM bugs 
@@ -1006,7 +1013,10 @@ if (defined $cgi->param('qa_contact')
     # The QA contact cannot be deleted from show_bug.cgi for a single bug!
     if ($name ne $cgi->param('dontchange')) {
         $qacontact = login_to_id($name, THROW_ERROR) if ($name ne "");
-        if ($qacontact && Bugzilla->params->{"strict_isolation"}) {
+        if ($qacontact && Bugzilla->params->{"strict_isolation"}
+            && !(defined $cgi->param('id') && $bug->qa_contact
+                 && $qacontact == $bug->qa_contact->id))
+        {
                 $usercache{$qacontact} ||= Bugzilla::User->new($qacontact);
                 my $qa_user = $usercache{$qacontact};
                 foreach my $product_id (@newprod_ids) {
