@@ -193,15 +193,8 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
   if (!mUncompiledMethod)
     return NS_OK;
 
-  // Don't install method if no name or body was supplied.
-  if (!(mName && mUncompiledMethod->mBodyText.GetText())) {
-    delete mUncompiledMethod;
-    mUncompiledMethod = nsnull;
-    return NS_OK;
-  }
-
-  nsDependentString body(mUncompiledMethod->mBodyText.GetText());
-  if (body.IsEmpty()) {
+  // Don't install method if no name was supplied.
+  if (!mName) {
     delete mUncompiledMethod;
     mUncompiledMethod = nsnull;
     return NS_OK;
@@ -231,6 +224,12 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
     args[argPos] = curr->mName;
     argPos++;
   }
+
+  // Get the body
+  nsDependentString body;
+  PRUnichar *bodyText = mUncompiledMethod->mBodyText.GetText();
+  if (bodyText)
+    body.Rebind(bodyText);
 
   // Now that we have a body and args, compile the function
   // and then define it.
