@@ -463,6 +463,18 @@ else
 endif
 
 ####################################
+# Sanity checks
+
+ifneq (,$(filter MINGW%,$(shell uname -s)))
+# check for CRLF line endings
+ifneq (0,$(shell $(PERL) -e 'binmode(STDIN); while (<STDIN>) { if (/\r/) { print "1"; exit } } print "0"' < $(TOPSRCDIR)/client.mk))
+$(error This source tree appears to have Windows-style line endings. To \
+convert it to Unix-style line endings, run \
+"python mozilla/build/win32/mozilla-dos2unix.py")
+endif
+endif
+
+####################################
 # CVS
 
 # Add the CVS root to CVS_FLAGS if needed
