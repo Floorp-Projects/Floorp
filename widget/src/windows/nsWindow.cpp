@@ -80,18 +80,6 @@
 #include <process.h>
 
 #ifdef WINCE
-#define NS_VK_APP1  0x0201
-#define NS_VK_APP2  0x0202
-#define NS_VK_APP3  0x0203
-#define NS_VK_APP4  0x0204
-#define NS_VK_APP5  0x0205
-#define NS_VK_APP6  0x0206
-#define NS_VK_APP7  0x0207
-#define NS_VK_APP8  0x0208
-#define NS_VK_APP9  0x0209
-#define NS_VK_APP10 0x020A
-#define NS_VK_APP11 0x020B
-
 #include "aygshell.h"
 #include "imm.h"
 #include "tpcshell.h"
@@ -182,7 +170,7 @@ static const char kMozHeapDumpMessageString[] = "MOZ_HeapDump";
 #define MAPVK_VSC_TO_VK  1
 #define MAPVK_VK_TO_CHAR 2
 #endif
-  
+
 #ifdef MOZ_XUL
 
 #ifndef AC_SRC_ALPHA

@@ -44,7 +44,7 @@
 #include <shellapi.h>
 #include "nsWindow.h"
 
-// Constants only found in new (98+, 2K+, XP+, etc.) Windows.
+// Constants only found in new (2K+, XP+, etc.) Windows.
 #ifndef COLOR_MENUHILIGHT
 #define COLOR_MENUHILIGHT    29
 #endif
@@ -64,12 +64,13 @@ SHAppBarMessagePtr gSHAppBarMessage = NULL;
 static HINSTANCE gShell32DLLInst = NULL;
 #endif
 
-static PRInt32 GetSystemParam(long flag, PRInt32 def) {
+static PRInt32 GetSystemParam(long flag, PRInt32 def)
+{
 #ifdef WINCE
     return def;
 #else
     DWORD value; 
-    return SystemParametersInfo(flag, 0, &value, 0) ? value : def;
+    return ::SystemParametersInfo(flag, 0, &value, 0) ? value : def;
 #endif
 }
 
@@ -270,16 +271,11 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       idx = COLOR_3DDKSHADOW;
       break;
     case eColor__moz_menubarhovertext: {
-      BOOL isFlatMenus;
-      HRESULT rv;
-
-      // This will simply fail on Windows versions prior to XP, so we get
-      // non-flat as desired.
-      rv = ::SystemParametersInfo(SPI_GETFLATMENU, 0, &isFlatMenus, 0);
-      if (rv && isFlatMenus)
-        idx = COLOR_HIGHLIGHTTEXT; /* flat menus (XP themes and later only) */
-      else
-        idx = COLOR_MENUTEXT; /* 3d menus (pre-XP, some themes) */
+     // GetSystemParam will return 0 on failure and we get non-flat as
+     // desired for Windows 2000 and sometimes on XP.
+      idx = (GetSystemParam(SPI_GETFLATMENU, 0)) ?
+                COLOR_HIGHLIGHTTEXT :
+                COLOR_MENUTEXT;
       break;
     }
     default:
@@ -372,7 +368,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 1;
         break;
     case eMetric_SubmenuDelay:
-        // This will default to the Window's default
+        // This will default to the Windows' default
         // (400ms) on error.
         aMetric = GetSystemParam(SPI_GETMENUSHOWDELAY, 400);
         break;
@@ -381,7 +377,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 1;
         break;
     case eMetric_DragFullWindow:
-        // This will default to the Window's default
+        // This will default to the Windows' default
         // (on by default) on error.
         aMetric = GetSystemParam(SPI_GETDRAGFULLWINDOWS, 1);
         break;
@@ -402,19 +398,14 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         // The high contrast flag really means -- use this theme and don't override it.
         HIGHCONTRAST contrastThemeInfo;
         contrastThemeInfo.cbSize = sizeof(contrastThemeInfo);
-        // Need to check return from SystemParametersInfo since 
-        // SPI_GETHIGHCONTRAST is not supported on Windows NT 
-        if (SystemParametersInfo(SPI_GETHIGHCONTRAST, 0, &contrastThemeInfo, 0)) {
-          aMetric = (contrastThemeInfo.dwFlags & HCF_HIGHCONTRASTON) != 0;
-        }
-        else {
-          aMetric = 0;
-        }
+        ::SystemParametersInfo(SPI_GETHIGHCONTRAST, 0, &contrastThemeInfo, 0);
+
+        aMetric = ((contrastThemeInfo.dwFlags & HCF_HIGHCONTRASTON) != 0);
         break;
     case eMetric_IsScreenReaderActive:
-      BOOL isScreenReaderActive;
-      aMetric = SystemParametersInfo(SPI_GETSCREENREADER, 0, &isScreenReaderActive, 0) && 
-                isScreenReaderActive;
+        // This will default to the Windows' default
+        // (off by default) on error.
+        aMetric = GetSystemParam(SPI_GETSCREENREADER, 0);
       break;
 #endif
     case eMetric_ScrollArrowStyle:
@@ -537,7 +528,8 @@ PRUnichar nsLookAndFeel::GetPasswordCharacter()
   if (!passwordCharacter) {
     passwordCharacter = '*';
 #ifndef WINCE
-    OSVERSIONINFO osversion = { sizeof(OSVERSIONINFO) };
+    OSVERSIONINFO osversion;
+    osversion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
     ::GetVersionEx(&osversion);
     if (osversion.dwMajorVersion > 5 ||
         osversion.dwMajorVersion == 5 && osversion.dwMinorVersion > 0)

@@ -46,6 +46,7 @@
 #include "nsIServiceManager.h"
 #include "nsComponentManagerUtils.h"
 #include "nsWidgetAtoms.h"
+#include "nsWindowAPI.h"
 #include <objbase.h>
 #include <initguid.h>
 
@@ -158,12 +159,6 @@ LRESULT CALLBACK DetectWindowMove(int code, WPARAM wParam, LPARAM lParam)
     return CallNextHookEx(nsMsgFilterHook, code, wParam, lParam);
 }
 #endif //#ifndef WINCE
-
-#include "nsWindowAPI.h"
-
-#define MAX_CLASS_NAME  128
-#define MAX_MENU_NAME   128
-#define MAX_FILTER_NAME 256
 
 MouseTrailer*       nsToolkit::gMouseTrailer;
 
@@ -371,7 +366,7 @@ NS_METHOD nsToolkit::Init(PRThread *aThread)
     // the user is moving a top-level window.
     if (nsMsgFilterHook == NULL) {
       nsMsgFilterHook = SetWindowsHookEx(WH_CALLWNDPROC, DetectWindowMove, 
-                                                NULL, GetCurrentThreadId());
+                                         NULL, GetCurrentThreadId());
     }
 #endif
 
@@ -389,7 +384,7 @@ PRBool nsToolkit::UserIsMovingWindow(void)
 //
 //-------------------------------------------------------------------------
 LRESULT CALLBACK nsToolkit::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, 
-                                            LPARAM lParam)
+                                       LPARAM lParam)
 {
     switch (msg) {
         case WM_CALLMETHOD:
@@ -478,16 +473,10 @@ PRBool nsToolkit::InitVersionInfo()
     isInitialized = PR_TRUE;
 
 #ifndef WINCE
-    OSVERSIONINFOEX osversion;
-    BOOL osVersionInfoEx;
-    
-    ::ZeroMemory(&osversion, sizeof(OSVERSIONINFOEX));
-    osversion.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+    OSVERSIONINFO osversion;
+    osversion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 
-    if (!(osVersionInfoEx = GetVersionEx((OSVERSIONINFO *)&osversion))) {
-      // Win2k or later should support OSVERSIONINFOEX.
-      return PR_FALSE;
-    }
+    ::GetVersionEx(&osversion);
 
     if (osversion.dwMajorVersion == 5)  { 
       nsToolkit::mIsWinXP = (osversion.dwMinorVersion == 1);

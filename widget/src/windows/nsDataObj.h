@@ -51,8 +51,6 @@
 #include "nsIInputStream.h"
 #include "nsIChannel.h"
 
-#define MAX_FORMATS 32
-
 // XXX for older version of PSDK where IAsyncOperation and related stuff is not available
 // but thisdefine  should be removed when parocles config is updated
 #ifndef __IAsyncOperation_INTERFACE_DEFINED__

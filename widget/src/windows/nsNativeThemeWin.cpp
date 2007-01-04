@@ -249,14 +249,12 @@ nsNativeThemeWin::UpdateConfig()
 {
   // Check for Windows XP (or later), and check if 'flat menus' are enabled.
   BOOL isFlatMenus;
-  HRESULT rv;
   mFlatMenus = PR_FALSE;
 
   // This will simply fail on Windows versions prior to XP, so we get
   // non-flat as desired.
-  rv = ::SystemParametersInfo(SPI_GETFLATMENU, 0, &isFlatMenus, 0);
-  if (rv)
-    mFlatMenus = isFlatMenus;
+  ::SystemParametersInfo(SPI_GETFLATMENU, 0, &isFlatMenus, 0);
+  mFlatMenus = isFlatMenus;
 }
 
 HANDLE
