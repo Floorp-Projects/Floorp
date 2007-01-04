@@ -167,8 +167,12 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *aAddress, PRBool 
     else if (existingCard && !emailAddressIn2ndEmailColumn) { 
       // address is already in the AB, so update the names
       PRBool setNames = PR_FALSE;
-      rv = SetNamesForCard(existingCard, unquotedName.get(), &setNames);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to set names");
+      
+      if (!unquotedName.IsEmpty())
+      {
+        rv = SetNamesForCard(existingCard, unquotedName.get(), &setNames);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to set names");
+      }
 
       PRBool setScreenName = PR_FALSE; 
       rv = AutoCollectScreenName(existingCard, curAddress, &setScreenName);
