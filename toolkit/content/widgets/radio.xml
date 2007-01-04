@@ -123,9 +123,12 @@
 
           if (!alreadySelected && focused) {
             // Only report if actual change
-            var myEvent = document.createEvent("Events");
-            myEvent.initEvent("RadioStateChange", true, true);
-            val.dispatchEvent(myEvent);
+            var myEvent;
+            if (val) {
+              myEvent = document.createEvent("Events");
+              myEvent.initEvent("RadioStateChange", true, true);
+              val.dispatchEvent(myEvent);
+            }
 
             if (previousItem) {
               myEvent = document.createEvent("Events");
