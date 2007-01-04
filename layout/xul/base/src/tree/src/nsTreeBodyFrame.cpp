@@ -621,14 +621,15 @@ nsTreeBodyFrame::InvalidateColumn(nsITreeColumn* aCol)
   if (mUpdateBatchNest)
     return NS_OK;
 
-  nsTreeColumn* col = NS_STATIC_CAST(nsTreeColumn*, aCol);
-  if (col) {
-    nsRect columnRect(col->GetX(), mInnerBox.y, col->GetWidth(), mInnerBox.height);
+  nsTreeColumn* col = GetColumnImpl(aCol);
+  if (!col)
+    return NS_ERROR_INVALID_ARG;
 
-    // When false then column is out of view
-    if (OffsetForHorzScroll(columnRect, PR_TRUE))
-        nsIFrame::Invalidate(columnRect, PR_FALSE);
-  }
+  nsRect columnRect(col->GetX(), mInnerBox.y, col->GetWidth(), mInnerBox.height);
+
+  // When false then column is out of view
+  if (OffsetForHorzScroll(columnRect, PR_TRUE))
+      nsIFrame::Invalidate(columnRect, PR_FALSE);
 
   return NS_OK;
 }
@@ -665,13 +666,14 @@ nsTreeBodyFrame::InvalidateCell(PRInt32 aIndex, nsITreeColumn* aCol)
   if (aIndex < 0 || aIndex > mPageLength)
     return NS_OK;
 
-  nsTreeColumn* col = NS_STATIC_CAST(nsTreeColumn*, aCol);
-  if (col) {
-    nscoord yPos = mInnerBox.y+mRowHeight*aIndex;
-    nsRect cellRect(col->GetX(), yPos, col->GetWidth(), mRowHeight);
-    if (OffsetForHorzScroll(cellRect, PR_TRUE))
-      nsIFrame::Invalidate(cellRect, PR_FALSE);
-  }
+  nsTreeColumn* col = GetColumnImpl(aCol);
+  if (!col)
+    return NS_ERROR_INVALID_ARG;
+
+  nscoord yPos = mInnerBox.y+mRowHeight*aIndex;
+  nsRect cellRect(col->GetX(), yPos, col->GetWidth(), mRowHeight);
+  if (OffsetForHorzScroll(cellRect, PR_TRUE))
+    nsIFrame::Invalidate(cellRect, PR_FALSE);
 
   return NS_OK;
 }
@@ -707,24 +709,25 @@ nsTreeBodyFrame::InvalidateColumnRange(PRInt32 aStart, PRInt32 aEnd, nsITreeColu
   if (mUpdateBatchNest)
     return NS_OK;
 
-  nsTreeColumn* col = NS_STATIC_CAST(nsTreeColumn*, aCol);
-  if (col) {
-    if (aStart == aEnd)
-      return InvalidateCell(aStart, col);
+  nsTreeColumn* col = GetColumnImpl(aCol);
+  if (!col)
+    return NS_ERROR_INVALID_ARG;
 
-    PRInt32 last = GetLastVisibleRow();
-    if (aStart > aEnd || aEnd < mTopRowIndex || aStart > last)
-      return NS_OK;
+  if (aStart == aEnd)
+    return InvalidateCell(aStart, col);
 
-    if (aStart < mTopRowIndex)
-      aStart = mTopRowIndex;
+  PRInt32 last = GetLastVisibleRow();
+  if (aStart > aEnd || aEnd < mTopRowIndex || aStart > last)
+    return NS_OK;
 
-    if (aEnd > last)
-      aEnd = last;
+  if (aStart < mTopRowIndex)
+    aStart = mTopRowIndex;
 
-    nsRect rangeRect(col->GetX(), mInnerBox.y+mRowHeight*(aStart-mTopRowIndex), col->GetWidth(), mRowHeight*(aEnd-aStart+1));
-    nsIFrame::Invalidate(rangeRect, PR_FALSE);
-  }
+  if (aEnd > last)
+    aEnd = last;
+
+  nsRect rangeRect(col->GetX(), mInnerBox.y+mRowHeight*(aStart-mTopRowIndex), col->GetWidth(), mRowHeight*(aEnd-aStart+1));
+  nsIFrame::Invalidate(rangeRect, PR_FALSE);
 
   return NS_OK;
 }
@@ -1627,9 +1630,9 @@ nsTreeBodyFrame::IsCellCropped(PRInt32 aRow, nsITreeColumn* aCol, PRBool *_retva
   nsCOMPtr<nsIRenderingContext> rc;
   GetPresContext()->PresShell()->CreateRenderingContext(this, getter_AddRefs(rc));
 
-  nsTreeColumn* col = NS_STATIC_CAST(nsTreeColumn*, aCol);
+  nsTreeColumn* col = GetColumnImpl(aCol);
   if (!col)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_INVALID_ARG;
 
   GetCellWidth(aRow, col, rc, desiredSize, currentSize);
   *_retval = desiredSize > currentSize;
@@ -3642,14 +3645,13 @@ nsresult nsTreeBodyFrame::EnsureRowIsVisibleInternal(const ScrollParts& aParts, 
 
 NS_IMETHODIMP nsTreeBodyFrame::EnsureCellIsVisible(PRInt32 aRow, nsITreeColumn* aCol)
 {
-  if (!aCol)
-    return NS_ERROR_INVALID_POINTER;
+  nsTreeColumn* col = GetColumnImpl(aCol);
+  if (!col)
+    return NS_ERROR_INVALID_ARG;
 
   ScrollParts parts = GetScrollParts();
 
   nscoord result = -1;
-
-  nsTreeColumn* col = NS_STATIC_CAST(nsTreeColumn*, aCol);
 
   nscoord columnPos = col->GetX();
   nscoord columnWidth = col->GetWidth();
@@ -3688,10 +3690,9 @@ NS_IMETHODIMP nsTreeBodyFrame::ScrollToColumn(nsITreeColumn* aCol)
 nsresult nsTreeBodyFrame::ScrollToColumnInternal(const ScrollParts& aParts,
                                                  nsITreeColumn* aCol)
 {
-  if(!aCol)
-    return NS_ERROR_INVALID_POINTER;
-
-  nsTreeColumn* col = NS_STATIC_CAST(nsTreeColumn*, aCol);
+  nsTreeColumn* col = GetColumnImpl(aCol);
+  if (!col)
+    return NS_ERROR_INVALID_ARG;
   return ScrollHorzInternal(aParts, col->GetX());
 }
 

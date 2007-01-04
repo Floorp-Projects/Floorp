@@ -69,6 +69,8 @@ struct nsTreeImageCacheEntry
   nsCOMPtr<imgIDecoderObserver> listener;
 };
 
+static NS_DEFINE_CID(kTreeColumnImplCID, NS_TREECOLUMN_IMPL_CID);
+
 // The actual frame that paints the cells and rows.
 class nsTreeBodyFrame : public nsLeafBoxFrame,
                         public nsITreeBoxObject,
@@ -353,6 +355,16 @@ protected:
     if (aOrientation != nsITreeView::DROP_ON)
       InvalidateRow(aRow + aOrientation);
   };
+
+  nsTreeColumn* GetColumnImpl(nsITreeColumn* aUnknownCol) {
+    if (!aUnknownCol)
+      return nsnull;
+
+    nsRefPtr<nsTreeColumn> col;
+    nsresult rv = aUnknownCol->QueryInterface(kTreeColumnImplCID,
+                                              getter_AddRefs(col));
+    return NS_SUCCEEDED(rv) ? col : nsnull;
+  }
 
   // Create a new timer. This method is used to delay various actions like
   // opening/closing folders or tree scrolling.
