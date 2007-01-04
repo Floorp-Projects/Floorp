@@ -1221,8 +1221,7 @@ nsFormSubmission::SubmitTo(nsIURI* aActionURI, const nsAString& aTarget,
   //
   NS_ENSURE_ARG_POINTER(aLinkHandler);
 
-  return aLinkHandler->OnLinkClickSync(aSource, eLinkVerb_Replace,
-                                       aActionURI,
+  return aLinkHandler->OnLinkClickSync(aSource, aActionURI,
                                        PromiseFlatString(aTarget).get(),
                                        postDataStream, nsnull,
                                        aDocShell, aRequest);

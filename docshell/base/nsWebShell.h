@@ -81,13 +81,11 @@ public:
 
     // nsILinkHandler
     NS_IMETHOD OnLinkClick(nsIContent* aContent,
-        nsLinkVerb aVerb,
         nsIURI* aURI,
         const PRUnichar* aTargetSpec,
         nsIInputStream* aPostDataStream = 0,
         nsIInputStream* aHeadersDataStream = 0);
     NS_IMETHOD OnLinkClickSync(nsIContent* aContent,
-        nsLinkVerb aVerb,
         nsIURI* aURI,
         const PRUnichar* aTargetSpec,
         nsIInputStream* aPostDataStream = 0,

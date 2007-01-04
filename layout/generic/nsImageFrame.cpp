@@ -1461,8 +1461,7 @@ nsImageFrame::TriggerLink(nsPresContext* aPresContext,
       // Only pass off the click event if the script security manager
       // says it's ok.
       if (NS_SUCCEEDED(rv))
-        handler->OnLinkClick(mContent, eLinkVerb_Replace, aURI,
-                             aTargetSpec.get());
+        handler->OnLinkClick(mContent, aURI, aTargetSpec.get());
     }
     else {
       handler->OnOverLink(mContent, aURI, aTargetSpec.get());

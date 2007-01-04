@@ -48,23 +48,13 @@ class nsGUIEvent;
 
 // Interface ID for nsILinkHandler
 #define NS_ILINKHANDLER_IID \
- { 0xa6cf905b, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
+ { 0x514bc565, 0x8d38, 0x4dde,{0xb4, 0xeb, 0xe7, 0xb5, 0x01, 0x2b, 0xf4, 0x64}}
 
 enum nsLinkState {
   eLinkState_Unknown    = 0,
   eLinkState_Unvisited  = 1,
   eLinkState_Visited    = 2, 
   eLinkState_NotLink    = 3
-};
-
-// XXX Verb to use for link actuation. These are the verbs specified
-// in the current XLink draft. We may actually want to support more
-// (especially for extended links).
-enum nsLinkVerb {
-  eLinkVerb_Replace = 0,
-  eLinkVerb_New     = 1,
-  eLinkVerb_Embed   = 2,
-  eLinkVerb_Undefined = 3
 };
 
 /**
@@ -78,7 +68,6 @@ public:
    * Process a click on a link.
    *
    * @param aContent the content for the frame that generated the trigger
-   * @param aVerb the verb to use when the link is triggered
    * @param aURI a URI object that defines the destination for the link
    * @param aTargetSpec indicates where the link is targeted (may be an empty
    *        string)
@@ -86,7 +75,6 @@ public:
    * @param aHeadersDataStream ???
    */
   NS_IMETHOD OnLinkClick(nsIContent* aContent, 
-                         nsLinkVerb aVerb,
                          nsIURI* aURI,
                          const PRUnichar* aTargetSpec,
                          nsIInputStream* aPostDataStream = 0,
@@ -99,7 +87,6 @@ public:
    * through an event.
    *
    * @param aContent the content for the frame that generated the trigger
-   * @param aVerb the verb to use when the link is triggered
    * @param aURI a URI obect that defines the destination for the link
    * @param aTargetSpec indicates where the link is targeted (may be an empty
    *        string)
@@ -109,7 +96,6 @@ public:
    * @param aRequest the request that was opened
    */
   NS_IMETHOD OnLinkClickSync(nsIContent* aContent, 
-                             nsLinkVerb aVerb,
                              nsIURI* aURI,
                              const PRUnichar* aTargetSpec,
                              nsIInputStream* aPostDataStream = 0,

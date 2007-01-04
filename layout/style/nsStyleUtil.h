@@ -70,7 +70,7 @@ public:
   static PRInt32 ConstrainFontWeight(PRInt32 aWeight);
 
   static PRBool IsHTMLLink(nsIContent *aContent, nsIAtom *aTag, nsPresContext *aPresContext, nsLinkState *aState);
-  static PRBool IsSimpleXlink(nsIContent *aContent, nsPresContext *aPresContext, nsLinkState *aState);
+  static PRBool IsLink(nsIContent *aContent, nsPresContext *aPresContext, nsLinkState *aState);
 
  static PRBool DashMatchCompare(const nsAString& aAttributeValue,
                                 const nsAString& aSelectorValue,

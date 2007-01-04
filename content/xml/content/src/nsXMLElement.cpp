@@ -37,38 +37,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXMLElement.h"
-#include "nsLayoutAtoms.h"
-#include "nsIDocument.h"
-#include "nsIAtom.h"
-#include "nsNetUtil.h"
-#include "nsIEventListenerManager.h"
-#include "nsIDocShell.h"
-#include "nsIEventStateManager.h"
-#include "nsIDOMEvent.h"
-#include "nsINameSpaceManager.h"
-#include "nsINodeInfo.h"
-#include "nsIURL.h"
-#include "nsIIOService.h"
-#include "nsNetCID.h"
-#include "nsIServiceManager.h"
-#include "nsXPIDLString.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsIRefreshURI.h"
-#include "nsStyleConsts.h"
-#include "nsIPresShell.h"
-#include "nsGUIEvent.h"
 #include "nsPresContext.h"
-#include "nsIDOMCSSStyleDeclaration.h"
-#include "nsIDOMViewCSS.h"
-#include "nsIXBLService.h"
-#include "nsIBindingManager.h"
-#include "nsEventDispatcher.h"
 #include "nsContentErrors.h"
-
-static nsIContent::AttrValuesArray strings[] =
-  {&nsGkAtoms::_new, &nsGkAtoms::replace, &nsGkAtoms::embed, nsnull};
+#include "nsIDocument.h"
 
 nsresult
 NS_NewXMLElement(nsIContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
@@ -84,12 +58,7 @@ NS_NewXMLElement(nsIContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
 }
 
 nsXMLElement::nsXMLElement(nsINodeInfo *aNodeInfo)
-  : nsGenericElement(aNodeInfo),
-    mIsLink(PR_FALSE)
-{
-}
-
-nsXMLElement::~nsXMLElement()
+  : nsGenericElement(aNodeInfo)
 {
 }
 
@@ -132,24 +101,6 @@ nsXMLElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMPL_ADDREF_INHERITED(nsXMLElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsXMLElement, nsGenericElement)
 
-nsresult
-nsXMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
-                      const nsAString& aValue, PRBool aNotify)
-{
-  if (aNameSpaceID == kNameSpaceID_XLink && aName == nsGkAtoms::type) { 
-
-    // NOTE: This really is a link according to the XLink spec,
-    //       we do not need to check other attributes. If there
-    //       is no href attribute, then this link is simply
-    //       untraversible [XLink 3.2].
-    mIsLink = aValue.EqualsLiteral("simple");
-
-    // We will check for actuate="onLoad" in MaybeTriggerAutoLink
-  }
-
-  return nsGenericElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
-                                   aNotify);
-}
 
 static nsresult
 DocShellToPresContext(nsIDocShell *aShell, nsPresContext **aPresContext)
@@ -164,26 +115,10 @@ DocShellToPresContext(nsIDocShell *aShell, nsPresContext **aPresContext)
   return ds->GetPresContext(aPresContext);
 }
 
-static inline
-nsresult SpecialAutoLoadReturn(nsresult aRv, nsLinkVerb aVerb)
+nsresult
+nsXMLElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
-  if (NS_SUCCEEDED(aRv)) {
-    switch(aVerb) {
-      case eLinkVerb_Embed:
-        aRv = NS_XML_AUTOLINK_EMBED;
-        break;
-      case eLinkVerb_New:
-        aRv = NS_XML_AUTOLINK_NEW;
-        break;
-      case eLinkVerb_Replace:
-        aRv = NS_XML_AUTOLINK_REPLACE;
-        break;
-      default:
-        aRv = NS_XML_AUTOLINK_UNDEFINED;
-        break;
-    }
-  }
-  return aRv;
+  return PostHandleEventForLinks(aVisitor);
 }
 
 NS_IMETHODIMP
@@ -191,184 +126,73 @@ nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
 {
   NS_ENSURE_ARG_POINTER(aShell);
 
-  nsresult rv = NS_OK;
-
-  if (mIsLink) {
-    do {
-      // actuate="onLoad" ?
-      if (AttrValueIs(kNameSpaceID_XLink, nsGkAtoms::actuate,
-                      nsGkAtoms::onLoad, eCaseMatters)) {
-
-        // Disable in Mail/News for now. We may want a pref to control
-        // this at some point.
-        nsCOMPtr<nsIDocShellTreeItem> docShellItem(do_QueryInterface(aShell));
-        if (docShellItem) {
-          nsCOMPtr<nsIDocShellTreeItem> rootItem;
-          docShellItem->GetRootTreeItem(getter_AddRefs(rootItem));
-          nsCOMPtr<nsIDocShell> docshell(do_QueryInterface(rootItem));
-          if (docshell) {
-            PRUint32 appType;
-            if (NS_SUCCEEDED(docshell->GetAppType(&appType)) &&
-                appType == nsIDocShell::APP_TYPE_MAIL) {
-              return NS_OK;
-            }
-          }
-        }
-
-        // show= ?
-        nsLinkVerb verb = eLinkVerb_Undefined; // basically means same as replace
-        PRBool stop = PR_FALSE;
-
-        // XXX Should probably do this using atoms 
-        switch (FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::show,
-                                strings, eCaseMatters)) {
-          // We should just act like an HTML link with target="_blank" and if
-          // someone diverts or blocks those, that's fine with us.  We don't
-          // care.
-          case 0: verb = eLinkVerb_New; break;
-          // We want to actually stop processing the current document now.
-          // We do this by returning the correct value so that the one
-          // that called us knows to stop processing.
-          case 1: verb = eLinkVerb_Replace; break;
-          // XXX TODO
-          case 2: stop = PR_TRUE; break;
-        }
-
-        if (stop)
-          break;
-
-        // Get our URI
-        nsCOMPtr<nsIURI> uri = nsContentUtils::GetXLinkURI(this);
-        if (!uri)
-          break;
-
-        nsCOMPtr<nsPresContext> pc;
-        rv = DocShellToPresContext(aShell, getter_AddRefs(pc));
-        if (NS_SUCCEEDED(rv)) {
-          rv = TriggerLink(pc, verb, uri, EmptyString(), PR_TRUE, PR_FALSE);
-
-          return SpecialAutoLoadReturn(rv,verb);
-        }
-      }
-    } while (0);
+  // We require an xlink:href, xlink:type="simple" and xlink:actuate="onLoad"
+  // XXX: as of XLink 1.1, elements will be links even without xlink:type set
+  if (!HasAttr(kNameSpaceID_XLink, nsGkAtoms::href) ||
+      !AttrValueIs(kNameSpaceID_XLink, nsGkAtoms::type,
+                   nsGkAtoms::simple, eCaseMatters) ||
+      !AttrValueIs(kNameSpaceID_XLink, nsGkAtoms::actuate,
+                   nsGkAtoms::onLoad, eCaseMatters)) {
+    return NS_OK;
   }
 
-  return rv;
-}
-
-nsresult
-nsXMLElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
-{
-  nsresult rv = NS_OK;
-  if (mIsLink && nsEventStatus_eIgnore == aVisitor.mEventStatus) {
-    switch (aVisitor.mEvent->message) {
-    case NS_MOUSE_BUTTON_DOWN:
-      {
-        if (aVisitor.mPresContext &&
-            aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT) {
-          if (NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
-                nsMouseEvent::eLeftButton) {
-            aVisitor.mPresContext->EventStateManager()->
-              SetContentState(this, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
-            aVisitor.mEventStatus = nsEventStatus_eConsumeDoDefault;
-          } else if (NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
-                       nsMouseEvent::eRightButton) {
-            // XXX Bring up a contextual menu provided by the application
-          }
-        }
+  // Disable in Mail/News for now. We may want a pref to control
+  // this at some point.
+  nsCOMPtr<nsIDocShellTreeItem> docShellItem = do_QueryInterface(aShell);
+  if (docShellItem) {
+    nsCOMPtr<nsIDocShellTreeItem> rootItem;
+    docShellItem->GetRootTreeItem(getter_AddRefs(rootItem));
+    nsCOMPtr<nsIDocShell> docshell = do_QueryInterface(rootItem);
+    if (docshell) {
+      PRUint32 appType;
+      if (NS_SUCCEEDED(docshell->GetAppType(&appType)) &&
+          appType == nsIDocShell::APP_TYPE_MAIL) {
+        return NS_OK;
       }
-      break;
-
-    case NS_MOUSE_CLICK:
-      {
-        if (nsEventStatus_eConsumeNoDefault != aVisitor.mEventStatus &&
-            aVisitor.mPresContext && NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent)) {
-          nsInputEvent* inputEvent =
-            NS_STATIC_CAST(nsInputEvent*, aVisitor.mEvent);
-          if (inputEvent->isControl || inputEvent->isMeta ||
-              inputEvent->isAlt || inputEvent->isShift) {
-            break;  // let the click go through so we can handle it in JS/XUL
-          }
-          nsAutoString href;
-          nsLinkVerb verb = eLinkVerb_Undefined; // basically means same as replace
-          nsCOMPtr<nsIURI> uri = nsContentUtils::GetXLinkURI(this);
-          if (!uri) {
-            aVisitor.mEventStatus = nsEventStatus_eConsumeDoDefault;
-            break;
-          }
-
-          // XXX Should probably do this using atoms 
-          switch (FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::show,
-                                  strings, eCaseMatters)) {
-            case 0: verb = eLinkVerb_New; break;
-            case 1: verb = eLinkVerb_Replace; break;
-            case 2: verb = eLinkVerb_Embed; break;
-          }
-
-          nsAutoString target;
-          GetAttr(kNameSpaceID_XLink, nsGkAtoms::_moz_target, target);
-          rv = TriggerLink(aVisitor.mPresContext, verb, uri,
-                           target, PR_TRUE, PR_TRUE);
-
-          aVisitor.mEventStatus = nsEventStatus_eConsumeDoDefault;
-        }
-      }
-      break;
-
-    case NS_KEY_PRESS:
-      if (aVisitor.mEvent->eventStructType == NS_KEY_EVENT) {
-        nsKeyEvent* keyEvent = NS_STATIC_CAST(nsKeyEvent*, aVisitor.mEvent);
-        if (keyEvent->keyCode == NS_VK_RETURN) {
-          nsEventStatus status = nsEventStatus_eIgnore;
-          rv = DispatchClickEvent(aVisitor.mPresContext, keyEvent, this,
-                                  PR_FALSE, &status);
-          if (NS_SUCCEEDED(rv)) {
-            aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-          }
-        }
-      }
-      break;
-
-    case NS_MOUSE_ENTER_SYNTH:
-      {
-        if (aVisitor.mPresContext) {
-          nsCOMPtr<nsIURI> uri = nsContentUtils::GetXLinkURI(this);
-          if (!uri) {
-            aVisitor.mEventStatus = nsEventStatus_eConsumeDoDefault;
-            break;
-          }
-
-          rv = TriggerLink(aVisitor.mPresContext, eLinkVerb_Replace, uri,
-                           EmptyString(), PR_FALSE, PR_TRUE);
-
-          aVisitor.mEventStatus = nsEventStatus_eConsumeDoDefault;
-        }
-      }
-      break;
-
-      // XXX this doesn't seem to do anything yet
-    case NS_MOUSE_EXIT_SYNTH:
-      {
-        if (aVisitor.mPresContext) {
-          rv = LeaveLink(aVisitor.mPresContext);
-          aVisitor.mEventStatus = nsEventStatus_eConsumeDoDefault;
-        }
-      }
-      break;
-
-    default:
-      break;
     }
   }
 
-  return rv;
+  // Get absolute URI
+  nsCOMPtr<nsIURI> absURI;
+  nsAutoString href;
+  GetAttr(kNameSpaceID_XLink, nsGkAtoms::href, href);
+  nsCOMPtr<nsIURI> baseURI = GetBaseURI();
+  nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(absURI), href,
+                                            GetOwnerDoc(), baseURI);
+  if (!absURI) {
+    return NS_OK;
+  }
+
+  // Check that the link's URI isn't the same as its document's URI, or else
+  // we'll recursively load the document forever (possibly in new windows!)
+  PRBool isDocURI;
+  absURI->Equals(GetOwnerDoc()->GetDocumentURI(), &isDocURI);
+  if (isDocURI) {
+    return NS_OK;
+  }
+
+  // Get target
+  nsAutoString target;
+  nsresult special_rv = GetLinkTargetAndAutoType(target);
+  // Ignore this link if xlink:show has a value we don't implement
+  if (NS_FAILED(special_rv)) return NS_OK;
+
+  // Attempt to load the URI
+  nsCOMPtr<nsPresContext> pc;
+  nsresult rv = DocShellToPresContext(aShell, getter_AddRefs(pc));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = TriggerLink(pc, absURI, target, PR_TRUE, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return special_rv; // return GetLinkTargetAndAutoType's special rv!
 }
 
 PRBool
 nsXMLElement::IsFocusable(PRInt32 *aTabIndex)
 {
-  nsCOMPtr<nsIURI> linkURI = nsContentUtils::GetLinkURI(this);
-  if (linkURI) {
+  nsCOMPtr<nsIURI> absURI;
+  if (IsLink(getter_AddRefs(absURI))) {
     if (aTabIndex) {
       *aTabIndex = ((sTabFocusModel & eTabFocus_linksMask) == 0 ? -1 : 0);
     }
@@ -380,6 +204,85 @@ nsXMLElement::IsFocusable(PRInt32 *aTabIndex)
   }
 
   return PR_FALSE;
+}
+
+PRBool
+nsXMLElement::IsLink(nsIURI** aURI) const
+{
+  NS_PRECONDITION(aURI, "Must provide aURI out param");
+
+  // To be an XLink for styling and interaction purposes, we require:
+  //
+  //   xlink:href          - must be set
+  //   xlink:type          - must be set to "simple"
+  //     xlink:_moz_target - must be set, OR
+  //     xlink:show        - must be unset or set to "", "new" or "replace"
+  //   xlink:actuate       - must be unset or set to "" or "onRequest"
+  //
+  // For any other values, we're either not a *clickable* XLink, or the end
+  // result is poorly specified. Either way, we return PR_FALSE.
+
+  static nsIContent::AttrValuesArray sShowVals[] =
+    { &nsGkAtoms::_empty, &nsGkAtoms::_new, &nsGkAtoms::replace, nsnull };
+
+  static nsIContent::AttrValuesArray sActuateVals[] =
+    { &nsGkAtoms::_empty, &nsGkAtoms::onRequest, nsnull };
+
+  // Optimization: check for href first for early return
+  const nsAttrValue* href = mAttrsAndChildren.GetAttr(nsGkAtoms::href,
+                                                      kNameSpaceID_XLink);
+  if (href &&
+      AttrValueIs(kNameSpaceID_XLink, nsGkAtoms::type,
+                  nsGkAtoms::simple, eCaseMatters) &&
+      (HasAttr(kNameSpaceID_XLink, nsGkAtoms::_moz_target) ||
+       FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::show,
+                       sShowVals, eCaseMatters) !=
+                       nsIContent::ATTR_VALUE_NO_MATCH) &&
+      FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::actuate,
+                      sActuateVals, eCaseMatters) !=
+                      nsIContent::ATTR_VALUE_NO_MATCH) {
+    // Get absolute URI
+    nsCOMPtr<nsIURI> baseURI = GetBaseURI();
+    nsContentUtils::NewURIWithDocumentCharset(aURI, href->GetStringValue(),
+                                              GetOwnerDoc(), baseURI);
+    return !!*aURI; // must promise out param is non-null if we return true
+  }
+
+  *aURI = nsnull;
+  return PR_FALSE;
+}
+
+void
+nsXMLElement::GetLinkTarget(nsAString& aTarget)
+{
+  GetLinkTargetAndAutoType(aTarget);
+}
+
+nsresult
+nsXMLElement::GetLinkTargetAndAutoType(nsAString& aTarget)
+{
+  // Mozilla extension xlink:_moz_target overrides xlink:show
+  if (GetAttr(kNameSpaceID_XLink, nsGkAtoms::_moz_target, aTarget)) {
+    return aTarget.IsEmpty() ? NS_XML_AUTOLINK_REPLACE : NS_OK;
+  }
+
+  // Try xlink:show if no xlink:_moz_target
+  GetAttr(kNameSpaceID_XLink, nsGkAtoms::show, aTarget);
+  if (aTarget.IsEmpty()) {
+    return NS_XML_AUTOLINK_UNDEFINED;
+  }
+  if (aTarget.EqualsLiteral("new")) {
+    aTarget.AssignLiteral("_blank");
+    return NS_XML_AUTOLINK_NEW;
+  }
+  if (aTarget.EqualsLiteral("replace")) {
+    aTarget.Truncate();
+    return NS_XML_AUTOLINK_REPLACE;
+  }
+  // xlink:show="embed" isn't handled by this code path
+
+  aTarget.Truncate();
+  return NS_ERROR_FAILURE;
 }
 
 

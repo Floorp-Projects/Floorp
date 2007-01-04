@@ -112,6 +112,8 @@ public:
   virtual PRBool IsFocusable(PRBool *aTabIndex = nsnull);
 
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
+  virtual PRBool IsLink(nsIURI** aURI) const;
+  virtual void GetLinkTarget(nsAString& aTarget);
 
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, PRBool aNotify)
@@ -265,8 +267,8 @@ nsHTMLAnchorElement::IsFocusable(PRInt32 *aTabIndex)
 
   if (!HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex)) {
     // check whether we're actually a link
-    nsCOMPtr<nsIURI> linkURI = nsContentUtils::GetLinkURI(this);
-    if (!linkURI) {
+    nsCOMPtr<nsIURI> absURI;
+    if (!IsLink(getter_AddRefs(absURI))) {
       // Not tabbable or focusable without href (bug 17605), unless
       // forced to be via presence of nonnegative tabindex attribute
       if (aTabIndex) {
@@ -287,6 +289,18 @@ nsresult
 nsHTMLAnchorElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   return PostHandleEventForAnchors(aVisitor);
+}
+
+PRBool
+nsHTMLAnchorElement::IsLink(nsIURI** aURI) const
+{
+  return IsHTMLLink(aURI);
+}
+
+void
+nsHTMLAnchorElement::GetLinkTarget(nsAString& aTarget)
+{
+  GetTarget(aTarget);
 }
 
 NS_IMETHODIMP

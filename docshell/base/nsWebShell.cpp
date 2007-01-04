@@ -714,7 +714,7 @@ nsWebShell::SetRendering(PRBool aRender)
 class OnLinkClickEvent : public nsRunnable {
 public:
   OnLinkClickEvent(nsWebShell* aHandler, nsIContent* aContent,
-                   nsLinkVerb aVerb, nsIURI* aURI,
+                   nsIURI* aURI,
                    const PRUnichar* aTargetSpec,
                    nsIInputStream* aPostDataStream = 0, 
                    nsIInputStream* aHeadersDataStream = 0);
@@ -723,7 +723,7 @@ public:
     nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mHandler->mScriptGlobal));
     nsAutoPopupStatePusher popupStatePusher(window, mPopupState);
 
-    mHandler->OnLinkClickSync(mContent, mVerb, mURI,
+    mHandler->OnLinkClickSync(mContent, mURI,
                               mTargetSpec.get(), mPostDataStream,
                               mHeadersDataStream,
                               nsnull, nsnull);
@@ -737,13 +737,11 @@ private:
   nsCOMPtr<nsIInputStream> mPostDataStream;
   nsCOMPtr<nsIInputStream> mHeadersDataStream;
   nsCOMPtr<nsIContent>     mContent;
-  nsLinkVerb               mVerb;
   PopupControlState        mPopupState;
 };
 
 OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
                                    nsIContent *aContent,
-                                   nsLinkVerb aVerb,
                                    nsIURI* aURI,
                                    const PRUnichar* aTargetSpec,
                                    nsIInputStream* aPostDataStream,
@@ -754,7 +752,6 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
   , mPostDataStream(aPostDataStream)
   , mHeadersDataStream(aHeadersDataStream)
   , mContent(aContent)
-  , mVerb(aVerb)
 {
   nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mHandler->mScriptGlobal));
 
@@ -765,7 +762,6 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
 
 NS_IMETHODIMP
 nsWebShell::OnLinkClick(nsIContent* aContent,
-                        nsLinkVerb aVerb,
                         nsIURI* aURI,
                         const PRUnichar* aTargetSpec,
                         nsIInputStream* aPostDataStream,
@@ -773,14 +769,13 @@ nsWebShell::OnLinkClick(nsIContent* aContent,
 {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
   nsCOMPtr<nsIRunnable> ev =
-      new OnLinkClickEvent(this, aContent, aVerb, aURI, aTargetSpec,
+      new OnLinkClickEvent(this, aContent, aURI, aTargetSpec,
                            aPostDataStream, aHeadersDataStream);
   return NS_DispatchToCurrentThread(ev);
 }
 
 NS_IMETHODIMP
 nsWebShell::OnLinkClickSync(nsIContent *aContent,
-                            nsLinkVerb aVerb,
                             nsIURI* aURI,
                             const PRUnichar* aTargetSpec,
                             nsIInputStream* aPostDataStream,
@@ -867,39 +862,21 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
     anchor->GetType(typeHint);
   }
   
-  switch(aVerb) {
-    case eLinkVerb_New:
-      NS_ASSERTION(target.IsEmpty(), "Losing window name information");
-      target.AssignLiteral("_blank");
-      // Fall into replace case
-    case eLinkVerb_Undefined:
-      // Fall through, this seems like the most reasonable action
-    case eLinkVerb_Replace:
-      {
-        rv = InternalLoad(aURI,               // New URI
-                          referer,            // Referer URI
-                          nsnull,             // No onwer
-                          INTERNAL_LOAD_FLAGS_INHERIT_OWNER, // Inherit owner from document
-                          target.get(),       // Window target
-                          NS_LossyConvertUTF16toASCII(typeHint).get(),
-                          aPostDataStream,    // Post data stream
-                          aHeadersDataStream, // Headers stream
-                          LOAD_LINK,          // Load type
-                          nsnull,             // No SHEntry
-                          PR_TRUE,            // first party site
-                          aDocShell,          // DocShell out-param
-                          aRequest);          // Request out-param
-        if (NS_SUCCEEDED(rv)) {
-          DispatchPings(aContent, referer);
-        }
-      }
-      break;
-    case eLinkVerb_Embed:
-      // XXX TODO Should be similar to the HTML IMG ALT attribute handling
-      //          in NS 4.x
-    default:
-      NS_ABORT_IF_FALSE(0,"unexpected link verb");
-      rv = NS_ERROR_UNEXPECTED;
+  rv = InternalLoad(aURI,               // New URI
+                    referer,            // Referer URI
+                    nsnull,             // No onwer
+                    INTERNAL_LOAD_FLAGS_INHERIT_OWNER, // Inherit owner from document
+                    target.get(),       // Window target
+                    NS_LossyConvertUTF16toASCII(typeHint).get(),
+                    aPostDataStream,    // Post data stream
+                    aHeadersDataStream, // Headers stream
+                    LOAD_LINK,          // Load type
+                    nsnull,             // No SHEntry
+                    PR_TRUE,            // first party site
+                    aDocShell,          // DocShell out-param
+                    aRequest);          // Request out-param
+  if (NS_SUCCEEDED(rv)) {
+    DispatchPings(aContent, referer);
   }
   return rv;
 }

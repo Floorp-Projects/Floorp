@@ -572,23 +572,6 @@ public:
   static PRBool IsDraggableLink(nsIContent* aContent);
 
   /**
-   * Method that gets the URI of the link content.  If the content
-   * isn't a link, return null.
-   *
-   * @param aContent The link content
-   * @return the URI the link points to
-   */
-  static already_AddRefed<nsIURI> GetLinkURI(nsIContent* aContent);
-
-  /**
-   * Method that gets the XLink uri for a content node, if it's an XLink
-   *
-   * @param aContent The content node, possibly an XLink
-   * @return Null if aContent is not an XLink, the URI it points to otherwise
-   */
-  static already_AddRefed<nsIURI> GetXLinkURI(nsIContent* aContent);
-
-  /**
    * Convenience method to create a new nodeinfo that differs only by name
    * from aNodeInfo.
    */

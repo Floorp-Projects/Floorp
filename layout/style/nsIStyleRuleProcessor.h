@@ -91,10 +91,9 @@ struct RuleProcessorData {
   nsIAtom*          mContentTag;    // if content, then content->GetTag()
   nsIAtom*          mContentID;     // if styled content, then weak reference to styledcontent->GetID()
   PRPackedBool      mIsHTMLContent; // if content, then does QI on HTMLContent, true or false
-  PRPackedBool      mIsHTMLLink;    // if content, calls nsStyleUtil::IsHTMLLink
-  PRPackedBool      mIsSimpleXLink; // if content, calls nsStyleUtil::IsSimpleXLink
-  nsCompatibility   mCompatMode;    // Possibly remove use of this in SelectorMatches?
+  PRPackedBool      mIsLink;        // if content, calls nsStyleUtil::IsHTMLLink or nsStyleUtil::IsLink
   PRPackedBool      mHasAttributes; // if content, content->GetAttrCount() > 0
+  nsCompatibility   mCompatMode;    // Possibly remove use of this in SelectorMatches?
   nsLinkState       mLinkState;     // if a link, this is the state, otherwise unknown
   PRInt32           mEventState;    // if content, eventStateMgr->GetContentState()
   PRInt32           mNameSpaceID;   // if content, content->GetNameSapce()

@@ -194,10 +194,11 @@ public:
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
 
   nsresult PostHandleEventForAnchors(nsEventChainPostVisitor& aVisitor);
+  PRBool IsHTMLLink(nsIURI** aURI) const;
 
   // Used by A, AREA, LINK, and STYLE.
   // Callers must hold a reference to nsHTMLUtils's global reference count.
-  nsresult GetHrefURIForAnchors(nsIURI** aURI);
+  nsresult GetHrefURIForAnchors(nsIURI** aURI) const;
 
   // HTML element methods
   void Compact() { mAttrsAndChildren.Compact(); }

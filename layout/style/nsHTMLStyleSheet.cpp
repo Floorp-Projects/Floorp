@@ -442,7 +442,7 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
       // if we have anchor colors, check if this is an anchor with an href
       if (tag == nsGkAtoms::a) {
         if (mLinkRule || mVisitedRule || mActiveRule) {
-          if (aData->mIsHTMLLink) {
+          if (aData->mIsLink) {
             switch (aData->mLinkState) {
               case eLinkState_Unvisited:
                 if (mLinkRule)
@@ -519,7 +519,7 @@ nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData,
 {
   if (aData->mContent &&
       aData->mIsHTMLContent &&
-      aData->mIsHTMLLink &&
+      aData->mIsLink &&
       aData->mContentTag == nsGkAtoms::a &&
       ((mActiveRule && (aData->mStateMask & NS_EVENT_STATE_ACTIVE)) ||
        (mLinkRule && (aData->mStateMask & NS_EVENT_STATE_VISITED)) ||

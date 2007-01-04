@@ -108,6 +108,8 @@ public:
                              PRBool aNotify);
 
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
+  virtual PRBool IsLink(nsIURI** aURI) const;
+  virtual void GetLinkTarget(nsAString& aTarget);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
@@ -327,6 +329,20 @@ nsresult
 nsHTMLLinkElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   return PostHandleEventForAnchors(aVisitor);
+}
+
+PRBool
+nsHTMLLinkElement::IsLink(nsIURI** aURI) const
+{
+  return IsHTMLLink(aURI);
+}
+
+void
+nsHTMLLinkElement::GetLinkTarget(nsAString& aTarget)
+{
+  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::target, aTarget)) {
+    GetBaseTarget(aTarget);
+  }
 }
 
 NS_IMETHODIMP

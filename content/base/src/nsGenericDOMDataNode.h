@@ -231,6 +231,7 @@ public:
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
 
   virtual already_AddRefed<nsIURI> GetBaseURI() const;
+  virtual PRBool IsLink(nsIURI** aURI) const;
 
   virtual PRBool MayHaveFrame() const;
 

@@ -432,9 +432,7 @@ nsIsIndexFrame::OnSubmit(nsPresContext* aPresContext)
 
   // Now pass on absolute url to the click handler
   if (handler) {
-    handler->OnLinkClick(mContent, eLinkVerb_Replace,
-                         uri,
-                         nsnull, nsnull);
+    handler->OnLinkClick(mContent, uri, nsnull);
   }
   return result;
 }

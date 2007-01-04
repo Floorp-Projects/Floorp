@@ -1842,8 +1842,8 @@ END_COM_MAP()
 
                         nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMElement));
 
-                        lh->OnLinkClick(content, eLinkVerb_Replace,
-                            uri, szTargetFrame ? szTargetFrame : mUseTarget);
+                        lh->OnLinkClick(content, uri,
+                                        szTargetFrame ? szTargetFrame : mUseTarget);
                     }
                 }
                 hr = S_OK;
