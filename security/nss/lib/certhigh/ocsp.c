@@ -38,7 +38,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.32 2006/12/08 22:10:52 wtchang%redhat.com Exp $
+ * $Id: ocsp.c,v 1.33 2007/01/04 20:38:29 alexei.volkov.bugs%sun.com Exp $
  */
 
 #include "prerror.h"
@@ -353,6 +353,8 @@ const SEC_ASN1Template ocsp_PointerToResponseBytesTemplate[] = {
 static const SEC_ASN1Template ocsp_BasicOCSPResponseTemplate[] = {
     { SEC_ASN1_SEQUENCE,
 	0, NULL, sizeof(ocspBasicOCSPResponse) },
+    { SEC_ASN1_ANY | SEC_ASN1_SAVE,
+	offsetof(ocspBasicOCSPResponse, tbsResponseDataDER) },
     { SEC_ASN1_POINTER,
 	offsetof(ocspBasicOCSPResponse, tbsResponseData),
 	ocsp_ResponseDataTemplate },
@@ -1585,7 +1587,7 @@ loser:
  * and returning (null).
  */
 static ocspResponseData *
-ocsp_GetResponseData(CERTOCSPResponse *response)
+ocsp_GetResponseData(CERTOCSPResponse *response, SECItem **tbsResponseDataDER)
 {
     ocspBasicOCSPResponse *basic;
     ocspResponseData *responseData;
@@ -1602,6 +1604,10 @@ ocsp_GetResponseData(CERTOCSPResponse *response)
 
     responseData = basic->tbsResponseData;
     PORT_Assert(responseData != NULL);
+
+    if (tbsResponseDataDER) {
+        *tbsResponseDataDER = &basic->tbsResponseDataDER;
+    }
 
     return responseData;
 }
@@ -2553,7 +2559,7 @@ ocsp_CertGetDefaultResponder(CERTCertDBHandle *handle,CERTOCSPCertID *certID);
  * verifying the signer's cert, or low-level problems (no memory, etc.)
  */
 static SECStatus
-ocsp_CheckSignature(ocspSignature *signature, void *tbs,
+ocsp_CheckSignature(ocspSignature *signature, SECItem *encodedTBS,
 		    const SEC_ASN1Template *encodeTemplate,
 		    CERTCertDBHandle *handle, SECCertUsage certUsage,
 		    int64 checkTime, PRBool lookupByName, void *certIndex,
@@ -2561,7 +2567,6 @@ ocsp_CheckSignature(ocspSignature *signature, void *tbs,
 		    CERTCertificate *issuer)
 {
     SECItem rawSignature;
-    SECItem *encodedTBS = NULL;
     CERTCertificate *responder = NULL;
     CERTCertificate *signerCert = NULL;
     SECKEYPublicKey *signerKey = NULL;
@@ -2674,13 +2679,6 @@ ocsp_CheckSignature(ocspSignature *signature, void *tbs,
 	goto finish;
 
     /*
-     * Prepare the data to be verified; it needs to be DER encoded first.
-     */
-    encodedTBS = SEC_ASN1EncodeItem(NULL, NULL, tbs, encodeTemplate);
-    if (encodedTBS == NULL)
-	goto finish;
-
-    /*
      * We copy the signature data *pointer* and length, so that we can
      * modify the length without damaging the original copy.  This is a
      * simple copy, not a dup, so no destroy/free is necessary.
@@ -2717,9 +2715,6 @@ finish:
 	    *pSignerCert = CERT_DupCertificate(signerCert);
 	}
     }
-
-    if (encodedTBS != NULL)
-	SECITEM_FreeItem(encodedTBS, PR_TRUE);
 
     if (signerKey != NULL)
 	SECKEY_DestroyPublicKey(signerKey);
@@ -2768,12 +2763,13 @@ CERT_VerifyOCSPResponseSignature(CERTOCSPResponse *response,
 				 CERTCertificate *issuer)
 {
     ocspResponseData *tbsData;		/* this is what is signed */
+    SECItem *tbsResponseDataDER;
     PRBool byName;
     void *certIndex;
     int64 producedAt;
     SECStatus rv;
 
-    tbsData = ocsp_GetResponseData(response);
+    tbsData = ocsp_GetResponseData(response, &tbsResponseDataDER);
 
     PORT_Assert(tbsData->responderID != NULL);
     switch (tbsData->responderID->responderIDType) {
@@ -2803,7 +2799,8 @@ CERT_VerifyOCSPResponseSignature(CERTOCSPResponse *response,
 	return rv;
 
     return ocsp_CheckSignature(ocsp_GetResponseSignature(response),
-			       tbsData, ocsp_ResponseDataTemplate,
+ 			       tbsResponseDataDER,
+ 			       ocsp_ResponseDataTemplate,
 			       handle, certUsageStatusResponder, producedAt,
 			       byName, certIndex, pwArg, pSignerCert, issuer);
 }
@@ -3633,7 +3630,7 @@ CERT_GetOCSPStatusForCertID(CERTCertDBHandle *handle,
     /*
      * The ResponseData part is the real guts of the response.
      */
-    responseData = ocsp_GetResponseData(response);
+    responseData = ocsp_GetResponseData(response, NULL);
     if (responseData == NULL) {
 	rv = SECFailure;
 	goto loser;

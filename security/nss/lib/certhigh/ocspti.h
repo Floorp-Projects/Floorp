@@ -37,7 +37,7 @@
 /*
  * Private header defining OCSP types.
  *
- * $Id: ocspti.h,v 1.5 2004/04/25 15:03:03 gerv%gerv.net Exp $
+ * $Id: ocspti.h,v 1.6 2007/01/04 20:38:29 alexei.volkov.bugs%sun.com Exp $
  */
 
 #ifndef _OCSPTI_H_
@@ -281,6 +281,7 @@ struct ocspResponseBytesStr {
 struct ocspBasicOCSPResponseStr {
     ocspResponseData *tbsResponseData;	/* "tbs" == To Be Signed */
     ocspSignature responseSignature;
+    SECItem tbsResponseDataDER;
 };
 
 /*
