@@ -67,30 +67,21 @@ nsDOMTextEvent::nsDOMTextEvent(nsPresContext* aPresContext,
   // IME transaction will hold a ref, the widget representation
   // isn't persistent
   //
-  nsIPrivateTextRange** tempTextRangeList = new nsIPrivateTextRange*[te->rangeCount];
-  if (tempTextRangeList) {
+  mTextRange = new nsPrivateTextRangeList(te->rangeCount);
+  if (mTextRange) {
     PRUint16 i;
 
     for(i = 0; i < te->rangeCount; i++) {
-      nsPrivateTextRange* tempPrivateTextRange = new
+      nsRefPtr<nsPrivateTextRange> tempPrivateTextRange = new
         nsPrivateTextRange(te->rangeArray[i].mStartOffset,
                            te->rangeArray[i].mEndOffset,
                            te->rangeArray[i].mRangeType);
 
       if (tempPrivateTextRange) {
-        NS_ADDREF(tempPrivateTextRange);
-
-        tempTextRangeList[i] = (nsIPrivateTextRange*)tempPrivateTextRange;
+        mTextRange->AppendTextRange(tempPrivateTextRange);
       }
     }
   }
-
-  // We need to create mTextRange even rangeCount is 0. 
-  // If rangeCount is 0, mac carbon will return 0 for new and
-  // tempTextRangeList will be null. but we should still create
-  // mTextRange, otherwise, we will crash it later when some code
-  // call GetInputRange and AddRef to the result
-  mTextRange = new nsPrivateTextRangeList(te->rangeCount ,tempTextRangeList);
 }
 
 NS_IMPL_ADDREF_INHERITED(nsDOMTextEvent, nsDOMUIEvent)
@@ -111,9 +102,10 @@ NS_METHOD nsDOMTextEvent::GetInputRange(nsIPrivateTextRangeList** aInputRange)
   if (mEvent->message == NS_TEXT_TEXT)
   {
     *aInputRange = mTextRange;
+    NS_IF_ADDREF(*aInputRange);
     return NS_OK;
   }
-  aInputRange = 0;
+  *aInputRange = nsnull;
   return NS_ERROR_FAILURE;
 }
 
