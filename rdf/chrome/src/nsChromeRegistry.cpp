@@ -1926,7 +1926,7 @@ nsChromeRegistry::SetProviderForPackage(const nsACString& aProvider,
   
   if (aUseProfile && !mProfileInitialized) {
     rv = LoadProfileDataSource();
-    NS_ENSURE_TRUE(rv, rv);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Figure out which file we're needing to modify, e.g., is it the install
