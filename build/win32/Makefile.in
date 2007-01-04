@@ -61,7 +61,7 @@ ifdef REDIST_FILES
 libs::
 	mkdir -p $(FINAL_TARGET)
 	for file in $(REDIST_FILES) ; do \
-	  cp --preserve=timestamps "$(WIN32_REDIST_DIR)"/$$file $(FINAL_TARGET) ; \
+	  install --preserve-timestamps "$(WIN32_REDIST_DIR)"/$$file $(FINAL_TARGET) ; \
 	done
 endif
 
