@@ -662,39 +662,25 @@ var gDataMigrator = {
     },
 
     getThunderbirdProfile: function gdm_getTB() {
-        var profileDir = this.dirService.get("ProfD", Ci.nsILocalFile);
-        var appSpec = this.ioService.newFileURI(profileDir).path;
-        var localFile = Cc["@mozilla.org/file/local;1"]
-                        .createInstance(Ci.nsILocalFile);
-        var truncate;
+        var profileRoot = this.dirService.get("DefProfRt", Ci.nsILocalFile);
+        LOG("profileRoot = " + profileRoot.path);
         if (this.mIsLightning) {
-            truncate = appSpec.indexOf("Profiles");
-            appSpec = appSpec.substr(0, truncate);
-            localFile.initWithPath(appSpec);
-            localFile.append("Profiles");
+            localFile = profileRoot;
         } else {
             // Now it gets ugly
             switch (this.mPlatform) {
                 case "darwin": // Mac OS X
-                    truncate = appSpec.indexOf("Application");
-                    appSpec = appSpec.substr(0, truncate);
-                    localFile.initWithPath(appSpec);
-                    localFile.append("Thunderbird");
-                    localFile.append("Profiles");
-                    break;
                 case "winnt":
-                    truncate = appSpec.indexOf("Mozilla");
-                    appSpec = appSpec.substr(0, truncate);
-                    localFile.initWithPath(appSpec);
+                    localFile = profileRoot.parent.parent.parent;
                     localFile.append("Thunderbird");
                     localFile.append("Profiles");
                     break;
                 default: // Unix
-                    truncate = appSpec.indexOf(".mozilla");
-                    appSpec = appSpec.substr(0, truncate);
+                    localFile = profileRoot.parent.parent;
                     localFile.append(".thunderbird");
             }
         }
+        LOG("searching for Thunderbird in " + localFile.path);
         return localFile.exists() ? localFile : null;
     },
 
@@ -703,38 +689,25 @@ var gDataMigrator = {
     },
 
     getNormalProfile: function gdm_getNorm(aAppName) {
-        var profileDir = this.dirService.get("ProfD", Ci.nsILocalFile);
-        var appSpec = this.ioService.newFileURI(profileDir).path;
-        var localFile = Cc["@mozilla.org/file/local;1"]
-                        .createInstance(Ci.nsILocalFile);
-
-        // This variable marks the path-index where the current profile diverges
-        // from the aAppName profile.  We'll cut off the path here and then
-        // append the known path to the aAppName profile.
-        var truncate;
+        var profileRoot = this.dirService.get("DefProfRt", Ci.nsILocalFile);
+        LOG("profileRoot = " + profileRoot.path);
 
         if (this.isLightning()) {  // We're in Thunderbird
             switch (this.mPlatform) {
                 case "darwin": // Mac OS X
-                    truncate = appSpec.indexOf("Thunderbird");
-                    appSpec = appSpec.substr(0, truncate);
-                    localFile.initWithPath(appSpec);
+                    localFile = profileRoot.parent.parent;
                     localFile.append("Application Support");
                     localFile.append(aAppName);
                     localFile.append("Profiles");
                     break;
                 case "winnt":
-                    truncate = appSpec.indexOf("Thunderbird");
-                    appSpec = appSpec.substr(0, truncate);
-                    localFile.initWithPath(appSpec);
+                    localFile = profileRoot.parent.parent;
                     localFile.append("Mozilla");
                     localFile.append(aAppName);
                     localFile.append("Profiles");
                     break;
                 default: // Unix
-                    truncate = appSpec.indexOf(".thunderbird");
-                    appSpec = appSpec.substr(0, truncate);
-                    localFile.initWithPath(appSpec);
+                    localFile = profileRoot.parent;
                     localFile.append(".mozilla");
                     localFile.append(aAppName.toLowerCase());
                     break;
@@ -745,20 +718,17 @@ var gDataMigrator = {
                 // replace it with "Firefox" to get to Firefox
                 case "darwin": // Mac OS X
                 case "winnt":
-                    truncate = appSpec.indexOf("Sunbird");
-                    appSpec = appSpec.substr(0, truncate);
-                    localFile.initWithPath(appSpec);
+                    localFile = profileRoot.parent.parent;
                     localFile.append(aAppName);
                     localFile.append("Profiles");
                     break;
                 default: // Unix
-                    truncate = appSpec.indexOf("sunbird");
-                    appSpec = appSpec.substr(0, truncate);
-                    localFile.initWithPath(appSpec);
+                    localFile = profileRoot.parent;
                     localFile.append(aAppName.toLowerCase());
                     break;
             }
         }
+        LOG("searching for " + aAppName + " in " + localFile.path);
         return localFile.exists() ? localFile : null;
     }
 };
