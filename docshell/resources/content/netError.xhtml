@@ -90,7 +90,7 @@
         return decodeURIComponent(url.slice(desc + 2));
       }
 
-      function retryThis()
+      function retryThis(buttonEl)
       {
         // Session history has the URL of the page that failed
         // to load, not the one of the error page. So, just call
@@ -101,6 +101,8 @@
           // We probably tried to reload a URI that caused an exception to
           // occur;  e.g. a non-existent file.
         }
+
+        buttonEl.disabled = true;
       }
 
       function initPage()
@@ -209,7 +211,7 @@
 
       <!-- Retry Button -->
       <xul:button xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  id="errorTryAgain" label="&retry.label;" oncommand="retryThis();" />
+                  id="errorTryAgain" label="&retry.label;" oncommand="retryThis(this);" />
 
     </div>
 
