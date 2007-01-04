@@ -2161,11 +2161,12 @@ nsXULScrollFrame::Layout(nsBoxLayoutState& aState)
   // now look at the content area and see if we need scrollbars or not
   PRBool needsLayout = PR_FALSE;
 
-  nsRect scrolledRect = mInner.GetScrolledRect(scrollAreaRect.Size());
-  nsSize scrolledContentSize(scrolledRect.XMost(), scrolledRect.YMost());
-
   // if we have 'auto' scrollbars look at the vertical case
   if (styles.mVertical != NS_STYLE_OVERFLOW_SCROLL) {
+    // These are only good until the call to LayoutScrollArea.
+    nsRect scrolledRect = mInner.GetScrolledRect(scrollAreaRect.Size());
+    nsSize scrolledContentSize(scrolledRect.XMost(), scrolledRect.YMost());
+
     // There are two cases to consider
       if (scrolledContentSize.height <= scrollAreaRect.height
           || styles.mVertical != NS_STYLE_OVERFLOW_AUTO) {
@@ -2196,6 +2197,10 @@ nsXULScrollFrame::Layout(nsBoxLayoutState& aState)
   // if scrollbars are auto look at the horizontal case
   if (styles.mHorizontal != NS_STYLE_OVERFLOW_SCROLL)
   {
+    // These are only good until the call to LayoutScrollArea.
+    nsRect scrolledRect = mInner.GetScrolledRect(scrollAreaRect.Size());
+    nsSize scrolledContentSize(scrolledRect.XMost(), scrolledRect.YMost());
+
     // if the child is wider that the scroll area
     // and we don't have a scrollbar add one.
     if (scrolledContentSize.width > scrollAreaRect.width
