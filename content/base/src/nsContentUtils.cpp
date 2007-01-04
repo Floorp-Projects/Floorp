@@ -66,7 +66,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOM3Node.h"
 #include "nsIIOService.h"
-#include "nsIURI.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIScriptSecurityManager.h"
@@ -101,10 +100,8 @@
 #include "nsIImageLoadingContent.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsILink.h"
 #include "nsILoadGroup.h"
 #include "nsContentPolicyUtils.h"
-#include "nsDOMString.h"
 #include "nsNodeInfoManager.h"
 #include "nsIXBLService.h"
 #include "nsCRT.h"
@@ -2107,54 +2104,8 @@ nsContentUtils::IsDraggableImage(nsIContent* aContent)
 // static
 PRBool
 nsContentUtils::IsDraggableLink(nsIContent* aContent) {
-  nsCOMPtr<nsIURI> linkURI = GetLinkURI(aContent);
-
-  // Does it have a URI?  If not, it's not draggable
-  return linkURI != nsnull;
-}
-
-// static
-already_AddRefed<nsIURI>
-nsContentUtils::GetLinkURI(nsIContent* aContent)
-{
-  NS_PRECONDITION(aContent, "Must have content node to work with");
-
-  nsCOMPtr<nsILink> link(do_QueryInterface(aContent));
-  if (link) {
-    nsIURI* uri = nsnull;
-    link->GetHrefURI(&uri);
-    if (uri) {
-      return uri;
-    }
-  }
-
-  // It could still be an XLink
-  return GetXLinkURI(aContent);
-}
-
-// static
-already_AddRefed<nsIURI>
-nsContentUtils::GetXLinkURI(nsIContent* aContent)
-{
-  NS_PRECONDITION(aContent, "Must have content node to work with");
-
-  if (aContent->AttrValueIs(kNameSpaceID_XLink, nsGkAtoms::type,
-                            nsGkAtoms::simple, eCaseMatters)) {
-    nsAutoString value;
-    // Check that we have a URI
-    if (aContent->GetAttr(kNameSpaceID_XLink, nsGkAtoms::href, value)) {
-      //  Resolve it relative to aContent's base URI.
-      nsCOMPtr<nsIURI> baseURI = aContent->GetBaseURI();
-
-      nsIURI* uri = nsnull;
-      nsContentUtils::NewURIWithDocumentCharset(&uri, value,
-                                                aContent->GetDocument(),
-                                                baseURI);
-      return uri;
-    }
-  }
-
-  return nsnull;
+  nsCOMPtr<nsIURI> absURI;
+  return aContent->IsLink(getter_AddRefs(absURI));
 }
 
 // static

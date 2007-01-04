@@ -473,34 +473,33 @@ PRBool nsStyleUtil::IsHTMLLink(nsIContent *aContent, nsIAtom *aTag, nsPresContex
   return result;
 }
 
-/*static*/ 
-PRBool nsStyleUtil::IsSimpleXlink(nsIContent *aContent, nsPresContext *aPresContext, nsLinkState *aState)
+/*static*/
+PRBool nsStyleUtil::IsLink(nsIContent    *aContent,
+                           nsPresContext *aPresContext,
+                           nsLinkState   *aState)
 {
   // XXX PERF This function will cause serious performance problems on
   // pages with lots of XLinks.  We should be caching the visited
   // state of the XLinks.  Where???
 
-  NS_ASSERTION(aContent && aState, "invalid call to IsXlink with null content");
+  NS_ASSERTION(aContent && aState, "invalid call to IsLink with null content");
 
   PRBool rv = PR_FALSE;
 
   if (aContent && aState) {
-    // first see if we have an XML element
-    nsCOMPtr<nsIXMLContent> xml(do_QueryInterface(aContent));
-    if (xml) {
-      nsCOMPtr<nsIURI> absURI = nsContentUtils::GetXLinkURI(aContent);
-      if (absURI) {
-        nsILinkHandler *linkHandler = aPresContext->GetLinkHandler();
-        if (linkHandler) {
-          linkHandler->GetLinkState(absURI, *aState);
-        }
-        else {
-          // no link handler?  then all links are unvisited
-          *aState = eLinkState_Unvisited;
-        }
-        aPresContext->Document()->AddStyleRelevantLink(aContent, absURI);
-        rv = PR_TRUE;
+    nsCOMPtr<nsIURI> absURI;
+    if (aContent->IsLink(getter_AddRefs(absURI))) {
+      nsILinkHandler *linkHandler = aPresContext->GetLinkHandler();
+      if (linkHandler) {
+        linkHandler->GetLinkState(absURI, *aState);
       }
+      else {
+        // no link handler?  then all links are unvisited
+        *aState = eLinkState_Unvisited;
+      }
+      aPresContext->Document()->AddStyleRelevantLink(aContent, absURI);
+
+      rv = PR_TRUE;
     }
   }
   return rv;

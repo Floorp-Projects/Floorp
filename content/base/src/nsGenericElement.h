@@ -427,6 +427,7 @@ public:
   virtual nsIContent *GetBindingParent() const;
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
   virtual already_AddRefed<nsIURI> GetBaseURI() const;
+  virtual PRBool IsLink(nsIURI** aURI) const;
   virtual void SetMayHaveFrame(PRBool aMayHaveFrame);
   virtual PRBool MayHaveFrame() const;
 
@@ -562,7 +563,6 @@ public:
    * check.
    *
    * @param aPresContext the pres context.
-   * @param aVerb how the link will be loaded (replace page, new window, etc.)
    * @param aLinkURI the URI of the link
    * @param aTargetSpec the target (like target=, may be empty)
    * @param aClick whether this was a click or not (if false, it assumes you
@@ -572,7 +572,6 @@ public:
    *        click() method if we ever implement it.
    */
   nsresult TriggerLink(nsPresContext* aPresContext,
-                       nsLinkVerb aVerb,
                        nsIURI* aLinkURI,
                        const nsAFlatString& aTargetSpec,
                        PRBool aClick,
@@ -980,6 +979,24 @@ protected:
    * @param aText the resulting text [OUT]
    */
   void GetContentsAsText(nsAString& aText);
+
+  /**
+   * Unified function to carry out event default actions for links of all types
+   * (HTML links, XLinks, SVG "XLinks", etc.)
+   */
+  nsresult PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor);
+
+  /**
+   * Get the target of this link element. Consumers should established that
+   * this element is a link (probably using IsLink) before calling this
+   * function (or else why call it?)
+   *
+   * Note: for HTML this gets the value of the 'target' attribute; for XLink
+   * this gets the value of the xlink:_moz_target attribute, or failing that,
+   * the value of xlink:show, converted to a suitably equivalent named target
+   * (e.g. _blank).
+   */
+  virtual void GetLinkTarget(nsAString& aTarget);
 
   /**
    * Array containing all attributes and children for this element

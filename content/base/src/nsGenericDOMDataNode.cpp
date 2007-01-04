@@ -811,6 +811,13 @@ nsGenericDOMDataNode::GetBaseURI() const
   return uri;
 }
 
+PRBool
+nsGenericDOMDataNode::IsLink(nsIURI** aURI) const
+{
+  *aURI = nsnull;
+  return PR_FALSE;
+}
+
 nsINode::nsSlots*
 nsGenericDOMDataNode::CreateSlots()
 {

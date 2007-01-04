@@ -5239,9 +5239,9 @@ nsDocument::ForgetLink(nsIContent* aContent)
   // now before we waste time constructing a URI object.
   if (mLinkMap.Count() == 0)
     return;
-    
-  nsCOMPtr<nsIURI> uri = nsContentUtils::GetLinkURI(aContent);
-  if (!uri)
+
+  nsCOMPtr<nsIURI> uri;
+  if (!aContent->IsLink(getter_AddRefs(uri)))
     return;
   PRUint32 hash = GetURIHash(uri);
   nsUint32ToContentHashEntry* entry = mLinkMap.GetEntry(hash);
@@ -5264,8 +5264,8 @@ public:
   
   virtual void Visit(nsIContent* aContent) {
     // Ensure that the URIs really match before we try to do anything
-    nsCOMPtr<nsIURI> uri = nsContentUtils::GetLinkURI(aContent);
-    if (!uri) {
+    nsCOMPtr<nsIURI> uri;
+    if (!aContent->IsLink(getter_AddRefs(uri))) {
       NS_ERROR("Should have found a URI for content in the link map");
       return;
     }

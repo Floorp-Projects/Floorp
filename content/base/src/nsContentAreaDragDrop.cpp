@@ -979,21 +979,14 @@ nsTransferableFactory::FindParentLinkNode(nsIDOMNode* inNode)
 //
 // GetAnchorURL
 //
-// Get the url for this anchor. First try the href, and if that's
-// empty, go for the name.
-//
 void
 nsTransferableFactory::GetAnchorURL(nsIDOMNode* inNode, nsAString& outURL)
 {
-  outURL.Truncate();
-  nsCOMPtr<nsIContent> content(do_QueryInterface(inNode));
-  if (!content) {
+  nsCOMPtr<nsIURI> linkURI;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(inNode);
+  if (!content || !content->IsLink(getter_AddRefs(linkURI))) {
     // Not a link
-    return;
-  }
-
-  nsCOMPtr<nsIURI> linkURI = nsContentUtils::GetLinkURI(content);
-  if (!linkURI) {
+    outURL.Truncate();
     return;
   }
 

@@ -88,6 +88,8 @@ public:
   NS_IMETHOD LinkRemoved() { return NS_OK; }
 
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
+  virtual PRBool IsLink(nsIURI** aURI) const;
+  virtual void GetLinkTarget(nsAString& aTarget);
 
   virtual void SetFocus(nsPresContext* aPresContext);
 
@@ -172,6 +174,18 @@ nsresult
 nsHTMLAreaElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   return PostHandleEventForAnchors(aVisitor);
+}
+
+PRBool
+nsHTMLAreaElement::IsLink(nsIURI** aURI) const
+{
+  return IsHTMLLink(aURI);
+}
+
+void
+nsHTMLAreaElement::GetLinkTarget(nsAString& aTarget)
+{
+  GetTarget(aTarget);
 }
 
 void

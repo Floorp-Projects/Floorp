@@ -740,8 +740,7 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
   mContentID = nsnull;
   mHasAttributes = PR_FALSE;
   mIsHTMLContent = PR_FALSE;
-  mIsHTMLLink = PR_FALSE;
-  mIsSimpleXLink = PR_FALSE;
+  mIsLink = PR_FALSE;
   mLinkState = eLinkState_Unknown;
   mEventState = 0;
   mNameSpaceID = kNameSpaceID_Unknown;
@@ -791,17 +790,17 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
     if (mIsHTMLContent && mHasAttributes) {
       // check if it is an HTML Link
       if(nsStyleUtil::IsHTMLLink(aContent, mContentTag, mPresContext, &mLinkState)) {
-        mIsHTMLLink = PR_TRUE;
+        mIsLink = PR_TRUE;
       }
     } 
 
     // if not an HTML link, check for a simple xlink (cannot be both HTML link and xlink)
     // NOTE: optimization: cannot be an XLink if no attributes (since it needs an 
-    if(!mIsHTMLLink &&
+    if(!mIsLink &&
        mHasAttributes && 
        !(mIsHTMLContent || aContent->IsNodeOfType(nsINode::eXUL)) && 
-       nsStyleUtil::IsSimpleXlink(aContent, mPresContext, &mLinkState)) {
-      mIsSimpleXLink = PR_TRUE;
+       nsStyleUtil::IsLink(aContent, mPresContext, &mLinkState)) {
+      mIsLink = PR_TRUE;
     } 
   }
 }
@@ -906,7 +905,7 @@ inline PRBool IsLinkPseudo(nsIAtom* aAtom)
 
 // Return whether we should apply a "global" (i.e., universal-tag)
 // selector for event states in quirks mode.  Note that
-// |data.mIsHTMLLink| is checked separately by the caller, so we return
+// |data.mIsLink| is checked separately by the caller, so we return
 // false for |nsGkAtoms::a|, which here means a named anchor.
 inline PRBool IsQuirkEventSensitive(nsIAtom *aContentTag)
 {
@@ -1175,7 +1174,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       stateToCheck = NS_EVENT_STATE_URLTARGET;
     }
     else if (IsLinkPseudo(pseudoClass->mAtom)) {
-      if (data.mIsHTMLLink || data.mIsSimpleXLink) {
+      if (data.mIsLink) {
         if (nsCSSPseudoClasses::mozAnyLink == pseudoClass->mAtom) {
           result = PR_TRUE;
         }
@@ -1185,8 +1184,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
                        "somebody changed IsLinkPseudo");
           NS_ASSERTION(data.mLinkState == eLinkState_Unvisited ||
                        data.mLinkState == eLinkState_Visited,
-                       "unexpected link state for "
-                       "mIsHTMLLink || mIsSimpleXLink");
+                       "unexpected link state for mIsLink");
           if (aStateMask & NS_EVENT_STATE_VISITED) {
             result = PR_TRUE;
             if (aDependence)
@@ -1276,7 +1274,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           // (unnegated)). This at least makes it closer to the spec.
           !isNegated &&
           // important for |IsQuirkEventSensitive|:
-          data.mIsHTMLContent && !data.mIsHTMLLink &&
+          data.mIsHTMLContent && !data.mIsLink &&
           !IsQuirkEventSensitive(data.mContentTag)) {
         // In quirks mode, only make certain elements sensitive to
         // selectors ":hover" and ":active".

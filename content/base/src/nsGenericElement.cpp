@@ -113,6 +113,7 @@
 #include "nsIDOMUserDataHandler.h"
 #include "nsEventDispatcher.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsIFocusController.h"
 
 #ifdef MOZ_SVG
 PRBool NS_SVG_TestFeature(const nsAString &fstr);
@@ -2135,6 +2136,13 @@ nsGenericElement::GetBaseURI() const
   return base;    
 }
 
+PRBool
+nsGenericElement::IsLink(nsIURI** aURI) const
+{
+  *aURI = nsnull;
+  return PR_FALSE;
+}
+
 void
 nsGenericElement::SetFocus(nsPresContext* aPresContext)
 {
@@ -3049,7 +3057,6 @@ nsGenericElement::LeaveLink(nsPresContext* aPresContext)
 
 nsresult
 nsGenericElement::TriggerLink(nsPresContext* aPresContext,
-                              nsLinkVerb aVerb,
                               nsIURI* aLinkURI,
                               const nsAFlatString& aTargetSpec,
                               PRBool aClick,
@@ -3079,7 +3086,7 @@ nsGenericElement::TriggerLink(nsPresContext* aPresContext,
     // Only pass off the click event if the script security manager
     // says it's ok.
     if (NS_SUCCEEDED(proceed))
-      handler->OnLinkClick(this, aVerb, aLinkURI, aTargetSpec.get());
+      handler->OnLinkClick(this, aLinkURI, aTargetSpec.get());
   } else {
     handler->OnOverLink(this, aLinkURI, aTargetSpec.get());
   }
@@ -3155,7 +3162,7 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
   if (kNameSpaceID_XLink == aNamespaceID && nsGkAtoms::href == aName) {
     // XLink URI(s) might be changing. Drop the link from the map. If it
     // is still style relevant it will be re-added by
-    // nsStyleUtil::IsSimpleXlink. Make sure to keep the style system
+    // nsStyleUtil::IsLink. Make sure to keep the style system
     // consistent so this remains true! In particular if the style system
     // were to get smarter and not restyling an XLink element if the href
     // doesn't change in a "significant" way, we'd need to do the same
@@ -3769,3 +3776,154 @@ nsGenericElement::CreateSlots()
 {
   return new nsDOMSlots(mFlagsOrSlots);
 }
+
+nsresult
+nsGenericElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
+{
+  // Optimisation: return early if this event doesn't interest us.
+  // IMPORTANT: this switch and the switch below it must be kept in sync!
+  switch (aVisitor.mEvent->message) {
+  case NS_MOUSE_BUTTON_DOWN:
+  case NS_MOUSE_CLICK:
+  case NS_UI_ACTIVATE:
+  case NS_KEY_PRESS:
+  case NS_MOUSE_ENTER_SYNTH:
+  case NS_FOCUS_CONTENT:
+  case NS_MOUSE_EXIT_SYNTH:
+  case NS_BLUR_CONTENT:
+    break;
+  default:
+    return NS_OK;
+  }
+
+  if (aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault ||
+      !NS_IS_TRUSTED_EVENT(aVisitor.mEvent) ||
+      !aVisitor.mPresContext) {
+    return NS_OK;
+  }
+
+  // Make sure we actually are a link before continuing
+  nsCOMPtr<nsIURI> absURI;
+  if (!IsLink(getter_AddRefs(absURI))) {
+    return NS_OK;
+  }
+
+  nsresult rv = NS_OK;
+
+  switch (aVisitor.mEvent->message) {
+  case NS_MOUSE_BUTTON_DOWN:
+    {
+      if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
+          NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+          nsMouseEvent::eLeftButton) {
+        // don't make the link grab the focus if there is no link handler
+        nsILinkHandler *handler = aVisitor.mPresContext->GetLinkHandler();
+        nsIDocument *document = GetCurrentDoc();
+        if (handler && document && ShouldFocus(this)) {
+          // If the window is not active, do not allow the focus to bring the
+          // window to the front. We update the focus controller, but do nothing
+          // else.
+          nsPIDOMWindow *win = document->GetWindow();
+          if (win) {
+            nsIFocusController *focusController =
+              win->GetRootFocusController();
+            if (focusController) {
+              PRBool isActive = PR_FALSE;
+              focusController->GetActive(&isActive);
+              if (!isActive) {
+                nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(this);
+                if(domElement)
+                  focusController->SetFocusedElement(domElement);
+                break;
+              }
+            }
+          }
+  
+          aVisitor.mPresContext->EventStateManager()->
+            SetContentState(this, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
+        }
+      }
+    }
+    break;
+
+  case NS_MOUSE_CLICK:
+    if (NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent)) {
+      nsInputEvent* inputEvent = NS_STATIC_CAST(nsInputEvent*, aVisitor.mEvent);
+      if (inputEvent->isControl || inputEvent->isMeta ||
+          inputEvent->isAlt ||inputEvent->isShift) {
+        break;
+      }
+
+      // The default action is simply to dispatch DOMActivate
+      nsIPresShell *shell = aVisitor.mPresContext->GetPresShell();
+      if (shell) {
+        // single-click
+        nsEventStatus status = nsEventStatus_eIgnore;
+        nsUIEvent actEvent(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
+                           NS_UI_ACTIVATE, 1);
+
+        rv = shell->HandleDOMEventWithTarget(this, &actEvent, &status);
+      }
+    }
+    break;
+
+  case NS_UI_ACTIVATE:
+    {
+      nsAutoString target;
+      GetLinkTarget(target);
+      rv = TriggerLink(aVisitor.mPresContext, absURI, target, PR_TRUE, PR_TRUE);
+    }
+    break;
+
+  case NS_KEY_PRESS:
+    {
+      if (aVisitor.mEvent->eventStructType == NS_KEY_EVENT) {
+        nsKeyEvent* keyEvent = NS_STATIC_CAST(nsKeyEvent*, aVisitor.mEvent);
+        if (keyEvent->keyCode == NS_VK_RETURN) {
+          nsEventStatus status = nsEventStatus_eIgnore;
+          rv = DispatchClickEvent(aVisitor.mPresContext, keyEvent, this,
+                                  PR_FALSE, &status);
+          if (NS_SUCCEEDED(rv)) {
+            aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+          }
+        }
+      }
+    }
+    break;
+
+  // Set the status bar the same for focus and mouseover
+  case NS_MOUSE_ENTER_SYNTH:
+    aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+    // FALL THROUGH
+  case NS_FOCUS_CONTENT:
+    {
+      nsAutoString target;
+      GetLinkTarget(target);
+      rv = TriggerLink(aVisitor.mPresContext, absURI, target, PR_FALSE, PR_TRUE);
+    }
+    break;
+
+  case NS_MOUSE_EXIT_SYNTH:
+    aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+    rv = LeaveLink(aVisitor.mPresContext);
+    break;
+
+  case NS_BLUR_CONTENT:
+    rv = LeaveLink(aVisitor.mPresContext);
+    break;
+
+  default:
+    // switch not in sync with the optimization switch earlier in this function
+    NS_NOTREACHED("switch statements not in sync");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return rv;
+}
+
+void
+nsGenericElement::GetLinkTarget(nsAString& aTarget)
+{
+  aTarget.Truncate();
+}
+

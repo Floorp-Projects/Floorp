@@ -40,21 +40,17 @@
 #include "nsGenericHTMLElement.h"
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
-#include "nsINodeInfo.h"
 #include "nsIContentViewer.h"
 #include "nsICSSParser.h"
 #include "nsICSSLoader.h"
 #include "nsICSSStyleRule.h"
 #include "nsCSSStruct.h"
-#include "nsCSSDeclaration.h"
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIDOMNamedNodeMap.h"
-#include "nsIDOMNodeList.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMNSHTMLElement.h"
@@ -62,19 +58,15 @@
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsIEventListenerManager.h"
-#include "nsIFocusController.h"
 #include "nsMappedAttributes.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsIHTMLDocument.h"
 #include "nsILink.h"
-#include "nsILinkHandler.h"
 #include "nsPIDOMWindow.h"
 #include "nsIStyleRule.h"
-#include "nsISupportsArray.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsEscape.h"
-#include "nsStyleConsts.h"
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsIScrollableView.h"
@@ -83,8 +75,6 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIDocShell.h"
-#include "nsIView.h"
-#include "nsIViewManager.h"
 #include "nsINameSpaceManager.h"
 #include "nsDOMError.h"
 #include "nsScriptLoader.h"
@@ -96,53 +86,33 @@
 #include "nsHTMLParts.h"
 #include "nsContentUtils.h"
 #include "nsString.h"
-#include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsLayoutAtoms.h"
 #include "nsIEventStateManager.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMNSEvent.h"
-#include "nsIPrivateDOMEvent.h"
-#include "nsDOMCID.h"
-#include "nsIServiceManager.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsICSSOMFactory.h"
-#include "prprf.h"
-#include "prmem.h"
 #include "nsITextControlFrame.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsILanguageAtomService.h"
 
-#include "nsIDOMMutationEvent.h"
 #include "nsMutationEvent.h"
 
-#include "nsIBindingManager.h"
-#include "nsXBLBinding.h"
-
-#include "nsRuleWalker.h"
-
-#include "nsIObjectFrame.h"
-#include "xptinfo.h"
-#include "nsIInterfaceInfoManager.h"
-#include "nsIServiceManager.h"
-
-#include "nsIParser.h"
-#include "nsParserCIID.h"
-#include "nsIHTMLContentSink.h"
-#include "nsLayoutCID.h"
 #include "nsContentCID.h"
 
 #include "nsIDOMText.h"
-#include "nsCOMArray.h"
-#include "nsNodeInfoManager.h"
 
 #include "nsIEditor.h"
 #include "nsIEditorIMESupport.h"
 #include "nsEventDispatcher.h"
 #include "nsLayoutUtils.h"
 #include "nsContentCreatorFunctions.h"
+
+class nsINodeInfo;
+class nsIDOMNodeList;
+class nsRuleWalker;
 
 // XXX todo: add in missing out-of-memory checks
 
@@ -1427,163 +1397,39 @@ nsGenericHTMLElement::PostHandleEventForAnchors(nsEventChainPostVisitor& aVisito
   NS_PRECONDITION(nsCOMPtr<nsILink>(do_QueryInterface(this)),
                   "should be called only when |this| implements |nsILink|");
 
-  nsresult rv = NS_OK;
-
   if (!aVisitor.mPresContext) {
     // We need a pres context to do link stuff. Some events (e.g. mutation
     // events) don't have one.
     // XXX: ideally, shouldn't we be able to do what we need without one?
-    return rv; 
-  }
-
-  if (!NS_IS_TRUSTED_EVENT(aVisitor.mEvent)) {
-    return rv;
+    return NS_OK; 
   }
 
   //Need to check if we hit an imagemap area and if so see if we're handling
   //the event on that map or on a link farther up the tree.  If we're on a
   //link farther up, do nothing.
   nsCOMPtr<nsIContent> target;
-
   aVisitor.mPresContext->EventStateManager()->
     GetEventTargetContent(aVisitor.mEvent, getter_AddRefs(target));
 
   if (target && IsArea(target) && !IsArea(this)) {
-    return rv;
+    return NS_OK;
   }
 
-  if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault) {
+  return PostHandleEventForLinks(aVisitor);
+}
 
-    // We'll use the equivalent of |GetHrefUTF8| on the
-    // nsILink interface to get a canonified URL that has been
-    // correctly escaped and URL-encoded for the document's charset.
+PRBool
+nsGenericHTMLElement::IsHTMLLink(nsIURI** aURI) const
+{
+  NS_PRECONDITION(aURI, "Must provide aURI out param");
 
-    nsCOMPtr<nsIURI> hrefURI;
-    GetHrefURIForAnchors(getter_AddRefs(hrefURI));
-
-    // Only bother to handle the mouse event if there was an href
-    // specified.
-    if (hrefURI) {
-      switch (aVisitor.mEvent->message) {
-      case NS_MOUSE_BUTTON_DOWN:
-        {
-          if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
-              NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
-                nsMouseEvent::eLeftButton) {
-            // don't make the link grab the focus if there is no link handler
-            nsILinkHandler *handler = aVisitor.mPresContext->GetLinkHandler();
-            nsIDocument *document = GetCurrentDoc();
-            if (handler && document && ShouldFocus(this)) {
-              // If the window is not active, do not allow the focus to bring the
-              // window to the front.  We update the focus controller, but do
-              // nothing else.
-              nsPIDOMWindow *win = document->GetWindow();
-              if (win) {
-                nsIFocusController *focusController =
-                  win->GetRootFocusController();
-                if (focusController) {
-                  PRBool isActive = PR_FALSE;
-                  focusController->GetActive(&isActive);
-                  if (!isActive) {
-                    nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(this);
-                    if(domElement)
-                      focusController->SetFocusedElement(domElement);
-                    break;
-                  }
-                }
-              }
-  
-              aVisitor.mPresContext->EventStateManager()->
-                SetContentState(this,
-                                NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
-            }
-          }
-        }
-        break;
-
-      case NS_MOUSE_CLICK:
-        if (NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent)) {
-          nsInputEvent* inputEvent =
-            NS_STATIC_CAST(nsInputEvent*, aVisitor.mEvent);
-          if (inputEvent->isControl || inputEvent->isMeta ||
-              inputEvent->isAlt ||inputEvent->isShift) {
-            break;
-          }
-
-          // The default action is simply to dispatch DOMActivate
-          nsIPresShell *shell = aVisitor.mPresContext->GetPresShell();
-          if (shell) {
-            // single-click
-            nsUIEvent actEvent(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
-                               NS_UI_ACTIVATE, 1);
-            nsEventStatus status = nsEventStatus_eIgnore;
-
-            rv = shell->HandleDOMEventWithTarget(this, &actEvent, &status);
-          }
-        }
-        break;
-
-      case NS_UI_ACTIVATE:
-        {
-          nsAutoString target;
-          GetAttr(kNameSpaceID_None, nsGkAtoms::target, target);
-          if (target.IsEmpty()) {
-            GetBaseTarget(target);
-          }
-          rv = TriggerLink(aVisitor.mPresContext, eLinkVerb_Replace, hrefURI,
-                           target, PR_TRUE, PR_TRUE);
-        }
-        break;
-
-      case NS_KEY_PRESS:
-        if (aVisitor.mEvent->eventStructType == NS_KEY_EVENT) {
-          nsKeyEvent* keyEvent = NS_STATIC_CAST(nsKeyEvent*, aVisitor.mEvent);
-          if (keyEvent->keyCode == NS_VK_RETURN) {
-            nsEventStatus status = nsEventStatus_eIgnore;
-            rv = DispatchClickEvent(aVisitor.mPresContext, keyEvent, this,
-                                    PR_FALSE, &status);
-            if (NS_SUCCEEDED(rv)) {
-              aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-            }
-          }
-        }
-        break;
-
-      // Set the status bar the same for focus and mouseover
-      case NS_MOUSE_ENTER_SYNTH:
-        aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-        // FALL THROUGH
-      case NS_FOCUS_CONTENT:
-      {
-        nsAutoString target;
-        GetAttr(kNameSpaceID_None, nsGkAtoms::target, target);
-        if (target.IsEmpty()) {
-          GetBaseTarget(target);
-        }
-        rv = TriggerLink(aVisitor.mPresContext, eLinkVerb_Replace,
-                         hrefURI, target, PR_FALSE, PR_TRUE);
-      }
-      break;
-
-      case NS_MOUSE_EXIT_SYNTH:
-        aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-        rv = LeaveLink(aVisitor.mPresContext);
-        break;
-
-      case NS_BLUR_CONTENT:
-        rv = LeaveLink(aVisitor.mPresContext);
-        break;
-
-      default:
-        break;
-      }
-    }
-  }
-  return rv;
+  GetHrefURIForAnchors(aURI);
+  // We promise out param is non-null if we return true, so base rv on it
+  return *aURI != nsnull;
 }
 
 nsresult
-nsGenericHTMLElement::GetHrefURIForAnchors(nsIURI** aURI)
+nsGenericHTMLElement::GetHrefURIForAnchors(nsIURI** aURI) const
 {
   // This is used by the three nsILink implementations and
   // nsHTMLStyleElement.

@@ -62,8 +62,9 @@ class nsTextFragment;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x38cb1dfd, 0xeeac, 0x4f35, \
-  { 0x93, 0x83, 0xc0, 0xb5, 0xe5, 0xf1, 0xcd, 0xa4 } }
+{ 0x43511041, 0xae82, 0x45aa, \
+  { 0xb9, 0x48, 0xd6, 0x1d, 0x81, 0xc9, 0xc3, 0x25 } }
+
 
 // hack to make egcs / gcc 2.95.2 happy
 class nsIContent_base : public nsINode {
@@ -544,6 +545,21 @@ public:
    * @return the base URI
    */
   virtual already_AddRefed<nsIURI> GetBaseURI() const = 0;
+
+  /**
+   * API to check if this is a link that's traversed in response to user input
+   * (e.g. a click event). Specializations for HTML/SVG/generic XML allow for
+   * different types of link in different types of content.
+   *
+   * @param aURI Required out param. If this content is a link, a new nsIURI
+   *             set to this link's URI will be passed out.
+   *
+   * @note The out param, aURI, is guaranteed to be set to a non-null pointer
+   *   when the return value is PR_TRUE.
+   *
+   * XXXjwatt: IMO IsInteractiveLink would be a better name.
+   */
+  virtual PRBool IsLink(nsIURI** aURI) const = 0;
 
   /**
    * This method is called when the parser finishes creating the element.  This
