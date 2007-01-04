@@ -4040,6 +4040,32 @@ enum BWCOpenDest {
            (contextMenuFlags & nsIContextMenuListener::CONTEXT_TEXT) != 0 ||
            isMidas)
   {
+    // simulate a double click to select the word as native text fields do for context clicks,
+    // which allows spell check to operate on the word under the mouse.
+    // ideally we'd tell the editor directly to move the anchor to the mouse location and select
+    // the word it ends up in, but there doesn't appear to be a way to do that.
+    NSEvent* realClick = [NSApp currentEvent];
+    NSEvent* fakeDoubleClickDown = [NSEvent mouseEventWithType:NSLeftMouseDown
+                                                      location:[realClick locationInWindow]
+                                                 modifierFlags:0
+                                                     timestamp:[realClick timestamp]
+                                                  windowNumber:[realClick windowNumber]
+                                                       context:[realClick context]
+                                                   eventNumber:[realClick eventNumber]
+                                                    clickCount:2
+                                                      pressure:[realClick pressure]];
+    NSEvent* fakeDoubleClickUp = [NSEvent mouseEventWithType:NSLeftMouseUp
+                                                    location:[realClick locationInWindow]
+                                               modifierFlags:0
+                                                   timestamp:[realClick timestamp]
+                                                windowNumber:[realClick windowNumber]
+                                                     context:[realClick context]
+                                                 eventNumber:[realClick eventNumber]
+                                                  clickCount:2
+                                                    pressure:[realClick pressure]];
+    NSView* textFieldView = [mContentView hitTest:[[mContentView superview] convertPoint:[realClick locationInWindow] fromView:nil]];
+    [textFieldView mouseDown:fakeDoubleClickDown];
+    [textFieldView mouseUp:fakeDoubleClickUp];
     menuPrototype = mInputMenu;
     showSpellingItems = YES;
   }
@@ -4211,6 +4237,9 @@ enum BWCOpenDest {
   nsCOMPtr<nsIDOMNode> anchorNode;
   PRInt32 anchorOffset = 0;
   GeckoUtils::GetAnchorNodeFromSelection(editor, getter_AddRefs(anchorNode), &anchorOffset);
+  // the anchor is at the beginning of the word, which the spelling system for whatever reason
+  // doesn't consider to be inside of the mispelled range, so we check one character further
+  ++anchorOffset;
   nsCOMPtr<nsIDOMRange> mispelledRange;
   inlineChecker->GetMispelledWord(anchorNode, (long)anchorOffset, getter_AddRefs(mispelledRange));
   if (mispelledRange) {
@@ -4279,6 +4308,8 @@ enum BWCOpenDest {
   nsCOMPtr<nsIDOMNode> anchorNode;
   PRInt32 anchorOffset = 0;
   GeckoUtils::GetAnchorNodeFromSelection(editor, getter_AddRefs(anchorNode), &anchorOffset);
+  // once again, we shift the anchor off the beginning of the word to make the spelling system happy
+  ++anchorOffset;
   
   nsString newWord;
   [[inSender title] assignTo_nsAString:newWord];
