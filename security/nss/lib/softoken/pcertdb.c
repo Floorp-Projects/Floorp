@@ -37,7 +37,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.63 2006/05/17 20:46:47 alexei.volkov.bugs%sun.com Exp $
+ * $Id: pcertdb.c,v 1.64 2007/01/04 20:25:41 alexei.volkov.bugs%sun.com Exp $
  */
 #include "prtime.h"
 
@@ -1238,68 +1238,6 @@ DecodeDBCrlEntry(certDBEntryRevocation *entry, SECItem *dbentry)
 loser:
     return(SECFailure);
 }
-
-/*
- * Create a new certDBEntryRevocation from existing data
- */
-static certDBEntryRevocation *
-NewDBCrlEntry(SECItem *derCrl, char * url, certDBEntryType crlType, int flags)
-{
-    certDBEntryRevocation *entry;
-    PRArenaPool *arena = NULL;
-    int nnlen;
-    
-    arena = PORT_NewArena( DER_DEFAULT_CHUNKSIZE );
-
-    if ( !arena ) {
-	goto loser;
-    }
-	
-    entry = PORT_ArenaZNew(arena, certDBEntryRevocation);
-    if ( entry == NULL ) {
-	goto loser;
-    }
-    
-    /* fill in the dbRevolcation */
-    entry->common.arena = arena;
-    entry->common.type = crlType;
-    entry->common.version = CERT_DB_FILE_VERSION;
-    entry->common.flags = flags;
-    
-
-    entry->derCrl.data = (unsigned char *)PORT_ArenaAlloc(arena, derCrl->len);
-    if ( !entry->derCrl.data ) {
-	goto loser;
-    }
-
-    if (url) {
-	nnlen = PORT_Strlen(url) + 1;
-	entry->url  = (char *)PORT_ArenaAlloc(arena, nnlen);
-	if ( !entry->url ) {
-	    goto loser;
-	}
-	PORT_Memcpy(entry->url, url, nnlen);
-    } else {
-	entry->url = NULL;
-    }
-
-	
-    entry->derCrl.len = derCrl->len;
-    PORT_Memcpy(entry->derCrl.data, derCrl->data, derCrl->len);
-
-    return(entry);
-
-loser:
-    
-    /* allocation error, free arena and return */
-    if ( arena ) {
-	PORT_FreeArena(arena, PR_FALSE);
-    }
-    
-    PORT_SetError(SEC_ERROR_NO_MEMORY);
-    return(0);
-}
-
 
 static SECStatus
 WriteDBCrlEntry(NSSLOWCERTCertDBHandle *handle, certDBEntryRevocation *entry,
@@ -5171,22 +5109,23 @@ nsslowcert_UpdateCrl(NSSLOWCERTCertDBHandle *handle, SECItem *derCrl,
 			SECItem *crlKey, char *url, PRBool isKRL)
 {
     SECStatus rv = SECFailure;
-    certDBEntryRevocation *entry = NULL;
+    certDBEntryRevocation entry;
     certDBEntryType crlType = isKRL ? certDBEntryTypeKeyRevocation  
 					: certDBEntryTypeRevocation;
     DeleteDBCrlEntry(handle, crlKey, crlType);
 
     /* Write the new entry into the data base */
-    entry = NewDBCrlEntry(derCrl, url, crlType, 0);
-    if (entry == NULL) goto done;
+    entry.common.arena = NULL;
+    entry.common.type = crlType;
+    entry.common.version = CERT_DB_FILE_VERSION;
+    entry.common.flags = 0;
 
-    rv = WriteDBCrlEntry(handle, entry, crlKey);
-    if (rv != SECSuccess) goto done;
+    entry.derCrl.data = derCrl->data;
+    entry.derCrl.len = derCrl->len;
+    entry.url = url;
 
-done:
-    if (entry) {
-	DestroyDBEntry((certDBEntry *)entry);
-    }
+    rv = WriteDBCrlEntry(handle, &entry, crlKey);
+
     return rv;
 }
 
