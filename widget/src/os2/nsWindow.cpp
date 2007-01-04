@@ -1,6 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 sts=2 et cin: */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -26,6 +26,7 @@
  *   Rich Walsh <dragtext@e-vertise.com>
  *   Dan Rosen <dr@netscape.com>
  *   Dainis Jonitis <Dainis_Jonitis@swh-t.lv>
+ *   Peter Weilbacher <mozilla@Weilbacher.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -981,7 +982,7 @@ void nsWindow::RealDoCreate( HWND              hwndP,
 
 #if DEBUG_sobotka
    printf("\n+++++++++++In nsWindow::RealDoCreate created 0x%lx, %d x %d\n",
-	  mWnd, aRect.width, aRect.height);
+          mWnd, aRect.width, aRect.height);
    printf("+++++++++++Location =  %d x %d\n", aRect.x, aRect.y);
    printf("+++++++++++Parent = 0x%lx\n", GetParentHWND());
    printf("+++++++++++WINDOWCOUNT+ = %d\n", ++WINDOWCOUNT);
@@ -2432,9 +2433,7 @@ BOOL nsWindow::CallMethod(MethodInfo *info)
 }
 
 //-------------------------------------------------------------------------
-//
 // OnKey
-//
 //-------------------------------------------------------------------------
 // Key handler.  Specs for the various text messages are really confused;
 // see other platforms for best results of how things are supposed to work.
@@ -2442,153 +2441,136 @@ BOOL nsWindow::CallMethod(MethodInfo *info)
 // Perhaps more importantly, the main man listening to these events (besides
 // random bits of javascript) is ender -- see 
 // mozilla/editor/base/nsEditorEventListeners.cpp.
-//
-PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
+PRBool nsWindow::OnKey(MPARAM mp1, MPARAM mp2)
 {
-   nsKeyEvent pressEvent(PR_TRUE, 0, nsnull);
-   USHORT     fsFlags = SHORT1FROMMP(mp1);
-   USHORT     usVKey = SHORT2FROMMP(mp2);
-   USHORT     usChar = SHORT1FROMMP(mp2);
-//   UCHAR      uchScan = CHAR4FROMMP(mp1);
+  nsKeyEvent pressEvent(PR_TRUE, 0, nsnull);
+  USHORT fsFlags = SHORT1FROMMP(mp1);
+  USHORT usVKey = SHORT2FROMMP(mp2);
+  USHORT usChar = SHORT1FROMMP(mp2);
+  UCHAR uchScan = CHAR4FROMMP(mp1);
 
-   // It appears we're not supposed to transmit shift, control & alt events
-   // to gecko.  Shrug.
-   //
-   // XXX this may be wrong, but is what gtk is doing...
-   if( fsFlags & KC_VIRTUALKEY &&
-      (usVKey == VK_SHIFT || usVKey == VK_CTRL ||
-       usVKey == VK_ALTGRAF)) return PR_FALSE;
+  // It appears we're not supposed to transmit shift, control & alt events
+  // to gecko.  Shrug.
+  //
+  // this is what gtk is doing...
+  if (fsFlags & KC_VIRTUALKEY && !(fsFlags & KC_KEYUP) &&
+      (usVKey == VK_SHIFT || usVKey == VK_CTRL || usVKey == VK_ALTGRAF) ) {
+    return PR_FALSE;
+  }
 
-   // My gosh this is ugly
-   // Workaround bug where using Alt+Esc let an Alt key creep through
-   // Only handle alt by itself if the LONEKEY bit is set
-   if ((fsFlags & KC_VIRTUALKEY) &&
-       (usVKey == VK_ALT) &&
-       !usChar && 
-       ((fsFlags & KC_LONEKEY) == 0) &&
-       (fsFlags & KC_KEYUP)) {
-         return PR_FALSE;
-       }
+  // My gosh this is ugly
+  // Workaround bug where using Alt+Esc let an Alt key creep through
+  // Only handle alt by itself if the LONEKEY bit is set
+  if ((fsFlags & KC_VIRTUALKEY) && (usVKey == VK_ALT) && !usChar && 
+      ((fsFlags & KC_LONEKEY) == 0) && (fsFlags & KC_KEYUP)) {
+    return PR_FALSE;
+  }
 
    // Now check if it's a dead-key
-   if( fsFlags & KC_DEADKEY)
-   {
-      // XXX CUA says we're supposed to give some kind of feedback `display the
-      //     dead key glyph'.  I'm not sure if we can use the COMPOSE messages
-      //     to do this -- it should really be done by someone who can test it
-      //     & has some idea what `ought' to happen...
+  if (fsFlags & KC_DEADKEY) {
+    // CUA says we're supposed to give some kind of feedback `display
+    // the dead key glyph'.  I'm not sure if we can use the COMPOSE
+    // messagesto do this -- it should really be done by someone who can
+    // test it & has some idea what `ought' to happen...
+    return PR_TRUE;
+  }
 
-      return PR_TRUE;
-   }
+  // Now dispatch a keyup/keydown event.  This one is *not* meant to
+  // have the unicode charcode in.
+  nsPoint point(0,0);
+  nsKeyEvent event(PR_TRUE, (fsFlags & KC_KEYUP) ? NS_KEY_UP : NS_KEY_DOWN,
+                   this);
+  InitEvent(event, &point);
+  event.keyCode   = WMChar2KeyCode(mp1, mp2);
+  event.isShift   = (fsFlags & KC_SHIFT) ? PR_TRUE : PR_FALSE;
+  event.isControl = (fsFlags & KC_CTRL) ? PR_TRUE : PR_FALSE;
+  event.isAlt     = (fsFlags & KC_ALT) ? PR_TRUE : PR_FALSE;
+  event.isMeta    = PR_FALSE;
+  event.charCode = 0;
 
-   // Now dispatch a keyup/keydown event.  This one is *not* meant to
-   // have the unicode charcode in.
+  // Checking for a scroll mouse event vs. a keyboard event
+  // The way we know this is that the repeat count is 0 and
+  // the key is not physically down
+  // unfortunately, there is an exception here - if alt or ctrl are
+  // held down, repeat count is set so we have to add special checks for them
+  if (((event.keyCode == NS_VK_UP) || (event.keyCode == NS_VK_DOWN)) &&
+      !(fsFlags & KC_KEYUP) &&
+      ((CHAR3FROMMP(mp1) == 0) || fsFlags & KC_CTRL || fsFlags & KC_ALT) ) {
+    if (!(WinGetPhysKeyState(HWND_DESKTOP, uchScan) & 0x8000)) {
+      MPARAM mp2;
+      if (event.keyCode == NS_VK_UP)
+        mp2 = MPFROM2SHORT(0, SB_LINEUP);
+      else
+        mp2 = MPFROM2SHORT(0, SB_LINEDOWN);
+      WinSendMsg(mWnd, WM_VSCROLL, 0, mp2);
+      return FALSE;
+    }
+  }
 
-   nsPoint point(0,0);
-   nsKeyEvent event(PR_TRUE, (fsFlags & KC_KEYUP) ? NS_KEY_UP : NS_KEY_DOWN,
-                    this);
-   InitEvent( event, &point);
-   event.keyCode   = WMChar2KeyCode( mp1, mp2);
-   event.isShift   = (fsFlags & KC_SHIFT) ? PR_TRUE : PR_FALSE;
-   event.isControl = (fsFlags & KC_CTRL) ? PR_TRUE : PR_FALSE;
-   event.isAlt     = (fsFlags & KC_ALT) ? PR_TRUE : PR_FALSE;
-   event.isMeta    = PR_FALSE;
-   event.charCode = 0;
+  pressEvent = event;
+  PRBool rc = DispatchWindowEvent(&event);
 
-   /* Checking for a scroll mouse event vs. a keyboard event */
-   /* The way we know this is that the repeat count is 0 and */
-   /* the key is not physically down */
-   /* unfortunately, there is an exception here - if alt or ctrl are */
-   /* held down, repeat count is set so we have to add special checks for them */
-   if (((event.keyCode == NS_VK_UP) || (event.keyCode == NS_VK_DOWN)) &&
-       (!(fsFlags & KC_KEYUP))
-       && ((CHAR3FROMMP(mp1) == 0) || fsFlags & KC_CTRL || fsFlags & KC_ALT)
-       ) {
-      if (!(WinGetPhysKeyState(HWND_DESKTOP, CHAR4FROMMP(mp1)) & 0x8000)) {
-         MPARAM mp2;
-         if (event.keyCode == NS_VK_UP)
-            mp2 = MPFROM2SHORT(0, SB_LINEUP);
-         else
-            mp2 = MPFROM2SHORT(0, SB_LINEDOWN);
-         WinSendMsg(mWnd, WM_VSCROLL, 0, mp2);
-         return FALSE;
-      }
-   }
+  // Break off now if this was a key-up.
+  if (fsFlags & KC_KEYUP) {
+    NS_RELEASE(event.widget);
+    return rc;
+  }
 
-   pressEvent = event;
+  // Break off if we've got an "invalid composition" -- that is, the user
+  // typed a deadkey last time, but has now typed something that doesn't
+  // make sense in that context.
+  if (fsFlags & KC_INVALIDCOMP) {
+    mHaveDeadKey = FALSE;
+    // actually, not sure whether we're supposed to abort the keypress
+    //     or process it as though the dead key has been pressed.
+    NS_RELEASE(event.widget);
+    return rc;
+  }
 
-   PRBool rc = DispatchWindowEvent( &event);
+  // Now we need to dispatch a keypress event which has the unicode char.
+  pressEvent.message = NS_KEY_PRESS;
+  if (rc) { // If keydown default was prevented, do same for keypress
+    pressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+  }
 
-   // Break off now if this was a key-up.
-   if( fsFlags & KC_KEYUP)
-   {
-      NS_RELEASE( event.widget);
-      return rc;
-   }
+  if (usChar) {
+    USHORT inbuf[2];
+    inbuf[0] = usChar;
+    inbuf[1] = '\0';
 
-   // Break off if we've got an "invalid composition" -- that is, the user
-   // typed a deadkey last time, but has now typed something that doesn't
-   // make sense in that context.
-   if( fsFlags & KC_INVALIDCOMP)
-   {
-      mHaveDeadKey = FALSE;
-      // XXX actually, not sure whether we're supposed to abort the keypress
-      //     or process it as though the dead key has been pressed.
-      NS_RELEASE( event.widget);
-      return rc;
-   }
+    nsAutoChar16Buffer outbuf;
+    PRInt32 bufLength;
+    MultiByteToWideChar(0, (const char*)inbuf, 2, outbuf, bufLength);
 
-   // Now we need to dispatch a keypress event which has the unicode char.
+    pressEvent.charCode = outbuf.get()[0];
 
-   pressEvent.message = NS_KEY_PRESS;
-   if (rc) { // If keydown default was prevented, do same for keypress
-     pressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
-   }
-
-   if( usChar)
-   {
-      USHORT inbuf[2];
-      inbuf[0] = usChar;
-      inbuf[1] = '\0';
-
-      nsAutoChar16Buffer outbuf;
-      PRInt32 bufLength;
-      MultiByteToWideChar(0, (const char*)inbuf, 2, outbuf, bufLength);
-
-      pressEvent.charCode = outbuf.get()[0];
-
-      if (pressEvent.isControl && !(fsFlags & (KC_VIRTUALKEY | KC_DEADKEY))) {
-        if (!pressEvent.isShift && (pressEvent.charCode >= 'A' && pressEvent.charCode <= 'Z'))
-        {
+    if (pressEvent.isControl && !(fsFlags & (KC_VIRTUALKEY | KC_DEADKEY))) {
+      if (!pressEvent.isShift && (pressEvent.charCode >= 'A' && pressEvent.charCode <= 'Z')) {
           pressEvent.charCode = tolower(pressEvent.charCode);
         }
-        if (pressEvent.isShift && (pressEvent.charCode >= 'a' && pressEvent.charCode <= 'z'))
-        {
+      if (pressEvent.isShift && (pressEvent.charCode >= 'a' && pressEvent.charCode <= 'z')) {
           pressEvent.charCode = toupper(pressEvent.charCode);
         }
         pressEvent.keyCode = 0;
-      } else if( !pressEvent.isControl && !pressEvent.isAlt && pressEvent.charCode != 0)
-      {
-         if ( !(fsFlags & KC_VIRTUALKEY) || 
-              ((fsFlags & KC_CHAR) && (pressEvent.keyCode == 0)) )
-         {
-//            pressEvent.isShift = PR_FALSE;
-            pressEvent.keyCode = 0;
-         }
-         else if (usVKey == VK_SPACE)
-         {
-//            pressEvent.isShift = PR_FALSE;
-         }
-         else  // Real virtual key 
-         {
-            pressEvent.charCode = 0;
-         }
+    } else if (!pressEvent.isControl && !pressEvent.isAlt && pressEvent.charCode != 0) {
+      if (!(fsFlags & KC_VIRTUALKEY) || // not virtual key
+          ((fsFlags & KC_CHAR) && (pressEvent.keyCode == 0)) ) {
+        pressEvent.keyCode = 0;
+      } else if (usVKey == VK_SPACE) {
+        // space key, do nothing here
+      } else if ((fsFlags & KC_VIRTUALKEY) &&
+                 isNumPadScanCode(uchScan) && pressEvent.keyCode != 0 && isNumlockOn) {
+        // this is NumLock+Numpad (no Alt), handle this like a normal number
+        pressEvent.keyCode = 0;
+      } else { // Real virtual key 
+        pressEvent.charCode = 0;
       }
-      rc = DispatchWindowEvent( &pressEvent);
-   }
+    }
+    rc = DispatchWindowEvent(&pressEvent);
+  }
 
-   NS_RELEASE( pressEvent.widget);
-   return rc;
+  NS_RELEASE(pressEvent.widget);
+  return rc;
 }
 
 void nsWindow::ConstrainZLevel(HWND *aAfter) {
@@ -2831,12 +2813,13 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           if (WinGetKeyState(HWND_DESKTOP, VK_BUTTON1) & 
               WinGetKeyState(HWND_DESKTOP, VK_BUTTON2) &
               0x8000) {
-            PRBool isCopy = FALSE;
+            PRBool isCopy = PR_FALSE;
             if (abs(XFROMMP(mp1) - gLastButton1Down.x) >
                   (WinQuerySysValue(HWND_DESKTOP, SV_CXMOTIONSTART) / 2) ||
                 abs(YFROMMP(mp1) - gLastButton1Down.y) >
-                  (WinQuerySysValue(HWND_DESKTOP, SV_CYMOTIONSTART) / 2))
-              isCopy = TRUE;
+                  (WinQuerySysValue(HWND_DESKTOP, SV_CYMOTIONSTART) / 2)) {
+              isCopy = PR_TRUE;
+            }
 
             nsKeyEvent event(PR_TRUE, NS_KEY_PRESS, this);
             nsPoint point(0,0);
@@ -2854,6 +2837,16 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
             event.isMeta    = PR_FALSE;
             event.eventStructType = NS_KEY_EVENT;
             event.charCode = 0;
+            // OS/2 does not set the Shift, Ctrl, or Alt on keyup
+            if (SHORT1FROMMP(mp1) & (KC_VIRTUALKEY|KC_KEYUP|KC_LONEKEY)) {
+              USHORT usVKey = SHORT2FROMMP(mp2);
+              if (usVKey == VK_SHIFT)
+                event.isShift = PR_TRUE;
+              if (usVKey == VK_CTRL)
+                event.isControl = PR_TRUE;
+              if (usVKey == VK_ALTGRAF || usVKey == VK_ALT)
+                event.isAlt = PR_TRUE;
+            }
             result = DispatchWindowEvent( &event);
           }
           break;
@@ -4050,92 +4043,138 @@ PRBool nsWindow::ReleaseIfDragHPS(HPS aHps)
 // --------------------------------------------------------------------------
 
 // 'Native data'
-// function to translate from a WM_CHAR to an NS VK_ constant ---------------
-PRUint32 WMChar2KeyCode( MPARAM mp1, MPARAM mp2)
+// function to translate from a WM_CHAR to an NS_VK_ constant ---------------
+PRUint32 WMChar2KeyCode(MPARAM mp1, MPARAM mp2)
 {
-   PRUint32 rc = 0;
-   USHORT   flags = SHORT1FROMMP( mp1);
+  PRUint32 rc = SHORT1FROMMP(mp2);  // character code
+  PRUint32 rcmask = rc & 0x00FF;    // masked character code for key up events
+  USHORT sc = CHAR4FROMMP(mp1);     // scan code
+  USHORT flags = SHORT1FROMMP(mp1); // flag word
 
-   // First check for characters.
-   // This is complicated by keystrokes such as Ctrl+K not having the KC_CHAR
-   // bit set, but thankfully they do have the character actually there.
-   //
-   // So go on the assumption that `if not vkey or deadkey then char'
-   //
-   if( !(flags & (KC_VIRTUALKEY | KC_DEADKEY)))
-   {
-      rc = SHORT1FROMMP(mp2);
+  // First check for characters.
+  // This is complicated by keystrokes such as Ctrl+K not having the KC_CHAR
+  // bit set, but thankfully they do have the character actually there.
+  //
+  // Assume that `if not vkey or deadkey or valid number then char'
+  if (!(flags & (KC_VIRTUALKEY | KC_DEADKEY)) ||
+      (rcmask >= '0' && rcmask <= '9' &&             // handle keys on Numpad, too,
+       (isNumPadScanCode(sc) ? isNumlockOn : 1)) ) { // if NumLock is on
+    if (flags & KC_KEYUP) { // On OS/2 the scancode is in the upper byte of
+                            // usChar when KC_KEYUP is set so mask it off
+      rc = rcmask;
+    } else { // not KC_KEYUP
+      if (! (flags & KC_CHAR)) {
+        if ((flags & KC_ALT) || (flags & KC_CTRL))
+          rc = rcmask;
+        else
+          rc = 0;
+      }
+    }
 
-      if( rc < 0xFF)
-      {
-         switch( rc)
-         {
-            case ';':  rc = NS_VK_SEMICOLON;     break;
-            case '=':  rc = NS_VK_EQUALS;        break;
-            case '*':  rc = NS_VK_MULTIPLY;      break;
-            case '+':  rc = NS_VK_ADD;           break;
-            case '-':  rc = NS_VK_SUBTRACT;      break;
-            case '.':  rc = NS_VK_PERIOD;        break; // NS_VK_DECIMAL ?
-            case '|':  rc = NS_VK_SEPARATOR;     break;
-            case ',':  rc = NS_VK_COMMA;         break;
-            case '/':  rc = NS_VK_SLASH;         break; // NS_VK_DIVIDE ?
-            case '`':  rc = NS_VK_BACK_QUOTE;    break;
-            case '(':  rc = NS_VK_OPEN_BRACKET;  break;
-            case '\\': rc = NS_VK_BACK_SLASH;    break;
-            case ')':  rc = NS_VK_CLOSE_BRACKET; break;
-            case '\'': rc = NS_VK_QUOTE;         break;
-         }
+    if (rc < 0xFF) {
+      if (rc >= 'a' && rc <= 'z') { // The DOM_VK are for upper case only so
+                                    // if rc is lower case upper case it.
+        rc = rc - 'a' + NS_VK_A;
+      } else if (rc >= 'A' && rc <= 'Z') { // Upper case
+        rc = rc - 'A' + NS_VK_A;
+      } else if (rc >= '0' && rc <= '9') {
+        // Number keys, including Numpad if NumLock is not set
+        rc = rc - '0' + NS_VK_0;
+      } else {
+        /* For some characters, map the scan code to the NS_VK value */
+        /* This only happens in the char case NOT the VK case! */
+        switch (sc) {
+          case 0x02: rc = NS_VK_1;             break;
+          case 0x03: rc = NS_VK_2;             break;
+          case 0x04: rc = NS_VK_3;             break;
+          case 0x05: rc = NS_VK_4;             break;
+          case 0x06: rc = NS_VK_5;             break;
+          case 0x07: rc = NS_VK_6;             break;
+          case 0x08: rc = NS_VK_7;             break;
+          case 0x09: rc = NS_VK_8;             break;
+          case 0x0A: rc = NS_VK_9;             break;
+          case 0x0B: rc = NS_VK_0;             break;
+          case 0x0D: rc = NS_VK_EQUALS;        break;
+          case 0x1A: rc = NS_VK_OPEN_BRACKET;  break;
+          case 0x1B: rc = NS_VK_CLOSE_BRACKET; break;
+          case 0x27: rc = NS_VK_SEMICOLON;     break;
+          case 0x28: rc = NS_VK_QUOTE;         break;
+          case 0x29: rc = NS_VK_BACK_QUOTE;    break;
+          case 0x2B: rc = NS_VK_BACK_SLASH;    break;
+          case 0x33: rc = NS_VK_COMMA;         break;
+          case 0x34: rc = NS_VK_PERIOD;        break;
+          case 0x35: rc = NS_VK_SLASH;         break;
+          case 0x37: rc = NS_VK_MULTIPLY;      break;
+          case 0x4A: rc = NS_VK_SUBTRACT;      break;
+          case 0x4C: rc = NS_VK_CLEAR;         break; // numeric case is handled above
+          case 0x4E: rc = NS_VK_ADD;           break;
+          case 0x5C: rc = NS_VK_DIVIDE;        break;
+          default: break;
+        } // switch
+      } // else
+    } // if (rc < 0xFF)
+  } else if (flags & KC_VIRTUALKEY) {
+    USHORT vk = SHORT2FROMMP( mp2);
+    if (flags & KC_KEYUP) { // On OS/2 there are extraneous bits in the upper byte of
+                            // usChar when KC_KEYUP is set so mask them off
+      rc = rcmask;
+    }
+    if (isNumPadScanCode(sc) &&
+        (((flags & KC_ALT) && (sc != PMSCAN_PADPERIOD)) ||
+          ((flags & (KC_CHAR | KC_SHIFT)) == KC_CHAR)  ||
+          ((flags & KC_KEYUP) && rc != 0) )) {
+      CHAR numpadMap[] = {NS_VK_NUMPAD7, NS_VK_NUMPAD8, NS_VK_NUMPAD9, 0,
+                          NS_VK_NUMPAD4, NS_VK_NUMPAD5, NS_VK_NUMPAD6, 0,
+                          NS_VK_NUMPAD1, NS_VK_NUMPAD2, NS_VK_NUMPAD3,
+                          NS_VK_NUMPAD0, NS_VK_DECIMAL};
+      // If this is the Numpad must not return VK for ALT+Numpad or ALT+NumLock+Numpad
+      // NumLock+Numpad is OK
+      if (numpadMap[sc - PMSCAN_PAD7] != 0) { // not plus or minus on Numpad
+        if (flags & KC_ALT) // do not react on Alt plus ASCII-code sequences
+          rc = 0;
+        else
+          rc = numpadMap[sc - PMSCAN_PAD7];
+      } else {                                // plus or minus of Numpad
+        rc = 0; // No virtual key for Alt+Numpad or NumLock+Numpad
       }
-   }
-   else if( flags & KC_VIRTUALKEY)
-   {
-      USHORT vk = SHORT2FROMMP( mp2);
-      if( isNumPadScanCode(CHAR4FROMMP(mp1)) && 
-          ( ((flags & KC_ALT) && (CHAR4FROMMP(mp1) != PMSCAN_PADPERIOD)) || 
-            ((flags & (KC_CHAR | KC_SHIFT)) == KC_CHAR) ) )
-      {
-         // No virtual key for Alt+NumPad or NumLock+NumPad
-         rc = 0;
+    } else if (!(flags & KC_CHAR) || isNumPadScanCode(sc) ||
+               (vk == VK_BACKSPACE) || (vk == VK_TAB) || (vk == VK_BACKTAB) ||
+               (vk == VK_ENTER) || (vk == VK_NEWLINE) || (vk == VK_SPACE)) {
+      if (vk >= VK_F1 && vk <= VK_F24) {
+        rc = NS_VK_F1 + (vk - VK_F1);
       }
-      else if( !(flags & KC_CHAR) || isNumPadScanCode(CHAR4FROMMP(mp1)) ||
-          (vk == VK_BACKSPACE) || (vk == VK_TAB) || (vk == VK_BACKTAB) ||
-          (vk == VK_ENTER) || (vk == VK_NEWLINE) || (vk == VK_SPACE) )
-      {
-         if( vk >= VK_F1 && vk <= VK_F24)
-            rc = NS_VK_F1 + (vk - VK_F1);
-         else switch( vk)
-         {
-            case VK_NUMLOCK:   rc = NS_VK_NUM_LOCK; break;
-            case VK_SCRLLOCK:  rc = NS_VK_SCROLL_LOCK; break;
-            case VK_ESC:       rc = NS_VK_ESCAPE; break; // NS_VK_CANCEL
-            case VK_BACKSPACE: rc = NS_VK_BACK; break;
-            case VK_TAB:       rc = NS_VK_TAB; break;
-            case VK_BACKTAB:   rc = NS_VK_TAB; break; // layout tests for isShift
-            case VK_CLEAR:     rc = NS_VK_CLEAR; break;
-            case VK_NEWLINE:   rc = NS_VK_RETURN; break;
-            case VK_ENTER:     rc = NS_VK_RETURN; break;
-            case VK_SHIFT:     rc = NS_VK_SHIFT; break;
-            case VK_CTRL:      rc = NS_VK_CONTROL; break;
-            case VK_ALT:       rc = NS_VK_ALT; break;
-            case VK_PAUSE:     rc = NS_VK_PAUSE; break;
-            case VK_CAPSLOCK:  rc = NS_VK_CAPS_LOCK; break;
-            case VK_SPACE:     rc = NS_VK_SPACE; break;
-            case VK_PAGEUP:    rc = NS_VK_PAGE_UP; break;
-            case VK_PAGEDOWN:  rc = NS_VK_PAGE_DOWN; break;
-            case VK_END:       rc = NS_VK_END; break;
-            case VK_HOME:      rc = NS_VK_HOME; break;
-            case VK_LEFT:      rc = NS_VK_LEFT; break;
-            case VK_UP:        rc = NS_VK_UP; break;
-            case VK_RIGHT:     rc = NS_VK_RIGHT; break;
-            case VK_DOWN:      rc = NS_VK_DOWN; break;
-            case VK_PRINTSCRN: rc = NS_VK_PRINTSCREEN; break;
-            case VK_INSERT:    rc = NS_VK_INSERT; break;
-            case VK_DELETE:    rc = NS_VK_DELETE; break;
-         }
-      }
-   }
+      else switch (vk) {
+        case VK_NUMLOCK:   rc = NS_VK_NUM_LOCK; break;
+        case VK_SCRLLOCK:  rc = NS_VK_SCROLL_LOCK; break;
+        case VK_ESC:       rc = NS_VK_ESCAPE; break; // NS_VK_CANCEL
+        case VK_BACKSPACE: rc = NS_VK_BACK; break;
+        case VK_TAB:       rc = NS_VK_TAB; break;
+        case VK_BACKTAB:   rc = NS_VK_TAB; break; // layout tests for isShift
+        case VK_CLEAR:     rc = NS_VK_CLEAR; break;
+        case VK_NEWLINE:   rc = NS_VK_RETURN; break;
+        case VK_ENTER:     rc = NS_VK_RETURN; break;
+        case VK_SHIFT:     rc = NS_VK_SHIFT; break;
+        case VK_CTRL:      rc = NS_VK_CONTROL; break;
+        case VK_ALT:       rc = NS_VK_ALT; break;
+        case VK_PAUSE:     rc = NS_VK_PAUSE; break;
+        case VK_CAPSLOCK:  rc = NS_VK_CAPS_LOCK; break;
+        case VK_SPACE:     rc = NS_VK_SPACE; break;
+        case VK_PAGEUP:    rc = NS_VK_PAGE_UP; break;
+        case VK_PAGEDOWN:  rc = NS_VK_PAGE_DOWN; break;
+        case VK_END:       rc = NS_VK_END; break;
+        case VK_HOME:      rc = NS_VK_HOME; break;
+        case VK_LEFT:      rc = NS_VK_LEFT; break;
+        case VK_UP:        rc = NS_VK_UP; break;
+        case VK_RIGHT:     rc = NS_VK_RIGHT; break;
+        case VK_DOWN:      rc = NS_VK_DOWN; break;
+        case VK_PRINTSCRN: rc = NS_VK_PRINTSCREEN; break;
+        case VK_INSERT:    rc = NS_VK_INSERT; break;
+        case VK_DELETE:    rc = NS_VK_DELETE; break;
+      } // switch
+    }
+  } // KC_VIRTUALKEY
 
-   return rc;
+  return rc;
 }
 
 PCSZ nsWindow::WindowClass()

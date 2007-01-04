@@ -358,6 +358,7 @@ protected:
 #define PM2NS_PARENT NS2PM_PARENT
 #define PM2NS NS2PM
 
+#define PMSCAN_PADMULT      0x37
 #define PMSCAN_PAD7         0x47
 #define PMSCAN_PAD8         0x48
 #define PMSCAN_PAD9         0x49
@@ -371,11 +372,15 @@ protected:
 #define PMSCAN_PAD3         0x51
 #define PMSCAN_PAD0         0x52
 #define PMSCAN_PADPERIOD    0x53
+#define PMSCAN_PADDIV       0x5c
 
 #define isNumPadScanCode(scanCode) !( (scanCode < PMSCAN_PAD7) ||      \
                                       (scanCode > PMSCAN_PADPERIOD) || \
+                                      (scanCode == PMSCAN_PADMULT) ||  \
+                                      (scanCode == PMSCAN_PADDIV) ||   \
                                       (scanCode == PMSCAN_PADMINUS) || \
                                       (scanCode == PMSCAN_PADPLUS) )
+#define isNumlockOn (BOOL)WinGetKeyState(HWND_DESKTOP, VK_NUMLOCK) & 0x0001
 
 extern PRUint32 WMChar2KeyCode( MPARAM mp1, MPARAM mp2);
 
