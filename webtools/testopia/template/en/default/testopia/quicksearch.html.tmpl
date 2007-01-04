@@ -13,29 +13,100 @@
   #
   # The Initial Developer of the Original Code is Greg Hendricks.
   # Portions created by Greg Hendricks are Copyright (C) 2001
-  # Novell. All Rights Reserved.
+  # Greg Hendricks. All Rights Reserved.
   #
   # Contributor(s): Greg Hendricks <ghendricks@novell.com>
   #%]
-  
-<script type="text/javascript"> 
-//  var djConfig = {
-//    isDebug: true};
-</script>
 
-<script src="testopia/dojo/dojo.js" type="text/javascript"></script>
-<script type="text/javascript">
-  dojo.require("dojo.widget.ComboBox");
-</script>
-Search for Environments:
-<input dojoType="combobox" 
-       value="Please Start Typing"
-       dataUrl="tr_quicksearch.cgi?action=getenv&search=%{searchString}" 
-       mode="remote"
-       autoComplete="false"
-       name="environment"
-       id="environment"
-       maxListLength="10"
-       style="font-size: xsmall;"
-       onValueChanged="alert('CHANGED');">
+[% PROCESS global/header.html.tmpl %]
 
+<form action="tr_quicksearch.cgi"><b>Testopia Quick Search:</b> <input
+  name="search"> <input type="submit"></form>
+<br>
+<br>
+<table border="1" cellpadding="3" cellspacing="1">
+  <thead>
+    <tr valign="TOP">
+      <th width="50%">Object</th>
+      <th width="50%">Prefix</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr valign="TOP">
+      <td width="50%">
+      <p align="LEFT"><b>TEST CASE</b>
+      </td>
+      <td width="50%">(Optional for cases)
+      <ul>
+        <li>case</li>
+        <li>TC</li>
+        <li>c</li>
+      </ul>
+      </td>
+    </tr>
+    <tr valign="TOP">
+      <td width="50%">
+      <p align="LEFT"><b>TEST PLAN</b>
+      </td>
+      <td width="50%">
+      <ul>
+        <li>plan</li>
+        <li>TP</li>
+        <li>p</li>
+      </ul>
+      </td>
+    </tr>
+    <tr valign="TOP">
+      <td width="50%">
+      <p align="LEFT"><b>TEST RUN</b>
+      </td>
+      <td width="50%">
+      <ul>
+        <li>run</li>
+        <li>TR</li>
+        <li>r</li>
+      </ul>
+      </td>
+    </tr>
+    <tr valign="TOP">
+      <td width="50%">
+      <p align="LEFT"><b>TEST RUN ENVIRONMENT</b>
+      </td>
+      <td width="50%">
+      <ul>
+        <li>env</li>
+        <li>TE</li>
+        <li>e</li>
+      </ul>
+      </td>
+    </tr>
+    <tr valign="TOP">
+      <td width="50%">
+      <p align="LEFT"><b>TEST CASE-RUN</b>
+      </td>
+      <td width="50%">
+      <ul>
+        <li>caserun</li>
+        <li>TCR</li>
+        <li>cr</li>
+      </ul>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
+
+<b>Examples:</b><br>
+To find test run #45 you could enter
+<b>run: 45 or, tr-45, or simply r 45.</b> The delimiters (: and -) 
+are optional but a space is required if they are not used.
+<p style="font-weight: medium">To find environments with the word
+'linux' in the name, you could enter <b>e:linux</b></p>
+<p style="font-weight: medium">Quick search searches for the object
+by ID number or by searching the summary or name for the search terms
+provided.</p>
+<p style="font-weight: medium">Leaving off the prefix will search
+for Test Cases. </p>
+
+[% PROCESS global/footer.html.tmpl %]
