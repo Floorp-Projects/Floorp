@@ -351,7 +351,7 @@ FindSigningCert(CERTCertDBHandle *certHandle, CERTSignedCrl *signCrl,
 }
 
 static CERTSignedCrl*
-DuplicateModCrl(PRArenaPool *arena, CERTCertDBHandle *certHandle,
+CreateModifiedCRLCopy(PRArenaPool *arena, CERTCertDBHandle *certHandle,
                 CERTCertificate **cert, char *certNickName,
                 PRFileDesc *inFile, PRInt32 decodeOptions,
                 PRInt32 importOptions)
@@ -365,7 +365,7 @@ DuplicateModCrl(PRArenaPool *arena, CERTCertDBHandle *certHandle,
     PORT_Assert(arena != NULL && certHandle != NULL &&
                 certNickName != NULL);
     if (!arena || !certHandle || !certNickName) {
-        SECU_PrintError(progName, "DuplicateModCrl: invalid args\n");
+        SECU_PrintError(progName, "CreateModifiedCRLCopy: invalid args\n");
         return NULL;
     }
 
@@ -429,7 +429,15 @@ DuplicateModCrl(PRArenaPool *arena, CERTCertDBHandle *certHandle,
         goto loser;
     }  
 
-    signCrl->arena = arena;    
+    /* Make sure the update time is current. It can be modified later
+     * by "update <time>" command from crl generation script */
+    rv = DER_EncodeTimeChoice(arena, &signCrl->crl.lastUpdate, PR_Now());
+    if (rv != SECSuccess) {
+        SECU_PrintError(progName, "fail to encode current time\n");
+        goto loser;
+    }
+
+    signCrl->arena = arena;
 
   loser:
     SECITEM_FreeItem(&crlDER, PR_FALSE);
@@ -675,7 +683,7 @@ GenerateCRL (CERTCertDBHandle *certHandle, char *certNickName,
     }
 
     if (modifyFlag == PR_TRUE) {
-        signCrl = DuplicateModCrl(arena, certHandle, &cert, certNickName,
+        signCrl = CreateModifiedCRLCopy(arena, certHandle, &cert, certNickName,
                                          inFile, decodeOptions, importOptions);
         if (signCrl == NULL) {
             goto loser;
