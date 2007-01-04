@@ -39,8 +39,7 @@
 
 #include "cairo-nquartz.h"
 
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
+#if defined(MAC_OS_X_VERSION_10_4) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
 #include <cups/cups.h>
 #else
 /* stupid apple doesn't bother to include cups.h in anything lower than
