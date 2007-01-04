@@ -37,7 +37,7 @@
 /*
  * Test program for client-side OCSP.
  *
- * $Id: ocspclnt.c,v 1.7 2004/04/25 15:02:47 gerv%gerv.net Exp $
+ * $Id: ocspclnt.c,v 1.8 2007/01/04 20:07:33 alexei.volkov.bugs%sun.com Exp $
  */
 
 #include "secutil.h"
@@ -78,18 +78,18 @@ synopsis (char *program_name)
 		"\t%s -P [-d <dir>]\n",
 		program_name);
     PR_fprintf (pr_stderr,
-		"\t%s -r <name> [-L] [-s <name>] [-d <dir>]\n",
+		"\t%s -r <name> [-a] [-L] [-s <name>] [-d <dir>]\n",
 		program_name);
     PR_fprintf (pr_stderr,
-		"\t%s -R <name> [-l <location>] [-s <name>] [-d <dir>]\n",
+		"\t%s -R <name> [-a] [-l <location>] [-s <name>] [-d <dir>]\n",
 		program_name);
     PR_fprintf (pr_stderr,
-		"\t%s -S <name> [-l <location> -t <name>]\n",
+		"\t%s -S <name> [-a] [-l <location> -t <name>]\n",
 		program_name);
     PR_fprintf (pr_stderr,
 		"\t\t [-s <name>] [-w <time>] [-d <dir>]\n");
     PR_fprintf (pr_stderr,
-		"\t%s -V <name> -u <usage> [-l <location> -t <name>]\n",
+		"\t%s -V <name> [-a] -u <usage> [-l <location> -t <name>]\n",
 		program_name);
     PR_fprintf (pr_stderr,
 		"\t\t [-s <name>] [-w <time>] [-d <dir>]\n");
@@ -132,7 +132,13 @@ long_usage (char *program_name)
     PR_fprintf (pr_stderr,
 		"  %-13s Fully verify cert \"nickname\", w/ status check\n",
 		"-V nickname");
+    PR_fprintf (pr_stderr,
+		"\n     %-10s also can be the name of the file with DER or\n"
+                "  %-13s PEM(use -a option) cert encoding\n", "nickname", "");
     PR_fprintf (pr_stderr, "Options:\n");
+    PR_fprintf (pr_stderr,
+		"  %-13s Decode input cert from PEM format. DER is default\n",
+		"-a");
     PR_fprintf (pr_stderr,
 		"  %-13s Add the service locator extension to the request\n",
 		"-L");
@@ -249,21 +255,16 @@ loser:
  * is "name") and dump it out.
  */
 static SECStatus
-create_request (FILE *out_file, CERTCertDBHandle *handle, const char *cert_name,
+create_request (FILE *out_file, CERTCertDBHandle *handle, CERTCertificate *cert,
 		PRBool add_service_locator, PRBool add_acceptable_responses)
 {
-    CERTCertificate *cert = NULL;
     CERTCertList *certs = NULL;
     CERTOCSPRequest *request = NULL;
     int64 now = PR_Now();
     SECItem *encoding = NULL;
     SECStatus rv = SECFailure;
 
-    if (handle == NULL || cert_name == NULL)
-	goto loser;
-
-    cert = CERT_FindCertByNicknameOrEmailAddr (handle, (char *) cert_name);
-    if (cert == NULL)
+    if (handle == NULL || cert == NULL)
 	goto loser;
 
     /*
@@ -309,8 +310,6 @@ loser:
 	CERT_DestroyOCSPRequest(request);
     if (certs != NULL)
 	CERT_DestroyCertList (certs);
-    if (cert != NULL)
-	CERT_DestroyCertificate (cert);
 
     return rv;
 }
@@ -323,10 +322,9 @@ loser:
  * via the AuthorityInfoAccess URL in the cert.
  */
 static SECStatus
-dump_response (FILE *out_file, CERTCertDBHandle *handle, const char *cert_name,
+dump_response (FILE *out_file, CERTCertDBHandle *handle, CERTCertificate *cert,
 	       const char *responder_url)
 {
-    CERTCertificate *cert = NULL;
     CERTCertList *certs = NULL;
     char *loc = NULL;
     int64 now = PR_Now();
@@ -334,11 +332,7 @@ dump_response (FILE *out_file, CERTCertDBHandle *handle, const char *cert_name,
     SECStatus rv = SECFailure;
     PRBool includeServiceLocator;
 
-    if (handle == NULL || cert_name == NULL)
-	goto loser;
-
-    cert = CERT_FindCertByNicknameOrEmailAddr (handle, (char *) cert_name);
-    if (cert == NULL)
+    if (handle == NULL || cert == NULL)
 	goto loser;
 
     if (responder_url != NULL) {
@@ -385,8 +379,6 @@ loser:
 	CERT_DestroyCertList (certs);
     if (loc != NULL && loc != responder_url)
 	PORT_Free (loc);
-    if (cert != NULL)
-	CERT_DestroyCertificate (cert);
 
     return rv;
 }
@@ -398,16 +390,12 @@ loser:
  */
 static SECStatus
 get_cert_status (FILE *out_file, CERTCertDBHandle *handle,
-		 const char *cert_name, int64 verify_time)
+		 CERTCertificate *cert, const char *cert_name,
+                 int64 verify_time)
 {
-    CERTCertificate *cert = NULL;
     SECStatus rv = SECFailure;
 
-    if (handle == NULL || cert_name == NULL)
-	goto loser;
-
-    cert = CERT_FindCertByNicknameOrEmailAddr (handle, (char *) cert_name);
-    if (cert == NULL)
+    if (handle == NULL || cert == NULL)
 	goto loser;
 
     rv = CERT_CheckOCSPStatus (handle, cert, verify_time, NULL);
@@ -427,8 +415,6 @@ get_cert_status (FILE *out_file, CERTCertDBHandle *handle,
     rv = SECSuccess;
 
 loser:
-    if (cert != NULL)
-	CERT_DestroyCertificate (cert);
 
     return rv;
 }
@@ -440,18 +426,13 @@ loser:
  * certificate verification API and let it do all the work.
  */
 static SECStatus
-verify_cert (FILE *out_file, CERTCertDBHandle *handle, const char *cert_name,
-	     SECCertUsage cert_usage, int64 verify_time)
+verify_cert (FILE *out_file, CERTCertDBHandle *handle, CERTCertificate *cert,
+	     const char *cert_name, SECCertUsage cert_usage, int64 verify_time)
 {
-    CERTCertificate *cert = NULL;
     SECStatus rv = SECFailure;
 
-    if (handle == NULL || cert_name == NULL)
-	goto loser;
-
-    cert = CERT_FindCertByNicknameOrEmailAddr (handle, (char *) cert_name);
-    if (cert == NULL)
-	goto loser;
+    if (handle == NULL || cert == NULL)
+	return rv;
 
     rv = CERT_VerifyCert (handle, cert, PR_TRUE, cert_usage, verify_time,
 			  NULL, NULL);
@@ -470,11 +451,38 @@ verify_cert (FILE *out_file, CERTCertDBHandle *handle, const char *cert_name,
 
     rv = SECSuccess;
 
-loser:
-    if (cert != NULL)
-	CERT_DestroyCertificate (cert);
-
     return rv;
+}
+
+CERTCertificate*
+find_certificate(CERTCertDBHandle *handle, const char *name, PRBool ascii)
+{
+    CERTCertificate *cert = NULL;
+    SECItem der;
+    PRFileDesc *certFile;
+
+    if (handle == NULL || name == NULL)
+        return NULL;
+
+    if (ascii == PR_FALSE) { 
+        /* by default need to check if there is cert nick is given */
+        cert = CERT_FindCertByNicknameOrEmailAddr (handle, (char *) name);
+        if (cert != NULL)
+            return cert;
+    }
+
+    certFile = PR_Open(name, PR_RDONLY, 0);
+    if (certFile == NULL) {
+        return NULL;
+    }
+
+    if (SECU_ReadDERFromFile(&der, certFile, ascii) == SECSuccess) {
+        cert = CERT_DecodeCertFromPackage((char*)der.data, der.len);
+        SECITEM_FreeItem(&der, PR_FALSE);
+    }
+    PR_Close(certFile);
+
+    return cert;
 }
 
 
@@ -945,6 +953,8 @@ main (int argc, char **argv)
     CERTCertDBHandle *handle = NULL;
     SECCertUsage cert_usage;
     int64	 verify_time;
+    CERTCertificate *cert = NULL;
+    PRBool ascii = PR_FALSE;
 
     retval = -1;		/* what we return/exit with on error */
 
@@ -1013,6 +1023,10 @@ main (int argc, char **argv)
 	  case 'V':
 	    vcert = 1;
 	    name = optstate->value;
+	    break;
+
+	  case 'a':
+	    ascii = PR_TRUE;
 	    break;
 
 	  case 'd':
@@ -1174,17 +1188,21 @@ main (int argc, char **argv)
 	    exit (-1);							\
 	}
 
+    if (name) {
+        cert = find_certificate(handle, name, ascii);
+    }
+
     if (crequest) {
 	if (signer_name != NULL) {
 	    NOTYET("-s");
 	}
-	rv = create_request (out_file, handle, name, add_service_locator,
+	rv = create_request (out_file, handle, cert, add_service_locator,
 			     add_acceptable_responses);
     } else if (dresponse) {
 	if (signer_name != NULL) {
 	    NOTYET("-s");
 	}
-	rv = dump_response (out_file, handle, name, responder_url);
+	rv = dump_response (out_file, handle, cert, responder_url);
     } else if (prequest) {
 	rv = print_request (out_file, data);
     } else if (presponse) {
@@ -1193,12 +1211,12 @@ main (int argc, char **argv)
 	if (signer_name != NULL) {
 	    NOTYET("-s");
 	}
-	rv = get_cert_status (out_file, handle, name, verify_time);
+	rv = get_cert_status (out_file, handle, cert, name, verify_time);
     } else if (vcert) {
 	if (signer_name != NULL) {
 	    NOTYET("-s");
 	}
-	rv = verify_cert (out_file, handle, name, cert_usage, verify_time);
+	rv = verify_cert (out_file, handle, cert, name, cert_usage, verify_time);
     }
 
     if (rv != SECSuccess)
@@ -1207,12 +1225,17 @@ main (int argc, char **argv)
 	retval = 0;
 
 nssdone:
+    if (cert) {
+        CERT_DestroyCertificate(cert);
+    }
+
     if (data != NULL) {
 	SECITEM_FreeItem (data, PR_TRUE);
     }
 
     if (handle != NULL) {
-	(void) CERT_DisableOCSPChecking (handle);
+ 	CERT_DisableOCSPDefaultResponder(handle);        
+ 	CERT_DisableOCSPChecking (handle);
     }
 
     if (NSS_Shutdown () != SECSuccess) {
