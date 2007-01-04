@@ -1167,10 +1167,12 @@ EOF_CRLINI
 
   echo "$SCRIPTNAME: Modifying CA CRL by adding one more cert ============"
   sleep 2
+  CRLUPDATE=`date "+%Y%m%d%H%M%SZ"`
   CRL_GRP_DATE=`date "+%Y%m%d%H%M%SZ"`
   CU_ACTION="Modify CRL by adding one more cert"
   crlu -d $CADIR -M -n "TestCA" -f ${R_PWFILE} -o ${CRL_FILE_GRP_1}_or1 \
       -i ${CRL_FILE_GRP_1}_or <<EOF_CRLINI
+update=$CRLUPDATE
 addcert ${CRL_GRP_END} $CRL_GRP_DATE
 EOF_CRLINI
   CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
@@ -1180,6 +1182,7 @@ EOF_CRLINI
       CU_ACTION="Modify CRL (ECC) by adding one more cert"
       crlu -d $CADIR -M -n "TestCA-ec" -f ${R_PWFILE} \
 	  -o ${CRL_FILE_GRP_1}_or1-ec -i ${CRL_FILE_GRP_1}_or-ec <<EOF_CRLINI
+update=$CRLUPDATE
 addcert ${CRL_GRP_END} $CRL_GRP_DATE
 EOF_CRLINI
       CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
@@ -1190,8 +1193,11 @@ EOF_CRLINI
   ########### Removing one cert ${UNREVOKED_CERT_GRP_1} #######################
   echo "$SCRIPTNAME: Modifying CA CRL by removing one cert ==============="
   CU_ACTION="Modify CRL by removing one cert"
+  sleep 2
+  CRLUPDATE=`date "+%Y%m%d%H%M%SZ"`
   crlu -d $CADIR -M -n "TestCA" -f ${R_PWFILE} -o ${CRL_FILE_GRP_1} \
       -i ${CRL_FILE_GRP_1}_or1 <<EOF_CRLINI
+update=$CRLUPDATE
 rmcert  ${UNREVOKED_CERT_GRP_1}
 EOF_CRLINI
   chmod 600 ${CRL_FILE_GRP_1}
@@ -1200,6 +1206,7 @@ EOF_CRLINI
       CU_ACTION="Modify CRL (ECC) by removing one cert"
       crlu -d $CADIR -M -n "TestCA-ec" -f ${R_PWFILE} -o ${CRL_FILE_GRP_1}-ec \
 	  -i ${CRL_FILE_GRP_1}_or1-ec <<EOF_CRLINI
+update=$CRLUPDATE
 rmcert  ${UNREVOKED_CERT_GRP_1}
 EOF_CRLINI
       chmod 600 ${CRL_FILE_GRP_1}-ec
@@ -1211,6 +1218,7 @@ EOF_CRLINI
   CRL_FILE_GRP_2=${R_SERVERDIR}/root.crl_${CRL_GRP_2_BEGIN}-${CRL_GRP_END}
 
   echo "$SCRIPTNAME: Creating CA CRL for groups 1 and 2  ==============="
+  sleep 2
   CRLUPDATE=`date "+%Y%m%d%H%M%SZ"`
   CRL_GRP_DATE=`date "+%Y%m%d%H%M%SZ"`
   CU_ACTION="Creating CRL for groups 1 and 2"
@@ -1271,10 +1279,12 @@ EOF_CRLINI
 
   echo "$SCRIPTNAME: Importing Server CA Issued CRL for certs ${CRL_GRP_BEGIN} trough ${CRL_GRP_END}"
   CU_ACTION="Importing CRL for groups 1"
+  crlu -D -n TestCA  -f "${R_PWFILE}" -d "${R_SERVERDIR}"
   crlu -I -i ${CRL_FILE} -n "TestCA" -f "${R_PWFILE}" -d "${R_SERVERDIR}"
   CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
   if [ -n "$NSS_ENABLE_ECC" ] ; then
       CU_ACTION="Importing CRL (ECC) for groups 1"
+      crlu -D -n TestCA-ec  -f "${R_PWFILE}" -d "${R_SERVERDIR}"
       crlu -I -i ${CRL_FILE}-ec -n "TestCA-ec" -f "${R_PWFILE}" \
 	  -d "${R_SERVERDIR}"
       CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
