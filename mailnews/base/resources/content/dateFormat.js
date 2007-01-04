@@ -248,14 +248,7 @@ function convertStringToPRTime(str)
 
   month -= 1; // since js month is 0-11
 
-  var time = new Date();
-  time.setMilliseconds(0);
-  time.setSeconds(0);
-  time.setMinutes(0);
-  time.setHours(0);
-  time.setYear(year);
-  time.setMonth(month);
-  time.setDate(date);
+  var time = new Date(year, month, date);
 
   // JavaScript time is in milliseconds, PRTime is in microseconds
   // so multiply by 1000 when converting
