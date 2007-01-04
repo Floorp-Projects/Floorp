@@ -77,7 +77,7 @@ sub trim_logs {
     # Nuke the old log files
     #
     $i = 0;
-    opendir( D, "$tree" );
+    opendir( D, &shell_escape($tree) );
     while( $fn = readdir( D ) ){
         if( $fn =~ /\.(?:gz|brief\.html)$/ ){
             ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime,

@@ -37,9 +37,10 @@ $maxdate = time();
 $mindate = $maxdate - 24*60*60;
 tb_load_data();
 
-EmitHtmlHeader("administer tinderbox", "tree: $tree");
-
 if (defined($tree)) {
+    my $safe_tree = value_encode($tree);
+
+    EmitHtmlHeader("administer tinderbox", "tree: $safe_tree");
 
     # Sheriff
     if( -r "$tree/sheriff.pl" ){
@@ -71,7 +72,7 @@ if (defined($tree)) {
 #
     print "
 <FORM method=post action=doadmin.cgi>
-<INPUT TYPE=HIDDEN NAME=tree VALUE=$tree>
+<INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
 <INPUT TYPE=HIDDEN NAME=command VALUE=set_sheriff>
 <br><b>Change sheriff info.</b>  (mailto: url, phone number, etc.)<br>
 <TEXTAREA NAME=sheriff ROWS=8 COLS=75 WRAP=SOFT>$current_sheriff
@@ -89,7 +90,7 @@ if (defined($tree)) {
 
     print "
 <FORM method=post action=doadmin.cgi>
-<INPUT TYPE=HIDDEN NAME=tree VALUE=$tree>
+<INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
 <INPUT TYPE=HIDDEN NAME=command VALUE=set_status_message>
 <br><b>Status message.</b>  (Use this for stay-out-of-the-tree warnings, etc.)<br>
 <TEXTAREA NAME=status ROWS=8 COLS=75 WRAP=SOFT>$status_message
@@ -109,7 +110,7 @@ if (defined($tree)) {
 
     print "
 <FORM method=post action=doadmin.cgi>
-<INPUT TYPE=HIDDEN NAME=tree VALUE=$tree>
+<INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
 <INPUT TYPE=HIDDEN NAME=command VALUE=set_rules_message>
 <br><b>The tree rules.</b>
 <br><TEXTAREA NAME=rules ROWS=18 COLS=75 WRAP=SOFT>$rules_message
@@ -126,7 +127,7 @@ if (defined($tree)) {
 #
 
     # Determine the collective size & age of the build logs
-    opendir(TRIM_DIR, "$tree") || die "opendir($tree): $!";
+    opendir(TRIM_DIR, &shell_escape($tree)) || die "opendir($safe_tree): $!";
     my @trim_files = grep { /\.(?:gz|brief\.html)$/ && -f "$tree/$_" } readdir(TRIM_DIR);
     close(TRIM_DIR);
     my $trim_bytes = 0;
@@ -153,7 +154,7 @@ if (defined($tree)) {
 
     print "
 <FORM method=post action=doadmin.cgi>
-<INPUT TYPE=HIDDEN NAME=tree VALUE='$tree'>
+<INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
 <INPUT TYPE=HIDDEN NAME=command VALUE=trim_logs>
 <b>Trim Logs</b><br>
 Trim Logs to <INPUT NAME=days size=5 VALUE='$trim_days'> days<br>
@@ -163,15 +164,73 @@ Tinderbox is configured to show up to $who_days days of log history. Currently, 
 </FORM>
 <hr>
 "   ;
-} else {
 
+#
+# Toggle scraping for builds.
+#
+    print "
+<B><font size=+1>Turn on log scraping.</font></b><br>  Checked builds will have the logs scanned fora token of the form <b>TinderboxPrint:aaa,bbb,ccc</b>.  These values will show up as-is in the showbuilds.cgi output.<br>
+<FORM method=post action=doadmin.cgi>
+<INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
+<INPUT TYPE=HIDDEN NAME=command VALUE=scrape_builds>
+";
+
+    @names = sort (@$build_names) ;
+
+    for $i (@names){
+        if( $i ne "" ){
+            $checked = ($scrape_builds->{$i} != 0 ? "CHECKED": "" );
+            print "<INPUT TYPE=checkbox NAME='build_".value_encode($i)."' $checked >";
+            print value_encode($i)."<br>\n";
+        }
+    }
+
+    print "
+<B>Password:</B> <INPUT NAME=password TYPE=password>
+<INPUT TYPE=SUBMIT VALUE='Scrape only checked builds'>
+</FORM>
+<hr>
+";
+
+#
+# Turn builds off.
+#
+    print "
+<B><font size=+1>If builds are behaving badly you can turn them off.</font></b><br>  Uncheck
+the build that is misbehaving and click the button.  Add <b><tt>&noignore=1</tt></b> to
+the tinderbox URL to override.<br>
+<FORM method=post action=doadmin.cgi>
+<INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
+<INPUT TYPE=HIDDEN NAME=command VALUE=disable_builds>
+";
+
+    @names = sort (@$build_names) ;
+
+    for $i (@names){
+        if( $i ne "" ){
+            $checked = ($ignore_builds->{$i} != 0 ? "": "CHECKED" );
+            print "<INPUT TYPE=checkbox NAME='build_".value_encode($i)."' $checked >";
+            print value_encode($i)."<br>\n";
+        }
+    }
+
+    print "
+<B>Password:</B> <INPUT NAME=password TYPE=password>
+<INPUT TYPE=SUBMIT VALUE='Show only checked builds'>
+</FORM>
+<hr>
+";
+
+} else {
 #
 # Create a new tinderbox page.
 #
 
+EmitHtmlHeader("administer tinderbox", "create a tinderbox page");
+
 print "
 <FORM method=post action=doadmin.cgi>
-<INPUT TYPE=HIDDEN NAME=tree VALUE=$tree>
+<INPUT TYPE=HIDDEN NAME=tree VALUE=''>
 <INPUT TYPE=HIDDEN NAME=command VALUE=create_tree>
 <b>Create a new tinderbox page, examples for SeaMonkey shown in parens.</b>
 <TABLE>
@@ -264,67 +323,4 @@ print "
 ";
 }
 
-#
-# Toggle scraping for builds.
-#
-
-if (defined($tree)) {
-    print "
-<B><font size=+1>Turn on log scraping.</font></b><br>  Checked builds will have the logs scanned fora token of the form <b>TinderboxPrint:aaa,bbb,ccc</b>.  These values will show up as-is in the showbuilds.cgi output.<br>
-<FORM method=post action=doadmin.cgi>
-<INPUT TYPE=HIDDEN NAME=tree VALUE=$tree>
-<INPUT TYPE=HIDDEN NAME=command VALUE=scrape_builds>
-";
-
-    @names = sort (@$build_names) ;
-
-    for $i (@names){
-        if( $i ne "" ){
-            $checked = ($scrape_builds->{$i} != 0 ? "CHECKED": "" );
-            print "<INPUT TYPE=checkbox NAME='build_$i' $checked >";
-            print "$i<br>\n";
-        }
-    }
-
-    print "
-<B>Password:</B> <INPUT NAME=password TYPE=password>
-<INPUT TYPE=SUBMIT VALUE='Scrape only checked builds'>
-</FORM>
-<hr>
-";
-}
-
-
-
-#
-# Turn builds off.
-#
-
-if (defined($tree)) {
-    print "
-<B><font size=+1>If builds are behaving badly you can turn them off.</font></b><br>  Uncheck
-the build that is misbehaving and click the button.  Add <b><tt>&noignore=1</tt></b> to
-the tinderbox URL to override.<br>
-<FORM method=post action=doadmin.cgi>
-<INPUT TYPE=HIDDEN NAME=tree VALUE=$tree>
-<INPUT TYPE=HIDDEN NAME=command VALUE=disable_builds>
-";
-
-    @names = sort (@$build_names) ;
-
-    for $i (@names){
-        if( $i ne "" ){
-            $checked = ($ignore_builds->{$i} != 0 ? "": "CHECKED" );
-            print "<INPUT TYPE=checkbox NAME='build_$i' $checked >";
-            print "$i<br>\n";
-        }
-    }
-
-    print "
-<B>Password:</B> <INPUT NAME=password TYPE=password>
-<INPUT TYPE=SUBMIT VALUE='Show only checked builds'>
-</FORM>
-<hr>
-";
-}
 print "</BODY></HTML>\n";

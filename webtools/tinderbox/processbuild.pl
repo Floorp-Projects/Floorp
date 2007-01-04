@@ -52,7 +52,7 @@ GetOptions("check-mail" => \$only_check_mail) or die ("Error parsing args.");
 # Acquire a lock first so that we don't step on ourselves
 my $lockfile = "$data_dir/processbuild.sem";
 my $lock = &lock_datafile($lockfile);
-opendir(DIR, $::data_dir) or $err++;
+opendir(DIR, &shell_escape($::data_dir)) or $err++;
 if ($err) {
     &unlock_datafile($lock);
     unlink($lockfile);

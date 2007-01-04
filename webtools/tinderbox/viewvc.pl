@@ -74,14 +74,6 @@ sub FetchOneColumn {
     return $row[0];
 }
 
-# Quotify a string, suitable for invoking a shell process
-sub shell_escape {
-    my ($file) = @_;
-    $file =~ s/\000/_NULL_/g;
-    $file =~ s/([ \"\'\`\~\^\?\$\&\|\!<>\(\)\[\]\;\:])/\\$1/g;
-    return $file;
-}
-
 sub formatSqlTime {
     my ($date) = @_;
     $time = strftime("%Y/%m/%d %T", gmtime($date));

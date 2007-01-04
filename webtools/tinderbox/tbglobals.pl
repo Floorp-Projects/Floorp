@@ -358,7 +358,6 @@ sub url_decode {
   return $value;
 }
 
-
 sub value_encode {
   my ($s) = @_;
   $s =~ s@&@&amp;@g;
@@ -368,6 +367,13 @@ sub value_encode {
   return $s;
 }
 
+# Quotify a string, suitable for invoking a shell process
+sub shell_escape {
+    my ($file) = @_;
+    $file =~ s/\000/_NULL_/g;
+    $file =~ s/([ \"\'\`\~\^\?\$\&\|\!<>\(\)\[\]\;\:])/\\$1/g;
+    return $file;
+}
 
 sub tb_load_treedata {
     my $tree = shift;
@@ -527,8 +533,9 @@ sub tb_check_password {
   while (my ($key,$value) = each %form) {
     next if $key eq "password" or $key eq "rememberpassword";
 
-    my $enc = value_encode($value);
-    print "<INPUT TYPE=HIDDEN NAME=\"$key\" VALUE=\"$enc\">\n";
+    my $enc_key = value_encode($key);
+    my $enc_value = value_encode($value);
+    print "<INPUT TYPE=HIDDEN NAME=\"$enc_key\" VALUE=\"$enc_value\">\n";
   }
   print "<INPUT TYPE=SUBMIT value=Submit></FORM>\n";
   exit;
