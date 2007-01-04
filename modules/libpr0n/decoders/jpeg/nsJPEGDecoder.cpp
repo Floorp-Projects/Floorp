@@ -71,28 +71,10 @@ METHODDEF(void) my_error_exit (j_common_ptr cinfo);
 #define MAX_JPEG_MARKER_LENGTH  (((PRUint32)1 << 16) - 1)
 
 
-/* Possible states for JPEG source manager */
-enum data_source_state {
-    READING_BACK = 0, /* Must be zero for init purposes */
-    READING_NEW
-};
-
-/*
- *  Implementation of a JPEG src object that understands our state machine
- */
-typedef struct {
-  /* public fields; must be first in this struct! */
-  struct jpeg_source_mgr pub;
-
-  nsJPEGDecoder *decoder;
-
-} decoder_source_mgr;
-
-
 nsJPEGDecoder::nsJPEGDecoder()
 {
   mState = JPEG_HEADER;
-  mFillState = READING_BACK;
+  mReading = PR_TRUE;
 
   mSamples = nsnull;
 #ifndef MOZ_CAIRO_GFX
@@ -100,28 +82,22 @@ nsJPEGDecoder::nsJPEGDecoder()
 #endif
 
   mBytesToSkip = 0;
-  
   memset(&mInfo, 0, sizeof(jpeg_decompress_struct));
-
-  mCompletedPasses = 0;
+  memset(&mSourceMgr, 0, sizeof(mSourceMgr));
 
   mBuffer = nsnull;
   mBufferLen = mBufferSize = 0;
 
   mBackBuffer = nsnull;
   mBackBufferLen = mBackBufferSize = mBackBufferUnreadLen = 0;
-
 }
 
 nsJPEGDecoder::~nsJPEGDecoder()
 {
-  if (mBuffer)
-    PR_Free(mBuffer);
-  if (mBackBuffer)
-    PR_Free(mBackBuffer);
+  PR_FREEIF(mBuffer);
+  PR_FREEIF(mBackBuffer);
 #ifndef MOZ_CAIRO_GFX
-  if (mRGBRow)
-    PR_Free(mRGBRow);
+  PR_FREEIF(mRGBRow);
 #endif
 }
 
@@ -148,28 +124,17 @@ NS_IMETHODIMP nsJPEGDecoder::Init(imgILoad *aLoad)
 
   /* Step 1: allocate and initialize JPEG decompression object */
   jpeg_create_decompress(&mInfo);
-  
-  decoder_source_mgr *src;
-  if (mInfo.src == NULL) {
-    src = PR_NEWZAP(decoder_source_mgr);
-    if (!src) {
-      mState = JPEG_ERROR;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    mInfo.src = NS_REINTERPRET_CAST(struct jpeg_source_mgr *, src);
-  }
+  /* Set the source manager */
+  mInfo.src = &mSourceMgr;
 
   /* Step 2: specify data source (eg, a file) */
 
   /* Setup callback functions. */
-  src->pub.init_source = init_source;
-  src->pub.fill_input_buffer = fill_input_buffer;
-  src->pub.skip_input_data = skip_input_data;
-  src->pub.resync_to_restart = jpeg_resync_to_restart;
-  src->pub.term_source = term_source;
-
-  src->decoder = this;
+  mSourceMgr.init_source = init_source;
+  mSourceMgr.fill_input_buffer = fill_input_buffer;
+  mSourceMgr.skip_input_data = skip_input_data;
+  mSourceMgr.resync_to_restart = jpeg_resync_to_restart;
+  mSourceMgr.term_source = term_source;
 
   return NS_OK;
 }
@@ -185,8 +150,6 @@ NS_IMETHODIMP nsJPEGDecoder::Close()
     NS_WARNING("Never finished decoding the JPEG.");
 
   /* Step 8: Release JPEG decompression object */
-  decoder_source_mgr *src = NS_REINTERPRET_CAST(decoder_source_mgr *, mInfo.src);
-  PR_FREEIF(src);
   mInfo.src = nsnull;
 
   jpeg_destroy_decompress(&mInfo);
@@ -223,9 +186,7 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     nsresult rv = inStr->Read((char*)mBuffer, count, &mBufferLen);
     *_retval = mBufferLen;
 
-    //nsresult rv = mOutStream->WriteFrom(inStr, count, _retval);
-
-    NS_ASSERTION(NS_SUCCEEDED(rv), "nsJPEGDecoder::WriteFrom -- mOutStream->WriteFrom failed");
+    NS_ASSERTION(NS_SUCCEEDED(rv), "nsJPEGDecoder::WriteFrom -- inStr->Read failed");
   }
   // else no input stream.. Flush() ?
 
@@ -355,14 +316,12 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
      * manager, it must be allocated before the call to
      * jpeg_start_compress().
      */
-    int row_stride;
-
     // Note! row_stride here must match the row_stride in
     // nsJPEGDecoder::OutputScanlines
 #if defined(MOZ_CAIRO_GFX) || defined(XP_MAC) || defined(XP_MACOSX)
-    row_stride = mInfo.output_width * 4;
+    const int row_stride = mInfo.output_width * 4;
 #else
-    row_stride = mInfo.output_width * 3;
+    const int row_stride = mInfo.output_width * 3;
 #endif
 
     mSamples = (*mInfo.mem->alloc_sarray)((j_common_ptr) &mInfo,
@@ -411,7 +370,7 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     {
       LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::WriteFrom -- JPEG_DECOMPRESS_SEQUENTIAL case");
       
-      if (OutputScanlines() == PR_FALSE)
+      if (!OutputScanlines())
         return NS_OK; /* I/O suspension */
       
       /* If we've completed image output ... */
@@ -451,7 +410,7 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
         if (mInfo.output_scanline == 0xffffff)
           mInfo.output_scanline = 0;
 
-        if (OutputScanlines() == PR_FALSE) {
+        if (!OutputScanlines()) {
           if (mInfo.output_scanline == 0) {
             /* didn't manage to read any lines - flag so we don't call
                jpeg_start_output() multiple times for the same scan */
@@ -508,19 +467,18 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 }
 
 
-int
+PRBool
 nsJPEGDecoder::OutputScanlines()
 {
-  PRUint32 top = mInfo.output_scanline;
+  const PRUint32 top = mInfo.output_scanline;
   PRBool rv = PR_TRUE;
-
+ 
   PRUint32 bpr;
   mFrame->GetImageBytesPerRow(&bpr);
-
   // Note! row_stride here must match the row_stride in
   // nsJPEGDecoder::WriteFrom
 #if defined(MOZ_CAIRO_GFX) || defined(XP_MAC) || defined(XP_MACOSX)
-  const int row_stride = mInfo.output_width << 2; // * 4
+  const int row_stride = mInfo.output_width * 4;
 #else
   const int row_stride = mInfo.output_width * 3;
 #endif
@@ -539,10 +497,8 @@ nsJPEGDecoder::OutputScanlines()
       JSAMPROW samples;
 #endif
 
-      /* Request one scanline.  Returns 0 or 1 scanlines. */
-      int ns = jpeg_read_scanlines(&mInfo, mSamples, 1);
-      
-      if (ns != 1) {
+      /* Request one scanline.  Returns 0 or 1 scanlines. */    
+      if (jpeg_read_scanlines(&mInfo, mSamples, 1) != 1) {
         rv = PR_FALSE; /* suspend */
         break;
       }
@@ -610,22 +566,18 @@ nsJPEGDecoder::OutputScanlines()
 METHODDEF(void)
 my_error_exit (j_common_ptr cinfo)
 {
-  nsresult error_code;
   decoder_error_mgr *err = (decoder_error_mgr *) cinfo->err;
 
   /* Convert error to a browser error code */
-  switch (cinfo->err->msg_code) {
-  case JERR_OUT_OF_MEMORY:
-      error_code = NS_ERROR_OUT_OF_MEMORY;
-  default:
-      error_code = NS_ERROR_FAILURE;
-  }
+  nsresult error_code = err->pub.msg_code == JERR_OUT_OF_MEMORY
+                      ? NS_ERROR_OUT_OF_MEMORY
+                      : NS_ERROR_FAILURE;
 
 #ifdef DEBUG
   char buffer[JMSG_LENGTH_MAX];
 
   /* Create the message */
-  (*cinfo->err->format_message) (cinfo, buffer);
+  (*err->pub.format_message) (cinfo, buffer);
 
   fprintf(stderr, "JPEG decoding error:\n%s\n", buffer);
 #endif
@@ -695,23 +647,24 @@ init_source (j_decompress_ptr jd)
 METHODDEF(void)
 skip_input_data (j_decompress_ptr jd, long num_bytes)
 {
-  decoder_source_mgr *src = (decoder_source_mgr *)jd->src;
+  struct jpeg_source_mgr *src = jd->src;
+  nsJPEGDecoder *decoder = SOURCE_MGR_TO_DECODER(src);
 
-  if (num_bytes > (long)src->pub.bytes_in_buffer) {
+  if (num_bytes > (long)src->bytes_in_buffer) {
     /*
      * Can't skip it all right now until we get more data from
      * network stream. Set things up so that fill_input_buffer
      * will skip remaining amount.
      */
-    src->decoder->mBytesToSkip = (size_t)num_bytes - src->pub.bytes_in_buffer;
-    src->pub.next_input_byte += src->pub.bytes_in_buffer;
-    src->pub.bytes_in_buffer = 0;
+    decoder->mBytesToSkip = (size_t)num_bytes - src->bytes_in_buffer;
+    src->next_input_byte += src->bytes_in_buffer;
+    src->bytes_in_buffer = 0;
 
   } else {
     /* Simple case. Just advance buffer pointer */
 
-    src->pub.bytes_in_buffer -= (size_t)num_bytes;
-    src->pub.next_input_byte += num_bytes;
+    src->bytes_in_buffer -= (size_t)num_bytes;
+    src->next_input_byte += num_bytes;
   }
 }
 
@@ -731,102 +684,86 @@ skip_input_data (j_decompress_ptr jd, long num_bytes)
 METHODDEF(boolean)
 fill_input_buffer (j_decompress_ptr jd)
 {
-  decoder_source_mgr *src = (decoder_source_mgr *)jd->src;
+  struct jpeg_source_mgr *src = jd->src;
+  nsJPEGDecoder *decoder = SOURCE_MGR_TO_DECODER(src);
 
-  unsigned char *new_buffer = (unsigned char *)src->decoder->mBuffer;
-  PRUint32 new_buflen = src->decoder->mBufferLen;
-  PRUint32 bytesToSkip = src->decoder->mBytesToSkip;
+  if (decoder->mReading) {
+    unsigned char *new_buffer = (unsigned char *)decoder->mBuffer;
+    PRUint32 new_buflen = decoder->mBufferLen;
+  
+    if (!new_buffer || new_buflen == 0)
+      return PR_FALSE; /* suspend */
 
-  switch(src->decoder->mFillState) {
-  case READING_BACK:
-    {
-      if (!new_buffer || new_buflen == 0)
+    decoder->mBufferLen = 0;
+
+    if (decoder->mBytesToSkip) {
+      if (decoder->mBytesToSkip < new_buflen) {
+        /* All done skipping bytes; Return what's left. */
+        new_buffer += decoder->mBytesToSkip;
+        new_buflen -= decoder->mBytesToSkip;
+        decoder->mBytesToSkip = 0;
+      } else {
+        /* Still need to skip some more data in the future */
+        decoder->mBytesToSkip -= (size_t)new_buflen;
         return PR_FALSE; /* suspend */
-
-      src->decoder->mBufferLen = 0;
-
-      if (bytesToSkip != 0) {
-        if (bytesToSkip < new_buflen) {
-          /* All done skipping bytes; Return what's left. */
-          new_buffer += bytesToSkip;
-          new_buflen -= bytesToSkip;
-          src->decoder->mBytesToSkip = 0;
-        } else {
-          /* Still need to skip some more data in the future */
-          src->decoder->mBytesToSkip -= (size_t)new_buflen;
-          return PR_FALSE; /* suspend */
-        }
       }
-
-      src->decoder->mBackBufferUnreadLen = src->pub.bytes_in_buffer;
-
-      src->pub.next_input_byte = new_buffer;
-      src->pub.bytes_in_buffer = (size_t)new_buflen;
-      src->decoder->mFillState = READING_NEW;
-
-      return PR_TRUE;
     }
-    break;
 
-  case READING_NEW:
-    {
-      if (src->pub.next_input_byte != src->decoder->mBuffer) {
-        /* Backtrack data has been permanently consumed. */
-        src->decoder->mBackBufferUnreadLen = 0;
-        src->decoder->mBackBufferLen = 0;
-      }
+      decoder->mBackBufferUnreadLen = src->bytes_in_buffer;
 
-      /* Save remainder of netlib buffer in backtrack buffer */
-      PRUint32 new_backtrack_buflen = src->pub.bytes_in_buffer + src->decoder->mBackBufferLen;
+    src->next_input_byte = new_buffer;
+    src->bytes_in_buffer = (size_t)new_buflen;
+    decoder->mReading = PR_FALSE;
 
-
-      /* Make sure backtrack buffer is big enough to hold new data. */
-      if (src->decoder->mBackBufferSize < new_backtrack_buflen) {
-
-        /* Round up to multiple of 16 bytes. */
-        PRUint32 roundup_buflen = ((new_backtrack_buflen + 15) >> 4) << 4;
-        if (src->decoder->mBackBufferSize) {
-            src->decoder->mBackBuffer =
-          (JOCTET *)PR_REALLOC(src->decoder->mBackBuffer, roundup_buflen);
-        } else {
-          src->decoder->mBackBuffer = (JOCTET*)PR_MALLOC(roundup_buflen);
-        }
-
-        /* Check for OOM */
-        if (!src->decoder->mBackBuffer) {
-#if 0
-          j_common_ptr cinfo = (j_common_ptr)(&src->js->jd);
-          cinfo->err->msg_code = JERR_OUT_OF_MEMORY;
-          my_error_exit(cinfo);
-#endif
-        }
-          
-        src->decoder->mBackBufferSize = (size_t)roundup_buflen;
-
-        /* Check for malformed MARKER segment lengths. */
-        if (new_backtrack_buflen > MAX_JPEG_MARKER_LENGTH) {
-          my_error_exit((j_common_ptr)(&src->decoder->mInfo));
-        }
-      }
-
-
-      /* Copy remainder of netlib buffer into backtrack buffer. */
-      memmove(src->decoder->mBackBuffer + src->decoder->mBackBufferLen,
-              src->pub.next_input_byte,
-              src->pub.bytes_in_buffer);
-
-
-      /* Point to start of data to be rescanned. */
-      src->pub.next_input_byte = src->decoder->mBackBuffer + src->decoder->mBackBufferLen - src->decoder->mBackBufferUnreadLen;
-      src->pub.bytes_in_buffer += src->decoder->mBackBufferUnreadLen;
-      src->decoder->mBackBufferLen = (size_t)new_backtrack_buflen;
-    
-      src->decoder->mFillState = READING_BACK;
-
-      return PR_FALSE;
-    }
-    break;
+    return PR_TRUE;
   }
+
+  if (src->next_input_byte != decoder->mBuffer) {
+    /* Backtrack data has been permanently consumed. */
+    decoder->mBackBufferUnreadLen = 0;
+    decoder->mBackBufferLen = 0;
+  }
+
+  /* Save remainder of netlib buffer in backtrack buffer */
+  const PRUint32 new_backtrack_buflen = src->bytes_in_buffer + decoder->mBackBufferLen;
+ 
+  /* Make sure backtrack buffer is big enough to hold new data. */
+  if (decoder->mBackBufferSize < new_backtrack_buflen) {
+
+
+    /* Round up to multiple of 256 bytes. */
+    const PRUint32 roundup_buflen = ((new_backtrack_buflen + 255) >> 8) << 8;
+    decoder->mBackBuffer = decoder->mBackBuffer
+                ? (JOCTET*)PR_REALLOC(decoder->mBackBuffer, roundup_buflen)
+                : (JOCTET*)PR_MALLOC(roundup_buflen);
+
+    /* Check for OOM */
+    if (!decoder->mBackBuffer) {
+#if 0
+      j_common_ptr cinfo = (j_common_ptr)(&decoder->js->jd);
+      cinfo->err->msg_code = JERR_OUT_OF_MEMORY;
+      my_error_exit(cinfo);
+#endif
+    }
+      
+    decoder->mBackBufferSize = (size_t)roundup_buflen;
+
+    /* Check for malformed MARKER segment lengths. */
+    if (new_backtrack_buflen > MAX_JPEG_MARKER_LENGTH) {
+      my_error_exit((j_common_ptr)(&decoder->mInfo));
+    }
+  }
+
+  /* Copy remainder of netlib buffer into backtrack buffer. */
+  memmove(decoder->mBackBuffer + decoder->mBackBufferLen,
+          src->next_input_byte,
+          src->bytes_in_buffer);
+
+  /* Point to start of data to be rescanned. */
+  src->next_input_byte = decoder->mBackBuffer + decoder->mBackBufferLen - decoder->mBackBufferUnreadLen;
+  src->bytes_in_buffer += decoder->mBackBufferUnreadLen;
+  decoder->mBackBufferLen = (size_t)new_backtrack_buflen;
+  decoder->mReading = PR_TRUE;
 
   return PR_FALSE;
 }
@@ -841,16 +778,16 @@ fill_input_buffer (j_decompress_ptr jd)
 METHODDEF(void)
 term_source (j_decompress_ptr jd)
 {
-  decoder_source_mgr *src = (decoder_source_mgr *)jd->src;
+  nsJPEGDecoder *decoder = SOURCE_MGR_TO_DECODER(jd->src);
 
-  if (src->decoder->mObserver) {
-    src->decoder->mObserver->OnStopFrame(nsnull, src->decoder->mFrame);
-    src->decoder->mObserver->OnStopContainer(nsnull, src->decoder->mImage);
-    src->decoder->mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
+  if (decoder->mObserver) {
+    decoder->mObserver->OnStopFrame(nsnull, decoder->mFrame);
+    decoder->mObserver->OnStopContainer(nsnull, decoder->mImage);
+    decoder->mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
   }
 
   PRBool isMutable = PR_FALSE;
-  if (src->decoder->mImageLoad) 
-      src->decoder->mImageLoad->GetIsMultiPartChannel(&isMutable);
-  src->decoder->mFrame->SetMutable(isMutable);
+  if (decoder->mImageLoad) 
+      decoder->mImageLoad->GetIsMultiPartChannel(&isMutable);
+  decoder->mFrame->SetMutable(isMutable);
 }
