@@ -59,26 +59,9 @@ public:
 
   nsIJSEventListener(nsIScriptContext *aContext, void *aScopeObject,
                      nsISupports *aTarget)
-    : mContext(aContext), mScopeObject(aScopeObject), mTarget(nsnull)
+    : mContext(aContext), mScopeObject(aScopeObject),
+      mTarget(do_QueryInterface(aTarget))
   {
-    // We keep a weak-ref to the event target to prevent cycles that prevent
-    // GC from cleaning up our global in all cases.  However, as this is a
-    // weak-ref, we must ensure it is the identity of the event target and
-    // not a "tear-off" or similar that may not live as long as we expect.
-    aTarget->QueryInterface(NS_GET_IID(nsISupports),
-                            NS_REINTERPRET_CAST(void **, &mTarget));
-    if (mTarget)
-      // We keep a weak-ref, so remove the reference the QI added.
-      mTarget->Release();
-    else {
-      NS_ERROR("Failed to get identity pointer");
-    }
-    // To help debug such leaks, we keep a counter of the event listeners
-    // currently alive.  If you change |mTarget| to a strong-ref, this never
-    // hits zero (running seamonkey.)
-#ifdef NS_DEBUG
-    PR_AtomicIncrement(&sNumJSEventListeners);
-#endif
   }
 
   nsIScriptContext *GetEventContext()
@@ -98,20 +81,13 @@ public:
 
   virtual void SetEventName(nsIAtom* aName) = 0;
 
-#ifdef NS_DEBUG
-  static PRInt32 sNumJSEventListeners;
-#endif
-
 protected:
   virtual ~nsIJSEventListener()
   {
-#ifdef NS_DEBUG
-    PR_AtomicDecrement(&sNumJSEventListeners);
-#endif
   }
   nsCOMPtr<nsIScriptContext> mContext;
   void *mScopeObject;
-  nsISupports *mTarget; // weak ref.
+  nsCOMPtr<nsISupports> mTarget;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIJSEventListener, NS_IJSEVENTLISTENER_IID)

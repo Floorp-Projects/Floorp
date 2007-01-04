@@ -38,7 +38,6 @@
 #ifndef nsINode_h___
 #define nsINode_h___
 
-#include "nsIDOMGCParticipant.h"
 #include "nsEvent.h"
 #include "nsPropertyTable.h"
 #include "nsTObserverArray.h"
@@ -97,11 +96,11 @@ class nsNodeSupportsWeakRefTearoff;
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x98470c4b, 0xe988, 0x4abf, \
-  { 0xa4, 0x00, 0x39, 0xbd, 0x00, 0x38, 0x51, 0x4d } }
+{ 0x0d2a583d, 0x7a99, 0x426b, \
+  { 0x89, 0xfa, 0xca, 0x8d, 0x63, 0xbb, 0xd7, 0x3f } }
 
 // hack to make egcs / gcc 2.95.2 happy
-class nsINode_base : public nsIDOMGCParticipant {
+class nsINode_base : public nsISupports {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INODE_IID)
 };

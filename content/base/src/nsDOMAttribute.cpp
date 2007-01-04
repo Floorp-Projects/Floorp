@@ -72,12 +72,24 @@ nsDOMAttribute::nsDOMAttribute(nsDOMAttributeMap *aAttrMap,
   // to drop our reference when it goes away.
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMAttribute)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMAttribute, nsIDOMAttr)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChild)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_LISTENERMANAGER
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMAttribute, nsIDOMAttr)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChild)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_LISTENERMANAGER
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 // QueryInterface implementation for nsDOMAttribute
 NS_INTERFACE_MAP_BEGIN(nsDOMAttribute)
   NS_INTERFACE_MAP_ENTRY(nsIDOMAttr)
   NS_INTERFACE_MAP_ENTRY(nsIAttribute)
   NS_INTERFACE_MAP_ENTRY(nsINode)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMGCParticipant)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3Node)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3Attr)
@@ -85,34 +97,12 @@ NS_INTERFACE_MAP_BEGIN(nsDOMAttribute)
                                  new nsNodeSupportsWeakRefTearoff(this))
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMAttr)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(Attr)
+  NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(nsDOMAttribute)
 NS_INTERFACE_MAP_END
 
-
-NS_IMPL_ADDREF(nsDOMAttribute)
-NS_IMPL_RELEASE_WITH_DESTROY(nsDOMAttribute,
-                             nsNodeUtils::LastRelease(this, PR_TRUE))
-
-// nsIDOMGCParticipant methods
-nsIDOMGCParticipant*
-nsDOMAttribute::GetSCCIndex()
-{
-  nsIContent *owner = GetContentInternal();
-
-  return owner ? owner->GetSCCIndex() : this;
-}
-
-void
-nsDOMAttribute::AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray)
-{
-  NS_ASSERTION(GetContentInternal() == nsnull,
-               "shouldn't be an SCC index if we're in an element");
-
-  // This node is the root of a subtree that's been removed from the
-  // document (since AppendReachableList is only called on SCC index
-  // nodes).  The document is reachable from it (through
-  // .ownerDocument), but it's not reachable from the document.
-  aArray.AppendObject(GetOwnerDoc());
-}
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDOMAttribute, nsIDOMAttr)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_FULL(nsDOMAttribute, nsIDOMAttr,
+                                      nsNodeUtils::LastRelease(this, PR_TRUE))
 
 void
 nsDOMAttribute::SetMap(nsDOMAttributeMap *aMap)
