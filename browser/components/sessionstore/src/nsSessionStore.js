@@ -149,6 +149,9 @@ SessionStoreService.prototype = {
   // minimal interval between two save operations (in milliseconds)
   _interval: DEFAULT_INTERVAL,
 
+  // when crash recovery is disabled, session data is not written to disk
+  _resume_from_crash: DEFAULT_RESUME_FROM_CRASH,
+
   // time in milliseconds (Date.now()) when the session was last written to file
   _lastSaveTime: 0, 
 
@@ -197,6 +200,10 @@ SessionStoreService.prototype = {
     this._interval = this._getPref("sessionstore.interval", DEFAULT_INTERVAL);
     this._prefBranch.addObserver("sessionstore.interval", this, true);
     
+    // get crash recovery state from prefs and allow for proper reaction to state changes
+    this._resume_from_crash = this._getPref("sessionstore.resume_from_crash", DEFAULT_RESUME_FROM_CRASH);
+    this._prefBranch.addObserver("sessionstore.resume_from_crash", this, true);
+    
     // observe prefs changes so we can modify stored data to match
     this._prefBranch.addObserver("sessionstore.max_tabs_undo", this, true);
 
@@ -244,6 +251,10 @@ SessionStoreService.prototype = {
       catch (ex) { } // nothing else we can do here
     }
 
+    // remove the session data files if crash recovery is disabled
+    if (!this._resume_from_crash)
+      this._clearDisk();
+    
     // As this is called at delayedStartup, restoration must be initiated here
     this.onLoad(aWindow);
   },
@@ -338,6 +349,16 @@ SessionStoreService.prototype = {
           this._saveTimer = null;
         }
         this.saveStateDelayed(null, -1);
+        break;
+      case "sessionstore.resume_from_crash":
+        this._resume_from_crash = this._getPref("sessionstore.resume_from_crash", this._resume_from_crash);
+        // either create the file with crash recovery information or remove it
+        // (when _loadState is not STATE_RUNNING, that file is used for session resuming instead)
+        if (this._resume_from_crash)
+          this.saveState(true);
+        else if (this._loadState == STATE_RUNNING)
+          this._clearDisk();
+        break;
       }
       break;
     case "timer-callback": // timer call back for delayed saving
@@ -1660,14 +1681,14 @@ SessionStoreService.prototype = {
    *        Milliseconds to delay
    */
   saveStateDelayed: function sss_saveStateDelayed(aWindow, aDelay) {
-    // interval until the next disk operation is allowed
-    var minimalDelay = this._lastSaveTime + this._interval - Date.now();
-
     if (aWindow) {
       this._dirtyWindows[aWindow.__SSi] = true;
     }
 
-    if (!this._saveTimer) {
+    if (!this._saveTimer && this._resume_from_crash) {
+      // interval until the next disk operation is allowed
+      var minimalDelay = this._lastSaveTime + this._interval - Date.now();
+      
       // if we have to wait, set a timer, otherwise saveState directly
       aDelay = Math.max(minimalDelay, aDelay || 2000);
       if (aDelay > 0) {
@@ -1686,6 +1707,10 @@ SessionStoreService.prototype = {
    *        Bool update all windows 
    */
   saveState: function sss_saveState(aUpdateAll) {
+    // if crash recovery is disabled, only save session resuming information
+    if (!this._resume_from_crash && this._loadState == STATE_RUNNING)
+      return;
+    
     this._dirty = aUpdateAll;
     var oState = this._getCurrentState();
     oState.session = { state: ((this._loadState == STATE_RUNNING) ? STATE_RUNNING_STR : STATE_STOPPED_STR) };
