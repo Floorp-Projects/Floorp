@@ -49,7 +49,7 @@ EXPORT_DIR	= $(DIST)/bin/defaults/isp
 EXPORT_DIR_L10N	= $(DIST)/bin/defaults/isp/$(AB_CD)
 endif
 
-EXPORT_RESOURCE_FILES = \
+EXPORT_RESOURCE_FILES = gmail.rdf \
 		$(NULL)
 
 ifdef MOZ_MOVEMAIL

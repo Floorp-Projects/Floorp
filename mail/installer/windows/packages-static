@@ -79,6 +79,8 @@ bin\defaults\profile\localstore.rdf
 bin\defaults\profile\prefs.js
 bin\defaults\profile\mimeTypes.rdf
 
+bin\isp\gmail.rdf
+
 bin\components\addrbook.xpt
 bin\components\mime.xpt
 bin\components\mailnews.xpt
