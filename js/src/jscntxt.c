@@ -61,6 +61,7 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsscan.h"
+#include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
 

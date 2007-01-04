@@ -529,6 +529,19 @@ js_FindIdentifierBase(JSContext *cx, jsid id);
 extern JSObject *
 js_FindVariableScope(JSContext *cx, JSFunction **funp);
 
+/*
+ * NB: js_NativeGet and js_NativeSet are called with the scope containing sprop
+ * (pobj's scope for Get, obj's for Set) locked, and on successful return, that
+ * scope is again locked.  But on failure, both functions return false with the
+ * scope containing sprop unlocked.
+ */
+extern JSBool
+js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj,
+             JSScopeProperty *sprop, jsval *vp);
+
+extern JSBool
+js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp);
+
 extern JSBool
 js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 

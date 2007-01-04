@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -304,26 +305,21 @@ struct JSScopeProperty {
 
 #define SPROP_INVALID_SLOT              0xffffffff
 
-#define SPROP_HAS_VALID_SLOT(sprop, scope)                                    \
-    ((sprop)->slot < (scope)->map.freeslot)
+#define SLOT_IN_SCOPE(slot,scope)         ((slot) < (scope)->map.freeslot)
+#define SPROP_HAS_VALID_SLOT(sprop,scope) SLOT_IN_SCOPE((sprop)->slot, scope)
 
 #define SPROP_HAS_STUB_GETTER(sprop)    (!(sprop)->getter)
 #define SPROP_HAS_STUB_SETTER(sprop)    (!(sprop)->setter)
 
-#define SPROP_CALL_GETTER(cx,sprop,getter,obj,obj2,vp)                        \
-    (!(getter) ||                                                             \
-     (getter)(cx, OBJ_THIS_OBJECT(cx,obj), SPROP_USERID(sprop), vp))
-#define SPROP_CALL_SETTER(cx,sprop,setter,obj,obj2,vp)                        \
-    (!(setter) ||                                                             \
-     (setter)(cx, OBJ_THIS_OBJECT(cx,obj), SPROP_USERID(sprop), vp))
-
+/* NB: SPROP_GET must not be called if SPROP_HAS_STUB_GETTER(sprop). */
 #define SPROP_GET(cx,sprop,obj,obj2,vp)                                       \
     (((sprop)->attrs & JSPROP_GETTER)                                         \
      ? js_InternalGetOrSet(cx, obj, (sprop)->id,                              \
                            OBJECT_TO_JSVAL((sprop)->getter), JSACC_READ,      \
                            0, 0, vp)                                          \
-     : SPROP_CALL_GETTER(cx, sprop, (sprop)->getter, obj, obj2, vp))
+     : (sprop)->getter(cx, OBJ_THIS_OBJECT(cx,obj), SPROP_USERID(sprop), vp))
 
+/* NB: SPROP_SET must not be called if SPROP_HAS_STUB_SETTER(sprop). */
 #define SPROP_SET(cx,sprop,obj,obj2,vp)                                       \
     (((sprop)->attrs & JSPROP_SETTER)                                         \
      ? js_InternalGetOrSet(cx, obj, (sprop)->id,                              \
@@ -332,7 +328,7 @@ struct JSScopeProperty {
      : ((sprop)->attrs & JSPROP_GETTER)                                       \
      ? (JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,                    \
                              JSMSG_GETTER_ONLY, NULL), JS_FALSE)              \
-     : SPROP_CALL_SETTER(cx, sprop, (sprop)->setter, obj, obj2, vp))
+     : (sprop)->setter(cx, OBJ_THIS_OBJECT(cx,obj), SPROP_USERID(sprop), vp))
 
 /* Macro for common expression to test for shared permanent attributes. */
 #define SPROP_IS_SHARED_PERMANENT(sprop)                                      \
@@ -380,7 +376,19 @@ js_RemoveScopeProperty(JSContext *cx, JSScope *scope, jsid id);
 extern void
 js_ClearScope(JSContext *cx, JSScope *scope);
 
-#define MARK_SCOPE_PROPERTY(sprop)      ((sprop)->flags |= SPROP_MARK)
+/*
+ * These macros used to inline short code sequences, but they grew over time.
+ * We retain them for internal backward compatibility, and in case one or both
+ * ever shrink to inline-able size.
+ */
+#define MARK_ID(cx,id)                js_MarkId(cx, id)
+#define MARK_SCOPE_PROPERTY(cx,sprop) js_MarkScopeProperty(cx, sprop)
+
+extern void
+js_MarkId(JSContext *cx, jsid id);
+
+extern void
+js_MarkScopeProperty(JSContext *cx, JSScopeProperty *sprop);
 
 extern void
 js_SweepScopeProperties(JSRuntime *rt);

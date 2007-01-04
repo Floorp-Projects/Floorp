@@ -3346,13 +3346,105 @@ js_FindIdentifierBase(JSContext *cx, jsid id)
 }
 
 JSBool
+js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj,
+             JSScopeProperty *sprop, jsval *vp)
+{
+    JSScope *scope;
+    uint32 slot;
+    int32 sample;
+    JSTempValueRooter tvr;
+    JSBool ok;
+
+    JS_ASSERT(OBJ_IS_NATIVE(pobj));
+    JS_ASSERT(JS_IS_OBJ_LOCKED(cx, pobj));
+    scope = OBJ_SCOPE(pobj);
+    JS_ASSERT(scope->object == pobj);
+
+    slot = sprop->slot;
+    if (slot != SPROP_INVALID_SLOT) {
+        *vp = LOCKED_OBJ_GET_SLOT(pobj, slot);
+
+        /* If sprop has a stub getter, we're done. */
+        if (SPROP_HAS_STUB_GETTER(sprop))
+            return JS_TRUE;
+    } else {
+        JS_ASSERT(!SPROP_HAS_STUB_GETTER(sprop));
+        *vp = JSVAL_VOID;
+    }
+
+    sample = cx->runtime->propertyRemovals;
+    JS_UNLOCK_SCOPE(cx, scope);
+    JS_PUSH_TEMP_ROOT_SPROP(cx, sprop, &tvr);
+    ok = SPROP_GET(cx, sprop, obj, pobj, vp);
+    JS_POP_TEMP_ROOT(cx, &tvr);
+    if (!ok)
+        return JS_FALSE;
+
+    JS_LOCK_SCOPE(cx, scope);
+    JS_ASSERT(scope->object == pobj);
+    if (SLOT_IN_SCOPE(slot, scope) &&
+        (JS_LIKELY(cx->runtime->propertyRemovals == sample) ||
+         SCOPE_GET_PROPERTY(scope, sprop->id) == sprop)) {
+        LOCKED_OBJ_SET_SLOT(pobj, slot, *vp);
+    }
+
+    return JS_TRUE;
+}
+
+JSBool
+js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp)
+{
+    JSScope *scope;
+    uint32 slot;
+    jsval pval;
+    int32 sample;
+    JSTempValueRooter tvr;
+    JSBool ok;
+
+    JS_ASSERT(OBJ_IS_NATIVE(obj));
+    JS_ASSERT(JS_IS_OBJ_LOCKED(cx, obj));
+    scope = OBJ_SCOPE(obj);
+    JS_ASSERT(scope->object == obj);
+
+    slot = sprop->slot;
+    if (slot != SPROP_INVALID_SLOT) {
+        pval = LOCKED_OBJ_GET_SLOT(obj, slot);
+
+        /* If sprop has a stub setter, keep scope locked and just store *vp. */
+        if (SPROP_HAS_STUB_SETTER(sprop))
+            goto set_slot;
+    } else {
+        JS_ASSERT(!SPROP_HAS_STUB_GETTER(sprop));
+        pval = JSVAL_VOID;
+    }
+
+    sample = cx->runtime->propertyRemovals;
+    JS_UNLOCK_SCOPE(cx, scope);
+    JS_PUSH_TEMP_ROOT_SPROP(cx, sprop, &tvr);
+    ok = SPROP_SET(cx, sprop, obj, obj, vp);
+    JS_POP_TEMP_ROOT(cx, &tvr);
+    if (!ok)
+        return JS_FALSE;
+
+    JS_LOCK_SCOPE(cx, scope);
+    JS_ASSERT(scope->object == obj);
+    if (SLOT_IN_SCOPE(slot, scope) &&
+        (JS_LIKELY(cx->runtime->propertyRemovals == sample) ||
+         SCOPE_GET_PROPERTY(scope, sprop->id) == sprop)) {
+  set_slot:
+        GC_POKE(cx, pval);
+        LOCKED_OBJ_SET_SLOT(obj, slot, *vp);
+    }
+
+    return JS_TRUE;
+}
+
+JSBool
 js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     JSObject *obj2;
     JSProperty *prop;
-    JSScope *scope;
     JSScopeProperty *sprop;
-    uint32 slot;
 
     /*
      * Handle old bug that took empty string as zero index.  Also convert
@@ -3424,33 +3516,12 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         return OBJ_GET_PROPERTY(cx, obj2, id, vp);
     }
 
-    /* Unlock obj2 before calling getter, relock after to avoid deadlock. */
-    scope = OBJ_SCOPE(obj2);
     sprop = (JSScopeProperty *) prop;
-    slot = sprop->slot;
-    if (slot != SPROP_INVALID_SLOT) {
-        JS_ASSERT(slot < obj2->map->freeslot);
-        *vp = LOCKED_OBJ_GET_SLOT(obj2, slot);
-
-        /* If sprop has a stub getter, we're done. */
-        if (!sprop->getter)
-            goto out;
-    } else {
-        *vp = JSVAL_VOID;
-    }
-
-    JS_UNLOCK_SCOPE(cx, scope);
-    if (!SPROP_GET(cx, sprop, obj, obj2, vp))
+    if (!js_NativeGet(cx, obj, obj2, sprop, vp))
         return JS_FALSE;
-    JS_LOCK_SCOPE(cx, scope);
 
-    if (SPROP_HAS_VALID_SLOT(sprop, scope)) {
-        LOCKED_OBJ_SET_SLOT(obj2, slot, *vp);
-        PROPERTY_CACHE_FILL(&cx->runtime->propertyCache, obj2, id, sprop);
-    }
-
-out:
-    JS_UNLOCK_SCOPE(cx, scope);
+    PROPERTY_CACHE_FILL(&cx->runtime->propertyCache, obj2, id, sprop);
+    JS_UNLOCK_OBJ(cx, obj2);
     return JS_TRUE;
 }
 
@@ -3465,8 +3536,6 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     intN shortid;
     JSClass *clasp;
     JSPropertyOp getter, setter;
-    jsval pval;
-    uint32 slot;
 
     /*
      * Handle old bug that took empty string as zero index.  Also convert
@@ -3543,8 +3612,10 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             JS_UNLOCK_SCOPE(cx, scope);
 
             /* Don't clone a shared prototype property. */
-            if (attrs & JSPROP_SHARED)
+            if (attrs & JSPROP_SHARED) {
+                JS_ASSERT(!SPROP_HAS_STUB_SETTER(sprop));
                 return SPROP_SET(cx, sprop, obj, pobj, vp);
+            }
 
             /* Restore attrs to the ECMA default for new properties. */
             attrs = JSPROP_ENUMERATE;
@@ -3614,37 +3685,8 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         PROPERTY_CACHE_FILL(&cx->runtime->propertyCache, obj, id, sprop);
     }
 
-    /* Get the current property value from its slot. */
-    slot = sprop->slot;
-    if (slot != SPROP_INVALID_SLOT) {
-        JS_ASSERT(slot < obj->map->freeslot);
-        pval = LOCKED_OBJ_GET_SLOT(obj, slot);
-
-        /* If sprop has a stub setter, keep scope locked and just store *vp. */
-        if (!sprop->setter)
-            goto set_slot;
-    }
-
-    /* Avoid deadlock by unlocking obj's scope while calling sprop's setter. */
-    JS_UNLOCK_SCOPE(cx, scope);
-
-    /* Let the setter modify vp before STOBJ_SET_SLOT(obj, slot, *vp). */
-    if (!SPROP_SET(cx, sprop, obj, obj, vp))
+    if (!js_NativeSet(cx, obj, sprop, vp))
         return JS_FALSE;
-
-    /* Relock obj's scope until we are done with sprop. */
-    JS_LOCK_SCOPE(cx, scope);
-
-    /*
-     * Check whether sprop is still around (was not deleted), and whether it
-     * has a slot (it may never have had one, or we may have lost a race with
-     * someone who cleared scope).
-     */
-    if (SPROP_HAS_VALID_SLOT(sprop, scope)) {
-  set_slot:
-        GC_POKE(cx, pval);
-        LOCKED_OBJ_SET_SLOT(obj, slot, *vp);
-    }
     JS_UNLOCK_SCOPE(cx, scope);
     return JS_TRUE;
 
@@ -4705,49 +4747,7 @@ js_Mark(JSContext *cx, JSObject *obj, void *arg)
     for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
         if (SCOPE_HAD_MIDDLE_DELETE(scope) && !SCOPE_HAS_PROPERTY(scope, sprop))
             continue;
-        MARK_SCOPE_PROPERTY(sprop);
-        if (JSID_IS_ATOM(sprop->id))
-            GC_MARK_ATOM(cx, JSID_TO_ATOM(sprop->id));
-        else if (JSID_IS_OBJECT(sprop->id))
-            GC_MARK(cx, JSID_TO_OBJECT(sprop->id), "id");
-
-#if JS_HAS_GETTER_SETTER
-        if (sprop->attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
-#ifdef GC_MARK_DEBUG
-            char buf[64];
-            char buf2[11];
-            const char *id;
-
-            if (JSID_IS_ATOM(sprop->id)) {
-                JSAtom *atom = JSID_TO_ATOM(sprop->id);
-
-                id = (atom && ATOM_IS_STRING(atom))
-                     ? JS_GetStringBytes(ATOM_TO_STRING(atom))
-                     : "unknown";
-            } else if (JSID_IS_INT(sprop->id)) {
-                JS_snprintf(buf2, sizeof buf2, "%d", JSID_TO_INT(sprop->id));
-                id = buf2;
-            } else {
-                id = "<object>";
-            }
-#endif
-
-            if (sprop->attrs & JSPROP_GETTER) {
-#ifdef GC_MARK_DEBUG
-                JS_snprintf(buf, sizeof buf, "%s %s",
-                            id, js_getter_str);
-#endif
-                GC_MARK(cx, JSVAL_TO_GCTHING((jsval) sprop->getter), buf);
-            }
-            if (sprop->attrs & JSPROP_SETTER) {
-#ifdef GC_MARK_DEBUG
-                JS_snprintf(buf, sizeof buf, "%s %s",
-                            id, js_setter_str);
-#endif
-                GC_MARK(cx, JSVAL_TO_GCTHING((jsval) sprop->setter), buf);
-            }
-        }
-#endif /* JS_HAS_GETTER_SETTER */
+        MARK_SCOPE_PROPERTY(cx, sprop);
     }
 
     /* No one runs while the GC is running, so we can use LOCKED_... here. */

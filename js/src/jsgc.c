@@ -2943,14 +2943,20 @@ restart:
             js_MarkLocalRoots(cx, acx->localRootStack);
 
         for (tvr = acx->tempValueRooters; tvr; tvr = tvr->down) {
-            if (tvr->count == -1) {
+            switch (tvr->count) {
+              case JSTVU_SINGLE:
                 if (JSVAL_IS_GCTHING(tvr->u.value)) {
                     GC_MARK(cx, JSVAL_TO_GCTHING(tvr->u.value),
                             "tvr->u.value");
                 }
-            } else if (tvr->count == -2) {
+                break;
+              case JSTVU_MARKER:
                 tvr->u.marker(cx, tvr);
-            } else {
+                break;
+              case JSTVU_SPROP:
+                MARK_SCOPE_PROPERTY(cx, tvr->u.sprop);
+                break;
+              default:
                 JS_ASSERT(tvr->count >= 0);
                 GC_MARK_JSVALS(cx, tvr->count, tvr->u.array, "tvr->u.array");
             }
