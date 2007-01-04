@@ -156,7 +156,7 @@
       <spacer flex="1"/>
       <hbox>
         <image class="addonThrobber"/>
-        <label id="progressStatus" value="Checking For Updates"/>
+        <label id="progressStatus" value="&progressStatus.label;"/>
       </hbox>
       <progressmeter id="addonsProgress" class="extension-item-progress" flex="1"/>
       <spacer flex="1"/>

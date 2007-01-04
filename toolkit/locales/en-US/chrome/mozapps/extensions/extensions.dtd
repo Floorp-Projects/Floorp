@@ -112,3 +112,5 @@
 <!ENTITY installIncompatibleUpdate.label  "Checking compatibility...">
 <!ENTITY installFinishing.label           "Installing...">
 <!ENTITY installFailure.label             "Install failed.">
+
+<!ENTITY progressStatus.label             "Checking For Updates">
