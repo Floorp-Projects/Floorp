@@ -125,6 +125,9 @@ protected:
   // implementation helpers:
   void GetOffsetToAncestor(nsIContent* ancestor, float &x, float &y);
 
+  // invalidate viewbox -> viewport xform & inform frames
+  void InvalidateTransformNotifyFrame();
+
   virtual LengthAttributesInfo GetLengthInfo();
 
   enum { X, Y, WIDTH, HEIGHT };

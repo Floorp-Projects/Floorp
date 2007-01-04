@@ -1193,26 +1193,8 @@ nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable,
     }
   }
 
-  // invalidate viewbox -> viewport xform & inform frames
-  mViewBoxToViewportTransform = nsnull;
+  InvalidateTransformNotifyFrame();
 
-  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
-  if (frame) {
-    nsISVGSVGFrame* svgframe;
-    CallQueryInterface(frame, &svgframe);
-    if (svgframe) {
-      svgframe->NotifyViewportChange();
-    }
-#ifdef DEBUG
-    else {
-      // XXX we get here during nsSVGOuterSVGFrame::Init() since that
-      // function is called before the presshell association between us
-      // and our frame is established.
-      NS_WARNING("wrong frame type");
-    }
-#endif
-  }
-  
   return NS_OK;
 }
 
@@ -1317,6 +1299,34 @@ void nsSVGSVGElement::GetOffsetToAncestor(nsIContent* ancestor,
   }
 }
 
+void
+nsSVGSVGElement::InvalidateTransformNotifyFrame()
+{
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc) return;
+  nsIPresShell* presShell = doc->GetShellAt(0);
+  if (!presShell) return;
+
+  mViewBoxToViewportTransform = nsnull;
+
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
+  if (frame) {
+    nsISVGSVGFrame* svgframe;
+    CallQueryInterface(frame, &svgframe);
+    if (svgframe) {
+      svgframe->NotifyViewportChange();
+    }
+#ifdef DEBUG
+    else {
+      // XXX we get here during nsSVGOuterSVGFrame::Init() since that
+      // function is called before the presshell association between us
+      // and our frame is established.
+      NS_WARNING("wrong frame type");
+    }
+#endif
+  }
+}
+
 //----------------------------------------------------------------------
 // nsISVGContent methods
 
@@ -1351,6 +1361,8 @@ nsSVGSVGElement::DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr)
     mViewBox->GetAnimVal(getter_AddRefs(vb));
     vb->SetWidth(mLengthAttributes[WIDTH].GetAnimValue(mCoordCtx));
     vb->SetHeight(mLengthAttributes[HEIGHT].GetAnimValue(mCoordCtx));
+  } else {
+    InvalidateTransformNotifyFrame();
   }
 }
 
