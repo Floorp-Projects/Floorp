@@ -88,6 +88,8 @@ use constant REQUIRED_PROCESS_FIELDS => qw(
     bug_file_loc
     component
     short_desc
+    reporter_accessible
+    cclist_accessible
 );
 
 # $input_email is a global so that it can be used in die_handler.
