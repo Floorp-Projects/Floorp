@@ -228,9 +228,9 @@ getUriCB(AtkHyperlink *aLink, gint aLinkIndex)
     nsIAccessibleHyperLink *accHyperlink = get_accessible_hyperlink(aLink);
     NS_ENSURE_TRUE(accHyperlink, nsnull);
 
-    MaiAtkHyperlink *maiHyperlink = MAI_ATK_HYPERLINK(accHyperlink);
+    MaiAtkHyperlink *maiHyperlink = MAI_ATK_HYPERLINK(aLink);
     if (maiHyperlink->uri)
-        return maiHyperlink->uri;
+        return g_strdup(maiHyperlink->uri);
 
     nsCOMPtr<nsIURI> uri;
     nsresult rv = accHyperlink->GetURI(aLinkIndex,getter_AddRefs(uri));
@@ -239,8 +239,8 @@ getUriCB(AtkHyperlink *aLink, gint aLinkIndex)
     nsCAutoString cautoStr;
     rv = uri->GetSpec(cautoStr);
 
-    maiHyperlink->uri = g_strdup(cautoStr.get());
-    return maiHyperlink->uri;
+    maiHyperlink->uri = ToNewCString(cautoStr);
+    return g_strdup(maiHyperlink->uri);
 }
 
 AtkObject *
