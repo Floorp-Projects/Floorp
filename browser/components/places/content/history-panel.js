@@ -41,8 +41,6 @@ var gHistoryTree;
 var gSearchBox;
 var gHistoryGrouping = "";
 
-const NHQO = Ci.nsINavHistoryQueryOptions;
-
 function HistorySidebarInit()
 {
   gHistoryTree = document.getElementById("historyTree");
@@ -95,6 +93,7 @@ function checkURLSecurity(aURL)
 
 function SetPlace(aSearchString)
 {
+  const NHQO = Ci.nsINavHistoryQueryOptions;
   var placeURI = ORGANIZER_ROOT_HISTORY_UNSORTED;
 
   var prefService = 
