@@ -429,12 +429,15 @@ SECStatus pk11_RetrieveCrls(CERTCrlHeadNode *nodes, SECItem* issuer,
  */
 SECItem *
 PK11_FindCrlByName(PK11SlotInfo **slot, CK_OBJECT_HANDLE *crlHandle,
-					 SECItem *name, int type, char **url)
+					 SECItem *name, int type, char **pUrl)
 {
-    NSSCRL **crls, **crlp, *crl;
+    NSSCRL **crls, **crlp, *crl = NULL;
     NSSDER subject;
     SECItem *rvItem;
     NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
+    char * url = NULL;
+
+    PORT_SetError(0);
     NSSITEM_FROM_SECITEM(&subject, name);
     if (*slot) {
 	nssCryptokiObject **instances;
@@ -443,7 +446,7 @@ PK11_FindCrlByName(PK11SlotInfo **slot, CK_OBJECT_HANDLE *crlHandle,
 	NSSToken *token = PK11Slot_GetNSSToken(*slot);
 	collection = nssCRLCollection_Create(td, NULL);
 	if (!collection) {
-	    return NULL;
+	    goto loser;
 	}
 	instances = nssToken_FindCRLsBySubject(token, NULL, &subject, 
 	                                       tokenOnly, 0, NULL);
@@ -461,9 +464,8 @@ PK11_FindCrlByName(PK11SlotInfo **slot, CK_OBJECT_HANDLE *crlHandle,
 	if (NSS_GetError() == NSS_ERROR_NOT_FOUND) {
 	    PORT_SetError(SEC_ERROR_CRL_NOT_FOUND);
 	}
-	return NULL;
+	goto loser;
     }
-    crl = NULL;
     for (crlp = crls; *crlp; crlp++) {
 	if ((!(*crlp)->isKRL && type == SEC_CRL_TYPE) ||
 	    ((*crlp)->isKRL && type != SEC_CRL_TYPE)) 
@@ -477,28 +479,34 @@ PK11_FindCrlByName(PK11SlotInfo **slot, CK_OBJECT_HANDLE *crlHandle,
 	/* CRL collection was found, but no interesting CRL's were on it.
 	 * Not an error */
 	PORT_SetError(SEC_ERROR_CRL_NOT_FOUND);
-	return NULL;
+	goto loser;
     }
     if (crl->url) {
-	*url = PORT_Strdup(crl->url);
-	if (!*url) {
-	    nssCRL_Destroy(crl);
-	    return NULL;
+	url = PORT_Strdup(crl->url);
+	if (!url) {
+	    goto loser;
 	}
-    } else {
-	*url = NULL;
     }
     rvItem = SECITEM_AllocItem(NULL, NULL, crl->encoding.size);
     if (!rvItem) {
-	PORT_Free(*url);
-	nssCRL_Destroy(crl);
-	return NULL;
+	goto loser;
     }
     memcpy(rvItem->data, crl->encoding.data, crl->encoding.size);
     *slot = PK11_ReferenceSlot(crl->object.instances[0]->token->pk11slot);
     *crlHandle = crl->object.instances[0]->handle;
+    *pUrl = url;
     nssCRL_Destroy(crl);
     return rvItem;
+
+loser:
+    if (url)
+    	PORT_Free(url);
+    if (crl)
+	nssCRL_Destroy(crl);
+    if (PORT_GetError() == 0) {
+	PORT_SetError(SEC_ERROR_CRL_NOT_FOUND);
+    }
+    return NULL;
 }
 
 CK_OBJECT_HANDLE
