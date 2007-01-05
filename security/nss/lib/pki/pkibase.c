@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.26 $ $Date: 2006/08/22 22:54:11 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.27 $ $Date: 2007/01/05 00:25:05 $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -1199,6 +1199,10 @@ crl_getUIDFromObject(nssPKIObject *o, NSSItem *uid)
     NSSCRL *crl = (NSSCRL *)o;
     NSSDER *encoding;
     encoding = nssCRL_GetEncoding(crl);
+    if (!encoding) {
+        nss_SetError(NSS_ERROR_INVALID_ARGUMENT);
+        return PR_FALSE;
+    }
     uid[0] = *encoding;
     uid[1].data = NULL; uid[1].size = 0;
     return PR_SUCCESS;

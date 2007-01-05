@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.61 $ $Date: 2006/10/09 18:51:55 $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.62 $ $Date: 2007/01/05 00:25:05 $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -1157,7 +1157,7 @@ nssCRL_GetEncoding (
   NSSCRL *crl
 )
 {
-    if (crl->encoding.data != NULL && crl->encoding.size > 0) {
+    if (crl && crl->encoding.data != NULL && crl->encoding.size > 0) {
 	return &crl->encoding;
     } else {
 	return (NSSDER *)NULL;
