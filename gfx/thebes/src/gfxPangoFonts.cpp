@@ -61,6 +61,7 @@
 
 #include "nsVoidArray.h"
 #include "nsPromiseFlatString.h"
+#include "nsUTF8Utils.h"
 
 #include "gfxContext.h"
 #include "gfxPangoFonts.h"
@@ -922,17 +923,10 @@ gfxPangoTextRun::MeasureOrDraw(gfxContext *aContext,
 
     int result;
 
-    if (mSegments.IsEmpty()) {
-#ifdef DISABLE_PANGO_FAST
+    if (mSegments.IsEmpty())
         result = MeasureOrDrawItemizing(aContext, aDraw, aPt, isRTL, pf);
-#else
-        result = MeasureOrDrawFast(aContext, aDraw, aPt, isRTL, pf);
-        if (result < 0)
-            result = MeasureOrDrawItemizing(aContext, aDraw, aPt, isRTL, pf);
-#endif
-    } else {
+    else
         result = DrawFromCache(aContext, aPt);
-    }
 
     if (aDraw)
         aContext->SetMatrix(mat);
@@ -967,109 +961,6 @@ gfxPangoTextRun::DrawFromCache(gfxContext *aContext, gfxPoint aPt)
 
 #define IS_MISSING_GLYPH(g) (((g) & 0x10000000) || (g) == 0x0FFFFFFF)
 
-int
-gfxPangoTextRun::MeasureOrDrawFast(gfxContext     *aContext,
-                                   PRBool         aDraw,
-                                   gfxPoint       aPt,
-                                   PRBool         aIsRTL,
-                                   gfxPangoFont   *aFont)
-{
-    PangoAnalysis analysis;
-    analysis.font        = aFont->GetPangoFont();
-    analysis.level       = aIsRTL ? 1 : 0;
-    analysis.lang_engine = nsnull;
-    analysis.extra_attrs = nsnull;
-
-    // Find non-ASCII character for finding the language of the script.
-    guint32 ch = 'a';
-    PRUint8 unicharRange = kRangeSetLatin;
-    const PRUint16 *c = mString.get();
-    const PRUint16 *end = c + mString.Length();
-    for (; c < end; ++c) {
-        if (*c > 0x100) {
-            ch = *c;
-            unicharRange = FindCharUnicodeRange(PRUnichar(ch));
-            break;
-        }
-    }
-
-    // Determin the language for finding the shaper.
-    nsCAutoString lang;
-    aFont->GetMozLang(lang);
-    switch (unicharRange) {
-        case kRangeSetLatin:
-            lang.Assign("x-western");
-            break;
-        case kRangeSetCJK:
-            if (GetCJKLangGroupIndex(lang.get()) < 0)
-                return -1; // try with itemizing
-            break;
-        default:
-            lang.Assign(LangGroupFromUnicodeRange(unicharRange));
-            break;
-    }
-
-    if (lang.IsEmpty() || lang.Equals("x-unicode") || lang.Equals("x-user-def"))
-        return -1; // try with itemizing
-
-    analysis.language     = GetPangoLanguage(lang);
-    analysis.shape_engine = pango_font_find_shaper(analysis.font,
-                                                   analysis.language,
-                                                   ch);
-
-    PangoGlyphString* glyphString = pango_glyph_string_new();
-    pango_shape(mUTF8String.get(), mUTF8String.Length(),
-                &analysis, glyphString);
-
-    gint num_glyphs = glyphString->num_glyphs;
-    gint *clusters = glyphString->log_clusters;
-    gint32 spaceWidth = (gint32)
-        NSToCoordRound(aFont->GetMetrics().spaceWidth * FLOAT_PANGO_SCALE);
-    int width = 0;
-    int spacingOffset = 0;
-    PRBool spacing = aDraw && !mUTF8Spacing.IsEmpty();
-    for (PRInt32 i = 0; i < num_glyphs; ++i) {
-        PangoGlyphInfo* info = &glyphString->glyphs[i];
-        if (IS_MISSING_GLYPH(info->glyph)) {
-            pango_glyph_string_free(glyphString);
-            return -1; // try with itemizing
-        }
-
-        int j = clusters[i];
-        PangoGlyphGeometry *geometry = &glyphString->glyphs[i].geometry;
-        if (spacing) {
-            geometry->x_offset = spacingOffset;
-            spacingOffset += mUTF8Spacing[j] - geometry->width;
-        }
-        if (mUTF8String[j] == ' ')
-            geometry->width = spaceWidth;
-        width += geometry->width;
-    }
-
-    // drawing
-    if (aDraw && num_glyphs > 0) {
-#ifndef THEBES_USE_PANGO_CAIRO
-        DrawCairoGlyphs(aContext, analysis.font,
-                        gfxPoint(0.0, 0.0),
-                        glyphString);
-#else
-        aContext->MoveTo(aPt); // XXX Do we need?
-        pango_cairo_show_glyph_string(aContext->GetCairo(), analysis.font,
-                                      glyphString);
-#endif
-    }
-
-    TextSegment segment;
-    segment.mFont = aFont;
-    segment.mOffset = 0;
-    segment.mLength = mUTF8String.Length();
-    segment.mWidth = width;
-    segment.mGlyphString = glyphString;
-    mSegments.AppendElement(segment);
-
-    return width;
-}
-
 class FontSelector
 {
 public:
@@ -1084,6 +975,7 @@ public:
     {
         for (PRUint32 i = 0; i < mGroup->FontListLength(); ++i)
             mFonts.AppendElement(mGroup->GetFontAt(i));
+        mShouldCheckByShaping = ShapingNeededForInit();
         InitSegments(0, mLength, mFontIndex);
     }
     ~FontSelector() {
@@ -1135,15 +1027,6 @@ public:
         aTextSegment->mWidth       = 0;
         aTextSegment->mGlyphString = segment.mGlyphString;
         mSegmentOffset += segment.mLength;
-        if (aTextSegment->mGlyphString)
-            return PR_TRUE;
-
-        aTextSegment->mGlyphString = pango_glyph_string_new();
-        PangoFont *tmpFont = mItem->analysis.font;
-        mItem->analysis.font = segment.mFont->GetPangoFont();
-        pango_shape(mString + aTextSegment->mOffset, aTextSegment->mLength,
-                    &mItem->analysis, aTextSegment->mGlyphString);
-        mItem->analysis.font = tmpFont;
         return PR_TRUE;
     }
 private:
@@ -1170,120 +1053,162 @@ private:
     PRPackedBool mTriedPrefFonts;
     PRPackedBool mTriedOtherFonts;
     PRPackedBool mIsRTL;
+    PRPackedBool mShouldCheckByShaping;
 
     void InitSegments(const PRUint32 aOffset,
                       const PRUint32 aLength,
                       const PRUint32 aFontIndex) {
+        if (aLength == 0)
+            return;
         mFontIndex = aFontIndex;
-
-        const char *current = mString + aOffset;
-        PRBool checkMissingGlyph = PR_TRUE;
-
-        // for RTL, if we cannot find the font that has all glyphs,
-        // we should use better font.
-        PRUint32 betterFontIndex  = 0;
-        PRUint32 foundGlyphs      = 0;
+        const char *start = mString + aOffset;
 
 RetryNextFont:
         nsRefPtr<gfxPangoFont> font = GetNextFont();
-
-        // If we cannot found the font that has the current character glyph,
-        // we should return default font's missing data.
         if (!font) {
-            font = mFonts[betterFontIndex];
-            checkMissingGlyph = PR_FALSE;
+            AppendMissingSegment(aOffset, aLength);
+            return;
         }
+        PangoFcFont *fcFont = PANGO_FC_FONT(font->GetPangoFont());
 
-        // Shaping
-        PangoGlyphString *glyphString = pango_glyph_string_new();
-        PangoFont *tmpFont = mItem->analysis.font;
-        mItem->analysis.font = font->GetPangoFont();
-        pango_shape(current, aLength, &mItem->analysis, glyphString);
-        mItem->analysis.font = tmpFont;
+        const char *last = start + aLength;
+        for (const char *c = start; c < last;) {
+            const char *checking = c;
+            gunichar u = UTF8CharEnumerator::NextChar(&c, last, nsnull);
+            if (pango_fc_font_has_char(fcFont, u))
+                continue;
 
-        gint num_glyphs     = glyphString->num_glyphs;
-        gint *clusters      = glyphString->log_clusters;
-        PRUint32 offset     = aOffset;
-        PRUint32 skipLength = 0;
-        if (checkMissingGlyph) {
-            for (PRInt32 i = 0; i < num_glyphs; ++i) {
-                PangoGlyphInfo* info = &glyphString->glyphs[i];
-                if (IS_MISSING_GLYPH(info->glyph)) {
-                    // XXX Note that we don't support the segment separation
-                    // in RTL text. Because the Arabic characters changes the
-                    // glyphs by the position of the context. I think that the
-                    // languages of RTL doesn't have *very* many characters, so,
-                    // the Arabic/Hebrew font may have all glyphs in a font.
-                    if (mIsRTL) {
-                        PRUint32 found = i;
-                        for (PRInt32 j = i; j < num_glyphs; ++j) {
-                            info = &glyphString->glyphs[j];
-                            if (!IS_MISSING_GLYPH(info->glyph))
-                                found++;
-                        }
-                        if (found > foundGlyphs) {
-                            // we find better font!
-                            foundGlyphs = found;
-                            betterFontIndex = mFontIndex - 1;
-                        }
-                        pango_glyph_string_free(glyphString);
-                        goto RetryNextFont;
-                    }
+            // create the segment for found glyphs
+            if (!AppendSegment(start - mString, checking - start, font))
+                goto RetryNextFont;
 
-                    // The glyph is missing, separate segment here.
-                    PRUint32 missingLength = aLength - clusters[i];
-                    PRInt32 j;
-                    for (j = i + 1; j < num_glyphs; ++j) {
-                        info = &glyphString->glyphs[j];
-                        if (!IS_MISSING_GLYPH(info->glyph)) {
-                            missingLength = clusters[j] - offset;
-                            break;
-                        }
-                    }
-
-                    if (i != 0) {
-                        // found glyphs
-                        SegmentData segment;
-                        segment.mLength      = offset - (aOffset + skipLength);
-                        segment.mGlyphString = nsnull;
-                        segment.mFont        = font;
-                        mSegmentStack.AppendElement(segment);
-                    }
-
-                    // missing glyphs
-                    PRUint32 fontIndex = mFontIndex;
-                    InitSegments(offset, missingLength, mFontIndex);
-                    mFontIndex = fontIndex;
-
-                    PRUint32 next = offset + missingLength;
-                    if (next >= aLength) {
-                        pango_glyph_string_free(glyphString);
-                        return;
-                    }
-
-                    // remains, continue this loop
-                    i = j;
-                    skipLength = next - aOffset;
-                }
-                if (i + 1 < num_glyphs)
-                    offset = aOffset + clusters[i + 1];
-                else
-                    offset = aOffset + aLength;
+            const char *c2 = c;
+            for (; c2 < last;) {
+                u = UTF8CharEnumerator::NextChar(&c2, last, nsnull);
+                if (!pango_fc_font_has_char(fcFont, u))
+                    continue;
             }
-        } else {
-            offset = aOffset + aLength;
+
+            // the current font doesn't have all characters.
+            if (checking == start && c2 == last)
+                goto RetryNextFont;
+
+            // missing glyphs
+            PRUint32 fontIndex = mFontIndex;
+            InitSegments(checking - mString, c2 - checking, mFontIndex);
+            mFontIndex = fontIndex;
+
+            start = c = c2;
         }
+
+        if (!AppendSegment(start - mString, last - start, font))
+            goto RetryNextFont;
+    }
+
+    PRBool AppendSegment(const PRUint32 aOffset,
+                         const PRUint32 aLength,
+                         const nsRefPtr<gfxPangoFont> aFont) {
+        if (aLength == 0)
+            return PR_TRUE;
 
         SegmentData segment;
-        segment.mLength      = aLength - skipLength;
-        if (skipLength == 0)
-            segment.mGlyphString = glyphString;
-        else {
-            segment.mGlyphString = nsnull;
-            pango_glyph_string_free(glyphString);
+        segment.mLength      = aLength;
+        segment.mFont        = aFont;
+
+        segment.mGlyphString = pango_glyph_string_new();
+        PangoFont *tmpFont = mItem->analysis.font;
+        mItem->analysis.font = aFont->GetPangoFont();
+        pango_shape(mString + aOffset, aLength, &mItem->analysis,
+                    segment.mGlyphString);
+        mItem->analysis.font = tmpFont;
+        if (!mShouldCheckByShaping) {
+            mSegmentStack.AppendElement(segment);
+            return PR_TRUE;
         }
-        segment.mFont        = font;
+
+        for (PRInt32 i = 0; i < segment.mGlyphString->num_glyphs; i++) {
+            if (IS_MISSING_GLYPH(segment.mGlyphString->glyphs[i].glyph)) {
+                NS_WARNING("The glyph is existing, but failed to shape");
+                pango_glyph_string_free(segment.mGlyphString);
+                return PR_FALSE;
+            }
+        }
+
         mSegmentStack.AppendElement(segment);
+        return PR_TRUE;
+    }
+
+    void AppendMissingSegment(const PRUint32 aOffset,
+                              const PRUint32 aLength) {
+        SegmentData segment;
+        segment.mLength      = aLength;
+        segment.mGlyphString = GetMissingGlyphString(aOffset, aLength, 0);
+        segment.mFont        = mFonts[0];
+        mSegmentStack.AppendElement(segment);
+    }
+
+#define RANGE_NEEDS_SHAPING(u,min,max) if ((u) < (min)) continue; \
+                                       if ((u) <= (max)) return PR_TRUE;
+
+    PRBool ShapingNeededForInit() {
+       const char *c = mString;
+       const char *last = c + mLength;
+       for (; c < last;) {
+           PRUint32 u = UTF8CharEnumerator::NextChar(&c, last, nsnull);
+           // Arabic, Syriac, Arabic Supplement, N'Ko, Thaana
+           RANGE_NEEDS_SHAPING(u, 0x0600, 0x07FF)
+           // Devanagari, Bengali, Gurmukhi, Gujarati, Oriya, Tamil, Telugu,
+           // Kannada, Malayalam, Sinhala, Thai, Lao, Tibetan, Myanmar,
+           // Hangul Jamo
+           RANGE_NEEDS_SHAPING(u, 0x0900, 0x11FF)
+           // Gujarati
+           RANGE_NEEDS_SHAPING(u, 0x0A80, 0x0AFF)
+           // Khmer, Mongolian
+           RANGE_NEEDS_SHAPING(u, 0x1780, 0x18AF)
+           // Limbu, Tai Le, New Tai Lue, Khmer Symbols
+           RANGE_NEEDS_SHAPING(u, 0x1900, 0x19FF)
+           // Balinese
+           RANGE_NEEDS_SHAPING(u, 0x1B00, 0x1B7F)
+           // Syloti Nagri
+           RANGE_NEEDS_SHAPING(u, 0xA800, 0xA82F)
+           // Phags-pa
+           RANGE_NEEDS_SHAPING(u, 0xA840, 0xA87F)
+           // Alphabetic Presentation Forms, Arabic Presentaion Forms-A
+           RANGE_NEEDS_SHAPING(u, 0xFB00, 0xFDFF)
+           // Arabic Presentaion Forms-B
+           RANGE_NEEDS_SHAPING(u, 0xFE70, 0xFEFF)
+           // Kharoshthi
+           RANGE_NEEDS_SHAPING(u, 0x10A00, 0x10A5F)
+       }
+       return PR_FALSE;
+    }
+
+    PangoGlyphString* GetMissingGlyphString(const PRUint32 aOffset,
+                                            const PRUint32 aLength,
+                                            const PRUint32 aFontIndex) {
+        PangoGlyphString *glyphString = pango_glyph_string_new();
+        if (!glyphString)
+            return nsnull;
+        pango_glyph_string_set_size(glyphString, aLength);
+        const char *start = mString + aOffset;
+        const char *last = start + aLength;
+        gint32 spaceWidth = (gint32)
+            NSToCoordRound(mFonts[aFontIndex]->GetMetrics().spaceWidth *
+                                                             FLOAT_PANGO_SCALE);
+        PRUint32 i = 0;
+        for (const char *c = start; c < last; i++) {
+            const char *checking = c;
+            UTF8CharEnumerator::NextChar(&c, last, nsnull);
+            PangoGlyphInfo *glyphs = &glyphString->glyphs[i];
+            glyphs->glyph = 0x10000000;
+            glyphs->geometry.width = spaceWidth;
+            glyphs->geometry.x_offset = 0;
+            glyphs->geometry.y_offset = 0;
+            glyphs->attr.is_cluster_start = 1;
+            glyphString->log_clusters[i] = checking - start;
+        }
+        pango_glyph_string_set_size(glyphString, i);
+        return glyphString;
     }
 
     gfxPangoFont *GetNextFont() {
