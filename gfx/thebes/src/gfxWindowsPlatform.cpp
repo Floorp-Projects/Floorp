@@ -22,6 +22,7 @@
  *   Stuart Parmenter <stuart@mozilla.com>
  *   Vladimir Vukicevic <vladimir@pobox.com>
  *   Masayuki Nakano <masayuki@d-toybox.com>
+ *   Masatoshi Kimura <VYV03354@nifty.ne.jp>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,6 +48,8 @@
 #include "nsIPref.h"
 #include "nsServiceManagerUtils.h"
 
+#include "nsIWindowsRegKey.h"
+
 #include <string>
 
 gfxWindowsPlatform::gfxWindowsPlatform()
@@ -54,6 +57,7 @@ gfxWindowsPlatform::gfxWindowsPlatform()
     mFonts.Init(200);
     mFontWeights.Init(200);
     mFontAliases.Init(20);
+    mFontSubstitutes.Init(50);
     UpdateFontList();
 }
 
@@ -168,12 +172,29 @@ gfxWindowsPlatform::GetFontList(const nsACString& aLangGroup,
     return NS_OK;
 }
 
+static void
+RemoveCharsetFromFontSubstitute(nsAString &aName)
+{
+    PRInt32 comma = aName.FindChar(PRUnichar(','));
+    if (comma >= 0)
+        aName.Truncate(comma);
+}
+
+static void
+BuildKeyNameFromFontName(nsAString &aName)
+{
+    if (aName.Length() >= LF_FACESIZE)
+        aName.Truncate(LF_FACESIZE - 1);
+    ToLowerCase(aName);
+}
+
 nsresult
 gfxWindowsPlatform::UpdateFontList()
 {
     mFonts.Clear();
     mFontAliases.Clear();
     mNonExistingFonts.Clear();
+    mFontSubstitutes.Clear();
 
     LOGFONTW logFont;
     logFont.lfCharSet = DEFAULT_CHARSET;
@@ -184,6 +205,50 @@ gfxWindowsPlatform::UpdateFontList()
     HDC dc = ::GetDC(nsnull);
     EnumFontFamiliesExW(dc, &logFont, (FONTENUMPROCW)gfxWindowsPlatform::FontEnumProc, (LPARAM)this, 0);
     ::ReleaseDC(nsnull, dc);
+
+    // Create the list of FontSubstitutes
+    nsCOMPtr<nsIWindowsRegKey> regKey =
+        do_CreateInstance("@mozilla.org/windows-registry-key;1");
+    if (!regKey)
+        return NS_ERROR_FAILURE;
+     NS_NAMED_LITERAL_STRING(kFontSubstitutesKey,
+          "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes");
+
+    nsresult rv =
+        regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
+                     kFontSubstitutesKey, nsIWindowsRegKey::ACCESS_READ);
+    if (NS_FAILED(rv))
+        return rv;
+
+    PRUint32 count;
+    rv = regKey->GetValueCount(&count);
+    if (NS_FAILED(rv) || count == 0)
+        return rv;
+    for (PRUint32 i = 0; i < count; i++) {
+        nsAutoString substituteName;
+        rv = regKey->GetValueName(i, substituteName);
+        if (NS_FAILED(rv) || substituteName.IsEmpty() ||
+            substituteName.CharAt(1) == PRUnichar('@'))
+            continue;
+        PRUint32 valueType;
+        rv = regKey->GetValueType(substituteName, &valueType);
+        if (NS_FAILED(rv) || valueType != nsIWindowsRegKey::TYPE_STRING)
+            continue;
+        nsAutoString actualFontName;
+        rv = regKey->ReadStringValue(substituteName, actualFontName);
+        if (NS_FAILED(rv))
+            continue;
+
+        RemoveCharsetFromFontSubstitute(substituteName);
+        BuildKeyNameFromFontName(substituteName);
+        RemoveCharsetFromFontSubstitute(actualFontName);
+        BuildKeyNameFromFontName(actualFontName);
+        nsRefPtr<FontEntry> fe;
+        if (!actualFontName.IsEmpty() && mFonts.Get(actualFontName, &fe))
+            mFontSubstitutes.Put(substituteName, fe);
+        else
+            mNonExistingFonts.AppendString(substituteName);
+    }
 
     return NS_OK;
 }
@@ -211,12 +276,12 @@ gfxWindowsPlatform::ResolveFontName(const nsAString& aFontName,
         return NS_ERROR_FAILURE;
 
     nsAutoString keyName(aFontName);
-    if (keyName.Length() >= LF_FACESIZE)
-        keyName.Truncate(LF_FACESIZE - 1);
-    ToLowerCase(keyName);
+    BuildKeyNameFromFontName(keyName);
 
     nsRefPtr<FontEntry> fe;
-    if (mFonts.Get(keyName, &fe) || mFontAliases.Get(keyName, &fe)) {
+    if (mFonts.Get(keyName, &fe) ||
+        mFontSubstitutes.Get(keyName, &fe) ||
+        mFontAliases.Get(keyName, &fe)) {
         aAborted = !(*aCallback)(fe->mName, aClosure);
         // XXX If the font has font link, we should add the linked font.
         return NS_OK;
@@ -261,16 +326,24 @@ gfxWindowsPlatform::FontResolveProc(const ENUMLOGFONTEXW *lpelfe,
         return 1;
 
     ResolveData *rData = reinterpret_cast<ResolveData*>(data);
-    rData->mFoundCount++;
 
     nsAutoString name(logFont.lfFaceName);
 
     // Save the alias name to cache
     nsRefPtr<FontEntry> fe;
     nsAutoString keyName(name);
-    ToLowerCase(keyName);
-    if (rData->mCaller->mFonts.Get(keyName, &fe))
-        rData->mCaller->mFontAliases.Put(*(rData->mFontName), fe);
+    BuildKeyNameFromFontName(keyName);
+    if (!rData->mCaller->mFonts.Get(keyName, &fe)) {
+        // This case only occurs on failing to build
+        // the list of font substitue. In this case, the user should
+        // reboot the Windows. Probably, we don't have the good way for
+        // resolving in this time.
+        NS_WARNING("Cannot find actual font");
+        return 1;
+    }
+
+    rData->mFoundCount++;
+    rData->mCaller->mFontAliases.Put(*(rData->mFontName), fe);
 
     return (rData->mCallback)(name, rData->mClosure);
 
