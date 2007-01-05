@@ -147,8 +147,6 @@ struct nsCycleCollectorParams
     PRBool mFaultIsFatal;
     PRBool mLogPointers;
     
-    PRUint32 mEventDivisor;
-    PRTime mTimeStep;
     PRUint32 mScanDelay;
     
     nsCycleCollectorParams() :
@@ -159,26 +157,6 @@ struct nsCycleCollectorParams
         mFaultIsFatal  (PR_GetEnv("XPCOM_CC_FAULT_IS_FATAL") != NULL),
         mLogPointers   (PR_GetEnv("XPCOM_CC_LOG_POINTERS") != NULL),
 
-        // The default number of tickles we receive from the event loop
-        // before we check the time.
-        //
-        // Making this number smaller causes:
-        //   - More time to be spent in the collector (bad)
-        //   - Collection to occur in finer-grained increments (good)
-
-        mEventDivisor(64),
-
-        // The default number of microseconds we consider as "one
-        // aging step" for the pointers in the purple buffer. We only
-        // scan the purple buffer for ripe pointers once this many ms
-        // have passed.
-        //
-        // Making this number smaller causes:
-        //   - More time to be spent in the collector (bad)
-        //   - Collection to occur in finer-grained increments (good)
-
-        mTimeStep(1000000),
-
         // The default number of collections to "age" candidate
         // pointers in the purple buffer before we decide that any
         // garbage cycle they're in has stabilized and we want to
@@ -188,17 +166,9 @@ struct nsCycleCollectorParams
         //   - More time to be spent in the collector (bad)
         //   - Less delay between forming garbage and collecting it (good)
 
-        mScanDelay(32)
+        mScanDelay(10)
     {
-        char *s = PR_GetEnv("XPCOM_CC_EVENT_DIVISOR");
-        if (s)
-            PR_sscanf(s, "%d", &mEventDivisor);
-
-        s = PR_GetEnv("XPCOM_CC_TIME_STEP");
-        if (s)
-            PR_sscanf(s, "%d", &mTimeStep);
-
-        s = PR_GetEnv("XPCOM_CC_SCAN_DELAY");
+        char *s = PR_GetEnv("XPCOM_CC_SCAN_DELAY");
         if (s)
             PR_sscanf(s, "%d", &mScanDelay);
     }
@@ -1601,96 +1571,64 @@ nsCycleCollector::Freed(void *n)
 void
 nsCycleCollector::Collect()
 {
-
-    if (mParams.mDoNothing)
-        return;
-
-    if (mParams.mHookMalloc)
-        InitMemHook();
-
-    // First check if our event divisor has expired.
-    if (mTick++ < mParams.mEventDivisor) 
-        return;
-
-    mTick = 0;
-
-    // Then check if the time limit has been reached.
-    PRTime now = PR_Now();
-    if ((mLastAging + mParams.mTimeStep) > now)
-        return;
-
-    mLastAging = now;
-
-    // NB: It is strange, and also essential, that we collect our
-    // purple candidates twice: both before *and* after calling
-    // mRuntimes[i]->BeginCycleCollection(). 
-    //
-    // The first call is necessary to avoid doing the (expensive)
-    // script GC triggered by BeginCycleCollection() if there are no
-    // purples at all.
-    //
-    // The second call is necessary to account for purples that 
-    // might have been forgotten during any script GCs that were
-    // triggered by BeginCycleCollection(). We don't want to be 
-    // walking dead purples, after all; they'll cause a crash.
-
-    CollectPurple();
-    if (mBufs[0]->GetSize() == 0) {
-        mPurpleBuf.BumpGeneration();
-        mStats.mCollection++;
-        if (mParams.mReportStats)
-            mStats.Dump();
-        return;
-    }
-
+    // This triggers a JS GC. Our caller assumes we always trigger at
+    // least one JS GC -- they rely on this fact to avoid redundant JS
+    // GC calls -- so it's essential that we actually execute this
+    // step!
+    
     for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
         if (mRuntimes[i])
             mRuntimes[i]->BeginCycleCollection();
     }
 
-    // Yes, do it again. See comment above.
+    if (! mParams.mDoNothing) {
 
-    CollectPurple();
-    if (mBufs[0]->GetSize() == 0) {
-        mPurpleBuf.BumpGeneration();
-        mStats.mCollection++;
-        if (mParams.mReportStats)
-            mStats.Dump();
-        return;
+        if (mParams.mHookMalloc)
+            InitMemHook();
+        
+        CollectPurple();
+
+        if (mBufs[0]->GetSize() == 0) {
+            mPurpleBuf.BumpGeneration();
+            mStats.mCollection++;
+            if (mParams.mReportStats)
+                mStats.Dump();
+
+        } else {
+            
+            if (mCollectionInProgress)
+                Fault("re-entered collection");
+            
+            mCollectionInProgress = PR_TRUE;
+            mScanInProgress = PR_TRUE;
+            
+            mGraph.Clear();
+            
+            // The main Bacon & Rajan collection algorithm.
+            
+            MarkRoots();  
+            ScanRoots();
+            
+            mScanInProgress = PR_FALSE;
+            MaybeDrawGraphs();
+            CollectWhite();
+            ForgetAll();
+            
+            // Some additional book-keeping.
+            
+            mGraph.Clear();
+            mPurpleBuf.BumpGeneration();
+            mStats.mCollection++;
+            if (mParams.mReportStats)
+                mStats.Dump();
+            mCollectionInProgress = PR_FALSE;
+        }
     }
-
-  
-    if (mCollectionInProgress)
-        Fault("re-entered collection");
-
-    mCollectionInProgress = PR_TRUE;
-    mScanInProgress = PR_TRUE;
-
-    mGraph.Clear();
-
-    // The main Bacon & Rajan collection algorithm.
-
-    MarkRoots();  
-    ScanRoots();
-
-    mScanInProgress = PR_FALSE;
-    MaybeDrawGraphs();
-    CollectWhite();
-    ForgetAll();
-
-    // Some additional book-keeping.
-
-    mGraph.Clear();
-    mPurpleBuf.BumpGeneration();
-    mStats.mCollection++;
-    if (mParams.mReportStats)
-        mStats.Dump();
-    mCollectionInProgress = PR_FALSE;
 
     for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
         if (mRuntimes[i])
             mRuntimes[i]->FinishCycleCollection();
-    }
+    }    
 }
 
 
