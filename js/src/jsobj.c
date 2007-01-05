@@ -4086,11 +4086,7 @@ js_MarkNativeIteratorStates(JSContext *cx)
         end = cursor + state->ida->length;
         for (; cursor != end; ++cursor) {
             id = *cursor;
-            if (JSID_IS_ATOM(id)) {
-                GC_MARK_ATOM(cx, JSID_TO_ATOM(id));
-            } else if (JSID_IS_OBJECT(id)) {
-                GC_MARK(cx, JSID_TO_OBJECT(id), "ida->vector[i]");
-            }
+            MARK_ID(cx, id);
         }
     } while ((state = state->next) != NULL);
 }
