@@ -675,6 +675,10 @@ sftk_handleCertObject(SFTKSession *session,SFTKObject *object)
 	/* get the der cert */ 
 	attribute = sftk_FindAttribute(object,CKA_VALUE);
 	PORT_Assert(attribute);
+	if (!attribute) {
+	    sftk_freeCertDB(certHandle);
+	    return CKR_ATTRIBUTE_VALUE_INVALID;
+	}
 
 	derCert.type = 0;
 	derCert.data = (unsigned char *)attribute->attrib.pValue;
@@ -815,18 +819,20 @@ sftk_handleTrustObject(SFTKSession *session,SFTKObject *object)
 	}
 
 	issuer = sftk_FindAttribute(object,CKA_ISSUER);
-	PORT_Assert(issuer);
-	issuerSN.derIssuer.data = (unsigned char *)issuer->attrib.pValue;
-	issuerSN.derIssuer.len = issuer->attrib.ulValueLen ;
-
 	serial = sftk_FindAttribute(object,CKA_SERIAL_NUMBER);
-	PORT_Assert(serial);
-	issuerSN.serialNumber.data = (unsigned char *)serial->attrib.pValue;
-	issuerSN.serialNumber.len = serial->attrib.ulValueLen ;
 
-	cert = nsslowcert_FindCertByIssuerAndSN(certHandle,&issuerSN);
-	sftk_FreeAttribute(serial);
-	sftk_FreeAttribute(issuer);
+	PORT_Assert(issuer && serial);
+	if (issuer && serial) {
+	    issuerSN.derIssuer.data = (unsigned char *)issuer->attrib.pValue;
+	    issuerSN.derIssuer.len = issuer->attrib.ulValueLen ;
+
+	    issuerSN.serialNumber.data = (unsigned char *)serial->attrib.pValue;
+	    issuerSN.serialNumber.len = serial->attrib.ulValueLen ;
+
+	    cert = nsslowcert_FindCertByIssuerAndSN(certHandle,&issuerSN);
+	}
+	if (issuer) sftk_FreeAttribute(issuer);
+	if (serial) sftk_FreeAttribute(serial);
 
 	if (cert == NULL) {
 	    sftk_freeCertDB(certHandle);
@@ -929,13 +935,19 @@ sftk_handleSMimeObject(SFTKSession *session,SFTKObject *object)
 	SECItem *pRawProfile = NULL;
 	SECItem *pRawTime = NULL;
 	char *email = NULL;
-    	SFTKAttribute *subject,*profile,*time;
+    	SFTKAttribute *subject = NULL,
+		     *profile = NULL,
+		     *time    = NULL;
 	SECStatus rv;
 	NSSLOWCERTCertDBHandle *certHandle;
+	CK_RV ck_rv = CKR_OK;
 
 	PORT_Assert(slot);
-	certHandle = sftk_getCertDB(slot);
+	if (slot == NULL) {
+	    return CKR_SESSION_HANDLE_INVALID;
+	}
 
+	certHandle = sftk_getCertDB(slot);
 	if (certHandle == NULL) {
 	    return CKR_TOKEN_WRITE_PROTECTED;
 	}
@@ -943,6 +955,11 @@ sftk_handleSMimeObject(SFTKSession *session,SFTKObject *object)
 	/* lookup SUBJECT */
 	subject = sftk_FindAttribute(object,CKA_SUBJECT);
 	PORT_Assert(subject);
+	if (!subject) {
+	    ck_rv = CKR_ATTRIBUTE_VALUE_INVALID;
+	    goto loser;
+	}
+
 	derSubj.data = (unsigned char *)subject->attrib.pValue;
 	derSubj.len = subject->attrib.ulValueLen ;
 	derSubj.type = 0;
@@ -967,23 +984,31 @@ sftk_handleSMimeObject(SFTKSession *session,SFTKObject *object)
 
 
 	email = sftk_getString(object,CKA_NETSCAPE_EMAIL);
+	if (!email) {
+	    ck_rv = CKR_ATTRIBUTE_VALUE_INVALID;
+	    goto loser;
+	}
 
 	/* Store CRL by SUBJECT */
 	rv = nsslowcert_SaveSMimeProfile(certHandle, email, &derSubj, 
 				pRawProfile,pRawTime);
-	sftk_freeCertDB(certHandle);
-    	sftk_FreeAttribute(subject);
-    	if (profile) sftk_FreeAttribute(profile);
-    	if (time) sftk_FreeAttribute(time);
 	if (rv != SECSuccess) {
-    	    PORT_Free(email);
-	    return CKR_DEVICE_ERROR;
+	    ck_rv = CKR_DEVICE_ERROR;
+	    goto loser;
 	}
 	emailKey.data = (unsigned char *)email;
 	emailKey.len = PORT_Strlen(email)+1;
 
 	object->handle = sftk_mkHandle(slot, &emailKey, SFTK_TOKEN_TYPE_SMIME);
-    	PORT_Free(email);
+
+loser:
+	sftk_freeCertDB(certHandle);
+	if (subject) sftk_FreeAttribute(subject);
+	if (profile) sftk_FreeAttribute(profile);
+	if (time)    sftk_FreeAttribute(time);
+	if (email)   PORT_Free(email);
+
+	return ck_rv;
     }
 
     return CKR_OK;
@@ -1028,6 +1053,11 @@ sftk_handleCrlObject(SFTKSession *session,SFTKObject *object)
 	/* lookup SUBJECT */
 	subject = sftk_FindAttribute(object,CKA_SUBJECT);
 	PORT_Assert(subject);
+	if (!subject) {
+	    sftk_freeCertDB(certHandle);
+	    return CKR_ATTRIBUTE_VALUE_INVALID;
+	}
+
 	derSubj.data = (unsigned char *)subject->attrib.pValue;
 	derSubj.len = subject->attrib.ulValueLen ;
 
@@ -3801,6 +3831,9 @@ CK_RV NSC_Login(CK_SESSION_HANDLE hSession, CK_USER_TYPE userType,
 
     /* get the slot */
     slot = sftk_SlotFromSessionHandle(hSession);
+    if (slot == NULL) {
+	return CKR_SESSION_HANDLE_INVALID;
+    }
 
     /* make sure the session is valid */
     session = sftk_SessionFromHandle(hSession);
@@ -3915,6 +3948,9 @@ CK_RV NSC_Logout(CK_SESSION_HANDLE hSession)
     SFTKSession *session;
     SECItem *pw = NULL;
 
+    if (slot == NULL) {
+	return CKR_SESSION_HANDLE_INVALID;
+    }
     session = sftk_SessionFromHandle(hSession);
     if (session == NULL) return CKR_SESSION_HANDLE_INVALID;
     sftk_FreeSession(session);
@@ -4043,6 +4079,9 @@ CK_RV NSC_CreateObject(CK_SESSION_HANDLE hSession,
 
     *phObject = CK_INVALID_HANDLE;
 
+    if (slot == NULL) {
+	return CKR_SESSION_HANDLE_INVALID;
+    }
     /*
      * now lets create an object to hang the attributes off of
      */
@@ -4105,6 +4144,9 @@ CK_RV NSC_CopyObject(CK_SESSION_HANDLE hSession,
     SFTKSlot *slot = sftk_SlotFromSessionHandle(hSession);
     int i;
 
+    if (slot == NULL) {
+	return CKR_SESSION_HANDLE_INVALID;
+    }
     /* Get srcObject so we can find the class */
     session = sftk_SessionFromHandle(hSession);
     if (session == NULL) {
@@ -4197,6 +4239,9 @@ CK_RV NSC_GetAttributeValue(CK_SESSION_HANDLE hSession,
     CK_RV crv;
     int i;
 
+    if (slot == NULL) {
+	return CKR_SESSION_HANDLE_INVALID;
+    }
     /*
      * make sure we're allowed
      */
@@ -4257,6 +4302,9 @@ CK_RV NSC_SetAttributeValue (CK_SESSION_HANDLE hSession,
     CK_BBOOL legal;
     int i;
 
+    if (slot == NULL) {
+	return CKR_SESSION_HANDLE_INVALID;
+    }
     /*
      * make sure we're allowed
      */
@@ -5083,6 +5131,9 @@ CK_RV NSC_FindObjectsInit(CK_SESSION_HANDLE hSession,
     CK_RV crv = CKR_OK;
     PRBool isLoggedIn;
     
+    if (slot == NULL) {
+	return CKR_SESSION_HANDLE_INVALID;
+    }
     session = sftk_SessionFromHandle(hSession);
     if (session == NULL) {
 	crv = CKR_SESSION_HANDLE_INVALID;
