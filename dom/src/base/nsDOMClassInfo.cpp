@@ -4470,12 +4470,13 @@ nsWindowSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     nsresult rv = window->GetLocation(getter_AddRefs(location));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = location->SetHref(nsDependentJSString(val));
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = WrapNative(cx, obj, location, NS_GET_IID(nsIDOMLocation), vp,
                     getter_AddRefs(holder));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = location->SetHref(nsDependentJSString(val));
+
     return NS_FAILED(rv) ? rv : NS_SUCCESS_I_DID_SOMETHING;
   }
 
