@@ -145,7 +145,8 @@ gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
         mMetrics.aveCharWidth = GetCharWidth('x');
 
     mMetrics.underlineOffset = atsMetrics.underlinePosition * size;
-    mMetrics.underlineSize = atsMetrics.underlineThickness * size;
+    // ATSUI sometimes returns 0 for underline thickness, see bug 361576.
+    mMetrics.underlineSize = PR_MAX(1.0f, atsMetrics.underlineThickness * size);
 
     mMetrics.subscriptOffset = mMetrics.xHeight;
     mMetrics.superscriptOffset = mMetrics.xHeight;
