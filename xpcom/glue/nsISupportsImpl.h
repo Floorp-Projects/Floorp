@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -61,7 +62,7 @@
 #endif
 
 #include "nsDebug.h"
-#include "nsTraceRefcnt.h" 
+#include "nsTraceRefcnt.h"
 #include "nsCycleCollector.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,11 +90,7 @@ private:
 
 #endif // NS_DEBUG
 
-#if PR_BITS_PER_WORD == 32
 #define NS_PURPLE_BIT ((PRUint32)(1 << 31))
-#elif PR_BITS_PER_WORD == 64
-#define NS_PURPLE_BIT ((PRUint64)(1 << 63))
-#endif
 
 #define NS_PURPLE_MASK (~NS_PURPLE_BIT)
 #define NS_PURPLE_BIT_SET(x) ((x) & (NS_PURPLE_BIT))
@@ -106,90 +103,88 @@ private:
 
 class nsCycleCollectingAutoRefCnt {
 
- public:
-    nsCycleCollectingAutoRefCnt()
-      : mValue(0) 
-      {}
+public:
+  nsCycleCollectingAutoRefCnt()
+    : mValue(0)
+  {}
 
-    nsCycleCollectingAutoRefCnt(nsrefcnt aValue) 
-      : mValue(aValue) 
-      {
-	NS_CLEAR_PURPLE_BIT(mValue);
-      }
+  nsCycleCollectingAutoRefCnt(nsrefcnt aValue)
+    : mValue(aValue)
+  {
+    NS_CLEAR_PURPLE_BIT(mValue);
+  }
 
-    nsrefcnt incr(nsISupports *owner) 
-      { 
-	
-	if (NS_UNLIKELY(mValue == NS_PURPLE_BIT))
-	  {
-	    // The sentinel value "purple bit alone, refcount 0" means
-	    // that we're stabilized, during finalization. In this
-	    // state we lie about our actual refcount if anyone asks
-	    // and say it's 1, which is basically true: the caller who
-	    // is deleting us has a reference still.
-	    return 1;
-	  }
-	
-	nsrefcnt tmp = get();
-	PRBool purple = NS_STATIC_CAST(PRBool, NS_PURPLE_BIT_SET(mValue));
-	
-	if (NS_UNLIKELY(purple)) {
-	  NS_ASSERTION(tmp != 0, "purple ISupports pointer with zero refcnt");
-	  nsCycleCollector_forget(owner);
-	} 
-	
-	mValue = tmp + 1;
-	return mValue;
-      }
+  nsrefcnt incr(nsISupports *owner)
+  {
+    if (NS_UNLIKELY(mValue == NS_PURPLE_BIT)) {
+      // The sentinel value "purple bit alone, refcount 0" means
+      // that we're stabilized, during finalization. In this
+      // state we lie about our actual refcount if anyone asks
+      // and say it's 1, which is basically true: the caller who
+      // is deleting us has a reference still.
+      return 1;
+    }
 
-    void stabilizeForDeletion(nsISupports *owner) 
-      { 
-	mValue = NS_PURPLE_BIT;
-      }
+    nsrefcnt tmp = get();
+    PRBool purple = NS_STATIC_CAST(PRBool, NS_PURPLE_BIT_SET(mValue));
 
-    nsrefcnt decr(nsISupports *owner)
-      {
-	if (NS_UNLIKELY(mValue == NS_PURPLE_BIT))
-	  return 1;
-	
-	nsrefcnt tmp = get();
-	PRBool purple = NS_STATIC_CAST(PRBool, NS_PURPLE_BIT_SET(mValue));
-  
-	if (NS_UNLIKELY(tmp > 1 && !purple)) {
-	  nsCycleCollector_suspect(owner);
-	  purple = PR_TRUE;
-    
-	} else if (NS_UNLIKELY(tmp == 1 && purple)) {
-	  nsCycleCollector_forget(owner);
-	  purple = PR_FALSE;
+    if (NS_UNLIKELY(purple)) {
+      NS_ASSERTION(tmp != 0, "purple ISupports pointer with zero refcnt");
+      nsCycleCollector_forget(owner);
+    }
 
-	} else {  
-	  NS_ASSERTION(tmp >= 1, "decr() called with zero refcnt");
-	}
-	
-	mValue = tmp - 1;
-	
-	if (purple)
-	  NS_SET_PURPLE_BIT(mValue);
-	
-	return get();
-      }
+    mValue = tmp + 1;
+    return mValue;
+  }
 
-    nsrefcnt get() const
-      {
-	if (NS_UNLIKELY(mValue == NS_PURPLE_BIT))
-	  return 1;
+  void stabilizeForDeletion(nsISupports *owner)
+  {
+    mValue = NS_PURPLE_BIT;
+  }
 
-	return NS_VALUE_WITHOUT_PURPLE_BIT(mValue); 
-      }
+  nsrefcnt decr(nsISupports *owner)
+  {
+    if (NS_UNLIKELY(mValue == NS_PURPLE_BIT))
+      return 1;
 
-    operator nsrefcnt() const
-      {  
-	return get();
-      }
+    nsrefcnt tmp = get();
+    PRBool purple = NS_STATIC_CAST(PRBool, NS_PURPLE_BIT_SET(mValue));
+
+    if (NS_UNLIKELY(tmp > 1 && !purple)) {
+      nsCycleCollector_suspect(owner);
+      purple = PR_TRUE;
+
+    } else if (NS_UNLIKELY(tmp == 1 && purple)) {
+      nsCycleCollector_forget(owner);
+      purple = PR_FALSE;
+
+    } else {
+      NS_ASSERTION(tmp >= 1, "decr() called with zero refcnt");
+    }
+
+    mValue = tmp - 1;
+
+    if (purple)
+      NS_SET_PURPLE_BIT(mValue);
+
+    return get();
+  }
+
+  nsrefcnt get() const
+  {
+    if (NS_UNLIKELY(mValue == NS_PURPLE_BIT))
+      return 1;
+
+    return NS_VALUE_WITHOUT_PURPLE_BIT(mValue);
+  }
+
+  operator nsrefcnt() const
+  {
+    return get();
+  }
 
  private:
-    nsrefcnt mValue;
+  nsrefcnt mValue;
 };
 
 class nsAutoRefCnt {
@@ -201,7 +196,7 @@ class nsAutoRefCnt {
     // only support prefix increment/decrement
     nsrefcnt operator++() { return ++mValue; }
     nsrefcnt operator--() { return --mValue; }
-    
+
     nsrefcnt operator=(nsrefcnt aValue) { return (mValue = aValue); }
     operator nsrefcnt() const { return mValue; }
     nsrefcnt get() const { return mValue; }

@@ -298,7 +298,7 @@ struct nsPurpleBuffer
 #define N_POINTERS (N_ENTRIES * ASSOCIATIVITY)
 #define TOTAL_BYTES (N_POINTERS * PR_BYTES_PER_WORD)
 #define INDEX_MASK PR_BITMASK(N_INDEX_BITS)
-#define POINTER_INDEX(P) ((((PRUint32)P) >> INDEX_LOW_BIT) & (INDEX_MASK))
+#define POINTER_INDEX(P) ((((PRUword)P) >> INDEX_LOW_BIT) & (INDEX_MASK))
 
 #if (INDEX_LOW_BIT + N_INDEX_BITS > (8 * PR_BYTES_PER_WORD))
 #error "index bit overflow"
