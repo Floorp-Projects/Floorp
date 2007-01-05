@@ -61,6 +61,8 @@
 #define NETWORK_PREFPANE NS_LITERAL_CSTRING("/System/Library/PreferencePanes/Network.prefPane")
 #define DESKTOP_PREFPANE NS_LITERAL_CSTRING("/System/Library/PreferencePanes/DesktopScreenEffectsPref.prefPane")
 
+#define SAFARI_BUNDLE_IDENTIFIER NS_LITERAL_CSTRING("com.apple.Safari")
+
 // These Launch Services functions are undocumented. We're using them since they're
 // the only way to set the default opener for URLs / file extensions.
 extern "C" {
@@ -500,5 +502,30 @@ nsMacShellService::OpenApplicationWithURI(nsILocalFile* aApplication, const nsAC
 NS_IMETHODIMP
 nsMacShellService::GetDefaultFeedReader(nsILocalFile** _retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = NS_ERROR_FAILURE;
+  *_retval = nsnull;
+
+  CFURLRef defaultHandlerURL;
+  OSStatus err = ::_LSCopyDefaultSchemeHandlerURL(CFSTR("feed"),
+                                                  &defaultHandlerURL);
+  if (defaultHandlerURL) {
+    nsCOMPtr<nsILocalFileMac> defaultReader =
+      do_CreateInstance("@mozilla.org/file/local;1", &rv);
+    if (NS_SUCCEEDED(rv)) {
+      rv = defaultReader->InitWithCFURL(defaultHandlerURL);
+      if (NS_SUCCEEDED(rv)) {
+        // ASSERT("Safari Is Not a Feed Reader");
+        nsCAutoString bundleIdentifier;
+
+        // don't throw if the bundle has no identifier
+        if (NS_FAILED(defaultReader->GetBundleIdentifier(bundleIdentifier)) ||
+            !bundleIdentifier.Equals(SAFARI_BUNDLE_IDENTIFIER))
+          NS_ADDREF(*_retval = defaultReader);
+      }
+    }
+
+    ::CFRelease(defaultHandlerURL);
+  }
+
+  return rv;
 }
