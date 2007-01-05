@@ -97,7 +97,6 @@ MAC_LCPPSRCS = \
 
 CPPSRCS =  \
 		$(MAC_LCPPSRCS) \
-		nsNativeThemeCocoa.cpp \
 		$(NULL)
 
 CMMSRCS = \
@@ -121,6 +120,7 @@ CMMSRCS = \
 		nsScreenManagerCocoa.mm \
 		nsSound.mm \
 		nsLookAndFeel.mm \
+		nsNativeThemeCocoa.mm \
 		$(NULL)
 
 XPIDLSRCS	+= \
