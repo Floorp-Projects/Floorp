@@ -1895,6 +1895,12 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 
   nsresult rv = NS_OK;
 
+  // If we already have a parser we ignore the document.open call.
+  if (mParser) {
+
+    return NS_OK;
+  }
+
   if (!nsContentUtils::CanCallerAccess(NS_STATIC_CAST(nsIDOMHTMLDocument*, this))) {
     nsPIDOMWindow *win = GetWindow();
     if (win) {
@@ -1906,12 +1912,6 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
         return NS_ERROR_DOM_SECURITY_ERR;
       }
     }
-  }
-
-  // If we already have a parser we ignore the document.open call.
-  if (mParser) {
-
-    return NS_OK;
   }
 
   if (!aContentType.EqualsLiteral("text/html") &&
