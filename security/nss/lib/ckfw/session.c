@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: session.c,v $ $Revision: 1.10 $ $Date: 2006/04/19 23:50:43 $";
+static const char CVS_ID[] = "@(#) $RCSfile: session.c,v $ $Revision: 1.11 $ $Date: 2007/01/05 00:23:14 $";
 #endif /* DEBUG */
 
 /*
@@ -1026,6 +1026,7 @@ nssCKFWSession_GetOperationStateLen
 
   if( (void *)NULL == (void *)fwSession->mdSession->GetOperationStateLen ) {
     *pError = CKR_STATE_UNSAVEABLE;
+    return (CK_ULONG)0;
   }
 
   /*
@@ -1436,6 +1437,11 @@ nssCKFWSession_CopyObject
    * Sanity-check object
    */
 
+  if( (NSSCKFWObject *)NULL == fwObject ) {
+    *pError = CKR_ARGUMENTS_BAD;
+    return (NSSCKFWObject *)NULL;
+  }
+
   oldIsToken = nssCKFWObject_IsTokenObject(fwObject);
 
   newIsToken = oldIsToken;
@@ -1489,19 +1495,6 @@ nssCKFWSession_CopyObject
     rv = nssCKFWObject_Create(arena, mdObject, 
       newIsToken ? NULL : fwSession,
       fwSession->fwToken, fwSession->fwInstance, pError);
-    if( (NSSCKFWObject *)NULL == fwObject ) {
-      if( CKR_OK == *pError ) {
-        *pError = CKR_GENERAL_ERROR;
-      }
-
-      if( (void *)NULL != (void *)mdObject->Destroy ) {
-        (void)mdObject->Destroy(mdObject, (NSSCKFWObject *)NULL,
-          fwSession->mdSession, fwSession, fwSession->mdToken,
-          fwSession->fwToken, fwSession->mdInstance, fwSession->fwInstance);
-      }
-    
-      return (NSSCKFWObject *)NULL;
-    }
 
     if( CK_FALSE == newIsToken ) {
       if( CK_FALSE == nssCKFWHash_Exists(fwSession->sessionObjectHash, rv) ) {
