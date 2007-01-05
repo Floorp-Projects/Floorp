@@ -1,7 +1,7 @@
 messenger.jar:
 % content branding %content/branding/ xpcnativewrappers=yes
   content/branding/about-credits.png                (about-credits.png)
-  content/branding/about-thunderbird.png            (about-thunderbird.png)
+  content/branding/about.png                        (about-thunderbird.png)
   content/branding/thunderbird-wizard-badge.png     (thunderbird-wizard-badge.png)
   content/branding/thunderbird-watermark.png        (thunderbird-watermark.png)
   content/branding/icon64.png                       (icon64.png)

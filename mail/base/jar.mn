@@ -53,7 +53,7 @@ messenger.jar:
 #ifdef MOZ_USE_GENERIC_BRANDING
 % content branding %content/branding/ xpcnativewrappers=yes
     content/branding/about-credits.png              (content/about-credits.png)
-    content/branding/about-thunderbird.png          (content/about-thunderbird.png)
+    content/branding/about.png                      (content/about-thunderbird.png)
     content/branding/thunderbird-watermark.png      (content/thunderbird-watermark.png)
     content/branding/icon64.png                     (content/icon64.png)
 #ifdef XP_WIN
