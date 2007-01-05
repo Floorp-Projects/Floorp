@@ -109,6 +109,7 @@ enum {
 // Reading bookmark files
 - (BOOL)readBookmarks;
 - (void)showCorruptBookmarksAlert;
+- (void)showRestoredBookmarksAlert;
 
 // these versions assume that we're reading all the bookmarks from the file (i.e. not an import into a subfolder)
 - (BOOL)readPListBookmarks:(NSString *)pathToFile;    // camino or safari
@@ -1321,8 +1322,11 @@ static BookmarkManager* gBookmarkManager = nil;
 
       // Try to recover from the backup, if there is one
       if ([fM fileExistsAtPath:backupPath]) {
-        NSLog(@"Recovering from backup bookmarks file '%@'", backupPath);
         if ([self readPListBookmarks:backupPath]) {
+          // This is a background thread, so we can't put up an alert directly.
+          [self performSelectorOnMainThread:@selector(showRestoredBookmarksAlert) withObject:nil waitUntilDone:NO];
+          NSLog(@"Recovering from backup bookmarks file '%@'", backupPath);
+
           [fM copyPath:backupPath toPath:bookmarkPath handler:self];
           return YES;
         }
@@ -1353,6 +1357,15 @@ static BookmarkManager* gBookmarkManager = nil;
 {
   NSRunAlertPanel(NSLocalizedString(@"CorruptedBookmarksAlert", nil),
                   NSLocalizedString(@"CorruptedBookmarksMsg", nil),
+                  NSLocalizedString(@"OKButtonText", nil),
+                  nil,
+                  nil);
+}
+
+- (void)showRestoredBookmarksAlert
+{
+  NSRunAlertPanel(NSLocalizedString(@"RestoredBookmarksAlert", nil),
+                  NSLocalizedString(@"RestoredBookmarksMsg", nil),
                   NSLocalizedString(@"OKButtonText", nil),
                   nil,
                   nil);
