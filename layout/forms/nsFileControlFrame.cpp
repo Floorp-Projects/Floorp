@@ -334,13 +334,13 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
     nsAutoString unicodePath;
     result = localFile->GetPath(unicodePath);
     if (!unicodePath.IsEmpty()) {
-      // Tell mTextFrame that it doesn't have focus while we're setting the
-      // value.  Otherwise it'll think that the value is being set by a script
-      // while it has focus and not fire onchange when it should.
-      PRBool hasFocus = mTextFrame->GetHasFocus();
-      mTextFrame->SetHasFocus(PR_FALSE);
+      // Tell mTextFrame that this update of the value is a user initiated
+      // change. Otherwise it'll think that the value is being set by a script
+      // and not fire onchange when it should.
+      PRBool oldState = mTextFrame->GetFireChangeEventState();
+      mTextFrame->SetFireChangeEventState(PR_TRUE);
       mTextFrame->SetFormProperty(nsGkAtoms::value, unicodePath);
-      mTextFrame->SetHasFocus(hasFocus);
+      mTextFrame->SetFireChangeEventState(oldState);
       nsCOMPtr<nsIFileControlElement> fileControl = do_QueryInterface(mContent);
       if (fileControl) {
         fileControl->SetFileName(unicodePath);
