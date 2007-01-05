@@ -67,11 +67,10 @@ foreach my $mod (@modules) {
   #print "system \"$cmd\"\n";
   $status |= system $cmd;
 }
-foreach my $d (@dirs) {
-  my $cmd = "config/fast-update.pl -r $branch -d $d -m all" . ($dirlocal ? " -l" : "");
-  #print "system \"$cmd\"\n";
-  $status |= system $cmd;
-}
+my $dirlist = join(' -d ', @dirs);
+my $cmd = "config/fast-update.pl -r $branch -d $dirlist -m all" . ($dirlocal ? " -l" : "");
+#print "system \"$cmd\"\n";
+$status |= system $cmd;
 
 exit $status;
 
