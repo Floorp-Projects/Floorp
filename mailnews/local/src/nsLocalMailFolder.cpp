@@ -2501,27 +2501,24 @@ keepGoing:
       break;
     }
     char *endBuffer = mCopyState->m_dataBuffer + mCopyState->m_leftOver;
-    end = (char *) memchr(start, '\r', endBuffer - start + 1);
+    end = PL_strnprbrk(start, "\r\n", endBuffer - start + 1);
     if (end)
     {
-      if (*(end+1) == nsCRT::LF)  //need to set the linebreak_len each time
+      //need to set the linebreak_len each time
+      if (*end == nsCRT::CR && *(end+1) == nsCRT::LF)
         linebreak_len = 2;  //CRLF
       else
-        linebreak_len = 1;  //only CR
+        linebreak_len = 1;  //only CR or only LF
     }
-    if (!end)
+    else
     {
-      end = (char *) memchr(start, '\n', endBuffer - start + 1);
-      if (end)
-        linebreak_len = 1;   //LF
-      else
-        linebreak_len =0;  //no LF
-    }
-    if (start && !end)
-    {
-      mCopyState->m_leftOver -= (start - mCopyState->m_dataBuffer);
-      memcpy (mCopyState->m_dataBuffer, start,
-        mCopyState->m_leftOver+1);
+      linebreak_len = 0;    //no LF
+      if (start)
+      {
+        mCopyState->m_leftOver -= (start - mCopyState->m_dataBuffer);
+        memcpy (mCopyState->m_dataBuffer, start,
+          mCopyState->m_leftOver+1);
+      }
     }
   }
   return rv;
