@@ -54,7 +54,8 @@ public:
 
     virtual const gfxFont::Metrics& GetMetrics();
 
-    float GetCharWidth (PRUnichar c);
+    float GetCharWidth(PRUnichar c);
+    float GetCharHeight(PRUnichar c);
 
     ATSUFontID GetATSUFontID() { return mATSUFontID; }
 

@@ -136,7 +136,11 @@ gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
     mMetrics.emDescent = mMetrics.emHeight - mMetrics.emAscent;
 
     mMetrics.maxAdvance = atsMetrics.maxAdvanceWidth * size;
-    mMetrics.xHeight = atsMetrics.xHeight * size;
+
+    if (atsMetrics.xHeight)
+        mMetrics.xHeight = atsMetrics.xHeight * size;
+    else
+        mMetrics.xHeight = GetCharHeight('x');
 
     if (atsMetrics.avgAdvanceWidth != 0.0)
         mMetrics.aveCharWidth =
@@ -199,6 +203,25 @@ gfxAtsuiFont::GetCharWidth(PRUnichar c)
     ATSUDisposeTextLayout(layout);
 
     return f;
+}
+
+float
+gfxAtsuiFont::GetCharHeight(PRUnichar c)
+{
+    // this sucks.  There is a faster way to go from a char -> glyphs, but it
+    // requires using oodles of apple private interfaces.  If we start caching
+    // gfxAtsuiFonts, then it might make sense to do that.
+    ATSUTextLayout layout;
+
+    UniCharCount one = 1;
+    ATSUCreateTextLayoutWithTextPtr(&c, 0, 1, 1, 1, &one, &mATSUStyle, &layout);
+
+    Rect rect;
+    ATSUMeasureTextImage(layout, 0, 1, 0, 0, &rect);
+
+    ATSUDisposeTextLayout(layout);
+
+    return rect.bottom - rect.top;
 }
 
 gfxAtsuiFont::~gfxAtsuiFont()
