@@ -98,6 +98,7 @@ private:
     nsDataHashtable<nsStringHashKey, nsRefPtr<FontEntry> > mFonts;
     nsDataHashtable<nsStringHashKey, nsRefPtr<WeightTable> > mFontWeights;
     nsDataHashtable<nsStringHashKey, nsRefPtr<FontEntry> > mFontAliases;
+    nsDataHashtable<nsStringHashKey, nsRefPtr<FontEntry> > mFontSubstitutes;
     nsStringArray mNonExistingFonts;
 };
 
