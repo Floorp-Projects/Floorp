@@ -146,8 +146,10 @@ gfxQuartzFontCache::gfxQuartzFontCache()
 {
     mCache.Init();
     mFamilies.Init(30);
+    mAppleFamilyNames.Init(60);
     mAllFamilyNames.Init(60);
     mPostscriptFonts.Init(60);
+    mFontIDTable.Init(60);
     mAllFontNames.Init(100);
     InitFontList();
     ::ATSFontNotificationSubscribe(ATSNotification,
@@ -183,15 +185,6 @@ gfxQuartzFontCache::AppendFontFamily(NSFontManager *aFontManager,
         // we should use localized simple family name.
         NSString *name = [aFontManager localizedNameForFamily:aName face:nil];
         GetStringForNSString(name, displayName);
-
-        // Cache only the original name of the family.
-        // (the localized names and display names will be appended)
-        NSString *psName = [[NSFont fontWithName:aName size:10.0] fontName];
-        nsAutoString strPsName, strFamilyName;
-        GetStringForNSString(psName, strPsName);
-        GetStringForNSString(aName, strFamilyName);
-        GenerateFontListKey(strFamilyName, key);
-        mAllFamilyNames.Put(key, strPsName);
     }
 
     GenerateFontListKey(displayName, key);
@@ -254,7 +247,9 @@ gfxQuartzFontCache::InitFontList()
     mFamilies.Clear();
     mAllFamilyNames.Clear();
     mPostscriptFonts.Clear();
+    mFontIDTable.Clear();
     mAllFontNames.Clear();
+    mNonExistingFonts.Clear();
 
     nsAutoString key;
 
@@ -288,9 +283,9 @@ gfxQuartzFontCache::InitFontList()
         }
     }
 
-    // We should cache for all alias for all families.
-    // We will use this for resolving the font names to actual fonts.
-    // We should use ATSUI for this, because cocoa cannot show the all aliases.
+    // We should cache for all alias for all families for resloving the given
+    // font name to postscript name. But if we cache all font names here,
+    // the start up time is slowly, so we should only cache the minimum list.
     ItemCount fontCount;
     OSStatus err = ::ATSUFontCount(&fontCount);
     if (err != noErr)
@@ -300,116 +295,108 @@ gfxQuartzFontCache::InitFontList()
     err = ::ATSUGetFontIDs(fontIDs, arraySize, &fontCount);
     if (err != noErr)
         return;
+
     TextEncoding encoding = 0;
     TECObjectRef converter = nsnull;
+
+    // In principle, we should get actual length of font name,
+    // but we can skip it by the enough buffer length.
+    ByteCount len;
+    ItemCount index;
+    const ByteCount kBufLength = 1024;
+    char buf[kBufLength];
+    nsAutoString basicFamilyName, postscriptName, name;
+
     for (ItemCount i = 0; i < fontCount; i++) {
-        struct FontNames {
-            FontNames() {
-                mShouldProgress = PR_FALSE;
-            }
-            nsStringArray mNames;
-            nsStringArray mFamilyNames;
-            nsString mFamily;
-            nsString mPostscriptName;
-            PRBool mShouldProgress;
-        };
-        FontNames names;
+        // Get postscript name, first.
+        err = ATSUFindFontName(fontIDs[i], kFontPostscriptName,
+                               kFontNoPlatformCode, kFontNoScriptCode,
+                               kFontNoLanguageCode, kBufLength,
+                               buf, &len, &index);
+        if (err != noErr || len == 0)
+            continue;
+
+        FontNameCode nameCode;
+        FontPlatformCode platformCode;
+        FontScriptCode scriptCode;
+        FontLanguageCode langCode;
+        err = ::ATSUGetIndFontName(fontIDs[i], index, kBufLength, buf, &len,
+                                   &nameCode, &platformCode,
+                                   &scriptCode, &langCode);
+        if (err != noErr || len == 0)
+            continue;
+
+        postscriptName.Truncate();
+        if (!GetFontNameFromBuffer(buf, len, platformCode, scriptCode,
+                                   langCode, converter, encoding,
+                                   postscriptName))
+            continue;
+
+        // We should get family name from mFamilies for checking the first
+        // character of the name.
+        nsRefPtr<FontEntry> psFont = new FontEntry(postscriptName);
+        NSFont *font = psFont->GetNSFont(10.0);
+        basicFamilyName.Truncate();
+        GetStringForNSString([font familyName], basicFamilyName);
+        NS_ASSERTION(!basicFamilyName.IsEmpty(),
+                     "fail to get basic family name");
+
+        PRBool ignoreThisFont = PR_FALSE;
+        if (basicFamilyName[0] == PRUnichar('.') ||
+            basicFamilyName[0] == PRUnichar('%'))
+            ignoreThisFont = PR_TRUE;
+
+        // Append postscript to mPostscriptFonts
+        GenerateFontListKey(postscriptName, key);
+        if (!ignoreThisFont) {
+            mPostscriptFonts.Put(key, psFont);
+            mFontIDTable.Put(PRUint32(fontIDs[i]), psFont);
+        } else {
+            mNonExistingFonts.AppendString(key);
+        }
 
         ItemCount nameCount;
         err = ::ATSUCountFontNames(fontIDs[i], &nameCount);
         if (err != noErr || nameCount == 0)
             continue;
+
         for (ItemCount j = 0; j < nameCount; j++) {
-            // In principle, we should get actual length of font name,
-            // but we can skip it by the enough buffer length.
-            ByteCount len;
-            const ByteCount kBufLength = 1024;
-            char buf[kBufLength];
-            FontNameCode nameCode;
-            FontPlatformCode platformCode;
-            FontScriptCode scriptCode;
-            FontLanguageCode langCode;
             err = ::ATSUGetIndFontName(fontIDs[i], j, kBufLength, buf, &len,
                                        &nameCode, &platformCode,
                                        &scriptCode, &langCode);
             if (err != noErr || len == 0)
                 continue;
-            switch (nameCode) {
-                case kFontFamilyName:
-                case kFontFullName:
-                case kFontPostscriptName:
-                    break;
-                default:
-                    continue;
-            }
-            nsAutoString fontName;
+
+            if (nameCode != kFontFamilyName && nameCode != kFontFullName)
+                continue;
+
+            // XXX the mac platform font names cannot be found by
+            // ATSUFindFontFromName with UTF16 string. So, we MUST cache the
+            // names here, but we can get the other names later.
+            if (!ignoreThisFont && platformCode != kFontMacintoshPlatform)
+                continue;
+
+            name.Truncate();
             if (!GetFontNameFromBuffer(buf, len, platformCode, scriptCode,
-                                       langCode, converter, encoding, fontName))
+                                       langCode, converter, encoding, name))
                 continue;
 
-            if (fontName[0] == PRUnichar('.') ||
-                fontName[0] == PRUnichar('%')) {
-                // We should ignore this font.
-                names.mShouldProgress = PR_FALSE;
-                break;
+            GenerateFontListKey(name, key);
+            if (ignoreThisFont) {
+                if (mNonExistingFonts.IndexOf(key) >= 0)
+                    mNonExistingFonts.AppendString(key);
+                continue;
             }
-            names.mShouldProgress = PR_TRUE;
-
             switch (nameCode) {
-                case kFontFamilyName:
-                    names.mFamilyNames.AppendString(fontName);
-                    // Find the family name of cocoa
-                    if (names.mFamily.IsEmpty()) {
-                        GenerateFontListKey(fontName, key);
-                        nsAutoString s;
-                        if (mAllFamilyNames.Get(key, &s))
-                            names.mFamily = s;
-                    }
-                    break;
                 case kFontFullName:
-                    names.mNames.AppendString(fontName);
+                    mAllFontNames.Put(key, psFont->Name());
                     break;
-                case kFontPostscriptName:
-                    NS_ASSERTION(names.mPostscriptName.IsEmpty() ||
-                                 names.mPostscriptName.Equals(fontName),
-                                 "A font id has two or more postscript name!");
-                    names.mPostscriptName = fontName;
+                case kFontFamilyName:
+                    // XXX we cannot resolve to postscript name, here.
+                    // Don't use fontName of NSFont that is buggy in some cases.
+                    mAppleFamilyNames.Put(key, basicFamilyName);
                     break;
             }
-        }
-
-        if (!names.mShouldProgress)
-            continue;
-        if (names.mPostscriptName.IsEmpty())
-            continue;
-        nsRefPtr<FontEntry> psFont = new FontEntry(names.mPostscriptName);
-        GenerateFontListKey(names.mPostscriptName, key);
-        mPostscriptFonts.Put(key, psFont);
-
-        for (PRInt32 j = 0; j < names.mNames.Count(); j++) {
-            GenerateFontListKey(*names.mNames[j], key);
-            nsAutoString str;
-            if (mAllFontNames.Get(key, &str))
-                continue;
-            mAllFontNames.Put(key, psFont->Name());
-        }
-
-        if (names.mFamily.IsEmpty()) {
-            NSFont *font = psFont->GetNSFont(10.0);
-            nsAutoString str;
-            GetStringForNSString([font familyName], str);
-            if (str.IsEmpty()) {
-                NS_ERROR("Why I cannot find the family name?");
-                continue;
-            }
-            names.mFamily = str;
-        }
-        for (PRInt32 j = 0; j < names.mFamilyNames.Count(); j++) {
-            nsAutoString str;
-            GenerateFontListKey(*names.mFamilyNames[j], key);
-            if (mAllFamilyNames.Get(key, &str))
-                continue;
-            mAllFamilyNames.Put(key, names.mFamily);
         }
     }
     if (converter)
@@ -616,8 +603,7 @@ gfxQuartzFontCache::FindFromSystem (const nsAString& aFamily,
     nsRefPtr<FontEntry> fe;
     GenerateFontListKey(aFamily, key);
     if (!mPostscriptFonts.Get(key, &fe)) {
-        if (!mAllFamilyNames.Get(key, &fontName) &&
-            !mAllFontNames.Get(key, &fontName))
+        if (!ResolveFontName(aFamily, fontName))
             return kATSUInvalidFontID;
         GenerateFontListKey(fontName, key);
         if (!mPostscriptFonts.Get(key, &fe))
@@ -702,13 +688,69 @@ gfxQuartzFontCache::ResolveFontName(const nsAString& aFontName,
     nsAutoString name, key;
     nsRefPtr<FontEntry> fe;
     GenerateFontListKey(aFontName, key);
+    if (mNonExistingFonts.IndexOf(key) >= 0)
+        return PR_FALSE;
     if (mPostscriptFonts.Get(key, &fe)) {
         aResolvedFontName = fe->Name();
         return PR_TRUE;
     }
-    if (mAllFamilyNames.Get(key, &name) || mAllFontNames.Get(key, &name)) {
+
+    // try to find from font names.
+    if (mAllFontNames.Get(key, &name)) {
         aResolvedFontName = name;
         return PR_TRUE;
     }
-    return PR_FALSE;
+    ATSUFontID fontID;
+    OSStatus err;
+    err = ATSUFindFontFromName(aFontName.BeginReading(),
+                               aFontName.Length() * sizeof(PRUnichar),
+                               kFontFullName,
+                               kFontNoPlatformCode,
+                               kFontNoScriptCode,
+                               kFontNoLanguageCode,
+                               &fontID);
+    if (err == noErr && fontID != kATSUInvalidFontID) {
+        if (!mFontIDTable.Get(PRUint32(fontID), &fe)) {
+            mNonExistingFonts.AppendString(key);
+            return PR_FALSE;
+        }
+        mAllFontNames.Put(key, fe->Name());
+        aResolvedFontName = fe->Name();
+        return PR_TRUE;
+    }
+
+    // try to find from family names.
+    if (mAllFamilyNames.Get(key, &name)) {
+        aResolvedFontName = name;
+        return PR_TRUE;
+    }
+    // try to find from apple family names.
+    if (mAppleFamilyNames.Get(key, &name)) {
+        NSString *familyName = GetNSStringForString(name);        
+        NSFont *font = [NSFont fontWithName:familyName size:10.0];
+        // XXX Don't use fontName of NSFont. It is buggy in some cases.
+        if (mFontIDTable.Get(PRUint32([font _atsFontID]), &fe)) {
+            mAllFamilyNames.Put(key, fe->Name());
+            aResolvedFontName = fe->Name();
+            return PR_TRUE;
+        }
+        NS_ERROR("There is a font family, but cannot find the actual font");
+        mNonExistingFonts.AppendString(key);
+        return PR_FALSE;
+    }
+    err = ATSUFindFontFromName(aFontName.BeginReading(),
+                               aFontName.Length() * sizeof(PRUnichar),
+                               kFontFamilyName,
+                               kFontNoPlatformCode,
+                               kFontNoScriptCode,
+                               kFontNoLanguageCode,
+                               &fontID);
+    if (err != noErr || fontID == kATSUInvalidFontID ||
+        !mFontIDTable.Get(PRUint32(fontID), &fe)) {
+        mNonExistingFonts.AppendString(key);
+        return PR_FALSE;
+    }
+    mAllFamilyNames.Put(key, fe->Name());
+    aResolvedFontName = fe->Name();
+    return PR_TRUE;
 }
