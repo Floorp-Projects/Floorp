@@ -21,7 +21,7 @@ function makeCall(query){
 }
 
 function addTag(id, type){
-  var tagValue = document.getElementById('newtag').value;
+  var tagValue = dojo.widget.manager.getWidgetById('newtag').getValue();
   if (tagValue == ''){
      alert("I can't work with a blank tag. Please enter something in the space provided");
      return;
@@ -49,8 +49,9 @@ function tagAttached() {
         s = s.substring(2);
 
         displayMsg('message', 1, "Updated");
-        setTimeout("clearMsg('message')",OK_TIMEOUT);        
-        document.getElementById('tagTable').innerHTML = s;
+        setTimeout("clearMsg('message')",OK_TIMEOUT);
+        dojo.widget.manager.getWidgetById('tagTable').setContent(s);
+//        document.getElementById('tagTable').innerHTML = s;
     } else {
         if (s.substring(0,5)=='Error') {
           //controlled error
@@ -61,7 +62,7 @@ function tagAttached() {
     }
     httpReq = undefined;
     document.getElementById('doAdd').disabled = false;
-    document.getElementById('newtag').value = '';
+    dojo.widget.manager.getWidgetById('newtag').setAllValues = '';
     
   }
 

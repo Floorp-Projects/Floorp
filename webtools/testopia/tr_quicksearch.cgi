@@ -40,12 +40,18 @@ Bugzilla->login();
 my $template = Bugzilla->template;
 my $cgi = Bugzilla->cgi;
 
-#print $cgi->header;
-
 my $action = $cgi->param('action') || '';
-my $term = trim($cgi->param('search')) || '';
+my $term = trim($cgi->param('query')) || '';
+
 push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
 
+# Quicksearch allows a user to look up any of the major objects in Testopia 
+# using a simple prefix. For instance, e:linux will search for all environments
+# with linux in the name or tr 33 will bring up Test Run 33.
+# If only one is returned, we jump to the appropriate page, otherwise 
+# we display the list.
+
+# If we have a term we are using this quicksearch 
 if ($term){
     SWITCH: for ($term){
         /^(tag)?[\s:-]+(.*)$/i && do{
@@ -122,7 +128,7 @@ if ($term){
         /^(caserun|TCR|cr)?[\s:-]+(.*)$/i && do{
             my $text = trim($2);
             if ($text =~ /^\d+$/){
-                print "Location: " . Param('urlbase') . "tr_show_caserun.cgi?run_id=" . $text . "\n\n";
+                print "Location: " . Param('urlbase') . "tr_show_caserun.cgi?caserun_id=" . $text . "\n\n";
             }
             else{
                 $cgi->param('current_tab', 'case_run');
@@ -132,7 +138,7 @@ if ($term){
                 my $search = Bugzilla::Testopia::Search->new($cgi);
                 my $table = Bugzilla::Testopia::Table->new('run', 'tr_list_runs.cgi', $cgi, undef, $search->query);
                 if ($table->list_count == 1){
-                    print "Location: " . Param('urlbase') . "tr_show_caserun.cgi?plan_id=" . ${$table->list}[0]->id . "\n\n";
+                    print "Location: " . Param('urlbase') . "tr_show_caserun.cgi?caserun_id=" . ${$table->list}[0]->id . "\n\n";
                 }
                 else{
                     print "Location: " . Param('urlbase') . "tr_list_caseruns.cgi?" . $table->get_query_part . "\n\n";
@@ -165,11 +171,16 @@ if ($term){
     }
     
 }
+############
+### Ajax ###
+############
 
+# This is where we lookup items typed into Dojo combo boxes
 else{
-    
+    print $cgi->header;
+
+# Environment Lookup
     if ($action eq 'getenv'){
-    
         my $search = $cgi->param('search');
         trick_taint($search);
         $search = "%$search%";
@@ -183,11 +194,26 @@ else{
                FROM test_environments 
               WHERE name like ?",
               undef, $search);
-        print STDERR objToJson($ref);
         print objToJson($ref);  
     }
+
+# Tag lookup
+    elsif ($action eq 'gettag'){
+        my $search = $cgi->param('search');
+        trick_taint($search);
+        $search = "%$search%";
+        my $dbh = Bugzilla->dbh;
+
+        my $ref = $dbh->selectall_arrayref(
+            "SELECT tag_name, tag_id 
+               FROM test_tags 
+              WHERE tag_name like ?",
+              undef, $search);
+        print objToJson($ref);  
+    }
+
+# If neither is true above, display the quicksearch form and explaination.
     else{
-        print $cgi->header;
         $template->process("testopia/quicksearch.html.tmpl", $vars) ||
             ThrowTemplateError($template->error());
     }

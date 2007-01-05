@@ -445,7 +445,7 @@ sub display {
     foreach my $run (@{$plan->test_runs}){
         push @dojo_search, "tip_" . $run->id;
     }
-    push @dojo_search, "plandoc";
+    push @dojo_search, "plandoc","newtag","tagTable";
     $vars->{'dojo_search'} = objToJson(\@dojo_search);
     $vars->{'plan'} = $plan;
     

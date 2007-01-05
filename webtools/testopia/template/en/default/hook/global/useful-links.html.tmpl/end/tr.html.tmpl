@@ -53,7 +53,7 @@
     <a href="tr_list_runs.cgi?current_tab=run&summary_type=allwordssubstr&summary=&notes_type=allwordssubstr&notes=&environment_type=allwordssubstr&environment=&tag_type=allwords&tag=&manager_type=substring&manager=[% user.login FILTER url_quote %]&run_id=&plan_id=&assignee_type=substr&assignee=[% user.login FILTER url_quote %]">My Runs</a>
     [% END %]&nbsp;|&nbsp;
     <form action="tr_quicksearch.cgi">
-      <input name="search" size="25" />
+      <input name="query" size="25" />
       <input type="submit" value="Find" />
     </form>
   </div>
