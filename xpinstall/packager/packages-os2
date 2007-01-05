@@ -108,7 +108,6 @@ bin/components/srchsvc.dll
 bin/components/appstartup.xpt
 bin/components/autocomplete.xpt
 bin/components/bookmarks.xpt
-bin/components/chrome.xpt
 bin/components/directory.xpt
 bin/components/downloadmanager.xpt
 ;bin/components/embedcomponents.dll
@@ -151,6 +150,7 @@ bin/components/dom_range.xpt
 bin/components/dom_sidebar.xpt
 bin/components/dom_storage.xpt
 bin/components/dom_stylesheets.xpt
+bin/components/dom_svg.xpt
 bin/components/dom_traversal.xpt
 bin/components/dom_views.xpt
 bin/components/dom_xbl.xpt
@@ -195,7 +195,7 @@ bin/components/i18n.dll
 bin/components/chardet.dll
 bin/components/mork.dll
 bin/components/mozbrwsr.xpt
-;bin/components/mozcomps.xpt
+;bin/components/mozcomps.xpt (not built on OS/2)
 bin/components/mozfind.dll
 bin/components/mozfind.xpt
 ;bin/components/mozucth.dll
@@ -479,7 +479,7 @@ bin/components/smime-service.js
 ;bin/components/msgMapi.dll
 ;bin/components/mapihook.xpt
 bin/components/msgmdn.dll
-;bin/components/msgmdn.xpt
+;bin/components/msgmdn.xpt (not built on OS/2)
 bin/components/mdn-service.js
 ;bin/components/nsSetDefaultMail.js
 ;bin/components/nsUnsetDefaultMail.js
