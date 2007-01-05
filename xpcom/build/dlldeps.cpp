@@ -96,6 +96,7 @@
 #include "nsStringBuffer.h"
 #include "nsCategoryCache.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsCycleCollector.h"
 #include "nsThreadUtils.h"
 
 #if !defined(WINCE) && !defined(XP_OS2)
@@ -272,6 +273,7 @@ void XXXNeverCalled()
     }
 
     nsCycleCollectionParticipant();
+    nsCycleCollector_collect();
 
 #if !defined(WINCE) && !defined(XP_OS2)
     NS_NewWindowsRegKey(nsnull);
