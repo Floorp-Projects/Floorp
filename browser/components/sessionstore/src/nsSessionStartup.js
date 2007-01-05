@@ -73,17 +73,6 @@ const CLASS_NAME = "Browser Session Startup Service";
 
 const STATE_RUNNING_STR = "running";
 
-/* :::::::: Pref Defaults :::::::::::::::::::: */
-
-// whether the service is enabled
-const DEFAULT_ENABLED = true;
-
-// resume the current session at startup just this once
-const DEFAULT_RESUME_SESSION_ONCE = false;
-
-// resume the current session at startup if it had previously crashed
-const DEFAULT_RESUME_FROM_CRASH = true;
-
 function debug(aMsg) {
   aMsg = ("SessionStartup: " + aMsg).replace(/\S{80}/g, "$&\n");
   Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService)
@@ -107,12 +96,10 @@ SessionStartup.prototype = {
    */
   init: function sss_init() {
     this._prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                       getService(Ci.nsIPrefService).
-                       getBranch("browser.");
-    this._prefBranch.QueryInterface(Ci.nsIPrefBranch2);
+                       getService(Ci.nsIPrefService).getBranch("browser.");
 
     // if the service is disabled, do not init 
-    if (!this._getPref("sessionstore.enabled", DEFAULT_ENABLED))
+    if (!this._prefBranch.getBoolPref("sessionstore.enabled"))
       return;
 
     // get file references
@@ -122,7 +109,7 @@ SessionStartup.prototype = {
     this._sessionFile.append("sessionstore.js");
     
     // only read the session file if config allows possibility of restoring
-    var resumeFromCrash = this._getPref("sessionstore.resume_from_crash", DEFAULT_RESUME_FROM_CRASH);
+    var resumeFromCrash = this._prefBranch.getBoolPref("sessionstore.resume_from_crash");
     if (resumeFromCrash || this._doResumeSession()) {
       // get string containing session state
       this._iniString = this._readFile(this._sessionFile);
@@ -147,7 +134,7 @@ SessionStartup.prototype = {
     if (this._iniString && !this._doRestore) {
       this._iniString = null; // reset the state string
     }
-    if (this._getPref("sessionstore.resume_session_once", DEFAULT_RESUME_SESSION_ONCE)) {
+    if (this._prefBranch.getBoolPref("sessionstore.resume_session_once")) {
       this._prefBranch.setBoolPref("sessionstore.resume_session_once", false);
     }
     
@@ -229,8 +216,8 @@ SessionStartup.prototype = {
    * @returns bool
    */
   _doResumeSession: function sss_doResumeSession() {
-    return this._getPref("startup.page", 1) == 3 ||
-      this._getPref("sessionstore.resume_session_once", DEFAULT_RESUME_SESSION_ONCE);
+    return this._prefBranch.getIntPref("startup.page") == 3 || 
+      this._prefBranch.getBoolPref("sessionstore.resume_session_once");
   },
 
   /**
@@ -240,14 +227,19 @@ SessionStartup.prototype = {
    */
   _doRecoverSession: function sss_doRecoverSession() {
     // do not prompt or resume, post-crash
-    if (!this._getPref("sessionstore.resume_from_crash", DEFAULT_RESUME_FROM_CRASH))
+    if (!this._prefBranch.getBoolPref("sessionstore.resume_from_crash"))
       return false;
 
     // if the prompt fails, recover anyway
     var recover = true;
+
     // allow extensions to hook in a more elaborate restore prompt
     // XXXzeniko drop this when we're using our own dialog instead of a standard prompt
-    var dialogURI = this._getPref("sessionstore.restore_prompt_uri");
+    var dialogURI = null;
+    try {
+      dialogURI = this._prefBranch.getCharPref("sessionstore.restore_prompt_uri");
+    }
+    catch (ex) { }
     
     try {
       if (dialogURI) { // extension provided dialog 
@@ -305,31 +297,6 @@ SessionStartup.prototype = {
   },
 
 /* ........ Storage API .............. */
-
-  /**
-   * basic pref reader
-   * @param aName
-   * @param aDefault
-   * @param aUseRootBranch
-   */
-  _getPref: function sss_getPref(aName, aDefault) {
-    var pb = this._prefBranch;
-    try {
-      switch (pb.getPrefType(aName)) {
-      case pb.PREF_STRING:
-        return pb.getCharPref(aName);
-      case pb.PREF_BOOL:
-        return pb.getBoolPref(aName);
-      case pb.PREF_INT:
-        return pb.getIntPref(aName);
-      default:
-        return aDefault;
-      }
-    }
-    catch(ex) {
-      return aDefault;
-    }
-  },
 
   /**
    * reads a file into a string
