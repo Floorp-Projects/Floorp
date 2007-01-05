@@ -196,9 +196,17 @@ private:
     nsDataHashtable<nsStringHashKey, nsRefPtr<FamilyEntry> > mFamilies;
     // The keys are the localized postscript names.
     nsDataHashtable<nsStringHashKey, nsRefPtr<FontEntry> > mPostscriptFonts;
+    // The keys are ATSUI font ID.
+    nsDataHashtable<nsUint32HashKey, nsRefPtr<FontEntry> > mFontIDTable;
+    // The keys are family names that is cached from all fonts.
+    // But at caching time, we cannot resolve to actual font.
+    // Therefore, the datas are basic family name of the font.
+    // You can resolve the basic family name to |postscript names| with
+    // |mFontIDTable|. See |ResolveFontName|.
+    nsDataHashtable<nsStringHashKey, nsString> mAppleFamilyNames;
     // The keys are all family names (including alias family names).
     // The datas are postscript name, therefore,
-    // you can resolve |all family names| to |postscript nams| 
+    // you can resolve |all family names| to |postscript nams|
     nsDataHashtable<nsStringHashKey, nsString> mAllFamilyNames;
     // The keys are all font names (including alias font names).
     // The datas are postscript name, therefore,
@@ -208,8 +216,11 @@ private:
     // for different fonts. Because a family name shared in one or more fonts.
     // So, if you want to resolve the name, you MUST check as following order:
     // 1. mPostscriptFont
-    // 2. mAllFamilyNames
-    // 3. mAllFontNames
+    // 2. mAllFontNames
+    // 3. mAllFamilyNames
+
+    // The non-existing font names are always lowercased.
+    nsStringArray mNonExistingFonts;
 };
 
 #endif /* GFXQUARTZFONTCACHE_H_ */
