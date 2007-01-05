@@ -37,7 +37,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.54 2006/09/11 23:12:30 julien.pierre.bugs%sun.com Exp $
+ * $Id: crl.c,v 1.55 2007/01/05 01:32:18 nelson%bolyard.com Exp $
  */
  
 #include "cert.h"
@@ -472,13 +472,21 @@ CERT_DecodeDERCrlWithFlags(PRArenaPool *narena, SECItem *derSignedCrl,
     SECStatus rv;
     OpaqueCRLFields* extended = NULL;
     const SEC_ASN1Template* crlTemplate = CERT_SignedCrlTemplate;
+    PRInt32 testOptions = options;
 
-    if (!derSignedCrl ||
-        ( (options & CRL_DECODE_ADOPT_HEAP_DER) && /* adopting DER requires
-                                                      not copying it */
-          (!(options & CRL_DECODE_DONT_COPY_DER))
-        )
-       ) {
+    PORT_Assert(derSignedCrl);
+    if (!derSignedCrl) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return NULL;
+    }
+
+    /* Adopting DER requires not copying it.  Code that sets ADOPT flag 
+     * but doesn't set DONT_COPY probably doesn't know What it is doing.  
+     * That condition is a programming error in the caller.
+     */
+    testOptions &= (CRL_DECODE_ADOPT_HEAP_DER | CRL_DECODE_DONT_COPY_DER);
+    PORT_Assert(testOptions != CRL_DECODE_ADOPT_HEAP_DER);
+    if (testOptions == CRL_DECODE_ADOPT_HEAP_DER) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return NULL;
     }
@@ -610,8 +618,9 @@ CERT_DecodeDERCrl(PRArenaPool *narena, SECItem *derSignedCrl, int type)
  *  caching stuff used by certificates....?
  * return values :
  *
- * SECSuccess means we got a valid DER CRL (passed in "decoded"), or no CRL at
- * all
+ * SECSuccess means we got a valid decodable DER CRL, or no CRL at all.
+ * Caller may distinguish those cases by the value returned in "decoded".
+ * When DER CRL is not found, error code will be SEC_ERROR_CRL_NOT_FOUND.
  *
  * SECFailure means we got a fatal error - most likely, we found a CRL,
  * and it failed decoding, or there was an out of memory error. Do NOT ignore
@@ -629,7 +638,6 @@ SEC_FindCrlByKeyOnSlot(PK11SlotInfo *slot, SECItem *crlKey, int type,
     SECItem *derCrl = NULL;
     CK_OBJECT_HANDLE crlHandle = 0;
     char *url = NULL;
-    int nsserror;
 
     PORT_Assert(decoded);
     if (!decoded) {
@@ -637,15 +645,12 @@ SEC_FindCrlByKeyOnSlot(PK11SlotInfo *slot, SECItem *crlKey, int type,
         return SECFailure;
     }
 
-    /* XXX it would be really useful to be able to fetch the CRL directly into
-       an arena. This would avoid a copy later on in the decode step */
-    PORT_SetError(0);
     derCrl = PK11_FindCrlByName(&slot, &crlHandle, crlKey, type, &url);
     if (derCrl == NULL) {
 	/* if we had a problem other than the CRL just didn't exist, return
 	 * a failure to the upper level */
-	nsserror = PORT_GetError();
-	if ((nsserror != 0) && (nsserror != SEC_ERROR_CRL_NOT_FOUND)) {
+	int nsserror = PORT_GetError();
+	if (nsserror != SEC_ERROR_CRL_NOT_FOUND) {
 	    rv = SECFailure;
 	}
 	goto loser;
@@ -653,15 +658,16 @@ SEC_FindCrlByKeyOnSlot(PK11SlotInfo *slot, SECItem *crlKey, int type,
     PORT_Assert(crlHandle != CK_INVALID_HANDLE);
     /* PK11_FindCrlByName obtained a slot reference. */
     
-    if (!(decodeoptions & CRL_DECODE_DONT_COPY_DER) ) {
-        /* force adoption of the DER from the heap - this will cause it to be
-           automatically freed when SEC_DestroyCrl is invoked */
-        decodeoptions |= CRL_DECODE_ADOPT_HEAP_DER;
-    }
+    /* derCRL is a fresh HEAP copy made for us by PK11_FindCrlByName.
+       Force adoption of the DER CRL from the heap - this will cause it 
+       to be automatically freed when SEC_DestroyCrl is invoked */
+    decodeoptions |= (CRL_DECODE_ADOPT_HEAP_DER | CRL_DECODE_DONT_COPY_DER);
+
     crl = CERT_DecodeDERCrlWithFlags(NULL, derCrl, type, decodeoptions);
     if (crl) {
         crl->slot = slot;
         slot = NULL; /* adopt it */
+	derCrl = NULL; /* adopted by the crl struct */
         crl->pkcs11ID = crlHandle;
         if (url) {
             crl->url = PORT_ArenaStrdup(crl->arena,url);
@@ -680,10 +686,7 @@ SEC_FindCrlByKeyOnSlot(PK11SlotInfo *slot, SECItem *crlKey, int type,
 
 loser:
     if (derCrl) {
-        /* destroy the DER if it was copied to the CRL */
-        if (crl && (!(decodeoptions & CRL_DECODE_DONT_COPY_DER)) ) {
-            SECITEM_FreeItem(derCrl, PR_TRUE);
-        }
+	SECITEM_FreeItem(derCrl, PR_TRUE);
     }
 
     *decoded = crl;
@@ -691,7 +694,6 @@ loser:
     return rv;
 }
 
-SECStatus SEC_DestroyCrl(CERTSignedCrl *crl);
 
 CERTSignedCrl *
 crl_storeCRL (PK11SlotInfo *slot,char *url,
@@ -700,15 +702,15 @@ crl_storeCRL (PK11SlotInfo *slot,char *url,
     CERTSignedCrl *oldCrl = NULL, *crl = NULL;
     PRBool deleteOldCrl = PR_FALSE;
     CK_OBJECT_HANDLE crlHandle = CK_INVALID_HANDLE;
+    SECStatus rv;
 
     PORT_Assert(newCrl);
     PORT_Assert(derCrl);
 
     /* we can't use the cache here because we must look in the same
        token */
-    SEC_FindCrlByKeyOnSlot(slot, &newCrl->crl.derName, type,
+    rv = SEC_FindCrlByKeyOnSlot(slot, &newCrl->crl.derName, type,
                                 &oldCrl, CRL_DECODE_SKIP_ENTRIES);
-
     /* if there is an old crl on the token, make sure the one we are
        installing is newer. If not, exit out, otherwise delete the
        old crl.
