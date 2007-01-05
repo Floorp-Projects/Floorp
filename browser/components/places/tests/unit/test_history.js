@@ -81,4 +81,7 @@ function run_test() {
     //do_check_eq(node.transitionType, histsvc.TRANSITION_TYPED);
   }
   root.containerOpen = false;
+
+  // by default, browser.history_expire_days is 9
+  do_check_true(!histsvc.historyDisabled);
 }

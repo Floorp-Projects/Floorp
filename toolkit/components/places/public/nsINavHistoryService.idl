@@ -1114,7 +1114,7 @@ interface nsINavHistoryQueryOptions : nsISupports
   nsINavHistoryQueryOptions clone();
 };
 
-[scriptable, uuid(C51F54CB-5E89-4B20-A37C-1343888935B7)]
+[scriptable, uuid(1a8df7bf-4889-4331-a521-f6c4dacd20e7)]
 interface nsINavHistoryService : nsISupports
 {
   /**
@@ -1304,6 +1304,12 @@ interface nsINavHistoryService : nsISupports
    * done changing. Should match beginUpdateBatch or bad things will happen.
    */
   void endUpdateBatch();
+
+  /** 
+   * True if history is disabled. currently, 
+   * history is disabled if the browser.history_expire_days pref is 0
+   */
+  readonly attribute boolean historyDisabled;
 };
 
 /**

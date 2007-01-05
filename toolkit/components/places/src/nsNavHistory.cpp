@@ -233,7 +233,8 @@ nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
                                mExpireNowTimer(nsnull),
                                mExpire(this),
                                mBatchesInProgress(0),
-                               mAutoCompleteOnlyTyped(PR_FALSE)
+                               mAutoCompleteOnlyTyped(PR_FALSE),
+                               mExpireDays(0)
 {
 #ifdef LAZY_ADD
   mLazyTimerSet = PR_TRUE;
@@ -2108,6 +2109,14 @@ nsNavHistory::EndUpdateBatch()
   if (--mBatchesInProgress == 0) {
     ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver, OnEndUpdateBatch())
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistory::GetHistoryDisabled(PRBool *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = IsHistoryDisabled();
   return NS_OK;
 }
 
