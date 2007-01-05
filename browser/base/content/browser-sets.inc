@@ -179,9 +179,9 @@
              oncommand="HistoryMenu.showPlacesSearch();"/>
 #ifdef MOZ_PLACES_BOOKMARKS
     <command id="Browser:ShowBookmarks" 
-             oncommand="PlacesCommandHook.showPlacesOrganizer(ORGANIZER_ROOT_BOOKMARKS);"/>
-  </commandset>           
+             oncommand="PlacesCommandHook.showPlacesOrganizer(ORGANIZER_ROOT_BOOKMARKS);"/>           
 #endif
+  </commandset>
 #endif
 
 #ifdef MOZ_PLACES_BOOKMARKS
