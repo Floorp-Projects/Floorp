@@ -285,8 +285,7 @@
             // This menu is empty.  If there is no static content, add
             // an element to show it is empty.
             if (this._startMarker == -1 && this._endMarker == -1) {
-              var bundle = document.getElementById("placeBundle");
-              var label = bundle.getString("bookmarksMenuEmptyFolder");
+              var label = PlacesUtils.getString("bookmarksMenuEmptyFolder");
               var element = null;
               element = document.createElementNS(XULNS, "menuitem");
               element.setAttribute("label", label);

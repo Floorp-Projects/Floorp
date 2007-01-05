@@ -521,16 +521,15 @@ PlacesController.prototype = {
     this._setEnabled("placesCmd_sortby:name", 
       (sortingChildren || !inSysArea) && canInsert && viewIsFolder && 
       !("mixed" in metadata) && enoughChildrenToSort);
-    
-    var strings = document.getElementById("placeBundle");
+
     var command = document.getElementById("placesCmd_sortby:name");
     
     if (name) {
       command.setAttribute("label", 
-        strings.getFormattedString("sortByName", [name]));
+        PlacesUtils.getFormattedString("sortByName", [name]));
     }
     else
-      command.setAttribute("label", strings.getString("sortByNameGeneric"));
+      command.setAttribute("label", PlacesUtils.getString("sortByNameGeneric"));
   },
 #endif
 
@@ -642,7 +641,7 @@ PlacesController.prototype = {
     if (hasSingleSelection) {
       if (selectedNode.uri.indexOf("livemark%2F") != -1) {
         isLivemarkItem = true;
-        command.setAttribute("label", strings.getString("livemarkReloadAll"));
+        command.setAttribute("label", PlacesUtils.getString("livemarkReloadAll"));
       }
       else {
         var name;
@@ -658,12 +657,12 @@ PlacesController.prototype = {
         }
 
         if (isLivemarkItem)
-          command.setAttribute("label", strings.getFormattedString("livemarkReloadOne", [name]));
+          command.setAttribute("label", PlacesUtils.getFormattedString("livemarkReloadOne", [name]));
       }
     }
     
     if (!isLivemarkItem)
-      command.setAttribute("label", strings.getString("livemarkReload"));
+      command.setAttribute("label", PlacesUtils.getString("livemarkReload"));
       
     this._setEnabled("placesCmd_reload", isLivemarkItem);  
   },
@@ -934,18 +933,21 @@ PlacesController.prototype = {
         var messageKey = "tabs.openWarningMultipleBranded";
         var openKey = "tabs.openButtonMultiple";
         var strings = document.getElementById("placeBundle");
-        var brandBundle = document.getElementById("bundle_brand");
-        var brandShortName = brandBundle.getString("brandShortName");
+        const BRANDING_BUNDLE_URI = "chrome://branding/locale/brand.properties";
+        var brandShortName = Cc["@mozilla.org/intl/stringbundle;1"].
+                             getService(Ci.nsIStringBundleService).
+                             createBundle(BRANDING_BUNDLE_URI).
+                             GetStringFromName("brandShortName");
        
         var buttonPressed = promptService.confirmEx(window,
-          strings.getString("tabs.openWarningTitle"),
-          strings.getFormattedString(messageKey, 
+          PlacesUtils.getString("tabs.openWarningTitle"),
+          PlacesUtils.getFormattedString(messageKey, 
             [numTabsToOpen, brandShortName]),
           (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0)
           + (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
-          strings.getString(openKey),
+          PlacesUtils.getString(openKey),
           null, null,
-          strings.getFormattedString("tabs.openWarningPromptMeBranded",
+          PlacesUtils.getFormattedString("tabs.openWarningPromptMeBranded",
             [brandShortName]),
           warnOnOpen);
 
@@ -1071,10 +1073,9 @@ PlacesController.prototype = {
     var ps =
         Cc["@mozilla.org/embedcomp/prompt-service;1"].
         getService(Ci.nsIPromptService);
-    var bundle = document.getElementById("placeBundle");
-    var title = bundle.getString("newFolderTitle");
-    var text = bundle.getString("newFolderMessage");
-    var value = { value: bundle.getString("newFolderDefault") };
+    var title = PlacesUtils.getString("newFolderTitle");
+    var text = PlacesUtils.getString("newFolderMessage");
+    var value = { value: PlacesUtils.getString("newFolderDefault") };
     if (ps.prompt(window, title, text, value, null, { })) {
       var ip = view.insertionPoint;
       if (!ip)

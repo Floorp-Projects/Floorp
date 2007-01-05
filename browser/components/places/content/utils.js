@@ -148,6 +148,29 @@ var PlacesUtils = {
   },
 
   /**
+   * String bundle helpers
+   */
+  __bundle: null,
+  get _bundle() {
+    if (!this.__bundle) {
+      const PLACES_STRING_BUNDLE_URI =
+        "chrome://browser/locale/places/places.properties";
+      this.__bundle = Cc["@mozilla.org/intl/stringbundle;1"].
+                      getService(Ci.nsIStringBundleService).
+                      createBundle(PLACES_STRING_BUNDLE_URI);
+    }
+    return this.__bundle;
+  },
+  
+  getFormattedString: function PU_getFormattedString(key, params) {
+    return this._bundle.formatStringFromName(key, params, params.length);
+  },
+  
+  getString: function PU_getString(key) {
+    return this._bundle.GetStringFromName(key);
+  },
+
+  /**
    * Determines whether or not a ResultNode is a Bookmark folder or not.
    * @param   aNode
    *          A NavHistoryResultNode

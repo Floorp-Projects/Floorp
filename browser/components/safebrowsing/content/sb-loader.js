@@ -184,8 +184,8 @@ var safebrowsing = {
 // any url loads.  We do the actually checking in the deferredStartup
 // method.
 safebrowsing.progressListener =
-  Cc["@mozilla.org/browser/safebrowsing/navstartlistener;1"]
-  .createInstance(Ci.nsIDocNavStartProgressListener);
+  Components.classes["@mozilla.org/browser/safebrowsing/navstartlistener;1"]
+            .createInstance(Components.interfaces.nsIDocNavStartProgressListener);
 safebrowsing.progressListener.callback =
   safebrowsing.progressListenerCallback;
 safebrowsing.progressListener.enabled = true;
