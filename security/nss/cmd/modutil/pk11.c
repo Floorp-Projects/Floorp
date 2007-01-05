@@ -751,6 +751,8 @@ loser:
 	memset(newpw2, 0, strlen(newpw2));
 	PORT_Free(newpw2);
     }
+    PK11_FreeSlot(slot);
+
     return ret;
 }
 

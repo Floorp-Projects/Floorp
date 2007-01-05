@@ -157,6 +157,8 @@ int main(int argc, char **argv)
 	}
     } while (cont);
 
+    PK11_FreeSlot(slot);
+
     if (NSS_Shutdown() != SECSuccess) {
         exit(1);
     }
