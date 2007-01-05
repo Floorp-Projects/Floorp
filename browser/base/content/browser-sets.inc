@@ -48,9 +48,6 @@
     <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
     <stringbundle id="bundle_shell" src="chrome://browser/locale/shellservice.properties"/>
     <stringbundle id="bundle_preferences" src="chrome://browser/locale/preferences/preferences.properties"/>
-#ifdef MOZ_PLACES
-    <stringbundle id="placeBundle" src="chrome://browser/locale/places/places.properties"/>
-#endif
   </stringbundleset>
 
   <commandset id="globalEditCommandSet"
@@ -172,17 +169,20 @@
     <command id="Tools:Addons" oncommand="BrowserOpenAddonsMgr();"/>
     <command id="Tools:Sanitize" oncommand="gBrowserGlue.sanitize(window || null);"/>
     <command id="History:UndoCloseTab" oncommand="undoCloseTab();"/>
+  </commandset>
+
 #ifdef MOZ_PLACES
-#include ../../components/places/content/commands.inc
+  <commandset id="placesCommands">
     <command id="Browser:ShowHistory" 
              oncommand="PlacesCommandHook.showPlacesOrganizer(ORGANIZER_ROOT_HISTORY);"/>
-    <command id="Browser:SearchHistory" oncommand="HistoryMenu.showPlacesSearch();"/>
-#endif
+    <command id="Browser:SearchHistory"
+             oncommand="HistoryMenu.showPlacesSearch();"/>
 #ifdef MOZ_PLACES_BOOKMARKS
     <command id="Browser:ShowBookmarks" 
              oncommand="PlacesCommandHook.showPlacesOrganizer(ORGANIZER_ROOT_BOOKMARKS);"/>
+  </commandset>           
 #endif
-  </commandset>
+#endif
 
 #ifdef MOZ_PLACES_BOOKMARKS
   <commandset id="multipleTabsCommands" 

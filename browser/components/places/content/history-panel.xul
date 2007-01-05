@@ -43,6 +43,7 @@
 <?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
 
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
+<?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
 
 <!DOCTYPE page [
 <!ENTITY % historyDTD SYSTEM "chrome://browser/locale/history/history.dtd">
@@ -60,25 +61,15 @@
       onload="HistorySidebarInit();">
 
   <script type="application/x-javascript" 
-          src="chrome://browser/content/places/utils.js"/>
-  <script type="application/x-javascript" 
-          src="chrome://browser/content/places/controller.js"/>
-  <script type="application/x-javascript" 
           src="chrome://browser/content/places/history-panel.js"/>
-  <script type="application/x-javascript" 
-          src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/x-javascript" 
-          src="chrome://browser/content/utilityOverlay.js"/>
 #ifndef MOZ_PLACES_BOOKMARKS
   <script type="application/x-javascript" 
           src="chrome://browser/content/bookmarks/bookmarks.js"/>
 #endif
-  <script type="application/x-javascript" 
-          src="chrome://global/content/nsDragAndDrop.js"/>
 
   <commandset id="editMenuCommands"/>
+  <commandset id="placesCommands"/>
 
-#include commands.inc
   <keyset id="editMenuKeys">
 #ifdef XP_MACOSX
     <key id="key_delete2" keycode="VK_BACK" command="cmd_delete"/>

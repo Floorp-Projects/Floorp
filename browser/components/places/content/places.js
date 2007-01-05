@@ -104,9 +104,9 @@ var PlacesOrganizer = {
    */
   setHeaderText: function PO_setHeaderText(type, text) {
     NS_ASSERT(type == 1 || type == 2 || type == 3, "Invalid Header Type");
-    var bundle = document.getElementById("placeBundle");
     var prefix = document.getElementById("showingPrefix");
-    prefix.setAttribute("value", bundle.getString("headerTextPrefix" + type));
+    prefix.setAttribute("value",
+                        PlacesUtils.getString("headerTextPrefix" + type));
     
     var contentTitle = document.getElementById("contentTitle");
     contentTitle.setAttribute("value", text);
@@ -206,9 +206,8 @@ var PlacesOrganizer = {
     // Update the "Find in <current collection>" command and the gray text in
     // the search box in the toolbar if the active collection is the current
     // collection.
-    var strings = document.getElementById("placeBundle");
-    var findCommand = document.getElementById("placesCmd_find:current");
-    var findLabel = strings.getFormattedString("findInPrefix", [node.title]);
+    var findCommand = document.getElementById("OrganizerCommand_find:current");
+    var findLabel = PlacesUtils.getFormattedString("findInPrefix", [node.title]);
     findCommand.setAttribute("label", findLabel);
     if (PlacesSearchBox.filterCollection == "collection") {
       PlacesSearchBox.updateCollectionTitle(node.title);
@@ -283,12 +282,11 @@ var PlacesOrganizer = {
     var selectedNode = aView.selectedNode;
     if (selectedNode) {
       if (PlacesUtils.nodeIsFolder(selectedNode)) {
-        var strings = document.getElementById("placeBundle");
         var childsCount =
           PlacesUtils.getFolderContents(asFolder(selectedNode).folderId)
                      .childCount;
-        statusText = strings.getFormattedString("status_foldercount",
-                                                [childsCount]);
+        statusText = PlacesUtils.getFormattedString("status_foldercount",
+                                                    [childsCount]);
       }
       else if (PlacesUtils.nodeIsBookmark(selectedNode))
         statusText = selectedNode.uri;
@@ -363,13 +361,12 @@ var PlacesSearchBox = {
    *          The title of the current collection.
    */
   updateCollectionTitle: function PSB_updateCollectionTitle(title) {
-    var strings = document.getElementById("placeBundle");
     if (title) {
       this.searchFilter.grayText = 
-        strings.getFormattedString("searchCurrentDefault", [title]);
+        PlacesUtils.getFormattedString("searchCurrentDefault", [title]);
     }
     else
-      this.searchFilter.grayText = strings.getString("searchDefault");
+      this.searchFilter.grayText = PlacesUtils.getString("searchDefault");
   },
   
   /**
@@ -405,9 +402,8 @@ var PlacesSearchBox = {
    * Set up the gray text in the search bar as the Places View loads. 
    */
   init: function PSB_init() {
-    var placeBundle = document.getElementById("placeBundle");
     var searchFilter = this.searchFilter;
-    searchFilter.grayText = placeBundle.getString("searchDefault");
+    searchFilter.grayText = PlacesUtils.getString("searchDefault");
     searchFilter.reset();
     searchFilter.focus();
   },
@@ -538,7 +534,7 @@ var PlacesQueryBuilder = {
     
     // Update the "can add more criteria" command to make sure various +
     // buttons are disabled.
-    var command = document.getElementById("placesCmd_search:moreCriteria");
+    var command = document.getElementById("OrganizerCommand_find:moreCriteria");
     if (this._numRows >= this._maxRows)
       command.setAttribute("disabled", "true");
     else
@@ -972,7 +968,6 @@ var ViewMenu = {
     // so track whether or not we find a column that is sort-active. 
     var isSorted = false;
     var content = document.getElementById("placeContent");
-    var strings = document.getElementById("placeBundle");
     var columns = content.columns;
     for (var i = 0; i < columns.count; ++i) {
       var column = columns.getColumnAt(i).element;
@@ -981,8 +976,8 @@ var ViewMenu = {
       var label = column.getAttribute("label");
       if (propertyPrefix) {
         var menuitemPrefix = propertyPrefix + column.id;
-        label = strings.getString(menuitemPrefix + ".label");
-        var accesskey = strings.getString(menuitemPrefix + ".accesskey");
+        label = PlacesUtils.getString(menuitemPrefix + ".label");
+        var accesskey = PlacesUtils.getString(menuitemPrefix + ".accesskey");
         menuitem.setAttribute("accesskey", accesskey);
       }
       menuitem.setAttribute("label", label);
@@ -1190,19 +1185,18 @@ var Groupers = {
    * Initializes groupings for various vie types. 
    */
   init: function G_init() {
-    var placeBundle = document.getElementById("placeBundle");
     this.defaultGrouper = 
-      new GroupingConfig(null, placeBundle.getString("defaultGroupOnLabel"),
-                         placeBundle.getString("defaultGroupOnAccesskey"),
-                         placeBundle.getString("defaultGroupOffLabel"),
-                         placeBundle.getString("defaultGroupOffAccesskey"),
+      new GroupingConfig(null, PlacesUtils.getString("defaultGroupOnLabel"),
+                         PlacesUtils.getString("defaultGroupOnAccesskey"),
+                         PlacesUtils.getString("defaultGroupOffLabel"),
+                         PlacesUtils.getString("defaultGroupOffAccesskey"),
                          "Groupers.groupBySite()",
                          "Groupers.groupByPage()", false);
     var subscriptionConfig = 
-      new GroupingConfig("livemark/", placeBundle.getString("livemarkGroupOnLabel"),
-                         placeBundle.getString("livemarkGroupOnAccesskey"),
-                         placeBundle.getString("livemarkGroupOffLabel"),
-                         placeBundle.getString("livemarkGroupOffAccesskey"),
+      new GroupingConfig("livemark/", PlacesUtils.getString("livemarkGroupOnLabel"),
+                         PlacesUtils.getString("livemarkGroupOnAccesskey"),
+                         PlacesUtils.getString("livemarkGroupOffLabel"),
+                         PlacesUtils.getString("livemarkGroupOffAccesskey"),
                          "Groupers.groupByFeed()",
                          "Groupers.groupByPost()", false);
     this.annotationGroupers.push(subscriptionConfig);

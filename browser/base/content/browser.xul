@@ -59,6 +59,7 @@
 
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
+<?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
 
 # All DTD information is stored in a separate file so that it can be shared by
 # hiddenWindow.xul.
@@ -128,9 +129,7 @@
 #include browser-context.inc
     </popup>
 
-#ifdef MOZ_PLACES_BOOKMARKS
-#include ../../components/places/content/context.inc
-#endif
+    <popup id="placesContext"/>
   </popupset>
 
 # The hacky hidden tree used by the Go menu to build items.

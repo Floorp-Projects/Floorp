@@ -42,6 +42,8 @@
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/places/places.css" type="text/css"?>
 
+<?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
+
 <!DOCTYPE window 
 [
   <!ENTITY % placesPopupDTD SYSTEM "chrome://browser/locale/places/placesPopup.dtd" > %placesPopupDTD;
@@ -60,17 +62,7 @@
   </stringbundleset>
 
   <script type="application/x-javascript"
-          src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/x-javascript"
-          src="chrome://browser/content/utilityOverlay.js"/>
-  <script type="application/x-javascript"
-          src="chrome://browser/content/places/utils.js"/>
-  <script type="application/x-javascript"
-          src="chrome://browser/content/places/controller.js"/>
-  <script type="application/x-javascript"
           src="chrome://browser/content/places/placesPopup.js"/>
-  <script type="application/x-javascript"
-          src="chrome://global/content/nsDragAndDrop.js"/>
   <hbox>
     <label value="&search.label;"/>
     <textbox flex="1"

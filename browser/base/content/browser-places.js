@@ -268,14 +268,13 @@ var PlacesCommandHook = {
     var bookmarkButton = document.getElementById("places-bookmark");
     if (!bookmarkButton) 
       return;
-      
-    var strings = document.getElementById("placeBundle");
+
     var currentLocation = getBrowser().selectedBrowser.webNavigation.currentURI;
     if (PlacesUtils.bookmarks.isBookmarked(currentLocation)) {
-      bookmarkButton.label = strings.getString("locationStatusBookmarked");
+      bookmarkButton.label = PlacesUtils.getString("locationStatusBookmarked");
       bookmarkButton.setAttribute("bookmarked", "true");
     } else {
-      bookmarkButton.label = strings.getString("locationStatusNotBookmarked");
+      bookmarkButton.label = PlacesUtils.getString("locationStatusNotBookmarked");
       bookmarkButton.removeAttribute("bookmarked");
     }
   },
@@ -414,16 +413,14 @@ var BookmarksEventHandler = {
         var separator = document.createElement("menuseparator");
         target.appendChild(separator);
 
-        var strings = document.getElementById("placeBundle");
-
         if (hasFeedHomePage) {
           var openHomePage = document.createElement("menuitem");
           openHomePage.setAttribute(
             "siteURI", button.getAttribute("siteURI"));
           openHomePage.setAttribute(
             "label",
-            strings.getFormattedString("menuOpenLivemarkOrigin.label",
-                                       [button.getAttribute("label")]));
+            PlacesUtils.getFormattedString("menuOpenLivemarkOrigin.label",
+                                           [button.getAttribute("label")]));
           target.appendChild(openHomePage);
         }
 

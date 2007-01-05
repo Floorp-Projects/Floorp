@@ -46,6 +46,7 @@
 
 <?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
+<?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % placesDTD SYSTEM "chrome://browser/locale/places/places.dtd">
@@ -64,48 +65,26 @@
         persist="width height screenX screenY sizemode">
 
   <script type="application/x-javascript"
-          src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/x-javascript"
-          src="chrome://browser/content/utilityOverlay.js"/>
-  <script type="application/x-javascript" 
-          src="chrome://browser/content/places/utils.js"/>
-  <script type="application/x-javascript"
-          src="chrome://browser/content/places/controller.js"/>
-  <script type="application/x-javascript"
-          src="chrome://browser/content/places/treeHelpers.js"/>
-  <script type="application/x-javascript"
           src="chrome://browser/content/places/places.js"/>
-  <!-- ew. -->
-  <script type="application/x-javascript"
-          src="chrome://global/content/nsDragAndDrop.js"/>
-  
-  <stringbundleset id="stringbundles">
-    <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
-    <stringbundle id="placeBundle" src="chrome://browser/locale/places/places.properties"/>
-    <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
-  </stringbundleset>
   
   <commandset id="editMenuCommands"/>
   <commandset id="baseMenuCommandSet"/>
-  <keyset id="baseMenuKeyset"/>
-
-#include commands.inc
+  <commandset id="placesCommands"/>
+  
   <commandset id="organizerCommandSet">
-    <command id="placesCmd_find:all" 
+    <command id="OrganizerCommand_find:all" 
              label="&cmd.find.label;" accesskey="&cmd.find.accesskey;"
              oncommand="PlacesSearchBox.findAll();"/>
-    <command id="placesCmd_find:current" 
+    <command id="OrganizerCommand_find:current"
              label="&cmd.findCurrent.label;"
              accesskey="&cmd.findCurrent.accesskey;"
              oncommand="PlacesSearchBox.findCurrent();"/>
-    <command id="placesCmd_export" 
-             label="&cmd.export.label;" accesskey="&cmd.export.accesskey;"
+    <command id="OrganizerCommand_export"
              oncommand="PlacesOrganizer.exportBookmarks();"/>
-    <command id="placesCmd_import" 
-             label="&cmd.import.label;" accesskey="&cmd.import.accesskey;"
+    <command id="OrganizerCommand_import"
              oncommand="PlacesOrganizer.importBookmarks();"/>
-    <command id="placesCmd_search:save"/>
-    <command id="placesCmd_search:moreCriteria"
+    <command id="OrganizerCommand_search:save"/>
+    <command id="OrganizerCommand_search:moreCriteria"
              oncommand="PlacesQueryBuilder.addRow();"/>
   </commandset>
 
@@ -115,31 +94,23 @@
     <broadcaster id="placesBC_grouping:separator"/>
   </broadcasterset>
 
+  <keyset id="baseMenuKeyset"/>
   <keyset id="placesOrganizerKeyset">
     <!-- Instantiation Keys -->
     <key id="placesKey_close" key="&cmd.close.key;" modifiers="accel" 
          oncommand="close();"/>
 
-    <key id="placesKey_edit:undo"
-         key="&cmd.edit_undo.key;"
-         modifiers="accel" 
-         command="cmd_undo"/>
-    <key id="placesKey_edit:redo"
-         key="&cmd.edit_redo.key;"
-         modifiers="accel" 
-         command="cmd_redo"/>
-    
     <key id="placesKey_show:debug"
          key="d" modifiers="accel,shift"
          oncommand="PlacesOrganizer.toggleDebugPanel();"/>
          
     <!-- Command Keys -->
     <key id="placesKey_find:all"
-         command="placesCmd_find:all" 
+         command="OrganizerCommand_find:all" 
          key="&cmd.find.key;"
          modifiers="accel"/>
     <key id="placesKey_find:current"
-         command="placesCmd_find:current" 
+         command="OrganizerCommand_find:current" 
          key="&cmd.find.key;"
          modifiers="accel,shift"/>
     <key id="placesKey_open"
@@ -173,7 +144,8 @@
          keycode="VK_F2"/>
     <key id="placesKey_reload"
          command="placesCmd_reload" 
-         key="&cmd.reload.key;" modifiers="accel"/>
+         key="&cmd.reload.key;"
+         modifiers="accel"/>
   </keyset>
 
   <keyset id="editMenuKeys">
@@ -183,19 +155,34 @@
   </keyset>
 
   <popupset id="placesPopupset">
-#include context.inc
+    <popup id="placesContext"/>
   </popupset>
-  
+
   <toolbox>
     <menubar id="placesMenubar">
       <menu id="fileMenu" label="&file.label;" accesskey="&file.accesskey;">
         <menupopup>
-          <menuitem id="fileNewBookmark" command="placesCmd_new:bookmark"/>
-          <menuitem id="fileNewFolder" command="placesCmd_new:folder" accesskey="&cmd.new_folder.accesskey;"/>
-          <menuitem id="fileNewSeparator" command="placesCmd_new:separator"/>
+          <menuitem id="fileNewBookmark"
+                    command="placesCmd_new:bookmark"
+                    label="&cmd.new_bookmark.label;"
+                    accesskey="&cmd.new_bookmark.accesskey;"/>
+          <menuitem id="fileNewFolder"
+                    command="placesCmd_new:folder"
+                    label="&cmd.new_folder.label;"
+                    accesskey="&cmd.new_folder.accesskey;"/>
+          <menuitem id="fileNewSeparator"
+                    command="placesCmd_new:separator"
+                    label="&cmd.new_separator.label;"
+                    accesskey="&cmd.new_separator.accesskey;"/>
           <menuseparator/>
-          <menuitem id="fileImport" command="placesCmd_import"/>
-          <menuitem id="fileExport" command="placesCmd_export"/>
+          <menuitem id="fileImport"
+                    command="OrganizerCommand_import"
+                    label="&cmd.import.label;"
+                    accesskey="&cmd.import.accesskey;"/>
+          <menuitem id="fileExport"
+                    command="OrganizerCommand_export"
+                    label="&cmd.export.label;"
+                    accesskey="&cmd.export.accesskey;"/>
 #ifndef XP_MACOSX
           <menuseparator/>
           <menuitem id="properties" command="placesCmd_show:info"/>
@@ -222,13 +209,14 @@
           <menuseparator/>
           <menuitem id="editSortByName"
                     command="placesCmd_sortby:name"
+                    label="&cmd.sortby_name.label;"
                     accesskey="&cmd.sortby_name.accesskey;"/>
           <menuseparator/>
           <menuitem id="editFindAll"
-                    command="placesCmd_find:all"
+                    command="OrganizerCommand_find:all"
                     key="placesKey_find:all"/>
           <menuitem id="editFindCurrent"
-                    command="placesCmd_find:current"
+                    command="OrganizerCommand_find:current"
                     key="placesKey_find:current"/>
 #ifdef XP_MACOSX
           <menuseparator/>
@@ -242,8 +230,11 @@
             onpopupshowing="ViewMenu.populate(event);"
             oncommand="ViewMenu.setSortColumn(event.target, null);">
         <menupopup>
-          <menuitem id="viewReload" command="placesCmd_reload"
-                    key="placesKey_reload"/>
+          <menuitem id="viewReload"
+                    command="placesCmd_reload"
+                    key="placesKey_reload"
+                    label="&cmd.reload.label;"
+                    accesskey="&cmd.reload.accesskey;"/>
           <menuseparator/>
           <menuitem id="viewToolbar" type="checkbox"
                     label="&view.toolbar.label;" accesskey="&view.toolbar.accesskey;"/>
@@ -278,9 +269,18 @@
     </menubar>
 
     <toolbar id="mainToolbar" class="chromeclass-toolbar">
-      <toolbarbutton id="newbookmark" command="placesCmd_new:bookmark"/>
-      <toolbarbutton id="newfolder" command="placesCmd_new:folder"/>
-      <toolbarbutton id="newseparator" command="placesCmd_new:separator"/>
+      <toolbarbutton id="newbookmark"
+                     command="placesCmd_new:bookmark"
+                     label="&cmd.new_bookmark.label;"
+                     accesskey="&cmd.new_bookmark.accesskey;"/>
+      <toolbarbutton id="newfolder"
+                     command="placesCmd_new:folder"
+                     label="&cmd.new_folder.label;"
+                     accesskey="&cmd.new_folder.accesskey;"/>
+      <toolbarbutton id="newseparator"
+                     command="placesCmd_new:separator"
+                     label="&cmd.new_separator.label;"
+                     accesskey="&cmd.new_separator.accesskey;"/>
       <toolbarseparator/>
       <!-- Not yet implemented 
       <toolbarbutton id="moveBookmark" label="&command.moveBookmarkShort.label;"
@@ -288,8 +288,19 @@
                      command="cmd_bm_movebookmark"/>
       <toolbarseparator/>
       -->
-      <toolbarbutton id="properties" command="placesCmd_show:info"/>
-      <toolbarbutton id="rename" command="placesCmd_rename"/>
+      <toolbarbutton id="properties"
+                     command="placesCmd_show:info"
+#ifdef XP_MACOSX
+                     label="&cmd.show_infoMac.label;" 
+                     accesskey="&cmd.show_infoMac.accesskey;"/>
+#else
+                     label="&cmd.show_infoWin.label;" 
+                     accesskey="&cmd.show_infoWin.accesskey;"/>
+#endif
+      <toolbarbutton id="rename"
+                     command="placesCmd_rename"
+                     label="&cmd.rename.label;"
+                     accesskey="&cmd.rename.accesskey;"/>
       <toolbarbutton id="delete"
                      command="cmd_delete"
                      label="&deleteCmd.label;"
@@ -354,11 +365,11 @@
             <hbox id="searchModifiers" hidden="true" align="center">
               <button id="saveSearch" class="small" 
                       label="&saveSearch.label;" accesskey="&saveSearch.accesskey;"
-                      command="placesCmd_search:save"/>
+                      command="OrganizerCommand_search:save"/>
               <button id="moreCriteria"
                       class="small"
                       label="&moreCriteria.label;"
-                      command="placesCmd_search:moreCriteria"/>
+                      command="OrganizerCommand_search:moreCriteria"/>
             </hbox>
           </hbox>
 #include advancedSearch.inc          
