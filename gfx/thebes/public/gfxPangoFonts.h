@@ -162,8 +162,6 @@ private:
     int mWidth;
 
     int MeasureOrDraw(gfxContext *aContext, PRBool aDraw, gfxPoint aPt);
-    int MeasureOrDrawFast(gfxContext *aContext, PRBool aDraw,
-                          gfxPoint aPt, PRBool aIsRTL, gfxPangoFont *aFont);
     int MeasureOrDrawItemizing(gfxContext *aContext, PRBool aDraw,
                                gfxPoint aPt, PRBool aIsRTL,
                                gfxPangoFont *aFont);
