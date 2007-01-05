@@ -190,14 +190,14 @@ public: //for methods who access nsTextControlFrame directly
   nsresult DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNodeOffset, PRInt32 *aResult);
   nsresult OffsetToDOMPoint(PRInt32 aOffset, nsIDOMNode** aResult, PRInt32* aPosition);
 
-  void SetHasFocus(PRBool aHasFocus)
+  void SetFireChangeEventState(PRBool aNewState)
   {
-    mHasFocus = aHasFocus;
+    mFireChangeEventState = aNewState;
   };
 
-  PRBool GetHasFocus() const
+  PRBool GetFireChangeEventState() const
   {
-    return mHasFocus;
+    return mFireChangeEventState;
   }    
 
   /* called to free up native keybinding services */
@@ -280,7 +280,9 @@ private:
   PRPackedBool mIsProcessing;
   PRPackedBool mNotifyOnInput;//default this to off to stop any notifications until setup is complete
   PRPackedBool mDidPreDestroy; // has PreDestroy been called
-  PRPackedBool mHasFocus;
+  // Calls to SetValue will be treated as user values (i.e. trigger onChange
+  // eventually) when mFireChangeEventState==true, this is used by nsFileControlFrame.
+  PRPackedBool mFireChangeEventState;
 
   nsCOMPtr<nsISelectionController> mSelCon;
   nsCOMPtr<nsFrameSelection> mFrameSel;

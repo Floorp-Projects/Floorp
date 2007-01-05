@@ -352,8 +352,6 @@ nsTextInputListener::Focus(nsIDOMEvent* aEvent)
     editor->AddEditorObserver(this);
   }
 
-  mFrame->SetHasFocus(PR_TRUE);
-
   return mFrame->InitFocusedValue();
 }
 
@@ -368,8 +366,6 @@ nsTextInputListener::Blur(nsIDOMEvent* aEvent)
   if (editor) {
     editor->RemoveEditorObserver(this);
   }
-
-  mFrame->SetHasFocus(PR_FALSE);
 
   return NS_OK;
 }
@@ -1033,17 +1029,17 @@ NS_IMETHODIMP nsTextControlFrame::GetAccessible(nsIAccessible** aAccessible)
 
 nsTextControlFrame::nsTextControlFrame(nsIPresShell* aShell, nsStyleContext* aContext)
   : nsStackFrame(aShell, aContext)
-{
-  mUseEditor = PR_FALSE;
-  mIsProcessing = PR_FALSE;
-  mNotifyOnInput = PR_TRUE;
-  mScrollableView = nsnull;
-  mDidPreDestroy = PR_FALSE;
-  mHasFocus = PR_FALSE;
-
+  , mUseEditor(PR_FALSE)
+  , mIsProcessing(PR_FALSE)
+  , mNotifyOnInput(PR_TRUE)
+  , mDidPreDestroy(PR_FALSE)
+  , mFireChangeEventState(PR_FALSE)
+  , mTextListener(nsnull)
+  , mScrollableView(nsnull)
 #ifdef DEBUG
-  mCreateFrameForCalled = PR_FALSE;
+  , mCreateFrameForCalled(PR_FALSE)
 #endif
+{
 }
 
 nsTextControlFrame::~nsTextControlFrame()
@@ -2732,9 +2728,11 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
       if (outerTransaction)
         mNotifyOnInput = PR_TRUE;
 
-      if (mHasFocus) {
-        // Since this code doesn't handle user-generated changes, reset
-        // mFocusedValue so the onchange event doesn't fire incorrectly.
+      // This method isn't used for user-generated changes, except for calls
+      // from nsFileControlFrame which sets mFireChangeEventState==true and
+      // restores it afterwards (ie. we want onchange events for those changes).
+      if (!mFireChangeEventState) {
+        // Reset mFocusedValue so the onchange event doesn't fire incorrectly.
         InitFocusedValue();
       }
     }
