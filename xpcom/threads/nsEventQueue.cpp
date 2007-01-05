@@ -41,7 +41,6 @@
 #include "nsAutoPtr.h"
 #include "prlog.h"
 #include "nsThreadUtils.h"
-#include "nsCycleCollector.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo *sLog = PR_NewLogModule("nsEventQueue");
@@ -92,10 +91,6 @@ nsEventQueue::GetEvent(PRBool mayWait, nsIRunnable **result)
       }
     }
   }
-
-  if (NS_IsMainThread()) {
-    nsCycleCollector_collect();
-  }  
 
   return PR_TRUE;
 }

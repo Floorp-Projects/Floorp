@@ -83,6 +83,7 @@
 #include "jscntxt.h"
 #include "nsEventDispatcher.h"
 #include "nsIContent.h"
+#include "nsCycleCollector.h"
 
 // For locale aware string methods
 #include "plstr.h"
@@ -3123,7 +3124,9 @@ nsJSContext::Notify(nsITimer *timer)
 {
   NS_ASSERTION(mContext, "No context in nsJSContext::Notify()!");
 
-  ::JS_GC(mContext);
+  // nsCycleCollector_collect() will run a ::JS_GC indirectly,
+  // so we do not explicitly call ::JS_GC here. 
+  nsCycleCollector_collect();
 
   sReadyForGC = PR_TRUE;
 
