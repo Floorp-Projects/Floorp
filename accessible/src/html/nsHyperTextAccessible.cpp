@@ -1305,7 +1305,8 @@ nsresult nsHyperTextAccessible::SetSelectionRange(PRInt32 aStartPos, PRInt32 aEn
   // If range 0 was successfully set, clear any additional selection 
   // ranges remaining from previous selection
   nsCOMPtr<nsISelection> domSel;
-  GetSelections(nsnull, getter_AddRefs(domSel));
+  nsCOMPtr<nsISelectionController> selCon;
+  GetSelections(getter_AddRefs(selCon), getter_AddRefs(domSel));
   if (domSel) {
     PRInt32 numRanges;
     domSel->GetRangeCount(&numRanges);
@@ -1315,6 +1316,11 @@ nsresult nsHyperTextAccessible::SetSelectionRange(PRInt32 aStartPos, PRInt32 aEn
       domSel->GetRangeAt(1, getter_AddRefs(range));
       domSel->RemoveRange(range);
     }
+  }
+  
+  if (selCon) {
+    selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
+       nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
   }
 
   return NS_OK;
