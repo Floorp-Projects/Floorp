@@ -178,7 +178,7 @@ pref("browser.shell.checkDefaultBrowser", true);
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last visited page, 3 = resume previous browser session
 // The behavior of option 3 is detailed at: http://wiki.mozilla.org/Session_Restore
 pref("browser.startup.page",                1);
-pref("browser.startup.homepage",	          "resource:/browserconfig.properties");
+pref("browser.startup.homepage",            "resource:/browserconfig.properties");
 
 pref("browser.cache.disk.capacity",         50000);
 pref("browser.enable_automatic_image_resizing", true);
@@ -531,3 +531,18 @@ pref("browser.EULA.2.accepted", true);
 
 // if we rev the EULA again, we should bump this so users agree to the new EULA
 pref("browser.EULA.version", 2);
+
+pref("browser.sessionstore.enabled", true);
+pref("browser.sessionstore.resume_from_crash", true);
+pref("browser.sessionstore.resume_session_once", false);
+ 
+// minimal interval between two save operations in milliseconds
+pref("browser.sessionstore.interval", 10000);
+// maximum amount of POSTDATA to be saved in bytes per history entry (-1 = all of it)
+// (NB: POSTDATA will be saved either entirely or not at all)
+pref("browser.sessionstore.postdata", 0);
+// on which sites to save text data, POSTDATA and cookies
+// 0 = everywhere, 1 = unencrypted sites, 2 = nowhere
+pref("browser.sessionstore.privacy_level", 1);
+// how many tabs can be reopened (per window)
+pref("browser.sessionstore.max_tabs_undo", 10);
