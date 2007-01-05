@@ -363,7 +363,7 @@ protected:
     nsRefPtr<nsTreeColumn> col;
     nsresult rv = aUnknownCol->QueryInterface(kTreeColumnImplCID,
                                               getter_AddRefs(col));
-    return NS_SUCCEEDED(rv) ? col : nsnull;
+    return NS_SUCCEEDED(rv) ? col.get() : nsnull;
   }
 
   // Create a new timer. This method is used to delay various actions like
