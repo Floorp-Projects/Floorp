@@ -70,6 +70,9 @@
 #define CSS_NORMAL_WEIGHT_BASE 4
 #define CSS_BOLD_WEIGHT_BASE 7
 
+#define SHOULD_BE_BOLD_IN_THIS_CSS_WEIGHT(w)  ((w) >= 550)
+#define SHOULD_BE_LIGHT_IN_THIS_CSS_WEIGHT(w) ((w) < 350)
+
 #define INDEX_FONT_POSTSCRIPT_NAME 0
 #define INDEX_FONT_EXTRA_NAME 1
 #define INDEX_FONT_WEIGHT 2
@@ -495,18 +498,30 @@ gfxQuartzFontCache::FindFontWeight(NSFontManager *aFontManager,
     PRUint32 traits = [aFontManager traitsOfFont:aCurrentFont];
     NSFont *newFont = aCurrentFont;
     if (currentWeight != desiredWeight) {
-        NSFont *newFont = [aFontManager fontWithFamily:[aCurrentFont familyName]
-                                        traits:traits weight:desiredWeight
-                                        size:aStyle->size];
+        newFont = [aFontManager fontWithFamily:[aCurrentFont familyName]
+                                traits:traits weight:desiredWeight
+                                size:aStyle->size];
         if (!SAME_TRAITS(traits, [aFontManager traitsOfFont:newFont],
                          NON_WEIGHT_TRAITS_MASK))
             newFont = aCurrentFont;
     }
 
-    newFont = aCurrentFont;
+    // The last resort. Some fonts cannot be bold by "font-weight: bold;".
+    // E.g., "Hiragino Kaku Gothic Pro".
+    // Maybe, we can remove this, if cairo supports the bold and italic font
+    // dynamic generating.
+    if (SHOULD_BE_LIGHT_IN_THIS_CSS_WEIGHT(aStyle->weight) &&
+        [aFontManager weightOfFont:newFont] >= aOriginalFont->Weight()) {
+        newFont = FindAnotherWeightMemberFont(aFontManager, aOriginalFont,
+                                              aCurrentFont, aStyle, PR_FALSE);
+    } else if (SHOULD_BE_BOLD_IN_THIS_CSS_WEIGHT(aStyle->weight) &&
+              [aFontManager weightOfFont:newFont] <= aOriginalFont->Weight()) {
+        newFont = FindAnotherWeightMemberFont(aFontManager, aOriginalFont,
+                                              aCurrentFont, aStyle, PR_TRUE);        
+    }
+
     if (weightOffset < 0) {
-        while (weightOffset != 0 &&
-               [aFontManager weightOfFont:newFont] > desiredWeight) {
+        while (weightOffset != 0) {
             NSFont *font = [aFontManager convertWeight:NO ofFont:newFont];
             if (newFont == font)
                 break;
@@ -517,8 +532,7 @@ gfxQuartzFontCache::FindFontWeight(NSFontManager *aFontManager,
             weightOffset++;
         }
     } else if (weightOffset > 0) {
-        while (weightOffset != 0 &&
-               [aFontManager weightOfFont:newFont] < desiredWeight) {
+        while (weightOffset != 0) {
             NSFont *font = [aFontManager convertWeight:YES ofFont:newFont];
             if (newFont == font)
                 break;
@@ -528,20 +542,6 @@ gfxQuartzFontCache::FindFontWeight(NSFontManager *aFontManager,
             newFont = font;
             weightOffset--;
         }
-    }
-
-    // The last resort. Some fonts cannot be bold by "font-weight: bold;".
-    // E.g., "Hiragino Kaku Gothic Pro".
-    // Maybe, we can remove this, if cairo supports the bold and italic font
-    // dynamic generating.
-    if (aStyle->weight < CSS_NORMAL_WEIGHT_BASE &&
-        [aFontManager weightOfFont:newFont] >= aOriginalFont->Weight()) {
-        newFont = FindAnotherWeightMemberFont(aFontManager, aOriginalFont,
-                                              aCurrentFont, aStyle, PR_FALSE);
-    } else if (aStyle->weight >= CSS_BOLD_WEIGHT_BASE &&
-              [aFontManager weightOfFont:newFont] <= aOriginalFont->Weight()) {
-        newFont = FindAnotherWeightMemberFont(aFontManager, aOriginalFont,
-                                              aCurrentFont, aStyle, PR_TRUE);        
     }
 
     return newFont;
