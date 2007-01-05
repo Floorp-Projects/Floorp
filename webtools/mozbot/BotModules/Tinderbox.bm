@@ -144,7 +144,7 @@ sub GotURI {
         $self->{'_lastupdate'} = $now;
         my @lines = split(/\n/os, $output);
 
-        # NOTE. There is a box in Tinderbox whereby if you pass it an invalid tree name, it
+        # NOTE. There is a bug in Tinderbox whereby if you pass it an invalid tree name, it
         # will stop at that tree and not give you any others. It won't give you an error
         # message, either. So do not give it the wrong trees!!!  (XXX should fix this)
 
