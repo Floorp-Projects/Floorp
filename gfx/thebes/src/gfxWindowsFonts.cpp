@@ -85,7 +85,7 @@ inline HDC GetDCFromSurface(gfxASurface *aSurface) {
 
 gfxWindowsFont::gfxWindowsFont(const nsAString& aName, const gfxFontStyle *aFontStyle)
     : gfxFont(aName, aFontStyle),
-      mFont(nsnull), mScriptCache(nsnull),
+      mFont(nsnull), mAdjustedSize(0), mScriptCache(nsnull),
       mFontFace(nsnull), mScaledFont(nsnull),
       mMetrics(nsnull)
 {
@@ -215,7 +215,7 @@ gfxWindowsFont::MakeHFONT()
                 if (!dc)
                     dc = GetDC((HWND)nsnull);
 
-                FillLogFont(tryWeight);
+                FillLogFont(mStyle->size, tryWeight);
                 mFont = CreateFontIndirectW(&mLogFont);
                 HGDIOBJ oldFont = SelectObject(dc, mFont);
                 TEXTMETRIC metrics;
@@ -248,11 +248,32 @@ gfxWindowsFont::MakeHFONT()
         chosenWeight = baseWeight * 100;
     }
 
+    mAdjustedSize = mStyle->size;
+    if (mStyle->sizeAdjust > 0) {
+        if (!mFont) {
+            FillLogFont(mAdjustedSize, chosenWeight);
+            mFont = CreateFontIndirectW(&mLogFont);
+        }
+
+        Metrics *oldMetrics = mMetrics;
+        ComputeMetrics();
+        gfxFloat aspect = mMetrics->xHeight / mMetrics->emHeight;
+        mAdjustedSize =
+            PR_MAX(ROUND(mStyle->size * (mStyle->sizeAdjust / aspect)), 1.0f);
+
+        if (mMetrics != oldMetrics) {
+            delete mMetrics;
+            mMetrics = oldMetrics;
+        }
+        DeleteObject(mFont);
+        mFont = nsnull;
+    }
+
     if (!mFont) {
-        FillLogFont(chosenWeight);
+        FillLogFont(mAdjustedSize, chosenWeight);
         mFont = CreateFontIndirectW(&mLogFont);
     }
-    
+
     if (dc)
         ReleaseDC((HWND)nsnull, dc);
 
@@ -275,7 +296,8 @@ gfxWindowsFont::MakeCairoScaledFont()
 
     cairo_matrix_t sizeMatrix;
 
-    cairo_matrix_init_scale(&sizeMatrix, mStyle->size, mStyle->size);
+    MakeHFONT(); // Ensure mAdjustedSize being initialized.
+    cairo_matrix_init_scale(&sizeMatrix, mAdjustedSize, mAdjustedSize);
 
     cairo_font_options_t *fontOptions = cairo_font_options_create();
     font = cairo_scaled_font_create(CairoFontFace(), &sizeMatrix, &mCTM.ToCairoMatrix(), fontOptions);
@@ -367,13 +389,13 @@ gfxWindowsFont::ComputeMetrics()
 }
 
 void
-gfxWindowsFont::FillLogFont(PRInt16 currentWeight)
+gfxWindowsFont::FillLogFont(gfxFloat aSize, PRInt16 aWeight)
 {
 #define CLIP_TURNOFF_FONTASSOCIATION 0x40
     
     const double yScale = mCTM.ToCairoMatrix().yy;
 
-    mLogFont.lfHeight = (LONG)-ROUND(mStyle->size * yScale);
+    mLogFont.lfHeight = (LONG)-ROUND(aSize * yScale);
 
     if (mLogFont.lfHeight == 0)
         mLogFont.lfHeight = -1;
@@ -394,7 +416,7 @@ gfxWindowsFont::FillLogFont(PRInt16 currentWeight)
     mLogFont.lfQuality        = DEFAULT_QUALITY;
     mLogFont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
     mLogFont.lfItalic         = (mStyle->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) ? TRUE : FALSE;
-    mLogFont.lfWeight         = currentWeight;
+    mLogFont.lfWeight         = aWeight;
 
     int len = PR_MIN(mName.Length(), LF_FACESIZE - 1);
     memcpy(mLogFont.lfFaceName, nsPromiseFlatString(mName).get(), len * 2);
@@ -1332,7 +1354,7 @@ TRY_AGAIN_HOPE_FOR_THE_BEST_2:
         cairo_t *cr = mContext->GetCairo();
 
         cairo_set_font_face(cr, mCurrentFont->CairoFontFace());
-        cairo_set_font_size(cr, mCurrentFont->GetStyle()->size);
+        cairo_set_font_size(cr, mCurrentFont->GetAdjustedSize());
 
         cairo_win32_scaled_font_select_font(mCurrentFont->CairoScaledFont(), mDC);
 

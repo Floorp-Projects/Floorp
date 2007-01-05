@@ -378,14 +378,16 @@ public:
     SCRIPT_CACHE *ScriptCache() { return &mScriptCache; }
     const gfxMatrix& CurrentMatrix() const { return mCTM; }
     void UpdateCTM(const gfxMatrix& aMatrix);
+    gfxFloat GetAdjustedSize() { MakeHFONT(); return mAdjustedSize; }
 
 protected:
     HFONT MakeHFONT();
     cairo_font_face_t *MakeCairoFontFace();
     cairo_scaled_font_t *MakeCairoScaledFont();
-    void FillLogFont(PRInt16 weight);
+    void FillLogFont(gfxFloat aSize, PRInt16 aWeight);
 
     HFONT mFont;
+    gfxFloat mAdjustedSize;
     gfxMatrix mCTM;
 
 private:
