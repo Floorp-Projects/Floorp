@@ -256,7 +256,7 @@ void _PR_InitLog(void)
         PR_SetLogBuffering(isSync ? bufSize : 0);
 
 #ifdef XP_UNIX
-        if (getuid() != geteuid() || getgid() != getegid()) {
+        if ((getuid() != geteuid()) || (getgid() != getegid())) {
             return;
         }
 #endif /* XP_UNIX */
