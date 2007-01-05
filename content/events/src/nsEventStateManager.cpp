@@ -3977,8 +3977,9 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
     if (!mPresContext || mPresContext->IsDynamic()) {
       newHover = aContent;
     } else {
-      nsIFrame *frame = mPresContext->PresShell()->GetPrimaryFrameFor(aContent);
-      if (nsLayoutUtils::IsViewportScrollbarFrame(frame)) {
+      nsIFrame *frame = aContent ?
+        mPresContext->PresShell()->GetPrimaryFrameFor(aContent) : nsnull;
+      if (frame && nsLayoutUtils::IsViewportScrollbarFrame(frame)) {
         // The scrollbars of viewport should not ignore the hover state.
         // Because they are *not* the content of the web page.
         newHover = aContent;
