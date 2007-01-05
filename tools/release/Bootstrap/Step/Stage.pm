@@ -10,6 +10,8 @@ use File::Find qw(find);
 use MozBuild::Util qw(MkdirWithPath);
 @ISA = ("Bootstrap::Step");
 
+use strict;
+
 my $config = new Bootstrap::Config;
 
 sub Execute {
@@ -89,7 +91,8 @@ sub Execute {
     );
 
     # Remove unshipped files and set proper mode on dirs
-    find(&TrimCallback, $stageDir . '/batch1/prestage-trimmed/');
+    find(sub { return $this->TrimCallback(); },
+     $stageDir . '/batch1/prestage-trimmed/');
     
     $this->Shell(
       'cmd' => 'rsync -Lav prestage-trimmed/ stage/',
@@ -142,23 +145,23 @@ sub Verify {
 }
 
 sub TrimCallback {
+    my $this = shift;
     my $dirent = $File::Find::name;
-
-    my (undef, undef, $gid) = getgrnam($product)
-      or die "Could not getgrname for $product: $!";
 
     if (-f $dirent) {
         if (($dirent =~ /xforms\.xpi/) || 
         # ja-JP-mac is the JA locale for mac, do not ship ja
         ($dirent =~ /ja\.mac/) ||
+        ($dirent =~ /mac\-xpi\/ja\.xpi$/) ||
         # ja is the JA locale for win32/linux, do not ship ja-JP-mac
-        ($dirent =~ /ja-JP-mac\.win32/) ||
-        ($dirent =~ /ja-JP-mac\.linux/) ||
-        ($dirent =~ /^windows-xpi\/ja-JP-mac\.xpi$/) ||
-        ($dirent =~ /^linux-xpi\/ja-JP-mac\.xpi$/) ||
+        ($dirent =~ /ja\-JP\-mac\.win32/) ||
+        ($dirent =~ /ja\-JP\-mac\.linux/) ||
+        ($dirent =~ /windows\-xpi\/ja\-JP\-mac\.xpi$/) ||
+        ($dirent =~ /linux\-xpi\/ja\-JP\-mac\.xpi$/) ||
         # MAR files are merged in later
         ($dirent =~ /\.mar$/) ||
         # ZIP files are not shipped
+        ($dirent =~ /\.zip$/) ||
         ($dirent =~ /en-US\.xpi$/)) {
             unlink($dirent) || die "Could not unlink $dirent: $!";
             $this->Log('msg' => "Unlinked $dirent");
@@ -168,6 +171,9 @@ sub TrimCallback {
             $this->Log('msg' => "Changed mode of $dirent to 0644");
        }
     } elsif (-d $dirent) { 
+        my $product = $config->Get('var' => 'product');
+        my (undef, undef, $gid) = getgrnam($product)
+         or die "Could not getgrname for $product: $!";
         chown(-1, $gid, $dirent)
           or die "Cannot chgrp $dirent to $product: $!";
         $this->Log('msg' => "Changed group of $dirent to $product");
