@@ -114,12 +114,22 @@ ifdef LIBRARY
 endif
 ifdef SHARED_LIBRARY
 	$(INSTALL) -m 775 $(SHARED_LIBRARY) $(SOURCE_LIB_DIR)
+ifdef MOZ_DEBUG_SYMBOLS
+ifeq (,$(filter-out _WIN%,$(NS_USE_GCC)_$(OS_TARGET)))
+	$(INSTALL) -m 644 $(SHARED_LIBRARY:$(DLL_SUFFIX)=pdb) $(SOURCE_LIB_DIR)
+endif
+endif
 endif
 ifdef IMPORT_LIBRARY
 	$(INSTALL) -m 775 $(IMPORT_LIBRARY) $(SOURCE_LIB_DIR)
 endif
 ifdef PROGRAM
 	$(INSTALL) -m 775 $(PROGRAM) $(SOURCE_BIN_DIR)
+ifdef MOZ_DEBUG_SYMBOLS
+ifeq (,$(filter-out _WIN%,$(NS_USE_GCC)_$(OS_TARGET)))
+	$(INSTALL) -m 644 $(PROGRAM:$(PROG_SUFFIX)=.pdb) $(SOURCE_BIN_DIR)
+endif
+endif
 endif
 ifdef PROGRAMS
 	$(INSTALL) -m 775 $(PROGRAMS) $(SOURCE_BIN_DIR)
