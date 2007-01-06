@@ -92,6 +92,7 @@
             <desc>[% a.description FILTER xml %]</desc>
             <filename>[% a.filename FILTER xml %]</filename>
             <type>[% a.contenttype FILTER xml %]</type>
+            <size>[% a.datasize FILTER xml %]</size>
         [% IF displayfields.attachmentdata %]
             <data encoding="base64">[% a.data FILTER base64 %]</data>
         [% END %]        

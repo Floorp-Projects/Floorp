@@ -56,7 +56,7 @@
 <!ELEMENT bug_when (#PCDATA)>
 <!ELEMENT work_time (#PCDATA)>
 <!ELEMENT thetext (#PCDATA)>
-<!ELEMENT attachment (attachid, date, desc, filename?, type?, data?, flag*)>
+<!ELEMENT attachment (attachid, date, desc, filename?, type?, size?, data?, flag*)>
 <!ATTLIST attachment
           isobsolete (0|1) #IMPLIED
           ispatch (0|1) #IMPLIED
@@ -67,6 +67,7 @@
 <!ELEMENT desc (#PCDATA)>
 <!ELEMENT filename (#PCDATA)>
 <!ELEMENT type (#PCDATA)>
+<!ELEMENT size (#PCDATA)>
 <!ELEMENT data (#PCDATA)>
 <!ATTLIST data
           encoding (base64) #IMPLIED
