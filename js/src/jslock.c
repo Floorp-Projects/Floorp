@@ -399,7 +399,7 @@ js_FinishSharingScope(JSContext *cx, JSScope *scope)
     jsval v;
 
     obj = scope->object;
-    nslots = JS_MIN(obj->map->freeslot, obj->map->nslots);
+    nslots = LOCKED_OBJ_NSLOTS(obj);
     for (i = 0; i != nslots; ++i) {
         v = STOBJ_GET_SLOT(obj, i);
         if (JSVAL_IS_STRING(v) &&

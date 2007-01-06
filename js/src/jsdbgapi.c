@@ -1149,9 +1149,9 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
         return JS_TRUE;
     }
 
-    n = scope->entryCount;
-    if (n > scope->map.nslots)
-        n = scope->map.nslots;
+    n = STOBJ_NSLOTS(obj);
+    if (n > scope->entryCount)
+        n = scope->entryCount;
     pd = (JSPropertyDesc *) JS_malloc(cx, (size_t)n * sizeof(JSPropertyDesc));
     if (!pd)
         return JS_FALSE;

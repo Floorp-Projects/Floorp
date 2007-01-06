@@ -2092,7 +2092,7 @@ MarkGCThingChildren(JSContext *cx, void *thing, uint8 *flagp,
         /* Set up local variables to loop over unmarked things. */
         end = (obj->map->ops->mark)
               ? obj->map->ops->mark(cx, obj, NULL)
-              : JS_MIN(obj->map->freeslot, obj->map->nslots);
+              : LOCKED_OBJ_NSLOTS(obj);
         thing = NULL;
         flagp = NULL;
 #ifdef GC_MARK_DEBUG
