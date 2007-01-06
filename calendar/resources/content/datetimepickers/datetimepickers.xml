@@ -310,6 +310,14 @@
         ]]>
       </constructor>
 
+      <destructor>
+        <![CDATA[
+          this.kMinimonth.removeEventListener("select", this.clickDate, false);
+          this.kMinimonth.removeEventListener("monthchange", this.reshowPopup, false);
+          this.kMinimonth.removeEventListener("popuplisthidden", this.reshowPopup, false);
+        ]]>
+      </destructor>
+
       <method name="update">
         <parameter name="aValue"/>
         <parameter name="aRefresh"/>
