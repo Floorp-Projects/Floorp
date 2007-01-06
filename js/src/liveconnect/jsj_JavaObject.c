@@ -1000,7 +1000,6 @@ jsj_wrapper_newObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
     if (map) {
         map->nrefs = nrefs;
         map->ops = ops;
-        map->nslots = JSJ_SLOT_COUNT;
         map->freeslot = JSJ_SLOT_COUNT;
     }
     return map;
@@ -1016,7 +1015,6 @@ jsval JS_DLL_CALLBACK
 jsj_wrapper_getRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot)
 {
     JS_ASSERT(slot < JSJ_SLOT_COUNT);
-    JS_ASSERT(obj->map->nslots == JSJ_SLOT_COUNT);
     JS_ASSERT(obj->map->freeslot == JSJ_SLOT_COUNT);
     return STOBJ_GET_SLOT(obj, slot);
 }
@@ -1025,7 +1023,6 @@ JSBool JS_DLL_CALLBACK
 jsj_wrapper_setRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
 {
     JS_ASSERT(slot < JSJ_SLOT_COUNT);
-    JS_ASSERT(obj->map->nslots == JSJ_SLOT_COUNT);
     JS_ASSERT(obj->map->freeslot == JSJ_SLOT_COUNT);
     STOBJ_SET_SLOT(obj, slot, v);
     return JS_TRUE;
