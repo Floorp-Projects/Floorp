@@ -46,6 +46,7 @@
 #include "secrng.h"
 #include "secerr.h"
 #include "prerror.h"
+#include "prthread.h"
 
 size_t RNG_FileUpdate(const char *fileName, size_t limit);
 
@@ -845,25 +846,28 @@ static int
 safe_pclose(FILE *fp)
 {
     pid_t pid;
-    int count, status;
+    int status = -1, rv;
 
     if ((pid = safe_popen_pid) == 0)
 	return -1;
     safe_popen_pid = 0;
 
+    fclose(fp);
+
+    /* yield the processor so the child gets some time to exit normally */
+    PR_Sleep(PR_INTERVAL_NO_WAIT);
+
     /* if the child hasn't exited, kill it -- we're done with its output */
-    count = 0;
-    while (waitpid(pid, &status, WNOHANG) == 0) {
-    	if (kill(pid, SIGKILL) < 0 && errno == ESRCH)
-	    break;
-	if (++count == 1000)
-	    break;
+    while ((rv = waitpid(pid, &status, WNOHANG)) == -1 && errno == EINTR)
+	;
+    if (rv == 0 && kill(pid, SIGKILL) == 0) {
+	while ((rv = waitpid(pid, &status, 0)) == -1 && errno == EINTR)
+	    ;
     }
 
     /* Reset SIGCHLD signal hander before returning */
     sigaction(SIGCHLD, &oldact, NULL);
 
-    fclose(fp);
     return status;
 }
 
