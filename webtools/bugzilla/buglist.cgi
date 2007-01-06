@@ -212,10 +212,11 @@ sub DiffDate {
 }
 
 sub LookupNamedQuery {
-    my ($name, $sharer_id, $query_type) = @_;
+    my ($name, $sharer_id, $query_type, $throw_error) = @_;
     my $user = Bugzilla->login(LOGIN_REQUIRED);
     my $dbh = Bugzilla->dbh;
     my $owner_id;
+    $throw_error = 1 unless defined $throw_error;
 
     # $name and $sharer_id are safe -- we only use them below in SELECT
     # placeholders and then in error messages (which are always HTML-filtered).
@@ -243,9 +244,11 @@ sub LookupNamedQuery {
                                                 WHERE userid = ? AND name = ?
                                                       $extra",
                                                undef, @args);
-    defined($result)
-        || ThrowUserError("missing_query", {'queryname' => $name,
-                                            'sharer_id' => $sharer_id});
+    if (!defined($result)) {
+        return 0 unless $throw_error;
+        ThrowUserError("missing_query", {'queryname' => $name,
+                                         'sharer_id' => $sharer_id});
+    }
 
     if ($sharer_id) {
         my $group = $dbh->selectrow_array('SELECT group_id
@@ -499,7 +502,13 @@ elsif (($cgi->param('cmdtype') eq "doit") && defined $cgi->param('remtype')) {
             }
 
             my %bug_ids;
-            unless ($query_name) {
+            if ($query_name) {
+                # Make sure this name is not already in use by a normal saved search.
+                if (LookupNamedQuery($query_name, undef, QUERY_LIST, !THROW_ERROR)) {
+                    ThrowUserError('query_name_exists', {'name' => $query_name});
+                }
+            }
+            else {
                 # No new query name has been given. We retrieve bug IDs
                 # currently set in the selected saved search.
                 $query_name = $cgi->param('oldqueryname');

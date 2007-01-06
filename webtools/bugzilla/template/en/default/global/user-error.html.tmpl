@@ -1249,6 +1249,14 @@
     No product specified when trying to edit components, milestones, versions
     or product.
 
+  [% ELSIF error == "query_name_exists" %]
+    [% title = "Search Name Already In Use" %]
+    The name <em>[% name FILTER html %]</em> is already used by another
+    saved search. You first have to
+    <a href="buglist.cgi?cmdtype=dorem&amp;remaction=forget&amp;namedcmd=
+    [%- name FILTER url_quote %]">delete</a> it if you really want to use
+    this name.
+
   [% ELSIF error == "query_name_missing" %]
     [% title = "No Search Name Specified" %]
     [% docslinks = {'list.html' => "About $terms.bug lists"} %]
