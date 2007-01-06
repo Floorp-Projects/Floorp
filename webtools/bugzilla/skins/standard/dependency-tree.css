@@ -90,5 +90,5 @@ ul.tree a.tree_link img {
 .summ_h A {
     background-color: #ffffaa;
     color: #333;
-    text-decoration: underline bold;
+    font-weight: bold;
 }
