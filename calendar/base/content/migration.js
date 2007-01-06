@@ -662,6 +662,7 @@ var gDataMigrator = {
     },
 
     getThunderbirdProfile: function gdm_getTB() {
+        var localFile;
         var profileRoot = this.dirService.get("DefProfRt", Ci.nsILocalFile);
         LOG("profileRoot = " + profileRoot.path);
         if (this.mIsLightning) {
@@ -689,6 +690,7 @@ var gDataMigrator = {
     },
 
     getNormalProfile: function gdm_getNorm(aAppName) {
+        var localFile;
         var profileRoot = this.dirService.get("DefProfRt", Ci.nsILocalFile);
         LOG("profileRoot = " + profileRoot.path);
 

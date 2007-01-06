@@ -38,7 +38,7 @@
 
 function getListItem(aCalendar) {
     var calendarList = document.getElementById("list-calendars-listbox");
-    for (item = calendarList.firstChild;
+    for (var item = calendarList.firstChild;
          item;
          item = item.nextSibling) {
         if (item.calendar && item.calendar.uri.equals(aCalendar.uri)) {
