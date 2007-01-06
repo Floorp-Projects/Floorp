@@ -348,7 +348,7 @@ nsOperaProfileMigrator::SetFile(void* aTransform, nsIPrefBranch* aBranch)
 {
   PrefTransform* xform = (PrefTransform*)aTransform;
   nsCOMPtr<nsILocalFile> lf(do_CreateInstance("@mozilla.org/file/local;1"));
-  lf->InitWithNativePath(nsDependentCString(xform->stringValue));
+  lf->InitWithPath(NS_ConvertUTF8toUTF16(xform->stringValue));
   return aBranch->SetComplexValue(xform->targetPrefName, NS_GET_IID(nsILocalFile), lf);
 }
 
@@ -379,7 +379,7 @@ nsOperaProfileMigrator::SetWString(void* aTransform, nsIPrefBranch* aBranch)
 {
   PrefTransform* xform = (PrefTransform*)aTransform;
   nsCOMPtr<nsIPrefLocalizedString> pls(do_CreateInstance("@mozilla.org/pref-localizedstring;1"));
-  NS_ConvertASCIItoUTF16 data(xform->stringValue);
+  NS_ConvertUTF8toUTF16 data(xform->stringValue); 
   pls->SetData(data.get());
   return aBranch->SetComplexValue(xform->targetPrefName, NS_GET_IID(nsIPrefLocalizedString), pls);
 }
