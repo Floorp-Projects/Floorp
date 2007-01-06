@@ -269,7 +269,7 @@ sub debug_print {
 sub get_body_and_attachments {
     my ($email) = @_;
 
-    my $ct = $email->content_type;
+    my $ct = $email->content_type || 'text/plain';
     debug_print("Splitting Body and Attachments [Type: $ct]...");
 
     my $body;
@@ -294,7 +294,7 @@ sub get_text_alternative {
     my @parts = $email->parts;
     my $body;
     foreach my $part (@parts) {
-        my $ct = $part->content_type;
+        my $ct = $part->content_type || 'text/plain';
         debug_print("Part Content-Type: $ct", 2);
         if (!$ct || $ct =~ /^text\/plain/i) {
             $body = $part->body;
