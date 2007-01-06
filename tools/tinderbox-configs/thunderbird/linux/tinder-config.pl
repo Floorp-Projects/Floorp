@@ -176,8 +176,7 @@ $update_version = "trunk";
 $update_platform = "Linux_x86-gcc3";
 $update_hash = "sha1";
 $update_filehost = "ftp.mozilla.org";
-$update_appv = "3.0a1";
-$update_extv = "3.0a1";
+$update_ver_file = "mail/config/version.txt";
 $update_pushinfo = 1;
 
 # Reboot the OS at the end of build-and-test cycle. This is primarily
