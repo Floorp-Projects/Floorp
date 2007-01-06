@@ -270,11 +270,6 @@ if ($cgi->cookie("BUGLIST") && defined $cgi->param('id')) {
     $vars->{'bug_list'} = \@bug_list;
 }
 
-foreach my $field_name ('product', 'component', 'version') {
-    defined($cgi->param($field_name))
-      || ThrowCodeError('undefined_field', { field => $field_name });
-}
-
 # This function checks if there is a comment required for a specific
 # function and tests, if the comment was given.
 # If comments are required for functions is defined by params.
@@ -313,6 +308,10 @@ if (defined $cgi->param('id')) {
         ON products.id = bugs.product_id WHERE bug_id = ?},
         undef, $cgi->param('id'));
 }
+
+# At this point, the product must be defined, even if set to "dontchange".
+defined($cgi->param('product'))
+  || ThrowCodeError('undefined_field', { field => 'product' });
 
 if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct) 
      || (!$cgi->param('id')
@@ -361,17 +360,23 @@ if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct)
     #
     my @version_names = map($_->name, @{$prod_obj->versions});
     my @component_names = map($_->name, @{$prod_obj->components});
-    my $vok = lsearch(\@version_names, $cgi->param('version')) >= 0;
-    my $cok = lsearch(\@component_names, $cgi->param('component')) >= 0;
+    my $vok = 0;
+    if (defined $cgi->param('version')) {
+        $vok = lsearch(\@version_names, $cgi->param('version')) >= 0;
+    }
+    my $cok = 0;
+    if (defined $cgi->param('component')) {
+        $cok = lsearch(\@component_names, $cgi->param('component')) >= 0;
+    }
 
     my $mok = 1;   # so it won't affect the 'if' statement if milestones aren't used
     my @milestone_names = ();
     if ( Bugzilla->params->{"usetargetmilestone"} ) {
-       defined($cgi->param('target_milestone'))
-         || ThrowCodeError('undefined_field', { field => 'target_milestone' });
-
        @milestone_names = map($_->name, @{$prod_obj->milestones});
-       $mok = lsearch(\@milestone_names, $cgi->param('target_milestone')) >= 0;
+       $mok = 0;
+       if (defined $cgi->param('target_milestone')) {
+           $mok = lsearch(\@milestone_names, $cgi->param('target_milestone')) >= 0;
+       }
     }
 
     # We cannot be sure if the component is the same by only checking $cok; the
@@ -413,10 +418,18 @@ if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct)
             if ($vok) {
                 $defaults{'version'} = $cgi->param('version');
             }
+            elsif (scalar(@version_names) == 1) {
+                $defaults{'version'} = $version_names[0];
+            }
+
             $vars->{'components'} = \@component_names;
             if ($cok) {
                 $defaults{'component'} = $cgi->param('component');
             }
+            elsif (scalar(@component_names) == 1) {
+                $defaults{'component'} = $component_names[0];
+            }
+
             if (Bugzilla->params->{"usetargetmilestone"}) {
                 $vars->{'use_target_milestone'} = 1;
                 $vars->{'milestones'} = \@milestone_names;
@@ -426,7 +439,6 @@ if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct)
                     $defaults{'target_milestone'} = $dbh->selectrow_array(
                         q{SELECT defaultmilestone FROM products 
                         WHERE name = ?}, undef, $prod);
-;
                 }
             }
             else {
@@ -446,6 +458,10 @@ if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct)
         exit;
     }
 }
+
+# At this point, the component must be defined, even if set to "dontchange".
+defined($cgi->param('component'))
+  || ThrowCodeError('undefined_field', { field => 'component' });
 
 # Confirm that the reporter of the current bug can access the bug we are duping to.
 sub DuplicateUserConfirm {
