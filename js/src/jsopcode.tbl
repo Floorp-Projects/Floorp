@@ -407,15 +407,19 @@ OPDEF(JSOP_FOREACH,       186,"foreach",    NULL,     1,  1,  1,  0,  JOF_BYTE)
 OPDEF(JSOP_DELDESC,       187,"deldesc",    NULL,     1,  2,  1, 17,  JOF_BYTE |JOF_ELEM|JOF_DEL)
 
 /*
- * Opcodes for extended literal addressing, using unsigned 24-bit immediate
- * operands to hold integer operands (JSOP_UINT24), extended atom indexes in
- * script->atomMap (JSOP_LITERAL, JSOP_FINDNAME), and ops prefixed by such
- * atom index immediates (JSOP_LITOPX).  See jsemit.c, EmitAtomIndexOp.
+ * Opcode to hold 24-bit immediate integer operands.
  */
 OPDEF(JSOP_UINT24,        188,"uint24",     NULL,     4,  0,  1, 16,  JOF_UINT24)
-OPDEF(JSOP_LITERAL,       189,"literal",    NULL,     4,  0,  1, 19,  JOF_UINT24)
-OPDEF(JSOP_FINDNAME,      190,"findname",   NULL,     4,  0,  2,  0,  JOF_UINT24)
-OPDEF(JSOP_LITOPX,        191,"litopx",     NULL,     5,  0,  0,  0,  JOF_LITOPX)
+
+/*
+ * Opcodes to allow 24-bit atom indexes. Whenever an atom index exceeds the
+ * 16-bit limit, the atom-indexing bytecode must be bracketed by JSOP_ATOMBASE
+ * and JSOP_RESETBASE to provide the upper bits of the index.  See jsemit.c,
+ * EmitAtomIndexOp.
+ */
+OPDEF(JSOP_ATOMBASE,      189,"atombase",   NULL,     2,  0,  0,  0,  JOF_2BYTE|JOF_ATOMBASE)
+OPDEF(JSOP_RESETBASE,     190,"resetbase",  NULL,     1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_RESETBASE0,    191,"resetbase0", NULL,     1,  0,  0,  0,  JOF_BYTE)
 
 /*
  * Opcodes to help the decompiler deal with XML.
@@ -484,3 +488,11 @@ OPDEF(JSOP_GETTHISPROP,   216,"getthisprop",   NULL,  3,  0,  1, 18,  JOF_CONST)
 OPDEF(JSOP_GETARGPROP,    217,"getargprop",    NULL,  5,  0,  1, 18,  JOF_INDEXCONST|JOF_VARPROP)
 OPDEF(JSOP_GETVARPROP,    218,"getvarprop",    NULL,  5,  0,  1, 18,  JOF_INDEXCONST|JOF_VARPROP)
 OPDEF(JSOP_GETLOCALPROP,  219,"getlocalprop",  NULL,  5,  0,  1, 18,  JOF_INDEXCONST|JOF_VARPROP)
+
+/*
+ * Optimize atom segments 1-3.  These must be followed by JSOP_RESETBASE0 after
+ * the opcode that they prefix.
+ */
+OPDEF(JSOP_ATOMBASE1,     220,"atombase1",     NULL,  1,  0,  0,  0,  JOF_BYTE |JOF_ATOMBASE)
+OPDEF(JSOP_ATOMBASE2,     221,"atombase2",     NULL,  1,  0,  0,  0,  JOF_BYTE |JOF_ATOMBASE)
+OPDEF(JSOP_ATOMBASE3,     222,"atombase3",     NULL,  1,  0,  0,  0,  JOF_BYTE |JOF_ATOMBASE)

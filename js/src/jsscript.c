@@ -1515,12 +1515,10 @@ js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
      * Special case: function definition needs no line number note because
      * the function's script contains its starting line number.
      */
-    if (*pc == JSOP_DEFFUN ||
-        (*pc == JSOP_LITOPX && pc[1 + LITERAL_INDEX_LEN] == JSOP_DEFFUN)) {
-        atom = js_GetAtom(cx, &script->atomMap,
-                          (*pc == JSOP_DEFFUN)
-                          ? GET_ATOM_INDEX(pc)
-                          : GET_LITERAL_INDEX(pc));
+    if (js_CodeSpec[*pc].format & JOF_ATOMBASE)
+        pc += js_CodeSpec[*pc].length;
+    if (*pc == JSOP_DEFFUN) {
+        atom = js_GetAtomFromBytecode(cx, script, pc, 0);
         fun = (JSFunction *) JS_GetPrivate(cx, ATOM_TO_OBJECT(atom));
         JS_ASSERT(FUN_INTERPRETED(fun));
         return fun->u.i.script->lineno;

@@ -63,11 +63,11 @@
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
+#include "jsopcode.h"
 #include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
-#include "jsopcode.h"
 
 #include "jsdbgapi.h"   /* whether or not JS_HAS_OBJ_WATCHPOINT */
 
@@ -787,7 +787,9 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         size_t classnchars = strlen(classname);
         static const char classpropid[] = "C";
         const char *cp;
+#ifdef DEBUG
         size_t onchars = nchars;
+#endif
 
         /* 2 for ': ', 2 quotes around classname, 2 for ', ' after. */
         classnchars += sizeof classpropid - 1 + 2 + 2;
@@ -3100,41 +3102,51 @@ Detecting(JSContext *cx, jsbytecode *pc)
     if (!cx->fp)
         return JS_FALSE;
     script = cx->fp->script;
-    for (endpc = script->code + script->length; pc < endpc; pc++) {
+    for (endpc = script->code + script->length;
+         pc < endpc;
+         pc += js_CodeSpec[op].length) {
         /* General case: a branch or equality op follows the access. */
         op = (JSOp) *pc;
         if (js_CodeSpec[op].format & JOF_DETECTING)
             return JS_TRUE;
 
-        /*
-         * Special case #1: handle (document.all == null).  Don't sweat about
-         * JS1.2's revision of the equality operators here.
-         */
-        if (op == JSOP_NULL) {
+        switch (op) {
+          case JSOP_NULL:
+            /*
+             * Special case #1: handle (document.all == null).  Don't sweat
+             * about JS1.2's revision of the equality operators here.
+             */
             if (++pc < endpc)
                 return *pc == JSOP_EQ || *pc == JSOP_NE;
-            break;
-        }
+            return JS_FALSE;
 
-        /*
-         * Special case #2: handle (document.all == undefined).  Don't worry
-         * about someone redefining undefined, which was added by Edition 3,
-         * so is read/write for backward compatibility.
-         */
-        if (op == JSOP_NAME) {
-            atom = GET_ATOM(cx, script, pc);
+          case JSOP_NAME:
+            /*
+             * Special case #2: handle (document.all == undefined).  Don't
+             * worry about someone redefining undefined, which was added by
+             * Edition 3, so is read/write for backward compatibility.
+             */
+            atom = js_GetAtomFromBytecode(cx, script, pc, 0);
             if (atom == cx->runtime->atomState.typeAtoms[JSTYPE_VOID] &&
                 (pc += js_CodeSpec[op].length) < endpc) {
                 op = (JSOp) *pc;
                 return op == JSOP_EQ || op == JSOP_NE ||
                        op == JSOP_STRICTEQ || op == JSOP_STRICTNE;
             }
+            return JS_FALSE;
+
+          case JSOP_GROUP:
+            break;
+
+          default:
+            /*
+             * At this point, anything but grouping means we're not detecting
+             * unless we see an extended atom index prefix.
+             */
+            if (js_CodeSpec[op].format & JOF_ATOMBASE)
+                return JS_FALSE;
             break;
         }
-
-        /* At this point, anything but grouping means we're not detecting. */
-        if (op != JSOP_GROUP)
-            break;
     }
     return JS_FALSE;
 }

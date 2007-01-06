@@ -595,8 +595,8 @@ BuildSpanDepTable(JSContext *cx, JSCodeGenerator *cg)
             if (!AddSpanDep(cx, cg, pc, pc2, off))
                 return JS_FALSE;
             pc2 += JUMP_OFFSET_LEN;
-            npairs = (jsint) GET_ATOM_INDEX(pc2);
-            pc2 += ATOM_INDEX_LEN;
+            npairs = (jsint) GET_UINT16(pc2);
+            pc2 += UINT16_LEN;
             while (npairs) {
                 pc2 += ATOM_INDEX_LEN;
                 off = GET_JUMP_OFFSET(pc2);
@@ -1734,76 +1734,42 @@ IndexRegExpClone(JSContext *cx, JSParseNode *pn, JSAtomListElement *ale,
     return JS_TRUE;
 }
 
+static int
+EmitBigIndexPrefix(JSContext *cx, JSCodeGenerator *cg, jsatomid atomIndex)
+{
+    if (atomIndex < JS_BIT(16))
+        return JSOP_NOP;
+    atomIndex >>= 16;
+    if (atomIndex <= JSOP_ATOMBASE3 - JSOP_ATOMBASE1 + 1) {
+        if (js_Emit1(cx, cg, JSOP_ATOMBASE1 + atomIndex - 1) < 0)
+            return -1;
+        return JSOP_RESETBASE0;
+    }
+    if (js_Emit2(cx, cg, JSOP_ATOMBASE, atomIndex) < 0)
+        return -1;
+    return JSOP_RESETBASE;
+}
+
 /*
  * Emit a bytecode and its 2-byte constant (atom) index immediate operand.
- * If the atomIndex requires more than 2 bytes, emit a prefix op whose 24-bit
- * immediate operand indexes the atom in script->atomMap.
+ * If the atomIndex requires more than 2 bytes, emit a prefix op whose 8-bit
+ * immediate operand effectively extends the 16-bit immediate of the prefixed
+ * opcode, by changing atom "segment" within script->atomMap (see jsinterp.c).
+ * We optimize segments 1-3 with single-byte JSOP_ATOMBASE[123] codes.
  *
- * If op has JOF_NAME mode, emit JSOP_FINDNAME to find and push the object in
- * the scope chain in which the literal name was found, followed by the name
- * as a string.  This enables us to use the JOF_ELEM counterpart to op.
- *
- * Otherwise, if op has JOF_PROP mode, emit JSOP_LITERAL before op, to push
- * the atom's value key.  For JOF_PROP ops, the object being operated on has
- * already been pushed, and JSOP_LITERAL will push the id, leaving the stack
- * in the proper state for a JOF_ELEM counterpart.
- *
- * Otherwise, emit JSOP_LITOPX to push the atom index, then perform a special
- * dispatch on op, but getting op's atom index from the stack instead of from
- * an unsigned 16-bit immediate operand.
+ * Such prefixing currently requires a suffix to restore the "zero segment"
+ * register setting, but this could be optimized further.
  */
 static JSBool
 EmitAtomIndexOp(JSContext *cx, JSOp op, jsatomid atomIndex, JSCodeGenerator *cg)
 {
-    uint32 mode;
-    JSOp prefixOp;
-    ptrdiff_t off;
-    jsbytecode *pc;
+    int bigSuffix;
 
-    if (atomIndex >= JS_BIT(16)) {
-        mode = (js_CodeSpec[op].format & JOF_MODEMASK);
-        if (op != JSOP_SETNAME) {
-            prefixOp = (mode == JOF_NAME)
-                       ? JSOP_FINDNAME
-                       : (mode == JOF_PROP)
-                       ? JSOP_LITERAL
-                       : JSOP_LITOPX;
-            off = js_EmitN(cx, cg, prefixOp, 3);
-            if (off < 0)
-                return JS_FALSE;
-            pc = CG_CODE(cg, off);
-            SET_LITERAL_INDEX(pc, atomIndex);
-        }
-
-        switch (op) {
-          case JSOP_DECNAME:    op = JSOP_DECELEM; break;
-          case JSOP_DECPROP:    op = JSOP_DECELEM; break;
-          case JSOP_DELNAME:    op = JSOP_DELELEM; break;
-          case JSOP_DELPROP:    op = JSOP_DELELEM; break;
-          case JSOP_FORNAME:    op = JSOP_FORELEM; break;
-          case JSOP_FORPROP:    op = JSOP_FORELEM; break;
-          case JSOP_GETPROP:    op = JSOP_GETELEM; break;
-          case JSOP_GETXPROP:   op = JSOP_GETXELEM; break;
-          case JSOP_IMPORTPROP: op = JSOP_IMPORTELEM; break;
-          case JSOP_INCNAME:    op = JSOP_INCELEM; break;
-          case JSOP_INCPROP:    op = JSOP_INCELEM; break;
-          case JSOP_INITPROP:   op = JSOP_INITELEM; break;
-          case JSOP_NAME:       op = JSOP_GETELEM; break;
-          case JSOP_NAMEDEC:    op = JSOP_ELEMDEC; break;
-          case JSOP_NAMEINC:    op = JSOP_ELEMINC; break;
-          case JSOP_PROPDEC:    op = JSOP_ELEMDEC; break;
-          case JSOP_PROPINC:    op = JSOP_ELEMINC; break;
-          case JSOP_BINDNAME:   return JS_TRUE;
-          case JSOP_SETNAME:    op = JSOP_SETELEM; break;
-          case JSOP_SETPROP:    op = JSOP_SETELEM; break;
-          default:              break;
-        }
-
-        return js_Emit1(cx, cg, op) >= 0;
-    }
-
+    bigSuffix = EmitBigIndexPrefix(cx, cg, atomIndex);
+    if (bigSuffix < 0)
+        return JS_FALSE;
     EMIT_UINT16_IMM_OP(op, atomIndex);
-    return JS_TRUE;
+    return bigSuffix == JSOP_NOP || js_Emit1(cx, cg, bigSuffix) >= 0;
 }
 
 /*
@@ -1844,31 +1810,23 @@ static JSBool
 EmitIndexConstOp(JSContext *cx, JSOp op, uintN slot, jsatomid atomIndex,
                  JSCodeGenerator *cg)
 {
+    int bigSuffix;
     ptrdiff_t off;
     jsbytecode *pc;
 
-    if (atomIndex >= JS_BIT(16)) {
-        /*
-         * Lots of literals in the outer function, so we have to emit
-         * [JSOP_LITOPX, atomIndex, op, slot].
-         */
-        off = js_EmitN(cx, cg, JSOP_LITOPX, 3);
-        if (off < 0)
-            return JS_FALSE;
-        pc = CG_CODE(cg, off);
-        SET_LITERAL_INDEX(pc, atomIndex);
-        EMIT_UINT16_IMM_OP(op, slot);
-    } else {
-        /* Emit [op, slot, atomIndex]. */
-        off = js_EmitN(cx, cg, op, 2 + ATOM_INDEX_LEN);
-        if (off < 0)
-            return JS_FALSE;
-        pc = CG_CODE(cg, off);
-        SET_UINT16(pc, slot);
-        pc += 2;
-        SET_ATOM_INDEX(pc, atomIndex);
-    }
-    return JS_TRUE;
+    bigSuffix = EmitBigIndexPrefix(cx, cg, atomIndex);
+    if (bigSuffix < 0)
+        return JS_FALSE;
+
+    /* Emit [op, slot, atomIndex]. */
+    off = js_EmitN(cx, cg, op, 2 + ATOM_INDEX_LEN);
+    if (off < 0)
+        return JS_FALSE;
+    pc = CG_CODE(cg, off);
+    SET_UINT16(pc, slot);
+    pc += 2;
+    SET_ATOM_INDEX(pc, atomIndex);
+    return bigSuffix == 0 || js_Emit1(cx, cg, bigSuffix) >= 0;
 }
 
 /*
@@ -2590,7 +2548,7 @@ EmitNumberOp(JSContext *cx, jsdouble dval, JSCodeGenerator *cg)
             if (off < 0)
                 return JS_FALSE;
             pc = CG_CODE(cg, off);
-            SET_LITERAL_INDEX(pc, atomIndex);
+            SET_UINT24(pc, atomIndex);
             return JS_TRUE;
         }
 
