@@ -32,7 +32,7 @@
           <NC:nsISmtpServer>
             <NC:hostname>smtp.gmail.com</NC:hostname>
             <NC:port>587</NC:port>
-            <NC:trySSL>3</NC:trySSL>
+            <NC:trySSL>2</NC:trySSL>
             <NC:description>Gmail</NC:description>
           </NC:nsISmtpServer>
         </NC:smtp>
