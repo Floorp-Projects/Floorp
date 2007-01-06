@@ -489,7 +489,8 @@ nsBidiPresUtils::InitLogicalArray(nsPresContext* aPresContext,
     directionalFrame = nsnull;
 
     if (aAddMarkers &&
-        frame->IsFrameOfType(nsIFrame::eBidiInlineContainer)) {
+        frame->IsFrameOfType(nsIFrame::eBidiInlineContainer) &&
+        !frame->GetPrevContinuation()) {
       const nsStyleVisibility* vis = frame->GetStyleVisibility();
       const nsStyleTextReset* text = frame->GetStyleTextReset();
       switch (text->mUnicodeBidi) {
@@ -519,7 +520,7 @@ nsBidiPresUtils::InitLogicalArray(nsPresContext* aPresContext,
 
       // Create a directional frame before the first frame of an
       // element specifying embedding or override
-      if (directionalFrame && !frame->GetPrevContinuation()) {
+      if (directionalFrame) {
         mLogicalFrames.AppendElement(directionalFrame);
       }
     }
@@ -542,12 +543,12 @@ nsBidiPresUtils::InitLogicalArray(nsPresContext* aPresContext,
     }
 
     // If the element is attributed by dir, indicate direction pop (add PDF frame)
-    if (directionalFrame) {
+    if (directionalFrame && !frame->GetNextContinuation()) {
       directionalFrame = NS_NewDirectionalFrame(shell, styleContext, kPDF);
    
       // Create a directional frame after the last frame of an
       // element specifying embedding or override
-      if (directionalFrame && !frame->GetNextContinuation()) {
+      if (directionalFrame) {
         mLogicalFrames.AppendElement(directionalFrame);
       }
     }
