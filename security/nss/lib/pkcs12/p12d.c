@@ -2296,9 +2296,9 @@ sec_pkcs12_validate_cert(sec_PKCS12SafeBag *cert,
 	return;
     }
 
-    CERT_DestroyCertificate(leafCert);
+    sec_pkcs12_validate_cert_nickname(cert, key, nicknameCb, (void *)leafCert);
 
-    sec_pkcs12_validate_cert_nickname(cert, key, nicknameCb, wincx);
+    CERT_DestroyCertificate(leafCert);
 }
 
 static void
@@ -2723,10 +2723,14 @@ SEC_PKCS12DecoderValidateBags(SEC_PKCS12DecoderContext *p12dcx,
 	i++;
     }
 
-    if(bagCnt == noInstallCnt) {
-	PORT_SetError(SEC_ERROR_PKCS12_DUPLICATE_DATA);
-	return SECFailure;
-    }
+    /* formerly was erroneous code here that assumed that if all bags
+     * failed to import, then the problem was duplicated data; 
+     * that is, it assume that the problem must be that the file had
+     * previously been successfully imported.  But importing a 
+     * previously imported file causes NO ERRORS at all, and this 
+     * false assumption caused real errors to be hidden behind false
+     * errors about duplicated data.
+     */
 
     if(probCnt) {
 	PORT_SetError(errorVal);
