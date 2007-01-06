@@ -247,8 +247,7 @@ $update_version = "trunk";
 $update_platform = "WINNT_x86-msvc";
 $update_hash = "md5";
 $update_filehost = "ftp.mozilla.org";
-$update_appv = "0.4a1";
-$update_extv = "0.4a1";
+$update_ver_file = 'calendar/sunbird/config/version.txt';
 $update_pushinfo = 1;
 
 # Reboot the OS at the end of build-and-test cycle. This is primarily

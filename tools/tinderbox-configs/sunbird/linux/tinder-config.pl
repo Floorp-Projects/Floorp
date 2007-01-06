@@ -235,8 +235,7 @@ $update_version = "trunk";
 $update_platform = "Linux_x86-gcc3";
 $update_hash = "md5";
 $update_filehost = "ftp.mozilla.org";
-$update_appv = "0.4a1";
-$update_extv = "0.4a1";
+$update_ver_file = 'calendar/sunbird/config/version.txt';
 $update_pushinfo = 1;
 
 # Reboot the OS at the end of build-and-test cycle. This is primarily
