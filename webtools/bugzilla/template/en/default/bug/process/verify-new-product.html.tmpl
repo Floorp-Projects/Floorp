@@ -118,7 +118,16 @@
 
 </form>
 <hr>
-<a href="query.cgi">Cancel and Return to the Search Page</a>
+
+[%# If 'id' is defined, then we are editing a single bug.
+  # Else we are editing several bugs at once. %]
+
+[% IF cgi.param('id') AND cgi.param('id').match('^\d+$') %]
+  [% id = cgi.param('id') %]
+  [% "Cancel and Return to $terms.bug $id" FILTER bug_link(id) FILTER none %]
+[% ELSE %]
+  <a href="buglist.cgi?regetlastlist=1">Cancel and Return to the last search results</a>
+[% END %]
 
 [% PROCESS global/footer.html.tmpl %]
 
