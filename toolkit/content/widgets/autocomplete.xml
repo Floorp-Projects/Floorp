@@ -192,12 +192,6 @@
         ]]></setter>
       </property>
 
-      <property name="selectionStart"
-                onget="return this.mInputElt.selectionStart;"/>
-
-      <property name="selectionEnd"
-                onget="return this.mInputElt.selectionEnd;"/>
-
       <method name="selectTextRange">
         <parameter name="aStartIndex"/>
         <parameter name="aEndIndex"/>
