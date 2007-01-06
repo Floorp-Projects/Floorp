@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.340 $ ';
+$::UtilsVersion = '$Revision: 1.341 $ ';
 
 package TinderUtils;
 
@@ -586,44 +586,41 @@ sub SetupPath {
     }
 
     if ($Settings::OS eq 'SunOS') {
-        if ($Settings::OSVerMajor eq '4') {
-            $ENV{PATH} = "/usr/gnu/bin:/usr/local/sun4/bin:/usr/bin:$ENV{PATH}";
-            $ENV{LD_LIBRARY_PATH} = "/home/motif/usr/lib:$ENV{LD_LIBRARY_PATH}";
-            $Settings::ConfigureArgs .= '--x-includes=/home/motif/usr/include/X11 '
-                . '--x-libraries=/home/motif/usr/lib';
-            $Settings::ConfigureEnvArgs ||= 'CC="egcc -DSUNOS4" CXX="eg++ -DSUNOS4"';
-            $Settings::Compiler ||= 'egcc';
+        my $os_ver = `uname -r`;
+        $Settings::OSVerMajor = int(substr($os_ver, 0, 1));
+        $Settings::OSVerMinor = int(substr($os_ver, 2, 2));
+        # For SunOS >= 5.8, use compiler cc/CC
+        if ($Settings::OSVerMajor == 5 and $Settings::OSVerMinor >= 8) {
+            $Settings::ConfigureEnvArgs ||= 'CC=cc CXX=CC';
+            $Settings::Compiler ||= 'cc';
         } else {
-            $ENV{PATH} = '/usr/ccs/bin:' . $ENV{PATH};
-        }
-        if ($Settings::CPU eq 'i86pc') {
-            $ENV{PATH} = '/opt/gnu/bin:' . $ENV{PATH};
-            $ENV{LD_LIBRARY_PATH} = '/opt/gnu/lib:' . $ENV{LD_LIBRARY_PATH};
-            if ($Settings::ConfigureEnvArgs eq '') {
-                $Settings::ConfigureEnvArgs ||= 'CC=egcc CXX=eg++';
+            if ($Settings::OSVerMajor == 4) {
+                $ENV{PATH} = "/usr/gnu/bin:/usr/local/sun4/bin:/usr/bin:$ENV{PATH}";
+                $ENV{LD_LIBRARY_PATH} = "/home/motif/usr/lib:$ENV{LD_LIBRARY_PATH}";
+                $Settings::ConfigureArgs .= '--x-includes=/home/motif/usr/include/X11 '
+                    . '--x-libraries=/home/motif/usr/lib';
+                $Settings::ConfigureEnvArgs ||= 'CC="egcc -DSUNOS4" CXX="eg++ -DSUNOS4"';
                 $Settings::Compiler ||= 'egcc';
+            } else {
+                $ENV{PATH} = '/usr/ccs/bin:' . $ENV{PATH};
             }
+            if ($Settings::CPU eq 'i86pc') {
+                $ENV{PATH} = '/opt/gnu/bin:' . $ENV{PATH};
+                $ENV{LD_LIBRARY_PATH} = '/opt/gnu/lib:' . $ENV{LD_LIBRARY_PATH};
+                if ($Settings::ConfigureEnvArgs eq '') {
+                    $Settings::ConfigureEnvArgs ||= 'CC=egcc CXX=eg++';
+                    $Settings::Compiler ||= 'egcc';
+                }
 
-            # Possible NSPR bug... If USE_PTHREADS is defined, then
-            #   _PR_HAVE_ATOMIC_CAS gets defined (erroneously?) and
-            #   libnspr21 does not work.
-            $Settings::NSPRArgs .= 'CLASSIC_NSPR=1 NS_USE_GCC=1 NS_USE_NATIVE=';
-        } else {
-            # This is utterly lame....
-            if ($ENV{HOST} eq 'fugu') {
-                $ENV{PATH} = "/tools/ns/workshop/bin:/usrlocal/bin:$ENV{PATH}";
-                $ENV{LD_LIBRARY_PATH} = '/tools/ns/workshop/lib:/usrlocal/lib:'
-                    . $ENV{LD_LIBRARY_PATH};
-                $Settings::ConfigureEnvArgs ||= 'CC=cc CXX=CC';
-                my $comptmp   = `cc -V 2>&1 | head -1`;
-                chomp($comptmp);
-                $Settings::Compiler ||= "cc/CC \($comptmp\)";
-                $Settings::NSPRArgs .= 'NS_USE_NATIVE=1';
+                # Possible NSPR bug... If USE_PTHREADS is defined, then
+                #   _PR_HAVE_ATOMIC_CAS gets defined (erroneously?) and
+                #   libnspr21 does not work.
+                $Settings::NSPRArgs .= 'CLASSIC_NSPR=1 NS_USE_GCC=1 NS_USE_NATIVE=';
             } else {
                 $Settings::NSPRArgs .= 'NS_USE_GCC=1 NS_USE_NATIVE=';
-            }
-            if ($Settings::OSVerMajor eq '5') {
-                $Settings::NSPRArgs .= ' USE_PTHREADS=1';
+                if ($Settings::OSVerMajor == 5) {
+                    $Settings::NSPRArgs .= ' USE_PTHREADS=1';
+                }
             }
         }
     }
