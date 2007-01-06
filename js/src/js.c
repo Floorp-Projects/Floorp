@@ -928,7 +928,7 @@ GetSwitchTableBounds(JSScript *script, uintN offset,
         pc += jmplen;
         n = GET_ATOM_INDEX(pc);
         pc += ATOM_INDEX_LEN;
-        jmplen += ATOM_INDEX_LEN;
+        jmplen += JUMP_OFFSET_LEN;
         break;
     }
 
