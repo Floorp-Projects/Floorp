@@ -117,6 +117,9 @@ public:
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
 
   friend class ImageListener;
+
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsImageDocument)
+
 protected:
   nsresult CreateSyntheticDocument();
 
@@ -261,6 +264,8 @@ nsImageDocument::~nsImageDocument()
 {
 }
 
+NS_IMPL_CYCLE_COLLECTION_0_AMBIGUOUS(nsImageDocument, nsIDocument)
+
 NS_IMPL_ADDREF_INHERITED(nsImageDocument, nsMediaDocument)
 NS_IMPL_RELEASE_INHERITED(nsImageDocument, nsMediaDocument)
 
@@ -269,6 +274,7 @@ NS_INTERFACE_MAP_BEGIN(nsImageDocument)
   NS_INTERFACE_MAP_ENTRY(imgIDecoderObserver)
   NS_INTERFACE_MAP_ENTRY(imgIContainerObserver)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
+  NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(nsImageDocument)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(ImageDocument)
 NS_INTERFACE_MAP_END_INHERITING(nsMediaDocument)
 
