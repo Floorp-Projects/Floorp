@@ -90,6 +90,12 @@ function setWindowName()
      confirm = bundle.GetStringFromName("deleteEmailCertConfirm");
      impact = bundle.GetStringFromName("deleteEmailCertImpact");
   }
+  else if(typeFlag == "orphan_tab")
+  {
+     title = bundle.GetStringFromName("deleteOrphanCertTitle");
+     confirm = bundle.GetStringFromName("deleteOrphanCertConfirm");
+     impact = "";
+  }
   else
   {
      return;

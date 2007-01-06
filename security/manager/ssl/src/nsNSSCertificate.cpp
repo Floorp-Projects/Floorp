@@ -89,6 +89,11 @@ extern PRLogModuleInfo* gPIPNSSLog;
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
+// This is being stored in an PRUint32 that can otherwise
+// only take values from nsIX509Cert's list of cert types.
+// As nsIX509Cert is frozen, we choose a value not contained
+// in the list to mean not yet initialized.
+#define CERT_TYPE_NOT_YET_INITIALIZED (1 << 30)
 
 /* nsNSSCertificate */
 
@@ -123,7 +128,7 @@ nsNSSCertificate::ConstructFromDER(char *certDER, int derLen)
 nsNSSCertificate::nsNSSCertificate(CERTCertificate *cert) : 
                                            mCert(nsnull),
                                            mPermDelete(PR_FALSE),
-                                           mCertType(nsIX509Cert::UNKNOWN_CERT)
+                                           mCertType(CERT_TYPE_NOT_YET_INITIALIZED)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -174,7 +179,8 @@ void nsNSSCertificate::destructorSafeDestroyNSSReference()
 nsresult
 nsNSSCertificate::GetCertType(PRUint32 *aCertType)
 {
-  if (mCertType == nsIX509Cert::UNKNOWN_CERT) {
+  if (mCertType == CERT_TYPE_NOT_YET_INITIALIZED) {
+     // only determine cert type once and cache it
      mCertType = getCertType(mCert);
   }
   *aCertType = mCertType;
