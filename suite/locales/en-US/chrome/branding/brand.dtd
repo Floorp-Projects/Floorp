@@ -3,3 +3,4 @@
 <!ENTITY  brandShortName        "SeaMonkey">
 <!ENTITY  vendorShortName       "SeaMonkey">
 <!ENTITY  sidebarName           "Sidebar">
+<!ENTITY  copyright.string      "Copyright &copy; 2003-2007 The Mozilla Foundation.">
