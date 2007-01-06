@@ -2142,7 +2142,7 @@ getCertType(CERTCertificate *cert)
     return nsIX509Cert::CA_CERT;
   if (cert->emailAddr)
     return nsIX509Cert::EMAIL_CERT;
-  return nsIX509Cert::SERVER_CERT;
+  return nsIX509Cert::UNKNOWN_CERT;
 }
 
 CERTCertNicknames *
