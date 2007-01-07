@@ -37,7 +37,6 @@
     <td>
       [% IF has_bits.size %]
         You have the following permission [% terms.bits %] set on your account:
-        <p>
         <table align="center">
           [% FOREACH bit_description = has_bits %]
             <tr>
@@ -75,7 +74,6 @@
         <br>
         And you can turn on or off the following [% terms.bits %] for
         <a href="editusers.cgi">other users</a>:
-        <p>
           <table align="center">
           [% FOREACH bit_description = set_bits %]
             <tr>
@@ -84,9 +82,8 @@
             </tr>
           [% END %]
           </table>
-        </p>
       [% END %]
-      
+
       [% IF user.groups.bz_sudoers %]
         <br>
         You are a member of the <b>bz_sudoers</b> group, so you can 
