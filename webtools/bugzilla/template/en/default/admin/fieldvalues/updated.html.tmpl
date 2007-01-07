@@ -47,10 +47,8 @@
 [% END %]
 
 [% UNLESS (updated_sortkey || updated_value) %]
-  <p>Nothing changed for field value '[% value FILTER html %]'.
+  <p>Nothing changed for field value '[% value FILTER html %]'.</p>
 [% END %]
-   
-<p>
 
 [% PROCESS admin/fieldvalues/footer.html.tmpl %]
 
