@@ -39,7 +39,7 @@ local our $vars = {};
 ###############################################################################
 # Each panel has two functions - panel Foo has a DoFoo, to get the data 
 # necessary for displaying the panel, and a SaveFoo, to save the panel's 
-# contents from the form data (if appropriate.) 
+# contents from the form data (if appropriate). 
 # SaveFoo may be called before DoFoo.    
 ###############################################################################
 sub DoAccount {

@@ -742,7 +742,7 @@
 
       <listitem>
         <para>Fill out the "Component" field, a short "Description", 
-        the "Default Assignee" and "Default QA Contact" (if enabled.) 
+        the "Default Assignee" and "Default QA Contact" (if enabled). 
         The Component and Description fields may contain HTML; 
         the "Default Assignee" field must be a login name
         already existing in the database. 

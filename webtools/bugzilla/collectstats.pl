@@ -45,7 +45,7 @@ use Bugzilla::Product;
 use Bugzilla::Field;
 
 # Turn off output buffering (probably needed when displaying output feedback
-# in the regenerate mode.)
+# in the regenerate mode).
 $| = 1;
 
 # Tidy up after graphing module
