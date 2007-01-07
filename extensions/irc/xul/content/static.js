@@ -282,6 +282,7 @@ function initStatic()
     }
 
     multilineInputMode(client.prefs["multiline"]);
+    updateSpellcheck(client.prefs["inputSpellcheck"]);
     if (client.prefs["showModeSymbols"])
         setListMode("symbol");
     else
@@ -2494,6 +2495,14 @@ function updateAppMotif(motifURL)
             updateAppMotif = function() {};
         }
     }
+}
+
+function updateSpellcheck(value)
+{
+    value = value.toString();
+    document.getElementById("input").setAttribute("spellcheck", value);
+    document.getElementById("multiline-input").setAttribute("spellcheck",
+                                                            value);
 }
 
 function updateNetwork()
