@@ -33,10 +33,10 @@
   # no_edit_other_milestones_link
   # no_add_milestone_link
   #%]
-  
-<p>
 
 <hr>
+
+<p>
 
 [% UNLESS no_add_milestone_link %]
   <a title="Add a milestone to product '[% product.name FILTER html %]'"
@@ -58,7 +58,7 @@
   Edit other milestones of product <a 
   href="editmilestones.cgi?product=
         [%- product.name FILTER url_quote %]">'[% product.name FILTER html %]'</a>.
-   
+
 [% END %]
 
   Edit product <a 
