@@ -1351,11 +1351,7 @@ sub wants_bug_mail {
         }
         else {
             # Catch-all for any change not caught by a more specific event
-            # XXX: Temporary Compatibility Change 2 of 2:
-            # This code is disabled, and replaced with the code a few lines
-            # below, in order to make the behaviour more like the original, 
-            # which only added this event if _all_ changes were of "other" type.
-            # $events{+EVT_OTHER} = 1;            
+            $events{+EVT_OTHER} = 1;            
         }
 
         # If the user is in a particular role and the value of that role
@@ -1395,12 +1391,6 @@ sub wants_bug_mail {
     }
     
     my @event_list = keys %events;
-    
-    # XXX Temporary Compatibility Change 2 of 2:
-    # See above comment.
-    if (!scalar(@event_list)) {
-      @event_list = (EVT_OTHER);
-    }
     
     my $wants_mail = $self->wants_mail(\@event_list, $relationship);
 
