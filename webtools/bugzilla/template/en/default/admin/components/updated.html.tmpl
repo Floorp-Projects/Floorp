@@ -52,7 +52,6 @@
 %]
 
 [% IF updated_description %]
-  <p>
   <table>
     <tr>
       <td>Updated description to:</td>
@@ -91,7 +90,7 @@
 [% UNLESS updated_description || updated_initialowner || 
           updated_initialqacontact || updated_name  ||
           updated_initialcc %]
-  <p>Nothing changed for component '[% comp.name FILTER html %]'.
+  <p>Nothing changed for component '[% comp.name FILTER html %]'.</p>
 [% END %]
 
 [% PROCESS admin/components/footer.html.tmpl %]
