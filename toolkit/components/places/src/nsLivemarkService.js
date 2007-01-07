@@ -442,7 +442,7 @@ LivemarkService.prototype = {
     }
   },
 
-  childrenReadOnly: false,
+  childrenReadOnly: true,
 
   createInstance: function LS_createInstance(outer, iid) {
     if (outer != null)
