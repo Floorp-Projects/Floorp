@@ -419,7 +419,7 @@ interface jsdIFilter : nsISupports
      * matches all hooks.  This attribute must be QI'able to the
      * (non-scriptable) nsIScriptGlobalObject interface.
      *
-     * The jsdIService caches this value internally, to if it changes you must
+     * The jsdIService caches this value internally, so if it changes you must
      * swap the filter with itself using jsdIService::swapFilters.
      */
     attribute nsISupports globalObject;
