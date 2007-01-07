@@ -1340,12 +1340,6 @@ sub wants_bug_mail {
     my $self = shift;
     my ($bug_id, $relationship, $fieldDiffs, $commentField, $changer, $bug_is_new) = @_;
 
-    # Don't send any mail, ever, if account is disabled 
-    # XXX Temporary Compatibility Change 1 of 2:
-    # This code is disabled for the moment to make the behaviour like the old
-    # system, which sent bugmail to disabled accounts.
-    # return 0 if $self->{'disabledtext'};
-    
     # Make a list of the events which have happened during this bug change,
     # from the point of view of this user.    
     my %events;    
