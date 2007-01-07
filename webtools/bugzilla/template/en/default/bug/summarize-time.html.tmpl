@@ -25,7 +25,7 @@
     [% title = title _ "$terms.Bug $ids.0: " %]
     [% header = (header _ " (and $terms.bugs blocking it)") IF do_depends %]
 [% ELSE %]
-    [% title = title _ "($ids.size $terms.bugs selected)" %]    
+    [% title = title _ "($ids.size $terms.bugs selected)" %]
     [% header = title %]
 [% END %]
 
@@ -35,11 +35,9 @@
     style_urls = ["skins/standard/summarize-time.css"]
     %]
 
-<p>
-
 [% IF ids.size == 0 %]
 
-    No [% terms.bugs %] specified or visible.
+    <p>No [% terms.bugs %] specified or visible.</p>
 
 [% ELSE %]
 
@@ -49,7 +47,6 @@
 
         [% global.grand_total = 0 %]
 
-        <p>
         [% FOREACH workdata = part_list %]
             [% part = parts.shift %]
             <div align="right">
@@ -66,7 +63,6 @@
             [% ELSE %]
                 [% INCLUDE owner_report %]
             [% END %]
-            <p>
         [% END %]
 
         [% IF monthly %]
@@ -76,15 +72,13 @@
 
         [% IF null.keys.size > 0 %] 
             [% INCLUDE inactive_report %]
-            <p>
-            <h4 style="margin: 0">Total of [% null.keys.size %] 
+            <h4 style="margin: 0">Total of [% null.keys.size %]
                 inactive [% terms.bugs %]</h4>
         [% END %]
 
     [% END %]
 
 [% END %]
-<p>
 
 [% PROCESS global/footer.html.tmpl %]
 
