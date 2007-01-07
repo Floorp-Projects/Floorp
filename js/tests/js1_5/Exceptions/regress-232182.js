@@ -82,16 +82,25 @@ else
     }
     reportCompare(expect, actual, status);
 
-    var inShell = (typeof stringsAreUtf8 == "function");
+    var inShell = (typeof stringsAreUTF8 == "function");
+    if (!inShell)
+    {
+        inShell = (typeof stringsAreUtf8  == "function");
+        if (inShell)
+        {
+            this.stringsAreUTF8 = stringsAreUtf8;
+            this.testUTF8 = testUtf8;
+        }
+    }
 
-    if (inShell && stringsAreUtf8()) 
+    if (inShell && stringsAreUTF8())
     {
         status = summary + ': UTF-8 test: bad UTF-08 sequence';
         expect = 'Error';
         actual = 'No error!';
         try
         {
-            testUtf8(1);
+            testUTF8(1);
         }
         catch (e)
         {
@@ -104,7 +113,7 @@ else
         actual = 'No error!';
         try
         {
-            testUtf8(2);
+            testUTF8(2);
         }
         catch (e)
         {
@@ -117,7 +126,7 @@ else
         actual = 'No error!';
         try
         {
-            testUtf8(3);
+            testUTF8(3);
         }
         catch (e)
         {
@@ -133,7 +142,7 @@ else
         actual = 'No error!';
         try
         {
-            testUtf8(4);
+            testUTF8(4);
         }
         catch (e)
         {

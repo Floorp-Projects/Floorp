@@ -1662,19 +1662,19 @@ ToInt32(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 static JSBool
-StringsAreUtf8(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+StringsAreUTF8(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                jsval *rval)
 {
     *rval = JS_CStringsAreUTF8() ? JSVAL_TRUE : JSVAL_FALSE;
     return JS_TRUE;
 }
 
-static const char* badUtf8 = "...\xC0...";
-static const char* bigUtf8 = "...\xFB\xBF\xBF\xBF\xBF...";
+static const char* badUTF8 = "...\xC0...";
+static const char* bigUTF8 = "...\xFB\xBF\xBF\xBF\xBF...";
 static const jschar badSurrogate[] = { 'A', 'B', 'C', 0xDEEE, 'D', 'E', 0 };
 
 static JSBool
-TestUtf8(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+TestUTF8(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     intN mode = 1;
     jschar chars[20];
@@ -1688,11 +1688,11 @@ TestUtf8(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     switch (mode) {
       /* mode 1: malformed UTF-8 string. */
       case 1:
-        JS_NewStringCopyZ(cx, badUtf8);
+        JS_NewStringCopyZ(cx, badUTF8);
         break;
       /* mode 2: big UTF-8 character. */
       case 2:
-        JS_NewStringCopyZ(cx, bigUtf8);
+        JS_NewStringCopyZ(cx, bigUTF8);
         break;
       /* mode 3: bad surrogate character. */
       case 3:
@@ -2137,8 +2137,8 @@ static JSFunctionSpec shell_functions[] = {
     {"untrap",          Untrap,         2,0,0},
     {"line2pc",         LineToPC,       0,0,0},
     {"pc2line",         PCToLine,       0,0,0},
-    {"stringsAreUtf8",  StringsAreUtf8, 0,0,0},
-    {"testUtf8",        TestUtf8,       1,0,0},
+    {"stringsAreUTF8",  StringsAreUTF8, 0,0,0},
+    {"testUTF8",        TestUTF8,       1,0,0},
     {"throwError",      ThrowError,     0,0,0},
 #ifdef DEBUG
     {"dis",             Disassemble,    1,0,0},
