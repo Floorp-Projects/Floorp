@@ -1861,6 +1861,7 @@ PlacesRemoveItemTransaction.prototype = {
 function PlacesRemoveSeparatorTransaction(oldContainer, oldIndex) {
   this._oldContainer = oldContainer;
   this._oldIndex = oldIndex;
+  this.redoTransaction = this.doTransaction;
 }
 PlacesRemoveSeparatorTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype, 
