@@ -100,8 +100,7 @@
     [% END %]
   </table>
 
-  <p>
-    Users become members of this group in one of three ways:
+  <p>Users become members of this group in one of three ways:</p>
     <ul>
       <li> by being explicity included when the user is edited.
       <li> by matching the user regexp above.
@@ -175,7 +174,7 @@
       </tr>
     [% END %]
   </table>
-  
+
   <input type="submit" id="update" value="Save Changes">
   <br>
   <dl>
@@ -202,7 +201,7 @@
       <td>
         <h4>Conversion of groups created with [% terms.Bugzilla %]
         versions 2.16 and prior:</h4>
-        
+
         <ul>
           <li>Remove all explicit memberships from this group: 
             <input name="remove_explicit_members" type="submit" id="remove_explicit_members" value="Remove Memberships">
@@ -222,6 +221,6 @@
   <input type="hidden" name="token" value="[% token FILTER html %]">
 </form>
 
-Back to the <a href="editgroups.cgi">group list</a>.
+<p>Back to the <a href="editgroups.cgi">group list</a>.</p>
 
 [% PROCESS global/footer.html.tmpl %] 
