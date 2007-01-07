@@ -63,6 +63,15 @@ function run_test() {
                                    uri("http://example.com/"),
                                    uri("http://example.com/rss.xml"), -1);
 
+
+  try {
+    lmsvc.QueryInterface(Ci.nsIRemoteContainer);
+  } catch(ex) {
+    do_throw("Failed to QueryInterface livemark-service to nsIRemoteContainer");
+  }
+
+  do_check_true(lmsvc.childrenReadOnly);
+
   do_check_true(lmsvc.isLivemark(livemarkId));
   do_check_true(lmsvc.getSiteURI(livemarkId).spec == "http://example.com/");
   do_check_true(lmsvc.getFeedURI(livemarkId).spec == "http://example.com/rss.xml");
