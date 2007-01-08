@@ -98,6 +98,7 @@ public:
   static const MappedAttributeEntry sViewportsMap[];
   static const MappedAttributeEntry sMarkersMap[];
   static const MappedAttributeEntry sColorMap[];
+  static const MappedAttributeEntry sFEFloodMap[];
   
   // nsIDOMNode
   NS_IMETHOD IsSupported(const nsAString& aFeature, const nsAString& aVersion, PRBool* aReturn);

@@ -4521,6 +4521,10 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
                         nsCSSProps::kFillRuleKTable);
   case eCSSProperty_filter:
     return ParseVariant(aErrorCode, aValue, VARIANT_HUO, nsnull);
+  case eCSSProperty_flood_color:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HC, nsnull);
+  case eCSSProperty_flood_opacity:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HN, nsnull);
   case eCSSProperty_marker_end:
   case eCSSProperty_marker_mid:
   case eCSSProperty_marker_start:

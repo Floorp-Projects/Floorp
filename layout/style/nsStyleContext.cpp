@@ -863,6 +863,8 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
   else
     fprintf(out, "%ld ", (long)svg->mStroke.mPaint.mColor);
 
+  fprintf(out, "%ld ", (long)svg->mFloodColor.mPaint.mColor);
+
   fprintf(out, "%s %s %s ",
           URICString(svg->mMarkerEnd).get(),
           URICString(svg->mMarkerMid).get(),
@@ -877,11 +879,12 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
   }
 
   svg->mStrokeDashoffset.ToString(str);
-  fprintf(out, "%f %s %f %f ",
+  fprintf(out, "%f %s %f %f %f ",
           svg->mFillOpacity,
           NS_ConvertUTF16toUTF8(str).get(),
           svg->mStrokeMiterlimit,
-          svg->mStrokeOpacity);
+          svg->mStrokeOpacity,
+          svg->mFloodOpacity);
   svg->mStrokeWidth.ToString(str);
   fprintf(out, "%s %d %d %d %d %d %d %d %d %d\" />\n",
           NS_ConvertUTF16toUTF8(str).get(),

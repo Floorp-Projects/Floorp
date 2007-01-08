@@ -4072,6 +4072,14 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
     svg->mFillRule = parentSVG->mFillRule;
   }
+
+  // flood-color: 
+  SetSVGPaint(SVGData.mFloodColor, parentSVG->mFloodColor,
+              mPresContext, aContext, svg->mFloodColor, inherited);
+
+  // flood-opacity:
+  SetSVGOpacity(SVGData.mFloodOpacity, parentSVG->mFloodOpacity,
+                svg->mFloodOpacity, inherited);
   
   // marker-end: url, none, inherit
   if (eCSSUnit_URL == SVGData.mMarkerEnd.GetUnit()) {

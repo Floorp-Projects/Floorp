@@ -66,6 +66,12 @@ public:
                    cairo_surface_t **aImage, nsRect *aRegion);
   void DefineImage(const nsAString &aName,
                    cairo_surface_t *aImage, nsRect aRegion);
+  void GetFilterBox(float *x, float *y, float *width, float *height) {
+    *x = mFilterX;
+    *y = mFilterY;
+    *width = mFilterWidth;
+    *height = mFilterHeight;
+  }
 
   nsSVGFilterInstance(nsSVGElement *aTarget,
                       nsIDOMSVGRect *aTargetBBox,

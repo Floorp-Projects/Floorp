@@ -496,6 +496,13 @@ nsSVGElement::sColorMap[] = {
   { nsnull }
 };
 
+// PresentationAttributes-feFlood
+/* static */ const nsGenericElement::MappedAttributeEntry
+nsSVGElement::sFEFloodMap[] = {
+  { &nsGkAtoms::flood_color },
+  { &nsGkAtoms::flood_opacity },
+  { nsnull }
+};
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods

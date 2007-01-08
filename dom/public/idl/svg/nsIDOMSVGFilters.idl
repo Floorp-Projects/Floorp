@@ -42,6 +42,7 @@ interface nsIDOMSVGAnimatedString;
 interface nsIDOMSVGAnimatedNumber;
 interface nsIDOMSVGAnimatedEnumeration;
 interface nsIDOMSVGAnimatedNumberList;
+interface nsIDOMSVGAnimatedInteger;
 
 [scriptable, uuid(ab68567a-b830-4c46-9f2f-a28513a9e980)]
 interface nsIDOMSVGFilterPrimitiveStandardAttributes : nsIDOMSVGElement
@@ -165,6 +166,32 @@ interface nsIDOMSVGFEOffsetElement : nsIDOMSVGFilterPrimitiveStandardAttributes 
     readonly attribute nsIDOMSVGAnimatedString in1;
     readonly attribute nsIDOMSVGAnimatedNumber dx;
     readonly attribute nsIDOMSVGAnimatedNumber dy;
+};
+
+[scriptable, uuid(4d507655-08c4-4726-8887-308a18ebbf2b)]
+interface nsIDOMSVGFEFloodElement : nsIDOMSVGFilterPrimitiveStandardAttributes
+{
+    readonly attribute nsIDOMSVGAnimatedString in1;
+};
+
+[scriptable, uuid(77bc4d70-0d49-4c81-b7a7-7432f0fe3e04)]
+interface nsIDOMSVGFETurbulenceElement : nsIDOMSVGFilterPrimitiveStandardAttributes
+{ 
+    // Turbulence Types
+    const unsigned short SVG_TURBULENCE_TYPE_UNKNOWN      = 0;
+    const unsigned short SVG_TURBULENCE_TYPE_FRACTALNOISE = 1;
+    const unsigned short SVG_TURBULENCE_TYPE_TURBULENCE   = 2;
+    // Stitch Options
+    const unsigned short SVG_STITCHTYPE_UNKNOWN  = 0;
+    const unsigned short SVG_STITCHTYPE_STITCH   = 1;
+    const unsigned short SVG_STITCHTYPE_NOSTITCH = 2;
+
+    readonly attribute nsIDOMSVGAnimatedNumber      baseFrequencyX;
+    readonly attribute nsIDOMSVGAnimatedNumber      baseFrequencyY;
+    readonly attribute nsIDOMSVGAnimatedInteger     numOctaves;
+    readonly attribute nsIDOMSVGAnimatedNumber      seed;
+    readonly attribute nsIDOMSVGAnimatedEnumeration stitchTiles;
+    readonly attribute nsIDOMSVGAnimatedEnumeration type;
 };
 
 [scriptable, uuid(16154319-FB5F-4473-B360-5065B6096D33)]

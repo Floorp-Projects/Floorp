@@ -270,7 +270,8 @@ nsSVGFilterElement::IsAttributeMapped(const nsIAtom* name) const
     sGradientStopMap,
     sMarkersMap,
     sTextContentElementsMap,
-    sViewportsMap
+    sViewportsMap,
+    sFEFloodMap
   };
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
     nsSVGGraphicElementBase::IsAttributeMapped(name);

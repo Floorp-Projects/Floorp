@@ -667,6 +667,8 @@ nsCSSSVG::nsCSSSVG(const nsCSSSVG& aCopy)
       mFillOpacity(aCopy.mFillOpacity),
       mFillRule(aCopy.mFillRule),
       mFilter(aCopy.mFilter),
+      mFloodColor(aCopy.mFloodColor),
+      mFloodOpacity(aCopy.mFloodOpacity),
       mMarkerEnd(aCopy.mMarkerEnd),
       mMarkerMid(aCopy.mMarkerMid),
       mMarkerStart(aCopy.mMarkerStart),
