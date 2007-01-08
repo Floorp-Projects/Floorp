@@ -280,7 +280,7 @@ pref("browser.urlbar.clickSelectsAll", false);
 // 0 goes back
 // 1 act like pgup
 // 2 and other values, nothing
-pref("browser.backspace_action", 1);
+pref("browser.backspace_action", 2);
 
 pref("general.autoScroll", false);
 #endif
