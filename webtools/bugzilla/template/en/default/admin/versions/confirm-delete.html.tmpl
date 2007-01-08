@@ -64,9 +64,9 @@
 </table>
 
 <h2>Confirmation</h2>
-  
-[% IF version.bug_count %]
 
+[% IF version.bug_count %]
+  <p>
   Sorry, there
   [% IF version.bug_count > 1 %] 
     are [% version.bug_count FILTER none %] [%+ terms.bugs %] 
@@ -82,10 +82,10 @@
      that [% terms.bug %]
   [% END %]
   to another version before you can delete this one.
-
+  </p>
 [% ELSE %]
 
-  <p>Do you really want to delete this version?<p>
+  <p>Do you really want to delete this version?</p>
   
   <form method="post" action="editversions.cgi">
     <input type="submit" id="delete" value="Yes, delete">
