@@ -1508,6 +1508,13 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
     JSXMLNamespace *ns;
     JSXMLQName *qn, *attrjqn;
     JSXMLClass xml_class;
+    int stackDummy;
+
+    if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
+        js_ReportCompileErrorNumber(cx, pn, JSREPORT_PN | JSREPORT_ERROR,
+                                    JSMSG_OVER_RECURSED);
+        return NULL;
+    }
 
 #define PN2X_SKIP_CHILD ((JSXML *) 1)
 
