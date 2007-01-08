@@ -2940,8 +2940,11 @@ interrupt:
     JS_BEGIN_MACRO                                                            \
         if (SPROP_HAS_STUB_GETTER(sprop)) {                                   \
             /* Fast path for Object instance properties. */                   \
-            JS_ASSERT((sprop)->slot != SPROP_INVALID_SLOT);                   \
-            *vp = LOCKED_OBJ_GET_SLOT(pobj, (sprop)->slot);                   \
+            JS_ASSERT((sprop)->slot != SPROP_INVALID_SLOT ||                  \
+                      !SPROP_HAS_STUB_SETTER(sprop));                         \
+            *vp = ((sprop)->slot != SPROP_INVALID_SLOT)                       \
+                  ? LOCKED_OBJ_GET_SLOT(pobj, (sprop)->slot)                  \
+                  : JSVAL_VOID;                                               \
         } else {                                                              \
             SAVE_SP_AND_PC(fp);                                               \
             ok = js_NativeGet(cx, obj, pobj, sprop, vp);                      \
