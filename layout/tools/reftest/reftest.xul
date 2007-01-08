@@ -42,6 +42,7 @@
         height="1000"
         style="background:white"
         >
+    <script type="application/ecmascript" src="quit.js" />
     <script type="application/ecmascript" src="reftest.js" />
     <browser id="browser" flex="1" type="content-primary" />
 </window>

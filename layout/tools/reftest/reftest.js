@@ -139,7 +139,7 @@ function StartCurrentURI()
 
 function DoneTests()
 {
-    window.close();
+    goQuitApplication();
 }
 
 function IFrameToKey()
