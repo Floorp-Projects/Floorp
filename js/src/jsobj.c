@@ -2939,10 +2939,6 @@ js_ChangeNativePropertyAttrs(JSContext *cx, JSObject *obj,
     } else {
         sprop = js_ChangeScopePropertyAttrs(cx, scope, sprop, attrs, mask,
                                             getter, setter);
-        if (sprop) {
-            PROPERTY_CACHE_FILL(&cx->runtime->propertyCache, obj, sprop->id,
-                                sprop);
-        }
     }
     JS_UNLOCK_OBJ(cx, obj);
     return sprop;
@@ -3074,7 +3070,6 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
 #if JS_HAS_GETTER_SETTER
 out:
 #endif
-    PROPERTY_CACHE_FILL(&cx->runtime->propertyCache, obj, id, sprop);
     if (propp)
         *propp = (JSProperty *) sprop;
     else
@@ -3350,28 +3345,9 @@ js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
     rt = cx->runtime;
     obj = cx->fp->scopeChain;
     do {
-        /* Try the property cache and return immediately on cache hit. */
-        if (OBJ_IS_NATIVE(obj)) {
-            JS_LOCK_OBJ(cx, obj);
-            PROPERTY_CACHE_TEST(&rt->propertyCache, obj, id, sprop);
-            if (sprop) {
-                JS_ASSERT(OBJ_IS_NATIVE(obj));
-                *objp = obj;
-                *pobjp = obj;
-                *propp = (JSProperty *) sprop;
-                return JS_TRUE;
-            }
-            JS_UNLOCK_OBJ(cx, obj);
-        }
-
-        /* If cache miss, take the slow path. */
         if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &pobj, &prop))
             return JS_FALSE;
         if (prop) {
-            if (OBJ_IS_NATIVE(pobj)) {
-                sprop = (JSScopeProperty *) prop;
-                PROPERTY_CACHE_FILL(&rt->propertyCache, pobj, id, sprop);
-            }
             *objp = obj;
             *pobjp = pobj;
             *propp = prop;
@@ -3601,7 +3577,6 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if (!js_NativeGet(cx, obj, obj2, sprop, vp))
         return JS_FALSE;
 
-    PROPERTY_CACHE_FILL(&cx->runtime->propertyCache, obj2, id, sprop);
     JS_UNLOCK_OBJ(cx, obj2);
     return JS_TRUE;
 }
@@ -3762,8 +3737,6 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
                             js_RemoveScopeProperty(cx, scope, id);
                             JS_UNLOCK_SCOPE(cx, scope);
                             return JS_FALSE);
-
-        PROPERTY_CACHE_FILL(&cx->runtime->propertyCache, obj, id, sprop);
     }
 
     if (!js_NativeSet(cx, obj, sprop, vp))
@@ -3904,7 +3877,6 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
     if (SPROP_HAS_VALID_SLOT(sprop, scope))
         GC_POKE(cx, LOCKED_OBJ_GET_SLOT(obj, sprop->slot));
 
-    PROPERTY_CACHE_FILL(&cx->runtime->propertyCache, obj, id, NULL);
     ok = js_RemoveScopeProperty(cx, scope, id);
     OBJ_DROP_PROPERTY(cx, obj, prop);
     return ok;
@@ -4847,7 +4819,6 @@ void
 js_Clear(JSContext *cx, JSObject *obj)
 {
     JSScope *scope;
-    JSRuntime *rt;
     JSScopeProperty *sprop;
     uint32 i, n;
 
@@ -4860,15 +4831,6 @@ js_Clear(JSContext *cx, JSObject *obj)
     JS_LOCK_OBJ(cx, obj);
     scope = OBJ_SCOPE(obj);
     if (scope->object == obj) {
-        /* Clear the property cache before we clear the scope. */
-        rt = cx->runtime;
-        for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
-            if (!SCOPE_HAD_MIDDLE_DELETE(scope) ||
-                SCOPE_HAS_PROPERTY(scope, sprop)) {
-                PROPERTY_CACHE_FILL(&rt->propertyCache, obj, sprop->id, NULL);
-            }
-        }
-
         /* Now that we're done using scope->lastProp/table, clear scope. */
         js_ClearScope(cx, scope);
 

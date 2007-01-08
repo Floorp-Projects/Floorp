@@ -730,7 +730,6 @@ JS_NewRuntime(uint32 maxbytes)
         goto bad;
     rt->scopeSharingTodo = NO_SCOPE_SHARING_TODO;
 #endif
-    rt->propertyCache.empty = JS_TRUE;
     if (!js_InitPropertyTree(rt))
         goto bad;
     return rt;
