@@ -73,55 +73,6 @@
 #include "jsxml.h"
 #endif
 
-#ifdef DEBUG
-#define ASSERT_CACHE_IS_EMPTY(cache)                                          \
-    JS_BEGIN_MACRO                                                            \
-        JSPropertyCacheEntry *end_, *pce_, entry_;                            \
-        JSPropertyCache *cache_ = (cache);                                    \
-        JS_ASSERT(cache_->empty);                                             \
-        end_ = &cache_->table[PROPERTY_CACHE_SIZE];                           \
-        for (pce_ = &cache_->table[0]; pce_ < end_; pce_++) {                 \
-            PCE_LOAD(cache_, pce_, entry_);                                   \
-            JS_ASSERT(!PCE_OBJECT(entry_));                                   \
-            JS_ASSERT(!PCE_PROPERTY(entry_));                                 \
-        }                                                                     \
-    JS_END_MACRO
-#else
-#define ASSERT_CACHE_IS_EMPTY(cache) ((void)0)
-#endif
-
-void
-js_FlushPropertyCache(JSContext *cx)
-{
-    JSPropertyCache *cache;
-
-    cache = &cx->runtime->propertyCache;
-    if (cache->empty) {
-        ASSERT_CACHE_IS_EMPTY(cache);
-        return;
-    }
-    memset(cache->table, 0, sizeof cache->table);
-    cache->empty = JS_TRUE;
-#ifdef JS_PROPERTY_CACHE_METERING
-    cache->flushes++;
-#endif
-}
-
-void
-js_DisablePropertyCache(JSContext *cx)
-{
-    JS_ASSERT(!cx->runtime->propertyCache.disabled);
-    cx->runtime->propertyCache.disabled = JS_TRUE;
-}
-
-void
-js_EnablePropertyCache(JSContext *cx)
-{
-    JS_ASSERT(cx->runtime->propertyCache.disabled);
-    ASSERT_CACHE_IS_EMPTY(&cx->runtime->propertyCache);
-    cx->runtime->propertyCache.disabled = JS_FALSE;
-}
-
 /*
  * Stack macros and functions.  These all use a local variable, jsval *sp, to
  * point to the next free stack slot.  SAVE_SP must be called before any call
@@ -2820,14 +2771,14 @@ interrupt:
              * is not paid for the more common cases.
              */
             LOAD_ATOM(0);
-            id   = ATOM_TO_JSID(atom);
+            id = ATOM_TO_JSID(atom);
             lval = FETCH_OPND(-1);
             i = -2;
             goto do_forinloop;
 
           BEGIN_CASE(JSOP_FORNAME)
             LOAD_ATOM(0);
-            id   = ATOM_TO_JSID(atom);
+            id = ATOM_TO_JSID(atom);
 
             /*
              * ECMA 12.6.3 says to eval the LHS after looking for properties
@@ -3013,50 +2964,6 @@ interrupt:
         }                                                                     \
     JS_END_MACRO
 
-/*
- * CACHED_GET and CACHED_SET use cx, obj, id, and rval from their callers'
- * environments.
- */
-#define CACHED_GET(call)                                                      \
-    JS_BEGIN_MACRO                                                            \
-        if (!OBJ_IS_NATIVE(obj)) {                                            \
-            ok = call;                                                        \
-        } else {                                                              \
-            JS_LOCK_OBJ(cx, obj);                                             \
-            PROPERTY_CACHE_TEST(&rt->propertyCache, obj, id, sprop);          \
-            if (sprop) {                                                      \
-                NATIVE_GET(cx, obj, obj, sprop, &rval);                       \
-                JS_UNLOCK_OBJ(cx, obj);                                       \
-            } else {                                                          \
-                JS_UNLOCK_OBJ(cx, obj);                                       \
-                ok = call;                                                    \
-                /* No fill here: js_GetProperty fills the cache. */           \
-            }                                                                 \
-        }                                                                     \
-    JS_END_MACRO
-
-#define CACHED_SET(call)                                                      \
-    JS_BEGIN_MACRO                                                            \
-        if (!OBJ_IS_NATIVE(obj)) {                                            \
-            ok = call;                                                        \
-        } else {                                                              \
-            JSScope *scope_;                                                  \
-            JS_LOCK_OBJ(cx, obj);                                             \
-            PROPERTY_CACHE_TEST(&rt->propertyCache, obj, id, sprop);          \
-            if (sprop &&                                                      \
-                !(sprop->attrs & JSPROP_READONLY) &&                          \
-                (scope_ = OBJ_SCOPE(obj), !SCOPE_IS_SEALED(scope_))) {        \
-                NATIVE_SET(cx, obj, sprop, &rval);                            \
-                JS_UNLOCK_SCOPE(cx, scope_);                                  \
-            } else {                                                          \
-                JS_UNLOCK_OBJ(cx, obj);                                       \
-                ok = call;                                                    \
-                /* No fill here: js_SetProperty writes through the cache. */  \
-            }                                                                 \
-        }                                                                     \
-    JS_END_MACRO
-
-
           BEGIN_CASE(JSOP_SETCONST)
             LOAD_ATOM(0);
             obj = fp->varobj;
@@ -3091,7 +2998,7 @@ interrupt:
 
           BEGIN_CASE(JSOP_BINDNAME)
             LOAD_ATOM(0);
-            id   = ATOM_TO_JSID(atom);
+            id = ATOM_TO_JSID(atom);
             SAVE_SP_AND_PC(fp);
             obj = js_FindIdentifierBase(cx, id);
             if (!obj) {
@@ -3103,13 +3010,13 @@ interrupt:
 
           BEGIN_CASE(JSOP_SETNAME)
             LOAD_ATOM(0);
-            id   = ATOM_TO_JSID(atom);
+            id = ATOM_TO_JSID(atom);
             rval = FETCH_OPND(-1);
             lval = FETCH_OPND(-2);
             JS_ASSERT(!JSVAL_IS_PRIMITIVE(lval));
             obj  = JSVAL_TO_OBJECT(lval);
             SAVE_SP_AND_PC(fp);
-            CACHED_SET(OBJ_SET_PROPERTY(cx, obj, id, &rval));
+            ok = OBJ_SET_PROPERTY(cx, obj, id, &rval);
             if (!ok)
                 goto out;
             sp--;
@@ -3559,7 +3466,7 @@ interrupt:
 
           BEGIN_CASE(JSOP_DELNAME)
             LOAD_ATOM(0);
-            id   = ATOM_TO_JSID(atom);
+            id = ATOM_TO_JSID(atom);
 
             SAVE_SP_AND_PC(fp);
             ok = js_FindProperty(cx, id, &obj, &obj2, &prop);
@@ -3579,7 +3486,7 @@ interrupt:
 
           BEGIN_CASE(JSOP_DELPROP)
             LOAD_ATOM(0);
-            id   = ATOM_TO_JSID(atom);
+            id = ATOM_TO_JSID(atom);
             PROPERTY_OP(-1, ok = OBJ_DELETE_PROPERTY(cx, obj, id, &rval));
             STORE_OPND(-1, rval);
           END_CASE(JSOP_DELPROP)
@@ -3609,7 +3516,7 @@ interrupt:
           BEGIN_CASE(JSOP_NAMEINC)
           BEGIN_CASE(JSOP_NAMEDEC)
             LOAD_ATOM(0);
-            id   = ATOM_TO_JSID(atom);
+            id = ATOM_TO_JSID(atom);
 
             SAVE_SP_AND_PC(fp);
             ok = js_FindProperty(cx, id, &obj, &obj2, &prop);
@@ -3628,7 +3535,7 @@ interrupt:
           BEGIN_CASE(JSOP_PROPINC)
           BEGIN_CASE(JSOP_PROPDEC)
             LOAD_ATOM(0);
-            id   = ATOM_TO_JSID(atom);
+            id = ATOM_TO_JSID(atom);
             lval = FETCH_OPND(-1);
             i = -1;
             goto do_incop;
@@ -3652,7 +3559,7 @@ interrupt:
 
             /* The operand must contain a number. */
             SAVE_SP_AND_PC(fp);
-            CACHED_GET(OBJ_GET_PROPERTY(cx, obj, id, &rval));
+            ok = OBJ_GET_PROPERTY(cx, obj, id, &rval);
             if (!ok)
                 goto out;
 
@@ -3720,7 +3627,7 @@ interrupt:
             }
 
             fp->flags |= JSFRAME_ASSIGNING;
-            CACHED_SET(OBJ_SET_PROPERTY(cx, obj, id, &rval));
+            ok = OBJ_SET_PROPERTY(cx, obj, id, &rval);
             fp->flags &= ~JSFRAME_ASSIGNING;
             if (!ok)
                 goto out;
@@ -3835,7 +3742,7 @@ interrupt:
             id = ATOM_TO_JSID(atom);
             obj = fp->thisp;
             SAVE_SP_AND_PC(fp);
-            CACHED_GET(OBJ_GET_PROPERTY(cx, obj, id, &rval));
+            ok = OBJ_GET_PROPERTY(cx, obj, id, &rval);
             if (!ok)
                 goto out;
             PUSH_OPND(rval);
@@ -3882,7 +3789,7 @@ interrupt:
                 VALUE_TO_OBJECT(cx, lval, obj);
                 STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
                 SAVE_SP_AND_PC(fp);
-                CACHED_GET(OBJ_GET_PROPERTY(cx, obj, id, &rval));
+                ok = OBJ_GET_PROPERTY(cx, obj, id, &rval);
                 if (!ok)
                     goto out;
             }
@@ -3892,11 +3799,11 @@ interrupt:
           BEGIN_CASE(JSOP_SETPROP)
             /* Get an immediate atom naming the property. */
             LOAD_ATOM(0);
-            id   = ATOM_TO_JSID(atom);
+            id = ATOM_TO_JSID(atom);
 
             /* Pop the right-hand side into rval for OBJ_SET_PROPERTY. */
             rval = FETCH_OPND(-1);
-            PROPERTY_OP(-2, CACHED_SET(OBJ_SET_PROPERTY(cx, obj, id, &rval)));
+            PROPERTY_OP(-2, ok = OBJ_SET_PROPERTY(cx, obj, id, &rval));
             sp--;
             STORE_OPND(-1, rval);
             obj = NULL;
@@ -3904,14 +3811,14 @@ interrupt:
 
           BEGIN_CASE(JSOP_GETELEM)
           BEGIN_CASE(JSOP_GETXELEM)
-            ELEMENT_OP(-1, CACHED_GET(OBJ_GET_PROPERTY(cx, obj, id, &rval)));
+            ELEMENT_OP(-1, ok = OBJ_GET_PROPERTY(cx, obj, id, &rval));
             sp--;
             STORE_OPND(-1, rval);
           END_CASE(JSOP_GETELEM)
 
           BEGIN_CASE(JSOP_SETELEM)
             rval = FETCH_OPND(-1);
-            ELEMENT_OP(-2, CACHED_SET(OBJ_SET_PROPERTY(cx, obj, id, &rval)));
+            ELEMENT_OP(-2, ok = OBJ_SET_PROPERTY(cx, obj, id, &rval));
             sp -= 2;
             STORE_OPND(-1, rval);
             obj = NULL;
@@ -4204,7 +4111,7 @@ interrupt:
 
           BEGIN_CASE(JSOP_NAME)
             LOAD_ATOM(0);
-            id   = ATOM_TO_JSID(atom);
+            id = ATOM_TO_JSID(atom);
 
             SAVE_SP_AND_PC(fp);
             ok = js_FindProperty(cx, id, &obj, &obj2, &prop);
@@ -4631,8 +4538,8 @@ interrupt:
 
           BEGIN_CASE(JSOP_EXPORTNAME)
             LOAD_ATOM(0);
-            id   = ATOM_TO_JSID(atom);
-            obj  = fp->varobj;
+            id = ATOM_TO_JSID(atom);
+            obj = fp->varobj;
             SAVE_SP_AND_PC(fp);
             ok = OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop);
             if (!ok)
@@ -4661,7 +4568,7 @@ interrupt:
           BEGIN_CASE(JSOP_IMPORTPROP)
             /* Get an immediate atom naming the property. */
             LOAD_ATOM(0);
-            id   = ATOM_TO_JSID(atom);
+            id = ATOM_TO_JSID(atom);
             PROPERTY_OP(-1, ok = ImportProperty(cx, obj, id));
             sp--;
           END_CASE(JSOP_IMPORTPROP)
@@ -4804,7 +4711,7 @@ interrupt:
                 LOAD_ATOM(0);
                 id = ATOM_TO_JSID(atom);
                 SAVE_SP_AND_PC(fp);
-                CACHED_SET(OBJ_SET_PROPERTY(cx, obj, id, &rval));
+                ok = OBJ_SET_PROPERTY(cx, obj, id, &rval);
                 if (!ok)
                     goto out;
                 STORE_OPND(-1, rval);
@@ -5260,7 +5167,7 @@ interrupt:
               case JSOP_SETNAME:
               case JSOP_SETPROP:
                 LOAD_ATOM(0);
-                id   = ATOM_TO_JSID(atom);
+                id = ATOM_TO_JSID(atom);
                 rval = FETCH_OPND(-1);
                 i = -1;
                 goto gs_pop_lval;
@@ -5278,7 +5185,7 @@ interrupt:
                 rval = FETCH_OPND(-1);
                 i = -1;
                 LOAD_ATOM(0);
-                id   = ATOM_TO_JSID(atom);
+                id = ATOM_TO_JSID(atom);
                 goto gs_get_lval;
 
               case JSOP_INITELEM:
@@ -5366,7 +5273,7 @@ interrupt:
           BEGIN_CASE(JSOP_INITPROP)
             /* Get the immediate property name into id. */
             LOAD_ATOM(0);
-            id   = ATOM_TO_JSID(atom);
+            id = ATOM_TO_JSID(atom);
             /* Pop the property's value into rval. */
             JS_ASSERT(sp - fp->spbase >= 2);
             rval = FETCH_OPND(-1);
@@ -5880,7 +5787,7 @@ interrupt:
           BEGIN_CASE(JSOP_GETMETHOD)
             /* Get an immediate atom naming the property. */
             LOAD_ATOM(0);
-            id   = ATOM_TO_JSID(atom);
+            id = ATOM_TO_JSID(atom);
             lval = FETCH_OPND(-1);
             SAVE_SP_AND_PC(fp);
             if (!JSVAL_IS_PRIMITIVE(lval)) {
@@ -5896,7 +5803,7 @@ interrupt:
                     if (!obj)
                         ok = JS_FALSE;
                 } else {
-                    CACHED_GET(OBJ_GET_PROPERTY(cx, obj, id, &rval));
+                    ok = OBJ_GET_PROPERTY(cx, obj, id, &rval);
                 }
             } else {
                 if (JSVAL_IS_STRING(lval)) {
@@ -5922,7 +5829,7 @@ interrupt:
                     goto out;
                 JS_ASSERT(obj);
                 STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
-                CACHED_GET(OBJ_GET_PROPERTY(cx, obj, id, &rval));
+                ok = OBJ_GET_PROPERTY(cx, obj, id, &rval);
                 obj = (JSObject *) lval; /* keep tagged as non-object */
             }
             if (!ok)
@@ -5933,7 +5840,7 @@ interrupt:
           BEGIN_CASE(JSOP_SETMETHOD)
             /* Get an immediate atom naming the property. */
             LOAD_ATOM(0);
-            id   = ATOM_TO_JSID(atom);
+            id = ATOM_TO_JSID(atom);
             rval = FETCH_OPND(-1);
             FETCH_OBJECT(cx, -2, lval, obj);
             SAVE_SP_AND_PC(fp);
@@ -5945,7 +5852,7 @@ interrupt:
                 ops = (JSXMLObjectOps *) obj->map->ops;
                 ok = ops->setMethod(cx, obj, id, &rval);
             } else {
-                CACHED_SET(OBJ_SET_PROPERTY(cx, obj, id, &rval));
+                ok = OBJ_SET_PROPERTY(cx, obj, id, &rval);
             }
             if (!ok)
                 goto out;

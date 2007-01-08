@@ -277,10 +277,6 @@ struct JSRuntime {
     JSCList             trapList;
     JSCList             watchPointList;
 
-    /* Weak links to properties, indexed by quickened get/set opcodes. */
-    /* XXX must come after JSCLists or MSVC alignment bug bites empty lists */
-    JSPropertyCache     propertyCache;
-
     /* Client opaque pointer */
     void                *data;
 
