@@ -30,6 +30,7 @@
   #%]
 
 [% IF Param('useclassification') && classification %]
+<p>
   [% classification_url_part = BLOCK %]&amp;classification=
      [%- classification.name FILTER url_quote %]
   [% END %]
@@ -39,12 +40,12 @@
   [% classification_text = BLOCK %] 
     of classification '[% classification.name FILTER html %]'
   [% END %]
+</p>
 [% END %]
-  
-<p>
 
 <hr>
 
+<p>
 [% UNLESS no_add_product_link || !user.in_group("editcomponents") %]
   <a title="Add a product"
      href="editproducts.cgi?action=add">Add</a> a product[% -%]
@@ -76,7 +77,7 @@
   href="editproducts.cgi?
         [%- classification_url_part_start FILTER none %]">other products
           [% classification_text %]</a>.
-   
+
 [% END %]
 
 [% IF Param('useclassification') && classification %]
