@@ -67,7 +67,6 @@ public:
   virtual void CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount);
   virtual void DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState);
   virtual PRInt32 BuildRows(nsIBox* aBox, nsGridRow* aRows);
-  virtual PRInt32 GetRowCount() { return 1; }
   virtual Type GetType() { return eRowLeaf; }
 
 protected:

@@ -104,7 +104,7 @@ public:
   virtual void DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState)=0;
   virtual PRInt32 BuildRows(nsIBox* aBox, nsGridRow* aRows)=0;
   virtual nsMargin GetTotalMargin(nsIBox* aBox, PRBool aIsHorizontal)=0;
-  virtual PRInt32 GetRowCount()=0;
+  virtual PRInt32 GetRowCount() { return 1; }
   
   /**
    * Return the level of the grid hierarchy this grid part represents.

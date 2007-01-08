@@ -78,7 +78,6 @@ public:
   virtual void DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState) { NS_NOTREACHED("Should not be called"); }
   virtual PRInt32 BuildRows(nsIBox* aBox, nsGridRow* aRows) { NS_NOTREACHED("Should not be called"); return 0; }
   virtual nsMargin GetTotalMargin(nsIBox* aBox, PRBool aIsHorizontal);
-  virtual PRInt32 GetRowCount() { NS_NOTREACHED("Should not be called"); return 0; }
   virtual Type GetType() { return eGrid; }
   NS_IMETHOD ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState,
                               nsIBox* aPrevBox, nsIBox* aChildList);
