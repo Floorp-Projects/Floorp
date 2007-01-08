@@ -2936,7 +2936,8 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
     // Resolve the style to use for the connecting lines.
     nsStyleContext* lineContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreeline);
     
-    if (lineContext->GetStyleVisibility()->IsVisibleOrCollapsed() && level) {
+    if (mIndentation && level &&
+        lineContext->GetStyleVisibility()->IsVisibleOrCollapsed()) {
       // Paint the thread lines.
 
       // Get the size of the twisty. We don't want to paint the twisty
@@ -2965,46 +2966,34 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
       style = borderStyle->GetBorderStyle(NS_SIDE_LEFT);
       aRenderingContext.SetLineStyle(ConvertBorderStyleToLineStyle(style));
 
-      nscoord lineX = currX;
+      nscoord srcX = currX + twistyRect.width - mIndentation / 2;
       nscoord lineY = (aRowIndex - mTopRowIndex) * mRowHeight + aPt.y;
 
-      // Compute the maximal level to paint.
-      PRInt32 maxLevel = level;
-      if (maxLevel > cellRect.width / mIndentation)
-        maxLevel = cellRect.width / mIndentation;
+      // Don't paint off our cell.
+      if (srcX <= cellRect.x + cellRect.width) {
+        nscoord destX = currX + twistyRect.width;
+        if (destX > cellRect.x + cellRect.width)
+          destX = cellRect.x + cellRect.width;
+        aRenderingContext.DrawLine(srcX, lineY + mRowHeight / 2, destX, lineY + mRowHeight / 2);
+      }
 
       PRInt32 currentParent = aRowIndex;
       for (PRInt32 i = level; i > 0; i--) {
-        if (i <= maxLevel) {
-          lineX = currX + twistyRect.width + mIndentation / 2;
-
-          nscoord srcX = lineX - (level - i + 1) * mIndentation;
-          if (srcX <= cellRect.x + cellRect.width) {
-            // Paint full vertical line only if we have next sibling.
-            PRBool hasNextSibling;
-            mView->HasNextSibling(currentParent, aRowIndex, &hasNextSibling);
-            if (hasNextSibling)
-              aRenderingContext.DrawLine(srcX, lineY, srcX, lineY + mRowHeight);
-            else if (i == level)
-              aRenderingContext.DrawLine(srcX, lineY, srcX, lineY + mRowHeight / 2);
-          }
+        if (srcX <= cellRect.x + cellRect.width) {
+          // Paint full vertical line only if we have next sibling.
+          PRBool hasNextSibling;
+          mView->HasNextSibling(currentParent, aRowIndex, &hasNextSibling);
+          if (hasNextSibling)
+            aRenderingContext.DrawLine(srcX, lineY, srcX, lineY + mRowHeight);
+          else if (i == level)
+            aRenderingContext.DrawLine(srcX, lineY, srcX, lineY + mRowHeight / 2);
         }
 
         PRInt32 parent;
         if (NS_FAILED(mView->GetParentIndex(currentParent, &parent)) || parent < 0)
           break;
         currentParent = parent;
-      }
-
-      // Don't paint off our cell.
-      if (level == maxLevel) {
-        nscoord srcX = lineX - mIndentation + 16;
-        if (srcX <= cellRect.x + cellRect.width) {
-          nscoord destX = lineX - mIndentation / 2;
-          if (destX > cellRect.x + cellRect.width)
-            destX = cellRect.x + cellRect.width;
-          aRenderingContext.DrawLine(srcX, lineY + mRowHeight / 2, destX, lineY + mRowHeight / 2);
-        }
+        srcX -= mIndentation;
       }
 
       aRenderingContext.PopState();
