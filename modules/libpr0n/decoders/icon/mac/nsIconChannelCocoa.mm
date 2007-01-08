@@ -312,7 +312,11 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
   PRUint8* bitmapRepData = (PRUint8*)[bitmapRep bitmapData];
   
   // create our buffer
+#ifdef MOZ_CAIRO_GFX
+  PRInt32 bufferCapacity = 2 + desiredImageSize * desiredImageSize * 4;
+#else
   PRInt32 bufferCapacity = 3 + desiredImageSize * desiredImageSize * 5;
+#endif
   nsAutoBuffer<PRUint8, 3 + 16 * 16 * 5> iconBuffer; // initial size is for 16x16
   if (!iconBuffer.EnsureElemCapacity(bufferCapacity))
     return NS_ERROR_OUT_OF_MEMORY;
@@ -322,7 +326,9 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
   // write header data into buffer
   *iconBufferPtr++ = desiredImageSize;
   *iconBufferPtr++ = desiredImageSize;
+#ifndef MOZ_CAIRO_GFX
   *iconBufferPtr++ = 8; // alpha bits per pixel
+#endif
   
   PRUint32 dataCount = (desiredImageSize * desiredImageSize) * 4;
   PRUint32 index = 0;
@@ -333,6 +339,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
     PRUint8 b = bitmapRepData[index++];
     PRUint8 a = bitmapRepData[index++];
     
+#ifndef MOZ_CAIRO_GFX
     // reverse premultiplication
     if (a == 0) {
       r = g = b = 0;
@@ -342,21 +349,35 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
       g = ((PRUint32) g) * 255 / a;
       b = ((PRUint32) b) * 255 / a;
     }
+#endif
     
-    // write data out to our buffer - the real alpha data is appended to the
-    // end of the stream, the alpha here is just an unused extra channel
+    // write data out to our buffer
+    // non-cairo uses native image format, but the A channel is ignored.
+    // cairo uses ARGB (highest to lowest bits)
+#if defined(MOZ_CAIRO_GFX) && defined(IS_LITTLE_ENDIAN)
+    *iconBufferPtr++ = b;
+    *iconBufferPtr++ = g;
+    *iconBufferPtr++ = r;
+    *iconBufferPtr++ = a;
+#else
     *iconBufferPtr++ = a;
     *iconBufferPtr++ = r;
     *iconBufferPtr++ = g;
     *iconBufferPtr++ = b;
+#endif
   }
   
+#ifndef MOZ_CAIRO_GFX
   // add the alpha to the buffer
   index = 3;
   while (index < dataCount) {
     *iconBufferPtr++ = bitmapRepData[index];
     index += 4;
   }
+#endif
+
+  NS_ASSERTION(iconBufferPtr == iconBuffer.get() + bufferCapacity,
+               "buffer size miscalculation");
   
   // Now, create a pipe and stuff our data into it
   nsCOMPtr<nsIInputStream> inStream;

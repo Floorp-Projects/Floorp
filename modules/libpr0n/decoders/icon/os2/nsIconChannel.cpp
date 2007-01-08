@@ -244,6 +244,13 @@ nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 *
 
 nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBlocking)
 {
+#ifdef MOZ_CAIRO_GFX
+  // This needs to be changed to match the format changes described in
+  // nsIconDecoder.h.  For cairo, the icon format is ARGB (A in highest
+  // bits, B in lowest bits, based on platform endianness).
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+
   // get some details about this icon
   nsCOMPtr<nsIFile> localFile;
   PRUint32 desiredImageSize;
