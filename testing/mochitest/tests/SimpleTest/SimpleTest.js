@@ -395,3 +395,10 @@ var is = SimpleTest.is;
 var isnot = SimpleTest.isnot;
 var todo = SimpleTest.todo;
 var isDeeply = SimpleTest.isDeeply;
+var oldOnError = window.onerror;
+window.onerror = function (ev) {
+    is(0, 1, "Error thrown during test: " + ev);
+    if (oldOnError) {
+	oldOnError(ev);
+    }
+}
