@@ -3156,6 +3156,8 @@ nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
 
   // Get the image destination size.
   nsSize imageDestSize = GetImageDestSize(imageContext, useImageRegion, image);
+  if (!imageDestSize.width || !imageDestSize.height)
+    return;
 
   // Get the borders and padding.
   nsMargin bp(0,0,0,0);
