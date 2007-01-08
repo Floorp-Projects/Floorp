@@ -1,4 +1,5 @@
 reftest.jar:
 % content reftest %content/
+*  content/quit.js (quit.js)
 *  content/reftest.js (reftest.js)
   content/reftest.xul (reftest.xul)
