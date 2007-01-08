@@ -304,7 +304,9 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   // if we are told to layout intrinic then get our preferred size.
   if (computedSize.width == NS_INTRINSICSIZE || computedSize.height == NS_INTRINSICSIZE) {
      prefSize = GetPrefSize(state);
-     BoundsCheck(GetMinSize(state), prefSize, GetMaxSize(state));
+     nsSize minSize = GetMinSize(state);
+     nsSize maxSize = GetMaxSize(state);
+     BoundsCheck(minSize, prefSize, maxSize);
   }
 
   // get our desiredSize
