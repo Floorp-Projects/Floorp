@@ -113,6 +113,7 @@ CPPSRCS		= \
 		nsPrintJobFactoryGTK.cpp \
 		nsPrintJobGTK.cpp \
 		nsTempfilePS.cpp \
+		nsIdleServiceGTK.cpp \
 		$(NULL)
 
 # build our subdirs, too
