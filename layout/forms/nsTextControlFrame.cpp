@@ -1779,63 +1779,58 @@ nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
                               aStatus);
 }
 
-NS_IMETHODIMP
-nsTextControlFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
+nsSize
+nsTextControlFrame::GetPrefSize(nsBoxLayoutState& aState)
 {
-  if (!DoesNeedRecalc(mPrefSize)) {
-     aSize = mPrefSize;
-     return NS_OK;
-  }
+  if (!DoesNeedRecalc(mPrefSize))
+     return mPrefSize;
 
 #ifdef DEBUG_LAYOUT
   PropagateDebug(aState);
 #endif
 
-  aSize.width = 0;
-  aSize.height = 0;
+  nsSize pref(0,0);
 
   // XXXbz this is almost certainly wrong.
   PRBool collapsed = PR_FALSE;
   IsCollapsed(aState, collapsed);
   if (collapsed)
-    return NS_OK;
+    return pref;
 
-  nsresult rv = CalcIntrinsicSize(aState.GetRenderingContext(), aSize);
-  NS_ENSURE_SUCCESS(rv, rv);
-  AddBorderAndPadding(aSize);
-  AddInset(aSize);
+  nsresult rv = CalcIntrinsicSize(aState.GetRenderingContext(), pref);
+  NS_ENSURE_SUCCESS(rv, pref);
+  AddBorderAndPadding(pref);
+  AddInset(pref);
 
-  mPrefSize = aSize;
+  mPrefSize = pref;
 
 #ifdef DEBUG_rods
   {
     nsMargin borderPadding(0,0,0,0);
     GetBorderAndPadding(borderPadding);
     nsSize size(169, 24);
-    nsSize actual(aSize.width/15, 
-                  aSize.height/15);
+    nsSize actual(pref.width/15, 
+                  pref.height/15);
     printf("nsGfxText(field) %d,%d  %d,%d  %d,%d\n", 
            size.width, size.height, actual.width, actual.height, actual.width-size.width, actual.height-size.height);  // text field
   }
 #endif
 
-  return NS_OK;
+  return pref;
 }
 
-
-
-NS_IMETHODIMP
-nsTextControlFrame::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
+nsSize
+nsTextControlFrame::GetMinSize(nsBoxLayoutState& aState)
 {
   // XXXbz why?  Why not the nsBoxFrame sizes?
-  return nsBox::GetMinSize(aState, aSize);
+  return nsBox::GetMinSize(aState);
 }
 
-NS_IMETHODIMP
-nsTextControlFrame::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
+nsSize
+nsTextControlFrame::GetMaxSize(nsBoxLayoutState& aState)
 {
   // XXXbz why?  Why not the nsBoxFrame sizes?
-  return nsBox::GetMaxSize(aState, aSize);
+  return nsBox::GetMaxSize(aState);
 }
 
 NS_IMETHODIMP

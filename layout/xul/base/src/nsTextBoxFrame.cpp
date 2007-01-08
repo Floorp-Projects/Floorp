@@ -854,42 +854,41 @@ nsTextBoxFrame::CalcTextSize(nsBoxLayoutState& aBoxLayoutState)
 /**
  * Ok return our dimensions
  */
-NS_IMETHODIMP
-nsTextBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
+nsSize
+nsTextBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState)
 {
-    DISPLAY_PREF_SIZE(this, aSize);
     CalcTextSize(aBoxLayoutState);
 
-    aSize = mTextSize;
+    nsSize size = mTextSize;
+    DISPLAY_PREF_SIZE(this, size);
 
-    AddBorderAndPadding(aSize);
-    AddInset(aSize);
-    nsIBox::AddCSSPrefSize(aBoxLayoutState, this, aSize);
+    AddBorderAndPadding(size);
+    AddInset(size);
+    nsIBox::AddCSSPrefSize(aBoxLayoutState, this, size);
 
-    return NS_OK;
+    return size;
 }
 
 /**
  * Ok return our dimensions
  */
-NS_IMETHODIMP
-nsTextBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
+nsSize
+nsTextBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
 {
-    DISPLAY_MIN_SIZE(this, aSize);
     CalcTextSize(aBoxLayoutState);
 
-    aSize = mTextSize;
+    nsSize size = mTextSize;
+    DISPLAY_MIN_SIZE(this, size);
 
-     // if there is cropping our min width becomes our border and  padding
-    if (mCropType != CropNone) {
-       aSize.width = 0;
-    }
+    // if there is cropping our min width becomes our border and padding
+    if (mCropType != CropNone)
+        size.width = 0;
 
-    AddBorderAndPadding(aSize);
-    AddInset(aSize);
-    nsIBox::AddCSSMinSize(aBoxLayoutState, this, aSize);
+    AddBorderAndPadding(size);
+    AddInset(size);
+    nsIBox::AddCSSMinSize(aBoxLayoutState, this, size);
 
-    return NS_OK;
+    return size;
 }
 
 NS_IMETHODIMP

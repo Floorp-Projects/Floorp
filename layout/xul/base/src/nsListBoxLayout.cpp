@@ -211,8 +211,7 @@ nsListBoxLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
       childRect.y = yOffset;
       childRect.width = clientRect.width;
       
-      nsSize size;
-      box->GetPrefSize(aState, size);
+      nsSize size = box->GetPrefSize(aState);
       body->SetRowHeight(size.height);
       
       childRect.height = rowHeight;

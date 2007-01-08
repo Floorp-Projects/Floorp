@@ -461,50 +461,43 @@ nsImageBoxFrame::GetImageSize()
 /**
  * Ok return our dimensions
  */
-NS_IMETHODIMP
-nsImageBoxFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
+nsSize
+nsImageBoxFrame::GetPrefSize(nsBoxLayoutState& aState)
 {
-  DISPLAY_PREF_SIZE(this, aSize);
-  if (DoesNeedRecalc(mImageSize)) {
+  nsSize size(0,0);
+  DISPLAY_PREF_SIZE(this, size);
+  if (DoesNeedRecalc(mImageSize))
      GetImageSize();
-  }
 
   if (!mUseSrcAttr && (mSubRect.width > 0 || mSubRect.height > 0))
-    aSize = nsSize(mSubRect.width, mSubRect.height);
+    size = nsSize(mSubRect.width, mSubRect.height);
   else
-    aSize = mImageSize;
-  AddBorderAndPadding(aSize);
-  AddInset(aSize);
-  nsIBox::AddCSSPrefSize(aState, this, aSize);
+    size = mImageSize;
+  AddBorderAndPadding(size);
+  AddInset(size);
+  nsIBox::AddCSSPrefSize(aState, this, size);
 
-  nsSize minSize(0,0);
-  nsSize maxSize(0,0);
-  GetMinSize(aState, minSize);
-  GetMaxSize(aState, maxSize);
+  BoundsCheck(GetMinSize(aState), size, GetMaxSize(aState));
 
-  BoundsCheck(minSize, aSize, maxSize);
-
-  return NS_OK;
+  return size;
 }
 
-NS_IMETHODIMP
-nsImageBoxFrame::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
+nsSize
+nsImageBoxFrame::GetMinSize(nsBoxLayoutState& aState)
 {
-  DISPLAY_MIN_SIZE(this, aSize);
   // An image can always scale down to (0,0).
-  aSize.width = aSize.height = 0;
-  AddBorderAndPadding(aSize);
-  AddInset(aSize);
-  nsIBox::AddCSSMinSize(aState, this, aSize);
-  return NS_OK;
+  nsSize size(0,0);
+  DISPLAY_MIN_SIZE(this, size);
+  AddBorderAndPadding(size);
+  AddInset(size);
+  nsIBox::AddCSSMinSize(aState, this, size);
+  return size;
 }
 
 NS_IMETHODIMP
 nsImageBoxFrame::GetAscent(nsBoxLayoutState& aState, nscoord& aCoord)
 {
-  nsSize size(0,0);
-  GetPrefSize(aState, size);
-  aCoord = size.height;
+  aCoord = GetPrefSize(aState).height;
   return NS_OK;
 }
 

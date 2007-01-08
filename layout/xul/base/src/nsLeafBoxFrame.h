@@ -52,9 +52,9 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
-  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize);
-  NS_IMETHOD GetMinSize(nsBoxLayoutState& aState, nsSize& aSize);
-  NS_IMETHOD GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize);
+  virtual nsSize GetPrefSize(nsBoxLayoutState& aState);
+  virtual nsSize GetMinSize(nsBoxLayoutState& aState);
+  virtual nsSize GetMaxSize(nsBoxLayoutState& aState);
   NS_IMETHOD GetFlex(nsBoxLayoutState& aState, nscoord& aFlex);
   NS_IMETHOD GetAscent(nsBoxLayoutState& aState, nscoord& aAscent);
 

@@ -67,10 +67,9 @@ nsGridCell::GetPrefSize(nsBoxLayoutState& aState)
   // we are as wide as the widest child plus its left offset
   // we are tall as the tallest child plus its top offset
 
-  nsSize pref(0,0);
-
   if (mBoxInColumn) {
-    mBoxInColumn->GetPrefSize(aState, pref);      
+    nsSize pref = mBoxInColumn->GetPrefSize(aState);
+
     nsBox::AddMargin(mBoxInColumn, pref);
     nsStackLayout::AddOffset(aState, mBoxInColumn, pref);
 
@@ -78,7 +77,7 @@ nsGridCell::GetPrefSize(nsBoxLayoutState& aState)
   }
 
   if (mBoxInRow) {
-    mBoxInRow->GetPrefSize(aState, pref);
+    nsSize pref = mBoxInRow->GetPrefSize(aState);
 
     nsBox::AddMargin(mBoxInRow, pref);
     nsStackLayout::AddOffset(aState, mBoxInRow, pref);
@@ -98,10 +97,8 @@ nsGridCell::GetMinSize(nsBoxLayoutState& aState)
   // we are as wide as the widest child plus its left offset
   // we are tall as the tallest child plus its top offset
 
-  nsSize min(0,0);
-
   if (mBoxInColumn) {
-    mBoxInColumn->GetMinSize(aState, min);      
+    nsSize min = mBoxInColumn->GetMinSize(aState);
 
     nsBox::AddMargin(mBoxInColumn, min);
     nsStackLayout::AddOffset(aState, mBoxInColumn, min);
@@ -110,7 +107,7 @@ nsGridCell::GetMinSize(nsBoxLayoutState& aState)
   }
 
   if (mBoxInRow) {
-    mBoxInRow->GetMinSize(aState, min);
+    nsSize min = mBoxInRow->GetMinSize(aState);
 
     nsBox::AddMargin(mBoxInRow, min);
     nsStackLayout::AddOffset(aState, mBoxInRow, min);
@@ -130,10 +127,8 @@ nsGridCell::GetMaxSize(nsBoxLayoutState& aState)
   // we are as wide as the smallest child plus its left offset
   // we are tall as the shortest child plus its top offset
 
-  nsSize max(NS_INTRINSICSIZE,NS_INTRINSICSIZE);
-
   if (mBoxInColumn) {
-    mBoxInColumn->GetMaxSize(aState, max);      
+    nsSize max = mBoxInColumn->GetMaxSize(aState);
  
     nsBox::AddMargin(mBoxInColumn, max);
     nsStackLayout::AddOffset(aState, mBoxInColumn, max);
@@ -142,7 +137,7 @@ nsGridCell::GetMaxSize(nsBoxLayoutState& aState)
   }
 
   if (mBoxInRow) {
-    mBoxInRow->GetMaxSize(aState, max);
+    nsSize max = mBoxInRow->GetMaxSize(aState);
 
     nsBox::AddMargin(mBoxInRow, max);
     nsStackLayout::AddOffset(aState, mBoxInRow, max);

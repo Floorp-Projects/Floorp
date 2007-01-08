@@ -87,7 +87,7 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize);
+  virtual nsSize GetPrefSize(nsBoxLayoutState& aState);
 
   virtual void Destroy();
 

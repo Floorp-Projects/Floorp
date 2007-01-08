@@ -88,8 +88,7 @@ nsStackLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize
   aBox->GetChildBox(&child);
  
   while (child) {  
-    nsSize pref(0,0);
-    child->GetPrefSize(aState, pref);
+    nsSize pref = child->GetPrefSize(aState);
 
     AddMargin(child, pref);
     AddOffset(aState, child, pref);
@@ -117,8 +116,7 @@ nsStackLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
   aBox->GetChildBox(&child);
    
   while (child) {  
-    nsSize min(0,0);
-    child->GetMinSize(aState, min);        
+    nsSize min = child->GetMinSize(aState);
     AddMargin(child, min);
     AddOffset(aState, child, min);
     AddLargestSize(aSize, min);
@@ -145,10 +143,8 @@ nsStackLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
   aBox->GetChildBox(&child);
    
   while (child) {  
-    nsSize max(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
-    child->GetMaxSize(aState, max);
-    nsSize min(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
-    child->GetMinSize(aState, min);
+    nsSize max = child->GetMaxSize(aState);
+    nsSize min = child->GetMinSize(aState);
     nsBox::BoundsCheckMinMax(min, max);
 
     AddMargin(child, max);
@@ -298,8 +294,7 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
           // If we have an offset, we don't stretch the child.  Just use
           // its preferred size.
           if (offsetSpecified) {
-            nsSize pref(0,0);
-            child->GetPrefSize(aState, pref);
+            nsSize pref = child->GetPrefSize(aState);
             childRect.width = pref.width;
             childRect.height = pref.height;
           }

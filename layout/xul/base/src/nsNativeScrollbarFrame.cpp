@@ -252,29 +252,30 @@ nsNativeScrollbarFrame::AttributeChanged(PRInt32 aNameSpaceID,
 // Ask our native widget what dimensions it wants to be, convert them
 // back to twips, and tell gecko.
 //
-NS_IMETHODIMP
-nsNativeScrollbarFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
+nsSize
+nsNativeScrollbarFrame::GetPrefSize(nsBoxLayoutState& aState)
 {
-  DISPLAY_PREF_SIZE(this, aSize);
+  nsSize size(0,0);
+  DISPLAY_PREF_SIZE(this, size);
   float p2t = 0.0;
   p2t = aState.PresContext()->PixelsToTwips();
   
   PRInt32 narrowDimension = 0;
   nsCOMPtr<nsINativeScrollbar> native ( do_QueryInterface(mScrollbar) );
-  if ( !native ) return NS_ERROR_FAILURE;  
+  if ( !native ) return size;
   native->GetNarrowSize(&narrowDimension);
   
   if ( IsVertical() )
-    aSize.width = nscoord(narrowDimension * p2t);
+    size.width = nscoord(narrowDimension * p2t);
   else
-    aSize.height = nscoord(narrowDimension * p2t);
+    size.height = nscoord(narrowDimension * p2t);
   
   // By now, we have both the content node for the scrollbar and the associated
   // scrollbar mediator (for outliner, if applicable). Hook up the scrollbar to
   // gecko
   Hookup();
     
-  return NS_OK;
+  return size;
 }
 
 

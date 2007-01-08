@@ -517,47 +517,41 @@ nsBox::GetLayoutManager(nsIBoxLayout** aLayout)
 }
 
 
-NS_IMETHODIMP
-nsBox::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
+nsSize
+nsBox::GetPrefSize(nsBoxLayoutState& aState)
 {
-  DISPLAY_PREF_SIZE(this, aSize);
-  aSize.width = 0;
-  aSize.height = 0;
+  nsSize pref(0,0);
+  DISPLAY_PREF_SIZE(this, pref);
 
   PRBool collapsed = PR_FALSE;
   IsCollapsed(aState, collapsed);
   if (collapsed)
-    return NS_OK;
+    return pref;
 
-  AddBorderAndPadding(aSize);
-  AddInset(aSize);
-  nsIBox::AddCSSPrefSize(aState, this, aSize);
+  AddBorderAndPadding(pref);
+  AddInset(pref);
+  nsIBox::AddCSSPrefSize(aState, this, pref);
 
-  nsSize minSize(0, 0), maxSize(0, 0);
-  GetMinSize(aState, minSize);
-  GetMaxSize(aState, maxSize);
+  BoundsCheck(GetMinSize(aState), pref, GetMaxSize(aState));
 
-  BoundsCheck(minSize, aSize, maxSize);
-
-  return NS_OK;
+  return pref;
 }
 
-NS_IMETHODIMP
-nsBox::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
+nsSize
+nsBox::GetMinSize(nsBoxLayoutState& aState)
 {
-  DISPLAY_MIN_SIZE(this, aSize);
-  aSize.width = 0;
-  aSize.height = 0;
+  nsSize min(0,0);
+  DISPLAY_MIN_SIZE(this, min);
 
   PRBool collapsed = PR_FALSE;
   IsCollapsed(aState, collapsed);
   if (collapsed)
-    return NS_OK;
+    return min;
 
-  AddBorderAndPadding(aSize);
-  AddInset(aSize);
-  nsIBox::AddCSSMinSize(aState, this, aSize);
-  return NS_OK;
+  AddBorderAndPadding(min);
+  AddInset(min);
+  nsIBox::AddCSSMinSize(aState, this, min);
+  return min;
 }
 
 nsSize
@@ -566,22 +560,21 @@ nsBox::GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState)
   return nsSize(0, 0);
 }
 
-NS_IMETHODIMP
-nsBox::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
+nsSize
+nsBox::GetMaxSize(nsBoxLayoutState& aState)
 {
-  DISPLAY_MAX_SIZE(this, aSize);
-  aSize.width = NS_INTRINSICSIZE;
-  aSize.height = NS_INTRINSICSIZE;
+  nsSize max(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+  DISPLAY_MAX_SIZE(this, max);
 
   PRBool collapsed = PR_FALSE;
   IsCollapsed(aState, collapsed);
   if (collapsed)
-    return NS_OK;
+    return max;
 
-  AddBorderAndPadding(aSize);
-  AddInset(aSize);
-  nsIBox::AddCSSMaxSize(aState, this, aSize);
-  return NS_OK;
+  AddBorderAndPadding(max);
+  AddInset(max);
+  nsIBox::AddCSSMaxSize(aState, this, max);
+  return max;
 }
 
 NS_IMETHODIMP
@@ -613,10 +606,8 @@ nsBox::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
   if (collapsed)
     return NS_OK;
 
-  nsSize size(0,0);
-  nsresult rv = GetPrefSize(aState, size);
-  aAscent = size.height;
-  return rv;
+  aAscent = GetPrefSize(aState).height;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -197,8 +197,7 @@ nsLeafBoxFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
   nsBoxLayoutState state(GetPresContext(), aRenderingContext);
-  nsSize minSize(0,0);
-  GetMinSize(state, minSize);
+  nsSize minSize = GetMinSize(state);
 
   // GetMinSize returns border-box width, and we want to return content
   // width.  Since Reflow uses the reflow state's border and padding, we
@@ -218,8 +217,7 @@ nsLeafBoxFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
   nsBoxLayoutState state(GetPresContext(), aRenderingContext);
-  nsSize prefSize(0,0);
-  GetPrefSize(state, prefSize);
+  nsSize prefSize = GetPrefSize(state);
 
   // GetPrefSize returns border-box width, and we want to return content
   // width.  Since Reflow uses the reflow state's border and padding, we
@@ -297,8 +295,7 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
 
   // this happens sometimes. So lets handle it gracefully.
   if (aReflowState.mComputedHeight == 0) {
-    nsSize minSize(0,0);
-    GetMinSize(state, minSize);
+    nsSize minSize = GetMinSize(state);
     computedSize.height = minSize.height - m.top - m.bottom;
   }
 
@@ -306,12 +303,8 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
 
   // if we are told to layout intrinic then get our preferred size.
   if (computedSize.width == NS_INTRINSICSIZE || computedSize.height == NS_INTRINSICSIZE) {
-     nsSize minSize(0,0);
-     nsSize maxSize(0,0);
-     GetPrefSize(state, prefSize);
-     GetMinSize(state,  minSize);
-     GetMaxSize(state,  maxSize);
-     BoundsCheck(minSize, prefSize, maxSize);
+     prefSize = GetPrefSize(state);
+     BoundsCheck(GetMinSize(state), prefSize, GetMaxSize(state));
   }
 
   // get our desiredSize
@@ -418,22 +411,22 @@ nsLeafBoxFrame::CharacterDataChanged(nsPresContext* aPresContext,
   return nsLeafFrame::CharacterDataChanged(aPresContext, aChild, aAppend);
 }
 
-NS_IMETHODIMP
-nsLeafBoxFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
+/* virtual */ nsSize
+nsLeafBoxFrame::GetPrefSize(nsBoxLayoutState& aState)
 {
-    return nsBox::GetPrefSize(aState, aSize);
+    return nsBox::GetPrefSize(aState);
 }
 
-NS_IMETHODIMP
-nsLeafBoxFrame::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
+/* virtual */ nsSize
+nsLeafBoxFrame::GetMinSize(nsBoxLayoutState& aState)
 {
-    return nsBox::GetMinSize(aState, aSize);
+    return nsBox::GetMinSize(aState);
 }
 
-NS_IMETHODIMP
-nsLeafBoxFrame::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
+/* virtual */ nsSize
+nsLeafBoxFrame::GetMaxSize(nsBoxLayoutState& aState)
 {
-    return nsBox::GetMaxSize(aState, aSize);
+    return nsBox::GetMaxSize(aState);
 }
 
 NS_IMETHODIMP

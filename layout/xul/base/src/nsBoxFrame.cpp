@@ -671,8 +671,7 @@ nsBoxFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
   DISPLAY_MIN_WIDTH(this, result);
 
   nsBoxLayoutState state(GetPresContext(), aRenderingContext);
-  nsSize minSize(0,0);
-  GetMinSize(state, minSize);
+  nsSize minSize = GetMinSize(state);
 
   // GetMinSize returns border-box width, and we want to return content
   // width.  Since Reflow uses the reflow state's border and padding, we
@@ -693,8 +692,7 @@ nsBoxFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
   DISPLAY_PREF_WIDTH(this, result);
 
   nsBoxLayoutState state(GetPresContext(), aRenderingContext);
-  nsSize prefSize(0,0);
-  GetPrefSize(state, prefSize);
+  nsSize prefSize = GetPrefSize(state);
 
   // GetPrefSize returns border-box width, and we want to return content
   // width.  Since Reflow uses the reflow state's border and padding, we
@@ -748,16 +746,12 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
 
   nsSize prefSize(0,0);
 
-  // if we are told to layout intrinic then get our preferred size.
+  // if we are told to layout intrinsic then get our preferred size.
   NS_ASSERTION(computedSize.width != NS_INTRINSICSIZE,
                "computed width should always be computed");
   if (computedSize.height == NS_INTRINSICSIZE) {
-     nsSize minSize(0,0);
-     nsSize maxSize(0,0);
-     GetPrefSize(state, prefSize);
-     GetMinSize(state,  minSize);
-     GetMaxSize(state,  maxSize);
-     BoundsCheck(minSize, prefSize, maxSize);
+    prefSize = GetPrefSize(state);
+    BoundsCheck(GetMinSize(state), prefSize, GetMaxSize(state));
   }
 
   // get our desiredSize
@@ -830,52 +824,39 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
+nsSize
+nsBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState)
 {
-  DISPLAY_PREF_SIZE(this, aSize);
+  nsSize size(0,0);
+  DISPLAY_PREF_SIZE(this, size);
   if (!DoesNeedRecalc(mPrefSize)) {
-     aSize = mPrefSize;
-     return NS_OK;
+     size = mPrefSize;
+     return size;
   }
 
 #ifdef DEBUG_LAYOUT
   PropagateDebug(aBoxLayoutState);
 #endif
 
-  nsresult rv = NS_OK;
-  aSize.width = 0;
-  aSize.height = 0;
-
   PRBool collapsed = PR_FALSE;
   IsCollapsed(aBoxLayoutState, collapsed);
-  if (collapsed) {
-    return NS_OK;
-  }
+  if (collapsed)
+    return size;
 
   // if the size was not completely redefined in CSS then ask our children
-  if (!nsIBox::AddCSSPrefSize(aBoxLayoutState, this, aSize))
+  if (!nsIBox::AddCSSPrefSize(aBoxLayoutState, this, size))
   {
-    aSize.width = 0;
-    aSize.height = 0;
-
     if (mLayoutManager) {
-      rv = mLayoutManager->GetPrefSize(this, aBoxLayoutState, aSize);
-      nsIBox::AddCSSPrefSize(aBoxLayoutState, this, aSize);
+      mLayoutManager->GetPrefSize(this, aBoxLayoutState, size);
+      nsIBox::AddCSSPrefSize(aBoxLayoutState, this, size);
     } else
-      rv = nsBox::GetPrefSize(aBoxLayoutState, aSize);
+      size = nsBox::GetPrefSize(aBoxLayoutState);
   }
 
-  nsSize minSize(0,0);
-  nsSize maxSize(0,0);
-  GetMinSize(aBoxLayoutState, minSize);
-  GetMaxSize(aBoxLayoutState, maxSize);
-
-  BoundsCheck(minSize, aSize, maxSize);
-
-  mPrefSize = aSize;
+  BoundsCheck(GetMinSize(aBoxLayoutState), size, GetMaxSize(aBoxLayoutState));
+  mPrefSize = size;
  
-  return rv;
+  return size;
 }
 
 NS_IMETHODIMP
@@ -908,86 +889,74 @@ nsBoxFrame::GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent)
   return rv;
 }
 
-NS_IMETHODIMP
-nsBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
+nsSize
+nsBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
 {
-  DISPLAY_MIN_SIZE(this, aSize);
+  nsSize size(0,0);
+  DISPLAY_MIN_SIZE(this, size);
   if (!DoesNeedRecalc(mMinSize)) {
-     aSize = mMinSize;
-     return NS_OK;
+    size = mMinSize;
+    return size;
   }
 
 #ifdef DEBUG_LAYOUT
   PropagateDebug(aBoxLayoutState);
 #endif
 
-  nsresult rv = NS_OK;
-
-  aSize.SizeTo(0, 0);
-
   PRBool collapsed = PR_FALSE;
   IsCollapsed(aBoxLayoutState, collapsed);
   if (collapsed)
-    return NS_OK;
+    return size;
 
   // if the size was not completely redefined in CSS then ask our children
-  if (!nsIBox::AddCSSMinSize(aBoxLayoutState, this, aSize))
+  if (!nsIBox::AddCSSMinSize(aBoxLayoutState, this, size))
   {
-    aSize.width = 0;
-    aSize.height = 0;
-
     if (mLayoutManager) {
-      rv = mLayoutManager->GetMinSize(this, aBoxLayoutState, aSize);
-      nsIBox::AddCSSMinSize(aBoxLayoutState, this, aSize);
+      mLayoutManager->GetMinSize(this, aBoxLayoutState, size);
+      nsIBox::AddCSSMinSize(aBoxLayoutState, this, size);
     } else {
-      rv = nsBox::GetMinSize(aBoxLayoutState, aSize);
+      size = nsBox::GetMinSize(aBoxLayoutState);
     }
   }
   
-  mMinSize = aSize;
+  mMinSize = size;
 
-  return rv;
+  return size;
 }
 
-NS_IMETHODIMP
-nsBoxFrame::GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
+nsSize
+nsBoxFrame::GetMaxSize(nsBoxLayoutState& aBoxLayoutState)
 {
-  DISPLAY_MAX_SIZE(this, aSize);
+  nsSize size(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+  DISPLAY_MAX_SIZE(this, size);
   if (!DoesNeedRecalc(mMaxSize)) {
-     aSize = mMaxSize;
-     return NS_OK;
+    size = mMaxSize;
+    return size;
   }
 
 #ifdef DEBUG_LAYOUT
   PropagateDebug(aBoxLayoutState);
 #endif
 
-  nsresult rv = NS_OK;
-
-  aSize.SizeTo(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
-
   PRBool collapsed = PR_FALSE;
   IsCollapsed(aBoxLayoutState, collapsed);
   if (collapsed)
-    return NS_OK;
+    return size;
 
   // if the size was not completely redefined in CSS then ask our children
-  if (!nsIBox::AddCSSMaxSize(aBoxLayoutState, this, aSize))
+  if (!nsIBox::AddCSSMaxSize(aBoxLayoutState, this, size))
   {
-    aSize.width = NS_INTRINSICSIZE;
-    aSize.height = NS_INTRINSICSIZE;
-
     if (mLayoutManager) {
-      rv = mLayoutManager->GetMaxSize(this, aBoxLayoutState, aSize);
-      nsIBox::AddCSSMaxSize(aBoxLayoutState, this, aSize);
+      mLayoutManager->GetMaxSize(this, aBoxLayoutState, size);
+      nsIBox::AddCSSMaxSize(aBoxLayoutState, this, size);
     } else {
-      rv = nsBox::GetMaxSize(aBoxLayoutState, aSize);
+      size = nsBox::GetMaxSize(aBoxLayoutState);
     }
   }
 
-  mMaxSize = aSize;
+  mMaxSize = size;
 
-  return rv;
+  return size;
 }
 
 NS_IMETHODIMP
@@ -1889,9 +1858,6 @@ nsBoxFrame::DisplayDebugInfoFor(nsIBox*  aBox,
                     nsSize maxSizeCSS (NS_INTRINSICSIZE, NS_INTRINSICSIZE);
                     nscoord flexCSS = NS_INTRINSICSIZE;
 
-                    nsSize prefSize(0, 0);
-                    nsSize minSize (0, 0);
-                    nsSize maxSize (NS_INTRINSICSIZE, NS_INTRINSICSIZE);
                     nscoord flexSize = 0;
                     nscoord ascentSize = 0;
 
@@ -1901,9 +1867,9 @@ nsBoxFrame::DisplayDebugInfoFor(nsIBox*  aBox,
                     nsIBox::AddCSSMaxSize (state, child, maxSizeCSS);
                     nsIBox::AddCSSFlex    (state, child, flexCSS);
 
-                    child->GetPrefSize(state, prefSize);
-                    child->GetMinSize(state, minSize);
-                    child->GetMaxSize(state, maxSize);
+                    nsSize prefSize = child->GetPrefSize(state);
+                    nsSize minSize = child->GetMinSize(state);
+                    nsSize maxSize = child->GetMaxSize(state);
                     child->GetFlex(state, flexSize);
                     child->GetAscent(state, ascentSize);
 

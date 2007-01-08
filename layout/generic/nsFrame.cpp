@@ -5781,110 +5781,96 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
   return rv;
 }
 
-NS_IMETHODIMP
-nsFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
+nsSize
+nsFrame::GetPrefSize(nsBoxLayoutState& aState)
 {
-  DISPLAY_PREF_SIZE(this, aSize);
+  nsSize size(0,0);
+  DISPLAY_PREF_SIZE(this, size);
   // If the size is cached, and there are no HTML constraints that we might
   // be depending on, then we just return the cached size.
   nsBoxLayoutMetrics *metrics = BoxMetrics();
   if (!DoesNeedRecalc(metrics->mPrefSize)) {
-     aSize = metrics->mPrefSize;
-     return NS_OK;
+    size = metrics->mPrefSize;
+    return size;
   }
-
-  aSize.width = 0;
-  aSize.height = 0;
 
   PRBool isCollapsed = PR_FALSE;
   IsCollapsed(aState, isCollapsed);
-  if (isCollapsed) {
-    return NS_OK;
-  } else {
-    // get our size in CSS.
-    PRBool completelyRedefined = nsIBox::AddCSSPrefSize(aState, this, metrics->mPrefSize);
+  if (isCollapsed)
+    return size;
 
-    // Refresh our caches with new sizes.
-    if (!completelyRedefined) {
-       RefreshSizeCache(aState);
-       metrics->mPrefSize = metrics->mBlockPrefSize;
+  // get our size in CSS.
+  PRBool completelyRedefined = nsIBox::AddCSSPrefSize(aState, this, size);
 
-       // notice we don't need to add our borders or padding
-       // in. That's because the block did it for us.
-       // but we do need to add insets so debugging will work.
-       AddInset(metrics->mPrefSize);
-       nsIBox::AddCSSPrefSize(aState, this, metrics->mPrefSize);
-    }
+  // Refresh our caches with new sizes.
+  if (!completelyRedefined) {
+    RefreshSizeCache(aState);
+    size = metrics->mBlockPrefSize;
+
+    // notice we don't need to add our borders or padding
+    // in. That's because the block did it for us.
+    // but we do need to add insets so debugging will work.
+    AddInset(size);
+    nsIBox::AddCSSPrefSize(aState, this, size);
   }
 
-  aSize = metrics->mPrefSize;
-
-  return NS_OK;
+  metrics->mPrefSize = size;
+  return size;
 }
 
-NS_IMETHODIMP
-nsFrame::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
+nsSize
+nsFrame::GetMinSize(nsBoxLayoutState& aState)
 {
-  DISPLAY_MIN_SIZE(this, aSize);
+  nsSize size(0,0);
+  DISPLAY_MIN_SIZE(this, size);
   // Don't use the cache if we have HTMLReflowState constraints --- they might have changed
   nsBoxLayoutMetrics *metrics = BoxMetrics();
   if (!DoesNeedRecalc(metrics->mMinSize)) {
-     aSize = metrics->mMinSize;
-     return NS_OK;
+    size = metrics->mMinSize;
+    return size;
   }
-
-  aSize.width = 0;
-  aSize.height = 0;
 
   PRBool isCollapsed = PR_FALSE;
   IsCollapsed(aState, isCollapsed);
-  if (isCollapsed) {
-    return NS_OK;
-  } else {
-    // get our size in CSS.
-    PRBool completelyRedefined = nsIBox::AddCSSMinSize(aState, this, metrics->mMinSize);
+  if (isCollapsed)
+    return size;
 
-    // Refresh our caches with new sizes.
-    if (!completelyRedefined) {
-       RefreshSizeCache(aState);
-       metrics->mMinSize = metrics->mBlockMinSize;
-       AddInset(metrics->mMinSize);
-       nsIBox::AddCSSMinSize(aState, this, metrics->mMinSize);
-    }
+  // get our size in CSS.
+  PRBool completelyRedefined = nsIBox::AddCSSMinSize(aState, this, size);
+
+  // Refresh our caches with new sizes.
+  if (!completelyRedefined) {
+    RefreshSizeCache(aState);
+    size = metrics->mBlockMinSize;
+    AddInset(size);
+    nsIBox::AddCSSMinSize(aState, this, size);
   }
 
-  aSize = metrics->mMinSize;
-
-  return NS_OK;
+  metrics->mMinSize = size;
+  return size;
 }
 
-NS_IMETHODIMP
-nsFrame::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
+nsSize
+nsFrame::GetMaxSize(nsBoxLayoutState& aState)
 {
-  DISPLAY_MAX_SIZE(this, aSize);
+  nsSize size(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+  DISPLAY_MAX_SIZE(this, size);
   // Don't use the cache if we have HTMLReflowState constraints --- they might have changed
   nsBoxLayoutMetrics *metrics = BoxMetrics();
   if (!DoesNeedRecalc(metrics->mMaxSize)) {
-     aSize = metrics->mMaxSize;
-     return NS_OK;
+    size = metrics->mMaxSize;
+    return size;
   }
-
-  aSize.width = NS_INTRINSICSIZE;
-  aSize.height = NS_INTRINSICSIZE;
 
   PRBool isCollapsed = PR_FALSE;
   IsCollapsed(aState, isCollapsed);
-  if (isCollapsed) {
-    return NS_OK;
-  } else {
-    metrics->mMaxSize.width = NS_INTRINSICSIZE;
-    metrics->mMaxSize.height = NS_INTRINSICSIZE;
-    nsBox::GetMaxSize(aState, metrics->mMaxSize);
-  }
+  if (isCollapsed)
+    return size;
 
-  aSize = metrics->mMaxSize;
+  size = nsBox::GetMaxSize(aState);
+  metrics->mMaxSize = size;
 
-  return NS_OK;
+  return size;
 }
 
 NS_IMETHODIMP

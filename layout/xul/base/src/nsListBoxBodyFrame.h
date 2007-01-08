@@ -93,7 +93,7 @@ public:
   virtual void MarkIntrinsicWidthsDirty();
 
   virtual nsSize GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState);
-  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState);
 
   // size calculation 
   PRInt32 GetRowCount();
