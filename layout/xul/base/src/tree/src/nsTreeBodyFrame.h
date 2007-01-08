@@ -356,14 +356,13 @@ protected:
       InvalidateRow(aRow + aOrientation);
   };
 
-  nsTreeColumn* GetColumnImpl(nsITreeColumn* aUnknownCol) {
+  already_AddRefed<nsTreeColumn> GetColumnImpl(nsITreeColumn* aUnknownCol) {
     if (!aUnknownCol)
       return nsnull;
 
-    nsRefPtr<nsTreeColumn> col;
-    nsresult rv = aUnknownCol->QueryInterface(kTreeColumnImplCID,
-                                              getter_AddRefs(col));
-    return NS_SUCCEEDED(rv) ? col.get() : nsnull;
+    nsTreeColumn* col;
+    aUnknownCol->QueryInterface(kTreeColumnImplCID, (void**)&col);
+    return col;
   }
 
   // Create a new timer. This method is used to delay various actions like
