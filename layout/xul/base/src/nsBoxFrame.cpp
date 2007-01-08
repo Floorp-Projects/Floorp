@@ -751,7 +751,9 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
                "computed width should always be computed");
   if (computedSize.height == NS_INTRINSICSIZE) {
     prefSize = GetPrefSize(state);
-    BoundsCheck(GetMinSize(state), prefSize, GetMaxSize(state));
+    nsSize minSize = GetMinSize(state);
+    nsSize maxSize = GetMaxSize(state);
+    BoundsCheck(minSize, prefSize, maxSize);
   }
 
   // get our desiredSize
@@ -853,7 +855,9 @@ nsBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState)
       size = nsBox::GetPrefSize(aBoxLayoutState);
   }
 
-  BoundsCheck(GetMinSize(aBoxLayoutState), size, GetMaxSize(aBoxLayoutState));
+  nsSize minSize = GetMinSize(aBoxLayoutState);
+  nsSize maxSize = GetMaxSize(aBoxLayoutState);
+  BoundsCheck(minSize, size, maxSize);
   mPrefSize = size;
  
   return size;
