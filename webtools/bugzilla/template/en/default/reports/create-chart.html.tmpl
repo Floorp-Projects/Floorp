@@ -189,7 +189,7 @@ function subcatSelected() {
 
             <td align="center">
               [% IF user.id == series.creator OR user.in_group("admin") %]
-               <a href="chart.cgi?action=edit&series_id=
+               <a href="chart.cgi?action=edit&amp;series_id=
                        [% series.series_id %]">Edit</a> |
               [% END %]
               <a href="buglist.cgi?cmdtype=dorem&amp;namedcmd=
