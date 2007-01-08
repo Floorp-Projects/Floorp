@@ -33,7 +33,7 @@
     in classification '[% classification.name FILTER html %]'
   [% END %]
 [% END %]
-  
+
 [% PROCESS global/header.html.tmpl
   title = "Select product $classification_title"
 %]
@@ -119,8 +119,6 @@
      columns = columns
      data = products
 %]
-
-<p>
 
 [% IF !showbugcounts %]
 
