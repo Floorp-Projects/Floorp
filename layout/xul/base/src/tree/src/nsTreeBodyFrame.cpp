@@ -621,7 +621,7 @@ nsTreeBodyFrame::InvalidateColumn(nsITreeColumn* aCol)
   if (mUpdateBatchNest)
     return NS_OK;
 
-  nsTreeColumn* col = GetColumnImpl(aCol);
+  nsRefPtr<nsTreeColumn> col = GetColumnImpl(aCol);
   if (!col)
     return NS_ERROR_INVALID_ARG;
 
@@ -666,7 +666,7 @@ nsTreeBodyFrame::InvalidateCell(PRInt32 aIndex, nsITreeColumn* aCol)
   if (aIndex < 0 || aIndex > mPageLength)
     return NS_OK;
 
-  nsTreeColumn* col = GetColumnImpl(aCol);
+  nsRefPtr<nsTreeColumn> col = GetColumnImpl(aCol);
   if (!col)
     return NS_ERROR_INVALID_ARG;
 
@@ -709,7 +709,7 @@ nsTreeBodyFrame::InvalidateColumnRange(PRInt32 aStart, PRInt32 aEnd, nsITreeColu
   if (mUpdateBatchNest)
     return NS_OK;
 
-  nsTreeColumn* col = GetColumnImpl(aCol);
+  nsRefPtr<nsTreeColumn> col = GetColumnImpl(aCol);
   if (!col)
     return NS_ERROR_INVALID_ARG;
 
@@ -1630,7 +1630,7 @@ nsTreeBodyFrame::IsCellCropped(PRInt32 aRow, nsITreeColumn* aCol, PRBool *_retva
   nsCOMPtr<nsIRenderingContext> rc;
   GetPresContext()->PresShell()->CreateRenderingContext(this, getter_AddRefs(rc));
 
-  nsTreeColumn* col = GetColumnImpl(aCol);
+  nsRefPtr<nsTreeColumn> col = GetColumnImpl(aCol);
   if (!col)
     return NS_ERROR_INVALID_ARG;
 
@@ -3645,7 +3645,7 @@ nsresult nsTreeBodyFrame::EnsureRowIsVisibleInternal(const ScrollParts& aParts, 
 
 NS_IMETHODIMP nsTreeBodyFrame::EnsureCellIsVisible(PRInt32 aRow, nsITreeColumn* aCol)
 {
-  nsTreeColumn* col = GetColumnImpl(aCol);
+  nsRefPtr<nsTreeColumn> col = GetColumnImpl(aCol);
   if (!col)
     return NS_ERROR_INVALID_ARG;
 
@@ -3690,7 +3690,7 @@ NS_IMETHODIMP nsTreeBodyFrame::ScrollToColumn(nsITreeColumn* aCol)
 nsresult nsTreeBodyFrame::ScrollToColumnInternal(const ScrollParts& aParts,
                                                  nsITreeColumn* aCol)
 {
-  nsTreeColumn* col = GetColumnImpl(aCol);
+  nsRefPtr<nsTreeColumn> col = GetColumnImpl(aCol);
   if (!col)
     return NS_ERROR_INVALID_ARG;
   return ScrollHorzInternal(aParts, col->GetX());
