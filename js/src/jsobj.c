@@ -3135,10 +3135,10 @@ Detecting(JSContext *cx, jsbytecode *pc)
 
           default:
             /*
-             * At this point, anything but grouping means we're not detecting
-             * unless we see an extended atom index prefix.
+             * At this point, anything but an extended atom index prefix means
+             * we're not detecting.
              */
-            if (js_CodeSpec[op].format & JOF_ATOMBASE)
+            if (!(js_CodeSpec[op].format & JOF_ATOMBASE))
                 return JS_FALSE;
             break;
         }
