@@ -898,10 +898,18 @@ SessionStoreService.prototype = {
     }
     
     if (!aPanel.__SS_text) {
-      aPanel.__SS_text = {};
+      aPanel.__SS_text = [];
+      aPanel.__SS_text._refs = [];
     }
-    else if (aPanel.__SS_text[aTextarea] &&
-             !aPanel.__SS_text[aTextarea].cache) {
+    
+    // get the index of the reference to the text element
+    var ix = aPanel.__SS_text._refs.indexOf(aTextarea);
+    if (ix == -1) {
+      // we haven't registered this text element yet - do so now
+      aPanel.__SS_text._refs.push(aTextarea);
+      ix = aPanel.__SS_text.length;
+    }
+    else if (!aPanel.__SS_text[ix].cache) {
       // we've already marked this text element for saving (the cache is
       // added during save operations and would have to be updated here)
       return false;
@@ -917,7 +925,7 @@ SessionStoreService.prototype = {
     }
     
     // mark this element for saving
-    aPanel.__SS_text[aTextarea] = { id: id, element: aTextarea };
+    aPanel.__SS_text[ix] = { id: id, element: aTextarea };
     
     return true;
   },
@@ -957,8 +965,8 @@ SessionStoreService.prototype = {
         
         var text = [];
         if (aBrowser.parentNode.__SS_text && this._checkPrivacyLevel(aBrowser.currentURI.schemeIs("https"))) {
-          for (var key in aBrowser.parentNode.__SS_text) {
-            var data = aBrowser.parentNode.__SS_text[key];
+          for (var ix = aBrowser.parentNode.__SS_text.length - 1; ix >= 0; ix--) {
+            var data = aBrowser.parentNode.__SS_text[ix];
             if (!data.cache) {
               // update the text element's value before adding it to the data structure
               data.cache = encodeURI(data.element.value);
