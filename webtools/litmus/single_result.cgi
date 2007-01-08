@@ -116,7 +116,7 @@ if ($c->param && $c->param('id')) {
         $c->param('change_result_status') and
         $c->param('result_status')) {
       # Ignore submission if it doesn't actually change the status.
-      if ($c->param('result_status') ne $result->result_status->class_name){
+      if ($c->param('result_status') ne $result->result_status_id->class_name){
         my ($new_status) = Litmus::DB::ResultStatus->search(class_name => $c->param('result_status'));
         if ($new_status) {
           $result->result_status($new_status);
