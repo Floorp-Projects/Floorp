@@ -80,7 +80,7 @@
 #include "nsStringEnumerator.h"
 #include "nsIInputStreamTee.h"
 #include "nsCheapSets.h"
-#ifdef DEBUG
+#if defined(DEBUG) && !defined(XP_OS2)
 #include "pure.h"
 #endif
 #include "nsHashKeys.h"
