@@ -3339,7 +3339,6 @@ js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
 {
     JSRuntime *rt;
     JSObject *obj, *pobj, *lastobj;
-    JSScopeProperty *sprop;
     JSProperty *prop;
 
     rt = cx->runtime;
@@ -4819,7 +4818,6 @@ void
 js_Clear(JSContext *cx, JSObject *obj)
 {
     JSScope *scope;
-    JSScopeProperty *sprop;
     uint32 i, n;
 
     /*
