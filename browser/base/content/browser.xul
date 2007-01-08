@@ -59,7 +59,9 @@
 
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
+#ifdef MOZ_PLACES
 <?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
+#endif
 
 # All DTD information is stored in a separate file so that it can be shared by
 # hiddenWindow.xul.
