@@ -20930,7 +20930,6 @@ EOF
 #define UNIX_ASYNC_DNS 1
 EOF
 
-  MOZ_MOVEMAIL=1
 elif test "$OS_ARCH" = "OpenVMS"; then
   cat >> confdefs.h <<\EOF
 #define XP_UNIX 1
