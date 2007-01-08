@@ -371,7 +371,7 @@ nsListBoxBodyFrame::GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState)
   nsSize result(0, 0);
   if (nsContentUtils::HasNonEmptyAttr(GetContent(), kNameSpaceID_None,
                                       nsGkAtoms::sizemode)) {
-    GetPrefSize(aBoxLayoutState, result);
+    result = GetPrefSize(aBoxLayoutState);
     result.height = 0;
     nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(this);
     if (scrollFrame &&
@@ -384,24 +384,24 @@ nsListBoxBodyFrame::GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState)
   return result;
 }
 
-NS_IMETHODIMP
-nsListBoxBodyFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
+nsSize
+nsListBoxBodyFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState)
 {  
-  nsresult rv = nsBoxFrame::GetPrefSize(aBoxLayoutState, aSize);
+  nsSize pref = nsBoxFrame::GetPrefSize(aBoxLayoutState);
 
   PRInt32 size = GetFixedRowSize();
   nsIBox* box = nsnull;
   GetChildBox(&box);
   if (size > -1)
-    aSize.height = size*GetRowHeightTwips();
+    pref.height = size*GetRowHeightTwips();
    
   nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(this);
   if (scrollFrame &&
       scrollFrame->GetScrollbarStyles().mVertical == NS_STYLE_OVERFLOW_AUTO) {
     nsMargin scrollbars = scrollFrame->GetDesiredScrollbarSizes(&aBoxLayoutState);
-    aSize.width += scrollbars.left + scrollbars.right;
+    pref.width += scrollbars.left + scrollbars.right;
   }
-  return rv;
+  return pref;
 }
 
 ///////////// nsIScrollbarMediator ///////////////

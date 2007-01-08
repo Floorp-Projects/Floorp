@@ -62,7 +62,7 @@ public:
                                          const nsDisplayListSet& aLists);
 
   // nsIBox
-  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize);
+  virtual nsSize GetPrefSize(nsBoxLayoutState& aState);
   
 protected:
   nsListItemFrame(nsIPresShell* aPresShell,

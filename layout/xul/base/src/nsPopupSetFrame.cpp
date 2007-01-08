@@ -249,13 +249,9 @@ nsPopupSetFrame::DoLayout(nsBoxLayoutState& aState)
       NS_ASSERTION(popupChild->IsBoxFrame(), "popupChild is not box!!");
 
       // then get its preferred size
-      nsSize prefSize(0,0);
-      nsSize minSize(0,0);
-      nsSize maxSize(0,0);
-
-      popupChild->GetPrefSize(aState, prefSize);
-      popupChild->GetMinSize(aState, minSize);
-      popupChild->GetMaxSize(aState, maxSize);
+      nsSize prefSize = popupChild->GetPrefSize(aState);
+      nsSize minSize = popupChild->GetMinSize(aState);
+      nsSize maxSize = popupChild->GetMaxSize(aState);
 
       BoundsCheck(minSize, prefSize, maxSize);
 

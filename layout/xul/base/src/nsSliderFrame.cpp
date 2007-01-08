@@ -349,8 +349,7 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
   PRBool isHorizontal = IsHorizontal();
 
   // get the thumb's pref size
-  nsSize thumbSize(0,0);
-  thumbBox->GetPrefSize(aState, thumbSize);
+  nsSize thumbSize = thumbBox->GetPrefSize(aState);
 
   if (isHorizontal)
     thumbSize.height = clientRect.height;
@@ -1011,27 +1010,27 @@ nsSliderFrame::Destroy()
   nsBoxFrame::Destroy();
 }
 
-NS_IMETHODIMP
-nsSliderFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
+nsSize
+nsSliderFrame::GetPrefSize(nsBoxLayoutState& aState)
 {
   EnsureOrient();
-  return nsBoxFrame::GetPrefSize(aState, aSize);
+  return nsBoxFrame::GetPrefSize(aState);
 }
 
-NS_IMETHODIMP
-nsSliderFrame::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
+nsSize
+nsSliderFrame::GetMinSize(nsBoxLayoutState& aState)
 {
   EnsureOrient();
 
   // our min size is just our borders and padding
-  return nsBox::GetMinSize(aState, aSize);
+  return nsBox::GetMinSize(aState);
 }
 
-NS_IMETHODIMP
-nsSliderFrame::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
+nsSize
+nsSliderFrame::GetMaxSize(nsBoxLayoutState& aState)
 {
   EnsureOrient();
-  return nsBoxFrame::GetMaxSize(aState, aSize);
+  return nsBoxFrame::GetMaxSize(aState);
 }
 
 void

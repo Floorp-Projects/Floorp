@@ -217,20 +217,21 @@ nsTreeBodyFrame::Init(nsIContent*     aContent,
   return rv;
 }
 
-NS_IMETHODIMP
-nsTreeBodyFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
+nsSize
+nsTreeBodyFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
 {
   EnsureView();
 
   nsIContent* baseElement = GetBaseElement();
 
+  nsSize min(0,0);
   PRInt32 desiredRows;
   if (NS_UNLIKELY(!baseElement)) {
     desiredRows = 0;
   }
   else if (baseElement->Tag() == nsGkAtoms::select &&
            baseElement->IsNodeOfType(nsINode::eHTML)) {
-    aSize.width = CalcMaxRowWidth();
+    min.width = CalcMaxRowWidth();
     nsAutoString size;
     baseElement->GetAttr(kNameSpaceID_None, nsGkAtoms::size, size);
     if (!size.IsEmpty()) {
@@ -245,7 +246,6 @@ nsTreeBodyFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
   }
   else {
     // tree
-    aSize.width = 0;
     nsAutoString rows;
     baseElement->GetAttr(kNameSpaceID_None, nsGkAtoms::rows, rows);
     if (!rows.IsEmpty()) {
@@ -258,13 +258,13 @@ nsTreeBodyFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
     }
   }
 
-  aSize.height = mRowHeight * desiredRows;
+  min.height = mRowHeight * desiredRows;
 
-  AddBorderAndPadding(aSize);
-  AddInset(aSize);
-  nsIBox::AddCSSMinSize(aBoxLayoutState, this, aSize);
+  AddBorderAndPadding(min);
+  AddInset(min);
+  nsIBox::AddCSSMinSize(aBoxLayoutState, this, min);
 
-  return NS_OK;
+  return min;
 }
 
 nscoord

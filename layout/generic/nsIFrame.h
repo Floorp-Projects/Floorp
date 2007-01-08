@@ -100,10 +100,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface 
-// 42728a19-b289-48b8-b6f4-1a46b719a63b
+// c822dca6-310c-433d-a1d0-d5b5b1cdce1f
 #define NS_IFRAME_IID \
-{ 0x42728a19, 0xb289, 0x48b8, \
-  { 0xb6, 0xf4, 0x1a, 0x46, 0xb7, 0x19, 0xa6, 0x3b } }
+{ 0xc822dca6, 0x310c, 0x433d, \
+  { 0xa1, 0xd0, 0xd5, 0xb5, 0xb1, 0xcd, 0xce, 0x1f } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -1816,9 +1816,27 @@ NS_PTR_TO_INT32(frame->GetProperty(nsGkAtoms::embeddingLevel))
     vAlign_Bottom
   };
 
-  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)=0;
-  NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)=0;
-  NS_IMETHOD GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)=0;
+  /**
+   * This calculates the minimum size required for a box based on its state
+   * @param[in] aBoxLayoutState The desired state to calculate for
+   * @return The minimum size
+   */
+  virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState) = 0;
+
+  /**
+   * This calculates the preferred size of a box based on its state
+   * @param[in] aBoxLayoutState The desired state to calculate for
+   * @return The preferred size
+   */
+  virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState) = 0;
+
+  /**
+   * This calculates the maximum size for a box based on its state
+   * @param[in] aBoxLayoutState The desired state to calculate for
+   * @return The maximum size
+   */    
+  virtual nsSize GetMaxSize(nsBoxLayoutState& aBoxLayoutState) = 0;
+
   NS_IMETHOD GetFlex(nsBoxLayoutState& aBoxLayoutState, nscoord& aFlex)=0;
   NS_HIDDEN_(nsresult)
     GetOrdinal(nsBoxLayoutState& aBoxLayoutState, PRUint32& aOrdinal);

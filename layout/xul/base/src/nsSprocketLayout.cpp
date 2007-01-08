@@ -363,19 +363,15 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
       nscoord width = clientRect.width;
       nscoord height = clientRect.height;
 
-      nsSize prefSize(0,0);
-      nsSize minSize(0,0);
-      nsSize maxSize(0,0);
-      
       if (!childBoxSize->bogus) {
         // We have a valid box size entry.  This entry already contains information about our
         // sizes along the axis of the box (e.g., widths in a horizontal box).  If our default
         // ALIGN is not stretch, however, then we also need to know the child's size along the
         // opposite axis.
         if (!(frameState & NS_STATE_AUTO_STRETCH)) {
-           child->GetPrefSize(aState, prefSize);
-           child->GetMinSize(aState, minSize);
-           child->GetMaxSize(aState, maxSize);
+           nsSize prefSize = child->GetPrefSize(aState);
+           nsSize minSize = child->GetMinSize(aState);
+           nsSize maxSize = child->GetMaxSize(aState);
            nsBox::BoundsCheck(minSize, prefSize, maxSize);
        
            AddMargin(child, prefSize);
@@ -510,8 +506,8 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
       if (sizeChanged) {
         // Our size is different.  Sanity check against our maximum allowed size to ensure
         // we didn't exceed it.
-        child->GetMinSize(aState, minSize);
-        child->GetMaxSize(aState, maxSize);
+        nsSize minSize = child->GetMinSize(aState);
+        nsSize maxSize = child->GetMaxSize(aState);
         nsBox::BoundsCheckMinMax(minSize, maxSize);
 
         // make sure the size is in our max size.
@@ -818,9 +814,9 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
     // 0 then and not even have to ask for it.
     //if (flexes != 1)  {
 
-      child->GetPrefSize(aState, pref);
-      child->GetMinSize(aState, min);
-      child->GetMaxSize(aState, max);
+      pref = child->GetPrefSize(aState);
+      min = child->GetMinSize(aState);
+      max = child->GetMaxSize(aState);
       child->GetAscent(aState, ascent);
       nsMargin margin;
       child->GetMargin(margin);
@@ -1074,10 +1070,8 @@ nsSprocketLayout::ChildResized(nsIBox* aBox,
             // ok if the height changed then we need to reflow everyone but us at the new height
             // so we will set the changed index to be us. And signal that we need a new pass.
 
-            nsSize max(0,0);
-            nsSize min(0,0);
-            aChild->GetMaxSize(aState, max);
-            aChild->GetMinSize(aState, min);
+            nsSize max = aChild->GetMaxSize(aState);
+            nsSize min = aChild->GetMinSize(aState);
             nsBox::BoundsCheckMinMax(min, max);
             AddMargin(aChild, max);
 
@@ -1112,10 +1106,8 @@ nsSprocketLayout::ChildResized(nsIBox* aBox,
       } 
       
       if (childActualWidth > childLayoutWidth) {
-            nsSize max(0,0);
-            nsSize min(0,0);
-            aChild->GetMinSize(aState, min);
-            aChild->GetMaxSize(aState, max);
+            nsSize min = aChild->GetMinSize(aState);
+            nsSize max = aChild->GetMaxSize(aState);
             nsBox::BoundsCheckMinMax(min, max);
             AddMargin(aChild, max);
 
@@ -1364,8 +1356,7 @@ nsSprocketLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aS
 
       if (!isCollapsed)
       {
-        nsSize pref(0,0);
-        child->GetPrefSize(aState, pref);
+        nsSize pref = child->GetPrefSize(aState);
         AddMargin(child, pref);
 
         if (isEqual) {
@@ -1428,17 +1419,16 @@ nsSprocketLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSi
 
       if (!isCollapsed)
       {
-        nsSize min(0,0);
+        nsSize min = child->GetMinSize(aState);
         nsSize pref(0,0);
         nscoord flex = 0;
 
-        child->GetMinSize(aState, min);        
         child->GetFlex(aState, flex);
         
         // if the child is not flexible then
         // its min size is its pref size.
         if (flex == 0)  {
-            child->GetPrefSize(aState, pref);
+            pref = child->GetPrefSize(aState);
             if (isHorizontal)
                min.width = pref.width;
             else
@@ -1510,10 +1500,8 @@ nsSprocketLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSi
       if (!isCollapsed)
       {
         // if completely redefined don't even ask our child for its size.
-        nsSize max(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
-        nsSize min(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
-        child->GetMaxSize(aState, max);
-        child->GetMinSize(aState, min);
+        nsSize max = child->GetMaxSize(aState);
+        nsSize min = child->GetMinSize(aState);
         nsBox::BoundsCheckMinMax(min, max);
 
         AddMargin(child, max);

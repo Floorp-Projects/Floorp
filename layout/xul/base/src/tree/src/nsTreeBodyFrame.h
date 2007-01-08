@@ -86,7 +86,7 @@ public:
   NS_DECL_NSITREEBOXOBJECT
 
   // nsIBox
-  NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState);
   NS_IMETHOD SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
                        PRBool aRemoveOverflowArea = PR_FALSE);
 

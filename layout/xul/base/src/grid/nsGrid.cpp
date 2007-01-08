@@ -935,7 +935,7 @@ nsGrid::GetPrefRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsHor
      nsSize size(0,0);
      if (box) 
      {
-       box->GetPrefSize(aState, size);
+       size = box->GetPrefSize(aState);
        nsBox::AddMargin(box, size);
        nsStackLayout::AddOffset(aState, box, size);
      }
@@ -1009,7 +1009,7 @@ nsGrid::GetMinRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsHori
   {
      nsSize size(0,0);
      if (box) {
-       box->GetPrefSize(aState, size);
+       size = box->GetPrefSize(aState);
        nsBox::AddMargin(box, size);
        nsStackLayout::AddOffset(aState, box, size);
      }
@@ -1085,7 +1085,7 @@ nsGrid::GetMaxRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsHori
   {
      nsSize size(NS_INTRINSICSIZE,NS_INTRINSICSIZE);
      if (box) {
-       box->GetPrefSize(aState, size);
+       size = box->GetPrefSize(aState);
        nsBox::AddMargin(box, size);
        nsStackLayout::AddOffset(aState, box, size);
      }
