@@ -31,10 +31,10 @@
   # no_edit_other_versions_link
   # no_add_version_link
   #%]
-  
-<p>
 
 <hr>
+
+<p>
 
 [% UNLESS no_add_version_link %]
   <a title="Add a version to product '[% product.name FILTER html %]'"
@@ -56,7 +56,7 @@
   Edit other versions of product <a 
   href="editversions.cgi?product=
         [%- product.name FILTER url_quote %]">'[% product.name FILTER html %]'</a>.
-   
+
 [% END %]
 
   Edit product <a 
