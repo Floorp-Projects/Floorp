@@ -256,9 +256,10 @@ PlacesController.prototype = {
              this._canInsert() &&
              this._view.peerDropTypes.indexOf(TYPE_X_MOZ_PLACE_SEPARATOR) != -1;
     case "placesCmd_show:info":
-      if (!this._selectionOverlapsSystemArea() &&
-          this._view.hasSingleSelection) {
-        var selectedNode = this._view.selectedNode;
+      var selectedNode = this._view.selectedNode;
+      if (this._view.hasSingleSelection &&
+          !PlacesUtils.nodeIsLivemarkContainer(selectedNode.parent) &&
+          !this._selectionOverlapsSystemArea()) {
         if (PlacesUtils.nodeIsBookmark(selectedNode) ||
             PlacesUtils.nodeIsFolder(selectedNode))
           return true;
