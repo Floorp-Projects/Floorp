@@ -479,7 +479,7 @@
       and then insert the URL to it in a comment, or in the URL field
       for this [% terms.bug %].
     [% END %]
-    <p>Alternately, if your attachment is an image, you could convert
+    <br>Alternately, if your attachment is an image, you could convert
     it to a compressible format like JPG or PNG and try again.
 
   [% ELSIF error == "flag_not_multiplicable" %]
@@ -987,7 +987,7 @@
     [% admindocslinks = {'versions.html' => 'Defining versions'} %]
     Sorry, the product <em>[% product.name FILTER html %]</em>
     has to have at least one version in order for you to
-    enter [% terms.abug %] into it.<p>
+    enter [% terms.abug %] into it.<br>
     [% IF user.in_group("editcomponents", product.id) %]
       <a href="editversions.cgi?action=add&amp;product=[% product.name FILTER url_quote %]">Create
       a new version</a>.
