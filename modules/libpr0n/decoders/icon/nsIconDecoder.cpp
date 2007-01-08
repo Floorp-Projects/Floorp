@@ -107,7 +107,11 @@ NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
   PRUint32 readLen;
   rv = inStr->Read((char*)buf, count, &readLen);
   NS_ENSURE_SUCCESS(rv, rv);
+#ifdef MOZ_CAIRO_GFX
+  NS_ENSURE_TRUE(readLen >= 2, NS_ERROR_UNEXPECTED); // w, h
+#else
   NS_ENSURE_TRUE(readLen >= 3, NS_ERROR_UNEXPECTED); // w, h, alphaBits
+#endif
 
   PRUint8 * const buf_end = buf + readLen;
   PRUint8 *data = buf;
@@ -118,16 +122,24 @@ NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
   // Read size
   PRInt32 w = *(data++);
   PRInt32 h = *(data++);
+#ifdef MOZ_CAIRO_GFX
+  NS_ENSURE_TRUE(w > 0 && h > 0, NS_ERROR_UNEXPECTED);
+#else
   PRUint8 alphaBits = *(data++);
   NS_ENSURE_TRUE(w > 0 && h > 0 && (alphaBits == 1 || alphaBits == 8),
                  NS_ERROR_UNEXPECTED);
+#endif
 
   mImage->Init(w, h, mObserver);
   if (mObserver)
     mObserver->OnStartContainer(nsnull, mImage);
 
+#ifdef MOZ_CAIRO_GFX
+  gfx_format format = gfxIFormats::BGRA; // XXX not really
+#else
   gfx_format format = alphaBits == 1 ? gfx_format(gfxIFormats::RGB_A1)
                                      : gfx_format(gfxIFormats::RGB_A8);
+#endif
   rv = mFrame->Init(0, 0, w, h, format, 24);
   if (NS_FAILED(rv))
     return rv;
@@ -145,34 +157,11 @@ NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 
   PRInt32 rownum;
 #if defined(MOZ_CAIRO_GFX)
-  return NS_ERROR_FAILURE; // this code is totally busted.. fixing shortly.
-
-  PRUint8 *row = (PRUint8*)malloc(bpr);
-  PRUint8 *adata = data + (bpr * height);
-  for (rownum = 0; rownum < height; ++rownum, data += bpr) {
-    PRUint8 *rowdata = data;
-    for (int i = 0; i < bpr; i++) {
-      const PRUint8 r = *rowdata++;
-      const PRUint8 g = *rowdata++;
-      const PRUint8 b = *rowdata++;
-      const PRUint8 a = (format == gfxIFormats::RGB_A1) ? adata[i>>3] : adata[i];
-#ifdef IS_LITTLE_ENDIAN
-      // BGRX
-      *row++ = b;
-      *row++ = g;
-      *row++ = r;
-      *row++ = a;
-#else
-      // XRGB
-      *row++ = a;
-      *row++ = r;
-      *row++ = g;
-      *row++ = b;
-#endif
-    }
-    mFrame->SetImageData(row, bpr, rownum * bpr);
-  }
-  free(row);
+  NS_ENSURE_TRUE(buf_end - data >= PRInt32(bpr) * height,
+                 NS_ERROR_UNEXPECTED);
+  
+  for (rownum = 0; rownum < height; ++rownum, data += bpr)
+    mFrame->SetImageData(data, bpr, rownum * bpr);
 #else
   NS_ENSURE_TRUE(buf_end - data >= PRInt32(bpr + abpr) * height,
                  NS_ERROR_UNEXPECTED);
