@@ -1,8 +1,0 @@
-#!/bin/csh
-
-set echo
-
-cd ../base
-make
-cd ../geckoterm
-rm xmlterm; make xmlterm
