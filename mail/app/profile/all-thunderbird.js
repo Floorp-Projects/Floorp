@@ -333,7 +333,7 @@ pref("autoupdate.enabled",              true);
 pref("browser.editor.disabled", false);
 pref("spellchecker.dictionary", "");
 // Dictionary download preference
-pref("spellchecker.dictionaries.download.url", "https://addons.mozilla.org/%LOCALE%/thunderbird/%VERSION%/dictionaries/");
+pref("spellchecker.dictionaries.download.url", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/thunderbird/%VERSION%/dictionaries/");
 
 // profile.force.migration can be used to bypass the migration wizard, forcing migration from a particular
 // mail application without any user intervention. Possible values are: 
