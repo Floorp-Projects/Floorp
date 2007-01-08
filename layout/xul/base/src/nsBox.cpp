@@ -532,7 +532,9 @@ nsBox::GetPrefSize(nsBoxLayoutState& aState)
   AddInset(pref);
   nsIBox::AddCSSPrefSize(aState, this, pref);
 
-  BoundsCheck(GetMinSize(aState), pref, GetMaxSize(aState));
+  nsSize minSize = GetMinSize(aState);
+  nsSize maxSize = GetMaxSize(aState);
+  BoundsCheck(minSize, pref, maxSize);
 
   return pref;
 }
