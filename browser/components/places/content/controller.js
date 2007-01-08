@@ -212,19 +212,34 @@ PlacesController.prototype = {
       return this._view.selectedURINode &&
              !this._selectionOverlapsSystemArea();
     case "placesCmd_open:tabs":
-      // We can open multiple links in tabs if there is either: 
-      //  a) a single folder selected
-      //  b) many links or folders selected
-      // XXXben - inSysArea should be removed, and generally be replaced by 
-      //          something that counts the number of selected links or the
-      //          number of links in the folder and enables the command only if
-      //          the number is less than some 'safe' amount.
-      var selectedNode = this._view.selectedNode;
-      var hasSingleSelection = this._view.hasSingleSelection;
-      var singleFolderSelected = hasSingleSelection && 
-                                 PlacesUtils.nodeIsFolder(selectedNode);
-      return !this._selectionOverlapsSystemArea() &&
-             (singleFolderSelected || !hasSingleSelection);
+      // We can open multiple links if the current selection is either:
+      //  a) a single folder which contains at least one link
+      //  b) multiple links
+      var node = this._view.selectedNode;
+      if (!node)
+        return false;
+
+      if (this._view.hasSingleSelection && PlacesUtils.nodeIsFolder(node)) {
+        var contents = PlacesUtils.getFolderContents(asFolder(node).folderId,
+                                                     false, false);
+        for (var i = 0; i < contents.childCount; ++i) {
+          var child = contents.getChild(i);
+          if (PlacesUtils.nodeIsURI(child))
+            return true;
+        }
+      }
+      else {
+        var oneLinkIsSelected = false;
+        var nodes = this._view.getSelectionNodes();
+        for (var i = 0; i < nodes.length; ++i) {
+          if (PlacesUtils.nodeIsURI(nodes[i])) {
+            if (oneLinkIsSelected)
+              return true;
+            oneLinkIsSelected = true;
+          }
+        }
+      }
+      return false;
 #ifdef MOZ_PLACES_BOOKMARKS
     case "placesCmd_new:folder":
       // New Folder - don't check selectionOverlapsSystemArea since we should
