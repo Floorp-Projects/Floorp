@@ -156,6 +156,7 @@
       [% ELSE %]
         Versions:
       [% END %]
+    </td>
     <td>
       [% IF product.versions.size > 0 %]
         [% FOREACH v = product.versions %]
@@ -215,7 +216,7 @@
 
   [% IF !Param("allowbugdeletion") %]
 
-    Sorry, there
+    <p>Sorry, there
 
     [% IF product.bug_count > 1 %]
       are [% product.bug_count FILTER html %] [%+ terms.bugs %]
@@ -231,7 +232,7 @@
        that [% terms.bug %]
     [% END %]
 
-    to another product before you can delete this one.
+    to another product before you can delete this one.</p>
 
   [% ELSE %]
 
@@ -257,7 +258,7 @@
 
 [% IF product.bug_count == 0 || Param('allowbugdeletion') %]
 
-  <p>Do you really want to delete this product?<p>
+  <p>Do you really want to delete this product?</p>
 
   <form method="post" action="editproducts.cgi">
     <input type="submit" id="delete" value="Yes, delete">
