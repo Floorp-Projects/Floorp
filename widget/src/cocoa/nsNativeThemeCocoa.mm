@@ -128,8 +128,6 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
   else
     bdi.state = kThemeStateActive;
 
-  bdi.adornment = inAdornment;
-
   if (inState & NS_EVENT_STATE_FOCUS)
     bdi.adornment |= kThemeAdornmentFocus;
 
