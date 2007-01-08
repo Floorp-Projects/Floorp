@@ -134,6 +134,10 @@ nsresult
 NS_NewSVGPatternElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGMaskElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGFEFloodElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGFETurbulenceElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
 NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
@@ -232,15 +236,17 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     return NS_NewSVGFEMorphologyElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::feOffset)
     return NS_NewSVGFEOffsetElement(aResult, aNodeInfo);
+  if (name == nsGkAtoms::feFlood)
+    return NS_NewSVGFEFloodElement(aResult, aNodeInfo);
+  if (name == nsGkAtoms::feTurbulence)
+    return NS_NewSVGFETurbulenceElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::feColorMatrix      ||
       name == nsGkAtoms::feConvolveMatrix   ||
       name == nsGkAtoms::feDiffuseLighting  ||
       name == nsGkAtoms::feDisplacementMap  ||
-      name == nsGkAtoms::feFlood            ||
       name == nsGkAtoms::feImage            ||
       name == nsGkAtoms::feSpecularLighting ||
-      name == nsGkAtoms::feTile             ||
-      name == nsGkAtoms::feTurbulence)
+      name == nsGkAtoms::feTile)
     return NS_NewSVGFEUnimplementedMOZElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::pattern)
     return NS_NewSVGPatternElement(aResult, aNodeInfo);

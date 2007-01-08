@@ -55,6 +55,10 @@
 #include "nsSVGFilters.h"
 #include "nsSVGUtils.h"
 #include "prdtoa.h"
+#include "nsStyleContext.h"
+#include "nsIDocument.h"
+#include "nsIFrame.h"
+#include "nsSVGAnimatedInteger.h"
 
 nsSVGElement::LengthInfo nsSVGFE::sLengthInfo[4] =
 {
@@ -232,13 +236,12 @@ nsSVGFE::GetLengthInfo()
 
 //--------------------Filter Resource-----------------------
 /**
- * nsSVGFilterResource provides functionality for obtaining and releasing
- * source and target images.  Images are automatically released when the
- * Filter Resource is destroyed, but methods to manually release images are
- * provided so that multiple source images may be used for a single filter.
- * PLEASE NOTE that nsSVGFilterResource should ONLY be used on the stack because
- * it has nsAutoString members
- */
+  * nsSVGFilterResource provides functionality for managing images used by
+  * filters.  PLEASE NOTE that nsSVGFilterResource should ONLY be used on the
+  * stack because it has nsAutoString member.  Also note that ReleaseTarget,
+  * and thus the deconstructor, depends on AcquireSourceImage having been called
+  * one or more times before it is executed.
+  */
 class nsSVGFilterResource
 {
 
@@ -247,8 +250,7 @@ public:
   ~nsSVGFilterResource();
 
   /*
-   * Acquiring a source image will lock that image
-   * and prepare its data to be read.
+   * Acquires a source image for reading
    * aIn:         the name of the filter primitive to use as the source
    * aFilter:     the filter that is calling AcquireImage
    * aSourceData: out parameter - the image data of the filter primitive
@@ -260,10 +262,10 @@ public:
                               nsSVGFE* aFilter, PRUint8** aSourceData,
                               cairo_surface_t** aSurface = 0);
   /*
-   * Acquiring a target image will create and lock
-   * a new surface to be used as the target image.
-   * aResult:     the name by which the resulting filter primitive image will be
-   *              identified
+   * Acquiring a target image will create a new surface to be used as the
+   * target image.
+   * aResult:     the name by which the resulting filter primitive image will
+   *              be identified
    * aTargetData: out parameter - the resulting filter primitive image data
    * aSurface:    optional out parameter - the resulting filter primitive image 
    *              surface
@@ -298,9 +300,6 @@ public:
   }
 
 private:
-  /*
-   * If the target image exists then it is unlocked and FixupTarget() is called
-   */
   void ReleaseTarget();
 
   /*
@@ -2474,6 +2473,711 @@ nsSVGFEOffsetElement::GetRequirements(PRUint32 *aRequirements)
 
 nsSVGElement::NumberAttributesInfo
 nsSVGFEOffsetElement::GetNumberInfo()
+{
+  return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
+                              NS_ARRAY_LENGTH(sNumberInfo));
+}
+
+//---------------------Flood------------------------
+
+typedef nsSVGFE nsSVGFEFloodElementBase;
+
+class nsSVGFEFloodElement : public nsSVGFEFloodElementBase,
+                            public nsIDOMSVGFEFloodElement,
+                            public nsISVGFilter
+{
+protected:
+  friend nsresult NS_NewSVGFEFloodElement(nsIContent **aResult,
+                                          nsINodeInfo *aNodeInfo);
+  nsSVGFEFloodElement(nsINodeInfo* aNodeInfo);
+  nsresult Init();
+
+public:
+  // interfaces:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // FE Base
+  NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEFloodElementBase::)
+
+  // nsISVGFilter
+  NS_IMETHOD Filter(nsSVGFilterInstance *instance);
+  NS_IMETHOD GetRequirements(PRUint32 *aRequirements);
+
+  // Flood
+  NS_DECL_NSIDOMSVGFEFLOODELEMENT
+
+  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEFloodElementBase::)
+  
+  NS_FORWARD_NSIDOMNODE(nsSVGFEFloodElementBase::)
+  NS_FORWARD_NSIDOMELEMENT(nsSVGFEFloodElementBase::)
+
+  // nsIContent interface
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+protected:
+  nsCOMPtr<nsIDOMSVGAnimatedString> mIn1;
+};
+
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEFlood)
+
+//----------------------------------------------------------------------
+// nsISupports methods
+
+NS_IMPL_ADDREF_INHERITED(nsSVGFEFloodElement,nsSVGFEFloodElementBase)
+NS_IMPL_RELEASE_INHERITED(nsSVGFEFloodElement,nsSVGFEFloodElementBase)
+
+NS_INTERFACE_MAP_BEGIN(nsSVGFEFloodElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGFilterPrimitiveStandardAttributes)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGFEFloodElement)
+  NS_INTERFACE_MAP_ENTRY(nsISVGFilter)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEFloodElement)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGFEFloodElementBase)
+
+//----------------------------------------------------------------------
+// Implementation
+
+nsSVGFEFloodElement::nsSVGFEFloodElement(nsINodeInfo *aNodeInfo)
+  : nsSVGFEFloodElementBase(aNodeInfo)
+{
+}
+
+nsresult
+nsSVGFEFloodElement::Init()
+{
+  nsresult rv = nsSVGFEFloodElementBase::Init();
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // DOM property: in1 , #IMPLIED attrib: in
+  {
+    rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsGkAtoms::in, mIn1);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  return rv;
+}
+
+//----------------------------------------------------------------------
+// nsIDOMNode methods
+
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEFloodElement)
+
+
+//----------------------------------------------------------------------
+// nsIDOMSVGFEFloodElement methods
+
+/* readonly attribute nsIDOMSVGAnimatedString in1; */
+NS_IMETHODIMP nsSVGFEFloodElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
+{
+  *aIn = mIn1;
+  NS_IF_ADDREF(*aIn);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGFEFloodElement::Filter(nsSVGFilterInstance *instance)
+{
+  nsresult rv;
+  PRUint8 *sourceData, *targetData;
+  cairo_surface_t *targetSurface;
+  nsSVGFilterResource fr(instance);
+
+  rv = fr.AcquireSourceImage(mIn1, this, &sourceData);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = fr.AcquireTargetImage(mResult, &targetData, &targetSurface);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsRect rect = fr.GetRect();
+
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc) return NS_ERROR_FAILURE;
+  nsIPresShell *presShell = doc->GetShellAt(0);
+  NS_ASSERTION(presShell, "need presShell to suspend redraw");
+  if (!presShell) return NS_ERROR_FAILURE;
+
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
+  nsStyleContext* style = frame->GetStyleContext();
+
+  nscolor floodColor = style->GetStyleSVG()->mFloodColor.mPaint.mColor;
+  float floodOpacity = style->GetStyleSVG()->mFloodOpacity;
+  PRUint8 r, g, b, a;
+  a = PRUint8(floodOpacity * 255);
+  r = (PRUint32(NS_GET_R(floodColor)) * a) / 255;
+  g = (PRUint32(NS_GET_G(floodColor)) * a) / 255;
+  b = (PRUint32(NS_GET_B(floodColor)) * a) / 255;
+
+  cairo_t *cr = cairo_create(targetSurface);
+  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS) {
+    cairo_destroy(cr);
+    return NS_ERROR_FAILURE;
+  }
+  cairo_set_source_rgba(cr, r, g, b, a);
+  cairo_rectangle(cr, rect.x, rect.y, rect.width, rect.height);
+  cairo_fill(cr);
+  cairo_destroy(cr);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGFEFloodElement::GetRequirements(PRUint32 *aRequirements)
+{
+  *aRequirements = CheckStandardNames(mIn1);
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// nsIContent methods
+
+NS_IMETHODIMP_(PRBool)
+nsSVGFEFloodElement::IsAttributeMapped(const nsIAtom* name) const
+{
+  static const MappedAttributeEntry* const map[] = {
+    sFEFloodMap
+  };
+  
+  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+    nsSVGFEFloodElementBase::IsAttributeMapped(name);
+}
+
+//---------------------Turbulence------------------------
+
+typedef nsSVGFE nsSVGFETurbulenceElementBase;
+
+class nsSVGFETurbulenceElement : public nsSVGFETurbulenceElementBase,
+                                 public nsIDOMSVGFETurbulenceElement,
+                                 public nsISVGFilter
+{
+protected:
+  friend nsresult NS_NewSVGFETurbulenceElement(nsIContent **aResult,
+                                               nsINodeInfo *aNodeInfo);
+  nsSVGFETurbulenceElement(nsINodeInfo* aNodeInfo);
+  nsresult Init();
+
+public:
+  // interfaces:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // FE Base
+  NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFETurbulenceElementBase::)
+
+  // nsISVGFilter
+  NS_IMETHOD Filter(nsSVGFilterInstance *instance);
+  NS_IMETHOD GetRequirements(PRUint32 *aRequirements);
+
+  // Turbulence
+  NS_DECL_NSIDOMSVGFETURBULENCEELEMENT
+
+  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFETurbulenceElementBase::)
+
+  NS_FORWARD_NSIDOMNODE(nsSVGFETurbulenceElementBase::)
+  NS_FORWARD_NSIDOMELEMENT(nsSVGFETurbulenceElementBase::)
+
+  virtual PRBool ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+protected:
+  virtual NumberAttributesInfo GetNumberInfo();
+
+  enum { BASE_FREQ_X, BASE_FREQ_Y, SEED}; // floating point seed?!
+  nsSVGNumber2 mNumberAttributes[3];
+  static NumberInfo sNumberInfo[3];
+
+  nsCOMPtr<nsIDOMSVGAnimatedInteger> mNumOctaves;
+  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mStitchTiles;
+  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mType;
+
+private:
+
+  /* The turbulence calculation code is an adapted version of what
+     appears in the SVG 1.1 specification:
+         http://www.w3.org/TR/SVG11/filters.html#feTurbulence
+  */
+
+  /* Produces results in the range [1, 2**31 - 2].
+     Algorithm is: r = (a * r) mod m
+     where a = 16807 and m = 2**31 - 1 = 2147483647
+     See [Park & Miller], CACM vol. 31 no. 10 p. 1195, Oct. 1988
+     To test: the algorithm should produce the result 1043618065
+     as the 10,000th generated number if the original seed is 1.
+  */
+#define RAND_M 2147483647	/* 2**31 - 1 */
+#define RAND_A 16807		/* 7**5; primitive root of m */
+#define RAND_Q 127773		/* m / a */
+#define RAND_R 2836		/* m % a */
+
+  PRInt32 SetupSeed(PRInt32 aSeed) {
+    if (aSeed <= 0)
+      aSeed = -(aSeed % (RAND_M - 1)) + 1;
+    if (aSeed > RAND_M - 1)
+      aSeed = RAND_M - 1;
+    return aSeed;
+  }
+
+  PRUint32 Random(PRUint32 aSeed) {
+    PRInt32 result = RAND_A * (aSeed % RAND_Q) - RAND_R * (aSeed / RAND_Q);
+    if (result <= 0)
+      result += RAND_M;
+    return result;
+  }
+#undef RAND_M
+#undef RAND_A
+#undef RAND_Q
+#undef RAND_R
+
+  const static int sBSize = 0x100;
+  const static int sBM = 0xff;
+  const static int sPerlinN = 0x1000;
+  const static int sNP = 12;			/* 2^PerlinN */
+  const static int sNM = 0xfff;
+
+  PRInt32 mLatticeSelector[sBSize + sBSize + 2];
+  double mGradient[4][sBSize + sBSize + 2][2];
+  struct StitchInfo {
+    int mWidth;			// How much to subtract to wrap for stitching.
+    int mHeight;
+    int mWrapX;			// Minimum value to wrap.
+    int mWrapY;
+  };
+
+  void Init(PRInt32 aSeed);
+  double Noise2(int aColorChannel, double aVec[2], StitchInfo *aStitchInfo);
+  double
+  Turbulence(int aColorChannel, double *aPoint, double aBaseFreqX,
+             double aBaseFreqY, int aNumOctaves, PRBool aFractalSum,
+             PRBool aDoStitching, double aTileX, double aTileY,
+             double aTileWidth, double aTileHeight);
+};
+
+nsSVGElement::NumberInfo nsSVGFETurbulenceElement::sNumberInfo[3] =
+{
+  { &nsGkAtoms::baseFrequency, 0 },
+  { &nsGkAtoms::baseFrequency, 0 },
+  { &nsGkAtoms::seed, 0 }
+};
+
+NS_IMPL_NS_NEW_SVG_ELEMENT(FETurbulence)
+
+//----------------------------------------------------------------------
+// nsISupports methods
+
+NS_IMPL_ADDREF_INHERITED(nsSVGFETurbulenceElement,nsSVGFETurbulenceElementBase)
+NS_IMPL_RELEASE_INHERITED(nsSVGFETurbulenceElement,nsSVGFETurbulenceElementBase)
+
+NS_INTERFACE_MAP_BEGIN(nsSVGFETurbulenceElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGFilterPrimitiveStandardAttributes)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGFETurbulenceElement)
+  NS_INTERFACE_MAP_ENTRY(nsISVGFilter)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFETurbulenceElement)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGFETurbulenceElementBase)
+
+//----------------------------------------------------------------------
+// Implementation
+
+nsSVGFETurbulenceElement::nsSVGFETurbulenceElement(nsINodeInfo *aNodeInfo)
+  : nsSVGFETurbulenceElementBase(aNodeInfo)
+{
+}
+
+nsresult
+nsSVGFETurbulenceElement::Init()
+{
+  nsresult rv = nsSVGFETurbulenceElementBase::Init();
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // enumeration mappings
+  static struct nsSVGEnumMapping gTurbulenceTypes[] = {
+    {&nsGkAtoms::fractalNoise,
+     nsIDOMSVGFETurbulenceElement::SVG_TURBULENCE_TYPE_FRACTALNOISE},
+    {&nsGkAtoms::turbulence,
+     nsIDOMSVGFETurbulenceElement::SVG_TURBULENCE_TYPE_TURBULENCE},
+    {nsnull, 0}
+  };
+
+  static struct nsSVGEnumMapping gStitchTypes[] = {
+    {&nsGkAtoms::stitch,
+     nsIDOMSVGFETurbulenceElement::SVG_STITCHTYPE_STITCH},
+    {&nsGkAtoms::noStitch,
+     nsIDOMSVGFETurbulenceElement::SVG_STITCHTYPE_NOSTITCH},
+    {nsnull, 0}
+  };
+
+  // Create mapped properties:
+
+  // DOM property: stitchTiles, #IMPLIED attrib: stitchTiles
+  {
+    nsCOMPtr<nsISVGEnum> stitch;
+    rv = NS_NewSVGEnum(getter_AddRefs(stitch),
+                       nsIDOMSVGFETurbulenceElement::SVG_STITCHTYPE_NOSTITCH,
+                       gStitchTypes);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mStitchTiles), stitch);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsGkAtoms::stitchTiles, mStitchTiles);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  // DOM property: type, #IMPLIED attrib: type
+  {
+    nsCOMPtr<nsISVGEnum> types;
+    rv = NS_NewSVGEnum(getter_AddRefs(types),
+                       nsIDOMSVGFETurbulenceElement::SVG_TURBULENCE_TYPE_TURBULENCE,
+                       gTurbulenceTypes);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mType), types);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsGkAtoms::type, mType);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  // DOM property: numOctaves ,  #IMPLIED attrib: numOctaves
+  {
+    rv = NS_NewSVGAnimatedInteger(getter_AddRefs(mNumOctaves), 1);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsGkAtoms::numOctaves, mNumOctaves);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  return rv;
+}
+
+//----------------------------------------------------------------------
+// nsIDOMNode methods
+
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFETurbulenceElement)
+
+//----------------------------------------------------------------------
+// nsIDOMSVGFETurbulenceElement methods
+
+/* readonly attribute nsIDOMSVGAnimatedNumber baseFrequencyX; */
+NS_IMETHODIMP nsSVGFETurbulenceElement::GetBaseFrequencyX(nsIDOMSVGAnimatedNumber * *aX)
+{
+  return mNumberAttributes[BASE_FREQ_X].ToDOMAnimatedNumber(aX, this);
+}
+
+/* readonly attribute nsIDOMSVGAnimatedNumber baseFrequencyY; */
+NS_IMETHODIMP nsSVGFETurbulenceElement::GetBaseFrequencyY(nsIDOMSVGAnimatedNumber * *aY)
+{
+  return mNumberAttributes[BASE_FREQ_Y].ToDOMAnimatedNumber(aY, this);
+}
+
+/* readonly attribute nsIDOMSVGAnimatedInteger numOctaves; */
+NS_IMETHODIMP nsSVGFETurbulenceElement::GetNumOctaves(nsIDOMSVGAnimatedInteger * *aNum)
+{
+  *aNum = mNumOctaves;
+  NS_IF_ADDREF(*aNum);
+  return NS_OK;
+}
+
+/* readonly attribute nsIDOMSVGAnimatedNumber seed; */
+NS_IMETHODIMP nsSVGFETurbulenceElement::GetSeed(nsIDOMSVGAnimatedNumber * *aSeed)
+{
+  return mNumberAttributes[SEED].ToDOMAnimatedNumber(aSeed, this);
+}
+
+/* readonly attribute nsIDOMSVGAnimatedEnumeration stitchTiles; */
+NS_IMETHODIMP nsSVGFETurbulenceElement::GetStitchTiles(nsIDOMSVGAnimatedEnumeration * *aStitch)
+{
+  *aStitch = mStitchTiles;
+  NS_IF_ADDREF(*aStitch);
+  return NS_OK;
+}
+
+/* readonly attribute nsIDOMSVGAnimatedEnumeration type; */
+NS_IMETHODIMP nsSVGFETurbulenceElement::GetType(nsIDOMSVGAnimatedEnumeration * *aType)
+{
+  *aType = mType;
+  NS_IF_ADDREF(*aType);
+  return NS_OK;
+}
+
+PRBool
+nsSVGFETurbulenceElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                         const nsAString& aValue,
+                                         nsAttrValue& aResult)
+{
+  if (aName == nsGkAtoms::baseFrequency && aNameSpaceID == kNameSpaceID_None) {
+    return ScanDualValueAttribute(aValue, nsGkAtoms::baseFrequency,
+                                  &mNumberAttributes[BASE_FREQ_X],
+                                  &mNumberAttributes[BASE_FREQ_Y],
+                                  &sNumberInfo[BASE_FREQ_X],
+                                  &sNumberInfo[BASE_FREQ_Y],
+                                  aResult);
+  }
+  return nsSVGFETurbulenceElementBase::ParseAttribute(aNameSpaceID, aName,
+                                                      aValue, aResult);
+}
+
+NS_IMETHODIMP
+nsSVGFETurbulenceElement::Filter(nsSVGFilterInstance *instance)
+{
+  nsresult rv;
+  PRUint8 *sourceData, *targetData;
+  nsSVGFilterResource fr(instance);
+
+  nsIDOMSVGAnimatedString* sourceGraphic = nsnull;
+  rv = NS_NewSVGAnimatedString(&sourceGraphic);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = fr.AcquireSourceImage(sourceGraphic, this, &sourceData);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = fr.AcquireTargetImage(mResult, &targetData);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsRect rect = fr.GetRect();
+
+#ifdef DEBUG_tor
+  fprintf(stderr, "FILTER TURBULENCE rect: %d,%d  %dx%d\n",
+          rect.x, rect.y, rect.width, rect.height);
+#endif
+
+  float fX, fY, seed;
+  PRInt32 octaves;
+  PRUint16 type, stitch;
+
+  GetAnimatedNumberValues(&fX, &fY, &seed, nsnull);
+  mNumOctaves->GetAnimVal(&octaves);
+  mStitchTiles->GetAnimVal(&stitch);
+  mType->GetAnimVal(&type);
+
+  Init((PRInt32)seed);
+
+  float filterX, filterY, filterWidth, filterHeight;
+  instance->GetFilterBox(&filterX, &filterY, &filterWidth, &filterHeight);
+
+  PRBool doStitch = PR_FALSE;
+  if (stitch == nsIDOMSVGFETurbulenceElement::SVG_STITCHTYPE_STITCH) {
+    doStitch = PR_TRUE;
+
+    float lowFreq, hiFreq;
+
+    lowFreq = floor(filterWidth * fX) / filterWidth;
+    hiFreq = ceil(filterWidth * fX) / filterWidth;
+    if (fX / lowFreq < hiFreq / fX)
+      fX = lowFreq;
+    else
+      fX = hiFreq;
+
+    lowFreq = floor(filterHeight * fY) / filterHeight;
+    hiFreq = ceil(filterHeight * fY) / filterHeight;
+    if (fY / lowFreq < hiFreq / fY)
+      fY = lowFreq;
+    else
+      fY = hiFreq;
+  }
+  PRInt32 stride = fr.GetDataStride();
+  for (PRInt32 y = rect.y; y < rect.y + rect.height; y++) {
+    for (PRInt32 x = rect.x; x < rect.x + rect.width; x++) {
+	    double point[2];
+	    point[0] = filterX + (filterWidth * x ) / (rect.width - 1);
+	    point[1] = filterY + (filterHeight * y) / (rect.height - 1);
+
+      float col[4];
+      if (type == nsIDOMSVGFETurbulenceElement::SVG_TURBULENCE_TYPE_TURBULENCE) {
+        for (int i = 0; i < 4; i++)
+          col[i] = Turbulence(i, point, fX, fY, octaves, PR_FALSE,
+                              doStitch, filterX, filterY, filterWidth, filterHeight) * 255;
+      } else {
+        for (int i = 0; i < 4; i++)
+          col[i] = (Turbulence(i, point, fX, fY, octaves, PR_TRUE,
+                               doStitch, filterX, filterY, filterWidth, filterHeight) * 255 + 255) / 2;
+      }
+      for (int i = 0; i < 4; i++) {
+          col[i] = PR_MIN(col[i], 255);
+          col[i] = PR_MAX(col[i], 0);
+      }
+
+      PRUint8 r, g, b, a;
+      a = PRUint8(col[3]);
+      FAST_DIVIDE_BY_255(r, unsigned(col[0]) * a);
+      FAST_DIVIDE_BY_255(g, unsigned(col[1]) * a);
+      FAST_DIVIDE_BY_255(b, unsigned(col[2]) * a);
+
+      targetData[y * stride + 4 * x    ] = b;
+      targetData[y * stride + 4 * x + 1] = g;
+      targetData[y * stride + 4 * x + 2] = r;
+      targetData[y * stride + 4 * x + 3] = a;
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGFETurbulenceElement::GetRequirements(PRUint32 *aRequirements)
+{
+  *aRequirements = 0;
+  return NS_OK;
+}
+
+void
+nsSVGFETurbulenceElement::Init(PRInt32 aSeed)
+{
+  double s;
+  int i, j, k;
+  aSeed = SetupSeed(aSeed);
+  for (k = 0; k < 4; k++) {
+    for (i = 0; i < sBSize; i++) {
+      mLatticeSelector[i] = i;
+      for (j = 0; j < 2; j++) {
+        mGradient[k][i][j] =
+          (double) (((aSeed =
+                      Random(aSeed)) % (sBSize + sBSize)) - sBSize) / sBSize;
+      }
+      s = double (sqrt
+                  (mGradient[k][i][0] * mGradient[k][i][0] +
+                   mGradient[k][i][1] * mGradient[k][i][1]));
+      mGradient[k][i][0] /= s;
+      mGradient[k][i][1] /= s;
+    }
+  }
+  while (--i) {
+    k = mLatticeSelector[i];
+    mLatticeSelector[i] = mLatticeSelector[j =
+                                           (aSeed =
+                                            Random(aSeed)) % sBSize];
+    mLatticeSelector[j] = k;
+  }
+  for (i = 0; i < sBSize + 2; i++) {
+    mLatticeSelector[sBSize + i] = mLatticeSelector[i];
+    for (k = 0; k < 4; k++)
+      for (j = 0; j < 2; j++)
+        mGradient[k][sBSize + i][j] = mGradient[k][i][j];
+  }
+}
+
+#define S_CURVE(t) ( t * t * (3. - 2. * t) )
+#define LERP(t, a, b) ( a + t * (b - a) )
+double
+nsSVGFETurbulenceElement::Noise2(int aColorChannel, double aVec[2],
+                                 StitchInfo *aStitchInfo)
+{
+  int bx0, bx1, by0, by1, b00, b10, b01, b11;
+  double rx0, rx1, ry0, ry1, *q, sx, sy, a, b, t, u, v;
+  register long i, j;
+  t = aVec[0] + sPerlinN;
+  bx0 = (int) t;
+  bx1 = bx0 + 1;
+  rx0 = t - (int) t;
+  rx1 = rx0 - 1.0f;
+  t = aVec[1] + sPerlinN;
+  by0 = (int) t;
+  by1 = by0 + 1;
+  ry0 = t - (int) t;
+  ry1 = ry0 - 1.0f;
+  // If stitching, adjust lattice points accordingly.
+  if (aStitchInfo != NULL) {
+    if (bx0 >= aStitchInfo->mWrapX)
+      bx0 -= aStitchInfo->mWidth;
+    if (bx1 >= aStitchInfo->mWrapX)
+      bx1 -= aStitchInfo->mWidth;
+    if (by0 >= aStitchInfo->mWrapY)
+      by0 -= aStitchInfo->mHeight;
+    if (by1 >= aStitchInfo->mWrapY)
+      by1 -= aStitchInfo->mHeight;
+  }
+  bx0 &= sBM;
+  bx1 &= sBM;
+  by0 &= sBM;
+  by1 &= sBM;
+  i = mLatticeSelector[bx0];
+  j = mLatticeSelector[bx1];
+  b00 = mLatticeSelector[i + by0];
+  b10 = mLatticeSelector[j + by0];
+  b01 = mLatticeSelector[i + by1];
+  b11 = mLatticeSelector[j + by1];
+  sx = double (S_CURVE(rx0));
+  sy = double (S_CURVE(ry0));
+  q = mGradient[aColorChannel][b00];
+  u = rx0 * q[0] + ry0 * q[1];
+  q = mGradient[aColorChannel][b10];
+  v = rx1 * q[0] + ry0 * q[1];
+  a = LERP(sx, u, v);
+  q = mGradient[aColorChannel][b01];
+  u = rx0 * q[0] + ry1 * q[1];
+  q = mGradient[aColorChannel][b11];
+  v = rx1 * q[0] + ry1 * q[1];
+  b = LERP(sx, u, v);
+  return LERP(sy, a, b);
+}
+#undef S_CURVE
+#undef LERP
+
+double
+nsSVGFETurbulenceElement::Turbulence(int aColorChannel, double *aPoint,
+                                     double aBaseFreqX, double aBaseFreqY,
+                                     int aNumOctaves, PRBool aFractalSum,
+                                     PRBool aDoStitching,
+                                     double aTileX, double aTileY,
+                                     double aTileWidth, double aTileHeight)
+{
+  StitchInfo stitch;
+  StitchInfo *stitchInfo = NULL; // Not stitching when NULL.
+  // Adjust the base frequencies if necessary for stitching.
+  if (aDoStitching) {
+    // When stitching tiled turbulence, the frequencies must be adjusted
+    // so that the tile borders will be continuous.
+    if (aBaseFreqX != 0.0) {
+      double loFreq = double (floor(aTileWidth * aBaseFreqX)) / aTileWidth;
+      double hiFreq = double (ceil(aTileWidth * aBaseFreqX)) / aTileWidth;
+      if (aBaseFreqX / loFreq < hiFreq / aBaseFreqX)
+        aBaseFreqX = loFreq;
+      else
+        aBaseFreqX = hiFreq;
+    }
+    if (aBaseFreqY != 0.0) {
+      double loFreq = double (floor(aTileHeight * aBaseFreqY)) / aTileHeight;
+      double hiFreq = double (ceil(aTileHeight * aBaseFreqY)) / aTileHeight;
+      if (aBaseFreqY / loFreq < hiFreq / aBaseFreqY)
+        aBaseFreqY = loFreq;
+      else
+        aBaseFreqY = hiFreq;
+    }
+    // Set up initial stitch values.
+    stitchInfo = &stitch;
+    stitch.mWidth = int (aTileWidth * aBaseFreqX + 0.5f);
+    stitch.mWrapX = int (aTileX * aBaseFreqX + sPerlinN + stitch.mWidth);
+    stitch.mHeight = int (aTileHeight * aBaseFreqY + 0.5f);
+    stitch.mWrapY = int (aTileY * aBaseFreqY + sPerlinN + stitch.mHeight);
+  }
+  double sum = 0.0f;
+  double vec[2];
+  vec[0] = aPoint[0] * aBaseFreqX;
+  vec[1] = aPoint[1] * aBaseFreqY;
+  double ratio = 1;
+  for (int octave = 0; octave < aNumOctaves; octave++) {
+    if (aFractalSum)
+      sum += double (Noise2(aColorChannel, vec, stitchInfo) / ratio);
+    else
+      sum += double (fabs(Noise2(aColorChannel, vec, stitchInfo)) / ratio);
+    vec[0] *= 2;
+    vec[1] *= 2;
+    ratio *= 2;
+    if (stitchInfo != NULL) {
+      // Update stitch values. Subtracting sPerlinN before the multiplication
+      // and adding it afterward simplifies to subtracting it once.
+      stitch.mWidth *= 2;
+      stitch.mWrapX = 2 * stitch.mWrapX - sPerlinN;
+      stitch.mHeight *= 2;
+      stitch.mWrapY = 2 * stitch.mWrapY - sPerlinN;
+    }
+  }
+  return sum;
+}
+
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::NumberAttributesInfo
+nsSVGFETurbulenceElement::GetNumberInfo()
 {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               NS_ARRAY_LENGTH(sNumberInfo));

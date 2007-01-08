@@ -636,11 +636,13 @@ nsChangeHint nsStyleColumn::MaxDifference()
 //
 nsStyleSVG::nsStyleSVG() 
 {
-    mFill.mType              = eStyleSVGPaintType_Color;
-    mFill.mPaint.mColor      = NS_RGB(0,0,0);
-    mStroke.mType            = eStyleSVGPaintType_None;
-    mStroke.mPaint.mColor    = NS_RGB(0,0,0);
-    mStrokeDasharray         = nsnull;
+    mFill.mType               = eStyleSVGPaintType_Color;
+    mFill.mPaint.mColor       = NS_RGB(0,0,0);
+    mStroke.mType             = eStyleSVGPaintType_None;
+    mStroke.mPaint.mColor     = NS_RGB(0,0,0);
+    mFloodColor.mType         = eStyleSVGPaintType_Color;
+    mFloodColor.mPaint.mColor = NS_RGB(0,0,0);
+    mStrokeDasharray          = nsnull;
 
     mStrokeDashoffset.SetFactorValue(0.0f);
     mStrokeWidth.SetFactorValue(1.0f);
@@ -648,6 +650,7 @@ nsStyleSVG::nsStyleSVG()
     mFillOpacity             = 1.0f;
     mStrokeMiterlimit        = 4.0f;
     mStrokeOpacity           = 1.0f;
+    mFloodOpacity            = 1.0f;
 
     mStrokeDasharrayLength   = 0;
     mClipRule                = NS_STYLE_FILL_RULE_NONZERO;
@@ -671,6 +674,7 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
 
   mFill = aSource.mFill;
   mStroke = aSource.mStroke;
+  mFloodColor = aSource.mFloodColor;
 
   mMarkerEnd = aSource.mMarkerEnd;
   mMarkerMid = aSource.mMarkerMid;
@@ -695,6 +699,7 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
   mFillOpacity = aSource.mFillOpacity;
   mStrokeMiterlimit = aSource.mStrokeMiterlimit;
   mStrokeOpacity = aSource.mStrokeOpacity;
+  mFloodOpacity = aSource.mFloodOpacity;
 
   mClipRule = aSource.mClipRule;
   mFillRule = aSource.mFillRule;
@@ -709,8 +714,9 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
 nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
 {
   if ( mFill                  != aOther.mFill                  ||
-
        mStroke                != aOther.mStroke                ||
+       mFloodColor            != aOther.mFloodColor            ||
+
        !EqualURIs(mMarkerEnd, aOther.mMarkerEnd)               ||
        !EqualURIs(mMarkerMid, aOther.mMarkerMid)               ||
        !EqualURIs(mMarkerStart, aOther.mMarkerStart)           ||
@@ -721,6 +727,7 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
        mFillOpacity           != aOther.mFillOpacity           ||
        mStrokeMiterlimit      != aOther.mStrokeMiterlimit      ||
        mStrokeOpacity         != aOther.mStrokeOpacity         ||
+       mFloodOpacity          != aOther.mFloodOpacity          ||
 
        mClipRule              != aOther.mClipRule              ||
        mFillRule              != aOther.mFillRule              ||

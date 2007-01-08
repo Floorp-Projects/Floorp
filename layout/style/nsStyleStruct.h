@@ -1241,6 +1241,7 @@ struct nsStyleSVG : public nsStyleStruct {
 
   nsStyleSVGPaint  mFill;             // [inherited]
   nsStyleSVGPaint  mStroke;           // [inherited]
+  nsStyleSVGPaint  mFloodColor;       // [inherited]
   nsCOMPtr<nsIURI> mMarkerEnd;        // [inherited]
   nsCOMPtr<nsIURI> mMarkerMid;        // [inherited]
   nsCOMPtr<nsIURI> mMarkerStart;      // [inherited]
@@ -1252,6 +1253,7 @@ struct nsStyleSVG : public nsStyleStruct {
   float            mFillOpacity;      // [inherited]
   float            mStrokeMiterlimit; // [inherited]
   float            mStrokeOpacity;    // [inherited]
+  float            mFloodOpacity;     // [inherited]
 
   PRUint32         mStrokeDasharrayLength;
   PRUint8          mClipRule;         // [inherited]
