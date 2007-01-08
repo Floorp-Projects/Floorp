@@ -3495,7 +3495,7 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp)
         if (SPROP_HAS_STUB_SETTER(sprop))
             goto set_slot;
     } else {
-        JS_ASSERT(!SPROP_HAS_STUB_GETTER(sprop));
+        JS_ASSERT(!SPROP_HAS_STUB_SETTER(sprop));
         pval = JSVAL_VOID;
     }
 
