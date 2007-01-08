@@ -86,6 +86,7 @@
 #include "nsIDocumentEncoder.h" 
 #include "nsMsgI18N.h"
 #include "nsIMIMEHeaderParam.h"
+#include "plbase64.h"
 #include <time.h>
 
 #define oneHour 3600000000U
@@ -5146,7 +5147,11 @@ NS_IMETHODIMP nsMsgDBFolder::FetchMsgPreviewText(nsMsgKey *aKeysToFetch, PRUint3
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgDBFolder::GetMsgTextFromStream(nsIMsgDBHdr *msgHdr, nsIInputStream *stream, PRInt32 bytesToRead, PRInt32 aMaxOutputLen, nsACString &aMsgText) 
+NS_IMETHODIMP nsMsgDBFolder::GetMsgTextFromStream(nsIMsgDBHdr *msgHdr, nsIInputStream *stream, 
+                                                  PRInt32 bytesToRead,
+                                                  PRInt32 aMaxOutputLen,
+                                                  PRBool aCompressQuotes,
+                                                  nsACString &aMsgText) 
 {
   /*
    1. non mime message - the message body starts after the blank line following the headers.
@@ -5154,30 +5159,30 @@ NS_IMETHODIMP nsMsgDBFolder::GetMsgTextFromStream(nsIMsgDBHdr *msgHdr, nsIInputS
    advance past its headers, and treat the next few lines as the text.
    3. mime message, text/plain - body follows headers
    4. multipart/mixed - scan past boundary, treat next part as body.
-   
-   TODO need to worry about quoted printable and other encodings, 
-   so look for content transfer encoding.
    */
   
-  // If we've got a header charset, we'll use that, otherwise we'll look for one in
-  // the mime parts.
-  nsXPIDLCString strCharset;
-  nsCString msgText;
-  msgHdr->GetCharset(getter_Copies(strCharset));
-  nsAutoString charset (NS_ConvertUTF8toUTF16(strCharset.get()));
-  
+  // If we've got a header charset use it, otherwise look for one in the mime parts.
   PRUint32 len;
   msgHdr->GetMessageSize(&len);
   nsLineBuffer<char> *lineBuffer;
-  
+
   nsresult rv = NS_InitLineBuffer(&lineBuffer);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
+  nsXPIDLCString strCharset;
+  msgHdr->GetCharset(getter_Copies(strCharset));
+  nsAutoString charset (NS_ConvertUTF8toUTF16(strCharset.get()));
+
+  nsCString msgText;
+  nsCAutoString encoding;
   nsCAutoString boundary;
   nsCAutoString curLine;
+  
   // might want to use a state var instead of bools.
   PRBool inMsgBody = PR_FALSE, msgBodyIsHtml = PR_FALSE, lookingForBoundary = PR_FALSE;
   PRBool haveBoundary = PR_FALSE;
+  PRBool isBase64 = PR_FALSE;
+  PRBool reachedEndBody = bytesToRead >= len;
   PRBool more = PR_TRUE;
   while (len > 0 && more)
   {
@@ -5208,11 +5213,15 @@ NS_IMETHODIMP nsMsgDBFolder::GetMsgTextFromStream(nsIMsgDBHdr *msgHdr, nsIInputS
       if (inMsgBody)
       {
         if (!boundary.IsEmpty() && boundary.Equals(curLine))
+        {
+          reachedEndBody = PR_TRUE;
           break;
+        }
         msgText.Append(curLine);
-        msgText.Append(" "); // convert each end of line delimter into a space
-                             // how much html should we parse for text? 2K? 4K?
-        if (msgText.Length() > bytesToRead || (!msgBodyIsHtml && msgText.Length() > aMaxOutputLen))
+        if (!isBase64) // don't append a LF for base64 encoded text
+          msgText.Append(nsCRT::LF); // put a LF back, we'll strip this out later        
+        
+        if (msgText.Length() > bytesToRead)
           break;
         continue;
       }
@@ -5238,67 +5247,177 @@ NS_IMETHODIMP nsMsgDBFolder::GetMsgTextFromStream(nsIMsgDBHdr *msgHdr, nsIInputS
           mimehdrpar->GetParameter(curLine, "charset", EmptyCString(), false, nsnull, charset);
         if (FindInReadable(NS_LITERAL_CSTRING("text/html"), curLine,
                            nsCaseInsensitiveCStringComparator()))
-        {
           msgBodyIsHtml = PR_TRUE;
-          //        bodyFollowsHeaders = PR_TRUE;
-        }
-        else if (FindInReadable(NS_LITERAL_CSTRING("text/plain"), curLine,
-                                nsCaseInsensitiveCStringComparator()))
-          /* bodyFollowsHeaders = PR_TRUE */;
         else if (FindInReadable(NS_LITERAL_CSTRING("multipart/"), curLine,
                                 nsCaseInsensitiveCStringComparator()))
-        {
           lookingForBoundary = PR_TRUE;
-        }
+      }
+      else if (StringBeginsWith(curLine, NS_LITERAL_CSTRING("Content-Transfer-Encoding:"),
+                           nsCaseInsensitiveCStringComparator()))
+      {
+        curLine.Right(encoding, curLine.Length() - 27);
+        if (encoding.EqualsLiteral("base64"))
+          isBase64 = PR_TRUE;
       }
     }
   }
 
-  // Note: in order to convert from a specific charset to UTF-8 we have to go through unicode first.
-  nsAutoString unicodeMsgBodyStr;
+  // if the snippet is encoded, decode it
+  if (!encoding.IsEmpty())
+    decodeMsgSnippet(encoding, !reachedEndBody, msgText);
+
+  // In order to turn our snippet into unicode, we need to convert it from the charset we
+  // detected earlier.
+  nsString unicodeMsgBodyStr;
   ConvertToUnicode(NS_ConvertUTF16toUTF8(charset).get(), msgText, unicodeMsgBodyStr);
 
   // now we've got a msg body. If it's html, convert it to plain text.
   // Then, set the previewProperty on the msg hdr to the plain text.
   if (msgBodyIsHtml)
-  {
-    nsAutoString bodyText;
-    nsresult rv = NS_OK;
-    // Create a parser
-    nsCOMPtr<nsIParser> parser = do_CreateInstance(kParserCID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    // Create the appropriate output sink
-    nsCOMPtr<nsIContentSink> sink = do_CreateInstance(NS_PLAINTEXTSINK_CONTRACTID,&rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    nsCOMPtr<nsIHTMLToTextSink> textSink(do_QueryInterface(sink));
-    NS_ENSURE_TRUE(textSink, NS_ERROR_FAILURE);
-    PRUint32 flags = nsIDocumentEncoder::OutputLFLineBreak 
-      | nsIDocumentEncoder::OutputNoScriptContent
-      | nsIDocumentEncoder::OutputNoFramesContent
-      | nsIDocumentEncoder::OutputBodyOnly;
-    
-    textSink->Initialize(&bodyText, flags, 80);
-    
-    parser->SetContentSink(sink);
-    
-    nsAutoString msgBodyStr;
-    rv = parser->Parse(unicodeMsgBodyStr, 0, NS_LITERAL_CSTRING("text/html"), PR_TRUE);
-    // push bodyText back into unicodeMsgBodyStr
-    unicodeMsgBodyStr.Assign(bodyText);
-  }
+    convertMsgSnippetToPlainText(unicodeMsgBodyStr);
 
-  // now convert back to utf-8 for storage
-  CopyUTF16toUTF8(unicodeMsgBodyStr, aMsgText);
+  // step 3, optionally remove quoted text from the snippet
+  nsString compressedQuotesMsgStr;
+  if (aCompressQuotes)
+    compressQuotesInMsgSnippet(unicodeMsgBodyStr, compressedQuotesMsgStr);
+
+  // now convert back to utf-8 which is more convenient for storage
+  CopyUTF16toUTF8(aCompressQuotes ? compressedQuotesMsgStr : unicodeMsgBodyStr, aMsgText);
+  
+  // finally, truncate the string based on aMaxOutputLen
+  if (aMsgText.Length() > aMaxOutputLen)
+    aMsgText.Truncate(aMaxOutputLen);
   return rv;
+}
 
+/** 
+ * decodeMsgSnippet - helper function which applies the appropriate transfer decoding 
+ *                    to the message snippet based on aEncodingType. Currently handles
+ *                    base64 and quoted-printable. If aEncodingType refers to an encoding we don't
+ *                    handle, the message data is passed back unmodified.
+ * @param aEncodingType the encoding type (base64, quoted-printable)
+ * @param aIsComplete the snippet is actually the entire message so the decoder
+ *                           doesn't have to worry about partial data
+ * @param aMsgSnippet in/out argument. The encoded msg snippet and then the decoded snippet
+ */
+void nsMsgDBFolder::decodeMsgSnippet(const nsACString& aEncodingType, PRBool aIsComplete, nsCString& aMsgSnippet)
+{
+  if (!aEncodingType.IsEmpty())
+  {
+    if (aEncodingType.EqualsLiteral("base64"))
+    {
+      PRInt32 base64Len = aMsgSnippet.Length();
+      if (aIsComplete)
+        base64Len -= base64Len % 4;
+      char *decodedBody = PL_Base64Decode(aMsgSnippet.get(), base64Len, nsnull);
+      if (decodedBody)
+        aMsgSnippet.Adopt(decodedBody);
+
+      // base64 encoded message haven't had line endings converted to LFs yet.
+      aMsgSnippet.ReplaceChar(nsCRT::CR, nsCRT::LF);
+      
+    }
+    else if (aEncodingType.EqualsLiteral("quoted-printable"))
+    {
+      // giant hack - decode in place, and truncate string.
+      MsgStripQuotedPrintable((unsigned char *) aMsgSnippet.get());
+      aMsgSnippet.Truncate(strlen(aMsgSnippet.get()));
+    }
+  }
+}
+
+/** 
+ * stripQuotesFromMsgSnippet - Reduces quoted reply text including the citation (Scott wrote:) from
+ *                             the message snippet to " ... ". Assumes the snippet has been decoded and converted to
+ *                             plain text.
+ * @param aMsgSnippet in/out argument. The string to strip quotes from. 
+ */
+void nsMsgDBFolder::compressQuotesInMsgSnippet(const nsString& aMsgSnippet, nsAString& aCompressedQuotes)
+{
+  PRUint32 msgBodyStrLen = aMsgSnippet.Length();
+  PRBool lastLineWasAQuote = PR_FALSE;
+  PRUint32 offset = 0;
+  PRUint32 lineFeedPos = 0;
+  while (offset < msgBodyStrLen)
+  {
+    lineFeedPos = aMsgSnippet.FindChar(nsCRT::LF, offset);
+    if (lineFeedPos != kNotFound)
+    {
+      const nsAString& currentLine = Substring(aMsgSnippet, offset, lineFeedPos - offset);
+      // this catches quoted text ("> "), nested quotes of any level (">> ", ">>> ", ...)
+      // it also catches empty line quoted text (">"). It might be over agressive and require
+      // tweaking later.
+      // Try to strip the citation. If the current line ends with a ':' and the next line 
+      // looks like a quoted reply (starts with a ">") skip the current line
+      if (StringBeginsWith(currentLine, NS_LITERAL_STRING(">")) ||
+          (lineFeedPos + 1 < msgBodyStrLen  && lineFeedPos
+          && aMsgSnippet[lineFeedPos - 1] == PRUnichar(':')
+          && aMsgSnippet[lineFeedPos + 1] == PRUnichar('>')))
+      {
+        lastLineWasAQuote = PR_TRUE;
+      }
+      else if (!currentLine.IsEmpty())
+      {
+        if (lastLineWasAQuote)
+        {
+          aCompressedQuotes += NS_LITERAL_STRING(" ... ");
+          lastLineWasAQuote = PR_FALSE;
+        }
+
+        aCompressedQuotes += currentLine;      
+        aCompressedQuotes += PRUnichar(' '); // don't forget to substitute a space for the line feed
+      }
+
+      offset = lineFeedPos + 1;
+    }
+    else
+    {
+      aCompressedQuotes.Append(Substring(aMsgSnippet, offset, msgBodyStrLen - offset));
+      break;
+    }
+  }
+}
+
+/**
+ * converts an html mail snippet to plain text
+ * @param aMessageText - in place conversion
+ */
+nsresult nsMsgDBFolder::convertMsgSnippetToPlainText(nsAString& aMessageText)
+{
+  nsString bodyText;
+  nsresult rv = NS_OK;
+  
+  // Create a parser
+  nsCOMPtr<nsIParser> parser = do_CreateInstance(kParserCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+    
+  // Create the appropriate output sink
+  nsCOMPtr<nsIContentSink> sink = do_CreateInstance(NS_PLAINTEXTSINK_CONTRACTID,&rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+    
+  nsCOMPtr<nsIHTMLToTextSink> textSink(do_QueryInterface(sink));
+  NS_ENSURE_TRUE(textSink, NS_ERROR_FAILURE);
+  PRUint32 flags = nsIDocumentEncoder::OutputLFLineBreak 
+                   | nsIDocumentEncoder::OutputNoScriptContent
+                   | nsIDocumentEncoder::OutputNoFramesContent
+                   | nsIDocumentEncoder::OutputBodyOnly;
+    
+  textSink->Initialize(&bodyText, flags, 80);
+  parser->SetContentSink(sink);  
+  rv = parser->Parse(aMessageText, 0, NS_LITERAL_CSTRING("text/html"), PR_TRUE);
+  aMessageText.Assign(bodyText);
+  return rv;
 }
 
 nsresult nsMsgDBFolder::GetMsgPreviewTextFromStream(nsIMsgDBHdr *msgHdr, nsIInputStream *stream) 
 {
   nsCString msgBody;
-  nsresult rv = GetMsgTextFromStream(msgHdr, stream, 2048, 255, msgBody);
+  nsresult rv = GetMsgTextFromStream(msgHdr, stream, 2048, 255, PR_TRUE, msgBody);
+
+  // for grins, see if we already have a property
+  nsXPIDLCString previewProp;
+  msgHdr->GetStringProperty("preview", getter_Copies(previewProp));
+
   // replaces all tabs and line returns with a space, then trims off leading and trailing white space
   msgBody.CompressWhitespace(PR_TRUE, PR_TRUE);
   msgHdr->SetStringProperty("preview", msgBody.get());
@@ -5360,7 +5479,7 @@ NS_IMETHODIMP nsMsgDBFolder::RemoveKeywordFromMessages(nsISupportsArray *aMessag
     NS_ENSURE_SUCCESS(rv, rv);
     nsXPIDLCString keywords;
     // If the tag is also a label, we should remove the label too...
-    PRBool keywordIsLabel = (!strncmp(aKeyword, "$label", 6)  && aKeyword[6] >= '1' && aKeyword[6] <= '5');
+    PRBool keywordIsLabel = (!PL_strncasecmp(aKeyword, "$label", 6)  && aKeyword[6] >= '1' && aKeyword[6] <= '5');
 
     for(PRUint32 i = 0; i < count; i++)
     {

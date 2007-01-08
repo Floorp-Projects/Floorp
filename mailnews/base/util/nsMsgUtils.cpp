@@ -1481,4 +1481,62 @@ nsresult MsgMailboxGetURI(const char *nativepath, nsCString &mailboxUri)
   return mailboxUri.IsEmpty() ? NS_ERROR_FAILURE : NS_OK;
 }
 
+NS_MSG_BASE void MsgStripQuotedPrintable (unsigned char *src)
+{
+  // decode quoted printable text in place
+  
+  if (!*src)
+    return;
+  unsigned char *dest = src;
+  int srcIdx = 0, destIdx = 0;
+  
+  while (src[srcIdx] != 0)
+  {
+    if (src[srcIdx] == '=')
+    {
+      unsigned char *token = &src[srcIdx];
+      unsigned char c = 0;
+      
+      // decode the first quoted char
+      if (token[1] >= '0' && token[1] <= '9')
+        c = token[1] - '0';
+      else if (token[1] >= 'A' && token[1] <= 'F')
+        c = token[1] - ('A' - 10);
+      else if (token[1] >= 'a' && token[1] <= 'f')
+        c = token[1] - ('a' - 10);
+      else
+      {
+        // first char after '=' isn't hex. copy the '=' as a normal char and keep going
+        dest[destIdx++] = src[srcIdx++]; // aka token[0]
+        continue;
+      }
+      
+      // decode the second quoted char
+      c = (c << 4);
+      if (token[2] >= '0' && token[2] <= '9')
+        c += token[2] - '0';
+      else if (token[2] >= 'A' && token[2] <= 'F')
+        c += token[2] - ('A' - 10);
+      else if (token[2] >= 'a' && token[2] <= 'f')
+        c += token[2] - ('a' - 10);
+      else
+      {
+        // second char after '=' isn't hex. copy the '=' as a normal char and keep going
+        dest[destIdx++] = src[srcIdx++]; // aka token[0]
+        continue;
+      }
+      
+      // if we got here, we successfully decoded a quoted printable sequence,
+      // so bump each pointer past it and move on to the next char;
+      dest[destIdx++] = c; 
+      srcIdx += 3;
+      
+    }
+    else
+      dest[destIdx++] = src[srcIdx++];
+  }
+  
+  dest[destIdx] = src[srcIdx]; // null terminate
+}  
+
 

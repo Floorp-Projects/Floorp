@@ -115,6 +115,9 @@ protected:
 
   virtual nsresult CreateBaseMessageURI(const char *aURI);
 
+  nsresult convertMsgSnippetToPlainText(nsAString& aMessageText);
+  void compressQuotesInMsgSnippet(const nsString& aMessageText, nsAString& aCompressedQuotesStr);
+  void decodeMsgSnippet(const nsACString& aEncodingType, PRBool aIsComplete, nsCString& aMsgSnippet);
 
   // helper routine to parse the URI and update member variables
   nsresult parseURI(PRBool needServer=PR_FALSE);

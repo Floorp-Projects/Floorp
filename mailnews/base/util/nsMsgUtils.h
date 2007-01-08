@@ -194,5 +194,7 @@ NS_MSG_BASE PRBool MsgHostDomainIsTrusted(nsCString &host, nsCString &trustedMai
 
 NS_MSG_BASE nsresult MsgMailboxGetURI(const char *nativepath, nsCString &mailboxUri);
 
+NS_MSG_BASE void MsgStripQuotedPrintable (unsigned char *src);
+
 #endif
 

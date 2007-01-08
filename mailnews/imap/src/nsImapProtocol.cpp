@@ -3081,7 +3081,7 @@ nsImapProtocol::FetchMessage(const char * messageIds,
       PRInt32 numBytesToFetch;
       m_runningUrl->GetNumBytesToFetch(&numBytesToFetch);
 
-      commandString.Append(" %s (UID BODY.PEEK[HEADER.FIELDS (Content-Type)] BODY.PEEK[TEXT]<0.");
+      commandString.Append(" %s (UID BODY.PEEK[HEADER.FIELDS (Content-Type Content-Transfer-Encoding)] BODY.PEEK[TEXT]<0.");
       commandString.AppendInt(numBytesToFetch);
       commandString.Append(">)");
     }
