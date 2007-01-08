@@ -37,10 +37,8 @@
 [% IF updated %]
   <p>Updated Version name to: '[% version.name FILTER html %]'.</p>
 [% ELSE %]
-  <p>Nothing changed for version '[% version.name FILTER html %]'.
+  <p>Nothing changed for version '[% version.name FILTER html %]'.</p>
 [% END %]
-   
-<p>
 
 [% PROCESS admin/versions/footer.html.tmpl %]
 
