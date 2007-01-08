@@ -22,6 +22,7 @@
 <input type="hidden" name="run_id" value="[% run.id FILTER none %]" />
 <input type="hidden" name="expand_filter" id="expand_filter" value="[% expand_filter FILTER none %]" />
 <script type="text/javascript">
+  dojo.require("dojo.widget.ComboBox");
   function toggleExp(obj){
     if (obj.value == 1){
       obj.value = 0;
@@ -95,7 +96,11 @@
         <tr>
           <th align="right">Case Tags</th>
           <td><input type="hidden" name="tags_type" value="anywords" />
-              <input name="tags">
+              <input id="tags" name="tags"
+                     dojoType="combobox" 
+                     dataUrl="tr_quicksearch.cgi?action=gettag&run_id=[% run.id FILTER none %]&search=%{searchString}" 
+                     mode="remote"
+                     maxListLength="10">
           </td>
         </tr>
       </table>

@@ -70,7 +70,11 @@
       <tr>
         <th align="right" class="bz_row_header">Tags:</th>
         <td><input type="hidden" name="tags_type" value="anywords" />
-            <input name="tags"></td>
+            <input id="tags" name="tags"
+                   dojoType="combobox" 
+                   dataUrl="tr_quicksearch.cgi?action=gettag&search=%{searchString}" 
+                   mode="remote"
+                   maxListLength="10"></td>
       </tr>
       <tr>
         <th align="right" class="bz_row_header">Default Tester Contains:</th>

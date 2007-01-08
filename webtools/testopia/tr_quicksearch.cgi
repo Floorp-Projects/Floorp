@@ -203,12 +203,24 @@ else{
         trick_taint($search);
         $search = "%$search%";
         my $dbh = Bugzilla->dbh;
-
-        my $ref = $dbh->selectall_arrayref(
-            "SELECT tag_name, tag_id 
-               FROM test_tags 
-              WHERE tag_name like ?",
-              undef, $search);
+        my $ref;
+        my $run_id = $cgi->param('run_id');
+        if ($run_id && validate_test_id($run_id, 'run')){
+            $ref = $dbh->selectall_arrayref(
+                "SELECT tag_name, test_tags.tag_id 
+                   FROM test_tags
+                   JOIN test_case_tags on test_case_tags.tag_id = test_tags.tag_id
+                   JOIN test_case_runs on test_case_runs.case_id = test_case_tags.case_id  
+                  WHERE tag_name like ? AND test_case_runs.run_id = ?",
+                  undef, ($search, $run_id));
+        }
+        else {
+            $ref = $dbh->selectall_arrayref(
+                "SELECT tag_name, tag_id 
+                   FROM test_tags 
+                  WHERE tag_name like ?",
+                  undef, $search);
+        }
         print objToJson($ref);  
     }
 
