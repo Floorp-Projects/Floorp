@@ -67,13 +67,14 @@
   <a href="editproducts.cgi?action=edit&amp;product=
   [%- product.name FILTER url_quote %]
   [%- classification_url_part FILTER none %]">[% product.name FILTER html %]</a>.
+  </p>
   [% updated = 1 %]
 [% END %]
 
 
 [% IF product.description != old_product.description %]
   <p>
-    Updated description to:</p>
+    Updated description to:
   </p>
   <p style="margin: 1em 3em 1em 3em">[% product.description FILTER html_light %]</p>
   [% updated = 1 %]
@@ -88,6 +89,7 @@
     open for 
   [% END %]
   new [% terms.bugs %].
+  </p>
   [% updated = 1 %]
 [% END %]
 
@@ -122,6 +124,7 @@
   Updated votes per user from
   [%+ old_product.votes_per_user FILTER html %] to 
   [%+ product.votes_per_user FILTER html %].
+  </p>
   [% updated = 1 %]
 [% END %]
 
@@ -130,6 +133,7 @@
   Updated maximum votes per [% terms.bug %] from 
   [%+ old_product.max_votes_per_bug FILTER html %] to 
   [%+ product.max_votes_per_bug FILTER html %].
+  </p>
   [% updated = 1 %]
 [% END %]
 
@@ -138,11 +142,12 @@
   Updated number of votes needed to confirm a [% terms.bug %] from
   [%+ old_product.votes_to_confirm FILTER html %] to 
   [%+ product.votes_to_confirm FILTER html %].
+  </p>
   [% updated = 1 %]
 [% END %]
 
 [% UNLESS updated %]
-  <p>Nothing changed for product '[% product.name FILTER html %]'.
+  <p>Nothing changed for product '[% product.name FILTER html %]'.</p>
 [% END %]
 
 [%# Note that this display of changed votes and/or confirmed bugs is
@@ -164,6 +169,7 @@
   [% ELSE %]
     &rarr;there were none.
   [% END %]
+  </p>
 
   <p>Checking existing votes in this product for anybody
   who now has too many total votes...<br>
@@ -176,6 +182,7 @@
   [% ELSE %]
     &rarr;there were none.
   [% END %]
+  </p>
 
   <p>Checking unconfirmed [% terms.bugs %] in this product for any which now have
   sufficient votes...<br>
@@ -194,6 +201,7 @@
   [% ELSE %]
     &rarr;there were none.
   [% END %]
+  </p>
 
 [% END %]
 
