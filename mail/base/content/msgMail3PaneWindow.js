@@ -334,6 +334,10 @@ var folderListener = {
        else if (eventType == "DeleteOrMoveMsgFailed") {
          HandleDeleteOrMoveMsgFailed(folder);
        }
+       else if (eventType == "AboutToCompact") {
+        if (gDBView)
+          gCurrentlyDisplayedMessage = gDBView.currentlyDisplayedMessage;
+       }
        else if (eventType == "CompactCompleted") {
          HandleCompactCompleted(folder);
        }
@@ -573,13 +577,6 @@ function HandleCompactCompleted(folder)
           dbFolderInfo = null;
         }
         
-        // before we reroot the folder, save off the currently displayed message
-        // so we can restore selection after re-rooting. For the manual compaction case,
-        // we've already saved this value off before we cleared the view and the thread pane.
-        // For the automatic folder compaction case, gDBView is still valid and we haven't 
-        // saved off gCurrentlyDisplayedMessage yet.
-        if (gCurrentlyDisplayedMessage == nsMsgViewIndex_None && gDBView)
-          gCurrentlyDisplayedMessage = gDBView.currentlyDisplayedMessage;
         RerootFolder(uri, msgFolder, viewType, viewFlags, sortType, sortOrder);
         LoadCurrentlyDisplayedMessage();
       }

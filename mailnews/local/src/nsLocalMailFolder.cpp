@@ -1562,7 +1562,7 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
         EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_TRUE /*dbBatching*/);
         if(!isMove)
           NotifyFolderEvent(NS_SUCCEEDED(rv) ? mDeleteOrMoveMsgCompletedAtom : mDeleteOrMoveMsgFailedAtom);
-        if (msgWindow)
+        if (msgWindow && !isMove)
           AutoCompact(msgWindow);
       }
   }
@@ -2785,6 +2785,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove(PRBool moveSucceeded)
       // lets delete these all at once - much faster that way
       result = srcFolder->DeleteMessages(mCopyState->m_messages, mCopyState->m_msgWindow, PR_TRUE, PR_TRUE, nsnull, mCopyState->m_allowUndo);
       srcFolder->NotifyFolderEvent(NS_SUCCEEDED(result) ? mDeleteOrMoveMsgCompletedAtom : mDeleteOrMoveMsgFailedAtom);
+      AutoCompact(mCopyState->m_msgWindow);
     }
       
     // enable the dest folder
