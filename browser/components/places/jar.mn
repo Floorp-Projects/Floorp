@@ -23,3 +23,5 @@ browser.jar:
 # to prevent having to worry about between versions of the browser
 *   content/browser/history/history-panel.xul            (content/history-panel.xul) 
 *   content/browser/places/history-panel.js              (content/history-panel.js)
+*   content/browser/places/moveBookmarks.xul             (content/moveBookmarks.xul)
+*   content/browser/places/moveBookmarks.js              (content/moveBookmarks.js)

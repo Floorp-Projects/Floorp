@@ -179,6 +179,16 @@
   "Group by Post">
 <!ENTITY cmd.groupby_post.accesskey
   "P">
+
+<!ENTITY cmd.moveBookmarks.label
+         "Move...">
+<!ENTITY cmd.moveBookmarks.accesskey
+         "M">
+<!ENTITY cmd.moveBookmarks.menuLabel
+         "Move Bookmark(s)...">
+<!ENTITY cmd.moveBookmarks.menuAccesskey
+         "M">
+
 <!ENTITY col.title.label
   "Title">
 <!ENTITY col.url.label
