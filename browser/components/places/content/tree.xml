@@ -230,6 +230,14 @@
           }
         ]]></body>
       </method>
+
+      <!-- nsIPlacesView -->
+      <method name="getResultNode">
+        <body><![CDATA[
+          return this.getResult().root;
+        ]]></body>
+      </method>
+
       <method name="getResultView">
         <body><![CDATA[
           try {

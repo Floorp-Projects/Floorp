@@ -189,7 +189,14 @@
           return this._result;
         ]]></body>
       </method>
-      
+
+      <!-- nsIPlacesView -->
+      <method name="getResultNode">
+        <body><![CDATA[
+          return this._result.root;
+        ]]></body>
+      </method>
+
       <method name="_rebuild">
         <body><![CDATA[
           // Clear out references to existing nodes, since we'll be deleting and re-adding.
