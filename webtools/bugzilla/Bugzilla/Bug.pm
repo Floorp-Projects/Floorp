@@ -1384,7 +1384,10 @@ sub update_comment {
 # Represents which fields from the bugs table are handled by process_bug.cgi.
 sub editable_bug_fields {
     my @fields = Bugzilla->dbh->bz_table_columns('bugs');
-    foreach my $remove ("bug_id", "creation_ts", "delta_ts", "lastdiffed") {
+    # Obsolete custom fields are not editable.
+    my @obsolete_fields = Bugzilla->get_fields({obsolete => 1, custom => 1});
+    @obsolete_fields = map { $_->name } @obsolete_fields;
+    foreach my $remove ("bug_id", "creation_ts", "delta_ts", "lastdiffed", @obsolete_fields) {
         my $location = lsearch(\@fields, $remove);
         splice(@fields, $location, 1);
     }
