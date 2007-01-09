@@ -188,9 +188,9 @@ struct JSObject {
     (OBJ_CHECK_SLOT(obj, JSSLOT_PROTO), STOBJ_SET_PROTO(obj, proto))
 
 #define LOCKED_OBJ_GET_PARENT(obj) \
-    (LOCKED_OBJ_CHECK_SLOT(obj, JSSLOT_PARENT), STOBJ_GET_PARENT(obj))
+    (OBJ_CHECK_SLOT(obj, JSSLOT_PARENT), STOBJ_GET_PARENT(obj))
 #define LOCKED_OBJ_SET_PARENT(obj,parent) \
-    (LOCKED_OBJ_CHECK_SLOT(obj, JSSLOT_PARENT), STOBJ_SET_PARENT(obj, parent))
+    (OBJ_CHECK_SLOT(obj, JSSLOT_PARENT), STOBJ_SET_PARENT(obj, parent))
 
 #define LOCKED_OBJ_GET_CLASS(obj) \
     (OBJ_CHECK_SLOT(obj, JSSLOT_CLASS), STOBJ_GET_CLASS(obj))
@@ -259,8 +259,8 @@ struct JSObject {
     OBJ_SET_SLOT(cx, obj, JSSLOT_PARENT, OBJECT_TO_JSVAL(parent))
 
 /*
- * Class is invariant and comes from the fixed slot. Thus no locking is
- * necessary to read it.
+ * Class is invariant and comes from the fixed JSCLASS_SLOT. Thus no locking
+ * is necessary to read it.
  */
 #define GC_AWARE_GET_CLASS(cx, obj)     STOBJ_GET_CLASS(obj)
 #define OBJ_GET_CLASS(cx,obj)           STOBJ_GET_CLASS(obj)
