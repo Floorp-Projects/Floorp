@@ -5413,11 +5413,6 @@ nsresult nsMsgDBFolder::GetMsgPreviewTextFromStream(nsIMsgDBHdr *msgHdr, nsIInpu
 {
   nsCString msgBody;
   nsresult rv = GetMsgTextFromStream(msgHdr, stream, 2048, 255, PR_TRUE, msgBody);
-
-  // for grins, see if we already have a property
-  nsXPIDLCString previewProp;
-  msgHdr->GetStringProperty("preview", getter_Copies(previewProp));
-
   // replaces all tabs and line returns with a space, then trims off leading and trailing white space
   msgBody.CompressWhitespace(PR_TRUE, PR_TRUE);
   msgHdr->SetStringProperty("preview", msgBody.get());
