@@ -280,14 +280,17 @@ var nsBrowserContentHandler = {
     if (remoteCommand != null) {
       try {
         var a = /^\s*(\w+)\(([^\)]*)\)\s*$/.exec(remoteCommand);
-        var remoteVerb = a[1].toLowerCase();
-        var remoteParams = [];
-        var sepIndex = a[2].lastIndexOf(",");
-        if (sepIndex == -1)
-          remoteParams[0] = a[2];
-        else {
-          remoteParams[0] = a[2].substring(0, sepIndex);
-          remoteParams[1] = a[2].substring(sepIndex + 1);
+        var remoteVerb;
+        if (a) {
+          remoteVerb = a[1].toLowerCase();
+          var remoteParams = [];
+          var sepIndex = a[2].lastIndexOf(",");
+          if (sepIndex == -1)
+            remoteParams[0] = a[2];
+          else {
+            remoteParams[0] = a[2].substring(0, sepIndex);
+            remoteParams[1] = a[2].substring(sepIndex + 1);
+          }
         }
 
         switch (remoteVerb) {
@@ -297,15 +300,26 @@ var nsBrowserContentHandler = {
           // openURL(<url>,new-window)
           // openURL(<url>,new-tab)
 
-          var uri = resolveURIInternal(cmdLine, remoteParams[0]);
+          // First param is the URL, second param (if present) is the "target"
+          // (tab, window)
+          var url = remoteParams[0];
+          var target = nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW;
+          if (remoteParams[1]) {
+            var targetParam = remoteParams[1].toLowerCase()
+                                             .replace(/^\s*|\s*$/g, "");
+            if (targetParam == "new-tab")
+              target = nsIBrowserDOMWindow.OPEN_NEWTAB;
+            else if (targetParam == "new-window")
+              target = nsIBrowserDOMWindow.OPEN_NEWWINDOW;
+            else {
+              // The "target" param isn't one of our supported values, so
+              // assume it's part of a URL that contains commas.
+              url += "," + remoteParams[1];
+            }
+          }
 
-          var location = nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW;
-          if (/new-window/.test(remoteParams[1]))
-            location = nsIBrowserDOMWindow.OPEN_NEWWINDOW;
-          else if (/new-tab/.test(remoteParams[1]))
-            location = nsIBrowserDOMWindow.OPEN_NEWTAB;
-
-          handURIToExistingBrowser(uri, location, cmdLine);
+          var uri = resolveURIInternal(cmdLine, url);
+          handURIToExistingBrowser(uri, target, cmdLine);
           break;
 
         case "xfedocommand":
@@ -321,12 +335,13 @@ var nsBrowserContentHandler = {
         default:
           // Somebody sent us a remote command we don't know how to process:
           // just abort.
-          throw NS_ERROR_ABORT;
+          throw "Unknown remote command.";
         }
 
         cmdLine.preventDefault = true;
       }
       catch (e) {
+        Components.utils.reportError(e);
         // If we had a -remote flag but failed to process it, throw
         // NS_ERROR_ABORT so that the xremote code knows to return a failure
         // back to the handling code.
