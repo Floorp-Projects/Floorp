@@ -33,7 +33,7 @@ use strict;
 use Fcntl qw(:flock);
 use File::Basename;
 
-use Email::Simple;
+use Email::MIME;
 
 #####################################################################
 # Constants And Initial Setup
@@ -275,7 +275,7 @@ sub parse_diffs ($) {
 sub parse_mail ($) {
     my ($mail_lines) = @_;
     my $mail_text = join('', @$mail_lines);
-    my $email = Email::Simple->new($mail_text);
+    my $email = Email::MIME->new($mail_text);
 
     debug_print("Parsing Message " . $email->header('Message-ID'));
 
