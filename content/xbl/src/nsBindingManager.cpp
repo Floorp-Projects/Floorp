@@ -283,9 +283,15 @@ SetOrRemoveObject(PLDHashTable& table, nsISupports* aKey, nsISupports* aValue)
 // Implement our nsISupports methods
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsBindingManager, nsIBindingManager)
-  tmp->mBindingTable.Clear();
-  tmp->mDocumentTable.Clear();
-  tmp->mLoadingDocTable.Clear();
+
+  if (tmp->mBindingTable.IsInitialized())
+    tmp->mBindingTable.Clear();
+
+  if (tmp->mDocumentTable.IsInitialized())
+    tmp->mDocumentTable.Clear();
+
+  if (tmp->mLoadingDocTable.IsInitialized())
+    tmp->mLoadingDocTable.Clear();
 
   if (tmp->mContentListTable.ops)
     PL_DHashTableFinish(&(tmp->mContentListTable));
