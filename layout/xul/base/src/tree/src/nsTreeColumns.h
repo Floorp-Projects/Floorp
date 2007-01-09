@@ -51,7 +51,7 @@ class nsTreeColumns;
 // information about each column.
 class nsTreeColumn : public nsITreeColumn {
 public:
-  nsTreeColumn(nsTreeColumns* aColumns, nsIFrame* aFrame);
+  nsTreeColumn(nsTreeColumns* aColumns, nsIContent* aContent);
   ~nsTreeColumn();
 
   NS_DECL_ISUPPORTS
@@ -61,14 +61,20 @@ public:
   friend class nsTreeColumns;
 
 protected:
-  void CacheAttributes();
+  nsIFrame* GetFrame();
+  nsIFrame* GetFrame(nsIFrame* aBodyFrame);
 
-  nsIContent* GetContent() { return mFrame->GetContent(); };
+  /**
+   * Returns a rect with x and width taken from the frame's rect and specified
+   * y and height. May fail in case there's no frame for the column.
+   */
+  nsresult GetRect(nsIFrame* aBodyFrame, nscoord aY, nscoord aHeight,
+                   nsRect* aResult);
+
+  nsresult GetXInTwips(nsIFrame* aBodyFrame, nscoord* aResult);
+  nsresult GetWidthInTwips(nsIFrame* aBodyFrame, nscoord* aResult);
 
   void SetColumns(nsTreeColumns* aColumns) { mColumns = aColumns; };
-
-  PRInt32 GetX() { return mFrame->GetRect().x; };
-  nscoord GetWidth() { return mFrame->GetRect().width; };
 
   const nsAString& GetId() { return mId; };
   nsIAtom* GetAtom() { return mAtom; };
@@ -92,7 +98,10 @@ protected:
   void SetPrevious(nsTreeColumn* aPrevious) { mPrevious = aPrevious; };
 
 private:
-  nsIFrame* mFrame;
+  /**
+   * Non-null nsIContent for the associated <treecol> element.
+   */
+  nsCOMPtr<nsIContent> mContent;
 
   nsTreeColumns* mColumns;
 
@@ -145,6 +154,14 @@ protected:
 private:
   nsITreeBoxObject* mTree;
 
+  /**
+   * The first column in the list of columns. All of the columns are supposed
+   * to be "alive", i.e. have a frame. This is achieved by clearing the columns
+   * list each time an nsTreeColFrame is destroyed.
+   *
+   * XXX this means that new nsTreeColumn objects are unnecessarily created
+   *     for untouched columns.
+   */
   nsTreeColumn* mFirstColumn;
 };
 

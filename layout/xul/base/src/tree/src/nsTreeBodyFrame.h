@@ -117,10 +117,21 @@ public:
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
-                              
+
+  friend nsIFrame* NS_NewTreeBodyFrame(nsIPresShell* aPresShell);
+
+  struct ScrollParts {
+    nsIScrollbarFrame* mVScrollbar;
+    nsIContent*        mVScrollbarContent;
+    nsIScrollbarFrame* mHScrollbar;
+    nsIContent*        mHScrollbarContent;
+    nsIScrollableView* mColumnsScrollableView;
+  };
+
   void PaintTreeBody(nsIRenderingContext& aRenderingContext,
                      const nsRect& aDirtyRect, nsPoint aPt);
 
+protected:
   // This method paints a specific column background of the tree.
   void PaintColumn(nsTreeColumn*        aColumn,
                    const nsRect&        aColumnRect,
@@ -212,17 +223,7 @@ public:
                             const nsRect&        aRect,
                             const nsRect&        aDirtyRect);
 
-  friend nsIFrame* NS_NewTreeBodyFrame(nsIPresShell* aPresShell);
 
-  struct ScrollParts {
-    nsIScrollbarFrame* mVScrollbar;
-    nsIContent*        mVScrollbarContent;
-    nsIScrollbarFrame* mHScrollbar;
-    nsIContent*        mHScrollbarContent;
-    nsIScrollableView* mColumnsScrollableView;
-  };
-
-protected:
   PRInt32 GetLastVisibleRow() {
     return mTopRowIndex + mPageLength;
   };
@@ -326,9 +327,9 @@ protected:
   // Get the base element, <tree> or <select>
   nsIContent* GetBaseElement();
 
-  void GetCellWidth(PRInt32 aRow, nsTreeColumn* aCol,
-                    nsIRenderingContext* aRenderingContext,
-                    nscoord& aDesiredSize, nscoord& aCurrentSize);
+  nsresult GetCellWidth(PRInt32 aRow, nsTreeColumn* aCol,
+                        nsIRenderingContext* aRenderingContext,
+                        nscoord& aDesiredSize, nscoord& aCurrentSize);
   nscoord CalcMaxRowWidth();
 
   // Translate the given rect horizontally from tree coordinates into the
