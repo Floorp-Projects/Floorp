@@ -748,7 +748,7 @@ nsStringBundleService::CreateExtensibleBundle(const char* aCategory,
   return res;
 }
 
-#define GLOBAL_PROPERTIES "chrome://global/locale/xpcom.properties"
+#define GLOBAL_PROPERTIES "chrome://global/locale/global-strres.properties"
 
 nsresult
 nsStringBundleService::FormatWithBundle(nsIStringBundle* bundle, nsresult aStatus,
