@@ -82,8 +82,7 @@ var gSmtpServerListWindow =
       var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(nsIPromptService);
       var cancel = promptService.confirmEx(window, this.mBundle.getString('smtpServers-confirmServerDeletionTitle'), 
                                            this.mBundle.getFormattedString('smtpServers-confirmServerDeletion', [server.hostname], 1),
-                                           (nsIPromptService.BUTTON_TITLE_YES * nsIPromptService.BUTTON_POS_0) + 
-                                           (nsIPromptService.BUTTON_TITLE_NO * nsIPromptService.BUTTON_POS_1),
+                                           nsIPromptService.STD_YES_NO_BUTTONS,
                                            null, null, null, null, { });
 
       if (!cancel)

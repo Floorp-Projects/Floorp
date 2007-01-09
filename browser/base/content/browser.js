@@ -1101,8 +1101,7 @@ function delayedStartup()
                                                 .getService(IPS);
       var checkEveryTime = { value: shouldCheck };
       var rv = ps.confirmEx(window, promptTitle, promptMessage,
-                            (IPS.BUTTON_TITLE_YES * IPS.BUTTON_POS_0) +
-                            (IPS.BUTTON_TITLE_NO * IPS.BUTTON_POS_1),
+                            IPS.STD_YES_NO_BUTTONS,
                             null, null, null, checkboxLabel, checkEveryTime);
       if (rv == 0)
         shell.setDefaultBrowser(true, false);
@@ -2733,8 +2732,7 @@ function openHomeDialog(aURL)
   var promptTitle = gNavigatorBundle.getString("droponhometitle");
   var promptMsg   = gNavigatorBundle.getString("droponhomemsg");
   var pressedVal  = promptService.confirmEx(window, promptTitle, promptMsg,
-                          (promptService.BUTTON_TITLE_YES * promptService.BUTTON_POS_0) +
-                          (promptService.BUTTON_TITLE_NO * promptService.BUTTON_POS_1),
+                          promptService.STD_YES_NO_BUTTONS,
                           null, null, null, null, {value:0});
 
   if (pressedVal == 0) {

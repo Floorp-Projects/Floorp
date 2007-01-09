@@ -343,8 +343,7 @@ function AskChangeDefaultEngine(aSelectedEngine)
 
     var checkbox = {value:0};
     var choice = promptSvc.confirmEx(window, title, changeEngineMsg, 
-                   (promptSvc.BUTTON_TITLE_YES * promptSvc.BUTTON_POS_0) + 
-                   (promptSvc.BUTTON_TITLE_NO * promptSvc.BUTTON_POS_1),
+                   promptSvc.STD_YES_NO_BUTTONS,
                    null, null, null, dontAskAgainMsg, checkbox);
     if (choice == 0)
       change = true;

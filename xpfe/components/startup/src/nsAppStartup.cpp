@@ -522,11 +522,7 @@ nsAppStartup::CheckAndRemigrateDefunctProfile()
   NS_ENSURE_SUCCESS(rv,rv);
   PRInt32 buttonPressed;
   rv = promptService->ConfirmEx(nsnull, brandName.get(),
-    dialogText.get(),
-    (nsIPromptService::BUTTON_POS_0 * 
-    nsIPromptService::BUTTON_TITLE_YES) + 
-    (nsIPromptService::BUTTON_POS_1 * 
-    nsIPromptService::BUTTON_TITLE_NO),
+    dialogText.get(), nsIPromptService::STD_YES_NO_BUTTONS,
     nsnull, nsnull, nsnull, nsnull, nsnull, &buttonPressed);
   NS_ENSURE_SUCCESS(rv,rv);
   

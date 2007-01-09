@@ -441,8 +441,7 @@ var gMainPane = {
       promptMessage = shellBundle.getFormattedString("setDefaultBrowserMessage", 
                                                      [brandShortName]);
       var rv = psvc.confirmEx(window, promptTitle, promptMessage, 
-                              (IPS.BUTTON_TITLE_YES * IPS.BUTTON_POS_0) + 
-                              (IPS.BUTTON_TITLE_NO * IPS.BUTTON_POS_1),
+                              IPS.STD_YES_NO_BUTTONS,
                               null, null, null, null, { });
       if (rv == 0)
         shellSvc.setDefaultBrowser(true, false);

@@ -143,8 +143,7 @@ function DeleteConfig()
   var bundle = document.getElementById("bundle_cckwizard");
 
   var button = gPromptService.confirmEx(window, bundle.getString("windowTitle"), bundle.getString("deleteConfirm"),
-                                        gPromptService.BUTTON_TITLE_YES * gPromptService.BUTTON_POS_0 +
-                                        gPromptService.BUTTON_TITLE_NO * gPromptService.BUTTON_POS_1,
+                                        gPromptService.STD_YES_NO_BUTTONS,
                                         null, null, null, null, {});
   if (button == 0) {
     gPrefBranch.deleteBranch("cck.config."+currentconfigname);
@@ -267,8 +266,7 @@ function CloseCCKWizard()
     var bundle = document.getElementById("bundle_cckwizard");
 
     var button = gPromptService.confirmEx(window, bundle.getString("windowTitle"), bundle.getString("cancelConfirm"),
-                                          (gPromptService.BUTTON_TITLE_YES * gPromptService.BUTTON_POS_0) +
-                                          (gPromptService.BUTTON_TITLE_NO * gPromptService.BUTTON_POS_1),
+                                          gPromptService.STD_YES_NO_BUTTONS,
                                           null, null, null, null, {});
   } else {
     button = 0;
@@ -2054,8 +2052,7 @@ function CCKWriteConfigFile(destdir)
   if (!file.exists()) {
         var bundle = document.getElementById("bundle_cckwizard");
         var button = gPromptService.confirmEx(window, bundle.getString("windowTitle"), bundle.getString("createDir").replace(/%S/g, file.path),
-                                              gPromptService.BUTTON_TITLE_YES * gPromptService.BUTTON_POS_0 +
-                                              gPromptService.BUTTON_TITLE_NO * gPromptService.BUTTON_POS_1,
+                                              gPromptService.STD_YES_NO_BUTTONS,
                                               null, null, null, null, {});
         if (button == 0) {
           try {
@@ -2607,8 +2604,7 @@ function ValidateDir()
       if (!file.exists()) {
         var bundle = document.getElementById("bundle_cckwizard");
         var button = gPromptService.confirmEx(window, bundle.getString("windowTitle"), bundle.getString("createDir").replace(/%S/g, filename),
-                                              gPromptService.BUTTON_TITLE_YES * gPromptService.BUTTON_POS_0 +
-                                              gPromptService.BUTTON_TITLE_NO * gPromptService.BUTTON_POS_1,
+                                              gPromptService.STD_YES_NO_BUTTONS,
                                               null, null, null, null, {});
         if (button == 0) {
           try {

@@ -218,10 +218,7 @@ nsMapiRegistry::ShowMailIntegrationDialog(nsIDOMWindow *aParentWindow) {
         rv = promptService->ConfirmEx(aParentWindow,
                                       dialogTitle,
                                       dialogText.get(),
-                                      (nsIPromptService::BUTTON_TITLE_YES * 
-                                      nsIPromptService::BUTTON_POS_0) +
-                                      (nsIPromptService::BUTTON_TITLE_NO * 
-                                      nsIPromptService::BUTTON_POS_1),
+                                      nsIPromptService::STD_YES_NO_BUTTONS,
                                       nsnull,
                                       nsnull,
                                       nsnull,
