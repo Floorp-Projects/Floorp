@@ -138,7 +138,7 @@ nsTreeColumn::GetXInTwips(nsIFrame* aBodyFrame, nscoord* aResult)
   }
   *aResult = frame->GetRect().x;
   return NS_OK;
-};
+}
 
 nsresult
 nsTreeColumn::GetWidthInTwips(nsIFrame* aBodyFrame, nscoord* aResult)
@@ -150,7 +150,7 @@ nsTreeColumn::GetWidthInTwips(nsIFrame* aBodyFrame, nscoord* aResult)
   }
   *aResult = frame->GetRect().width;
   return NS_OK;
-};
+}
 
 
 NS_IMETHODIMP
