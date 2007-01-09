@@ -198,6 +198,8 @@
       versions
     [% END %].
 
+    [% Hook.process("auth_failure") %]
+
   [% ELSIF error == "attachment_deletion_disabled" %]
     [% title = "Attachment Deletion Disabled" %]
     Attachment deletion is disabled on this installation.
