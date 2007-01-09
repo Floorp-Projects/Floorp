@@ -233,7 +233,7 @@ pref("app.update.silent", false);
 pref("app.update.url", "https://aus2.mozilla.org/update/1/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/update.xml");
 // URL user can browse to manually if for some reason all update installation
 // attempts fail.
-pref("app.update.url.manual", "http://www.mozilla.org/products/seamonkey/");
+pref("app.update.url.manual", "http://www.mozilla.org/projects/seamonkey/");
 // A default value for the "More information about this update" link
 // supplied in the "An update is available" page of the update wizard. 
 pref("app.update.url.details", "chrome://communicator-region/locale/region.properties");
