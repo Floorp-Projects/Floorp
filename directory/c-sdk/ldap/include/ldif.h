@@ -47,6 +47,13 @@
  * is provided ``as is'' without express or implied warranty.
  */
 
+/* NOTE: As of mozldap version 6.0.1 the LDIF functions are now
+   publicly usable.  The LDIF functions were originally designed for
+   "internal use only" purposes and as such the APIs are not very modern
+   or safe.  For example, the caller needs to be careful to provide
+   adequately sized buffers and so on.
+*/
+
 #ifndef _LDIF_H
 #define _LDIF_H
 

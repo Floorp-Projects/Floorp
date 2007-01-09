@@ -57,6 +57,7 @@ HEADERS		= \
 		  ldap-deprecated.h \
 		  ldap_ssl.h \
 		  ldappr.h \
+		  ldif.h \
 		  iutil.h \
 		  srchpref.h \
 		  $(NULL)

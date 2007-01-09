@@ -45,12 +45,15 @@ include $(topsrcdir)/build.mk
 
 SRCS		= line64.c
 
+RELEASE_LIBS    = $(SHARED_LIBRARY) $(DLLLDIF)
+
 REALOBJS	= $(SRCS:.c=.$(OBJ_SUFFIX))
 OBJS		= $(addprefix $(OBJDIR_NAME)/, $(REALOBJS))
 
 HDIR		= $(topsrcdir)/ldap/include
 
 LIBLDIF		= $(addprefix $(OBJDIR_NAME)/, $(LIB_PREFIX)$(LDIF_LIBNAME).$(LIB_SUFFIX))
+DLLLDIF         = $(addprefix $(OBJDIR_NAME)/, $(LIB_PREFIX)$(LDIF_LIBNAME).$(DLL_SUFFIX))
 
 INSTALLDIR      = $(DIST)/$(OBJDIR_NAME)
 
@@ -66,6 +69,34 @@ PLATFORMCFLAGS	= -DUSE_WAITPID -DNEEDPROTOS
 PLATFORMLIBS	=
 THREADS		=
 THREADSLIB	=
+
+#
+# shared library symbol export definitions
+#
+ifeq ($(USE_DLL_EXPORTS_FILE), 1)
+ifeq ($(OS_ARCH), WINNT)
+GENEXPORTS=cmd /c  $(PERL) $(topsrcdir)/ldif/build/genexports.pl
+else
+GENEXPORTS=$(PERL) $(topsrcdir)/ldif/build/genexports.pl
+endif
+
+# variable definitions for exported symbols
+ifeq ($(OS_ARCH), WINNT)
+        LDIF_EXPORT_DEFS= $(win_srcdir)/../msdos/winsock/nsldif32.def
+else
+ifeq ($(OS_ARCH), OS2)
+        LDIF_EXPORT_DEFS= $(OBJDIR_NAME)/libldif.def
+else
+        LDIF_EXPORT_DEFS= $(OBJDIR_NAME)/libldif.exp
+endif
+GARBAGE += $(LDIF_EXPORT_DEFS)
+endif
+
+LDIF_EXPORT_FLAGS=$(addprefix $(DLLEXPORTS_PREFIX), $(LDIF_EXPORT_DEFS))
+
+GENEXPARGS=$(BUILD_DEBUG) $(LDIFVERS_SUFFIX) $(LDIFVERS)
+endif # USE_DLL_EXPORTS_FILE
+
 
 ###########################################################################
 
@@ -84,15 +115,29 @@ $(LIBDIR):
 
 $(LIBLDIF): $(OBJS) $(LIBDIR)
 	@echo ======= making $(LIBLDIF)
+
+	$(LINK_LIB)
+
+$(DLLLDIF): $(OBJS) $(LIBDIR) $(LDIF_EXPORT_DEFS)
+	@echo ======= making $(DLLLDIF)
+
 ifdef SO_FILES_TO_REMOVE
 	-$(RM) $(SO_FILES_TO_REMOVE)
 endif
-	$(LINK_LIB)
+
+	$(LINK_DLL) $(LDAP_EXPORT_FLAGS) $(EXTRA_LIBS)
+
 
 veryclean:: clean
 
 $(OBJDEST):
 	$(MKDIR) $(OBJDEST)
 
-export::	$(LIBLDIF)
+export::	$(DLLLDIF) $(LIBLDIF)
 	$(INSTALL) -m 444 $(LIBLDIF) $(dist_libdir)
+
+ifdef MKSHLIB
+	$(INSTALL) -m 444 $(LIBLDIF) $(dist_libdir)
+	$(INSTALL) -m 444 $(DLLLDIF) $(dist_libdir)
+	$(INSTALL) -m 444 $(DLLLDIF) $(dist_bindir)
+endif
