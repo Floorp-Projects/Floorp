@@ -2603,8 +2603,8 @@ nsSVGFEFloodElement::Filter(nsSVGFilterInstance *instance)
   nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
   nsStyleContext* style = frame->GetStyleContext();
 
-  nscolor floodColor = style->GetStyleSVG()->mFloodColor;
-  float floodOpacity = style->GetStyleSVG()->mFloodOpacity;
+  nscolor floodColor = style->GetStyleSVGReset()->mFloodColor;
+  float floodOpacity = style->GetStyleSVGReset()->mFloodOpacity;
   PRUint8 r, g, b, a;
   a = PRUint8(floodOpacity * 255);
   r = (PRUint32(NS_GET_R(floodColor)) * a) / 255;
