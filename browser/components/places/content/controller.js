@@ -186,6 +186,7 @@ PlacesController.prototype = {
       return PlacesUtils.tm.numberOfRedoItems > 0;
     case "cmd_cut":
     case "cmd_delete":
+    case "placesCmd_moveBookmarks":
       return !this.rootNodeIsSelected() && 
              !this._selectionOverlapsSystemArea() &&
              this._hasRemovableSelection();
@@ -340,6 +341,9 @@ PlacesController.prototype = {
     case "placesCmd_show:info":
       this.showBookmarkPropertiesForSelection();
       break;
+    case "placesCmd_moveBookmarks":
+      this.moveSelectedBookmarks();
+      break;
 #endif
     }
   },
@@ -371,16 +375,15 @@ PlacesController.prototype = {
    * are non-removable. We don't need to worry about recursion here since it
    * is a policy decision that a removable item not be placed inside a non-
    * removable item. 
-   * @returns true if the selection contains no nodes that cannot be removed,
-   *          false otherwise. 
+   * @returns true if the there's a selection which has no nodes that cannot be removed,
+   *          false otherwise.
    */
   _hasRemovableSelection: function PC__hasRemovableSelection() {
-    var v = this._view;
-    NS_ASSERT(v, "No active view - cannot paste!");
-    if (!v)
+    if (!this._view.hasSelection)
       return false;
-    var nodes = v.getSelectionNodes();
-    var root = v.getResult().root;
+
+    var nodes = this._view.getSelectionNodes();
+    var root = this._view.getResult().root;
 
     for (var i = 0; i < nodes.length; ++i) {
       var parent = nodes[i].parent || root;
@@ -396,11 +399,9 @@ PlacesController.prototype = {
       if (PlacesUtils.nodeIsFolder(parent)) {
         var readOnly = PlacesUtils.bookmarks.getFolderReadonly(asFolder(parent).folderId);
         if (readOnly)
-          return !readOnly;
+          return false;
       }
     }
-    if (!v.hasSelection)
-      return !PlacesUtils.nodeIsReadOnly(root);
     return true;
   },
   
@@ -433,12 +434,8 @@ PlacesController.prototype = {
    * Determines whether or not nodes can be inserted relative to the selection.
    */
   _canInsert: function PC__canInsert() {
-    var v = this._view;
-    NS_ASSERT(v, "No active view - cannot insert!");
-    if (!v)
-      return false;
-    var nodes = v.getSelectionNodes();
-    var root = v.getResult().root;
+    var nodes = this._view.getSelectionNodes();
+    var root = this._view.getResult().root;
     for (var i = 0; i < nodes.length; ++i) {
       var parent = nodes[i].parent || root;
       if (PlacesUtils.nodeIsReadOnly(parent))
@@ -1112,6 +1109,15 @@ PlacesController.prototype = {
       throw Cr.NS_ERROR_NOT_AVAILABLE;
     var txn = new PlacesCreateSeparatorTransaction(ip.folderId, ip.index);
     PlacesUtils.tm.doTransaction(txn);
+  },
+
+  /**
+   * Opens a dialog for moving the selected nodes.
+   */
+  moveSelectedBookmarks: function PC_moveBookmarks() {
+    window.openDialog("chrome://browser/content/places/moveBookmarks.xul",
+                      "", "chrome, modal",
+                      this._view.getSelectionNodes(), PlacesUtils.tm);
   },
 
   /**
@@ -2046,6 +2052,7 @@ function goUpdatePlacesCommands() {
   goUpdateCommand("placesCmd_new:bookmark");
   goUpdateCommand("placesCmd_new:separator");
   goUpdateCommand("placesCmd_show:info");
+  goUpdateCommand("placesCmd_moveBookmarks");
   // XXXmano todo: sort and livemarks commands handling
 #endif
 }

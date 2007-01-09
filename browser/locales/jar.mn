@@ -35,6 +35,7 @@
     locale/browser/places/placesPopup.dtd          (%chrome/browser/places/placesPopup.dtd)
     locale/browser/places/placesPopup.properties   (%chrome/browser/places/placesPopup.properties)
     locale/browser/preferences/selectBookmark.dtd  (%chrome/browser/preferences/selectBookmark.dtd)
+    locale/browser/places/moveBookmarks.dtd        (%chrome/browser/places/moveBookmarks.dtd)
 #else
 *   locale/browser/bookmarks/bookmarks.dtd         (%chrome/browser/bookmarks/bookmarks.dtd)
 *   locale/browser/bookmarks/addBookmark.dtd       (%chrome/browser/bookmarks/addBookmark.dtd)

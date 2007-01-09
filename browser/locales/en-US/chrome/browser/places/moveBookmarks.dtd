@@ -1,0 +1,5 @@
+<!ENTITY window.title              "Choose Folder">
+<!ENTITY window.style              "width: 36em; height: 18em;">
+<!ENTITY moveTo.label              "Move to:">
+<!ENTITY newFolderButton.label     "New Folder">
+<!ENTITY newFolderButton.accesskey "N">

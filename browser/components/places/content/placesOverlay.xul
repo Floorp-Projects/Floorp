@@ -80,14 +80,16 @@
              oncommand="goDoCommand('placesCmd_new:separator');"/>
     <command id="placesCmd_show:info" 
              oncommand="goDoCommand('placesCmd_show:info');"/>
+    <command id="placesCmd_rename"
+             oncommand="goDoCommand('placesCmd_show:info');"
+             observes="placesCmd_show:info"/>
     <!-- XXXmano bug 364644: not yet supported -->
     <command id="placesCmd_reload"
              disabled="true"/>
     <command id="placesCmd_sortby:name"/>
 
-    <command id="placesCmd_rename"
-             oncommand="goDoCommand('placesCmd_show:info');"
-             observes="placesCmd_show:info"/>
+    <command id="placesCmd_moveBookmarks"
+             oncommand="goDoCommand('placesCmd_moveBookmarks');"/>
 #endif
   </commandset>
 
