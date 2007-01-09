@@ -827,6 +827,7 @@ nsUnknownContentTypeDialog.prototype = {
     updateHelperAppPref: function() {
       var ha = new this.mDialog.HelperApps();
       ha.updateTypeInfo(this.mLauncher.MIMEInfo);
+      ha.destroy();
     },
     
     // onOK:
