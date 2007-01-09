@@ -107,6 +107,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant,
   NS_IMETHODIMP                                                                \
   NS_CYCLE_COLLECTION_CLASSNAME(_class)::Unlink(nsISupports *s)                \
   {                                                                            \
+    NS_ASSERTION(nsCOMPtr<nsISupports>(do_QueryInterface(s)) == s,             \
+                 "not canonical nsISupports pointer");                         \
     _class *tmp = NS_STATIC_CAST(_class*, NS_STATIC_CAST(_base*, s));
 
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(_field)                       \
@@ -133,6 +135,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant,
                          (nsISupports *s,                                      \
                           nsCycleCollectionTraversalCallback &cb)              \
   {                                                                            \
+    NS_ASSERTION(nsCOMPtr<nsISupports>(do_QueryInterface(s)) == s,             \
+                 "not canonical nsISupports pointer");                         \
     _class *tmp = NS_STATIC_CAST(_class*, NS_STATIC_CAST(_base*, s));          \
     NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class)
 
@@ -167,6 +171,10 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                           \
 #define NS_IMPL_CYCLE_COLLECTION_CLASS(_class)                                 \
   static NS_CYCLE_COLLECTION_CLASSNAME(_class)                                 \
     NS_CYCLE_COLLECTION_NAME(_class);
+
+// The *_AMBIGUOUS macros are needed when a cast from _class* to
+// nsISupports* is ambiguous.  The _base parameter must match the base
+// class used to implement QueryInterface to nsISupports.
 
 #define NS_IMPL_CYCLE_COLLECTION_0_AMBIGUOUS(_class, _base)                    \
  NS_IMPL_CYCLE_COLLECTION_CLASS(_class)                                        \
