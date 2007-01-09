@@ -331,8 +331,17 @@ var BookmarksEventHandler = {
       return;
 
     var target = aEvent.originalTarget;
-    PlacesUtils.getViewForNode(target).controller.openLinksInTabs();
-    
+    var view = PlacesUtils.getViewForNode(target);
+    if (PlacesUtils.nodeIsFolder(view.selectedNode)) {
+      // Don't open the root folder in tabs when the empty area on the toolbar
+      // is middle-clicked or when a non-bookmark item in a bookmarks menupopup
+      // middle-clicked.
+      if (!view.controller.rootNodeIsSelected())
+        view.controller.openLinksInTabs();
+    }
+    else
+      this.onCommand(aEvent);
+
     // If this event bubbled up from a menu or menuitem,
     // close the menus.
     if (target.localName == "menu" ||
