@@ -40,14 +40,17 @@
 #ifndef nsXBLWindowKeyHandler_h__
 #define nsXBLWindowKeyHandler_h__
 
+#include "nsWeakPtr.h"
 #include "nsIDOMKeyListener.h"
-#include "nsIDOMElement.h"
-#include "nsXBLWindowHandler.h"
 
 class nsIAtom;
+class nsIDOMElement;
 class nsIDOMEventReceiver;
+class nsIXBLDocumentInfo;
+class nsXBLSpecialDocInfo;
+class nsXBLPrototypeHandler;
 
-class nsXBLWindowKeyHandler : public nsIDOMKeyListener, public nsXBLWindowHandler
+class nsXBLWindowKeyHandler : public nsIDOMKeyListener
 {
 public:
   nsXBLWindowKeyHandler(nsIDOMElement* aElement, nsIDOMEventReceiver* aReceiver);
@@ -69,16 +72,39 @@ public:
   static NS_HIDDEN_(void) ShutDown();
 
 protected:
+  nsresult WalkHandlers(nsIDOMEvent* aKeyEvent, nsIAtom* aEventType);
 
-  NS_IMETHOD WalkHandlers(nsIDOMEvent* aKeyEvent, nsIAtom* aEventType);
+  // walk the handlers, looking for one to handle the event
+  nsresult WalkHandlersInternal(nsIDOMEvent* aKeyEvent,
+                                nsIAtom* aEventType, 
+                                nsXBLPrototypeHandler* aHandler);
 
   // lazily load the handlers. Overridden to handle being attached
   // to a particular element rather than the document
-  virtual nsresult EnsureHandlers(PRBool *aIsEditor);
-  
+  nsresult EnsureHandlers(PRBool *aIsEditor);
+
   // check if the given handler cares about the given key event
   PRBool EventMatched(nsXBLPrototypeHandler* inHandler, nsIAtom* inEventType,
                       nsIDOMEvent* inEvent);
+
+  // are we working with editor or browser?
+  PRBool IsEditor() ;
+
+  // Returns the element which was passed as a parameter to the constructor,
+  // unless the element has been removed from the document.
+  already_AddRefed<nsIDOMElement> GetElement();
+  // Using weak pointer to the DOM Element.
+  nsWeakPtr              mWeakPtrForElement;
+  nsIDOMEventReceiver*   mReceiver; // weak ref
+
+  // these are not owning references; the prototype handlers are owned
+  // by the prototype bindings which are owned by the docinfo.
+  nsXBLPrototypeHandler* mHandler;     // platform bindings
+  nsXBLPrototypeHandler* mUserHandler; // user-specific bindings
+
+  // holds document info about bindings
+  static nsXBLSpecialDocInfo* sXBLSpecialDocInfo;
+  static PRUint32 sRefCnt;
 };
 
 nsresult
