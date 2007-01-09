@@ -136,6 +136,9 @@ public:
   }
   void SetEnabled(PRBool aEnabled)
   {
+    if (!mEnabled && aEnabled) {
+      ProcessPendingRequestsAsync();
+    }
     mEnabled = aEnabled;
   }
 
@@ -153,7 +156,7 @@ public:
   void RemoveExecuteBlocker()
   {
     if (!--mBlockerCount) {
-      ProcessPendingRequests();
+      ProcessPendingRequestsAsync();
     }
   }
 
@@ -173,10 +176,22 @@ public:
                                  const nsString& aHintCharset,
                                  nsIDocument* aDocument, nsString& aString);
 
+  /**
+   * Processes any pending requests that are ready for processing.
+   */
+  void ProcessPendingRequests();
+
 protected:
+  /**
+   * Process any pending requests asyncronously (i.e. off an event) if there
+   * are any. Note that this is a no-op if there aren't any currently pending
+   * requests.
+   */
+  void ProcessPendingRequestsAsync();
+
   PRBool ReadyToExecuteScripts()
   {
-    return !mBlockerCount;
+    return mEnabled && !mBlockerCount;
   }
 
   nsresult ProcessRequest(nsScriptLoadRequest* aRequest);
@@ -186,7 +201,6 @@ protected:
                            nsScriptLoadRequest* aRequest);
   nsresult EvaluateScript(nsScriptLoadRequest* aRequest,
                           const nsAFlatString& aScript);
-  void ProcessPendingRequests();
 
   nsresult PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
                                 nsIStreamLoader* aLoader,
