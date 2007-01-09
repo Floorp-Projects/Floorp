@@ -853,17 +853,19 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
   const nsStyleSVG* svg = GetStyleSVG();
   fprintf(out, "<svg data=\"%d ",(int)svg->mFill.mType);
   if (svg->mFill.mType == eStyleSVGPaintType_Server)
-    fprintf(out, "%s ", URICString(svg->mFill.mPaint.mPaintServer).get());
+    fprintf(out, "%s %ld ", URICString(svg->mFill.mPaint.mPaintServer).get(),
+                            (long)svg->mFill.mFallbackColor);
   else
     fprintf(out, "%ld ", (long)svg->mFill.mPaint.mColor);
 
   fprintf(out, "%d ", (int)svg->mStroke.mType);
   if (svg->mStroke.mType == eStyleSVGPaintType_Server)
-    fprintf(out, "%s ", URICString(svg->mStroke.mPaint.mPaintServer).get());
+    fprintf(out, "%s %ld ", URICString(svg->mStroke.mPaint.mPaintServer).get(),
+                            (long)svg->mStroke.mFallbackColor);
   else
     fprintf(out, "%ld ", (long)svg->mStroke.mPaint.mColor);
 
-  fprintf(out, "%ld ", (long)svg->mFloodColor.mPaint.mColor);
+  fprintf(out, "%ld ", (long)svg->mFloodColor);
 
   fprintf(out, "%s %s %s ",
           URICString(svg->mMarkerEnd).get(),
@@ -902,12 +904,7 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
   IndentBy(out,aIndent);
   const nsStyleSVGReset* svgReset = GetStyleSVGReset();
 
-  fprintf(out, "<svgreset data=\"%d ", (int)svgReset->mStopColor.mType);
-  if (svgReset->mStopColor.mType == eStyleSVGPaintType_Server)
-    fprintf(out, "%s ",
-            URICString(svgReset->mStopColor.mPaint.mPaintServer).get());
-  else
-    fprintf(out, "%ld ", (long)svgReset->mStopColor.mPaint.mColor);
+  fprintf(out, "<svgreset data=\"%ld ", (long)svgReset->mStopColor);
 
   fprintf(out, "%s %s %s %f %d\" />\n",
           URICString(svgReset->mClipPath).get(),

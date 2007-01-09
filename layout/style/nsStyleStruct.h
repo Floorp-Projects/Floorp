@@ -1209,6 +1209,7 @@ struct nsStyleSVGPaint
     nscolor mColor;
     nsIURI *mPaintServer;
   } mPaint;
+  nscolor mFallbackColor;
 
   // empty constructor to keep Sun compiler happy
   nsStyleSVGPaint() {}
@@ -1241,7 +1242,7 @@ struct nsStyleSVG : public nsStyleStruct {
 
   nsStyleSVGPaint  mFill;             // [inherited]
   nsStyleSVGPaint  mStroke;           // [inherited]
-  nsStyleSVGPaint  mFloodColor;       // [inherited]
+  nscolor          mFloodColor;       // [inherited]
   nsCOMPtr<nsIURI> mMarkerEnd;        // [inherited]
   nsCOMPtr<nsIURI> mMarkerMid;        // [inherited]
   nsCOMPtr<nsIURI> mMarkerStart;      // [inherited]
@@ -1284,7 +1285,7 @@ struct nsStyleSVGReset : public nsStyleStruct {
   static nsChangeHint MaxDifference();
 #endif
 
-  nsStyleSVGPaint  mStopColor;        // [reset]
+  nscolor          mStopColor;        // [reset]
   nsCOMPtr<nsIURI> mClipPath;         // [reset]
   nsCOMPtr<nsIURI> mFilter;           // [reset]
   nsCOMPtr<nsIURI> mMask;             // [reset]

@@ -217,7 +217,7 @@ nsSVGGradientFrame::GetStopInformation(PRInt32 aIndex,
   }
 
   if (stopFrame) {
-    *aColor   = stopFrame->GetStyleSVGReset()->mStopColor.mPaint.mColor;
+    *aColor   = stopFrame->GetStyleSVGReset()->mStopColor;
     *aOpacity = stopFrame->GetStyleSVGReset()->mStopOpacity;
   }
 #ifdef DEBUG
