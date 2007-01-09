@@ -202,14 +202,14 @@ function onMessageViewMouseDown(e)
     if ((typeof startScrolling != "function") ||
         ((e.which != 1) && (e.which != 2)))
     {
-        return false;
+        return true;
     }
         
     var cx = getMessagesContext(null, e.target);
     var command = getEventCommand(e);
     if (!client.commandManager.isCommandSatisfied(cx, command))
         startScrolling(e);
-    return false;
+    return true;
 }
 
 function getEventCommand(e)
