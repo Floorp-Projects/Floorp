@@ -4008,20 +4008,26 @@ nsRuleNode::ComputeColumnData(nsStyleStruct* aStartStruct,
 
 #ifdef MOZ_SVG
 static void
-SetSVGPaint(const nsCSSValue& aValue, const nsStyleSVGPaint& parentPaint,
+SetSVGPaint(const nsCSSValuePair& aValue, const nsStyleSVGPaint& parentPaint,
             nsPresContext* aPresContext, nsStyleContext *aContext, 
             nsStyleSVGPaint& aResult, PRBool& aInherited)
 {
-  if (aValue.GetUnit() == eCSSUnit_Inherit) {
+  if (aValue.mXValue.GetUnit() == eCSSUnit_Inherit) {
     aResult = parentPaint;
     aInherited = PR_TRUE;
-  } else if (aValue.GetUnit() == eCSSUnit_None) {
+  } else if (aValue.mXValue.GetUnit() == eCSSUnit_None) {
     aResult.mType = eStyleSVGPaintType_None;
-  } else if (aValue.GetUnit() == eCSSUnit_URL) {
+  } else if (aValue.mXValue.GetUnit() == eCSSUnit_URL) {
     aResult.mType = eStyleSVGPaintType_Server;
-    aResult.mPaint.mPaintServer = aValue.GetURLValue();
+    aResult.mPaint.mPaintServer = aValue.mXValue.GetURLValue();
     NS_IF_ADDREF(aResult.mPaint.mPaintServer);
-  } else if (SetColor(aValue, parentPaint.mPaint.mColor, aPresContext, aContext, aResult.mPaint.mColor, aInherited)) {
+    if (aValue.mYValue.GetUnit() == eCSSUnit_None) {
+      aResult.mFallbackColor = NS_RGBA(0, 0, 0, 0);
+    } else {
+      NS_ASSERTION(aValue.mYValue.GetUnit() != eCSSUnit_Inherit, "cannot inherit fallback colour");
+      SetColor(aValue.mYValue, NS_RGB(0, 0, 0), aPresContext, aContext, aResult.mFallbackColor, aInherited);
+    }
+  } else if (SetColor(aValue.mXValue, parentPaint.mPaint.mColor, aPresContext, aContext, aResult.mPaint.mColor, aInherited)) {
     aResult.mType = eStyleSVGPaintType_Color;
   }
 }
@@ -4074,8 +4080,8 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
   }
 
   // flood-color: 
-  SetSVGPaint(SVGData.mFloodColor, parentSVG->mFloodColor,
-              mPresContext, aContext, svg->mFloodColor, inherited);
+  SetColor(SVGData.mFloodColor, parentSVG->mFloodColor,
+           mPresContext, aContext, svg->mFloodColor, inherited);
 
   // flood-opacity:
   SetSVGOpacity(SVGData.mFloodOpacity, parentSVG->mFloodOpacity,
@@ -4264,8 +4270,7 @@ nsRuleNode::ComputeSVGResetData(nsStyleStruct* aStartStruct,
   COMPUTE_START_RESET(SVGReset, (), svgReset, parentSVGReset, SVG, SVGData)
 
   // stop-color: 
-  SetSVGPaint(SVGData.mStopColor, parentSVGReset->mStopColor,
-              mPresContext, aContext, svgReset->mStopColor, inherited);
+  SetColor(SVGData.mStopColor, parentSVGReset->mStopColor, mPresContext, aContext, svgReset->mStopColor, aInherited);
 
   // clip-path: url, none, inherit
   if (eCSSUnit_URL == SVGData.mClipPath.GetUnit()) {

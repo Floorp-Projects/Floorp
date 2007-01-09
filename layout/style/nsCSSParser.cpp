@@ -344,6 +344,9 @@ protected:
   PRBool ParseTextShadow(nsresult& aErrorCode);
 
 #ifdef MOZ_SVG
+  PRBool ParsePaint(nsresult& aErrorCode,
+                    nsCSSValuePair* aResult,
+                    nsCSSProperty aPropID);
   PRBool ParseDasharray(nsresult& aErrorCode);
   PRBool ParseMarker(nsresult& aErrorCode);
 #endif
@@ -4277,6 +4280,10 @@ PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
     return ParseTextShadow(aErrorCode);
 
 #ifdef MOZ_SVG
+  case eCSSProperty_fill:
+    return ParsePaint(aErrorCode, &mTempData.mSVG.mFill, eCSSProperty_fill);
+  case eCSSProperty_stroke:
+    return ParsePaint(aErrorCode, &mTempData.mSVG.mStroke, eCSSProperty_stroke);
   case eCSSProperty_stroke_dasharray:
     return ParseDasharray(aErrorCode);
   case eCSSProperty_marker:
@@ -4395,6 +4402,8 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_text_shadow:
   case eCSSProperty_COUNT:
 #ifdef MOZ_SVG
+  case eCSSProperty_fill:
+  case eCSSProperty_stroke:
   case eCSSProperty_stroke_dasharray:
   case eCSSProperty_marker:
 #endif
@@ -4510,9 +4519,6 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_dominant_baseline:
     return ParseVariant(aErrorCode, aValue, VARIANT_AHK,
                         nsCSSProps::kDominantBaselineKTable);
-  case eCSSProperty_fill:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HC | VARIANT_NONE | VARIANT_URL,
-                        nsnull);
   case eCSSProperty_fill_opacity:
     return ParseVariant(aErrorCode, aValue, VARIANT_HN,
                         nsnull);
@@ -4538,13 +4544,10 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
     return ParseVariant(aErrorCode, aValue, VARIANT_AHK,
                         nsCSSProps::kShapeRenderingKTable);
   case eCSSProperty_stop_color:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HC | VARIANT_NONE,
+    return ParseVariant(aErrorCode, aValue, VARIANT_HC,
                         nsnull);
   case eCSSProperty_stop_opacity:
     return ParseVariant(aErrorCode, aValue, VARIANT_HN,
-                        nsnull);
-  case eCSSProperty_stroke:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HC | VARIANT_NONE | VARIANT_URL,
                         nsnull);
   case eCSSProperty_stroke_dashoffset:
     return ParseVariant(aErrorCode, aValue, VARIANT_HLPN,
@@ -6100,6 +6103,30 @@ PRBool CSSParserImpl::ParseTextShadow(nsresult& aErrorCode)
 }
 
 #ifdef MOZ_SVG
+PRBool CSSParserImpl::ParsePaint(nsresult& aErrorCode,
+                                 nsCSSValuePair* aResult,
+                                 nsCSSProperty aPropID)
+{
+  if (!ParseVariant(aErrorCode, aResult->mXValue,
+                    VARIANT_HC | VARIANT_NONE | VARIANT_URL,
+                    nsnull))
+    return PR_FALSE;
+  
+  if (aResult->mXValue.GetUnit() == eCSSUnit_URL) {
+    if (!ParseVariant(aErrorCode, aResult->mYValue, VARIANT_COLOR | VARIANT_NONE,
+                     nsnull))
+      aResult->mYValue.SetColorValue(NS_RGB(0, 0, 0));
+  } else {
+    aResult->mYValue = aResult->mXValue;
+  }
+
+  if (!ExpectEndProperty(aErrorCode, PR_TRUE))
+    return PR_FALSE;
+
+  mTempData.SetPropertyBit(aPropID);
+  return PR_TRUE;
+}
+
 PRBool CSSParserImpl::ParseDasharray(nsresult& aErrorCode)
 {
   nsCSSValue value;

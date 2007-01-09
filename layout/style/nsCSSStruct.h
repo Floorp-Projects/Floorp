@@ -497,7 +497,7 @@ struct nsCSSSVG : public nsCSSStruct {
   nsCSSValue mClipPath;
   nsCSSValue mClipRule;
   nsCSSValue mDominantBaseline;
-  nsCSSValue mFill;
+  nsCSSValuePair mFill;
   nsCSSValue mFillOpacity;
   nsCSSValue mFillRule;
   nsCSSValue mFilter;
@@ -511,7 +511,7 @@ struct nsCSSSVG : public nsCSSStruct {
   nsCSSValue mShapeRendering;
   nsCSSValue mStopColor;
   nsCSSValue mStopOpacity;
-  nsCSSValue mStroke;
+  nsCSSValuePair mStroke;
   nsCSSValueList *mStrokeDasharray;
   nsCSSValue mStrokeDashoffset;
   nsCSSValue mStrokeLinecap;

@@ -636,13 +636,14 @@ nsChangeHint nsStyleColumn::MaxDifference()
 //
 nsStyleSVG::nsStyleSVG() 
 {
-    mFill.mType               = eStyleSVGPaintType_Color;
-    mFill.mPaint.mColor       = NS_RGB(0,0,0);
-    mStroke.mType             = eStyleSVGPaintType_None;
-    mStroke.mPaint.mColor     = NS_RGB(0,0,0);
-    mFloodColor.mType         = eStyleSVGPaintType_Color;
-    mFloodColor.mPaint.mColor = NS_RGB(0,0,0);
-    mStrokeDasharray          = nsnull;
+    mFill.mType              = eStyleSVGPaintType_Color;
+    mFill.mPaint.mColor      = NS_RGB(0,0,0);
+    mFill.mFallbackColor     = NS_RGB(0,0,0);
+    mStroke.mType            = eStyleSVGPaintType_None;
+    mStroke.mPaint.mColor    = NS_RGB(0,0,0);
+    mStroke.mFallbackColor   = NS_RGB(0,0,0);
+    mFloodColor              = NS_RGB(0,0,0);
+    mStrokeDasharray         = nsnull;
 
     mStrokeDashoffset.SetFactorValue(0.0f);
     mStrokeWidth.SetFactorValue(1.0f);
@@ -761,8 +762,7 @@ nsChangeHint nsStyleSVG::MaxDifference()
 //
 nsStyleSVGReset::nsStyleSVGReset() 
 {
-    mStopColor.mType         = eStyleSVGPaintType_Color;
-    mStopColor.mPaint.mColor = NS_RGB(0,0,0);
+    mStopColor               = NS_RGB(0,0,0);
     mClipPath                = nsnull;
     mFilter                  = nsnull;
     mMask                    = nsnull;
@@ -815,6 +815,7 @@ nsStyleSVGPaint::~nsStyleSVGPaint() {
 nsStyleSVGPaint& nsStyleSVGPaint::operator=(const nsStyleSVGPaint& aOther) 
 {
   mType = aOther.mType;
+  mFallbackColor = aOther.mFallbackColor;
   if (mType == eStyleSVGPaintType_Server) {
     mPaint.mPaintServer = aOther.mPaint.mPaintServer;
     NS_IF_ADDREF(mPaint.mPaintServer);
@@ -829,7 +830,8 @@ PRBool nsStyleSVGPaint::operator==(const nsStyleSVGPaint& aOther) const
   if (mType != aOther.mType)
     return PR_FALSE;
   if (mType == eStyleSVGPaintType_Server)
-    return EqualURIs(mPaint.mPaintServer, aOther.mPaint.mPaintServer);
+    return EqualURIs(mPaint.mPaintServer, aOther.mPaint.mPaintServer) &&
+           mFallbackColor == aOther.mFallbackColor;
   if (mType == eStyleSVGPaintType_None)
     return PR_TRUE;
   return mPaint.mColor == aOther.mPaint.mColor;
