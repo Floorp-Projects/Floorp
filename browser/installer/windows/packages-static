@@ -334,6 +334,10 @@ bin\chrome\pippki.manifest
 ;
 bin\updater.exe
 
+; [airbag]
+bin\crashreporter.exe
+bin\crashreporter.ini
+
 ; [Additional Developer Tools]
 [adt]
 bin\extensions\inspector@mozilla.org\install.rdf
@@ -345,10 +349,6 @@ bin\extensions\inspector@mozilla.org\chrome\icons\default\winInspectorMain.ico
 
 ; [Additional Browsing Enhancements]
 [abe]
-
-; [airbag]
-bin\crashreporter.exe
-bin\crashreporter.ini
 
 [talkback]
 bin\extensions\talkback@mozilla.org\install.rdf
