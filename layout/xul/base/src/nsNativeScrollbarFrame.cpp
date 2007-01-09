@@ -300,6 +300,11 @@ nsNativeScrollbarFrame::Hookup()
   }
 
   Parts parts = FindParts();
+  if (!parts.mScrollbarFrame) {
+    // Nothing to do here
+    return;
+  }
+  
   // We can't just pass 'mediator' to the widget, because 'mediator' might go away.
   // So pass a pointer to us. When we go away, we can tell the widget.
   nsIContent* scrollbarContent = parts.mScrollbarFrame->GetContent();
