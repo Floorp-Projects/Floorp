@@ -165,10 +165,12 @@ elsif ($action eq 'do_clone'){
             } 
 
             my $case = Bugzilla::Testopia::TestCase->new($id);
+            # Copy test cases creating new ones
             if ($cgi->param('copy_cases') == 2 ){
                 my $caseid = $case->copy($newplan->id, $author, 1);
                 $case->link_plan($newplan->id, $caseid);
             }
+            # Just create a link
             else {
                 $case->link_plan($newplan->id);
             }
