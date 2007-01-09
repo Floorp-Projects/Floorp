@@ -403,7 +403,7 @@ cmdEditInsert.prototype =
   undoCommand: function()
   {
     if (this.attr && this.subject == viewer.subject)
-      this.subject.removeAttributeNS(this.attr.namepsaceURI,
+      this.subject.removeAttributeNS(this.attr.namespaceURI,
                                      this.attr.localName);
   }
 };
