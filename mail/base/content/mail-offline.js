@@ -207,15 +207,17 @@ var MailOfflineMgr = {
    */
   shouldSendUnsentMessages: function()
   {
-    // if we are online already, and we have unsent messages, then honor the 
-    // offline.send.unsent_messages pref.
-    if (this.isOnline() && this.haveUnsentMessages())
+    var sendUnsentWhenGoingOnlinePref = gPrefBranch.getIntPref("offline.send.unsent_messages");
+    if(sendUnsentWhenGoingOnlinePref == 2) // never send
+      return false;
+
+    // if we we have unsent messages, then honor the offline.send.unsent_messages pref.
+    else if (this.haveUnsentMessages())
     {
-      var sendUnsentWhenGoingOnlinePref = gPrefBranch.getIntPref("offline.send.unsent_messages");      
-      if ((sendUnsentWhenGoingOnlinePref == 0 && this.confirmSendUnsentMessages()) || sendUnsentWhenGoingOnlinePref == 1)
+      if ((sendUnsentWhenGoingOnlinePref == 0 && this.confirmSendUnsentMessages())
+           || sendUnsentWhenGoingOnlinePref == 1)
         return true;
     }
-    
     return false;
   },
    
@@ -259,7 +261,7 @@ var MailOfflineMgr = {
                                           this.offlineBundle.getString('getMessagesOfflineWindowTitle1'), 
                                           this.offlineBundle.getString('getMessagesOfflineLabel1'));    
     if (goOnline)
-      this.offlineManager.goOnline(this.haveUnsentMessages() && this.confirmSendUnsentMessages(), 
+      this.offlineManager.goOnline(this.shouldSendUnsentMessages(),
                                    false /* playbackOfflineImapOperations */, msgWindow);
     return goOnline;
   },

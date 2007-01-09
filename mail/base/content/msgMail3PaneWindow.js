@@ -1029,7 +1029,7 @@ function loadStartFolder(initialUri)
       MsgGetMessagesForAllServers(defaultServer);
     
     // if appropriate, send unsent messages. This may end up prompting the user
-    if (MailOfflineMgr.shouldSendUnsentMessages())
+    if (MailOfflineMgr.isOnline() && MailOfflineMgr.shouldSendUnsentMessages())
       SendUnsentMessages();
 }
 
