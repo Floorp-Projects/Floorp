@@ -247,14 +247,11 @@ static void GetNativeRect(const nsRect& aSrc, RECT& aDst)
 void
 nsNativeThemeWin::UpdateConfig()
 {
-  // Check for Windows XP (or later), and check if 'flat menus' are enabled.
-  BOOL isFlatMenus;
-  mFlatMenus = PR_FALSE;
-
-  // This will simply fail on Windows versions prior to XP, so we get
-  // non-flat as desired.
-  ::SystemParametersInfo(SPI_GETFLATMENU, 0, &isFlatMenus, 0);
-  mFlatMenus = isFlatMenus;
+  // On Windows 2000 this SystemParametersInfo call will fail
+  //   and we get non-flat as desired.
+  BOOL useFlat = PR_FALSE;
+  mFlatMenus = ::SystemParametersInfo(SPI_GETFLATMENU, 0, &useFlat, 0) ?
+                   useFlat : PR_FALSE;
 }
 
 HANDLE
