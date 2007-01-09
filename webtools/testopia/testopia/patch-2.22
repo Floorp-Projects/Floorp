@@ -88,6 +88,29 @@ Index: /bmo-2.22/Bugzilla.pm
  ];
  
  # Non-cgi scripts that should silently exit.
+Index: /bmo-2.22/Bugzilla/User.pm
+===================================================================
+RCS file: /cvsroot/mozilla/webtools/bugzilla/Bugzilla/User.pm,v
+retrieving revision 1.101.2.3
+diff -u -r1.101.2.3 User.pm
+--- /bmo-2.22/Bugzilla/User.pm	14 Mar 2006 07:45:54 -0000	1.101.2.3
++++ /bmo-2.22-testopia/Bugzilla/User.pm	9 Jan 2007 00:35:14 -0000
+@@ -236,6 +236,16 @@
+     return $self->{queries};
+ }
+ 
++sub testopia_queries {
++    my $self = shift;
++    my $dbh = Bugzilla->dbh;
++    my $ref = $dbh->selectall_arrayref(
++        "SELECT name, query FROM test_named_queries
++         WHERE userid = ? AND isvisible = 1",
++         {'Slice' =>{}}, $self->id);
++    return $ref;
++}
++
+ sub settings {
+     my ($self) = @_;
 Index: /bmo-2.22/Bugzilla/DB/Schema.pm
 ===================================================================
 --- /bmo-2.22/Bugzilla/DB/Schema.pm	2006-01-06 07:38:42.000000000 -0700

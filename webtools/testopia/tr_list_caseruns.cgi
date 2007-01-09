@@ -237,6 +237,8 @@ elsif ($action eq 'do_delete'){
     exit;
 }
 
+$vars->{'qname'} = $cgi->param('qname') if $cgi->param('qname');
+
 # Take the search from the URL params and convert it to SQL
 $cgi->param('current_tab', 'case_run');
 my $search = Bugzilla::Testopia::Search->new($cgi);

@@ -245,6 +245,9 @@ if ($action eq 'Commit'){
 ###############
 ### Display ###
 ###############
+
+$vars->{'qname'} = $cgi->param('qname') if $cgi->param('qname');
+
 # Take the search from the URL params and convert it to SQL
 $cgi->param('current_tab', 'case');
 my $search = Bugzilla::Testopia::Search->new($cgi);

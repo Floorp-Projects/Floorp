@@ -207,8 +207,9 @@ found.
 		<a href="tr_list_cases.cgi?[% urlquerypart FILTER remove('&viewall=.') FILTER html %]&amp;ctype=xml&amp;viewall=1"><image src="testopia/img/xml.png" class="image"></a>
 	</div>
 </div>
-[% END %]
 
+[% END %]
+[% PROCESS "testopia/saved-search.html.tmpl" %]
 [%############################################################################%]
 [%# Page Footer                                                              #%]
 [%############################################################################%]

@@ -27,6 +27,7 @@ use lib ".";
 use Bugzilla;
 use Bugzilla::Util;
 use Bugzilla::Error;
+use Bugzilla::Constants;
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::TestPlan;
 use Bugzilla::Testopia::TestRun;
@@ -185,7 +186,57 @@ elsif ($action eq 'get_valid_exp'){
     chop($ret);	
 	print $ret;
 }
+elsif ($action eq 'save_query'){
+    Bugzilla->login(LOGIN_REQUIRED);
+    my $query = $cgi->param('query_part');
+    my $qname = $cgi->param('query_name');
+    
+    ThrowUserError('query_name_missing') unless $qname;
+    
+    trick_taint($query);
+    trick_taint($qname);
+     
+    my ($name) = $dbh->selectrow_array(
+        "SELECT name 
+           FROM test_named_queries 
+          WHERE userid = ? 
+            AND name = ?",
+            undef,(Bugzilla->user->id, $qname));
+            
+    if ($name){
+        $dbh->do(
+            "UPDATE test_named_queries 
+                SET query = ?
+              WHERE userid = ? 
+                AND name = ?",
+                undef,($query, Bugzilla->user->id, $qname));
+        $vars->{'tr_message'} = "Updated saved search '$qname'";
+    }
+    else{
+        $query .= "&qname=$qname";
+        $dbh->do("INSERT INTO test_named_queries 
+                  VALUES(?,?,?,?)",
+                  undef, (Bugzilla->user->id, $qname, 1, $query)); 
+        
+        $vars->{'tr_message'} = "Search saved as '$qname'";
+    }
+    display();             
+}
+elsif ($action eq 'delete_query'){
+    my $qname = $cgi->param('query_name');
+    
+    trick_taint($qname);
+    
+    $dbh->do("DELETE FROM test_named_queries WHERE userid = ? AND name = ?",
+    undef, (Bugzilla->user->id, $qname));
+    $vars->{'tr_message'} = "Testopia Saved Search '$qname' Deleted";
+    display();
+}
 else{
+    display();
+}
+
+sub display {
     my $plan = Bugzilla::Testopia::TestPlan->new({ 'plan_id' => 0 });
     my @allversions;
     foreach my $p (@{$plan->get_available_products}){
