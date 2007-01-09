@@ -171,6 +171,8 @@ function AbPanelUnload()
 {
   var addrbookSession = Components.classes["@mozilla.org/addressbook/services/session;1"].getService().QueryInterface(Components.interfaces.nsIAddrBookSession);
   addrbookSession.removeAddressBookListener(gAddressBookPanelAbListener);
+  parent.document.getElementById("msgcomposeWindow").removeEventListener('compose-window-close', AbPanelOnComposerClose, true);
+  parent.document.getElementById("msgcomposeWindow").removeEventListener('compose-window-reopen', AbPanelOnComposerReOpen, true);
 
   CloseAbView();
 }
