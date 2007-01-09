@@ -13,7 +13,7 @@
 Summary:          Mozilla LDAP C SDK
 Name:             mozldap
 Version:          %{major}.%{minor}.%{submin}
-Release:          1%{?dist}
+Release:          2%{?dist}
 License:          MPL/GPL/LGPL
 URL:              http://www.mozilla.org/directory/csdk.html
 Group:            System Environment/Libraries
@@ -67,8 +67,6 @@ Header and Library files for doing development with the Mozilla LDAP C SDK
 %setup -q
 
 %build
-if [ $RPM_BUILD_ROOT != "/" ] ; then %{__rm} -rf $RPM_BUILD_ROOT ; fi
-
 cd mozilla/directory/c-sdk
 
 %configure \
@@ -101,7 +99,7 @@ make \
 %endif
 
 %install
-if [ $RPM_BUILD_ROOT != "/" ] ; then %{__rm} -rf $RPM_BUILD_ROOT ; fi
+%{__rm} -rf $RPM_BUILD_ROOT
 
 # Set up our package file
 %{__mkdir_p} $RPM_BUILD_ROOT%{_libdir}/pkgconfig
@@ -154,7 +152,7 @@ cp -r mozilla/directory/c-sdk/ldap/examples $RPM_BUILD_ROOT%{_datadir}/%{name}
 %{__install} -m 644 mozilla/directory/c-sdk/ldap/libraries/libldap/ldapsearchprefs.conf $RPM_BUILD_ROOT%{_datadir}/%{name}/etc
 
 %clean
-if [ $RPM_BUILD_ROOT != "/" ] ; then %{__rm} -rf $RPM_BUILD_ROOT ; fi
+%{__rm} -rf $RPM_BUILD_ROOT
 
 
 %post -p /sbin/ldconfig
@@ -188,6 +186,10 @@ if [ $RPM_BUILD_ROOT != "/" ] ; then %{__rm} -rf $RPM_BUILD_ROOT ; fi
 %{_datadir}/%{name}
 
 %changelog
+* Mon Jan  9 2007 Rich Megginson <richm@stanfordalumni.org> - 6.0.1-2
+- Remove buildroot = "/" checking
+- Remove buildroot removal from %%build section
+
 * Mon Jan  8 2007 Rich Megginson <richm@stanfordalumni.org> - 6.0.1-1
 - bump version to 6.0.1
 - added libldif and ldif.h
