@@ -38,7 +38,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.33 2007/01/04 20:38:29 alexei.volkov.bugs%sun.com Exp $
+ * $Id: ocsp.c,v 1.34 2007/01/09 23:39:08 alexei.volkov.bugs%sun.com Exp $
  */
 
 #include "prerror.h"
@@ -1585,6 +1585,16 @@ loser:
  * is only used internally.  When this interface is officially exported,
  * each assertion below will need to be followed-up with setting an error
  * and returning (null).
+ *
+ * FUNCTION: ocsp_GetResponseData
+ *   Returns ocspResponseData structure and a pointer to tbs response
+ *   data DER from a valid ocsp response. 
+ * INPUTS:
+ *   CERTOCSPResponse *response
+ *     structure of a valid ocsp response
+ * RETURN:
+ *   Returns a pointer to ocspResponseData structure: decoded OCSP response
+ *   data, and a pointer(tbsResponseDataDER) to its undecoded data DER.
  */
 static ocspResponseData *
 ocsp_GetResponseData(CERTOCSPResponse *response, SECItem **tbsResponseDataDER)
@@ -1608,6 +1618,8 @@ ocsp_GetResponseData(CERTOCSPResponse *response, SECItem **tbsResponseDataDER)
     if (tbsResponseDataDER) {
         *tbsResponseDataDER = &basic->tbsResponseDataDER;
     }
+    PORT_Assert((*tbsResponseDataDER)->data != NULL);
+    PORT_Assert((*tbsResponseDataDER)->len != 0);
 
     return responseData;
 }
@@ -2560,7 +2572,6 @@ ocsp_CertGetDefaultResponder(CERTCertDBHandle *handle,CERTOCSPCertID *certID);
  */
 static SECStatus
 ocsp_CheckSignature(ocspSignature *signature, SECItem *encodedTBS,
-		    const SEC_ASN1Template *encodeTemplate,
 		    CERTCertDBHandle *handle, SECCertUsage certUsage,
 		    int64 checkTime, PRBool lookupByName, void *certIndex,
 		    void *pwArg, CERTCertificate **pSignerCert,
@@ -2800,7 +2811,6 @@ CERT_VerifyOCSPResponseSignature(CERTOCSPResponse *response,
 
     return ocsp_CheckSignature(ocsp_GetResponseSignature(response),
  			       tbsResponseDataDER,
- 			       ocsp_ResponseDataTemplate,
 			       handle, certUsageStatusResponder, producedAt,
 			       byName, certIndex, pwArg, pSignerCert, issuer);
 }
