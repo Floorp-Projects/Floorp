@@ -44,6 +44,7 @@
 #include "nsIOutputStream.h"
 #include "nsThreadUtils.h"
 #include "nsJSSh.h"
+#include "nsComponentManagerUtils.h"
 
 //**********************************************************************
 // ConnectionListener helper class

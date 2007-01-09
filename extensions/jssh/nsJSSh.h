@@ -47,7 +47,7 @@
 #include "nsIJSSh.h"
 #include "nsIJSContextStack.h"
 #include "nsIPrincipal.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIXPCScriptable.h"
 
