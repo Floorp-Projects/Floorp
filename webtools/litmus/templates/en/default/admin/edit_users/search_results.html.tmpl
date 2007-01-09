@@ -42,38 +42,43 @@
 <tr>
   <td class="header"></td>
   <td class="header">Email Address</td>
-  <td class="header">irc</td>
+  <td class="header">IRC Nickname</td>
   <td class="header">Name</td>
 </tr>
 
-[% resultsfound = 0 %]
-[% WHILE (u = users.next) %] 
-  [% resultsfound = 1 %]
-  <tr>
+[% IF users %]
+
+[% FOREACH user=users.list %]
+  <tr [% IF not (loop.count % 2) %]class="even"[% ELSE %]class="odd"[% END %]>
     <td>
-    <a href="edit_users.cgi?id=[%u.user_id | html | uri %]">edit</a>
+    <a href="edit_users.cgi?id=[% user.user_id | html | uri %]">edit</a>
     </td>
     <td>
-      [% u.email | html %]
+      [% user.email | html %]
     </td>
     <td>
-      [% u.irc_nickname | html %]
+      [% user.irc_nickname | html %]
     </td>
     <td>
-      [% u.realname | html %]
+      [% user.realname | html %]
     </td>
   </tr>
 [% END %]
+
 </table>
 
-[% IF resultsfound == 0 %]
-  <h1 class="errorHeading">No results found.</h1>
-  
-  [% INCLUDE admin/edit_users/searchform.html.tmpl %]
+[% ELSE %]
+<tr>
+  <td class="no-results" colspan="4">No matching users found.</td>
+</tr>
+
 [% END %]
 
-</div>
+</table>
+  
+[% INCLUDE admin/edit_users/searchform.html.tmpl %]
 
+</div>
 
 </div><!--END content-->
 

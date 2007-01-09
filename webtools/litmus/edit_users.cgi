@@ -49,12 +49,13 @@ if (Litmus::Auth::istrusted($cookie)) {
   
   if ($c->param('search_string')) {
     # search for users:
-    my $users = Litmus::DB::User->search_FullTextMatches(
+    my @users = Litmus::DB::User->search_FullTextMatches(
                                                          $c->param('search_string'), 
                                                          $c->param('search_string'),
                                                          $c->param('search_string'));
     my $vars = {
-		users => $users,
+		users => \@users,
+                search_string => $c->param('search_string'),
                };
     print $c->header();
     Litmus->template()->process("admin/edit_users/search_results.html.tmpl", $vars) || 
