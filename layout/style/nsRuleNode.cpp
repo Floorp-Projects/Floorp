@@ -4079,14 +4079,6 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
     svg->mFillRule = parentSVG->mFillRule;
   }
 
-  // flood-color: 
-  SetColor(SVGData.mFloodColor, parentSVG->mFloodColor,
-           mPresContext, aContext, svg->mFloodColor, inherited);
-
-  // flood-opacity:
-  SetSVGOpacity(SVGData.mFloodOpacity, parentSVG->mFloodOpacity,
-                svg->mFloodOpacity, inherited);
-  
   // marker-end: url, none, inherit
   if (eCSSUnit_URL == SVGData.mMarkerEnd.GetUnit()) {
     svg->mMarkerEnd = SVGData.mMarkerEnd.GetURLValue();
@@ -4269,8 +4261,13 @@ nsRuleNode::ComputeSVGResetData(nsStyleStruct* aStartStruct,
 {
   COMPUTE_START_RESET(SVGReset, (), svgReset, parentSVGReset, SVG, SVGData)
 
-  // stop-color: 
-  SetColor(SVGData.mStopColor, parentSVGReset->mStopColor, mPresContext, aContext, svgReset->mStopColor, aInherited);
+  // stop-color:
+  SetColor(SVGData.mStopColor, parentSVGReset->mStopColor,
+           mPresContext, aContext, svgReset->mStopColor, inherited);
+
+  // flood-color:
+  SetColor(SVGData.mFloodColor, parentSVGReset->mFloodColor,
+           mPresContext, aContext, svgReset->mFloodColor, inherited);
 
   // clip-path: url, none, inherit
   if (eCSSUnit_URL == SVGData.mClipPath.GetUnit()) {
@@ -4285,6 +4282,10 @@ nsRuleNode::ComputeSVGResetData(nsStyleStruct* aStartStruct,
   // stop-opacity:
   SetSVGOpacity(SVGData.mStopOpacity, parentSVGReset->mStopOpacity,
                 svgReset->mStopOpacity, inherited);
+
+  // flood-opacity:
+  SetSVGOpacity(SVGData.mFloodOpacity, parentSVGReset->mFloodOpacity,
+                svgReset->mFloodOpacity, inherited);
 
   // dominant-baseline: enum, auto, inherit
   if (eCSSUnit_Enumerated == SVGData.mDominantBaseline.GetUnit()) {

@@ -865,8 +865,6 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
   else
     fprintf(out, "%ld ", (long)svg->mStroke.mPaint.mColor);
 
-  fprintf(out, "%ld ", (long)svg->mFloodColor);
-
   fprintf(out, "%s %s %s ",
           URICString(svg->mMarkerEnd).get(),
           URICString(svg->mMarkerMid).get(),
@@ -881,12 +879,11 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
   }
 
   svg->mStrokeDashoffset.ToString(str);
-  fprintf(out, "%f %s %f %f %f ",
+  fprintf(out, "%f %s %f %f ",
           svg->mFillOpacity,
           NS_ConvertUTF16toUTF8(str).get(),
           svg->mStrokeMiterlimit,
-          svg->mStrokeOpacity,
-          svg->mFloodOpacity);
+          svg->mStrokeOpacity);
   svg->mStrokeWidth.ToString(str);
   fprintf(out, "%s %d %d %d %d %d %d %d %d %d\" />\n",
           NS_ConvertUTF16toUTF8(str).get(),
@@ -906,11 +903,14 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
 
   fprintf(out, "<svgreset data=\"%ld ", (long)svgReset->mStopColor);
 
-  fprintf(out, "%s %s %s %f %d\" />\n",
+  fprintf(out, "%ld ", (long)svgReset->mFloodColor);
+
+  fprintf(out, "%s %s %s %f %f %d\" />\n",
           URICString(svgReset->mClipPath).get(),
           URICString(svgReset->mFilter).get(),
           URICString(svgReset->mMask).get(),
           svgReset->mStopOpacity,
+          svgReset->mFloodOpacity,
           (int)svgReset->mDominantBaseline);
 #endif
   //#insert new style structs here#
