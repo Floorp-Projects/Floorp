@@ -122,7 +122,7 @@ function evaluateTypein()
 {
   var code = gTextBoxEval.value;
   var iframe = document.getElementById("Evaluator");
-  iframe.setAttribute("src", "javascript: " + code);
+  iframe.setAttribute("src", "javascript: " + encodeURIComponent(code));
 }
 
 function displayResult()
