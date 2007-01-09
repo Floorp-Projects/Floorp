@@ -113,10 +113,12 @@ elsif ($action eq 'do_edit'){
     # we are safe using trick_taint
     trick_taint($cname);
     trick_taint($desc);
-
+    
+    my $orig_id = $category->check_name($cname);
+    
     ThrowUserError('testopia-name-not-unique', 
                     {'object' => 'Category', 
-                     'name' => $cname}) if $category->check_name($cname);
+                     'name' => $cname}) if ($orig_id && $cid != $orig_id);
 
     $category->update($cname, $desc);
     $vars->{'tr_message'} = "Category successfully updated";

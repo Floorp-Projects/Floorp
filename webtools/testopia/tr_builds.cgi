@@ -120,9 +120,12 @@ elsif ($action eq 'do_edit'){
     trick_taint($desc);
     trick_taint($milestone);
     validate_selection($milestone, 'value', 'milestones');
+    
+    my $orig_id = $build->check_name($cname);
+    
     ThrowUserError('testopia-name-not-unique', 
-                {'object' => 'Build', 
-                 'name' => $cname}) if $build->check_name($cname);
+                  {'object' => 'Build', 
+                   'name' => $cname}) if ($orig_id && $orig_id != $bid);
     
     $build->update($cname, $desc, $milestone);
     # Search.pm thinks we are searching for a build_id

@@ -167,7 +167,7 @@ sub check_name {
     my ($name) = @_;
     my $dbh = Bugzilla->dbh;
     my $is = $dbh->selectrow_array(
-        "SELECT 1 FROM test_builds 
+        "SELECT build_id FROM test_builds 
          WHERE name = ? AND product_id = ?",
          undef, $name, $self->{'product_id'});
  
