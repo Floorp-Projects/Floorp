@@ -109,10 +109,18 @@
     return false;
   }
 
+  function getContentFrameURI(aFocusedWindow)
+  {
+    var contentFrame = isContentFrame(aFocusedWindow) ? aFocusedWindow : window.content;
+    return contentFrame.location.href;
+  }
+
   function handleLinkClick(event, href, linkNode)
   {
     // Make sure we are allowed to open this URL
-    urlSecurityCheck(href, document);
+    var focusedWindow = document.commandDispatcher.focusedWindow;
+    var sourceURL = getContentFrameURI(focusedWindow);
+    urlSecurityCheck(href, sourceURL);
     return false;
   }
 

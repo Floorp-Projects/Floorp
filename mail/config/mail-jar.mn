@@ -35,11 +35,9 @@ content/communicator/editorBindings.xul,              comm/content/communicator/
 content/communicator/platformBrowserBindings.xul,     comm/content/communicator/platformBrowserBindings.xul 
 content/communicator/platformEditorBindings.xul,      comm/content/communicator/platformEditorBindings.xul 
 content/communicator/platformCommunicatorOverlay.xul, comm/content/communicator/platformCommunicatorOverlay.xul 
-content/communicator/contentAreaUtils.js,             comm/content/communicator/contentAreaUtils.js 
 content/communicator/builtinURLs.js,                  comm/content/communicator/builtinURLs.js
 content/communicator/contentAreaDD.js,                comm/content/communicator/contentAreaDD.js 
 content/communicator/contentAreaClick.js,             comm/content/communicator/contentAreaClick.js 
-content/communicator/contentAreaContextOverlay.xul,   comm/content/communicator/contentAreaContextOverlay.xul 
 content/communicator/nsContextMenu.js,                comm/content/communicator/nsContextMenu.js
 content/communicator/printing.js,                     comm/content/communicator/printing.js
 
@@ -125,6 +123,7 @@ content/global/editMenuOverlay.js,                    toolkit/content/global/edi
 content/global/XPCNativeWrapper.js,                   toolkit/content/global/XPCNativeWrapper.js
 content/global/alerts,                                toolkit/content/global/alerts
 content/global/platformHTMLBindings.xml,              toolkit/content/global/platformHTMLBindings.xml
+content/global/contentAreaUtils.js,                   toolkit/content/global/contentAreaUtils.js
 
 #from mozapps
 content/mozapps/downloads,                            toolkit/content/mozapps/downloads
