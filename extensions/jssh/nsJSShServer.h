@@ -42,7 +42,7 @@
 #include "nsIJSShServer.h"
 #include "nsCOMPtr.h"
 #include "nsIServerSocket.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 
 class nsJSShServer : public nsIJSShServer
 {

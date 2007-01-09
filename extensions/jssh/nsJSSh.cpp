@@ -42,11 +42,13 @@
 #include "nsIXPConnect.h"
 #include "nsIProxyObjectManager.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsDependentString.h"
 #include "nsIIOService.h"
 #include "nsNetCID.h"
 #include "nsIChannel.h"
 #include "nsThreadUtils.h"
+#include "nsServiceManagerUtils.h"
+#include "nsXPCOMCIDInternal.h"
+#include "nsMemory.h"
 
 //**********************************************************************
 // Javascript Environment
@@ -463,11 +465,13 @@ NS_IMETHODIMP nsJSSh::Run()
 {
   nsCOMPtr<nsIJSSh> proxied_shell;
   if (!NS_IsMainThread()) {
-    NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                         NS_GET_IID(nsIJSSh),
-                         (nsIJSSh*)this,
-                         NS_PROXY_SYNC,
-                         getter_AddRefs(proxied_shell));
+    nsCOMPtr<nsIProxyObjectManager> pom = do_GetService(NS_XPCOMPROXY_CONTRACTID);
+    NS_ASSERTION(pom, "uh-oh, no proxy object manager!");
+    pom->GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                           NS_GET_IID(nsIJSSh),
+                           (nsIJSSh*)this,
+                           NS_PROXY_SYNC,
+                           getter_AddRefs(proxied_shell));
   }
   else {
 #ifdef DEBUG
@@ -480,7 +484,7 @@ NS_IMETHODIMP nsJSSh::Run()
   if (mInput) {
     // read-eval-print loop
     PRUint32 bytesWritten;
-    if (mOutput && mProtocol != NS_LITERAL_CSTRING("plain"))
+    if (mOutput && !mProtocol.Equals(NS_LITERAL_CSTRING("plain")))
       mOutput->Write(gWelcome, strlen(gWelcome), &bytesWritten);
     
     while (!mQuit) {
@@ -522,11 +526,13 @@ NS_IMETHODIMP nsJSSh::Run()
     // Shutdown the current thread, which must be done from the main thread.
     nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
     nsCOMPtr<nsIThread> proxied_thread;
-    NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                         NS_GET_IID(nsIThread),
-                         thread.get(),
-                         NS_PROXY_ASYNC,
-                         getter_AddRefs(proxied_thread));
+    nsCOMPtr<nsIProxyObjectManager> pom = do_GetService(NS_XPCOMPROXY_CONTRACTID);
+    NS_ASSERTION(pom, "uh-oh, no proxy object manager!");
+    pom->GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                           NS_GET_IID(nsIThread),
+                           thread.get(),
+                           NS_PROXY_ASYNC,
+                           getter_AddRefs(proxied_thread));
     if (proxied_thread)
       proxied_thread->Shutdown();
   }
