@@ -900,7 +900,20 @@ SECU_PrintInteger(FILE *out, SECItem *i, char *m, int level)
     } else if (i->len > 4) {
 	SECU_PrintAsHex(out, i, m, level);
     } else {
-	iv = DER_GetInteger(i);
+   	if (i->type == siUnsignedInteger && *i->data & 0x80) {
+            /* Make sure i->data has zero in the highest bite 
+             * if i->data is an unsigned integer */
+            SECItem tmpI;
+            char data[] = {0, 0, 0, 0, 0};
+
+            PORT_Memcpy(data + 1, i->data, i->len);
+            tmpI.len = i->len + 1;
+            tmpI.data = (void*)data;
+
+            iv = DER_GetInteger(&tmpI);
+	} else {
+            iv = DER_GetInteger(i);
+	}
 	SECU_Indent(out, level); 
 	if (m) {
 	    fprintf(out, "%s: %d (0x%x)\n", m, iv, iv);
