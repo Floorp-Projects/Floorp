@@ -114,7 +114,14 @@
           return this._result;
         ]]></body>
       </method>
-      
+
+      <!-- nsIPlacesView -->
+      <method name="getResultNode">
+        <body><![CDATA[
+          return this._resultNode;
+        ]]></body>
+      </method>
+
       <!-- These are the indices of the start and end
            of dynamic content in the menu.  For index,
            if this is a bookmark menu and it has two

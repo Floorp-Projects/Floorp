@@ -186,7 +186,7 @@ PlacesController.prototype = {
       return PlacesUtils.tm.numberOfRedoItems > 0;
     case "cmd_cut":
     case "cmd_delete":
-      return !this._rootNodeIsSelected() && 
+      return !this.rootNodeIsSelected() && 
              !this._selectionOverlapsSystemArea() &&
              this._hasRemovableSelection();
     case "cmd_copy":
@@ -452,10 +452,10 @@ PlacesController.prototype = {
   /**
    * Determines whether or not the root node for the view is selected
    */
-  _rootNodeIsSelected: function PC__rootNodeIsSelected() {
+  rootNodeIsSelected: function PC_rootNodeIsSelected() {
     if (this._view.hasSelection) {
       var nodes = this._view.getSelectionNodes();
-      var root = this._view.getResult().root;
+      var root = this._view.getResultNode();
       for (var i = 0; i < nodes.length; ++i) {
         if (nodes[i] == root)
           return true;      
