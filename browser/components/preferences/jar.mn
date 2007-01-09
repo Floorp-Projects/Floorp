@@ -18,7 +18,6 @@ browser.jar:
 *   content/browser/preferences/feeds.js
 *   content/browser/preferences/fonts.xul
 *   content/browser/preferences/fonts.js
-*   content/browser/preferences/helperapplications.js
 *   content/browser/preferences/languages.xul
 *   content/browser/preferences/languages.js
 *   content/browser/preferences/main.xul
