@@ -68,9 +68,19 @@
         <parameter name="aAttr"/>
         <parameter name="aValue"/>
         <body>
+        <![CDATA[
           var intvalue = parseInt(aValue, 10);
-          if (!isNaN(intvalue)) this._slider.setAttribute(aAttr, intvalue);
+          if (!isNaN(intvalue)) {
+            if (aAttr == "curpos") {
+              if (intvalue < this.min)
+                intvalue = this.min;
+              else if (intvalue > this.max)
+                intvalue = this.max;
+            }
+            this._slider.setAttribute(aAttr, intvalue);
+          }
           return aValue;
+        ]]>
         </body>
       </method>
 
