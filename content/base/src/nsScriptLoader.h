@@ -187,7 +187,7 @@ protected:
    * are any. Note that this is a no-op if there aren't any currently pending
    * requests.
    */
-  void ProcessPendingRequestsAsync();
+  virtual void ProcessPendingRequestsAsync();
 
   PRBool ReadyToExecuteScripts()
   {
