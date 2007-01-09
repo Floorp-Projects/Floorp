@@ -244,7 +244,7 @@ sub pickos {
         return formvalue('op_sys');
     }
 
-    my @os;
+    my @os = ();
 
     if (Bugzilla->params->{'defaultopsys'}) {
         @os = Bugzilla->params->{'defaultopsys'};
@@ -253,57 +253,58 @@ sub pickos {
         # item in @os that is a valid platform choice. If
         # no choice is valid, we return "Other".
         for ($ENV{'HTTP_USER_AGENT'}) {
-            /\(.*IRIX.*\)/ && do {@os = "IRIX"; last;};
-            /\(.*OSF.*\)/ && do {@os = "OSF/1"; last;};
-            /\(.*Linux.*\)/ && do {@os = "Linux"; last;};
-            /\(.*Solaris.*\)/ && do {@os = "Solaris"; last;};
-            /\(.*SunOS 5.*\)/ && do {@os = "Solaris"; last;};
-            /\(.*SunOS.*sun4u.*\)/ && do {@os = "Solaris"; last;};
-            /\(.*SunOS.*\)/ && do {@os = "SunOS"; last;};
-            /\(.*HP-?UX.*\)/ && do {@os = "HP-UX"; last;};
-            /\(.*BSD\/(?:OS|386).*\)/ && do {@os = "BSDI"; last;};
-            /\(.*FreeBSD.*\)/ && do {@os = "FreeBSD"; last;};
-            /\(.*OpenBSD.*\)/ && do {@os = "OpenBSD"; last;};
-            /\(.*NetBSD.*\)/ && do {@os = "NetBSD"; last;};
-            /\(.*BeOS.*\)/ && do {@os = "BeOS"; last;};
-            /\(.*AIX.*\)/ && do {@os = "AIX"; last;};
-            /\(.*OS\/2.*\)/ && do {@os = "OS/2"; last;};
-            /\(.*QNX.*\)/ && do {@os = "Neutrino"; last;};
-            /\(.*VMS.*\)/ && do {@os = "OpenVMS"; last;};
-            /\(.*Windows XP.*\)/ && do {@os = "Windows XP"; last;};
-            /\(.*Windows NT 5\.2.*\)/ && do {@os = "Windows Server 2003"; last;};
-            /\(.*Windows NT 5\.1.*\)/ && do {@os = "Windows XP"; last;};
-            /\(.*Windows 2000.*\)/ && do {@os = "Windows 2000"; last;};
-            /\(.*Windows NT 5.*\)/ && do {@os = "Windows 2000"; last;};
-            /\(.*Win.*9[8x].*4\.9.*\)/ && do {@os = "Windows ME"; last;};
-            /\(.*Win(?:dows |)M[Ee].*\)/ && do {@os = "Windows ME"; last;};
-            /\(.*Win(?:dows |)98.*\)/ && do {@os = "Windows 98"; last;};
-            /\(.*Win(?:dows |)95.*\)/ && do {@os = "Windows 95"; last;};
-            /\(.*Win(?:dows |)16.*\)/ && do {@os = "Windows 3.1"; last;};
-            /\(.*Win(?:dows[ -]|)NT.*\)/ && do {@os = "Windows NT"; last;};
-            /\(.*Windows.*NT.*\)/ && do {@os = "Windows NT"; last;};
-            /\(.*32bit.*\)/ && do {@os = "Windows 95"; last;};
-            /\(.*16bit.*\)/ && do {@os = "Windows 3.1"; last;};
-            /\(.*Mac OS 9.*\)/ && do {@os = "Mac System 9.x"; last;};
-            /\(.*Mac OS 8\.6.*\)/ && do {@os = "Mac System 8.6"; last;};
-            /\(.*Mac OS 8\.5.*\)/ && do {@os = "Mac System 8.5"; last;};
+            /\(.*IRIX.*\)/ && do {push @os, "IRIX"; };
+            /\(.*OSF.*\)/ && do {push @os, "OSF/1";};
+            /\(.*Linux.*\)/ && do {push @os, "Linux";};
+            /\(.*Solaris.*\)/ && do {push @os, "Solaris";};
+            /\(.*SunOS 5.*\)/ && do {push @os, "Solaris";};
+            /\(.*SunOS.*sun4u.*\)/ && do {push @os, "Solaris";};
+            /\(.*SunOS.*\)/ && do {push @os, "SunOS";};
+            /\(.*HP-?UX.*\)/ && do {push @os, "HP-UX";};
+            /\(.*BSD\/(?:OS|386).*\)/ && do {push @os, "BSDI";};
+            /\(.*FreeBSD.*\)/ && do {push @os, "FreeBSD";};
+            /\(.*OpenBSD.*\)/ && do {push @os, "OpenBSD";};
+            /\(.*NetBSD.*\)/ && do {push @os, "NetBSD";};
+            /\(.*BeOS.*\)/ && do {push @os, "BeOS";};
+            /\(.*AIX.*\)/ && do {push @os, "AIX";};
+            /\(.*OS\/2.*\)/ && do {push @os, "OS/2";};
+            /\(.*QNX.*\)/ && do {push @os, "Neutrino";};
+            /\(.*VMS.*\)/ && do {push @os, "OpenVMS";};
+            /\(.*Windows XP.*\)/ && do {push @os, "Windows XP";};
+            /\(.*Windows NT 5\.2.*\)/ && do {push @os, "Windows Server 2003";};
+            /\(.*Windows NT 5\.1.*\)/ && do {push @os, "Windows XP";};
+            /\(.*Windows 2000.*\)/ && do {push @os, "Windows 2000";};
+            /\(.*Windows NT 5.*\)/ && do {push @os, "Windows 2000";};
+            /\(.*Win.*9[8x].*4\.9.*\)/ && do {push @os, "Windows ME";};
+            /\(.*Win(?:dows |)M[Ee].*\)/ && do {push @os, "Windows ME";};
+            /\(.*Win(?:dows |)98.*\)/ && do {push @os, "Windows 98";};
+            /\(.*Win(?:dows |)95.*\)/ && do {push @os, "Windows 95";};
+            /\(.*Win(?:dows |)16.*\)/ && do {push @os, "Windows 3.1";};
+            /\(.*Win(?:dows[ -]|)NT.*\)/ && do {push @os, "Windows NT";};
+            /\(.*Windows.*NT.*\)/ && do {push @os, "Windows NT";};
+            /\(.*32bit.*\)/ && do {push @os, "Windows 95";};
+            /\(.*16bit.*\)/ && do {push @os, "Windows 3.1";};
+            /\(.*Mac OS 9.*\)/ && do {push @os, "Mac System 9.x";};
+            /\(.*Mac OS 8\.6.*\)/ && do {push @os, "Mac System 8.6";};
+            /\(.*Mac OS 8\.5.*\)/ && do {push @os, "Mac System 8.5";};
         # Bugzilla doesn't have an entry for 8.1
-            /\(.*Mac OS 8\.1.*\)/ && do {@os = "Mac System 8.0"; last;};
-            /\(.*Mac OS 8\.0.*\)/ && do {@os = "Mac System 8.0"; last;};
-            /\(.*Mac OS 8[^.].*\)/ && do {@os = "Mac System 8.0"; last;};
-            /\(.*Mac OS 8.*\)/ && do {@os = "Mac System 8.6"; last;};
-            /\(.*Mac OS X.*\)/ && do {@os = "Mac OS X 10.0"; last;};
-            /\(.*Darwin.*\)/ && do {@os = "Mac OS X 10.0"; last;};
+            /\(.*Mac OS 8\.1.*\)/ && do {push @os, "Mac System 8.0";};
+            /\(.*Mac OS 8\.0.*\)/ && do {push @os, "Mac System 8.0";};
+            /\(.*Mac OS 8[^.].*\)/ && do {push @os, "Mac System 8.0";};
+            /\(.*Mac OS 8.*\)/ && do {push @os, "Mac System 8.6";};
+            /\(.*Intel.*Mac OS X.*\)/ && do {push @os, "Mac OS X 10.4";};
+            /\(.*Mac OS X.*\)/ && do {push @os, ("Mac OS X 10.3", "Mac OS X 10.0");};
+            /\(.*Darwin.*\)/ && do {push @os, "Mac OS X 10.0";};
         # Silly
-            /\(.*Mac.*PowerPC.*\)/ && do {@os = "Mac System 9.x"; last;};
-            /\(.*Mac.*PPC.*\)/ && do {@os = "Mac System 9.x"; last;};
-            /\(.*Mac.*68k.*\)/ && do {@os = "Mac System 8.0"; last;};
+            /\(.*Mac.*PowerPC.*\)/ && do {push @os, "Mac System 9.x";};
+            /\(.*Mac.*PPC.*\)/ && do {push @os, "Mac System 9.x";};
+            /\(.*Mac.*68k.*\)/ && do {push @os, "Mac System 8.0";};
         # Evil
-            /Amiga/i && do {@os = "Other"; last;};
-            /WinMosaic/ && do {@os = "Windows 95"; last;};
-            /\(.*PowerPC.*\)/ && do {@os = "Mac System 9.x"; last;};
-            /\(.*PPC.*\)/ && do {@os = "Mac System 9.x"; last;};
-            /\(.*68K.*\)/ && do {@os = "Mac System 8.0"; last;};
+            /Amiga/i && do {push @os, "Other";};
+            /WinMosaic/ && do {push @os, "Windows 95";};
+            /\(.*PowerPC.*\)/ && do {push @os, "Mac System 9.x";};
+            /\(.*PPC.*\)/ && do {push @os, "Mac System 9.x";};
+            /\(.*68K.*\)/ && do {push @os, "Mac System 8.0";};
         }
     }
 
