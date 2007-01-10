@@ -142,7 +142,17 @@ const componentData =
     {cid: Components.ID("{1e2fc0e2-bf5f-4d60-9f1e-5e92cf517c0b}"),
      contractid: "@mozilla.org/network/protocol;1?name=webcal",
      script: "calProtocolHandler.js",
-     constructor: "calProtocolHandler"}
+     constructor: "calProtocolHandler"},
+
+    {cid: Components.ID("{6fe88047-75b6-4874-80e8-5f5800f14984}"),
+     contractid: "@mozilla.org/calendar/ics-parser;1",
+     script: "calIcsParser.js",
+     constructor: "calIcsParser"},
+
+    {cid: Components.ID("{207a6682-8ff1-4203-9160-729ec28c8766}"),
+     contractid: "@mozilla.org/calendar/ics-serializer;1",
+     script: "calIcsSerializer.js",
+     constructor: "calIcsSerializer"}
     ];
 
 var calItemModule = {

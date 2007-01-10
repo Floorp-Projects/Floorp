@@ -60,6 +60,8 @@ XPIDLSRCS	= calIAlarmService.idl \
 		  calIDuration.idl   \
 		  calIErrors.idl     \
 		  calIEvent.idl      \
+		  calIIcsParser.idl  \
+		  calIIcsSerializer.idl \
 		  calIICSService.idl \
 		  calIItemBase.idl   \
 		  calIItipItem.idl   \

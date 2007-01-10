@@ -15,7 +15,7 @@
  * The Original Code is mozilla calendar code.
  *
  * The Initial Developer of the Original Code is
- *  Michiel van Leeuwen <mvl@exedo.nl>
+ *   Michiel van Leeuwen <mvl@exedo.nl>
  * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
@@ -243,97 +243,16 @@ calICSCalendar.prototype = {
         // for non-existing or empty files, but not good for invalid files.
         // That's why we put them in readOnly mode
         try {
-            var rootComp = this.mICSService.parseICS(str);
-
-            var calComp;
-            // libical returns the vcalendar component if there is just
-            // one vcalendar. If there are multiple vcalendars, it returns
-            // an xroot component, with those vcalendar childs. We need to
-            // handle both.
-            if (rootComp.componentType == 'VCALENDAR') {
-                calComp = rootComp;
-            } else {
-                calComp = rootComp.getFirstSubcomponent('VCALENDAR');
-            }
-
-            var unexpandedItems = [];
-            var uid2parent = {};
-            var excItems = [];
+            var parser = Components.classes["@mozilla.org/calendar/ics-parser;1"].
+                                    createInstance(Components.interfaces.calIIcsParser);
+            parser.parseString(str);
+            var items = parser.getItems({});
             
-            while (calComp) {
-                // Get unknown properties
-                var prop = calComp.getFirstProperty("ANY");
-                while (prop) {
-                    if (!this.calendarPromotedProps[prop.propertyName]) {
-                        this.unmappedProperties.push(prop);
-                        LOG(prop.propertyName);
-                    }
-                    prop = calComp.getNextProperty("ANY");
-                }
-
-                var subComp = calComp.getFirstSubcomponent("ANY");
-                while (subComp) {
-                    // Place each subcomp in a try block, to hopefully get as
-                    // much of a bad calendar as possible
-                    try {
-                        var item = null;
-                        switch (subComp.componentType) {
-                        case "VEVENT":
-                            item = createEvent();
-                            break;
-                        case "VTODO":
-                            item = createTodo();
-                            break;
-                        case "VTIMEZONE":
-                            // this should already be attached to the relevant
-                            // events in the calendar, so there's no need to
-                            // do anything with it here.
-                            break;
-                        default:
-                            this.unmappedComponents.push(subComp);
-                            LOG(subComp.componentType);
-                        }
-                        if (item != null) {
-                            item.icalComponent = subComp;
-                            var rid = item.recurrenceId;
-                            if (rid == null) {
-                                unexpandedItems.push( item );
-                                if (item.recurrenceInfo != null)
-                                    uid2parent[item.id] = item;
-                            }
-                            else {
-                                item.calendar = this;
-                                // force no recurrence info:
-                                item.recurrenceInfo = null;
-                                excItems.push(item);
-                            }
-                        }
-                            
-                    }
-                    catch(ex) { 
-                        this.mObserver.onError(ex.result, ex.toString());
-                    }
-                    subComp = calComp.getNextSubcomponent("ANY");
-                }
-                calComp = rootComp.getNextSubcomponent('VCALENDAR');
-            }
-            
-            // tag "exceptions", i.e. items with rid:
-            for each (var item in excItems) {
-                var parent = uid2parent[item.id];
-                if (parent == null) {
-                    debug( "no parent item for rid=" + item.recurrenceId );
-                }
-                else {
-                    item.parentItem = parent;
-                    parent.recurrenceInfo.modifyException(item);
-                }
-            }
-            
-            for each (var item in unexpandedItems) {
+            for each (var item in items) {
                 this.mMemoryCalendar.adoptItem(item, null);
             }
-            
+            this.unmappedComponents = parser.getComponents({});
+            this.unmappedProperties = parser.getProperties({});
         } catch(e) {
             LOG("Parsing the file failed:"+e);
             this.mObserver.onError(e.result, e.toString());
@@ -359,8 +278,10 @@ calICSCalendar.prototype = {
                                    .getService(Components.interfaces.nsIAppStartup);
         var listener =
         {
+            serializer: null,
             onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail)
             {
+                var inLastWindowClosingSurvivalArea = false;
                 try  {
                     // All events are returned. Now set up a channel and a
                     // streamloader to upload.  onStopRequest will be called
@@ -378,15 +299,27 @@ calICSCalendar.prototype = {
                     var uploadChannel = channel.QueryInterface(
                         Components.interfaces.nsIUploadChannel);
 
-                    // do the actual serialization
-                    var icsStream = calComp.serializeToICSStream();
+                    // Create a pipe to convert the output stream from the
+                    // serializer into an input stream for the upload channel
+                    var pipe = Components.classes["@mozilla.org/pipe;1"].
+                                  createInstance(Components.interfaces.nsIPipe);
+                    const PR_UINT32_MAX = 4294967295; // signals "infinite-length"
+                    pipe.init(true, true, 0, PR_UINT32_MAX, null);
 
-                    uploadChannel.setUploadStream(icsStream, "text/calendar",
-                                                  -1);
+                    // Serialize
+                    var icsStream = this.serializer.serializeToStream(pipe.outputStream);
+
+                    // Upload
+                    uploadChannel.setUploadStream(pipe.inputStream,
+                                                  "text/calendar", -1);
+
                     appStartup.enterLastWindowClosingSurvivalArea();
+                    inLastWindowClosingSurvivalArea = true;
                     channel.asyncOpen(savedthis, savedthis);
                 } catch (ex) {
-                    appStartup.exitLastWindowClosingSurvivalArea();
+                    if (inLastWindowClosingSurvivalArea) {
+                        appStartup.exitLastWindowClosingSurvivalArea();
+                    }
                     savedthis.mObserver.onError(
                         ex.result, "The calendar could not be saved; there " +
                         "was a failure: 0x" + ex.result.toString(16));
@@ -396,35 +329,16 @@ calICSCalendar.prototype = {
             },
             onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems)
             {
-                for (var i=0; i<aCount; i++) {
-                    var item = aItems[i];
-                    calComp.addSubcomponent(item.icalComponent);
-                    var rec = item.recurrenceInfo;
-                    if (rec != null) {
-                        var exceptions = rec.getExceptionIds({});
-                        for each ( var exid in exceptions ) {
-                            var ex = rec.getExceptionFor(exid, false);
-                            if (ex != null) {
-                                calComp.addSubcomponent(ex.icalComponent);
-                            }
-                        }
-                    }
-                }
+                this.serializer.addItems(aItems, aCount);
             }
         };
-
-        var calComp = this.mICSService.createIcalComponent("VCALENDAR");
-        calComp.version = "2.0";
-        calComp.prodid = "-//Mozilla.org/NONSGML Mozilla Calendar V1.1//EN";
-
-        var i;
-        for (i in this.unmappedComponents) {
-             LOG("Adding a "+this.unmappedComponents[i].componentType);
-             calComp.addSubcomponent(this.unmappedComponents[i]);
+        listener.serializer = Components.classes["@mozilla.org/calendar/ics-serializer;1"].
+                                         createInstance(Components.interfaces.calIIcsSerializer);
+        for each (var comp in this.unmappedComponents) {
+            listener.serializer.addComponent(comp);
         }
-        for (i in this.unmappedProperties) {
-             LOG("Adding "+this.unmappedProperties[i].propertyName);
-             calComp.addProperty(this.unmappedProperties[i]);
+        for each (var prop in this.unmappedProperties) {
+            listener.serializer.addProperty(prop);
         }
 
         this.getItems(calICalendar.ITEM_FILTER_TYPE_ALL | calICalendar.ITEM_FILTER_COMPLETED_ALL,

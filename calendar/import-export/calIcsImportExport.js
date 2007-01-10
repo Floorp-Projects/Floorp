@@ -67,142 +67,10 @@ calIcsImporter.prototype.getFileTypes = getIcsFileTypes;
 
 calIcsImporter.prototype.importFromStream =
 function ics_importFromStream(aStream, aCount) {
-    var items = new Array();
-
-    // Read in the string. Note that it isn't a real string at this point, because
-    // likely, the file is utf8. The multibyte chars show up as multiple 'chars'
-    // in this string. So call it an array of octets for now.    
-    
-    var octetArray = [];
-    var binaryInputStream = Components.classes["@mozilla.org/binaryinputstream;1"]
-                                          .createInstance(Components.interfaces.nsIBinaryInputStream);
-    binaryInputStream.setInputStream(aStream);
-    octetArray = binaryInputStream.readByteArray(binaryInputStream.available());
-    
-   
-    // Some other apps (most notably, sunbird 0.2) happily splits an utf8 character
-    // between the octets, and adds a newline and space between them, for ics
-    // folding. Unfold manually before parsing the file as utf8.
-    // This is utf8 safe, because octets with the first bit 0 are always one-octet
-    // characters. So the space or the newline never can be part of a multi-byte
-    // char.
-    for (var i=octetArray.length-2; i>=0; i--) {
-        if (octetArray[i] == "\n" && octetArray[i+1] == " ") {
-            octetArray = octetArray.splice(i, 2);
-        }
-    }
-
-    // Interpret the byte-array as an utf8 string, and convert into a
-    // javascript string.
-    var unicodeConverter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
-                                     .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
-    // ics files are always utf8
-    unicodeConverter.charset = "UTF-8";
-    var str = unicodeConverter.convertFromByteArray(octetArray, octetArray.length);
-
-
-    icssrv = Components.classes["@mozilla.org/calendar/ics-service;1"]
-                       .getService(Components.interfaces.calIICSService);
-
-    var rootComp = icssrv.parseICS(str);
-    var calComp;
-    // libical returns the vcalendar component if there is just
-    // one vcalendar. If there are multiple vcalendars, it returns
-    // an xroot component, with those vcalendar childs. We need to
-    // handle both.
-    if (rootComp.componentType == 'VCALENDAR') {
-        calComp = rootComp;
-    } else {
-        calComp = rootComp.getFirstSubcomponent('VCALENDAR');
-    }
-
-    while (calComp) {
-        // XXX bug 354073:
-        // When Sunbird 0.2 (and earlier) creates EXDATEs, they are set to
-        // 00:00:00 floating rather than to the item's DTSTART. This fixes that.
-        //
-        // This should really be in the migration code found in bug 349586,
-        // but in the interest of getting 0.3 released, we're putting it here.
-        // When bug 349586 lands, please make sure moving this to the
-        // migrator is part of that checkin.
-        var prodId = calComp.getFirstProperty("PRODID");
-        var isFromOldSunbird;
-        if (prodId) {
-            isFromOldSunbird = (prodId.value.indexOf("NONSGML Mozilla Calendar V1.0") > -1);
-        }
-
-        // Helper function to deal with the busted exdates from Sunbird 0.2
-        function fixOldSunbirdExceptions(aItem) {
-            const kCalIRecurrenceDate = Components.interfaces.calIRecurrenceDate;
-
-            var ritems = aItem.recurrenceInfo.getRecurrenceItems({});
-            for (var i in ritems) {
-                var ritem = ritems[i];
-
-                // EXDATEs are represented as calIRecurrenceDates, which are
-                // negative and finite.
-                if (ritem instanceof kCalIRecurrenceDate &&
-                    ritem.isNegative && ritem.isFinite)
-                {
-                    // Only mess with the exception if its time is wrong.
-                    var oldDate = aItem.startDate || aItem.entryDate;
-                    if (ritem.date.compare(oldDate) != 0) {
-                        var newRitem = ritem.clone();
-                        // All we want from aItem is the time and timezone.
-                        newRitem.date.timezone = oldDate.timezone;
-                        newRitem.date.hour   = oldDate.hour;
-                        newRitem.date.minute = oldDate.minute;
-                        newRitem.date.second = oldDate.second;
-                        newRitem.date.normalize();
-                        aItem.recurrenceInfo.appendRecurrenceItem(newRitem);
-                        aItem.recurrenceInfo.deleteRecurrenceItem(ritem);
-                    }
-                }
-            }
-            return aItem;
-        }
-
-        var subComp = calComp.getFirstSubcomponent("ANY");
-        while (subComp) {
-            switch (subComp.componentType) {
-            case "VEVENT":
-                var event = Components.classes["@mozilla.org/calendar/event;1"]
-                                      .createInstance(Components.interfaces.calIEvent);
-                event.icalComponent = subComp;
-
-                // Only try to fix ICS from Sunbird 0.2 (and earlier) if it
-                // has an EXDATE.
-                hasExdate = subComp.getFirstProperty("EXDATE");
-                if (isFromOldSunbird && hasExdate) {
-                    event = fixOldSunbirdExceptions(event);
-                }
-
-                items.push(event);
-                break;
-            case "VTODO":
-                var todo = Components.classes["@mozilla.org/calendar/todo;1"]
-                                     .createInstance(Components.interfaces.calITodo);
-                todo.icalComponent = subComp;
-
-                // Only try to fix ICS from Sunbird 0.2 (and earlier) if it
-                // has an EXDATE.
-                hasExdate = subComp.getFirstProperty("EXDATE");
-                if (isFromOldSunbird && hasExdate) {
-                    todo = fixOldSunbirdExceptions(todo);
-                }
-
-                items.push(todo);
-                break;
-            default:
-                // Nothing
-            }
-            subComp = calComp.getNextSubcomponent("ANY");
-        }
-        calComp = rootComp.getNextSubcomponent('VCALENDAR');
-    }
-
-    aCount.value = items.length;
-    return items;
+    var parser = Components.classes["@mozilla.org/calendar/ics-parser;1"].
+                            createInstance(Components.interfaces.calIIcsParser);
+    parser.parseFromString(aStream);
+    return parser.getItems(aCount);
 };
 
 
@@ -227,35 +95,8 @@ calIcsExporter.prototype.getFileTypes = getIcsFileTypes;
 // not prototype.export. export is reserved.
 calIcsExporter.prototype.exportToStream =
 function ics_exportToStream(aStream, aCount, aItems) {
-    icssrv = Components.classes["@mozilla.org/calendar/ics-service;1"]
-                       .getService(Components.interfaces.calIICSService);
-    var calComp = icssrv.createIcalComponent("VCALENDAR");
-    calComp.version = "2.0";
-    calComp.prodid = "-//Mozilla.org/NONSGML Mozilla Calendar V1.1//EN";
-    
-    for each (item in aItems) {
-        calComp.addSubcomponent(item.icalComponent);
-        var rec = item.recurrenceInfo;
-        if (rec != null) {
-            var exceptions = rec.getExceptionIds({});
-            for each ( var exid in exceptions ) {
-                var ex = rec.getExceptionFor(exid, false);
-                if (ex != null) {
-                    calComp.addSubcomponent(ex.icalComponent);
-                }
-            }
-        }    
-    }
-    var str = calComp.serializeToICS();
-
-    // Convert the javascript string to an array of bytes, using the
-    // utf8 encoder
-    var convStream = Components.classes["@mozilla.org/intl/converter-output-stream;1"]
-                               .getService(Components.interfaces.nsIConverterOutputStream);
-    convStream.init(aStream, 'UTF-8', 0, 0x0000);
-
-    convStream.writeString(str);
-    convStream.close();
-
-    return;
+    var serializer = Components.classes["@mozilla.org/calendar/ics-serializer;1"].
+                                createInstance(Components.interfaces.calIIcsSerializer);
+    serializer.addItems(aItems, aItems.length);
+    serializer.serializeToStream(aStream);
 };

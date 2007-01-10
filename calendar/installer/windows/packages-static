@@ -218,6 +218,8 @@ bin\js\calDateTimeFormatter.js
 bin\js\calEvent.js
 bin\js\calHtmlExport.js
 bin\js\calIcsImportExport.js
+bin\js\calIcsParser.js
+bin\js\calIcsSerializer.js
 bin\js\calItemBase.js
 bin\js\calItipItem.js
 bin\js\calListFormatter.js
