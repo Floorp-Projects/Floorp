@@ -274,7 +274,6 @@ sub switch {
        my $oldenv = $self->{'environment_id'};
        
        $self = Bugzilla::Testopia::TestCaseRun->new($self->clone($build_id,$env_id));
-       $self->set_as_current;
        
        if ($oldbuild != $build_id){
            my $build = Bugzilla::Testopia::Build->new($build_id);
@@ -292,7 +291,8 @@ sub switch {
               $note .= "'. Resetting to IDLE.";
            $self->append_note($note);
        }
-   } 
+   }
+   $self->set_as_current; 
    return $self;
 }
 
