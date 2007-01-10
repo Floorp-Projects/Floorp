@@ -368,7 +368,9 @@ function unifinderOnSelect( event )
             dump( "e is "+e+"\n" );
             return;
          }
-         ArrayOfEvents.push( calendarEvent );
+         if (calendarEvent) {
+             ArrayOfEvents.push(calendarEvent);
+         }
       }
    }
    
