@@ -235,6 +235,9 @@
         // then start dragging it
         evbox.parentColumn.startSweepingToModifyEvent(evbox, evbox.mOccurrence, whichside, event.screenX, event.screenY);
       ]]></handler>
+      <handler event="click" button="0"><![CDATA[
+        event.stopPropagation();
+      ]]></handler>
     </handlers>
   </binding>
 
@@ -1294,6 +1297,10 @@
         }
       ]]></handler>
 
+      <handler event="click" button="0"><![CDATA[
+        this.calendarView.setSelectedItems(0, []);
+      ]]></handler>
+
       <!-- mouse down handler, in empty event column regions.  Starts sweeping out a new
          - event.
         -->
@@ -1436,6 +1443,9 @@
       ]]></handler>
       <handler event="mousedown"><![CDATA[
         this.calendarView.selectedDay = this.mDate;
+      ]]></handler>
+      <handler event="click" button="0"><![CDATA[
+        this.calendarView.setSelectedItems(0, []);
       ]]></handler>
     </handlers>
   </binding>

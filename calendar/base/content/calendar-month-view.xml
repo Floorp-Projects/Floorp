@@ -605,6 +605,10 @@
 
          this.monthView.controller.modifyOccurrence(item, newStart, newEnd);
       ]]></handler>
+
+      <handler event="click" button="0"><![CDATA[
+        this.monthView.setSelectedItems(0, []);
+      ]]></handler>
     </handlers>
   </binding>
 

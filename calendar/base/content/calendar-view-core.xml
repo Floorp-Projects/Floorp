@@ -225,6 +225,7 @@
                 items = [this.mOccurrence];
             }
             this.calendarView.setSelectedItems(items.length, items);
+            event.stopPropagation();
         }
       ]]></handler>
 
