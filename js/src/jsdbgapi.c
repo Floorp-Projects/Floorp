@@ -69,6 +69,13 @@ typedef struct JSTrap {
     void            *closure;
 } JSTrap;
 
+#define DBG_LOCK(rt)            JS_ACQUIRE_LOCK((rt)->debuggerLock)
+#define DBG_UNLOCK(rt)          JS_RELEASE_LOCK((rt)->debuggerLock)
+#define DBG_LOCK_EVAL(rt,expr)  (DBG_LOCK(rt), (expr), DBG_UNLOCK(rt))
+
+/*
+ * NB: FindTrap must be called with rt->debuggerLock acquired.
+ */
 static JSTrap *
 FindTrap(JSRuntime *rt, JSScript *script, jsbytecode *pc)
 {
@@ -88,40 +95,60 @@ js_PatchOpcode(JSContext *cx, JSScript *script, jsbytecode *pc, JSOp op)
 {
     JSTrap *trap;
 
+    DBG_LOCK(cx->runtime);
     trap = FindTrap(cx->runtime, script, pc);
     if (trap)
         trap->op = op;
     else
         *pc = (jsbytecode)op;
+    DBG_UNLOCK(cx->runtime);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
            JSTrapHandler handler, void *closure)
 {
+    JSTrap *junk, *trap, *twin;
     JSRuntime *rt;
-    JSTrap *trap;
+    uint32 sample;
 
+    junk = NULL;
     rt = cx->runtime;
+    DBG_LOCK(rt);
     trap = FindTrap(rt, script, pc);
     if (trap) {
         JS_ASSERT(trap->script == script && trap->pc == pc);
         JS_ASSERT(*pc == JSOP_TRAP);
     } else {
+        sample = rt->debuggerMutations;
+        DBG_UNLOCK(rt);
         trap = (JSTrap *) JS_malloc(cx, sizeof *trap);
         if (!trap || !js_AddRoot(cx, &trap->closure, "trap->closure")) {
             if (trap)
                 JS_free(cx, trap);
             return JS_FALSE;
         }
-        JS_APPEND_LINK(&trap->links, &rt->trapList);
-        trap->script = script;
-        trap->pc = pc;
-        trap->op = (JSOp)*pc;
-        *pc = JSOP_TRAP;
+        DBG_LOCK(rt);
+        twin = (rt->debuggerMutations != sample)
+               ? FindTrap(rt, script, pc)
+               : NULL;
+        if (twin) {
+            junk = trap;
+            trap = twin;
+        } else {
+            JS_APPEND_LINK(&trap->links, &rt->trapList);
+            ++rt->debuggerMutations;
+            trap->script = script;
+            trap->pc = pc;
+            trap->op = (JSOp)*pc;
+            *pc = JSOP_TRAP;
+        }
     }
     trap->handler = handler;
     trap->closure = closure;
+    DBG_UNLOCK(rt);
+    if (junk)
+        JS_free(cx, junk);
     return JS_TRUE;
 }
 
@@ -130,19 +157,29 @@ JS_GetTrapOpcode(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     JSTrap *trap;
 
-    trap = FindTrap(cx->runtime, script, pc);
+    DBG_LOCK_EVAL(cx->runtime, trap = FindTrap(cx->runtime, script, pc));
     if (!trap) {
+#ifdef JS_THREADSAFE
+        /*
+         * If we lost a race with another thread, return JSOP_LIMIT so our
+         * caller can detect this case and do something sane.
+         */
+#else
         JS_ASSERT(0);   /* XXX can't happen */
+#endif
         return JSOP_LIMIT;
     }
     return trap->op;
 }
 
 static void
-DestroyTrap(JSContext *cx, JSTrap *trap)
+DestroyTrapAndUnlock(JSContext *cx, JSTrap *trap)
 {
+    ++cx->runtime->debuggerMutations;
     JS_REMOVE_LINK(&trap->links);
     *trap->pc = (jsbytecode)trap->op;
+    DBG_UNLOCK(cx->runtime);
+
     js_RemoveRoot(cx->runtime, &trap->closure);
     JS_free(cx, trap);
 }
@@ -153,13 +190,16 @@ JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
 {
     JSTrap *trap;
 
+    DBG_LOCK(cx->runtime);
     trap = FindTrap(cx->runtime, script, pc);
     if (handlerp)
         *handlerp = trap ? trap->handler : NULL;
     if (closurep)
         *closurep = trap ? trap->closure : NULL;
     if (trap)
-        DestroyTrap(cx, trap);
+        DestroyTrapAndUnlock(cx, trap);
+    else
+        DBG_UNLOCK(cx->runtime);
 }
 
 JS_PUBLIC_API(void)
@@ -167,15 +207,23 @@ JS_ClearScriptTraps(JSContext *cx, JSScript *script)
 {
     JSRuntime *rt;
     JSTrap *trap, *next;
+    uint32 sample;
 
     rt = cx->runtime;
+    DBG_LOCK(rt);
     for (trap = (JSTrap *)rt->trapList.next;
          trap != (JSTrap *)&rt->trapList;
          trap = next) {
         next = (JSTrap *)trap->links.next;
-        if (trap->script == script)
-            DestroyTrap(cx, trap);
+        if (trap->script == script) {
+            sample = rt->debuggerMutations;
+            DestroyTrapAndUnlock(cx, trap);
+            DBG_LOCK(rt);
+            if (rt->debuggerMutations != sample + 1)
+                next = (JSTrap *)rt->trapList.next;
+        }
     }
+    DBG_UNLOCK(rt);
 }
 
 JS_PUBLIC_API(void)
@@ -183,28 +231,55 @@ JS_ClearAllTraps(JSContext *cx)
 {
     JSRuntime *rt;
     JSTrap *trap, *next;
+    uint32 sample;
 
     rt = cx->runtime;
+    DBG_LOCK(rt);
     for (trap = (JSTrap *)rt->trapList.next;
          trap != (JSTrap *)&rt->trapList;
          trap = next) {
         next = (JSTrap *)trap->links.next;
-        DestroyTrap(cx, trap);
+        sample = rt->debuggerMutations;
+        DestroyTrapAndUnlock(cx, trap);
+        DBG_LOCK(rt);
+        if (rt->debuggerMutations != sample + 1)
+            next = (JSTrap *)rt->trapList.next;
     }
+    DBG_UNLOCK(rt);
 }
 
 JS_PUBLIC_API(JSTrapStatus)
 JS_HandleTrap(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval)
 {
     JSTrap *trap;
-    JSTrapStatus status;
     jsint op;
+    JSTrapStatus status;
 
+    DBG_LOCK(cx->runtime);
     trap = FindTrap(cx->runtime, script, pc);
+    JS_ASSERT(!trap || trap->handler);
     if (!trap) {
-        JS_ASSERT(0);   /* XXX can't happen */
+        op = (JSOp) *pc;
+        DBG_UNLOCK(cx->runtime);
+
+        /* Defend against "pc for wrong script" API usage error. */
+        JS_ASSERT(op != JSOP_TRAP);
+
+#ifdef JS_THREADSAFE
+        /* If the API was abused, we must fail for want of the real op. */
+        if (op == JSOP_TRAP)
+            return JSTRAP_ERROR;
+
+        /* Assume a race with a debugger thread and try to carry on. */
+        *rval = INT_TO_JSVAL(op);
+        return JSTRAP_CONTINUE;
+#else
+        /* Always fail if single-threaded (must be an API usage error). */
         return JSTRAP_ERROR;
+#endif
     }
+    DBG_UNLOCK(cx->runtime);
+
     /*
      * It's important that we not use 'trap->' after calling the callback --
      * the callback might remove the trap!
@@ -247,37 +322,59 @@ typedef struct JSWatchPoint {
     JSPropertyOp        setter;
     JSWatchPointHandler handler;
     void                *closure;
-    jsrefcount          nrefs;
+    uintN               flags;
 } JSWatchPoint;
 
-#define HoldWatchPoint(wp) ((wp)->nrefs++)
+#define JSWP_LIVE       0x1             /* live because set and not cleared */
+#define JSWP_HELD       0x2             /* held while running handler/setter */
 
+/*
+ * NB: DropWatchPointAndUnlock releases cx->runtime->debuggerLock in all cases.
+ */
 static JSBool
-DropWatchPoint(JSContext *cx, JSWatchPoint *wp)
+DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
 {
     JSScopeProperty *sprop;
+    JSPropertyOp setter;
 
-    if (--wp->nrefs != 0)
+    wp->flags &= ~flag;
+    if (wp->flags != 0) {
+        DBG_UNLOCK(cx->runtime);
         return JS_TRUE;
+    }
 
     /*
      * Remove wp from the list, then if there are no other watchpoints for
      * wp->sprop in any scope, restore wp->sprop->setter from wp.
      */
+    ++cx->runtime->debuggerMutations;
     JS_REMOVE_LINK(&wp->links);
     sprop = wp->sprop;
-    if (!js_GetWatchedSetter(cx->runtime, NULL, sprop)) {
+
+    /*
+     * Passing null for the scope parameter tells js_GetWatchedSetter to find
+     * any watch point for sprop, and not to lock or unlock rt->debuggerLock.
+     * If js_ChangeNativePropertyAttrs fails, propagate failure after removing
+     * wp->closure's root and freeing wp.
+     */
+    setter = js_GetWatchedSetter(cx->runtime, NULL, sprop);
+    DBG_UNLOCK(cx->runtime);
+    if (!setter) {
         sprop = js_ChangeNativePropertyAttrs(cx, wp->object, sprop,
                                              0, sprop->attrs,
                                              sprop->getter, wp->setter);
-        if (!sprop)
-            return JS_FALSE;
     }
+
     js_RemoveRoot(cx->runtime, &wp->closure);
     JS_free(cx, wp);
-    return JS_TRUE;
+    return sprop != NULL;
 }
 
+/*
+ * NB: js_MarkWatchPoints does not acquire cx->runtime->debuggerLock, since
+ * the debugger should never be racing with the GC (i.e., the debugger must
+ * respect the request model).
+ */
 void
 js_MarkWatchPoints(JSContext *cx)
 {
@@ -294,6 +391,9 @@ js_MarkWatchPoints(JSContext *cx)
     }
 }
 
+/*
+ * NB: FindWatchPoint must be called with rt->debuggerLock acquired.
+ */
 static JSWatchPoint *
 FindWatchPoint(JSRuntime *rt, JSScope *scope, jsid id)
 {
@@ -312,26 +412,40 @@ JSScopeProperty *
 js_FindWatchPoint(JSRuntime *rt, JSScope *scope, jsid id)
 {
     JSWatchPoint *wp;
+    JSScopeProperty *sprop;
 
+    DBG_LOCK(rt);
     wp = FindWatchPoint(rt, scope, id);
-    if (!wp)
-        return NULL;
-    return wp->sprop;
+    sprop = wp ? wp->sprop : NULL;
+    DBG_UNLOCK(rt);
+    return sprop;
 }
 
+/*
+ * Secret handshake with DropWatchPointAndUnlock: if (!scope), we know our
+ * caller has acquired rt->debuggerLock, so we don't have to.
+ */
 JSPropertyOp
 js_GetWatchedSetter(JSRuntime *rt, JSScope *scope,
                     const JSScopeProperty *sprop)
 {
+    JSPropertyOp setter;
     JSWatchPoint *wp;
 
+    setter = NULL;
+    if (scope)
+        DBG_LOCK(rt);
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
          wp != (JSWatchPoint *)&rt->watchPointList;
          wp = (JSWatchPoint *)wp->links.next) {
-        if ((!scope || wp->object == scope->object) && wp->sprop == sprop)
-            return wp->setter;
+        if ((!scope || wp->object == scope->object) && wp->sprop == sprop) {
+            setter = wp->setter;
+            break;
+        }
     }
-    return NULL;
+    if (scope)
+        DBG_UNLOCK(rt);
+    return setter;
 }
 
 JSBool JS_DLL_CALLBACK
@@ -345,11 +459,16 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     JSBool ok;
 
     rt = cx->runtime;
+    DBG_LOCK(rt);
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
          wp != (JSWatchPoint *)&rt->watchPointList;
          wp = (JSWatchPoint *)wp->links.next) {
         sprop = wp->sprop;
-        if (wp->object == obj && SPROP_USERID(sprop) == id) {
+        if (wp->object == obj && SPROP_USERID(sprop) == id &&
+            !(wp->flags & JSWP_HELD)) {
+            wp->flags |= JSWP_HELD;
+            DBG_UNLOCK(rt);
+
             JS_LOCK_OBJ(cx, obj);
             propid = ID_TO_VALUE(sprop->id);
             userid = (sprop->flags & SPROP_HAS_SHORTID)
@@ -357,10 +476,11 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                      : propid;
             scope = OBJ_SCOPE(obj);
             JS_UNLOCK_OBJ(cx, obj);
-            HoldWatchPoint(wp);
+
+            /* NB: wp is held, so we can safely dereference it still. */
             ok = wp->handler(cx, obj, propid,
                              SPROP_HAS_VALID_SLOT(sprop, scope)
-                             ? OBJ_GET_SLOT(cx, obj, wp->sprop->slot)
+                             ? OBJ_GET_SLOT(cx, obj, sprop->slot)
                              : JSVAL_VOID,
                              vp, wp->closure);
             if (ok) {
@@ -405,7 +525,8 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 } else {
                     argv = JS_malloc(cx, nslots * sizeof(jsval));
                     if (!argv) {
-                        DropWatchPoint(cx, wp);
+                        DBG_LOCK(rt);
+                        DropWatchPointAndUnlock(cx, wp, JSWP_HELD);
                         return JS_FALSE;
                     }
                 }
@@ -436,9 +557,11 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 if (argv != smallv)
                     JS_free(cx, argv);
             }
-            return DropWatchPoint(cx, wp) && ok;
+            DBG_LOCK(rt);
+            return DropWatchPointAndUnlock(cx, wp, JSWP_HELD) && ok;
         }
     }
+    DBG_UNLOCK(rt);
     JS_ASSERT(0);       /* XXX can't happen */
     return JS_FALSE;
 }
@@ -572,8 +695,10 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
      * OBJ_DROP_PROPERTY(cx, obj, prop) before returning.
      */
     ok = JS_TRUE;
+    DBG_LOCK(rt);
     wp = FindWatchPoint(rt, OBJ_SCOPE(obj), propid);
     if (!wp) {
+        DBG_UNLOCK(rt);
         watcher = js_WrapWatchedSetter(cx, propid, sprop->attrs, sprop->setter);
         if (!watcher) {
             ok = JS_FALSE;
@@ -595,25 +720,34 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
         wp->object = obj;
         JS_ASSERT(sprop->setter != js_watch_set || pobj != obj);
         wp->setter = sprop->setter;
-        wp->nrefs = 1;
+        wp->flags = JSWP_LIVE;
 
         /* XXXbe nest in obj lock here */
         sprop = js_ChangeNativePropertyAttrs(cx, obj, sprop, 0, sprop->attrs,
                                              sprop->getter, watcher);
         if (!sprop) {
-            /* Self-link wp->links so DropWatchPoint can JS_REMOVE_LINK it. */
+            /* Self-link so DropWatchPointAndUnlock can JS_REMOVE_LINK it. */
             JS_INIT_CLIST(&wp->links);
-            DropWatchPoint(cx, wp);
+            DBG_LOCK(rt);
+            DropWatchPointAndUnlock(cx, wp, JSWP_LIVE);
             ok = JS_FALSE;
             goto out;
         }
         wp->sprop = sprop;
 
-        /* Now that wp is fully initialized, append it to rt's wp list. */
+        /*
+         * Now that wp is fully initialized, append it to rt's wp list.
+         * Because obj is locked we know that no other thread could have added
+         * a watchpoint for (obj, propid).
+         */
+        DBG_LOCK(rt);
+        JS_ASSERT(!FindWatchPoint(rt, OBJ_SCOPE(obj), propid));
         JS_APPEND_LINK(&wp->links, &rt->watchPointList);
+        ++rt->debuggerMutations;
     }
     wp->handler = handler;
     wp->closure = closure;
+    DBG_UNLOCK(rt);
 
 out:
     OBJ_DROP_PROPERTY(cx, obj, prop);
@@ -628,6 +762,7 @@ JS_ClearWatchPoint(JSContext *cx, JSObject *obj, jsval id,
     JSWatchPoint *wp;
 
     rt = cx->runtime;
+    DBG_LOCK(rt);
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
          wp != (JSWatchPoint *)&rt->watchPointList;
          wp = (JSWatchPoint *)wp->links.next) {
@@ -636,9 +771,10 @@ JS_ClearWatchPoint(JSContext *cx, JSObject *obj, jsval id,
                 *handlerp = wp->handler;
             if (closurep)
                 *closurep = wp->closure;
-            return DropWatchPoint(cx, wp);
+            return DropWatchPointAndUnlock(cx, wp, JSWP_LIVE);
         }
     }
+    DBG_UNLOCK(rt);
     if (handlerp)
         *handlerp = NULL;
     if (closurep)
@@ -651,15 +787,24 @@ JS_ClearWatchPointsForObject(JSContext *cx, JSObject *obj)
 {
     JSRuntime *rt;
     JSWatchPoint *wp, *next;
+    uint32 sample;
 
     rt = cx->runtime;
+    DBG_LOCK(rt);
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
          wp != (JSWatchPoint *)&rt->watchPointList;
          wp = next) {
         next = (JSWatchPoint *)wp->links.next;
-        if (wp->object == obj && !DropWatchPoint(cx, wp))
-            return JS_FALSE;
+        if (wp->object == obj) {
+            sample = rt->debuggerMutations;
+            if (!DropWatchPointAndUnlock(cx, wp, JSWP_LIVE))
+                return JS_FALSE;
+            DBG_LOCK(rt);
+            if (rt->debuggerMutations != sample + 1)
+                next = (JSWatchPoint *)rt->watchPointList.next;
+        }
     }
+    DBG_UNLOCK(rt);
     return JS_TRUE;
 }
 
@@ -668,15 +813,22 @@ JS_ClearAllWatchPoints(JSContext *cx)
 {
     JSRuntime *rt;
     JSWatchPoint *wp, *next;
+    uint32 sample;
 
     rt = cx->runtime;
+    DBG_LOCK(rt);
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
          wp != (JSWatchPoint *)&rt->watchPointList;
          wp = next) {
         next = (JSWatchPoint *)wp->links.next;
-        if (!DropWatchPoint(cx, wp))
+        sample = rt->debuggerMutations;
+        if (!DropWatchPointAndUnlock(cx, wp, JSWP_LIVE))
             return JS_FALSE;
+        DBG_LOCK(rt);
+        if (rt->debuggerMutations != sample + 1)
+            next = (JSWatchPoint *)rt->watchPointList.next;
     }
+    DBG_UNLOCK(rt);
     return JS_TRUE;
 }
 

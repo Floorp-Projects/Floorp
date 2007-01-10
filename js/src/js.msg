@@ -297,3 +297,4 @@ MSG_DEF(JSMSG_BAD_GENERATOR_YIELD,    214, 1, JSEXN_TYPEERR, "yield from closing
 MSG_DEF(JSMSG_BAD_YIELD_SYNTAX,       215, 0, JSEXN_SYNTAXERR, "yield expression must be parenthesized")
 MSG_DEF(JSMSG_ARRAY_COMP_LEFTSIDE,    216, 0, JSEXN_SYNTAXERR, "invalid array comprehension left-hand side")
 MSG_DEF(JSMSG_YIELD_FROM_FILTER,      217, 0, JSEXN_INTERNALERR, "yield not yet supported from filtering predicate")
+MSG_DEF(JSMSG_EMPTY_ARRAY_REDUCE,     218, 0, JSEXN_TYPEERR, "reduce of empty array with no initial value")

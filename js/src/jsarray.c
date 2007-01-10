@@ -1662,22 +1662,27 @@ array_lastIndexOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return array_indexOfHelper(cx, obj, argc, argv, rval, JS_TRUE);
 }
 
-/* Order is important; extras that use a caller's predicate must follow MAP. */
+/* Order is important; extras that take a predicate funarg must follow MAP. */
 typedef enum ArrayExtraMode {
     FOREACH,
+    REDUCE,
+    REDUCE_RIGHT,
     MAP,
     FILTER,
     SOME,
     EVERY
 } ArrayExtraMode;
 
+#define REDUCE_MODE(mode) ((mode) == REDUCE || (mode) == REDUCE_RIGHT)
+
 static JSBool
 array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
             ArrayExtraMode mode)
 {
     jsval *vp, *sp, *origsp, *oldsp;
-    jsuint length, newlen, i;
+    jsuint length, newlen;
     JSObject *callable, *thisp, *newarr;
+    jsint start, end, step, i;
     void *mark;
     JSStackFrame *fp;
     JSBool ok, cond, hole;
@@ -1705,7 +1710,25 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
     newarr = NULL;
     ok = JS_TRUE;
 #endif
+    start = 0, end = length, step = 1;
     switch (mode) {
+      case REDUCE_RIGHT:
+        start = length - 1, end = -1, step = -1;
+        /* FALL THROUGH */
+      case REDUCE:
+        if (length == 0 && argc == 1) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_EMPTY_ARRAY_REDUCE);
+            return JS_FALSE;
+        }
+        if (argc >= 2) {
+            *rval = argv[1];
+        } else {
+            if (!GetArrayElement(cx, obj, start, &hole, rval))
+                return JS_FALSE;
+            start += step;
+        }
+        break;
       case MAP:
       case FILTER:
         newlen = (mode == MAP) ? length : 0;
@@ -1727,7 +1750,7 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
     if (length == 0)
         return JS_TRUE;
 
-    if (argc > 1) {
+    if (argc > 1 && !REDUCE_MODE(mode)) {
         if (!js_ValueToObject(cx, argv[1], &thisp))
             return JS_FALSE;
         argv[1] = OBJECT_TO_JSVAL(thisp);
@@ -1735,8 +1758,12 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
         thisp = NULL;
     }
 
-    /* We call with 3 args (value, index, array), plus room for rval. */
-    origsp = js_AllocStack(cx, 2 + 3 + 1, &mark);
+    /*
+     * For all but REDUCE, we call with 3 args (value, index, array), plus
+     * room for rval.  REDUCE requires 4 args (accum, value, index, array).
+     */
+    argc = 3 + REDUCE_MODE(mode);
+    origsp = js_AllocStack(cx, 2 + argc + 1, &mark);
     if (!origsp)
         return JS_FALSE;
 
@@ -1744,7 +1771,7 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
     fp = cx->fp;
     oldsp = fp->sp;
 
-    for (i = 0; i < length; i++) {
+    for (i = start; i != end; i += step) {
         ok = (JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) &&
               GetArrayElement(cx, obj, i, &hole, vp));
         if (!ok)
@@ -1760,13 +1787,15 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
         sp = origsp;
         *sp++ = OBJECT_TO_JSVAL(callable);
         *sp++ = OBJECT_TO_JSVAL(thisp);
+        if (REDUCE_MODE(mode))
+            *sp++ = *rval;
         *sp++ = *vp;
         *sp++ = INT_TO_JSVAL(i);
         *sp++ = OBJECT_TO_JSVAL(obj);
 
         /* Do the call. */
         fp->sp = sp;
-        ok = js_Invoke(cx, 3, JSINVOKE_INTERNAL);
+        ok = js_Invoke(cx, argc, JSINVOKE_INTERNAL);
         vp[1] = fp->sp[-1];
         fp->sp = oldsp;
         if (!ok)
@@ -1786,6 +1815,10 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
 
         switch (mode) {
           case FOREACH:
+            break;
+          case REDUCE:
+          case REDUCE_RIGHT:
+            *rval = vp[1];
             break;
           case MAP:
             ok = SetArrayElement(cx, newarr, i, vp[1]);
@@ -1837,6 +1870,20 @@ array_map(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 }
 
 static JSBool
+array_reduce(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+             jsval *rval)
+{
+    return array_extra(cx, obj, argc, argv, rval, REDUCE);
+}
+
+static JSBool
+array_reduceRight(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                  jsval *rval)
+{
+    return array_extra(cx, obj, argc, argv, rval, REDUCE_RIGHT);
+}
+
+static JSBool
 array_filter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
              jsval *rval)
 {
@@ -1884,6 +1931,8 @@ static JSFunctionSpec array_methods[] = {
     {"lastIndexOf",         array_lastIndexOf,      1,JSFUN_GENERIC_NATIVE,0},
     {"forEach",             array_forEach,          1,JSFUN_GENERIC_NATIVE,2},
     {"map",                 array_map,              1,JSFUN_GENERIC_NATIVE,2},
+    {"reduce",              array_reduce,           1,JSFUN_GENERIC_NATIVE,2},
+    {"reduceRight",         array_reduceRight,      1,JSFUN_GENERIC_NATIVE,2},
     {"filter",              array_filter,           1,JSFUN_GENERIC_NATIVE,2},
     {"some",                array_some,             1,JSFUN_GENERIC_NATIVE,2},
     {"every",               array_every,            1,JSFUN_GENERIC_NATIVE,2},
