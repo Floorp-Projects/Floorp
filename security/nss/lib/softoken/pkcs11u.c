@@ -2093,8 +2093,8 @@ sftk_deleteTokenKeyByHandle(SFTKSlot *slot, CK_OBJECT_HANDLE handle)
    SECItem *item;
    PRBool rem;
 
-   item = (SECItem *)PL_HashTableLookup(slot->tokenHashTable, (void *)handle);
-   rem = PL_HashTableRemove(slot->tokenHashTable,(void *)handle) ;
+   item = (SECItem *)PL_HashTableLookup(slot->tokObjHashTable, (void *)handle);
+   rem = PL_HashTableRemove(slot->tokObjHashTable,(void *)handle) ;
    if (rem && item) {
 	SECITEM_FreeItem(item,PR_TRUE);
    }
@@ -2117,7 +2117,7 @@ sftk_addTokenKeyByHandle(SFTKSlot *slot, CK_OBJECT_HANDLE handle, SECItem *key)
     if (item == NULL) {
 	return SECFailure;
     }
-    entry = PL_HashTableAdd(slot->tokenHashTable,(void *)handle,item);
+    entry = PL_HashTableAdd(slot->tokObjHashTable,(void *)handle,item);
     if (entry == NULL) {
 	SECITEM_FreeItem(item,PR_TRUE);
 	return SECFailure;
@@ -2129,7 +2129,7 @@ sftk_addTokenKeyByHandle(SFTKSlot *slot, CK_OBJECT_HANDLE handle, SECItem *key)
 static SECItem *
 sftk_lookupTokenKeyByHandle(SFTKSlot *slot, CK_OBJECT_HANDLE handle)
 {
-    return (SECItem *)PL_HashTableLookup(slot->tokenHashTable, (void *)handle);
+    return (SECItem *)PL_HashTableLookup(slot->tokObjHashTable, (void *)handle);
 }
 
 /*
@@ -2161,7 +2161,7 @@ SFTK_ClearTokenKeyHashTable(SFTKSlot *slot)
 {
     sftk_tokenKeyLock(slot);
     PORT_Assert(!slot->present);
-    PL_HashTableEnumerateEntries(slot->tokenHashTable, sftk_freeHashItem, NULL);
+    PL_HashTableEnumerateEntries(slot->tokObjHashTable, sftk_freeHashItem, NULL);
     sftk_tokenKeyUnlock(slot);
     return CKR_OK;
 }
@@ -2408,14 +2408,14 @@ static SFTKObject *
 sftk_ObjectFromHandleOnSlot(CK_OBJECT_HANDLE handle, SFTKSlot *slot)
 {
     SFTKObject *object;
-    PRUint32 index = sftk_hash(handle, slot->tokObjHashSize);
+    PRUint32 index = sftk_hash(handle, slot->sessObjHashSize);
 
     if (sftk_isToken(handle)) {
 	return sftk_NewTokenObject(slot, NULL, handle);
     }
 
     PZ_Lock(slot->objectLock);
-    sftkqueue_find2(object, handle, index, slot->tokObjects);
+    sftkqueue_find2(object, handle, index, slot->sessObjHashTable);
     if (object) {
 	sftk_ReferenceObject(object);
     }
@@ -2468,10 +2468,10 @@ sftk_FreeObject(SFTKObject *object)
 void
 sftk_AddSlotObject(SFTKSlot *slot, SFTKObject *object)
 {
-    PRUint32 index = sftk_hash(object->handle, slot->tokObjHashSize);
+    PRUint32 index = sftk_hash(object->handle, slot->sessObjHashSize);
     sftkqueue_init_element(object);
     PZ_Lock(slot->objectLock);
-    sftkqueue_add2(object, object->handle, index, slot->tokObjects);
+    sftkqueue_add2(object, object->handle, index, slot->sessObjHashTable);
     PZ_Unlock(slot->objectLock);
 }
 
@@ -2505,7 +2505,7 @@ sftk_DeleteObject(SFTKSession *session, SFTKObject *object)
     NSSLOWCERTCertificate *cert;
     NSSLOWCERTCertTrust tmptrust;
     PRBool isKrl;
-    PRUint32 index = sftk_hash(object->handle, slot->tokObjHashSize);
+    PRUint32 index = sftk_hash(object->handle, slot->sessObjHashSize);
 
   /* Handle Token case */
     if (so && so->session) {
@@ -2514,7 +2514,7 @@ sftk_DeleteObject(SFTKSession *session, SFTKObject *object)
 	sftkqueue_delete(&so->sessionList,0,session->objects,0);
 	PZ_Unlock(session->objectLock);
 	PZ_Lock(slot->objectLock);
-	sftkqueue_delete2(object, object->handle, index, slot->tokObjects);
+	sftkqueue_delete2(object, object->handle, index, slot->sessObjHashTable);
 	PZ_Unlock(slot->objectLock);
 	sftkqueue_clear_deleted_element(object);
 	sftk_FreeObject(object); /* reduce it's reference count */
