@@ -731,6 +731,17 @@ function updateAllDay()
     setElementValue("event-starttime", allDay, "timepickerdisabled");
     setElementValue("event-endtime", allDay, "timepickerdisabled");
 
+    if (!allDay) {
+        // Reset default event length, if timepickers are equal
+        var startDate = jsDateToDateTime(getElementValue("event-starttime"));
+        var endDate = jsDateToDateTime(getElementValue("event-endtime"));
+        if (startDate.compare(endDate) == 0) {
+            endDate.minute += getPrefSafe("calendar.event.defaultlength", 60);
+            endDate.normalize();
+            setElementValue("event-endtime", endDate.jsDate);
+        }
+    }
+
     updateAccept();
 }
 
