@@ -294,7 +294,6 @@ function weekPrint_getDayTable(aDate, aItems) {
         style += ' color: ' + getContrastingTextColor(calColor);
         if (catColor) {
             style += ' border: solid ' + catColor + ' 2px;';
-dump("getting color:"+getContrastingTextColor(catColor));
         }
         var item = <tr>
                        <td valign='top' align='left' style={style}>{time} {item.title}</td>
