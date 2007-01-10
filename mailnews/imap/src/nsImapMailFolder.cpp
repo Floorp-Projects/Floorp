@@ -4364,20 +4364,10 @@ nsImapMailFolder::OnlineCopyCompleted(nsIImapProtocol *aProtocol, ImapOnlineCopy
                  do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv);
         NS_ENSURE_SUCCESS(rv,rv);
    
-        rv = imapService->AddMessageFlags(m_thread, this, nsnull, nsnull,
+        return imapService->AddMessageFlags(m_thread, this, nsnull, nsnull,
                                           messageIds,
                                           kImapMsgDeletedFlag,
                                           PR_TRUE);
-      if (NS_SUCCEEDED(rv))
-      {
-        nsMsgKeyArray affectedMessages;
-        char *keyTokenString = nsCRT::strdup(messageIds);
-        ParseUidString(keyTokenString, affectedMessages);
-        if (mDatabase) 
-          mDatabase->DeleteMessages(&affectedMessages,nsnull);
-        nsCRT::free(keyTokenString);
-        return rv;
-      }
     }
     /* unhandled action */
     else return NS_ERROR_FAILURE;
