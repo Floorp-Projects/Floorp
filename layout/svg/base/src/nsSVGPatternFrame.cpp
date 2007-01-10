@@ -791,22 +791,23 @@ nsSVGPatternFrame::CreateSurface(nsIDOMSVGRect *bbox)
 // nsSVGPaintServerFrame methods:
 
 nsresult
-nsSVGPatternFrame::SetupPaintServer(cairo_t *aCtx,
+nsSVGPatternFrame::SetupPaintServer(gfxContext *aContext,
                                     nsSVGGeometryFrame *aSource,
                                     float aOpacity,
                                     void **aClosure)
 {
   *aClosure = nsnull;
+  cairo_t *ctx = aContext->GetCairo();
 
   cairo_matrix_t matrix;
-  cairo_get_matrix(aCtx, &matrix);
+  cairo_get_matrix(ctx, &matrix);
 
   // Paint it!
   cairo_surface_t *surface;
   nsCOMPtr<nsIDOMSVGMatrix> pMatrix;
-  cairo_identity_matrix(aCtx);
+  cairo_identity_matrix(ctx);
   nsresult rv = PaintPattern(&surface, getter_AddRefs(pMatrix), aSource);
-  cairo_set_matrix(aCtx, &matrix);
+  cairo_set_matrix(ctx, &matrix);
   if (NS_FAILED(rv)) {
     cairo_surface_destroy(surface);
     return rv;
@@ -833,7 +834,7 @@ nsSVGPatternFrame::SetupPaintServer(cairo_t *aCtx,
   cairo_pattern_set_matrix (surface_pattern, &pmatrix);
   cairo_pattern_set_extend (surface_pattern, CAIRO_EXTEND_REPEAT);
 
-  cairo_set_source(aCtx, surface_pattern);
+  cairo_set_source(ctx, surface_pattern);
 
   *aClosure = surface_pattern;
 
@@ -841,7 +842,7 @@ nsSVGPatternFrame::SetupPaintServer(cairo_t *aCtx,
 }
 
 void
-nsSVGPatternFrame::CleanupPaintServer(cairo_t *aCtx, void *aClosure)
+nsSVGPatternFrame::CleanupPaintServer(gfxContext *aContext, void *aClosure)
 {
   cairo_pattern_t *pattern = NS_STATIC_CAST(cairo_pattern_t*, aClosure);
   cairo_pattern_destroy(pattern);
