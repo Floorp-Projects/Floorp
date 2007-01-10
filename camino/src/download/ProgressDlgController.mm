@@ -1097,12 +1097,30 @@ static id gSharedProgressController = nil;
 
 -(NSArray *)toolbarAllowedItemIdentifiers:(NSToolbar *)toolbar
 {
-  return [NSArray arrayWithObjects:@"cleanupbutton", @"removebutton", @"cancelbutton", @"pauseresumebutton", @"openbutton", @"revealbutton", @"movetotrashbutton", NSToolbarFlexibleSpaceItemIdentifier, nil];
+  return [NSArray arrayWithObjects:@"cleanupbutton",
+                                   @"removebutton",
+                                   @"cancelbutton",
+                                   @"pauseresumebutton",
+                                   @"openbutton",
+                                   @"revealbutton",
+                                   @"movetotrashbutton",
+                                   NSToolbarCustomizeToolbarItemIdentifier,
+                                   NSToolbarFlexibleSpaceItemIdentifier,
+                                   NSToolbarSpaceItemIdentifier,
+                                   NSToolbarSeparatorItemIdentifier,
+                                   nil];
 }
 
 -(NSArray *)toolbarDefaultItemIdentifiers:(NSToolbar *)toolbar
 {
-  return [NSArray arrayWithObjects:@"cleanupbutton", @"removebutton", @"cancelbutton", @"pauseresumebutton", @"openbutton", NSToolbarFlexibleSpaceItemIdentifier, @"revealbutton", nil];
+  return [NSArray arrayWithObjects:@"cleanupbutton",
+                                   @"removebutton",
+                                   @"cancelbutton",
+                                   @"pauseresumebutton",
+                                   @"openbutton",
+                                   NSToolbarFlexibleSpaceItemIdentifier,
+                                   @"revealbutton",
+                                   nil];
 }
 
 - (void)setToolTipForToolbarItem:(NSToolbarItem *)theItem
