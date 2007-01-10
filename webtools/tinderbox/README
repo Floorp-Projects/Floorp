@@ -143,13 +143,13 @@ DATA STRUCTURES IN showbuilds.cgi
 load_buildlog() creates build_list a list of hash refernces of this
 type
       $buildrec = {    
-         mailtime => $mailtime,
+         endtime => $endtime,          # formerly $mailtime
          buildtime => $buildtime,
-         buildname => ($tree2 ne '' ? $t->{name} . ' ' : '' ) . $buildname,
+         buildname => $buildname,
          errorparser => $errorparser,
          buildstatus => $buildstatus,
          logfile => $logfile,
-         binaryname => $binaryname,
+         binaryurl => $binaryurl,
          td => $t
       };
 

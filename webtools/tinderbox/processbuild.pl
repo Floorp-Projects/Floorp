@@ -283,6 +283,25 @@ sub check_required_variables {
     $err_string .= "Variable 'tinderbox:status' must be 'success', 'busted', 'testfailed', or 'building'\n";
   }
 
+  # Build End Date - Only present in final status message
+  if ($tbx->{buildenddate} eq '') {
+      if ($tbx->{status} =~ /building/) {
+          $tbx->{buildenddate} = $tbx->{builddate};
+      } else {
+          # Fallback to using processing time as enddate for older clients
+          $tbx->{buildenddate} = time;
+      }
+  }
+  else {
+      if ($tbx->{buildenddate} =~ 
+          /([0-9]*)\/([0-9]*)\/([0-9]*)[ \t]*([0-9]*)\:([0-9]*)\:([0-9]*)/) {
+          $tbx->{buildenddate} = timelocal($6,$5,$4,$2,$1-1,$3);
+      }
+      elsif ($tbx->{buildenddate} < 7000000) {
+          $err_string .= "Variable 'tinderbox:buildenddate' not of the form MM/DD/YY HH:MM:SS or unix date\n";
+      }
+  }
+
   # Log compression
   #
   if ($tbx->{logcompression} !~ /^(bzip2|gzip)?$/) {
@@ -306,7 +325,6 @@ sub check_required_variables {
 
 sub write_build_data {
   my $tbx = $_[0];
-  $process_time = time;
   my $lockfile = "$tbx->{tree}/builddat.sem";
   my $lock = &lock_datafile($lockfile);
   unless (open(BUILDDATA, ">>", "$tbx->{tree}/build.dat")) {
@@ -314,7 +332,7 @@ sub write_build_data {
       &unlock_datafile($lock);
       return;
   }
-  print BUILDDATA "$process_time|$tbx->{builddate}|$tbx->{build}|$tbx->{errorparser}|$tbx->{status}|$tbx->{logfile}|$tbx->{binaryurl}\n";
+  print BUILDDATA "$tbx->{buildenddate}|$tbx->{builddate}|$tbx->{build}|$tbx->{errorparser}|$tbx->{status}|$tbx->{logfile}|$tbx->{binaryurl}\n";
   close BUILDDATA;
   &unlock_datafile($lock);
   unlink($lockfile);

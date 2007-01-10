@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.341 $ ';
+$::UtilsVersion = '$Revision: 1.342 $ ';
 
 package TinderUtils;
 
@@ -769,7 +769,7 @@ sub encode_log {
 }
 
 sub mail_build_finished_message {
-    my ($start_time, $build_status, $binary_url, $logfile) = @_;
+    my ($start_time, $end_time, $build_status, $binary_url, $logfile) = @_;
 
     # Rewrite LOG to OUTLOG, shortening lines.
     open OUTLOG, ">$logfile.last" or die "Unable to open logfile, $logfile: $!";
@@ -781,6 +781,7 @@ sub mail_build_finished_message {
     print OUTLOG "\n";
     print OUTLOG "tinderbox: tree: $Settings::BuildTree\n";
     print OUTLOG "tinderbox: builddate: $start_time\n";
+    print OUTLOG "tinderbox: buildenddate: $end_time\n";
     print OUTLOG "tinderbox: status: $build_status\n";
     print OUTLOG "tinderbox: binaryurl: $binary_url\n" if ($binary_url ne "");
     print OUTLOG "tinderbox: build: $Settings::BuildName\n";
@@ -1218,12 +1219,7 @@ sub BuildIt {
         close LOG;
         chdir $build_dir;
 
-        my $mailBuildEndTime = $start_time;
-        if ($Settings::TestOnlyTinderbox){
-          $mailBuildEndTime = $server_start_time;
-        }
-
-        mail_build_finished_message($mailBuildEndTime, $build_status, $binary_url, $logfile) if $Settings::ReportStatus;
+        mail_build_finished_message($mailBuildStartTime, time(), $build_status, $binary_url, $logfile) if $Settings::ReportStatus;
 
         rebootSystem() if $Settings::OS eq 'WIN98' && $Settings::RebootSystem;
 

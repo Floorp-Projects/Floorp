@@ -101,7 +101,7 @@ sub trim_logs {
     open(BD, "<", "$tree/build.dat");
     open(NBD, ">", "$tree/build.dat.new");
     while( <BD> ){
-        ($mailtime,$buildtime,$buildname) = split( /\|/ );
+        ($endtime,$buildtime,$buildname) = split( /\|/ );
         if( $buildtime >= $min_date ){
             print NBD $_;
         }
@@ -193,7 +193,7 @@ sub disable_builds {
     # Read build.dat
     open(BD, "<", "$tree/build.dat");
     while( <BD> ){
-        ($mailtime,$buildtime,$bname) = split( /\|/ );
+        ($endtime,$buildtime,$bname) = split( /\|/ );
         $buildnames{$bname} = 0;
     }
     close( BD );
@@ -225,7 +225,7 @@ sub scrape_builds {
     # Read build.dat
     open(BD, "<", "$tree/build.dat");
     while( <BD> ){
-        ($mailtime,$buildtime,$bname) = split( /\|/ );
+        ($endtime,$buildtime,$bname) = split( /\|/ );
         $buildnames{$bname} = 1;
     }
     close( BD );

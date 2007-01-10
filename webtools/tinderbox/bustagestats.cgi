@@ -63,7 +63,7 @@ if (defined $tree && defined $start && defined $end) {
             my %stats;
             while (<IN>) {
                 chomp;
-                my ($mailtime, $buildtime, $buildname, $errorparser,
+                my ($endtime, $buildtime, $buildname, $errorparser,
                     $buildstatus, $logfile, $binaryurl) = 
                         split( /\|/ );
                 if ($buildtime >= $first && $buildtime <= $last) {

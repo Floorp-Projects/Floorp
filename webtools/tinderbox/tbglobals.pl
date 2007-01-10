@@ -553,11 +553,11 @@ sub tb_find_build_record {
 
   chomp($log_entry);
   # Skip the logfile in the parse since it is already known.
-  my ($mailtime, $buildtime, $buildname, $errorparser,
+  my ($endtime, $buildtime, $buildname, $errorparser,
       $buildstatus, $binaryurl) = (split /\|/, $log_entry)[0..4,6];
 
   $buildrec = {    
-    mailtime    => $mailtime,
+    endtime     => $endtime,
     buildtime   => $buildtime,
     buildname   => $buildname,
     errorparser => $errorparser,
@@ -612,11 +612,9 @@ sub load_buildlog {
   my $internal_build_list;
   LOOP: while( $_ = $bw->readline ) {
     chomp;
-    my ($mailtime, $buildtime, $buildname,
+    my ($endtime, $buildtime, $buildname,
      $errorparser, $buildstatus, $logfile, $binaryurl) = split /\|/;
     
-    my ($endtime);
-
     # Ignore stuff in the future.
     next if $buildtime > $maxdate;
     
@@ -635,16 +633,6 @@ sub load_buildlog {
     }
     $tooearly = 0;
 
-    # We should get clients reporting their actual end time.  This would
-    # alleviate an obvious problem where a build starts immediately on the
-    # same system after another completed.  Now, since we infer the end time
-    # based on the mail time, the reported end time of the first build can
-    # be later than the reported start time of the second.
-
-    # Completed builds are eligible for inference of their end time.  If the
-    # build is on-going, it doesn't have an end time, so leave it undefined.
-    $endtime = $mailtime if ($buildstatus ne 'building');
-
     if ($form{noignore} or not $treedata->{ignore_builds}->{$buildname}) {
 
       # Latest record in build.dat for this (buildtime, buildname) tuple wins.
@@ -656,7 +644,6 @@ sub load_buildlog {
 
       my $buildrec = {    
                       endtime     => $endtime,
-                      mailtime    => $mailtime,
                       buildtime   => $buildtime,
                       buildname   => $buildname,
                       errorparser => $errorparser,
@@ -782,7 +769,7 @@ sub get_build_time_index {
   #
   foreach my $br (@{$build_list}) {
     $build_time_index->{$br->{buildtime}} = 1;
-    if ( $br->{endtime} and $display_accurate_build_end_times ) {
+    if ($display_accurate_build_end_times) {
       $build_time_index->{$br->{endtime}} = 1;
     }
   }

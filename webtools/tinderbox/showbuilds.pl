@@ -353,9 +353,6 @@ BEGIN {
           # Add build start, end, and elapsed time where possible.
           my($start, $end, $elapsed);
 
-          # Treat buildtime as the build's start and mailtime as the build's
-          # end.  We should add in explicit setting of endtime in the client
-          # scripts if they don't already have it and then use that here.
           my $start_timet = $br->{buildtime};
           my $end_timet = $br->{endtime};
 
@@ -371,7 +368,7 @@ BEGIN {
           # Grab the human-readable start time.
           $start = get_local_hms($start_timet, $need_to_qualify);
 
-          # If we're still building, the mailtime only reflects the opening
+          # If we're still building, the endtime only reflects the opening
           # mail that the build has started, not the time at which the build
           # ended.  In that case, don't use it.  Use the current time, instead.
           my $time_info = "";
