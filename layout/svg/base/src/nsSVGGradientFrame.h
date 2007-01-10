@@ -56,11 +56,11 @@ class nsSVGGradientFrame : public nsSVGGradientFrameBase,
 {
 public:
   // nsSVGPaintServerFrame methods:
-  virtual nsresult SetupPaintServer(cairo_t *aCtx,
+  virtual nsresult SetupPaintServer(gfxContext *aContext,
                                     nsSVGGeometryFrame *aSource,
                                     float aOpacity,
                                     void **aClosure);
-  virtual void CleanupPaintServer(cairo_t *aCtx, void *aClosure);
+  virtual void CleanupPaintServer(gfxContext *aContext, void *aClosure);
 
   // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);

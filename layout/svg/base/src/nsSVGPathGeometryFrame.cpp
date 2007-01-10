@@ -333,7 +333,7 @@ nsSVGPathGeometryFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
   if (mask & HITTEST_MASK_FILL)
     isHit = cairo_in_fill(ctx, xx, yy);
   if (!isHit && (mask & HITTEST_MASK_STROKE)) {
-    SetupCairoStrokeHitGeometry(ctx);
+    SetupCairoStrokeHitGeometry(&context);
     isHit = cairo_in_stroke(ctx, xx, yy);
   }
 
@@ -409,7 +409,7 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
   double xmin, ymin, xmax, ymax;
 
   if (HasStroke()) {
-    SetupCairoStrokeGeometry(ctx);
+    SetupCairoStrokeGeometry(&context);
     cairo_stroke_extents(ctx, &xmin, &ymin, &xmax, &ymax);
     nsSVGUtils::UserToDeviceBBox(ctx, &xmin, &ymin, &xmax, &ymax);
   } else {
