@@ -556,10 +556,10 @@ var PlacesUtils = {
    * Generates a HistoryResultNode for the contents of a folder.
    * @param   folderId
    *          The folder to open
-   * @param   excludeItems
+   * @param   [optional] excludeItems
    *          True to hide all items (individual bookmarks). This is used on
    *          the left places pane so you just get a folder hierarchy.
-   * @param   expandQueries
+   * @param   [optional] expandQueries
    *          True to make query items expand as new containers. For managing,
    *          you want this to be false, for menus and such, you want this to
    *          be true.
