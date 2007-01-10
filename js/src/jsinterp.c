@@ -1474,6 +1474,18 @@ JSBool
 js_InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, jsval fval,
                     JSAccessMode mode, uintN argc, jsval *argv, jsval *rval)
 {
+    int stackDummy;
+
+    /*
+     * js_InternalInvoke could result in another try to get or set the same id
+     * again, see bug 355497.
+     */
+    if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_OVER_RECURSED);
+        return JS_FALSE;
+    }
+
     /*
      * Check general (not object-ops/class-specific) access from the running
      * script to obj.id only if id has a scripted getter or setter that we're
