@@ -8,13 +8,15 @@
     <NC:providers>
       <NC:nsIMsgAccount about="domain:mac.com">
 
-        <!-- pop3 server info -->
+        <!-- imap server info -->
         <NC:incomingServer>
           <NC:nsIMsgIncomingServer>
             <NC:prettyName>.Mac</NC:prettyName>
             <NC:hostName>mail.mac.com</NC:hostName>
             <NC:type>imap</NC:type>
             <NC:rememberPassword>true</NC:rememberPassword>
+            <NC:port>993</NC:port>
+            <NC:socketType>3</NC:socketType>            
           </NC:nsIMsgIncomingServer>
         </NC:incomingServer>
 
@@ -22,6 +24,8 @@
         <NC:smtp>
           <NC:nsISmtpServer>
             <NC:hostname>smtp.mac.com</NC:hostname>
+            <NC:description>.Mac</NC:description>
+            <NC:trySSL>2</NC:trySSL>
           </NC:nsISmtpServer>
         </NC:smtp>
         <NC:smtpRequiresUsername>true</NC:smtpRequiresUsername>
@@ -32,7 +36,6 @@
         <NC:identity>
           <NC:nsIMsgIdentity>
             <NC:composeHtml>true</NC:composeHtml>
-            <NC:doFcc>false</NC:doFcc>
           </NC:nsIMsgIdentity>
         </NC:identity>
 
