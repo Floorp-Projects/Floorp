@@ -845,7 +845,7 @@ sub fields {
            bug_status resolution dup_id
            bug_file_loc status_whiteboard keywords
            priority bug_severity target_milestone
-           dependson blocked votes
+           dependson blocked votes everconfirmed
            reporter assigned_to cc),
     
         # Conditional Fields
