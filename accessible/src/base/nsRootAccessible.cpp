@@ -547,13 +547,20 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     return NS_OK;
   }
       
+  nsIAccessibilityService *accService = GetAccService();
+  NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
+
   if (eventType.LowerCaseEqualsLiteral("pagehide")) {
-    // Only get cached accessible for pagehide -- so that we don't create it
-    // just to destroy it.
+    // pagehide event can be fired under several conditions, such as HTML
+    // document going away, closing a window/dialog, and wizard page changing.
+    // We only destroy the accessible object when it's a document accessible,
+    // so that we don't destroy something still in use, like wizard page. 
+    // And we only get cached document accessible to destroy, so that we don't
+    // create it just to destroy it.
     nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(eventShell));
-    nsCOMPtr<nsIAccessibleDocument> accessibleDoc =
-      nsAccessNode::GetDocAccessibleFor(weakShell);
-    nsCOMPtr<nsPIAccessibleDocument> privateAccDoc = do_QueryInterface(accessibleDoc);
+    nsCOMPtr<nsIAccessible> accessible;
+    accService->GetCachedAccessible(aTargetNode, weakShell, getter_AddRefs(accessible));
+    nsCOMPtr<nsPIAccessibleDocument> privateAccDoc = do_QueryInterface(accessible);
     if (privateAccDoc) {
       privateAccDoc->Destroy();
     }
@@ -578,9 +585,6 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     TryFireEarlyLoadEvent(aTargetNode);
     return NS_OK;
   }
-
-  nsIAccessibilityService *accService = GetAccService();
-  NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
 
   if (eventType.EqualsLiteral("TreeViewChanged")) {
     NS_ENSURE_TRUE(localName.EqualsLiteral("tree"), NS_OK);
