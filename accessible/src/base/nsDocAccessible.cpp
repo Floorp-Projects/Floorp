@@ -107,16 +107,6 @@ nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell)
 
   // XXX aaronl should we use an algorithm for the initial cache size?
   mAccessNodeCache.Init(kDefaultCacheSize);
-
-  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
-    GetDocShellTreeItemFor(mDOMNode);
-  if (docShellTreeItem) {
-    PRInt32 itemType;
-    docShellTreeItem->GetItemType(&itemType);
-    if (itemType == nsIDocShellTreeItem::typeChrome) {
-      mIsContentLoaded = PR_TRUE;
-    }
-  }
 }
 
 //-----------------------------------------------------
