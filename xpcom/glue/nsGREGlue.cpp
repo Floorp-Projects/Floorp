@@ -166,6 +166,13 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
 #elif XP_WIN
     if (_fullpath(aBuffer, p, aBufLen))
       return NS_OK;
+#elif XP_OS2
+    // realpath on OS/2 returns a unix-ized path, so re-native-ize
+    if (realpath(p, aBuffer)) {
+      for (char* ptr = strchr(aBuffer, '/'); ptr; ptr = strchr(ptr, '/'))
+        *ptr = '\\';
+      return NS_OK;
+    }
 #elif XP_BEOS
     BPath path;
     status_t result;

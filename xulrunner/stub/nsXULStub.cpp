@@ -56,6 +56,15 @@
 #elif defined(XP_MACOSX)
 #include <CFBundle.h>
 #define PATH_SEPARATOR_CHAR '/'
+#elif defined (XP_OS2)
+#define INCL_DOS
+#define INCL_DOSMISC
+#define INCL_DOSERRORS
+#include <os2.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#define PATH_SEPARATOR_CHAR '\\'
 #else
 #include <unistd.h>
 #include <sys/types.h>
@@ -162,6 +171,13 @@ main(int argc, char **argv)
   if (!::GetModuleFileName(NULL, iniPath, sizeof(iniPath)))
     return 1;
 
+#elif defined(XP_OS2)
+   PPIB ppib;
+   PTIB ptib;
+ 
+   DosGetInfoBlocks(&ptib, &ppib);
+   DosQueryModuleName(ppib->pib_hmte, sizeof(iniPath), iniPath);
+
 #else
   // on unix, there is no official way to get the path of the current binary.
   // instead of using the MOZILLA_FIVE_HOME hack, which doesn't scale to
@@ -266,6 +282,15 @@ main(int argc, char **argv)
       return 1;
     }
   }
+#ifdef XP_OS2
+  // On OS/2 we need to set BEGINLIBPATH to be able to find XULRunner DLLs
+  strcpy(tmpPath, greDir);
+  lastSlash = strrchr(tmpPath, PATH_SEPARATOR_CHAR);
+  if (lastSlash) {
+    *lastSlash = '\0';
+  }
+  DosSetExtLIBPATH(tmpPath, BEGIN_LIBPATH);
+#endif
 
   rv = XPCOMGlueStartup(greDir);
   if (NS_FAILED(rv)) {
