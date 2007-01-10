@@ -180,7 +180,6 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       //res = GetMacBrushColor(??, aColor, NS_RGB(0xCC,0xCC,0xCC));
       //active titlebar etc is #CCCCCC
       aColor = NS_RGB(0xCC,0xCC,0xCC);
-      res = NS_OK;
       break;
     case eColor_activeborder:
       //If it means anything at all on Mac OS, then its black in every theme I've tried,
@@ -198,7 +197,6 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       //incidentally, this is supposed to be the colour of the desktop, though how anyone
       //is supposed to guess that from the name?
       aColor = NS_RGB(0x63,0x63,0xCE);
-      res = NS_OK;
       break;
     case eColor_buttonface:
     case eColor__moz_buttonhoverface:
@@ -231,7 +229,6 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       //this is the scrollbar trough. HARDCODING no way to get this colour
       //res = GetMacBrushColor(??, aColor, NS_RGB(0xAA,0xAA,0xAA));
       aColor = NS_RGB(0xAA,0xAA,0xAA);
-      res = NS_OK;
       break;
     case eColor_threeddarkshadow:
       res = GetMacBrushColor(kThemeBrushButtonActiveDarkShadow, aColor, NS_RGB(0x77,0x77,0x77));
@@ -262,7 +259,6 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       //no way to fetch this colour. HARDCODING to Platinum
       //res = GetMacBrushColor(??, aColor, NS_RGB(0xCC,0xCC,0xCC));
       aColor = NS_RGB(0xCC,0xCC,0xCC);
-      res = NS_OK;
       break;
     case eColor_window:
       res = GetMacBrushColor(kThemeBrushDocumentWindowBackground, aColor, NS_RGB(0xFF,0xFF,0xFF));        
