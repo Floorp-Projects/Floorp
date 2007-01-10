@@ -311,6 +311,7 @@ function makeHTMLWeek(date, sortedList, targetMonth) {
             } catch(ex) {}
 
             var style = 'font-size: 11px; background-color: ' + calColor + ';';
+            style += ' color: ' + getContrastingTextColor(calColor);
             if (catColor) {
                 style += ' border: solid ' + catColor + ' 2px;';
             }
