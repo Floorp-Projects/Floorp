@@ -183,10 +183,6 @@
                     command="OrganizerCommand_export"
                     label="&cmd.export.label;"
                     accesskey="&cmd.export.accesskey;"/>
-#ifndef XP_MACOSX
-          <menuseparator/>
-          <menuitem id="properties" command="placesCmd_show:info"/>
-#endif
           <menuseparator/>
           <menuitem id="fileClose"
                     key="placesKey_close" 
