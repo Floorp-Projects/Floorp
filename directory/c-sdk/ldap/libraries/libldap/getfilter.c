@@ -52,8 +52,6 @@ static char copyright[] = "@(#) Copyright (c) 1993 Regents of the University of 
 #include "regex.h"
 
 static int break_into_words( char *str, char *delims, char ***wordsp );
-int nsldapi_next_line_tokens( char **bufp, long *blenp, char ***toksp );
-void nsldapi_free_strarray( char **sap );
 
 #if !defined( macintosh ) && !defined( DOS )
 extern char	* LDAP_CALL re_comp();

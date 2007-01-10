@@ -308,6 +308,8 @@
 #
 538 ldap_find_control
 #
+539 ldap_url_parse_no_defaults
+#
 550 ldap_create_userstatus_control
 551 ldap_parse_userstatus_control
 #

@@ -207,7 +207,12 @@ ldap_explode( const char *dn, const int notypes, const int nametype )
 {
 	char	*p, *q, *rdnstart, **rdns = NULL;
 	size_t	plen = 0;
-	int	state, count = 0, endquote, len, goteq;
+	int		state = 0;
+	int		count = 0;
+	int		startquote = 0;
+	int		endquote = 0;
+	int		len = 0;
+	int		goteq = 0;
 
 	LDAPDebug( LDAP_DEBUG_TRACE, "ldap_explode\n", 0, 0, 0 );
 
@@ -227,7 +232,6 @@ ldap_explode( const char *dn, const int notypes, const int nametype )
 
 	p = rdnstart = (char *) dn;
 	state = OUTQUOTE;
-	goteq = 0;
 
 	do {
 		p += plen;
@@ -289,10 +293,11 @@ ldap_explode( const char *dn, const int notypes, const int nametype )
 						rdnstart = ++q;
 					}
 					if ( *rdnstart == '"' ) {
+						startquote = 1;
 						++rdnstart;
 					}
 					
-					if ( *(p-1) == '"' ) {
+					if ( (*(p-1) == '"') && startquote ) {
 						endquote = 1;
 						--p;
 					}

@@ -164,7 +164,14 @@ nsldapi_send_server_request(
 {
 	LDAPRequest	*lr;
 	int		err;
-	int		incparent;	/* did we bump parent's ref count? */
+	int		incparent; /* did we bump parent's ref count? */
+	/* EPIPE and Unsolicited Response handling variables */
+	int				res_rc     = 0;
+	int				epipe_err  = 0;
+	int				ext_res_rc = 0;
+	char			*ext_oid   = NULL;
+	struct berval	*ext_data  = NULL;
+	LDAPMessage		*ext_res   = NULL;
 
 	LDAPDebug( LDAP_DEBUG_TRACE, "nsldapi_send_server_request\n", 0, 0, 0 );
 
@@ -210,12 +217,12 @@ nsldapi_send_server_request(
 
 
 	/*
-         * return a fatal error if:
-         * 1. no connections exists
+     * return a fatal error if:
+     * 1. no connections exists
 	 * or 
-         * 2. the connection is dead
+     * 2. the connection is dead
 	 * or 
-         * 3. it is not in the connected state with normal (non async) I/O
+     * 3. it is not in the connected state with normal (non async) I/O
 	 */
 	if (   lc == NULL
                     || ( lc->lconn_status == LDAP_CONNST_DEAD )
@@ -298,13 +305,13 @@ nsldapi_send_server_request(
 		    lc, 0, 0 );
 	}
 
-        if ( lc->lconn_status == LDAP_CONNST_CONNECTING ||
+    if ( lc->lconn_status == LDAP_CONNST_CONNECTING ||
                         lc->lconn_pending_requests > 0 ) {
-                /*
-                 * The connect is not yet complete, or there are existing
-                 * requests that have not yet been sent to the server.
-                 * Delay sending this request.
-                 */
+       /*
+        * The connect is not yet complete, or there are existing
+        * requests that have not yet been sent to the server.
+        * Delay sending this request.
+        */
 		lr->lr_status = LDAP_REQST_WRITING;
                 ++lc->lconn_pending_requests;
 		nsldapi_iostatus_interest_write( ld, lc->lconn_sb );
@@ -331,39 +338,102 @@ nsldapi_send_server_request(
 
 	    } else {
 		    if (( err = nsldapi_send_ber_message( ld, lc->lconn_sb,
-				    ber, 0 /* do not free ber */ )) != 0 ) {
+				    ber, 0 /* do not free ber */, 
+				    1 /* will handle EPIPE */ )) != 0 ) {
+				    
+				epipe_err = LDAP_GET_ERRNO( ld );
+				if ( epipe_err == EPIPE ) {
+					res_rc = nsldapi_result_nolock(ld, LDAP_RES_UNSOLICITED, 1, 
+									1, (struct timeval *) NULL, &ext_res);
+					if ( ( res_rc == LDAP_RES_EXTENDED ) && ext_res ) {
+						ext_res_rc = ldap_parse_extended_result( ld, ext_res, 
+										&ext_oid, &ext_data, 0 );
+						if ( ext_res_rc != LDAP_SUCCESS ) {
+							if ( ext_res ) {
+								ldap_msgfree( ext_res );
+							}					
+							nsldapi_connection_lost_nolock( ld, lc->lconn_sb );
+						} else {
+#ifdef LDAP_DEBUG
+	LDAPDebug( LDAP_DEBUG_TRACE, 
+			   "nsldapi_send_server_request: Unsolicited response\n", 0, 0, 0 );
+	if ( ext_oid ) {
+		LDAPDebug( LDAP_DEBUG_TRACE, 
+				"nsldapi_send_server_request: Unsolicited response oid: %s\n", 
+				   ext_oid, 0, 0 );
+	}
+	if ( ext_data && ext_data->bv_len && ext_data->bv_val ) {
+		LDAPDebug( LDAP_DEBUG_TRACE, 
+				"nsldapi_send_server_request: Unsolicited response len: %d\n", 
+				   ext_data->bv_len, 0, 0 );
+		LDAPDebug( LDAP_DEBUG_TRACE, 
+				"nsldapi_send_server_request: Unsolicited response val: %s\n", 
+				   ext_data->bv_val, 0, 0 );
+	}
+	if ( !ext_oid && !ext_data ) { 					
+		LDAPDebug( LDAP_DEBUG_TRACE, 
+				"nsldapi_send_server_request: Unsolicited response is empty\n", 
+				   0, 0, 0 );
+	}
+#endif /* LDAP_DEBUG */
+							if ( ext_oid ) {
+								if ( strcmp ( ext_oid, 
+										LDAP_NOTICE_OF_DISCONNECTION ) == 0 ) {
+									if ( ext_data ) {
+										ber_bvfree( ext_data );
+									}
+									if ( ext_oid ) {
+										ldap_memfree( ext_oid );
+									}
+									if ( ext_res ) {
+										ldap_msgfree( ext_res );
+									}
+									nsldapi_connection_lost_nolock( ld, 
+														lc->lconn_sb );
+									nsldapi_free_request( ld, lr, 0 );
+									nsldapi_free_connection( ld, lc, 
+													NULL, NULL, 0, 0 );
+									LDAP_MUTEX_UNLOCK( ld, LDAP_REQ_LOCK );
+									LDAP_MUTEX_UNLOCK( ld, LDAP_CONN_LOCK );
+									return( -1 );					
+								}
+							}
+						}
+					} else {
+						if ( ext_res ) {
+							ldap_msgfree( ext_res );
+						}				
+						nsldapi_connection_lost_nolock( ld, lc->lconn_sb );
+					}
+				}
 
-                        /* need to continue write later */
-                        if (err == -2 ) {       
-                                lr->lr_status = LDAP_REQST_WRITING;
-                                ++lc->lconn_pending_requests;
-                                nsldapi_iostatus_interest_write( ld,
-                                            lc->lconn_sb );
-                        } else {
+                /* need to continue write later */
+                if (err == -2 ) {       
+                   	lr->lr_status = LDAP_REQST_WRITING;
+                   	++lc->lconn_pending_requests;
+                   	nsldapi_iostatus_interest_write( ld, lc->lconn_sb );
+                } else {
+					LDAP_SET_LDERRNO( ld, LDAP_SERVER_DOWN, NULL, NULL );
+					nsldapi_free_request( ld, lr, 0 );
+                    nsldapi_free_connection( ld, lc, NULL, NULL, 0, 0 );
+					LDAP_MUTEX_UNLOCK( ld, LDAP_REQ_LOCK );
+					LDAP_MUTEX_UNLOCK( ld, LDAP_CONN_LOCK );
+					return( -1 );
+				}
 
-                                LDAP_SET_LDERRNO( ld, LDAP_SERVER_DOWN,
-                                        NULL, NULL );
-				nsldapi_free_request( ld, lr, 0 );
-                                nsldapi_free_connection( ld, lc, NULL, NULL,
-                                        0, 0 );
-				LDAP_MUTEX_UNLOCK( ld, LDAP_REQ_LOCK );
-				LDAP_MUTEX_UNLOCK( ld, LDAP_CONN_LOCK );
-				return( -1 );
+			} else {
+				if ( parentreq == NULL ) {
+					ber->ber_end = ber->ber_ptr;
+					ber->ber_ptr = ber->ber_buf;
+				}
+
+				/* sent -- waiting for a response */
+				if (ld->ld_options & LDAP_BITOPT_ASYNC) {
+					lc->lconn_status = LDAP_CONNST_CONNECTED;
+				}
+
+				nsldapi_iostatus_interest_read( ld, lc->lconn_sb );
 			}
-
-		} else {
-			if ( parentreq == NULL ) {
-				ber->ber_end = ber->ber_ptr;
-				ber->ber_ptr = ber->ber_buf;
-			}
-
-			/* sent -- waiting for a response */
-			if (ld->ld_options & LDAP_BITOPT_ASYNC) {
-				lc->lconn_status = LDAP_CONNST_CONNECTED;
-			}
-
-			nsldapi_iostatus_interest_read( ld, lc->lconn_sb );
-		}
 	}
 	LDAP_MUTEX_UNLOCK( ld, LDAP_REQ_LOCK );
 	LDAP_MUTEX_UNLOCK( ld, LDAP_CONN_LOCK );
@@ -376,6 +446,9 @@ nsldapi_send_server_request(
 /*
  * nsldapi_send_ber_message(): Attempt to send a BER-encoded message.
  * If freeit is non-zero, ber is freed when the send succeeds.
+ * If errno is EPIPE and epipe_handler is set we let the caller
+ * deal with EPIPE and dont call lost_nolock here but the caller 
+ * should call lost_nolock itself when done with handling EPIPE.
  *
  * Return values:
  *    0: message sent successfully.
@@ -383,7 +456,8 @@ nsldapi_send_server_request(
  *   -2: async. I/O is enabled and the send would block.
  */
 int
-nsldapi_send_ber_message( LDAP *ld, Sockbuf *sb, BerElement *ber, int freeit )
+nsldapi_send_ber_message( LDAP *ld, Sockbuf *sb, BerElement *ber, int freeit,
+		int epipe_handler )
 {
 	int	rc = 0;	/* optimistic */
 	int	async = ( 0 != (ld->ld_options & LDAP_BITOPT_ASYNC));
@@ -406,12 +480,14 @@ nsldapi_send_ber_message( LDAP *ld, Sockbuf *sb, BerElement *ber, int freeit )
 					break;
 				}
 			} else {
-				nsldapi_connection_lost_nolock( ld, sb );
+				if ( !(epipe_handler && ( terrno == EPIPE )) ) {
+					nsldapi_connection_lost_nolock( ld, sb );
+				}
 				rc = -1;	/* fatal error */
 				break;
 			}
 		}
-        }
+    }
 
 	return( rc );
 }
@@ -449,7 +525,8 @@ nsldapi_send_pending_requests_nolock( LDAP *ld, LDAPConn *lc )
 		if ( lr->lr_status == LDAP_REQST_WRITING
 		    && lr->lr_conn == lc ) {
 			err = nsldapi_send_ber_message( ld, lc->lconn_sb,
-			    lr->lr_ber, 0 /* do not free ber */ );
+			    lr->lr_ber, 0 /* do not free ber */, 
+			    0 /* will not handle EPIPE */ );
 			if ( err == 0 ) {		/* send succeeded */
 				LDAPDebug( LDAP_DEBUG_TRACE,
 				    "%s: 0x%p SENT\n", logname, lr, 0 );

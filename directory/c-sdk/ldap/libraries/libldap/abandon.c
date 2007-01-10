@@ -271,7 +271,7 @@ nsldapi_send_abandon_message( LDAP *ld, LDAPConn *lc, BerElement *ber,
 	int	err = 0;
 
 	err = nsldapi_send_ber_message( ld, lc->lconn_sb,
-	    ber, 1 /* free ber */ );
+	    ber, 1 /* free ber */, 0 /* will not handle EPIPE */ );
 	if ( err == -2 ) {
 		/*
 		 * "Would block" error.  Queue the abandon as

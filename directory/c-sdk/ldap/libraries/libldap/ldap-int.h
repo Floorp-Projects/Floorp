@@ -745,7 +745,7 @@ int nsldapi_send_pending_requests_nolock( LDAP *ld, LDAPConn *lc );
 int nsldapi_alloc_ber_with_options( LDAP *ld, BerElement **berp );
 void nsldapi_set_ber_options( LDAP *ld, BerElement *ber );
 int nsldapi_send_ber_message( LDAP *ld, Sockbuf *sb, BerElement *ber,
-	int freeit );
+	int freeit, int epipe_handler );
 int nsldapi_send_server_request( LDAP *ld, BerElement *ber, int msgid,
 	LDAPRequest *parentreq, LDAPServer *srvlist, LDAPConn *lc,
 	char *bindreqdn, int bind );

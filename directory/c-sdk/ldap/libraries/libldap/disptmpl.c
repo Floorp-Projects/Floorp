@@ -55,8 +55,6 @@
 static void free_disptmpl( struct ldap_disptmpl *tmpl );
 static int read_next_tmpl( char **bufp, long *blenp,
 	struct ldap_disptmpl **tmplp, int dtversion );
-int nsldapi_next_line_tokens( char **bufp, long *blenp, char ***toksp );
-void nsldapi_free_strarray( char **sap );
 
 static char		*tmploptions[] = {
     "addable", "modrdn",

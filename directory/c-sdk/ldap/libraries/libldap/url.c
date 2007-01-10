@@ -133,6 +133,12 @@ skip_url_prefix( const char **urlp, int *enclosedp, int *securep )
 }
 
 
+int
+LDAP_CALL
+ldap_url_parse_no_defaults( const char *url, LDAPURLDesc **ludpp, int dn_required)
+{
+    return( nsldapi_url_parse( url, ludpp, dn_required ) );
+}
 
 
 int

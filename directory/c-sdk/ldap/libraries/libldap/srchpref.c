@@ -53,8 +53,6 @@
 #include "ldap-int.h"
 #include "srchpref.h"
 
-int nsldapi_next_line_tokens( char **bufp, long *blenp, char ***toksp );
-void nsldapi_free_strarray( char **sap );
 static void free_searchobj( struct ldap_searchobj *so );
 static int read_next_searchobj( char **bufp, long *blenp,
 	struct ldap_searchobj **sop, int soversion );

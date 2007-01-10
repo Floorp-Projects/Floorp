@@ -337,6 +337,8 @@ typedef struct ldap_url_desc {
  */
 LDAP_API(int) LDAP_CALL ldap_is_ldap_url( const char *url );
 LDAP_API(int) LDAP_CALL ldap_url_parse( const char *url, LDAPURLDesc **ludpp );
+LDAP_API(int) LDAP_CALL ldap_url_parse_no_defaults( const char *url, 
+        LDAPURLDesc **ludpp, int dn_required);
 LDAP_API(void) LDAP_CALL ldap_free_urldesc( LDAPURLDesc *ludp );
 LDAP_API(int) LDAP_CALL ldap_url_search( LDAP *ld, const char *url,
         int attrsonly );
