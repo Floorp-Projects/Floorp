@@ -384,6 +384,7 @@ var gDataMigrator = {
                 cal.name = getRDFAttr(node, "name");
                 calManager.setCalendarPref(cal, "color", 
                                            getRDFAttr(node, "color"));
+                getCompositeCalendar().addCalendar(cal);
             }
             aCallback();
         }
@@ -632,6 +633,7 @@ var gDataMigrator = {
         putItemsIntoCal(cal, items);
 
         calManager.registerCalendar(cal);
+        getCompositeCalendar().addCalendar(cal);
         return cal;
     },
 
