@@ -21,6 +21,7 @@
 # Contributor(s): Dawn Endico <endico@mozilla.org>
 #                 Gregary Hendricks <ghendricks@novell.com>
 #                 Vance Baarda <vrb@novell.com>
+#                 Guzman Braso <gbn@hqso.net>
 
 # This script reads in xml bug data from standard input and inserts
 # a new bug into bugzilla. Everything before the beginning <?xml line
@@ -692,8 +693,13 @@ sub process_bug {
 
     # Milestone
     if ( $params->{"usetargetmilestone"} ) {
-        my $milestone = new Bugzilla::Milestone(
-            { product => $product, name => $bug_fields{'target_milestone'} });
+        my $milestone;
+        if (defined $bug_fields{'target_milestone'}
+            && $bug_fields{'target_milestone'} ne "") {
+
+            $milestone = new Bugzilla::Milestone(
+                { product => $product, name => $bug_fields{'target_milestone'} });
+        }
         if ($milestone) {
             push( @values, $milestone->name );
         }
