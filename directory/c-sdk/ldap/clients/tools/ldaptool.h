@@ -95,14 +95,8 @@ extern int getopt (int argc, char *const *argv, const char *optstring);
 #include <ssl.h>
 #endif
 
-
 #include <portable.h>
-
 #include <ldap.h>
-#ifndef NO_LIBLCACHE
-#include <lcache.h>
-#endif
-
 #include <ldaplog.h>
 #include <ldif.h>
 
@@ -115,7 +109,6 @@ extern int getopt (int argc, char *const *argv, const char *optstring);
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 
 /*
  * shared macros, structures, etc.
@@ -176,6 +169,8 @@ LDAPControl *ldaptool_create_manage_dsait_control( void );
 void ldaptool_print_referrals( char **refs );
 int ldaptool_print_extended_response( LDAP *ld, LDAPMessage *res, char *msg );
 LDAPControl *ldaptool_create_proxyauth_control( LDAP *ld );
+LDAPControl *ldaptool_create_geteffectiveRights_control ( LDAP *ld,
+        const char *authzid, const char **attrlist );
 void ldaptool_add_control_to_array( LDAPControl *ctrl, LDAPControl **array);
 void ldaptool_reset_control_array( LDAPControl **array );
 char *ldaptool_get_tmp_dir( void );

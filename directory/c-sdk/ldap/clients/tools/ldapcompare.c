@@ -85,6 +85,10 @@ main( int argc, char **argv )
 #endif
 
     optind = ldaptool_process_args( argc, argv, "cq", 0, options_callback );
+    
+    if ( optind == -1 ) {
+        usage ( LDAP_PARAM_ERROR );
+    }
 
     if ( ldaptool_fp == NULL && optind >= argc ) {
 	ldaptool_fp = stdin;

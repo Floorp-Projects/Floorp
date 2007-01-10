@@ -56,6 +56,7 @@ static void parse_and_display_reference( LDAP *ld, LDAPMessage *ref );
 static char *sortresult2string(ber_int_t result);
 static char *changetype_num2string( ber_int_t chgtype );
 static char *msgtype2str( int msgtype );
+static char **get_effectiverights_attrlist(char * optarg);
 
 /*
  * Prefix used in names of pseudo attributes added to the entry LDIF
@@ -94,13 +95,13 @@ usage( void )
     fprintf( stderr, "    -B\t\tprint non-ASCII values and use old output format (attr=value)\n" );
     fprintf( stderr, "    -x\t\tperforming sorting on server\n" );
     fprintf( stderr, "    -F sep\tprint `sep' instead of `%s' between attribute names\n", LDAPTOOL_DEFSEP );
-    fprintf( stderr, "          \tand values\n" );
+    fprintf( stderr, "          \tand values in old output format (attr=value)\n" );
     fprintf( stderr, "    -S attr\tsort the results by attribute `attr'\n" );
     fprintf( stderr, "    -s scope\tone of base, one, or sub (default is sub)\n" );
     fprintf( stderr, "    -a deref\tone of never, always, search, or find (default: never)\n" );
     fprintf( stderr, "            \t(alias dereferencing)\n" );
-    fprintf( stderr, "    -l time lim\ttime limit (in seconds) for search\n" );
-    fprintf( stderr, "    -z size lim\tsize limit (in entries) for search\n" );
+    fprintf( stderr, "    -l time lim\ttime limit (in seconds) for search (default is no limit)\n" );
+    fprintf( stderr, "    -z size lim\tsize limit (in entries) for search (default is no limit)\n" );
     fprintf( stderr, "    -C PS:changetype[:changesonly[:entrychgcontrols]]\n" );
     fprintf( stderr, "\t\tchangetypes are add,delete,modify,moddn,any\n" );
     fprintf( stderr, "\t\tchangesonly and  entrychgcontrols are boolean values\n" );
@@ -108,6 +109,13 @@ usage( void )
     fprintf( stderr, "    -G before%cafter%cindex%ccount | before%cafter%cvalue where 'before' and\n", VLV_PARAM_SEP, VLV_PARAM_SEP, VLV_PARAM_SEP, VLV_PARAM_SEP, VLV_PARAM_SEP );
     fprintf( stderr, "\t\t'after' are the number of entries surrounding 'index.'\n");
     fprintf( stderr, "\t\t'count' is the content count, 'value' is the search value.\n");
+    fprintf( stderr, "    -c authzid\tspecifies the getEffectiveRights control authzid\n");
+    fprintf( stderr, "\t\t eg. dn:uid=bjensen,dc=example,dc=com\n");
+    fprintf( stderr, "\t\t A value of \"\" means \"the authorization id for the operation\".\n");
+    fprintf( stderr, "\t\t A value of \"dn:\" means \"anonymous\"\n");
+    fprintf( stderr, "\t\t (The aclRights operational attribute must be requested)\n");
+    fprintf( stderr, "    -X attrlist\tspecifies the getEffectiveRights control specific attribute list,\n");
+    fprintf( stderr, "\t\t where attributes are space separated eg. \"nsroledn userPassword\"\n");
 
     exit( LDAP_PARAM_ERROR );
 }
@@ -125,6 +133,9 @@ static int	use_vlv = 0, vlv_before, vlv_after, vlv_index, vlv_count;
 static int	use_psearch=0;
 static int	flush_after_each_entry=0;
 static int	write_ldif_version = 1;
+static char *get_effectiverights_control_target_dn = NULL; /* -c */
+static char **get_effectiverights_control_attrlist = NULL; /* -X */
+static int	do_effective_rights_control = 0;
 
 /* Persistent search variables */
 static int	chgtype=0, changesonly=1, return_echg_ctls=1;
@@ -133,7 +144,9 @@ static int	chgtype=0, changesonly=1, return_echg_ctls=1;
 int
 main( int argc, char **argv )
 {
-    char		*filtpattern, **attrs;
+    char		*filtpattern = NULL;
+    int			free_filtpattern = 0;
+    char		**attrs;
     int			rc, optind, i, first;
     LDAP		*ld;
 
@@ -158,15 +171,15 @@ main( int argc, char **argv )
     ldaptool_reset_control_array( ldaptool_request_ctrls );
 #ifdef HAVE_SASL_OPTIONS
 #ifdef HAVE_SASL_OPTIONS_2
-    optind = ldaptool_process_args( argc, argv, "ABLTU1eortuxa:b:F:G:l:S:s:z:C:",
+    optind = ldaptool_process_args( argc, argv, "ABLTU1eortuxa:b:F:G:l:S:s:z:C:c:X:",
         0, options_callback );
 #else
-    optind = ldaptool_process_args( argc, argv, "ABLTU1ertuxa:b:F:G:l:S:s:z:C:",
+    optind = ldaptool_process_args( argc, argv, "ABLTU1ertuxa:b:F:G:l:S:s:z:C:c:X:",
         0, options_callback );
 #endif
 #else
     optind = ldaptool_process_args( argc, argv,
-	    "ABLTU1eortuxa:b:F:G:l:S:s:z:C:", 0, options_callback );
+	    "ABLTU1eortuxa:b:F:G:l:S:s:z:C:c:X:", 0, options_callback );
 #endif  /* HAVE_SASL_OPTIONS */
 
     if ( optind == -1 ) {
@@ -202,6 +215,7 @@ main( int argc, char **argv )
     } else {	/* there are additional args (filter + attrs) */
 	if ( ldaptool_fp == NULL || strstr( argv[ optind ], "%s" ) != NULL ) {
 	    filtpattern = ldaptool_local2UTF8( argv[ optind ], "filter" );
+	    free_filtpattern = 1;
 	    ++optind;
 	} else {
 	    filtpattern = "%s";
@@ -256,7 +270,7 @@ main( int argc, char **argv )
     }
 
     if ( ldaptool_fp == NULL ) {
-	char *conv;
+	char *conv = NULL;
 
 	conv = ldaptool_local2UTF8( base, "base DN" );
 	rc = dosearch( ld, conv, scope, attrs, attrsonly, filtpattern, "" );
@@ -314,6 +328,9 @@ main( int argc, char **argv )
     }
 
     ldaptool_cleanup( ld );
+    if ( (free_filtpattern != 0) && (filtpattern != NULL) ) {
+		free (filtpattern);
+    }
     return( rc );
 }
 
@@ -382,6 +399,26 @@ options_callback( int option, char *optarg )
 
     case 'F':	/* field separator */
 	sep = strdup( optarg );
+	break;
+	case 'c':	/* getEffectiveRights control authzid */
+		if ( optarg && optarg[0] == '\0' ) {
+			/* -c ""
+				means "This user"
+			*/
+			get_effectiverights_control_target_dn = NULL;
+			do_effective_rights_control = 1;
+		}else if ( strlen(optarg) < 3 || (strncasecmp(optarg, "dn:", 3) != 0) ) {
+			fprintf(stderr,"-c wrong format--should be \"\" or \"dn:...\".\n"
+				"\"dn:\" means anonymous user.");
+			usage();
+		} else {		
+			get_effectiverights_control_target_dn = strdup(optarg);
+			do_effective_rights_control = 1;
+		}	
+	break;
+	case 'X':	/* getEffectiveRights control attr list */
+		get_effectiverights_control_attrlist = get_effectiverights_attrlist(optarg);
+		do_effective_rights_control = 1;
 	break;
     case 'b':	/* searchbase */
 	base = strdup( optarg );
@@ -602,7 +639,15 @@ dosearch( ld, base, scope, attrs, attrsonly, filtpatt, value )
     if ((ldctrl = ldaptool_create_proxyauth_control(ld)) !=NULL) {
 	ldaptool_add_control_to_array(ldctrl, ldaptool_request_ctrls);
     }
-    
+
+    if ( do_effective_rights_control ) {
+        if ((ldctrl = ldaptool_create_geteffectiveRights_control(ld,
+			get_effectiverights_control_target_dn,
+			(const char**) get_effectiverights_control_attrlist)) != NULL) {
+	    ldaptool_add_control_to_array(ldctrl, ldaptool_request_ctrls);
+        }
+    }
+
     if (use_psearch) {
 	if ( ldap_create_persistentsearch_control( ld, chgtype,
                 changesonly, return_echg_ctls, 
@@ -1181,8 +1226,8 @@ static struct ldapsearch_type2str ldapsearch_msgtypes[] = {
 
 
 /*
-* Return a descriptive string given an LDAP result message type (tag). 
-*/     
+ * Return a descriptive string given an LDAP result message type (tag). 
+ */     
 static char * 
 msgtype2str( int msgtype )
 {    
@@ -1223,4 +1268,34 @@ changetype_num2string( ber_int_t chgtype )
     }
 
     return( s );
+}
+
+/* returns a null teminated charrary */
+static char  **get_effectiverights_attrlist(char * optarg)
+{
+	int i = 0;
+	char ** retArray = NULL;
+	char * tmp_str = strdup(optarg);
+	
+	if ( tmp_str == NULL ) {
+		perror("strdup");
+		exit(LDAP_NO_MEMORY);
+	}
+
+	retArray = ldap_str2charray( tmp_str, " "); /* takes copies */
+	if ( retArray == NULL ) {
+		fprintf( stderr, "%s: not enough memory\n", ldaptool_progname );
+		exit( LDAP_NO_MEMORY );
+	}
+	
+	free(tmp_str);	
+
+	while( retArray[i] != NULL ) {
+
+		fprintf(stderr,"%s ", retArray[i]);
+		i++;
+	}
+	fprintf(stderr, "\n");
+
+	return(retArray);
 }

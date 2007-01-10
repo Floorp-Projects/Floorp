@@ -60,9 +60,7 @@ usage( void )
 }
 
 
-main( argc, argv )
-    int		argc;
-    char	**argv;
+int main( int argc, char **argv )
 {
     char	*entrydn, *rdn, buf[ 4096 ];
     int		rc, havedn, deref, optind;

@@ -78,13 +78,6 @@ static void ldaptool_debug_free( void *ptr );
 #if defined(NET_SSL) && defined(LDAP_TOOL_PKCS11)
 static void ldaptool_setcallbacks( struct ldapssl_pkcs_fns *pfns);
 static char * buildTokenCertName( const char *tokenName, const char *certName);
-#ifdef FORTEZZA
-static int ldaptool_fortezza_init( int exit_on_error );
-static int ldaptool_fortezza_alert( void *arg, PRBool onOpen,
-	char *string, int value1, void *value2 );
-static void * ldaptool_fortezza_getpin( char **passwordp );
-static char * ldaptool_fortezza_err2string( int err );
-#endif /* FORTEZZA */
 #endif
 #ifdef HAVE_SASL_OPTIONS
 static int saslSetParam(char *saslarg);
@@ -132,14 +125,12 @@ ldaptool_common_usage( int two_hosts )
     fprintf( stderr, "    -m pathname\tpath to security module database\n");
 #endif /* LDAP_TOOL_PKCS11 */
     fprintf( stderr, "    -W\t\tSSL key password\n" );
-    fprintf( stderr, "    -3\t\tcheck hostnames in SSL certificates\n" );
-
+    fprintf( stderr, "    -W - \tprompt for SSL key password\n" );
 #ifdef LDAP_TOOL_PKCS11
+    fprintf( stderr, "    -I file\tSSL key password 'file' containing token:password pair/s\n" );
     fprintf( stderr, "    -Q [token][:certificate name]\tPKCS 11\n" );
-    fprintf( stderr, "    -X pathname\tFORTEZZA compromised key list (CKL)\n" );
-    fprintf( stderr, "    -I pin\tcard password file\n" );
 #endif /* LDAP_TOOL_PKCS11 */
-
+    fprintf( stderr, "    -3\t\tcheck hostnames in SSL certificates\n" );
 #endif /* NET_SSL */
     fprintf( stderr, "    -D binddn\tbind dn\n" );
     fprintf( stderr, "    -w passwd\tbind passwd (for simple authentication)\n" );
@@ -154,11 +145,8 @@ ldaptool_common_usage( int two_hosts )
     fprintf( stderr, "    -O limit\tmaximum number of referral hops to traverse (default: %d)\n", LDAPTOOL_DEFREFHOPLIMIT );
     fprintf( stderr, "    -M\t\tmanage references (treat them as regular entries)\n" );
     fprintf( stderr, "    -0\t\tignore LDAP library version mismatches\n" );
-
-#ifndef NO_LIBLCACHE
-    fprintf( stderr, "    -C cfgfile\tuse local database described by cfgfile\n" );
-#endif
     fprintf( stderr, "    -i charset\tcharacter set for command line input (default taken from locale)\n" );
+    fprintf( stderr, "    \t\tuse '-i 0' to override locale settings and bypass any conversions\n" );
     fprintf( stderr, "    -k do not convert password to utf8 (use default from locale)\n" );
 #if 0
 /*
@@ -211,6 +199,7 @@ static int		ldversion = -1;	/* use default */
 static int		refhoplim = LDAPTOOL_DEFREFHOPLIMIT;
 static int		send_manage_dsait_ctrl = 0;
 static int		prompt_password = 0;
+static int		prompt_sslpassword = 0;
 static FILE		*password_fp = NULL;
 static char             *proxyauth_id = NULL;
 static int		proxyauth_version = 2;	/* use newer proxy control */
@@ -225,9 +214,6 @@ static char             *sasl_secprops = NULL;
 static int              ldapauth = -1;
 #endif  /* HAVE_SASL_OPTIONS */
 
-#ifndef NO_LIBLCACHE
-static char		*cache_config_file = NULL;
-#endif /* !NO_LIBLCACHE */
 #if defined(NET_SSL)
 static int		secure = 0;
 static int		isZ = 0;
@@ -258,12 +244,6 @@ static char             *pkcs_pin = NULL;
 static struct ldapssl_pkcs_fns local_pkcs_fns = 
     {0,NULL,NULL,NULL,NULL,NULL,NULL,NULL, NULL };
 
-#ifdef FORTEZZA
-static uint32		fortezza_cardmask = 0;
-static char		*fortezza_personality = NULL;
-static char		*fortezza_krlfile = NULL;
-static char		*fortezza_pin = NULL;
-#endif /* FORTEZZA */
 #endif /* LDAP_TOOL_PKCS11 */
 #endif /* NET_SSL */
 
@@ -387,26 +367,29 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
 
 #ifdef HAVE_SASL_OPTIONS
 #ifdef HAVE_SASL_OPTIONS_2
-    common_opts = "kgnvEMRHZ02:3d:D:f:h:j:I:K:N:O:P:p:W:w:V:X:m:i:y:Y:J:";
+    common_opts = "kgnvEMRHZ02:3d:D:f:h:j:I:K:N:O:P:p:W:w:V:m:i:y:Y:J:";
 #else
-    common_opts = "kgnvEMRHZ03d:D:f:h:j:I:K:N:O:o:P:p:W:w:V:X:m:i:y:Y:J:";
+    common_opts = "kgnvEMRHZ03d:D:f:h:j:I:K:N:O:o:P:p:W:w:V:m:i:y:Y:J:";
 #endif
 #else
-    common_opts = "kgnvEMRHZ03d:D:f:h:j:I:K:N:O:P:p:Q:W:w:V:X:m:i:k:y:Y:J:";
+    common_opts = "kgnvEMRHZ03d:D:f:h:j:I:K:N:O:P:p:Q:W:w:V:m:i:k:y:Y:J:";
 #endif  /* HAVE_SASL_OPTIONS */
 
-    /* note: optstring must include room for liblcache "C:" option */
     if (( optstring = (char *) malloc( strlen( extra_opts ) + strlen( common_opts )
-	    + 3 )) == NULL ) {
+	    + 1 )) == NULL ) {
 	perror( "malloc" );
 	exit( LDAP_NO_MEMORY );
     }
 
-#ifdef NO_LIBLCACHE
     sprintf( optstring, "%s%s", common_opts, extra_opts );
-#else
-    sprintf( optstring, "%s%sC:", common_opts, extra_opts );
-#endif
+
+	if ( argc == 2 ) {
+		if ( ((strncmp( argv[1], "/?", strlen("/?") + 1 )) == 0 ) ||
+			 ((strncmp( argv[1], "-help", strlen("-help") + 1 )) == 0 ) ||
+			 ((strncmp( argv[1], "--help", strlen("--help") + 1 )) == 0 ) ) {
+			return( -1 );
+		}
+	}
 
     hostnum = 0;
     while ( (i = getopt( argc, argv, optstring )) != EOF ) {
@@ -432,11 +415,6 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
 	case 'R':	/* don't automatically chase referrals */
 	    chase_referrals = 0;
 	    break;
-#ifndef NO_LIBLCACHE
-	case 'C':	/* search local database */
-	    cache_config_file = strdup( optarg );
-	    break;
-#endif
 	case 'f':	/* input file */
 	    if ( optarg[0] == '-' && optarg[1] == '\0' ) {
 		ldaptool_fp = stdin;
@@ -526,11 +504,15 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
 	    }
 	    break;
 	case 'W':	/* SSL key password */
-	    ssl_passwd = strdup( optarg );
-	    if (NULL == ssl_passwd)
-	    {
-		perror("malloc");
-		exit( LDAP_NO_MEMORY );
+		if ( optarg[0] == '-' && optarg[1] == '\0' ) {
+			prompt_sslpassword = 1;
+		} else {
+	    	ssl_passwd = strdup( optarg );
+	    	if (NULL == ssl_passwd)
+	    	{
+				perror("malloc");
+				exit( LDAP_NO_MEMORY );
+	    	}
 	    }
 	    isW = 1;
 	    break;
@@ -549,7 +531,7 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
 	    }
 	    break;
 
-	case 'Q': 	/* FORTEZZA [card][:personality] */
+	case 'Q': 	/* [token][:certificate name] */
 	    pkcs_token = strdup(optarg);
 	    if (NULL == pkcs_token)
 	    {
@@ -558,13 +540,8 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
 	    }
 
 	    break;
-	case 'X':	/* path to FORTEZZA CKL file */
-	  /*
-	    fortezza_krlfile = strdup( optarg );
-	    */
 
-	    break;
-	case 'I':	/* FORTEZZA PIN (password file) */
+	case 'I':	/* PIN (password file) */
 	    ssl_donglefile = strdup( optarg );
 	    
 	    break;
@@ -686,10 +663,10 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
 	}
     }
 
-    /* if '-N' is specified, -W is needed too */
-    if ( isN && NULL == ssl_passwd ) {
-	fprintf( stderr, "%s: with the -N option, please specify -W also\n\n", ldaptool_progname ); 
-	return (-1);
+    /* if '-N' is specified, -W or -I is needed too */
+    if ( isN && NULL == ssl_passwd && 0 == prompt_sslpassword && NULL == ssl_donglefile ) {
+        fprintf( stderr, "%s: with the -N option, please specify -W or -I also\n\n", ldaptool_progname ); 
+        return (-1);
     }
 
     if ( isj && isw ) {
@@ -1043,25 +1020,6 @@ ldaptool_ldap_init( int second_host )
 	perror( "ldap_init" );
 	exit( LDAP_LOCAL_ERROR );
     }
-
-#ifndef NO_LIBLCACHE
-    if ( cache_config_file != NULL ) {
-	int	opt;
-
-	if ( lcache_init( ld, cache_config_file ) != 0 ) {
-		exit( ldaptool_print_lderror( ld, cache_config_file,
-			LDAPTOOL_CHECK4SSL_NEVER ));
-	}
-	opt = 1;
-	(void) ldap_set_option( ld, LDAP_OPT_CACHE_ENABLE, &opt );
-	opt = LDAP_CACHE_LOCALDB;
-	(void) ldap_set_option( ld, LDAP_OPT_CACHE_STRATEGY, &opt );
-	if ( ldversion == -1 ) {	/* not set with -V */
-	    ldversion = LDAP_VERSION2;	/* local db only supports v2 */
-	}
-    }
-#endif
-
 
     ldap_set_option( ld, LDAP_OPT_REFERRALS, chase_referrals ? LDAP_OPT_ON:
 	LDAP_OPT_OFF );
@@ -1810,6 +1768,26 @@ ldaptool_create_proxyauth_control( LDAP *ld )
     return( ctl );
 }
 
+/* Effective Rights control */
+LDAPControl *
+ldaptool_create_geteffectiveRights_control ( LDAP *ld, const char *authzid,
+											const char **attrlist)
+{
+    LDAPControl	*ctl = NULL;
+    int rc;
+    
+	rc = ldap_create_geteffectiveRights_control( ld, authzid, attrlist, 1,
+							&ctl);
+ 
+    if ( rc != LDAP_SUCCESS) 
+    {
+		if (ctl)
+	    	ldap_control_free( ctl);
+		return NULL;
+    }
+    return( ctl );
+}
+
 void
 ldaptool_add_control_to_array( LDAPControl *ctrl, LDAPControl **array)
 {
@@ -2368,96 +2346,6 @@ ldaptool_setcallbacks( struct ldapssl_pkcs_fns *pfns)
   pfns->local_structure_id=PKCS_STRUCTURE_ID;
 }
 
-
-
-#ifdef FORTEZZA
-static int
-ldaptool_fortezza_init( int exit_on_error )
-{
-    int		rc, errcode;
-
-    if ( fortezza_personality == NULL && fortezza_cardmask == 0 ) { /* no FORTEZZA desired */
-	SSL_EnableGroup( SSL_GroupFortezza, DSFalse );	/* disable FORTEZZA */
-	return( 0 );
-    }
-
-    if (( rc = FortezzaConfigureServer( ldaptool_fortezza_getpin, fortezza_cardmask,
-	    fortezza_personality, ldaptool_fortezza_alert, NULL, &errcode,
-	    fortezza_krlfile )) < 0 ) {
-	fprintf( stderr,
-		"%s: FORTEZZA initialization failed (error %d - %s)\n",
-		ldaptool_progname, errcode,
-		ldaptool_fortezza_err2string( errcode ));
-	if ( exit_on_error ) {
-	    exit( LDAP_LOCAL_ERROR );
-	}
-
-	SSL_EnableGroup( SSL_GroupFortezza, DSFalse );	/* disable FORTEZZA */
-	return( -1 );
-    }
-
-    SSL_EnableGroup( SSL_GroupFortezza, DSTrue );	/* enable FORTEZZA */
-    return( 0 );
-}
-
-
-static int
-ldaptool_fortezza_alert( void *arg, PRBool onOpen, char *string,
-	int value1, void *value2 )
-{
-    fprintf( stderr, "%s: FORTEZZA alert: ", ldaptool_progname );
-    fprintf( stderr, string, value1, value2 );
-    fprintf( stderr, "\n" );
-    return( 1 );
-}
-
-
-static void *
-ldaptool_fortezza_getpin( char **passwordp )
-{
-    *passwordp = fortezza_pin;
-    return( *passwordp );
-}
-
-
-/*
- * convert a Fortezza error code (as returned by FortezzaConfigureServer()
- * into a human-readable string.
- *
- * Error strings are intentionally similar to those found in
- * ns/netsite/lib/libadmin/httpcon.c
- */
-static char *
-ldaptool_fortezza_err2string( int err )
-{
-    char	*s;
-
-    switch( err ) {
-    case FORTEZZA_BADPASSWD:
-	s = "invalid pin number";
-	break;
-    case FORTEZZA_BADCARD:
-	s = "bad or missing card";
-	break;
-    case FORTEZZA_MISSING_KRL:
-	s = "bad or missing compromised key list";
-	break;
-    case FORTEZZA_CERT_INIT_ERROR:
-	s = "unable to initialize certificate cache.  either a cert on "
-		"the card is bad, or an old FORTEZZA certificate is in a"
-		 "readonly database";
-	break;
-    case FORTEZZA_EXPIRED_CERT:
-	s = "unable to verify certificate";
-	break;
-    default:
-	s = "unknown error";
-    }
-
-    return( s );
-}
-
-#endif /* FORTEZZA */
 #endif /* LDAP_TOOL_PKCS11 */
 #endif /* NET_SSL */
 

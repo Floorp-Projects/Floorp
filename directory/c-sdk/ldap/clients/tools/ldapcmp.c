@@ -69,6 +69,8 @@ usage( void )
     fprintf( stderr, "\t\tthen the -b flag is not required)\n" );
     fprintf( stderr, "options:\n" );
     fprintf( stderr, "    -s scope\tone of base, one, or sub (default is sub)\n" );
+    fprintf( stderr, "    -l timelim\ttime limit (in seconds) for search (default is no limit)\n" );
+    fprintf( stderr, "    -z sizelim\tsize limit (in entries) for search (default is no limit)\n" );
     ldaptool_common_usage( 1 );
     exit( LDAP_PARAM_ERROR );
 }

@@ -118,6 +118,10 @@ ldaptool_local2UTF8( const char *src, const char *desc )
     } else if ( *src == '\0' ) {	/* trivial case # 2 */
 	utf8 = strdup( "" );
     } else {
+    /* check for bypass option */
+    if ( NULL != ldaptool_charset && 0 == strcmp(ldaptool_charset, "0") ) {
+    	return strdup( src );
+    }
 	/* Determine the source charset if not already done */
 	if ( NULL == src_charset ) {
 	    if ( NULL != ldaptool_charset

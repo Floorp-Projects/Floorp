@@ -247,10 +247,10 @@ ldaptool_berval_from_ldif_value( const char *value, int vlen,
 	}
 
 	if (strlen(url) < 6 || strncasecmp(url, "file:/", 6) != 0) {
-	  /*
-	   * We only support file:/ URLs for now.
-	   */
-	  url = NULL;
+	    /*
+	     * We only support file:// like URLs for now.
+	     */
+	    url = NULL;
 	}
     }
 
@@ -261,7 +261,7 @@ ldaptool_berval_from_ldif_value( const char *value, int vlen,
 	switch( rc ) {
 	case LDAPTOOL_FILEURL_NOTAFILEURL:
 	    if ( reporterrs ) fprintf( stderr, "%s: unsupported URL \"%s\";"
-		    " use a file:/ URL instead.\n", ldaptool_progname, url );
+		    " use a file:// URL instead.\n", ldaptool_progname, url );
 	    break;
 
 	case LDAPTOOL_FILEURL_MISSINGPATH:
@@ -273,7 +273,7 @@ ldaptool_berval_from_ldif_value( const char *value, int vlen,
 	    case LDAPTOOL_FILEURL_NONLOCAL:
 		if ( reporterrs ) fprintf( stderr,
 			"%s: unable to process URL \"%s\" -- only"
-			" local file:/ URLs are supported.\n",
+			" local file:// URLs are supported.\n",
 			ldaptool_progname, url );
 		break;
 
