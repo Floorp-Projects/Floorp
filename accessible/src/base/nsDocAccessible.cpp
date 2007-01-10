@@ -67,6 +67,7 @@
 #include "nsUnicharUtils.h"
 #include "nsIURI.h"
 #include "nsIWebNavigation.h"
+#include "nsIFocusController.h"
 #ifdef MOZ_XUL
 #include "nsIXULDocument.h"
 #endif
@@ -241,6 +242,22 @@ NS_IMETHODIMP nsDocAccessible::GetFocusedChild(nsIAccessible **aFocusedChild)
   nsCOMPtr<nsIAccessibilityService> accService =
     do_GetService("@mozilla.org/accessibilityService;1");
   return accService->GetAccessibleFor(gLastFocusedNode, aFocusedChild);
+}
+
+NS_IMETHODIMP nsDocAccessible::TakeFocus()
+{
+  nsCOMPtr<nsIDOMWindow> domWin;
+  GetWindow(getter_AddRefs(domWin));
+  nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(domWin));
+  NS_ENSURE_TRUE(privateDOMWindow, NS_ERROR_FAILURE);
+  nsIFocusController *focusController =
+    privateDOMWindow->GetRootFocusController();
+  if (focusController) {
+    nsCOMPtr<nsIDOMElement> ele(do_QueryInterface(mDOMNode));
+    focusController->SetFocusedElement(ele);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 // ------- nsIAccessibleDocument Methods (5) ---------------
