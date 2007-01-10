@@ -1650,7 +1650,7 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAStr
       rv = FetchPreviewText(msgHdr, previewText);
       if (!previewText.IsEmpty())
       {
-        valueText.Append(NS_LITERAL_STRING("\n - "));
+        valueText.Append(NS_LITERAL_STRING(" - "));
         valueText.Append(previewText);
       }
     }
