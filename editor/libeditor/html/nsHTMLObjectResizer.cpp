@@ -272,6 +272,9 @@ nsHTMLEditor::CreateResizingInfo(nsIDOMElement ** aReturn, nsIDOMNode * aParentN
 nsresult
 nsHTMLEditor::SetAllResizersPosition()
 {
+  if (!mTopLeftHandle)
+    return NS_ERROR_FAILURE;
+
   PRInt32 x = mResizedObjectX;
   PRInt32 y = mResizedObjectY;
   PRInt32 w = mResizedObjectWidth;
