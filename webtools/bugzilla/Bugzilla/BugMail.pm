@@ -591,7 +591,7 @@ sub sendMail {
 
     my $diffs = $difftext . "\n\n" . $newcomments;
     if ($isnew) {
-        $diffs = $head . "\n\n" . $diffs;
+        $diffs = $head . ($difftext ? "\n\n" : "") . $diffs;
     }
 
     my (@reasons, @reasons_watch);
