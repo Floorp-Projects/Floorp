@@ -803,8 +803,8 @@ js_AddRootRT(JSRuntime *rt, void *rp, const char *name)
         } while (rt->gcLevel > 0);
     }
 #endif
-    rhe = (JSGCRootHashEntry *) JS_DHashTableOperate(&rt->gcRootsHash, rp,
-                                                     JS_DHASH_ADD);
+    rhe = (JSGCRootHashEntry *)
+          JS_DHashTableOperate(&rt->gcRootsHash, rp, JS_DHASH_ADD);
     if (rhe) {
         rhe->root = rp;
         rhe->name = name;
@@ -1694,7 +1694,7 @@ js_LockGCThingRT(JSRuntime *rt, void *thing)
         }
 
         lhe = (JSGCLockHashEntry *)
-            JS_DHashTableOperate(rt->gcLocksHash, thing, JS_DHASH_ADD);
+              JS_DHashTableOperate(rt->gcLocksHash, thing, JS_DHASH_ADD);
         if (!lhe) {
             ok = JS_FALSE;
             goto done;
@@ -2977,10 +2977,6 @@ restart:
             js_GCMarkSharpMap(cx, &acx->sharpObjectMap);
     }
 
-#ifdef DUMP_CALL_TABLE
-    js_DumpCallTable(cx);
-#endif
-
     /*
      * Mark children of things that caused too deep recursion during above
      * marking phase.
@@ -3012,6 +3008,14 @@ restart:
 
     /* Finalize iterator states before the objects they iterate over. */
     CloseIteratorStates(cx);
+
+#ifdef DUMP_CALL_TABLE
+    /*
+     * Call js_DumpCallTable here so it can meter and then clear weak refs to
+     * GC-things that are about to be finalized.
+     */
+    js_DumpCallTable(cx);
+#endif
 
     /*
      * Sweep phase.
