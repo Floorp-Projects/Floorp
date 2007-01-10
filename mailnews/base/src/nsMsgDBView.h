@@ -169,6 +169,7 @@ protected:
   nsresult FetchAuthor(nsIMsgDBHdr * aHdr, PRUnichar ** aAuthorString);
   nsresult FetchRecipients(nsIMsgDBHdr * aHdr, PRUnichar ** aRecipientsString);
   nsresult FetchSubject(nsIMsgDBHdr * aMsgHdr, PRUint32 aFlags, PRUnichar ** aValue);
+  nsresult FetchPreviewText(nsIMsgDBHdr * aMsgHdr, nsAString& aValue);
   nsresult FetchDate(nsIMsgDBHdr * aHdr, PRUnichar ** aDateString);
   nsresult FetchStatus(PRUint32 aFlags, PRUnichar ** aStatusString);
   nsresult FetchSize(nsIMsgDBHdr * aHdr, PRUnichar ** aSizeString);

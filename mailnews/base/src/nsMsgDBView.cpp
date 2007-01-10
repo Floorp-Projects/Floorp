@@ -68,6 +68,7 @@
 #include "nsIMsgAccountManager.h"
 #include "nsITreeColumns.h"
 #include "nsTextFormatter.h"
+#include "nsMsgI18N.h"
 
 nsrefcnt nsMsgDBView::gInstanceCount	= 0;
 
@@ -453,6 +454,18 @@ nsresult nsMsgDBView::FetchSubject(nsIMsgDBHdr * aMsgHdr, PRUint32 aFlags, PRUni
     aMsgHdr->GetMime2DecodedSubject(aValue);
 
   return NS_OK;
+}
+
+nsresult nsMsgDBView::FetchPreviewText(nsIMsgDBHdr * aMsgHdr, nsAString& aValue)
+{
+  nsresult rv;
+  nsXPIDLCString utf8PreviewText;
+  rv = aMsgHdr->GetStringProperty("preview", getter_Copies(utf8PreviewText));
+  if (NS_SUCCEEDED(rv) && utf8PreviewText.get())
+    // convert to unicode
+    rv = ConvertToUnicode("UTF-8", utf8PreviewText, aValue);
+
+  return rv;
 }
 
 // in case we want to play around with the date string, I've broken it out into
@@ -1631,7 +1644,16 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAStr
   {
   case 's':
     if (colID[1] == 'u') // subject
+    {
       rv = FetchSubject(msgHdr, m_flags[aRow], getter_Copies(valueText));
+      nsAutoString previewText;
+      rv = FetchPreviewText(msgHdr, previewText);
+      if (!previewText.IsEmpty())
+      {
+        valueText.Append(NS_LITERAL_STRING("\n - "));
+        valueText.Append(previewText);
+      }
+    }
     else if (colID[1] == 'e') // sender
       rv = FetchAuthor(msgHdr, getter_Copies(valueText));
     else if (colID[1] == 'i') // size
