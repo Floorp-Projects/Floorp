@@ -912,3 +912,25 @@ NS_IMETHODIMP nsRootAccessible::GetAccessibleRelated(PRUint32 aRelationType,
   return NS_OK;
 }
 
+NS_IMETHODIMP nsRootAccessible::FireDocLoadEvents(PRUint32 aEventType)
+{
+  if (!mDocument || !mWeakShell) {
+    return NS_OK;  // Document has been shut down
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
+    nsAccessNode::GetDocShellTreeItemFor(mDOMNode);
+  NS_ASSERTION(docShellTreeItem, "No doc shell tree item for document");
+  NS_ENSURE_TRUE(docShellTreeItem, NS_ERROR_FAILURE);
+  PRInt32 contentType;
+  docShellTreeItem->GetItemType(&contentType);
+  if (contentType == nsIDocShellTreeItem::typeContent) {
+    return nsDocAccessibleWrap::FireDocLoadEvents(aEventType); // Content might need to fire event
+  }
+
+  // Root chrome: don't fire event
+  mIsContentLoaded = (aEventType == nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE ||
+                      aEventType == nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED);
+
+  return NS_OK;
+}

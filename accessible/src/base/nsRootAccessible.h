@@ -75,6 +75,9 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType,
                                     nsIAccessible **aRelated);
 
+    // ----- nsPIAccessibleDocument -----------------------
+    NS_IMETHOD FireDocLoadEvents(PRUint32 aEventType);
+
     // ----- nsIDOMEventListener --------------------------
     NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
 

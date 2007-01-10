@@ -180,16 +180,6 @@ NS_IMETHODIMP nsAccessibilityService::OnStateChange(nsIWebProgress *aWebProgress
   nsCOMPtr<nsIDOMNode> domDocRootNode(do_QueryInterface(domDoc));
   NS_ENSURE_TRUE(domDocRootNode, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
-    nsAccessNode::GetDocShellTreeItemFor(domDocRootNode);
-  NS_ASSERTION(docShellTreeItem, "No doc shell tree item for loading document");
-  NS_ENSURE_TRUE(docShellTreeItem, NS_ERROR_FAILURE);
-  PRInt32 contentType;
-  docShellTreeItem->GetItemType(&contentType);
-  if (contentType != nsIDocShellTreeItem::typeContent) {
-    return NS_OK; // Not interested in chrome loading, just content
-  }
-
   // Get the accessible for the new document.
   // If it not created yet this will create it & cache it, as well as 
   // set up event listeners so that MSAA/ATK toolkit and internal 
