@@ -319,7 +319,7 @@
         <parameter name="column"/>
         <body>
           <![CDATA[
-            if (row < 0 || row >= this.itemCount || !column)
+            if (row < 0 || row >= this.view.rowCount || !column)
               return;
             if (column.type != Components.interfaces.nsITreeColumn.TYPE_TEXT ||
                 column.cycler || !this.view.isEditable(row, column))
@@ -332,6 +332,8 @@
             input.hidden = false;
 
             var box = this.treeBoxObject;
+            box.ensureCellIsVisible(row, column);
+
             var outx = {}, outy = {}, outwidth = {}, outheight = {};
             var coords = box.getCoordsForCellItem(row, column, "text",
                                                   outx, outy, outwidth, outheight);
