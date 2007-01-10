@@ -2642,6 +2642,19 @@
                   column.deleteEvent(aEvent);
               }
           }
+
+          // See whether the item we are deleting was selected.  If it was, then
+          // fire the appropriate event so our watchers can update
+          var found = false;
+          for (var i = 0; i < this.mSelectedItems.length; i++) {
+              if (this.mSelectedItems[i].hasSameIds(aEvent)) {
+                  this.mSelectedItems.splice(i, 1);
+                  found = true;
+              }
+          }
+          if (found) {
+              this.fireEvent("itemselect", this.mSelectedItems);
+          }
         ]]></body>
       </method>
 

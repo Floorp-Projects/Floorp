@@ -1357,10 +1357,17 @@
           function isNotItem(a) {
               return !a.hasSameIds(aItem);
           }
+          var oldLength = this.mSelectedItems.length;
           this.mSelectedItems = this.mSelectedItems.filter(isNotItem);
 
           for each (box in boxes) {
             box.box.deleteItem(aItem);
+          }
+
+          // If a deleted event was selected, we need to announce that the
+          // selection changed.
+          if (oldLength != this.mSelectedItems.length) {
+              this.fireEvent("itemselect", this.mSelectedItems);
           }
         ]]></body>
       </method>
