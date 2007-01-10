@@ -135,7 +135,7 @@ XPCOMGlueLoad(const char *xpcomFile)
 
     GetFrozenFunctionsFunc sym;
 
-    ulrc = DosQueryProcAddr(h, 0, "NS_GetFrozenFunctions", (PFN*)&sym);
+    ulrc = DosQueryProcAddr(h, 0, "_NS_GetFrozenFunctions", (PFN*)&sym);
 
     if (ulrc != NO_ERROR)
         XPCOMGlueUnload();
@@ -171,7 +171,9 @@ XPCOMGlueLoadXULFunctions(const nsDynamicFunctionLoad *symbols)
 
     nsresult rv = NS_OK;
     while (symbols->functionName) {
-        ulrc = DosQueryProcAddr(sXULLibrary, 0, symbols->functionName, (PFN*)symbols->function);
+        char buffer[512];
+        snprintf(buffer, sizeof(buffer), "_%s", symbols->functionName);
+        ulrc = DosQueryProcAddr(sXULLibrary, 0, buffer, (PFN*)symbols->function);
 
         if (ulrc != NO_ERROR)
             rv = NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
