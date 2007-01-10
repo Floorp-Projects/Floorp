@@ -359,6 +359,7 @@ txCopy::execute(txExecutionState& aEs)
 
     switch (txXPathNodeUtils::getNodeType(node)) {
         case txXPathNodeType::DOCUMENT_NODE:
+        case txXPathNodeType::DOCUMENT_FRAGMENT_NODE:
         {
             const nsAFlatString& empty = EmptyString();
 
@@ -375,7 +376,7 @@ txCopy::execute(txExecutionState& aEs)
         {
             nsCOMPtr<nsIAtom> localName =
                 txXPathNodeUtils::getLocalName(node);
-            nsresult rv = aEs.mResultHandler->
+            rv = aEs.mResultHandler->
                 startElement(txXPathNodeUtils::getPrefix(node),
                              localName, nsnull,
                              txXPathNodeUtils::getNamespaceID(node));
