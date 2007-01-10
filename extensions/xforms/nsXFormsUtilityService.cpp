@@ -72,9 +72,11 @@ NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);\
 
 #define GET_COMBOBOX_UIWIDGET \
 NS_ENSURE_ARG(aElement);\
-nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));\
-nsCOMPtr<nsIContent> parent(content->GetBindingParent());\
-nsCOMPtr<nsIXFormsComboboxUIWidget> widget(do_QueryInterface(parent));\
+nsCOMPtr<nsIXFormsComboboxUIWidget> widget(do_QueryInterface(aElement));\
+if (!widget) {\
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));\
+  widget = do_QueryInterface(content->GetBindingParent());\
+}\
 NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);\
 
 #define GET_XFORMS_SELECT1 \
@@ -367,6 +369,8 @@ nsresult
 nsXFormsUtilityService::GetSelectChildrenForNodeInternal(nsIDOMNode *aElement,
                                                          nsNodeList *aNodeList)
 {
+  NS_ENSURE_ARG(aElement);
+
   nsCOMPtr<nsIDOMNodeList> children;
   aElement->GetChildNodes(getter_AddRefs(children));
   NS_ENSURE_TRUE(children, NS_ERROR_FAILURE);

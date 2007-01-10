@@ -102,7 +102,7 @@ nsXFormsAccessible::GetBoundChildElementValue(const nsAString& aTagName,
 }
 
 void
-nsXFormsAccessible::CacheSelectChildren()
+nsXFormsAccessible::CacheSelectChildren(nsIDOMNode *aContainerNode)
 {
   if (!mWeakShell) {
     // This node has been shut down
@@ -117,8 +117,13 @@ nsXFormsAccessible::CacheSelectChildren()
   if (!accService)
     return;
 
+  nsCOMPtr<nsIDOMNode> container(aContainerNode);
+  if (!container)
+    container = mDOMNode;
+
   nsCOMPtr<nsIDOMNodeList> children;
-  sXFormsService->GetSelectChildrenFor(mDOMNode, getter_AddRefs(children));
+  sXFormsService->GetSelectChildrenFor(container, getter_AddRefs(children));
+
   if (!children)
     return;
 

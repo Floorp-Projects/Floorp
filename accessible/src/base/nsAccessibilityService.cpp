@@ -1587,12 +1587,21 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
     case nsIAccessibleProvider::XFormsItemRadiogroup:
       *aAccessible = new nsXFormsItemRadiogroupAccessible(aNode, weakShell);
       break;
+    case nsIAccessibleProvider::XFormsSelectCombobox:
+      *aAccessible = new nsXFormsSelectComboboxAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XFormsItemCombobox:
+      *aAccessible = new nsXFormsItemComboboxAccessible(aNode, weakShell);
+      break;
 
     case nsIAccessibleProvider::XFormsDropmarkerWidget:
       *aAccessible = new nsXFormsDropmarkerWidgetAccessible(aNode, weakShell);
       break;
     case nsIAccessibleProvider::XFormsCalendarWidget:
       *aAccessible = new nsXFormsCalendarWidgetAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XFormsComboboxPopupWidget:
+      *aAccessible = new nsXFormsComboboxPopupWidgetAccessible(aNode, weakShell);
       break;
 #endif
 

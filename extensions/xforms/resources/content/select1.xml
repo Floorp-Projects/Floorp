@@ -52,13 +52,6 @@
     <!-- The strange indentation is because of the whitespace nodes.-->
     <content>
       <children includes="label|hint"/>
-      <html:div class="-moz-xforms-select1-popup" anonid="popup"
-                onmouseover="this.parentNode.shouldHandleBlur = false;
-                             this.parentNode.mouseOver(event);"
-                onmouseup="this.parentNode.mouseUp(event);"
-                onmouseout="this.parentNode.shouldHandleBlur = true;">
-        <children/>
-      </html:div>
       <html:span class="-moz-select1-container"
                  anonid="container"><html:input
                  class="-moz-xforms-select1-input xf-value"
@@ -77,9 +70,17 @@
                     onmouseup="this.parentNode.parentNode.shouldHandleBlur = true;"
                     onclick="this.parentNode.parentNode.togglePopup();
                              this.previousSibling.focus();"
-        /></html:span></content>
+        /></html:span>
+      <html:div mozType:comboboxpopup="true" anonid="popup"
+                onmouseover="this.parentNode.shouldHandleBlur = false;
+                             this.parentNode.mouseOver(event);"
+                onmouseup="this.parentNode.mouseUp(event);"
+                onmouseout="this.parentNode.shouldHandleBlur = true;">
+        <children/>
+      </html:div>
+    </content>
 
-    <implementation implements="nsIXFormsUIWidget, nsIXFormsNSSelect1Element, nsIXFormsNSEditableElement, nsIXFormsComboboxUIWidget">
+    <implementation implements="nsIXFormsNSSelect1Element, nsIXFormsNSEditableElement, nsIXFormsComboboxUIWidget, nsIAccessibleProvider">
 
       <!-- nsIXFormsNSEditableElement -->
       <property name="editor" readonly="true"
@@ -118,6 +119,13 @@
           else
             this.hidePopup();
         </setter>
+      </property>
+
+      <!-- nsIAccessibleProvider -->
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsSelectCombobox;
+        </getter>
       </property>
 
       <field name="_inputField">null</field>
@@ -201,6 +209,12 @@
           if (this._selected) {
             // Remove extra white space characters from the beginning of the label.
             this.inputField.value = this._selected.labelText.replace(/^[\s\n]+/, "");
+
+            // Fire 'ValueChange' event. This event is used by accessible
+            // module.
+            var event = this.ownerDocument.createEvent("Events");
+            event.initEvent("ValueChange", false, false);
+            this.dispatchEvent(event);
           }
           ]]>
         </body>
@@ -1176,7 +1190,13 @@
       </html:div>
     </content>
 
-    <implementation>
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsItemCombobox;
+        </getter>
+      </property>
+
       <field name="_content">null</field>
       <property name="content" readonly="true">
         <getter>

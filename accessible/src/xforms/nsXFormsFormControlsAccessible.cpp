@@ -562,3 +562,93 @@ nsXFormsItemRadiogroupAccessible::GetActionName(PRUint8 aIndex, nsAString& aName
   return NS_OK;
 }
 
+
+// nsXFormsSelectComboboxAccessible
+
+nsXFormsSelectComboboxAccessible::
+  nsXFormsSelectComboboxAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell):
+  nsXFormsSelectableAccessible(aNode, aShell)
+{
+}
+
+NS_IMETHODIMP
+nsXFormsSelectComboboxAccessible::GetRole(PRUint32 *aRole)
+{
+  NS_ENSURE_ARG_POINTER(aRole);
+
+  *aRole = ROLE_COMBOBOX;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsSelectComboboxAccessible::GetState(PRUint32 *aState)
+{
+  nsresult rv = nsXFormsSelectableAccessible::GetState(aState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool isOpen = PR_FALSE;
+  rv = sXFormsService->IsDropmarkerOpen(mDOMNode, &isOpen);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (isOpen)
+    *aState = STATE_EXPANDED;
+  else
+    *aState = STATE_COLLAPSED;
+
+  *aState |= STATE_HASPOPUP | STATE_FOCUSABLE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsSelectComboboxAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren)
+{
+  NS_ENSURE_ARG_POINTER(aAllowsAnonChildren);
+
+  *aAllowsAnonChildren = PR_TRUE;
+  return NS_OK;
+}
+
+
+// nsXFormsItemComboboxAccessible
+
+nsXFormsItemComboboxAccessible::
+  nsXFormsItemComboboxAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell):
+  nsXFormsSelectableItemAccessible(aNode, aShell)
+{
+}
+
+NS_IMETHODIMP
+nsXFormsItemComboboxAccessible::GetRole(PRUint32 *aRole)
+{
+  NS_ENSURE_ARG_POINTER(aRole);
+
+  *aRole = ROLE_LISTITEM;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsItemComboboxAccessible::GetState(PRUint32 *aState)
+{
+  nsresult rv = nsXFormsSelectableItemAccessible::GetState(aState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (*aState & STATE_UNAVAILABLE)
+    return NS_OK;
+
+  *aState |= STATE_SELECTABLE;
+  if (IsItemSelected())
+    *aState |= STATE_SELECTED;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsItemComboboxAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+{
+  if (aIndex != eAction_Click)
+    return NS_ERROR_INVALID_ARG;
+
+  nsAccessible::GetTranslatedString(NS_LITERAL_STRING("select"), aName);
+  return NS_OK;
+}
+

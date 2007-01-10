@@ -498,6 +498,8 @@ select1 itemset, select itemset {
 }
 
   /* choices widget */
+html|*:root select1:not([appearance]) choices,
+html|*:root select1[appearance="minimal] choices,
 select[appearance='full'] choices,
 select1[appearance='full'] choices {
   -moz-binding: url('chrome://xforms/content/selects.xml#choices');
@@ -757,5 +759,9 @@ html|*:root html|input[mozType|dropmarker] {
 
 xul|*:root xul|dropmarker[mozType|dropmarker] {
   -moz-binding: url('chrome://xforms/content/widgets-xul.xml#dropmarker');
+}
+
+html|*:root html|div[mozType|comboboxpopup] {
+  -moz-binding: url('chrome://xforms/content/widgets-xhtml.xml#comboboxpopup');
 }
 

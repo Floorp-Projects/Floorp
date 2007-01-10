@@ -100,7 +100,9 @@ protected:
   // element. Note, those select/select1 elements that use native widget
   // for representation don't use the method since their item/choices elements
   // are hidden and therefore aren't accessible.
-  void CacheSelectChildren();
+  //
+  // @param aContainerNode - node that contains item elements
+  void CacheSelectChildren(nsIDOMNode *aContainerNode = nsnull);
 };
 
 

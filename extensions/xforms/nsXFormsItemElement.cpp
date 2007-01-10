@@ -42,6 +42,9 @@
 #include "nsXFormsAtoms.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMDocumentEvent.h"
+#include "nsIDOMEvent.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsString.h"
 #include "nsXFormsUtils.h"
 #include "nsIXFormsValueElement.h"
@@ -396,6 +399,33 @@ NS_IMETHODIMP
 nsXFormsItemElement::SetActive(PRBool aActive)
 {
   /// @see comment in nsIXFormsItemElement.idl
+
+  if (aActive) {
+    // Fire 'DOMMenuItemActive' event. This event is used by accessible module.
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    mElement->GetOwnerDocument(getter_AddRefs(domDoc));
+    nsCOMPtr<nsIDOMDocumentEvent> doc = do_QueryInterface(domDoc);
+    NS_ENSURE_STATE(doc);
+
+    nsCOMPtr<nsIDOMEvent> event;
+    doc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+    NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
+
+    event->InitEvent(NS_LITERAL_STRING("DOMMenuItemActive"),
+                     PR_TRUE, PR_TRUE);
+
+    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mElement));
+    NS_ENSURE_STATE(node);
+
+    nsXFormsUtils::SetEventTrusted(event, node);
+
+    nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mElement));
+    NS_ENSURE_STATE(target);
+
+    PRBool defaultActionEnabled = PR_TRUE;
+    nsresult rv = target->DispatchEvent(event, &defaultActionEnabled);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   NS_NAMED_LITERAL_STRING(active, "_moz_active");
 

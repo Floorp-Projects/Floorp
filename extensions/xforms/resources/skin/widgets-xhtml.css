@@ -135,3 +135,22 @@ input[mozType|dropmarker]:active:hover {
   border-style: outset;
 }
 
+/* combobox popup (used inside minimal select1) */
+
+div[mozType|comboboxpopup="true"] {
+  border-width: 1px;
+  top: 0px;
+  left: 0px;
+  border: 1px outset black !important;
+  background-color: -moz-Field;
+  font: -moz-list;
+  text-align: start;
+  visibility: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: absolute;
+  -moz-user-select: none;
+  z-index: 2147482647;
+  cursor: default;
+}
+

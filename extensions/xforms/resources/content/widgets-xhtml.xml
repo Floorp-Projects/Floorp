@@ -755,5 +755,21 @@
     </implementation>
   </binding>
 
+
+  <!-- POPUP for MINIMAL SELECT1 -->
+  <binding id="comboboxpopup">
+    <resources>
+      <stylesheet src="chrome://xforms/skin/widgets-xhtml.css"/>
+    </resources>
+
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsComboboxPopupWidget;
+        </getter>
+      </property>
+    </implementation>
+  </binding>
+
 </bindings>
 

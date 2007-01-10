@@ -136,15 +136,16 @@ public:
   NS_IMETHOD GetEditor(nsIDOMNode *aElement, nsIEditor **aEditor) = 0;
 
   /**
-   * Return true if dropmarker is in open state, otherwise false. Failure if
-   * given element is not dropmarker or its parent element isn't supposed to
-   * have dropmarker.
+   * Return true if dropmarker is in open state (combobox popup is open),
+   * otherwise false. Failure if given 'aElement' node is not direct child of
+   * combobox element or is not combobox itself.
    */
   NS_IMETHOD IsDropmarkerOpen(nsIDOMNode *aElement, PRBool* aIsOpen) = 0;
 
   /**
-   * Toggles dropmarker state. Failure if given element is not dropmarker or
-   * its parent element isn't supposed to have dropmarker.
+   * Toggles dropmarker state (close/open combobox popup). Failure if given
+   * 'aElement' node is not direct child of combobox element or is not combobox
+   * itself.
    */
   NS_IMETHOD ToggleDropmarkerState(nsIDOMNode *aElement) = 0;
 
