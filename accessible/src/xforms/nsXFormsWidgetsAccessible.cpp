@@ -127,3 +127,73 @@ nsXFormsCalendarWidgetAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
+
+// nsXFormsComboboxPopupWidgetAccessible
+
+nsXFormsComboboxPopupWidgetAccessible::
+  nsXFormsComboboxPopupWidgetAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell):
+  nsXFormsAccessible(aNode, aShell)
+{
+}
+
+NS_IMETHODIMP
+nsXFormsComboboxPopupWidgetAccessible::GetRole(PRUint32 *aRole)
+{
+  NS_ENSURE_ARG_POINTER(aRole);
+
+  *aRole = ROLE_LIST;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsComboboxPopupWidgetAccessible::GetState(PRUint32 *aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+
+  nsXFormsAccessible::GetState(aState);
+
+  PRBool isOpen = PR_FALSE;
+  nsresult rv = sXFormsService->IsDropmarkerOpen(mDOMNode, &isOpen);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aState |= STATE_FOCUSABLE;
+
+  if (isOpen)
+    *aState = STATE_FLOATING;
+  else
+    *aState = STATE_INVISIBLE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsComboboxPopupWidgetAccessible::GetValue(nsAString& aValue)
+{
+  aValue.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsComboboxPopupWidgetAccessible::GetName(nsAString& aName)
+{
+  aName.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsComboboxPopupWidgetAccessible::GetDescription(nsAString& aDescription)
+{
+  aDescription.Truncate();
+  return NS_OK;
+}
+
+void
+nsXFormsComboboxPopupWidgetAccessible::CacheChildren()
+{
+  nsCOMPtr<nsIDOMNode> parent;
+  mDOMNode->GetParentNode(getter_AddRefs(parent));
+
+  // Parent node must be an xforms:select1 element.
+  CacheSelectChildren(parent);
+}
+

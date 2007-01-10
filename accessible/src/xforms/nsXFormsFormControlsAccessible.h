@@ -241,5 +241,41 @@ public:
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
 };
 
+
+/**
+ * Accessible object for xforms:select1 of minimal appearance that is
+ * represented by combobox.
+ */
+
+class nsXFormsSelectComboboxAccessible : public nsXFormsSelectableAccessible
+{
+public:
+  nsXFormsSelectComboboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+  NS_IMETHOD GetState(PRUint32 *aState);
+
+  // Allows accessible nodes in anonymous content of xforms element by
+  // always returning PR_TRUE value.
+  NS_IMETHOD GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren);
+};
+
+
+/**
+ * Accessible object for xforms:item element when it is represented by a
+ * listitem. This occurs when the item is contained in a xforms:select with
+ * minimal appearance. Such a xforms:select is represented by a combobox.
+ */
+
+class nsXFormsItemComboboxAccessible : public nsXFormsSelectableItemAccessible
+{
+public:
+  nsXFormsItemComboboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+  NS_IMETHOD GetState(PRUint32 *aState);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
+};
+
 #endif
 
