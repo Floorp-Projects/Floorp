@@ -39,9 +39,9 @@
     <p><img src="{$config.webpath}/images/faq_small.png" style="float: left;" height="16" width="16" alt=""/>&nbsp;Visit the <a href="http://www.java.com/en/download/index.jsp">Java download page</a> to select the latest version for your operating system.</p>
     <h3><img src="{$config.webpath}/images/install.png" height="24" width="24" alt=""/>&nbsp;Download</h3>
     <div style="margin-top: 5px; height: 38px">
-        <div class="iconbar"><img src="{$config.webpath}/images/windows_icon.png" height="34" width="34" alt=""/>&nbsp;For Windows:<br/>&nbsp;&nbsp;<a href="http://www.java.com/en/download/index.jsp">Version 5.0 Update 7</a></div>
-        <div class="iconbar"><img src="{$config.webpath}/images/linux_icon.png" height="34" width="34" alt=""/>&nbsp;For Linux:<br/>&nbsp;&nbsp;<a href="http://www.java.com/en/download/index.jsp">Version 5.0 Update 7</a></div>
-        <div class="iconbar"><img src="{$config.webpath}/images/macosx_icon.png" height="34" width="34" alt=""/>&nbsp;For MacOSX:<br/>&nbsp;&nbsp;<a href="http://plugindoc.mozdev.org/OSX.html#Java">Details</a></div>
+        <div class="iconbar"><img src="{$config.webpath}/images/windows_icon.png" height="34" width="34" alt=""/>&nbsp;For Windows:<br/>&nbsp;&nbsp;<a href="http://www.java.com/en/download/">Latest Version</a></div>
+        <div class="iconbar"><img src="{$config.webpath}/images/linux_icon.png" height="34" width="34" alt=""/>&nbsp;For Linux:<br/>&nbsp;&nbsp;<a href="http://www.java.com/en/download/">Latest Version</a></div>
+        <div class="iconbar"><img src="{$config.webpath}/images/macosx_icon.png" height="34" width="34" alt=""/>&nbsp;For MacOSX:<br/>&nbsp;&nbsp;<a href="http://www.java.com/en/download/">Latest Version</a></div>
     </div>
     <div class="baseline"><img src="{$config.webpath}/images/faq_small.png" style="float: left;" height="16" width="16" alt=""/>&nbsp;Support Documentation: <a href="http://plugindoc.mozdev.org/windows.html#Java">Windows</a>, <a href="http://plugindoc.mozdev.org/linux.html#Java">Linux</a>, <a href="http://plugindoc.mozdev.org/OSX.html#Java">MacOSX</a> | <a href="http://plugindoc.mozdev.org/faqs/java.html">Java Plugin FAQ</a></div>
 </div>

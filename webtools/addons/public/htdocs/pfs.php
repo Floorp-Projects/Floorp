@@ -194,11 +194,18 @@ if (!empty($mimetype) &&
 
         $name = 'Java Runtime Environment';
         $version = '';
-        $manualInstallationURL = 'http://java.com/en/download/manual.jsp';
+        $manualInstallationURL = 'http://java.com/download/manual.jsp';
         $installerShowsUI = 'true';
         $needsRestart = 'true';
 
-        if (preg_match('/^Win/', $clientOS)) {
+        // For now, send Vista users to a manual download page.
+        //
+        // This is a temp fix for bug 366129 until vista has a non-manual
+        // solution.
+        if (preg_match('/^Windows NT 6\.0/', $clientOS)) {
+            $guid = '{fbe640ef-4375-4f45-8d79-767d60bf75b8}';
+            $XPILocation = getUriForNoXPI();
+        } elseif (preg_match('/^Win/', $clientOS)) {
             $guid = '{92a550f2-dfd2-4d2f-a35d-a98cfda73595}';
             $XPILocation = 'http://java.com/jre-install.xpi';
         } else {
