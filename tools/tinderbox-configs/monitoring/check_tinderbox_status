@@ -27,6 +27,7 @@ done
 URL="http://tinderbox.mozilla.org/${TREE}/quickparse.txt"
 OLD_STATE="/var/tmp/tinderbox-${TREE}-old.state"
 NEW_STATE="/var/tmp/tinderbox-${TREE}-new.state"
+TEMP_STATE="/var/tmp/tinderbox-${TREE}.temp"
 STATUS=0
 
 print_usage() {
@@ -70,7 +71,13 @@ case "$1" in
 
     if [ -f "$OLD_STATE" ]
     then
-        curl -s "$URL" | grep -v 'State|' | awk -F\| '{print $3}' > $NEW_STATE
+        curl -s "$URL"  > $TEMP_STATE
+        if [ $? -eq 0 ]; then
+          grep -v 'State|' $TEMP_STATE | awk -F\| '{print $3}'  > $NEW_STATE
+        else
+          echo "Error retrieving status from tinderbox server"
+          exit 0
+        fi
         added=`diff "$OLD_STATE" "$NEW_STATE" | grep '^> ' | sed 's/^> //' | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /'`
         removed=`diff "$OLD_STATE" "$NEW_STATE" | grep '^< ' | sed 's/^< //' | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /'`
         # restore state
@@ -92,9 +99,15 @@ case "$1" in
         fi
     else 
       # initialize old state
-      curl -s "$URL" | grep -v 'State|' | awk -F\| '{print $3}' > "$OLD_STATE"
-      echo "Initialized old state."
-      STATUS=0
+      curl -s "$URL" > $TEMP_STATE
+      if [ $? -eq 0 ]; then
+        grep -v 'State|' $TEMP_STATE | awk -F\| '{print $3}' > "$OLD_STATE"
+        message="Initialized old state."
+        STATUS=0
+      else
+        message="Error retrieving status from tinderbox server"
+        STATUS=0
+      fi
     fi
     echo $message 
     echo 
