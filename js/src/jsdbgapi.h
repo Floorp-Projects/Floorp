@@ -104,6 +104,9 @@ js_MarkWatchPoints(JSContext *cx);
 extern JSScopeProperty *
 js_FindWatchPoint(JSRuntime *rt, JSScope *scope, jsid id);
 
+/*
+ * NB: callers outside of jsdbgapi.c must pass non-null scope.
+ */
 extern JSPropertyOp
 js_GetWatchedSetter(JSRuntime *rt, JSScope *scope,
                     const JSScopeProperty *sprop);

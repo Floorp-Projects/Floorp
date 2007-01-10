@@ -311,7 +311,9 @@ struct JSScopeProperty {
 #define SPROP_HAS_STUB_GETTER(sprop)    (!(sprop)->getter)
 #define SPROP_HAS_STUB_SETTER(sprop)    (!(sprop)->setter)
 
-/* NB: SPROP_GET must not be called if SPROP_HAS_STUB_GETTER(sprop). */
+/*
+ * NB: SPROP_GET must not be called if SPROP_HAS_STUB_GETTER(sprop).
+ */
 #define SPROP_GET(cx,sprop,obj,obj2,vp)                                       \
     (((sprop)->attrs & JSPROP_GETTER)                                         \
      ? js_InternalGetOrSet(cx, obj, (sprop)->id,                              \
@@ -319,7 +321,10 @@ struct JSScopeProperty {
                            0, 0, vp)                                          \
      : (sprop)->getter(cx, OBJ_THIS_OBJECT(cx,obj), SPROP_USERID(sprop), vp))
 
-/* NB: SPROP_SET must not be called if SPROP_HAS_STUB_SETTER(sprop). */
+/*
+ * NB: SPROP_SET must not be called if (SPROP_HAS_STUB_SETTER(sprop) &&
+ * !(sprop->attrs & JSPROP_GETTER)).
+ */
 #define SPROP_SET(cx,sprop,obj,obj2,vp)                                       \
     (((sprop)->attrs & JSPROP_SETTER)                                         \
      ? js_InternalGetOrSet(cx, obj, (sprop)->id,                              \

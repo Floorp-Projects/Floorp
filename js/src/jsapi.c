@@ -729,6 +729,9 @@ JS_NewRuntime(uint32 maxbytes)
     if (!rt->scopeSharingDone)
         goto bad;
     rt->scopeSharingTodo = NO_SCOPE_SHARING_TODO;
+    rt->debuggerLock = JS_NEW_LOCK();
+    if (!rt->debuggerLock)
+        goto bad;
 #endif
     if (!js_InitPropertyTree(rt))
         goto bad;
@@ -775,6 +778,8 @@ JS_DestroyRuntime(JSRuntime *rt)
         JS_DESTROY_CONDVAR(rt->setSlotDone);
     if (rt->scopeSharingDone)
         JS_DESTROY_CONDVAR(rt->scopeSharingDone);
+    if (rt->debuggerLock)
+        JS_DESTROY_LOCK(rt->debuggerLock);
 #else
     GSN_CACHE_CLEAR(&rt->gsnCache);
 #endif
