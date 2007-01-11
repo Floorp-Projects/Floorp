@@ -62,7 +62,7 @@
   <groupbox id="signing.titlebox">
     <caption label="&signingGroupTitle.label;"/>
     
-    <label value="&signingCert.message;"/>
+    <label value="&signingCert.message;" control="identity.signing_cert_name"/>
 
     <hbox align="center">
       <textbox id="identity.signing_cert_name" wsm_persist="true" flex="1" 
@@ -85,7 +85,7 @@
   <groupbox id="encryption.titlebox">
     <caption label="&encryptionGroupTitle.label;"/>
 
-    <label value="&encryptionCert.message;"/>
+    <label value="&encryptionCert.message;" control="identity.encryption_cert_name"/>
     
     <hbox align="center">
       <textbox id="identity.encryption_cert_name" wsm_persist="true" flex="1" 
