@@ -556,8 +556,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::Assert(nsIRDFResource* source,
   //We don't handle tv = PR_FALSE at the moment.
   if(NS_SUCCEEDED(rv) && tv)
     return DoFolderAssert(folder, property, target);
-  else
-    return NS_ERROR_FAILURE;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsMsgFolderDataSource::Unassert(nsIRDFResource* source,
@@ -2620,6 +2619,24 @@ PRBool nsMsgRecentFoldersDataSource::WantsThisFolder(nsIMsgFolder *folder)
   return m_folders.IndexOf(folder) != kNotFound;
 }
 
+NS_IMETHODIMP nsMsgRecentFoldersDataSource::OnItemAdded(nsIRDFResource *parentItem, nsISupports *item)
+{
+  // if we've already built the recent folder array, we should add this item to the array
+  // since just added items are by definition new.
+  // I think this means newly discovered imap folders (ones w/o msf files) will
+  // get added, but maybe that's OK.
+  if (m_builtRecentFolders)
+  {
+    nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(item));
+    if (folder && m_folders.IndexOf(folder) == kNotFound)
+    {
+      m_folders.AppendObject(folder);
+      nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(item);
+      NotifyObservers(kNC_RecentFolders, kNC_Child, resource, nsnull, PR_TRUE, PR_FALSE);
+    }
+  }
+  return nsMsgFlatFolderDataSource::OnItemAdded(parentItem, item);
+}
 
 
 nsresult nsMsgRecentFoldersDataSource::NotifyPropertyChanged(nsIRDFResource *resource, 

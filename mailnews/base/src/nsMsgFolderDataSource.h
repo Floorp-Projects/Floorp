@@ -364,9 +364,10 @@ public:
   nsMsgRecentFoldersDataSource() {m_dsName = "mailnewsrecentfolders"; m_builtRecentFolders = PR_FALSE;
                                   m_cutOffDate = 0; m_maxNumFolders = 15;}
   virtual ~nsMsgRecentFoldersDataSource() {}
-  nsresult NotifyPropertyChanged(nsIRDFResource *resource, 
+  virtual nsresult NotifyPropertyChanged(nsIRDFResource *resource, 
                     nsIRDFResource *property, nsIRDFNode *newNode, 
                     nsIRDFNode *oldNode);
+  NS_IMETHOD OnItemAdded(nsIRDFResource *parentItem, nsISupports *item);
   virtual void Cleanup();
 protected:
   PRBool m_builtRecentFolders;
