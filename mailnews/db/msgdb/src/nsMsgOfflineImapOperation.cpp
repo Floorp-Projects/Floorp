@@ -56,7 +56,6 @@ NS_IMPL_ISUPPORTS1(nsMsgOfflineImapOperation, nsIMsgOfflineImapOperation)
 #define PROP_NEW_FLAGS "newFlags"
 #define PROP_MESSAGE_KEY "msgKey"
 #define PROP_SRC_MESSAGE_KEY "srcMsgKey"
-#define PROP_NEW_FLAGS "newFlags"
 #define PROP_SRC_FOLDER_URI "srcFolderURI"
 #define PROP_MOVE_DEST_FOLDER_URI "moveDest"
 #define PROP_NUM_COPY_DESTS "numCopyDests"
@@ -64,6 +63,7 @@ NS_IMPL_ISUPPORTS1(nsMsgOfflineImapOperation, nsIMsgOfflineImapOperation)
                                     // them around since we delete off the front first.
 #define PROP_KEYWORD_ADD "addedKeywords"
 #define PROP_KEYWORD_REMOVE "removedKeywords"
+#define PROP_MSG_SIZE "msgSize"
 
 nsMsgOfflineImapOperation::nsMsgOfflineImapOperation(nsMsgDatabase *db, nsIMdbRow *row)
 {
@@ -362,6 +362,18 @@ NS_IMETHODIMP nsMsgOfflineImapOperation::GetCopyDestination(PRInt32 copyIndex, c
   }
   else
     return NS_ERROR_NULL_POINTER;
+}
+
+/* attribute unsigned log msgSize; */
+NS_IMETHODIMP nsMsgOfflineImapOperation::GetMsgSize(PRUint32 *aMsgSize)
+{
+  NS_ENSURE_ARG(aMsgSize);
+  return m_mdb->GetUint32Property(m_mdbRow, PROP_MSG_SIZE, aMsgSize, 0);
+}
+
+NS_IMETHODIMP nsMsgOfflineImapOperation::SetMsgSize(PRUint32 aMsgSize)
+{
+  return m_mdb->SetUint32Property(m_mdbRow, PROP_MSG_SIZE, aMsgSize);
 }
 
 void nsMsgOfflineImapOperation::Log(PRLogModuleInfo *logFile)

@@ -6488,7 +6488,12 @@ nsresult nsImapMailFolder::CopyOfflineMsgBody(nsIMsgFolder *srcFolder, nsIMsgDBH
     PRUint32 messageSize;
     origHdr->GetMessageOffset(&messageOffset);
     origHdr->GetOfflineMessageSize(&messageSize);
-
+    if (!messageSize)
+    {
+      nsCOMPtr<nsIMsgLocalMailFolder> localFolder = do_QueryInterface(srcFolder); 
+      if (localFolder)   //can just use regular message size
+        origHdr->GetMessageSize(&messageSize);
+    }
     PRInt64 tellPos;
     seekable->Tell(&tellPos);
     nsInt64 curStorePos = tellPos;
@@ -6527,6 +6532,13 @@ nsresult nsImapMailFolder::CopyOfflineMsgBody(nsIMsgFolder *srcFolder, nsIMsgDBH
           outputStream->Flush();
         }
       }
+    }
+    if (NS_SUCCEEDED(rv))
+    {
+      PRUint32 resultFlags;
+      destHdr->OrFlags(MSG_FLAG_OFFLINE, &resultFlags);
+      destHdr->SetOfflineMessageSize(messageSize);
+
     }
   }
   return rv;
@@ -6650,8 +6662,18 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
             
             if (isMove)
             {
+              PRUint32 msgSize;
+              PRUint32 msgFlags;
+              imapMessageFlagsType newImapFlags = 0;
+              message->GetMessageSize(&msgSize);
+              message->GetFlags(&msgFlags);
               sourceOp->SetDestinationFolderURI(folderURI); // offline move
               sourceOp->SetOperation(nsIMsgOfflineImapOperation::kMsgMoved);
+              sourceOp->SetMsgSize(msgSize);
+              newImapFlags = msgFlags & 0x7;
+              if (msgFlags & MSG_FLAG_FORWARDED)
+                newImapFlags |=  kImapMsgForwardedFlag;
+              sourceOp->SetNewFlags(newImapFlags);
             }
             else
               sourceOp->AddMessageCopyOperation(folderURI); // offline copy

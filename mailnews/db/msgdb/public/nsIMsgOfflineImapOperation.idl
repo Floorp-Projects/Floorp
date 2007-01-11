@@ -43,7 +43,7 @@ typedef unsigned short imapMessageFlagsType;
 
 typedef long nsOfflineImapOperationType;
 
-[scriptable, uuid(2728cb2b-4716-4b5e-98a7-ce22569378e5)]
+[scriptable, uuid(e576dace-db4f-4d23-aa6f-57165504848f)]
 
 interface nsIMsgOfflineImapOperation : nsISupports
 {
@@ -75,5 +75,6 @@ interface nsIMsgOfflineImapOperation : nsISupports
   readonly attribute long numberOfCopies;
   void addMessageCopyOperation(in string destinationBox);
   string getCopyDestination(in long copyIndex);
+  attribute unsigned long msgSize;
 };
 
