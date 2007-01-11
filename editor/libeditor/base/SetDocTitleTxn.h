@@ -60,9 +60,6 @@ public:
 
   static const nsIID& GetCID() { static const nsIID iid = SET_DOC_TITLE_TXN_CID; return iid; }
 
-  virtual ~SetDocTitleTxn();
-
-
   /** Initialize the transaction.
     * @param aEditor the object providing core editing operations
     * @param aValue  the new value for document title
@@ -75,17 +72,10 @@ private:
   nsresult SetDomTitle(const nsAString& aTitle);
 
 public:
-  NS_IMETHOD DoTransaction(void);
+  NS_DECL_EDITTXN
 
-  NS_IMETHOD UndoTransaction(void);
-
-  NS_IMETHOD RedoTransaction(void);
-
-  NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
-
+  NS_IMETHOD RedoTransaction();
   NS_IMETHOD GetIsTransient(PRBool *aIsTransient);
-
-  NS_IMETHOD GetTxnDescription(nsAString& aTxnDescription);
 
 protected:
 

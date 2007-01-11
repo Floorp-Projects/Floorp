@@ -65,10 +65,6 @@ NS_IMETHODIMP SplitElementTxn::Init(nsEditor   *aEditor,
   return NS_OK;
 }
 
-SplitElementTxn::~SplitElementTxn()
-{
-}
-
 NS_IMETHODIMP SplitElementTxn::DoTransaction(void)
 {
 #ifdef NS_DEBUG
@@ -212,13 +208,6 @@ NS_IMETHODIMP SplitElementTxn::RedoTransaction(void)
   return result;
 }
 
-
-NS_IMETHODIMP SplitElementTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
-{
-  if (aDidMerge)
-    *aDidMerge = PR_FALSE;
-  return NS_OK;
-}
 
 NS_IMETHODIMP SplitElementTxn::GetTxnDescription(nsAString& aString)
 {

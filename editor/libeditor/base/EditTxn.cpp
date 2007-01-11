@@ -40,44 +40,28 @@
 
 NS_IMPL_ISUPPORTS2(EditTxn, nsITransaction, nsPIEditorTransaction)
 
-EditTxn::EditTxn()
-{
-}
-
 EditTxn::~EditTxn()
 {
 }
 
-NS_IMETHODIMP EditTxn::DoTransaction(void)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP EditTxn::UndoTransaction(void)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP EditTxn::RedoTransaction(void)
+NS_IMETHODIMP
+EditTxn::RedoTransaction(void)
 {
   return DoTransaction();
 }
 
-NS_IMETHODIMP EditTxn::GetIsTransient(PRBool *aIsTransient)
+NS_IMETHODIMP
+EditTxn::GetIsTransient(PRBool *aIsTransient)
 {
-  if (aIsTransient)
-    *aIsTransient = PR_FALSE;
+  *aIsTransient = PR_FALSE;
+
   return NS_OK;
 }
 
-NS_IMETHODIMP EditTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
+NS_IMETHODIMP
+EditTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
+  *aDidMerge = PR_FALSE;
+
   return NS_OK;
 }
-
-NS_IMETHODIMP EditTxn::GetTxnDescription(nsAString& aString)
-{
-  aString.AssignLiteral("EditTxn");
-  return NS_OK;
-}
-

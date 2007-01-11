@@ -45,11 +45,6 @@ EditAggregateTxn::EditAggregateTxn()
   NS_POSTCONDITION(NS_SUCCEEDED(res), "EditAggregateTxn failed in constructor");
 }
 
-EditAggregateTxn::~EditAggregateTxn()
-{
-  // nsISupportsArray cleans up array for us at destruct time
-}
-
 NS_IMETHODIMP EditAggregateTxn::DoTransaction(void)
 {
   nsresult result=NS_OK;  // it's legal (but not very useful) to have an empty child list
@@ -109,13 +104,6 @@ NS_IMETHODIMP EditAggregateTxn::RedoTransaction(void)
     }  
   }
   return result;
-}
-
-NS_IMETHODIMP EditAggregateTxn::GetIsTransient(PRBool *aIsTransient)
-{
-  if (aIsTransient)
-    *aIsTransient = PR_FALSE;
-  return NS_OK;
 }
 
 NS_IMETHODIMP EditAggregateTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
@@ -223,18 +211,6 @@ NS_IMETHODIMP EditAggregateTxn::GetName(nsIAtom **aName)
   return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP_(nsrefcnt) EditAggregateTxn::AddRef(void)
-{
-  return EditTxn::AddRef();
-}
-
-//NS_IMPL_RELEASE_INHERITED(Class, Super)
-NS_IMETHODIMP_(nsrefcnt) EditAggregateTxn::Release(void)
-{
-  return EditTxn::Release();
-}
-
-//NS_IMPL_QUERY_INTERFACE_INHERITED1(Class, Super, AdditionalInterface)
 NS_IMETHODIMP EditAggregateTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (!aInstancePtr) return NS_ERROR_NULL_POINTER;

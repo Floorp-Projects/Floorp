@@ -52,11 +52,6 @@ IMETextTxn::IMETextTxn()
 {
 }
 
-IMETextTxn::~IMETextTxn()
-{
-  mRangeList = do_QueryInterface(nsnull);
-}
-
 NS_IMETHODIMP IMETextTxn::Init(nsIDOMCharacterData     *aElement,
                                PRUint32                 aOffset,
                                PRUint32                 aReplaceLength,

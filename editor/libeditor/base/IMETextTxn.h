@@ -63,8 +63,6 @@ class IMETextTxn : public EditTxn
 public:
   static const nsIID& GetCID() { static const nsIID iid = IME_TEXT_TXN_CID; return iid; }
 
-  virtual ~IMETextTxn();
-
   /** initialize the transaction
     * @param aElement the text content node
     * @param aOffset  the location in aElement to do the insertion
@@ -84,14 +82,9 @@ private:
 	IMETextTxn();
 
 public:
-	
-  NS_IMETHOD DoTransaction(void);
-
-  NS_IMETHOD UndoTransaction(void);
+  NS_DECL_EDITTXN
 
   NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
-
-  NS_IMETHOD GetTxnDescription(nsAString& aTxnDescription);
 
   NS_IMETHOD MarkFixed(void);
 

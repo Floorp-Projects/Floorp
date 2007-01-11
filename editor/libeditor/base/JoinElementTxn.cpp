@@ -62,10 +62,6 @@ NS_IMETHODIMP JoinElementTxn::Init(nsEditor   *aEditor,
   return NS_OK;
 }
 
-JoinElementTxn::~JoinElementTxn()
-{
-}
-
 // After DoTransaction() and RedoTransaction(), the left node is removed from the content tree and right node remains.
 NS_IMETHODIMP JoinElementTxn::DoTransaction(void)
 {
@@ -160,20 +156,6 @@ NS_IMETHODIMP JoinElementTxn::UndoTransaction(void)
   result = mParent->InsertBefore(mLeftNode, mRightNode, getter_AddRefs(resultNode));
   return result;
 
-}
-
-NS_IMETHODIMP JoinElementTxn::GetIsTransient(PRBool *aIsTransient)
-{
-  if (aIsTransient)
-    *aIsTransient = PR_FALSE;
-  return NS_OK;
-}
-
-nsresult JoinElementTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
-{
-  if (aDidMerge)
-    *aDidMerge = PR_FALSE;
-  return NS_OK;
 }
 
 NS_IMETHODIMP JoinElementTxn::GetTxnDescription(nsAString& aString)

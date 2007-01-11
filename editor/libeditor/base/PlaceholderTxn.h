@@ -45,6 +45,7 @@
 #include "nsCOMPtr.h"
 #include "nsWeakPtr.h"
 #include "nsWeakReference.h"
+#include "nsAutoPtr.h"
 
 #define PLACEHOLDER_TXN_CID \
 {/* {0CE9FB00-D9D1-11d2-86DE-000064657374} */ \
@@ -75,20 +76,12 @@ private:
   PlaceholderTxn();
 
 public:
-
-  virtual ~PlaceholderTxn();
-
 // ------------ EditAggregateTxn -----------------------
 
-  NS_IMETHOD DoTransaction(void);
+  NS_DECL_EDITTXN
 
-  NS_IMETHOD UndoTransaction(void);
-  
-  NS_IMETHOD RedoTransaction(void);
-
+  NS_IMETHOD RedoTransaction();
   NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
-
-  NS_IMETHOD GetTxnDescription(nsAString& aTxnDescription);
 
 // ------------ nsIAbsorbingTransaction -----------------------
 
@@ -120,7 +113,7 @@ protected:
   // selection at the start of the txn is stored, as is the selection at the end.
   // This is so that UndoTransaction() and RedoTransaction() can restore the
   // selection properly.
-  nsSelectionState *mStartSel; // use a pointer because this is constructed before we exist
+  nsAutoPtr<nsSelectionState> mStartSel; // use a pointer because this is constructed before we exist
   nsSelectionState  mEndSel;
   nsIEditor*        mEditor;   /** the editor for this transaction */
 };

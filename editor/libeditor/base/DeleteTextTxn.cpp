@@ -54,10 +54,6 @@ DeleteTextTxn::DeleteTextTxn()
 {
 }
 
-DeleteTextTxn::~DeleteTextTxn()
-{
-}
-
 NS_IMETHODIMP DeleteTextTxn::Init(nsIEditor *aEditor,
                                   nsIDOMCharacterData *aElement,
                                   PRUint32 aOffset,
@@ -129,13 +125,6 @@ NS_IMETHODIMP DeleteTextTxn::UndoTransaction(void)
   if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
 
   return mElement->InsertData(mOffset, mDeletedText);
-}
-
-NS_IMETHODIMP DeleteTextTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
-{
-  if (aDidMerge)
-    *aDidMerge = PR_FALSE;
-  return NS_OK;
 }
 
 NS_IMETHODIMP DeleteTextTxn::GetTxnDescription(nsAString& aString)

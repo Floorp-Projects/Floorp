@@ -80,10 +80,6 @@ NS_IMETHODIMP CreateElementTxn::Init(nsEditor      *aEditor,
 }
 
 
-CreateElementTxn::~CreateElementTxn()
-{
-}
-
 NS_IMETHODIMP CreateElementTxn::DoTransaction(void)
 {
 #ifdef NS_DEBUG
@@ -218,13 +214,6 @@ NS_IMETHODIMP CreateElementTxn::RedoTransaction(void)
   // now, reinsert mNewNode
   nsCOMPtr<nsIDOMNode> resultNode;
   return mParent->InsertBefore(mNewNode, mRefNode, getter_AddRefs(resultNode));
-}
-
-NS_IMETHODIMP CreateElementTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
-{
-  if (aDidMerge)
-    *aDidMerge=PR_FALSE;
-  return NS_OK;
 }
 
 NS_IMETHODIMP CreateElementTxn::GetTxnDescription(nsAString& aString)

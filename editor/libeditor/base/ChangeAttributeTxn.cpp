@@ -43,10 +43,6 @@ ChangeAttributeTxn::ChangeAttributeTxn()
 {
 }
 
-ChangeAttributeTxn::~ChangeAttributeTxn()
-{
-}
-
 NS_IMETHODIMP ChangeAttributeTxn::Init(nsIEditor      *aEditor,
                                        nsIDOMElement  *aElement,
                                        const nsAString& aAttribute,
@@ -113,13 +109,6 @@ NS_IMETHODIMP ChangeAttributeTxn::RedoTransaction(void)
     result = mElement->RemoveAttribute(mAttribute);
 
   return result;
-}
-
-NS_IMETHODIMP ChangeAttributeTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
-{
-  if (aDidMerge)
-    *aDidMerge=PR_FALSE;
-  return NS_OK;
 }
 
 NS_IMETHODIMP ChangeAttributeTxn::GetTxnDescription(nsAString& aString)

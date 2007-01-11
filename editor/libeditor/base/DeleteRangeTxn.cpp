@@ -128,10 +128,6 @@ NS_IMETHODIMP DeleteRangeTxn::Init(nsIEditor *aEditor,
 
 }
 
-DeleteRangeTxn::~DeleteRangeTxn()
-{
-}
-
 NS_IMETHODIMP DeleteRangeTxn::DoTransaction(void)
 {
 #ifdef NS_DEBUG
@@ -212,13 +208,6 @@ NS_IMETHODIMP DeleteRangeTxn::RedoTransaction(void)
     return NS_ERROR_NOT_INITIALIZED;
 
   return EditAggregateTxn::RedoTransaction();
-}
-
-NS_IMETHODIMP DeleteRangeTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
-{
-  if (aDidMerge)
-    *aDidMerge = PR_FALSE;
-  return NS_OK;
 }
 
 NS_IMETHODIMP DeleteRangeTxn::GetTxnDescription(nsAString& aString)
