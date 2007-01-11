@@ -21,7 +21,13 @@
 use strict;
 use lib ".";
 
-use Bugzilla;
+BEGIN {
+    my $envpath = $ENV{'PATH'};
+    require Bugzilla;
+    # $ENV{'PATH'} is required by the 'ps' command to run correctly.
+    $ENV{'PATH'} = $envpath;
+}
+
 use Bugzilla::Constants;
 
 use Socket;
