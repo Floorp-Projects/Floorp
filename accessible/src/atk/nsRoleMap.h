@@ -160,6 +160,8 @@ PRUint32 atkRoleMap[] = {
     ATK_ROLE_APPLICATION,         // nsIAccessible::ROLE_APP_ROOT          111
     ATK_ROLE_MENU,                // nsIAccessible::ROLE_PARENT_MENUITEM   112
     ATK_ROLE_CALENDAR,            // nsIAccessible::ROLE_CALENDAR          113
+    ATK_ROLE_MENU,                // nsIAccessible::ROLE_COMBOBOX_LIST     114
+    ATK_ROLE_MENU_ITEM,           // nsIAccessible::ROLE_COMBOBOX_LISTITEM 115
     kROLE_ATK_LAST_ENTRY          // nsIAccessible::ROLE_LAST_ENTRY
 };
 

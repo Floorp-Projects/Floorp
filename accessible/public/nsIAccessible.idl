@@ -488,7 +488,9 @@ interface nsIAccessible : nsISupports
   const unsigned long ROLE_APP_ROOT = 111;
   const unsigned long ROLE_PARENT_MENUITEM = 112;
   const unsigned long ROLE_CALENDAR = 113;
-  const unsigned long ROLE_LAST_ENTRY = 114; // Important -- helps ensure nsRoleMap's are synchronized
+  const unsigned long ROLE_COMBOBOX_LIST = 114;
+  const unsigned long ROLE_COMBOBOX_LISTITEM = 115;
+  const unsigned long ROLE_LAST_ENTRY = 116; // Important -- helps ensure nsRoleMap's are synchronized
 
 // MSAA relationship extensions to accNavigate
   const unsigned long NAVRELATION_CONTROLLED_BY = 0x1000;

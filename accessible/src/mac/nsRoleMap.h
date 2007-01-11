@@ -156,5 +156,7 @@ static const NSString* AXRoles [] = {
   NSAccessibilityUnknownRole,                   // ROLE_APP_ROOT. unused on OS X
   NSAccessibilityMenuItemRole,                  // ROLE_PARENT_MENUITEM
   NSAccessibilityGroupRole,                     // ROLE_CALENDAR
+  NSAccessibilityMenuRole,                      // ROLE_COMBOBOX_LIST
+  NSAccessibilityMenuItemRole,                  // ROLE_COMBOBOX_LISTITEM
   @"ROLE_LAST_ENTRY"                            // ROLE_LAST_ENTRY. bogus role that will never be shown (just marks the end of this array)!
 };
