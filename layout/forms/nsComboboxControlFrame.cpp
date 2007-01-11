@@ -479,8 +479,11 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
   // If the dropdown's intrinsic width is narrower than our specified width,
   // then expand it out.  We want our border-box width to end up the same as
   // the dropdown's so account for both sets of mComputedBorderPadding.
+  nscoord forcedWidth = aReflowState.mComputedWidth +
+    aReflowState.mComputedBorderPadding.LeftRight() -
+    kidReflowState.mComputedBorderPadding.LeftRight();
   kidReflowState.mComputedWidth = PR_MAX(kidReflowState.mComputedWidth,
-                                         aReflowState.mComputedWidth);
+                                         forcedWidth);
 
   // ensure we start off hidden
   if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
