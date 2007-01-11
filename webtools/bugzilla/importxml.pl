@@ -612,10 +612,10 @@ sub process_bug {
 
     # Bug Access
     push( @query,  "cclist_accessible" );
-    push( @values, $bug_fields{'cclist_accessible'} == 1 ? 1 : 0 );
+    push( @values, $bug_fields{'cclist_accessible'} ? 1 : 0 );
 
     push( @query,  "reporter_accessible" );
-    push( @values, $bug_fields{'reporter_accessible'} == 1 ? 1 : 0 );
+    push( @values, $bug_fields{'reporter_accessible'} ? 1 : 0 );
 
     # Product and Component if there is no valid default product and
     # component defined in the parameters, we wouldn't be here
