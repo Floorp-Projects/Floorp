@@ -138,7 +138,10 @@
     </button>
   </hbox>
 
-  <tree id="historyTree" flex="1" type="places" 
+  <tree id="historyTree"
+        flex="1"
+        type="places"
+        place="place:&amp;beginTime=-2592000000000&amp;beginTimeRef=1&amp;endTime=7200000000&amp;endTimeRef=2&amp;type=1"
         context="historyContextMenu"
         onkeypress="if (event.keyCode == 13) openURL(event);"
         hidecolumnpicker="true"
