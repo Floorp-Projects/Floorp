@@ -140,8 +140,19 @@ static PRLogModuleInfo* gJSDiagnostics;
 #endif
 #endif // WINCE
 
-#define NS_GC_DELAY                2000 // ms
-#define NS_FIRST_GC_DELAY          10000 // ms
+// The amount of time we wait between a request to GC (due to leaving
+// a page) and doing the actual GC.
+#define NS_GC_DELAY                 2000 // ms
+
+// The amount of time we wait until we force a GC in case the previous
+// GC timer happened to fire while we were in the middle of loading a
+// page (we'll GC once the page is loaded if that happens before this
+// amount of time has passed).
+#define NS_LOAD_IN_PROCESS_GC_DELAY 4000 // ms
+
+// The amount of time we wait from the first request to GC to actually
+// doing the first GC.
+#define NS_FIRST_GC_DELAY           10000 // ms
 
 #define JAVASCRIPT nsIProgrammingLanguage::JAVASCRIPT
 
@@ -149,6 +160,19 @@ static PRLogModuleInfo* gJSDiagnostics;
 
 static nsITimer *sGCTimer;
 static PRBool sReadyForGC;
+
+// The number of currently pending document loads. This count isn't
+// guaranteed to always reflect reality and can't easily as we don't
+// have an easy place to know when a load ends or is interrupted in
+// all cases. This counter also gets reset if we end up GC'ing while
+// we're waiting for a slow page to load. IOW, this count may be 0
+// even when there are pending loads.
+static PRUint32 sPendingLoadCount;
+
+// Boolean that tells us whether or not the current GC timer
+// (sGCTimer) was scheduled due to a GC timer firing while we were in
+// the middle of loading a page.
+static PRBool sLoadInProgressGCTimer;
 
 nsScriptNameSpaceManager *gNameSpaceManager;
 
@@ -3001,7 +3025,7 @@ nsJSContext::FinalizeContext()
 void
 nsJSContext::GC()
 {
-  FireGCTimer();
+  FireGCTimer(PR_FALSE);
 }
 
 void
@@ -3124,18 +3148,62 @@ nsJSContext::Notify(nsITimer *timer)
 {
   NS_ASSERTION(mContext, "No context in nsJSContext::Notify()!");
 
-  // nsCycleCollector_collect() will run a ::JS_GC indirectly,
-  // so we do not explicitly call ::JS_GC here. 
-  nsCycleCollector_collect();
+  NS_RELEASE(sGCTimer);
+
+  if (sPendingLoadCount == 0 || sLoadInProgressGCTimer) {
+    // nsCycleCollector_collect() will run a ::JS_GC() indirectly,
+    // so we do not explicitly call ::JS_GC() here. 
+    nsCycleCollector_collect();
+
+    sLoadInProgressGCTimer = PR_FALSE;
+
+    // Reset sPendingLoadCount in case the timer that fired was a
+    // timer we scheduled due to a normal GC timer firing while
+    // documents were loading. If this happens we're waiting for a
+    // document that is taking a long time to load, and we effectively
+    // ignore the fact that the currently loading documents are still
+    // loading and move on as if they weren't.
+    sPendingLoadCount = 0;
+  } else {
+    FireGCTimer(PR_TRUE);
+  }
 
   sReadyForGC = PR_TRUE;
 
-  NS_RELEASE(sGCTimer);
   return NS_OK;
 }
 
+// static
 void
-nsJSContext::FireGCTimer()
+nsJSContext::LoadStart()
+{
+  ++sPendingLoadCount;
+}
+
+// static
+void
+nsJSContext::LoadEnd()
+{
+  // sPendingLoadCount is not a well managed load counter (and doesn't
+  // need to be), so make sure we don't make it wrap backwards here.
+  if (sPendingLoadCount > 0) {
+    --sPendingLoadCount;
+  }
+
+  if (!sPendingLoadCount && sLoadInProgressGCTimer) {
+    sGCTimer->Cancel();
+
+    NS_RELEASE(sGCTimer);
+    sLoadInProgressGCTimer = PR_FALSE;
+
+    // nsCycleCollector_collect() will run a ::JS_GC() indirectly, so
+    // we do not explicitly call ::JS_GC() here.
+    nsCycleCollector_collect();
+  }
+}
+
+void
+nsJSContext::FireGCTimer(PRBool aLoadInProgress)
 {
   // Always clear the newborn roots.  If there's already a timer, this
   // will let the GC from that timer clean up properly.  If we're going
@@ -3153,7 +3221,9 @@ nsJSContext::FireGCTimer()
   if (!sGCTimer) {
     NS_WARNING("Failed to create timer");
 
-    ::JS_GC(mContext);
+    // nsCycleCollector_collect() will run a ::JS_GC() indirectly, so
+    // we do not explicitly call ::JS_GC() here.
+    nsCycleCollector_collect();
 
     return;
   }
@@ -3161,8 +3231,12 @@ nsJSContext::FireGCTimer()
   static PRBool first = PR_TRUE;
 
   sGCTimer->InitWithCallback(this,
-                             first ? NS_FIRST_GC_DELAY : NS_GC_DELAY,
+                             first ? NS_FIRST_GC_DELAY :
+                             aLoadInProgress ? NS_LOAD_IN_PROCESS_GC_DELAY :
+                                               NS_GC_DELAY,
                              nsITimer::TYPE_ONE_SHOT);
+
+  sLoadInProgressGCTimer = aLoadInProgress;
 
   first = PR_FALSE;
 }
@@ -3259,6 +3333,8 @@ nsJSRuntime::Startup()
   // initialize all our statics, so that we can restart XPCOM
   sGCTimer = nsnull;
   sReadyForGC = PR_FALSE;
+  sLoadInProgressGCTimer = PR_FALSE;
+  sPendingLoadCount = 0;
   gNameSpaceManager = nsnull;
   sRuntimeService = nsnull;
   sRuntime = nsnull;

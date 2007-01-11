@@ -42,10 +42,10 @@
 #include "nsCOMPtr.h"
 #include "jsapi.h"
 #include "nsIObserver.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsIXPCScriptNotify.h"
 #include "nsITimer.h"
 #include "prtime.h"
+
 class nsIXPConnectJSObjectHolder;
 
 class nsJSContext : public nsIScriptContext,
@@ -167,6 +167,9 @@ public:
 
   NS_DECL_NSITIMERCALLBACK
 
+  static void LoadStart();
+  static void LoadEnd();
+
 protected:
   nsresult InitializeExternalClasses();
   nsresult InitializeLiveConnectClasses(JSObject *aGlobalObj);
@@ -181,7 +184,7 @@ protected:
 
   nsresult AddSupportsPrimitiveTojsvals(nsISupports *aArg, jsval *aArgv);
 
-  void FireGCTimer();
+  void FireGCTimer(PRBool aLoadInProgress);
 
   // given an nsISupports object (presumably an event target or some other
   // DOM object), get (or create) the JSObject wrapping it.
