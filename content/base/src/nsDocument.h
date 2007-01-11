@@ -111,6 +111,7 @@
 
 class nsIEventListenerManager;
 class nsDOMStyleSheetList;
+class nsDOMStyleSheetSetList;
 class nsIOutputStream;
 class nsDocument;
 class nsIDTD;
@@ -732,6 +733,7 @@ protected:
 
   nsCOMPtr<nsIEventListenerManager> mListenerManager;
   nsCOMPtr<nsIDOMStyleSheetList> mDOMStyleSheets;
+  nsRefPtr<nsDOMStyleSheetSetList> mStyleSheetSetList;
   nsRefPtr<nsScriptLoader> mScriptLoader;
   nsDocHeaderData* mHeaderData;
 
@@ -776,6 +778,12 @@ private:
   already_AddRefed<nsIDOMElement>
     CheckAncestryAndGetFrame(nsIDocument* aDocument) const;
 
+  // Just like EnableStyleSheetsForSet, but doesn't check whether
+  // aSheetSet is null and allows the caller to control whether to set
+  // aSheetSet as the preferred set in the CSSLoader.
+  void EnableStyleSheetsForSetInternal(const nsAString& aSheetSet,
+                                       PRBool aUpdateCSSLoader);
+
   // These are not implemented and not supported.
   nsDocument(const nsDocument& aOther);
   nsDocument& operator=(const nsDocument& aOther);
@@ -797,6 +805,9 @@ private:
   nsTHashtable<nsUint32ToContentHashEntry> mLinkMap;
   // URIs whose visitedness has changed while we were hidden
   nsCOMArray<nsIURI> mVisitednessChangedURIs;
+
+  // Member to store out last-selected stylesheet set.
+  nsString mLastStyleSheetSet;
 };
 
 

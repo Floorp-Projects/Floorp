@@ -56,9 +56,10 @@ class nsIDocument;
 class nsIStyleRuleProcessor;
 
 // IID for the nsIStyleSheet interface
-// 93eea32f-681b-4405-b908-3933cf1d5091
+// 7b2d31da-c3fb-4537-bd97-337272b83568
 #define NS_ISTYLE_SHEET_IID     \
-{0x93eea32f, 0x681b, 0x4405, {0xb9, 0x08, 0x39, 0x33, 0xcf, 0x1d, 0x50, 0x91}}
+{ 0x7b2d31da, 0xc3fb, 0x4537,   \
+ { 0xbd, 0x97, 0x33, 0x72, 0x72, 0xb8, 0x35, 0x68 } }
 
 /**
  * A style sheet is a thing associated with a document that has style
@@ -91,7 +92,12 @@ public:
 
   /**
    * Set the stylesheet to be enabled.  This may or may not make it
-   * applicable.
+   * applicable.  Note that this WILL inform the sheet's document of
+   * its new applicable state if the state changes but WILL NOT call
+   * BeginUpdate() or EndUpdate() on the document -- calling those is
+   * the caller's responsibility.  This allows use of SetEnabled when
+   * batched updates are desired.  If you want updates handled for
+   * you, see nsIDOMStyleSheet::SetDisabled().
    */
   NS_IMETHOD SetEnabled(PRBool aEnabled) = 0;
 

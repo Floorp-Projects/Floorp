@@ -97,10 +97,10 @@ class nsWeakFrame;
 
 typedef short SelectionType;
 
-// 56719ada-52e9-4d81-b23d-acba10c5c1e2
+// 5A76F236-B93A-4C70-BC22-250F71C90518
 #define NS_IPRESSHELL_IID     \
-{ 0x56719ada, 0x52e9, 0x4d81, \
-  { 0xb2, 0x3d, 0xac, 0xba, 0x10, 0xc5, 0xc1, 0xe2 } }
+{ 0x5a76f236, 0xb93a, 0x4c70, \
+ { 0xbc, 0x22, 0x25, 0x0f, 0x71, 0xc9, 0x05, 0x18 } }
 
 // Constants uses for ScrollFrameIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -198,12 +198,6 @@ public:
 
 #endif
 
-  // These two methods are used only by viewer
-  NS_IMETHOD GetActiveAlternateStyleSheet(nsString& aSheetTitle) = 0;
-
-  NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle) = 0;
-
-
   /* Enable/disable author style level. Disabling author style disables the entire
    * author level of the cascade, including the HTML preshint level.
    */
@@ -239,12 +233,6 @@ public:
    * - initially created for bugs 31816, 20760, 22963
    */
   NS_IMETHOD SetPreferenceStyleRules(PRBool aForceReflow) = 0;
-
-  /**
-   * Gather titles of all selectable (alternate and preferred) style sheets
-   * fills void array with nsString* caller must free strings
-   */
-  NS_IMETHOD ListAlternateStyleSheets(nsStringArray& aTitleList) = 0;
 
   /**
    * FrameSelection will return the Frame based selection API.

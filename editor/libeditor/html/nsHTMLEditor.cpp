@@ -77,6 +77,7 @@
 
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
+#include "nsIDOMStyleSheet.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDocumentStateListener.h"
 
@@ -3686,8 +3687,10 @@ nsHTMLEditor::EnableStyleSheet(const nsAString &aURL, PRBool aEnable)
   if (!sheet)
     return NS_OK; // Don't fail if sheet not found
 
-  nsCOMPtr<nsIStyleSheet> nsISheet = do_QueryInterface(sheet);
-  return nsISheet->SetEnabled(aEnable);
+  nsCOMPtr<nsIDOMStyleSheet> domSheet(do_QueryInterface(sheet));
+  NS_ASSERTION(domSheet, "Sheet not implementing nsIDOMStyleSheet!");
+  
+  return domSheet->SetDisabled(!aEnable);
 }
 
 
@@ -3701,8 +3704,10 @@ nsHTMLEditor::EnableExistingStyleSheet(const nsAString &aURL)
   // Enable sheet if already loaded.
   if (sheet)
   {
-    nsCOMPtr<nsIStyleSheet> nsISheet = do_QueryInterface(sheet);
-    nsISheet->SetEnabled(PR_TRUE);
+    nsCOMPtr<nsIDOMStyleSheet> domSheet(do_QueryInterface(sheet));
+    NS_ASSERTION(domSheet, "Sheet not implementing nsIDOMStyleSheet!");
+    
+    domSheet->SetDisabled(PR_FALSE);
     return PR_TRUE;
   }
   return PR_FALSE;

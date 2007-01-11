@@ -66,6 +66,7 @@
 
 #include "nsIDOMStyleSheet.h"
 #include "nsDOMAttribute.h"
+#include "nsIDOMDOMStringList.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMAbstractView.h"
@@ -486,6 +487,117 @@ nsOnloadBlocker::SetLoadFlags(nsLoadFlags aLoadFlags)
   return NS_OK;
 }
 
+// ==================================================================
+// =
+// ==================================================================
+
+// If we ever have an nsIDocumentObserver notification for stylesheet title
+// changes, we could make this inherit from nsDOMStringList instead of
+// reimplementing nsIDOMDOMStringList.
+class nsDOMStyleSheetSetList : public nsIDOMDOMStringList
+                          
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  NS_DECL_NSIDOMDOMSTRINGLIST
+
+  nsDOMStyleSheetSetList(nsIDocument* aDocument);
+
+  void Disconnect()
+  {
+    mDocument = nsnull;
+  }
+
+protected:
+  // Rebuild our list of style sets
+  nsresult GetSets(nsStringArray& aStyleSets);
+  
+  nsIDocument* mDocument;  // Our document; weak ref.  It'll let us know if it
+                           // dies.
+};
+
+NS_IMPL_ADDREF(nsDOMStyleSheetSetList)
+NS_IMPL_RELEASE(nsDOMStyleSheetSetList)
+NS_INTERFACE_MAP_BEGIN(nsDOMStyleSheetSetList)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMDOMStringList)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(DOMStringList)
+NS_INTERFACE_MAP_END
+
+nsDOMStyleSheetSetList::nsDOMStyleSheetSetList(nsIDocument* aDocument)
+  : mDocument(aDocument)
+{
+  NS_ASSERTION(mDocument, "Must have document!");
+}
+
+NS_IMETHODIMP
+nsDOMStyleSheetSetList::Item(PRUint32 aIndex, nsAString& aResult)
+{
+  nsStringArray styleSets;
+  nsresult rv = GetSets(styleSets);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  if (aIndex >= (PRUint32)styleSets.Count()) {
+    SetDOMStringToNull(aResult);
+  } else {
+    styleSets.StringAt(aIndex, aResult);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMStyleSheetSetList::GetLength(PRUint32 *aLength)
+{
+  nsStringArray styleSets;
+  nsresult rv = GetSets(styleSets);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  *aLength = (PRUint32)styleSets.Count();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMStyleSheetSetList::Contains(const nsAString& aString, PRBool *aResult)
+{
+  nsStringArray styleSets;
+  nsresult rv = GetSets(styleSets);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  *aResult = styleSets.IndexOf(aString) != -1;
+
+  return NS_OK;
+}
+
+nsresult
+nsDOMStyleSheetSetList::GetSets(nsStringArray& aStyleSets)
+{
+  if (!mDocument) {
+    return NS_OK; // Spec says "no exceptions", and we have no style sets if we
+                  // have no document, for sure
+  }
+  
+  PRInt32 count = mDocument->GetNumberOfStyleSheets();
+  nsAutoString title;
+  nsAutoString temp;
+  for (PRInt32 index = 0; index < count; index++) {
+    nsIStyleSheet* sheet = mDocument->GetStyleSheetAt(index);
+    NS_ASSERTION(sheet, "Null sheet in sheet list!");
+    sheet->GetTitle(title);
+    if (!title.IsEmpty() && aStyleSets.IndexOf(title) == -1 &&
+        !aStyleSets.AppendString(title)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  return NS_OK;
+}
+
+// ==================================================================
+// =
+// ==================================================================
 
 class nsDOMImplementation : public nsIDOMDOMImplementation,
                             public nsIPrivateDOMImplementation
@@ -656,6 +768,9 @@ nsDocument::nsDocument(const char* aContentType)
     PR_LOG(gDocumentLeakPRLog, PR_LOG_DEBUG,
            ("DOCUMENT %p created", this));
 #endif
+
+  // Start out mLastStyleSheetSet as null, per spec
+  SetDOMStringToNull(mLastStyleSheetSet);
 }
 
 nsDocument::~nsDocument()
@@ -670,6 +785,10 @@ nsDocument::~nsDocument()
 
   // Clear mObservers to keep it in sync with the mutationobserver list
   mObservers.Clear();
+
+  if (mStyleSheetSetList) {
+    mStyleSheetSetList->Disconnect();
+  }
 
   mParentDocument = nsnull;
 
@@ -1585,29 +1704,15 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
   }
 
   if (aHeaderField == nsGkAtoms::headerDefaultStyle) {
-    // switch alternate style sheets based on default
-    // XXXldb What if we don't have all the sheets yet?  Should this use
-    // the DOM API for preferred stylesheet set that's "coming soon"?
-    nsAutoString type;
-    nsAutoString title;
-    PRInt32 index;
-
-    CSSLoader()->SetPreferredSheet(aData);
-
-    PRInt32 count = mStyleSheets.Count();
-    for (index = 0; index < count; index++) {
-      nsIStyleSheet* sheet = mStyleSheets[index];
-      sheet->GetType(type);
-      if (!type.EqualsLiteral("text/html")) {
-        sheet->GetTitle(title);
-        if (!title.IsEmpty()) {  // if sheet has title
-          PRBool enabled =
-            (!aData.IsEmpty() &&
-             title.Equals(aData, nsCaseInsensitiveStringComparator()));
-
-          sheet->SetEnabled(enabled);
-        }
-      }
+    // Only mess with our stylesheets if we don't have a lastStyleSheetSet, per
+    // spec.
+    if (DOMStringIsNull(mLastStyleSheetSet)) {
+      // Calling EnableStyleSheetsForSetInternal, not SetSelectedStyleSheetSet,
+      // per spec.  The idea here is that we're changing our preferred set and
+      // that shouldn't change the value of lastStyleSheetSet.  Also, we're
+      // using the Internal version so we can update the CSSLoader and not have
+      // to worry about null strings.
+      EnableStyleSheetsForSetInternal(aData, PR_TRUE);
     }
   }
 
@@ -2073,7 +2178,7 @@ void
 nsDocument::UpdateStyleSheets(nsCOMArray<nsIStyleSheet>& aOldSheets,
                               nsCOMArray<nsIStyleSheet>& aNewSheets)
 {
-  NS_DOCUMENT_NOTIFY_OBSERVERS(BeginUpdate, (this, UPDATE_STYLE));
+  BeginUpdate(UPDATE_STYLE);
 
   // XXX Need to set the sheet on the ownernode, if any
   NS_PRECONDITION(aOldSheets.Count() == aNewSheets.Count(),
@@ -2105,7 +2210,7 @@ nsDocument::UpdateStyleSheets(nsCOMArray<nsIStyleSheet>& aOldSheets,
     }
   }
 
-  NS_DOCUMENT_NOTIFY_OBSERVERS(EndUpdate, (this, UPDATE_STYLE));
+  EndUpdate(UPDATE_STYLE);
 }
 
 void
@@ -2942,10 +3047,116 @@ nsDocument::GetStyleSheets(nsIDOMStyleSheetList** aStyleSheets)
 }
 
 NS_IMETHODIMP
-nsDocument::GetPreferredStylesheetSet(nsAString& aStyleTitle)
+nsDocument::GetSelectedStyleSheetSet(nsAString& aSheetSet)
 {
-  CSSLoader()->GetPreferredSheet(aStyleTitle);
+  aSheetSet.Truncate();
+  
+  // Look through our sheets, find the selected set title
+  PRInt32 count = GetNumberOfStyleSheets();
+  nsAutoString title;
+  for (PRInt32 index = 0; index < count; index++) {
+    nsIStyleSheet* sheet = GetStyleSheetAt(index);
+    NS_ASSERTION(sheet, "Null sheet in sheet list!");
+
+    nsCOMPtr<nsIDOMStyleSheet> domSheet = do_QueryInterface(sheet);
+    NS_ASSERTION(domSheet, "Sheet must QI to nsIDOMStyleSheet");
+    PRBool disabled;
+    domSheet->GetDisabled(&disabled);
+    if (disabled) {
+      // Disabled sheets don't affect the currently selected set
+      continue;
+    }
+    
+    sheet->GetTitle(title);
+
+    if (aSheetSet.IsEmpty()) {
+      aSheetSet = title;
+    } else if (!title.IsEmpty() && !aSheetSet.Equals(title)) {
+      // Sheets from multiple sets enabled; return null string, per spec.
+      SetDOMStringToNull(aSheetSet);
+      break;
+    }
+  }
+
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::SetSelectedStyleSheetSet(const nsAString& aSheetSet)
+{
+  if (DOMStringIsNull(aSheetSet)) {
+    return NS_OK;
+  }
+
+  // Must update mLastStyleSheetSet before doing anything else with stylesheets
+  // or CSSLoaders.
+  mLastStyleSheetSet = aSheetSet;
+  EnableStyleSheetsForSetInternal(aSheetSet, PR_TRUE);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::GetLastStyleSheetSet(nsAString& aSheetSet)
+{
+  aSheetSet = mLastStyleSheetSet;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::GetPreferredStyleSheetSet(nsAString& aSheetSet)
+{
+  GetHeaderData(nsGkAtoms::headerDefaultStyle, aSheetSet);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::GetStyleSheetSets(nsIDOMDOMStringList** aList)
+{
+  if (!mStyleSheetSetList) {
+    mStyleSheetSetList = new nsDOMStyleSheetSetList(this);
+    if (!mStyleSheetSetList) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  NS_ADDREF(*aList = mStyleSheetSetList);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::EnableStyleSheetsForSet(const nsAString& aSheetSet)
+{
+  // Per spec, passing in null is a no-op.
+  if (!DOMStringIsNull(aSheetSet)) {
+    // Note: must make sure to not change the CSSLoader's preferred sheet --
+    // that value should be equal to either our lastStyleSheetSet (if that's
+    // non-null) or to our preferredStyleSheetSet.  And this method doesn't
+    // change either of those.
+    EnableStyleSheetsForSetInternal(aSheetSet, PR_FALSE);
+  }
+
+  return NS_OK;
+}
+
+void
+nsDocument::EnableStyleSheetsForSetInternal(const nsAString& aSheetSet,
+                                            PRBool aUpdateCSSLoader)
+{
+  BeginUpdate(UPDATE_STYLE);
+  PRInt32 count = GetNumberOfStyleSheets();
+  nsAutoString title;
+  for (PRInt32 index = 0; index < count; index++) {
+    nsIStyleSheet* sheet = GetStyleSheetAt(index);
+    NS_ASSERTION(sheet, "Null sheet in sheet list!");
+    sheet->GetTitle(title);
+    if (!title.IsEmpty()) {
+      sheet->SetEnabled(title.Equals(aSheetSet));
+    }
+  }
+  if (aUpdateCSSLoader) {
+    CSSLoader()->SetPreferredSheet(aSheetSet);
+  }
+  EndUpdate(UPDATE_STYLE);
 }
 
 NS_IMETHODIMP
