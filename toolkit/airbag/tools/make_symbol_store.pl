@@ -93,6 +93,7 @@ if($ARGV[0] eq '-c') {
 my $dump_syms = shift;
 my $symbol_path = shift;
 foreach my $pdbfile (@ARGV) {
+    next unless -f $pdbfile;
     my ($sf) = fileparse($pdbfile, ".pdb");
     my $symfile = $symbol_path . "/" . $sf . ".sym";
     system("$dump_syms $pdbfile > $symfile");
