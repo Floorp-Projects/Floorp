@@ -962,11 +962,22 @@ nsHTMLFormElement::SubmitSubmission(nsIFormSubmission* aFormSubmission)
     return NS_OK;
   }
 
-  // No need to do anything special for javascript: URIs here.  If the action
-  // gets changed to something else we'll drop the current submission anyway
-  // (due to the patch for bug 145142), and if it doesn't we don't really want
-  // to start several identical javascript: URIs going.  In any case, the point
-  // is that the original fix for bug 139798 is no longer needed.
+  // javascript URIs are not really submissions; they just call a function.
+  // Also, they may synchronously call submit(), and we want them to be able to
+  // do so while still disallowing other double submissions. (Bug 139798)
+  // Note that any other URI types that are of equivalent type should also be
+  // added here.
+  // XXXbz this is a mess.  The real issue here is that nsJSChannel sets the
+  // LOAD_BACKGROUND flag, so doesn't notify us, compounded by the fact that
+  // the JS executes before we forget the submission in OnStateChange on
+  // STATE_STOP.  As a result, we have to make sure that we simply pretend
+  // we're not submitting when submitting to a JS URL.  That's kinda bogus, but
+  // there we are.
+  PRBool schemeIsJavaScript = PR_FALSE;
+  if (NS_SUCCEEDED(actionURI->SchemeIs("javascript", &schemeIsJavaScript)) &&
+      schemeIsJavaScript) {
+    mIsSubmitting = PR_FALSE;
+  }
 
   nsAutoString target;
   rv = GetTarget(target);
@@ -1021,7 +1032,7 @@ nsHTMLFormElement::SubmitSubmission(nsIFormSubmission* aFormSubmission)
     // If the channel is pending, we have to listen for web progress.
     PRBool pending = PR_FALSE;
     mSubmittingRequest->IsPending(&pending);
-    if (pending) {
+    if (pending && !schemeIsJavaScript) {
       mWebProgress = do_GetInterface(docShell);
       NS_ASSERTION(mWebProgress, "nsIDocShell not converted to nsIWebProgress!");
       rv = mWebProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_ALL);
