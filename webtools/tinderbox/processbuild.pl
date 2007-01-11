@@ -96,6 +96,8 @@ exit(0);
 sub process_mailfile($) {
     my ($mail_file) = @_;
     my $err = 0;
+    my $logfile_base = basename($mail_file);
+    $logfile_base =~ s/^tbx\.//;
 
     print "process_mailfile($mail_file)\n" if ($debug);
 
@@ -140,7 +142,7 @@ sub process_mailfile($) {
     # Write data to "build.dat"
     #
     print "Write build.dat: $tinderbox{build}\n" if ($debug);
-    $tinderbox{logfile} = "$tinderbox{builddate}.$$.gz";
+    $tinderbox{logfile} = "$tinderbox{builddate}.$logfile_base.gz";
     write_build_data(\%tinderbox);
 
     # Add tree to changed trees list to later rebuild who.dat
