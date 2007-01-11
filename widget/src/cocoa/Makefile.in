@@ -88,17 +88,6 @@ EXPORTS = \
 		mozView.h \
 		$(NULL)
 
-MAC_LCPPSRCS = \
-		nsDeviceContextSpecX.cpp \
-		nsPrintOptionsX.cpp \
-		nsPrintSettingsX.cpp \
-		nsPrintSessionX.cpp \
-		$(NULL)
-
-CPPSRCS =  \
-		$(MAC_LCPPSRCS) \
-		$(NULL)
-
 CMMSRCS = \
 		nsBidiKeyboard.mm \
 		nsClipboard.mm \
@@ -121,6 +110,10 @@ CMMSRCS = \
 		nsSound.mm \
 		nsLookAndFeel.mm \
 		nsNativeThemeCocoa.mm \
+		nsDeviceContextSpecX.mm \
+		nsPrintOptionsX.mm \
+		nsPrintSettingsX.mm \
+		nsPrintSessionX.mm \
 		$(NULL)
 
 XPIDLSRCS	+= \
@@ -130,7 +123,6 @@ XPIDLSRCS	+= \
 		$(NULL)
 
 GFX_CPPSRCS     := $(addprefix $(topsrcdir)/gfx/src/mac/,$(GFX_LCPPSRCS))
-MAC_CPP_CSRCS   := $(addprefix $(srcdir)/../mac/,$(MAC_LCPPSRCS))
 
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
@@ -142,7 +134,7 @@ EXTRA_DSO_LDOPTS += \
 		-lthebes \
 		$(NULL)
 
-GARBAGE		+= $(GFX_LCPPSRCS) $(MAC_LCPPSRCS)
+GARBAGE		+= $(GFX_LCPPSRCS)
 
 include $(topsrcdir)/config/rules.mk
 
@@ -164,7 +156,7 @@ $(NIB_DEST)/%: $(srcdir)/resources/MainMenu.nib/% $(NIB_DEST)
 RESOURCE = libwidget.rsrc
 RES_SRC = nsMacWidget.r
 
-export:: $(GFX_CPPSRCS) $(MAC_CPP_CSRCS) $(srcdir)/../mac/$(RES_SRC)
+export:: $(GFX_CPPSRCS) $(srcdir)/../mac/$(RES_SRC)
 	$(INSTALL) $^ .
 
 # for objdir builds, symlink the cursors dir
@@ -183,7 +175,6 @@ libs:: $(RESOURCE)
 LOCAL_INCLUDES	= \
 	$(TK_CFLAGS) \
 	-I$(srcdir)/../xpwidgets \
-	-I$(srcdir)/../mac \
 	$(NULL)
 
 LDFLAGS	+= \
