@@ -703,9 +703,8 @@ nsFieldSetFrame::RemoveFrame(nsIAtom*       aListName,
     mFrames.DestroyFrame(mLegendFrame);
     mLegendFrame = nsnull;
     AddStateBits(NS_FRAME_IS_DIRTY);
-    if (GetParent()) {
-      GetParent()->ChildIsDirty(this);
-    }
+    GetPresContext()->PresShell()->
+      FrameNeedsReflow(this, nsIPresShell::eTreeChange);
     return NS_OK;
   }
   return mContentFrame->RemoveFrame(aListName, aOldFrame);
@@ -733,10 +732,9 @@ nsFieldSetFrame::MaybeSetLegend(nsIFrame* aFrameList, nsIAtom* aListName)
     aFrameList = mLegendFrame->GetNextSibling();
     mLegendFrame->SetNextSibling(mContentFrame);
     mFrames.SetFrames(mLegendFrame);
-    AddStateBits(NS_FRAME_IS_DIRTY);
-    if (GetParent()) {
-      GetParent()->ChildIsDirty(this);
-    }
+    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+    GetPresContext()->PresShell()->
+      FrameNeedsReflow(this, nsIPresShell::eTreeChange);
   }
   return aFrameList;
 }
