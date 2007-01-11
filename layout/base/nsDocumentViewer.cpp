@@ -118,6 +118,7 @@
 #include "nsIClipboardHelper.h"
 
 #include "nsPIDOMWindow.h"
+#include "nsJSEnvironment.h"
 #include "nsIFocusController.h"
 
 #include "nsIScrollableView.h"
@@ -512,8 +513,7 @@ DocumentViewerImpl::DocumentViewerImpl(nsPresContext* aPresContext)
   : mPresContext(aPresContext),
     mTextZoom(1.0),
     mIsSticky(PR_TRUE),
-    mHintCharsetSource(kCharsetUninitialized),
-    mIsPageMode(PR_FALSE)
+    mHintCharsetSource(kCharsetUninitialized)
 {
   PrepareToStartLoad();
 }
@@ -894,6 +894,8 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
 
       if (window) {
         window->SetNewDocument(mDocument, aState, PR_TRUE);
+
+        nsJSContext::LoadStart();
       }
     }
   }
@@ -1108,6 +1110,8 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
     name.AppendInt(index);
     DumpContentToPPM(name.get());
   }
+
+  nsJSContext::LoadEnd();
 
 #ifdef NS_PRINTING
   // Check to see if someone tried to print during the load
