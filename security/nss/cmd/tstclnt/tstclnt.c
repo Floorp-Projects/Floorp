@@ -515,7 +515,6 @@ int main(int argc, char **argv)
     int                useExportPolicy = 0;
     PRSocketOptionData opt;
     PRNetAddr          addr;
-    PRHostEnt          hp;
     PRPollDesc         pollset[2];
     PRBool             useCommandLinePassword = PR_FALSE;
     PRBool             pingServerFirst = PR_FALSE;
@@ -524,6 +523,7 @@ int main(int argc, char **argv)
     PRBool             skipProtoHeader = PR_FALSE;
     int                headerSeparatorPtrnId = 0;
     int                error = 0;
+    PRUint16           portno;
     PLOptState *optstate;
     PLOptStatus optstatus;
     PRStatus prStatus;
@@ -598,6 +598,7 @@ int main(int argc, char **argv)
 	Usage(progName);
 
     if (!host || !port) Usage(progName);
+    portno = (PRUint16)atoi(port);
 
     if (!certDir) {
 	certDir = SECU_DefaultSSLDir();	/* Look in $SSL_DIR */
@@ -640,28 +641,28 @@ int main(int argc, char **argv)
 
     status = PR_StringToNetAddr(host, &addr);
     if (status == PR_SUCCESS) {
-	int portno = atoi(port);
-    	addr.inet.port = PR_htons((PRUint16)portno);
+    	addr.inet.port = PR_htons(portno);
     } else {
 	/* Lookup host */
-	char buf[PR_NETDB_BUF_SIZE];
-	status = PR_GetIPNodeByName(host, PR_AF_INET6, PR_AI_DEFAULT, 
-				    buf, sizeof buf, &hp);
-	if (status != PR_SUCCESS) {
+	PRAddrInfo *addrInfo;
+	void       *enumPtr   = NULL;
+
+	addrInfo = PR_GetAddrInfoByName(host, PR_AF_UNSPEC, 
+	                                PR_AI_ADDRCONFIG | PR_AI_NOCANONNAME);
+	if (!addrInfo) {
 	    SECU_PrintError(progName, "error looking up host");
 	    return 1;
 	}
-	if (PR_EnumerateHostEnt(0, &hp, (PRUint16)atoi(port), &addr) == -1) {
+	do {
+	    enumPtr = PR_EnumerateAddrInfo(enumPtr, addrInfo, portno, &addr);
+	} while (enumPtr != NULL &&
+		 addr.raw.family != PR_AF_INET &&
+		 addr.raw.family != PR_AF_INET6);
+	PR_FreeAddrInfo(addrInfo);
+	if (enumPtr == NULL) {
 	    SECU_PrintError(progName, "error looking up host address");
 	    return 1;
 	}
-    }
-
-    if (PR_IsNetAddrType(&addr, PR_IpAddrV4Mapped)) {
-    	/* convert to IPv4.  */
-	addr.inet.family = PR_AF_INET;
-	memcpy(&addr.inet.ip, &addr.ipv6.ip.pr_s6_addr[12], 4);
-	memset(&addr.inet.pad[0], 0, sizeof addr.inet.pad);
     }
 
     printHostNameAndAddr(host, &addr);
@@ -670,7 +671,7 @@ int main(int argc, char **argv)
 	int iter = 0;
 	PRErrorCode err;
 	do {
-	    s = PR_NewTCPSocket();
+	    s = PR_OpenTCPSocket(addr.raw.family);
 	    if (s == NULL) {
 		SECU_PrintError(progName, "Failed to create a TCP socket");
 	    }
@@ -708,7 +709,7 @@ int main(int argc, char **argv)
     }
 
     /* Create socket */
-    s = PR_NewTCPSocket();
+    s = PR_OpenTCPSocket(addr.raw.family);
     if (s == NULL) {
 	SECU_PrintError(progName, "error creating socket");
 	return 1;
