@@ -474,9 +474,6 @@ calICSCalendar.prototype = {
     getInterface: function(iid, instance) {
         if (iid.equals(Components.interfaces.nsIAuthPrompt)) {
             return new calAuthPrompt();
-            return Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                             .getService(Components.interfaces.nsIWindowWatcher)
-                             .getNewAuthPrompter(null);
         }
         else if (iid.equals(Components.interfaces.nsIPrompt)) {
             // use the window watcher service to get a nsIPrompt impl
