@@ -186,6 +186,11 @@ OS_LIBS		+= -ldld -L/lib/pa1.1 -lm
 else
 OS_LIBS		+= -ldld -lm -lc
 endif
+ifneq ($(OS_TEST),ia64)
+ifndef USE_64
+DSO_LDOPTS	+= +I PR_HPUX10xInit
+endif
+endif
 endif
 
 ifeq ($(OS_ARCH),UNIXWARE)
