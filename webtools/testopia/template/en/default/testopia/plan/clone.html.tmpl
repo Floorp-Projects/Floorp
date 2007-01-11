@@ -109,7 +109,7 @@
     categories only:</td>
     <td>
       [% PROCESS select sel = { name => 'clone_categories', 
-                                list => plan.product.categories 
+                                list => plan.get_used_categories 
                                 accesskey => 'c' 
                                 mult => 1 
                                 elements => 5

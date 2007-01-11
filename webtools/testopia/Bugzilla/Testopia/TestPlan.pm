@@ -480,7 +480,21 @@ sub get_product_environments {
     return $ref;
 }
 
-
+sub get_used_categories {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+    my $ref = $dbh->selectall_arrayref(
+            "SELECT DISTINCT test_case_categories.category_id AS id, name 
+               FROM test_case_categories
+               JOIN test_cases ON test_cases.category_id = test_case_categories.category_id
+               JOIN test_case_plans ON test_cases.case_id = test_case_plans.case_id 
+              WHERE plan_id = ?
+           ORDER BY name",
+           {'Slice'=>{}}, $self->id);
+           
+    return $ref;
+    
+}
 =head2 get_case_ids_by_category
 
 Returns a list of case_ids in this plan from the selected categories.
