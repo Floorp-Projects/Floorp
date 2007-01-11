@@ -53,7 +53,7 @@
 #endif
 
 
-extern "C" NS_EXPORT void
+extern "C" NS_EXPORT void JNICALL
 MOZILLA_NATIVE(initialize) (JNIEnv* env, jobject)
 {
   if (!InitializeJavaGlobals(env)) {
@@ -95,7 +95,7 @@ InitEmbedding_Impl(JNIEnv* env, jobject aLibXULDirectory,
   return XRE_InitEmbedding(libXULDir, appDir, provider, nsnull, 0);
 }
 
-extern "C" NS_EXPORT void
+extern "C" NS_EXPORT void JNICALL
 GRE_NATIVE(initEmbedding) (JNIEnv* env, jobject, jobject aLibXULDirectory,
                            jobject aAppDirectory, jobject aAppDirProvider)
 {
@@ -108,7 +108,7 @@ GRE_NATIVE(initEmbedding) (JNIEnv* env, jobject, jobject aLibXULDirectory,
   }
 }
 
-extern "C" NS_EXPORT void
+extern "C" NS_EXPORT void JNICALL
 GRE_NATIVE(termEmbedding) (JNIEnv *env, jobject)
 {
   // Free globals before calling XRE_TermEmbedding(), since we need some
@@ -152,7 +152,7 @@ InitXPCOM_Impl(JNIEnv* env, jobject aMozBinDirectory,
                                 nsnull, aResult);
 }
 
-extern "C" NS_EXPORT jobject
+extern "C" NS_EXPORT jobject JNICALL
 XPCOM_NATIVE(initXPCOM) (JNIEnv* env, jobject, jobject aMozBinDirectory,
                          jobject aAppFileLocProvider)
 {
@@ -167,7 +167,7 @@ XPCOM_NATIVE(initXPCOM) (JNIEnv* env, jobject, jobject aMozBinDirectory,
   return nsnull;
 }
 
-extern "C" NS_EXPORT void
+extern "C" NS_EXPORT void JNICALL
 XPCOM_NATIVE(shutdownXPCOM) (JNIEnv *env, jobject, jobject aServMgr)
 {
   nsresult rv;
@@ -191,7 +191,7 @@ XPCOM_NATIVE(shutdownXPCOM) (JNIEnv *env, jobject, jobject aServMgr)
     ThrowException(env, rv, "NS_ShutdownXPCOM failed");
 }
 
-extern "C" NS_EXPORT jobject
+extern "C" NS_EXPORT jobject JNICALL
 XPCOM_NATIVE(newLocalFile) (JNIEnv *env, jobject, jstring aPath,
                             jboolean aFollowLinks)
 {
@@ -222,7 +222,7 @@ XPCOM_NATIVE(newLocalFile) (JNIEnv *env, jobject, jstring aPath,
   return nsnull;
 }
 
-extern "C" NS_EXPORT jobject
+extern "C" NS_EXPORT jobject JNICALL
 XPCOM_NATIVE(getComponentManager) (JNIEnv *env, jobject)
 {
   // Call XPCOM method
@@ -241,7 +241,7 @@ XPCOM_NATIVE(getComponentManager) (JNIEnv *env, jobject)
   return nsnull;
 }
 
-extern "C" NS_EXPORT jobject
+extern "C" NS_EXPORT jobject JNICALL
 XPCOM_NATIVE(getComponentRegistrar) (JNIEnv *env, jobject)
 {
   // Call XPCOM method
@@ -260,7 +260,7 @@ XPCOM_NATIVE(getComponentRegistrar) (JNIEnv *env, jobject)
   return nsnull;
 }
 
-extern "C" NS_EXPORT jobject
+extern "C" NS_EXPORT jobject JNICALL
 XPCOM_NATIVE(getServiceManager) (JNIEnv *env, jobject)
 {
   // Call XPCOM method
@@ -279,7 +279,7 @@ XPCOM_NATIVE(getServiceManager) (JNIEnv *env, jobject)
   return nsnull;
 }
 
-extern "C" NS_EXPORT jobject
+extern "C" NS_EXPORT jobject JNICALL
 GRE_NATIVE(lockProfileDirectory) (JNIEnv* env, jobject, jobject aDirectory)
 {
   nsresult rv = NS_ERROR_FAILURE;
@@ -312,7 +312,7 @@ GRE_NATIVE(lockProfileDirectory) (JNIEnv* env, jobject, jobject aDirectory)
   return nsnull;
 }
 
-extern "C" NS_EXPORT void
+extern "C" NS_EXPORT void JNICALL
 GRE_NATIVE(notifyProfile) (JNIEnv *env, jobject)
 {
   XRE_NotifyProfile();
@@ -322,7 +322,7 @@ GRE_NATIVE(notifyProfile) (JNIEnv *env, jobject)
 extern PRUint64 GetPlatformHandle(JAWT_DrawingSurfaceInfo* dsi);
 #endif
 
-extern "C" NS_EXPORT jlong
+extern "C" NS_EXPORT jlong JNICALL
 MOZILLA_NATIVE(getNativeHandleFromAWT) (JNIEnv* env, jobject clazz,
                                         jobject widget)
 {
