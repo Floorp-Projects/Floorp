@@ -192,6 +192,10 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetKeyBinding(nsAString& _retval)
 NS_IMETHODIMP nsXULMenuitemAccessible::GetRole(PRUint32 *aRole)
 {
   *aRole = ROLE_MENUITEM;
+  if (mParent && Role(mParent) == ROLE_COMBOBOX_LIST) {
+    *aRole = ROLE_COMBOBOX_LISTITEM;
+    return NS_OK;
+  }
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   if (!element)
     return NS_ERROR_FAILURE;
@@ -381,9 +385,14 @@ NS_IMETHODIMP nsXULMenupopupAccessible::GetName(nsAString& _retval)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsXULMenupopupAccessible::GetRole(PRUint32 *_retval)
+NS_IMETHODIMP nsXULMenupopupAccessible::GetRole(PRUint32 *aRole)
 {
-  *_retval = ROLE_MENUPOPUP;
+  if (mParent && Role(mParent) == ROLE_COMBOBOX) {
+    *aRole = ROLE_COMBOBOX_LIST;
+  }
+  else {
+    *aRole = ROLE_MENUPOPUP;
+  }
   return NS_OK;
 }
 

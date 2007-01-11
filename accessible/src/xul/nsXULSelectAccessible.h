@@ -51,15 +51,12 @@ class nsIWeakReference;
   *
   *  Listbox:
   *     - nsXULListboxAccessible
-  *        - nsXULSelectListAccessible
-  *           - nsXULSelectOptionAccessible
+  *        - nsXULSelectOptionAccessible
   *
   *  Comboboxes:
   *     - nsXULComboboxAccessible      <menulist />
-  *        - nsHTMLTextFieldAccessible
-  *        - nsXULComboboxButtonAccessible    
-  *        - nsXULSelectListAccessible      <menupopup />
-  *           - nsXULSelectOptionAccessible(s)   <menuitem />
+  *        - nsXULMenuAccessible          <menupopup />
+  *           - nsXULMenuitemAccessible(s)   <menuitem />
   */
 
 /** ------------------------------------------------------ */
@@ -84,39 +81,6 @@ protected:
   NS_IMETHOD ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState);
   nsresult AppendFlatStringFromSubtree(nsIContent *aContent, nsAString *aFlatString)
     { return NS_ERROR_FAILURE; }  // Overrides base impl in nsAccessible
-};
-
-/*
- * The list that contains all the options in the select.
- */
-class nsXULSelectListAccessible : public nsAccessibleWrap
-{
-public:
-  
-  nsXULSelectListAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
-  virtual ~nsXULSelectListAccessible() {}
-
-  /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetRole(PRUint32 *_retval);
-  NS_IMETHOD GetState(PRUint32 *_retval);
-};
-
-/*
- * Options inside the select, contained within the list
- */
-class nsXULSelectOptionAccessible : public nsXULMenuitemAccessible
-{
-public:
-  
-  nsXULSelectOptionAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
-  virtual ~nsXULSelectOptionAccessible() {}
-
-  /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetRole(PRUint32 *_retval);
-  NS_IMETHOD GetState(PRUint32 *_retval);
-  // Don't use XUL menuitems's description attribute
-  NS_IMETHOD GetDescription(nsAString& aDesc) { return nsAccessibleWrap::GetDescription(aDesc); }
-  nsIFrame*  GetBoundsFrame();
 };
 
 /** ------------------------------------------------------ */
@@ -176,6 +140,7 @@ private:
 class nsXULComboboxAccessible : public nsXULSelectableAccessible
 {
 public:
+  enum { eAction_Click = 0 };
 
   nsXULComboboxAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
   virtual ~nsXULComboboxAccessible() {}
@@ -184,10 +149,12 @@ public:
   void CacheChildren();
   NS_IMETHOD GetRole(PRUint32 *_retval);
   NS_IMETHOD GetState(PRUint32 *_retval);
-
   NS_IMETHOD GetValue(nsAString& _retval);
   NS_IMETHOD GetDescription(nsAString& aDescription);
   NS_IMETHOD GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren);
+  NS_IMETHOD DoAction(PRUint8 index);
+  NS_IMETHOD GetNumActions(PRUint8 *aNumActions);
+  NS_IMETHOD GetActionName(PRUint8 index, nsAString& aActionName);
 };
 
 #endif

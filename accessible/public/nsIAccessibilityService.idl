@@ -45,7 +45,7 @@ interface nsIFrame;
 interface nsObjectFrame;
 interface nsIContent;
 
-[scriptable, uuid(7b2dc92f-bd14-4f0c-bdff-1caa0621fea5)]
+[scriptable, uuid(e4cdb7c5-d029-4bee-bff5-99455c6e0057)]
 interface nsIAccessibilityService : nsIAccessibleRetrieval
 {
   nsIAccessible createOuterDocAccessible(in nsIDOMNode aNode);
@@ -74,10 +74,6 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
   nsIAccessible createHTMLTableHeadAccessible(in nsIDOMNode aDOMNode);
   nsIAccessible createHTMLTextAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLTextFieldAccessible(in nsISupports aFrame);
-
-  // XXX: It seems these methods aren't used.
-  nsIAccessible createXULSelectOptionAccessible(in nsIDOMNode aNode);
-  nsIAccessible createXULSelectListAccessible(in nsIDOMNode aNode);
 
   [noscript] nsIAccessible getAccessible(in nsIDOMNode aNode, in nsIPresShell aPresShell,                          
                               in nsIWeakReference aWeakShell, 
