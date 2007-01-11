@@ -620,7 +620,17 @@ PR_IMPLEMENT(PRStatus) PR_JoinThread(PRThread *thred)
     return (0 == rv) ? PR_SUCCESS : PR_FAILURE;
 }  /* PR_JoinThread */
 
-PR_IMPLEMENT(void) PR_DetachThread(void) { }  /* PR_DetachThread */
+PR_IMPLEMENT(void) PR_DetachThread(void)
+{
+    void *thred;
+    int rv;
+
+    _PT_PTHREAD_GETSPECIFIC(pt_book.key, thred);
+    if (NULL == thred) return;
+    _pt_thread_death(thred);
+    rv = pthread_setspecific(pt_book.key, NULL);
+    PR_ASSERT(0 == rv);
+}  /* PR_DetachThread */
 
 PR_IMPLEMENT(PRThread*) PR_GetCurrentThread(void)
 {
