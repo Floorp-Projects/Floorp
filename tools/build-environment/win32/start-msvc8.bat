@@ -43,8 +43,9 @@ else (
 if "%VC8DIR%"=="" (
     rem Prepend SDK paths - Don't use the SDK SetEnv.cmd because it pulls in
     rem random VC paths which we don't want.
+    rem Add the atlthunk compat library to the end of our LIB
     set PATH=%SDKDIR%\bin;%PATH%
-    set LIB=%SDKDIR%\lib;%LIB%
+    set LIB=%SDKDIR%\lib;%LIB%;%MOZILLABUILD%\atlthunk_compat
     set INCLUDE=%SDKDIR%\include;%SDKDIR%\include\atl;%INCLUDE%
 )
 

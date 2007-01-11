@@ -45,6 +45,13 @@ make
 make install DESTDIR="${MSYS_STAGEDIR}/mozilla-build/msys"
 popd
 
+# build and install atlthunk_compat
+rm -rf "${MSYS_STAGEDIR}/atlthunk_compat"
+mkdir "${MSYS_STAGEDIR}/atlthunk_compat"
+(cd "${MSYS_SRCDIR}/atlthunk_compat" && nmake -f NMakefile OBJDIR="${MOZ_STAGEDIR}\\atlthunk_compat")
+mkdir "${MSYS_STAGEDIR}/mozilla-build/atlthunk_compat"
+install "${MSYS_STAGEDIR}/atlthunk_compat/atlthunk.lib" "${MSYS_STAGEDIR}/mozilla-build/atlthunk_compat"
+
 # install moztools-static and wintools-compat
 unzip -d "${MSYS_STAGEDIR}/mozilla-build" "${MSYS_SRCDIR}/moztools-static.zip"
 rm -f "${MSYS_STAGEDIR}"/mozilla-build/moztools/bin/{gmake.exe,shmsdos.exe,uname.exe}

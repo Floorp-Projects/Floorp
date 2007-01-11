@@ -10,8 +10,10 @@
 # This script is python instead of shell because running the MSYS installer
 # requires that no MSYS shells be currently running.
 #
-# The following tools must exist on the PATH:
+# The following tools must be set up in the environment:
 #   makensis
+#   msvc8
+#   the Platform SDK version of ATL must be in INCLUDE before the VC8 version
 #
 # The following tools are prerequisites:
 #   A mingw build toolchain, and an MSYS shell to build it. Use --msys= to
@@ -68,7 +70,6 @@ check_call([join(sourcedir, "msysDTK-1.0.1.exe"),
 check_call([join(sourcedir, "XEmacs Setup 21.4.19.exe"),
             "/DIR=" + join(stagedir, "mozilla-build", "xemacs"),
             "/SP-", "/NOICONS"])
-
 # Run an MSYS shell to perform the following tasks:
 # * install make-3.81
 # * install UPX
