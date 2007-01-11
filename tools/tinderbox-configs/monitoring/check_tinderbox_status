@@ -3,14 +3,15 @@
 # Checks to see if tinderbox tree state has changed. 
 #
 # Copyright 2006 Mozilla
-# Author: Robert Helmer <robert@roberthelmer.com>
+# Initial Author: Robert Helmer <robert@roberthelmer.com>
+# Contributor(s): Nick Thomas <nrthomas@gmail.com>
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 
 PROGNAME=`basename $0`
 PROGPATH=`echo $0 | sed -e 's,[\\/][^\\/][^\\/]*$,,'`
 NAGIOS_PLUGIN_PATH='/usr/lib/nagios/plugins'
-REVISION=`echo '$Revision 1.2 $' | sed -e 's/[^0-9.]//g'`
+REVISION=`echo '$Revision 1.4 $' | sed -e 's/[^0-9.]//g'`
 
 . $NAGIOS_PLUGIN_PATH/utils.sh
 
@@ -28,6 +29,7 @@ URL="http://tinderbox.mozilla.org/${TREE}/quickparse.txt"
 OLD_STATE="/var/tmp/tinderbox-${TREE}-old.state"
 NEW_STATE="/var/tmp/tinderbox-${TREE}-new.state"
 TEMP_STATE="/var/tmp/tinderbox-${TREE}.temp"
+TIMEOUT=7		# should be less than 10 seconds so curl gives up before nagios
 STATUS=0
 
 print_usage() {
@@ -71,11 +73,13 @@ case "$1" in
 
     if [ -f "$OLD_STATE" ]
     then
-        curl -s "$URL"  > $TEMP_STATE
-        if [ $? -eq 0 ]; then
+        curl -s -m $TIMEOUT "$URL"  > $TEMP_STATE
+        if [ $? -eq 0 ]
+        then
           grep -v 'State|' $TEMP_STATE | awk -F\| '{print $3}'  > $NEW_STATE
         else
           echo "Error retrieving status from tinderbox server"
+          echo
           exit 0
         fi
         added=`diff "$OLD_STATE" "$NEW_STATE" | grep '^> ' | sed 's/^> //' | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /'`
@@ -85,10 +89,8 @@ case "$1" in
         then
           mv "$NEW_STATE" "$OLD_STATE"
         fi
-        if [ -z "$added" ] 
+        if [ -n "$added" ] 
         then
-          STATUS=0
-        else
           message="ADDED: $added" 
           STATUS=1
         fi
@@ -97,10 +99,15 @@ case "$1" in
           message="$message =-=-= REMOVED: $removed"
           STATUS=2
         fi
+        if [ -z "$message" ]
+        then
+          message="OK: No changes"
+        fi
     else 
       # initialize old state
-      curl -s "$URL" > $TEMP_STATE
-      if [ $? -eq 0 ]; then
+      curl -s -m $TIMEOUT "$URL" > $TEMP_STATE
+      if [ $? -eq 0 ]
+      then
         grep -v 'State|' $TEMP_STATE | awk -F\| '{print $3}' > "$OLD_STATE"
         message="Initialized old state."
         STATUS=0
