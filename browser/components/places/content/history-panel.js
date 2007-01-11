@@ -40,6 +40,7 @@
 var gHistoryTree;
 var gSearchBox;
 var gHistoryGrouping = "";
+var gSearching = false;
 
 function HistorySidebarInit()
 {
@@ -90,54 +91,12 @@ function checkURLSecurity(aURL)
   }
   return true;
 }
-
-function SetPlace(aSearchString)
-{
-  const NHQO = Ci.nsINavHistoryQueryOptions;
-  var placeURI = ORGANIZER_ROOT_HISTORY_UNSORTED;
-
-  var prefService = 
-    Components.classes["@mozilla.org/preferences-service;1"]
-            .getService(Ci.nsIPrefBranch);
-  if (prefService.getBoolPref("browser.history.showSessions"))
-      placeURI += "&showSessions=1";
-
-  switch (gHistoryGrouping) {
-    case "site":
-      placeURI += "&sort=" + NHQO.SORT_BY_TITLE_ASCENDING;
-      break; 
-    case "visited":
-      placeURI += "&sort=" + NHQO.SORT_BY_VISITCOUNT_DESCENDING;
-      break; 
-    case "lastvisited":
-      placeURI += "&sort=" + NHQO.SORT_BY_DATE_DESCENDING;
-      break; 
-    case "dayandsite":
-      // if there isn't a search string, add the grouping
-      if (!aSearchString) {
-        placeURI += "&group=" + NHQO.GROUP_BY_DAY;
-        placeURI += "&group=" + NHQO.GROUP_BY_HOST; 
-      }
-
-      placeURI += "&sort=" + NHQO.SORT_BY_TITLE_ASCENDING;
-      break;
-    default: /* "day" */
-      // if there isn't a search string, add the grouping
-      if (!aSearchString)
-        placeURI += "&group=" + NHQO.GROUP_BY_DAY;
-    
-      placeURI += "&sort=" + NHQO.SORT_BY_TITLE_ASCENDING;
-      break;
-  }
-
-  gHistoryTree.place = placeURI;
-}
   
 function GroupBy(groupingType)
-{ 
+{
   gHistoryGrouping = groupingType;
   gSearchBox.value = "";
-  searchHistory(gSearchBox.value);
+  searchHistory("");
 }
 
 function collapseExpand()
@@ -274,12 +233,50 @@ function buildContextMenu(aEvent)
   }
 }
 
+function SetSortingAndGrouping() {
+  const NHQO = Ci.nsINavHistoryQueryOptions;
+  var sortingMode;
+  var groups = [];
+  switch (gHistoryGrouping) {
+    case "site":
+      sortingMode = NHQO.SORT_BY_TITLE_ASCENDING;
+      break; 
+    case "visited":
+      sortingMode = NHQO.SORT_BY_VISITCOUNT_DESCENDING;
+      break; 
+    case "lastvisited":
+      sortingMode = NHQO.SORT_BY_DATE_DESCENDING;
+      break; 
+    case "dayandsite":
+      groups.push(NHQO.GROUP_BY_DAY);
+      groups.push(NHQO.GROUP_BY_HOST);
+      sortingMode = NHQO.SORT_BY_TITLE_ASCENDING;
+      break;
+    default:
+      groups.push(NHQO.GROUP_BY_DAY);
+      sortingMode = NHQO.SORT_BY_TITLE_ASCENDING;
+      break;
+  }
+  var options = asQuery(gHistoryTree.getResult().root).queryOptions;
+  options.setGroupingMode(groups, groups.length);
+  options.sortingMode = sortingMode;
+}
+
 function searchHistory(aInput)
 {
-  SetPlace(aInput);
-
-  if (!aInput)
-    return;
+  if (aInput) {
+    if (!gSearching) {
+      // Unset grouping when searching; applyFilter will update the view
+      var options = asQuery(gHistoryTree.getResult().root).queryOptions;
+      options.setGroupingMode([], 0);
+      gSearching = true;
+    }
+  }
+  else {
+    // applyFilter will update the view
+    SetSortingAndGrouping();
+    gSearching = false;
+  }
 
   gHistoryTree.applyFilter(aInput, false /* onlyBookmarks */, 
                            0 /* folderRestrict */, null); 
