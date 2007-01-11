@@ -276,6 +276,7 @@ NS_IMETHODIMP nsSVGPathSegList::AppendItem(nsIDOMSVGPathSeg *newItem,
   if (!newItem)
     return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
   AppendElement(newItem);
+  NS_ADDREF(*_retval);
   return NS_OK;
 }
 
