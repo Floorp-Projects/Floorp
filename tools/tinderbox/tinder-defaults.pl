@@ -244,6 +244,11 @@ $update_package = 0;
 $update_pushinfo = 0;
 $update_aus_host = 'aus2-staging.mozilla.org';
 
+$airbag_pushsymbols = 0;
+#$ENV{AIRBAG_SYMBOL_SERVER} = ''
+#$ENV{AIRBAG_SYMBOL_USER}   = ''
+#$ENV{AIRBAG_SYMBOL_PATH}   = ''
+
 # Reboot the OS at the end of build-and-test cycle. This is primarily
 # intended for Win9x, which can't last more than a few cycles before
 # locking up (and testing would be suspect even after a couple of cycles).
