@@ -68,10 +68,6 @@ NS_IMETHODIMP DeleteElementTxn::Init(nsIDOMNode *aElement,
 }
 
 
-DeleteElementTxn::~DeleteElementTxn()
-{
-}
-
 NS_IMETHODIMP DeleteElementTxn::DoTransaction(void)
 {
 #ifdef NS_DEBUG
@@ -171,14 +167,6 @@ NS_IMETHODIMP DeleteElementTxn::RedoTransaction(void)
 
   nsCOMPtr<nsIDOMNode> resultNode;
   return mParent->RemoveChild(mElement, getter_AddRefs(resultNode));
-}
-
-
-NS_IMETHODIMP DeleteElementTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
-{
-  if (aDidMerge)
-    *aDidMerge = PR_FALSE;
-  return NS_OK;
 }
 
 NS_IMETHODIMP DeleteElementTxn::GetTxnDescription(nsAString& aString)

@@ -48,8 +48,6 @@
 0x93276f00, 0xab2c, 0x11d2, \
 {0x8f, 0xb4, 0x0, 0x60, 0x8, 0x15, 0x9b, 0xc} }
 
-class nsIPresShell;
-
 /**
   * A transaction that inserts text into a content node. 
   */
@@ -58,8 +56,6 @@ class InsertTextTxn : public EditTxn
 public:
 
   static const nsIID& GetCID() { static const nsIID iid = INSERT_TEXT_TXN_CID; return iid; }
-
-  virtual ~InsertTextTxn();
 
   /** initialize the transaction
     * @param aElement the text content node
@@ -78,13 +74,9 @@ private:
 
 public:
 	
-  NS_IMETHOD DoTransaction(void);
-
-  NS_IMETHOD UndoTransaction(void);
+  NS_DECL_EDITTXN
 
   NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
-
-  NS_IMETHOD GetTxnDescription(nsAString& aTxnDescription);
 
 // nsISupports declarations
 

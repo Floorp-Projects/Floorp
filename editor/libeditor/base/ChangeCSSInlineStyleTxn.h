@@ -59,8 +59,6 @@ public:
 
   static const nsIID& GetCID() { static const nsIID iid = CHANGE_CSSINLINESTYLE_TXN_CID; return iid; }
 
-  virtual ~ChangeCSSInlineStyleTxn();
-
   /** Initialize the transaction.
     * @param aEditor         [IN] the object providing core editing operations
     * @param aNode           [IN] the node whose style attribute will be changed
@@ -106,16 +104,6 @@ private:
     */
   void   RemoveValueFromListOfValues(nsAString & aValues, const nsAString  & aRemoveValue);
 
-  /** appends 'property : value' to the string
-    *
-    * @param aOutputString   [IN/OUT] the string
-    * @param aPropert        [IN] the css property string
-    * @param aValues         [IN] the value string for the css property
-    */
-  void   AppendDeclaration(nsAString & aOutputString,
-                           const nsAString & aProperty,
-                           const nsAString & aValues);
-
   /** If the boolean is true and if the value is not the empty string,
     * set the property in the transaction to that value; if the value
     * is empty, remove the property from element's styles. If the boolean
@@ -124,16 +112,9 @@ private:
   nsresult SetStyle(PRBool aAttributeWasSet, nsAString & aValue);
 
 public:
+  NS_DECL_EDITTXN
 
-  NS_IMETHOD DoTransaction(void);
-
-  NS_IMETHOD UndoTransaction(void);
-
-  NS_IMETHOD RedoTransaction(void);
-
-  NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
-
-  NS_IMETHOD GetTxnDescription(nsAString& aTxnDescription);
+  NS_IMETHOD RedoTransaction();
 
 protected:
 

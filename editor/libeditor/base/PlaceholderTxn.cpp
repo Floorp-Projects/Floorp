@@ -52,31 +52,8 @@ PlaceholderTxn::PlaceholderTxn() :  EditAggregateTxn(),
 }
 
 
-PlaceholderTxn::~PlaceholderTxn()
-{
-  delete mStartSel;
-}
-
-NS_IMPL_ADDREF_INHERITED(PlaceholderTxn, EditAggregateTxn)
-NS_IMPL_RELEASE_INHERITED(PlaceholderTxn, EditAggregateTxn)
-
-//NS_IMPL_QUERY_INTERFACE_INHERITED1(Class, Super, AdditionalInterface)
-NS_IMETHODIMP PlaceholderTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
- 
-  if (aIID.Equals(NS_GET_IID(nsIAbsorbingTransaction))) {
-    *aInstancePtr = (nsISupports*)(nsIAbsorbingTransaction*)(this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsISupportsWeakReference))) {
-    *aInstancePtr = (nsISupports*)(nsISupportsWeakReference*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return EditAggregateTxn::QueryInterface(aIID, aInstancePtr);
-}
+NS_IMPL_ISUPPORTS_INHERITED2(PlaceholderTxn, EditAggregateTxn,
+                             nsIAbsorbingTransaction, nsISupportsWeakReference)
 
 NS_IMETHODIMP PlaceholderTxn::Init(nsIAtom *aName, nsSelectionState *aSelState, nsIEditor *aEditor)
 {

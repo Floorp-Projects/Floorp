@@ -75,15 +75,7 @@ private:
   DeleteTextTxn();
 
 public:
-	virtual ~DeleteTextTxn();
-
-  NS_IMETHOD DoTransaction(void);
-
-  NS_IMETHOD UndoTransaction(void);
-
-  NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
-
-  NS_IMETHOD GetTxnDescription(nsAString& aTxnDescription);
+  NS_DECL_EDITTXN
 
   PRUint32 GetOffset() { return mOffset; }
 
