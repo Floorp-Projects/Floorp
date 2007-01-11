@@ -2813,6 +2813,15 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
             tableLength = (uint32)(high - low + 1);
             if (tableLength >= JS_BIT(16) || tableLength > 2 * caseCount)
                 switchOp = JSOP_LOOKUPSWITCH;
+        } else if (switchOp == JSOP_LOOKUPSWITCH) {
+            /*
+             * Lookup switch supports only atom indexes bellow 64K limit.
+             * Conservatively estimate the maximum possible index during
+             * switch generation and use conditional switch if it exceeds
+             * the limit.
+             */
+            if (caseCount + cg->atomList.count > JS_BIT(16))
+                switchOp = JSOP_CONDSWITCH;
         }
     }
 
