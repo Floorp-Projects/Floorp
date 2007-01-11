@@ -2166,7 +2166,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   }
 
   if ((minY == VERTICAL_ALIGN_FRAMES_NO_MINIMUM) ||
-      (maxY == VERTICAL_ALIGN_FRAMES_NO_MINIMUM)) {
+      (maxY == VERTICAL_ALIGN_FRAMES_NO_MAXIMUM)) {
     minY = maxY = baselineY;
   }
 
