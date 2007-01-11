@@ -77,6 +77,9 @@ txVariableMap::bindVariable(const txExpandedName& aName, txAExprResult* aValue)
     if (NS_SUCCEEDED(rv)) {
         NS_ADDREF(aValue);
     }
+    else if (rv == NS_ERROR_XSLT_ALREADY_SET) {
+        rv = NS_ERROR_XSLT_VAR_ALREADY_SET;
+    }
     return rv;
 }
 
