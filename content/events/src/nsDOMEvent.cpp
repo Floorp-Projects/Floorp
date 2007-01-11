@@ -455,6 +455,9 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_PAGE_SHOW;
     else if (atom == nsGkAtoms::onpagehide)
       mEvent->message = NS_PAGE_HIDE;
+  } else if (mEvent->eventStructType == NS_XUL_COMMAND_EVENT) {
+    if (atom == nsGkAtoms::oncommand)
+      mEvent->message = NS_XUL_COMMAND;
   }
 #ifdef MOZ_SVG
   else if (mEvent->eventStructType == NS_SVG_EVENT) {
