@@ -131,6 +131,45 @@ LoadXULMethods(JNIEnv* env, jobject aXPCOMPath, void** aFunctions)
   if (NS_FAILED(rv))
     return rv;
 
+#ifdef XP_WIN32
+  // The JNICALL calling convention defines to "__stdcall" on Win32, which
+  // mangles the name.
+  nsDynamicFunctionLoad funcs[] = {
+    { "_Java_org_mozilla_xpcom_internal_MozillaImpl_initialize@8",
+            (NSFuncPtr*) &aFunctions[kFunc_Initialize] },
+    { "_Java_org_mozilla_xpcom_internal_GREImpl_initEmbedding@20",
+            (NSFuncPtr*) &aFunctions[kFunc_InitEmbedding] },
+    { "_Java_org_mozilla_xpcom_internal_GREImpl_termEmbedding@8",
+            (NSFuncPtr*) &aFunctions[kFunc_TermEmbedding] },
+    { "_Java_org_mozilla_xpcom_internal_GREImpl_lockProfileDirectory@12",
+            (NSFuncPtr*) &aFunctions[kFunc_LockProfileDirectory] },
+    { "_Java_org_mozilla_xpcom_internal_GREImpl_notifyProfile@8",
+            (NSFuncPtr*) &aFunctions[kFunc_NotifyProfile] },
+    { "_Java_org_mozilla_xpcom_internal_XPCOMImpl_initXPCOM@16",
+            (NSFuncPtr*) &aFunctions[kFunc_InitXPCOM] },
+    { "_Java_org_mozilla_xpcom_internal_XPCOMImpl_shutdownXPCOM@12",
+            (NSFuncPtr*) &aFunctions[kFunc_ShutdownXPCOM] },
+    { "_Java_org_mozilla_xpcom_internal_XPCOMImpl_getComponentManager@8",
+            (NSFuncPtr*) &aFunctions[kFunc_GetComponentManager] },
+    { "_Java_org_mozilla_xpcom_internal_XPCOMImpl_getComponentRegistrar@8",
+            (NSFuncPtr*) &aFunctions[kFunc_GetComponentRegistrar] },
+    { "_Java_org_mozilla_xpcom_internal_XPCOMImpl_getServiceManager@8",
+            (NSFuncPtr*) &aFunctions[kFunc_GetServiceManager] },
+    { "_Java_org_mozilla_xpcom_internal_XPCOMImpl_newLocalFile@16",
+            (NSFuncPtr*) &aFunctions[kFunc_NewLocalFile] },
+    { "_Java_org_mozilla_xpcom_internal_XPCOMJavaProxy_callXPCOMMethod@20",
+            (NSFuncPtr*) &aFunctions[kFunc_CallXPCOMMethod] },
+    { "_Java_org_mozilla_xpcom_internal_XPCOMJavaProxy_finalizeProxy@12",
+            (NSFuncPtr*) &aFunctions[kFunc_FinalizeProxy] },
+    { "_Java_org_mozilla_xpcom_internal_XPCOMJavaProxy_isSameXPCOMObject@16",
+            (NSFuncPtr*) &aFunctions[kFunc_IsSameXPCOMObject] },
+    { "_Java_org_mozilla_xpcom_ProfileLock_release@16",
+            (NSFuncPtr*) &aFunctions[kFunc_ReleaseProfileLock] },
+    { "Java_org_mozilla_xpcom_internal_MozillaImpl_getNativeHandleFromAWT@12",
+            (NSFuncPtr*) &aFunctions[kFunc_GetNativeHandleFromAWT] },
+    { nsnull, nsnull }
+  };
+#else
   nsDynamicFunctionLoad funcs[] = {
     { "Java_org_mozilla_xpcom_internal_MozillaImpl_initialize",
             (NSFuncPtr*) &aFunctions[kFunc_Initialize] },
@@ -166,6 +205,7 @@ LoadXULMethods(JNIEnv* env, jobject aXPCOMPath, void** aFunctions)
             (NSFuncPtr*) &aFunctions[kFunc_GetNativeHandleFromAWT] },
     { nsnull, nsnull }
   };
+#endif
 
   rv = XPCOMGlueLoadXULFunctions(funcs);
   if (NS_FAILED(rv))
