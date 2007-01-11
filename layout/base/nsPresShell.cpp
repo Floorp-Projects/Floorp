@@ -807,9 +807,6 @@ public:
   NS_IMETHOD PopStackMemory();
   NS_IMETHOD AllocateStackMemory(size_t aSize, void** aResult);
 
-  NS_IMETHOD GetActiveAlternateStyleSheet(nsString& aSheetTitle);
-  NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle);
-  NS_IMETHOD ListAlternateStyleSheets(nsStringArray& aTitleList);
   NS_IMETHOD SetPreferenceStyleRules(PRBool aForceReflow);
   
   NS_IMETHOD GetSelection(SelectionType aType, nsISelection** aSelection);
@@ -1762,97 +1759,6 @@ void*
 PresShell::AllocateFrame(size_t aSize)
 {
   return mFrameArena.AllocateFrame(aSize);
-}
-
-NS_IMETHODIMP
-PresShell::GetActiveAlternateStyleSheet(nsString& aSheetTitle)
-{ // first non-html sheet in style set that has title
-  if (mStyleSet) {
-    PRInt32 count = mStyleSet->SheetCount(nsStyleSet::eDocSheet);
-    PRInt32 index;
-    NS_NAMED_LITERAL_STRING(textHtml, "text/html");
-    for (index = 0; index < count; index++) {
-      nsIStyleSheet* sheet = mStyleSet->StyleSheetAt(nsStyleSet::eDocSheet,
-                                                     index);
-      if (nsnull != sheet) {
-        nsAutoString type;
-        sheet->GetType(type);
-        if (PR_FALSE == type.Equals(textHtml)) {
-          nsAutoString title;
-          sheet->GetTitle(title);
-          if (!title.IsEmpty()) {
-            aSheetTitle = title;
-            index = count;  // stop looking
-          }
-        }
-      }
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PresShell::SelectAlternateStyleSheet(const nsString& aSheetTitle)
-{
-  if (mDocument && mStyleSet) {
-    mStyleSet->BeginUpdate();
-    PRInt32 count = mDocument->GetNumberOfStyleSheets();
-    PRInt32 index;
-    NS_NAMED_LITERAL_STRING(textHtml,"text/html");
-    for (index = 0; index < count; index++) {
-      nsIStyleSheet *sheet = mDocument->GetStyleSheetAt(index);
-      PRBool complete;
-      sheet->GetComplete(complete);
-      if (complete) {
-        nsAutoString type;
-        sheet->GetType(type);
-        if (!type.Equals(textHtml)) {
-          nsAutoString title;
-          sheet->GetTitle(title);
-          if (!title.IsEmpty()) {
-            if (title.Equals(aSheetTitle)) {
-              mStyleSet->AddDocStyleSheet(sheet, mDocument);
-            }
-            else {
-              mStyleSet->RemoveStyleSheet(nsStyleSet::eDocSheet, sheet);
-            }
-          }
-        }
-      }
-    }
-
-    mStyleSet->EndUpdate();
-    ReconstructStyleData();
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PresShell::ListAlternateStyleSheets(nsStringArray& aTitleList)
-{
-  // XXX should this be returning incomplete sheets?  Probably.
-  if (mDocument) {
-    PRInt32 count = mDocument->GetNumberOfStyleSheets();
-    PRInt32 index;
-    NS_NAMED_LITERAL_STRING(textHtml,"text/html");
-    for (index = 0; index < count; index++) {
-      nsIStyleSheet *sheet = mDocument->GetStyleSheetAt(index);
-      if (sheet) {
-        nsAutoString type;
-        sheet->GetType(type);
-        if (PR_FALSE == type.Equals(textHtml)) {
-          nsAutoString  title;
-          sheet->GetTitle(title);
-          if (!title.IsEmpty()) {
-            if (-1 == aTitleList.IndexOf(title)) {
-              aTitleList.AppendString(title);
-            }
-          }
-        }
-      }
-    }
-  }
-  return NS_OK;
 }
 
 void

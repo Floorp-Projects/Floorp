@@ -841,7 +841,17 @@ nsCSSStyleSheet::GetApplicable(PRBool& aApplicable) const
 NS_IMETHODIMP
 nsCSSStyleSheet::SetEnabled(PRBool aEnabled)
 {
-  return nsCSSStyleSheet::SetDisabled(!aEnabled);
+  // Internal method, so callers must handle BeginUpdate/EndUpdate
+  PRBool oldDisabled = mDisabled;
+  mDisabled = !aEnabled;
+
+  if (mDocument && mInner && mInner->mComplete && oldDisabled != mDisabled) {
+    ClearRuleCascades();
+
+    mDocument->SetStyleSheetApplicableState(this, !mDisabled);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1341,18 +1351,10 @@ nsCSSStyleSheet::GetDisabled(PRBool* aDisabled)
 NS_IMETHODIMP    
 nsCSSStyleSheet::SetDisabled(PRBool aDisabled)
 {
-  PRBool oldDisabled = mDisabled;
-  mDisabled = aDisabled;
-
-  if (mDocument && mInner && mInner->mComplete && oldDisabled != mDisabled) {
-    ClearRuleCascades();
-
-    mDocument->BeginUpdate(UPDATE_STYLE);
-    mDocument->SetStyleSheetApplicableState(this, !mDisabled);
-    mDocument->EndUpdate(UPDATE_STYLE);
-  }
-
-  return NS_OK;
+  // DOM method, so handle BeginUpdate/EndUpdate
+  MOZ_AUTO_DOC_UPDATE(mDocument, UPDATE_STYLE, PR_TRUE);
+  nsresult rv = nsCSSStyleSheet::SetEnabled(!aDisabled);
+  return rv;
 }
 
 NS_IMETHODIMP

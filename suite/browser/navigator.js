@@ -1987,7 +1987,7 @@ function stylesheetFillPopup(menuPopup)
   }
   menuPopup.firstChild.setAttribute("checked", styleDisabled);
   itemPersistentOnly.setAttribute("checked", !altStyleSelected && !styleDisabled);
-  itemPersistentOnly.hidden = (window.content.document.preferredStylesheetSet) ? true : false;
+  itemPersistentOnly.hidden = (window.content.document.preferredStyleSheetSet) ? true : false;
 }
 
 function stylesheetInFrame(frame, title) {

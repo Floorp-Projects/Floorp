@@ -52,6 +52,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocument.h"
+#include "nsIDOMNSDocumentStyle.h"
 #include "nsIUnicharInputStream.h"
 #include "nsIConverterInputStream.h"
 #include "nsICharsetAlias.h"
@@ -292,11 +293,16 @@ CSSLoaderImpl::Init(nsIDocument* aDocument)
 {
   NS_ASSERTION(! mDocument, "already initialized");
 
-  if (! mDocument) {
-    mDocument = aDocument;
-    return NS_OK;
+  mDocument = aDocument;
+
+  // We can just use the preferred set, since there are no sheets in the
+  // document yet (if there are, how did they get there? _we_ load the sheets!)
+  // and hence the selected set makes no sense at this time.
+  nsCOMPtr<nsIDOMNSDocumentStyle> domDoc(do_QueryInterface(mDocument));
+  if (domDoc) {
+    domDoc->GetPreferredStyleSheetSet(mPreferredSheet);
   }
-  return NS_ERROR_ALREADY_INITIALIZED;
+  return NS_OK;
 }
 
 PR_STATIC_CALLBACK(PLDHashOperator)
@@ -353,6 +359,19 @@ StartNonAlternates(nsIURI *aKey, SheetLoadData* &aData, void* aClosure)
 NS_IMETHODIMP
 CSSLoaderImpl::SetPreferredSheet(const nsAString& aTitle)
 {
+#ifdef DEBUG
+  nsCOMPtr<nsIDOMNSDocumentStyle> doc(do_QueryInterface(mDocument));
+  if (doc) {
+    nsAutoString currentPreferred;
+    doc->GetLastStyleSheetSet(currentPreferred);
+    if (DOMStringIsNull(currentPreferred)) {
+      doc->GetPreferredStyleSheetSet(currentPreferred);
+    }
+    NS_ASSERTION(currentPreferred.Equals(aTitle),
+                 "Unexpected argument to SetPreferredSheet");    
+  }
+#endif
+  
   mPreferredSheet = aTitle;
 
   // start any pending alternates that aren't alternates anymore
@@ -865,15 +884,12 @@ CSSLoaderImpl::IsAlternate(const nsAString& aTitle, PRBool aHasAlternateRel)
   if (!aHasAlternateRel && mDocument && mPreferredSheet.IsEmpty()) {
     // There's no preferred set yet, and we now have a sheet with a title.
     // Make that be the preferred set.
-    // XXXbz maybe this should be checking IsVoid(), actually, since the
-    // preferred set can be explicitly set to the empty string.  Look into
-    // this.
     mDocument->SetHeaderData(nsGkAtoms::headerDefaultStyle, aTitle);
     // We're definitely not an alternate
     return PR_FALSE;
   }
 
-  return !aTitle.Equals(mPreferredSheet, nsCaseInsensitiveStringComparator());
+  return !aTitle.Equals(mPreferredSheet);
 }
 
 /**
