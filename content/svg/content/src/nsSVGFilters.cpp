@@ -2605,18 +2605,17 @@ nsSVGFEFloodElement::Filter(nsSVGFilterInstance *instance)
 
   nscolor floodColor = style->GetStyleSVGReset()->mFloodColor;
   float floodOpacity = style->GetStyleSVGReset()->mFloodOpacity;
-  PRUint8 r, g, b, a;
-  a = PRUint8(floodOpacity * 255);
-  r = (PRUint32(NS_GET_R(floodColor)) * a) / 255;
-  g = (PRUint32(NS_GET_G(floodColor)) * a) / 255;
-  b = (PRUint32(NS_GET_B(floodColor)) * a) / 255;
 
   cairo_t *cr = cairo_create(targetSurface);
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS) {
     cairo_destroy(cr);
     return NS_ERROR_FAILURE;
   }
-  cairo_set_source_rgba(cr, r, g, b, a);
+  cairo_set_source_rgba(cr, 
+                        NS_GET_R(floodColor) / 255.0,
+                        NS_GET_G(floodColor) / 255.0,
+                        NS_GET_B(floodColor) / 255.0,
+                        floodOpacity);
   cairo_rectangle(cr, rect.x, rect.y, rect.width, rect.height);
   cairo_fill(cr);
   cairo_destroy(cr);
