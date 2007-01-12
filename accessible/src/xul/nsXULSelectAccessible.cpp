@@ -59,7 +59,7 @@
   *
   *  Listbox:
   *     - nsXULListboxAccessible              <richlistbox/>
-  *         - nsXULSelectOptionAccessible     <richlistitem/>
+  *         - nsXULListitemAccessible         <richlistitem/>
   *
   *  Comboboxes:
   *     - nsXULComboboxAccessible             <menulist/>
