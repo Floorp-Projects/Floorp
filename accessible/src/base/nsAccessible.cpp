@@ -1393,8 +1393,13 @@ nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsA
         labeledEl->GetLabel(textEquivalent);
       }
       else {
-        aContent->GetAttr(kNameSpaceID_None,
-                          nsAccessibilityAtoms::tooltiptext, textEquivalent);
+        if (aContent->NodeInfo()->Equals(nsAccessibilityAtoms::label, kNameSpaceID_XUL)) {
+          aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, textEquivalent);
+        }
+        if (textEquivalent.IsEmpty()) {
+          aContent->GetAttr(kNameSpaceID_None,
+                            nsAccessibilityAtoms::tooltiptext, textEquivalent);
+        }
       }
       AppendNameFromAccessibleFor(aContent, &textEquivalent, PR_TRUE /* use value */);
 
