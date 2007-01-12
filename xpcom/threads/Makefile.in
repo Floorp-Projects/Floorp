@@ -56,7 +56,6 @@ REQUIRES	= string \
 		  $(NULL)
 
 CPPSRCS		= \
-		nsAutoLock.cpp \
 		nsEventQueue.cpp \
 		nsEnvironment.cpp \
 		nsThread.cpp \
@@ -68,7 +67,6 @@ CPPSRCS		= \
 		$(NULL)
 
 EXPORTS		= \
-		nsAutoLock.h \
 		nsProcess.h \
 		nsEventQueue.h \
 		$(NULL)

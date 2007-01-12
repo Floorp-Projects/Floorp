@@ -115,7 +115,7 @@
  * This is the base class for the stack-based locking objects.
  * Clients of derived classes need not play with this superclass.
  **/
-class NS_COM nsAutoLockBase {
+class NS_COM_GLUE nsAutoLockBase {
     friend class nsAutoUnlockBase;
 
 protected:
@@ -146,7 +146,7 @@ protected:
  * This is the base class for stack-based unlocking objects.
  * It unlocks locking objects based on nsAutoLockBase.
  **/
-class NS_COM nsAutoUnlockBase {
+class NS_COM_GLUE nsAutoUnlockBase {
 protected:
     nsAutoUnlockBase() {}
 
@@ -165,7 +165,7 @@ protected:
  * nsAutoLock
  * Stack-based locking object for PRLock.
  **/
-class NS_COM nsAutoLock : public nsAutoLockBase {
+class NS_COM_GLUE nsAutoLock : public nsAutoLockBase {
 private:
     PRLock* mLock;
     PRBool mLocked;
@@ -254,7 +254,7 @@ public:
 #include "nsError.h"
 #include "nsDebug.h"
 
-class NS_COM nsAutoMonitor : public nsAutoLockBase {
+class NS_COM_GLUE nsAutoMonitor : public nsAutoLockBase {
 public:
 
     /**
@@ -368,7 +368,7 @@ private:
 #include "prcmon.h"
 #include "nsError.h"
 
-class NS_COM nsAutoCMonitor : public nsAutoLockBase {
+class NS_COM_GLUE nsAutoCMonitor : public nsAutoLockBase {
 public:
     nsAutoCMonitor(void* lockObject)
         : nsAutoLockBase(lockObject, eAutoCMonitor),
