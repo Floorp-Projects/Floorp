@@ -86,26 +86,61 @@ WHERE
 });
 
 __PACKAGE__->set_sql(EnabledBySubgroup => qq{
-SELECT t.* 
+SELECT DISTINCT(t.*) 
 FROM testcases t, testcase_subgroups tsg, subgroup_testgroups sgtg
 WHERE 
   tsg.testcase_id=t.testcase_id AND
   tsg.subgroup_id=sgtg.subgroup_id AND
   tsg.subgroup_id=? AND 
+  sgtg.testgroup_id=? AND
   t.enabled=1 
   ORDER BY tsg.sort_order ASC
 });
 
 __PACKAGE__->set_sql(CommunityEnabledBySubgroup => qq{
-SELECT t.* 
+SELECT DISTINCT(t.*)
 FROM testcases t, testcase_subgroups tsg, subgroup_testgroups sgtg
 WHERE 
   tsg.testcase_id=t.testcase_id AND
   tsg.subgroup_id=sgtg.subgroup_id AND
   tsg.subgroup_id=? AND 
+  sgtg.testgroup_id=? AND
   t.enabled=1 AND 
   t.community_enabled=1
 ORDER BY tsg.sort_order ASC
+});
+
+__PACKAGE__->set_sql(EnabledByTestRun => qq{
+SELECT DISTINCT(tc.testcase_id)
+FROM test_runs tr, test_run_testgroups trtg, testgroups tg, subgroup_testgroups sgtg, subgroups sg, testcase_subgroups tcsg, testcases tc
+WHERE 
+  tr.test_run_id=? AND 
+  tr.test_run_id=trtg.test_run_id AND 
+  trtg.testgroup_id=sgtg.testgroup_id AND 
+  trtg.testgroup_id=tg.testgroup_id AND 
+  sgtg.subgroup_id=tcsg.subgroup_id AND 
+  sgtg.subgroup_id=sg.subgroup_id AND 
+  tcsg.testcase_id=tc.testcase_id AND 
+  tg.enabled=1 AND 
+  sg.enabled=1 AND 
+  tc.enabled=1
+});
+
+__PACKAGE__->set_sql(CommunityEnabledByTestRun => qq{
+SELECT DISTINCT(tc.testcase_id)
+FROM test_runs tr, test_run_testgroups trtg, testgroups tg, subgroup_testgroups sgtg, subgroups sg, testcase_subgroups tcsg, testcases tc
+WHERE 
+  tr.test_run_id=? AND 
+  tr.test_run_id=trtg.test_run_id AND 
+  trtg.testgroup_id=sgtg.testgroup_id AND 
+  trtg.testgroup_id=tg.testgroup_id AND 
+  sgtg.subgroup_id=tcsg.subgroup_id AND 
+  sgtg.subgroup_id=sg.subgroup_id AND 
+  tcsg.testcase_id=tc.testcase_id AND 
+  tg.enabled=1 AND 
+  sg.enabled=1 AND 
+  tc.enabled=1 AND
+  tc.community_enabled=1
 });
 
 #########################################################################
@@ -384,12 +419,3 @@ sub update_subgroup() {
 }
 
 1;
-
-
-
-
-
-
-
-
-

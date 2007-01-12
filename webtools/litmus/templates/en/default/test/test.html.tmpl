@@ -39,6 +39,7 @@
   <tr>
     <td><b>Testcase ID #:</b></td>
     <td id="testcase_id_display[% IF ! show_edit %]_[% testcase.testcase_id | html %][% END %]">[% testcase.testcase_id | html %]</td>
+    [% IF ! show_edit %]<td align="right" valign="top" colspan="5"><a href="manage_testcases.cgi?testcase_id=[%testcase.testcase_id | html%]&edit=1"> Edit Testcase</a></td>[% END %]
   </tr>
   <tr>
     <td><b>Summary:</b></td>
@@ -49,13 +50,11 @@
   <td>
     <div id="product_text[% IF ! show_edit %]_[% testcase.testcase_id | html %][% END %]">[% testcase.product.name | html %]</div>
     </td>
-    [% IF ! show_edit %]<td align="right" valign="top" colspan="5"><a href="manage_testcases.cgi?testcase_id=[%testcase.testcase_id | html%]&edit=1"> Edit Testcase</a></td>[% END %]
   </tr>
   <td width="20%"><b>Branch:</b></td>
   <td>
     <div id="branch_text[% IF ! show_edit %]_[% testcase.testcase_id | html %][% END %]">[% testcase.branch.name | html %]</div>
     </td>
-    [% IF ! show_edit %]<td align="right" valign="top" colspan="5"><a href="manage_testcases.cgi?testcase_id=[%testcase.testcase_id | html%]&edit=1"> Edit Testcase</a></td>[% END %]
   </tr>
   <tr>
     <td><b>Test Group(s):</b></td>
