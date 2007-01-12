@@ -80,7 +80,10 @@ cp "${MSYS_SRCDIR}"/{profile-inputrc.sh,profile-extrapaths.sh,profile-echo.sh,pr
 # Copy the batch files that make everything go!
 cp "${MSYS_SRCDIR}"/{guess-msvc.bat,start-msvc6.bat,start-msvc71.bat,start-msvc8.bat} "${MSYS_STAGEDIR}/mozilla-build"
 
-# zip it up... this will change later to make an installer via NSIS
+# zip it up and make an installer
+cp "${MSYS_SRCDIR}"/{license.rtf,installit.nsi} "${MSYS_STAGEDIR}"
+unix2dos "${MSYS_STAGEDIR}/license.rtf"
 pushd "${MSYS_STAGEDIDR}"
+makensis //NOCD installit.nsi
 zip -r9D mozilla-build.zip mozilla-build
 popd
