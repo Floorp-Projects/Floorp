@@ -4864,15 +4864,15 @@ JS_ReportPendingException(JSContext *cx)
     CHECK_REQUEST(cx);
 
     /*
-     * Set cx->creatingException to suppress the standard error-to-exception
+     * Set cx->generatingError to suppress the standard error-to-exception
      * conversion done by all {js,JS}_Report* functions except for OOM.  The
-     * cx->creatingException flag was added to suppress recursive divergence
+     * cx->generatingError flag was added to suppress recursive divergence
      * under js_ErrorToException, but it serves for our purposes here too.
      */
-    save = cx->creatingException;
-    cx->creatingException = JS_TRUE;
+    save = cx->generatingError;
+    cx->generatingError = JS_TRUE;
     ok = js_ReportUncaughtException(cx);
-    cx->creatingException = save;
+    cx->generatingError = save;
     return ok;
 }
 
