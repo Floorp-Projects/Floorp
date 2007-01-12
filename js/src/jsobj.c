@@ -3121,7 +3121,7 @@ Detecting(JSContext *cx, jsbytecode *pc)
              * worry about someone redefining undefined, which was added by
              * Edition 3, so is read/write for backward compatibility.
              */
-            atom = js_GetAtomFromBytecode(cx, script, pc, 0);
+            atom = js_GetAtomFromBytecode(script, pc, 0);
             if (atom == cx->runtime->atomState.typeAtoms[JSTYPE_VOID] &&
                 (pc += js_CodeSpec[op].length) < endpc) {
                 op = (JSOp) *pc;
@@ -3529,7 +3529,7 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             JSString *str;
 
             op = *pc;
-            if (op == JSOP_GETXPROP || op == JSOP_GETXELEM) {
+            if (op == JSOP_GETXPROP) {
                 flags = JSREPORT_ERROR;
             } else {
                 if (!JS_HAS_STRICT_OPTION(cx) ||

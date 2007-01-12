@@ -111,8 +111,7 @@ GetJumpOffset(jsbytecode *pc, jsbytecode *pc2)
 }
 
 JSAtom *
-js_GetAtomFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc,
-                       ptrdiff_t pcoff)
+js_GetAtomFromBytecode(JSScript *script, jsbytecode *pc, ptrdiff_t pcoff)
 {
     JSOp op;
     uintN span, atomBase;
@@ -134,7 +133,8 @@ js_GetAtomFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc,
             atomBase = (pc[-1] - JSOP_ATOMBASE1 + 1) << 16;
         }
     }
-    return GET_ATOM(cx, script->atomMap.vector + atomBase, pc + pcoff);
+    JS_ASSERT(atomBase < script->atomMap.length);
+    return GET_ATOM(script, script->atomMap.vector + atomBase, pc + pcoff);
 }
 
 #ifdef DEBUG
@@ -239,7 +239,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         break;
 
       case JOF_CONST:
-        atom = js_GetAtomFromBytecode(cx, script, pc, 0);
+        atom = js_GetAtomFromBytecode(script, pc, 0);
         bytes = ToDisassemblySource(cx, ATOM_KEY(atom));
         if (!bytes)
             return 0;
@@ -295,7 +295,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         pc2 += UINT16_LEN;
         fprintf(fp, " offset %d npairs %u", off, (uintN) npairs);
         while (npairs) {
-            atom = GET_ATOM(cx, script->atomMap.vector, pc2);
+            atom = GET_ATOM(script, script->atomMap.vector, pc2);
             pc2 += ATOM_INDEX_LEN;
             off = GetJumpOffset(pc, pc2);
             pc2 += jmplen;
@@ -320,7 +320,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
 
       case JOF_INDEXCONST:
         fprintf(fp, " %u", GET_VARNO(pc));
-        atom = js_GetAtomFromBytecode(cx, script, pc, VARNO_LEN);
+        atom = js_GetAtomFromBytecode(script, pc, VARNO_LEN);
         bytes = ToDisassemblySource(cx, ATOM_KEY(atom));
         if (!bytes)
             return 0;
@@ -1222,7 +1222,7 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
         else if (op == JSOP_SETVAR)
             atom = GetSlotAtom(jp, js_GetLocalVariable, i);
         else if (op == JSOP_SETGVAR)
-            atom = js_GetAtomFromBytecode(cx, jp->script, pc, 0);
+            atom = js_GetAtomFromBytecode(jp->script, pc, 0);
         else
             lval = GetLocal(ss, i, JS_TRUE);
         if (atom)
@@ -1347,7 +1347,7 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
           case JSOP_UINT24: d = i = GET_UINT24(pc); goto do_getelem;
 
           case JSOP_NUMBER:
-            atom = js_GetAtomFromBytecode(cx, jp->script, pc, 0);
+            atom = js_GetAtomFromBytecode(jp->script, pc, 0);
             d = *ATOM_TO_DOUBLE(atom);
             LOCAL_ASSERT(JSDOUBLE_IS_FINITE(d) && !JSDOUBLE_IS_NEGZERO(d));
             i = (jsint)d;
@@ -1379,7 +1379,7 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
 
           case JSOP_GETPROP:
             *OFF2STR(&ss->sprinter, head) = '{';
-            atom = js_GetAtomFromBytecode(cx, jp->script, pc, 0);
+            atom = js_GetAtomFromBytecode(jp->script, pc, 0);
             str = ATOM_TO_STRING(atom);
             if (!QuoteString(&ss->sprinter, str,
                              js_IsIdentifier(str) ? 0 : (jschar)'\'')) {
@@ -1571,7 +1571,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     JS_END_MACRO
 
 #define LOAD_ATOM(PCOFF)                                                      \
-    (atom = js_GetAtomFromBytecode(cx, jp->script, pc, PCOFF))
+    (atom = js_GetAtomFromBytecode(jp->script, pc, (PCOFF)))
 
 /*
  * Get atom from jp->script's atom map, quote/escape its string appropriately
@@ -3360,7 +3360,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 /* FALL THROUGH */
 
               case JSOP_GETELEM:
-              case JSOP_GETXELEM:
                 op = JSOP_NOP;          /* turn off parens */
                 xval = POP_STR();
                 op = saveop;
@@ -3607,7 +3606,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     } else {
                         table[k].label = NULL;
                     }
-                    atom = GET_ATOM(cx, jp->script->atomMap.vector, pc2);
+                    atom = GET_ATOM(jp->script, jp->script->atomMap.vector,
+                                    pc2);
                     pc2 += ATOM_INDEX_LEN;
                     off2 = GetJumpOffset(pc, pc2);
                     pc2 += jmplen;
@@ -4721,7 +4721,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
             JSObject *obj;
 
             JS_ASSERT(ndefs == 0);
-            atom = js_GetAtomFromBytecode(cx, script, pc, 0);
+            atom = js_GetAtomFromBytecode(script, pc, 0);
             obj = ATOM_TO_OBJECT(atom);
             JS_ASSERT(OBJ_BLOCK_DEPTH(cx, obj) == pcdepth);
             ndefs = OBJ_BLOCK_COUNT(cx, obj);
