@@ -179,7 +179,14 @@ typedef enum JSOpLength {
 #define GET_ATOM_INDEX(pc)      GET_UINT16(pc)
 #define SET_ATOM_INDEX(pc,i)    ((pc)[1] = ATOM_INDEX_HI(i),                  \
                                  (pc)[2] = ATOM_INDEX_LO(i))
-#define GET_ATOM(cx,atoms,pc)   ((atoms)[GET_ATOM_INDEX(pc)])
+
+#define ASSERT_ATOM_INDEX_IN_MAP(script,atoms,index)                          \
+    JS_ASSERT((size_t)((atoms) - (script)->atomMap.vector) <                  \
+              (size_t)(script)->atomMap.length - (size_t)(index))
+
+#define GET_ATOM(script,atoms,pc)                                             \
+    (ASSERT_ATOM_INDEX_IN_MAP(script,atoms,GET_ATOM_INDEX(pc)),               \
+     (atoms)[GET_ATOM_INDEX(pc)])
 
 #define GET_ATOMBASE(pc)        (JS_ASSERT(*(pc) == JSOP_ATOMBASE),           \
                                  ((uintN)((pc)[1])) << 16)
@@ -264,11 +271,10 @@ js_puts(JSPrinter *jp, const char *s);
 
 /*
  * A slower version of GET_ATOM when the caller does not want to maintain
- * atoms table offset itself.
+ * the atom table segment register itself.
  */
 extern JSAtom*
-js_GetAtomFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc,
-                       ptrdiff_t pcoff);
+js_GetAtomFromBytecode(JSScript *script, jsbytecode *pc, ptrdiff_t pcoff);
 
 #ifdef DEBUG
 /*

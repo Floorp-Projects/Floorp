@@ -1519,7 +1519,7 @@ js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
     if (js_CodeSpec[*pc].format & JOF_ATOMBASE)
         pc += js_CodeSpec[*pc].length;
     if (*pc == JSOP_DEFFUN) {
-        atom = js_GetAtomFromBytecode(cx, script, pc, 0);
+        atom = js_GetAtomFromBytecode(script, pc, 0);
         fun = (JSFunction *) JS_GetPrivate(cx, ATOM_TO_OBJECT(atom));
         JS_ASSERT(FUN_INTERPRETED(fun));
         return fun->u.i.script->lineno;

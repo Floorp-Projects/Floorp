@@ -641,7 +641,7 @@ NoSuchMethod(JSContext *cx, JSStackFrame *fp, jsval *vp, uint32 flags,
 #if JS_HAS_XML_SUPPORT
       case JSOP_GETMETHOD:
 #endif
-        atom = js_GetAtomFromBytecode(cx, fp->script, pc, 0);
+        atom = js_GetAtomFromBytecode(fp->script, pc, 0);
         argc = *argcp;
         argsobj = js_NewArrayObject(cx, argc, vp + 2);
         if (!argsobj)
@@ -2255,7 +2255,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     /* Load the atom base register used by LOAD_ATOM and inline equivalents. */
     atoms = script->atomMap.vector;
 
-#define LOAD_ATOM(PCOFF) (atom = GET_ATOM(cx, atoms, pc + PCOFF))
+#define LOAD_ATOM(PCOFF) (atom = GET_ATOM(script, atoms, pc + PCOFF))
 
     /*
      * Optimized Get and SetVersion for proper script language versioning.
@@ -3825,7 +3825,6 @@ interrupt:
           END_CASE(JSOP_SETPROP)
 
           BEGIN_CASE(JSOP_GETELEM)
-          BEGIN_CASE(JSOP_GETXELEM)
             ELEMENT_OP(-1, ok = OBJ_GET_PROPERTY(cx, obj, id, &rval));
             sp--;
             STORE_OPND(-1, rval);
@@ -4177,12 +4176,14 @@ interrupt:
 
           BEGIN_CASE(JSOP_ATOMBASE)
             atoms += GET_ATOMBASE(pc);
+            ASSERT_ATOM_INDEX_IN_MAP(script, atoms, 0);
           END_CASE(JSOP_ATOMBASE)
 
           BEGIN_CASE(JSOP_ATOMBASE1)
           BEGIN_CASE(JSOP_ATOMBASE2)
           BEGIN_CASE(JSOP_ATOMBASE3)
             atoms += (op - JSOP_ATOMBASE1 + 1) << 16;
+            ASSERT_ATOM_INDEX_IN_MAP(script, atoms, 0);
           END_CASE(JSOP_ATOMBASE3)
 
           BEGIN_CASE(JSOP_RESETBASE0)
@@ -4395,55 +4396,6 @@ interrupt:
             }
           END_VARLEN_CASE
 
-          BEGIN_CASE(JSOP_LOOKUPSWITCH)
-            lval = POP_OPND();
-            pc2 = pc;
-            len = GET_JUMP_OFFSET(pc2);
-
-            if (!JSVAL_IS_NUMBER(lval) &&
-                !JSVAL_IS_STRING(lval) &&
-                !JSVAL_IS_BOOLEAN(lval)) {
-                DO_NEXT_OP(len);
-            }
-
-            pc2 += JUMP_OFFSET_LEN;
-            npairs = (jsint) GET_UINT16(pc2);
-            pc2 += UINT16_LEN;
-
-#define SEARCH_PAIRS(MATCH_CODE)                                              \
-    while (npairs) {                                                          \
-        atom = GET_ATOM(cx, atoms, pc2);                                      \
-        rval = ATOM_KEY(atom);                                                \
-        MATCH_CODE                                                            \
-        if (match) {                                                          \
-            pc2 += ATOM_INDEX_LEN;                                            \
-            len = GET_JUMP_OFFSET(pc2);                                       \
-            DO_NEXT_OP(len);                                                  \
-        }                                                                     \
-        pc2 += ATOM_INDEX_LEN + JUMP_OFFSET_LEN;                              \
-        npairs--;                                                             \
-    }
-            if (JSVAL_IS_STRING(lval)) {
-                str  = JSVAL_TO_STRING(lval);
-                SEARCH_PAIRS(
-                    match = (JSVAL_IS_STRING(rval) &&
-                             ((str2 = JSVAL_TO_STRING(rval)) == str ||
-                              js_EqualStrings(str2, str)));
-                )
-            } else if (JSVAL_IS_DOUBLE(lval)) {
-                d = *JSVAL_TO_DOUBLE(lval);
-                SEARCH_PAIRS(
-                    match = (JSVAL_IS_DOUBLE(rval) &&
-                             *JSVAL_TO_DOUBLE(rval) == d);
-                )
-            } else {
-                SEARCH_PAIRS(
-                    match = (lval == rval);
-                )
-            }
-#undef SEARCH_PAIRS
-          END_VARLEN_CASE
-
           BEGIN_CASE(JSOP_TABLESWITCHX)
             pc2 = pc;
             len = GET_JUMPX_OFFSET(pc2);
@@ -4473,52 +4425,65 @@ interrupt:
           END_VARLEN_CASE
 
           BEGIN_CASE(JSOP_LOOKUPSWITCHX)
-            lval = POP_OPND();
+            off = JUMPX_OFFSET_LEN;
+            goto do_lookup_switch;
+
+          BEGIN_CASE(JSOP_LOOKUPSWITCH)
+            off = JUMP_OFFSET_LEN;
+
+          do_lookup_switch:
             pc2 = pc;
-            len = GET_JUMPX_OFFSET(pc2);
+            lval = POP_OPND();
 
             if (!JSVAL_IS_NUMBER(lval) &&
                 !JSVAL_IS_STRING(lval) &&
                 !JSVAL_IS_BOOLEAN(lval)) {
-                DO_NEXT_OP(len);
+                goto end_lookup_switch;
             }
 
-            pc2 += JUMPX_OFFSET_LEN;
+            pc2 += off;
             npairs = (jsint) GET_UINT16(pc2);
             pc2 += UINT16_LEN;
+            JS_ASSERT(npairs);  /* empty switch uses JSOP_TABLESWITCH */
 
-#define SEARCH_EXTENDED_PAIRS(MATCH_CODE)                                     \
-    while (npairs) {                                                          \
-        atom = GET_ATOM(cx, atoms, pc2);                                      \
+#define SEARCH_PAIRS(MATCH_CODE)                                              \
+    for (;;) {                                                                \
+        atom = GET_ATOM(script, atoms, pc2);                                  \
         rval = ATOM_KEY(atom);                                                \
         MATCH_CODE                                                            \
-        if (match) {                                                          \
-            pc2 += ATOM_INDEX_LEN;                                            \
-            len = GET_JUMPX_OFFSET(pc2);                                      \
-            DO_NEXT_OP(len);                                                  \
+        pc2 += ATOM_INDEX_LEN;                                                \
+        if (match)                                                            \
+            break;                                                            \
+        pc2 += off;                                                           \
+        if (--npairs == 0) {                                                  \
+            pc2 = pc;                                                         \
+            break;                                                            \
         }                                                                     \
-        pc2 += ATOM_INDEX_LEN + JUMPX_OFFSET_LEN;                             \
-        npairs--;                                                             \
     }
             if (JSVAL_IS_STRING(lval)) {
-                str  = JSVAL_TO_STRING(lval);
-                SEARCH_EXTENDED_PAIRS(
+                str = JSVAL_TO_STRING(lval);
+                SEARCH_PAIRS(
                     match = (JSVAL_IS_STRING(rval) &&
                              ((str2 = JSVAL_TO_STRING(rval)) == str ||
                               js_EqualStrings(str2, str)));
                 )
             } else if (JSVAL_IS_DOUBLE(lval)) {
                 d = *JSVAL_TO_DOUBLE(lval);
-                SEARCH_EXTENDED_PAIRS(
+                SEARCH_PAIRS(
                     match = (JSVAL_IS_DOUBLE(rval) &&
                              *JSVAL_TO_DOUBLE(rval) == d);
                 )
             } else {
-                SEARCH_EXTENDED_PAIRS(
+                SEARCH_PAIRS(
                     match = (lval == rval);
                 )
             }
-#undef SEARCH_EXTENDED_PAIRS
+#undef SEARCH_PAIRS
+
+          end_lookup_switch:
+            len = (op == JSOP_LOOKUPSWITCH)
+                  ? GET_JUMP_OFFSET(pc2)
+                  : GET_JUMPX_OFFSET(pc2);
           END_VARLEN_CASE
 
           EMPTY_CASE(JSOP_CONDSWITCH)
@@ -6100,6 +6065,7 @@ interrupt:
 #ifdef JS_THREADED_INTERP
           L_JSOP_BACKPATCH:
           L_JSOP_BACKPATCH_POP:
+          L_JSOP_UNUSED197:
 #else
           default:
 #endif
