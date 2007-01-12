@@ -73,8 +73,6 @@
                      searchSessions="addrbook" timeout="300" maxrows="4" 
                      autoFill="true" autoFillAfterMatch="true" forceComplete="true"
                      minResultsForPopup="1" ignoreBlurWhileSearching="true"
-                     ontextcommand="this.focus();"
-                     onerrorcommand=""
                      oninput="this.setAttribute('dirty','true');">
               <xul:image class="person-icon" onclick="this.parentNode.select();"/>
             </xul:textbox>
@@ -142,7 +140,6 @@
           this.mIOService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
           this.mIsOffline = this.mIOService.offline;
           
-          this.onInitialize();
         ]]>
       </constructor>
 
@@ -165,6 +162,8 @@
                     break;
                 }
             }
+
+            this.onInitialize();
             
             // this trigger the continous update chain, which
             // effectively calls this.onModify() on predefined
@@ -263,7 +262,6 @@
             // until this function returns we add at least a single copy of this template back again.
             listbox.removeChild(template);
 
-            this.fitDummyRows();
             this.addDirectoryServerObserver();
             
             this.setFocus(this.mMaxAttendees);
@@ -294,10 +292,22 @@
           <![CDATA[
           // create a new listbox item and append it to our parent control.
           var newNode = aTemplateNode.cloneNode(true);
-          aParentNode.appendChild(newNode);
 
           var input = document.getAnonymousElementByAttribute(newNode, "anonid", "input");
           var icon = document.getAnonymousElementByAttribute(newNode, "anonid", "icon");
+
+          // We always clone the first row.  The problem is that the first row
+          // could be focused.  When we clone that row, we end up with a cloned
+          // XUL textbox that has a focused attribute set.  Therefore we think
+          // we're focused and don't properly refocus.  The best solution to this
+          // would be to clone a template row that didn't really have any presentation,
+          // rather than using the real visible first row of the listbox.
+          // For now we'll just put in a hack that ensures the focused attribute
+          // is never copied when the node is cloned.
+          if (input.getAttribute('focused') != '')
+            input.removeAttribute('focused');
+
+          aParentNode.appendChild(newNode);
 
           // the template could have its fields disabled,
           // that's why we need to reset their status.
@@ -630,8 +640,12 @@
       <method name="fitDummyRows">
         <body>
           <![CDATA[
-            this.calcContentHeight();
-            this.createOrRemoveDummyRows();
+            var self = this;
+            var func = function func() {
+              self.calcContentHeight();
+              self.createOrRemoveDummyRows();
+            }
+            setTimeout(func,0);
           ]]>
         </body>
       </method>
@@ -2200,7 +2214,10 @@
             
             // tell the freebusy grid about the new start/enddate
             var grid = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
-            var refresh = (grid.startDate.compare(this.mStartDate) != 0) ||
+
+            var refresh = (grid.startDate == null) ||
+                          (grid.startDate.compare(this.mStartDate) != 0) ||
+                          (grid.endDate == null) ||
                           (grid.endDate.compare(this.mEndDate) != 0);
             grid.startDate = this.mStartDate;
             grid.endDate = this.mEndDate;
@@ -3012,7 +3029,9 @@
           // tell the freebusy grid about the new start/enddate
           var grid = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
           
-          var refresh = (grid.startDate.compare(this.mStartDate) != 0) ||
+          var refresh = (grid.startDate == null) ||
+                        (grid.startDate.compare(this.mStartDate) != 0) ||
+                        (grid.endDate == null) ||
                         (grid.endDate.compare(this.mEndDate) != 0);
           grid.startDate = this.mStartDate;
           grid.endDate = this.mEndDate;

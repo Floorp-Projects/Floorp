@@ -1268,9 +1268,11 @@
           this.mMaxFreeBusy = 0;
           this.mFreeBusySequence = 0;
           this.mFreeBusy = [];
-          
-          this.onInitialize();
 
+          var self = this;
+          var load = function loadHandler() { self.onLoad(); };
+          window.addEventListener("load", load, true);
+          
           this.mConsoleService = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
         ]]>
       </constructor>
@@ -1319,6 +1321,14 @@
         </getter>
       </property>
 
+      <method name="onLoad">
+        <body>
+          <![CDATA[
+            this.onInitialize();
+          ]]>
+        </body>
+      </method>
+
       <method name="onInitialize">
         <body>
           <![CDATA[
@@ -1343,7 +1353,6 @@
             this.appendNewRow(listbox,template,null);
             listbox.removeChild(template);
           
-            this.fitDummyRows();
             this.updateFreeBusy();
           ]]>
         </body>
@@ -1749,8 +1758,12 @@
       <method name="fitDummyRows">
         <body>
           <![CDATA[
-            this.calcContentHeight();
-            this.createOrRemoveDummyRows();
+            var self = this;
+            var func = function func() {
+              self.calcContentHeight();
+              self.createOrRemoveDummyRows();
+            }
+            setTimeout(func,0);
           ]]>
         </body>
       </method>
