@@ -743,15 +743,15 @@ struct JSContext {
 #endif
 
     /*
-     * True if creating an exception object, to prevent runaway recursion.
-     * NB: creatingException packs with rval2set, #if JS_HAS_LVALUE_RETURN;
+     * True if generating an error, to prevent runaway recursion.
+     * NB: generatingError packs with rval2set, #if JS_HAS_LVALUE_RETURN;
      * with xmlSettingFlags, #if JS_HAS_XML_SUPPORT; and with throwing below.
      */
-    JSPackedBool        creatingException;
+    JSPackedBool        generatingError;
 
     /*
      * Exception state -- the exception member is a GC root by definition.
-     * NB: throwing packs with creatingException and rval2set, above.
+     * NB: throwing packs with generatingError and rval2set, above.
      */
     JSPackedBool        throwing;           /* is there a pending exception? */
     jsval               exception;          /* most-recently-thrown exception */

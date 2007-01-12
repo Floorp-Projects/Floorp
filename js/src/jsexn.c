@@ -728,14 +728,9 @@ StringToFilename(JSContext *cx, JSString *str)
 static JSBool
 Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSBool ok;
     uint32 lineno;
     JSString *message, *filename;
     JSStackFrame *fp;
-
-    if (cx->creatingException)
-        return JS_FALSE;
-    cx->creatingException = JS_TRUE;
 
     if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
         /*
@@ -745,17 +740,14 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
          * js_NewObject to find the class prototype, we must get the class
          * prototype ourselves.
          */
-        ok = OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(argv[-2]),
+        if (!OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(argv[-2]),
                               ATOM_TO_JSID(cx->runtime->atomState
                                            .classPrototypeAtom),
-                              rval);
-        if (!ok)
-            goto out;
+                              rval))
+            return JS_FALSE;
         obj = js_NewObject(cx, &js_ErrorClass, JSVAL_TO_OBJECT(*rval), NULL);
-        if (!obj) {
-            ok = JS_FALSE;
-            goto out;
-        }
+        if (!obj)
+            return JS_FALSE;
         *rval = OBJECT_TO_JSVAL(obj);
     }
 
@@ -769,10 +761,8 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     /* Set the 'message' property. */
     if (argc != 0) {
         message = js_ValueToString(cx, argv[0]);
-        if (!message) {
-            ok = JS_FALSE;
-            goto out;
-        }
+        if (!message)
+            return JS_FALSE;
         argv[0] = STRING_TO_JSVAL(message);
     } else {
         message = cx->runtime->emptyString;
@@ -781,20 +771,16 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     /* Set the 'fileName' property. */
     if (argc > 1) {
         filename = js_ValueToString(cx, argv[1]);
-        if (!filename) {
-            ok = JS_FALSE;
-            goto out;
-        }
+        if (!filename)
+            return JS_FALSE;
         argv[1] = STRING_TO_JSVAL(filename);
         fp = NULL;
     } else {
         fp = JS_GetScriptedCaller(cx, NULL);
         if (fp) {
             filename = FilenameToString(cx, fp->script->filename);
-            if (!filename) {
-                ok = JS_FALSE;
-                goto out;
-            }
+            if (!filename)
+                return JS_FALSE;
         } else {
             filename = cx->runtime->emptyString;
         }
@@ -802,21 +788,16 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* Set the 'lineNumber' property. */
     if (argc > 2) {
-        ok = js_ValueToECMAUint32(cx, argv[2], &lineno);
-        if (!ok)
-            goto out;
+        if (!js_ValueToECMAUint32(cx, argv[2], &lineno))
+            return JS_FALSE;
     } else {
         if (!fp)
             fp = JS_GetScriptedCaller(cx, NULL);
         lineno = (fp && fp->pc) ? js_PCToLineNumber(cx, fp->script, fp->pc) : 0;
     }
 
-    ok = (OBJ_GET_CLASS(cx, obj) != &js_ErrorClass) ||
-         InitExnPrivate(cx, obj, message, filename, lineno, NULL);
-
-  out:
-    cx->creatingException = JS_FALSE;
-    return ok;
+    return (OBJ_GET_CLASS(cx, obj) != &js_ErrorClass) ||
+            InitExnPrivate(cx, obj, message, filename, lineno, NULL);
 }
 
 /*
@@ -1186,17 +1167,16 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
         return JS_FALSE;
 
     /*
-     * Prevent runaway recursion, just as the Exception native constructor
-     * must do, via cx->creatingException.  If an out-of-memory error occurs,
-     * no exception object will be created, but we don't assume that OOM is
-     * the only kind of error that subroutines of this function called below
-     * might raise.
+     * Prevent runaway recursion, via cx->generatingError.  If an out-of-memory
+     * error occurs, no exception object will be created, but we don't assume
+     * that OOM is the only kind of error that subroutines of this function
+     * called below might raise.
      */
-    if (cx->creatingException)
+    if (cx->generatingError)
         return JS_FALSE;
 
     /* After this point the control must flow through the label out. */
-    cx->creatingException = JS_TRUE;
+    cx->generatingError = JS_TRUE;
 
     /* Protect the newly-created strings below from nesting GCs. */
     memset(tv, 0, sizeof tv);
@@ -1246,7 +1226,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
 
 out:
     JS_POP_TEMP_ROOT(cx, &tvr);
-    cx->creatingException = JS_FALSE;
+    cx->generatingError = JS_FALSE;
     return ok;
 }
 
