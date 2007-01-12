@@ -79,7 +79,7 @@
 ########################################################################
 
 tests="cipher perf cert dbtests tools fips sdr crmf smime ssl"
-TESTS=${TESTS-$tests}
+TESTS=${TESTS:-$tests}
 SCRIPTNAME=all.sh
 CLEANUP="${SCRIPTNAME}"
 cd `dirname $0`	# will cause problems if sourced 
