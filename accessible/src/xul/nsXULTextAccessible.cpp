@@ -87,11 +87,9 @@ nsLeafAccessible(aDomNode, aShell)
 { 
 }
 
-NS_IMETHODIMP nsXULTooltipAccessible::GetName(nsAString& _retval)
+NS_IMETHODIMP nsXULTooltipAccessible::GetName(nsAString& aName)
 {
-  //XXX, kyle.yuan@sun.com, we don't know how to get at this information at the moment,
-  //  because it is not loaded until it shows.
-  return NS_OK;
+  return GetXULName(aName, PR_TRUE);
 }
 
 NS_IMETHODIMP nsXULTooltipAccessible::GetState(PRUint32 *_retval)

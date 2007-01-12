@@ -573,8 +573,16 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     // popup and the accessibility toolkit event can't be fired.
     nsCOMPtr<nsIDOMXULPopupElement> popup(do_QueryInterface(aTargetNode));
     if (popup) {
-      return FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUPSTART,
-                                    aTargetNode, nsnull);
+      PRInt32 event = nsIAccessibleEvent::EVENT_MENUPOPUPSTART;
+      nsCOMPtr<nsIContent> content(do_QueryInterface(aTargetNode));
+      if (content->NodeInfo()->Equals(nsAccessibilityAtoms::tooltip, kNameSpaceID_XUL)) {
+        // There is a single <xul:tooltip> node which Mozilla moves around.
+        // The accessible for it stays the same no matter where it moves. 
+        // AT's expect to get an EVENT_SHOW for the tooltip. 
+        // In event callback the tooltip's accessible will be ready.
+        event = nsIAccessibleEvent::EVENT_SHOW;
+      }
+      return FireDelayedToolkitEvent(event, aTargetNode, nsnull);
     }
   }
 

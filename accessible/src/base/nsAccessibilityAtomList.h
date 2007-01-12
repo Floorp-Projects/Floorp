@@ -129,6 +129,7 @@ ACCESSIBILITY_ATOM(thead, "thead")
 ACCESSIBILITY_ATOM(textarea, "textarea") // XForms
 ACCESSIBILITY_ATOM(textbox, "textbox")   // XUL
 ACCESSIBILITY_ATOM(toolbaritem, "toolbaritem")   // XUL
+ACCESSIBILITY_ATOM(tooltip, "tooltip")   // XUL
 ACCESSIBILITY_ATOM(tr, "tr")
 ACCESSIBILITY_ATOM(ul, "ul")
 
