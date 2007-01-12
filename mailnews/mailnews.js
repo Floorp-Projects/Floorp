@@ -79,11 +79,17 @@ pref("mailnews.headers.extraExpandedHeaders", "");
 // sort_order is an int value reflecting nsMsgViewSortOrder values
 //   as defined in nsIMsgDBView.idl (ascending = 1, descending = 2)
 // sort_type is an int value reflecting nsMsgViewSortType values
-//   as defined in nsIMsgDBView.idl (byDate = 18, byThread = 22 etc.)
+//   as defined in nsIMsgDBView.idl (byDate = 18, byId = 21 etc.)
 pref("mailnews.default_sort_order", 1); // for Mail/RSS/... (nsMsgDatabase)
 pref("mailnews.default_sort_type", 18); //
 pref("mailnews.default_news_sort_order", 1); // for News (nsNewsDatabase)
-pref("mailnews.default_news_sort_type", 22); //
+pref("mailnews.default_news_sort_type", 21); //
+
+// default view flags for new folders
+// both flags are int values reflecting nsMsgViewFlagsType values
+// as defined in nsIMsgDBView.idl (kNone = 0, kThreadedDisplay = 1 etc.)
+pref("mailnews.default_view_flags", 0); // for Mail/RSS/... (nsMsgDatabase)
+pref("mailnews.default_news_view_flags", 1); // for News (nsNewsDatabase)
 
 // If true, delete will use the direction of the sort order
 // in determining the next message to select. 

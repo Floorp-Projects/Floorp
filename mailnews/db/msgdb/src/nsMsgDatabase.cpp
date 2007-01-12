@@ -4748,7 +4748,14 @@ NS_IMETHODIMP nsMsgDownloadSettings::SetAgeLimitOfMsgsToDownload(PRUint32 ageLim
 NS_IMETHODIMP nsMsgDatabase::GetDefaultViewFlags(nsMsgViewFlagsTypeValue *aDefaultViewFlags)
 { 
   NS_ENSURE_ARG_POINTER(aDefaultViewFlags);
-  *aDefaultViewFlags = nsMsgViewFlagsType::kNone;
+  GetIntPref("mailnews.default_view_flags", aDefaultViewFlags);
+  if (*aDefaultViewFlags < nsMsgViewFlagsType::kNone ||
+      *aDefaultViewFlags > (nsMsgViewFlagsType::kThreadedDisplay |
+                            nsMsgViewFlagsType::kShowIgnored |
+                            nsMsgViewFlagsType::kUnreadOnly |
+                            nsMsgViewFlagsType::kExpandAll |
+                            nsMsgViewFlagsType::kGroupBySort))
+    *aDefaultViewFlags = nsMsgViewFlagsType::kNone;
   return NS_OK;
 }
 
