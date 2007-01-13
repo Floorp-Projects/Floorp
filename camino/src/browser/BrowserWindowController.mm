@@ -1912,9 +1912,10 @@ enum BWCOpenDest {
 
 - (void)whitelistAndShowPopup:(nsIDOMPopupBlockedEvent*)aPopupBlockedEvent
 { 
+  nsCOMPtr<nsIDOMWindow> requestingWindow;
+  aPopupBlockedEvent->GetRequestingWindow(getter_AddRefs(requestingWindow));
   // get the URIs for the popup window, and it's parent document
-  nsCOMPtr<nsIURI> requestingWindowURI, popupWindowURI;
-  aPopupBlockedEvent->GetRequestingWindowURI(getter_AddRefs(requestingWindowURI));
+  nsCOMPtr<nsIURI> popupWindowURI;
   aPopupBlockedEvent->GetPopupWindowURI(getter_AddRefs(popupWindowURI));
 
   nsAutoString windowName, features;
@@ -1930,15 +1931,10 @@ enum BWCOpenDest {
 #endif 
 
   // find the docshell for the blocked popup window, in order to show it
-  nsCOMPtr<nsIDocShell> popupWinDocShell = [[mBrowserView getBrowserView] findDocShellForURI:requestingWindowURI];
-  if (!popupWinDocShell)
+  if (!requestingWindow)
     return;
 
-  nsCOMPtr<nsIDOMWindowInternal> domWin = do_GetInterface(popupWinDocShell);
-  if (!domWin)
-    return;
-
-  nsCOMPtr<nsPIDOMWindow> piDomWin = do_QueryInterface(domWin);
+  nsCOMPtr<nsPIDOMWindow> piDomWin = do_QueryInterface(requestingWindow);
   if (!piDomWin)
     return;
 

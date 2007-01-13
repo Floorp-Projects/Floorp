@@ -54,6 +54,7 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsIDOMKeyEvent.h"
+#include "nsWeakPtr.h"
 
 class nsIRenderingContext;
 class nsIRegion;
@@ -885,11 +886,11 @@ class nsPopupBlockedEvent : public nsEvent
 public:
   nsPopupBlockedEvent(PRBool isTrusted, PRUint32 msg)
     : nsEvent(isTrusted, msg, NS_POPUPBLOCKED_EVENT),
-      mRequestingWindowURI(nsnull), mPopupWindowURI(nsnull)
+      mPopupWindowURI(nsnull)
   {
   }
 
-  nsIURI* mRequestingWindowURI; // owning reference
+  nsWeakPtr mRequestingWindow;
   nsIURI* mPopupWindowURI;      // owning reference
   nsString mPopupWindowFeatures;
   nsString mPopupWindowName;

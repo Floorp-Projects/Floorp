@@ -529,14 +529,12 @@ const gPopupBlockerObserver = {
         var label = bundle_browser.getFormattedString("popupShowPopupPrefix",
                                                       [popupURIspec]);
         menuitem.setAttribute("label", label);
-        menuitem.setAttribute("requestingWindowURI", pageReport[i].requestingWindowURI.spec);
         menuitem.setAttribute("popupWindowURI", popupURIspec);
         menuitem.setAttribute("popupWindowFeatures", pageReport[i].popupWindowFeatures);
-#ifndef MOZILLA_1_8_BRANCH
-# bug 314700
         menuitem.setAttribute("popupWindowName", pageReport[i].popupWindowName);
-#endif
         menuitem.setAttribute("oncommand", "gPopupBlockerObserver.showBlockedPopup(event);");
+        menuitem.requestingWindow = pageReport[i].requestingWindow;
+        menuitem.requestingDocument = pageReport[i].requestingDocument;
         aEvent.target.appendChild(menuitem);
       }
     }
@@ -561,30 +559,17 @@ const gPopupBlockerObserver = {
 
   showBlockedPopup: function (aEvent)
   {
-    var requestingWindow = aEvent.target.getAttribute("requestingWindowURI");
-    var requestingWindowURI =
-                      Components.classes["@mozilla.org/network/io-service;1"]
-                                .getService(Components.interfaces.nsIIOService)
-                                .newURI(requestingWindow, null, null);
+    var target = aEvent.target;
+    var popupWindowURI = target.getAttribute("popupWindowURI");
+    var features = target.getAttribute("popupWindowFeatures");
+    var name = target.getAttribute("popupWindowName");
 
-    var popupWindowURI = aEvent.target.getAttribute("popupWindowURI");
-    var features = aEvent.target.getAttribute("popupWindowFeatures");
-#ifndef MOZILLA_1_8_BRANCH
-# bug 314700
-    var name = aEvent.target.getAttribute("popupWindowName");
-#endif
+    var dwi = target.requestingWindow;
 
-    var shell = findChildShell(null, gBrowser.selectedBrowser.docShell,
-                               requestingWindowURI);
-    if (shell) {
-      var ifr = shell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-      var dwi = ifr.getInterface(Components.interfaces.nsIDOMWindowInternal);
-#ifdef MOZILLA_1_8_BRANCH
-# bug 314700
-      dwi.open(popupWindowURI, "", features);
-#else
+    // If we have a requesting window and the requesting document is
+    // still the current document, open the popup.
+    if (dwi && dwi.document == target.requestingDocument) {
       dwi.open(popupWindowURI, name, features);
-#endif
     }
   },
 
