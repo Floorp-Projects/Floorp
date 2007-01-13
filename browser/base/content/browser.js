@@ -4962,7 +4962,7 @@ var BrowserOffline = {
     } catch (ex) {
     }
   
-    if (!this._canGoOffline()) {
+    if (!ioService.offline && !this._canGoOffline()) {
       this._updateOfflineUI(false);
       return;
     }
