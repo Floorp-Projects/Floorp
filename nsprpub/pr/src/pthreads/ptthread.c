@@ -987,9 +987,7 @@ static void _PR_Fini(void)
     _PT_PTHREAD_GETSPECIFIC(pt_book.key, thred);
     if (NULL != thred)
     {
-#if 0  /* see bug 362768 comment 14 */
         _pt_thread_death(thred);
-#endif
         rv = pthread_setspecific(pt_book.key, NULL);
         PR_ASSERT(0 == rv);
     }
