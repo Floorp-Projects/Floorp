@@ -4235,19 +4235,23 @@ PRBool IsPopupBlocked(nsIDOMDocument* aDoc)
 
 static
 void FirePopupBlockedEvent(nsIDOMDocument* aDoc,
-                           nsIURI *aRequestingURI, nsIURI *aPopupURI,
+                           nsIDOMWindow *aRequestingWindow, nsIURI *aPopupURI,
                            const nsAString &aPopupWindowName,
                            const nsAString &aPopupWindowFeatures)
 {
   if (aDoc) {
-    // Fire a "DOMPopupBlocked" event so that the UI can hear about blocked popups.
+    // Fire a "DOMPopupBlocked" event so that the UI can hear about
+    // blocked popups.
     nsCOMPtr<nsIDOMDocumentEvent> docEvent(do_QueryInterface(aDoc));
     nsCOMPtr<nsIDOMEvent> event;
-    docEvent->CreateEvent(NS_LITERAL_STRING("PopupBlockedEvents"), getter_AddRefs(event));
+    docEvent->CreateEvent(NS_LITERAL_STRING("PopupBlockedEvents"),
+                          getter_AddRefs(event));
     if (event) {
       nsCOMPtr<nsIDOMPopupBlockedEvent> pbev(do_QueryInterface(event));
       pbev->InitPopupBlockedEvent(NS_LITERAL_STRING("DOMPopupBlocked"),
-              PR_TRUE, PR_TRUE, aRequestingURI, aPopupURI, aPopupWindowName, aPopupWindowFeatures);
+                                  PR_TRUE, PR_TRUE, aRequestingWindow,
+                                  aPopupURI, aPopupWindowName,
+                                  aPopupWindowFeatures);
       nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
       privateEvent->SetTrusted(PR_TRUE);
 
@@ -4373,12 +4377,7 @@ nsGlobalWindow::FireAbuseEvents(PRBool aBlocked, PRBool aWindow,
   nsCOMPtr<nsIDOMDocument> topDoc;
   topWindow->GetDocument(getter_AddRefs(topDoc));
 
-  nsCOMPtr<nsIURI> requestingURI;
   nsCOMPtr<nsIURI> popupURI;
-  nsCOMPtr<nsIWebNavigation> webNav =
-    do_GetInterface((nsIScriptGlobalObject *)this);
-  if (webNav)
-    webNav->GetCurrentURI(getter_AddRefs(requestingURI));
 
   // build the URI of the would-have-been popup window
   // (see nsWindowWatcher::URIfromURL)
@@ -4416,7 +4415,8 @@ nsGlobalWindow::FireAbuseEvents(PRBool aBlocked, PRBool aWindow,
 
   // fire an event chock full of informative URIs
   if (aBlocked)
-    FirePopupBlockedEvent(topDoc, requestingURI, popupURI, aPopupWindowName, aPopupWindowFeatures);
+    FirePopupBlockedEvent(topDoc, this, popupURI, aPopupWindowName,
+                          aPopupWindowFeatures);
   if (aWindow)
     FirePopupWindowEvent(topDoc);
 }
