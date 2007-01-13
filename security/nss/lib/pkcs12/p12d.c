@@ -629,7 +629,8 @@ sec_pkcs12_decoder_nested_safe_contents_update(void *arg, const char *buf,
 
     /* check for an error */
     if(!safeContentsCtx || !safeContentsCtx->p12dcx 
-			|| safeContentsCtx->p12dcx->error) {
+			|| safeContentsCtx->p12dcx->error
+			|| !safeContentsCtx->safeContentsDcx) {
 	return;
     }
 
@@ -725,7 +726,8 @@ sec_pkcs12_decoder_safe_contents_callback(void *arg, const char *buf,
 
     /* check for error */  
     if(!safeContentsCtx || !safeContentsCtx->p12dcx 
-		|| safeContentsCtx->p12dcx->error) {
+		|| safeContentsCtx->p12dcx->error
+		|| !safeContentsCtx->safeContentsDcx) {
 	return;
     }
     p12dcx = safeContentsCtx->p12dcx;
@@ -2414,7 +2416,9 @@ sec_pkcs12_add_key(sec_PKCS12SafeBag *key, SECItem *publicValue,
     SECStatus rv;
     SECItem *nickName;
 
-    if(!key) {
+   /* We should always have values for "key" and "publicValue"
+      so they can be dereferenced later. */
+   if(!key || !publicValue) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
