@@ -71,6 +71,7 @@ EXPORTS		= \
 CPPSRCS		= \
 		BasicTableLayoutStrategy.cpp \
 		FixedTableLayoutStrategy.cpp \
+		SpanningCellSorter.cpp \
 		nsCellMap.cpp \
 		nsTableCellFrame.cpp \
 		nsTableColFrame.cpp \
