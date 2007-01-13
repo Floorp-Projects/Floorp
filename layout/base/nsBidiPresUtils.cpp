@@ -101,6 +101,15 @@ nsBidiPresUtils::IsSuccessful() const
 
 /* Some helper methods for Resolve() */
 
+// Should this frame be split between text runs?
+PRBool
+IsBidiSplittable(nsIFrame* aFrame) {
+  nsIAtom* frameType = aFrame->GetType();
+  // Bidi inline containers should be split, unless they're line frames.
+  return aFrame->IsFrameOfType(nsIFrame::eBidiInlineContainer)
+    && frameType != nsGkAtoms::lineFrame;
+}
+
 static nsresult
 SplitInlineAncestors(nsPresContext* aPresContext,
                       nsIFrame*     aFrame)
@@ -111,7 +120,7 @@ SplitInlineAncestors(nsPresContext* aPresContext,
   nsIFrame* newFrame = aFrame->GetNextSibling();
   nsIFrame* newParent;
 
-  while (parent->IsFrameOfType(nsIFrame::eBidiInlineContainer)) {
+  while (IsBidiSplittable(parent)) {
     nsIFrame* grandparent = parent->GetParent();
     NS_ASSERTION(grandparent, "Couldn't get parent's parent in nsBidiPresUtils::SplitInlineAncestors");
     
@@ -447,12 +456,12 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
       nsIFrame* child = frame;
       nsIFrame* parent = frame->GetParent();
       while (parent &&
-             parent->IsFrameOfType(nsIFrame::eBidiInlineContainer) &&
+             IsBidiSplittable(parent) &&
              !child->GetNextSibling()) {
         child = parent;
         parent = child->GetParent();
       }
-      if (parent && parent->IsFrameOfType(nsIFrame::eBidiInlineContainer))
+      if (parent && IsBidiSplittable(parent))
         SplitInlineAncestors(aPresContext, child);
     }
   } // for
@@ -461,7 +470,6 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
 
 // Should this frame be treated as a leaf (e.g. when building mLogicalArray)?
 PRBool IsBidiLeaf(nsIFrame* aFrame) {
-  nsIAtom* frameType = aFrame->GetType();
   nsIFrame* kid = aFrame->GetFirstChild(nsnull);
   // Need the IsBlockLevel() check because nsFirstLetterFrame is
   // always of type eBidiInlineContainer, even if it's floating.
@@ -608,6 +616,14 @@ nsBidiPresUtils::ReorderFrames(nsPresContext*       aPresContext,
                                nsIFrame*            aFirstFrameOnLine,
                                PRInt32              aNumFramesOnLine)
 {
+  // If this line consists of a line frame, reorder the line frame's children.
+  if (aFirstFrameOnLine->GetType() == nsGkAtoms::lineFrame) {
+    aFirstFrameOnLine = aFirstFrameOnLine->GetFirstChild(nsnull);
+    // All children of the line frame are on the first line. Setting aNumFramesOnLine
+    // to -1 makes InitLogicalArrayFromLine look at all of them.
+    aNumFramesOnLine = -1;
+  }
+
   InitLogicalArrayFromLine(aFirstFrameOnLine, aNumFramesOnLine);
 
   PRBool isReordered;
