@@ -103,11 +103,12 @@ extern PRInt32 _PR_ia64_AtomicSet(PRInt32 *val, PRInt32 newval);
 #define _MD_ATOMIC_SET                _PR_ia64_AtomicSet
 #endif
 
-#ifdef _PR_INET6
-#define _PR_HAVE_INET_NTOP
 #define _PR_HAVE_GETIPNODEBYNAME
 #define _PR_HAVE_GETIPNODEBYADDR
 #define _PR_HAVE_GETADDRINFO
+#ifdef _PR_INET6
+#define _PR_HAVE_INET_NTOP
+#else
 #define _PR_INET6_PROBE
 #endif
 

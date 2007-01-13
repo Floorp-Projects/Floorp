@@ -1209,10 +1209,10 @@ tools are selected during the Xcode/Developer Tools installation.])
         AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
     fi
 
-    # HP-UX 11i (B.11.11) or higher
+    # HP-UX 11i v2 (B.11.23) or higher
     changequote(<<,>>)
     case "$OS_RELEASE" in
-    [C-Z]*|B.[2-9]*|B.1[2-9]*|B.11.[2-9]*|B.11.1[1-9]*)
+    [C-Z]*|B.[2-9]*|B.1[2-9]*|B.11.[3-9]*|B.11.2[3-9]*)
         USE_IPV6=1
         ;;
     esac
