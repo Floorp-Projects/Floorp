@@ -442,6 +442,31 @@ var BookmarksEventHandler = {
         }
       }
     }
+  },
+
+  fillInBTTooltip: function(aTipElement) {
+    // Fx2XP: Don't show tooltips for bookmarks under sub-folders
+    if (aTipElement.localName != "toolbarbutton")
+      return false;
+
+    var url = aTipElement.getAttribute("url");
+    if (!url) 
+      return false;
+
+    var tooltipUrl = document.getElementById("btUrlText");
+    tooltipUrl.value = url;
+
+    var title = aTipElement.label;
+    var tooltipTitle = document.getElementById("btTitleText");
+    if (title && title != url) {
+      tooltipTitle.hidden = false;
+      tooltipTitle.value = title;
+    }
+    else
+      tooltipTitle.hidden = true;
+
+    // show tooltip
+    return true;
   }
 };
 
