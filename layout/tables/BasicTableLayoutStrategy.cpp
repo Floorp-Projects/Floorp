@@ -46,6 +46,7 @@
 #include "nsTableCellFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsGkAtoms.h"
+#include "SpanningCellSorter.h"
 
 #undef  DEBUG_TABLE_STRATEGY 
 
@@ -221,10 +222,12 @@ void
 BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRenderingContext)
 {
     nsTableFrame *tableFrame = mTableFrame;
-    float p2t = tableFrame->GetPresContext()->ScaledPixelsToTwips();
+    nsPresContext *presContext = tableFrame->GetPresContext();
+    float p2t = presContext->ScaledPixelsToTwips();
     nsTableCellMap *cellMap = tableFrame->GetCellMap();
 
     nscoord spacing = tableFrame->GetCellSpacingX();
+    SpanningCellSorter spanningCells(presContext->PresShell());
 
     // Loop over the columns to consider the columns and cells *without*
     // a colspan.
@@ -272,8 +275,13 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
             PRInt32 colSpan;
             nsTableCellFrame *cellFrame =
                 cellMap->GetCellInfoAt(row, col, &originates, &colSpan);
-            if (!cellFrame || !originates || colSpan > 1)
+            if (!cellFrame || !originates) {
                 continue;
+            }
+            if (colSpan > 1) {
+                spanningCells.AddCell(colSpan, row, col);
+                continue;
+            }
 
             CellWidthInfo info = GetCellWidthInfo(aRenderingContext, cellFrame);
 
@@ -290,26 +298,38 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
     mTableFrame->Dump(PR_FALSE, PR_TRUE, PR_FALSE);
 #endif
 
-    // Loop over the columns to consider cells *with* a colspan.
-    // We consider these cells by seeing if they require adding to the
-    // widths as they were when we considered only non-spanning cells.
-    // We then accumulate the *additions* to the non-spanning values in
-    // the column frame's Span* members.  Considering things only
-    // relative to the widths resulting from the non-spanning cells
-    // (rather than incrementally including the results from spanning
-    // cells, or doing spanning and non-spanning cells in a single pass)
-    // means that layout remains row-order-invariant.
-    for (col = 0, col_end = cellMap->GetColCount(); col < col_end; ++col) {
-        for (PRInt32 row = 0, row_end = cellMap->GetRowCount();
-             row < row_end; ++row) {
-            PRBool originates;
-            PRInt32 colSpan;
-            nsTableCellFrame *cellFrame =
-                cellMap->GetCellInfoAt(row, col, &originates, &colSpan);
-            if (!cellFrame || !originates || colSpan == 1)
-                continue;
-
-            NS_ASSERTION(colSpan > 1, "bad colspan");
+    // Consider the cells with a colspan that we saved in the loop above
+    // into the spanning cell sorter.  We consider these cells by seeing
+    // if they require adding to the widths resulting only from cells
+    // with a smaller colspan, and therefore we must process them sorted
+    // in increasing order by colspan.  For each colspan group, we
+    // accumulate the *additions* to the prior values in the column
+    // frame's Span* members, since this makes the distribution process
+    // simpler.
+    //
+    // Considering things only relative to the widths resulting from
+    // cells with smaller colspans (rather than incrementally including
+    // the results from spanning cells, or doing spanning and
+    // non-spanning cells in a single pass) means that layout remains
+    // row-order-invariant and (except for percentage widths that add to
+    // more than 100%) column-order invariant.
+    //
+    // Starting with smaller colspans makes it more likely that we
+    // satisfy all the constraints given and don't distribute space to
+    // columns where we don't need it.
+    SpanningCellSorter::Item *item;
+    PRInt32 colSpan;
+    while ((item = spanningCells.GetNext(&colSpan))) {
+        NS_ASSERTION(colSpan > 1,
+                     "cell should not have been put in spanning cell sorter");
+        do {
+            PRInt32 row = item->row;
+            col = item->col;
+            CellData *cellData = cellMap->GetDataAt(row, col);
+            nsTableCellFrame *cellFrame = cellData->GetCellFrame();
+            NS_ASSERTION(cellData && cellData->IsOrig(),
+                         "bogus result from spanning cell sorter");
+            NS_ASSERTION(cellFrame, "bogus result from spanning cell sorter");
 
             CellWidthInfo info = GetCellWidthInfo(aRenderingContext, cellFrame);
 
@@ -325,11 +345,9 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
                     NS_ERROR("column frames out of sync with cell map");
                     continue;
                 }
-                if (!mTableFrame->GetNumCellsOriginatingInCol(scol)) {
-                   continue;
-                }
 
-                if (scol != col) {
+                if (mTableFrame->GetNumCellsOriginatingInCol(scol) &&
+                    scol != col) {
                     info.minCoord -= spacing;
                     info.prefCoord -= spacing;
                 }
@@ -394,14 +412,41 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
                 scolFrame->AddSpanPrefCoord(NSToCoordRound(
                                float(info.prefCoord) * coordRatio));
             }
+        } while ((item = item->next));
+
+        // Combine the results of the span analysis into the main results,
+        // for each increment of colspan.
+
+        for (col = 0, col_end = cellMap->GetColCount(); col < col_end; ++col) {
+            nsTableColFrame *colFrame = tableFrame->GetColFrame(col);
+            if (!colFrame) {
+                NS_ERROR("column frames out of sync with cell map");
+                continue;
+            }
+
+            // Since PrefCoord is really a shorthand for two values (XXX
+            // this isn't really a space savings since we have to store
+            // mHasSpecifiedCoord; we should probably just store the values
+            // since it's less confusing) and calling AddMinCoord can
+            // influence the result of GetPrefCoord, save the value as it
+            // was during the loop over spanning cells before messing with
+            // anything.
+            nscoord prefCoord = colFrame->GetPrefCoord();
+            colFrame->AddMinCoord(colFrame->GetMinCoord() +
+                                  colFrame->GetSpanMinCoord());
+            colFrame->AddPrefCoord(prefCoord +
+                                   PR_MAX(colFrame->GetSpanMinCoord(),
+                                          colFrame->GetSpanPrefCoord()),
+                                   colFrame->GetHasSpecifiedCoord());
+            NS_ASSERTION(colFrame->GetMinCoord() <= colFrame->GetPrefCoord(),
+                         "min larger than pref");
+            colFrame->AddPrefPercent(colFrame->GetSpanPrefPercent());
+
+            colFrame->ResetSpanMinCoord();
+            colFrame->ResetSpanPrefCoord();
+            colFrame->ResetSpanPrefPercent();
         }
     }
-#ifdef DEBUG_TABLE_STRATEGY
-    printf("ComputeColumnIntrinsicWidths span incr.\n");
-    mTableFrame->Dump(PR_FALSE, PR_TRUE, PR_FALSE);
-#endif
-
-    // Combine the results of the span analysis into the main results.
 
     // Prevent percentages from adding to more than 100% by (to be
     // compatible with other browsers) treating any percentages that would
@@ -416,28 +461,11 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
             continue;
         }
 
-        // Since PrefCoord is really a shorthand for two values (XXX
-        // this isn't really a space savings since we have to store
-        // mHasSpecifiedCoord; we should probably just store the values
-        // since it's less confusing) and calling AddMinCoord can
-        // influence the result of GetPrefCoord, save the value as it
-        // was during the loop over spanning cells before messing with
-        // anything.
-        nscoord prefCoord = colFrame->GetPrefCoord();
-        colFrame->AddMinCoord(colFrame->GetMinCoord() +
-                              colFrame->GetSpanMinCoord());
-        colFrame->AddPrefCoord(prefCoord +
-                               PR_MAX(colFrame->GetSpanMinCoord(),
-                                      colFrame->GetSpanPrefCoord()),
-                               colFrame->GetHasSpecifiedCoord());
-        NS_ASSERTION(colFrame->GetMinCoord() <= colFrame->GetPrefCoord(),
-                     "min larger than pref");
-        colFrame->AddPrefPercent(colFrame->GetSpanPrefPercent());
-
         colFrame->AdjustPrefPercent(&pct_used);
     }
+
 #ifdef DEBUG_TABLE_STRATEGY
-    printf("ComputeColumnIntrinsicWidths adjust\n");
+    printf("ComputeColumnIntrinsicWidths spanning\n");
     mTableFrame->Dump(PR_FALSE, PR_TRUE, PR_FALSE);
 #endif
 }
