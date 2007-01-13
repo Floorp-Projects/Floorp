@@ -619,10 +619,10 @@ SEC_PKCS12PutPFX(SECItem *der_pfx, SECItem *pwitem,
 		}
 	    } else {
 		safe_contents = sec_pkcs12_create_safe_contents(asafe->poolp);
-		safe_contents->swapUnicode = pfx->swapUnicode;
 		if(safe_contents == NULL) {
 		    rv = SECFailure;
 		} else {
+                    safe_contents->swapUnicode = pfx->swapUnicode;
 		    rv = SECSuccess;
 		}
 	    }
