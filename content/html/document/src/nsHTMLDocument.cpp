@@ -588,8 +588,25 @@ nsHTMLDocument::TryBookmarkCharset(nsIDocShell* aDocShell,
   return PR_FALSE;
 }
 
+static PRBool
+CheckSameOrigin(nsINode* aNode1, nsINode* aNode2)
+{
+  NS_PRECONDITION(aNode1, "Null node?");
+  NS_PRECONDITION(aNode2, "Null node?");
+
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  if (!secMan) {
+    return PR_FALSE;
+  }
+
+  return
+    NS_SUCCEEDED(secMan->CheckSameOriginPrincipal(aNode1->NodePrincipal(),
+                                                  aNode2->NodePrincipal()));
+}
+
 PRBool
 nsHTMLDocument::TryParentCharset(nsIDocumentCharsetInfo*  aDocInfo,
+                                 nsIDocument* aParentDocument,
                                  PRInt32& aCharsetSource,
                                  nsACString& aCharset)
 {
@@ -600,11 +617,24 @@ nsHTMLDocument::TryParentCharset(nsIDocumentCharsetInfo*  aDocInfo,
     aDocInfo->GetParentCharsetSource(&parentSource);
     if (kCharsetFromParentForced <= parentSource)
       source = kCharsetFromParentForced;
-    else if (kCharsetFromHintPrevDoc == parentSource)
+    else if (kCharsetFromHintPrevDoc == parentSource) {
+      // Make sure that's OK
+      if (!aParentDocument || !CheckSameOrigin(this, aParentDocument)) {
+        return PR_FALSE;
+      }
+      
       // if parent is posted doc, set this prevent autodections
+      // I'm not sure this makes much sense... but whatever.
       source = kCharsetFromHintPrevDoc;
-    else if (kCharsetFromCache <= parentSource)
+    }
+    else if (kCharsetFromCache <= parentSource) {
+      // Make sure that's OK
+      if (!aParentDocument || !CheckSameOrigin(this, aParentDocument)) {
+        return PR_FALSE;
+      }
+
       source = kCharsetFromParentFrame;
+    }
     else
       return PR_FALSE;
 
@@ -790,6 +820,32 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   docShell->GetDocumentCharsetInfo(getter_AddRefs(dcInfo));
   PRInt32 textType = GET_BIDI_OPTION_TEXTTYPE(GetBidiOptions());
 
+  // Look for the parent document.  Note that at this point we don't have our
+  // content viewer set up yet, and therefore do not have a useful
+  // mParentDocument.
+
+  // in this block of code, if we get an error result, we return it
+  // but if we get a null pointer, that's perfectly legal for parent
+  // and parentContentViewer
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+  NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
+  docShellAsItem->GetSameTypeParent(getter_AddRefs(parentAsItem));
+
+  nsCOMPtr<nsIDocShell> parent(do_QueryInterface(parentAsItem));
+  nsCOMPtr<nsIDocument> parentDocument;
+  nsCOMPtr<nsIContentViewer> parentContentViewer;
+  if (parent) {
+    rv = parent->GetContentViewer(getter_AddRefs(parentContentViewer));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIDocumentViewer> docViewer =
+      do_QueryInterface(parentContentViewer);
+    if (docViewer) {
+      docViewer->GetDocument(getter_AddRefs(parentDocument));
+    }
+  }
+
   //
   // The following logic is mirrored in nsWebShell::Embed!
   //
@@ -800,26 +856,9 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   if (cv) {
      muCV = do_QueryInterface(cv);
   } else {
-    // in this block of code, if we get an error result, we return it
-    // but if we get a null pointer, that's perfectly legal for parent
-    // and parentContentViewer
-    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
-    NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
-    docShellAsItem->GetSameTypeParent(getter_AddRefs(parentAsItem));
-
-    nsCOMPtr<nsIDocShell> parent(do_QueryInterface(parentAsItem));
-    if (parent) {
-      nsCOMPtr<nsIContentViewer> parentContentViewer;
-      rv = parent->GetContentViewer(getter_AddRefs(parentContentViewer));
-      if (NS_FAILED(rv)) { return rv; }
-      if (parentContentViewer) {
-        muCV = do_QueryInterface(parentContentViewer);
-        if (muCV) {
-          muCVIsParent = PR_TRUE;
-        }
-      }
+    muCV = do_QueryInterface(parentContentViewer);
+    if (muCV) {
+      muCVIsParent = PR_TRUE;
     }
   }
 
@@ -850,7 +889,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     // should be always safe to try more sources.
     if (!TryUserForcedCharset(muCV, dcInfo, charsetSource, charset)) {
       TryHintCharset(muCV, charsetSource, charset);
-      TryParentCharset(dcInfo, charsetSource, charset);
+      TryParentCharset(dcInfo, parentDocument, charsetSource, charset);
       if (TryChannelCharset(aChannel, charsetSource, charset)) {
         // Use the channel's charset (e.g., charset from HTTP
         // "Content-Type" header).
