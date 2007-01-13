@@ -1681,18 +1681,17 @@ SECStatus
 PK11_DeleteTokenPrivateKey(SECKEYPrivateKey *privKey, PRBool force)
 {
     CERTCertificate *cert=PK11_GetCertFromPrivateKey(privKey);
+    SECStatus rv = SECWouldBlock;
 
-    /* found a cert matching the private key?. */
-    if (!force  && cert != NULL) {
-	/* yes, don't delete the key */
-        CERT_DestroyCertificate(cert);
-	SECKEY_DestroyPrivateKey(privKey);
-	return SECWouldBlock;
+    if (!cert || force) {
+	/* now, then it's safe for the key to go away */
+	rv = PK11_DestroyTokenObject(privKey->pkcs11Slot,privKey->pkcs11ID);
     }
-    /* now, then it's safe for the key to go away */
-    PK11_DestroyTokenObject(privKey->pkcs11Slot,privKey->pkcs11ID);
+    if (cert) {
+	CERT_DestroyCertificate(cert);
+    }
     SECKEY_DestroyPrivateKey(privKey);
-    return SECSuccess;
+    return rv;
 }
 
 /*
