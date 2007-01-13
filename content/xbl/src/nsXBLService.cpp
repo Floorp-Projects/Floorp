@@ -174,13 +174,6 @@ public:
     if (!ready)
       return;
 
-    // XXX Deal with layered bindings.  For example, mBoundElement may be anonymous content.
-    // Now do a ContentInserted notification to cause the frames to get installed finally,
-    nsIContent* parent = mBoundElement->GetParent();
-    PRInt32 index = 0;
-    if (parent)
-      index = parent->IndexOf(mBoundElement);
-        
     // If |mBoundElement| is (in addition to having binding |mBinding|)
     // also a descendant of another element with binding |mBinding|,
     // then we might have just constructed it due to the
@@ -199,8 +192,7 @@ public:
           shell->FrameManager()->GetUndisplayedContent(mBoundElement);
 
         if (!sc) {
-          nsCOMPtr<nsIDocumentObserver> obs(do_QueryInterface(shell));
-          obs->ContentInserted(doc, parent, mBoundElement, index);
+          shell->RecreateFramesFor(mBoundElement);
         }
       }
     }

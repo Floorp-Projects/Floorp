@@ -7638,26 +7638,27 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchyInternal()
         
           // XXXbz So why can't we reuse ContentRemoved?
 
-          nsIFrame* docParentFrame = docElementFrame->GetParent();
+          NS_ASSERTION(docElementFrame->GetParent() == mDocElementContainingBlock,
+                       "Unexpected doc element parent frame");
 
-          NS_ASSERTION(docParentFrame, "should have a parent frame");
-          if (docParentFrame) {
-            // Remove the old document element hieararchy
-            rv = state.mFrameManager->RemoveFrame(docParentFrame, nsnull, 
-                                                  docElementFrame);
-            if (NS_SUCCEEDED(rv)) {
-              // Create the new document element hierarchy
-              nsIFrame*                 newChild;
-              rv = ConstructDocElementFrame(state, rootContent,
-                                            docParentFrame, &newChild);
-
-              if (NS_SUCCEEDED(rv)) {
-                rv = state.mFrameManager->InsertFrames(docParentFrame, nsnull,
-                                                       nsnull, newChild);
-
-              }
-            }
+          // Remove the old document element hieararchy
+          rv = state.mFrameManager->RemoveFrame(mDocElementContainingBlock,
+                                                nsnull, docElementFrame);
+          if (NS_FAILED(rv)) {
+            return rv;
           }
+
+        }
+
+        // Create the new document element hierarchy
+        nsIFrame*                 newChild;
+        rv = ConstructDocElementFrame(state, rootContent,
+                                      mDocElementContainingBlock, &newChild);
+
+        // newChild could be null even if |rv| is success, thanks to XBL.
+        if (NS_SUCCEEDED(rv) && newChild) {
+          rv = state.mFrameManager->InsertFrames(mDocElementContainingBlock,
+                                                 nsnull, nsnull, newChild);
         }
       }
     }
