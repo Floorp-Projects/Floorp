@@ -153,6 +153,10 @@ void nsTableColFrame::Dump(PRInt32 aIndent)
     printf(" anonymous-cell ");
     break;
   }
+  printf("\nm:%d c:%d p:%d sm:%d sc:%d sp:%d f:%d",
+         GetMinCoord(), GetPrefCoord(), GetPrefPercent(),
+         GetSpanMinCoord(), GetSpanPrefCoord(), GetSpanPrefPercent(),
+         GetFinalWidth());
   printf("\n%s**END COL DUMP** ", indent);
   delete [] indent;
 }

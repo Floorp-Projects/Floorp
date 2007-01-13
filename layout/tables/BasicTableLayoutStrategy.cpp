@@ -292,6 +292,12 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
             colFrame->AddPrefCoord(info.prefCoord, info.hasSpecifiedWidth);
             colFrame->AddPrefPercent(info.prefPercent);
         }
+#ifdef DEBUG_dbaron_off
+        printf("table %p col %d nonspan: min=%d pref=%d spec=%d pct=%f\n",
+               mTableFrame, col, colFrame->GetMinCoord(),
+               colFrame->GetPrefCoord(), colFrame->GetHasSpecifiedCoord(),
+               colFrame->GetPrefPercent());
+#endif
     }
 #ifdef DEBUG_TABLE_STRATEGY
     printf("ComputeColumnIntrinsicWidths single\n");
@@ -431,12 +437,12 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
             // influence the result of GetPrefCoord, save the value as it
             // was during the loop over spanning cells before messing with
             // anything.
-            nscoord prefCoord = colFrame->GetPrefCoord();
-            colFrame->AddMinCoord(colFrame->GetMinCoord() +
-                                  colFrame->GetSpanMinCoord());
-            colFrame->AddPrefCoord(prefCoord +
-                                   PR_MAX(colFrame->GetSpanMinCoord(),
-                                          colFrame->GetSpanPrefCoord()),
+            nscoord newPref =
+                colFrame->GetPrefCoord() + colFrame->GetSpanPrefCoord();
+            nscoord newMin =
+                colFrame->GetMinCoord() + colFrame->GetSpanMinCoord();
+            colFrame->AddMinCoord(newMin);
+            colFrame->AddPrefCoord(PR_MAX(newPref, newMin),
                                    colFrame->GetHasSpecifiedCoord());
             NS_ASSERTION(colFrame->GetMinCoord() <= colFrame->GetPrefCoord(),
                          "min larger than pref");
@@ -445,6 +451,13 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
             colFrame->ResetSpanMinCoord();
             colFrame->ResetSpanPrefCoord();
             colFrame->ResetSpanPrefPercent();
+
+#ifdef DEBUG_dbaron_off
+            printf("table %p col %d span %d: min=%d pref=%d spec=%d pct=%f\n",
+                   mTableFrame, col, colSpan, colFrame->GetMinCoord(),
+                   colFrame->GetPrefCoord(), colFrame->GetHasSpecifiedCoord(),
+                   colFrame->GetPrefPercent());
+#endif
         }
     }
 
