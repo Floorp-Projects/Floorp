@@ -1945,11 +1945,19 @@ enum BWCOpenDest {
   popupWindowURI->GetSpec(uriStr);
   
   // whitelist the URL
-  [self whitelistURL:requestingWindowURI];
-
+  nsCOMPtr<nsIURI> requestingWindowURI;
+  nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(requestingWindow);                                                                                                   
+  if (webNav)                                                                                                                                        
+    webNav->GetCurrentURI(getter_AddRefs(requestingWindowURI));
+  
+  if (requestingWindowURI)
+    [self whitelistURL:requestingWindowURI];
+  else
+    NSLog(@"Couldn't whitelist the URI");  
+  
   // show the blocked popup
   nsCOMPtr<nsIDOMWindow> openedWindow;
-  nsresult rv = domWin->Open(NS_ConvertUTF8toUTF16(uriStr), windowName, features, getter_AddRefs(openedWindow));
+  nsresult rv = piDomWin->Open(NS_ConvertUTF8toUTF16(uriStr), windowName, features, getter_AddRefs(openedWindow));
   if (NS_FAILED(rv))
     NSLog(@"Couldn't show the blocked popup window for %@", [NSString stringWith_nsACString:uriStr]);  
 }
