@@ -1730,7 +1730,7 @@ MicrosummarySet.prototype = {
     // XXX Handle XML documents, whose microsummaries are specified
     // via processing instructions.
 
-    var links = resource.content.getElementsByTagName("LINK");
+    var links = resource.content.getElementsByTagName("link");
     for ( var i = 0; i < links.length; i++ ) {
       var link = links[i];
 
