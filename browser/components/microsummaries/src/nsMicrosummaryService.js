@@ -225,7 +225,8 @@ MicrosummaryService.prototype = {
   },
   
   _destroy: function MSS__destroy() {
-    // XXX Anything we need to kill to prevent shutdown memory leaks?
+    this._timer.cancel();
+    this._timer = null;
   },
 
   _updateMicrosummaries: function MSS__updateMicrosummaries() {
