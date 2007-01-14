@@ -47,6 +47,7 @@ Contributor(s): ______________________________________. -->
   onload="hiddenWindowStartup();">
 
   <!-- JS from navigator.xul, to handle the menu commands -->
+  <html:script language="JavaScript" src="chrome://global/content/strres.js"/>
   <html:script language="javascript" src="chrome://navigator/content/navigator.js"/>
 
   <!-- keys are appended from the overlay -->
