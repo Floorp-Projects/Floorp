@@ -57,10 +57,19 @@ Contributor(s): ______________________________________. -->
   <script type="application/x-javascript" src="chrome://navigator/content/navigator.js"/>
 
   <!-- keys are appended from the overlay -->
-  <keyset id="keyset"/>
+  <keyset id="tasksKeys"/>
+  <keyset id="navKeys">
+    <key id="showHideSidebar"/>
+  </keyset>
   
-  <!-- broadcasters are appended from the overlay -->
-  <broadcasterset id="broadcasterset"/>
+  <!-- commands are appended from the overlay -->
+  <commandset id="tasksCommands"/>
+  <commandset id="globalEditMenuItems"/>
+  <commandset id="selectEditMenuItems"/>
+  <commandset id="undoEditMenuItems"/>
+  <commandset id="clipboardEditMenuItems"/>
+  
+  <broadcasterset id="navBroadcasters"/>
 
   <!-- it's the whole navigator.xul menubar! hidden windows need to
        have a menubar for situations where they're the only window remaining
