@@ -272,6 +272,110 @@ function ASSERT(aCondition, aMessage, aCritical) {
 
 
 /**
+ * Auth prompt implementation - Uses password manager if at all possible.
+ */
+function calAuthPrompt() {
+    // use the window watcher service to get a nsIAuthPrompt impl
+    this.mPrompter = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                               .getService(Components.interfaces.nsIWindowWatcher)
+                               .getNewAuthPrompter(null);
+    this.mTriedStoredPassword = false;
+}
+
+calAuthPrompt.prototype = {
+    prompt: function capP(aDialogTitle, aText, aPasswordRealm, aSavePassword,
+                          aDefaultText, aResult) {
+        return this.mPrompter.prompt(aDialogTitle, aText, aPasswordRealm,
+                                     aSavePassword, aDefaultText, aResult);
+    },
+
+    getPasswordInfo: function capGPI(aPasswordRealm) {
+        var username;
+        var password;
+        var found = false;
+        var passwordManager = Components.classes["@mozilla.org/passwordmanager;1"]
+                                        .getService(Components.interfaces.nsIPasswordManager);
+        var pwenum = passwordManager.enumerator;
+        // step through each password in the password manager until we find the one we want:
+        while (pwenum.hasMoreElements()) {
+            try {
+                var pass = pwenum.getNext().QueryInterface(Components.interfaces.nsIPassword);
+                if (pass.host == aPasswordRealm) {
+                     // found it!
+                     username = pass.user;
+                     password = pass.password;
+                     found = true;
+                     break;
+                }
+            } catch (ex) {
+                // don't do anything here, ignore the password that could not
+                // be read
+            }
+        }
+        return {found: found, username: username, password: password};
+    },
+
+    promptUsernameAndPassword: function capPUAP(aDialogTitle, aText,
+                                                aPasswordRealm,aSavePassword,
+                                                aUser, aPwd) {
+        var pw;
+        if (!this.mTriedStoredPassword) {
+            pw = this.getPasswordInfo(aPasswordRealm);
+        }
+
+        if (pw && pw.found) {
+            this.mTriedStoredPassword = true;
+            aUser.value = pw.username;
+            aPwd.value = pw.password;
+            return true;
+        } else {
+            return this.mPrompter.promptUsernameAndPassword(aDialogTitle, aText,
+                                                            aPasswordRealm,
+                                                            aSavePassword,
+                                                            aUser, aPwd);
+        }
+    },
+
+    promptAuth: function capPA(aChannel, aLevel, aAuthInfo) {
+        // need to match the way the password manager stores host/realm
+        var hostRealm = aChannel.URI.host + ":" + aChannel.URI.port + " (" +
+                        aAuthInfo.realm + ")";
+        var pw;
+        if (!this.mTriedStoredPassword) {
+            pw = this.getPasswordInfo(hostRealm);
+        }
+
+        if (pw && pw.found) {
+            this.mTriedStoredPassword = true;
+            aAuthInfo.username = pw.username;
+            aAuthInfo.password = pw.password;
+            return true;
+        } else {
+            return this.mPrompter.promptAuth(aChannel, aLevel, aAuthInfo);
+        }
+    },
+
+    promptPassword: function capPP(aDialogTitle, aText, aPasswordRealm,
+                             aSavePassword, aPwd) {
+        var found = false;
+        var pw;
+        if (!this.mTriedStoredPassword) {
+            pw = this.getPasswordInfo(aPasswordRealm);
+        }
+
+        if (pw && pw.found) {
+            this.mTriedStoredPassword = true;
+            aPwd.value = pw.password;
+            return true;
+        } else {
+            return this.mPrompter.promptPassword(aDialogTitle, aText,
+                                                 aPasswordRealm, aSavePassword,
+                                                 aPwd);
+        }
+    }
+}
+
+/**
  * Pick whichever of "black" or "white" will look better when used as a text
  * color against a background of bgColor. 
  *

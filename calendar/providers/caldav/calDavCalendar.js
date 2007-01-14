@@ -941,10 +941,7 @@ calDavCalendar.prototype = {
     // nsIInterfaceRequestor impl
     getInterface: function(iid) {
         if (iid.equals(Components.interfaces.nsIAuthPrompt)) {
-            // use the window watcher service to get a nsIAuthPrompt impl
-            return Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                             .getService(Components.interfaces.nsIWindowWatcher)
-                             .getNewAuthPrompter(null);
+            return new calAuthPrompt();
         }
         else if (iid.equals(Components.interfaces.nsIPrompt)) {
             // use the window watcher service to get a nsIPrompt impl
@@ -961,9 +958,7 @@ calDavCalendar.prototype = {
                              .getService(Components.interfaces.nsIWindowWatcher)
                              .getNewPrompter(null);
         } else if (!isOnBranch && iid.equals(Components.interfaces.nsIAuthPrompt2)) {
-            return Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                             .getService(Components.interfaces.nsIPromptFactory)
-                             .getPrompt(null, iid)
+            return new calAuthPrompt();
         }
         throw Components.results.NS_ERROR_NO_INTERFACE;
     },
