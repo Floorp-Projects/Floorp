@@ -57,10 +57,12 @@ var FullScreen =
       if (els[i].getAttribute("fullscreentoolbar") == "true") {
         this.setToolbarButtonMode(els[i], aShow ? "" : "small");
       } else {
+        // use moz-collapsed so it doesn't persist hidden/collapsed,
+        // so that new windows don't have missing toolbars
         if (aShow)
-          els[i].removeAttribute("collapsed");
+          els[i].removeAttribute("moz-collapsed");
         else
-          els[i].setAttribute("collapsed", "true");
+          els[i].setAttribute("moz-collapsed", "true");
       }
     }
     
