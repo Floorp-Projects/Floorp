@@ -1207,7 +1207,8 @@ MicrosummaryGenerator.prototype = {
             node.namespaceURI != MICSUM_NS ||
             (node.nodeName != "include" && node.nodeName != "exclude"))
           continue;
-        this._rules.push({ type: node.nodeName, regexp: new RegExp(node.textContent) });
+        var urlRegexp = node.textContent.replace(/^\s+|\s+$/g, "");
+        this._rules.push({ type: node.nodeName, regexp: new RegExp(urlRegexp) });
       }
     }
 
