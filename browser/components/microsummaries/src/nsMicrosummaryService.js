@@ -73,6 +73,8 @@ const FIELD_CONTENT_TYPE      = NC_NS + "ContentType";
 const FIELD_BOOKMARK_URL      = NC_NS + "URL";
 #endif
 
+const MAX_SUMMARY_LENGTH = 4096;
+
 function MicrosummaryService() {}
 
 MicrosummaryService.prototype = {
@@ -1282,11 +1284,16 @@ MicrosummaryGenerator.prototype = {
   },
 
   generateMicrosummary: function MSD_generateMicrosummary(pageContent) {
-    if (this.content)
-      return this.content.replace(/^\s+|\s+$/g, "");
-    else if (this.template)
+    if (this.content) {
+      var content = this.content.replace(/^\s+|\s+$/g, "");
+      if (content.length > MAX_SUMMARY_LENGTH) 
+        content = content.substring(0, MAX_SUMMARY_LENGTH);
+      return content;
+    } else if (this.template) {
+      // Note that _processTemplate truncates the summary for us, so we don't
+      // need to do anything more here
       return this._processTemplate(pageContent);
-    else
+    } else
       throw("generateMicrosummary called on uninitialized microsummary generator");
   },
 
@@ -1328,7 +1335,11 @@ MicrosummaryGenerator.prototype = {
 
     // XXX When we support HTML microsummaries we'll need to do something
     // more sophisticated than just returning the text content of the fragment.
-    return fragment.textContent;
+    var content = fragment.textContent;
+    if (content.length > MAX_SUMMARY_LENGTH) 
+      content = content.substring(0, MAX_SUMMARY_LENGTH);
+
+    return content;
   }
 };
 
