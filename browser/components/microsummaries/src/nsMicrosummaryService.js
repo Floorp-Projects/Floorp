@@ -265,6 +265,8 @@ MicrosummaryService.prototype = {
 #endif
       var generatorURI = this._uri(this._getField(bookmarkID, FIELD_MICSUM_GEN_URI));
       var microsummary = new Microsummary(pageURI, generatorURI);
+      if (this._localGenerators[generatorURI.spec])
+        microsummary.generator = this._localGenerators[generatorURI.spec];
 
       // A microsummary observer that calls the microsummary service
       // to update the datastore when the microsummary finishes loading.
@@ -709,6 +711,9 @@ MicrosummaryService.prototype = {
     var genURI = this._uri(this._getField(bookmarkID, FIELD_MICSUM_GEN_URI));
     
     var microsummary = new Microsummary(pageURI, genURI);
+    if (this._localGenerators[generatorURI.spec])
+      microsummary.generator = this._localGenerators[generatorURI.spec];
+
     return microsummary;
   },
 
