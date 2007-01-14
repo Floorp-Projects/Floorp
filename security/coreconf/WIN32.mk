@@ -130,6 +130,7 @@ else # !NS_USE_GCC
 	endif
 	ifneq (,$(MOZ_PROFILE)$(MOZ_DEBUG_SYMBOLS))
 		DLLFLAGS += -DEBUG -OPT:REF
+		LDFLAGS += -DEBUG -OPT:REF
 	endif
     else
 	#
