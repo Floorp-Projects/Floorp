@@ -263,37 +263,7 @@ MicrosummaryService.prototype = {
           this._getField(bookmarkID, FIELD_MICSUM_EXPIRATION) > now)
         continue;
 
-      // Create and initialize a new Microsummary instance.
-      var pageURI =
-#ifdef MOZ_PLACES
-        bookmarkID;
-#else
-        this._uri(this._getField(bookmarkID, FIELD_BOOKMARK_URL));
-#endif
-      var generatorURI = this._uri(this._getField(bookmarkID, FIELD_MICSUM_GEN_URI));
-      var microsummary = new Microsummary(pageURI, generatorURI);
-      if (this._localGenerators[generatorURI.spec])
-        microsummary.generator = this._localGenerators[generatorURI.spec];
-
-      // A microsummary observer that calls the microsummary service
-      // to update the datastore when the microsummary finishes loading.
-      var observer = {
-        _svc: this,
-        _bookmarkID: bookmarkID,
-        onContentLoaded: function(microsummary) {
-          this._svc._updateMicrosummary(this._bookmarkID, microsummary);
-
-          // Prevent reference cycles from leaking memory.
-          microsummary.removeObserver(this);
-          this._bookmark = null;
-          this._svc = null;
-        }
-      };
-
-      // Register the observer with the microsummary and trigger
-      // the microsummary to update itself.
-      microsummary.addObserver(observer);
-      microsummary.update();
+      this.refreshMicrosummary(bookmarkID);
     }
   },
   
@@ -854,8 +824,60 @@ MicrosummaryService.prototype = {
       return true;
 
     return false
-  }
+  },
 
+  /**
+   * Refresh a microsummary, updating its value in the datastore and UI.
+   * If this method can refresh the microsummary instantly, it will.
+   * Otherwise, it'll asynchronously download the necessary information
+   * (the generator and/or page) before refreshing the microsummary.
+   *
+   * Callers should check the "content" property of the returned microsummary
+   * object to distinguish between sync and async refreshes.  If its value
+   * is "null", then it's an async refresh, and the caller should register
+   * itself as an nsIMicrosummaryObserver via nsIMicrosummary.addObserver()
+   * to find out when the refresh completes.
+   *
+   * @param   bookmarkID
+   *          the bookmark whose microsummary is being refreshed
+   *
+   * @returns the microsummary being refreshed
+   *
+   */
+  refreshMicrosummary: function MSS_refreshMicrosummary(bookmarkID) {
+    if (!this.hasMicrosummary(bookmarkID))
+      throw "bookmark " + bookmarkID + " does not have a microsummary";
+
+    var pageURI = this._getPageForBookmark(bookmarkID);
+    var generatorURI = this._uri(this._getField(bookmarkID, FIELD_MICSUM_GEN_URI));
+    var microsummary = new Microsummary(pageURI, generatorURI);
+    if (this._localGenerators[generatorURI.spec])
+      microsummary.generator = this._localGenerators[generatorURI.spec];
+
+    // A microsummary observer that calls the microsummary service
+    // to update the datastore when the microsummary finishes loading.
+    var observer = {
+      _svc: this,
+      _bookmarkID: bookmarkID,
+      onContentLoaded: function MSS_observer_onContentLoaded(microsummary) {
+        try {
+          this._svc._updateMicrosummary(this._bookmarkID, microsummary);
+        }
+        finally {
+          this._svc = null;
+          this._bookmarkID = null;
+          microsummary.removeObserver(this);
+        }
+      }
+    };
+
+    // Register the observer with the microsummary and trigger the microsummary
+    // to update itself.
+    microsummary.addObserver(observer);
+    microsummary.update();
+    
+    return microsummary;
+  }
 };
 
 
