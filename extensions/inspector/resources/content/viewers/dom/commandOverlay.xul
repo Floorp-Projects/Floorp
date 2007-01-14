@@ -18,13 +18,13 @@
              oncommand="inspector.getViewer('dom').findNext()"/>
 
     <command id="cmd:toggleAnon" viewer="dom"
-             oncommand="inspector.getViewer('dom').toggleAnonContent(true)"/>
+             oncommand="inspector.getViewer('dom').toggleAnonContent()"/>
 
     <command id="cmd:toggleSubDocs" viewer="dom"
              oncommand="inspector.getViewer('dom').toggleSubDocs()"/>
 
     <command id="cmd:toggleAccessibleNodes" viewer="dom"
-             oncommand="inspector.getViewer('dom').toggleAccessibleNodes(true);"/>
+             oncommand="inspector.getViewer('dom').toggleAccessibleNodes();"/>
 
     <command id="cmd:toggleWhitespaceNodes" viewer="dom"
              oncommand="inspector.getViewer('dom').toggleWhitespaceNodes()"/>

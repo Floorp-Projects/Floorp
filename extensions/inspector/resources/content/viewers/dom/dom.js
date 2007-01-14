@@ -138,10 +138,10 @@ DOMViewer.prototype =
 
     this.mPanel = aPane;
 
-    this.setAnonContent(PrefUtils.getPref("inspector.dom.showAnon"), false);
-    this.setAccessibleNodes(PrefUtils.getPref("inspector.dom.showAccessibleNodes"), false);
+    this.setAnonContent(PrefUtils.getPref("inspector.dom.showAnon"));
+    this.setProcessingInstructions(PrefUtils.getPref("inspector.dom.showProcessingInstructions"));
+    this.setAccessibleNodes(PrefUtils.getPref("inspector.dom.showAccessibleNodes"));
     this.setWhitespaceNodes(PrefUtils.getPref("inspector.dom.showWhitespaceNodes"));
-    this.setProcessingInstructions(PrefUtils.getPref("inspector.dom.showProcessingInstructions"), false);
     this.setFlashSelected(PrefUtils.getPref("inspector.blink.on"));
 
     aPane.notifyViewerReady(this);
@@ -274,20 +274,25 @@ DOMViewer.prototype =
                          "_blank", "chrome,dependent", this.mFindType, this.mFindDir, this.mFindParams);
   },
 
-  toggleAnonContent: function(aRebuild)
+  /**
+   * Toggles the setting for displaying anonymous content.
+   */
+  toggleAnonContent: function toggleAnonContent()
   {
-    this.setAnonContent(!this.mDOMView.showAnonymousContent, aRebuild);
+    var value = PrefUtils.getPref("inspector.dom.showAnon");
+    PrefUtils.setPref("inspector.dom.showAnon", !value);
   },
-  
-  setAnonContent: function(aValue, aRebuild)
+
+  /**
+   * Sets the UI and filters for anonymous content.
+   *
+   * @param aValue The value that we should be setting things to.
+   */
+  setAnonContent: function setAnonContent(aValue)
   {
     this.mDOMView.showAnonymousContent = aValue;
-    this.mPanel.panelset.setCommandAttribute("cmd:toggleAnon", "checked", aValue);
-    PrefUtils.setPref("inspector.dom.showAnon", aValue);
-
-    if (aRebuild) {
-      this.rebuild();
-    }
+    this.mPanel.panelset.setCommandAttribute("cmd:toggleAnon", "checked",
+                                             aValue);
   },
 
   toggleSubDocs: function()
@@ -302,19 +307,16 @@ DOMViewer.prototype =
    */
   toggleProcessingInstructions: function toggleProcessingInstructions()
   {
-    var value = !(this.mDOMView.whatToShow &
-                  NodeFilter.SHOW_PROCESSING_INSTRUCTION);
-    this.setProcessingInstructions(value, true);
+    var value = PrefUtils.getPref("inspector.dom.showProcessingInstructions");
+    PrefUtils.setPref("inspector.dom.showProcessingInstructions", !value);
   },
 
   /**
    * Sets the visibility of Processing Instructions.
    *
    * @param aValue The visibility of the instructions.
-   * @param aRebuild Indicates if the tree should be rebuilt or not.
    */
-  setProcessingInstructions: function setProcessingInstructions(aValue,
-                                                                aRebuild)
+  setProcessingInstructions: function setProcessingInstructions(aValue)
   {
     this.mPanel.panelset.setCommandAttribute("cmd:toggleProcessingInstructions",
                                              "checked", aValue);
@@ -323,31 +325,23 @@ DOMViewer.prototype =
     } else {
       this.mDOMView.whatToShow &= ~NodeFilter.SHOW_PROCESSING_INSTRUCTION;
     }
-    
-    PrefUtils.setPref("inspector.dom.showProcessingInstructions", aValue);
-
-    if (aRebuild) {
-      this.rebuild();
-    }
   },
 
   /**
    * Toggle state of 'Show Accessible Nodes' option.
-   *
-   * @param Boolean aRebuild - if true then DOM nodes tree will be rebuilded.
    */
-  toggleAccessibleNodes: function toggleAccessibleNodes(aRebuild)
+  toggleAccessibleNodes: function toggleAccessibleNodes()
   {
-    this.setAccessibleNodes(!this.getAccessibleNodes(), aRebuild);
+    var value = PrefUtils.getPref("inspector.dom.showAccessibleNodes");
+    PrefUtils.setPref("inspector.dom.showAccessibleNodes", !value);
   },
 
   /**
    * Set state of 'Show Accessible Nodes' option.
    *
    * @param Boolean aValue - if true then accessible nodes will be shown
-   * @param Boolean aRebuild - if true then DOM nodes tree will be rebuilded.
    */
-  setAccessibleNodes: function setAccessibleNodes(aValue, aRebuild)
+  setAccessibleNodes: function setAccessibleNodes(aValue)
   {
     if (!("@mozilla.org/accessibilityService;1" in Components.classes))
       aValue = false;
@@ -355,11 +349,6 @@ DOMViewer.prototype =
     this.mDOMView.showAccessibleNodes = aValue;
     this.mPanel.panelset.setCommandAttribute("cmd:toggleAccessibleNodes",
                                              "checked", aValue);
-    PrefUtils.setPref("inspector.dom.showAccessibleNodes", aValue);
-
-    if (aRebuild) {
-      this.rebuild();
-    }
     this.onItemSelected();
   },
 
@@ -371,33 +360,27 @@ DOMViewer.prototype =
     return this.mDOMView.showAccessibleNodes;
   },
 
-  setWhitespaceNodes: function(aValue)
+  /**
+   * Toggles the value for whitespace nodes.
+   */
+  toggleWhitespaceNodes: function toggleWhitespaceNodes()
   {
-    // Do this first so we ensure the checkmark is set in the case
-    // we are starting with whitespace nodes enabled.
-    this.mPanel.panelset.setCommandAttribute("cmd:toggleWhitespaceNodes", "checked", aValue);
+    var value = PrefUtils.getPref("inspector.dom.showWhitespaceNodes");
+    PrefUtils.setPref("inspector.dom.showWhitespaceNodes", !value);
+  },
 
-    // The rest of the stuff is redundant to do if we are not changing
-    // the value, so just bail here if we're setting the same value.
-    if (this.mDOMView.showWhitespaceNodes == aValue) {
-      return;
-    }
-
+  /**
+   * Sets the UI for displaying whitespace nodes.
+   *
+   * @param aValue The value we are to use to determine the state of the UI.
+   */
+  setWhitespaceNodes: function setWhitespaceNodes(aValue)
+  {
+    this.mPanel.panelset.setCommandAttribute("cmd:toggleWhitespaceNodes",
+                                             "checked", aValue);
     this.mDOMView.showWhitespaceNodes = aValue;
-    PrefUtils.setPref("inspector.dom.showWhitespaceNodes", aValue);
-    this.rebuild();
   },
 
-  toggleWhitespaceNodes: function()
-  {
-    this.setWhitespaceNodes(!this.mDOMView.showWhitespaceNodes);
-  },
-
-  toggleAttributes: function()
-  {
-    alert("NOT YET IMPLEMENTED");
-  },
-  
   showColumnsDialog: function()
   {
     var win = openDialog("chrome://inspector/content/viewers/dom/columnsDialog.xul", 
@@ -899,16 +882,25 @@ DOMViewer.prototype =
     }
   },
 
-  toggleFlashSelected: function()
+  /**
+   * Toggles the preference for flashing selected elements.
+   */
+  toggleFlashSelected: function toggleFlashSelected()
   {
-    this.setFlashSelected(!this.mFlashSelected);
+    var value = PrefUtils.getPref("inspector.blink.on");
+    PrefUtils.setPref("inspector.blink.on", !value);
   },
 
-  setFlashSelected: function(aValue)
+  /**
+   * Sets the object's value and the command for flashing selected objects.
+   *
+   * @param aValue The value to set it to.
+   */
+  setFlashSelected: function setFlashSelected(aValue)
   {
     this.mFlashSelected = aValue;
-    this.mPanel.panelset.setCommandAttribute("cmd:flashSelected", "checked", aValue);
-    PrefUtils.setPref("inspector.blink.on", aValue);
+    this.mPanel.panelset.setCommandAttribute("cmd:flashSelected", "checked",
+                                             aValue);
   },
 
   ////////////////////////////////////////////////////////////////////////////
@@ -921,34 +913,39 @@ DOMViewer.prototype =
    */
   onPrefChanged: function onPrefChanged(aName)
   {
-    if (aName == "inspector.dom.showAnon")
-      this.setAnonContent(PrefUtils.getPref("inspector.dom.showAnon"), true);
+    var value = PrefUtils.getPref(aName);
 
-    if (aName == "inspector.dom.showWhitespaceNodes")
-      this.setWhitespaceNodes(PrefUtils.getPref("inspector.dom.showWhitespaceNodes"));
+    if (aName == "inspector.dom.showAnon") {
+      this.setAnonContent(value);
+    } else if (aName == "inspector.dom.showProcessingInstructions") {
+      this.setProcessingInstructions(value);
+    } else if (aName == "inspector.dom.showAccessibleNodes") {
+      this.setAccessibleNodes(value);
+    } else if (aName == "inspector.dom.showWhitespaceNodes") {
+      this.setWhitespaceNodes(value);
+    } else if (aName == "inspector.blink.on") {
+      this.setFlashSelected(value);
 
-    if (aName == "inspector.dom.showAccessibleNodes")
-      this.setAccessibleNodes(PrefUtils.getPref("inspector.dom.showAccessibleNodes"), true);
-
-    if (aName == "inspector.dom.showProcessingInstructions")
-      this.setProcessingInstructions(PrefUtils.getPref("inspector.dom.showProcessingInstructions"), true);
-    
-    if (aName == "inspector.blink.on")
-      this.setFlashSelected(PrefUtils.getPref("inspector.blink.on"));
-
-    if (this.mFlasher) {
+      // don't need to rebuild for this
+      return;
+    } else if (this.mFlasher) {
       if (aName == "inspector.blink.border-color") {
-        this.mFlasher.color = PrefUtils.getPref("inspector.blink.border-color");
+        this.mFlasher.color = value;
       } else if (aName == "inspector.blink.border-width") {
-        this.mFlasher.thickness = PrefUtils.getPref("inspector.blink.border-width");
+        this.mFlasher.thickness = value;
       } else if (aName == "inspector.blink.duration") {
-        this.mFlasher.duration = PrefUtils.getPref("inspector.blink.duration");
+        this.mFlasher.duration = value;
       } else if (aName == "inspector.blink.speed") {
-        this.mFlasher.speed = PrefUtils.getPref("inspector.blink.speed");
+        this.mFlasher.speed = value;
       } else if (aName == "inspector.blink.invert") {
-        this.mFlasher.invert = PrefUtils.getPref("inspector.blink.invert");
+        this.mFlasher.invert = value;
       }
+
+      // don't need to rebuild for these
+      return;
     }
+
+    this.rebuild();
   },
 
   ////////////////////////////////////////////////////////////////////////////
