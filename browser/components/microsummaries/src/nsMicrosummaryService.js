@@ -771,23 +771,10 @@ MicrosummaryService.prototype = {
    */
   setMicrosummary: function MSS_setMicrosummary(bookmarkID, microsummary) {
     this._setField(bookmarkID, FIELD_MICSUM_GEN_URI, microsummary.generatorURI.spec);
-
-    // If the microsummary content has already been generated,
-    // set the URI's generated title to the microsummary content
-    // and expire the microsummary after the normal interval.
-    if (microsummary.content) {
-      var now = new Date().getTime();
-      this._setField(bookmarkID, FIELD_GENERATED_TITLE, microsummary.content);
-      this._setField(bookmarkID, FIELD_MICSUM_EXPIRATION, now + UPDATE_INTERVAL);
-    }
-
-    // Otherwise, expire the microsummary and update it immediately.
-    else {
-      if (this._hasField(bookmarkID, FIELD_MICSUM_EXPIRATION))
-        this._clearField(bookmarkID, FIELD_MICSUM_EXPIRATION);
-      microsummary.addObserver(this);
-      microsummary.update();
-    }
+    if (microsummary.content)
+      this._updateMicrosummary(bookmarkID, microsummary);
+    else
+      this.refreshMicrosummary(bookmarkID);
   },
 
   /**
