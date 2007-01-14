@@ -1414,8 +1414,17 @@ MicrosummarySet.prototype = {
     for ( var i = 0; i < links.length; i++ ) {
       var link = links[i];
 
-      if (link.getAttribute("rel") != "microsummary")
+      if(!link.hasAttribute("rel"))
         continue;
+
+      var relAttr = link.getAttribute("rel");
+
+      // The attribute's value can be a space-separated list of link types,
+      // check to see if "microsummary" is one of them.
+      var linkTypes = relAttr.split(/\s+/);
+      if (!linkTypes.some( function(v) { return v.toLowerCase() == "microsummary"; }))
+        continue;
+
 
       // Unlike the "href" attribute, the "href" property contains
       // an absolute URI spec, so we use it here to create the URI.
