@@ -68,6 +68,7 @@ Contributor(s): ______________________________________. -->
   <commandset id="selectEditMenuItems"/>
   <commandset id="undoEditMenuItems"/>
   <commandset id="clipboardEditMenuItems"/>
+  <commandset id="commands"/>
   
   <broadcasterset id="navBroadcasters"/>
 
