@@ -2131,8 +2131,9 @@ MicrosummaryResource.prototype = {
     };
 
     // cancel loads that take too long
-    // timeout specified in seconds at browser.microsummary.requestTimeout, or 10 seconds
-    var timeout = getPref("browser.microsummary.requestTimeout", 10) * 1000;
+    // timeout specified in seconds at browser.microsummary.requestTimeout,
+    // or 300 seconds (five minutes)
+    var timeout = getPref("browser.microsummary.requestTimeout", 300) * 1000;
     var timerObserver = {
       _self: this,
       observe: function MSR_timerObserver_observe() {
