@@ -271,6 +271,7 @@ sub pickos {
             /\(.*QNX.*\)/ && do {push @os, "Neutrino";};
             /\(.*VMS.*\)/ && do {push @os, "OpenVMS";};
             /\(.*Windows XP.*\)/ && do {push @os, "Windows XP";};
+            /\(.*Windows NT 6\.0.*\)/ && do {push @os, "Windows Vista";};
             /\(.*Windows NT 5\.2.*\)/ && do {push @os, "Windows Server 2003";};
             /\(.*Windows NT 5\.1.*\)/ && do {push @os, "Windows XP";};
             /\(.*Windows 2000.*\)/ && do {push @os, "Windows 2000";};
