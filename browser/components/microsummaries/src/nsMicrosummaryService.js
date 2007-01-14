@@ -58,6 +58,10 @@ const FIELD_GENERATED_TITLE   = "bookmarks/generatedTitle";
 const FIELD_CONTENT_TYPE      = "bookmarks/contentType";
 #else
 const NC_NS                   = "http://home.netscape.com/NC-rdf#";
+const RDF_NS                  = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+const FIELD_RDF_TYPE          = RDF_NS + "type";
+const VALUE_MICSUM_BOOKMARK   = NC_NS + "MicsumBookmark";
+const VALUE_NORMAL_BOOKMARK   = NC_NS + "Bookmark";
 const FIELD_MICSUM_GEN_URI    = NC_NS + "MicsumGenURI";
 const FIELD_MICSUM_EXPIRATION = NC_NS + "MicsumExpiration";
 const FIELD_GENERATED_TITLE   = NC_NS + "GeneratedTitle";
@@ -238,12 +242,12 @@ MicrosummaryService.prototype = {
     }
 #else
     var bookmarks = [];
-    var resources = this._bmds.GetAllResources();
-    while (resources.hasMoreElements()) {
-      var resource = resources.getNext().QueryInterface(Ci.nsIRDFResource);
-      if (this._bmds.hasArcOut(resource, this._resource(FIELD_MICSUM_GEN_URI)))
-        bookmarks.push(resource);
-    }
+
+    var resources = this._bmds.GetSources(this._resource(FIELD_RDF_TYPE),
+                                          this._resource(VALUE_MICSUM_BOOKMARK),
+                                          true);
+    while (resources.hasMoreElements())
+      bookmarks.push(resources.getNext().QueryInterface(Ci.nsIRDFResource));
 #endif
 
     var now = new Date().getTime();
@@ -597,8 +601,12 @@ MicrosummaryService.prototype = {
     var node = this._bmds.GetTarget(bookmarkResource,
                                     this._resource(fieldName),
                                     true);
-    if (node)
-      fieldValue = node.QueryInterface(Ci.nsIRDFLiteral).Value;
+    if (node) {
+      if (fieldName == FIELD_RDF_TYPE)
+        fieldValue = node.QueryInterface(Ci.nsIRDFResource).Value;
+      else
+        fieldValue = node.QueryInterface(Ci.nsIRDFLiteral).Value;
+    }
     else
       fieldValue = null;
 
@@ -622,7 +630,29 @@ MicrosummaryService.prototype = {
                         true);
     }
 
-    this._forceToolbarRebuild();
+    // If we're setting the generator URI field, make sure the bookmark's
+    // RDF type is set to the microsummary bookmark type.
+    if (fieldName == FIELD_MICSUM_GEN_URI &&
+        this._getField(bookmarkID, FIELD_RDF_TYPE) != VALUE_MICSUM_BOOKMARK) {
+      if (this._hasField(bookmarkID, FIELD_RDF_TYPE)) {
+        oldValue = this._getField(bookmarkID, FIELD_RDF_TYPE);
+        this._bmds.Change(bookmarkResource,
+                          this._resource(FIELD_RDF_TYPE),
+                          this._resource(oldValue),
+                          this._resource(VALUE_MICSUM_BOOKMARK));
+      }
+      else {
+        this._bmds.Assert(bookmarkResource,
+                          this._resource(FIELD_RDF_TYPE),
+                          this._resource(VALUE_MICSUM_BOOKMARK),
+                          true);
+      }
+    }
+
+    // If we're setting a field that could affect this bookmark's label
+    // in bookmarks toolbars, then force toolbars to rebuild from scratch.
+    if (fieldName == FIELD_MICSUM_GEN_URI || fieldName == FIELD_GENERATED_TITLE)
+      this._forceToolbarRebuild();
   },
 
   _clearField: function MSS__clearField(bookmarkID, fieldName) {
@@ -635,8 +665,16 @@ MicrosummaryService.prototype = {
       this._bmds.Unassert(bookmarkResource,
                           this._resource(fieldName),
                           node);
-      this._forceToolbarRebuild();
     }
+
+    // If we're clearing the generator URI field, set the bookmark's RDF type
+    // back to the normal bookmark type.
+    if (fieldName == FIELD_MICSUM_GEN_URI &&
+        this._getField(bookmarkID, FIELD_RDF_TYPE) == VALUE_MICSUM_BOOKMARK)
+      this._bmds.Change(bookmarkResource,
+                        this._resource(FIELD_RDF_TYPE),
+                        this._resource(VALUE_MICSUM_BOOKMARK),
+                        this._resource(VALUE_NORMAL_BOOKMARK));
   },
 
   _hasField: function MSS__hasField(bookmarkID, fieldName) {
