@@ -67,6 +67,7 @@ function DOMViewer_initialize()
 function DOMViewer_destroy()
 {
   PrefUtils.removeObserver("inspector", PrefChangeObserver);
+  viewer.removeClickListeners();
   viewer = null;
 }
 
