@@ -1641,6 +1641,7 @@ MicrosummaryResource.prototype = {
     
     request = request.QueryInterface(Ci.nsIXMLHttpRequest);
     request.open("GET", this.uri.spec, true);
+    request.setRequestHeader("X-Moz", "microsummary");
     request.send(null);
   },
 
