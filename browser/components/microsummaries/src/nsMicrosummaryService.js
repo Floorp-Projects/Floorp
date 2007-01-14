@@ -257,7 +257,14 @@ MicrosummaryService.prototype = {
       // we don't try it every 15 seconds, potentially overloading the server.
       this._setField(bookmarkID, FIELD_MICSUM_EXPIRATION, now + updateInterval);
 
-      this.refreshMicrosummary(bookmarkID);
+      // Try to update the microsummary, but trap errors, so an update
+      // that throws doesn't prevent us from updating the rest of them.
+      try {
+        this.refreshMicrosummary(bookmarkID);
+      }
+      catch(ex) {
+        Components.utils.reportError(ex);
+      }
     }
   },
   
@@ -711,8 +718,18 @@ MicrosummaryService.prototype = {
     var resources = this._bmds.GetSources(this._resource(FIELD_RDF_TYPE),
                                           this._resource(VALUE_MICSUM_BOOKMARK),
                                           true);
-    while (resources.hasMoreElements())
-      bookmarks.push(resources.getNext().QueryInterface(Ci.nsIRDFResource));
+    while (resources.hasMoreElements()) {
+      var resource = resources.getNext().QueryInterface(Ci.nsIRDFResource);
+
+      // When a bookmark gets deleted or cut, most of its arcs get removed
+      // from the data source, but a few of them remain, in particular its RDF
+      // type arc.  So just because this resource has a MicsumBookmark type,
+      // that doesn't mean it's a real bookmark!  We need to check.
+      if (!this._bms.isBookmarkedResource(resource))
+        continue;
+
+      bookmarks.push(resource);
+    }
 
     return bookmarks;
   },
@@ -1001,6 +1018,8 @@ MicrosummaryService.prototype = {
       throw "bookmark " + bookmarkID + " does not have a microsummary";
 
     var pageURI = this._getPageForBookmark(bookmarkID);
+    if (!pageURI)
+      throw("can't get URL for bookmark with ID " + bookmarkID);
     var generatorURI = this._uri(this._getField(bookmarkID, FIELD_MICSUM_GEN_URI));
 
     var localGenerator = this._localGenerators[generatorURI.spec];
