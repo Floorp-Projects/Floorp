@@ -1458,8 +1458,12 @@ SEC_PKCS12DecoderVerify(SEC_PKCS12DecoderContext *p12dcx)
     SECStatus rv = SECSuccess;
 
     /* make sure that no errors have occured... */
-    if(!p12dcx || p12dcx->error) {
+    if(!p12dcx) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
+    if(p12dcx->error) {
+	/* error code is already set! PORT_SetError(p12dcx->errorValue); */
 	return SECFailure;
     }
 
@@ -2411,10 +2415,10 @@ sec_pkcs12_add_cert(sec_PKCS12SafeBag *cert, PRBool keyExists, void *wincx)
 
 static SECStatus
 sec_pkcs12_add_key(sec_PKCS12SafeBag *key, SECItem *publicValue, 
-			KeyType keyType, unsigned int keyUsage, void *wincx)
+		   KeyType keyType, unsigned int keyUsage, 
+		   SECItem *nickName, void *wincx)
 {
     SECStatus rv;
-    SECItem *nickName;
 
    /* We should always have values for "key" and "publicValue"
       so they can be dereferenced later. */
@@ -2426,8 +2430,6 @@ sec_pkcs12_add_key(sec_PKCS12SafeBag *key, SECItem *publicValue,
     if(key->problem || key->noInstall) {
 	return SECSuccess;
     }
-
-    nickName = sec_pkcs12_get_nickname(key);
 
     switch(SECOID_FindOIDTag(&key->safeBagType))
     {
@@ -2453,12 +2455,6 @@ sec_pkcs12_add_key(sec_PKCS12SafeBag *key, SECItem *publicValue,
 	    return SECFailure;
     }
 
-    key->installed = PR_TRUE;
-
-    if(nickName) {
-	SECITEM_ZfreeItem(nickName, PR_TRUE);
-    }
-					
     if(rv != SECSuccess) {
 	key->error = SEC_ERROR_PKCS12_UNABLE_TO_IMPORT_KEY;
 	key->problem = PR_TRUE;
@@ -2469,10 +2465,25 @@ sec_pkcs12_add_key(sec_PKCS12SafeBag *key, SECItem *publicValue,
     return rv;
 }
 
+/* 
+ * The correctness of the code in this file ABSOLUTELY REQUIRES 
+ * that ALL BAGs share a single common arena.  
+ *
+ * This function allocates the bag list from the arena of whatever bag 
+ * happens to be passed to it.  Each time a new bag is handed to it,
+ * it grows (resizes) the arena of the bag that was handed to it.  
+ * If the bags have different arenas, it will grow the wrong arena.
+ *
+ * Worse, if the bags had separate arenas, then while destroying the bags 
+ * in a bag list, when the bag whose arena contained the bag list was 
+ * destroyed, the baglist itself would be destroyed, making it difficult 
+ * or impossible to continue to destroy the bags in the destroyed list.
+ */
 static SECStatus
 sec_pkcs12_add_item_to_bag_list(sec_PKCS12SafeBag ***bagList, 
 				sec_PKCS12SafeBag *bag)
 {
+    sec_PKCS12SafeBag **newBagList = NULL;
     int i = 0;
 
     if(!bagList || !bag) {
@@ -2481,28 +2492,32 @@ sec_pkcs12_add_item_to_bag_list(sec_PKCS12SafeBag ***bagList,
     }
 
     if(!(*bagList)) {
-	(*bagList) = (sec_PKCS12SafeBag **)PORT_ArenaZAlloc(bag->arena, 
+	newBagList = (sec_PKCS12SafeBag **)PORT_ArenaZAlloc(bag->arena, 
 				      sizeof(sec_PKCS12SafeBag *) * 2);
     } else {
-	while((*bagList)[i]) i++;
-	(*bagList) = (sec_PKCS12SafeBag **)PORT_ArenaGrow(bag->arena, *bagList,
+	while((*bagList)[i]) 
+	    i++;
+	newBagList = (sec_PKCS12SafeBag **)PORT_ArenaGrow(bag->arena, 
+	                        *bagList,
 				sizeof(sec_PKCS12SafeBag *) * (i + 1),
 				sizeof(sec_PKCS12SafeBag *) * (i + 2));
     }
 
-    if(!(*bagList)) {
+    if(!newBagList) {
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
 	return SECFailure;
     }
 
-    (*bagList)[i] = bag;
-    (*bagList)[i+1] = NULL;
+    newBagList[i]   = bag;
+    newBagList[i+1] = NULL;
+    *bagList = newBagList;
 
     return SECSuccess;
 }
 
 static sec_PKCS12SafeBag **
-sec_pkcs12_find_certs_for_key(sec_PKCS12SafeBag **safeBags, sec_PKCS12SafeBag *key ) 
+sec_pkcs12_find_certs_for_key(sec_PKCS12SafeBag **safeBags, 
+                              sec_PKCS12SafeBag *key ) 
 {
     sec_PKCS12SafeBag **certList = NULL;
     SECItem *keyId;
@@ -2518,9 +2533,7 @@ sec_pkcs12_find_certs_for_key(sec_PKCS12SafeBag **safeBags, sec_PKCS12SafeBag *k
 	return NULL;
     }
 
-    i = 0;
-    certList = NULL;
-    while(safeBags[i]) {
+    for (i = 0; safeBags[i]; i++) {
 	if(SECOID_FindOIDTag(&(safeBags[i]->safeBagType)) 
 				== SEC_OID_PKCS12_V1_CERT_BAG_ID) {
 	    SECItem *certKeyId = sec_pkcs12_get_attribute_value(safeBags[i],
@@ -2530,11 +2543,15 @@ sec_pkcs12_find_certs_for_key(sec_PKCS12SafeBag **safeBags, sec_PKCS12SafeBag *k
 				== SECEqual)) {
 		if(sec_pkcs12_add_item_to_bag_list(&certList, safeBags[i])
 				!= SECSuccess) {
+		    /* This would leak the partial list of safeBags,
+		     * but that list is allocated from the arena of 
+		     * one of the safebags, and will be destroyed when 
+		     * that arena is destroyed.  So this is not a real leak.
+		     */
 		    return NULL;
 		}
 	    }
 	}
-	i++;
     }
 
     return certList;
@@ -2553,20 +2570,20 @@ SEC_PKCS12DecoderGetCerts(SEC_PKCS12DecoderContext *p12dcx)
     }
 
     safeBags = p12dcx->safeBags;
-    i = 0;
     certList = CERT_NewCertList();
 
     if (certList == NULL) {
 	 return NULL;
     }
 
-    while(safeBags[i]) {
+    for (i = 0; safeBags[i]; i++) {
 	if (SECOID_FindOIDTag(&(safeBags[i]->safeBagType)) 
 				== SEC_OID_PKCS12_V1_CERT_BAG_ID) {
 		SECItem *derCert = sec_pkcs12_get_der_cert(safeBags[i]) ;
 		CERTCertificate *tempCert = NULL;
 
-		if (derCert == NULL) continue;
+		if (derCert == NULL) 
+		    continue;
     		tempCert=CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
 		                                 derCert, NULL, 
 		                                 PR_FALSE, PR_TRUE);
@@ -2576,7 +2593,9 @@ SEC_PKCS12DecoderGetCerts(SEC_PKCS12DecoderContext *p12dcx)
 		}
 		SECITEM_FreeItem(derCert,PR_TRUE);
 	}
-	i++;
+	/* fixed an infinite loop here, by ensuring that i gets incremented
+	 * if derCert is NULL above.
+	 */
     }
 
     return certList;
@@ -2593,26 +2612,31 @@ sec_pkcs12_get_key_bags(sec_PKCS12SafeBag **safeBags)
 	return NULL;
     }
 
-    i = 0;
-    while(safeBags[i]) {
+    for (i = 0; safeBags[i]; i++) {
 	bagType = SECOID_FindOIDTag(&(safeBags[i]->safeBagType));
 	switch(bagType) {
 	    case SEC_OID_PKCS12_V1_KEY_BAG_ID:
 	    case SEC_OID_PKCS12_V1_PKCS8_SHROUDED_KEY_BAG_ID:
 		if(sec_pkcs12_add_item_to_bag_list(&keyList, safeBags[i])
 				!= SECSuccess) {
+		    /* This would leak, except that keyList is allocated
+		     * from the arena shared by all the safeBags.
+		     */
 		    return NULL;
 		}
 		break;
 	    default:
 		break;
 	}
-	i++;
     }
 
     return keyList;
 }
 
+/* This function takes two passes over the bags, validating them 
+ * The two passes are intended to mirror exactly the two passes in 
+ * sec_pkcs12_install_bags.  But they don't. :(
+ */
 static SECStatus 
 sec_pkcs12_validate_bags(sec_PKCS12SafeBag **safeBags, 
 			 SEC_PKCS12NicknameCollisionCallback nicknameCb,
@@ -2630,70 +2654,72 @@ sec_pkcs12_validate_bags(sec_PKCS12SafeBag **safeBags,
 	return SECSuccess;
     }
 
+    /* First pass.  Find all the key bags.  
+     * Find the matching cert(s) for each key.  
+     */
     keyList = sec_pkcs12_get_key_bags(safeBags);
     if(keyList) {
-	i = 0;
+	for (i = 0; keyList[i]; ++i) {
+	    sec_PKCS12SafeBag *key = keyList[i];
+	    sec_PKCS12SafeBag **certList = 
+			    sec_pkcs12_find_certs_for_key(safeBags, key);
 
-	while(keyList[i]) {
-	    sec_PKCS12SafeBag **certList = sec_pkcs12_find_certs_for_key(
-							safeBags, keyList[i]);
 	    if(certList) {
-		int j = 0;
+		int j;
 
-		if(SECOID_FindOIDTag(&(keyList[i]->safeBagType)) == 
+		if(SECOID_FindOIDTag(&(key->safeBagType)) == 
 					SEC_OID_PKCS12_V1_KEY_BAG_ID) {
 		    /* if it is an unencrypted private key then make sure
 		     * the attributes are propageted to the appropriate 
 		     * level 
 		     */
-		    if(sec_pkcs12_get_key_info(keyList[i]) != SECSuccess) {
+		    if(sec_pkcs12_get_key_info(key) != SECSuccess) {
 			return SECFailure;
 		    }
 		}
 	
-		sec_pkcs12_validate_key_by_cert(certList[0], keyList[i], wincx);
-		while(certList[j]) {
-		    certList[j]->hasKey = PR_TRUE;
-		    if(keyList[i]->problem) {
-			certList[j]->problem = PR_TRUE;
-			certList[j]->error = keyList[i]->error;
-		    } else {
-			sec_pkcs12_validate_cert(certList[j], keyList[i],
-						 nicknameCb, wincx);
-			if(certList[j]->problem) {
-			    keyList[i]->problem = certList[j]->problem;
-			    keyList[i]->error = certList[j]->error;
-			}
+		sec_pkcs12_validate_key_by_cert(certList[0], key, wincx);
+		for (j = 0; certList[j]; ++j) {
+		    sec_PKCS12SafeBag *cert = certList[j];
+		    cert->hasKey = PR_TRUE;
+		    if(key->problem) {
+			cert->problem = PR_TRUE;
+			cert->error   = key->error;
+			continue;
+		    } 
+		    sec_pkcs12_validate_cert(cert, key, nicknameCb, wincx);
+		    if(cert->problem) {
+			key->problem = cert->problem;
+			key->error   = cert->error;
 		    }
-		    j++;
 		}
 	    }
-
-	    i++;
 	}
     }
 
-    i = 0;
-    while(safeBags[i]) {
-	if(!safeBags[i]->validated) {
-	    SECOidTag bagType = SECOID_FindOIDTag(&safeBags[i]->safeBagType);
+    /* Now take a second pass over the safebags and mark for installation any 
+     * certs that were neither installed nor disqualified by the first pass.
+     */
+    for (i = 0; safeBags[i]; ++i) {
+	sec_PKCS12SafeBag *bag = safeBags[i];
+
+	if(!bag->validated) {
+	    SECOidTag bagType = SECOID_FindOIDTag(&bag->safeBagType);
 
 	    switch(bagType) {
-		case SEC_OID_PKCS12_V1_CERT_BAG_ID:
-		    sec_pkcs12_validate_cert(safeBags[i], NULL, nicknameCb, 
-					     wincx);
-		    break;
-		case SEC_OID_PKCS12_V1_KEY_BAG_ID:
-		case SEC_OID_PKCS12_V1_PKCS8_SHROUDED_KEY_BAG_ID:
-		    safeBags[i]->noInstall = PR_TRUE;
-		    safeBags[i]->problem = PR_TRUE;	
-		    safeBags[i]->error = SEC_ERROR_PKCS12_UNABLE_TO_IMPORT_KEY;
-		    break;
-		default:
-		    safeBags[i]->noInstall = PR_TRUE;
+	    case SEC_OID_PKCS12_V1_CERT_BAG_ID:
+		sec_pkcs12_validate_cert(bag, NULL, nicknameCb, wincx);
+		break;
+	    case SEC_OID_PKCS12_V1_KEY_BAG_ID:
+	    case SEC_OID_PKCS12_V1_PKCS8_SHROUDED_KEY_BAG_ID:
+		bag->noInstall = PR_TRUE;
+		bag->problem = PR_TRUE;	
+		bag->error = SEC_ERROR_PKCS12_UNABLE_TO_IMPORT_KEY;
+		break;
+	    default:
+		bag->noInstall = PR_TRUE;
 	    }
 	}
-	i++;
     }
 
     return SECSuccess;
@@ -2719,7 +2745,8 @@ SEC_PKCS12DecoderValidateBags(SEC_PKCS12DecoderContext *p12dcx,
     i = 0;
     while(p12dcx->safeBags[i]) {
 	bagCnt++;
-	if(p12dcx->safeBags[i]->noInstall) noInstallCnt++;
+	if(p12dcx->safeBags[i]->noInstall) 
+	    noInstallCnt++;
 	if(p12dcx->safeBags[i]->problem) {
 	    probCnt++;
 	    errorVal = p12dcx->safeBags[i]->error;
@@ -2796,12 +2823,16 @@ sec_pkcs12_get_public_value_and_type(sec_PKCS12SafeBag *certBag,
     return pubValue;
 }
 
+/* This function takes two passes over the bags, installing them in the
+ * desired slot.  The two passes are intended to mirror exactly the 
+ * two passes in sec_pkcs12_validate_bags.
+ */
 static SECStatus 
-sec_pkcs12_install_bags(sec_PKCS12SafeBag **safeBags, 
-			void *wincx)
+sec_pkcs12_install_bags(sec_PKCS12SafeBag **safeBags, void *wincx)
 {
-    sec_PKCS12SafeBag **keyList, **certList;
+    sec_PKCS12SafeBag **keyList;
     int i;
+    int failedKeys = 0;
 
     if(!safeBags) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -2812,93 +2843,116 @@ sec_pkcs12_install_bags(sec_PKCS12SafeBag **safeBags,
 	return SECSuccess;
     }
 
+    /* First pass.  Find all the key bags. 
+     * Try to install them, and any certs associated with them.  
+     */
     keyList = sec_pkcs12_get_key_bags(safeBags);
     if(keyList) {
-	i = 0;
-
-	while(keyList[i]) {
+	for (i = 0; keyList[i]; i++) {
 	    SECStatus rv;
 	    SECItem *publicValue = NULL;
+	    SECItem *nickName    = NULL;
+	    sec_PKCS12SafeBag *key = keyList[i];
+	    sec_PKCS12SafeBag **certList;
 	    KeyType keyType;
 	    unsigned int keyUsage;
 
-	    if(keyList[i]->problem) {
-		goto next_key_bag;
+	    if(key->problem) {
+		++failedKeys;
+		continue;
 	    }
 
-	    certList = sec_pkcs12_find_certs_for_key(safeBags,
-						     keyList[i]);
-	    if(certList) {
+	    certList = sec_pkcs12_find_certs_for_key(safeBags, key);
+	    if(certList && certList[0]) {
 		publicValue = sec_pkcs12_get_public_value_and_type(certList[0],
 							&keyType, &keyUsage);
+		/* use the cert's nickname, if it has one, else use the 
+		 * key's nickname, else fail.
+		 */
+		nickName = sec_pkcs12_get_nickname_for_cert(certList[0], 
+		                                            key, wincx);
+	    } else {
+		nickName = sec_pkcs12_get_nickname(key);
 	    }
-            if(publicValue) {
-                rv = sec_pkcs12_add_key(keyList[i], publicValue, keyType,
-                                        keyUsage, wincx);
-		SECITEM_FreeItem(publicValue, PR_TRUE);
-	    }
-            else {
-                keyList[i]->error = SEC_ERROR_PKCS12_UNABLE_TO_IMPORT_KEY;
+	    if (!nickName) {
+		key->error = SEC_ERROR_BAD_NICKNAME;
+		key->problem = PR_TRUE;
+		rv = SECFailure;
+	    } else if (!publicValue) {
+                key->error = SEC_ERROR_PKCS12_UNABLE_TO_IMPORT_KEY;
+		key->problem = PR_TRUE;
                 rv = SECFailure;
+	    } else {
+		rv = sec_pkcs12_add_key(key, publicValue, keyType, 
+		                        keyUsage, nickName, wincx);
             }
+	    if (publicValue) {
+		SECITEM_FreeItem(publicValue, PR_TRUE);
+		publicValue = NULL;
+	    }
+	    if (nickName) {
+		SECITEM_FreeItem(nickName, PR_TRUE);
+		nickName = NULL;
+	    }
 	    if(rv != SECSuccess) {
-		PORT_SetError(keyList[i]->error);
-		return SECFailure;
+		PORT_SetError(key->error);
+		++failedKeys;
 	    }
 
 	    if(certList) {
-		int j = 0;
+		int j;
 
-		while(certList[j]) {
+		for (j = 0; certList[j]; j++) {
+		    sec_PKCS12SafeBag *cert = certList[j];
 		    SECStatus certRv;
 
+		    if (!cert)
+		    	continue;
 		    if(rv != SECSuccess) {
-			certList[j]->problem = keyList[i]->problem;
-			certList[j]->error = keyList[i]->error;	
-			certList[j]->noInstall = PR_TRUE;
-			goto next_cert_bag;
+			cert->problem = key->problem;
+			cert->error   = key->error;	
+			cert->noInstall = PR_TRUE;
+			continue;
 		    }
 
-		    certRv = sec_pkcs12_add_cert(certList[j], 
-						 certList[j]->hasKey, wincx);
+		    certRv = sec_pkcs12_add_cert(cert, cert->hasKey, wincx);
 		    if(certRv != SECSuccess) {
-			keyList[i]->problem = certList[j]->problem;
-			keyList[i]->error = certList[j]->error;
-			PORT_SetError(certList[j]->error);
+			key->problem = cert->problem;
+			key->error   = cert->error;
+			PORT_SetError(cert->error);
 			return SECFailure;
 		    }
-next_cert_bag:
-		    j++;
 		}
 	    }
-
-next_key_bag:
-	    i++;
 	}
     }
+    if (failedKeys)
+    	return SECFailure;
 
-    i = 0;
-    while(safeBags[i]) {
-	if(!safeBags[i]->installed) {
+    /* Now take a second pass over the safebags and install any certs 
+     * that were neither installed nor disqualified by the first pass.
+     */
+    for (i = 0; safeBags[i]; i++) {
+	sec_PKCS12SafeBag *bag = safeBags[i];
+
+	if (!bag->installed && !bag->problem && !bag->noInstall) {
 	    SECStatus rv;
-	    SECOidTag bagType = SECOID_FindOIDTag(&(safeBags[i]->safeBagType));
+	    SECOidTag bagType = SECOID_FindOIDTag(&(bag->safeBagType));
 
 	    switch(bagType) {
-		case SEC_OID_PKCS12_V1_CERT_BAG_ID:
-		    rv = sec_pkcs12_add_cert(safeBags[i], safeBags[i]->hasKey,
-					     wincx);
-		    if(rv != SECSuccess) {
-			PORT_SetError(safeBags[i]->error);
-			return SECFailure;
-		    }
-		    break;
-		case SEC_OID_PKCS12_V1_KEY_BAG_ID:
-		case SEC_OID_PKCS12_V1_PKCS8_SHROUDED_KEY_BAG_ID:
-		default:
-		    break;
+	    case SEC_OID_PKCS12_V1_CERT_BAG_ID:
+		rv = sec_pkcs12_add_cert(bag, bag->hasKey, wincx);
+		if(rv != SECSuccess) {
+		    PORT_SetError(bag->error);
+		    return SECFailure;
+		}
+		break;
+	    case SEC_OID_PKCS12_V1_KEY_BAG_ID:
+	    case SEC_OID_PKCS12_V1_PKCS8_SHROUDED_KEY_BAG_ID:
+	    default:
+		break;
 	    }
 	}
-	i++;
     }
 
     return SECSuccess;
