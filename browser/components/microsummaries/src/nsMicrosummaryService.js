@@ -51,7 +51,7 @@ const CHECK_INTERVAL = 15 * 1000; // 15 seconds
 const MICSUM_NS = new Namespace("http://www.mozilla.org/microsummaries/0.1");
 const XSLT_NS = new Namespace("http://www.w3.org/1999/XSL/Transform");
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
 const FIELD_MICSUM_GEN_URI    = "microsummary/generatorURI";
 const FIELD_MICSUM_EXPIRATION = "microsummary/expiration";
 const FIELD_GENERATED_TITLE   = "bookmarks/generatedTitle";
@@ -75,7 +75,7 @@ function MicrosummaryService() {}
 
 MicrosummaryService.prototype = {
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
   // Bookmarks Service
   __bms: null,
   get _bms() {
@@ -148,7 +148,7 @@ MicrosummaryService.prototype = {
     return this._ios.newURI(spec, null, null);
   },
 
-#ifndef MOZ_PLACES
+#ifndef MOZ_PLACES_BOOKMARKS
   /**
    * Make an RDF resource from a URI spec.
    * @param   uriSpec
@@ -616,7 +616,7 @@ MicrosummaryService.prototype = {
     }
   },
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
   /**
    * Get the set of bookmarks with microsummaries.
    *
@@ -873,7 +873,7 @@ MicrosummaryService.prototype = {
    *
    */
   setMicrosummary: function MSS_setMicrosummary(bookmarkID, microsummary) {
-#ifndef MOZ_PLACES
+#ifndef MOZ_PLACES_BOOKMARKS
     // Make sure that the bookmark is of type MicsumBookmark
     // because that's what the template rules are matching
     if (this._getField(bookmarkID, FIELD_RDF_TYPE) != VALUE_MICSUM_BOOKMARK) {
@@ -922,7 +922,7 @@ MicrosummaryService.prototype = {
    *
    */
   removeMicrosummary: function MSS_removeMicrosummary(bookmarkID) {
-#ifndef MOZ_PLACES
+#ifndef MOZ_PLACES_BOOKMARKS
     // Set the bookmark's RDF type back to the normal bookmark type
     if (this._getField(bookmarkID, FIELD_RDF_TYPE) == VALUE_MICSUM_BOOKMARK) {
       // Force the bookmark trees to rebuild, since they don't seem
