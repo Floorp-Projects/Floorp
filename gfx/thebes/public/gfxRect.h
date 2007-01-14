@@ -59,11 +59,11 @@ struct THEBES_API gfxRect {
         return (pos != s.pos) || (size != s.size);
     }
 
-    const gfxPoint& TopLeft() { return pos; }
-    gfxFloat Width() { return size.width; }
-    gfxFloat Height() { return size.height; }
-    gfxFloat X() { return pos.x; }
-    gfxFloat Y() { return pos.y; }
+    const gfxPoint& TopLeft() const { return pos; }
+    gfxFloat Width() const { return size.width; }
+    gfxFloat Height() const { return size.height; }
+    gfxFloat X() const { return pos.x; }
+    gfxFloat Y() const { return pos.y; }
 
     // XXX figure out what methods (intersect, union, etc) we use and add them.
 };
