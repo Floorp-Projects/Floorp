@@ -1807,6 +1807,9 @@ MicrosummaryResource.prototype = {
     var errorHandler = {
       _self: this,
       handleEvent: function MSR_errorHandler_handleEvent(event) {
+        if (this._self._loadTimer)
+          this._self._loadTimer.cancel();
+
         LOG(this._self.uri.spec + " load failed");
         try     { this._self.destroy() }
         finally { this._self = null }
