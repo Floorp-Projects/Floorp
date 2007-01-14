@@ -45,10 +45,6 @@ const MODE_TRUNCATE = 0x20;
 const NS_ERROR_MODULE_DOM = 2152923136;
 const NS_ERROR_DOM_BAD_URI = NS_ERROR_MODULE_DOM + 1012;
 
-// How often to update microsummaries, in milliseconds.
-// XXX Make this a hidden pref so power users can modify it.
-const UPDATE_INTERVAL = 30 * 60 * 1000; // 30 minutes
-
 // How often to check for microsummaries that need updating, in milliseconds.
 const CHECK_INTERVAL = 15 * 1000; // 15 seconds
 
@@ -183,6 +179,14 @@ MicrosummaryService.prototype = {
     return this.__dirs;
   },
 
+  // The update interval as specified by the user (defaults to 30 minutes)
+  get _updateInterval() {
+    var updateInterval =
+      getPref("browser.microsummary.updateInterval", 30);
+    // the minimum update interval is 1 minute
+    return Math.max(updateInterval, 1) * 60 * 1000;
+  },
+
   // A cache of local microsummary generators.  This gets built on startup
   // by the _cacheLocalGenerators() method.
   _localGenerators: {},
@@ -240,6 +244,7 @@ MicrosummaryService.prototype = {
     var bookmarks = this._getBookmarks();
 
     var now = Date.now();
+    var updateInterval = this._updateInterval;
     for ( var i = 0; i < bookmarks.length; i++ ) {
       var bookmarkID = bookmarks[i];
 
@@ -250,7 +255,7 @@ MicrosummaryService.prototype = {
 
       // Reset the expiration time immediately, so if the refresh is failing
       // we don't try it every 15 seconds, potentially overloading the server.
-      this._setField(bookmarkID, FIELD_MICSUM_EXPIRATION, now + UPDATE_INTERVAL);
+      this._setField(bookmarkID, FIELD_MICSUM_EXPIRATION, now + updateInterval);
 
       this.refreshMicrosummary(bookmarkID);
     }
@@ -259,7 +264,7 @@ MicrosummaryService.prototype = {
   _updateMicrosummary: function MSS__updateMicrosummary(bookmarkID, microsummary) {
     this._setField(bookmarkID, FIELD_GENERATED_TITLE, microsummary.content);
     this._setField(bookmarkID, FIELD_MICSUM_EXPIRATION,
-                   Date.now() + (microsummary.updateInterval || UPDATE_INTERVAL));
+                   Date.now() + (microsummary.updateInterval || this._updateInterval));
 
     LOG("updated microsummary for page " + microsummary.pageURI.spec +
         " to " + microsummary.content);
@@ -1863,15 +1868,7 @@ ArrayEnumerator.prototype = {
  *        the text to log
  */
 function LOG(aText) {
-  var shouldLog = false;
-  try {
-    var pb = Cc["@mozilla.org/preferences-service;1"].
-             getService(Ci.nsIPrefBranch);
-    shouldLog = pb.getBoolPref("browser.microsummary.log");
-  }
-  catch (ex) {}
-  
-  if (shouldLog) {
+  if (getPref("browser.microsummary.log", false)) {
     dump("*** Microsummaries: " +  aText + "\n");
     var consoleService = Cc["@mozilla.org/consoleservice;1"].
                          getService(Ci.nsIConsoleService);
@@ -2135,14 +2132,7 @@ MicrosummaryResource.prototype = {
 
     // cancel loads that take too long
     // timeout specified in seconds at browser.microsummary.requestTimeout, or 10 seconds
-    var timeout = 10 * 1000;
-    try {
-      var pb = Cc["@mozilla.org/preferences-service;1"].
-               getService(Ci.nsIPrefBranch);
-      timeout = pb.getIntPref("browser.microsummary.requestTimeout") * 1000;
-    }
-    catch (ex) {}
-
+    var timeout = getPref("browser.microsummary.requestTimeout", 10) * 1000;
     var timerObserver = {
       _self: this,
       observe: function MSR_timerObserver_observe() {
@@ -2346,8 +2336,28 @@ function getLoadedMicrosummaryResource(uri) {
   return null;
 }
 
-
-
+/**
+ * Get a value from a pref or a default value if the pref doesn't exist.
+ *
+ * @param   prefName
+ * @param   defaultValue
+ * @returns the pref's value or the default (if it is missing)
+ */
+function getPref(prefName, defaultValue) {
+  try {
+    var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                     getService(Ci.nsIPrefBranch);
+    switch (prefBranch.getPrefType(prefName)) {
+    case prefBranch.PREF_BOOL:
+      return prefBranch.getBoolPref(prefName);
+    case prefBranch.PREF_INT:
+      return prefBranch.getIntPref(prefName);
+    }
+  }
+  catch (ex) { /* return the default value */ }
+  
+  return defaultValue;
+}
 
 
 // From http://lxr.mozilla.org/mozilla/source/browser/components/search/nsSearchService.js
