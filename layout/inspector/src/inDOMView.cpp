@@ -1292,7 +1292,7 @@ inDOMView::AppendKidsToArray(nsIDOMNodeList* aKids,
   PRUint16 nodeType = 0;
 
   // Try and get DOM Utils in case we don't have one yet.
-  if (mShowWhitespaceNodes && !mDOMUtils) {
+  if (!mShowWhitespaceNodes && !mDOMUtils) {
     mDOMUtils = do_CreateInstance("@mozilla.org/inspector/dom-utils;1");
   }
 
