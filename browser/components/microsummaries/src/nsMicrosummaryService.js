@@ -670,8 +670,13 @@ MicrosummaryService.prototype = {
       
       // rebuild the bookmarks sidebar
       var sidebar = win.document.getElementById("sidebar");
-      if (sidebar.contentWindow && sidebar.contentWindow.location ==
-          "chrome://browser/content/bookmarks/bookmarksPanel.xul") {
+      // sidebar.docShell is null if the sidebar isn't showing, in which case
+      // sidebar.contentWindow will throw an exception (because it assumes
+      // the existence of sidebar.docShell), so we have to check for .docShell
+      // before we check for .contentWindow.
+      if (sidebar && sidebar.docShell && sidebar.contentWindow &&
+          sidebar.contentWindow.location ==
+            "chrome://browser/content/bookmarks/bookmarksPanel.xul") {
         var treeElement = sidebar.contentDocument.getElementById("bookmarks-view");
         treeElement.tree.builder.rebuild();
       }
