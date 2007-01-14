@@ -55,6 +55,8 @@ Contributor(s): ______________________________________. -->
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://navigator/content/navigator.js"/>
 
+  <stringbundleset id="stringbundleset"/>
+
   <!-- keys are appended from the overlay -->
   <keyset id="tasksKeys"/>
   <keyset id="navKeys">
