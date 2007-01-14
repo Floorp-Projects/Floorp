@@ -123,6 +123,15 @@ MicrosummaryService.prototype = {
     return this.__ios;
   },
 
+  // Observer Service
+  __obs: null,
+  get _obs() {
+    if (!this.__obs)
+      this.__obs = Cc["@mozilla.org/observer-service;1"].
+                   getService(Ci.nsIObserverService);
+    return this.__obs;
+  },
+
   /**
    * Make a URI from a spec.
    * @param   spec
@@ -190,22 +199,6 @@ MicrosummaryService.prototype = {
 
   observe: function MSS_observe(subject, topic, data) {
     switch (topic) {
-      // If we end up doing anything profile-specific (f.e. loading
-      // support packs installed into the profile, perhaps via extensions,
-      // then we'll have to defer initialization until, like the extension
-      // manager, we observe the profile-after-change subject.
-      case "app-startup":
-        var obs = Cc["@mozilla.org/observer-service;1"].
-                  getService(Ci.nsIObserverService);
-        obs.addObserver(this, "profile-after-change", false);
-        obs.addObserver(this, "xpcom-shutdown", true);
-        break;
-      case "profile-after-change":
-        var obs = Cc["@mozilla.org/observer-service;1"].
-                  getService(Ci.nsIObserverService);
-        obs.removeObserver(this, "profile-after-change");
-        this._init();
-        break;
       case "xpcom-shutdown":
         this._destroy();
         break;
@@ -213,6 +206,8 @@ MicrosummaryService.prototype = {
   },
 
   _init: function MSS__init() {
+    this._obs.addObserver(this, "xpcom-shutdown", true);
+
     // Periodically update microsummaries that need updating.
     this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     var callback = {
@@ -1607,25 +1602,9 @@ var gModule = {
                                                location,
                                                type);
     }
-  
-    // Make the service a startup observer
-    var categoryManager = Components.classes["@mozilla.org/categorymanager;1"].
-                          getService(Components.interfaces.nsICategoryManager);
-    categoryManager.addCategoryEntry("app-startup",
-                                     this._objects.service.className,
-                                     "service," + this._objects.service.contractID, 
-                                     true,
-                                     true,
-                                     null);
   },
   
-  unregisterSelf: function(componentManager, fileSpec, location) {
-    var categoryManager = Components.classes["@mozilla.org/categorymanager;1"].
-                          getService(Components.interfaces.nsICategoryManager);
-    categoryManager.deleteCategoryEntry("app-startup",
-                                        this._objects.service.className,
-                                        true);
-  },
+  unregisterSelf: function(componentManager, fileSpec, location) {},
 
   getClassObject: function(componentManager, cid, iid) {
     if (!iid.equals(Components.interfaces.nsIFactory))
@@ -1639,21 +1618,20 @@ var gModule = {
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
   
-  _makeFactory: #1= function(ctor) {
-    function ci(outer, iid) {
-      if (outer != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-      return (new ctor()).QueryInterface(iid);
-    }
-    return { createInstance: ci };
-  },
-  
   _objects: {
     service: {
       CID        : Components.ID("{460a9792-b154-4f26-a922-0f653e2c8f91}"),
       contractID : "@mozilla.org/microsummary/service;1",
       className  : "Microsummary Service",
-      factory    : #1#(MicrosummaryService)
+      factory    : MicrosummaryServiceFactory = {
+                     createInstance: function(aOuter, aIID) {
+                       if (aOuter != null)
+                         throw Components.results.NS_ERROR_NO_AGGREGATION;
+                       var svc = new MicrosummaryService();
+                       svc._init();
+                      return svc.QueryInterface(aIID);
+                     }
+                   }
     }
   },
   
