@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *  Myk Melez <myk@mozilla.org> (Original Author)
+ *  Simon Bünzli <zeniko@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -253,8 +254,7 @@ MicrosummaryService.prototype = {
       bookmarks.push(resources.getNext().QueryInterface(Ci.nsIRDFResource));
 #endif
 
-    var now = new Date().getTime();
-
+    var now = Date.now();
     for ( var i = 0; i < bookmarks.length; i++ ) {
       var bookmarkID = bookmarks[i];
 
@@ -265,7 +265,6 @@ MicrosummaryService.prototype = {
 
       // Reset the expiration time immediately, so if the refresh is failing
       // we don't try it every 15 seconds, potentially overloading the server.
-      var now = new Date().getTime();
       this._setField(bookmarkID, FIELD_MICSUM_EXPIRATION, now + UPDATE_INTERVAL);
 
       this.refreshMicrosummary(bookmarkID);
@@ -274,9 +273,8 @@ MicrosummaryService.prototype = {
   
   _updateMicrosummary: function MSS__updateMicrosummary(bookmarkID, microsummary) {
     this._setField(bookmarkID, FIELD_GENERATED_TITLE, microsummary.content);
-
-    var now = new Date().getTime();
-    this._setField(bookmarkID, FIELD_MICSUM_EXPIRATION, now + UPDATE_INTERVAL);
+    this._setField(bookmarkID, FIELD_MICSUM_EXPIRATION,
+                   Date.now() + (microsummary.updateInterval || UPDATE_INTERVAL));
 
     LOG("updated microsummary for page " + microsummary.pageURI.spec +
         " to " + microsummary.content);
@@ -909,9 +907,11 @@ Microsummary.prototype = {
     // If we have everything we need to generate the content, generate it.
     if (this._content == null &&
         this.generator &&
-        (this.pageContent || !this.generator.needsPageContent))
+        (this.pageContent || !this.generator.needsPageContent)) {
       this._content = this.generator.generateMicrosummary(this.pageContent);
-  
+      this.updateInterval = this.generator.calculateUpdateInterval(this.pageContent);
+    }
+
     // Note: we return "null" if the content wasn't already generated and we
     // couldn't retrieve it from the generated title annotation or generate it
     // ourselves.  So callers shouldn't count on getting content; instead,
@@ -947,6 +947,10 @@ Microsummary.prototype = {
     return this._pageContent;
   },
   set pageContent(newValue) { this._pageContent = newValue },
+
+  _updateInterval: null,
+  get updateInterval()         { return this._updateInterval; },
+  set updateInterval(newValue) { this._updateInterval = newValue; },
 
   // nsIMicrosummary
 
@@ -1013,6 +1017,7 @@ Microsummary.prototype = {
     // Now that we have both the generator and (if needed) the page content,
     // generate the microsummary, then let the observers know about it.
     this.content = this.generator.generateMicrosummary(this.pageContent);
+    this.updateInterval = this.generator.calculateUpdateInterval(this.pageContent);
     this.pageContent = null;
     for ( var i = 0; i < this._observers.length; i++ )
       this._observers[i].onContentLoaded(this);
@@ -1214,6 +1219,38 @@ MicrosummaryGenerator.prototype = {
       }
     }
 
+    // allow the generators to set individual update values (even varying
+    // depending on certain XPath expressions)
+    var update = generatorNode.getElementsByTagNameNS(MICSUM_NS, "update")[0] || null;
+    if (update) {
+      function _parseInterval(string) {
+        // convert from minute fractions to milliseconds
+        // and ensure a minimum value of 1 minute
+        return Math.round(Math.max(parseFloat(string) || 0, 1) * 60 * 1000);
+      }
+
+      this._unconditionalUpdateInterval =
+        update.hasAttribute("interval") ?
+        _parseInterval(update.getAttribute("interval")) : null;
+
+      // collect the <condition expression="XPath Expression" interval="time"/> clauses
+      this._updateIntervals = new Array();
+      for (i = 0; i < update.childNodes.length; i++) {
+        node = update.childNodes[i];
+        if (node.nodeType != node.ELEMENT_NODE || node.namespaceURI != MICSUM_NS ||
+            node.nodeName != "condition")
+          continue;
+        if (!node.getAttribute("expression") || !node.getAttribute("interval")) {
+          LOG("ignoring incomplete conditional update interval for " + this.uri.spec);
+          continue;
+        }
+        this._updateIntervals.push({
+          expression: node.getAttribute("expression"),
+          interval: _parseInterval(node.getAttribute("interval"))
+        });
+      }
+    }
+
     var templateNode = generatorNode.getElementsByTagNameNS(MICSUM_NS, "template")[0];
     if (templateNode) {
       this.template = templateNode.getElementsByTagNameNS(XSLT_NS, "transform")[0]
@@ -1230,7 +1267,27 @@ MicrosummaryGenerator.prototype = {
     else
       throw("generateMicrosummary called on uninitialized microsummary generator");
   },
-  
+
+  calculateUpdateInterval: function MSD_calculateUpdateInterval(doc) {
+    if (this.content || !this._updateIntervals || !doc)
+      return null;
+
+    for (var i = 0; i < this._updateIntervals.length; i++) {
+      try {
+        if (doc.evaluate(this._updateIntervals[i].expression, doc, null,
+                         Ci.nsIDOMXPathResult.BOOLEAN_TYPE, null).booleanValue)
+          return this._updateIntervals[i].interval;
+      }
+      catch (ex) {
+        Components.utils.reportError(ex);
+        // remove the offending conditional update interval
+        this._updateIntervals.splice(i--, 1);
+      }
+    }
+
+    return this._unconditionalUpdateInterval;
+  },
+
   _processTemplate: function MSD__processTemplate(doc) {
     LOG("processing template " + this.template + " against document " + doc);
 
