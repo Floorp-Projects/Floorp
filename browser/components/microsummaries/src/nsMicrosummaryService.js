@@ -395,12 +395,25 @@ MicrosummaryService.prototype = {
     // for updates.
     rootNode.setAttribute("sourceURI", resource.uri.spec);
 
-    var generatorName = rootNode.getAttribute("name");
-    var fileName = sanitizeName(generatorName) + ".xml";
-    var file = this._dirs.get("UsrMicsumGens", Ci.nsIFile);
-    file.append(fileName);
-    file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
+    // The existing cache entry for this generator, if it is already installed.
+    var generator = this._localGenerators[resource.uri.spec];
 
+    var file;
+    if (generator) {
+      // This generator is already installed.  Save it in the existing file
+      // (i.e. update the existing generator with the newly downloaded XML).
+      file = generator.localURI.QueryInterface(Ci.nsIFileURL).file.clone();
+    }
+    else {
+      // This generator is not already installed.  Save it as a new file.
+      var generatorName = rootNode.getAttribute("name");
+      var fileName = sanitizeName(generatorName) + ".xml";
+      file = this._dirs.get("UsrMicsumGens", Ci.nsIFile);
+      file.append(fileName);
+      file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
+    }
+
+    // Write the generator XML to the local file.
     var outputStream = Cc["@mozilla.org/network/safe-file-output-stream;1"].
                        createInstance(Ci.nsIFileOutputStream);
     var localFile = file.QueryInterface(Ci.nsILocalFile);
@@ -416,6 +429,9 @@ MicrosummaryService.prototype = {
       outputStream.close();
 
     // Finally, cache the generator in the local generators cache.
+    // If the generator is already installed, this call will overwrite
+    // the old version of the generator in the cache with the new version.
+    // Otherwise, the call will add the generator to the cache as a new entry.
     this._cacheLocalGeneratorFile(file);
   },
 
