@@ -608,25 +608,6 @@ MicrosummaryService.prototype = {
                         true);
     }
 
-    // If we're setting the generator URI field, make sure the bookmark's
-    // RDF type is set to the microsummary bookmark type.
-    if (fieldName == FIELD_MICSUM_GEN_URI &&
-        this._getField(bookmarkID, FIELD_RDF_TYPE) != VALUE_MICSUM_BOOKMARK) {
-      if (this._hasField(bookmarkID, FIELD_RDF_TYPE)) {
-        oldValue = this._getField(bookmarkID, FIELD_RDF_TYPE);
-        this._bmds.Change(bookmarkResource,
-                          this._resource(FIELD_RDF_TYPE),
-                          this._resource(oldValue),
-                          this._resource(VALUE_MICSUM_BOOKMARK));
-      }
-      else {
-        this._bmds.Assert(bookmarkResource,
-                          this._resource(FIELD_RDF_TYPE),
-                          this._resource(VALUE_MICSUM_BOOKMARK),
-                          true);
-      }
-    }
-
     // If we're setting a field that could affect this bookmark's label,
     // then force all bookmark trees to rebuild from scratch.
     if (fieldName == FIELD_MICSUM_GEN_URI || fieldName == FIELD_GENERATED_TITLE)
@@ -644,15 +625,6 @@ MicrosummaryService.prototype = {
                           this._resource(fieldName),
                           node);
     }
-
-    // If we're clearing the generator URI field, set the bookmark's RDF type
-    // back to the normal bookmark type.
-    if (fieldName == FIELD_MICSUM_GEN_URI &&
-        this._getField(bookmarkID, FIELD_RDF_TYPE) == VALUE_MICSUM_BOOKMARK)
-      this._bmds.Change(bookmarkResource,
-                        this._resource(FIELD_RDF_TYPE),
-                        this._resource(VALUE_MICSUM_BOOKMARK),
-                        this._resource(VALUE_NORMAL_BOOKMARK));
 
     // If we're clearing a field that could affect this bookmark's label,
     // then force all bookmark trees to rebuild from scratch.
@@ -775,11 +747,39 @@ MicrosummaryService.prototype = {
    *
    */
   setMicrosummary: function MSS_setMicrosummary(bookmarkID, microsummary) {
+#ifndef MOZ_PLACES
+    // Make sure that the bookmark is of type MicsumBookmark
+    // because that's what the template rules are matching
+    if (this._getField(bookmarkID, FIELD_RDF_TYPE) != VALUE_MICSUM_BOOKMARK) {
+      var bookmarkResource = bookmarkID.QueryInterface(Ci.nsIRDFResource);
+      if (this._hasField(bookmarkID, FIELD_RDF_TYPE)) {
+        var oldValue = this._getField(bookmarkID, FIELD_RDF_TYPE);
+        this._bmds.Change(bookmarkResource,
+                          this._resource(FIELD_RDF_TYPE),
+                          this._resource(oldValue),
+                          this._resource(VALUE_MICSUM_BOOKMARK));
+      }
+      else {
+        this._bmds.Assert(bookmarkResource,
+                          this._resource(FIELD_RDF_TYPE),
+                          this._resource(VALUE_MICSUM_BOOKMARK),
+                          true);
+      }
+    }
+#endif
     this._setField(bookmarkID, FIELD_MICSUM_GEN_URI, microsummary.generator.uri.spec);
-    if (microsummary.content)
+
+    if (microsummary.content) {
       this._updateMicrosummary(bookmarkID, microsummary);
-    else
+    }
+    else {
+      // Display a static title initially (unless there's already one set)
+      if (!this._getField(bookmarkID, FIELD_GENERATED_TITLE))
+        this._setField(bookmarkID, FIELD_GENERATED_TITLE,
+                       microsummary.generator.name || microsummary.generator.uri.spec);
+
       this.refreshMicrosummary(bookmarkID);
+    }
   },
 
   /**
@@ -790,6 +790,17 @@ MicrosummaryService.prototype = {
    *
    */
   removeMicrosummary: function MSS_removeMicrosummary(bookmarkID) {
+#ifndef MOZ_PLACES
+    // Set the bookmark's RDF type back to the normal bookmark type
+    if (this._getField(bookmarkID, FIELD_RDF_TYPE) == VALUE_MICSUM_BOOKMARK) {
+      var bookmarkResource = bookmarkID.QueryInterface(Ci.nsIRDFResource);
+      this._bmds.Change(bookmarkResource,
+                        this._resource(FIELD_RDF_TYPE),
+                        this._resource(VALUE_MICSUM_BOOKMARK),
+                        this._resource(VALUE_NORMAL_BOOKMARK));
+    }
+#endif
+
     var fields = [FIELD_MICSUM_GEN_URI,
                   FIELD_MICSUM_EXPIRATION,
                   FIELD_GENERATED_TITLE,
