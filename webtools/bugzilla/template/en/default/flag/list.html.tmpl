@@ -107,10 +107,10 @@
                   title="[% type.description FILTER html %]"
                   onchange="toggleRequesteeField(this);">
             [%# Only display statuses the user is allowed to set. %]
+            [% IF user.can_request_flag(type) %]
+              <option value="X"></option>
+            [% END %]
             [% IF type.is_active %]
-              [% IF user.can_request_flag(type) %]
-                <option value="X"></option>
-              [% END %]
               [% IF (type.is_requestable && user.can_request_flag(type)) || flag.status == "?" %]
                 <option value="?" [% "selected" IF flag.status == "?" %]>?</option>
               [% END %]
