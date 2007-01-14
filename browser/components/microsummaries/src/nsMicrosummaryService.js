@@ -629,10 +629,10 @@ MicrosummaryService.prototype = {
       }
     }
 
-    // If we're setting a field that could affect this bookmark's label
-    // in bookmarks toolbars, then force toolbars to rebuild from scratch.
+    // If we're setting a field that could affect this bookmark's label,
+    // then force all bookmark trees to rebuild from scratch.
     if (fieldName == FIELD_MICSUM_GEN_URI || fieldName == FIELD_GENERATED_TITLE)
-      this._forceToolbarRebuild();
+      this._forceBookmarkTreesRebuild();
   },
 
   _clearField: function MSS__clearField(bookmarkID, fieldName) {
@@ -667,21 +667,39 @@ MicrosummaryService.prototype = {
   },
 
   /**
-   * Oy vey, a hack!  Force the bookmarks toolbars to rebuild, since they don't
+   * Oy vey, a hack!  Force the bookmark trees to rebuild, since they don't
    * seem to be able to do it correctly on their own right after we twiddle
    * something microsummaryish (but they rebuild fine otherwise, incorporating
    * all the microsummary changes upon next full rebuild, f.e. if you open
    * a new window or shut down and restart your browser).
    *
    */
-  _forceToolbarRebuild: function MSS__forceToolbarRebuild() {
+  _forceBookmarkTreesRebuild: function MSS__forceBookmarkTreesRebuild() {
     var mediator = Cc["@mozilla.org/appshell/window-mediator;1"].
                    getService(Ci.nsIWindowMediator);
     var windows = mediator.getEnumerator("navigator:browser");
     while (windows.hasMoreElements()) {
       var win = windows.getNext();
+      
+      // rebuild the bookmarks toolbar
       var bookmarksToolbar = win.document.getElementById("bookmarks-ptf");
       bookmarksToolbar.builder.rebuild();
+      
+      // rebuild the bookmarks sidebar
+      var sidebar = win.document.getElementById("sidebar");
+      if (sidebar.contentWindow && sidebar.contentWindow.location ==
+          "chrome://browser/content/bookmarks/bookmarksPanel.xul") {
+        var treeElement = sidebar.contentDocument.getElementById("bookmarks-view");
+        treeElement.tree.builder.rebuild();
+      }
+    }
+    
+    windows = mediator.getEnumerator("bookmarks:manager");
+    while (windows.hasMoreElements()) {
+      win = windows.getNext();
+      // rebuild the Bookmarks Manager's view
+      treeElement = win.document.getElementById("bookmarks-view");
+      treeElement.tree.builder.rebuild();
     }
   },
 
