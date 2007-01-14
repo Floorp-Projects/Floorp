@@ -77,7 +77,9 @@
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarks.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksMenu.js"/>
 
-  <stringbundleset id="stringbundleset"/>
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_navigator" src="chrome://navigator/locale/navigator.properties"/>
+  </stringbundleset>
 
   <!-- keys are appended from the overlay -->
   <keyset id="tasksKeys">
