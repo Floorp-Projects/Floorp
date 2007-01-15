@@ -334,19 +334,24 @@
     </toolbar>
   </toolbox>
   <hbox flex="1" id="placesView">
-    <tree id="placesList" class="placesTree" type="places"
+    <tree id="placesList"
+          class="placesTree"
+          type="places"
           place="place:&amp;folder=1&amp;group=3&amp;excludeItems=1&amp;excludeQueries=1"
           hidecolumnpicker="true" context="placesContext"
           onselect="PlacesOrganizer.onPlaceSelected(true);
                     PlacesOrganizer.updateStatusBarForView(this);"
           onclick="PlacesOrganizer.onTreeClick(event);"
-          seltype="single">
+          seltype="single"
+          persist="width">
       <treecols>
         <treecol id="title" flex="1" primary="true" hideheader="true"/>
       </treecols>
       <treechildren id="placesListChildren" view="placesList"  flex="1"/>
     </tree>
-    <splitter id="splitter"/>
+    <splitter id="splitter" collapse="before" persist="state">
+      <grippy/>
+    </splitter>
     <vbox id="contentView" flex="4">
       <deck id="contentDeck" flex="1">
         <vbox flex="1">
