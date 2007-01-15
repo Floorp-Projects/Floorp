@@ -75,9 +75,9 @@ THREADSLIB	=
 #
 ifeq ($(USE_DLL_EXPORTS_FILE), 1)
 ifeq ($(OS_ARCH), WINNT)
-GENEXPORTS=cmd /c  $(PERL) $(topsrcdir)/ldif/build/genexports.pl
+GENEXPORTS=cmd /c  $(PERL) $(topsrcdir)/ldap/build/genexports.pl
 else
-GENEXPORTS=$(PERL) $(topsrcdir)/ldif/build/genexports.pl
+GENEXPORTS=$(PERL) $(topsrcdir)/ldap/build/genexports.pl
 endif
 
 # variable definitions for exported symbols
@@ -99,6 +99,25 @@ endif # USE_DLL_EXPORTS_FILE
 
 
 ###########################################################################
+
+ifeq ($(USE_DLL_EXPORTS_FILE), 1)
+# recursive gmake rule to create exported symbols file
+$(LDIF_EXPORT_DEFS):: $(srcdir)/../libldif.ex
+ifeq ($(OS_ARCH), WINNT)
+	$(GENEXPORTS) Win32 $(srcdir)/../msdos/winsock/nsldif32.tdf $< $(GENEXPARGS) > $@
+else
+ifeq ($(OS_ARCH), OS2)
+	echo LIBRARY $(LDIF_LIBNAME) INITINSTANCE TERMINSTANCE > $@
+	echo PROTMODE >> $@
+	echo CODE    LOADONCALL MOVEABLE DISCARDABLE >> $@
+	echo DATA    PRELOAD MOVEABLE MULTIPLE NONSHARED >> $@
+	echo EXPORTS >> $@
+	$(GENEXPORTS) $(OS_ARCH) Standard $< $(GENEXPARGS) >> $@
+else
+	$(GENEXPORTS) $(OS_ARCH) Standard $< $(GENEXPARGS) > $@
+endif
+endif
+endif # USE_DLL_EXPORTS_FILE
 
 versiont.c:	Makefile.client Version.c
 	@$(RM) $@
@@ -125,7 +144,7 @@ ifdef SO_FILES_TO_REMOVE
 	-$(RM) $(SO_FILES_TO_REMOVE)
 endif
 
-	$(LINK_DLL) $(LDAP_EXPORT_FLAGS) $(EXTRA_LIBS)
+	$(LINK_DLL) $(LDIF_EXPORT_FLAGS) $(EXTRA_LIBS)
 
 
 veryclean:: clean
