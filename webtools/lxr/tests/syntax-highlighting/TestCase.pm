@@ -1,4 +1,5 @@
 
+package TestCase;
 use Test;
 require 'foo.pl';
 
