@@ -68,7 +68,14 @@ var nsOfflineStartup =
     {
       gStartingUp = false;
       // if checked, the "work offline" checkbox overrides
-      if (ioService.offline && !ioService.manageOfflineStatus) {
+      var managingOffineStatus = false;
+      try 
+      {
+        managingOffineStatus = ioService.manageOfflineStatus;
+      } catch (ex) {} // the getter for ioService.manageOfflineStatus throws an exception on platforms that don't support it.
+      
+      if (ioService.offline && !managingOffineStatus) 
+      {
         debug("already offline!");
         return;
       }
