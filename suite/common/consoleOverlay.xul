@@ -51,6 +51,50 @@
 <overlay id="consoleOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+  <script type="application/x-javascript"><![CDATA[
+    /* :::::::: Command Controller for the Window ::::::::::::::: */
+
+    var ConsoleController =
+    {
+      supportsCommand: function (aCommand) 
+      {
+        switch (aCommand) {
+          case "cmd_copy":
+            return true;
+          default:
+            return false;
+        }
+      },
+
+      isCommandEnabled: function (aCommand)
+      {
+        switch (aCommand) {
+          case "cmd_copy":
+            return isItemSelected();
+          default:
+            return false;
+        }
+      },
+
+      doCommand: function (aCommand)
+      {
+        switch (aCommand) {
+          case "cmd_copy":
+            copyItemToClipboard();
+            break;
+          default:
+            break;
+        }
+      },
+
+      onEvent: function (aEvent) 
+      {
+      }
+    }
+
+    top.controllers.insertControllerAt(0, ConsoleController);
+  ]]></script>
+
   <commandset id="consoleCommands">
     <commandset id="tasksCommands"/>
     <command id="cmd_quit"/>
@@ -73,7 +117,7 @@
       </menu>
 
       <menu id="menu_Edit">
-        <menupopup onpopupshowing="updateCopyMenu()">
+        <menupopup onpopupshowing="goUpdateCommand('cmd_copy')">
           <menuitem id="menu_copy"/>
         </menupopup>
       </menu>
