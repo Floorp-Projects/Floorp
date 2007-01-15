@@ -40,39 +40,12 @@
 var BookmarkPropertiesPanel = {
 
   /** UI Text Strings */
-
   __strings: null,
   get _strings() {
     if (!this.__strings) {
       this.__strings = document.getElementById("stringBundle");
     }
     return this.__strings;
-  },
-
-  /**
-   * The Bookmarks Service.
-   */
-  __bms: null,
-  get _bms() {
-    if (!this.__bms) {
-      this.__bms =
-        Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-        getService(Ci.nsINavBookmarksService);
-    }
-    return this.__bms;
-  },
-
-  /**
-   * The Nav History Service.
-   */
-  __hist: null,
-  get _hist() {
-    if (!this.__hist) {
-      this.__hist =
-        Cc["@mozilla.org/browser/nav-history-service;1"].
-        getService(Ci.nsINavHistoryService);
-    }
-    return this.__hist;
   },
 
   /**
@@ -87,20 +60,6 @@ var BookmarkPropertiesPanel = {
     }
     return this.__ios;
   },
-
-  /**
-   * The Live Bookmark service for dealing with syndication feed folders.
-   */
-  __livemarks: null,
-  get _livemarks() {
-    if (!this.__livemarks) {
-      this.__livemarks =
-        Cc["@mozilla.org/browser/livemark-service;2"].
-        getService(Ci.nsILivemarkService);
-    }
-    return this.__livemarks;
-  },
-
   /**
    * The Microsummary Service for displaying microsummaries.
    */
@@ -131,10 +90,6 @@ var BookmarkPropertiesPanel = {
    * The possibilities are enumerated by the constants above.
    */
   _variant: null,
-
-  _isVariant: function BPP__isVariant(variant) {
-    return this._variant == variant;
-  },
 
   /**
    * Returns true if this variant of the dialog uses a URI as a primary
@@ -340,7 +295,7 @@ var BookmarkPropertiesPanel = {
   _determineVariant: function BPP__determineVariant(identifier, action) {
     if (action == "add") {
       this._assertURINotString(identifier);
-      if (this._bms.isBookmarked(identifier)) {
+      if (PlacesUtils.bookmarks.isBookmarked(identifier)) {
         return this.EDIT_BOOKMARK_VARIANT;
       }
       else {
@@ -360,7 +315,7 @@ var BookmarkPropertiesPanel = {
         }
       }
 
-      NS_ASSERT(this._bms.isBookmarked(identifier),
+      NS_ASSERT(PlacesUtils.bookmarks.isBookmarked(identifier),
                 "Bookmark Properties dialog instantiated with " +
                 "non-bookmarked URI: \"" + identifier + "\"");
       return this.EDIT_BOOKMARK_VARIANT;
@@ -381,7 +336,7 @@ var BookmarkPropertiesPanel = {
   _getURITitle: function BPP__getURITitle(uri) {
     this._assertURINotString(uri);
 
-    var title = this._bms.getItemTitle(uri);
+    var title = PlacesUtils.bookmarks.getItemTitle(uri);
 
     /* If we can't get a title for a new bookmark, let's set it to
        be the first 100 characters of the URI. */
@@ -414,12 +369,13 @@ var BookmarkPropertiesPanel = {
       this._assertURINotString(identifier);
       this._bookmarkURI = identifier;
     }
-    else if (this._identifierIsFolderID()){
+    else if (this._identifierIsFolderID()) {
       this._folderId = identifier;
     }
-    else if (this._isVariant(this.ADD_MULTIPLE_BOOKMARKS_VARIANT)) {
+    else if (this._variant == this.ADD_MULTIPLE_BOOKMARKS_VARIANT) {
       this._URIList = identifier;
     }
+
     this._bookmarkTitle = title;
     this._dialogWindow = dialogWindow;
     this._tm = tm;
@@ -441,9 +397,9 @@ var BookmarkPropertiesPanel = {
     this._folderTree.excludeItems = true;
     this._folderTree.setAttribute("seltype", this._getFolderSelectionType());
 
-    var query = this._hist.getNewQuery();
-    query.setFolders([this._bms.placesRoot], 1);
-    var options = this._hist.getNewQueryOptions();
+    var query = PlacesUtils.history.getNewQuery();
+    query.setFolders([PlacesUtils.bookmarks.placesRoot], 1);
+    var options = PlacesUtils.history.getNewQueryOptions();
     options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
     options.excludeReadOnlyFolders = true;
     options.excludeQueries = true;
@@ -485,8 +441,11 @@ var BookmarkPropertiesPanel = {
       if (this._identifierIsURI()) {
         this._bookmarkTitle = this._getURITitle(this._bookmarkURI);
       }
-      else if (this._identifierIsFolderID()){
-        this._bookmarkTitle = this._bms.getFolderTitle(this._folderId);
+      else if (this._identifierIsFolderID()) {
+        this._bookmarkTitle = PlacesUtils.bookmarks.getFolderTitle(this._folderId);
+      }
+      else if (this._variant == this.ADD_MULTIPLE_BOOKMARKS_VARIANT) {
+        this._bookmarkTitle = this._strings.getString("bookmarkAllTabsDefault");
       }
     }
 
@@ -515,10 +474,10 @@ var BookmarkPropertiesPanel = {
 
     if (this._areLivemarkURIsVisible()) {
       if (this._identifierIsFolderID()) {
-        var feedURI = this._livemarks.getFeedURI(this._folderId);
+        var feedURI = PlacesUtils.livemarks.getFeedURI(this._folderId);
         if (feedURI)
           this._element("editLivemarkFeedLocationBox").value = feedURI.spec;
-        var siteURI = this._livemarks.getSiteURI(this._folderId);
+        var siteURI = PlacesUtils.livemarks.getSiteURI(this._folderId);
         if (siteURI)
           this._element("editLivemarkSiteLocationBox").value = siteURI.spec;
       }
@@ -529,7 +488,7 @@ var BookmarkPropertiesPanel = {
 
     if (this._isShortcutVisible()) {
       var shortcutbox = this._element("editShortcutBox");
-      shortcutbox.value = this._bms.getKeywordForURI(this._bookmarkURI);
+      shortcutbox.value = PlacesUtils.bookmarks.getKeywordForURI(this._bookmarkURI);
     }
     else {
       this._hide("shortcutRow");
@@ -548,7 +507,7 @@ var BookmarkPropertiesPanel = {
     }
 
     if (this._isFolderEditable()) {
-      this._folderTree.selectFolders([this._bms.bookmarksRoot]);
+      this._folderTree.selectFolders([PlacesUtils.bookmarks.bookmarksRoot]);
     }
     else {
       this._hide("folderRow");
@@ -674,12 +633,12 @@ var BookmarkPropertiesPanel = {
     var transactions = [];
 
     if (this._identifierIsURI()) {
-      var folders = this._bms.getBookmarkFolders(bookmarkURI, {});
+      var folders = PlacesUtils.bookmarks.getBookmarkFolders(bookmarkURI, {});
       if (folders.length == 0)
         return;
 
       for (var i = 0; i < folders.length; i++) {
-        var index = this._bms.indexOfItem(folders[i], bookmarkURI);
+        var index = PlacesUtils.bookmarks.indexOfItem(folders[i], bookmarkURI);
         var transaction = new PlacesRemoveItemTransaction(bookmarkURI,
                                                           folders[i], index)
         transactions.push(transaction);
@@ -778,7 +737,7 @@ var BookmarkPropertiesPanel = {
           }
         }
       }
-      else if (this._isVariant(this.ADD_MULTIPLE_BOOKMARKS_VARIANT)) {
+      else if (this._variant == this.ADD_MULTIPLE_BOOKMARKS_VARIANT) {
         var node = selected[0];
         var folder = node.QueryInterface(Ci.nsINavHistoryFolderResultNode);
 
@@ -837,7 +796,7 @@ var BookmarkPropertiesPanel = {
                                                  shortcutbox.value));
     }
 
-    if (this._isVariant(this.EDIT_BOOKMARK_VARIANT) &&
+    if (this._variant == this.EDIT_BOOKMARK_VARIANT &&
         (newURI.spec != this._bookmarkURI.spec)) {
          PlacesUtils.changeBookmarkURI(this._bookmarkURI, newURI);
     }
