@@ -48,7 +48,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="browser" extends="xul:browser">
-    <implementation type="application/x-javascript" implements="nsIAccessibleProvider, nsIObserver">
+    <implementation type="application/x-javascript" implements="nsIAccessibleProvider, nsIObserver, nsIDOMEventListener">
       <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
@@ -679,7 +679,8 @@
         <body>
           <![CDATA[
             this._isScrolling = false;
-            this.removeEventListener('mousemove', this.handleMouseMove, false);            
+            this.removeEventListener("mousemove", this, false);
+            this.contentDocument.removeEventListener("blur", this, true);
             if (this._autoScrollMarkerImage) {
               this._autoScrollMarkerImage.style.display = 'none';  // seems to avoid blocking when autoscroll is initited during pageload
               this._autoScrollMarkerImage.parentNode.removeChild(this._autoScrollMarkerImage);
@@ -777,7 +778,7 @@
          ]]>
        </body>
      </method>
-     <method name="handleMouseMove">
+     <method name="_handleMouseMove">
         <parameter name="aEvent"/>
         <body>
         <![CDATA[
@@ -796,6 +797,21 @@
         </body>
       </method>
 
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          switch (aEvent.type) {
+            case "mousemove":
+              this._handleMouseMove(aEvent);
+              break;
+            case "blur":
+              if (aEvent.target == this.contentDocument)
+                this.stopScroll();
+          }
+        ]]>
+        </body>
+      </method>
     </implementation>
 
     <handlers>
@@ -862,7 +878,8 @@
                 this.currentURI.spec == "about:blank"|| 
                 this.isAutoscrollBlocker(event.originalTarget))
               return;
-            this.addEventListener('mousemove', this.handleMouseMove, false);
+            this.addEventListener("mousemove", this, false);
+            this.contentDocument.addEventListener("blur", this, true);
             this._screenX = event.screenX;
             this._screenY = event.screenY;
             this._startX = event.screenX;
