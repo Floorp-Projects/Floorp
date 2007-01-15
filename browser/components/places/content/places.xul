@@ -233,7 +233,7 @@
       </menu>
       <menu id="viewMenu" label="&view.label;" accesskey="&view.accesskey;"
             onpopupshowing="ViewMenu.populate(event);"
-            oncommand="ViewMenu.setSortColumn(event.target, null);">
+            oncommand="ViewMenu.setSortColumn(event.target.getAttribute('column'), null);">
         <menupopup>
           <menuitem id="viewReload"
                     command="placesCmd_reload"
