@@ -7,13 +7,13 @@
 
 %define major           6
 %define minor           0
-%define submin          1
+%define submin          2
 %define libsuffix       %{major}0
 
 Summary:          Mozilla LDAP C SDK
 Name:             mozldap
 Version:          %{major}.%{minor}.%{submin}
-Release:          2%{?dist}
+Release:          1%{?dist}
 License:          MPL/GPL/LGPL
 URL:              http://www.mozilla.org/directory/csdk.html
 Group:            System Environment/Libraries
@@ -186,6 +186,10 @@ cp -r mozilla/directory/c-sdk/ldap/examples $RPM_BUILD_ROOT%{_datadir}/%{name}
 %{_datadir}/%{name}
 
 %changelog
+* Mon Jan 15 2007 Rich Megginson <richm@stanfordalumni.org> - 6.0.2-1
+- Fixed exports file generation for Solaris and Windows - no effect on linux
+- bumped version to 6.0.2
+
 * Mon Jan  9 2007 Rich Megginson <richm@stanfordalumni.org> - 6.0.1-2
 - Remove buildroot = "/" checking
 - Remove buildroot removal from %%build section

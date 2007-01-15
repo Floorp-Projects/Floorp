@@ -35,7 +35,7 @@
 ; 
 ; ***** END LICENSE BLOCK ***** 
 
-LIBRARY         NSLDAP32V6
+LIBRARY         NSLDAP32V60
 DESCRIPTION     'Lightweight Directory Access Protocol Client API for 32-bit Windows'
 VERSION		6.0
 HEAPSIZE        4096
@@ -190,6 +190,10 @@ EXPORTS
 	ber_sockbuf_free		@150
 	ber_get_next_buffer_ext		@151
 	ber_svecfree		@152
+	ber_get_buf_datalen		@153
+	ber_get_buf_databegin		@154
+	ber_stack_init		@155
+	ber_sockbuf_free_data		@156
 
 	ldap_memfree		@200
 	ldap_ber_free		@201
@@ -310,11 +314,37 @@ EXPORTS
 	ldap_x_calloc		@533
 	ldap_x_realloc		@534
 	ldap_x_free		@535
+; 
 	ldap_create_proxiedauth_control		@536
+; 
+	ldap_create_geteffectiveRights_control		@537
+; 
+	ldap_find_control		@538
+; 
+	ldap_url_parse_no_defaults		@539
+; 
+	ldap_create_userstatus_control		@550
+	ldap_parse_userstatus_control		@551
+; 
+	ldap_create_passwordpolicy_control		@560
+	ldap_create_passwordpolicy_control_ext		@561
+	ldap_parse_passwordpolicy_control		@562
+	ldap_parse_passwordpolicy_control_ext		@563
+	ldap_passwordpolicy_err2txt		@564
 ; 
 	ldap_passwd		@570
 	ldap_parse_passwd		@571
 	ldap_passwd_s		@573
+; 
+	ldap_delete_result_entry		@580
+	ldap_add_result_entry		@581
+; 
+	ldap_whoami		@590
+	ldap_parse_whoami		@591
+	ldap_whoami_s		@592
+; 
+	ldap_create_authzid_control		@600
+	ldap_parse_authzid_control		@601
 ; 
 	ldap_memcache_init		@1000
 	ldap_memcache_set		@1001

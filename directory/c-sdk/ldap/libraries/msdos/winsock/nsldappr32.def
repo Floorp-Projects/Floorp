@@ -35,7 +35,7 @@
 ; 
 ; ***** END LICENSE BLOCK ***** 
 
-LIBRARY         NSLDAPPR32V6
+LIBRARY         NSLDAPPR32V60
 DESCRIPTION     'LDAP to NSPR glue library for 32-bit Windows'
 VERSION		6.0
 HEAPSIZE        4096
@@ -55,7 +55,9 @@ EXPORTS
 	prldap_get_socket_info		@2015
 	prldap_set_session_option		@2016
 	prldap_get_session_option		@2017
-	prldap_is_installed				@2018
+	prldap_is_installed		@2018
 	prldap_import_connection		@2019
+	prldap_set_default_socket_info		@2020
+	prldap_get_default_socket_info		@2021
 ; 
 ; end of generated exports list.
