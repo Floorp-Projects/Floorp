@@ -722,10 +722,12 @@ nsMsgCompose::Initialize(nsIDOMWindowInternal *aWindow, nsIMsgComposeParams *par
   params->GetSmtpPassword(getter_Copies(smtpPassword));
   mSmtpPassword = (const char *)smtpPassword;
 
-  // register the compose object with the compose service
-  rv = composeService->RegisterComposeWindow(aWindow, this);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  if (aWindow)
+  {
+    // register the compose object with the compose service
+    rv = composeService->RegisterComposeWindow(aWindow, this);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   return CreateMessage(originalMsgURI, type, composeFields);
 }
 
