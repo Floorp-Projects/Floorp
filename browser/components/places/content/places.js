@@ -973,6 +973,7 @@ var ViewMenu = {
       var column = columns.getColumnAt(i).element;
       var menuitem = document.createElementNS(XUL_NS, "menuitem");
       menuitem.id = "menucol_" + column.id;
+      menuitem.setAttribute("column", column.id);
       var label = column.getAttribute("label");
       if (propertyPrefix) {
         var menuitemPrefix = propertyPrefix + column.id;
@@ -985,7 +986,7 @@ var ViewMenu = {
         menuitem.setAttribute("type", "radio");
         menuitem.setAttribute("name", "columns");
         // This column is the sort key. Its item is checked. 
-        if (column.hasAttribute("sortDirection")) {
+        if (column.getAttribute("sortDirection") != "") {
           menuitem.setAttribute("checked", "true");
           isSorted = true;
         }
@@ -993,10 +994,10 @@ var ViewMenu = {
       else if (type == "checkbox") {
         menuitem.setAttribute("type", "checkbox");
         // Cannot uncheck the primary column. 
-        if (column.getAttribute("primary") == "true")
+        if (column.primary)
           menuitem.setAttribute("disabled", "true");
         // Items for visible columns are checked. 
-        if (column.getAttribute("hidden") != "true")
+        if (column.hidden)
           menuitem.setAttribute("checked", "true");
       }
       if (pivot)
@@ -1080,61 +1081,60 @@ var ViewMenu = {
   
   /**
    * Sorts the view by the specified key.
-   * @param   element
-   *          The menuitem element for the column that is the sort key. 
-   *          Can be null - the primary column will be sorted. 
-   * @param   direction
+   * @param   aColumnID
+   *          The ID of the colum that is the sort key. Can be null - the
+   *          current sort column id or "title" will be used.
+   * @param   aDirection
    *          The direction to sort - "ascending" or "descending". 
-   *          Can be null - the last direction will be used.
-   *          If both element and direction are null, the view will be
-   *          unsorted. 
+   *          Can be null - the last direction or descending will be used.
+   *
+   * If both aColumnID and aDirection are null, the view will be unsorted.
    */
-  setSortColumn: function VM_setSortColumn(element, direction) {
-    const PREFIX = "menucol_";
-    // Validate the click - check to see if it was on a valid sort item.
-    if (element && 
-        (element.id.substring(0, PREFIX.length) != PREFIX &&
-         element.id != "viewSortDescending" && 
-         element.id != "viewSortAscending"))
+  setSortColumn: function VM_setSortColumn(aColumnID, aDirection) {
+    var result = document.getElementById("placeContent").getResult();
+    if (!aColumnID && !aDirection) {
+      result.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
       return;
-    
-    // If both element and direction are null, all will be unsorted.
-    var unsorted = !element && !direction;
-    // If only the element is null, the currently sorted column will be sorted 
-    // with the specified direction, if there is no currently sorted column, 
-    // the primary column will be sorted with the specified direction. 
-    if (!element && direction) {
-      element = this._getSortColumn();
-      if (!element)
-        element = document.getElementById("title");
-    }
-    else if (element && !direction) {
-      var elementID = element.id.substr(PREFIX.length, element.id.length);
-      element = document.getElementById(elementID);
-      // If direction is null, use the default (ascending)
-      direction = "ascending";
     }
 
-    var content = document.getElementById("placeContent");      
-    var columns = content.columns;
-    for (var i = 0; i < columns.count; ++i) {
-      var column = columns.getColumnAt(i).element;
-      if (unsorted) {
-        column.removeAttribute("sortActive");
-        column.removeAttribute("sortDirection");
-        content.getResult().sortAll(Ci.nsINavHistoryQueryOptions.SORT_BY_NONE);
-      }
-      else if (column.id == element.id) {
-        // We need to do this to ensure the UI updates properly next time it is built.
-        if (column.getAttribute("sortDirection") != direction) {
-          column.setAttribute("sortActive", "true");
-          column.setAttribute("sortDirection", direction);
-        }
-        var columnObj = content.columns.getColumnFor(column);
-        content.view.cycleHeader(columnObj);
-        break;
-      }
+    var sortColumn = this._getSortColumn();
+    if (!aDirection) {
+      aDirection = sortColumn ?
+                   sortColumn.getAttribute("sortDirection") : "descending";
     }
+    else if (!aColumnID)
+      aColumnID = sortColumn ? sortColumn.id : "title";
+
+    var sortingMode;
+    switch (aColumnID) {
+      case "title":
+        if (aDirection == "descending")
+          sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_DESCENDING;
+        else
+          sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING;
+        break;
+      case "url":
+        if (aDirection == "descending")
+          sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_URI_DESCENDING;
+        else
+          sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_URI_ASCENDING;
+        break;
+      case "date":
+        if (aDirection == "descending")
+          sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
+        else
+          sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_ASCENDING;
+        break;      
+      case "visitCount":
+        if (aDirection == "descending")
+          sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING;
+        else
+          sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_ASCENDING;
+        break;
+      default:
+        throw("Invalid Column");
+    }
+    result.sortingMode = sortingMode;
   }
 };
 
