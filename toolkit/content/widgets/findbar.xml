@@ -133,8 +133,8 @@
       ]]></handler>
 
       <handler event="keypress"><![CDATA[
-        var win = this.findbar._currentWindow ?
-          this.findbar._currentWindow : this.findbar._browser.contentWindow;
+        var win = this.findbar._currentWindow ||
+                  this.findbar.browser.contentWindow;
 
         switch (event.keyCode) {
           case KeyEvent.DOM_VK_RETURN:
@@ -164,7 +164,7 @@
 
       <handler event="blur"><![CDATA[
         var findbar = this.findbar;
-        var fastFind = findbar._browser.fastFind;
+        var fastFind = findbar.browser.fastFind;
         if (findbar._foundEditable)
           fastFind.collapseSelection();
         else {
@@ -281,6 +281,10 @@
       <field name="_browser">null</field>
       <property name="browser">
         <getter><![CDATA[
+          if (!this._browser) {
+            this._browser =
+              document.getElementById(this.getAttribute("browserid"));
+          }
           return this._browser;
         ]]></getter>
         <setter><![CDATA[
@@ -368,15 +372,6 @@
         // Convenience
         this.nsITypeAheadFind = Components.interfaces.nsITypeAheadFind;
         this.nsISelectionController = Components.interfaces.nsISelectionController;
-
-        var _delayedInit = function(aSelf) {
-          // The browser element might be bound after the findbar
-          if (aSelf.hasAttribute("browserid")) {
-            aSelf.browser =
-              document.getElementById(aSelf.getAttribute("browserid"));
-          }
-        };
-        setTimeout(_delayedInit, 0, this);
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -457,7 +452,7 @@
         <parameter name="aWord"/>
         <parameter name="aWindow"/>
         <body><![CDATA[
-          var win = aWindow ? aWindow : this._browser.contentWindow;
+          var win = aWindow || this.browser.contentWindow;
 
           var textFound = false;
           for (var i = 0; win.frames && i < win.frames.length; i++) {
@@ -625,7 +620,7 @@
       <method name="_updateCaseSensitivity">
         <parameter name="aString"/>
         <body><![CDATA[
-          var val = aString ? aString : this._findField.value;
+          var val = aString || this._findField.value;
 
           var caseSensitive = this._shouldBeCaseSensitive(val);
           var checkbox = this.getElement("find-case-sensitive");
@@ -642,7 +637,7 @@
           checkbox.hidden = hideCheckbox;
           statusLabel.hidden = !hideCheckbox;
 
-          var fastFind = this._browser.fastFind;
+          var fastFind = this.browser.fastFind;
           fastFind.caseSensitive = caseSensitive;
         ]]></body>
       </method>
@@ -739,12 +734,12 @@
                   else if (this._currentWindow)
                     this._currentWindow.focus();
                   else
-                    this._browser.contentWindow.focus();
+                    this.browser.contentWindow.focus();
                 }
                 catch(ex) {
                   // Retry to set focus.
                   try {
-                    this._browser.contentWindow.focus();
+                    this.browser.contentWindow.focus();
                   }
                   catch(e) { /* We lose focused element! */ }
                 }
@@ -754,7 +749,7 @@
           }
 
           this.hidden = true;
-          var fastFind = this._browser.fastFind;
+          var fastFind = this.browser.fastFind;
           fastFind.setSelectionModeAndRepaint
             (this.nsISelectionController.SELECTION_ON);
           this._setFoundLink(null);
@@ -870,7 +865,7 @@
               this._foundLink.focus();
             else if (this._foundEditable) {
               this._foundEditable.focus();
-              var fastFind = this._browser.fastFind;
+              var fastFind = this.browser.fastFind;
               fastFind.collapseSelection();
             }
             else if (this._currentWindow)
@@ -923,7 +918,7 @@
 
           // disable FAYT in about:config and about:blank to prevent FAYT
           // opening unexpectedly - to fix bugs 264562, 267150, 269712
-          var url = this._browser.currentURI.spec;
+          var url = this.browser.currentURI.spec;
           if (url == "about:blank" || url == "about:config")
             return false;
 
@@ -1067,9 +1062,9 @@
             this._currentWindow = null;
           }
           else {
-            this._setFoundLink(this._browser.fastFind.foundLink);
-            this._foundEditable = this._browser.fastFind.foundEditable;
-            this._currentWindow = this._browser.fastFind.currentWindow;
+            this._setFoundLink(this.browser.fastFind.foundLink);
+            this._foundEditable = this.browser.fastFind.foundEditable;
+            this._currentWindow = this.browser.fastFind.currentWindow;
           }
         ]]></body>
       </method>
@@ -1077,7 +1072,7 @@
       <method name="_find">
         <parameter name="aValue"/>
         <body><![CDATA[
-          var val = aValue ? aValue : this._findField.value
+          var val = aValue || this._findField.value
 
           this._enableFindButtons(val);
           if (this.getElement("highlight").checked)
@@ -1085,7 +1080,7 @@
 
           this._updateCaseSensitivity(val);
 
-          var fastFind = this._browser.fastFind;
+          var fastFind = this.browser.fastFind;
           var res = fastFind.find(val,
                                   this._findMode == this.FIND_LINKS,
                                   this._findField.getAttribute("focused") == "true");
@@ -1130,7 +1125,7 @@
       <method name="_findAgain">
         <parameter name="aFindPrevious"/>
         <body><![CDATA[
-          var fastFind = this._browser.fastFind;
+          var fastFind = this.browser.fastFind;
           var findFieldFocused =
             this._findField.getAttribute("focused") == "true";
           var res = fastFind.findAgain(aFindPrevious,
@@ -1220,7 +1215,7 @@
       <method name="onFindAgainCommand">
         <parameter name="aFindPrevious"/>
         <body><![CDATA[
-          var findString = this._browser.fastFind.searchString;
+          var findString = this.browser.fastFind.searchString;
           if (!findString) {
             this.startFind();
             return;
