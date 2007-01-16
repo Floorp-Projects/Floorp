@@ -505,7 +505,7 @@ int main(int argc, char** argv)
      **  Stress test
      *
      **      Go through four years, starting from
-     **      00:00:00 PST Jan. 1, 1993, incrementing
+     **      00:00:00 PST Jan. 1, 2005, incrementing
      **      every 10 minutes.
      **
      **************************************************************
@@ -522,22 +522,22 @@ int main(int argc, char** argv)
 	printf("\n");
 	printf("*******************************************************\n");
 	printf("**                                                   **\n");
-	printf("**                 Stress test                       **\n");
-	printf("**  Starting from midnight Jan. 1, 1993 PST,         **\n");
+	printf("**        Stress test  Pacific Time                  **\n");
+	printf("**  Starting from midnight Jan. 1, 2005 PST,         **\n");
 	printf("**  going through four years in 10-minute increment  **\n");
 	printf("**                                                   **\n");
 	printf("*******************************************************\n\n");
 	}
 	LL_I2L(usecPer10Min, 600000000L);
 
-	/* 00:00:00 PST Jan. 1, 1993 */
+	/* 00:00:00 PST Jan. 1, 2005 */
 	et.tm_usec = 0;
 	et.tm_sec = 0;
 	et.tm_min = 0;
 	et.tm_hour = 0;
 	et.tm_mday = 1;
 	et.tm_month = 0;
-	et.tm_year = 1993;
+	et.tm_year = 2005;
 	et.tm_params.tp_gmt_offset = -8 * 3600;
 	et.tm_params.tp_dst_offset = 0;
 	usecs = PR_ImplodeTime(&et);
@@ -553,20 +553,19 @@ int main(int argc, char** argv)
 		    PR_NormalizeTime(&et2, PR_USPacificTimeParameters);
 
 		    if (!ExplodedTimeIsEqual(&et1, &et2)) {
-		        if (debug_mode) printf("ERROR: componentwise comparison failed\n");
+			printf("ERROR: componentwise comparison failed\n");
 			PrintExplodedTime(&et1);
-			if (debug_mode) printf("\n");
+			printf("\n");
 			PrintExplodedTime(&et2);
-			if (debug_mode) printf("\n");
+			printf("\n");
 			failed_already=1;
 		        return 1;
 		    }
 
 		    if (LL_NE(usecs, PR_ImplodeTime(&et1))) { 
-                        if (debug_mode)
-					printf("ERROR: PR_ExplodeTime and PR_ImplodeTime are not inverse\n");
+			printf("ERROR: PR_ExplodeTime and PR_ImplodeTime are not inverse\n");
 			PrintExplodedTime(&et1);
-			if (debug_mode) printf("\n");
+			printf("\n");
 			failed_already=1;
 		        return 1;
 		    }
@@ -574,18 +573,22 @@ int main(int argc, char** argv)
 
 		    if (!dstInEffect && et1.tm_params.tp_dst_offset) {
 		        dstInEffect = 1;
-		        if (debug_mode) printf("DST changeover from ");
-			PrintExplodedTime(&et);
-			if (debug_mode) printf(" to ");
-			PrintExplodedTime(&et1);
-			if (debug_mode) printf(".\n");
+		        if (debug_mode) {
+			    printf("DST changeover from ");
+			    PrintExplodedTime(&et);
+			    printf(" to ");
+			    PrintExplodedTime(&et1);
+			    printf(".\n");
+		    	}
                     } else if (dstInEffect && !et1.tm_params.tp_dst_offset) {
 		        dstInEffect = 0;
-			if (debug_mode) printf("DST changeover from ");
-			PrintExplodedTime(&et);
-			if (debug_mode) printf(" to ");
-			PrintExplodedTime(&et1);
-			if (debug_mode) printf(".\n");
+			if (debug_mode) {
+			    printf("DST changeover from ");
+			    PrintExplodedTime(&et);
+			    printf(" to ");
+			    PrintExplodedTime(&et1);
+			    printf(".\n");
+			}
                     }
 
 		    et = et1;
@@ -609,8 +612,8 @@ int main(int argc, char** argv)
 	printf("\n");
 	printf("*******************************************************\n");
 	printf("**                                                   **\n");
-	printf("**                 Stress test                       **\n");
-	printf("**  Starting from midnight Jan. 1, 1993 PST,         **\n");
+	printf("**         Stress test    Local Time                 **\n");
+	printf("**  Starting from midnight Jan. 1, 2005 PST,         **\n");
 	printf("**  going through four years in 10-minute increment  **\n");
 	printf("**                                                   **\n");
 	printf("*******************************************************\n\n");
@@ -618,14 +621,14 @@ int main(int argc, char** argv)
 	
 	LL_I2L(usecPer10Min, 600000000L);
 
-	/* 00:00:00 PST Jan. 1, 1993 */
+	/* 00:00:00 PST Jan. 1, 2005 */
 	et.tm_usec = 0;
 	et.tm_sec = 0;
 	et.tm_min = 0;
 	et.tm_hour = 0;
 	et.tm_mday = 1;
 	et.tm_month = 0;
-	et.tm_year = 1993;
+	et.tm_year = 2005;
 	et.tm_params.tp_gmt_offset = -8 * 3600;
 	et.tm_params.tp_dst_offset = 0;
 	usecs = PR_ImplodeTime(&et);
@@ -641,18 +644,18 @@ int main(int argc, char** argv)
 		    PR_NormalizeTime(&et2, PR_LocalTimeParameters);
 
 		    if (!ExplodedTimeIsEqual(&et1, &et2)) {
-		        if (debug_mode) printf("ERROR: componentwise comparison failed\n");
+			printf("ERROR: componentwise comparison failed\n");
 			PrintExplodedTime(&et1);
-			if (debug_mode) printf("\n");
+			printf("\n");
 			PrintExplodedTime(&et2);
-			if (debug_mode) printf("\n");
+			printf("\n");
 		        return 1;
 		    }
 
 		    if (LL_NE(usecs, PR_ImplodeTime(&et1))) {
                         printf("ERROR: PR_ExplodeTime and PR_ImplodeTime are not inverse\n");
 			PrintExplodedTime(&et1);
-			if (debug_mode) printf("\n");
+			printf("\n");
 			failed_already=1;
 		        return 1;
 		    }
@@ -660,18 +663,22 @@ int main(int argc, char** argv)
 
 		    if (!dstInEffect && et1.tm_params.tp_dst_offset) {
 		        dstInEffect = 1;
-		        if (debug_mode) printf("DST changeover from ");
-			PrintExplodedTime(&et);
-			if (debug_mode) printf(" to ");
-			PrintExplodedTime(&et1);
-			if (debug_mode) printf(".\n");
+		        if (debug_mode) {
+			    printf("DST changeover from ");
+			    PrintExplodedTime(&et);
+			    printf(" to ");
+			    PrintExplodedTime(&et1);
+			    printf(".\n");
+			}
                     } else if (dstInEffect && !et1.tm_params.tp_dst_offset) {
 		        dstInEffect = 0;
-			if (debug_mode) printf("DST changeover from ");
-			PrintExplodedTime(&et);
-			if (debug_mode) printf(" to ");
-			PrintExplodedTime(&et1);
-			if (debug_mode) printf(".\n");
+			if (debug_mode) {
+			    printf("DST changeover from ");
+			    PrintExplodedTime(&et);
+			    printf(" to ");
+			    PrintExplodedTime(&et1);
+			    printf(".\n");
+			}
                     }
 
 		    et = et1;
@@ -694,8 +701,8 @@ int main(int argc, char** argv)
 	printf("\n");
 	printf("*******************************************************\n");
 	printf("**                                                   **\n");
-	printf("**                 Stress test                       **\n");
-	printf("**  Starting from midnight Jan. 1, 1997 PST,         **\n");
+	printf("**           Stress test    Local Time               **\n");
+	printf("**  Starting from midnight Jan. 1, 2009 PST,         **\n");
 	printf("**  going back four years in 10-minute increment     **\n");
 	printf("**                                                   **\n");
 	printf("*******************************************************\n\n");
@@ -703,14 +710,14 @@ int main(int argc, char** argv)
 
 	LL_I2L(usecPer10Min, 600000000L);
 
-	/* 00:00:00 PST Jan. 1, 1997 */
+	/* 00:00:00 PST Jan. 1, 2009 */
 	et.tm_usec = 0;
 	et.tm_sec = 0;
 	et.tm_min = 0;
 	et.tm_hour = 0;
 	et.tm_mday = 1;
 	et.tm_month = 0;
-	et.tm_year = 1997;
+	et.tm_year = 2009;
 	et.tm_params.tp_gmt_offset = -8 * 3600;
 	et.tm_params.tp_dst_offset = 0;
 	usecs = PR_ImplodeTime(&et);
@@ -726,19 +733,18 @@ int main(int argc, char** argv)
 		    PR_NormalizeTime(&et2, PR_LocalTimeParameters);
 
 		    if (!ExplodedTimeIsEqual(&et1, &et2)) {
-		        if (debug_mode) printf("ERROR: componentwise comparison failed\n");
+		        printf("ERROR: componentwise comparison failed\n");
 			PrintExplodedTime(&et1);
-			if (debug_mode) printf("\n");
+			printf("\n");
 			PrintExplodedTime(&et2);
-			if (debug_mode) printf("\n");
+			printf("\n");
 		        return 1;
 		    }
 
 		    if (LL_NE(usecs, PR_ImplodeTime(&et1))) {
-                   if (debug_mode)
-					printf("ERROR: PR_ExplodeTime and PR_ImplodeTime are not inverse\n");
+			printf("ERROR: PR_ExplodeTime and PR_ImplodeTime are not inverse\n");
 			PrintExplodedTime(&et1);
-			if (debug_mode) printf("\n");
+			printf("\n");
 			failed_already=1;
 		        return 1;
 		    }
@@ -746,18 +752,22 @@ int main(int argc, char** argv)
 
 		    if (!dstInEffect && et1.tm_params.tp_dst_offset) {
 		        dstInEffect = 1;
-		        if (debug_mode) printf("DST changeover from ");
-			PrintExplodedTime(&et);
-			if (debug_mode) printf(" to ");
-			PrintExplodedTime(&et1);
-			if (debug_mode) printf(".\n");
+		        if (debug_mode) {
+			    printf("DST changeover from ");
+			    PrintExplodedTime(&et);
+			    printf(" to ");
+			    PrintExplodedTime(&et1);
+			    printf(".\n");
+			}
                     } else if (dstInEffect && !et1.tm_params.tp_dst_offset) {
 		        dstInEffect = 0;
-			if (debug_mode) printf("DST changeover from ");
-			PrintExplodedTime(&et);
-			if (debug_mode) printf(" to ");
-			PrintExplodedTime(&et1);
-			if (debug_mode) printf(".\n");
+			if (debug_mode) {
+			    printf("DST changeover from ");
+			    PrintExplodedTime(&et);
+			    printf(" to ");
+			    PrintExplodedTime(&et1);
+			    printf(".\n");
+			}
                     }
 
 		    et = et1;
