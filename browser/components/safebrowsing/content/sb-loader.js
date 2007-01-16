@@ -61,13 +61,6 @@ var safebrowsing = {
   startup: function() {
     setTimeout(safebrowsing.deferredStartup, 2000);
 
-    var helpMenu = document.getElementById("menu_HelpPopup");
-    if (helpMenu) {
-      helpMenu.addEventListener("popupshowing",
-                                safebrowsing.setReportPhishingMenu,
-                                false);
-    }
-    
     // clean up
     window.removeEventListener("load", safebrowsing.startup, false);
   },
@@ -138,12 +131,6 @@ var safebrowsing = {
     }
     if (safebrowsing.phishWarden) {
       safebrowsing.phishWarden.shutdown();
-    }
-    var helpMenu = document.getElementById("menu_HelpPopup");
-    if (helpMenu) {
-      helpMenu.removeEventListener("popupshowing",
-                                   safebrowsing.setReportPhishingMenu,
-                                   false);
     }
     
     window.removeEventListener("unload", safebrowsing.shutdown, false);
