@@ -503,7 +503,6 @@ function UpdateStatusQuota(folder)
     gQuotaUICache.meter = document.getElementById("quotaMeter");
     gQuotaUICache.panel = document.getElementById("quotaPanel");
     gQuotaUICache.label = document.getElementById("quotaLabel");
-    gQuotaUICache.labelShadow = document.getElementById("quotaLabelShadow");
     const kBranch = "mail.quota.mainwindow_threshold.";
     gQuotaUICache.showTreshold = gPrefBranch.getIntPref(kBranch + "show");
     gQuotaUICache.warningTreshold = gPrefBranch.getIntPref(kBranch + "warning");
@@ -534,7 +533,6 @@ function UpdateStatusQuota(folder)
       var tooltip = gMessengerBundle.getFormattedString("quotaTooltip",
            [used.value, max.value]);
       gQuotaUICache.label.value = label;
-      gQuotaUICache.labelShadow.value = label;
       gQuotaUICache.label.tooltipText = tooltip;
       if (percent < gQuotaUICache.warningTreshold)
         gQuotaUICache.panel.removeAttribute("alert");
