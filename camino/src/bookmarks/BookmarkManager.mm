@@ -90,6 +90,21 @@ enum {
   kHistoryContainerIndex = 2,
 };
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_4
+// These are only used for bookmark error logging on 10.4, but
+// we need them defined to keep the compiler happy on 10.3 SDKs
+enum {
+  NSAtomicWrite = 1
+};
+
+@interface NSData(TigerErrorLogging)
+- (BOOL)writeToFile:(NSString*)path options:(unsigned int)mask error:(NSError**)errorPtr;
+@end
+
+@interface NSError(TigerErrorLogging)
+- (NSString*)localizedFailureReason;
+@end
+#endif
 
 @interface BookmarkManager (Private)
 
@@ -2072,8 +2087,7 @@ static BookmarkManager* gBookmarkManager = nil;
       return;
     }
     NSError* error = nil;
-    // 1 is NSAtomicWrite, but we don't have the 10.4 headers. It's temp code, so we'll just hard-code it.
-    success = [bookmarkData writeToFile:backupFile options:1 error:&error];
+    success = [bookmarkData writeToFile:backupFile options:NSAtomicWrite error:&error];
     if (!success)
       NSLog(@"writePropertyListFile: %@ (%@)",
             [error localizedDescription], [error localizedFailureReason]);
