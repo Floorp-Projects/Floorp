@@ -464,6 +464,11 @@ function checkForUpdates()
 
 function buildHelpMenu()
 {
+  // Enable/disable the "Report Web Forgery" menu item.  safebrowsing object
+  // may not exist in OSX
+  if (typeof safebrowsing != "undefined")
+    safebrowsing.setReportPhishingMenu();
+
   var updates = 
       Components.classes["@mozilla.org/updates/update-service;1"].
       getService(Components.interfaces.nsIApplicationUpdateService);
