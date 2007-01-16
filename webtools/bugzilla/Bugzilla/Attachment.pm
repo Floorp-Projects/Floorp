@@ -749,7 +749,10 @@ sub insert_attachment_for_bug {
         unless ($cgi->param('ispatch')) {
             $class->validate_content_type($throw_error) || return 0;
         }
-        $data = _validate_data($throw_error, $hr_vars) || return 0;
+        $data = _validate_data($throw_error, $hr_vars);
+        # If the attachment is stored locally, $data eq ''.
+        # If an error is thrown, $data eq '0'.
+        ($data ne '0') || return 0;
         $contenttype = $cgi->param('contenttype');
 
         # These are inserted using placeholders so no need to panic
