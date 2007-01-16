@@ -619,6 +619,8 @@ nsBidiPresUtils::ReorderFrames(nsPresContext*       aPresContext,
   // If this line consists of a line frame, reorder the line frame's children.
   if (aFirstFrameOnLine->GetType() == nsGkAtoms::lineFrame) {
     aFirstFrameOnLine = aFirstFrameOnLine->GetFirstChild(nsnull);
+    if (!aFirstFrameOnLine)
+      return;
     // All children of the line frame are on the first line. Setting aNumFramesOnLine
     // to -1 makes InitLogicalArrayFromLine look at all of them.
     aNumFramesOnLine = -1;
