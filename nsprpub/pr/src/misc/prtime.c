@@ -823,7 +823,7 @@ static const DSTParams dstParams[2] = {
 PR_IMPLEMENT(PRTimeParameters)
 PR_USPacificTimeParameters(const PRExplodedTime *gmt)
 {
-    DSTParams * dst;
+    const DSTParams *dst;
     PRTimeParameters retVal;
     PRExplodedTime st;
 
