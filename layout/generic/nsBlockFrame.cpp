@@ -2421,11 +2421,20 @@ nsBlockFrame::AttributeChanged(PRInt32         aNameSpaceID,
   else if (nsGkAtoms::value == aAttribute) {
     const nsStyleDisplay* styleDisplay = GetStyleDisplay();
     if (NS_STYLE_DISPLAY_LIST_ITEM == styleDisplay->mDisplay) {
+      nsIFrame* nextAncestor = mParent;
+      nsBlockFrame* blockParent = nsnull;
+      
       // Search for the closest ancestor that's a block frame. We
       // make the assumption that all related list items share a
       // common block parent.
       // XXXldb I think that's a bad assumption.
-      nsBlockFrame* blockParent = nsLayoutUtils::FindNearestBlockAncestor(this);
+      while (nextAncestor) {
+        if (NS_OK == nextAncestor->QueryInterface(kBlockFrameCID, 
+                                                  (void**)&blockParent)) {
+          break;
+        }
+        nextAncestor = nextAncestor->GetParent();
+      }
 
       // Tell the enclosing block frame to renumber list items within
       // itself
@@ -3101,7 +3110,7 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
       // no longer makes sense.  Now we always allocate on the stack
       nsLineLayout lineLayout(aState.mPresContext,
                               aState.mReflowState.mSpaceManager,
-                              &aState.mReflowState, &aLine);
+                              &aState.mReflowState);
       lineLayout.Init(&aState, aState.mMinLineHeight, aState.mLineNumber);
       if (forceBreakInContent) {
         lineLayout.ForceBreakAtPosition(forceBreakInContent, forceBreakOffset);
@@ -3313,11 +3322,8 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   }
 
   if ((lineReflowStatus == LINE_REFLOW_STOP || lineReflowStatus == LINE_REFLOW_OK) &&
-      aLineLayout.NeedsBackup()) {
+      !aLineLayout.HaveForcedBreakPosition() && aLineLayout.NeedsBackup()) {
     // We need to try backing up to before a text run
-    NS_ASSERTION(!aLineLayout.HaveForcedBreakPosition(),
-                 "We shouldn't be backing up more than once! "
-                 "Someone must have set a break opportunity beyond the available width");
     PRInt32 offset;
     nsIContent* breakContent = aLineLayout.GetLastOptionalBreakPosition(&offset);
     if (breakContent) {
@@ -3822,7 +3828,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     aLineLayout.AddBulletFrame(mBullet, metrics);
     addedBullet = PR_TRUE;
   }
-  aLineLayout.VerticalAlignLine();
+  aLineLayout.VerticalAlignLine(aLine);
   // Our ascent is the ascent of our first line (but if this line is all
   // whitespace we'll correct things in |ReflowBlockFrame|).
   if (aLine == mLines.front()) {

@@ -63,128 +63,53 @@ gfxTextRunCache::GetCache()
     return mGlobalCache;
 }
 
-static PRUint32 ComputeFlags(PRBool aIsRTL, PRBool aEnableSpacing)
-{
-    PRUint32 flags = gfxTextRunFactory::TEXT_HAS_SURROGATES;
-    if (aIsRTL) {
-        flags |= gfxTextRunFactory::TEXT_IS_RTL;
-    }
-    if (aEnableSpacing) {
-        flags |= gfxTextRunFactory::TEXT_ENABLE_SPACING |
-                 gfxTextRunFactory::TEXT_ABSOLUTE_SPACING |
-                 gfxTextRunFactory::TEXT_ENABLE_NEGATIVE_SPACING;
-    }
-    return flags;
-}
-
 gfxTextRun*
-gfxTextRunCache::GetOrMakeTextRun (gfxContext* aContext, gfxFontGroup *aFontGroup,
-                                   const PRUnichar *aString, PRUint32 aLength, gfxFloat aDevToApp,
-                                   PRBool aIsRTL, PRBool aEnableSpacing, PRBool *aCallerOwns)
+gfxTextRunCache::GetOrMakeTextRun (gfxFontGroup *aFontGroup, const nsAString& aString)
 {
-    gfxSkipChars skipChars;
-    // Choose pessimistic flags since we don't want to bother analyzing the string
-    gfxTextRunFactory::Parameters params =
-        { aContext, nsnull, nsnull, &skipChars, nsnull, 0, aDevToApp,
-              ComputeFlags(aIsRTL, aEnableSpacing) };
+    if (gDisableCache)
+        return aFontGroup->MakeTextRun(aString);
 
-    gfxTextRun* tr = nsnull;
-    // Don't cache textruns that use spacing
-    if (!gDisableCache && !aEnableSpacing) {
-        // Evict first, to make sure that the textrun we return is live.
-        EvictUTF16();
-    
-        gfxTextRun *tr;
-        TextRunEntry *entry;
-        nsDependentSubstring keyStr(aString, aString + aLength);
-        FontGroupAndString key(aFontGroup, &keyStr);
+    // Evict first, to make sure that the textrun we return is live.
+    EvictUTF16();
 
-        if (mHashTableUTF16.Get(key, &entry)) {
-            gfxTextRun *cachedTR = entry->textRun;
-            // Check that this matches what we wanted. If it doesn't, we leave
-            // this cache entry alone and return a fresh, caller-owned textrun
-            // below.
-            if (cachedTR->GetPixelsToAppUnits() == aDevToApp &&
-                cachedTR->IsRightToLeft() == aIsRTL) {
-                entry->Used();
-                tr = cachedTR;
-                tr->SetContext(aContext);
-            }
-        } else {
-            tr = aFontGroup->MakeTextRun(aString, aLength, &params);
-            entry = new TextRunEntry(tr);
-            key.Realize();
-            mHashTableUTF16.Put(key, entry);
-        }
-    }
+    gfxTextRun *tr;
+    TextRunEntry *entry;
+    FontGroupAndString key(aFontGroup, &aString);
 
-    if (tr) {
-        *aCallerOwns = PR_FALSE;
+    if (mHashTableUTF16.Get(key, &entry)) {
+        entry->Used();
+        tr = entry->textRun.get();
     } else {
-        // Textrun is not in the cache for some reason.
-        *aCallerOwns = PR_TRUE;
-        tr = aFontGroup->MakeTextRun(aString, aLength, &params);
-    }
-    if (tr) {
-        // We don't want to have to reconstruct the string
-        tr->RememberText(aString, aLength);
+        tr = aFontGroup->MakeTextRun(aString);
+        entry = new TextRunEntry(tr);
+        key.Realize();
+        mHashTableUTF16.Put(key, entry);
     }
 
     return tr;
 }
 
 gfxTextRun*
-gfxTextRunCache::GetOrMakeTextRun (gfxContext* aContext, gfxFontGroup *aFontGroup,
-                                   const char *aString, PRUint32 aLength, gfxFloat aDevToApp,
-                                   PRBool aIsRTL, PRBool aEnableSpacing, PRBool *aCallerOwns)
+gfxTextRunCache::GetOrMakeTextRun (gfxFontGroup *aFontGroup, const nsACString& aString)
 {
-    gfxSkipChars skipChars;
-    // Choose pessimistic flags since we don't want to bother analyzing the string
-    gfxTextRunFactory::Parameters params =
-        { aContext, nsnull, nsnull, &skipChars, nsnull, 0, aDevToApp,
-              ComputeFlags(aIsRTL, aEnableSpacing) };
-    const PRUint8* str = NS_REINTERPRET_CAST(const PRUint8*, aString);
+    if (gDisableCache)
+        return aFontGroup->MakeTextRun(aString);
 
-    gfxTextRun* tr = nsnull;
-    // Don't cache textruns that use spacing
-    if (!gDisableCache && !aEnableSpacing) {
-        // Evict first, to make sure that the textrun we return is live.
-        EvictASCII();
-    
-        gfxTextRun *tr;
-        TextRunEntry *entry;
-        nsDependentCSubstring keyStr(aString, aString + aLength);
-        FontGroupAndCString key(aFontGroup, &keyStr);
+    // Evict first, to make sure that the textrun we return is live.
+    EvictASCII();
 
-        if (mHashTableASCII.Get(key, &entry)) {
-            gfxTextRun *cachedTR = entry->textRun;
-            // Check that this matches what we wanted. If it doesn't, we leave
-            // this cache entry alone and return a fresh, caller-owned textrun
-            // below.
-            if (cachedTR->GetPixelsToAppUnits() == aDevToApp &&
-                cachedTR->IsRightToLeft() == aIsRTL) {
-                entry->Used();
-                tr = cachedTR;
-                tr->SetContext(aContext);
-            }
-        } else {
-            tr = aFontGroup->MakeTextRun(str, aLength, &params);
-            entry = new TextRunEntry(tr);
-            key.Realize();
-            mHashTableASCII.Put(key, entry);
-        }
-    }
+    gfxTextRun *tr;
+    TextRunEntry *entry;
+    FontGroupAndCString key(aFontGroup, &aString);
 
-    if (tr) {
-        *aCallerOwns = PR_FALSE;
+    if (mHashTableASCII.Get(key, &entry)) {
+        entry->Used();
+        tr = entry->textRun.get();
     } else {
-        // Textrun is not in the cache for some reason.
-        *aCallerOwns = PR_TRUE;
-        tr = aFontGroup->MakeTextRun(str, aLength, &params);
-    }
-    if (tr) {
-        // We don't want to have to reconstruct the string
-        tr->RememberText(str, aLength);
+        tr = aFontGroup->MakeTextRun(aString);
+        entry = new TextRunEntry(tr);
+        key.Realize();
+        mHashTableASCII.Put(key, entry);
     }
 
     return tr;

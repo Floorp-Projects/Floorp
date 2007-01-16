@@ -59,7 +59,7 @@
 #include "nsLayoutAtoms.h"
 #endif
 
-nsICaseConversion* nsTextTransformer::gCaseConv = nsnull;
+
 PRBool nsTextTransformer::sWordSelectListenerPrefChecked = PR_FALSE;
 PRBool nsTextTransformer::sWordSelectEatSpaceAfter = PR_FALSE;
 PRBool nsTextTransformer::sWordSelectStopAtPunctuation = PR_FALSE;
@@ -120,6 +120,8 @@ nsAutoTextBuffer::GrowTo(PRInt32 aNewSize, PRBool aCopyToHead)
 
 //----------------------------------------------------------------------
 
+static nsICaseConversion* gCaseConv =  nsnull;
+
 nsresult
 nsTextTransformer::Initialize()
 {
@@ -140,9 +142,7 @@ nsTextTransformer::Initialize()
 
   return NS_OK;
 }
-
-nsresult
-nsTextTransformer::EnsureCaseConv()
+static nsresult EnsureCaseConv()
 {
   nsresult res = NS_OK;
   if (!gCaseConv) {
@@ -151,13 +151,6 @@ nsTextTransformer::EnsureCaseConv()
     NS_ASSERTION( gCaseConv != NULL, "cannot get UnicharUtil");
   }
   return res;
-}
-
-nsICaseConversion*
-nsTextTransformer::GetCaseConv()
-{
-  EnsureCaseConv();
-  return gCaseConv;
 }
 
 void

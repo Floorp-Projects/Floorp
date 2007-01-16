@@ -55,8 +55,12 @@ public:
 
   PRInt32 Prev( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos);
 
-  virtual void GetJISx4051Breaks(const PRUnichar* aText, PRUint32 aLength,
-                                 PRPackedBool* aBreakBefore);
+protected:
+
+  PRInt8   GetClass(PRUnichar u);
+  PRInt8   ContextualAnalysis(PRUnichar prev, PRUnichar cur, PRUnichar next );
+  PRBool   GetPair(PRInt8 c1, PRInt8 c2);
+
 };
 
 #endif  /* nsJISx4501LineBreaker_h__ */

@@ -58,7 +58,6 @@
 #include "nsDisplayList.h"
 #include "nsRegion.h"
 #include "nsFrameManager.h"
-#include "nsBlockFrame.h"
 
 #ifdef MOZ_SVG_FOREIGNOBJECT
 #include "nsSVGForeignObjectFrame.h"
@@ -997,37 +996,6 @@ nsLayoutUtils::GetFontMetricsForFrame(nsIFrame* aFrame,
     GetMetricsFor(sc->GetStyleFont()->mFont,
                   sc->GetStyleVisibility()->mLangGroup,
                   *aFontMetrics);
-}
-
-nsIFrame*
-nsLayoutUtils::FindChildContainingDescendant(nsIFrame* aParent, nsIFrame* aDescendantFrame)
-{
-  nsIFrame* result = aDescendantFrame;
-
-  while (result) {
-    nsIFrame* parent = result->GetParent();
-    if (parent == aParent) {
-      break;
-    }
-
-    // The frame is not an immediate child of aParent so walk up another level
-    result = parent;
-  }
-
-  return result;
-}
-
-nsBlockFrame*
-nsLayoutUtils::FindNearestBlockAncestor(nsIFrame* aFrame)
-{
-  nsIFrame* nextAncestor;
-  for (nextAncestor = aFrame->GetParent(); nextAncestor;
-       nextAncestor = nextAncestor->GetParent()) {
-    nsBlockFrame* block;
-    if (NS_SUCCEEDED(nextAncestor->QueryInterface(kBlockFrameCID, (void**)&block)))
-      return block;
-  }
-  return nsnull;
 }
 
 nsIFrame*

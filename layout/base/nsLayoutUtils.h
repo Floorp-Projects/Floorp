@@ -56,8 +56,6 @@ class nsIFontMetrics;
 #include "nsStyleSet.h"
 #include "nsIView.h"
 
-class nsBlockFrame;
-
 /**
  * nsLayoutUtils is a namespace class used for various helper
  * functions that are useful in multiple places in layout.  The goal
@@ -434,18 +432,6 @@ public:
   static nsresult GetFontMetricsForFrame(nsIFrame* aFrame,
                                          nsIFontMetrics** aFontMetrics);
 
-  /**
-   * Find the immediate child of aParent whose frame subtree contains
-   * aDescendantFrame. Returns null if aDescendantFrame is not a descendant
-   * of aParent.
-   */
-  static nsIFrame* FindChildContainingDescendant(nsIFrame* aParent, nsIFrame* aDescendantFrame);
-  
-  /**
-   * Find the nearest ancestor that's a block
-   */
-  static nsBlockFrame* FindNearestBlockAncestor(nsIFrame* aFrame);
-  
   /**
    * If aFrame is an out of flow frame, return its placeholder, otherwise
    * return its parent.

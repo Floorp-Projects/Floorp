@@ -124,7 +124,7 @@ CPPSRCS          += nsSystemFontsMac.cpp
  endif
 endif
 
-EXPORTS         += nsIThebesRenderingContext.h nsIThebesFontMetrics.h
+EXPORTS		+= nsIThebesRenderingContext.h
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/. \

@@ -43,10 +43,11 @@
 
 #define NS_LINEBREAKER_NEED_MORE_TEXT -1
 
-// {c3d9f25f-7cea-4a76-a08f-05c431353448}
+// {E86B3375-BF89-11d2-B3AF-00805F8A6670}
 #define NS_ILINEBREAKER_IID \
-{ 0xc3d9f25f, 0x7cea, 0x4a76, \
-    { 0xa0, 0x8f, 0x05, 0xc4, 0x31, 0x35, 0x34, 0x48 } }
+{ 0xe86b3375, 0xbf89, 0x11d2, \
+    { 0xb3, 0xaf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
+
 
 class nsILineBreaker : public nsISupports
 {
@@ -62,14 +63,6 @@ public:
   virtual PRInt32 Prev( const PRUnichar* aText, PRUint32 aLen, 
                         PRUint32 aPos) = 0;
 
-  // Call this on a word with whitespace at either end. We will apply JISx4501
-  // rules to find breaks inside the word. aBreakBefore is set to the break-
-  // before status of each character; aBreakBefore[0] will always be false
-  // because we never return a break before the first character.
-  // aLength is the length of the aText array and also the length of the aBreakBefore
-  // output array.
-  virtual void GetJISx4051Breaks(const PRUnichar* aText, PRUint32 aLength,
-                                 PRPackedBool* aBreakBefore) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsILineBreaker, NS_ILINEBREAKER_IID)
