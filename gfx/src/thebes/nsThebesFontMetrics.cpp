@@ -40,8 +40,9 @@
 #include "nsFont.h"
 
 #include "nsString.h"
-#include "nsAutoBuffer.h"
 #include <stdio.h>
+
+#include "gfxTextRunCache.h"
 
 NS_IMPL_ISUPPORTS1(nsThebesFontMetrics, nsIFontMetrics)
 
@@ -54,8 +55,6 @@ NS_IMPL_ISUPPORTS1(nsThebesFontMetrics, nsIFontMetrics)
 #elif defined(XP_MACOSX)
 #include "gfxAtsuiFonts.h"
 #endif
-
-#include "gfxTextRunCache.h"
 
 nsThebesFontMetrics::nsThebesFontMetrics()
 {
@@ -283,6 +282,43 @@ nsThebesFontMetrics::GetMaxStringLength()
     return PR_MAX(1, len);
 }
 
+class StubPropertyProvider : public gfxTextRun::PropertyProvider {
+public:
+    StubPropertyProvider(const nscoord* aSpacing = nsnull)
+      : mSpacing(aSpacing) {}
+
+    virtual void ForceRememberText() {
+        NS_ERROR("This shouldn't be called because we already asked the textrun to remember");
+    }
+    virtual void GetHyphenationBreaks(PRUint32 aStart, PRUint32 aLength,
+                                      PRPackedBool* aBreakBefore) {
+        NS_ERROR("This shouldn't be called because we never call BreakAndMeasureText");
+    }
+    virtual gfxFloat GetHyphenWidth() {
+        NS_ERROR("This shouldn't be called because we never specify hyphen breaks");
+        return 0;
+    }
+    virtual void GetSpacing(PRUint32 aStart, PRUint32 aLength,
+                            Spacing* aSpacing);
+
+private:
+    const nscoord* mSpacing;
+};
+
+void
+StubPropertyProvider::GetSpacing(PRUint32 aStart, PRUint32 aLength,
+                                 Spacing* aSpacing)
+{
+    PRUint32 i;
+    for (i = 0; i < aLength; ++i) {
+        aSpacing[i].mBefore = 0;
+        // mSpacing is absolute (already includes the character width). This is OK
+        // because gfxTextRunCache sets TEXT_ABSOLUTE_SPACING when it creates
+        // the textrun.
+        aSpacing[i].mAfter = mSpacing ? mSpacing[aStart + i] : 0;
+    }
+}
+
 nsresult 
 nsThebesFontMetrics::GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth,
                               nsThebesRenderingContext *aContext)
@@ -296,13 +332,12 @@ nsThebesFontMetrics::GetWidth(const char* aString, PRUint32 aLength, nscoord& aW
     if ((aLength == 1) && (aString[0] == ' '))
         return GetSpaceWidth(aWidth);
 
-    const nsDependentCSubstring& theString = nsDependentCSubstring(aString, aString+aLength);
-    //nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(theString);
-    nsRefPtr<gfxTextRun> textrun = gfxTextRunCache::GetCache()->GetOrMakeTextRun(mFontGroup, theString);
+    StubPropertyProvider provider;
+    AutoTextRun textRun(this, aContext, aString, aLength, PR_FALSE);
+    if (!textRun.get())
+        return NS_ERROR_FAILURE;
 
-    textrun->SetRightToLeft(mIsRTL);
-
-    aWidth = ROUND_TO_TWIPS(textrun->Measure(aContext->Thebes()));
+    aWidth = NSToCoordRound(textRun->GetAdvanceWidth(0, aLength, &provider));
 
     return NS_OK;
 }
@@ -321,16 +356,14 @@ nsThebesFontMetrics::GetWidth(const PRUnichar* aString, PRUint32 aLength,
     if ((aLength == 1) && (aString[0] == ' '))
         return GetSpaceWidth(aWidth);
 
-    const nsDependentSubstring& theString = nsDependentSubstring(aString, aString+aLength);
-    //nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(theString);
-    nsRefPtr<gfxTextRun> textrun = gfxTextRunCache::GetCache()->GetOrMakeTextRun(mFontGroup, theString);
+    StubPropertyProvider provider;
+    AutoTextRun textRun(this, aContext, aString, aLength, PR_FALSE);
+    if (!textRun.get())
+        return NS_ERROR_FAILURE;
 
-    textrun->SetRightToLeft(mIsRTL);
-
-    aWidth = ROUND_TO_TWIPS(textrun->Measure(aContext->Thebes()));
+    aWidth = NSToCoordRound(textRun->GetAdvanceWidth(0, aLength, &provider));
 
     return NS_OK;
-
 }
 
 // Get the text dimensions for this string
@@ -380,67 +413,46 @@ nsThebesFontMetrics::DrawString(const char *aString, PRUint32 aLength,
     if (aLength == 0)
         return NS_OK;
 
-    float app2dev = mDeviceContext->AppUnitsToDevUnits();
-
-    const nsDependentCSubstring& theString = nsDependentCSubstring(aString, aString+aLength);
-    //nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(theString);
-    nsRefPtr<gfxTextRun> textrun = gfxTextRunCache::GetCache()->GetOrMakeTextRun(mFontGroup, theString);
-
-    textrun->SetRightToLeft(mIsRTL);
-
-    if (aSpacing) {
-        gfxFloat offset = aX * app2dev;
-        nsTArray<gfxFloat> spacing(aLength);
-        for (PRUint32 i = 0; i < aLength; ++i) {
-            gfxFloat nextOffset = offset + aSpacing[i] * app2dev;
-            spacing.AppendElement(NSToIntRound(nextOffset) -
-                                  NSToIntRound(offset));
-            offset = nextOffset;
-        }
-        textrun->SetSpacing(spacing);
+    StubPropertyProvider provider(aSpacing);
+    AutoTextRun textRun(this, aContext, aString, aLength, aSpacing != nsnull);
+    if (!textRun.get())
+        return NS_ERROR_FAILURE;
+    gfxPoint pt(aX, aY);
+#ifdef MOZ_X11    
+    if (mIsRTL) {
+        pt.x += textRun->GetAdvanceWidth(0, aLength, &provider);
     }
-
-    aContext->Thebes()->DrawTextRun(textrun, gfxPoint(NSToIntRound(aX * app2dev), NSToIntRound(aY * app2dev)));
-
+#endif
+    textRun->Draw(aContext->Thebes(), pt, 0, aLength,
+                  nsnull, &provider, nsnull);
     return NS_OK;
 }
 
 // aCachedOffset will be updated with a new offset.
 nsresult
 nsThebesFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
-                            nscoord aX, nscoord aY,
-                            PRInt32 aFontID,
-                            const nscoord* aSpacing,
-                            nsThebesRenderingContext *aContext)
+                                nscoord aX, nscoord aY,
+                                PRInt32 aFontID,
+                                const nscoord* aSpacing,
+                                nsThebesRenderingContext *aContext)
 {
     if (aLength == 0)
         return NS_OK;
 
-    float app2dev = mDeviceContext->AppUnitsToDevUnits();
-
-    const nsDependentSubstring& theString = nsDependentSubstring(aString, aString+aLength);
-    //nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(theString);
-    nsRefPtr<gfxTextRun> textrun = gfxTextRunCache::GetCache()->GetOrMakeTextRun(mFontGroup, theString);
-
-    textrun->SetRightToLeft(mIsRTL);
-
-    if (aSpacing) {
-        gfxFloat offset = aX * app2dev;
-        nsTArray<gfxFloat> spacing(aLength);
-        for (PRUint32 i = 0; i < aLength; ++i) {
-            gfxFloat nextOffset = offset + aSpacing[i] * app2dev;
-            spacing.AppendElement(NSToIntRound(nextOffset) - 
-                                  NSToIntRound(offset));
-            offset = nextOffset;
-        }
-        textrun->SetSpacing(spacing);
+    StubPropertyProvider provider(aSpacing);
+    AutoTextRun textRun(this, aContext, aString, aLength, aSpacing != nsnull);
+    if (!textRun.get())
+        return NS_ERROR_FAILURE;
+    gfxPoint pt(aX, aY);
+#ifdef MOZ_X11
+    if (mIsRTL) {
+        pt.x += textRun->GetAdvanceWidth(0, aLength, &provider);
     }
-
-    aContext->Thebes()->DrawTextRun(textrun, gfxPoint(NSToIntRound(aX * app2dev), NSToIntRound(aY * app2dev)));
-
+#endif
+    textRun->Draw(aContext->Thebes(), pt, 0, aLength,
+                  nsnull, &provider, nsnull);
     return NS_OK;
 }
-
 
 #ifdef MOZ_MATHML
 // These two functions get the bounding metrics for this handle,

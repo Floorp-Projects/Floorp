@@ -52,15 +52,17 @@ public:
      */
     static gfxTextRunCache* GetCache();
 
-    /* Will return a pointer to a gfxTextRun, either from the cache
-     * or a newly created (and cached) run.
-     *
-     * The caller does not have to addref the result, as long as
-     * it is not used past another call to GetOrMakeTextRun, at which point
-     * it may be evicted.
+    /* Will return a pointer to a gfxTextRun, which may or may not be from
+     * the cache. If aCallerOwns is set to true, the caller owns the textrun
+     * and must delete it. Otherwise the returned textrun is only valid until
+     * the next GetOrMakeTextRun call and the caller must not delete it.
      */
-    gfxTextRun *GetOrMakeTextRun (gfxFontGroup *aFontGroup, const nsAString& aString);
-    gfxTextRun *GetOrMakeTextRun (gfxFontGroup *aFontGroup, const nsACString& aString);
+    gfxTextRun *GetOrMakeTextRun (gfxContext* aContext, gfxFontGroup *aFontGroup,
+                                  const char *aString, PRUint32 aLength, gfxFloat aDevToApp,
+                                  PRBool aIsRTL, PRBool aEnableSpacing, PRBool *aCallerOwns);
+    gfxTextRun *GetOrMakeTextRun (gfxContext* aContext, gfxFontGroup *aFontGroup,
+                                  const PRUnichar *aString, PRUint32 aLength, gfxFloat aDevToApp,
+                                  PRBool aIsRTL, PRBool aEnableSpacing, PRBool *aCallerOwns);
 
 protected:
     gfxTextRunCache();
@@ -139,8 +141,10 @@ protected:
         TextRunEntry(gfxTextRun *tr) : textRun(tr), lastUse(PR_Now()) { }
         void Used() { lastUse = PR_Now(); }
 
-        nsRefPtr<gfxTextRun> textRun;
-        PRTime lastUse;
+        gfxTextRun* textRun;
+        PRTime      lastUse;
+        
+        ~TextRunEntry() { delete textRun; }
     };
 
     typedef FontGroupAndStringT<nsAString, nsString> FontGroupAndString;
@@ -148,9 +152,6 @@ protected:
 
     typedef FontGroupAndStringHashKeyT<FontGroupAndString> FontGroupAndStringHashKey;
     typedef FontGroupAndStringHashKeyT<FontGroupAndCString> FontGroupAndCStringHashKey;
-
-    //nsRefPtrHashtable<FontGroupAndStringHashKey, gfxTextRun> mHashTableUTF16;
-    //nsRefPtrHashtable<FontGroupAndCStringHashKey, gfxTextRun> mHashTableASCII;
 
     nsClassHashtable<FontGroupAndStringHashKey, TextRunEntry> mHashTableUTF16;
     nsClassHashtable<FontGroupAndCStringHashKey, TextRunEntry> mHashTableASCII;

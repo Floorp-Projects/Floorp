@@ -481,24 +481,153 @@ gfxWindowsFontGroup::~gfxWindowsFontGroup()
 
 }
 
-gfxTextRun *
-gfxWindowsFontGroup::MakeTextRun(const nsAString& aString)
-{
-    if (aString.IsEmpty()) {
-        NS_WARNING("It is illegal to create a gfxTextRun with empty strings");
-        return nsnull;
+class gfxWrapperTextRun : public gfxTextRun {
+public:
+    gfxWrapperTextRun(gfxWindowsFontGroup *aGroup,
+                      const PRUint8* aString, PRUint32 aLength,
+                      gfxTextRunFactory::Parameters* aParams)
+        : gfxTextRun(aParams, PR_TRUE), mContext(aParams->mContext),
+          mInner(nsDependentCSubstring(reinterpret_cast<const char*>(aString),
+                                       reinterpret_cast<const char*>(aString + aLength)),
+                 aGroup),
+          mLength(aLength)
+    {
+        mInner.SetRightToLeft(IsRightToLeft());
     }
-    return new gfxWindowsTextRun(aString, this);
+    gfxWrapperTextRun(gfxWindowsFontGroup *aGroup,
+                      const PRUnichar* aString, PRUint32 aLength,
+                      gfxTextRunFactory::Parameters* aParams)
+        : gfxTextRun(aParams, PR_TRUE), mContext(aParams->mContext),
+          mInner(nsDependentSubstring(aString, aString + aLength), aGroup),
+          mLength(aLength)
+    {
+        mInner.SetRightToLeft(IsRightToLeft());
+    }
+    ~gfxWrapperTextRun() {}
+
+    virtual void GetCharFlags(PRUint32 aStart, PRUint32 aLength,
+                              PRUint8* aFlags)
+    { NS_ERROR("NOT IMPLEMENTED"); }
+    virtual PRUint8 GetCharFlags(PRUint32 aOffset)
+    { NS_ERROR("NOT IMPLEMENTED"); for (;;) ; }
+    virtual PRUint32 GetLength()
+    { NS_ERROR("NOT IMPLEMENTED"); for (;;) ; }
+    virtual PRBool SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
+                                          PRPackedBool* aBreakBefore)
+    { NS_ERROR("NOT IMPLEMENTED"); for (;;) ; }
+    virtual void DrawToPath(gfxContext *aContext, gfxPoint aPt,
+                            PRUint32 aStart, PRUint32 aLength,
+                            PropertyProvider* aBreakProvider,
+                            gfxFloat* aAdvanceWidth)
+    { NS_ERROR("NOT IMPLEMENTED"); }
+    virtual void DrawSpecialString(gfxContext* aContext, gfxPoint aPt,
+                                   SpecialString aString)
+    { NS_ERROR("NOT IMPLEMENTED"); }
+    virtual Metrics MeasureText(PRUint32 aStart, PRUint32 aLength,
+                                PRBool aTightBoundingBox,
+                                PropertyProvider* aBreakProvider)
+    { NS_ERROR("NOT IMPLEMENTED"); for (;;) ; }
+    virtual Metrics MeasureTextSpecialString(SpecialString aString,
+                                             PRBool aTightBoundingBox)
+    { NS_ERROR("NOT IMPLEMENTED"); for (;;) ; }
+    virtual gfxFloat GetAdvanceWidthSpecialString(SpecialString aString)
+    { NS_ERROR("NOT IMPLEMENTED"); for (;;) ; }
+    virtual gfxFont::Metrics GetDecorationMetrics()
+    { NS_ERROR("NOT IMPLEMENTED"); for (;;) ; }
+    virtual void SetLineBreaks(PRUint32 aStart, PRUint32 aLength,
+                               PRBool aLineBreakBefore, PRBool aLineBreakAfter,
+                               TextProvider* aProvider,
+                               gfxFloat* aAdvanceWidthDelta)
+    { NS_ERROR("NOT IMPLEMENTED"); }
+    virtual PRUint32 BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
+                                         PRBool aLineBreakBefore, gfxFloat aWidth,
+                                         PropertyProvider* aProvider,
+                                         PRBool aSuppressInitialBreak,
+                                         Metrics* aMetrics, PRBool aTightBoundingBox,
+                                         PRBool* aUsedHyphenation,
+                                         PRUint32* aLastBreak)
+    { NS_ERROR("NOT IMPLEMENTED"); for (;;) ; }
+    virtual void FlushSpacingCache(PRUint32 aStart)
+    { NS_ERROR("NOT IMPLEMENTED"); }
+
+    virtual void Draw(gfxContext *aContext, gfxPoint aPt,
+                      PRUint32 aStart, PRUint32 aLength,
+                      const gfxRect* aDirtyRect,
+                      PropertyProvider* aBreakProvider,
+                      gfxFloat* aAdvanceWidth);
+    virtual gfxFloat GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
+                                     PropertyProvider* aBreakProvider);
+
+    virtual void SetContext(gfxContext* aContext) { mContext = aContext; }
+
+private:
+    gfxContext*       mContext;
+    gfxWindowsTextRun mInner;
+    PRUint32          mLength;
+    
+    void SetupSpacingFromProvider(PropertyProvider* aProvider);
+};
+
+void
+gfxWrapperTextRun::SetupSpacingFromProvider(PropertyProvider* aProvider)
+{
+    if (!(mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING))
+        return;
+
+    NS_ASSERTION(mFlags & gfxTextRunFactory::TEXT_ABSOLUTE_SPACING,
+                 "Can't handle relative spacing");
+
+    nsAutoTArray<PropertyProvider::Spacing,200> spacing;
+    spacing.AppendElements(mLength);
+    aProvider->GetSpacing(0, mLength, spacing.Elements());
+
+    nsTArray<gfxFloat> spaceArray;
+    PRUint32 i;
+    gfxFloat offset = 0;
+    for (i = 0; i < mLength; ++i) {
+        NS_ASSERTION(spacing.Elements()[i].mBefore == 0,
+                     "Can't handle before-spacing!");
+        gfxFloat nextOffset = offset + spacing.Elements()[i].mAfter/mPixelsToAppUnits;
+        spaceArray.AppendElement(ROUND(nextOffset) - ROUND(offset));
+        offset = nextOffset;
+    }
+    mInner.SetSpacing(spaceArray);
+}
+
+void
+gfxWrapperTextRun::Draw(gfxContext *aContext, gfxPoint aPt,
+                        PRUint32 aStart, PRUint32 aLength,
+                        const gfxRect* aDirtyRect,
+                        PropertyProvider* aBreakProvider,
+                        gfxFloat* aAdvanceWidth)
+{
+    NS_ASSERTION(aStart == 0 && aLength == mLength, "Can't handle substrings");
+    SetupSpacingFromProvider(aBreakProvider);
+    gfxPoint pt(aPt.x/mPixelsToAppUnits, aPt.y/mPixelsToAppUnits);
+    return mInner.Draw(mContext, pt);
+}
+
+gfxFloat
+gfxWrapperTextRun::GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
+                                   PropertyProvider* aBreakProvider)
+{
+    NS_ASSERTION(aStart == 0 && aLength == mLength, "Can't handle substrings");
+    SetupSpacingFromProvider(aBreakProvider);
+    return mInner.Measure(mContext)*mPixelsToAppUnits;
 }
 
 gfxTextRun *
-gfxWindowsFontGroup::MakeTextRun(const nsACString& aString)
+gfxWindowsFontGroup::MakeTextRun(const PRUnichar* aString, PRUint32 aLength,
+                                 Parameters* aParams)
 {
-    if (aString.IsEmpty()) {
-        NS_WARNING("It is illegal to create a gfxTextRun with empty strings");
-        return nsnull;
-    }
-    return new gfxWindowsTextRun(aString, this);
+    return new gfxWrapperTextRun(this, aString, aLength, aParams);
+}
+
+gfxTextRun *
+gfxWindowsFontGroup::MakeTextRun(const PRUint8* aString, PRUint32 aLength,
+                                 Parameters* aParams)
+{
+    return new gfxWrapperTextRun(this, aString, aLength, aParams);
 }
 
 /**********************************************************************
