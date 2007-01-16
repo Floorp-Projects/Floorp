@@ -1980,6 +1980,7 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
   }
   else if (nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) { 
     nsNSSShutDownPreventionLock locker;
+    PRBool clearSessionCache = PR_FALSE;
     PRBool enabled;
     NS_ConvertUTF16toUTF8  prefName(someData);
 
@@ -1987,12 +1988,15 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
       mPrefBranch->GetBoolPref("security.enable_ssl2", &enabled);
       SSL_OptionSetDefault(SSL_ENABLE_SSL2, enabled);
       SSL_OptionSetDefault(SSL_V2_COMPATIBLE_HELLO, enabled);
+      clearSessionCache = PR_TRUE;
     } else if (prefName.Equals("security.enable_ssl3")) {
       mPrefBranch->GetBoolPref("security.enable_ssl3", &enabled);
       SSL_OptionSetDefault(SSL_ENABLE_SSL3, enabled);
+      clearSessionCache = PR_TRUE;
     } else if (prefName.Equals("security.enable_tls")) {
       mPrefBranch->GetBoolPref("security.enable_tls", &enabled);
       SSL_OptionSetDefault(SSL_ENABLE_TLS, enabled);
+      clearSessionCache = PR_TRUE;
     } else if (prefName.Equals("security.OCSP.enabled")) {
       setOCSPOptions(mPrefBranch);
     } else {
@@ -2001,10 +2005,13 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
         if (prefName.Equals(cp->pref)) {
           mPrefBranch->GetBoolPref(cp->pref, &enabled);
           SSL_CipherPrefSetDefault(cp->id, enabled);
+          clearSessionCache = PR_TRUE;
           break;
         }
       }
     }
+    if (clearSessionCache)
+      SSL_ClearSessionCache();
   }
   else if (nsCRT::strcmp(aTopic, PROFILE_CHANGE_NET_TEARDOWN_TOPIC) == 0) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("receiving network teardown topic\n"));
