@@ -85,12 +85,14 @@ function donePageInit() {
             email += "@" + currentAccountData.domain;
     }
     setDivTextFromForm("identity.email", email);
-
+    
     var userName="";
     if (pageData.login && pageData.login.username)
         userName = pageData.login.username.value;
     if (!userName && email)
-        userName = getUsernameFromEmail(email);
+        userName = getUsernameFromEmail(email, currentAccountData && 
+                                        currentAccountData.incomingServerUserNameRequiresDomain);
+              
     // Hide the "username" field if we don't want to show information
     // on the incoming server.
     setDivTextFromForm("server.username", hideIncoming ? null : userName);
@@ -99,7 +101,8 @@ function donePageInit() {
     if (pageData.login && pageData.login.smtpusername)
         smtpUserName = pageData.login.smtpusername.value;
     if (!smtpUserName && email)
-        smtpUserName = getUsernameFromEmail(email);
+        smtpUserName = getUsernameFromEmail(email, currentAccountData && 
+                                            currentAccountData.smtpUserNameRequiresDomain);
     setDivTextFromForm("smtpServer.username", smtpUserName);
 
     if (pageData.accname && pageData.accname.prettyName) {

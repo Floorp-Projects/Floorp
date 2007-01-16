@@ -854,10 +854,12 @@ function serverIsNntp(pageData) {
   return false;
 }
 
-function getUsernameFromEmail(email)
+function getUsernameFromEmail(aEmail, aEnsureDomain)
 {
-	var emailData = email.split("@");
-    return emailData[0];
+  var username = aEmail.split("@")[0];  
+  if (aEnsureDomain && gCurrentAccountData && gCurrentAccountData.domain)
+    username += '@' + gCurrentAccountData.domain;    
+  return username;
 }
 
 function getCurrentUserName(pageData)
@@ -871,7 +873,7 @@ function getCurrentUserName(pageData)
 	}
 	if (userName == "") {
 		var email = pageData.identity.email.value;
-		userName = getUsernameFromEmail(email); 
+		userName = getUsernameFromEmail(email, false); 
 	}
 	return userName;
 }
@@ -941,16 +943,10 @@ function FixupAccountDataForIsp(accountData)
       return;
 
     var email = accountData.identity.email;
-    var username;
-
-    if (email) {
-      username = getUsernameFromEmail(email);
-    }
-    
+       
     // fix up the username
-    if (!accountData.incomingServer.username) {
-        accountData.incomingServer.username = username;
-    }
+    if (!accountData.incomingServer.username)
+        accountData.incomingServer.username = getUsernameFromEmail(email, accountData.incomingServerUserNameRequiresDomain);
 
     if (!accountData.smtp.username &&
         accountData.smtpRequiresUsername) {
@@ -960,7 +956,7 @@ function FixupAccountDataForIsp(accountData)
       if (accountData.smtp.hostname == accountData.incomingServer.hostName)
         accountData.smtp.username = accountData.incomingServer.username;
       else
-        accountData.smtp.username = username;
+        accountData.smtp.username = getUsernameFromEmail(email, accountData.smtpUserNameRequiresDomain);
     }
 }
 
