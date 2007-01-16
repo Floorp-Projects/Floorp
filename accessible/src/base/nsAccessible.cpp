@@ -1493,31 +1493,16 @@ nsIContent *nsAccessible::GetLabelContent(nsIContent *aForNode)
 nsIContent* nsAccessible::GetXULLabelContent(nsIContent *aForNode, nsIAtom *aLabelType)
 {
   nsAutoString controlID;
-  nsIContent *labelContent = GetContentPointingTo(&controlID, aForNode, nsnull, nsnull,
-                                                  kNameSpaceID_None, aLabelType);
-  if (labelContent) {
-    return labelContent;
-  }
-
-  // If we're in anonymous content, determine whether we should use
-  // the binding parent based on where the id for this control is
   aForNode->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::id, controlID);
-  if (controlID.IsEmpty()) {
-    // If no control ID and we're anonymous content
-    // get ID from parent that inserted us.
-    aForNode = aForNode->GetBindingParent();
-    if (aForNode) {
-      aForNode->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::id, controlID);
-    }
-    if (controlID.IsEmpty()) {
-      return nsnull;
-    }
-  }
-  
+  if (controlID.IsEmpty())
+    return nsnull;
+
   // Look for label in subtrees of nearby ancestors
   static const PRUint32 kAncestorLevelsToSearch = 5;
   PRUint32 count = 0;
+  nsIContent *labelContent = nsnull;
   nsIContent *prevSearched = nsnull;
+
   while (!labelContent && ++count <= kAncestorLevelsToSearch && 
          (aForNode = aForNode->GetParent()) != nsnull) {
     labelContent = GetContentPointingTo(&controlID, aForNode,
