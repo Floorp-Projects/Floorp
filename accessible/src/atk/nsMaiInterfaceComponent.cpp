@@ -40,6 +40,12 @@
 
 #include "nsMaiInterfaceComponent.h"
 #include "nsAccessibleWrap.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMDocumentView.h"
+#include "nsIDOMAbstractView.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 void
 componentInterfaceInitCB(AtkComponentIface *aIface)
@@ -93,18 +99,45 @@ getExtentsCB(AtkComponent *aComponent,
              gint *aAccHeight,
              AtkCoordType aCoordType)
 {
+    *aAccX = *aAccY = *aAccWidth = *aAccHeight = 0;
+
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aComponent));
     if (!accWrap)
         return;
 
     PRInt32 nsAccX, nsAccY, nsAccWidth, nsAccHeight;
+    // Returned in screen coordinates
     nsresult rv = accWrap->GetBounds(&nsAccX, &nsAccY,
-                                           &nsAccWidth, &nsAccHeight);
+                                     &nsAccWidth, &nsAccHeight);
     if (NS_FAILED(rv))
         return;
-    // or ATK_XY_SCREEN  what is definition this in nsIAccessible?
     if (aCoordType == ATK_XY_WINDOW) {
-        /* deal with the coord type */
+      // Make coordinates relative to top level window instead of screen
+      nsCOMPtr<nsIDOMNode> domNode;
+      accWrap->GetDOMNode(getter_AddRefs(domNode));
+      nsCOMPtr<nsIDocShellTreeItem> treeItem = nsAccessNode::GetDocShellTreeItemFor(domNode);
+      nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
+      treeItem->GetRootTreeItem(getter_AddRefs(rootTreeItem));
+      nsCOMPtr<nsIDOMDocument> domDoc = do_GetInterface(rootTreeItem);
+      nsCOMPtr<nsIDOMDocumentView> docView(do_QueryInterface(domDoc));
+      if (!docView) {
+        return;
+      }
+
+      nsCOMPtr<nsIDOMAbstractView> abstractView;
+      docView->GetDefaultView(getter_AddRefs(abstractView));
+      nsCOMPtr<nsIDOMWindowInternal> windowInter(do_QueryInterface(abstractView));
+      if (!windowInter) {
+        return;
+      }
+
+      PRInt32 screenX, screenY;
+      if (NS_FAILED(windowInter->GetScreenX(&screenX)) ||
+          NS_FAILED(windowInter->GetScreenY(&screenY))) {
+        return;
+      }
+      nsAccX -= screenX;
+      nsAccY -= screenY;
     }
 
     *aAccX = nsAccX;
