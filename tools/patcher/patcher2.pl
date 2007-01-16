@@ -749,6 +749,11 @@ sub CreateCompletePatchinfo {
                  locale => $l,
                  version => $to->{'appv'});
 
+                my $licenseUrl = SubstitutePath(
+                 path => $u_config->{$u}->{'license'},
+                 locale => $l,
+                 version => $to->{'appv'});
+
                 for my $c (@channels) {
                     my $aus_prefix = "$u/aus2/$from_aus_app/$from_aus_version/$from_aus_platform/$from_aus_buildid/$l/$c";
 
@@ -781,6 +786,7 @@ sub CreateCompletePatchinfo {
                     $complete_patch->{'url'} = $gen_complete_url;
 
                     $complete_patch->{'details'} = $detailsUrl;
+                    $complete_patch->{'license'} = $licenseUrl;
 
                     write_patch_info(patch => $complete_patch,
                                      schemaVer => $to->{'schema'});
@@ -927,6 +933,11 @@ sub CreatePastReleasePatchinfo {
                  locale => $locale,
                  version => $patchLocaleNode->{'appv'});
 
+                my $licenseUrl = SubstitutePath(
+                 path => $config->GetCurrentUpdate()->{'license'},
+                 locale => $locale,
+                 version => $patchLocaleNode->{'appv'});
+
                 foreach my $channel (@{$pastUpd->{'channels'}}) {
                     my $ausDir = ($channel =~ /test(-\w+)?$/) ? 'aus2.test' : 'aus2';
                     my $ausPrefix = "$prefixStr/$ausDir/$fromAusApp/$fromAusVersion/$fromAusPlatform/$fromAusBuildId/$locale/$channel";
@@ -957,6 +968,8 @@ sub CreatePastReleasePatchinfo {
                      $genCompleteTestUrl : $genCompleteUrl;
 
                     $completePatch->{'details'} = $detailsUrl;
+                    $completePatch->{'license'} = $licenseUrl;
+                    $completePatch->{'updateType'} = $updateType;
 
                     write_patch_info(patch => $completePatch,
                                      schemaVer => $patchLocaleNode->{'schema'});
@@ -1062,6 +1075,11 @@ sub CreatePartialPatchinfo {
                  locale => $l,
                  version => $to->{'appv'});
 
+                my $licenseUrl = SubstitutePath(
+                 path => $u_config->{$u}->{'license'},
+                 locale => $l,
+                 version => $to->{'appv'});
+
                 for my $c (@channels) {
                     my $aus_prefix = "$u/aus2/$from_aus_app/$from_aus_version/$from_aus_platform/$from_aus_buildid/$l/$c";
 
@@ -1090,6 +1108,8 @@ sub CreatePartialPatchinfo {
                     $partial_patch->{'size'} = (stat($partial_pathname))[7];
                     $partial_patch->{'url'} = $gen_partial_url;
                     $partial_patch->{'details'} = $detailsUrl;
+                    $partial_patch->{'license'} = $licenseUrl;
+                    $partial_patch->{'updateType'} = $updateType;
 
                     write_patch_info(patch => $partial_patch,
                                      schemaVer => $to->{'schema'});
@@ -1159,6 +1179,12 @@ sub write_patch_info {
 
         if (defined($patch->{'details'})) {
             $text .= "$patch->{'details'}\n";
+        }
+        if (defined($patch->{'license'})) {
+            $text .= "$patch->{'license'}\n";
+        }
+        if (defined($patch->{'updateType'})) {
+            $text .= "$patch->{'updateType'}\n";
         }
     } elsif ($CURRENT_SCHEMA_VERSION == $schemaVersion) {
         $text = "version=1\n";

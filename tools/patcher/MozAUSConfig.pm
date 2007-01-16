@@ -379,6 +379,8 @@ sub CreateUpdateGraph
         my $u_partial = $u->{'partial'};
         my $u_complete = $u->{'complete'};
         my $u_details = $u->{'details'};
+        my $u_license = $u->{'license'};
+        my $u_updateType = $u->{'updateType'};
         my $u_force = [];
       
         if (defined($u->{'force'})) {
@@ -417,6 +419,8 @@ sub CreateUpdateGraph
         $u_config->{$u_key}->{'partial'} = $u_partial;
         $u_config->{$u_key}->{'complete'} = $u_complete;
         $u_config->{$u_key}->{'details'} = $u_details;
+        $u_config->{$u_key}->{'license'} = $u_license;
+        $u_config->{$u_key}->{'updateType'} = $u_updateType;
         $u_config->{$u_key}->{'force'} = $u_force;
         $u_config->{$u_key}->{'platforms'} = {};
 
