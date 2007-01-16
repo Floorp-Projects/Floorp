@@ -296,6 +296,9 @@ nsSVGForeignObjectFrame::GetCoveredRegion()
 NS_IMETHODIMP
 nsSVGForeignObjectFrame::UpdateCoveredRegion()
 {
+  if (mParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
+    return NS_ERROR_FAILURE;
+
   float x, y, w, h;
   GetBBoxInternal(&x, &y, &w, &h);
 
@@ -374,6 +377,11 @@ nsSVGForeignObjectFrame::GetBBoxInternal(float* aX, float *aY, float* aWidth,
 NS_IMETHODIMP
 nsSVGForeignObjectFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
+  if (mParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD) {
+    *_retval = nsnull;
+    return NS_ERROR_FAILURE;
+  }
+
   float x, y, w, h;
   GetBBoxInternal(&x, &y, &w, &h);
   return NS_NewSVGRect(_retval, x, y, w, h);
