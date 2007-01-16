@@ -9,7 +9,7 @@
 		<div class="addon-feature-text corner-box">
 			<h2><a href="{$config.webpath}/{$app}/{$recommended[re].id}/">{$recommended[re].name}</a> <span>by {$recommended[re].username}</span></h2>
 			<p>{$recommended[re].body}</p>
-			<p class="install-button"><a href="{$recommended[re].uri}" onclick="return install(event,'{$recommended[re].name} {$recommended[re].version}', '{$config.webpath}/images/default.png', '{$recommended[re].hash}');" title="Install {$recommended[re].name} {$recommended[re].version} (Right-Click to Download)"><span class="install-green-button"><span class="install-button-text">Install now ({$recommended[re].size}&nbsp;KB)</span></span></a></p>
+			<p class="install-button"><a href="{$recommended[re].uri}" onclick="return install(event,'{$recommended[re].name|escape:"quotes"} {$recommended[re].version}', '{$config.webpath}/images/default.png', '{$recommended[re].hash}');" title="Install {$recommended[re].name} {$recommended[re].version} (Right-Click to Download)"><span class="install-green-button"><span class="install-button-text">Install now ({$recommended[re].size}&nbsp;KB)</span></span></a></p>
       {if $recommended[re].id eq SUPER_MAGIC_YAHOO_ID}
       <p class="eula">By clicking Install, you agree to the <a href="http://del.icio.us/help/firefox/bookmarks/license">Software License</a> for this add-on.</p>
       {/if}			
@@ -30,7 +30,7 @@
 <a href="{$config.webpath}/{$app}/{$recommended[re].id}/previews/"><img class="recommended-img" alt="" src="{$config.webpath}{$recommended[re].previewuri}"/></a>
 <h2><a href="{$config.webpath}/{$app}/{$recommended[re].id}/">{$recommended[re].name}</a></h2>
 <div class="recommended-download">
-<h3><a href="{$recommended[re].uri}" onclick="return install(event,'{$recommended[re].name} {$recommended[re].version}', '{$config.webpath}/images/default.png', '{$recommended[re].hash}');" title="Install {$recommended[re].name} {$recommended[re].version} (Right-Click to Download)">Install Extension ({$recommended[re].size} KB)</a></h3>
+<h3><a href="{$recommended[re].uri}" onclick="return install(event,'{$recommended[re].name|escape:"quotes"} {$recommended[re].version}', '{$config.webpath}/images/default.png', '{$recommended[re].hash}');" title="Install {$recommended[re].name} {$recommended[re].version} (Right-Click to Download)">Install Extension ({$recommended[re].size} KB)</a></h3>
 </div>
 <p>{$recommended[re].body|nl2br}</p>
 </div>
