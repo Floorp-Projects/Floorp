@@ -63,7 +63,7 @@
 #include "nsStringAPI.h"
 
 #include "nsCRT.h"
-#include "xptcall.h"
+#include "nsXPTCUtils.h"
 #include "xpt_xdr.h"
 
 #ifdef HAVE_LONG_LONG
@@ -483,24 +483,23 @@ protected:
 			va_list va);
 };
 
-class PYXPCOM_EXPORT PyXPCOM_XPTStub : public PyG_Base, public nsXPTCStubBase
+class PYXPCOM_EXPORT PyXPCOM_XPTStub : public PyG_Base, public nsAutoXPTCStub
 {
 friend class PyG_Base;
 public:
-	NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
-		{return PyG_Base::QueryInterface(aIID, aInstancePtr);}     \
-	NS_IMETHOD_(nsrefcnt) AddRef(void) {return PyG_Base::AddRef();}    \
-	NS_IMETHOD_(nsrefcnt) Release(void) {return PyG_Base::Release();}  \
+	NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr)
+		{return PyG_Base::QueryInterface(aIID, aInstancePtr);}
+	NS_IMETHOD_(nsrefcnt) AddRef(void) {return PyG_Base::AddRef();}
+	NS_IMETHOD_(nsrefcnt) Release(void) {return PyG_Base::Release();}
 
-	NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info);
 	// call this method and return result
 	NS_IMETHOD CallMethod(PRUint16 methodIndex,
-                          const nsXPTMethodInfo* info,
+                          const XPTMethodDescriptor* info,
                           nsXPTCMiniVariant* params);
 
 	virtual void *ThisAsIID(const nsIID &iid);
 protected:
-	PyXPCOM_XPTStub(PyObject *instance, const nsIID &iid) : PyG_Base(instance, iid) {;}
+	PyXPCOM_XPTStub(PyObject *instance, const nsIID &iid);
 private:
 };
 
@@ -549,7 +548,7 @@ class PYXPCOM_EXPORT PyXPCOM_GatewayVariantHelper
 public:
 	PyXPCOM_GatewayVariantHelper( PyG_Base *gateway,
 	                              int methodIndex,
-	                              const nsXPTMethodInfo *info, 
+	                              const XPTMethodDescriptor *info, 
 	                              nsXPTCMiniVariant* params );
 	~PyXPCOM_GatewayVariantHelper();
 	PyObject *MakePyArgs();
@@ -567,7 +566,7 @@ private:
 
 
 	nsXPTCMiniVariant* m_params;
-	const nsXPTMethodInfo *m_info;
+	const XPTMethodDescriptor *m_info;
 	int m_method_index;
 	PythonTypeDescriptor *m_python_type_desc_array;
 	int m_num_type_descs;

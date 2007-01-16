@@ -49,39 +49,29 @@
 #include "PyXPCOM_std.h"
 #include <nsIInterfaceInfoManager.h>
 
+PyXPCOM_XPTStub::PyXPCOM_XPTStub(PyObject *instance, const nsIID &iid)
+	: PyG_Base(instance, iid)
+{
+	if (NS_FAILED(InitStub(iid)))
+		NS_ERROR("InitStub must not fail!");
+}
+
 void *PyXPCOM_XPTStub::ThisAsIID(const nsIID &iid)
 {
-	if (iid.Equals(NS_GET_IID(nsISupports)))
-	    return (nsISupports *)(nsXPTCStubBase *)this;
-	else if (iid.Equals(m_iid))
-		return (nsISupports *)(nsXPTCStubBase *)this;
-	else
-		return PyG_Base::ThisAsIID(iid);
+	// Not quite clear who should get nsISupports - I would
+	// expect our PyG_Base, but Java gives it the stub.
+	if (iid.Equals(NS_GET_IID(nsISupports)) || iid.Equals(m_iid)) {
+		return mXPTCStub;
+	}
+	// else
+	return PyG_Base::ThisAsIID(iid);
 }
 
-
-NS_IMETHODIMP
-PyXPCOM_XPTStub::GetInterfaceInfo(nsIInterfaceInfo** info)
-{
-	NS_PRECONDITION(info, "NULL pointer");
-	if (info==nsnull)
-		return NS_ERROR_NULL_POINTER;
-	// Simply get the XPCOM runtime to provide this
-	// (but there must be some reason why they don't get it themselves!?)
-	// Maybe because they don't know the IID?
-	nsCOMPtr<nsIInterfaceInfoManager> iim(do_GetService(
-	                     NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
-	NS_ABORT_IF_FALSE(iim != nsnull, "Cant get interface from IIM!");
-	if (iim==nsnull)
-		return NS_ERROR_FAILURE;
-
-	return iim->GetInfoForIID( &m_iid, info);
-}
 
 // call this method and return result
 NS_IMETHODIMP
 PyXPCOM_XPTStub::CallMethod(PRUint16 methodIndex,
-                          const nsXPTMethodInfo* info,
+                          const XPTMethodDescriptor* info,
                           nsXPTCMiniVariant* params)
 {
 	nsresult rc = NS_ERROR_FAILURE;
@@ -96,7 +86,7 @@ PyXPCOM_XPTStub::CallMethod(PRUint16 methodIndex,
 	if (obMI==NULL)
 		goto done;
 	// base object is passed raw.
-	obThisObject = PyObject_FromNSInterface((nsXPTCStubBase *)this,
+	obThisObject = PyObject_FromNSInterface((nsISupports *)ThisAsIID(m_iid),
 	                                        m_iid, PR_FALSE);
 	obParams = arg_helper.MakePyArgs();
 	if (obParams==NULL)
@@ -164,7 +154,7 @@ done:
 		Py_XDECREF(err_result);
 		PyErr_Restore(exc_typ, exc_val, exc_tb);
 		if (bProcessMainError) {
-			PyXPCOM_LogError("The function '%s' failed\n", info->GetName());
+			PyXPCOM_LogError("The function '%s' failed\n", info->name);
 			rc = PyXPCOM_SetCOMErrorFromPyException();
 		}
 		// else everything is already setup,

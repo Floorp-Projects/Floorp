@@ -1865,7 +1865,7 @@ PyObject *PyXPCOM_InterfaceVariantHelper::MakePythonResult()
 **************************************************************************
 *************************************************************************/
 
-PyXPCOM_GatewayVariantHelper::PyXPCOM_GatewayVariantHelper( PyG_Base *gw, int method_index, const nsXPTMethodInfo *info, nsXPTCMiniVariant* params )
+PyXPCOM_GatewayVariantHelper::PyXPCOM_GatewayVariantHelper( PyG_Base *gw, int method_index, const XPTMethodDescriptor *info, nsXPTCMiniVariant* params )
 {
 	m_params = params;
 	m_info = info;
@@ -1896,7 +1896,7 @@ PyObject *PyXPCOM_GatewayVariantHelper::MakePyArgs()
 	// we pass to Python
 	int i;
 	for (i=0;i<m_info->num_args;i++) {
-		nsXPTParamInfo *pi = (nsXPTParamInfo *)m_info->params+i;
+		XPTParamDescriptor *pi = m_info->params+i;
 		PythonTypeDescriptor &td = m_python_type_desc_array[i];
 		td.param_flags = pi->flags;
 		td.type_flags = pi->type.prefix.flags;
@@ -2166,7 +2166,7 @@ nsresult PyXPCOM_GatewayVariantHelper::GetArrayType(PRUint8 index, PRUint8 *ret,
 	if (NS_FAILED(rc))
 		return rc;
 	nsXPTType datumType;
-	const nsXPTParamInfo& param_info = m_info->GetParam((PRUint8)index);
+	const nsXPTParamInfo& param_info = m_info->params[index];
 	rc = ii->GetTypeForParam(m_method_index, &param_info, 1, &datumType);
 	if (NS_FAILED(rc))
 		return rc;
@@ -2716,7 +2716,7 @@ nsresult PyXPCOM_GatewayVariantHelper::ProcessPythonResult(PyObject *ret_ob)
 		// If they havent given enough, we don't really care.
 		// although a warning is probably appropriate.
 		if (num_user_results != num_results) {
-			const char *method_name = m_info->GetName();
+			const char *method_name = m_info->name;
 			PyXPCOM_LogWarning("The method '%s' has %d out params, but %d were supplied by the Python code\n",
 				method_name,
 				num_results,
@@ -2732,12 +2732,12 @@ nsresult PyXPCOM_GatewayVariantHelper::ProcessPythonResult(PyObject *ret_ob)
 			Py_DECREF(sub);
 			this_py_index = 1;
 		}
-		for (i=0;NS_SUCCEEDED(rc) && i<m_info->GetParamCount();i++) {
+		for (i=0;NS_SUCCEEDED(rc) && i<m_info->num_args;i++) {
 			// If we've already done it, or don't need to do it!
 			if (i==index_retval || m_python_type_desc_array[i].is_auto_out) 
 				continue;
-			nsXPTParamInfo *pi = (nsXPTParamInfo *)m_info->params+i;
-			if (pi->IsOut()) {
+			XPTParamDescriptor *pi = m_info->params+i;
+			if (XPT_PD_IS_OUT(pi->flags)) {
 				PyObject *sub = PySequence_GetItem(user_result, this_py_index);
 				if (sub==NULL)
 					return NS_ERROR_FAILURE;

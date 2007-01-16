@@ -356,7 +356,7 @@ PyG_Base::QueryInterface(REFNSIID iid, void** ppv)
 		// must say this is an 'internal' call, else we recurse QI into
 		// oblivion.
 		PyObject * this_interface_ob = Py_nsISupports::PyObjectFromInterface(
-		                                       (nsXPTCStubBase *)this,
+		                                       (nsIXPTCProxy *)this,
 		                                       iid, PR_FALSE, PR_TRUE);
 		if ( !ob || !this_interface_ob) {
 			Py_XDECREF(ob);
