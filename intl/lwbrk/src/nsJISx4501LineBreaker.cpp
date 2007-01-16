@@ -47,6 +47,7 @@
 #include "rulebrk.h"
 #include "nsUnicharUtils.h"
 
+
 /* 
 
    Simplification of Pair Table in JIS X 4051
@@ -240,7 +241,7 @@ IS_SPACE(PRUnichar u)
   return ((u) == 0x0020 || (u) == 0x0009 || (u) == 0x000a || (u) == 0x000d || (u)==0x200b);
 }
 
-static PRInt8 GetClass(PRUnichar u)
+PRInt8 nsJISx4051LineBreaker::GetClass(PRUnichar u)
 {
    PRUint16 h = u & 0xFF00;
    PRUint16 l = u & 0x00ff;
@@ -331,7 +332,7 @@ static PRInt8 GetClass(PRUnichar u)
    return c;
 }
 
-static PRBool GetPair(PRInt8 c1, PRInt8 c2)
+PRBool nsJISx4051LineBreaker::GetPair(PRInt8 c1, PRInt8 c2)
 {
   NS_ASSERTION( c1 < MAX_CLASSES ,"illegal classes 1");
   NS_ASSERTION( c2 < MAX_CLASSES ,"illegal classes 2");
@@ -360,8 +361,9 @@ NS_IMPL_ISUPPORTS1(nsJISx4051LineBreaker, nsILineBreaker)
 #define CHARACTER_CLASS  8 // JIS x4051 class 18 is now map to simplified class 8
 #define IS_ASCII_DIGIT(u) (0x0030 <= (u) && (u) <= 0x0039)
 
-static PRInt8 ContextualAnalysis(
-  PRUnichar prev, PRUnichar cur, PRUnichar next)
+PRInt8  nsJISx4051LineBreaker::ContextualAnalysis(
+  PRUnichar prev, PRUnichar cur, PRUnichar next
+)
 {
    if(U_COMMA == cur)
    {
@@ -391,7 +393,7 @@ static PRInt8 ContextualAnalysis(
      if(U_SPACE != next)
        return CHARACTER_CLASS;
    }
-   return GetClass(cur);
+   return this->GetClass(cur);
 }
 
 
@@ -433,18 +435,18 @@ ROUTE_CJK_BETWEEN:
 
   PRInt8 c1, c2;
   if(NEED_CONTEXTUAL_ANALYSIS(aText1[aTextLen1-1]))
-    c1 = ContextualAnalysis((aTextLen1>1)?aText1[aTextLen1-2]:0,
+    c1 = this->ContextualAnalysis((aTextLen1>1)?aText1[aTextLen1-2]:0,
                                   aText1[aTextLen1-1],
                                   aText2[0]);
   else 
-    c1 = GetClass(aText1[aTextLen1-1]);
+    c1 = this->GetClass(aText1[aTextLen1-1]);
 
   if(NEED_CONTEXTUAL_ANALYSIS(aText2[0]))
-    c2 = ContextualAnalysis(aText1[aTextLen1-1],
-                            aText2[0],
-                            (aTextLen2>1)?aText2[1]:0);
+    c2 = this->ContextualAnalysis(aText1[aTextLen1-1],
+                                  aText2[0],
+                                  (aTextLen2>1)?aText2[1]:0);
   else 
-    c2 = GetClass(aText2[0]);
+    c2 = this->GetClass(aText2[0]);
 
   /* Handle cases for THAI */
   if((CLASS_THAI == c1) && (CLASS_THAI == c2))
@@ -481,11 +483,11 @@ ROUTE_CJK_NEXT:
   cur = aPos;
   if(NEED_CONTEXTUAL_ANALYSIS(aText[cur]))
   {
-    c1 = ContextualAnalysis((cur>0)?aText[cur-1]:0,
-                            aText[cur],
-                            (cur<(aLen-1)) ?aText[cur+1]:0);
+    c1 = this->ContextualAnalysis((cur>0)?aText[cur-1]:0,
+                                  aText[cur],
+                                  (cur<(aLen-1)) ?aText[cur+1]:0);
   } else  {
-    c1 = GetClass(aText[cur]);
+    c1 = this->GetClass(aText[cur]);
   }
   
   if(CLASS_THAI == c1) 
@@ -495,11 +497,11 @@ ROUTE_CJK_NEXT:
   {
      if(NEED_CONTEXTUAL_ANALYSIS(aText[cur]))
      {
-       c2 = ContextualAnalysis((cur>0)?aText[cur-1]:0,
-                               aText[cur],
-                               (cur<(aLen-1)) ?aText[cur+1]:0);
+       c2= this->ContextualAnalysis((cur>0)?aText[cur-1]:0,
+                                  aText[cur],
+                                  (cur<(aLen-1)) ?aText[cur+1]:0);
      } else {
-       c2 = GetClass(aText[cur]);
+       c2 = this->GetClass(aText[cur]);
      }
 
      if(GetPair(c1, c2)) {
@@ -537,11 +539,11 @@ ROUTE_CJK_PREV:
   PRInt8 c1, c2;
   if(NEED_CONTEXTUAL_ANALYSIS(aText[cur-1]))
   {
-    c2 = ContextualAnalysis(((cur-1)>0)?aText[cur-2]:0,
-                            aText[cur-1],
-                            (cur<aLen) ?aText[cur]:0);
+    c2 = this->ContextualAnalysis(((cur-1)>0)?aText[cur-2]:0,
+                                  aText[cur-1],
+                                  (cur<aLen) ?aText[cur]:0);
   } else  {
-    c2 = GetClass(aText[cur-1]);
+    c2 = this->GetClass(aText[cur-1]);
   }
   // To Do: 
   //
@@ -551,11 +553,11 @@ ROUTE_CJK_PREV:
   {
      if(NEED_CONTEXTUAL_ANALYSIS(aText[cur-1]))
      {
-       c1 = ContextualAnalysis(((cur-1)>0)?aText[cur-2]:0,
-                               aText[cur-1],
-                               (cur<aLen) ?aText[cur]:0);
+       c1= this->ContextualAnalysis(((cur-1)>0)?aText[cur-2]:0,
+                                  aText[cur-1],
+                                  (cur<aLen) ?aText[cur]:0);
      } else {
-       c1 = GetClass(aText[cur-1]);
+       c1 = this->GetClass(aText[cur-1]);
      }
 
      if(GetPair(c1, c2)) {
@@ -566,36 +568,3 @@ ROUTE_CJK_PREV:
   return NS_LINEBREAKER_NEED_MORE_TEXT; // Need more text
 }
 
-void
-nsJISx4051LineBreaker::GetJISx4051Breaks(const PRUnichar* aChars, PRUint32 aLength,
-                                         PRPackedBool* aBreakBefore)
-{
-  PRUint32 cur;
-  PRInt8 lastClass = -1;
-
-  for (cur = 0; cur < aLength; ++cur) {
-    PRUnichar ch = aChars[cur];
-    PRInt8 cl;
-
-    if (NEED_CONTEXTUAL_ANALYSIS(ch)) {
-      cl = ContextualAnalysis(cur > 0 ? aChars[cur - 1] : 0,
-                              ch,
-                              cur + 1 < aLength ? aChars[cur + 1] : 0);
-    } else {
-      cl = GetClass(ch);
-    }
-
-    PRBool allowBreak;
-    if (cur > 0) {
-      if (CLASS_THAI == lastClass && CLASS_THAI == cl) {
-        allowBreak = 0 == TrbWordBreakPos(aChars, cur, aChars + cur, aLength - cur);
-      } else {
-        allowBreak = GetPair(lastClass, cl);
-      }
-    } else {
-      allowBreak = PR_FALSE;
-    }
-    aBreakBefore[cur] = allowBreak;
-    lastClass = cl;
-  }
-}

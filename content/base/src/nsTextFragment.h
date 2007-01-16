@@ -191,11 +191,9 @@ public:
   void SetBidiFlag();
 
   struct FragmentBits {
-    // PRPackedBool to ensure that the values are unsigned, because we
-    // want 0/1, not 0/-1!
-    PRPackedBool mInHeap : 1;
-    PRPackedBool mIs2b : 1;
-    PRPackedBool mIsBidi : 1;
+    PRBool mInHeap : 1;
+    PRBool mIs2b : 1;
+    PRBool mIsBidi : 1;
     PRUint32 mLength : 29;
   };
 

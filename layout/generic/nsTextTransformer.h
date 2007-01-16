@@ -56,7 +56,6 @@ class nsIContent;
 class nsIFrame;
 class nsILineBreaker;
 class nsIWordBreaker;
-class nsICaseConversion;
 
 // XXX I'm sure there are other special characters
 #define CH_NBSP   160
@@ -346,8 +345,6 @@ public:
   	return sWordSelectStopAtPunctuation;
   }
   
-  static nsICaseConversion* GetCaseConv();
-  
   static nsresult Initialize();
   static void Shutdown();
 
@@ -380,8 +377,6 @@ protected:
   PRInt32 ScanNormalUnicodeText_B(PRBool aForLineBreak, PRInt32* aWordLen);
   PRInt32 ScanPreWrapWhiteSpace_B(PRInt32* aWordLen);
   PRInt32 ScanPreData_B(PRInt32* aWordLen);
-
-  static nsresult EnsureCaseConv();
 
   // Converts the current text in the transform buffer from ascii to
   // Unicode
@@ -433,8 +428,6 @@ protected:
   static PRBool sWordSelectListenerPrefChecked;  // have we read the prefs yet?
   static PRBool sWordSelectEatSpaceAfter;        // should we include whitespace up to next word? 
   static PRBool sWordSelectStopAtPunctuation;    // should we stop at punctuation?
-
-  static nsICaseConversion* gCaseConv;
 
 #ifdef DEBUG
   static void SelfTest(nsPresContext* aPresContext);

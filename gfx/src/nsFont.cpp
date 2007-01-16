@@ -93,25 +93,17 @@ nsFont::~nsFont()
 {
 }
 
-PRBool nsFont::BaseEquals(const nsFont& aOther) const
+PRBool nsFont::Equals(const nsFont& aOther) const
 {
   if ((style == aOther.style) &&
       (systemFont == aOther.systemFont) &&
+      (variant == aOther.variant) &&
       (familyNameQuirks == aOther.familyNameQuirks) &&
       (weight == aOther.weight) &&
+      (decorations == aOther.decorations) &&
       (size == aOther.size) &&
       (sizeAdjust == aOther.sizeAdjust) &&
       name.Equals(aOther.name, nsCaseInsensitiveStringComparator())) {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
-PRBool nsFont::Equals(const nsFont& aOther) const
-{
-  if (BaseEquals(aOther) &&
-      (variant == aOther.variant) &&
-      (decorations == aOther.decorations)) {
     return PR_TRUE;
   }
   return PR_FALSE;

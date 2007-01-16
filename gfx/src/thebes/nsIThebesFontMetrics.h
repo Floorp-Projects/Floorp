@@ -43,8 +43,6 @@
 
 class nsThebesRenderingContext;
 
-class gfxFontGroup;
-
 class nsIThebesFontMetrics : public nsIFontMetrics {
 public:
     // Get the width for this string.  aWidth will be updated with the
@@ -112,8 +110,6 @@ public:
     virtual PRBool GetRightToLeftText() = 0;
 
     virtual PRInt32 GetMaxStringLength() = 0;
-
-    virtual gfxFontGroup* GetThebesFontGroup() = 0;
 };
 
 #endif /* __nsIThebesFontMetrics_h */

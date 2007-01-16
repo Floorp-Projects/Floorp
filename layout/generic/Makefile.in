@@ -154,6 +154,7 @@ CPPSRCS		= \
 		nsSpaceManager.cpp \
 		nsSpacerFrame.cpp \
 		nsSplittableFrame.cpp \
+		nsTextFrame.cpp \
 		nsTextTransformer.cpp \
 		nsViewportFrame.cpp \
 		$(NULL)
@@ -162,21 +163,6 @@ ifdef IBMBIDI
 CPPSRCS		+= \
 		nsBidiFrames.cpp \
 		$(NULL)
-endif
-
-# set this to 1 to enable the new text frame
-MOZ_ENABLE_NEW_TEXT_FRAME =
-
-ifdef MOZ_ENABLE_NEW_TEXT_FRAME
-CPPSRCS   += \
-          nsTextFrameThebes.cpp \
-          nsTextRunTransformations.cpp \
-          nsTextFrameUtils.cpp \
-    $(NULL)
-else
-CPPSRCS   += \
-          nsTextFrame.cpp \
-    $(NULL)
 endif
 
 RESOURCES_HTML = \

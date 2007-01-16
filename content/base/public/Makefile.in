@@ -72,7 +72,6 @@ nsCaseTreatment.h \
 nsContentCID.h \
 nsCopySupport.h \
 nsContentCreatorFunctions.h \
-nsLineBreaker.h \
 nsXMLNameSpaceMap.h \
 $(NULL)
 
