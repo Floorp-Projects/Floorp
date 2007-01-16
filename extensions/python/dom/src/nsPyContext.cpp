@@ -43,6 +43,8 @@
 #include "nsIAtom.h"
 #include "prtime.h"
 #include "nsStringAPI.h"
+#include "nsIWeakReference.h" // needed by nsGUIEvent.h
+#include "nsIWeakReferenceUtils.h" // needed by nsGUIEvent.h
 #include "nsGUIEvent.h"
 #include "nsServiceManagerUtils.h"
 #include "nsDOMScriptObjectHolder.h"
