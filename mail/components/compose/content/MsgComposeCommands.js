@@ -21,6 +21,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   David Bienvenu <bienvenu@nventure.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -122,6 +123,8 @@ var gAttachVCardOptionChanged;
 var gMailSession;
 var gAutoSaveInterval;
 var gAutoSaveTimeout;
+var gExplicitSave;
+var gEditingDraft;
 
 const kComposeAttachDirPrefName = "mail.compose.attach.dir";
 
@@ -1438,6 +1441,8 @@ function ComposeStartup(recycled, aParams)
     }
   }
 
+  gEditingDraft = gMsgCompose.compFields.draftId;
+
   // finally, see if we need to auto open the address sidebar. 
   var sideBarBox = document.getElementById('sidebar-box');
   if (sideBarBox.getAttribute("sidebarVisible") == "true")
@@ -1452,6 +1457,8 @@ function ComposeStartup(recycled, aParams)
 
   if (gAutoSaveInterval)
     gAutoSaveTimeout = setTimeout(AutoSave, gAutoSaveInterval);
+
+  gExplicitSave = false;
 }
 
 // The new, nice, simple way of getting notified when a new editor has been created
@@ -2021,6 +2028,8 @@ function SaveAsDraft()
 {
   dump("SaveAsDraft from XUL\n");
 
+  gExplicitSave = true;
+
   GenericSendMessage(nsIMsgCompDeliverMode.SaveAsDraft);
   defaultSaveOperation = "draft";
 }
@@ -2490,7 +2499,7 @@ function ComposeCanClose()
   }
 
   // Returns FALSE only if user cancels save action
-  if (gContentChanged || gMsgCompose.bodyModified)
+  if (gContentChanged || gMsgCompose.bodyModified || !gExplicitSave)
   {
     // call window.focus, since we need to pop up a dialog
     // and therefore need to be visible (to prevent user confusion)
@@ -2514,6 +2523,10 @@ function ComposeCanClose()
         case 1: //Cancel
           return false;
         case 2: //Don't Save
+          // don't delete the draft if we didn't start off editing a draft
+          // and the user hasn't explicitly saved it.
+          if (!gEditingDraft && !gExplicitSave)
+            RemoveDraft();
           break;
       }
     }
@@ -2522,6 +2535,34 @@ function ComposeCanClose()
   }
 
   return true;
+}
+
+const MSG_FOLDER_FLAG_DRAFTS = 0x0400;
+
+function RemoveDraft()
+{
+  try
+  {
+    var draftUri = gMsgCompose.compFields.draftId;
+    var msgKey = draftUri.substr(draftUri.indexOf('#') + 1);
+    var folder = sRDF.GetResource(gMsgCompose.savedFolderURI).QueryInterface(Components.interfaces.nsIMsgFolder);
+    try {
+      if (folder.flags & MSG_FOLDER_FLAG_DRAFTS)
+      {
+        var msgs = Components.classes["@mozilla.org/supports-array;1"].
+            createInstance(Components.interfaces.nsISupportsArray);
+        msgs.AppendElement(folder.GetMessageHeader(msgKey));
+        folder.deleteMessages(msgs, null, true, false, null, false);
+      }
+    }
+    catch (ex) // couldn't find header - perhaps an imap folder.
+    {
+      var imapFolder = folder.QueryInterface(Components.interfaces.nsIMsgImapMailFolder);
+      var keyArray = new Array;
+      keyArray[0] = msgKey;
+      imapFolder.storeImapFlags(8, true, keyArray, 1, null);
+    }
+  } catch (ex) {}
 }
 
 function SetContentAndBodyAsUnmodified()

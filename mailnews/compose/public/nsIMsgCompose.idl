@@ -233,7 +233,7 @@ interface nsIMsgCompose : nsISupports {
   [noscript] void setCiteReference(in nsString citeReference);
 
   /* Set the URI of the folder where the message has been saved */
-  [noscript] attribute string savedFolderURI;
+  attribute string savedFolderURI;
 
   /* Append the signature defined in the identity to the msgBody */
   [noscript] void processSignature(in nsIMsgIdentity identity,
