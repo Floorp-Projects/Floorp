@@ -82,10 +82,14 @@ public:
                       const gfxFontStyle *aStyle);
     virtual ~gfxAtsuiFontGroup();
 
-    virtual gfxTextRun *MakeTextRun(const nsAString& aString);
-    virtual gfxTextRun *MakeTextRun(const nsACString& aCString) {
-        return MakeTextRun(NS_ConvertASCIItoUTF16(aCString));
+    virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle) {
+        NS_ERROR("NOT IMPLEMENTED");
+        return nsnull;
     }
+    virtual gfxTextRun *MakeTextRun(const PRUnichar* aString, PRUint32 aLength,
+                                    Parameters* aParams);
+    virtual gfxTextRun *MakeTextRun(const PRUint8* aString, PRUint32 aLength,
+                                    Parameters* aParams);
 
     ATSUFontFallbacks *GetATSUFontFallbacksPtr() { return &mFallbacks; }
     
@@ -103,7 +107,7 @@ protected:
     ATSUFontFallbacks mFallbacks;
 };
 
-class THEBES_API gfxAtsuiTextRun : public gfxTextRun {
+class THEBES_API gfxAtsuiTextRun {
 public:
     gfxAtsuiTextRun(const nsAString& aString, gfxAtsuiFontGroup *aFontGroup);
     ~gfxAtsuiTextRun();
@@ -114,6 +118,9 @@ public:
     virtual void SetSpacing(const nsTArray<gfxFloat>& spacingArray);
     virtual const nsTArray<gfxFloat> *const GetSpacing() const;
 
+    void SetRightToLeft(PRBool aIsRTL) { mIsRTL = aIsRTL; }
+    PRBool IsRightToLeft() { return mIsRTL; }
+
 private:
     nsString mString;
     gfxAtsuiFontGroup *mGroup;
@@ -121,6 +128,8 @@ private:
     ATSUTextLayout mATSULayout;
 
     nsTArray<ATSUStyle> mStylesToDispose;
+    
+    PRPackedBool mIsRTL;
 };
 
 #endif /* GFX_ATSUIFONTS_H */

@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,18 +12,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Novell code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is Novell Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Robert O'Callahan (rocallahan@novell.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -34,29 +34,36 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsJISx4501LineBreaker_h__
-#define nsJISx4501LineBreaker_h__
 
+#include "gfxRect.h"
 
-#include "nsILineBreaker.h"
-
-class nsJISx4051LineBreaker : public nsILineBreaker
+gfxRect gfxRect::Intersect(const gfxRect& aRect) const
 {
-  NS_DECL_ISUPPORTS
+  gfxRect result(0,0,0,0);
 
-public:
-  nsJISx4051LineBreaker();
-  virtual ~nsJISx4051LineBreaker();
+  gfxFloat x = PR_MAX(aRect.X(), X());
+  gfxFloat xmost = PR_MIN(aRect.XMost(), XMost());
+  if (x >= xmost)
+    return result;
 
-  PRBool BreakInBetween( const PRUnichar* aText1 , PRUint32 aTextLen1,
-                         const PRUnichar* aText2 , PRUint32 aTextLen2);
+  gfxFloat y = PR_MAX(aRect.Y(), Y());
+  gfxFloat ymost = PR_MIN(aRect.YMost(), YMost());
+  if (y >= ymost)
+    return result;
 
-  PRInt32 Next( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos);
+  result = gfxRect(x, y, xmost - x, ymost - y);
+  return result;
+}
 
-  PRInt32 Prev( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos);
-
-  virtual void GetJISx4051Breaks(const PRUnichar* aText, PRUint32 aLength,
-                                 PRPackedBool* aBreakBefore);
-};
-
-#endif  /* nsJISx4501LineBreaker_h__ */
+gfxRect gfxRect::Union(const gfxRect& aRect) const
+{
+  gfxRect result(0,0,0,0);
+  if (!aRect.IsEmpty() && !IsEmpty()) {
+    gfxFloat x = PR_MIN(aRect.X(), X());
+    gfxFloat xmost = PR_MAX(aRect.XMost(), XMost());
+    gfxFloat y = PR_MIN(aRect.Y(), Y());
+    gfxFloat ymost = PR_MAX(aRect.YMost(), YMost());
+    result = gfxRect(x, y, xmost - x, ymost - y);
+  }
+  return result;
+}

@@ -26,8 +26,10 @@ CPPSRCS	= \
 	gfxContext.cpp \
 	gfxImageSurface.cpp \
 	gfxFont.cpp \
-	gfxPlatform.cpp \
+        gfxRect.cpp \
+        gfxSkipChars.cpp \
 	gfxTextRunCache.cpp \
+        gfxPlatform.cpp \
 	$(NULL)
 
 ifdef MOZ_TREE_CAIRO

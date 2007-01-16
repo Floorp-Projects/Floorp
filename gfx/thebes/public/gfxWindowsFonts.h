@@ -418,8 +418,14 @@ public:
     gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFontStyle* aStyle);
     virtual ~gfxWindowsFontGroup();
 
-    virtual gfxTextRun *MakeTextRun(const nsAString& aString);
-    virtual gfxTextRun *MakeTextRun(const nsACString& aString);
+    virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle) {
+        NS_ERROR("NOT IMPLEMENTED");
+        return nsnull;
+    }
+    virtual gfxTextRun *MakeTextRun(const PRUnichar* aString, PRUint32 aLength,
+                                    Parameters* aParams);
+    virtual gfxTextRun *MakeTextRun(const PRUint8* aString, PRUint32 aLength,
+                                    Parameters* aParams);
 
     const nsACString& GetGenericFamily() const {
         return mGenericFamily;
@@ -476,7 +482,7 @@ private:
  *
  **********************************************************************/
 
-class THEBES_API gfxWindowsTextRun : public gfxTextRun {
+class THEBES_API gfxWindowsTextRun {
 public:
     gfxWindowsTextRun(const nsAString& aString, gfxWindowsFontGroup *aFontGroup);
     gfxWindowsTextRun(const nsACString& aString, gfxWindowsFontGroup *aFontGroup);
@@ -487,6 +493,9 @@ public:
 
     virtual void SetSpacing(const nsTArray<gfxFloat>& spacingArray);
     virtual const nsTArray<gfxFloat> *const GetSpacing() const;
+    
+    void SetRightToLeft(PRBool aIsRTL) { mIsRTL = aIsRTL; }
+    PRBool IsRightToLeft() { return mIsRTL; }
 
 private:
     double MeasureOrDrawFast(gfxContext *aContext, PRBool aDraw, gfxPoint pt);
@@ -500,8 +509,9 @@ private:
     nsString mString;
     nsCString mCString;
 
-    const PRBool mIsASCII;
-
+    const PRPackedBool mIsASCII;
+    PRPackedBool mIsRTL;
+    
     nsRefPtr<gfxWindowsFont> mFallbackFont;
 
     /* cached values */

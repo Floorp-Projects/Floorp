@@ -46,6 +46,7 @@
 #include "nsIAtom.h"
 
 #include "gfxFont.h"
+#include "gfxTextRunCache.h"
 
 class nsThebesFontMetrics : public nsIThebesFontMetrics
 {
@@ -143,9 +144,40 @@ public:
     virtual nsresult SetRightToLeftText(PRBool aIsRTL);
     virtual PRBool GetRightToLeftText();
 
+    virtual gfxFontGroup* GetThebesFontGroup() { return mFontGroup; }
+    
 protected:
 
     const gfxFont::Metrics& GetMetrics() const;
+
+    class AutoTextRun {
+    public:
+        AutoTextRun(nsThebesFontMetrics* aMetrics, nsIRenderingContext* aRC,
+                    const char* aString, PRInt32 aLength, PRBool aEnableSpacing) {
+            mTextRun = gfxTextRunCache::GetCache()->GetOrMakeTextRun(
+                NS_STATIC_CAST(gfxContext*, aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT)),
+                aMetrics->mFontGroup, aString, aLength, aMetrics->mDev2App,
+                aMetrics->mIsRTL, aEnableSpacing, &mOwning);
+        }
+        AutoTextRun(nsThebesFontMetrics* aMetrics, nsIRenderingContext* aRC,
+                    const PRUnichar* aString, PRInt32 aLength, PRBool aEnableSpacing) {
+            mTextRun = gfxTextRunCache::GetCache()->GetOrMakeTextRun(
+                NS_STATIC_CAST(gfxContext*, aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT)),
+                aMetrics->mFontGroup, aString, aLength, aMetrics->mDev2App,
+                aMetrics->mIsRTL, aEnableSpacing, &mOwning);
+        }
+        ~AutoTextRun() {
+            if (mOwning) {
+                delete mTextRun;
+            }
+        }
+        gfxTextRun* operator->() { return mTextRun; }
+        gfxTextRun* get() { return mTextRun; }
+    private:
+        gfxTextRun* mTextRun;
+        PRBool      mOwning;
+    };
+    friend class AutoTextRun;
 
     nsRefPtr<gfxFontGroup> mFontGroup;
     gfxFontStyle *mFontStyle;
