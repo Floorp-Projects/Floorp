@@ -1930,7 +1930,7 @@ PRUint32	nsMsgDatabase::GetStatusFlags(nsIMsgDBHdr *msgHdr, PRUint32 origFlags)
   
   nsMsgKey key;
   (void)msgHdr->GetMessageKey(&key);
-  if (m_newSet.GetSize() > 0 && m_newSet.GetAt(m_newSet.GetSize() - 1) == key || m_newSet.IndexOf(key) != kNotFound)
+  if (m_newSet.GetSize() > 0 && m_newSet.GetAt(m_newSet.GetSize() - 1) == key || m_newSet.IndexOfSorted(key) != kNotFound)
     statusFlags |= MSG_FLAG_NEW;
   else
     statusFlags &= ~MSG_FLAG_NEW;
