@@ -941,8 +941,15 @@ void _PR_InitThreads(
  */
 static void _PR_Fini(void) __attribute__ ((destructor));
 #elif defined(__SUNPRO_C)
+/*
+ * Sun Studio compiler
+ */
 #pragma fini(_PR_Fini)
 #elif defined(HPUX)
+/*
+ * Current versions of HP C compiler define __HP_cc.
+ * HP C compiler A.11.01.20 doesn't define __HP_cc.
+ */
 #if defined(__ia64) || defined(_LP64)
 #pragma FINI "_PR_Fini"
 #else
@@ -974,7 +981,7 @@ void PR_HPUX10xInit(shl_t handle, int loading)
 }
 #endif
 #elif defined(AIX)
-/* Need to use the binitfini::_PR_Fini linker option. */
+/* Need to use the -binitfini::_PR_Fini linker option. */
 #endif
 
 static void _PR_Fini(void)
