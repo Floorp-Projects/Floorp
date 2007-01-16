@@ -39,14 +39,8 @@
 #include "nsIInternetConfigService.h"
 #include "nsIServiceManager.h"
 #include "nsSize.h"
-#include <ControlDefinitions.h>
-#include <MacWindows.h>
- 
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
+
+#import <Carbon/Carbon.h>
 
 nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 {
@@ -168,7 +162,6 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       res = GetMacTextColor(kThemeTextColorMenuItemActive, aColor, NS_RGB(0x00,0x00,0x00));
       break;
     case eColor_infotext:
-      //this will only work on MacOS 9. Mac OS < 9 will use hardcoded value
       res = GetMacTextColor(kThemeTextColorNotification, aColor, NS_RGB(0x00,0x00,0x00));
       break;    
     case eColor_windowtext:
@@ -182,13 +175,12 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       aColor = NS_RGB(0xCC,0xCC,0xCC);
       break;
     case eColor_activeborder:
-      //If it means anything at all on Mac OS, then its black in every theme I've tried,
-      //but Aqua *has* no border!
+      // Aqua has no border
       res = GetMacBrushColor(kThemeBrushBlack, aColor, NS_RGB(0x00,0x00,0x00));
       break;
      case eColor_appworkspace:
-      // NOTE: this is an MDI color and does not exist on macOS.
-      //used the closest match, which will likely be white.
+      // NOTE: this is an MDI color and does not exist on Mac OS X.
+      // Use the closest match, which will likely be white.
       res = GetMacBrushColor(kThemeBrushDocumentWindowBackground, aColor, NS_RGB(0x63,0x63,0xCE));
       break;   
     case eColor_background:
@@ -252,7 +244,6 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       res = GetMacBrushColor(kThemeBrushDialogBackgroundActive, aColor, NS_RGB(0xDD,0xDD,0xDD));
       break;
     case eColor_infobackground:
-      //Brush exists on on MacOS 9. Earlier Mac OS will use default Platinum colour
       res = GetMacBrushColor(kThemeBrushNotificationWindowBackground, aColor, NS_RGB(0xFF,0xFF,0xC6));
       break;
     case eColor_windowframe:
@@ -337,8 +328,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       res = GetMacBrushColor(kThemeBrushButtonActiveDarkShadow, aColor, NS_RGB(0x77,0x77,0x77));
       break;
     case eColor__moz_mac_alternateprimaryhighlight:
-      // For proper styling of lists when active, on 10.2+
-      // On older OSs may have to fall back to primary highlight color
+      // For proper styling of lists when active
       nscolor fallbackColor;
       GetMacBrushColor(kThemeBrushPrimaryHighlightColor, fallbackColor, NS_RGB(0x00,0x00,0x00));
       res = GetMacBrushColor(kThemeBrushAlternatePrimaryHighlightColor, aColor, fallbackColor);
