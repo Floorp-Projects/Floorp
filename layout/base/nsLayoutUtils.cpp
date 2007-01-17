@@ -1296,6 +1296,27 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
   if (result < min)
     result = min;
 
+  const nsStyleDisplay *disp = aFrame->GetStyleDisplay();
+  if (aFrame->IsThemed(disp)) {
+    nsSize size(0, 0);
+    PRBool canOverride = PR_TRUE;
+    nsPresContext *presContext = aFrame->GetPresContext();
+    presContext->GetTheme()->
+      GetMinimumWidgetSize(aRenderingContext, aFrame, disp->mAppearance,
+                           &size, &canOverride);
+
+    // GMWS() returns size in pixels, we need to convert it back to twips
+    float p2t = presContext->ScaledPixelsToTwips();
+    nscoord themeWidth = NSIntPixelsToTwips(size.width, p2t);
+
+    // GMWS() returns a border-box width
+    themeWidth += offsets.hMargin;
+    themeWidth = AddPercents(aType, themeWidth, offsets.hPctMargin);
+
+    if (themeWidth > result || !canOverride)
+      result = themeWidth;
+  }
+
 #ifdef DEBUG_INTRINSIC_WIDTH
   nsFrame::IndentBy(stdout, gNoiseIndent);
   NS_STATIC_CAST(nsFrame*, aFrame)->ListTag(stdout);

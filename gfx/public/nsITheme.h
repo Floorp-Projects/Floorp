@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* service providing platform-specific native rendering for widgets */
+
 #ifndef nsITheme_h_
 #define nsITheme_h_
 
@@ -63,6 +65,16 @@ class nsIAtom;
 #define NS_THEMERENDERER_CID \
 { 0xd930e29b, 0x6909, 0x44e5, { 0xab, 0x4b, 0xaf, 0x10, 0xd6, 0x92, 0x37, 0x5 } }
 
+/**
+ * nsITheme is a service that provides platform-specific native
+ * rendering for widgets.  In other words, it provides the necessary
+ * operations to draw a rendering object (an nsIFrame) as a native
+ * widget.
+ *
+ * All the methods on nsITheme take a rendering context or device
+ * context, a frame (the rendering object), and a widget type (one of
+ * the constants in nsThemeConstants.h).
+ */
 class nsITheme: public nsISupports {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITHEME_IID)
@@ -73,29 +85,48 @@ public:
                                   const nsRect& aRect,
                                   const nsRect& aClipRect)=0;
 
+  /**
+   * Get the computed CSS border for the widget, in pixels.
+   */
   NS_IMETHOD GetWidgetBorder(nsIDeviceContext* aContext, 
                              nsIFrame* aFrame,
                              PRUint8 aWidgetType,
                              nsMargin* aResult)=0;
 
-  // This method can return PR_FALSE to indicate that the CSS padding value
-  // should be used.  Otherwise, it will fill in aResult with the desired
-  // padding and return PR_TRUE.
+  /**
+   * This method can return PR_FALSE to indicate that the CSS padding
+   * value should be used.  Otherwise, it will fill in aResult with the
+   * computed padding, in pixels, and return PR_TRUE.
+   *
+   * XXXldb This ought to be required to return true for non-containers
+   * so that we don't let specified padding that has no effect change
+   * the computed padding and potentially the size.
+   */
   virtual PRBool GetWidgetPadding(nsIDeviceContext* aContext,
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   nsMargin* aResult) = 0;
 
-  // This method can return PR_FALSE to indicate that no special overflow
-  // area is required by the native widget. Otherwise it will fill in
-  // aResult with the desired overflow area and return PR_TRUE.
+  /**
+   * This method can return PR_FALSE to indicate that no special
+   * overflow area is required by the native widget. Otherwise it will
+   * fill in aResult with the desired overflow area, in twips, relative
+   * to the widget origin, and return PR_TRUE.
+   */
   virtual PRBool GetWidgetOverflow(nsIDeviceContext* aContext,
                                    nsIFrame* aFrame,
                                    PRUint8 aWidgetType,
                                    nsRect* aResult)
   { return PR_FALSE; }
 
-  NS_IMETHOD GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
+  /**
+   * Get the minimum border-box size of a widget, in *pixels* (in
+   * |aResult|).  If |aIsOverridable| is set to true, this size is a
+   * minimum size; if false, this size is the only valid size for the
+   * widget.
+   */
+  NS_IMETHOD GetMinimumWidgetSize(nsIRenderingContext* aContext,
+                                  nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   nsSize* aResult,
                                   PRBool* aIsOverridable)=0;
@@ -105,6 +136,9 @@ public:
 
   NS_IMETHOD ThemeChanged()=0;
 
+  /**
+   * Can the nsITheme implementation handle this widget?
+   */
   virtual PRBool ThemeSupportsWidget(nsPresContext* aPresContext,
                                      nsIFrame* aFrame,
                                      PRUint8 aWidgetType)=0;

@@ -700,18 +700,6 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
       }
     }
 
-    const nsStyleDisplay* disp = GetStyleDisplay();
-    if (disp->mAppearance && gTheme) {
-      // Add in the theme's desired overflow
-      if (gTheme->ThemeSupportsWidget(presContext, this, disp->mAppearance)) {
-        nsRect r;
-        if (gTheme->GetWidgetOverflow(presContext->DeviceContext(), this,
-                                      disp->mAppearance, &r)) {
-          rect.UnionRect(rect, r);
-        }
-      }
-    }
-
     FinishAndStoreOverflow(&rect, GetSize());
   }
 
