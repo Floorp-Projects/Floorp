@@ -51,7 +51,6 @@
 #include "gfxFont.h"
 
 class gfxRegion;
-class gfxTextRun;
 
 /**
  * This is the main class for doing actual drawing. It is initialized using
@@ -190,22 +189,6 @@ public:
     void Rectangle(gfxRect rect, PRBool snapToPixels = PR_FALSE);
     void Ellipse(gfxPoint center, gfxSize dimensions);
     void Polygon(const gfxPoint *points, PRUint32 numPoints);
-
-    /**
-     ** Text
-     **/
-
-    /**
-     * Add the text outline to the current path.
-     */
-    // specify this in a sane way.
-    //void AddStringToPath(gfxTextRun& text);
-
-    /**
-     * Draw the text run at the current point.
-     * XXX support drawing subsections of the text run
-     */
-    void DrawTextRun(gfxTextRun *text, gfxPoint pt);
 
     /**
      ** Transformation Matrix manipulation
