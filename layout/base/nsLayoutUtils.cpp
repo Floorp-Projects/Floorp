@@ -360,6 +360,96 @@ nsLayoutUtils::DoCompareTreePosition(nsIContent* aContent1,
   return index1 - index2;
 }
 
+static nsIFrame* FillAncestors(nsIFrame* aFrame,
+                               nsIFrame* aStopAtAncestor, nsFrameManager* aFrameManager,
+                               nsTArray<nsIFrame*>* aAncestors)
+{
+  while (aFrame && aFrame != aStopAtAncestor) {
+    aAncestors->AppendElement(aFrame);
+    aFrame = nsLayoutUtils::GetParentOrPlaceholderFor(aFrameManager, aFrame);
+  }
+  return aFrame;
+}
+
+// Return true if aFrame1 is after aFrame2
+static PRBool IsFrameAfter(nsIFrame* aFrame1, nsIFrame* aFrame2)
+{
+  nsIFrame* f = aFrame2;
+  do {
+    f = f->GetNextSibling();
+    if (f == aFrame1)
+      return PR_TRUE;
+  } while (f);
+  return PR_FALSE;
+}
+
+// static
+PRInt32
+nsLayoutUtils::DoCompareTreePosition(nsIFrame* aFrame1,
+                                     nsIFrame* aFrame2,
+                                     PRInt32 aIf1Ancestor,
+                                     PRInt32 aIf2Ancestor,
+                                     nsIFrame* aCommonAncestor)
+{
+  NS_PRECONDITION(aFrame1, "aFrame1 must not be null");
+  NS_PRECONDITION(aFrame2, "aFrame2 must not be null");
+
+  nsPresContext* presContext = aFrame1->GetPresContext();
+  if (presContext != aFrame2->GetPresContext()) {
+    NS_ERROR("no common ancestor at all, different documents");
+    return 0;
+  }
+  nsFrameManager* frameManager = presContext->PresShell()->FrameManager();
+
+  nsAutoTArray<nsIFrame*,20> frame1Ancestors;
+  if (!FillAncestors(aFrame1, aCommonAncestor, frameManager, &frame1Ancestors)) {
+    // We reached the root of the frame tree ... if aCommonAncestor was set,
+    // it is wrong
+    aCommonAncestor = nsnull;
+  }
+
+  nsAutoTArray<nsIFrame*,20> frame2Ancestors;
+  if (!FillAncestors(aFrame2, aCommonAncestor, frameManager, &frame2Ancestors) &&
+      aCommonAncestor) {
+    // We reached the root of the frame tree ... aCommonAncestor was wrong.
+    // Try again with no hint.
+    return DoCompareTreePosition(aFrame1, aFrame2,
+                                 aIf1Ancestor, aIf2Ancestor, nsnull);
+  }
+
+  PRInt32 last1 = PRInt32(frame1Ancestors.Length()) - 1;
+  PRInt32 last2 = PRInt32(frame2Ancestors.Length()) - 1;
+  while (last1 >= 0 && last2 >= 0 &&
+         frame1Ancestors[last1] == frame2Ancestors[last2]) {
+    last1--;
+    last2--;
+  }
+
+  if (last1 < 0) {
+    if (last2 < 0) {
+      NS_ASSERTION(aFrame1 == aFrame2, "internal error?");
+      return 0;
+    }
+    // aFrame1 is an ancestor of aFrame2
+    return aIf1Ancestor;
+  }
+
+  if (last2 < 0) {
+    // aFrame2 is an ancestor of aFrame1
+    return aIf2Ancestor;
+  }
+
+  nsIFrame* ancestor1 = frame1Ancestors[last1];
+  nsIFrame* ancestor2 = frame2Ancestors[last2];
+  // Now we should be able to walk sibling chains to find which one is first
+  if (IsFrameAfter(ancestor2, ancestor1))
+    return -1;
+  if (IsFrameAfter(ancestor1, ancestor2))
+    return 1;
+  NS_WARNING("Frames were in different child lists???");
+  return 0;
+}
+
 // static
 nsIFrame* nsLayoutUtils::GetLastSibling(nsIFrame* aFrame) {
   if (!aFrame) {
