@@ -37,6 +37,8 @@
 
  ***** END LICENSE BLOCK ***** -->
 
+<?xml-stylesheet href="chrome://communicator/skin/helpOverlay.css" type="text/css"?>
+
 <!DOCTYPE overlay>
 
 <overlay id="helpOverlay"

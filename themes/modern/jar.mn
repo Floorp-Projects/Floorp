@@ -3,6 +3,7 @@ modern.jar:
 % skin communicator modern/1.0 %skin/modern/communicator/
 % skin editor modern/1.0 %skin/modern/editor/
 % skin global modern/1.0 %skin/modern/global/
+% skin help modern/1.0 %skin/modern/help/
 % skin messenger modern/1.0 %skin/modern/messenger/
 % skin navigator modern/1.0 %skin/modern/navigator/
 #else
@@ -19,7 +20,8 @@ modern.jar:
   skin/modern/communicator/button.css                              (communicator/button.css)
   skin/modern/communicator/toolbar.css                             (communicator/toolbar.css)
   skin/modern/communicator/dialogs.css                             (communicator/dialogs.css)
-  skin/modern/communicator/smileys.css                            (communicator/smileys.css)
+  skin/modern/communicator/helpOverlay.css                         (communicator/helpOverlay.css)
+  skin/modern/communicator/smileys.css                             (communicator/smileys.css)
   skin/modern/communicator/communicator.css                        (communicator/communicator.css)
   skin/modern/communicator/bookmarks/bookmark-folder-closed.gif    (communicator/bookmarks/bookmark-folder-closed.gif)
   skin/modern/communicator/bookmarks/bookmark-folder-dis.gif       (communicator/bookmarks/bookmark-folder-dis.gif)
@@ -159,6 +161,7 @@ modern.jar:
   skin/modern/global/console.css                                   (global/console.css)
   skin/modern/global/dropmarker.css                                (global/dropmarker.css)
   skin/modern/global/filepicker.css                                (global/filepicker.css)
+  skin/modern/global/findBar.css                                   (/toolkit/themes/winstripe/global/findBar.css)
   skin/modern/global/formatting.css                                (global/formatting.css)
   skin/modern/global/groupbox.css                                  (global/groupbox.css)
   skin/modern/global/listbox.css                                   (global/listbox.css)
@@ -298,6 +301,12 @@ modern.jar:
   skin/modern/global/tree/twisty-clsd.gif                          (global/tree/twisty-clsd.gif)
   skin/modern/global/tree/twisty-open.gif                          (global/tree/twisty-open.gif)
   skin/modern/global/tree/columnpicker.gif                         (global/tree/columnpicker.gif)
+  skin/modern/help/help.css                                        (help/help.css)
+  skin/modern/help/helpFileLayout.css                              (/toolkit/themes/winstripe/help/helpFileLayout.css)
+  skin/modern/help/home.gif                                        (help/home.gif)
+  skin/modern/help/home-act.gif                                    (help/home-act.gif)
+  skin/modern/help/home-dis.gif                                    (help/home-dis.gif)
+  skin/modern/help/home-hov.gif                                    (help/home-hov.gif)
   skin/modern/messenger/threadPaneLabels.css                       (messenger/threadPaneLabels.css)
   skin/modern/messenger/accountCentral.css                         (messenger/accountCentral.css)
   skin/modern/messenger/accountManage.css                          (messenger/accountManage.css)
