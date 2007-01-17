@@ -1765,9 +1765,7 @@ nsBoxSize::Clear()
 void* 
 nsBoxSize::operator new(size_t sz, nsBoxLayoutState& aState) CPP_THROW_NEW
 {
-   void* mem = 0;
-   aState.AllocateStackMemory(sz,&mem);
-   return mem;
+   return aState.AllocateStackMemory(sz);
 }
 
 
@@ -1780,10 +1778,7 @@ nsBoxSize::operator delete(void* aPtr, size_t sz)
 void* 
 nsComputedBoxSize::operator new(size_t sz, nsBoxLayoutState& aState) CPP_THROW_NEW
 {
-  
-   void* mem = 0;
-   aState.AllocateStackMemory(sz,&mem);
-   return mem;
+   return aState.AllocateStackMemory(sz);
 }
 
 void 

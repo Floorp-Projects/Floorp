@@ -107,9 +107,8 @@ SpanningCellSorter::AddCell(PRInt32 aColSpan, PRInt32 aRow, PRInt32 aCol)
     NS_ASSERTION(mState == ADDING, "cannot call AddCell after GetNext");
     NS_ASSERTION(aColSpan >= ARRAY_BASE, "cannot add cells with colspan<2");
 
-    Item *i;
-    nsresult rv = mPresShell->AllocateStackMemory(sizeof(Item), (void**)&i);
-    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    Item *i = (Item*) mPresShell->AllocateStackMemory(sizeof(Item));
+    NS_ENSURE_TRUE(i != nsnull, PR_FALSE);
 
     i->row = aRow;
     i->col = aCol;

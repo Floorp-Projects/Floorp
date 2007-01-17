@@ -172,10 +172,24 @@ public:
   virtual void* AllocateFrame(size_t aSize) = 0;
   virtual void  FreeFrame(size_t aSize, void* aFreeChunk) = 0;
 
-  // Dynamic stack memory allocation
-  NS_IMETHOD PushStackMemory() = 0;
-  NS_IMETHOD PopStackMemory() = 0;
-  NS_IMETHOD AllocateStackMemory(size_t aSize, void** aResult) = 0;
+  /**
+   * Stack memory allocation:
+   *
+   * Callers who wish to allocate memory whose lifetime corresponds to
+   * the lifetime of a stack-allocated object can use this API.  The
+   * caller must use a pair of calls to PushStackMemory and
+   * PopStackMemory, such that all stack object lifetimes are either
+   * entirely between the calls or containing both calls.
+   *
+   * Then, between the calls, the caller can call AllocateStackMemory to
+   * allocate memory from an arena pool that will be freed by the call
+   * to PopStackMemory.
+   *
+   * The allocations cannot be for more than 4044 bytes.
+   */
+  virtual void PushStackMemory() = 0;
+  virtual void PopStackMemory() = 0;
+  virtual void* AllocateStackMemory(size_t aSize) = 0;
   
   nsIDocument* GetDocument() { return mDocument; }
 
