@@ -499,7 +499,7 @@ select1 itemset, select itemset {
 
   /* choices widget */
 html|*:root select1:not([appearance]) choices,
-html|*:root select1[appearance="minimal] choices,
+html|*:root select1[appearance='minimal'] choices,
 select[appearance='full'] choices,
 select1[appearance='full'] choices {
   -moz-binding: url('chrome://xforms/content/selects.xml#choices');
