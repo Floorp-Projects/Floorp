@@ -431,8 +431,11 @@ nsProxyObject::LockedFind(REFNSIID aIID, void **aResult)
 
     peo = new nsProxyEventObject(this, pec, 
                 already_AddRefed<nsISomeInterface>(newInterface), &rv);
-    if (!peo)
+    if (!peo) {
+        NS_RELEASE(newInterface);
         return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     if (NS_FAILED(rv)) {
         delete peo;
         return rv;
