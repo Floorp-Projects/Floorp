@@ -1769,7 +1769,7 @@ PeekException()
 void
 PopException()
 {
-  NS_ASSERTION(!gNPPException, "Uh, no NPP exception to pop!");
+  NS_ASSERTION(gNPPException, "Uh, no NPP exception to pop!");
 
   if (gNPPException) {
     free(gNPPException);
