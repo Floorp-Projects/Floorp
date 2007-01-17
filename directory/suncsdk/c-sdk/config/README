@@ -1,9 +1,0 @@
-This part of of the tree taken from NSPR 4.1.  The
-NSPR config tree was tagged with:
-
-cvs tag ldapcsdk_branch50-config
-
-
-The version of NSPR this was taken from:
-
-NSPRPUB_RELEASE_4_1 (revision: 3.23)
