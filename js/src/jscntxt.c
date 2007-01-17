@@ -79,7 +79,7 @@ js_ThreadDestructorCB(void *ptr)
     if (!thread)
         return;
     while (!JS_CLIST_IS_EMPTY(&thread->contextList)) {
-        /* NB: must use a temporary, as the macro evaluates its actual twice. */
+        /* NB: use a temporary, as the macro evaluates its args many times. */
         JSCList *link = thread->contextList.next;
 
         JS_REMOVE_AND_INIT_LINK(link);
