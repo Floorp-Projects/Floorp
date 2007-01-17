@@ -106,7 +106,7 @@ gfxSkipCharsIterator::SetOffsets(PRUint32 aOffset, PRBool aInOriginalString)
     }
   
     if (aInOriginalString && mSkipChars->mShortcuts &&
-        abs(aOffset - mListPrefixCharCount) > SHORTCUT_FREQUENCY) {
+        abs(PRInt32(aOffset) - PRInt32(mListPrefixCharCount)) > SHORTCUT_FREQUENCY) {
         // Take a shortcut. This makes SetOffsets(..., PR_TRUE) O(1) by bounding
         // the iterations in the loop below to at most SHORTCUT_FREQUENCY iterations
         PRUint32 shortcutIndex = aOffset/SHORTCUT_FREQUENCY;
