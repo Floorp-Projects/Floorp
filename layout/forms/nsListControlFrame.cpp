@@ -343,7 +343,7 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsPoint aPt)
     fRect.MoveBy(childframe->GetParent()->GetOffsetTo(this));
   } else {
     fRect.x = fRect.y = 0;
-    fRect.width = mRect.width;
+    fRect.width = GetScrollPortSize().width;
     fRect.height = CalcFallbackRowHeight(0);
     fRect.MoveBy(containerFrame->GetOffsetTo(this));
   }

@@ -358,6 +358,10 @@ protected:
     mInner.mSupppressScrollbarUpdate = aSuppress;
   }
   PRBool GuessVScrollbarNeeded(const ScrollReflowState& aState);
+  nsSize GetScrollPortSize() const
+  {
+    return mInner.GetScrollPortSize();
+  }
 
 #ifdef DEBUG
   PRBool IsScrollbarUpdateSuppressed() const {
