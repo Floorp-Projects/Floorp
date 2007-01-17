@@ -346,18 +346,19 @@ sub get_cc_xml {
 
 sub do_update {
     my ($run) = @_;
-    
+
     my $timestamp;
     $timestamp = $run->stop_date;
     $timestamp = undef if $cgi->param('status') && $run->stop_date;
     $timestamp = get_time_stamp() if !$cgi->param('status') && !$run->stop_date;
+    
     my $summary = $cgi->param('summary') || '';
     my $prodver = $cgi->param('product_version');
     my $planver = $cgi->param('plan_version');
-    my $build = $cgi->param('build');
-    my $env      = $cgi->param('environment') ? $cgi->param('environment') : $cgi->param('env_pick');
+    my $build   = $cgi->param('build');
+    my $env     = $cgi->param('environment');
     my $manager = DBNameToIdAndCheck(trim($cgi->param('manager')));
-    my $notes = trim($cgi->param('notes'));
+    my $notes   = trim($cgi->param('notes'));
 
     ThrowUserError('testopia-missing-required-field', {'field' => 'summary'}) if ($cgi->param('summary') eq '');
     ThrowUserError('testopia-missing-required-field', {'field' => 'environment'}) if ($env eq '');
@@ -369,7 +370,7 @@ sub do_update {
     
     detaint_natural($build);
     detaint_natural($env);
-    
+
     validate_test_id($build, 'build');
     validate_test_id($env, 'environment');
 

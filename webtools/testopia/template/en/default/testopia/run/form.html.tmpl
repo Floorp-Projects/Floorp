@@ -20,27 +20,13 @@
   #%]
 
 <script type="text/javascript">
-    dojo.require("dojo.io");
-    function getProdEnvs(product){
-        document.getElementById("env_pick").disabled = true;
-        document.getElementById("action").disabled = true;
-        dojo.io.bind({
-            url:   "tr_new_plan.cgi",
-            content: {  product_id: product, action: "getenvs" },
-            load:  function(type, data, evt){
-                     var comps = document.getElementById("env_pick");
-                     comps.options.length = 0;
-                     for (i in data){
-                       var myOp = new Option(data[i].name, data[i].id);
-                       addOption(comps, myOp);
-                     }
-                     document.getElementById("env_pick").disabled = false;
-                     document.getElementById("action").disabled = false;
-                   },
-            error: function(type, error){ alert(error.message);},
-            mimetype: "text/json"
-        });
-    }
+    dojo.require("dojo.widget.ComboBox");
+    dojo.addOnLoad(
+      function() {
+       dojo.widget.manager.getWidgetById('environment').setValue('[% run.environment.id FILTER none %]');
+       dojo.widget.manager.getWidgetById('environment').setLabel('[% run.environment.name FILTER html %]');
+      }
+    );
 </script>
 
 <a name="attributes"></a>
@@ -82,8 +68,8 @@
     </tr>
 
     <tr>
-      <th align="right">Status</th>
-      <td colspan="3">
+      <th align="right" valign="top">Status</th>
+      <td valign="top">
         [% SET statuslist = [{ id => 1, name => 'Running'}, {id => 0, name=> 'Stopped'}] %]
         [% PROCESS select sel = { name => "status", 
                                   list => statuslist, 
@@ -91,33 +77,17 @@
         %]
 
       </td>
-    </tr>
-    <tr><td colspan="4" align="center">
-      <table>
-        <tr><th align="center"  colspan="2">Environment</th></tr>
-        <tr>
-          <th align="right">ID</th>
-          <td><input name="environment" id="environment" value="[% run.environment.id FILTER none %]" />
-            <a href="tr_query.cgi?current_tab=environment" target="blank"><img src="testopia/img/env_lookup.png" title="Search for Environments" align="middle"></a>
-            <a href="tr_new_environment.cgi" target="_blank">New</a>
-          </td>
-        </tr>
-        <tr>
-          <th>Or Select from Product</th>
-          <td>
-    [% PROCESS select sel = { name      => 'prod_pick',
-                              list      => user.get_selectable_products,
-                              default   => run.plan.product_id
-                              events    => 'onChange="getProdEnvs(this.value)"' } %]
-          </td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>
-    [% PROCESS select sel = { name      => 'env_pick' }%]
-          </td>
-        </tr>
-      </table></td>
+      <th align="right" valign="top">Environment:</th>
+      <td valign="top">
+          <input dojoType="select" 
+                 dataUrl="tr_quicksearch.cgi?action=getenv&search=%{searchString}" 
+                 mode="remote"
+                 autoComplete="false"
+                 id="environment"
+                 name="environment"
+                 maxListLength="10" 
+                 style="width:200px; height:15px"
+                 value="[% run.environment.id FILTER none %]" ></td>
     </tr>
     <tr>
       <th align="right">Summary</th>
@@ -136,6 +106,3 @@
   <div class="submits">
     <input type="submit" name="action" id="action" value="[% action %]" />
   </div>
-<script type="text/javascript">
-  getProdEnvs(document.getElementById('prod_pick').value);
-</script>

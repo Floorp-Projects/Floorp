@@ -26,6 +26,14 @@
 [% IF NOT dotweak %]
   [% build_list = caserun.run.plan.product.builds %]
   [% default_build = caserun.build.name %]
+  <script type="text/javascript">
+    dojo.addOnLoad(
+      function() {
+        dojo.widget.manager.getWidgetById('caserun_env').setValue('[% caserun.environment.id FILTER none %]');
+        dojo.widget.manager.getWidgetById('caserun_env').setLabel('[% caserun.environment.name FILTER none %]');
+      }
+    );
+  </script>
 [% ELSE %]
   [% default_build = "--Do Not Change--" %]
 [% END %]
@@ -74,6 +82,7 @@
   </tr>
 
 </table>
+
 <table width="100%">
   <tr>
     <th align="right">Build</th>
@@ -84,11 +93,22 @@
      %]
     </td>
     <th align="right">Environment</th>
-    <td><input name="caserun_env" id="caserun_env" size="5" value="[% dotweak ? "--Do Not Change--" : caserun.environment.id FILTER html %]"><a href="tr_query.cgi?current_tab=environment" target="blank"><img src="testopia/img/env_lookup.png" align="middle"></a></td>
+    <td><input dojoType="select" 
+               dataUrl="tr_quicksearch.cgi?action=getenv&search=%{searchString}" 
+               mode="remote"
+               autoComplete="false"
+               id="caserun_env"
+               name="caserun_env"
+               maxListLength="10" 
+               style="width:200px; height:15px"
+            [% IF NOT dotweak %]
+               value="[% caserun.environment.id FILTER none %]" 
+            [% END %]>
+    </td>
     <th align="right">Assignee</th>
     <td><input name="assignee" value="[% dotweak ? "--Do Not Change--" : caserun.assignee.login FILTER html %]"></td>
-    <th align="right" valign="top" colspan="2">Attach [% terms.Bugs %]</th>
-    <td><input name="bugs">&nbsp;<a href="enter_bug.cgi?product=[% caserun.run.plan.product.name FILTER url_quote %]&caserun_id=[% caserun.id FILTER none %]">Log a New [% terms.Bug %]</a></td>
+    <th align="right" colspan="2">Attach [% terms.Bugs %]</th>
+    <td><input name="bugs">&nbsp;<a href="enter_bug.cgi?product=[% caserun.run.plan.product.name FILTER url_quote %]&caserun_id=[% caserun.id FILTER none %]" target="_blank"><img src="testopia/img/snew.gif" alt="Log a New Bug" title="Log a New Bug" style="vertical-align:text-bottom;" /></a>
     
   </tr>
 </table>

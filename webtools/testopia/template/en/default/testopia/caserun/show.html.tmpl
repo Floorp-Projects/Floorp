@@ -36,12 +36,20 @@
 [%############################################################################%]
 
 [% PROCESS global/header.html.tmpl %]
-
 [% PROCESS testopia/style.none.tmpl %]
-
 [% PROCESS testopia/messages.html.tmpl %]
-
 [% PROCESS testopia/caserun/navigate.html.tmpl %]
+
+<script type="text/javascript">
+  djConfig = {
+    parseWidgets: false,
+    searchIds: ["caserun_env"]
+  };
+</script>
+<script src="testopia/dojo/dojo.js" type="text/javascript"></script>
+<script type="text/javascript">
+  dojo.require("dojo.widget.Select");
+</script>
 
 [%##### Overview #####%]
 

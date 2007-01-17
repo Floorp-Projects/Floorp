@@ -42,12 +42,13 @@ require "globals.pl";
 
 Bugzilla->login();
 Bugzilla->batch(1);
-print Bugzilla->cgi->header();
    
 my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
 
-my $caserun_id = Bugzilla->cgi->param('caserun_id');
+print $cgi->header;
+
+my $caserun_id = $cgi->param('caserun_id');
 validate_test_id($caserun_id, 'case_run');
 
 ThrowUserError('testopia-missing-parameter', {'param' => 'caserun_id'}) unless ($caserun_id);

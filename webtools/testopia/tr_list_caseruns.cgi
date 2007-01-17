@@ -101,7 +101,7 @@ if ($action eq 'Commit'){
 
         my $build    = $cgi->param('caserun_build') == -1 ? $caserun->build->id : $cgi->param('caserun_build');
         my $notes    = $cgi->param('notes');
-        my $env      = $cgi->param('caserun_env') eq '--Do Not Change--' ? $caserun->environment->id : $cgi->param('caserun_env');
+        my $env      = $cgi->param('caserun_env') eq '' ? $caserun->environment->id : $cgi->param('caserun_env');
         
         validate_test_id($build, 'build');
         validate_test_id($env, 'environment');
