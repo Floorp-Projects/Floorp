@@ -3085,9 +3085,6 @@ nsFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
   if (minWidth > result.width)
     result.width = minWidth;
 
-  if (result.width < 0)
-    result.width = 0;
-
   // Compute height
 
   if (!IsAutoHeight(stylePos->mHeight, aCBSize.height)) {
@@ -3116,6 +3113,33 @@ nsFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
         result.height = minHeight;
     }
   }
+
+  const nsStyleDisplay *disp = GetStyleDisplay();
+  if (IsThemed(disp)) {
+    nsSize size(0, 0);
+    PRBool canOverride = PR_TRUE;
+    nsPresContext *presContext = GetPresContext();
+    presContext->GetTheme()->
+      GetMinimumWidgetSize(aRenderingContext, this, disp->mAppearance,
+                           &size, &canOverride);
+
+    // GMWS() returns size in pixels, we need to convert it back to twips
+    float p2t = presContext->ScaledPixelsToTwips();
+    size.width = NSIntPixelsToTwips(size.width, p2t);
+    size.height = NSIntPixelsToTwips(size.height, p2t);
+
+    // GMWS() returns border-box; we need content-box
+    size.width -= aBorder.width + aPadding.width;
+    size.height -= aBorder.height + aPadding.height;
+
+    if (size.height > result.height || !canOverride)
+      result.height = size.height;
+    if (size.width > result.width || !canOverride)
+      result.width = size.width;
+  }
+
+  if (result.width < 0)
+    result.width = 0;
 
   if (result.height < 0)
     result.height = 0;
@@ -5228,12 +5252,23 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
 {
   // This is now called FinishAndStoreOverflow() instead of 
   // StoreOverflow() because frame-generic ways of adding overflow
-  // can happen here, e.g. CSS2 outline.
+  // can happen here, e.g. CSS2 outline and native theme.
   // If we find more things other than outline that need to be added,
   // we should think about starting a new method like GetAdditionalOverflow()
   NS_ASSERTION(aNewSize.width == 0 || aNewSize.height == 0 ||
                aOverflowArea->Contains(nsRect(nsPoint(0, 0), aNewSize)),
                "Computed overflow area must contain frame bounds");
+
+  const nsStyleDisplay *disp = GetStyleDisplay();
+  if (IsThemed(disp)) {
+    nsRect r;
+    nsPresContext *presContext = GetPresContext();
+    if (presContext->GetTheme()->
+          GetWidgetOverflow(presContext->DeviceContext(), this,
+                            disp->mAppearance, &r)) {
+      aOverflowArea->UnionRect(*aOverflowArea, r);
+    }
+  }
 
   PRBool geometricOverflow =
     aOverflowArea->x < 0 || aOverflowArea->y < 0 ||
