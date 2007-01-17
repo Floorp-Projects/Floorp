@@ -339,10 +339,17 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
 
             CellWidthInfo info = GetCellWidthInfo(aRenderingContext, cellFrame);
 
+            // Before looping over the spanned columns to distribute
+            // this cell's width over the columns it spans, we first
+            // compute that loop's invariants, which include totals over
+            // the spanned columns and ratios derived from those totals.
+
             // Accumulate information about the spanned columns, and
             // subtract the already-used space from |info|.
-            nscoord totalSPref = 0, totalSNonPctPref = 0;
-            PRInt32 nonPctCount = 0;
+            nscoord totalSPref = 0, totalSMin = 0; // total existing widths
+            nscoord totalSNonPctPref = 0; // total pref width of columns
+                                          // without percentage widths
+            PRInt32 nonPctCount = 0; // # of columns without percentage widths
             PRInt32 scol, scol_end;
             for (scol = col, scol_end = col + colSpan;
                  scol < scol_end; ++scol) {
@@ -359,6 +366,7 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
                 }
 
                 totalSPref += scolFrame->GetPrefCoord();
+                totalSMin += scolFrame->GetMinCoord();
                 float scolPct = scolFrame->GetPrefPercent();
                 if (scolPct == 0.0f) {
                     totalSNonPctPref += scolFrame->GetPrefCoord();
@@ -388,7 +396,17 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
                 }
             }
 
-            // ... and actually do the distribution.
+            // The min-width of this cell that fits inside the
+            // pref-width of the spanned columns gets distributed
+            // according to different ratios.
+            nscoord minWithinPref =
+                PR_MIN(info.minCoord, totalSPref - totalSMin);
+            NS_ASSERTION(minWithinPref >= 0, "neither value can be negative");
+            info.minCoord -= minWithinPref;
+
+            // ... and actually do the distribution of the widths of
+            // this cell exceeding the totals already in the spanned
+            // columns.
             for (scol = col, scol_end = col + colSpan;
                  scol < scol_end; ++scol) {
                 nsTableColFrame *scolFrame = tableFrame->GetColFrame(scol);
@@ -396,25 +414,46 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
                     NS_ERROR("column frames out of sync with cell map");
                     continue;
                 }
+
+                // the percentage width (only to columns that don't
+                // already have percentage widths, in proportion to
+                // the existing pref widths)
                 if (scolFrame->GetPrefPercent() == 0.0f) {
                     float spp;
                     if (totalSNonPctPref > 0) {
                         spp = pctRatio * scolFrame->GetPrefCoord();
                     } else {
+                        // distribute equally when all pref widths are 0
                         spp = pctRatio;
                     }
                     scolFrame->AddSpanPrefPercent(spp);
                 }
 
+                // the part of the min width that fits within the
+                // existing pref width
+                float minRatio = 0.0f;
+                if (minWithinPref > 0) {
+                    minRatio = float(scolFrame->GetPrefCoord() -
+                                     scolFrame->GetMinCoord()) /
+                               float(totalSPref - totalSMin);
+                }
+
+                // the rest of the min width, and the pref width (in
+                // proportion to the existing pref widths)
                 float coordRatio; // for both min and pref
                 if (totalSPref > 0) {
                     coordRatio = float(scolFrame->GetPrefCoord()) /
                                  float(totalSPref);
                 } else {
+                    // distribute equally when all pref widths are 0
                     coordRatio = 1.0f / float(colSpan);
                 }
+
+                // combine the two min-width distributions, and record
+                // min and pref
                 scolFrame->AddSpanMinCoord(NSToCoordRound(
-                               float(info.minCoord) * coordRatio));
+                               float(info.minCoord) * coordRatio +
+                               float(minWithinPref) * minRatio));
                 scolFrame->AddSpanPrefCoord(NSToCoordRound(
                                float(info.prefCoord) * coordRatio));
             }
