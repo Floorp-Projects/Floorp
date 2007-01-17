@@ -2997,6 +2997,7 @@ JS_dtobasestr(int base, double d)
               nomem1:
                 Bfree(b);
                 RELEASE_DTOA_LOCK();
+                free(buffer);
                 return NULL;
             }
             do {
@@ -3032,6 +3033,7 @@ JS_dtobasestr(int base, double d)
                     Bfree(mlo);
                 Bfree(mhi);
                 RELEASE_DTOA_LOCK();
+                free(buffer);
                 return NULL;
             }
             JS_ASSERT(e < 0);
