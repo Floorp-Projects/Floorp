@@ -63,11 +63,9 @@ class nsAppRootAccessible: public nsAccessibleWrap
 {
 public:
     virtual ~nsAppRootAccessible();
-#ifdef MAI_LOGGING
-    //    virtual void DumpMaiObjectInfo(int aDepth);
-#endif
 
     static nsAppRootAccessible *Create();
+    static void Load();
     static void Unload();
 
 public:
