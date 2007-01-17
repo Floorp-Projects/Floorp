@@ -66,8 +66,7 @@ class nsLineLayout {
 public:
   nsLineLayout(nsPresContext* aPresContext,
                nsSpaceManager* aSpaceManager,
-               const nsHTMLReflowState* aOuterReflowState,
-               const nsLineList::iterator* aLine);
+               const nsHTMLReflowState* aOuterReflowState);
   ~nsLineLayout();
 
   void Init(nsBlockReflowState* aState, nscoord aMinLineHeight,
@@ -127,7 +126,7 @@ public:
     PushFrame(aFrame);
   }
 
-  void VerticalAlignLine();
+  void VerticalAlignLine(nsLineBox* aLineBox);
 
   PRBool TrimTrailingWhiteSpace();
 
@@ -162,9 +161,7 @@ protected:
 #define LL_LINEENDSINSOFTBR            0x00000400
 #define LL_NEEDBACKUP                  0x00000800
 #define LL_LASTTEXTFRAME_WRAPPINGENABLED 0x00001000
-#define LL_INFIRSTLINE                 0x00002000
-#define LL_GOTLINEBOX                  0x00004000
-#define LL_LASTFLAG                    LL_GOTLINEBOX
+#define LL_LASTFLAG                    LL_LASTTEXTFRAME_WRAPPINGENABLED
 
   PRUint16 mFlags;
 
@@ -277,7 +274,7 @@ public:
    * @param aWrappingEnabled whether that text had word-wrapping enabled
    * (white-space:normal or -moz-pre-wrap)
    */
-  nsIFrame* GetTrailingTextFrame(PRBool* aWrappingEnabled) const {
+  nsIFrame* GetTrailingTextFrame(PRBool* aWrappingEnabled) {
     *aWrappingEnabled = GetFlag(LL_LASTTEXTFRAME_WRAPPINGENABLED);
     return mTrailingTextFrame;
   }
@@ -299,14 +296,6 @@ public:
 
   void SetFirstLetterFrame(nsIFrame* aFrame) {
     mFirstLetterFrame = aFrame;
-  }
-
-  PRBool GetInFirstLine() const {
-    return GetFlag(LL_INFIRSTLINE);
-  }
-
-  void SetInFirstLine(PRBool aSetting) {
-    SetFlag(LL_INFIRSTLINE, aSetting);
   }
 
   //----------------------------------------
@@ -401,11 +390,8 @@ public:
    * some other kind of frame when inline frames are reflowed in a non-block
    * context (e.g. MathML).
    */
-  nsIFrame* GetLineContainerFrame() const { return mBlockReflowState->frame; }
-  const nsLineList::iterator* GetLine() const {
-    return GetFlag(LL_GOTLINEBOX) ? &mLineBox : nsnull;
-  }
-
+  nsIFrame* GetLineContainerFrame() { return mBlockReflowState->frame; }
+  
 protected:
   // This state is constant for a given block frame doing line layout
   nsSpaceManager* mSpaceManager;
@@ -441,7 +427,7 @@ protected:
   PRInt32 mTextJustificationNumSpaces;
   PRInt32 mTextJustificationNumLetters;
 
-  nsLineList::iterator mLineBox;
+  nsLineBox* mLineBox;
 
   PRInt32 mTotalPlacedFrames;
 
