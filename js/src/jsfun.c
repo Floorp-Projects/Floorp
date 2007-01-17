@@ -1582,7 +1582,9 @@ fun_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         obj = NULL;
     } else {
         /* Otherwise convert the first arg to 'this' and skip over it. */
-        if (!js_ValueToObject(cx, argv[0], &obj))
+        if (!JSVAL_IS_PRIMITIVE(argv[0]))
+            obj = JSVAL_TO_OBJECT(argv[0]);
+        else if (!js_ValueToObject(cx, argv[0], &obj))
             return JS_FALSE;
         argc--;
         argv++;
@@ -1669,7 +1671,9 @@ fun_apply(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     /* Convert the first arg to 'this' and skip over it. */
-    if (!js_ValueToObject(cx, argv[0], &obj))
+    if (!JSVAL_IS_PRIMITIVE(argv[0]))
+        obj = JSVAL_TO_OBJECT(argv[0]);
+    else if (!js_ValueToObject(cx, argv[0], &obj))
         return JS_FALSE;
 
     /* Allocate stack space for fval, obj, and the args. */
