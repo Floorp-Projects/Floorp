@@ -372,6 +372,10 @@
         // Convenience
         this.nsITypeAheadFind = Components.interfaces.nsITypeAheadFind;
         this.nsISelectionController = Components.interfaces.nsISelectionController;
+
+        // Make sure the FAYT keypress listener is attached by initializing the
+        // browser property
+        setTimeout(function(aSelf) { aSelf.browser = aSelf.browser; }, 0, this);
       ]]></constructor>
 
       <destructor><![CDATA[
