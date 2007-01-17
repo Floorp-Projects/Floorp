@@ -47,7 +47,6 @@ gfxPDFSurface::gfxPDFSurface(const char *filename, gfxSize aSizeInPoints)
 
 gfxPDFSurface::~gfxPDFSurface()
 {
-    Destroy();
 }
 
 void

@@ -79,6 +79,5 @@ gfxQuartzSurface::gfxQuartzSurface(cairo_surface_t *csurf)
 
 gfxQuartzSurface::~gfxQuartzSurface()
 {
-    Destroy();
     CGContextRelease(mCGContext);
 }

@@ -73,8 +73,6 @@ gfxImageSurface::gfxImageSurface(cairo_surface_t *csurf)
 
 gfxImageSurface::~gfxImageSurface()
 {
-    Destroy();
-
     if (mOwnsData)
         delete[] mData;
 }

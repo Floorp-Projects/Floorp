@@ -47,8 +47,6 @@ gfxGlitzSurface::gfxGlitzSurface(glitz_drawable_t *drawable, glitz_surface_t *su
 
 gfxGlitzSurface::~gfxGlitzSurface()
 {
-    Destroy();
-
     if (mOwnsSurface) {
         if (mGlitzSurface) {
             glitz_surface_flush(mGlitzSurface);

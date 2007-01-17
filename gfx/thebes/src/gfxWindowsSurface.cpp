@@ -95,8 +95,6 @@ gfxWindowsSurface::gfxWindowsSurface(cairo_surface_t *csurf) :
 
 gfxWindowsSurface::~gfxWindowsSurface()
 {
-    Destroy();
-
     if (mOwnsDC) {
         if (mWnd)
             ::ReleaseDC(mWnd, mDC);

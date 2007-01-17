@@ -2134,5 +2134,17 @@ _cairo_surface_copy_pattern_for_destination (const cairo_pattern_t *pattern,
     }
 }
 
+/**
+ * cairo_surface_get_reference_count
+ * @surface: the #cairo_surface_t to fetch the reference count for
+ *
+ * Returns the number of references to this surface that are held.
+ */
+unsigned int
+cairo_surface_get_reference_count (cairo_surface_t *surface)
+{
+    return surface->ref_count;
+}
+
 /*  LocalWords:  rasterized
  */

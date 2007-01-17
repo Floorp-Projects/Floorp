@@ -117,7 +117,6 @@ gfxXlibSurface::gfxXlibSurface(cairo_surface_t *csurf)
 
 gfxXlibSurface::~gfxXlibSurface()
 {
-    Destroy();
 }
 
 void

@@ -65,7 +65,6 @@ gfxPSSurface::gfxPSSurface(FILE *file, gfxSize aSizeInPoints)
 
 gfxPSSurface::~gfxPSSurface()
 {
-    Destroy();
 }
 
 void

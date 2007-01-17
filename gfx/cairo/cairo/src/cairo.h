@@ -1271,6 +1271,9 @@ cairo_surface_destroy (cairo_surface_t *surface);
 cairo_public cairo_status_t
 cairo_surface_status (cairo_surface_t *surface);
 
+cairo_public unsigned int
+cairo_surface_get_reference_count (cairo_surface_t *surface);
+
 /**
  * cairo_surface_type_t
  * @CAIRO_SURFACE_TYPE_IMAGE: The surface is of type image

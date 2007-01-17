@@ -65,8 +65,6 @@ gfxBeOSSurface::gfxBeOSSurface(unsigned long width, unsigned long height, color_
 
 gfxBeOSSurface::~gfxBeOSSurface()
 {
-    Destroy();
-
     if (mOwnsView) {
         mBitmap->RemoveChild(mView);
 
