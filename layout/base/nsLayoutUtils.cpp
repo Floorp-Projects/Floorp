@@ -111,20 +111,20 @@ GetLastChildFrame(nsIFrame*       aFrame,
 {
   NS_PRECONDITION(aFrame, "NULL frame pointer");
 
-  // Get the last in flow frame
-  nsIFrame* lastInFlow = aFrame->GetLastInFlow();
+  // Get the last continuation frame
+  nsIFrame* lastContinuation = aFrame->GetLastContinuation();
 
   // Get the last child frame
-  nsIFrame* firstChildFrame = lastInFlow->GetFirstChild(nsnull);
+  nsIFrame* firstChildFrame = lastContinuation->GetFirstChild(nsnull);
   if (firstChildFrame) {
     nsFrameList frameList(firstChildFrame);
     nsIFrame*   lastChildFrame = frameList.LastChild();
 
     NS_ASSERTION(lastChildFrame, "unexpected error");
 
-    // Get the frame's first-in-flow. This matters in case the frame has
-    // been continuted across multiple lines
-    lastChildFrame = lastChildFrame->GetFirstInFlow();
+    // Get the frame's first continuation. This matters in case the frame has
+    // been continued across multiple lines or split by BiDi resolution.
+    lastChildFrame = lastChildFrame->GetFirstContinuation();
     
     // If the last child frame is a pseudo-frame, then return its last child.
     // Note that the frame we create for the generated content is also a
@@ -146,7 +146,8 @@ nsIFrame*
 nsLayoutUtils::GetBeforeFrame(nsIFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "NULL frame pointer");
-  NS_ASSERTION(!aFrame->GetPrevInFlow(), "aFrame must be first-in-flow");
+  NS_ASSERTION(!aFrame->GetPrevContinuation(),
+               "aFrame must be first continuation");
   
   nsIFrame* firstFrame = GetFirstChildFrame(aFrame, aFrame->GetContent());
 
