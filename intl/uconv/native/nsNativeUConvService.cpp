@@ -372,15 +372,13 @@ NativeUConvService::GetNativeConverter(const char* from,
 {
     *aResult = nsnull;
 
-    IConvAdaptor* ucl = new IConvAdaptor();
+    nsRefPtr<IConvAdaptor> ucl = new IConvAdaptor();
     if (!ucl)
         return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult rv = ucl->Init(from, to);
-
-    if (NS_SUCCEEDED(rv)) {
-        NS_ADDREF(*aResult = (nsISupports*)(nsIUnicharEncoder*)ucl);
-    }
+    if (NS_SUCCEEDED(rv))
+        NS_ADDREF(*aResult = ucl);
 
     return rv;
 }
