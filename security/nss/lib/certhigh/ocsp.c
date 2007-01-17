@@ -38,7 +38,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.34 2007/01/09 23:39:08 alexei.volkov.bugs%sun.com Exp $
+ * $Id: ocsp.c,v 1.35 2007/01/17 23:15:46 alexei.volkov.bugs%sun.com Exp $
  */
 
 #include "prerror.h"
@@ -1617,9 +1617,10 @@ ocsp_GetResponseData(CERTOCSPResponse *response, SECItem **tbsResponseDataDER)
 
     if (tbsResponseDataDER) {
         *tbsResponseDataDER = &basic->tbsResponseDataDER;
+
+        PORT_Assert((*tbsResponseDataDER)->data != NULL);
+        PORT_Assert((*tbsResponseDataDER)->len != 0);
     }
-    PORT_Assert((*tbsResponseDataDER)->data != NULL);
-    PORT_Assert((*tbsResponseDataDER)->len != 0);
 
     return responseData;
 }
