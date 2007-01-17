@@ -651,6 +651,24 @@ nsHTMLReflowState::CalculateHorizBorderPaddingMargin(nscoord aContainingBlockWid
          margin.left + margin.right;
 }
 
+static nsIFrame*
+FindImmediateChildOf(nsIFrame* aParent, nsIFrame* aDescendantFrame)
+{
+  nsIFrame* result = aDescendantFrame;
+
+  while (result) {
+    nsIFrame* parent = result->GetParent();
+    if (parent == aParent) {
+      break;
+    }
+
+    // The frame is not an immediate child of aParent so walk up another level
+    result = parent;
+  }
+
+  return result;
+}
+
 /**
  * Returns PR_TRUE iff a pre-order traversal of the normal child
  * frames rooted at aFrame finds no non-empty frame before aDescendant.
@@ -758,8 +776,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
                                   NS_REINTERPRET_CAST(void**, &blockFrame)))) {
     // We need the immediate child of the block frame, and that may not be
     // the placeholder frame
-    nsIFrame *blockChild =
-      nsLayoutUtils::FindChildContainingDescendant(blockFrame, aPlaceholderFrame);
+    nsIFrame *blockChild = FindImmediateChildOf(blockFrame, aPlaceholderFrame);
     nsBlockFrame::line_iterator lineBox = blockFrame->FindLineFor(blockChild);
 
     // How we determine the hypothetical box depends on whether the element
