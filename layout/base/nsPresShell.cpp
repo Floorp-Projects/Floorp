@@ -856,13 +856,6 @@ public:
   NS_IMETHOD PostReflowCallback(nsIReflowCallback* aCallback);
   NS_IMETHOD CancelReflowCallback(nsIReflowCallback* aCallback);
 
-  /**
-   * Reflow batching
-   */   
-  NS_IMETHOD BeginReflowBatching();
-  NS_IMETHOD EndReflowBatching(PRBool aFlushPendingReflows);  
-  NS_IMETHOD GetReflowBatchingStatus(PRBool* aBatch);
-  
   NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame);
   NS_IMETHOD CreateRenderingContext(nsIFrame *aFrame,
                                     nsIRenderingContext** aContext);
@@ -1139,7 +1132,6 @@ protected:
   
   nsCOMPtr<nsICaret>            mCaret;
   PRInt16                       mSelectionFlags;
-  PRPackedBool                  mBatchReflows;  // When set to true, the pres shell batches reflow commands.
   PresShellViewEventListener    *mViewEventListener;
   FrameArena                    mFrameArena;
   StackArena*                   mStackArena;
@@ -3411,15 +3403,12 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty)
     }
   }
 
-  // Post a reflow event if we are not batching reflow commands.
-  if (!mBatchReflows) {
-    // If we're in the middle of a drag, process it right away (needed for mac,
-    // might as well do it on all platforms just to keep the code paths the same).
-    // XXXbz but how does this actually "process it right away"?
-    // Isn't this more like "never process it"?
-    if ( !IsDragInProgress() )
-      PostReflowEvent();
-  }
+  // If we're in the middle of a drag, process it right away (needed for mac,
+  // might as well do it on all platforms just to keep the code paths the same).
+  // XXXbz but how does this actually "process it right away"?
+  // Isn't this more like "never process it"?
+  if ( !IsDragInProgress() )
+    PostReflowEvent();
 
   return NS_OK;
 }
@@ -4727,35 +4716,6 @@ PresShell::IsReflowLocked(PRBool* aIsReflowLocked)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-PresShell::BeginReflowBatching()
-{  
-  mBatchReflows = PR_TRUE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-PresShell::EndReflowBatching(PRBool aFlushPendingReflows)
-{  
-  nsresult rv = NS_OK;
-  mBatchReflows = PR_FALSE;
-  if (aFlushPendingReflows) {
-    rv = FlushPendingNotifications(Flush_OnlyReflow);
-  }
-  else {
-    PostReflowEvent();
-  }
-  return rv;
-}
-
-
-NS_IMETHODIMP
-PresShell::GetReflowBatchingStatus(PRBool* aIsBatching)
-{
-  *aIsBatching = mBatchReflows;
-  return NS_OK;
-}
-
 void
 PresShell::CharacterDataChanged(nsIDocument *aDocument,
                                 nsIContent*  aContent,
@@ -5938,22 +5898,18 @@ PresShell::ReflowEvent::Run() {
     }
 #endif
     // NOTE: the ReflowEvent class is a friend of the PresShell class
-    PRBool isBatching;
     ps->ClearReflowEventStatus();
-    ps->GetReflowBatchingStatus(&isBatching);
-    if (!isBatching) {
-      // Set a kung fu death grip on the view manager associated with the pres shell
-      // before processing that pres shell's reflow commands.  Fixes bug 54868.
-      nsCOMPtr<nsIViewManager> viewManager = ps->GetViewManager();
-      NS_ENSURE_TRUE(viewManager, NS_OK);
-      viewManager->BeginUpdateViewBatch();
-      ps->ProcessReflowCommands(PR_TRUE);
-      viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+    // Set a kung fu death grip on the view manager associated with the pres shell
+    // before processing that pres shell's reflow commands.  Fixes bug 54868.
+    nsCOMPtr<nsIViewManager> viewManager = ps->GetViewManager();
+    NS_ENSURE_TRUE(viewManager, NS_OK);
+    viewManager->BeginUpdateViewBatch();
+    ps->ProcessReflowCommands(PR_TRUE);
+    viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 
-      // Now, explicitly release the pres shell before the view manager
-      ps = nsnull;
-      viewManager = nsnull;
-    }
+    // Now, explicitly release the pres shell before the view manager
+    ps = nsnull;
+    viewManager = nsnull;
   }
   return NS_OK;
 }

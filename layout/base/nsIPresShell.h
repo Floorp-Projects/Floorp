@@ -97,10 +97,10 @@ class nsWeakFrame;
 
 typedef short SelectionType;
 
-// 5A76F236-B93A-4C70-BC22-250F71C90518
+// B6AFC710-43B8-4FD0-8B18-782FD621B270
 #define NS_IPRESSHELL_IID     \
-{ 0x5a76f236, 0xb93a, 0x4c70, \
- { 0xbc, 0x22, 0x25, 0x0f, 0x71, 0xc9, 0x05, 0x18 } }
+{ 0xb6afc710, 0x43b8, 0x4fd0, \
+ { 0x8b, 0x18, 0x78, 0x2f, 0xd6, 0x21, 0xb2, 0x70 } }
 
 // Constants uses for ScrollFrameIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -376,12 +376,6 @@ public:
 
   NS_IMETHOD PostReflowCallback(nsIReflowCallback* aCallback) = 0;
   NS_IMETHOD CancelReflowCallback(nsIReflowCallback* aCallback) = 0;
- /**
-   * Reflow batching
-   */   
-  NS_IMETHOD BeginReflowBatching() = 0;
-  NS_IMETHOD EndReflowBatching(PRBool aFlushPendingReflows) = 0;
-  NS_IMETHOD GetReflowBatchingStatus(PRBool* aIsBatching) = 0;
 
   NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame) = 0;
 
