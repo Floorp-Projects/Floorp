@@ -78,10 +78,10 @@ public:
   // doing box layout or intrinsic size calculation will cause bugs.
   nsIRenderingContext* GetRenderingContext() const { return mRenderingContext; }
 
-  nsresult PushStackMemory() { return PresShell()->PushStackMemory(); }
-  nsresult PopStackMemory()  { return PresShell()->PopStackMemory(); }
-  nsresult AllocateStackMemory(size_t aSize, void** aResult)
-  { return PresShell()->AllocateStackMemory(aSize, aResult); }
+  void PushStackMemory() { PresShell()->PushStackMemory(); }
+  void PopStackMemory()  { PresShell()->PopStackMemory(); }
+  void* AllocateStackMemory(size_t aSize)
+  { return PresShell()->AllocateStackMemory(aSize); }
 
 private:
   nsCOMPtr<nsPresContext> mPresContext;
