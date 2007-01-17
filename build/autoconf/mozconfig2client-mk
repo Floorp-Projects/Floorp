@@ -101,7 +101,7 @@ echo "# PATH=$PATH" >> $tmp_file
 
 if [ "$MOZCONFIG" ]
 then
-  . $MOZCONFIG
+  . "$MOZCONFIG"
 fi
 
 if [ "$opts" ]; then

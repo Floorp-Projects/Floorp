@@ -115,7 +115,7 @@ done
 
 MOZCONFIG=`$_AUTOCONF_TOOLS_DIR/mozconfig-find $topsrcdir`
 if [ "$MOZCONFIG" ]; then
-  . $MOZCONFIG
+  . "$MOZCONFIG"
 fi
 
 if [ "$mozconfig_ac_options" ]; then
