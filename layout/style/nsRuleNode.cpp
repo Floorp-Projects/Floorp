@@ -3986,10 +3986,10 @@ nsRuleNode::ComputeColumnData(nsStyleStruct* aStartStruct,
            column->mColumnWidth, parent->mColumnWidth, SETCOORD_LAH,
            aContext, mPresContext, inherited);
 
-  // column-gap: length, percentage, inherit
+  // column-gap: length, percentage, inherit, normal
   SetCoord(columnData.mColumnGap,
-           column->mColumnGap, parent->mColumnGap, SETCOORD_LPH,
-           aContext, mPresContext, inherited);
+           column->mColumnGap, parent->mColumnGap,
+           SETCOORD_LPH | SETCOORD_NORMAL, aContext, mPresContext, inherited);
 
   // column-count: auto, integer, inherit
   if (eCSSUnit_Auto == columnData.mColumnCount.GetUnit()) {

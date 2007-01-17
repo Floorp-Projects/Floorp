@@ -592,7 +592,7 @@ nsStyleColumn::nsStyleColumn()
 { 
   mColumnCount = NS_STYLE_COLUMN_COUNT_AUTO;
   mColumnWidth.SetAutoValue();
-  mColumnGap.SetCoordValue(0);
+  mColumnGap.SetNormalValue();
 }
 
 nsStyleColumn::~nsStyleColumn() 
