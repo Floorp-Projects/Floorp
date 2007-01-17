@@ -138,15 +138,21 @@ char nsSVGPathSeg::mTypeLetters[] = {
   'A', 'a', 'H', 'h', 'V', 'v', 'Q', 'q', 'T', 't'
 };
 
-nsresult 
-nsSVGPathSeg::SetParent(nsISVGValue* aParent)
+nsQueryReferent
+nsSVGPathSeg::GetCurrentList() const
 {
-  if (!aParent) {
-    mParent = nsnull;
+  return do_QueryReferent(mCurrentList);
+}
+
+nsresult 
+nsSVGPathSeg::SetCurrentList(nsISVGValue* aList)
+{
+  if (!aList) {
+    mCurrentList = nsnull;
     return NS_OK;
   }
   nsresult rv;
-  mParent = do_GetWeakReference(aParent, &rv);
+  mCurrentList = do_GetWeakReference(aList, &rv);
   return rv;
 }
 
@@ -167,8 +173,8 @@ nsSVGPathSeg::GetPathSegTypeAsLetter(nsAString & aPathSegTypeAsLetter)
 void
 nsSVGPathSeg::DidModify(void)
 {
-  if (mParent) {
-    nsCOMPtr<nsISVGValue> val = do_QueryReferent(mParent);
+  if (mCurrentList) {
+    nsCOMPtr<nsISVGValue> val = do_QueryReferent(mCurrentList);
     if (val) {
       val->BeginBatchUpdate();
       val->EndBatchUpdate();

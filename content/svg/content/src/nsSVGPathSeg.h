@@ -60,8 +60,9 @@ struct nsSVGPathSegTraversalState {
 class nsSVGPathSeg : public nsIDOMSVGPathSeg
 {
 public:
-  nsSVGPathSeg() : mParent(nsnull) {}
-  nsresult SetParent(nsISVGValue* aParent);
+  nsSVGPathSeg() : mCurrentList(nsnull) {}
+  nsresult SetCurrentList(nsISVGValue* aList);
+  nsQueryReferent GetCurrentList() const;
 
   // nsISupports interface:
   NS_DECL_ISUPPORTS
@@ -79,7 +80,7 @@ protected:
 
 private:
   static char mTypeLetters[];
-  nsCOMPtr<nsIWeakReference> mParent;
+  nsCOMPtr<nsIWeakReference> mCurrentList;
 };
 
 nsIDOMSVGPathSeg*

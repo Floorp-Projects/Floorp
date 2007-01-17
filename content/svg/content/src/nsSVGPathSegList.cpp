@@ -87,6 +87,7 @@ protected:
   void AppendElement(nsIDOMSVGPathSeg* aElement);
   void RemoveElementAt(PRInt32 index);
   void InsertElementAt(nsIDOMSVGPathSeg* aElement, PRInt32 index);
+  void RemoveFromCurrentList(nsIDOMSVGPathSeg*);
 
   void ReleaseSegments(PRBool aModify = PR_TRUE);
 
@@ -106,7 +107,7 @@ nsSVGPathSegList::~nsSVGPathSegList()
   PRInt32 count = mSegments.Count();
   for (PRInt32 i = 0; i < count; ++i) {
     nsSVGPathSeg* seg = NS_STATIC_CAST(nsSVGPathSeg*, mSegments.ObjectAt(i));
-    seg->SetParent(nsnull);
+    seg->SetCurrentList(nsnull);
   }
 }
 
@@ -141,7 +142,7 @@ nsSVGPathSegList::SetValueString(const nsAString& aValue)
   PRInt32 count = mSegments.Count();
   for (PRInt32 i=0; i<count; ++i) {
     nsSVGPathSeg* seg = NS_STATIC_CAST(nsSVGPathSeg*, mSegments.ObjectAt(i));
-    seg->SetParent(this);
+    seg->SetCurrentList(this);
   }
 
   if (NS_FAILED(rv)) {
@@ -227,12 +228,19 @@ NS_IMETHODIMP nsSVGPathSegList::InsertItemBefore(nsIDOMSVGPathSeg *newItem,
                                                  PRUint32 index,
                                                  nsIDOMSVGPathSeg **_retval)
 {
-  // null check when implementing - this method can be used by scripts!
-  // if (!newItem)
-  //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+  *_retval = newItem;
+  if (!newItem)
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
-  NS_NOTYETIMPLEMENTED("nsSVGPathSegList::InsertItemBefore");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if ((PRInt32)index >= mSegments.Count()) {
+    *_retval = nsnull;
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
+  InsertElementAt(newItem, index);
+  NS_ADDREF(*_retval);
+
+  return NS_OK;
 }
 
 /* nsIDOMSVGPathSeg replaceItem (in nsIDOMSVGPathSeg newItem, in unsigned long index); */
@@ -240,12 +248,20 @@ NS_IMETHODIMP nsSVGPathSegList::ReplaceItem(nsIDOMSVGPathSeg *newItem,
                                             PRUint32 index,
                                             nsIDOMSVGPathSeg **_retval)
 {
-  // null check when implementing - this method can be used by scripts!
-  // if (!newItem)
-  //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+  *_retval = newItem;
+  if (!newItem)
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
-  NS_NOTYETIMPLEMENTED("nsSVGPathSegList::ReplaceItem");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if ((PRInt32)index >= mSegments.Count()) {
+    *_retval = nsnull;
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
+  InsertElementAt(newItem, index);
+  RemoveElementAt(index+1);
+  NS_ADDREF(*_retval);
+
+  return NS_OK;
 }
 
 /* nsIDOMSVGPathSeg removeItem (in unsigned long index); */
@@ -268,10 +284,6 @@ NS_IMETHODIMP nsSVGPathSegList::RemoveItem(PRUint32 index, nsIDOMSVGPathSeg **_r
 NS_IMETHODIMP nsSVGPathSegList::AppendItem(nsIDOMSVGPathSeg *newItem,
                                            nsIDOMSVGPathSeg **_retval)
 {
-  // XXX The SVG specs state that 'if newItem is already in a list, it
-  // is removed from its previous list before it is inserted into this
-  // list'. We don't do that. Should we?
-
   *_retval = newItem;
   if (!newItem)
     return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
@@ -316,7 +328,7 @@ nsSVGPathSegList::ReleaseSegments(PRBool aModify)
   PRInt32 count = mSegments.Count();
   for (PRInt32 i = 0; i < count; ++i) {
     nsSVGPathSeg* seg = NS_STATIC_CAST(nsSVGPathSeg*, mSegments.ObjectAt(i));
-    seg->SetParent(nsnull);
+    seg->SetCurrentList(nsnull);
   }
   mSegments.Clear();
   if (aModify) {
@@ -328,9 +340,12 @@ void
 nsSVGPathSegList::AppendElement(nsIDOMSVGPathSeg* aElement)
 {
   WillModify();
+  // XXX: we should only remove an item from its current list if we
+  // successfully added it to this list
+  RemoveFromCurrentList(aElement);
   mSegments.AppendObject(aElement);
   nsSVGPathSeg* seg = NS_STATIC_CAST(nsSVGPathSeg*, aElement);
-  seg->SetParent(this);
+  seg->SetCurrentList(this);
   DidModify();
 }
 
@@ -339,7 +354,7 @@ nsSVGPathSegList::RemoveElementAt(PRInt32 index)
 {
   WillModify();
   nsSVGPathSeg* seg = NS_STATIC_CAST(nsSVGPathSeg*, mSegments.ObjectAt(index));
-  seg->SetParent(nsnull);
+  seg->SetCurrentList(nsnull);
   mSegments.RemoveObjectAt(index);
   DidModify();
 }
@@ -348,12 +363,33 @@ void
 nsSVGPathSegList::InsertElementAt(nsIDOMSVGPathSeg* aElement, PRInt32 index)
 {
   WillModify();
+  // XXX: we should only remove an item from its current list if we
+  // successfully added it to this list
+  RemoveFromCurrentList(aElement);
   mSegments.InsertObjectAt(aElement, index);
   nsSVGPathSeg* seg = NS_STATIC_CAST(nsSVGPathSeg*, aElement);
-  seg->SetParent(this);
+  seg->SetCurrentList(this);
   DidModify();
 }
 
+// The SVG specs state that 'if newItem is already in a list, it
+// is removed from its previous list before it is inserted into this
+// list'.  This is a helper function to do that.
+void 
+nsSVGPathSegList::RemoveFromCurrentList(nsIDOMSVGPathSeg* aSeg)
+{
+  nsSVGPathSeg *theSeg = NS_STATIC_CAST(nsSVGPathSeg*, aSeg);
+  nsCOMPtr<nsISVGValue> currentList = theSeg->GetCurrentList();
+  if (currentList) {
+    // aSeg's current list must be cast back to a nsSVGPathSegList*
+    nsSVGPathSegList* otherSegList = NS_STATIC_CAST(nsSVGPathSegList*, currentList.get());
+    PRInt32 ix = otherSegList->mSegments.IndexOfObject(theSeg);
+    if (ix != -1) { 
+      otherSegList->RemoveElementAt(ix); 
+    }
+    theSeg->SetCurrentList(nsnull);
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////
 // Exported creation functions:
