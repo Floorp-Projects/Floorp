@@ -4296,14 +4296,6 @@ nsresult nsEditor::BeginUpdateViewBatch()
 
     if (mViewManager)
       mViewManager->BeginUpdateViewBatch();
-
-    // Turn off reflow.
-
-    nsCOMPtr<nsIPresShell> presShell;
-    GetPresShell(getter_AddRefs(presShell));
-
-    if (presShell)
-      presShell->BeginReflowBatching();
   }
 
   mUpdateCount++;
@@ -4344,26 +4336,7 @@ nsresult nsEditor::EndUpdateViewBatch()
 
     GetFlags(&flags);
 
-    // Turn reflow back on.
-    //
-    // Make sure we enable reflowing before we call
-    // mViewManager->EndUpdateViewBatch().  This will make sure that any
-    // new updates caused by a reflow, that may happen during the
-    // EndReflowBatching(), get included if we force a refresh during
-    // the mViewManager->EndUpdateViewBatch() call.
-
-    if (presShell)
-    {
-      PRBool forceReflow = PR_TRUE;
-
-      if (flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask)
-        forceReflow = PR_FALSE;
-
-      presShell->EndReflowBatching(forceReflow);
-    }
-
     // Turn view updating back on.
-
     if (mViewManager)
     {
       PRUint32 updateFlag = NS_VMREFRESH_IMMEDIATE;
