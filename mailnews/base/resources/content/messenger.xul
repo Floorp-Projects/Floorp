@@ -136,7 +136,7 @@
 <popup id="messagePaneContext"/>
 
   <toolbox id="mailToolbarToolbox" class="toolbox-top">
-    <menubar id="mailMenubar"/>
+    <menubar id="mail-menubar"/>
     <toolbar id="msgToolbar"/>
     <toolbar id="msgLocationToolbar"/>
   </toolbox>

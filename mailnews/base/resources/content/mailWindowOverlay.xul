@@ -1012,7 +1012,7 @@
 
 </popup>
 
-<menubar id="mailMenubar" grippytooltiptext="&menuBar.tooltip;">
+<menubar id="mail-menubar" grippytooltiptext="&menuBar.tooltip;">
   <menu id="menu_File" >
     <menupopup id="menu_FilePopup" onpopupshowing="file_init();">
       <menu id="menu_New">
