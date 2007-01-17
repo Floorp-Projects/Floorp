@@ -51,6 +51,7 @@
 typedef GType (* AtkGetTypeType) (void);
 GType g_atk_hyperlink_impl_type = G_TYPE_INVALID;
 static PRBool sATKChecked = PR_FALSE;
+static PRBool sInitialized = PR_FALSE;
 static const char sATKLibName[] = "libatk-1.0.so";
 static const char sATKHyperlinkImplGetTypeSymbol[] = "atk_hyperlink_impl_get_type";
 
@@ -61,6 +62,7 @@ static nsAppRootAccessible *sAppRoot = nsnull;
 static guint (* gail_add_global_event_listener) (GSignalEmissionHook listener,
                                                  const gchar *event_type);
 static void (* gail_remove_global_event_listener) (guint remove_listener);
+static AtkObject * (*gail_get_root) (void);
 
 /* maiutil */
 
@@ -218,6 +220,7 @@ mai_util_class_init(MaiUtilClass *klass)
     // save gail function pointer
     gail_add_global_event_listener = atk_class->add_global_event_listener;
     gail_remove_global_event_listener = atk_class->remove_global_event_listener;
+    gail_get_root = atk_class->get_root;
 
     atk_class->add_global_event_listener =
         mai_util_add_global_event_listener;
@@ -433,9 +436,15 @@ mai_util_get_root(void)
 {
     nsAppRootAccessible *root = nsAppRootAccessible::Create();
 
-    if (!root)
-        return nsnull;
-    return root->GetAtkObject();
+    if (root)
+        return root->GetAtkObject();
+
+    // We've shutdown, try to use gail instead
+    // (to avoid assert in spi_atk_tidy_windows())
+    if (gail_get_root)
+        return gail_get_root();
+
+    return nsnull;
 }
 
 G_CONST_RETURN gchar *
@@ -515,37 +524,6 @@ nsAppRootAccessible::~nsAppRootAccessible()
 
 /* virtual functions */
 
-#if 0
-#ifdef MAI_LOGGING
-void
-nsAppRootAccessible::DumpMaiObjectInfo(int aDepth)
-{
-    --aDepth;
-    if (aDepth < 0)
-        return;
-    g_print("nsAppRootAccessible: this=0x%x, aDepth=%d, type=%s\n",
-            (unsigned int)this, aDepth, "nsAppRootAccessible");
-    gint nChild = GetChildCount();
-    g_print("#child=%d<br>\n", nChild);
-    g_print("Iface num: 1=component, 2=action, 3=value, 4=editabletext,"
-            "5=hyperlink, 6=hypertext, 7=selection, 8=table, 9=text\n");
-    g_print("<ul>\n");
-
-    MaiObject *maiChild;
-    for (int childIndex = 0; childIndex < nChild; childIndex++) {
-        maiChild = RefChild(childIndex);
-        if (maiChild) {
-            g_print("  <li>");
-            maiChild->DumpMaiObjectInfo(aDepth);
-        }
-    }
-    g_print("</ul>\n");
-    g_print("End of nsAppRootAccessible: this=0x%x, type=%s\n<br>",
-            (unsigned int)this, "nsAppRootAccessible");
-}
-#endif
-#endif
-
 NS_IMETHODIMP nsAppRootAccessible::Init()
 {
     // load and initialize gail library
@@ -575,21 +553,30 @@ NS_IMETHODIMP nsAppRootAccessible::Init()
     return rv;
 }
 
+/* static */ void nsAppRootAccessible::Load()
+{
+    sInitialized = PR_TRUE;
+}
+
 /* static */ void nsAppRootAccessible::Unload()
 {
+    sInitialized = PR_FALSE;
     NS_IF_RELEASE(sAppRoot);
     if (sAtkBridge.lib) {
-        if (sAtkBridge.shutdown)
-            (*sAtkBridge.shutdown)();
-        //Not unload atk-bridge library
-        //an exit function registered will take care of it
+        // Do not shutdown/unload atk-bridge,
+        // an exit function registered will take care of it
+        // if (sAtkBridge.shutdown)
+        //     (*sAtkBridge.shutdown)();
         sAtkBridge.lib = NULL;
         sAtkBridge.init = NULL;
         sAtkBridge.shutdown = NULL;
     }
     if (sGail.lib) {
-        if (sGail.shutdown)
-            (*sGail.shutdown)();
+        // Do not shutdown gail because
+        // 1) Maybe it's not init-ed by us. e.g. GtkEmbed
+        // 2) We need it to avoid assert in spi_atk_tidy_windows
+        // if (sGail.shutdown)
+        //   (*sGail.shutdown)();
         sGail.lib = NULL;
         sGail.init = NULL;
         sGail.shutdown = NULL;
@@ -828,7 +815,7 @@ nsAppRootAccessible::Create()
         }
         sATKChecked = PR_TRUE;
     }
-    if (!sAppRoot) {
+    if (!sAppRoot && sInitialized) {
         sAppRoot = new nsAppRootAccessible();
         NS_ASSERTION(sAppRoot, "OUT OF MEMORY");
         if (sAppRoot) {
