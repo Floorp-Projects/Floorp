@@ -99,7 +99,6 @@ protected:
   nscoord GetContinuationOffset(nscoord* aWidth = 0) const;
 
   nsMargin mBorderPadding;
-  nsSize mCanvasSize;
 };
 
 #endif /* nsHTMLCanvasFrame_h___ */

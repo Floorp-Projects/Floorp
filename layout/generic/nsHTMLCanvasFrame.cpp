@@ -107,10 +107,10 @@ nsHTMLCanvasFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
                                nsSize aMargin, nsSize aBorder, nsSize aPadding,
                                PRBool aShrinkWrap)
 {
-  mCanvasSize = GetCanvasSize();
+  nsSize canvasSize = GetCanvasSize();
 
   return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
-                            aRenderingContext, this, mCanvasSize,
+                            aRenderingContext, this, canvasSize,
                             aCBSize, aBorder, aPadding);
 }
 
@@ -185,12 +185,14 @@ nsHTMLCanvasFrame::PaintCanvas(nsIRenderingContext& aRenderingContext,
   if (!canvas)
     return;
 
+  nsSize canvasSize = GetCanvasSize();
+
   // XXXvlad clip to aDirtyRect!
 
-  if (inner.Size() != mCanvasSize)
+  if (inner.Size() != canvasSize)
   {
-    float sx = inner.width / (float) mCanvasSize.width;
-    float sy = inner.height / (float) mCanvasSize.height;
+    float sx = inner.width / (float) canvasSize.width;
+    float sy = inner.height / (float) canvasSize.height;
 
     aRenderingContext.PushState();
     aRenderingContext.Translate(inner.x, inner.y);
