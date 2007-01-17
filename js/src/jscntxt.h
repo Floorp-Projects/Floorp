@@ -655,11 +655,6 @@ struct JSContext {
     /* Limit pointer for checking stack consumption during recursion. */
     jsuword             stackLimit;
 
-    /* Runtime version control identifier and equality operators. */
-    uint16              version;
-    jsbytecode          jsop_eq;
-    jsbytecode          jsop_ne;
-
     /* Data shared by threads in an address space. */
     JSRuntime           *runtime;
 
@@ -757,6 +752,9 @@ struct JSContext {
     jsval               exception;          /* most-recently-thrown exception */
     /* Flag to indicate that we run inside gcCallback(cx, JSGC_MARK_END). */
     JSPackedBool        insideGCMarkCallback;
+
+    /* Runtime version control identifier. */
+    uint16              version;
 
     /* Per-context options. */
     uint32              options;            /* see jsapi.h for JSOPTION_* */

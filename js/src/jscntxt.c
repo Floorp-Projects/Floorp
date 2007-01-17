@@ -234,8 +234,6 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
      * done by js_DestroyContext).
      */
     cx->version = JSVERSION_DEFAULT;
-    cx->jsop_eq = JSOP_EQ;
-    cx->jsop_ne = JSOP_NE;
     JS_InitArenaPool(&cx->stackPool, "stack", stackChunkSize, sizeof(jsval));
     JS_InitArenaPool(&cx->tempPool, "temp", 1024, sizeof(jsdouble));
 
