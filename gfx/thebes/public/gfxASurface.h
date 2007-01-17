@@ -49,7 +49,35 @@
  * abstract class, and use gfxContext to draw on this surface.
  */
 class THEBES_API gfxASurface {
-    THEBES_INLINE_DECL_REFCOUNTING(gfxASurface)
+public:
+    // Surfaces use refcounting that's tied to the cairo surface refcnt, to avoid
+    // refcount mismatch issues.
+    nsrefcnt AddRef(void) {
+        NS_PRECONDITION(mSurface != nsnull, "gfxASurface::AddRef without mSurface");
+
+        if (mHasFloatingRef) {
+            // eat the floating ref
+            mHasFloatingRef = PR_FALSE;
+        } else {
+            cairo_surface_reference(mSurface);
+        }
+
+        return (nsrefcnt) cairo_surface_get_reference_count(mSurface);
+    }
+
+    nsrefcnt Release(void) {
+        NS_PRECONDITION(!mHasFloatingRef, "gfxASurface::Release while floating ref still outstanding!");
+        NS_PRECONDITION(mSurface != nsnull, "gfxASurface::Release without mSurface");
+        // Note that there is a destructor set on user data for mSurface,
+        // which will delete this gfxASurface wrapper when the surface's refcount goes
+        // out of scope.
+        nsrefcnt refcnt = (nsrefcnt) cairo_surface_get_reference_count(mSurface);
+        cairo_surface_destroy(mSurface);
+
+        // |this| may not be valid any more, don't use it!
+
+        return --refcnt;
+    }
 
 public:
     /**
@@ -137,20 +165,13 @@ protected:
 
     void Init(cairo_surface_t *surface, PRBool existingSurface = PR_FALSE);
 
-    void Destroy();
-
-    PRBool Destroyed() const {
-        return mDestroyed;
-    }
-
     virtual ~gfxASurface() {
-        if (!mDestroyed) {
-            NS_WARNING("gfxASurface::~gfxASurface called, but cairo surface was not destroyed! (Did someone forget to call Destroy()?)");
-        }
     }
 private:
     cairo_surface_t *mSurface;
-    PRBool mDestroyed;
+    PRPackedBool mHasFloatingRef;
+
+    static void SurfaceDestroyFunc(void *data);
 };
 
 /**
@@ -159,13 +180,10 @@ private:
 class THEBES_API gfxUnknownSurface : public gfxASurface {
 public:
     gfxUnknownSurface(cairo_surface_t *surf) {
-        cairo_surface_reference(surf);
-        Init(surf);
+        Init(surf, PR_TRUE);
     }
 
-    virtual ~gfxUnknownSurface() {
-        Destroy();
-    }
+    virtual ~gfxUnknownSurface() { }
 };
 
 #endif /* GFX_ASURFACE_H */

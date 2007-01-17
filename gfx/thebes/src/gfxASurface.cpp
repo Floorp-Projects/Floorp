@@ -56,6 +56,13 @@
 
 static cairo_user_data_key_t gfxasurface_pointer_key;
 
+void
+gfxASurface::SurfaceDestroyFunc(void *data) {
+    gfxASurface *surf = (gfxASurface*) data;
+    // fprintf (stderr, "Deleting wrapper for %p (wrapper: %p)\n", surf->mSurface, data);
+    delete surf;
+}
+
 gfxASurface*
 gfxASurface::GetSurfaceWrapper(cairo_surface_t *csurf)
 {
@@ -65,7 +72,7 @@ gfxASurface::GetSurfaceWrapper(cairo_surface_t *csurf)
 void
 gfxASurface::SetSurfaceWrapper(cairo_surface_t *csurf, gfxASurface *asurf)
 {
-    cairo_surface_set_user_data(csurf, &gfxasurface_pointer_key, asurf, NULL);
+    cairo_surface_set_user_data(csurf, &gfxasurface_pointer_key, asurf, SurfaceDestroyFunc);
 }
 
 already_AddRefed<gfxASurface>
@@ -76,7 +83,7 @@ gfxASurface::Wrap (cairo_surface_t *csurf)
     /* Do we already have a wrapper for this surface? */
     result = GetSurfaceWrapper(csurf);
     if (result) {
-        // fprintf(stderr, "Using existing surface for %p\n", result);
+        // fprintf(stderr, "Existing wrapper for %p -> %p\n", csurf, result);
         NS_ADDREF(result);
         return result;
     }
@@ -106,40 +113,22 @@ gfxASurface::Wrap (cairo_surface_t *csurf)
         result = new gfxUnknownSurface(csurf);
     }
 
-    //fprintf(stderr, "New surface for %p\n", result);
+    // fprintf(stderr, "New wrapper for %p -> %p\n", csurf, result);
 
-    if (result) {
-        NS_ADDREF(result);
-        SetSurfaceWrapper(csurf, result);
-    }
-
+    NS_ADDREF(result);
     return result;
 }
 
 void
 gfxASurface::Init(cairo_surface_t* surface, PRBool existingSurface)
 {
-    if (existingSurface) {
-        // old surface, ::Wrap will stuff the pointer in, but we need to retain mSurface
-        cairo_surface_reference(surface);
-    } else {
-        // we're initializing from a new surface, so stuff our pointer here
-        SetSurfaceWrapper(surface, this);
-    }
+    SetSurfaceWrapper(surface, this);
 
-    mDestroyed = PR_FALSE;
     mSurface = surface;
-}
 
-void
-gfxASurface::Destroy()
-{
-    if (mDestroyed) {
-        NS_WARNING("Calling Destroy on an already-destroyed surface!");
-        return;
+    if (existingSurface) {
+        mHasFloatingRef = PR_FALSE;
+    } else {
+        mHasFloatingRef = PR_TRUE;
     }
-
-    cairo_surface_set_user_data(mSurface, &gfxasurface_pointer_key, NULL, NULL);
-    cairo_surface_destroy(mSurface);
-    mDestroyed = PR_TRUE;
 }
