@@ -46,18 +46,18 @@
 #
 topsrcdir=$1
 
-for _config in $MOZCONFIG \
-               $MOZ_MYCONFIG \
-               $topsrcdir/.mozconfig \
-               $topsrcdir/mozconfig \
-               $topsrcdir/mozconfig.sh \
-               $topsrcdir/myconfig.sh \
-               $HOME/.mozconfig \
-               $HOME/.mozconfig.sh \
-               $HOME/.mozmyconfig.sh
+for _config in "$MOZCONFIG" \
+               "$MOZ_MYCONFIG" \
+               "$topsrcdir/.mozconfig" \
+               "$topsrcdir/mozconfig" \
+               "$topsrcdir/mozconfig.sh" \
+               "$topsrcdir/myconfig.sh" \
+               "$HOME/.mozconfig" \
+               "$HOME/.mozconfig.sh" \
+               "$HOME/.mozmyconfig.sh"
 do
-  if test -f $_config; then
-    echo $_config;
+  if test -f "$_config"; then
+    echo "$_config";
     exit 0
   fi
 done
