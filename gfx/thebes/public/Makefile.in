@@ -22,6 +22,7 @@ EXPORTS		= 	gfxASurface.h \
 			gfxPoint.h \
 			gfxRect.h \
 			gfxRegion.h \
+                        gfxSkipChars.h \
 			gfxTypes.h \
 			gfxTextRunCache.h \
 			$(NULL)

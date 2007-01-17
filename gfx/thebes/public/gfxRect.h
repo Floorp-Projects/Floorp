@@ -59,12 +59,25 @@ struct THEBES_API gfxRect {
         return (pos != s.pos) || (size != s.size);
     }
 
+    const gfxRect& MoveBy(const gfxPoint& aPt) {
+        pos = pos + aPt;
+        return *this;
+    }
+    gfxRect operator+(const gfxPoint& aPt) const {
+        return gfxRect(pos + aPt, size);
+    }
+
     const gfxPoint& TopLeft() const { return pos; }
     gfxFloat Width() const { return size.width; }
     gfxFloat Height() const { return size.height; }
     gfxFloat X() const { return pos.x; }
     gfxFloat Y() const { return pos.y; }
+    gfxFloat XMost() const { return pos.x + size.width; }
+    gfxFloat YMost() const { return pos.y + size.height; }
 
+    PRBool IsEmpty() const { return size.width <= 0 || size.height <= 0; }
+    gfxRect Intersect(const gfxRect& aRect) const;
+    gfxRect Union(const gfxRect& aRect) const;
     // XXX figure out what methods (intersect, union, etc) we use and add them.
 };
 
