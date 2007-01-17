@@ -2421,20 +2421,11 @@ nsBlockFrame::AttributeChanged(PRInt32         aNameSpaceID,
   else if (nsGkAtoms::value == aAttribute) {
     const nsStyleDisplay* styleDisplay = GetStyleDisplay();
     if (NS_STYLE_DISPLAY_LIST_ITEM == styleDisplay->mDisplay) {
-      nsIFrame* nextAncestor = mParent;
-      nsBlockFrame* blockParent = nsnull;
-      
       // Search for the closest ancestor that's a block frame. We
       // make the assumption that all related list items share a
       // common block parent.
       // XXXldb I think that's a bad assumption.
-      while (nextAncestor) {
-        if (NS_OK == nextAncestor->QueryInterface(kBlockFrameCID, 
-                                                  (void**)&blockParent)) {
-          break;
-        }
-        nextAncestor = nextAncestor->GetParent();
-      }
+      nsBlockFrame* blockParent = nsLayoutUtils::FindNearestBlockAncestor(this);
 
       // Tell the enclosing block frame to renumber list items within
       // itself
