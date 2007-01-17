@@ -5462,8 +5462,14 @@ nsDocShell::RestoreFromHistory()
 
     nsCOMPtr<nsIDocument> document = do_QueryInterface(domDoc);
     if (document) {
-        SetCurrentURI(document->GetDocumentURI(),
-                      document->GetChannel(), PR_TRUE);
+        // Use the uri from the mLSHE we had when we entered this function
+        // (which need not match the document's URI if anchors are involved),
+        // since that's the history entry we're loading.  Note that if we use
+        // origLSHE we don't have to worry about whether the entry in question
+        // is still mLSHE or whether it's now mOSHE.
+        nsCOMPtr<nsIURI> uri;
+        origLSHE->GetURI(getter_AddRefs(uri));
+        SetCurrentURI(uri, document->GetChannel(), PR_TRUE);
     }
 
     // This is the end of our CreateContentViewer() replacement.
