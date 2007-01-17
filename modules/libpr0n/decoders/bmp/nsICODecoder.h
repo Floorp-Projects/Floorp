@@ -97,7 +97,9 @@ private:
   void ProcessInfoHeader();
 
   nsresult SetImageData();
+#ifndef MOZ_CAIRO_GFX
   nsresult SetAlphaData();
+#endif
 
   PRUint32 CalcAlphaRowSize();
 
@@ -106,9 +108,6 @@ private:
   nsCOMPtr<imgIContainer> mImage;
   nsCOMPtr<gfxIImageFrame> mFrame;
   
-  PRUint8 mHaveAlphaData;
-  PRPackedBool mDecodingAndMask;
-
   PRUint32 mPos;
   PRUint16 mNumIcons;
   PRUint16 mCurrIcon;
@@ -130,8 +129,13 @@ private:
   nsresult mStatus;
 
   PRUint8* mDecodedBuffer;
+#ifndef MOZ_CAIRO_GFX
   PRUint8* mAlphaBuffer;
+#endif
+
+  PRUint8 mHaveAlphaData;
   PRPackedBool mIsCursor;
+  PRPackedBool mDecodingAndMask;
 };
 
 
