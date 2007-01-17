@@ -914,7 +914,11 @@ nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
     }
   }
 
+  NS_ASSERTION(!aReflowState.mLineLayout->GetInFirstLine(),
+               "Nested first-line frames? BOGUS");
+  aReflowState.mLineLayout->SetInFirstLine(PR_TRUE);
   rv = ReflowFrames(aPresContext, aReflowState, irs, aMetrics, aStatus);
+  aReflowState.mLineLayout->SetInFirstLine(PR_FALSE);
 
   // Note: the line layout code will properly compute our overflow state for us
 
