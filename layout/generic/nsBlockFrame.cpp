@@ -3313,8 +3313,11 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   }
 
   if ((lineReflowStatus == LINE_REFLOW_STOP || lineReflowStatus == LINE_REFLOW_OK) &&
-      !aLineLayout.HaveForcedBreakPosition() && aLineLayout.NeedsBackup()) {
+      aLineLayout.NeedsBackup()) {
     // We need to try backing up to before a text run
+    NS_ASSERTION(!aLineLayout.HaveForcedBreakPosition(),
+                 "We shouldn't be backing up more than once! "
+                 "Someone must have set a break opportunity beyond the available width");
     PRInt32 offset;
     nsIContent* breakContent = aLineLayout.GetLastOptionalBreakPosition(&offset);
     if (breakContent) {
