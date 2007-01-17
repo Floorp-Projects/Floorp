@@ -4160,7 +4160,7 @@ NS_IMETHODIMP PresShell::GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocation
 NS_IMETHODIMP
 PresShell::GetSelectionForCopy(nsISelection** outSelection)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   *outSelection = nsnull;
 
