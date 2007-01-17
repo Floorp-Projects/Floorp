@@ -219,6 +219,9 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState)
         colGap = NSToCoordRound(colStyle->mColumnGap.GetPercentValue()*availContentWidth);
       }
       break;
+    case eStyleUnit_Normal:
+      colGap = GetStyleFont()->mFont.size;
+      break;
     default:
       NS_NOTREACHED("Unknown gap type");
       break;

@@ -583,6 +583,9 @@ nsComputedDOMStyle::GetColumnGap(nsIDOMCSSValue** aValue)
         val->SetPercent(column->mColumnGap.GetPercentValue());
       }
       break;
+    case eStyleUnit_Normal:
+      val->SetTwips(GetStyleFont()->mFont.size);
+      break;
     default:
       NS_ERROR("Unexpected column gap unit");
       val->SetTwips(0);
