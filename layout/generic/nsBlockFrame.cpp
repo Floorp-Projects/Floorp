@@ -3312,12 +3312,16 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
     }
   }
 
-  if ((lineReflowStatus == LINE_REFLOW_STOP || lineReflowStatus == LINE_REFLOW_OK) &&
-      aLineLayout.NeedsBackup()) {
+  // We only need to backup if the line isn't going to be reflowed again anyway
+  PRBool needsBackup = aLineLayout.NeedsBackup() &&
+    (lineReflowStatus == LINE_REFLOW_STOP || lineReflowStatus == LINE_REFLOW_OK);
+  if (needsBackup && aLineLayout.HaveForcedBreakPosition()) {
+  	NS_WARNING("We shouldn't be backing up more than once! "
+               "Someone must have set a break opportunity beyond the available width");
+    needsBackup = PR_FALSE;
+  }
+  if (needsBackup) {
     // We need to try backing up to before a text run
-    NS_ASSERTION(!aLineLayout.HaveForcedBreakPosition(),
-                 "We shouldn't be backing up more than once! "
-                 "Someone must have set a break opportunity beyond the available width");
     PRInt32 offset;
     nsIContent* breakContent = aLineLayout.GetLastOptionalBreakPosition(&offset);
     if (breakContent) {
@@ -3325,7 +3329,8 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
       lineReflowStatus = LINE_REFLOW_REDO_NO_PULL;
     }
   } else {
-    // Don't try to force any breaking if we are going to retry
+    // In case we reflow this line again, remember that we don't
+    // need to force any breaking
     aLineLayout.ClearOptionalBreakPosition();
   }
 
