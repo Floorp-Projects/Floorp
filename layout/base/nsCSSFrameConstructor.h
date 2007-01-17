@@ -833,6 +833,7 @@ private:
   // Methods support :first-letter style
 
   void CreateFloatingLetterFrame(nsFrameConstructorState& aState,
+                                 nsIFrame*                aBlockFrame,
                                  nsIContent*              aTextContent,
                                  nsIFrame*                aTextFrame,
                                  nsIContent*              aBlockContent,
@@ -841,6 +842,7 @@ private:
                                  nsFrameItems&            aResult);
 
   nsresult CreateLetterFrame(nsFrameConstructorState& aState,
+                             nsIFrame*                aBlockFrame,
                              nsIContent*              aTextContent,
                              nsIFrame*                aParentFrame,
                              nsFrameItems&            aResult);
@@ -851,6 +853,7 @@ private:
                                         nsFrameItems&            aBlockFrames);
 
   nsresult WrapFramesInFirstLetterFrame(nsFrameConstructorState& aState,
+                                        nsIFrame*                aBlockFrame,
                                         nsIFrame*                aParentFrame,
                                         nsIFrame*                aParentFrameList,
                                         nsIFrame**               aModifiedParent,
