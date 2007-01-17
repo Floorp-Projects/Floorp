@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Darin Fisher <darin@meer.net>
  *   Benjamin Smedberg <benjamin@smedbergs.us>
+ *   Ben Turner <mozilla@songbirdnest.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -230,10 +231,46 @@ nsAString::DefaultComparator(const char_type *a, const char_type *b,
     if (*a == *b)
       continue;
 
-    return a < b ? -1 : 1;
+    return *a < *b ? -1 : 1;
   }
 
   return 0;
+}
+
+PRInt32
+nsAString::Compare(const char_type *other, ComparatorFunc c) const
+{
+  const char_type *cself;
+  PRUint32 selflen = NS_StringGetData(*this, &cself);
+  PRUint32 otherlen = NS_strlen(other);
+  PRUint32 comparelen = selflen <= otherlen ? selflen : otherlen;
+
+  PRInt32 result = c(cself, other, comparelen);
+  if (result == 0) {
+    if (selflen < otherlen)
+      return -1;
+    else if (selflen > otherlen)
+      return 1;
+  }
+  return result;
+}
+
+PRInt32
+nsAString::Compare(const self_type &other, ComparatorFunc c) const
+{
+  const char_type *cself, *cother;
+  PRUint32 selflen = NS_StringGetData(*this, &cself);
+  PRUint32 otherlen = NS_StringGetData(other, &cother);
+  PRUint32 comparelen = selflen <= otherlen ? selflen : otherlen;
+
+  PRInt32 result = c(cself, cother, comparelen);
+  if (result == 0) {
+    if (selflen < otherlen)
+      return -1;
+    else if (selflen > otherlen)
+      return 1;
+  }
+  return result;
 }
 
 PRBool
@@ -615,6 +652,42 @@ nsACString::DefaultComparator(const char_type *a, const char_type *b,
                               PRUint32 len)
 {
   return memcmp(a, b, len);
+}
+
+PRInt32
+nsACString::Compare(const char_type *other, ComparatorFunc c) const
+{
+  const char_type *cself;
+  PRUint32 selflen = NS_CStringGetData(*this, &cself);
+  PRUint32 otherlen = strlen(other);
+  PRUint32 comparelen = selflen <= otherlen ? selflen : otherlen;
+
+  PRInt32 result = c(cself, other, comparelen);
+  if (result == 0) {
+    if (selflen < otherlen)
+      return -1;
+    else if (selflen > otherlen)
+      return 1;
+  }
+  return result;
+}
+
+PRInt32
+nsACString::Compare(const self_type &other, ComparatorFunc c) const
+{
+  const char_type *cself, *cother;
+  PRUint32 selflen = NS_CStringGetData(*this, &cself);
+  PRUint32 otherlen = NS_CStringGetData(other, &cother);
+  PRUint32 comparelen = selflen <= otherlen ? selflen : otherlen;
+
+  PRInt32 result = c(cself, cother, comparelen);
+  if (result == 0) {
+    if (selflen < otherlen)
+      return -1;
+    else if (selflen > otherlen)
+      return 1;
+  }
+  return result;
 }
 
 PRBool

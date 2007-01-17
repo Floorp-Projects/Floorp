@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Darin Fisher <darin@meer.net>
  *   Benjamin Smedberg <benjamin@smedbergs.us>
+ *   Ben Turner <mozilla@songbirdnest.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -185,11 +186,35 @@ public:
                                                const char_type *b,
                                                PRUint32 length);
 
+  NS_HIDDEN_(PRInt32) Compare( const char_type *other,
+                               ComparatorFunc c = DefaultComparator ) const;
+
+  NS_HIDDEN_(PRInt32) Compare( const self_type &other,
+                               ComparatorFunc c = DefaultComparator ) const;
+
   NS_HIDDEN_(PRBool) Equals( const char_type *other,
                              ComparatorFunc c = DefaultComparator ) const;
 
   NS_HIDDEN_(PRBool) Equals( const self_type &other,
                              ComparatorFunc c = DefaultComparator ) const;
+
+  NS_HIDDEN_(PRBool) operator < (const self_type &other) const
+  {
+    return Compare(other) < 0;
+  }
+  NS_HIDDEN_(PRBool) operator < (const char_type *other) const
+  {
+    return Compare(other) < 0;
+  }
+
+  NS_HIDDEN_(PRBool) operator <= (const self_type &other) const
+  {
+    return Compare(other) <= 0;
+  }
+  NS_HIDDEN_(PRBool) operator <= (const char_type *other) const
+  {
+    return Compare(other) <= 0;
+  }
 
   NS_HIDDEN_(PRBool) operator == (const self_type &other) const
   {
@@ -198,6 +223,33 @@ public:
   NS_HIDDEN_(PRBool) operator == (const char_type *other) const
   {
     return Equals(other);
+  }
+
+  NS_HIDDEN_(PRBool) operator >= (const self_type &other) const
+  {
+    return Compare(other) >= 0;
+  }
+  NS_HIDDEN_(PRBool) operator >= (const char_type *other) const
+  {
+    return Compare(other) >= 0;
+  }
+
+  NS_HIDDEN_(PRBool) operator > (const self_type &other) const
+  {
+    return Compare(other) > 0;
+  }
+  NS_HIDDEN_(PRBool) operator > (const char_type *other) const
+  {
+    return Compare(other) > 0;
+  }
+
+  NS_HIDDEN_(PRBool) operator != (const self_type &other) const
+  {
+    return !Equals(other);
+  }
+  NS_HIDDEN_(PRBool) operator != (const char_type *other) const
+  {
+    return !Equals(other);
   }
 
   NS_HIDDEN_(PRBool) EqualsLiteral(const char *aASCIIString) const;
@@ -411,11 +463,35 @@ public:
                                                const char_type *b,
                                                PRUint32 length);
 
+  NS_HIDDEN_(PRInt32) Compare( const char_type *other,
+                               ComparatorFunc c = DefaultComparator ) const;
+
+  NS_HIDDEN_(PRInt32) Compare( const self_type &other,
+                               ComparatorFunc c = DefaultComparator ) const;
+
   NS_HIDDEN_(PRBool) Equals( const char_type *other,
                              ComparatorFunc c = DefaultComparator ) const;
 
   NS_HIDDEN_(PRBool) Equals( const self_type &other,
                              ComparatorFunc c = DefaultComparator ) const;
+
+  NS_HIDDEN_(PRBool) operator < (const self_type &other) const
+  {
+    return Compare(other) < 0;
+  }
+  NS_HIDDEN_(PRBool) operator < (const char_type *other) const
+  {
+    return Compare(other) < 0;
+  }
+
+  NS_HIDDEN_(PRBool) operator <= (const self_type &other) const
+  {
+    return Compare(other) <= 0;
+  }
+  NS_HIDDEN_(PRBool) operator <= (const char_type *other) const
+  {
+    return Compare(other) <= 0;
+  }
 
   NS_HIDDEN_(PRBool) operator == (const self_type &other) const
   {
@@ -424,6 +500,33 @@ public:
   NS_HIDDEN_(PRBool) operator == (const char_type *other) const
   {
     return Equals(other);
+  }
+
+  NS_HIDDEN_(PRBool) operator >= (const self_type &other) const
+  {
+    return Compare(other) >= 0;
+  }
+  NS_HIDDEN_(PRBool) operator >= (const char_type *other) const
+  {
+    return Compare(other) >= 0;
+  }
+
+  NS_HIDDEN_(PRBool) operator > (const self_type &other) const
+  {
+    return Compare(other) > 0;
+  }
+  NS_HIDDEN_(PRBool) operator > (const char_type *other) const
+  {
+    return Compare(other) > 0;
+  }
+
+  NS_HIDDEN_(PRBool) operator != (const self_type &other) const
+  {
+    return !Equals(other);
+  }
+  NS_HIDDEN_(PRBool) operator != (const char_type *other) const
+  {
+    return !Equals(other);
   }
 
   NS_HIDDEN_(PRBool) EqualsLiteral( const char_type *other ) const
