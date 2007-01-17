@@ -229,24 +229,22 @@ private:
 };
 
 /** Sets the pixel data in aDecoded to the given values.
- * The variable passed in as aDecoded will be moved on 3 bytes! */
+ * The variable passed in as aDecoded will be moved on 3 or 4 bytes! */
 inline void SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue, PRUint8 aAlpha = 0xFF)
 {
 #if defined(MOZ_CAIRO_GFX)
-#ifdef IS_LITTLE_ENDIAN
-  // BGRX
-  *aDecoded++ = aBlue;
-  *aDecoded++ = aGreen;
-  *aDecoded++ = aRed;
-  *aDecoded++ = aAlpha;
-#else
-  // XRGB
-  *aDecoded++ = aAlpha;
-  *aDecoded++ = aRed;
-  *aDecoded++ = aGreen;
-  *aDecoded++ = aBlue;
-#endif
-
+    // This is not skipping for pixels where aAlpha happen to be 0xFF
+    // This will also make the compiler skip this part completely when 
+    // inlining SetPixel when aAlpha is not specified
+    if (aAlpha != 0xFF) {
+#define DO_PREMULTIPLY(c_) ((PRUint16(c_) * PRUint16(aAlpha) + 127) / 255)
+        aBlue = DO_PREMULTIPLY(aBlue);
+        aGreen = DO_PREMULTIPLY(aGreen);
+        aRed = DO_PREMULTIPLY(aRed);
+#undef DO_PREMULTIPLY
+    }
+    *(PRUint32*)aDecoded = (aAlpha << 24) | (aRed << 16) | (aGreen << 8) | aBlue;
+    aDecoded += 4;
 #else // MOZ_CAIRO_GFX
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
@@ -266,11 +264,7 @@ inline void SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 a
 
 inline void SetPixel(PRUint8*& aDecoded, PRUint8 idx, colorTable* aColors)
 {
-    PRUint8 red, green, blue;
-    red = aColors[idx].red;
-    green = aColors[idx].green;
-    blue = aColors[idx].blue;
-    SetPixel(aDecoded, red, green, blue);
+    SetPixel(aDecoded, aColors[idx].red, aColors[idx].green, aColors[idx].blue);
 }
 
 /** Sets two (or one if aCount = 1) pixels
