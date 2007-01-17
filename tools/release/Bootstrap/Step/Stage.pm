@@ -32,20 +32,35 @@ sub Execute {
     if (not -d $stageDir) {
         MkdirWithPath('dir' => $stageDir) 
           or die "Could not mkdir $stageDir: $!";
+        $this->Log('msg' => "Created directory $stageDir");
     }
  
     # Create skeleton batch directory.
     my $skelDir = "$stageDir/batch-skel/stage";
     if (not -d "$skelDir") {
         MkdirWithPath('dir' => $skelDir) 
-          or die "Cannot create $stageDir: $!";
+          or die "Cannot create $skelDir: $!";
+        $this->Log('msg' => "Created directory $skelDir");
     }
+
+    my (undef, undef, $gid) = getgrnam($product)
+      or die "Could not getgrname for $product: $!";
 
     # Create the contrib and contrib-localized directories with expected 
     # access rights.
-    if (not -d "$skelDir/contrib") {
-        MkdirWithPath('dir' => "$skelDir/contrib") 
-          or die "Could not mkdir $skelDir/contrib: $!";
+    for my $dir ('contrib', 'contrib-localized') {
+        if (not -d "$skelDir/$dir") {
+            MkdirWithPath('dir' => "$skelDir/$dir") 
+              or die "Could not mkdir $skelDir/$dir : $!";
+            $this->Log('msg' => "Created directory $skelDir/$dir");
+        }
+
+        chmod(oct(2775), "$skelDir/$dir")
+          or die "Cannot change mode on $skelDir/$dir to 2775: $!";
+        $this->Log('msg' => "Changed mode of $dir to 2775");
+        chown(-1, $gid, "$skelDir/$dir")
+          or die "Cannot chgrp $skelDir/$dir to $product: $!";
+        $this->Log('msg' => "Changed group of $skelDir/$dir to $product");
     }
 
     my (undef, undef, $gid) = getgrnam($product)
@@ -61,7 +76,9 @@ sub Execute {
  
     # NOTE - should have a standard "master" copy somewhere else
     # Copy the KEY file from the previous release directory.
-    copy("$product/releases/1.5/KEY", "$skelDir/");
+    my $keyFile = '/home/ftp/pub/' . $product . '/releases/1.5/KEY';
+    copy($keyFile, $skelDir . '/') 
+      or die("Could not copy $keyFile to $skelDir: $!");
 
     ## Prepare the merging directory.
     $this->Shell(
@@ -75,6 +92,7 @@ sub Execute {
     if (not -d "$stageDir/batch1/prestage") {
         MkdirWithPath('dir' => "$stageDir/batch1/prestage") 
           or die "Cannot create $stageDir/batch1/prestage: $!";
+        $this->Log('msg' => "Created directory $stageDir/batch1/prestage");
     }
 
     $this->Shell(
