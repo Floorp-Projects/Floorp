@@ -56,10 +56,6 @@ public class NativeEventThread extends Thread {
     // Attribute ivars
     //
 
-    private Object blockingResult;
-
-    private Exception blockingException;
-
     //
     // Relationship ivars
     //
@@ -172,6 +168,8 @@ public void run()
             System.out.println("NativeEventThread.run(): Exception: " + e +
                                " while sleeping: " + e.getMessage());
         }
+        runnable = runnables.poll();
+        wcRunnable = blockingRunnables.poll();
         synchronized (this) {
 	    // if we are have been told to delete ourselves
             if (null == this.wrapperFactory) {
@@ -184,8 +182,7 @@ public void run()
                 return;
             }
 	    
-	    if (!runnables.isEmpty()) {
-                runnable = (Runnable)runnables.poll();
+	    if (null!= runnable) {
                 if (LOGGER.isLoggable(Level.FINEST)) {
                     LOGGER.finest("NativeEventThread.run: About to run " + 
                             runnable.toString());
@@ -196,46 +193,25 @@ public void run()
                             runnable.toString());
                 }
 	    }
-	    if (!blockingRunnables.isEmpty()) {
-                wcRunnable = (WCRunnable)blockingRunnables.poll();
-		try {
-                    blockingException = null;
-                    if (LOGGER.isLoggable(Level.FINEST)) {
-                        LOGGER.finest("NativeEventThread.run: About to run " +
-                                wcRunnable.toString());
-                    }
-		    blockingResult = wcRunnable.run();
-                    if (LOGGER.isLoggable(Level.FINEST)) {
-                        LOGGER.finest("NativeEventThread.run: Return from run " +
-                                wcRunnable.toString());
-                    }
-		}
-		catch (RuntimeException e) {
-		    blockingException = e;
-		}
+	    if (null != wcRunnable) {
+                if (LOGGER.isLoggable(Level.FINEST)) {
+                    LOGGER.finest("NativeEventThread.run: About to run " +
+                            wcRunnable.toString());
+                }
+                wcRunnable.setResult(wcRunnable.run());
+                if (LOGGER.isLoggable(Level.FINEST)) {
+                    LOGGER.finest("NativeEventThread.run: Return from run " +
+                            wcRunnable.toString());
+                }
 		// notify the pushBlockingWCRunnable() method.
-		try {
-		    notifyAll();
-		}
-		catch (Exception e) {
-		    System.out.println("NativeEventThread.run: Exception: trying to notify for blocking result:" + e + " " + e.getMessage());
-		}
-		// wait for the result to be grabbed.  This prevents the
-		// results from getting mixed up.
-		try {
-                    if (LOGGER.isLoggable(Level.FINEST)) {
-                        LOGGER.finest("NativeEventThread.run: About to wait for caller to grab result from " +
-                                wcRunnable.toString());
+                synchronized (wcRunnable) {
+                    try {
+                        wcRunnable.notifyAll();
                     }
-		    wait();
-                    if (LOGGER.isLoggable(Level.FINEST)) {
-                        LOGGER.finest("NativeEventThread.run: Return from wait for caller to grab result from " +
-                                wcRunnable.toString());
+                    catch (Exception e) {
+                        System.out.println("NativeEventThread.run: Exception: trying to notify for blocking result:" + e + " " + e.getMessage());
                     }
-		}
-		catch (Exception e) {
-		    System.out.println("NativeEventThread.run: Exception: trying to waiting for pushBlockingWCRunnable:" + e + " " + e.getMessage());
-		}
+                }
 	    }
 	    nativeProcessEvents(nativeWrapperFactory);
         }
@@ -256,24 +232,27 @@ public void run()
 	}
     }
     
-    Object pushBlockingWCRunnable(WCRunnable toInvoke) {
+    Object pushBlockingWCRunnable(WCRunnable toInvoke) throws RuntimeException {
 	Object result = null;
-	RuntimeException e = null;
 
 	if (Thread.currentThread().getName().equals(instance.getName())){
-	    result = toInvoke.run();
+	    toInvoke.run();
+            result = toInvoke.getResult();
+            if (result instanceof RuntimeException) {
+                throw ((RuntimeException) result);
+            }
 	    return result;
 	}
 
-	synchronized (this) {
-	    blockingRunnables.add(toInvoke);
+        blockingRunnables.add(toInvoke);
+        synchronized (toInvoke) {
 	    try {
                 if (LOGGER.isLoggable(Level.FINEST)) {
                     LOGGER.finest("NativeEventThread.pushBlockingWCRunnable: " +
                             " About to wait for NativeEventThread to run " +
                             toInvoke.toString());
                 }
-		wait();
+		toInvoke.wait();
                 if (LOGGER.isLoggable(Level.FINEST)) {
                     LOGGER.finest("NativeEventThread.pushBlockingWCRunnable: " +
                             " Return from wait for NativeEventThread to run " +
@@ -283,20 +262,12 @@ public void run()
 	    catch (Exception se) {
 		System.out.println("NativeEventThread.pushBlockingWCRunnable: Exception: while waiting for blocking result: " + se + "  " + se.getMessage());
 	    }
-	    result = blockingResult;
-	    if (null != blockingException) {
-		e = new RuntimeException(blockingException);
-	    }
-	    try {
-		notifyAll();
-	    }
-	    catch (Exception se) {
-		System.out.println("NativeEventThread.pushBlockingWCRunnable: Exception: trying to send notifyAll() to NativeEventThread: " + se + "  " + se.getMessage());
-	    }
-	}
-	if (null != e) {
-	    throw e;
-	}
+        }
+        result = toInvoke.getResult();
+        if (result instanceof RuntimeException) {
+            throw ((RuntimeException) result);
+        }
+
 	return result;
     }
 

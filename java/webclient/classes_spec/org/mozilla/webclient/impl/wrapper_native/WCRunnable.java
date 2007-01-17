@@ -30,8 +30,18 @@ package org.mozilla.webclient.impl.wrapper_native;
  *
  */ 
 
-public interface WCRunnable {
+public abstract class WCRunnable {
 
-    public Object run();
+    public abstract Object run();
+    
+    private Object result = null;
 
+    public Object getResult() {
+        return result;
+    }
+
+    public void setResult(Object result) {
+        this.result = result;
+    }
+    
 }
