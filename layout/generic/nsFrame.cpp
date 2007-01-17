@@ -6045,27 +6045,10 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
   // ok now reflow the child into the spacers calculated space
   if (needsReflow) {
 
-    nsMargin border(0,0,0,0);
-    GetBorderAndPadding(border);
-
-
     aDesiredSize.width = 0;
     aDesiredSize.height = 0;
 
-    nsSize size(aWidth, aHeight);
-
     // create a reflow state to tell our child to flow at the given size.
-    if (size.height != NS_INTRINSICSIZE) {
-        size.height -= (border.top + border.bottom);
-        if (size.height < 0)
-          size.height = 0;
-    }
-
-    if (size.width != NS_INTRINSICSIZE) {
-        size.width -= (border.left + border.right);
-        if (size.width < 0)
-          size.width = 0;
-    }
 
     // Construct a bogus parent reflow state so that there's a usable
     // containing block reflow state.
@@ -6092,6 +6075,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
     if (parentSize.height != NS_INTRINSICSIZE)
       parentReflowState.mComputedHeight = parentSize.height;
     parentReflowState.mComputedMargin.SizeTo(0, 0, 0, 0);
+    // XXX use box methods
     parentFrame->GetPadding(parentReflowState.mComputedPadding);
     parentFrame->GetBorder(parentReflowState.mComputedBorderPadding);
     parentReflowState.mComputedBorderPadding +=
@@ -6109,10 +6093,18 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
 
     // mComputedWidth and mComputedHeight are content-box, not
     // border-box
-    if (size.width != NS_INTRINSICSIZE)
-      reflowState.mComputedWidth = size.width;
-    if (size.height != NS_INTRINSICSIZE)
-      reflowState.mComputedHeight = size.height;
+    if (aWidth != NS_INTRINSICSIZE) {
+      reflowState.mComputedWidth =
+        aWidth - reflowState.mComputedBorderPadding.LeftRight();
+      if (reflowState.mComputedWidth < 0)
+        reflowState.mComputedWidth = 0;
+    }
+    if (aHeight != NS_INTRINSICSIZE) {
+      reflowState.mComputedHeight =
+        aHeight - reflowState.mComputedBorderPadding.TopBottom();
+      if (reflowState.mComputedHeight < 0)
+        reflowState.mComputedHeight = 0;
+    }
 
     // Box layout calls SetRect before Layout, whereas non-box layout
     // calls SetRect after Reflow.
@@ -6171,8 +6163,10 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
              else {
               if (aDesiredSize.width > aWidth)
               {
-                 reflowState.mComputedWidth = aDesiredSize.width - (border.left + border.right);
-                 reflowState.availableWidth = reflowState.mComputedWidth;
+                 reflowState.mComputedWidth = aDesiredSize.width - reflowState.mComputedBorderPadding.LeftRight();
+                 if (reflowState.mComputedWidth < 0)
+                   reflowState.mComputedWidth = 0;
+                 reflowState.availableWidth = aDesiredSize.width;
                  DidReflow(aPresContext, &reflowState, NS_FRAME_REFLOW_FINISHED);
                  #ifdef DEBUG_REFLOW
                   nsAdaptorAddIndents();
