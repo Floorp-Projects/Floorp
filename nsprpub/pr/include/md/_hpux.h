@@ -110,6 +110,24 @@ extern PRInt32 _PR_ia64_AtomicSet(PRInt32 *val, PRInt32 newval);
 #define _PR_HAVE_INET_NTOP
 #else
 #define _PR_INET6_PROBE
+#define _PR_HAVE_MD_SOCKADDR_IN6
+/* isomorphic to struct in6_addr on HP-UX B.11.23 */
+struct _md_in6_addr {
+    union {
+        PRUint8   _S6_u8[16];
+        PRUint16  _S6_u16[8];
+        PRUint32  _S6_u32[4];
+        PRUint32  __S6_align;
+    } _s6_un;
+};
+/* isomorphic to struct sockaddr_in6 on HP-UX B.11.23 */
+struct _md_sockaddr_in6 {
+    PRUint16 sin6_family;
+    PRUint16 sin6_port;
+    PRUint32 sin6_flowinfo;
+    struct _md_in6_addr sin6_addr;
+    PRUint32 sin6_scope_id;
+};
 #endif
 
 #if !defined(_PR_PTHREADS)
