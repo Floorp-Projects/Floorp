@@ -1581,7 +1581,7 @@ retry:
 
       case '=':
         if (MatchChar(ts, c)) {
-            tp->t_op = MatchChar(ts, c) ? JSOP_STRICTEQ : (JSOp)cx->jsop_eq;
+            tp->t_op = MatchChar(ts, c) ? JSOP_STRICTEQ : JSOP_EQ;
             tt = TOK_EQOP;
         } else {
             tp->t_op = JSOP_NOP;
@@ -1591,7 +1591,7 @@ retry:
 
       case '!':
         if (MatchChar(ts, '=')) {
-            tp->t_op = MatchChar(ts, '=') ? JSOP_STRICTNE : (JSOp)cx->jsop_ne;
+            tp->t_op = MatchChar(ts, '=') ? JSOP_STRICTNE : JSOP_NE;
             tt = TOK_EQOP;
         } else {
             tp->t_op = JSOP_NOT;
