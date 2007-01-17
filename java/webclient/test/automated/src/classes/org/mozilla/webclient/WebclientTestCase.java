@@ -1,5 +1,5 @@
 /*
- * $Id: WebclientTestCase.java,v 1.10 2007/01/17 11:43:43 edburns%acm.org Exp $
+ * $Id: WebclientTestCase.java,v 1.11 2007/01/17 16:20:54 edburns%acm.org Exp $
  */
 
 /* 
@@ -47,7 +47,7 @@ import org.mozilla.util.THTTPD;
  *
  * <B>Lifetime And Scope</B> <P>
  *
- * @version $Id: WebclientTestCase.java,v 1.10 2007/01/17 11:43:43 edburns%acm.org Exp $
+ * @version $Id: WebclientTestCase.java,v 1.11 2007/01/17 16:20:54 edburns%acm.org Exp $
  * 
  * @see	Blah
  * @see	Bloo
@@ -123,6 +123,11 @@ public void setUp()
     
     LOGGER.info(this.getClass().getName() + " setUp()");
     
+}
+
+public void tearDown()
+{
+    LOGGER.info(this.getClass().getName() + " tearDown()");
 }
 
 //

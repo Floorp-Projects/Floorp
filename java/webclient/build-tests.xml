@@ -182,9 +182,13 @@
             <test name="org.mozilla.webclient.MouseListenerTest"/>
             <test name="org.mozilla.webclient.KeyListenerTest"/>
             <test name="org.mozilla.webclient.DocumentLoadListenerTest"/>
+<!--
             <test name="org.mozilla.webclient.WindowCreatorTest"/>
+-->
             <test name="org.mozilla.webclient.DOMTest"/>
+<!--
             <test name="org.mozilla.webclient.CurrentPageTest"/>
+-->
 <!-- non running
             <test name="org.mozilla.webclient.wrapper_native.gtk.TestGtkBrowserControlCanvas"/>
 -->
@@ -203,6 +207,7 @@
             <sysproperty key="native.waitForDebugger" 
                          value="${native.waitForDebugger}"/>
             <jvmarg line="${debug.jvm.args}"/>
+            <jvmarg line="-Djava.util.logging.config.file=${basedir}${FILE_PATH_SEP}..${FILE_PATH_SEP}logging.properties"/>
 
             <classpath refid="test.classpath"/>
         </java>
