@@ -93,7 +93,8 @@
 
 nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
                            nsSpaceManager* aSpaceManager,
-                           const nsHTMLReflowState* aOuterReflowState)
+                           const nsHTMLReflowState* aOuterReflowState,
+                           const nsLineList::iterator* aLine)
   : mPresContext(aPresContext),
     mSpaceManager(aSpaceManager),
     mBlockReflowState(aOuterReflowState),
@@ -132,6 +133,11 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
 
   mCurrentSpan = mRootSpan = nsnull;
   mSpanDepth = 0;
+
+  if (aLine) {
+    SetFlag(LL_GOTLINEBOX, PR_TRUE);
+    mLineBox = *aLine;
+  }
 
   mCompatMode = mPresContext->CompatibilityMode();
 }
@@ -808,7 +814,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 #endif // IBMBIDI
 
   nsIAtom* frameType = aFrame->GetType();
-  
   PRInt32 savedOptionalBreakOffset;
   nsIContent* savedOptionalBreakContent =
     GetLastOptionalBreakPosition(&savedOptionalBreakOffset);
@@ -1393,7 +1398,7 @@ PRBool IsPercentageAwareFrame(nsPresContext *aPresContext, nsIFrame *aFrame)
 
 
 void
-nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox)
+nsLineLayout::VerticalAlignLine()
 {
   // Synthesize a PerFrameData for the block frame
   PerFrameData rootPFD;
@@ -1402,7 +1407,6 @@ nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox)
   rootPFD.mAscent = 0;
   rootPFD.mDescent = 0;
   mRootSpan->mFrame = &rootPFD;
-  mLineBox = aLineBox;
 
   // Partially place the children of the block frame. The baseline for
   // this operation is set to zero so that the y coordinates for all
@@ -1507,32 +1511,31 @@ nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox)
     }
     // check to see if the frame is an inline replace element
     // and if it is percent-aware.  If so, mark the line.
-    if ((PR_FALSE==aLineBox->ResizeReflowOptimizationDisabled()) &&
+    if ((PR_FALSE==mLineBox->ResizeReflowOptimizationDisabled()) &&
          pfd->mFrameType & NS_CSS_FRAME_TYPE_INLINE)
     {
       if (IsPercentageAwareFrame(mPresContext, pfd->mFrame))
-        aLineBox->DisableResizeReflowOptimization();
+        mLineBox->DisableResizeReflowOptimization();
     }
   }
 
   // Fill in returned line-box and max-element-width data
-  aLineBox->mBounds.x = psd->mLeftEdge;
-  aLineBox->mBounds.y = mTopEdge;
-  aLineBox->mBounds.width = psd->mX - psd->mLeftEdge;
-  aLineBox->mBounds.height = lineHeight;
+  mLineBox->mBounds.x = psd->mLeftEdge;
+  mLineBox->mBounds.y = mTopEdge;
+  mLineBox->mBounds.width = psd->mX - psd->mLeftEdge;
+  mLineBox->mBounds.height = lineHeight;
   mFinalLineHeight = lineHeight;
-  aLineBox->SetAscent(baselineY - mTopEdge);
+  mLineBox->SetAscent(baselineY - mTopEdge);
 #ifdef NOISY_VERTICAL_ALIGN
   printf(
     "  [line]==> bounds{x,y,w,h}={%d,%d,%d,%d} lh=%d a=%d\n",
-    aLineBox->mBounds.x, aLineBox->mBounds.y,
-    aLineBox->mBounds.width, aLineBox->mBounds.height,
-    mFinalLineHeight, aLineBox->GetAscent());
+    mLineBox->mBounds.x, mLineBox->mBounds.y,
+    mLineBox->mBounds.width, mLineBox->mBounds.height,
+    mFinalLineHeight, mLineBox->GetAscent());
 #endif
 
   // Undo root-span mFrame pointer to prevent brane damage later on...
   mRootSpan->mFrame = nsnull;
-  mLineBox = nsnull;
 }
 
 void
