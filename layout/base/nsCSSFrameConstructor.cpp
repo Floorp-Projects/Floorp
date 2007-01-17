@@ -1232,9 +1232,17 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
 
 nsFrameConstructorState::~nsFrameConstructorState()
 {
+  // Frame order comparison functions only work properly when the placeholders
+  // have been inserted into the frame tree. So for example if we have a new float
+  // containing the placeholder for a new abs-pos frame, and we process the abs-pos
+  // insertion first, then we won't be able to find the right place to insert in
+  // in the abs-pos list. So put floats in first, because they can contain placeholders
+  // for abs-pos and fixed-pos items whose containing blocks are outside the floats.
+  // Then put abs-pos frames in, because they can contain placeholders for fixed-pos
+  // items whose containing block is outside the abs-pos frames. 
+  ProcessFrameInsertions(mFloatedItems, nsGkAtoms::floatList);
   ProcessFrameInsertions(mAbsoluteItems, nsGkAtoms::absoluteList);
   ProcessFrameInsertions(mFixedItems, nsGkAtoms::fixedList);
-  ProcessFrameInsertions(mFloatedItems, nsGkAtoms::floatList);
 }
 
 static nsIFrame*
@@ -1473,19 +1481,20 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
     // So first test the last child of the containing block
     nsIFrame* lastChild = nsLayoutUtils::GetLastSibling(firstChild);
 
+    // CompareTreePosition uses placeholder hierarchy for out of flow frames,
+    // so this will make out-of-flows respect the ordering of placeholders,
+    // which is great because it takes care of anonymous content.
     if (!lastChild ||
-        nsLayoutUtils::CompareTreePosition(lastChild->GetContent(),
-                                           firstNewFrame->GetContent(),
-                                           containingBlock->GetContent()) < 0) {
+        nsLayoutUtils::CompareTreePosition(lastChild, firstNewFrame, containingBlock) < 0) {
       // no lastChild, or lastChild comes before the new children, so just append
       rv = containingBlock->AppendFrames(aChildListName, firstNewFrame);
     } else {
       nsIFrame* insertionPoint = nsnull;
       // try the other children
       for (nsIFrame* f = firstChild; f != lastChild; f = f->GetNextSibling()) {
-        if (nsLayoutUtils::CompareTreePosition(f->GetContent(),
-                                               firstNewFrame->GetContent(),
-                                               containingBlock->GetContent()) > 0) {
+        PRInt32 compare =
+          nsLayoutUtils::CompareTreePosition(f, firstNewFrame, containingBlock);
+        if (compare > 0) {
           // f comes after the new children, so stop here and insert after
           // the previous frame
           break;

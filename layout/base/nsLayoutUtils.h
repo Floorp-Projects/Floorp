@@ -144,7 +144,45 @@ public:
                                        PRInt32 aIf1Ancestor,
                                        PRInt32 aIf2Ancestor,
                                        nsIContent* aCommonAncestor = nsnull);
-  
+
+  /**
+   * CompareTreePosition determines whether aFrame1 comes before or
+   * after aFrame2 in a preorder traversal of the frame tree, where out
+   * of flow frames are treated as children of their placeholders. This is
+   * basically the same ordering as DoCompareTreePosition(nsIContent*) except
+   * that it handles anonymous content properly and there are subtleties with
+   * continuations.
+   * 
+   * @param aCommonAncestor either null, or a common ancestor of
+   *                        aContent1 and aContent2.  Actually this is
+   *                        only a hint; if it's not an ancestor of
+   *                        aContent1 or aContent2, this function will
+   *                        still work, but it will be slower than
+   *                        normal.
+   * @return < 0 if aContent1 is before aContent2
+   *         > 0 if aContent1 is after aContent2,
+   *         0 otherwise (meaning they're the same, or they're in
+   *           different frame trees)
+   */
+  static PRInt32 CompareTreePosition(nsIFrame* aFrame1,
+                                     nsIFrame* aFrame2,
+                                     nsIFrame* aCommonAncestor = nsnull)
+  {
+    return DoCompareTreePosition(aFrame1, aFrame2, -1, 1, aCommonAncestor);
+  }
+
+  /*
+   * More generic version of |CompareTreePosition|.  |aIf1Ancestor|
+   * gives the value to return when 1 is an ancestor of 2, and likewise
+   * for |aIf2Ancestor|.  Passing (-1, 1) gives preorder traversal
+   * order, and (1, -1) gives postorder traversal order.
+   */
+  static PRInt32 DoCompareTreePosition(nsIFrame* aFrame1,
+                                       nsIFrame* aFrame2,
+                                       PRInt32 aIf1Ancestor,
+                                       PRInt32 aIf2Ancestor,
+                                       nsIFrame* aCommonAncestor = nsnull);
+
   /**
    * GetLastSibling simply finds the last sibling of aFrame, or returns nsnull if
    * aFrame is null.
