@@ -42,10 +42,15 @@
 [% IF matchsuccess == 1 %]
   [% PROCESS global/header.html.tmpl title="Confirm Match" %]
 
+[% USE Bugzilla %]
+
   <form method="post" 
   [% IF script -%]
     action="[% script %]"
   [%- END -%]
+  [% IF Bugzilla.cgi.param("data") %]
+    enctype="multipart/form-data"
+  [% END %]
   >
 
   <p>

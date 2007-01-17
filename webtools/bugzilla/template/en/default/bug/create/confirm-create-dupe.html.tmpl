@@ -27,6 +27,8 @@
   title = "Already filed $terms.bug"
 %]
 
+[% USE Bugzilla %]
+
 <table cellpadding="20">
   <tr>
     <td bgcolor="#ff0000">
@@ -44,7 +46,8 @@ FILTER bug_link(bugid) FILTER none %].</font></p>
   <p>If you are sure you used the same form to submit a new [% terms.bug %],
   click 'File [% terms.bug %] again'.<p>
 
-  <form name="create" id="create" method="post" action="post_bug.cgi">
+  <form name="create" id="create" method="post" action="post_bug.cgi"
+  [%- IF Bugzilla.cgi.param("data") %] enctype="multipart/form-data"[% END %]>
     [% PROCESS "global/hidden-fields.html.tmpl"
                exclude="^(Bugzilla_login|Bugzilla_password|ignore_token)$" %]
     <input type="hidden" name="ignore_token" value="[% bugid FILTER html %]">

@@ -281,6 +281,14 @@ dl dl > dt {
     border-top: none;
 }
 
+.box {
+    border: 1px solid black;
+    color: black;
+    background-color: #ffc;
+    margin: 1em;
+    padding: 0.5em 1em;
+}
+
 /* Rules specific for printing */
 @media print {
     #header, #footer {

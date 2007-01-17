@@ -31,11 +31,14 @@
   onload = "document.forms['login'].Bugzilla_login.focus()"
 %]
 
+[% USE Bugzilla %]
+
 <p>
   I need a legitimate login and password to continue.
 </p>
 
-<form name="login" action="[% target FILTER html %]" method="POST">
+<form name="login" action="[% target FILTER html %]" method="POST"
+[%- IF Bugzilla.cgi.param("data") %] enctype="multipart/form-data"[% END %]>
   <table>
     <tr>
       <th align="right"><label for="Bugzilla_login">Login:</label></th>
