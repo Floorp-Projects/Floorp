@@ -118,6 +118,8 @@ struct NS_GFX nsFont {
   }
 
   PRBool Equals(const nsFont& aOther) const ;
+  // Compare ignoring differences in 'variant' and 'decoration'
+  PRBool BaseEquals(const nsFont& aOther) const;
 
   nsFont& operator=(const nsFont& aOther);
 
