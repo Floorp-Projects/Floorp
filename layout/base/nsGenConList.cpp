@@ -69,14 +69,14 @@ nsGenConList::DestroyNodesFor(nsIFrame* aFrame)
   while (mFirstNode->mPseudoFrame == aFrame) {
     destroyed = PR_TRUE;
     node = Next(mFirstNode);
-    if (node == mFirstNode) { // Last link
+    PRBool isLastNode = node == mFirstNode; // before they're dangling
+    Remove(mFirstNode);
+    delete mFirstNode;
+    if (isLastNode) {
       mFirstNode = nsnull;
-      delete node;
       return PR_TRUE;
     }
     else {
-      Remove(mFirstNode);
-      delete mFirstNode;
       mFirstNode = node;
     }
   }
@@ -134,6 +134,7 @@ nsGenConList::NodeAfter(const nsGenConNode* aNode1, const nsGenConNode* aNode2)
       return pseudoType1 == 1;
     }
   }
+  // XXX Switch to the frame version of DoCompareTreePosition?
   PRInt32 cmp = nsLayoutUtils::DoCompareTreePosition(content1, content2,
                                                      pseudoType1, -pseudoType2);
   NS_ASSERTION(cmp != 0, "same content, different frames");
@@ -152,6 +153,7 @@ nsGenConList::Insert(nsGenConNode* aNode)
       // Binary search.
 
       // the range of indices at which |aNode| could end up.
+      // (We already know it can't be at index mSize.)
       PRUint32 first = 0, last = mSize - 1;
 
       // A cursor to avoid walking more than the length of the list.
@@ -189,4 +191,9 @@ nsGenConList::Insert(nsGenConNode* aNode)
     mFirstNode = aNode;
   }
   ++mSize;
+
+  NS_ASSERTION(aNode == mFirstNode || NodeAfter(aNode, Prev(aNode)),
+               "sorting error");
+  NS_ASSERTION(IsLast(aNode) || NodeAfter(Next(aNode), aNode),
+               "sorting error");
 }
