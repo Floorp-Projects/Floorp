@@ -24,16 +24,13 @@
 
 package org.mozilla.webclient.impl.wrapper_native;
 
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.mozilla.util.Assert;
 import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
-
-import java.util.Vector;
-import java.util.Enumeration;
-
-import java.util.Stack;
-
-import org.mozilla.webclient.UnimplementedException;
 
 import org.mozilla.webclient.impl.WrapperFactory;
 
@@ -48,6 +45,10 @@ public class NativeEventThread extends Thread {
     //
     // Class variables
     //
+    
+    public static final String LOG = "org.mozilla.webclient.impl.wrapper_native.NativeEventThread";
+
+    public static final Logger LOGGER = Log.getLogger(LOG);
 
     static NativeEventThread instance = null;
     
@@ -66,8 +67,8 @@ public class NativeEventThread extends Thread {
     private WrapperFactory wrapperFactory;
     private int nativeWrapperFactory;
     
-    private Stack blockingRunnables;
-    private Stack runnables;
+    private Queue<WCRunnable> blockingRunnables;
+    private Queue<Runnable> runnables;
     
     
     //
@@ -91,8 +92,8 @@ public class NativeEventThread extends Thread {
 	wrapperFactory = yourFactory;
 	nativeWrapperFactory = yourNativeWrapperFactory;
 	
-	blockingRunnables = new Stack();
-	runnables = new Stack();
+	blockingRunnables = new ConcurrentLinkedQueue<WCRunnable>();
+	runnables = new ConcurrentLinkedQueue<Runnable>();
     }
     
     /**
@@ -110,7 +111,13 @@ public class NativeEventThread extends Thread {
 	    // this has to be inside the synchronized block!
 	    wrapperFactory = null;
 	    try {
+                if (LOGGER.isLoggable(Level.FINEST)) {
+                    LOGGER.finest("NativeEventThread.delete: About to wait during delete()");
+                }
 		wait();
+                if (LOGGER.isLoggable(Level.FINEST)) {
+                    LOGGER.finest("NativeEventThread.delete: Returned from wait during delete()");
+                }
 	    }
 	    catch (Exception e) {
 		System.out.println("NativeEventThread.delete: interrupted while waiting\n\t for NativeEventThread to notifyAll() after destruction of initContext: " + e +
@@ -139,9 +146,11 @@ public class NativeEventThread extends Thread {
 
 public void run()
 {
+    Runnable runnable;
+    WCRunnable wcRunnable;
     // our owner must have put an event in the queue 
-    Assert.assert_it(!runnables.empty());
-    ((Runnable)runnables.pop()).run();
+    Assert.assert_it(!runnables.isEmpty());
+    ((Runnable)runnables.poll()).run();
     synchronized (wrapperFactory) {
 	try {
 	    wrapperFactory.notifyAll();
@@ -175,14 +184,31 @@ public void run()
                 return;
             }
 	    
-	    if (!runnables.empty()) {
-		((Runnable)runnables.pop()).run();
+	    if (!runnables.isEmpty()) {
+                runnable = (Runnable)runnables.poll();
+                if (LOGGER.isLoggable(Level.FINEST)) {
+                    LOGGER.finest("NativeEventThread.run: About to run " + 
+                            runnable.toString());
+                }
+		runnable.run();
+                if (LOGGER.isLoggable(Level.FINEST)) {
+                    LOGGER.finest("NativeEventThread.run: Return from run " + 
+                            runnable.toString());
+                }
 	    }
-	    if (!blockingRunnables.empty()) {
+	    if (!blockingRunnables.isEmpty()) {
+                wcRunnable = (WCRunnable)blockingRunnables.poll();
 		try {
-		    blockingException = null;
-		    blockingResult = 
-			((WCRunnable)blockingRunnables.pop()).run();
+                    blockingException = null;
+                    if (LOGGER.isLoggable(Level.FINEST)) {
+                        LOGGER.finest("NativeEventThread.run: About to run " +
+                                wcRunnable.toString());
+                    }
+		    blockingResult = wcRunnable.run();
+                    if (LOGGER.isLoggable(Level.FINEST)) {
+                        LOGGER.finest("NativeEventThread.run: Return from run " +
+                                wcRunnable.toString());
+                    }
 		}
 		catch (RuntimeException e) {
 		    blockingException = e;
@@ -197,13 +223,19 @@ public void run()
 		// wait for the result to be grabbed.  This prevents the
 		// results from getting mixed up.
 		try {
+                    if (LOGGER.isLoggable(Level.FINEST)) {
+                        LOGGER.finest("NativeEventThread.run: About to wait for caller to grab result from " +
+                                wcRunnable.toString());
+                    }
 		    wait();
+                    if (LOGGER.isLoggable(Level.FINEST)) {
+                        LOGGER.finest("NativeEventThread.run: Return from wait for caller to grab result from " +
+                                wcRunnable.toString());
+                    }
 		}
 		catch (Exception e) {
 		    System.out.println("NativeEventThread.run: Exception: trying to waiting for pushBlockingWCRunnable:" + e + " " + e.getMessage());
 		}
-
-		
 	    }
 	    nativeProcessEvents(nativeWrapperFactory);
         }
@@ -220,7 +252,7 @@ public void run()
 
     void pushRunnable(Runnable toInvoke) {
 	synchronized (this) {
-	    runnables.push(toInvoke);
+	    runnables.add(toInvoke);
 	}
     }
     
@@ -234,9 +266,19 @@ public void run()
 	}
 
 	synchronized (this) {
-	    blockingRunnables.push(toInvoke);
+	    blockingRunnables.add(toInvoke);
 	    try {
+                if (LOGGER.isLoggable(Level.FINEST)) {
+                    LOGGER.finest("NativeEventThread.pushBlockingWCRunnable: " +
+                            " About to wait for NativeEventThread to run " +
+                            toInvoke.toString());
+                }
 		wait();
+                if (LOGGER.isLoggable(Level.FINEST)) {
+                    LOGGER.finest("NativeEventThread.pushBlockingWCRunnable: " +
+                            " Return from wait for NativeEventThread to run " +
+                            toInvoke.toString());
+                }
 	    }
 	    catch (Exception se) {
 		System.out.println("NativeEventThread.pushBlockingWCRunnable: Exception: while waiting for blocking result: " + se + "  " + se.getMessage());
