@@ -1434,12 +1434,19 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
   // height equal to the available space
   if (nsnull == parentReflowState) {
     // XXXldb This doesn't mean what it used to!
-    mComputedWidth = availableWidth;
-    mComputedHeight = availableHeight;
+    InitOffsets(aContainingBlockWidth, aBorder, aPadding);
+    // Override mComputedMargin since reflow roots start from the
+    // frame's boundary, which is inside the margin.
     mComputedMargin.SizeTo(0, 0, 0, 0);
-    mComputedPadding.SizeTo(0, 0, 0, 0);
-    mComputedBorderPadding.SizeTo(0, 0, 0, 0);
     mComputedOffsets.SizeTo(0, 0, 0, 0);
+
+    mComputedWidth = availableWidth - mComputedBorderPadding.LeftRight();
+    if (mComputedWidth < 0)
+      mComputedWidth = 0;
+    mComputedHeight = availableHeight - mComputedBorderPadding.TopBottom();
+    if (mComputedHeight < 0)
+      mComputedHeight = 0;
+
     mComputedMinWidth = mComputedMinHeight = 0;
     mComputedMaxWidth = mComputedMaxHeight = NS_UNCONSTRAINEDSIZE;
   } else {
