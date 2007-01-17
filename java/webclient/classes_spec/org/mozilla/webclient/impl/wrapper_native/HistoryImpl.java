@@ -84,6 +84,10 @@ public void back()
 		nativeBack(getNativeBrowserControl());
 		return null;
 	    }
+                public String toString() {
+                    return "WCRunnable.nativeBack";
+                }
+            
 	});
 }
             
@@ -98,6 +102,10 @@ public boolean canBack()
 		    boolean canBack = nativeCanBack(getNativeBrowserControl());
 		    return new Boolean(canBack);
 		}
+                public String toString() {
+                    return "WCRunnable.nativeCanBack";
+                }
+                
 	    });
     
     return result.booleanValue();
@@ -141,6 +149,10 @@ public void forward()
 		nativeForward(getNativeBrowserControl());
 		return null;
 	    }
+                public String toString() {
+                    return "WCRunnable.nativeForward";
+                }
+            
 	});
 }
             
@@ -155,6 +167,10 @@ public boolean canForward()
 		    boolean canForward = nativeCanForward(getNativeBrowserControl());
 		    return new Boolean(canForward);
 		}
+                public String toString() {
+                    return "WCRunnable.nativecanForward";
+                }
+                
 	    });
     
     return result.booleanValue();

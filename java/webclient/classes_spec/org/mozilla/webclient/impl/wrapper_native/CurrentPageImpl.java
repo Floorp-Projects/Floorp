@@ -103,6 +103,10 @@ public void copyCurrentSelectionToSystemClipboard()
 		nativeCopyCurrentSelectionToSystemClipboard(CurrentPageImpl.this.getNativeBrowserControl());
 		return null;
 	    }
+            public String toString() {
+                return "WCRunnable.nativeCopyCurrentSelectionToSystemClipboard";
+            }
+
 	});
 }
 
@@ -116,6 +120,10 @@ public Selection getSelection() {
 				selection);
 	     return null;
 	    }
+            public String toString() {
+                return "WCRunnable.nativeGetSelection";
+            }
+
 	});
     
     return selection;
@@ -135,6 +143,10 @@ public void highlightSelection(Selection selection) {
 					     startOffset, endOffset);
 		    return null;
 		}
+                public String toString() {
+                    return "WCRunnable.nativeHighlightSelection";
+                }
+
 	    });
         }
     }
@@ -144,7 +156,11 @@ public void clearAllSelections() {
 	    public Object run() {
 		nativeClearAllSelections(CurrentPageImpl.this.getNativeBrowserControl());
 		return null;
-	    }
+            }
+            public String toString() {
+                return "WCRunnable.nativeClearAllSelections";
+            }
+
 	});
     }
 public void findInPage(String stringToFind, boolean forward, boolean matchCase)
@@ -166,7 +182,11 @@ public boolean find(String toFind, boolean dir, boolean doCase)
 		boolean rc = nativeFind(CurrentPageImpl.this.getNativeBrowserControl(), 
 					stringToFind, forward, matchCase);
 		return rc ? Boolean.TRUE : Boolean.FALSE;
-	    }
+            }
+            public String toString() {
+                return "WCRunnable.nativeFind";
+            }
+
 	});
     return result.booleanValue();
 }
@@ -186,6 +206,10 @@ public boolean findNext()
 		boolean rc = nativeFindNext(CurrentPageImpl.this.getNativeBrowserControl());
 		return rc ? Boolean.TRUE : Boolean.FALSE;
 	    }
+            public String toString() {
+                return "WCRunnable.nativeFindNext";
+            }
+
 	});
     return result.booleanValue();
 }
@@ -236,6 +260,10 @@ public String getSource()
 				selection);
 		return null;
 	    }
+            public String toString() {
+                return "WCRunnable.nativeGetSource";
+            }
+
 	});
     HTMLContent = selection.toString();
     
@@ -271,6 +299,10 @@ public void selectAll() {
 		nativeSelectAll(CurrentPageImpl.this.getNativeBrowserControl());
 		return null;
 	    }
+            public String toString() {
+                return "WCRunnable.nativeSelectAll";
+            }
+
 	});
 }
 
@@ -280,6 +312,11 @@ public void print()
 	    public void run() {
 		nativePrint(CurrentPageImpl.this.getNativeBrowserControl());
 	    }
+            public String toString() {
+                return "Runnable.nativePrint";
+            }
+
+
 	});
 }
 
@@ -291,6 +328,11 @@ public void printPreview(boolean pre)
 		nativePrintPreview(CurrentPageImpl.this.getNativeBrowserControl(), 
 				   preview);
 	    }
+            public String toString() {
+                return "Runnable.nativePrintPreview";
+            }
+
+
 	});
 }
 

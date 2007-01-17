@@ -24,14 +24,24 @@
 package org.mozilla.util;
 
 import java.util.Date;
+import java.util.logging.Logger;
 
 /**
  * <p>Logging facility.</p>
  * @author Keith Bernstein
- * @version $Id: Log.java,v 1.3 2005/03/15 02:49:16 edburns%acm.org Exp $
+ * @version $Id: Log.java,v 1.4 2007/01/17 11:43:43 edburns%acm.org Exp $
  */
 
 public class Log extends Object {
+    
+    public static Logger getLogger( String loggerName ) {
+        return Logger.getLogger(loggerName, LOG_STRINGS );
+    }
+
+    public static final String LOG_STRINGS = "org.mozilla.LogStrings";
+    public static final String LOG = "org.mozilla";
+    
+    public static final Logger LOGGER = getLogger(LOG);
     static String applicationName = "APPLICATION NAME UNKNOWN [call setApplicationName() from main]";
     static String applicationVersion = "APPLICATION VERSION UNKNOWN [call setApplicationVersion() from main]";
     static String applicationVersionDate = "APPLICATION VERSION DATE UNKNOWN [call setApplicationVersionDate() from main]";

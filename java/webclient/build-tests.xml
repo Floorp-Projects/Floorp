@@ -119,6 +119,12 @@
 	      </patternset>
 
         </javac>
+  
+        <copy todir="${out.test.dir}/classes">
+          <fileset dir="${src.test.dir}">
+            <include name="**/*.properties" />
+          </fileset>
+        </copy>
 
     </target>
 
@@ -158,6 +164,7 @@
             <sysproperty key="native.waitForDebugger" 
                          value="${native.waitForDebugger}"/>
             <jvmarg line="${debug.jvm.args}"/>
+            <jvmarg line="-Djava.util.logging.config.file=${basedir}${FILE_PATH_SEP}..${FILE_PATH_SEP}logging.properties"/>
 
             <classpath refid="test.classpath"/>
 

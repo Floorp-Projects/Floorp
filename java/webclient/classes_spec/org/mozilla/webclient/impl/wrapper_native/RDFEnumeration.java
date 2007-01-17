@@ -107,6 +107,10 @@ protected void finalize() throws Throwable
 		nativeFinalize(RDFEnumeration.this.nativeContext);
 		return null;
 	    }
+            public String toString() {
+                return "WCRunnable.nativeFinalize";
+            }
+            
 	});
     super.finalize();
 }
@@ -126,6 +130,10 @@ public boolean hasMoreElements()
 							  RDFEnumeration.this.nativeRDFNode));
 		    return result;
 		}
+                public String toString() {
+                    return "WCRunnable.nativeHasMoreElements";
+                }
+
 	    });
     return result.booleanValue();
 }
@@ -142,6 +150,10 @@ public Object nextElement()
 						      RDFEnumeration.this.nativeRDFNode));
 		    return result;
 		}
+                public String toString() {
+                    return "WCRunnable.nativeNextElement";
+                }
+
 	    });
     
     if (-1 != nextNativeRDFNode.intValue()) {

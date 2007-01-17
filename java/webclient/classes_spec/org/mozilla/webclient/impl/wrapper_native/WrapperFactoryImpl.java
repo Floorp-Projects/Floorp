@@ -149,7 +149,11 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
 		public Object run() {
 		    WrapperFactoryImpl.this.nativeInitBrowserControl(nativeWrapperFactory, nativeBrowserControl);
 		    return null;
-		}
+                }
+                public String toString() {
+                    return "WCRunnable.nativeInitBrowserControl";
+                }
+
 	    });
 
 	browserControls.put(result, new Integer(nativeBrowserControl));
@@ -167,6 +171,10 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
 			WrapperFactoryImpl.this.nativeDestroyBrowserControl(nativeBrowserControl);
 			return null;
 		    }
+                    public String toString() {
+                        return "WCRunnable.nativeDeleteBrowserControl";
+                    }
+
 		});
 	}
     }
@@ -293,7 +301,12 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
 		    WrapperFactoryImpl.this.nativeAppInitialize(finalStr,
 								nativeWrapperFactory,
 								eventThread);
-		}
+                }
+                public String toString() {
+                    return "Runnable.nativeAppInitialize";
+                }
+
+
 	    });
 	
 	eventThread.start();
@@ -330,6 +343,10 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
 			WrapperFactoryImpl.this.nativeAppSetup(nativeWrapperFactory);
 			return null;
 		    }
+                    public String toString() {
+                        return "WCRunnable.nativeAppSetup";
+                    }
+
 		});
 	}
 	catch (RuntimeException e) {
@@ -373,6 +390,10 @@ public void terminate() throws Exception
 		WrapperFactoryImpl.this.terminated = true;
 		return null;
 	    }
+            public String toString() {
+                return "WCRunnable.nativeTerminate";
+            }
+
 	});
     
     eventThread.delete();

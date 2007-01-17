@@ -39,7 +39,7 @@ import org.mozilla.webclient.impl.wrapper_native.NativeEventThread;
 
  * There is one instance of the BrowserControlCanvas per top level awt Frame.
 
- * @version $Id: Win32BrowserControlCanvas.java,v 1.1 2004/04/20 16:17:41 edburns%acm.org Exp $
+ * @version $Id: Win32BrowserControlCanvas.java,v 1.2 2007/01/17 11:43:43 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlCanvasFactory
  * 
@@ -74,6 +74,10 @@ public class Win32BrowserControlCanvas extends BrowserControlCanvas {
 			    new Integer(Win32BrowserControlCanvas.this.getHandleToPeer());
 			return result;
 		    }
+                    public String toString() {
+                        return "WCRunnable.getHandleToPeer";
+                    }
+
 		});
 	return result.intValue();
     }

@@ -70,10 +70,9 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH),WINNT)
-MS_SDK_HOME=/cygdrive/d/Files_2k/MICROS~1
 INCLUDES += \
-	-I$(MS_SDK_HOME)/VC98/Include \
-	-I$(MS_SDK_HOME)/VC98/ATL/SRC \
+	-I$(MSVCDIR)/Include \
+	-I$(MSVCDIR)/ATL/SRC \
 	-I../src \
 	-I../src/_xpidlgen \
 	-I$(MOZILLA_FIVE_HOME)/../include/string \

@@ -162,6 +162,10 @@ public TreeModel getBookmarks() throws IllegalStateException
 							   getNativeWrapperFactory()));
 			return result;
 		    }
+                    public String toString() {
+                        return "WCRunnable.nativeGetBookmarks";
+                    }
+                    
 		});
 	
         if (-1 == nativeBookmarks.intValue()) {
@@ -202,6 +206,10 @@ public BookmarkEntry newBookmarkEntry(String url)
 						     finalUrl, false));
 		    return result;
 		}
+                public String toString() {
+                    return "WCRunnable.nativeNewBookmarkEntry";
+                }
+                
 	    });
     
     if (-1 != newNode.intValue()) {

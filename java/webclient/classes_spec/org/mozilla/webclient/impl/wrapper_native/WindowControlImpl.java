@@ -91,6 +91,10 @@ public void setBounds(Rectangle rect)
 				newBounds.width, newBounds.height);
 		return null;
 	    }
+            public String toString() {
+                return "WCRunnable.nativeSetBounds";
+            }
+
 	});
 }
 
@@ -115,6 +119,10 @@ public void createWindow(int nativeWindow, Rectangle rect)
 			      finalHeight, bc);
 		return null;
 	    }
+            public String toString() {
+                return "WCRunnable.nativeRealize";
+            }
+            
 	});
 }
 
@@ -160,6 +168,10 @@ public void setVisible(boolean newState)
 		nativeSetVisible(getNativeBrowserControl(), finalBool);
 		return null;
 	    }
+            public String toString() {
+                return "WCRunnable.nativeSetVisible";
+            }
+
 	});
 }
 
@@ -206,7 +218,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("WindowControlImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.5 2004/04/22 06:41:02 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.6 2007/01/17 11:43:43 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

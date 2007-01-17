@@ -160,6 +160,10 @@ public void addDocumentLoadListener(DocumentLoadListener listener)
 						 true);
 			return null;
 		    }
+                    public String toString() {
+                        return "WCRunnable.nativeSetCapturePageInfo";
+                    }
+
 		});
 	}
 	
@@ -188,6 +192,10 @@ public void removeDocumentLoadListener(DocumentLoadListener listener)
 						 false);
 			return null;
 		    }
+                    public String toString() {
+                        return "WCRunnable.nativeSetCapturePageInfo";
+                    }
+
 		});
 	}
 	
@@ -269,6 +277,10 @@ public void setNewWindowListener(NewWindowListener listener)
 		    }
 		    return null;
 		}
+                public String toString() {
+                    return "WCRunnable.nativeSetNewWindowListenerAttached";
+                }
+
 	    });
 	
 	newWindowListener = listener;

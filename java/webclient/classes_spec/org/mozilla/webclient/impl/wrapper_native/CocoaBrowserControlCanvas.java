@@ -61,6 +61,10 @@ public class CocoaBrowserControlCanvas extends BrowserControlCanvas {
 			    new Integer(CocoaBrowserControlCanvas.this.getHandleToPeer());
 			return result;
 		    }
+                    public String toString() {
+                        return "WCRunnable.getHandleToPeer";
+                    }
+
 		});
 	return result.intValue();
     }

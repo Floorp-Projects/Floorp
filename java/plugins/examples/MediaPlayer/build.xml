@@ -43,7 +43,6 @@
 
   <!-- Should Java compilations set the 'debug' compiler option? -->
   <property name="compile.debug" value="true"/>
-  <property name="compile.source" value="1.3"/>
 
   <!-- Should Java compilations set the 'deprecation' compiler option? -->
   <property name="compile.deprecation" value="false"/>

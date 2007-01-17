@@ -1,5 +1,5 @@
 /*
- * $Id: WebclientTestCase.java,v 1.9 2005/08/09 04:43:00 edburns%acm.org Exp $
+ * $Id: WebclientTestCase.java,v 1.10 2007/01/17 11:43:43 edburns%acm.org Exp $
  */
 
 /* 
@@ -33,14 +33,11 @@ import java.util.List;
 
 import java.io.IOException;
 import java.io.File;
-
-import org.mozilla.util.Assert;
-import org.mozilla.util.ParameterCheck;
+import java.util.logging.Logger;
 
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import junit.framework.TestResult;
-import junit.framework.Test;
 
 import org.mozilla.util.THTTPD;
 
@@ -50,7 +47,7 @@ import org.mozilla.util.THTTPD;
  *
  * <B>Lifetime And Scope</B> <P>
  *
- * @version $Id: WebclientTestCase.java,v 1.9 2005/08/09 04:43:00 edburns%acm.org Exp $
+ * @version $Id: WebclientTestCase.java,v 1.10 2007/01/17 11:43:43 edburns%acm.org Exp $
  * 
  * @see	Blah
  * @see	Bloo
@@ -66,6 +63,10 @@ public abstract class WebclientTestCase extends TestCase
 public static final String WEBCLIENTSTUB_LOG_MODULE = "webclientstub";
 public static final String WEBCLIENT_LOG_MODULE = "webclient";
 public static String OUTPUT_FILE_ROOT = "build.test/";
+public static final String TEST_LOG = "org.mozilla.webclient.test";
+public static final String TEST_LOG_STRINGS = "org.mozilla.webclient.TestLogStrings";
+
+public static final Logger LOGGER = getLogger(TEST_LOG);
 
 //
 // Class Variables
@@ -99,6 +100,11 @@ public WebclientTestCase(String name)
 // Class methods
 //
 
+public static Logger getLogger( String loggerName ) {
+    return Logger.getLogger(loggerName, TEST_LOG_STRINGS );
+}
+
+
 //
 // Methods From TestCase
 //
@@ -114,6 +120,8 @@ public void setUp()
     OUTPUT_FILE_ROOT = mozSrcValue + File.separator + 
             "mozilla" + File.separator + "java" + File.separator + 
             "webclient" + File.separator + OUTPUT_FILE_ROOT;
+    
+    LOGGER.info(this.getClass().getName() + " setUp()");
     
 }
 

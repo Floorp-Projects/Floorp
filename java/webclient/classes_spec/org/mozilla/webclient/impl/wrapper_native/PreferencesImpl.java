@@ -114,6 +114,9 @@ public void setPref(String prefName, String prefValue)
 		    nativeSetIntPref(getWrapperFactory().getNativeWrapperFactory(), finalName, intVal.intValue());
 		    return null;
 		}
+                public String toString() {
+                    return "WCRunnable.nativeSetIntPref";
+                }
 	    });
     }
     catch (NumberFormatException e) {
@@ -127,6 +130,10 @@ public void setPref(String prefName, String prefValue)
 					  finalName, boolVal.booleanValue());
 			return null;
 		    }
+                public String toString() {
+                    return "WCRunnable.nativeSetBoolPref";
+                }
+                    
 		});
         }
         else {
@@ -138,6 +145,10 @@ public void setPref(String prefName, String prefValue)
 			nativeSetUnicharPref(getWrapperFactory().getNativeWrapperFactory(), finalName, finalValue);
 			return null;
 		    }
+                    public String toString() {
+                        return "WCRunnable.nativeSetUnicharPref";
+                    }
+
 		});
 	}
     }
@@ -153,6 +164,10 @@ public Properties getPrefs()
 				       PreferencesImpl.this.props);
 		    return result;
 		}
+                public String toString() {
+                    return "WCRunnable.nativeGetPrefs";
+                }
+                
 	    });
     
     return props;

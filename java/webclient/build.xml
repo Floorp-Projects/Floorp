@@ -43,7 +43,6 @@
 
   <!-- Should Java compilations set the 'debug' compiler option? -->
   <property name="compile.debug" value="true"/>
-  <property name="compile.source" value="1.3"/>
 
   <!-- Should Java compilations set the 'deprecation' compiler option? -->
   <property name="compile.deprecation" value="false"/>
@@ -74,6 +73,20 @@
         <os family="unix" />
       </and>
     </condition>
+
+    <condition property="FILE_PATH_SEP" value="\">
+      <and>
+        <os family="windows" />
+      </and>
+    </condition>
+
+    <condition property="FILE_PATH_SEP" value="/">
+      <and>
+        <os family="unix" />
+      </and>
+    </condition>
+
+
 
   </target>
 
@@ -342,13 +355,13 @@ ${myenv.MOZ_JDKHOME}/bin/java ${debug.options} org.mozilla.webclient.test.Embedd
     
   </target>
 
-  <target name="run.test" description="Run unit tests">
+  <target name="run.test" depends="prepare" description="Run unit tests">
 
     <ant antfile="build-tests.xml" target="run.test"/>
     
   </target>
 
-  <target name="run.test.browser" depends="main" description="Run the test browser">
+  <target name="run.test.browser" depends="prepare" description="Run the test browser">
 
     <ant antfile="build-tests.xml" target="run.test.browser"/>
     
