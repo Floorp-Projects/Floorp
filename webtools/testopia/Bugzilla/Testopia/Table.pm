@@ -354,6 +354,7 @@ sub list_count { return $_[0]->{'list_count'}; }
 sub view_count { return $_[0]->{'view_count'}; }
 sub page       { return $_[0]->{'page'}; }
 sub url_loc    { return $_[0]->{'url_loc'}; }
+sub type       { return $_[0]->{'type'}; }
 
 =head2 page_size
 

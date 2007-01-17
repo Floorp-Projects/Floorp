@@ -48,16 +48,19 @@
    [%# url = "$table.url_loc?direction=$direction&getlist=1&page="%]
 [% END %]
 <script type='text/javascript'>
-  function jumpToPage(page){
-    var digit = /^\d+$/;
-    page = page - 1;
-    if ((page >= [% table.page_count %]) || (page < 0) || !digit.test(page)){
-      alert('Invalid page number. Please enter a value between 1 and [% table.page_count %] ');
-      return;
+   var [% table.type %]Table = {
+  
+    jumpToPage: function (page){
+      var digit = /^\d+$/;
+      page = page - 1;
+      if ((page >= [% table.page_count %]) || (page < 0) || !digit.test(page)){
+        alert('Invalid page number. Please enter a value between 1 and [% table.page_count %] ');
+        return;
+      }
+      var url = '[% url %]' + page;
+      document.location = url;
     }
-    var url = '[% url %]' + page;
-    document.location = url;
-  }
+  };
 </script>
 
 <table align="center">
@@ -100,8 +103,8 @@
     [% END %]
     [% end_mark %]
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    <input type="button" onclick="jumpToPage(document.getElementById('jump').value)" value="Jump To Page">
-    <input id="jump" size="4">
+    <input type="button" onclick="[% table.type %]Table.jumpToPage(document.getElementById('jump_[% table.type %]').value)" value="Jump To Page">
+    <input id="jump_[% table.type %]" size="4">
     &nbsp;Out of [% table.page_count %]
     &nbsp;&nbsp;&nbsp;
   [% IF ajax %]
