@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 //-----------------------------------------------------------------------------
-var bug     = "364014";
+var bug     = "364104";
 var summary = "Array.prototype.indexOf, Array.prototype.lastIndexOf issues " +
               "with the optional second fromIndex argument";
 var actual, expect;
