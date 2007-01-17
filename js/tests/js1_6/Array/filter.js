@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 //-----------------------------------------------------------------------------
-var bug     = "364104";
+var bug     = "364603";
 var summary = "The value placed in a filtered array for an element is the " +
               " element's value before the callback is run, not after";
 var actual, expect;
