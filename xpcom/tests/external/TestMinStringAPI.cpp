@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Darin Fisher <darin@meer.net>
  *   Benjamin Smedberg <benjamin@smedbergs.us>
+ *   Ben Turner <mozilla@songbirdnest.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -547,6 +548,357 @@ static PRBool test_compressws()
   return check.Equals(NS_LITERAL_STRING("Testing 1 2 3"));
 }
 
+static PRBool test_comparisons()
+{
+  PRBool result;
+
+  // nsString
+
+  NS_NAMED_LITERAL_STRING(shortString1, "Foo");
+  NS_NAMED_LITERAL_STRING(shortString2, "Bar");
+  NS_NAMED_LITERAL_STRING(shortString3, "Bar");
+  NS_NAMED_LITERAL_STRING(shortString4, "bar");
+  NS_NAMED_LITERAL_STRING(longString, "FooBar");
+
+  // ==
+
+  result = (shortString1 == shortString2);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortString2 == shortString3);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortString3 == shortString4);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortString1 == longString);
+  if (result)
+    return PR_FALSE;
+
+  result = (longString == shortString1);
+  if (result)
+    return PR_FALSE;
+
+  // !=
+
+  result = (shortString1 != shortString2);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortString2 != shortString3);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortString3 != shortString4);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortString1 != longString);
+  if (!result)
+    return PR_FALSE;
+
+  result = (longString != shortString1);
+  if (!result)
+    return PR_FALSE;
+
+  // <
+
+  result = (shortString1 < shortString2);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortString2 < shortString1);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortString1 < longString);
+  if (!result)
+    return PR_FALSE;
+
+  result = (longString < shortString1);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortString2 < shortString3);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortString3 < shortString4);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortString4 < shortString3);
+  if (result)
+    return PR_FALSE;
+
+  // <=
+
+  result = (shortString1 <= shortString2);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortString2 <= shortString1);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortString1 <= longString);
+  if (!result)
+    return PR_FALSE;
+
+  result = (longString <= shortString1);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortString2 <= shortString3);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortString3 <= shortString4);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortString4 <= shortString3);
+  if (result)
+    return PR_FALSE;
+
+  // >
+
+  result = (shortString1 > shortString2);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortString2 > shortString1);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortString1 > longString);
+  if (result)
+    return PR_FALSE;
+
+  result = (longString > shortString1);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortString2 > shortString3);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortString3 > shortString4);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortString4 > shortString3);
+  if (!result)
+    return PR_FALSE;
+
+  // >=
+
+  result = (shortString1 >= shortString2);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortString2 >= shortString1);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortString1 >= longString);
+  if (result)
+    return PR_FALSE;
+
+  result = (longString >= shortString1);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortString2 >= shortString3);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortString3 >= shortString4);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortString4 >= shortString3);
+  if (!result)
+    return PR_FALSE;
+
+  // nsCString
+
+  NS_NAMED_LITERAL_CSTRING(shortCString1, "Foo");
+  NS_NAMED_LITERAL_CSTRING(shortCString2, "Bar");
+  NS_NAMED_LITERAL_CSTRING(shortCString3, "Bar");
+  NS_NAMED_LITERAL_CSTRING(shortCString4, "bar");
+  NS_NAMED_LITERAL_CSTRING(longCString, "FooBar");
+
+  // ==
+
+  result = (shortCString1 == shortCString2);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortCString2 == shortCString3);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortCString3 == shortCString4);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortCString1 == longCString);
+  if (result)
+    return PR_FALSE;
+
+  result = (longCString == shortCString1);
+  if (result)
+    return PR_FALSE;
+
+  // !=
+
+  result = (shortCString1 != shortCString2);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortCString2 != shortCString3);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortCString3 != shortCString4);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortCString1 != longCString);
+  if (!result)
+    return PR_FALSE;
+
+  result = (longCString != shortCString1);
+  if (!result)
+    return PR_FALSE;
+
+  // <
+
+  result = (shortCString1 < shortCString2);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortCString2 < shortCString1);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortCString1 < longCString);
+  if (!result)
+    return PR_FALSE;
+
+  result = (longCString < shortCString1);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortCString2 < shortCString3);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortCString3 < shortCString4);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortCString4 < shortCString3);
+  if (result)
+    return PR_FALSE;
+
+  // <=
+
+  result = (shortCString1 <= shortCString2);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortCString2 <= shortCString1);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortCString1 <= longCString);
+  if (!result)
+    return PR_FALSE;
+
+  result = (longCString <= shortCString1);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortCString2 <= shortCString3);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortCString3 <= shortCString4);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortCString4 <= shortCString3);
+  if (result)
+    return PR_FALSE;
+
+  // >
+
+  result = (shortCString1 > shortCString2);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortCString2 > shortCString1);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortCString1 > longCString);
+  if (result)
+    return PR_FALSE;
+
+  result = (longCString > shortCString1);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortCString2 > shortCString3);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortCString3 > shortCString4);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortCString4 > shortCString3);
+  if (!result)
+    return PR_FALSE;
+
+  // >=
+
+  result = (shortCString1 >= shortCString2);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortCString2 >= shortCString1);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortCString1 >= longCString);
+  if (result)
+    return PR_FALSE;
+
+  result = (longCString >= shortCString1);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortCString2 >= shortCString3);
+  if (!result)
+    return PR_FALSE;
+
+  result = (shortCString3 >= shortCString4);
+  if (result)
+    return PR_FALSE;
+
+  result = (shortCString4 >= shortCString3);
+  if (!result)
+    return PR_FALSE;
+
+  return PR_TRUE;
+}
+
 //----
 
 typedef PRBool (*TestFunc)();
@@ -573,6 +925,7 @@ tests[] =
     { "test_trim", test_trim },
     { "test_find", test_find },
     { "test_compressws", test_compressws },
+    { "test_comparisons", test_comparisons },
     { nsnull, nsnull }
   };
 
