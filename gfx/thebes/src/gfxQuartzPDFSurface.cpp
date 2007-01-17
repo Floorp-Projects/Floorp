@@ -87,7 +87,6 @@ gfxQuartzPDFSurface::gfxQuartzPDFSurface(const char *filename, gfxSize aSizeInPo
 
 gfxQuartzPDFSurface::~gfxQuartzPDFSurface()
 {
-    Destroy();
     CGContextRelease(mCGContext);
 
     /* don't spool if we're aborted */
