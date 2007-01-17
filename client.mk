@@ -223,6 +223,7 @@ MODULES_NS_toolkit :=                           \
 MODULES_toolkit :=                              \
   $(MODULES_core)                               \
   mozilla/chrome                                \
+  mozilla/testing/mochitest                     \
   $(NULL)
 
 LOCALES_toolkit :=                              \
