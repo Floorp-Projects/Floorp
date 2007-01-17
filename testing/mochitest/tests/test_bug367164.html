@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=367164
+-->
+<head>
+  <title>Test for Bug 367164</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=367164">Mozilla Bug 367164</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 367164 **/
+
+var span = document.createElement("span");
+
+var ins1 = false;
+var ins2 = false;
+var rem1 = false;
+var rem2 = false;
+
+span.addEventListener("DOMNodeInserted", function() { ins1 = true; }, true);
+span.addEventListener("DOMNodeInserted", function() { ins2 = true; }, false);
+span.addEventListener("DOMNodeRemoved", function() { rem1 = true; }, true);
+span.addEventListener("DOMNodeRemoved", function() { rem2 = true; }, false);
+
+$("content").appendChild(span);
+$("content").removeChild(span);
+
+is(ins1, true, "Capturing DOMNodeInserted listener");
+is(ins2, true, "Bubbling DOMNodeInserted listener");
+is(rem1, true, "Capturing DOMNodeRemoved listener");
+is(rem2, true, "Bubbling DOMNodeRemoved listener");
+  
+</script>
+
+</pre>
+</body>
+</html>
+
