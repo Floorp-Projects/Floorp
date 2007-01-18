@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsLookAndFeel
-#define __nsLookAndFeel
+#ifndef nsLookAndFeel_h_
+#define nsLookAndFeel_h_
 #include "nsXPLookAndFeel.h"
 
 class nsLookAndFeel: public nsXPLookAndFeel {
@@ -72,4 +72,4 @@ typedef enum {
   }
 };
 
-#endif
+#endif // nsLookAndFeel_h_

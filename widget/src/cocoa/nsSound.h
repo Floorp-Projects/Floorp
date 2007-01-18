@@ -38,8 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NSSOUND_H_
-#define NSSOUND_H_
+#ifndef nsSound_h_
+#define nsSound_h_
 
 #include "nsISound.h"
 #include "nsIStreamLoader.h"
@@ -57,4 +57,4 @@ public:
     NS_DECL_NSISTREAMLOADEROBSERVER
 };
 
-#endif
+#endif // nsSound_h_

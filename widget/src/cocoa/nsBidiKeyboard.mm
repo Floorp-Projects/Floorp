@@ -39,7 +39,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsBidiKeyboard.h"
-#include <Carbon/Carbon.h>
+
+#import <Carbon/Carbon.h>
 
 NS_IMPL_ISUPPORTS1(nsBidiKeyboard, nsIBidiKeyboard)
 

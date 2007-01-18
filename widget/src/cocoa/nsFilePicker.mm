@@ -45,7 +45,7 @@
 // so we can use CFURLGetFSRef.
 
 #undef DARWIN
-#include <Cocoa/Cocoa.h>
+#import <Cocoa/Cocoa.h>
 #define DARWIN  
 
 #include "nsCOMPtr.h"

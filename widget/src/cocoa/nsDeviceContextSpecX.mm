@@ -49,10 +49,8 @@
 #include "nsIPrintOptions.h"
 #include "nsIPrintSettingsX.h"
 
-#ifdef MOZ_CAIRO_GFX
 #include "gfxQuartzSurface.h"
 #include "gfxQuartzPDFSurface.h"
-#endif
 
 /** -------------------------------------------------------
  *  Construct the nsDeviceContextSpecX
@@ -78,11 +76,8 @@ nsDeviceContextSpecX::~nsDeviceContextSpecX()
   ClosePrintManager();
 }
 
-#ifdef MOZ_CAIRO_GFX
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecX, nsIDeviceContextSpec)
-#else
-NS_IMPL_ISUPPORTS2(nsDeviceContextSpecX, nsIDeviceContextSpec, nsIPrintingContext)
-#endif
+
 /** -------------------------------------------------------
  *  Initialize the nsDeviceContextSpecMac
  *  @update   dc 12/02/98
@@ -132,73 +127,6 @@ NS_IMETHODIMP nsDeviceContextSpecX::ClosePrintManager()
 	return NS_OK;
 }  
 
-#ifndef MOZ_CAIRO_GFX
-NS_IMETHODIMP nsDeviceContextSpecX::BeginDocument(PRUnichar*  aTitle, 
-                                                  PRUnichar*  aPrintToFileName,
-                                                  PRInt32     aStartPage, 
-                                                  PRInt32     aEndPage)
-{
-    if (aTitle) {
-      CFStringRef cfString = ::CFStringCreateWithCharacters(NULL, aTitle, nsCRT::strlen(aTitle));
-      if (cfString) {
-        ::PMSetJobNameCFString(mPrintSettings, cfString);
-        ::CFRelease(cfString);
-      }
-    }
-
-    OSStatus status;
-    status = ::PMSetFirstPage(mPrintSettings, aStartPage, false);
-    NS_ASSERTION(status == noErr, "PMSetFirstPage failed");
-    status = ::PMSetLastPage(mPrintSettings, aEndPage, false);
-    NS_ASSERTION(status == noErr, "PMSetLastPage failed");
-
-    status = ::PMSessionBeginDocument(mPrintSession, mPrintSettings, mPageFormat);
-    if (status != noErr) return NS_ERROR_ABORT;
-    
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecX::EndDocument()
-{
-    ::PMSessionEndDocument(mPrintSession);
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecX::AbortDocument()
-{
-    return EndDocument();
-}
-
-NS_IMETHODIMP nsDeviceContextSpecX::BeginPage()
-{
-    OSStatus status = ::PMSessionBeginPage(mPrintSession, mPageFormat, NULL);
-    if (status != noErr) return NS_ERROR_ABORT;
-    
-#ifndef MOZ_CAIRO_GFX
-    ::GetPort(&mSavedPort);
-    void *graphicsContext;
-    status = ::PMSessionGetGraphicsContext(mPrintSession, kPMGraphicsContextQuickdraw, &graphicsContext);
-    if (status != noErr)
-      return NS_ERROR_ABORT;
-    ::SetPort((CGrafPtr)graphicsContext);
-#endif
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecX::EndPage()
-{
-    OSStatus status = ::PMSessionEndPage(mPrintSession);
-    if (mSavedPort)
-    {
-        ::SetPort(mSavedPort);
-        mSavedPort = 0;
-    }
-    if (status != noErr)
-      return NS_ERROR_ABORT;
-    return NS_OK;
-}
-#endif
-
 NS_IMETHODIMP nsDeviceContextSpecX::GetPrinterResolution(double* aResolution)
 {
     PMPrinter printer;
@@ -224,7 +152,6 @@ NS_IMETHODIMP nsDeviceContextSpecX::GetPageRect(double* aTop, double* aLeft, dou
     return NS_OK;
 }
 
-#ifdef MOZ_CAIRO_GFX
 NS_IMETHODIMP nsDeviceContextSpecX::GetSurfaceForPrinter(gfxASurface **surface)
 {
     // PDF surface -- prints to file and then uses cups to spool
@@ -248,4 +175,3 @@ NS_IMETHODIMP nsDeviceContextSpecX::GetSurfaceForPrinter(gfxASurface **surface)
 
     return NS_OK;
 }
-#endif

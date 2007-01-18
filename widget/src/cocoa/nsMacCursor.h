@@ -33,6 +33,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef nsMacCursor_h_
+#define nsMacCursor_h_
+
 #import <Cocoa/Cocoa.h>
 #import <Carbon/Carbon.h>
 
@@ -119,4 +122,7 @@
     @result     YES if the cursor is animated (has more than one frame), NO if it is a simple static cursor.
  */
 - (BOOL) isAnimated;
+
 @end
+
+#endif // nsMacCursor_h_

@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsDeviceContextSpecX_h___
-#define nsDeviceContextSpecX_h___
+#ifndef nsDeviceContextSpecX_h_
+#define nsDeviceContextSpecX_h_
 
 #include "nsIDeviceContextSpec.h"
 #include "nsIPrintingContext.h"
@@ -45,9 +45,6 @@
 #include <PMApplication.h>
 
 class nsDeviceContextSpecX : public nsIDeviceContextSpec
-#ifndef MOZ_CAIRO_GFX
-, public nsIPrintingContext
-#endif
 {
 public:
     /**
@@ -57,14 +54,12 @@ public:
     nsDeviceContextSpecX();
 
     NS_DECL_ISUPPORTS
-#ifdef MOZ_CAIRO_GFX
     NS_IMETHOD GetSurfaceForPrinter(gfxASurface **surface);
     NS_IMETHOD BeginDocument(PRUnichar*  aTitle, 
                              PRUnichar*  aPrintToFileName,
                              PRInt32     aStartPage, 
                              PRInt32     aEndPage) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD EndDocument() { return NS_ERROR_NOT_IMPLEMENTED; }
-#endif
 
     /**
      * Initialize the nsDeviceContextSpecX for use.  This will allocate a printrecord for use
@@ -95,21 +90,6 @@ public:
      */
     NS_IMETHOD ClosePrintManager();
 
-#ifndef MOZ_CAIRO_GFX
-    NS_IMETHOD BeginDocument(PRUnichar*  aTitle, 
-                             PRUnichar*  aPrintToFileName,
-                             PRInt32     aStartPage, 
-                             PRInt32     aEndPage);
-    
-    NS_IMETHOD EndDocument();
-    
-    NS_IMETHOD AbortDocument();
-    
-    NS_IMETHOD BeginPage();
-    
-    NS_IMETHOD EndPage();
-#endif
-
     NS_IMETHOD GetPrinterResolution(double* aResolution);
     
     NS_IMETHOD GetPageRect(double* aTop, double* aLeft, double* aBottom, double* aRight);
@@ -129,4 +109,4 @@ protected:
     PRBool            mBeganPrinting;
 };
 
-#endif
+#endif // nsDeviceContextSpecX_h_

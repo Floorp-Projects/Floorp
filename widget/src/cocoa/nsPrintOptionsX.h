@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsPrintOptionsX_h__
-#define nsPrintOptionsX_h__
+#ifndef nsPrintOptionsX_h_
+#define nsPrintOptionsX_h_
 
 #include "nsPrintOptionsImpl.h"
 
@@ -64,4 +64,4 @@ protected:
 };
 
 
-#endif /* nsPrintOptionsX_h__ */
+#endif // nsPrintOptionsX_h_

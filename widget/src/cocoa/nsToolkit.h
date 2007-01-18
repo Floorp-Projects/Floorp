@@ -36,9 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef nsToolkit_h_
+#define nsToolkit_h_
+
 #include "nsIToolkit.h"
 
-#include <IOKit/IOKitLib.h>
+#import <IOKit/IOKitLib.h>
 
 /**
  * The toolkit abstraction is necessary because the message pump must
@@ -95,3 +98,5 @@ protected:
 };
 
 extern nsToolkit* NS_CreateToolkitInstance();
+
+#endif // nsToolkit_h_

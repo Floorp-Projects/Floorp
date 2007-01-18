@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsPrintSettingsX_h__
-#define nsPrintSettingsX_h__
+#ifndef nsPrintSettingsX_h_
+#define nsPrintSettingsX_h_
 
 #include "nsPrintSettingsImpl.h"  
 #include "nsIPrintSettingsX.h"  
@@ -73,4 +73,4 @@ protected:
   PMPrintSettings mPrintSettings;
 };
 
-#endif /* nsPrintSettingsX_h__ */
+#endif // nsPrintSettingsX_h_

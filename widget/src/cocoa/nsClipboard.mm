@@ -47,7 +47,7 @@
 #include "nsMemory.h"
 #include "nsIImage.h"
 
-#include <Cocoa/Cocoa.h>
+#import <Cocoa/Cocoa.h>
 
 nsClipboard::nsClipboard() : nsBaseClipboard()
 {

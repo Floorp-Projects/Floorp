@@ -40,8 +40,8 @@
  * Gecko events.  
  */
 
-#ifndef nsAppShell_h__
-#define nsAppShell_h__
+#ifndef nsAppShell_h_
+#define nsAppShell_h_
 
 #include "nsBaseAppShell.h"
 
@@ -81,4 +81,4 @@ protected:
   PRPackedBool       mTerminated;
 };
 
-#endif // nsAppShell_h__
+#endif // nsAppShell_h_

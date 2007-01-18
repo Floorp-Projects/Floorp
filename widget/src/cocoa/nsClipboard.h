@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsClipboard_h__
-#define nsClipboard_h__
+#ifndef nsClipboard_h_
+#define nsClipboard_h_
 
 #include "nsBaseClipboard.h"
 
@@ -62,4 +62,4 @@ protected:
 
 };
 
-#endif // nsClipboard_h__
+#endif // nsClipboard_h_

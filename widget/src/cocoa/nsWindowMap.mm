@@ -37,10 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import "nsWindowMap.h"
+#include "nsWindowMap.h"
 
-#import "nsChildView.h"
-#import "nsCocoaWindow.h"
+#include "nsChildView.h"
+#include "nsCocoaWindow.h"
 
 @interface WindowDataMap(Private)
 

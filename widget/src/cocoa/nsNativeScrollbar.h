@@ -35,9 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-#ifndef nsNativeScrollbar_h__
-#define nsNativeScrollbar_h__
+#ifndef nsNativeScrollbar_h_
+#define nsNativeScrollbar_h_
 
 #import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
@@ -136,4 +135,4 @@ private:
 @end
 
 
-#endif // nsNativeScrollbar_
+#endif // nsNativeScrollbar_h_

@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsMenuX_h__
-#define nsMenuX_h__
+#ifndef nsMenuX_h_
+#define nsMenuX_h_
 
 #include "nsCOMPtr.h"
 #include "nsIMenu.h"
@@ -162,4 +162,4 @@ protected:
     PRPackedBool                mVisible;               // are we visible to the user?
 };
 
-#endif // nsMenuX_h__
+#endif // nsMenuX_h_

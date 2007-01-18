@@ -61,7 +61,7 @@
 #include "nsIView.h"
 #include "nsIRegion.h"
 
-#include <Cocoa/Cocoa.h>
+#import <Cocoa/Cocoa.h>
 
 extern NSPasteboard* globalDragPboard;
 extern NSView* globalDragView;

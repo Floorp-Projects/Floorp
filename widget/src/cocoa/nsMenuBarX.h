@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsMenuBarX_h__
-#define nsMenuBarX_h__
+#ifndef nsMenuBarX_h_
+#define nsMenuBarX_h_
 
 #include "nsIMenuBar.h"
 #include "nsIMenuListener.h"
@@ -169,4 +169,4 @@ protected:
     static EventHandlerUPP  sCommandEventHandler; // carbon event handler for commands, shared
 };
 
-#endif // nsMenuBarX_h__
+#endif // nsMenuBarX_h_
