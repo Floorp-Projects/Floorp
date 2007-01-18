@@ -562,8 +562,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
     }
     DBG_UNLOCK(rt);
-    JS_ASSERT(0);       /* XXX can't happen */
-    return JS_FALSE;
+    return JS_TRUE;
 }
 
 JSBool JS_DLL_CALLBACK
