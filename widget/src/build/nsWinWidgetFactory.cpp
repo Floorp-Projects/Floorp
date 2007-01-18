@@ -50,7 +50,6 @@
 #include "nsAppShellSingleton.h"
 #include "nsIServiceManager.h"
 #include "nsSound.h"
-#include "nsIdleServiceWin.h"
 
 #include "nsBidiKeyboard.h"
 
@@ -80,7 +79,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceWin)
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
@@ -130,10 +128,6 @@ static const nsModuleComponentInfo components[] =
     NS_BIDIKEYBOARD_CID,
     "@mozilla.org/widget/bidikeyboard;1",
     nsBidiKeyboardConstructor },
-  { "User Idle Service",
-    NS_IDLE_SERVICE_CID,
-    "@mozilla.org/widget/idleservice;1",
-    nsIdleServiceWinConstructor },
 #endif
   { "Native Theme Renderer", 
     NS_THEMERENDERER_CID,
