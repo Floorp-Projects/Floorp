@@ -51,7 +51,7 @@ nsIdleServiceWin::GetIdleTime(PRUint32 *aTimeDiff)
     inputInfo.cbSize = sizeof(inputInfo);
     if (!::GetLastInputInfo(&inputInfo))
         return NS_ERROR_FAILURE;
-
+    //XXXgijs: this might break after 49.7 days, see MSDN docs for GetTickCount.
     *aTimeDiff = GetTickCount() - inputInfo.dwTime;
     return NS_OK;
 }
