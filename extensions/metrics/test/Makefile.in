@@ -47,16 +47,20 @@ REQUIRES	= \
 		xpcom \
 		metrics \
 		necko \
+		dom \
+		content \
 		$(NULL)
 
 CPPSRCS		= \
 		TestMetricsConfig.cpp \
+		TestUICommandCollector.cpp \
 		$(NULL)
 
 SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../src \
+		-I$(srcdir)/../build \
 		-I$(DIST)/public/nss \
 		-I$(DIST)/private/nss \
 		$(NULL)
