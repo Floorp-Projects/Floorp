@@ -1,3 +1,0 @@
-#define GENERATE_FOR_PPC
-//#define DEBUG_WALDEMAR 1
-#include "ElectricalFireConfig.h"

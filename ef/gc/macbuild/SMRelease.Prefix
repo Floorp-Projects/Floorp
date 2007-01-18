@@ -1,4 +1,0 @@
-#undef  DEBUG
-#define NDEBUG 1
-
-#include "NSPRConfig.h"
