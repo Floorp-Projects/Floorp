@@ -1,9 +1,0 @@
-#//------------------------------------------------------------------------
-#//
-#// Makefile to install MODULES/APPLET/INCLUDE header files into the distribution
-#// directory.
-#//
-#//------------------------------------------------------------------------
-include <manifest.mn>
-include <$(DEPTH)/config/rules.mak>
-

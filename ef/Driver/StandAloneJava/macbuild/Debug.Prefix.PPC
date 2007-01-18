@@ -1,4 +1,0 @@
-#define DEBUG 1
-#define GENERATE_FOR_PPC
-//#define DEBUG_SMSILVER 1
-#include "ElectricalFireConfig.h"
