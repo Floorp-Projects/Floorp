@@ -985,7 +985,7 @@ nsMathMLContainerFrame::ReflowForeignChild(nsIFrame*                aChildFrame,
   // provide a local, self-contained linelayout where to reflow the nsInlineFrame
   nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   nsLineLayout ll(aPresContext, aReflowState.mSpaceManager,
-                  aReflowState.parentReflowState);
+                  aReflowState.parentReflowState, nsnull);
   ll.BeginLineReflow(0, 0, availSize.width, availSize.height, PR_FALSE, PR_FALSE);
   PRBool pushedFrame;
   ll.ReflowFrame(aChildFrame, aStatus, &aDesiredSize, pushedFrame);
