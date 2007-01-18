@@ -257,7 +257,7 @@ if ($table->view_count > $query_limit){
     ThrowUserError('testopia-query-too-large', {'limit' => $query_limit});
 }
 # Check that all of the test cases returned only belong to one product.
-if ($table->list_count > 0){
+if ($table->list_count > 0 && $table->list_count < 1000 && !$cgi->param('addrun')){
     my %case_prods;
     my $prod_id;
     foreach my $case (@{$table->list}){

@@ -47,6 +47,11 @@
    [% url = "$table.get_page_url&page="%]
    [%# url = "$table.url_loc?direction=$direction&getlist=1&page="%]
 [% END %]
+[% pagesizelist = [{name => 25, id => 25},
+                   {name => 50, id => 50},
+                   {name => 100, id => 100},
+                   {name => 500, id => 500}]%]
+                   
 <script type='text/javascript'>
    var [% table.type %]Table = {
   
@@ -61,10 +66,13 @@
       document.location = url;
     }
   };
+  function adjustPageSize(psize) {
+    document.location = "[% url %]&pagesize=" + psize;
+  }
 </script>
 
 <table align="center">
-  <tr>
+  <tr style="background-color: #eeeeee; ">
   [% IF table.page != 0 %]
     <td><a href="[% url %]0[% pc %]">&lt;&lt;&nbsp;First</a></td>
     <td><a href="[% url %][% table.page - 1 %][% pc %]">&lt;&nbsp;Previous</a></td>
@@ -72,7 +80,7 @@
     <td>&lt;&lt;&nbsp;First</td>
     <td>&lt;&nbsp;Previous</td>
   [% END %]
-    <td align="center">
+    <td align="center" style="font-size: medium">
     [% SET framewidth = 10 %]
     [% IF (table.page_count - 1) < framewidth %]
       [% SET p = 0 %]
@@ -103,19 +111,6 @@
     [% END %]
     [% end_mark %]
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    <input type="button" onclick="[% table.type %]Table.jumpToPage(document.getElementById('jump_[% table.type %]').value)" value="Jump To Page">
-    <input id="jump_[% table.type %]" size="4">
-    &nbsp;Out of [% table.page_count %]
-    &nbsp;&nbsp;&nbsp;
-  [% IF ajax %]
-    <a href="[% url %]null,1[% pc %]">All</a>&nbsp;
-  [% ELSE %]
-    [% IF table.list_count < MAX_LIMIT %]
-    <a href="[% url %]&viewall=1">All</a>&nbsp;
-    [% ELSE %]
-    <span style="color:gray">All</span>
-    [% END %]
-  [% END %]
     </td>
   [% IF table.page < table.page_count - 1 %]
     <td><a href="[% url %][% table.page + 1 %][% pc %]">Next&nbsp;&gt;</a></td>
@@ -124,6 +119,30 @@
     <td>Next&nbsp;&gt;</td>
     <td>Last&nbsp;&gt;&gt;</td>
   [% END %]
+    
   </tr>
+    <td colspan="5">
+    <input type="button" onclick="[% table.type %]Table.jumpToPage(document.getElementById('jump_[% table.type %]').value)" value="Jump To Page">
+    <input id="jump_[% table.type %]" size="4">
+    &nbsp;Out of [% table.page_count %] pages
+    &nbsp;&nbsp;&nbsp;
+    View [% PROCESS select sel = {list    => pagesizelist,
+                                  default => table.page_size,
+                                  events  => 'onchange="adjustPageSize(this.value)"' }%]
+    records at a time
+    &nbsp;&nbsp;&nbsp;
+  [% IF ajax %]
+    <a href="[% url %]null,1[% pc %]">View All</a>&nbsp;
+  [% ELSE %]
+    [% IF table.list_count < MAX_LIMIT %]
+    <a href="[% url %]&viewall=1">View All</a>&nbsp;
+    [% ELSE %]
+    <span style="color:gray">View All</span>
+    [% END %]
+  [% END %]
+    </td>
+    
+  </tr>
+  <tr><th colspan="5" style="font-size: 12pt;">[% table.list_count %] records found</th></tr>
 </table>
 [% END %]

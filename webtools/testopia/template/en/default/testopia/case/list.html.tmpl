@@ -40,7 +40,12 @@
 [% PROCESS testopia/style.none.tmpl %]
 [% PROCESS testopia/blocks.html.tmpl %]
 [% PROCESS testopia/messages.html.tmpl %]
-
+<script type="text/javascript">
+  djConfig = {
+    parseWidgets: false,
+    searchIds: ["tags"]
+  };
+</script>
 <script src="testopia/js/util.js" type="text/javascript"></script>
 <script src="testopia/dojo/dojo.js" type="text/javascript"></script>
 <script type="text/javascript">
@@ -72,17 +77,17 @@
 
 [% PROCESS testopia/case/table.html.tmpl %]
 
-<p>
+<p><b>
 [% IF table.list_count == 0 %]
 No test cases
 [% ELSE %]
   [% IF table.list_count == 1 %]
     One test case
   [% ELSE %]
-    [% table.list_count FILTER none %] test cases
+    [% table.list_count FILTER none %] total test cases
   [% END %]
 [% END %]
-found.
+found.</b>
 </p>
 
 [% IF dotweak AND table.list_count %]

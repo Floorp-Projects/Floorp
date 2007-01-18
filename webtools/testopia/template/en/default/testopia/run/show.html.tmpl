@@ -176,13 +176,13 @@
 
 [% table.list_count FILTER none %] test cases found.
 <br/>
-<form action="tr_list_cases.cgi" method="POST">
+<form action="tr_list_cases.cgi" method="GET">
   <input type="hidden" name="exclude" value="[% run.case_id_list FILTER none %]" />
   <input type="hidden" name="current_tab" value="case" />
   <input type="hidden" name="addrun" value="[% run.id FILTER none %]" />
   <input type="hidden" name="plan_id" value="[% run.plan.id FILTER none %]" />
   <input type="hidden" name="case_status_id" value="2" />
-  <input type="hidden" name="viewall" value="1" />
+  <input type="hidden" name="viewall" value="0" />
   <input type="submit" value="Add Cases" />
 </form>
 

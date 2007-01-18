@@ -190,7 +190,6 @@ if ($action eq 'Add'){
 ####################
 else {
     $cgi->param('current_tab', 'case');
-    $cgi->param('viewall', 1);
     my $search = Bugzilla::Testopia::Search->new($cgi);
     my $table = Bugzilla::Testopia::Table->new('case', 'tr_new_run.cgi', $cgi, undef, $search->query);
     $vars->{'case'} = Bugzilla::Testopia::TestCase->new({'case_id' => 0});
