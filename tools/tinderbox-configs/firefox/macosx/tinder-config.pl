@@ -1,6 +1,6 @@
 #
-## hostname: xserve06.build.mozilla.org
-## uname: Darwin xserve06.build.mozilla.org 8.7.2 Darwin Kernel Version 8.7.2: Tue Jul 25 23:14:47 PDT 2006; root:xnu-792.10.96.obj~3/RELEASE_PPC Power Macintosh powerpc
+## hostname: bm-xserve08.build.mozilla.org
+## uname: Darwin bm-xserve08.build.mozilla.org 8.8.4 Darwin Kernel Version 8.8.4: Sun Oct 29 15:26:54 PST 2006; root:xnu-792.16.4.obj~1/RELEASE_I386 i386 i386
 #
 
 #- tinder-config.pl - Tinderbox configuration file.
@@ -81,7 +81,7 @@ $StartupPerformanceTest   = 1;  # Ts
 
 $TestsPhoneHome           = 1;  # Should test report back to server?
 
-$GraphNameOverride        = 'xserve06.build.mozilla.org_Fx-Trunk';
+$GraphNameOverride        = 'xserve08.build.mozilla.org_Fx-Trunk';
 
 # $results_server
 #----------------------------------------------------------------------------
