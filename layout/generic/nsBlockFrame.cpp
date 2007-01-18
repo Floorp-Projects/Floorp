@@ -3101,7 +3101,7 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
       // no longer makes sense.  Now we always allocate on the stack
       nsLineLayout lineLayout(aState.mPresContext,
                               aState.mReflowState.mSpaceManager,
-                              &aState.mReflowState);
+                              &aState.mReflowState, &aLine);
       lineLayout.Init(&aState, aState.mMinLineHeight, aState.mLineNumber);
       if (forceBreakInContent) {
         lineLayout.ForceBreakAtPosition(forceBreakInContent, forceBreakOffset);
@@ -3827,7 +3827,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     aLineLayout.AddBulletFrame(mBullet, metrics);
     addedBullet = PR_TRUE;
   }
-  aLineLayout.VerticalAlignLine(aLine);
+  aLineLayout.VerticalAlignLine();
   // Our ascent is the ascent of our first line (but if this line is all
   // whitespace we'll correct things in |ReflowBlockFrame|).
   if (aLine == mLines.front()) {
