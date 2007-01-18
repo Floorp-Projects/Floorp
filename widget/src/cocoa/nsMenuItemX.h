@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsMenuItemX_h__
-#define nsMenuItemX_h__
+#ifndef nsMenuItemX_h_
+#define nsMenuItemX_h_
 
 #include "nsIMenuItem.h"
 #include "nsString.h"
@@ -46,7 +46,7 @@
 #include "nsWeakReference.h"
 #include "nsIWidget.h"
 
-#include <Cocoa/Cocoa.h>
+#import <Cocoa/Cocoa.h>
 
 class nsIMenu;
 
@@ -124,4 +124,4 @@ protected:
   EMenuItemType     mMenuType;
 };
 
-#endif // nsMenuItem_h__
+#endif // nsMenuItemX_h_

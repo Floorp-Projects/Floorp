@@ -35,7 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <Carbon/Carbon.h>
+#ifndef nsNativeThemeCocoa_h_
+#define nsNativeThemeCocoa_h_
+
+#import <Carbon/Carbon.h>
 
 #include "nsITheme.h"
 #include "nsCOMPtr.h"
@@ -123,3 +126,5 @@ protected:
                           const HIRect& inBoxRect, PRBool inChecked, 
                           PRBool inDisabled, PRInt32 inState);
 };
+
+#endif // nsNativeThemeCocoa_h_

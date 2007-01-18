@@ -36,10 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NS_SCREEN_COCOA_H_
-#define NS_SCREEN_COCOA_H_
+#ifndef nsScreenCocoa_h_
+#define nsScreenCocoa_h_
 
-#import <AppKit/AppKit.h>
+#import <Cocoa/Cocoa.h>
 
 #include "nsIScreen.h"
 
@@ -59,4 +59,4 @@ private:
     NSScreen *mScreen;
 };
 
-#endif
+#endif // nsScreenCocoa_h_

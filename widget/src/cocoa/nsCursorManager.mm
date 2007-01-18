@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import "nsCursorManager.h"
-#import "math.h"
+#include "nsCursorManager.h"
+#include <math.h>
 
 static nsCursorManager *gInstance;
 

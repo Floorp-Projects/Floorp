@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <PMApplication.h>
-
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsPrintOptionsX.h"
@@ -48,21 +46,16 @@
 #include "prmem.h"
 
 
-/** ---------------------------------------------------
- */
 nsPrintOptionsX::nsPrintOptionsX()
 {
 }
 
-/** ---------------------------------------------------
- */
+
 nsPrintOptionsX::~nsPrintOptionsX()
 {
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
- */
+
 nsresult nsPrintOptionsX::_CreatePrintSettings(nsIPrintSettings **_retval)
 {
   nsresult rv;
@@ -84,17 +77,16 @@ nsresult nsPrintOptionsX::_CreatePrintSettings(nsIPrintSettings **_retval)
   return rv;
 }
 
-/** ---------------------------------------------------
- */
+
 NS_IMETHODIMP
 nsPrintOptionsX::ShowPrintSetupDialog(nsIPrintSettings *aThePrintSettings)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 } 
 
-/* [noscript] voidPtr GetNativeData (in short aDataType); */
+
 NS_IMETHODIMP
-nsPrintOptionsX::GetNativeData(PRInt16 aDataType, void * *_retval)
+nsPrintOptionsX::GetNativeData(PRInt16 aDataType, void **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nsnull;
@@ -102,7 +94,9 @@ nsPrintOptionsX::GetNativeData(PRInt16 aDataType, void * *_retval)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
 #pragma mark -
+
 
 nsresult
 nsPrintOptionsX::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName, PRUint32 aFlags)
@@ -120,6 +114,7 @@ nsPrintOptionsX::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
   
   return NS_OK;
 }
+
 
 nsresult
 nsPrintOptionsX::WritePrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName, PRUint32 aFlags)

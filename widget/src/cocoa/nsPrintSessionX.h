@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsPrintSessionX_h__
-#define nsPrintSessionX_h__
+#ifndef nsPrintSessionX_h_
+#define nsPrintSessionX_h_
 
 #include "nsPrintSession.h"
 #include "nsIPrintSessionX.h"
@@ -62,4 +62,4 @@ protected:
   PMPrintSession    mSession;
 };
 
-#endif // nsPrintSessionX_h__
+#endif // nsPrintSessionX_h_

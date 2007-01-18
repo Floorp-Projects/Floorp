@@ -36,7 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import <AppKit/AppKit.h>
+#ifndef nsWindowMap_h_
+#define nsWindowMap_h_
+
+#import <Cocoa/Cocoa.h>
 
 // 
 //  WindowDataMap
@@ -88,3 +91,4 @@
 
 @end
 
+#endif // nsWindowMap_h_

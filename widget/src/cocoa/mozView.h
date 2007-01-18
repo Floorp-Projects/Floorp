@@ -35,6 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef mozView_h_
+#define mozView_h_
+
 #undef DARWIN
 #import <Cocoa/Cocoa.h>
 class nsIWidget;
@@ -90,3 +93,5 @@ class nsIWidget;
 - (void)setSuppressMakeKeyFront:(BOOL)inSuppress;
 
 @end
+
+#endif // mozView_h_

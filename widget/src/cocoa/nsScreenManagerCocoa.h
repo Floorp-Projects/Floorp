@@ -36,10 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NS_SCREEN_MANAGER_COCOA_H_
-#define NS_SCREEN_MANAGER_COCOA_H_
+#ifndef nsScreenManagerCocoa_h_
+#define nsScreenManagerCocoa_h_
 
-#import <AppKit/AppKit.h>
+#import <Cocoa/Cocoa.h>
 
 #include "nsCOMArray.h"
 
@@ -64,4 +64,4 @@ private:
     nsCOMArray<nsScreenCocoa> mScreenList;
 };
 
-#endif
+#endif // nsScreenManagerCocoa_h_

@@ -35,8 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef MacWindow_h__
-#define MacWindow_h__
+
+#ifndef nsCocoaWindow_h_
+#define nsCocoaWindow_h_
 
 #undef DARWIN
 
@@ -179,4 +180,4 @@ protected:
 };
 
 
-#endif // MacWindow_h__
+#endif // nsCocoaWindow_h_

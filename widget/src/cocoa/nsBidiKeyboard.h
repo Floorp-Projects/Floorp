@@ -38,8 +38,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsBidiKeyboard
-#define __nsBidiKeyboard
+#ifndef nsBidiKeyboard_h_
+#define nsBidiKeyboard_h_
+
 #include "nsIBidiKeyboard.h"
 
 class nsBidiKeyboard : public nsIBidiKeyboard
@@ -53,4 +54,4 @@ public:
 };
 
 
-#endif // __nsBidiKeyboard
+#endif // nsBidiKeyboard_h_

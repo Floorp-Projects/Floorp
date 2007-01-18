@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsDragService_h__
-#define nsDragService_h__
+#ifndef nsDragService_h_
+#define nsDragService_h_
 
 #include "nsBaseDragService.h"
 
@@ -65,4 +65,4 @@ private:
 
 };
 
-#endif // nsDragService_h__
+#endif // nsDragService_h_

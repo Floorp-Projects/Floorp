@@ -40,9 +40,7 @@
 
 #include "nsSound.h"
 
-#include <Foundation/NSData.h>
-#include <AppKit/NSSound.h>
-#include <AppKit/AppKit.h>
+#import <Cocoa/Cocoa.h>
 
 #include "nsNetUtil.h"
 #include "nsCOMPtr.h"

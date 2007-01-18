@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import "nsMacCursor.h"
-#import "nsDebug.h"
+#include "nsMacCursor.h"
+#include "nsDebug.h"
 
 /*! @category   nsMacCursor (PrivateMethods)
     @abstract   Private methods internal to the nsMacCursor class.

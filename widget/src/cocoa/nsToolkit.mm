@@ -47,12 +47,9 @@
 #include <mach/mach_interface.h>
 #include <mach/mach_init.h>
 
-#include <IOKit/pwr_mgt/IOPMLib.h>
-#include <IOKit/IOMessage.h>
-
-#include <CoreFoundation/CoreFoundation.h>
-#include <Carbon/Carbon.h>
-#include <Gestalt.h>
+#import <Carbon/Carbon.h>
+#import <IOKit/pwr_mgt/IOPMLib.h>
+#import <IOKit/IOMessage.h>
 
 #include "nsWidgetAtoms.h"
 

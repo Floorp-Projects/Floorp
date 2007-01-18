@@ -41,7 +41,6 @@
 #include "nsIRenderingContext.h"
 #include "nsRect.h"
 #include "nsSize.h"
-#include "nsTransform2D.h"
 #include "nsThemeConstants.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
@@ -53,7 +52,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsPresContext.h"
 #include "nsILookAndFeel.h"
-#include "nsUnicharUtils.h"
 #include "nsWidgetAtoms.h"
 
 #include "gfxContext.h"

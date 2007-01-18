@@ -35,14 +35,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsChildView_h__
-#define nsChildView_h__
+#ifndef nsChildView_h_
+#define nsChildView_h_
 
 // formal protocols
-#import "mozView.h"
+#include "mozView.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessible.h"
-#import "mozAccessibleProtocol.h"
+#include "mozAccessibleProtocol.h"
 #endif
 
 #include "nsAutoPtr.h"
@@ -64,7 +64,7 @@
 #include "nsIMenuBar.h"
 
 #include "nsplugindefs.h"
-#include <Quickdraw.h>
+#import <Quickdraw.h>
 
 class gfxASurface;
 
@@ -326,4 +326,4 @@ protected:
 };
 
 
-#endif // nsChildView_h__
+#endif // nsChildView_h_
