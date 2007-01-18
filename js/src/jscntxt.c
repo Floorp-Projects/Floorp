@@ -646,8 +646,8 @@ js_LeaveLocalRootScopeWithResult(JSContext *cx, jsval rval)
 
     /*
      * Pop the scope, restoring lrs->scopeMark.  If rval is a GC-thing, push
-     * it on the caller's scope, or store it in cx->lastInternalResult if we
-     * are leaving the outermost scope.  We don't need to allocate a new lrc
+     * it on the caller's scope, or store it in lastInternalResult if we are
+     * leaving the outermost scope.  We don't need to allocate a new lrc
      * because we can overwrite the old mark's slot with rval.
      */
     lrc = lrs->topChunk;
@@ -655,7 +655,7 @@ js_LeaveLocalRootScopeWithResult(JSContext *cx, jsval rval)
     lrs->scopeMark = (uint32) JSVAL_TO_INT(lrc->roots[m]);
     if (JSVAL_IS_GCTHING(rval) && !JSVAL_IS_NULL(rval)) {
         if (mark == 0) {
-            cx->lastInternalResult = rval;
+            cx->weakRoots.lastInternalResult = rval;
         } else {
             /*
              * Increment m to avoid the "else if (m == 0)" case below.  If

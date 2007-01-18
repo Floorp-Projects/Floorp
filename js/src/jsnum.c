@@ -693,7 +693,7 @@ js_NumberToObject(JSContext *cx, jsdouble d)
     if (!obj)
         return NULL;
     if (!js_NewNumberValue(cx, d, &v)) {
-        cx->newborn[GCX_OBJECT] = NULL;
+        cx->weakRoots.newborn[GCX_OBJECT] = NULL;
         return NULL;
     }
     OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, v);

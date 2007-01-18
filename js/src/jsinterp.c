@@ -1445,7 +1445,7 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
 
         /*
          * Store *rval in the a scoped local root if a scope is open, else in
-         * the cx->lastInternalResult pigeon-hole GC root, solely so users of
+         * the lastInternalResult pigeon-hole GC root, solely so users of
          * js_InternalInvoke and its direct and indirect (js_ValueToString for
          * example) callers do not need to manage roots for local, temporary
          * references to such results.
@@ -1456,7 +1456,7 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
                 if (js_PushLocalRoot(cx, cx->localRootStack, *rval) < 0)
                     ok = JS_FALSE;
             } else {
-                cx->lastInternalResult = *rval;
+                cx->weakRoots.lastInternalResult = *rval;
             }
         }
     }
@@ -1919,7 +1919,7 @@ js_InvokeConstructor(JSContext *cx, jsval *vp, uintN argc)
     /* Now we have an object with a constructor method; call it. */
     vp[1] = OBJECT_TO_JSVAL(obj);
     if (!js_Invoke(cx, argc, JSINVOKE_CONSTRUCT)) {
-        cx->newborn[GCX_OBJECT] = NULL;
+        cx->weakRoots.newborn[GCX_OBJECT] = NULL;
         return JS_FALSE;
     }
 
@@ -5028,7 +5028,7 @@ interrupt:
             /* Restore fp->scopeChain now that obj is defined in parent. */
             fp->scopeChain = obj2;
             if (!ok) {
-                cx->newborn[GCX_OBJECT] = NULL;
+                cx->weakRoots.newborn[GCX_OBJECT] = NULL;
                 goto out;
             }
 
@@ -5110,7 +5110,7 @@ interrupt:
             /* Restore fp->scopeChain now that obj is defined in fp->varobj. */
             fp->scopeChain = obj2;
             if (!ok) {
-                cx->newborn[GCX_OBJECT] = NULL;
+                cx->weakRoots.newborn[GCX_OBJECT] = NULL;
                 goto out;
             }
 
@@ -5247,7 +5247,7 @@ interrupt:
             JS_ASSERT(sp - fp->spbase >= 1);
             lval = FETCH_OPND(-1);
             JS_ASSERT(JSVAL_IS_OBJECT(lval));
-            cx->newborn[GCX_OBJECT] = JSVAL_TO_GCTHING(lval);
+            cx->weakRoots.newborn[GCX_OBJECT] = JSVAL_TO_GCTHING(lval);
           END_CASE(JSOP_ENDINIT)
 
           BEGIN_CASE(JSOP_INITPROP)
