@@ -58,8 +58,11 @@ static const PRUint32 ASK_BEFORE_ACCEPT = 1;
 static const PRUint32 ACCEPT_SESSION = 2;
 static const PRUint32 BEHAVIOR_REJECT = 2;
 
+static const PRUint32 DEFAULT_QUOTA = 5 * 1024;
+
 static const char kPermissionType[] = "cookie";
 static const char kStorageEnabled[] = "dom.storage.enabled";
+static const char kDefaultQuota[] = "dom.storage.default_quota";
 static const char kCookiesBehavior[] = "network.cookie.cookieBehavior";
 static const char kCookiesLifetimePolicy[] = "network.cookie.lifetimePolicy";
 
@@ -98,6 +101,13 @@ IsCallerSecure()
   nsresult rv = innerUri->SchemeIs("https", &isHttps);
 
   return NS_SUCCEEDED(rv) && isHttps;
+}
+
+static PRInt32
+GetQuota(const nsAString &domain)
+{
+  // FIXME: per-domain quotas?
+  return ((PRInt32)nsContentUtils::GetIntPref(kDefaultQuota, DEFAULT_QUOTA) * 1024);
 }
 
 nsSessionStorageEntry::nsSessionStorageEntry(KeyTypePointer aStr)
@@ -457,7 +467,8 @@ nsDOMStorage::GetItem(const nsAString& aKey, nsIDOMStorageItem **aItem)
   else if (UseDB()) {
     PRBool secure;
     nsAutoString value;
-    nsresult rv = GetDBValue(aKey, value, &secure);
+    nsAutoString unused;
+    nsresult rv = GetDBValue(aKey, value, &secure, unused);
     // return null if access isn't allowed or the key wasn't found
     if (rv == NS_ERROR_DOM_SECURITY_ERR || rv == NS_ERROR_DOM_NOT_FOUND_ERR)
       return NS_OK;
@@ -544,14 +555,16 @@ NS_IMETHODIMP nsDOMStorage::RemoveItem(const nsAString& aKey)
     nsresult rv = InitDB();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAutoString unused;
+    nsAutoString value;
     PRBool secureItem;
-    rv = GetDBValue(aKey, unused, &secureItem);
+    nsAutoString owner;
+    rv = GetDBValue(aKey, value, &secureItem, owner);
     if (rv == NS_ERROR_DOM_NOT_FOUND_ERR)
       return NS_OK;
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = gStorageDB->RemoveKey(mDomain, aKey);
+    rv = gStorageDB->RemoveKey(mDomain, aKey, owner,
+                               aKey.Length() + value.Length());
     NS_ENSURE_SUCCESS(rv, rv);
 
     mItemsCached = PR_FALSE;
@@ -622,7 +635,7 @@ nsDOMStorage::CacheKeysFromDB()
 
 nsresult
 nsDOMStorage::GetDBValue(const nsAString& aKey, nsAString& aValue,
-                         PRBool* aSecure)
+                         PRBool* aSecure, nsAString& aOwner)
 {
   aValue.Truncate();
 
@@ -634,7 +647,7 @@ nsDOMStorage::GetDBValue(const nsAString& aKey, nsAString& aValue,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString value;
-  rv = gStorageDB->GetKeyValue(mDomain, aKey, value, aSecure);
+  rv = gStorageDB->GetKeyValue(mDomain, aKey, value, aSecure, aOwner);
   if (NS_FAILED(rv))
     return rv;
 
@@ -660,8 +673,32 @@ nsDOMStorage::SetDBValue(const nsAString& aKey,
   nsresult rv = InitDB();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoString value;
-  rv = gStorageDB->SetKey(mDomain, aKey, aValue, aSecure);
+  // Get the current domain for quota enforcement
+  nsCOMPtr<nsIPrincipal> subjectPrincipal;
+  nsContentUtils::GetSecurityManager()->
+    GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
+
+  nsAutoString currentDomain;
+
+  if (subjectPrincipal) {
+    nsCOMPtr<nsIURI> uri;
+    rv = subjectPrincipal->GetURI(getter_AddRefs(uri));
+
+    if (NS_SUCCEEDED(rv) && uri) {
+        nsCAutoString currentDomainAscii;
+        uri->GetAsciiHost(currentDomainAscii);
+        currentDomain = NS_ConvertUTF8toUTF16(currentDomainAscii);
+    }
+    
+    if (currentDomain.IsEmpty()) {
+        return NS_ERROR_DOM_SECURITY_ERR;
+    }
+  } else {
+      currentDomain = mDomain;
+  }
+  
+  rv = gStorageDB->SetKey(mDomain, aKey, aValue, aSecure,
+                          currentDomain, GetQuota(currentDomain));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mItemsCached = PR_FALSE;
@@ -828,7 +865,7 @@ nsDOMStorageList::NamedItem(const nsAString& aDomain,
       PRPackedBool sessionOnly;
       if (!nsDOMStorage::CanUseStorage(uri, &sessionOnly))
         return NS_ERROR_DOM_SECURITY_ERR;
-
+      
       rv = uri->GetAsciiHost(currentDomain);
       NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1012,7 +1049,8 @@ nsDOMStorageItem::GetSecure(PRBool* aSecure)
 
   if (mStorage->UseDB()) {
     nsAutoString value;
-    return mStorage->GetDBValue(mKey, value, aSecure);
+    nsAutoString owner;
+    return mStorage->GetDBValue(mKey, value, aSecure, owner);
   }
 
   *aSecure = IsSecure();
@@ -1044,7 +1082,8 @@ nsDOMStorageItem::GetValue(nsAString& aValue)
   if (mStorage->UseDB()) {
     // GetDBValue checks the secure state so no need to do it here
     PRBool secure;
-    nsresult rv = mStorage->GetDBValue(mKey, aValue, &secure);
+    nsAutoString unused;
+    nsresult rv = mStorage->GetDBValue(mKey, aValue, &secure, unused);
     return (rv == NS_ERROR_DOM_NOT_FOUND_ERR) ? NS_OK : rv;
   }
 

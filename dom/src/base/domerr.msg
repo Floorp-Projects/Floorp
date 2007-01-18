@@ -99,6 +99,7 @@ DOM_MSG_DEF(NS_ERROR_DOM_PROP_ACCESS_DENIED, "Access to property denied")
 DOM_MSG_DEF(NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED, "Access to XPConnect service denied")
 DOM_MSG_DEF(NS_ERROR_DOM_BAD_URI, "Access to restricted URI denied")
 DOM_MSG_DEF(NS_ERROR_DOM_RETVAL_UNDEFINED, "Return value is undefined")
+DOM_MSG_DEF(NS_ERROR_DOM_QUOTA_REACHED, "Persistent storage maximum size reached")
 
 /* common global codes (from nsError.h) */
 

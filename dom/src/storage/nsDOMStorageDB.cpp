@@ -73,28 +73,63 @@ nsDOMStorageDB::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool exists;
-  rv = mConnection->TableExists(NS_LITERAL_CSTRING("moz_webappsstore"), &exists);
+  rv = mConnection->TableExists(NS_LITERAL_CSTRING("webappsstore"), &exists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (! exists) {
     rv = mConnection->ExecuteSimpleSQL(
-           NS_LITERAL_CSTRING("CREATE TABLE moz_webappsstore ("
+           NS_LITERAL_CSTRING("CREATE TABLE webappsstore ("
                               "domain TEXT, "
                               "key TEXT, "
                               "value TEXT, "
-                              "secure INTEGER) "));
+                              "secure INTEGER, "
+                              "owner TEXT)"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
+  
+  rv = mConnection->TableExists(NS_LITERAL_CSTRING("moz_webappsstore"),
+                                &exists);
+  NS_ENSURE_SUCCESS(rv, rv);
 
+  if (exists) {
+      // upgrade an old store
+      
+      // create a temporary index to handle dup checking
+       rv = mConnection->ExecuteSimpleSQL(
+              NS_LITERAL_CSTRING("CREATE UNIQUE INDEX webappsstore_tmp "
+                                 " ON webappsstore(domain, key)"));
+
+      // if the index can't be created, there are dup domain/key combos
+      // in moz_webappstore2, which indicates a bug elsewhere.  Fail to upgrade
+      // in this case
+      if (NS_SUCCEEDED(rv)) {
+          rv = mConnection->ExecuteSimpleSQL(
+                 NS_LITERAL_CSTRING("INSERT OR IGNORE INTO "
+                                    "webappsstore(domain, key, value, secure, owner) "
+                                    "SELECT domain, key, value, secure, domain "
+                                    "FROM moz_webappsstore"));
+
+          // try to drop the index even in case of an error
+          mConnection->ExecuteSimpleSQL(
+            NS_LITERAL_CSTRING("DROP INDEX webappsstore_tmp"));
+
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          rv = mConnection->ExecuteSimpleSQL(
+                 NS_LITERAL_CSTRING("DROP TABLE moz_webappsstore"));
+          NS_ENSURE_SUCCESS(rv, rv);
+      }
+  }
+  
   // retrieve all keys associated with a domain
   rv = mConnection->CreateStatement(
-         NS_LITERAL_CSTRING("SELECT key, secure FROM moz_webappsstore "
+         NS_LITERAL_CSTRING("SELECT key, secure FROM webappsstore "
                             "WHERE domain = ?1"),
          getter_AddRefs(mGetAllKeysStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // retrieve a value given a domain and a key
   rv = mConnection->CreateStatement(
-         NS_LITERAL_CSTRING("SELECT value, secure FROM moz_webappsstore "
+         NS_LITERAL_CSTRING("SELECT value, secure, owner FROM webappsstore "
                             "WHERE domain = ?1 "
                             "AND key = ?2"),
          getter_AddRefs(mGetKeyValueStatement));
@@ -102,22 +137,24 @@ nsDOMStorageDB::Init()
 
   // insert a new key
   rv = mConnection->CreateStatement(
-         NS_LITERAL_CSTRING("INSERT INTO moz_webappsstore values (?1, ?2, ?3, ?4)"),
+    NS_LITERAL_CSTRING("INSERT INTO "
+                       "webappsstore(domain, key, value, secure, owner) "
+                       "VALUES (?1, ?2, ?3, ?4, ?5)"),
          getter_AddRefs(mInsertKeyStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // update an existing key
   rv = mConnection->CreateStatement(
-         NS_LITERAL_CSTRING("UPDATE moz_webappsstore "
-                            "SET value = ?1, secure = ?2 "
-                            "WHERE domain = ?3 "
-                            "AND key = ?4 "),
+         NS_LITERAL_CSTRING("UPDATE webappsstore "
+                            "SET value = ?1, secure = ?2, owner = ?3"
+                            "WHERE domain = ?4 "
+                            "AND key = ?5 "),
          getter_AddRefs(mUpdateKeyStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // update the secure status of an existing key
   rv = mConnection->CreateStatement(
-         NS_LITERAL_CSTRING("UPDATE moz_webappsstore "
+         NS_LITERAL_CSTRING("UPDATE webappsstore "
                             "SET secure = ?1 "
                             "WHERE domain = ?2 "
                             "AND key = ?3 "),
@@ -126,7 +163,7 @@ nsDOMStorageDB::Init()
 
   // remove a key
   rv = mConnection->CreateStatement(
-         NS_LITERAL_CSTRING("DELETE FROM moz_webappsstore "
+         NS_LITERAL_CSTRING("DELETE FROM webappsstore "
                             "WHERE domain = ?1 "
                             "AND key = ?2"),
          getter_AddRefs(mRemoveKeyStatement));
@@ -134,8 +171,16 @@ nsDOMStorageDB::Init()
 
   // remove all keys
   rv = mConnection->CreateStatement(
-         NS_LITERAL_CSTRING("DELETE FROM moz_webappsstore"),
+         NS_LITERAL_CSTRING("DELETE FROM webappsstore"),
          getter_AddRefs(mRemoveAllStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // check the usage for a given owner
+  rv = mConnection->CreateStatement(
+         NS_LITERAL_CSTRING("SELECT SUM(LENGTH(key) + LENGTH(value)) "
+                            "FROM webappsstore "
+                            "WHERE owner = ?1"),
+         getter_AddRefs(mGetUsageStatement));
 
   return rv;
 }
@@ -179,7 +224,8 @@ nsresult
 nsDOMStorageDB::GetKeyValue(const nsAString& aDomain,
                             const nsAString& aKey,
                             nsAString& aValue,
-                            PRBool* aSecure)
+                            PRBool* aSecure,
+                            nsAString& aOwner)
 {
   mozStorageStatementScoper scope(mGetKeyValueStatement);
 
@@ -199,6 +245,9 @@ nsDOMStorageDB::GetKeyValue(const nsAString& aDomain,
 
     rv = mGetKeyValueStatement->GetInt32(1, &secureInt);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mGetKeyValueStatement->GetString(2, aOwner);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   else {
     rv = NS_ERROR_DOM_NOT_FOUND_ERR;
@@ -213,11 +262,26 @@ nsresult
 nsDOMStorageDB::SetKey(const nsAString& aDomain,
                        const nsAString& aKey,
                        const nsAString& aValue,
-                       PRBool aSecure)
+                       PRBool aSecure,
+                       const nsAString& aOwner,
+                       PRInt32 aQuota)
 {
   mozStorageStatementScoper scope(mGetKeyValueStatement);
+ 
+  PRInt32 usage = 0;
+  nsresult rv;
+  if (!aOwner.IsEmpty()) {
+    if (aOwner == mCachedOwner) {
+      usage = mCachedUsage;
+    } else {
+      rv = GetUsage(aOwner, &usage);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
 
-  nsresult rv = mGetKeyValueStatement->BindStringParameter(0, aDomain);
+  usage += aKey.Length() + aValue.Length();
+
+  rv = mGetKeyValueStatement->BindStringParameter(0, aDomain);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mGetKeyValueStatement->BindStringParameter(1, aKey);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -235,34 +299,67 @@ nsDOMStorageDB::SetKey(const nsAString& aDomain,
         return NS_ERROR_DOM_SECURITY_ERR;
     }
 
-    mGetKeyValueStatement->Reset();
+    nsAutoString previousOwner;
+    rv = mGetKeyValueStatement->GetString(2, previousOwner);
+    NS_ENSURE_SUCCESS(rv, rv);
     
+    if (previousOwner == aOwner) {
+      nsAutoString previousValue;
+      rv = mGetKeyValueStatement->GetString(0, previousValue);
+      NS_ENSURE_SUCCESS(rv, rv);
+      usage -= aKey.Length() + previousValue.Length();
+    }
+
+    mGetKeyValueStatement->Reset();
+
+    if (usage > aQuota) {
+      return NS_ERROR_DOM_QUOTA_REACHED;
+    }
+
     mozStorageStatementScoper scopeupdate(mUpdateKeyStatement);
 
     rv = mUpdateKeyStatement->BindStringParameter(0, aValue);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mUpdateKeyStatement->BindInt32Parameter(1, aSecure);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mUpdateKeyStatement->BindStringParameter(2, aDomain);
+    rv = mUpdateKeyStatement->BindStringParameter(2, aOwner);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mUpdateKeyStatement->BindStringParameter(3, aKey);
+    rv = mUpdateKeyStatement->BindStringParameter(3, aDomain);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mUpdateKeyStatement->BindStringParameter(4, aKey);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return mUpdateKeyStatement->Execute();
+    rv = mUpdateKeyStatement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  else {
+    if (usage > aQuota) {
+      return NS_ERROR_DOM_QUOTA_REACHED;
+    }
+    
+    mozStorageStatementScoper scopeinsert(mInsertKeyStatement);
+    
+    rv = mInsertKeyStatement->BindStringParameter(0, aDomain);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mInsertKeyStatement->BindStringParameter(1, aKey);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mInsertKeyStatement->BindStringParameter(2, aValue);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mInsertKeyStatement->BindInt32Parameter(3, aSecure);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mInsertKeyStatement->BindStringParameter(4, aOwner);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    rv = mInsertKeyStatement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  mozStorageStatementScoper scopeinsert(mInsertKeyStatement);
+  if (!aOwner.IsEmpty()) {
+    mCachedOwner = aOwner;
+    mCachedUsage = usage;
+  }
 
-  rv = mInsertKeyStatement->BindStringParameter(0, aDomain);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mInsertKeyStatement->BindStringParameter(1, aKey);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mInsertKeyStatement->BindStringParameter(2, aValue);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mInsertKeyStatement->BindInt32Parameter(3, aSecure);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return mInsertKeyStatement->Execute();
+  return NS_OK;
 }
 
 nsresult
@@ -301,9 +398,15 @@ nsDOMStorageDB::SetSecure(const nsAString& aDomain,
 
 nsresult
 nsDOMStorageDB::RemoveKey(const nsAString& aDomain,
-                          const nsAString& aKey)
+                          const nsAString& aKey,
+                          const nsAString& aOwner,
+                          PRInt32 aKeyUsage)
 {
   mozStorageStatementScoper scope(mRemoveKeyStatement);
+
+  if (aOwner == mCachedOwner) {
+    mCachedUsage -= aKeyUsage;
+  }
 
   nsresult rv = mRemoveKeyStatement->BindStringParameter(0, aDomain);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -318,4 +421,24 @@ nsDOMStorageDB::RemoveAll()
 {
   mozStorageStatementScoper scope(mRemoveAllStatement);
   return mRemoveAllStatement->Execute();
+}
+
+nsresult
+nsDOMStorageDB::GetUsage(const nsAString &aOwner, PRInt32 *aUsage)
+{
+  mozStorageStatementScoper scope(mGetUsageStatement);
+
+  nsresult rv = mGetUsageStatement->BindStringParameter(0, aOwner);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  PRBool exists;
+  rv = mGetUsageStatement->ExecuteStep(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!exists) {
+    *aUsage = 0;
+    return NS_OK;
+  }
+  
+  return mGetUsageStatement->GetInt32(0, aUsage);
 }

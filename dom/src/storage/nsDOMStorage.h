@@ -139,7 +139,10 @@ public:
 
   // retrieve the value and secure state corresponding to a key out of storage.
   nsresult
-  GetDBValue(const nsAString& aKey, nsAString& aValue, PRBool* aSecure);
+  GetDBValue(const nsAString& aKey,
+             nsAString& aValue,
+             PRBool* aSecure,
+             nsAString& aOwner);
 
   // set the value corresponding to a key in the storage. If
   // aSecure is false, then attempts to modify a secure value
