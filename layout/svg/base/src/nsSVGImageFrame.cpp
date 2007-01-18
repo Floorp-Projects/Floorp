@@ -65,6 +65,9 @@ public:
   // imgIContainerObserver (override nsStubImageDecoderObserver)
   NS_IMETHOD FrameChanged(imgIContainer *aContainer, gfxIImageFrame *newframe,
                           nsRect * dirtyRect);
+  // imgIContainerObserver (override nsStubImageDecoderObserver)
+  NS_IMETHOD OnStartContainer(imgIRequest *aRequest,
+                              imgIContainer *aContainer);
 
   void SetFrame(nsSVGImageFrame *frame) { mFrame = frame; }
 
@@ -408,6 +411,18 @@ NS_IMETHODIMP nsSVGImageListener::FrameChanged(imgIContainer *aContainer,
     return NS_ERROR_FAILURE;
 
   mFrame->UpdateGraphic();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSVGImageListener::OnStartContainer(imgIRequest *aRequest,
+                                                   imgIContainer *aContainer)
+{
+  if (!mFrame)
+    return NS_ERROR_FAILURE;
+
+  mFrame->mImageContainer = aContainer;
+  mFrame->UpdateGraphic();
+
   return NS_OK;
 }
 
