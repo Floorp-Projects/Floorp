@@ -68,9 +68,6 @@ private:
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
 public:
   // nsIFrame:
-  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
-  virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
-
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
