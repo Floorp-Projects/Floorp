@@ -399,6 +399,13 @@ var oldOnError = window.onerror;
 window.onerror = function (ev) {
     is(0, 1, "Error thrown during test: " + ev);
     if (oldOnError) {
-	oldOnError(ev);
+	try {
+	  oldOnError(ev);
+	} catch (e) {
+	}
+    }
+    if (SimpleTest._stopOnLoad == false) {
+      // Need to finish() manually here
+      SimpleTest.finish();
     }
 }
