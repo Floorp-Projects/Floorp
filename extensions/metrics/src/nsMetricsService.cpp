@@ -119,7 +119,7 @@ static const char kEventCountPref[] = "metrics.event-count";
 static const char kEnablePref[] = "metrics.upload.enable";
 
 const PRUint32 nsMetricsService::kMaxRetries = 3;
-const PRUint32 nsMetricsService::kMetricsVersion = 1;
+const PRUint32 nsMetricsService::kMetricsVersion = 2;
 
 //-----------------------------------------------------------------------------
 

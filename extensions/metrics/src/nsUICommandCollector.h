@@ -47,6 +47,7 @@
 
 class nsIDOMWindow;
 class nsIMetricsEventItem;
+class nsIWritablePropertyBag2;
 
 class nsUICommandCollector : public nsIObserver,
                              public nsIDOMEventListener,
@@ -67,6 +68,18 @@ class nsUICommandCollector : public nsIObserver,
 
   nsUICommandCollector();
 
+  // Given a command event, determines the appropriate id and anonid values
+  // to log.  Returns failure if no id or anonid exists for the event target.
+  nsresult GetEventTargets(nsIDOMEvent *event,
+                           nsString &targetId, nsString &targetAnonId) const;
+
+  // Given a command event, determines whether the source was a key element.
+  // If so, keyId is set to the id of the element.
+  void GetEventKeyId(nsIDOMEvent *event, nsString &keyId) const;
+
+  // Given a DOM event, finds the id of the window that contains the target.
+  nsresult GetEventWindow(nsIDOMEvent *event, PRUint32 *window) const;
+
  private:
   ~nsUICommandCollector();
 
@@ -74,6 +87,11 @@ class nsUICommandCollector : public nsIObserver,
   // and if so, adds additional data about the bookmark to parentItem.
   nsresult LogBookmarkInfo(const nsString& id,
                            nsIMetricsEventItem* parentItem);
+
+  // Hashes the given property value and adds it to the property bag.
+  nsresult SetHashedValue(nsIWritablePropertyBag2 *properties,
+                          const nsString &propertyName,
+                          const nsString &propertyValue) const;
 };
 
 #define NS_UICOMMANDCOLLECTOR_CLASSNAME "UI Command Collector"
