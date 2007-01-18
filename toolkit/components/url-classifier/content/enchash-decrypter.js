@@ -74,18 +74,13 @@ PROT_EnchashDecrypter.SALT_LENGTH = PROT_EnchashDecrypter.DATABASE_SALT.length;
 PROT_EnchashDecrypter.MAX_DOTS = 5;
 
 PROT_EnchashDecrypter.REs = {};
-PROT_EnchashDecrypter.REs.FIND_DODGY_CHARS = 
-  new RegExp("[\x01-\x1f\x7f-\xff]+");
-PROT_EnchashDecrypter.REs.FIND_DODGY_CHARS_GLOBAL = 
+PROT_EnchashDecrypter.REs.FIND_DODGY_CHARS_GLOBAL =
   new RegExp("[\x01-\x1f\x7f-\xff]+", "g");
-PROT_EnchashDecrypter.REs.FIND_END_DOTS = new RegExp("^\\.+|\\.+$");
-PROT_EnchashDecrypter.REs.FIND_END_DOTS_GLOBAL = 
+PROT_EnchashDecrypter.REs.FIND_END_DOTS_GLOBAL =
   new RegExp("^\\.+|\\.+$", "g");
-PROT_EnchashDecrypter.REs.FIND_MULTIPLE_DOTS = new RegExp("\\.{2,}");
-PROT_EnchashDecrypter.REs.FIND_MULTIPLE_DOTS_GLOBAL = 
+PROT_EnchashDecrypter.REs.FIND_MULTIPLE_DOTS_GLOBAL =
   new RegExp("\\.{2,}", "g");
-PROT_EnchashDecrypter.REs.FIND_TRAILING_DOTS = new RegExp("\\.+$");
-PROT_EnchashDecrypter.REs.POSSIBLE_IP = 
+PROT_EnchashDecrypter.REs.POSSIBLE_IP =
   new RegExp("^((?:0x[0-9a-f]+|[0-9\\.])+)$", "i");
 PROT_EnchashDecrypter.REs.FIND_BAD_OCTAL = new RegExp("(^|\\.)0\\d*[89]");
 PROT_EnchashDecrypter.REs.IS_OCTAL = new RegExp("^0[0-7]*$");
@@ -243,9 +238,6 @@ PROT_EnchashDecrypter.prototype.getCanonicalHost = function(str, opt_maxDots) {
 }
 
 PROT_EnchashDecrypter.prototype.parseIPAddress_ = function(host) {
-
-  host = host.replace(this.REs_.FIND_TRAILING_DOTS_GLOBAL, "");
-
   if (!this.REs_.POSSIBLE_IP.test(host))
     return "";
 

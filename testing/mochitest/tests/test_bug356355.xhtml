@@ -165,37 +165,13 @@ function testRE(re, inputValPairs) {
        "RegExp broken: " + re + " (input: " + inputValPairs[i] + ")");
 };
 
-var tests =
-  ["", false,
-   "normal chars;!@#$%^&*&(", false,
-   "MORE NORMAL ,./<>?;':{}", false,
-   "Slightly less\2 normal", true,
-   "\245 stuff \45", true,
-   "\31", true];
-testRE(r.FIND_DODGY_CHARS, tests);
-
-tests =
-  [no_dots, false,
-   one_dot, false,
-   leading_dot, true,
-   trailing_dots, true,
-   end_dots, true];
-testRE(r.FIND_END_DOTS, tests);
-
 tests =
   [no_dots, false,
    one_dot, false,
    two_dots, true,
    lots_o_dots, true,
    multi_dots, true];
-testRE(r.FIND_MULTIPLE_DOTS, tests);
-
-tests =
-  [no_dots, false,
-   one_dot, false,
-   trailing_dot, true,
-   trailing_dots, true];
-testRE(r.FIND_TRAILING_DOTS, tests);
+testRE(r.FIND_MULTIPLE_DOTS_GLOBAL, tests);
 
 tests =
   ["random junk", false,
