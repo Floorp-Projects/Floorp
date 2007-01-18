@@ -1,92 +1,228 @@
 package MozBuild::Util;
+
+use strict;
+
 use File::Path;
+use IO::Handle;
+use IO::Select;
+use IPC::Open3;
+use POSIX qw(:sys_wait_h);
+
 use base qw(Exporter);
 
-@EXPORT_OK = qw(RunShellCommand MkdirWithPath HashFile);
+our @EXPORT_OK = qw(RunShellCommand MkdirWithPath HashFile);
 
-my $EXEC_TIMEOUT = '600';
+my $DEFAULT_EXEC_TIMEOUT = 600;
+my $EXEC_IO_READINCR = 1000;
+
+# RunShellCommand is a safe, performant way that handles all the gotchas of
+# spawning a simple shell command. It's meant to replace backticks and open()s,
+# while providing flexibility to handle stdout and stderr differently, provide
+# timeouts to stop runaway programs, and provide easy-to-obtain information
+# about return values, signals, output, and the like.
+#
+# Arguments:
+#    command - string: the command to run
+#    args - optional array ref: list of arguments to an array
+#    logfile - optional string: logfile to copy output to
+#    timeout - optional int: timeout value, in seconds, to wait for a command;
+#     defaults to ten minutes; set to 0 for no timeout
+#    redirectStderr - bool, default true: redirect child's stderr onto stdout
+#     stream?
+#    appendLogfile - bool, default true: append to the logfile (as opposed to
+#     overwriting it?)
+#    printOutputImmedaitely - bool, default false: print the output here to
+#     whatever is currently defined as *STDOUT?
+#    background - bool, default false: spawn a command and return all the info
+#     the caller needs to handle the program; assumes the caller takes
+#     complete responsibility for waitpid(), handling of the stdout/stderr
+#     IO::Handles, etc.
+#
 
 sub RunShellCommand {
     my %args = @_;
+
     my $shellCommand = $args{'command'};
+    die 'ASSERT: RunShellCommand(): Empty command.' 
+     if (not(defined($shellCommand)) || $shellCommand =~ /^\s+$/);
+    my $commandArgs = $args{'args'};
+    die 'ASSERT: RunShellCommand(): commandArgs not an array ref.' 
+     if (defined($commandArgs) && ref($commandArgs) ne 'ARRAY');
+
     my $logfile = $args{'logfile'};
 
-    # optional
-    my $timeout = exists($args{'timeout'}) ? $args{'timeout'} : $EXEC_TIMEOUT;
-    my $redirectStderr = exists($args{'redirectStderr'}) ? $args{'redirectStderr'} : 1;
+    # Optional
+    my $timeout = exists($args{'timeout'}) ?
+     int($args{'timeout'}) : $DEFAULT_EXEC_TIMEOUT;
+    my $redirectStderr = exists($args{'redirectStderr'}) ?
+     $args{'redirectStderr'} : 1;
+    my $appendLogfile = exists($args{'appendLog'}) ? $args{'appendLog'} : 1;
     my $printOutputImmediately = exists($args{'output'}) ? $args{'output'} : 0;
+    my $background = exists($args{'bg'}) ? $args{'bg'} : 0;
 
-    my $now = localtime();
+    # This is a compatibility check for the old calling convention; if we
+    # find spaces in the command, turn it into the proper command [ args]-type
+    # call. This will break callers that "escape" their args by quoting them,
+    # i.e. foo "bar baz" buh, expecting the args to foo to be "bar baz" and
+    # "buh". They will turn out to be "\"bar", "baz\" and "buh". These callers
+    # just need to be fixed.
+    if ($shellCommand =~ /\s/) {
+        $shellCommand =~ s/^\s+//;
+        $shellCommand =~ s/\s+$//;
+
+        my @commandParts = split(/\s+/, $shellCommand);
+
+        $shellCommand = shift(@commandParts);
+        if (defined($commandArgs)) {
+            push(@{$commandArgs}, @commandParts);
+        } else {
+            $commandArgs = \@commandParts;
+        }
+    }
+
+    # Glob the command together to check for 2>&1 constructs...
+    my $entireCommand = $shellCommand . 
+     (defined($commandArgs) ? join (' ', @{$commandArgs}) : '');
+   
+    # If we see 2>&1 in the command, set redirectStderr (overriding the option
+    # itself, and remove the construct from the command and arguments.
+    if ($entireCommand =~ /2\>\&1/) {
+        $redirectStderr = 1;
+        $shellCommand =~ s/2\>\&1//g;
+        if (defined($commandArgs)) {
+            for (my $i = 0; $i < scalar(@{$commandArgs}); $i++) {
+                $commandArgs->[$i] =~ s/2\>\&1//g;
+            }
+        }
+    }
+
     local $_;
  
     chomp($shellCommand);
 
-    my $exitValue = 1;
-    my $signalNum;
-    my $sigName;
-    my $dumpedCore;
-    my $timedOut;
+    my $exitValue = undef;
+    my $signalNum = undef;
+    my $sigName = undef;
+    my $dumpedCore = undef;
+    my $childEndedTime = undef;
+    my $timedOut = 0;
     my $output = '';
-    my $pid;
+    my $childPid = 0;
+    my $childStartedTime = 0;
 
     eval {
         local $SIG{'ALRM'} = sub { die "alarm\n" };
-        alarm $timeout;
- 
-        if (! $redirectStderr or $shellCommand =~ "2>&1") {
-            $pid = open CMD, "$shellCommand |" or die "Could not run command $shellCommand: $!";
-        } else {
-            $pid = open CMD, "$shellCommand 2>&1 |" or die "Could not close command $shellCommand: $!";
+        local $SIG{'PIPE'} = sub { die "pipe\n" };
+  
+        my @execCommand = ($shellCommand);
+        push(@execCommand, @{$commandArgs}) if (defined($commandArgs) && 
+         scalar(@{$commandArgs} > 0));
+    
+        my $childIn = new IO::Handle();
+        my $childOut = new IO::Handle();
+        my $childErr = new IO::Handle();
+
+        alarm($timeout);
+        $childStartedTime = localtime();
+
+        $childPid = open3($childIn, $childOut, $childErr, @execCommand);
+        $childIn->close();
+
+        if ($args{'background'}) {
+            alarm(0);
+
+            return { startTime => $childStartedTime,
+                     endTime => undef,
+                     timedOut => $timedOut,
+                     exitValue => $exitValue,
+                     sigName => $signalNum,
+                     output => undef,
+                     dumpedCore => $dumpedCore,
+                     pid => $childPid,
+                     stdout => $childOut,
+                     stderr => $childErr };
         }
 
         if (defined($logfile)) {
-            open(LOGFILE, ">> $logfile") or die "Could not open logfile $logfile: $!";
+            my $openArg = $appendLogfile ? '>>' : '>';
+            open(LOGFILE, $openArg . $logfile) or 
+             die 'Could not ' . $appendLogfile ? 'append' : 'open' . 
+              " logfile $logfile: $!";
             LOGFILE->autoflush(1);
         }
-        while (<CMD>) {
-            $output .= $_;
-            print $_ if ($printOutputImmediately);
-            if (defined($logfile)) {
-                print LOGFILE $_;
+
+        my $childSelect = new IO::Select();
+        $childSelect->add($childErr);
+        $childSelect->add($childOut);
+    
+        # Should be safe to call can_read() in blocking mode, since,
+        # IF NOTHING ELSE, the alarm() we set will catch a program that
+        # fails to finish executing within the timeout period.
+
+        while (my @ready = $childSelect->can_read()) {
+            foreach my $fh (@ready) {
+                my $line = undef;
+                my $rv = $fh->sysread($line, $EXEC_IO_READINCR);
+
+                # Check for read()ing nothing, and getting errors...
+                next if ($rv == 0);
+                if ($rv eq undef) {
+                    warn "sysread() failed with: $!\n";
+                    next;
+                }
+
+                # This check is down here instead of up above because if we're
+                # throwing away stderr, we want to empty out the buffer, so
+                # the pipe isn't constantly readable. So, sysread() stderr,
+                # alas, only to throw it away.
+                next if (not($redirectStderr) && ($fh == $childErr));
+
+                $output .= $line;
+                print STDOUT $line if ($printOutputImmediately);
+                print LOGFILE $line if (defined($logfile));
+            }
+
+            if (waitpid($childPid, WNOHANG) > 0) {
+                alarm(0);
+                $childEndedTime = localtime();
+                $exitValue = WEXITSTATUS($?);
+                $signalNum = WIFSIGNALED($?) && WTERMSIG($?);
+                $dumpedCore = WIFSIGNALED($?) && WCOREDUMP($?);
+                $childSelect->remove($childErr);
+                $childSelect->remove($childOut);
+
             }
         }
-        if (defined($logfile)) {
-            close(LOGFILE) or die "Could not close logfile $logfile: $!";
-        }
 
-        close CMD;# or die "Could not close command: $!";
-        $exitValue = $? >> 8;
-        $signalNum = $? >> 127;
-        $dumpedCore = $? & 128;
-        $timedOut = 0;
-        alarm 0;
+        die 'ASSERT: RunShellCommand(): stdout handle not empty'
+         if ($childOut->sysread(undef, $EXEC_IO_READINCR) != 0);
+        die 'ASSERT: RunShellCommand(): stderr handle not empty;'
+         if ($childErr->sysread(undef, $EXEC_IO_READINCR) != 0);
     };
+
+    if (defined($logfile)) {
+        close(LOGFILE) or die "Could not close logfile $logfile: $!";
+    }
 
     if ($@) {
         if ($@ eq "alarm\n") {
             $timedOut = 1;
-            kill(9, $pid) or die "Could not kill timed-out $pid: $!";
-            warn "Shell command $shellCommand timed out, PID $pid killed: $@\n";
+            kill(9, $childPid) or die "Could not kill timed-out $childPid: $!";
+            warn "Shell command $shellCommand timed out, PID $childPid killed: $@\n";
         } else {
             warn "Error running $shellCommand: $@\n";
             $output = $@;
         }
     }
 
-    if ($exitValue or $timedOut or $dumpedCore or $signalNum) {
-        if ($timedOut) {
-            # callers expect exitValue to be non-zero if request timed out
-            $exitValue = 1;
-        }
-    }
-
-    return { timedOut => $timedOut,
-             exitValue => $exitValue,
-             sigName => $sigName,
-             output => $output,
-             dumpedCore => $dumpedCore,
-             pid => $pid,
-    };
+     return { startTime => $childStartedTime,
+              endTime => $childEndedTime,
+              timedOut => $timedOut,
+              exitValue => $exitValue,
+              sigName => $sigName,
+              output => $output,
+              dumpedCore => $dumpedCore
+            };
 }
 
 ## This is a wrapper function to get easy true/false return values from a
