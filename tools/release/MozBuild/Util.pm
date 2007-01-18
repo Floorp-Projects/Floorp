@@ -7,6 +7,7 @@ use IO::Handle;
 use IO::Select;
 use IPC::Open3;
 use POSIX qw(:sys_wait_h);
+use Cwd;
 
 use base qw(Exporter);
 
@@ -59,25 +60,15 @@ sub RunShellCommand {
     my $appendLogfile = exists($args{'appendLog'}) ? $args{'appendLog'} : 1;
     my $printOutputImmediately = exists($args{'output'}) ? $args{'output'} : 0;
     my $background = exists($args{'bg'}) ? $args{'bg'} : 0;
+    my $changeToDir = exists($args{'dir'}) ?  $args{'dir'} : undef;
 
-    # This is a compatibility check for the old calling convention; if we
-    # find spaces in the command, turn it into the proper command [ args]-type
-    # call. This will break callers that "escape" their args by quoting them,
-    # i.e. foo "bar baz" buh, expecting the args to foo to be "bar baz" and
-    # "buh". They will turn out to be "\"bar", "baz\" and "buh". These callers
-    # just need to be fixed.
+    # This is a compatibility check for the old calling convention;
     if ($shellCommand =~ /\s/) {
         $shellCommand =~ s/^\s+//;
         $shellCommand =~ s/\s+$//;
 
-        my @commandParts = split(/\s+/, $shellCommand);
-
-        $shellCommand = shift(@commandParts);
-        if (defined($commandArgs)) {
-            push(@{$commandArgs}, @commandParts);
-        } else {
-            $commandArgs = \@commandParts;
-        }
+        die "ASSERT: old RunShellCommand() calling convention detected\n" 
+         if ($shellCommand =~ /\s+/);
     }
 
     # Glob the command together to check for 2>&1 constructs...
@@ -100,6 +91,7 @@ sub RunShellCommand {
  
     chomp($shellCommand);
 
+    my $cwd = getcwd();
     my $exitValue = undef;
     my $signalNum = undef;
     my $sigName = undef;
@@ -109,6 +101,11 @@ sub RunShellCommand {
     my $output = '';
     my $childPid = 0;
     my $childStartedTime = 0;
+
+    if (defined($changeToDir)) {
+        chdir($changeToDir) or die "RunShellCommand(): failed to chdir() to "
+         . "$changeToDir\n";
+    }
 
     eval {
         local $SIG{'ALRM'} = sub { die "alarm\n" };
@@ -131,6 +128,7 @@ sub RunShellCommand {
         if ($args{'background'}) {
             alarm(0);
 
+            chdir($cwd) if (defined($changeToDir));
             return { startTime => $childStartedTime,
                      endTime => undef,
                      timedOut => $timedOut,
@@ -166,7 +164,7 @@ sub RunShellCommand {
 
                 # Check for read()ing nothing, and getting errors...
                 next if ($rv == 0);
-                if ($rv eq undef) {
+                if (not defined($rv)) {
                     warn "sysread() failed with: $!\n";
                     next;
                 }
@@ -215,14 +213,16 @@ sub RunShellCommand {
         }
     }
 
-     return { startTime => $childStartedTime,
-              endTime => $childEndedTime,
-              timedOut => $timedOut,
-              exitValue => $exitValue,
-              sigName => $sigName,
-              output => $output,
-              dumpedCore => $dumpedCore
-            };
+    chdir($cwd) if (defined($changeToDir));
+
+    return { startTime => $childStartedTime,
+             endTime => $childEndedTime,
+             timedOut => $timedOut,
+             exitValue => $exitValue,
+             sigName => $sigName,
+             output => $output,
+             dumpedCore => $dumpedCore
+           };
 }
 
 ## This is a wrapper function to get easy true/false return values from a
