@@ -207,36 +207,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGOuterSVGFrameBase)
 //----------------------------------------------------------------------
 // reflowing
 
-/* virtual */ nscoord
-nsSVGOuterSVGFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
-{
-  nscoord result;
-  DISPLAY_MIN_WIDTH(this, result);
-
-  nsSVGSVGElement *svg = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
-  float width =
-    svg->mLengthAttributes[nsSVGSVGElement::WIDTH].GetAnimValue(this);
-
-  result = nscoord(width * GetTwipsPerPx());
-  return result;
-
-}
-
-/* virtual */ nscoord
-nsSVGOuterSVGFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
-{
-  nscoord result;
-  DISPLAY_PREF_WIDTH(this, result);
-
-  nsSVGSVGElement *svg = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
-  float width =
-    svg->mLengthAttributes[nsSVGSVGElement::WIDTH].GetAnimValue(this);
-
-  result = nscoord(width * GetTwipsPerPx());
-  return result;
-
-}
-
 NS_IMETHODIMP
 nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
@@ -336,6 +306,7 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
   // Let's work out our desired dimensions.
 
   nsSVGSVGElement *svg = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
+  svg->SetParentCoordCtxProvider(this);
   float width =
     svg->mLengthAttributes[nsSVGSVGElement::WIDTH].GetAnimValue(this);
   float height =

@@ -987,10 +987,6 @@ nsSVGSVGElement::SetParentCoordCtxProvider(nsSVGCoordCtxProvider *parentCtx)
     return NS_ERROR_FAILURE;
   }
 
-  if (parentCtx == mCoordCtx) {
-    return NS_OK;
-  }
-
   mCoordCtx = parentCtx;
   
   // set parent's mmPerPx on our coord contexts:
