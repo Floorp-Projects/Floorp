@@ -45,6 +45,7 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsdhash.h"
+#include "jsutil.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -339,6 +340,20 @@ struct JSGCArenaList {
     JSGCArenaStats stats;
 #endif
 };
+
+typedef struct JSWeakRoots {
+    /* Most recently created things by type, members of the GC's root set. */
+    JSGCThing           *newborn[GCX_NTYPES];
+
+    /* Atom root for the last-looked-up atom on this context. */
+    JSAtom              *lastAtom;
+
+    /* Root for the result of the most recent js_InternalInvoke call. */
+    jsval               lastInternalResult;
+} JSWeakRoots;
+
+JS_STATIC_ASSERT(JSVAL_NULL == 0);
+#define JS_CLEAR_WEAK_ROOTS(wr) (memset((wr), 0, sizeof(JSWeakRoots)))
 
 #ifdef DEBUG_notme
 #define TOO_MUCH_GC 1

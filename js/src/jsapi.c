@@ -1773,12 +1773,7 @@ JS_AddNamedRoot(JSContext *cx, void *rp, const char *name)
 JS_PUBLIC_API(void)
 JS_ClearNewbornRoots(JSContext *cx)
 {
-    uintN i;
-
-    for (i = 0; i < GCX_NTYPES; i++)
-        cx->newborn[i] = NULL;
-    cx->lastAtom = NULL;
-    cx->lastInternalResult = JSVAL_NULL;
+    JS_CLEAR_WEAK_ROOTS(&cx->weakRoots);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2561,7 +2556,7 @@ JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *clasp,
         return NULL;
     if (!DefineProperty(cx, obj, name, OBJECT_TO_JSVAL(nobj), NULL, NULL, attrs,
                         0, 0)) {
-        cx->newborn[GCX_OBJECT] = NULL;
+        cx->weakRoots.newborn[GCX_OBJECT] = NULL;
         return NULL;
     }
     return nobj;
@@ -3409,7 +3404,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
     return iterobj;
 
 bad:
-    cx->newborn[GCX_OBJECT] = NULL;
+    cx->weakRoots.newborn[GCX_OBJECT] = NULL;
     return NULL;
 }
 
@@ -3870,7 +3865,7 @@ JS_CompileUCScript(JSContext *cx, JSObject *obj,
 #define LAST_FRAME_CHECKS(cx,result)                                          \
     JS_BEGIN_MACRO                                                            \
         if (!(cx)->fp) {                                                      \
-            (cx)->lastInternalResult = JSVAL_NULL;                            \
+            (cx)->weakRoots.lastInternalResult = JSVAL_NULL;                  \
             LAST_FRAME_EXCEPTION_CHECK(cx, result);                           \
         }                                                                     \
     JS_END_MACRO
