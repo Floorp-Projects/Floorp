@@ -196,6 +196,17 @@ nsAppShell::ProcessGeckoEvents()
   }
 
   NativeEventCallback();
+  
+  [NSApp postEvent:[NSEvent otherEventWithType:NSApplicationDefined
+                                      location:NSMakePoint(0,0)
+                                 modifierFlags:0
+                                     timestamp:0
+                                  windowNumber:-1
+                                       context:NULL
+                                       subtype:0
+                                         data1:0
+                                         data2:0]
+           atStart:NO];
 }
 
 // WillTerminate
