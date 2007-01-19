@@ -36,6 +36,9 @@ f== bugs/360065-1.html bugs/360065-1-ref.html # bug 18217
 == bugs/364862-1.html bugs/364862-1-ref.html
 == bugs/365173-1.html bugs/365173-1-ref.html
 == bugs/322461-1.xml bugs/322461-1-ref.html
+== bugs/346774-1a.html bugs/346774-1-ref.html
+== bugs/346774-1b.html bugs/346774-1-ref.html
+== bugs/346774-1c.html bugs/346774-1-ref.html
 
 # table-dom/
 == table-dom/appendCells1.html table-dom/appendCells1-ref.html
