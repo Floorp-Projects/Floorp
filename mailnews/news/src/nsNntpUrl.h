@@ -58,6 +58,7 @@ public:
 
   // nsIMsgFolder override
   NS_IMETHOD GetFolder(nsIMsgFolder **msgFolder);
+  NS_IMETHOD Clone(nsIURI **_retval);
 
   // nsNntpUrl
   nsNntpUrl();

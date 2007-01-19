@@ -381,3 +381,16 @@ NS_IMETHODIMP nsNntpUrl::SetCharsetOverRide(const char * aCharacterSet)
   mCharsetOverride = aCharacterSet;
   return NS_OK;
 }
+
+NS_IMETHODIMP nsNntpUrl::Clone(nsIURI **_retval)
+{
+  nsresult rv;
+  rv = nsMsgMailNewsUrl::Clone(_retval);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIMsgMessageUrl> newsurl = do_QueryInterface(*_retval, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return newsurl->SetUri(mURI.get());
+}
+

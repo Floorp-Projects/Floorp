@@ -1006,7 +1006,7 @@ nsNntpService::ConstructNntpUrl(const char *urlString, nsIUrlListener *aUrlListe
   nsCOMPtr <nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(nntpUrl);
   mailnewsurl->SetMsgWindow(aMsgWindow);
   nsCOMPtr <nsIMsgMessageUrl> msgUrl = do_QueryInterface(nntpUrl);
-  msgUrl->SetUri(urlString);
+  msgUrl->SetUri(originalMessageUri);
   mailnewsurl->SetSpec(nsDependentCString(urlString));
   nntpUrl->SetNewsAction(action);
   
