@@ -219,6 +219,7 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_spinner_upbutton,       NS_THEME_SPINNER_UP_BUTTON,
   eCSSKeyword_spinner_downbutton,     NS_THEME_SPINNER_DOWN_BUTTON,
   eCSSKeyword_scrollbar,              NS_THEME_SCROLLBAR,
+  eCSSKeyword_scrollbar_small,        NS_THEME_SCROLLBAR_SMALL,
   eCSSKeyword_scrollbarbutton_up,     NS_THEME_SCROLLBAR_BUTTON_UP,
   eCSSKeyword_scrollbarbutton_down,   NS_THEME_SCROLLBAR_BUTTON_DOWN,
   eCSSKeyword_scrollbarbutton_left,   NS_THEME_SCROLLBAR_BUTTON_LEFT,
