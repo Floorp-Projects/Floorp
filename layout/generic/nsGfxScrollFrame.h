@@ -184,7 +184,15 @@ public:
   PRPackedBool mIsRoot:1;
   // Is mOuter an nsXULScrollFrame?
   PRPackedBool mIsXUL:1;
+  // If true, don't try to layout the scrollbars in Reflow().  This can be
+  // useful if multiple passes are involved, because we don't want to place the
+  // scrollbars at the wrong size.
   PRPackedBool mSupppressScrollbarUpdate:1;
+  // If true, we skipped a scrollbar layout due to mSupppressScrollbarUpdate
+  // being set at some point.  That means we should lay out scrollbars even if
+  // it might not strictly be needed next time mSupppressScrollbarUpdate is
+  // false.
+  PRPackedBool mSkippedScrollbarLayout:1;
   // Did we load a hint from global history
   // about whether a vertical scrollbar is required?
   PRPackedBool mDidLoadHistoryVScrollbarHint:1;
