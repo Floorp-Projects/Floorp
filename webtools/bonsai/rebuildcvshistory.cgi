@@ -210,7 +210,14 @@ if ($#ARGV == 4) {
      $::FORM{'firstfile'}        = $ARGV[2];
      $::FORM{'subdir'}           = $ARGV[3];
      $::FORM{'modules'}          = $ARGV[4];
-} else {
+}
+elsif ($#ARGV == 2) {
+     $::TreeID                   = $ARGV[0];
+     $::FORM{'startfrom'}        = $ARGV[1];
+     $::Filename                 = $ARGV[2];
+}
+else {
+
      print "Content-type: text/html
 
 <HTML>";
@@ -222,8 +229,10 @@ if ($#ARGV == 4) {
 }
 
 $::StartFrom   = ParseTimeAndCheck(FormData('startfrom'));
-$::FirstFile   = trim(FormData('firstfile'));
-$::SubDir      = trim(FormData('subdir'));
+if (!$::Filename) {
+    $::FirstFile   = trim(FormData('firstfile'));
+    $::SubDir      = trim(FormData('subdir'));
+}
 $::Modules     = '';
 
 if (defined($::FORM{'modules'})) {
@@ -245,6 +254,8 @@ Rebuilding entire checkin history in $::Description, (`$::TreeID' tree) ...
 ";
 
 Log("Rebuilding cvs history in $::Description, (`$::TreeID' tree)...");
+
+if ($::Filename) { ProcessOneFile("$::Repository/$::Filename,v"); exit; }
 
 LoadDirList();
 my @Dirs = grep(!/\*$/, @::LegalDirs);
