@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+# Ryan Flint <rflint@dslr.net>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -129,14 +130,13 @@ var gSecurityPane = {
   readCheckPhish: function ()
   {
     var phishEnabled = document.getElementById("browser.safebrowsing.enabled").value;
-    var remoteLookup = document.getElementById("browser.safebrowsing.remoteLookups").value;
 
     var checkPhish = document.getElementById("checkPhishChoice");
     var loadList = document.getElementById("onloadProvider");
     var onloadAfter = document.getElementById("onloadAfter");
 
     checkPhish.disabled = onloadAfter.disabled = !phishEnabled;
-    loadList.disabled = !phishEnabled || !remoteLookup;
+    loadList.disabled = !phishEnabled;
 
     // don't override pref value
     return undefined;
@@ -159,11 +159,15 @@ var gSecurityPane = {
     const prefName = "browser.safebrowsing.provider." +
                      providerNum +
                      ".privacy.optedIn";
-    var pref = document.createElement("preference");
-    pref.setAttribute("type", "bool");
-    pref.id = prefName;
-    pref.setAttribute("name", prefName);
-    document.getElementById("securityPreferences").appendChild(pref);
+    var pref = document.getElementById(prefName);
+
+    if (!pref) {
+      pref = document.createElement("preference");
+      pref.setAttribute("type", "bool");
+      pref.id = prefName;
+      pref.setAttribute("name", prefName);
+      document.getElementById("securityPreferences").appendChild(pref);
+    }
 
     // only show privacy policy if it hasn't already been shown or the user
     // hasn't agreed to it
@@ -181,24 +185,6 @@ var gSecurityPane = {
 
     // user has previously agreed
     return true;
-  },
-
-  /**
-   * Enables and disables UI as necessary based on which type of phishing
-   * detection is currently selected (and whether phishing is even enabled,
-   * since this could trample on readCheckPhish during a preference update).
-   */
-  readPhishChoice: function ()
-  {
-    var phishPref = document.getElementById("browser.safebrowsing.enabled");
-    var phishChoice = document.getElementById("browser.safebrowsing.remoteLookups");
-
-    var onloadList = document.getElementById("onloadProvider");
-    if (phishPref.value)
-      onloadList.disabled = !phishChoice.value;
-
-    // don't override pref value
-    return undefined;
   },
 
   /**
@@ -220,6 +206,21 @@ var gSecurityPane = {
 
     // don't override pref value
     return undefined;
+  },
+
+  /**
+   * Ensures that the user has agreed to the selected provider's privacy policy
+   * if safe browsing is enabled.
+   */
+  onSBChange: function ()
+  {
+    var phishEnabled = document.getElementById("browser.safebrowsing.enabled").value;
+    var remoteLookup = document.getElementById("browser.safebrowsing.remoteLookups");
+    var providerNum = document.getElementById("onloadProvider").value;
+
+    if (phishEnabled && remoteLookup.value &&
+        !this._userAgreedToPhishingEULA(providerNum))
+      remoteLookup.value = false;
   },
 
   /**
@@ -309,21 +310,9 @@ var gSecurityPane = {
   onProviderChanged: function ()
   {
     var pref = document.getElementById("browser.safebrowsing.dataProvider");
-    if (!this._userAgreedToPhishingEULA(pref.value)) {
-      this._disableOnloadPhishChecks();
-    }
-  },
-
-  /**
-   * Turns off onload phishing protection and updates UI accordingly.
-   */
-  _disableOnloadPhishChecks: function ()
-  {
     var remoteLookup = document.getElementById("browser.safebrowsing.remoteLookups");
-    remoteLookup.value = false;
 
-    var radio = document.getElementById("checkPhishChoice");
-    this._pane.userChangedValue(radio);
+    remoteLookup.value = this._userAgreedToPhishingEULA(pref.value);
   },
 
   // PASSWORDS
