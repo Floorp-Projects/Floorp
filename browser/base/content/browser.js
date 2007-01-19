@@ -1382,7 +1382,8 @@ function ctrlNumberTabSelection(event)
   if (!event.metaKey)
 #else
 #ifdef XP_UNIX
-  if (!event.altKey)
+  // don't let tab selection clash with numeric accesskeys (bug 366084)
+  if (!event.altKey || event.shiftKey)
 #else
   if (!event.ctrlKey)
 #endif
