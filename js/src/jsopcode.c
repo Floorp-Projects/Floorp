@@ -782,7 +782,7 @@ static ptrdiff_t
 GetOff(SprintStack *ss, uintN i)
 {
     ptrdiff_t off;
-    JSString *str;
+    char *bytes;
 
     off = ss->offsets[i];
     if (off < 0) {
@@ -795,14 +795,15 @@ GetOff(SprintStack *ss, uintN i)
             return 0;
         }
 
-        str = js_DecompileValueGenerator(ss->sprinter.context, off,
-                                         JSVAL_NULL, NULL);
-        if (!str)
+        bytes = js_DecompileValueGenerator(ss->sprinter.context, off,
+                                           JSVAL_NULL, NULL);
+        if (!bytes)
             return 0;
-        off = SprintCString(&ss->sprinter, JS_GetStringBytes(str));
+        off = SprintCString(&ss->sprinter, bytes);
         if (off < 0)
             off = 0;
         ss->offsets[i] = off;
+        JS_free(ss->sprinter.context, bytes);
     }
     return off;
 }
@@ -4408,7 +4409,7 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun)
 
 #undef LOCAL_ASSERT_RV
 
-JSString *
+char *
 js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
                            JSString *fallback)
 {
@@ -4422,7 +4423,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
     jssrcnote *sn;
     ptrdiff_t len, oplen;
     JSPrinter *jp;
-    JSString *name;
+    char *name;
 
     for (fp = cx->fp; fp && !fp->script; fp = fp->down)
         continue;
@@ -4554,7 +4555,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
      * its keyword name instead.
      */
     if (op == JSOP_THIS)
-        return JS_NewStringCopyZ(cx, js_this_str);
+        return JS_strdup(cx, js_this_str);
 
     /*
      * JSOP_BINDNAME is special: it generates a value, the base object of a
@@ -4737,12 +4738,20 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
             jp->scope = OBJ_SCOPE(fp->fun->object);
         }
         jp->dvgfence = end;
-        if (js_DecompileCode(jp, script, begin, (uintN)len, (uintN)pcdepth))
-            name = js_GetPrinterOutput(jp);
+        if (js_DecompileCode(jp, script, begin, (uintN)len, (uintN)pcdepth)) {
+            name = (jp->sprinter.base) ? jp->sprinter.base : "";
+            name = JS_strdup(cx, name);
+        }
         js_DestroyPrinter(jp);
     }
     return name;
 
   do_fallback:
-    return fallback ? fallback : js_ValueToSource(cx, v);
+    if (!fallback) {
+        fallback = js_ValueToSource(cx, v);
+        if (!fallback)
+            return NULL;
+    }
+    return js_DeflateString(cx, JSSTRING_CHARS(fallback),
+                            JSSTRING_LENGTH(fallback));
 }

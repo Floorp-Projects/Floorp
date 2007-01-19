@@ -1636,7 +1636,6 @@ ImportProperty(JSContext *cx, JSObject *obj, jsid id)
     JSIdArray *ida;
     JSProperty *prop;
     JSObject *obj2, *target, *funobj, *closure;
-    JSString *str;
     uintN attrs;
     jsint i;
     jsval value;
@@ -1653,10 +1652,8 @@ ImportProperty(JSContext *cx, JSObject *obj, jsid id)
         if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
             return JS_FALSE;
         if (!prop) {
-            str = js_DecompileValueGenerator(cx, JSDVG_IGNORE_STACK,
-                                             ID_TO_VALUE(id), NULL);
-            if (str)
-                js_ReportIsNotDefined(cx, JS_GetStringBytes(str));
+            js_ReportValueError(cx, JSMSG_NOT_DEFINED,
+                                JSDVG_IGNORE_STACK, ID_TO_VALUE(id), NULL);
             return JS_FALSE;
         }
         ok = OBJ_GET_ATTRIBUTES(cx, obj, id, prop, &attrs);
@@ -1664,13 +1661,8 @@ ImportProperty(JSContext *cx, JSObject *obj, jsid id)
         if (!ok)
             return JS_FALSE;
         if (!(attrs & JSPROP_EXPORTED)) {
-            str = js_DecompileValueGenerator(cx, JSDVG_IGNORE_STACK,
-                                             ID_TO_VALUE(id), NULL);
-            if (str) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_NOT_EXPORTED,
-                                     JS_GetStringBytes(str));
-            }
+            js_ReportValueError(cx, JSMSG_NOT_EXPORTED,
+                                JSDVG_IGNORE_STACK, ID_TO_VALUE(id), NULL);
             return JS_FALSE;
         }
     }
@@ -2421,11 +2413,13 @@ interrupt:
             if (nuses) {
                 SAVE_SP_AND_PC(fp);
                 for (n = -nuses; n < 0; n++) {
-                    str = js_DecompileValueGenerator(cx, n, sp[n], NULL);
-                    if (str) {
+                    char *bytes = js_DecompileValueGenerator(cx, n, sp[n],
+                                                             NULL);
+                    if (bytes) {
                         fprintf(tracefp, "%s %s",
                                 (n == -nuses) ? "  inputs:" : ",",
-                                JS_GetStringBytes(str));
+                                bytes);
+                        JS_free(cx, bytes);
                     }
                 }
                 fprintf(tracefp, " @ %d\n", sp - fp->spbase);
@@ -2727,12 +2721,7 @@ interrupt:
             SAVE_SP_AND_PC(fp);
             rval = FETCH_OPND(-1);
             if (JSVAL_IS_PRIMITIVE(rval)) {
-                str = js_DecompileValueGenerator(cx, -1, rval, NULL);
-                if (str) {
-                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                         JSMSG_IN_NOT_OBJECT,
-                                         JS_GetStringBytes(str));
-                }
+                js_ReportValueError(cx, JSMSG_IN_NOT_OBJECT, -1, rval, NULL);
                 ok = JS_FALSE;
                 goto out;
             }
@@ -5458,12 +5447,8 @@ interrupt:
             rval = FETCH_OPND(-1);
             if (JSVAL_IS_PRIMITIVE(rval) ||
                 !(obj = JSVAL_TO_OBJECT(rval))->map->ops->hasInstance) {
-                str = js_DecompileValueGenerator(cx, -1, rval, NULL);
-                if (str) {
-                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                         JSMSG_BAD_INSTANCEOF_RHS,
-                                         JS_GetStringBytes(str));
-                }
+                js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
+                                    -1, rval, NULL);
                 ok = JS_FALSE;
                 goto out;
             }
@@ -5794,13 +5779,8 @@ interrupt:
                     i = JSProto_Boolean;
                 } else {
                     JS_ASSERT(JSVAL_IS_NULL(lval) || JSVAL_IS_VOID(lval));
-                    str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
-                                                     lval, NULL);
-                    if (str) {
-                        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                             JSMSG_NO_PROPERTIES,
-                                             JS_GetStringBytes(str));
-                    }
+                    js_ReportValueError(cx, JSMSG_NO_PROPERTIES,
+                                        JSDVG_SEARCH_STACK, lval, NULL);
                     ok = JS_FALSE;
                     goto out;
                 }
@@ -6015,13 +5995,8 @@ interrupt:
                 goto out;
             }
             if (FRAME_TO_GENERATOR(fp)->state == JSGEN_CLOSING) {
-                str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
-                                                 fp->argv[-2], NULL);
-                if (str) {
-                    JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
-                                           JSMSG_BAD_GENERATOR_YIELD,
-                                           JSSTRING_CHARS(str));
-                }
+                js_ReportValueError(cx, JSMSG_BAD_GENERATOR_YIELD,
+                                    JSDVG_SEARCH_STACK, fp->argv[-2], NULL);
                 ok = JS_FALSE;
                 goto out;
             }
@@ -6096,11 +6071,13 @@ interrupt:
                 if (op == JSOP_FORELEM && sp[-1] == JSVAL_FALSE)
                     --ndefs;
                 for (n = -ndefs; n < 0; n++) {
-                    str = js_DecompileValueGenerator(cx, n, sp[n], NULL);
-                    if (str) {
+                    char *bytes = js_DecompileValueGenerator(cx, n, sp[n],
+                                                             NULL);
+                    if (bytes) {
                         fprintf(tracefp, "%s %s",
                                 (n == -ndefs) ? "  output:" : ",",
-                                JS_GetStringBytes(str));
+                                bytes);
+                        JS_free(cx, bytes);
                     }
                 }
                 fprintf(tracefp, " @ %d\n", sp - fp->spbase);

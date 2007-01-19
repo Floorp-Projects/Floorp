@@ -1205,6 +1205,26 @@ js_ReportIsNotDefined(JSContext *cx, const char *name)
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_DEFINED, name);
 }
 
+JSBool
+js_ReportValueErrorFlags(JSContext *cx, uintN flags, const uintN errorNumber,
+                         intN spindex, jsval v, JSString *fallback,
+                         const char *arg1, const char *arg2)
+{
+    char *bytes;
+    JSBool ok;
+
+    JS_ASSERT(js_ErrorFormatString[errorNumber].argCount >= 1);
+    JS_ASSERT(js_ErrorFormatString[errorNumber].argCount <= 3);
+    bytes = js_DecompileValueGenerator(cx, spindex, v, fallback);
+    if (!bytes)
+        return JS_FALSE;
+
+    ok = JS_ReportErrorFlagsAndNumber(cx, flags, js_GetErrorMessage,
+                                      NULL, errorNumber, bytes, arg1, arg2);
+    JS_free(cx, bytes);
+    return ok;
+}
+
 #if defined DEBUG && defined XP_UNIX
 /* For gdb usage. */
 void js_traceon(JSContext *cx)  { cx->tracefp = stderr; }

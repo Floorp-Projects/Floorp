@@ -982,6 +982,28 @@ js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *report);
 extern void
 js_ReportIsNotDefined(JSContext *cx, const char *name);
 
+/*
+ * Report error using js_DecompileValueGenerator(cx, spindex, v, fallback) as
+ * the first argument for the error message. If the error message has less
+ * then 3 arguments, use null for arg1 or arg2.
+ */
+extern JSBool
+js_ReportValueErrorFlags(JSContext *cx, uintN flags, const uintN errorNumber,
+                         intN spindex, jsval v, JSString *fallback,
+                         const char *arg1, const char *arg2);
+
+#define js_ReportValueError(cx,errorNumber,spindex,v,fallback)                \
+    ((void)js_ReportValueErrorFlags(cx, JSREPORT_ERROR, errorNumber,          \
+                                    spindex, v, fallback, NULL, NULL))
+
+#define js_ReportValueError2(cx,errorNumber,spindex,v,fallback,arg1)          \
+    ((void)js_ReportValueErrorFlags(cx, JSREPORT_ERROR, errorNumber,          \
+                                    spindex, v, fallback, arg1, NULL))
+
+#define js_ReportValueError3(cx,errorNumber,spindex,v,fallback,arg1,arg2)     \
+    ((void)js_ReportValueErrorFlags(cx, JSREPORT_ERROR, errorNumber,          \
+                                    spindex, v, fallback, arg1, arg2))
+
 extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
 
 /*

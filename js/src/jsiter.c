@@ -347,11 +347,10 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
 {
     JSObject *obj;
     JSTempValueRooter tvr;
-    const JSAtom *atom;
+    JSAtom *atom;
     JSBool ok;
     JSObject *iterobj;
     jsval arg;
-    JSString *str;
 
     JS_ASSERT(!(flags & ~(JSITER_ENUMERATE |
                           JSITER_FOREACH |
@@ -420,12 +419,10 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
         if (!js_InternalInvoke(cx, obj, *vp, JSINVOKE_ITERATOR, 1, &arg, vp))
             goto bad;
         if (JSVAL_IS_PRIMITIVE(*vp)) {
-            str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, *vp, NULL);
-            if (str) {
-                JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
-                                       JSMSG_BAD_ITERATOR_RETURN,
-                                       JSSTRING_CHARS(str),
-                                       JSSTRING_CHARS(ATOM_TO_STRING(atom)));
+            const char *printable = js_AtomToPrintableString(cx, atom);
+            if (printable) {
+                js_ReportValueError2(cx, JSMSG_BAD_ITERATOR_RETURN,
+                                     JSDVG_SEARCH_STACK, *vp, NULL, printable);
             }
             goto bad;
         }
@@ -928,7 +925,6 @@ generator_op(JSContext *cx, JSGeneratorOp op,
              JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSGenerator *gen;
-    JSString *str;
     jsval arg;
 
     if (!JS_InstanceOf(cx, obj, &js_GeneratorClass, argv))
@@ -949,13 +945,8 @@ generator_op(JSContext *cx, JSGeneratorOp op,
 
           case JSGENOP_SEND:
             if (!JSVAL_IS_VOID(argv[0])) {
-                str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
-                                                 argv[0], NULL);
-                if (str) {
-                    JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
-                                           JSMSG_BAD_GENERATOR_SEND,
-                                           JSSTRING_CHARS(str));
-                }
+                js_ReportValueError(cx, JSMSG_BAD_GENERATOR_SEND,
+                                    JSDVG_SEARCH_STACK, argv[0], NULL);
                 return JS_FALSE;
             }
             break;
@@ -972,13 +963,9 @@ generator_op(JSContext *cx, JSGeneratorOp op,
 
       case JSGEN_RUNNING:
       case JSGEN_CLOSING:
-        str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, argv[-1],
-                                         JS_GetFunctionId(gen->frame.fun));
-        if (str) {
-            JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
-                                   JSMSG_NESTING_GENERATOR,
-                                   JSSTRING_CHARS(str));
-        }
+        js_ReportValueError(cx, JSMSG_NESTING_GENERATOR,
+                            JSDVG_SEARCH_STACK, argv[-1],
+                            JS_GetFunctionId(gen->frame.fun));
         return JS_FALSE;
 
       default:

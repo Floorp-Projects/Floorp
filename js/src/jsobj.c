@@ -3526,7 +3526,6 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         if (JSVAL_IS_VOID(*vp) && cx->fp && (pc = cx->fp->pc)) {
             JSOp op;
             uintN flags;
-            JSString *str;
 
             op = *pc;
             if (op == JSOP_GETXPROP) {
@@ -3554,13 +3553,9 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             }
 
             /* Ok, bad undefined property reference: whine about it. */
-            str = js_DecompileValueGenerator(cx, JSDVG_IGNORE_STACK,
-                                             ID_TO_VALUE(id), NULL);
-            if (!str ||
-                !JS_ReportErrorFlagsAndNumber(cx, flags,
-                                              js_GetErrorMessage, NULL,
-                                              JSMSG_UNDEFINED_PROP,
-                                              JS_GetStringBytes(str))) {
+            if (!js_ReportValueErrorFlags(cx, flags, JSMSG_UNDEFINED_PROP,
+                                          JSDVG_IGNORE_STACK, ID_TO_VALUE(id),
+                                          NULL, NULL, NULL)) {
                 return JS_FALSE;
             }
         }
@@ -3744,17 +3739,10 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     JS_UNLOCK_SCOPE(cx, scope);
     return JS_TRUE;
 
-  read_only_error: {
-    JSString *str = js_DecompileValueGenerator(cx,
-                                               JSDVG_IGNORE_STACK,
-                                               ID_TO_VALUE(id),
-                                               NULL);
-    if (!str)
-        return JS_FALSE;
-    return JS_ReportErrorFlagsAndNumberUC(cx, flags, js_GetErrorMessage,
-                                          NULL, JSMSG_READ_ONLY,
-                                          JS_GetStringChars(str));
-  }
+  read_only_error:
+    return js_ReportValueErrorFlags(cx, flags, JSMSG_READ_ONLY,
+                                    JSDVG_IGNORE_STACK, ID_TO_VALUE(id), NULL,
+                                    NULL, NULL);
 }
 
 JSBool
@@ -3923,7 +3911,7 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
         break;
     }
     if (!JSVAL_IS_PRIMITIVE(v)) {
-        /* Avoid recursive death through js_DecompileValueGenerator. */
+        /* Avoid recursive death when decompiling in js_ReportValueError. */
         if (hint == JSTYPE_STRING) {
             str = JS_InternString(cx, OBJ_GET_CLASS(cx, obj)->name);
             if (!str)
@@ -3932,15 +3920,11 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
             str = NULL;
         }
         *vp = OBJECT_TO_JSVAL(obj);
-        str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, save, str);
-        if (str) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_CANT_CONVERT_TO,
-                                 JS_GetStringBytes(str),
-                                 (hint == JSTYPE_VOID)
-                                 ? "primitive type"
-                                 : js_type_strs[hint]);
-        }
+        js_ReportValueError2(cx, JSMSG_CANT_CONVERT_TO,
+                             JSDVG_SEARCH_STACK, save, str,
+                             (hint == JSTYPE_VOID)
+                             ? "primitive type"
+                             : js_type_strs[hint]);
         return JS_FALSE;
     }
 out:
@@ -4367,7 +4351,6 @@ JSBool
 js_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
     JSClass *clasp;
-    JSString *str;
 
     clasp = OBJ_GET_CLASS(cx, obj);
     if (clasp->hasInstance)
@@ -4388,13 +4371,8 @@ js_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
         }
     }
 #endif
-    str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
-                                     OBJECT_TO_JSVAL(obj), NULL);
-    if (str) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BAD_INSTANCEOF_RHS,
-                             JS_GetStringBytes(str));
-    }
+    js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
+                        JSDVG_SEARCH_STACK, OBJECT_TO_JSVAL(obj), NULL);
     return JS_FALSE;
 }
 
@@ -4555,16 +4533,12 @@ JSObject *
 js_ValueToNonNullObject(JSContext *cx, jsval v)
 {
     JSObject *obj;
-    JSString *str;
 
     if (!js_ValueToObject(cx, v, &obj))
         return NULL;
     if (!obj) {
-        str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
-        if (str) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_NO_PROPERTIES, JS_GetStringBytes(str));
-        }
+        js_ReportValueError(cx, JSMSG_NO_PROPERTIES,
+                            JSDVG_SEARCH_STACK, v, NULL);
     }
     return obj;
 }
