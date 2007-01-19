@@ -1991,13 +1991,15 @@ InternNonIntElementId(JSContext *cx, jsval idval, jsid *idp)
  * Currently it's broken for JS_VERSION < 160, though this isn't worth fixing.
  * Add your compiler support macros here.
  */
-#if JS_VERSION >= 160 && (                                                    \
+#ifndef JS_THREADED_INTERP
+# if JS_VERSION >= 160 && (                                                   \
     __GNUC__ >= 3 ||                                                          \
     (__IBMC__ >= 700 && defined __IBM_COMPUTED_GOTO) ||                       \
     __SUNPRO_C >= 0x570)
-# define JS_THREADED_INTERP 1
-#else
-# undef JS_THREADED_INTERP
+#  define JS_THREADED_INTERP 1
+# else
+#  define JS_THREADED_INTERP 0
+# endif
 #endif
 
 /*
@@ -2175,7 +2177,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     JSClass *clasp;
     JSFunction *fun;
     JSType type;
-#if !defined JS_THREADED_INTERP && defined DEBUG
+#if !JS_THREADED_INTERP && defined DEBUG
     FILE *tracefp = NULL;
 #endif
 #if JS_HAS_EXPORT_IMPORT
@@ -2196,7 +2198,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 # define JS_EXTENSION_(s) s
 #endif
 
-#ifdef JS_THREADED_INTERP
+#if JS_THREADED_INTERP
     static void *normalJumpTable[] = {
 # define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) \
         JS_EXTENSION &&L_##op,
@@ -2291,7 +2293,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
      * not have to reload it each time through the interpreter loop -- we hope
      * the compiler can keep it in a register when it is non-null.
      */
-#ifdef JS_THREADED_INTERP
+#if JS_THREADED_INTERP
 # define LOAD_JUMP_TABLE()                                                    \
     (jumpTable = interruptHandler ? interruptJumpTable : normalJumpTable)
 #else
@@ -2352,7 +2354,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     }
     obj = NULL;
 
-#ifdef JS_THREADED_INTERP
+#if JS_THREADED_INTERP
 
     /*
      * This is a loop, but it does not look like a loop.  The loop-closing
@@ -2593,7 +2595,7 @@ interrupt:
                 depth = (jsint) script->depth;
                 atoms = script->atomMap.vector;
                 pc = fp->pc;
-#ifndef JS_THREADED_INTERP
+#if !JS_THREADED_INTERP
                 endpc = script->code + script->length;
 #endif
 
@@ -4038,7 +4040,7 @@ interrupt:
                 /* Push the frame and set interpreter registers. */
                 cx->fp = fp = &newifp->frame;
                 pc = script->code;
-#ifndef JS_THREADED_INTERP
+#if !JS_THREADED_INTERP
                 endpc = pc + script->length;
 #endif
                 inlineCallCount++;
@@ -6037,7 +6039,7 @@ interrupt:
           L_JSOP_ENUMCONSTELEM:
 #endif
 
-#ifdef JS_THREADED_INTERP
+#if JS_THREADED_INTERP
           L_JSOP_BACKPATCH:
           L_JSOP_BACKPATCH_POP:
           L_JSOP_UNUSED197:
@@ -6053,7 +6055,7 @@ interrupt:
             goto out;
           }
 
-#ifndef JS_THREADED_INTERP
+#if !JS_THREADED_INTERP
 
         } /* switch (op) */
 
