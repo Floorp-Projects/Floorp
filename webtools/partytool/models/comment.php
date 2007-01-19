@@ -38,7 +38,7 @@ class Comment extends AppModel {
   var $name = 'Comment';
 
   var $validate = array(
-    'text' => VALID_NOT_EMPTY
+    'text' => "/^\S/"
   );
 
   function canComment($pid, $uid) {
