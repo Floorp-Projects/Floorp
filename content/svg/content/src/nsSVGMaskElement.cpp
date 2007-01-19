@@ -183,12 +183,12 @@ NS_IMETHODIMP_(PRBool)
 nsSVGMaskElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
+    sFEFloodMap,
     sFontSpecificationMap,
     sGradientStopMap,
     sMarkersMap,
     sTextContentElementsMap,
-    sViewportsMap,
-    sFEFloodMap
+    sViewportsMap
   };
 
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
