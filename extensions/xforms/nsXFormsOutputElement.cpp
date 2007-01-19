@@ -84,6 +84,8 @@ public:
   NS_IMETHOD SetValue(const nsAString& aValue);
   NS_IMETHOD GetHasBoundNode(PRBool *aHasBoundNode);
 
+  NS_IMETHOD IsContentAllowed(PRBool *aIsAllowed);
+
   nsXFormsOutputElement();
 
 private:
@@ -195,6 +197,21 @@ nsXFormsOutputElement::SetValue(const nsAString& aValue)
 {
   // Setting the value on an output controls seems wrong semantically.
   return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+nsXFormsOutputElement::IsContentAllowed(PRBool *aIsAllowed)
+{
+  NS_ENSURE_ARG_POINTER(aIsAllowed);
+  *aIsAllowed = PR_TRUE;
+
+  // Output may not be bound to complexContent.
+  PRBool isComplex = PR_FALSE;
+  IsContentComplex(&isComplex);
+  if (isComplex) {
+    *aIsAllowed = PR_FALSE;
+  }
+  return NS_OK;
 }
 
 NS_HIDDEN_(nsresult)

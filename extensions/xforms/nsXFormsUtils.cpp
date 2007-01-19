@@ -2719,3 +2719,35 @@ nsXFormsUtils::SetSingleNodeBindingValue(nsIDOMElement *aElement,
   return PR_FALSE;
 }
 
+/* static */ PRBool
+nsXFormsUtils::NodeHasItemset(nsIDOMNode *aNode)
+{
+  PRBool hasItemset = PR_FALSE;
+
+  nsCOMPtr<nsIDOMNodeList> children;
+  aNode->GetChildNodes(getter_AddRefs(children));
+
+  PRUint32 childCount = 0;
+  if (children) {
+    children->GetLength(&childCount);
+  }
+
+  for (PRUint32 i = 0; i < childCount; ++i) {
+    nsCOMPtr<nsIDOMNode> child;
+    children->Item(i, getter_AddRefs(child));
+    if (nsXFormsUtils::IsXFormsElement(child, NS_LITERAL_STRING("itemset"))) {
+      hasItemset = PR_TRUE;
+      break;
+    } else if (nsXFormsUtils::IsXFormsElement(child,
+                                              NS_LITERAL_STRING("choices"))) {
+      // The choices element may have an itemset.
+      hasItemset = nsXFormsUtils::NodeHasItemset(child);
+      if (hasItemset) {
+        // No need to look at any other children.
+        break;
+      }
+    }
+  }
+  return hasItemset;
+}
+

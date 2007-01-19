@@ -183,11 +183,30 @@ nsXFormsControlStub::ResetBoundNode(const nsString &aBindAttribute,
 
   *aContextChanged = (oldBoundNode != mBoundNode);
 
-  if (!mBoundNode) {
+  // Some controls may not be bound to certain types of content. If the content
+  // is a disallowed type, report the error and dispatch a binding exception
+  // event.
+  PRBool isAllowed = PR_TRUE;
+  IsContentAllowed(&isAllowed);
+
+  if (!mBoundNode || !isAllowed) {
     // If there's no result (ie, no instance node) returned by the above, it
     // means that the binding is not pointing to an instance data node, so we
     // should disable the control.
     mAppearDisabled = PR_TRUE;
+
+    if (!isAllowed) {
+      // build the error string that we want output to the ErrorConsole
+      nsAutoString localName;
+      mElement->GetLocalName(localName);
+      const PRUnichar *strings[] = { localName.get() };
+
+      nsXFormsUtils::ReportError(
+        NS_LITERAL_STRING("boundTypeErrorComplexContent"),
+        strings, 1, mElement, mElement);
+
+      nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
+    }
 
     nsCOMPtr<nsIXTFElementWrapper> wrapper(do_QueryInterface(mElement));
     NS_ENSURE_STATE(wrapper);
@@ -817,6 +836,39 @@ nsXFormsControlStub::GetBoundBuiltinType(PRUint16 *aBuiltinType)
   return mModel->GetRootBuiltinType(schemaType, aBuiltinType);
 }
 
+NS_IMETHODIMP
+nsXFormsControlStub::IsContentAllowed(PRBool *aIsAllowed)
+{
+  NS_ENSURE_ARG_POINTER(aIsAllowed);
+  *aIsAllowed = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsControlStub::IsContentComplex(PRBool *aIsComplex)
+{
+  NS_ENSURE_ARG_POINTER(aIsComplex);
+  *aIsComplex = PR_FALSE;
+
+  if (mBoundNode) {
+    // If the bound node has any Element children, then it has complexContent.
+    nsCOMPtr<nsIDOMNode> currentNode;
+    mBoundNode->GetFirstChild(getter_AddRefs(currentNode));
+    while (currentNode) {
+      PRUint16 nodeType;
+      currentNode->GetNodeType(&nodeType);
+      if (nodeType == nsIDOMNode::ELEMENT_NODE) {
+        *aIsComplex = PR_TRUE;
+        break;
+      }
+
+      nsCOMPtr<nsIDOMNode> node;
+      currentNode->GetNextSibling(getter_AddRefs(node));
+      currentNode.swap(node);
+    }
+  }
+  return NS_OK;
+}
 
 NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsControlStub,
                              nsXFormsStubElement,

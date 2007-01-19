@@ -50,6 +50,8 @@ public:
                            nsRestrictionFlag *aRestriction,
                            nsAString &aUnallowedTypes);
 
+  NS_IMETHOD IsContentAllowed(PRBool *aIsAllowed);
+
   nsXFormsInputElement(const nsAString& aType)
     : nsXFormsDelegateStub(aType)
     {}
@@ -79,6 +81,22 @@ nsXFormsInputElement::IsTypeAllowed(PRUint16 aType, PRBool *aIsAllowed,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXFormsInputElement::IsContentAllowed(PRBool *aIsAllowed)
+{
+  NS_ENSURE_ARG_POINTER(aIsAllowed);
+  *aIsAllowed = PR_TRUE;
+
+
+  // For input and secret elements, complexContent is not allowed.
+  PRBool isComplex = PR_FALSE;
+  IsContentComplex(&isComplex);
+  if (isComplex) {
+    *aIsAllowed = PR_FALSE;
+  }
+  return NS_OK;
+}
+
 class nsXFormsTextareaElement : public nsXFormsDelegateStub
 {
 public:
@@ -86,6 +104,8 @@ public:
   NS_IMETHOD IsTypeAllowed(PRUint16 aType, PRBool *aIsAllowed,
                            nsRestrictionFlag *aRestriction,
                            nsAString &aAllowedTypes);
+
+  NS_IMETHOD IsContentAllowed(PRBool *aIsAllowed);
 
   nsXFormsTextareaElement()
     : nsXFormsDelegateStub(NS_LITERAL_STRING("textarea"))
@@ -112,6 +132,21 @@ nsXFormsTextareaElement::IsTypeAllowed(PRUint16 aType, PRBool *aIsAllowed,
 
   // build the string of types that textareas can bind to
   aAllowedTypes.AssignLiteral("xsd:string");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsTextareaElement::IsContentAllowed(PRBool *aIsAllowed)
+{
+  NS_ENSURE_ARG_POINTER(aIsAllowed);
+  *aIsAllowed = PR_TRUE;
+
+  // Textareas may not be bound to complexContent.
+  PRBool isComplex = PR_FALSE;
+  IsContentComplex(&isComplex);
+  if (isComplex) {
+    *aIsAllowed = PR_FALSE;
+  }
   return NS_OK;
 }
 

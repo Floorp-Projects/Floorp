@@ -75,6 +75,8 @@ public:
   // nsIXFormsDelegate overrides
   NS_IMETHOD GetXFormsAccessors(nsIXFormsAccessors **aAccessor);
 
+  NS_IMETHOD IsContentAllowed(PRBool *aIsAllowed);
+
 #ifdef DEBUG_smaug
   virtual const char* Name() { return "select"; }
 #endif
@@ -162,6 +164,23 @@ nsXFormsSelectElement::GetXFormsAccessors(nsIXFormsAccessors **aAccessor)
     }
   }
   NS_ADDREF(*aAccessor = mAccessor);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsSelectElement::IsContentAllowed(PRBool *aIsAllowed)
+{
+  NS_ENSURE_ARG_POINTER(aIsAllowed);
+  *aIsAllowed = PR_TRUE;
+
+  // For select elements, non-simpleContent is only allowed if the select
+  // element contains an itemset.
+  PRBool isComplex = PR_FALSE;
+  IsContentComplex(&isComplex);
+  if (isComplex && !nsXFormsUtils::NodeHasItemset(mElement)) {
+    *aIsAllowed = PR_FALSE;
+  }
+
   return NS_OK;
 }
 
