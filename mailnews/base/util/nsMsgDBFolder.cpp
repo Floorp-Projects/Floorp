@@ -5193,19 +5193,24 @@ NS_IMETHODIMP nsMsgDBFolder::GetMsgTextFromStream(nsIMsgDBHdr *msgHdr, nsIInputS
     // we read the next line.
     if (lookingForBoundary) 
     {
-      PRInt32 boundaryIndex = curLine.Find("boundary=\"");
+      // Mail.app doesn't wrap the boundary id in quotes so we need 
+      // to be sure to handle an unquoted boundary.
+      PRInt32 boundaryIndex = curLine.Find("boundary=");
       if (boundaryIndex != kNotFound)
       {
-        boundaryIndex += 10;
+        boundaryIndex += 9;
+        if (curLine[boundaryIndex] == '\"')
+          boundaryIndex++;
+
         PRInt32 endBoundaryIndex = curLine.RFindChar('"');
-        if (endBoundaryIndex != kNotFound)
-        {
-          // prepend "--" to boundary, and then boundary delimiter, minus the trailing " 
-          boundary.Assign("--");
-          boundary.Append(Substring(curLine, boundaryIndex, endBoundaryIndex - boundaryIndex));
-          haveBoundary = PR_TRUE;
-          lookingForBoundary = PR_FALSE;
-        }
+        if (endBoundaryIndex == kNotFound)
+          endBoundaryIndex = curLine.Length(); // no trailing quote? assume the boundary runs to the end of the line
+
+        // prepend "--" to boundary, and then boundary delimiter, minus the trailing " 
+        boundary.Assign("--");
+        boundary.Append(Substring(curLine, boundaryIndex, endBoundaryIndex - boundaryIndex));
+        haveBoundary = PR_TRUE;
+        lookingForBoundary = PR_FALSE;
       }
     }
     rv = NS_ReadLine(stream, lineBuffer, curLine, &more);
