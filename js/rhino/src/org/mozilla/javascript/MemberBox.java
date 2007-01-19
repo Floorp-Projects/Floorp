@@ -54,6 +54,10 @@ final class MemberBox implements Serializable
 {
     static final long serialVersionUID = 6358550398665688245L;
 
+    private transient Member memberObject;
+    transient Class[] argTypes;
+    Object delegateTo;
+
     MemberBox(Method method)
     {
         init(method);
@@ -343,8 +347,5 @@ final class MemberBox implements Serializable
         }
         return result;
     }
-
-    private transient Member memberObject;
-    transient Class[] argTypes;
 }
 

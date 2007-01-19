@@ -355,19 +355,22 @@ public class FunctionObject extends BaseFunction
      */
     public void addAsConstructor(Scriptable scope, Scriptable prototype)
     {
+        initAsConstructor(scope, prototype);
+        defineProperty(scope, prototype.getClassName(),
+                       this, ScriptableObject.DONTENUM);
+    }
+
+    void initAsConstructor(Scriptable scope, Scriptable prototype)
+    {
         ScriptRuntime.setFunctionProtoAndParent(this, scope);
         setImmunePrototypeProperty(prototype);
 
         prototype.setParentScope(this);
 
-        final int attr = ScriptableObject.DONTENUM  |
-                         ScriptableObject.PERMANENT |
-                         ScriptableObject.READONLY;
-        defineProperty(prototype, "constructor", this, attr);
-
-        String name = prototype.getClassName();
-        defineProperty(scope, name, this, ScriptableObject.DONTENUM);
-
+        defineProperty(prototype, "constructor", this,
+                       ScriptableObject.DONTENUM  |
+                       ScriptableObject.PERMANENT |
+                       ScriptableObject.READONLY);
         setParentScope(scope);
     }
 

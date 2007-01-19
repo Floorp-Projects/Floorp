@@ -23,6 +23,7 @@
  *
  * Contributor(s):
  *   Norris Boyd
+ *   Igor Bukanov
  *
  * Alternatively, the contents of this file may be used under the terms of
  * the GNU General Public License Version 2 or later (the "GPL"), in which
@@ -38,7 +39,6 @@
 
 package org.mozilla.javascript;
 
-import java.io.Serializable;
 import java.lang.reflect.*;
 
 /**
@@ -46,81 +46,88 @@ import java.lang.reflect.*;
  *
  * <p> This improves startup time and average memory usage.
  */
-public final class LazilyLoadedCtor implements Serializable {
-    private static final long serialVersionUID = 1L;
+public final class LazilyLoadedCtor implements java.io.Serializable {
+	private static final long serialVersionUID = 1L;
+	
+    private static final int STATE_BEFORE_INIT = 0;
+    private static final int STATE_INITIALIZING = 1;
+    private static final int STATE_WITH_VALUE = 2;
 
-    public LazilyLoadedCtor(ScriptableObject scope,
-                     String ctorName, String className, boolean sealed)
+    private final ScriptableObject scope;
+    private final String propertyName;
+    private final String className;
+    private final boolean sealed;
+    private Object initializedValue;
+    private int state;
+
+    public LazilyLoadedCtor(ScriptableObject scope, String propertyName,
+                            String className, boolean sealed)
     {
 
+        this.scope = scope;
+        this.propertyName = propertyName;
         this.className = className;
-        this.ctorName = ctorName;
         this.sealed = sealed;
+        this.state = STATE_BEFORE_INIT;
 
-        if (setter == null) {
-            Method[] methods = FunctionObject.getMethodList(getClass());
-            getter = FunctionObject.findSingleMethod(methods, "getProperty");
-            setter = FunctionObject.findSingleMethod(methods, "setProperty");
-        }
-
-        scope.defineProperty(ctorName, this, getter, setter,
-                             ScriptableObject.DONTENUM);
+        scope.addLazilyInitializedValue(propertyName, 0, this,
+                                        ScriptableObject.DONTENUM);
     }
 
-    public Object getProperty(ScriptableObject obj) {
-        synchronized (obj) {
-            if (!isReplaced) {
-                boolean removeOnError = false;
-                Class cl = Kit.classOrNull(className);
-                if (cl == null) {
-                    removeOnError = true;
-                } else {
-                    try {
-                        ScriptableObject.defineClass(obj, cl, sealed);
-                        isReplaced = true;
-                    } catch (InvocationTargetException ex) {
-                        Throwable target = ex.getTargetException();
-                        if (target instanceof RuntimeException) {
-                            throw (RuntimeException)target;
-                        }
-                        removeOnError = true;
-                    } catch (RhinoException ex) {
-                        removeOnError = true;
-                    } catch (InstantiationException ex) {
-                        removeOnError = true;
-                    } catch (IllegalAccessException ex) {
-                        removeOnError = true;
-                    } catch (SecurityException ex) {
-                        // Treat security exceptions as absence of object.
-                        // They can be due to the following reasons:
-                        //  java.lang.RuntimePermission createClassLoader
-                        removeOnError = true;
-                    } catch (LinkageError ex) {
-                        // No dependant classes
-                        removeOnError = true;
-                    }
-                }
-                if (removeOnError) {
-                    obj.delete(ctorName);
-                    return Scriptable.NOT_FOUND;
+    void init()
+    {
+        synchronized (this) {
+            if (state == STATE_INITIALIZING)
+                throw new IllegalStateException(
+                    "Recursive initialization for "+propertyName);
+            if (state == STATE_BEFORE_INIT) {
+                state = STATE_INITIALIZING;
+                // Set value now to have something to set in finaly block if
+                // buildValue throws.
+                Object value = Undefined.instance;
+                try {
+                    value = buildValue();
+                } finally {
+                    initializedValue = value;
+                    state = STATE_WITH_VALUE;
                 }
             }
         }
-        // Get just added object
-        return obj.get(ctorName, obj);
     }
 
-    public Object setProperty(ScriptableObject obj, Object val) {
-        synchronized (obj) {
-            isReplaced = true;
-            return val;
+    Object getValue()
+    {
+        if (state != STATE_WITH_VALUE)
+            throw new IllegalStateException(propertyName);
+        return initializedValue;
+    }
+
+    private Object buildValue()
+    {
+        Class cl = Kit.classOrNull(className);
+        if (cl != null) {
+            try {
+                Object value = ScriptableObject.buildClassCtor(scope, cl,
+                                                               sealed, false);
+                if (value == null) {
+                    // cl has own static initializer which is expected
+                    // to set the property on its own.
+                    value = scope.get(propertyName, scope);
+                    if (value != Scriptable.NOT_FOUND)
+                        return value;
+                }
+            } catch (InvocationTargetException ex) {
+                Throwable target = ex.getTargetException();
+                if (target instanceof RuntimeException) {
+                    throw (RuntimeException)target;
+                }
+            } catch (RhinoException ex) {
+            } catch (InstantiationException ex) {
+            } catch (IllegalAccessException ex) {
+            } catch (SecurityException ex) {
+            }
         }
+        return Undefined.instance;
     }
 
-    private static Method getter, setter;
-
-    private String ctorName;
-    private String className;
-    private boolean sealed;
-    private boolean isReplaced;
 }
