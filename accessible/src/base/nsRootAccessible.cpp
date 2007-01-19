@@ -505,7 +505,16 @@ void nsRootAccessible::FireCurrentFocusEvent()
                                                      NS_LITERAL_STRING("Events"),
                                                      getter_AddRefs(event))) &&
         NS_SUCCEEDED(event->InitEvent(NS_LITERAL_STRING("focus"), PR_TRUE, PR_TRUE))) {
-      HandleEventWithTarget(event, focusedNode);
+      // Get the target node we really want for the event.
+      nsIAccessibilityService* accService = GetAccService();
+      if (accService) {
+        nsCOMPtr<nsIDOMNode> targetNode;
+        accService->GetRelevantContentNodeFor(focusedNode,
+                                            getter_AddRefs(targetNode));
+        if (targetNode) {
+          HandleEventWithTarget(event, targetNode);
+        }
+      }
     }
   }
 }
