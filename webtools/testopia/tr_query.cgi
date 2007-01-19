@@ -34,6 +34,7 @@ use Bugzilla::Testopia::TestRun;
 use Bugzilla::Testopia::Environment::Category;
 use Bugzilla::Testopia::Environment::Element;
 use Bugzilla::Testopia::Environment::Property;
+use JSON;
 
 use vars qw($vars $template);
 require "globals.pl";
@@ -52,43 +53,35 @@ my $action = $cgi->param('action') || '';
 if ($action eq 'getversions'){
     my @prod_ids = split(",", $cgi->param('prod_ids'));
     my $tab = $cgi->param('current_tab') || '';
-    my $plan = Bugzilla::Testopia::TestPlan->new({'plan_id'    => 0});
+    
+    my $products;
     my @validated;
     foreach my $p (@prod_ids){
         detaint_natural($p);
         validate_selection($p,'id','products');
         push @validated, $p if can_view_product($p);
     }
-    my $prodlist = join(",", @validated);
-    my $versions   = $plan->get_product_versions($prodlist) if ($tab eq 'run' || $tab eq 'plan' || $tab eq 'case_run');
-    my $milestones = $plan->get_product_milestones($prodlist) if ($tab eq 'run' || $tab eq 'case_run');
-    my $builds     = $plan->get_product_builds($prodlist) if ($tab eq 'run' || $tab eq 'case_run');
-    my $components = $plan->get_product_components($prodlist) if ($tab eq 'case' || '' || $tab eq 'case_run');
-    my $categories = $plan->get_product_categories($prodlist) if ($tab eq 'case' || '' || $tab eq 'case_run');
-    my $environments = $plan->get_product_environments($prodlist) if ($tab eq 'case' || '' || $tab eq 'case_run');
-
-    my $ret = "<product>";
-    foreach my $value (@$versions){
-        $ret .= "<version>". xml_quote($value->{'name'}) ."</version>";
-    }
-    foreach my $value (@$milestones){
-        $ret .= "<milestone>". xml_quote($value->{'name'}) ."</milestone>";
-    }
-    foreach my $value (@$builds){
-        $ret .= "<build>". xml_quote($value->{'name'}) ."</build>";
-    }
-    foreach my $value (@$components){
-        $ret .= "<component>". xml_quote($value->{'name'}) ."</component>";
-    }
-    foreach my $value (@$categories){
-        $ret .= "<category>". xml_quote($value->{'name'}) ."</category>";
-    }
-    foreach my $value (@$environments){
-        $ret .= "<environment>". xml_quote($value->{'name'}) ."</environment>";
-    }
-    $ret .= "</product>";
+    my $prod_ids = join(",", @validated);
+    my $dbh = Bugzilla->dbh;
+    $products->{'version'}     = $dbh->selectcol_arrayref("SELECT DISTINCT value FROM versions WHERE product_id IN ($prod_ids)");
+    $products->{'milestone'}   = $dbh->selectcol_arrayref("SELECT DISTINCT value FROM milestones WHERE product_id IN ($prod_ids)");
+    $products->{'component'}   = $dbh->selectcol_arrayref("SELECT DISTINCT name FROM components WHERE product_id IN ($prod_ids)");
+    $products->{'build'}       = $dbh->selectcol_arrayref("SELECT DISTINCT name FROM test_builds WHERE product_id IN ($prod_ids)");
+    $products->{'category'}    = $dbh->selectcol_arrayref("SELECT DISTINCT name FROM test_case_categories WHERE product_id IN ($prod_ids)");
+    $products->{'environment'} = $dbh->selectcol_arrayref("SELECT DISTINCT name FROM test_environments WHERE product_id IN ($prod_ids)");
     
-    print $ret;
+    # This list must match the name of the select fields and the names above
+    $products->{'selectTypes'} = [qw{version milestone component build category environment}];
+
+#    my $versions   = $plan->get_product_versions($prodlist) if ($tab eq 'run' || $tab eq 'plan' || $tab eq 'case_run');
+#    my $milestones = $plan->get_product_milestones($prodlist) if ($tab eq 'run' || $tab eq 'case_run');
+#    my $builds     = $plan->get_product_builds($prodlist) if ($tab eq 'run' || $tab eq 'case_run');
+#    my $components = $plan->get_product_components($prodlist) if ($tab eq 'case' || '' || $tab eq 'case_run');
+#    my $categories = $plan->get_product_categories($prodlist) if ($tab eq 'case' || '' || $tab eq 'case_run');
+#    my $environments = $plan->get_product_environments($prodlist) if ($tab eq 'case' || '' || $tab eq 'case_run');
+    my $json = new JSON;
+    $json->autoconv(0);
+    print $json->objToJson($products);
 }
 
 elsif ($action eq 'get_products'){

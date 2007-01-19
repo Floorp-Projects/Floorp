@@ -49,121 +49,16 @@
 
 <script type="text/javascript">
     function fillSelects (data){
-        var xmldocroot = data.documentElement;
-        var tab = '[% current_tab FILTER none %]';
-        
-        if (tab == 'run' || tab == 'plan'){
-          var versions   = xmldocroot.getElementsByTagName('version');
-          var selVersion = document.getElementById("default_product_version");
-          selVersion.options.length = 0;
-          for (i=0; i< versions.length; i++){
-            var id = versions[i].firstChild.nodeValue;
-            var name = versions[i].firstChild.nodeValue;
-            var myOp = new Option(name, id);
-            addOption(selVersion,myOp);
+      for (i in data.selectTypes){
+        try{
+          document.getElementById(data.selectTypes[i]).options.length = 0;
+          for (j in data[data.selectTypes[i]]){
+            var newOption = new Option(data[data.selectTypes[i]][j],data[data.selectTypes[i]][j]);
+            addOption(document.getElementById(data.selectTypes[i]),newOption);
           }
         }
-        if (tab == 'run'){
-          var milestones = xmldocroot.getElementsByTagName('milestone');
-          var builds     = xmldocroot.getElementsByTagName('build');
-          var environment  = xmldocroot.getElementsByTagName('environment');
-
-          var selMilestone = document.getElementById("milestone");
-          var selBuild     = document.getElementById("build");
-          var selEnv       = document.getElementById("environment");
-
-          selBuild.options.length = 0;
-          selMilestone.options.length = 0;
-          for (i=0; i< milestones.length; i++){
-            var id = milestones[i].firstChild.nodeValue;
-            var name = milestones[i].firstChild.nodeValue;
-            var myOp = new Option(name, id);
-            addOption(selMilestone,myOp);
-          }
-          for (i=0; i< builds.length; i++){
-            var id = builds[i].firstChild.nodeValue;
-            var name = builds[i].firstChild.nodeValue;
-            var myOp = new Option(name, id);
-            addOption(selBuild,myOp);
-          }
-          for (i=0; i< environment.length; i++){
-            var id = environment[i].firstChild.nodeValue;
-            var name = environment[i].firstChild.nodeValue;
-            var myOp = new Option(name, id);
-            addOption(selEnv,myOp);
-          }
-
-        }
-        if (tab == 'case_run'){
-          var milestones = xmldocroot.getElementsByTagName('milestone');
-          var builds     = xmldocroot.getElementsByTagName('build');
-          var components = xmldocroot.getElementsByTagName('component');
-          var categories = xmldocroot.getElementsByTagName('category');
-          var environment = xmldocroot.getElementsByTagName('environment');
-
-          var selMilestone = document.getElementById("milestone");
-          var selBuild     = document.getElementById("build");
-          var selComponent = document.getElementById("component");
-          var selCategory  = document.getElementById("category");
-          var selEnv       = document.getElementById("environment");
-                    
-          selComponent.options.length = 0;
-          selCategory.options.length = 0;
-          selBuild.options.length = 0;
-          selMilestone.options.length = 0;
-          
-          for (i=0; i< milestones.length; i++){
-            var id = milestones[i].firstChild.nodeValue;
-            var name = milestones[i].firstChild.nodeValue;
-            var myOp = new Option(name, id);
-            addOption(selMilestone,myOp);
-          }
-          for (i=0; i< builds.length; i++){
-            var id = builds[i].firstChild.nodeValue;
-            var name = builds[i].firstChild.nodeValue;
-            var myOp = new Option(name, id);
-            addOption(selBuild,myOp);
-          }
-          for (i=0; i< components.length; i++){
-            var id = components[i].firstChild.nodeValue;
-            var name = components[i].firstChild.nodeValue;
-            var myOp = new Option(name, id);
-            addOption(selComponent,myOp);
-          }
-          for (i=0; i< categories.length; i++){
-            var id = categories[i].firstChild.nodeValue;
-            var name = categories[i].firstChild.nodeValue;
-            var myOp = new Option(name, id);
-            addOption(selCategory,myOp);
-          }
-          for (i=0; i< environment.length; i++){
-            var id = environment[i].firstChild.nodeValue;
-            var name = environment[i].firstChild.nodeValue;
-            var myOp = new Option(name, id);
-            addOption(selEnv,myOp);
-          }
-        
-        }
-        if (tab == 'case' || tab == ''){
-          var components = xmldocroot.getElementsByTagName('component');
-          var categories = xmldocroot.getElementsByTagName('category');
-          var selComponent = document.getElementById("component");
-          var selCategory  = document.getElementById("category");
-          selComponent.options.length = 0;
-          selCategory.options.length = 0;
-          for (i=0; i< components.length; i++){
-            var id = components[i].firstChild.nodeValue;
-            var name = components[i].firstChild.nodeValue;
-            var myOp = new Option(name, id);
-            addOption(selComponent,myOp);
-          }
-          for (i=0; i< categories.length; i++){
-            var id = categories[i].firstChild.nodeValue;
-            var name = categories[i].firstChild.nodeValue;
-            var myOp = new Option(name, id);
-            addOption(selCategory,myOp);
-          }
-        }
+        catch(err){}
+      }
     }
 
   function onProductSelection(){
@@ -178,8 +73,8 @@
         url:     "tr_query.cgi",
         content: {  current_tab: "[% current_tab FILTER none %]", prod_ids: ids.join(","), action: "getversions" },
         load:    function(type, data, evt){ fillSelects(data);},
-        error:   function(type, error){ alert("ERROR");},
-        mimetype: "text/xml"
+        error:   function(type, error){},
+        mimetype: "text/json"
     });
 
   }

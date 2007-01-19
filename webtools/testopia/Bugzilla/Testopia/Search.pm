@@ -943,6 +943,19 @@ sub init {
                                  join(',', $cgi->param($field))]);
         }
     }
+    # 19.01.2007 - Changed multiselct version fields to 'version'.
+    # Changing them above in @legal_fields could break API funtionality
+    # So we redifine them here.
+    if (defined $cgi->param('version')){
+        my $field;
+        if ($obj eq 'case_run'){
+            $field = 'run_product_version';
+        }
+        elsif ($obj eq 'run'){
+            $field = 'default_product_version';
+        }
+        push(@specialchart, [$field, "anyexact", join(',', $cgi->param('version'))]);
+    }
     if (defined $cgi->param('run_status')){
         my @sta = $cgi->param('run_status');
         unless (scalar @sta > 1){
@@ -1002,7 +1015,7 @@ sub init {
     
     # check static text fields
     foreach my $f ("case_summary", "summary", "tcaction", "tceffect", "script",
-                   "requirement", "name", "plan_text", "environment",
+                   "requirement", "name", "plan_text", "environment_name",
                    "notes", "env_value_selected") {
         if (defined $cgi->param($f)) {
             my $s = trim($cgi->param($f));

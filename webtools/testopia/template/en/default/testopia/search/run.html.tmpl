@@ -35,9 +35,6 @@
     <th>Status</th>
     <th>Product</th>
     <th>Version</th>
-    <th>Build</th>
-    <th>Milestone</th>
-    <th>Environment</th>
   </tr>
   <tr>
     <td style="padding-right: 30px;">
@@ -56,11 +53,27 @@
                               events    => 'onChange="onProductSelection()"' } %]
     </td>
     <td style="padding-right: 30px;">
-    [% PROCESS select sel = { name  => 'default_product_version',
+    [% PROCESS select sel = { name  => 'version',
                               accesskey => 'v', 
                               list      => product_versions,
                               elements  => 5,
                               mult      => 1 } %]   
+    </td>
+  </tr>
+</table>
+<table>
+  <tr class="bz_row_header">
+    <th>Milestone</th>
+    <th>Build</th>
+    <th>Environment</th>
+  </tr>
+  <tr>
+    <td style="padding-right: 30px;">
+    [% PROCESS select sel = { name  => 'milestone',
+                              accesskey => 'm', 
+                              list      => run.get_distinct_milestones,
+                              elements  => 5,
+                              mult      => 1 } %] 
     </td>
     <td style="padding-right: 30px;">
     [% PROCESS select sel = { name  => 'build',
@@ -70,14 +83,7 @@
                               mult      => 1 } %]   
     </td>
     <td style="padding-right: 30px;">
-    [% PROCESS select sel = { name  => 'milestone',
-                              accesskey => 'm', 
-                              list      => run.get_distinct_milestones,
-                              elements  => 5,
-                              mult      => 1 } %] 
-    </td>
-    <td style="padding-right: 30px;">
-    [% PROCESS select sel = { name  => 'environment_id',
+    [% PROCESS select sel = { name  => 'environment',
                               accesskey => 'e', 
                               list      => run.get_environments,
                               elements  => 5,

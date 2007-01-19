@@ -33,9 +33,6 @@
 <table>
   <tr class="bz_row_header">
     <th>Status</th>
-    <th>Product</th>
-    <th>Components</th>
-    <th>Category</th>
     <th>Priority</th>
     <th>Automatic</th>
   </tr>
@@ -47,6 +44,31 @@
                   elements  => 5,
                   mult      => 1 } %]
     </td>
+    <td style="padding-right: 30px;">
+    [% PROCESS select sel = { name  => 'priority_id',
+                  accesskey => 'p', 
+                  list      => case.get_priority_list
+                  elements  => 5,
+                  mult      => 1 } %]
+    </td>
+    <td style="padding-right: 30px;">
+    [% PROCESS select sel = { name  => 'isautomated',
+                  accesskey => 'a', 
+                  list      => 
+                    [   { id => "0", name => "Manual" },
+                        { id => "1", name => "Automatic" }  ]
+                  elements  => 5,
+                  mult      => 1 } %]
+    </td>
+  </tr>
+</table>
+<table>
+  <tr class="bz_row_header">
+    <th>Product</th>
+    <th>Components</th>
+    <th>Category</th>
+  </tr>
+  <tr>
     <td style="padding-right: 30px;">
     [% PROCESS select sel = { name  => 'product_id',
                   accesskey => 'p', 
@@ -68,22 +90,6 @@
                   list      => case.get_category_list(1),
                   elements  => 5,
                   mult      => 1 } %]   
-    </td>
-    <td style="padding-right: 30px;">
-    [% PROCESS select sel = { name  => 'priority_id',
-                  accesskey => 'p', 
-                  list      => case.get_priority_list
-                  elements  => 5,
-                  mult      => 1 } %]
-    </td>
-    <td style="padding-right: 30px;">
-    [% PROCESS select sel = { name  => 'isautomated',
-                  accesskey => 'a', 
-                  list      => 
-                    [   { id => "0", name => "Manual" },
-                        { id => "1", name => "Automatic" }  ]
-                  elements  => 5,
-                  mult      => 1 } %]
     </td>
   </tr>
 </table>

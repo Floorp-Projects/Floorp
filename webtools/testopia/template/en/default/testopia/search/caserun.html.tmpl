@@ -33,48 +33,32 @@
 <table>
   <tr class="bz_row_header">
     <th>Status</th>
-    <th>Product</th>
-    <th>Components</th>
-    <th>Category</th>
+    <th>Run Status</th>
     <th>Priority</th>
     <th>Automatic</th>
+    <th>Product</th>
   </tr>
   <tr>
     <td style="padding-right: 30px;">
-      [% PROCESS select sel = { name => "case_run_status_id", 
-                                list => caserun.get_status_list,
-                                elements => 6,
-                                mult => 1, }
-      %]
+    [% PROCESS select sel = { name => "case_run_status_id", 
+                              list => caserun.get_status_list,
+                              elements => 6,
+                              mult => 1, }
+    %]
     </td>
     <td style="padding-right: 30px;">
-    [% PROCESS select sel = { name  => 'product_id',
-                  accesskey => 'p', 
-                  list      => plan.get_available_products,
-                  elements  => 5,
-                  mult      => 1  
-                  events    => 'onChange="onProductSelection()"' } %]
-    </td>
-    <td style="padding-right: 30px;">
-    [% PROCESS select sel = { name  => 'component',
-                  accesskey => 'm', 
-                  list      => case.get_available_components
-                  elements  => 5,
-                  mult      => 1 } %]
-    </td>
-    <td style="padding-right: 30px;">
-    [% PROCESS select sel = { name  => 'category',
-                  accesskey => 't', 
-                  list      => case.get_category_list(1),
-                  elements  => 5,
-                  mult      => 1 } %]   
+    [% PROCESS select sel = { name  => 'run_status',
+                              accesskey => 's', 
+                              list      => run.get_status_list
+                              elements  => 5,
+                              mult      => 1 } %]
     </td>
     <td style="padding-right: 30px;">
     [% PROCESS select sel = { name  => 'priority_id',
-                  accesskey => 'p', 
-                  list      => case.get_priority_list
-                  elements  => 5,
-                  mult      => 1 } %]
+                              accesskey => 'p', 
+                              list      => case.get_priority_list
+                              elements  => 5,
+                              mult      => 1 } %]
     </td>
     <td style="padding-right: 30px;">
     [% PROCESS select sel = { name  => 'isautomated',
@@ -85,33 +69,34 @@
                   elements  => 5,
                   mult      => 1 } %]
     </td>
+    <td colspan="3" align="center" >
+    [% PROCESS select sel = { name  => 'product_id',
+                              accesskey => 'p', 
+                              list      => plan.get_available_products,
+                              elements  => 5,
+                              mult      => 1  
+                              events    => 'onChange="onProductSelection()"' } %]
+    </td>
   </tr>
+</table>
+<table>
   <tr class="bz_row_header">
-    <th>Run Status</th>
+    <th>Component</th>
     <th>Version</th>
-    <th>Build</th>
     <th>Milestone</th>
-    <th>Environment</th>
   </tr>
   <tr>
     <td style="padding-right: 30px;">
-    [% PROCESS select sel = { name  => 'run_status',
-                              accesskey => 's', 
-                              list      => run.get_status_list
+    [% PROCESS select sel = { name  => 'component',
+                              accesskey => 'm', 
+                              list      => case.get_available_components
                               elements  => 5,
                               mult      => 1 } %]
     </td>
     <td style="padding-right: 30px;">
-    [% PROCESS select sel = { name  => 'run_product_version',
+    [% PROCESS select sel = { name  => 'version',
                               accesskey => 'v', 
                               list      => product_versions,
-                              elements  => 5,
-                              mult      => 1 } %]   
-    </td>
-    <td style="padding-right: 30px;">
-    [% PROCESS select sel = { name  => 'build',
-                              accesskey => 't', 
-                              list      => run.get_distinct_builds,
                               elements  => 5,
                               mult      => 1 } %]   
     </td>
@@ -121,6 +106,25 @@
                               list      => run.get_distinct_milestones,
                               elements  => 5,
                               mult      => 1 } %] 
+    </td>
+  <tr class="bz_row_header">
+    <th>Category</th>
+    <th>Build</th>
+    <th>Environment</th>
+  </tr>
+    <td style="padding-right: 30px;">
+    [% PROCESS select sel = { name  => 'category',
+                              accesskey => 't', 
+                              list      => case.get_category_list(1),
+                              elements  => 5,
+                              mult      => 1 } %]   
+    </td>
+    <td style="padding-right: 30px;">
+    [% PROCESS select sel = { name  => 'build',
+                              accesskey => 't', 
+                              list      => run.get_distinct_builds,
+                              elements  => 5,
+                              mult      => 1 } %]   
     </td>
     <td style="padding-right: 30px;">
     [% PROCESS select sel = { name  => 'environment',
@@ -135,7 +139,7 @@
 
 </fieldset>
 <fieldset>
-    <legend><strong>Attributes</strong></legend>
+    <legend><strong>Roles</strong></legend>
 <table>
   <tr>
     <th align="right">Assignee</th>
@@ -145,8 +149,11 @@
     <td>
         <input name="assignee">
     </td>
-    <th><input type="radio" name="andor" value="1"/>AND
-        <input type="radio" name="andor" value="0"  checked="checked"/>OR</th>
+  </tr>
+  <tr>
+    <th colspan="2"><input type="radio" name="andor" value="1"/>AND
+      <input type="radio" name="andor" value="0"  checked="checked"/>OR</th>
+
   </tr>
   <tr>
     <th align="right">Tested By</th>
@@ -157,6 +164,12 @@
         <input name="testedby">
     </td>
   </tr>
+</table>
+</fieldset>
+<fieldset>
+    <legend><strong>Attributes</strong></legend>
+<table>
+
   <tr>
     <th align="right">Case Summary</th>
     <td>
@@ -173,15 +186,6 @@
                               list => query_variants } %]</td>
     <td>
         <input name="requirement">
-    </td>
-  </tr>
-  <tr>
-    <th align="right">Environment</th>
-    <td>
-    [% PROCESS select sel = { name => 'environment_type',
-                              list => query_variants } %]</td>
-    <td>
-        <input name="environment">
     </td>
   </tr>
   <tr>

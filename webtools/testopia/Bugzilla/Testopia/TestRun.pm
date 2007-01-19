@@ -722,7 +722,7 @@ Returns a list of environments for use in searches
 sub get_environments {
     my $dbh = Bugzilla->dbh;
     my $ref = $dbh->selectall_arrayref(
-                "SELECT environment_id AS id, name
+                "SELECT DISTINCT name AS id, name
                  FROM test_environments
                  ORDER BY name",
                  {'Slice'=>{}});
