@@ -27,6 +27,8 @@ EXPORTS		= 	gfxASurface.h \
 			gfxTextRunCache.h \
 			$(NULL)
 
+EXPORTS += gfxFontTest.h
+
 ifdef MOZ_ENABLE_GLITZ
 REQUIRES += glitz
 EXPORTS +=	gfxGlitzSurface.h

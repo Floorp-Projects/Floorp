@@ -47,6 +47,8 @@
 #include "gfxContext.h"
 #include "gfxAtsuiFonts.h"
 
+#include "gfxFontTest.h"
+
 #include "cairo-atsui.h"
 
 #include "gfxQuartzSurface.h"
@@ -178,6 +180,12 @@ gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
     cairo_font_options_t *fontOptions = cairo_font_options_create();
     mScaledFont = cairo_scaled_font_create(mFontFace, &sizeMatrix, &ctm, fontOptions);
     cairo_font_options_destroy(fontOptions);
+}
+
+nsString
+gfxAtsuiFont::GetUniqueName()
+{
+    return gfxQuartzFontCache::SharedFontCache()->GetPostscriptNameForFontID(mATSUFontID);
 }
 
 float
@@ -515,6 +523,12 @@ gfxAtsuiTextRun::Draw(gfxContext *aContext, gfxPoint pt)
         }
 
         gfxAtsuiFont *font = mGroup->FindFontFor(runFontID);
+
+        if (gfxFontTestStore::CurrentStore()) {
+            gfxFontTestStore::CurrentStore()->AddItem(font->GetUniqueName(),
+                                                      cairoGlyphs.glyphs, numGlyphs);
+        }
+
         cairo_set_scaled_font (cr, font->CairoScaledFont());
         cairo_show_glyphs (cr, cairoGlyphs.glyphs, numGlyphs);
 

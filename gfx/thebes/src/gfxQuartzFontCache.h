@@ -121,6 +121,9 @@ public:
     PRBool ResolveFontName(const nsAString& aFontName,
                            nsAString& aResolvedFontName);
     void UpdateFontList() { InitFontList(); }
+
+    const nsString& GetPostscriptNameForFontID(ATSUFontID fid);
+
 private:
     static gfxQuartzFontCache *sSharedFontCache;
 

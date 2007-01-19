@@ -53,6 +53,8 @@
 #include "gfxGlitzSurface.h"
 #endif
 
+#include "gfxFontTest.h"
+
 #include "nsUnicodeRange.h"
 #include "nsUnicharUtils.h"
 
@@ -423,6 +425,36 @@ gfxWindowsFont::FillLogFont(gfxFloat aSize, PRInt16 aWeight)
     mLogFont.lfFaceName[len] = '\0';
 }
 
+
+nsString
+gfxWindowsFont::GetUniqueName()
+{
+    nsString uniqueName;
+
+    // make sure this exists, because we're going to read its fields
+    MakeHFONT();
+
+    // start with the family name
+    uniqueName.Assign(mName);
+
+    // append the weight code
+    if (mLogFont.lfWeight != 400) {
+        uniqueName.AppendLiteral(":");
+        uniqueName.AppendInt(mLogFont.lfWeight);
+    }
+
+    // append italic?
+    if (mLogFont.lfItalic)
+        uniqueName.AppendLiteral(":Italic");
+
+    if (mLogFont.lfUnderline)
+        uniqueName.AppendLiteral(":Underline");
+
+    if (mLogFont.lfStrikeOut)
+        uniqueName.AppendLiteral(":StrikeOut");
+
+    return uniqueName;
+}
 
 /**********************************************************************
  *
@@ -1347,6 +1379,10 @@ TRY_AGAIN_HOPE_FOR_THE_BEST_2:
         }
     }
 
+    gfxWindowsFont *GetCurrentFont() {
+        return mCurrentFont;
+    }
+
     void SelectFont() {
         if (mFontSelected)
             return;
@@ -1683,6 +1719,11 @@ SCRIPT_PLACE:
             XFORM currentxform;
             GetWorldTransform(aDC, &currentxform);
             SetWorldTransform(aDC, &savedxform);
+
+            if (gfxFontTestStore::CurrentStore()) {
+                gfxFontTestStore::CurrentStore()->AddItem(item->GetCurrentFont()->GetUniqueName(),
+                                                          cglyphs, nglyphs);
+            }
 
             cairo_show_glyphs(cr, cglyphs, nglyphs);
 

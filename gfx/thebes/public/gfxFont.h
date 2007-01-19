@@ -139,6 +139,8 @@ public:
     const nsString& GetName() const { return mName; }
     const gfxFontStyle *GetStyle() const { return mStyle; }
 
+    virtual nsString GetUniqueName() { return GetName(); }
+
     struct Metrics {
         gfxFloat xHeight;
         gfxFloat superscriptOffset;
@@ -238,6 +240,7 @@ class THEBES_API gfxTextRun {
     THEBES_INLINE_DECL_REFCOUNTING(gfxTextRun)
 
 public:
+    gfxTextRun() : mIsRTL(PR_FALSE) { }
     virtual ~gfxTextRun() {}
 
     virtual void Draw(gfxContext *aContext, gfxPoint pt) = 0;
