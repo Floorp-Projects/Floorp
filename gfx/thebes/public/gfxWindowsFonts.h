@@ -380,6 +380,8 @@ public:
     void UpdateCTM(const gfxMatrix& aMatrix);
     gfxFloat GetAdjustedSize() { MakeHFONT(); return mAdjustedSize; }
 
+    virtual nsString GetUniqueName();
+
 protected:
     HFONT MakeHFONT();
     cairo_font_face_t *MakeCairoFontFace();

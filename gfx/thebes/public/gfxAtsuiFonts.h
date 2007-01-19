@@ -64,11 +64,15 @@ public:
 
     ATSUStyle GetATSUStyle() { return mATSUStyle; }
 
+    virtual nsString GetUniqueName();
+
 protected:
     const gfxFontStyle *mFontStyle;
 
     ATSUFontID mATSUFontID;
     ATSUStyle mATSUStyle;
+
+    nsString mUniqueName;
 
     cairo_font_face_t *mFontFace;
     cairo_scaled_font_t *mScaledFont;

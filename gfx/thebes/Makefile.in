@@ -10,9 +10,8 @@ MODULE	= thebes
 
 DIRS	= public src
 
-# disabled until vlad fixes the tests to link against the right thing on non-windows
-#ifdef ENABLE_TESTS
-#TOOL_DIRS  += test
-#endif
+ifdef ENABLE_TESTS
+TOOL_DIRS  += test
+endif
 
 include $(topsrcdir)/config/rules.mk

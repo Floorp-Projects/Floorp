@@ -754,3 +754,15 @@ gfxQuartzFontCache::ResolveFontName(const nsAString& aFontName,
     aResolvedFontName = fe->Name();
     return PR_TRUE;
 }
+
+const nsString&
+gfxQuartzFontCache::GetPostscriptNameForFontID(ATSUFontID fid)
+{
+    nsRefPtr<FontEntry> fe;
+
+    if (!mFontIDTable.Get(PRUint32(fid), &fe)) {
+        return NS_LITERAL_STRING("INVALID_FONT");
+    }
+
+    return fe->Name();
+}
