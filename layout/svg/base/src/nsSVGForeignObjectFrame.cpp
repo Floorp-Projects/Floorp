@@ -249,6 +249,9 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
 nsresult
 nsSVGForeignObjectFrame::TransformPointFromOuterPx(float aX, float aY, nsPoint* aOut)
 {
+  if (mParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
+    return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIDOMSVGMatrix> tm = GetTMIncludingOffset();
   nsCOMPtr<nsIDOMSVGMatrix> inverse;
   nsresult rv = tm->Inverse(getter_AddRefs(inverse));
@@ -341,7 +344,8 @@ nsSVGForeignObjectFrame::NotifyRedrawSuspended()
 NS_IMETHODIMP
 nsSVGForeignObjectFrame::NotifyRedrawUnsuspended()
 {
-  FlushDirtyRegion();
+  if (!(mParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD))
+    FlushDirtyRegion();
   return NS_OK;
 }
 
@@ -480,6 +484,9 @@ nsSVGForeignObjectFrame::DoReflow()
 #ifdef DEBUG
   printf("**nsSVGForeignObjectFrame::DoReflow()\n");
 #endif
+
+  if (mParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
+    return;
 
   nsPresContext *presContext = GetPresContext();
   nsIFrame* kid = GetFirstChild(nsnull);
