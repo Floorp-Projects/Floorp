@@ -808,6 +808,15 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       break;
     }
       
+    case NS_THEME_SCROLLBAR_SMALL:
+    {
+      SInt32 scrollbarWidth = 0;
+      ::GetThemeMetric(kThemeMetricSmallScrollBarWidth, &scrollbarWidth);
+      aResult->SizeTo(scrollbarWidth, scrollbarWidth);
+      *aIsOverridable = PR_FALSE;
+      break;
+    }
+      
     case NS_THEME_SCROLLBAR:
     case NS_THEME_SCROLLBAR_BUTTON_UP:
     case NS_THEME_SCROLLBAR_BUTTON_DOWN:
@@ -959,6 +968,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_SCALE_THUMB_VERTICAL:
 
     case NS_THEME_SCROLLBAR:
+    case NS_THEME_SCROLLBAR_SMALL:
     case NS_THEME_SCROLLBAR_BUTTON_UP:
     case NS_THEME_SCROLLBAR_BUTTON_DOWN:
     case NS_THEME_SCROLLBAR_BUTTON_LEFT:

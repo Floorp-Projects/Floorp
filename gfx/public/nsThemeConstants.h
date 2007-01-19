@@ -85,7 +85,7 @@
 #define NS_THEME_TREEVIEW_HEADER_SORTARROW                 47
 
 // Open tree widget twisty
-#define NS_THEME_TREEVIEW_TWISTY_OPEN                    48
+#define NS_THEME_TREEVIEW_TWISTY_OPEN                      48
 
 // A horizontal progress bar.
 #define NS_THEME_PROGRESSBAR                               51
@@ -127,7 +127,10 @@
 #define NS_THEME_SPINNER_DOWN_BUTTON                       74
 
 // A scrollbar.
-#define NS_THEME_SCROLLBAR                                 81
+#define NS_THEME_SCROLLBAR                                 80
+
+// A small scrollbar.
+#define NS_THEME_SCROLLBAR_SMALL                           81
 
 // A scrollbar button (up/down/left/right)
 #define NS_THEME_SCROLLBAR_BUTTON_UP                       82

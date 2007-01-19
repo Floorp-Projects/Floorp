@@ -22,6 +22,7 @@
  * Contributor(s):
  *  Mark Mentovai <mark@moxienet.com>
  *  Stuart Morgan <stuart.morgan@alumni.case.edu>
+ *  Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -548,6 +549,23 @@ nsNativeScrollbar::UpdateScroller()
   {
   }
   return self;
+}
+
+
+- (void)setFrame:(NSRect)frameRect
+{
+  // maybe make this a small scrollbar
+  SInt32 smallScrollbarWidth = 0;
+  ::GetThemeMetric(kThemeMetricSmallScrollBarWidth, &smallScrollbarWidth);
+  if ((SInt32)frameRect.size.width == smallScrollbarWidth ||
+      (SInt32)frameRect.size.height == smallScrollbarWidth) {
+    [self setControlSize:NSSmallControlSize];
+  }
+  else {
+    [self setControlSize:NSRegularControlSize];
+  }
+
+  [super setFrame:frameRect];
 }
 
 

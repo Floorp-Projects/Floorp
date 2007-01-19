@@ -53,6 +53,12 @@ scrollbar {
   background-color: white;
 }
 
+html|select[size]:not([size="0"]):not([size="1"]) > scrollbar,
+html|select[multiple] > scrollbar {
+  -moz-appearance: scrollbar-small;
+  min-width: 11px;
+}
+
 /* ::::: square at the corner of two scrollbars ::::: */
 
 scrollcorner {
