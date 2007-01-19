@@ -397,6 +397,21 @@ nsresult nsMsgContentPolicy::MailShouldLoad(nsIURI * aRequestingLocation, nsIURI
 {
   NS_ENSURE_TRUE(aRequestingLocation, NS_OK);
 
+  // Allow remote content when using a remote start page in the message pane.
+  // aRequestingLocation is the url currently loaded in the message pane. 
+  // If that's an http / https url (as opposed to a mail url) then we 
+  // must be loading a start page and not a message.
+  PRBool isHttp;
+  PRBool isHttps;
+  nsresult rv = aRequestingLocation->SchemeIs("http", &isHttp);
+  rv |= aRequestingLocation->SchemeIs("https", &isHttps);
+  if (NS_SUCCEEDED(rv) && (isHttp || isHttps))
+  {
+    *aDecision = nsIContentPolicy::ACCEPT;
+    return NS_OK;
+  }
+
+
   // (1) examine the msg hdr value for the remote content policy on this particular message to
   //     see if this particular message has special rights to bypass the remote content check
   // (2) special case RSS urls, always allow them to load remote images since the user explicitly
@@ -405,7 +420,6 @@ nsresult nsMsgContentPolicy::MailShouldLoad(nsIURI * aRequestingLocation, nsIURI
   //     who are allowed to send us remote images
 
   // get the msg hdr for the message URI we are actually loading
-  nsresult rv;
   nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(aRequestingLocation, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
