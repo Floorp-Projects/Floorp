@@ -1112,15 +1112,15 @@ NS_IMETHODIMP_(PRBool)
 nsSVGSVGElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
+    sColorMap,
+    sFEFloodMap,
     sFillStrokeMap,
-    sGraphicsMap,
-    sTextContentElementsMap,
     sFontSpecificationMap,
     sGradientStopMap,
-    sViewportsMap,
+    sGraphicsMap,
     sMarkersMap,
-    sColorMap,
-    sFEFloodMap
+    sTextContentElementsMap,
+    sViewportsMap
   };
 
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||

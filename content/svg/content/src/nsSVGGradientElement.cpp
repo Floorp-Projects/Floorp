@@ -199,8 +199,8 @@ NS_IMETHODIMP_(PRBool)
 nsSVGGradientElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
-    sGradientStopMap,
-    sColorMap
+    sColorMap,
+    sGradientStopMap
   };
   
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
