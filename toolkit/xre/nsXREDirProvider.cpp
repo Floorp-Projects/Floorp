@@ -375,7 +375,7 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
         && NS_SUCCEEDED(file->IsWritable(&isWritable)) && !isWritable) {
       PRUint32 permissions;
       if (NS_SUCCEEDED(file->GetPermissions(&permissions))) {
-        rv = file->SetPermissions(permissions | 0644);
+        rv = file->SetPermissions(permissions | 0600);
         NS_ASSERTION(NS_SUCCEEDED(rv), "failed to ensure file permissions");
       }
     }
