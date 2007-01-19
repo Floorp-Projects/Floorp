@@ -2138,12 +2138,8 @@ ToXML(JSContext *cx, jsval v)
     return obj;
 
 bad:
-    str = js_DecompileValueGenerator(cx, JSDVG_IGNORE_STACK, v, NULL);
-    if (str) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BAD_XML_CONVERSION,
-                             JS_GetStringBytes(str));
-    }
+    js_ReportValueError(cx, JSMSG_BAD_XML_CONVERSION,
+                        JSDVG_IGNORE_STACK, v, NULL);
     return NULL;
 }
 
@@ -2224,12 +2220,8 @@ ToXMLList(JSContext *cx, jsval v)
     return listobj;
 
 bad:
-    str = js_DecompileValueGenerator(cx, JSDVG_IGNORE_STACK, v, NULL);
-    if (str) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BAD_XMLLIST_CONVERSION,
-                             JS_GetStringBytes(str));
-    }
+    js_ReportValueError(cx, JSMSG_BAD_XMLLIST_CONVERSION,
+                        JSDVG_IGNORE_STACK, v, NULL);
     return NULL;
 }
 
@@ -3073,12 +3065,8 @@ ToAttributeName(JSContext *cx, jsval v)
         uri = prefix = cx->runtime->emptyString;
     } else {
         if (JSVAL_IS_PRIMITIVE(v)) {
-            name = js_DecompileValueGenerator(cx, JSDVG_IGNORE_STACK, v, NULL);
-            if (name) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_BAD_XML_ATTR_NAME,
-                                     JS_GetStringBytes(name));
-            }
+            js_ReportValueError(cx, JSMSG_BAD_XML_ATTR_NAME,
+                                JSDVG_IGNORE_STACK, v, NULL);
             return NULL;
         }
 
@@ -3116,6 +3104,12 @@ ToAttributeName(JSContext *cx, jsval v)
     return qn;
 }
 
+static void
+ReportBadXMLName(JSContext *cx, jsval id)
+{
+    js_ReportValueError(cx, JSMSG_BAD_XML_NAME, JSDVG_IGNORE_STACK, id, NULL);
+}
+
 static JSXMLQName *
 ToXMLName(JSContext *cx, jsval v, jsid *funidp)
 {
@@ -3130,9 +3124,7 @@ ToXMLName(JSContext *cx, jsval v, jsid *funidp)
         name = JSVAL_TO_STRING(v);
     } else {
         if (JSVAL_IS_PRIMITIVE(v)) {
-            name = js_DecompileValueGenerator(cx, JSDVG_IGNORE_STACK, v, NULL);
-            if (name)
-                goto bad;
+            ReportBadXMLName(cx, v);
             return NULL;
         }
 
@@ -3453,19 +3445,6 @@ out:
     if (!ok)
         return NULL;
     return copy;
-}
-
-static void
-ReportBadXMLName(JSContext *cx, jsval id)
-{
-    JSString *name;
-
-    name = js_DecompileValueGenerator(cx, JSDVG_IGNORE_STACK, id, NULL);
-    if (name) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BAD_XML_NAME,
-                             JS_GetStringBytes(name));
-    }
 }
 
 /* ECMA-357 9.1.1.4 XML [[DeleteByIndex]]. */

@@ -307,16 +307,18 @@ extern JSBool
 js_DecompileFunction(JSPrinter *jp, JSFunction *fun);
 
 /*
- * Find the source expression that resulted in v, and return a new string
- * containing it.  Fall back on v's string conversion (fallback) if we can't
- * find the bytecode that generated and pushed v on the operand stack.
+ * Find the source expression that resulted in v, and return a newly allocated
+ * C-string containing it.  Fall back on v's string conversion (fallback) if we
+ * can't find the bytecode that generated and pushed v on the operand stack.
  *
  * Search the current stack frame if spindex is JSDVG_SEARCH_STACK.  Don't
  * look for v on the stack if spindex is JSDVG_IGNORE_STACK.  Otherwise,
  * spindex is the negative index of v, measured from cx->fp->sp, or from a
  * lower frame's sp if cx->fp is native.
+ *
+ * The caller must call JS_free on the result after a succsesful call.
  */
-extern JSString *
+extern char *
 js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
                            JSString *fallback);
 
