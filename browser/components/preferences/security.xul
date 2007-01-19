@@ -65,7 +65,8 @@
                   type="bool"/>
       <preference id="browser.safebrowsing.enabled"
                   name="browser.safebrowsing.enabled"
-                  type="bool"/>
+                  type="bool"
+                  onchange="gSecurityPane.onSBChange();"/>
       <preference id="browser.safebrowsing.remoteLookups"
                   name="browser.safebrowsing.remoteLookups"
                   type="bool"/>
@@ -107,7 +108,6 @@
                 onsyncfrompreference="return gSecurityPane.readCheckPhish();"/>
       <radiogroup id="checkPhishChoice" class="indent"
                   preference="browser.safebrowsing.remoteLookups"
-                  onsyncfrompreference="return gSecurityPane.readPhishChoice();"
                   onsynctopreference="return gSecurityPane.writePhishChoice();">
         <radio id="cachedRadio"
                label="&useDownloadedList.label;"
