@@ -116,6 +116,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
       } break;
 
     case nsIAccessibleEvent::EVENT_STATE_CHANGE:
+      {
         StateChange *pStateChange;
         AtkStateType atkState;
 
@@ -145,7 +146,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
         atk_object_notify_state_change(accWrap->GetAtkObject(),
                                        atkState, pStateChange->enable);
         rv = NS_OK;
-        break;
+        } break;
       
         /*
          * More complex than I ever thought.
@@ -486,6 +487,22 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
                                "attributes_changed");
         rv = NS_OK;
       } break;
+
+    case nsIAccessibleEvent::EVENT_SHOW:
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_SHOW\n"));
+        atk_object_notify_state_change(accWrap->GetAtkObject(),
+                                       ATK_STATE_VISIBLE, PR_TRUE);
+        atk_object_notify_state_change(accWrap->GetAtkObject(),
+                                       ATK_STATE_SHOWING, PR_TRUE);
+        break;
+
+    case nsIAccessibleEvent::EVENT_HIDE:
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_HIDE\n"));
+        atk_object_notify_state_change(accWrap->GetAtkObject(),
+                                       ATK_STATE_VISIBLE, PR_FALSE);
+        atk_object_notify_state_change(accWrap->GetAtkObject(),
+                                       ATK_STATE_SHOWING, PR_FALSE);
+        break;
 
     default:
         // Don't transfer others
