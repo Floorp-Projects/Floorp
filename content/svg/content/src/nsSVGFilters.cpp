@@ -239,7 +239,7 @@ nsSVGFE::GetLengthInfo()
   * nsSVGFilterResource provides functionality for managing images used by
   * filters.  PLEASE NOTE that nsSVGFilterResource should ONLY be used on the
   * stack because it has nsAutoString member.  Also note that ReleaseTarget,
-  * and thus the deconstructor, depends on AcquireSourceImage having been called
+  * and thus the destructor, depends on AcquireSourceImage having been called
   * one or more times before it is executed.
   */
 class nsSVGFilterResource
@@ -1274,14 +1274,15 @@ nsSVGFECompositeElement::Filter(nsSVGFilterInstance *instance)
     // Blend in the second source image
     rv = fr.AcquireSourceImage(mIn1, this, &sourceData);
     NS_ENSURE_SUCCESS(rv, rv);
-    float scalar = 1 / 255.0f;
+    float k1Scaled = k1 / 255.0f;
+    float k4Scaled = k4 / 255.0f;
     for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
       for (PRInt32 y = rect.y; y < rect.YMost(); y++) {
         PRUint32 targIndex = y * stride + 4 * x;
         for (PRInt32 i = 0; i < 4; i++) {
           PRUint8 i2 = targetData[targIndex + i];
           PRUint8 i1 = sourceData[targIndex + i];
-          float result = k1*i1*i2*scalar + k2*i1 + k3*i2 + k4*scalar;
+          float result = k1Scaled*i1*i2 + k2*i1 + k3*i2 + k4Scaled;
           targetData[targIndex + i] =
                        NS_STATIC_CAST(PRUint8, PR_MIN(PR_MAX(0, result), 255));
         }
@@ -1481,20 +1482,21 @@ nsSVGFEComponentTransferElement::Filter(nsSVGFilterInstance *instance)
   PRInt32 stride = fr.GetDataStride();
   for (PRInt32 y = rect.y; y < rect.y + rect.height; y++)
     for (PRInt32 x = rect.x; x < rect.x + rect.width; x++) {
-      PRUint32 r, g, b, a;
-      a = sourceData[y * stride + 4 * x + 3];
+      PRInt32 targIndex = y * stride + x * 4;
+      PRUint8 r, g, b, a;
+      a = sourceData[targIndex + 3];
       if (a) {
-        b = tableB[(255 * (PRUint32)sourceData[y * stride + 4 * x])     / a];
-        g = tableG[(255 * (PRUint32)sourceData[y * stride + 4 * x + 1]) / a];
-        r = tableR[(255 * (PRUint32)sourceData[y * stride + 4 * x + 2]) / a];
+        b = tableB[(255 * (PRUint32)sourceData[targIndex])     / a];
+        g = tableG[(255 * (PRUint32)sourceData[targIndex + 1]) / a];
+        r = tableR[(255 * (PRUint32)sourceData[targIndex + 2]) / a];
       } else {
         b = g = r = 0;
       }
       a = tableA[a];
-      targetData[y * stride + 4 * x]     = (b * a) / 255;
-      targetData[y * stride + 4 * x + 1] = (g * a) / 255;
-      targetData[y * stride + 4 * x + 2] = (r * a) / 255;
-      targetData[y * stride + 4 * x + 3] = a;
+      FAST_DIVIDE_BY_255(targetData[targIndex], b * a);
+      FAST_DIVIDE_BY_255(targetData[targIndex + 1], g * a);
+      FAST_DIVIDE_BY_255(targetData[targIndex + 2], r * a);
+      targetData[targIndex + 3] = a;
     }
   return NS_OK;
 }
@@ -2442,13 +2444,13 @@ nsSVGFEOffsetElement::Filter(nsSVGFilterInstance *instance)
   val.Init(nsSVGUtils::Y, 0xff, fltY, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
   offsetY = (PRInt32) instance->GetPrimitiveLength(&val);
 
+  PRInt32 stride = fr.GetDataStride();
+  PRInt32 targetColumn = rect.x + offsetX;
   for (PRInt32 y = rect.y; y < rect.y + rect.height; y++) {
     PRInt32 targetRow = y + offsetY;
     if (targetRow < rect.y || targetRow >= rect.y + rect.height)
       continue;
 
-    PRInt32 targetColumn = rect.x + offsetX;
-    PRInt32 stride = fr.GetDataStride();
     if (targetColumn < rect.x)
       memcpy(targetData + stride * targetRow + 4 * rect.x,
              sourceData + stride * y - 4 * offsetX,
@@ -2594,13 +2596,8 @@ nsSVGFEFloodElement::Filter(nsSVGFilterInstance *instance)
   NS_ENSURE_SUCCESS(rv, rv);
   nsRect rect = fr.GetRect();
 
-  nsIDocument* doc = GetCurrentDoc();
-  if (!doc) return NS_ERROR_FAILURE;
-  nsIPresShell *presShell = doc->GetShellAt(0);
-  NS_ASSERTION(presShell, "need presShell to suspend redraw");
-  if (!presShell) return NS_ERROR_FAILURE;
-
-  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
+  nsIFrame* frame = GetPrimaryFrame();
+  if (!frame) return NS_ERROR_FAILURE;
   nsStyleContext* style = frame->GetStyleContext();
 
   nscolor floodColor = style->GetStyleSVGReset()->mFloodColor;
@@ -2975,9 +2972,10 @@ nsSVGFETurbulenceElement::Filter(nsSVGFilterInstance *instance)
   PRInt32 stride = fr.GetDataStride();
   for (PRInt32 y = rect.y; y < rect.y + rect.height; y++) {
     for (PRInt32 x = rect.x; x < rect.x + rect.width; x++) {
-	    double point[2];
-	    point[0] = filterX + (filterWidth * x ) / (rect.width - 1);
-	    point[1] = filterY + (filterHeight * y) / (rect.height - 1);
+      PRInt32 targIndex = y * stride + x * 4;
+      double point[2];
+      point[0] = filterX + (filterWidth * x ) / (rect.width - 1);
+      point[1] = filterY + (filterHeight * y) / (rect.height - 1);
 
       float col[4];
       if (type == nsIDOMSVGFETurbulenceElement::SVG_TURBULENCE_TYPE_TURBULENCE) {
@@ -2990,8 +2988,8 @@ nsSVGFETurbulenceElement::Filter(nsSVGFilterInstance *instance)
                                doStitch, filterX, filterY, filterWidth, filterHeight) * 255 + 255) / 2;
       }
       for (int i = 0; i < 4; i++) {
-          col[i] = PR_MIN(col[i], 255);
-          col[i] = PR_MAX(col[i], 0);
+        col[i] = PR_MIN(col[i], 255);
+        col[i] = PR_MAX(col[i], 0);
       }
 
       PRUint8 r, g, b, a;
@@ -3000,10 +2998,10 @@ nsSVGFETurbulenceElement::Filter(nsSVGFilterInstance *instance)
       FAST_DIVIDE_BY_255(g, unsigned(col[1]) * a);
       FAST_DIVIDE_BY_255(b, unsigned(col[2]) * a);
 
-      targetData[y * stride + 4 * x    ] = b;
-      targetData[y * stride + 4 * x + 1] = g;
-      targetData[y * stride + 4 * x + 2] = r;
-      targetData[y * stride + 4 * x + 3] = a;
+      targetData[targIndex    ] = b;
+      targetData[targIndex + 1] = g;
+      targetData[targIndex + 2] = r;
+      targetData[targIndex + 3] = a;
     }
   }
 
