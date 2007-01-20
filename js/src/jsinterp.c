@@ -2956,20 +2956,6 @@ interrupt:
         }                                                                     \
     JS_END_MACRO
 
-#define NATIVE_SET(cx,obj,sprop,vp)                                           \
-    JS_BEGIN_MACRO                                                            \
-        if (SPROP_HAS_STUB_SETTER(sprop)) {                                   \
-            /* Fast path for Object instance properties. */                   \
-            JS_ASSERT((sprop)->slot != SPROP_INVALID_SLOT);                   \
-            LOCKED_OBJ_SET_SLOT(obj, (sprop)->slot, *vp);                     \
-        } else {                                                              \
-            SAVE_SP_AND_PC(fp);                                               \
-            ok = js_NativeSet(cx, obj, sprop, vp);                            \
-            if (!ok)                                                          \
-                goto out;                                                     \
-        }                                                                     \
-    JS_END_MACRO
-
           BEGIN_CASE(JSOP_SETCONST)
             LOAD_ATOM(0);
             obj = fp->varobj;
