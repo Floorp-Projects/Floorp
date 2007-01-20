@@ -945,6 +945,7 @@ static void _PR_Fini(void) __attribute__ ((destructor));
  * Sun Studio compiler
  */
 #pragma fini(_PR_Fini)
+static void _PR_Fini(void);
 #elif defined(HPUX)
 /*
  * Current versions of HP C compiler define __HP_cc.
@@ -952,6 +953,7 @@ static void _PR_Fini(void) __attribute__ ((destructor));
  */
 #if defined(__ia64) || defined(_LP64)
 #pragma FINI "_PR_Fini"
+static void _PR_Fini(void);
 #else
 /*
  * Only HP-UX 10.x style initializers are supported in 32-bit links.
@@ -984,7 +986,7 @@ void PR_HPUX10xInit(shl_t handle, int loading)
 /* Need to use the -binitfini::_PR_Fini linker option. */
 #endif
 
-static void _PR_Fini(void)
+void _PR_Fini(void)
 {
     void *thred;
     int rv;
