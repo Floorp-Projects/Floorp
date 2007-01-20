@@ -109,7 +109,6 @@ bin\components\content_xslt.xpt
 bin\components\content_xtf.xpt
 bin\components\xultmpl.xpt
 bin\components\chardet.xpt
-bin\components\jsconsole.xpt
 bin\components\jsconsole-clhandler.js
 bin\components\layout_xul_tree.xpt
 bin\components\inspector.xpt
