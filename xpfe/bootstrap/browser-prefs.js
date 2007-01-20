@@ -201,6 +201,7 @@ pref("spellchecker.dictionaries.download.url", "chrome://branding/locale/brand.p
 pref("layout.spellcheckDefault", 1);
 
 pref("app.releaseNotesURL", "chrome://branding/locale/brand.properties");
+pref("app.vendorURL", "chrome://branding/locale/brand.properties");
 
 pref("extensions.getMoreLocalesURL", "chrome://branding/locale/brand.properties");
 
