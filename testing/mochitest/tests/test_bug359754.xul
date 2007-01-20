@@ -10,6 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=359754
 
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>      
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
 
 <body  xmlns="http://www.w3.org/1999/xhtml">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=359754">Mozilla Bug 359754</a>
@@ -29,10 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=359754
 <script class="testbody" type="application/javascript">
 
 function hitIt() {
-var event = document.createEvent("KeyEvents");
-event.initKeyEvent("keypress", true, true, null, false, false, false, false, KeyEvent.DOM_VK_UP, 0);
-var cancelled = $("foo").dispatchEvent(event);
-return cancelled;
+  sendKey("up", "foo");
 }
 
 SimpleTest.waitForExplicitFinish();
@@ -44,9 +42,7 @@ addLoadEvent(function() {
 // pay attention to our key events
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-var cancelled = hitIt();
-
-ok(!cancelled, "accepted key up");
+hitIt();
 is($("foo").value, "6", "value is now 6");
 
 hitIt();
