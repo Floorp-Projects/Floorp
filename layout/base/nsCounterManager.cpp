@@ -46,6 +46,8 @@
 // Should be called immediately after calling |Insert|.
 void nsCounterUseNode::Calc(nsCounterList *aList)
 {
+    NS_ASSERTION(!aList->IsDirty(),
+                 "Why are we calculating with a dirty list?");
     mValueAfter = aList->ValueBefore(this);
 }
 
@@ -53,6 +55,8 @@ void nsCounterUseNode::Calc(nsCounterList *aList)
 // Should be called immediately after calling |Insert|.
 void nsCounterChangeNode::Calc(nsCounterList *aList)
 {
+    NS_ASSERTION(!aList->IsDirty(),
+                 "Why are we calculating with a dirty list?");
     if (mType == RESET) {
         mValueAfter = mChangeValue;
     } else {
@@ -235,7 +239,12 @@ nsCounterManager::AddResetOrIncrement(nsIFrame *aFrame, PRInt32 aIndex,
         // list.
         return PR_TRUE;
     }
-    node->Calc(counterList);
+
+    // Don't call Calc() if the list is already dirty -- it'll be recalculated
+    // anyway, and trying to calculate with a dirty list doesn't work.
+    if (NS_LIKELY(!counterList->IsDirty())) {
+        node->Calc(counterList);
+    }
     return PR_FALSE;
 }
 

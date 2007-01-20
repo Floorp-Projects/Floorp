@@ -2024,15 +2024,22 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
           return NS_ERROR_OUT_OF_MEMORY;
 
         counterList->Insert(node);
-        if (counterList->IsLast(node))
-          node->Calc(counterList);
-        else {
-          counterList->SetDirty();
-          CountersDirty();
+        PRBool dirty = counterList->IsDirty();
+        if (!dirty) {
+          if (counterList->IsLast(node)) {
+            node->Calc(counterList);
+            node->GetText(contentString);
+          }
+          // In all other cases (list already dirty or node not at the end),
+          // just start with an empty string for now and when we recalculate
+          // the list we'll change the value to the right one.
+          else {
+            counterList->SetDirty();
+            CountersDirty();
+          }
         }
 
         textPtr = &node->mText; // text node assigned below
-        node->GetText(contentString);
       }
       break;
 
