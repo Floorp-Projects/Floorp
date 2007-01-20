@@ -82,6 +82,7 @@ LIBS =  $(HELPER_OBJS) \
 	$(NSPR_LIBS) \
 	$(call EXPAND_MOZLIBNAME,thebes) \
 	$(TK_LIBS) \
+	$(ZLIB_LIBS) \
 	$(NULL)
 
 ifeq ($(MOZ_GFX_TOOLKIT),windows)
