@@ -20,4 +20,3 @@ ac_add_options --enable-official-branding
 ac_add_options --disable-shared
 ac_add_options --enable-static
 ac_add_options --enable-update-packaging
-ac_add_options --with-windows-version=400
