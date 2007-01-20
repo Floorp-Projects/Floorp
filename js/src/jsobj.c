@@ -3466,11 +3466,12 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp)
             goto set_slot;
     } else {
         /*
-         * No slot allocated, so either we must have a non-stub setter, or
-         * we will get a JSMSG_GETTER_ONLY error from SPROP_SET.
+         * Allow API consumers to create shared properties with stub setters.
+         * Such properties lack value storage, so setting them is like writing
+         * to /dev/null.
          */
-        JS_ASSERT(!SPROP_HAS_STUB_SETTER(sprop) ||
-                  (sprop->attrs & JSPROP_GETTER));
+        if (SPROP_HAS_STUB_SETTER(sprop))
+            return JS_TRUE;
         pval = JSVAL_VOID;
     }
 
