@@ -9,7 +9,10 @@ comm.jar:
 *  content/navigator-region/contents.rdf                            (contents-region.rdf)
 *  content/navigator-platform/contents.rdf                          (contents-platform.rdf)
 #endif
+   content/navigator/aboutAbout.html
    content/navigator/browser.js
+   content/navigator/fullScreen.js
+   content/navigator/hiddenWindow.xul
    content/navigator/languageDictionary.js
    content/navigator/linkToolbarHandler.js
    content/navigator/linkToolbarItem.js

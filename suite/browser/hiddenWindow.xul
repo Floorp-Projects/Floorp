@@ -55,7 +55,7 @@
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
 %brandDTD;
-<!ENTITY % buildDTD SYSTEM "chrome://global/content/build.dtd" >
+<!ENTITY % buildDTD SYSTEM "chrome://communicator/content/build.dtd" >
 %buildDTD;
 <!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd" >
 %navigatorDTD;

@@ -52,6 +52,7 @@ comm.jar:
    content/communicator/askViewZoom.xul
    content/communicator/askViewZoom.js
    content/communicator/browserBindings.xul
+*  content/communicator/build.dtd
    content/communicator/communicator.css
    content/communicator/consoleOverlay.xul
    content/communicator/contentAreaUtils.js
