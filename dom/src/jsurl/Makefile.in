@@ -59,7 +59,6 @@ REQUIRES	= xpcom \
 		  widget \
 		  appshell \
 		  xpconnect \
-		  jsconsole \
 		  uconv \
 		  docshell \
 		  content \

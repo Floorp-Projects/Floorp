@@ -40,7 +40,6 @@
 #include "nsPromptService.h"
 #include "nsWindowWatcher.h"
 #include "nsAppStartupNotifier.h"
-#include "nsJSConsoleService.h"
 #include "nsFind.h"
 #include "nsWebBrowserFind.h"
 #include "nsWebBrowserPersist.h"
@@ -122,7 +121,6 @@ nsDefaultAuthPromptConstructor(nsISupports *outer, const nsIID &iid, void **resu
 #ifdef MOZ_XUL
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDialogParamBlock)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPromptService, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSConsoleService)
 #ifdef NS_PRINTING
 #ifndef WINCE
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintingPromptService, Init)
@@ -141,7 +139,6 @@ static const nsModuleComponentInfo gComponents[] = {
   { "Dialog ParamBlock", NS_DIALOGPARAMBLOCK_CID, NS_DIALOGPARAMBLOCK_CONTRACTID, nsDialogParamBlockConstructor },
   { "Prompt Service", NS_PROMPTSERVICE_CID, NS_PROMPTSERVICE_CONTRACTID, nsPromptServiceConstructor },
   { "Nonblocking Alert Service", NS_PROMPTSERVICE_CID, NS_NONBLOCKINGALERTSERVICE_CONTRACTID, nsPromptServiceConstructor },
-  { "JS Console Service", NS_JSCONSOLESERVICE_CID, NS_JSCONSOLESERVICE_CONTRACTID, nsJSConsoleServiceConstructor },
 #ifdef NS_PRINTING
 #ifndef WINCE
   { "Printing Prompt Service", NS_PRINTINGPROMPTSERVICE_CID, NS_PRINTINGPROMPTSERVICE_CONTRACTID, nsPrintingPromptServiceConstructor },
