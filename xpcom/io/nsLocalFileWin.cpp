@@ -1441,10 +1441,19 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
                 backup.Append(destPath);
                 backup.Append(L".moztmp");
 
+                // we are about to remove the .moztmp file,
+                // so attempt to make sure the file is writable
+                // (meaning:  the "read only" attribute is not set)
+                // _wchmod can silently fail (return -1) if 
+                // the file doesn't exist but that's ok, because 
+                // _wremove() will also silently fail if the file
+                // doesn't exist.
+               (void)_wchmod(backup.get(), _S_IREAD | _S_IWRITE);
+
                 // remove any existing backup file that we may already have.
                 // maybe we should be doing some kind of unique naming here,
                 // but why bother.
-                _wremove(backup.get());
+               (void)_wremove(backup.get());
 
                 // move destination file to backup file
                 copyOK = ::MoveFileW(destPath.get(), backup.get());
