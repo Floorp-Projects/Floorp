@@ -61,7 +61,6 @@
 #include "nsIWindowMediator.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMDocument.h"
-#include "nsIJSConsoleService.h"
 #include "nsIConsoleService.h"
 #include "nsXPIDLString.h"
 #include "prprf.h"
@@ -85,7 +84,6 @@ public:
 
     nsresult Init(nsIURI* uri);
     nsresult EvaluateScript(nsIChannel *aChannel, PopupControlState aPopupState);
-    nsresult BringUpConsole(nsIDOMWindow *aDomWindow);
 
 protected:
     virtual ~nsJSThunk();
@@ -188,14 +186,6 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
     nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(global, &rv));
     if (NS_FAILED(rv)) {
         return NS_ERROR_FAILURE;
-    }
-
-    // If mURI is just "javascript:", we bring up the Error console
-    // and return NS_ERROR_DOM_RETVAL_UNDEFINED.
-    if (script.IsEmpty()) {
-        rv = BringUpConsole(domWindow);
-        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-        return NS_ERROR_DOM_RETVAL_UNDEFINED;
     }
 
     // So far so good: get the script context from its owner.
@@ -376,35 +366,6 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
             rv = NS_ERROR_OUT_OF_MEMORY;
     }
 
-    return rv;
-}
-
-nsresult nsJSThunk::BringUpConsole(nsIDOMWindow *aDomWindow)
-{
-    nsresult rv;
-
-    // First, get the Window Mediator service.
-    nsCOMPtr<nsIWindowMediator> windowMediator =
-        do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
-
-    if (NS_FAILED(rv)) return rv;
-
-    // Next, find out whether there's a console already open.
-    nsCOMPtr<nsIDOMWindowInternal> console;
-    rv = windowMediator->GetMostRecentWindow(NS_LITERAL_STRING("global:console").get(),
-                                             getter_AddRefs(console));
-    if (NS_FAILED(rv)) return rv;
-
-    if (console) {
-        // If the console is already open, bring it to the top.
-        rv = console->Focus();
-    } else {
-        nsCOMPtr<nsIJSConsoleService> jsconsole;
-
-        jsconsole = do_GetService("@mozilla.org/embedcomp/jsconsole-service;1", &rv);
-        if (NS_FAILED(rv) || !jsconsole) return rv;
-        jsconsole->Open(aDomWindow);
-    }
     return rv;
 }
 
