@@ -51,13 +51,7 @@
 #include "nsTextFormatter.h"
 #include "nsIView.h"
 #include "nsRoleMap.h"
-
-// for the COM IEnumVARIANT solution in get_AccSelection()
-#define _ATLBASE_IMPL
-#include <atlbase.h>
-extern CComModule _Module;
-#define _ATLCOM_IMPL
-#include <atlcom.h>
+#include "nsArrayUtils.h"
 
 /* For documentation of the accessibility architecture,
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
@@ -68,8 +62,6 @@ extern CComModule _Module;
 #ifdef DEBUG_LEAKS
 static gAccessibles = 0;
 #endif
-
-CComModule _Module;
 
 EXTERN_C GUID CDECL CLSID_Accessible =
 { 0x61044601, 0xa811, 0x4e2b, { 0xbb, 0xba, 0x17, 0xbf, 0xab, 0xd3, 0x29, 0xd7 } };
@@ -608,48 +600,149 @@ STDMETHODIMP nsAccessibleWrap::get_accFocus(
   return S_OK;
 }
 
+// This helper class implements IEnumVARIANT for a nsIArray containing nsIAccessible objects.
+
+class AccessibleEnumerator : public IEnumVARIANT
+{
+public:
+  AccessibleEnumerator(nsIArray* aArray) : mArray(aArray), mCurIndex(0) { }
+  AccessibleEnumerator(const AccessibleEnumerator& toCopy) :
+    mArray(toCopy.mArray), mCurIndex(toCopy.mCurIndex) { }
+  ~AccessibleEnumerator() { }
+
+  // IUnknown
+  STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject);
+  STDMETHODIMP_(ULONG) AddRef(void);
+  STDMETHODIMP_(ULONG) Release(void);
+
+  // IEnumVARIANT
+  STDMETHODIMP Next(unsigned long celt, VARIANT FAR* rgvar, unsigned long FAR* pceltFetched);
+  STDMETHODIMP Skip(unsigned long celt);
+  STDMETHODIMP Reset()
+  {
+    mCurIndex = 0;
+    return S_OK;
+  }
+  STDMETHODIMP Clone(IEnumVARIANT FAR* FAR* ppenum);
+
+private:
+  nsCOMPtr<nsIArray> mArray;
+  PRUint32 mCurIndex;
+  nsAutoRefCnt mRefCnt;
+};
+
+HRESULT
+AccessibleEnumerator::QueryInterface(REFIID iid, void ** ppvObject)
+{
+  if (iid == IID_IEnumVARIANT) {
+    *ppvObject = static_cast<IEnumVARIANT*>(this);
+    AddRef();
+    return S_OK;
+  }
+  if (iid == IID_IUnknown) {
+    *ppvObject = static_cast<IUnknown*>(this);
+    AddRef();
+    return S_OK;
+  }
+
+  *ppvObject = NULL;
+  return E_NOINTERFACE;
+}
+
+STDMETHODIMP_(ULONG)
+AccessibleEnumerator::AddRef(void)
+{
+  return ++mRefCnt;
+}
+
+STDMETHODIMP_(ULONG)
+AccessibleEnumerator::Release(void)
+{
+  ULONG r = --mRefCnt;
+  if (r == 0)
+    delete this;
+  return r;
+}
+
+STDMETHODIMP
+AccessibleEnumerator::Next(unsigned long celt, VARIANT FAR* rgvar, unsigned long FAR* pceltFetched)
+{
+  PRUint32 length = 0;
+  mArray->GetLength(&length);
+
+  HRESULT hr = S_OK;
+
+  // Can't get more elements than there are...
+  if (celt > length - mCurIndex) {
+    hr = S_FALSE;
+    celt = length - mCurIndex;
+  }
+
+  for (PRUint32 i = 0; i < celt; ++i, ++mCurIndex) {
+    // Copy the elements of the array into rgvar
+    nsCOMPtr<nsIAccessible> accel(do_QueryElementAt(mArray, mCurIndex));
+    NS_ASSERTION(accel, "Invalid pointer in mArray");
+
+    if (accel) {
+      rgvar[i].vt = VT_DISPATCH;
+      rgvar[i].pdispVal = nsAccessibleWrap::NativeAccessible(accel);
+    }
+  }
+
+  if (pceltFetched)
+    *pceltFetched = celt;
+
+  return hr;
+}
+
+STDMETHODIMP
+AccessibleEnumerator::Clone(IEnumVARIANT FAR* FAR* ppenum)
+{
+  *ppenum = new AccessibleEnumerator(*this);
+  if (!*ppenum)
+    return E_OUTOFMEMORY;
+  NS_ADDREF(*ppenum);
+  return S_OK;
+}
+
+STDMETHODIMP
+AccessibleEnumerator::Skip(unsigned long celt)
+{
+  PRUint32 length = 0;
+  mArray->GetLength(&length);
+  // Check if we can skip the requested number of elements
+  if (celt > length - mCurIndex) {
+    mCurIndex = length;
+    return S_FALSE;
+  }
+  mCurIndex += celt;
+  return S_OK;
+}
+
 /**
   * This method is called when a client wants to know which children of a node
-  *  are selected. Currently we only handle this for HTML selects, which are the
-  *  only nsIAccessible objects to implement nsIAccessibleSelectable.
+  *  are selected. Note that this method can only find selected children for
+  *  nsIAccessible object which implement nsIAccessibleSelectable.
   *
   * The VARIANT return value arguement is expected to either contain a single IAccessible
   *  or an IEnumVARIANT of IAccessibles. We return the IEnumVARIANT regardless of the number
-  *  of options selected, unless there are none selected in which case we return an empty
+  *  of children selected, unless there are none selected in which case we return an empty
   *  VARIANT.
   *
-  * The typedefs at the beginning set up the structure that will contain an array
-  *  of the IAccessibles. It implements the IEnumVARIANT interface, allowing us to
-  *  use it to return the IAccessibles in the VARIANT.
-  *
-  * We get the selected options from the select's accessible object and then put create
-  *  IAccessible objects for them and put those in the CComObject<EnumeratorType>
-  *  object. Then we put the CComObject<EnumeratorType> object in the VARIANT and return.
+  * We get the selected options from the select's accessible object and wrap
+  *  those in an AccessibleEnumerator which we then put in the return VARIANT.
   *
   * returns a VT_EMPTY VARIANT if:
-  *  - there are no options in the select
-  *  - none of the options are selected
-  *  - there is an error QIing to IEnumVARIANT
-  *  - The object is not the type that can have children selected
+  *  - there are no selected children for this object
+  *  - the object is not the type that can have children selected
   */
 STDMETHODIMP nsAccessibleWrap::get_accSelection(VARIANT __RPC_FAR *pvarChildren)
 {
-  typedef VARIANT                      ItemType;              /* type of the object to be stored in container */
-  typedef ItemType                     EnumeratorExposedType; /* the type of the item exposed by the enumerator interface */
-  typedef IEnumVARIANT                 EnumeratorInterface;   /* a COM enumerator ( IEnumXXXXX ) interface */
-  typedef _Copy<EnumeratorExposedType> EnumeratorCopyPolicy;  /* Copy policy class */
-  typedef CComEnum<EnumeratorInterface,
-                   &__uuidof(EnumeratorInterface),
-                   EnumeratorExposedType,
-                   EnumeratorCopyPolicy > EnumeratorType;
-
-  IEnumVARIANT* pUnk = NULL;
-  CComObject<EnumeratorType>* pEnum = NULL;
   VariantInit(pvarChildren);
   pvarChildren->vt = VT_EMPTY;
 
-  nsCOMPtr<nsIAccessibleSelectable> select;
-  nsAccessNode::QueryInterface(NS_GET_IID(nsIAccessibleSelectable), getter_AddRefs(select));
+  nsCOMPtr<nsIAccessibleSelectable> 
+    select(do_QueryInterface(NS_STATIC_CAST(nsIAccessible*, this)));
 
   if (select) {  // do we have an nsIAccessibleSelectable?
     // we have an accessible that can have children selected
@@ -657,31 +750,14 @@ STDMETHODIMP nsAccessibleWrap::get_accSelection(VARIANT __RPC_FAR *pvarChildren)
     // gets the selected options as nsIAccessibles.
     select->GetSelectedChildren(getter_AddRefs(selectedOptions));
     if (selectedOptions) { // false if the select has no children or none are selected
-      PRUint32 length;
-      selectedOptions->GetLength(&length);
-      CComVariant* optionArray = new CComVariant[length]; // needs to be a CComVariant to go into the EnumeratorType object
+      // 1) Create and initialize the enumeration
+      nsRefPtr<AccessibleEnumerator> pEnum = new AccessibleEnumerator(selectedOptions);
 
-      // 1) Populate an array to store in the enumeration
-      for (PRUint32 i = 0 ; i < length ; i++) {
-        nsCOMPtr<nsIAccessible> tempAccess;
-        selectedOptions->QueryElementAt(i, NS_GET_IID(nsIAccessible),
-                                        getter_AddRefs(tempAccess));
-        if (tempAccess) {
-          optionArray[i] = NativeAccessible(tempAccess);
-        }
-      }
-
-      // 2) Create and initialize the enumeration
-      HRESULT hr = CComObject<EnumeratorType>::CreateInstance(&pEnum);
-      pEnum->Init(&optionArray[0], &optionArray[length], NULL, AtlFlagCopy);
-      pEnum->QueryInterface(IID_IEnumVARIANT, reinterpret_cast<void**>(&pUnk));
-      delete [] optionArray; // clean up, the Init call copies the data (AtlFlagCopy)
-
-      // 3) Put the enumerator in the VARIANT
-      if (!pUnk)
-        return NS_ERROR_FAILURE;
+      // 2) Put the enumerator in the VARIANT
+      if (!pEnum)
+        return E_OUTOFMEMORY;
       pvarChildren->vt = VT_UNKNOWN;    // this must be VT_UNKNOWN for an IEnumVARIANT
-      pvarChildren->punkVal = pUnk;
+      NS_ADDREF(pvarChildren->punkVal = pEnum);
     }
   }
   return S_OK;
