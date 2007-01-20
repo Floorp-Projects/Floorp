@@ -67,7 +67,6 @@ REQUIRES	= js \
 		  gfx \
 		  widget \
 		  webbrowserpersist \
-		  jsconsole \
 		  find \
 		  htmlparser \
 		  embed_base \
@@ -97,10 +96,6 @@ SHARED_LIBRARY_LIBS = \
 	$(NULL)
 
 ifdef MOZ_XUL
-SHARED_LIBRARY_LIBS += \
-	../jsconsole/src/$(LIB_PREFIX)jsconsole_s.$(LIB_SUFFIX) \
-	$(NULL)
-
 ifdef NS_PRINTING
 ifndef WINCE
 SHARED_LIBRARY_LIBS += \
@@ -108,13 +103,11 @@ SHARED_LIBRARY_LIBS += \
 	$(NULL)
 endif
 endif
-
 endif
 
 LOCAL_INCLUDES	= \
 	-I$(srcdir)/../windowwatcher/src  \
 	-I$(srcdir)/../appstartup/src  \
-	-I$(srcdir)/../jsconsole/src  \
 	-I$(srcdir)/../find/src  \
 	-I$(srcdir)/../webbrowserpersist/src  \
 	-I$(srcdir)/../commandhandler/src \
