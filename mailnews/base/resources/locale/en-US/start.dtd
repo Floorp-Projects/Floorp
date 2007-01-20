@@ -36,8 +36,9 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY startpage.title "Welcome to &brandShortName; Mail &amp; Newsgroups">
+<!--# LOCALIZATION NOTE (headline.label): the URL for <a id="vendorURL"> is fetched from brand.properties -->
 <!ENTITY headline.label
-'Welcome to <a href="&vendorURL;">&brandShortName;</a> Mail &amp; Newsgroups!'>
+'Welcome to <a id="vendorURL" href="">&brandShortName;</a> Mail &amp; Newsgroups!'>
 <!ENTITY description.label
 "&brandShortName; Mail &amp; Newsgroups is a powerful open-source mail and news
 client, supporting advanced junk mail detection and other useful features.">

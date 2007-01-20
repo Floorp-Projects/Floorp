@@ -77,9 +77,14 @@
 </div>
 
 <script type="application/x-javascript">
-  // get dictionaries and release notes URLs from prefs
+  // get vendor, dictionaries and release notes URLs from prefs
   var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
                             .getService(Components.interfaces.nsIURLFormatter);
+  var vendorURL = formatter.formatURLPref("app.vendorURL");
+  var vendor = document.getElementById("vendorURL");
+  if (vendor)
+    vendor.setAttribute("href", vendorURL);
+
   var dictURL = formatter.formatURLPref("spellchecker.dictionaries.download.url");
   var dictionaries = document.getElementById("dictURL");
   if (dictionaries)

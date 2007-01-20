@@ -205,6 +205,7 @@ pref("layout.spellcheckDefault", 1);
 pref("accessibility.typeaheadfind.flashBar", 0);
 
 pref("app.releaseNotesURL", "chrome://branding/locale/brand.properties");
+pref("app.vendorURL", "chrome://branding/locale/brand.properties");
 
 // App-specific update preferences
 
