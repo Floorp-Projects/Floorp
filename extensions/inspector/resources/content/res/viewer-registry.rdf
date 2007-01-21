@@ -87,7 +87,7 @@
     <rdf:li><rdf:Description 
       ins:uid="jsObject"
       ins:panels="bxDocPanel bxObjectPanel bxObjPanel"
-      ins:description="Javascript Object"
+      ins:description="JavaScript Object"
       ins:filter="return true;"/>
     </rdf:li>
 
