@@ -431,6 +431,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
                                        availSize, availSize.width,
                                        aReflowState.mComputedHeight);
       kidReflowState.mFlags.mIsTopOfPage = PR_TRUE;
+      kidReflowState.mFlags.mTableIsSplittable = PR_FALSE;
           
 #ifdef DEBUG_roc
       printf("*** Reflowing child #%d %p: availHeight=%d\n",

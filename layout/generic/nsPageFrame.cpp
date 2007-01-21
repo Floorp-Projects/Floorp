@@ -147,6 +147,7 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,
 
     nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame, maxSize);
     kidReflowState.mFlags.mIsTopOfPage = PR_TRUE;
+    kidReflowState.mFlags.mTableIsSplittable = PR_TRUE;
 
     // calc location of frame
     nscoord xc = mPD->mReflowMargin.left + mPD->mExtraMargin.left;

@@ -318,6 +318,8 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
                                      // (potentially) in a context where
                                      // percent heights have a different
                                      // basis?
+    PRUint16 mTableIsSplittable:1;   // tables are splittable, this should happen only inside a page
+                                     // and never insider a column frame
   } mFlags;
 
 #ifdef IBMBIDI

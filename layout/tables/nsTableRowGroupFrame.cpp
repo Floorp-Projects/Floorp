@@ -1286,7 +1286,7 @@ nsTableRowGroupFrame::Reflow(nsPresContext*          aPresContext,
 
   // See if all the frames fit. Do not try to split anything if we're
   // not paginated ... we can't split across columns yet.
-  if (aPresContext->IsPaginated() &&
+  if (aReflowState.mFlags.mTableIsSplittable &&
       (NS_FRAME_NOT_COMPLETE == aStatus || splitDueToPageBreak || 
        aDesiredSize.height > aReflowState.availableHeight)) {
     // Nope, find a place to split the row group 
