@@ -84,7 +84,13 @@ protected:
 	nsString m_ListNickName;
 	nsString m_Description;
 	PRBool   m_IsMailList;
+
+  /*
+   * Note that any derived implementations should ensure that this item
+   * (m_DirPrefId) is correctly initialised correctly
+   */
   nsCString m_DirPrefId;  // ie,"ldap_2.servers.pab"
+
   nsCOMPtr<nsIPrefBranch> m_DirectoryPrefs;
   nsCOMPtr<nsISupportsArray> m_AddressList;
 };

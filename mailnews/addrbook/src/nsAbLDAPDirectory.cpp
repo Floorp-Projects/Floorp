@@ -84,6 +84,21 @@ NS_IMPL_ISUPPORTS_INHERITED4(nsAbLDAPDirectory, nsAbDirectoryRDFResource, nsIAbD
 NS_IMETHODIMP nsAbLDAPDirectory::Init(const char* aURI)
 {
   mInitialized = PR_FALSE;
+
+  // We need to ensure that the m_DirPrefId is initialized properly
+  nsCAutoString uri(aURI);
+
+  // Find the first ? (of the search params) if there is one.
+  // We know we can start at the end of the moz-abldapdirectory:// because
+  // that's the URI we should have been passed.
+  PRInt32 searchCharLocation = uri.FindChar('?', kLDAPDirectoryRootLen);
+
+  if (searchCharLocation == kNotFound)
+    uri.Right(m_DirPrefId, uri.Length() - kLDAPDirectoryRootLen);
+  else
+    uri.Mid(m_DirPrefId, kLDAPDirectoryRootLen,
+            searchCharLocation - kLDAPDirectoryRootLen);
+
   return nsAbDirectoryRDFResource::Init(aURI);
 }
 
@@ -623,4 +638,3 @@ NS_IMETHODIMP nsAbLDAPDirectory::SetDataVersion(const nsACString &aDataVersion)
 {
   return SetStringValue("dataVersion", aDataVersion);
 }
-
