@@ -4044,12 +4044,23 @@ enum BWCOpenDest {
            (contextMenuFlags & nsIContextMenuListener::CONTEXT_TEXT) != 0 ||
            isMidas)
   {
-    // simulate a double click to select the word as native text fields do for context clicks,
-    // which allows spell check to operate on the word under the mouse.
-    // ideally we'd tell the editor directly to move the anchor to the mouse location and select
-    // the word it ends up in, but there doesn't appear to be a way to do that.
-    NSEvent* realClick = [NSApp currentEvent];
-    NSEvent* fakeDoubleClickDown = [NSEvent mouseEventWithType:NSLeftMouseDown
+    // The following is a hack to work around bug 365183: If there is a no selection in the
+    // editor, we simulate a double click to select the word as native text fields do
+    // for context clicks, which allows spell check to operate on the word under the mouse.
+    // The behavior is not quite right since a right click outside of an existing selection should
+    // change the selection, but this gets us most of the way there until bug 365183 is fixed.
+    if (!hasSelection) {
+      NSEvent* realClick = [NSApp currentEvent];
+      NSEvent* fakeDoubleClickDown = [NSEvent mouseEventWithType:NSLeftMouseDown
+                                                        location:[realClick locationInWindow]
+                                                   modifierFlags:0
+                                                       timestamp:[realClick timestamp]
+                                                    windowNumber:[realClick windowNumber]
+                                                         context:[realClick context]
+                                                     eventNumber:[realClick eventNumber]
+                                                      clickCount:2
+                                                        pressure:[realClick pressure]];
+      NSEvent* fakeDoubleClickUp = [NSEvent mouseEventWithType:NSLeftMouseUp
                                                       location:[realClick locationInWindow]
                                                  modifierFlags:0
                                                      timestamp:[realClick timestamp]
@@ -4058,18 +4069,11 @@ enum BWCOpenDest {
                                                    eventNumber:[realClick eventNumber]
                                                     clickCount:2
                                                       pressure:[realClick pressure]];
-    NSEvent* fakeDoubleClickUp = [NSEvent mouseEventWithType:NSLeftMouseUp
-                                                    location:[realClick locationInWindow]
-                                               modifierFlags:0
-                                                   timestamp:[realClick timestamp]
-                                                windowNumber:[realClick windowNumber]
-                                                     context:[realClick context]
-                                                 eventNumber:[realClick eventNumber]
-                                                  clickCount:2
-                                                    pressure:[realClick pressure]];
-    NSView* textFieldView = [mContentView hitTest:[[mContentView superview] convertPoint:[realClick locationInWindow] fromView:nil]];
-    [textFieldView mouseDown:fakeDoubleClickDown];
-    [textFieldView mouseUp:fakeDoubleClickUp];
+      NSView* textFieldView = [mContentView hitTest:[[mContentView superview] convertPoint:[realClick locationInWindow] fromView:nil]];
+      [textFieldView mouseDown:fakeDoubleClickDown];
+      [textFieldView mouseUp:fakeDoubleClickUp];
+    }
+    
     menuPrototype = mInputMenu;
     showSpellingItems = YES;
   }
