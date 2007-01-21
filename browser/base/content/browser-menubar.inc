@@ -421,7 +421,7 @@
                   ref="NC:BookmarksRoot" flags="dont-test-empty"
                   template='bookmarks-template'
                   infer="forward-proxy"
-                  onpopupshowing="UpdateBookmarkAllTabsMenuitem(); BookmarksMenu.onShowMenu(event.target)"
+                  onpopupshowing="BookmarksMenu.onShowMenu(event.target)"
                   onpopuphidden="BookmarksMenu.onHideMenu(event.target)"
                   oncommand="BookmarksMenu.loadBookmark(event, event.target, this.database)"
                   onclick="BookmarksMenu.loadBookmarkMiddleClick(event, this.database)"

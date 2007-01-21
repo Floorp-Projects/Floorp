@@ -120,6 +120,7 @@ var gSanitizeListener = null;
 
 var gURLBarAutoFillPrefListener = null;
 var gAutoHideTabbarPrefListener = null;
+var gBookmarkAllTabsHandler = null;
 
 #ifdef XP_MACOSX
 var gClickAndHoldTimer = null;
@@ -278,20 +279,6 @@ function SetClickAndHoldHandlers()
 #endif
 
 #ifndef MOZ_PLACES_BOOKMARKS
-function UpdateBookmarkAllTabsMenuitem()
-{
-  var tabbrowser = getBrowser();
-  var numTabs = 0;
-  if (tabbrowser)
-    numTabs = tabbrowser.tabContainer.childNodes.length;
-
-  var bookmarkAllCommand = document.getElementById("Browser:BookmarkAllTabs");
-  if (numTabs > 1)
-    bookmarkAllCommand.removeAttribute("disabled");
-  else
-    bookmarkAllCommand.setAttribute("disabled", "true");
-}
-
 function addBookmarkMenuitems()
 {
   var tabbrowser = getBrowser();
@@ -300,8 +287,6 @@ function addBookmarkMenuitems()
   bookmarkAllTabsItem.setAttribute("label", gNavigatorBundle.getString("bookmarkAllTabs_label"));
   bookmarkAllTabsItem.setAttribute("accesskey", gNavigatorBundle.getString("bookmarkAllTabs_accesskey"));
   bookmarkAllTabsItem.setAttribute("command", "Browser:BookmarkAllTabs");
-  // set up the bookmarkAllTabs menu item correctly when the menu popup is shown
-  tabMenu.addEventListener("popupshowing", UpdateBookmarkAllTabsMenuitem, false);
   var bookmarkCurTabItem = document.createElement("menuitem");
   bookmarkCurTabItem.setAttribute("label", gNavigatorBundle.getString("bookmarkCurTab_label"));
   bookmarkCurTabItem.setAttribute("accesskey", gNavigatorBundle.getString("bookmarkCurTab_accesskey"));
@@ -1128,6 +1113,9 @@ function delayedStartup()
 
   // browser-specific tab augmentation
   AugmentTabs.init();
+
+  // bookmark-all-tabs command
+  gBookmarkAllTabsHandler = new BookmarkAllTabsHandler();
 }
 
 function BrowserShutdown()
@@ -5612,71 +5600,7 @@ var FeedHandler = {
 };
 
 #ifdef MOZ_PLACES
-
-/**
- * This is a generic command controller for browser commands. Features can
- * register commands with this controller and the events that should trigger
- * updates to their state. Each command object must implement this interface:
- * 
- * readonly attribute boolean enabled; // true if the command is enabled
- * void execute(); // performs the command
- */
-var BrowserController = {
-  EVENT_TABCHANGE: "tabchange",
-  
-  /**
-   * A hash of command-name->command-objects
-   */
-  commands: { },
-  
-  /**
-   * A hash of event-name->array-of-command-names
-   */
-  events: { },
-  
-  /**
-   * See nsIController.idl
-   */
-  supportsCommand: function BC_supportsCommand(command) {
-    //LOG("BrowserController.supportsCommand: " + command);
-    return command in this.commands;
-  },
-
-  /**
-   * See nsIController.idl
-   */
-  isCommandEnabled: function BC_isCommandEnabled(command) {
-    //LOG("BrowserController.isCommandEnabled: " + command);
-    NS_ASSERT(this.supportsCommand(command), 
-           "Controller does not support: " + command);
-    return this.commands[command].enabled;
-  },
-  
-  /**
-   * See nsIController.idl
-   */
-  doCommand: function BC_doCommand(command) {
-    //LOG("BrowserController.doCommand: " + command);
-    NS_ASSERT(this.supportsCommand(command), 
-           "Controller does not support: " + command);
-    this.commands[command].execute();
-  },
-  
-  /**
-   * See nsIController.idl
-   */
-  onEvent: function BC_onEvent(event) {
-    if (event in this.events) {
-      var commandsForEvent = this.events[event];
-      for (var i = 0; i < commandsForEvent.length; ++i) 
-        CommandUpdater.updateCommand(commandsForEvent[i]);
-    }
-  }
-};
-window.controllers.appendController(BrowserController);
-
 #include browser-places.js
-
 #endif
 
 /**
@@ -5850,3 +5774,51 @@ function formatURL(aFormat, aIsPref) {
   var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
   return aIsPref ? formatter.formatURLPref(aFormat) : formatter.formatURL(aFormat);
 }
+
+/**
+ * This object encapsulates both legacy and places-based implementations
+ * of the bookmark-all-tabs command. It also takes care of updating the command
+ * enabled-state when tabs are created or removed.
+ */
+function BookmarkAllTabsHandler() {
+  this._command = document.getElementById("Browser:BookmarkAllTabs");
+  gBrowser.addEventListener("TabOpen", this, true);
+  gBrowser.addEventListener("TabClose", this, true);
+  this._updateCommandState();
+}
+
+BookmarkAllTabsHandler.prototype = {
+  QueryInterface: function BATH_QueryInterface(aIID) {
+    if (aIID.equals(Ci.nsIDOMEventListener) ||
+        aIID.equals(Ci.nsISupports))
+      return this;
+
+    throw Cr.NS_NOINTERFACE;
+  },
+
+  _updateCommandState: function BATH__updateCommandState(aTabClose) {
+    var numTabs = gBrowser.tabContainer.childNodes.length;
+
+    // The TabClose event is fired before the tab is removed from the DOM
+    if (aTabClose)
+      numTabs--;
+
+    if (numTabs > 1)
+      this._command.removeAttribute("disabled");
+    else
+      this._command.setAttribute("disabled", "true");
+  },
+
+  doCommand: function BATH_doCommand() {
+#ifdef MOZ_PLACES_BOOKMARKS
+    PlacesCommandHook.bookmarkCurrentPages();
+#else
+    addBookmarkAs(gBrowser, true);
+#endif
+  },
+
+  // nsIDOMEventListener
+  handleEvent: function(aEvent) {
+    this._updateCommandState(aEvent.type == "TabClose");
+  }
+};

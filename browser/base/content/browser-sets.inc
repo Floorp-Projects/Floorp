@@ -146,11 +146,14 @@
              oncommand="PlacesCommandHook.bookmarkLink(gContextMenu.linkURL, gContextMenu.linkText());"/>
     <command id="Browser:AddBookmarkAs" 
              oncommand="PlacesCommandHook.bookmarkCurrentPage();"/>
-    <command id="Browser:BookmarkAllTabs" oncommand="BrowserController.doCommand('Browser:BookmarkAllTabs');"/>
 #else
     <command id="Browser:AddBookmarkAs" oncommand="addBookmarkAs(document.getElementById('content'), false);"/>
-    <command id="Browser:BookmarkAllTabs" oncommand="addBookmarkAs(document.getElementById('content'), true);"/>
 #endif
+    <!-- The command is disabled for the hidden window. Otherwise its enabled
+         state is handler by the BookmarkAllTabsHandler object. -->
+    <command id="Browser:BookmarkAllTabs"
+             oncommand="gBookmarkAllTabsHandler.doCommand();"
+             disabled="true"/>
     <command id="Browser:Home"    oncommand="BrowserHome();"/>
     <command id="Browser:Back"    oncommand="BrowserBack();" disabled="true"/>
     <command id="Browser:Forward" oncommand="BrowserForward();" disabled="true"/>
@@ -181,14 +184,6 @@
     <command id="Browser:ShowBookmarks" 
              oncommand="PlacesCommandHook.showPlacesOrganizer(ORGANIZER_ROOT_BOOKMARKS);"/>           
 #endif
-  </commandset>
-#endif
-
-#ifdef MOZ_PLACES_BOOKMARKS
-  <commandset id="multipleTabsCommands" 
-              commandupdater="true" events="select"
-              oncommandupdate="BrowserController.onEvent(BrowserController.EVENT_TABCHANGE);">
-    <command id="Browser:BookmarkAllTabs" disabled="true"/>
   </commandset>
 #endif
 
