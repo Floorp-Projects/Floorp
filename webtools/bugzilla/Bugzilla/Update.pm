@@ -81,6 +81,11 @@ sub get_notifications {
     my @release;
     if (Bugzilla->params->{'upgrade_notification'} eq 'development_snapshot') {
         @release = grep {$_->{'status'} eq 'development'} @releases;
+        # If there is no development snapshot available, then we are in the
+        # process of releasing a release candidate. That's the release we want.
+        unless (scalar(@release)) {
+            @release = grep {$_->{'status'} eq 'release-candidate'} @releases;
+        }
     }
     elsif (Bugzilla->params->{'upgrade_notification'} eq 'latest_stable_release') {
         @release = grep {$_->{'status'} eq 'stable'} @releases;
