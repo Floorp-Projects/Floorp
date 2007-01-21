@@ -85,7 +85,8 @@
       [% END -%]
       [% FILTER null;
            cgi = CGI.new('');
-           cgi.param('module',  "$dirname/$filename");
+           cgi.param('module',  'allrepositories');
+           cgi.param('branch',  '');
            cgi.param('who',     email);
            cgi.param('sortby',  'Date');
            cgi.param('date',    'week');
