@@ -309,6 +309,17 @@ var PlacesUtils = {
   },
 
   /**
+   * Determines whether or not a node is a readonly folder. 
+   * @param   aNode
+   *          The node to test.
+   * @returns true if the node is a readonly folder.
+  */
+  folderIsReadonly: function(aNode) {
+    return this.nodeIsFolder(aNode) &&
+           this.bookmarks.getFolderReadonly(asFolder(aNode).folderId);
+  },
+
+  /**
    * Gets the index of a node within its parent container
    * @param   aNode
    *          The node to look up
