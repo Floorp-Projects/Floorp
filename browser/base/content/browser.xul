@@ -512,11 +512,7 @@
                     onnewtab="BrowserOpenTab();"
                     autocompletepopup="PopupAutoComplete"
                     ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"
-                    onclick="return contentAreaClick(event, false);"
-#ifdef MOZ_PLACES_BOOKMARKS
-                    onselect="BrowserController.onEvent(BrowserController.EVENT_TABCHANGE);"
-#endif
-                    />
+                    onclick="return contentAreaClick(event, false);"/>
       </vbox>
     </hbox>
 #ifdef TOOLBAR_CUSTOMIZATION_SHEET
