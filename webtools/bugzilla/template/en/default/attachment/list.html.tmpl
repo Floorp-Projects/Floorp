@@ -51,18 +51,13 @@
 </script>
 
 <br>
-<table id="attachment_table" cellspacing="0" cellpadding="4" border="1">
+<table id="attachment_table" cellspacing="0" cellpadding="4">
   <tr>
-    <th bgcolor="#cccccc" align="left"><a name="a0" id="a0">Attachment</a></th>
-    <th bgcolor="#cccccc" align="left">Type</th>
-    <th bgcolor="#cccccc" align="left">Creator</th>
-    <th bgcolor="#cccccc" align="left">Created</th>
-    <th bgcolor="#cccccc" align="left">Size</th>
-    [% IF show_attachment_flags %]
-      <th bgcolor="#cccccc" align="left">Flags</th>
-    [% END %]
-    <th bgcolor="#cccccc" align="left">Actions</th>
+    <th colspan="[% show_attachment_flags ? 3 : 2 %]" align="left">
+      <a name="a0" id="a0">Attachments</a>
+    </th>
   </tr>
+
   [% count = 0 %]
   [% has_obsolete_attachments = 0 %]
 
@@ -73,39 +68,43 @@
       <tr class="[% "bz_private" IF attachment.isprivate %][%-%]
                  [%+ "bz_tr_obsolete" IF attachment.isobsolete %]">
         <td valign="top">
-          <a name="a[% count %]" href="attachment.cgi?id=[% attachment.id %]">[% attachment.description FILTER html FILTER obsolete(attachment.isobsolete) %]</a>
-        </td>
-
-        <td valign="top">
-          [% IF attachment.ispatch %]
-            <i>patch</i>
-          [% ELSIF attachment.isurl %]
-            <i>url</i>
-          [% ELSE %]
-            [% attachment.contenttype FILTER html %]
-          [% END %]
-        </td>
-
-        <td valign="top">
-          <a href="mailto:[% attachment.attacher.email FILTER html %]">
-          [% attachment.attacher.name || attachment.attacher.login FILTER html %]
-          </a>
-        </td>
-        <td valign="top">
-          <a href="#attach_[% attachment.id %]">[% attachment.attached FILTER time %]</a>
-        </td>
-        <td valign="top">
           [% IF attachment.datasize %]
-            [% attachment.datasize FILTER unitconvert %]
-          [% ELSE %]
-            <em>deleted</em>
+            <a name="a[% count %]" href="attachment.cgi?id=[% attachment.id %]"
+               title="View the content of the attachment">
           [% END %]
+          [% attachment.description FILTER html FILTER obsolete(attachment.isobsolete) %]
+          [% "</a>" IF attachment.datasize %]
+
+          <span class="bz_attach_extra_info">
+            [% IF attachment.datasize %]
+              ([% attachment.datasize FILTER unitconvert %],
+              [% IF attachment.ispatch %]
+                <i>patch</i>)
+              [% ELSIF attachment.isurl %]
+                <i>url</i>)
+              [% ELSE %]
+                [%+ attachment.contenttype FILTER html %])
+              [% END %]
+            [% ELSE %]
+              (<em>deleted</em>)
+            [% END %]
+
+            <br>
+            <a href="#attach_[% attachment.id %]"
+               title="Go to the comment associated with the attachment">
+              [%- attachment.attached FILTER time %]</a>,
+
+            <a href="mailto:[% attachment.attacher.email FILTER html %]"
+               title="Write an email to the creator of the attachment">
+              [% attachment.attacher.name || attachment.attacher.login FILTER html %]
+            </a>
+          </span>
         </td>
 
         [% IF show_attachment_flags %]
-          <td valign="top">
+          <td class="bz_attach_flags" valign="top">
             [% IF attachment.flags.size == 0 %]
-              <i>none</i>
+              <i>no flag</i>
             [% ELSE %]
               [% FOREACH flag = attachment.flags %]
                 [% flag.setter.nick FILTER html %]:
@@ -129,22 +128,19 @@
     [% END %]
   [% END %]
 
-  <tr>
-    <td colspan="[% show_attachment_flags ? 6 : 5 %]">
-      <a href="attachment.cgi?bugid=[% bugid %]&amp;action=enter">Create a New Attachment</a> (proposed patch, testcase, etc.)
+  <tr class="bz_attach_footer">
+    <td colspan="[% show_attachment_flags ? 3 : 2 %]">
+      [% IF attachments.size %]
+        <span class="bz_attach_view_hide">
+          [% IF has_obsolete_attachments %]
+            <a href="#a0" onClick="return toggle_display(this);">Hide Obsolete</a> |
+          [% END %]
+          <a href="attachment.cgi?bugid=[% bugid %]&amp;action=viewall">View All</a>
+        </span>
+      [% END %]
+      <a href="attachment.cgi?bugid=[% bugid %]&amp;action=enter">Add an attachment</a>
+      (proposed patch, testcase, etc.)
     </td>
-    [% IF attachments.size %]
-      <td>
-        <a href="attachment.cgi?bugid=[% bugid %]&amp;action=viewall">View All</a>
-        [% IF has_obsolete_attachments %]
-          <br><a href="#a0" onClick="return toggle_display(this);">Hide Obsolete</a>
-        [% END %]
-      </td>
-    [% ELSE %]
-      <td class="bz_disabled">
-        View All
-      </td>
-    [% END %]
   </tr>
 </table>
 <br>

@@ -281,6 +281,35 @@ dl dl > dt {
     border-top: none;
 }
 
+/* Style of the attachment table */
+#attachment_table {
+    border-collapse: collapse;
+    width: 40em;
+    border: 1px solid #333333;
+}
+
+#attachment_table th, .bz_attach_footer {
+    background-color: #E0E0E0;
+    color: black;
+}
+
+#attachment_table td {
+    border: 1px solid #333333;
+}
+
+.bz_attach_extra_info {
+    font-size: smaller;
+}
+
+.bz_attach_flags, .bz_attach_footer {
+    white-space: nowrap;
+}
+
+.bz_attach_view_hide {
+    float: right;
+    padding-left: 1em;
+}
+
 .box {
     border: 1px solid black;
     color: black;
