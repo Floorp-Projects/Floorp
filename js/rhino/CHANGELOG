@@ -1,4 +1,4 @@
-This file version: $Id: CHANGELOG,v 1.4 2006/12/27 19:43:00 szegedia%freemail.hu Exp $
+This file version: $Id: CHANGELOG,v 1.5 2007/01/21 15:28:18 inonit%inonit.com Exp $
 
 Changes since Rhino 1.6R5
 =========================
@@ -9,6 +9,9 @@ Changes since Rhino 1.6R5
   the ProtectionDomain of Rhino classes.
 - Wrapped access to system properties and creation of class loaders into
   AccessController.doPrivileged() to nicely play in secured environments.
+- Added implementation of __defineGetter__ and __defineSetter__ to match
+  SpiderMonkey. __lookupGetter__ and __lookupSetter__ are not
+  implemented, nor are the JS get and set keywords.  Also see #224334.
 - Fixed #318305: ScriptOrFnNode class reports bad end line number
 - Fixed #352319: Rhino threw a ClassCastException when a continuation captured
   from a catch() block was restarted.
