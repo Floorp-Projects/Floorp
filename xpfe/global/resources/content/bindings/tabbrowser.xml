@@ -222,7 +222,8 @@
           var canvas = aPopup.lastChild.firstChild;
           canvas.parentNode.hidden = true;
 
-          if (!this.mPrefs.getBoolPref("browser.tabs.tooltippreview.enable")) {
+          if (tab == this.mCurrentTab ||
+              !this.mPrefs.getBoolPref("browser.tabs.tooltippreview.enable")) {
             label.removeAttribute("width");
             aPopup.removeAttribute("tabpreview");
             return true;
