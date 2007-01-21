@@ -468,7 +468,7 @@
     
     <handlers>
       <handler event="mouseover">
-        this.parentNode.selectedIndex = this.getAttribute("engineIndex");
+        this.parentNode.selectedIndex = Number(this.getAttribute("engineIndex"));
       </handler>
 
       <handler event="mouseout">
