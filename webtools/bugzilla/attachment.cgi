@@ -804,8 +804,10 @@ sub delete_attachment {
 
         $dbh->bz_lock_tables('attachments WRITE', 'attach_data WRITE', 'flags WRITE');
         $dbh->do('DELETE FROM attach_data WHERE id = ?', undef, $attach_id);
-        $dbh->do('UPDATE attachments SET mimetype = ?, ispatch = ?, isurl = ?
-                  WHERE attach_id = ?', undef, ('text/plain', 0, 0, $attach_id));
+        $dbh->do('UPDATE attachments SET mimetype = ?, ispatch = ?, isurl = ?,
+                         isobsolete = ?
+                  WHERE attach_id = ?', undef,
+                 ('text/plain', 0, 0, 1, $attach_id));
         $dbh->do('DELETE FROM flags WHERE attach_id = ?', undef, $attach_id);
         $dbh->bz_unlock_tables;
 
