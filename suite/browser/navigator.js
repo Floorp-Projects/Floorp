@@ -1927,26 +1927,79 @@ function checkForDirectoryListing()
  *     Written by Tim Hill (bug 6782)
  *     Frameset handling by Neil Rashbrook <neil@parkwaycc.co.uk>
  **/
-function getStyleSheetArray(frame)
+/**
+ * Adds this frame's stylesheet sets to the View > Use Style submenu
+ *
+ * If the frame has no preferred stylesheet set then the "Default style"
+ * menuitem should be shown. Note that it defaults to checked, hidden.
+ *
+ * If this frame has a selected stylesheet set then its menuitem should
+ * be checked (unless the "None" style is currently selected), and the
+ * "Default style" menuitem should to be unchecked.
+ *
+ * The stylesheet sets may match those of other frames. In that case, the
+ * checkmark should be removed from sets that are not selected in this frame.
+ *
+ * @param menuPopup          The submenu's popup child
+ * @param frame              The frame whose sets are to be added
+ * @param styleDisabled      True if the "None" style is currently selected
+ * @param itemPersistentOnly The "Default style" menuitem element
+ */
+function stylesheetFillFrame(menuPopup, frame, styleDisabled, itemPersistentOnly)
 {
-  var styleSheets = frame.document.styleSheets;
-  var styleSheetsArray = new Array(styleSheets.length);
-  for (var i = 0; i < styleSheets.length; i++) {
-    styleSheetsArray[i] = styleSheets[i];
-  }
-  return styleSheetsArray;
-}
+  if (!frame.document.preferredStyleSheetSet)
+    itemPersistentOnly.hidden = false;
 
-function getAllStyleSheets(frameset)
+  var title = frame.document.selectedStyleSheetSet;
+  if (title)
+    itemPersistentOnly.removeAttribute("checked");
+
+  var styleSheetSets = frame.document.styleSheetSets;
+  for (var i = 0; i < styleSheetSets.length; i++) {
+    var styleSheetSet = styleSheetSets[i];
+    var menuitem = menuPopup.getElementsByAttribute("data", styleSheetSet).item(0);
+    if (menuitem) {
+      if (styleSheetSet != title)
+        menuitem.removeAttribute("checked");
+    } else {
+      var menuItem = document.createElement("menuitem");
+      menuItem.setAttribute("type", "radio");
+      menuItem.setAttribute("label", styleSheetSet);
+      menuItem.setAttribute("data", styleSheetSet);
+      menuItem.setAttribute("checked", styleSheetSet == title && !styleDisabled);
+      menuPopup.appendChild(menuItem);
+    }
+  }
+}
+/**
+ * Adds all available stylesheet sets to the View > Use Style submenu
+ *
+ * If all frames have preferred stylesheet sets then the "Default style"
+ * menuitem should remain hidden, otherwise it should be shown, and
+ * if some frames have a selected stylesheet then the "Default style"
+ * menuitem should be unchecked, otherwise it should remain checked.
+ *
+ * A stylesheet set's menuitem should not be checked if the "None" style
+ * is currently selected. Otherwise a stylesheet set may be available in
+ * more than one frame. In such a case the menuitem should only be checked
+ * if it is selected in all frames in which it is available.
+ *
+ * @param menuPopup          The submenu's popup child
+ * @param frameset           The frameset whose sets are to be added
+ * @param styleDisabled      True if the "None" style is currently selected
+ * @param itemPersistentOnly The "Default style" menuitem element
+ */
+function stylesheetFillAll(menuPopup, frameset, styleDisabled, itemPersistentOnly)
 {
-  var styleSheetsArray = getStyleSheetArray(frameset);
+  stylesheetFillFrame(menuPopup, frameset, styleDisabled, itemPersistentOnly);
   for (var i = 0; i < frameset.frames.length; i++) {
-    var frameSheets = getAllStyleSheets(frameset.frames[i]);
-    styleSheetsArray = styleSheetsArray.concat(frameSheets);
+    stylesheetFillAll(menuPopup, frameset.frames[i], styleDisabled, itemPersistentOnly);
   }
-  return styleSheetsArray;
 }
-
+/**
+ * Populates the View > Use Style submenu with all available stylesheet sets
+ * @param menuPopup The submenu's popup child
+ */
 function stylesheetFillPopup(menuPopup)
 {
   /* Clear menu */
@@ -1954,67 +2007,25 @@ function stylesheetFillPopup(menuPopup)
   while (itemPersistentOnly.nextSibling)
     menuPopup.removeChild(itemPersistentOnly.nextSibling);
 
-  var styleSheets = getAllStyleSheets(window.content);
-  var currentStyleSheets = [];
+  /* Reset permanent items */
   var styleDisabled = getMarkupDocumentViewer().authorStyleDisabled;
-  var altStyleSelected = false;
-
-  for (var i = 0; i < styleSheets.length; ++i) {
-    var currentStyleSheet = styleSheets[i];
-
-    if (currentStyleSheet.title) {
-      if (!currentStyleSheet.disabled)
-        altStyleSelected = true;
-
-      var lastWithSameTitle = null;
-      if (currentStyleSheet.title in currentStyleSheets)
-        lastWithSameTitle = currentStyleSheets[currentStyleSheet.title];
-
-      if (!lastWithSameTitle) {
-        var menuItem = document.createElement("menuitem");
-        menuItem.setAttribute("type", "radio");
-        menuItem.setAttribute("label", currentStyleSheet.title);
-        menuItem.setAttribute("data", currentStyleSheet.title);
-        menuItem.setAttribute("checked", !currentStyleSheet.disabled && !styleDisabled);
-        menuPopup.appendChild(menuItem);
-        currentStyleSheets[currentStyleSheet.title] = menuItem;
-      } else {
-        if (currentStyleSheet.disabled)
-          lastWithSameTitle.removeAttribute("checked");
-      }
-    }
-  }
   menuPopup.firstChild.setAttribute("checked", styleDisabled);
-  itemPersistentOnly.setAttribute("checked", !altStyleSelected && !styleDisabled);
-  itemPersistentOnly.hidden = (window.content.document.preferredStyleSheetSet) ? true : false;
+  itemPersistentOnly.setAttribute("checked", !styleDisabled);
+  itemPersistentOnly.hidden = true;
+
+  stylesheetFillAll(menuPopup, window.content, styleDisabled, itemPersistentOnly);
 }
-
-function stylesheetInFrame(frame, title) {
-  var docStyleSheets = frame.document.styleSheets;
-
-  for (var i = 0; i < docStyleSheets.length; ++i) {
-    if (docStyleSheets[i].title == title)
-      return true;
-  }
-  return false;
-}
-
-function stylesheetSwitchFrame(frame, title) {
-  var docStyleSheets = frame.document.styleSheets;
-
-  for (var i = 0; i < docStyleSheets.length; ++i) {
-    var docStyleSheet = docStyleSheets[i];
-
-    if (docStyleSheet.title)
-      docStyleSheet.disabled = (docStyleSheet.title != title);
-    else if (docStyleSheet.disabled)
-      docStyleSheet.disabled = false;
-  }
-}
-
+/**
+ * Switches all frames in a frameset to the same stylesheet set
+ *
+ * Only frames that support the given title will be switched
+ *
+ * @param frameset The frameset whose frames are to be switched
+ * @param title    The name of the stylesheet set to switch to
+ */
 function stylesheetSwitchAll(frameset, title) {
-  if (!title || stylesheetInFrame(frameset, title)) {
-    stylesheetSwitchFrame(frameset, title);
+  if (!title || frameset.document.styleSheetSets.contains(title)) {
+    frameset.document.selectedStyleSheetSet = title;
   }
   for (var i = 0; i < frameset.frames.length; i++) {
     stylesheetSwitchAll(frameset.frames[i], title);
