@@ -681,168 +681,219 @@ PlacesController.prototype = {
   },
 #endif
 
+
   /** 
-   * Gather information about the selection according to the following
+   * Gathers information about the selected nodes according to the following
    * rules:
-   *    "link"              single selection is URI
-   *    "links"             all selected items are links, and there are at least 2
-   *    "folder"            selection is a folder
-   *    "query"             selection is a query
-   *    "remotecontainer"   selection is a remote container
-   *    "separator"         selection is a separator line
-   *    "host"              selection is a host
-   *    "mutable"           selection can have items inserted or reordered
-   *    "mixed"             selection contains more than one type
-   *    "allLivemarks"      selection is a query containing every livemark
-   *    "multiselect"       seleciton contains more than one item
-   * In addition, a property is set corresponding to each of the selected 
-   * items' annotation names.
+   *    "link"              node is a URI
+   *    "bookmark"          node is a bookamrk
+   *    "folder"            node is a folder
+   *    "query"             node is a query
+   *    "remotecontainer"   node is a remote container
+   *    "separator"         node is a separator line
+   *    "host"              node is a host
+   *    "mutable"           node can have items inserted or reordered
+   *    "allLivemarks"      node is a query containing every livemark
    *    
-   * @returns an object with each of the properties above set if the selection
-   *          matches that rule. 
-   * Note: This can be slow, so don't call it anywhere performance critical!
+   * @returns an array of objects corresponding the selected nodes. Each
+   *          object has each of the properties above set if its corresponding
+   *          node matches the rule. In addition, the annotations names for each 
+   *          node are set on its corresponding object as properties.
+   * Notes:
+   *   1) This can be slow, so don't call it anywhere performance critical!
+   *   2) A single-object array corresponding the root node is returned if
+   *      there's no selection.
    */
   _buildSelectionMetadata: function PC__buildSelectionMetadata() {
-    var metadata = { };
-    var v = this._view;
-    var hasSingleSelection = v.hasSingleSelection;
-    if (v.selectedURINode && hasSingleSelection)
-      metadata["link"] = true;
-    if (hasSingleSelection) {
-      var selectedNode = v.selectedNode;
-      if (PlacesUtils.nodeIsFolder(selectedNode))
-        metadata["folder"] = true;
-      if (PlacesUtils.nodeIsQuery(selectedNode))
-        metadata["query"] = true;
-      if (PlacesUtils.nodeIsRemoteContainer(selectedNode))
-        metadata["remotecontainer"] = true;
-      if (PlacesUtils.nodeIsSeparator(selectedNode))
-        metadata["separator"] = true;
-      if (PlacesUtils.nodeIsHost(selectedNode))
-        metadata["host"] = true;
-    }
-    
-    // Mutability is whether or not a container can have selected items
-    // inserted or reordered. It does _not_ dictate whether or not the container
-    // can have items removed from it, since some containers that aren't 
-    // reorderable can have items removed from them, e.g. a history list. 
-    //
-    // The mutability property starts out set to true, and is removed if 
-    // any component of the selection is found to be part of a readonly 
-    // container.
-    metadata["mutable"] = true;
+    var metadata = [];
+    var nodes = [];
+    var root = this._view.getResult().root;
+    if (this._view.hasSelection)
+      nodes = this._view.getSelectionNodes();
+    else // See the second note above
+      nodes = [root];
 
-    /**
-     * Determines whether or not a node is a readonly folder. 
-     * @param   node
-     *          The node to test.
-     * @returns true if the node is a readonly folder.
-     */
-    function folderIsReadOnly(node) {
-      return PlacesUtils.nodeIsFolder(node) && 
-             PlacesUtils.bookmarks.getFolderReadonly(asFolder(node).folderId);
-    }
-    
-    var foundNonURI = false;
-    var nodes = v.getSelectionNodes();
-    var root = v.getResult().root;
-    if (v.hasSelection) 
-      var lastParent = nodes[0].parent, lastType = nodes[0].type;
-    else {
-      // If there is no selection, mutability is determined by the readonly-ness
-      // of the result root. See note above on mutability.
-      if (folderIsReadOnly(root))
-        delete metadata["mutable"];
-    }
-    // Walk the selection, gathering metadata about the selected items.       
-    for (var i = 0; i < nodes.length; ++i) {
+    for (var i=0; i < nodes.length; i++) {
+      var nodeData = {};
       var node = nodes[i];
-      if (!PlacesUtils.nodeIsURI(node))
-        foundNonURI = true;
-      
-      // If there is a selection, mutability is determined by the readonly-ness
-      // of the selected item, or the parent of the selection. See note above
-      // on mutability.
-      if (PlacesUtils.nodeIsReadOnly(node) || folderIsReadOnly(node.parent || root))
-        delete metadata["mutable"];
-      
+      var nodeType = node.type;
       var uri = null;
-      if (PlacesUtils.nodeIsURI(node))
-        uri = PlacesUtils._uri(node.uri);
-      if (PlacesUtils.nodeIsFolder(node))
-        uri = PlacesUtils.bookmarks.getFolderURI(asFolder(node).folderId);
+
+      // We don't use the nodeIs* methods here to avoid going through the type
+      // property way too often
+      switch(nodeType) {
+        case Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY:
+          nodeData["query"] = true;
+          break;
+        case Ci.nsINavHistoryResultNode.RESULT_TYPE_REMOTE_CONTAINER:
+          nodeData["remotecontainer"] = true;
+          break;
+        case Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER:
+          nodeData["folder"] = true;
+          uri = PlacesUtils.bookmarks.getFolderURI(asFolder(node).folderId);
+
+          // See nodeIsRemoteContainer
+          if (asContainer(node).remoteContainerType != "")
+            nodeData["remotecontainer"] = true;
+          break;
+        case Ci.nsINavHistoryResultNode.RESULT_TYPE_HOST:
+          nodeData["host"] = true;
+          break;
+        case Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR:
+          nodeData["separator"] = true;
+          break;
+        case Ci.nsINavHistoryResultNode.RESULT_TYPE_URI:
+        case Ci.nsINavHistoryResultNode.RESULT_TYPE_VISIT:
+        case Ci.nsINavHistoryResultNode.RESULT_TYPE_FULL_VISIT:
+          nodeData["link"] = true;
+          if (PlacesUtils.bookmarks.isBookmarked(PlacesUtils._uri(node.uri)))
+            nodeData["bookmark"] = true;
+          break;
+      }
+
+      // Mutability is whether or not a container can have selected items
+      // inserted or reordered. It does _not_ dictate whether or not the 
+      // container can have items removed from it, since some containers that
+      // aren't  reorderable can have items removed from them, e.g. a history
+      // list. 
+      if (!PlacesUtils.nodeIsReadOnly(node) &&
+          !PlacesUtils.folderIsReadonly(node.parent || root))
+        nodeData["mutable"] = true;
+
+      // annotations
       if (uri) {
         var names = PlacesUtils.annotations.getPageAnnotationNames(uri, { });
         for (var j = 0; j < names.length; ++j)
-          metadata[names[i]] = true;
+          nodeData[names[i]] = true;
       }
-      else if (PlacesUtils.nodeIsQuery(node)) {
-        // Various queries might live in the left-hand side of the organizer window.
-        // If this one happens to have collected all the livemark feeds, allow its
-        // context menu to contain "Reload All Livemarks". That will usually only
-        // mean the Subscriptions folder, but if some other folder happens to use
-        // the same query, it's fine too.  Queries have very limited data (no 
-        // annotations), so we're left checking the query URI directly.
-        uri = PlacesUtils._uri(node.uri);
+      else if (nodeType = Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY) {
+        // Various queries might live in the left-hand side of the organizer
+        // window. If this one happens to have collected all the livemark feeds,
+        // allow its context menu to contain "Reload All Livemarks". That will 
+        // usually only mean the Subscriptions folder, but if some other folder 
+        // happens to use the same query, it's fine too.  Queries have very 
+        // limited data (no  annotations), so we're left checking the query URI 
+        // directly.
+        uri = PlacesUtils._uri(nodes[i].uri);
         if (uri.spec == ORGANIZER_SUBSCRIPTIONS_QUERY)
-          metadata["allLivemarks"] = true;
+          nodeData["allLivemarks"] = true;
       }
-            
-      if (nodes[i].parent != lastParent || nodes[i].type != lastType)
-        metadata["mixed"] = true;
+      metadata.push(nodeData);
     }
-    
-    if (v.selType != "single")
-      metadata["multiselect"] = true;
-    if (!foundNonURI && nodes.length > 1)
-      metadata["links"] = true;
 
     return metadata;
   },
-  
+
   /** 
-   * Determines if a menuitem should be shown or not by comparing the rules
-   * that govern the item's display with the state of the selection. 
-   * @param   metadata
-   *          metadata about the selection. 
-   * @param   rules
-   *          rules that govern the item's display
-   * @returns true if the conditions are satisfied and the item can be 
-   *          displayed, false otherwise. 
+   * Determines if a context-menu item should be shown
+   * @param   aMenuItem
+   *          the context menu item 
+   * @param   aMetaData
+   *          meta data about the selection
+   * @returns true if the conditions (see buildContextMenu) are satisfied
+   *          and the item can be displayed, false otherwise. 
    */
-  _shouldShowMenuItem: function(metadata, rules) {
-    for (var i = 0; i < rules.length; ++i) {
-      if (rules[i] in metadata)
-        return true;
+  _shouldShowMenuItem: function(aMenuItem, aMetaData) {
+    var selectiontype = aMenuItem.getAttribute("selectiontype");
+    if (selectiontype == "multiple" && aMetaData.length == 1)
+      return false;
+    if (selectiontype == "single" && aMetaData.length != 1)
+      return false;
+
+    var forceHideRules = aMenuItem.getAttribute("forcehideselection").split("|");
+    for (var i = 0; i < aMetaData.length; ++i) {
+      for (var j=0; j < forceHideRules.length; ++j) {
+        if (forceHideRules[j] in aMetaData[i])
+          return false;
+      }
     }
-    return false;
+
+    if (aMenuItem.hasAttribute("selection")) {
+      var showRules = aMenuItem.getAttribute("selection").split("|");
+      var anyMatched = false;
+      function metaDataNodeMatches(metaDataNode, rules) {
+        for (var i=0; i < rules.length; i++) {
+          if (rules[i] in metaDataNode)
+            return true;
+        }
+
+        return false;
+      }
+      for (var i = 0; i < aMetaData.length; ++i) {
+        if (metaDataNodeMatches(aMetaData[i], showRules))
+          anyMatched = true;
+        else
+          return false;
+      }
+      return anyMatched;
+    }
+
+    return !aMenuItem.hidden;
   },
 
   /**
-   * Build a context menu for the selection, ensuring that the content of the
-   * selection is correct and enabling/disabling items according to the state
-   * of the commands. 
-   * @param   popup
+   * Detects information (meta-data rules) about the current selection in the
+   * view (see _buildSelectionMetadata) and sets the visibility state for each
+   * of the menu-items in the given popup with the following rules applied:
+   *  1) The "selectiontype" attribute may be set on a menu-item to "single"
+   *     if the menu-item should be visible only if there is a single node
+   *     selected, or to "multiple" if the menu-item should be visible only if
+   *     multiple nodes are selected. If the attribute is not set or if it is
+   *     set to an invalid value, the menu-item may be visible for both types of
+   *     selection.
+   *  2) The "selection" attribute may be set on a menu-item to the various
+   *     meta-data rules for which it may be visible. The rules should be
+   *     separated with the | character.
+   *  3) A menu-item may be visible only if at least one of the rules set in
+   *     its selection attribute apply to each of the selected nodes in the
+   *     view.
+   *  4) The "forcehideselection" attribute may be set on a menu-item to rules
+   *     for which it should be hidden. This attribute takes priority over the
+   *     selection attribute. A menu-item would be hidden if at least one of the
+   *     given rules apply to one of the selected nodes. The rules should be
+   *     separated with the | character.
+   *  5) The visibility state of a menu-item is unchanged if none of these
+   *     attribute are set.
+   *  6) These attributes should not be set on separators for which the
+   *     visibility state is "auto-detected."
+   * @param   aPopup
    *          The menupopup to build children into.
    */
-  buildContextMenu: function PC_buildContextMenu(popup) {
-    // Determine availability/enabled state of commands
+  buildContextMenu: function PC_buildContextMenu(aPopup) {
     var metadata = this._buildSelectionMetadata();
-    
-    var lastVisible = null;
-    for (var i = 0; i < popup.childNodes.length; ++i) {
-      var item = popup.childNodes[i];
-      var rules = item.getAttribute("selection");
-      item.hidden = !this._shouldShowMenuItem(metadata, rules.split("|"));
-      if (!item.hidden)
-        lastVisible = item;
+
+    var separator = null;
+    var visibleItemsBeforeSep = false;
+    for (var i = 0; i < aPopup.childNodes.length; ++i) {
+      var item = aPopup.childNodes[i];
+      if (item.localName != "menuseparator") {
+        item.hidden = !this._shouldShowMenuItem(item, metadata)
+        if (!item.hidden) {
+          visibleItemsBeforeSep = true;
+
+          // Show the separator above the menu-item if any
+          if (separator) {
+            separator.hidden = false;
+            separator = null;
+          }
+        }
+      }
+      else { // menuseparator
+        // Initially hide it. It will be unhidden if there will be at least one
+        // visible menu-item above and below it.
+        item.hidden = true;
+
+        // We won't show the separator at all if no items are visible above it
+        if (visibleItemsBeforeSep)
+          separator = item;
+
+        // New separator, count again:
+        visibleItemsBeforeSep = false;
+      }
     }
-    if (lastVisible.localName == "menuseparator")
-      lastVisible.hidden = true;
-    
     return true;
   },
-  
+
   /**
    * Select all links in the current view. 
    */

@@ -97,32 +97,38 @@
          onpopupshowing="this._view = PlacesUtils.getViewForNode(document.popupNode);
                          this._view.buildContextMenu(this);"
          onpopuphiding="this._view.destroyContextMenu();">
-    <!-- the rules defined in the selection attribute control whether or not 
-         the menu item is _visible_ regardless of whether or not the command
-         is enabled. -->
     <menuitem id="placesContext_open"
               command="placesCmd_open"
               label="&cmd.open.label;"
               accesskey="&cmd.open.accesskey;"
               default="true"
+              selectiontype="single"
               selection="link"/>
     <menuitem id="placesContext_open:newwindow"
               command="placesCmd_open:window"
               label="&cmd.open_window.label;"
               accesskey="&cmd.open_window.accesskey;"
+              selectiontype="single"
               selection="link"/>
     <menuitem id="placesContext_open:newtab"
               command="placesCmd_open:tab"
               label="&cmd.open_tab.label;"
               accesskey="&cmd.open_tab.accesskey;"
+              selectiontype="single"
               selection="link"/>
-    <menuitem id="placesContext_open:tabs"
+    <menuitem id="placesContext_openFolder:tabs"
               command="placesCmd_open:tabs"
               label="&cmd.open_tabs.label;"
               accesskey="&cmd.open_tabs.accesskey;"
-              selection="folder|links"/>
-    <menuseparator id="placesContext_openSeparator"
-                   selection="link|links|folder"/>
+              selectiontype="single"
+              selection="folder"/>
+    <menuitem id="placesContext_openLinks:tabs"
+              command="placesCmd_open:tabs"
+              label="&cmd.open_tabs.label;"
+              accesskey="&cmd.open_tabs.accesskey;"
+              selectiontype="multiple"
+              selection="link"/>
+    <menuseparator id="placesContext_openSeparator"/>
     <menuitem id="placesContext_new:folder"
               command="placesCmd_new:folder"
               label="&cmd.new_folder.label;"
@@ -133,49 +139,42 @@
               label="&cmd.new_separator.label;"
               accesskey="&cmd.new_separator.accesskey;"
               selection="mutable"/>
-    <menuseparator id="placesContext_newSeparator"
-                   selection="mutable"/>
-    <menuitem id="placesContext_undo"
-              command="cmd_undo"
-              label="&undoCmd.label;"
-              accesskey="&undoCmd.accesskey;" 
-              selection="separator|link|links|folder|mixed"/>
+    <menuseparator id="placesContext_newSeparator"/>
+    <menuitem id="placesContext_cut"
+               command="cmd_cut"
+               label="&cutCmd.label;"
+               accesskey="&cutCmd.accesskey;" 
+               selection="separator|link|folder|mixed"
+               forcehideselection="livemark/bookmarkFeedURI"/>
     <menuitem id="placesContext_copy"
               command="cmd_copy"
               label="&copyCmd.label;"
               accesskey="&copyCmd.accesskey;" 
-              selection="separator|link|links|folder|mixed"/>
+              selection="separator|link|folder"/>
     <menuitem id="placesContext_paste"
               command="cmd_paste"
               label="&pasteCmd.label;"
               accesskey="&pasteCmd.accesskey;"
               selection="mutable"/>
+    <menuseparator id="placesContext_editSeparator"/>
     <menuitem id="placesContext_delete"
               command="cmd_delete"
               label="&deleteCmd.label;"
               accesskey="&deleteCmd.accesskey;"
-              selection="host|separator|link|links|folder|mixed"/>
-    <menuseparator id="placesContext_editSeparator"
-                   selection="link|links|folder|mixed|mutable"/>
-    <menuitem id="placesContext_selectAll"
-              command="cmd_selectAll"
-              label="&selectAllCmd.label;"
-              accesskey="&selectAllCmd.accesskey;"
-              selection="multiselect"/>
-    <menuseparator id="placesContext_selectSeparator"
-                 selection="multiselect"/>
+              selection="host|separator|link|folder"
+              forcehideselection="livemark/bookmarkFeedURI"/>
+    <menuseparator id="placesContext_deleteSeparator"/>
     <menuitem id="placesContext_reload"
               command="placesCmd_reload"
               label="&cmd.reload.label;"
               accesskey="&cmd.reload.accesskey;"
-              selection="livemark/feedURI|livemark/bookmarkFeedURI|allLivemarks"/>
+              selection="livemark/feedURI|allLivemarks"/>
     <menuitem id="placesContext_sortby:name"
               command="placesCmd_sortby:name"
               label="&cmd.sortby_name.label;"
               accesskey="&cmd.context_sortby_name.accesskey;"
               selection="mutable"/>
-    <menuseparator id="placesContext_sortSeparator"
-                   selection="mutable|livemark/feedURI|livemark/bookmarkFeedURI|allLivemarks"/>
+    <menuseparator id="placesContext_sortSeparator"/>
     <menuitem id="placesContext_show:info"
               command="placesCmd_show:info"
 #ifdef XP_MACOSX
@@ -185,7 +184,8 @@
               label="&cmd.show_infoWin.label;" 
               accesskey="&cmd.show_infoWin.accesskey;"
 #endif
-              selection="link|folder|query"/>
+              selection="bookmark|folder|query"
+              forcehideselection="livemark/bookmarkFeedURI"/>
   </popup>
 
 </overlay>
