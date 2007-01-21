@@ -965,7 +965,7 @@ CHBrowserListener::HandleFeedLink(nsIDOMElement* inElement)
   feedURI->SetScheme(NS_LITERAL_CSTRING("feed"));
   
   nsCAutoString feedFullURI;
-  feedURI->GetSpec(feedFullURI);
+  feedURI->GetAsciiSpec(feedFullURI);
   
   // get the two specs, the feed's uri and the feed's title
   NSString* feedSpec = [NSString stringWith_nsACString:feedFullURI];
