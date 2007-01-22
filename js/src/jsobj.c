@@ -781,47 +781,6 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         }
     }
 
-#ifdef DUMP_CALL_TABLE
-    if (cx->options & JSOPTION_LOGCALL_TOSOURCE) {
-        const char *classname = OBJ_GET_CLASS(cx, obj)->name;
-        size_t classnchars = strlen(classname);
-        static const char classpropid[] = "C";
-        const char *cp;
-#ifdef DEBUG
-        size_t onchars = nchars;
-#endif
-
-        /* 2 for ': ', 2 quotes around classname, 2 for ', ' after. */
-        classnchars += sizeof classpropid - 1 + 2 + 2;
-        if (ida->length)
-            classnchars += 2;
-
-        /* 2 for the braces, 1 for the terminator */
-        chars = (jschar *)
-            realloc((ochars = chars),
-                    (nchars + classnchars + 2 + 1) * sizeof(jschar));
-        if (!chars) {
-            free(ochars);
-            goto error;
-        }
-
-        chars[nchars++] = '{';          /* 1 from the 2 braces */
-        for (cp = classpropid; *cp; cp++)
-            chars[nchars++] = (jschar) *cp;
-        chars[nchars++] = ':';
-        chars[nchars++] = ' ';          /* 2 for ': ' */
-        chars[nchars++] = '"';
-        for (cp = classname; *cp; cp++)
-            chars[nchars++] = (jschar) *cp;
-        chars[nchars++] = '"';          /* 2 quotes */
-        if (ida->length) {
-            chars[nchars++] = ',';
-            chars[nchars++] = ' ';      /* 2 for ', ' */
-        }
-
-        JS_ASSERT(nchars - onchars == 1 + classnchars);
-    } else
-#endif
     chars[nchars++] = '{';
 
     comma = NULL;
@@ -1036,10 +995,6 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
             if (vsharp)
                 JS_free(cx, vsharp);
-#ifdef DUMP_CALL_TABLE
-            if (outermost && nchars >= js_LogCallToSourceLimit)
-                break;
-#endif
         }
     }
 
@@ -2647,8 +2602,12 @@ js_FindClassObject(JSContext *cx, JSObject *start, jsid id, jsval *vp)
 
     JS_ASSERT(OBJ_IS_NATIVE(pobj));
     sprop = (JSScopeProperty *) prop;
-    JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj)));
-    *vp = OBJ_GET_SLOT(cx, pobj, sprop->slot);
+    if (sprop->flags & SPROP_IS_METHOD) {
+        *vp = SPROP_METHOD_VALUE(sprop);
+    } else {
+        JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj)));
+        *vp = OBJ_GET_SLOT(cx, pobj, sprop->slot);
+    }
     OBJ_DROP_PROPERTY(cx, pobj, prop);
     return JS_TRUE;
 }
@@ -2900,27 +2859,120 @@ js_LookupHiddenProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
            js_LookupProperty(cx, obj, id, objp, propp);
 }
 
+static JSBool
+SetMethodProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+    jsid propid;
+    JSObject *pobj;
+    JSProperty *prop;
+    JSScopeProperty *sprop;
+    uintN attrs, flags;
+
+    if (!JS_ValueToId(cx, id, &propid))
+        return JS_FALSE;
+
+    if (!js_LookupProperty(cx, obj, propid, &pobj, &prop))
+        return JS_FALSE;
+
+    sprop = (JSScopeProperty *)prop;
+    if (pobj == obj) {
+        JS_ASSERT(sprop->flags & SPROP_IS_METHOD);
+        if (SPROP_METHOD_VALUE(sprop) == *vp) {
+            OBJ_DROP_PROPERTY(cx, obj, prop);
+            return JS_TRUE;
+        }
+    }
+    attrs = sprop->attrs & ~JSPROP_SHARED;
+    flags = sprop->flags & ~SPROP_IS_METHOD;
+    JS_ASSERT(!(flags & SPROP_HAS_SHORTID));
+    OBJ_DROP_PROPERTY(cx, pobj, prop);
+
+    return js_DefineNativeProperty(cx, obj, propid, *vp, NULL, NULL, attrs,
+                                   flags, 0, NULL);
+}
+
+static JSScopeProperty *
+AddNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
+                  JSPropertyOp getter, JSPropertyOp setter, uint32 slot,
+                  uintN attrs, uintN flags, intN shortid)
+{
+    JSClass *clasp;
+    JSScope *scope;
+    JSScopeProperty *sprop;
+
+    /* Use the object's class getter and setter by default. */
+    clasp = LOCKED_OBJ_GET_CLASS(obj);
+    if (!getter)
+        getter = clasp->getProperty;
+    if (!setter)
+        setter = clasp->setProperty;
+
+    /*
+     * If adding a function-valued property to an object with stub getter and
+     * setter, store the function object in the property-tree node for maximum
+     * sharing and correct polymorphic inline caching.  Thus scope->lastProp
+     * can be used as a structural type identifier when indexing a PIC.
+     */
+    if (VALUE_IS_FUNCTION(cx, value) &&
+        getter == JS_PropertyStub &&
+        setter == JS_PropertyStub) {
+        JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED)));
+        JS_ASSERT(!(flags & SPROP_HAS_SHORTID));
+        getter = (JSPropertyOp) JSVAL_TO_OBJECT(value);
+        setter = SetMethodProperty;
+        slot = SPROP_INVALID_SLOT;
+        attrs |= JSPROP_SHARED;
+        flags |= SPROP_IS_METHOD;
+    }
+
+    /* Get obj's own scope if it has one, or create a new one for obj. */
+    scope = js_GetMutableScope(cx, obj);
+    if (!scope)
+        return NULL;
+
+    /* Add the property to scope, or replace an existing one of the same id. */
+    if (clasp->flags & JSCLASS_SHARE_ALL_PROPERTIES)
+        attrs |= JSPROP_SHARED;
+    sprop = js_AddScopeProperty(cx, scope, id, getter, setter, slot,
+                                attrs, flags, shortid);
+    if (!sprop)
+        return NULL;
+
+    /* Store value before calling addProperty, in case the latter GC's. */
+    if (SPROP_HAS_VALID_SLOT(sprop, scope))
+        LOCKED_OBJ_SET_SLOT(obj, sprop->slot, value);
+
+    /*
+     * Backward compatibility requires allowing addProperty hooks to mutate
+     * the nominal initial value of a slot-full property, while GC safety
+     * wants that value to be stored before the call-out through the hook.
+     * Optimize to do both while saving cycles for classes that stub their
+     * addProperty hook.
+     */
+    if (clasp->addProperty != JS_PropertyStub) {
+        jsval nominal = value;
+        if (!clasp->addProperty(cx, obj, SPROP_USERID(sprop), &value)) {
+            js_RemoveScopeProperty(cx, scope, id);
+            return NULL;
+        }
+        if (value != nominal && SPROP_HAS_VALID_SLOT(sprop, scope))
+            LOCKED_OBJ_SET_SLOT(obj, sprop->slot, value);
+    }
+
+    return sprop;
+}
+
 JSScopeProperty *
 js_AddNativeProperty(JSContext *cx, JSObject *obj, jsid id,
                      JSPropertyOp getter, JSPropertyOp setter, uint32 slot,
                      uintN attrs, uintN flags, intN shortid)
 {
-    JSScope *scope;
     JSScopeProperty *sprop;
 
+    CHECK_FOR_STRING_INDEX(id);
     JS_LOCK_OBJ(cx, obj);
-    scope = js_GetMutableScope(cx, obj);
-    if (!scope) {
-        sprop = NULL;
-    } else {
-        /*
-         * Handle old bug that took empty string as zero index.  Also convert
-         * string indices to integers if appropriate.
-         */
-        CHECK_FOR_STRING_INDEX(id);
-        sprop = js_AddScopeProperty(cx, scope, id, getter, setter, slot, attrs,
-                                    flags, shortid);
-    }
+    sprop = AddNativeProperty(cx, obj, id, JSVAL_VOID, getter, setter, slot,
+                              attrs, flags, shortid);
     JS_UNLOCK_OBJ(cx, obj);
     return sprop;
 }
@@ -2953,33 +3005,11 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                                    0, 0, propp);
 }
 
-/*
- * Backward compatibility requires allowing addProperty hooks to mutate the
- * nominal initial value of a slot-full property, while GC safety wants that
- * value to be stored before the call-out through the hook.  Optimize to do
- * both while saving cycles for classes that stub their addProperty hook.
- */
-#define ADD_PROPERTY_HELPER(cx,clasp,obj,scope,sprop,vp,cleanup)              \
-    JS_BEGIN_MACRO                                                            \
-        if ((clasp)->addProperty != JS_PropertyStub) {                        \
-            jsval nominal_ = *(vp);                                           \
-            if (!(clasp)->addProperty(cx, obj, SPROP_USERID(sprop), vp)) {    \
-                cleanup;                                                      \
-            }                                                                 \
-            if (*(vp) != nominal_) {                                          \
-                if (SPROP_HAS_VALID_SLOT(sprop, scope))                       \
-                    LOCKED_OBJ_SET_SLOT(obj, (sprop)->slot, *(vp));           \
-            }                                                                 \
-        }                                                                     \
-    JS_END_MACRO
-
 JSBool
 js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                         JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
                         uintN flags, intN shortid, JSProperty **propp)
 {
-    JSClass *clasp;
-    JSScope *scope;
     JSScopeProperty *sprop;
 
     /*
@@ -3035,37 +3065,12 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     }
 #endif /* JS_HAS_GETTER_SETTER */
 
-    /* Lock if object locking is required by this implementation. */
     JS_LOCK_OBJ(cx, obj);
-
-    /* Use the object's class getter and setter by default. */
-    clasp = LOCKED_OBJ_GET_CLASS(obj);
-    if (!getter)
-        getter = clasp->getProperty;
-    if (!setter)
-        setter = clasp->setProperty;
-
-    /* Get obj's own scope if it has one, or create a new one for obj. */
-    scope = js_GetMutableScope(cx, obj);
-    if (!scope)
-        goto bad;
-
-    /* Add the property to scope, or replace an existing one of the same id. */
-    if (clasp->flags & JSCLASS_SHARE_ALL_PROPERTIES)
-        attrs |= JSPROP_SHARED;
-    sprop = js_AddScopeProperty(cx, scope, id, getter, setter,
-                                SPROP_INVALID_SLOT, attrs, flags, shortid);
+    sprop = AddNativeProperty(cx, obj, id, value,
+                              getter, setter, SPROP_INVALID_SLOT,
+                              attrs, flags, shortid);
     if (!sprop)
         goto bad;
-
-    /* Store value before calling addProperty, in case the latter GC's. */
-    if (SPROP_HAS_VALID_SLOT(sprop, scope))
-        LOCKED_OBJ_SET_SLOT(obj, sprop->slot, value);
-
-    /* XXXbe called with lock held */
-    ADD_PROPERTY_HELPER(cx, clasp, obj, scope, sprop, &value,
-                        js_RemoveScopeProperty(cx, scope, id);
-                        goto bad);
 
 #if JS_HAS_GETTER_SETTER
 out:
@@ -3706,37 +3711,21 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
         /* Find or make a property descriptor with the right heritage. */
         JS_LOCK_OBJ(cx, obj);
-        scope = js_GetMutableScope(cx, obj);
-        if (!scope) {
+        sprop = AddNativeProperty(cx, obj, id, *vp,
+                                  getter, setter, SPROP_INVALID_SLOT,
+                                  attrs, flags, shortid);
+        if (!sprop) {
             JS_UNLOCK_OBJ(cx, obj);
             return JS_FALSE;
         }
-        if (clasp->flags & JSCLASS_SHARE_ALL_PROPERTIES)
-            attrs |= JSPROP_SHARED;
-        sprop = js_AddScopeProperty(cx, scope, id, getter, setter,
-                                    SPROP_INVALID_SLOT, attrs, flags, shortid);
-        if (!sprop) {
-            JS_UNLOCK_SCOPE(cx, scope);
-            return JS_FALSE;
-        }
-
-        /*
-         * Initialize the new property value (passed to setter) to undefined.
-         * Note that we store before calling addProperty, to match the order
-         * in js_DefineNativeProperty.
-         */
-        if (SPROP_HAS_VALID_SLOT(sprop, scope))
-            LOCKED_OBJ_SET_SLOT(obj, sprop->slot, JSVAL_VOID);
-
-        /* XXXbe called with obj locked */
-        ADD_PROPERTY_HELPER(cx, clasp, obj, scope, sprop, vp,
-                            js_RemoveScopeProperty(cx, scope, id);
-                            JS_UNLOCK_SCOPE(cx, scope);
-                            return JS_FALSE);
+        scope = OBJ_SCOPE(obj);
+        if (sprop->setter == SetMethodProperty)
+            goto out;
     }
 
     if (!js_NativeSet(cx, obj, sprop, vp))
         return JS_FALSE;
+  out:
     JS_UNLOCK_SCOPE(cx, scope);
     return JS_TRUE;
 
@@ -4022,11 +4011,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
             /* Object has a private scope; Enumerate all props in scope. */
             for (sprop = lastProp = SCOPE_LAST_PROP(scope); sprop;
                  sprop = sprop->parent) {
-                if ((
-#ifdef DUMP_CALL_TABLE
-                     (cx->options & JSOPTION_LOGCALL_TOSOURCE) ||
-#endif
-                     (sprop->attrs & JSPROP_ENUMERATE)) &&
+                if (((sprop->attrs & JSPROP_ENUMERATE)) &&
                     !(sprop->flags & SPROP_IS_ALIAS) &&
                     (!SCOPE_HAD_MIDDLE_DELETE(scope) ||
                      SCOPE_HAS_PROPERTY(scope, sprop))) {
@@ -4040,11 +4025,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
             }
             i = length;
             for (sprop = lastProp; sprop; sprop = sprop->parent) {
-                if ((
-#ifdef DUMP_CALL_TABLE
-                     (cx->options & JSOPTION_LOGCALL_TOSOURCE) ||
-#endif
-                     (sprop->attrs & JSPROP_ENUMERATE)) &&
+                if (((sprop->attrs & JSPROP_ENUMERATE)) &&
                     !(sprop->flags & SPROP_IS_ALIAS) &&
                     (!SCOPE_HAD_MIDDLE_DELETE(scope) ||
                      SCOPE_HAS_PROPERTY(scope, sprop))) {
