@@ -142,8 +142,6 @@ public class NativeEventThread extends Thread {
 
 public void run()
 {
-    Runnable runnable;
-    WCRunnable wcRunnable;
     // our owner must have put an event in the queue 
     Assert.assert_it(!runnables.isEmpty());
     ((Runnable)runnables.poll()).run();
@@ -160,7 +158,24 @@ public void run()
     // Execute the event-loop.
     // 
     
-    while (true) {
+    while (doEventLoopOnce()) {
+    }
+}
+
+public void runUntilEventOfType(Class wcRunnableClass) {
+    WCRunnable result = null;
+    while (doEventLoopOnce(wcRunnableClass)) {
+    }
+}
+
+/**
+ * @return true if the event loop should continue to be executed, false otherwise
+ */
+
+    private boolean doEventLoopOnce(Class... wcRunnableClass) {
+        Runnable runnable;
+        WCRunnable wcRunnable;
+        boolean result = true;
         try {
             Thread.sleep(1);
         }
@@ -179,7 +194,7 @@ public void run()
                 catch (Exception e) {
                     System.out.println("NativeEventThread.run: Exception: trying to send notifyAll() to this during delete: " + e + " " + e.getMessage());
                 }
-                return;
+                return false;
             }
 	    
 	    if (null!= runnable) {
@@ -204,6 +219,10 @@ public void run()
                             wcRunnable.toString());
                 }
 		// notify the pushBlockingWCRunnable() method.
+                if (LOGGER.isLoggable(Level.FINEST)) {
+                    LOGGER.finest("NativeEventThread.run: About to enter synchronized block for " +
+                            wcRunnable.toString());
+                }
                 synchronized (wcRunnable) {
                     try {
                         wcRunnable.notifyAll();
@@ -212,11 +231,19 @@ public void run()
                         System.out.println("NativeEventThread.run: Exception: trying to notify for blocking result:" + e + " " + e.getMessage());
                     }
                 }
+                if (LOGGER.isLoggable(Level.FINEST)) {
+                    LOGGER.finest("NativeEventThread.run: Exited synchronized block for " +
+                            wcRunnable.toString());
+                }
+                if (0 < wcRunnableClass.length &&
+                    wcRunnable.getClass() == wcRunnableClass[0]) {
+                    result = false;
+                }
 	    }
 	    nativeProcessEvents(nativeWrapperFactory);
         }
+        return result;
     }
-}
 
 //
 // private methods
@@ -236,7 +263,7 @@ public void run()
 	Object result = null;
 
 	if (Thread.currentThread().getName().equals(instance.getName())){
-	    toInvoke.run();
+	    toInvoke.setResult(toInvoke.run());
             result = toInvoke.getResult();
             if (result instanceof RuntimeException) {
                 throw ((RuntimeException) result);
@@ -245,16 +272,21 @@ public void run()
 	}
 
         blockingRunnables.add(toInvoke);
+        if (LOGGER.isLoggable(Level.FINEST)) {
+            LOGGER.finest("NativeEventThread.pushBlockingWCRunnable:" +
+                    " About to enter synchronized block for " +
+                    toInvoke.toString());
+        }
         synchronized (toInvoke) {
 	    try {
                 if (LOGGER.isLoggable(Level.FINEST)) {
-                    LOGGER.finest("NativeEventThread.pushBlockingWCRunnable: " +
+                    LOGGER.finest("NativeEventThread.pushBlockingWCRunnable:" +
                             " About to wait for NativeEventThread to run " +
                             toInvoke.toString());
                 }
 		toInvoke.wait();
                 if (LOGGER.isLoggable(Level.FINEST)) {
-                    LOGGER.finest("NativeEventThread.pushBlockingWCRunnable: " +
+                    LOGGER.finest("NativeEventThread.pushBlockingWCRunnable:" +
                             " Return from wait for NativeEventThread to run " +
                             toInvoke.toString());
                 }
@@ -262,6 +294,11 @@ public void run()
 	    catch (Exception se) {
 		System.out.println("NativeEventThread.pushBlockingWCRunnable: Exception: while waiting for blocking result: " + se + "  " + se.getMessage());
 	    }
+        }
+        if (LOGGER.isLoggable(Level.FINEST)) {
+            LOGGER.finest("NativeEventThread.pushBlockingWCRunnable:" +
+                    " Exited synchronized block for " +
+                    toInvoke.toString());
         }
         result = toInvoke.getResult();
         if (result instanceof RuntimeException) {

@@ -111,19 +111,8 @@ public void createWindow(int nativeWindow, Rectangle rect)
     final int finalWidth = rect.width;
     final int finalHeight = rect.height;
 
-    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
-	    public Object run() {
-
-		nativeRealize(nativeWin, nativeBc, finalX, 
-			      finalY, finalWidth, 
-			      finalHeight, bc);
-		return null;
-	    }
-            public String toString() {
-                return "WCRunnable.nativeRealize";
-            }
-            
-	});
+    NativeEventThread.instance.pushBlockingWCRunnable(new NativeRealizeWCRunnable(nativeWin,
+            nativeBc, rect, bc));
 }
 
 public int getNativeWebShell()
@@ -182,6 +171,34 @@ public void setFocus()
     throw new UnimplementedException("\nUnimplementedException -----\n API Function WindowControl::setFocus has not yet been implemented.\n");
 }
 
+public class NativeRealizeWCRunnable extends WCRunnable {
+    
+    final private int nativeWin;
+    final private int nativeBc;
+    final private Rectangle rect;
+    final private BrowserControl bc;
+    
+    NativeRealizeWCRunnable(int nativeWin, int nativeBc, Rectangle rect, 
+            BrowserControl bc) {
+        this.nativeWin = nativeWin;
+        this.nativeBc = nativeBc;
+        this.rect = rect;
+        this.bc = bc;
+    }
+    
+    public Object run() {
+
+        WindowControlImpl.this.nativeRealize(this.nativeWin, this.nativeBc, 
+                this.rect.x, this.rect.y, this.rect.width, this.rect.height, 
+                this.bc);
+        return null;
+    }
+    public String toString() {
+        return "WCRunnable.nativeRealize";
+    }
+
+}
+
 
 // 
 // Native methods
@@ -218,7 +235,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("WindowControlImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.6 2007/01/17 11:43:43 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.7 2007/01/22 12:35:14 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

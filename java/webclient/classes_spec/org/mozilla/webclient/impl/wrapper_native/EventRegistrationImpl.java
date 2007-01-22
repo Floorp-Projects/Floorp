@@ -319,6 +319,7 @@ int nativeEventOccurred(String targetClassName, long eventType,
 	NewWindowEvent newWindowEvent = new NewWindowEvent(this, eventType, 
 							   eventData);
 	newWindowListener.eventDispatched(newWindowEvent);
+        NativeEventThread.instance.runUntilEventOfType(WindowControlImpl.NativeRealizeWCRunnable.class);
 	return getNativeBrowserControlFromNewWindowEvent(newWindowEvent);
     }
     // else...
