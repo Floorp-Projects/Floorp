@@ -121,47 +121,42 @@ nsJARInputStream::InitDirectory(nsZipArchive* aZip,
     mZip = aZip;
     nsZipFind *find;
     nsresult rv;
-    if (*aDir) {
-        // We can get aDir's contents as strings via FindEntries
-        // with the following pattern (see nsIZipReader.findEntries docs)
-        // assuming dirName is properly escaped:
-        //
-        //   dirName + "?*~" + dirName + "?*/?*"
-        nsDependentCString dirName(aDir);
-        mNameLen = dirName.Length();
-    
-        // iterate through dirName and copy it to escDirName, escaping chars
-        // which are special at the "top" level of the regexp so FindEntries
-        // works correctly
-        nsCAutoString escDirName;
-        const char* curr = dirName.BeginReading();
-        const char* end  = dirName.EndReading();
-        while (curr != end) {
-            switch (*curr) {
-                case '*':
-                case '?':
-                case '$':
-                case '[':
-                case ']':
-                case '^':
-                case '~':
-                case '(':
-                case ')':
-                case '\\':
-                    escDirName.Append('\\');
-                    // fall through
-                default:
-                    escDirName.Append(*curr);
-            }
-            ++curr;
+    // We can get aDir's contents as strings via FindEntries
+    // with the following pattern (see nsIZipReader.findEntries docs)
+    // assuming dirName is properly escaped:
+    //
+    //   dirName + "?*~" + dirName + "?*/?*"
+    nsDependentCString dirName(aDir);
+    mNameLen = dirName.Length();
+
+    // iterate through dirName and copy it to escDirName, escaping chars
+    // which are special at the "top" level of the regexp so FindEntries
+    // works correctly
+    nsCAutoString escDirName;
+    const char* curr = dirName.BeginReading();
+    const char* end  = dirName.EndReading();
+    while (curr != end) {
+        switch (*curr) {
+            case '*':
+            case '?':
+            case '$':
+            case '[':
+            case ']':
+            case '^':
+            case '~':
+            case '(':
+            case ')':
+            case '\\':
+                escDirName.Append('\\');
+                // fall through
+            default:
+                escDirName.Append(*curr);
         }
-        nsCAutoString pattern = escDirName + NS_LITERAL_CSTRING("?*~") +
-                                escDirName + NS_LITERAL_CSTRING("?*/?*");
-        rv = aZip->FindInit(pattern.get(), &find);
-    } else {
-        mNameLen = 0;
-        rv = aZip->FindInit(nsnull, &find);
+        ++curr;
     }
+    nsCAutoString pattern = escDirName + NS_LITERAL_CSTRING("?*~") +
+                            escDirName + NS_LITERAL_CSTRING("?*/?*");
+    rv = aZip->FindInit(pattern.get(), &find);
     if (NS_FAILED(rv)) return rv;
 
     const char *name;
