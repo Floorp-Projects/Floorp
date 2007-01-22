@@ -165,7 +165,7 @@ LoadXULMethods(JNIEnv* env, jobject aXPCOMPath, void** aFunctions)
             (NSFuncPtr*) &aFunctions[kFunc_IsSameXPCOMObject] },
     { "_Java_org_mozilla_xpcom_ProfileLock_release@16",
             (NSFuncPtr*) &aFunctions[kFunc_ReleaseProfileLock] },
-    { "Java_org_mozilla_xpcom_internal_MozillaImpl_getNativeHandleFromAWT@12",
+    { "_Java_org_mozilla_xpcom_internal_MozillaImpl_getNativeHandleFromAWT@12",
             (NSFuncPtr*) &aFunctions[kFunc_GetNativeHandleFromAWT] },
     { nsnull, nsnull }
   };
