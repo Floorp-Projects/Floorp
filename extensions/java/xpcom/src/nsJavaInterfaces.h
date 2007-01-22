@@ -65,12 +65,6 @@ extern "C" NS_EXPORT void JNICALL
 GRE_NATIVE(notifyProfile) (JNIEnv *env, jobject);
 
 extern "C" NS_EXPORT jobject JNICALL
-GRE_NATIVE(lockProfileDirectory) (JNIEnv *, jobject, jobject aDirectory);
-
-extern "C" NS_EXPORT void JNICALL
-GRE_NATIVE(notifyProfile) (JNIEnv *env, jobject);
-
-extern "C" NS_EXPORT jobject JNICALL
 XPCOM_NATIVE(initXPCOM) (JNIEnv* env, jobject, jobject aMozBinDirectory,
                          jobject aAppFileLocProvider);
 
