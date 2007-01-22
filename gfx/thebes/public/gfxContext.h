@@ -531,6 +531,18 @@ public:
     void BeginPage();
     void EndPage();
 
+    /**
+     ** Hit Testing - check if given point is in the current path
+     **/
+    PRBool PointInFill(gfxPoint pt);
+    PRBool PointInStroke(gfxPoint pt);
+
+    /**
+     ** Extents - returns user space extent of current path
+     **/
+    gfxRect GetUserFillExtent();
+    gfxRect GetUserStrokeExtent();
+
 private:
     cairo_t *mCairo;
     nsRefPtr<gfxASurface> mSurface;

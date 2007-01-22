@@ -346,10 +346,29 @@ gfxContext::UserToDevice(const gfxSize& size) const
 gfxRect
 gfxContext::UserToDevice(const gfxRect& rect) const
 {
-    gfxRect ret = rect;
-    cairo_user_to_device(mCairo, &ret.pos.x, &ret.pos.y);
-    cairo_user_to_device_distance(mCairo, &ret.size.width, &ret.size.height);
-    return ret;
+    double xmin, ymin, xmax, ymax;
+    xmin = rect.pos.x;
+    ymin = rect.pos.y;
+    xmax = rect.pos.x + rect.size.width;
+    ymax = rect.pos.y + rect.size.height;
+
+    double x[3], y[3];
+    x[0] = xmin;  y[0] = ymax;
+    x[1] = xmax;  y[1] = ymax;
+    x[2] = xmax;  y[2] = ymin;
+
+    cairo_user_to_device(mCairo, &xmin, &ymin);
+    xmax = xmin;
+    ymax = ymin;
+    for (int i = 0; i < 3; i++) {
+        cairo_user_to_device(mCairo, &x[i], &y[i]);
+        xmin = PR_MIN(xmin, x[i]);
+        xmax = PR_MAX(xmax, x[i]);
+        ymin = PR_MIN(ymin, y[i]);
+        ymax = PR_MAX(ymax, y[i]);
+    }
+
+    return gfxRect(xmin, ymin, xmax - xmin, ymax - ymin);
 }
 
 PRBool
@@ -696,4 +715,32 @@ gfxContext::EndPage()
 {
     if (NS_FAILED(mSurface->EndPage()))
         cairo_show_page(mCairo);
+}
+
+PRBool
+gfxContext::PointInFill(gfxPoint pt)
+{
+    return cairo_in_fill(mCairo, pt.x, pt.y);
+}
+
+PRBool
+gfxContext::PointInStroke(gfxPoint pt)
+{
+    return cairo_in_stroke(mCairo, pt.x, pt.y);
+}
+
+gfxRect
+gfxContext::GetUserFillExtent()
+{
+    double xmin, ymin, xmax, ymax;
+    cairo_fill_extents(mCairo, &xmin, &ymin, &xmax, &ymax);
+    return gfxRect(xmin, ymin, xmax - xmin, ymax - ymin);
+}
+
+gfxRect
+gfxContext::GetUserStrokeExtent()
+{
+    double xmin, ymin, xmax, ymax;
+    cairo_stroke_extents(mCairo, &xmin, &ymin, &xmax, &ymax);
+    return gfxRect(xmin, ymin, xmax - xmin, ymax - ymin);
 }
