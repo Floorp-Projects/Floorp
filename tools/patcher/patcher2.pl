@@ -969,7 +969,6 @@ sub CreatePastReleasePatchinfo {
 
                     $completePatch->{'details'} = $detailsUrl;
                     $completePatch->{'license'} = $licenseUrl;
-                    $completePatch->{'updateType'} = $updateType;
 
                     write_patch_info(patch => $completePatch,
                                      schemaVer => $patchLocaleNode->{'schema'});
@@ -1109,7 +1108,6 @@ sub CreatePartialPatchinfo {
                     $partial_patch->{'url'} = $gen_partial_url;
                     $partial_patch->{'details'} = $detailsUrl;
                     $partial_patch->{'license'} = $licenseUrl;
-                    $partial_patch->{'updateType'} = $updateType;
 
                     write_patch_info(patch => $partial_patch,
                                      schemaVer => $to->{'schema'});
