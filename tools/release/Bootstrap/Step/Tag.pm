@@ -17,6 +17,7 @@ sub Execute {
     my $productTag = $config->Get('var' => 'productTag');
     my $branchTag = $config->Get('var' => 'branchTag');
     my $pullDate = $config->Get('var' => 'pullDate');
+    my $l10n_pullDate = $config->Get('var' => 'l10n_pullDate');
     my $rc = $config->Get('var' => 'rc');
     my $version = $config->Get('var' => 'version');
     my $appName = $config->Get('var' => 'appName');
@@ -192,7 +193,7 @@ sub Execute {
             next;
         }
         $this->Shell(
-            'cmd' => 'cvs -d ' . $l10nCvsroot . ' co -r ' . $branchTag . ' -D "' . $pullDate . '" l10n/' . $locale,
+            'cmd' => 'cvs -d ' . $l10nCvsroot . ' co -r ' . $branchTag . ' -D "' . $l10n_pullDate . '" l10n/' . $locale,
             'dir' => $releaseTagDir . '/l10n',
             'logFile' => $logDir . '/l10n-checkout.log',
         );
