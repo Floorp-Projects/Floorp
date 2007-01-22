@@ -67,7 +67,7 @@ EXPORTS +=	gfxPlatformMac.h \
 		gfxAtsuiFonts.h \
 		$(NULL)
 
-ifdef MOZ_EABLE_GLITZ
+ifdef MOZ_ENABLE_GLITZ
 REQUIRES += glitzagl
 endif
 endif
