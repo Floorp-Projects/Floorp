@@ -94,7 +94,16 @@ public:
   void InsertGroupCellMap(nsTableRowGroupFrame&  aNewRowGroup,
                           nsTableRowGroupFrame*& aPrevRowGroup);
 
-  nsCellMap* GetMapFor(nsTableRowGroupFrame& aRowGroup);
+  /**
+   * Get the nsCellMap for the given row group.  If aStartHint is non-null,
+   * will start looking with that cellmap and only fall back to starting at the
+   * beginning of the list if that doesn't find us the right nsCellMap.
+   * Otherwise, just start at the beginning.
+   *
+   * aRowGroup must not be null.
+   */
+  nsCellMap* GetMapFor(const nsTableRowGroupFrame* aRowGroup,
+                       nsCellMap* aStartHint) const;
 
   /** synchronize the cellmaps with the rowgroups again **/
   void Synchronize(nsTableFrame* aTableFrame);

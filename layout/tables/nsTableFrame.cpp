@@ -4172,14 +4172,16 @@ BCMapCellIterator::SetNewRowGroup(PRBool aFindFirstDamagedRow)
   mAtEnd = PR_TRUE;
   mRowGroupIndex++;
   PRInt32 numRowGroups = mRowGroups.Count();
+  mCellMap = nsnull;
   for (PRInt32 rgX = mRowGroupIndex; rgX < numRowGroups; rgX++) {
-    nsIFrame* frame = (nsTableRowGroupFrame*)mRowGroups.ElementAt(mRowGroupIndex); if (!frame) ABORT1(PR_FALSE);
+    nsIFrame* frame = (nsIFrame*)mRowGroups.ElementAt(mRowGroupIndex); if (!frame) ABORT1(PR_FALSE);
     mRowGroup = mTableFrame.GetRowGroupFrame(frame); if (!mRowGroup) ABORT1(PR_FALSE);
     PRInt32 rowCount = mRowGroup->GetRowCount();
     mRowGroupStart = mRowGroup->GetStartRowIndex();
     mRowGroupEnd   = mRowGroupStart + rowCount - 1;
     if (rowCount > 0) {
-      mCellMap = mTableCellMap->GetMapFor(*mRowGroup); if (!mCellMap) ABORT1(PR_FALSE);
+      mCellMap = mTableCellMap->GetMapFor(mRowGroup, mCellMap);
+      if (!mCellMap) ABORT1(PR_FALSE);
       nsTableRowFrame* firstRow = mRowGroup->GetFirstRow();
       if (aFindFirstDamagedRow) {
         if ((mAreaStart.y >= mRowGroupStart) && (mAreaStart.y <= mRowGroupEnd)) {
@@ -4306,7 +4308,7 @@ BCMapCellIterator::PeekBottom(BCMapCellInfo&   aRefInfo,
       nsIFrame* frame = (nsTableRowGroupFrame*)mRowGroups.ElementAt(nextRgIndex); if (!frame) ABORT0();
       rg = mTableFrame.GetRowGroupFrame(frame);
       if (rg) {
-        cellMap = mTableCellMap->GetMapFor(*rg); if (!cellMap) ABORT0();
+        cellMap = mTableCellMap->GetMapFor(rg, cellMap); if (!cellMap) ABORT0();
         rgRowIndex = 0;
         nextRow = rg->GetFirstRow();
       }
@@ -4917,6 +4919,9 @@ nsTableFrame::ExpandBCDamageArea(nsRect& aRect) const
     PRUint32 numRowGroups;
     nsVoidArray rowGroups;
     OrderRowGroups(rowGroups, numRowGroups);
+
+    // Scope outside loop to be used as hint.
+    nsCellMap* cellMap = nsnull;
     for (PRUint32 rgX = 0; rgX < numRowGroups; rgX++) {
       nsIFrame* kidFrame = (nsIFrame*)rowGroups.ElementAt(rgX);
       nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(kidFrame); if (!rgFrame) ABORT0();
@@ -4924,7 +4929,8 @@ nsTableFrame::ExpandBCDamageArea(nsRect& aRect) const
       PRInt32 rgEndY   = rgStartY + rgFrame->GetRowCount() - 1;
       if (dEndY < rgStartY) 
         break;
-      nsCellMap* cellMap = tableCellMap->GetMapFor(*rgFrame); if (!cellMap) ABORT0();
+      cellMap = tableCellMap->GetMapFor(rgFrame, cellMap);
+      if (!cellMap) ABORT0();
       // check for spanners from above and below
       if ((dStartY > 0) && (dStartY >= rgStartY) && (dStartY <= rgEndY)) {
         if (PRUint32(dStartY - rgStartY) >= cellMap->mRows.Length()) 
@@ -5815,7 +5821,10 @@ BCMapBorderIterator::SetNewRowGroup()
     rowGroupEnd      = rowGroupStart + rg->GetRowCount() - 1;
 
     if (SetNewRow(rg->GetFirstRow())) {
-      cellMap = tableCellMap->GetMapFor(*(nsTableRowGroupFrame*)rg->GetFirstInFlow()); if (!cellMap) ABORT1(PR_FALSE);
+      cellMap =
+        tableCellMap->GetMapFor((nsTableRowGroupFrame*)rg->GetFirstInFlow(),
+                                nsnull);
+      if (!cellMap) ABORT1(PR_FALSE);
     }
     if (rg && table->GetPrevInFlow() && !rg->GetPrevInFlow()) {
       // if rg doesn't have a prev in flow, then it may be a repeated header or footer

@@ -261,17 +261,40 @@ void nsTableCellMap::RemoveGroupCellMap(nsTableRowGroupFrame* aGroup)
   }
 }
 
-nsCellMap* 
-nsTableCellMap::GetMapFor(nsTableRowGroupFrame& aRowGroup)
+static nsCellMap*
+FindMapFor(const nsTableRowGroupFrame* aRowGroup,
+           nsCellMap* aStart,
+           const nsCellMap* aEnd)
 {
-  NS_ASSERTION(!aRowGroup.GetPrevInFlow(), "GetMapFor called with continuation");
-  for (nsCellMap* map = mFirstMap; map; map = map->GetNextSibling()) {
-    if (&aRowGroup == map->GetRowGroup()) {
+  for (nsCellMap* map = aStart; map != aEnd; map = map->GetNextSibling()) {
+    if (aRowGroup == map->GetRowGroup()) {
       return map;
     }
   }
+
+  return nsnull;
+}
+
+nsCellMap* 
+nsTableCellMap::GetMapFor(const nsTableRowGroupFrame* aRowGroup,
+                          nsCellMap* aStartHint) const
+{
+  NS_PRECONDITION(aRowGroup, "Must have a rowgroup");
+  NS_ASSERTION(!aRowGroup->GetPrevInFlow(), "GetMapFor called with continuation");
+  if (aStartHint) {
+    nsCellMap* map = FindMapFor(aRowGroup, aStartHint, nsnull);
+    if (map) {
+      return map;
+    }
+  }
+
+  nsCellMap* map = FindMapFor(aRowGroup, mFirstMap, aStartHint);
+  if (map) {
+    return map;
+  }
+  
   // if aRowGroup is a repeated header or footer find the header or footer it was repeated from
-  if (aRowGroup.IsRepeatable()) {
+  if (aRowGroup->IsRepeatable()) {
     nsTableFrame* fifTable = NS_STATIC_CAST(nsTableFrame*, mTableFrame.GetFirstInFlow());
 
     nsAutoVoidArray rowGroups;
@@ -280,16 +303,12 @@ nsTableCellMap::GetMapFor(nsTableRowGroupFrame& aRowGroup)
     // find the original header/footer 
     fifTable->OrderRowGroups(rowGroups, numRowGroups, &thead, &tfoot);
 
-    const nsStyleDisplay* display = aRowGroup.GetStyleDisplay();
+    const nsStyleDisplay* display = aRowGroup->GetStyleDisplay();
     nsTableRowGroupFrame* rgOrig = 
       (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == display->mDisplay) ? thead : tfoot; 
     // find the row group cell map using the original header/footer
-    if (rgOrig) {
-      for (nsCellMap* map = mFirstMap; map; map = map->GetNextSibling()) {
-        if (rgOrig == map->GetRowGroup()) {
-          return map;
-        }
-      }
+    if (rgOrig && rgOrig != aRowGroup) {
+      return GetMapFor(rgOrig, aStartHint);
     }
   }
 
@@ -310,11 +329,13 @@ nsTableCellMap::Synchronize(nsTableFrame* aTableFrame)
     return;
   }
 
+  // Scope |map| outside the loop so we can use it as a hint.
+  nsCellMap* map = nsnull;
   for (PRUint32 rgX = 0; rgX < numRowGroups; rgX++) {
     nsTableRowGroupFrame* rgFrame =
       nsTableFrame::GetRowGroupFrame((nsIFrame*)orderedRowGroups.ElementAt(rgX));
     if (rgFrame) {
-      nsCellMap* map = GetMapFor(*rgFrame);
+      map = GetMapFor(rgFrame, map);
       if (map) {
         if (!maps.AppendElement(map)) {
           delete map;
