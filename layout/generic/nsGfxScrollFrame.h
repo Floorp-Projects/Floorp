@@ -250,11 +250,13 @@ public:
   virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
   NS_IMETHOD GetPadding(nsMargin& aPadding);
-
-   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
-                  nsHTMLReflowMetrics&     aDesiredSize,
-                  const nsHTMLReflowState& aReflowState,
-                  nsReflowStatus&          aStatus);
+  NS_IMETHOD IsCollapsed(nsBoxLayoutState& aBoxLayoutState,
+                         PRBool& aCollapsed);
+  
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus);
 
   // Because there can be only one child frame, these two function return
   // NS_ERROR_FAILURE

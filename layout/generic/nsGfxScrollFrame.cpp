@@ -693,6 +693,15 @@ nsHTMLScrollFrame::GetPadding(nsMargin& aMargin)
 }
 
 NS_IMETHODIMP
+nsHTMLScrollFrame::IsCollapsed(nsBoxLayoutState& aBoxLayoutState,
+                                PRBool& aCollapsed)
+{
+  // We're never collapsed in the box sense.
+  aCollapsed = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
                           nsHTMLReflowMetrics&     aDesiredSize,
                           const nsHTMLReflowState& aReflowState,
