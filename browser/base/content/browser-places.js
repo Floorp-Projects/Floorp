@@ -342,7 +342,7 @@ var BookmarksEventHandler = {
    *        DOMEvent for the command
    */
   onCommand: function BM_onCommand(aEvent) {
-    // If this is the special "Open in Tabs" menuitem,
+    // If this is the special "Open All in Tabs" menuitem,
     // load all the menuitems in tabs.
 
     var target = aEvent.originalTarget;
@@ -359,8 +359,8 @@ var BookmarksEventHandler = {
 
   /**
    * Handler for popupshowing event for an item in bookmarks toolbar or menu.
-   * If the item isn't the main bookmarks menu, add an "Open in Tabs" menuitem
-   * to the bottom of the popup.
+   * If the item isn't the main bookmarks menu, add an "Open All in Tabs"
+   * menuitem to the bottom of the popup.
    * @param event 
    *        DOMEvent for popupshowing
    */
@@ -368,7 +368,7 @@ var BookmarksEventHandler = {
     var target = event.target;
 
     if (target.localName == "menupopup" && target.id != "bookmarksMenuPopup") {
-      // Show "Open in Tabs" menuitem if there are at least
+      // Show "Open All in Tabs" menuitem if there are at least
       // two menuitems with places result nodes, and "Open (Feed Name)"
       // if it's a livemark with a siteURI.
       var numNodes = 0;

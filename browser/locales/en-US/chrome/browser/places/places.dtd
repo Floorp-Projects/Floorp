@@ -119,9 +119,9 @@
   "Open in a New Tab">
 <!ENTITY cmd.open_tab.accesskey
   "w">
-<!ENTITY cmd.open_tabs.label
-  "Open in Tabs">
-<!ENTITY cmd.open_tabs.accesskey
+<!ENTITY cmd.open_all_in_tabs.label
+  "Open All in Tabs">
+<!ENTITY cmd.open_all_in_tabs.accesskey
   "O">
 <!ENTITY cmd.show_infoWin.label
   "Properties">
