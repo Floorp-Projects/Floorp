@@ -172,6 +172,14 @@ public:
     }
 
     /**
+     * Check if matrix is singular (no inverse exists).
+     */
+    PRBool IsSingular() {
+        // if the determinant (ad - bc) is zero it's singular
+        return (mat.xx * mat.yy) == (mat.yx * mat.xy);
+    }
+
+    /**
      * Scales this matrix. The scale is pre-multiplied onto this matrix,
      * i.e. the scaling takes place before the other transformations.
      */
