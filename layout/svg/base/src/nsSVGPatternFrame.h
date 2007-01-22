@@ -140,7 +140,6 @@ protected:
                               nsIDOMSVGRect *bbox,
                               nsIDOMSVGMatrix *callerCTM);
   nsresult   ConstructCTM(nsIDOMSVGMatrix **ctm, nsIDOMSVGRect *callerBBox);
-  cairo_surface_t *CreateSurface(nsIDOMSVGRect *bbox);
   nsresult   GetCallerGeometry(nsIDOMSVGMatrix **aCTM, 
                                nsIDOMSVGRect **aBBox,
                                nsSVGElement **aContent, 

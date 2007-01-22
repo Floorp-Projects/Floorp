@@ -53,8 +53,8 @@
 #include "nsSVGPatternElement.h"
 #include "nsSVGGeometryFrame.h"
 #include "nsSVGPatternFrame.h"
-#include "gfxASurface.h"
 #include "gfxContext.h"
+#include "gfxImageSurface.h"
 
 #ifdef DEBUG_scooter
 static void printCTM(char *msg, nsIDOMSVGMatrix *aCTM);
@@ -281,17 +281,22 @@ nsSVGPatternFrame::PaintPattern(cairo_surface_t** surface,
 
   // Now that we have all of the necessary geometries, we can
   // create our surface.
-  cairo_surface_t *patternSurface = CreateSurface(bbox);
-  if (!patternSurface)
+  float surfaceWidth, surfaceHeight;
+  bbox->GetWidth(&surfaceWidth);
+  bbox->GetHeight(&surfaceHeight);
+
+#ifdef DEBUG_scooter
+  printf("Creating %dX%d surface\n",(int)(surfaceWidth),(int)(surfaceHeight));
+#endif
+
+  nsRefPtr<gfxImageSurface> tmpSurface =
+    new gfxImageSurface(gfxASurface::ImageFormatARGB32,
+                        (int)surfaceWidth, (int)surfaceHeight);
+  if (!tmpSurface)
     return NS_ERROR_FAILURE;
 
-  gfxUnknownSurface tmpSurface(patternSurface);
-  gfxContext tmpContext(&tmpSurface);
-
-  // thebes types don't like being stack allocated - addref the surface
-  // so that gfxContext doesn't try destroying it (scope will delete it)
-  tmpSurface.AddRef();
-
+  memset(tmpSurface->Data(), 0, tmpSurface->Height() * tmpSurface->Stride());
+  gfxContext tmpContext(tmpSurface);
   nsSVGRenderState tmpState(&tmpContext);
 
   // OK, now render -- note that we use "firstKid", which
@@ -308,7 +313,9 @@ nsSVGPatternFrame::PaintPattern(cairo_surface_t** surface,
   }
   mSource = nsnull;
 
-  *surface = patternSurface;
+  // caller now owns the cairo surface
+  cairo_surface_reference(tmpSurface->CairoSurface());
+  *surface = tmpSurface->CairoSurface();
   return NS_OK;
 }
 
@@ -771,20 +778,6 @@ nsSVGPatternFrame::GetCallerGeometry(nsIDOMSVGMatrix **aCTM,
     (*aBBox)->SetHeight(height);
   }
   return NS_OK;
-}
-
-cairo_surface_t *
-nsSVGPatternFrame::CreateSurface(nsIDOMSVGRect *bbox)
-{
-  float width, height;
-  bbox->GetWidth(&width);
-  bbox->GetHeight(&height);
-
-#ifdef DEBUG_scooter
-  printf("Creating %dX%d surface\n",(int)(width),(int)(height));
-#endif
-  return cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
-                                    (int)(width), (int)(height));
 }
 
 //----------------------------------------------------------------------
