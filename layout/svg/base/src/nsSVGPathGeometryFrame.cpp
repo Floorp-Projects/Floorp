@@ -411,13 +411,16 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
   if (HasStroke()) {
     SetupCairoStrokeGeometry(&context);
     cairo_stroke_extents(ctx, &xmin, &ymin, &xmax, &ymax);
-    nsSVGUtils::UserToDeviceBBox(ctx, &xmin, &ymin, &xmax, &ymax);
+    if (!IsDegeneratePath(xmin, ymin, xmax, ymax)) {
+      nsSVGUtils::UserToDeviceBBox(ctx, &xmin, &ymin, &xmax, &ymax);
+      mRect = nsSVGUtils::ToBoundingPixelRect(xmin, ymin, xmax, ymax);
+    }
   } else {
     cairo_identity_matrix(ctx);
     cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
+    if (!IsDegeneratePath(xmin, ymin, xmax, ymax))
+      mRect = nsSVGUtils::ToBoundingPixelRect(xmin, ymin, xmax, ymax);
   }
-  if (!IsDegeneratePath(xmin, ymin, xmax, ymax))
-    mRect = nsSVGUtils::ToBoundingPixelRect(xmin, ymin, xmax, ymax);
 
   // Add in markers
   mRect = GetCoveredRegion();
