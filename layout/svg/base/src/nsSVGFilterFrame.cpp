@@ -49,6 +49,7 @@
 #include "nsSVGContainerFrame.h"
 #include "gfxASurface.h"
 #include "gfxContext.h"
+#include "gfxImageSurface.h"
 
 typedef nsSVGContainerFrame nsSVGFilterFrameBase;
 
@@ -359,26 +360,18 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
   aTarget->NotifyCanvasTMChanged(PR_TRUE);
 
   // paint the target geometry
-  cairo_surface_t *surface =
-    cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
-                               filterResX, filterResY);
-  if (!surface) {
+  nsRefPtr<gfxImageSurface> tmpSurface =
+    new gfxImageSurface(gfxASurface::ImageFormatARGB32,
+                        filterResX, filterResY);
+  if (!tmpSurface) {
     FilterFailCleanup(aContext, aTarget);
     return NS_OK;
   }
 
-  gfxUnknownSurface tmpSurface(surface);
-  gfxContext tmpContext(&tmpSurface);
-
-  // thebes types don't like being stack allocated - addref the surface
-  // so that gfxContext doesn't try destroying it (scope will delete it)
-  tmpSurface.AddRef();
-
-  // tmpSurface now owns the cairo surface
-  cairo_surface_destroy(surface);
-
+  gfxContext tmpContext(tmpSurface);
   nsSVGRenderState tmpState(&tmpContext);
 
+  memset(tmpSurface->Data(), 0, tmpSurface->Height() * tmpSurface->Stride());
   aTarget->PaintSVG(&tmpState, nsnull);
 
   mPrimitiveUnits->GetAnimVal(&type);
@@ -397,9 +390,9 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
       return NS_OK;
     }
 
-    PRUint8 *data = cairo_image_surface_get_data(surface);
+    PRUint8 *data = tmpSurface->Data();
     PRUint8 *alphaData = cairo_image_surface_get_data(alpha);
-    PRUint32 stride = cairo_image_surface_get_stride(surface);
+    PRUint32 stride = tmpSurface->Stride();
 
     for (PRUint32 yy=0; yy<filterResY; yy++)
       for (PRUint32 xx=0; xx<filterResX; xx++) {
@@ -415,7 +408,8 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
 
   // this always needs to be defined last because the default image
   // for the first filter element is supposed to be SourceGraphic
-  instance.DefineImage(NS_LITERAL_STRING("SourceGraphic"), surface,
+  instance.DefineImage(NS_LITERAL_STRING("SourceGraphic"),
+                       tmpSurface->CairoSurface(),
                        nsRect(0, 0, filterResX, filterResY));
 
   for (PRUint32 k=0; k<count; ++k) {
@@ -428,10 +422,18 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
     }
   }
 
-  cairo_surface_t *filterResult;
+  cairo_surface_t *filterResult = nsnull;
   nsRect filterRect;
+  nsRefPtr<gfxASurface> resultSurface;
 
   instance.LookupImage(NS_LITERAL_STRING(""), &filterResult, &filterRect);
+
+  if (filterResult)
+    resultSurface = gfxASurface::Wrap(filterResult);
+  if (!resultSurface) {
+    FilterFailCleanup(aContext, aTarget);
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIDOMSVGMatrix> scale, fini;
   NS_NewSVGMatrix(getter_AddRefs(scale),
@@ -441,10 +443,8 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
 
   ctm->Multiply(scale, getter_AddRefs(fini));
 
-  gfxUnknownSurface resultSurface(filterResult);
-
   nsSVGUtils::CompositeSurfaceMatrix(aContext->GetGfxContext(),
-                                     &resultSurface, fini, 1.0);
+                                     resultSurface, fini, 1.0);
 
   aTarget->SetOverrideCTM(nsnull);
   aTarget->SetMatrixPropagation(PR_TRUE);
