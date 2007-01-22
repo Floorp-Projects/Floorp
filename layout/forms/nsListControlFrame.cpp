@@ -597,21 +597,15 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
 
   mMightNeedSecondPass = PR_FALSE;
 
-  nscoord heightOfARow = HeightOfARow();
-
-  // Now see whether we need a second pass.  If the height of a row has not
-  // changed, we don't.  See similar logic in nsSelectsAreaFrame::Reflow.  We
-  // need to match it here.
-  if (heightOfARow == oldHeightOfARow) {
+  // Now see whether we need a second pass.  If we do, our nsSelectsAreaFrame
+  // will have suppressed the scrollbar update.
+  if (!IsScrollbarUpdateSuppressed()) {
     // All done.  No need to do more reflow.
     NS_ASSERTION(!IsScrollbarUpdateSuppressed(),
                  "Shouldn't be suppressing if the height of a row has not "
                  "changed!");
     return rv;
   }
-
-  NS_ASSERTION(IsScrollbarUpdateSuppressed(),
-               "Why didn't we suppress for our second pass?");
 
   SetSuppressScrollbarUpdate(PR_FALSE);
 
@@ -623,7 +617,7 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
   nsHTMLScrollFrame::DidReflow(aPresContext, &state, aStatus);
 
   // Now compute the height we want to have
-  state.mComputedHeight = CalcIntrinsicHeight(heightOfARow, length);
+  state.mComputedHeight = CalcIntrinsicHeight(HeightOfARow(), length);
   state.ApplyMinMaxConstraints(nsnull, &state.mComputedHeight);
 
   nsHTMLScrollFrame::WillReflow(aPresContext);
@@ -683,28 +677,19 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
 
   mMightNeedSecondPass = PR_FALSE;
 
-  nscoord visibleHeight = GetScrolledFrame()->GetSize().height;
-  nscoord heightOfARow = HeightOfARow();
-
-  // Now see whether we need a second pass.  If the height of a row has not
-  // changed and neither has the height of our scrolled frame, we don't.  See
-  // similar logic in nsSelectsAreaFrame::Reflow.  We need to match it here.
-  if (visibleHeight == oldVisibleHeight &&
-      heightOfARow == oldHeightOfARow) {
+  // Now see whether we need a second pass.  If we do, our nsSelectsAreaFrame
+  // will have suppressed the scrollbar update.
+  if (!IsScrollbarUpdateSuppressed()) {
     // All done.  No need to do more reflow.
-    NS_ASSERTION(!IsScrollbarUpdateSuppressed(),
-                 "Shouldn't be suppressing if total height has not changed!");
-    NS_ASSERTION(!(GetStateBits() & NS_FRAME_FIRST_REFLOW),
-                 "How is the visible height unconstrained?");
     NS_ASSERTION(!(GetStateBits() & NS_FRAME_FIRST_REFLOW),
                  "How can we avoid a second pass during first reflow?");
     return rv;
   }
 
-  NS_ASSERTION(IsScrollbarUpdateSuppressed(),
-               "Why didn't we suppress for our second pass?");
-
   SetSuppressScrollbarUpdate(PR_FALSE);
+
+  nscoord visibleHeight = GetScrolledFrame()->GetSize().height;
+  nscoord heightOfARow = HeightOfARow();
 
   // Gotta reflow again.
   // XXXbz We're just changing the height here; do we need to dirty ourselves
