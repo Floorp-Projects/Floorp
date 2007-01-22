@@ -4484,15 +4484,17 @@ static JSBool
 AddCharsToURI(JSContext *cx, JSString *str, const jschar *chars, size_t length)
 {
     size_t total;
+    jschar *newchars;
 
     JS_ASSERT(!JSSTRING_IS_DEPENDENT(str));
     total = str->length + length + 1;
     if (!str->chars ||
         JS_HOWMANY(total, URI_CHUNK) > JS_HOWMANY(str->length + 1, URI_CHUNK)) {
         total = JS_ROUNDUP(total, URI_CHUNK);
-        str->chars = JS_realloc(cx, str->chars, total * sizeof(jschar));
-        if (!str->chars)
+        newchars = JS_realloc(cx, str->chars, total * sizeof(jschar));
+        if (!newchars)
             return JS_FALSE;
+        str->chars = newchars;
     }
     js_strncpy(str->chars + str->length, chars, length);
     str->length += length;
