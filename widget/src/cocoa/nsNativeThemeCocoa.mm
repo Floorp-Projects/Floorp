@@ -124,7 +124,7 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
   else if ((inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER))
     bdi.state = kThemeStatePressed;
   else
-    bdi.state = kThemeStateActive;
+    bdi.state = (inKind == kThemeArrowButton) ? kThemeStateInactive : kThemeStateActive;
 
   if (inState & NS_EVENT_STATE_FOCUS)
     bdi.adornment |= kThemeAdornmentFocus;
@@ -486,7 +486,9 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_DROPDOWN_BUTTON:
-      // do nothing, this is covered by the DROPDOWN case
+      DrawButton (cgContext, kThemeArrowButton, macRect, PR_FALSE,
+                  IsDisabled(aFrame), kThemeButtonOn,
+                  kThemeAdornmentArrowDownArrow, eventState);
       break;
 
     case NS_THEME_TEXTFIELD:
@@ -627,6 +629,7 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
       break;
 
     case NS_THEME_DROPDOWN:
+    case NS_THEME_DROPDOWN_BUTTON:
       aResult->SizeTo(kAquaDropdownLeftEndcap, kAquaPushButtonTopBottom, 
                       kAquaDropwdonRightEndcap, kAquaPushButtonTopBottom);
       break;
@@ -738,18 +741,11 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
     }
 
     case NS_THEME_DROPDOWN:
+    case NS_THEME_DROPDOWN_BUTTON:
     {
       SInt32 popupHeight = 0;
       ::GetThemeMetric(kThemeMetricPopupButtonHeight, &popupHeight);
       aResult->SizeTo(0, popupHeight);
-      break;
-    }
-    
-    case NS_THEME_DROPDOWN_BUTTON:
-    {
-      // the drawing for this is done by the dropdown, so just make this
-      // zero sized.
-      aResult->SizeTo(0,0);
       break;
     }
  
