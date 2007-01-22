@@ -1763,9 +1763,9 @@ nsTextControlFrame::GetMinWidth(nsIRenderingContext* aRenderingContext)
 
 NS_IMETHODIMP
 nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
-                               nsHTMLReflowMetrics&     aDesiredSize,
-                               const nsHTMLReflowState& aReflowState,
-                               nsReflowStatus&          aStatus)
+                           nsHTMLReflowMetrics&     aDesiredSize,
+                           const nsHTMLReflowState& aReflowState,
+                           nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsTextControlFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
@@ -1790,12 +1790,6 @@ nsTextControlFrame::GetPrefSize(nsBoxLayoutState& aState)
 #endif
 
   nsSize pref(0,0);
-
-  // XXXbz this is almost certainly wrong.
-  PRBool collapsed = PR_FALSE;
-  IsCollapsed(aState, collapsed);
-  if (collapsed)
-    return pref;
 
   nsresult rv = CalcIntrinsicSize(aState.GetRenderingContext(), pref);
   NS_ENSURE_SUCCESS(rv, pref);
@@ -1845,6 +1839,15 @@ nsTextControlFrame::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
   GetBorderAndPadding(borderPadding);
   aAscent += borderPadding.top;
   
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTextControlFrame::IsCollapsed(nsBoxLayoutState& aBoxLayoutState,
+                                PRBool& aCollapsed)
+{
+  // We're never collapsed in the box sense.
+  aCollapsed = PR_FALSE;
   return NS_OK;
 }
 
