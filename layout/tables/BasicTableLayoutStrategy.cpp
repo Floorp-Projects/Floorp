@@ -269,15 +269,10 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
 
         // Consider the contents of and the widths on the cells without
         // colspans.
-        for (PRInt32 row = 0, row_end = cellMap->GetRowCount();
-             row < row_end; ++row) {
-            PRBool originates;
-            PRInt32 colSpan;
-            nsTableCellFrame *cellFrame =
-                cellMap->GetCellInfoAt(row, col, &originates, &colSpan);
-            if (!cellFrame || !originates) {
-                continue;
-            }
+        nsCellMapColumnIterator columnIter(cellMap, col);
+        PRInt32 row, colSpan;
+        nsTableCellFrame* cellFrame;
+        while ((cellFrame = columnIter.GetNextFrame(&row, &colSpan))) {
             if (colSpan > 1) {
                 spanningCells.AddCell(colSpan, row, col);
                 continue;

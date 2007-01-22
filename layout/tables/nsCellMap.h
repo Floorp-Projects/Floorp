@@ -51,6 +51,7 @@ class nsTableRowGroupFrame;
 class nsTableFrame;
 class nsCellMap;
 class nsPresContext;
+class nsCellMapColumnIterator;
 
 struct nsColInfo
 {
@@ -233,6 +234,8 @@ protected:
   friend class nsCellMap;
   friend class BCMapCellIterator;
   friend class BCMapBorderIterator;
+  friend class nsCellMapColumnIterator;
+  
 /** Insert a row group cellmap after aPrevMap, if aPrefMap is null insert it
   * at the beginning, the ordering of the cellmap corresponds to the ordering of
   * rowgroups once OrderRowGroups has been called
@@ -403,6 +406,7 @@ protected:
   friend class BCMapCellIterator;
   friend class BCMapBorderIterator;
   friend class nsTableFrame;
+  friend class nsCellMapColumnIterator;
 
   /**
    * Increase the number of rows in this cellmap by aNumRows.  Put the
@@ -538,6 +542,47 @@ protected:
   // Prescontext to deallocate and allocate celldata
   nsCOMPtr<nsPresContext> mPresContext;
 };
+
+/**
+ * A class for iterating the cells in a given column.  Must be given a
+ * non-null nsTableCellMap and a column number valid for that cellmap.
+ */
+class nsCellMapColumnIterator
+{
+public:
+  nsCellMapColumnIterator(const nsTableCellMap* aMap, PRInt32 aCol) :
+    mMap(aMap), mCurMap(aMap->mFirstMap), mRow(0), mCol(aCol), mFoundCells(0)
+  {
+    NS_PRECONDITION(aMap, "Must have map");
+    NS_PRECONDITION(mCol < aMap->GetColCount(), "Invalid column");
+    mOrigCells = aMap->GetNumCellsOriginatingInCol(mCol);
+    if (mCurMap) {
+      mCurMapRowCount = mCurMap->GetRowCount();
+    }
+  }
+
+  nsTableCellFrame* GetNextFrame(PRInt32* aRow, PRInt32* aColSpan);
+  
+private:
+  void AdvanceRowGroup();
+
+  // Advance the row; aIncrement is considered to be a cell's rowspan,
+  // so if 0 is passed in we'll advance to the next rowgroup.
+  void IncrementRow(PRInt32 aIncrement);
+
+  const nsTableCellMap* mMap;
+  const nsCellMap* mCurMap;
+  // In steady-state mRow is the row in our current nsCellMap that we'll use
+  // the next time GetNextFrame() is called.  Due to the way we skip over
+  // rowspans, the entry in mRow and mCol is either null, dead, originating, or
+  // a colspan.  In particular, it cannot be a rowspan or overlap entry.
+  PRUint32 mRow;
+  const PRInt32 mCol;
+  PRUint32 mOrigCells;
+  PRUint32 mFoundCells;
+  PRUint32 mCurMapRowCount;
+};
+
 
 /* ----- inline methods ----- */
 inline PRInt32 nsTableCellMap::GetColCount() const
