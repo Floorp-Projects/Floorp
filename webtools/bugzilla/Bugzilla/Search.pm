@@ -643,7 +643,7 @@ sub init {
          "^content," => sub {
              ThrowUserError("search_content_without_matches");
          },
-         "^deadline,(?:lessthan|greaterthan|equals|notequals),(-|\\+)?(\\d+)([dDwWmMyY])\$" => sub {
+         "^(?:deadline|creation_ts|delta_ts),(?:lessthan|greaterthan|equals|notequals),(?:-|\\+)?(?:\\d+)(?:[dDwWmMyY])\$" => sub {
              $v = SqlifyDate($v);
              $q = $dbh->quote($v);
         },
