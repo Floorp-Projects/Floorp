@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifndef __nsWindow_h__
+#define __nsWindow_h__
 
 #include "nsAutoPtr.h"
 
