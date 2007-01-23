@@ -7196,6 +7196,7 @@ void ReflowCountMgr::PaintCount(const char *    aName,
       sprintf(buf, "%d", counter->mCount);
       nscoord x = 0, y;
       nscoord width, height;
+      aRenderingContext->SetTextRunRTL(PR_FALSE);
       aRenderingContext->GetWidth((char*)buf, width);
       fm->GetHeight(height);
       fm->GetMaxAscent(y);

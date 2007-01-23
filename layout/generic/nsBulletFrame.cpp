@@ -374,6 +374,7 @@ nsBulletFrame::PaintBullet(nsIRenderingContext& aRenderingContext, nsPoint aPt)
     aRenderingContext.SetFont(fm);
     nscoord ascent;
     fm->GetMaxAscent(ascent);
+    aRenderingContext.SetTextRunRTL(PR_FALSE);
     aRenderingContext.DrawString(text, mPadding.left + aPt.x,
                                  mPadding.top + aPt.y + ascent);
     break;
@@ -402,9 +403,11 @@ nsBulletFrame::PaintBullet(nsIRenderingContext& aRenderingContext, nsPoint aPt)
                                      charType, level, isBidiSystem);//Mohamed
       }
     }
+    // XXX is this right?
+    aRenderingContext.SetTextRunRTL(level);
     aRenderingContext.DrawString(text, mPadding.left + aPt.x,
                                  mPadding.top + aPt.y + ascent);
-  }   
+  }
 #endif // IBMBIDI
 }
 
@@ -1545,7 +1548,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
       GetListItemText(*myList, text);
       fm->GetHeight(aMetrics.height);
       aRenderingContext->SetFont(fm);
-      aRenderingContext->GetWidth(text, aMetrics.width);
+      aMetrics.width = nsLayoutUtils::GetStringWidth(this, aRenderingContext, text.get(), text.Length());
       aMetrics.width += mPadding.right;
       fm->GetMaxAscent(aMetrics.ascent);
       fm->GetMaxDescent(aMetrics.descent);

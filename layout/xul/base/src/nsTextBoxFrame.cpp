@@ -458,6 +458,8 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
     if (NS_FAILED(rv) )
 #endif // IBMBIDI
     {
+       aRenderingContext.SetTextRunRTL(PR_FALSE);
+
        if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
            // In the simple (non-BiDi) case, we calculate the mnemonic's
            // underline position by getting the text metric.
@@ -504,8 +506,9 @@ nsTextBoxFrame::CalculateUnderline(nsIRenderingContext& aRenderingContext)
 {
     if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
          // Calculate all fields of mAccessKeyInfo which
-         // are the same for both BiDi and non-BiDi rames.
+         // are the same for both BiDi and non-BiDi frames.
          const PRUnichar *titleString = mCroppedTitle.get();
+         aRenderingContext.SetTextRunRTL(PR_FALSE);
          aRenderingContext.GetWidth(titleString[mAccessKeyInfo->mAccesskeyIndex],
                                     mAccessKeyInfo->mAccessWidth);
 
@@ -533,7 +536,8 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
     aRenderingContext.SetFont(fontMet);
 
     // see if the text will completely fit in the width given
-    aRenderingContext.GetWidth(mTitle, mTitleWidth);
+    mTitleWidth = nsLayoutUtils::GetStringWidth(this, &aRenderingContext,
+                                                mTitle.get(), mTitle.Length());
 
     if (mTitleWidth <= aWidth) {
         mCroppedTitle = mTitle;
@@ -560,6 +564,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
     // see if the width is even smaller than the ellipsis
     // if so, clear the text (XXX set as many '.' as we can?).
     nscoord ellipsisWidth;
+    aRenderingContext.SetTextRunRTL(PR_FALSE);
     aRenderingContext.GetWidth(ELLIPSIS, ellipsisWidth);
 
     if (ellipsisWidth > aWidth) {
@@ -577,6 +582,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
     aWidth -= ellipsisWidth;
 
     // XXX: This whole block should probably take surrogates into account
+    // XXX and clusters!
     // ok crop things
     switch (mCropType)
     {
@@ -589,6 +595,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
             int i;
             for (i = 0; i < length; ++i) {
                 PRUnichar ch = mTitle.CharAt(i);
+                // still in LTR mode
                 aRenderingContext.GetWidth(ch,cwidth);
                 if (twidth + cwidth > aWidth)
                     break;
@@ -642,8 +649,9 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
 
         case CropCenter:
         {
-            nscoord stringWidth = 0;
-            aRenderingContext.GetWidth(mTitle, stringWidth);
+            nscoord stringWidth =
+                nsLayoutUtils::GetStringWidth(this, &aRenderingContext,
+                                              mTitle.get(), mTitle.Length());
             if (stringWidth <= aWidth) {
                 // the entire string will fit in the maximum width
                 mCroppedTitle.Insert(mTitle, 0);
@@ -658,6 +666,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
             nsAutoString leftString, rightString;
 
             rightPos = mTitle.Length() - 1;
+            aRenderingContext.SetTextRunRTL(PR_FALSE);
             for (leftPos = 0; leftPos <= rightPos;) {
                 // look at the next character on the left end
                 ch = mTitle.CharAt(leftPos);
@@ -704,7 +713,8 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
         break;
     }
 
-    aRenderingContext.GetWidth(mCroppedTitle, mTitleWidth);
+    mTitleWidth = nsLayoutUtils::GetStringWidth(this, &aRenderingContext,
+                                                mCroppedTitle.get(), mCroppedTitle.Length());
 }
 
 // the following block is to append the accesskey to mTitle if there is an accesskey
@@ -830,7 +840,8 @@ nsTextBoxFrame::GetTextSize(nsPresContext* aPresContext, nsIRenderingContext& aR
                                                  *getter_AddRefs(fontMet));
     fontMet->GetHeight(aSize.height);
     aRenderingContext.SetFont(fontMet);
-    aRenderingContext.GetWidth(aString, aSize.width);
+    aSize.width =
+      nsLayoutUtils::GetStringWidth(this, &aRenderingContext, aString.get(), aString.Length());
     fontMet->GetMaxAscent(aAscent);
 }
 

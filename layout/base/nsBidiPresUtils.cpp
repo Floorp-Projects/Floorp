@@ -1325,15 +1325,17 @@ nsresult nsBidiPresUtils::GetBidiEngine(nsBidi** aBidiEngine)
   return rv; 
 }
 
-nsresult nsBidiPresUtils::RenderText(const PRUnichar*     aText,
-                                     PRInt32              aLength,
-                                     nsBidiDirection      aBaseDirection,
-                                     nsPresContext*      aPresContext,
-                                     nsIRenderingContext& aRenderingContext,
-                                     nscoord              aX,
-                                     nscoord              aY,
-                                     nsBidiPositionResolve* aPosResolve,
-                                     PRInt32              aPosResolveCount)
+nsresult nsBidiPresUtils::ProcessText(const PRUnichar*       aText,
+                                      PRInt32                aLength,
+                                      nsBidiDirection        aBaseDirection,
+                                      nsPresContext*         aPresContext,
+                                      nsIRenderingContext&   aRenderingContext,
+                                      Mode                   aMode,
+                                      nscoord                aX,
+                                      nscoord                aY,
+                                      nsBidiPositionResolve* aPosResolve,
+                                      PRInt32                aPosResolveCount,
+                                      nscoord*               aWidth)
 {
   NS_ASSERTION((aPosResolve == nsnull) != (aPosResolveCount > 0), "Incorrect aPosResolve / aPosResolveCount arguments");
 
@@ -1351,6 +1353,7 @@ nsresult nsBidiPresUtils::RenderText(const PRUnichar*     aText,
 
   nscoord width, xEndRun, xStartText = aX;
   PRBool isRTL = PR_FALSE;
+  nscoord totalWidth = 0;
   PRInt32 i, start, limit, length;
   PRUint32 visualStart = 0;
   PRUint8 charType;
@@ -1393,6 +1396,8 @@ nsresult nsBidiPresUtils::RenderText(const PRUnichar*     aText,
      * subrun before rendering. After rendering all the subruns, we restore the
      * x-coordinate of the end of the run for the start of the next run.
      */
+    aRenderingContext.SetTextRunRTL(level & 1);
+
     if (level & 1) {
       aRenderingContext.GetWidth(aText + start, subRunLength, width, nsnull);
       aX += width;
@@ -1422,10 +1427,13 @@ nsresult nsBidiPresUtils::RenderText(const PRUnichar*     aText,
                         isBidiSystem);
 
       aRenderingContext.GetWidth(runVisualText.get(), subRunLength, width, nsnull);
+      totalWidth += width;
       if (level & 1) {
         aX -= width;
       }
-      aRenderingContext.DrawString(runVisualText.get(), subRunLength, aX, aY, width);
+      if (aMode == MODE_DRAW) {
+        aRenderingContext.DrawString(runVisualText.get(), subRunLength, aX, aY);
+      }
 
       /*
        * The caller may request to calculate the visual position of one
@@ -1507,6 +1515,9 @@ nsresult nsBidiPresUtils::RenderText(const PRUnichar*     aText,
   // Restore original reading order
   if (isRTL) {
     aRenderingContext.SetRightToLeftText(PR_FALSE);
+  }
+  if (aWidth) {
+    *aWidth = totalWidth;
   }
   return NS_OK;
 }

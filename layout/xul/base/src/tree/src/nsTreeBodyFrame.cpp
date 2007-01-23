@@ -1219,8 +1219,8 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, nsITreeColumn* aCol, const n
     textRect.height += bp.top + bp.bottom;
 
     rc->SetFont(fm);
-    nscoord width;
-    rc->GetWidth(cellText, width);
+    nscoord width =
+      nsLayoutUtils::GetStringWidth(this, rc, cellText.get(), cellText.Length());
 
     nscoord totalTextWidth = width + bp.left + bp.right;
     if (totalTextWidth < remainWidth) {
@@ -1264,9 +1264,8 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
 {
   NS_PRECONDITION(aColumn && aColumn->GetFrame(this), "invalid column passed");
 
-  nscoord width;
-  aRenderingContext.GetWidth(aText, width);
-
+  nscoord width =
+    nsLayoutUtils::GetStringWidth(this, &aRenderingContext, aText.get(), aText.Length());
   nscoord maxWidth = aTextRect.width;
 
   if (aColumn->Overflow()) {
@@ -1308,6 +1307,7 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
     // See if the width is even smaller than the ellipsis
     // If so, clear the text completely.
     nscoord ellipsisWidth;
+    aRenderingContext.SetTextRunRTL(PR_FALSE);
     aRenderingContext.GetWidth(ELLIPSIS, ellipsisWidth);
 
     nscoord width = aTextRect.width;
@@ -1332,6 +1332,7 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
           int i;
           for (i = 0; i < length; ++i) {
             PRUnichar ch = aText[i];
+            // XXX this is horrible and doesn't handle clusters
             aRenderingContext.GetWidth(ch,cwidth);
             if (twidth + cwidth > width)
               break;
@@ -1405,8 +1406,8 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
     }
   }
 
-  aRenderingContext.GetWidth(aText, width);
-  aTextRect.width = width;
+  aTextRect.width =
+    nsLayoutUtils::GetStringWidth(this, &aRenderingContext, aText.get(), aText.Length());
 }
 
 nsIAtom*
@@ -1669,8 +1670,8 @@ nsTreeBodyFrame::GetCellWidth(PRInt32 aRow, nsTreeColumn* aCol,
   aRenderingContext->SetFont(textContext->GetStyleFont()->mFont, nsnull);
 
   // Get the width of the text itself
-  nscoord width;
-  aRenderingContext->GetWidth(cellText, width);
+  nscoord width =
+    nsLayoutUtils::GetStringWidth(this, aRenderingContext, cellText.get(), cellText.Length());
   nscoord totalTextWidth = width + bp.left + bp.right;
   aDesiredSize += totalTextWidth;
   return NS_OK;
@@ -3433,22 +3434,8 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
 #ifdef MOZ_TIMELINE
   NS_TIMELINE_START_TIMER("Render Outline Text");
 #endif
-#ifdef IBMBIDI
-  nsresult rv = NS_ERROR_FAILURE;
-  nsBidiPresUtils* bidiUtils = aPresContext->GetBidiUtils();
-
-  if (bidiUtils) {
-    const nsStyleVisibility* vis = GetStyleVisibility();
-    nsBidiDirection direction =
-      (NS_STYLE_DIRECTION_RTL == vis->mDirection) ?
-      NSBIDI_RTL : NSBIDI_LTR;
-    rv = bidiUtils->RenderText(text.get(), text.Length(), direction,
-                               aPresContext, aRenderingContext,
-                               textRect.x, textRect.y + baseline);
-  }
-  if (NS_FAILED(rv))
-#endif // IBMBIDI
-  aRenderingContext.DrawString(text, textRect.x, textRect.y + baseline);
+  nsLayoutUtils::DrawString(this, &aRenderingContext, text.get(), text.Length(),
+                            textRect.TopLeft() + nsPoint(0, baseline));
 #ifdef MOZ_TIMELINE
   NS_TIMELINE_STOP_TIMER("Render Outline Text");
   NS_TIMELINE_MARK_TIMER("Render Outline Text");

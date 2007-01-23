@@ -270,8 +270,8 @@ nscoord nsPageFrame::GetXPosition(nsIRenderingContext& aRenderingContext,
                                   PRInt32              aJust,
                                   const nsString&      aStr)
 {
-  PRInt32 width;
-  aRenderingContext.GetWidth(aStr, width);
+  nscoord width = nsLayoutUtils::GetStringWidth(this, &aRenderingContext,
+                                                aStr.get(), aStr.Length());
 
   nscoord x = aRect.x;
   switch (aJust) {
@@ -406,24 +406,7 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
     aRenderingContext.PushState();
     aRenderingContext.SetColor(NS_RGB(0,0,0));
     aRenderingContext.SetClipRect(aRect, nsClipCombine_kReplace);
-#ifdef IBMBIDI
-    nsresult rv = NS_ERROR_FAILURE;
-
-    nsPresContext* pc = GetPresContext();
-    if (pc->BidiEnabled()) {
-      nsBidiPresUtils* bidiUtils =  pc->GetBidiUtils();
-      
-      if (bidiUtils) {
-        // Base direction is always LTR for now. If bug 139337 is fixed, 
-        // that should change.
-        rv = bidiUtils->RenderText(str.get(), str.Length(), NSBIDI_LTR,
-                                   pc, aRenderingContext,
-                                   x, y + aAscent);
-      }
-    }
-    if (NS_FAILED(rv))
-#endif // IBMBIDI
-    aRenderingContext.DrawString(str, x, y + aAscent);
+    nsLayoutUtils::DrawString(this, &aRenderingContext, str.get(), str.Length(), nsPoint(x, y + aAscent));
     aRenderingContext.PopState();
   }
 }

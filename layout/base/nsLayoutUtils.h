@@ -549,6 +549,17 @@ public:
   // Implement nsIFrame::GetMinWidth in terms of nsIFrame::AddInlineMinWidth
   static nscoord MinWidthFromInline(nsIFrame* aFrame,
                                     nsIRenderingContext* aRenderingContext);
+
+  static void DrawString(const nsIFrame*      aFrame,
+                         nsIRenderingContext* aContext,
+                         const PRUnichar*     aString,
+                         PRInt32              aLength,
+                         nsPoint              aPoint);
+
+  static nscoord GetStringWidth(const nsIFrame*      aFrame,
+                                nsIRenderingContext* aContext,
+                                const PRUnichar*     aString,
+                                PRInt32              aLength);
 };
 
 #endif // nsLayoutUtils_h__
