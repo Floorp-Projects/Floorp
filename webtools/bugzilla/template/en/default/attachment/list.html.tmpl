@@ -59,12 +59,14 @@
   </tr>
 
   [% count = 0 %]
-  [% has_obsolete_attachments = 0 %]
+  [% obsolete_attachments = 0 %]
 
   [% FOREACH attachment = attachments %]
     [% count = count + 1 %]
     [% IF !attachment.isprivate || user.is_insider || attachment.attacher.id == user.id %]
-      [% SET has_obsolete_attachments = 1 IF attachment.isobsolete %]
+      [% IF attachment.isobsolete %]
+        [% obsolete_attachments = obsolete_attachments + 1 %]
+      [% END %]
       <tr class="[% "bz_private" IF attachment.isprivate %][%-%]
                  [%+ "bz_tr_obsolete" IF attachment.isobsolete %]">
         <td valign="top">
@@ -72,16 +74,16 @@
             <a name="a[% count %]" href="attachment.cgi?id=[% attachment.id %]"
                title="View the content of the attachment">
           [% END %]
-          [% attachment.description FILTER html FILTER obsolete(attachment.isobsolete) %]
+          <b>[% attachment.description FILTER html FILTER obsolete(attachment.isobsolete) %]</b>
           [% "</a>" IF attachment.datasize %]
 
           <span class="bz_attach_extra_info">
             [% IF attachment.datasize %]
               ([% attachment.datasize FILTER unitconvert %],
               [% IF attachment.ispatch %]
-                <i>patch</i>)
+                patch)
               [% ELSIF attachment.isurl %]
-                <i>url</i>)
+                url)
               [% ELSE %]
                 [%+ attachment.contenttype FILTER html %])
               [% END %]
@@ -104,7 +106,7 @@
         [% IF show_attachment_flags %]
           <td class="bz_attach_flags" valign="top">
             [% IF attachment.flags.size == 0 %]
-              <i>no flag</i>
+              <i>no flags</i>
             [% ELSE %]
               [% FOREACH flag = attachment.flags %]
                 [% flag.setter.nick FILTER html %]:
@@ -132,8 +134,8 @@
     <td colspan="[% show_attachment_flags ? 3 : 2 %]">
       [% IF attachments.size %]
         <span class="bz_attach_view_hide">
-          [% IF has_obsolete_attachments %]
-            <a href="#a0" onClick="return toggle_display(this);">Hide Obsolete</a> |
+          [% IF obsolete_attachments %]
+            <a href="#a0" onClick="return toggle_display(this);">Hide Obsolete</a> ([% obsolete_attachments %]) |
           [% END %]
           <a href="attachment.cgi?bugid=[% bugid %]&amp;action=viewall">View All</a>
         </span>

@@ -434,6 +434,7 @@
   'attachment.id', 
   'flag.status',
   'bugid',
+  'obsolete_attachments',
 ],
 
 'attachment/show-multiple.html.tmpl' => [
