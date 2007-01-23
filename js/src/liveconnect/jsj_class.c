@@ -266,7 +266,7 @@ jsj_ConvertJavaSignatureToString(JSContext *cx, JavaSignature *signature)
         if (!component_signature_string)
             return NULL;
         sig = JS_smprintf("[%s", component_signature_string);
-        JS_free(cx, (char*)component_signature_string);
+        JS_smprintf_free((char*)component_signature_string);
 
     } else {
         /* A primitive class */
@@ -303,11 +303,11 @@ jsj_ConvertJavaSignatureToHRString(JSContext *cx,
         if (!component_signature_string)
             return NULL;
         sig = JS_smprintf("%s[]", component_signature_string);
-        JS_free(cx, (char*)component_signature_string);
+        JS_smprintf_free((char*)component_signature_string);
 
     } else {
         /* A primitive class or a non-array object class */
-        sig = JS_strdup(cx, signature->name);
+        sig = JS_smprintf("%s", signature->name);
     }
 
     if (!sig) {
@@ -433,7 +433,7 @@ jsj_DiscardJavaClassReflections(JNIEnv *jEnv)
     jsj_env = jsj_MapJavaThreadToJSJavaThreadState(jEnv, &err_msg);
     JS_ASSERT(jsj_env);
     if (!jsj_env)
-        return;
+        goto error;
 
     /* Get the JSContext that we're supposed to use for this Java thread */
     cx = jsj_env->cx;
@@ -451,13 +451,11 @@ jsj_DiscardJavaClassReflections(JNIEnv *jEnv)
                                                              jEnv, &err_msg);
 #endif
             if (!cx)
-                return;
+                goto error;
         } else {
             err_msg = JS_smprintf("Unable to find/create JavaScript execution "
                                   "context for JNI thread 0x%08x", jEnv);
-            jsj_LogError(err_msg);
-            free(err_msg);
-            return;
+            goto error;
         }
     }
 
@@ -467,6 +465,15 @@ jsj_DiscardJavaClassReflections(JNIEnv *jEnv)
                                       (void*)jsj_env);
         JSJ_HashTableDestroy(java_class_reflections);
         java_class_reflections = NULL;
+    }
+
+    return;
+
+error:
+    JS_ASSERT(!cx);
+    if (err_msg) {
+        jsj_LogError(err_msg);
+        JS_smprintf_free(err_msg);
     }
 }
 

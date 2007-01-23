@@ -88,6 +88,9 @@ typedef JavaVM SystemJavaVM;
  * functionality specific to the embedding.  For example, these callbacks are
  * necessary in multi-threaded environments or to implement a security
  * policy.
+ * 
+ * Note: The error message returned by errp has to be created by JS_smprintf.
+ * See bug: https://bugzilla.mozilla.org/show_bug.cgi?id=261468.
  */
 typedef struct JSJCallbacks {
 

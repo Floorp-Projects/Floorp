@@ -85,7 +85,7 @@ report_java_initialization_error(JNIEnv *jEnv, const char *js_error_msg)
     }
 
     jsj_LogError(error_msg);
-    free((void*)error_msg);
+    JS_smprintf_free((char*)error_msg);
 }
 
 /*

@@ -86,7 +86,7 @@ JavaClass_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 
         str = JS_NewString(cx, name, strlen(name));
         if (!str) {
-            free(name);
+            JS_smprintf_free(name);
             /* It's not necessary to call JS_ReportOutOfMemory(), as
                JS_NewString() will do so on failure. */
             return JS_FALSE;
