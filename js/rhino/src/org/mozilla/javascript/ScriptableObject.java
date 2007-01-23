@@ -25,6 +25,7 @@
  *   Norris Boyd
  *   Igor Bukanov
  *   Roger Lawrence
+ *   Steve Weiss
  *
  * Alternatively, the contents of this file may be used under the terms of
  * the GNU General Public License Version 2 or later (the "GPL"), in which
@@ -929,7 +930,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         Scriptable superProto = null;
         if (mapInheritance) {
             Class superClass = clazz.getSuperclass();
-            if (ScriptRuntime.ScriptableClass.isAssignableFrom(superClass)) {
+            if (ScriptRuntime.ScriptableClass.isAssignableFrom(superClass)
+                    && !Modifier.isAbstract(superClass.getModifiers())) {
                 String name = ScriptableObject.defineClass(scope, superClass, sealed, mapInheritance);
                 if (name != null) {
                     superProto = ScriptableObject.getClassPrototype(scope, name);
