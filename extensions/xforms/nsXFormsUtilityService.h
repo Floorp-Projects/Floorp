@@ -57,6 +57,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIXFormsUtilityService
+  NS_IMETHOD GetBuiltinTypeName(nsIDOMNode *aElement, nsAString& aName);
   NS_IMETHOD IsReadonly(nsIDOMNode *aElement, PRBool *aState);
   NS_IMETHOD IsRelevant(nsIDOMNode *aElement, PRBool *aState);
   NS_IMETHOD IsRequired(nsIDOMNode *aElement, PRBool *aState);

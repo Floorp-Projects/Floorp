@@ -41,6 +41,7 @@
 
 #include "nsIContent.h"
 
+#include "nsIXFormsControl.h"
 #include "nsIXFormsDelegate.h"
 #include "nsIXFormsAccessors.h"
 #include "nsIXFormsRangeConditionAccessors.h"
@@ -52,6 +53,7 @@
 #include "nsIXFormsNSSelectElement.h"
 #include "nsIXFormsNSSelect1Element.h"
 #include "nsIXFormsItemElement.h"
+#include "nsIModelElementPrivate.h"
 #include "nsXFormsUtils.h"
 #include "nsXFormsAtoms.h"
 
@@ -88,6 +90,20 @@ NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);\
 NS_ENSURE_ARG(aElement);\
 nsCOMPtr<nsIXFormsNSSelectElement> widget(do_QueryInterface(aElement));\
 NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);\
+
+NS_IMETHODIMP
+nsXFormsUtilityService::GetBuiltinTypeName(nsIDOMNode *aElement,
+                                           nsAString& aName)
+{
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aElement));
+  NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIModelElementPrivate> model = nsXFormsUtils::GetModel(element);
+  NS_ENSURE_TRUE(model, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIXFormsControl> control(do_QueryInterface(element));
+  return model->GetBuiltinTypeNameForControl(control, aName);
+}
 
 NS_IMETHODIMP
 nsXFormsUtilityService::IsReadonly(nsIDOMNode *aElement, PRBool *aState)

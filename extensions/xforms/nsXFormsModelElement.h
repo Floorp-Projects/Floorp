@@ -398,26 +398,41 @@ private:
   void ValidateInstanceDocuments();
 
   /**
+   * Return the name of builitn type.
+   *
+   * @param aType The builtin type
+   * @param aName The name of the given type
+   */
+  NS_HIDDEN_(nsresult) GetBuiltinTypeName(PRUint16   aType,
+                                          nsAString& aName);
+
+  /**
    * Starting with aType, walks through the builtin derived types back to the
    * builtin primative type, appending the datatype URIs to the string array as
    * it goes
    */
-  NS_HIDDEN_(nsresult) AppendBuiltinTypes(PRUint16       aType,
-                                          nsStringArray *aBuiltinType);
+  NS_HIDDEN_(nsresult) GetBuiltinTypesNames(PRUint16       aType,
+                                            nsStringArray *aNameArray);
+
   /**
    * Starting from aType, walks the chain of datatype extension/derivation to
    * gather information.
    *
-   * @param aType        The type we are trying to find datatype information
-   *                     for
-   * @param aBuiltinType If non-null, we'll return the root primative type
-   *                     of aType in this buffer
-   * @param aTypeArray   If aBuiltinType is nsnull, we'll build a string
-   *                     array of datatype URIs and put them in aTypeArray.
+   * @param aType            The type we are trying to find datatype information
+   *                         for
+   * @param aFindRootBuiltin If true then root builtin type will be returned
+                             only
+   * @param aBuiltinType     If non-null, we'll return the builtin (if
+   *                         aFindRootBuiltin is false) or root builtin (if
+   *                         aFindRootBuiltin is true) type of the given type
+   * @param aTypeArray       If non-null and aFindRootBuiltin is false, we'll
+   *                         build a string array of datatype URIs and put them
+   *                         in aTypeArray.
    */
   NS_HIDDEN_(nsresult) WalkTypeChainInternal(nsISchemaType *aType,
+                                             PRBool         aFindRootBuiltin,
                                              PRUint16      *aBuiltinType,
-                                             nsStringArray *aTypeArray);
+                                             nsStringArray *aTypeArray = nsnull);
   /**
    * Returns the primative type that aSchemaType is derived/extended from
    */

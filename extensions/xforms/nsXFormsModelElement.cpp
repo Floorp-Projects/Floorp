@@ -2647,203 +2647,261 @@ nsXFormsModelElement::ForceRebind(nsIXFormsControl* aControl)
 }
 
 nsresult
-nsXFormsModelElement::AppendBuiltinTypes(PRUint16       aType,
-                                         nsStringArray *aTypeArray)
+nsXFormsModelElement::GetBuiltinTypeName(PRUint16   aType,
+                                         nsAString& aName)
+{
+  switch (aType) {
+    case nsISchemaBuiltinType::BUILTIN_TYPE_STRING:
+      aName.AssignLiteral("string");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_BOOLEAN:
+      aName.AssignLiteral("boolean");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_DECIMAL:
+      aName.AssignLiteral("decimal");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_FLOAT:
+      aName.AssignLiteral("float");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_DOUBLE:
+      aName.AssignLiteral("double");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_DURATION:
+      aName.AssignLiteral("duration");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_DATETIME:
+      aName.AssignLiteral("dateTime");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_TIME:
+      aName.AssignLiteral("time");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_DATE:
+      aName.AssignLiteral("date");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_GYEARMONTH:
+      aName.AssignLiteral("gYearMonth");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_GYEAR:
+      aName.AssignLiteral("gYear");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_GMONTHDAY:
+      aName.AssignLiteral("gMonthDay");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_GDAY:
+      aName.AssignLiteral("gDay");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_GMONTH:
+      aName.AssignLiteral("gMonth");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_HEXBINARY:
+      aName.AssignLiteral("hexBinary");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_BASE64BINARY:
+      aName.AssignLiteral("base64Binary");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_ANYURI:
+      aName.AssignLiteral("anyURI");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_QNAME:
+      aName.AssignLiteral("QName");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_NOTATION:
+      aName.AssignLiteral("NOTATION");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_NORMALIZED_STRING:
+      aName.AssignLiteral("normalizedString");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_TOKEN:
+      aName.AssignLiteral("token");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_BYTE:
+      aName.AssignLiteral("byte");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDBYTE:
+      aName.AssignLiteral("unsignedByte");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_INTEGER:
+      aName.AssignLiteral("integer");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_NEGATIVEINTEGER:
+      aName.AssignLiteral("negativeInteger");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_NONPOSITIVEINTEGER:
+      aName.AssignLiteral("nonPositiveInteger");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_LONG:
+      aName.AssignLiteral("long");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_NONNEGATIVEINTEGER:
+      aName.AssignLiteral("nonNegativeInteger");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_INT:
+      aName.AssignLiteral("int");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDINT:
+      aName.AssignLiteral("unsignedInt");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDLONG:
+      aName.AssignLiteral("unsignedLong");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_POSITIVEINTEGER:
+      aName.AssignLiteral("positiveInteger");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_SHORT:
+      aName.AssignLiteral("short");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDSHORT:
+      aName.AssignLiteral("unsignedShort");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_LANGUAGE:
+      aName.AssignLiteral("language");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_NMTOKEN:
+      aName.AssignLiteral("NMTOKEN");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_NAME:
+      aName.AssignLiteral("Name");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_NCNAME:
+      aName.AssignLiteral("NCName");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_ID:
+      aName.AssignLiteral("ID");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_IDREF:
+      aName.AssignLiteral("IDREF");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_ENTITY:
+      aName.AssignLiteral("ENTITY");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_IDREFS:
+      aName.AssignLiteral("IDREFS");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_ENTITIES:
+      aName.AssignLiteral("ENTITIES");
+      break;
+    case nsISchemaBuiltinType::BUILTIN_TYPE_NMTOKENS:
+      aName.AssignLiteral("NMTOKENS");
+      break;
+    default:
+      // should never hit here
+      NS_WARNING("nsXFormsModelElement::GetBuiltinTypeName: Unknown builtin type encountered.");
+      return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsXFormsModelElement::GetBuiltinTypesNames(PRUint16       aType,
+                                           nsStringArray *aNameArray)
 {
   // This function recursively appends aType (and its base types) to
-  // aTypeArray.  So it assumes aType isn't in the array already.
+  // aNameArray.  So it assumes aType isn't in the array already.
   nsAutoString typeString, builtString;
   PRUint16 parentType = 0;
 
   // We won't append xsd:anyType as the base of every type since that is kinda
   // redundant.
 
+  nsresult rv = GetBuiltinTypeName(aType, typeString);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   switch (aType) {
-    case nsISchemaBuiltinType::BUILTIN_TYPE_STRING:
-      typeString.AppendLiteral("string");
-      break;
-    case nsISchemaBuiltinType::BUILTIN_TYPE_BOOLEAN:
-      typeString.AppendLiteral("boolean");
-      break;
-    case nsISchemaBuiltinType::BUILTIN_TYPE_DECIMAL:
-      typeString.AppendLiteral("decimal");
-      break;
-    case nsISchemaBuiltinType::BUILTIN_TYPE_FLOAT:
-      typeString.AppendLiteral("float");
-      break;
-    case nsISchemaBuiltinType::BUILTIN_TYPE_DOUBLE:
-      typeString.AppendLiteral("double");
-      break;
-    case nsISchemaBuiltinType::BUILTIN_TYPE_DURATION:
-      typeString.AppendLiteral("duration");
-      break;
-    case nsISchemaBuiltinType::BUILTIN_TYPE_DATETIME:
-      typeString.AppendLiteral("dateTime");
-      break;
-    case nsISchemaBuiltinType::BUILTIN_TYPE_TIME:
-      typeString.AppendLiteral("time");
-      break;
-    case nsISchemaBuiltinType::BUILTIN_TYPE_DATE:
-      typeString.AppendLiteral("date");
-      break;
-    case nsISchemaBuiltinType::BUILTIN_TYPE_GYEARMONTH:
-      typeString.AppendLiteral("gYearMonth");
-      break;
-    case nsISchemaBuiltinType::BUILTIN_TYPE_GYEAR:
-      typeString.AppendLiteral("gYear");
-      break;
-    case nsISchemaBuiltinType::BUILTIN_TYPE_GMONTHDAY:
-      typeString.AppendLiteral("gMonthDay");
-      break;
-    case nsISchemaBuiltinType::BUILTIN_TYPE_GDAY:
-      typeString.AppendLiteral("gDay");
-      break;
-    case nsISchemaBuiltinType::BUILTIN_TYPE_GMONTH:
-      typeString.AppendLiteral("gMonth");
-      break;
-    case nsISchemaBuiltinType::BUILTIN_TYPE_HEXBINARY:
-      typeString.AppendLiteral("hexBinary");
-      break;
-    case nsISchemaBuiltinType::BUILTIN_TYPE_BASE64BINARY:
-      typeString.AppendLiteral("base64Binary");
-      break;
-    case nsISchemaBuiltinType::BUILTIN_TYPE_ANYURI:
-      typeString.AppendLiteral("anyURI");
-      break;
-    case nsISchemaBuiltinType::BUILTIN_TYPE_QNAME:
-      typeString.AppendLiteral("QName");
-      break;
-    case nsISchemaBuiltinType::BUILTIN_TYPE_NOTATION:
-      typeString.AppendLiteral("NOTATION");
-      break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_NORMALIZED_STRING:
-      typeString.AppendLiteral("normalizedString");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_STRING;
       break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_TOKEN:
-      typeString.AppendLiteral("token");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_NORMALIZED_STRING;
       break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_BYTE:
-      typeString.AppendLiteral("byte");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_SHORT;
       break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDBYTE:
-      typeString.AppendLiteral("unsignedByte");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDSHORT;
       break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_INTEGER:
-      typeString.AppendLiteral("integer");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_DECIMAL;
       break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_NEGATIVEINTEGER:
-      typeString.AppendLiteral("negativeInteger");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_NONPOSITIVEINTEGER;
       break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_NONPOSITIVEINTEGER:
-      typeString.AppendLiteral("nonPositiveInteger");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_INTEGER;
       break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_LONG:
-      typeString.AppendLiteral("long");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_INTEGER;
       break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_NONNEGATIVEINTEGER:
-      typeString.AppendLiteral("nonNegativeInteger");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_INTEGER;
       break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_INT:
-      typeString.AppendLiteral("int");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_LONG;
       break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDINT:
-      typeString.AppendLiteral("unsignedInt");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDLONG;
       break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDLONG:
-      typeString.AppendLiteral("unsignedLong");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_NONNEGATIVEINTEGER;
       break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_POSITIVEINTEGER:
-      typeString.AppendLiteral("positiveInteger");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_NONNEGATIVEINTEGER;
       break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_SHORT:
-      typeString.AppendLiteral("short");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_INT;
       break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDSHORT:
-      typeString.AppendLiteral("unsignedShort");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDINT;
       break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_LANGUAGE:
-      typeString.AppendLiteral("language");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_TOKEN;
       break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_NMTOKEN:
-      typeString.AppendLiteral("NMTOKEN");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_TOKEN;
       break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_NAME:
-      typeString.AppendLiteral("Name");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_TOKEN;
       break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_NCNAME:
-      typeString.AppendLiteral("NCName");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_NAME;
       break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_ID:
-      typeString.AppendLiteral("ID");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_NCNAME;
       break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_IDREF:
-      typeString.AppendLiteral("IDREF");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_NCNAME;
       break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_ENTITY:
-      typeString.AppendLiteral("ENTITY");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_NCNAME;
       break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_IDREFS:
-      typeString.AppendLiteral("IDREFS");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_IDREF;
       break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_ENTITIES:
-      typeString.AppendLiteral("ENTITIES");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_ENTITY;
       break;
     case nsISchemaBuiltinType::BUILTIN_TYPE_NMTOKENS:
-      typeString.AppendLiteral("NMTOKENS");
       parentType = nsISchemaBuiltinType::BUILTIN_TYPE_NMTOKEN;
       break;
-    default:
-      // should never hit here
-      NS_WARNING("nsXFormsModelElement::AppendBuiltinTypes: Unknown builtin type encountered.");
-      return NS_ERROR_FAILURE;
   }
 
   builtString.AppendLiteral(NS_NAMESPACE_XML_SCHEMA);
   builtString.AppendLiteral("#");
   builtString.Append(typeString);
-  aTypeArray->AppendString(builtString);
+  aNameArray->AppendString(builtString);
 
-  nsresult rv = NS_OK;
-  if (parentType) {
-    rv = AppendBuiltinTypes(parentType, aTypeArray);
-  }
+  if (parentType)
+    return GetBuiltinTypesNames(parentType, aNameArray);
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
 nsXFormsModelElement::WalkTypeChainInternal(nsISchemaType *aType,
+                                            PRBool         aFindRootBuiltin,
                                             PRUint16      *aBuiltinType,
                                             nsStringArray *aTypeArray)
 {
-  // If aBuiltinType is !nsnull, then we are only looking for the root
-  // primative type for aType.  Otherwise build the whole string array.
-  PRBool onlyFindBuiltinRoot = aBuiltinType ? PR_TRUE : PR_FALSE;
-
   PRUint16 schemaTypeValue = 0;
   aType->GetSchemaType(&schemaTypeValue);
   NS_ENSURE_STATE(schemaTypeValue);
@@ -2863,15 +2921,20 @@ nsXFormsModelElement::WalkTypeChainInternal(nsISchemaType *aType,
         nsCOMPtr<nsISchemaBuiltinType> builtinType(do_QueryInterface(aType));
         NS_ENSURE_STATE(builtinType);
 
-        if (onlyFindBuiltinRoot) {
+        if (aFindRootBuiltin)
           return BuiltinTypeToPrimative(builtinType, aBuiltinType);
-        }
-        // the datatype URI for aType will be added to the array by
-        // AppendBuiltinTypes
+
         PRUint16 builtinTypeVal;
         rv = builtinType->GetBuiltinType(&builtinTypeVal);
         NS_ENSURE_SUCCESS(rv, rv);
-        return AppendBuiltinTypes(builtinTypeVal, aTypeArray);
+
+        if (aBuiltinType)
+          *aBuiltinType = builtinTypeVal;
+
+        if (aTypeArray)
+          return GetBuiltinTypesNames(builtinTypeVal, aTypeArray);
+
+        return NS_OK;
       }
       case nsISchemaSimpleType::SIMPLE_TYPE_RESTRICTION:
       {
@@ -2933,7 +2996,7 @@ nsXFormsModelElement::WalkTypeChainInternal(nsISchemaType *aType,
 
   NS_ENSURE_STATE(simpleType);
 
-  if (!onlyFindBuiltinRoot) {
+  if (aTypeArray) {
     nsAutoString builtString;
     rv = aType->GetTargetNamespace(builtString);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2945,7 +3008,8 @@ nsXFormsModelElement::WalkTypeChainInternal(nsISchemaType *aType,
     aTypeArray->AppendString(builtString);
   }
 
-  return WalkTypeChainInternal(simpleType, aBuiltinType, aTypeArray);
+  return WalkTypeChainInternal(simpleType, aFindRootBuiltin, aBuiltinType,
+                               aTypeArray);
 
 }
 
@@ -3027,7 +3091,7 @@ nsXFormsModelElement::BuiltinTypeToPrimative(nsISchemaBuiltinType *aSchemaType,
 NS_IMETHODIMP
 nsXFormsModelElement::GetDerivedTypeList(const nsAString &aType,
                                          const nsAString &aNamespace,
-                                         nsAString       &aBuiltinType)
+                                         nsAString       &aTypeList)
 {
   nsCOMPtr<nsISchemaCollection> schemaColl = do_QueryInterface(mSchemas);
   NS_ENSURE_STATE(schemaColl);
@@ -3035,9 +3099,9 @@ nsXFormsModelElement::GetDerivedTypeList(const nsAString &aType,
   nsCOMPtr<nsISchemaType> schemaType;
   schemaColl->GetType(aType, aNamespace, getter_AddRefs(schemaType));
   NS_ENSURE_STATE(schemaType);
-  nsStringArray typeArray;
 
-  nsresult rv = WalkTypeChainInternal(schemaType, nsnull, &typeArray);
+  nsStringArray typeArray;
+  nsresult rv = WalkTypeChainInternal(schemaType, PR_FALSE, nsnull, &typeArray);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIStringEnumerator> stringEnum;
     rv = NS_NewStringEnumerator(getter_AddRefs(stringEnum), &typeArray);
@@ -3058,18 +3122,35 @@ nsXFormsModelElement::GetDerivedTypeList(const nsAString &aType,
       }
 
       if (NS_SUCCEEDED(rv)) {
-        aBuiltinType.Assign(constructorString);
+        aTypeList.Assign(constructorString);
       }
     }
   }
 
   if (NS_FAILED(rv)) {
-    aBuiltinType.Assign(EmptyString());
+    aTypeList.Assign(EmptyString());
   }
 
   typeArray.Clear();
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsXFormsModelElement::GetBuiltinTypeNameForControl(nsIXFormsControl  *aControl,
+                                                   nsAString&         aTypeName)
+{
+  NS_ENSURE_ARG(aControl);
+
+  nsCOMPtr<nsISchemaType> schemaType;
+  nsresult rv = GetTypeForControl(aControl, getter_AddRefs(schemaType));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint16 builtinType;
+  rv = WalkTypeChainInternal(schemaType, PR_FALSE, &builtinType);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return GetBuiltinTypeName(builtinType, aTypeName);
 }
 
 NS_IMETHODIMP
@@ -3079,7 +3160,7 @@ nsXFormsModelElement::GetRootBuiltinType(nsISchemaType *aType,
   NS_ENSURE_ARG(aType);
   NS_ENSURE_ARG_POINTER(aBuiltinType);
 
-  return WalkTypeChainInternal(aType, aBuiltinType, nsnull);
+  return WalkTypeChainInternal(aType, PR_TRUE, aBuiltinType);
 }
 
 /* static */ void

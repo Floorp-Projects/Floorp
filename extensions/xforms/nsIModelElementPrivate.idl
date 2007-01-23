@@ -48,7 +48,7 @@ interface nsISchemaBuiltinType;
  * Private interface implemented by the model element for other
  * elements to use.
  */
-[uuid(7df6b6ad-9555-4829-9bb0-8e42e6c02bcf)]
+[uuid(3d94c3a4-e8d4-466c-a753-3cc65a338954)]
 interface nsIModelElementPrivate : nsIXFormsModelElement
 {
   /**
@@ -58,21 +58,6 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
    */
   void addFormControl(in nsIXFormsControl control, in nsIXFormsControl parent);
   void removeFormControl(in nsIXFormsControl control);
-
-  /**
-   * Determine the type for a form control based on the schema included by
-   * this model.
-   */
-  nsISchemaType getTypeForControl(in nsIXFormsControl control);
-
-  /** 
-   * This function takes an instance data node, finds the type bound to it, and
-   * returns the separated out type and namespace URI.  If no type is set for
-   * the node, then it returns the defaults: "http://www.w3.org/2001/XMLSchema"
-   * and "string"
-   */
-  void getTypeAndNSFromNode(in nsIDOMNode instancenode, out AString type, 
-                            out AString namespaceURI);
 
   /**
    * Notification that an instance element has started or finished loading
@@ -218,6 +203,27 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
   void forceRebind(in nsIXFormsControl control);
 
   /**
+   * Determine the type for a form control based on the schema included by
+   * this model.
+   */
+  nsISchemaType getTypeForControl(in nsIXFormsControl control);
+
+  /**
+   * Return builtin type name for a form control based on the schema included by
+   * this model.
+   */
+  AString getBuiltinTypeNameForControl(in nsIXFormsControl control);
+
+  /** 
+   * This function takes an instance data node, finds the type bound to it, and
+   * returns the separated out type and namespace URI.  If no type is set for
+   * the node, then it returns the defaults: "http://www.w3.org/2001/XMLSchema"
+   * and "string"
+   */
+  void getTypeAndNSFromNode(in nsIDOMNode instancenode, out AString type,
+                            out AString namespaceURI);
+
+  /**
    * Retrieves the list of datatypes that the original type is derived from
    * or is an extension of
    *
@@ -230,7 +236,7 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
    * error if we encounter a complex type that comes from complex content
    * extension or restriction.
    */
-  void GetDerivedTypeList(in AString aType, in AString aNamespace,
+  void getDerivedTypeList(in AString aType, in AString aNamespace,
                           out AString aTypeList);
 
   /**
