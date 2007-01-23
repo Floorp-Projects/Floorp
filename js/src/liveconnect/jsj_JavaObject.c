@@ -352,8 +352,16 @@ jsj_DiscardJavaObjReflections(JNIEnv *jEnv)
     /* Get the per-thread state corresponding to the current Java thread */
     jsj_env = jsj_MapJavaThreadToJSJavaThreadState(jEnv, &err_msg);
     JS_ASSERT(jsj_env);
-    if (!jsj_env)
+    if (!jsj_env) {
+        if (err_msg) {
+            jsj_LogError(err_msg);
+            JS_smprintf_free(err_msg);
+        }
+
         return;
+    }
+
+    JS_ASSERT(!err_msg);
 
     if (java_obj_reflections) {
         JSJ_HashTableEnumerateEntries(java_obj_reflections,

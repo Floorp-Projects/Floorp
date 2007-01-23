@@ -127,15 +127,15 @@ convert_java_method_arg_signatures_to_string(JSContext *cx,
     rest_arg_signatures =
         convert_java_method_arg_signatures_to_string(cx, rest_args, num_args - 1);
     if (!rest_arg_signatures) {
-        free((void*)first_arg_signature);
+        JS_smprintf_free((char*)first_arg_signature);
         return NULL;
     }
 
     /* Concatenate the signature string of this argument with the signature
        strings of all the remaining arguments. */
     sig = JS_smprintf("%s%s", first_arg_signature, rest_arg_signatures);
-    free((void*)first_arg_signature);
-    free((void*)rest_arg_signatures);
+    JS_smprintf_free((char*)first_arg_signature);
+    JS_smprintf_free((char*)rest_arg_signatures);
     if (!sig) {
         JS_ReportOutOfMemory(cx);
         return NULL;
@@ -161,7 +161,7 @@ convert_java_method_arg_signatures_to_hr_string(JSContext *cx,
     JavaSignature **rest_args;
 
     if (num_args == 0)
-        return strdup("");
+        return JS_smprintf("%s", "");
 
     /* Convert the first method argument in the array to a string */
     first_arg_signature = jsj_ConvertJavaSignatureToHRString(cx, arg_signatures[0]);
@@ -177,7 +177,7 @@ convert_java_method_arg_signatures_to_hr_string(JSContext *cx,
     rest_arg_signatures =
         convert_java_method_arg_signatures_to_hr_string(cx, rest_args, num_args - 1, whitespace);
     if (!rest_arg_signatures) {
-        free((void*)first_arg_signature);
+        JS_smprintf_free((char*)first_arg_signature);
         return NULL;
     }
 
@@ -185,8 +185,8 @@ convert_java_method_arg_signatures_to_hr_string(JSContext *cx,
        strings of all the remaining arguments. */
     separator = whitespace ? " " : "";
     sig = JS_smprintf("%s,%s%s", first_arg_signature, separator, rest_arg_signatures);
-    free((void*)first_arg_signature);
-    free((void*)rest_arg_signatures);
+    JS_smprintf_free((char*)first_arg_signature);
+    JS_smprintf_free((char*)rest_arg_signatures);
     if (!sig) {
         JS_ReportOutOfMemory(cx);
         return NULL;
@@ -226,14 +226,14 @@ jsj_ConvertJavaMethodSignatureToHRString(JSContext *cx,
     /* Convert the method return value signature to a C-string */
     return_val_sig_cstr = jsj_ConvertJavaSignatureToHRString(cx, return_val_signature);
     if (!return_val_sig_cstr) {
-        free((void*)arg_sigs_cstr);
+        JS_smprintf_free((char*)arg_sigs_cstr);
         return NULL;
     }
 
     /* Compose method arg signatures string and return val signature string */
     sig_cstr = JS_smprintf("%s %s(%s)", return_val_sig_cstr, method_name, arg_sigs_cstr);
-    free((void*)arg_sigs_cstr);
-    free((void*)return_val_sig_cstr);
+    JS_smprintf_free((char*)arg_sigs_cstr);
+    JS_smprintf_free((char*)return_val_sig_cstr);
 
     if (!sig_cstr) {
         JS_ReportOutOfMemory(cx);
@@ -403,19 +403,19 @@ jsj_ConvertJavaMethodSignatureToString(JSContext *cx,
     /* Convert the method return value signature to a C-string */
     return_val_sig_cstr = jsj_ConvertJavaSignatureToString(cx, return_val_signature);
     if (!return_val_sig_cstr) {
-        free((void*)arg_sigs_cstr);
+        JS_smprintf_free((char*)arg_sigs_cstr);
         return NULL;
     }
 
     /* Compose method arg signatures string and return val signature string */
     if (arg_sigs_cstr) {
         sig_cstr = JS_smprintf("(%s)%s", arg_sigs_cstr, return_val_sig_cstr);
-        free((void*)arg_sigs_cstr);
+        JS_smprintf_free((char*)arg_sigs_cstr);
     } else {
         sig_cstr = JS_smprintf("()%s", return_val_sig_cstr);
     }
 
-    free((void*)return_val_sig_cstr);
+    JS_smprintf_free((char*)return_val_sig_cstr);
 
     if (!sig_cstr) {
         JS_ReportOutOfMemory(cx);
@@ -721,12 +721,12 @@ jsj_ResolveExplicitMethod(JSContext *cx, JNIEnv *jEnv,
 
 	if (!strcmp(sig_cstr, arg_start))
 	    break;
-	JS_free(cx, (void*)sig_cstr);
+	JS_smprintf_free((char*)sig_cstr);
     }
     JS_free(cx, arg_start);
     if (!method)
 	return NULL;
-    JS_free(cx, (void*)sig_cstr);
+    JS_smprintf_free((char*)sig_cstr);
     
     /* Don't bother doing anything if the method isn't overloaded */
     if (!member_descriptor->methods->next)
@@ -789,7 +789,7 @@ get_js_arg_types_as_string(JSContext *cx, uintN argc, jsval *argv)
     const char *arg_type, *arg_string, *tmp;
 
     if (argc == 0)
-        return strdup("()");
+        return JS_smprintf("%s", "()");
     
     arg_string = strdup("(");
     if (!arg_string)
@@ -861,7 +861,7 @@ report_method_match_failure(JSContext *cx,
         if (!method_str)
             goto out_of_memory;
         tmp = JS_smprintf("%s   %s\n", err, method_str);
-        free((char*)method_str);
+        JS_smprintf_free((char*)method_str);
         if (!tmp)
             goto out_of_memory;
         err = tmp;
@@ -874,9 +874,9 @@ report_method_match_failure(JSContext *cx,
 
 out_of_memory:
     if (js_arg_string)
-        free((char*)js_arg_string);
+        JS_smprintf_free((char*)js_arg_string);
     if (err)
-        free((char*)err);
+        JS_smprintf_free((char*)err);
 }
 
 /*
@@ -935,7 +935,7 @@ report_ambiguous_method_match(JSContext *cx,
         if (!method_str)
             goto out_of_memory;
         tmp = JS_smprintf("%s   %s\n", err, method_str);
-        free((char*)method_str);
+        JS_smprintf_free((char*)method_str);
         if (!tmp)
             goto out_of_memory;
         err = tmp;
@@ -948,9 +948,9 @@ report_ambiguous_method_match(JSContext *cx,
 
 out_of_memory:
     if (js_arg_string)
-        free((char*)js_arg_string);
+        JS_smprintf_free((char*)js_arg_string);
     if (err)
-        free((char*)err);
+        JS_smprintf_free((char*)err);
 }
 
 /*

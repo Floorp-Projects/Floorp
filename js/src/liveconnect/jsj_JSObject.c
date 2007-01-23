@@ -791,7 +791,7 @@ entry_failure:
     JS_ASSERT(!cx);
     if (err_msg) {
         jsj_LogError(err_msg);
-        free(err_msg);
+        JS_smprintf_free(err_msg);
     }
 
     return NULL;

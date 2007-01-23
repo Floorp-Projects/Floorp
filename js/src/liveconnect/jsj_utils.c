@@ -380,7 +380,7 @@ jsj_UnexpectedJavaError(JSContext *cx, JNIEnv *env, const char *format, ...)
     format2 = JS_smprintf("internal error: %s", format);
     if (format2) {
         vreport_java_error(cx, env, format2, ap);
-        free((void*)format2);
+        JS_smprintf_free((void*)format2);
     }
     va_end(ap);
 }

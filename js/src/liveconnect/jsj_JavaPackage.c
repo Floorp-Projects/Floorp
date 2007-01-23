@@ -85,6 +85,10 @@ define_JavaPackage(JSContext *cx, JSObject *parent_obj,
     
     /* Attach private, native data to the JS object */
     package = (JavaPackage_Private *)JS_malloc(cx, sizeof(JavaPackage_Private));
+    if (!package) {
+        JS_DeleteProperty(cx, parent_obj, obj_name);
+        return NULL;
+    }
     JS_SetPrivate(cx, package_obj, (void *)package);
     if (path)
         package->path = JS_strdup(cx, path);
@@ -257,7 +261,7 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
     }
     
 out:
-    free(newPath);
+    JS_smprintf_free(newPath);
     jsj_ExitJava(jsj_env);
     return ok;
 }
@@ -293,7 +297,7 @@ JavaPackage_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
                 *cp = '.';
         str = JS_NewString(cx, name, strlen(name));
         if (!str) {
-            free(name);
+            JS_smprintf_free(name);
             /* It's not necessary to call JS_ReportOutOfMemory(), as
                JS_NewString() will do so on failure. */
             return JS_FALSE;
