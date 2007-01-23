@@ -453,6 +453,10 @@ protected:
                                       // rects for right floats.  Only makes
                                       // sense when mHaveCachedLeftYMost is
                                       // true.
+  // We keep track of the last BandRect* we worked with so that we can
+  // make use of locality of reference in situations where people want
+  // to do a bunch of operations in a row.
+  BandRect*       mCachedBandPosition;
 
 protected:
   FrameInfo* GetFrameInfoFor(nsIFrame* aFrame);
@@ -463,6 +467,7 @@ protected:
   void       ClearBandRects();
 
   BandRect*  GetNextBand(const BandRect* aBandRect) const;
+  BandRect*  GetPrevBand(const BandRect* aBandRect) const;
   void       DivideBand(BandRect* aBand, nscoord aBottom);
   PRBool     CanJoinBands(BandRect* aBand, BandRect* aPrevBand);
   PRBool     JoinBands(BandRect* aBand, BandRect* aPrevBand);
@@ -473,6 +478,22 @@ protected:
                                    nscoord         aY,
                                    const nsSize&   aMaxSize,
                                    nsBandData&     aAvailableSpace) const;
+
+  // Return a band guaranteed to have its top at or above aYOffset or the first
+  // band if there is no band with its top above aYOffset.  This method will
+  // use mCachedBandPosition to maybe get such a band that's not too far up.
+  // This function should not be called if there are no bands.
+  // This function never returns null.
+  BandRect*  GuessBandWithTopAbove(nscoord aYOffset) const;
+
+  void SetCachedBandPosition(BandRect* aBandRect) {
+    NS_ASSERTION(!aBandRect ||
+                 aBandRect == mBandList.Head() ||
+                 aBandRect->Prev()->mBottom != aBandRect->mBottom,
+                 "aBandRect should be first rect within its band");
+    mCachedBandPosition = aBandRect;
+  }
+
 
 private:
   static PRInt32 sCachedSpaceManagerCount;
