@@ -1104,6 +1104,12 @@ nsThebesRenderingContext::GetRightToLeftText(PRBool* aIsRTL)
     return NS_OK;
 }
 
+void
+nsThebesRenderingContext::SetTextRunRTL(PRBool aIsRTL)
+{
+	mFontMetrics->SetTextRunRTL(aIsRTL);
+}
+
 NS_IMETHODIMP
 nsThebesRenderingContext::SetFont(const nsFont& aFont, nsIAtom* aLangGroup)
 {
