@@ -90,6 +90,8 @@ nsCommonWidget::InitButtonEvent(nsMouseEvent &aEvent,
     aEvent.isMeta    = (aGdkEvent->state & GDK_MOD4_MASK)
         ? PR_TRUE : PR_FALSE;
 
+    aEvent.time = aGdkEvent->time;
+
     switch (aGdkEvent->type) {
     case GDK_2BUTTON_PRESS:
         aEvent.clickCount = 2;
@@ -138,6 +140,7 @@ nsCommonWidget::InitMouseScrollEvent(nsMouseScrollEvent &aEvent,
     aEvent.isMeta    = (aGdkEvent->state & GDK_MOD4_MASK)
         ? PR_TRUE : PR_FALSE;
     
+    aEvent.time = aGdkEvent->time;
 }
 
 void
@@ -152,6 +155,7 @@ nsCommonWidget::InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent)
         ? PR_TRUE : PR_FALSE;
     aEvent.isMeta    = (aGdkEvent->state & GDK_MOD4_MASK)
         ? PR_TRUE : PR_FALSE;
+
     aEvent.time      = aGdkEvent->time;
 }
 

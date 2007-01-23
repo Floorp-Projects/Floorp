@@ -1800,6 +1800,8 @@ nsWindow::OnEnterNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
     event.refPoint.x = nscoord(aEvent->x);
     event.refPoint.y = nscoord(aEvent->y);
 
+    event.time = aEvent->time;
+
     LOG(("OnEnterNotify: %p\n", (void *)this));
 
     nsEventStatus status;
@@ -1818,6 +1820,8 @@ nsWindow::OnLeaveNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
     event.refPoint.x = nscoord(aEvent->x);
     event.refPoint.y = nscoord(aEvent->y);
 
+    event.time = aEvent->time;
+
     LOG(("OnLeaveNotify: %p\n", (void *)this));
 
     nsEventStatus status;
@@ -1832,6 +1836,8 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
     sIsDraggingOutOf = PR_FALSE;
 
     // see if we can compress this event
+    // XXXldb Why skip every other motion event when we have multiple,
+    // but not more than that?
     XEvent xevent;
     PRPackedBool synthEvent = PR_FALSE;
     while (XCheckWindowEvent(GDK_WINDOW_XDISPLAY(aEvent->window),
@@ -1857,6 +1863,8 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
             ? PR_TRUE : PR_FALSE;
         event.isAlt     = (xevent.xmotion.state & GDK_MOD1_MASK)
             ? PR_TRUE : PR_FALSE;
+
+        event.time = xevent.xmotion.time;
     }
     else {
         event.refPoint.x = nscoord(aEvent->x);
@@ -1868,6 +1876,8 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
             ? PR_TRUE : PR_FALSE;
         event.isAlt     = (aEvent->state & GDK_MOD1_MASK)
             ? PR_TRUE : PR_FALSE;
+
+        event.time = aEvent->time;
     }
 
     nsEventStatus status;
@@ -2398,6 +2408,7 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
 
     event.refPoint.x = retx;
     event.refPoint.y = rety;
+    event.time = aTime;
 
     innerMostWidget->AddRef();
 
@@ -2514,6 +2525,7 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
 
     event.refPoint.x = retx;
     event.refPoint.y = rety;
+    event.time = aTime;
 
     nsEventStatus status;
     innerMostWidget->DispatchEvent(&event, status);

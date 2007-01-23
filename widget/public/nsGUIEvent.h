@@ -384,8 +384,8 @@ public:
   PRUint32    message;
   // In widget relative coordinates, not modified by layout code.
   nsPoint     refPoint;
-  // Elapsed time, in milliseconds, from the time the system was
-  // started to the time the message was created
+  // Elapsed time, in milliseconds, from a platform-specific zero time
+  // to the time the message was created
   PRUint32    time;
   // Flags to hold event flow stage and capture/bubble cancellation
   // status. This is used also to indicate whether the event is trusted.
