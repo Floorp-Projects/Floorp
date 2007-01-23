@@ -1718,31 +1718,6 @@ function MsgSendUnsentMsgs()
     MailOfflineMgr.goOnlineToSendMessages(msgWindow);
 }
 
-function GetPrintSettings()
-{
-  var prevPS = gPrintSettings;
-
-  try {
-    if (gPrintSettings == null) {
-      var useGlobalPrintSettings = gPrefBranch.getBoolPref("print.use_global_printsettings");
-
-      // I would rather be using nsIWebBrowserPrint API
-      // but I really don't have a document at this point
-      var printSettingsService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
-                                           .getService(Components.interfaces.nsIPrintSettingsService);
-      if (useGlobalPrintSettings) {
-        gPrintSettings = printSettingsService.globalPrintSettings;
-      } else {
-        gPrintSettings = printSettingsService.CreatePrintSettings();
-      }
-    }
-  } catch (e) {
-    dump("GetPrintSettings "+e);
-  }
-
-  return gPrintSettings;
-}
-
 function PrintEnginePrintInternal(messageList, numMessages, doPrintPreview, msgType)
 {
     if (numMessages == 0) {
@@ -1751,7 +1726,7 @@ function PrintEnginePrintInternal(messageList, numMessages, doPrintPreview, msgT
     }
 
     if (gPrintSettings == null) {
-      gPrintSettings = GetPrintSettings();
+      gPrintSettings = PrintUtils.getPrintSettings();
     }
     printEngineWindow = window.openDialog("chrome://messenger/content/msgPrintEngine.xul",
                                           "",
