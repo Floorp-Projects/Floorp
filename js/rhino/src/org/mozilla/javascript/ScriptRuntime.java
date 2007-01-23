@@ -30,6 +30,7 @@
  *   Terry Lucas
  *   Frank Mitchell
  *   Milen Nankov
+ *   Hannes Wallnoefer
  *   Andrew Wason
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -2032,7 +2033,7 @@ public class ScriptRuntime {
     /**
      * Perform function call in reference context. Should always
      * return value that can be passed to
-     * {@link #refGet(Object)} or @link #refSet(Object, Object)}
+     * {@link #refGet(Ref, Context)} or {@link #refSet(Ref, Object, Context)}
      * arbitrary number of times.
      * The args array reference should not be stored in any object that is
      * can be GC-reachable after this method returns. If this is necessary,
@@ -2296,13 +2297,25 @@ public class ScriptRuntime {
         return toString(val1).concat(toString(val2));
     }
 
+    /**
+     * @deprecated The method is only present for compatibility.
+     */
     public static Object nameIncrDecr(Scriptable scopeChain, String id,
                                       int incrDecrMask)
+    {
+        return nameIncrDecr(scopeChain, id, Context.getContext(), incrDecrMask);
+    }
+
+    public static Object nameIncrDecr(Scriptable scopeChain, String id,
+                                      Context cx, int incrDecrMask)
     {
         Scriptable target;
         Object value;
       search: {
             do {
+                if (cx.useDynamicScope && scopeChain.getParentScope() == null) {
+                    scopeChain = checkDynamicScope(cx.topCallScope, scopeChain);
+                }
                 target = scopeChain;
                 do {
                     value = target.get(id, scopeChain);
