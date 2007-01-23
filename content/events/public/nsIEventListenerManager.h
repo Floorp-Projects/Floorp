@@ -52,8 +52,8 @@ class nsIAtom;
  * Event listener manager interface.
  */
 #define NS_IEVENTLISTENERMANAGER_IID \
-{ 0x68588aa5, 0x41e6, 0x4642, \
-  { 0xac, 0x8e, 0x7d, 0x43, 0x9c, 0x7d, 0x2a, 0xaa } }
+{ 0x5e7dc4c0, 0x3d7e, 0x4934, \
+  { 0xb6, 0x54, 0xd7, 0xe3, 0x74, 0xa0, 0x37, 0xdf } }
 
 
 class nsIEventListenerManager : public nsISupports {
@@ -141,17 +141,6 @@ public:
                          nsISupports* aCurrentTarget,
                          PRUint32 aFlags,
                          nsEventStatus* aEventStatus) = 0;
-
-  /**
-  * Creates a DOM event.
-  * Preferred way to create an event is to use either
-  * nsEventDispatcher::CreateEvent or nsIDOMDocumentEvent::createEvent.
-  * FIXME! Remove this method, Bug 329126.
-  */
-  NS_IMETHOD CreateEvent(nsPresContext* aPresContext,
-                         nsEvent* aEvent,
-                         const nsAString& aEventType,
-                         nsIDOMEvent** aDOMEvent) = 0;
 
   /**
   * Tells the event listener manager that its target (which owns it) is

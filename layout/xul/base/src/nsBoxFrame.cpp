@@ -96,7 +96,6 @@
 #include "nsIDOMElement.h"
 #include "nsITheme.h"
 #include "nsTransform2D.h"
-#include "nsIEventListenerManager.h"
 #include "nsIEventStateManager.h"
 #include "nsEventDispatcher.h"
 #include "nsIDOMEvent.h"
@@ -2131,11 +2130,9 @@ nsBoxFrame::FireDOMEventSynch(const nsAString& aDOMEventName, nsIContent *aConte
   if (content && presContext) {
     // Fire a DOM event
     nsCOMPtr<nsIDOMEvent> event;
-    nsCOMPtr<nsIEventListenerManager> manager;
-    content->GetListenerManager(PR_TRUE, getter_AddRefs(manager));
-    if (manager && NS_SUCCEEDED(manager->CreateEvent(presContext, nsnull,
-                                                     NS_LITERAL_STRING("Events"),
-                                                     getter_AddRefs(event)))) {
+    if (NS_SUCCEEDED(nsEventDispatcher::CreateEvent(presContext, nsnull,
+                                                    NS_LITERAL_STRING("Events"),
+                                                    getter_AddRefs(event)))) {
       event->InitEvent(aDOMEventName, PR_TRUE, PR_TRUE);
 
       nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
