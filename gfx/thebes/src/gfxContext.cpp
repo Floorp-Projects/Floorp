@@ -649,14 +649,6 @@ gfxContext::Mask(gfxASurface *surface, gfxPoint offset)
     cairo_mask_surface(mCairo, surface->CairoSurface(), offset.x, offset.y);
 }
 
-// fonts?
-void
-gfxContext::DrawTextRun(gfxTextRun *text, gfxPoint pt)
-{
-    if (text)
-        text->Draw(this, pt);
-}
-
 void
 gfxContext::Paint(gfxFloat alpha)
 {
