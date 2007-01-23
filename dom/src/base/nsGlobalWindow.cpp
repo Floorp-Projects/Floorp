@@ -5258,12 +5258,12 @@ nsGlobalWindow::Atob(const nsAString& aAsciiBase64String,
     return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
   }
 
-  char *base64 = ToNewCString(aAsciiBase64String);
-  if (!base64) {
+  PRInt32 dataLen = aAsciiBase64String.Length();
+
+  NS_LossyConvertUTF16toASCII base64(aAsciiBase64String);
+  if (base64.Length() != dataLen) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  PRInt32 dataLen = aAsciiBase64String.Length();
 
   PRInt32 resultLen = dataLen;
   if (base64[dataLen - 1] == '=') {
@@ -5275,21 +5275,29 @@ nsGlobalWindow::Atob(const nsAString& aAsciiBase64String,
   }
 
   resultLen = ((resultLen * 3) / 4);
-
-  char *bin_data = PL_Base64Decode(base64, dataLen,
-                                   nsnull);
-  if (!bin_data) {
-    nsMemory::Free(base64);
-
+  // Add 4 extra bytes (one is needed for sure for null termination)
+  // to the malloc size just to make sure we don't end up writing past
+  // the allocated memory (the PL_Base64Decode API should really
+  // provide a guaranteed way to figure this out w/o needing to do the
+  // above yourself).
+  char *dest = NS_STATIC_CAST(char *, nsMemory::Alloc(resultLen + 4));
+  if (!dest) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  CopyASCIItoUTF16(Substring(bin_data, bin_data + resultLen), aBinaryData);
+  char *bin_data = PL_Base64Decode(base64.get(), dataLen, dest);
 
-  nsMemory::Free(base64);
-  PR_Free(bin_data);
+  nsresult rv = NS_OK;
 
-  return NS_OK;
+  if (bin_data) {
+    CopyASCIItoUTF16(Substring(bin_data, bin_data + resultLen), aBinaryData);
+  } else {
+    rv = NS_ERROR_DOM_INVALID_CHARACTER_ERR;
+  }
+
+  nsMemory::Free(dest);
+
+  return rv;
 }
 
 NS_IMETHODIMP
