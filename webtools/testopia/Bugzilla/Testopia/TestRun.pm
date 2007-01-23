@@ -998,6 +998,28 @@ sub case_count {
     return scalar @{$self->cases};
 }
 
+sub case_run_count {
+    my $self = shift;
+    my ($status_id) = @_;
+    my $dbh = Bugzilla->dbh;
+    my $query = 
+           "SELECT COUNT(*) 
+              FROM test_case_runs 
+             WHERE run_id = ? AND iscurrent = 1";
+    $query .= " AND case_run_status_id = ?" if $status_id;
+    
+    my $count;
+    if ($status_id){
+        ($count) = $dbh->selectrow_array($query,undef,($self->{'run_id'}, $status_id));
+    }
+    else {
+        ($count) = $dbh->selectrow_array($query,undef,$self->{'run_id'});
+    }
+    
+    return $count;       
+}
+
+#TODO: Replace these with case_run_count
 =head2 idle_count
 
 Returns a count of the number of case-runs in this run with a status

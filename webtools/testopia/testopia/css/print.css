@@ -1,0 +1,25 @@
+body {
+	font-family: arial,sans-serif;
+}
+.print_table_header {
+	font-weight: bold;
+	text-align: center;
+	padding-left: 15px;
+}
+.print_table_bold {
+	text-align: right;
+	font-weight: bold;	
+}
+.print_table_body {
+	text-align: left;
+	padding-left: 15px;
+}
+.print_table_data {
+	text-align: center;
+}
+.print_table {
+	border-left: 1px solid #000000;
+	border-top: 1px solid #000000;
+	border-right: 1px solid #000000;
+	border-bottom: 1px solid #000000;
+}

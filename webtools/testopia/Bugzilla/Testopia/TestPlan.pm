@@ -1142,6 +1142,63 @@ sub test_run_count {
     return $self->{'test_run_count'};
 }
 
+sub test_case_run_count {
+    my $self = shift;
+    my ($status_id) = @_;
+    my $dbh = Bugzilla->dbh;
+    my $query = 
+        "SELECT count(case_run_id) FROM test_case_runs 
+         INNER JOIN test_runs ON test_case_runs.run_id = test_runs.run_id
+         INNER JOIN test_plans ON test_runs.plan_id = test_plans.plan_id
+         WHERE test_case_runs.iscurrent = 1 AND test_plans.plan_id = ?";
+       $query .= " AND test_case_runs.case_run_status_id = ?" if $status_id;
+    my $count;
+    if ($status_id){
+        ($count) = $dbh->selectrow_array($query,undef,($self->id,$status_id));
+    }
+    else {
+        ($count) = $dbh->selectrow_array($query,undef,$self->id);
+    }
+    
+    return $count;
+}
+
+sub builds_seen {
+    my $self = shift;
+    my ($status_id) = @_;
+    my $dbh = Bugzilla->dbh;
+    my $ref = $dbh->selectcol_arrayref(
+        "SELECT DISTINCT test_case_runs.build_id 
+           FROM test_case_runs
+     INNER JOIN test_runs ON test_case_runs.run_id = test_runs.run_id
+          WHERE test_runs.plan_id = ? AND test_case_runs.iscurrent = 1",
+          undef,$self->id);
+    
+    my @o;      
+    foreach my $id (@$ref){
+        push @o, Bugzilla::Testopia::Build->new($id);
+    }
+    return \@o;
+}
+
+sub environments_seen {
+    my $self = shift;
+    my ($status_id) = @_;
+    my $dbh = Bugzilla->dbh;
+    my $ref = $dbh->selectcol_arrayref(
+        "SELECT DISTINCT test_case_runs.environment_id 
+           FROM test_case_runs
+     INNER JOIN test_runs ON test_case_runs.run_id = test_runs.run_id
+          WHERE test_runs.plan_id = ? AND test_case_runs.iscurrent = 1",
+          undef,$self->id);
+          
+    my @o; 
+    foreach my $id (@$ref){
+        push @o, Bugzilla::Testopia::Environment->new($id);
+    }
+    return \@o;   
+}
+
 =head2 tags
 
 Returns a reference to a list of Testopia::TestTag objects 

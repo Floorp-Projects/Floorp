@@ -762,6 +762,24 @@ sub caseruns {
     return $self->{'caseruns'};
 }
 
+sub case_run_count {
+    my ($self,$status_id) = @_;
+    my $dbh = Bugzilla->dbh;
+    
+    my $query = "SELECT COUNT(case_run_id) FROM test_case_runs 
+           WHERE environment_id = ?";
+    $query .= " AND case_run_status_id = ?" if $status_id;
+    
+    my $count;
+    if ($status_id){
+        $count = $dbh->selectrow_array($query, undef, ($self->id,$status_id));
+    }
+    else {
+        $count = $dbh->selectrow_array($query, undef, $self->id);
+    }
+          
+    return $count;
+}
 =head1 TODO
 
 

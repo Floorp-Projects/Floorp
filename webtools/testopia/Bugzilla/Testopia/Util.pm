@@ -40,7 +40,8 @@ use base qw(Exporter);
                                          can_view_product GetProducts
                                          get_field_id get_time_stamp 
                                          validate_test_id validate_selection
-                                         validate_version support_server_push);
+                                         validate_version support_server_push
+                                         percentage);
 
 use Bugzilla;
 use Bugzilla::Config;
@@ -249,6 +250,11 @@ sub support_server_push {
               || $cgi->param('serverpush');
               
   return $serverpush;            
+}
+
+sub percentage {
+  my ($total, $count) = (@_);
+  return $total == 0 ? 0 : int($count*100/$total);
 }
 
 =head1 AUTHOR

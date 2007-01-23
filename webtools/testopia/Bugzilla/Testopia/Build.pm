@@ -265,15 +265,22 @@ Returns the number of test case runs against this build
 =cut
 
 sub case_run_count {
-    my ($self) = @_;
+    my ($self,$status_id) = @_;
     my $dbh = Bugzilla->dbh;
-    return $self->{'case_run_count'} if exists $self->{'case_run_count'};
-
-    $self->{'case_run_count'} = $dbh->selectrow_array(
-          "SELECT COUNT(case_run_id) FROM test_case_runs 
-           WHERE build_id = ?", undef, $self->{'build_id'});
+    
+    my $query = "SELECT COUNT(case_run_id) FROM test_case_runs 
+           WHERE build_id = ?";
+    $query .= " AND case_run_status_id = ?" if $status_id;
+    
+    my $count;
+    if ($status_id){
+        $count = $dbh->selectrow_array($query, undef, ($self->{'build_id'},$status_id));
+    }
+    else {
+        $count = $dbh->selectrow_array($query, undef, $self->{'build_id'});
+    }
           
-    return $self->{'case_run_count'};
+    return $count;
 }
 
 =head1 SEE ALSO

@@ -24,7 +24,7 @@
 
 [% PROCESS testopia/export/xml.header.tmpl -%]
 
-[% FOREACH test_case = table.list %]
+[% FOREACH test_case = case_table.list %]
 	[%+ PROCESS testopia/export/xml.case.tmpl case=test_case %]
 [% END %]
 
