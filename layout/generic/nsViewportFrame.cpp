@@ -304,8 +304,6 @@ ViewportFrame::Reflow(nsPresContext*          aPresContext,
   aDesiredSize.height = aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE
                           ? aReflowState.availableHeight
                           : kidRect.height;
-  aDesiredSize.ascent = aDesiredSize.height;
-  aDesiredSize.descent = 0;
 
   // Make a copy of the reflow state and change the computed width and height
   // to reflect the available space for the fixed items

@@ -78,6 +78,18 @@ nsTableCaptionFrame::GetType() const
   return nsGkAtoms::tableCaptionFrame;
 }
 
+/* virtual */ nscoord
+nsTableOuterFrame::GetBaseline() const
+{
+  nsIFrame* kid = mFrames.FirstChild();
+  if (!kid) {
+    NS_NOTREACHED("no inner table");
+    return nsHTMLContainerFrame::GetBaseline();
+  }
+
+  return kid->GetBaseline() + kid->GetPosition().y;
+}
+
 inline PRBool IsSideCaption(nsIFrame* aCaptionFrame)
 {
   PRUint8 captionSide = aCaptionFrame->GetStyleTableBorder()->mCaptionSide;
@@ -1259,8 +1271,6 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   UpdateReflowMetrics(captionSide, aDesiredSize, innerMargin, captionMargin);
   
   // Return our desired rect
-  aDesiredSize.ascent  = mInnerTableFrame->GetAscent();
-  aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
 
   NS_FRAME_SET_TRUNCATION(aStatus, aOuterRS, aDesiredSize);
   return rv;

@@ -258,7 +258,7 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
 
   mBoundingMetrics.width = 0;
   mBoundingMetrics.ascent = mBoundingMetrics.descent = -0x7FFFFFFF;
-  aDesiredSize.ascent = aDesiredSize.descent = -0x7FFFFFFF;
+  nscoord ascent = -0x7FFFFFFF, descent = -0x7FFFFFFF;
   aDesiredSize.width = aDesiredSize.height = 0;
 
   nsIFrame* childFrame = mFrames.FirstChild();
@@ -302,8 +302,7 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
           trySubScriptShift = PR_MAX(minSubScriptShift,subScriptShift);
           mBoundingMetrics.descent =
             PR_MAX(mBoundingMetrics.descent,bmSubScript.descent);
-          aDesiredSize.descent =
-            PR_MAX(aDesiredSize.descent,subScriptSize.descent);
+          descent = PR_MAX(descent,subScriptSize.height - subScriptSize.ascent);
           width = bmSubScript.width + scriptSpace;
           rightBearing = bmSubScript.rightBearing;
         }
@@ -323,8 +322,7 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
             PR_MAX(minSupScriptShift,PR_MAX(minShiftFromXHeight,supScriptShift));
           mBoundingMetrics.ascent =
             PR_MAX(mBoundingMetrics.ascent,bmSupScript.ascent);
-          aDesiredSize.ascent =
-            PR_MAX(aDesiredSize.ascent,supScriptSize.ascent);
+          ascent = PR_MAX(ascent,supScriptSize.ascent);
           width = PR_MAX(width, bmSupScript.width + scriptSpace);
           rightBearing = PR_MAX(rightBearing, bmSupScript.rightBearing);
 
@@ -394,10 +392,9 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
 
   // get the reflow metrics ...
   aDesiredSize.ascent =
-    PR_MAX(aDesiredSize.ascent+maxSupScriptShift,baseSize.ascent);
-  aDesiredSize.descent =
-    PR_MAX(aDesiredSize.descent+maxSubScriptShift,baseSize.descent);
-  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+    PR_MAX(ascent+maxSupScriptShift,baseSize.ascent);
+  aDesiredSize.height = aDesiredSize.ascent +
+    PR_MAX(descent+maxSubScriptShift,baseSize.height - baseSize.ascent);
   aDesiredSize.width = mBoundingMetrics.width;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 

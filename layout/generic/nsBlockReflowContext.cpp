@@ -365,8 +365,6 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
 #ifdef DEBUG
   mMetrics.width = nscoord(0xdeadbeef);
   mMetrics.height = nscoord(0xdeadbeef);
-  mMetrics.ascent = nscoord(0xdeadbeef);
-  mMetrics.descent = nscoord(0xdeadbeef);
 #endif
 
   mOuterReflowState.mSpaceManager->Translate(tx, ty);
@@ -381,14 +379,10 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
       printf(" metrics=%d,%d!\n", mMetrics.width, mMetrics.height);
     }
     if ((mMetrics.width == nscoord(0xdeadbeef)) ||
-        (mMetrics.height == nscoord(0xdeadbeef)) ||
-        (mMetrics.ascent == nscoord(0xdeadbeef)) ||
-        (mMetrics.descent == nscoord(0xdeadbeef))) {
+        (mMetrics.height == nscoord(0xdeadbeef))) {
       printf("nsBlockReflowContext: ");
       nsFrame::ListTag(stdout, mFrame);
-      printf(" didn't set whad %d,%d,%d,%d!\n",
-             mMetrics.width, mMetrics.height,
-             mMetrics.ascent, mMetrics.descent);
+      printf(" didn't set w/h %d,%d!\n", mMetrics.width, mMetrics.height);
     }
   }
 #endif

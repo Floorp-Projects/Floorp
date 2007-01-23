@@ -794,6 +794,17 @@ nsFrame::SetAdditionalStyleContext(PRInt32 aIndex,
   NS_PRECONDITION(aIndex >= 0, "invalid index number");
 }
 
+nscoord
+nsFrame::GetBaseline() const
+{
+  NS_ASSERTION(!(GetStateBits() & (NS_FRAME_IS_DIRTY |
+                                   NS_FRAME_HAS_DIRTY_CHILDREN)),
+               "frame must not be dirty");
+  // Default to the bottom margin edge, per CSS2.1's definition of the
+  // 'baseline' value of 'vertical-align'.
+  return mRect.height + GetUsedMargin().bottom;
+}
+
 // Child frame enumeration
 
 nsIAtom*
@@ -3248,8 +3259,6 @@ nsFrame::Reflow(nsPresContext*          aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsFrame");
   aDesiredSize.width = 0;
   aDesiredSize.height = 0;
-  aDesiredSize.ascent = 0;
-  aDesiredSize.descent = 0;
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
@@ -3746,7 +3755,6 @@ nsFrame::IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
     aMetrics.width = 0;
     aMetrics.height = 0;
     aMetrics.ascent = 0;
-    aMetrics.descent = 0;
     aMetrics.mCarriedOutBottomMargin.Zero();
     aMetrics.mOverflowArea.x = 0;
     aMetrics.mOverflowArea.y = 0;
@@ -5803,7 +5811,12 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
 
     metrics->mBlockPrefSize.height = metrics->mBlockMinSize.height;
 
-    metrics->mBlockAscent = desiredSize.ascent;
+    if (desiredSize.ascent == nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
+      if (!nsLayoutUtils::GetFirstLineBaseline(this, &metrics->mBlockAscent))
+        metrics->mBlockAscent = GetBaseline();
+    } else {
+      metrics->mBlockAscent = desiredSize.ascent;
+    }
 
 #ifdef DEBUG_adaptor
     printf("min=(%d,%d), pref=(%d,%d), ascent=%d\n", metrics->mBlockMinSize.width,
@@ -6168,15 +6181,6 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
 
     NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "bad status");
 
-    // Save the ascent.  (bug 103925)
-    PRBool isCollapsed = PR_FALSE;
-    IsCollapsed(aState, isCollapsed);
-    if (isCollapsed) {
-      metrics->mAscent = 0;
-    } else {
-      metrics->mAscent = aDesiredSize.ascent;
-    }
-
    // printf("width: %d, height: %d\n", aDesiredSize.mCombinedArea.width, aDesiredSize.mCombinedArea.height);
 
     // see if the overflow option is set. If it is then if our child's bounds overflow then
@@ -6238,6 +6242,20 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
     PRUint32 layoutFlags = aState.LayoutFlags();
     nsContainerFrame::FinishReflowChild(this, aPresContext, &reflowState,
                                         aDesiredSize, aX, aY, layoutFlags | NS_FRAME_NO_MOVE_FRAME);
+
+    // Save the ascent.  (bug 103925)
+    PRBool isCollapsed = PR_FALSE;
+    IsCollapsed(aState, isCollapsed);
+    if (isCollapsed) {
+      metrics->mAscent = 0;
+    } else {
+      if (aDesiredSize.ascent == nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
+        if (!nsLayoutUtils::GetFirstLineBaseline(this, &metrics->mAscent))
+          metrics->mAscent = GetBaseline();
+      } else
+        metrics->mAscent = aDesiredSize.ascent;
+    }
+
   } else {
     aDesiredSize.ascent = metrics->mBlockAscent;
   }

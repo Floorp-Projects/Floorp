@@ -1637,7 +1637,6 @@ static void ClearMetrics(nsHTMLReflowMetrics& aMetrics)
   aMetrics.width = 0;
   aMetrics.height = 0;
   aMetrics.ascent = 0;
-  aMetrics.descent = 0;
 #ifdef MOZ_MATHML
   aMetrics.mBoundingMetrics.Clear();
 #endif
@@ -4762,10 +4761,9 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   // Disallow negative widths
   aMetrics.width = NSToCoordCeil(PR_MAX(0, textMetrics.mAdvanceWidth));
   aMetrics.ascent = NSToCoordCeil(textMetrics.mAscent);
-  aMetrics.descent = NSToCoordCeil(textMetrics.mDescent);
-  aMetrics.height = aMetrics.ascent + aMetrics.descent;
+  aMetrics.height = aMetrics.ascent + NSToCoordCeil(textMetrics.mDescent);
   NS_ASSERTION(aMetrics.ascent >= 0, "Negative ascent???");
-  NS_ASSERTION(aMetrics.descent >= 0, "Negative ascent???");
+  NS_ASSERTION(aMetrics.height - aMetrics.ascent >= 0, "Negative descent???");
 
   mAscent = aMetrics.ascent;
 
@@ -4864,8 +4862,8 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
 
 #ifdef NOISY_REFLOW
   ListTag(stdout);
-  printf(": desiredSize=%d,%d(a=%d/d=%d) status=%x\n",
-         aMetrics.width, aMetrics.height, aMetrics.ascent, aMetrics.descent,
+  printf(": desiredSize=%d,%d(b=%d) status=%x\n",
+         aMetrics.width, aMetrics.height, aMetrics.ascent,
          aStatus);
 #endif
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);

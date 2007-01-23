@@ -5938,7 +5938,6 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
     aMetrics.width = 0;
     aMetrics.height = 0;
     aMetrics.ascent = 0;
-    aMetrics.descent = 0;
 #ifdef MOZ_MATHML
     if (NS_REFLOW_CALC_BOUNDING_METRICS & aMetrics.mFlags)
       aMetrics.mBoundingMetrics.Clear();
@@ -6115,12 +6114,10 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
   if ((0 == textData.mX) && !ts.mPreformatted) {
     aMetrics.height = 0;
     aMetrics.ascent = 0;
-    aMetrics.descent = 0;
   }
   else {
     aMetrics.ascent = textData.mAscent;
-    aMetrics.descent = textData.mDescent;
-    aMetrics.height = aMetrics.ascent + aMetrics.descent;
+    aMetrics.height = textData.mAscent + textData.mDescent;
   }
   mAscent = aMetrics.ascent;
 
@@ -6166,7 +6163,7 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
       else {
         // Things didn't turn out well, just return the reflow metrics.
         aMetrics.mBoundingMetrics.ascent = aMetrics.ascent;
-        aMetrics.mBoundingMetrics.descent = aMetrics.descent;
+        aMetrics.mBoundingMetrics.descent = aMetrics.height - aMetrics.ascent;
         aMetrics.mBoundingMetrics.width = aMetrics.width;
         aMetrics.mBoundingMetrics.rightBearing = aMetrics.width;
       }
@@ -6215,8 +6212,8 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
 
 #ifdef NOISY_REFLOW
   ListTag(stdout);
-  printf(": desiredSize=%d,%d(a=%d/d=%d) status=%x\n",
-         aMetrics.width, aMetrics.height, aMetrics.ascent, aMetrics.descent,
+  printf(": desiredSize=%d,%d(b=%d) status=%x\n",
+         aMetrics.width, aMetrics.height, aMetrics.ascent,
          aStatus);
 #endif
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);

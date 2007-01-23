@@ -499,6 +499,18 @@ nsBlockFrame::InvalidateInternal(const nsRect& aDamageRect,
   nsBlockFrameSuper::InvalidateInternal(aDamageRect, aX, aY, aForChild, aImmediate);
 }
 
+nscoord
+nsBlockFrame::GetBaseline() const
+{
+  NS_ASSERTION(!(GetStateBits() & (NS_FRAME_IS_DIRTY |
+                                   NS_FRAME_HAS_DIRTY_CHILDREN)),
+               "frame must not be dirty");
+  nscoord result;
+  if (nsLayoutUtils::GetLastLineBaseline(this, &result))
+    return result;
+  return nsFrame::GetBaseline();
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // Child frame enumeration
 
@@ -993,6 +1005,40 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
 
   CheckFloats(state);
 
+  // Place the "marker" (bullet) frame if it is placed next to a block
+  // child.
+  //
+  // According to the CSS2 spec, section 12.6.1, the "marker" box
+  // participates in the height calculation of the list-item box's
+  // first line box.
+  //
+  // There are exactly two places a bullet can be placed: near the
+  // first or second line. It's only placed on the second line in a
+  // rare case: an empty first line followed by a second line that
+  // contains a block (example: <LI>\n<P>... ). This is where
+  // the second case can happen.
+  if (mBullet && HaveOutsideBullet() &&
+      (mLines.empty() ||
+       mLines.front()->IsBlock() ||
+       0 == mLines.front()->mBounds.height)) {
+    // Reflow the bullet
+    nsHTMLReflowMetrics metrics;
+    ReflowBullet(state, metrics);
+
+    nscoord baseline;
+    if (!nsLayoutUtils::GetFirstLineBaseline(this, &baseline)) {
+      baseline = 0;
+    }
+    
+    // Doing the alignment using the baseline will also cater for
+    // bullets that are placed next to a child block (bug 92896)
+    
+    // Tall bullets won't look particularly nice here...
+    nsRect bbox = mBullet->GetRect();
+    bbox.y = baseline - metrics.ascent;
+    mBullet->SetRect(bbox);
+  }
+
   // Compute our final size
   ComputeFinalSize(aReflowState, state, aMetrics);
 
@@ -1295,13 +1341,6 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     autoHeight += borderPadding.top + borderPadding.bottom;
     aMetrics.height = autoHeight;
   }
-
-  // XXXbernd this should be revised when inline-blocks are implemented
-  if (GetFirstChild(nsnull))
-    aMetrics.ascent = mAscent;
-  else 
-    aMetrics.ascent = aMetrics.height;
-  aMetrics.descent = aMetrics.height - aMetrics.ascent;
 
 #ifdef DEBUG_blocks
   if (CRAZY_WIDTH(aMetrics.width) || CRAZY_HEIGHT(aMetrics.height)) {
@@ -1657,9 +1696,6 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   PRUint8 inlineFloatBreakType = NS_STYLE_CLEAR_NONE;
 
   line_iterator line = begin_lines(), line_end = end_lines();
-
-  if (line == line_end)
-    mAscent=0; // there are no lines, reset the previously computed ascent
 
   // Reflow the lines that are already ours
   for ( ; line != line_end; ++line, aState.AdvanceToNextLine()) {
@@ -3003,47 +3039,6 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
                brc.GetCarriedOutBottomMargin(), collapsedBottomMargin.get(),
                aState.mPrevBottomMargin);
 #endif
-        
-        // If the block frame that we just reflowed happens to be our
-        // first block, then its computed ascent is ours
-        if (frame == GetTopBlockChild(aState.mPresContext)) {
-          const nsHTMLReflowMetrics& metrics = brc.GetMetrics();
-          mAscent = metrics.ascent;
-        }
-        
-        // Place the "marker" (bullet) frame.
-        //
-        // According to the CSS2 spec, section 12.6.1, the "marker" box
-        // participates in the height calculation of the list-item box's
-        // first line box.
-        //
-        // There are exactly two places a bullet can be placed: near the
-        // first or second line. It's only placed on the second line in a
-        // rare case: an empty first line followed by a second line that
-        // contains a block (example: <LI>\n<P>... ). This is where
-        // the second case can happen.
-        if (mBullet && HaveOutsideBullet() &&
-            ((aLine == mLines.front()) ||
-             ((0 == mLines.front()->mBounds.height) &&
-              (aLine == begin_lines().next())))) {
-          // Reflow the bullet
-          nsHTMLReflowMetrics metrics;
-          ReflowBullet(aState, metrics);
-          
-          // Doing the alignment using |mAscent| will also cater for bullets
-          // that are placed next to a child block (bug 92896)
-          // (Note that mAscent should be set by now, otherwise why would
-          // we be placing the bullet yet?)
-          
-          // Tall bullets won't look particularly nice here...
-          nsRect bbox = mBullet->GetRect();
-          nscoord bulletTopMargin = applyTopMargin
-            ? collapsedBottomMargin.get()
-            : 0;
-          bbox.y = aState.BorderPadding().top + mAscent -
-            metrics.ascent + bulletTopMargin;
-          mBullet->SetRect(bbox);
-        }
       }
       else {
         // None of the block fits. Determine the correct reflow status.
@@ -3828,11 +3823,6 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     addedBullet = PR_TRUE;
   }
   aLineLayout.VerticalAlignLine();
-  // Our ascent is the ascent of our first line (but if this line is all
-  // whitespace we'll correct things in |ReflowBlockFrame|).
-  if (aLine == mLines.front()) {
-    mAscent = aLine->mBounds.y + aLine->GetAscent();
-  }
 
 #ifdef DEBUG
   {
@@ -3910,11 +3900,6 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
                    ? -aState.mPrevBottomMargin.get() : 0;
     newY = aState.mY + dy;
     aLine->SlideBy(dy); // XXXldb Do we really want to do this?
-    // keep our ascent in sync
-    // XXXldb If it's empty, shouldn't the next line control the ascent?
-    if (mLines.front() == aLine) {
-      mAscent += dy;
-    }
   }
 
   // See if the line fit. If it doesn't we need to push it. Our first

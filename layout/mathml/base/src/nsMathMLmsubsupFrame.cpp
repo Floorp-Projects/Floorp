@@ -332,11 +332,10 @@ nsMathMLmsubsupFrame::PlaceSubSupScript(nsPresContext*      aPresContext,
     PR_MAX(baseSize.ascent, 
        PR_MAX(subScriptSize.ascent - subScriptShift,
               supScriptSize.ascent + supScriptShift));
-  aDesiredSize.descent =
-    PR_MAX(baseSize.descent,
-       PR_MAX(subScriptSize.descent + subScriptShift, 
-              supScriptSize.descent - supScriptShift));
-  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+  aDesiredSize.height = aDesiredSize.ascent +
+    PR_MAX(baseSize.height - baseSize.ascent,
+       PR_MAX(subScriptSize.height - subScriptSize.ascent + subScriptShift, 
+              supScriptSize.height - subScriptSize.ascent - supScriptShift));
   aDesiredSize.width = boundingMetrics.width;
   aDesiredSize.mBoundingMetrics = boundingMetrics;
 

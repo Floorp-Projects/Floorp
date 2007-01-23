@@ -158,6 +158,12 @@ public:
   PRBool HasVerticalAlignBaseline();
 
   /**
+   * Get the first-line baseline of the cell relative to its top border
+   * edge, as if the cell were vertically aligned to the top of the row.
+   */
+  nscoord GetCellBaseline() const;
+
+  /**
    * return the cell's specified row span. this is what was specified in the
    * content model or in the style info, and is always >= 1.
    * to get the effective row span (the actual value that applies), use GetEffectiveRowSpan()
@@ -192,17 +198,16 @@ public:
   void SetColIndex(PRInt32 aColIndex);
 
   /** return the available width given to this frame during its last reflow */
-  virtual nscoord GetPriorAvailWidth();
+  inline nscoord GetPriorAvailWidth();
   
   /** set the available width given to this frame during its last reflow */
-  virtual void SetPriorAvailWidth(nscoord aPriorAvailWidth);
+  inline void SetPriorAvailWidth(nscoord aPriorAvailWidth);
 
   /** return the desired size returned by this frame during its last reflow */
-  virtual nsSize GetDesiredSize();
-  virtual nscoord GetDesiredAscent();
+  inline nsSize GetDesiredSize();
 
   /** set the desired size returned by this frame during its last reflow */
-  virtual void SetDesiredSize(const nsHTMLReflowMetrics & aDesiredSize);
+  inline void SetDesiredSize(const nsHTMLReflowMetrics & aDesiredSize);
 
   PRBool GetContentEmpty();
   void SetContentEmpty(PRBool aContentEmpty);
@@ -251,7 +256,6 @@ protected:
 
   nscoord      mPriorAvailWidth;      // the avail width during the last reflow
   nsSize       mDesiredSize;          // the last desired width & height
-  nscoord      mDesiredAscent;        // the last desired ascent
 };
 
 inline nscoord nsTableCellFrame::GetPriorAvailWidth()
@@ -263,14 +267,10 @@ inline void nsTableCellFrame::SetPriorAvailWidth(nscoord aPriorAvailWidth)
 inline nsSize nsTableCellFrame::GetDesiredSize()
 { return mDesiredSize; }
 
-inline nscoord nsTableCellFrame::GetDesiredAscent()
-{ return mDesiredAscent; }
-
 inline void nsTableCellFrame::SetDesiredSize(const nsHTMLReflowMetrics & aDesiredSize)
 { 
   mDesiredSize.width = aDesiredSize.width;
   mDesiredSize.height = aDesiredSize.height;
-  mDesiredAscent = aDesiredSize.ascent;
 }
 
 inline PRBool nsTableCellFrame::GetContentEmpty()

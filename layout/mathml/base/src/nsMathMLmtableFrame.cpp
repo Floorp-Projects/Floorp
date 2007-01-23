@@ -632,7 +632,6 @@ nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
       aDesiredSize.ascent = dy + height/2 + axisHeight;
     }
   }
-  aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
 
   mReference.x = 0;
   mReference.y = aDesiredSize.ascent;
@@ -640,7 +639,7 @@ nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
   // just make-up a bounding metrics
   mBoundingMetrics.Clear();
   mBoundingMetrics.ascent = aDesiredSize.ascent;
-  mBoundingMetrics.descent = aDesiredSize.descent;
+  mBoundingMetrics.descent = aDesiredSize.height - aDesiredSize.ascent;
   mBoundingMetrics.width = aDesiredSize.width;
   mBoundingMetrics.leftBearing = 0;
   mBoundingMetrics.rightBearing = aDesiredSize.width;

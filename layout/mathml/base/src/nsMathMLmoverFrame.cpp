@@ -389,11 +389,11 @@ nsMathMLmoverFrame::Place(nsIRenderingContext& aRenderingContext,
   mBoundingMetrics.rightBearing = 
     PR_MAX(dxBase + bmBase.rightBearing, dxOver + bmOver.rightBearing);
 
-  aDesiredSize.descent = baseSize.descent;
   aDesiredSize.ascent = 
     PR_MAX(mBoundingMetrics.ascent + delta2,
            overSize.ascent + bmOver.descent + delta1 + bmBase.ascent);
-  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+  aDesiredSize.height = aDesiredSize.ascent +
+    baseSize.height - baseSize.ascent;
   aDesiredSize.width = mBoundingMetrics.width;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 

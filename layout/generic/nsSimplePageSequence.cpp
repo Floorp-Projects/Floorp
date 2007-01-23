@@ -208,8 +208,6 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
     // Return our desired size
     aDesiredSize.height  = mSize.height;
     aDesiredSize.width   = mSize.width;
-    aDesiredSize.ascent  = aDesiredSize.height;
-    aDesiredSize.descent = 0;
     aDesiredSize.mOverflowArea = nsRect(0, 0, aDesiredSize.width,
                                         aDesiredSize.height);
     FinishAndStoreOverflow(&aDesiredSize);
@@ -373,8 +371,6 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   // Return our desired size
   aDesiredSize.height  = y; // includes page heights and dead space
   aDesiredSize.width   = x + availSize.width + deadSpaceGap;
-  aDesiredSize.ascent  = aDesiredSize.height;
-  aDesiredSize.descent = 0;
 
   aDesiredSize.mOverflowArea = nsRect(0, 0, aDesiredSize.width,
                                       aDesiredSize.height);

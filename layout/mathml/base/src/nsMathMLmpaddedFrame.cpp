@@ -436,9 +436,8 @@ nsMathMLmpaddedFrame::Reflow(nsPresContext*          aPresContext,
   mBoundingMetrics.descent = depth;
 
   aDesiredSize.ascent += dy;
-  aDesiredSize.descent += depth - mBoundingMetrics.descent;
   aDesiredSize.width = mBoundingMetrics.width;
-  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+  aDesiredSize.height += dy + depth - mBoundingMetrics.descent;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
   // combine our tweaked size and our natural size to get our real estate

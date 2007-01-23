@@ -881,8 +881,6 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
       aStatus = NS_FRAME_NOT_COMPLETE;
     }
   }
-  aMetrics.ascent  = aMetrics.height;
-  aMetrics.descent = 0;
 
   aMetrics.mOverflowArea.SetRect(0, 0, aMetrics.width, aMetrics.height);
   FinishAndStoreOverflow(&aMetrics);

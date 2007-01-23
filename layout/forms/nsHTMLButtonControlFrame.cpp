@@ -341,7 +341,6 @@ nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
 
   aDesiredSize.ascent +=
     aReflowState.mComputedBorderPadding.top + focusPadding.top;
-  aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
 
   aDesiredSize.mOverflowArea =
     nsRect(0, 0, aDesiredSize.width, aDesiredSize.height);
@@ -413,14 +412,17 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
     yoff = (minInternalHeight - aDesiredSize.height) / 2;
   }
 
-  // Adjust the ascent by our offset (since we moved the child's
-  // baseline by that much).
-  aDesiredSize.ascent += yoff;
-  
   // Place the child
   FinishReflowChild(aFirstKid, aPresContext, &reflowState, aDesiredSize,
                     xoffset,
                     yoff + aFocusPadding.top + aReflowState.mComputedBorderPadding.top, 0);
+
+  if (aDesiredSize.ascent == nsHTMLReflowMetrics::ASK_FOR_BASELINE)
+    aDesiredSize.ascent = aFirstKid->GetBaseline();
+
+  // Adjust the baseline by our offset (since we moved the child's
+  // baseline by that much).
+  aDesiredSize.ascent += yoff;
 }
 
 /* virtual */ PRBool

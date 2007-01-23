@@ -166,7 +166,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   nsReflowStatus childStatus;
 
   aDesiredSize.width = aDesiredSize.height = 0;
-  aDesiredSize.ascent = aDesiredSize.descent = 0;
+  aDesiredSize.ascent = 0;
 
   nsBoundingMetrics bmSqr, bmBase, bmIndex;
   nsIRenderingContext& renderingContext = *aReflowState.rendContext;
@@ -283,9 +283,9 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
     PR_MAX(bmBase.width, bmBase.rightBearing); // take also care of the rule
 
   aDesiredSize.ascent = mBoundingMetrics.ascent + leading;
-  aDesiredSize.descent =
-    PR_MAX(baseSize.descent, (mBoundingMetrics.descent + ruleThickness));
-  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+  aDesiredSize.height = aDesiredSize.ascent +
+    PR_MAX(baseSize.height - baseSize.ascent,
+           mBoundingMetrics.descent + ruleThickness);
   aDesiredSize.width = mBoundingMetrics.width;
 
   /////////////
@@ -303,8 +303,9 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
     indexClearance = 
       indexRaisedAscent - mBoundingMetrics.ascent; // excess gap introduced by a tall index 
     mBoundingMetrics.ascent = indexRaisedAscent;
+    nscoord descent = aDesiredSize.height - aDesiredSize.ascent;
     aDesiredSize.ascent = mBoundingMetrics.ascent + leading;
-    aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+    aDesiredSize.height = aDesiredSize.ascent + descent;
   }
 
   // the index is tucked in closer to the radical while making sure

@@ -200,9 +200,9 @@ nsMathMLmsubFrame::PlaceSubScript (nsPresContext*      aPresContext,
   // reflow metrics
   aDesiredSize.ascent = 
     PR_MAX(baseSize.ascent, subScriptSize.ascent - actualSubScriptShift);
-  aDesiredSize.descent = 
-    PR_MAX(baseSize.descent, subScriptSize.descent + actualSubScriptShift);
-  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+  aDesiredSize.height = aDesiredSize.ascent +
+    PR_MAX(baseSize.height - baseSize.ascent,
+           subScriptSize.height - subScriptSize.ascent + actualSubScriptShift);
   aDesiredSize.width = boundingMetrics.width;
   aDesiredSize.mBoundingMetrics = boundingMetrics;
 

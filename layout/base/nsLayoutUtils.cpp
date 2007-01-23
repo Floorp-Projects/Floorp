@@ -1676,8 +1676,8 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
 }
 
 /* static */ nscoord
-nsLayoutUtils::MinWidthFromInline(nsIFrame *aFrame,
-                                  nsIRenderingContext *aRenderingContext)
+nsLayoutUtils::MinWidthFromInline(nsIFrame* aFrame,
+                                  nsIRenderingContext* aRenderingContext)
 {
   nsIFrame::InlineMinWidthData data;
   DISPLAY_MIN_WIDTH(aFrame, data.prevLines);
@@ -1687,8 +1687,8 @@ nsLayoutUtils::MinWidthFromInline(nsIFrame *aFrame,
 }
 
 /* static */ nscoord
-nsLayoutUtils::PrefWidthFromInline(nsIFrame *aFrame,
-                                   nsIRenderingContext *aRenderingContext)
+nsLayoutUtils::PrefWidthFromInline(nsIFrame* aFrame,
+                                   nsIRenderingContext* aRenderingContext)
 {
   nsIFrame::InlinePrefWidthData data;
   DISPLAY_PREF_WIDTH(aFrame, data.prevLines);
@@ -1752,4 +1752,98 @@ nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
   nscoord width;
   aContext->GetWidth(aString, aLength, width);
   return width;
+}
+
+/* static */ PRBool
+nsLayoutUtils::GetFirstLineBaseline(const nsIFrame* aFrame, nscoord* aResult)
+{
+  const nsBlockFrame* block;
+  if (NS_FAILED(NS_CONST_CAST(nsIFrame*, aFrame)->
+                  QueryInterface(kBlockFrameCID, (void**)&block))) {
+    // For the first-line baseline we also have to check for a table, and if
+    // so, use the baseline of its first row.
+    nsIAtom* fType = aFrame->GetType();
+    if (fType == nsGkAtoms::tableOuterFrame) {
+      *aResult = aFrame->GetBaseline();
+      return PR_TRUE;
+    }
+
+    // For first-line baselines, we have to consider scroll frames.
+    if (fType == nsGkAtoms::scrollFrame) {
+      nsIScrollableFrame *sFrame;
+      if (NS_FAILED(CallQueryInterface(NS_CONST_CAST(nsIFrame*,
+                                         aFrame), &sFrame)) || !sFrame) {
+        NS_NOTREACHED("not scroll frame");
+      }
+      nscoord kidBaseline;
+      if (GetFirstLineBaseline(sFrame->GetScrolledFrame(), &kidBaseline)) {
+        // Consider only the border and padding that contributes to the
+        // kid's position, not the scrolling, so we get the initial
+        // position.
+        *aResult = kidBaseline + aFrame->GetUsedBorderAndPadding().top;
+        return PR_TRUE;
+      }
+      return PR_FALSE;
+    }
+
+    // No baseline.
+    return PR_FALSE;
+  }
+
+  for (nsBlockFrame::const_line_iterator line = block->begin_lines(),
+                                     line_end = block->end_lines();
+       line != line_end; ++line) {
+    if (line->IsBlock()) {
+      nsIFrame *kid = line->mFirstChild;
+      nscoord kidBaseline;
+      if (GetFirstLineBaseline(kid, &kidBaseline)) {
+        *aResult = kidBaseline + kid->GetPosition().y;
+        return PR_TRUE;
+      }
+    } else {
+      // XXX Is this the right test?  We have some bogus empty lines
+      // floating around, but IsEmpty is perhaps too weak.
+      if (line->GetHeight() != 0 || !line->IsEmpty()) {
+        *aResult = line->mBounds.y + line->GetAscent();
+        return PR_TRUE;
+      }
+    }
+  }
+  return PR_FALSE;
+}
+
+/* static */ PRBool
+nsLayoutUtils::GetLastLineBaseline(const nsIFrame* aFrame, nscoord* aResult)
+{
+  const nsBlockFrame* block;
+  if (NS_FAILED(NS_CONST_CAST(nsIFrame*, aFrame)->
+                  QueryInterface(kBlockFrameCID, (void**)&block)))
+    // No baseline.  (We intentionally don't descend into scroll frames.)
+    return PR_FALSE;
+
+  for (nsBlockFrame::const_reverse_line_iterator line = block->rbegin_lines(),
+                                             line_end = block->rend_lines();
+       line != line_end; ++line) {
+    if (line->IsBlock()) {
+      nsIFrame *kid = line->mFirstChild;
+      nscoord kidBaseline;
+      if (GetLastLineBaseline(kid, &kidBaseline)) {
+        *aResult = kidBaseline + kid->GetPosition().y;
+        return PR_TRUE;
+      } else if (kid->GetType() == nsGkAtoms::scrollFrame) {
+        // Use the bottom of the scroll frame.
+        // XXX CSS2.1 really doesn't say what to do here.
+        *aResult = kid->GetRect().YMost();
+        return PR_TRUE;
+      }
+    } else {
+      // XXX Is this the right test?  We have some bogus empty lines
+      // floating around, but IsEmpty is perhaps too weak.
+      if (line->GetHeight() != 0 || !line->IsEmpty()) {
+        *aResult = line->mBounds.y + line->GetAscent();
+        return PR_TRUE;
+      }
+    }
+  }
+  return PR_FALSE;
 }

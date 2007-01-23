@@ -1442,10 +1442,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
 #endif
 
       aMetrics.width = mComputedSize.width;
-      aMetrics.height = mComputedSize.height;
-
-      aMetrics.ascent = aMetrics.height;
-      aMetrics.descent = 0;
+      aMetrics.ascent = aMetrics.height = mComputedSize.height;
 
       return;
     }
@@ -1469,9 +1466,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
   switch (myList->mListStyleType) {
     case NS_STYLE_LIST_STYLE_NONE:
       aMetrics.width = 0;
-      aMetrics.height = 0;
-      aMetrics.ascent = 0;
-      aMetrics.descent = 0;
+      aMetrics.ascent = aMetrics.height = 0;
       break;
 
     case NS_STYLE_LIST_STYLE_DISC:
@@ -1488,9 +1483,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
       bulletSize = NSIntPixelsToTwips(bulletSize, p2t);
       mPadding.bottom = NSIntPixelsToTwips((nscoord) NSToIntRound((float)ascent / (8.0f * p2t)),p2t);
       aMetrics.width = mPadding.right + bulletSize;
-      aMetrics.height = mPadding.bottom + bulletSize;
-      aMetrics.ascent = mPadding.bottom + bulletSize;
-      aMetrics.descent = 0;
+      aMetrics.ascent = aMetrics.height = mPadding.bottom + bulletSize;
       break;
 
     default:
@@ -1551,7 +1544,6 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
       aMetrics.width = nsLayoutUtils::GetStringWidth(this, aRenderingContext, text.get(), text.Length());
       aMetrics.width += mPadding.right;
       fm->GetMaxAscent(aMetrics.ascent);
-      fm->GetMaxDescent(aMetrics.descent);
       break;
   }
 }
@@ -1574,7 +1566,6 @@ nsBulletFrame::Reflow(nsPresContext* aPresContext,
   aMetrics.width += borderPadding.left + borderPadding.right;
   aMetrics.height += borderPadding.top + borderPadding.bottom;
   aMetrics.ascent += borderPadding.top;
-  aMetrics.descent += borderPadding.bottom;
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);

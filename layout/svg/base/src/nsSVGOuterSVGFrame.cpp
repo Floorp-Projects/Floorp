@@ -315,9 +315,6 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
   aDesiredSize.width = (int)(width*twipsPerPx);
   aDesiredSize.height = (int)(height*twipsPerPx);
 
-  aDesiredSize.ascent = aDesiredSize.height;
-  aDesiredSize.descent = 0;
-  
   // XXX add in CSS borders ??
 
   aStatus = NS_FRAME_COMPLETE;

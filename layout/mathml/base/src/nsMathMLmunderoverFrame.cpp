@@ -464,10 +464,10 @@ nsMathMLmunderoverFrame::Place(nsIRenderingContext& aRenderingContext,
     PR_MAX(dxAnonymousBase + bmAnonymousBase.rightBearing, dxUnder + bmUnder.rightBearing);
 
   aDesiredSize.ascent = ascentAnonymousBase;
-  aDesiredSize.descent = 
+  aDesiredSize.height = aDesiredSize.ascent +
     PR_MAX(mBoundingMetrics.descent + underDelta2,
-           bmAnonymousBase.descent + underDelta1 + bmUnder.ascent + underSize.descent);
-  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+           bmAnonymousBase.descent + underDelta1 + bmUnder.ascent +
+             underSize.height - underSize.ascent);
   aDesiredSize.width = mBoundingMetrics.width;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 

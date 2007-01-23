@@ -723,8 +723,6 @@ nsHTMLFramesetFrame::GetDesiredSize(nsPresContext*          aPresContext,
     aDesiredSize.width  = size.width;
     aDesiredSize.height = size.height;
   } 
-  aDesiredSize.ascent = aDesiredSize.height;
-  aDesiredSize.descent = 0;
 }
 
 

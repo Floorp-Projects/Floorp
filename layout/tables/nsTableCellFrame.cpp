@@ -555,7 +555,7 @@ void nsTableCellFrame::VerticallyAlignChild(const nsHTMLReflowState& aReflowStat
     case NS_STYLE_VERTICAL_ALIGN_BASELINE:
       // Align the baselines of the child frame with the baselines of 
       // other children in the same row which have 'vertical-align: baseline'
-      kidYTop = topInset + aMaxAscent - GetDesiredAscent();
+      kidYTop = topInset + aMaxAscent - GetCellBaseline();
     break;
 
     case NS_STYLE_VERTICAL_ALIGN_TOP:
@@ -615,6 +615,20 @@ nsTableCellFrame::HasVerticalAlignBaseline()
     }
   }
   return PR_TRUE;
+}
+
+nscoord
+nsTableCellFrame::GetCellBaseline() const
+{
+  // Ignore the position of the inner frame relative to the cell frame
+  // since we want the position as though the inner were top-aligned.
+  nsIFrame *inner = mFrames.FirstChild();
+  nscoord borderPadding = GetUsedBorderAndPadding().top;
+  nscoord result;
+  if (nsLayoutUtils::GetFirstLineBaseline(inner, &result))
+    return result + borderPadding;
+  return inner->GetContentRect().YMost() - inner->GetPosition().y +
+         borderPadding;
 }
 
 PRInt32 nsTableCellFrame::GetRowSpan()
@@ -780,7 +794,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
     availSize.height = 1;
 
   nsHTMLReflowMetrics kidSize(aDesiredSize.mFlags);
-  kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
+  kidSize.width = kidSize.height = 0;
   SetPriorAvailWidth(aReflowState.availableWidth);
   nsIFrame* firstKid = mFrames.FirstChild();
   NS_ASSERTION(firstKid, "Frame construction error, a table cell always has an inner cell frame");
@@ -854,12 +868,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
   // set the cell's desired size and max element size
   aDesiredSize.width   = cellWidth;
   aDesiredSize.height  = cellHeight;
-  aDesiredSize.ascent  = topInset;
-  aDesiredSize.descent = bottomInset;
 
-  aDesiredSize.ascent  += kidSize.ascent;
-  aDesiredSize.descent += kidSize.descent;
-  
   // the overflow area will be computed when the child will be vertically aligned
 
   if (aReflowState.mFlags.mSpecialHeightReflow) {

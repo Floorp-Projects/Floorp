@@ -463,7 +463,6 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
     aMetrics.width = 0;
     aMetrics.height = 0;
     aMetrics.ascent = 0;
-    aMetrics.descent = 0;
   }
   else {
     // Compute final width
@@ -493,14 +492,12 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
       // and bottom border and padding. The height of children do not
       // affect our height.
       fm->GetMaxAscent(aMetrics.ascent);
-      fm->GetMaxDescent(aMetrics.descent);
       fm->GetHeight(aMetrics.height);
     } else {
       NS_WARNING("Cannot get font metrics - defaulting sizes to 0");
-      aMetrics.ascent = aMetrics.descent = aMetrics.height = 0;
+      aMetrics.ascent = aMetrics.height = 0;
     }
     aMetrics.ascent += aReflowState.mComputedBorderPadding.top;
-    aMetrics.descent += aReflowState.mComputedBorderPadding.bottom;
     aMetrics.height += aReflowState.mComputedBorderPadding.top +
       aReflowState.mComputedBorderPadding.bottom;
   }
@@ -511,8 +508,8 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
 
 #ifdef NOISY_FINAL_SIZE
   ListTag(stdout);
-  printf(": metrics=%d,%d ascent=%d descent=%d\n",
-         aMetrics.width, aMetrics.height, aMetrics.ascent, aMetrics.descent);
+  printf(": metrics=%d,%d ascent=%d\n",
+         aMetrics.width, aMetrics.height, aMetrics.ascent);
 #endif
 
   return rv;

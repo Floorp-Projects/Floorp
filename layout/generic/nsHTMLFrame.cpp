@@ -566,8 +566,6 @@ CanvasFrame::Reflow(nsPresContext*          aPresContext,
   if (mFrames.IsEmpty()) {
     // We have no child frame, so return an empty size
     aDesiredSize.width = aDesiredSize.height = 0;
-    aDesiredSize.ascent = aDesiredSize.descent = 0;
-
   } else {
     nsIFrame* kidFrame = mFrames.FirstChild();
     PRBool kidDirty = (kidFrame->GetStateBits() & NS_FRAME_IS_DIRTY) != 0;
@@ -613,9 +611,6 @@ CanvasFrame::Reflow(nsPresContext*          aPresContext,
         nsPoint(kidReflowState.mComputedMargin.left,
                 kidReflowState.mComputedMargin.top));
     FinishAndStoreOverflow(&aDesiredSize);
-
-    aDesiredSize.ascent = aDesiredSize.height;
-    aDesiredSize.descent = 0;
   }
 
   NS_FRAME_TRACE_REFLOW_OUT("CanvasFrame::Reflow", aStatus);

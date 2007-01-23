@@ -145,9 +145,6 @@ nsHTMLCanvasFrame::Reflow(nsPresContext*           aPresContext,
     aMetrics.height = PR_MAX(0, aMetrics.height);
   }
 
-  aMetrics.ascent  = aMetrics.height;
-  aMetrics.descent = 0;
-
   aMetrics.mOverflowArea.SetRect(0, 0, aMetrics.width, aMetrics.height);
   FinishAndStoreOverflow(&aMetrics);
 

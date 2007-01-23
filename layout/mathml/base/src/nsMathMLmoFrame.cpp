@@ -818,7 +818,7 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
     // see bug 188467 for what is going on here
     nscoord dy = aDesiredStretchSize.ascent - (mBoundingMetrics.ascent + leading);
     aDesiredStretchSize.ascent = mBoundingMetrics.ascent + leading;
-    aDesiredStretchSize.descent = mBoundingMetrics.descent;
+    aDesiredStretchSize.height = aDesiredStretchSize.ascent + mBoundingMetrics.descent;
 
     firstChild->SetPosition(firstChild->GetPosition() - nsPoint(0, dy));
   }
@@ -827,9 +827,9 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
     fm->GetMaxAscent(ascent);
     fm->GetMaxDescent(descent);
     aDesiredStretchSize.ascent = PR_MAX(mBoundingMetrics.ascent + leading, ascent);
-    aDesiredStretchSize.descent = PR_MAX(mBoundingMetrics.descent + leading, descent);
+    aDesiredStretchSize.height = aDesiredStretchSize.ascent +
+                                 PR_MAX(mBoundingMetrics.descent + leading, descent);
   }
-  aDesiredStretchSize.height = aDesiredStretchSize.ascent + aDesiredStretchSize.descent;
   aDesiredStretchSize.width = mBoundingMetrics.width;
   aDesiredStretchSize.mBoundingMetrics = mBoundingMetrics;
   mReference.x = 0;
@@ -940,7 +940,6 @@ nsMathMLmoFrame::Reflow(nsPresContext*          aPresContext,
     aDesiredSize.width = 0;
     aDesiredSize.height = 0;
     aDesiredSize.ascent = 0;
-    aDesiredSize.descent = 0;
     aDesiredSize.mBoundingMetrics.Clear();
     aStatus = NS_FRAME_COMPLETE;
 

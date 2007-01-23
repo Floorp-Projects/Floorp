@@ -130,8 +130,6 @@ SpacerFrame::GetDesiredSize(nsHTMLReflowMetrics& aMetrics, nsSize aPercentBase)
   // By default, we have no area
   aMetrics.width = 0;
   aMetrics.height = 0;
-  aMetrics.ascent = 0;
-  aMetrics.descent = 0;
 
   const nsStylePosition* position = GetStylePosition();
 
@@ -144,7 +142,6 @@ SpacerFrame::GetDesiredSize(nsHTMLReflowMetrics& aMetrics, nsSize aPercentBase)
     if (eStyleUnit_Coord == position->mHeight.GetUnit()) {
       aMetrics.height = position->mHeight.GetCoordValue();
     }
-    aMetrics.ascent = aMetrics.height;
     break;
 
   case TYPE_IMAGE:
@@ -169,8 +166,6 @@ SpacerFrame::GetDesiredSize(nsHTMLReflowMetrics& aMetrics, nsSize aPercentBase)
       float factor = position->mHeight.GetPercentValue();
       aMetrics.width = NSToCoordRound(factor * aPercentBase.height);
     }
-    // accent
-    aMetrics.ascent = aMetrics.height;
     break;
   }
 

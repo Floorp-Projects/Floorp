@@ -343,10 +343,10 @@ nsMathMLmunderFrame::Place(nsIRenderingContext& aRenderingContext,
     PR_MAX(dxBase + bmBase.rightBearing, dxUnder + bmUnder.rightBearing);
 
   aDesiredSize.ascent = baseSize.ascent;
-  aDesiredSize.descent = 
+  aDesiredSize.height = aDesiredSize.ascent +
     PR_MAX(mBoundingMetrics.descent + delta2,
-           bmBase.descent + delta1 + bmUnder.ascent + underSize.descent);
-  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+           bmBase.descent + delta1 + bmUnder.ascent +
+             underSize.height - underSize.ascent);
   aDesiredSize.width = mBoundingMetrics.width;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
