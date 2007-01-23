@@ -707,8 +707,12 @@
                 this.mCurrentBrowser.focusedElement = document.commandDispatcher.focusedElement;
               }
 
-              if (this.mCurrentBrowser.focusedElement) {
-                // Clear focus outline before we draw on top of it
+              if (this.mCurrentBrowser.focusedElement &&
+                  this.mCurrentBrowser.focusedElement.parentNode !=
+                  this.mCurrentTab.parentNode) {
+                // Clear focus outline before we draw on top of it.
+                // Only blur the focused element if it isn't a tab, 
+                // to avoid breaking keyboard tab navigation
                 this.mCurrentBrowser.focusedElement.blur();
               }
               this.mCurrentBrowser.setAttribute("type", "content-targetable");
