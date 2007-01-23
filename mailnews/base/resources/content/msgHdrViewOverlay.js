@@ -502,31 +502,31 @@ var messageHeaderSink = {
 
     mSecurityInfo  : null,
     mSaveHdr: null,
-    getSecurityInfo: function()
+    get securityInfo()
     {
       return this.mSecurityInfo;
     },
-    setSecurityInfo: function(aSecurityInfo)
+    set securityInfo(aSecurityInfo)
     {
       this.mSecurityInfo = aSecurityInfo;
     },
 
     mDummyMsgHeader: null,
 
-    getDummyMsgHeader: function()
+    get dummyMsgHeader()
     {
       if (!this.mDummyMsgHeader)
         this.mDummyMsgHeader = new nsDummyMsgHeader();
       return this.mDummyMsgHeader;
     },
     mProperties: null,
-    getProperties: function()
-      {
+    get properties()
+    {
       if (!this.mProperties)
         this.mProperties = Components.classes["@mozilla.org/hash-property-bag;1"].
           createInstance(Components.interfaces.nsIWritablePropertyBag2);
       return this.mProperties;
-      }
+    }
 };
 
 // Private method which generates a space delimited list of tag keys for the
