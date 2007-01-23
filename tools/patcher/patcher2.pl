@@ -749,10 +749,14 @@ sub CreateCompletePatchinfo {
                  locale => $l,
                  version => $to->{'appv'});
 
-                my $licenseUrl = SubstitutePath(
-                 path => $u_config->{$u}->{'license'},
-                 locale => $l,
-                 version => $to->{'appv'});
+                my $licenseUrl = undef;
+                if (defined($u_config->{$u}->{'license'})) {
+                    $licenseUrl = SubstitutePath(
+                     path => $u_config->{$u}->{'license'},
+                     locale => $l,
+                     version => $to->{'appv'});
+                }
+
 
                 for my $c (@channels) {
                     my $aus_prefix = "$u/aus2/$from_aus_app/$from_aus_version/$from_aus_platform/$from_aus_buildid/$l/$c";
@@ -933,10 +937,15 @@ sub CreatePastReleasePatchinfo {
                  locale => $locale,
                  version => $patchLocaleNode->{'appv'});
 
-                my $licenseUrl = SubstitutePath(
-                 path => $config->GetCurrentUpdate()->{'license'},
-                 locale => $locale,
-                 version => $patchLocaleNode->{'appv'});
+                my $licenseUrl = undef;
+                if (defined($config->GetCurrentUpdate()->{'license'})) {
+                    $licenseUrl = SubstitutePath(
+                     path => $config->GetCurrentUpdate()->{'license'},
+                     locale => $locale,
+                     version => $patchLocaleNode->{'appv'});
+                }
+
+                my $updateType = $config->GetCurrentUpdate()->{'updateType'};
 
                 foreach my $channel (@{$pastUpd->{'channels'}}) {
                     my $ausDir = ($channel =~ /test(-\w+)?$/) ? 'aus2.test' : 'aus2';
@@ -969,6 +978,7 @@ sub CreatePastReleasePatchinfo {
 
                     $completePatch->{'details'} = $detailsUrl;
                     $completePatch->{'license'} = $licenseUrl;
+                    $completePatch->{'updateType'} = $updateType;
 
                     write_patch_info(patch => $completePatch,
                                      schemaVer => $patchLocaleNode->{'schema'});
@@ -1073,11 +1083,16 @@ sub CreatePartialPatchinfo {
                  path => $u_config->{$u}->{'details'},
                  locale => $l,
                  version => $to->{'appv'});
+            
+                my $licenseUrl = undef;
+                if (defined($u_config->{$u}->{'license'})) {
+                    $licenseUrl = SubstitutePath(
+                     path => $u_config->{$u}->{'license'},
+                     locale => $l,
+                     version => $to->{'appv'});
+                }
 
-                my $licenseUrl = SubstitutePath(
-                 path => $u_config->{$u}->{'license'},
-                 locale => $l,
-                 version => $to->{'appv'});
+                my $updateType = $u_config->{$u}->{'updateType'};
 
                 for my $c (@channels) {
                     my $aus_prefix = "$u/aus2/$from_aus_app/$from_aus_version/$from_aus_platform/$from_aus_buildid/$l/$c";
@@ -1108,6 +1123,7 @@ sub CreatePartialPatchinfo {
                     $partial_patch->{'url'} = $gen_partial_url;
                     $partial_patch->{'details'} = $detailsUrl;
                     $partial_patch->{'license'} = $licenseUrl;
+                    $partial_patch->{'updateType'} = $updateType;
 
                     write_patch_info(patch => $partial_patch,
                                      schemaVer => $to->{'schema'});
