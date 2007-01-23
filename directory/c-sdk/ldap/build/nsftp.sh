@@ -48,7 +48,7 @@
 #      nsftp ldapsdk/19961108 c:\3.0\ns\components\ldapsdk
 #
 
-SERVER=ftp-rel
+SERVER=$COMPONENT_FTP_SERVER
 USER=ftpman
 PASSWD=ftpman
 TMPFILE=tmp.foo
