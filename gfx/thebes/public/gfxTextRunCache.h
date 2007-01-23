@@ -48,9 +48,15 @@
 class THEBES_API gfxTextRunCache {
 public:
     /*
-     * Get the global gfxTextRunCache
+     * Get the global gfxTextRunCache.  You must call Init() before
+     * calling this method.
      */
-    static gfxTextRunCache* GetCache();
+    static gfxTextRunCache* GetCache() {
+        return mGlobalCache;
+    }
+
+    static nsresult Init();
+    static void Shutdown();
 
     /* Will return a pointer to a gfxTextRun, either from the cache
      * or a newly created (and cached) run.
@@ -66,6 +72,7 @@ protected:
     gfxTextRunCache();
 
     static gfxTextRunCache *mGlobalCache;
+    static PRInt32 mGlobalCacheRefCount;
 
     /* A small container class to hold a gfxFontGroup ref and a string.
      * This is used as the key for the cache hash table; to avoid
