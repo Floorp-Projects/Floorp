@@ -76,6 +76,10 @@ span[mozType|calendar] td.currentMonth:hover{
   cursor: pointer;
 }
 
+span[mozType|calendar] td:focus {
+  outline: 1px dotted black;
+}
+
 span[mozType|calendar] td[selected] {
   border: 1px solid black;
 }

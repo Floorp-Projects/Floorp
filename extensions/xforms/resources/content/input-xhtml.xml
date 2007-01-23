@@ -216,6 +216,7 @@
                     title="&xforms.datepicker.title;"/>
       </html:span>
       <html:span mozType:calendar="true" anonid="picker"
+                 internaltabhandling="true"
                  style="position:absolute; display:none;"/>
       <children/>
     </content>

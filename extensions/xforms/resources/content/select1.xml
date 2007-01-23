@@ -65,7 +65,6 @@
       /><html:input mozType:dropmarker="true"
                     type="button"
                     anonid="dropmarker"
-                    tabindex="-1"
                     onmousedown="this.parentNode.parentNode.shouldHandleBlur = false;"
                     onmouseup="this.parentNode.parentNode.shouldHandleBlur = true;"
                     onclick="this.parentNode.parentNode.togglePopup();

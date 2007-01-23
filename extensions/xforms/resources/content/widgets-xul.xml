@@ -195,7 +195,8 @@
 
       <handler event="keypress" phase="capturing">
         // Stop event propagation to prevent event processing of
-        // xul:toolbarbutton.
+        // button binding, i.e. to prevent default behaviour of button
+        // that is to advance/rewind focus on arrow keys.
         switch (event.keyCode) {
           case event.DOM_VK_UP:
           case event.DOM_VK_DOWN:
@@ -217,7 +218,7 @@
       <xul:hbox>
         <!-- month selection section -->
         <xul:hbox class="list" flex="1">
-          <xul:description anonid="months-label" readonly="true" flex="1"/>
+          <xul:description anonid="months-label" flex="1"/>
           <xul:vbox class="control-buttons-box">
             <xul:toolbarbutton anonid="prevmonth-btn" class="toolbarbutton-up"
                                tooltiptext="&xforms.datepicker.prevMonth.title;"/>

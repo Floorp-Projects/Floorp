@@ -255,6 +255,9 @@
         <body>
           this.popup.hidePopup();
           this._isPickerVisible = false;
+
+          this.ownerDocument.defaultView.setTimeout(
+            function(control) { control.focus(); }, 0, this.control);
         </body>
       </method>
 
@@ -310,10 +313,17 @@
         this.picker.value = this.control.value;
       </handler>
 
+      <handler event="popupshown">
+        this.ownerDocument.defaultView.setTimeout(
+          function(picker) { picker.focus();} , 0, this.picker);
+      </handler>
+
       <handler event="keypress">
       <![CDATA[
         if (event.keyCode == event.DOM_VK_F4) {
           this.togglePicker();
+        } else if (event.keyCode == event.DOM_VK_ESCAPE) {
+          this.hidePicker();
         } else if (event.altKey && (event.keyCode == event.DOM_VK_DOWN ||
                    event.keyCode == event.DOM_VK_UP)) {
           this.togglePicker();

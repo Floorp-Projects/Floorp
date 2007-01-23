@@ -47,12 +47,12 @@ box[mozType|calendar] {
   border: 1px outset black !important;
 }
 
+box[mozType|calendar] toolbarbutton {
+  margin: 1px;
+}
+
 box[mozType|calendar] toolbarbutton:focus {
-  border: 1px dotted ThreeDDarkShadow !important;
-  -moz-border-top-colors: none !important;
-  -moz-border-right-colors: none !important;
-  -moz-border-bottom-colors: none !important;
-  -moz-border-left-colors: none !important;
+  outline: 1px dotted black;
 }
 
 .prevMonth, .nextMonth {

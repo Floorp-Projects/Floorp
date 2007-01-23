@@ -214,6 +214,28 @@
       </method>
 
     <!-- private -->
+      <method name="getFocusedElement">
+        <body>
+          var selection = this.ownerDocument.defaultView.getSelection();
+          if (!selection)
+            return null;
+
+          var focused = selection.focusNode;
+          if (!focused)
+            return null;
+
+          // focusNode returns html:td if focused element is inside table cell
+          // (see bug 365900).
+          if (focused.localName != "input") {
+            input = focused.getElementsByTagNameNS(this.XHTML_NS, "input")[0];
+            if (input)
+              return input;
+          }
+
+          return focused;
+        </body>
+      </method>
+
       <property name="dateLabel" readonly="true">
         <getter>
           if (!this._dateLabel) {
@@ -249,7 +271,7 @@
     </implementation>
 
     <handlers>
-      <handler event="keypress">
+      <handler event="keypress" phase="capturing">
       <![CDATA[
         var target = event.originalTarget;
 
@@ -287,6 +309,44 @@
           case this.fwdButton:
             this.processAction("nextMonth", null, true);
             break;
+        }
+      </handler>
+
+      <handler event="keypress" keycode="VK_TAB">
+        if (!this.hasAttribute("internaltabhandling"))
+          return;
+
+        event.preventDefault();
+
+        var focused = getFocusedElement();
+        if (!focused)
+          return;
+
+        if (focused == this.backButton) {
+          this.fwdButton.focus();
+        } else if (focused == this.fwdButton) {
+          this.focus();
+        } else {
+          this.backButton.focus();
+        }
+      </handler>
+
+      <handler event="keypress" keycode="VK_TAB" modifiers="shift">
+        if (!this.hasAttribute("internaltabhandling"))
+          return;
+
+        event.preventDefault();
+
+        var focused = getFocusedElement();
+        if (!focused)
+          return;
+
+        if (focused == this.backButton) {
+          this.focus();
+        } else if (focused == this.fwdButton) {
+          this.backButton.focus();
+        } else {
+          this.fwdButton.focus();
         }
       </handler>
     </handlers>
@@ -742,6 +802,8 @@
 
   <!-- DROPMARKER -->
   <binding id="dropmarker">
+    <content tabindex="-1"/>
+
     <resources>
       <stylesheet src="chrome://xforms/skin/widgets-xhtml.css"/>
     </resources>

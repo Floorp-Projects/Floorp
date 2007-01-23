@@ -385,7 +385,7 @@
           }
 
           dayElm = this._dayElements[aIndex];
-          dayElm.setAttribute("tabindex", "0");
+          dayElm.setAttribute("tabindex", "1");
 
           this._currentDayIndex = aIndex;
         </body>
@@ -490,6 +490,13 @@
           this.focus();
         }
       ]]>
+      </handler>
+
+      <handler event="keypress" keycode="VK_PAGE_UP">
+        this.month++;
+      </handler>
+      <handler event="keypress" keycode="VK_PAGE_DOWN">
+        this.month--;
       </handler>
     </handlers>
   </binding>
