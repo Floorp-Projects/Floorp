@@ -85,6 +85,10 @@ public:
   // Returns value of child xforms 'hint' element.
   NS_IMETHOD GetDescription(nsAString& aDescription);
 
+  // Appends ARIA 'datatype' property based on datatype of instance node that
+  // element is bound to.
+  NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
+
   // Denies accessible nodes in anonymous content of xforms element by
   // always returning PR_FALSE value.
   NS_IMETHOD GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren);

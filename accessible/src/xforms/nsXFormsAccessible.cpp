@@ -45,6 +45,7 @@
 #include "nsIMutableArray.h"
 #include "nsIXFormsUtilityService.h"
 #include "nsIPlaintextEditor.h"
+#include "nsIPersistentProperties2.h"
 
 // nsXFormsAccessibleBase
 
@@ -239,6 +240,23 @@ nsXFormsAccessible::GetDescription(nsAString& aDescription)
 
   // search the xforms:hint element
   return GetBoundChildElementValue(NS_LITERAL_STRING("hint"), aDescription);
+}
+
+NS_IMETHODIMP
+nsXFormsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
+{
+  NS_ENSURE_ARG_POINTER(aAttributes);
+
+  nsresult rv = nsHyperTextAccessible::GetAttributes(aAttributes);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString name;
+  rv = sXFormsService->GetBuiltinTypeName(mDOMNode, name);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString unused;
+  return (*aAttributes)->SetStringProperty(NS_LITERAL_CSTRING("datatype"),
+                                           name, unused);
 }
 
 NS_IMETHODIMP

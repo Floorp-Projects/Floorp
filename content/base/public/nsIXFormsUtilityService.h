@@ -52,10 +52,11 @@ class nsIEditor;
 #endif
 
 /* nsIXFormsUtilityService */
-#define NS_IXFORMSUTILITYSERVICE_IID_STR "88d9eaa9-1498-4ffb-85a6-44267595cb20"
+#define NS_IXFORMSUTILITYSERVICE_IID_STR "cd3457b6-cb6a-496c-bdfa-6cfecb2bd5fb"
 #define NS_IXFORMSUTILITYSERVICE_IID \
-{ 0x88d9eaa9, 0x1498, 0x4ffb, \
-  { 0x85, 0xa6, 0x44, 0x26, 0x75, 0x95, 0xcb, 0x20 } }
+{ 0xcd3457b6, 0xcb6a, 0x496c, \
+  { 0xbd, 0xfa, 0x6c, 0xfe, 0xcb, 0x2b, 0xd5, 0xfb } }
+
 
 /**
  * Private interface implemented by the nsXFormsUtilityService in XForms
@@ -71,6 +72,12 @@ public:
     STATE_IN_RANGE,
     STATE_NOT_A_RANGE
   };
+
+  /**
+   * Returns the name of the builtin type of the instance node that aElement is
+   * bound to. Fails if aElement doesn't have a bound node.
+   */
+  NS_IMETHOD GetBuiltinTypeName(nsIDOMNode *aElement, nsAString& aName);
 
   /**
    * Return true if instance node that element is bound to is readonly.
