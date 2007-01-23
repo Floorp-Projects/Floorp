@@ -29,6 +29,7 @@
  *   Terry Lucas
  *   Roger Lawrence
  *   Milen Nankov
+ *   Hannes Wallnoefer
  *
  * Alternatively, the contents of this file may be used under the terms of
  * the GNU General Public License Version 2 or later (the "GPL"), in which
@@ -3166,7 +3167,7 @@ switch (op) {
         continue Loop;
     case Icode_NAME_INC_DEC :
         stack[++stackTop] = ScriptRuntime.nameIncrDecr(frame.scope, stringReg,
-                                                       iCode[frame.pc]);
+                                                       cx, iCode[frame.pc]);
         ++frame.pc;
         continue Loop;
     case Icode_SETVAR1:
@@ -3217,7 +3218,7 @@ switch (op) {
         } else {
             String varName = frame.idata.argNames[indexReg];
             stack[stackTop] = ScriptRuntime.nameIncrDecr(frame.scope, varName,
-                                                         incrDecrMask);
+                                                         cx, incrDecrMask);
         }
         ++frame.pc;
         continue Loop;

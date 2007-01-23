@@ -25,6 +25,7 @@
  *   Igor Bukanov
  *   Roger Lawrence
  *   Andi Vajda
+ *   Hannes Wallnoefer
  *
  * Alternatively, the contents of this file may be used under the terms of
  * the GNU General Public License Version 2 or later (the "GPL"), in which
@@ -3196,10 +3197,12 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
           case Token.NAME:
             cfw.addALoad(variableObjectLocal);
             cfw.addPush(child.getString());          // push name
+            cfw.addALoad(contextLocal);
             cfw.addPush(incrDecrMask);
             addScriptRuntimeInvoke("nameIncrDecr",
                 "(Lorg/mozilla/javascript/Scriptable;"
                 +"Ljava/lang/String;"
+                +"Lorg/mozilla/javascript/Context;"
                 +"I)Ljava/lang/Object;");
             break;
           case Token.GETPROP: {
