@@ -100,10 +100,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface 
-// c822dca6-310c-433d-a1d0-d5b5b1cdce1f
+// f02b2868-ac80-4e38-978c-02df6477d294
 #define NS_IFRAME_IID \
-{ 0xc822dca6, 0x310c, 0x433d, \
-  { 0xa1, 0xd0, 0xd5, 0xb5, 0xb1, 0xcd, 0xce, 0x1f } }
+{ 0xf02b2868, 0xac80, 0x4e38, \
+  { 0x97, 0x8c, 0x02, 0xdf, 0x64, 0x77, 0xd2, 0x94 } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -711,6 +711,14 @@ public:
   nsRect GetMarginRect() const;
   nsRect GetPaddingRect() const;
   nsRect GetContentRect() const;
+
+  /**
+   * Get the position of the frame's baseline, relative to the top of
+   * the frame (its top border edge).  Only valid when Reflow is not
+   * needed and when the frame returned nsHTMLReflowMetrics::
+   * ASK_FOR_ASCENT as ascent in its reflow metrics.
+   */
+  virtual nscoord GetBaseline() const = 0;
 
   /**
    * Used to iterate the list of additional child list names. Returns the atom

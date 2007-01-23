@@ -147,7 +147,7 @@ public:
 
   /* return the row ascent
    */
-  nscoord GetAscent();
+  nscoord GetRowBaseline();
  
   /** returns the ordinal position of this row in its table */
   virtual PRInt32 GetRowIndex() const;

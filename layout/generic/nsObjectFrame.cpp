@@ -627,8 +627,6 @@ nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
   // By default, we have no area
   aMetrics.width = 0;
   aMetrics.height = 0;
-  aMetrics.ascent = 0;
-  aMetrics.descent = 0;
 
   if (IsHidden(PR_FALSE)) {
     return;
@@ -686,9 +684,6 @@ nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
   // paint borders, though!  At that point, we will need to adjust the desired
   // size either here or in Reflow....  Further, we will need to fix Paint() to
   // call the superclass in all cases.
-  
-  // ascent
-  aMetrics.ascent = aMetrics.height;
 }
 
 NS_IMETHODIMP

@@ -590,8 +590,6 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
   aDesiredSize.height = borderPadding.top + contentSize.height +
     borderPadding.bottom;
   aDesiredSize.width = contentSize.width + borderPadding.left + borderPadding.right;
-  aDesiredSize.ascent  = aDesiredSize.height;
-  aDesiredSize.descent = 0;
   overflowRect.UnionRect(overflowRect, nsRect(0, 0, aDesiredSize.width, aDesiredSize.height));
   aDesiredSize.mOverflowArea = overflowRect;
   

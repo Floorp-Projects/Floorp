@@ -116,8 +116,6 @@ nsPlaceholderFrame::Reflow(nsPresContext*          aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   aDesiredSize.width = 0;
   aDesiredSize.height = 0;
-  aDesiredSize.ascent = 0;
-  aDesiredSize.descent = 0;
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);

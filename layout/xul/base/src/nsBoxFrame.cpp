@@ -800,7 +800,6 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
   aDesiredSize.width  = mRect.width;
   aDesiredSize.height = mRect.height;
   aDesiredSize.ascent = ascent;
-  aDesiredSize.descent = mRect.height - ascent;
 
   // NS_FRAME_OUTSIDE_CHILDREN is set in SetBounds() above
   if (mState & NS_FRAME_OUTSIDE_CHILDREN) {

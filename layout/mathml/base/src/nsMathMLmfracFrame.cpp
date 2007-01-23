@@ -423,8 +423,8 @@ nsMathMLmfracFrame::Place(nsIRenderingContext& aRenderingContext,
   mBoundingMetrics.width = width;
 
   aDesiredSize.ascent = sizeNum.ascent + numShift;
-  aDesiredSize.descent = sizeDen.descent + denShift;
-  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+  aDesiredSize.height = aDesiredSize.ascent +
+                        sizeDen.height - sizeDen.ascent + denShift;
   aDesiredSize.width = mBoundingMetrics.width;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 

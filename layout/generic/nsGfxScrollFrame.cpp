@@ -249,8 +249,6 @@ struct ScrollReflowState {
   nsRect mScrollPortRect;
   // The size of the inside-border area
   nsSize mInsideBorderSize;
-  // Taken from kid metrics; ascent from the inner-border top edge
-  nscoord mAscent;
   // Whether we decided to show the horizontal scrollbar
   PRPackedBool mShowHScrollbar;
   // Whether we decided to show the vertical scrollbar
@@ -411,7 +409,6 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
     scrollPortOrigin.x += vScrollbarActualWidth;
   }
   aState->mScrollPortRect = nsRect(scrollPortOrigin, scrollPortSize);
-  aState->mAscent = aKidMetrics.ascent;
   return PR_TRUE;
 }
 
@@ -781,10 +778,7 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
     state.mComputedBorder.LeftRight();
   aDesiredSize.height = state.mInsideBorderSize.height +
     state.mComputedBorder.TopBottom();
-  aDesiredSize.ascent =
-    state.mAscent + aReflowState.mComputedBorderPadding.top;
 
-  aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
   aDesiredSize.mOverflowArea = nsRect(0, 0, aDesiredSize.width, aDesiredSize.height);
   FinishAndStoreOverflow(&aDesiredSize);
 

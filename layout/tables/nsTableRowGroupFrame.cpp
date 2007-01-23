@@ -397,7 +397,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*        aPresContext,
       // XXXldb We used to only pass aDesiredSize.mFlags through for the
       // incremental reflow codepath.
       nsHTMLReflowMetrics desiredSize(aDesiredSize.mFlags);
-      desiredSize.width = desiredSize.height = desiredSize.ascent = desiredSize.descent = 0;
+      desiredSize.width = desiredSize.height = 0;
   
       // Reflow the child into the available space, giving it as much height as
       // it wants. We'll deal with splitting later after we've computed the row
@@ -677,7 +677,8 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*          aPresContext,
               // to ensure that a spanning cell with a long descender doesn't
               // collide with the next row, we need to take into account the shift
               // that will be done to align the cell on the baseline of the row.
-              cellFrameSize.height += rowFrame->GetMaxCellAscent() - cellFrame->GetDesiredAscent();
+              cellFrameSize.height += rowFrame->GetMaxCellAscent() -
+                                      cellFrame->GetCellBaseline();
             }
   
             if (heightOfAreaSpanned < cellFrameSize.height) {

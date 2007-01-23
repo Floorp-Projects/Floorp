@@ -80,7 +80,7 @@ nsMathMLForeignFrameWrapper::Reflow(nsPresContext*          aPresContext,
   // just make-up a bounding metrics
   mBoundingMetrics.Clear();
   mBoundingMetrics.ascent = aDesiredSize.ascent;
-  mBoundingMetrics.descent = aDesiredSize.descent;
+  mBoundingMetrics.descent = aDesiredSize.height - aDesiredSize.ascent;
   mBoundingMetrics.width = aDesiredSize.width;
   mBoundingMetrics.leftBearing = 0;
   mBoundingMetrics.rightBearing = aDesiredSize.width;

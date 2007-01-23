@@ -475,7 +475,7 @@ protected:
     nsCSSFrameType mFrameType;
 
     // From metrics
-    nscoord mAscent, mDescent;
+    nscoord mAscent;
     nsRect mBounds;
     nsRect mCombinedArea;
 

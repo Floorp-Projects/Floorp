@@ -170,8 +170,6 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,
   if (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
     aDesiredSize.height = aReflowState.availableHeight;
   }
-  aDesiredSize.ascent = aDesiredSize.height;
-  aDesiredSize.descent = 0;
   PR_PL(("PageFrame::Reflow %p ", this));
   PR_PL(("[%d,%d]\n", aReflowState.availableWidth, aReflowState.availableHeight));
 
@@ -627,7 +625,6 @@ nsPageBreakFrame::Reflow(nsPresContext*          aPresContext,
   // round the height down to the nearest pixel
   aDesiredSize.height -=
     aDesiredSize.height % GetPresContext()->IntScaledPixelsToTwips(1);
-  aDesiredSize.ascent = aDesiredSize.descent = 0;
 
   // Note: not using NS_FRAME_FIRST_REFLOW here, since it's not clear whether
   // DidReflow will always get called before the next Reflow() call.

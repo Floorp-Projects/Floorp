@@ -104,7 +104,7 @@ nsMathMLContainerFrame::ReflowError(nsIRenderingContext& aRenderingContext,
   if (NS_FAILED(rv)) {
     NS_WARNING("GetBoundingMetrics failed");
     aDesiredSize.width = aDesiredSize.height = 0;
-    aDesiredSize.ascent = aDesiredSize.descent = 0;
+    aDesiredSize.ascent = 0;
     return NS_OK;
   }
 
@@ -112,8 +112,9 @@ nsMathMLContainerFrame::ReflowError(nsIRenderingContext& aRenderingContext,
   nsCOMPtr<nsIFontMetrics> fm;
   aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
   fm->GetMaxAscent(aDesiredSize.ascent);
-  fm->GetMaxDescent(aDesiredSize.descent);
-  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+  nscoord descent;
+  fm->GetMaxDescent(descent);
+  aDesiredSize.height = aDesiredSize.ascent + descent;
   aDesiredSize.width = mBoundingMetrics.width;
 
   // Also return our bounding metrics
@@ -178,10 +179,10 @@ nsMathMLContainerFrame::GetReflowAndBoundingMetricsFor(nsIFrame*            aFra
   // for the frame's ascent and descent information
 
   nsRect rect = aFrame->GetRect();
-  aReflowMetrics.descent = rect.x;
   aReflowMetrics.ascent  = rect.y;
   aReflowMetrics.width   = rect.width;
   aReflowMetrics.height  = rect.height;
+  nscoord descent = aReflowMetrics.height - aReflowMetrics.ascent;
 
   if (aFrame->IsFrameOfType(nsIFrame::eMathML)) {
     nsIMathMLFrame* mathMLFrame;
@@ -196,7 +197,7 @@ nsMathMLContainerFrame::GetReflowAndBoundingMetricsFor(nsIFrame*            aFra
   }
 
  // aFrame is not a MathML frame, just return the reflow metrics
- aBoundingMetrics.descent = aReflowMetrics.descent;
+ aBoundingMetrics.descent = descent;
  aBoundingMetrics.ascent  = aReflowMetrics.ascent;
  aBoundingMetrics.width   = aReflowMetrics.width;
  aBoundingMetrics.rightBearing = aReflowMetrics.width;
@@ -361,7 +362,7 @@ nsMathMLContainerFrame::Stretch(nsIRenderingContext& aRenderingContext,
                              mEmbellishData.direction, containerSize, childSize);
 
         // store the updated metrics
-        childFrame->SetRect(nsRect(childSize.descent, childSize.ascent,
+        childFrame->SetRect(nsRect(0, childSize.ascent,
                                    childSize.width, childSize.height));
 
         // Remember the siblings which were _deferred_.
@@ -389,7 +390,7 @@ nsMathMLContainerFrame::Stretch(nsIRenderingContext& aRenderingContext,
                 mathMLFrame->Stretch(aRenderingContext, stretchDir,
                                      containerSize, childSize);
                 // store the updated metrics
-                childFrame->SetRect(nsRect(childSize.descent, childSize.ascent,
+                childFrame->SetRect(nsRect(0, childSize.ascent,
                                            childSize.width, childSize.height));
               }
             }
@@ -946,7 +947,7 @@ nsMathMLContainerFrame::ReflowChild(nsIFrame*                aChildFrame,
                                     nsReflowStatus&          aStatus)
 {
   aDesiredSize.width = aDesiredSize.height = 0;
-  aDesiredSize.ascent = aDesiredSize.descent = 0;
+  aDesiredSize.ascent = 0;
   aDesiredSize.mBoundingMetrics.Clear();
   aDesiredSize.mFlags |= NS_REFLOW_CALC_BOUNDING_METRICS;
 
@@ -994,7 +995,7 @@ nsMathMLContainerFrame::ReflowForeignChild(nsIFrame*                aChildFrame,
 
   // make up the bounding metrics from the reflow metrics.
   aDesiredSize.mBoundingMetrics.ascent = aDesiredSize.ascent;
-  aDesiredSize.mBoundingMetrics.descent = aDesiredSize.descent;
+  aDesiredSize.mBoundingMetrics.descent = aDesiredSize.height - aDesiredSize.ascent;
   aDesiredSize.mBoundingMetrics.width = aDesiredSize.width;
   aDesiredSize.mBoundingMetrics.rightBearing = aDesiredSize.width;
 
@@ -1014,7 +1015,7 @@ nsMathMLContainerFrame::Reflow(nsPresContext*          aPresContext,
 {
   nsresult rv;
   aDesiredSize.width = aDesiredSize.height = 0;
-  aDesiredSize.ascent = aDesiredSize.descent = 0;
+  aDesiredSize.ascent = 0;
   aDesiredSize.mBoundingMetrics.Clear();
 
   /////////////
@@ -1037,7 +1038,7 @@ nsMathMLContainerFrame::Reflow(nsPresContext*          aPresContext,
     // At this stage, the origin points of the children have no use, so we will use the
     // origins as placeholders to store the child's ascent and descent. Later on,
     // we should set the origins so as to overwrite what we are storing there now.
-    childFrame->SetRect(nsRect(childDesiredSize.descent, childDesiredSize.ascent,
+    childFrame->SetRect(nsRect(0, childDesiredSize.ascent,
                                childDesiredSize.width, childDesiredSize.height));
     childFrame = childFrame->GetNextSibling();
   }
@@ -1080,7 +1081,7 @@ nsMathMLContainerFrame::Reflow(nsPresContext*          aPresContext,
         mathMLFrame->Stretch(*aReflowState.rendContext, stretchDir,
                              containerSize, childDesiredSize);
         // store the updated metrics
-        childFrame->SetRect(nsRect(childDesiredSize.descent, childDesiredSize.ascent,
+        childFrame->SetRect(nsRect(0, childDesiredSize.ascent,
                                    childDesiredSize.width, childDesiredSize.height));
       }
       childFrame = childFrame->GetNextSibling();
@@ -1215,7 +1216,7 @@ nsMathMLContainerFrame::Place(nsIRenderingContext& aRenderingContext,
 {
   // these are needed in case this frame is empty (i.e., we don't enter the loop)
   aDesiredSize.width = aDesiredSize.height = 0;
-  aDesiredSize.ascent = aDesiredSize.descent = 0;
+  aDesiredSize.ascent = 0;
   mBoundingMetrics.Clear();
 
   // cache away thinspace
@@ -1232,12 +1233,13 @@ nsMathMLContainerFrame::Place(nsIRenderingContext& aRenderingContext,
   eMathMLFrameType childFrameType;
 
   nsIFrame* childFrame = mFrames.FirstChild();
+  nscoord ascent = 0, descent = 0;
   while (childFrame) {
     GetReflowAndBoundingMetricsFor(childFrame, childSize, bmChild, &childFrameType);
     GetItalicCorrection(bmChild, leftCorrection, italicCorrection);
     if (0 == count) {
-      aDesiredSize.ascent = childSize.ascent;
-      aDesiredSize.descent = childSize.descent;
+      ascent = childSize.ascent;
+      descent = childSize.height - ascent;
       mBoundingMetrics = bmChild;
       // update to include the left correction
       // but leave <msqrt> alone because the sqrt glyph itself is there first
@@ -1248,10 +1250,11 @@ nsMathMLContainerFrame::Place(nsIRenderingContext& aRenderingContext,
         mBoundingMetrics.leftBearing += leftCorrection;
     }
     else {
-      if (aDesiredSize.descent < childSize.descent)
-        aDesiredSize.descent = childSize.descent;
-      if (aDesiredSize.ascent < childSize.ascent)
-        aDesiredSize.ascent = childSize.ascent;
+      nscoord childDescent = childSize.height - childSize.ascent;
+      if (descent < childDescent)
+        descent = childDescent;
+      if (ascent < childSize.ascent)
+        ascent = childSize.ascent;
       // add inter frame spacing
       nscoord space = GetInterFrameSpacing(mPresentationData.scriptLevel,
         prevFrameType, childFrameType, &fromFrameType, &carrySpace);
@@ -1274,7 +1277,8 @@ nsMathMLContainerFrame::Place(nsIRenderingContext& aRenderingContext,
     childFrame = childFrame->GetNextSibling();
   }
   aDesiredSize.width = mBoundingMetrics.width;
-  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+  aDesiredSize.height = ascent + descent;
+  aDesiredSize.ascent = ascent;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
   mReference.x = 0;

@@ -259,9 +259,9 @@ nsMathMLmsqrtFrame::Reflow(nsPresContext*          aPresContext,
     PR_MAX(bmBase.width, bmBase.rightBearing); // take also care of the rule
 
   aDesiredSize.ascent = mBoundingMetrics.ascent + leading;
-  aDesiredSize.descent =
-    PR_MAX(baseSize.descent, (mBoundingMetrics.descent + ruleThickness));
-  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+  aDesiredSize.height = aDesiredSize.ascent +
+    PR_MAX(baseSize.height - baseSize.ascent,
+           mBoundingMetrics.descent + ruleThickness);
   aDesiredSize.width = mBoundingMetrics.width;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 

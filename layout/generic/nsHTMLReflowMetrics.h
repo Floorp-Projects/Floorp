@@ -139,8 +139,10 @@ struct nsCollapsingMargin {
  * @see #Reflow()
  */
 struct nsHTMLReflowMetrics {
-  nscoord width, height;        // [OUT] desired width and height
-  nscoord ascent, descent;      // [OUT] ascent and descent information
+  nscoord width, height;    // [OUT] desired width and height (border-box)
+  nscoord ascent;           // [OUT] baseline (from top), or ASK_FOR_BASELINE
+
+  enum { ASK_FOR_BASELINE = nscoord_MAX };
 
 #ifdef MOZ_MATHML
   // Metrics that _exactly_ enclose the text to allow precise MathML placements.
@@ -185,7 +187,7 @@ struct nsHTMLReflowMetrics {
     // initialized, but there are some bad frame classes that aren't
     // properly setting them when returning from Reflow()...
     width = height = 0;
-    ascent = descent = 0;
+    ascent = ASK_FOR_BASELINE;
   }
 
   nsHTMLReflowMetrics& operator=(const nsHTMLReflowMetrics& aOther)
@@ -203,7 +205,6 @@ struct nsHTMLReflowMetrics {
     width = aOther.width;
     height = aOther.height;
     ascent = aOther.ascent;
-    descent = aOther.descent;
     return *this;
   }
 

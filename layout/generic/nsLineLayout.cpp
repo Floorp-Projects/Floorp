@@ -796,8 +796,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 #ifdef DEBUG
   metrics.width = nscoord(0xdeadbeef);
   metrics.height = nscoord(0xdeadbeef);
-  metrics.ascent = nscoord(0xdeadbeef);
-  metrics.descent = nscoord(0xdeadbeef);
 #endif
   nscoord tx = x - psd->mReflowState->mComputedBorderPadding.left;
   nscoord ty = y - psd->mReflowState->mComputedBorderPadding.top;
@@ -910,13 +908,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       printf(" metrics=%d,%d!\n", metrics.width, metrics.height);
     }
     if ((metrics.width == nscoord(0xdeadbeef)) ||
-        (metrics.height == nscoord(0xdeadbeef)) ||
-        (metrics.ascent == nscoord(0xdeadbeef)) ||
-        (metrics.descent == nscoord(0xdeadbeef))) {
+        (metrics.height == nscoord(0xdeadbeef))) {
       printf("nsLineLayout: ");
       nsFrame::ListTag(stdout, aFrame);
-      printf(" didn't set whad %d,%d,%d,%d!\n", metrics.width, metrics.height,
-             metrics.ascent, metrics.descent);
+      printf(" didn't set w/h %d,%d!\n", metrics.width, metrics.height);
     }
   }
 #endif
@@ -1245,8 +1240,10 @@ nsLineLayout::PlaceFrame(PerFrameData* pfd, nsHTMLReflowMetrics& aMetrics)
   }
 
   // Record ascent and update max-ascent and max-descent values
-  pfd->mAscent = aMetrics.ascent;
-  pfd->mDescent = aMetrics.descent;
+  if (aMetrics.ascent == nsHTMLReflowMetrics::ASK_FOR_BASELINE)
+    pfd->mAscent = pfd->mFrame->GetBaseline();
+  else
+    pfd->mAscent = aMetrics.ascent;
 
   // If the band was updated during the reflow of that frame then we
   // need to adjust any prior frames that were reflowed.
@@ -1293,8 +1290,10 @@ nsLineLayout::AddBulletFrame(nsIFrame* aFrame,
     pfd->mFrameType = NS_FRAME_REPLACED(NS_CSS_FRAME_TYPE_INLINE);
     pfd->mFlags = 0;  // all flags default to false
     pfd->SetFlag(PFD_ISBULLET, PR_TRUE);
-    pfd->mAscent = aMetrics.ascent;
-    pfd->mDescent = aMetrics.descent;
+    if (aMetrics.ascent == nsHTMLReflowMetrics::ASK_FOR_BASELINE)
+      pfd->mAscent = aFrame->GetBaseline();
+    else
+      pfd->mAscent = aMetrics.ascent;
 
     // Note: y value will be updated during vertical alignment
     pfd->mBounds = aFrame->GetRect();
@@ -1405,7 +1404,6 @@ nsLineLayout::VerticalAlignLine()
   rootPFD.mFrame = mBlockReflowState->frame;
   rootPFD.mFrameType = mBlockReflowState->mFrameType;
   rootPFD.mAscent = 0;
-  rootPFD.mDescent = 0;
   mRootSpan->mFrame = &rootPFD;
 
   // Partially place the children of the block frame. The baseline for
@@ -1863,17 +1861,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
           case NS_STYLE_VERTICAL_ALIGN_BASELINE:
             // The elements baseline is aligned with the baseline of
             // the parent.
-            if (frameSpan) {
-              // XXX explain
-              pfd->mBounds.y = baselineY - pfd->mAscent;
-            }
-            else {
-              // For non-span elements the borders, padding and
-              // margins are significant. Use the visual box height
-              // and the bottom margin as the distance off of the
-              // baseline.
-              pfd->mBounds.y = baselineY - pfd->mAscent - pfd->mMargin.bottom;
-            }
+            pfd->mBounds.y = baselineY - pfd->mAscent;
             pfd->mVerticalAlign = VALIGN_OTHER;
             break;
 
@@ -1884,13 +1872,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
             // offset to the baseline Y.
             fm->GetSubscriptOffset(parentSubscript);
             revisedBaselineY = baselineY + parentSubscript;
-            if (frameSpan) {
-              pfd->mBounds.y = revisedBaselineY - pfd->mAscent;
-            }
-            else {
-              pfd->mBounds.y = revisedBaselineY - pfd->mAscent -
-                pfd->mMargin.bottom;
-            }
+            pfd->mBounds.y = revisedBaselineY - pfd->mAscent;
             pfd->mVerticalAlign = VALIGN_OTHER;
             break;
 
@@ -1901,13 +1883,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
             // offset to the baseline Y.
             fm->GetSuperscriptOffset(parentSuperscript);
             revisedBaselineY = baselineY - parentSuperscript;
-            if (frameSpan) {
-              pfd->mBounds.y = revisedBaselineY - pfd->mAscent;
-            }
-            else {
-              pfd->mBounds.y = revisedBaselineY - pfd->mAscent -
-                pfd->mMargin.bottom;
-            }
+            pfd->mBounds.y = revisedBaselineY - pfd->mAscent;
             pfd->mVerticalAlign = VALIGN_OTHER;
             break;
 
@@ -1991,13 +1967,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         // the screen we reverse the sign.
         coordOffset = textStyle->mVerticalAlign.GetCoordValue();
         revisedBaselineY = baselineY - coordOffset;
-        if (frameSpan) {
-          pfd->mBounds.y = revisedBaselineY - pfd->mAscent;
-        }
-        else {
-          pfd->mBounds.y = revisedBaselineY - pfd->mAscent -
-            pfd->mMargin.bottom;
-        }
+        pfd->mBounds.y = revisedBaselineY - pfd->mAscent;
         pfd->mVerticalAlign = VALIGN_OTHER;
         break;
 
@@ -2010,13 +1980,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
           textStyle->mVerticalAlign.GetPercentValue() * elementLineHeight
           );
         revisedBaselineY = baselineY - percentOffset;
-        if (frameSpan) {
-          pfd->mBounds.y = revisedBaselineY - pfd->mAscent;
-        }
-        else {
-          pfd->mBounds.y = revisedBaselineY - pfd->mAscent -
-            pfd->mMargin.bottom;
-        }
+        pfd->mBounds.y = revisedBaselineY - pfd->mAscent;
         pfd->mVerticalAlign = VALIGN_OTHER;
         break;
     }
@@ -2073,8 +2037,8 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         if (yTop < minY) minY = yTop;
         if (yBottom > maxY) maxY = yBottom;
 #ifdef NOISY_VERTICAL_ALIGN
-        printf("     [frame]raw: a=%d d=%d h=%d bp=%d,%d logical: h=%d leading=%d y=%d minY=%d maxY=%d\n",
-               pfd->mAscent, pfd->mDescent, pfd->mBounds.height,
+        printf("     [frame]raw: a=%d h=%d bp=%d,%d logical: h=%d leading=%d y=%d minY=%d maxY=%d\n",
+               pfd->mAscent, pfd->mBounds.height,
                pfd->mBorderPadding.top, pfd->mBorderPadding.bottom,
                logicalHeight,
                pfd->mSpan ? topLeading : 0,
@@ -2176,9 +2140,9 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   if ((psd != mRootSpan) && (psd->mZeroEffectiveSpanBox)) {
 #ifdef NOISY_VERTICAL_ALIGN
     printf("   [span]adjusting for zeroEffectiveSpanBox\n");
-    printf("     Original: minY=%d, maxY=%d, height=%d, ascent=%d, descent=%d, logicalHeight=%d, topLeading=%d, bottomLeading=%d\n",
+    printf("     Original: minY=%d, maxY=%d, height=%d, ascent=%d, logicalHeight=%d, topLeading=%d, bottomLeading=%d\n",
            minY, maxY, spanFramePFD->mBounds.height,
-           spanFramePFD->mAscent, spanFramePFD->mDescent,
+           spanFramePFD->mAscent,
            psd->mLogicalHeight, psd->mTopLeading, psd->mBottomLeading);
 #endif
     nscoord goodMinY = spanFramePFD->mBorderPadding.top - psd->mTopLeading;
@@ -2216,13 +2180,12 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     if (maxY < spanFramePFD->mBounds.height) {
       nscoord adjust = spanFramePFD->mBounds.height - maxY;
       spanFramePFD->mBounds.height -= adjust; // move the bottom up
-      spanFramePFD->mDescent -= adjust;
       psd->mBottomLeading += adjust;
     }
 #ifdef NOISY_VERTICAL_ALIGN
-    printf("     New: minY=%d, maxY=%d, height=%d, ascent=%d, descent=%d, logicalHeight=%d, topLeading=%d, bottomLeading=%d\n",
+    printf("     New: minY=%d, maxY=%d, height=%d, ascent=%d, logicalHeight=%d, topLeading=%d, bottomLeading=%d\n",
            minY, maxY, spanFramePFD->mBounds.height,
-           spanFramePFD->mAscent, spanFramePFD->mDescent,
+           spanFramePFD->mAscent,
            psd->mLogicalHeight, psd->mTopLeading, psd->mBottomLeading);
 #endif
   }

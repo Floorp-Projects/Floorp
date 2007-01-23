@@ -135,8 +135,6 @@ nsLeafFrame::AddBordersAndPadding(const nsHTMLReflowState& aReflowState,
 {
   aMetrics.width += aReflowState.mComputedBorderPadding.LeftRight();
   aMetrics.height += aReflowState.mComputedBorderPadding.TopBottom();
-  aMetrics.ascent = aMetrics.height;
-  aMetrics.descent = 0;
 }
 
 void
@@ -145,8 +143,6 @@ nsLeafFrame::SizeToAvailSize(const nsHTMLReflowState& aReflowState,
 {
   aDesiredSize.width  = aReflowState.availableWidth; // FRAME
   aDesiredSize.height = aReflowState.availableHeight;
-  aDesiredSize.ascent = aDesiredSize.height;
-  aDesiredSize.descent = 0;
   aDesiredSize.mOverflowArea =
     nsRect(0, 0, aDesiredSize.width, aDesiredSize.height);
   FinishAndStoreOverflow(&aDesiredSize);  

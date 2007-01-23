@@ -110,7 +110,8 @@ public:
              nscoord              leading,
              nscoord              em,
              nsBoundingMetrics&   aContainerSize,
-             nsHTMLReflowMetrics& aDesiredSize);
+             nscoord&             aAscent,
+             nscoord&             aDescent);
 
   static void
   PlaceChar(nsMathMLChar*      aMathMLChar,

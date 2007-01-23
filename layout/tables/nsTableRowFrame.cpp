@@ -381,7 +381,7 @@ nscoord nsTableRowFrame::GetMaxCellAscent() const
   return mMaxCellAscent;
 }
 
-nscoord nsTableRowFrame::GetAscent()
+nscoord nsTableRowFrame::GetRowBaseline()
 {
   if(mMaxCellAscent)
     return mMaxCellAscent;
@@ -522,7 +522,7 @@ nsTableRowFrame::CalcHeight(const nsHTMLReflowState& aReflowState)
        if (!kidFrame->GetFirstChild(nsnull)->GetFirstChild(nsnull))
          ascent = desSize.height;
        else
-         ascent = ((nsTableCellFrame *)kidFrame)->GetDesiredAscent();
+         ascent = ((nsTableCellFrame *)kidFrame)->GetCellBaseline();
       nscoord descent = desSize.height - ascent;
       UpdateHeight(desSize.height, ascent, descent, tableFrame, (nsTableCellFrame*)kidFrame);
     }
@@ -975,7 +975,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
         if (!kidFrame->GetFirstChild(nsnull)->GetFirstChild(nsnull))
           ascent = desiredSize.height;
         else
-          ascent = ((nsTableCellFrame *)kidFrame)->GetDesiredAscent();
+          ascent = ((nsTableCellFrame *)kidFrame)->GetCellBaseline();
         nscoord descent = desiredSize.height - ascent;
         UpdateHeight(desiredSize.height, ascent, descent, &aTableFrame, cellFrame);
       }

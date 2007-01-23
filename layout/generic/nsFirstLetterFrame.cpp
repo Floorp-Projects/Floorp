@@ -283,7 +283,6 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
   aMetrics.width += lr;
   aMetrics.height += tb;
   aMetrics.ascent += bp.top;
-  aMetrics.descent += bp.bottom;
 
   // Create a continuation or remove existing continuations based on
   // the reflow completion status.

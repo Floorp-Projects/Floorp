@@ -279,7 +279,7 @@ nsMathMLmactionFrame::Reflow(nsPresContext*          aPresContext,
   nsresult rv = NS_OK;
   aStatus = NS_FRAME_COMPLETE;
   aDesiredSize.width = aDesiredSize.height = 0;
-  aDesiredSize.ascent = aDesiredSize.descent = 0;
+  aDesiredSize.ascent = 0;
   mBoundingMetrics.Clear();
   nsIFrame* childFrame = GetSelectedFrame();
   if (childFrame) {
@@ -288,7 +288,7 @@ nsMathMLmactionFrame::Reflow(nsPresContext*          aPresContext,
                                        childFrame, availSize);
     rv = ReflowChild(childFrame, aPresContext, aDesiredSize,
                      childReflowState, aStatus);
-    childFrame->SetRect(nsRect(aDesiredSize.descent,aDesiredSize.ascent,
+    childFrame->SetRect(nsRect(0,aDesiredSize.ascent,
                         aDesiredSize.width,aDesiredSize.height));
     mBoundingMetrics = aDesiredSize.mBoundingMetrics;
   }
@@ -304,7 +304,7 @@ nsMathMLmactionFrame::Place(nsIRenderingContext& aRenderingContext,
                             nsHTMLReflowMetrics& aDesiredSize)
 {
   aDesiredSize.width = aDesiredSize.height = 0;
-  aDesiredSize.ascent = aDesiredSize.descent = 0;
+  aDesiredSize.ascent = 0;
   mBoundingMetrics.Clear();
   nsIFrame* childFrame = GetSelectedFrame();
   if (childFrame) {

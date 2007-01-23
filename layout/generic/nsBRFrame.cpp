@@ -115,7 +115,6 @@ BRFrame::Reflow(nsPresContext* aPresContext,
                        // However, it's not always 0.  See below.
   aMetrics.width = 0;
   aMetrics.ascent = 0;
-  aMetrics.descent = 0;
 
   // Only when the BR is operating in a line-layout situation will it
   // behave like a BR.
@@ -155,8 +154,6 @@ BRFrame::Reflow(nsPresContext* aPresContext,
         nscoord leading = logicalHeight - ascent - descent;
         aMetrics.height = logicalHeight;
         aMetrics.ascent = ascent + (leading/2);
-        aMetrics.descent = logicalHeight - aMetrics.ascent;
-                      // = descent + (leading/2), but without rounding error
       }
       else {
         aMetrics.ascent = aMetrics.height = 0;

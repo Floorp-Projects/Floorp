@@ -174,6 +174,7 @@ public:
                           nsIFrame*       aOldFrame);
   virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
   NS_IMETHOD  SetParent(const nsIFrame* aParent);
+  virtual nscoord GetBaseline() const;
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
   virtual void Destroy();
   virtual nsSplittableType GetSplittableType() const;
@@ -262,8 +263,6 @@ public:
   line_iterator FindLineFor(nsIFrame* aFrame);
 
   static nsresult GetCurrentLine(nsBlockReflowState *aState, nsLineBox **aOutCurrentLine);
-
-  inline nscoord GetAscent() { return mAscent; }
 
   // Create a contination for aPlaceholder and its out of flow frame and
   // add it to the list of overflow floats
@@ -564,9 +563,6 @@ protected:
   void VerifyOverflowSituation();
   PRInt32 GetDepth() const;
 #endif
-
-  // Ascent of our first line to support 'vertical-align: baseline' in table-cells
-  nscoord mAscent;
 
   nscoord mMinWidth, mPrefWidth;
 

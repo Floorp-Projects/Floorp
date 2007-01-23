@@ -2798,7 +2798,7 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
       nsRect oldKidRect = kidFrame->GetRect();
 
       nsHTMLReflowMetrics desiredSize;
-      desiredSize.width = desiredSize.height = desiredSize.ascent = desiredSize.descent = 0;
+      desiredSize.width = desiredSize.height = 0;
   
       // Reflow the child into the available space
       nsHTMLReflowState kidReflowState(presContext, aReflowState.reflowState,
@@ -3440,7 +3440,8 @@ nscoord nsTableFrame::GetCellSpacingY()
 }
 
 
-nscoord nsTableFrame::GetAscent()
+/* virtual */ nscoord
+nsTableFrame::GetBaseline() const
 {
   nscoord ascent = 0;
   nsAutoVoidArray orderedRowGroups;
@@ -3451,7 +3452,7 @@ nscoord nsTableFrame::GetAscent()
     nsTableRowGroupFrame* rgFrame = GetRowGroupFrame((nsIFrame*)orderedRowGroups.ElementAt(rgIndex));
     if (rgFrame->GetRowCount()) {
       firstRow = rgFrame->GetFirstRow(); 
-      ascent = rgFrame->GetRect().y + firstRow->GetRect().y + firstRow->GetAscent();
+      ascent = rgFrame->GetRect().y + firstRow->GetRect().y + firstRow->GetRowBaseline();
       break;
     }
   }

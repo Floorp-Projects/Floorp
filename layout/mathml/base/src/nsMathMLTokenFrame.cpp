@@ -127,7 +127,7 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
 
   // initializations needed for empty markup like <mtag></mtag>
   aDesiredSize.width = aDesiredSize.height = 0;
-  aDesiredSize.ascent = aDesiredSize.descent = 0;
+  aDesiredSize.ascent = 0;
   aDesiredSize.mBoundingMetrics.Clear();
 
   // ask our children to compute their bounding metrics
@@ -145,7 +145,7 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
     if (NS_FAILED(rv)) return rv;
 
     // origins are used as placeholders to store the child's ascent and descent.
-    childFrame->SetRect(nsRect(childDesiredSize.descent, childDesiredSize.ascent,
+    childFrame->SetRect(nsRect(0, childDesiredSize.ascent,
                                childDesiredSize.width, childDesiredSize.height));
     // compute and cache the bounding metrics
     if (0 == count)
@@ -190,8 +190,8 @@ nsMathMLTokenFrame::Place(nsIRenderingContext& aRenderingContext,
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
   aDesiredSize.width = mBoundingMetrics.width;
   aDesiredSize.ascent = PR_MAX(mBoundingMetrics.ascent, ascent);
-  aDesiredSize.descent = PR_MAX(mBoundingMetrics.descent, descent);
-  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+  aDesiredSize.height = aDesiredSize.ascent +
+                        PR_MAX(mBoundingMetrics.descent, descent);
 
   if (aPlaceOrigin) {
     nscoord dy, dx = 0;
