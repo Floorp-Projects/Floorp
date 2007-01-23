@@ -188,7 +188,7 @@ $BuildTree  = 'Sunbird';
 $LocaleTree = 'Mozilla-l10n';
 
 #$BuildName = '';
-#$BuildTag = 'SUNBIRD_0_3_BRANCH';
+$BuildTag = 'SUNBIRD_0_3_BRANCH';
 #$BuildConfigDir = 'mozilla/config';
 #$Topsrcdir = 'mozilla';
 
@@ -229,14 +229,14 @@ $stub_installer = 0;
 $sea_installer = 0;
 $archive       = 1;
 $push_raw_xpis = 0;
-$update_package = 1;
-$update_product = "Sunbird";
-$update_version = "trunk";
-$update_platform = "Linux_x86-gcc3";
-$update_hash = "md5";
-$update_filehost = "ftp.mozilla.org";
-$update_ver_file = 'calendar/sunbird/config/version.txt';
-$update_pushinfo = 1;
+#$update_package = 1;
+#$update_product = "Sunbird";
+#$update_version = "trunk";
+#$update_platform = "Linux_x86-gcc3";
+#$update_hash = "md5";
+#$update_filehost = "ftp.mozilla.org";
+#$update_ver_file = 'calendar/sunbird/config/version.txt';
+#$update_pushinfo = 1;
 
 # Reboot the OS at the end of build-and-test cycle. This is primarily
 # intended for Win9x, which can't last more than a few cycles before
