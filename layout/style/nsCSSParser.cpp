@@ -3329,7 +3329,7 @@ CSSParserImpl::ParseDeclaration(nsresult& aErrorCode,
     }
   }
   if (aCheckForBraces)
-    REPORT_UNEXPECTED_TOKEN(PEBadDeclOrRuleEnd);
+    REPORT_UNEXPECTED_TOKEN(PEBadDeclOrRuleEnd2);
   else
     REPORT_UNEXPECTED_TOKEN(PEBadDeclEnd);
   REPORT_UNEXPECTED(PEDeclDropped);
@@ -4311,7 +4311,7 @@ PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
   case eCSSProperty_padding_right_ltr_source:
   case eCSSProperty_padding_right_rtl_source:
     // The user can't use these
-    REPORT_UNEXPECTED(PEInaccessibleProperty);
+    REPORT_UNEXPECTED(PEInaccessibleProperty2);
     return PR_FALSE;
 
   default:  // must be single property
