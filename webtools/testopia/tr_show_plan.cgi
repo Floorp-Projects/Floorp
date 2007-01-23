@@ -162,7 +162,22 @@ elsif ($action eq 'do_clone'){
             # Copy test cases creating new ones
             if ($cgi->param('copy_cases') == 2 ){
                 my $caseid = $case->copy($newplan->id, $author, 1);
+                my $newcase = Bugzilla::Testopia::TestCase->new($caseid);
                 $case->link_plan($newplan->id, $caseid);
+
+                foreach my $tag (@{$case->tags}){
+                    # Doing it this way avoids collisions
+                    my $newtag = Bugzilla::Testopia::TestTag->new({
+                                   tag_name  => $tag->name
+                                 });
+                    my $newtagid = $newtag->store;
+                    $newcase->add_tag($newtagid);
+                }
+
+                foreach my $comp (@{$case->components}){
+                    $newcase->add_component($comp->{'id'});
+                }
+                
             }
             # Just create a link
             else {
@@ -463,7 +478,8 @@ sub display {
     my $date = sprintf "%04d-%02d-%02d", 1900+$time[5],$time[4]+1,$time[3];
 	my $filename = "testcases-$date.$format->{extension}";
     print $cgi->header(-type => $format->{'ctype'},
-					   -content_disposition => "$disp; filename=$filename");
+					   -content_disposition => "$disp; filename=$filename")
+		if $cgi->param('ctype');
 	
 	$vars->{'percentage'} = \&percentage;			   	  
 	$template->process($format->{'template'}, $vars) ||

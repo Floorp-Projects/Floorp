@@ -783,17 +783,6 @@ sub copy {
 
     my $key = $dbh->bz_last_key( 'test_cases', 'case_id' );
     
-    my $components_ref = $dbh->selectcol_arrayref(
-            "SELECT component_id 
-               FROM test_case_components 
-              WHERE case_id = ?",
-              undef, $self->id);
-              
-    foreach my $comp_id (@{$components_ref}){
-        $dbh->do("INSERT INTO test_case_components 
-                         VALUES(?,?)", undef, $key, $comp_id);
-    }
-    
     if ($copydoc){
         $self->store_text($key, Bugzilla->user->id, $self->text->{'action'}, 
                           $self->text->{'effect'}, $self->text->{'setup'}, 
