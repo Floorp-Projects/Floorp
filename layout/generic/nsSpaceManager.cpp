@@ -115,7 +115,8 @@ nsSpaceManager::nsSpaceManager(nsIPresShell* aPresShell, nsIFrame* aFrame)
     mHaveCachedLeftYMost(PR_TRUE),
     mHaveCachedRightYMost(PR_TRUE),
     mMaximalLeftYMost(0),
-    mMaximalRightYMost(0)
+    mMaximalRightYMost(0),
+    mCachedBandPosition(nsnull)
 {
   MOZ_COUNT_CTOR(nsSpaceManager);
   mX = mY = 0;
@@ -369,8 +370,7 @@ nsSpaceManager::GetBandData(nscoord       aYOffset,
     aBandData.mTrapezoids[0].mFrame = nsnull;
   } else {
     // Find the first band that contains the y-offset or is below the y-offset
-    NS_ASSERTION(!mBandList.IsEmpty(), "no bands");
-    BandRect* band = mBandList.Head();
+    BandRect* band = GuessBandWithTopAbove(y);
 
     aBandData.mCount = 0;
     while (nsnull != band) {
@@ -418,6 +418,37 @@ nsSpaceManager::GetNextBand(const BandRect* aBandRect) const
     }
 
     aBandRect = aBandRect->Next();
+  }
+
+  // No bands left
+  return nsnull;
+}
+
+/**
+ * Skips to the start of the previous band.
+ *
+ * @param aBandRect The first rect within a band
+ * @returns The start of the previous band, or nsnull of this is the first band.
+ */
+nsSpaceManager::BandRect*
+nsSpaceManager::GetPrevBand(const BandRect* aBandRect) const
+{
+  NS_ASSERTION(aBandRect->Prev() == &mBandList ||
+               aBandRect->Prev()->mBottom <= aBandRect->mTop,
+               "aBandRect should be first rect within its band");
+
+  BandRect* prev = aBandRect->Prev();
+  nscoord topOfBand = prev->mTop;
+
+  while (prev != &mBandList) {
+    // Check whether the prev rect is part of the same band
+    if (prev->mTop != topOfBand) {
+      // We found the beginning of this band
+      return (BandRect*)aBandRect;
+    }
+
+    aBandRect = prev;
+    prev = aBandRect->Prev();
   }
 
   // No bands left
@@ -514,6 +545,11 @@ nsSpaceManager::JoinBands(BandRect* aBand, BandRect* aPrevBand)
 {
   if (CanJoinBands(aBand, aPrevBand)) {
     BandRect* startOfNextBand = aBand;
+    // We're going to be removing aPrevBand, so if mCachedBandPosition points
+    // to it just advance it to startOfNextBand.
+    if (mCachedBandPosition == aPrevBand) {
+      SetCachedBandPosition(startOfNextBand);
+    }
 
     while (aPrevBand != startOfNextBand) {
       // Adjust the top of the band we're keeping, and then move to the next
@@ -524,6 +560,8 @@ nsSpaceManager::JoinBands(BandRect* aBand, BandRect* aPrevBand)
       // Delete the rect from the previous band
       BandRect* next = aPrevBand->Next();
 
+      NS_ASSERTION(mCachedBandPosition != aPrevBand,
+                   "Removing mCachedBandPosition BandRect?");
       aPrevBand->Remove();
       delete aPrevBand;
       aPrevBand = next;
@@ -571,6 +609,9 @@ nsSpaceManager::AddRectToBand(BandRect* aBand, BandRect* aBandRect)
         // No, the new rect is completely to the left of the existing rect
         // (case #1). Insert a new rect
         aBand->InsertBefore(aBandRect);
+        if (mCachedBandPosition == aBand) {
+          SetCachedBandPosition(aBandRect);
+        }
         return;
       }
 
@@ -601,6 +642,10 @@ nsSpaceManager::AddRectToBand(BandRect* aBand, BandRect* aBandRect)
         // rect
         aBandRect->mRight = aBand->mLeft;
         aBand->InsertBefore(aBandRect);
+
+        if (mCachedBandPosition == aBand) {
+          SetCachedBandPosition(aBandRect);
+        }
 
         // Mark the existing rect as shared
         aBand->AddFrame(aBandRect->mFrame);
@@ -675,7 +720,8 @@ nsSpaceManager::AddRectToBand(BandRect* aBand, BandRect* aBandRect)
     }
   } while (aBand->mTop == topOfBand);
 
-  // Insert a new rect
+  // Insert a new rect.  This is an insertion at the _end_ of the band, so we
+  // absolutely do not want to set mCachedBandPosition to aBandRect here.
   aBand->InsertBefore(aBandRect);
 }
 
@@ -714,12 +760,14 @@ nsSpaceManager::InsertBandRect(BandRect* aBandRect)
   nscoord yMost;
   if (!YMost(yMost) || (aBandRect->mTop >= yMost)) {
     mBandList.Append(aBandRect);
+    SetCachedBandPosition(aBandRect);
     return;
   }
 
   // Examine each band looking for a band that intersects this rect
-  NS_ASSERTION(!mBandList.IsEmpty(), "no bands");
-  BandRect* band = mBandList.Head();
+  // First guess a band whose top is above aBandRect->mTop.  We know
+  // aBandRect won't overlap any bands before that one.
+  BandRect* band = GuessBandWithTopAbove(aBandRect->mTop);
 
   while (nsnull != band) {
     // Compare the top edge of this rect with the top edge of the band
@@ -730,6 +778,7 @@ nsSpaceManager::InsertBandRect(BandRect* aBandRect)
         // Case #1. This rect is completely above the band, so insert a
         // new band before the current band
         band->InsertBefore(aBandRect);
+        SetCachedBandPosition(aBandRect);
         break;  // we're all done
       }
 
@@ -774,6 +823,7 @@ nsSpaceManager::InsertBandRect(BandRect* aBandRect)
 
     if (aBandRect->mBottom == band->mBottom) {
       // Add the rect to the band
+      SetCachedBandPosition(band);  // Do this before AddRectToBand
       AddRectToBand(band, aBandRect);
       break;
 
@@ -795,6 +845,7 @@ nsSpaceManager::InsertBandRect(BandRect* aBandRect)
       if (nsnull == band) {
         // Append a new bottommost band
         mBandList.Append(aBandRect);
+        SetCachedBandPosition(aBandRect);
         break;
       }
     }
@@ -916,6 +967,9 @@ nsSpaceManager::RemoveRegion(nsIFrame* aFrame)
               } else {
                 band = nsnull;
               }
+              if (mCachedBandPosition == rect) {
+                SetCachedBandPosition(band);
+              }                
             }
             delete rect;
             rect = next;
@@ -938,6 +992,9 @@ nsSpaceManager::RemoveRegion(nsIFrame* aFrame)
             if (prevRect == band) {
               // the rect we're deleting is the start of the band
               band = rect;
+              if (mCachedBandPosition == prevRect) {
+                SetCachedBandPosition(band);
+              }
             }
             delete prevRect;
           }
@@ -962,6 +1019,9 @@ nsSpaceManager::RemoveRegion(nsIFrame* aFrame)
       prevFoundMatchingRect = foundMatchingRect;
       prevBand = band;
       band = (rect == &mBandList) ? nsnull : rect;
+      if (!mCachedBandPosition) {
+        SetCachedBandPosition(band);
+      }
     }
   }
 
@@ -1271,6 +1331,27 @@ nsSpaceManager::ClearFloats(nscoord aY, PRUint8 aBreakType)
   bottom -= mY;
 
   return bottom;
+}
+
+nsSpaceManager::BandRect*
+nsSpaceManager::GuessBandWithTopAbove(nscoord aYOffset) const
+{
+  NS_ASSERTION(!mBandList.IsEmpty(), "no bands");
+  BandRect* band = nsnull;
+  if (mCachedBandPosition) {
+    band = mCachedBandPosition;
+    // Now seek backward so that we're guaranteed to be the topmost
+    // band which might contain the y-offset or be below it.
+    while (band && band->mTop > aYOffset) {
+      band = GetPrevBand(band);
+    }
+  }
+
+  if (band) {
+    return band;
+  }
+  
+  return mBandList.Head();
 }
 
 /////////////////////////////////////////////////////////////////////////////
