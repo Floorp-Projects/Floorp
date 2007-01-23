@@ -768,35 +768,30 @@
               whatToFocus = newBrowser.focusedWindow;
             }
  
-            // Change focus for this window to |aElement|, without focusing the
-            // window itself.
-            function setFocus(aElement) {
-              var cmdDispatcher = document.commandDispatcher;
+            // Change focus for this window to |whatToFocus|, without
+            // focusing the window itself.
+            var cmdDispatcher = document.commandDispatcher;
 
-              var ww =
-                Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                          .getService(Components.interfaces.nsIWindowWatcher);
-              if (ww.activeWindow == window) {
-                cmdDispatcher.suppressFocusScroll = true;
-                aElement.focus();
-                cmdDispatcher.suppressFocusScroll = false;
+            var ww =
+              Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                        .getService(Components.interfaces.nsIWindowWatcher);
+            if (ww.activeWindow == window) {
+              cmdDispatcher.suppressFocusScroll = true;
+              whatToFocus.focus();
+              cmdDispatcher.suppressFocusScroll = false;
+            }
+            else {
+              // set the element in command dispatcher so focus will restore
+              // properly when the window does become active
+              if (whatToFocus instanceof Window) {
+                cmdDispatcher.focusedWindow = whatToFocus;
+                cmdDispatcher.focusedElement = null;
               }
               else {
-                // set the element in command dispatcher so focus will restore
-                // properly when the window does become active
-                if (aElement instanceof Window) {
-                  cmdDispatcher.focusedWindow = aElement;
-                  cmdDispatcher.focusedElement = null;
-                }
-                else {
-                  cmdDispatcher.focusedWindow = aElement.ownerDocument.defaultView;
-                  cmdDispatcher.focusedElement = aElement;
-                }
+                cmdDispatcher.focusedWindow = whatToFocus.ownerDocument.defaultView;
+                cmdDispatcher.focusedElement = whatToFocus;
               }
             }
-
-            // Use setTimeout to avoid focus outline ghosting.
-            setTimeout(setFocus, 0, whatToFocus);
           ]]>
         </body>
       </method>
