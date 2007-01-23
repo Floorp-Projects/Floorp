@@ -659,8 +659,60 @@ struct JSContext {
     /* JSRuntime contextList linkage. */
     JSCList             links;
 
-    /* Interpreter activation count. */
-    uintN               interpLevel;
+    /* Counter of operations for branch callback calls. */
+    uint32              operationCounter;
+
+#if JS_HAS_XML_SUPPORT
+    /*
+     * Bit-set formed from binary exponentials of the XML_* tiny-ids defined
+     * for boolean settings in jsxml.c, plus an XSF_CACHE_VALID bit.  Together
+     * these act as a cache of the boolean XML.ignore* and XML.prettyPrinting
+     * property values associated with this context's global object.
+     */
+    uint8               xmlSettingFlags;
+#endif
+
+    /* Runtime version control identifier. */
+    uint16              version;
+
+    /* Per-context options. */
+    uint32              options;            /* see jsapi.h for JSOPTION_* */
+
+    /* Locale specific callbacks for string conversion. */
+    JSLocaleCallbacks   *localeCallbacks;
+
+    /*
+     * cx->resolvingTable is non-null and non-empty if we are initializing
+     * standard classes lazily, or if we are otherwise recursing indirectly
+     * from js_LookupProperty through a JSClass.resolve hook.  It is used to
+     * limit runaway recursion (see jsapi.c and jsobj.c).
+     */
+    JSDHashTable        *resolvingTable;
+
+#if JS_HAS_LVALUE_RETURN
+    /*
+     * Secondary return value from native method called on the left-hand side
+     * of an assignment operator.  The native should store the object in which
+     * to set a property in *rval, and return the property's id expressed as a
+     * jsval by calling JS_SetCallReturnValue2(cx, idval).
+     */
+    jsval               rval2;
+    JSPackedBool        rval2set;
+#endif
+
+    /*
+     * True if generating an error, to prevent runaway recursion.
+     * NB: generatingError packs with rval2set, #if JS_HAS_LVALUE_RETURN;
+     * with insideGCMarkCallback and with throwing below.
+     */
+    JSPackedBool        generatingError;
+
+    /* Flag to indicate that we run inside gcCallback(cx, JSGC_MARK_END). */
+    JSPackedBool        insideGCMarkCallback;
+
+    /* Exception state -- the exception member is a GC root by definition. */
+    JSPackedBool        throwing;           /* is there a pending exception? */
+    jsval               exception;          /* most-recently-thrown exception */
 
     /* Limit pointer for checking stack consumption during recursion. */
     jsuword             stackLimit;
@@ -700,8 +752,8 @@ struct JSContext {
     JSBranchCallback    branchCallback;
     JSErrorReporter     errorReporter;
 
-    /* Counter of operations for branch callback calls. */
-    uint32              operationCounter;
+    /* Interpreter activation count. */
+    uintN               interpLevel;
 
     /* Client opaque pointer */
     void                *data;
@@ -719,60 +771,6 @@ struct JSContext {
 #define CX_FROM_THREAD_LINKS(tl) \
     ((JSContext *)((char *)(tl) - offsetof(JSContext, threadLinks)))
 #endif
-
-#if JS_HAS_LVALUE_RETURN
-    /*
-     * Secondary return value from native method called on the left-hand side
-     * of an assignment operator.  The native should store the object in which
-     * to set a property in *rval, and return the property's id expressed as a
-     * jsval by calling JS_SetCallReturnValue2(cx, idval).
-     */
-    jsval               rval2;
-    JSPackedBool        rval2set;
-#endif
-
-#if JS_HAS_XML_SUPPORT
-    /*
-     * Bit-set formed from binary exponentials of the XML_* tiny-ids defined
-     * for boolean settings in jsxml.c, plus an XSF_CACHE_VALID bit.  Together
-     * these act as a cache of the boolean XML.ignore* and XML.prettyPrinting
-     * property values associated with this context's global object.
-     */
-    uint8               xmlSettingFlags;
-#endif
-
-    /*
-     * True if generating an error, to prevent runaway recursion.
-     * NB: generatingError packs with rval2set, #if JS_HAS_LVALUE_RETURN;
-     * with xmlSettingFlags, #if JS_HAS_XML_SUPPORT; and with throwing below.
-     */
-    JSPackedBool        generatingError;
-
-    /*
-     * Exception state -- the exception member is a GC root by definition.
-     * NB: throwing packs with generatingError and rval2set, above.
-     */
-    JSPackedBool        throwing;           /* is there a pending exception? */
-    jsval               exception;          /* most-recently-thrown exception */
-    /* Flag to indicate that we run inside gcCallback(cx, JSGC_MARK_END). */
-    JSPackedBool        insideGCMarkCallback;
-
-    /* Runtime version control identifier. */
-    uint16              version;
-
-    /* Per-context options. */
-    uint32              options;            /* see jsapi.h for JSOPTION_* */
-
-    /* Locale specific callbacks for string conversion. */
-    JSLocaleCallbacks   *localeCallbacks;
-
-    /*
-     * cx->resolvingTable is non-null and non-empty if we are initializing
-     * standard classes lazily, or if we are otherwise recursing indirectly
-     * from js_LookupProperty through a JSClass.resolve hook.  It is used to
-     * limit runaway recursion (see jsapi.c and jsobj.c).
-     */
-    JSDHashTable        *resolvingTable;
 
     /* PDL of stack headers describing stack slots not rooted by argv, etc. */
     JSStackHeader       *stackHeaders;
