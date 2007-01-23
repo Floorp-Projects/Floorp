@@ -76,6 +76,7 @@
 #include "nsReadableUtils.h"
 #include "nsRootAccessible.h"
 #include "nsIDOMNSEventTarget.h"
+#include "nsIDOMDocumentEvent.h"
 
 #ifdef MOZ_XUL
 #include "nsXULTreeAccessible.h"
@@ -495,15 +496,11 @@ void nsRootAccessible::FireCurrentFocusEvent()
   }
 
   // Simulate a focus event so that we can reuse code that fires focus for container children like treeitems
-  nsIContent *rootContent = mDocument->GetRootContent();
-  nsPresContext *presContext = GetPresContext();
-  if (rootContent && presContext) {
+  nsCOMPtr<nsIDOMDocumentEvent> docEvent = do_QueryInterface(mDocument);
+  if (docEvent) {
     nsCOMPtr<nsIDOMEvent> event;
-    nsCOMPtr<nsIEventListenerManager> manager;
-    rootContent->GetListenerManager(PR_TRUE, getter_AddRefs(manager));
-    if (manager && NS_SUCCEEDED(manager->CreateEvent(presContext, nsnull,
-                                                     NS_LITERAL_STRING("Events"),
-                                                     getter_AddRefs(event))) &&
+    if (NS_SUCCEEDED(docEvent->CreateEvent(NS_LITERAL_STRING("Events"),
+                                           getter_AddRefs(event))) &&
         NS_SUCCEEDED(event->InitEvent(NS_LITERAL_STRING("focus"), PR_TRUE, PR_TRUE))) {
       // Get the target node we really want for the event.
       nsIAccessibilityService* accService = GetAccService();

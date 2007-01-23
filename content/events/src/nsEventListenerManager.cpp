@@ -1415,20 +1415,6 @@ found:
   return NS_OK;
 }
 
-/**
-* Creates a DOM event
-*/
-
-NS_IMETHODIMP
-nsEventListenerManager::CreateEvent(nsPresContext* aPresContext,
-                                    nsEvent* aEvent,
-                                    const nsAString& aEventType,
-                                    nsIDOMEvent** aDOMEvent)
-{
-  return nsEventDispatcher::CreateEvent(aPresContext, aEvent,
-                                        aEventType, aDOMEvent);
-}
-
 NS_IMETHODIMP
 nsEventListenerManager::Disconnect()
 {

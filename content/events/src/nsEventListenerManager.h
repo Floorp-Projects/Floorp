@@ -117,11 +117,6 @@ public:
                          PRUint32 aFlags,
                          nsEventStatus* aEventStatus);
 
-  NS_IMETHOD CreateEvent(nsPresContext* aPresContext, 
-                         nsEvent* aEvent,
-                         const nsAString& aEventType,
-                         nsIDOMEvent** aDOMEvent);
-
   NS_IMETHOD Disconnect();
 
   NS_IMETHOD SetListenerTarget(nsISupports* aTarget);
