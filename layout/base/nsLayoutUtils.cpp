@@ -59,6 +59,7 @@
 #include "nsRegion.h"
 #include "nsFrameManager.h"
 #include "nsBlockFrame.h"
+#include "nsBidiPresUtils.h"
 
 #ifdef MOZ_SVG_FOREIGNOBJECT
 #include "nsSVGForeignObjectFrame.h"
@@ -1238,6 +1239,7 @@ static PRBool GetAbsoluteCoord(const nsStyleCoord& aStyle,
   if (eStyleUnit_Chars == unit) {
     SetFontFromStyle(aRenderingContext, aFrame->GetStyleContext());
     nscoord fontWidth;
+    aRenderingContext->SetTextRunRTL(PR_FALSE);
     aRenderingContext->GetWidth('M', fontWidth);
     aResult = aStyle.GetIntValue() * fontWidth;
     return PR_TRUE;
@@ -1693,4 +1695,61 @@ nsLayoutUtils::PrefWidthFromInline(nsIFrame *aFrame,
   aFrame->AddInlinePrefWidth(aRenderingContext, &data);
   data.Break(aRenderingContext);
   return data.prevLines;
+}
+
+void
+nsLayoutUtils::DrawString(const nsIFrame*      aFrame,
+                          nsIRenderingContext* aContext,
+                          const PRUnichar*     aString,
+                          PRInt32              aLength,
+                          nsPoint              aPoint)
+{
+#ifdef IBMBIDI
+  nsresult rv = NS_ERROR_FAILURE;
+  nsPresContext* presContext = aFrame->GetPresContext();
+  nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
+
+  if (bidiUtils) {
+    const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
+    nsBidiDirection direction =
+      (NS_STYLE_DIRECTION_RTL == vis->mDirection) ?
+      NSBIDI_RTL : NSBIDI_LTR;
+    rv = bidiUtils->RenderText(aString, aLength, direction,
+                               presContext, *aContext,
+                               aPoint.x, aPoint.y);
+  }
+  if (NS_FAILED(rv))
+#endif // IBMBIDI
+  { 
+    aContext->SetTextRunRTL(PR_FALSE);
+    aContext->DrawString(aString, aLength, aPoint.x, aPoint.y);
+  }
+}
+
+nscoord
+nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
+                              nsIRenderingContext* aContext,
+                              const PRUnichar*     aString,
+                              PRInt32              aLength)
+{
+  // Only do bidi resolution for width measurement if we have a "real"
+  // textrun implementation. Otherwise assume the platform can get
+  // things right for a mixed-direction string.
+#if defined(IBMBIDI) && defined(MOZ_X11)
+  nsPresContext* presContext = aFrame->GetPresContext();
+  nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
+
+  if (bidiUtils) {
+    const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
+    nsBidiDirection direction =
+      (NS_STYLE_DIRECTION_RTL == vis->mDirection) ?
+      NSBIDI_RTL : NSBIDI_LTR;
+    return bidiUtils->MeasureTextWidth(aString, aLength,
+                                       direction, presContext, *aContext);
+  }
+#endif // IBMBIDI
+  aContext->SetTextRunRTL(PR_FALSE);
+  nscoord width;
+  aContext->GetWidth(aString, aLength, width);
+  return width;
 }

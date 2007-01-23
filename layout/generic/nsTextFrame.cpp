@@ -451,6 +451,8 @@ public:
                                         nsTextStyle& aTextStyle,
                                         PRUnichar* aBuffer, PRInt32 aLength, PRInt32 aNumJustifiableCharacter);
 
+  void SetupTextRunDirection(nsPresContext* aPresContext, nsIRenderingContext* aRenderingContext);
+
   /**
    * @param aRightToLeftText whether the rendering context is reversing text
    *                         using its native right-to-left capability
@@ -2024,8 +2026,10 @@ nsTextFrame::PaintText(nsIRenderingContext& aRenderingContext, nsPoint aPt)
   PRInt16 selectionValue;
   if (NS_FAILED(GetSelectionStatus(presContext, selectionValue)))
     selectionValue = nsISelectionController::SELECTION_NORMAL;
+  
   nsTextPaintStyle ts(presContext, aRenderingContext, mStyleContext, content,
                       selectionValue);
+  SetupTextRunDirection(presContext, &aRenderingContext);
   if (ts.mSmallCaps || (0 != ts.mWordSpacing) || (0 != ts.mLetterSpacing)
     || ts.mJustifying) {
     PaintTextSlowly(presContext, aRenderingContext, sc, ts, aPt.x, aPt.y);
@@ -2150,6 +2154,13 @@ nsTextFrame::FillClusterBuffer(nsPresContext *aPresContext, const PRUnichar *aTe
 inline PRBool IsEndOfLine(nsFrameState aState)
 {
   return (aState & TEXT_IS_END_OF_LINE) ? PR_TRUE : PR_FALSE;
+}
+
+void nsTextFrame::SetupTextRunDirection(nsPresContext* aPresContext,
+                                        nsIRenderingContext* aContext)
+{
+  PRBool isRTL = aPresContext->BidiEnabled() && (NS_GET_EMBEDDING_LEVEL(this) & 1);
+  aContext->SetTextRunRTL(isRTL);
 }
 
 /**
@@ -3158,7 +3169,9 @@ nsTextFrame::GetPositionSlowly(nsIRenderingContext* aRendContext,
   // initialize out param
   *aNewContent = nsnull;
 
-  nsTextStyle ts(GetPresContext(), *aRendContext, mStyleContext);
+  nsPresContext* presContext = GetPresContext();
+  nsTextStyle ts(presContext, *aRendContext, mStyleContext);
+  SetupTextRunDirection(presContext, aRendContext);
   if (!ts.mSmallCaps && !ts.mWordSpacing && !ts.mLetterSpacing && !ts.mJustifying) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -4083,12 +4096,14 @@ nsTextFrame::GetPositionHelper(const nsPoint&  aPoint,
   if (mState & NS_FRAME_IS_DIRTY)
     return NS_ERROR_UNEXPECTED;
 
-  nsIPresShell *shell = GetPresContext()->GetPresShell();
+  nsPresContext *presContext = GetPresContext();
+  nsIPresShell *shell = presContext->GetPresShell();
   if (shell) {
     nsCOMPtr<nsIRenderingContext> rendContext;      
     nsresult rv = shell->CreateRenderingContext(this, getter_AddRefs(rendContext));
     if (NS_SUCCEEDED(rv)) {
-      nsTextStyle ts(GetPresContext(), *rendContext, mStyleContext);
+      nsTextStyle ts(presContext, *rendContext, mStyleContext);
+      SetupTextRunDirection(presContext, rendContext);
       if (ts.mSmallCaps || ts.mWordSpacing || ts.mLetterSpacing || ts.mJustifying) {
         nsresult result = GetPositionSlowly(rendContext, aPoint, aNewContent,
                                  aContentOffset);
@@ -4363,7 +4378,9 @@ nsTextFrame::GetPointFromOffset(nsPresContext* aPresContext,
   }
   if (inOffset >= mContentLength)
     inOffset = mContentLength;
+
   nsTextStyle ts(aPresContext, *inRendContext, mStyleContext);
+  SetupTextRunDirection(aPresContext, inRendContext);
 
   // Make enough space to transform
   nsAutoTextBuffer paintBuffer;
@@ -5645,6 +5662,7 @@ nsTextFrame::AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
 
   nsPresContext *presContext = GetPresContext();
   nsTextStyle ts(presContext, *aRenderingContext, mStyleContext);
+  SetupTextRunDirection(presContext, aRenderingContext);
   if (!ts.mFont->mSize)
     // XXX If font size is zero, we still need to figure out whether we've
     // got non-whitespace text and whether we end in whitespace.
@@ -5740,20 +5758,34 @@ nsTextFrame::AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
 
       atStart = PR_FALSE;
 
-      nsTextDimensions dimensions;
+      nscoord width;
       if (ts.mSmallCaps) {
+        nsTextDimensions dimensions;
+        // MeasureSmallCapsText measures one character at a time so it *should*
+        // be OK to just say "LTR" here without breaking things (any more than
+        // they're already broken)
+        aRenderingContext->SetTextRunRTL(PR_FALSE);
         MeasureSmallCapsText(aRenderingContext, ts, bp2, wordLen, PR_FALSE,
                              &dimensions);
+        width = dimensions.width;
       } else {
+        // Unfortunately we might have mixed-directionality text at this point,
+        // and we might not know our embedding level. So we have to make some
+        // approximations, until bidi resolution is moved to frame construction.
         if (tx.TransformedTextIsAscii()) {
-          aRenderingContext->GetTextDimensions(bp1, wordLen, dimensions);
+          // It may not actually be LTR, but hopefully the width doesn't care
+          aRenderingContext->SetTextRunRTL(PR_FALSE);
+          aRenderingContext->GetWidth(bp1, wordLen, width);
         } else {
-          aRenderingContext->GetTextDimensions(bp2, wordLen, dimensions);
+          // We may get the directions reversed but at least we'll be breaking
+          // the string up and measuring segments in the same direction
+          width =
+            nsLayoutUtils::GetStringWidth(this, aRenderingContext, bp2, wordLen);
         }
-        dimensions.width += ts.mLetterSpacing * wordLen;
+        width += ts.mLetterSpacing * wordLen;
       }
 
-      aData->currentLine += dimensions.width;
+      aData->currentLine += width;
       aData->skipWhitespace = PR_FALSE;
       aData->trailingWhitespace = 0;
     }
@@ -5837,20 +5869,35 @@ nsTextFrame::AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
           aData->trailingWhitespace += width;
       }
     } else {
-      nsTextDimensions dimensions;
+      nscoord width;
       if (ts.mSmallCaps) {
+        nsTextDimensions dimensions;
+        // MeasureSmallCapsText measures one character at a time so it *should*
+        // be OK to just say "LTR" here without breaking things (any more than
+        // they're already broken)
+        aRenderingContext->SetTextRunRTL(PR_FALSE);
         MeasureSmallCapsText(aRenderingContext, ts, bp2, wordLen, PR_FALSE,
                              &dimensions);
+        width = dimensions.width;
       } else {
+        // Unfortunately we might have mixed-directionality text at this point, 
+        // because we may not have reflowed yet, and we might not know our
+        // embedding level. So we have to make some approximations, until
+        // bidi resolution is moved to frame construction.
         if (tx.TransformedTextIsAscii()) {
-          aRenderingContext->GetTextDimensions(bp1, wordLen, dimensions);
+          // It may not actually be LTR, but hopefully the width doesn't care
+          aRenderingContext->SetTextRunRTL(PR_FALSE);
+          aRenderingContext->GetWidth(bp1, wordLen, width);
         } else {
-          aRenderingContext->GetTextDimensions(bp2, wordLen, dimensions);
+          // We may get the directions reversed but at least we'll be breaking
+          // the string up and measuring segments in the same direction
+          width =
+            nsLayoutUtils::GetStringWidth(this, aRenderingContext, bp2, wordLen);
         }
-        dimensions.width += ts.mLetterSpacing * wordLen;
+        width += ts.mLetterSpacing * wordLen;
       }
 
-      aData->currentLine += dimensions.width;
+      aData->currentLine += width;
       aData->skipWhitespace = PR_FALSE;
       aData->trailingWhitespace = 0;
     }
@@ -5915,6 +5962,7 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
   }
   nsLineLayout& lineLayout = *aReflowState.mLineLayout;
   nsTextStyle ts(aPresContext, *aReflowState.rendContext, mStyleContext);
+  SetupTextRunDirection(aPresContext, aReflowState.rendContext);
 
   if ( (mContentLength > 0) && (mState & NS_FRAME_IS_BIDI) ) {
     startingOffset = mContentOffset;

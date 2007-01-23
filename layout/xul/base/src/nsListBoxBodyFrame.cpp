@@ -811,8 +811,8 @@ nsListBoxBodyFrame::ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutState)
                           *getter_AddRefs(fm));
           rendContext->SetFont(fm);
 
-          nscoord textWidth;
-          rendContext->GetWidth(value, textWidth);
+          nscoord textWidth =
+            nsLayoutUtils::GetStringWidth(this, rendContext, value.get(), value.Length());
           textWidth += width;
 
           if (textWidth > largestWidth) 

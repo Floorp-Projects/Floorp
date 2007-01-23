@@ -2997,6 +2997,7 @@ AddCoord(const nsStyleCoord& aStyle,
     case eStyleUnit_Chars: {
       SetFontFromStyle(aRenderingContext, aFrame->GetStyleContext());
       nscoord fontWidth;
+      aRenderingContext->SetTextRunRTL(PR_FALSE);
       aRenderingContext->GetWidth('M', fontWidth);
       *aCoord += aStyle.GetIntValue() * fontWidth;
       break;

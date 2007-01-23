@@ -188,15 +188,31 @@ public:
    * @param[in,out] aPosResolve array of logical positions to resolve into visual positions; can be nsnull if this functionality is not required
    * @param aPosResolveCount number of items in the aPosResolve array
    */
-  nsresult RenderText(const PRUnichar*     aText,
-                      PRInt32              aLength,
-                      nsBidiDirection      aBaseDirection,
-                      nsPresContext*      aPresContext,
-                      nsIRenderingContext& aRenderingContext,
-                      nscoord              aX,
-                      nscoord              aY,
+  nsresult RenderText(const PRUnichar*       aText,
+                      PRInt32                aLength,
+                      nsBidiDirection        aBaseDirection,
+                      nsPresContext*         aPresContext,
+                      nsIRenderingContext&   aRenderingContext,
+                      nscoord                aX,
+                      nscoord                aY,
                       nsBidiPositionResolve* aPosResolve = nsnull,
-                      PRInt32              aPosResolveCount = 0);
+                      PRInt32                aPosResolveCount = 0)
+  {
+    return ProcessText(aText, aLength, aBaseDirection, aPresContext, aRenderingContext,
+                       MODE_DRAW, aX, aY, aPosResolve, aPosResolveCount, nsnull);
+  }
+  
+  nscoord MeasureTextWidth(const PRUnichar*     aText,
+                           PRInt32              aLength,
+                           nsBidiDirection      aBaseDirection,
+                           nsPresContext*       aPresContext,
+                           nsIRenderingContext& aRenderingContext)
+  {
+    nscoord length;
+    nsresult rv = ProcessText(aText, aLength, aBaseDirection, aPresContext, aRenderingContext,
+                              MODE_MEASURE, 0, 0, nsnull, 0, &length);
+    return NS_SUCCEEDED(rv) ? length : 0;
+  }
 
   /**
    * Check if a line is reordered, i.e., if the child frames are not
@@ -244,6 +260,19 @@ public:
   static nsBidiLevel GetFrameBaseLevel(nsIFrame* aFrame);
 
 private:
+  enum Mode { MODE_DRAW, MODE_MEASURE };
+  nsresult ProcessText(const PRUnichar*       aText,
+                       PRInt32                aLength,
+                       nsBidiDirection        aBaseDirection,
+                       nsPresContext*         aPresContext,
+                       nsIRenderingContext&   aRenderingContext,
+                       Mode                   aMode,
+                       nscoord                aX, // DRAW only
+                       nscoord                aY, // DRAW only
+                       nsBidiPositionResolve* aPosResolve,  /* may be null */
+                       PRInt32                aPosResolveCount,
+                       nscoord*               aWidth /* may be null */);
+
   /**
    *  Create a string containing entire text content of this block.
    *

@@ -827,6 +827,12 @@ public:
   NS_IMETHOD SetRightToLeftText(PRBool aIsRTL) = 0;
 
   /**
+   * This sets the direction of the text; all characters should be
+   * overridden to have this direction.
+   */
+  virtual void SetTextRunRTL(PRBool aIsRTL) {}
+
+  /**
    *  Draw a portion of an image, scaling it to fit within a specified rect.
    *  @param aImage     The image to draw
    *  @param aSrcRect   The rect (in twips) of the image to draw.
