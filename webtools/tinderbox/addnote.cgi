@@ -20,14 +20,17 @@
 #
 # Contributor(s): 
 
-use Fcntl;
+use strict;
+use Fcntl qw(:flock);
 
 require 'tbglobals.pl';
 require 'showbuilds.pl';
 
 # Process the form arguments
-%form = ();
-&split_cgi_args();
+my %form = &split_cgi_args();
+my %cookie_jar = &split_cookie_args();
+
+my ($args, $tree, $logfile, $errorparser, $buildname, $buildtime);
 
 if (defined($args = $form{log})) {
   # Use simplified arguments that uses the logfile as a key.
@@ -111,7 +114,9 @@ if ($form{note}) {
     ."Go back to the build Page</a>";
 
   # Rebuild the static tinderbox pages
-  tb_build_static();
+  my %new_form = ();
+  $new_form{tree} = $tree;
+  &tb_build_static(\$new_form);
 
 } else {
   # Print the form to submit a comment
@@ -123,7 +128,7 @@ if ($form{note}) {
 
   # Retrieve the email address from the cookie jar.
   #
-  $emailvalue = '';
+  my $emailvalue = '';
   $emailvalue = " value='$cookie_jar{email}'" if defined $cookie_jar{email};
 
   print <<__END_FORM;
@@ -174,7 +179,7 @@ __END_FORM
   # Add a checkbox for the each of the other builds
   for my $other_build_name (sort keys %build_status) {
     if ($other_build_name ne '' and $other_build_name ne $buildname
-        and not $ignore_builds->{$other_build_name}) {
+        and not $::ignore_builds->{$other_build_name}) {
       print "<INPUT TYPE='checkbox' NAME='$other_build_name'>";
       print "$other_build_name<BR>\n";
     }

@@ -26,6 +26,8 @@
 #  <logfilename>|blurb1|blurb2|blurb3 ...
 #
 
+use strict;
+
 sub usage {
   warn "./scrape.pl <tree> <logfile>";
 }
@@ -42,7 +44,7 @@ unless ($#ARGV == 1) {
   die "Error: Wrong number of arguments\n";
 }
 
-($tree, $logfile) = @ARGV;
+my ($tree, $logfile) = @ARGV;
 
 print "scrape.pl($tree, $logfile)\n" if ($debug);
 
@@ -56,7 +58,7 @@ require "$tree/treedata.pl";
 #
 my $gz = gzopen("$tree/$logfile", "rb")
   or die "gzopen($tree/$logfile): $!\n";
-@scrape_data = find_scrape_data($gz);
+my @scrape_data = find_scrape_data($gz);
 $gz->gzclose();
 
 if (!defined(@scrape_data)) {

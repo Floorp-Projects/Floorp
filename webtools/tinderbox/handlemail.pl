@@ -20,16 +20,17 @@
 #
 # Contributor(s): 
 
+use strict;
 use lib "@TINDERBOX_DIR@";
 require 'tbglobals.pl';
 
 $ENV{'PATH'} = "@SETUID_PATH@";
-$tinderboxdir = "@TINDERBOX_DIR@";
+my $tinderboxdir = "@TINDERBOX_DIR@";
 
 chdir $tinderboxdir or die "Couldn't chdir to $tinderboxdir"; 
 
-$time = time();
-open(OUT, ">$data_dir/tbx.$time.$$") or die ("Could not open data file, tbx.$time.$$\n");
+my $time = time();
+open(OUT, ">$::data_dir/tbx.$time.$$") or die ("Could not open data file, tbx.$time.$$\n");
 while (<STDIN>) {
     print OUT $_;
 }

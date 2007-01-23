@@ -30,7 +30,7 @@ sub last_successful_builds {
   print STDERR "Loading build data...";
 
   require 'tbglobals.pl';
-  tb_load_data();
+  tb_load_data(\%form);
 
   print STDERR "done\n";
   

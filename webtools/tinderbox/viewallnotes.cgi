@@ -29,8 +29,7 @@ use Date::Format;
 my $TIMEFORMAT = "%D %T";
 
 # Process the form arguments
-%form = ();
-&split_cgi_args();
+my %form = &split_cgi_args();
 
 $| = 1;
 

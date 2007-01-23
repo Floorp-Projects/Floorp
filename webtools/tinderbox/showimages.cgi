@@ -23,23 +23,26 @@
 
 $| = 1;
 
+use strict;
 require 'tbglobals.pl';
 require 'imagelog.pl';
 require 'header.pl';
 
 # Process the form arguments
-%form = ();
-&split_cgi_args();
+my %form = &split_cgi_args();
+my %cookie_jar = &split_cookie_args();
 
-tb_check_password();
+&tb_check_password(\%form, \%cookie_jar);
 
 print "Content-type: text/html\n\n";
 
-@url = ();
-@quote = ();
-@width = ();
-@height = ();
-$i = 0;
+my @url = ();
+my @quote = ();
+my @width = ();
+my @height = ();
+my $i = 0;
+
+my ($oldname, $newname, $foundit, $url, $quote, $width, $height);
 
 EmitHtmlHeader("tinderbox: all images");
 
@@ -60,13 +63,13 @@ too?  Where\'s your sense of mystery and anticipation?
 
 
 if ($form{'url'} ne "") {
-    $oldname = "$data_dir/imagelog.txt";
+    $oldname = "$::data_dir/imagelog.txt";
     open (OLD, "<$oldname") || die "Oops; can't open imagelog.txt";
     $newname = "$oldname-$$";
     open (NEW, ">$newname") || die "Can't open $newname";
     $foundit = 0;
     while (<OLD>) {
-        chop;
+        chomp;
         ($url, $width, $height, $quote) = split(/\`/);
         if ($url eq $form{'url'} && $quote eq $form{'origquote'}) {
             $foundit = 1;
@@ -93,7 +96,7 @@ if ($form{'url'} ne "") {
     
 
 
-$doedit = ($form{'doedit'} ne "");
+my $doedit = ($form{'doedit'} ne "");
 
 if (!$doedit) {
     print "
@@ -106,7 +109,7 @@ if (!$doedit) {
 
 
 
-open( IMAGELOG, "<$data_dir/imagelog.txt" ) || die "can't open file";
+open( IMAGELOG, "<$::data_dir/imagelog.txt" ) || die "can't open file";
 while( <IMAGELOG> ){
     chop;
     ($url[$i],$width[$i],$height[$i],$quote[$i])  = split(/\`/);
@@ -117,8 +120,8 @@ close( IMAGELOG );
 $i--;
 print "<center>";
 while( $i >= 0 ){
-    $qurl = value_encode($url[$i]);
-    $qquote = value_encode($quote[$i]);
+    my $qurl = value_encode($url[$i]);
+    my $qquote = value_encode($quote[$i]);
     print " 
 <img border=2 src='$url[$i]' width='$width[$i]' height='$height[$i]'><br>
 <i>$quote[$i]</i>";

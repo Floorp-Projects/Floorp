@@ -29,6 +29,7 @@
 #   ./warnings.pl [--debug]
 #
 
+use strict;
 use FileHandle;
 use Compress::Zlib;
 use lib "@TINDERBOX_DIR@";
@@ -84,34 +85,39 @@ sub usage {
 
 $ENV{PATH} = "@SETUID_PATH@";
 
+my $debug = 0;
 $debug = 1, shift @ARGV if $ARGV[0] eq '--debug';
 
 &usage, die "Error: Not enough arguments\n" if $#ARGV == -1;
 
 # Load tinderbox build data.
 #   (So we can find the last successful build for the tree of intestest.)
-$log_file = shift @ARGV;
+my $log_file = shift @ARGV;
 # tinderbox/tbglobals.pl uses many shameful globals
 
 &usage, die "Logfile does not exist, $log_file\n" unless -e $log_file;
 
+my $tree;
 ($tree, $log_file) = split '/', $log_file;
-$form{tree} = $tree;
+my %form;
 
-&require_only_one_tree();
+$tree = &require_only_one_tree($tree);
+$form{tree} = $tree;
 require "$tree/treedata.pl";
 
-$source_root = 'mozilla';
+my $source_root = 'mozilla';
+my ($exclude_pat, $tag, %bases, %fullpath, %modules, %module_files);
+my (%seen, %unblamed, @who_list);
 
 # ===================================================================
 # Warnings to ignore
 
-@mac_ignore = (
+my @mac_ignore = (
   'function has no prototype',
   'inline function call .* not inlined',
 );
 
-@ignore = ( 
+my @ignore = ( 
   'location of the previous definition',
   '\' was hidden',
   #'declaration of \`index\' shadows global',
@@ -124,7 +130,7 @@ $source_root = 'mozilla';
 
 # Patterns that need to match warning text and source directory
 #
-@ignore_dir = (
+my @ignore_dir = (
   # mailnews is stuck with this
   { warning=>'aggregate has a partly bracketed initializer', 
     dir=>'mailnews/mime/' }
@@ -132,7 +138,7 @@ $source_root = 'mozilla';
 
 # Patterns that need to match warning text and source code text
 #
-@ignore_match = (
+my @ignore_match = (
   { warning=>'statement with no effect', source=>'(?:JS_|PR_)?ASSERT'},
 );
 
@@ -146,19 +152,19 @@ $source_root = 'mozilla';
 #   paths to files.
 #
 print STDERR "Building hash of file names...";
-($file_bases, $file_fullpaths) = build_file_hash($cvs_root, @cvs_modules)
-    if ($cvs_module ne '');
+my ($file_bases, $file_fullpaths) = build_file_hash($::cvs_root, @::cvs_modules)
+    if ($::cvs_module ne '');
 print STDERR "done.\n";
 
 # Find the build we want and generate warnings for it
 #
-$br = find_build_record($tree,$log_file);
+my $br = find_build_record($tree,$log_file);
   
-%warnings = ();
-%warnings_by_who = ();
-%who_count = ();
-$total_warnings_count = 0;
-$total_ignored_count = 0;
+my %warnings = ();
+my %warnings_by_who = ();
+my %who_count = ();
+my $total_warnings_count = 0;
+my $total_ignored_count = 0;
 
   # Parse the build log for warnings
   #
@@ -167,15 +173,15 @@ $total_ignored_count = 0;
   my $gz = gzopen("$tree/$log_file", "rb") or 
     die "gzopen($tree/$log_file): $!\n";
   if ($br->{errorparser} eq 'unix') {
-    gcc_parser($gz, $cvs_root, $tree, $log_file, $file_bases, $file_fullpaths);
+    gcc_parser($gz, $::cvs_root, $tree, $log_file, $file_bases, $file_fullpaths);
   } elsif ($br->{errorparser} eq 'mac') {
-    mac_parser($gz, $cvs_root, $tree, $log_file, $file_bases, $file_fullpaths);
+    mac_parser($gz, $::cvs_root, $tree, $log_file, $file_bases, $file_fullpaths);
   }
   $gz->gzclose();
 
   # Attach blame to all the warnings
   #   (Yes, global variables are flying around.)
-  &build_blame($cvs_root, $file_fullpaths) if ($cvs_module ne '');
+  &build_blame($::cvs_root, $file_fullpaths) if ($::cvs_module ne '');
 
   # Come up with the temporary filenames for the output
   #
@@ -186,7 +192,7 @@ $total_ignored_count = 0;
 
   # Write the warnings indexed by who
   #
-  $fh = new FileHandle;
+  my $fh = new FileHandle;
   $fh->open($warn_file, ">") or die "Unable to open $warn_file: $!\n";
   my $time_str = print_html_by_who($fh, $br);
   $fh->close;
@@ -221,12 +227,12 @@ sub build_file_hash {
 
   read_cvs_modules_file();
 
-  local %bases = (); # Set in find_cvs_files
-  local %fullpath = (); # Set in find_cvs_files
+  %bases = (); # Set in find_cvs_files
+  %fullpath = (); # Set in find_cvs_files
 
   for my $module_item (@modules) {
     my $module = $module_item->[0];
-    local $tag = $module_item->[1]; # Used in find_cvs_files
+    $tag = $module_item->[1]; # Used in find_cvs_files
 
     my @include_list = ();
     my @exclude_list = ();
@@ -237,7 +243,7 @@ sub build_file_hash {
       expand_cvs_modules($module, \@include_list, \@exclude_list);
     }
 
-    local $exclude_pat = join '|', @exclude_list; # Used in find_cvs_files
+    $exclude_pat = join '|', @exclude_list; # Used in find_cvs_files
 
     use Cwd;
     my $save_dir = cwd;
@@ -256,8 +262,8 @@ sub build_file_hash {
 sub read_cvs_modules_file
 {
   local $_;
-  open(MODULES, "<", "$cvs_root/CVSROOT/modules")
-    or die "Unable to open modules file: $cvs_root/CVSROOT/modules\n";
+  open(MODULES, "<", "$::cvs_root/CVSROOT/modules")
+    or die "Unable to open modules file: $::cvs_root/CVSROOT/modules\n";
   while (<MODULES>) {
     if (/ -a /) {
       while (/\\$/) {
@@ -294,7 +300,7 @@ sub find_cvs_files {
     return;
   }
   my $dir = $File::Find::dir;
-  $dir =~ s|^$cvs_root/$source_root/||o;
+  $dir =~ s|^$::cvs_root/$source_root/||o;
   $dir =~ s|/$||;
   my $file = substr $_, 0, -2;
 
@@ -312,16 +318,16 @@ sub find_build_record {
   my @build_records = ();
   my $br;
 
-  $maxdate = time;
-  $mindate = $maxdate - 5*60*60; # Go back 5 hours
+  $::maxdate = time;
+  $::mindate = $::maxdate - 5*60*60; # Go back 5 hours
 
   print STDERR "Loading build data...";
-  tb_load_data();
+  tb_load_data(\%form);
   print STDERR "done\n";
 
-  for (my $ii=0; $ii <= $name_count; $ii++) {
-    for (my $tt=0; $tt <= $time_count; $tt++) {
-      if (defined($br = $build_table->[$tt][$ii])
+  for (my $ii=0; $ii <= $::name_count; $ii++) {
+    for (my $tt=0; $tt <= $::time_count; $tt++) {
+      if (defined($br = $::build_table->[$tt][$ii])
           and $br->{logfile} eq $log_file) {
         return $br;
   } } }
@@ -380,7 +386,7 @@ sub gcc_parser {
     my $ignore_it = /$ignore_pat/o;
     unless ($ignore_it) {
       # Now check if the warning should be ignored based on directory
-      for $ignore_rec (@ignore_dir) {
+      for my $ignore_rec (@ignore_dir) {
         next unless $dir =~ /^$ignore_rec->{dir}/;
         next unless /$ignore_rec->{warning}/;
         $ignore_it = 1;
@@ -413,10 +419,11 @@ sub gcc_parser {
 sub mac_parser {
   my ($gz, $cvs_root, $tree, $log_file, $file_bases, $file_fullnames) = @_;
   my $build_dir = '';
+  my ($bytesread, $line);
 
   my $ignore_pat = "(?:".join('|',@mac_ignore).")";
 
- PARSE_TOP: while (defined($gz) && (($bytesred=$gz->gzreadline($line)) > 0)) {
+ PARSE_TOP: while (defined($gz) && (($bytesread=$gz->gzreadline($line)) > 0)) {
     $_ = $line ;
     # Now only match lines with "warning:"
     next unless /^Warning :/;
@@ -425,7 +432,7 @@ sub mac_parser {
 
     warn "debug> $_\n" if $debug;
 
-    my ($filename, $line, $warning_text);
+    my ($filename, $warning_text);
     (undef, $warning_text) = split /:\s*/, $_, 2;
     $_ = <$fh>;
     while (not /^\S+ line \d+/) {
@@ -448,11 +455,11 @@ sub mac_parser {
       $warnings{$file}{$line}->{first_seen_line} = $.;
       $warnings{$file}{$line}->{ignorecount} = 0;
     }
-    $ignore_it = 0;
+    my $ignore_it = 0;
     $ignore_it = 1 if $warning_text =~ /^$ignore_pat$/o;
     if (0) { # unless ($ignore_it) {
       # Now check if the warning should be ignored based on directory
-      for $ignore_rec (@ignore_dir) {
+      for my $ignore_rec (@ignore_dir) {
         next unless $dir =~ /^$ignore_rec->{dir}/;
         next unless /$ignore_rec->{warning}/;
         $ignore_it = 1;
@@ -484,6 +491,7 @@ sub mac_parser {
 
 sub build_blame {
   my ($cvs_root, $tags) = @_;
+  my ($file, $lines_hash);
 
   use lib "@BONSAI_DIR@";
   require 'cvsblame.pl';
@@ -510,8 +518,8 @@ sub build_blame {
     }
     my @text = &extract_revision($revision);
     LINE: while (my ($line, $line_rec) = each %{$lines_hash}) {
-      my $line_rev = $revision_map[$line-1];
-      my $who = $revision_author{$line_rev};
+      my $line_rev = $::revision_map[$line-1];
+      my $who = $::revision_author{$line_rev};
       my $source_text = join '', @text[$line-3..$line+1];
       $source_text =~ s/\t/    /g;
       
@@ -520,7 +528,7 @@ sub build_blame {
       $line_rec->{line_rev} = $line_rev;
       $line_rec->{source}   = $source_text;
 
-      for $ignore_rec (@ignore_match) {
+      for my $ignore_rec (@ignore_match) {
         for my $warn_rec (@{ $line_rec->{list}}) {
           if ($warn_rec->{warning_text} =~ /$ignore_rec->{warning}/
               and $source_text =~ /$ignore_rec->{source}/
@@ -582,7 +590,7 @@ sub print_html_by_who {
   my $old_fh = select($fh);
 
   my $total_unignored_count = $total_warnings_count - $total_ignored_count;
-  for $who (sort { $who_count{$b} <=> $who_count{$a}
+  for my $who (sort { $who_count{$b} <=> $who_count{$a}
                    || $a cmp $b } keys %who_count) {
     next if $who_count{$who} == 0;
     push @who_list, $who;
@@ -628,7 +636,7 @@ __END_HEADER
 
   # Print all the warnings
   #
-  for $who (@who_list, "Unblamed") {
+  for my $who (@who_list, "Unblamed") {
     my $total_count = $who_count{$who};
     
     next if $total_count == 0;
@@ -647,8 +655,8 @@ __END_HEADER
 
     print "\n<table>\n";
     my $count = 1;
-    for $file (sort keys %{$warnings_by_who{$who}}) {
-      for $linenum (sort keys %{$warnings_by_who{$who}{$file}}) {
+    for my $file (sort keys %{$warnings_by_who{$who}}) {
+      for my $linenum (sort keys %{$warnings_by_who{$who}{$file}}) {
         my $line_rec = $warnings_by_who{$who}{$file}{$linenum};
         my $count_for_line = $line_rec->{count} - $line_rec->{ignorecount};
         next if $count_for_line == 0;
@@ -703,7 +711,7 @@ __END_HEADER
 
   # Print all the warnings
   #
-  for $who (@who_list, "Unblamed") {
+  for my $who (@who_list, "Unblamed") {
     my $total_count = $who_count{$who};
     my ($name, $email);
     ($name = $who) =~ s/%.*//;
@@ -719,8 +727,8 @@ __END_HEADER
 
     print "\n<table>\n";
     my $count = 1;
-    for $file (sort keys %{$warnings_by_who{$who}}) {
-      for $linenum (sort keys %{$warnings_by_who{$who}{$file}}) {
+    for my $file (sort keys %{$warnings_by_who{$who}}) {
+      for my $linenum (sort keys %{$warnings_by_who{$who}{$file}}) {
         my $line_rec = $warnings_by_who{$who}{$file}{$linenum};
         my $count_for_line = $line_rec->{count} - $line_rec->{ignorecount};
         next if $count_for_line == 0;
@@ -840,7 +848,7 @@ sub build_url {
 sub file_url {
   my ($file, $linenum) = @_;
 
-  return "$bonsai_url/cvsblame.cgi"
+  return "$::bonsai_url/cvsblame.cgi"
         ."?file=mozilla/$file&mark=$linenum#".($linenum-10);
 
 }

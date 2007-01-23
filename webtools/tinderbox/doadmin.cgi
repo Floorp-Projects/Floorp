@@ -20,26 +20,27 @@
 #
 # Contributor(s): 
 
+use strict;
 use Tie::IxHash;
 
 require 'tbglobals.pl';
 
 umask 002;
-$perm = "0660"; # Permission of created files
-$dir_perm = "0770"; # Permission of created dirs
+my $perm = "0660"; # Permission of created files
+my $dir_perm = "0770"; # Permission of created dirs
 
 # Process the form arguments
-%form = ();
-&split_cgi_args();
+my %form = &split_cgi_args();
+my %cookie_jar = &split_cookie_args();
 
 $|=1;
 
-tb_check_password();
+&tb_check_password(\%form, \%cookie_jar);
 
 print "Content-type: text/html\n\n<HTML>\n";
 
-$command = $form{'command'};
-$tree= $form{'tree'};
+my $command = $form{'command'};
+my $tree= $form{'tree'};
 
 if( $command eq 'create_tree' ){
     &create_tree;
@@ -66,21 +67,22 @@ elsif( $command eq 'scrape_builds' ){
 }
 
 sub trim_logs {
-    $days = $form{'days'};
-    $tree = $form{'tree'};
+    my $days = $form{'days'};
+    my $tree = $form{'tree'};
 
     print "<h2>Trimming Log files for $tree...</h2>\n<p>";
     
-    $min_date = time - (60*60*24 * $days);
+    my $min_date = time - (60*60*24 * $days);
 
     #
     # Nuke the old log files
     #
-    $i = 0;
+    my $i = 0;
+    my $tblocks;
     opendir( D, &shell_escape($tree) );
-    while( $fn = readdir( D ) ){
+    while( my $fn = readdir( D ) ){
         if( $fn =~ /\.(?:gz|brief\.html)$/ ){
-            ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime,
+            my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime,
                 $ctime,$blksize,$blocks) = stat("$tree/$fn");
             if( $mtime && ($mtime < $min_date) ){
                 print "$fn\n";
@@ -91,17 +93,17 @@ sub trim_logs {
         }
     }
     closedir( D );
-    $k = $tblocks*512/1024;
+    my $k = $tblocks*512/1024;
     print "<br><b>$i Logfiles ( $k K bytes ) removed</b><br>\n";
 
     #
     # Trim build.dat
     #
-    $builds_removed = 0;
+    my $builds_removed = 0;
     open(BD, "<", "$tree/build.dat");
     open(NBD, ">", "$tree/build.dat.new");
     while( <BD> ){
-        ($endtime,$buildtime,$buildname) = split( /\|/ );
+        my ($endtime,$buildtime,$buildname) = split( /\|/ );
         if( $buildtime >= $min_date ){
             print NBD $_;
         }
@@ -112,6 +114,7 @@ sub trim_logs {
     close( BD );
     close( NBD );
 
+    unlink( "$tree/build.dat.old" );
     rename( "$tree/build.dat", "$tree/build.dat.old" );
     rename( "$tree/build.dat.new", "$tree/build.dat" );
 
@@ -121,7 +124,7 @@ sub trim_logs {
 sub create_tree {
     tie my %treedata => 'Tie::IxHash';
     # make a copy of default_treedata to preserve order
-    %treedata = %default_treedata;
+    %treedata = %::default_treedata;
     $treedata{who_days} = $form{'who_days'};
     $treedata{cvs_root} = $form{'repository'};
     $treedata{cvs_module} = $form{'modulename'};
@@ -138,7 +141,7 @@ sub create_tree {
 
     $treedata{use_bonsai} = $treedata{use_viewvc} = 0;
 
-    $treename = $form{'treename'};
+    my $treename = $form{'treename'};
 
     for my $var ( 'cvs_module', 'cvs_branch', 'bonsai_tree') {
         $treedata{use_bonsai}++ if (defined($treedata{$var}) && 
@@ -188,12 +191,12 @@ sub create_tree {
 
 
 sub disable_builds {
-    my $i,%buildnames;
+    my ($i,%buildnames);
 
     # Read build.dat
     open(BD, "<", "$tree/build.dat");
     while( <BD> ){
-        ($endtime,$buildtime,$bname) = split( /\|/ );
+        my ($endtime,$buildtime,$bname) = split( /\|/ );
         $buildnames{$bname} = 0;
     }
     close( BD );
@@ -220,12 +223,12 @@ sub disable_builds {
 
 
 sub scrape_builds {
-    my $i,%buildnames;
+    my ($i,%buildnames);
 
     # Read build.dat
     open(BD, "<", "$tree/build.dat");
     while( <BD> ){
-        ($endtime,$buildtime,$bname) = split( /\|/ );
+        my ($endtime,$buildtime,$bname) = split( /\|/ );
         $buildnames{$bname} = 1;
     }
     close( BD );
@@ -252,7 +255,7 @@ sub scrape_builds {
 
 
 sub set_sheriff {
-    $m = $form{'sheriff'};
+    my $m = $form{'sheriff'};
     $m =~ s/\'/\\\'/g;
     open(SHERIFF, ">", "$tree/sheriff.pl");
     print SHERIFF "\$current_sheriff = '$m';\n1;";
@@ -263,7 +266,7 @@ sub set_sheriff {
 }
 
 sub set_status_message {
-    $m = $form{'status'};
+    my $m = $form{'status'};
     $m =~ s/\'/\\\'/g;
     open(TREESTATUS, ">", "$tree/status.pl");
     print TREESTATUS "\$status_message = \'$m\'\;\n1;";
@@ -274,7 +277,7 @@ sub set_status_message {
 }
 
 sub set_rules_message {
-    $m = $form{'rules'};
+    my $m = $form{'rules'};
     $m =~ s/\'/\\\'/g;
     open(RULES, ">", "$tree/rules.pl");
     print RULES "\$rules_message = \'$m\';\n1;";

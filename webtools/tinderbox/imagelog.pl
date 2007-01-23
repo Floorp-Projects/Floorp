@@ -22,17 +22,19 @@
 
 1;
 
+use strict;
+
 sub add_imagelog {
-    local($url,$quote,$width,$height) = @_;
-    open( IMAGELOG, ">>", "$data_dir/imagelog.txt" ) || die "Oops; can't open imagelog.txt";
+    my ($url,$quote,$width,$height) = @_;
+    open( IMAGELOG, ">>", "$::data_dir/imagelog.txt" ) || die "Oops; can't open imagelog.txt";
     print IMAGELOG "$url`$width`$height`$quote\n";
     close( IMAGELOG );
 }
 
 sub get_image{
-    local(@log,@ret,$i);
+    my (@log,@ret,$i);
 
-    open( IMAGELOG, "<", "$data_dir/imagelog.txt" );
+    open( IMAGELOG, "<", "$::data_dir/imagelog.txt" );
     @log = <IMAGELOG>;
 
     # return a random line

@@ -28,13 +28,13 @@ use File::Copy;
 use File::Basename;
 use lib "@TINDERBOX_DIR@";
 require 'tbglobals.pl'; # for $gzip
-#use strict;
+use strict;
 
 umask 002;
 
 # setuid globals
 $ENV{'PATH'} = "@SETUID_PATH@";
-$tinderboxdir = "@TINDERBOX_DIR@";
+my $tinderboxdir = "@TINDERBOX_DIR@";
 
 # globals
 my ($only_check_mail);
@@ -42,7 +42,7 @@ my @changed_trees=();
 my %scraped_trees;
 my $debug = 0;
 my $err = 0;
-my $rejected_mail_dir = "$data_dir/bad";
+my $rejected_mail_dir = "$::data_dir/bad";
 
 chdir $tinderboxdir or die "Couldn't chdir to $tinderboxdir"; 
 
@@ -50,7 +50,7 @@ chdir $tinderboxdir or die "Couldn't chdir to $tinderboxdir";
 GetOptions("check-mail" => \$only_check_mail) or die ("Error parsing args.");
 
 # Acquire a lock first so that we don't step on ourselves
-my $lockfile = "$data_dir/processbuild.sem";
+my $lockfile = "$::data_dir/processbuild.sem";
 my $lock = &lock_datafile($lockfile);
 opendir(DIR, &shell_escape($::data_dir)) or $err++;
 if ($err) {
@@ -59,29 +59,29 @@ if ($err) {
     die("Can't opendir($::data_dir): $!");
 }
 my @datafiles = 
-    sort(grep { /^tbx\.\d+\.\d+$/ && -f "$data_dir/$_" } readdir(DIR));
+    sort(grep { /^tbx\.\d+\.\d+$/ && -f "$::data_dir/$_" } readdir(DIR));
 closedir(DIR);
 print "Files: @datafiles\n" if ($debug && $#datafiles > 0);
 for my $file (@datafiles) {
-    &process_mailfile("$data_dir/$file");
+    &process_mailfile("$::data_dir/$file");
 }
 &unlock_datafile($lock);
 unlink($lockfile);
 
 require 'showbuilds.pl';
 # Hardcode static pages to only showing 12 hrs of data
-$nowdate = $maxdate = time;
-$hours = 12;
-$mindate = $maxdate - ($hours*60*60);
+$::nowdate = $::maxdate = time;
+$::hours = 12;
+$::mindate = $::maxdate - ($::hours*60*60);
 print "Changed trees:\n\t@changed_trees\n" if ($debug && $#changed_trees > 0);
 for my $t (@changed_trees) {
     # Override globals used in static page creation
-    %form = ();
-    $tree = $t;
+    my %form = ();
+    $form{tree} = $t;
     print "Tree: $t\n" if ($debug);
     # Static pages - For Sidebar flash and tinderbox panels.
-    $rel_path = ''; 
-    &tb_build_static();
+    $::rel_path = ''; 
+    &tb_build_static(\%form);
     # Who data
     $err = system("./buildwho.pl", "$t");
     if ($err) {
@@ -101,8 +101,8 @@ sub process_mailfile($) {
 
     print "process_mailfile($mail_file)\n" if ($debug);
 
-    %MAIL_HEADER = ();
-    %tinderbox = ();
+    my %MAIL_HEADER = ();
+    my %tinderbox = ();
 
     # Scan the logfile once to get mail header and build variables
     #
@@ -118,7 +118,7 @@ sub process_mailfile($) {
     print "Parsing: end\n" if ($debug);
 
     # If the mail does not contain any tinderbox header info, just drop it.
-    @tbkeys = keys %tinderbox;
+    my @tbkeys = keys %tinderbox;
     if ($#tbkeys == -1) {
         print "Dropping spam mail: $mail_file\n" if ($debug);
         unlink $mail_file;
@@ -166,33 +166,35 @@ sub process_mailfile($) {
     #   Compare the name with $warning_buildnames_pat which is defined in
     #   $tinderbox{tree}/treedata.pl if at all.
     print "Warnings($tinderbox{tree}/$tinderbox{logfile})\n" if ($debug);
-    undef $warning_buildnames_pat;
+    undef $::warning_buildnames_pat;
     open(TD, "$tinderbox{tree}/treedata.pl");
+    my $line;
     while ($line=<TD>) {
         if ($line =~ m/^\$warning_build_names_pat\s*=.*;$/) {
+            $line =~ s/^\$warning/\$::warning/;
             eval($line);
         }
     }
     close(TD);
-    if (defined $warning_buildnames_pat
-        and $tinderbox{build} =~ /^$warning_buildnames_pat$/
+    if (defined $::warning_buildnames_pat
+        and $tinderbox{build} =~ /^$::warning_buildnames_pat$/
         and $tinderbox{status} ne 'failed') {
         $err = system("./warnings.pl", "$tinderbox{tree}/$tinderbox{logfile}");
         warn "warnings.pl($tinderbox{tree}/$tinderbox{logfile} returned an error\n" if ($err);
-        undef $warning_buildnames_pat;
+        undef $::warning_buildnames_pat;
     }
 
     # Scrape data
     #   Look for build name in scrapedata.pl.
     print "Scrape($tinderbox{tree},$tinderbox{logfile})\n" if ($debug);
-    undef $scrape_builds;
+    undef $::scrape_builds;
     require "$tinderbox{tree}/scrapebuilds.pl"
         if -r "$tinderbox{tree}/scrapebuilds.pl";
     # required files are only loaded once so preserve scraped_builds value
-    if (defined($scrape_builds)) {
-        $scraped_trees{$tinderbox{tree}} = $scrape_builds;
+    if (defined($::scrape_builds)) {
+        $scraped_trees{$tinderbox{tree}} = $::scrape_builds;
     }
-    $sb = $scraped_trees{$tinderbox{tree}};
+    my $sb = $scraped_trees{$tinderbox{tree}};
     if (defined($sb) and $sb->{$tinderbox{build}}) {
         $err = system("./scrape.pl", "$tinderbox{tree}", "$tinderbox{logfile}");
         warn "scrape.pl($tinderbox{tree},$tinderbox{logfile}) returned an error\n" if ($err);
@@ -224,15 +226,15 @@ sub parse_mail_header {
   
   while(<$fh>) {
     chomp;
-    last if $line eq '';
+    last if $_ eq '';
     
     if (/([^ :]*)\:[ \t]+([^\n]*)/) {
       $name = $1;
       $name =~ tr/A-Z/a-z/;
-      $mail_ref{$name} = $2;
+      $mail_ref->{$name} = $2;
     }
     elsif ($name ne '') {
-      $mail_ref{$name} .= $2;
+      $mail_ref->{$name} .= $2;
     }
   }
 }

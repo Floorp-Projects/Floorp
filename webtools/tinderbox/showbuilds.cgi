@@ -20,6 +20,7 @@
 #
 # Contributor(s): 
 
+use strict;
 use lib "@TINDERBOX_DIR@";
 require 'tbglobals.pl';
 require 'imagelog.pl';
@@ -28,43 +29,39 @@ require 'showbuilds.pl';
 umask 002;
 
 # Process the form arguments
-%form = ();
-&split_cgi_args();
+my %form = &split_cgi_args();
 
 # Show 12 hours by default
 #
-$nowdate = time; 
-if (not defined($maxdate = $form{maxdate})) {
-  $maxdate = $nowdate;
+$::nowdate = time; 
+if (not defined($::maxdate = $form{maxdate})) {
+    $::maxdate = $::nowdate;
 }
 if ($form{showall}) {
-  $mindate = 0;
+    $::mindate = 0;
+} else {
+    $::default_hours = 12;
+    $::hours = $::default_hours;
+    $::hours = $form{hours} if $form{hours};
+    $::mindate = $::maxdate - ($::hours*60*60);
 }
-else {
-  $default_hours = 12;
-  $hours = $default_hours;
-  $hours = $form{hours} if $form{hours};
-  $mindate = $maxdate - ($hours*60*60);
-}
-
-$::tree = $form{tree};
 
 # $rel_path is the relative path to webtools/tinderbox used for links.
 # It changes to "../" if the page is generated statically, because then
-# it is placed in tinderbox/$::tree.
-$rel_path = ''; 
+# it is placed in tinderbox/$tree.
+$::rel_path = ''; 
 
-&show_tree_selector,  exit if $::tree eq '';
-&do_quickparse,       exit if $form{quickparse};
-&do_express,          exit if $form{express};
-&do_rdf,              exit if $form{rdf};
-&do_static,           exit if $form{static};
-&do_flash,            exit if $form{flash};
-&do_panel,            exit if $form{panel};
-&do_hdml,             exit if $form{hdml};
-&do_vxml,             exit if $form{vxml};
-&do_wml,              exit if $form{wml}; 
-&do_tinderbox,        exit;
+&show_tree_selector(\%form),  exit if $form{tree} eq '';
+&do_quickparse(\%form),       exit if $form{quickparse};
+&do_express(\%form),          exit if $form{express};
+&do_rdf(\%form),              exit if $form{rdf};
+&do_static(\%form),           exit if $form{static};
+&do_flash(\%form),            exit if $form{flash};
+&do_panel(\%form),            exit if $form{panel};
+&do_hdml(\%form),             exit if $form{hdml};
+&do_vxml(\%form),             exit if $form{vxml};
+&do_wml(\%form),              exit if $form{wml}; 
+&do_tinderbox(\%form),        exit;
 
 # end of main
 #=====================================================================

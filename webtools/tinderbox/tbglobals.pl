@@ -19,12 +19,15 @@
 #
 # Contributor(s): 
 
+use strict;
 # Reading the log backwards saves time when we only want the tail.
 use Backwards;
 use Digest::MD5 qw(md5_hex);
 use Tie::IxHash;
 use FileHandle;
 use Fcntl qw(:DEFAULT :flock);
+
+require 'header.pl';
 
 #
 # Global variabls and functions for tinderbox
@@ -51,42 +54,42 @@ $::CI_LOG=11;
 #
 
 # Variables set from Makefile
-$bonsai_dir = "@BONSAI_DIR@";
-$bonsai_url = "@BONSAI_URL@";
-$default_cvsroot = "@CVSROOT@";
-$registry_url = "@REGISTRY_URL@";
+$::bonsai_dir = "@BONSAI_DIR@";
+$::bonsai_url = "@BONSAI_URL@";
+$::default_cvsroot = "@CVSROOT@";
+$::registry_url = "@REGISTRY_URL@";
 
 # From load_data()
-$ignore_builds = {};
-$scrape_builds = {};
+$::ignore_builds = {};
+$::scrape_builds = {};
 
 # From get_build_name_index()
-$build_name_index = {};     
-$build_names = [];
-$name_count = 0;
+$::build_name_index = {};     
+$::build_names = [];
+$::name_count = 0;
 
 # From get_build_time_index()
-$build_time_index = {};
-$build_time_times = [];
-$mindate_time_count = 0;  # time_count that corresponds to the mindate
-$time_count = 0;
+$::build_time_index = {};
+$::build_time_times = [];
+$::mindate_time_count = 0;  # time_count that corresponds to the mindate
+$::time_count = 0;
 
-$build_table = [];
-$who_list = [];
-@note_array = ();
+$::build_table = [];
+$::who_list = [];
+@::note_array = ();
 
-$data_dir='data';
+$::data_dir='data';
 
-@global_tree_list = ();
-undef @global_tree_list;
+@::global_tree_list = ();
+undef @::global_tree_list;
 
 # Set this to show real end times for builds instead of just using
 # the start of the next build as the end time.
-$display_accurate_build_end_times = 1;
+my $display_accurate_build_end_times = 1;
 
 # Format version of treedata.pl
 # Use Tie::IxHash to keep order of treedata variables
-tie %default_treedata => 'Tie::IxHash',
+tie %::default_treedata => 'Tie::IxHash',
     treedata_version => 1,
     who_days => 14,
     use_bonsai => 1,
@@ -114,21 +117,51 @@ sub trick_taint{
 }
 
 sub make_tree_list {
-    return @global_tree_list if defined(@global_tree_list);
+    return @::global_tree_list if defined(@::global_tree_list);
     while(<*>) {
-        if( -d $_ && $_ ne "$data_dir" && $_ ne 'CVS' && -f "$_/treedata.pl") {
-            push @global_tree_list, $_;
+        if( -d $_ && $_ ne "$::data_dir" && $_ ne 'CVS' && -f "$_/treedata.pl") {
+            push @::global_tree_list, $_;
         }
     }
-    return @global_tree_list;
+    return @::global_tree_list;
 }
 
 sub require_only_one_tree {
     my ($t) = @_;
     my @treelist = &make_tree_list();
-    $t = $::tree if !defined($t);
     $t = '' if (!grep {$t eq $_} @treelist);
-    &show_tree_selector, exit if $t eq '';
+    &::show_tree_selector, exit if $t eq '';
+    return $t;
+}
+
+sub show_tree_selector {
+
+    print "Content-type: text/html\n\n";
+
+    &EmitHtmlHeader("tinderbox");
+
+    print "<P><TABLE WIDTH=\"100%\">";
+    print "<TR><TD ALIGN=CENTER>Select one of the following trees:</TD></TR>";
+    print "<TR><TD ALIGN=CENTER>\n";
+    print " <TABLE><TR><TD><UL>\n";
+
+    my @list = &make_tree_list();
+
+    foreach (@list) {
+        print "<LI><a href=showbuilds.cgi?tree=$_>$_</a>\n";
+    }
+    print "</UL></TD></TR></TABLE></TD></TR></TABLE>";
+
+    print "<P><TABLE WIDTH=\"100%\">";
+    print "<TR><TD ALIGN=CENTER><a href=admintree.cgi>";
+    print "Create a new tree</a> or administer one of the following trees:</TD></TR>";
+    print "<TR><TD ALIGN=CENTER>\n";
+    print " <TABLE><TR><TD><UL>\n";
+
+    foreach (@list) {
+        print "<LI><a href=admintree.cgi?tree=$_>$_</a>\n";
+    }
+    print "</UL></TD></TR></TABLE></TD></TR></TABLE>";
 }
 
 sub lock_datafile {
@@ -377,49 +410,49 @@ sub shell_escape {
 
 sub tb_load_treedata {
     my $tree = shift;
-
     do "$tree/treedata.pl" if -r "$tree/treedata.pl";
 }
 
-sub tb_load_data {
-  $tree = $form{'tree'};  # Testing: $tree = "SeaMonkey";
+sub tb_load_data() {
+    my ($form_ref) = (@_);
+    my $tree = $form_ref->{tree};
 
-  return undef unless $tree;
+    return undef unless $tree;
+
+    &tb_load_treedata($tree);
+
+    # Reset globals
+    $::ignore_builds = {};
+    $::scrape_builds = {};
+
+    undef $::ignore_builds;
+    undef $::scrape_builds;
+    do "$tree/ignorebuilds.pl" if -r "$tree/ignorebuilds.pl";
+    do "$tree/scrapebuilds.pl" if -r "$tree/scrapebuilds.pl";
+ 
+    my $td = {};
+    $td->{name} = $tree;
+    $td->{num} = 0;
+    $td->{cvs_module} = $::cvs_module;
+    $td->{cvs_branch} = $::cvs_branch;
+    $td->{ignore_builds} = $::ignore_builds;
+    $td->{scrape_builds} = $::scrape_builds;
+    $::cvs_root = '/m/src' if $::cvs_root eq '';
+    $td->{cvs_root} = $::cvs_root;
+
+    my $build_list = &load_buildlog($td, $form_ref);
   
-  tb_load_treedata($tree);
-        
-  # Reset globals
-  $ignore_builds = {};
-  $scrape_builds = {};
-
-  undef $ignore_builds;
-  undef $scrape_builds;
-  do "$tree/ignorebuilds.pl" if -r "$tree/ignorebuilds.pl";
-  do "$tree/scrapebuilds.pl" if -r "$tree/scrapebuilds.pl";
-        
-  $td = {};
-  $td->{name} = $tree;
-  $td->{num} = 0;
-  $td->{cvs_module} = $cvs_module;
-  $td->{cvs_branch} = $cvs_branch;
-  $td->{ignore_builds} = $ignore_builds;
-  $td->{scrape_builds} = $scrape_builds;
-  $cvs_root = '/m/src' if $cvs_root eq '';
-  $td->{cvs_root} = $cvs_root;
-
-  $build_list = load_buildlog($td);
+    &get_build_name_index($build_list);
+    &get_build_time_index($build_list);
   
-  get_build_name_index($build_list);
-  get_build_time_index($build_list);
-  
-  load_who($td);
+    &load_who($td);
 
-  make_build_table($td, $build_list);
+    &make_build_table($td, $build_list);
 
-  $td->{scrape}     = load_scrape($td);
-  $td->{warnings}   = load_warnings($td);
+    $td->{scrape}     = &load_scrape($td);
+    $td->{warnings}   = &load_warnings($td);
 
-  return $td;
+    return $td;
 }
 
 sub tb_loadquickparseinfo {
@@ -427,8 +460,8 @@ sub tb_loadquickparseinfo {
   local $_;
 
   return if (! -d "$tree" || ! -r "$tree/build.dat");
-  $maxdate = time if !defined($maxdate);
-  undef $ignore_builds;
+  $::maxdate = time if !defined($::maxdate);
+  undef $::ignore_builds;
   do "$tree/ignorebuilds.pl" if -r "$tree/ignorebuilds.pl";
     
   my $bw = Backwards->new("$tree/build.dat") or die;
@@ -443,7 +476,7 @@ sub tb_loadquickparseinfo {
         $buildstatus =~ /^success|busted|testfailed$/) {
 
       # Ignore stuff in the future.
-      next if $buildtime > $maxdate;
+      next if $buildtime > $::maxdate;
 
       $latest_time = $buildtime if $buildtime > $latest_time;
 
@@ -461,7 +494,7 @@ sub tb_loadquickparseinfo {
       }
       $tooearly = 0;
 
-      next if exists $ignore_builds->{$buildname};
+      next if exists $::ignore_builds->{$buildname};
       next if exists $build->{$buildname}
               and $times->{$buildname} >= $buildtime;
       
@@ -474,71 +507,75 @@ sub tb_loadquickparseinfo {
 sub tb_last_status {
   my ($build_index) = @_;
 
-  for (my $tt=0; $tt < $time_count; $tt++) {
-    my $br = $build_table->[$tt][$build_index];
-    next unless defined $br and $br->{buildstatus};
+  for (my $tt=0; $tt < $::time_count; $tt++) {
+    my $br = $::build_table->[$tt][$build_index];
+    next unless defined $br and $br != -1 and $br->{buildstatus};
     next unless $br->{buildstatus} =~ /^(success|busted|testfailed)$/;
     return $br->{buildstatus};
   }
   return 'building';
 }
 
-sub tb_check_password {
-  if ($form{password} eq '' and defined $cookie_jar{tinderbox_password}) {
-    $form{password} = $cookie_jar{tinderbox_password};
-  }
-  my $correct = '';
-  if (open(REAL, "<", "data/passwd")) {
-    $correct = <REAL>;
-    close REAL;
-    $correct =~ s/\s+$//;   # Strip trailing whitespace.
-  }
-  $form{password} =~ s/\s+$//;      # Strip trailing whitespace.
-  if ($form{password} ne '') {
-    my $encoded = md5_hex($form{password});
-    $encoded =~ s/\s+$//;   # Strip trailing whitespace.
-    if ($encoded eq $correct) {
-      if ($form{rememberpassword} ne '') {
-        print "Set-Cookie: tinderbox_password=$form{'password'} ;"
-             ." path=/ ; expires = Sun, 1-Mar-2020 00:00:00 GMT\n";
-      }
-      return;
+sub tb_check_password($$) {
+    my ($form_ref, $cj_ref) = (@_);
+    my %form = %{$form_ref};
+    my %cookie_jar = %{$cj_ref};
+
+    if ($form{password} eq '' and defined $cookie_jar{tinderbox_password}) {
+        $form{password} = $cookie_jar{tinderbox_password};
     }
-  }
+    my $correct = '';
+    if (open(REAL, "<", "data/passwd")) {
+        $correct = <REAL>;
+        close REAL;
+        $correct =~ s/\s+$//;   # Strip trailing whitespace.
+    }
+    $form{password} =~ s/\s+$//;      # Strip trailing whitespace.
+    if ($form{password} ne '') {
+        my $encoded = md5_hex($form{password});
+        $encoded =~ s/\s+$//;   # Strip trailing whitespace.
+        if ($encoded eq $correct) {
+            if ($form{rememberpassword} ne '') {
+                print "Set-Cookie: tinderbox_password=$form{'password'} ;"
+                    ." path=/ ; expires = Sun, 1-Mar-2020 00:00:00 GMT\n";
+            }
+            return;
+        }
+    }
 
-  # Force a return here to test w/o a password.
-  # return;
+    # Force a return here to test w/o a password.
+    # return;
 
-  require 'header.pl';
+    require 'header.pl';
 
-  print "Content-type: text/html\n";
-  print "Set-Cookie: tinderbox_password= ; path=/ ; "
-       ." Expires = Sun, 1-Mar-2020 00:00:00 GMT\n";
-  print "\n";
+    print "Content-type: text/html\n";
+    print "Set-Cookie: tinderbox_password= ; path=/ ; "
+        ." Expires = Sun, 1-Mar-2020 00:00:00 GMT\n";
+    print "\n";
 
-  EmitHtmlHeader("What's the magic word?",
-                 "You need to know the magic word to use this page.");
+    EmitHtmlHeader("What's the magic word?",
+                   "You need to know the magic word to use this page.");
 
-  if ($form{password} ne '') {
-    print "<B>Invalid password; try again.<BR></B>";
-  }
-  print q(
-    <FORM method=post>
-    <B>Password:</B>
-    <INPUT NAME=password TYPE=password><BR>
-    <INPUT NAME=rememberpassword TYPE=checkbox>
-    If correct, remember password as a cookie<BR>
-  );
+    if ($form{password} ne '') {
+        print "<B>Invalid password; try again.<BR></B>";
+    }
+    print q(
+            <FORM method=post>
+            <B>Password:</B>
+            <INPUT NAME=password TYPE=password><BR>
+            <INPUT NAME=rememberpassword TYPE=checkbox>
+            If correct, remember password as a cookie<BR>
+            );
     
-  while (my ($key,$value) = each %form) {
-    next if $key eq "password" or $key eq "rememberpassword";
+    while (my ($key,$value) = each %form) {
+        next if $key eq "password" or $key eq "rememberpassword";
 
-    my $enc_key = value_encode($key);
-    my $enc_value = value_encode($value);
-    print "<INPUT TYPE=HIDDEN NAME=\"$enc_key\" VALUE=\"$enc_value\">\n";
-  }
-  print "<INPUT TYPE=SUBMIT value=Submit></FORM>\n";
-  exit;
+        my $enc_key = value_encode($key);
+        my $enc_value = value_encode($value);
+        print "<INPUT TYPE=HIDDEN NAME=\"$enc_key\" VALUE=\"$enc_value\">\n";
+    }
+    print "<INPUT TYPE=SUBMIT value=Submit></FORM>\n";
+    exit;
 }
 
 sub tb_find_build_record {
@@ -556,7 +593,7 @@ sub tb_find_build_record {
   my ($endtime, $buildtime, $buildname, $errorparser,
       $buildstatus, $binaryurl) = (split /\|/, $log_entry)[0..4,6];
 
-  $buildrec = {    
+  my $buildrec = {    
     endtime     => $endtime,
     buildtime   => $buildtime,
     buildname   => $buildname,
@@ -590,8 +627,8 @@ sub write_treedata() {
 # end of public functions
 #============================================================
 
-sub load_buildlog {
-  my ($treedata) = $_[0];
+sub load_buildlog($$) {
+  my ($treedata, $form_ref) = (@_);
 
   # In general you always want to make "$_" a local
   # if it is used. That way it is restored upon return.
@@ -599,11 +636,11 @@ sub load_buildlog {
   my $build_list = [];
 
 
-  if (not defined $maxdate) {
-    $maxdate = time();
+  if (not defined $::maxdate) {
+    $::maxdate = time();
   }
-  if (not defined $mindate) {
-    $mindate = $maxdate - 24*60*60;
+  if (not defined $::mindate) {
+    $::mindate = $::maxdate - 24*60*60;
   }
   
   my ($bw) = Backwards->new("$treedata->{name}/build.dat") or die;
@@ -616,10 +653,10 @@ sub load_buildlog {
      $errorparser, $buildstatus, $logfile, $binaryurl) = split /\|/;
     
     # Ignore stuff in the future.
-    next if $buildtime > $maxdate;
+    next if $buildtime > $::maxdate;
     
     # Ignore stuff in the past (but get a 2 hours of extra data)
-    if ($buildtime < $mindate - 2*60*60) {
+    if ($buildtime < $::mindate - 2*60*60) {
       # Occasionally, a build might show up with a bogus time.  So,
       # we won't judge ourselves as having hit the end until we
       # hit a full 20 lines in a row that are too early.
@@ -633,7 +670,7 @@ sub load_buildlog {
     }
     $tooearly = 0;
 
-    if ($form{noignore} or not $treedata->{ignore_builds}->{$buildname}) {
+    if ($form_ref->{noignore} or not $treedata->{ignore_builds}->{$buildname}) {
 
       # Latest record in build.dat for this (buildtime, buildname) tuple wins.
       if ( $internal_build_list->{$buildtime}->{$buildname} ) {
@@ -666,7 +703,7 @@ sub load_who {
   local $_;
   
   # Reset globals
-  $who_list = [];
+  $::who_list = [];
 
   open(WHOLOG, "<", "$treedata->{name}/who.dat");
   while (<WHOLOG>) {
@@ -674,20 +711,20 @@ sub load_who {
     my ($checkin_time, $email) = split /\|/;
 
     # Find the time slice where this checkin belongs.
-    for (my $ii = $time_count - 1; $ii >= 0; $ii--) {
-      if ($checkin_time < $build_time_times->[$ii]) {
-        $who_list->[$ii+1]->{$email} = 1;
+    for (my $ii = $::time_count - 1; $ii >= 0; $ii--) {
+      if ($checkin_time < $::build_time_times->[$ii]) {
+        $::who_list->[$ii+1]->{$email} = 1;
         last;
       } elsif ($ii == 0) {
-        $who_list->[0]->{$email} = 1;
+        $::who_list->[0]->{$email} = 1;
       }
     }
   }
 
   # Ignore the last one
   #
-  #if ($time_count > 0) {
-  #  $who_list->[$time_count] = {};
+  #if ($::time_count > 0) {
+  #  $::who_list->[$::time_count] = {};
   #}
 }
 
@@ -737,88 +774,89 @@ sub get_build_name_index {
   my ($build_list) = @_;
 
   # Reset globals
-  $build_name_index = {};     
-  $build_names = [];
-  $name_count = 0;
+  $::build_name_index = {};     
+  $::build_names = [];
+  $::name_count = 0;
 
   # Get all the unique build names.
   #
   foreach my $build_record (@{$build_list}) {
-    $build_name_index->{$build_record->{buildname}} = 1;
+    $::build_name_index->{$build_record->{buildname}} = 1;
   }
     
   my $ii = 0;
-  foreach my $name (sort keys %{$build_name_index}) {
-    $build_names->[$ii] = $name;
-    $build_name_index->{$name} = $ii;
+  foreach my $name (sort keys %{$::build_name_index}) {
+    $::build_names->[$ii] = $name;
+    $::build_name_index->{$name} = $ii;
     $ii++;
   }
-  $name_count = $#{$build_names} + 1;
+  $::name_count = $#{$::build_names} + 1;
 }
 
 sub get_build_time_index {
   my ($build_list) = @_;
 
   # Reset globals
-  $build_time_index = {};
-  $build_time_times = [];
-  $mindate_time_count = 0;  # time_count that corresponds to the mindate
-  $time_count = 0;
+  $::build_time_index = {};
+  $::build_time_times = [];
+  $::mindate_time_count = 0;  # time_count that corresponds to the mindate
+  $::time_count = 0;
 
   # Get all the unique build names.
   #
   foreach my $br (@{$build_list}) {
-    $build_time_index->{$br->{buildtime}} = 1;
+    $::build_time_index->{$br->{buildtime}} = 1;
     if ($display_accurate_build_end_times) {
-      $build_time_index->{$br->{endtime}} = 1;
+      $::build_time_index->{$br->{endtime}} = 1;
     }
   }
 
   my $ii = 0;
-  foreach my $time (sort {$b <=> $a} keys %{$build_time_index}) {
-    $build_time_times->[$ii] = $time;
-    $build_time_index->{$time} = $ii;
-    $mindate_time_count = $ii if $time >= $mindate;
+  foreach my $time (sort {$b <=> $a} keys %{$::build_time_index}) {
+    $::build_time_times->[$ii] = $time;
+    $::build_time_index->{$time} = $ii;
+    $::mindate_time_count = $ii if $time >= $::mindate;
     $ii++;
   }
-  $time_count = $#{$build_time_times} + 1;
+  $::time_count = $#{$::build_time_times} + 1;
 }
 
 sub make_build_table {
   my ($treedata, $build_list) = @_;
-  my ($ti, $bi, $ti1, $br);
+  my ($ti, $bi, $ti1, $br, $br1);
 
   # Reset globals
-  $build_table = [];
+  $::build_table = [];
 
   # Create the build table
   #
-  for (my $ii=0; $ii < $time_count; $ii++){
-    $build_table->[$ii] = [];
+  for (my $ii=0; $ii < $::time_count; $ii++){
+    $::build_table->[$ii] = [];
   }
 
   # Populate the build table with build data
   #
   foreach $br (reverse @{$build_list}) {
-    $ti = $build_time_index->{$br->{buildtime}};
-    $bi = $build_name_index->{$br->{buildname}};
-    $build_table->[$ti][$bi] = $br;
+    $ti = $::build_time_index->{$br->{buildtime}};
+    $bi = $::build_name_index->{$br->{buildname}};
+    $::build_table->[$ti][$bi] = $br;
   }
 
   &load_notes($treedata);
 
-  for ($bi = $name_count - 1; $bi >= 0; $bi--) {
-    for ($ti = $time_count - 1; $ti >= 0; $ti--) {
-      if (defined($br = $build_table->[$ti][$bi])
-          and not defined($br->{rowspan})) {
+  for ($bi = $::name_count - 1; $bi >= 0; $bi--) {
+    for ($ti = $::time_count - 1; $ti >= 0; $ti--) {
+      if (defined($br = $::build_table->[$ti][$bi])
+          and $br != -1
+          and not defined($br->{'rowspan'})) {
 
         # Find the next-defined cell after us.  We may run all the way to the
         # end of the page and not find a defined cell.  That's okay.
         $ti1 = $ti+1;
-        while ( $ti1 < $time_count and not defined $build_table->[$ti1][$bi] ) {
+        while ( $ti1 < $::time_count and not defined $::build_table->[$ti1][$bi] ) {
           $ti1++;
         }
-        if (defined($br1 = $build_table->[$ti1][$bi])) {
+        if (defined($br1 = $::build_table->[$ti1][$bi])) {
           $br->{previousbuildtime} = $br1->{buildtime};
         }
 
@@ -828,28 +866,28 @@ sub make_build_table {
           # If the current record represents a system that's still building,
           # we'll use the old style and let the build window "slide" up to the
           # next defined build record.
-          while ( $ti1 >= 0 and not defined $build_table->[$ti1][$bi] ) {
-            $build_table->[$ti1][$bi] = -1;
+          while ( $ti1 >= 0 and not defined $::build_table->[$ti1][$bi] ) {
+            $::build_table->[$ti1][$bi] = -1;
             $ti1--;
           }
         } else {
           # If the current record has a non 'building' status, we stop the
           # build window at its "endtime".
-          while ( $ti1 >= 0 and not defined $build_table->[$ti1][$bi]
-                  and $build_time_times->[$ti1] < $br->{endtime} ) {
-            $build_table->[$ti1][$bi] = -1;
+          while ( $ti1 >= 0 and not defined $::build_table->[$ti1][$bi]
+                  and $::build_time_times->[$ti1] < $br->{endtime} ) {
+            $::build_table->[$ti1][$bi] = -1;
             $ti1--;
           }
         }
 
-        if ($ti1 > 0 and defined($br1 = $build_table->[$ti1][$bi])) {
+        if ($ti1 > 0 and defined($br1 = $::build_table->[$ti1][$bi])) {
           $br->{nextbuildtime} = $br1->{buildtime};
         }
 
         $br->{rowspan} = $ti - $ti1;
         unless ($br->{rowspan} == 1) {
-          $build_table->[$ti1+1][$bi] = $br;
-          $build_table->[$ti][$bi] = -1;
+          $::build_table->[$ti1+1][$bi] = $br;
+          $::build_table->[$ti][$bi] = -1;
         }
       }
     }
@@ -863,58 +901,58 @@ sub make_build_table {
   # section of code is a no-op.  Every cell will be defined, either with a
   # real $br or being set to -1.
 
-  for ($bi = $name_count - 1; $bi >= 0; $bi--) {
-    for ($ti = $time_count - 1; $ti >= 0; $ti--) {
-      if (not defined($build_table->[$ti][$bi])) {
+  for ($bi = $::name_count - 1; $bi >= 0; $bi--) {
+    for ($ti = $::time_count - 1; $ti >= 0; $ti--) {
+      if (not defined($::build_table->[$ti][$bi])) {
         my $ti1 = $ti;
-        while ( $ti1 >= 0 and not defined $build_table->[$ti1][$bi] ) {
-          $build_table->[$ti1][$bi] = -1;
+        while ( $ti1 >= 0 and not defined $::build_table->[$ti1][$bi] ) {
+          $::build_table->[$ti1][$bi] = -1;
           $ti1--;
         }
 
         my $null_record_br = {};
         $null_record_br->{buildstatus} = "null";
         $null_record_br->{rowspan} = $ti - $ti1;
-        $build_table->[$ti1+1][$bi] = $null_record_br;
+        $::build_table->[$ti1+1][$bi] = $null_record_br;
       }
     }
   }
 }
 
-sub load_notes {
+sub load_notes($) {
   my $treedata = $_[0];
 
   # Reset globals
-  @note_array = ();
+  @::note_array = ();
 
   open(NOTES, "<", "$treedata->{name}/notes.txt") 
     or print "<h2>warning: Couldn't open $treedata->{name}/notes.txt </h2>\n";
   while (<NOTES>) {
-    chop;
+    chomp;
     my ($nbuildtime,$nbuildname,$nwho,$nnow,$nenc_note) = split /\|/;
-    my $ti = $build_time_index->{$nbuildtime};
-    my $bi = $build_name_index->{$nbuildname};
+    my $ti = $::build_time_index->{$nbuildtime};
+    my $bi = $::build_name_index->{$nbuildname};
 
     if (defined $ti and defined $bi) {
-      $build_table->[$ti][$bi]->{hasnote} = 1;
-      unless (defined $build_table->[$ti][$bi]->{noteid}) {
-        $build_table->[$ti][$bi]->{noteid} = $#note_array + 1;
+      $::build_table->[$ti][$bi]->{hasnote} = 1;
+      unless (defined $::build_table->[$ti][$bi]->{noteid}) {
+        $::build_table->[$ti][$bi]->{noteid} = $#::note_array + 1;
       }
-      $noteid = $build_table->[$ti][$bi]->{noteid};
-      $now_str = &print_time($nnow);
-      $note = &url_decode($nenc_note);
+      my $noteid = $::build_table->[$ti][$bi]->{noteid};
+      my $now_str = &print_time($nnow);
+      my $note = &url_decode($nenc_note);
       
-      $note_array[$noteid] = '' unless $note_array[$noteid];
-      $note_array[$noteid] = "<pre>\n[<b><a href=mailto:$nwho>"
+      $::note_array[$noteid] = '' unless $::note_array[$noteid];
+      $::note_array[$noteid] = "<pre>\n[<b><a href=mailto:$nwho>"
         ."$nwho</a> - $now_str</b>]\n$note\n</pre>"
-        .$note_array[$noteid];
+        .$::note_array[$noteid];
     }
   }
   close NOTES;
 }
 
 sub split_cgi_args {
-    local (@args, $pair, $key, $value, $s);
+    my (@args, $pair, $key, $value, $s, %form);
     
     if ($ENV{"REQUEST_METHOD"} eq 'POST') {
         $s .= $_ while (<>);
@@ -933,12 +971,18 @@ sub split_cgi_args {
         $form{$key} = $value;
     }
     
+    return %form;
+}
+
+sub split_cookie_args {
     # extract the cookies from the HTTP_COOKIE environment 
-    %cookie_jar = split('[;=] *',$ENV{'HTTP_COOKIE'});
+    my %cookie_jar = split('[;=] *',$ENV{'HTTP_COOKIE'});
+    return %cookie_jar;
 }
 
 sub make_cgi_args {
-    local($k,$v,$ret);
+    my (%form) = (@_);
+    my ($k,$v,$ret);
     for $k (sort keys %form){
         $ret .= ($ret eq "" ? '?' : '&');
         $v = $form{$k};
@@ -949,14 +993,14 @@ sub make_cgi_args {
     return $ret;
 }
 
-@weekdays = ('Sun','Mon','Tue','Wed','Thu','Fri','Sat');
-@months = ('Jan','Feb','Mar','Apr','May','Jun',
+my @weekdays = ('Sun','Mon','Tue','Wed','Thu','Fri','Sat');
+my @months = ('Jan','Feb','Mar','Apr','May','Jun',
            'Jul','Aug','Sep','Oct','Nov','Dec');
 
 sub toGMTString {
-    local ($seconds) = $_[0];
+    my ($seconds) = $_[0];
 
-    local ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)
         = gmtime($seconds);
     $year += 1900;
 

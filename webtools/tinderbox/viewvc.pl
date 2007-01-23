@@ -4,6 +4,7 @@
 # These generic DBI routines should live somewhere common
 #
 
+use strict;
 use DBI;
 use POSIX qw(strftime mktime);
 use Time::Local;
@@ -14,15 +15,16 @@ sub ConnectToDatabase {
     my ($dsn);
 
     if (!defined $::db) {
-        $dsn = "DBI:${viewvc_dbdriver}:database=${viewvc_dbname};";
-        $dsn .= "host=${viewvc_dbhost};" 
-            if (defined($viewvc_dbhost) && "$viewvc_dbhost" ne "");
-        $dsn .= "port=${viewvc_dbport};" 
-            if (defined($viewvc_dbport) && "$viewvc_dbport" ne "");
+        $dsn = "DBI:" . $::viewvc_dbdriver . ":database=" . 
+            $::viewvc_dbname . ";";
+        $dsn .= "host=" . $::viewvc_dbhost . ";"
+            if (defined($::viewvc_dbhost) && "$::viewvc_dbhost" ne "");
+        $dsn .= "port=" . $::viewvc_dbport . ";" 
+            if (defined($::viewvc_dbport) && "$::viewvc_dbport" ne "");
 
 #        DBI->trace(1, "/tmp/dbi.out");
 
-        $::db = DBI->connect($dsn, $viewvc_dbuser, $viewvc_dbpasswd)
+        $::db = DBI->connect($dsn, $::viewvc_dbuser, $::viewvc_dbpasswd)
             || die "Can't connect to database server.";
     }
 }
@@ -76,7 +78,7 @@ sub FetchOneColumn {
 
 sub formatSqlTime {
     my ($date) = @_;
-    $time = strftime("%Y/%m/%d %T", gmtime($date));
+    my $time = strftime("%Y/%m/%d %T", gmtime($date));
     return $time;
 }
 
@@ -127,8 +129,8 @@ sub query_checkins($) {
 #    print "values: @bind_values\n";
     &SendSQL($qstring, @bind_values);
 
-    $lastlog = 0;
-    my @row;
+    my $lastlog = 0;
+    my (@row, $ci, $rev, $result);
     while (@row = &FetchSQLData()) {
 #print "<pre>";
         $ci = [];
@@ -149,21 +151,21 @@ sub query_checkins($) {
 
         next if ($key =~ m@^CVSROOT/@);
 
-        if( $have_mod_map &&
+        if( $::have_mod_map &&
             !&in_module(\%mod_map, $ci->[$::CI_DIR], $ci->[$::CI_FILE] ) ){
             next;
         }
 
-        if( $begin_tag) {
-            $rev = $begin_tag->{$key};
+        if( $::begin_tag) {
+            $rev = $::begin_tag->{$key};
             print "<BR>$key begintag is $rev<BR>\n";
             if ($rev == "" || rev_is_after($ci->[$::CI_REV], $rev)) {
                 next;
             }
         }
 
-        if( $end_tag) {
-            $rev = $end_tag->{$key};
+        if( $::end_tag) {
+            $rev = $::end_tag->{$key};
             print "<BR>$key endtag is $rev<BR>\n";
             if ($rev == "" || rev_is_after($rev, $ci->[$::CI_REV])) {
                 next;

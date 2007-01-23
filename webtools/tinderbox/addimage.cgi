@@ -20,6 +20,7 @@
 #
 # Contributor(s): 
 
+use strict;
 use Socket;
 
 require 'header.pl';
@@ -33,7 +34,7 @@ $| = 1;
 require "tbglobals.pl";
 require "imagelog.pl";
 
-&split_cgi_args;
+my %form = &split_cgi_args();
 
 
 sub Error {
@@ -50,6 +51,8 @@ sub Error {
 }
 
 
+my ($url, $quote, $width, $height, $size );
+
 if( $url = $form{"url"} ){
     $quote = $form{"quote"};
 
@@ -62,7 +65,7 @@ if( $url = $form{"url"} ){
 #    $width = $form{"width"};
 #    $height = $form{"height"};
 
-    if ($width eq "" || $height eq "") {
+#    if ($width eq "" || $height eq "") {
         $size = &URLsize($url);
         if ($size =~ /WIDTH=([0-9]*)/) {
             $width = $1;
@@ -73,7 +76,7 @@ if( $url = $form{"url"} ){
         if ($width eq "" || $height eq "") {
             Error "Couldn't get image size for \"$url\".\n";
         }
-    }
+#    }
 
     print " 
     
@@ -173,22 +176,6 @@ have even seen it.
 ";
 }
 
-sub split_cgi_args {
-    local($i,$var,$value, $s);
-
-    $s = $ENV{"QUERY_STRING"};
-
-    @args= split(/\&/, $s );
-
-    for $i (@args) {
-        ($var, $value) = split(/=/, $i);
-        $value =~ tr/+/ /;
-        $value =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
-        $form{$var} = $value;
-    }
-}
-
-
 #sub imgsize {
 #    local($file)= @_;
 #
@@ -237,7 +224,9 @@ sub split_cgi_args {
 
 
 sub gifsize {
-    local($GIF) = @_;
+    my ($GIF) = @_;
+    my ($size, $type, $s);
+    my ($a,$b,$c,$d);
     read($GIF, $type, 6); 
     if(!($type =~ /GIF8[7,9]a/) || 
        !(read($GIF, $s, 4) == 4) ){
@@ -251,8 +240,9 @@ sub gifsize {
 }
 
 sub xbmsize {
-    local($XBM) = @_;
-    local($input)="";
+    my ($XBM) = @_;
+    my $input ="";
+    my ($size, $a, $b);
 
     $input .= <$XBM>;
     $input .= <$XBM>;
@@ -270,9 +260,11 @@ sub xbmsize {
 # Andrew Tong, werdna@ugcs.caltech.edu           February 14, 1995
 # modified slightly by alex@ed.ac.uk
 sub jpegsize {
-    local($JPEG) = @_;
-    local($done)=0;
-    $size="";
+    my ($JPEG) = @_;
+    my $done=0;
+    my $size="";
+    my ($c1, $c2, $ch, $s, $length, $marker, $junk);
+    my ($a,$b,$c,$d);
 
     read($JPEG, $c1, 1); read($JPEG, $c2, 1);
     if( !((ord($c1) == 0xFF) && (ord($c2) == 0xD8))){
@@ -319,6 +311,7 @@ sub jpegsize {
 
 sub URLsize {
     my ($fullurl) = @_;
+    my $S = new IO::Handle;
 
     $_ = $fullurl;
     if ( ! m@^http://@ ) {
@@ -329,6 +322,7 @@ sub URLsize {
     my($them,$port) = split(/:/, $serverstring);
     my $port = 80 unless $port;
     my $size="";
+    my ($newheight, $newwidth);
 
     $_ = $them;
     if ( m@^[^.]*$@ ) {
@@ -344,22 +338,22 @@ sub URLsize {
     $paddr   = sockaddr_in($port, $iaddr);
 
     $proto   = getprotobyname('tcp');
-    socket(S, PF_INET, SOCK_STREAM, $proto)  || die "socket: $!";
-    connect(S, $paddr)    || die "connect: $!";
-    select(S); $| = 1; select(STDOUT);
+    socket($S, PF_INET, SOCK_STREAM, $proto)  || die "socket: $!";
+    connect($S, $paddr)    || die "connect: $!";
+    select($S); $| = 1; select(STDOUT);
 
-    print S "GET /$url HTTP/1.0\r\n";
-    print S "Host: $them\r\n";
-    print S "User-Agent: Tinderbox/0.0\r\n";
-    print S "\r\n";
+    print $S "GET /$url HTTP/1.0\r\n";
+    print $S "Host: $them\r\n";
+    print $S "User-Agent: Tinderbox/0.0\r\n";
+    print $S "\r\n";
 
-    $_ = <S>;
+    $_ = <$S>;
     if (! m@^HTTP/[0-9.]+ 200@ ) {
         Error "$them responded:<BR> $_";
     }
 
     my $ctype = "";
-    while (<S>) {
+    while (<$S>) {
         # print "read: $_<br>\n";
         if ( m@^Content-Type:[ \t]*([^ \t\r\n]+)@io ) {
             $ctype = $1;
@@ -371,11 +365,11 @@ sub URLsize {
     if ( $_ eq "" ) {
         Error "Server returned no content-type for \"$fullurl\"?";
     } elsif ( m@image/jpeg@i || m@image/pjpeg@i ) {
-        $size = &jpegsize(S);
+        $size = &jpegsize($S);
     } elsif ( m@image/gif@i ) {
-        $size = &gifsize(S);
+        $size = &gifsize($S);
     } elsif ( m@image/xbm@i || m@image/x-xbm@i || m@image/x-xbitmap@i ) {
-        $size = &xbmsize(S);
+        $size = &xbmsize($S);
     } else {
         Error "Not a GIF, JPEG, or XBM: that was of type \"$ctype\".";
     }               
@@ -401,6 +395,6 @@ sub URLsize {
     }
 }
 
-sub dokill {
-    kill 9,$child if $child;
-}
+#sub dokill {
+#    kill 9,$child if $child;
+#}

@@ -20,36 +20,40 @@
 #
 # Contributor(s): 
 
+use strict;
 use Compress::Zlib;
 require 'tbglobals.pl';
-require 'header.pl';
+require 'showbuilds.pl';
 
 # Process the form arguments
-%form = ();
-&split_cgi_args();
+my %form = &split_cgi_args();
 
 #############################################################
 # Global variables
 
-$LINES_AFTER_ERROR = 5;
-$LINES_BEFORE_ERROR = 30;
+my $LINES_AFTER_ERROR = 5;
+my $LINES_BEFORE_ERROR = 30;
 
 my $last_modified_time = 0;
 my $expires_time = time() + 3600;
 
 # These variables are set by the error parser functions:
 #    has_error(), has_warning(), and has_errorline().
-$error_file = '';
-$error_file_ref = '';
-$error_line = 0;
-$error_guess = 0;
+my $error_file = '';
+my $error_file_ref = '';
+my $error_line = 0;
+my $error_guess = 0;
+
+my ($args, $tree, $full_logfile, $linenum, $logfile);
+my ($errorparser, $buildname, $buildtime, $numlines, $fulltext);
+my ($enc_buildname, $brief_filename);
 
 #############################################################
 # CGI inputs
 
 if (defined($args = $form{log}) or defined($args = $form{exerpt})) {
 
-  ($full_logfile, $linenum) = split /:/,  $args;
+  my ($full_logfile, $linenum) = split /:/,  $args;
   ($tree, $logfile) = split /\//, $full_logfile;
 
   my $br = tb_find_build_record($tree, $logfile);
@@ -70,10 +74,10 @@ $fulltext    = $form{fulltext};
 
 $enc_buildname = url_encode($buildname);
 
-&require_only_one_tree();
+$tree = &require_only_one_tree($tree);
 require "$tree/treedata.pl";
 
-$time_str = print_time($buildtime);
+my $time_str = print_time($buildtime);
 
 $|=1;
 
@@ -166,6 +170,8 @@ sub print_header {
   print "Expires: " . gmtime($expires_time) . "\n";
   print "\n";
 
+  my ($s, $s1, $s2);
+
   if ($fulltext) {
     $s = 'Show <b>Brief</b> Log';
     $s1 = '';
@@ -197,21 +203,21 @@ sub print_notes {
   #
   # Print notes
   #
-  $found_note = 0;
+  my $found_note = 0;
   open(NOTES,"<", "$tree/notes.txt") 
     or print "<h2>warning: Couldn't open $tree/notes.txt </h2>\n";
   print "$buildtime, $buildname<br>\n";
   while (<NOTES>) {
     chop;
-    ($nbuildtime,$nbuildname,$nwho,$nnow,$nenc_note) = split(/\|/);
+    my ($nbuildtime,$nbuildname,$nwho,$nnow,$nenc_note) = split(/\|/);
     #print "$_<br>\n";
     if ($nbuildtime == $buildtime and $nbuildname eq $buildname) {
       if (not $found_note) {
 	print "<H2>Build Comments</H2>\n";
 	$found_note = 1;
       }
-      $now_str = print_time($nnow);
-      $note = url_decode($nenc_note);
+      my $now_str = print_time($nnow);
+      my $note = url_decode($nenc_note);
       print "<pre>\n[<b><a href=mailto:$nwho>$nwho</a> - $now_str</b>]\n$note\n</pre>";
     }
   }
@@ -224,7 +230,7 @@ sub print_summary {
   #
   logprint('<H2>Build Error Summary</H2><PRE>');
 
-  @log_errors = ();
+  my @log_errors = ();
 
   my $line_num = 0;
   my $error_num = 0;
@@ -232,7 +238,7 @@ sub print_summary {
       warn "gzopen($tree/$logfile): $!\n";
   my ($bytesread, $line);
   while (defined($gz) && (($bytesread = $gz->gzreadline($line)) > 0)) {
-    $line_has_error = output_summary_line($line, $error_num);
+    my $line_has_error = output_summary_line($line, $error_num);
 
     if ($line_has_error) {
       push @log_errors, $line_num;        
@@ -266,7 +272,7 @@ sub print_log_section {
     $ii++;
     next if $ii < $first_line;
     last if $ii > $last_line;
-    if ($ii == $line_of_intested) {
+    if ($ii == $line_of_interest) {
       print "<b>$_</b>";
     } else {
       print;
@@ -285,7 +291,7 @@ sub print_log {
 
   logprint('<H2>Build Error Log</H2><pre>');
 
-  $line_num = 0;
+  my $line_num = 0;
   my $gz = gzopen("$tree/$logfile", "rb") or
       warn "gzopen($tree/$logfile): $!\n";
   my ($bytesread, $line);
@@ -301,6 +307,10 @@ sub print_log {
 
 BEGIN {
   my $last_was_error = 0; 
+  my $next_error = 0;
+  my $log_skip = 0;
+  my $cur_error = 0;
+  my $log_line = 0;
 
   sub output_summary_line {
     my ($line, $error_id) = @_;
@@ -320,11 +330,6 @@ BEGIN {
     }
     return $last_was_error;
   }
-}
-
-
-BEGIN {
-  my $next_error = 0;
 
   sub output_log_line {
     my ($line, $line_num, $errors) = @_;
@@ -341,10 +346,10 @@ BEGIN {
     my %out = ();
 
     if (($has_error or $has_warning) and has_errorline($line, \%out)) {
-      $q = quotemeta($out{error_file});
-      $goto_line = $out{error_line} > 10 ? $out{error_line} - 10 : 1;
-      $cvsblame = $out{error_guess} ? "cvsguess.cgi" : "cvsblame.cgi"; 
-      $line =~ s@$q@<a href=$bonsai_url/$cvsblame?file=$out{error_file_ref}&rev=$cvs_branch&mark=$out{error_line}#$goto_line>$out{error_file}</a>@
+      my $q = quotemeta($out{error_file});
+      my $goto_line = $out{error_line} > 10 ? $out{error_line} - 10 : 1;
+      my $cvsblame = $out{error_guess} ? "cvsguess.cgi" : "cvsblame.cgi"; 
+      $line =~ s@$q@<a href=$::bonsai_url/$cvsblame?file=$out{error_file_ref}&rev=$::cvs_branch&mark=$out{error_line}#$goto_line>$out{error_file}</a>@
     }
 
     if ($has_error) {
@@ -354,7 +359,7 @@ BEGIN {
         $logline .= "<a name='err".($next_error - 1)."'></a>";
 
         # Only print "NEXT ERROR" link if there is another error to jump to
-        $have_more_errors = 0;
+        my $have_more_errors = 0;
         my $ii = $next_error;
         while ($ii < $#{$errors} - 1) {
           if ($errors->[$ii] != $errors->[$ii + 1] - 1) {
@@ -381,11 +386,10 @@ BEGIN {
     
     push_log_line($logline, $errors);
   }
-}
 
-
-sub push_log_line {
+  sub push_log_line {
     my ($line, $log_errors) = @_;
+    
     if ($fulltext) {
         logprint($line);
         return;
@@ -406,10 +410,12 @@ sub push_log_line {
         $log_skip++;
     }
     $log_line++;
+  }
+
+  sub logprint {
+    my $line  = $_[0];
+    print $line;
+    print BRIEFFILE $line if not $fulltext;
+  }
 }
 
-sub logprint {
-  my $line  = $_[0];
-  print $line;
-  print BRIEFFILE $line if not $fulltext;
-}

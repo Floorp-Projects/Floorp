@@ -19,6 +19,7 @@
 #
 # Contributor(s): 
 
+use strict;
 
 sub EmitHtmlTitleAndHeader {
     my($doctitle,$heading,$subheading) = @_;
@@ -29,10 +30,10 @@ sub EmitHtmlTitleAndHeader {
     print "<BODY   BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\"";
     print "LINK=\"#0000EE\" VLINK=\"#551A8B\" ALINK=\"#FF0000\">";
 
-    if (open(BANNER, "<", "data/banner.html")) {
+    if (open(BANNER, "<", "$::data_dir/banner.html")) {
         while (<BANNER>) { print; }
         close BANNER;
-    } elsif (open(BANNER, "<", "$bonsai_dir/data/banner.html")) {
+    } elsif (open(BANNER, "<", "$::bonsai_dir/data/banner.html")) {
         while (<BANNER>) { print; }
         close BANNER;
     }
@@ -50,7 +51,7 @@ sub EmitHtmlTitleAndHeader {
     print "  </TD>\n";
     print "  <TD>\n";
 
-    if (open(BLURB, "<", "data/blurb")) {
+    if (open(BLURB, "<", "$::data_dir/blurb")) {
         while (<BLURB>) { print; }
         close BLURB;
     }

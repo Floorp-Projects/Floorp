@@ -20,12 +20,12 @@
 #
 # Contributor(s): 
 
+use strict;
 require 'tbglobals.pl';
 require 'header.pl';
 
 # Process the form arguments
-%form = ();
-&split_cgi_args();
+my %form = &split_cgi_args();
 
 $|=1;
 
@@ -33,11 +33,14 @@ print "Content-type: text/html\n\n";
 
 $form{noignore} = 1;            # Force us to load all build info, not
                                 # paying any attention to ignore_builds stuff.
-$maxdate = time();
-$mindate = $maxdate - 24*60*60;
-tb_load_data();
+$::maxdate = time();
+$::mindate = $::maxdate - 24*60*60;
+my $treedata = &tb_load_data(\%form);
 
-if (defined($tree)) {
+my (@names, $i, $checked);
+
+if (defined($treedata)) {
+    my $tree = $treedata->{name};
     my $safe_tree = value_encode($tree);
 
     EmitHtmlHeader("administer tinderbox", "tree: $safe_tree");
@@ -45,25 +48,25 @@ if (defined($tree)) {
     # Sheriff
     if( -r "$tree/sheriff.pl" ){
         require "$tree/sheriff.pl";
-        $current_sheriff =~ s/\s*$//;  # Trim trailing whitespace;
+        $::current_sheriff =~ s/\s*$//;  # Trim trailing whitespace;
     } else {
-        $current_sheriff = "";
+        $::current_sheriff = "";
     }
 
     # Status message.
     if( -r "$tree/status.pl" ){
         require "$tree/status.pl";
-        $status_message =~ s/\s*$//;  # Trim trailing whitespace;
+        $::status_message =~ s/\s*$//;  # Trim trailing whitespace;
     } else {
-        $status_message = "";
+        $::status_message = "";
     }
 
     # Tree rules.
     if( -r "$tree/rules.pl" ){
         require "$tree/rules.pl";
-        $rules_message =~ s/\s*$//;  # Trim trailing whitespace;
+        $::rules_message =~ s/\s*$//;  # Trim trailing whitespace;
     } else {
-        $rules_message = "";
+        $::rules_message = "";
     }
 
 
@@ -75,7 +78,7 @@ if (defined($tree)) {
 <INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
 <INPUT TYPE=HIDDEN NAME=command VALUE=set_sheriff>
 <br><b>Change sheriff info.</b>  (mailto: url, phone number, etc.)<br>
-<TEXTAREA NAME=sheriff ROWS=8 COLS=75 WRAP=SOFT>$current_sheriff
+<TEXTAREA NAME=sheriff ROWS=8 COLS=75 WRAP=SOFT>$::current_sheriff
 </TEXTAREA>
 <br>
 <B>Password:</B> <INPUT NAME=password TYPE=password>
@@ -93,7 +96,7 @@ if (defined($tree)) {
 <INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
 <INPUT TYPE=HIDDEN NAME=command VALUE=set_status_message>
 <br><b>Status message.</b>  (Use this for stay-out-of-the-tree warnings, etc.)<br>
-<TEXTAREA NAME=status ROWS=8 COLS=75 WRAP=SOFT>$status_message
+<TEXTAREA NAME=status ROWS=8 COLS=75 WRAP=SOFT>$::status_message
 </TEXTAREA>
 <br>
 <b>
@@ -113,7 +116,7 @@ if (defined($tree)) {
 <INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
 <INPUT TYPE=HIDDEN NAME=command VALUE=set_rules_message>
 <br><b>The tree rules.</b>
-<br><TEXTAREA NAME=rules ROWS=18 COLS=75 WRAP=SOFT>$rules_message
+<br><TEXTAREA NAME=rules ROWS=18 COLS=75 WRAP=SOFT>$::rules_message
 </TEXTAREA>
 <br>
 <B>Password:</B> <INPUT NAME=password TYPE=password>
@@ -131,6 +134,7 @@ if (defined($tree)) {
     my @trim_files = grep { /\.(?:gz|brief\.html)$/ && -f "$tree/$_" } readdir(TRIM_DIR);
     close(TRIM_DIR);
     my $trim_bytes = 0;
+    my $trim_size;
     my $now = time();
     my $trim_oldest = $now;
     my $size_K = 1024;
@@ -141,8 +145,8 @@ if (defined($tree)) {
         $trim_bytes += $file_stat[7];
         $trim_oldest = $file_stat[9] if ($trim_oldest > $file_stat[9]);
     }
-    $trim_days = int (($now - $trim_oldest) / 86400);
-    if ($trim_bytes < $size_k) {
+    my $trim_days = int (($now - $trim_oldest) / 86400);
+    if ($trim_bytes < $size_K) {
         $trim_size = "$trim_bytes b";
     } elsif ($trim_bytes < $size_M) {
         $trim_size = int($trim_bytes / $size_K) . " Kb";
@@ -158,7 +162,7 @@ if (defined($tree)) {
 <INPUT TYPE=HIDDEN NAME=command VALUE=trim_logs>
 <b>Trim Logs</b><br>
 Trim Logs to <INPUT NAME=days size=5 VALUE='$trim_days'> days<br>
-Tinderbox is configured to show up to $who_days days of log history. Currently, there are $trim_days days of logging taking up $trim_size of space.<br>
+Tinderbox is configured to show up to $::who_days days of log history. Currently, there are $trim_days days of logging taking up $trim_size of space.<br>
 <B>Password:</B> <INPUT NAME=password TYPE=password>
 <INPUT TYPE=SUBMIT VALUE='Trim Logs'>
 </FORM>
@@ -175,11 +179,11 @@ Tinderbox is configured to show up to $who_days days of log history. Currently, 
 <INPUT TYPE=HIDDEN NAME=command VALUE=scrape_builds>
 ";
 
-    @names = sort (@$build_names) ;
+    @names = sort (@$::build_names) ;
 
     for $i (@names){
         if( $i ne "" ){
-            $checked = ($scrape_builds->{$i} != 0 ? "CHECKED": "" );
+            $checked = ($::scrape_builds->{$i} != 0 ? "CHECKED": "" );
             print "<INPUT TYPE=checkbox NAME='build_".value_encode($i)."' $checked >";
             print value_encode($i)."<br>\n";
         }
@@ -204,11 +208,11 @@ the tinderbox URL to override.<br>
 <INPUT TYPE=HIDDEN NAME=command VALUE=disable_builds>
 ";
 
-    @names = sort (@$build_names) ;
+    @names = sort (@$::build_names) ;
 
     for $i (@names){
         if( $i ne "" ){
-            $checked = ($ignore_builds->{$i} != 0 ? "": "CHECKED" );
+            $checked = ($::ignore_builds->{$i} != 0 ? "": "CHECKED" );
             print "<INPUT TYPE=checkbox NAME='build_".value_encode($i)."' $checked >";
             print value_encode($i)."<br>\n";
         }

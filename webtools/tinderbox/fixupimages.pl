@@ -20,6 +20,7 @@
 #
 # Contributor(s): 
 
+use strict;
 use Socket;
 
 require 'tbglobals.pl';
@@ -30,13 +31,14 @@ $SIG{ALRM} = sub { die "timeout" };
 
 # Move an old imagelog to a new one
 
-open( IMAGELOG, "<", "$data_dir/imagelog.txt" ) || die "can't open file";
-open (OUT, ">", "$data_dir/newimagelog.txt") || die "can't open output file";
+open( IMAGELOG, "<", "$::data_dir/imagelog.txt" ) || die "can't open file";
+open (OUT, ">", "$::data_dir/newimagelog.txt") || die "can't open output file";
 select(OUT); $| = 1; select(STDOUT);
 
+my ($size, $height, $width);
 while( <IMAGELOG> ){
     chop;
-    ($url,$quote)  = split(/\`/);
+    my ($url,$quote)  = split(/\`/);
     print "$url\n";
 
     eval {
@@ -77,19 +79,21 @@ while( <IMAGELOG> ){
 
 
 sub imgsize {
-    local($file)= @_;
+    my ($file)= @_;
+    my ($size, $s, $newwidth, $newheight);
+    my $STREAM = new IO::Handle;
 
     #first try to open the file
-    if( !open(STREAM, "<", $file) ){
+    if( !open($STREAM, "<", $file) ){
         print "Can't open IMG $file"; 
         $size="";
     } else {
         if ($file =~ /.jpg/i || $file =~ /.jpeg/i) {
-            $size = &jpegsize(STREAM);
+            $size = &jpegsize($STREAM);
         } elsif($file =~ /.gif/i) {
-            $size = &gifsize(STREAM);
+            $size = &gifsize($STREAM);
         } elsif($file =~ /.xbm/i) {
-            $size = &xbmsize(STREAM);
+            $size = &xbmsize($STREAM);
         } else {
             return "";
         }
@@ -100,7 +104,7 @@ sub imgsize {
         if(  /\s*height\s*=\s*([0-9]*)\s*/i ){
             ($newheight)=/\s*height\s*=\s*(\d*)\s*/i;
         }
-        close(STREAM);
+        close($STREAM);
     }
     return $size;
 }
@@ -109,7 +113,10 @@ sub imgsize {
 # Subroutine gets the size of the specified GIF
 ###########################################################################
 sub gifsize {
-    local($GIF) = @_;
+    my ($GIF) = @_;
+    my ($size, $s, $type);
+    my ($a,$b,$c,$d);
+
     read($GIF, $type, 6); 
     if(!($type =~ /GIF8[7,9]a/) || 
        !(read($GIF, $s, 4) == 4) ){
@@ -123,8 +130,9 @@ sub gifsize {
 }
 
 sub xbmsize {
-    local($XBM) = @_;
-    local($input)="";
+    my ($XBM) = @_;
+    my ($input)="";
+    my ($size, $a, $b);
 
     $input .= <$XBM>;
     $input .= <$XBM>;
@@ -142,9 +150,11 @@ sub xbmsize {
 # Andrew Tong, werdna@ugcs.caltech.edu           February 14, 1995
 # modified slightly by alex@ed.ac.uk
 sub jpegsize {
-    local($JPEG) = @_;
-    local($done)=0;
-    $size="";
+    my ($JPEG) = @_;
+    my ($done)=0;
+    my $size="";
+    my ($c1, $c2, $ch, $s, $length, $marker, $junk, $done);
+    my ($a,$b,$c,$d);
 
     read($JPEG, $c1, 1); read($JPEG, $c2, 1);
     if( !((ord($c1) == 0xFF) && (ord($c2) == 0xD8))){
@@ -195,6 +205,8 @@ sub URLsize {
     my $port = 80 unless $port;
     $them = 'localhost' unless $them;
     my $size="";
+    my ($newheight, $newwidth);
+    my $S = new IO::Handle;
 
     $_=$url;
     if( /gif/i || /jpeg/i || /jpg/i || /xbm/i ) {
@@ -206,19 +218,19 @@ sub URLsize {
         $paddr   = sockaddr_in($port, $iaddr);
 
         $proto   = getprotobyname('tcp');
-        socket(S, PF_INET, SOCK_STREAM, $proto)  || return "socket: $!";
-        connect(S, $paddr)    || return "connect: $!";
-        select(S); $| = 1; select(STDOUT);
+        socket($S, PF_INET, SOCK_STREAM, $proto)  || return "socket: $!";
+        connect($S, $paddr)    || return "connect: $!";
+        select($S); $| = 1; select(STDOUT);
 
 
 
-        print S "GET /$url\n";
+        print $S "GET /$url\n";
         if ($url =~ /.jpg/i || $url =~ /.jpeg/i) {
-            $size = &jpegsize(S);
+            $size = &jpegsize($S);
         } elsif($url =~ /.gif/i) {
-            $size = &gifsize(S);
+            $size = &gifsize($S);
         } elsif($url =~ /.xbm/i) {
-            $size = &xbmsize(S);
+            $size = &xbmsize($S);
         } else {
             return "";
         }               
