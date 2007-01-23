@@ -38,6 +38,7 @@
 #include "gfxTextRunCache.h"
 
 gfxTextRunCache* gfxTextRunCache::mGlobalCache = nsnull;
+PRInt32 gfxTextRunCache::mGlobalCacheRefCount = 0;
 
 static int gDisableCache = -1;
 
@@ -54,14 +55,35 @@ gfxTextRunCache::gfxTextRunCache()
     mLastUTF16Eviction = mLastASCIIEviction = PR_Now();
 }
 
-gfxTextRunCache*
-gfxTextRunCache::GetCache()
+// static
+nsresult
+gfxTextRunCache::Init()
 {
-    if (!mGlobalCache)
+    // We only live on the UI thread, right?  ;)
+    ++mGlobalCacheRefCount;
+
+    if (mGlobalCacheRefCount == 1) {
+        NS_ASSERTION(!mGlobalCache, "Why do we have an mGlobalCache?");
         mGlobalCache = new gfxTextRunCache();
 
-    return mGlobalCache;
+        if (!mGlobalCache) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
+
+    return NS_OK;
 }
+
+// static
+void
+gfxTextRunCache::Shutdown()
+{
+    --mGlobalCacheRefCount;
+    if (mGlobalCacheRefCount == 0) {
+        delete mGlobalCache;
+        mGlobalCache = nsnull;
+    }
+}    
 
 gfxTextRun*
 gfxTextRunCache::GetOrMakeTextRun (gfxFontGroup *aFontGroup, const nsAString& aString)

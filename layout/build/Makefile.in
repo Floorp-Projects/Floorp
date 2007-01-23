@@ -108,6 +108,10 @@ REQUIRES	= xpcom \
 		  inspector \
 		  $(NULL)
 
+ifdef MOZ_ENABLE_CAIRO_GFX
+REQUIRES += thebes
+endif
+
 CPPSRCS		= \
 		nsLayoutModule.cpp \
 		nsContentHTTPStartup.cpp \
