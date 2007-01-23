@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.343 $ ';
+$::UtilsVersion = '$Revision: 1.344 $ ';
 
 package TinderUtils;
 
@@ -730,6 +730,35 @@ sub mail_build_started_message {
     unlink "$msg_log";
 }
 
+sub mail_build_failed_message {
+    my ($start_time) = @_;
+    
+    return if (!defined($Settings::FailedBuildAdministrator) or
+               "$Settings::FailedBuildAdministrator" eq "");
+
+    my $msg_log = "build_failed_msg.tmp";
+    open LOG, ">", $msg_log;
+
+    PrintUsage() if $Settings::BuildTree =~ /^\s+$/i;
+
+    my $platform = $Settings::OS =~ /^WIN/ ? 'windows' : 'unix';
+
+    print_log "Subject: tinderbox bustage: $Settings::BuildName";
+    print_log "\n";
+    print_log "Tinderbox tree: $Settings::BuildName has failed to build at $start_time\n";
+    print_log "\n";
+
+    close LOG;
+
+    if ($Settings::blat ne "" && $Settings::use_blat) {
+        system("$Settings::blat $msg_log -to $Settings::FailedBuildAdministrator");
+    } else {
+        system "$Settings::mail " .
+            "$Settings::FailedBuildAdministrator < $msg_log";
+    }
+    unlink "$msg_log";
+}    
+
 sub encode_log {
     my $input_file = shift;
     my $output_file = shift;
@@ -1208,6 +1237,8 @@ sub BuildIt {
         # Increment failure count if we failed.
         if ($build_status eq 'busted') {
             $build_failure_count++;
+            mail_build_failed_message($start_time) if
+                ($build_failure_count == 1 && $Settings::ReportFailedStatus);
         } else {
             $build_failure_count = 0;
         }
