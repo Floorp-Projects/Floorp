@@ -111,9 +111,11 @@
 // objects alive during the unlinking.
 // 
 
+#ifndef __MINGW32__
 #ifdef WIN32
 #include <crtdbg.h>
 #include <errno.h>
+#endif
 #endif
 
 #include "nsCycleCollectionParticipant.h"
@@ -883,10 +885,12 @@ nsCycleCollector::CollectWhite()
     for (i = 0; i < nsIProgrammingLanguage::MAX+1; ++i)
         mBufs[i]->Empty();
 
+#ifndef __MINGW32__
 #ifdef WIN32
     struct _CrtMemState ms1, ms2;
     _CrtMemCheckpoint(&ms1);
 #endif // WIN32
+#endif // __MINGW32__
 
     mGraph.Enumerate(FindWhiteCallback, this);
 
@@ -924,11 +928,13 @@ nsCycleCollector::CollectWhite()
     for (i = 0; i < nsIProgrammingLanguage::MAX+1; ++i)
         mBufs[i]->Empty();
 
+#ifndef __MINGW32__
 #ifdef WIN32
     _CrtMemCheckpoint(&ms2);
     if (ms2.lTotalCount < ms1.lTotalCount)
         mStats.mFreedBytes += (ms1.lTotalCount - ms2.lTotalCount);
 #endif // WIN32
+#endif __MINGW32__
 }
 
 
@@ -1271,6 +1277,7 @@ void (*__malloc_initialize_hook) (void) = InitMemHook;
 
 
 #elif defined(WIN32)
+#ifndef __MINGW32__
 
 static int 
 AllocHook(int allocType, void *userData, size_t size, int 
@@ -1290,7 +1297,7 @@ static void InitMemHook(void)
         hookedMalloc = PR_TRUE;        
     }
 }
-
+#endif // __MINGW32__
 
 #elif 0 // defined(XP_MACOSX)
 
@@ -1522,8 +1529,10 @@ nsCycleCollector::Suspect(nsISupports *n)
     if (nsCycleCollector_shouldSuppress(n))
         return;
 
+#ifndef __MINGW32__
     if (mParams.mHookMalloc)
         InitMemHook();
+#endif
 
     mPurpleBuf.Put(n);
 
@@ -1553,8 +1562,10 @@ nsCycleCollector::Forget(nsISupports *n)
     if (!NS_IsMainThread())
         Fault("trying to forget from non-main thread");
 
+#ifndef __MINGW32__
     if (mParams.mHookMalloc)
         InitMemHook();
+#endif
 
     mPurpleBuf.Remove(n);
     
@@ -1605,8 +1616,10 @@ nsCycleCollector::Collect()
 
     if (! mParams.mDoNothing) {
 
+#ifndef __MINGW32__
         if (mParams.mHookMalloc)
             InitMemHook();
+#endif
         
         CollectPurple();
 
