@@ -6501,8 +6501,12 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems); 
     }
+    PRUint32 flags = 0;
+    if (NS_STYLE_DISPLAY_INLINE_BLOCK == aDisplay->mDisplay) {
+      flags = NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT;
+    }
     // Create the block frame
-    newFrame = NS_NewBlockFrame(mPresShell, aStyleContext);
+    newFrame = NS_NewBlockFrame(mPresShell, aStyleContext, flags);
     if (newFrame) { // That worked so construct the block and its children
       // XXXbz should we be passing in a non-null aContentParentFrame?
       rv = ConstructBlock(aState, aDisplay, aContent,
