@@ -3156,7 +3156,9 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
     nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(mHTMLDocument));
     doc->GetDoctype(getter_AddRefs(oldDocType));
 
-    if (name.IsEmpty()) {
+    // Assign "HTML" if we don't have anything, and normalize
+    // the name if it is something like "hTmL", per HTML5.
+    if (name.IsEmpty() || name.LowerCaseEqualsLiteral("html")) {
       name.AssignLiteral("HTML");
     }
 
