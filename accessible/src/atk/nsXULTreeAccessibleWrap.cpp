@@ -64,14 +64,15 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::GetChildCount(PRInt32 *aAccChildCount)
   // by going through DOM structure of XUL tree
   nsAccessible::GetChildCount(aAccChildCount);
 
-  // add the count of table cell (or tree item) accessibles, which are
-  // created and appended by XUL tree accessible implementation
-  PRInt32 rowCount, colCount = 1;
-  mTreeView->GetRowCount(&rowCount);
-  mFirstChild->GetChildCount(&colCount);
+  if (*aAccChildCount != eChildCountUninitialized) {
+    // add the count of table cell (or tree item) accessibles, which are
+    // created and appended by XUL tree accessible implementation
+    PRInt32 rowCount, colCount = 1;
+    mTreeView->GetRowCount(&rowCount);
+    mFirstChild->GetChildCount(&colCount);
 
-  *aAccChildCount += rowCount * colCount;
-
+    *aAccChildCount += rowCount * colCount;
+  }
   return NS_OK;
 }
 

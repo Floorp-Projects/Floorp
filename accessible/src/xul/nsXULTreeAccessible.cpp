@@ -286,10 +286,11 @@ NS_IMETHODIMP nsXULTreeAccessible::GetChildCount(PRInt32 *aAccChildCount)
 
   nsAccessible::GetChildCount(aAccChildCount);
 
-  PRInt32 rowCount;
-  mTreeView->GetRowCount(&rowCount);
-  *aAccChildCount += rowCount;
-
+  if (*aAccChildCount != eChildCountUninitialized) {
+    PRInt32 rowCount;
+    mTreeView->GetRowCount(&rowCount);
+    *aAccChildCount += rowCount;
+  }
   return NS_OK;
 }
 
