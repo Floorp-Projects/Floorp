@@ -92,7 +92,7 @@ sub do_static($) {
         open(OUT, ">", "$outfile.$$");
         select OUT;
 
-        eval "$call($form_ref)";
+        eval "$call(\$form_ref)";
 
         close(OUT);
         unlink($outfile);
