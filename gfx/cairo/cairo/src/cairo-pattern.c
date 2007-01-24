@@ -285,7 +285,7 @@ _cairo_pattern_create_in_error (cairo_status_t status)
  * If the values passed in are outside that range, they will be
  * clamped.
  *
- * Return value: the newly created #cairo_pattern_t if succesful, or
+ * Return value: the newly created #cairo_pattern_t if successful, or
  * an error pattern in case of no memory.  The caller owns the
  * returned object and should call cairo_pattern_destroy() when
  * finished with it.
@@ -326,7 +326,7 @@ slim_hidden_def (cairo_pattern_create_rgb);
  * 1.  If the values passed in are outside that range, they will be
  * clamped.
  *
- * Return value: the newly created #cairo_pattern_t if succesful, or
+ * Return value: the newly created #cairo_pattern_t if successful, or
  * an error pattern in case of no memory.  The caller owns the
  * returned object and should call cairo_pattern_destroy() when
  * finished with it.
@@ -363,7 +363,7 @@ slim_hidden_def (cairo_pattern_create_rgba);
  *
  * Create a new cairo_pattern_t for the given surface.
  *
- * Return value: the newly created #cairo_pattern_t if succesful, or
+ * Return value: the newly created #cairo_pattern_t if successful, or
  * an error pattern in case of no memory.  The caller owns the
  * returned object and should call cairo_pattern_destroy() when
  * finished with it.
@@ -412,7 +412,7 @@ slim_hidden_def (cairo_pattern_create_for_surface);
  * pattern space is identical to user space, but the relationship
  * between the spaces can be changed with cairo_pattern_set_matrix().
  *
- * Return value: the newly created #cairo_pattern_t if succesful, or
+ * Return value: the newly created #cairo_pattern_t if successful, or
  * an error pattern in case of no memory.  The caller owns the
  * returned object and should call cairo_pattern_destroy() when
  * finished with it.
@@ -456,7 +456,7 @@ cairo_pattern_create_linear (double x0, double y0, double x1, double y1)
  * pattern space is identical to user space, but the relationship
  * between the spaces can be changed with cairo_pattern_set_matrix().
  *
- * Return value: the newly created #cairo_pattern_t if succesful, or
+ * Return value: the newly created #cairo_pattern_t if successful, or
  * an error pattern in case of no memory.  The caller owns the
  * returned object and should call cairo_pattern_destroy() when
  * finished with it.

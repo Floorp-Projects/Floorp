@@ -214,7 +214,7 @@ _utf8_get_char_extended (const unsigned char *p,
  * consist entirely of valid Unicode characters.
  *
  * Return value: %CAIRO_STATUS_SUCCESS if the entire string was
- *   succesfully converted. %CAIRO_STATUS_INVALID_STRING if an
+ *   successfully converted. %CAIRO_STATUS_INVALID_STRING if an
  *   an invalid sequence was found.
  **/
 cairo_status_t
@@ -278,7 +278,7 @@ _cairo_utf8_to_ucs4 (const unsigned char *str,
  * consist entirely of valid Unicode characters.
  *
  * Return value: %CAIRO_STATUS_SUCCESS if the entire string was
- *   succesfully converted. %CAIRO_STATUS_INVALID_STRING if an
+ *   successfully converted. %CAIRO_STATUS_INVALID_STRING if an
  *   an invalid sequence was found.
  **/
 cairo_status_t

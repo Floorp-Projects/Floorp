@@ -127,6 +127,6 @@ _cairo_clip_translate (cairo_clip_t  *clip,
                        cairo_fixed_t  ty);
 
 cairo_private cairo_rectangle_list_t*
-_cairo_clip_copy_rectangles (cairo_clip_t *clip, cairo_gstate_t *gstate);
+_cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate);
 
 #endif /* CAIRO_CLIP_PRIVATE_H */

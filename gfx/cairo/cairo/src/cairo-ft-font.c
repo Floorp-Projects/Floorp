@@ -139,7 +139,7 @@ static const cairo_unscaled_font_backend_t cairo_ft_unscaled_font_backend;
 /*
  * We maintain a hash table to map file/id => cairo_ft_unscaled_font_t.
  * The hash table itself isn't limited in size. However, we limit the
- * number of FT_Face objects we keep around; when we've exceeeded that
+ * number of FT_Face objects we keep around; when we've exceeded that
  * limit and need to create a new FT_Face, we dump the FT_Face from a
  * random cairo_ft_unscaled_font_t which has an unlocked FT_Face, (if
  * there are any).
@@ -2178,7 +2178,7 @@ _cairo_ft_font_face_create (cairo_ft_unscaled_font_t *unscaled,
  * @pattern: an existing #FcPattern
  *
  * Add options to a #FcPattern based on a #cairo_font_options_t font
- * options object. Options that are already in the pattern, are not overriden,
+ * options object. Options that are already in the pattern, are not overridden,
  * so you should call this function after calling FcConfigSubstitute() (the
  * user's settings should override options based on the surface type), but
  * before calling FcDefaultSubstitute().
@@ -2285,7 +2285,7 @@ slim_hidden_def (cairo_ft_font_options_substitute);
  * also for the FreeType backend and can be used with functions such
  * as cairo_ft_font_lock_face().
  *
- * Font rendering options are representated both here and when you
+ * Font rendering options are represented both here and when you
  * call cairo_scaled_font_create(). Font options that have a representation
  * in a #FcPattern must be passed in here; to modify #FcPattern
  * appropriately to reflect the options in a #cairo_font_options_t, call

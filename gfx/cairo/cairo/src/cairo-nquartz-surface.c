@@ -1474,10 +1474,13 @@ _cairo_nquartz_surface_mask (void *abstract_surface,
 
 	CGContextSetAlpha (surface->cgContext, solid_mask->color.alpha);
     } else {
-	/* So, CGContextClipToMask is not present in 10.3.9, so we're doomed; we could
-	 * do fallback, if we implemented _composite, but for now let's just not support
-	 * this.  (But pretend we did.)
+	/* So, CGContextClipToMask is not present in 10.3.9, so we're
+	 * doomed; if we have imageData, we can do fallback, otherwise
+	 * just pretend success.
 	 */
+	if (surface->imageData)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
 	return CAIRO_STATUS_SUCCESS;
     }
 
@@ -1698,7 +1701,7 @@ cairo_nquartz_surface_create (cairo_format_t format,
 	if (width % 4 == 0)
 	    stride = width;
 	else
-	    stride = (width & 3) + 1;
+	    stride = (width & ~3) + 4;
 	bitinfo = kCGImageAlphaNone;
 	bitsPerComponent = 8;
     } else if (format == CAIRO_FORMAT_A1) {

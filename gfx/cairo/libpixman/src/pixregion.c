@@ -1421,7 +1421,7 @@ QuickSortRects(
  *      Step 2. Split the rectangles into the minimum number of proper y-x
  *		banded regions.  This may require horizontally merging
  *		rectangles, and vertically coalescing bands.  With any luck,
- *		this step in an identity tranformation (ala the Box widget),
+ *		this step in an identity transformation (ala the Box widget),
  *		or a coalescing into 1 box (ala Menus).
  *
  *	Step 3. Merge the separate regions down to a single region by calling

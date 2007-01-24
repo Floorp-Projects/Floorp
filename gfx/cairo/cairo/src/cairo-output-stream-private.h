@@ -159,4 +159,8 @@ _cairo_memory_stream_length (cairo_output_stream_t *stream);
 cairo_private cairo_output_stream_t *
 _cairo_base85_stream_create (cairo_output_stream_t *output);
 
+/* cairo_deflate_stream.c */
+cairo_private cairo_output_stream_t *
+_cairo_deflate_stream_create (cairo_output_stream_t *output);
+
 #endif /* CAIRO_OUTPUT_STREAM_PRIVATE_H */

@@ -102,7 +102,7 @@ slim_hidden_def(cairo_matrix_init);
  * @x0: location to store x0 (X-translation component) of matrix, or %NULL
  * @y0: location to store y0 (Y-translation component) of matrix, or %NULL
  *
- * Gets the matrix values for the affine tranformation that @matrix represents.
+ * Gets the matrix values for the affine transformation that @matrix represents.
  * See cairo_matrix_init().
  *
  *

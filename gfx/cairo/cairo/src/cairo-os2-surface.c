@@ -251,7 +251,7 @@ _cairo_os2_surface_blit_pixels (cairo_os2_surface_t *surface,
                                 PRECTL               prcl_begin_paint_rect)
 {
     POINTL aptlPoints[4];
-    LONG lOldYInversion;
+    LONG lOldYInversion, rc = GPI_OK;
 
     /* Enable Y Inversion for the HPS, so the
      * GpiDrawBits will work with upside-top image, not with upside-down image!
@@ -312,13 +312,63 @@ _cairo_os2_surface_blit_pixels (cairo_os2_surface_t *surface,
         }
     }
 #endif
-    GpiDrawBits (hps_begin_paint,
-                 surface->pixels,
-                 &(surface->bitmap_info),
-                 4,
-                 aptlPoints,
-                 ROP_SRCCOPY,
-                 BBO_IGNORE);
+    rc = GpiDrawBits (hps_begin_paint,
+                      surface->pixels,
+                      &(surface->bitmap_info),
+                      4,
+                      aptlPoints,
+                      ROP_SRCCOPY,
+                      BBO_IGNORE);
+
+    if (rc != GPI_OK) {
+        /* if GpiDrawBits () failed then this is most likely because the
+         * display driver could not handle a 32bit bitmap. So we need to
+         * - create a buffer that only contains 3 bytes per pixel
+         * - change the bitmap info header to contain 24bit
+         * - pass the new buffer to GpiDrawBits () again
+         * - clean up the new buffer
+         */
+        BITMAPINFOHEADER2 bmpheader;
+        unsigned char *pchPixBuf, *pchPixSource;
+        void *pBufStart;
+        ULONG ulPixels;
+
+        /* allocate temporary pixel buffer */
+        pchPixBuf = (unsigned char *) malloc (3 * surface->bitmap_info.cx *
+                                              surface->bitmap_info.cy);
+        pchPixSource = surface->pixels; /* start at beginning of pixel buffer */
+        pBufStart = pchPixBuf; /* remember beginning of the new pixel buffer */
+
+        /* copy the first three bytes for each pixel but skip over the fourth */
+        for (ulPixels = 0; ulPixels < surface->bitmap_info.cx * surface->bitmap_info.cy; ulPixels++)
+        {
+            /* copy BGR from source buffer */
+            *pchPixBuf++ = *pchPixSource++;
+            *pchPixBuf++ = *pchPixSource++;
+            *pchPixBuf++ = *pchPixSource++;
+            pchPixSource++; /* jump over alpha channel in source buffer */
+        }
+
+        /* jump back to start of the buffer for display and cleanup */
+        pchPixBuf = pBufStart;
+
+        /* set up the bitmap header, but this time with 24bit depth only */
+        memset (&bmpheader, 0, sizeof (bmpheader));
+        bmpheader.cbFix = sizeof (BITMAPINFOHEADER2);
+        bmpheader.cx = surface->bitmap_info.cx;
+        bmpheader.cy = surface->bitmap_info.cy;
+        bmpheader.cPlanes = surface->bitmap_info.cPlanes;
+        bmpheader.cBitCount = 24;
+        rc = GpiDrawBits (hps_begin_paint,
+                          pchPixBuf,
+                          (PBITMAPINFO2)&bmpheader,
+                          4,
+                          aptlPoints,
+                          ROP_SRCCOPY,
+                          BBO_IGNORE);
+
+        free (pchPixBuf);
+    }
 
     /* Restore Y inversion */
     GpiEnableYInversion (hps_begin_paint, lOldYInversion);
@@ -372,7 +422,7 @@ _cairo_os2_surface_get_pixels_from_screen (cairo_os2_surface_t *surface,
     hps = GpiCreatePS (hab,
                        hdc,
                        &sizlTemp,
-                       PU_PELS | GPIT_NORMAL | GPIA_ASSOC );
+                       PU_PELS | GPIT_NORMAL | GPIA_ASSOC);
     if (!hps) {
         DevCloseDC (hdc);
         return;
@@ -405,7 +455,7 @@ _cairo_os2_surface_get_pixels_from_screen (cairo_os2_surface_t *surface,
     /* Target coordinates (Noninclusive) */
     aptlPoints[0].x = 0;
     aptlPoints[0].y = 0;
-    
+
     aptlPoints[1].x = sizlTemp.cx;
     aptlPoints[1].y = sizlTemp.cy;
 

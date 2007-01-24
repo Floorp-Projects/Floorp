@@ -1,4 +1,4 @@
-/* $Id: cairo-scaled-font.c,v 1.12 2006/12/23 01:15:53 vladimir%pobox.com Exp $
+/* $Id: cairo-scaled-font.c,v 1.13 2007/01/24 23:53:03 vladimir%pobox.com Exp $
  *
  * Copyright © 2005 Keith Packard
  *
@@ -326,7 +326,7 @@ _cairo_scaled_font_keys_equal (const void *abstract_key_a, const void *abstract_
 
 /* XXX: This 256 number is arbitary---we've never done any measurement
  * of this. In fact, having a per-font glyph caches each managed
- * separately is probably not waht we want anyway. Would probably be
+ * separately is probably not what we want anyway. Would probably be
  * much better to have a single cache for glyphs with random
  * replacement across all glyphs of all fonts. */
 static int max_glyphs_cached_per_font = 256;
@@ -705,24 +705,13 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     int i;
     double min_x = 0.0, min_y = 0.0, max_x = 0.0, max_y = 0.0;
-    double x_pos = 0.0, y_pos = 0.0;
+    cairo_bool_t visible = FALSE;
+    cairo_scaled_glyph_t *scaled_glyph = NULL;
 
     if (scaled_font->status)
 	return;
 
-    if (!num_glyphs) {
-	extents->x_bearing = 0.0;
-	extents->y_bearing = 0.0;
-	extents->width = 0.0;
-	extents->height = 0.0;
-	extents->x_advance = 0.0;
-	extents->y_advance = 0.0;
-
-	return;
-    }
-
     for (i = 0; i < num_glyphs; i++) {
-	cairo_scaled_glyph_t	*scaled_glyph;
 	double			left, top, right, bottom;
 
 	status = _cairo_scaled_glyph_lookup (scaled_font,
@@ -734,12 +723,17 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
 	    return;
 	}
 
+	/* "Ink" extents should skip "invisible" glyphs */
+	if (scaled_glyph->metrics.width == 0 && scaled_glyph->metrics.height == 0)
+	    continue;
+
 	left = scaled_glyph->metrics.x_bearing + glyphs[i].x;
 	right = left + scaled_glyph->metrics.width;
 	top = scaled_glyph->metrics.y_bearing + glyphs[i].y;
 	bottom = top + scaled_glyph->metrics.height;
 
-	if (i == 0) {
+	if (!visible) {
+	    visible = TRUE;
 	    min_x = left;
 	    max_x = right;
 	    min_y = top;
@@ -750,16 +744,36 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
 	    if (top < min_y) min_y = top;
 	    if (bottom > max_y) max_y = bottom;
 	}
-	x_pos = glyphs[i].x + scaled_glyph->metrics.x_advance;
-	y_pos = glyphs[i].y + scaled_glyph->metrics.y_advance;
     }
 
-    extents->x_bearing = min_x - glyphs[0].x;
-    extents->y_bearing = min_y - glyphs[0].y;
-    extents->width = max_x - min_x;
-    extents->height = max_y - min_y;
-    extents->x_advance = x_pos - glyphs[0].x;
-    extents->y_advance = y_pos - glyphs[0].y;
+    if (visible) {
+	extents->x_bearing = min_x - glyphs[0].x;
+	extents->y_bearing = min_y - glyphs[0].y;
+	extents->width = max_x - min_x;
+	extents->height = max_y - min_y;
+    } else {
+	extents->x_bearing = 0.0;
+	extents->y_bearing = 0.0;
+	extents->width = 0.0;
+	extents->height = 0.0;
+    }
+
+    if (num_glyphs) {
+        double x0, y0, x1, y1;
+
+	x0 = glyphs[0].x;
+	y0 = glyphs[0].y;
+
+	/* scaled_glyphs contains the glyph for num_glyphs - 1 already. */
+	x1 = glyphs[num_glyphs - 1].x + scaled_glyph->metrics.x_advance;
+	y1 = glyphs[num_glyphs - 1].y + scaled_glyph->metrics.y_advance;
+
+	extents->x_advance = x1 - x0;
+	extents->y_advance = y1 - y0;
+    } else {
+	extents->x_advance = 0.0;
+	extents->y_advance = 0.0;
+    }
 }
 slim_hidden_def (cairo_scaled_font_glyph_extents);
 
@@ -775,6 +789,12 @@ _cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t *scaled_font,
     uint32_t *ucs4 = NULL;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_scaled_glyph_t *scaled_glyph;
+
+    if (utf8[0] == '\0') {
+	*num_glyphs = 0;
+	*glyphs = NULL;
+	return CAIRO_STATUS_SUCCESS;
+    }
 
     if (scaled_font->backend->text_to_glyphs) {
 	status = scaled_font->backend->text_to_glyphs (scaled_font,
@@ -905,6 +925,9 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 
     if (scaled_font->status)
 	return scaled_font->status;
+
+    if (!num_glyphs)
+	return CAIRO_STATUS_SUCCESS;
 
     if (scaled_font->backend->show_glyphs != NULL) {
 	status = scaled_font->backend->show_glyphs (scaled_font,
@@ -1074,7 +1097,7 @@ _scaled_glyph_path_close_path (void *abstract_closure)
  * operates only on an A1 surface, (converting an A8 surface to A1 if
  * necessary), and performs the tracing by drawing a little square
  * around each pixel that is on in the mask. We do not pretend that
- * this is a high-quality result. But we are leaving it up to somone
+ * this is a high-quality result. But we are leaving it up to someone
  * who cares enough about getting a better result to implement
  * something more sophisticated.
  **/

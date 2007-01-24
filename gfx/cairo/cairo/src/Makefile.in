@@ -68,6 +68,7 @@ CSRCS   = \
         cairo-clip.c \
         cairo-color.c \
         cairo-debug.c \
+        cairo-deflate-stream.c \
         cairo-fixed.c \
         cairo-font.c \
         cairo-font-options.c \

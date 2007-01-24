@@ -71,7 +71,7 @@
  *   using a tiling pattern (4.6.2).  How do you create such a scratch
  *   surface?  cairo_surface_create_similar() ?
  *
- * - What if you create a similiar surface and does show_page and then
+ * - What if you create a similar surface and does show_page and then
  *   does show_surface on another surface?
  *
  * - Output TM so page scales to the right size - PDF default user
@@ -129,6 +129,8 @@ typedef struct _cairo_pdf_surface {
 	cairo_pdf_resource_t self;
 	cairo_pdf_resource_t length;
 	long start_offset;
+        cairo_bool_t compressed;
+        cairo_output_stream_t *old_output;
     } current_stream;
 
     cairo_bool_t has_clip;
@@ -146,8 +148,9 @@ _cairo_pdf_surface_clear (cairo_pdf_surface_t *surface);
 
 static cairo_pdf_resource_t
 _cairo_pdf_surface_open_stream (cairo_pdf_surface_t	*surface,
+                                cairo_bool_t             compressed,
 				const char		*fmt,
-				...) CAIRO_PRINTF_FORMAT(2, 3);
+				...) CAIRO_PRINTF_FORMAT(3, 4);
 static void
 _cairo_pdf_surface_close_stream (cairo_pdf_surface_t	*surface);
 
@@ -456,6 +459,7 @@ _cairo_pdf_surface_clear (cairo_pdf_surface_t *surface)
 
 static cairo_pdf_resource_t
 _cairo_pdf_surface_open_stream (cairo_pdf_surface_t	*surface,
+                                cairo_bool_t             compressed,
 				const char		*fmt,
 				...)
 {
@@ -464,12 +468,16 @@ _cairo_pdf_surface_open_stream (cairo_pdf_surface_t	*surface,
     surface->current_stream.active = TRUE;
     surface->current_stream.self = _cairo_pdf_surface_new_object (surface);
     surface->current_stream.length = _cairo_pdf_surface_new_object (surface);
+    surface->current_stream.compressed = compressed;
 
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\r\n"
 				 "<< /Length %d 0 R\r\n",
 				 surface->current_stream.self.id,
 				 surface->current_stream.length.id);
+    if (compressed)
+        _cairo_output_stream_printf (surface->output,
+                                     "   /Filter /FlateDecode\r\n");
 
     if (fmt != NULL) {
 	va_start (ap, fmt);
@@ -483,6 +491,11 @@ _cairo_pdf_surface_open_stream (cairo_pdf_surface_t	*surface,
 
     surface->current_stream.start_offset = _cairo_output_stream_get_position (surface->output);
 
+    if (compressed) {
+        surface->current_stream.old_output = surface->output;
+        surface->output = _cairo_deflate_stream_create (surface->output);
+    }
+
     return surface->current_stream.self;
 }
 
@@ -493,6 +506,13 @@ _cairo_pdf_surface_close_stream (cairo_pdf_surface_t *surface)
 
     if (! surface->current_stream.active)
 	return;
+
+    if (surface->current_stream.compressed) {
+        _cairo_output_stream_destroy (surface->output);
+        surface->output = surface->current_stream.old_output;
+        _cairo_output_stream_printf (surface->output,
+                                     "\r\n");
+    }
 
     length = _cairo_output_stream_get_position (surface->output) -
 	surface->current_stream.start_offset;
@@ -577,6 +597,7 @@ _cairo_pdf_surface_resume_content_stream (cairo_pdf_surface_t *surface)
     cairo_pdf_resource_t stream;
 
     stream = _cairo_pdf_surface_open_stream (surface,
+                                             TRUE,
 					     "   /Type /XObject\r\n"
 					     "   /Subtype /Form\r\n"
 					     "   /BBox [ 0 0 %f %f ]\r\n",
@@ -593,6 +614,7 @@ _cairo_pdf_surface_start_page (void *abstract_surface)
     cairo_pdf_resource_t stream;
 
     stream = _cairo_pdf_surface_open_stream (surface,
+                                             TRUE,
 					     "   /Type /XObject\r\n"
 					     "   /Subtype /Form\r\n"
 					     "   /BBox [ 0 0 %f %f ]\r\n",
@@ -626,7 +648,7 @@ compress_dup (const void *data, unsigned long data_size,
 }
 
 /* Emit alpha channel from the image into the given data, providing
- * and id that can be used to reference the resulting SMask object.
+ * an id that can be used to reference the resulting SMask object.
  *
  * In the case that the alpha channel happens to be all opaque, then
  * no SMask object will be emitted and *id_ret will be set to 0.
@@ -680,6 +702,7 @@ emit_smask (cairo_pdf_surface_t		*surface,
     }
 
     *stream_ret = _cairo_pdf_surface_open_stream (surface,
+                                                  FALSE,
 						  "   /Type /XObject\r\n"
 						  "   /Subtype /Image\r\n"
 						  "   /Width %d\r\n"
@@ -789,12 +812,14 @@ emit_image (cairo_pdf_surface_t		*surface,
 
     if (need_smask)
 	*image_ret = _cairo_pdf_surface_open_stream (surface,
+                                                     FALSE,
 						     IMAGE_DICTIONARY
 						     "   /SMask %d 0 R\r\n",
 						     image->width, image->height,
 						     smask.id);
     else
 	*image_ret = _cairo_pdf_surface_open_stream (surface,
+                                                     FALSE,
 						     IMAGE_DICTIONARY,
 						     image->width, image->height);
 
@@ -865,16 +890,41 @@ emit_surface_pattern (cairo_pdf_surface_t	*surface,
 
     _cairo_surface_get_extents (&surface->base, &surface_extents);
 
-    /* In PDF, (as far as I can tell), all patterns are repeating. So
-     * we support cairo's EXTEND_NONE semantics by setting the repeat
-     * step size to the larger of the image size and the extents of
-     * the destination surface. That way we guarantee the pattern will
-     * not repeat.
-     */
     switch (extend) {
     case CAIRO_EXTEND_NONE:
-	xstep = MAX(image->width, surface_extents.width);
-	ystep = MAX(image->height, surface_extents.height);
+        {
+	    /* In PDF, (as far as I can tell), all patterns are
+	     * repeating. So we support cairo's EXTEND_NONE semantics
+	     * by setting the repeat step size to a size large enough
+	     * to guarantee that no more than a single occurrence will
+	     * be visible.
+	     *
+	     * First, map the pattern's extents through the inverse
+	     * pattern matrix to compute the device-space bounds of
+	     * the desired single occurrence. Then consider the bounds
+	     * of (the union of this rectangle with the target surface
+	     * extents). If the repeat size is larger than the
+	     * diagonal of the bounds of the union, then it is
+	     * guaranteed to never repeat visibly.
+	     */
+	    double x1 = 0.0, y1 = 0.0;
+	    double x2 = image->width, y2 = image->height;
+	    cairo_matrix_t surface_to_device = pattern->base.matrix;
+	    cairo_matrix_invert (&surface_to_device);
+	    _cairo_matrix_transform_bounding_box (&surface_to_device,
+						  &x1, &y1, &x2, &y2,
+						  NULL);
+	    /* Rather than computing precise bounds of the union, just
+	     * add the surface extents unconditionally. We only
+	     * required an answer that's large enough, we don't really
+	     * care if it's not as tight as possible. */
+	    x1 = MAX (fabs(x1), fabs(x2)) + surface_extents.width;
+	    y1 = MAX (fabs(y1), fabs(y2)) + surface_extents.height;
+	    /* Similarly, don't bother computing the square root to
+	     * determine the length of the final diagonal. */
+	    xstep = _cairo_lround (ceil (x1 * y1));
+	    ystep = _cairo_lround (ceil (x1 * y1));
+	}
 	break;
     case CAIRO_EXTEND_REPEAT:
 	xstep = image->width;
@@ -928,6 +978,7 @@ emit_surface_pattern (cairo_pdf_surface_t	*surface,
     cairo_matrix_scale (&pdf_p2d, 1.0, -1.0);
 
     stream = _cairo_pdf_surface_open_stream (surface,
+                                             FALSE,
 					     "   /BBox [0 0 %d %d]\r\n"
 					     "   /XStep %d\r\n"
 					     "   /YStep %d\r\n"
@@ -1006,7 +1057,7 @@ emit_linear_colorgradient (cairo_pdf_surface_t		*surface,
 }
 
 static cairo_pdf_resource_t
-emit_stiched_colorgradient (cairo_pdf_surface_t   *surface,
+emit_stitched_colorgradient (cairo_pdf_surface_t   *surface,
 			    unsigned int 	   n_stops,
 			    cairo_pdf_color_stop_t stops[])
 {
@@ -1020,7 +1071,7 @@ emit_stiched_colorgradient (cairo_pdf_surface_t   *surface,
 						       &stops[i+1]);
     }
 
-    /* ... and stich them together */
+    /* ... and stitch them together */
     function = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\r\n"
@@ -1065,7 +1116,7 @@ emit_stiched_colorgradient (cairo_pdf_surface_t   *surface,
     return function;
 }
 
-#define COLOR_STOP_EPSILLON 1e-6
+#define COLOR_STOP_EPSILON 1e-6
 
 static cairo_pdf_resource_t
 emit_pattern_stops (cairo_pdf_surface_t *surface, cairo_gradient_pattern_t *pattern)
@@ -1095,13 +1146,13 @@ emit_pattern_stops (cairo_pdf_surface_t *surface, cairo_gradient_pattern_t *patt
 
     /* make sure first offset is 0.0 and last offset is 1.0. (Otherwise Acrobat
      * Reader chokes.) */
-    if (stops[0].offset > COLOR_STOP_EPSILLON) {
+    if (stops[0].offset > COLOR_STOP_EPSILON) {
 	    memcpy (allstops, stops, sizeof (cairo_pdf_color_stop_t));
 	    stops = allstops;
 	    stops[0].offset = 0.0;
 	    n_stops++;
     }
-    if (stops[n_stops-1].offset < 1.0 - COLOR_STOP_EPSILLON) {
+    if (stops[n_stops-1].offset < 1.0 - COLOR_STOP_EPSILON) {
 	    memcpy (&stops[n_stops],
 		    &stops[n_stops - 1],
 		    sizeof (cairo_pdf_color_stop_t));
@@ -1110,12 +1161,12 @@ emit_pattern_stops (cairo_pdf_surface_t *surface, cairo_gradient_pattern_t *patt
     }
 
     if (n_stops == 2) {
-	/* no need for stiched function */
+	/* no need for stitched function */
 	function = emit_linear_colorgradient (surface, &stops[0], &stops[1]);
     } else {
-	/* multiple stops: stich. XXX possible optimization: regulary spaced
-	 * stops do not require stiching. XXX */
-	function = emit_stiched_colorgradient (surface,
+	/* multiple stops: stitch. XXX possible optimization: regulary spaced
+	 * stops do not require stitching. XXX */
+	function = emit_stitched_colorgradient (surface,
 					       n_stops,
 					       stops);
     }
@@ -1942,7 +1993,7 @@ _cairo_pdf_surface_emit_outline_glyph (cairo_pdf_surface_t	*surface,
     if (status)
 	return status;
 
-    *glyph_ret = _cairo_pdf_surface_open_stream (surface, NULL);
+    *glyph_ret = _cairo_pdf_surface_open_stream (surface, FALSE, NULL);
 
     _cairo_output_stream_printf (surface->output,
 				 "0 0 %f %f %f %f d1\r\n",
@@ -1980,7 +2031,7 @@ _cairo_pdf_surface_emit_bitmap_glyph (cairo_pdf_surface_t	*surface,
     cairo_status_t status;
     cairo_image_surface_t *image;
     unsigned char *row, *byte;
-    int rows, cols, bytes_per_row;
+    int rows, cols;
 
     status = _cairo_scaled_glyph_lookup (scaled_font,
 					 glyph_index,
@@ -1997,7 +2048,7 @@ _cairo_pdf_surface_emit_bitmap_glyph (cairo_pdf_surface_t	*surface,
 	    return cairo_surface_status (&image->base);
     }
 
-    *glyph_ret = _cairo_pdf_surface_open_stream (surface, NULL);
+    *glyph_ret = _cairo_pdf_surface_open_stream (surface, FALSE, NULL);
 
     _cairo_output_stream_printf (surface->output,
 				 "0 0 %f %f %f %f d1\r\n",
@@ -2025,7 +2076,6 @@ _cairo_pdf_surface_emit_bitmap_glyph (cairo_pdf_surface_t	*surface,
 
     _cairo_output_stream_printf (surface->output,
 				 "ID ");
-    bytes_per_row = (image->width + 7) / 8;
     for (row = image->data, rows = image->height; rows; row += image->stride, rows--) {
 	for (byte = row, cols = (image->width + 7) / 8; cols; byte++, cols--) {
 	    unsigned char output_byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (*byte);
@@ -2727,6 +2777,7 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
     cairo_pdf_surface_t *surface = abstract_surface;
     unsigned int current_subset_id = (unsigned int)-1;
     unsigned int font_id, subset_id, subset_glyph_index;
+    cairo_bool_t diagonal;
     cairo_status_t status;
     int i;
 
@@ -2742,6 +2793,12 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
     _cairo_output_stream_printf (surface->output,
 				 "BT\r\n");
 
+    if (scaled_font->scale.xy == 0.0 &&
+        scaled_font->scale.yx == 0.0)
+        diagonal = TRUE;
+    else
+        diagonal = FALSE;
+
     for (i = 0; i < num_glyphs; i++) {
 	status = _cairo_scaled_font_subsets_map_glyph (surface->font_subsets,
 						       scaled_font, glyphs[i].index,
@@ -2749,22 +2806,29 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
 	if (status)
 	    return status;
 
-	if (subset_id != current_subset_id) {
+	if (subset_id != current_subset_id)
 	    _cairo_output_stream_printf (surface->output,
 					 "/CairoFont-%d-%d 1 Tf\r\n",
 					 font_id, subset_id);
-	    current_subset_id = subset_id;
-	}
 
-	_cairo_output_stream_printf (surface->output,
-				     "%f %f %f %f %f %f Tm <%02x> Tj\r\n",
-				     scaled_font->scale.xx,
-				     scaled_font->scale.yx,
-				     -scaled_font->scale.xy,
-				     -scaled_font->scale.yy,
-				     glyphs[i].x,
-				     glyphs[i].y,
-				     subset_glyph_index);
+        if (subset_id != current_subset_id || !diagonal) {
+            _cairo_output_stream_printf (surface->output,
+                                         "%f %f %f %f %f %f Tm <%02x> Tj\r\n",
+                                         scaled_font->scale.xx,
+                                         scaled_font->scale.yx,
+                                         -scaled_font->scale.xy,
+                                         -scaled_font->scale.yy,
+                                         glyphs[i].x,
+                                         glyphs[i].y,
+                                         subset_glyph_index);
+	    current_subset_id = subset_id;
+        } else {
+            _cairo_output_stream_printf (surface->output,
+                                         "%f %f Td <%02x> Tj\r\n",
+                                         (glyphs[i].x - glyphs[i-1].x)/scaled_font->scale.xx,
+                                         (glyphs[i].y - glyphs[i-1].y)/scaled_font->scale.yy,
+                                         subset_glyph_index);
+        }
     }
 
     _cairo_output_stream_printf (surface->output,

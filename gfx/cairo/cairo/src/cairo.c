@@ -48,11 +48,12 @@ static const cairo_t cairo_nil = {
   CAIRO_REF_COUNT_INVALID,	/* ref_count */
   CAIRO_STATUS_NO_MEMORY,	/* status */
   { 				/* path */
-    NULL, NULL,			/* op_buf_head, op_buf_tail */
-    NULL, NULL,			/* arg_buf_head, arg_buf_tail */
-    { 0, 0 },			/* last_move_point */
-    { 0, 0 },			/* current point */
-    FALSE,			/* has_current_point */
+    NULL, NULL,			   /* op_buf_head, op_buf_tail */
+    NULL, NULL,			   /* arg_buf_head, arg_buf_tail */
+    { 0, 0 },			   /* last_move_point */
+    { 0, 0 },			   /* current point */
+    FALSE,			   /* has_current_point */
+    FALSE			   /* has_curve_to */
   },
   NULL				/* gstate */
 };
@@ -952,26 +953,18 @@ cairo_set_dash (cairo_t	     *cr,
 /**
  * cairo_get_dash_count:
  * @cr: a #cairo_t
- * @count: return value for the number of dash values, or %NULL
  *
- * Gets the length of the dash array in @cr.
+ * Returns the length of the dash array in @cr (0 if dashing is not
+ * currently in effect).
  *
- * Return value: %CAIRO_STATUS_SUCCESS, or error status set on
- * @cr.
+ * See also cairo_set_dash() and cairo_get_dash().
  *
  * Since: 1.4
  */
-cairo_status_t
-cairo_get_dash_count (cairo_t *cr,
-		      int     *count)
+int
+cairo_get_dash_count (cairo_t *cr)
 {
-    if (cr->status)
-	return cr->status;
-
-    if (count)
-	*count = cr->gstate->stroke_style.num_dashes;
-
-    return CAIRO_STATUS_SUCCESS;
+    return cr->gstate->stroke_style.num_dashes;
 }
 
 /**
@@ -984,27 +977,20 @@ cairo_get_dash_count (cairo_t *cr,
  * enough to hold at least the number of values returned by
  * cairo_get_dash_count().
  *
- * Return value: %CAIRO_STATUS_SUCCESS, or error status set on
- * @cr.
- *
  * Since: 1.4
  **/
-cairo_status_t
+void
 cairo_get_dash (cairo_t *cr,
 		double  *dashes,
 		double  *offset)
 {
-    if (cr->status)
-	return cr->status;
-
-    memcpy (dashes,
-	    cr->gstate->stroke_style.dash,
-	    sizeof(double) * cr->gstate->stroke_style.num_dashes);
+    if (dashes)
+	memcpy (dashes,
+		cr->gstate->stroke_style.dash,
+		sizeof (double) * cr->gstate->stroke_style.num_dashes);
 
     if (offset)
 	*offset = cr->gstate->stroke_style.dash_offset;
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 void
@@ -2264,7 +2250,7 @@ _cairo_rectangle_list_create_in_error (cairo_status_t status)
 }
 
 /**
- * cairo_copy_clip_rectangles:
+ * cairo_copy_clip_rectangle_list:
  *
  * Returns the current clip region as a list of rectangles in user coordinates.
  * Never returns %NULL.
@@ -2280,12 +2266,12 @@ _cairo_rectangle_list_create_in_error (cairo_status_t status)
  * Since: 1.4
  **/
 cairo_rectangle_list_t *
-cairo_copy_clip_rectangles (cairo_t *cr)
+cairo_copy_clip_rectangle_list (cairo_t *cr)
 {
     if (cr->status)
         return _cairo_rectangle_list_create_in_error (cr->status);
 
-    return _cairo_gstate_copy_clip_rectangles (cr->gstate);
+    return _cairo_gstate_copy_clip_rectangle_list (cr->gstate);
 }
 
 /**

@@ -1760,7 +1760,7 @@ _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
  *
  * This function returns a bounding box for the surface.  The surface
  * bounds are defined as a region beyond which no rendering will
- * possibly be recorded, in otherwords, it is the maximum extent of
+ * possibly be recorded, in other words, it is the maximum extent of
  * potentially usable coordinates.
  *
  * For vector surfaces, (PDF, PS, SVG and meta-surfaces), the surface
@@ -1811,6 +1811,9 @@ _cairo_surface_show_glyphs (cairo_surface_t	*surface,
     {
         return CAIRO_STATUS_NO_MEMORY;
     }
+
+    if (!num_glyphs)
+	return CAIRO_STATUS_SUCCESS;
 
     _cairo_surface_copy_pattern_for_destination (source,
 						 surface,

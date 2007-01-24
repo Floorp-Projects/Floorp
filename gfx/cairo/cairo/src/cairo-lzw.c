@@ -230,7 +230,7 @@ _lzw_symbol_table_init (lzw_symbol_table_t *table)
 /* Lookup a symbol in the symbol table. The PREV and NEXT fields of
  * symbol form the key for the lookup.
  *
- * If succesful, then this function returns TRUE and slot_ret will be
+ * If successful, then this function returns TRUE and slot_ret will be
  * left pointing at the result that will have the CODE field of
  * interest.
  *

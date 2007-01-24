@@ -347,8 +347,8 @@ _cairo_image_surface_create_with_content (cairo_content_t	content,
  * Creates an image surface for the provided pixel data. The output
  * buffer must be kept around until the #cairo_surface_t is destroyed
  * or cairo_surface_finish() is called on the surface.  The initial
- * contents of @buffer will be used as the inital image contents; you
- * must explicitely clear the buffer, using, for example,
+ * contents of @buffer will be used as the initial image contents; you
+ * must explicitly clear the buffer, using, for example,
  * cairo_rectangle() and cairo_fill() if you want it cleared.
  *
  * Return value: a pointer to the newly created surface. The caller

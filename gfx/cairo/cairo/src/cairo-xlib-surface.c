@@ -1106,7 +1106,7 @@ _operator_needs_alpha_composite (cairo_operator_t op,
 /* There is a bug in most older X servers with compositing using a
  * untransformed repeating source pattern when the source is in off-screen
  * video memory, and another with repeated transformed images using a
- * general tranform matrix. When these bugs could be triggered, we need a
+ * general transform matrix. When these bugs could be triggered, we need a
  * fallback: in the common case where we have no transformation and the
  * source and destination have the same format/visual, we can do the
  * operation using the core protocol for the first bug, otherwise, we need
@@ -1166,7 +1166,7 @@ _categorize_composite_operation (cairo_xlib_surface_t *dst,
 
 		/* If these are on the same screen but otherwise incompatible,
 		 * make a copy as core drawing can't cross depths and doesn't
-		 * work rightacross visuals of the same depth
+		 * work right across visuals of the same depth
 		 */
 		if (_cairo_xlib_surface_same_screen (dst, src) &&
 		    !_surfaces_compatible (dst, src))
@@ -2392,7 +2392,7 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
      *
      *  This is a postscript-y model, where each glyph has its own
      *  coordinate space, so it's what we expose in terms of metrics. It's
-     *  apparantly what everyone's expecting. Everyone except the Render
+     *  apparently what everyone's expecting. Everyone except the Render
      *  extension. Render wants to see a glyph tile starting at (0,0), with
      *  an origin offset inside, like this:
      *
@@ -2696,9 +2696,9 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 	 * the first zero-size glyph.  However, we don't skip all size-zero
 	 * glyphs, since that will force a new element at every space.  We
 	 * skip initial size-zero glyphs and hope that it's enough.  Since
-	 * Xft never exposed that bug, this assumptation should be correct.
+	 * Xft never exposed that bug, this assumption should be correct.
 	 *
-	 * We also skip any glyph that hav troublesome coordinates.  We want
+	 * We also skip any glyphs that have troublesome coordinates.  We want
 	 * to make sure that (glyph2.x - (glyph1.x + glyph1.width)) fits in
 	 * a signed 16bit integer, otherwise it will overflow in the render
 	 * protocol.

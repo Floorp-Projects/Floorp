@@ -54,7 +54,7 @@ _cairo_cache_remove (cairo_cache_t	 *cache,
 		     cairo_cache_entry_t *entry);
 
 static void
-_cairo_cache_shrink_to_accomodate (cairo_cache_t *cache,
+_cairo_cache_shrink_to_accommodate (cairo_cache_t *cache,
 				   unsigned long  additional);
 
 static cairo_status_t
@@ -215,7 +215,7 @@ _cairo_cache_thaw (cairo_cache_t *cache)
     cache->freeze_count--;
 
     if (cache->freeze_count == 0)
-	_cairo_cache_shrink_to_accomodate (cache, 0);
+	_cairo_cache_shrink_to_accommodate (cache, 0);
 }
 
 /**
@@ -267,17 +267,17 @@ _cairo_cache_remove_random (cairo_cache_t *cache)
 }
 
 /**
- * _cairo_cache_shrink_to_accomodate:
+ * _cairo_cache_shrink_to_accommodate:
  * @cache: a cache
  * @additional: additional size requested in bytes
  *
  * If cache is not frozen, eject entries randomly until the size of
  * the cache is at least @additional bytes less than
- * cache->max_size. That is, make enough room to accomodate a new
+ * cache->max_size. That is, make enough room to accommodate a new
  * entry of size @additional.
  **/
 static void
-_cairo_cache_shrink_to_accomodate (cairo_cache_t *cache,
+_cairo_cache_shrink_to_accommodate (cairo_cache_t *cache,
 				   unsigned long  additional)
 {
     cairo_int_status_t status;
@@ -313,7 +313,7 @@ _cairo_cache_insert (cairo_cache_t	 *cache,
 {
     cairo_status_t status;
 
-    _cairo_cache_shrink_to_accomodate (cache, entry->size);
+    _cairo_cache_shrink_to_accommodate (cache, entry->size);
 
     status = _cairo_hash_table_insert (cache->hash_table,
 				       (cairo_hash_entry_t *) entry);

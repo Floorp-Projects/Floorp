@@ -89,7 +89,7 @@ typedef struct cairo_ps_surface {
 /* A word wrap stream can be used as a filter to do word wrapping on
  * top of an existing output stream. The word wrapping is quite
  * simple, using isspace to determine characters that separate
- * words. Any word that will cause the column count exceeed the given
+ * words. Any word that will cause the column count exceed the given
  * max_column will have a '\n' character emitted before it.
  *
  * The stream is careful to maintain integrity for words that cross
@@ -282,7 +282,7 @@ _cairo_ps_surface_path_close_path (void *closure)
 }
 
 /* The line cap value is needed to workaround the fact that PostScript
- * semnatics for stroking degenerate sub-paths do not match cairo
+ * semantics for stroking degenerate sub-paths do not match cairo
  * semantics. (PostScript draws something for any line cap value,
  * while cairo draws something only for round caps).
  *
@@ -572,7 +572,7 @@ _cairo_ps_surface_emit_bitmap_glyph_data (cairo_ps_surface_t	*surface,
     cairo_status_t status;
     cairo_image_surface_t *image;
     unsigned char *row, *byte;
-    int rows, cols, bytes_per_row;
+    int rows, cols;
 
     status = _cairo_scaled_glyph_lookup (scaled_font,
 					 glyph_index,
@@ -613,7 +613,6 @@ _cairo_ps_surface_emit_bitmap_glyph_data (cairo_ps_surface_t	*surface,
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "   /DataSource   {<");
-    bytes_per_row = (image->width + 7) / 8;
     for (row = image->data, rows = image->height; rows; row += image->stride, rows--) {
 	for (byte = row, cols = (image->width + 7) / 8; cols; byte++, cols--) {
 	    unsigned char output_byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (*byte);
