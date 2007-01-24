@@ -77,7 +77,7 @@ public:
    * Returns the name of the builtin type of the instance node that aElement is
    * bound to. Fails if aElement doesn't have a bound node.
    */
-  NS_IMETHOD GetBuiltinTypeName(nsIDOMNode *aElement, nsAString& aName);
+  NS_IMETHOD GetBuiltinTypeName(nsIDOMNode *aElement, nsAString& aName) = 0;
 
   /**
    * Return true if instance node that element is bound to is readonly.
