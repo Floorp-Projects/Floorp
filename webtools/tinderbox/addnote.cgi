@@ -35,6 +35,7 @@ my ($args, $tree, $logfile, $errorparser, $buildname, $buildtime);
 if (defined($args = $form{log})) {
   # Use simplified arguments that uses the logfile as a key.
   ($tree, $logfile) = split /\//, $args;
+  $tree = &require_only_one_tree($tree);
 
   my $br = tb_find_build_record($tree, $logfile);
   $errorparser = $br->{errorparser};
@@ -42,7 +43,7 @@ if (defined($args = $form{log})) {
   $buildtime   = $br->{buildtime};
 } else {
   # Use old style arguments;
-  $tree        = $form{tree};
+  $tree        = &require_only_one_tree($form{tree});
   $logfile     = $form{logfile};
   $errorparser = $form{errorparser};
   $buildname   = $form{buildname};
@@ -116,7 +117,7 @@ if ($form{note}) {
   # Rebuild the static tinderbox pages
   my %new_form = ();
   $new_form{tree} = $tree;
-  &tb_build_static(\$new_form);
+  &tb_build_static(\%new_form);
 
 } else {
   # Print the form to submit a comment

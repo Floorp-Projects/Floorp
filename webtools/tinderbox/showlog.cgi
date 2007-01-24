@@ -55,6 +55,7 @@ if (defined($args = $form{log}) or defined($args = $form{exerpt})) {
 
   my ($full_logfile, $linenum) = split /:/,  $args;
   ($tree, $logfile) = split /\//, $full_logfile;
+  $tree = &require_only_one_tree($tree);
 
   my $br = tb_find_build_record($tree, $logfile);
   $errorparser = $br->{errorparser};
@@ -64,7 +65,7 @@ if (defined($args = $form{log}) or defined($args = $form{exerpt})) {
   $numlines = 50;
   $numlines = $form{numlines} if exists $form{numlines};
 } else {
-  $tree        = $form{tree};
+  $tree        = &require_only_one_tree($form{tree});
   $errorparser = $form{errorparser};
   $logfile     = $form{logfile};
   $buildname   = $form{buildname};
@@ -74,7 +75,6 @@ $fulltext    = $form{fulltext};
 
 $enc_buildname = url_encode($buildname);
 
-$tree = &require_only_one_tree($tree);
 require "$tree/treedata.pl";
 
 my $time_str = print_time($buildtime);

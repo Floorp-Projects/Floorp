@@ -126,12 +126,18 @@ sub make_tree_list {
     return @::global_tree_list;
 }
 
-sub require_only_one_tree {
-    my ($t) = @_;
+sub validate_tree($) {
+    my ($tree) = (@_);
     my @treelist = &make_tree_list();
-    $t = '' if (!grep {$t eq $_} @treelist);
-    &::show_tree_selector, exit if $t eq '';
-    return $t;
+    $tree = undef if (!grep {$tree eq $_} @treelist);
+    return $tree;
+}
+
+sub require_only_one_tree {
+    my ($tree) = (@_);
+    $tree = &validate_tree($tree);
+    &show_tree_selector, exit if !defined($tree);
+    return $tree;
 }
 
 sub show_tree_selector {

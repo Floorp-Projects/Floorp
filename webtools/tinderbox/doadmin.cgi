@@ -42,6 +42,12 @@ print "Content-type: text/html\n\n<HTML>\n";
 my $command = $form{'command'};
 my $tree= $form{'tree'};
 
+if ($command eq 'create_tree') {
+    ($tree = $form{'treename'}) =~ s/^.*?([\w-\.]+).*$/\1/;
+} else {
+    $tree = &require_only_one_tree($tree);
+}
+
 if( $command eq 'create_tree' ){
     &create_tree;
 }
@@ -141,7 +147,7 @@ sub create_tree {
 
     $treedata{use_bonsai} = $treedata{use_viewvc} = 0;
 
-    my $treename = $form{'treename'};
+    my $treename = $tree;
 
     for my $var ( 'cvs_module', 'cvs_branch', 'bonsai_tree') {
         $treedata{use_bonsai}++ if (defined($treedata{$var}) && 

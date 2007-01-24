@@ -35,6 +35,7 @@ $form{noignore} = 1;            # Force us to load all build info, not
                                 # paying any attention to ignore_builds stuff.
 $::maxdate = time();
 $::mindate = $::maxdate - 24*60*60;
+$form{tree} = &validate_tree($form{tree});
 my $treedata = &tb_load_data(\%form);
 
 my (@names, $i, $checked);
