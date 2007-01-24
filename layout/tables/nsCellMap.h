@@ -567,8 +567,8 @@ public:
     NS_PRECONDITION(mCol < aMap->GetColCount(), "Invalid column");
     mOrigCells = aMap->GetNumCellsOriginatingInCol(mCol);
     if (mCurMap) {
-      mCurMapRowCount = mCurMap->GetRowCount();
-      if (mCurMapRowCount == 0 && mOrigCells > 0) {
+      mCurMapContentRowCount = mCurMap->GetRowCount();
+      if (mCurMapContentRowCount == 0 && mOrigCells > 0) {
         // This row group is useless; advance!
         AdvanceRowGroup();
       }
@@ -601,7 +601,7 @@ private:
   const PRInt32 mCol;
   PRUint32 mOrigCells;
   PRUint32 mFoundCells;
-  PRUint32 mCurMapRowCount;
+  PRUint32 mCurMapContentRowCount;
 };
 
 
