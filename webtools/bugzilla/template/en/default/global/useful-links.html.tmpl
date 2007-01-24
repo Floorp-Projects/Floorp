@@ -51,6 +51,7 @@
         [% END %]
         [% IF user.groups.editcomponents %]
           <li><span class="separator">[% sep %]</span><a href="sanitycheck.cgi">Sanity Check</a></li>
+          [% sep = "| " %]
         [% END %]
         [% IF user.groups.editusers || user.can_bless %]
           <li><span class="separator">[% sep %]</span><a href="editusers.cgi">Users</a></li>
