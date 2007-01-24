@@ -79,7 +79,10 @@
             __proto__: control.inputField,
 
             set readonly(val) {
-              this.control.readonly = val;
+              if (val)
+                this.control.setAttribute("readonly", val);
+              else
+                this.control.removeAttribute("readonly");
             }
           };
         </body>
