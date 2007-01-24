@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Jeff Walden <jwalden+code@mit.edu>          (original author)
+ *   Robert Sayre <sayrer@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIServerSocket.idl"
+#include "nsIPropertyBag.idl"
 
 interface nsILocalFile;
 interface nsISimpleEnumerator;
@@ -145,8 +147,22 @@ interface nsIHttpServer : nsIServerSocketListener
    *   does not begin with and end with a forward slash
    */
   void registerDirectory(in string path, in nsILocalFile dir);
-};
 
+  /**
+   * Sets the handler used to display the contents of a directory if
+   * the directory contains no index page.
+   *
+   * @param handler
+   *   an object which will handle any requests for directories which
+   *   do not contain index pages, or null to reset to the default
+   *   index handler; if while the server is running the handler
+   *   throws an exception while responding to a request, an HTTP 500
+   *   response will be returned.  An nsIFile corresponding to the
+   *   directory is available from the metadata object passed to the
+   *   handler, under the key "directory".
+   */
+  void setIndexHandler(in nsIHttpRequestHandler handler);
+};
 
 /**
  * A representation of a handler for HTTP requests.  The handler is used by
@@ -183,8 +199,8 @@ interface nsIHttpRequestHandler : nsISupports
 /**
  * A representation of the data included in an HTTP request.
  */
-[scriptable, uuid(acbb5ea6-58b3-4750-bcc7-618910ebca9d)]
-interface nsIHttpRequestMetadata : nsISupports
+[scriptable, uuid(3a899b17-b6eb-4333-8ef4-912df454a551)]
+interface nsIHttpRequestMetadata : nsIPropertyBag
 {
   /**
    * The request type for this request (see RFC 2616, section 5.1.1).
@@ -269,7 +285,7 @@ interface nsIHttpRequestMetadata : nsISupports
 /**
  * Represents an HTTP response, as described in RFC 2616, section 6.
  */
-[scriptable, uuid(017f962b-137e-4911-887c-61808e89fa4f)]
+[scriptable, uuid(a2aaaff7-03bd-43b6-b460-94671e288093)]
 interface nsIHttpResponse : nsISupports
 {
   /**
@@ -317,4 +333,12 @@ interface nsIHttpResponse : nsISupports
    * written.
    */
   readonly attribute nsIOutputStream bodyOutputStream;
+
+  /**
+   * Write a string to the response's output stream.
+   *
+   * @note
+   *   This method is only guaranteed to work with ASCII data.
+   */
+  void write(in string data);
 };

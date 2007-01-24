@@ -1,3 +1,5 @@
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -22,6 +24,7 @@
  *   Darin Fisher (v1, netwerk/test/TestServ.js)
  *   Christian Biesinger (v2, netwerk/test/unit/head_http_server.js)
  *   Jeff Walden <jwalden+code@mit.edu> (v3, netwerk/test/httpserver/httpd.js)
+ *   Robert Sayre <sayrer@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -396,6 +399,14 @@ nsHttpServer.prototype =
     this._handler.registerErrorHandler(code, handler);
   },
 
+  //
+  // see nsIHttpServer.setIndexHandler
+  //
+  setIndexHandler: function(handler)
+  {
+    this._handler.setIndexHandler(handler);
+  },
+
   // NSISUPPORTS
 
   //
@@ -538,6 +549,16 @@ function createHandlerFunc(handler)
   return function(metadata, response) { handler.handle(metadata, response); };
 }
 
+/**
+ * The default handler for directories. 
+ */
+function defaultIndexHandler(metadata, response)
+{
+  var file = metadata.getProperty("directory");
+  NS_ASSERT(file);
+
+  throw HTTP_501;  // need directory listings ftw!
+}
 
 /**
  * An object which handles requests for a server, executing default and
@@ -592,6 +613,12 @@ function ServerHandler(srv)
    * @see also ServerHandler.prototype._defaultErrors
    */
   this._overrideErrors = {};
+
+  /**
+   * Init our default handler for directories. The handler used to
+   * serve directories when no index file is present.
+   */
+  this._indexHandler = defaultIndexHandler;
 }
 ServerHandler.prototype =
 {
@@ -711,13 +738,7 @@ ServerHandler.prototype =
     if (path.charAt(0) != "/")
       throw Cr.NS_ERROR_INVALID_ARG;
 
-    // for convenience, handler can be a function if this is run from xpcshell
-    if (typeof(handler) == "function")
-      this._overridePaths[path] = handler;
-    else if (handler)
-      this._overridePaths[path] = createHandlerFunc(handler);
-    else
-      delete this._overridePaths[path];
+    this._handlerToField(handler, this._overridePaths, path);
   },
 
   //
@@ -752,13 +773,41 @@ ServerHandler.prototype =
       dumpn("*** WARNING: registering non-HTTP/1.1 error code " +
             "(" + err + ") handler -- was this intentional?");
 
+    this._handlerToField(handler, this._overrideErrors, err);
+  },
+
+  //
+  // see nsIHttpServer.setIndexHandler
+  //
+  setIndexHandler: function(handler)
+  {
+    if (!handler)
+      handler = defaultIndexHandler;
+    else if (typeof(handler) != "function")
+      handler = createHandlerFunc(handler);
+
+    this._indexHandler = handler;
+  },
+
+  /**
+   * Set or remove a handler in an ojbect with a key.
+   * If handler is null, the key will be deleted.
+   *
+   * @param handler
+   *   A function or an nsIHttpRequestHandler object.
+   * @param dict
+   *   The object to attach the handler to.
+   * @param key
+   *   The field name of the handler.
+   */
+  _handlerToField: function(handler, dict, key) {
     // for convenience, handler can be a function if this is run from xpcshell
     if (typeof(handler) == "function")
-      this._overrideErrors[err] = handler;
+      dict[key] = handler;
     else if (handler)
-      this._overrideErrors[err] = createHandlerFunc(handler);
+      dict[key] = createHandlerFunc(handler);
     else
-      delete this._overrideErrors[err];
+      delete dict[key];
   },
 
   /**
@@ -800,13 +849,17 @@ ServerHandler.prototype =
       // path-to-directory mapping in the requested URL
       var file = this._getFileForPath(path);
 
-      // the "file" might be a directory -- deal
+      // the "file" might be a directory, in which case we either serve the
+      // contained index.html or make the index handler write the response
       if (file.exists() && file.isDirectory())
       {
-        file.append("index.html");  // make configurable?
-        if (!file.exists() ||
-            file.isDirectory())
-          throw HTTP_501;  // need directory listings ftw!
+        file.append("index.html"); // make configurable?
+        if (!file.exists() || file.isDirectory())
+        {
+          metadata._bag.setPropertyAsInterface("directory", file.parent);
+          this._indexHandler(metadata, response);
+          return;
+        }
       }
 
       // alternately, the file might not exist
@@ -1458,6 +1511,15 @@ Response.prototype =
   },
 
   //
+  // see nsIHttpResponse.write
+  //
+  write: function(data)
+  {
+    var dataAsString = String(data);
+    this.bodyOutputStream.write(dataAsString, dataAsString.length);
+  },
+
+  //
   // see nsIHttpResponse.setStatusLine
   //
   setStatusLine: function(httpVersion, code, description)
@@ -2014,6 +2076,13 @@ function RequestMetadata(port)
   this._headers = new nsHttpHeaders();
 
   /**
+   * For the addition of ad-hoc properties and new functionality
+   * without having to tweak nsIHttpRequestMetadata every time.
+   */
+  this._bag = Cc["@mozilla.org/hash-property-bag;1"]
+                .createInstance(Ci.nsIWritablePropertyBag2);
+
+  /**
    * The numeric HTTP error, if any, associated with this request.  This value
    * may be set by the constructor but is usually only set by the handler after
    * this has been constructed.  After this has been initialized, this value
@@ -2099,6 +2168,22 @@ RequestMetadata.prototype =
   get headers()
   {
     return this._headers.enumerator;
+  },
+
+  //
+  // see nsIPropertyBag.enumerator
+  //
+  get enumerator()
+  {
+    return this._bag.enumerator;
+  },
+
+  //
+  // see nsIPropertyBag.getProperty
+  //
+  getProperty: function(name) 
+  {
+    return this._bag.getProperty(name);
   },
 
   // ENTITY
