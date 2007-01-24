@@ -890,14 +890,14 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
     cairo_scaled_font_t *scaledFont = currentFont->CairoScaledFont();
 
     cairo_set_font_face(cr, fontFace);
-    cairo_set_font_size(cr, mGroup->mStyle.size);
+    cairo_set_font_size(cr, currentFont->GetAdjustedSize());
 
     SaveDC(aDC);
 
     cairo_win32_scaled_font_select_font(scaledFont, aDC);
 
     const double cairofontfactor = cairo_win32_scaled_font_get_metrics_factor(scaledFont);
-    const double cairoToPixels = cairofontfactor * mGroup->mStyle.size;
+    const double cairoToPixels = cairofontfactor * currentFont->GetAdjustedSize();
 
     LPWORD glyphs = (LPWORD)malloc(aLength * sizeof(WORD));
     DWORD ret;
