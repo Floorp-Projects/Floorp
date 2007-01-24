@@ -122,9 +122,13 @@ sub peek(*)
 # In each field need to change '\"' to '"' and change all '"' to '""'.  The last field
 # will also have a '"' at the end of the line that needs to be removed.
 #
-sub print_tcdb_fields
+# If TCDB format the Test Case Name may contain a series of 4-6 digits after two underscores
+# which need to be removed.  The TCDB appended the Test Case number to any Test Case created
+# from a existing Test Case.  In Testopia the Test Case numbers have no meaning.
+#
+sub print_fields
 {
-	my ($file_descriptor,$fields_ref,$testcasenamefield) = @_;
+	my ($file_descriptor,$fields_ref,$testcasenamefield,$tcdb_format) = @_;
 
 	my $index = 0;
 	while ( $index < @$fields_ref )
@@ -132,7 +136,7 @@ sub print_tcdb_fields
 		$fields_ref->[$index] =~ s/"$//g if ( $index == ( @$fields_ref -1 ) );
 		$fields_ref->[$index] =~ s/\\"/"/g;
 		$fields_ref->[$index] =~ s/"/""/g;
-		if ( $index == $testcasenamefield )
+		if ( $tcdb_format && ( $index == $testcasenamefield ) )
 		{
 			$fields_ref->[$index] =~ s/__\d\d\d\d\d\d\d//g;
 			$fields_ref->[$index] =~ s/__\d\d\d\d\d\d//g;
@@ -179,19 +183,23 @@ sub remove_field_list
 		chop;
 
 		s/\r//g;
-		s/\342\200\231/&#8217;/g;
-		s/\342\200\230/&#8216;/g;
-		s/\342\200\246/&#133;/g;
+		#
+		# Map extended characters into HTML entities.
+		#
 		s/\342\200\223/-/g;
 		s/\342\200\224/&#8212;/g;
+		s/\342\200\230/&#8216;/g;
+		s/\342\200\231/&#8217;/g;
 		s/\342\200\234/&#8220;/g;
 		s/\342\200\235/&#8221;/g;
+		s/\342\200\246/&#133;/g;
+		s/\302\240/&nbsp;/g;
 		s/\302\251/&copy;/g;
 		s/\031/'/g;
 		s/\221/&8216;/g;					# left single quotation mark
 		s/\222/&8217;/g;					# right single quotation mark
-		s/\223/&8220;/g;                    # left double quotation mark
-		s/\224/&8221;/g;                    # right double quotation mark
+		s/\223/&8220;/g;					# left double quotation mark
+		s/\224/&8221;/g;					# right double quotation mark
 		s/\226/-/g;
 		s/\337/&#223;/g;					# beta
 		s/\341/&#224;/g;					# small letter a with acute accent
@@ -248,7 +256,7 @@ sub remove_field_list
 
 		# The end of the TCDB CSV line will be a double quote at the end of the line.  Keep combining
 		# lines until we have a double quote at the end of the line and try to parse the line.
-		if ( ! ($parse_line =~ /.+"$/) )
+		if ( ! ($parse_line =~ /.+\n*"$/) )
 		{
 			$parse_line .= "\\n";
 			next;
@@ -301,8 +309,8 @@ sub remove_field_list
 					}
 					# Is the next non-white space character a comma followed by a double quote?  If yes then we
 					# have reached the end of the field.
-					if ( ( $comma_index <= $#chars &&  $chars[$comma_index] eq "," ) &&
-					     ( $double_quote_index <= $#chars &&  $chars[$double_quote_index] eq "\"" ) )
+					if ( ( $comma_index <= $#chars && $chars[$comma_index] eq "," ) &&
+					     ( $double_quote_index <= $#chars && $chars[$double_quote_index] eq "\"" ) )
 					{	
 						push (@fields,join("",@field_buffer));
 						@field_buffer = ();
@@ -354,7 +362,7 @@ sub remove_field_list
 		# Do we have all the fields we need?
 		if ( ($#fields == ($number_of_fields-1)) && (! $in_quote_field) && $looks_like_end_of_csv_line )
 		{
-			print_tcdb_fields(\*CSVWORK,\@fields,$testcasenamefield);
+			print_fields(\*CSVWORK,\@fields,$testcasenamefield,$tcdb_format);
 			$parse_line = "";
 			@fields = ();
 		}
@@ -369,7 +377,7 @@ sub remove_field_list
 				# Create the missing field.  Need to insert a double quote since print_fields expects a double
 				# quote at end of last field.
 				push (@fields,"\"");
-				print_tcdb_fields(\*CSVWORK,\@fields,$testcasenamefield);
+				print_fields(\*CSVWORK,\@fields,$testcasenamefield,$tcdb_format);
 				$parse_line = "";
 				@fields = ();
 			}
@@ -447,16 +455,17 @@ my $csv_work_filename = $csv_input_filename . ".work";
 open(XMLOUTPUT, ">", $xml_output_filename) or error("Cannot open file $xml_output_filename");
 my %tcdb_user;
 my $field_list = remove_field_list($csv_input_filename,$csv_work_filename,$tcdb);
-map_TCDB_users(\%tcdb_user);
+map_TCDB_users(\%tcdb_user) if ( $tcdb );
 
 #
-# Process the $field_list variable which comes from the first line of the CSV file.
+# Process the $field_list variable which comes from the first line of the CSV file.  This line
+# defines the columns and column order of the CSV file.
 #
 # Format of the first line should be in the form: 
 #    "Testcase Name","Attributes","Priority","Description","Folder","Creator","Owner",
 #    "Pass/Fail Definition","Setup Steps","Cleanup Steps","Steps"
 # 
-# Fields currently used if they exist are: 
+# Columns currently used if they exist are: 
 #    attributes - split apart at each comma to become a tag.
 #    category - category for test case.
 #    cleanupsteps - added to Break Down section.
@@ -479,21 +488,39 @@ map_TCDB_users(\%tcdb_user);
 #                   is the summary.  if testcasename and description are both null a error is
 #                   generated.  added to Action section if -tcdb flag used.
 #
-# The order of the fields is not important.  The fields supplied to Class::CSV will be in
+# The order of the columns is not important.  The columns supplied to Class::CSV will be in
 # order found on the first line of the CSV file.
 #
-# The field_list returned from remove_field_list() will have:
-#    Changed to lower case.
-#    Remove spaces.
-#    Remove all "s.
-#    Remove all /s.
+# The field_list returned from remove_field_list() will have been:
+#    Transformed to lower case.
+#    All white space characters removed.
+#    All double quotes (") removed.
+#    All forward slashes (/) removed.
 #
 
-# More sources for the CSV's other than TCDB, transform some of the column names.
-$field_list =~ s/author/owner/g;
-$field_list =~ s/result/passfaildefinition/g;
-$field_list =~ s/summary/testcasename/g;
-$field_list =~ s/tags/attributes/g;
+# Column name mapping.  $field_list contains the name of each column in the CSV file.  If your
+# column name is that same as a default column name you can covert the column name in $field_list
+# and no additional code is needed for the field.
+#
+# For example if you have a column named 'author' that is really the 'owner' of the Test Case you
+# just change 'author' to 'owner' in $field_list.
+#
+# Add , to front and end of $field_list to make substitution logic easier.  They are remove when
+# substitutions are finished.
+$field_list = ",$field_list,";
+# author is mapped to owner
+$field_list =~ s/,author,/,owner,/g;
+# result is mapped to passfaildefinition
+$field_list =~ s/,result,/,passfaildefinition,/g;
+# summary is mapped to testcasename
+$field_list =~ s/,summary,/,testcasename,/g;
+# tags is mapped to attributes
+$field_list =~ s/,tags,/,attributes,/g;
+# remove , from beginning of $field_list
+$field_list =~ s/^,//;
+# remove , from end of $field_list
+$field_list =~ s/,$//;
+
 my %fields;
 foreach my $field ( split(/,/,$field_list) )
 {
@@ -534,7 +561,7 @@ foreach my $line (@{$csv->lines()}) {
 	
 	error("No owner for Test Case at line $line_count in $csv_work_filename") if ( ! defined($fields{'owner'}) );
 	my $owner = $line->owner();
-	$owner = $tcdb_user{$line->owner()} if ( $owner =~ /\d+/ );
+	$owner = $tcdb_user{$line->owner()} if ( $tcdb );
 	error("Could not find owner for Test Case at line $line_count in $csv_work_filename") if ( $owner eq "" );
 	
 	print XMLOUTPUT "author=\"" . fix_entities($owner) . "\" ";

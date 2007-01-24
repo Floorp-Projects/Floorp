@@ -158,7 +158,7 @@ found.</b>
   </tr>
 
   <tr>
-  [% IF NOT multiprod %]
+  [% IF NOT multiprod AND NOT addrun %]
     <td align="right"><b>Category<b></td>
     <td>
     [% PROCESS select sel = { name  => 'category',
@@ -208,7 +208,7 @@ found.</b>
 	<div class="links">
 		<span class="label">Export:</span>
 		<a href="tr_list_cases.cgi?[% urlquerypart FILTER remove('&viewall=.') FILTER html %]&amp;ctype=csv&amp;viewall=1"><image src="testopia/img/csv.png" class="image"></a>
-		|
+		<img src="https://secure-www.novell.com/img/link_divbar.gif" width="1" height="20" alt="line" class="bar">
 		<a href="tr_list_cases.cgi?[% urlquerypart FILTER remove('&viewall=.') FILTER html %]&amp;ctype=xml&amp;viewall=1"><image src="testopia/img/xml.png" class="image"></a>
 	</div>
 </div>

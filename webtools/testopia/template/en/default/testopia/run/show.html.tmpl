@@ -176,7 +176,7 @@
 
 [% table.list_count FILTER none %] test cases found.
 <br/>
-<form action="tr_list_cases.cgi" method="GET">
+<form action="tr_list_cases.cgi" method="POST">
   <input type="hidden" name="exclude" value="[% run.case_id_list FILTER none %]" />
   <input type="hidden" name="current_tab" value="case" />
   <input type="hidden" name="addrun" value="[% run.id FILTER none %]" />

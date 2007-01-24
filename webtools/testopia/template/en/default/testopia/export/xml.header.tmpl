@@ -21,5 +21,8 @@
 [%# Testopia XML export header template #%]
 
 <?xml version="1.0" [% IF Param('utf8') %]encoding="UTF-8" [% END %]standalone="yes" ?>
-<!DOCTYPE testopia SYSTEM "testopia.dtd">
+<!DOCTYPE testopia SYSTEM "testopia.dtd" [
+<!ENTITY testopia_lt "<">
+<!ENTITY testopia_gt ">">
+]>
 <testopia version="1.1">

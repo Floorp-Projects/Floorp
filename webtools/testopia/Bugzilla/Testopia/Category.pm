@@ -160,8 +160,8 @@ sub remove {
 
 =head2 check_name
 
-Returns true if a category of the specified name exists in the 
-database for a product.
+Returns the category id if the specified name exists in the 
+database for the product.
 
 =cut
 
@@ -170,7 +170,7 @@ sub check_name {
     my ($name) = @_;
     my $dbh = Bugzilla->dbh;
     my $is = $dbh->selectrow_array(
-        "SELECT 1 FROM test_case_categories 
+        "SELECT category_id FROM test_case_categories 
          WHERE name = ? AND product_id = ?",
          undef, $name, $self->{'product_id'});
  

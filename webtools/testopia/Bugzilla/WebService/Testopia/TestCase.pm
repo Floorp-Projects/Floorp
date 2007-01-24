@@ -94,16 +94,29 @@ sub create
 {
 	my $self =shift;
 	my ($new_values) = @_;
+	
+	if (not defined $$new_values{plan_id})
+	{
+	    die "Plan ID Number (plan_id) Required When Creating A TestCase"
+	}
+
+    # Plan id linked to new test case after store method is called
+	my $plan_id = $$new_values{plan_id};
+
+    # Remove plan id from new_values hash	
+	delete $$new_values{plan_id};
 
     $self->login;
 
 	my $test_case = new Bugzilla::Testopia::TestCase($new_values);
 	
+	# Result is test plan id
 	my $result = $test_case->store();
+
+	$test_case->link_plan($plan_id, $result);
 	
 	$self->logout;
 
-	# Result is new test plan id
 	return $result
 }
 
@@ -121,7 +134,7 @@ sub update
     	$self->logout;
         die "Testcase, " . $test_case_id . ", not found"; 
 	}
-	
+
 	if (not $test_case->canedit)
 	{
 	    $self->logout;
@@ -312,6 +325,110 @@ sub get_components
 	return $result;
 }
 
+sub add_tag
+{
+	my $self =shift;
+	my ($test_case_id, $tag_name) = @_;
+
+    $self->login;
+
+	my $test_case = new Bugzilla::Testopia::TestCase($test_case_id);
+
+	if (not defined $test_case)
+	{
+    	$self->logout;
+        die "Testcase, " . $test_case_id . ", not found"; 
+	}
+	
+	if (not $test_case->canedit)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
+	
+	#Create new tag or retrieve id of existing tag
+	my $test_tag = new Bugzilla::Testopia::TestTag({tag_name=>$tag_name});
+	my $tag_id = $test_tag->store;
+
+    my $result = $test_case->add_tag($tag_id);
+    
+    if ($result == 1)
+    {
+        $self->logout;
+        die "Tag, " . $tag_name . ", already exists for Testcase, " . $test_case_id;
+    }
+
+	$self->logout;
+	
+	# Result 0 on success, otherwise an exception will be thrown
+	return $result;
+}
+
+sub remove_tag
+{
+	my $self =shift;
+	my ($test_case_id, $tag_name) = @_;
+
+    $self->login;
+
+	my $test_case = new Bugzilla::Testopia::TestCase($test_case_id);
+
+	if (not defined $test_case)
+	{
+    	$self->logout;
+        die "Testcase, " . $test_case_id . ", not found"; 
+	}
+	
+	if (not $test_case->canedit)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
+
+    my $test_tag = Bugzilla::Testopia::TestTag->check_name($tag_name);
+    if (not defined $test_tag)
+    {
+        $self->logout;
+        die "Tag, " . $tag_name . ", does not exist";
+    }
+    
+    my $result = $test_case->remove_tag($test_tag->id);
+
+	$self->logout;
+	
+	# Result 0 on success, otherwise an exception will be thrown
+	return 0;
+}
+
+sub get_tags
+{
+	my $self =shift;
+	my ($test_case_id) = @_;
+
+    $self->login;
+
+	my $test_case = new Bugzilla::Testopia::TestCase($test_case_id);
+
+	if (not defined $test_case)
+	{
+    	$self->logout;
+        die "Testcase, " . $test_case_id . ", not found"; 
+	}
+	
+	if (not $test_case->canview)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
+
+    my $result = $test_case->tags;
+
+	$self->logout;
+	
+	# Result list of tags otherwise an exception will be thrown
+	return $result;
+}
+
 sub lookup_status_id_by_name
 {
 	my $self =shift;
@@ -422,5 +539,74 @@ sub lookup_priority_name_by_id
 	# Result is test case priority name for the given test case priority id
 	return $result;
 }
+
+sub link_plan
+{
+	my $self =shift;
+	my ($test_case_id, $test_plan_id) = @_;
+
+    $self->login;
+
+	my $test_case = new Bugzilla::Testopia::TestCase($test_case_id);
+
+	if (not defined $test_case)
+	{
+    	$self->logout;
+        die "Testcase, " . $test_case_id . ", not found"; 
+	}
+	
+	if (not $test_case->canedit)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
+
+    $test_case->link_plan($test_plan_id);
+    
+    my $result = $test_case->plans;
+
+	$self->logout;
+	
+	# Result is list of plans for test case on success, otherwise an exception will be thrown
+	return $result;
+}
+
+sub unlink_plan
+{
+	my $self =shift;
+	my ($test_case_id, $test_plan_id) = @_;
+
+    $self->login;
+
+	my $test_case = new Bugzilla::Testopia::TestCase($test_case_id);
+
+	if (not defined $test_case)
+	{
+    	$self->logout;
+        die "Testcase, " . $test_case_id . ", not found"; 
+	}
+	
+	if (not $test_case->canedit)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
+
+    my $rtn_code = $test_case->unlink_plan($test_plan_id);
+    
+    if ($rtn_code == 0)
+    {
+	    $self->logout;
+        die "User Can Not Unlink Plan, " . $test_plan_id;
+    }
+    
+    my $result = $test_case->plans;
+
+	$self->logout;
+	
+	# Result is list of plans for test case on success, otherwise an exception will be thrown
+	return $result;
+}
+
 
 1;

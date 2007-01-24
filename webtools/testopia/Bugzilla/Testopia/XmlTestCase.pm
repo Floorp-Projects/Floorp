@@ -316,18 +316,9 @@ sub store()
 	# exist it will be created.
 	foreach my $testplan (@testplan)
 	{
-		my $categoryid = -1;
-		
-		push my @categories, @{$testplan->product->categories};
-    	foreach my $category (@categories)
-    	{
-    		if ( $category->name eq $self->category )
-			{
-				$categoryid = $category->id;
-				last;
-			}
-    	}
-    	if ( $categoryid == -1 )
+		my $category = $testplan->product->categories->[0];
+		my $categoryid = $category->check_name($self->category) if ( defined($category) );
+    	if ( ! defined($categoryid) )
     	{
     		my $new_category = Bugzilla::Testopia::Category->new({
     			product_id  => $testplan->product_id,

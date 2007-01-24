@@ -353,6 +353,9 @@ sub UpdateDB {
     $dbh->bz_alter_column('test_runs', 'run_id', {TYPE => 'INTSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_runs', 'start_date', {TYPE => 'DATETIME', NOTNULL => 1});
 
+    $dbh->bz_drop_index('test_case_components', 'case_commponents_component_id_idx');
+    $dbh->bz_drop_index('test_case_components', 'case_components_case_id_idx');
+    $dbh->bz_drop_index('test_case_components', 'case_components_component_id_idx');
     $dbh->bz_drop_index('test_case_run_status', 'AI_case_run_status_id');
     $dbh->bz_drop_index('test_case_run_status', 'sortkey');
     $dbh->bz_drop_index('test_cases', 'AI_case_id');
@@ -369,9 +372,11 @@ sub UpdateDB {
     $dbh->bz_add_index('test_builds', 'build_name_idx', ['name']);
     $dbh->bz_add_index('test_builds', 'build_product_id_name_idx', {FIELDS => [qw(product_id name)], TYPE => 'UNIQUE'});
     $dbh->bz_add_index('test_case_categories', 'category_product_id_name_idx', {FIELDS => [qw(product_id name)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_case_components', 'components_case_id_idx', {FIELDS => [qw(case_id component_id)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_case_components', 'components_component_id_idx', ['component_id']);
     $dbh->bz_add_index('test_case_runs', 'case_run_build_env_idx', {FIELDS => [qw(run_id case_id build_id environment_id)], TYPE => 'UNIQUE'});
-    $dbh->bz_add_index('test_case_tags', 'case_tags_user_idx', [qw(tag_id userid)]);
     $dbh->bz_add_index('test_cases', 'test_case_requirement_idx', ['requirement']);
+    $dbh->bz_add_index('test_case_tags', 'case_tags_user_idx', [qw(tag_id userid)]);
     $dbh->bz_add_index('test_runs', 'test_run_plan_id_run_id_idx', [qw(plan_id run_id)]);
     $dbh->bz_add_index('test_runs', 'test_runs_summary_idx', {FIELDS => ['summary'], TYPE => 'FULLTEXT'});
 

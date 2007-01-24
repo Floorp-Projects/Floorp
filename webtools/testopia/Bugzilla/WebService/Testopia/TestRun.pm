@@ -265,4 +265,108 @@ sub lookup_environment_name_by_id
 	return $result;
 }
 
+sub add_tag
+{
+	my $self =shift;
+	my ($test_run_id, $tag_name) = @_;
+
+    $self->login;
+
+	my $test_run = new Bugzilla::Testopia::TestRun($test_run_id);
+
+	if (not defined $test_run)
+	{
+    	$self->logout;
+        die "Testrun, " . $test_run_id . ", not found"; 
+	}
+	
+	if (not $test_run->canedit)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
+	
+	#Create new tag or retrieve id of existing tag
+	my $test_tag = new Bugzilla::Testopia::TestTag({tag_name=>$tag_name});
+	my $tag_id = $test_tag->store;
+
+    my $result = $test_run->add_tag($tag_id);
+    
+    if ($result == 1)
+    {
+        $self->logout;
+        die "Tag, " . $tag_name . ", already exists for Testrun, " . $test_run_id;
+    }
+
+	$self->logout;
+	
+	# Result 0 on success, otherwise an exception will be thrown
+	return $result;
+}
+
+sub remove_tag
+{
+	my $self =shift;
+	my ($test_run_id, $tag_name) = @_;
+
+    $self->login;
+
+	my $test_run = new Bugzilla::Testopia::TestRun($test_run_id);
+
+	if (not defined $test_run)
+	{
+    	$self->logout;
+        die "Testrun, " . $test_run_id . ", not found"; 
+	}
+	
+	if (not $test_run->canedit)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
+
+    my $test_tag = Bugzilla::Testopia::TestTag->check_name($tag_name);
+    if (not defined $test_tag)
+    {
+        $self->logout;
+        die "Tag, " . $tag_name . ", does not exist";
+    }
+    
+    my $result = $test_run->remove_tag($test_tag->id);
+
+	$self->logout;
+	
+	# Result 0 on success, otherwise an exception will be thrown
+	return 0;
+}
+
+sub get_tags
+{
+	my $self =shift;
+	my ($test_run_id) = @_;
+
+    $self->login;
+
+	my $test_run = new Bugzilla::Testopia::TestRun($test_run_id);
+
+	if (not defined $test_run)
+	{
+    	$self->logout;
+        die "Testrun, " . $test_run_id . ", not found"; 
+	}
+	
+	if (not $test_run->canview)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
+
+    my $result = $test_run->tags;
+
+	$self->logout;
+	
+	# Result list of tags otherwise an exception will be thrown
+	return $result;
+}
+
 1;

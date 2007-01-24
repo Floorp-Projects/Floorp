@@ -24,7 +24,7 @@
 
 	<testcase author="[% case.author.email FILTER xml %]" priority="[% case.priority FILTER xml %]" automated="[% case.isautomated ? "Automatic" : "Manual" FILTER xml %]" status="[% case.status FILTER xml %]">
 [% IF case.text.action %]
-		<action>[% case.text.action FILTER xml %]</action>
+		<action>[% case.text.action FILTER replace('<','&testopia_lt;') FILTER replace('>','&testopia_gt;') %]</action>
 [% END %]
 [% IF case.alias %]
 		<alias>[% case.alias FILTER xml %]</alias>
@@ -32,21 +32,17 @@
 [% IF case.arguments %]
 		<arguments>[% case.arguments FILTER xml %]</arguments>
 [% END %]
-[% IF case.blocked %]
-	[% FOREACH blocked_test_case = case.blocked %]
+[% FOREACH blocked_test_case = case.blocked %]
 		<blocks type="Xml_description">[% blocked_test_case.summary FILTER xml %]</blocks>
-	[% END %]
 [% END %]
 [% IF case.text.breakdown %]
-		<breakdown>[% case.text.breakdown FILTER xml %]</breakdown>
+		<breakdown>[% case.text.breakdown FILTER replace('<','&testopia_lt;') FILTER replace('>','&testopia_gt;') %]</breakdown>
 [% END %]
 [% IF case.category.name %]
 		<categoryname>[% case.category.name FILTER xml %]</categoryname>
 [% END %]
-[% IF case.components %]
-	[% FOREACH component = case.components %]
+[% FOREACH component = case.components %]
 		<component product="[% component.product_name %]">[% component.name FILTER xml %]</component>
-	[% END %]
 [% END %]
 [% IF case.default_tester.email %]
 		<defaulttester>[% case.default_tester.email FILTER xml %]</defaulttester>
@@ -57,7 +53,7 @@
 	[% END %]
 [% END %]
 [% IF case.text.effect %]
-		<expectedresults>[% case.text.effect FILTER xml %]</expectedresults>
+		<expectedresults>[% case.text.effect FILTER replace('<','&testopia_lt;') FILTER replace('>','&testopia_gt;') %]</expectedresults>
 [% END %]
 [% IF case.requirement %]
 		<requirement>[% case.requirement FILTER xml %]</requirement>
@@ -66,20 +62,16 @@
 		<script>[% case.script FILTER xml %]</script>
 [% END %]
 [% IF case.text.setup %]
-		<setup>[% case.text.setup FILTER xml %]</setup>
+		<setup>[% case.text.setup FILTER replace('<','&testopia_lt;') FILTER replace('>','&testopia_gt;') %]</setup>
 [% END %]
 [% IF case.summary %]
 		<summary>[% case.summary FILTER xml %]</summary>
 [% END %]
-[% IF case.tags %]
-	[% FOREACH tag = case.tags %]
+[% FOREACH tag = case.tags %]
 		<tag>[% tag.name FILTER xml %]</tag>
-	[% END %]
 [% END %]
-[% IF case.plans %]
-	[% FOREACH test_plan = case.plans %]
+[% FOREACH test_plan = case.plans %]
 		<testplan_reference type="Xml_description">[% test_plan.name FILTER xml %]</testplan_reference>
-	[% END %]
 [% END %]
 	</testcase>
 	

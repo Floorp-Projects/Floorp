@@ -246,6 +246,11 @@ sub parse()
 		my $category_name = entity_replace_xml($twig_category->field('name'),STRIP_BOTH);
 		my $product_name = entity_replace_xml($twig_category->att('product'),STRIP_BOTH);
 		my $description = entity_replace_xml($twig_category->field('description'),STRIP_BOTH);
+		if ( $category_name eq "" )
+		{
+			$self->error("Category name cannot be empty, product='" . $product_name . "', description='" . $description . "'.");
+			next;
+		}
 		
 		$description = "FIX ME.  Created during category import with no description supplied." if ( $description eq "" );
 		
@@ -466,7 +471,15 @@ sub parse()
     	# Keep track of this testcase's category.  To create a category at this time would require
     	# getting the product from the Test Plan that this Test Case is associated with.  The category
     	# will created when each Test Case is stored.
-     	$xml_testcase->category(entity_replace_xml($twig_testcase->field('categoryname'),STRIP_BOTH));
+    	my $categoryname = entity_replace_xml($twig_testcase->field('categoryname'),STRIP_BOTH);
+    	if ( $categoryname ne "" )
+    	{
+     		$xml_testcase->category($categoryname);
+    	}
+    	else
+    	{
+    		$self->error("Empty category name for test case '" . $summary . "'.");
+    	}
  
  		my @attachments = $twig_testcase->children('attachment');
 		foreach my $twig_attachments (@attachments)

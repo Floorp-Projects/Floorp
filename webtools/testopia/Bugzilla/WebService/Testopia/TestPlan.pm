@@ -228,6 +228,35 @@ sub get_categories
 	return $result;
 }
 
+sub get_components
+{
+	my $self =shift;
+    my ($test_plan_id) = @_;
+
+    $self->login;
+
+    my $test_plan = new Bugzilla::Testopia::TestPlan($test_plan_id);
+
+	if (not defined $test_plan)
+	{
+    	$self->logout;
+        die "Testplan, " . $test_plan_id . ", not found"; 
+	}
+	
+	if (not $test_plan->canview)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
+    
+    my $result = $test_plan->product->components;
+
+	$self->logout;
+	
+	# Result is list of components for the given test plan
+	return $result;
+}
+
 sub get_builds
 {
 	my $self =shift;
@@ -293,6 +322,110 @@ sub lookup_type_id_by_name
     };
 	
 	# Result is test plan type id for the given test plan type name
+	return $result;
+}
+
+sub add_tag
+{
+	my $self =shift;
+	my ($test_plan_id, $tag_name) = @_;
+
+    $self->login;
+
+	my $test_plan = new Bugzilla::Testopia::TestPlan($test_plan_id);
+
+	if (not defined $test_plan)
+	{
+    	$self->logout;
+        die "Testplan, " . $test_plan_id . ", not found"; 
+	}
+	
+	if (not $test_plan->canedit)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
+	
+	#Create new tag or retrieve id of existing tag
+	my $test_tag = new Bugzilla::Testopia::TestTag({tag_name=>$tag_name});
+	my $tag_id = $test_tag->store;
+
+    my $result = $test_plan->add_tag($tag_id);
+    
+    if ($result == 1)
+    {
+        $self->logout;
+        die "Tag, " . $tag_name . ", already exists for Testplan, " . $test_plan_id;
+    }
+
+	$self->logout;
+	
+	# Result 0 on success, otherwise an exception will be thrown
+	return $result;
+}
+
+sub remove_tag
+{
+	my $self =shift;
+	my ($test_plan_id, $tag_name) = @_;
+
+    $self->login;
+
+	my $test_plan = new Bugzilla::Testopia::TestPlan($test_plan_id);
+
+	if (not defined $test_plan)
+	{
+    	$self->logout;
+        die "Testplan, " . $test_plan_id . ", not found"; 
+	}
+	
+	if (not $test_plan->canedit)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
+
+    my $test_tag = Bugzilla::Testopia::TestTag->check_name($tag_name);
+    if (not defined $test_tag)
+    {
+        $self->logout;
+        die "Tag, " . $tag_name . ", does not exist";
+    }
+    
+    my $result = $test_plan->remove_tag($test_tag->id);
+
+	$self->logout;
+	
+	# Result 0 on success, otherwise an exception will be thrown
+	return 0;
+}
+
+sub get_tags
+{
+	my $self =shift;
+	my ($test_plan_id) = @_;
+
+    $self->login;
+
+	my $test_plan = new Bugzilla::Testopia::TestPlan($test_plan_id);
+
+	if (not defined $test_plan)
+	{
+    	$self->logout;
+        die "Testplan, " . $test_plan_id . ", not found"; 
+	}
+	
+	if (not $test_plan->canview)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
+
+    my $result = $test_plan->tags;
+
+	$self->logout;
+	
+	# Result list of tags otherwise an exception will be thrown
 	return $result;
 }
 
