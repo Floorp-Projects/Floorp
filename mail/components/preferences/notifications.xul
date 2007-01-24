@@ -52,9 +52,7 @@
             dlgbuttons="accept,cancel"
             title="&notificationsDialog2.title;">
 
-  <prefpane id="NotificationsDialogPane" onpaneload="gNotificationsDialog.init();">
-    <script type="application/x-javascript" src="chrome://messenger/content/preferences/notifications.js"/>
-
+  <prefpane id="NotificationsDialogPane">
     <preferences>
       <preference id="mail.biff.alert.show_preview" name="mail.biff.alert.show_preview" type="bool"/>
       <preference id="mail.biff.alert.show_subject" name="mail.biff.alert.show_subject" type="bool"/>
