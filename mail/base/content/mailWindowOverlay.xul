@@ -2185,25 +2185,22 @@
     <hbox id="phishingBar" class="msgNotificationBar" align="center">
       <image id="phishingBarImage"/>
       <description flex="1" class="msgNotificationBarText">&phishingBarMessage.label;</description>
-      <spacer flex="1"/>
       <button label="&removePhishingBarButton.label;" oncommand="MsgIsNotAScam();"/>
     </hbox>
 
     <hbox id="junkBar" class="msgNotificationBar" align="center">
       <image id="junkBarImage"/>
       <description flex="1" class="msgNotificationBarText">&junkBarMessage.label;</description>
-      <spacer flex="1"/>
       <button label="&junkBarButton.label;" oncommand="JunkSelectedMessages(false);"/>
     </hbox>
 
     <hbox id="remoteContentBar" class="msgNotificationBar" align="center">
       <image id="remoteContentImage"/>
       <vbox flex="1">
-        <description flex="1" class="msgNotificationBarText">&remoteContentMessage.label;</description>
-        <label id="allowRemoteContentForAuthorDesc" class="text-link" flex="1"
+        <description class="msgNotificationBarText">&remoteContentMessage.label;</description>
+        <label id="allowRemoteContentForAuthorDesc" class="text-link"
                onclick="allowRemoteContentForSender();"/>
       </vbox>
-      <spacer flex="1"/>
       <button label="&loadRemoteContentButton1.label;" oncommand="loadMsgWithRemoteContent();"/>
     </hbox>
   </deck>

@@ -2219,7 +2219,7 @@ var gMessageNotificationBar =
     // update the allow remote content for sender string
     var headerParser = Components.classes["@mozilla.org/messenger/headerparser;1"].getService(Components.interfaces.nsIMsgHeaderParser);
     var emailAddress = headerParser.extractHeaderAddressMailboxes(null, aMsgHdr.author);
-    document.getElementById('allowRemoteContentForAuthorDesc').value = 
+    document.getElementById('allowRemoteContentForAuthorDesc').textContent  = 
       gMessengerBundle.getFormattedString('alwaysLoadRemoteContentForSender', [emailAddress ? emailAddress : aMsgHdr.author]);
     this.updateMsgNotificationBar(kMsgNotificationRemoteImages, true);
   },
