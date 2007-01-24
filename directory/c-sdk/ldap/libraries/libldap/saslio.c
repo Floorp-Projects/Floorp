@@ -125,8 +125,11 @@ nsldapi_sasl_pktlen( char *buf, int maxbufsize )
 {
         int     size;
 
+#if defined( _WINDOWS ) || defined( _WIN32 )
+        size = ntohl(*(u_long *)buf);
+#else
         size = ntohl(*(uint32_t *)buf);
-
+#endif
         if ( size < 0 || size > maxbufsize ) {
                 return (-1 );
         }

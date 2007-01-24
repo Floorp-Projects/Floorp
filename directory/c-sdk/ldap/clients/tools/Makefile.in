@@ -97,6 +97,9 @@ LDAPPASSWD_OBJ		= $(addprefix $(OBJDEST)/, ldappasswd.obj)
 LDAPTOOLCOMMON_OBJ	= $(addprefix $(OBJDEST)/, common.obj) \
 			  $(addprefix $(OBJDEST)/, convutf8.obj) \
 			  $(addprefix $(OBJDEST)/, fileurl.obj) 
+ifeq ($(HAVE_SASL), 1)
+LDAPTOOLCOMMON_OBJ      += $(addprefix $(OBJDEST)/, ldaptool-sasl.obj)
+endif
 ifeq ($(LDAP_TOOL_ARGPIN),1)
 LDAPTOOLCOMMON_OBJ	+= $(addprefix $(OBJDEST)/, argpin.obj) \
 			   $(addprefix $(OBJDEST)/, ntuserpin.obj)
@@ -173,9 +176,7 @@ EXTRA_LIBS += $(LDAPTOOLS_NSS_LINK) $(NSPRLINK)
 endif
 
 ifeq ($(HAVE_SASL), 1)
-ifneq ($(OS_ARCH), WINNT)
 EXTRA_LIBS += $(SASL_LINK)
-endif
 endif
 
 # set platform specific libs

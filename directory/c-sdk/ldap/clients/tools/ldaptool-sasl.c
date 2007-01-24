@@ -63,6 +63,22 @@ typedef struct {
 static int get_default(ldaptoolSASLdefaults *defaults, sasl_interact_t *interact, unsigned flags);
 static int get_new_value(sasl_interact_t *interact, unsigned flags);
 
+/* WIN32 does not have getlogin() so roll our own */
+#if defined( _WINDOWS ) || defined( _WIN32 )
+#include "LMCons.h"
+static char *getlogin()
+{
+	LPTSTR lpszSystemInfo; /* pointer to system information string */
+	DWORD cchBuff = UNLEN;   /* size of user name */
+	static TCHAR tchBuffer[UNLEN + 1]; /* buffer for expanded string */
+
+	lpszSystemInfo = tchBuffer;
+	GetUserName(lpszSystemInfo, &cchBuff);
+
+	return lpszSystemInfo;
+}
+#endif /* _WINDOWS || _WIN32 */
+
 /*
   Note that it is important to use "" (the empty string, length 0) as the default
   username value for non-interactive cases.  This allows the sasl library to find the best

@@ -82,6 +82,19 @@ AC_ARG_WITH(sasl-lib,
     AC_MSG_RESULT(no))
 
 # check for sasl
+if test -n "$_WIN32_MSVC" -a -n "$USE_WINDOWS_PATHS" ; then
+    if test -n "$SASL_CFLAGS" -a -z "$SKIP_CYGWIN_FIXUP" ; then
+        path=`echo $SASL_CFLAGS | sed -e 's/^-I//'`
+        path=`cygpath -m $path`
+        SASL_CFLAGS="/I$path"
+	fi
+    if test -n "$SASL_LIBS" -a -z "$SKIP_CYGWIN_FIXUP" ; then
+        path=`echo $SASL_LIBS | sed -e 's/^-L//'`
+        path=`cygpath -m $path`
+        SASL_LIBS="/LIBPATH:$path"
+    fi
+	special_sasl_check_lib=1
+fi
 # set ldflags to point to where the user told us to find the sasl libs,
 # if any - otherwise it will just use the default location (e.g. /usr/lib)
 # the way AC_CHECK_LIB works is it actually attempts to compile and link
@@ -94,8 +107,30 @@ fi
 AC_CHECK_FUNC(getaddrinfo,,[
 	AC_CHECK_LIB(socket, getaddrinfo, [LIBS="-lsocket -lnsl $LIBS"])])
 
-AC_CHECK_LIB([sasl2], [sasl_client_init], [sasl_lib=-lsasl2],
-             AC_CHECK_LIB([sasl], [sasl_client_init], [sasl_lib=-lsasl]))
+if test -n "$special_sasl_check_lib" ; then
+    # use this to override the ac_link LIBS used by AC_CHECK_LIB
+    # ac_link puts conftest.c betwen $LDFLAGS and $LIBS, but we
+	# have to use /LIBPATH which must come after the /link directive
+	# however, anything after /link on the command line is assumed to
+	# be a linker directive, and conftest.c is not valid there
+	# we want to end up with cl.exe .... conftest.c /link /LIBPATH:foo libsasl.lib
+	LDFLAGS=
+	SAVE_LIBS="$LIBS"
+	LIBS="/link $SASL_LIBS sasl32.lib"
+	AC_CHECK_LIB([sasl32], [sasl_client_init], [sasl_lib=sasl32.lib])
+	if test -z "$sasl_lib" ; then
+		LIBS="/link $SASL_LIBS libsasl2.lib"
+		AC_CHECK_LIB([sasl2], [sasl_client_init], [sasl_lib=libsasl2.lib])
+	fi
+	if test -z "$sasl_lib" ; then
+		LIBS="/link $SASL_LIBS libsasl.lib"
+		AC_CHECK_LIB([sasl], [sasl_client_init], [sasl_lib=libsasl.lib])
+	fi
+	LIBS="$SAVE_LIBS"
+else
+	AC_CHECK_LIB([sasl2], [sasl_client_init], [sasl_lib=-lsasl2],
+    	         AC_CHECK_LIB([sasl], [sasl_client_init], [sasl_lib=-lsasl]))
+fi
 
 SASL_LIBS="$SASL_LIBS $sasl_lib"
 LDFLAGS=$SAVE_LDFLAGS
