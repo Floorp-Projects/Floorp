@@ -256,7 +256,7 @@
 <h3>Reports</h3>
 <a href="tr_plan_reports.cgi?plan_id=[% plan.id FILTER none %]&type=build_coverage">Build Coverage</a><br/>
 <a href="tr_query.cgi?current_tab=plan&report=1">General Reports</a><br/>
-<a href="tr_show_plan.cgi?plan_id=[% plan.id FILTER none %]&ctype=print" target="_blank">Printable Percentage Report</a>
+<a href="tr_show_plan.cgi?plan_id=[% plan.id FILTER none %]&ctype=print" target="_blank">Printable Percentage Report</a><br/>
 [% IF plan.bugs %]
 <a href="tr_plan_reports.cgi?plan_id=[% plan.id FILTER none %]&type=bugcounts">Top Bugs</a><br>
 <a href="buglist.cgi?bug_id=[% plan.bug_list FILTER none %]">Bugs Found in this Plan</a><br>

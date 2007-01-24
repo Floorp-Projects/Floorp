@@ -118,7 +118,7 @@
   </TR>
   <tr>
   [% FOREACH status = plan.test_runs.0.caseruns.0.get_status_list %]
-    <TD class="print_table_data">[% percentage(plan.case_run_count,plan.test_case_run_count(status.id)) %]%</TD>
+    <TD class="print_table_data">[% percentage(plan.test_case_run_count,plan.test_case_run_count(status.id)) %]%</TD>
   [% END %]
   </tr>
 </table>
