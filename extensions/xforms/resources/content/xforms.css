@@ -247,6 +247,19 @@ html|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#double"] h
   -moz-binding: url('chrome://xforms/content/widgets-xhtml.xml#slider');
 }
 
+/* numberbox widgets */
+
+xul|textbox[type="number"] {
+  -moz-binding: url('chrome://xforms/content/widgets-xul.xml#numberbox');
+  display: -moz-box;
+}
+
+/* spinbuttons widgets */
+
+xul|spinbuttons {
+  -moz-binding: url('chrome://xforms/content/widgets-xul.xml#spinbuttons');
+}
+
 /* input widgets */
 
   /* input */
