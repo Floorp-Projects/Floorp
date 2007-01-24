@@ -1379,11 +1379,16 @@ static BookmarkManager* gBookmarkManager = nil;
 
 - (void)showRestoredBookmarksAlert
 {
-  NSRunAlertPanel(NSLocalizedString(@"RestoredBookmarksAlert", nil),
-                  NSLocalizedString(@"RestoredBookmarksMsg", nil),
-                  NSLocalizedString(@"OKButtonText", nil),
-                  nil,
-                  nil);
+  if (NSRunAlertPanel(NSLocalizedString(@"RestoredBookmarksAlert", nil),
+                      NSLocalizedString(@"RestoredBookmarksMsg", nil),
+                      NSLocalizedString(@"RestoredBookmarksInfoButton", nil),
+                      NSLocalizedString(@"CancelButtonText", nil),
+                      nil) == NSAlertDefaultReturn)
+  {
+    [[NSApp delegate] openNewWindowOrTabWithURL:NSLocalizedStringFromTable(@"CorruptedBookmarksDefault", @"WebsiteDefaults", nil)
+                                    andReferrer:nil
+                                  alwaysInFront:YES];
+  }
 }
 
 - (BOOL)readPListBookmarks:(NSString *)pathToFile
