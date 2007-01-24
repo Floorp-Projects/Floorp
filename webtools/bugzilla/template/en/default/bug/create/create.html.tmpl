@@ -412,7 +412,9 @@ function handleWantsAttachment(wants_attachment) {
 
 
         [% END %]
-        [% comment FILTER html %]
+        [%-# We are within a BLOCK. The comment will be correctly HTML-escaped
+          # by global/textarea.html.tmpl. So we must not escape the comment here. %]
+        [% comment FILTER none %]
       [%- END %]
       [% INCLUDE global/textarea.html.tmpl
          name           = 'comment'
