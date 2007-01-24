@@ -204,7 +204,39 @@ Requires Ant version 1.2 or later
     <delete quiet="true" file="${dist.file}"/>
     <delete quiet="true" file="${dist.source-only-zip}"/>
   </target>
-
+  
+  <!--
+	The next two targets run the JavaScript Test Library tests.  Note that these tests are quite extensive and take a long time
+	to run.  They are not documented in the 'help' target for now.
+  -->
+  
+  <!--
+	Run the tests using JUnit.  Beware that if you are using Ant from the command-line, there are some difficulties you may
+	encounter setting this up correctly; see http://ant.apache.org/faq.html#delegating-classloader
+	
+	IDEs that use Ant as the build system probably handle this fine.
+  -->
+  <target name="junit-all" depends="compile">
+    <ant antfile="testsrc/build.xml" target="junit"/>
+  </target>
+  
+  <!--
+	Run the tests using the Java port of jsdriver.pl.  Note that running this port from the command-line
+	may be superior, as it allows configuration options, such as running with a non-default optimization level or running only
+	a subset of the tests.
+  -->
+  <target name="jsdriver-all" depends="compile">
+	  <ant antfile="testsrc/build.xml" target="jsdriver" />
+  </target>
+  
+  <!--
+	Target just for development of the test code.
+  -->
+  <target name="_test-recompile" depends="compile">
+	  <ant antfile="testsrc/build.xml" target="clean" />
+	  <ant antfile="testsrc/build.xml" target="compile" />
+  </target>
+  
   <target name="help" depends="properties">
 <echo>The following targets are available with this build file:
 

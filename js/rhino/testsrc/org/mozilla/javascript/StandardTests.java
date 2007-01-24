@@ -19,6 +19,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Attila Szegedi
+ * David P. Caldwell <inonit@inonit.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * the GNU General Public License Version 2 or later (the "GPL"), in which
@@ -60,22 +62,28 @@ import org.mozilla.javascript.tools.shell.ShellContextFactory;
  * Executes the tests in the js/tests directory, much like jsDriver.pl does.
  * Excludes tests found in the js/tests/rhino-n.tests file.
  * @author Attila Szegedi
- * @version $Id: StandardTests.java,v 1.4 2006/11/10 15:27:38 gerv%gerv.net Exp $
+ * @version $Id: StandardTests.java,v 1.5 2007/01/24 22:14:59 inonit%inonit.com Exp $
  */
 public class StandardTests extends TestSuite
 {
     public static TestSuite suite() throws Exception
     {
         TestSuite suite = new TestSuite("Standard JavaScript tests");
-        URL url = StandardTests.class.getResource(".");
-        String path = url.getFile();
-        int jsIndex = path.lastIndexOf("/js");
-        if(jsIndex == -1)
-        {
-            throw new IllegalStateException("You aren't running the tests from within the standard mozilla/js directory structure");
-        }
-        path = path.substring(0, jsIndex + 3).replace('/', File.separatorChar);
-        File testDir = new File(path, "tests");
+		
+		File testDir = null;
+		if (System.getProperty("mozilla.js.tests") != null) {
+			testDir = new File(System.getProperty("mozilla.js.tests"));
+		} else {		
+			URL url = StandardTests.class.getResource(".");
+			String path = url.getFile();
+			int jsIndex = path.lastIndexOf("/js");
+			if(jsIndex == -1)
+			{
+				throw new IllegalStateException("You aren't running the tests from within the standard mozilla/js directory structure");
+			}
+			path = path.substring(0, jsIndex + 3).replace('/', File.separatorChar);
+			testDir = new File(path, "tests");
+		}
         if(!testDir.isDirectory())
         {
             throw new FileNotFoundException(testDir + " is not a directory");
@@ -101,16 +109,12 @@ public class StandardTests extends TestSuite
     
     private static void addSuites(TestSuite topLevel, File testDir, Properties excludes, int optimizationLevel)
     {
-        File[] subdirs = testDir.listFiles(new DirectoryFilter());
+        File[] subdirs = testDir.listFiles(ShellTest.DIRECTORY_FILTER);
         Arrays.sort(subdirs);
         for (int i = 0; i < subdirs.length; i++)
         {
             File subdir = subdirs[i];
             String name = subdir.getName();
-            if(name.equals("CVS"))
-            {
-                continue;
-            }
             TestSuite testSuite = new TestSuite(name);
             addCategories(testSuite, subdir, name + "/", excludes, optimizationLevel);
             topLevel.addTest(testSuite);
@@ -119,16 +123,12 @@ public class StandardTests extends TestSuite
     
     private static void addCategories(TestSuite suite, File suiteDir, String prefix, Properties excludes, int optimizationLevel)
     {
-        File[] subdirs = suiteDir.listFiles(new DirectoryFilter());
+        File[] subdirs = suiteDir.listFiles(ShellTest.DIRECTORY_FILTER);
         Arrays.sort(subdirs);
         for (int i = 0; i < subdirs.length; i++)
         {
             File subdir = subdirs[i];
             String name = subdir.getName();
-            if(name.equals("CVS"))
-            {
-                continue;
-            }
             TestSuite testCategory = new TestSuite(name);
             addTests(testCategory, subdir, prefix + name + "/", excludes, optimizationLevel);
             suite.addTest(testCategory);
@@ -137,20 +137,46 @@ public class StandardTests extends TestSuite
     
     private static void addTests(TestSuite suite, File suiteDir, String prefix, Properties excludes, int optimizationLevel)
     {
-        File[] jsFiles = suiteDir.listFiles(new JsFilter());
+        File[] jsFiles = suiteDir.listFiles(ShellTest.TEST_FILTER);
         Arrays.sort(jsFiles);
         for (int i = 0; i < jsFiles.length; i++)
         {
             File jsFile = jsFiles[i];
             String name = jsFile.getName();
-            if(name.equals("shell.js") || name.equals("browser.js") || excludes.containsKey(prefix + name))
+            if(excludes.containsKey(prefix + name))
             {
                 continue;
             }
             suite.addTest(new JsTestCase(jsFile, optimizationLevel));
         }
     }
-    
+	
+	private static class JunitStatus extends ShellTest.Status {
+		final void running(File jsFile) {
+			//	do nothing
+		}
+		
+		final void failed(String s) {
+			Assert.fail(s);
+		}
+		
+		final void exitCodesWere(int expected, int actual) {
+			Assert.assertEquals("Unexpected exit code", expected, actual);
+		}
+		
+		final void outputWas(String s) {
+			System.out.print(s);
+		}
+		
+		final void threw(Throwable t) {
+			Assert.fail(ShellTest.getStackTrace(t));
+		}
+		
+		final void timedOut() {
+			failed("Timed out.");
+		}
+	}
+	
     private static final class JsTestCase extends TestCase
     {
         private final File jsFile;
@@ -168,133 +194,20 @@ public class StandardTests extends TestSuite
             return 1;
         }
 
-        private static class TestState
-        {
-            boolean finished;
-            Exception e;
-        }
-        
+		private static class ShellTestParameters extends ShellTest.Parameters {
+			int getTimeoutMilliseconds() {
+				if (System.getProperty("mozilla.js.tests.timeout") != null) {
+					return Integer.parseInt(System.getProperty("mozilla.js.tests.timeout"));
+				}
+				return 60000;
+			}
+		}
+	
         public void runBare() throws Exception
         {
-            final Global global = new Global();
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            PrintStream p = new PrintStream(out);
-            global.setOut(p);
-            global.setErr(p);
-            final ShellContextFactory shellContextFactory = new ShellContextFactory();
-            shellContextFactory.setOptimizationLevel(optimizationLevel);
-            final TestState testState = new TestState();
-            Thread t = new Thread(new Runnable()
-            {
-                public void run()
-                {
-                    try
-                    {
-                        shellContextFactory.call(new ContextAction()
-                        {
-                            public Object run(Context cx)
-                            {
-                                global.init(cx);
-                                runFileIfExists(cx, global, new File(jsFile.getParentFile().getParentFile(), "shell.js"));
-                                runFileIfExists(cx, global, new File(jsFile.getParentFile(), "shell.js"));
-                                runFileIfExists(cx, global, jsFile);
-                                return null;
-                            } 
-                        });
-                    }
-                    catch(Exception e)
-                    {
-                        synchronized(testState)
-                        {
-                            testState.e = e;
-                        }
-                    }
-                    synchronized(testState)
-                    {
-                        testState.finished = true;
-                    }
-                }
-            });
-            t.start();
-            t.join(60000);
-            boolean isNegativeTest = jsFile.getName().endsWith("-n.js");
-            synchronized(testState)
-            {
-                if(!testState.finished)
-                {
-                    t.stop();
-                    Assert.fail("Timed out");
-                }
-                if(testState.e != null)
-                {
-                    if(isNegativeTest)
-                    {
-                        if(testState.e instanceof EvaluatorException)
-                        {
-                            // Expected to bomb
-                            return;
-                        }
-                    }
-                    throw testState.e;
-                }
-            }
-            if(isNegativeTest)
-            {
-                Assert.fail("Test was expected to produce a runtime error");
-            }
-            int exitCode = 0;
-            int expectedExitCode = 0;
-            p.flush();
-            System.out.print(new String(out.toByteArray()));
-            BufferedReader r = new BufferedReader(new InputStreamReader(
-                    new ByteArrayInputStream(out.toByteArray())));
-            String failures = "";
-            for(;;)
-            {
-                String s = r.readLine();
-                if(s == null)
-                {
-                    break;
-                }
-                if(s.indexOf("FAILED!") != -1)
-                {
-                    failures += s + '\n';
-                }
-                int expex = s.indexOf("EXPECT EXIT ");
-                if(expex != -1)
-                {
-                    expectedExitCode = s.charAt(expex + "EXPECT EXIT ".length()) - '0';
-                }
-            }
-            Assert.assertEquals("Unexpected exit code", expectedExitCode, exitCode);
-            if(failures != "")
-            {
-                Assert.fail(failures);
-            }
-        }
-    }
-    
-    private static void runFileIfExists(Context cx, Scriptable global, File f)
-    {
-        if(f.isFile())
-        {
-            Main.processFile(cx, global, f.getPath());
-        }
-    }
-    
-    private static class DirectoryFilter implements FileFilter
-    {
-        public boolean accept(File pathname)
-        {
-            return pathname.isDirectory();
-        }
-    }
-
-    private static class JsFilter implements FileFilter
-    {
-        public boolean accept(File pathname)
-        {
-            return pathname.getName().endsWith(".js");
+			final ShellContextFactory shellContextFactory = new ShellContextFactory();
+			shellContextFactory.setOptimizationLevel(optimizationLevel);
+			ShellTest.run(shellContextFactory, jsFile, new ShellTestParameters(), new JunitStatus());
         }
     }
 }
