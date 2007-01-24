@@ -52,6 +52,7 @@
 #include "nsIXTFElementWrapper.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMAttr.h"
 #include "nsIDOMText.h"
 #include "nsIDOMCDATASection.h"
 #include "nsIDOMEvent.h"
@@ -1229,42 +1230,112 @@ nsXFormsSubmissionElement::CreateAttachments(nsIModelElementPrivate *aModel,
   nsCOMPtr<nsIDOMNode> currentNode(aNode);
 
   while (currentNode) {
+    PRUint16 currentNodeType;
+    nsresult rv = currentNode->GetNodeType(&currentNodeType);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // If |currentNode| is an element node of type 'xsd:anyURI', we need to
     // generate a ContentID for the child of this element, and append a new
     // attachment to the attachments array.
 
     PRUint32 encType;
-    nsresult rv;
     if (NS_SUCCEEDED(GetElementEncodingType(currentNode, &encType, aModel)) &&
         encType == ELEMENT_ENCTYPE_URI) {
       // ok, looks like we have a local file to upload
 
+      // uploadFileProperty can exist on attribute nodes if an upload is bound
+      // to an attribute.  But we'll have to look for such attributes as we
+      // we encounter the element nodes that contain them.  We won't reach
+      // attributes walking the child/sibling chain of nodes.  So here just
+      // test for nsIContent.
       void* uploadFileProperty = nsnull;
       nsCOMPtr<nsIContent> content = do_QueryInterface(currentNode);
       if (content) {
         uploadFileProperty =
           content->GetProperty(nsXFormsAtoms::uploadFileProperty);
-      } else {
-        nsCOMPtr<nsIAttribute> attr = do_QueryInterface(currentNode);
-        NS_ENSURE_STATE(attr);
-        uploadFileProperty =
-          attr->GetProperty(nsXFormsAtoms::uploadFileProperty);
       }
 
       nsIFile *file = NS_STATIC_CAST(nsIFile *, uploadFileProperty);
       // NOTE: this value may be null if a file hasn't been selected.
 
-      nsCString cid;
-      MakeMultipartContentID(cid);
+      if (uploadFileProperty) {
+        nsCString cid;
+        cid.AssignLiteral("cid:");
+        MakeMultipartContentID(cid);
+  
+        nsCOMPtr<nsIDOMNode> childNode;
+      
+        switch (currentNodeType) {
 
-      nsAutoString cidURI;
-      cidURI.AssignLiteral("cid:");
-      AppendASCIItoUTF16(cid, cidURI);
+        case nsIDOMNode::TEXT_NODE:
+        case nsIDOMNode::CDATA_SECTION_NODE:
+        case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
+        case nsIDOMNode::COMMENT_NODE:
+          rv = currentNode->SetNodeValue(NS_ConvertUTF8toUTF16(cid));
+          NS_ENSURE_SUCCESS(rv, rv);
+      
+          break;
+      
+        case nsIDOMNode::ELEMENT_NODE:
+      
+          rv = currentNode->GetFirstChild(getter_AddRefs(childNode));
+          NS_ENSURE_SUCCESS(rv, rv);
+      
+          // shouldn't have to worry about the case of there not being a child
+          // node here.  If uploadFileProperty is set then that means that
+          // the node that 'currentNode' was cloned from has has gone through
+          // through model.SetNodeValue, so should already have a text node
+          // as the first child and no extraneous text nodes
+          // following the first one.  We'll check to make sure, though.
+          PRUint16 childType;
+          rv = childNode->GetNodeType(&childType);
+          NS_ENSURE_SUCCESS(rv, rv);
+      
+          if (childType == nsIDOMNode::TEXT_NODE ||
+              childType == nsIDOMNode::CDATA_SECTION_NODE) {
+            rv = childNode->SetNodeValue(NS_ConvertUTF8toUTF16(cid));
+            NS_ENSURE_SUCCESS(rv, rv);
+          } else {
+            return NS_ERROR_UNEXPECTED;
+          }
+        }
+        aAttachments->Append(file, cid);
+      }
+    }
 
-      aAttachments->Append(file, cid);
+    // look to see if the element node has any attributes with an
+    // uploadFileProperty on it.
+    if (currentNodeType == nsIDOMNode::ELEMENT_NODE) {
+      PRBool hasAttributes = PR_FALSE;
+      currentNode->HasAttributes(&hasAttributes);
+      if (hasAttributes) {
+        nsCOMPtr<nsIDOMNamedNodeMap> attrs;
+        currentNode->GetAttributes(getter_AddRefs(attrs));
+        NS_ENSURE_STATE(attrs);
+        PRUint32 length;
+        attrs->GetLength(&length);
+        nsCOMPtr<nsIDOMNode> attrDOMNode;
+        for (PRUint32 i = 0; i < length; ++i) {
+          attrs->Item(i, getter_AddRefs(attrDOMNode));
+          NS_ENSURE_STATE(attrDOMNode);
+          nsCOMPtr<nsIAttribute> attr = do_QueryInterface(attrDOMNode);
+          NS_ENSURE_STATE(attr);
+          void *uploadFileProperty =
+            attr->GetProperty(nsXFormsAtoms::uploadFileProperty);
+  
+          if (!uploadFileProperty) {
+            continue;
+          }
 
-      rv = currentNode->SetNodeValue(cidURI);
-      NS_ENSURE_SUCCESS(rv, rv);
+          nsIFile *file = NS_STATIC_CAST(nsIFile *, uploadFileProperty);
+          nsCString cid;
+          cid.AssignLiteral("cid:");
+          MakeMultipartContentID(cid);
+          rv = attrDOMNode->SetNodeValue(NS_ConvertUTF8toUTF16(cid));
+          NS_ENSURE_SUCCESS(rv, rv);
+          aAttachments->Append(file, cid);
+        }
+      }
     }
 
     nsCOMPtr<nsIDOMNode> child;
@@ -1282,6 +1353,14 @@ nsXFormsSubmissionElement::CreateAttachments(nsIModelElementPrivate *aModel,
   return NS_OK;
 }
       
+static void
+ReleaseObject(void    *aObject,
+              nsIAtom *aPropertyName,
+              void    *aPropertyValue,
+              void    *aData)
+{
+  NS_STATIC_CAST(nsISupports *, aPropertyValue)->Release();
+}
 
 nsresult
 nsXFormsSubmissionElement::CopyChildren(nsIModelElementPrivate *aModel,
@@ -1375,7 +1454,7 @@ nsXFormsSubmissionElement::CopyChildren(nsIModelElementPrivate *aModel,
         currentNode->HasAttributes(&hasAttrs);
         if ((type == nsIDOMNode::ELEMENT_NODE) && hasAttrs) {
           nsCOMPtr<nsIDOMNamedNodeMap> attrMap;
-          nsCOMPtr<nsIDOMNode> attrNode, tempNode;
+          nsCOMPtr<nsIDOMNode> attrDOMNode, tempNode;
         
           currentNode->GetAttributes(getter_AddRefs(attrMap));
           NS_ENSURE_STATE(attrMap);
@@ -1386,25 +1465,83 @@ nsXFormsSubmissionElement::CopyChildren(nsIModelElementPrivate *aModel,
           attrMap->GetLength(&length);
         
           for (PRUint32 run = 0; run < length; ++run) {
-            attrMap->Item(run, getter_AddRefs(attrNode));
-            NS_ENSURE_STATE(attrNode);
-            aModel->HandleInstanceDataNode(attrNode, &handleNodeResult);
+            attrMap->Item(run, getter_AddRefs(attrDOMNode));
+            NS_ENSURE_STATE(attrDOMNode);
+            aModel->HandleInstanceDataNode(attrDOMNode, &handleNodeResult);
 
-            if (handleNodeResult == nsIModelElementPrivate::SUBMIT_SKIP_NODE) {
-              nsAutoString localName, namespaceURI;
-
-              rv = attrNode->GetLocalName(localName);
-              NS_ENSURE_SUCCESS(rv, rv);
-              rv = attrNode->GetNamespaceURI(namespaceURI);
-              NS_ENSURE_SUCCESS(rv, rv);
-              rv = destElem->RemoveAttributeNS(namespaceURI, localName);
-              NS_ENSURE_SUCCESS(rv, rv);
-            } else if (handleNodeResult ==
+            if (handleNodeResult ==
                        nsIModelElementPrivate::SUBMIT_ABORT_SUBMISSION) {
               // abort
               nsXFormsUtils::ReportError(NS_LITERAL_STRING("warnSubmitInvalidNode"),
                                          currentNode, nsIScriptError::warningFlag);
               return NS_ERROR_ILLEGAL_VALUE;
+            }
+
+            nsAutoString localName, namespaceURI;
+
+            rv = attrDOMNode->GetLocalName(localName);
+            NS_ENSURE_SUCCESS(rv, rv);
+            rv = attrDOMNode->GetNamespaceURI(namespaceURI);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            if (handleNodeResult == nsIModelElementPrivate::SUBMIT_SKIP_NODE) {
+              rv = destElem->RemoveAttributeNS(namespaceURI, localName);
+              NS_ENSURE_SUCCESS(rv, rv);
+            } else {
+              // the cloning does not copy any properties of the currentNode. If
+              // the attribute node has an uploadFileProperty we need to copy it
+              // to the submission document so that local files will be attached
+              // properly when the submission format is multipart-related.
+              void* uploadFileProperty = nsnull;
+              nsCOMPtr<nsIAttribute> attrNode(do_QueryInterface(attrDOMNode));
+              if (attrNode) {
+                uploadFileProperty =
+                  attrNode->GetProperty(nsXFormsAtoms::uploadFileProperty);
+                if (uploadFileProperty) {
+                  nsCOMPtr<nsIDOMAttr> destDOMAttr;
+                  rv = destElem->GetAttributeNodeNS(
+                    namespaceURI, localName, getter_AddRefs(destDOMAttr));
+                  NS_ENSURE_SUCCESS(rv, rv);
+                  nsCOMPtr<nsIAttribute> destAttribute(
+                    do_QueryInterface(destDOMAttr));
+                  if (destAttribute) {
+                    // Clone the local file so the same pointer isn't released
+                    // twice
+                    nsIFile *file =
+                      NS_STATIC_CAST(nsIFile *, uploadFileProperty);
+                    nsIFile *fileCopy = nsnull;
+                    nsresult rv = file->Clone(&fileCopy);
+                    NS_ENSURE_SUCCESS(rv, rv);
+                    destAttribute->SetProperty(
+                      nsXFormsAtoms::uploadFileProperty, fileCopy,
+                      ReleaseObject);
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        // ImportNode does not copy any properties of the currentNode. If the
+        // node has an uploadFileProperty we need to copy it to the submission
+        // document so that local files will be attached properly when the
+        // submission format is multipart-related.
+        void* uploadFileProperty = nsnull;
+        nsCOMPtr<nsIContent> currentNodeContent(do_QueryInterface(currentNode));
+        if (currentNodeContent) {
+          uploadFileProperty =
+            currentNodeContent->GetProperty(nsXFormsAtoms::uploadFileProperty);
+          if (uploadFileProperty) {
+            nsCOMPtr<nsIContent> destChildContent(do_QueryInterface(destChild));
+            if (destChildContent) {
+              // Clone the local file so the same pointer isn't released twice.
+              nsIFile *file = NS_STATIC_CAST(nsIFile *, uploadFileProperty);
+              nsIFile *fileCopy = nsnull;
+              nsresult rv = file->Clone(&fileCopy);
+              NS_ENSURE_SUCCESS(rv, rv);
+              destChildContent->SetProperty(nsXFormsAtoms::uploadFileProperty,
+                                            fileCopy,
+                                            ReleaseObject);
             }
           }
         }
