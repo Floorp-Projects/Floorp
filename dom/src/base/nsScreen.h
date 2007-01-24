@@ -56,18 +56,7 @@ public:
   NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);
 
   NS_DECL_ISUPPORTS
-
-  NS_IMETHOD GetTop(PRInt32* aWidth);
-  NS_IMETHOD GetLeft(PRInt32* aWidth);
-  NS_IMETHOD GetWidth(PRInt32* aWidth);
-  NS_IMETHOD GetHeight(PRInt32* aHeight);
-  NS_IMETHOD GetPixelDepth(PRInt32* aPixelDepth);
-  NS_IMETHOD GetColorDepth(PRInt32* aColorDepth);
-  NS_IMETHOD GetAvailWidth(PRInt32* aAvailWidth);
-  NS_IMETHOD GetAvailHeight(PRInt32* aAvailHeight);
-  NS_IMETHOD GetAvailLeft(PRInt32* aAvailLeft);
-  NS_IMETHOD GetAvailTop(PRInt32* aAvailTop);
-
+  NS_DECL_NSIDOMSCREEN
 
 protected:
   nsIDeviceContext* GetDeviceContext();
