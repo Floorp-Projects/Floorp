@@ -1380,7 +1380,7 @@ _cairo_gstate_clip_extents (cairo_gstate_t *gstate,
         		    double         *y2);
 
 cairo_private cairo_rectangle_list_t*
-_cairo_gstate_copy_clip_rectangles (cairo_gstate_t *gstate);
+_cairo_gstate_copy_clip_rectangle_list (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
 _cairo_gstate_show_surface (cairo_gstate_t	*gstate,

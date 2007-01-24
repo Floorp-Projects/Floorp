@@ -131,7 +131,7 @@ static const unsigned short charstring_key = 4330;
 #define CHARSTRING_endchar    0x000e
 
 /* Before calling this function, the caller must allocate sufficient
- * space in data (see _cairo_array_grow_by). The maxium number of
+ * space in data (see _cairo_array_grow_by). The maximum number of
  * bytes that will be used is 2.
  */
 static void
@@ -156,7 +156,7 @@ charstring_encode_command (cairo_array_t *data, int command)
 }
 
 /* Before calling this function, the caller must allocate sufficient
- * space in data (see _cairo_array_grow_by). The maxium number of
+ * space in data (see _cairo_array_grow_by). The maximum number of
  * bytes that will be used is 5.
  */
 static void

@@ -14,7 +14,7 @@
 #define cairo_clip_extents _moz_cairo_clip_extents
 #define cairo_clip_preserve _moz_cairo_clip_preserve
 #define cairo_close_path _moz_cairo_close_path
-#define cairo_copy_clip_rectangles _moz_cairo_copy_clip_rectangles
+#define cairo_copy_clip_rectangle_list _moz_cairo_copy_clip_rectangle_list
 #define cairo_copy_page _moz_cairo_copy_page
 #define cairo_copy_path _moz_cairo_copy_path
 #define cairo_copy_path_flat _moz_cairo_copy_path_flat
@@ -223,6 +223,7 @@
 #define cairo_surface_get_content _moz_cairo_surface_get_content
 #define cairo_surface_get_device_offset _moz_cairo_surface_get_device_offset
 #define cairo_surface_get_font_options _moz_cairo_surface_get_font_options
+#define cairo_surface_get_reference_count _moz_cairo_surface_get_reference_count
 #define cairo_surface_get_type _moz_cairo_surface_get_type
 #define cairo_surface_get_user_data _moz_cairo_surface_get_user_data
 #define cairo_surface_is_nquartz _moz_cairo_surface_is_nquartz

@@ -47,7 +47,7 @@ static const cairo_font_options_t cairo_font_options_nil = {
  * _cairo_font_options_init_default:
  * @options: a #cairo_font_options_t
  *
- * Initializes all fileds of the font options object to default values.
+ * Initializes all fields of the font options object to default values.
  **/
 void
 _cairo_font_options_init_default (cairo_font_options_t *options)
@@ -233,7 +233,7 @@ slim_hidden_def (cairo_font_options_hash);
  * @options: a #cairo_font_options_t
  * @antialias: the new antialiasing mode
  *
- * Sets the antiliasing mode for the font options object. This
+ * Sets the antialiasing mode for the font options object. This
  * specifies the type of antialiasing to do when rendering text.
  **/
 void
@@ -251,7 +251,7 @@ slim_hidden_def (cairo_font_options_set_antialias);
  * cairo_font_options_get_antialias:
  * @options: a #cairo_font_options_t
  *
- * Gets the antialising mode for the font options object.
+ * Gets the antialiasing mode for the font options object.
  *
  * Return value: the antialiasing mode
  **/

@@ -601,7 +601,7 @@ _cairo_clip_rect_to_user (cairo_gstate_t *gstate,
 }
 
 cairo_private cairo_rectangle_list_t*
-_cairo_clip_copy_rectangles (cairo_clip_t *clip, cairo_gstate_t *gstate)
+_cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
 {
     cairo_rectangle_list_t *list;
     cairo_rectangle_t *rectangles;

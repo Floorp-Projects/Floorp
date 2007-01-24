@@ -926,7 +926,7 @@ _operator_needs_alpha_composite (cairo_operator_t op,
 /* There is a bug in most older X servers with compositing using a
  * untransformed repeating source pattern when the source is in off-screen
  * video memory, and another with repeated transformed images using a
- * general tranform matrix. When these bugs could be triggered, we need a
+ * general transform matrix. When these bugs could be triggered, we need a
  * fallback: in the common case where we have no transformation and the
  * source and destination have the same format/visual, we can do the
  * operation using the core protocol for the first bug, otherwise, we need
@@ -2020,7 +2020,7 @@ _cairo_xcb_surface_add_glyph (xcb_connection_t *dpy,
      *
      *  This is a postscript-y model, where each glyph has its own
      *  coordinate space, so it's what we expose in terms of metrics. It's
-     *  apparantly what everyone's expecting. Everyone except the Render
+     *  apparently what everyone's expecting. Everyone except the Render
      *  extension. Render wants to see a glyph tile starting at (0,0), with
      *  an origin offset inside, like this:
      *

@@ -26,9 +26,9 @@
 #ifdef ICINT_NEED_IC_ONES
 /* Fall back on HACKMEM 169.  */
 int
-_FbOnes (unsigned long mask)
+_FbOnes (unsigned int mask)
 {
-    register unsigned long y;
+    register int y;
 
     y = (mask >> 1) &033333333333;
     y = mask - y - ((y >>1) & 033333333333);

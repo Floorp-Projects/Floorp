@@ -623,7 +623,7 @@ _cairo_svg_document_emit_bitmap_glyph_data (cairo_svg_document_t	*document,
     cairo_scaled_glyph_t *scaled_glyph;
     cairo_status_t status;
     unsigned char *row, *byte;
-    int rows, cols, bytes_per_row;
+    int rows, cols;
     int x, y, bit;
 
     status = _cairo_scaled_glyph_lookup (scaled_font,
@@ -644,7 +644,6 @@ _cairo_svg_document_emit_bitmap_glyph_data (cairo_svg_document_t	*document,
     _cairo_output_stream_printf (document->xml_node_glyphs, "<g");
     emit_transform (document->xml_node_glyphs, " transform", ">/n", &image->base.device_transform);
 
-    bytes_per_row = (image->width + 7) / 8;
     for (y = 0, row = image->data, rows = image->height; rows; row += image->stride, rows--, y++) {
 	for (x = 0, byte = row, cols = (image->width + 7) / 8; cols; byte++, cols--) {
 	    unsigned char output_byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (*byte);

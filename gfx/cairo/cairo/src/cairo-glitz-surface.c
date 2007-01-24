@@ -262,16 +262,17 @@ _cairo_glitz_surface_set_image (void		      *abstract_surface,
     glitz_buffer_t	  *buffer;
     glitz_pixel_format_t  pf;
     pixman_format_t	  *format;
-    int			  am, rm, gm, bm;
+    unsigned int	  bpp, am, rm, gm, bm;
     char		  *data;
 
     format = pixman_image_get_format (image->pixman_image);
     if (!format)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    pixman_format_get_masks (format, &pf.masks.bpp, &am, &rm, &gm, &bm);
+    pixman_format_get_masks (format, &bpp, &am, &rm, &gm, &bm);
 
     pf.fourcc = GLITZ_FOURCC_RGB;
+    pf.masks.bpp = bpp;
     pf.masks.alpha_mask = am;
     pf.masks.red_mask = rm;
     pf.masks.green_mask = gm;
@@ -591,7 +592,7 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	glitz_fixed16_16_t	    *params;
 	int			    n_params;
 	unsigned int		    *pixels;
-	int			    i, n_base_params;
+	unsigned int		    i, n_base_params;
 	glitz_buffer_t		    *buffer;
 	static glitz_pixel_format_t format = {
 	    GLITZ_FOURCC_RGB,
@@ -715,6 +716,8 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	attr->base.x_offset = 0;
 	attr->base.y_offset = 0;
     } break;
+    case CAIRO_PATTERN_TYPE_SOLID:
+    case CAIRO_PATTERN_TYPE_SURFACE:
     default:
 	break;
     }
@@ -756,6 +759,7 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	    case CAIRO_FILTER_GOOD:
 	    case CAIRO_FILTER_BEST:
 	    case CAIRO_FILTER_BILINEAR:
+	    case CAIRO_FILTER_GAUSSIAN:
 	    default:
 		attr->filter = GLITZ_FILTER_BILINEAR;
 		break;
@@ -977,10 +981,20 @@ _cairo_glitz_surface_fill_rectangles (void		      *abstract_dst,
 	glitz_set_rectangles (dst->surface, &glitz_color,
 			      (glitz_rectangle_t *) rects, n_rects);
     } break;
+    case CAIRO_OPERATOR_SATURATE:
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    case CAIRO_OPERATOR_OVER:
+    case CAIRO_OPERATOR_IN:
+    case CAIRO_OPERATOR_OUT:
+    case CAIRO_OPERATOR_ATOP:
+    case CAIRO_OPERATOR_DEST:
+    case CAIRO_OPERATOR_DEST_OVER:
+    case CAIRO_OPERATOR_DEST_IN:
+    case CAIRO_OPERATOR_DEST_OUT:
+    case CAIRO_OPERATOR_DEST_ATOP:
+    case CAIRO_OPERATOR_XOR:
+    case CAIRO_OPERATOR_ADD:
     default:
-	if (op == CAIRO_OPERATOR_SATURATE)
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-
 	if (_glitz_ensure_target (dst->surface))
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -1670,8 +1684,8 @@ static const cairo_glitz_area_funcs_t _cairo_glitz_area_funcs = {
 
 #define GLYPH_CACHE_TEXTURE_SIZE 512
 #define GLYPH_CACHE_MAX_LEVEL     64
-#define GLYPH_CACHE_MAX_HEIGHT    72
-#define GLYPH_CACHE_MAX_WIDTH     72
+#define GLYPH_CACHE_MAX_HEIGHT    96
+#define GLYPH_CACHE_MAX_WIDTH     96
 
 #define WRITE_VEC2(ptr, _x, _y) \
     *(ptr)++ = (_x);		\
@@ -1799,7 +1813,7 @@ _cairo_glitz_surface_add_glyph (cairo_glitz_surface_t *surface,
     glitz_pixel_format_t		pf;
     glitz_buffer_t			*buffer;
     pixman_format_t			*format;
-    int					am, rm, gm, bm;
+    unsigned int			bpp, am, rm, gm, bm;
     cairo_int_status_t			status;
 
     glyph_private = scaled_glyph->surface_private;
@@ -1858,9 +1872,10 @@ _cairo_glitz_surface_add_glyph (cairo_glitz_surface_t *surface,
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
-    pixman_format_get_masks (format, &pf.masks.bpp, &am, &rm, &gm, &bm);
+    pixman_format_get_masks (format, &bpp, &am, &rm, &gm, &bm);
 
     pf.fourcc		= GLITZ_FOURCC_RGB;
+    pf.masks.bpp        = bpp;
     pf.masks.alpha_mask = am;
     pf.masks.red_mask   = rm;
     pf.masks.green_mask = gm;
@@ -2057,6 +2072,11 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
 		if (status)
 		    goto UNLOCK;
 
+		x_offset = scaled_glyphs[i]->surface->base.device_transform.x0;
+		y_offset = scaled_glyphs[i]->surface->base.device_transform.y0;
+		x1 = _cairo_lround (glyphs[i].x) + x_offset;
+		y1 = _cairo_lround (glyphs[i].y) + y_offset;
+
 		glitz_composite (_glitz_operator (op),
 				 src->surface,
 				 clone->surface,
@@ -2109,8 +2129,6 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
     }
 
 UNLOCK:
-    _cairo_scaled_font_thaw_cache (scaled_font);
-
     if (cached_glyphs)
     {
 	for (i = 0; i < num_glyphs; i++)
@@ -2120,6 +2138,8 @@ UNLOCK:
 		glyph_private->locked = FALSE;
 	}
     }
+
+    _cairo_scaled_font_thaw_cache (scaled_font);
 
     glitz_buffer_destroy (buffer);
 

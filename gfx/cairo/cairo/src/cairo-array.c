@@ -44,7 +44,7 @@
  * @element_size.
  *
  * The #cairo_array_t object provides grow-by-doubling storage. It
- * never intereprets the data passed to it, nor does it provide any
+ * never interprets the data passed to it, nor does it provide any
  * sort of callback mechanism for freeing resources held onto by
  * stored objects.
  *

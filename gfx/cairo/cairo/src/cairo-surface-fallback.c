@@ -511,7 +511,7 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
 				cairo_antialias_t antialias)
 {
     cairo_status_t status;
-    pixman_region16_t *trap_region;
+    pixman_region16_t *trap_region = NULL;
     pixman_region16_t *clear_region = NULL;
     cairo_rectangle_int16_t extents;
     cairo_composite_traps_info_t traps_info;
@@ -519,29 +519,37 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
     if (traps->num_traps == 0)
 	return CAIRO_STATUS_SUCCESS;
 
+    status = _cairo_surface_get_extents (dst, &extents);
+    if (status)
+	return status;
+
     status = _cairo_traps_extract_region (traps, &trap_region);
     if (status)
 	return status;
 
     if (_cairo_operator_bounded_by_mask (op))
     {
+	cairo_rectangle_int16_t trap_extents;
 	if (trap_region) {
 	    status = _cairo_clip_intersect_to_region (clip, trap_region);
-	    _cairo_region_extents_rectangle (trap_region, &extents);
+	    if (status)
+		goto out;
+
+	    _cairo_region_extents_rectangle (trap_region, &trap_extents);
 	} else {
-	    cairo_box_t trap_extents;
-	    _cairo_traps_extents (traps, &trap_extents);
-	    _cairo_box_round_to_rectangle (&trap_extents, &extents);
-	    status = _cairo_clip_intersect_to_rectangle (clip, &extents);
+	    cairo_box_t trap_box;
+	    _cairo_traps_extents (traps, &trap_box);
+	    _cairo_box_round_to_rectangle (&trap_box, &trap_extents);
 	}
+
+	_cairo_rectangle_intersect (&extents, &trap_extents);
+	status = _cairo_clip_intersect_to_rectangle (clip, &extents);
+	if (status)
+	    goto out;
     }
     else
     {
 	cairo_surface_t *clip_surface = clip ? clip->surface : NULL;
-
-	status = _cairo_surface_get_extents (dst, &extents);
-	if (status)
-	    return status;
 
 	if (trap_region && !clip_surface) {
 	    /* If we optimize drawing with an unbounded operator to

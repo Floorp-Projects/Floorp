@@ -36,6 +36,16 @@
  *	Vladimir Vukicevic <vladimir@pobox.com>
  */
 
+#define WIN32_LEAN_AND_MEAN
+/* We require Windows 2000 features such as ETO_PDY */
+#if !defined(WINVER) || (WINVER < 0x0500)
+# define WINVER 0x0500
+#endif
+#if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
+# define _WIN32_WINNT 0x0500
+#endif
+#include <windows.h>
+
 #include <stdio.h>
 #include "cairoint.h"
 #include "cairo-clip-private.h"
@@ -1702,7 +1712,7 @@ cairo_win32_surface_create (HDC hdc)
  *
  * Creates a device-independent-bitmap surface not associated with
  * any particular existing surface or device context. The created
- * bitmap will be unititialized.
+ * bitmap will be uninitialized.
  *
  * Return value: the newly created surface
  *
@@ -1724,7 +1734,7 @@ cairo_win32_surface_create_with_dib (cairo_format_t format,
  *
  * Creates a device-independent-bitmap surface not associated with
  * any particular existing surface or device context. The created
- * bitmap will be unititialized.
+ * bitmap will be uninitialized.
  *
  * Return value: the newly created surface
  *
@@ -1818,7 +1828,7 @@ cairo_win32_surface_get_dc (cairo_surface_t *surface)
 }
 
 /**
- * cario_win32_surface_get_image
+ * cairo_win32_surface_get_image
  * @surface: a #cairo_surface_t
  *
  * Returns a #cairo_surface_t image surface that refers to the same bits
