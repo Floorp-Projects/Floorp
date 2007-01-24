@@ -5,9 +5,10 @@ StartPageDefault = "http://www.mozilla.org/projects/camino/welcome.html";
 ThrobberPageDefault = "http://www.mozilla.org/projects/camino/";
 FeedbackPageDefault = "http://www.mozilla.org/projects/camino/feedback.html";
 InfoPageDefault = "http://www.mozilla.org/projects/camino/";
-RendezvousPageDefault="http://www.zeroconf.org/webbrowsers.html";
+RendezvousPageDefault ="http://www.zeroconf.org/webbrowsers.html";
+CorruptedBookmarksDefault = "http://wiki.caminobrowser.org/QA:Damaged_Bookmarks";
 
-SearchCustomPageDefault="http://www.mozilla.org/products/camino/features/searchCustomization.html";
-TipsTricksPageDefault="http://www.mozilla.org/products/camino/features/tipsTricks.html";
-ReleaseNotesDefault="http://www.mozilla.org/products/camino/releases/1.0.html";
+SearchCustomPageDefault = "http://www.mozilla.org/products/camino/features/searchCustomization.html";
+TipsTricksPageDefault = "http://www.mozilla.org/products/camino/features/tipsTricks.html";
+ReleaseNotesDefault = "http://www.mozilla.org/products/camino/releases/1.0.html";
 
