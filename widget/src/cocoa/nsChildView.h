@@ -98,6 +98,7 @@ class nsChildView;
   BOOL mIsPluginView;
 
   NSEvent* mCurKeyEvent;   // only valid during a keyDown
+  PRBool  mKeyHandled;
   
   // needed for NSTextInput implementation
   NSRange mMarkedRange;

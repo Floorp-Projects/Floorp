@@ -1739,6 +1739,7 @@ NSEvent* globalDragEvent = nil;
     mGeckoChild = inChild;
     mIsPluginView = NO;
     mCurKeyEvent = nil;
+    mKeyHandled = PR_FALSE;
     
     // initialization for NSTextInput
     mMarkedRange.location = NSNotFound;
@@ -2904,6 +2905,8 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     geckoEvent.charCode  = bufPtr[0]; // gecko expects OS-translated unicode
     geckoEvent.isChar    = PR_TRUE;
     geckoEvent.isShift   = ([mCurKeyEvent modifierFlags] & NSShiftKeyMask) != 0;
+    if (mKeyHandled)
+      geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
     // don't set other modifiers from the current event, because here in
     // -insertText: they've already been taken into account in creating
     // the input string.
@@ -3143,10 +3146,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 // event to gecko.
 - (void)keyDown:(NSEvent*)theEvent
 {
-  PRBool isKeyDownEventHandled = PR_TRUE;
-  PRBool isKeyEventHandled = PR_FALSE;
   BOOL  isARepeat = [theEvent isARepeat];
-
   mCurKeyEvent = theEvent;
   
   // if we have a dead-key event, we won't get a character
@@ -3161,25 +3161,22 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
                   message:NS_KEY_DOWN
              toGeckoEvent:&geckoEvent];
 
-    // XXX Maybe we should only do this when there is a plugin present.
+    //XXX we should only do this when there is a plugin present
     EventRecord macEvent;
     ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
     geckoEvent.nativeMsg = &macEvent;
-    isKeyDownEventHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
+    mKeyHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
   }
-  
+
   // Check to see if we are still the first responder.
   // The key down event may have shifted the focus, in which
   // case we should not fire the key press.
   NSResponder* resp = [[self window] firstResponder];
   if (resp != (NSResponder*)self) {
-#if DEBUG
-    printf("We are no longer the responder. Bailing.\n");
-#endif
     mCurKeyEvent = nil;
     return;
   }
-    
+
   if (nonDeadKeyPress) {
     nsKeyEvent geckoEvent(PR_TRUE, 0, nsnull);
     geckoEvent.refPoint.x = geckoEvent.refPoint.y = 0;
@@ -3187,7 +3184,10 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     [self convertKeyEvent:theEvent
                   message:NS_KEY_PRESS
              toGeckoEvent:&geckoEvent];
-    
+
+    if (mKeyHandled)
+      geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+
     // if this is a non-letter keypress, or the control key is down,
     // dispatch the keydown to gecko, so that we trap delete,
     // control-letter combinations etc before Cocoa tries to use
@@ -3197,9 +3197,8 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
       EventRecord macEvent;
       ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
-      
-      isKeyEventHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
-      mIgnoreDoCommand = isKeyEventHandled;
+
+      mIgnoreDoCommand = mGeckoChild->DispatchWindowEvent(geckoEvent);
     }
   }
 
@@ -3207,6 +3206,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 
   mIgnoreDoCommand = NO;
   mCurKeyEvent = nil;
+  mKeyHandled = PR_FALSE;
 }
 
 
