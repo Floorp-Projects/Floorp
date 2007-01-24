@@ -264,11 +264,11 @@ function checkForImage(elem, htmllocalname)
 
     var imageSize = "";
     if (img.width) {
-      if (imageRequest && (imageRequest.image.width  != img.width ||
-                           imageRequest.image.height != img.height))
+      var image = imageRequest && imageRequest.image;
+      if (image && (image.width != img.width || image.height != img.height))
         imageSize = gMetadataBundle.getFormattedString("imageDimensionsScaled",
-                                                       [imageRequest.image.width, imageRequest.image.height,
-                                                        img.width,                img.height]);
+                                                       [image.width, image.height,
+                                                        img.width,   img.height]);
       else
         imageSize = gMetadataBundle.getFormattedString("imageDimensions", [img.width, img.height]);
     }        
