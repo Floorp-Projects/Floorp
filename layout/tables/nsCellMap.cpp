@@ -2704,15 +2704,19 @@ CellData* nsCellMap::AllocCellData(nsTableCellFrame* aOrigCell)
 void
 nsCellMapColumnIterator::AdvanceRowGroup()
 {
-  mCurMap = mCurMap->GetNextSibling();
+  // Set mCurMapRowCount to 0 in case mCurMap has no next sibling.  This can
+  // happen if we just handled the last originating cell.  Future calls will
+  // end up with mFoundCells == mOrigCells, but for this one mFoundCells was
+  // definitely not big enough if we got here.
+  mCurMapRowCount = 0;
+  do {
+    mCurMap = mCurMap->GetNextSibling();
+  } while (mCurMap && 0 == (mCurMapRowCount = mCurMap->GetRowCount()));
 
-  /* mCurMap could now be null, if we just handled the last originating cell.
-     Future calls will end up with mFoundCells == mOrigCells, but for this
-     one mFoundCells was definitely not big enough if we got here... */
-  mCurMapRowCount = mCurMap ? mCurMap->GetRowCount() : 0;
+  NS_ASSERTION(mCurMapRowCount != 0 || !mCurMap, "How did that happen?");
 
-  // Set mRow to 0, since cells can't span across table row groups.
-  mRow = 0;
+  // Set mCurMapRow to 0, since cells can't span across table row groups.
+  mCurMapRow = 0;
 }
 
 void
@@ -2721,12 +2725,23 @@ nsCellMapColumnIterator::IncrementRow(PRInt32 aIncrement)
   NS_PRECONDITION(aIncrement >= 0, "Bogus increment");
   NS_PRECONDITION(mCurMap, "Bogus mOrigCells?");
   if (aIncrement == 0) {
-    // This will span to the end of the row group
+    // This will span to the end of the row group.  Note that mCurMapRowCount
+    // only includes content rows, so we can just increment by what's left of
+    // it.
+    mRow += (mCurMapRowCount - mCurMapRow);
     AdvanceRowGroup();
   }
   else {
     mRow += aIncrement;
-    if (mRow >= mCurMapRowCount) {
+    mCurMapRow += aIncrement;
+    if (mCurMapRow >= mCurMapRowCount) {
+      // It's possible that the cell whose rowspan we're incrementing by spans
+      // past the end of the content rows in this rowgroup.  In that case,
+      // mCurMapRow will become strictly bigger than mCurMapRowCount.  If that
+      // happens, we should subtract the difference from mRow, since mRow
+      // should not count non-content rows.  Of course if the difference is
+      // zero it's safe to subtract it too, so just subtract unconditionally.
+      mRow -= mCurMapRow - mCurMapRowCount;
       AdvanceRowGroup();
     }
   }
@@ -2744,11 +2759,11 @@ nsCellMapColumnIterator::GetNextFrame(PRInt32* aRow, PRInt32* aColSpan)
   }
 
   while (1) {
-    NS_ASSERTION(mRow < mCurMapRowCount, "Bogus mOrigCells?");
+    NS_ASSERTION(mCurMapRow < mCurMapRowCount, "Bogus mOrigCells?");
     // Safe to just get the row (which is faster than calling GetDataAt(), but
     // there may not be that many cells in it, so have to use SafeElementAt for
     // the mCol.
-    const nsCellMap::CellDataArray& row = mCurMap->mRows[mRow];
+    const nsCellMap::CellDataArray& row = mCurMap->mRows[mCurMapRow];
     CellData* cellData = row.SafeElementAt(mCol);
     if (!cellData || cellData->IsDead()) {
       // Could hit this if there are fewer cells in this row than others, for
@@ -2768,18 +2783,22 @@ nsCellMapColumnIterator::GetNextFrame(PRInt32* aRow, PRInt32* aColSpan)
 
     NS_ASSERTION(cellData->IsOrig(),
                  "Must have originating cellData by this point.  "
-                 "See comment on mRow in header.");
+                 "See comment on mCurMapRow in header.");
 
     nsTableCellFrame* cellFrame = cellData->GetCellFrame();
     NS_ASSERTION(cellFrame, "Orig data without cellframe?");
     
     *aRow = mRow;
     PRBool ignoredZeroSpan;
-    *aColSpan = mCurMap->GetEffectiveColSpan(*mMap, mRow, mCol, ignoredZeroSpan);
+    *aColSpan = mCurMap->GetEffectiveColSpan(*mMap, mCurMapRow, mCol,
+                                             ignoredZeroSpan);
 
     IncrementRow(cellFrame->GetRowSpan());
 
     ++mFoundCells;
+
+    NS_ASSERTION(cellData = mMap->GetDataAt(*aRow, mCol),
+                 "Giving caller bogus row?");
 
     return cellFrame;
   }

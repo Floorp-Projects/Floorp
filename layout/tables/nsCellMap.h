@@ -560,13 +560,18 @@ class nsCellMapColumnIterator
 {
 public:
   nsCellMapColumnIterator(const nsTableCellMap* aMap, PRInt32 aCol) :
-    mMap(aMap), mCurMap(aMap->mFirstMap), mRow(0), mCol(aCol), mFoundCells(0)
+    mMap(aMap), mCurMap(aMap->mFirstMap), mRow(0),
+    mCurMapRow(0), mCol(aCol), mFoundCells(0)
   {
     NS_PRECONDITION(aMap, "Must have map");
     NS_PRECONDITION(mCol < aMap->GetColCount(), "Invalid column");
     mOrigCells = aMap->GetNumCellsOriginatingInCol(mCol);
     if (mCurMap) {
       mCurMapRowCount = mCurMap->GetRowCount();
+      if (mCurMapRowCount == 0 && mOrigCells > 0) {
+        // This row group is useless; advance!
+        AdvanceRowGroup();
+      }
     }
   }
 
@@ -581,11 +586,18 @@ private:
 
   const nsTableCellMap* mMap;
   const nsCellMap* mCurMap;
-  // In steady-state mRow is the row in our current nsCellMap that we'll use
-  // the next time GetNextFrame() is called.  Due to the way we skip over
-  // rowspans, the entry in mRow and mCol is either null, dead, originating, or
-  // a colspan.  In particular, it cannot be a rowspan or overlap entry.
+
+  // mRow is the row in the entire nsTableCellMap where we are right now.  This
+  // must be passable to nsTableCellMap::GetDataAt, so must be a _content_ row
+  // index.
   PRUint32 mRow;
+  
+  // In steady-state mCurMapRow is the row in our current nsCellMap
+  // that we'll use the next time GetNextFrame() is called.  Due to
+  // the way we skip over rowspans, the entry in mCurMapRow and mCol
+  // is either null, dead, originating, or a colspan.  In particular,
+  // it cannot be a rowspan or overlap entry.
+  PRUint32 mCurMapRow;
   const PRInt32 mCol;
   PRUint32 mOrigCells;
   PRUint32 mFoundCells;

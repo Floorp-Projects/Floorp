@@ -327,9 +327,10 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
             PRInt32 row = item->row;
             col = item->col;
             CellData *cellData = cellMap->GetDataAt(row, col);
-            nsTableCellFrame *cellFrame = cellData->GetCellFrame();
             NS_ASSERTION(cellData && cellData->IsOrig(),
                          "bogus result from spanning cell sorter");
+
+            nsTableCellFrame *cellFrame = cellData->GetCellFrame();
             NS_ASSERTION(cellFrame, "bogus result from spanning cell sorter");
 
             CellWidthInfo info = GetCellWidthInfo(aRenderingContext, cellFrame);
