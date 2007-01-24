@@ -71,10 +71,9 @@ public:
   NS_DECL_NSIDOMEVENTTARGET
   NS_DECL_NSIDOM3EVENTTARGET
   NS_DECL_NSIDOMNSEVENTTARGET
+  NS_DECL_NSICHROMEEVENTHANDLER
 
-  NS_IMETHOD PreHandleChromeEvent(nsEventChainPreVisitor& aVisitor);
-  NS_IMETHOD PostHandleChromeEvent(nsEventChainPostVisitor& aVisitor);
-
+  // nsIDOMEventReceiver
   NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
   NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
   NS_IMETHOD GetListenerManager(PRBool aCreateIfNotFound,
