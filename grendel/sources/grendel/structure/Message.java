@@ -467,6 +467,9 @@ public class Message
 
         String message_id_that = list[0];
 
+        if (message_id_this==null) {
+            return false;
+        }
         return message_id_this.equals(message_id_that);
     }
 
@@ -475,6 +478,9 @@ public class Message
         String message_id_this = this.getMessageID();
         String message_id_that = message.getMessageID();
 
+        if (message_id_this==null) {
+            return false;
+        }
         return message_id_this.equals(message_id_that);
     }
 

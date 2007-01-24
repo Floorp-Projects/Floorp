@@ -37,7 +37,7 @@ public final class Servers {
     
     /** Creates a new instance of Servers */
     static {
-        options_mail=Preferences.getPreferances().getPropertyPrefs("options").getPropertyPrefs("mail");
+        options_mail=Preferences.getPreferences().getPropertyPrefs("options").getPropertyPrefs("mail");
     }
     
     public static synchronized List<Server> getServers() {
@@ -52,17 +52,17 @@ public final class Servers {
         }
     }
     
-    private static synchronized void updateServers() {        
-        List<Account__Receive> recive_accounts_list= new ArrayList<Account__Receive>(Preferences.getPreferances().getAccounts().getReciveAccounts());
+    private static synchronized void updateServers() {
+        List<Account__Receive> receive_accounts_list= new ArrayList<Account__Receive>(Preferences.getPreferences().getAccounts().getReceiveAccounts());
         //servers=new Vector<Server>(recive_accounts_list.size());
         
         for (Server s: servers) {
-            boolean contains = recive_accounts_list.remove(s.getAccount());
+            boolean contains = receive_accounts_list.remove(s.getAccount());
             if (! contains) {
                 servers.remove(s);
             }
         }
-        for (Account__Receive account : recive_accounts_list) {
+        for (Account__Receive account : receive_accounts_list) {
             try {
                 servers.add(new Server(account));
             } catch (NoSuchProviderException e) {

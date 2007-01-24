@@ -45,7 +45,7 @@ public final class AddressBookManager
      * Get the addressbooks branch from preferances.
      * Done here incase any other initation requires it.
      */
-    books = Preferences.getPreferances().getAddressbooks();
+    books = Preferences.getPreferences().getAddressbooks();
   }
 
   /**

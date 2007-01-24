@@ -131,6 +131,8 @@
     <menupopup>
       <menuitem onclick="openAddressBook" label="&addressBookLabel;" accesskey="&addressBookAccel;"/>
       <menuseparator/>
+      <menuitem id="prefEditor" onclick="prefEditor" label="Preferences Editor" accesskey="p"/>
+      <menuseparator/>
       <menuitem id="prefGeneral" onclick="prefGeneral" label="&prefGeneralLabel;" accesskey="&prefGeneralAccel;"/>
       <menuitem id="prefIds" onclick="prefIds" label="&prefIdsLabel;" accesskey="&prefIdsAccel;"/>
       <menuitem id="prefSrvs" onclick="prefSrvs" label="&prefSrvsLabel;" accesskey="&prefSrvsAccel;"/>

@@ -67,7 +67,7 @@ public final class Test {
         p.setProperty("ui",p_1);
         p.storeToXML(new FileWriter("C:\\test_1.xml"));
         System.out.println(p.toString());*/
-        /*Accounts accounts = XMLPreferences.getPreferances().getAccounts();
+        /*Accounts accounts = XMLPreferences.getPreferences().getAccounts();
         accounts.addAccount(new Account_SMTP("Main_SMTP"));
         accounts.addAccount(new Account_IMAP("Main_IMAP"));
         accounts.getAccount(1).addIdentity(new Identity("Hash9","hash9@localhost","Main"));
@@ -105,8 +105,8 @@ public final class Test {
         wired.setDefaultIdentity(0);
         wired.setPassword("tri3i9");
         wired.setUsername("hash9");*/
-        //XMLPreferences.getPreferances().getAccounts().getAccount(5);
-        //Preferences.getPreferances().getAccounts().removeAccount(5);
+        //XMLPreferences.getPreferences().getAccounts().getAccount(5);
+        //Preferences.getPreferences().getAccounts().removeAccount(5);
         /*Account_IMAP Server_2 = new Account_IMAP();
         Server_2.setName("Server");
         Server_2.setHost("192.168.0.100");
@@ -114,7 +114,7 @@ public final class Test {
         Server_2.setDefaultIdentity(0);
         Server_2.setPassword("Sig27ma");
         Server_2.setUsername("hash9");
-        Preferences.getPreferances().getAccounts().addAccount(Server_2);*/
+        Preferences.getPreferences().getAccounts().addAccount(Server_2);*/
         /*Account_NNTP a = new Account_NNTP("Mozilla Mail/News");
         Identity id = new Identity();
         id.setEMail("grendel@eternal.undonet.com");
@@ -122,7 +122,7 @@ public final class Test {
         a.addIdentity(id);
         a.setHost("news.mozilla.org");
         a.setPort(-1);
-        Preferences.getPreferances().getAccounts().addAccount(a);*/
+        Preferences.getPreferences().getAccounts().addAccount(a);*/
         Account_IMAP Server_2 = new Account_IMAP();
         Server_2.setName("Alt Server");
         Server_2.setHost("192.168.0.100");
@@ -130,7 +130,7 @@ public final class Test {
         Server_2.setDefaultIdentity(0);
         Server_2.setPassword("Sig27ma");
         Server_2.setUsername("hash9");
-        Preferences.getPreferances().getAccounts().addAccount(Server_2);
+        Preferences.getPreferences().getAccounts().addAccount(Server_2);
         Preferences.save();
     }
 }

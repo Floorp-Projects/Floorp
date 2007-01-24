@@ -191,6 +191,10 @@
 <!ENTITY multiPrefsLabel "Tools" >
 <!ENTITY multiPrefsAccel "T" >
 
+
+<!ENTITY prefEditorLabel "Preferences..." >
+<!ENTITY prefEditorAccel "P" >
+
 <!ENTITY prefIdsLabel "Identities" >
 <!ENTITY prefIdsAccel "I" >
 <!ENTITY prefSrvsLabel "Servers" >

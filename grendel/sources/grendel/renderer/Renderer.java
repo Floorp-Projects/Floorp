@@ -134,9 +134,9 @@ public class Renderer implements Runnable {
       putBar(buf);
       
       Attachment a=makeAttachment(index, p);
-      buf.append("<table border=\"1\" cellspacing=\"0\">");
+      buf.append("<table border=\"1\" cellspacing=\"0\" cellpadding=\"2\">");
       buf.append("<tr><td>");
-      buf.append(HTMLUtils.genHRef("<img src=\"image.jpg\">", a.getURL()));
+      buf.append(HTMLUtils.genHRef("<img src=\"image.jpg\" />", a.getURL()));
       buf.append("</td><td><table border=\"0\">\n");
       
       if (p.getFileName()!=null) {
@@ -231,6 +231,7 @@ public class Renderer implements Runnable {
     ps.println("<head>");
     ps.println("</head>");
     ps.println("<body>");
+    ps.println("<div>");
     
     try {
       ps.println(objectRenderer(message, null, message).toString());
@@ -240,6 +241,7 @@ public class Renderer implements Runnable {
       e.printStackTrace(ps);
     }
     
+    ps.println("</div>");
     ps.println("</body>");
     ps.println("</html>");
     ps.close();
@@ -314,7 +316,7 @@ public class Renderer implements Runnable {
   
   public void putBar(StringBuilder buf) {
     if (putbar) {
-      buf.append("<br>\n<hr>\n<br>\n");
+      buf.append("<br />\n<hr />\n<br />\n");
     } else {
       putbar = true;
     }

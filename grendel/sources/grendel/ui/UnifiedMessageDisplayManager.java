@@ -24,6 +24,7 @@
 
 package grendel.ui;
 
+import grendel.ui2.FolderView;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -138,7 +139,7 @@ public class UnifiedMessageDisplayManager extends MessageDisplayManager {
 
 class UnifiedMessageFrame extends GeneralFrame {
   private final boolean DEBUG = false;
-  MasterPanel   fFolders = null;
+  FolderView    fFolders = null;
   FolderPanel   fThreads = null;
   MessagePanel  fMessage = null;
   JSplitPane    splitter1 = null, splitter2 = null;
@@ -160,7 +161,7 @@ class UnifiedMessageFrame extends GeneralFrame {
 
     PrefsDialog.CheckPrefs(this);
 
-    fFolders = new MasterPanel();
+    fFolders = new FolderView();
     fThreads = new FolderPanel();
     fMessage = new MessagePanel();
 
@@ -182,19 +183,19 @@ class UnifiedMessageFrame extends GeneralFrame {
 
     layoutPanels(layout);
 
-    XMLMenuBuilder builder = new XMLMenuBuilder(Util.MergeActions(actions, Util.MergeActions(fFolders.getActions(), Util.MergeActions(fThreads.getActions(), fMessage.getActions()))));
+    XMLMenuBuilder builder = new XMLMenuBuilder(Util.MergeActions(actions, /*Util.MergeActions(fFolders.getActions(),*/ Util.MergeActions(fThreads.getActions(), fMessage.getActions())/*)*/));
     fMenu = builder.buildFrom("ui/grendel.xml", this);
 
     getRootPane().setJMenuBar(fMenu);
 
-    JToolBar masterToolBar = fFolders.getToolBar();
+    //JToolBar masterToolBar = fFolders.getToolBar();
     JToolBar folderToolBar = fThreads.getToolBar();
     JToolBar messageToolBar = fMessage.getToolBar();
 
 
-    fToolBar = Util.MergeToolBars(masterToolBar,
+    fToolBar = /*Util.MergeToolBars(masterToolBar,*/
                              Util.MergeToolBars(folderToolBar,
-                                                messageToolBar));
+                                                messageToolBar)/*)*/;
 
     fToolBarPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
     fToolBarPanelConstraints.anchor = GridBagConstraints.WEST;
@@ -228,7 +229,7 @@ class UnifiedMessageFrame extends GeneralFrame {
     UIPrefs.GetMaster().setMultiPaneLayout(fLayout);
     UIPrefs.GetMaster().writePrefs();
 
-    fFolders.dispose();
+    //fFolders.dispose();
     fThreads.dispose();
     fMessage.dispose();
 

@@ -33,7 +33,7 @@ public class PrefsTreeTableModel extends DefaultTreeTableModel
      * Creates a new instance of PrefsTreeTableModel
      */
     public PrefsTreeTableModel() {
-        this(Preferences.getPreferances());
+        this(Preferences.getPreferences());
     }
     
     public PrefsTreeTableModel(XMLPreferences prefs) {

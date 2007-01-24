@@ -29,13 +29,8 @@
 package grendel.ui;
 
 import grendel.ui.addressbook2.Addressbook;
-import java.awt.Component;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
-import java.io.IOException;
-import java.text.MessageFormat;
-import java.util.Enumeration;
-import java.util.ResourceBundle;
 
 import javax.swing.JFrame;
 import javax.swing.ToolTipManager;
@@ -45,15 +40,9 @@ import grendel.ui.prefs.Identities;
 import grendel.ui.prefs.Servers;
 import grendel.ui.prefs.General;
 import grendel.ui.prefs.UI;
-import grendel.storage.MailDrop;
 import grendel.search.SearchFrame;
-
-/* Temporarily removed because FilterMaster is broken (edwin)
-import grendel.filters.FilterMaster;
-*/
-
-import grendel.composition.Composition;
 import com.trfenv.parsers.Event;
+import grendel.ui.prefs2.PrefsUI;
 
 /**
  *Generates a list of common Grendel events for use across the application.
@@ -77,6 +66,8 @@ public class ActionFactory {
   static int fIdent = 0;
 
   static Runnable fComposeMessageThread = new DummyComposeMessageThread();
+
+    static RunPrefEditor fRunPrefEditor = new RunPrefEditor();
 
   public static ExitAction GetExitAction() {
     return fExitAction;
@@ -140,6 +131,10 @@ public class ActionFactory {
     return fShowAddressBookAction;
   }
 
+  public static RunPrefEditor GetRunPrefEditor() {
+      return fRunPrefEditor;
+  }
+
   /**
    *Returns an array of all the preferences events. Used in windows that
    *don't automatically have the preferences events supplied to them.
@@ -155,6 +150,20 @@ public class ActionFactory {
   }
 }
 
+
+class RunPrefEditor extends Event {
+
+  public RunPrefEditor() {
+    super("prefEditor");
+
+    setEnabled(true);
+  }
+
+
+  public void actionPerformed(ActionEvent aEvent) {
+    new PrefsUI().setVisible(true);
+  }
+}
 class ExitAction extends Event {
 
   public ExitAction() {

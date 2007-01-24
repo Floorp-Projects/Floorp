@@ -54,12 +54,12 @@ abstract class HeaderFormatter {
     
     /** Called when beginning to output a header block.  This opens the table. */
     void startHeaderOutput(StringBuilder output) {
-        output.append("<TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>");
+        output.append("<table cellpadding=\"2\" cellspacing=\"0\" width=\"100%\">");
     }
     
     /** Called when done filling a header block.  This closes the table. */
     void finishHeaderOutput(StringBuilder output) {
-        output.append("</TABLE>");
+        output.append("</table>");
     }
     
     /*************************************************************************/
@@ -208,12 +208,12 @@ abstract class HeaderFormatter {
     }
     
     boolean writeRandomHeader(String header, StringBuilder value, StringBuilder output) {
-        output.append("<TR><TH VALIGN=BASELINE ALIGN=RIGHT NOWRAP><FONT FACE=" + HEADER_FONT_NAME + ">");
+        output.append("<tr><th valign=\"baseline\" align=\"right\" nowrap=\"nowrap\"><font face=\"" + HEADER_FONT_NAME + "\">");
         output.append(localizeHeaderName(header));
-        output.append(": </FONT></TH><TD><FONT FACE=" + HEADER_FONT_NAME + ">");
+        output.append(": </font></th><td><font face=\"" + HEADER_FONT_NAME + "\">");
         quoteHTML(value);
         output.append(value);
-        output.append("</FONT></TD></TR>");
+        output.append("</font></td></tr>");
         return true;
     }
 }

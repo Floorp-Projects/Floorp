@@ -103,7 +103,7 @@ public class Accounts extends XMLPreferences {
         }
     }
     
-    public List<Account__Receive> getReciveAccounts() {
+    public List<Account__Receive> getReceiveAccounts() {
         List<Account__Receive> l = new ArrayList<Account__Receive>(size());
         Collection c = values();
         for (Object o: c) {

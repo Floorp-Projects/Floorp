@@ -111,7 +111,7 @@ public class Main {
         Message m = test.getMessage(1);
         System.out.println("Message 1: " + m.toString());*/
         //echoSigs(netscape);*/
-        //Account__Receive ar = Preferences.getPreferances().getAccounts().getReciveAccounts().get(0);
+        //Account__Receive ar = Preferences.getPreferances().getAccounts().getReceiveAccounts().get(0);
         /*System.out.println("Servers: "+Servers.getServers());
         Server s = Servers.getServers().get(2);
         FolderList fl =s.getRoot().getFolders();

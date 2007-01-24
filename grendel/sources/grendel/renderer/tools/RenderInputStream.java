@@ -100,7 +100,7 @@ public class RenderInputStream implements ObjectRender
 
     if (p.getContentType().contains("text/")) {
       //buf.append("<br>\n<hr>\n<br>\n");
-      buf.append("<table border=\"1\" cellspacing=\"0\">");
+      buf.append("<table border=\"1\" cellspacing=\"0\" cellpadding=\"2\">");
 
       Enumeration enumm=p.getAllHeaders();
 
@@ -116,7 +116,7 @@ public class RenderInputStream implements ObjectRender
       }
 
       buf.append("</table>");
-      buf.append("<br>");
+      buf.append("<br />");
       buf.append("<blockquote>");
       buf.append("<pre>");
       buf.append(HTMLUtils.quoteToHTML(sw.toString()));

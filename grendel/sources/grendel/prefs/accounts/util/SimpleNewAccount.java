@@ -196,7 +196,7 @@ public class SimpleNewAccount {
     private Account_SMTP getSMTPServer() {
         if (acc_name != null) throw new NullPointerException("acc_name");
         
-        List<Account__Send> send_accounts =  Preferences.getPreferances().getAccounts().getSendAccounts();
+        List<Account__Send> send_accounts =  Preferences.getPreferences().getAccounts().getSendAccounts();
         for (Account__Send account: send_accounts) {
             if (account instanceof Account_SMTP) {
                 Account_SMTP smtp = (Account_SMTP) account;
@@ -211,7 +211,7 @@ public class SimpleNewAccount {
         Account_SMTP smtp = new Account_SMTP(acc_name+"_SMTP");
         smtp.setHost(out_host);
         smtp.setPort(out_port);
-        Preferences.getPreferances().getAccounts().addAccount(smtp);
+        Preferences.getPreferences().getAccounts().addAccount(smtp);
         return smtp;
     }
 }

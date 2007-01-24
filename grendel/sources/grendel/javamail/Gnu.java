@@ -107,10 +107,10 @@ public final class Gnu {
         //XXX This refers to the HEAD CVS of GNU JavaMail
         String host = nntp.getHost();
         if (host!=null) {
-            props.put("mail.nntp.newsrc.file", Preferences.getPreferances().getProfilePath()+host+".newsrc");
+            props.put("mail.nntp.newsrc.file", Preferences.getPreferences().getProfilePath()+host+".newsrc");
             props.put("mail.nntp.host", host);
         } else {
-            props.put("mail.nntp.newsrc.file", Preferences.getPreferances().getProfilePath()+"news.rc");
+            props.put("mail.nntp.newsrc.file", Preferences.getPreferences().getProfilePath()+"news.rc");
         }
         
         props.put("mail.nntp.listall", "true"); //XXX Mozilla.org Bug

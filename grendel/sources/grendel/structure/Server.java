@@ -71,8 +71,12 @@ public class Server {
             NoticeBoard.publish(new ExceptionNotice(e));
             JOptionPane.showMessageDialog(null,"Login failed", "Grendel Error", JOptionPane.ERROR_MESSAGE);  // TODO REDO THIS!!!!!
             try {
-                store.close();
+                if (store.isConnected()) {
+                    store.close();
+                }
             } catch (MessagingException ex) {
+                ex.printStackTrace();
+            } catch (Exception ex) {
                 ex.printStackTrace();
             }
             return false;
@@ -80,8 +84,12 @@ public class Server {
             
             NoticeBoard.publish(new ExceptionNotice(e.getNextException()));
             try {
-                store.close();
+                if (store.isConnected()) {
+                    store.close();
+                }
             } catch (MessagingException ex) {
+                ex.printStackTrace();
+            } catch (Exception ex) {
                 ex.printStackTrace();
             }
             return false;

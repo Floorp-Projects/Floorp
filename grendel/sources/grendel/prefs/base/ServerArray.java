@@ -86,9 +86,9 @@ public class ServerArray {
     }
     
     public ServerStructure get(int Index) {
-        Account a = Preferences.getPreferances().getAccounts().getReciveAccounts().get(Index);
+        Account a = Preferences.getPreferences().getAccounts().getReceiveAccounts().get(Index);
         if (Index<0) Index=0;
-        if (Index>Preferences.getPreferances().getAccounts().getReciveAccounts().size()) Index=0;
+        if (Index>Preferences.getPreferences().getAccounts().getReceiveAccounts().size()) Index=0;
         if (a == null) {
             return get(Index +1);
         }
@@ -97,15 +97,15 @@ public class ServerArray {
     }
     
     public void add(ServerStructure aServer) {
-        Preferences.getPreferances().getAccounts().addAccount(aServer.getAccount());
+        Preferences.getPreferences().getAccounts().addAccount(aServer.getAccount());
     }
     
     public void remove(int Index) {
-        Preferences.getPreferances().getAccounts().removeAccount(Index);
+        Preferences.getPreferences().getAccounts().removeAccount(Index);
     }
     
     public int size() {
-        return Preferences.getPreferances().getAccounts().getReciveAccounts().size();
+        return Preferences.getPreferences().getAccounts().getReceiveAccounts().size();
     }
     
 }

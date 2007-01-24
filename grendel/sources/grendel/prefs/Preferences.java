@@ -131,7 +131,7 @@ public final class Preferences extends XMLPreferences
     return base_path;
   }
 
-  public static Preferences getPreferances()
+  public static Preferences getPreferences()
   {
     if (preferences == null)
     {

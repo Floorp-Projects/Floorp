@@ -66,12 +66,12 @@ public class GeneralPrefs {
     }
     
     public String getSMTPServer() {
-        Account_SMTP a = (Account_SMTP) Preferences.getPreferances().getAccounts().getAccount(0);
+        Account_SMTP a = (Account_SMTP) Preferences.getPreferences().getAccounts().getAccount(0);
         return a.getHost();
     }
     
     public void setSMTPServer(String aSMTPServer) {
-        Account_SMTP a = (Account_SMTP) Preferences.getPreferances().getAccounts().getAccount(0);
+        Account_SMTP a = (Account_SMTP) Preferences.getPreferences().getAccounts().getAccount(0);
         a.setHost(aSMTPServer);
     }
     

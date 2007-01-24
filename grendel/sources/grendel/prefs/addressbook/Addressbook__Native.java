@@ -88,7 +88,7 @@ public abstract class Addressbook__Native extends AbstractAddressbook implements
   
   public static String getBaseDirectory()
   {
-    return Preferences.getPreferances().getProfilePath().concat("/addressbook/");
+    return Preferences.getPreferences().getProfilePath().concat("/addressbook/");
   }
   
   public String getDirectory()

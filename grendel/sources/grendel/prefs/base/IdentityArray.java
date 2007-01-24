@@ -104,9 +104,9 @@ public class IdentityArray {
     }
     
     public IdentityStructure get(int Index) {
-        Identity id = Preferences.getPreferances().getAccounts().getAccount(0).getIdentity(Index);
+        Identity id = Preferences.getPreferences().getAccounts().getAccount(0).getIdentity(Index);
         if (Index<0) Index=0;
-        if (Index>Preferences.getPreferances().getAccounts().getAccount(0).getIdentities().size()) Index=0;
+        if (Index>Preferences.getPreferences().getAccounts().getAccount(0).getIdentities().size()) Index=0;
         if (id == null) {
             return get(Index +1);
         }
@@ -115,18 +115,18 @@ public class IdentityArray {
     }
     
     public void add(IdentityStructure aIdentity) {
-        Preferences.getPreferances().getAccounts().getAccount(0).addIdentity(aIdentity.getID());
+        Preferences.getPreferences().getAccounts().getAccount(0).addIdentity(aIdentity.getID());
         /*if (aIdentity.getParent() == null) {
-            aIdentity.setParent(XMLPreferences.getPreferances().getAccounts().getAccount(0).getIdentities());
+            aIdentity.setParent(XMLPreferences.getPreferences().getAccounts().getAccount(0).getIdentities());
         }*/
     }
     
     public void remove(int Index) {
-        Preferences.getPreferances().getAccounts().getAccount(0).removeIdentity(Index);
+        Preferences.getPreferences().getAccounts().getAccount(0).removeIdentity(Index);
     }
     
     public int size() {
-        int i =Preferences.getPreferances().getAccounts().getAccount(0).getIdentities().size(); 
+        int i =Preferences.getPreferences().getAccounts().getAccount(0).getIdentities().size(); 
         return i;
     }
     

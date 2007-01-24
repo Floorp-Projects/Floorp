@@ -142,7 +142,7 @@ public final class HTMLUtils {
         String strData=buffer.toString();
         
         //strData = strData.replace(" ", "&nbsp;");
-        strData=strData.replace("\n", "<br>");
+        strData=strData.replace("\n", "<br />");
         
         return strData;
     }

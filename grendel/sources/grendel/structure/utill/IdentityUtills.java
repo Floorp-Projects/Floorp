@@ -31,7 +31,7 @@ public final class IdentityUtills {
     
     public static ArrayList<AccountIdentity> getAllAccountIdentitys() {
         ArrayList<AccountIdentity> ai_a = new ArrayList<AccountIdentity>();
-        List<Account__Receive> recieve_accounts =  Preferences.getPreferances().getAccounts().getReciveAccounts();
+        List<Account__Receive> recieve_accounts =  Preferences.getPreferences().getAccounts().getReceiveAccounts();
         for (Account__Receive account: recieve_accounts) {
             Collection<Identity> identities = account.getCollectionIdentities();
             Account__Send send_account = account.getSendAccount();

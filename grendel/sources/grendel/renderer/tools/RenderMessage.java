@@ -94,7 +94,7 @@ public class RenderMessage implements ObjectRender {
         
         if (indent) {
             buf.append("<blockquote>");
-            buf.append("<table border=\"1\" cellspacing=\"0\">");
+            buf.append("<table border=\"1\" cellspacing=\"0\" cellpadding=\"2\">");
             buf.append("<tr><td>");
         }
         
@@ -111,7 +111,7 @@ public class RenderMessage implements ObjectRender {
         /*new BriefHeaderFormatter().formatHeaders(ih, buf);
         buf.append("<hr>");*/
             new NormalHeaderFormatter().formatHeaders(ih, buf);
-            buf.append("<hr>");
+            buf.append("<hr />");
         /*new FullHeaderFormatter().formatHeaders(ih, buf);
         buf.append("<hr>");*/
         }

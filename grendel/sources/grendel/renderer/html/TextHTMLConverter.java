@@ -109,7 +109,7 @@ public class TextHTMLConverter {
             char url[] = new char[url_length];
             text.getChars(i, end, url, 0);
 
-            text.insert(i, "<A HREF=\"");
+            text.insert(i, "<a href=\"");
             i += 9;
             end += 9;
             in_length += 9;
@@ -145,7 +145,7 @@ public class TextHTMLConverter {
               i++;
             }
 
-            text.insert(i, "</A>");
+            text.insert(i, "</a>");
             i += 4;
             in_length += 4;
 
@@ -184,9 +184,9 @@ public class TextHTMLConverter {
       if (i < in_length &&
           (text.charAt(i) == '>' || text.charAt(i) == ']') &&
           !sendmailFuckage(text, i, in_length)) {
-        text.insert(i, "<CITE>");
+        text.insert(i, "<cite>");
         in_length += 6;
-        text.insert(in_length, "</CITE><br>");
+        text.insert(in_length, "</cite><br />");
       }
     }
   }

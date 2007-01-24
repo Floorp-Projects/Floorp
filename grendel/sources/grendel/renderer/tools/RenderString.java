@@ -44,6 +44,7 @@ package grendel.renderer.tools;
 import grendel.renderer.html.HTMLUtils;
 import grendel.renderer.ObjectRender;
 import grendel.renderer.Renderer;
+import grendel.renderer.html.TextHTMLConverter;
 
 import java.util.Enumeration;
 
@@ -91,7 +92,12 @@ public class RenderString implements ObjectRender
       buf.append(HTMLUtils.cleanHTML((String) o));
     } else if (p.getContentType().contains("text/plain")) {
         master.putBar(buf);
-        buf.append(HTMLUtils.quoteToHTML((String) o));
+        buf.append("<pre class=\"message-plain-text\">");
+        StringBuilder buffer=new StringBuilder((String) o);
+        TextHTMLConverter.quoteForHTML(buffer, true, true);
+        buf.append(buffer);
+        buf.append("</pre>");
+        //buf.append(HTMLUtils.quoteToHTML((String) o));
     } else {
       try {
         String s=(String) o;

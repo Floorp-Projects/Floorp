@@ -338,6 +338,18 @@ public class Folder {
         return name_this.equals(name_that);
     }
     
+    /*
+     * Tests if this folder physically exists on the Server.
+     */
+    public boolean exists() {
+        getServer().ensureConnection();
+        try {
+            return folder.exists();
+        } catch (MessagingException ex) {
+            NoticeBoard.publish(new ExceptionNotice(ex));
+            return false;
+        }
+    }
     
     /**
      * Get the number of unread messages
@@ -695,7 +707,7 @@ public class Folder {
                     boolean found = false;
                     
                     for (int j = 0; j < messages_a.length; j++) {
-                        if (m.equals(messages_a[i])) {
+                        if (m.equals(messages_a[j])) {
                             found = true;
                             j = messages_a.length;
                         }

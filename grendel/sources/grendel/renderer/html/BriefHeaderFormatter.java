@@ -56,22 +56,22 @@ public class BriefHeaderFormatter extends HeaderFormatter {
     /** Called when beginning to output a header block.  This opens the table. */
     void startHeaderOutput(StringBuilder output) {
         super.startHeaderOutput(output);
-        output.append("<TR>");
+        output.append("<tr>");
     }
     
     /** Called when done filling a header block.  This closes the table. */
     void finishHeaderOutput(StringBuilder output) {
-        output.append("</TR>");
+        output.append("</tr>");
         super.finishHeaderOutput(output);
     }
     
     boolean writeRandomHeader(String header, StringBuilder value, StringBuilder output) {
-        output.append("<TH VALIGN=BASELINE ALIGN=RIGHT NOWRAP><FONT FACE=" + HEADER_FONT_NAME + ">");
+        output.append("<th valign=\"baseline\" align=\"right\" =\"nowrap\"><font face=\"" + HEADER_FONT_NAME + "\">");
         output.append(localizeHeaderName(header));
-        output.append(": </FONT></TH><TD><FONT FACE=" + HEADER_FONT_NAME + ">");
+        output.append(": </font></th><td><font face=\"" + HEADER_FONT_NAME + "\">");
         quoteHTML(value);
         output.append(value);
-        output.append("</FONT></TD>");
+        output.append("</font></td>");
         return true;
     }
     

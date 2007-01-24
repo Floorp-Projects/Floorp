@@ -61,7 +61,7 @@ public final class JMProviders {
     
     public static Session getSession() {
         if (sess==null) {
-            options_mail=Preferences.getPreferances().getPropertyPrefs("options").getPropertyPrefs("mail");
+            options_mail=Preferences.getPreferences().getPropertyPrefs("options").getPropertyPrefs("mail");
             Properties props = new Properties();
             sess=Session.getDefaultInstance(props, null);
             //fSession.setDebug(options_mail.getPropertyBoolean("debug"));
