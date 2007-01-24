@@ -2175,7 +2175,7 @@ var gMessageNotificationBar =
     var headerParser = Components.classes["@mozilla.org/messenger/headerparser;1"]
                                  .getService(Components.interfaces.nsIMsgHeaderParser);
     var emailAddress = headerParser.extractHeaderAddressMailboxes(null, aMsgHdr.author);
-    document.getElementById('allowRemoteContentForAuthorDesc').value =
+    document.getElementById('allowRemoteContentForAuthorDesc').textContent =
       gMessengerBundle.getFormattedString('alwaysLoadRemoteContentForSender', [emailAddress ? emailAddress : aMsgHdr.author]);
     this.updateMsgNotificationBar(kMsgNotificationRemoteImages, true);
   },
