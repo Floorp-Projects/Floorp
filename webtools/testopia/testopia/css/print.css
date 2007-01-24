@@ -4,7 +4,15 @@ body {
 .print_table_header {
 	font-weight: bold;
 	text-align: center;
-	padding-left: 15px;
+	padding-left: 5px;
+	padding-right: 5px;
+	border-bottom: 1px solid #000;
+}
+.print_table_row_header {
+	font-weight: bold;
+	text-align: right;
+	padding-right: 5px;
+	border-right: 1px solid #000;
 }
 .print_table_bold {
 	text-align: right;

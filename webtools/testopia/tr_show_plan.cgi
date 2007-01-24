@@ -212,12 +212,14 @@ elsif ($action eq 'Commit'){
 }
 
 elsif ($action eq 'Print'){
-    print $cgi->header;
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
-    ThrowUserError("testopia-permission-denied", {'object' => 'plan'}) unless $plan->canview;
-    $vars->{'plan'} = $plan;    
-    $template->process("testopia/plan/show-document.html.tmpl", $vars)
-      || ThrowTemplateError($template->error());
+    unless ($plan->canview){
+        print $cgi->header;
+        ThrowUserError("testopia-permission-denied", {'object' => 'plan'});
+    }
+    $vars->{'printdoc'} = 1;
+    $cgi->param('ctype', 'print');
+    display($plan);    
 }
 
 elsif ($action eq 'History'){
@@ -336,7 +338,6 @@ elsif ($action eq 'caselist'){
 ### Just show it ###
 ####################
 else{
-    print $cgi->header;
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
     ThrowUserError("testopia-permission-denied", {'object' => 'plan'}) unless $plan->canview;
     display($plan);
@@ -477,9 +478,9 @@ sub display {
     my @time = localtime(time());
     my $date = sprintf "%04d-%02d-%02d", 1900+$time[5],$time[4]+1,$time[3];
 	my $filename = "testcases-$date.$format->{extension}";
+#	print $cgi->multipart_final if ($serverpush && $vars->{'case_table'}->list_count >= 1000);
     print $cgi->header(-type => $format->{'ctype'},
-					   -content_disposition => "$disp; filename=$filename")
-		if $cgi->param('ctype');
+					   -content_disposition => "$disp; filename=$filename");
 	
 	$vars->{'percentage'} = \&percentage;			   	  
 	$template->process($format->{'template'}, $vars) ||

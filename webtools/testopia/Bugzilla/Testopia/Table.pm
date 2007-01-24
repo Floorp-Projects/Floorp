@@ -108,38 +108,27 @@ sub init {
     my $debug = $cgi->param('debug') if $cgi;
     my @list;
     if ($query){
-        my $serverpush = support_server_push($cgi);
         print "$query" if $debug;
+
         # For paging we need to know the total number of items
         # but Search.pm returns a query with a subset
         my $countquery = $query;
         $countquery =~ s/ LIMIT.*$//;
         print "<br> $countquery" if $debug;
+
         my $dbh = Bugzilla->switch_to_shadow_db();
+
         my $count_res = $dbh->selectcol_arrayref($countquery);
         my $count = scalar @$count_res;
         print "<br> total rows: $count" if $debug;
+
         $self->{'list_count'} = $count;
         my @ids;
         my $list = $dbh->selectcol_arrayref($query);
+
         $dbh = Bugzilla->switch_to_main_db();
-        
-        my $vars;
-        my $progress_interval = 1000;
-        my $i = 0;
-        my $total = scalar @$list;
-        
+
         foreach my $id (@$list){
-            $i++;
-            if ($serverpush && $i % $progress_interval == 0){
-                print $cgi->multipart_end;
-                print $cgi->multipart_start;
-                $vars->{'complete'} = $i;
-                $vars->{'total'} = $total;
-                
-                Bugzilla->template->process("testopia/progress.html.tmpl", $vars)
-                  || ThrowTemplateError(Bugzilla->template->error());
-            }
             my $o;
             if ($type eq 'case'){
                 $o = Bugzilla::Testopia::TestCase->new($id);
