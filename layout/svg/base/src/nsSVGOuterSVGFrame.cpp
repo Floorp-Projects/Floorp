@@ -709,6 +709,7 @@ nsSVGOuterSVGFrame::CalculateAvailableSpace(nsRect *maxRect,
 {
   *preferredRect = aPresContext->GetVisibleArea();
   
+  // XXXldb What about margin?
   if (aReflowState.availableWidth != NS_INTRINSICSIZE)
     maxRect->width = aReflowState.availableWidth;
   else if (aReflowState.parentReflowState &&

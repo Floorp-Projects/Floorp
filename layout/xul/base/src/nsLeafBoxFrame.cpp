@@ -358,6 +358,8 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
     nsRect* overflowArea = GetOverflowAreaProperty();
     NS_ASSERTION(overflowArea, "Failed to set overflow area property");
     aDesiredSize.mOverflowArea = *overflowArea;
+  } else {
+    aDesiredSize.mOverflowArea = nsRect(nsPoint(0, 0), GetSize());
   }
 
 #ifdef DO_NOISY_REFLOW

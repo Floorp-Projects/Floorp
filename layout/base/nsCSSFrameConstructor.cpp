@@ -7326,12 +7326,13 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
         ResolvePseudoStyleFor(aContent,
                               nsCSSAnonBoxes::mozSVGForeignContent, aStyleContext);
     
-      nsIFrame* blockFrame = NS_NewBlockFrame(mPresShell, innerPseudoStyle);
+      nsIFrame* blockFrame = NS_NewBlockFrame(mPresShell, innerPseudoStyle,
+                                              NS_BLOCK_SPACE_MGR |
+                                                NS_BLOCK_MARGIN_ROOT |
+                                                NS_FRAME_REFLOW_ROOT);
       if (NS_UNLIKELY(!blockFrame))
         return NS_ERROR_OUT_OF_MEMORY;
     
-      blockFrame->AddStateBits(NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT |
-                               NS_FRAME_REFLOW_ROOT);
       // Claim to be relatively positioned so that we end up being the
       // absolute containing block.
       nsFrameConstructorSaveState saveState;

@@ -517,11 +517,21 @@ nsSVGForeignObjectFrame::DoReflow()
 
   mInReflow = PR_TRUE;
 
-  // create a new reflow state, setting our max size to (width,height):
   nsHTMLReflowState reflowState(presContext, kid,
-                                renderingContext, size);
+                                renderingContext,
+                                nsSize(size.width, NS_UNCONSTRAINEDSIZE));
   nsHTMLReflowMetrics desiredSize;
   nsReflowStatus status;
+
+  // We don't use size.height above because that tells the child to do
+  // page/column breaking at that height.
+  NS_ASSERTION(reflowState.mComputedBorderPadding == nsMargin(0, 0, 0, 0) &&
+               reflowState.mComputedMargin == nsMargin(0, 0, 0, 0),
+               "style system should ensure that :-moz-svg-foreign content "
+               "does not get styled");
+  NS_ASSERTION(reflowState.mComputedWidth == size.width,
+               "reflow state made child wrong size");
+  reflowState.mComputedHeight = size.height;
   
   ReflowChild(kid, presContext, desiredSize, reflowState, 0, 0,
               NS_FRAME_NO_MOVE_FRAME, status);

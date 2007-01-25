@@ -72,4 +72,6 @@ foreignObject {
 *|*::-moz-svg-foreign-content {
   display: block !important;
   position: static !important;
+  /* so we don't report overflow that confuses the reflow root code */
+  overflow: -moz-hidden-unscrollable ! important;
 }
