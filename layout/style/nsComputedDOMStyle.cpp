@@ -464,30 +464,41 @@ nsComputedDOMStyle::GetBottom(nsIDOMCSSValue** aValue)
   return GetOffsetWidthFor(NS_SIDE_BOTTOM, aValue);
 }
 
-nsDOMCSSRGBColor*
-nsComputedDOMStyle::GetDOMCSSRGBColor(nscolor aColor)
+nsresult
+nsComputedDOMStyle::SetToRGBAColor(nsROCSSPrimitiveValue* aValue,
+                                   nscolor aColor)
 {
+  if (NS_GET_A(aColor) == 0) {
+    aValue->SetIdent(nsGkAtoms::transparent);
+    return NS_OK;
+  }
+
   nsROCSSPrimitiveValue *red   = GetROCSSPrimitiveValue();
   nsROCSSPrimitiveValue *green = GetROCSSPrimitiveValue();
   nsROCSSPrimitiveValue *blue  = GetROCSSPrimitiveValue();
+  nsROCSSPrimitiveValue *alpha  = GetROCSSPrimitiveValue();
 
-  if (red && green && blue) {
-    nsDOMCSSRGBColor *rgbColor = new nsDOMCSSRGBColor(red, green, blue);
+  if (red && green && blue && alpha) {
+    nsDOMCSSRGBColor *rgbColor =
+      new nsDOMCSSRGBColor(red, green, blue, alpha, NS_GET_A(aColor) < 255);
 
     if (rgbColor) {
       red->SetNumber(NS_GET_R(aColor));
       green->SetNumber(NS_GET_G(aColor));
       blue->SetNumber(NS_GET_B(aColor));
+      alpha->SetNumber(float(NS_GET_A(aColor)) / 255.0f);
 
-      return rgbColor;
+      aValue->SetColor(rgbColor);
+      return NS_OK;
     }
   }
 
   delete red;
   delete green;
   delete blue;
+  delete alpha;
 
-  return nsnull;
+  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 nsresult
@@ -498,14 +509,11 @@ nsComputedDOMStyle::GetColor(nsIDOMCSSValue** aValue)
 
   const nsStyleColor* color = GetStyleColor();
 
-  nsDOMCSSRGBColor *rgb = GetDOMCSSRGBColor(color->mColor);
-  if (!rgb) {
+  nsresult rv = SetToRGBAColor(val, color->mColor);
+  if (NS_FAILED(rv)) {
     delete val;
-
-    return NS_ERROR_OUT_OF_MEMORY;
+    return rv;
   }
-
-  val->SetColor(rgb);
 
   return CallQueryInterface(val, aValue);
 }
@@ -856,15 +864,11 @@ nsComputedDOMStyle::GetBackgroundColor(nsIDOMCSSValue** aValue)
                                  nsCSSProps::kBackgroundColorKTable);
     val->SetIdent(backgroundColor);
   } else {
-    nsDOMCSSRGBColor *rgb = nsnull;
-    rgb = GetDOMCSSRGBColor(color->mBackgroundColor);
-    if (!rgb) {
+    nsresult rv = SetToRGBAColor(val, color->mBackgroundColor);
+    if (NS_FAILED(rv)) {
       delete val;
-
-      return NS_ERROR_OUT_OF_MEMORY;
+      return rv;
     }
-
-    val->SetColor(rgb);
   }
 
   return CallQueryInterface(val, aValue);
@@ -1396,15 +1400,11 @@ nsComputedDOMStyle::GetOutlineColor(nsIDOMCSSValue** aValue)
   nscolor color;
   GetStyleOutline()->GetOutlineColor(color);
 
-  nsDOMCSSRGBColor *rgb = nsnull;
-  rgb = GetDOMCSSRGBColor(color);
-  if (!rgb) {
+  nsresult rv = SetToRGBAColor(val, color);
+  if (NS_FAILED(rv)) {
     delete val;
-
-    return NS_ERROR_OUT_OF_MEMORY;
+    return rv;
   }
-
-  val->SetColor(rgb);
 
   return CallQueryInterface(val, aValue);
 }
@@ -2925,14 +2925,11 @@ nsComputedDOMStyle::GetBorderColorsFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
         if (borderColors->mTransparent) {
           primitive->SetIdent(nsGkAtoms::transparent);
         } else {
-          nsDOMCSSRGBColor *rgb = GetDOMCSSRGBColor(borderColors->mColor);
-          if (rgb) {
-            primitive->SetColor(rgb);
-          } else {
+          nsresult rv = SetToRGBAColor(primitive, borderColors->mColor);
+          if (NS_FAILED(rv)) {
             delete valueList;
             delete primitive;
-
-            return NS_ERROR_OUT_OF_MEMORY;
+            return rv;
           }
         }
 
@@ -3014,15 +3011,13 @@ nsComputedDOMStyle::GetBorderColorFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
       const nsStyleColor* colorStruct = GetStyleColor();
       color = colorStruct->mColor;
     }
+    // XXX else?
 
-    nsDOMCSSRGBColor *rgb = GetDOMCSSRGBColor(color);
-    if (!rgb) {
+    nsresult rv = SetToRGBAColor(val, color);
+    if (NS_FAILED(rv)) {
       delete val;
-
-      return NS_ERROR_OUT_OF_MEMORY;
+      return rv;
     }
-
-    val->SetColor(rgb);
   }
 
   return CallQueryInterface(val, aValue);
