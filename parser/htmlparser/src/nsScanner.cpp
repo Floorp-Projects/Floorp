@@ -51,6 +51,9 @@
 #include "nsCRT.h"
 #include "nsParser.h"
 
+// We replace NUL characters with this character.
+static PRUnichar sInvalid = UCS2_REPLACEMENT_CHAR;
+
 nsReadEndCondition::nsReadEndCondition(const PRUnichar* aTerminateChars) :
   mChars(aTerminateChars), mFilter(PRUnichar(~0)) // All bits set
 {
@@ -758,7 +761,7 @@ nsresult nsScanner::ReadTagIdentifier(nsScannerSharedSubstring& aString) {
         break;
 
       case '\0':
-        ReplaceCharacter(current, '-');
+        ReplaceCharacter(current, sInvalid);
         break;
 
       default:
@@ -1059,8 +1062,8 @@ nsresult nsScanner::ReadWhile(nsString& aString,
  
     theChar=*current;
     if (theChar == '\0') {
-      ReplaceCharacter(current, '-');
-      theChar = '-';
+      ReplaceCharacter(current, sInvalid);
+      theChar = sInvalid;
     }
     if(theChar) {
       PRInt32 pos=aValidSet.FindChar(theChar);
@@ -1121,8 +1124,8 @@ nsresult nsScanner::ReadUntil(nsAString& aString,
   while (current != mEndPosition) {
     theChar = *current;
     if (theChar == '\0') {
-      ReplaceCharacter(current, '-');
-      theChar = '-';
+      ReplaceCharacter(current, sInvalid);
+      theChar = sInvalid;
     }
 
     // Filter out completely wrong characters
@@ -1181,8 +1184,8 @@ nsresult nsScanner::ReadUntil(nsScannerSharedSubstring& aString,
   while (current != mEndPosition) {
     theChar = *current;
     if (theChar == '\0') {
-      ReplaceCharacter(current, '-');
-      theChar = '-';
+      ReplaceCharacter(current, sInvalid);
+      theChar = sInvalid;
     }
 
     // Filter out completely wrong characters
@@ -1242,8 +1245,8 @@ nsresult nsScanner::ReadUntil(nsScannerIterator& aStart,
   
   while (current != mEndPosition) {
     if (theChar == '\0') {
-      ReplaceCharacter(current, '-');
-      theChar = '-';
+      ReplaceCharacter(current, sInvalid);
+      theChar = sInvalid;
     }
 
     // Filter out completely wrong characters
@@ -1306,8 +1309,8 @@ nsresult nsScanner::ReadUntil(nsAString& aString,
 
   while (current != mEndPosition) {
     if (theChar == '\0') {
-      ReplaceCharacter(current, '-');
-      theChar = '-';
+      ReplaceCharacter(current, sInvalid);
+      theChar = sInvalid;
     }
 
     if (aTerminalChar == theChar) {
