@@ -746,6 +746,7 @@ PlacesController.prototype = {
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_VISIT:
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_FULL_VISIT:
           nodeData["link"] = true;
+          uri = PlacesUtils._uri(node.uri);
           if (PlacesUtils.bookmarks.isBookmarked(PlacesUtils._uri(node.uri)))
             nodeData["bookmark"] = true;
           break;
