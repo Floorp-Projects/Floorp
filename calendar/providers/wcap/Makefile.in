@@ -54,6 +54,7 @@ EXTRA_SCRIPTS = \
                 calWcapSession.js \
                 calWcapCalendarItems.js \
                 calWcapCalendar.js \
+                calWcapCachedCalendar.js \
                 $(NULL)
 
 EXTRA_COMPONENTS = \
