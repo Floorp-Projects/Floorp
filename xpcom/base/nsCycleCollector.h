@@ -58,6 +58,7 @@ NS_COM PRBool nsCycleCollector_isScanSafe(nsISupports *n);
 NS_COM void nsCycleCollector_suspect(nsISupports *n);
 NS_COM void nsCycleCollector_forget(nsISupports *n);
 NS_COM void nsCycleCollector_collect();
+NS_COM void nsCycleCollector_shutdown();
 
 // Helpers for interacting with language-identified scripts
 
