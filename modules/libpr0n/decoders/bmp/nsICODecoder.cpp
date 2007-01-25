@@ -66,14 +66,43 @@ NS_IMPL_ISUPPORTS1(nsICODecoder, imgIDecoder)
 // Actual Data Processing
 // ----------------------------------------
 
+#ifdef MOZ_CAIRO_GFX
+static PRUint32 premultiply(PRUint32 x)
+{
+    PRUint32 a = x >> 24;
+    PRUint32 t = (x & 0xff00ff) * a + 0x800080;
+    t = (t + ((t >> 8) & 0xff00ff)) >> 8;
+    t &= 0xff00ff;
+
+    x = ((x >> 8) & 0xff) * a + 0x80;
+    x = (x + ((x >> 8) & 0xff));
+    x &= 0xff00;
+    x |= t | (a << 24);
+    return x;
+}
+#endif
+
 nsresult nsICODecoder::SetImageData()
 {
+#ifdef MOZ_CAIRO_GFX
+  if (mHaveAlphaData) {
+    // We have premultiply the pixels when we have alpha transparency
+    PRUint32* p = (PRUint32*)mDecodedBuffer;
+    for (PRUint32 c = mDirEntry.mWidth * mDirEntry.mHeight; c > 0; --c) {
+      *p = premultiply(*p);
+      p++;
+    }
+  }
+  // In Cairo we can set the whole image in one go
+  PRUint32 dataLen = mDirEntry.mHeight * mDirEntry.mWidth * 4;
+  mFrame->SetImageData(mDecodedBuffer, dataLen, 0);
+#else
   PRUint32 bpr;
   mFrame->GetImageBytesPerRow(&bpr);
  
   // Since the ICO is decoded into an exact sized array, the frame may use
   // more bytes per row of pixels than the decoding array.
-#if defined(MOZ_CAIRO_GFX) || defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MAC) || defined(XP_MACOSX)
   PRUint32 decodedLineLen = mDirEntry.mWidth * 4;
 #else
   PRUint32 decodedLineLen = mDirEntry.mWidth * 3;
@@ -87,6 +116,7 @@ nsresult nsICODecoder::SetImageData()
        ++i, frameOffset += bpr, decodeBufferPos += decodedLineLen) {
     mFrame->SetImageData(decodeBufferPos, decodedLineLen, frameOffset);
   }
+#endif
 
   nsIntRect r(0, 0, 0, 0);
   mFrame->GetWidth(&r.width);
