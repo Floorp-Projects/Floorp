@@ -39,9 +39,11 @@
 
 #include "calICalendar.idl"
 #include "calIDateTime.idl"
+#include "calIWcapRequest.idl"
 interface calIWcapSession;
+interface calIAttendee;
 
-/** Adds WCAP specific capabilities.
+/** Adds WCAP specific capabilities to calICalendar.
  */
 [scriptable, uuid(21A189DF-6C92-41f6-9E2B-1929EF25CAEE)]
 interface calIWcapCalendar : calICalendar
@@ -53,46 +55,75 @@ interface calIWcapCalendar : calICalendar
     
     /**
      * Current calId the calendar instance acts on; defaults to userId.
-     * @exception may throw an NS_ERROR_NOT_AVAILABLE of not logged in
+     * @exception NS_ERROR_NOT_AVAILABLE if not logged in
      */
     readonly attribute string calId;
-    
+
     /**
      * UserId of primary owner of this calendar instance.
+     * @exception NS_ERROR_NOT_AVAILABLE if not logged in
      */
     readonly attribute string ownerId;
     
     /**
+     * Determines whether this calendar instance is the user's default calendar.
+     * @exception NS_ERROR_NOT_AVAILABLE if not logged in
+     */
+    readonly attribute boolean isDefaultCalendar;
+    
+    /**
      * Whether the currently selected calendar belongs to user.
+     * @exception NS_ERROR_NOT_AVAILABLE if not logged in
      */
     readonly attribute boolean isOwnedCalendar;
     
     /**
      * Calendar description.
+     * @exception NS_ERROR_NOT_AVAILABLE if not logged in
      */
     readonly attribute string description;
     
     /**
      * Calendar display name.
+     * @exception NS_ERROR_NOT_AVAILABLE if not logged in
      */
     readonly attribute string displayName;
     
     /**
      * Gets this calendar's (calId) default timezone.
+     * @exception NS_ERROR_NOT_AVAILABLE if not logged in
      */
     readonly attribute string defaultTimezone;
     
     /**
+     * Tests whether the passed item corresponds to an invitation.
+     *
+     * @param item item to be tested
+     * @return whether the passed item corresponds to an invitation
+     */
+    boolean isInvitation(in calIItemBase item);
+    
+    /**
+     * Gets the invited attendee if the passed item corresponds to
+     * an invitation.
+     *
+     * @param item invitation item
+     * @return attendee object else null
+     */
+    calIAttendee getInvitedAttendee(in calIItemBase item);
+    
+    /**
      * Gets calendar properties.
-     * An error is notified to all registered calIObservers, then thrown.
      *
      * @param propName property name (e.g. X-S1CS-CALPROPS-COMMON-NAME)
-     * @return array of property values
+     * @param count length of props array
+     * @param listener called with array of strings as result
+     * @return request object to track operation
+     * @exception NS_ERROR_NOT_AVAILABLE if not logged in
      */
-    void getCalendarProperties(
-        in string propName,
-        out unsigned long count,
-        [array, size_is(count), retval] out string properties );
+    void getCalendarProperties(in string propName,
+                               out unsigned long count,
+                               [array, size_is(count), retval] out string props);
     
     /* xxx todo: additional filters sensible for calICalendar, too?
                  claiming bits 24-30 for now.
@@ -180,12 +211,13 @@ interface calIWcapCalendar : calICalendar
      * @param listener operation listener for SYNC operation
      *                 (may optionally implemented calIObserver to receive
      *                 onAddItem(), onModifyItem() or onDeleteItem() calls)
+     * @return request object to track operation
      */
-    void syncChangesTo(
+    calIWcapRequest syncChangesTo(
         in calICalendar destCal,
         in unsigned long itemFilter,
         in calIDateTime dtFrom,
-        in calIOperationListener listener );
+        in calIOperationListener listener);
 
     /* xxx todo:
        separate out into another interface and leave only an attribute
@@ -262,10 +294,11 @@ interface calIWcapCalendar : calICalendar
      * if (cal.checkAccess(calIWcapCalendar.AC_PROP_WRITE))
      *     cal.name = newName;
      *
+     * @exception NS_ERROR_NOT_AVAILABLE if not logged in
      * @param accessControlBits access control bits (above AC_ definitions)
      * @return true if access is granted, false otherwise
      */
-    boolean checkAccess( in unsigned long accessControlBits );
+    boolean checkAccess(in unsigned long accessControlBits);
     
     /**
      * Defines granted and denied permissions for a specific user or
@@ -288,9 +321,12 @@ interface calIWcapCalendar : calICalendar
      *                    - @ stands in for everybody
      *                    xxx todo: change the above
      * @param accessControlBits access control bits (above AC_ definitions)
+     * @param listener called when access control bits have been updated
+     * @return request object to track operation
      */
-    void defineAccessControl(
-        in string userId, in unsigned long accessControlBits );
+    calIWcapRequest defineAccessControl(
+        in string userId, in unsigned long accessControlBits,
+        in calIWcapRequestResultListener listener);
     
     /**
      * To reset a user's access control definition to the default ones
@@ -299,20 +335,26 @@ interface calIWcapCalendar : calICalendar
      * Components.results.NS_ERROR_INVALID_ARG is thrown.
      *
      * @param userId user id
+     * @param listener called when access control bits have been updated
+     * @return request object to track operation
      */
-    void resetAccessControl( in string userId );
+    calIWcapRequest resetAccessControl(
+        in string userId,
+        in calIWcapRequestResultListener listener);
     
-    /**
-     * Gets the set of access control definitions (including "everybody").
-     * Both out arrays have the same length.
-     *
-     * @param count length of returned arrays
-     * @param users users ids
-     * @param accessControlBits access control bits
-     */
-    void getAccessControlDefinitions(
-        out unsigned long count,
-        [array, size_is(count)] out string users,
-        [array, size_is(count)] out unsigned long accessControlBits );
+//     /**
+//      * Gets the set of access control definitions (including "everybody").
+//      * Both out arrays have the same length.
+//      *
+//      * @param count length of returned arrays
+//      * @param users users ids
+//      * @param accessControlBits access control bits
+//      * @param listener called with xxx todo
+//      * @return request object to track operation
+//      */
+//     calIWcapRequest getAccessControlDefinitions(
+//         out unsigned long count,
+//         [array, size_is(count)] out string users,
+//         [array, size_is(count)] out unsigned long accessControlBits );
 };
 

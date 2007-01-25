@@ -37,73 +37,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function createWcapCalendar( calId, session, /*optional*/calProps )
+function createWcapCalendar(session, /*optional*/calProps)
 {
-    var cal = new calWcapCalendar( calId, session, calProps );
-    switch (CACHE) {
-    case "memory":
-    case "storage":
-        // wrap it up:
-        var cal_ = new calWcapCachedCalendar();
-        cal_.remoteCal = cal;
-        cal = cal_;
-        break;
-    }
+    var cal = new calWcapCalendar(session, calProps);
+//     switch (CACHE) {
+//     case "memory":
+//     case "storage":
+//         // wrap it up:
+//         var cal_ = new calWcapCachedCalendar();
+//         cal_.remoteCal = cal;
+//         cal = cal_;
+//         break;
+//     }
     return cal;
 }
 
-function calWcapCalendar( calId, session, /*optional*/calProps ) {
+function calWcapCalendar(session, /*optional*/calProps) {
     this.wrappedJSObject = this;
-    this.m_calId = calId;
     this.m_session = session;
     this.m_calProps = calProps;
     this.m_bSuppressAlarms = SUPPRESS_ALARMS;
     
-    // init queued calls:
-    this.adoptItem = makeQueuedCall(this.session.asyncQueue,
-                                    this, this.adoptItem_queued);
-    this.modifyItem = makeQueuedCall(this.session.asyncQueue,
-                                     this, this.modifyItem_queued);
-    this.deleteItem = makeQueuedCall(this.session.asyncQueue,
-                                     this, this.deleteItem_queued);
-    this.getItem = makeQueuedCall(this.session.asyncQueue,
-                                  this, this.getItem_queued);
-    this.getItems = makeQueuedCall(this.session.asyncQueue,
-                                   this, this.getItems_queued);
-    this.syncChangesTo = makeQueuedCall(this.session.asyncQueue,
-                                        this, this.syncChangesTo_queued);
-    
-    if (LOG_LEVEL > 0 && this.m_calProps) {
-        if (this.m_calId != this.getCalendarProperties(
-                "X-NSCP-CALPROPS-RELATIVE-CALID", {})[0]) {
-            this.notifyError("calId mismatch: " + this.m_calId +
-                             " vs. " + ar[0]);
-        }
+    if (this.m_calProps) {
+        var ar = this.getCalProps("X-NSCP-CALPROPS-RELATIVE-CALID");
+        if (ar.length > 0)
+            this.m_calId = ar[0];
+        else
+            this.notifyError("no X-NSCP-CALPROPS-RELATIVE-CALID!");
     }
 }
 calWcapCalendar.prototype = {
-    m_ifaces: [ Components.interfaces.calIWcapCalendar,
-                Components.interfaces.calICalendar,
+    m_ifaces: [ calIWcapCalendar,
+                calICalendar,
                 Components.interfaces.calICalendarProvider,
                 Components.interfaces.nsIInterfaceRequestor,
                 Components.interfaces.nsIClassInfo,
                 Components.interfaces.nsISupports ],
     
     // nsISupports:
-    QueryInterface:
-    function( iid )
-    {
-        for each ( var iface in this.m_ifaces ) {
-            if (iid.equals( iface ))
-                return this;
-        }
-        throw Components.results.NS_ERROR_NO_INTERFACE;
+    QueryInterface: function calWcapCalendar_QueryInterface(iid) {
+        qiface(this.m_ifaces, iid);
+        return this;
     },
     
     // nsIClassInfo:
-    getInterfaces:
-    function( count )
-    {
+    getInterfaces: function calWcapCalendar_getInterfaces( count ) {
         count.value = this.m_ifaces.length;
         return this.m_ifaces;
     },
@@ -116,14 +94,14 @@ calWcapCalendar.prototype = {
     get classID() {
         return calWcapCalendarModule.WcapCalendarInfo.classID;
     },
-    getHelperForLanguage: function( language ) { return null; },
+    getHelperForLanguage:
+    function calWcapCalendar_getHelperForLanguage(language) { return null; },
     implementationLanguage:
     Components.interfaces.nsIProgrammingLanguage.JAVASCRIPT,
     flags: 0,
     
     // nsIInterfaceRequestor:
-    getInterface:
-    function( iid, instance )
+    getInterface: function calWcapCalendar_getInterface(iid, instance)
     {
         if (iid.equals(Components.interfaces.nsIAuthPrompt)) {
             // use the window watcher service to get a nsIAuthPrompt impl
@@ -137,35 +115,22 @@ calWcapCalendar.prototype = {
         return null;
     },
     
-    toString:
-    function()
-    {
+    toString: function calWcapCalendar_toString() {
         var str = this.session.toString();
-        str += (", calId=" +
-                (this.session.isLoggedIn ? this.calId : this.m_calId));
+        if (this.m_calId)
+            str += (", calId=" + this.calId);
+        else
+            str += ", default calendar";
         return str;
     },
-    log:
-    function( msg, context )
-    {
-        return logMessage( context ? context : this.toString(), msg );
-    },
-    logError:
-    function( err, context )
-    {
-        var msg = errorToString(err);
-        Components.utils.reportError( this.log("error: " + msg, context) );
-        return msg;
-    },
-    notifyError:
-    function( err )
+    notifyError: function calWcapCalendar_notifyError(err)
     {
         debugger;
-        var msg = this.logError(err);
+        var msg = logError(err, this);
         this.notifyObservers(
             "onError",
             err instanceof Components.interfaces.nsIException
-            ? [err.result, err.message] : [-1, msg] );
+            ? [err.result, err.message] : [isNaN(err) ? -1 : err, msg] );
     },
     
     // calICalendarProvider:
@@ -173,19 +138,13 @@ calWcapCalendar.prototype = {
         return null;
     },
     // displayName attribute already part of calIWcapCalendar
-    createCalendar:
-    function( name, url, listener )
-    {
+    createCalendar: function calWcapCalendar_createCalendar(name, url, listener) {
         throw NS_ERROR_NOT_IMPLEMENTED;
     },
-    deleteCalendar:
-    function( calendar, listener )
-    {
+    deleteCalendar: function calWcapCalendar_deleteCalendar(calendar, listener) {
         throw NS_ERROR_NOT_IMPLEMENTED;
     },
-    getCalendar:
-    function( url )
-    {
+    getCalendar: function calWcapCalendar_getCalendar( url ) {
         throw NS_ERROR_NOT_IMPLEMENTED;
     },
     
@@ -213,23 +172,16 @@ calWcapCalendar.prototype = {
                 // early, so don't log in here if not logged in already...
                 !this.session.isLoggedIn ||
                 // limit to write permission on components:
-                !this.checkAccess(
-                    Components.interfaces.calIWcapCalendar.AC_COMP_WRITE));
+                !this.checkAccess(calIWcapCalendar.AC_COMP_WRITE));
     },
-    set readOnly( bReadOnly ) { this.m_bReadOnly = bReadOnly; },
-    
-    resetCalProps:
-    function()
-    {
-        this.m_calProps = null;
+    set readOnly(bReadOnly) {
+        this.m_bReadOnly = bReadOnly;
     },
     
     get uri() {
         if (this.m_calId) {
             var ret = this.session.uri.clone();
-            if (LOG_LEVEL == 42) { // xxx todo: interims hack for tbe
-                ret.path += ("?calid=" + encodeURIComponent(this.m_calId));
-            }
+            ret.path += ("?calid=" + encodeURIComponent(this.m_calId));
             return ret;
         }
         else
@@ -237,26 +189,25 @@ calWcapCalendar.prototype = {
     },
     set uri( thatUri ) {
         this.session.uri = thatUri;
-        // uri changes, but calId stays constant:
-        this.resetCalProps();
     },
     
-    notifyObservers:
-    function( func, args ) {
-        this.session.notifyObservers( func, args );
+    notifyObservers: function calWcapCalendar_notifyObservers(func, args) {
+        this.session.notifyObservers(func, args);
     },
-    addObserver:
-    function( observer ) {
-        this.session.addObserver( observer );
+    addObserver: function calWcapCalendar_addObserver(observer) {
+        this.session.addObserver(observer);
     },
-    removeObserver:
-    function( observer ) {
-        this.session.removeObserver( observer );
+    removeObserver: function calWcapCalendar_removeObserver(observer) {
+        this.session.removeObserver(observer);
     },
     
     // xxx todo: batch currently not used
-    startBatch: function() { this.notifyObservers( "onStartBatch", [] ); },
-    endBatch: function() { this.notifyObservers( "onEndBatch", [] ); },
+    startBatch: function calWcapCalendar_startBatch() {
+        this.notifyObservers("onStartBatch", []);
+    },
+    endBatch: function calWcapCalendar_endBatch() {
+        this.notifyObservers("onEndBatch", []);
+    },
     
     // xxx todo: rework like in
     //           https://bugzilla.mozilla.org/show_bug.cgi?id=257428
@@ -273,63 +224,58 @@ calWcapCalendar.prototype = {
                 // xxx todo: assume alarms if not logged in already
                 (this.session.isLoggedIn && !this.isOwnedCalendar));
     },
-    set suppressAlarms( bSuppressAlarms ) {
+    set suppressAlarms(bSuppressAlarms) {
         this.m_bSuppressAlarms = bSuppressAlarms;
     },
     
-    get canRefresh() { return true; },
-    refresh:
-    function() {
-        // xxx todo: somehow misusing reload remote calendars for
-        //           session renewal...
-        // refresh session ticket immedidately, not queued:
-        this.log("refresh!");
-        this.session.refresh();
+    get canRefresh() { return false; },
+    refresh: function calWcapCalendar_refresh() {
+        log("refresh.", this);
     },
     
-    getCommandUrl:
-    function( wcapCommand )
+    issueNetworkRequest: function calWcapCalendar_issueNetworkRequest(
+        request, respFunc, dataConvFunc, wcapCommand, params, accessRights)
     {
-        var url = this.session.getCommandUrl(wcapCommand);
-        var calId = this.calId;
-        if (calId)
-            url += ("&calid=" + encodeURIComponent(calId));
-        return url;
+        var this_ = this;
+        // - bootstrap problem: no cal_props, no access check, no default calId
+        // - assure being logged in, thus the default cal_props are available
+        // - every subscribed calendar will come along with cal_props
+        return this.session.getSessionId(
+            request,
+            function getSessionId_resp(err, sessionId) {
+                try {
+                    if (err)
+                        throw err;
+                    this_.assureAccess(accessRights);
+                    params += ("&calid=" + encodeURIComponent(this_.calId));
+                    this_.session.issueNetworkRequest(
+                        request, respFunc, dataConvFunc, wcapCommand, params);
+                }
+                catch (exc) {
+                    respFunc(exc);
+                }
+            });
     },
     
     // calIWcapCalendar:
     
     m_session: null,
     get session() {
-        if (this.m_session)
-            return this.m_session;
-        throw new Components.Exception("Disconnected from session!");
+        return this.m_session;
     },
     
-    // xxx todo: for now to make subscriptions context menu work,
-    //           will vanish when UI has been revised and every subscribed
-    //           calendar has its own calICalendar object...
-    //           poking calId, so default calendar will then behave
-    //           like a subscribed one...
     m_calId: null,
     get calId() {
         if (this.m_calId)
             return this.m_calId;
         return this.session.defaultCalId;
     },
-    set calId( id ) {
-        this.log( "setting calId to " + id );
-        this.m_calId = id;
-        // refresh calprops:
-        this.getCalProps_( true /*async*/, true /*refresh*/ );
-    },
     
     get ownerId() {
-        var ar = this.getCalendarProperties("X-NSCP-CALPROPS-PRIMARY-OWNER",{});
+        var ar = this.getCalProps("X-NSCP-CALPROPS-PRIMARY-OWNER");
         if (ar.length == 0) {
             var calId = this.calId;
-            this.logError(
-                "cannot determine primary owner of calendar " + calId );
+            logError("cannot determine primary owner of calendar " + calId, this);
             // fallback to calId prefix:
             var nColon = calId.indexOf(":");
             if (nColon >= 0)
@@ -340,7 +286,7 @@ calWcapCalendar.prototype = {
     },
     
     get description() {
-        var ar = this.getCalendarProperties("X-NSCP-CALPROPS-DESCRIPTION", {});
+        var ar = this.getCalProps("X-NSCP-CALPROPS-DESCRIPTION");
         if (ar.length == 0) {
             // fallback to display name:
             return this.displayName;
@@ -349,11 +295,10 @@ calWcapCalendar.prototype = {
     },
     
     get displayName() {
-        var ar = this.getCalendarProperties("X-NSCP-CALPROPS-NAME", {});
+        var ar = this.getCalProps("X-NSCP-CALPROPS-NAME");
         if (ar.length == 0) {
             // fallback to common name:
-            ar = this.getCalendarProperties(
-                "X-S1CS-CALPROPS-COMMON-NAME", {});
+            ar = this.getCalProps("X-S1CS-CALPROPS-COMMON-NAME");
             if (ar.length == 0) {
                 return this.calId;
             }
@@ -362,69 +307,41 @@ calWcapCalendar.prototype = {
     },
     
     get isOwnedCalendar() {
+        if (this.isDefaultCalendar)
+            return true; // default calendar is owned
         return (this.ownerId == this.session.userId);
     },
     
+    get isDefaultCalendar() {
+        return !this.m_calId;
+    },
+    
     getCalendarProperties:
-    function( propName, out_count )
-    {
-        var ret = filterCalProps(
-            propName, this.getCalProps_(false /* !async: waits for response*/));
+    function(propName, out_count) {
+        var ret = this.getCalProps(propName);
         out_count.value = ret.length;
         return ret;
     },
-    m_calProps: null,
-    getCalProps_:
-    function( bAsync, bRefresh )
-    {
-//         this.session.assureLoggedIn();
-        if (bRefresh || !this.m_calProps) {
-            this.m_calProps = null;
-            var url = this.getCommandUrl( "get_calprops" );
-            url += "&fmt-out=text%2Fxml";
-            var this_ = this;
-            function resp( wcapResponse ) {
-                try {
-                    // first statement, may throw:
-                    var xml = wcapResponse.data;
-                    if (this_.m_calProps == null)
-                        this_.m_calProps = xml;
-                }
-                catch (exc) {
-                    // just logging here, because user may have dangling
-                    // users referred in his subscription list:
-                    this_.logError(exc);
-                    if (!bAsync && testResultCode(
-                            exc, Components.interfaces.
-                            calIWcapErrors.WCAP_ACCESS_DENIED_TO_CALENDAR)) {
-                        // the user obviously has no property access,
-                        // forward in case of synchronous calls.
-                        // async will be swallowed though.
-                        throw exc;
-                    }
-                }
-            }
-            if (bAsync)
-                this.session.issueAsyncRequest( url, stringToXml, resp );
-            else
-                this.session.issueSyncRequest( url, stringToXml, resp );
+    
+    getCalProps: function calWcapCalendar_getCalProps(propName) {
+        if (!this.m_calProps) {
+            log("soft error: no calprops, most possibly not logged in.", this);
+//             throw new Components.Exception("No calprops available!",
+//                                            Components.results.NS_ERROR_NOT_AVAILABLE);
         }
-        return this.m_calProps;
+        return filterXmlNodes(propName, this.m_calProps);
     },
     
     get defaultTimezone() {
-        var tzid = this.getCalendarProperties("X-NSCP-CALPROPS-TZID", {});
+        var tzid = this.getCalProps("X-NSCP-CALPROPS-TZID");
         if (tzid.length == 0) {
-            this.logError("cannot get X-NSCP-CALPROPS-TZID!",
-                          "defaultTimezone");
+            logError("defaultTimezone: cannot get X-NSCP-CALPROPS-TZID!", this);
             return "UTC"; // fallback
         }
         return tzid[0];
     },
     
-    getAlignedTimezone:
-    function( tzid )
-    {
+    getAlignedTimezone: function calWcapCalendar_getAlignedTimezone(tzid) {
         // check whether it is one of cs:
         if (tzid.indexOf("/mozilla.org/") == 0) {
             // cut mozilla prefix: assuming that the latter string portion
@@ -438,55 +355,51 @@ calWcapCalendar.prototype = {
             //           user's default if not supported directly
             var ret = this.defaultTimezone;
             // use calendar's default:
-            this.log(tzid + " not supported, falling back to default: " + ret);
+            log(tzid + " not supported, falling back to default: " + ret, this);
             return ret;
         }
         else // is ok (supported):
             return tzid;
     },
     
-    checkAccess:
-    function( accessControlBits )
+    checkAccess: function calWcapCalendar_checkAccess(accessControlBits)
     {
         // xxx todo: take real acl into account
         // for now, assuming that owners have been granted full access,
         // and all others can read, but not add/modify/delete.
-        var granted = Components.interfaces.calIWcapCalendar.AC_FULL;
+        var granted = calIWcapCalendar.AC_FULL;
         if (!this.isOwnedCalendar) {
             // burn out write access:
-            granted &= ~(Components.interfaces.calIWcapCalendar.AC_COMP_WRITE |
-                         Components.interfaces.calIWcapCalendar.AC_PROP_WRITE);
+            granted &= ~(calIWcapCalendar.AC_COMP_WRITE |
+                         calIWcapCalendar.AC_PROP_WRITE);
         }
         // check whether every bit fits:
         return ((accessControlBits & granted) == accessControlBits);
     },
     
-    assureAccess:
-    function( accessControlBits )
+    assureAccess: function calWcapCalendar_assureAccess(accessControlBits)
     {
         if (!this.checkAccess(accessControlBits)) {
             throw new Components.Exception("Access denied!",
-                                           Components.interfaces.calIWcapErrors
-                                           .WCAP_ACCESS_DENIED_TO_CALENDAR);
+                                           calIWcapErrors.WCAP_ACCESS_DENIED_TO_CALENDAR);
             // xxx todo: throwing different error here, no
             //           calIErrors.CAL_IS_READONLY anymore
         }
     },
     
-    defineAccessControl:
-    function( userId, accessControlBits )
+    defineAccessControl: function calWcapCalendar_defineAccessControl(
+        userId, accessControlBits)
     {
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
     
-    resetAccessControl:
-    function( userId )
+    resetAccessControl: function calWcapCalendar_resetAccessControl(userId)
     {
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
     
-    getAccessControlDefinitions:
-    function( out_count, out_users, out_accessControlBits )
+    getAccessControlDefinitions: function calWcapCalendar_getAccessControlDefinitions(
+        out_count, out_users, out_accessControlBits)
     {
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     }

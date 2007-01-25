@@ -54,23 +54,11 @@ EXTRA_SCRIPTS = \
                 calWcapSession.js \
                 calWcapCalendarItems.js \
                 calWcapCalendar.js \
-                calWcapCachedCalendar.js \
                 $(NULL)
 
-EXTRA_PP_COMPONENTS = \
+EXTRA_COMPONENTS = \
                 calWcapCalendarModule.js \
                 $(NULL)
-
-# minimum log level:
-ifdef wcap_logging
-ifeq (,$(findstring $(wcap_logging),1 2 3 4 5))
-DEFINES += -DLOG_LEVEL=2
-else
-DEFINES += -DLOG_LEVEL=$(wcap_logging)
-endif
-else # ifdef wcap_logging
-DEFINES += -DLOG_LEVEL=0
-endif # ifdef wcap_logging
 
 # installing EXTRA_SCRIPTS into js/
 

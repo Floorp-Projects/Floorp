@@ -37,9 +37,356 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-//
-// WCAP request helpers
-//
+/**
+   Requests, either the queued calWcapRequest or an async network request.
+   
+   A request object is used to track an async action.
+   While the action is running, isPending is true.
+   Functions issuing an async action usually take a response function along
+   with their parameters, typically named respFunc.
+   That function is called *after* the action has ended (i.e. isPending of the
+   issued action/request is false when called, status remains stable).
+   The response function gets the ended request as first parameter to check
+   whether the request has been successful and get its data.
+   The request function itself may return either
+   - a further calIWcapRequest request object, i.e. an async continuation
+   - some data (incl null/undefined) which is the result of the async function,
+     indicating that there is no further continuation
+*/
+
+var g_requestId = 0;
+function generateRequestId() {
+    ++g_requestId;
+    return g_requestId;
+}
+
+function calWcapRequest(respFunc, logContext) {
+    this.wrappedJSObject = this;
+    this.m_logContext = logContext;
+    this.m_id = generateRequestId();
+    this.m_isPending = true;
+    this.m_status = Components.results.NS_OK;
+    this.m_respFunc = respFunc;
+    this.m_attachedRequests = [];
+}
+calWcapRequest.prototype = {
+    m_logContext: null,
+    m_parentRequest: null,
+    m_id: 0,
+    m_isPending: true,
+    m_status: Components.results.NS_OK,
+    m_respFunc: null,
+    m_attachedRequests: null,
+    m_locked: false,
+    
+    get parentRequest() { return this.m_parentRequest; },
+    set parentRequest(req) {
+        if (this.parentRequest)
+            logError("already has parent!", this);
+        this.detachFromParent(); // detach without error
+        this.m_parentRequest = req;
+    },
+    
+    /** The following locking is necessary when scheduling multiple async
+        requests; one cannot be sure that e.g. the first completes quickly
+        and responds the whole parent request when detaching.
+    */
+    lockPending: function calWcapRequest_lockPending() {
+        this.m_locked = true;
+    },
+    unlockPending: function calWcapRequest_unlockPending() {
+        if (this.m_locked) {
+            this.m_locked = false;
+            // assures that respFunc is executed:
+            if (this.m_attachedRequests.length == 0) {
+                this.execRespFunc();
+            }
+        }
+    },
+    
+    toString: function calWcapRequest_toString() {
+        var ret = ("calWcapRequest id=" + this.id +
+                   ", parent-id=" +
+                   (this.parentRequest ? this.parentRequest.id : "<none>") +
+                   " (" + this.m_logContext + ")");
+        if (LOG_LEVEL > 2 && this.m_attachedRequests.length > 0) {
+            ret += "\nattached requests:";
+            for each ( var req in this.m_attachedRequests ) {
+                ret += ("\n#" + req.id + "\t" + req);
+            }
+        }
+        return ret;
+    },
+    
+    attachSubRequest: function calWcapRequest_attachSubRequest(req)
+    {
+        if (req) {
+            if (!this.m_attachedRequests.some(
+                    function(req_) { return req.id == req_.id; } )) {
+                if (req.isPending) {
+                    this.m_attachedRequests.push(req);
+                    req.parentRequest = this;
+                    log("attachSubRequest()", this);
+                }
+                else if (!this.m_locked && this.m_attachedRequests.length == 0) {
+                    this.execRespFunc(req.status);
+                }
+            }
+            else {
+                logError("request already attached: " + req.id, this);
+            }
+        }
+    },
+    
+    detachSubRequest: function calWcapRequest_detachSubRequest(req, err)
+    {
+        this.m_attachedRequests = this.m_attachedRequests.filter(
+            function(req_) { return req.id != req_.id; } );
+        if (err) {
+            // first failing sub request stops whole request:
+            this.execRespFunc(err);
+        }
+        // assures that respFunc is executed after every sub request has been completed:
+        else if (!this.m_locked && this.m_attachedRequests.length == 0) {
+            this.execRespFunc();
+        }
+    },
+    
+    cancelAllSubRequests: function calWcapRequest_cancelAllSubRequests(status) {
+        var attachedRequests = this.m_attachedRequests;
+        this.m_attachedRequests = [];
+        attachedRequests.forEach( function(req) { req.cancel(status); } );
+    },
+    
+    detachFromParent: function calWcapRequest_detachFromParent(err) {
+        var parentRequest = this.m_parentRequest;
+        if (parentRequest) {
+            this.m_parentRequest = null;
+            parentRequest.detachSubRequest(this, err);
+        }
+    },
+    
+    execRespFunc: function calWcapRequest_execRespFunc(err, data)
+    {
+        if (this.isPending) {
+            this.m_isPending = false;
+            if (err)
+                this.m_status = err;
+            this.cancelAllSubRequests();
+            var respFunc = this.m_respFunc;
+            if (respFunc) {
+                this.m_respFunc = null; // call once only
+                if (LOG_LEVEL > 2) {
+                    log("response exec: " + errorToString(err), this);
+                }
+                try {
+                    respFunc(this, err, data);
+                }
+                catch (exc) {
+                    this.m_status = exc;
+                    logError(exc, this);
+                }
+            }
+            this.detachFromParent(this.m_status);
+        }
+    },
+    
+    // calIWcapRequest:
+    get id() {
+        return this.m_id;
+    },
+    get isPending() {
+        return this.m_isPending;
+    },
+    get succeeded() {
+        return (!this.isPending &&
+                getResultCode(this.status) == Components.results.NS_OK);
+    },
+    get status() {
+        return (this.m_status === null ? Components.results.NS_OK
+                                       : this.m_status);
+    },
+    
+    cancel: function calWcapRequest_cancel(status)
+    {
+        if (this.isPending) {
+            this.m_isPending = false;
+            log("cancel.", this);
+            this.m_respFunc = null;
+            if (!status)
+                status = Components.results.NS_ERROR_FAILURE;
+            this.m_status = status;
+            this.cancelAllSubRequests();
+            this.detachFromParent(); // detach without error
+        }
+    }
+};
+
+function calWcapNetworkRequest(channel, respFunc, bLogging) {
+//     this.superClass(respFunc);
+    this.wrappedJSObject = this;
+    this.m_id = generateRequestId();
+    this.m_channel = channel;
+    this.m_respFunc = respFunc;
+    this.m_bLogging = (bLogging === undefined ? true : bLogging);
+}
+// subClass(calWcapNetworkRequest, calWcapRequest);
+
+calWcapNetworkRequest.prototype = {
+    m_id: 0,
+    m_channel: null,
+    m_respFunc: null,
+    m_bLogging: false,
+    
+    m_isPending: true,
+    get isPending() { return this.m_isPending; },
+    
+    toString: function calWcapNetworkRequest_toString() {
+        var ret = ("calWcapNetworkRequest id=" + this.id +
+                   ", parent-id=" +
+                   (this.parentRequest ? this.parentRequest.id : "<none>"));
+        if (this.m_bLogging)
+            ret += (" (" + this.m_channel.URI.spec + ")");
+        return ret;
+    },
+    
+    m_parentRequest: null,
+    get parentRequest() { return this.m_parentRequest; },
+    set parentRequest(req) {
+        if (this.parentRequest)
+            logError("already has parent!", this);
+        this.detachFromParent(); // detach without error
+        this.m_parentRequest = req;
+    },
+    
+    get id() {
+        return this.m_id;
+    },
+    
+    detachFromParent: function calWcapNetworkRequest_detachFromParent(err) {
+        var parentRequest = this.m_parentRequest;
+        if (parentRequest) {
+            this.m_parentRequest = null;
+            parentRequest.detachSubRequest(this, err);
+        }
+    },
+    
+    cancel: function calWcapNetworkRequest_cancel(status) {
+        if (this.isPending) {
+            this.m_isPending = false;
+            log("cancel.", this);
+            this.m_respFunc = null;
+            this.detachFromParent(); // detach without error
+            // xxx todo: check whether this works on redirected channels!
+            if (this.m_channel.isPending()) {
+                log("cancelling netwerk request...", this);
+                this.m_channel.cancel(NS_BINDING_FAILED);
+            }
+        }
+    },
+    
+    execRespFunc: function calWcapNetworkRequest_execRespFunc(err, str)
+    {
+        if (this.isPending) {
+            this.m_isPending = false;
+            var respFunc = this.m_respFunc;
+            if (respFunc) {
+                this.m_respFunc = null; // call once only
+                if (LOG_LEVEL > 2 && this.m_bLogging) {
+                    log("response exec: " + errorToString(err), this);
+                }
+                try {
+                    respFunc(err, str);
+                    err = null; // may have been handled
+                }
+                catch (exc) {
+                    logError(exc, this);
+                    err = exc;
+                }
+            }
+            this.detachFromParent(err);
+        }
+    },
+    
+    // nsIUnicharStreamLoaderObserver:
+    onDetermineCharset: function calWcapNetworkRequest_onDetermineCharset(
+        loader, context, firstSegment, length)
+    {
+        var channel = null;
+        if (loader)
+            channel = loader.channel;
+        var charset = null;
+        if (channel)
+            charset = channel.contentCharset;
+        if (!charset || charset.length == 0)
+            charset = "UTF-8";
+        return charset;
+    },
+    
+    onStreamComplete: function calWcapNetworkRequest_onStreamComplete(
+        loader, context, status, /* nsIUnicharInputStream */ unicharData)
+    {
+        if (LOG_LEVEL > 0 && this.m_bLogging) {
+            log("status: " + errorToString(status), this);
+        }
+        switch (status) {
+        case NS_BINDING_SUCCEEDED: {
+            var err = null;
+            var str = "";
+            try {
+                if (unicharData) {
+                    var str_ = {};
+                    while (unicharData.readString(-1, str_)) {
+                        str += str_.value;
+                    }
+                }
+                if (LOG_LEVEL > 2 && this.m_bLogging) {
+                    log("contentCharset = " + this.onDetermineCharset(loader) +
+                        "\nrequest result:\n" + str, this);
+                }
+            }
+            catch (exc) {
+                err = exc;
+            }
+            this.execRespFunc(err, str);
+            break;
+        }
+        case NS_BINDING_REDIRECTED:
+        case NS_BINDING_RETARGETED:
+            // just status
+            // xxx todo: in case of a redirected channel,
+            // how to get that channel => cancel feature!
+            break;
+        default: // errors:
+            this.execRespFunc(status);
+            break;
+        }
+    }
+};
+
+function issueNetworkRequest(parentRequest, respFunc, url, bLogging)
+{
+    var channel;
+    try {
+        var loader = Components.classes["@mozilla.org/network/unichar-stream-loader;1"]
+                               .createInstance(Components.interfaces.nsIUnicharStreamLoader);
+        channel = getIoService().newChannel(url, "" /* charset */, null /* baseURI */);
+        channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
+    }
+    catch (exc) {
+        respFunc(exc);
+        return;
+    }
+    var netRequest = new calWcapNetworkRequest(channel, respFunc, bLogging);
+    parentRequest.attachSubRequest(netRequest);
+    log("opening channel.", netRequest);
+    try {
+        loader.init(channel, netRequest, null /*context*/, 0 /*segment size*/);
+    }
+    catch (exc) {
+        netRequest.execRespFunc(exc);
+    }
+}
 
 function getWcapRequestStatusString( xml )
 {
@@ -52,249 +399,34 @@ function getWcapRequestStatusString( xml )
     return str;
 }
 
-// response object for Calendar.issueRequest()
-function WcapResponse() {
-}
-WcapResponse.prototype = {
-    m_response: null,
-    m_exc: null,
-    
-    get data() {
-        if (this.m_exc != null) {
-            // clear exception, so it is not thrown again on sync requests:
-            var exc = this.m_exc;
-            this.m_exc = null;
-            throw exc;
-        }
-        return this.m_data;
-    },
-    set data(d) {
-        this.m_data = d;
-        this.m_exc = null;
-    },
-    get exception() {
-        return this.m_exc;
-    },
-    set exception(exc) {
-        this.m_exc = exc;
-    }
-};
-
-function stringToIcal( data )
+function stringToIcal( data, expectedErrno )
 {
-    if (!data || data == "") { // assuming time-out
+    if (!data || data == "") { // assuming time-out; WTF.
         throw new Components.Exception(
             "Login failed. Invalid session ID.",
-            Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED );
+            Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED);
     }
-    var icalRootComp = getIcsService().parseICS( data );
-    checkWcapIcalErrno( icalRootComp );
+    var icalRootComp;
+    try {
+        icalRootComp = getIcsService().parseICS(data);
+    }
+    catch (exc) { // map into more useful error string:
+        throw new Components.Exception("error parsing ical data!",
+                                       Components.interfaces.calIErrors.ICS_PARSE);
+    }
+    checkWcapIcalErrno(icalRootComp, expectedErrno);
     return icalRootComp;
 }
 
-function stringToXml( data )
+function stringToXml( data, expectedErrno )
 {
     if (!data || data == "") { // assuming time-out
         throw new Components.Exception(
             "Login failed. Invalid session ID.",
-            Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED );
+            Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED);
     }
-    var xml = getDomParser().parseFromString( data, "text/xml" );
-    checkWcapXmlErrno( xml );
+    var xml = getDomParser().parseFromString(data, "text/xml");
+    checkWcapXmlErrno(xml, expectedErrno);
     return xml;
 }
-
-function UnicharReader( receiverFunc ) {
-    this.wrappedJSObject = this;
-    this.m_receiverFunc = receiverFunc;
-}
-UnicharReader.prototype = {
-    m_receiverFunc: null,
-    
-    // nsIUnicharStreamLoaderObserver:
-    onDetermineCharset:
-    function( loader, context, firstSegment, length )
-    {
-        var charset = loader.channel.contentCharset;
-        if (!charset || charset == "")
-            charset = "UTF-8";
-        return charset;
-    },
-    
-    onStreamComplete:
-    function( loader, context, status, /* nsIUnicharInputStream */ unicharData )
-    {
-        switch (status) {
-        case NS_BINDING_SUCCEEDED: {
-            if (LOG_LEVEL > 2) {
-                var channel = loader.channel;
-                logMessage( "issueAsyncRequest( \"" +
-                            (channel ? channel.URI.spec : "<unknown>") + "\" )",
-                            "received stream." );
-            }
-            var str = "";
-            if (unicharData) {
-                var str_ = {};
-                while (unicharData.readString( -1, str_ )) {
-                    str += str_.value;
-                }
-            }
-            if (LOG_LEVEL > 1) {
-                var channel = loader.channel;
-                logMessage( "issueAsyncRequest( \"" +
-                            (channel ? channel.URI.spec : "<unknown>") + "\" )",
-                            "contentCharset = " + loader.channel.contentCharset+
-                            "\nrequest result:\n" + str );
-            }
-            this.m_receiverFunc( str );
-            break;
-        }
-        case NS_BINDING_REDIRECTED:
-        case NS_BINDING_RETARGETED:
-            // just status
-            break;
-        default: // errors:
-            if (LOG_LEVEL > 0) {
-                var channel = loader.channel;
-                logMessage("issueAsyncRequest( \"" +
-                           (channel ? channel.URI.spec : "<unknown>") + "\" )",
-                           "error: " + errorToString(status));
-            }
-            this.m_receiverFunc(""); // will lead to timeout
-            break;
-        }
-    }
-};
-
-function issueAsyncRequest( url, receiverFunc )
-{
-    var reader = null;
-    if (receiverFunc != null) {
-        reader = new UnicharReader( receiverFunc );
-    }
-    var loader =
-        Components.classes["@mozilla.org/network/unichar-stream-loader;1"]
-        .createInstance(Components.interfaces.nsIUnicharStreamLoader);
-    logMessage( "issueAsyncRequest( \"" + url + "\" )", "opening channel." );
-    var channel = getIoService().newChannel(
-        url, "" /* charset */, null /* baseURI */ );
-    channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
-    loader.init( channel, reader, null /* context */, 0 /* segment size */ );
-}
-
-function streamToString( inStream, charset )
-{
-    if (LOG_LEVEL > 2) {
-        logMessage( "streamToString()",
-                    "inStream.available() = " + inStream.available() +
-                    ", charset = " + charset );
-    }
-    // byte-array to string:
-    var convStream =
-        Components.classes["@mozilla.org/intl/converter-input-stream;1"]
-        .createInstance(Components.interfaces.nsIConverterInputStream);
-    try {
-        convStream.init( inStream, charset, 0, 63 /* '?' */ );
-        var str = "";
-        var str_ = {};
-        while (convStream.readString( -1, str_ )) {
-            str += str_.value;
-        }
-    }
-    catch (exc) {
-        throw new Components.Exception(
-            "error converting stream: " + errorToString(exc) +
-            "\ncharset: " + charset +
-            "\npartially read string: " + str, exc );
-    }
-    return str;
-}
-
-function issueSyncRequest( url, receiverFunc, bLogging )
-{
-    if (bLogging == undefined)
-        bLogging = true;
-    if (bLogging && LOG_LEVEL > 0) {
-        logMessage( "issueSyncRequest( \"" + url + "\" )",
-                    "opening channel." );
-    }
-    
-    var channel = getIoService().newChannel(
-        url, "" /* charset */, null /* baseURI */ );
-    channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
-    
-    var stream = channel.open();
-    var status = channel.status;
-    if (status == Components.results.NS_OK) {
-        var charset = channel.contentCharset;
-        if (!charset || charset == "")
-            charset = "UTF-8";
-        var str = streamToString( stream, charset );
-        if (bLogging && LOG_LEVEL > 1) {
-            logMessage( "issueSyncRequest( \"" + url + "\" )",
-                        "returned: " + str );
-        }
-        if (receiverFunc) {
-            receiverFunc( str );
-        }
-        return str;
-    }
-    else if (bLogging && LOG_LEVEL > 0) {
-        logMessage( "issueSyncRequest( \"" + url + "\" )",
-                    "failed: " + errorToString(status) );
-    }
-    
-    throw status;
-}
-
-function issueSyncXMLRequest( url, receiverFunc, bLogging )
-{
-    var str = issueSyncRequest( url, null, bLogging );
-    var xml = getDomParser().parseFromString( str, "text/xml" );
-    if (receiverFunc) {
-        receiverFunc( xml );
-    }
-    return xml;
-}
-
-// response object for Calendar.issueRequest()
-function RequestQueue() {
-    this.m_requests = [];
-}
-RequestQueue.prototype = {
-    m_requests: null,
-    m_token: 0,
-    
-    postRequest:
-    function( func )
-    {
-        var token = this.m_token;
-        this.m_token += 1;
-        this.m_requests.push( { m_token: token, m_func: func } );
-        var len = this.m_requests.length;
-        logMessage( "RequestQueue::postRequest()",
-                    "queueing request. token=" + token +
-                    ", open requests=" + len );
-        if (len == 1) {
-            func( token );
-        }
-    },
-    
-    requestCompleted:
-    function( requestToken )
-    {
-        var len_ = this.m_requests.length;
-        this.m_requests = this.m_requests.filter(
-            function(x) { return x.m_token != requestToken; } );
-        var len = this.m_requests.length;
-        logMessage( "RequestQueue::requestCompleted()",
-                    "token=" + requestToken +
-                    ((len > 0 && len_ == len) ? "(expired !!!)" : "") +
-                    ", open requests=" + len );
-        if (len > 0) {
-            var entry = this.m_requests[0];
-            entry.m_func( entry.m_token );
-        }
-    }
-};
 

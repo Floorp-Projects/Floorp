@@ -37,28 +37,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "calIWcapFreeBusyEntry.idl"
+#include "nsIVariant.idl"
 
-[scriptable, uuid(4498E0D0-04EC-43a3-92E0-560667696CF3)]
-interface calIWcapFreeBusyListener : nsISupports
+[scriptable, uuid(6586B48D-3FF6-4b82-B9F6-5B561D416E36)]
+interface calIWcapRequest : nsISupports
 {
     /**
-     * Callback receiving free-busy entries.
-     * xxx todo: use array of calIPeriod when available and stick
-     *           to busy entries only...
-     *
-     * @param rc result code,
-     *           e.g. NS_OK or calIWcapErrors.WCAP_CALENDAR_DOES_NOT_EXIST
-     * @param requestId request id to distinguish asynchronous requests
-     * @param calId a calid or "mailto:rfc822addr"
-     * @param count number of free-busy entries
-     * @param entries free-busy entries
+     * For easy testing for equality.
      */
-    void onGetFreeBusyTimes(
-        in nsresult rc,
-        in unsigned long requestId,
-        in string calId,
-        in unsigned long count,
-        [array, size_is(count)] in calIWcapFreeBusyEntry entries );
+    readonly attribute unsigned long id;
+    
+    /**
+     * Determines whether the request is pending, i.e. has not been completed.
+     */
+    readonly attribute boolean isPending;
+    
+    /**
+     * Determines whether the request has succeeded, i.e. it has successfully
+     * been completed.
+     * XXX todo: remove this and favor
+     * !request.isPending && Components.isSuccessCode(request.status) ?
+     */
+    readonly attribute boolean succeeded;
+    
+    /**
+     * Status of the request, e.g. NS_OK while pending or after successful
+     * completion, or NS_ERROR_FAILED when failed.
+     */
+    readonly attribute nsIVariant status;
+    
+    /**
+     * Cancels a pending request and changes status.
+     */
+    void cancel(in nsIVariant status);
+};
+
+[scriptable, uuid(D0BC007F-D0B5-4352-A32A-8F7A9F55A713)]
+interface calIWcapRequestResultListener : nsISupports
+{
+    /**
+     * Callback receiving results.
+     *
+     * @param request object to track operation
+     * @param result request result or null in case of an error
+     */
+    void onRequestResult(in calIWcapRequest request,
+                         in nsIVariant result);
 };
 
