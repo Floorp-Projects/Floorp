@@ -59,6 +59,7 @@
 #include "nsEnumeratorUtils.h"
 #include "mdb.h"
 #include "prprf.h"
+#include "nsIPrefService.h"
 
 // XXX todo
 // fix this -1,0,1 crap, use an enum or #define
@@ -83,6 +84,80 @@ NS_IMPL_ISUPPORTS_INHERITED4(nsAbMDBDirectory, nsAbDirectoryRDFResource,
                              nsIAbMDBDirectory,
                              nsIAbDirectorySearch,
                              nsIAddrDBListener)
+
+NS_IMETHODIMP nsAbMDBDirectory::Init(const char *aUri)
+{
+  // We need to ensure  that the m_DirPrefId is initialized properly
+  nsCAutoString uri;
+  uri = aUri;
+
+  // Mailing lists don't have their own prefs.
+  if (m_DirPrefId.IsEmpty() && (uri.Find("MailList") == kNotFound))
+  {
+    // Find the first ? (of the search params) if there is one.
+    // We know we can start at the end of the moz-abmdbdirectory:// because
+    // that's the URI we should have been passed.
+    PRInt32 searchCharLocation = uri.FindChar('?', kMDBDirectoryRootLen);
+
+    nsCAutoString filename;
+
+    // extract the filename from the uri.
+    if (searchCharLocation == kNotFound)
+      uri.Right(filename, uri.Length() - kMDBDirectoryRootLen);
+    else
+      uri.Mid(filename, kMDBDirectoryRootLen,
+              searchCharLocation - kMDBDirectoryRootLen);
+
+    // Get the pref servers and the address book directory branch
+    nsresult rv;
+    nsCOMPtr<nsIPrefService> prefService(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIPrefBranch> prefBranch;
+    rv = prefService->GetBranch(NS_LITERAL_CSTRING(PREF_LDAP_SERVER_TREE_NAME ".").get(),
+                                getter_AddRefs(prefBranch));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    char** childArray;
+    PRUint32 childCount, i;
+    PRInt32 dotOffset;
+    nsXPIDLCString childValue;
+    nsDependentCString child;
+
+    rv = prefBranch->GetChildList("", &childCount, &childArray);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    for (i = 0; i < childCount; ++i)
+    {
+      child.Assign(childArray[i]);
+
+      if (StringEndsWith(child, NS_LITERAL_CSTRING(".filename")))
+      {
+        if (NS_SUCCEEDED(prefBranch->GetCharPref(child.get(),
+                                                 getter_Copies(childValue))))
+        {
+          if (childValue == filename)
+          {
+            dotOffset = child.RFindChar('.');
+            if (dotOffset != -1)
+            {
+              nsCAutoString prefName;
+              child.Left(prefName, dotOffset);
+              m_DirPrefId.AssignLiteral(PREF_LDAP_SERVER_TREE_NAME ".");
+              m_DirPrefId.Append(prefName);
+            }
+          }
+        }
+      }
+    }     
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(childCount, childArray);
+
+    NS_ASSERTION(!m_DirPrefId.IsEmpty(),
+                 "Error, Could not set m_DirPrefId in nsAbMDBDirectory::Init");
+  }
+
+  return nsAbDirectoryRDFResource::Init(aUri);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

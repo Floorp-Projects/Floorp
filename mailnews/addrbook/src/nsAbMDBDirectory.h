@@ -74,6 +74,9 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIADDRDBLISTENER
 
+  // Override nsAbDirectoryRDFResource::Init
+  NS_IMETHOD Init(const char *aUri);
+
   // nsIAbMDBDirectory methods
   NS_IMETHOD GetURI(nsACString &aURI);
   NS_IMETHOD ClearDatabase();
