@@ -911,9 +911,9 @@ emit_surface_pattern (cairo_pdf_surface_t	*surface,
 	    double x2 = image->width, y2 = image->height;
 	    cairo_matrix_t surface_to_device = pattern->base.matrix;
 	    cairo_matrix_invert (&surface_to_device);
-	    _cairo_matrix_transform_bounding_box (&surface_to_device,
-						  &x1, &y1, &x2, &y2,
-						  NULL);
+	    cairo_matrix_transform_bounding_box (&surface_to_device,
+						 &x1, &y1, &x2, &y2,
+						 NULL);
 	    /* Rather than computing precise bounds of the union, just
 	     * add the surface extents unconditionally. We only
 	     * required an answer that's large enough, we don't really
