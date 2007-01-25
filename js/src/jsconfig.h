@@ -177,7 +177,7 @@
 #define JS_HAS_EXPORT_IMPORT    1       /* has export fun; import obj.fun */
 #define JS_HAS_EVAL_THIS_SCOPE  1       /* Math.eval is same as with (Math) */
 #define JS_HAS_SHARP_VARS       1       /* has #n=, #n# for object literals */
-#define JS_HAS_SCRIPT_OBJECT    1       /* has (new Script("x++")).exec() */
+#define JS_HAS_SCRIPT_OBJECT    0       /* has (new Script("x++")).exec() */
 #define JS_HAS_XDR              1       /* has XDR API and internal support */
 #define JS_HAS_XDR_FREEZE_THAW  0       /* has XDR freeze/thaw script methods */
 #define JS_HAS_TOSOURCE         1       /* has Object/Array toSource method */
