@@ -61,6 +61,9 @@
 #define CG_BITMAP_BYTE_ORDER_FLAG kCGBitmapByteOrder32Host
 #endif
 
+/* Public in 10.4, present in 10.3.9 */
+CG_EXTERN CGRect CGRectApplyAffineTransform (CGRect, CGAffineTransform);
+
 typedef struct _cairo_atsui_font_face cairo_atsui_font_face_t;
 typedef struct _cairo_atsui_font cairo_atsui_font_t;
 typedef struct _cairo_atsui_scaled_path cairo_atsui_scaled_path_t;
