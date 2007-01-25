@@ -519,7 +519,7 @@ function AbPrintAddressBookInternal(doPrintPreview, msgType)
   var printUrl = "addbook://" + abURIArr[0] + "/" + abURIArr[1] + "?action=print"
 
   if (!gPrintSettings) {
-    gPrintSettings = GetPrintSettings();
+    gPrintSettings = PrintUtils.getPrintSettings();
   }
 
 	printEngineWindow = window.openDialog("chrome://messenger/content/msgPrintEngine.xul",
