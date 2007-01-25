@@ -275,3 +275,4 @@ inline void Set4BitPixel(PRUint8*& aDecoded, PRUint8 aData,
 }
 
 #endif
+

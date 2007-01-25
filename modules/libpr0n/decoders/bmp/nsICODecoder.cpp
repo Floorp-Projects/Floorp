@@ -704,4 +704,3 @@ void nsICODecoder::ProcessInfoHeader() {
   mBIH.colors = LITTLE_TO_NATIVE32(mBIH.colors);
   mBIH.important_colors = LITTLE_TO_NATIVE32(mBIH.important_colors);
 }
-
