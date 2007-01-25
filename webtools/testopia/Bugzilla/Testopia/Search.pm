@@ -952,7 +952,7 @@ sub init {
             $field = 'run_product_version';
         }
         elsif ($obj eq 'run'){
-            $field = 'default_product_version';
+            $field = 'product_version';
         }
         push(@specialchart, [$field, "anyexact", join(',', $cgi->param('version'))]);
     }
