@@ -1006,6 +1006,17 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIRenderingContext, NS_IRENDERING_CONTEXT_IID)
  */
 #define NS_RENDERING_HINT_REORDER_SPACED_TEXT 0x40
 
+/**
+ * This bit, when set, indicates that gfx is using the new gfxTextRun API
+ * underneath.
+ * In particular, only single-direction text runs should be passed to
+ * string methods, and the direction set by SetTextRunRTL will be honoured
+ * for all characters in the string.
+ * XXX TEMPORARY This will go away when all gfx implementations implement
+ * gfxTextRun properly.
+ */
+#define NS_RENDERING_HINT_NEW_TEXT_RUNS 0x80
+
 //flags for copy CopyOffScreenBits
 
 //when performing the blit, use the region, if any,

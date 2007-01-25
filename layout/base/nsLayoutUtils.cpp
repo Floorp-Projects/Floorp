@@ -1732,20 +1732,24 @@ nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
                               const PRUnichar*     aString,
                               PRInt32              aLength)
 {
+#ifdef IBMBIDI
+  PRUint32 hints = 0;
+  aContext->GetHints(hints);
   // Only do bidi resolution for width measurement if we have a "real"
   // textrun implementation. Otherwise assume the platform can get
   // things right for a mixed-direction string.
-#if defined(IBMBIDI) && defined(MOZ_X11)
-  nsPresContext* presContext = aFrame->GetPresContext();
-  nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
+  if (hints & NS_RENDERING_HINT_NEW_TEXT_RUNS) {
+    nsPresContext* presContext = aFrame->GetPresContext();
+    nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
 
-  if (bidiUtils) {
-    const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
-    nsBidiDirection direction =
-      (NS_STYLE_DIRECTION_RTL == vis->mDirection) ?
-      NSBIDI_RTL : NSBIDI_LTR;
-    return bidiUtils->MeasureTextWidth(aString, aLength,
-                                       direction, presContext, *aContext);
+    if (bidiUtils) {
+      const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
+      nsBidiDirection direction =
+        (NS_STYLE_DIRECTION_RTL == vis->mDirection) ?
+        NSBIDI_RTL : NSBIDI_LTR;
+      return bidiUtils->MeasureTextWidth(aString, aLength,
+                                         direction, presContext, *aContext);
+    }
   }
 #endif // IBMBIDI
   aContext->SetTextRunRTL(PR_FALSE);
