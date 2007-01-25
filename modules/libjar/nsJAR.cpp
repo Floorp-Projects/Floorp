@@ -326,7 +326,6 @@ nsJAR::GetInputStreamWithSpec(const nsACString& aJarDirSpec,
   NS_ENSURE_ARG_POINTER(result);
 
   // Watch out for the jar:foo.zip!/ (aDir is empty) top-level special case!
-  PRFileDesc *fd = nsnull;
   nsZipItem *item = nsnull;
   if (*aEntryName) {
     // First check if item exists in jar
@@ -343,12 +342,19 @@ nsJAR::GetInputStreamWithSpec(const nsACString& aJarDirSpec,
     rv = jis->InitDirectory(&mZip, aJarDirSpec, aEntryName);
   } else {
     // Open jarfile, to get its own filedescriptor for the stream
+    // XXX The file may have been overwritten, so |item| might not be
+    // valid.  We really want to work from inode rather than file name.
+    PRFileDesc *fd = nsnull;
     fd = OpenFile();
-    rv = fd ? jis->InitFile(&mZip, item, fd) : NS_ERROR_FAILURE;
+    if (fd) {
+      rv = jis->InitFile(&mZip, item, fd);
+      // |jis| now owns |fd|
+    } else {
+      rv = NS_ERROR_FAILURE;
+    }
   }
   if (NS_FAILED(rv)) {
     NS_RELEASE(*result);
-    if (fd) PR_Close(fd);
   }
   return rv;
 }

@@ -61,6 +61,9 @@ nsJARInputStream::InitFile(nsZipArchive* aZip, nsZipItem *item, PRFileDesc *fd)
 {
     nsresult rv;
 
+    // Keep the file handle, even on failure
+    mFd = fd;
+      
     NS_ENSURE_ARG_POINTER(aZip);
     NS_ENSURE_ARG_POINTER(item);
     NS_ENSURE_ARG_POINTER(fd);
@@ -68,9 +71,6 @@ nsJARInputStream::InitFile(nsZipArchive* aZip, nsZipItem *item, PRFileDesc *fd)
     // Mark it as closed, in case something fails in initialisation
     mClosed = PR_TRUE;
 
-    // Keep the file handle    
-    mFd = fd;
-      
     // Keep the important bits of nsZipItem only
     mInSize = item->size;
  
