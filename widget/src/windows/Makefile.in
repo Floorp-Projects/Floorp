@@ -103,6 +103,7 @@ CPPSRCS += \
 	nsImageClipboard.cpp \
 	nsBidiKeyboard.cpp   \
 	nsSound.cpp          \
+	nsIdleServiceWin.cpp    \
 	$(NULL)
 endif
 
