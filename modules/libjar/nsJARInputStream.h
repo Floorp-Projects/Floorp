@@ -60,7 +60,9 @@ class nsJARInputStream : public nsIInputStream
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
    
+    // takes ownership of |fd|, even on failure
     nsresult InitFile(nsZipArchive* aZip, nsZipItem *item, PRFileDesc *fd);
+
     nsresult InitDirectory(nsZipArchive* aZip,
                            const nsACString& aJarDirSpec,
                            const char* aDir);
