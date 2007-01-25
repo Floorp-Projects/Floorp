@@ -132,6 +132,13 @@ public:
   void ActivatePopup(nsPopupFrameList* aEntry, PRBool aActivateFlag);
   void OpenPopup(nsPopupFrameList* aEntry, PRBool aOpenFlag);
 
+  /**
+   * Return true if the docshell containing aFrame may open a popup. aFrame
+   * doesn't need to be any particular type of frame, just a frame in the
+   * same document.
+   */
+  static PRBool MayOpenPopup(nsIFrame* aFrame);
+
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
