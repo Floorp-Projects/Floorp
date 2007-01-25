@@ -60,7 +60,7 @@ nsCacheEntry *
 nsDiskCacheEntry::CreateCacheEntry(nsCacheDevice *  device)
 {
     nsCacheEntry * entry = nsnull;
-    nsresult       rv = nsCacheEntry::Create(mKeyStart,
+    nsresult       rv = nsCacheEntry::Create(Key(),
                                              nsICache::STREAM_BASED,
                                              nsICache::STORE_ON_DISK,
                                              device,
@@ -75,7 +75,7 @@ nsDiskCacheEntry::CreateCacheEntry(nsCacheDevice *  device)
     // XXX why does nsCacheService have to fill out device in BindEntry()?
     entry->SetDataSize(mDataSize);
     
-    rv = entry->UnflattenMetaData(&mKeyStart[mKeySize], mMetaDataSize);
+    rv = entry->UnflattenMetaData(MetaData(), mMetaDataSize);
     if (NS_FAILED(rv)) {
         delete entry;
         return nsnull;
@@ -115,9 +115,9 @@ CreateDiskCacheEntry(nsDiskCacheBinding *  binding,
     diskEntry->mKeySize         = keySize;
     diskEntry->mMetaDataSize    = metaSize;
     
-    memcpy(diskEntry->mKeyStart, entry->Key()->get(),keySize);
+    memcpy(diskEntry->Key(), entry->Key()->get(),keySize);
     
-    nsresult rv = entry->FlattenMetaData(&diskEntry->mKeyStart[keySize], metaSize);
+    nsresult rv = entry->FlattenMetaData(diskEntry->MetaData(), metaSize);
     if (NS_FAILED(rv)) {
         delete [] (char *)diskEntry;
         return nsnull;
@@ -136,7 +136,7 @@ NS_IMPL_ISUPPORTS1(nsDiskCacheEntryInfo, nsICacheEntryInfo)
 NS_IMETHODIMP nsDiskCacheEntryInfo::GetClientID(char ** clientID)
 {
     NS_ENSURE_ARG_POINTER(clientID);
-    return ClientIDFromCacheKey(nsDependentCString(mDiskEntry->mKeyStart), clientID);
+    return ClientIDFromCacheKey(nsDependentCString(mDiskEntry->Key()), clientID);
 }
 
 extern const char DISK_CACHE_DEVICE_ID[];
@@ -150,7 +150,7 @@ NS_IMETHODIMP nsDiskCacheEntryInfo::GetDeviceID(char ** deviceID)
 
 NS_IMETHODIMP nsDiskCacheEntryInfo::GetKey(nsACString &clientKey)
 {
-    return ClientKeyFromCacheKey(nsDependentCString(mDiskEntry->mKeyStart), clientKey);
+    return ClientKeyFromCacheKey(nsDependentCString(mDiskEntry->Key()), clientKey);
 }
 
 NS_IMETHODIMP nsDiskCacheEntryInfo::GetFetchCount(PRInt32 *aFetchCount)

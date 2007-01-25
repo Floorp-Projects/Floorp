@@ -130,8 +130,8 @@ nsDiskCacheEvictor::VisitRecord(nsDiskCacheRecord *  mapRecord)
     
         // Compare clientID's without malloc
         if ((diskEntry->mKeySize <= mClientIDSize) ||
-            (diskEntry->mKeyStart[mClientIDSize] != ':') ||
-            (memcmp(diskEntry->mKeyStart, mClientID, mClientIDSize) != 0)) {
+            (diskEntry->Key()[mClientIDSize] != ':') ||
+            (memcmp(diskEntry->Key(), mClientID, mClientIDSize) != 0)) {
             delete [] (char *)diskEntry;
             return kVisitNextRecord;  // clientID doesn't match, skip it
         }
@@ -422,7 +422,7 @@ nsDiskCacheDevice::FindEntry(nsCString * key, PRBool *collision)
     if (NS_FAILED(rv))  return nsnull;
     
     // compare key to be sure
-    if (strcmp(diskEntry->mKeyStart, key->get()) == 0) {
+    if (strcmp(diskEntry->Key(), key->get()) == 0) {
         entry = diskEntry->CreateCacheEntry(this);
     } else {
         *collision = PR_TRUE;
