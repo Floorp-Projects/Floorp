@@ -3365,7 +3365,7 @@ enum
   kShiftKeyCode       = 0x38,
   kCapsLockKeyCode    = 0x39,
   kControlKeyCode     = 0x3B,
-  kOptionkeyCode      = 0x3A,   // left and right option keys
+  kOptionkeyCode      = 0x3A, // both left and right option keys
   kClearKeyCode       = 0x47,
   
   // function keys
@@ -3406,13 +3406,13 @@ enum
   kKeypadSubtractKeyCode  = 0x4E,
   kKeypadDecimalKeyCode   = 0x41,
   kKeypadDivideKeyCode    = 0x4B,
-  kKeypadEqualsKeyCode    = 0x51,     // no correpsonding raptor key code
+  kKeypadEqualsKeyCode    = 0x51, // no correpsonding gecko key code
   kEnterKeyCode           = 0x4C,
   kReturnKeyCode          = 0x24,
-  kPowerbookEnterKeyCode  = 0x34,     // Enter on Powerbook's keyboard is different
+  kPowerbookEnterKeyCode  = 0x34, // Enter on Powerbook's keyboard is different
   
-  kInsertKeyCode          = 0x72,       // also help key
-  kDeleteKeyCode          = 0x75,       // also forward delete key
+  kInsertKeyCode          = 0x72, // also help key
+  kDeleteKeyCode          = 0x75, // also forward delete key
   kTabKeyCode             = 0x30,
   kBackspaceKeyCode       = 0x33,
   kHomeKeyCode            = 0x73, 
@@ -3423,86 +3423,78 @@ enum
   kRightArrowKeyCode      = 0x7C,
   kUpArrowKeyCode         = 0x7E,
   kDownArrowKeyCode       = 0x7D
-  
 };
 
 
-static PRUint32 ConvertMacToRaptorKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, NSString* characters)
+static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, NSString* characters)
 {
-  PRUint32 raptorKeyCode = 0;
-  PRUint8 charCode;
+  PRUint32 geckoKeyCode = 0;
+  PRUint8 charCode = 0;
   if ([characters length])
     charCode = [characters characterAtIndex: 0];
-  else
-    charCode = 0;
 
   switch (keyCode)
   {
-//  case ??             :       raptorKeyCode = NS_VK_CANCEL;   break;      // don't know what this key means. Nor does joki
+    // modifiers. We don't get separate events for these
+    case kEscapeKeyCode:        geckoKeyCode = NS_VK_ESCAPE;         break;
+    case kShiftKeyCode:         geckoKeyCode = NS_VK_SHIFT;          break;
+    case kCapsLockKeyCode:      geckoKeyCode = NS_VK_CAPS_LOCK;      break;
+    case kControlKeyCode:       geckoKeyCode = NS_VK_CONTROL;        break;
+    case kOptionkeyCode:        geckoKeyCode = NS_VK_ALT;            break;
+    case kClearKeyCode:         geckoKeyCode = NS_VK_CLEAR;          break;
 
-// modifiers. We don't get separate events for these
-    case kEscapeKeyCode:        raptorKeyCode = NS_VK_ESCAPE;         break;
-    case kShiftKeyCode:         raptorKeyCode = NS_VK_SHIFT;          break;
-//    case kCommandKeyCode:       raptorKeyCode = NS_VK_META;           break;
-    case kCapsLockKeyCode:      raptorKeyCode = NS_VK_CAPS_LOCK;      break;
-    case kControlKeyCode:       raptorKeyCode = NS_VK_CONTROL;        break;
-    case kOptionkeyCode:        raptorKeyCode = NS_VK_ALT;            break;
-    case kClearKeyCode:         raptorKeyCode = NS_VK_CLEAR;          break;
-
-// function keys
-    case kF1KeyCode:            raptorKeyCode = NS_VK_F1;             break;
-    case kF2KeyCode:            raptorKeyCode = NS_VK_F2;             break;
-    case kF3KeyCode:            raptorKeyCode = NS_VK_F3;             break;
-    case kF4KeyCode:            raptorKeyCode = NS_VK_F4;             break;
-    case kF5KeyCode:            raptorKeyCode = NS_VK_F5;             break;
-    case kF6KeyCode:            raptorKeyCode = NS_VK_F6;             break;
-    case kF7KeyCode:            raptorKeyCode = NS_VK_F7;             break;
-    case kF8KeyCode:            raptorKeyCode = NS_VK_F8;             break;
-    case kF9KeyCode:            raptorKeyCode = NS_VK_F9;             break;
-    case kF10KeyCode:           raptorKeyCode = NS_VK_F10;            break;
-    case kF11KeyCode:           raptorKeyCode = NS_VK_F11;            break;
-    case kF12KeyCode:           raptorKeyCode = NS_VK_F12;            break;
-//  case kF13KeyCode:           raptorKeyCode = NS_VK_F13;            break;    // clash with the 3 below
-//  case kF14KeyCode:           raptorKeyCode = NS_VK_F14;            break;
-//  case kF15KeyCode:           raptorKeyCode = NS_VK_F15;            break;
-    case kPauseKeyCode:         raptorKeyCode = NS_VK_PAUSE;          break;
-    case kScrollLockKeyCode:    raptorKeyCode = NS_VK_SCROLL_LOCK;    break;
-    case kPrintScreenKeyCode:   raptorKeyCode = NS_VK_PRINTSCREEN;    break;
+    // function keys
+    case kF1KeyCode:            geckoKeyCode = NS_VK_F1;             break;
+    case kF2KeyCode:            geckoKeyCode = NS_VK_F2;             break;
+    case kF3KeyCode:            geckoKeyCode = NS_VK_F3;             break;
+    case kF4KeyCode:            geckoKeyCode = NS_VK_F4;             break;
+    case kF5KeyCode:            geckoKeyCode = NS_VK_F5;             break;
+    case kF6KeyCode:            geckoKeyCode = NS_VK_F6;             break;
+    case kF7KeyCode:            geckoKeyCode = NS_VK_F7;             break;
+    case kF8KeyCode:            geckoKeyCode = NS_VK_F8;             break;
+    case kF9KeyCode:            geckoKeyCode = NS_VK_F9;             break;
+    case kF10KeyCode:           geckoKeyCode = NS_VK_F10;            break;
+    case kF11KeyCode:           geckoKeyCode = NS_VK_F11;            break;
+    case kF12KeyCode:           geckoKeyCode = NS_VK_F12;            break;
+    // case kF13KeyCode:           geckoKeyCode = NS_VK_F13;            break;    // clash with the 3 below
+    // case kF14KeyCode:           geckoKeyCode = NS_VK_F14;            break;
+    // case kF15KeyCode:           geckoKeyCode = NS_VK_F15;            break;
+    case kPauseKeyCode:         geckoKeyCode = NS_VK_PAUSE;          break;
+    case kScrollLockKeyCode:    geckoKeyCode = NS_VK_SCROLL_LOCK;    break;
+    case kPrintScreenKeyCode:   geckoKeyCode = NS_VK_PRINTSCREEN;    break;
   
-// keypad
-    case kKeypad0KeyCode:       raptorKeyCode = NS_VK_NUMPAD0;        break;
-    case kKeypad1KeyCode:       raptorKeyCode = NS_VK_NUMPAD1;        break;
-    case kKeypad2KeyCode:       raptorKeyCode = NS_VK_NUMPAD2;        break;
-    case kKeypad3KeyCode:       raptorKeyCode = NS_VK_NUMPAD3;        break;
-    case kKeypad4KeyCode:       raptorKeyCode = NS_VK_NUMPAD4;        break;
-    case kKeypad5KeyCode:       raptorKeyCode = NS_VK_NUMPAD5;        break;
-    case kKeypad6KeyCode:       raptorKeyCode = NS_VK_NUMPAD6;        break;
-    case kKeypad7KeyCode:       raptorKeyCode = NS_VK_NUMPAD7;        break;
-    case kKeypad8KeyCode:       raptorKeyCode = NS_VK_NUMPAD8;        break;
-    case kKeypad9KeyCode:       raptorKeyCode = NS_VK_NUMPAD9;        break;
+    // keypad
+    case kKeypad0KeyCode:       geckoKeyCode = NS_VK_NUMPAD0;        break;
+    case kKeypad1KeyCode:       geckoKeyCode = NS_VK_NUMPAD1;        break;
+    case kKeypad2KeyCode:       geckoKeyCode = NS_VK_NUMPAD2;        break;
+    case kKeypad3KeyCode:       geckoKeyCode = NS_VK_NUMPAD3;        break;
+    case kKeypad4KeyCode:       geckoKeyCode = NS_VK_NUMPAD4;        break;
+    case kKeypad5KeyCode:       geckoKeyCode = NS_VK_NUMPAD5;        break;
+    case kKeypad6KeyCode:       geckoKeyCode = NS_VK_NUMPAD6;        break;
+    case kKeypad7KeyCode:       geckoKeyCode = NS_VK_NUMPAD7;        break;
+    case kKeypad8KeyCode:       geckoKeyCode = NS_VK_NUMPAD8;        break;
+    case kKeypad9KeyCode:       geckoKeyCode = NS_VK_NUMPAD9;        break;
 
-    case kKeypadMultiplyKeyCode:  raptorKeyCode = NS_VK_MULTIPLY;     break;
-    case kKeypadAddKeyCode:       raptorKeyCode = NS_VK_ADD;          break;
-    case kKeypadSubtractKeyCode:  raptorKeyCode = NS_VK_SUBTRACT;     break;
-    case kKeypadDecimalKeyCode:   raptorKeyCode = NS_VK_DECIMAL;      break;
-    case kKeypadDivideKeyCode:    raptorKeyCode = NS_VK_DIVIDE;       break;
-//  case ??               :       raptorKeyCode = NS_VK_SEPARATOR;    break;
+    case kKeypadMultiplyKeyCode:  geckoKeyCode = NS_VK_MULTIPLY;     break;
+    case kKeypadAddKeyCode:       geckoKeyCode = NS_VK_ADD;          break;
+    case kKeypadSubtractKeyCode:  geckoKeyCode = NS_VK_SUBTRACT;     break;
+    case kKeypadDecimalKeyCode:   geckoKeyCode = NS_VK_DECIMAL;      break;
+    case kKeypadDivideKeyCode:    geckoKeyCode = NS_VK_DIVIDE;       break;
 
+    // these may clash with forward delete and help
+    case kInsertKeyCode:        geckoKeyCode = NS_VK_INSERT;         break;
+    case kDeleteKeyCode:        geckoKeyCode = NS_VK_DELETE;         break;
 
-// these may clash with forward delete and help
-    case kInsertKeyCode:        raptorKeyCode = NS_VK_INSERT;         break;
-    case kDeleteKeyCode:        raptorKeyCode = NS_VK_DELETE;         break;
-
-    case kBackspaceKeyCode:     raptorKeyCode = NS_VK_BACK;           break;
-    case kTabKeyCode:           raptorKeyCode = NS_VK_TAB;            break;
-    case kHomeKeyCode:          raptorKeyCode = NS_VK_HOME;           break;
-    case kEndKeyCode:           raptorKeyCode = NS_VK_END;            break;
-    case kPageUpKeyCode:        raptorKeyCode = NS_VK_PAGE_UP;        break;
-    case kPageDownKeyCode:      raptorKeyCode = NS_VK_PAGE_DOWN;      break;
-    case kLeftArrowKeyCode:     raptorKeyCode = NS_VK_LEFT;           break;
-    case kRightArrowKeyCode:    raptorKeyCode = NS_VK_RIGHT;          break;
-    case kUpArrowKeyCode:       raptorKeyCode = NS_VK_UP;             break;
-    case kDownArrowKeyCode:     raptorKeyCode = NS_VK_DOWN;           break;
+    case kBackspaceKeyCode:     geckoKeyCode = NS_VK_BACK;           break;
+    case kTabKeyCode:           geckoKeyCode = NS_VK_TAB;            break;
+    case kHomeKeyCode:          geckoKeyCode = NS_VK_HOME;           break;
+    case kEndKeyCode:           geckoKeyCode = NS_VK_END;            break;
+    case kPageUpKeyCode:        geckoKeyCode = NS_VK_PAGE_UP;        break;
+    case kPageDownKeyCode:      geckoKeyCode = NS_VK_PAGE_DOWN;      break;
+    case kLeftArrowKeyCode:     geckoKeyCode = NS_VK_LEFT;           break;
+    case kRightArrowKeyCode:    geckoKeyCode = NS_VK_RIGHT;          break;
+    case kUpArrowKeyCode:       geckoKeyCode = NS_VK_UP;             break;
+    case kDownArrowKeyCode:     geckoKeyCode = NS_VK_DOWN;           break;
 
     default:
         if (aKeyEvent->isControl)
@@ -3511,99 +3503,95 @@ static PRUint32 ConvertMacToRaptorKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent,
         // if we haven't gotten the key code already, look at the char code
         switch (charCode)
         {
-          case kReturnCharCode:       raptorKeyCode = NS_VK_RETURN;       break;
-          case kEnterCharCode:        raptorKeyCode = NS_VK_RETURN;       break;      // fix me!
-          case ' ':                   raptorKeyCode = NS_VK_SPACE;        break;
-          case ';':                   raptorKeyCode = NS_VK_SEMICOLON;    break;
-          case '=':                   raptorKeyCode = NS_VK_EQUALS;       break;
-          case ',':                   raptorKeyCode = NS_VK_COMMA;        break;
-          case '.':                   raptorKeyCode = NS_VK_PERIOD;       break;
-          case '/':                   raptorKeyCode = NS_VK_SLASH;        break;
-          case '`':                   raptorKeyCode = NS_VK_BACK_QUOTE;   break;
+          case kReturnCharCode:       geckoKeyCode = NS_VK_RETURN;        break;
+          case kEnterCharCode:        geckoKeyCode = NS_VK_RETURN;        break;
+          case ' ':                   geckoKeyCode = NS_VK_SPACE;         break;
+          case ';':                   geckoKeyCode = NS_VK_SEMICOLON;     break;
+          case '=':                   geckoKeyCode = NS_VK_EQUALS;        break;
+          case ',':                   geckoKeyCode = NS_VK_COMMA;         break;
+          case '.':                   geckoKeyCode = NS_VK_PERIOD;        break;
+          case '/':                   geckoKeyCode = NS_VK_SLASH;         break;
+          case '`':                   geckoKeyCode = NS_VK_BACK_QUOTE;    break;
           case '{':
-          case '[':                   raptorKeyCode = NS_VK_OPEN_BRACKET; break;
-          case '\\':                  raptorKeyCode = NS_VK_BACK_SLASH;   break;
+          case '[':                   geckoKeyCode = NS_VK_OPEN_BRACKET;  break;
+          case '\\':                  geckoKeyCode = NS_VK_BACK_SLASH;    break;
           case '}':
-          case ']':                   raptorKeyCode = NS_VK_CLOSE_BRACKET;  break;
+          case ']':                   geckoKeyCode = NS_VK_CLOSE_BRACKET; break;
           case '\'':
-          case '"':                   raptorKeyCode = NS_VK_QUOTE;        break;
+          case '"':                   geckoKeyCode = NS_VK_QUOTE;         break;
           
           default:
-            
-            if (charCode >= '0' && charCode <= '9')   // numerals
-            {
-              raptorKeyCode = charCode;
-            }
-            else if (charCode >= 'a' && charCode <= 'z')    // lowercase
-            {
-              raptorKeyCode = toupper(charCode);
-            }
-            else if (charCode >= 'A' && charCode <= 'Z')    // uppercase
-            {
-              raptorKeyCode = charCode;
-            }
-
+            if (charCode >= '0' && charCode <= '9') // numerals
+              geckoKeyCode = charCode;
+            else if (charCode >= 'a' && charCode <= 'z') // lowercase
+              geckoKeyCode = toupper(charCode);
+            else if (charCode >= 'A' && charCode <= 'Z') // uppercase
+              geckoKeyCode = charCode;
             break;
         }
   }
 
-  return raptorKeyCode;
+  return geckoKeyCode;
 }
 
 
-static PRBool IsSpecialRaptorKey(UInt32 macKeyCode)
+static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 {
   PRBool  isSpecial;
 
   // this table is used to determine which keys are special and should not generate a charCode
   switch (macKeyCode)
   {
-// modifiers. We don't get separate events for these
-// yet
-    case kEscapeKeyCode:        isSpecial = PR_TRUE; break;
-    case kShiftKeyCode:         isSpecial = PR_TRUE; break;
-    case kCommandKeyCode:       isSpecial = PR_TRUE; break;
-    case kCapsLockKeyCode:      isSpecial = PR_TRUE; break;
-    case kControlKeyCode:       isSpecial = PR_TRUE; break;
-    case kOptionkeyCode:        isSpecial = PR_TRUE; break;
-    case kClearKeyCode:         isSpecial = PR_TRUE; break;
+    // modifiers - we don't get separate events for these yet
+    case kEscapeKeyCode:
+    case kShiftKeyCode:
+    case kCommandKeyCode:
+    case kCapsLockKeyCode:
+    case kControlKeyCode:
+    case kOptionkeyCode:
+    case kClearKeyCode:
 
-// function keys
-    case kF1KeyCode:            isSpecial = PR_TRUE; break;
-    case kF2KeyCode:            isSpecial = PR_TRUE; break;
-    case kF3KeyCode:            isSpecial = PR_TRUE; break;
-    case kF4KeyCode:            isSpecial = PR_TRUE; break;
-    case kF5KeyCode:            isSpecial = PR_TRUE; break;
-    case kF6KeyCode:            isSpecial = PR_TRUE; break;
-    case kF7KeyCode:            isSpecial = PR_TRUE; break;
-    case kF8KeyCode:            isSpecial = PR_TRUE; break;
-    case kF9KeyCode:            isSpecial = PR_TRUE; break;
-    case kF10KeyCode:           isSpecial = PR_TRUE; break;
-    case kF11KeyCode:           isSpecial = PR_TRUE; break;
-    case kF12KeyCode:           isSpecial = PR_TRUE; break;
-    case kPauseKeyCode:         isSpecial = PR_TRUE; break;
-    case kScrollLockKeyCode:    isSpecial = PR_TRUE; break;
-    case kPrintScreenKeyCode:   isSpecial = PR_TRUE; break;
+    // function keys
+    case kF1KeyCode:
+    case kF2KeyCode:
+    case kF3KeyCode:
+    case kF4KeyCode:
+    case kF5KeyCode:
+    case kF6KeyCode:
+    case kF7KeyCode:
+    case kF8KeyCode:
+    case kF9KeyCode:
+    case kF10KeyCode:
+    case kF11KeyCode:
+    case kF12KeyCode:
+    case kPauseKeyCode:
+    case kScrollLockKeyCode:
+    case kPrintScreenKeyCode:
 
-    case kInsertKeyCode:        isSpecial = PR_TRUE; break;
-    case kDeleteKeyCode:        isSpecial = PR_TRUE; break;
-    case kTabKeyCode:           isSpecial = PR_TRUE; break;
-    case kBackspaceKeyCode:     isSpecial = PR_TRUE; break;
+    case kInsertKeyCode:
+    case kDeleteKeyCode:
+    case kTabKeyCode:
+    case kBackspaceKeyCode:
 
-    case kHomeKeyCode:          isSpecial = PR_TRUE; break; 
-    case kEndKeyCode:           isSpecial = PR_TRUE; break;
-    case kPageUpKeyCode:        isSpecial = PR_TRUE; break;
-    case kPageDownKeyCode:      isSpecial = PR_TRUE; break;
-    case kLeftArrowKeyCode:     isSpecial = PR_TRUE; break;
-    case kRightArrowKeyCode:    isSpecial = PR_TRUE; break;
-    case kUpArrowKeyCode:       isSpecial = PR_TRUE; break;
-    case kDownArrowKeyCode:     isSpecial = PR_TRUE; break;
-    case kReturnKeyCode:        isSpecial = PR_TRUE; break;
-    case kEnterKeyCode:         isSpecial = PR_TRUE; break;
-    case kPowerbookEnterKeyCode: isSpecial = PR_TRUE; break;
+    case kHomeKeyCode:
+    case kEndKeyCode:
+    case kPageUpKeyCode:
+    case kPageDownKeyCode:
+    case kLeftArrowKeyCode:
+    case kRightArrowKeyCode:
+    case kUpArrowKeyCode:
+    case kDownArrowKeyCode:
+    case kReturnKeyCode:
+    case kEnterKeyCode:
+    case kPowerbookEnterKeyCode:
+      isSpecial = PR_TRUE;
+      break;
 
-    default:                    isSpecial = PR_FALSE; break;
+    default:
+      isSpecial = PR_FALSE;
+      break;
   }
+
   return isSpecial;
 }
 
@@ -3618,7 +3606,7 @@ static PRBool IsSpecialRaptorKey(UInt32 macKeyCode)
     
   // Check to see if the message is a key press that does not involve
   // one of our special key codes.
-  if (aMessage == NS_KEY_PRESS && !IsSpecialRaptorKey([aKeyEvent keyCode])) {
+  if (aMessage == NS_KEY_PRESS && !IsSpecialGeckoKey([aKeyEvent keyCode])) {
     if (!outGeckoEvent->isControl && !outGeckoEvent->isMeta)
       outGeckoEvent->isControl = outGeckoEvent->isAlt = outGeckoEvent->isMeta = 0;
     
@@ -3641,7 +3629,7 @@ static PRBool IsSpecialRaptorKey(UInt32 macKeyCode)
       outGeckoEvent->charCode -= 32;    // convert to uppercase
   }
   else {
-    outGeckoEvent->keyCode = ConvertMacToRaptorKeyCode([aKeyEvent keyCode], outGeckoEvent, [aKeyEvent characters]);
+    outGeckoEvent->keyCode = ConvertMacToGeckoKeyCode([aKeyEvent keyCode], outGeckoEvent, [aKeyEvent characters]);
     outGeckoEvent->charCode = 0;
   } 
   
