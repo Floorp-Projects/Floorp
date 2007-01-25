@@ -117,8 +117,8 @@ public:
     NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar);
     virtual nsIMenuBar*     GetMenuBar();
     NS_IMETHOD              ShowMenuBar(PRBool aShow);
-    NS_IMETHOD WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect) { return NS_OK; }
-    NS_IMETHOD ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect) { return NS_OK; }
+    NS_IMETHOD WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
+    NS_IMETHOD ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
     
     virtual void* GetNativeData(PRUint32 aDataType) ;
 
