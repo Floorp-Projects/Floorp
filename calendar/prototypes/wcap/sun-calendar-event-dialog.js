@@ -50,7 +50,6 @@ var gItemDuration = null;
 var gStartTimezone = null;
 var gEndTimezone = null;
 var gIsReadOnly = false;
-var gOwnerID = null;
 var gUserID = null;
 var gOrganizerID = null;
 var gPrivacy = null;
@@ -1551,6 +1550,7 @@ function editAttendees()
   args.attendees = window.attendees;
   args.organizer = window.organizer;
   args.calendar = calendar;
+  args.item = window.calendarItem;
   args.onOk = callback;
   args.fbWrapper = window.fbWrapper;
 
@@ -1775,30 +1775,9 @@ function updateCalendar()
   var item = window.calendarItem;
   var calendar = document.getElementById("item-calendar").selectedItem.calendar;
 
-  // set 'gIsReadOnly' if the calendar is read-only
-  gIsReadOnly = false;
-  if (calendar && calendar.readOnly) {
-    gIsReadOnly = true;
-  } else {
-  
-    try {
-      var userID = "";
-      var ownerID = "";
-      var organizerID = "";
-    
-      var organizer = window.organizer;
-      var provider = calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
-      ownerID = provider.ownerId;
-      userID = provider.session.userId;
-      organizerID = ((organizer == null || organizer.id == null)
-                      ? ownerID // sensible default
-                      : organizer.id);
-
-      if(ownerID != organizerID)
-        gIsReadOnly = true;
-    }
-    catch(e) {}
-  }
+  gIsReadOnly = true;
+  if(calendar)
+      gIsReadOnly = calendar.readOnly;
 
   // update the accept button
   updateAccept();

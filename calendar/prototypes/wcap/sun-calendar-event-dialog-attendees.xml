@@ -96,11 +96,9 @@
       <field name="mIsOffline">0</field>
       <field name="mLDAPSession">null</field>
       <field name="mSessionAdded">0</field>
-      <field name="mOwnerID">null</field>
-      <field name="mUserID">null</field>
       <field name="mOrganizerID">null</field>
       <field name="mIsReadOnly">false</field>
-      <field name="mIsOrganizer">false</field>
+      <field name="mIsInvitation">false</field>
       <field name="mPopupOpen">false</field>
 
       <constructor>
@@ -191,24 +189,15 @@
 
             // assume we're the organizer [in case that the calendar
             // does not support the concept of identities].
-            this.mIsOrganizer = true;
-            
-            try {
-              this.mUserID = "";
-              this.mOwnerID = "";
-              this.mOrganizerID = "";
-            
-              var provider = calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
-              this.mOwnerID = provider.ownerId;
-              this.mUserID = provider.session.userId;
-              this.mOrganizerID = ((organizer == null || organizer.id == null)
-                              ? this.mOwnerID // sensible default
-                              : organizer.id);
+            this.mIsInvitation = false;
 
-              // set 'mIsOrganizer' if the current calid originally scheduled this event.
-              this.mIsOrganizer = false;
-              if(this.mOwnerID == this.mOrganizerID)
-                this.mIsOrganizer = true;
+            this.mOrganizerID = "";
+            try {
+              var provider = calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
+              this.mIsInvitation = provider.isInvitation(args.item);
+              this.mOrganizerID = ((organizer == null || organizer.id == null)
+                              ? provider.ownerId // sensible default
+                              : organizer.id);
             }
             catch(e) {}
 
@@ -216,8 +205,22 @@
             var template = document.getAnonymousElementByAttribute(this, "anonid", "item");
             template.focus();
 
-            if(this.mIsReadOnly || !this.mIsOrganizer)
+            if(this.mIsReadOnly || this.mIsInvitation)
               listbox.setAttribute("disabled","true");
+            
+            // TODO: use calIWcapCalendar::owner
+            // TODO: use calIWcapCalendar::owner
+            // TODO: use calIWcapCalendar::owner
+            // TODO: use calIWcapCalendar::owner
+            // TODO: use calIWcapCalendar::owner
+            // TODO: use calIWcapCalendar::owner
+            // TODO: use calIWcapCalendar::owner
+            // TODO: use calIWcapCalendar::owner
+            // TODO: use calIWcapCalendar::owner
+            // TODO: use calIWcapCalendar::owner
+            // TODO: use calIWcapCalendar::owner
+            // TODO: use calIWcapCalendar::owner
+            // TODO: use calIWcapCalendar::owner
             
             // TODO: the organizer should show up in the attendee list, but this information
             // should be based on the organizer contained in the appropriate field of calIItemBase.
@@ -238,8 +241,7 @@
               }
               try {
                 var provider = calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
-                var organizerCalendar = provider.session.getCalendarByCalId(this.mOrganizerID);
-                var props = organizerCalendar.getCalendarProperties("X-S1CS-CALPROPS-COMMON-NAME",{});
+                var props = provider.getCalendarProperties("X-S1CS-CALPROPS-COMMON-NAME",{});
                 if(props.length > 0)
                     organizer.commonName = props[0];
               }
@@ -314,7 +316,7 @@
           input.removeAttribute("disabled");
           icon.removeAttribute("disabled");
 
-          if(this.mIsReadOnly || !this.mIsOrganizer) {
+          if(this.mIsReadOnly || this.mIsInvitation) {
             input.setAttribute("disabled","true");
             icon.setAttribute("disabled","true");
           }
@@ -412,7 +414,7 @@
               input.removeAttribute("disabled");
               icon.removeAttribute("disabled");
 
-              if(this.mIsReadOnly || !this.mIsOrganizer) {
+              if(this.mIsReadOnly || this.mIsInvitation) {
                 input.setAttribute("disabled","true");
                 icon.setAttribute("disabled","true");
               }
@@ -1335,7 +1337,7 @@
             return;
           }
 
-          if(this.mIsReadOnly || !this.mIsOrganizer)
+          if(this.mIsReadOnly || this.mIsInvitation)
             return;
         
           if (event.originalTarget == null ||
@@ -1364,7 +1366,7 @@
 
       <handler event="keydown">
         <![CDATA[
-        if(this.mIsReadOnly || !this.mIsOrganizer)
+        if(this.mIsReadOnly || this.mIsInvitation)
           return;
         if(event.originalTarget.localName == "input") {
             switch(event.keyCode) {
@@ -1393,7 +1395,7 @@
         // appropriately and stop the event propagation.
         if(this.mPopupOpen)
           return;
-        if(this.mIsReadOnly || !this.mIsOrganizer)
+        if(this.mIsReadOnly || this.mIsInvitation)
           return;
         if(event.originalTarget.localName == "input") {
           switch(event.keyCode) {
@@ -1998,11 +2000,8 @@
       <field name="mStartHourDefault">8</field>
       <field name="mEndHourDefault">19</field>
 
-      <field name="mOwnerID">null</field>
-      <field name="mUserID">null</field>
-      <field name="mOrganizerID">null</field>
       <field name="mIsReadOnly">false</field>
-      <field name="mIsOrganizer">false</field>
+      <field name="mIsInvitation">false</field>
       <field name="mIgnoreUpdate">false</field>
       <field name="mDisplayTimezone">true</field>
 
@@ -2754,40 +2753,17 @@
 
             // assume we're the organizer [in case that the calendar
             // does not support the concept of identities].
-            this.mIsOrganizer = true;
+            this.mIsInvitation = false;
 
             //var organizerRow = document.getAnonymousElementByAttribute(this, "anonid", "event-organizer-row");
             //organizerRow.setAttribute("collapsed","true");
 
             try {
-              this.mUserID = "";
-              this.mOwnerID = "";
-              this.mOrganizerID = "";
-            
-              var provider = calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
-              this.mOwnerID = provider.ownerId;
-              this.mUserID = provider.session.userId;
-              this.mOrganizerID = ((organizer == null || organizer.id == null)
-                              ? this.mOwnerID // sensible default
-                              : organizer.id);
-
-              // set 'mIsOrganizer' if the current calid originally scheduled this event.
-              this.mIsOrganizer = false;
-              if(this.mOwnerID == this.mOrganizerID)
-                this.mIsOrganizer = true;
-
-              // display the organizer [try to get the common name from the calid]
-              //TODO: either remove this row or enable this again -> organizerRow.removeAttribute("collapsed");
-              var organizer = document.getAnonymousElementByAttribute(this, "anonid", "event-organizer");
-              organizer.value = this.mOrganizerID;
-              var organizerCalendar = provider.session.getCalendarByCalId(this.mOrganizerID);
-              var props = organizerCalendar.getCalendarProperties("X-S1CS-CALPROPS-COMMON-NAME",{});
-              if(props.length > 0)
-                  organizer.value = props[0];
+              this.mIsInvitation = provider.isInvitation(args.item);
             }
             catch(e) {}
             
-            if(this.mIsReadOnly || !this.mIsOrganizer) {
+            if(this.mIsReadOnly || this.mIsInvitation) {
               document.getAnonymousElementByAttribute(this, "anonid", "next-slot").setAttribute('disabled', 'true');
               document.getAnonymousElementByAttribute(this, "anonid", "previous-slot").setAttribute('disabled', 'true');
             }            

@@ -896,10 +896,10 @@
             
               // first of all make sure that the given intervall is
               // within the intervall we're currently displaying.
-              if(entry.isBusyEntry) {
+              if(true) {
               
-                var rangeStart = entry.dtRangeStart.getInTimezone(kDefaultTimezone);
-                var rangeEnd = entry.dtRangeEnd.getInTimezone(kDefaultTimezone);
+                var rangeStart = entry.start.getInTimezone(kDefaultTimezone);
+                var rangeEnd = entry.end.getInTimezone(kDefaultTimezone);
                 rangeStart.normalize();
                 rangeEnd.normalize();
                 
@@ -1038,10 +1038,10 @@
               
                 // first of all make sure that the given intervall is
                 // within the intervall we're currently displaying.
-                if(entry.isBusyEntry) {
+                if(true) {
                 
-                  var rangeStart = entry.dtRangeStart.getInTimezone(kDefaultTimezone);
-                  var rangeEnd = entry.dtRangeEnd.getInTimezone(kDefaultTimezone);
+                  var rangeStart = entry.start.getInTimezone(kDefaultTimezone);
+                  var rangeEnd = entry.end.getInTimezone(kDefaultTimezone);
                   rangeStart.normalize();
                   rangeEnd.normalize();
 
@@ -1147,8 +1147,8 @@
       <field name="mMaxFreeBusy">0</field>
       <field name="mCalendar">null</field>
       <field name="mConsoleService">null</field>
-      <field name="mFreeBusySequence">0</field>
       <field name="mFreeBusy">null</field>
+      <field name="mPendingRequests">null</field>
       <field name="mStartDate">null</field>
       <field name="mEndDate">null</field>
       <field name="mScrollOffset">0</field>
@@ -1245,13 +1245,10 @@
             return this;
           },
   
-          onGetFreeBusyTimes: function(rc,requestId,calId,count,entries) {
+          onRequestResult: function(request,entries) {
 
-            if (rc == Components.results.NS_OK) {
-
-              // delegate to the binding
-              this.binding.onFreeBusy(requestId,calId,count,entries);
-            }
+            // delegate to the binding
+            this.binding.onFreeBusy(request,entries);
           }
         })
       ]]>
@@ -1266,12 +1263,14 @@
           this.mRange = Number(this.getAttribute("range"));
         
           this.mMaxFreeBusy = 0;
-          this.mFreeBusySequence = 0;
           this.mFreeBusy = [];
+          this.mPendingRequests = [];
 
           var self = this;
           var load = function loadHandler() { self.onLoad(); };
           window.addEventListener("load", load, true);
+          var unload = function unloadHandler() { self.onUnload(); };
+          window.addEventListener("unload", unload, true);
           
           this.mConsoleService = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
         ]]>
@@ -1287,7 +1286,7 @@
           <![CDATA[
           this.mStartDate = val.clone();
           this.mStartDate.makeImmutable();
-          for (i=1; i <= this.mMaxFreeBusy; i++) {
+          for (var i=1; i <= this.mMaxFreeBusy; i++) {
             this.getFreeBusyElement(i).startDate = val;
           }
           return val;
@@ -1305,7 +1304,7 @@
           <![CDATA[
           this.mEndDate = val.clone();
           this.mEndDate.makeImmutable();
-          for (i=1; i <= this.mMaxFreeBusy; i++) {
+          for (var i=1; i <= this.mMaxFreeBusy; i++) {
             this.getFreeBusyElement(i).endDate = val;
           }
           return val;
@@ -1325,6 +1324,20 @@
         <body>
           <![CDATA[
             this.onInitialize();
+          ]]>
+        </body>
+      </method>
+
+      <method name="onUnload">
+        <body>
+          <![CDATA[
+            // cancel pending free/busy requests
+            for each(var request in this.mPendingRequests) {
+              request.cancel(null);
+            }
+
+            this.mFreeBusy = [];
+            this.mPendingRequests = [];
           ]]>
         </body>
       </method>
@@ -1506,10 +1519,9 @@
                                "### " + (msg ? msg : ""));
                     this.mConsoleService.logStringMessage(str);
                                             
-                    this.mFreeBusy.push(i);
-                    this.mFreeBusySequence = this.mFreeBusy.length-1;
-                    
-                    this.mCalendar.session.getFreeBusyTimes(calid,start,end,true,this.mFreeBusyListener,true,this.mFreeBusySequence);
+                    var request = this.mCalendar.session.getFreeBusyTimes(calid,start,end,true,this.mFreeBusyListener);
+                    this.mFreeBusy[request.id] = i;
+                    this.mPendingRequests.push(request);
                   }
                 }
                 catch (ex) {
@@ -1523,26 +1535,32 @@
 
       <!-- onFreeBusy(), called with the result set from getFreeBusyTimes() -->
       <method name="onFreeBusy">
-        <parameter name="sequenceId"/>
-        <parameter name="calId"/>
-        <parameter name="count"/>
+        <parameter name="request"/>
         <parameter name="entries"/>
         <body>
           <![CDATA[
-            var row = this.mFreeBusy[sequenceId];
+            // find request in list of pending requests and remove from queue
+            var queue = this.mPendingRequests;
+            for(var i=0; i<queue.length; i++) {
+              if(queue[i] == request) {
+                queue.splice(i,1);
+                break;
+              }
+            }
 
-            var msg = "response for <"+calId+"> on row <"+row+"> - sequence <"+sequenceId+">";
-            var str = ("\n### freebusy log " + new Date() +
-                       "### " + (msg ? msg : ""));
-            this.mConsoleService.logStringMessage(str);
-
-            if(row) {
-              var freebusy = this.getFreeBusyElement(row);
-              var fieldValue = freebusy.getAttribute("calid");
-              if (fieldValue.indexOf(calId) == 0) {
+            if (request.status == Components.results.NS_OK) {
+              var row = this.mFreeBusy[request.id];
+              if(row) {
+                var freebusy = this.getFreeBusyElement(row);
                 freebusy.onFreeBusy(entries);
               }
             }
+
+            // reset map<row-id,request-id> if currently no further
+            // requests are pending. this basically shrinks the array
+            // in order to get rid of all previously remembered relationships.
+            if(!queue.length)
+              this.mFreeBusy = [];
           ]]>
         </body>
       </method>
