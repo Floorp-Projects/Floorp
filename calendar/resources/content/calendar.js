@@ -146,7 +146,7 @@ function handleCommandLine(aComLine) {
         calurl = aComLine.handleFlagWithParam("subscribe", false);
     } catch(ex) {}
     if (calurl) {
-        var uri = makeURL(calurl);
+        var uri = aComLine.resolveURI(calurl);
         var cal = getCalendarManager().createCalendar('ics', uri);
         getCalendarManager().registerCalendar(cal);
 
