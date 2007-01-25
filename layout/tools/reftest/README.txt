@@ -73,6 +73,14 @@ that do not depend on XUL, or even ones testing other layout engines.
 Running Tests
 =============
 
+At some point in the future there will hopefully be a cleaner way to do
+this.  For now, go to your object directory, and run (perhaps using
+MOZ_NO_REMOTE=1 or the -profile <directory> option)
+
+./firefox -reftest /path/to/srcdir/mozilla/layout/reftests/reftest.list > reftest.out
+
+and then search/grep reftest.out for "UNEXPECTED" or "FAIL".
+
 Testable Areas
 ==============
 
