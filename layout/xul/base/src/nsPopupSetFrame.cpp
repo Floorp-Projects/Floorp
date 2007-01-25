@@ -66,6 +66,12 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsGUIEvent.h"
 #include "nsIRootBox.h"
+#include "nsIFocusController.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShell.h"
+#include "nsPIDOMWindow.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIBaseWindow.h"
 
 #define NS_MENU_POPUP_LIST_INDEX   0
 
@@ -363,6 +369,9 @@ nsPopupSetFrame::ShowPopup(nsIContent* aElementContent, nsIContent* aPopupConten
                            const nsString& aPopupType, const nsString& anAnchorAlignment,
                            const nsString& aPopupAlignment)
 {
+  if (!MayOpenPopup(this))
+    return NS_OK;
+
   nsWeakFrame weakFrame(this);
   // First fire the popupshowing event.
   if (!OnCreate(aXPos, aYPos, aPopupContent) || !weakFrame.IsAlive())
@@ -823,5 +832,44 @@ nsPopupSetFrame::AddPopupFrame(nsIFrame* aPopup)
   // Now return.  The remaining entry values will be filled in if/when showPopup is
   // called for this popup.
   return NS_OK;
+}
+
+//static
+PRBool
+nsPopupSetFrame::MayOpenPopup(nsIFrame* aFrame)
+{
+  nsCOMPtr<nsISupports> cont = aFrame->GetPresContext()->GetContainer();
+  nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(cont);
+  if (!dsti)
+    return PR_FALSE;
+
+  // chrome shells can always open popups
+  PRInt32 type = -1;
+  if (NS_SUCCEEDED(dsti->GetItemType(&type)) && type == nsIDocShellTreeItem::typeChrome)
+    return PR_TRUE;
+
+  nsCOMPtr<nsIDocShell> shell = do_QueryInterface(dsti);
+  if (!shell)
+    return PR_FALSE;
+
+  nsCOMPtr<nsPIDOMWindow> win = do_GetInterface(shell);
+  if (!win)
+    return PR_FALSE;
+
+  // only allow popups in active windows
+  PRBool active;
+  nsIFocusController* focusController = win->GetRootFocusController();
+  focusController->GetActive(&active);
+  if (!active)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(shell);
+  if (!baseWin)
+    return PR_FALSE;
+
+  // only allow popups in visible frames
+  PRBool visible;
+  baseWin->GetVisibility(&visible);
+  return visible;
 }
 

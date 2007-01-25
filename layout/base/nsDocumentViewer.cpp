@@ -120,6 +120,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsJSEnvironment.h"
 #include "nsIFocusController.h"
+#include "nsIMenuParent.h"
 
 #include "nsIScrollableView.h"
 #include "nsIHTMLDocument.h"
@@ -369,6 +370,8 @@ private:
   nsresult GetPopupNode(nsIDOMNode** aNode);
   nsresult GetPopupLinkNode(nsIDOMNode** aNode);
   nsresult GetPopupImageNode(nsIImageLoadingContent** aNode);
+
+  void HideViewIfPopup(nsIView* aView);
 
   void DumpContentToPPM(const char* aFileName);
 
@@ -1247,34 +1250,67 @@ DocumentViewerImpl::PageHide(PRBool aIsUnload)
   }
 
   mDocument->OnPageHide(!aIsUnload);
-  if (!aIsUnload)
-    return NS_OK;
+  if (aIsUnload) {
+    // if Destroy() was called during OnPageHide(), mDocument is nsnull.
+    NS_ENSURE_STATE(mDocument);
 
-  // if Destroy() was called during OnPageHide(), mDocument is nsnull.
-  NS_ENSURE_STATE(mDocument);
+    // First, get the window from the document...
+    nsPIDOMWindow *window = mDocument->GetWindow();
 
-  // First, get the window from the document...
-  nsPIDOMWindow *window = mDocument->GetWindow();
+    if (!window) {
+      // Fail if no window is available...
+      NS_ERROR("window not set for document!");
+      return NS_ERROR_NULL_POINTER;
+    }
 
-  if (!window) {
-    // Fail if no window is available...
-    NS_ERROR("window not set for document!");
-    return NS_ERROR_NULL_POINTER;
+    // Now, fire an Unload event to the document...
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsEvent event(PR_TRUE, NS_PAGE_UNLOAD);
+    event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
+    // XXX Dispatching to |window|, but using |document| as the target.
+    event.target = mDocument;
+
+    // Never permit popups from the unload handler, no matter how we get
+    // here.
+    nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
+
+    nsEventDispatcher::Dispatch(window, mPresContext, &event, nsnull, &status);
   }
 
-  // Now, fire an Unload event to the document...
-  nsEventStatus status = nsEventStatus_eIgnore;
-  nsEvent event(PR_TRUE, NS_PAGE_UNLOAD);
-  event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
-  // XXX Dispatching to |window|, but using |document| as the target.
-  event.target = mDocument;
+  if (mPresShell) {
+    // look for open menupopups and close them after the unload event, in case
+    // the unload event listeners open any new popups
+    nsIViewManager *vm = mPresShell->GetViewManager();
+    if (vm) {
+      nsIView *rootView = nsnull;
+      vm->GetRootView(rootView);
+      if (rootView)
+        HideViewIfPopup(rootView);
+    }
+  }
 
-  // Never permit popups from the unload handler, no matter how we get
-  // here.
-  nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
-
-  nsEventDispatcher::Dispatch(window, mPresContext, &event, nsnull, &status);
   return NS_OK;
+}
+
+void
+DocumentViewerImpl::HideViewIfPopup(nsIView* aView)
+{
+  nsIFrame* frame = NS_STATIC_CAST(nsIFrame*, aView->GetClientData());
+  if (frame) {
+    nsIMenuParent* parent;
+    CallQueryInterface(frame, &parent);
+    if (parent) {
+      parent->HideChain();
+      // really make sure the view is hidden
+      mViewManager->SetViewVisibility(aView, nsViewVisibility_kHide);
+    }
+  }
+
+  nsIView* child = aView->GetFirstChild();
+  while (child) {
+    HideViewIfPopup(child);
+    child = child->GetNextSibling();
+  }
 }
 
 static void
