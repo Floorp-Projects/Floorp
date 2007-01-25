@@ -1018,6 +1018,32 @@ NS_IMETHODIMP nsCocoaWindow::ShowMenuBar(PRBool aShow)
 }
 
 
+NS_IMETHODIMP nsCocoaWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
+{
+  nsRect r = cocoaRectToGeckoRect([mWindow contentRectForFrameRect:[mWindow frame]]);
+
+  aNewRect.x = r.x + aOldRect.x;
+  aNewRect.y = r.y + aOldRect.y;
+  aNewRect.width = aOldRect.width;
+  aNewRect.height = aOldRect.height;
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsCocoaWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
+{
+  nsRect r = cocoaRectToGeckoRect([mWindow contentRectForFrameRect:[mWindow frame]]);
+
+  aNewRect.x = aOldRect.x - r.x;
+  aNewRect.y = aOldRect.y - r.y;
+  aNewRect.width = aOldRect.width;
+  aNewRect.height = aOldRect.height;
+
+  return NS_OK;
+}
+
+
 nsIMenuBar* nsCocoaWindow::GetMenuBar()
 {
   return mMenuBar;
