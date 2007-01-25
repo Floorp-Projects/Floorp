@@ -174,29 +174,41 @@ fips_140()
   certutil -d ${P_R_FIPSDIR} -K -f ${R_FIPSPWFILE} 2>&1
   html_msg $? 0 "List the FIPS module keys (certutil -K)"
 
-#
-# This test was interfering with QA running on more than one machine pointing
-# to the same binary file. Turn it off for now.
-#
-#  echo "$SCRIPTNAME: Detect mangled database --------------------------"
-#  SOFTOKEN=${DIST}/${OBJDIR}/lib/${DLL_PREFIX}softokn3.${DLL_SUFFIX}
-#  echo "cp ${SOFTOKEN} ${TMP}/softokn3.sav"
-#  cp ${SOFTOKEN} ${TMP}/softokn3.sav
-#  echo "mangling ${SOFTOKEN}"
-#  echo "mangle -i ${SOFTOKEN} -o 60000 -b 5"
-#  mangle -i ${SOFTOKEN} -o 60000 -b 5 2>&1
-#  if [ $? -eq 0 ]; then
-#    echo "dbtest -r  -d ${P_R_FIPSDIR} "
-# suppress the expected failure message
-#    dbtest -r  -d ${P_R_FIPSDIR}  > ${TMP}/dbtestoutput.txt 2>&1
-#    html_msg $? 46 "Init NSS with a corrupted library (dbtest -r)"
-#    echo "cp ${TMP}/softokn3.sav ${SOFTOKEN}"
-#    cp ${TMP}/softokn3.sav ${SOFTOKEN}
-#  else
-#    html_msg 0 0 "Skipping corruption test, can't open ${DLL_PREFIX}softokn3.${DLL_SUFFIX}"
-#  fi
-#  echo "rm ${TMP}/softokn3.sav"
-#  rm ${TMP}/softokn3.sav
+  LIBDIR="${DIST}/${OBJDIR}/lib"
+  MANGLEDIR="${FIPSDIR}/mangle"
+   
+  # There are different versions of cp command on different systems, some of them 
+  # copies only symlinks, others doesn't have option to disable links, so there
+  # is needed to copy files one by one. 
+  echo "mkdir ${MANGLEDIR}"
+  mkdir ${MANGLEDIR}
+  for lib in `ls ${LIBDIR}`; do
+    echo "cp ${LIBDIR}/${lib} ${MANGLEDIR}"
+    cp ${LIBDIR}/${lib} ${MANGLEDIR}
+  done
+    
+  echo "$SCRIPTNAME: Detect mangled database --------------------------"
+  SOFTOKEN=${MANGLEDIR}/${DLL_PREFIX}softokn3.${DLL_SUFFIX}
+
+  echo "mangling ${SOFTOKEN}"
+  echo "mangle -i ${SOFTOKEN} -o 60000 -b 5"
+  mangle -i ${SOFTOKEN} -o 60000 -b 5 2>&1
+  if [ $? -eq 0 ]; then
+    if [ "${OS_ARCH}" = "WINNT" ]; then
+      DBTEST=`which dbtest`
+      echo "PATH=${MANGLEDIR} ${DBTEST} -r -d ${P_R_FIPSDIR}"
+      PATH="${MANGLEDIR}" ${DBTEST} -r -d ${P_R_FIPSDIR} > ${TMP}/dbtestoutput.txt 2>&1
+      RESULT=$?
+    else
+      echo "LD_LIBRARY_PATH=${MANGLEDIR} dbtest -r -d ${P_R_FIPSDIR}"
+      LD_LIBRARY_PATH="${MANGLEDIR}" dbtest -r -d ${P_R_FIPSDIR} > ${TMP}/dbtestoutput.txt 2>&1
+      RESULT=$?
+    fi  
+
+    html_msg ${RESULT} 46 "Init NSS with a corrupted library (dbtest -r)"
+  else
+    html_msg 0 0 "Skipping corruption test, can't open ${DLL_PREFIX}softokn3.${DLL_SUFFIX}"
+  fi
 }
 
 ############################## fips_cleanup ############################
@@ -213,7 +225,6 @@ fips_cleanup()
 ################## main #################################################
 
 fips_init
-
 fips_140
 fips_cleanup
 
