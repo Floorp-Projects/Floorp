@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -454,7 +455,7 @@ nsresult nsScanner::GetChar(PRUnichar& aChar) {
   }
 
   if(NS_OK == result){
-    aChar=*mCurrentPosition++;
+    aChar = *mCurrentPosition++;
     --mCountRemaining;
   }
   return result;
@@ -753,9 +754,13 @@ nsresult nsScanner::ReadTagIdentifier(nsScannerSharedSubstring& aString) {
       case '<':
       case '>':
       case '/':
-      case '\0':
         found = PR_TRUE;
         break;
+
+      case '\0':
+        ReplaceCharacter(current, '-');
+        break;
+
       default:
         break;
     }
@@ -768,11 +773,6 @@ nsresult nsScanner::ReadTagIdentifier(nsScannerSharedSubstring& aString) {
   // Don't bother appending nothing.
   if (current != mCurrentPosition) {
     AppendUnicodeTo(mCurrentPosition, current, aString);
-  }
-
-  // Drop NULs on the floor since nobody really likes them.
-  while (current != end && !*current) {
-    ++current;
   }
 
   SetPosition(current);  
@@ -1058,6 +1058,10 @@ nsresult nsScanner::ReadWhile(nsString& aString,
   while(current != end) {
  
     theChar=*current;
+    if (theChar == '\0') {
+      ReplaceCharacter(current, '-');
+      theChar = '-';
+    }
     if(theChar) {
       PRInt32 pos=aValidSet.FindChar(theChar);
       if(kNotFound==pos) {
@@ -1116,6 +1120,10 @@ nsresult nsScanner::ReadUntil(nsAString& aString,
   
   while (current != mEndPosition) {
     theChar = *current;
+    if (theChar == '\0') {
+      ReplaceCharacter(current, '-');
+      theChar = '-';
+    }
 
     // Filter out completely wrong characters
     // Check if all bits are in the required area
@@ -1172,6 +1180,10 @@ nsresult nsScanner::ReadUntil(nsScannerSharedSubstring& aString,
   
   while (current != mEndPosition) {
     theChar = *current;
+    if (theChar == '\0') {
+      ReplaceCharacter(current, '-');
+      theChar = '-';
+    }
 
     // Filter out completely wrong characters
     // Check if all bits are in the required area
@@ -1229,6 +1241,11 @@ nsresult nsScanner::ReadUntil(nsScannerIterator& aStart,
   }
   
   while (current != mEndPosition) {
+    if (theChar == '\0') {
+      ReplaceCharacter(current, '-');
+      theChar = '-';
+    }
+
     // Filter out completely wrong characters
     // Check if all bits are in the required area
     if(!(theChar & aEndCondition.mFilter)) {
@@ -1244,7 +1261,7 @@ nsresult nsScanner::ReadUntil(nsScannerIterator& aStart,
 
           return NS_OK;
         }
-      ++setcurrent;
+        ++setcurrent;
       }
     }
     
@@ -1288,6 +1305,11 @@ nsresult nsScanner::ReadUntil(nsAString& aString,
   }
 
   while (current != mEndPosition) {
+    if (theChar == '\0') {
+      ReplaceCharacter(current, '-');
+      theChar = '-';
+    }
+
     if (aTerminalChar == theChar) {
       if(addTerminal)
         ++current;
