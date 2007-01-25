@@ -233,16 +233,6 @@ private:
 inline void SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue, PRUint8 aAlpha = 0xFF)
 {
 #if defined(MOZ_CAIRO_GFX)
-    // This is not skipping for pixels where aAlpha happen to be 0xFF
-    // This will also make the compiler skip this part completely when 
-    // inlining SetPixel when aAlpha is not specified
-    if (aAlpha != 0xFF) {
-#define DO_PREMULTIPLY(c_) ((PRUint16(c_) * PRUint16(aAlpha) + 127) / 255)
-        aBlue = DO_PREMULTIPLY(aBlue);
-        aGreen = DO_PREMULTIPLY(aGreen);
-        aRed = DO_PREMULTIPLY(aRed);
-#undef DO_PREMULTIPLY
-    }
     *(PRUint32*)aDecoded = (aAlpha << 24) | (aRed << 16) | (aGreen << 8) | aBlue;
     aDecoded += 4;
 #else // MOZ_CAIRO_GFX
