@@ -1707,16 +1707,18 @@ nsLayoutUtils::DrawString(const nsIFrame*      aFrame,
 #ifdef IBMBIDI
   nsresult rv = NS_ERROR_FAILURE;
   nsPresContext* presContext = aFrame->GetPresContext();
-  nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
+  if (presContext->BidiEnabled()) {
+    nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
 
-  if (bidiUtils) {
-    const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
-    nsBidiDirection direction =
-      (NS_STYLE_DIRECTION_RTL == vis->mDirection) ?
-      NSBIDI_RTL : NSBIDI_LTR;
-    rv = bidiUtils->RenderText(aString, aLength, direction,
-                               presContext, *aContext,
-                               aPoint.x, aPoint.y);
+    if (bidiUtils) {
+      const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
+      nsBidiDirection direction =
+        (NS_STYLE_DIRECTION_RTL == vis->mDirection) ?
+        NSBIDI_RTL : NSBIDI_LTR;
+      rv = bidiUtils->RenderText(aString, aLength, direction,
+                                 presContext, *aContext,
+                                 aPoint.x, aPoint.y);
+    }
   }
   if (NS_FAILED(rv))
 #endif // IBMBIDI
@@ -1740,15 +1742,17 @@ nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
   // things right for a mixed-direction string.
   if (hints & NS_RENDERING_HINT_NEW_TEXT_RUNS) {
     nsPresContext* presContext = aFrame->GetPresContext();
-    nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
+    if (presContext->BidiEnabled()) {
+      nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
 
-    if (bidiUtils) {
-      const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
-      nsBidiDirection direction =
-        (NS_STYLE_DIRECTION_RTL == vis->mDirection) ?
-        NSBIDI_RTL : NSBIDI_LTR;
-      return bidiUtils->MeasureTextWidth(aString, aLength,
-                                         direction, presContext, *aContext);
+      if (bidiUtils) {
+        const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
+        nsBidiDirection direction =
+          (NS_STYLE_DIRECTION_RTL == vis->mDirection) ?
+          NSBIDI_RTL : NSBIDI_LTR;
+        return bidiUtils->MeasureTextWidth(aString, aLength,
+                                           direction, presContext, *aContext);
+      }
     }
   }
 #endif // IBMBIDI
