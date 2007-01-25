@@ -46,6 +46,7 @@ EXTRA_DSO_LDOPTS += \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(XPCOM_LIBS) \
 	$(NSPR_LIBS) \
+	$(ZLIB_LIBS) \
 	$(NULL)
 
 

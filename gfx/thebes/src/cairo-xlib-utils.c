@@ -132,7 +132,7 @@ _get_rectangular_clip (cairo_t *cr,
     int rect_count = 0;
     cairo_bool_t retval = True;
 
-    cliplist = cairo_copy_clip_rectangles (cr);
+    cliplist = cairo_copy_clip_rectangle_list (cr);
     if (cliplist->status != CAIRO_STATUS_SUCCESS) {
         retval = False;
         goto FINISH;
