@@ -1104,7 +1104,7 @@ VarPrefix(jssrcnote *sn)
     JS_END_MACRO
 
 const char *
-GetLocal(SprintStack *ss, jsint i, JSBool retract)
+GetLocal(SprintStack *ss, jsint i)
 {
     ptrdiff_t off;
     JSContext *cx;
@@ -1154,8 +1154,7 @@ GetLocal(SprintStack *ss, jsint i, JSBool retract)
     rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
     if (!rval)
         return NULL;
-    if (retract)
-        RETRACT(&ss->sprinter, rval);
+    RETRACT(&ss->sprinter, rval);
     return rval;
 
 #undef LOCAL_ASSERT
@@ -1225,7 +1224,7 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
         else if (op == JSOP_SETGVAR)
             atom = js_GetAtomFromBytecode(jp->script, pc, 0);
         else
-            lval = GetLocal(ss, i, JS_TRUE);
+            lval = GetLocal(ss, i);
         if (atom)
             lval = js_AtomToPrintableString(cx, atom);
         LOCAL_ASSERT(lval);
@@ -2459,7 +2458,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 }
 #endif
 
-                rval = GetLocal(ss, i, JS_TRUE);
+                rval = GetLocal(ss, i);
                 todo = Sprint(&ss->sprinter, ss_format, VarPrefix(sn), rval);
                 break;
 
@@ -2473,13 +2472,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               case JSOP_INCLOCAL:
               case JSOP_DECLOCAL:
                 i = GET_UINT16(pc);
-                lval = GetLocal(ss, i, JS_TRUE);
+                lval = GetLocal(ss, i);
                 goto do_inclval;
 
               case JSOP_LOCALINC:
               case JSOP_LOCALDEC:
                 i = GET_UINT16(pc);
-                lval = GetLocal(ss, i, JS_TRUE);
+                lval = GetLocal(ss, i);
                 goto do_lvalinc;
 
               case JSOP_FORLOCAL:
@@ -3304,8 +3303,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               BEGIN_LITOPX_CASE(JSOP_GETLOCALPROP, 2)
                 i = GET_UINT16(pc);
                 LOCAL_ASSERT((uintN)i < ss->top);
-                lval = GetLocal(ss, i, JS_FALSE);
-                if (!lval || !PushOff(ss, STR2OFF(&ss->sprinter, lval), op))
+                lval = GetLocal(ss, i);
+                if (!lval)
+                    return NULL;
+                todo = SprintCString(&ss->sprinter, lval);
+                if (todo < 0 || !PushOff(ss, todo, op))
                     return NULL;
                 goto do_getprop;
 
