@@ -46,8 +46,11 @@
 
 nsDOMCSSRGBColor::nsDOMCSSRGBColor(nsIDOMCSSPrimitiveValue* aRed,
                                    nsIDOMCSSPrimitiveValue* aGreen,
-                                   nsIDOMCSSPrimitiveValue* aBlue)
-  : mRed(aRed), mGreen(aGreen), mBlue(aBlue)
+                                   nsIDOMCSSPrimitiveValue* aBlue,
+                                   nsIDOMCSSPrimitiveValue* aAlpha,
+                                   PRBool aHasAlpha)
+  : mRed(aRed), mGreen(aGreen), mBlue(aBlue), mAlpha(aAlpha)
+  , mHasAlpha(aHasAlpha)
 {
 }
 
@@ -57,6 +60,7 @@ nsDOMCSSRGBColor::~nsDOMCSSRGBColor(void)
 
 NS_INTERFACE_MAP_BEGIN(nsDOMCSSRGBColor)
   NS_INTERFACE_MAP_ENTRY(nsIDOMRGBColor)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSRGBAColor)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CSSRGBColor)
 NS_INTERFACE_MAP_END
@@ -89,5 +93,14 @@ nsDOMCSSRGBColor::GetBlue(nsIDOMCSSPrimitiveValue** aBlue)
   NS_ENSURE_TRUE(mBlue, NS_ERROR_NOT_INITIALIZED);
   *aBlue = mBlue;
   NS_ADDREF(*aBlue);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMCSSRGBColor::GetAlpha(nsIDOMCSSPrimitiveValue** aAlpha)
+{
+  NS_ENSURE_TRUE(mAlpha, NS_ERROR_NOT_INITIALIZED);
+  *aAlpha = mAlpha;
+  NS_ADDREF(*aAlpha);
   return NS_OK;
 }

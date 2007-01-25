@@ -2860,6 +2860,16 @@ PRBool CSSParserImpl::ParseColor(nsresult& aErrorCode, nsCSSValue& aValue)
         nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(tk->mIdent);
         if (eCSSKeyword_UNKNOWN < keyword) { // known keyword
           PRInt32 value;
+#ifdef MOZ_CAIRO_GFX
+          // XXX Once non-cairo is no longer supported, we should remove
+          // the special parsing of transparent for background-color and
+          // border-color.  (It currently overrides this, since keywords
+          // are checked earlier in ParseVariant.)
+#endif
+          if (mHandleAlphaColors && keyword == eCSSKeyword_transparent) {
+            aValue.SetColorValue(NS_RGBA(0, 0, 0, 0));
+            return PR_TRUE;
+          }
           if (nsCSSProps::FindKeyword(keyword, nsCSSProps::kColorKTable, value)) {
             aValue.SetIntValue(value, eCSSUnit_Integer);
             return PR_TRUE;

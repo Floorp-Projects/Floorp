@@ -162,7 +162,7 @@ public:
     mType = CSS_URI;
   }
 
-  void SetColor(nsIDOMRGBColor* aColor)
+  void SetColor(nsDOMCSSRGBColor* aColor)
   {
     NS_PRECONDITION(aColor, "Null RGBColor being set!");
     Reset();
@@ -224,7 +224,7 @@ private:
   union {
     nscoord         mTwips;
     float           mFloat;
-    nsIDOMRGBColor* mColor;
+    nsDOMCSSRGBColor* mColor;
     nsIDOMRect*     mRect;
     PRUnichar*      mString;
     nsIURI*         mURI;

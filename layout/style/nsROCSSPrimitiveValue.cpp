@@ -240,7 +240,10 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
         NS_NAMED_LITERAL_STRING(comma, ", ");
         nsCOMPtr<nsIDOMCSSPrimitiveValue> colorCSSValue;
         nsAutoString colorValue;
-        tmpStr.AssignLiteral("rgb(");
+        if (mValue.mColor->HasAlpha())
+          tmpStr.AssignLiteral("rgba(");
+        else
+          tmpStr.AssignLiteral("rgb(");
 
         // get the red component
         result = mValue.mColor->GetRed(getter_AddRefs(colorCSSValue));
@@ -267,7 +270,20 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
         result = colorCSSValue->GetCssText(colorValue);
         if (NS_FAILED(result))
           break;
-        tmpStr.Append(colorValue + NS_LITERAL_STRING(")"));
+        tmpStr.Append(colorValue);
+
+        if (mValue.mColor->HasAlpha()) {
+          // get the alpha component
+          result = mValue.mColor->GetAlpha(getter_AddRefs(colorCSSValue));
+          if (NS_FAILED(result))
+            break;
+          result = colorCSSValue->GetCssText(colorValue);
+          if (NS_FAILED(result))
+            break;
+          tmpStr.Append(comma + colorValue);
+        }
+
+        tmpStr.Append(NS_LITERAL_STRING(")"));
 
         break;
       }

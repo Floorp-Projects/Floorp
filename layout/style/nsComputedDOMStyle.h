@@ -272,7 +272,7 @@ private:
 
   nsROCSSPrimitiveValue* GetROCSSPrimitiveValue();
   nsDOMCSSValueList* GetROCSSValueList(PRBool aCommaDelimited);
-  nsDOMCSSRGBColor* GetDOMCSSRGBColor(nscolor aColor);
+  nsresult SetToRGBAColor(nsROCSSPrimitiveValue* aValue, nscolor aColor);
 
   struct ComputedStyleMapEntry
   {

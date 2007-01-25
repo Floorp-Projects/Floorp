@@ -178,6 +178,7 @@
 #include "nsIDOMCSSRuleList.h"
 #include "nsIDOMRect.h"
 #include "nsIDOMRGBColor.h"
+#include "nsIDOMNSRGBAColor.h"
 
 // XBL related includes.
 #include "nsIXBLService.h"
@@ -2366,6 +2367,7 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(CSSRGBColor, nsIDOMRGBColor)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMRGBColor)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSRGBAColor)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Range, nsIDOMRange)
