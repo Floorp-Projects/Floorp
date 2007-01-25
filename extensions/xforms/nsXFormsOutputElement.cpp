@@ -84,7 +84,7 @@ public:
   NS_IMETHOD SetValue(const nsAString& aValue);
   NS_IMETHOD GetHasBoundNode(PRBool *aHasBoundNode);
 
-  NS_IMETHOD IsContentAllowed(PRBool *aIsAllowed);
+  virtual PRBool IsContentAllowed();
 
   nsXFormsOutputElement();
 
@@ -199,19 +199,17 @@ nsXFormsOutputElement::SetValue(const nsAString& aValue)
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-NS_IMETHODIMP
-nsXFormsOutputElement::IsContentAllowed(PRBool *aIsAllowed)
+PRBool
+nsXFormsOutputElement::IsContentAllowed()
 {
-  NS_ENSURE_ARG_POINTER(aIsAllowed);
-  *aIsAllowed = PR_TRUE;
+  PRBool isAllowed = PR_TRUE;
 
   // Output may not be bound to complexContent.
-  PRBool isComplex = PR_FALSE;
-  IsContentComplex(&isComplex);
+  PRBool isComplex = IsContentComplex();
   if (isComplex) {
-    *aIsAllowed = PR_FALSE;
+    isAllowed = PR_FALSE;
   }
-  return NS_OK;
+  return isAllowed;
 }
 
 NS_HIDDEN_(nsresult)

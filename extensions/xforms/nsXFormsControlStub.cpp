@@ -186,8 +186,7 @@ nsXFormsControlStub::ResetBoundNode(const nsString &aBindAttribute,
   // Some controls may not be bound to certain types of content. If the content
   // is a disallowed type, report the error and dispatch a binding exception
   // event.
-  PRBool isAllowed = PR_TRUE;
-  IsContentAllowed(&isAllowed);
+  PRBool isAllowed = IsContentAllowed();
 
   if (!mBoundNode || !isAllowed) {
     // If there's no result (ie, no instance node) returned by the above, it
@@ -836,19 +835,16 @@ nsXFormsControlStub::GetBoundBuiltinType(PRUint16 *aBuiltinType)
   return mModel->GetRootBuiltinType(schemaType, aBuiltinType);
 }
 
-NS_IMETHODIMP
-nsXFormsControlStub::IsContentAllowed(PRBool *aIsAllowed)
+PRBool
+nsXFormsControlStub::IsContentAllowed()
 {
-  NS_ENSURE_ARG_POINTER(aIsAllowed);
-  *aIsAllowed = PR_TRUE;
-  return NS_OK;
+  return PR_TRUE;
 }
 
-NS_IMETHODIMP
-nsXFormsControlStub::IsContentComplex(PRBool *aIsComplex)
+PRBool
+nsXFormsControlStub::IsContentComplex()
 {
-  NS_ENSURE_ARG_POINTER(aIsComplex);
-  *aIsComplex = PR_FALSE;
+  PRBool isComplex = PR_FALSE;
 
   if (mBoundNode) {
     // If the bound node has any Element children, then it has complexContent.
@@ -858,7 +854,7 @@ nsXFormsControlStub::IsContentComplex(PRBool *aIsComplex)
       PRUint16 nodeType;
       currentNode->GetNodeType(&nodeType);
       if (nodeType == nsIDOMNode::ELEMENT_NODE) {
-        *aIsComplex = PR_TRUE;
+        isComplex = PR_TRUE;
         break;
       }
 
@@ -867,7 +863,7 @@ nsXFormsControlStub::IsContentComplex(PRBool *aIsComplex)
       currentNode.swap(node);
     }
   }
-  return NS_OK;
+  return isComplex;
 }
 
 NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsControlStub,

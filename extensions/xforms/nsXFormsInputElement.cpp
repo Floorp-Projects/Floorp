@@ -50,7 +50,7 @@ public:
                            nsRestrictionFlag *aRestriction,
                            nsAString &aUnallowedTypes);
 
-  NS_IMETHOD IsContentAllowed(PRBool *aIsAllowed);
+  virtual PRBool IsContentAllowed();
 
   nsXFormsInputElement(const nsAString& aType)
     : nsXFormsDelegateStub(aType)
@@ -81,20 +81,17 @@ nsXFormsInputElement::IsTypeAllowed(PRUint16 aType, PRBool *aIsAllowed,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXFormsInputElement::IsContentAllowed(PRBool *aIsAllowed)
+PRBool
+nsXFormsInputElement::IsContentAllowed()
 {
-  NS_ENSURE_ARG_POINTER(aIsAllowed);
-  *aIsAllowed = PR_TRUE;
-
+  PRBool isAllowed = PR_TRUE;
 
   // For input and secret elements, complexContent is not allowed.
-  PRBool isComplex = PR_FALSE;
-  IsContentComplex(&isComplex);
+  PRBool isComplex = IsContentComplex();
   if (isComplex) {
-    *aIsAllowed = PR_FALSE;
+    isAllowed = PR_FALSE;
   }
-  return NS_OK;
+  return isAllowed;
 }
 
 class nsXFormsTextareaElement : public nsXFormsDelegateStub
@@ -105,7 +102,7 @@ public:
                            nsRestrictionFlag *aRestriction,
                            nsAString &aAllowedTypes);
 
-  NS_IMETHOD IsContentAllowed(PRBool *aIsAllowed);
+  virtual PRBool IsContentAllowed();
 
   nsXFormsTextareaElement()
     : nsXFormsDelegateStub(NS_LITERAL_STRING("textarea"))
@@ -135,19 +132,17 @@ nsXFormsTextareaElement::IsTypeAllowed(PRUint16 aType, PRBool *aIsAllowed,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXFormsTextareaElement::IsContentAllowed(PRBool *aIsAllowed)
+PRBool
+nsXFormsTextareaElement::IsContentAllowed()
 {
-  NS_ENSURE_ARG_POINTER(aIsAllowed);
-  *aIsAllowed = PR_TRUE;
+  PRBool isAllowed = PR_TRUE;
 
-  // Textareas may not be bound to complexContent.
-  PRBool isComplex = PR_FALSE;
-  IsContentComplex(&isComplex);
+  // Textarea elements may not be bound to complexContent.
+  PRBool isComplex = IsContentComplex();
   if (isComplex) {
-    *aIsAllowed = PR_FALSE;
+    isAllowed = PR_FALSE;
   }
-  return NS_OK;
+  return isAllowed;
 }
 
 // Creators

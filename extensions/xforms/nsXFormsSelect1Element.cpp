@@ -80,7 +80,7 @@ public:
   // nsIXFormsDelegate overrides
   NS_IMETHOD GetXFormsAccessors(nsIXFormsAccessors **aAccessor);
 
-  NS_IMETHOD IsContentAllowed(PRBool *aIsAllowed);
+  virtual PRBool IsContentAllowed();
 
   nsXFormsSelect1Element(const nsAString& aType)
     : nsXFormsDelegateStub(aType)
@@ -195,21 +195,19 @@ nsXFormsSelect1Element::GetXFormsAccessors(nsIXFormsAccessors **aAccessor)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXFormsSelect1Element::IsContentAllowed(PRBool *aIsAllowed)
+PRBool
+nsXFormsSelect1Element::IsContentAllowed()
 {
-  NS_ENSURE_ARG_POINTER(aIsAllowed);
-  *aIsAllowed = PR_TRUE;
+  PRBool isAllowed = PR_TRUE;
 
   // For select1 elements, non-simpleContent is only allowed if the select
   // element contains an itemset.
-  PRBool isComplex = PR_FALSE;
-  IsContentComplex(&isComplex);
+  PRBool isComplex = IsContentComplex();
   if (isComplex && !nsXFormsUtils::NodeHasItemset(mElement)) {
-    *aIsAllowed = PR_FALSE;
+    isAllowed = PR_FALSE;
   }
 
-  return NS_OK;
+  return isAllowed;
 }
 
 NS_HIDDEN_(nsresult)

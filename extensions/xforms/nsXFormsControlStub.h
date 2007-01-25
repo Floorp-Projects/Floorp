@@ -134,18 +134,15 @@ public:
    * type of content that may be bound to the control. For example,
    * xf:input may only be bound to simpleContent.
    *
-   * @param aIsAllowed     Indicates whether the control is allowed to bind
-   *                       to the content type.
    */
-  NS_IMETHOD IsContentAllowed(PRBool *aIsAllowed);
+  virtual PRBool IsContentAllowed();
 
   /**
    * This function determines if the content to which the control is being
    * bound is complex; ie contains Element children.
    *
-   * @param aIsComplex     Indicates whether the content is complex.
    */
-  NS_IMETHOD IsContentComplex(PRBool *aIsComplex);
+  virtual PRBool IsContentComplex();
 
   // nsIXFormsContextControl
   NS_DECL_NSIXFORMSCONTEXTCONTROL
