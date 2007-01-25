@@ -772,6 +772,8 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     // Release the directory service
     NS_IF_RELEASE(nsDirectoryService::gService);
 
+    nsCycleCollector_shutdown();
+
     if (moduleLoaders) {
         PRBool more;
         nsCOMPtr<nsISupports> el;
