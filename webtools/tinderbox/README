@@ -196,6 +196,7 @@ $tree/${logfile}
 $tree/${logfile}.brief.html
 $tree/ignorebuilds.pl
 $tree/scrapebuilds.pl
+$tree/warningbuilds.pl
 $tree/rules.pl
 $tree/status.pl
 $tree/sheriff.pl
@@ -218,6 +219,9 @@ $ignore_builds, each key is a tree name.
 
 scrapebuilds.pl: same as ignorebuilds.pl, but selects a build to be
 "scraped" for data, with a token in the form TinderboxPrint:aaa,bbb,...
+
+warningbuilds.pl: same as scrapebuilds.pl but looks for compiler
+warning messags instead of TinderboxPrint tokens
 
 status.pl stores the tree-specific status.  Its contents looks like:
           $status_message = 'message';

@@ -63,11 +63,8 @@ elsif( $command eq 'set_rules_message' ){
 elsif( $command eq 'set_sheriff' ){
     &set_sheriff;
 }
-elsif( $command eq 'disable_builds' ){
-    &disable_builds;
-}
-elsif( $command eq 'scrape_builds' ){
-    &scrape_builds;
+elsif ($command eq 'admin_builds') {
+    &admin_builds;
 } else {
     print "Unknown command: \"$command\".";
 }
@@ -87,7 +84,8 @@ sub trim_logs {
     my $tblocks;
     opendir( D, &shell_escape($tree) );
     while( my $fn = readdir( D ) ){
-        if( $fn =~ /\.(?:gz|brief\.html)$/ ){
+        if( $fn =~ /\.(?:gz|brief\.html)$/ ||
+            $fn =~ m/^warn.*?\.html$/){
             my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime,
                 $ctime,$blksize,$blocks) = stat("$tree/$fn");
             if( $mtime && ($mtime < $min_date) ){
@@ -124,7 +122,28 @@ sub trim_logs {
     rename( "$tree/build.dat", "$tree/build.dat.old" );
     rename( "$tree/build.dat.new", "$tree/build.dat" );
 
-    print "<h2>$builds_removed Builds removed from build.dat</h2>\n";
+    #
+    # Trim scrape.dat & warnings.dat
+    #
+    for my $file ("scrape.dat", "warnings.dat") {
+        open(BD, "<", "$tree/$file");
+        open(NBD, ">", "$tree/$file.new");
+        while (<BD>) {
+            my ($logfile, $junk) = split (/\|/);
+            my ($buildtime, $processtime, $pid) = split (/\./, $logfile);
+            if ($buildtime >= $min_date) {
+                print NBD $_;
+            }
+        }
+        close(BD);
+        close(NBD);
+        unlink("$tree/$file.old");
+        rename("$tree/$file", "$tree/$file.old");
+        rename("$tree/$file.new", "$tree/$file");
+    }
+
+    print "<h2>$builds_removed builds removed from build.dat</h2>\n";
+    print "<h2><a href=\"showbuilds.cgi?tree=$tree\">Back to tree</a></h2>\n";
 }
 
 sub create_tree {
@@ -196,70 +215,66 @@ sub create_tree {
 }
 
 
-sub disable_builds {
-    my ($i,%buildnames);
+sub admin_builds {
+    my ($i,%active_buildnames, %scrape_buildnames, %warning_buildnames);
 
     # Read build.dat
     open(BD, "<", "$tree/build.dat");
-    while( <BD> ){
+    while(<BD>){
         my ($endtime,$buildtime,$bname) = split( /\|/ );
-        $buildnames{$bname} = 0;
+        $active_buildnames{$bname} = 0;
+        $scrape_buildnames{$bname} = 0;
+        $warning_buildnames{$bname} = 0;
     }
-    close( BD );
+    close(BD);
 
     for $i (keys %form) {
-        if ($i =~ /^build_/ ){
-            $i =~ s/^build_//;
-            $buildnames{$i} = 1;
+        if ($i =~ m/^active_/ ) {
+            $i =~ s/^active_//;
+            $active_buildnames{$i} = 1;
+        } elsif ($i =~ m/^scrape_/ ) {
+            $i =~ s/^scrape_//;
+            $scrape_buildnames{$i} = 1;
+        } elsif ($i =~ m/^warning_/ ) {
+            $i =~ s/^warning_//;
+            $warning_buildnames{$i} = 1;
         }
     }
 
     open(IGNORE, ">", "$tree/ignorebuilds.pl");
     print IGNORE '$ignore_builds = {' . "\n";
-    for $i ( sort keys %buildnames ){
-        if( $buildnames{$i} == 0 ){
+    for $i (sort keys %active_buildnames){
+        if ($active_buildnames{$i} == 0){
             print IGNORE "\t\t'$i' => 1,\n";
         }
     }
     print IGNORE "\t};\n";
-
-    chmod( oct($perm), "$tree/ignorebuilds.pl");
-    print "<h2><a href=showbuilds.cgi?tree=$tree>Build state Changed</a></h2>\n";
-}
-
-
-sub scrape_builds {
-    my ($i,%buildnames);
-
-    # Read build.dat
-    open(BD, "<", "$tree/build.dat");
-    while( <BD> ){
-        my ($endtime,$buildtime,$bname) = split( /\|/ );
-        $buildnames{$bname} = 1;
-    }
-    close( BD );
-
-    for $i (keys %form) {
-        if ($i =~ /^build_/ ){
-            $i =~ s/^build_//;
-            $buildnames{$i} = 0;
-        }
-    }
+    close IGNORE;
 
     open(SCRAPE, ">", "$tree/scrapebuilds.pl");
     print SCRAPE '$scrape_builds = {' . "\n";
-    for $i ( sort keys %buildnames ){
-        if( $buildnames{$i} == 0 ){
+    for $i (sort keys %scrape_buildnames){
+        if ($scrape_buildnames{$i} == 1){
             print SCRAPE "\t\t'$i' => 1,\n";
         }
     }
     print SCRAPE "\t};\n";
+    close SCRAPE;
 
-    chmod( oct($perm), "$tree/scrapebuilds.pl");
+    open(WARNING, ">", "$tree/warningbuilds.pl");
+    print WARNING '$warning_builds = {' . "\n";
+    for $i (sort keys %warning_buildnames){
+        if ($warning_buildnames{$i} == 1){
+            print WARNING "\t\t'$i' => 1,\n";
+        }
+    }
+    print WARNING "\t};\n";
+    close WARNING;
+
+    chmod( oct($perm), "$tree/ignorebuilds.pl", "$tree/scrapebuilds.pl",
+           "$tree/warningbuilds.pl");
     print "<h2><a href=showbuilds.cgi?tree=$tree>Build state Changed</a></h2>\n";
 }
-
-
 sub set_sheriff {
     my $m = $form{'sheriff'};
     $m =~ s/\'/\\\'/g;

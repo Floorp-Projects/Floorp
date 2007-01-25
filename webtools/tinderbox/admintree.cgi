@@ -171,60 +171,51 @@ Tinderbox is configured to show up to $::who_days days of log history. Currently
 "   ;
 
 #
-# Toggle scraping for builds.
+# Individual tree administration
 #
+    print "<B><font size=+1>Individual tree administration</font></b><br>";
     print "
-<B><font size=+1>Turn on log scraping.</font></b><br>  Checked builds will have the logs scanned fora token of the form <b>TinderboxPrint:aaa,bbb,ccc</b>.  These values will show up as-is in the showbuilds.cgi output.<br>
+<table border=1>
+<tr><td><b>Active</b></td><td>Only checked builds are shown. Add <b><tt>&noignore=1</tt></b> to the tinderbox URL to override.</td></tr>
+<tr><td><b>Scrape</b></td><td>Checked builds will have the logs scanned for a token of the form <b>TinderboxPrint:aaa,bbb,ccc</b>.<br>These values will show up as-is in the showbuilds.cgi output.</td></tr>
+<tr><td><b>Warnings</b></td><td>Checked builds will have the logs scanned for compiler warning messages.</td></tr>
+</table>
+";
+
+    print "
+<br>
 <FORM method=post action=doadmin.cgi>
 <INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
-<INPUT TYPE=HIDDEN NAME=command VALUE=scrape_builds>
+<INPUT TYPE=HIDDEN NAME=command VALUE=admin_builds>
+<TABLE BORDER=1>
+<TR><TD><B>Build</B></TD><TD><B>Active</B></TD><TD><B>Scrape</B></TD><TD><B>Warnings</B></TD></TR>
 ";
 
     @names = sort (@$::build_names) ;
 
     for $i (@names){
-        if( $i ne "" ){
-            $checked = ($::scrape_builds->{$i} != 0 ? "CHECKED": "" );
-            print "<INPUT TYPE=checkbox NAME='build_".value_encode($i)."' $checked >";
-            print value_encode($i)."<br>\n";
+        if ($i ne "") {
+            my $buildname = &value_encode($i);
+            my $active_check = ($::ignore_builds->{$i} != 0 ? "": "CHECKED=1" );
+            my $scrape_check = ($::scrape_builds->{$i} != 0 ? "CHECKED=1" : "" );
+            my $warning_check = ($::warning_builds->{$i} != 0 ? "CHECKED=1": "" );
+            print "<TR>\n";
+            print "<TD>$buildname</TD>\n";
+            print "<TD><INPUT TYPE=checkbox NAME='active_$buildname' $active_check ></TD>\n";
+            print "<TD><INPUT TYPE=checkbox NAME='scrape_$buildname' $scrape_check ></TD>\n";
+            print "<TD><INPUT TYPE=checkbox NAME='warning_$buildname' $warning_check ></TD>\n";
+            print "</TR>\n";
         }
     }
-
+    print "</TABLE>\n";
+ 
     print "
 <B>Password:</B> <INPUT NAME=password TYPE=password>
-<INPUT TYPE=SUBMIT VALUE='Scrape only checked builds'>
+<INPUT TYPE=SUBMIT VALUE='Change build configuration'>
 </FORM>
 <hr>
 ";
 
-#
-# Turn builds off.
-#
-    print "
-<B><font size=+1>If builds are behaving badly you can turn them off.</font></b><br>  Uncheck
-the build that is misbehaving and click the button.  Add <b><tt>&noignore=1</tt></b> to
-the tinderbox URL to override.<br>
-<FORM method=post action=doadmin.cgi>
-<INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
-<INPUT TYPE=HIDDEN NAME=command VALUE=disable_builds>
-";
-
-    @names = sort (@$::build_names) ;
-
-    for $i (@names){
-        if( $i ne "" ){
-            $checked = ($::ignore_builds->{$i} != 0 ? "": "CHECKED" );
-            print "<INPUT TYPE=checkbox NAME='build_".value_encode($i)."' $checked >";
-            print value_encode($i)."<br>\n";
-        }
-    }
-
-    print "
-<B>Password:</B> <INPUT NAME=password TYPE=password>
-<INPUT TYPE=SUBMIT VALUE='Show only checked builds'>
-</FORM>
-<hr>
-";
 
 } else {
 #

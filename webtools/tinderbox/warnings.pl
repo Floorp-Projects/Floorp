@@ -151,7 +151,7 @@ my @ignore_match = (
 #   We need this because the warnings do not always give the full
 #   paths to files.
 #
-print STDERR "Building hash of file names...";
+print STDERR "Building hash of file names..." if ($debug);
 my ($file_bases, $file_fullpaths) = build_file_hash($::cvs_root, @::cvs_modules)
     if ($::cvs_module ne '');
 print STDERR "done.\n";
@@ -168,7 +168,7 @@ my $total_ignored_count = 0;
 
   # Parse the build log for warnings
   #
-  warn "Parsing $br->{buildname}, $log_file\n";
+  warn "Parsing $br->{buildname}, $log_file\n" if ($debug);
 
   my $gz = gzopen("$tree/$log_file", "rb") or 
     die "gzopen($tree/$log_file): $!\n";
@@ -321,13 +321,14 @@ sub find_build_record {
   $::maxdate = time;
   $::mindate = $::maxdate - 5*60*60; # Go back 5 hours
 
-  print STDERR "Loading build data...";
+  print STDERR "Loading build data..." if ($debug);
   tb_load_data(\%form);
   print STDERR "done\n";
 
   for (my $ii=0; $ii <= $::name_count; $ii++) {
     for (my $tt=0; $tt <= $::time_count; $tt++) {
       if (defined($br = $::build_table->[$tt][$ii])
+          and $br != -1
           and $br->{logfile} eq $log_file) {
         return $br;
   } } }

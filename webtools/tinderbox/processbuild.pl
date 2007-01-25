@@ -163,39 +163,34 @@ sub process_mailfile($) {
     }
 
     # Warnings
-    #   Compare the name with $warning_buildnames_pat which is defined in
-    #   $tinderbox{tree}/treedata.pl if at all.
+    #   Look for build name in warningbuilds.pl
     print "Warnings($tinderbox{tree}/$tinderbox{logfile})\n" if ($debug);
-    undef $::warning_buildnames_pat;
-    open(TD, "$tinderbox{tree}/treedata.pl");
-    my $line;
-    while ($line=<TD>) {
-        if ($line =~ m/^\$warning_build_names_pat\s*=.*;$/) {
-            $line =~ s/^\$warning/\$::warning/;
-            eval($line);
-        }
-    }
-    close(TD);
-    if (defined $::warning_buildnames_pat
-        and $tinderbox{build} =~ /^$::warning_buildnames_pat$/
+    undef %TreeConfig::warning_builds;
+    package TreeConfig;
+    do "$tinderbox{tree}/warningbuilds.pl"
+        if -r "$tinderbox{tree}/warningbuilds.pl";
+    package main;
+
+    if (defined $TreeConfig::warning_builds
+        and defined($TreeConfig::warning_builds->{$tinderbox{build}})
+        and $tinderbox{status} ne 'building'
         and $tinderbox{status} ne 'failed') {
         $err = system("./warnings.pl", "$tinderbox{tree}/$tinderbox{logfile}");
         warn "warnings.pl($tinderbox{tree}/$tinderbox{logfile} returned an error\n" if ($err);
-        undef $::warning_buildnames_pat;
     }
 
     # Scrape data
-    #   Look for build name in scrapedata.pl.
+    #   Look for build name in scrapebuilds.pl.
     print "Scrape($tinderbox{tree},$tinderbox{logfile})\n" if ($debug);
-    undef $::scrape_builds;
-    require "$tinderbox{tree}/scrapebuilds.pl"
+    undef %TreeConfig::scrape_builds;
+    package TreeConfig;
+    do "$tinderbox{tree}/scrapebuilds.pl"
         if -r "$tinderbox{tree}/scrapebuilds.pl";
-    # required files are only loaded once so preserve scraped_builds value
-    if (defined($::scrape_builds)) {
-        $scraped_trees{$tinderbox{tree}} = $::scrape_builds;
-    }
-    my $sb = $scraped_trees{$tinderbox{tree}};
-    if (defined($sb) and $sb->{$tinderbox{build}}) {
+    package main;
+
+    if (defined $TreeConfig::scrape_builds
+        and defined($TreeConfig::scrape_builds->{$tinderbox{build}})
+        and $tinderbox{status} ne 'building') {
         $err = system("./scrape.pl", "$tinderbox{tree}", "$tinderbox{logfile}");
         warn "scrape.pl($tinderbox{tree},$tinderbox{logfile}) returned an error\n" if ($err);
     }

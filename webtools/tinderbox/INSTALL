@@ -57,7 +57,7 @@ This is a quick guide for installing the tinderbox server.
 	</Directory>
 	# Deny access to private tree data
 	<Directory /var/www/html/tinderbox/*/>
-		<FilesMatch "^(ignorebuilds.pl|scrapebuilds|treedata).pl$">
+		<FilesMatch "^(ignorebuilds.pl|scrapebuilds|treedata|warningbuilds).pl$">
 			Deny from all
 		</FilesMatch>
 		<FilesMatch "\.(dat)$">

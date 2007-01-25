@@ -433,8 +433,10 @@ sub tb_load_data() {
 
     undef $::ignore_builds;
     undef $::scrape_builds;
+    undef $::warning_builds;
     do "$tree/ignorebuilds.pl" if -r "$tree/ignorebuilds.pl";
     do "$tree/scrapebuilds.pl" if -r "$tree/scrapebuilds.pl";
+    do "$tree/warningbuilds.pl" if -r "$tree/warningbuilds.pl";
  
     my $td = {};
     $td->{name} = $tree;
