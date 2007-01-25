@@ -22,56 +22,56 @@
 
 [% PROCESS global/variables.none.tmpl %]
 
-	<testcase author="[% case.author.email FILTER xml %]" priority="[% case.priority FILTER xml %]" automated="[% case.isautomated ? "Automatic" : "Manual" FILTER xml %]" status="[% case.status FILTER xml %]">
+    <testcase author="[% case.author.email FILTER xml %]" priority="[% case.priority FILTER xml %]" automated="[% case.isautomated ? "Automatic" : "Manual" FILTER xml %]" status="[% case.status FILTER xml %]">
 [% IF case.text.action %]
-		<action>[% case.text.action FILTER replace('<','&testopia_lt;') FILTER replace('>','&testopia_gt;') %]</action>
+        <action>[% case.text.action FILTER replace('<','&testopia_lt;') FILTER replace('>','&testopia_gt;') %]</action>
 [% END %]
 [% IF case.alias %]
-		<alias>[% case.alias FILTER xml %]</alias>
+        <alias>[% case.alias FILTER xml %]</alias>
 [% END %]
 [% IF case.arguments %]
-		<arguments>[% case.arguments FILTER xml %]</arguments>
+        <arguments>[% case.arguments FILTER xml %]</arguments>
 [% END %]
 [% FOREACH blocked_test_case = case.blocked %]
-		<blocks type="Xml_description">[% blocked_test_case.summary FILTER xml %]</blocks>
+        <blocks type="Xml_description">[% blocked_test_case.summary FILTER xml %]</blocks>
 [% END %]
 [% IF case.text.breakdown %]
-		<breakdown>[% case.text.breakdown FILTER replace('<','&testopia_lt;') FILTER replace('>','&testopia_gt;') %]</breakdown>
+        <breakdown>[% case.text.breakdown FILTER replace('<','&testopia_lt;') FILTER replace('>','&testopia_gt;') %]</breakdown>
 [% END %]
 [% IF case.category.name %]
-		<categoryname>[% case.category.name FILTER xml %]</categoryname>
+        <categoryname>[% case.category.name FILTER xml %]</categoryname>
 [% END %]
 [% FOREACH component = case.components %]
-		<component product="[% component.product_name %]">[% component.name FILTER xml %]</component>
+        <component product="[% component.product_name %]">[% component.name FILTER xml %]</component>
 [% END %]
 [% IF case.default_tester.email %]
-		<defaulttester>[% case.default_tester.email FILTER xml %]</defaulttester>
+        <defaulttester>[% case.default_tester.email FILTER xml %]</defaulttester>
 [% END %]
-[% IF case.dependson %]
-	[% FOREACH dependson_test_case = case.dependson %]
-		<dependson type="Xml_description">[% dependson_test_case.summary FILTER xml %]</dependson>
-	[% END %]
+
+[% FOREACH dependson_test_case = case.dependson %]
+        <dependson type="Xml_description">[% dependson_test_case.summary FILTER xml %]</dependson>
 [% END %]
+
 [% IF case.text.effect %]
-		<expectedresults>[% case.text.effect FILTER replace('<','&testopia_lt;') FILTER replace('>','&testopia_gt;') %]</expectedresults>
+        <expectedresults>[% case.text.effect FILTER replace('<','&testopia_lt;') FILTER replace('>','&testopia_gt;') %]</expectedresults>
 [% END %]
 [% IF case.requirement %]
-		<requirement>[% case.requirement FILTER xml %]</requirement>
+        <requirement>[% case.requirement FILTER xml %]</requirement>
 [% END %]
 [% IF case.script %]
-		<script>[% case.script FILTER xml %]</script>
+        <script>[% case.script FILTER xml %]</script>
 [% END %]
 [% IF case.text.setup %]
-		<setup>[% case.text.setup FILTER replace('<','&testopia_lt;') FILTER replace('>','&testopia_gt;') %]</setup>
+        <setup>[% case.text.setup FILTER replace('<','&testopia_lt;') FILTER replace('>','&testopia_gt;') %]</setup>
 [% END %]
 [% IF case.summary %]
-		<summary>[% case.summary FILTER xml %]</summary>
+        <summary>[% case.summary FILTER xml %]</summary>
 [% END %]
 [% FOREACH tag = case.tags %]
-		<tag>[% tag.name FILTER xml %]</tag>
+        <tag>[% tag.name FILTER xml %]</tag>
 [% END %]
 [% FOREACH test_plan = case.plans %]
-		<testplan_reference type="Xml_description">[% test_plan.name FILTER xml %]</testplan_reference>
+        <testplan_reference type="Xml_description">[% test_plan.name FILTER xml %]</testplan_reference>
 [% END %]
-	</testcase>
-	
+    </testcase>
+    
