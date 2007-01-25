@@ -146,6 +146,32 @@ smime_sign()
 
 
 
+smime_p7()
+{
+  echo "$SCRIPTNAME: p7 util Data Tests ------------------------------"
+  echo "p7env -d ${P_R_ALICEDIR} -r Alice -i alice.txt -o alice_p7.env"
+  p7env -d ${P_R_ALICEDIR} -r Alice -i alice.txt -o alice.env
+  html_msg $? 0 "Creating envelope for user Alice" "."
+
+  echo "p7content -d ${P_R_ALICEDIR} -i alice.env -o alice_p7.data"
+  p7content -d ${P_R_ALICEDIR} -i alice.env -o alice_p7.data -p nss
+  html_msg $? 0 "Verifying file delivered to user Alice" "."
+
+  sed -e '3,8p' -n alice_p7.data > alice_p7.data.sed
+
+  echo "diff alice.txt alice_p7.data.sed"
+  diff alice.txt alice_p7.data.sed
+  html_msg $? 0 "Compare Decoded Enveloped Data and Original" "."
+
+  echo "p7sign -d ${P_R_ALICEDIR} -k Alice -i alice.txt -o alice.sig -p nss -e"
+  p7sign -d ${P_R_ALICEDIR} -k Alice -i alice.txt -o alice.sig -p nss -e
+  html_msg $? 0 "Signing file for user Alice" "."
+
+  echo "p7verify -d ${P_R_ALICEDIR} -c alice.txt -s alice.sig"
+  p7verify -d ${P_R_ALICEDIR} -c alice.txt -s alice.sig
+  html_msg $? 0 "Verifying file delivered to user Alice" "."
+}
+
 ############################## smime_main ##############################
 # local shell function to test basic signed and enveloped messages 
 # from 1 --> 2"
@@ -261,5 +287,6 @@ smime_cleanup()
 
 smime_init
 smime_main
+smime_p7
 smime_cleanup
 

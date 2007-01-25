@@ -37,7 +37,7 @@
 /*
  * p7content -- A command to display pkcs7 content.
  *
- * $Id: p7content.c,v 1.10 2004/04/25 15:02:48 gerv%gerv.net Exp $
+ * $Id: p7content.c,v 1.11 2007/01/25 00:52:25 alexei.volkov.bugs%sun.com Exp $
  */
 
 #include "nspr.h"
@@ -47,6 +47,7 @@
 #include "cert.h"
 #include "certdb.h"
 #include "nss.h"
+#include "pk11pub.h"
 
 #if defined(XP_UNIX)
 #include <unistd.h>
@@ -101,6 +102,19 @@ static PRBool
 decryption_allowed(SECAlgorithmID *algid, PK11SymKey *key)
 {
     return PR_TRUE;
+}
+
+char* KeyDbPassword = 0;
+
+
+char* MyPK11PasswordFunc (PK11SlotInfo *slot, PRBool retry, void* arg)
+{
+    char *ret=0;
+
+    if (retry == PR_TRUE)
+        return NULL;
+    ret = PL_strdup (KeyDbPassword);
+    return ret;
 }
 
 int
@@ -217,7 +231,7 @@ main(int argc, char **argv)
     /*
      * Parse command line arguments
      */
-    optstate = PL_CreateOptState(argc, argv, "d:i:o:");
+    optstate = PL_CreateOptState(argc, argv, "d:i:o:p:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
 	  case 'd':
@@ -242,6 +256,10 @@ main(int argc, char **argv)
 	    }
 	    break;
 
+	  case 'p':
+            KeyDbPassword = strdup (optstate->value);
+            break;
+
 	  default:
 	    Usage(progName);
 	    break;
@@ -260,6 +278,8 @@ main(int argc, char **argv)
 	SECU_PrintPRandOSError(progName);
 	return -1;
     }
+
+    PK11_SetPasswordFunc (MyPK11PasswordFunc);
 
     if (DecodeAndPrintFile(outFile, inFile, progName)) {
 	SECU_PrintError(progName, "problem decoding data");

@@ -38,7 +38,7 @@
 /*
  * PKCS7 decoding, verification.
  *
- * $Id: p7decode.c,v 1.23 2006/10/09 22:22:33 alexei.volkov.bugs%sun.com Exp $
+ * $Id: p7decode.c,v 1.24 2007/01/25 00:52:25 alexei.volkov.bugs%sun.com Exp $
  */
 
 #include "nssrenam.h"
@@ -440,9 +440,9 @@ sec_pkcs7_decoder_get_recipient_key (SEC_PKCS7DecoderContext *p7dcx,
     SEC_PKCS7RecipientInfo *ri;
     CERTCertificate *cert = NULL;
     SECKEYPrivateKey *privkey = NULL;
-    PK11SymKey *bulkkey;
+    PK11SymKey *bulkkey = NULL;
     SECOidTag keyalgtag, bulkalgtag, encalgtag;
-    PK11SlotInfo *slot;
+    PK11SlotInfo *slot = NULL;
     int bulkLength = 0;
 
     if (recipientinfos == NULL || recipientinfos[0] == NULL) {
@@ -592,16 +592,16 @@ sec_pkcs7_decoder_get_recipient_key (SEC_PKCS7DecoderContext *p7dcx,
 	  }
       default:
 	p7dcx->error = SEC_ERROR_UNSUPPORTED_KEYALG;
-	goto no_key_found;
+	break;
     }
-
-    return bulkkey;
 
 no_key_found:
     if (privkey != NULL)
 	SECKEY_DestroyPrivateKey (privkey);
+    if (slot != NULL)
+	PK11_FreeSlot(slot);
 
-    return NULL;
+    return bulkkey;
 }
  
 /*
