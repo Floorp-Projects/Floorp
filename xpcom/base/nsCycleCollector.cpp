@@ -488,6 +488,7 @@ struct nsCycleCollector
     void Allocated(void *n, size_t sz);
     void Freed(void *n);
     void Collect();
+    void Shutdown();
 };
 
 
@@ -1666,6 +1667,19 @@ nsCycleCollector::Collect()
     }    
 }
 
+void
+nsCycleCollector::Shutdown()
+{
+    // Here we want to run a final collection on everything we've seen
+    // buffered, irrespective of age; then permanently disable
+    // the collector because the program is shutting down.
+
+    mPurpleBuf.BumpGeneration();
+    mParams.mScanDelay = 0;
+    Collect();
+    mParams.mDoNothing = PR_TRUE;
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 // Module public API (exported in nsCycleCollector.h)
@@ -1720,6 +1734,15 @@ nsCycleCollector_collect()
         return;
 
     sCollector.Collect();
+}
+
+void 
+nsCycleCollector_shutdown()
+{
+    if (sCollectorConstructed == 0)
+        return;
+
+    sCollector.Shutdown();
 }
 
 
