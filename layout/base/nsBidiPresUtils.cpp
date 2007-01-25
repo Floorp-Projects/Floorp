@@ -1119,7 +1119,8 @@ nsBidiPresUtils::FormatUnicodeText(nsPresContext*  aPresContext,
                                    PRInt32&         aTextLength,
                                    nsCharType       aCharType,
                                    PRBool           aIsOddLevel,
-                                   PRBool           aIsBidiSystem)
+                                   PRBool           aIsBidiSystem,
+                                   PRBool           aIsNewTextRunSystem)
 {
   NS_ASSERTION(aIsOddLevel == 0 || aIsOddLevel == 1, "aIsOddLevel should be 0 or 1");
   nsresult rv = NS_OK;
@@ -1168,15 +1169,17 @@ nsBidiPresUtils::FormatUnicodeText(nsPresContext*  aPresContext,
   PRBool doReverse = PR_FALSE;
   PRBool doShape = PR_FALSE;
 
-  if (aIsBidiSystem) {
-    if ( (CHARTYPE_IS_RTL(aCharType)) ^ (aIsOddLevel) )
-      doReverse = PR_TRUE;
-  }
-  else {
-    if (aIsOddLevel)
-      doReverse = PR_TRUE;
-    if (eCharType_RightToLeftArabic == aCharType) 
-      doShape = PR_TRUE;
+  if (!aIsNewTextRunSystem) {
+    if (aIsBidiSystem) {
+      if ( (CHARTYPE_IS_RTL(aCharType)) ^ (aIsOddLevel) )
+        doReverse = PR_TRUE;
+    }
+    else {
+      if (aIsOddLevel)
+        doReverse = PR_TRUE;
+      if (eCharType_RightToLeftArabic == aCharType) 
+        doShape = PR_TRUE;
+    }
   }
 
   if (doReverse || doShape) {
@@ -1424,7 +1427,7 @@ nsresult nsBidiPresUtils::ProcessText(const PRUnichar*       aText,
         return NS_ERROR_OUT_OF_MEMORY;
       FormatUnicodeText(aPresContext, runVisualText.BeginWriting(), subRunLength,
                         (nsCharType)charType, level & 1,
-                        isBidiSystem);
+                        isBidiSystem, (hints & NS_RENDERING_HINT_NEW_TEXT_RUNS) != 0);
 
       aRenderingContext.GetWidth(runVisualText.get(), subRunLength, width, nsnull);
       totalWidth += width;
@@ -1527,19 +1530,22 @@ nsBidiPresUtils::ReorderUnicodeText(PRUnichar*       aText,
                                     PRInt32&         aTextLength,
                                     nsCharType       aCharType,
                                     PRBool           aIsOddLevel,
-                                    PRBool           aIsBidiSystem)
+                                    PRBool           aIsBidiSystem,
+                                    PRBool           aIsNewTextRunSystem)
 {
   NS_ASSERTION(aIsOddLevel == 0 || aIsOddLevel == 1, "aIsOddLevel should be 0 or 1");
   nsresult rv = NS_OK;
   PRBool doReverse = PR_FALSE;
 
-  if (aIsBidiSystem) {
-    if ( (CHARTYPE_IS_RTL(aCharType)) ^ (aIsOddLevel) )
-      doReverse = PR_TRUE;
-  }
-  else {
-    if (aIsOddLevel)
-      doReverse = PR_TRUE;
+  if (!aIsNewTextRunSystem) {
+    if (aIsBidiSystem) {
+      if ( (CHARTYPE_IS_RTL(aCharType)) ^ (aIsOddLevel) )
+        doReverse = PR_TRUE;
+    }
+    else {
+      if (aIsOddLevel)
+        doReverse = PR_TRUE;
+    }
   }
 
   if (doReverse) {

@@ -2957,8 +2957,11 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
 #ifdef DEBUG
         PRInt32 rememberTextLength = textLength;
 #endif
+        PRUint32 hints = 0;
+        aRenderingContext.GetHints(hints);
         bidiUtils->ReorderUnicodeText(text, textLength,
-                                      charType, isOddLevel, isBidiSystem);
+                                      charType, isOddLevel, isBidiSystem,
+                                      (hints & NS_RENDERING_HINT_NEW_TEXT_RUNS) != 0);
         NS_ASSERTION(rememberTextLength == textLength, "Bidi formatting changed text length");
       }
     }
@@ -3689,9 +3692,12 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
           // base direction 
           aRenderingContext.SetRightToLeftText(PR_TRUE);
         }
+        PRUint32 hints = 0;
+        aRenderingContext.GetHints(hints);
         // If we will be painting char by char, handle the text like on non-bidi platform
         bidiUtils->ReorderUnicodeText(text, textLength, charType,
-                                      isOddLevel, (paintCharByChar) ? PR_FALSE : isBidiSystem);
+                                      isOddLevel, (paintCharByChar) ? PR_FALSE : isBidiSystem,
+                                      (hints & NS_RENDERING_HINT_NEW_TEXT_RUNS) != 0);
         NS_ASSERTION(rememberTextLength == textLength, "Bidi formatting changed text length");
       }
     }

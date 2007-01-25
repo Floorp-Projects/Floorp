@@ -391,16 +391,19 @@ nsBulletFrame::PaintBullet(nsIRenderingContext& aRenderingContext, nsPoint aPt)
     if (bidiUtils) {
       const PRUnichar* buffer = text.get();
       PRInt32 textLength = text.Length();
+      PRUint32 hints = 0;
+      aRenderingContext.GetHints(hints);
+      PRBool isNewTextRunSystem = (hints & NS_RENDERING_HINT_NEW_TEXT_RUNS) != 0;
       if (eCharType_RightToLeft == charType) {
         bidiUtils->FormatUnicodeText(presContext, (PRUnichar*)buffer, textLength,
-                                     charType, level, PR_FALSE);
+                                     charType, level, PR_FALSE, isNewTextRunSystem);
       }
       else {
 //Mohamed
         aRenderingContext.GetHints(hints);
         isBidiSystem = (hints & NS_RENDERING_HINT_ARABIC_SHAPING);
         bidiUtils->FormatUnicodeText(presContext, (PRUnichar*)buffer, textLength,
-                                     charType, level, isBidiSystem);//Mohamed
+                                     charType, level, isBidiSystem, isNewTextRunSystem);//Mohamed
       }
     }
     // XXX is this right?
