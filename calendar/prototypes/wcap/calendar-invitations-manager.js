@@ -125,8 +125,9 @@ InvitationsManager.prototype = {
             try {
                 var wcapCalendar = calendar.QueryInterface(
                     Components.interfaces.calIWcapCalendar);
-                wcapCalendar = wcapCalendar.session.getCalendarByCalId(
-                    wcapCalendar.session.wrappedJSObject.defaultCalId);
+                if (!wcapCalendar.isOwnedCalendar) {
+                    continue;
+                }
                 var listener = {
                     mInvitationsManager: this,
                     QueryInterface: function(aIID) {
@@ -187,7 +188,7 @@ InvitationsManager.prototype = {
                         if (!Components.isSuccessCode(aStatus)) {
                             return;
                         }
-                        for each (item in aItems) {
+                        for each (var item in aItems) {
                             this.mInvitationsManager.addItem(item);
                         }
                     },
@@ -458,12 +459,9 @@ InvitationsManager.prototype = {
         try {
             var wcapCalendar = item.calendar.QueryInterface(
                 Components.interfaces.calIWcapCalendar);
-            var attendees = item.getAttendees({});
-            for each(var attendee in attendees) {
-                if (attendee.id == wcapCalendar.ownerId) {
-                    return attendee.participationStatus;
-                }
-            }
+            var attendee = wcapCalendar.getInvitedAttendee(item);
+            if (attendee)
+                return attendee.participationStatus;
         } catch(e) {}
         return null;
     },

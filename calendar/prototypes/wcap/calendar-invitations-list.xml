@@ -229,12 +229,9 @@
           try {
             var wcapCalendar = aItem.calendar.QueryInterface(
                 Components.interfaces.calIWcapCalendar);
-            var attendees = aItem.getAttendees({});
-            for each(var attendee in attendees) {
-              if (attendee.id == wcapCalendar.ownerId) {
-                return attendee.participationStatus;
-              }
-            }
+            var att = wcapCalendar.getInvitedAttendee(aItem);
+            if (att)
+                return att.participationStatus;
           } catch(e) {}
           return null;
         ]]></body>
@@ -247,12 +244,13 @@
           try {
             var wcapCalendar = aItem.calendar.QueryInterface(
                 Components.interfaces.calIWcapCalendar);
-            var attendees = aItem.getAttendees({});
-            for each(var attendee in attendees) {
-              if (attendee.id == wcapCalendar.ownerId) {
-                attendee.participationStatus = aStatus;
+            var att = wcapCalendar.getInvitedAttendee(aItem);
+            if (att) {
+                att_ = att.clone();
+                att_.participationStatus = aStatus;
+                aItem.removeAttendee(att);
+                aItem.addAttendee(att_);
                 return true;
-              }
             }
           } catch(e) {}
           return false;
