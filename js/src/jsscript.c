@@ -340,6 +340,8 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return js_Execute(cx, scopeobj, script, caller, JSFRAME_EVAL, rval);
 }
 
+#endif /* JS_HAS_SCRIPT_OBJECT */
+
 #if JS_HAS_XDR
 
 static JSBool
@@ -665,7 +667,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     return JS_FALSE;
 }
 
-#if JS_HAS_XDR_FREEZE_THAW
+#if JS_HAS_SCRIPT_OBJECT && JS_HAS_XDR_FREEZE_THAW
 /*
  * These cannot be exposed to web content, and chrome does not need them, so
  * we take them out of the Mozilla client altogether.  Fortunately, there is
@@ -821,8 +823,10 @@ out:
 
 static const char js_thaw_str[] = "thaw";
 
-#endif /* JS_HAS_XDR_FREEZE_THAW */
+#endif /* JS_HAS_SCRIPT_OBJECT && JS_HAS_XDR_FREEZE_THAW */
 #endif /* JS_HAS_XDR */
+
+#if JS_HAS_SCRIPT_OBJECT
 
 static JSFunctionSpec script_methods[] = {
 #if JS_HAS_TOSOURCE
@@ -872,8 +876,6 @@ script_mark(JSContext *cx, JSObject *obj, void *arg)
 }
 
 #if !JS_HAS_SCRIPT_OBJECT
-const char js_Script_str[] = "Script";
-
 #define JSProto_Script  JSProto_Object
 #endif
 
@@ -906,7 +908,7 @@ Script(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return script_compile(cx, obj, argc, argv, rval);
 }
 
-#if JS_HAS_XDR_FREEZE_THAW
+#if JS_HAS_SCRIPT_OBJECT && JS_HAS_XDR_FREEZE_THAW
 
 static JSBool
 script_static_thaw(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
@@ -926,11 +928,11 @@ static JSFunctionSpec script_static_methods[] = {
     {0,0,0,0,0}
 };
 
-#else  /* !JS_HAS_XDR_FREEZE_THAW */
+#else  /* !JS_HAS_SCRIPT_OBJECT || !JS_HAS_XDR_FREEZE_THAW */
 
 #define script_static_methods   NULL
 
-#endif /* !JS_HAS_XDR_FREEZE_THAW */
+#endif /* !JS_HAS_SCRIPT_OBJECT || !JS_HAS_XDR_FREEZE_THAW */
 
 JSObject *
 js_InitScriptClass(JSContext *cx, JSObject *obj)
