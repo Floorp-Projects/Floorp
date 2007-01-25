@@ -38,7 +38,7 @@
  * p7sign -- A command to create a *detached* pkcs7 signature (over a given
  * input file).
  *
- * $Id: p7sign.c,v 1.11 2007/01/04 22:42:40 alexei.volkov.bugs%sun.com Exp $
+ * $Id: p7sign.c,v 1.12 2007/01/25 00:52:25 alexei.volkov.bugs%sun.com Exp $
  */
 
 #include "nspr.h"
@@ -306,6 +306,7 @@ loser:
         fclose(outFile);
     }
     if (NSS_Shutdown() != SECSuccess) {
+        SECU_PrintError(progName, "NSS shutdown:");
         exit(1);
     }
 
