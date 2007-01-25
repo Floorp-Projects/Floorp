@@ -2786,17 +2786,26 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
     return NS_OK;
   }
 
-#ifdef MOZ_CAIRO_GFX
+  // Get the image data
   nsCOMPtr<gfxIImageFrame> frame;
   aCursor->GetFrameAt(0, getter_AddRefs(frame));
   if (!frame)
     return NS_ERROR_NOT_AVAILABLE;
 
   PRInt32 width, height;
-  PRUint32 bpr;
-  gfx_format format;
   frame->GetWidth(&width);
   frame->GetHeight(&height);
+
+  // Reject cursors greater than 128 pixels in some direction, to prevent
+  // spoofing.
+  // XXX ideally we should rescale. Also, we could modify the API to
+  // allow trusted content to set larger cursors.
+  if (width > 128 || height > 128)
+    return NS_ERROR_NOT_AVAILABLE;
+
+#ifdef MOZ_CAIRO_GFX
+  PRUint32 bpr;
+  gfx_format format;
   frame->GetImageBytesPerRow(&bpr);
   frame->GetFormat(&format);
 
@@ -2868,16 +2877,6 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
 
 #else
 
-  // Get the image data
-  nsCOMPtr<gfxIImageFrame> frame;
-  aCursor->GetFrameAt(0, getter_AddRefs(frame));
-  if (!frame)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  PRInt32 width, height;
-  frame->GetWidth(&width);
-  frame->GetHeight(&height);
-
   gfx_format format;
   nsresult rv = frame->GetFormat(&format);
   if (NS_FAILED(rv))
@@ -2889,6 +2888,8 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
 
   // On Win2k with nVidia video drivers 71.84 at 32 bit color, cursors that 
   // have 8 bit alpha are truncated to 64x64.  Skip cursors larger than that.
+  // This is redundant with checks above, but we'll leave it in as a reminder
+  // in case we start accepting larger cursors again
   if (IsWin2k() && (format == gfxIFormats::BGR_A8) &&
       (width > 64 || height > 64))
     return NS_ERROR_FAILURE;
