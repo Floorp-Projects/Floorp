@@ -481,12 +481,12 @@ FeedWriter.prototype = {
           //          just don't know how to do that via script...
           // XXXmano TBD: can probably add this to nsIShellService
 #ifdef XP_WIN
-          if (fp.file.leafName != "firefox.exe") {
+#expand           if (fp.file.leafName != "__MOZ_APP_NAME__.exe") {
 #else
 #ifdef XP_MACOSX
-          if (fp.file.leafName != "Firefox.app") {
+#expand           if (fp.file.leafName != "__MOZ_APP_DISPLAYNAME__.app") {
 #else
-          if (fp.file.leafName != "firefox-bin") {
+#expand           if (fp.file.leafName != "__MOZ_APP_NAME__-bin") {
 #endif
 #endif
             var selectedAppMenuItem = this.selectedApplicationItemWrapped;

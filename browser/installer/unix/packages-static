@@ -41,8 +41,8 @@ bin/components/libjar50.so
 
 [browser]
 ; [Base Browser Files]
-bin/firefox-bin
-bin/firefox
+bin/@MOZ_APP_NAME@-bin
+bin/@MOZ_APP_NAME@
 bin/mozilla-xremote-client
 bin/run-mozilla.sh
 bin/plugins/libnullplugin.so

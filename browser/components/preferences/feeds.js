@@ -288,7 +288,16 @@ var gFeedsPane = {
     if (fp.show() == Ci.nsIFilePicker.returnOK && fp.file) {
       // XXXben - we need to compare this with the running instance executable
       //          just don't know how to do that via script...
-      if (fp.file.leafName == "firefox.exe")
+      // XXXmano TBD: can probably add this to nsIShellService
+#ifdef XP_WIN
+#expand       if (fp.file.leafName == "__MOZ_APP_NAME__.exe")
+#else
+#ifdef XP_MACOSX
+#expand       if (fp.file.leafName == "__MOZ_APP_DISPLAYNAME__.app")
+#else
+#expand       if (fp.file.leafName == "__MOZ_APP_NAME__-bin")
+#endif
+#endif
         return;
 
       this.element(PREF_SELECTED_APP).value = fp.file;

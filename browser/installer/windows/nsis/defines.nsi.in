@@ -6,6 +6,6 @@
 !define FileInstallerMSI      "@PKG_BASENAME@.installer.msi"
 !define FileInstallerNETRoot  "@PKG_BASENAME@.net-installer"
 
-!define FileMainEXE           "firefox.exe"
+!define FileMainEXE           "@MOZ_APP_NAME@.exe"
 !define WindowClass           "FirefoxMessageWindow"
 !define DDEApplication        "Firefox"

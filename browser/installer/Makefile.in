@@ -44,8 +44,8 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 NO_PKG_FILES = \
-	firefox-config \
-	firefox-bin.elf \
+	$(MOZ_APP_NAME)-config \
+	$(MOZ_APP_NAME)-bin.elf \
 	regchrome* \
 	regxpcom* \
 	xpcshell* \
@@ -82,7 +82,7 @@ MOZ_OPTIONAL_PKG_LIST = \
 	talkback \
 	$(NULL)
 
-DEFINES += -DAB_CD=$(AB_CD)
+DEFINES += -DAB_CD=$(AB_CD) -DMOZ_APP_NAME=$(MOZ_APP_NAME)
 
 ifdef MOZ_PKG_MANIFEST_P
 MOZ_PKG_MANIFEST = packages-static

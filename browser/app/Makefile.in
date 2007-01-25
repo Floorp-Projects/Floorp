@@ -87,9 +87,9 @@ else
 MOZILLA_INTERNAL_API = 1
 
 ifeq ($(USE_SHORT_LIBNAME), 1)
-PROGRAM = firefox$(BIN_SUFFIX)
+PROGRAM = $(MOZ_APP_NAME)$(BIN_SUFFIX)
 else
-PROGRAM = firefox-bin$(BIN_SUFFIX)
+PROGRAM = $(MOZ_APP_NAME)-bin$(BIN_SUFFIX)
 endif
 
 REQUIRES = \
@@ -271,19 +271,19 @@ endif
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 
-firefox:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
+$(MOZ_APP_NAME):: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \
                 -e "s|%MOZ_USER_DIR%|.mozilla/firefox|" \
 		-e "s|%MREDIR%|$(mredir)|" > $@
 	chmod +x $@
 
-libs:: firefox
+libs:: $(MOZ_APP_NAME)
 	$(INSTALL) $< $(DIST)/bin
 
-install:: firefox
+install:: $(MOZ_APP_NAME)
 	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
 
-GARBAGE += firefox
+GARBAGE += $(MOZ_APP_NAME)
 GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, firefox.js)
 
 endif
