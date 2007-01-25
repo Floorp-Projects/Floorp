@@ -6046,7 +6046,27 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
         else
           size = target->GetSize();
 
-        nsHTMLReflowState reflowState(mPresContext, target, rcx, size);
+        NS_ASSERTION(!target->GetNextInFlow() && !target->GetPrevInFlow(),
+                     "reflow roots should never split");
+
+        // Don't pass size directly to the reflow state, since a
+        // constrained height implies page/column breaking.
+        nsHTMLReflowState reflowState(mPresContext, target, rcx,
+                                      nsSize(size.width, NS_UNCONSTRAINEDSIZE));
+        
+        // fix the computed height
+        NS_ASSERTION(reflowState.mComputedMargin == nsMargin(0, 0, 0, 0),
+                     "reflow state should not set margin for reflow roots");
+        reflowState.mComputedHeight =
+          size.height - reflowState.mComputedBorderPadding.TopBottom();
+        NS_ASSERTION(reflowState.mComputedWidth ==
+                       size.width -
+                         reflowState.mComputedBorderPadding.LeftRight(),
+                     "reflow state computed incorrect width");
+
+        // except the viewport frame does want availableHeight set
+        if (target == root)
+          reflowState.availableHeight = size.height;
 
         nsReflowStatus status;
         target->Reflow(mPresContext, desiredSize, reflowState, status);
@@ -6058,6 +6078,12 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
                       desiredSize.height == size.height),
                      "non-root frame's desired size changed during an "
                      "incremental reflow");
+        NS_ASSERTION(desiredSize.mOverflowArea ==
+                       nsRect(nsPoint(0, 0),
+                              nsSize(desiredSize.width, desiredSize.height)),
+                     "reflow roots must not have visible overflow");
+        NS_ASSERTION(status == NS_FRAME_COMPLETE,
+                     "reflow roots should never split");
 
         target->SetSize(nsSize(desiredSize.width, desiredSize.height));
 
