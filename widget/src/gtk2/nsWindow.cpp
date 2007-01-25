@@ -959,6 +959,15 @@ nsWindow::SetCursor(imgIContainer* aCursor,
     if (!pixbuf)
         return NS_ERROR_NOT_AVAILABLE;
 
+    int width = gdk_pixbuf_get_width(pixbuf);
+    int height = gdk_pixbuf_get_height(pixbuf);
+    // Reject cursors greater than 128 pixels in some direction, to prevent
+    // spoofing.
+    // XXX ideally we should rescale. Also, we could modify the API to
+    // allow trusted content to set larger cursors.
+    if (width > 128 || height > 128)
+        return NS_ERROR_NOT_AVAILABLE;
+
     // Looks like all cursors need an alpha channel (tested on Gtk 2.4.4). This
     // is of course not documented anywhere...
     // So add one if there isn't one yet
@@ -974,8 +983,6 @@ nsWindow::SetCursor(imgIContainer* aCursor,
     GdkCursor* cursor;
     if (!_gdk_cursor_new_from_pixbuf || !_gdk_display_get_default) {
         // Fallback to a monochrome cursor
-        int width = gdk_pixbuf_get_width(pixbuf);
-        int height = gdk_pixbuf_get_height(pixbuf);
         GdkPixmap* mask = gdk_pixmap_new(NULL, width, height, 1);
         if (!mask)
             return NS_ERROR_OUT_OF_MEMORY;
