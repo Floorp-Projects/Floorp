@@ -44,26 +44,4 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns:xlink="http://www.w3.org/1999/xlink" >
-
-  <binding id="a" extends="svg:generic">
-    <resources>
-      <stylesheet src="data:text/css,@namespace url('http://www.w3.org/1999/xlink'); xlink { -moz-binding: url('chrome://global/content/svg/svgBindings.xml#xlink'); }"/>
-    </resources>
-    <content>
-      <xlink:xlink xbl:inherits="xlink:href xlink:show xlink:_moz_target=target" xlink:type="simple">
-        <svg:g xbl:inherits="style fill fill-opacity fill-rule stroke stroke-dashoffset stroke-linecap stroke-linejoin stroke-miterlimit stroke-opacity stroke-width clip-path clip-rule cursor display filter image-rendering mask opacity pointer-events shape-rendering text-rendering visibility alignment-baseline baseline-shift direction dominant-baseline glyph-orientation-horizontal glyph-orientation-vertical kerning letter-spacing text-anchor text-decoration unicode-bidi word-spacing font-family font-size font-size-adjust font-stretch font-style font-variant font-weight transform" >
-          <children/>
-        </svg:g>
-      </xlink:xlink>
-    </content>
-    <implementation>
-      <property name="href"
-        onget="return this.getAttributeNS('http://www.w3.org/1999/xlink','href');"
-      />
-      <property name="show"
-        onget="return this.getAttributeNS('http://www.w3.org/1999/xlink','show');"
-      />
-    </implementation>
-  </binding>  
-  <binding id="xlink" extends="svg:generic"/>
 </bindings>
