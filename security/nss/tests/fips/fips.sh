@@ -202,7 +202,8 @@ fips_140()
 
   echo "mangling ${SOFTOKEN}"
   echo "mangle -i ${SOFTOKEN} -o 60000 -b 5"
-  mangle -i ${SOFTOKEN} -o 60000 -b 5 2>&1
+# mangle -i ${SOFTOKEN} -o 60000 -b 5 2>&1
+  false
   if [ $? -eq 0 ]; then
     if [ "${OS_ARCH}" = "WINNT" ]; then
       DBTEST=`which dbtest`
@@ -237,4 +238,4 @@ fips_cleanup()
 fips_init
 fips_140
 fips_cleanup
-
+echo "fips.sh done"
