@@ -47,6 +47,7 @@ include $(topsrcdir)/config/rules.mk
 _STATIC_FILES = test.template.txt \
 		xhtml.template.txt \
 		xul.template.txt \
+		harness.css \
 		$(NULL)
 
 libs:: $(_STATIC_FILES)

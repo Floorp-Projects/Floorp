@@ -54,5 +54,30 @@ _SERV_FILES = 	runtests.pl \
 		gen_template.pl \
 		$(NULL)	
 
+
+_DEST_DIR = $(DEPTH)/_tests/$(relativesrcdir)
+
+# XXXsayrer will work on making this work better with other apps
+ifeq ($(OS_ARCH),Darwin)
+ifdef DEBUG
+browser_path = \"../$(DIST)/MinefieldDebug.app/Contents/MacOS/firefox\"
+else
+browser_path = \"../$(DIST)/Minefield.app/Contents/MacOS/firefox\"
+endif
+else
+browser_path = \"../$(DIST)/bin/firefox\"
+endif
+
+# These go in _tests/ so they need to go up an extra path segement
+TEST_DRIVER_PPARGS = 	-DBROWSER_PATH=$(browser_path) \
+			-DXPC_BIN_PATH=\"../$(DIST)/bin\" \
+			-DTOPSRCDIR=\"$(topsrcdir)\" \
+			$(NULL)
+
+runtests.pl: runtests.pl.in
+	$(PERL) $(MOZILLA_DIR)/config/preprocessor.pl \
+	$(TEST_DRIVER_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
+
+
 libs:: $(_SERV_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/$(relativesrcdir)
+	$(INSTALL) $^ $(_DEST_DIR)

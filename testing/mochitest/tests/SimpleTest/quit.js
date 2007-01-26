@@ -12,14 +12,16 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is The Original Code is Mozilla Automated Testing Code
+ * The Original Code is Mozilla Automated Testing Code.
  *
  * The Initial Developer of the Original Code is
  * Mozilla Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Bob Clary <bob@bclary.com>
+ * Contributor(s):
+ *   Bob Clary <bob@bclary.com>
+ *   Jeff Walden <jwalden+code@mit.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,6 +41,18 @@
   From mozilla/toolkit/content
   These files did not have a license
 */
+
+function quitHook()
+{
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "http://" + location.host + "/server/shutdown", true);
+  xhr.onreadystatechange = function (event)
+    {
+      if (xhr.readyState == 4)
+        goQuitApplication();
+    };
+  xhr.send(null);
+}
 
 function canQuitApplication()
 {

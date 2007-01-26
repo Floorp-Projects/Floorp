@@ -1,0 +1,453 @@
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 1998
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Robert Sayre <sayrer@gmail.com>
+#   Jeff Walden <jwalden+bmo@mit.edu>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+# Win32 path munging for msys courtesy the Curl project under an
+# MIT/X license http://curl.haxx.se/
+#
+# Copyright (c) 1996 - 2007, Daniel Stenberg, <daniel@haxx.se>.
+# All rights reserved.
+#
+# Permission to use, copy, modify, and distribute this software for
+# any purpose with or without fee is hereby granted, provided that the
+# above copyright notice and this permission notice appear in all
+# copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT OF THIRD PARTY RIGHTS. IN NO EVENT SHALL THE AUTHORS
+# OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+# OR OTHER DEALINGS IN THE SOFTWARE.
+#
+# Except as contained in this notice, the name of a copyright holder
+# shall not be used in advertising or otherwise to promote the sale,
+# use or other dealings in this Software without prior written
+# authorization of the copyright holder.
+
+ # Perl script to start server and browser
+ # For usage instructions, run:
+ # perl runtests.pl --help 
+
+use FindBin;
+use File::Path;
+use File::Spec;
+use Getopt::Long;
+use Cwd 'abs_path';
+use POSIX qw(sys_wait_h strftime);
+
+use strict;
+
+ # URL parameters to test URL:
+ #
+ # autorun -- kick off tests automatically
+ # closeWhenDone -- runs quit.js after tests
+ # logFile -- logs test run to an absolute path
+ #
+
+ # consoleLevel, fileLevel: set the logging level of the console and
+ # file logs, if activated.
+ # <http://mochikit.com/doc/html/MochiKit/Logging.html>
+
+ # Path to the test script on the server
+use constant TEST_SERVER_HOST => "localhost:8888";
+use constant TEST_PATH => "/tests/";
+use constant TESTS_URL => "http://" . TEST_SERVER_HOST . TEST_PATH;
+
+ # Max time in seconds to wait for server startup before tests will fail -- if
+ # this seems big, it's mostly for debug machines where cold startup
+ # (particularly after a build) takes forever.
+use constant SERVER_STARTUP_TIMEOUT => 15;
+
+my $profile = "mochitest_testing_profile";
+my $profile_dir = "$FindBin::Bin/$profile";
+
+ # These are generated in mozilla/testing/mochitest/Makefile.in
+#expand my $app = __BROWSER_PATH__;
+#expand my $topsrcdir = __TOPSRCDIR__;
+#expand my $dist_bin = __XPC_BIN_PATH__;
+#ifdef WIN32
+#expand my $is_win32 = __WIN32__;
+#else
+my $is_win32 = 0;
+#endif
+
+ # Do everything.
+ main();
+
+
+ #################
+ # MAIN FUNCTION #
+ #################
+
+sub main {
+  my ($close_when_done, $appoverride, $log_path, $autorun,
+      $console_level, $file_level, $help); 
+  GetOptions("close-when-done!"=> \$close_when_done,
+             "appname:s"=> \$appoverride,
+             "log-file:s" => \$log_path,
+             "autorun!" => \$autorun,
+             "console-level:s" => \$console_level,
+             "file-level:s" => \$file_level,
+             "help!" => \$help);
+  
+  # if the switches include --help, exit and print directions
+  if ($help) {
+    usage_and_exit();
+  }
+  
+  # we were passed an explicit path to the app
+  if ($appoverride) {
+    $app = $appoverride;
+  }
+             
+  initializeProfile();
+  my $serverPid = startServer($close_when_done);
+
+  # If we're lucky, the server has fully started by now, and all paths are
+  # ready, etc.  However, xpcshell cold start times suck, at least for debug
+  # builds.  We'll try to connect to the server for 30 seconds or until we
+  # succeed, whichever is first.  If we succeed, then we continue with
+  # execution.  If we fail, we try to kill the server and exit with an error.
+  wait_for_server_startup($serverPid, SERVER_STARTUP_TIMEOUT);
+
+  my $url = TESTS_URL . "?";
+  if ($autorun) {
+    $url .= "&autorun=1";
+  }
+  if ($close_when_done) {
+    $url .= "&closeWhenDone=1";
+  }
+  if ($log_path) {
+    $url .= "&logFile=$log_path";
+  }
+  if ($file_level) {
+    $url .= "&fileLevel=$file_level";
+  }
+  if ($console_level) {
+    $url .= "&consoleLevel=$console_level";
+  }
+
+  my $test_start = runTests($url);
+
+  shutdownServer($serverPid);
+  
+  # print test run times
+  my $test_finish = localtime();
+  print " started: $test_start\n";
+  print "finished: $test_finish\n";
+}
+
+ #######################
+ # COMMANDLINE USAGE   #
+ #######################
+
+sub usage_and_exit {
+  print "\n";
+  print "Usage instructons for runtests.pl.\n";
+  print "If --log-file is specified, --file-level must be specified as well.";
+  print "\n\n";
+  print "Syntax:\n";
+  print "  runtests.pl \\\n";
+  print "   [--autorun] \\\n";
+  print "   [--close-when-done] \\\n";
+  print "   [--appname=/path/to/app] \\\n";
+  print "   [--log-file=/path/to/logfile] \\\n";
+  print "   [--file-level=DEBUG|INFO|ERROR|FATAL|WARNING] \\\n";  
+  print "   [--console-level=DEBUG|INFO|ERROR|FATAL|WARNING] \n\n";  
+  exit(1);
+}
+
+ #######################
+ # MAKE A WINDOWS PATH #
+ #######################
+
+sub winPathFromDir {
+  my ($path) = abs_path(@_);
+
+  # XXXsayrer need to test for cygwin here.
+  # we can shell out to the cygpath utility to do this for us
+
+  # This is a windows mingw32 build, we need to translate the
+  # given path to the "actual" windows path.
+
+  my @m = `mount`;
+  my $matchlen;
+  my $bestmatch;
+  my $mount;
+
+  #example mount output:
+  # C:\DOCUME~1\Temp on /tmp type user (binmode,noumount)
+  # c:\ActiveState\perl on /perl type user (binmode)
+  # C:\msys\1.0\bin on /usr/bin type user (binmode,cygexec,noumount)
+  # C:\msys\1.0\bin on /bin type user (binmode,cygexec,noumount)
+  foreach $mount (@m) {
+    if ( $mount =~ /(.*) on ([^ ]*) type /) {
+      my ($mingw, $real)=($2, $1);
+      if ($path =~ /^$mingw/) {
+        # the path starts with the path we
+        # found on this line in the mount output
+        my $len = length($mingw);
+        if ($len > $matchlen) {
+          # we remember the match that is the longest
+          $matchlen = $len;
+          $bestmatch = $real;
+	      }
+      }
+    }
+  }
+  if (!$matchlen) {
+    die "Serious error, can't find our \"real\" path!\n";
+  }
+
+  my ($volume,$directories,$file) =
+    File::Spec->splitpath(substr($path, $matchlen), 1);
+  my @dirs = File::Spec->splitdir( $directories );
+  return $bestmatch . join "\\", @dirs;
+}
+
+ ##################
+ # SERVER STARTUP #
+ ##################
+
+ # Start up the server, and let the server script handle shutdown if
+ # we're closing when done.  (We'll kill it later if it goes zombie
+ # somehow, but that shouldn't be the way it happens except if
+ # something really breaks.)
+
+sub startServer {
+  my ($close_when_done) = @_;
+  my $pid = fork();
+  if ($pid == 0) {
+    # Run the server
+    my $status = 0;
+    my $command = "";
+
+    if ($close_when_done) {
+      $command .= "CLOSE_WHEN_DONE=1 ";
+    }
+
+    #if (-e "$dist_bin/run-mozilla.sh") {
+    #  $command .= "$dist_bin/run-mozilla.sh ";
+    #}
+
+    $command .= "$dist_bin/xpcshell -v 170 ";
+
+    # So we get clean paths passed to the app
+    my $serverDir = abs_path("${topsrcdir}/netwerk/test/httpserver");
+    my $mochiDir = abs_path("${topsrcdir}/testing/mochitest");
+
+    # this path is passed as a string, so we need to convert it on win32
+    if ($is_win32) {
+      $command .= " -f \"" . winPathFromDir($serverDir) . "\\httpd.js\"";
+      $command .= " -f \"" . winPathFromDir($mochiDir) . "\\server.js\"";
+    } else {
+      $command .= " -f \"" . $serverDir .  "/httpd.js\"";
+      $command .= " -f \"" . $mochiDir . "/server.js\"";
+    }
+    print "$command\n";
+    exec("$command") or die("Error running server: $!\n");
+  }
+
+  return ($pid);
+}
+
+
+ ##############
+ # TEST SETUP #
+ ##############
+
+sub initializeProfile {
+  my $pref_content = <<PREFEND;
+user_pref("browser.dom.window.dump.enabled", true);
+user_pref("capability.principal.codebase.p1.granted", "UniversalXPConnect UniversalBrowserRead UniversalBrowserWrite UniversalPreferencesRead UniversalPreferencesWrite UniversalFileRead");
+user_pref("capability.principal.codebase.p1.id", "http://localhost:8888");
+user_pref("capability.principal.codebase.p1.subjectName", "");
+user_pref("dom.disable_open_during_load", false);
+user_pref("signed.applets.codebase_principal_support", true);
+user_pref("security.warn_submit_insecure", false);
+user_pref("browser.shell.checkDefaultBrowser", false);
+PREFEND
+
+  my $chrome_content = <<CHROMEEND;
+\@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
+toolbar,
+toolbarpalette {
+  background-repeat: repeat-x !important;
+  background-position: top right !important;
+  background-color: rgb(235, 235, 235) !important;
+  background-image: url("chrome://browser/skin/bookmark_toolbar_background.gif") !important;
+}
+toolbar#nav-bar {
+  background-image: none !important;
+}
+CHROMEEND
+
+  # remove the profile we created last run
+  rmtree($profile_dir, 0, 0);
+
+  my $chrome_dir = "$profile_dir/chrome";
+  mkdir($profile_dir);
+  mkdir($chrome_dir);
+
+  # first create our profile
+  my $create_args = "$profile $profile_dir";
+  if ($is_win32) {
+    $create_args = "$profile " . winPathFromDir($profile_dir);
+  }
+  my @args = ($app, '-CreateProfile', $create_args);
+  my $rc = 0xffff & system @args;
+  if ($rc != 0) {
+    die("FAIL Creating profile failed!\n");
+  } else {
+    print "Creating profile succeeded\n";
+  }
+
+  # append magic prefs to user.js
+  open(PREFOUTFILE, ">>$profile_dir/user.js") ||
+    die("Could not open user.js file $!\n");
+  print PREFOUTFILE ($pref_content);
+  close(PREFOUTFILE) or die("Couldn't close user.js file: $!\n");
+
+  # add userChrome.css
+  open(CHROMEOUTFILE, ">>$chrome_dir/userChrome.css") ||
+    die("Could not open userChrome.css file $!");
+  print CHROMEOUTFILE ($chrome_content);
+  close(CHROMEOUTFILE);
+}
+
+ ###################
+ # WAIT FOR SERVER #
+ ###################
+
+sub wait_for_server_startup {
+  my ($pid, $timeout) = @_;
+
+  die ("Invalid timeout value passed to wait_for_server_startup()\n")
+      if ($timeout <= 0);
+
+  eval {
+      my $loop_count = 0;
+      while ($loop_count++ < $timeout) {
+          last if (-e "$profile_dir/server_alive.txt");
+          sleep 1;
+      }
+
+      die "timeout" if ($loop_count >= $timeout);
+      return "done";
+  };
+
+  my $time_out_message;
+  if ($@) {
+      if ($@ =~ /timeout/) {
+          $time_out_message = "Timed out while waiting for server startup.\n";
+      } else {
+          # Died for some other reason.
+          $time_out_message = "An unknown error occurred ";
+	        $time_out_message .= "while waiting for server startup.\n";
+      }
+  }
+
+  if ($time_out_message) {
+    kill_process($pid);
+    print $time_out_message;
+    exit(1);
+  }
+}
+
+sub kill_process {
+  my ($target_pid) = @_;
+  my $start_time = time();
+
+  # Try to kill and wait 10 seconds, then try a kill -9
+  my $sig;
+  for $sig ('TERM', 'KILL') {
+    print "kill $sig $target_pid\n";
+    kill $sig => $target_pid;
+    my $interval_start = time;
+    while (time - $interval_start < 10) {
+      # the following will work with 'cygwin' perl on win32, but not
+      # with 'MSWin32' (ActiveState) perl
+      my $pid = waitpid($target_pid, POSIX::WNOHANG());
+      if (($pid == $target_pid and POSIX::WIFEXITED($?)) or $pid == -1) {
+        my $secs = time - $start_time;
+        $secs = $secs == 1 ? '1 second' : "$secs seconds";
+        print "Process killed. Took $secs to die.\n";
+        return;
+      }
+      sleep 1;
+    }
+  }
+  die "Unable to kill process: $target_pid";
+}
+
+ ##################
+ # TEST EXECUTION #
+ ##################
+
+sub runTests {
+  my ($testUrl) = @_;
+
+  # mark the start
+  my $test_start = localtime();
+
+  # set env vars so Firefox doesn't quit weirdly and break the script
+  $ENV{'MOZ_NO_REMOTE'} = '1';
+  $ENV{'NO_EM_RESTART'} = '1';
+  $ENV{'XPCOM_DEBUG_BREAK'} = 'stack';
+
+  # now run with the profile we created
+  my @runargs = ($app, '-P', "$profile", $testUrl);
+  my $rc = 0xffff & system @runargs;
+  if ($rc != 0) {
+    print "FAIL Exited with code $rc during test run\n";
+  }
+
+  return $test_start;
+}
+
+ ##################
+ # TEST EXECUTION #
+ ##################
+
+sub shutdownServer {
+  my ($pid) = @_;
+  kill_process($pid);
+}

@@ -39,6 +39,7 @@ DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir  = testing/mochitest/tests
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -46,3 +47,34 @@ DIRS =	 SimpleTest \
 	 $(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+_TEST_FILES = test_MochiKit-Async.html \
+		test_MochiKit-Base.html \
+		test_MochiKit-DateTime.html \
+		test_MochiKit-DOM.html \
+		test_MochiKit-Style.html \
+		test_MochiKit-Format.html \
+		test_MochiKit-Iter.html \
+		test_MochiKit-Logging.html \
+		test_MochiKit-MochiKit.html \
+		test_MochiKit-Color.html \
+		test_MochiKit-Signal.html \
+		test_Base.js \
+		test_Color.js \
+		test_DateTime.js \
+		test_DragAndDrop.js \
+		test_Format.js \
+		test_Iter.js \
+		test_Logging.js \
+		test_Signal.js \
+		cli.js \
+		FakeJSAN.js \
+		standalone.js \
+		test_MochiKit-Async.json \
+		$(NULL)
+
+# Copy the MochiKit tests into subdirectory, so the top level is all dirs
+# in the test screen. We leave them in tests/ in the src tree to mirror
+# the upstream MochiKit repository
+libs:: $(_TEST_FILES)
+	$(INSTALL) $^ $(DEPTH)/_tests/$(relativesrcdir)/MochiKit_Unit_Tests

@@ -49,6 +49,8 @@ _SIMPLETEST_FILES =	MozillaFileLogger.js \
 			SimpleTest.js \
 			test.css \
 			TestRunner.js \
+			setup.js \
+			EventUtils.js \
 			$(NULL)
 
 libs:: $(_SIMPLETEST_FILES)

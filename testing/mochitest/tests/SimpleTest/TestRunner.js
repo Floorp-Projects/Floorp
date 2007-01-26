@@ -8,27 +8,8 @@
 **/
 var TestRunner = {};
 TestRunner.logEnabled = false;
-TestRunner._iframes = {};
-TestRunner._iframeDocuments = {};
-TestRunner._iframeRows = {};
 TestRunner._currentTest = 0;
 TestRunner._urls = [];
-TestRunner._testsDiv = DIV();
-TestRunner._progressDiv = DIV();
-TestRunner._summaryDiv = DIV({'id': "summaryDiv"}, 
-    H1(null, "Tests Summary"),
-    TABLE(null, 
-        THEAD(null, 
-            TR(null,
-                TH(null, "Test"), 
-                TH(null, "Passed"), 
-                TH(null, "Failed"),
-                TH(null, "Todo")
-            )
-        ),
-        TBODY()
-    )
-);
 
 /**
  * This function is called after generating the summary.
@@ -58,14 +39,11 @@ TestRunner._toggle = function(el) {
  * Creates the iframe that contains a test
 **/
 TestRunner._makeIframe = function (url) {
-    var iframe = document.createElement('iframe');
+    var iframe = $('testframe');
     iframe.src = url;
     iframe.name = url;
+   
     iframe.width = "500";
-    var tbody = TestRunner._summaryDiv.getElementsByTagName("tbody")[0];
-    var tr = TR(null, TD({'colspan': '4'}, iframe));
-    iframe._row = tr;
-    tbody.appendChild(tr);
     return iframe;
 };
 
@@ -80,14 +58,8 @@ TestRunner.runTests = function (/*url...*/) {
         TestRunner.logger.log("SimpleTest START");
   
     var body = document.getElementsByTagName("body")[0];
-    appendChildNodes(body,
-        TestRunner._testsDiv,
-        TestRunner._progressDiv,
-        TestRunner._summaryDiv
-    );
-    for (var i = 0; i < arguments.length; i++) {
-        TestRunner._urls.push(arguments[i]); 
-    }
+    TestRunner._urls = flattenArguments(arguments);
+    $('testframe').src="";
     TestRunner.runNextTest();
 };
 
@@ -97,17 +69,17 @@ TestRunner.runTests = function (/*url...*/) {
 TestRunner.runNextTest = function() {
     if (TestRunner._currentTest < TestRunner._urls.length) {
         var url = TestRunner._urls[TestRunner._currentTest];
-        var progress = SPAN(null,
-            "Running ", A({href:url}, url), "..."
-        );
+        $("current-test-path").innerHTML = url;
         
         if (TestRunner.logEnabled)
-            TestRunner.logger.log(scrapeText(progress));
+            TestRunner.logger.log("Running " + url + "...");
         
-        TestRunner._progressDiv.appendChild(progress);
-        TestRunner._iframes[url] = TestRunner._makeIframe(url);
+        TestRunner._makeIframe(url);
     }  else {
-        TestRunner.makeSummary();
+        $("current-test").innerHTML = "<b>Finished</b>";
+        TestRunner._makeIframe("about:blank");
+        if (TestRunner.logEnabled)
+            TestRunner.logger.log("SimpleTest FINISHED");
         if (TestRunner.onComplete)
             TestRunner.onComplete();
     }
@@ -116,49 +88,61 @@ TestRunner.runNextTest = function() {
 /**
  * This stub is called by SimpleTest when a test is finished.
 **/
-TestRunner.testFinished = function (doc) {
-    appendChildNodes(TestRunner._progressDiv, SPAN(null, "Done"), BR());
+TestRunner.testFinished = function(doc) {
     var finishedURL = TestRunner._urls[TestRunner._currentTest];
     
     if (TestRunner.logEnabled)
         TestRunner.logger.debug("SimpleTest finished " + finishedURL);
     
-    TestRunner._iframeDocuments[finishedURL] = doc;
-    // TestRunner._iframes[finishedURL].style.display = "none";
-    TestRunner._toggle(TestRunner._iframes[finishedURL]);
+    TestRunner._updateUI();
     TestRunner._currentTest++;
     TestRunner.runNextTest();
 };
 
 /**
- * Display the summary in the browser
-**/
-TestRunner.makeSummary = function() {
-    if (TestRunner.logEnabled)
-        TestRunner.logger.log("SimpleTest FINISHED");
-    var rows = [];
-    for (var url in TestRunner._iframeDocuments) {
-        var doc = TestRunner._iframeDocuments[url];
-        var nOK = withDocument(doc,
-            partial(getElementsByTagAndClassName, 'div', 'test_ok')
-        ).length;
-        var nNotOK = withDocument(doc,
-            partial(getElementsByTagAndClassName, 'div', 'test_not_ok')
-        ).length;
-        var nTodo = withDocument(doc,
-            partial(getElementsByTagAndClassName, 'div', 'test_todo')
-        ).length;
-        var toggle = partial(TestRunner._toggle, TestRunner._iframes[url]);
-        var jsurl = "TestRunner._toggle(TestRunner._iframes['" + url + "'])";
-        var row = TR(
-            {'style': {'backgroundColor': nNotOK > 0 ? "#f00":"#0f0"}}, 
-            TD(null, url),
-            TD(null, nOK),
-            TD(null, nNotOK),
-            TD({'style': {'backgroundColor': nTodo > 0 ? "orange":"transparent"}}, nTodo)
-        );
-        row.onclick = toggle;
-        var tbody = TestRunner._summaryDiv.getElementsByTagName("tbody")[0];
-        tbody.insertBefore(row, TestRunner._iframes[url]._row)
-    }
-};
+ * Get the results.
+ */
+TestRunner.countResults = function(doc) {
+  var nOK = withDocument(doc,
+     partial(getElementsByTagAndClassName, 'div', 'test_ok')
+  ).length;
+  var nNotOK = withDocument(doc,
+     partial(getElementsByTagAndClassName, 'div', 'test_not_ok')
+  ).length;
+  var nTodo = withDocument(doc,
+     partial(getElementsByTagAndClassName, 'div', 'test_todo')
+  ).length;
+  return {"OK": nOK, "notOK": nNotOK, "todo": nTodo};
+}
+
+TestRunner._updateUI = function() {
+  var results = TestRunner.countResults($('testframe').contentDocument);
+  var passCount = parseInt($("pass-count").innerHTML) + results.OK;
+  var failCount = parseInt($("fail-count").innerHTML) + results.notOK;
+  var todoCount = parseInt($("todo-count").innerHTML) + results.todo;
+  $("pass-count").innerHTML = passCount;
+  $("fail-count").innerHTML = failCount;
+  $("todo-count").innerHTML = todoCount;
+  
+  // Set the top Green/Red bar
+  var indicator = $("indicator");
+  if (failCount > 0) {
+    indicator.innerHTML = "Status: Fail";
+    indicator.style.backgroundColor = "red";
+  } else if (passCount > 0) {
+    indicator.innerHTML = "Status: Pass";
+    indicator.style.backgroundColor = "green";
+  }
+  
+  // Set the table values
+  var trID = "tr-" + $('current-test-path').innerHTML;
+  var row = $(trID);
+  replaceChildNodes(row,
+    TD({'style':
+        {'backgroundColor': results.notOK > 0 ? "#f00":"#0d0"}}, results.OK),
+    TD({'style':
+        {'backgroundColor': results.notOK > 0 ? "#f00":"#0d0"}}, results.notOK),
+    TD({'style': {'backgroundColor':
+                   results.todo > 0 ? "orange":"#0d0"}}, results.todo)
+  );
+}

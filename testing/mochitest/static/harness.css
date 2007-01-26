@@ -1,0 +1,102 @@
+body   {
+  margin: 0;
+  padding: 0;
+  font-family: Verdana, Helvetica, Arial, sans-serif;
+  font-size: 11px;
+}
+
+th, td {
+  font-family: Verdana, Helvetica, Arial, sans-serif;
+  font-size: 11px;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  padding-left: 1em;
+  margin: 0;
+  background: #f6f6f6;
+}
+
+ul.top {
+  width: 80%;
+  float: left;
+}
+
+li, th, td {
+  border-bottom: 1px solid white;
+  height: 14px;
+}
+
+th, td {
+  padding-left: .2em;
+  padding-right: .2em;
+  text-align: left;
+}
+
+table#test-table {
+  background: #f6f6f6;
+  width: 19%;
+}
+
+div.container {
+  margin: 1em;
+}
+
+li a {
+  text-decoration: none;
+}
+
+li a:hover {
+  text-decoration: underline;
+}
+
+li.dir a {
+  color: #000;
+}
+
+a {
+  color: #3333CC;
+}
+
+li.non-test a:link, li.non-test a:hover,
+li.non-test a:active, li.non-test a:visited {
+  color: #999999;
+}
+
+a#runtests {
+  color: blue;
+}
+
+.clear { clear: both;}
+.invisible { display: none;}
+
+div.status {
+  min-height: 170px;
+  width: 100%;
+  border: 1px solid #666;
+  float: left;
+}
+div.frameholder {
+  min-height: 170px;
+  min-width: 500px;
+  background-color: #ffffff;
+  float: left;
+}
+
+div#current-test {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+#indicator {
+  color: white;
+  background-color: green;
+  padding: .5em;
+  margin: 0;
+}
+
+#pass, #fail {
+  margin: 0;
+  padding: .5em;
+}
