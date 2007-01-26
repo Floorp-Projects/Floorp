@@ -207,12 +207,23 @@ void
 nsHTMLReflowState::SetComputedWidth(nscoord aComputedWidth)
 {
   NS_ASSERTION(frame, "Must have a frame!");
-  NS_ASSERTION(!(frame->GetStateBits() & NS_FRAME_IN_REFLOW),
-               "frame shouldn't be in reflow yet");
-               
+  // It'd be nice to assert that |frame| is not in reflow, but this fails for
+  // two reasons:
+  //
+  // 1) Viewport frames reset the computed width on a copy of their reflow
+  //    state when reflowing fixed-pos kids.  In that case we actually don't
+  //    want to mess with the resize flags, because comparing the frame's rect
+  //    to the munged computed width is pointless.
+  // 2) nsFrame::BoxReflow creates a reflow state for its parent.  This reflow
+  //    state is not used to reflow the parent, but just as a parent for the
+  //    frame's own reflow state.  So given a nsBoxFrame inside some non-XUL
+  //    (like a text control, for example), we'll end up creating a reflow
+  //    state for the parent while the parent is reflowing.
+
   nscoord oldComputedWidth = mComputedWidth;
   mComputedWidth = aComputedWidth;
-  if (mComputedWidth != oldComputedWidth) {
+  if (mComputedWidth != oldComputedWidth &&
+      frame->GetType() != nsGkAtoms::viewportFrame) {  // Or check GetParent()?
     InitResizeFlags(frame->GetPresContext());
   }
 }
