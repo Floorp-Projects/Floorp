@@ -659,17 +659,17 @@
            return;
          }
          var c = this.currentIndex;
-         if (c == 0)
+         if (c == -1)
            return;
-         var f = this.treeBoxObject.getFirstVisibleRow();
-         var i = 0;
-         if (f > 0) {
-           var p = this.treeBoxObject.getPageLength();
-           if (f - p >= 0)
-             i = c - p;
-           else
-             i = c - f;
-           this.treeBoxObject.scrollByPages(-1);
+         if (c == 0 && this.view.selection.isSelected(c)) {
+           this.treeBoxObject.ensureRowIsVisible(0);
+           return;
+         }
+         var i = this.treeBoxObject.getFirstVisibleRow();
+         if (c <= i) {
+            var p = this.treeBoxObject.getPageLength();
+            i = c <= p ? 0 : c - p;
+            this.treeBoxObject.ensureRowIsVisible(i);
          }
          this.view.selection.timedSelect(i, this._selectDelay);
         ]]>
@@ -685,21 +685,20 @@
            return;
          }
          var c = this.currentIndex;
-          var l = this.view.rowCount - 1;
-         if (c == l)
+         var l = this.view.rowCount - 1;
+         if (l == -1)
            return;
-         var f = this.treeBoxObject.getFirstVisibleRow();
-         var p = this.treeBoxObject.getPageLength();
-         var i = l;
-         var lastTopRowIndex = l - p;
-         if (f <= lastTopRowIndex) {
-           if (f + p <= lastTopRowIndex)
-             i = c + p;
-           else
-             i = lastTopRowIndex + c - f + 1;
-           this.treeBoxObject.scrollByPages(1);
+         if (c == l && this.view.selection.isSelected(c)) {
+           this.treeBoxObject.ensureRowIsVisible(l);
+           return;
          }
-         this.view.selection.timedSelect(i, this._selectDelay);
+         var p = this.treeBoxObject.getPageLength();
+         var i = this.treeBoxObject.getFirstVisibleRow() + p - 1;
+         if (c >= i) {
+            i = c + p;
+            this.treeBoxObject.ensureRowIsVisible(i > l ? l : i);
+         }
+         this.view.selection.timedSelect(i > l ? l : i, this._selectDelay);
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_up"
@@ -708,17 +707,17 @@
          if (this._editingColumn || this.view.selection.single)
            return;
          var c = this.currentIndex;
-         if (c == 0)
+         if (c == -1)
            return;
-         var f = this.treeBoxObject.getFirstVisibleRow();
-         var i = 0;
-         if (f > 0) {
-           var p = this.treeBoxObject.getPageLength();
-           if (f - p >= 0)
-             i = c - p;
-           else
-             i = c - f;
-           this.treeBoxObject.scrollByPages(-1);
+         if (c == 0 && this.view.selection.isSelected(c)) {
+           this.treeBoxObject.ensureRowIsVisible(0);
+           return;
+         }
+         var i = this.treeBoxObject.getFirstVisibleRow();
+         if (c <= i) {
+            var p = this.treeBoxObject.getPageLength();
+            i = c <= p ? 0 : c - p;
+            this.treeBoxObject.ensureRowIsVisible(i);
          }
          // Extend the selection from the existing pivot, if any
          this.view.selection.rangedSelect(-1, i, this._isAccelPressed(event));
@@ -730,22 +729,21 @@
          if (this._editingColumn || this.view.selection.single)
            return;
          var c = this.currentIndex;
-          var l = this.view.rowCount - 1;
-         if (c == l)
+         var l = this.view.rowCount - 1;
+         if (l == -1)
            return;
-         var f = this.treeBoxObject.getFirstVisibleRow();
+         if (c == l && this.view.selection.isSelected(c)) {
+           this.treeBoxObject.ensureRowIsVisible(l);
+           return;
+         }
          var p = this.treeBoxObject.getPageLength();
-         var i = l;
-         var lastTopRowIndex = l - p;
-         if (f <= lastTopRowIndex) {
-           if (f + p <= lastTopRowIndex)
-             i = c + p;
-           else
-             i = lastTopRowIndex + c - f + 1;
-           this.treeBoxObject.scrollByPages(1);
+         var i = this.treeBoxObject.getFirstVisibleRow() + p - 1;
+         if (c >= i) {
+            i = c + p;
+            this.treeBoxObject.ensureRowIsVisible(i > l ? l : i);
          }
          // Extend the selection from the existing pivot, if any
-         this.view.selection.rangedSelect(-1, i, this._isAccelPressed(event));
+         this.view.selection.rangedSelect(-1, i > l ? l : i, this._isAccelPressed(event));
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_home"
