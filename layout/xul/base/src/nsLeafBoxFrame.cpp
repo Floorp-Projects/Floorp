@@ -252,7 +252,7 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsLeafBoxFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
-  NS_ASSERTION(aReflowState.mComputedWidth >=0 && aReflowState.mComputedHeight >= 0, "Computed Size < 0");
+  NS_ASSERTION(aReflowState.ComputedWidth() >=0 && aReflowState.mComputedHeight >= 0, "Computed Size < 0");
 
 #ifdef DO_NOISY_REFLOW
   printf("\n-------------Starting LeafBoxFrame Reflow ----------------------------\n");
@@ -274,7 +274,7 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   
   printSize("AW", aReflowState.availableWidth);
   printSize("AH", aReflowState.availableHeight);
-  printSize("CW", aReflowState.mComputedWidth);
+  printSize("CW", aReflowState.ComputedWidth());
   printSize("CH", aReflowState.mComputedHeight);
 
   printf(" *\n");
@@ -286,7 +286,7 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   // create the layout state
   nsBoxLayoutState state(aPresContext, aReflowState.rendContext);
 
-  nsSize computedSize(aReflowState.mComputedWidth,aReflowState.mComputedHeight);
+  nsSize computedSize(aReflowState.ComputedWidth(),aReflowState.mComputedHeight);
 
   nsMargin m;
   m = aReflowState.mComputedBorderPadding;
@@ -310,7 +310,7 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   }
 
   // get our desiredSize
-  if (aReflowState.mComputedWidth == NS_INTRINSICSIZE) {
+  if (aReflowState.ComputedWidth() == NS_INTRINSICSIZE) {
     computedSize.width = prefSize.width;
   } else {
     computedSize.width += m.left + m.right;

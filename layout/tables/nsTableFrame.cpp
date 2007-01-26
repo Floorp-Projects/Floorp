@@ -1966,7 +1966,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
     mutable_rs.mFlags.mSpecialHeightReflow = oldSpecialHeightReflow;
   }
 
-  aDesiredSize.width = aReflowState.mComputedWidth +
+  aDesiredSize.width = aReflowState.ComputedWidth() +
                        aReflowState.mComputedBorderPadding.LeftRight();
   if (!haveDesiredHeight) {
     CalcDesiredHeight(aReflowState, aDesiredSize); 
@@ -2031,7 +2031,7 @@ nsTableFrame::ReflowTable(nsHTMLReflowMetrics&     aDesiredSize,
   }
   // Constrain our reflow width to the computed table width (of the 1st in flow).
   // and our reflow height to our avail height minus border, padding, cellspacing
-  aDesiredSize.width = aReflowState.mComputedWidth +
+  aDesiredSize.width = aReflowState.ComputedWidth() +
                        aReflowState.mComputedBorderPadding.LeftRight();
   nsTableReflowState reflowState(*GetPresContext(), aReflowState, *this,
                                  aDesiredSize.width, aAvailHeight);
@@ -2805,8 +2805,6 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
                                        kidFrame, kidAvailSize,
                                        -1, -1, PR_FALSE);
       InitChildReflowState(kidReflowState);
-      // XXX fix up bad mComputedWidth for scroll frame
-      kidReflowState.mComputedWidth = PR_MAX(kidReflowState.mComputedWidth, 0);
 
       // If this isn't the first row group, then we can't be at the top of the page
       // When a new page starts, a head row group may be added automatically.
@@ -3387,7 +3385,7 @@ nsTableFrame::GetBorderPadding(const nsHTMLReflowState& aReflowState,
     while (parentRS) {
       if (parentRS->frame) {
         if (nsGkAtoms::tableFrame == parentRS->frame->GetType()) {
-          nsSize basis(parentRS->mComputedWidth, parentRS->mComputedHeight);
+          nsSize basis(parentRS->ComputedWidth(), parentRS->mComputedHeight);
           GetPaddingFor(basis, *paddingData, padding);
           break;
         }

@@ -717,7 +717,7 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsBoxFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
-  NS_ASSERTION(aReflowState.mComputedWidth >=0 && aReflowState.mComputedHeight >= 0, "Computed Size < 0");
+  NS_ASSERTION(aReflowState.ComputedWidth() >=0 && aReflowState.ComputedWidth() >= 0, "Computed Size < 0");
 
 #ifdef DO_NOISY_REFLOW
   printf("\n-------------Starting BoxFrame Reflow ----------------------------\n");
@@ -725,7 +725,7 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
   
   printSize("AW", aReflowState.availableWidth);
   printSize("AH", aReflowState.availableHeight);
-  printSize("CW", aReflowState.mComputedWidth);
+  printSize("CW", aReflowState.ComputedWidth());
   printSize("CH", aReflowState.mComputedHeight);
 
   printf(" *\n");
@@ -737,7 +737,7 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
   // create the layout state
   nsBoxLayoutState state(aPresContext, aReflowState.rendContext);
 
-  nsSize computedSize(aReflowState.mComputedWidth,aReflowState.mComputedHeight);
+  nsSize computedSize(aReflowState.ComputedWidth(),aReflowState.mComputedHeight);
 
   nsMargin m;
   m = aReflowState.mComputedBorderPadding;

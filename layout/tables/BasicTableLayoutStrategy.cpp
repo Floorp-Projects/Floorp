@@ -614,7 +614,7 @@ BasicTableLayoutStrategy::MarkIntrinsicWidthsDirty()
 /* virtual */ void
 BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowState)
 {
-    nscoord width = aReflowState.mComputedWidth;
+    nscoord width = aReflowState.ComputedWidth();
 
     if (mLastCalcWidth == width)
         return;

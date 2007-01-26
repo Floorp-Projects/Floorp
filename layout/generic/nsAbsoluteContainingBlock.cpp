@@ -334,7 +334,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     PrettyUC(aReflowState.availableWidth, width);
     PrettyUC(aReflowState.availableHeight, height);
     printf(" a=%s,%s ", width, height);
-    PrettyUC(aReflowState.mComputedWidth, width);
+    PrettyUC(aReflowState.ComputedWidth(), width);
     PrettyUC(aReflowState.mComputedHeight, height);
     printf("c=%s,%s \n", width, height);
   }
@@ -347,10 +347,10 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
 
   nscoord availWidth = aContainingBlockWidth;
   if (availWidth == -1) {
-    NS_ASSERTION(aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE,
+    NS_ASSERTION(aReflowState.ComputedWidth() != NS_UNCONSTRAINEDSIZE,
                  "Must have a useful width _somewhere_");
     availWidth =
-      aReflowState.mComputedWidth + aReflowState.mComputedPadding.LeftRight();
+      aReflowState.ComputedWidth() + aReflowState.mComputedPadding.LeftRight();
   }
     
   nsHTMLReflowMetrics kidDesiredSize;

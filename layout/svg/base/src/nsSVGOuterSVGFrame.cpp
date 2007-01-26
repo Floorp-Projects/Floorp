@@ -283,7 +283,7 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
 //            aReflowState.availableHeight,
 //            r.width, r.height);
 //     printf("******* cw: %d, ch: %d \n    cmaxw: %d, cmaxh: %d\n",
-//            aReflowState.mComputedWidth,
+//            aReflowState.ComputedWidth(),
 //            aReflowState.mComputedHeight,
 //            aReflowState.mComputedMaxWidth,
 //            aReflowState.mComputedMaxHeight);
@@ -293,7 +293,7 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
 //              aReflowState.parentReflowState->availableWidth,
 //              aReflowState.parentReflowState->availableHeight);
 //       printf("******* parent cw: %d, parent ch: %d \n  parent cmaxw: %d, parent cmaxh: %d\n",
-//              aReflowState.parentReflowState->mComputedWidth,
+//              aReflowState.parentReflowState->ComputedWidth(),
 //              aReflowState.parentReflowState->mComputedHeight,
 //              aReflowState.parentReflowState->mComputedMaxWidth,
 //              aReflowState.parentReflowState->mComputedMaxHeight);
@@ -713,8 +713,8 @@ nsSVGOuterSVGFrame::CalculateAvailableSpace(nsRect *maxRect,
   if (aReflowState.availableWidth != NS_INTRINSICSIZE)
     maxRect->width = aReflowState.availableWidth;
   else if (aReflowState.parentReflowState &&
-           aReflowState.parentReflowState->mComputedWidth != NS_INTRINSICSIZE)
-    maxRect->width = aReflowState.parentReflowState->mComputedWidth;
+           aReflowState.parentReflowState->ComputedWidth() != NS_INTRINSICSIZE)
+    maxRect->width = aReflowState.parentReflowState->ComputedWidth();
   else
     maxRect->width = NS_MAXSIZE;
   

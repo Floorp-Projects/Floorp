@@ -297,7 +297,7 @@ nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsHTMLButtonControlFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
-  NS_PRECONDITION(aReflowState.mComputedWidth != NS_INTRINSICSIZE,
+  NS_PRECONDITION(aReflowState.ComputedWidth() != NS_INTRINSICSIZE,
                   "Should have real computed width by now");
 
   if (mState & NS_FRAME_FIRST_REFLOW) {
@@ -319,7 +319,7 @@ nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
   ReflowButtonContents(aPresContext, aDesiredSize, aReflowState, firstKid,
                        focusPadding, aStatus);
 
-  aDesiredSize.width = aReflowState.mComputedWidth;
+  aDesiredSize.width = aReflowState.ComputedWidth();
 
   // If computed use the computed value.
   if (aReflowState.mComputedHeight != NS_INTRINSICSIZE) 
@@ -361,7 +361,7 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
                                                nsMargin aFocusPadding,
                                                nsReflowStatus& aStatus)
 {
-  nsSize availSize(aReflowState.mComputedWidth, NS_INTRINSICSIZE);
+  nsSize availSize(aReflowState.ComputedWidth(), NS_INTRINSICSIZE);
 
   // Indent the child inside us by the focus border. We must do this separate
   // from the regular border.
@@ -374,7 +374,7 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
   // offset to allow the kid to spill left into our padding.
   nscoord xoffset = aFocusPadding.left + aReflowState.mComputedBorderPadding.left;
   nscoord extrawidth = DoGetMinWidth(aReflowState.rendContext, PR_FALSE) -
-    aReflowState.mComputedWidth;
+    aReflowState.ComputedWidth();
   if (extrawidth > 0) {
     nscoord extraleft = extrawidth / 2;
     nscoord extraright = extrawidth - extraleft;

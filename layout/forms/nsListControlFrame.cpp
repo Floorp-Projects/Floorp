@@ -526,7 +526,7 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
                            const nsHTMLReflowState& aReflowState, 
                            nsReflowStatus&          aStatus)
 {
-  NS_PRECONDITION(aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE,
+  NS_PRECONDITION(aReflowState.ComputedWidth() != NS_UNCONSTRAINEDSIZE,
                   "Must have a computed width");
 
   // If all the content and frames are here 

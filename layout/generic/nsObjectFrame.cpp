@@ -632,7 +632,7 @@ nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
     return;
   }
   
-  aMetrics.width = aReflowState.mComputedWidth;
+  aMetrics.width = aReflowState.ComputedWidth();
   aMetrics.height = aReflowState.mComputedHeight;
 
   // for EMBED and APPLET, default to 240x200 for compatibility

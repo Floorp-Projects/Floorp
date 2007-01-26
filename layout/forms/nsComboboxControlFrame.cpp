@@ -256,22 +256,6 @@ static PRInt32 gReflowInx = -1;
 #define PX(__v) __v 
 #endif
 
-//------------------------------------------
-// Asserts if we return a desired size that 
-// doesn't correctly match the mComputedWidth
-//------------------------------------------
-#ifdef DO_UNCONSTRAINED_CHECK
-#define UNCONSTRAINED_CHECK() \
-if (aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE) { \
-  nscoord width = aDesiredSize.width - borderPadding.left - borderPadding.right; \
-  if (width != aReflowState.mComputedWidth) { \
-    printf("aDesiredSize.width %d %d != aReflowState.mComputedWidth %d\n", aDesiredSize.width, width, aReflowState.mComputedWidth); \
-  } \
-  NS_ASSERTION(width == aReflowState.mComputedWidth, "Returning bad value when constrained!"); \
-}
-#else
-#define UNCONSTRAINED_CHECK()
-#endif
 //------------------------------------------------------
 //-- Done with macros
 //------------------------------------------------------
@@ -479,11 +463,11 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
   // If the dropdown's intrinsic width is narrower than our specified width,
   // then expand it out.  We want our border-box width to end up the same as
   // the dropdown's so account for both sets of mComputedBorderPadding.
-  nscoord forcedWidth = aReflowState.mComputedWidth +
+  nscoord forcedWidth = aReflowState.ComputedWidth() +
     aReflowState.mComputedBorderPadding.LeftRight() -
     kidReflowState.mComputedBorderPadding.LeftRight();
-  kidReflowState.mComputedWidth = PR_MAX(kidReflowState.mComputedWidth,
-                                         forcedWidth);
+  kidReflowState.SetComputedWidth(PR_MAX(kidReflowState.ComputedWidth(),
+                                         forcedWidth));
 
   // ensure we start off hidden
   if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
@@ -670,11 +654,11 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
   nsBoxLayoutState bls(GetPresContext(), aReflowState.rendContext);
   nscoord buttonWidth = scrollable->GetDesiredScrollbarSizes(&bls).LeftRight();
 
-  if (buttonWidth > aReflowState.mComputedWidth) {
+  if (buttonWidth > aReflowState.ComputedWidth()) {
     buttonWidth = 0;
   }
 
-  mDisplayWidth = aReflowState.mComputedWidth - buttonWidth;
+  mDisplayWidth = aReflowState.ComputedWidth() - buttonWidth;
 
   nsresult rv = nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState,
                                     aStatus);
@@ -1125,11 +1109,12 @@ nsComboboxDisplayFrame::Reflow(nsPresContext*           aPresContext,
     // rows look like, for lack of anything better.
     state.mComputedHeight = mComboBox->mListControlFrame->GetHeightOfARow();
   }
-  state.mComputedWidth = mComboBox->mDisplayWidth -
-    state.mComputedBorderPadding.LeftRight();
-  if (state.mComputedWidth < 0) {
-    state.mComputedWidth = 0;
+  nscoord computedWidth = mComboBox->mDisplayWidth -
+    state.mComputedBorderPadding.LeftRight(); 
+  if (computedWidth < 0) {
+    computedWidth = 0;
   }
+  state.SetComputedWidth(computedWidth);
 
   return nsBlockFrame::Reflow(aPresContext, aDesiredSize, state, aStatus);
 }

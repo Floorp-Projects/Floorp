@@ -102,9 +102,9 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   mPresContext = aPresContext;
   mNextInFlow = NS_STATIC_CAST(nsBlockFrame*, mBlock->GetNextInFlow());
 
-  NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth,
+  NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aReflowState.ComputedWidth(),
                "no unconstrained widths should be present anymore");
-  mContentArea.width = aReflowState.mComputedWidth;
+  mContentArea.width = aReflowState.ComputedWidth();
 
   // Compute content area height. Unlike the width, if we have a
   // specified style height we ignore it since extra content is

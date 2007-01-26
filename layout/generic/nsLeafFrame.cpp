@@ -84,10 +84,10 @@ nsLeafFrame::Reflow(nsPresContext* aPresContext,
   // XXX add in code to check for width/height being set via css
   // and if set use them instead of calling GetDesiredSize.
 
-  NS_ASSERTION(aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE,
+  NS_ASSERTION(aReflowState.ComputedWidth() != NS_UNCONSTRAINEDSIZE,
                "Shouldn't have unconstrained stuff here");
 
-  aMetrics.width = aReflowState.mComputedWidth;
+  aMetrics.width = aReflowState.ComputedWidth();
   if (NS_INTRINSICSIZE != aReflowState.mComputedHeight) {
     aMetrics.height = aReflowState.mComputedHeight;
   } else {

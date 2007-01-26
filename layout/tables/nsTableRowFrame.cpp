@@ -73,9 +73,11 @@ void nsTableCellReflowState::FixUp(const nsSize& aAvailSpace)
   // fix the mComputed values during a pass 2 reflow since the cell can be a percentage base
   NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aAvailSpace.width,
                "unconstrained available width in reflow");
-  if (NS_UNCONSTRAINEDSIZE != mComputedWidth) {
-    mComputedWidth = aAvailSpace.width - mComputedBorderPadding.left - mComputedBorderPadding.right;
-    mComputedWidth = PR_MAX(0, mComputedWidth);
+  if (NS_UNCONSTRAINEDSIZE != ComputedWidth()) {
+    nscoord computedWidth = aAvailSpace.width - mComputedBorderPadding.left -
+      mComputedBorderPadding.right;
+    computedWidth = PR_MAX(0, computedWidth);
+    SetComputedWidth(computedWidth);
   }
   if (NS_UNCONSTRAINEDSIZE != mComputedHeight) {
     if (NS_UNCONSTRAINEDSIZE != aAvailSpace.height) {
@@ -785,7 +787,7 @@ GetComputedWidth(const nsHTMLReflowState& aReflowState,
   nscoord computedWidth = 0;
   while (parentReflow) {
     if (parentReflow->frame == &aTableFrame) {
-      computedWidth = parentReflow->mComputedWidth;
+      computedWidth = parentReflow->ComputedWidth();
       break;
     }
     parentReflow = parentReflow->parentReflowState;
