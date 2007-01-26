@@ -70,4 +70,7 @@
     </td>
     <td align="left" valign="top">[% caserun.case.priority FILTER html %]</td>
     <td align="left" valign="top">[% caserun.case.category.name FILTER html %]</td>
-    <td align="center" valign="top"><span id="nbgs[% index %]">[% IF caserun.bug_count %]<a href="buglist.cgi?bug_id=[% caserun.get_buglist %]">[% caserun.bug_count %]</a>[% ELSE %][% caserun.bug_count %][% END %]</span></td>
+    <td align="center" valign="top"><span id="nbgs[% index %]">
+    [% FOREACH bug = caserun.bugs %]
+      [% bug.bug_id FILTER bug_link(bug.bug_id) %]
+    [% END %]</span></td>
