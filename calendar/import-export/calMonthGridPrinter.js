@@ -310,13 +310,14 @@ function makeHTMLWeek(date, sortedList, targetMonth) {
                 catColor = pb2.getCharPref("calendar.category.color."+item.getProperty("CATEGORIES").toLowerCase());
             } catch(ex) {}
 
-            var style = 'font-size: 11px; background-color: ' + calColor + ';';
+            var style = 'font-size: 11px; text-align: left;';
+            style += ' background-color: ' + calColor + ';';
             style += ' color: ' + getContrastingTextColor(calColor);
             if (catColor) {
                 style += ' border: solid ' + catColor + ' 2px;';
             }
             var item = <tr>
-                           <td valign='top' align='center' style={style}>{time} {item.title}</td>
+                           <td valign='top' style={style}>{time} {item.title}</td>
                        </tr>;
             innerTable.appendChild(item);
         }
