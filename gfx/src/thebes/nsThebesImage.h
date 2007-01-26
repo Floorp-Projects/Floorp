@@ -112,6 +112,31 @@ public:
     }
 
 protected:
+    static PRBool AllowedImageSize(PRInt32 aWidth, PRInt32 aHeight) {
+        NS_ASSERTION(aWidth > 0, "invalid image width");
+        NS_ASSERTION(aHeight > 0, "invalid image height");
+
+        // reject over-wide or over-tall images
+        const PRInt32 k64KLimit = 0x0000FFFF;
+        if (NS_UNLIKELY(aWidth > k64KLimit || aHeight > k64KLimit )) {
+            NS_WARNING("image too big");
+            return PR_FALSE;
+        }
+        
+        // check to make sure we don't overflow a 32-bit
+        PRInt32 tmp = aWidth * aHeight;
+        if (NS_UNLIKELY(tmp / aHeight != aWidth)) {
+            NS_WARNING("width or height too large");
+            return PR_FALSE;
+        }
+        tmp = tmp * 4;
+        if (NS_UNLIKELY(tmp / 4 != aWidth * aHeight)) {
+            NS_WARNING("width or height too large");
+            return PR_FALSE;
+        }
+        return PR_TRUE;
+    }
+
     gfxImageSurface::gfxImageFormat mFormat;
     PRInt32 mWidth;
     PRInt32 mHeight;

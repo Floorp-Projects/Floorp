@@ -74,24 +74,9 @@ nsThebesImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequi
     mWidth = aWidth;
     mHeight = aHeight;
 
-    /* reject over-wide or over-tall images */
-    const PRInt32 k64KLimit = 0x0000FFFF;
-    if (aWidth > k64KLimit || aHeight > k64KLimit ){
-        NS_ERROR("image too big");
+    // Reject over-wide or over-tall images.
+    if (!AllowedImageSize(aWidth, aHeight))
         return NS_ERROR_FAILURE;
-    }
-
-    /* check to make sure we don't overflow a 32-bit */
-    PRInt32 tmp = aWidth * aHeight;
-    if (tmp / aHeight != aWidth) {
-        NS_ASSERTION(0, "width or height too large\n");
-        return NS_ERROR_FAILURE;
-    }
-    tmp = tmp * 4;
-    if (tmp / 4 != aWidth * aHeight) {
-        NS_ASSERTION(0, "width or height too large\n");
-        return NS_ERROR_FAILURE;
-    }
 
     gfxImageSurface::gfxImageFormat format;
     switch(aMaskRequirements)
@@ -390,6 +375,10 @@ nsThebesImage::Draw(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface,
       aSY = srcRect.y;
     }
 
+    // Reject over-wide or over-tall images.
+    if (!AllowedImageSize(aDWidth, aDHeight))
+        return NS_ERROR_FAILURE;
+
     gfxRect dr(aDX, aDY, aDWidth, aDHeight);
 
     gfxMatrix mat;
@@ -460,6 +449,11 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
              * and render the image into it first.  Then we'll tile that surface. */
             width = mWidth + xPadding;
             height = mHeight + yPadding;
+
+            // Reject over-wide or over-tall images.
+            if (!AllowedImageSize(width, height))
+                return NS_ERROR_FAILURE;
+
             surface = new gfxImageSurface(gfxASurface::ImageFormatARGB32,
                                           width, height);
             tmpSurfaceGrip = surface;
