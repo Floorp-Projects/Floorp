@@ -3151,10 +3151,6 @@ nsJSContext::Notify(nsITimer *timer)
   NS_RELEASE(sGCTimer);
 
   if (sPendingLoadCount == 0 || sLoadInProgressGCTimer) {
-    // nsCycleCollector_collect() will run a ::JS_GC() indirectly,
-    // so we do not explicitly call ::JS_GC() here. 
-    nsCycleCollector_collect();
-
     sLoadInProgressGCTimer = PR_FALSE;
 
     // Reset sPendingLoadCount in case the timer that fired was a
@@ -3164,6 +3160,10 @@ nsJSContext::Notify(nsITimer *timer)
     // ignore the fact that the currently loading documents are still
     // loading and move on as if they weren't.
     sPendingLoadCount = 0;
+
+    // nsCycleCollector_collect() will run a ::JS_GC() indirectly,
+    // so we do not explicitly call ::JS_GC() here. 
+    nsCycleCollector_collect();
   } else {
     FireGCTimer(PR_TRUE);
   }
@@ -3220,6 +3220,10 @@ nsJSContext::FireGCTimer(PRBool aLoadInProgress)
 
   if (!sGCTimer) {
     NS_WARNING("Failed to create timer");
+
+    // Reset sLoadInProgressGCTimer since we're not able to fire the
+    // timer.
+    sLoadInProgressGCTimer = PR_FALSE;
 
     // nsCycleCollector_collect() will run a ::JS_GC() indirectly, so
     // we do not explicitly call ::JS_GC() here.
@@ -3481,6 +3485,8 @@ void nsJSRuntime::ShutDown()
     sGCTimer->Cancel();
 
     NS_RELEASE(sGCTimer);
+
+    sLoadInProgressGCTimer = PR_FALSE;
   }
 
   delete gNameSpaceManager;
