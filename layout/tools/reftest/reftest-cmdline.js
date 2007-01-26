@@ -39,8 +39,8 @@
 // NOTE: this file implements both the seamonkey nsICmdLineHandler and
 // the toolkit nsICommandLineHandler, using runtime detection.
 
-const LAYOUTATEST_CMDLINE_CONTRACTID = "@mozilla.org/commandlinehandler/general-startup;1?type=reftest";
-const LAYOUTATEST_CMDLINE_CLSID      = Components.ID('{32530271-8c1b-4b7d-a812-218e42c6bb23}');
+const REFTEST_CMDLINE_CONTRACTID     = "@mozilla.org/commandlinehandler/general-startup;1?type=reftest";
+const REFTEST_CMDLINE_CLSID          = Components.ID('{32530271-8c1b-4b7d-a812-218e42c6bb23}');
 const CATMAN_CONTRACTID              = "@mozilla.org/categorymanager;1";
 const nsISupports                    = Components.interfaces.nsISupports;
   
@@ -127,9 +127,9 @@ var LayoutATestCmdLineModule =
   {
     compMgr = compMgr.QueryInterface(nsIComponentRegistrar);
 
-    compMgr.registerFactoryLocation(LAYOUTATEST_CMDLINE_CLSID,
+    compMgr.registerFactoryLocation(REFTEST_CMDLINE_CLSID,
                                     "LayoutATest CommandLine Service",
-                                    LAYOUTATEST_CMDLINE_CONTRACTID,
+                                    REFTEST_CMDLINE_CONTRACTID,
                                     fileSpec,
                                     location,
                                     type);
@@ -137,17 +137,17 @@ var LayoutATestCmdLineModule =
     var catman = Components.classes[CATMAN_CONTRACTID].getService(nsICategoryManager);
     catman.addCategoryEntry("command-line-argument-handlers",
                             "reftest command line handler",
-                            LAYOUTATEST_CMDLINE_CONTRACTID, true, true);
+                            REFTEST_CMDLINE_CONTRACTID, true, true);
     catman.addCategoryEntry("command-line-handler",
                             "m-reftest",
-                            LAYOUTATEST_CMDLINE_CONTRACTID, true, true);
+                            REFTEST_CMDLINE_CONTRACTID, true, true);
   },
 
   unregisterSelf : function(compMgr, fileSpec, location)
   {
     compMgr = compMgr.QueryInterface(nsIComponentRegistrar);
 
-    compMgr.unregisterFactoryLocation(LAYOUTATEST_CMDLINE_CLSID, fileSpec);
+    compMgr.unregisterFactoryLocation(REFTEST_CMDLINE_CLSID, fileSpec);
     catman = Components.classes[CATMAN_CONTRACTID].getService(nsICategoryManager);
     catman.deleteCategoryEntry("command-line-argument-handlers",
                                "reftest command line handler", true);
@@ -157,7 +157,7 @@ var LayoutATestCmdLineModule =
 
   getClassObject : function(compMgr, cid, iid)
   {
-    if (cid.equals(LAYOUTATEST_CMDLINE_CLSID)) {
+    if (cid.equals(REFTEST_CMDLINE_CLSID)) {
       return LayoutATestCmdLineFactory;
     }
 
