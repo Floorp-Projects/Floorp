@@ -164,7 +164,8 @@ public:
 private:
   nsresult HandleEphemeralMessage(nsIDOMDocument* aDoc, nsIDOMEvent* aEvent);
   nsresult HandleModalAndModelessMessage(nsIDOMDocument* aDoc, nsAString& aLevel);
-  void CloneNode(nsIDOMNode* aSrc, nsIDOMNode** aTarget);
+  void ImportNode(nsIDOMNode* aSrc, nsIDOMDocument* aDestDoc,
+                  nsIDOMNode** aTarget);
   PRBool HandleInlineAlert(nsIDOMEvent* aEvent);
   nsresult ConstructMessageWindowURL(const nsAString& aData,
                                      PRBool aIsLink,
@@ -275,7 +276,8 @@ nsXFormsMessageElement::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 void
-nsXFormsMessageElement::CloneNode(nsIDOMNode* aSrc, nsIDOMNode** aTarget)
+nsXFormsMessageElement::ImportNode(nsIDOMNode* aSrc, nsIDOMDocument* aDestDoc,
+                                   nsIDOMNode** aTarget)
 {
   nsAutoString ns;
   nsAutoString localName;
@@ -288,21 +290,17 @@ nsXFormsMessageElement::CloneNode(nsIDOMNode* aSrc, nsIDOMNode** aTarget)
       localName.EqualsLiteral("output")) {
     nsCOMPtr<nsIDelegateInternal> outEl(do_QueryInterface(aSrc));
     if (outEl) {
-      nsCOMPtr<nsIDOMDocument> doc;
-      aSrc->GetOwnerDocument(getter_AddRefs(doc));
-      if (doc) {
-        nsCOMPtr<nsIDOMText> text;
-        nsAutoString value;
-        outEl->GetValue(value);
-        doc->CreateTextNode(value, getter_AddRefs(text));
-        NS_IF_ADDREF(*aTarget = text);
-      }
+      nsCOMPtr<nsIDOMText> text;
+      nsAutoString value;
+      outEl->GetValue(value);
+      aDestDoc->CreateTextNode(value, getter_AddRefs(text));
+      NS_IF_ADDREF(*aTarget = text);
     }
     return;
   }
 
   // Clone other elements
-  aSrc->CloneNode(PR_FALSE, aTarget);
+  aDestDoc->ImportNode(aSrc, PR_FALSE, aTarget);
 
   if (!*aTarget)
     return;
@@ -322,7 +320,7 @@ nsXFormsMessageElement::CloneNode(nsIDOMNode* aSrc, nsIDOMNode** aTarget)
     
     if (child) {
       nsCOMPtr<nsIDOMNode> clone;
-      CloneNode(child, getter_AddRefs(clone));
+      ImportNode(child, aDestDoc, getter_AddRefs(clone));
       if (clone)
         (*aTarget)->AppendChild(clone, getter_AddRefs(tmp));
     }
@@ -727,7 +725,7 @@ nsXFormsMessageElement::HandleModalAndModelessMessage(nsIDOMDocument* aDoc,
         
         if (child) {
           nsCOMPtr<nsIDOMNode> clone;
-          CloneNode(child, getter_AddRefs(clone));
+          ImportNode(child, ddoc, getter_AddRefs(clone));
           if (clone)
             bodyEl->AppendChild(clone, getter_AddRefs(tmp));
         }
