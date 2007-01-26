@@ -201,9 +201,8 @@ fips_140()
   SOFTOKEN=${MANGLEDIR}/${DLL_PREFIX}softokn3.${DLL_SUFFIX}
 
   echo "mangling ${SOFTOKEN}"
-  echo "mangle -i ${SOFTOKEN} -o 60000 -b 5"
-# mangle -i ${SOFTOKEN} -o 60000 -b 5 2>&1
-  false
+  echo "mangle -i ${SOFTOKEN} -o -8 -b 5"
+  mangle -i ${SOFTOKEN} -o -8 -b 5 2>&1
   if [ $? -eq 0 ]; then
     if [ "${OS_ARCH}" = "WINNT" ]; then
       DBTEST=`which dbtest`
