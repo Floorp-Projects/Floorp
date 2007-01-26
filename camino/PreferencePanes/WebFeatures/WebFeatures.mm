@@ -59,6 +59,9 @@ static NSString* XPCOMShutDownNotificationName = @"XPCOMShutDown";
 // needs to match the string in PreferenceManager.mm
 static NSString* const AdBlockingChangedNotificationName = @"AdBlockingChanged";
 
+// for camino.enable_plugins; needs to match string in BrowserWrapper.mm
+static NSString* const kEnablePluginsChangedNotificationName = @"EnablePluginsChanged";
+
 // for accessibility.tabfocus
 const int kFocusLinks = (1 << 2);
 const int kFocusForms = (1 << 1);
@@ -113,6 +116,11 @@ const int kAnnoyancePrefSome = 3;
   BOOL javaEnabled = [self getBooleanPref:"security.enable_java" withSuccess:&gotPref] && gotPref;
   [mEnableJava setState:javaEnabled];
 
+  // Set initial value on Plug-ins checkbox.
+  // If we fail to get the pref, ensure we leave plugins enabled by default.
+  BOOL pluginsEnabled = [self getBooleanPref:"camino.enable_plugins" withSuccess:&gotPref] || !gotPref;
+  [mEnablePlugins setState:pluginsEnabled];
+
   // set initial value on popup blocking checkbox and disable the whitelist
   // button if it's off
   BOOL enablePopupBlocking = [self getBooleanPref:"dom.disable_open_during_load" withSuccess:&gotPref] && gotPref;  
@@ -152,23 +160,34 @@ const int kAnnoyancePrefSome = 3;
 
 
 //
-// clickEnableJS
+// -clickEnableJS:
 //
-// Set pref if JavaScript is enabled
+// Enable and disable JavaScript
 //
 -(IBAction) clickEnableJS:(id)sender
 {
-  [self setPref:"javascript.enabled" toBoolean:[sender state] == NSOnState];
+  [self setPref:"javascript.enabled" toBoolean:([sender state] == NSOnState)];
 }
 
 //
-// clickEnableJava
+// -clickEnableJava:
 //
-// Set pref if Java is enabled
+// Enable and disable Java
 //
 -(IBAction) clickEnableJava:(id)sender
 {
-  [self setPref:"security.enable_java" toBoolean:[sender state] == NSOnState];
+  [self setPref:"security.enable_java" toBoolean:([sender state] == NSOnState)];
+}
+
+//
+// -clickEnablePlugins:
+//
+// Enable and disable plugins
+//
+-(IBAction) clickEnablePlugins:(id)sender
+{
+  [self setPref:"camino.enable_plugins" toBoolean:([sender state] == NSOnState)];
+  [[NSNotificationCenter defaultCenter] postNotificationName:kEnablePluginsChangedNotificationName object:nil];
 }
 
 //
@@ -179,7 +198,7 @@ const int kAnnoyancePrefSome = 3;
 //
 - (IBAction)clickEnableAdBlocking:(id)sender
 {
-  [self setPref:"camino.enable_ad_blocking" toBoolean:[sender state] == NSOnState];
+  [self setPref:"camino.enable_ad_blocking" toBoolean:([sender state] == NSOnState)];
   [[NSNotificationCenter defaultCenter] postNotificationName:AdBlockingChangedNotificationName object:nil]; 
 }
 
@@ -191,7 +210,7 @@ const int kAnnoyancePrefSome = 3;
 //
 - (IBAction)clickEnablePopupBlocking:(id)sender
 {
-  [self setPref:"dom.disable_open_during_load" toBoolean:[sender state] == NSOnState];
+  [self setPref:"dom.disable_open_during_load" toBoolean:([sender state] == NSOnState)];
   [mEditWhitelist setEnabled:[sender state]];
 }
 
@@ -202,7 +221,7 @@ const int kAnnoyancePrefSome = 3;
 //
 -(IBAction) clickEnableImageResizing:(id)sender
 {
-  [self setPref:"browser.enable_automatic_image_resizing" toBoolean:[sender state] == NSOnState];
+  [self setPref:"browser.enable_automatic_image_resizing" toBoolean:([sender state] == NSOnState)];
 }
 
 //

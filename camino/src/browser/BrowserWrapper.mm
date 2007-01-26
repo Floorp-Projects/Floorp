@@ -86,6 +86,9 @@ class nsIDOMPopupBlockedEvent;
 
 static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
+// for camino.enable_plugins; needs to match string in WebFeatures.mm
+static NSString* const kEnablePluginsChangedNotificationName = @"EnablePluginsChanged";
+
 // types of status bar messages, in order of priority for showing to the user
 enum {
   eStatusLinkTarget    = 0, // link mouseover info
@@ -112,6 +115,7 @@ enum {
 - (NSString*)displayTitleForPageURL:(NSString*)inURL title:(NSString*)inTitle;
 
 - (void)updateOfflineStatus;
+- (void)updatePluginsEnabledState;
 
 - (void)checkForCustomViewOnLoad:(NSString*)inURL;
 
@@ -159,11 +163,8 @@ enum {
     mProgress = 0.0;
     mFeedList = nil;
 
-    BOOL gotPref;
-    BOOL pluginsEnabled = [[PreferenceManager sharedInstance] getBooleanPref:"camino.enable_plugins" withSuccess:&gotPref];
-    if (gotPref && !pluginsEnabled)
-      [mBrowserView setProperty:nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS toValue:PR_FALSE];
-    
+    [self updatePluginsEnabledState];
+
     mToolTip = [[ToolTip alloc] init];
 
     //[self setSiteIconImage:[NSImage imageNamed:@"globe_ico"]];
@@ -710,6 +711,15 @@ enum {
   mOffline = offline;
 }
 
+- (void)updatePluginsEnabledState
+{
+  BOOL gotPref;
+  BOOL pluginsEnabled = [[PreferenceManager sharedInstance] getBooleanPref:"camino.enable_plugins" withSuccess:&gotPref];
+
+  // If we can't get the pref, ensure we leave plugins enabled.
+  [mBrowserView setProperty:nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS toValue:(gotPref ? pluginsEnabled : YES)];
+}
+
 //
 // onShowTooltip:where:withText
 //
@@ -866,6 +876,11 @@ enum {
   [mDelegate updateWindowTitle:newWindowTitle];
 }
 
+- (void)enablePluginsChanged:(NSNotification*)aNote
+{
+  [self updatePluginsEnabledState];
+}
+
 //
 // sizeBrowserTo
 //
@@ -1009,11 +1024,15 @@ enum {
 
 - (void)registerNotificationListener
 {
-  [[NSNotificationCenter defaultCenter] addObserver:	self
-                                        selector:     @selector(imageLoadedNotification:)
-                                        name:         SiteIconLoadNotificationName
-                                        object:				self];
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(imageLoadedNotification:)
+                                               name:SiteIconLoadNotificationName
+                                             object:self];
 
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(enablePluginsChanged:)
+                                               name:kEnablePluginsChangedNotificationName
+                                             object:nil];
 }
 
 // called when [[SiteIconProvider sharedFavoriteIconProvider] fetchFavoriteIconForPage:...] completes
