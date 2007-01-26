@@ -79,6 +79,11 @@ public:
 
   NS_IMETHOD DidSetStyleContext();
 
+  NS_IMETHOD Reflow(nsPresContext*           aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus);
+
   /**
    * Get the "type" of the frame
    *
