@@ -39,6 +39,7 @@
 const HORIZONTAL = 1;
 const LEFT = 2;
 const TOP = 4;
+const MSG_FOLDER_FLAG_VIRTUAL = 0x0020;
 
 var gSlideTime = 50;
 var gNumNewMsgsToShowInAlert = 4; // the more messages we show in the alert, the larger it will be
@@ -81,7 +82,7 @@ function prefillAlertInfo()
   for (var folderIndex = 0; folderIndex < numFolders; folderIndex++)
   {
     var folder = allFolders.GetElementAt(folderIndex).QueryInterface(Components.interfaces.nsIMsgFolder);
-    if (folder.hasNewMessages)
+    if (folder.hasNewMessages && !(folder.flags & MSG_FOLDER_FLAG_VIRTUAL))
     {
       var asyncFetch = {};
       folderSummaryInfoEl.parseFolder(folder, new urlListener(folder), asyncFetch);

@@ -2043,59 +2043,83 @@
             // skip servers, Trash and Junk folders
             if (!aFolder || aFolder.isServer || aFolder.getFlag(kMsgPopupFolderFlagJunk) || aFolder.getFlag(kMsgPopupFolderFlagTrash))
               return false;
-          
-            // now get the database
-            var msgDatabase = aFolder.getMsgDatabase(null);
-            aFolder.setMsgDatabase(null);
-            var msgKeys = {};
-            var numMsgKeys = {};
-            msgDatabase.getNewList(numMsgKeys, msgKeys);
-
-            if (!numMsgKeys.value)
-              return false;
-
-            // fetchMsgPreviewText forces the previewText property to get generated
-            // for each of the message keys.
-            try {
-              aFolder.fetchMsgPreviewText(msgKeys.value, numMsgKeys.value, false, aUrlListener, aOutAsync);
-              aFolder.setMsgDatabase(null);
-            }
-            catch (ex)
+            var folderArray = new Array;
+            if (aFolder.flags  & MSG_FOLDER_FLAG_VIRTUAL)
             {
-              // fetchMsgPreviewText throws an error when we call it on a news folder, we should just not show
-              // the tooltip if this method returns an error.
-              aFolder.setMsgDatabase(null);
-              return false; 
+              var msgDatabase = aFolder.getMsgDatabase(null);
+              var dbFolderInfo = msgDatabase.dBFolderInfo;
+              var srchFolderUri = dbFolderInfo.getCharPtrProperty("searchFolderUri");
+              var srchFolderUriArray = srchFolderUri.split('|');
+              var foldersAdded = 0;
+              var RDF = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService().QueryInterface(Components.interfaces.nsIRDFService);
+              for (var i in srchFolderUriArray) 
+              {
+                var realFolder = RDF.GetResource(srchFolderUriArray[i]).QueryInterface(Components.interfaces.nsIMsgFolder);
+                if (!realFolder.isServer)
+                  folderArray[foldersAdded++] = realFolder;
+              }
             }
-
-            // if fetching the preview text is going to be an asynch operation and the caller
-            // is set up to handle that fact, then don't bother filling in any of the fields since 
-            // we'll have to do this all over again when the fetch for the preview text completes.
-            if (aOutAsync.value && aUrlListener)
-              return false; 
-            var unicodeConverter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
-                                  .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
-            unicodeConverter.charset = "UTF-8";                                  
-            
-            var index = 0;
-            var hdrParser = Components.classes["@mozilla.org/messenger/headerparser;1"].getService(Components.interfaces.nsIMsgHeaderParser);
-            while (document.getAnonymousNodes(this)[0].childNodes.length < this.mMaxMsgHdrsInPopup && index < numMsgKeys.value)
+            else
+              folderArray[0] = aFolder;
+            for (var folderIndex = 0; folderIndex < folderArray.length; folderIndex++)
             {
-              var msgPopup = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "folderSummaryMessage");
-              var msgHdr = msgDatabase.GetMsgHdrForKey(msgKeys.value[index++]);
-              msgPopup.setAttribute('subject', msgHdr.mime2DecodedSubject);
+              aFolder = folderArray[folderIndex];
+              // now get the database
+              var msgDatabase = aFolder.getMsgDatabase(null);
+              aFolder.setMsgDatabase(null);
+              var msgKeys = {};
+              var numMsgKeys = {};
+              msgDatabase.getNewList(numMsgKeys, msgKeys);
+
+              if (!numMsgKeys.value)
+                continue;
+
+              // fetchMsgPreviewText forces the previewText property to get generated
+              // for each of the message keys.
+              try {
+                aFolder.fetchMsgPreviewText(msgKeys.value, numMsgKeys.value, false, aUrlListener, aOutAsync);
+                aFolder.setMsgDatabase(null);
+              }
+              catch (ex)
+              {
+                // fetchMsgPreviewText throws an error when we call it on a news folder, we should just not show
+                // the tooltip if this method returns an error.
+                aFolder.setMsgDatabase(null);
+                continue; 
+              }
+
+              // if fetching the preview text is going to be an asynch operation and the caller
+              // is set up to handle that fact, then don't bother filling in any of the fields since 
+              // we'll have to do this all over again when the fetch for the preview text completes.
+              // We don't expect to get called with a urlListener if we're doing a virtual folder.
+              if (aOutAsync.value && aUrlListener)
+                return false; 
+              var unicodeConverter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
+                                    .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+              unicodeConverter.charset = "UTF-8";                                  
               
-              var previewText = msgHdr.getStringProperty('preview');
-              // convert the preview text from utf-8 to unicode          
-              if (previewText)            
-                msgPopup.setAttribute('previewText', unicodeConverter.ConvertToUnicode(previewText));
+              var index = 0;
+              var hdrParser = Components.classes["@mozilla.org/messenger/headerparser;1"].getService(Components.interfaces.nsIMsgHeaderParser);
+              while (document.getAnonymousNodes(this)[0].childNodes.length < this.mMaxMsgHdrsInPopup && index < numMsgKeys.value)
+              {
+                var msgPopup = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "folderSummaryMessage");
+                var msgHdr = msgDatabase.GetMsgHdrForKey(msgKeys.value[index++]);
+                msgPopup.setAttribute('subject', msgHdr.mime2DecodedSubject);
+                
+                var previewText = msgHdr.getStringProperty('preview');
+                // convert the preview text from utf-8 to unicode          
+                if (previewText)            
+                  msgPopup.setAttribute('previewText', unicodeConverter.ConvertToUnicode(previewText));
 
-              var names = {};
-              var emails = {};
-              var numAddresses = hdrParser.parseHeadersWithArray(msgHdr.mime2DecodedAuthor, emails, names, {});
-              msgPopup.setAttribute('sender', ' - ' + (names.value[0] ? names.value[0] : emails.value[0]));
-              document.getAnonymousNodes(this)[0].appendChild(msgPopup);
-            }            
+                var names = {};
+                var emails = {};
+                var numAddresses = hdrParser.parseHeadersWithArray(msgHdr.mime2DecodedAuthor, emails, names, {});
+                msgPopup.setAttribute('sender', ' - ' + (names.value[0] ? names.value[0] : emails.value[0]));
+                document.getAnonymousNodes(this)[0].appendChild(msgPopup);
+              } 
+              if (document.getAnonymousNodes(this)[0].childNodes.length >= this.mMaxMsgHdrsInPopup)
+                return true;    
+            }       
             return true;
           ]]>
         </body>
