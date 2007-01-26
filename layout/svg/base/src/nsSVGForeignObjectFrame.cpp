@@ -529,7 +529,7 @@ nsSVGForeignObjectFrame::DoReflow()
                reflowState.mComputedMargin == nsMargin(0, 0, 0, 0),
                "style system should ensure that :-moz-svg-foreign content "
                "does not get styled");
-  NS_ASSERTION(reflowState.mComputedWidth == size.width,
+  NS_ASSERTION(reflowState.ComputedWidth() == size.width,
                "reflow state made child wrong size");
   reflowState.mComputedHeight = size.height;
   
