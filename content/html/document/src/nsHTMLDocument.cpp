@@ -3596,6 +3596,9 @@ nsHTMLDocument::CreateAndAddWyciwygChannel(void)
 
   mWyciwygChannel->SetSecurityInfo(mSecurityInfo);
 
+  // Use our new principal
+  channel->SetOwner(NodePrincipal());
+
   // Inherit load flags from the original document's channel
   channel->SetLoadFlags(mLoadFlags);
 
