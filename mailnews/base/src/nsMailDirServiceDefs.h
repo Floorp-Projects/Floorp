@@ -52,6 +52,6 @@
 // Files and directories that exist on a per- basis.
 // ----------------------------------------------------------------------------
 
-#define ISP_SEARCH_DIRECTORY_LIST                 "ISPDL"
+#define ISP_DIRECTORY_LIST                 "ISPDL"
       
 #endif

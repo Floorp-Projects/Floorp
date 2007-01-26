@@ -52,7 +52,6 @@
 #include "nsMsgBaseCID.h"
 
 #ifdef MOZ_XUL_APP
-#include "nsIChromeRegistry.h"
 #include "nsMailDirServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
@@ -134,54 +133,23 @@ void nsMsgServiceProviderService::LoadISPFiles()
   if (NS_FAILED(rv))
     return;
 
-  // get the current locale, we'll need this later on...don't bail out in the case of an error
-  nsCOMPtr<nsIXULChromeRegistry> packageRegistry = do_GetService("@mozilla.org/chrome/chrome-registry;1");
-  nsCAutoString localeName;
-  if (packageRegistry)
-    packageRegistry->GetSelectedLocale(NS_LITERAL_CSTRING("global"), localeName);
-
-  // First, process any isp files shipped by default in <location of exe>\isp
-  nsCOMPtr<nsIFile> ispDirectory;
-  rv = dirSvc->Get(NS_XPCOM_CURRENT_PROCESS_DIR,
-                   NS_GET_IID(nsIFile), getter_AddRefs(ispDirectory));
-  if (NS_SUCCEEDED(rv))
-  {
-    ispDirectory->AppendNative(NS_LITERAL_CSTRING("isp"));
-    LoadISPFilesFromDir(ispDirectory);
-    // also look in <location of exe>\isp\AB-CD
-    if (!localeName.IsEmpty())
-    {
-      ispDirectory->AppendNative(localeName);
-      LoadISPFilesFromDir(ispDirectory);
-    }
-  }
-
-  // Now walk through the extension directories
+  // Walk through the list of isp directories
   nsCOMPtr<nsISimpleEnumerator> ispDirectories;
-  rv = dirSvc->Get(ISP_SEARCH_DIRECTORY_LIST,
+  rv = dirSvc->Get(ISP_DIRECTORY_LIST,
                    NS_GET_IID(nsISimpleEnumerator), getter_AddRefs(ispDirectories));
   if (NS_FAILED(rv))
     return;
 
   PRBool hasMore;
-  while (NS_SUCCEEDED(ispDirectories->HasMoreElements(&hasMore)) && hasMore) {
+  nsCOMPtr<nsIFile> ispDirectory;
+  while (NS_SUCCEEDED(ispDirectories->HasMoreElements(&hasMore)) && hasMore) 
+  {
     nsCOMPtr<nsISupports> elem;
     ispDirectories->GetNext(getter_AddRefs(elem));
 
     ispDirectory = do_QueryInterface(elem);
     if (ispDirectory)
-    {
       LoadISPFilesFromDir(ispDirectory);
-
-      // If we have a current locale, look in isp\ab-cd in case there are locale specific isp files.
-      nsCOMPtr<nsIFile> localeISPDir;
-      ispDirectory->Clone(getter_AddRefs(localeISPDir));
-      if (localeISPDir && !localeName.IsEmpty())
-      {
-        localeISPDir->AppendNative(localeName);
-        LoadISPFilesFromDir(localeISPDir);
-      }
-    }
   }
 }
 

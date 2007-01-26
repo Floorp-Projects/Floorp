@@ -38,9 +38,12 @@
 #include "nsMailDirProvider.h"
 #include "nsMailDirServiceDefs.h"
 #include "nsXULAppAPI.h"
-#include "nsString.h"
 #include "nsMsgBaseCID.h"
-
+#include "nsArrayEnumerator.h"
+#include "nsCOMArray.h"
+#include "nsEnumeratorUtils.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsIChromeRegistry.h"
 #include "nsICategoryManager.h"
 
 NS_IMPL_ISUPPORTS2(nsMailDirProvider,
@@ -58,28 +61,46 @@ NS_IMETHODIMP
 nsMailDirProvider::GetFiles(const char *aKey,
 				nsISimpleEnumerator* *aResult)
 {
-  if (strcmp(aKey, ISP_SEARCH_DIRECTORY_LIST) != 0) {
+  if (strcmp(aKey, ISP_DIRECTORY_LIST) != 0)
     return NS_ERROR_FAILURE;
-  }
+
+  // The list of isp directories includes the isp directory
+  // in the current process dir (i.e. <path to thunderbird.exe>\isp and 
+  // <path to thunderbird.exe>\isp\locale 
+  // and isp and isp\locale for each active extension
 
   nsCOMPtr<nsIProperties> dirSvc =
     do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
   if (!dirSvc)
     return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsIFile> currentProcessDir;
+  nsresult rv = dirSvc->Get(NS_XPCOM_CURRENT_PROCESS_DIR,
+                   NS_GET_IID(nsIFile), getter_AddRefs(currentProcessDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+  // now turn this into an enumerator, is there a more direct way to do this?
+  nsCOMArray<nsIFile> directories;
+  directories.AppendObject(currentProcessDir);
+  nsCOMPtr<nsISimpleEnumerator> currentProcessDirEnum;
+  NS_NewArrayEnumerator(getter_AddRefs(currentProcessDirEnum), directories);
+
+  nsCOMPtr<nsISimpleEnumerator> appEnum = new AppendingEnumerator(currentProcessDirEnum);
+  if (!appEnum)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   nsCOMPtr<nsISimpleEnumerator> list;
-  nsresult rv = dirSvc->Get(XRE_EXTENSIONS_DIR_LIST,
+  rv = dirSvc->Get(XRE_EXTENSIONS_DIR_LIST,
 			    NS_GET_IID(nsISimpleEnumerator),
 			    getter_AddRefs(list));
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsISimpleEnumerator> e = new AppendingEnumerator(list);
-  if (!e)
+  nsCOMPtr<nsISimpleEnumerator> extensionsEnum = new AppendingEnumerator(list);
+  if (!extensionsEnum)
     return NS_ERROR_OUT_OF_MEMORY;
-
-  *aResult = nsnull;
-  e.swap(*aResult);
+   
+  // now combine the app enumerator with the extensions enumerator
+  rv = NS_NewUnionEnumerator(aResult, appEnum, extensionsEnum);
   return NS_SUCCESS_AGGREGATE_RESULT;
 }
 
@@ -89,19 +110,25 @@ NS_IMPL_ISUPPORTS1(nsMailDirProvider::AppendingEnumerator,
 NS_IMETHODIMP
 nsMailDirProvider::AppendingEnumerator::HasMoreElements(PRBool *aResult)
 {
-  *aResult = mNext ? PR_TRUE : PR_FALSE;
+  *aResult = mNext || mNextWithLocale ? PR_TRUE : PR_FALSE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMailDirProvider::AppendingEnumerator::GetNext(nsISupports* *aResult)
 {
+  // Set the return value to the next directory we want to enumerate over
   if (aResult)
     NS_ADDREF(*aResult = mNext);
 
-  mNext = nsnull;
+  if (mNextWithLocale)
+  {
+    mNext = mNextWithLocale;
+    mNextWithLocale = nsnull;
+    return NS_OK;
+  }
 
-  nsresult rv;
+  mNext = nsnull;
 
   // Ignore all errors
 
@@ -119,11 +146,20 @@ nsMailDirProvider::AppendingEnumerator::GetNext(nsISupports* *aResult)
       continue;
 
     mNext->AppendNative(NS_LITERAL_CSTRING("isp"));
-
     PRBool exists;
-    rv = mNext->Exists(&exists);
+    nsresult rv = mNext->Exists(&exists);
     if (NS_SUCCEEDED(rv) && exists)
+    {
+      if (!mLocale.IsEmpty())
+      {
+        mNext->Clone(getter_AddRefs(mNextWithLocale));
+        mNextWithLocale->AppendNative(mLocale);
+        rv = mNextWithLocale->Exists(&exists);
+        if (NS_FAILED(rv) || !exists)
+          mNextWithLocale = nsnull; // clear out mNextWithLocale, so we don't try to iterate over it
+      } 
       break;
+    }
 
     mNext = nsnull;
   }
@@ -135,6 +171,9 @@ nsMailDirProvider::AppendingEnumerator::AppendingEnumerator
     (nsISimpleEnumerator* aBase) :
   mBase(aBase)
 {
+  nsCOMPtr<nsIXULChromeRegistry> packageRegistry = do_GetService("@mozilla.org/chrome/chrome-registry;1");
+  if (packageRegistry)
+    packageRegistry->GetSelectedLocale(NS_LITERAL_CSTRING("global"), mLocale);
   // Initialize mNext to begin
   GetNext(nsnull);
 }
