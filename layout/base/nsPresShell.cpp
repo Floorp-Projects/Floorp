@@ -6059,7 +6059,7 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
                      "reflow state should not set margin for reflow roots");
         reflowState.mComputedHeight =
           size.height - reflowState.mComputedBorderPadding.TopBottom();
-        NS_ASSERTION(reflowState.mComputedWidth ==
+        NS_ASSERTION(reflowState.ComputedWidth() ==
                        size.width -
                          reflowState.mComputedBorderPadding.LeftRight(),
                      "reflow state computed incorrect width");
