@@ -199,24 +199,11 @@ nsWyciwygChannel::GetURI(nsIURI* *aURI)
 NS_IMETHODIMP
 nsWyciwygChannel::GetOwner(nsISupports **aOwner)
 {
-  nsresult rv = NS_OK;
+  NS_PRECONDITION(mOwner, "Must have a principal!");
+  NS_ENSURE_STATE(mOwner);
 
-  if (!mOwner) {
-    // Create codebase principal with URI of original document, not our URI
-
-    // without an owner or an original URI!
-    NS_ENSURE_TRUE(mOriginalURI, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIPrincipal> principal;
-    nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
-    rv = secMan->GetCodebasePrincipal(mOriginalURI, getter_AddRefs(principal));
-    if (NS_SUCCEEDED(rv)) {
-      mOwner = principal;
-    }
-  }
-
-  NS_IF_ADDREF(*aOwner = mOwner);
-  return rv;
+  NS_ADDREF(*aOwner = mOwner);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -299,9 +286,15 @@ nsWyciwygChannel::Open(nsIInputStream ** aReturn)
 NS_IMETHODIMP
 nsWyciwygChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
 {
+  // The only places creating wyciwyg: channels should be
+  // HTMLDocument::OpenCommon and session history.  Both should be setting an
+  // owner.
+  NS_PRECONDITION(mOwner, "Must have a principal");
+  
   LOG(("nsWyciwygChannel::AsyncOpen [this=%x]\n", this));
 
   NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
+  NS_ENSURE_STATE(mOwner);
   NS_ENSURE_ARG_POINTER(listener);
 
   nsCAutoString spec;

@@ -127,8 +127,15 @@ nsWyciwygProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
 NS_IMETHODIMP
 nsWyciwygProtocolHandler::GetProtocolFlags(PRUint32 *result) 
 {
-  // Should this be an an nsINestedURI?  We don't really want random
-  // webpages loading these URIs...
-  *result = URI_NORELATIVE | URI_NOAUTH | URI_DANGEROUS_TO_LOAD;
+  // Should this be an an nsINestedURI?  We don't really want random webpages
+  // loading these URIs...
+
+  // Note that using URI_INHERITS_SECURITY_CONTEXT here is OK -- untrusted code
+  // is not allowed to link to wyciwyg URIs and users shouldn't be able to get
+  // at them, and nsDocShell::InternalLoad forbids non-history loads of these
+  // URIs.  And when loading from history we end up using the principal from
+  // the history entry, which we put there ourselves, so all is ok.
+  *result = URI_NORELATIVE | URI_NOAUTH | URI_DANGEROUS_TO_LOAD |
+    URI_INHERITS_SECURITY_CONTEXT;
   return NS_OK;
 }
