@@ -3580,8 +3580,8 @@ PRBool CSSParserImpl::ParseEnum(nsresult& aErrorCode, nsCSSValue& aValue,
 
 
 struct UnitInfo {
-  const char name[5];  // needs to be long enough for the longest unit, with
-                       // terminating null.
+  char name[5];  // needs to be long enough for the longest unit, with
+                 // terminating null.
   PRUint32 length;
   nsCSSUnit unit;
   PRInt32 type;
