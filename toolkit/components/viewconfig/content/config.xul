@@ -56,6 +56,7 @@
 <stringbundle id="configBundle" src="chrome://global/locale/config.properties"/>
 
 <popup id="configContext" onpopupshowing="if (event.target == this) updateContextMenu();">
+  <menuitem id="copyPref" label="&copyPref.label;" accesskey="&copyPref.accesskey;" oncommand="copyPref();"/>
   <menuitem id="copyName" label="&copyName.label;" accesskey="&copyName.accesskey;" oncommand="copyName();"/>
   <menuitem id="copyValue" label="&copyValue.label;" accesskey="&copyValue.accesskey;" oncommand="copyValue();"/>
   <menu label="&new.label;" accesskey="&new.accesskey;">

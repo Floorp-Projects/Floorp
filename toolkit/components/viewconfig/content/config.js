@@ -477,6 +477,9 @@ function updateContextMenu()
     copyDisabled = false;
   }
 
+  var copyPref = document.getElementById("copyPref");
+  copyPref.setAttribute("disabled", copyDisabled);
+
   var copyName = document.getElementById("copyName");
   copyName.setAttribute("disabled", copyDisabled);
 
@@ -500,6 +503,12 @@ function updateContextMenu()
   var isLocked = gPrefBranch.prefIsLocked(entry.prefCol);
   document.getElementById("lockSelected").hidden = isLocked;
   document.getElementById("unlockSelected").hidden = !isLocked;
+}
+
+function copyPref()
+{
+  var pref = gPrefView[view.selection.currentIndex];
+  gClipboardHelper.copyString(pref.prefCol + ';' + pref.valueCol);
 }
 
 function copyName()
