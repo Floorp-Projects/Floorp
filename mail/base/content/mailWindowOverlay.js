@@ -675,7 +675,7 @@ function backToolbarMenu_init(menuPopup)
   populateHistoryMenu(menuPopup, true);
 }
 
-var gNavDebug = true;
+var gNavDebug = false;
 function navDebug(str)
 {
   if (gNavDebug)
@@ -743,17 +743,10 @@ function NavigateToUri(target)
   var folder = RDF.GetResource(folderUri).QueryInterface(Components.interfaces.nsIMsgFolder);
   var msgHdr = messenger.msgHdrFromURI(msgUri);
   navDebug("navigating from " + messenger.navigatePos + " by " + historyIndex + " to " + msgUri + "\n");
+  navDebug("folderUri = " + folderUri + "\n");
   // this "- 0" seems to ensure that historyIndex is treated as an int, not a string.
-  messenger.navigatePos += historyIndex - 0;
-  if (IsCurrentLoadedFolder(folder))
-  {
-    gDBView.selectMsgByKey(msgHdr.messageKey);
-  }
-  else
-  {
-    gStartMsgKey = msgHdr.messageKey;
-    SelectFolder(folderUri);
-  }
+  messenger.navigatePos += (historyIndex - 0);
+  LoadNavigatedToMessage(msgHdr, folder, folderUri);
 }
 
 function forwardToolbarMenu_init(menuPopup)

@@ -1745,6 +1745,20 @@ function GetFolderAttribute(tree, source, attribute)
   return target;
 }
 
+function LoadNavigatedToMessage(msgHdr, folder, folderUri)
+{
+  if (IsCurrentLoadedFolder(folder))
+  {
+    gDBView.selectMsgByKey(msgHdr.messageKey);
+  }
+  else
+  {
+    gStartMsgKey = msgHdr.messageKey;
+    SelectFolder(folderUri);
+  }
+  
+}
+
 // Some of the per account junk mail settings have been
 // converted to global prefs. Let's try to migrate some
 // of those settings from the default account.

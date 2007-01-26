@@ -55,6 +55,7 @@ var gNextMessageViewIndexAfterDelete = -2;
 var gCurrentFolderToRerootForStandAlone;
 var gRerootOnFolderLoadForStandAlone = false;
 var gNextMessageAfterLoad = null;
+var gMessageToLoad = nsMsgKey_None;
 
 // the folderListener object
 var folderListener = {
@@ -663,12 +664,16 @@ function SelectFolder(folderUri)
     dbview.close(); 
 
   gCurrentFolderToRerootForStandAlone = folderUri;
-
+  msgWindow.openFolder = msgfolder;
+  
   if (msgfolder.manyHeadersToDownload)
   {
     gRerootOnFolderLoadForStandAlone = true;
     try
     {
+      // accessing the db causes the folder loaded notification to get sent
+      // for local folders.
+      var db = msgfolder.getMsgDatabase(msgWindow);
       msgfolder.startFolderLoading();
       msgfolder.updateFolder(msgWindow);
     }
@@ -696,8 +701,13 @@ function RerootFolderForStandAlone(uri)
   // create new folder view
   CreateView(null);
   
+  if (gMessageToLoad != nsMsgKey_None)
+  {
+    LoadMessageByMsgKey(gMessageToLoad);
+    gMessageToLoad = nsMsgKey_None;
+  }
   // now do the work to load the appropriate message
-  if (gNextMessageAfterLoad) {
+  else if (gNextMessageAfterLoad) {
     var type = gNextMessageAfterLoad;
     gNextMessageAfterLoad = null;
     LoadMessageByNavigationType(type);
@@ -1185,3 +1195,17 @@ function LoadMessageByViewIndex(viewIndex)
   if (nsMsgKey_None == gDBView.keyForFirstSelectedMessage)
     UpdateMailToolbar("update toolbar for message Window");
 }
+
+function LoadNavigatedToMessage(msgHdr, folder, folderUri)
+{
+  if (IsCurrentLoadedFolder(folder))
+  {
+    LoadMessageByMsgKey(msgHdr.messageKey);
+  }
+  else
+  {
+    gMessageToLoad = msgHdr.messageKey;
+    SelectFolder(folderUri);
+  }
+}
+
