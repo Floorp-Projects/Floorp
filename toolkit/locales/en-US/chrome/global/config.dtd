@@ -57,8 +57,11 @@
 <!ENTITY columnChooser.tooltip "Click to select columns to display"> 
 
 <!-- Context Menu -->
+<!ENTITY copyPref.key "C">
+<!ENTITY copyPref.label "Copy">
+<!ENTITY copyPref.accesskey "C">
 <!ENTITY copyName.label "Copy Name">
-<!ENTITY copyName.accesskey "C">
+<!ENTITY copyName.accesskey "N">
 <!ENTITY copyValue.label "Copy Value">
 <!ENTITY copyValue.accesskey "V">
 <!ENTITY modify.label "Modify">
@@ -68,7 +71,7 @@
 <!ENTITY reset.label "Reset">
 <!ENTITY reset.accesskey "R">
 <!ENTITY new.label "New">
-<!ENTITY new.accesskey "N">
+<!ENTITY new.accesskey "w">
 <!ENTITY string.label "String">
 <!ENTITY string.accesskey "S">
 <!ENTITY integer.label "Integer">

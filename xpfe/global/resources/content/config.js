@@ -478,6 +478,9 @@ function updateContextMenu()
     copyDisabled = false;
   }
 
+  var copyPref = document.getElementById("copyPref");
+  copyPref.setAttribute("disabled", copyDisabled);
+
   var copyName = document.getElementById("copyName");
   copyName.setAttribute("disabled", copyDisabled);
 
@@ -496,6 +499,12 @@ function updateContextMenu()
   var toggleSelected = document.getElementById("toggleSelected");
   toggleSelected.setAttribute("disabled", lockCol == PREF_IS_LOCKED);
   toggleSelected.hidden = !canToggle;
+}
+
+function copyPref()
+{
+  var pref = gPrefView[view.selection.currentIndex];
+  gClipboardHelper.copyString(pref.prefCol + ';' + pref.valueCol);
 }
 
 function copyName()
