@@ -1,7 +1,7 @@
-/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8/thunderbird-2.0b2pre.en-US.mac.dmg
-/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8/thunderbird-2.0b2pre.en-US.mac.complete.mar
-/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8/thunderbird-2.0b2pre.en-US.linux-i686.complete.mar
-/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8/thunderbird-2.0b2pre.en-US.linux-i686.tar.gz
-/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8/thunderbird-2.0b2pre.en-US.win32.installer.exe
-/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8/thunderbird-2.0b2pre.en-US.win32.complete.mar
-/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8/thunderbird-2.0b2pre.en-US.win32.zip
+/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8/thunderbird-2.0pre.en-US.mac.dmg
+/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8/thunderbird-2.0pre.en-US.mac.complete.mar
+/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8/thunderbird-2.0pre.en-US.linux-i686.complete.mar
+/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8/thunderbird-2.0pre.en-US.linux-i686.tar.gz
+/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8/thunderbird-2.0pre.en-US.win32.installer.exe
+/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8/thunderbird-2.0pre.en-US.win32.complete.mar
+/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8/thunderbird-2.0pre.en-US.win32.zip
