@@ -102,6 +102,9 @@ const int kOpenNewWindowOnAE = 0;
 const int kOpenNewTabOnAE = 1;
 const int kReuseWindowOnAE = 2;
 
+// Key in the defaults system used to determine if we crashed last time.
+NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTerminatedNormally";
+
 @interface MainController(Private)<NetworkServicesClient>
 
 - (void)setupStartpage;
@@ -121,6 +124,7 @@ const int kReuseWindowOnAE = 2;
 - (void)loadApplicationPage:(NSString*)pageURL;
 - (NSArray*)browserWindows;
 + (NSURL*)decodeLocalFileURL:(NSURL*)url;
+- (BOOL)previousSessionTerminatedNormally;
 
 @end
 
@@ -261,13 +265,33 @@ const int kReuseWindowOnAE = 2;
   NSString* charsetPath = [NSBundle pathForResource:@"Charset" ofType:@"dict" inDirectory:[[NSBundle mainBundle] bundlePath]];
   mCharsets = [[NSDictionary dictionaryWithContentsOfFile:charsetPath] retain];
 
-  // restore previous window state
-  if ([prefManager getBooleanPref:"camino.remember_window_state" withSuccess:NULL]) {
+  // Determine if the previous session's window state should be restored.
+  // Obey the camino.remember_window_state preference unless Camino crashed
+  // last time, in which case the user is asked what to do.
+  BOOL shouldRestoreWindowState = NO;
+  if ([self previousSessionTerminatedNormally]) {
+    shouldRestoreWindowState = [prefManager getBooleanPref:"camino.remember_window_state" withSuccess:NULL];
+  }
+  else {
+    NSAlert* restoreAfterCrashAlert = [[[NSAlert alloc] init] autorelease];
+    [restoreAfterCrashAlert addButtonWithTitle:NSLocalizedString(@"RestoreAfterCrashActionButton", nil)];
+    [restoreAfterCrashAlert addButtonWithTitle:NSLocalizedString(@"RestoreAfterCrashCancelButton", nil)];
+    [restoreAfterCrashAlert setMessageText:NSLocalizedString(@"RestoreAfterCrashTitle", nil)];
+    [restoreAfterCrashAlert setInformativeText:NSLocalizedString(@"RestoreAfterCrashMessage", nil)];
+    [restoreAfterCrashAlert setAlertStyle:NSWarningAlertStyle];
+    if ([restoreAfterCrashAlert runModal] == NSAlertFirstButtonReturn)
+      shouldRestoreWindowState = YES;
+  }
+
+  if (shouldRestoreWindowState) {
     // if we've already opened a window (e.g., command line argument or apple event), we need
     // to pull it to the front after restoring the window state
     NSWindow* existingWindow = [self getFrontmostBrowserWindow];
     [[SessionManager sharedInstance] restoreWindowState];
     [existingWindow makeKeyAndOrderFront:self];
+  }
+  else {
+    [[SessionManager sharedInstance] clearSavedState];
   }
 
   // open a new browser window if we don't already have one or we have a specific
@@ -367,6 +391,11 @@ const int kReuseWindowOnAE = 2;
   NSWindow* curMainWindow = [mApplication mainWindow];
   if (curMainWindow && [[curMainWindow windowController] respondsToSelector:@selector(autosaveWindowFrame)])
     [[curMainWindow windowController] autosaveWindowFrame];
+
+  // Indicate that Camino exited normally. Write the default to disk
+  // immediately since we cannot wait for automatic synchronization.
+  [[NSUserDefaults standardUserDefaults] setObject:@"YES" forKey:kPreviousSessionTerminatedNormallyKey];
+  [[NSUserDefaults standardUserDefaults] synchronize];
 
   // Cancel outstanding site icon loads
   [[RemoteDataProvider sharedRemoteDataProvider] cancelOutstandingRequests];
@@ -469,6 +498,37 @@ const int kReuseWindowOnAE = 2;
 
   // dock bookmarks
   [self updateDockMenuBookmarkFolder];
+}
+
+//
+// -previousSessionTerminatedNormally
+//
+// Checks a saved default indicating whether the last session ended normally.
+// The first invocation of this method will check the default on disk and then 
+// immediately reset it to "NO". This default is set to "YES" upon normal
+// termination in -applicationWillTerminate:.
+//
+- (BOOL)previousSessionTerminatedNormally
+{
+  static BOOL previousSessionTerminatedNormally = NO; // original value from defaults.
+  static BOOL checked = NO;
+
+  if (!checked) {
+    // Assume the application terminated normally if no key is present to otherwise 
+    // indicate the termination status. Prevents cases where preferences from older 
+    // versions of Camino would falsely indicate a crash.
+    [[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObject:@"YES" forKey:kPreviousSessionTerminatedNormallyKey]];
+
+    previousSessionTerminatedNormally = [[NSUserDefaults standardUserDefaults] boolForKey:kPreviousSessionTerminatedNormallyKey];
+
+    // Reset the termination status default and write it to disk now.
+    [[NSUserDefaults standardUserDefaults] setObject:@"NO" forKey:kPreviousSessionTerminatedNormallyKey];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+
+    checked = YES;
+  }
+
+  return previousSessionTerminatedNormally;
 }
 
 #pragma mark -
