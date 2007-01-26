@@ -71,10 +71,10 @@
 </stringbundleset>
 
 <script type="application/x-javascript" src="chrome://communicator/content/printing.js"/>
-<script type="application/x-javascript" src="chrome://editor/content/editorInlineSpellCheck.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mailCore.js"/>
+<script type="application/x-javascript" src="chrome://global/content/inlineSpellCheckUI.js"/>
 <script type="application/x-javascript" src="chrome://editor/content/editor.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/messengercompose/MsgComposeCommands.js"/>
 
@@ -241,15 +241,14 @@
 
 <keyset id="editorKeys"/>
 
-<popup id="msgComposeContext"
-    onpopupshowing="openEditorContextMenu();">
-  
+<popup id="msgComposeContext" onpopupshowing="openEditorContextMenu(this);">
+
   <menuitem id="spellCheckNoSuggestions" label="&spellCheckNoSuggestions.label;" disabled="true"/>
   <menuseparator id="spellCheckAddSep"/>
   <menuitem id="spellCheckAddToDictionary" label="&spellCheckAddToDictionary.label;" accesskey="&spellCheckAddToDictionary.accesskey;"
-            oncommand="InlineSpellChecker.addToDictionary(null,null);"/>  
+            oncommand="InlineSpellCheckerUI.addToDictionary();"/>  
   <menuitem id="spellCheckIgnoreWord" label="&spellCheckIgnoreWord.label;" accesskey="&spellCheckIgnoreWord.accesskey;"
-            oncommand="InlineSpellChecker.ignoreWord(null, null)"/>  
+            oncommand="InlineSpellCheckerUI.ignoreWord();"/>  
   <menuseparator id="spellCheckSuggestionsSeparator"/>
 
   <menuitem label="&undo.label;" accesskey="&undo.accesskey;" command="cmd_undo"/>
@@ -417,7 +416,7 @@
           <menuitem label="&checkSpellingCmd.label;" id="menu_checkspelling" accesskey="&checkSpellingCmd.accesskey;" key="key_checkspelling" command="cmd_spelling"/>
           <menuitem label="&enableInlineSpellChecker.label;" id="menu_inlineSpellCheck" 
                            accesskey="&enableInlineSpellChecker.accesskey;" checked="false"
-                           type="checkbox" oncommand="ToggleInlineSpellChecker(event.target)"/>
+                           type="checkbox" oncommand="InlineSpellCheckerUI.enabled = !InlineSpellCheckerUI.enabled"/>
           <menuitem label="&quoteCmd.label;" accesskey="&quoteCmd.accesskey;" command="cmd_quoteMessage"/>
           <menuseparator/>
           <menuitem id="returnReceiptMenu" type="checkbox" label="&returnReceiptMenu.label;" accesskey="&returnReceiptMenu.accesskey;" checked="false" oncommand="ToggleReturnReceipt(event.target)"/>
