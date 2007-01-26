@@ -165,7 +165,7 @@ function DocumentLoaded()
             break;
         case 2:
             var equal = (key == gPart1Key);
-            var result = "LAYOUTATEST ";
+            var result = "REFTEST ";
             var test_passed = (equal == gURLs[0].equal);
             var result_expected = (test_passed == !gURLs[0].fail_expected);
             if (!result_expected) {
@@ -182,8 +182,8 @@ function DocumentLoaded()
             result += gURLs[0].url1.spec;
             dump(result + "\n");
             if (!test_passed && !result_expected) {
-                dump("LAYOUTATEST   IMAGE 1: " + gPart1Key + "\n");
-                dump("LAYOUTATEST   IMAGE 2: " + key + "\n");
+                dump("REFTEST   IMAGE 1: " + gPart1Key + "\n");
+                dump("REFTEST   IMAGE 2: " + key + "\n");
             }
 
             gPart1Key = undefined;
