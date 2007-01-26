@@ -37,7 +37,7 @@
 /*
  * Test program to mangle 1 bit in a binary
  *
- * $Id: mangle.c,v 1.6 2004/04/25 15:02:54 gerv%gerv.net Exp $
+ * $Id: mangle.c,v 1.7 2007/01/26 19:38:05 nelson%bolyard.com Exp $
  */
 
 #include "nspr.h"
@@ -65,17 +65,17 @@ main (int argc, char **argv)
 
     /* parameter set variables */
     const char  *libFile = NULL; 	
-    int offset = -1;
     int bitOffset = -1;
 
     /* return values */
     int		 retval = 2;  /* 0 - test succeeded.
 			       * 1 - illegal args 
 			       * 2 - function failed */
-    PRFileDesc *fd;
+    PRFileDesc *fd = NULL;
     int bytesRead;
     int bytesWritten;
-    int pos;
+    PROffset32   offset = -1;
+    PROffset32   pos;
 
     programName = PL_strrchr(argv[0], '/');
     programName = programName ? (programName + 1) : argv[0];
@@ -112,11 +112,6 @@ main (int argc, char **argv)
 	return 1;
     }
 
-    if (offset < 0) {
-	usage(programName);
-	return 1;
-    }
-
     /* open the target signature file */
     fd = PR_OpenFile(libFile,PR_RDWR,0666);
     if (fd == NULL ) {
@@ -125,10 +120,21 @@ main (int argc, char **argv)
 	goto loser;
     }
 
+    if (offset < 0) { /* convert to positive offset */
+	pos = PR_Seek(fd, offset, PR_SEEK_END);
+	if (pos == -1) {
+	    PR_fprintf(pr_stderr,"Seek for read on %s (to %d) failed\n", 
+		       libFile, offset);
+	    goto loser;
+	}
+	offset = pos;
+    }
+
     /* read the byte */
     pos = PR_Seek(fd, offset, PR_SEEK_SET);
     if (pos != offset) {
-	PR_fprintf(pr_stderr,"Seek for read on %s (to %d) failed\n", libFile, offset);
+	PR_fprintf(pr_stderr,"Seek for read on %s (to %d) failed\n", 
+	           libFile, offset);
 	goto loser;
     }
     bytesRead = PR_Read(fd, &cbuf, 1);
@@ -141,13 +147,14 @@ main (int argc, char **argv)
 		offset, offset, (unsigned char)cbuf, (unsigned char)cbuf);
     /* change it */
     cbuf ^= 1 << bitOffset;
-    PR_fprintf(pr_stderr,"%02x (%d)\n", (
-				unsigned char)cbuf, (unsigned char)cbuf);
+    PR_fprintf(pr_stderr,"%02x (%d)\n", 
+               (unsigned char)cbuf, (unsigned char)cbuf);
 
     /* write it back out */
     pos = PR_Seek(fd, offset, PR_SEEK_SET);
     if (pos != offset) {
-	PR_fprintf(pr_stderr,"Seek for write on %s (to %d) failed\n", libFile, offset);
+	PR_fprintf(pr_stderr,"Seek for write on %s (to %d) failed\n", 
+	           libFile, offset);
 	goto loser;
     }
     bytesWritten = PR_Write(fd, &cbuf, 1);
@@ -156,12 +163,11 @@ main (int argc, char **argv)
 	goto loser;
     }
 
-    PR_Close(fd);
     retval = 0;
 
-
 loser:
-
+    if (fd)
+	PR_Close(fd);
     PR_Cleanup ();
     return retval;
 }
