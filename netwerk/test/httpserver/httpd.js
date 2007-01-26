@@ -61,7 +61,7 @@ function NS_ASSERT(cond, msg)
   if (debugEnabled() && !cond)
   {
     dumpn("###!!!");
-    dumpn("###!!! ASSERTION: " + msg);
+    dumpn("###!!! ASSERTION" + (msg ? ": " + msg : "!"));
     dumpn("###!!! Stack follows:");
 
     var stack = new Error().stack.split(/\n/);
@@ -549,16 +549,87 @@ function createHandlerFunc(handler)
   return function(metadata, response) { handler.handle(metadata, response); };
 }
 
+
 /**
- * The default handler for directories. 
+ * The default handler for directories; writes an HTML response containing a
+ * slightly-formatted directory listing.
  */
 function defaultIndexHandler(metadata, response)
 {
-  var file = metadata.getProperty("directory");
-  NS_ASSERT(file);
+  response.setHeader("Content-Type", "text/html", false);
 
-  throw HTTP_501;  // need directory listings ftw!
+  var path = htmlEscape(metadata.path);
+
+  //
+  // Just do a very basic bit of directory listings -- no need for too much
+  // fanciness, especially since we don't have a style sheet in which we can
+  // stick rules (don't want to pollute the default path-space).
+  //
+
+  var body = '<html>\
+                <head>\
+                  <title>' + path + '</title>\
+                </head>\
+                <body>\
+                  <h1>' + path + '</h1>\
+                  <ol style="list-style-type: none">';
+
+  var directory = metadata.getProperty("directory");
+  NS_ASSERT(directory && directory.isDirectory());
+
+  var fileList = [];
+  var files = directory.directoryEntries;
+  while (files.hasMoreElements())
+  {
+    var f = files.getNext().QueryInterface(Ci.nsIFile);
+    if (!f.isHidden())
+      fileList.push(f);
+  }
+
+  fileList.sort(fileSort);
+
+  for (var i = 0; i < fileList.length; i++)
+  {
+    var file = fileList[i];
+    try
+    {
+      var name = file.leafName;
+      var sep = file.isDirectory() ? "/" : "";
+
+      // Note: using " to delimit the attribute here because encodeURIComponent
+      //       passes through '.
+      var item = '<li><a href="' + encodeURIComponent(name) + sep + '">' +
+                   htmlEscape(name) + sep +
+                 '</a></li>';
+
+      body += item;
+    }
+    catch (e) { /* some file system error, ignore the file */ }
+  }
+
+  body    += '    </ol>\
+                </body>\
+              </html>';
+
+  response.bodyOutputStream.write(body, body.length);
 }
+
+/**
+ * Sorts a and b (nsIFile objects) into an aesthetically pleasing order.
+ */
+function fileSort(a, b)
+{
+  var dira = a.isDirectory(), dirb = b.isDirectory();
+
+  if (dira && !dirb)
+    return -1;
+  if (dirb && !dira)
+    return 1;
+
+  var namea = a.leafName.toLowerCase(), nameb = b.leafName.toLowerCase();
+  return nameb > namea ? -1 : 1;
+}
+
 
 /**
  * An object which handles requests for a server, executing default and

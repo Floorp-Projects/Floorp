@@ -66,7 +66,7 @@ var listener =
           break;
 
         case 1:
-          do_check_eq(ch.responseStatus, 500);
+          do_check_eq(ch.responseStatus, 200); // default index handler
           break;
       }
     },
@@ -99,13 +99,13 @@ function performNextTest()
   ch.asyncOpen(listener, null);
 }
 
-var srv;
+var srv, serverBasePath;
 
 function run_test()
 {
   srv = createServer();
-  dirServ = Cc["@mozilla.org/file/directory_service;1"]
-              .getService(Ci.nsIProperties);
+  var dirServ = Cc["@mozilla.org/file/directory_service;1"]
+                  .getService(Ci.nsIProperties);
   serverBasePath = dirServ.get("CurProcD", Ci.nsILocalFile);
   serverBasePath.append("httpserver_tests");
   srv.registerDirectory("/", serverBasePath);
@@ -119,5 +119,10 @@ function run_test()
 
 function myIndexHandler(metadata, response)
 {
+  var dir = metadata.getProperty("directory");
+  do_check_true(dir != null);
+  do_check_true(dir instanceof Ci.nsIFile);
+  do_check_true(dir.equals(serverBasePath));
+
   response.write("directory!");
 }
