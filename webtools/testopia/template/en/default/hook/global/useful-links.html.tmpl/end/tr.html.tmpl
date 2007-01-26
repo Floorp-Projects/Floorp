@@ -63,7 +63,7 @@
   <div class="links">
     <b>Testopia Saved Searches:</b>
     [% FOREACH query = user.testopia_queries %]
-      <a href="[% query.query %]">[% query.name %]</a>[% '&nbsp;|&nbsp;' UNLESS loop.last %]
+      <a href="[% query.query %]">[% query.name FILTER html %]</a>[% '&nbsp;|&nbsp;' UNLESS loop.last %]
     [% END %]
   </div>
   [% END %]
