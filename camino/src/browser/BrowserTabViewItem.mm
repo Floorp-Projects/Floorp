@@ -180,20 +180,9 @@ const int kMenuTruncationChars = 60;
   return NSDragOperationGeneric;
 }
 
-- (unsigned int)draggingUpdated:(id <NSDraggingInfo>)sender
-{
-  if (![self shouldAcceptDragFrom:[sender draggingSource]]) {
-    [self hideDragDestinationIndicator];
-    return NSDragOperationNone;
-  }
-
-  [self showDragDestinationIndicator];
-  return NSDragOperationGeneric;
-}
-
 - (void)draggingExited:(id <NSDraggingInfo>)sender
 {
-    [self hideDragDestinationIndicator];
+  [self hideDragDestinationIndicator];
 }
 
 - (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender
