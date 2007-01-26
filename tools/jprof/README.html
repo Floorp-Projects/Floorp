@@ -64,7 +64,7 @@ which have the following meanings:
     one (with <code>kill -PROF</code>, or with <code>kill -ALRM</code> if
     JP_REALTIME is used, or with <code>kill -POLL</code> (also known as <code>kill -IO</code>) if JP_RTC_HZ is used).
 
-    <li> <b>JP_FIRST=x</b> : Wait x seconds before starting the timer.  This doesn't work with JP_RTC_HZ yet.  See <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=367675">bug 367675</a>.
+    <li> <b>JP_FIRST=x</b> : Wait x seconds before starting the timer
 
     <li> <b>JP_PERIOD=y</b> : Set timer to interrupt every y seconds.  Only
     values of y strictly greater than 0.001 are supported.
