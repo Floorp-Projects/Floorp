@@ -7328,8 +7328,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     
       nsIFrame* blockFrame = NS_NewBlockFrame(mPresShell, innerPseudoStyle,
                                               NS_BLOCK_SPACE_MGR |
-                                                NS_BLOCK_MARGIN_ROOT |
-                                                NS_FRAME_REFLOW_ROOT);
+                                                NS_BLOCK_MARGIN_ROOT);
       if (NS_UNLIKELY(!blockFrame))
         return NS_ERROR_OUT_OF_MEMORY;
     
