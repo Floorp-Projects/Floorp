@@ -1686,7 +1686,6 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   mChannel->SetContentType(NS_LITERAL_CSTRING("application/xml"));
 
   // Start reading from the channel
-  ChangeState(XML_HTTP_REQUEST_SENT);
   rv = mChannel->AsyncOpen(listener, nsnull);
 
   if (NS_FAILED(rv)) {
@@ -1694,6 +1693,12 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     mChannel = nsnull;
     return rv;
   }
+
+  // Now that we've successfully opened the channel, we can change state.  Note
+  // that this needs to come after the AsyncOpen() and rv check, because this
+  // can run script that would try to restart this request, and that could end
+  // up doing our AsyncOpen on a null channel if the reentered AsyncOpen fails.
+  ChangeState(XML_HTTP_REQUEST_SENT);
 
   // If we're synchronous, spin an event loop here and wait
   if (!(mState & XML_HTTP_REQUEST_ASYNC)) {
