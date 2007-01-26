@@ -455,7 +455,7 @@ function finishAccount(account, accountData)
 
         var destServer = account.incomingServer;
         var srcServer = accountData.incomingServer;
-        copyObjectToInterface(destServer, srcServer);
+        copyObjectToInterface(destServer, srcServer, true);
 
         // see if there are any protocol-specific attributes
         // if so, we use the type to get the IID, QueryInterface
@@ -470,9 +470,10 @@ function finishAccount(account, accountData)
                 srcProtocolServer = srcServer["ServerType-" + srcServer.type];
 
                 dump("Copying over " + srcServer.type + "-specific data\n");
-                copyObjectToInterface(destProtocolServer, srcProtocolServer);
+                copyObjectToInterface(destProtocolServer, srcProtocolServer, false);
             }
         }
+          
         account.incomingServer.valid=true;
         // hack to cause an account loaded notification now the server is valid
         account.incomingServer = account.incomingServer;
@@ -484,16 +485,13 @@ function finishAccount(account, accountData)
     if (destIdentity) // does this account have an identity? 
     {   
         if (accountData.identity && accountData.identity.email) {
-            dump('trying to write out an identity: ' + destIdentity + '\n');
-
             // fixup the email address if we have a default domain
             var emailArray = accountData.identity.email.split('@');
             if (emailArray.length < 2 && accountData.domain) {
                 accountData.identity.email += '@' + accountData.domain;
             }
 
-            copyObjectToInterface(destIdentity,
-                                  accountData.identity);
+            copyObjectToInterface(destIdentity, accountData.identity, true);
             destIdentity.valid=true;
         }
 
@@ -539,7 +537,7 @@ function finishAccount(account, accountData)
                   smtpService.defaultServer = smtpServer;
               }
 
-              copyObjectToInterface(smtpServer, accountData.smtp);
+              copyObjectToInterface(smtpServer, accountData.smtp, false);
 
               // refer bug#141314
               // since we clone the default smtpserver with the new account's username
@@ -561,31 +559,58 @@ function finishAccount(account, accountData)
      }
 }
 
+// Helper method used by copyObjectToInterface which attempts to set dest[attribute] as a generic
+// attribute on the xpconnect object, src.
+// This routine skips any attribute that begins with ServerType- 
+function setGenericAttribute(dest, src, attribute)
+{
+  if (!(/^ServerType-/i.test(attribute)))
+  {
+    switch (typeof src[attribute])
+    {
+      case "string":
+        dest.setUnicharAttribute(attribute, src[attribute]);
+        break;
+      case "boolean":
+        dest.setBoolAttribute(attribute, src[attribute]);
+        break;
+      case "number":
+        dest.setIntAttribute(attribute, src[attribute]);
+        break;
+      default:
+        dump('Error: No Generic attribute found for: ' +  typeof src[attribute] + '\n');
+        break;
+    }
+  }
+}
+
 // copy over all attributes from dest into src that already exist in src
 // the assumption is that src is an XPConnect interface full of attributes
-function copyObjectToInterface(dest, src) {
-    if (!dest) return;
-    if (!src) return;
+// @param useGenericFallback if we can't set an attribute directly on src, then fall back
+//        and try setting it generically. This assumes that src supports setIntAttribute, setUnicharAttribute
+//        and setBoolAttribute. 
+function copyObjectToInterface(dest, src, useGenericFallback) 
+{
+  if (!dest) return;
+  if (!src) return;
 
-    var i;
-    for (i in src) {
-        try {
-            if (dest[i] != src[i])
-                dest[i] = src[i];
-        }
-        catch (ex) {
-            dump("Error copying the " +
-                 i + " attribute: " + ex + "\n");
-            dump("[This is ok if this is a ServerType-* attribute, or if this is a readonly attribute (like receiptHeaderType)]\n");
-        }
-    }
+  var attribute;
+  for (attribute in src) 
+  {
+    if (dest.__lookupSetter__(attribute))
+    {
+      if (dest[attribute] != src[attribute])
+        dest[attribute] = src[attribute];
+    } 
+    else if (useGenericFallback) // fall back to setting the attribute generically
+      setGenericAttribute(dest, src, attribute);
+  } // for each attribute in src we want to copy
 }
 
 // check if there already is a "Local Folders"
 // if not, create it.
 function verifyLocalFoldersAccount() 
 {
-  dump ("verifying local folders account\n");
   var localMailServer = null;
   try {
     localMailServer = am.localFoldersServer;
@@ -596,7 +621,6 @@ function verifyLocalFoldersAccount()
   }
 
   try {
-
     if (!localMailServer) 
     {
       // dump("Creating local mail account\n");
@@ -626,7 +650,6 @@ function setupCopiesAndFoldersServer(account, accountIsDeferred, accountData)
     // For this server, do we default the folder prefs to this server, or to the "Local Folders" server
     // If it's deferred, we use the local folders account.
     var defaultCopiesAndFoldersPrefsToServer = !accountIsDeferred && server.defaultCopiesAndFoldersPrefsToServer;
-    dump ("verifying local folders account \n");
 
     var copiesAndFoldersServer = null;
     if (defaultCopiesAndFoldersPrefsToServer) 
@@ -656,56 +679,54 @@ function setupCopiesAndFoldersServer(account, accountIsDeferred, accountData)
 
 function setDefaultCopiesAndFoldersPrefs(identity, server, accountData)
 {
-	dump("finding folders on server = " + server.hostName + "\n");
-
-	var rootFolder = server.rootFolder;
+  var rootFolder = server.rootFolder;
 
 	// we need to do this or it is possible that the server's draft,
-    // stationery fcc folder will not be in rdf
+	// stationery fcc folder will not be in rdf
 	//
 	// this can happen in a couple cases
 	// 1) the first account we create, creates the local mail.  since
-    // local mail was just created, it obviously hasn't been opened,
-    // or in rdf..
+  // local mail was just created, it obviously hasn't been opened,
+  // or in rdf..
 	// 2) the account we created is of a type where
-    // defaultCopiesAndFoldersPrefsToServer is true
+  // defaultCopiesAndFoldersPrefsToServer is true
 	// this since we are creating the server, it obviously hasn't been
-    // opened, or in rdf.
-    //
-    // this makes the assumption that the server's draft, stationery fcc folder
-    // are at the top level (ie subfolders of the root folder.)  this works
-    // because we happen to be doing things that way, and if the user changes
-    // that, it will work because to change the folder, it must be in rdf,
-    // coming from the folder cache, in the worst case.
-    var folders = rootFolder.GetSubFolders();
-    var msgFolder = rootFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
+  // opened, or in rdf.
+  //
+  // this makes the assumption that the server's draft, stationery fcc folder
+  // are at the top level (ie subfolders of the root folder.)  this works
+  // because we happen to be doing things that way, and if the user changes
+  // that, it will work because to change the folder, it must be in rdf,
+  // coming from the folder cache, in the worst case.
+  var folders = rootFolder.GetSubFolders();
+  var msgFolder = rootFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
 
-    /** 
-     * When a new account is created, folders 'Sent', 'Drafts'
-     * and 'Templates' are not created then, but created on demand at runtime. 
-     * But we do need to present them as possible choices in the Copies and Folders 
-     * UI. To do that, folder URIs have to be created and stored in the prefs file. 
-     * So, if there is a need to build special folders, append the special folder 
-     * names and create right URIs.
-     */
-    var folderDelim = "/";
+  /** 
+   * When a new account is created, folders 'Sent', 'Drafts'
+   * and 'Templates' are not created then, but created on demand at runtime. 
+   * But we do need to present them as possible choices in the Copies and Folders 
+   * UI. To do that, folder URIs have to be created and stored in the prefs file. 
+   * So, if there is a need to build special folders, append the special folder 
+   * names and create right URIs.
+   */
+  var folderDelim = "/";
 
-    /* we use internal names known to everyone like Sent, Templates and Drafts */
-    /* if folder names were already given in isp rdf, we use them,
-       otherwise we use internal names known to everyone like Sent, Templates and Drafts */
-    
-    var draftFolder = (accountData.identity && accountData.identity.draftFolder ? accountData.identity.draftFolder : "Drafts");
-    var stationeryFolder = (accountData.identity && accountData.identity.stationeryFolder ? accountData.identity.stationeryFolder : "Templates");
-    var fccFolder = (accountData.identity && accountData.identity.fccFolder ? accountData.identity.fccFolder : "Sent");
+  /* we use internal names known to everyone like Sent, Templates and Drafts */
+  /* if folder names were already given in isp rdf, we use them,
+     otherwise we use internal names known to everyone like Sent, Templates and Drafts */
+  
+  var draftFolder = (accountData.identity && accountData.identity.draftFolder ? accountData.identity.draftFolder : "Drafts");
+  var stationeryFolder = (accountData.identity && accountData.identity.stationeryFolder ? accountData.identity.stationeryFolder : "Templates");
+  var fccFolder = (accountData.identity && accountData.identity.fccFolder ? accountData.identity.fccFolder : "Sent");
 
-    identity.draftFolder = msgFolder.server.serverURI+ folderDelim + draftFolder;
-    identity.stationeryFolder = msgFolder.server.serverURI+ folderDelim + stationeryFolder;
-    identity.fccFolder = msgFolder.server.serverURI+ folderDelim + fccFolder;
-            
-	
-    identity.fccFolderPickerMode = (accountData.identity && accountData.identity.fccFolder ? 1 : gDefaultSpecialFolderPickerMode);
-    identity.draftsFolderPickerMode = (accountData.identity && accountData.identity.draftFolder ? 1 : gDefaultSpecialFolderPickerMode);
-    identity.tmplFolderPickerMode = (accountData.identity && accountData.identity.stationeryFolder ? 1 : gDefaultSpecialFolderPickerMode);
+  identity.draftFolder = msgFolder.server.serverURI+ folderDelim + draftFolder;
+  identity.stationeryFolder = msgFolder.server.serverURI+ folderDelim + stationeryFolder;
+  identity.fccFolder = msgFolder.server.serverURI+ folderDelim + fccFolder;
+          
+
+  identity.fccFolderPickerMode = (accountData.identity && accountData.identity.fccFolder ? 1 : gDefaultSpecialFolderPickerMode);
+  identity.draftsFolderPickerMode = (accountData.identity && accountData.identity.draftFolder ? 1 : gDefaultSpecialFolderPickerMode);
+  identity.tmplFolderPickerMode = (accountData.identity && accountData.identity.stationeryFolder ? 1 : gDefaultSpecialFolderPickerMode);
 }
 
 function AccountExists(userName,hostName,serverType)
