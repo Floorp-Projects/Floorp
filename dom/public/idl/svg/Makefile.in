@@ -50,6 +50,7 @@ XPIDL_MODULE	= dom_svg
 
 XPIDLSRCS	= \
 		nsIDOMGetSVGDocument.idl \
+		nsIDOMSVGAElement.idl \
 		nsIDOMSVGAngle.idl \
 		nsIDOMSVGAnimatedAngle.idl \
 		nsIDOMSVGAnimatedEnum.idl \

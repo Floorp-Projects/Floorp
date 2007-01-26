@@ -239,6 +239,7 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_SVGDocument_id,
 
   // SVG element classes
+  eDOMClassInfo_SVGAElement_id,
   eDOMClassInfo_SVGCircleElement_id,
   eDOMClassInfo_SVGClipPathElement_id,
   eDOMClassInfo_SVGDefsElement_id,
@@ -381,8 +382,6 @@ enum nsDOMClassInfoID {
   // added here, which is the end of the things that are currently on by
   // default.
 
-  // Define this near the end so that enabling/disabling foreignobject doesn't
-  // break binary compatibility
 #if defined(MOZ_SVG) && defined(MOZ_SVG_FOREIGNOBJECT)
   eDOMClassInfo_SVGForeignObjectElement_id,
 #endif

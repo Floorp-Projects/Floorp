@@ -68,6 +68,7 @@ REQUIRES	= xpcom \
 CPPSRCS		= \
 		nsDOMSVGZoomEvent.cpp \
 		nsDOMSVGEvent.cpp \
+		nsSVGAElement.cpp \
 		nsSVGAngle.cpp \
 		nsSVGAnimatedAngle.cpp \
 		nsSVGAnimatedEnumeration.cpp \

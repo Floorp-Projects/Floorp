@@ -47,6 +47,8 @@
 #include "nsDebug.h"
 
 nsresult
+NS_NewSVGAElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
 NS_NewSVGPolylineElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGPolygonElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
@@ -154,6 +156,8 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
 
   nsIAtom *name = aNodeInfo->NameAtom();
   
+  if (name == nsGkAtoms::a)
+    return NS_NewSVGAElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::polyline)
     return NS_NewSVGPolylineElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::polygon)
