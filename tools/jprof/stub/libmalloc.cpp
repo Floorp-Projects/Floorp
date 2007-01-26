@@ -386,6 +386,8 @@ NS_EXPORT_(void) setupProfilingStuff(void)
             if (rtc) {
 #if defined(linux)
                 rtcHz = atol(rtc+10);
+                timerMiliSec = 0; /* This makes JP_FIRST work right. */
+                realTime = 1; /* It's the _R_TC and all.  ;) */
 
 #define IS_POWER_OF_TWO(x) (((x) & ((x) - 1)) == 0)
 
@@ -431,7 +433,9 @@ NS_EXPORT_(void) setupProfilingStuff(void)
                                   "profiling\n", stderr);
                             return;
                         }
-                    } else
+                    }
+
+                    if (!rtcHz || firstDelay != 0)
 #endif
                     if (realTime) {
                         sigaction(SIGALRM, &action, NULL);
@@ -459,7 +463,11 @@ NS_EXPORT_(void) setupProfilingStuff(void)
 
 		    if(startTimer) {
 #if defined(linux)
-                        if (rtcHz) {
+                        /* If we have an initial delay we can just use
+                           startSignalCounter to set up a timer to fire the
+                           first stackHook after that delay.  When that happens
+                           we'll go and switch to RTC profiling. */
+                        if (rtcHz && firstDelay == 0) {
                             puts("Jprof: enabled RTC signals");
                             enableRTCSignals(true);
                         } else
