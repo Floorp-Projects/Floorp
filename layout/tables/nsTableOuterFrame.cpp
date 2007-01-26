@@ -469,7 +469,7 @@ GetContainingBlockSize(const nsHTMLReflowState& aOuterRS)
     aOuterRS.mCBReflowState;
 
   if (containRS) {
-    size.width = containRS->mComputedWidth;
+    size.width = containRS->ComputedWidth();
     if (NS_UNCONSTRAINEDSIZE == size.width) {
       size.width = 0;
     }
@@ -1193,19 +1193,19 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
     nsReflowStatus capStatus; // don't let the caption cause incomplete
     rv = OuterReflowChild(aPresContext, mCaptionFrame, aOuterRS,
                           captionRSSpace, captionMet,
-                          aOuterRS.mComputedWidth, captionSize,
+                          aOuterRS.ComputedWidth(), captionSize,
                           captionMargin, capStatus);
     if (NS_FAILED(rv)) return rv;
   } else if (mCaptionFrame) {
     captionSize = mCaptionFrame->GetSize();
-    GetMargin(aPresContext, aOuterRS, mCaptionFrame, aOuterRS.mComputedWidth,
+    GetMargin(aPresContext, aOuterRS, mCaptionFrame, aOuterRS.ComputedWidth(),
               captionMargin);
   } else {
     captionSize.SizeTo(0,0);
     captionMargin.SizeTo(0,0,0,0);
   }
 
-  nscoord innerAvailWidth = aOuterRS.mComputedWidth;
+  nscoord innerAvailWidth = aOuterRS.ComputedWidth();
   if (captionSide == NS_SIDE_LEFT || captionSide == NS_SIDE_RIGHT)
     // If side is left/right then we know we have a caption and we
     // reflowed it.
@@ -1225,7 +1225,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   } else {
     innerSize = mInnerTableFrame->GetSize();
     GetMargin(aPresContext, aOuterRS, mInnerTableFrame,
-              aOuterRS.mComputedWidth, innerMargin);
+              aOuterRS.ComputedWidth(), innerMargin);
   }
 
   nsSize   containSize = GetContainingBlockSize(aOuterRS);

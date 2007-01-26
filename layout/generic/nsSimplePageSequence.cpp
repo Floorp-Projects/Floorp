@@ -289,7 +289,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
                                      availSize);
     nsReflowStatus  status;
 
-    kidReflowState.mComputedWidth  = kidReflowState.availableWidth;
+    kidReflowState.SetComputedWidth(kidReflowState.availableWidth);
     //kidReflowState.mComputedHeight = kidReflowState.availableHeight;
     PR_PL(("AV W: %d   H: %d\n", kidReflowState.availableWidth, kidReflowState.availableHeight));
 

@@ -269,7 +269,7 @@ static nsSize ComputeInsideBorderSize(ScrollReflowState* aState,
   // aDesiredInsideBorderSize is the frame size; i.e., it includes
   // borders and padding (but the scrolled child doesn't have
   // borders). The scrolled child has the same padding as us.
-  nscoord contentWidth = aState->mReflowState.mComputedWidth;
+  nscoord contentWidth = aState->mReflowState.ComputedWidth();
   if (contentWidth == NS_UNCONSTRAINEDSIZE) {
     contentWidth = aDesiredInsideBorderSize.width -
       aState->mReflowState.mComputedPadding.LeftRight();
@@ -423,7 +423,7 @@ nsHTMLScrollFrame::ReflowScrolledFrame(const ScrollReflowState& aState,
   // be OK
   nscoord paddingLR = aState.mReflowState.mComputedPadding.LeftRight();
 
-  nscoord availWidth = aState.mReflowState.mComputedWidth + paddingLR;
+  nscoord availWidth = aState.mReflowState.ComputedWidth() + paddingLR;
 
   if (aAssumeVScroll) {
     nsSize vScrollbarPrefSize = 

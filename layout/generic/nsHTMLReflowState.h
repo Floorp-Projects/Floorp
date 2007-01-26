@@ -234,6 +234,7 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
   // percentage widths, etc.) of this reflow state's frame.
   const nsHTMLReflowState *mCBReflowState;
 
+private:
   // The computed width specifies the frame's content area width, and it does
   // not apply to inline non-replaced elements
   //
@@ -244,6 +245,7 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
   // containing block, the margin/border/padding areas, and the min/max width.
   nscoord          mComputedWidth; 
 
+public:
   // The computed height specifies the frame's content height, and it does
   // not apply to inline non-replaced elements
   //
@@ -408,6 +410,9 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
            (mFlags.mVResize && 
             (frame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT));
   }
+
+  nscoord ComputedWidth() const { return mComputedWidth; }
+  void SetComputedWidth(nscoord aComputedWidth);
 
 protected:
 

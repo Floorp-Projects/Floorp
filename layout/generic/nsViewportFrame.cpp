@@ -235,7 +235,8 @@ nsPoint
 
   if (scrollingFrame) {
     nsMargin scrollbars = scrollingFrame->GetActualScrollbarSizes();
-    aReflowState->mComputedWidth -= scrollbars.left + scrollbars.right;
+    aReflowState->SetComputedWidth(aReflowState->ComputedWidth() -
+                                   (scrollbars.left + scrollbars.right));
     aReflowState->availableWidth -= scrollbars.left + scrollbars.right;
     aReflowState->mComputedHeight -= scrollbars.top + scrollbars.bottom;
     // XXX why don't we also adjust "aReflowState->availableHeight"?
@@ -320,7 +321,7 @@ ViewportFrame::Reflow(nsPresContext*          aPresContext,
 
   // Just reflow all the fixed-pos frames.
   rv = mFixedContainer.Reflow(this, aPresContext, reflowState,
-                              reflowState.mComputedWidth, 
+                              reflowState.ComputedWidth(), 
                               reflowState.mComputedHeight,
                               PR_TRUE, PR_TRUE); // XXX could be optimized
 

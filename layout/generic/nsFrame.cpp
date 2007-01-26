@@ -6120,7 +6120,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
 
     // This may not do very much useful, but it's probably worth trying.
     if (parentSize.width != NS_INTRINSICSIZE)
-      parentReflowState.mComputedWidth = parentSize.width;
+      parentReflowState.SetComputedWidth(parentSize.width);
     if (parentSize.height != NS_INTRINSICSIZE)
       parentReflowState.mComputedHeight = parentSize.height;
     parentReflowState.mComputedMargin.SizeTo(0, 0, 0, 0);
@@ -6143,10 +6143,10 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
     // mComputedWidth and mComputedHeight are content-box, not
     // border-box
     if (aWidth != NS_INTRINSICSIZE) {
-      reflowState.mComputedWidth =
+      nscoord computedWidth =
         aWidth - reflowState.mComputedBorderPadding.LeftRight();
-      if (reflowState.mComputedWidth < 0)
-        reflowState.mComputedWidth = 0;
+      computedWidth = PR_MAX(computedWidth, 0);
+      reflowState.SetComputedWidth(computedWidth);
     }
     if (aHeight != NS_INTRINSICSIZE) {
       reflowState.mComputedHeight =
@@ -6168,7 +6168,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
 
     #ifdef DEBUG_REFLOW
       nsAdaptorAddIndents();
-      printf("Size=(%d,%d)\n",reflowState.mComputedWidth, reflowState.mComputedHeight);
+      printf("Size=(%d,%d)\n",reflowState.ComputedWidth(), reflowState.mComputedHeight);
       nsAdaptorAddIndents();
       nsAdaptorPrintReason(reflowState);
       printf("\n");
@@ -6203,9 +6203,10 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
              else {
               if (aDesiredSize.width > aWidth)
               {
-                 reflowState.mComputedWidth = aDesiredSize.width - reflowState.mComputedBorderPadding.LeftRight();
-                 if (reflowState.mComputedWidth < 0)
-                   reflowState.mComputedWidth = 0;
+                 nscoord computedWidth = aDesiredSize.width -
+                   reflowState.mComputedBorderPadding.LeftRight();
+                 computedWidth = PR_MAX(computedWidth, 0);
+                 reflowState.SetComputedWidth(computedWidth);
                  reflowState.availableWidth = aDesiredSize.width;
                  DidReflow(aPresContext, &reflowState, NS_FRAME_REFLOW_FINISHED);
                  #ifdef DEBUG_REFLOW
@@ -7145,7 +7146,7 @@ static void DisplayReflowEnterPrint(nsPresContext*          aPresContext,
     DR_state->PrettyUC(aReflowState.availableHeight, height);
     printf("Reflow a=%s,%s ", width, height);
 
-    DR_state->PrettyUC(aReflowState.mComputedWidth, width);
+    DR_state->PrettyUC(aReflowState.ComputedWidth(), width);
     DR_state->PrettyUC(aReflowState.mComputedHeight, height);
     printf("c=%s,%s ", width, height);
 
@@ -7180,7 +7181,7 @@ static void DisplayReflowEnterPrint(nsPresContext*          aPresContext,
       float p2t = aPresContext->ScaledPixelsToTwips();
       CheckPixelError(aReflowState.availableWidth, p2t);
       CheckPixelError(aReflowState.availableHeight, p2t);
-      CheckPixelError(aReflowState.mComputedWidth, p2t);
+      CheckPixelError(aReflowState.ComputedWidth(), p2t);
       CheckPixelError(aReflowState.mComputedHeight, p2t);
     }
   }

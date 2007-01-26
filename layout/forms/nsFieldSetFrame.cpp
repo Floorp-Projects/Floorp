@@ -445,7 +445,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsFieldSetFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
-  NS_PRECONDITION(aReflowState.mComputedWidth != NS_INTRINSICSIZE,
+  NS_PRECONDITION(aReflowState.ComputedWidth() != NS_INTRINSICSIZE,
                   "Should have a precomputed width!");      
   
   // Initialize OUT parameter
@@ -468,7 +468,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
        (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) != 0;
   }
 
-  nsSize availSize(aReflowState.mComputedWidth, aReflowState.availableHeight);
+  nsSize availSize(aReflowState.ComputedWidth(), aReflowState.availableHeight);
   NS_ASSERTION(!mContentFrame ||
                GetContentMinWidth(aReflowState.rendContext) <= availSize.width,
                "Bogus availSize.width; should be bigger");
@@ -495,8 +495,8 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
                                         legendAvailSize);
 
     // always give the legend as much size as it wants
-    legendReflowState.mComputedWidth =
-      mLegendFrame->GetPrefWidth(aReflowState.rendContext);
+    legendReflowState.
+      SetComputedWidth(mLegendFrame->GetPrefWidth(aReflowState.rendContext));
     legendReflowState.mComputedHeight = NS_INTRINSICSIZE;
 
     nsHTMLReflowMetrics legendDesiredSize;
@@ -583,8 +583,8 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   // use the computed width if the inner content does not fill it
-  if (aReflowState.mComputedWidth > contentRect.width) {
-    contentRect.width = aReflowState.mComputedWidth;
+  if (aReflowState.ComputedWidth() > contentRect.width) {
+    contentRect.width = aReflowState.ComputedWidth();
   }
 
   if (mLegendFrame) {

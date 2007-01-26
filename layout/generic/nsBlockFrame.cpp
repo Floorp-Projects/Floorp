@@ -787,9 +787,9 @@ CalculateContainingBlockSizeForAbsolutes(const nsHTMLReflowState& aReflowState,
       }
       // We found a reflow state for the outermost wrapping frame, so use
       // its computed metrics if available
-      if (aLastRS->mComputedWidth != NS_UNCONSTRAINEDSIZE) {
+      if (aLastRS->ComputedWidth() != NS_UNCONSTRAINEDSIZE) {
         cbSize.width = PR_MAX(0,
-          aLastRS->mComputedWidth + aLastRS->mComputedPadding.LeftRight() - scrollbars.LeftRight());
+          aLastRS->ComputedWidth() + aLastRS->mComputedPadding.LeftRight() - scrollbars.LeftRight());
       }
       if (aLastRS->mComputedHeight != NS_UNCONSTRAINEDSIZE) {
         cbSize.height = PR_MAX(0,
@@ -815,7 +815,7 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
     ListTag(stdout);
     printf(": begin reflow availSize=%d,%d computedSize=%d,%d\n",
            aReflowState.availableWidth, aReflowState.availableHeight,
-           aReflowState.mComputedWidth, aReflowState.mComputedHeight);
+           aReflowState.ComputedWidth(), aReflowState.mComputedHeight);
   }
   AutoNoisyIndenter indent(gNoisy);
   PRTime start = LL_ZERO; // Initialize these variablies to silence the compiler.
@@ -1230,7 +1230,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
 #endif
 
   // Compute final width
-  aMetrics.width = borderPadding.left + aReflowState.mComputedWidth +
+  aMetrics.width = borderPadding.left + aReflowState.ComputedWidth() +
     borderPadding.right;
 
   // Return bottom margin information
@@ -1453,9 +1453,9 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
 
   if (tryAndSkipLines) {
     nscoord newAvailWidth = aState.mReflowState.mComputedBorderPadding.left +
-                            aState.mReflowState.mComputedWidth;
+                            aState.mReflowState.ComputedWidth();
     NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aState.mReflowState.mComputedBorderPadding.left &&
-                 NS_UNCONSTRAINEDSIZE != aState.mReflowState.mComputedWidth,
+                 NS_UNCONSTRAINEDSIZE != aState.mReflowState.ComputedWidth(),
                  "math on NS_UNCONSTRAINEDSIZE");
 
 #ifdef DEBUG
@@ -1673,7 +1673,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     IndentBy(stdout, gNoiseIndent);
     ListTag(stdout);
     printf(": reflowing dirty lines");
-    printf(" computedWidth=%d\n", aState.mReflowState.mComputedWidth);
+    printf(" computedWidth=%d\n", aState.mReflowState.ComputedWidth());
   }
   AutoNoisyIndenter indent(gNoisyReflow);
 #endif
@@ -6180,7 +6180,7 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
   // Reflow the bullet now
   nsSize availSize;
   // Make up a width since it doesn't really matter (XXX).
-  availSize.width = rs.mComputedWidth;
+  availSize.width = rs.ComputedWidth();
   availSize.height = NS_UNCONSTRAINEDSIZE;
 
   // Get the reason right.

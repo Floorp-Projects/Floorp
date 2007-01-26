@@ -201,8 +201,8 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState)
 {
   const nsStyleColumn* colStyle = GetStyleColumn();
   nscoord availContentWidth = GetAvailableContentWidth(aReflowState);
-  if (aReflowState.mComputedWidth != NS_INTRINSICSIZE) {
-    availContentWidth = aReflowState.mComputedWidth;
+  if (aReflowState.ComputedWidth() != NS_INTRINSICSIZE) {
+    availContentWidth = aReflowState.ComputedWidth();
   }
   nscoord colHeight = GetAvailableContentHeight(aReflowState);
   if (aReflowState.mComputedHeight != NS_INTRINSICSIZE) {
@@ -371,8 +371,8 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
   nscoord targetX = borderPadding.left;
   if (RTL) {
     nscoord availWidth = aReflowState.availableWidth;
-    if (aReflowState.mComputedWidth != NS_INTRINSICSIZE) {
-      availWidth = aReflowState.mComputedWidth;
+    if (aReflowState.ComputedWidth() != NS_INTRINSICSIZE) {
+      availWidth = aReflowState.ComputedWidth();
     }
     if (availWidth != NS_INTRINSICSIZE) {
       childOrigin.x += availWidth - aConfig.mColWidth;
@@ -576,8 +576,8 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
       contentSize.height = PR_MAX(aReflowState.mComputedMinHeight, contentSize.height);
     }
   }
-  if (aReflowState.mComputedWidth != NS_INTRINSICSIZE) {
-    contentSize.width = aReflowState.mComputedWidth;
+  if (aReflowState.ComputedWidth() != NS_INTRINSICSIZE) {
+    contentSize.width = aReflowState.ComputedWidth();
   } else {
     if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMaxWidth) {
       contentSize.width = PR_MIN(aReflowState.mComputedMaxWidth, contentSize.width);

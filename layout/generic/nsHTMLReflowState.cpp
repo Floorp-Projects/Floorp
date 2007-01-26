@@ -204,6 +204,20 @@ nsCSSOffsetState::ComputeHeightDependentValue(nscoord aContainingBlockHeight,
 }
 
 void
+nsHTMLReflowState::SetComputedWidth(nscoord aComputedWidth)
+{
+  NS_ASSERTION(frame, "Must have a frame!");
+  NS_ASSERTION(!(frame->GetStateBits() & NS_FRAME_IN_REFLOW),
+               "frame shouldn't be in reflow yet");
+               
+  nscoord oldComputedWidth = mComputedWidth;
+  mComputedWidth = aComputedWidth;
+  if (mComputedWidth != oldComputedWidth) {
+    InitResizeFlags(frame->GetPresContext());
+  }
+}
+
+void
 nsHTMLReflowState::Init(nsPresContext* aPresContext,
                         nscoord         aContainingBlockWidth,
                         nscoord         aContainingBlockHeight,

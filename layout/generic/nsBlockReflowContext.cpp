@@ -175,14 +175,14 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
             if (frame != aRS.frame) {
               NS_ASSERTION(frame->GetParent() == aRS.frame,
                            "Can only drill through one level of block wrapper");
-              nsSize availSpace(aRS.mComputedWidth, aRS.mComputedHeight);
+              nsSize availSpace(aRS.ComputedWidth(), aRS.mComputedHeight);
               outerReflowState = new nsHTMLReflowState(prescontext,
                                                        aRS, frame, availSpace);
               if (!outerReflowState)
                 goto done;
             }
             {
-              nsSize availSpace(outerReflowState->mComputedWidth,
+              nsSize availSpace(outerReflowState->ComputedWidth(),
                                 outerReflowState->mComputedHeight);
               nsHTMLReflowState innerReflowState(prescontext,
                                                  *outerReflowState, kid,
@@ -281,7 +281,7 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   if (!aIsAdjacentWithTop) {
     aFrameRS.mFlags.mIsTopOfPage = PR_FALSE;  // make sure this is cleared
   }
-  mComputedWidth = aFrameRS.mComputedWidth;
+  mComputedWidth = aFrameRS.ComputedWidth();
 
   if (aApplyTopMargin) {
     mTopMargin = aPrevMargin;
@@ -315,11 +315,11 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   if (NS_STYLE_FLOAT_RIGHT == aFrameRS.mStyleDisplay->mFloats) {
     nscoord frameWidth;
      
-    if (NS_UNCONSTRAINEDSIZE == aFrameRS.mComputedWidth) {
+    if (NS_UNCONSTRAINEDSIZE == aFrameRS.ComputedWidth()) {
       // Use the current frame width
       frameWidth = mFrame->GetSize().width;
     } else {
-      frameWidth = aFrameRS.mComputedWidth +
+      frameWidth = aFrameRS.ComputedWidth() +
                    aFrameRS.mComputedBorderPadding.left +
                    aFrameRS.mComputedBorderPadding.right;
     }
