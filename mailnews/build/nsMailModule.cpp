@@ -104,6 +104,7 @@
 #include "nsRssIncomingServer.h"
 #include "nsRssService.h"
 #include "nsMsgTagService.h"
+#include "nsMsgFolderNotificationService.h"
 #include "nsMailDirProvider.h"
 
 #ifdef XP_WIN
@@ -338,6 +339,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgOfflineManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgProgress)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSpamSettings)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgTagService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgFolderNotificationService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCidProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMailDirProvider)
 #ifdef XP_WIN
@@ -843,6 +845,11 @@ static const nsModuleComponentInfo gComponents[] = {
       NS_MSGTAGSERVICE_CONTRACTID,
       nsMsgTagServiceConstructor,
     },
+    { "Msg Notification Service", NS_MSGNOTIFICATIONSERVICE_CID,
+      NS_MSGNOTIFICATIONSERVICE_CONTRACTID,
+      nsMsgFolderNotificationServiceConstructor,
+    },
+  
     { "cid protocol", NS_CIDPROTOCOL_CID,
       NS_CIDPROTOCOLHANDLER_CONTRACTID,
       nsCidProtocolHandlerConstructor,
