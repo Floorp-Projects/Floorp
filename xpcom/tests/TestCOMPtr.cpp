@@ -155,24 +155,21 @@ IFoo::AddRef()
 nsrefcnt
 IFoo::Release()
   {
-    int wrap_message = (refcount_ == 1);
-    if ( wrap_message )
+    int newcount = --refcount_;
+    if ( newcount == 0 )
       printf(">>");
-      
-    --refcount_;
+
     printf("IFoo@%p::Release(), refcount --> %d\n",
            STATIC_CAST(void*, this), refcount_);
 
-    if ( !refcount_ )
+    if ( newcount == 0 )
       {
         printf("  delete IFoo@%p\n", STATIC_CAST(void*, this));
+        printf("<<IFoo@%p::Release()\n", STATIC_CAST(void*, this));
         delete this;
       }
 
-    if ( wrap_message )
-      printf("<<IFoo@%p::Release()\n", STATIC_CAST(void*, this));
-
-    return refcount_;
+    return newcount;
   }
 
 nsresult
