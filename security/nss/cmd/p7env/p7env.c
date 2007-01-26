@@ -37,7 +37,7 @@
 /*
  * p7env -- A command to create a pkcs7 enveloped data.
  *
- * $Id: p7env.c,v 1.7 2004/10/07 04:12:47 julien.pierre.bugs%sun.com Exp $
+ * $Id: p7env.c,v 1.8 2007/01/26 01:15:43 nelson%bolyard.com Exp $
  */
 
 #include "nspr.h"
@@ -209,7 +209,7 @@ main(int argc, char **argv)
 	    break;
 
 	  case 'o':
-	    outFile = fopen(optstate->value, "w");
+	    outFile = fopen(optstate->value, "wb");
 	    if (!outFile) {
 		fprintf(stderr, "%s: unable to open \"%s\" for writing\n",
 			progName, optstate->value);

@@ -38,7 +38,7 @@
  * p7sign -- A command to create a *detached* pkcs7 signature (over a given
  * input file).
  *
- * $Id: p7sign.c,v 1.12 2007/01/25 00:52:25 alexei.volkov.bugs%sun.com Exp $
+ * $Id: p7sign.c,v 1.13 2007/01/26 01:15:43 nelson%bolyard.com Exp $
  */
 
 #include "nspr.h"
@@ -238,7 +238,7 @@ main(int argc, char **argv)
 	    break;
 
 	  case 'o':
-	    outFile = fopen(optstate->value, "w");
+	    outFile = fopen(optstate->value, "wb");
 	    if (!outFile) {
 		fprintf(stderr, "%s: unable to open \"%s\" for writing\n",
 			progName, optstate->value);
