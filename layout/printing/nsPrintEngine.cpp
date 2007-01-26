@@ -3288,6 +3288,10 @@ nsPrintEngine::FinishPrintPreview()
 
   SetIsCreatingPrintPreview(PR_FALSE);
 
+  if (mPrt->mPrintDC) {
+    mPrt->mPrintDC->SetAltDevice(nsnull);
+  }
+
   /* cleaup on failure + notify user */
   if (NS_FAILED(rv)) {
     /* cleanup done, let's fire-up an error dialog to notify the user
