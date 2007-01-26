@@ -226,10 +226,10 @@ function onStart()
   // start in online or offline mode
   if (gStartupMode) {
     var offlineState = document.getElementById("offlineState");
-    var ioService = Components.classes["@mozilla.org/network/io-service;1"].
-                      getService(Components.interfaces.nsIIOService);
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                              .getService(Components.interfaces.nsIIOService2);
     if (offlineState.checked != ioService.offline) {
-      ioService.manageOfflineState = false;
+      ioService.manageOfflineStatus = false;
       ioService.offline = offlineState.checked;
     }
   }
