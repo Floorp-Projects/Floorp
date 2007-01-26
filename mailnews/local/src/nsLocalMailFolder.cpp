@@ -109,7 +109,7 @@
 #include "nsAutoPtr.h"
 #include "nsIRssIncomingServer.h"
 #include "nsNetUtil.h"
-
+#include "nsIMsgFolderNotificationService.h"
 
 static NS_DEFINE_CID(kMailboxServiceCID,          NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
@@ -1514,7 +1514,12 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
   // shift delete case - (delete to trash is handled in EndMove)
   // this is also the case when applying retention settings.
   if (deleteStorage && !isMove)
+  {
     MarkMsgsOnPop3Server(messages, POP3_DELETE);
+    nsCOMPtr <nsIMsgFolderNotificationService> notifier = do_GetService(NS_MSGNOTIFICATIONSERVICE_CONTRACTID);
+    if (notifier)
+        notifier->NotifyItemDeleted(messages);    
+  }
   
   PRBool isTrashFolder = mFlags & MSG_FOLDER_FLAG_TRASH;
   if (!deleteStorage && !isTrashFolder)
@@ -2120,7 +2125,24 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder,
       }
     }
   }  
-  
+
+  nsCOMPtr <nsIMsgFolderNotificationService> notifier = do_GetService(NS_MSGNOTIFICATIONSERVICE_CONTRACTID);
+  if (notifier)
+  {
+    PRBool hasListeners;
+    notifier->GetHasListeners(&hasListeners);
+    if (hasListeners)
+    {
+      nsCOMPtr <nsISupportsArray> supportsArray = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
+      if (supportsArray)
+      {
+        
+        supportsArray->AppendElement(srcFolder);
+        notifier->NotifyItemMoveCopyCompleted(isMoveFolder, supportsArray, this);
+      }
+    }
+  }
+        
   if (isMoveFolder && NS_SUCCEEDED(copyStatus))
   {
     //notifying the "folder" that was dragged and dropped has been created.
@@ -2650,6 +2672,22 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
   else
   { // both CopyMessages() & CopyFileMessage() go here if they have
     // done copying operation; notify completion to copy service
+    
+    // notify the global msg folder listeners
+    if (multipleCopiesFinished)
+    {
+      // we need to send this notification before we delete the source messages,
+      // because deleting the source messages clears out the src msg db hdr.
+      nsCOMPtr <nsIMsgFolderNotificationService> notifier = do_GetService(NS_MSGNOTIFICATIONSERVICE_CONTRACTID);
+      if (notifier)
+      {
+        PRBool hasListeners;
+        notifier->GetHasListeners(&hasListeners);
+        if (hasListeners)
+            notifier->NotifyItemMoveCopyCompleted(mCopyState->m_isMove, mCopyState->m_messages, this);
+      }
+      
+    }
     if(!mCopyState->m_isMove)
     {
       if (multipleCopiesFinished)
@@ -2722,7 +2760,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove(PRBool moveSucceeded)
   
   if (mCopyState && mCopyState->m_curCopyIndex >= mCopyState->m_totalMsgCount)
   {
-    
     //Notify that a completion finished.
     nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryInterface(mCopyState->m_srcSupport);
     if(srcFolder)

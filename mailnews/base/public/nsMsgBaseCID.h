@@ -527,6 +527,17 @@
  0xb897da55, 0x8256, 0x4cf5, \
  { 0x89, 0x2b, 0x32, 0xe7, 0x7b, 0xc7, 0xc5, 0x0b}}
 
+//
+// nsMsgNotificationService
+//
+#define NS_MSGNOTIFICATIONSERVICE_CONTRACTID \
+"@mozilla.org/messenger/msgnotificationservice;1"
+
+#define NS_MSGNOTIFICATIONSERVICE_CID \
+{ /* F1F7CBCD-D5E3-45A0-AA2D-CECF1A95AB03 */ \
+  0xf1f7cbcd, 0xd5e3, 0x45a0, \
+  {0xaa, 0x2d, 0xce, 0xcf, 0x1a, 0x95, 0xab, 0x03}}
+
 // 
 // nsMessengerOSIntegration 
 //

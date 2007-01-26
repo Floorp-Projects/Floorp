@@ -115,7 +115,7 @@
 #include "nsICacheEntryDescriptor.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIMsgIdentity.h"
-
+#include "nsIMsgFolderNotificationService.h"
 
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -1536,6 +1536,7 @@ NS_IMETHODIMP nsImapMailFolder::Delete ()
       if (NS_SUCCEEDED(mPath->GetFileSpec(&fileSpec)) && fileSpec.Exists())
         fileSpec.Delete(PR_FALSE);
     }
+    // should notify nsIMsgFolderListeners about the folder getting deleted...
     return rv;
 }
 
@@ -3073,7 +3074,13 @@ nsresult nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol *aProtocol
     }
     // here we need to tweak flags from uid state..
     if (mDatabase && (!m_msgMovedByFilter || ShowDeletedMessages()))
+    {
       mDatabase->AddNewHdrToDB(newMsgHdr, PR_TRUE);
+      nsCOMPtr <nsIMsgFolderNotificationService> notifier = do_GetService(NS_MSGNOTIFICATIONSERVICE_CONTRACTID);
+      if (notifier)
+        notifier->NotifyItemAdded(newMsgHdr);    
+      
+    }
     m_msgParser->Clear(); // clear out parser, because it holds onto a msg hdr.
     m_msgParser->SetMailDB(nsnull); // tell it to let go of the db too.
     // I don't think we want to do this - it does bad things like set the size incorrectly.

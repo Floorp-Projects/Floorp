@@ -1718,11 +1718,20 @@ PRInt32 nsParseNewMailState::PublishMsgHeader(nsIMsgWindow *msgWindow)
           m_newMsgHdr->OrFlags(MSG_FLAG_NEW, &newFlags);
         
         m_mailDB->AddNewHdrToDB(m_newMsgHdr, PR_TRUE);
+        NotifyGlobalListeners(m_newMsgHdr);
       }
     } // if it was moved by imap filter, m_parseMsgState->m_newMsgHdr == nsnull
     m_newMsgHdr = nsnull;
   }
   return 0;
+}
+
+void nsParseNewMailState::NotifyGlobalListeners(nsIMsgDBHdr *newHdr)
+{
+  if (!m_notificationService)
+    m_notificationService = do_GetService("@mozilla.org/messenger/msgnotificationservice;1");
+  if (m_notificationService)
+    m_notificationService->NotifyItemAdded(newHdr);
 }
 
 nsresult nsParseNewMailState::GetTrashFolder(nsIMsgFolder **pTrashFolder)
@@ -2327,6 +2336,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
         }
       }
       destMailDB->AddNewHdrToDB(newHdr, PR_TRUE);
+      NotifyGlobalListeners(newHdr);
       m_msgToForwardOrReply = newHdr;
     }
   }

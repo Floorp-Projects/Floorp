@@ -41,6 +41,8 @@
 #include "nsCOMArray.h"
 #include "nspr.h"
 #include "nsIFileSpec.h"
+#include "nsIMsgFolderNotificationService.h"
+#include "nsMsgBaseCID.h"
 
 // ******************** nsCopySource ******************
 // 
@@ -179,6 +181,35 @@ nsMsgCopyService::ClearRequest(nsCopyRequest* aRequest, nsresult rv)
 {
   if (aRequest)
   {
+    // Send notifications to nsIGlobalMsgFolderNotificationService
+    
+    if (aRequest->m_requestType == nsCopyFoldersType)
+    {
+      nsCOMPtr <nsIMsgFolderNotificationService> notifier = do_GetService(NS_MSGNOTIFICATIONSERVICE_CONTRACTID);
+      if (notifier)
+      {
+        PRBool hasListeners;
+        notifier->GetHasListeners(&hasListeners);
+        if (hasListeners)
+        {
+          nsCOMPtr <nsISupportsArray> supportsArray = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
+          if (supportsArray)
+          {
+            // Iterate over the copy sources and append their message arrays to this supports array
+            // or in the case of folders, the source folder.
+            PRInt32 cnt, i;
+            cnt =  aRequest->m_copySourceArray.Count();
+            for (i=0; i < cnt; i++)
+            {
+              nsCopySource *copySource = (nsCopySource*) aRequest->m_copySourceArray.ElementAt(i);
+              supportsArray->AppendElement(copySource->m_msgFolder);
+            }
+            notifier->NotifyItemMoveCopyCompleted(aRequest->m_isMoveOrDraftOrTemplate, supportsArray, aRequest->m_dstFolder);
+          }
+        }
+      }
+    }
+    
     // undo stuff
     if (aRequest->m_allowUndo && aRequest->m_copySourceArray.Count() > 1 && 
         aRequest->m_txnMgr)

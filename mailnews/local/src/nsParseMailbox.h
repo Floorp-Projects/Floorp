@@ -61,6 +61,7 @@
 
 #include "nsIMsgFilterList.h"
 #include "nsIMsgFilterHitNotify.h"
+#include "nsIMsgFolderNotificationService.h"
 
 class nsFileSpec;
 class nsByteArray;
@@ -260,6 +261,7 @@ public:
   virtual void	ApplyFilters(PRBool *pMoved, nsIMsgWindow *msgWindow, 
                              PRUint32 msgOffset);
   nsresult    ApplyForwardAndReplyFilter(nsIMsgWindow *msgWindow);
+  void        NotifyGlobalListeners(nsIMsgDBHdr *newHdr);
 
 protected:
   virtual nsresult GetTrashFolder(nsIMsgFolder **pTrashFolder);
@@ -277,6 +279,7 @@ protected:
   nsCOMPtr <nsIMsgWindow> m_msgWindow;
   nsCOMPtr <nsIMsgFolder> m_downloadFolder;
   nsCOMArray <nsIMsgFolder> m_filterTargetFolders;
+  nsCOMPtr <nsIMsgFolderNotificationService> m_notificationService;
 
   nsImapMoveCoalescer *m_moveCoalescer; // strictly owned by nsParseNewMailState;
 
