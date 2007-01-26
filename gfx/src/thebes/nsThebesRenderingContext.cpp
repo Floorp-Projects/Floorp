@@ -609,7 +609,29 @@ nsThebesRenderingContext::DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoo
 /* Clamp r to (0,0) (16384,16384);
  * these are to be device coordinates.
  *
- * Returns PR_FALSE if the rectangle is completely out of bounds, PR_TRUE otherwise.
+ * Returns PR_FALSE if the rectangle is completely out of bounds,
+ * PR_TRUE otherwise.
+ *
+ * This function assumes that it will be called with a rectangle being
+ * drawn into a surface with an identity transformation matrix; that
+ * is, anything above or to the left of (0,0) will be offscreen.
+ *
+ * First it checks if the rectangle is entirely beyond
+ * CAIRO_COORD_MAX; if so, it can't ever appear on the screen --
+ * PR_FALSE is returned.
+ *
+ * Then it shifts any rectangles with x/y < 0 so that x and y are = 0,
+ * and adjusts the width and height appropriately.  For example, a
+ * rectangle from (0,-5) with dimensions (5,10) will become a
+ * rectangle from (0,0) with dimensions (5,5).
+ *
+ * If after negative x/y adjustment to 0, either the width or height
+ * is negative, then the rectangle is completely offscreen, and
+ * nothing is drawn -- PR_FALSE is returned.
+ *
+ * Finally, if x+width or y+height are greater than CAIRO_COORD_MAX,
+ * the width and height are clamped such x+width or y+height are equal
+ * to CAIRO_COORD_MAX, and PR_TRUE is returned.
  */
 #define CAIRO_COORD_MAX (16384.0)
 
@@ -622,6 +644,8 @@ ConditionRect(gfxRect& r) {
 
     if (r.pos.x < 0.0) {
         r.size.width += r.pos.x;
+        if (r.size.width < 0.0)
+            return PR_FALSE;
         r.pos.x = 0.0;
     }
 
@@ -631,6 +655,9 @@ ConditionRect(gfxRect& r) {
 
     if (r.pos.y < 0.0) {
         r.size.height += r.pos.y;
+        if (r.size.height < 0.0)
+            return PR_FALSE;
+
         r.pos.y = 0.0;
     }
 
