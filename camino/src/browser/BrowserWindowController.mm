@@ -1119,9 +1119,11 @@ enum BWCOpenDest {
                  ABS(MIN(newFrame.size.height, defaultFrame.size.height) - [[self window] frame].size.height) > kMinZoomChange);
 }
 
-// If the window is resized update the cached windowframe unless we are zooming the window
 - (void)windowDidResize:(NSNotification *)aNotification
 {
+  [self updateWindowTitle:[mBrowserView windowTitle]];
+
+  // Update the cached windowframe unless we are zooming the window
   if (!mShouldZoom)
     mLastFrameSize = [[self window] frame];
   else
@@ -1819,9 +1821,27 @@ enum BWCOpenDest {
   }
 }
 
+// Get the title's maximal width manually and truncate the title ourselves to work around
+// 10.3's crappy title truncation.  Also, this way we can middle-truncate, which 10.4 doesn't do
 - (void)updateWindowTitle:(NSString*)title
 {
-  [[self window] setTitle:title];
+  if (!title)
+    return;
+
+  NSWindow* window = [self window];
+
+  float leftEdge = NSMaxX([[window standardWindowButton:NSWindowZoomButton] frame]);
+  NSButton* toolbarButton = [window standardWindowButton:NSWindowToolbarButton];
+  float rightEdge = toolbarButton ? [toolbarButton frame].origin.x : NSMaxX([window frame]);
+
+  // Leave 8 pixels of padding around the title.
+  const int kTitlePadding = 8;
+  float titleWidth = rightEdge - leftEdge - 2 * kTitlePadding;
+
+  // Sending |titleBarFontOfSize| 0 returns default size
+  NSDictionary* attributes = [NSDictionary dictionaryWithObject:[NSFont titleBarFontOfSize:0] forKey:NSFontAttributeName];
+
+  [window setTitle:[title stringByTruncatingToWidth:titleWidth at:kTruncateAtMiddle withAttributes:attributes]];
 }
 
 - (void)updateStatus:(NSString*)status
@@ -2073,7 +2093,7 @@ enum BWCOpenDest {
 
 - (void)updateFromFrontmostTab
 {
-  [[self window] setTitle:[mBrowserView windowTitle]];
+  [self updateWindowTitle:[mBrowserView windowTitle]];
   [self setLoadingActive:[mBrowserView isBusy]];
   [self setLoadingProgress:[mBrowserView loadingProgress]];
   [self showSecurityState:[mBrowserView securityState]];

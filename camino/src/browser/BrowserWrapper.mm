@@ -674,7 +674,7 @@ enum {
     newWindowTitle = [NSString stringWithFormat:NSLocalizedString(@"OfflineTitleFormat", @""), newWindowTitle];
   mTitle = [newWindowTitle retain];
   
-  [mDelegate updateWindowTitle:[mTitle stringByTruncatingTo:80 at:kTruncateAtEnd]];
+  [mDelegate updateWindowTitle:mTitle];
   
   // Always set the tab.
   [mTabItem setLabel:mTabTitle];		// tab titles get truncated when setting them to tabs
