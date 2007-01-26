@@ -1278,7 +1278,7 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
 
     //-- get the source scheme
     nsCAutoString sourceScheme;
-    rv = sourceURI->GetScheme(sourceScheme);
+    rv = sourceBaseURI->GetScheme(sourceScheme);
     if (NS_FAILED(rv)) return rv;
 
     if (targetScheme.Equals(sourceScheme,
