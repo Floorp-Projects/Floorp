@@ -134,9 +134,10 @@ interface nsIMsgImapMailFolder : nsISupports {
    * - if the server does not supports quotas,
    * - if there are no storage quotas on this folder, or
    * - if the folder has never been opened.
-   * If it is true, the folder has a storage quota and the usedKB and
-   * maxKB attributes are set to the values provided by the server
-   * (in kilobytes), for this quota root.
+   * If it is true and maxKB > 0, the folder has a storage quota and
+   * the usedKB and maxKB attributes are set to the values provided by
+   * the server (in kilobytes), for this quota root.
+   * Lotus Notes sends us maxKB = 0, usedKB > 0 for unlimited quota.
    */
   void getQuota(out boolean valid, out unsigned long usedKB, out unsigned long maxKB);
 };
