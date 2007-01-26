@@ -4,35 +4,16 @@
 
 Steps to get started:
 
- 1.) Right now, you will need to edit some constants in runtests.pl. Windows
-     is not yet supported.
+ 1.) Run the runtests.pl script to start the server.
+ 
+     Currently, the test script automatically determines the location
+     of *Firefox*.
 
- 2.) Start the python server in a separate console:
-     
-      %> python server.py
-
-     It runs at http://localhost:8888/. Control-C will kill it. We are looking
-     at other server options, because we don't want to require python.
-
- 3.) New test cases can be added to the tests/ directory. We are working on
-     easy test navigation and automated test addition.
-
- 4.) gen_template.pl will generate test templates for HTML, XUL, and XHTML.
+ 2.) gen_template.pl will generate test templates for HTML, XUL, and XHTML.
      Read the comment at the top of the file for usage instructions.
 
- 5.) Write a test.
+ 3.) Write a test.
 
-
-Checkin rules:
-
- 1.) Any module owner/peer/member should feel free to check in a test case.
-
- 2.) Tests should always be passing, and failing tests will make the tree
-     turn orange (very soon). If you have tests that you know are going to
-     fail, use the todo() function.
-
- 3.) Modifications to Makefiles, Perl, or JS code need a bugzilla bug with 
-     davel and sayrer cc'd.
 
 Example test:
 
