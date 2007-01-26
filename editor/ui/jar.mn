@@ -37,7 +37,6 @@ comm.jar:
       content/editor/pref-composer.xul                         (composer/content/pref-composer.xul) 
       content/editor/pref-publish.xul                          (composer/content/pref-publish.xul) 
       content/editor/editorSmileyOverlay.xul                   (composer/content/editorSmileyOverlay.xul) 
-      content/editor/editorInlineSpellCheck.js                 (composer/content/editorInlineSpellCheck.js) 
       content/editor/editorPrefsOverlay.xul                    (composer/content/editorPrefsOverlay.xul) 
       content/editor/editorNavigatorOverlay.xul                (composer/content/editorNavigatorOverlay.xul) 
       content/editor/editorMailOverlay.xul                     (composer/content/editorMailOverlay.xul) 
