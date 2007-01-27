@@ -81,8 +81,8 @@ public:
   void CreateScrollableView();
 
   void CreateAnonymousContent(nsISupportsArray& aAnonymousChildren);
-  void PostScrollPortEvent(PRBool aOverflow, nsScrollPortEvent::orientType aType);
-  void PostOverflowEvents();
+  nsresult FireScrollPortEvent();
+  void PostOverflowEvent();
 
   nsresult BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                             const nsRect&           aDirtyRect,
@@ -105,6 +105,15 @@ public:
   public:
     NS_DECL_NSIRUNNABLE
     ScrollEvent(nsGfxScrollFrameInner *inner) : mInner(inner) {}
+    void Revoke() { mInner = nsnull; }
+  private:
+    nsGfxScrollFrameInner *mInner;
+  };
+
+  class AsyncScrollPortEvent : public nsRunnable {
+  public:
+    NS_DECL_NSIRUNNABLE
+    AsyncScrollPortEvent(nsGfxScrollFrameInner *inner) : mInner(inner) {}
     void Revoke() { mInner = nsnull; }
   private:
     nsGfxScrollFrameInner *mInner;
@@ -162,6 +171,7 @@ public:
                         const nsRect& aScrollArea);
 
   nsRevocableEventPtr<ScrollEvent> mScrollEvent;
+  nsRevocableEventPtr<AsyncScrollPortEvent> mAsyncScrollPortEvent;
   nsIScrollableView* mScrollableView;
   nsIBox* mHScrollbarBox;
   nsIBox* mVScrollbarBox;
