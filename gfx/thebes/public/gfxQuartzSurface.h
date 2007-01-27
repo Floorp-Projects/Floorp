@@ -54,8 +54,7 @@ public:
 
     virtual ~gfxQuartzSurface();
 
-    unsigned long Width() { return mWidth; }
-    unsigned long Height() { return mHeight; }
+    gfxSize GetSize() const { return gfxSize(mWidth, mHeight); }
 
     CGContextRef GetCGContext() { return mCGContext; }
 

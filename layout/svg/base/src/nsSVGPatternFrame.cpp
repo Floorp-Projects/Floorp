@@ -295,7 +295,7 @@ nsSVGPatternFrame::PaintPattern(cairo_surface_t** surface,
   if (!tmpSurface)
     return NS_ERROR_FAILURE;
 
-  memset(tmpSurface->Data(), 0, tmpSurface->Height() * tmpSurface->Stride());
+  memset(tmpSurface->Data(), 0, tmpSurface->GetSize().height * tmpSurface->Stride());
   gfxContext tmpContext(tmpSurface);
   nsSVGRenderState tmpState(&tmpContext);
 

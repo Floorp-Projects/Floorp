@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -54,12 +54,16 @@ public:
     nsDeviceContextSpecX();
 
     NS_DECL_ISUPPORTS
+#ifdef MOZ_CAIRO_GFX
     NS_IMETHOD GetSurfaceForPrinter(gfxASurface **surface);
     NS_IMETHOD BeginDocument(PRUnichar*  aTitle, 
                              PRUnichar*  aPrintToFileName,
                              PRInt32     aStartPage, 
-                             PRInt32     aEndPage) { return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD EndDocument() { return NS_ERROR_NOT_IMPLEMENTED; }
+                             PRInt32     aEndPage);
+    NS_IMETHOD EndDocument();
+    NS_IMETHOD BeginPage();
+    NS_IMETHOD EndPage();
+#endif
 
     /**
      * Initialize the nsDeviceContextSpecX for use.  This will allocate a printrecord for use
@@ -105,8 +109,7 @@ protected:
     PMPrintSession    mPrintSession;              // printing context.
     PMPageFormat      mPageFormat;                // page format.
     PMPrintSettings   mPrintSettings;             // print settings.
-    CGrafPtr          mSavedPort;                 // saved graphics port.
     PRBool            mBeganPrinting;
 };
 
-#endif // nsDeviceContextSpecX_h_
+#endif //nsDeviceContextSpecX_h_

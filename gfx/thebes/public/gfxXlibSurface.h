@@ -69,8 +69,11 @@ public:
 
     virtual ~gfxXlibSurface();
 
-    unsigned long Width() { if (mWidth == -1) DoSizeQuery(); return mWidth; }
-    unsigned long Height() { if (mHeight == -1) DoSizeQuery(); return mHeight; }
+    gfxSize GetSize() {
+        if (mWidth == -1 || mHeight == -1)
+            DoSizeQuery();
+        return gfxSize(mWidth, mHeight);
+    }
 
     Display* XDisplay() { return mDisplay; }
     Drawable XDrawable() { return mDrawable; }

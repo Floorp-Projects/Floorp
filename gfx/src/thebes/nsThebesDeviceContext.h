@@ -120,8 +120,10 @@ public:
     nsNativeWidget GetWidget() { return mWidget; }
 #ifdef XP_WIN
     HDC GetHDC() {
-        if (mPrintingSurface)
+        if (mPrintingSurface) {
+            NS_ASSERTION(mPrintingSurface->GetType() == gfxASurface::SurfaceTypeWin32, "invalid surface type");
             return reinterpret_cast<gfxWindowsSurface*>(mPrintingSurface.get())->GetDC();
+        }
         return nsnull;
     }
 #endif
@@ -131,6 +133,7 @@ protected:
     void ComputeClientRectUsingScreen(nsRect* outRect);
     void ComputeFullAreaUsingScreen(nsRect* outRect);
     void FindScreen(nsIScreen** outScreen);
+    void CalcPrintingSize();
 
     PRUint32 mDepth;
 

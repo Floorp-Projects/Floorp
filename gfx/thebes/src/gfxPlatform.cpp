@@ -128,19 +128,20 @@ gfxPlatform::OptimizeImage(gfxImageSurface* aSurface)
     nsRefPtr<gfxASurface> optSurface;
     gfxASurface::gfxImageFormat realFormat = aSurface->Format();
 
+    gfxSize surfaceSize = aSurface->GetSize();
     if (realFormat == gfxASurface::ImageFormatARGB32) {
         // this might not really need alpha; figure that out
         if (!DoesARGBImageDataHaveAlpha(aSurface->Data(),
-                                        aSurface->Width(),
-                                        aSurface->Height(),
+                                        surfaceSize.width,
+                                        surfaceSize.height,
                                         aSurface->Stride()))
         {
             realFormat = gfxASurface::ImageFormatRGB24;
         }
     }
 
-    optSurface = CreateOffscreenSurface(aSurface->Width(),
-                                        aSurface->Height(),
+    optSurface = CreateOffscreenSurface(surfaceSize.width,
+                                        surfaceSize.height,
                                         realFormat);
 
     if (!optSurface)

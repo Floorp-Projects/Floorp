@@ -93,7 +93,7 @@ CPPSRCS	+= 	gfxQuartzSurface.cpp gfxQuartzPDFSurface.cpp gfxPlatformMac.cpp gfxA
 CMMSRCS = gfxQuartzFontCache.mm
 
 # Always link with OpenGL/AGL
-EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL -framework Cocoa -framework QuickTime -lcups
+EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL -framework Cocoa -framework QuickTime
 endif
 
 ifdef MOZ_ENABLE_GLITZ
