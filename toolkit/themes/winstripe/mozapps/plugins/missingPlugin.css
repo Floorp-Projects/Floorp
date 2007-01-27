@@ -14,8 +14,10 @@ html|applet > *|* {
 
 html|a {
   text-align: -moz-center;
-  overflow: -moz-hidden-unscrollable;
-  display: block;
+  overflow: hidden;
+  display: inline-block;
+  /* overflow:hidden makes baseline vertical-alignment act like plugins */
+  vertical-align: inherit;
   border: 1px outset;
   padding: 5px;
   font-size: 12px;
