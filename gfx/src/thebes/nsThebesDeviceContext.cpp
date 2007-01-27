@@ -62,6 +62,8 @@
 #include <pango/pango-fontmap.h>
 #endif /* GTK2 */
 
+#include "gfxImageSurface.h"
+
 #ifdef MOZ_ENABLE_GTK2
 #include "nsSystemFontsGTK2.h"
 #include "gfxPDFSurface.h"
@@ -78,7 +80,7 @@ static nsSystemFontsWin *gSystemFonts = nsnull;
 static nsSystemFontsBeOS *gSystemFonts = nsnull;
 #elif XP_MACOSX
 #include "nsSystemFontsMac.h"
-#include "gfxQuartzPDFSurface.h"
+#include "gfxQuartzSurface.h"
 static nsSystemFontsMac *gSystemFonts = nsnull;
 #else
 #error Need to declare gSystemFonts!
@@ -229,15 +231,6 @@ nsThebesDeviceContext::Init(nsNativeWidget aWidget)
 
     SetDPI(prefVal);
 
-#ifdef XP_MACOSX
-    if (mPrinter) {
-        gfxSize size = ((gfxQuartzPDFSurface*)(mPrintingSurface.get()))->GetSize();
-        mWidth = NSFloatPointsToTwips(size.width);
-        mHeight = NSFloatPointsToTwips(size.height);
-    }
-
-    mDepth = 24;
-#endif
 
 #ifdef MOZ_ENABLE_GTK2
     if (getenv ("MOZ_X_SYNC")) {
@@ -246,28 +239,10 @@ nsThebesDeviceContext::Init(nsNativeWidget aWidget)
         XSetErrorHandler(x11_error_handler);
     }
 
-    // XXX
-    if (mPrinter) {
-        // XXX this should use a gfxAPrintingSurface or somesuch cast.
-        // currently PDF and PS are identical here
-        gfxSize size = ((gfxPSSurface*)(mPrintingSurface.get()))->GetSize();
-        mWidth = NSFloatPointsToTwips(size.width);
-        mHeight = NSFloatPointsToTwips(size.height);
-        printf("%f %f\n", size.width, size.height);
-        printf("%d %d\n", (PRInt32)mWidth, (PRInt32)mHeight);
-    }
-    // XXX
-    mDepth = 24;
 #endif
 
-#ifdef XP_WIN
-    HDC dc =  GetHDC() ? GetHDC() : GetDC((HWND)mWidget);
-    mWidth = ::GetDeviceCaps(dc, HORZRES);
-    mHeight = ::GetDeviceCaps(dc, VERTRES);
-    mDepth = (PRUint32)::GetDeviceCaps(dc, BITSPIXEL);
-    if (dc != (HDC)GetHDC())
-        ReleaseDC((HWND)mWidget, dc);
-#endif
+
+    mDepth = 24;
 
     mScreenManager = do_GetService("@mozilla.org/gfx/screenmanager;1");   
 
@@ -339,6 +314,9 @@ nsThebesDeviceContext::CreateRenderingContext(nsIRenderingContext *&aContext)
     nsCOMPtr<nsIRenderingContext> pContext;
     rv = CreateRenderingContextInstance(*getter_AddRefs(pContext));
     if (NS_SUCCEEDED(rv)) {
+#ifdef XP_MACOSX
+        mDeviceContextSpec->GetSurfaceForPrinter(getter_AddRefs(mPrintingSurface));
+#endif
         if (mPrintingSurface)
             rv = pContext->Init(this, mPrintingSurface);
         else
@@ -451,13 +429,8 @@ nsThebesDeviceContext::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHei
 {
     if (mPrinter) {
         // we have a printer device
-#if defined(MOZ_ENABLE_GTK2) || defined(XP_MACOSX)
         aWidth = mWidth;
         aHeight = mHeight;
-#else
-        aWidth = NSToIntRound(mWidth * mDevUnitsToAppUnits);
-        aHeight = NSToIntRound(mHeight * mDevUnitsToAppUnits);
-#endif
     } else {
         nsRect area;
         ComputeFullAreaUsingScreen(&area);
@@ -475,13 +448,8 @@ nsThebesDeviceContext::GetRect(nsRect &aRect)
         // we have a printer device
         aRect.x = 0;
         aRect.y = 0;
-#if defined(MOZ_ENABLE_GTK2) || defined(XP_MACOSX)
         aRect.width = NSToIntRound(mWidth);
         aRect.height = NSToIntRound(mHeight);
-#else
-        aRect.width = NSToIntRound(mWidth * mDevUnitsToAppUnits);
-        aRect.height = NSToIntRound(mHeight * mDevUnitsToAppUnits);
-#endif
     } else
         ComputeFullAreaUsingScreen ( &aRect );
 
@@ -495,13 +463,8 @@ nsThebesDeviceContext::GetClientRect(nsRect &aRect)
         // we have a printer device
         aRect.x = 0;
         aRect.y = 0;
-#if defined(MOZ_ENABLE_GTK2) || defined(XP_MACOSX)
         aRect.width = NSToIntRound(mWidth);
         aRect.height = NSToIntRound(mHeight);
-#else
-        aRect.width = NSToIntRound(mWidth * mDevUnitsToAppUnits);
-        aRect.height = NSToIntRound(mHeight * mDevUnitsToAppUnits);
-#endif
     }
     else
         ComputeClientRectUsingScreen(&aRect);
@@ -555,6 +518,8 @@ nsThebesDeviceContext::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
     newDevCon->SetAppUnitsToDevUnits((a2d / t2d) * newDevCon->mTwipsToPixels);
     newDevCon->SetDevUnitsToAppUnits(1.0f / newDevCon->mAppUnitsToDevUnits);
 
+    newDevCon->CalcPrintingSize();
+
     return NS_OK;
 }
 
@@ -577,6 +542,8 @@ nsThebesDeviceContext::BeginDocument(PRUnichar*  aTitle,
     nsRefPtr<gfxContext> thebes = new gfxContext(mPrintingSurface);
     thebes->BeginPrinting(nsDependentString(aTitle ? aTitle : kEmpty),
                           nsDependentString(aPrintToFileName ? aPrintToFileName : kEmpty));
+    if (mDeviceContextSpec)
+        mDeviceContextSpec->BeginDocument(aTitle, aPrintToFileName, aStartPage, aEndPage);
     return NS_OK;
 }
 
@@ -584,10 +551,12 @@ nsThebesDeviceContext::BeginDocument(PRUnichar*  aTitle,
 NS_IMETHODIMP
 nsThebesDeviceContext::EndDocument(void)
 {
-    nsRefPtr<gfxContext> thebes = new gfxContext(mPrintingSurface);
-    thebes->EndPrinting();
-
-    mPrintingSurface->Finish();
+    if (mPrintingSurface) {
+        nsRefPtr<gfxContext> thebes = new gfxContext(mPrintingSurface);
+        thebes->EndPrinting();
+  
+        mPrintingSurface->Finish();
+    }
 
     if (mDeviceContextSpec)
         mDeviceContextSpec->EndDocument();
@@ -600,6 +569,9 @@ nsThebesDeviceContext::AbortDocument(void)
 {
     nsRefPtr<gfxContext> thebes = new gfxContext(mPrintingSurface);
     thebes->AbortPrinting();
+
+    if (mDeviceContextSpec)
+        mDeviceContextSpec->EndDocument();
     return NS_OK;
 }
 
@@ -607,8 +579,13 @@ nsThebesDeviceContext::AbortDocument(void)
 NS_IMETHODIMP
 nsThebesDeviceContext::BeginPage(void)
 {
-    nsRefPtr<gfxContext> thebes = new gfxContext(mPrintingSurface);
-    thebes->BeginPage();
+    if (mPrintingSurface) {
+        nsRefPtr<gfxContext> thebes = new gfxContext(mPrintingSurface);
+        thebes->BeginPage();
+    }
+
+    if (mDeviceContextSpec)
+        mDeviceContextSpec->BeginPage();
     return NS_OK;
 }
 
@@ -617,6 +594,16 @@ nsThebesDeviceContext::EndPage(void)
 {
     nsRefPtr<gfxContext> thebes = new gfxContext(mPrintingSurface);
     thebes->EndPage();
+
+    /* uhh. yeah, don't ask.
+     * We need to release this before we call end page for mac.. */
+#ifdef XP_MACOSX
+    mPrintingSurface = nsnull;
+#endif
+
+    if (mDeviceContextSpec)
+        mDeviceContextSpec->EndPage();
+
     return NS_OK;
 }
 
@@ -702,8 +689,8 @@ nsThebesDeviceContext::ComputeFullAreaUsingScreen(nsRect* outRect)
         outRect->width = NSToIntRound(width * mDevUnitsToAppUnits);
         outRect->height = NSToIntRound(height * mDevUnitsToAppUnits);
         
-        mWidth = width;
-        mHeight = height;
+        mWidth = outRect->width;
+        mHeight = outRect->height;
     }
     
 }
@@ -721,4 +708,65 @@ nsThebesDeviceContext::FindScreen(nsIScreen** outScreen)
         mScreenManager->ScreenForNativeWidget(mWidget, outScreen);
     else
         mScreenManager->GetPrimaryScreen(outScreen);
+}
+
+void
+nsThebesDeviceContext::CalcPrintingSize()
+{
+    if (!mPrinter)
+        return;
+
+    PRBool inPoints = PR_TRUE;
+
+    gfxSize size;
+    switch (mPrintingSurface->GetType()) {
+    case gfxASurface::SurfaceTypeImage:
+        inPoints = PR_FALSE;
+        size = reinterpret_cast<gfxImageSurface*>(mPrintingSurface.get())->GetSize();
+        break;
+
+#ifdef MOZ_ENABLE_GTK2
+    case gfxASurface::SurfaceTypePDF:
+        inPoints = PR_TRUE;
+        size = reinterpret_cast<gfxPDFSurface*>(mPrintingSurface.get())->GetSize();
+        break;
+    case gfxASurface::SurfaceTypePS:
+        inPoints = PR_TRUE;
+        size = reinterpret_cast<gfxPSSurface*>(mPrintingSurface.get())->GetSize();
+        break;
+#endif
+
+#ifdef XP_MACOSX
+    case gfxASurface::SurfaceTypeQuartz2:
+        inPoints = PR_TRUE; // this is really only true when we're printing
+        size = reinterpret_cast<gfxQuartzSurface*>(mPrintingSurface.get())->GetSize();
+        break;
+#endif
+
+#ifdef XP_WIN
+    case gfxASurface::SurfaceTypeWin32:
+    {
+        inPoints = PR_FALSE;
+        HDC dc =  GetHDC() ? GetHDC() : GetDC((HWND)mWidget);
+        size.width = NSToIntRound(::GetDeviceCaps(dc, HORZRES) * mDevUnitsToAppUnits);
+        size.height = NSToIntRound(::GetDeviceCaps(dc, VERTRES) * mDevUnitsToAppUnits);
+        mDepth = (PRUint32)::GetDeviceCaps(dc, BITSPIXEL);
+        if (dc != (HDC)GetHDC())
+            ReleaseDC((HWND)mWidget, dc);
+        break;
+    }
+#endif
+    default:
+        NS_ASSERTION(0, "trying to print to unknown surface type");
+    }
+
+    if (inPoints) {
+        mWidth = NSFloatPointsToTwips(size.width);
+        mHeight = NSFloatPointsToTwips(size.height);
+        printf("%f %f\n", size.width, size.height);
+        printf("%d %d\n", (PRInt32)mWidth, (PRInt32)mHeight);
+    } else {
+        mWidth = NSToIntRound(size.width);
+        mHeight = NSToIntRound(size.height);
+    }
 }

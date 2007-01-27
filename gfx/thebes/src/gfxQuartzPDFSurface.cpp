@@ -39,39 +39,7 @@
 
 #include "cairo-nquartz.h"
 
-#if defined(MAC_OS_X_VERSION_10_4) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
-#include <cups/cups.h>
-#else
-/* stupid apple doesn't bother to include cups.h in anything lower than
- * the 10.4 SDK yet they've shipped libcups since 10.2! wtf!
- * Apple is as bad as Linux!  come on!
- */
-extern "C" {
-typedef struct
-{
-    char *name;
-    char *value;
-} cups_option_t;
-typedef struct
-{
-    char *name,
-         *instance;
-    int is_default;
-    int num_options;
-    cups_option_t *options;
-} cups_dest_t;
-extern int cupsPrintFile(const char *printer, const char *filename,
-                         const char *title, int num_options,
-                         cups_option_t *options);
-extern void cupsFreeDests(int num_dests, cups_dest_t *dests);
-extern cups_dest_t *cupsGetDest(const char *name, const char *instance,
-                                int num_dests, cups_dest_t *dests);
-extern int cupsGetDests(cups_dest_t **dests);
-}
-#endif
-
 gfxQuartzPDFSurface::gfxQuartzPDFSurface(const char *filename, gfxSize aSizeInPoints)
-    : mFilename(strdup(filename)), mAborted(PR_FALSE)
 {
     mRect = CGRectMake(0.0, 0.0, aSizeInPoints.width, aSizeInPoints.height);
 
@@ -88,37 +56,6 @@ gfxQuartzPDFSurface::gfxQuartzPDFSurface(const char *filename, gfxSize aSizeInPo
 gfxQuartzPDFSurface::~gfxQuartzPDFSurface()
 {
     CGContextRelease(mCGContext);
-
-    /* don't spool if we're aborted */
-    if (mAborted) {
-        printf("aborted!!\n");
-        free(mFilename);
-        return;
-    }
-
-    /* quick dirty spooling code */
-    /* this doesn't do the right thing with the print options at all. */
-    int ndests;
-    cups_dest_t *dests;
-    ndests = cupsGetDests(&dests);
-#ifdef DEBUG_pavlov
-    for (int i = 0; i < ndests; i++) {
-        printf("%s\n", dests[i].name);
-    }
-#endif
-    /* get the default printer */
-    cups_dest_t *defaultDest = cupsGetDest(NULL, NULL, ndests, dests);
-#ifdef DEBUG_pavlov
-    printf("printing to: %s\n", defaultDest->name);
-    printf("printing: %s\n", mFilename);
-#endif
-
-    /* print with the default printer */
-    cupsPrintFile(defaultDest->name, mFilename, "Mozilla Print Job", defaultDest->num_options, defaultDest->options);
-
-    cupsFreeDests(ndests, dests);
-
-    free(mFilename);
 }
 
 
@@ -137,7 +74,6 @@ gfxQuartzPDFSurface::EndPrinting()
 nsresult
 gfxQuartzPDFSurface::AbortPrinting()
 {
-    mAborted = PR_TRUE;
     return NS_OK;
 }
 

@@ -68,8 +68,9 @@ public:
 
     // ImageSurface methods
     gfxImageFormat Format() const { return mFormat; }
-    long Width() const { return mWidth; }
-    long Height() const { return mHeight; }
+
+    gfxSize GetSize() const { return gfxSize(mWidth, mHeight); }
+
     /**
      * Distance in bytes between the start of a line and the start of the
      * next line.

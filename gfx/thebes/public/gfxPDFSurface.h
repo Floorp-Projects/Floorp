@@ -49,10 +49,9 @@ public:
     void SetDPI(double x, double y);
     void GetDPI(double *xDPI, double *yDPI);
 
-    gfxSize GetSize() {
-        gfxSize size = mSize;
-        return size;
-    }
+    // this is in points!
+    gfxSize GetSize() const { return mSize; }
+
 private:
     double mXDPI;
     double mYDPI;

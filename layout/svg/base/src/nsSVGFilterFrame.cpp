@@ -371,7 +371,7 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
   gfxContext tmpContext(tmpSurface);
   nsSVGRenderState tmpState(&tmpContext);
 
-  memset(tmpSurface->Data(), 0, tmpSurface->Height() * tmpSurface->Stride());
+  memset(tmpSurface->Data(), 0, tmpSurface->GetSize().height * tmpSurface->Stride());
   aTarget->PaintSVG(&tmpState, nsnull);
 
   mPrimitiveUnits->GetAnimVal(&type);

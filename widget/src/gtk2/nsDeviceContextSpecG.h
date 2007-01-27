@@ -91,6 +91,8 @@ public:
   NS_IMETHOD ClosePrintManager(); 
   NS_IMETHOD BeginDocument(PRUnichar * aTitle, PRUnichar * aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage);
   NS_IMETHOD EndDocument();
+  NS_IMETHOD BeginPage() { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD EndPage() { return NS_ERROR_NOT_IMPLEMENTED; }
 
   NS_IMETHOD GetToPrinter(PRBool &aToPrinter); 
   NS_IMETHOD GetIsPrintPreview(PRBool &aIsPPreview);

@@ -62,8 +62,6 @@ public:
 
 protected:
     CGContextRef mCGContext;
-    char *mFilename;
     CGRect mRect;
-    PRBool mAborted;
 };
 #endif /* GFX_QUARTZPDFSURFACE_H */
