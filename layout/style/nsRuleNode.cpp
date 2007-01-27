@@ -2837,6 +2837,9 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
     // pseudo-elements must not be positioned or floated (CSS2 12.1) and
     // must be limited to certain display types (depending on the
     // display type of the element to which they are attached).
+    // XXX These restrictions are no longer present in CSS2.1.  We
+    // should ensure that we support removing them before doing so,
+    // though.
 
     if (display->mPosition != NS_STYLE_POSITION_STATIC)
       display->mPosition = NS_STYLE_POSITION_STATIC;
@@ -2847,7 +2850,9 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
     if (displayValue != NS_STYLE_DISPLAY_NONE &&
         displayValue != NS_STYLE_DISPLAY_INLINE) {
       inherited = PR_TRUE;
-      if (parentDisplay->IsBlockLevel()) {
+      // XXX IsBlockInside?  (except for the marker bit)
+      if (parentDisplay->IsBlockLevel() ||
+          parentDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE_BLOCK) {
         // If the subject of the selector is a block-level element,
         // allowed values are 'none', 'inline', 'block', and 'marker'.
         // If the value of the 'display' has any other value, the

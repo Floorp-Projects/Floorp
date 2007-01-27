@@ -57,8 +57,13 @@
   -moz-box-sizing: border-box; /* XXX do we really want this? */
 }
 
+*|*::-moz-inline-table {
+  display: inline-table !important;
+  -moz-box-sizing: border-box; /* XXX do we really want this? */
+}
+
 *|*::-moz-table-outer {
-  display: table !important;
+  display: inherit !important; /* table or inline-table */
   margin: 0 ! important;
   padding: 0 ! important;
   border: none ! important;

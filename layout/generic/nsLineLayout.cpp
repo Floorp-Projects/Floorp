@@ -715,23 +715,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 
   // Compute the available size for the frame. This available width
   // includes room for the side margins.
-  nsSize availSize;
-  if (NS_UNCONSTRAINEDSIZE == psd->mRightEdge) {
-    availSize.width = NS_UNCONSTRAINEDSIZE;
-  }
-  else {
-    availSize.width = psd->mRightEdge - psd->mX;
-    if (psd->mNoWrap) {
-      // Make up a width to use for reflowing into.  XXX what value to
-      // use? for tables, we want to limit it; for other elements
-      // (e.g. text) it can be unlimited...
-      availSize.width = psd->mReflowState->availableWidth;
-    }
-  }
   // For now, set the available height to unconstrained always.
-  // XXX inline blocks and tables won't be able to break across pages/
-  // columns, but it's not clear how to handle that anyway
-  availSize.height = NS_UNCONSTRAINEDSIZE;
+  nsSize availSize(mBlockReflowState->ComputedWidth(), NS_UNCONSTRAINEDSIZE);
 
   // Setup reflow state for reflowing the frame
   nsHTMLReflowState reflowState(mPresContext, *psd->mReflowState,
@@ -741,6 +726,14 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   SetFlag(LL_UNDERSTANDSNWHITESPACE, PR_FALSE);
   mTextJustificationNumSpaces = 0;
   mTextJustificationNumLetters = 0;
+
+  // Inline-ish and text-ish things don't compute their width;
+  // everything else does.  We need to give them an available width that
+  // reflects the space left on the line.
+  NS_ASSERTION(psd->mRightEdge != NS_UNCONSTRAINEDSIZE,
+               "shouldn't have unconstrained widths anymore");
+  if (reflowState.ComputedWidth() == NS_UNCONSTRAINEDSIZE)
+    reflowState.availableWidth = psd->mRightEdge - psd->mX;
 
   // Stash copies of some of the computed state away for later
   // (vertical alignment, for example)
@@ -1051,10 +1044,13 @@ nsLineLayout::ApplyStartMargin(PerFrameData* pfd,
   else {
     pfd->mBounds.x += ltr ? pfd->mMargin.left : pfd->mMargin.right;
 
-    if (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth){
-      // Adjust available width to account for the left margin. The
-      // right margin will be accounted for when we finish flowing the
-      // frame.
+    NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth,
+                 "shouldn't have unconstrained widths anymore");
+    if (NS_UNCONSTRAINEDSIZE == aReflowState.ComputedWidth()) {
+      // For inline-ish and text-ish things (which don't compute widths
+      // in the reflow state), adjust available width to account for the
+      // left margin. The right margin will be accounted for when we
+      // finish flowing the frame.
       aReflowState.availableWidth -= ltr ? pfd->mMargin.left : pfd->mMargin.right;
     }
   }

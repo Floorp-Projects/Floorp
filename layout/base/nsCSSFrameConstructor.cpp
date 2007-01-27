@@ -2374,6 +2374,7 @@ IsTableRelated(PRUint8 aDisplay,
                PRBool  aIncludeSpecial) 
 {
   if ((aDisplay == NS_STYLE_DISPLAY_TABLE)              ||
+      (aDisplay == NS_STYLE_DISPLAY_INLINE_TABLE)       ||
       (aDisplay == NS_STYLE_DISPLAY_TABLE_HEADER_GROUP) ||
       (aDisplay == NS_STYLE_DISPLAY_TABLE_ROW_GROUP)    ||
       (aDisplay == NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP) ||
@@ -2741,9 +2742,17 @@ nsCSSFrameConstructor::CreatePseudoTableFrame(PRInt32                  aNameSpac
   parentStyle = parentFrame->GetStyleContext(); 
   nsIContent* parentContent = parentFrame->GetContent();   
 
+  // Thankfully, the parent can't change display type without causing
+  // frame reconstruction, so this won't need to change.
+  nsIAtom *pseudoType;
+  if (parentStyle->GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_INLINE)
+    pseudoType = nsCSSAnonBoxes::inlineTable;
+  else
+    pseudoType = nsCSSAnonBoxes::table;
+
   // create the SC for the inner table which will be the parent of the outer table's SC
   childStyle = mPresShell->StyleSet()->ResolvePseudoStyleFor(parentContent,
-                                                             nsCSSAnonBoxes::table,
+                                                             pseudoType,
                                                              parentStyle);
 
   nsPseudoFrameData& pseudoOuter = aState.mPseudoFrames.mTableOuter;
@@ -6385,6 +6394,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
   // XXX Ignore tables for the time being
   if (aDisplay->IsBlockLevel() &&
       aDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE &&
+      aDisplay->mDisplay != NS_STYLE_DISPLAY_INLINE_TABLE &&
       aDisplay->IsScrollableOverflow() &&
       !propagatedScrollToViewport) {
 
@@ -6549,6 +6559,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
     // Use the 'display' property to choose a frame type
     switch (aDisplay->mDisplay) {
     case NS_STYLE_DISPLAY_TABLE:
+    case NS_STYLE_DISPLAY_INLINE_TABLE:
     {
       nsIFrame* innerTable;
       rv = ConstructTableFrame(aState, aContent, 
@@ -8641,7 +8652,7 @@ nsCSSFrameConstructor::NeedSpecialFrameReframe(nsIContent*     aParent1,
     nsRefPtr<nsStyleContext> styleContext;
     styleContext = ResolveStyleContext(aParentFrame, aChild);
     const nsStyleDisplay* display = styleContext->GetStyleDisplay();
-    childIsBlock = display->IsBlockLevel() || IsTableRelated(display->mDisplay, PR_TRUE);
+    childIsBlock = display->IsBlockLevel();
   }
   nsIFrame* prevParent; // parent of prev sibling
   nsIFrame* nextParent; // parent of next sibling
