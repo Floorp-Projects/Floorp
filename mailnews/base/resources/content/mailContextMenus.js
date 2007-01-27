@@ -309,6 +309,8 @@ function fillFolderPaneContextMenu()
   ShowMenuItem("folderPaneContext-copy-location", !isServer && !isVirtualFolder);
   ShowMenuItem("folderPaneContext-emptyTrash", (numSelected <= 1) && (specialFolder == 'Trash'));
   EnableMenuItem("folderPaneContext-emptyTrash", true);
+  ShowMenuItem("folderPaneContext-emptyJunk", (numSelected <= 1) && (specialFolder == 'Junk'));
+  EnableMenuItem("folderPaneContext-emptyJunk", true);
 
   var showSendUnsentMessages = (numSelected <= 1) && (specialFolder == 'Unsent Messages');
   ShowMenuItem("folderPaneContext-sendUnsentMessages", showSendUnsentMessages);

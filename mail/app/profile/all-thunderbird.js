@@ -394,3 +394,6 @@ pref("browser.urlbar.clickSelectsAll", false);
 
 // prevent status-bar spoofing even if people are foolish enough to turn on JS
 pref("dom.disable_window_status_change",          true);
+
+// For the Empty Junk confirmation dialog
+pref("mail.emptyJunk.dontAskAgain", false);

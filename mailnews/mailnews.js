@@ -753,3 +753,6 @@ pref("mail.signature_date", 0);
 #ifdef XP_OS2
 pref("mail.compose.max_recycled_windows", 0);
 #endif
+
+// For the Empty Junk confirmation dialog
+pref("mailnews.emptyJunk.dontAskAgain", false);

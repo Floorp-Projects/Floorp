@@ -781,6 +781,10 @@
         label="&folderContextEmptyTrash.label;"
         accesskey="&folderContextEmptyTrash.accesskey;"
         oncommand="MsgEmptyTrash();"/>
+    <menuitem id="folderPaneContext-emptyJunk"
+        label="&folderContextEmptyJunk.label;"
+        accesskey="&folderContextEmptyJunk.accesskey;"
+        oncommand="deleteAllInFolder('emptyJunk');"/>
     <menuitem id="folderPaneContext-sendUnsentMessages"
         label="&folderContextSendUnsentMessages.label;"
         accesskey="&folderContextSendUnsentMessages.accesskey;"

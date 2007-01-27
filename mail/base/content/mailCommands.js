@@ -36,6 +36,9 @@
 #
 # ***** END LICENSE BLOCK *****
 
+var gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                      .getService(Components.interfaces.nsIPromptService);
+
 function DoRDFCommand(dataSource, command, srcArray, argumentArray)
 {
   var commandResource = RDF.GetResource(command);
@@ -771,6 +774,75 @@ function JunkSelectedMessages(setAsJunk)
 
   gDBView.doCommand(setAsJunk ? nsMsgViewCommandType.junk
                               : nsMsgViewCommandType.unjunk);
+}
+
+function confirmToProceed(commandName)
+{
+  const kDontAskAgainPref = "mail."+commandName+".dontAskAgain";
+  // default to ask user if the pref is not set
+  var dontAskAgain = false;
+  try {
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                        .getService(Components.interfaces.nsIPrefBranch);
+    dontAskAgain = pref.getBoolPref(kDontAskAgainPref);
+  } catch (ex) {}
+
+  if (!dontAskAgain)
+  {
+    var checkbox = {value:false};
+    var choice = gPromptService.confirmEx(
+                   window,
+                   gMessengerBundle.getString(commandName+"Title"),
+                   gMessengerBundle.getString(commandName+"Message"),
+                   gPromptService.STD_YES_NO_BUTTONS,
+                   null, null, null,
+                   gMessengerBundle.getString(commandName+"DontAsk"),
+                   checkbox);
+    try {
+      if (checkbox.value)
+        pref.setBoolPref(kDontAskAgainPref, true);
+    } catch (ex) {}
+
+    if (choice != 0)
+      return false;
+  }
+  return true;
+}
+
+function deleteAllInFolder(commandName)
+{
+  var folder = GetMsgFolderFromUri(GetSelectedFolderURI(), true);
+  if (!folder)
+    return;
+
+  if (!confirmToProceed(commandName))
+    return;
+
+  var children = Components.classes["@mozilla.org/supports-array;1"]
+                  .createInstance(Components.interfaces.nsISupportsArray);
+
+  // Delete sub-folders.
+  var iter = folder.GetSubFolders();
+  while (true) {
+    try {
+      children.AppendElement(iter.currentItem());
+      iter.next();
+    } catch (ex) {
+      break;
+    }
+  }
+  for (var i = 0; i < children.Count(); ++i) {
+    folder.propagateDelete(children.GetElementAt(i), true, msgWindow); 
+  }
+  children.Clear();                                       
+  
+  // Delete messages.
+  iter = folder.getMessages(msgWindow);
+  while (iter.hasMoreElements()) {
+    children.AppendElement(iter.getNext());
+  }
+  folder.deleteMessages(children, msgWindow, true, false, null, false); 
+  children.Clear();                                       
 }
 
 function deleteJunkInFolder()
