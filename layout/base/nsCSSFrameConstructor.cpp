@@ -6392,9 +6392,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
   // If the frame is a block-level frame and is scrollable, then wrap it
   // in a scroll frame.
   // XXX Ignore tables for the time being
-  if (aDisplay->IsBlockLevel() &&
-      aDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE &&
-      aDisplay->mDisplay != NS_STYLE_DISPLAY_INLINE_TABLE &&
+  if (aDisplay->IsBlockInside() &&
       aDisplay->IsScrollableOverflow() &&
       !propagatedScrollToViewport) {
 

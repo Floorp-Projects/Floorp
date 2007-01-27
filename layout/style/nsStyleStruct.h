@@ -785,9 +785,38 @@ struct nsStyleDisplay : public nsStyleStruct {
   PRUint8 mOverflowY;           // [reset] see nsStyleConsts.h
   PRUint8   mClipFlags;         // [reset] see nsStyleConsts.h
   
-  PRBool IsBlockLevel() const {return (NS_STYLE_DISPLAY_BLOCK == mDisplay) ||
-                                      (NS_STYLE_DISPLAY_LIST_ITEM == mDisplay) ||
-                                      (NS_STYLE_DISPLAY_TABLE == mDisplay);}
+  // XXX Deprecated.  Prefer |IsBlockOutside|.
+  PRBool IsBlockLevel() const {
+    return IsBlockOutside();
+  }
+
+  PRBool IsBlockInside() const {
+    return NS_STYLE_DISPLAY_BLOCK == mDisplay ||
+           NS_STYLE_DISPLAY_LIST_ITEM == mDisplay ||
+           NS_STYLE_DISPLAY_INLINE_BLOCK == mDisplay;
+    // Should TABLE_CELL and TABLE_CAPTION go here?  They have
+    // block frames nested inside of them.
+    // (But please audit all callers before changing.)
+  }
+
+  PRBool IsBlockOutside() const {
+    return NS_STYLE_DISPLAY_BLOCK == mDisplay ||
+           NS_STYLE_DISPLAY_LIST_ITEM == mDisplay ||
+           NS_STYLE_DISPLAY_TABLE == mDisplay;
+  }
+
+  PRBool IsInlineOutside() const {
+    return NS_STYLE_DISPLAY_INLINE == mDisplay ||
+           NS_STYLE_DISPLAY_INLINE_BLOCK == mDisplay ||
+           NS_STYLE_DISPLAY_INLINE_TABLE == mDisplay ||
+           NS_STYLE_DISPLAY_INLINE_BOX == mDisplay ||
+           NS_STYLE_DISPLAY_INLINE_GRID == mDisplay ||
+           NS_STYLE_DISPLAY_INLINE_STACK == mDisplay ||
+           // Are these really inlines? :
+           NS_STYLE_DISPLAY_DECK == mDisplay ||
+           NS_STYLE_DISPLAY_POPUP == mDisplay ||
+           NS_STYLE_DISPLAY_GROUPBOX == mDisplay;
+  }
 
   PRBool IsFloating() const {
     return NS_STYLE_FLOAT_NONE != mFloats;
