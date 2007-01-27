@@ -39,6 +39,7 @@
 #ifndef GFX_PANGOFONTS_H
 #define GFX_PANGOFONTS_H
 
+#include "cairo.h"
 #include "gfxTypes.h"
 #include "gfxFont.h"
 
