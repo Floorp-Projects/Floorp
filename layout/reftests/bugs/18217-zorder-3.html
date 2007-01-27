@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Testcase for inline-table (bug 18217)</title>
+<style type="text/css">
+div { height: 1em; }
+span { display:inline-table; vertical-align: top; height: 1em; background: red; color: red; }
+div#after { margin-top:-1em; }
+div#after span { display: inline; background: green; color: green; }
+</style>
+</head>
+<body>
+<div><span>X</span></div>
+<div id="after"><span>X</span></div>
+</body>
+</html>

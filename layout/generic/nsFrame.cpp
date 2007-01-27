@@ -3774,6 +3774,7 @@ nsFrame::IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
   // Absolute positioning causes |display->mDisplay| to be set to block,
   // if needed.
   return display->mDisplay == NS_STYLE_DISPLAY_BLOCK || 
+         display->mDisplay == NS_STYLE_DISPLAY_INLINE_BLOCK || 
          display->mDisplay == NS_STYLE_DISPLAY_LIST_ITEM ||
          display->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL;
 }

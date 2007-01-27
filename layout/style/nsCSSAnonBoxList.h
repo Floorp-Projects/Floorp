@@ -70,6 +70,7 @@ CSS_ANON_BOX(radio, ":-moz-radio")
 CSS_ANON_BOX(check, ":-moz-checkbox")
 CSS_ANON_BOX(mozDisplayComboboxControlFrame, ":-moz-display-comboboxcontrol-frame")
 
+CSS_ANON_BOX(inlineTable, ":-moz-inline-table")
 CSS_ANON_BOX(table, ":-moz-table")
 CSS_ANON_BOX(tableCell, ":-moz-table-cell")
 CSS_ANON_BOX(tableColGroup, ":-moz-table-column-group")

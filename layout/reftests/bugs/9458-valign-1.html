@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Testcase for inline-block (bug 9458)</title>
+<style type="text/css">
+span { display: inline-block; }
+span > span { display: block; visibility: hidden; }
+</style>
+</head>
+<body>
+<table border height="200"><tr><td valign="bottom">
+<p>a<span><span>x</span>bcd</span>e</p>
+</td></tr></table>
+</body>
+</html>

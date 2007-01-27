@@ -4,6 +4,35 @@
 != data:text/plain,HELLO about:blank
 
 # bugs/
+== bugs/9458-basic-1.html bugs/9458-basic-1-ref.html
+== bugs/9458-valign-1.html bugs/9458-valign-1-ref.html
+== bugs/9458-valign-2.html bugs/9458-valign-2-ref.html
+== bugs/9458-height-1.html bugs/9458-height-1-ref.html
+== bugs/9458-height-2.html bugs/9458-height-2-ref.html
+== bugs/9458-width-1a.html bugs/9458-width-1-ref.html
+== bugs/9458-width-1b.html bugs/9458-width-1-ref.html
+== bugs/9458-width-2a.html bugs/9458-width-2-ref.html
+== bugs/9458-width-2b.html bugs/9458-width-2-ref.html
+== bugs/9458-zorder-1.html bugs/9458-zorder-ref.html
+== bugs/9458-zorder-2.html bugs/9458-zorder-ref.html
+== bugs/9458-zorder-3.html bugs/9458-zorder-ref-inline.html
+== bugs/9458-zorder-4.html bugs/9458-zorder-ref-inline.html
+== bugs/9458-zorder-5.html bugs/9458-zorder-ref-inline.html
+== bugs/18217-basic-1.html bugs/18217-basic-1-ref.html
+== bugs/18217-basic-2a.html bugs/18217-basic-2-ref.html
+== bugs/18217-basic-2b.html bugs/18217-basic-2-ref.html
+== bugs/18217-valign-1.html bugs/18217-valign-1-ref.html
+== bugs/18217-height-1.html bugs/18217-height-1-ref.html
+== bugs/18217-height-2.html bugs/18217-height-2-ref.html
+== bugs/18217-width-1a.html bugs/18217-width-1-ref.html
+== bugs/18217-width-1b.html bugs/18217-width-1-ref.html
+== bugs/18217-width-2a.html bugs/18217-width-2-ref.html
+== bugs/18217-width-2b.html bugs/18217-width-2-ref.html
+== bugs/18217-zorder-1.html bugs/18217-zorder-ref.html
+== bugs/18217-zorder-2.html bugs/18217-zorder-ref.html
+== bugs/18217-zorder-3.html bugs/18217-zorder-ref-inline.html
+== bugs/18217-zorder-4.html bugs/18217-zorder-ref-inline.html
+== bugs/18217-zorder-5.html bugs/18217-zorder-ref-inline.html
 == bugs/142233-1.html bugs/142233-1-ref.html
 == bugs/339289-1.html bugs/339289-1-ref.html
 == bugs/347912-1.html bugs/347912-1-ref.html
@@ -23,7 +52,7 @@ f== bugs/351641-2b.html bugs/351641-2-ref.html # bug 358433 (2006-10-19)
 == bugs/359903-2.html bugs/359903-2-ref.html
 == bugs/360757-1a.html bugs/360757-1-ref.html
 == bugs/360757-1b.html bugs/360757-1-ref.html
-f== bugs/360065-1.html bugs/360065-1-ref.html # bug 18217
+== bugs/360065-1.html bugs/360065-1-ref.html
 == bugs/332557-1.html bugs/332557-1-ref.html
 == bugs/315620-1a.html bugs/315620-1-ref.html
 != bugs/315620-1b.html bugs/315620-1-ref.html
@@ -50,6 +79,8 @@ f== bugs/360065-1.html bugs/360065-1-ref.html # bug 18217
 == bugs/367332-1e.html bugs/367332-1-ref.html
 == bugs/367332-1f.html bugs/367332-1-ref.html
 == bugs/367332-1g.html bugs/367332-1-ref.html
+== bugs/367504-margin-1.html bugs/367504-margin-1-ref.html
+== bugs/367504-float-1.html bugs/367504-float-1-ref.html
 
 # table-dom/
 == table-dom/appendCells1.html table-dom/appendCells1-ref.html

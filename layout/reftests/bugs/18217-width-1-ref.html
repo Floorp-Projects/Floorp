@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Testcase for inline-table (bug 18217)</title>
+<style type="text/css">
+body > div { width: 10em; }
+body > div > div { display: table; background: green; color: white; }
+</style>
+</head>
+<body>
+<div>x<div>This is some text that is wider than 10em but has no words wider than 10em.</div>z</div>
+</body>
+</html>
