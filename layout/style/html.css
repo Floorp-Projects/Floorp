@@ -488,7 +488,8 @@ noembed, param {
 
 /* emulation of non-standard HTML <marquee> tag */
 marquee {
-  display: block;
+  display: inline-block;
+  vertical-align: text-bottom;
   -moz-binding: url('chrome://xbl-marquee/content/xbl-marquee.xml#marquee-horizontal');
 }
 
