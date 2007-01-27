@@ -2849,7 +2849,13 @@ void nsImapServerResponseParser::quota_data()
   if (!PL_strcasecmp(fNextToken, "QUOTAROOT"))
   {
     // ignore QUOTAROOT response
-    skip_to_CRLF();
+    nsCString quotaroot; 
+    AdvanceToNextToken();
+    while (ContinueParse() && !fAtEndOfLine)
+    {
+      quotaroot.Adopt(CreateAstring());
+      AdvanceToNextToken();
+    }
   }
   else if(!PL_strcasecmp(fNextToken, "QUOTA"))
   {
