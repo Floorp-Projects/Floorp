@@ -45,7 +45,7 @@ COMPVERSIONDIR = $(DEPTH)/directory/c-sdk
 endif
 
 DEFAULT_VENDOR_NAME=mozilla.org
-DEFAULT_VENDOR_VERSION=601
+DEFAULT_VENDOR_VERSION=602
 
 ifndef VENDOR_NAME
 VENDOR_NAME	= $(DEFAULT_VENDOR_NAME)
@@ -494,13 +494,27 @@ else
 
 LINK_LIB        = $(RM) $@; $(AR) $(AR_FLAGS) $(OBJS); $(RANLIB) $@
 LINK_LIB2       = $(RM) $@; $(AR) $@ $(OBJS2); $(RANLIB) $@
+ifneq ($(LD),$(CC))
 ifdef SONAMEFLAG_PREFIX
-LINK_DLL        = $(LD) $(DSO_LDOPTS) $(ALDFLAGS) $(DLL_LDFLAGS) $(DLL_EXPORT_FLAGS) \
+LINK_DLL        = $(LD) $(DSO_LDOPTS) $(LDRPATHFLAG_PREFIX)$(RPATHFLAG) $(ALDFLAGS) \
+                        $(DLL_LDFLAGS) $(DLL_EXPORT_FLAGS) \
                         -o $@ $(SONAMEFLAG_PREFIX)$(notdir $@) $(OBJS)
 else # SONAMEFLAG_PREFIX
-LINK_DLL        = $(LD) $(DSO_LDOPTS) $(ALDFLAGS) $(DLL_LDFLAGS) $(DLL_EXPORT_FLAGS) \
+LINK_DLL        = $(LD) $(DSO_LDOPTS) $(LDRPATHFLAG_PREFIX)$(RPATHFLAG) $(ALDFLAGS) \
+                        $(DLL_LDFLAGS) $(DLL_EXPORT_FLAGS) \
                         -o $@ $(OBJS)
 endif # SONAMEFLAG_PREFIX
+else  # $(CC) is used to link libs
+ifdef SONAMEFLAG_PREFIX
+LINK_DLL        = $(LD) $(DSO_LDOPTS) $(RPATHFLAG_PREFIX)$(RPATHFLAG) $(ALDFLAGS) \
+                        $(DLL_LDFLAGS) $(DLL_EXPORT_FLAGS) \
+                        -o $@ $(SONAMEFLAG_PREFIX)$(notdir $@) $(OBJS)
+else # SONAMEFLAG_PREFIX
+LINK_DLL        = $(LD) $(DSO_LDOPTS) $(RPATHFLAG_PREFIX)$(RPATHFLAG) $(ALDFLAGS) \
+                        $(DLL_LDFLAGS) $(DLL_EXPORT_FLAGS) \
+                        -o $@ $(OBJS)
+endif # SONAMEFLAG_PREFIX
+endif # LD!CC
 endif #!os2
 
 ifeq ($(OS_ARCH), OSF1)
