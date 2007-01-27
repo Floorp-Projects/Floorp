@@ -2547,6 +2547,11 @@
         if (event.target != this)
           return;
 
+        // Ignore vertical events.
+        if (event.detail == 0) {
+          return;
+        }
+
         this._scrollButtonDownBox.collapsed = true;
         this._scrollButtonDownBoxAnimate.collapsed = true;
       ]]></handler>
@@ -2555,6 +2560,11 @@
         // filter underflow events which were dispatched on nested scrollboxes
         if (event.target != this)
           return;
+
+        // Ignore vertical events.
+        if (event.detail == 0) {
+          return;
+        }
 
         this._scrollButtonDownBox.collapsed = false;
         this._scrollButtonDownBoxAnimate.collapsed = false;

@@ -168,6 +168,22 @@
         if (event.target != this)
           return;
 
+        // Ignore events that doesn't match our orientation.
+        // Scrollport event orientation:
+        //   0: vertical
+        //   1: horizontal
+        //   2: both
+        if (this.getAttribute("orient") == "horizontal") {
+          if (event.detail == 0) {
+            return;
+          }
+        }
+        else {    // vertical scrollbox
+          if (event.detail == 1) {
+            return;
+          }
+        }
+
         this._scrollButtonUp.collapsed = true;
         this._scrollButtonDown.collapsed = true;
         try {
@@ -189,6 +205,22 @@
         // filter underflow events which were dispatched on nested scrollboxes
         if (event.target != this)
           return;
+
+        // Ignore events that doesn't match our orientation.
+        // Scrollport event orientation:
+        //   0: vertical
+        //   1: horizontal
+        //   2: both
+        if (this.getAttribute("orient") == "horizontal") {
+          if (event.detail == 0) {
+            return;
+          }
+        }
+        else {    // vertical scrollbox
+          if (event.detail == 1) {
+            return;
+          }
+        }
 
         this._scrollButtonUp.collapsed = false;
         this._scrollButtonDown.collapsed = false;

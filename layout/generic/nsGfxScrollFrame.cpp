@@ -155,6 +155,8 @@ nsHTMLScrollFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 void
 nsHTMLScrollFrame::Destroy()
 {
+  mInner.mScrollEvent.Revoke();
+  mInner.mAsyncScrollPortEvent.Revoke();
   nsIScrollableView *view = mInner.GetScrollableView();
   NS_ASSERTION(view, "unexpected null pointer");
   if (view)
@@ -645,7 +647,7 @@ nsHTMLScrollFrame::PlaceScrollArea(const ScrollReflowState& aState)
                                              &scrolledArea,
                                              NS_FRAME_NO_MOVE_VIEW);
 
-  mInner.PostOverflowEvents();
+  mInner.PostOverflowEvent();
 }
 
 /* virtual */ nscoord
@@ -961,6 +963,8 @@ nsXULScrollFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 void
 nsXULScrollFrame::Destroy()
 {
+  mInner.mScrollEvent.Revoke();
+  mInner.mAsyncScrollPortEvent.Revoke();
   nsIScrollableView *view = mInner.GetScrollableView();
   NS_ASSERTION(view, "unexpected null pointer");
   if (view)
@@ -1528,37 +1532,62 @@ nsGfxScrollFrameInner::ScrollToRestoredPosition()
   }
 }
 
-class nsAsyncScrollPortEvent : public nsRunnable
+nsresult
+nsGfxScrollFrameInner::FireScrollPortEvent()
 {
-public:
-  // nsAsyncScrollPortEvent owns aEvent.
-  nsAsyncScrollPortEvent(nsIContent* aTarget, nsPresContext* aPresContext,
-                         nsScrollPortEvent* aEvent)
-  : mTarget(aTarget), mPresContext(aPresContext), mEvent(aEvent) {}
-
-  NS_IMETHOD Run() {
-    nsEventDispatcher::Dispatch(mTarget, mPresContext, mEvent);
+  mAsyncScrollPortEvent.Forget();
+  mOuter->GetPresContext()->GetPresShell()->
+    FlushPendingNotifications(Flush_OnlyReflow);
+  if (mAsyncScrollPortEvent.IsPending()) {
     return NS_OK;
   }
-private:
-  nsCOMPtr<nsIContent>         mTarget;
-  nsRefPtr<nsPresContext>      mPresContext;
-  nsAutoPtr<nsScrollPortEvent> mEvent;
-};
 
-void
-nsGfxScrollFrameInner::PostScrollPortEvent(PRBool aOverflow, nsScrollPortEvent::orientType aType)
-{
-  nsScrollPortEvent* event = new nsScrollPortEvent(PR_TRUE, aOverflow ?
-                                                   NS_SCROLLPORT_OVERFLOW :
-                                                   NS_SCROLLPORT_UNDERFLOW,
-                                                   nsnull);
-  ENSURE_TRUE(event);
-  event->orient = aType;
-  nsCOMPtr<nsIRunnable> ev = new nsAsyncScrollPortEvent(mOuter->GetContent(),
-                                                        mOuter->GetPresContext(),
-                                                        event);
-  NS_DispatchToCurrentThread(ev);
+  nsSize scrollportSize = GetScrollPortSize();
+  nsSize childSize = GetScrolledRect(scrollportSize).Size();
+
+  PRBool newVerticalOverflow = childSize.height > scrollportSize.height;
+  PRBool vertChanged = mVerticalOverflow != newVerticalOverflow;
+
+  PRBool newHorizontalOverflow = childSize.width > scrollportSize.width;
+  PRBool horizChanged = mHorizontalOverflow != newHorizontalOverflow;
+
+  if (!vertChanged && !horizChanged) {
+    return NS_OK;
+  }
+
+  // If both either overflowed or underflowed then we dispatch only one
+  // DOM event.
+  PRBool both = vertChanged && horizChanged &&
+                newVerticalOverflow == newHorizontalOverflow;
+  nsScrollPortEvent::orientType orient;
+  if (both) {
+    orient = nsScrollPortEvent::both;
+    mHorizontalOverflow = newHorizontalOverflow;
+    mVerticalOverflow = newVerticalOverflow;
+  }
+  else if (vertChanged) {
+    orient = nsScrollPortEvent::vertical;
+    mVerticalOverflow = newVerticalOverflow;
+    if (horizChanged) {
+      // We need to dispatch a separate horizontal DOM event. Do that the next
+      // time around since dispatching the vertical DOM event might destroy
+      // the frame.
+      PostOverflowEvent();
+    }
+  }
+  else {
+    orient = nsScrollPortEvent::horizontal;
+    mHorizontalOverflow = newHorizontalOverflow;
+  }
+
+  nsScrollPortEvent event(PR_TRUE,
+                          (orient == nsScrollPortEvent::horizontal ?
+                           mHorizontalOverflow : mVerticalOverflow) ?
+                            NS_SCROLLPORT_OVERFLOW : NS_SCROLLPORT_UNDERFLOW,
+                          nsnull);
+  event.orient = orient;
+  return nsEventDispatcher::Dispatch(mOuter->GetContent(),
+                                     mOuter->GetPresContext(), &event);
 }
 
 void
@@ -1849,6 +1878,12 @@ nsGfxScrollFrameInner::PostScrollEvent()
   }
 }
 
+NS_IMETHODIMP
+nsGfxScrollFrameInner::AsyncScrollPortEvent::Run()
+{
+  return mInner ? mInner->FireScrollPortEvent() : NS_OK;
+}
+
 PRBool
 nsXULScrollFrame::AddHorizontalScrollbar(nsBoxLayoutState& aState,
                                          nsRect& aScrollAreaSize, PRBool aOnTop)
@@ -2005,40 +2040,16 @@ nsXULScrollFrame::LayoutScrollArea(nsBoxLayoutState& aState, const nsRect& aRect
 
   aState.SetLayoutFlags(oldflags);
 
-  mInner.PostOverflowEvents();
 }
 
-void nsGfxScrollFrameInner::PostOverflowEvents()
+void nsGfxScrollFrameInner::PostOverflowEvent()
 {
-  nsSize scrollportSize = GetScrollPortSize();
-  nsSize childSize = GetScrolledRect(scrollportSize).Size();
-    
-  PRBool newVerticalOverflow = childSize.height > scrollportSize.height;
-  PRBool vertChanged = mVerticalOverflow != newVerticalOverflow;
-  mVerticalOverflow = newVerticalOverflow;
+  if (mAsyncScrollPortEvent.IsPending())
+    return;
 
-  PRBool newHorizontalOverflow = childSize.width > scrollportSize.width;
-  PRBool horizChanged = mHorizontalOverflow != newHorizontalOverflow;
-  mHorizontalOverflow = newHorizontalOverflow;
-
-  if (vertChanged) {
-    if (horizChanged) {
-      if (mVerticalOverflow == mHorizontalOverflow) {
-        // both either overflowed or underflowed. 1 event
-        PostScrollPortEvent(mVerticalOverflow, nsScrollPortEvent::both);
-      } else {
-        // one overflowed and one underflowed
-        PostScrollPortEvent(mVerticalOverflow, nsScrollPortEvent::vertical);
-        PostScrollPortEvent(mHorizontalOverflow, nsScrollPortEvent::horizontal);
-      }
-    } else {
-      PostScrollPortEvent(mVerticalOverflow, nsScrollPortEvent::vertical);
-    }
-  } else {
-    if (horizChanged) {
-      PostScrollPortEvent(mHorizontalOverflow, nsScrollPortEvent::horizontal);
-    }
-  }
+  nsRefPtr<AsyncScrollPortEvent> ev = new AsyncScrollPortEvent(this);
+  if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev)))
+    mAsyncScrollPortEvent = ev;
 }
 
 PRBool
@@ -2275,6 +2286,8 @@ nsXULScrollFrame::Layout(nsBoxLayoutState& aState)
   if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
     mInner.mHadNonInitialReflow = PR_TRUE;
   }
+
+  mInner.PostOverflowEvent();
   return NS_OK;
 }
 
