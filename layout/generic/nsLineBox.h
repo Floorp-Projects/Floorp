@@ -308,15 +308,6 @@ public:
     return mFlags.mImpactedByFloat;
   }
 
-  // mHasPercentageChild bit
-  void SetHasPercentageChild(PRBool aOn) {
-    NS_ASSERTION((PR_FALSE==aOn || PR_TRUE==aOn), "somebody is playing fast and loose with bools and bits!");
-    mFlags.mHasPercentageChild = aOn;
-  }
-  PRBool HasPercentageChild() const {
-    return mFlags.mHasPercentageChild;
-  }
-
   // mLineWrapped bit
   void SetLineWrapped(PRBool aOn) {
     NS_ASSERTION((PR_FALSE==aOn || PR_TRUE==aOn), "somebody is playing fast and loose with bools and bits!");
@@ -507,7 +498,6 @@ public:
     PRUint32 mHasClearance : 1;
     PRUint32 mBlock : 1;
     PRUint32 mImpactedByFloat : 1;
-    PRUint32 mHasPercentageChild : 1;
     PRUint32 mLineWrapped: 1;
     PRUint32 mResizeReflowOptimizationDisabled: 1;  // default 0 = means that the opt potentially applies to this line. 1 = never skip reflowing this line for a resize reflow
     PRUint32 mEmptyCacheValid: 1;

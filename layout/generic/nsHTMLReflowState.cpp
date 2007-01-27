@@ -325,6 +325,10 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext)
   // become fixed, but an entire descendant chain of percentage heights
   // to become fixed.
   if ((mStylePosition->mHeight.GetUnit() == eStyleUnit_Percent ||
+       mStylePosition->mMinHeight.GetUnit() == eStyleUnit_Percent ||
+       mStylePosition->mMaxHeight.GetUnit() == eStyleUnit_Percent ||
+       mStylePosition->mOffset.GetTopUnit() == eStyleUnit_Percent ||
+       mStylePosition->mOffset.GetBottomUnit() == eStyleUnit_Percent ||
        frame->IsBoxFrame()) &&
       mCBReflowState) {
     const nsHTMLReflowState *rs = this;
