@@ -270,6 +270,7 @@ bin\res\broken-image.gif
 bin\res\html\*
 bin\res\fonts\*
 bin\res\dtd\*
+bin\res\effective_tld_names.dat
 bin\defaults\wallet\VcardSchema.tbl
 bin\defaults\wallet\FieldSchema.tbl
 bin\defaults\wallet\SchemaConcat.tbl

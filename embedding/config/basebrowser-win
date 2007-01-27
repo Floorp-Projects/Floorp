@@ -302,3 +302,6 @@ res\html\gopher-unknown.gif
 ; p3p
 components\p3p.dll
 components\p3p.xpt
+
+; Effective TLD
+res\effective_tld_names.dat

@@ -430,6 +430,8 @@ res/table-remove-row.gif
 ;;res/unixcharset.properties
 ;;; res/strres.properties 
 
+res/effective_tld_names.dat
+
 ; required prefs files
 greprefs/*
 

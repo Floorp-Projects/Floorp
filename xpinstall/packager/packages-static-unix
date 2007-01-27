@@ -283,6 +283,7 @@ bin/res/rdf/loading.gif
 bin/res/html/*
 bin/res/fonts/*
 bin/res/dtd/*
+bin/res/effective_tld_names.dat
 
 ; p3p
 bin/components/p3p.xpt

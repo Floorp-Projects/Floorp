@@ -265,6 +265,7 @@ bin\res\table-remove-column.gif
 bin\res\table-remove-row-active.gif
 bin\res\table-remove-row-hover.gif
 bin\res\table-remove-row.gif
+bin\res\effective_tld_names.dat
 bin\defaults\wallet\VcardSchema.tbl
 bin\defaults\wallet\FieldSchema.tbl
 bin\defaults\wallet\SchemaConcat.tbl

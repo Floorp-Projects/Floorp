@@ -48,6 +48,7 @@ bin\msvcr80.dll
 bin\@MOZ_APP_NAME@.exe
 bin\plugins\npnul32.dll
 bin\res\cmessage.txt
+bin\res\effective_tld_names.dat
 bin\xpicleanup.exe
 bin\LICENSE
 bin\README.txt

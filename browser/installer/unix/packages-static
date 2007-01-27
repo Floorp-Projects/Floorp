@@ -47,6 +47,7 @@ bin/mozilla-xremote-client
 bin/run-mozilla.sh
 bin/plugins/libnullplugin.so
 bin/res/cmessage.txt
+bin/res/effective_tld_names.dat
 bin/xpicleanup
 
 ; [Components]
