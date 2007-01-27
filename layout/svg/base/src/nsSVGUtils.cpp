@@ -1021,7 +1021,7 @@ nsSVGUtils::CompositeSurfaceMatrix(gfxContext *aContext,
 
   aContext->Save();
 
-  aContext->Multiply(gfxMatrix(matrix));
+  aContext->Multiply(gfxMatrix(*reinterpret_cast<gfxMatrix*>(&matrix)));
 
   aContext->SetSource(aSurface);
   aContext->Paint(aOpacity);
@@ -1039,7 +1039,7 @@ nsSVGUtils::SetClipRect(gfxContext *aContext,
     return;
 
   gfxMatrix oldMatrix = aContext->CurrentMatrix();
-  aContext->Multiply(gfxMatrix(matrix));
+  aContext->Multiply(gfxMatrix(*reinterpret_cast<gfxMatrix*>(&matrix)));
   aContext->Clip(gfxRect(aX, aY, aWidth, aHeight));
   aContext->SetMatrix(oldMatrix);
 }

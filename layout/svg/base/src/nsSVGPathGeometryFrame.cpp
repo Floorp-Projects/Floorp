@@ -652,8 +652,8 @@ nsSVGPathGeometryFrame::GeneratePath(gfxContext* aContext)
     cairo_new_path(ctx);
     return;
   }
-
-  aContext->Multiply(gfxMatrix(matrix));
+  
+  aContext->Multiply(gfxMatrix(*reinterpret_cast<gfxMatrix*>(&matrix)));
 
   cairo_new_path(ctx);
   NS_STATIC_CAST(nsSVGPathGeometryElement*, mContent)->ConstructPath(ctx);

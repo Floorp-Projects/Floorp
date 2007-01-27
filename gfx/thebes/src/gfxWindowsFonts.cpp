@@ -55,6 +55,11 @@
 
 #include "gfxFontTest.h"
 
+#include "cairo.h"
+#include "cairo-win32.h"
+
+#include <windows.h>
+
 #include "nsUnicodeRange.h"
 #include "nsUnicharUtils.h"
 
@@ -166,10 +171,10 @@ gfxWindowsFont::CairoScaledFont()
 void
 gfxWindowsFont::UpdateCTM(const gfxMatrix& aMatrix)
 {
-    if (aMatrix.yy() == mCTM.yy() &&
-        aMatrix.xx() == mCTM.xx() &&
-        aMatrix.xy() == mCTM.xy() &&
-        aMatrix.yx() == mCTM.yx())
+    if (aMatrix.yy == mCTM.yy &&
+        aMatrix.xx == mCTM.xx &&
+        aMatrix.xy == mCTM.xy &&
+        aMatrix.yx == mCTM.yx)
         return;
 
     Destroy();
@@ -302,7 +307,9 @@ gfxWindowsFont::MakeCairoScaledFont()
     cairo_matrix_init_scale(&sizeMatrix, mAdjustedSize, mAdjustedSize);
 
     cairo_font_options_t *fontOptions = cairo_font_options_create();
-    font = cairo_scaled_font_create(CairoFontFace(), &sizeMatrix, &mCTM.ToCairoMatrix(), fontOptions);
+    font = cairo_scaled_font_create(CairoFontFace(), &sizeMatrix,
+                                    reinterpret_cast<cairo_matrix_t*>(&mCTM),
+                                    fontOptions);
     cairo_font_options_destroy(fontOptions);
 
     return font;
@@ -395,7 +402,7 @@ gfxWindowsFont::FillLogFont(gfxFloat aSize, PRInt16 aWeight)
 {
 #define CLIP_TURNOFF_FONTASSOCIATION 0x40
     
-    const double yScale = mCTM.ToCairoMatrix().yy;
+    const double yScale = mCTM.yy;
 
     mLogFont.lfHeight = (LONG)-ROUND(aSize * yScale);
 

@@ -38,11 +38,14 @@
 #ifndef GFX_ASURFACE_H
 #define GFX_ASURFACE_H
 
-#include <cairo.h>
-
 #include "gfxTypes.h"
 #include "gfxRect.h"
 #include "nsStringFwd.h"
+
+typedef struct _cairo_surface cairo_surface_t;
+typedef struct _cairo_user_data_key cairo_user_data_key_t;
+
+typedef void (*thebes_destroy_func_t) (void *data);
 
 /**
  * A surface is something you can draw on. Instantiate a subclass of this
@@ -50,34 +53,8 @@
  */
 class THEBES_API gfxASurface {
 public:
-    // Surfaces use refcounting that's tied to the cairo surface refcnt, to avoid
-    // refcount mismatch issues.
-    nsrefcnt AddRef(void) {
-        NS_PRECONDITION(mSurface != nsnull, "gfxASurface::AddRef without mSurface");
-
-        if (mHasFloatingRef) {
-            // eat the floating ref
-            mHasFloatingRef = PR_FALSE;
-        } else {
-            cairo_surface_reference(mSurface);
-        }
-
-        return (nsrefcnt) cairo_surface_get_reference_count(mSurface);
-    }
-
-    nsrefcnt Release(void) {
-        NS_PRECONDITION(!mHasFloatingRef, "gfxASurface::Release while floating ref still outstanding!");
-        NS_PRECONDITION(mSurface != nsnull, "gfxASurface::Release without mSurface");
-        // Note that there is a destructor set on user data for mSurface,
-        // which will delete this gfxASurface wrapper when the surface's refcount goes
-        // out of scope.
-        nsrefcnt refcnt = (nsrefcnt) cairo_surface_get_reference_count(mSurface);
-        cairo_surface_destroy(mSurface);
-
-        // |this| may not be valid any more, don't use it!
-
-        return --refcnt;
-    }
+    nsrefcnt AddRef(void);
+    nsrefcnt Release(void);
 
 public:
     /**
@@ -108,9 +85,9 @@ public:
     } gfxSurfaceType;
 
     typedef enum {
-        CONTENT_COLOR = CAIRO_CONTENT_COLOR,
-        CONTENT_ALPHA = CAIRO_CONTENT_ALPHA,
-        CONTENT_COLOR_ALPHA = CAIRO_CONTENT_COLOR_ALPHA
+        CONTENT_COLOR       = 0x1000,
+        CONTENT_ALPHA       = 0x2000,
+        CONTENT_COLOR_ALPHA = 0x3000
     } gfxContentType;
 
     /* Wrap the given cairo surface and return a gfxASurface for it */
@@ -119,26 +96,27 @@ public:
     /*** this DOES NOT addref the surface */
     cairo_surface_t *CairoSurface() { return mSurface; }
 
-    gfxSurfaceType GetType() const { return (gfxSurfaceType)cairo_surface_get_type(mSurface); }
+    gfxSurfaceType GetType() const;
 
-    gfxContentType GetContentType() const { return (gfxContentType)cairo_surface_get_content(mSurface); }
+    gfxContentType GetContentType() const;
 
-    void SetDeviceOffset (gfxFloat xOff, gfxFloat yOff) {
-        cairo_surface_set_device_offset(mSurface,
-                                        xOff, yOff);
+    void SetDeviceOffset(gfxPoint offset);
+    gfxPoint GetDeviceOffset() const;
+
+    // XXX deprecated remove this
+    void SetDeviceOffset(gfxFloat xOff, gfxFloat yOff) {
+        SetDeviceOffset(gfxPoint(xOff, yOff));
+    }
+    // XXX deprecated remove this
+    void GetDeviceOffset(gfxFloat *xOff, gfxFloat *yOff) const {
+        gfxPoint pt = GetDeviceOffset();
+        *xOff = pt.x;
+        *yOff = pt.y;
     }
 
-    void GetDeviceOffset (gfxFloat *xOff, gfxFloat *yOff) {
-        cairo_surface_get_device_offset(mSurface, xOff, yOff);
-    }
-
-    void Flush() { cairo_surface_flush(mSurface); }
-    void MarkDirty() { cairo_surface_mark_dirty(mSurface); }
-    void MarkDirty(const gfxRect& r) {
-        cairo_surface_mark_dirty_rectangle(mSurface,
-                                           (int) r.pos.x, (int) r.pos.y,
-                                           (int) r.size.width, (int) r.size.height);
-    }
+    void Flush();
+    void MarkDirty();
+    void MarkDirty(const gfxRect& r);
 
     /* Printing backend functions */
     virtual nsresult BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName) { return NS_ERROR_NOT_IMPLEMENTED; }
@@ -149,15 +127,8 @@ public:
 
     void SetData(const cairo_user_data_key_t *key,
                  void *user_data,
-                 cairo_destroy_func_t destroy)
-    {
-        cairo_surface_set_user_data (mSurface, key, user_data, destroy);
-    }
-
-    void *GetData(const cairo_user_data_key_t *key)
-    {
-        return cairo_surface_get_user_data (mSurface, key);
-    }
+                 thebes_destroy_func_t destroy);
+    void *GetData(const cairo_user_data_key_t *key);
 
 protected:
     static gfxASurface* GetSurfaceWrapper(cairo_surface_t *csurf);

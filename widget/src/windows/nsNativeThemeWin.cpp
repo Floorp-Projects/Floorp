@@ -853,15 +853,12 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
 
     SetGraphicsMode(hdc, GM_ADVANCED);
     XFORM xform;
-    double dm[6];
-    m.ToValues(&dm[0], &dm[1], &dm[2], &dm[3], &dm[4], &dm[5]);
-
-    xform.eM11 = (FLOAT) dm[0];
-    xform.eM12 = (FLOAT) dm[1];
-    xform.eM21 = (FLOAT) dm[2];
-    xform.eM22 = (FLOAT) dm[3];
-    xform.eDx  = (FLOAT) dm[4];
-    xform.eDy  = (FLOAT) dm[5];
+    xform.eM11 = (FLOAT) m.xx;
+    xform.eM12 = (FLOAT) m.yx;
+    xform.eM21 = (FLOAT) m.xy;
+    xform.eM22 = (FLOAT) m.yy;
+    xform.eDx  = (FLOAT) m.x0;
+    xform.eDy  = (FLOAT) m.y0;
     SetWorldTransform (hdc, &xform);
   } else {
     gfxPoint pos(m.GetTranslation());
@@ -2035,14 +2032,12 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
 
     SetGraphicsMode(hdc, GM_ADVANCED);
     XFORM xform;
-    double dm[6];
-    m.ToValues(&dm[0], &dm[1], &dm[2], &dm[3], &dm[4], &dm[5]);
-    xform.eM11 = (FLOAT) dm[0];
-    xform.eM12 = (FLOAT) dm[1];
-    xform.eM21 = (FLOAT) dm[2];
-    xform.eM22 = (FLOAT) dm[3];
-    xform.eDx  = (FLOAT) dm[4];
-    xform.eDy  = (FLOAT) dm[5];
+    xform.eM11 = (FLOAT) m.xx;
+    xform.eM12 = (FLOAT) m.yx;
+    xform.eM21 = (FLOAT) m.xy;
+    xform.eM22 = (FLOAT) m.yy;
+    xform.eDx  = (FLOAT) m.x0;
+    xform.eDy  = (FLOAT) m.y0;
     SetWorldTransform (hdc, &xform);
   } else {
     gfxPoint pos(m.GetTranslation());

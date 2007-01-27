@@ -352,8 +352,8 @@ nsThebesImage::Draw(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface,
     // See comment inside ThebesDrawTile
     if (doSnap) {
         gfxMatrix roundedCTM(savedCTM);
-        roundedCTM.x0() = ::floor(roundedCTM.x0() + 0.5);
-        roundedCTM.y0() = ::floor(roundedCTM.y0() + 0.5);
+        roundedCTM.x0 = ::floor(roundedCTM.x0 + 0.5);
+        roundedCTM.y0 = ::floor(roundedCTM.y0 + 0.5);
         ctx->SetMatrix(roundedCTM);
     }
 
@@ -431,8 +431,8 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
     // is what's used at the time of a SetPattern call).
     if (doSnap) {
         gfxMatrix roundedCTM(savedCTM);
-        roundedCTM.x0() = ::floor(roundedCTM.x0() + 0.5);
-        roundedCTM.y0() = ::floor(roundedCTM.y0() + 0.5);
+        roundedCTM.x0 = ::floor(roundedCTM.x0 + 0.5);
+        roundedCTM.y0 = ::floor(roundedCTM.y0 + 0.5);
         thebesContext->SetMatrix(roundedCTM);
     }
 
@@ -487,7 +487,7 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
         patMat.Translate(p0);
 
         pat = new gfxPattern(surface);
-        pat->SetExtend(CAIRO_EXTEND_REPEAT);
+        pat->SetExtend(gfxPattern::EXTEND_REPEAT);
         pat->SetMatrix(patMat);
 
         thebesContext->SetPattern(pat);

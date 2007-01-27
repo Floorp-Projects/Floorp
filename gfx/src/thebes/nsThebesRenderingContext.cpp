@@ -231,10 +231,9 @@ nsThebesRenderingContext::PopTranslation(PushedTranslation* aState)
 NS_IMETHODIMP
 nsThebesRenderingContext::SetTranslation(nscoord aX, nscoord aY)
 {
-    gfxMatrix mat = mThebes->CurrentMatrix();
-    gfxFloat a, b, c, d, tx, ty;
-    mat.ToValues(&a, &b, &c, &d, &tx, &ty);
-    gfxMatrix newMat(a, b, c, d, aX, aY);
+    gfxMatrix newMat(mThebes->CurrentMatrix());
+    newMat.x0 = aX;
+    newMat.y0 = aY;
     mThebes->SetMatrix(newMat);
     return NS_OK;
 }
@@ -452,13 +451,10 @@ nsThebesRenderingContext::UpdateTempTransformMatrix()
      * | x0 y0 1 |            | m20 m21  1 |
      *****/
 
-    // this sort of sucks
-    gfxFloat xx, yx, xy, yy, x0, y0;
-    mThebes->CurrentMatrix().ToValues(&xx, &yx, &xy, &yy, &x0, &y0);
-
-    NS_ASSERTION(yx == 0 && xy == 0, "Can't represent Thebes matrix to Gfx");
-    mTempTransform.SetToTranslate(TO_TWIPS(x0), TO_TWIPS(y0));
-    mTempTransform.AddScale(xx, yy);
+    const gfxMatrix& ctm = mThebes->CurrentMatrix();
+    NS_ASSERTION(ctm.yx == 0 && ctm.xy == 0, "Can't represent Thebes matrix to Gfx");
+    mTempTransform.SetToTranslate(TO_TWIPS(ctm.x0), TO_TWIPS(ctm.y0));
+    mTempTransform.AddScale(ctm.xx, ctm.yy);
 }
 
 nsTransform2D&

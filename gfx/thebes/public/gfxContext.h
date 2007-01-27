@@ -39,18 +39,16 @@
 #ifndef GFX_CONTEXT_H
 #define GFX_CONTEXT_H
 
-#include <cairo.h>
+#include "gfxTypes.h"
 
 #include "gfxASurface.h"
 #include "gfxColor.h"
 #include "gfxPoint.h"
 #include "gfxRect.h"
-#include "gfxTypes.h"
 #include "gfxMatrix.h"
 #include "gfxPattern.h"
-#include "gfxFont.h"
 
-class gfxRegion;
+typedef struct _cairo cairo_t;
 
 /**
  * This is the main class for doing actual drawing. It is initialized using
@@ -429,23 +427,23 @@ public:
 
     // define enum for operators (clear, src, dst, etc)
     enum GraphicsOperator {
-        OPERATOR_CLEAR = CAIRO_OPERATOR_CLEAR,
-        OPERATOR_SOURCE = CAIRO_OPERATOR_SOURCE,
+        OPERATOR_CLEAR,
+        OPERATOR_SOURCE,
 
-        OPERATOR_OVER = CAIRO_OPERATOR_OVER,
-        OPERATOR_IN = CAIRO_OPERATOR_IN,
-        OPERATOR_OUT = CAIRO_OPERATOR_OUT,
-        OPERATOR_ATOP = CAIRO_OPERATOR_ATOP,
+        OPERATOR_OVER,
+        OPERATOR_IN,
+        OPERATOR_OUT,
+        OPERATOR_ATOP,
 
-        OPERATOR_DEST = CAIRO_OPERATOR_DEST,
-        OPERATOR_DEST_OVER = CAIRO_OPERATOR_DEST_OVER,
-        OPERATOR_DEST_IN = CAIRO_OPERATOR_DEST_IN,
-        OPERATOR_DEST_OUT = CAIRO_OPERATOR_DEST_OUT,
-        OPERATOR_DEST_ATOP = CAIRO_OPERATOR_DEST_ATOP,
+        OPERATOR_DEST,
+        OPERATOR_DEST_OVER,
+        OPERATOR_DEST_IN,
+        OPERATOR_DEST_OUT,
+        OPERATOR_DEST_ATOP,
 
-        OPERATOR_XOR = CAIRO_OPERATOR_XOR,
-        OPERATOR_ADD = CAIRO_OPERATOR_ADD,
-        OPERATOR_SATURATE = CAIRO_OPERATOR_SATURATE
+        OPERATOR_XOR,
+        OPERATOR_ADD,
+        OPERATOR_SATURATE
     };
     /**
      * Sets the operator used for all further drawing. The operator affects
@@ -489,7 +487,6 @@ public:
      * Any current path will be destroyed by these functions!
      */
     void Clip(gfxRect rect); // will clip to a rect
-    void Clip(const gfxRegion& region); // will clip to a region
 
     /**
      * This will ensure that the surface actually has its clip set.

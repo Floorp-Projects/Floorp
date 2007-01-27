@@ -36,11 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <stdio.h>
-
 #include "gfxASurface.h"
 
 #include "gfxImageSurface.h"
+
+#include "cairo.h"
 
 #ifdef CAIRO_HAS_WIN32_SURFACE
 #include "gfxWindowsSurface.h"
@@ -54,7 +54,42 @@
 #include "gfxQuartzSurface.h"
 #endif
 
+#include <stdio.h>
+
 static cairo_user_data_key_t gfxasurface_pointer_key;
+
+// Surfaces use refcounting that's tied to the cairo surface refcnt, to avoid
+// refcount mismatch issues.
+nsrefcnt
+gfxASurface::AddRef(void)
+{
+    NS_PRECONDITION(mSurface != nsnull, "gfxASurface::AddRef without mSurface");
+
+    if (mHasFloatingRef) {
+        // eat the floating ref
+        mHasFloatingRef = PR_FALSE;
+    } else {
+        cairo_surface_reference(mSurface);
+    }
+
+    return (nsrefcnt) cairo_surface_get_reference_count(mSurface);
+}
+
+nsrefcnt
+gfxASurface::Release(void)
+{
+    NS_PRECONDITION(!mHasFloatingRef, "gfxASurface::Release while floating ref still outstanding!");
+    NS_PRECONDITION(mSurface != nsnull, "gfxASurface::Release without mSurface");
+    // Note that there is a destructor set on user data for mSurface,
+    // which will delete this gfxASurface wrapper when the surface's refcount goes
+    // out of scope.
+    nsrefcnt refcnt = (nsrefcnt) cairo_surface_get_reference_count(mSurface);
+    cairo_surface_destroy(mSurface);
+
+    // |this| may not be valid any more, don't use it!
+
+    return --refcnt;
+}
 
 void
 gfxASurface::SurfaceDestroyFunc(void *data) {
@@ -131,4 +166,66 @@ gfxASurface::Init(cairo_surface_t* surface, PRBool existingSurface)
     } else {
         mHasFloatingRef = PR_TRUE;
     }
+}
+
+gfxASurface::gfxSurfaceType
+gfxASurface::GetType() const
+{
+    return (gfxSurfaceType)cairo_surface_get_type(mSurface);
+}
+
+gfxASurface::gfxContentType
+gfxASurface::GetContentType() const
+{
+    return (gfxContentType)cairo_surface_get_content(mSurface);
+}
+
+void
+gfxASurface::SetDeviceOffset(gfxPoint offset)
+{
+    cairo_surface_set_device_offset(mSurface,
+                                    offset.x, offset.y);
+}
+
+gfxPoint
+gfxASurface::GetDeviceOffset() const
+{
+    gfxPoint pt;
+    cairo_surface_get_device_offset(mSurface, &pt.x, &pt.y);
+    return pt;
+}
+
+void
+gfxASurface::Flush()
+{
+    cairo_surface_flush(mSurface);
+}
+
+void
+gfxASurface::MarkDirty()
+{
+    cairo_surface_mark_dirty(mSurface);
+}
+
+void
+gfxASurface::MarkDirty(const gfxRect& r)
+{
+    cairo_surface_mark_dirty_rectangle(mSurface,
+                                       (int) r.pos.x, (int) r.pos.y,
+                                       (int) r.size.width, (int) r.size.height);
+}
+
+
+void
+gfxASurface::SetData(const cairo_user_data_key_t *key,
+                     void *user_data,
+                     cairo_destroy_func_t destroy)
+{
+    cairo_surface_set_user_data(mSurface, key, user_data, destroy);
+}
+
+void *
+gfxASurface::GetData(const cairo_user_data_key_t *key)
+{
+    return cairo_surface_get_user_data(mSurface, key);
 }

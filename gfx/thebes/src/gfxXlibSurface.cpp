@@ -36,8 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <stdio.h>
 #include "gfxXlibSurface.h"
+
+#include "cairo.h"
+#include "cairo-xlib.h"
+#include "cairo-xlib-xrender.h"
 
 static cairo_user_data_key_t pixmap_free_key;
 
@@ -48,7 +51,7 @@ typedef struct {
 
 static void pixmap_free_func (void *);
 
-gfxXlibSurface::gfxXlibSurface(Display* dpy, Drawable drawable, Visual* visual)
+gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual)
     : mPixmapTaken(PR_FALSE), mDisplay(dpy), mDrawable(drawable)
 {
     DoSizeQuery();
@@ -56,7 +59,7 @@ gfxXlibSurface::gfxXlibSurface(Display* dpy, Drawable drawable, Visual* visual)
     Init(surf);
 }
 
-gfxXlibSurface::gfxXlibSurface(Display* dpy, Drawable drawable, Visual* visual,
+gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual,
                                unsigned long width, unsigned long height)
     : mPixmapTaken(PR_FALSE), mDisplay(dpy), mDrawable(drawable), mWidth(width), mHeight(height)
 {
@@ -64,7 +67,7 @@ gfxXlibSurface::gfxXlibSurface(Display* dpy, Drawable drawable, Visual* visual,
     Init(surf);
 }
 
-gfxXlibSurface::gfxXlibSurface(Display* dpy, Visual* visual, unsigned long width, unsigned long height)
+gfxXlibSurface::gfxXlibSurface(Display *dpy, Visual *visual, unsigned long width, unsigned long height)
     : mPixmapTaken(PR_FALSE), mDisplay(dpy), mWidth(width), mHeight(height)
 
 {
@@ -79,7 +82,7 @@ gfxXlibSurface::gfxXlibSurface(Display* dpy, Visual* visual, unsigned long width
     TakePixmap();
 }
 
-gfxXlibSurface::gfxXlibSurface(Display* dpy, Drawable drawable, XRenderPictFormat *format,
+gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, XRenderPictFormat *format,
                                unsigned long width, unsigned long height)
     : mPixmapTaken(PR_FALSE), mDisplay(dpy), mDrawable(drawable),
       mWidth(width), mHeight(height)
@@ -90,7 +93,7 @@ gfxXlibSurface::gfxXlibSurface(Display* dpy, Drawable drawable, XRenderPictForma
     Init(surf);
 }
 
-gfxXlibSurface::gfxXlibSurface(Display* dpy, XRenderPictFormat *format,
+gfxXlibSurface::gfxXlibSurface(Display *dpy, XRenderPictFormat *format,
                                unsigned long width, unsigned long height)
     : mPixmapTaken(PR_FALSE), mDisplay(dpy), mWidth(width), mHeight(height)
 {
@@ -183,7 +186,6 @@ pixmap_free_func (void *data)
 {
     pixmap_free_struct *pfs = (pixmap_free_struct*) data;
 
-    //fprintf (stderr, "freeing pixmap %d\n", pfs->pixmap);
     XFreePixmap (pfs->dpy, pfs->pixmap);
 
     delete pfs;
