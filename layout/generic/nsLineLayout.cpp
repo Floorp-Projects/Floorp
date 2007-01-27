@@ -689,6 +689,75 @@ nsLineLayout::LineIsBreakable() const
   return PR_FALSE;
 }
 
+// Checks all four sides for percentage units.  This means it should
+// only be used for things (margin, padding) where percentages on top
+// and bottom depend on the *width* just like percentages on left and
+// right.
+static PRBool
+HasPercentageUnitSide(const nsStyleSides& aSides)
+{
+  NS_FOR_CSS_SIDES(side) {
+    if (eStyleUnit_Percent == aSides.GetUnit(side))
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+static PRBool
+IsPercentageAware(const nsIFrame* aFrame)
+{
+  NS_ASSERTION(aFrame, "null frame is not allowed");
+
+  nsIAtom *fType = aFrame->GetType();
+  if (fType == nsGkAtoms::textFrame) {
+    // None of these things can ever be true for text frames.
+    return PR_FALSE;
+  }
+
+  // Some of these things don't apply to non-replaced inline frames
+  // (that is, fType == nsGkAtoms::inlineFrame || fType ==
+  // nsGkAtoms::positionedInlineFrame), but we won't bother making
+  // things unnecessarily complicated, since they'll probably be set
+  // quite rarely.
+
+  const nsStyleMargin* margin = aFrame->GetStyleMargin();
+  if (HasPercentageUnitSide(margin->mMargin)) {
+    return PR_TRUE;
+  }
+
+  const nsStylePadding* padding = aFrame->GetStylePadding();
+  if (HasPercentageUnitSide(padding->mPadding)) {
+    return PR_TRUE;
+  }
+
+  // Note that borders can't be aware of percentages
+
+  const nsStylePosition* pos = aFrame->GetStylePosition();
+
+  if (eStyleUnit_Percent == pos->mWidth.GetUnit() ||
+      eStyleUnit_Percent == pos->mMaxWidth.GetUnit() ||
+      eStyleUnit_Percent == pos->mMinWidth.GetUnit() ||
+      eStyleUnit_Percent == pos->mOffset.GetRightUnit() ||
+      eStyleUnit_Percent == pos->mOffset.GetLeftUnit()) {
+    return PR_TRUE;
+  }
+
+  if (eStyleUnit_Auto == pos->mWidth.GetUnit()) {
+    // We need to check for frames that shrink-wrap when they're auto
+    // width.
+    const nsStyleDisplay* disp = aFrame->GetStyleDisplay();
+    if (disp->mDisplay == NS_STYLE_DISPLAY_INLINE_BLOCK ||
+        disp->mDisplay == NS_STYLE_DISPLAY_INLINE_TABLE ||
+        fType == nsGkAtoms::HTMLButtonControlFrame ||
+        fType == nsGkAtoms::gfxButtonControlFrame ||
+        fType == nsGkAtoms::fieldSetFrame) {
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+
 nsresult
 nsLineLayout::ReflowFrame(nsIFrame* aFrame,
                           nsReflowStatus& aReflowStatus,
@@ -712,6 +781,14 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   nsFrame::ListTag(stdout, aFrame);
   printf("\n");
 #endif
+
+  // See if this frame depends on the width of its containing block.  If
+  // so, disable resize reflow optimizations for the line.  (Note that,
+  // to be conservative, we do this if we *try* to fit a frame on a
+  // line, even if we don't succeed.)
+  if (IsPercentageAware(aFrame)) {
+    mLineBox->DisableResizeReflowOptimization();
+  }
 
   // Compute the available size for the frame. This available width
   // includes room for the side margins.
@@ -1323,75 +1400,6 @@ nsLineLayout::DumpPerSpanData(PerSpanData* psd, PRInt32 aIndent)
 #define VALIGN_TOP    1
 #define VALIGN_BOTTOM 2
 
-PRBool
-nsLineLayout::IsPercentageUnitSides(const nsStyleSides* aSides)
-{
-  return eStyleUnit_Percent == aSides->GetLeftUnit()
-      || eStyleUnit_Percent == aSides->GetRightUnit()
-      || eStyleUnit_Percent == aSides->GetTopUnit()
-      || eStyleUnit_Percent == aSides->GetBottomUnit();
-}
-
-PRBool
-nsLineLayout::IsPercentageAwareReplacedElement(nsPresContext *aPresContext, 
-                                               nsIFrame* aFrame)
-{
-  if (aFrame->IsFrameOfType(nsIFrame::eReplaced))
-  {
-    nsIAtom* frameType = aFrame->GetType();
-    if (nsGkAtoms::brFrame != frameType && 
-        nsGkAtoms::textFrame != frameType)
-    {
-      const nsStyleMargin* margin = aFrame->GetStyleMargin();
-      if (IsPercentageUnitSides(&margin->mMargin)) {
-        return PR_TRUE;
-      }
-
-      const nsStylePadding* padding = aFrame->GetStylePadding();
-      if (IsPercentageUnitSides(&padding->mPadding)) {
-        return PR_TRUE;
-      }
-
-      // Borders aren't percentage aware
-
-      const nsStylePosition* pos = aFrame->GetStylePosition();
-      if (eStyleUnit_Percent == pos->mWidth.GetUnit()
-        || eStyleUnit_Percent == pos->mMaxWidth.GetUnit()
-        || eStyleUnit_Percent == pos->mMinWidth.GetUnit()
-        || eStyleUnit_Percent == pos->mHeight.GetUnit()
-        || eStyleUnit_Percent == pos->mMinHeight.GetUnit()
-        || eStyleUnit_Percent == pos->mMaxHeight.GetUnit()
-        || IsPercentageUnitSides(&pos->mOffset)) { // XXX need more here!!!
-        return PR_TRUE;
-      }
-    }
-  }
-
-  return PR_FALSE;
-}
-
-PRBool IsPercentageAwareFrame(nsPresContext *aPresContext, nsIFrame *aFrame)
-{
-  if (aFrame->IsFrameOfType(nsIFrame::eReplaced)) {
-    if (nsLineLayout::IsPercentageAwareReplacedElement(aPresContext, aFrame)) {
-      return PR_TRUE;
-    }
-  }
-  else
-  {
-    nsIFrame *child = aFrame->GetFirstChild(nsnull);
-    if (child)
-    { // aFrame is an inline container frame, check my frame state
-      if (aFrame->GetStateBits() & NS_INLINE_FRAME_CONTAINS_PERCENT_AWARE_CHILD) {
-        return PR_TRUE;
-      }
-    }
-    // else it's a frame we just don't care about
-  }  
-  return PR_FALSE;
-}
-
-
 void
 nsLineLayout::VerticalAlignLine()
 {
@@ -1502,14 +1510,6 @@ nsLineLayout::VerticalAlignLine()
     if (span) {
       nscoord distanceFromTop = pfd->mBounds.y - mTopEdge;
       PlaceTopBottomFrames(span, distanceFromTop, lineHeight);
-    }
-    // check to see if the frame is an inline replace element
-    // and if it is percent-aware.  If so, mark the line.
-    if ((PR_FALSE==mLineBox->ResizeReflowOptimizationDisabled()) &&
-         pfd->mFrameType & NS_CSS_FRAME_TYPE_INLINE)
-    {
-      if (IsPercentageAwareFrame(mPresContext, pfd->mFrame))
-        mLineBox->DisableResizeReflowOptimization();
     }
   }
 
