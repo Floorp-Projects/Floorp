@@ -658,7 +658,7 @@
           if (event.ctrlKey) {
             dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
           }
-          xferData.data = this._controller.getTransferData(dragAction.action);
+          xferData.data = this._self._controller.getTransferData(dragAction.action);
 #ifdef XP_WIN
           // Support folder dragging on the personal toolbar when the user 
           // holds the "alt" key while they drag (Ctrl+drag has another 
