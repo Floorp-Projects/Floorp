@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.344 $ ';
+$::UtilsVersion = '$Revision: 1.345 $ ';
 
 package TinderUtils;
 
@@ -2061,7 +2061,11 @@ sub run_all_tests {
                 set_pref($pref_file, 'browser.sessionstore.resume_from_crash', 'false');
             }
             elsif ($Settings::BinaryName eq 'Camino') {
+                # Suppress default browser dialog
                 set_pref($pref_file, 'camino.check_default_browser', 'false');
+
+                # Suppress session restore dialog
+                set_pref($pref_file, 'browser.sessionstore.resume_from_crash', 'false');
             }
 
             # Suppress security warnings for QA test.
