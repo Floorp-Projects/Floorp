@@ -130,6 +130,8 @@ public:
                  thebes_destroy_func_t destroy);
     void *GetData(const cairo_user_data_key_t *key);
 
+    void Finish();
+
 protected:
     static gfxASurface* GetSurfaceWrapper(cairo_surface_t *csurf);
     static void SetSurfaceWrapper(cairo_surface_t *csurf, gfxASurface *asurf);

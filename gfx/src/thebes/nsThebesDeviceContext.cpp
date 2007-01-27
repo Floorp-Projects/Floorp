@@ -587,7 +587,7 @@ nsThebesDeviceContext::EndDocument(void)
     nsRefPtr<gfxContext> thebes = new gfxContext(mPrintingSurface);
     thebes->EndPrinting();
 
-    cairo_surface_finish(mPrintingSurface->CairoSurface());
+    mPrintingSurface->Finish();
 
     if (mDeviceContextSpec)
         mDeviceContextSpec->EndDocument();

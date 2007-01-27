@@ -229,3 +229,9 @@ gfxASurface::GetData(const cairo_user_data_key_t *key)
 {
     return cairo_surface_get_user_data(mSurface, key);
 }
+
+void
+gfxASurface::Finish()
+{
+    cairo_surface_finish(mSurface);
+}
