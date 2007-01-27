@@ -3768,7 +3768,14 @@ nsFrame::IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
 
 /* virtual */ PRBool nsFrame::IsContainingBlock() const
 {
-  return PR_FALSE;
+  const nsStyleDisplay* display = GetStyleDisplay();
+
+  // Absolute positioning causes |display->mDisplay| to be set to block,
+  // if needed.
+  return display->mDisplay == NS_STYLE_DISPLAY_BLOCK || 
+         display->mDisplay == NS_STYLE_DISPLAY_INLINE_BLOCK || 
+         display->mDisplay == NS_STYLE_DISPLAY_LIST_ITEM ||
+         display->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL;
 }
 
 #ifdef NS_DEBUG
