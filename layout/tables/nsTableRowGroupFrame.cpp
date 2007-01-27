@@ -427,7 +427,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*        aPresContext,
       if (!reflowAllKids) {
         if (IsSimpleRowFrame(aReflowState.tableFrame, kidFrame)) {
           // Inform the row of its new height.
-          ((nsTableRowFrame*)kidFrame)->DidResize(aReflowState.reflowState);
+          ((nsTableRowFrame*)kidFrame)->DidResize();
           // the overflow area may have changed inflate the overflow area
           if (aReflowState.tableFrame->IsAutoHeight()) {
             // Because other cells in the row may need to be aligned
@@ -479,7 +479,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*        aPresContext,
   aDesiredSize.height = aReflowState.y;
 
   if (aReflowState.reflowState.mFlags.mSpecialHeightReflow) {
-    DidResizeRows(aReflowState.reflowState, aDesiredSize);
+    DidResizeRows(aDesiredSize);
     if (isPaginated) {
       CacheRowHeightsForPrinting(aPresContext, GetFirstRow());
     }
@@ -535,8 +535,7 @@ UpdateHeights(RowInfo& aRowInfo,
 }
 
 void 
-nsTableRowGroupFrame::DidResizeRows(const nsHTMLReflowState& aReflowState,
-                                    nsHTMLReflowMetrics&     aDesiredSize)
+nsTableRowGroupFrame::DidResizeRows(nsHTMLReflowMetrics& aDesiredSize)
 {
   // update the cells spanning rows with their new heights
   // this is the place where all of the cells in the row get set to the height of the row
@@ -544,7 +543,7 @@ nsTableRowGroupFrame::DidResizeRows(const nsHTMLReflowState& aReflowState,
   aDesiredSize.mOverflowArea = nsRect(0, 0, 0, 0);
   for (nsTableRowFrame* rowFrame = GetFirstRow();
        rowFrame; rowFrame = rowFrame->GetNextRow()) {
-    rowFrame->DidResize(aReflowState);
+    rowFrame->DidResize();
     ConsiderChildOverflow(aDesiredSize.mOverflowArea, rowFrame);
   }
 }
@@ -820,7 +819,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*          aPresContext,
     CacheRowHeightsForPrinting(aPresContext, GetFirstRow());
   }
 
-  DidResizeRows(aReflowState, aDesiredSize);
+  DidResizeRows(aDesiredSize);
 
   aDesiredSize.height = rowGroupHeight; // Adjust our desired size
   delete [] rowInfo; // cleanup
@@ -1090,7 +1089,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*          aPresContext,
         if (NS_FAILED(rv)) return rv;
         rowFrame->SetSize(nsSize(rowMetrics.width, rowMetrics.height));
         rowFrame->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
-        rowFrame->DidResize(aReflowState);
+        rowFrame->DidResize();
 
         if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
           // The row frame is incomplete and all of the rowspan 1 cells' block frames split

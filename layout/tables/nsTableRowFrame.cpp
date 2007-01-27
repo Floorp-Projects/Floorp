@@ -334,7 +334,7 @@ nsTableRowFrame::GetFirstCell()
  * Post-reflow hook. This is where the table row does its post-processing
  */
 void
-nsTableRowFrame::DidResize(const nsHTMLReflowState& aReflowState)
+nsTableRowFrame::DidResize()
 {
   // Resize and re-align the cell frames based on our row height
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
@@ -360,7 +360,7 @@ nsTableRowFrame::DidResize(const nsHTMLReflowState& aReflowState)
       {
         cellFrame->SetSize(nsSize(cellFrame->GetSize().width, cellHeight));
         // realign cell content based on the new height
-        cellFrame->VerticallyAlignChild(aReflowState, mMaxCellAscent);
+        cellFrame->VerticallyAlignChild(mMaxCellAscent);
         ConsiderChildOverflow(desiredSize.mOverflowArea, cellFrame);
         // Note that if the cell's *content* needs to change in response
         // to this height, it will get a special height reflow.
@@ -665,8 +665,6 @@ nsTableRowFrame::CalculateCellActualSize(nsIFrame* aCellFrame,
 // column widths taking into account column spans and column spacing
 static void 
 CalcAvailWidth(nsTableFrame&     aTableFrame,
-               nscoord           aTableComputedWidth,
-               float             aPixelToTwips,
                nsTableCellFrame& aCellFrame,
                nscoord           aCellSpacingX,
                nscoord&          aColAvailWidth,
@@ -694,28 +692,6 @@ CalcAvailWidth(nsTableFrame&     aTableFrame,
     aColAvailWidth += cellSpacing;
   } 
   aCellAvailWidth = aColAvailWidth;
-
-  // for a cell with a colspan > 1, use its fix width (if set) as the avail width 
-  // if this is its initial reflow
-  if ((aCellFrame.GetStateBits() & NS_FRAME_FIRST_REFLOW)
-      && (aTableFrame.GetEffectiveColSpan(aCellFrame) > 1)) {
-    // see if the cell has a style width specified
-    const nsStylePosition* cellPosition = aCellFrame.GetStylePosition();
-    if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) {
-      // need to add padding into fixed width
-      nsMargin borderPadding(0,0,0,0);
-      if (NS_UNCONSTRAINEDSIZE != aTableComputedWidth) {
-        borderPadding = nsTableFrame::GetBorderPadding(nsSize(aTableComputedWidth, 0), 
-                                                       aPixelToTwips,  &aCellFrame);
-      }
-      nscoord fixWidth = cellPosition->mWidth.GetCoordValue() + borderPadding.left + borderPadding.right;
-      if (NS_UNCONSTRAINEDSIZE != aColAvailWidth) {
-        aCellAvailWidth = PR_MIN(aColAvailWidth, fixWidth);
-      } else {
-        aCellAvailWidth = fixWidth;
-      }
-    }
-  }
 }
 
 nscoord
@@ -777,22 +753,6 @@ GetSpaceBetween(PRInt32       aPrevColIndex,
     }
   }
   return space;
-}
-
-static nscoord
-GetComputedWidth(const nsHTMLReflowState& aReflowState,
-                 nsTableFrame&            aTableFrame)
-{
-  const nsHTMLReflowState* parentReflow = aReflowState.parentReflowState;
-  nscoord computedWidth = 0;
-  while (parentReflow) {
-    if (parentReflow->frame == &aTableFrame) {
-      computedWidth = parentReflow->ComputedWidth();
-      break;
-    }
-    parentReflow = parentReflow->parentReflowState;
-  }
-  return computedWidth;
 }
 
 // subtract the heights of aRow's prev in flows from the unpaginated height
@@ -903,8 +863,8 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
     if (doReflowChild) {
       // Calculate the available width for the table cell using the known column widths
       nscoord availColWidth, availCellWidth;
-      CalcAvailWidth(aTableFrame, GetComputedWidth(aReflowState, aTableFrame), p2t,
-                     *cellFrame, cellSpacingX, availColWidth, availCellWidth);
+      CalcAvailWidth(aTableFrame, *cellFrame, cellSpacingX,
+                     availColWidth, availCellWidth);
 
       nsHTMLReflowMetrics desiredSize;
 
@@ -1129,7 +1089,7 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*          aPresContext,
   // XXX What happens if this cell has 'vertical-align: baseline' ?
   // XXX Why is it assumed that the cell's ascent hasn't changed ?
   if (fullyComplete) {
-    aCellFrame->VerticallyAlignChild(aReflowState, mMaxCellAscent);
+    aCellFrame->VerticallyAlignChild(mMaxCellAscent);
   }
   aCellFrame->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
 

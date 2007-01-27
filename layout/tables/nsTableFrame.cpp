@@ -3055,8 +3055,7 @@ nsTableFrame::CalcDesiredHeight(const nsHTMLReflowState& aReflowState, nsHTMLRef
 }
 
 static
-void ResizeCells(nsTableFrame&            aTableFrame,
-                 const nsHTMLReflowState& aReflowState)
+void ResizeCells(nsTableFrame& aTableFrame)
 {
   nsAutoVoidArray rowGroups;
   PRUint32 numRowGroups;
@@ -3079,7 +3078,7 @@ void ResizeCells(nsTableFrame&            aTableFrame,
                                       groupDesiredSize.height);
     nsTableRowFrame* rowFrame = rgFrame->GetFirstRow();
     while (rowFrame) {
-      rowFrame->DidResize(aReflowState);
+      rowFrame->DidResize();
       rgFrame->ConsiderChildOverflow(groupDesiredSize.mOverflowArea, rowFrame);
       rowFrame = rowFrame->GetNextRow();
     }
@@ -3136,7 +3135,7 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
             yEndRG += rowRect.height + cellSpacingY;
             amountUsed += amountForRow;
             amountUsedByRG += amountForRow;
-            //rowFrame->DidResize(aReflowState);        
+            //rowFrame->DidResize();        
             nsTableFrame::RePositionViews(rowFrame);
           }
         }
@@ -3165,7 +3164,7 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
   }
 
   if (amountUsed >= aAmount) {
-    ResizeCells(*this, aReflowState);
+    ResizeCells(*this);
     return;
   }
 
@@ -3241,7 +3240,7 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
           amountUsed += amountForRow;
           amountUsedByRG += amountForRow;
           NS_ASSERTION((amountUsed <= aAmount), "invalid row allocation");
-          //rowFrame->DidResize(aReflowState);        
+          //rowFrame->DidResize();        
           nsTableFrame::RePositionViews(rowFrame);
         }
         else {
@@ -3270,7 +3269,7 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
     yOriginRG = yEndRG;
   }
 
-  ResizeCells(*this, aReflowState);
+  ResizeCells(*this);
 }
 
 PRBool 
@@ -3319,100 +3318,6 @@ void nsTableFrame::SetColumnWidth(PRInt32 aColIndex, nscoord aWidth)
   else {
     firstInFlow->SetColumnWidth(aColIndex, aWidth);
   }
-}
-
-
-nscoord 
-CalcPercentPadding(nscoord      aBasis,
-                   nsStyleCoord aStyleCoord)
-{
-  float percent = (NS_UNCONSTRAINEDSIZE == aBasis)
-                  ? 0 : aStyleCoord.GetPercentValue();
-  return NSToCoordRound(((float)aBasis) * percent);
-}
-
-void 
-GetPaddingFor(const nsSize&         aBasis, 
-              const nsStylePadding& aPaddingData, 
-              nsMargin&             aPadding)
-{
-  nsStyleCoord styleCoord;
-  aPaddingData.mPadding.GetTop(styleCoord);
-  if (eStyleUnit_Percent == aPaddingData.mPadding.GetTopUnit()) {
-    aPadding.top = CalcPercentPadding(aBasis.height, styleCoord);
-  }
-  else if (eStyleUnit_Coord == aPaddingData.mPadding.GetTopUnit()) {
-    aPadding.top = styleCoord.GetCoordValue();
-  }
-
-  aPaddingData.mPadding.GetRight(styleCoord);
-  if (eStyleUnit_Percent == aPaddingData.mPadding.GetRightUnit()) {
-    aPadding.right = CalcPercentPadding(aBasis.width, styleCoord);
-  }
-  else if (eStyleUnit_Coord == aPaddingData.mPadding.GetTopUnit()) {
-    aPadding.right = styleCoord.GetCoordValue();
-  }
-
-  aPaddingData.mPadding.GetBottom(styleCoord);
-  if (eStyleUnit_Percent == aPaddingData.mPadding.GetBottomUnit()) {
-    aPadding.bottom = CalcPercentPadding(aBasis.height, styleCoord);
-  }
-  else if (eStyleUnit_Coord == aPaddingData.mPadding.GetTopUnit()) {
-    aPadding.bottom = styleCoord.GetCoordValue();
-  }
-
-  aPaddingData.mPadding.GetLeft(styleCoord);
-  if (eStyleUnit_Percent == aPaddingData.mPadding.GetLeftUnit()) {
-    aPadding.left = CalcPercentPadding(aBasis.width, styleCoord);
-  }
-  else if (eStyleUnit_Coord == aPaddingData.mPadding.GetTopUnit()) {
-    aPadding.left = styleCoord.GetCoordValue();
-  }
-}
-
-nsMargin
-nsTableFrame::GetBorderPadding(const nsHTMLReflowState& aReflowState,
-                               float                    aPixelToTwips,
-                               const nsTableCellFrame*  aCellFrame)
-{
-  // XXX When we have a more sensible border/padding API (bug 332922),
-  // we can get rid of the aReflowState parameters here and on all the
-  // DidResize* functions.
-  const nsStylePadding* paddingData = aCellFrame->GetStylePadding();
-  nsMargin padding(0,0,0,0);
-  if (!paddingData->GetPadding(padding)) {
-    const nsHTMLReflowState* parentRS = aReflowState.parentReflowState;
-    while (parentRS) {
-      if (parentRS->frame) {
-        if (nsGkAtoms::tableFrame == parentRS->frame->GetType()) {
-          nsSize basis(parentRS->ComputedWidth(), parentRS->mComputedHeight);
-          GetPaddingFor(basis, *paddingData, padding);
-          break;
-        }
-      }
-      parentRS = parentRS->parentReflowState;
-    }
-  }
-  nsMargin border;
-  aCellFrame->GetBorderWidth(aPixelToTwips, border);
-  padding += border;
-  return padding;
-}
-
-nsMargin
-nsTableFrame::GetBorderPadding(const nsSize&           aBasis,
-                               float                   aPixelToTwips,
-                               const nsTableCellFrame* aCellFrame)
-{
-  const nsStylePadding* paddingData = aCellFrame->GetStylePadding();
-  nsMargin padding(0,0,0,0);
-  if (!paddingData->GetPadding(padding)) {
-    GetPaddingFor(aBasis, *paddingData, padding);
-  }
-  nsMargin border;
-  aCellFrame->GetBorderWidth(aPixelToTwips, border);
-  padding += border;
-  return padding;
 }
 
 // XXX: could cache this.  But be sure to check style changes if you do!
