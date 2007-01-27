@@ -643,7 +643,7 @@
            inheritstyle="false">
 
     <content>
-      <html:div xbl:inherits="" style="overflow: -moz-scrollbars-none">
+      <html:div xbl:inherits="" style="overflow: hidden">
         <html:div style="display: -moz-box; margin: 0 100%;"> 
           <html:div class="innerDiv">
             <children/>
@@ -654,11 +654,13 @@
 
   </binding>
 
+  <!-- use margin-right to force large intrinsic width -->
   <binding id="marquee-vertical"
-           extends="chrome://xbl-marquee/content/xbl-marquee.xml#marquee">
+           extends="chrome://xbl-marquee/content/xbl-marquee.xml#marquee"
+           inheritstyle="false">
 
     <content>
-      <html:div xbl:inherits="" style="overflow: -moz-scrollbars-none">
+      <html:div xbl:inherits="" style="overflow: hidden; width: 100%; margin-right: 100%">
         <html:div class="innerDiv">
           <children/>
         </html:div>
