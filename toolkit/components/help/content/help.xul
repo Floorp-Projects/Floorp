@@ -234,7 +234,9 @@
         <vbox id="help-search-sidebar" hidden="true" flex="1">
           <sidebarheader align="center">
             <label id="help-search-sidebar-header" flex="1" crop="end" value="&searchtab.label;"/>
-            <toolbarbutton id="find-closebutton"  oncommand="hideSearchSidebar();"/>
+            <toolbarbutton id="search-sidebar-closebutton"
+                           tooltiptext="&searchClose.tooltip;"
+                           oncommand="hideSearchSidebar();"/>
           </sidebarheader>
           <tree id="help-search-tree" class="focusring"
                 flex="1" hidecolumnpicker="true"

@@ -64,6 +64,22 @@
 /* Set the minimum sidebar width so the help contents aren't squeezed together.*/
 #help-sidebar { min-width: 15em; width: 20em; max-width: 25em; }
 
+#search-sidebar-closebutton {
+  border: 1px solid transparent;
+  padding: 3px 2px 4px 2px !important;
+  list-style-image: url("chrome://global/skin/icons/close.png");
+  -moz-appearance: none;
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+#search-sidebar-closebutton:hover {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
+#search-sidebar-closebutton:hover:active {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+}
+
 /* ----- BACK BUTTON ----- */
 
 #help-back-button {
