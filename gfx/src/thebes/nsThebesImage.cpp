@@ -364,6 +364,10 @@ nsThebesImage::Draw(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface,
       nsRect srcRect(aSX, aSY, aSWidth, aSHeight);
       srcRect.IntersectRect(srcRect, mDecoded);
 
+      // This happens when mDecoded.width or height is zero. bug 368427.
+      if (NS_UNLIKELY(srcRect.width == 0 || srcRect.height == 0))
+          return NS_OK;
+
       aDX += (PRInt32)((srcRect.x - aSX)*xscale);
       aDY += (PRInt32)((srcRect.y - aSY)*yscale);
 
