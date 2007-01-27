@@ -50,6 +50,7 @@ use IO::Handle;
 
 use File::Path;
 use File::Copy qw(move copy);
+use File::Spec::Functions;
 
 use MozAUSConfig;
 use MozAUSLib qw(CreatePartialMarFile
@@ -788,7 +789,17 @@ sub CreateCompletePatchinfo {
                     $complete_patch->{'appv'} = $to->{'appv'};
                     $complete_patch->{'extv'} = $to->{'extv'};
                     $complete_patch->{'size'} = (stat($to_path))[7];
-                    $complete_patch->{'url'} = $gen_complete_url;
+
+                    my $channelSpecificUrlKey = $c . '-url';
+
+                    if (exists($complete->{$channelSpecificUrlKey})) {
+                        $complete_patch->{'url'} = SubstitutePath(
+                          path => $complete->{$channelSpecificUrlKey}, 
+                          platform => $p,
+                          locale => $l);
+                    } else {
+                        $complete_patch->{'url'} = $gen_complete_url;
+                    }
 
                     $complete_patch->{'details'} = $detailsUrl;
                     $complete_patch->{'license'} = $licenseUrl;
@@ -805,16 +816,22 @@ sub CreateCompletePatchinfo {
                             $testPatch->{$key} = $complete_patch->{$key};
                         }
 
-                        if (exists($complete->{'testurl'})) {
-                            $testPatch->{'url'} = SubstitutePath(path => 
-                                                   $complete->{'testurl'},
-                                                   platform => $p,
-                                                   locale => $l );
-                        }
+                        foreach my $testChan (split(/[\s,]+/, 
+                         $u_config->{$u}->{'testchannel'})) {
 
-                        foreach my $testChan (split(/[\s,]+/, $u_config->{$u}->{'testchannel'})) {
+                            $testPatch->{'info_path'} = catfile($u,
+                             'aus2.test', $from_aus_app, 
+                             $from_aus_version, $from_aus_platform, 
+                             $from_aus_buildid, $l, $testChan, 'complete.txt');
 
-                            $testPatch->{'info_path'} = "$u/aus2.test/$from_aus_app/$from_aus_version/$from_aus_platform/$from_aus_buildid/$l/$testChan/complete.txt";
+                            my $testUrlKey = $testChan . '-url';
+
+                            if (exists($complete->{$testUrlKey})) {
+                                $testPatch->{'url'} = SubstitutePath(path => 
+                                  $complete->{$testUrlKey},
+                                  platform => $p,
+                                  locale => $l );
+                            }
 
                             write_patch_info(patch => $testPatch,
                                              schemaVer => $to->{'schema'});
@@ -930,10 +947,6 @@ sub CreatePastReleasePatchinfo {
                                                     platform => $toPlatform,
                                                     locale => $locale );
 
-                my $genCompleteTestUrl = SubstitutePath(path => $completeTestUrl,
-                                                    platform => $toPlatform,
-                                                    locale => $locale );
-
                 my $detailsUrl = SubstitutePath(
                  path => $config->GetCurrentUpdate()->{'details'},
                  locale => $locale,
@@ -975,8 +988,17 @@ sub CreatePastReleasePatchinfo {
                     $completePatch->{'appv'} = $patchLocaleNode->{'appv'};
                     $completePatch->{'extv'} = $patchLocaleNode->{'extv'};
                     $completePatch->{'size'} = (stat($to_path))[$MozAUSLib::ST_SIZE];
-                    $completePatch->{'url'} = ($channel =~ /test(-\w+)?$/) ? 
-                     $genCompleteTestUrl : $genCompleteUrl;
+
+                    my $channelSpecificUrlKey = $channel . '-url';
+
+                    if (exists($completePatch->{$channelSpecificUrlKey})) {
+                        $completePatch->{'url'} = SubstitutePath(
+                         path => $completePatch->{$channelSpecificUrlKey},
+                         platform => $toPlatform,
+                         locale => $locale);
+                    } else {
+                        $completePatch->{'url'} = $genCompleteUrl;
+                    }
 
                     $completePatch->{'details'} = $detailsUrl;
                     $completePatch->{'license'} = $licenseUrl;
@@ -1076,10 +1098,9 @@ sub CreatePartialPatchinfo {
                                                    locale => $l );
                 my $partial_pathname = "$u/ftp/$gen_partial_path";
 
-                my $gen_partial_url = $partial_url;
-                $gen_partial_url = SubstitutePath(path => $partial_url,
-                                                  platform => $p,
-                                                  locale => $l );
+                my $gen_partial_url = SubstitutePath(path => $partial_url,
+                                                     platform => $p,
+                                                     locale => $l );
 
                 my $detailsUrl = SubstitutePath(
                  path => $u_config->{$u}->{'details'},
@@ -1122,7 +1143,18 @@ sub CreatePartialPatchinfo {
                     $partial_patch->{'appv'} = $to->{'appv'};
                     $partial_patch->{'extv'} = $to->{'extv'};
                     $partial_patch->{'size'} = (stat($partial_pathname))[7];
-                    $partial_patch->{'url'} = $gen_partial_url;
+
+                    my $channelSpecificUrlKey = $c . '-url';
+
+                    if (exists($partial->{$channelSpecificUrlKey})) {
+                        $partial_patch->{'url'} = SubstitutePath(
+                          path => $partial->{$channelSpecificUrlKey}, 
+                          platform => $p,
+                          locale => $l);
+                    } else {
+                        $partial_patch->{'url'} = $gen_partial_url;
+                    }
+
                     $partial_patch->{'details'} = $detailsUrl;
                     $partial_patch->{'license'} = $licenseUrl;
                     $partial_patch->{'updateType'} = $updateType;
@@ -1138,18 +1170,25 @@ sub CreatePartialPatchinfo {
                             $testPatch->{$key} = $partial_patch->{$key};
                         }
 
-                        if (exists($partial->{'testurl'})) {
-                            $testPatch->{'url'} = SubstitutePath(path => 
-                                                   $partial->{'testurl'},
-                                                   platform => $p,
-                                                   locale => $l );
-                        }
+                        foreach my $testChan (split(/[\s,]+/, 
+                         $u_config->{$u}->{'testchannel'})) {
 
-                        foreach my $testChan (split(/[\s,]+/, $u_config->{$u}->{'testchannel'})) {
+                            $testPatch->{'info_path'} = catfile($u,
+                             'aus2.test', $from_aus_app,
+                             $from_aus_version, $from_aus_platform,
+                             $from_aus_buildid, $l, $testChan, 'partial.txt');
 
-                            $testPatch->{'info_path'} = "$u/aus2.test/$from_aus_app/$from_aus_version/$from_aus_platform/$from_aus_buildid/$l/$testChan/partial.txt";
+                            my $testChanKey = $testChan . '-url';
 
-                            #print STDERR "Generating TEST entry: $testPatch->{'info_path'}\n";
+                            if (exists($partial->{$testChanKey})) {
+                                $testPatch->{'url'} = SubstitutePath(path => 
+                                 $partial->{$testChanKey},
+                                 platform => $p,
+                                 locale => $l );
+                            } else {
+                                $testPatch->{'url'} = $gen_partial_path;
+                            }
+
                             write_patch_info(patch => $testPatch,
                                              schemaVer => $to->{'schema'});
                         }
