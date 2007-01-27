@@ -313,16 +313,16 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
     // If we have a scale, I think we've already lost; so don't round
     // anything here
     CGContextConcatCTM(cgContext,
-                       CGAffineTransformMake(mat.xx(), mat.xy(),
-                                             mat.yx(), mat.yy(),
-                                             mat.x0(), mat.y0()));
+                       CGAffineTransformMake(mat.xx, mat.xy,
+                                             mat.yx, mat.yy,
+                                             mat.x0, mat.y0));
   } else {
     // Otherwise, we round the x0/y0, because otherwise things get rendered badly
     CGContextConcatCTM(cgContext,
-                       CGAffineTransformMake(mat.xx(), mat.xy(),
-                                             mat.yx(), mat.yy(),
-                                             floor(mat.x0() + ROUND_CONST_FLOAT),
-                                             floor(mat.y0() + ROUND_CONST_FLOAT)));
+                       CGAffineTransformMake(mat.xx, mat.xy,
+                                             mat.yx, mat.yy,
+                                             floor(mat.x0 + ROUND_CONST_FLOAT),
+                                             floor(mat.y0 + ROUND_CONST_FLOAT)));
   }
 
 #if 0
