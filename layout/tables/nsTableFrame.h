@@ -310,14 +310,6 @@ public:
                        nsIFrame*&               aLastChildReflowed,
                        nsReflowStatus&          aStatus);
 
-  static nsMargin GetBorderPadding(const nsHTMLReflowState& aReflowState,
-                                   float                    aPixelToTwips,
-                                   const nsTableCellFrame*  aCellFrame);
-
-  static nsMargin GetBorderPadding(const nsSize&           aBasis,
-                                   float                   aPixelToTwips,
-                                   const nsTableCellFrame* aCellFrame);
-
   nsFrameList& GetColGroups();
 
   NS_IMETHOD GetParentStyleContextFrame(nsPresContext* aPresContext,
