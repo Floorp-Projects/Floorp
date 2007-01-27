@@ -244,7 +244,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       res = GetMacBrushColor(kThemeBrushDialogBackgroundActive, aColor, NS_RGB(0xDD,0xDD,0xDD));
       break;
     case eColor_infobackground:
-      res = GetMacBrushColor(kThemeBrushNotificationWindowBackground, aColor, NS_RGB(0xFF,0xFF,0xC6));
+      aColor = NS_RGB(0xFF,0xFF,0xC7);
       break;
     case eColor_windowframe:
       //no way to fetch this colour. HARDCODING to Platinum
