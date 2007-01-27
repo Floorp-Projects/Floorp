@@ -757,6 +757,7 @@ sub CreateCompletePatchinfo {
                      version => $to->{'appv'});
                 }
 
+                my $updateType = $config->GetCurrentUpdate()->{'updateType'};
 
                 for my $c (@channels) {
                     my $aus_prefix = "$u/aus2/$from_aus_app/$from_aus_version/$from_aus_platform/$from_aus_buildid/$l/$c";
@@ -791,6 +792,7 @@ sub CreateCompletePatchinfo {
 
                     $complete_patch->{'details'} = $detailsUrl;
                     $complete_patch->{'license'} = $licenseUrl;
+                    $complete_patch->{'updateType'} = $updateType;
 
                     write_patch_info(patch => $complete_patch,
                                      schemaVer => $to->{'schema'});
