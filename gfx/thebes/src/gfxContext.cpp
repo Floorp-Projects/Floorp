@@ -45,12 +45,16 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+#include "cairo.h"
+
 #include "gfxContext.h"
 
 #include "gfxColor.h"
 #include "gfxMatrix.h"
 #include "gfxASurface.h"
 #include "gfxPattern.h"
+
+
 
 gfxContext::gfxContext(gfxASurface *surface) :
     mSurface(surface)
@@ -277,14 +281,14 @@ gfxContext::Rotate(gfxFloat angle)
 void
 gfxContext::Multiply(const gfxMatrix& matrix)
 {
-    const cairo_matrix_t& mat = matrix.ToCairoMatrix();
+    const cairo_matrix_t& mat = reinterpret_cast<const cairo_matrix_t&>(matrix);
     cairo_transform(mCairo, &mat);
 }
 
 void
 gfxContext::SetMatrix(const gfxMatrix& matrix)
 {
-    const cairo_matrix_t& mat = matrix.ToCairoMatrix();
+    const cairo_matrix_t& mat = reinterpret_cast<const cairo_matrix_t&>(matrix);
     cairo_set_matrix(mCairo, &mat);
 }
 
@@ -299,7 +303,7 @@ gfxContext::CurrentMatrix() const
 {
     cairo_matrix_t mat;
     cairo_get_matrix(mCairo, &mat);
-    return gfxMatrix(mat);
+    return gfxMatrix(*reinterpret_cast<gfxMatrix*>(&mat));
 }
 
 gfxPoint
@@ -561,11 +565,6 @@ gfxContext::Clip(gfxRect rect)
     cairo_new_path(mCairo);
     cairo_rectangle(mCairo, rect.pos.x, rect.pos.y, rect.size.width, rect.size.height);
     cairo_clip(mCairo);
-}
-
-void
-gfxContext::Clip(const gfxRegion& region)
-{
 }
 
 void

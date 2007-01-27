@@ -36,12 +36,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "gfxWindowsSurface.h"
-#include "nsString.h"
-
 #include "gfxContext.h"
 #include "gfxPlatform.h"
 
-#include <cairo-win32.h>
+#include "cairo.h"
+#include "cairo-win32.h"
+
+#include "nsString.h"
 
 gfxWindowsSurface::gfxWindowsSurface(HWND wnd) :
     mOwnsDC(PR_TRUE), mWnd(wnd)

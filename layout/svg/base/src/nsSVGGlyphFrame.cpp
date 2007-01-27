@@ -1433,7 +1433,7 @@ nsSVGGlyphFrame::GetGlobalTransform(gfxContext *aContext)
     return NS_ERROR_FAILURE;
   }
 
-  aContext->Multiply(gfxMatrix(matrix));
+  aContext->Multiply(gfxMatrix(*reinterpret_cast<gfxMatrix*>(&matrix)));
 
   return NS_OK;
 }

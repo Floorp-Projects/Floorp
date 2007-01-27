@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Stuart Parmenter <pavlov@pavlov.net>
+ *   Stuart Parmenter <stuart@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,95 +38,50 @@
 #ifndef GFX_PATTERN_H
 #define GFX_PATTERN_H
 
-#include <cairo.h>
-
-#include "gfxColor.h"
-#include "gfxASurface.h"
-#include "gfxMatrix.h"
 #include "gfxTypes.h"
 
+#include "gfxColor.h"
+#include "gfxMatrix.h"
+
 class gfxContext;
+class gfxASurface;
+typedef struct _cairo_pattern cairo_pattern_t;
+
 
 class THEBES_API gfxPattern {
-    friend class gfxContext;
-
     THEBES_INLINE_DECL_REFCOUNTING(gfxPattern)
 
 public:
-    gfxPattern(cairo_pattern_t *aPattern) {
-        mPattern = cairo_pattern_reference(aPattern);
-    }
-
-    gfxPattern(gfxRGBA aColor) {
-        mPattern = cairo_pattern_create_rgba(aColor.r, aColor.g, aColor.b, aColor.a);
-    }
-
-    // from another surface
-    gfxPattern(gfxASurface* surface) {
-        mPattern = cairo_pattern_create_for_surface(surface->CairoSurface());
-    }
-
+    gfxPattern(cairo_pattern_t *aPattern);
+    gfxPattern(gfxRGBA aColor);
+    gfxPattern(gfxASurface *surface); // from another surface
     // linear
-    gfxPattern(gfxFloat x0, gfxFloat y0, gfxFloat x1, gfxFloat y1) {
-        mPattern = cairo_pattern_create_linear(x0, y0, x1, y1);
-    }
-
-    // radial
+    gfxPattern(gfxFloat x0, gfxFloat y0, gfxFloat x1, gfxFloat y1); // linear
     gfxPattern(gfxFloat cx0, gfxFloat cy0, gfxFloat radius0,
-               gfxFloat cx1, gfxFloat cy1, gfxFloat radius1) {
-        mPattern = cairo_pattern_create_radial(cx0, cy0, radius0,
-                                               cx1, cy1, radius1);
-    }
+               gfxFloat cx1, gfxFloat cy1, gfxFloat radius1); // radial
+    virtual ~gfxPattern();
 
-    virtual ~gfxPattern() {
-        cairo_pattern_destroy(mPattern);
-    }
+    cairo_pattern_t *CairoPattern();
+    void AddColorStop(gfxFloat offset, const gfxRGBA& c);
+    void SetMatrix(const gfxMatrix& matrix);
+    gfxMatrix CurrentMatrix() const;
 
-    cairo_pattern_t *CairoPattern() {
-        return mPattern;
-    }
-
-    void AddColorStop(gfxFloat offset, const gfxRGBA& c) {
-        cairo_pattern_add_color_stop_rgba(mPattern, offset, c.r, c.g, c.b, c.a);
-    }
-
-    void SetMatrix(const gfxMatrix& matrix) {
-        cairo_matrix_t mat = matrix.ToCairoMatrix();
-        cairo_pattern_set_matrix(mPattern, &mat);
-    }
-
-    gfxMatrix CurrentMatrix() const {
-        cairo_matrix_t mat;
-        cairo_pattern_get_matrix(mPattern, &mat);
-        return gfxMatrix(mat);
-    }
+    enum GraphicsExtend {
+        EXTEND_NONE,
+        EXTEND_REPEAT,
+        EXTEND_REFLECT,
+        EXTEND_PAD
+    };
 
     // none, repeat, reflect
-    void SetExtend(int extend) {
-        cairo_pattern_set_extend(mPattern, (cairo_extend_t)extend);
-    }
+    void SetExtend(GraphicsExtend extend);
+    GraphicsExtend Extend() const;
 
-    int Extend() const {
-        return (int)cairo_pattern_get_extend(mPattern);
-    }
-
-    void SetFilter(int filter) {
-        cairo_pattern_set_filter(mPattern, (cairo_filter_t)filter);
-    }
-
-    int Filter() const {
-        return (int)cairo_pattern_get_filter(mPattern);
-    }
-
+    void SetFilter(int filter);
+    int Filter() const;
 
     /* returns TRUE if it succeeded */
-    PRBool GetSolidColor(gfxRGBA& aColor) {
-        return cairo_pattern_get_rgba(mPattern,
-                                      &aColor.r,
-                                      &aColor.g,
-                                      &aColor.b,
-                                      &aColor.a) == CAIRO_STATUS_SUCCESS;
-    }
+    PRBool GetSolidColor(gfxRGBA& aColor);
 
 protected:
     cairo_pattern_t *mPattern;
