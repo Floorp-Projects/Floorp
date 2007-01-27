@@ -24,6 +24,7 @@
 
 <!ENTITY searchtab.label    	  	"Search">
 <!ENTITY searchtab.accesskey            "S">
+<!ENTITY searchClose.tooltip            "Close search results">
 <!ENTITY toctab.label       	  	"Contents">
 <!ENTITY toctab.accesskey               "C">
 
