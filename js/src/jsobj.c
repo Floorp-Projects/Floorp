@@ -1244,12 +1244,12 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (caller && !caller->varobj && !js_GetCallObject(cx, caller, NULL))
         return JS_FALSE;
 
+    scopeobj = NULL;
 #if JS_HAS_SCRIPT_OBJECT
     /*
      * Script.prototype.compile/exec and Object.prototype.eval all take an
      * optional trailing argument that overrides the scope object.
      */
-    scopeobj = NULL;
     if (argc >= 2) {
         if (!js_ValueToObject(cx, argv[1], &scopeobj))
             return JS_FALSE;
