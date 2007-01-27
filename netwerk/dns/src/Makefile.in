@@ -75,3 +75,9 @@ LOCAL_INCLUDES =  \
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DIMPL_NS_NET
+
+libs::
+	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/effective_tld_names.dat $(DIST)/bin/res
+
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/effective_tld_names.dat $(DESTDIR)$(mozappdir)/res

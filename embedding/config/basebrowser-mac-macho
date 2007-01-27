@@ -271,3 +271,6 @@ components/p3p.xpt
 ; svg
 components/dom_svg.xpt
 res/svg.css
+
+; Effective TLD
+res/effective_tld_names.dat

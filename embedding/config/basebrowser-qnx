@@ -270,3 +270,6 @@ res/entityTables/transliterate.properties
 components/libp3p.so
 components/p3p.xpt
 
+; Effective TLD
+res/effective_tld_names.dat
+

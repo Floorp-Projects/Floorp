@@ -21,5 +21,7 @@ dist/bin/components/@SHARED_LIBRARY@
 !xpt dist/bin/components/necko_socket.xpt
 #endif
 
+dist/bin/res/effective_tld_names.dat
+
 [gecko-support]
 dist/bin/defaults/pref/security-prefs.js
