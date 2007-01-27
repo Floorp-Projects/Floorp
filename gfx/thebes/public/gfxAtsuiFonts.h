@@ -39,6 +39,7 @@
 #ifndef GFX_ATSUIFONTS_H
 #define GFX_ATSUIFONTS_H
 
+#include "cairo.h"
 #include "gfxTypes.h"
 #include "gfxFont.h"
 
