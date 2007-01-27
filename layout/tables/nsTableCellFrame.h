@@ -148,6 +148,8 @@ public:
    */
   virtual nsIAtom* GetType() const;
 
+  virtual PRBool IsContainingBlock() const;
+
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
