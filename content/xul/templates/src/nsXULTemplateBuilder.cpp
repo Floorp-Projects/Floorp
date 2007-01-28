@@ -451,9 +451,9 @@ nsXULTemplateBuilder::UpdateResult(nsIXULTemplateResult* aOldResult,
     // will be false if the result applies to content that is in a closed menu
     // or treeitem for example.
 
-    nsCOMPtr<nsISupportsArray> insertionPoints;
+    nsAutoPtr<nsCOMArray<nsIContent> > insertionPoints;
     PRBool mayReplace = GetInsertionLocations(aOldResult ? aOldResult : aNewResult,
-                                              getter_AddRefs(insertionPoints));
+                                              getter_Transfers(insertionPoints));
     if (! mayReplace)
         return NS_OK;
 
@@ -506,12 +506,9 @@ nsXULTemplateBuilder::UpdateResult(nsIXULTemplateResult* aOldResult,
     if (insertionPoints) {
         // iterate over each insertion point and add or remove the result from
         // that container
-        PRUint32 count;
-        insertionPoints->Count(&count);
-
+        PRUint32 count = insertionPoints->Count();
         for (PRUint32 t = 0; t < count; t++) {
-            nsCOMPtr<nsIContent> insertionPoint =
-                do_QueryElementAt(insertionPoints, t);
+            nsCOMPtr<nsIContent> insertionPoint = insertionPoints->SafeObjectAt(t);
             if (insertionPoint) {
                 rv = UpdateResultInContainer(aOldResult, aNewResult, queryset,
                                              oldId, newId, insertionPoint);

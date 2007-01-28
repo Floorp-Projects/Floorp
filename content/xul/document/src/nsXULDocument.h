@@ -135,7 +135,7 @@ public:
     NS_IMETHOD AddElementForID(const nsAString& aID, nsIContent* aElement);
     NS_IMETHOD RemoveElementForID(const nsAString& aID, nsIContent* aElement);
     NS_IMETHOD GetElementsForID(const nsAString& aID,
-                                nsISupportsArray* aElements);
+                                nsCOMArray<nsIContent>& aElements);
     NS_IMETHOD AddForwardReference(nsForwardReference* aRef);
     NS_IMETHOD ResolveForwardReferences();
     NS_IMETHOD GetScriptGlobalObjectOwner(nsIScriptGlobalObjectOwner** aGlobalOwner);
@@ -214,7 +214,7 @@ protected:
 
     nsresult ApplyPersistentAttributes();
     nsresult ApplyPersistentAttributesToElements(nsIRDFResource* aResource,
-                                                 nsISupportsArray* aElements);
+                                                 nsCOMArray<nsIContent>& aElements);
 
     nsresult
     AddElementToDocumentPre(nsIContent* aElement);

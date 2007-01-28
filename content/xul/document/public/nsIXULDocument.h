@@ -40,6 +40,7 @@
 
 #include "nsISupports.h"
 #include "nsString.h"
+#include "nsCOMArray.h"
 
 class nsForwardReference;
 class nsIAtom;
@@ -53,10 +54,11 @@ class nsIContent;
 class nsIRDFDataSource;
 class nsIScriptGlobalObjectOwner;
 
-// {694439d3-c03b-43d7-9dc5-dd6687e5949f}
+// {01c4fe87-961f-4194-a21d-04f4387c4bb3}
 #define NS_IXULDOCUMENT_IID \
-{ 0x694439d3, 0xc03b, 0x43d7, \
-  { 0x9d, 0xc5, 0xdd, 0x66, 0x87, 0xe5, 0x94, 0x9f } }
+{ 0x01c4fe87, 0x961f, 0x4194, \
+  { 0xa2, 0x1d, 0x04, 0xf4, 0x38, 0x7c, 0x4b, 0xb3 } }
+
 
 /*
  * An XUL-specific extension to nsIDocument. Includes methods for
@@ -83,10 +85,10 @@ public:
 
   /**
    * Get the elements for a particular resource in the resource-to-element
-   * map. The nsISupportsArray will be truncated and filled in with
+   * map. The nsCOMArray will be truncated and filled in with
    * nsIContent pointers.
    */
-  NS_IMETHOD GetElementsForID(const nsAString& aID, nsISupportsArray* aElements) = 0;
+  NS_IMETHOD GetElementsForID(const nsAString& aID, nsCOMArray<nsIContent>& aElements) = 0;
 
   /**
    * Add a "forward declaration" of a XUL observer. Such declarations

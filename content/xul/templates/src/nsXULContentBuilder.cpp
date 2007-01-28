@@ -347,7 +347,7 @@ protected:
 
     nsresult
     GetElementsForResult(nsIXULTemplateResult* aResult,
-                         nsISupportsArray* aElements);
+                         nsCOMArray<nsIContent>& aElements);
 
     nsresult
     CreateElement(PRInt32 aNameSpaceID,
@@ -381,13 +381,10 @@ protected:
      * Return true if the result can be inserted into the template as
      * generated content. For the content builder, aLocations will be set
      * to the list of containers where the content should be inserted.
-     *
-     * XXX aLocations is currently an nsISupportsArray, because of
-     *     GetElementsForID; will be switched to an nsCOMArray with bug 321174
      */
     virtual PRBool
     GetInsertionLocations(nsIXULTemplateResult* aOldResult,
-                          nsISupportsArray** aLocations);
+                          nsCOMArray<nsIContent>** aLocations);
 
     /**
      * Remove the content associated with aOldResult which no longer matches,
@@ -1573,7 +1570,7 @@ nsXULContentBuilder::IsLazyWidgetItem(nsIContent* aElement)
 
 nsresult
 nsXULContentBuilder::GetElementsForResult(nsIXULTemplateResult* aResult,
-                                          nsISupportsArray* aElements)
+                                          nsCOMArray<nsIContent>& aElements)
 {
     // if the root has been removed from the document, just return
     // since there won't be any generated content any more
@@ -1696,20 +1693,13 @@ nsXULContentBuilder::HasGeneratedContent(nsIRDFResource* aResource,
         if (! xuldoc)
             return NS_OK;
 
-        nsCOMPtr<nsISupportsArray> elements;
-        rv = NS_NewISupportsArray(getter_AddRefs(elements));
-        if (NS_FAILED(rv))
-            return rv;
-
+        nsCOMArray<nsIContent> elements;
         xuldoc->GetElementsForID(refID, elements);
 
-        PRUint32 cnt;
-        rv = elements->Count(&cnt);
-        if (NS_FAILED(rv))
-            return rv;
+        PRUint32 cnt = elements.Count();
 
         for (PRInt32 i = PRInt32(cnt) - 1; i >= 0; --i) {
-            nsCOMPtr<nsIContent> content = do_QueryElementAt(elements, i);
+            nsCOMPtr<nsIContent> content = elements.SafeObjectAt(i);
 
             do {
                 nsTemplateMatch* match;
@@ -1806,7 +1796,7 @@ nsXULContentBuilder::NodeWillBeDestroyed(const nsINode* aNode)
 
 PRBool
 nsXULContentBuilder::GetInsertionLocations(nsIXULTemplateResult* aResult,
-                                           nsISupportsArray** aLocations)
+                                           nsCOMArray<nsIContent>** aLocations)
 {
     *aLocations = nsnull;
 
@@ -1815,24 +1805,20 @@ nsXULContentBuilder::GetInsertionLocations(nsIXULTemplateResult* aResult,
     if (NS_FAILED(rv))
         return PR_FALSE;
 
-    nsCOMPtr<nsISupportsArray> elements;
-    rv = NS_NewISupportsArray(getter_AddRefs(elements));
-    if (NS_FAILED(rv))
-        return PR_FALSE;
-
     nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mRoot->GetDocument());
     if (! xuldoc)
         return PR_FALSE;
 
-    xuldoc->GetElementsForID(ref, elements);
+    *aLocations = new nsCOMArray<nsIContent>;
+    NS_ENSURE_TRUE(*aLocations, PR_FALSE);
 
-    PRUint32 count;
-    elements->Count(&count);
+    xuldoc->GetElementsForID(ref, **aLocations);
+    PRUint32 count = (*aLocations)->Count();
 
     PRBool found = PR_FALSE;
 
     for (PRUint32 t = 0; t < count; t++) {
-        nsCOMPtr<nsIContent> content = do_QueryElementAt(elements, t);
+        nsCOMPtr<nsIContent> content = (*aLocations)->SafeObjectAt(t);
 
         nsTemplateMatch* refmatch;
         if (content == mRoot || mContentSupportMap.Get(content, &refmatch)) {
@@ -1852,10 +1838,8 @@ nsXULContentBuilder::GetInsertionLocations(nsIXULTemplateResult* aResult,
         }
 
         // clear the item in the list since we don't want to insert there
-        elements->SetElementAt(t, nsnull);
+        (*aLocations)->ReplaceObjectAt(nsnull, t);
     }
-
-    elements.swap(*aLocations);
 
     return found;
 }
@@ -1892,18 +1876,15 @@ nsXULContentBuilder::ReplaceMatch(nsIXULTemplateResult* aOldResult,
     }
 
     if (aOldResult) {
-        nsSupportsArray elements;
-        rv = GetElementsForResult(aOldResult, &elements);
+        nsCOMArray<nsIContent> elements;
+        rv = GetElementsForResult(aOldResult, elements);
         if (NS_FAILED(rv))
             return rv;
 
-        PRUint32 count;
-        elements.Count(&count);
+        PRUint32 count = elements.Count();
 
         for (PRInt32 e = PRInt32(count) - 1; e >= 0; --e) {
-            nsISupports* isupports = elements.ElementAt(e);
-            nsCOMPtr<nsIContent> child = do_QueryInterface(isupports);
-            NS_IF_RELEASE(isupports);
+            nsCOMPtr<nsIContent> child = elements.SafeObjectAt(e);
 
             nsTemplateMatch* match;
             if (mContentSupportMap.Get(child, &match)) {
@@ -1929,14 +1910,13 @@ nsXULContentBuilder::ReplaceMatch(nsIXULTemplateResult* aOldResult,
 nsresult
 nsXULContentBuilder::SynchronizeResult(nsIXULTemplateResult* aResult)
 {
-    nsSupportsArray elements;
-    GetElementsForResult(aResult, &elements);
+    nsCOMArray<nsIContent> elements;
+    GetElementsForResult(aResult, elements);
 
-    PRUint32 cnt = 0;
-    elements.Count(&cnt);
+    PRUint32 cnt = elements.Count();
 
     for (PRInt32 i = PRInt32(cnt) - 1; i >= 0; --i) {
-        nsCOMPtr<nsIContent> element = do_QueryElementAt(&elements, i);
+        nsCOMPtr<nsIContent> element = elements.SafeObjectAt(i);
 
         nsTemplateMatch* match;
         if (! mContentSupportMap.Get(element, &match))

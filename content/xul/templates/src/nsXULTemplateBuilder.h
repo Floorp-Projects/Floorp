@@ -434,12 +434,12 @@ protected:
      * Those results will be generated when the container is opened.
      * If false is returned, no content should be generated. Possible 
      * insertion locations may optionally be set for new content, depending on
-     * the builder being used. Note that some items within aLocations may be
-     * null.
+     * the builder being used. Note that *aLocations or some items within
+     * aLocations may be null.
      */
     virtual PRBool
     GetInsertionLocations(nsIXULTemplateResult* aResult,
-                          nsISupportsArray** aLocations) = 0;
+                          nsCOMArray<nsIContent>** aLocations) = 0;
 
     /**
      * Must be implemented by subclasses. Handle removing the generated

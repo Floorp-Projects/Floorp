@@ -316,18 +316,18 @@ nsElementMap::Remove(const nsAString& aID, nsIContent* aContent)
 
 
 nsresult
-nsElementMap::Find(const nsAString& aID, nsISupportsArray* aResults)
+nsElementMap::Find(const nsAString& aID, nsCOMArray<nsIContent>& aResults)
 {
     NS_PRECONDITION(mMap != nsnull, "not initialized");
     if (! mMap)
         return NS_ERROR_NOT_INITIALIZED;
 
-    aResults->Clear();
+    aResults.Clear();
     ContentListItem* item =
         NS_REINTERPRET_CAST(ContentListItem*, PL_HashTableLookup(mMap, (const PRUnichar *)PromiseFlatString(aID).get()));
 
     while (item) {
-        aResults->AppendElement(item->mContent);
+        aResults.AppendObject(item->mContent);
         item = item->mNext;
     }
     return NS_OK;
