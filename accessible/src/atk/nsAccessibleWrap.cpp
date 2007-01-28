@@ -45,6 +45,7 @@
 #include "nsString.h"
 #include "prprf.h"
 #include "nsRoleMap.h"
+#include "nsStateMap.h"
 
 #include "nsMaiInterfaceComponent.h"
 #include "nsMaiInterfaceAction.h"
@@ -476,143 +477,6 @@ GetUniqueMaiAtkTypeName(PRUint16 interfacesBits)
     return name;
 }
 
-/******************************************************************************
-The following nsIAccessible states aren't translated, just ignored.
-  STATE_MIXED:         For a three-state check box.
-  STATE_READONLY:      The object is designated read-only.
-  STATE_HOTTRACKED:    Means its appearance has changed to indicate mouse
-                       over it.
-  STATE_FLOATING:      Not supported yet.
-  STATE_MARQUEED:      Indicate scrolling or moving text or graphics.
-  STATE_ANIMATED:
-  STATE_OFFSCREEN:     Has no on-screen representation.
-  STATE_MOVEABLE:
-  STATE_SELFVOICING:   The object has self-TTS.
-  STATE_LINKED:        The object is formatted as a hyperlink.
-  STATE_TRAVERSE:      The object is a hyperlink that has been visited.
-  STATE_EXTSELECTABLE: Indicates that an object extends its selectioin.
-  STATE_ALERT_LOW:     Not supported yet.
-  STATE_ALERT_MEDIUM:  Not supported yet.
-  STATE_ALERT_HIGH:    Not supported yet.
-  STATE_PROTECTED:     The object is a password-protected edit control.
-  STATE_HASPOPUP:      Object displays a pop-up menu or window when invoked.
-
-Returned AtkStatusSet never contain the following AtkStates.
-  ATK_STATE_ARMED:     Indicates that the object is armed.
-  ATK_STATE_DEFUNCT:   Indicates the user interface object corresponding to
-                       thus object no longer exists.
-  ATK_STATE_HORIZONTAL:Indicates the orientation of this object is horizontal.
-  ATK_STATE_ICONIFIED:
-  ATK_STATE_OPAQUE:     Indicates the object paints every pixel within its
-                        rectangular region
-  ATK_STATE_STALE:      The index associated with this object has changed since
-                        the user accessed the object
-******************************************************************************/
-
-void
-nsAccessibleWrap::TranslateStates(PRUint32 aState, PRUint32 aExtState, void *aAtkStateSet)
-{
-    if (!aAtkStateSet)
-        return;
-    AtkStateSet *state_set = NS_STATIC_CAST(AtkStateSet *, aAtkStateSet);
-
-    if (aState & nsIAccessible::STATE_SELECTED)
-        atk_state_set_add_state (state_set, ATK_STATE_SELECTED);
-
-    if (aState & nsIAccessible::STATE_FOCUSED)
-        atk_state_set_add_state (state_set, ATK_STATE_FOCUSED);
-
-    if (aState & nsIAccessible::STATE_PRESSED)
-        atk_state_set_add_state (state_set, ATK_STATE_PRESSED);
-
-    if (aState & nsIAccessible::STATE_CHECKED)
-        atk_state_set_add_state (state_set, ATK_STATE_CHECKED);
-
-    if (aState & nsIAccessible::STATE_EXPANDED)
-        atk_state_set_add_state (state_set, ATK_STATE_EXPANDED);
-
-    if (aState & nsIAccessible::STATE_COLLAPSED)
-        atk_state_set_add_state (state_set, ATK_STATE_EXPANDABLE);
-                   
-    // The control can't accept input at this time
-    if (aState & nsIAccessible::STATE_BUSY)
-        atk_state_set_add_state (state_set, ATK_STATE_BUSY);
-
-    if (aState & nsIAccessible::STATE_FOCUSABLE)
-        atk_state_set_add_state (state_set, ATK_STATE_FOCUSABLE);
-
-    if (!(aState & nsIAccessible::STATE_INVISIBLE))
-        atk_state_set_add_state (state_set, ATK_STATE_VISIBLE);
-
-    if (aState & nsIAccessible::STATE_SELECTABLE)
-        atk_state_set_add_state (state_set, ATK_STATE_SELECTABLE);
-
-    if (aState & nsIAccessible::STATE_SIZEABLE)
-        atk_state_set_add_state (state_set, ATK_STATE_RESIZABLE);
-
-    if (aState & nsIAccessible::STATE_MULTISELECTABLE)
-        atk_state_set_add_state (state_set, ATK_STATE_MULTISELECTABLE);
-
-    if (!(aState & nsIAccessible::STATE_UNAVAILABLE)) {
-        atk_state_set_add_state (state_set, ATK_STATE_ENABLED);
-        atk_state_set_add_state (state_set, ATK_STATE_SENSITIVE);
-    }
-
-    if (aState & nsIAccessible::STATE_INVALID)
-        atk_state_set_add_state (state_set, ATK_STATE_INVALID_ENTRY);
-
-    if (aState & nsIAccessible::STATE_DEFAULT)
-        atk_state_set_add_state (state_set, ATK_STATE_DEFAULT);
-
-    if (aState & nsIAccessible::STATE_REQUIRED)
-        atk_state_set_add_state (state_set, ATK_STATE_REQUIRED);
-
-    if (aState & nsIAccessible::STATE_TRAVERSED)
-        atk_state_set_add_state (state_set, ATK_STATE_VISITED);
-
-    if (aState & nsIAccessible::STATE_ANIMATED)
-        atk_state_set_add_state (state_set, ATK_STATE_ANIMATED);
-
-    // The following state is
-    // Extended state flags (for now non-MSAA, for Java and Gnome/ATK support)
-    if (aExtState & nsIAccessible::EXT_STATE_SELECTABLE_TEXT)
-        atk_state_set_add_state (state_set, ATK_STATE_SELECTABLE_TEXT);
-
-    if (aExtState & nsIAccessible::EXT_STATE_ACTIVE)
-        atk_state_set_add_state (state_set, ATK_STATE_ACTIVE);
-
-    if (aExtState & nsIAccessible::EXT_STATE_EXPANDABLE)
-        atk_state_set_add_state (state_set, ATK_STATE_EXPANDABLE);
-
-    if (aExtState & nsIAccessible::EXT_STATE_MODAL)
-        atk_state_set_add_state (state_set, ATK_STATE_MODAL);
-
-    if (aExtState & nsIAccessible::EXT_STATE_MULTI_LINE)
-        atk_state_set_add_state (state_set, ATK_STATE_MULTI_LINE);
-
-    if (aExtState & nsIAccessible::EXT_STATE_SENSITIVE)
-        atk_state_set_add_state (state_set, ATK_STATE_SENSITIVE);
-
-    if (aExtState & nsIAccessible::EXT_STATE_SHOWING)
-        atk_state_set_add_state (state_set, ATK_STATE_SHOWING);
-
-    if (aExtState & nsIAccessible::EXT_STATE_SINGLE_LINE)
-        atk_state_set_add_state (state_set, ATK_STATE_SINGLE_LINE);
-
-    if (aExtState & nsIAccessible::EXT_STATE_TRANSIENT)
-        atk_state_set_add_state (state_set, ATK_STATE_TRANSIENT);
-
-    if (aExtState & nsIAccessible::EXT_STATE_VERTICAL)
-        atk_state_set_add_state (state_set, ATK_STATE_VERTICAL);
-
-    if (aExtState & nsIAccessible::EXT_STATE_EDITABLE)
-        atk_state_set_add_state (state_set, ATK_STATE_EDITABLE);
-
-    if (aExtState & nsIAccessible::EXT_STATE_DEFUNCT)
-        atk_state_set_add_state (state_set, ATK_STATE_DEFUNCT);
-
-}
-
 PRBool nsAccessibleWrap::IsValidObject()
 {
     // to ensure we are not shut down
@@ -1018,6 +882,30 @@ getIndexInParentCB(AtkObject *aAtkObj)
     return currentIndex;
 }
 
+static void TranslateStates(PRUint32 aState, const AtkStateMap *aStateMap,
+                            AtkStateSet *aStateSet)
+{
+  NS_ASSERTION(aStateSet, "Can't pass in null state set");
+
+  // Convert every state to an entry in AtkStateMap
+  PRUint32 stateIndex = 0;
+  PRUint32 bitMask = 1;
+  while (aStateMap[stateIndex].stateMapEntryType != kNoSuchState) {
+    if (aStateMap[stateIndex].atkState) {    // There's potentially an ATK state for this
+      PRBool isStateOn = (aState & bitMask) != 0;
+      if (aStateMap[stateIndex].stateMapEntryType == kMapOpposite) {
+        isStateOn = !isStateOn;
+      }
+      if (isStateOn) {
+        atk_state_set_add_state(aStateSet, aStateMap[stateIndex].atkState);
+      }
+    }
+    // Map extended state
+    bitMask <<= 1;
+    ++ stateIndex;
+  }
+}
+
 AtkStateSet *
 refStateSetCB(AtkObject *aAtkObj)
 {
@@ -1028,18 +916,19 @@ refStateSetCB(AtkObject *aAtkObj)
     nsAccessibleWrap *accWrap =
         NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
 
-    PRUint32 accState = 0;
+    // Map states
+    PRUint32 accState;
     nsresult rv = accWrap->GetFinalState(&accState);
     NS_ENSURE_SUCCESS(rv, state_set);
+    TranslateStates(accState, gAtkStateMap, state_set);
 
-    PRUint32 accExtState = 0;
+    // Map extended states
+    PRUint32 accExtState;
     rv = accWrap->GetExtState(&accExtState);
     NS_ENSURE_SUCCESS(rv, state_set);
 
-    if ((accState == 0) && (accExtState == 0))
-      return state_set;
+    TranslateStates(accExtState, gAtkStateMapExt, state_set);
 
-    nsAccessibleWrap::TranslateStates(accState, accExtState, state_set);
     return state_set;
 }
 

@@ -50,6 +50,8 @@
 #include <glib.h>
 #include <glib-object.h>
 
+#include "nsStateMap.h"
+
 //----- nsDocAccessibleWrap -----
 
 /*
@@ -72,8 +74,6 @@ static char * sAtkPropertyNameArray[PROP_LAST] = {
     "accessible_table_row_header",
     "accessible_table_summary"
 };
-
-static  AtkStateType TranslateAState(PRUint32 aState, PRUint32 aExtState);
 
 nsDocAccessibleWrap::nsDocAccessibleWrap(nsIDOMNode *aDOMNode,
                                          nsIWeakReference *aShell): 
@@ -117,36 +117,29 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
 
     case nsIAccessibleEvent::EVENT_STATE_CHANGE:
       {
-        StateChange *pStateChange;
-        AtkStateType atkState;
-
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_STATE_CHANGE\n"));
         if (!aEventData)
             break;
 
-        pStateChange = NS_REINTERPRET_CAST(StateChange *, aEventData);
-
-        switch (pStateChange->state) {
-        case nsIAccessible::STATE_INVISIBLE:
-            atkState = ATK_STATE_VISIBLE;
-            pStateChange->enable = !pStateChange->enable;
-            break;
-        case nsIAccessible::STATE_UNAVAILABLE:
-            atkState = ATK_STATE_ENABLED;
-            pStateChange->enable = !pStateChange->enable;
-            break;
-        case nsIAccessible::STATE_READONLY:
-            atkState = ATK_STATE_EDITABLE;
-            pStateChange->enable = !pStateChange->enable;
-            break;
-        default:
-            atkState = TranslateAState(pStateChange->state, pStateChange->extState);
+        StateChange *pStateChange = NS_REINTERPRET_CAST(StateChange *, aEventData);
+        PRInt32 stateIndex = AtkStateMap::GetStateIndexFor(pStateChange->state);
+        if (stateIndex >= 0) {
+          const AtkStateMap *atkStateMap = pStateChange->isExtendedState ? gAtkStateMapExt : gAtkStateMap;
+          NS_ASSERTION(atkStateMap[stateIndex].stateMapEntryType != kNoSuchState, "No such state");
+          if (atkStateMap[stateIndex].atkState != kNone) {
+            NS_ASSERTION(atkStateMap[stateIndex].stateMapEntryType != kNoStateChange,
+                         "State changes should not fired for this state");
+            if (atkStateMap[stateIndex].stateMapEntryType == kMapOpposite) {
+              pStateChange->enable = !pStateChange->enable;
+            }
+            // Fire state change for first state if there is one to map
+            atk_object_notify_state_change(accWrap->GetAtkObject(),
+                                           atkStateMap[stateIndex].atkState, pStateChange->enable);
+          }
         }
-
-        atk_object_notify_state_change(accWrap->GetAtkObject(),
-                                       atkState, pStateChange->enable);
         rv = NS_OK;
-        } break;
+      }
+      break;
       
         /*
          * More complex than I ever thought.
@@ -494,6 +487,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
                                        ATK_STATE_VISIBLE, PR_TRUE);
         atk_object_notify_state_change(accWrap->GetAtkObject(),
                                        ATK_STATE_SHOWING, PR_TRUE);
+        rv = NS_OK;
         break;
 
     case nsIAccessibleEvent::EVENT_HIDE:
@@ -502,6 +496,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
                                        ATK_STATE_VISIBLE, PR_FALSE);
         atk_object_notify_state_change(accWrap->GetAtkObject(),
                                        ATK_STATE_SHOWING, PR_FALSE);
+        rv = NS_OK;
         break;
 
     default:
@@ -512,76 +507,3 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
 
     return rv;
 }
-
-/* static */
-AtkStateType
-TranslateAState(PRUint32 aState, PRUint32 aExtState)
-{
-    switch (aState) {
-    case nsIAccessible::STATE_SELECTED:
-        return ATK_STATE_SELECTED;
-    case nsIAccessible::STATE_FOCUSED:
-        return ATK_STATE_FOCUSED;
-    case nsIAccessible::STATE_PRESSED:
-        return ATK_STATE_PRESSED;
-    case nsIAccessible::STATE_CHECKED:
-        return ATK_STATE_CHECKED;
-    case nsIAccessible::STATE_EXPANDED:
-        return ATK_STATE_EXPANDED;
-    case nsIAccessible::STATE_COLLAPSED:
-        return ATK_STATE_EXPANDABLE;
-        // The control can't accept input at this time
-    case nsIAccessible::STATE_BUSY:
-        return ATK_STATE_BUSY;
-    case nsIAccessible::STATE_FOCUSABLE:
-        return ATK_STATE_FOCUSABLE;
-    case nsIAccessible::STATE_SELECTABLE:
-        return ATK_STATE_SELECTABLE;
-    case nsIAccessible::STATE_SIZEABLE:
-        return ATK_STATE_RESIZABLE;
-    case nsIAccessible::STATE_MULTISELECTABLE:
-        return ATK_STATE_MULTISELECTABLE;
-
-#if 0
-        // The following states are opposite the MSAA states.
-        // We need to deal with them specially
-    case nsIAccessible::STATE_INVISIBLE:
-        return !ATK_STATE_VISIBLE;
-
-    case nsIAccessible::STATE_UNAVAILABLE:
-        return !ATK_STATE_ENABLED;
-
-    case nsIAccessible::STATE_READONLY:
-        return !ATK_STATE_EDITABLE;
-#endif
-    }
-
-    // The following state is
-    // Extended state flags (for non-MSAA, for Java and Gnome/ATK support)
-    switch (aExtState) {
-    case nsIAccessible::EXT_STATE_ACTIVE:
-        return ATK_STATE_ACTIVE;
-    case nsIAccessible::EXT_STATE_EXPANDABLE:
-        return ATK_STATE_EXPANDABLE;
-#if 0
-        // Need change definitions in nsIAccessible.idl to avoid
-        // duplicate value
-    case nsIAccessible::EXT_STATE_MODAL:
-        return ATK_STATE_MODAL;
-#endif
-    case nsIAccessible::EXT_STATE_MULTI_LINE:
-        return ATK_STATE_MULTI_LINE;
-    case nsIAccessible::EXT_STATE_SENSITIVE:
-        return ATK_STATE_SENSITIVE;
-    case nsIAccessible::EXT_STATE_SHOWING:
-        return ATK_STATE_SHOWING;
-    case nsIAccessible::EXT_STATE_SINGLE_LINE:
-        return ATK_STATE_SINGLE_LINE;
-    case nsIAccessible::EXT_STATE_TRANSIENT:
-        return ATK_STATE_TRANSIENT;
-    case nsIAccessible::EXT_STATE_VERTICAL:
-        return ATK_STATE_VERTICAL;
-    }
-    return ATK_STATE_INVALID;
-}
-

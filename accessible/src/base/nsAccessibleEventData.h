@@ -82,11 +82,11 @@ class nsAccessibleEventData: public nsIAccessibleEvent
 
 struct StateChange {
   PRUint32 state;
-  PRUint32 extState;
+  PRBool   isExtendedState;
   PRBool   enable;
   StateChange() {
     state = 0;
-    extState = 0;
+    isExtendedState = PR_FALSE;
     enable = PR_FALSE;
   }
 };

@@ -169,6 +169,7 @@ protected:
     static nsITimer *gDoCommandTimer;
     static PRBool gIsAccessibilityActive;
     static PRBool gIsCacheDisabled;
+    static PRBool gIsFormFillEnabled;
 
     static nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> gGlobalDocAccessibleCache;
 

@@ -220,6 +220,18 @@ NS_IMETHODIMP nsDocAccessible::GetState(PRUint32 *aState)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDocAccessible::GetExtState(PRUint32 *aExtState)
+{
+  nsresult rv = nsHyperTextAccessible::GetExtState(aExtState);
+  // Our default calculation for ENABLED/SENSITIVE checks to see if
+  // something is focusable but not disabled.
+  // Documents are focusable but are not controls that can be
+  // enabled or sensitive, so here we clear those states,
+  // since they will have been set by the default GetExtState()
+  *aExtState &= ~(EXT_STATE_ENABLED | EXT_STATE_SENSITIVE);
+  return rv;
+}
+
 NS_IMETHODIMP nsDocAccessible::GetFocusedChild(nsIAccessible **aFocusedChild)
 {
   if (!gLastFocusedNode) {
@@ -387,15 +399,12 @@ void nsDocAccessible::CheckForEditor()
                                      getter_AddRefs(editor));
   SetEditor(editor);
   if (editor) {
-    // State readonly is now clear
-#ifdef MOZ_ACCESSIBILITY_ATK
+    // State editable is now set, readonly is now clear
     StateChange stateData;
     stateData.enable = PR_TRUE;
-    stateData.state = STATE_READONLY; // Will be translated to ATK_STATE_EDITABLE
+    stateData.isExtendedState = PR_TRUE;
+    stateData.state = EXT_STATE_EDITABLE;
     FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, &stateData);
-#else
-    FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, nsnull);
-#endif
   }
 }
 

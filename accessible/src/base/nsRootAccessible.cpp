@@ -73,6 +73,7 @@
 #include "nsIViewManager.h"
 #include "nsLayoutAtoms.h"
 #include "nsPIDOMWindow.h"
+#include "nsIWebBrowserChrome.h"
 #include "nsReadableUtils.h"
 #include "nsRootAccessible.h"
 #include "nsIDOMNSEventTarget.h"
@@ -81,6 +82,7 @@
 #ifdef MOZ_XUL
 #include "nsXULTreeAccessible.h"
 #include "nsIXULDocument.h"
+#include "nsIXULWindow.h"
 #endif
 
 // Expanded version of NS_IMPL_ISUPPORTS_INHERITED2 
@@ -126,15 +128,9 @@ NS_IMETHODIMP nsRootAccessible::GetName(nsAString& aName)
     }
   }
 
-  nsPIDOMWindow *window = mDocument->GetWindow();
-  nsIDocShell *docShell = nsnull;
-  if (window) {
-    docShell = window->GetDocShell();
-  }
-
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
-  if(!docShellAsItem)
-     return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
+    GetDocShellTreeItemFor(mDOMNode);
+  NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
   docShellAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
@@ -181,6 +177,27 @@ NS_IMETHODIMP nsRootAccessible::GetRole(PRUint32 *aRole)
   return nsDocAccessibleWrap::GetRole(aRole);
 }
 
+#ifdef MOZ_XUL
+PRUint32 nsRootAccessible::GetChromeFlags()
+{
+  // Return the flag set for the top level window as defined 
+  // by nsIWebBrowserChrome::CHROME_WINDOW_[FLAGNAME]
+  // Not simple: nsIXULWindow is not just a QI from nsIDOMWindow
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = GetDocShellTreeItemFor(mDOMNode);
+  NS_ENSURE_TRUE(treeItem, 0);
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
+  NS_ENSURE_TRUE(treeOwner, 0);
+  nsCOMPtr<nsIXULWindow> xulWin(do_GetInterface(treeOwner));
+  if (!xulWin) {
+    return 0;
+  }
+  PRUint32 chromeFlags;
+  xulWin->GetChromeFlags(&chromeFlags);
+  return chromeFlags;
+}
+#endif
+
 NS_IMETHODIMP nsRootAccessible::GetState(PRUint32 *aState) 
 {
   nsresult rv = NS_ERROR_FAILURE;
@@ -200,6 +217,20 @@ NS_IMETHODIMP nsRootAccessible::GetState(PRUint32 *aState)
       *aState |= STATE_FOCUSED;
     }
   }
+
+#ifdef MOZ_XUL
+  PRUint32 chromeFlags = GetChromeFlags();
+  if (chromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE) {
+    *aState |= STATE_SIZEABLE;
+  }
+  if (chromeFlags & nsIWebBrowserChrome::CHROME_TITLEBAR) {
+    // If it has a titlebar it's movable
+    // XXX unless it's minimized or maximized, but not sure
+    //     how to detect that
+    *aState |= STATE_MOVEABLE;
+  }
+#endif
+
   return NS_OK;
 }
 
@@ -219,6 +250,12 @@ NS_IMETHODIMP nsRootAccessible::GetExtState(PRUint32 *aExtState)
       *aExtState |= EXT_STATE_ACTIVE;
     }
   }
+#ifdef MOZ_XUL
+  if (GetChromeFlags() & nsIWebBrowserChrome::CHROME_MODAL) {
+    *aExtState |= EXT_STATE_MODAL;
+  }
+#endif
+
   return NS_OK;
 }
 

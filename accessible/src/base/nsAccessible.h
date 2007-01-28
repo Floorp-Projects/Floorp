@@ -163,7 +163,7 @@ protected:
   PRBool MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut, nsStateMapEntry *aStateMapEntry);
   virtual nsIFrame* GetBoundsFrame();
   virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
-  PRBool IsPartiallyVisible(PRBool *aIsOffscreen); 
+  PRBool IsVisible(PRBool *aIsOffscreen); 
   nsresult GetTextFromRelationID(nsIAtom *aIDAttrib, nsString &aName);
 
   static nsIContent *GetContentPointingTo(const nsAString *aId,
