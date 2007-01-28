@@ -59,7 +59,7 @@ _DEST_DIR = $(DEPTH)/_tests/$(relativesrcdir)
 
 # XXXsayrer will work on making this work better with other apps
 ifeq ($(OS_ARCH),Darwin)
-ifdef DEBUG
+ifdef MOZ_DEBUG
 browser_path = \"../$(DIST)/MinefieldDebug.app/Contents/MacOS/firefox\"
 else
 browser_path = \"../$(DIST)/Minefield.app/Contents/MacOS/firefox\"
