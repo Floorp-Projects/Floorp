@@ -713,6 +713,24 @@ nsIFrame::GetUsedBorder() const
                (GetStateBits() & NS_FRAME_IN_REFLOW),
                "cannot call on a dirty frame not currently being reflowed");
 
+  // Theme methods don't use const-ness.
+  nsIFrame *mutable_this = NS_CONST_CAST(nsIFrame*, this);
+
+  const nsStyleDisplay *disp = GetStyleDisplay();
+  if (mutable_this->IsThemed(disp)) {
+    nsMargin result;
+    nsPresContext *presContext = GetPresContext();
+    presContext->GetTheme()->GetWidgetBorder(presContext->DeviceContext(),
+                                             mutable_this, disp->mAppearance,
+                                             &result);
+    float p2t = presContext->ScaledPixelsToTwips();
+    result.top = NSIntPixelsToTwips(result.top, p2t);
+    result.right = NSIntPixelsToTwips(result.right, p2t);
+    result.bottom = NSIntPixelsToTwips(result.bottom, p2t);
+    result.left = NSIntPixelsToTwips(result.left, p2t);
+    return result;
+  }
+
   return GetStyleBorder()->GetBorder();
 }
 
@@ -725,6 +743,25 @@ nsIFrame::GetUsedPadding() const
                "cannot call on a dirty frame not currently being reflowed");
 
   nsMargin padding(0, 0, 0, 0);
+
+  // Theme methods don't use const-ness.
+  nsIFrame *mutable_this = NS_CONST_CAST(nsIFrame*, this);
+
+  const nsStyleDisplay *disp = GetStyleDisplay();
+  if (mutable_this->IsThemed(disp)) {
+    nsPresContext *presContext = GetPresContext();
+    if (presContext->GetTheme()->GetWidgetPadding(presContext->DeviceContext(),
+                                                  mutable_this,
+                                                  disp->mAppearance,
+                                                  &padding)) {
+      float p2t = presContext->ScaledPixelsToTwips();
+      padding.top = NSIntPixelsToTwips(padding.top, p2t);
+      padding.right = NSIntPixelsToTwips(padding.right, p2t);
+      padding.bottom = NSIntPixelsToTwips(padding.bottom, p2t);
+      padding.left = NSIntPixelsToTwips(padding.left, p2t);
+      return padding;
+    }
+  }
   if (!GetStylePadding()->GetPadding(padding)) {
     nsMargin *p = NS_STATIC_CAST(nsMargin*,
                     GetProperty(nsGkAtoms::usedPaddingProperty));
@@ -3039,6 +3076,26 @@ nsFrame::IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext)
   const nsStyleBorder *styleBorder = GetStyleBorder();
   result.hBorder += styleBorder->GetBorderWidth(NS_SIDE_LEFT);
   result.hBorder += styleBorder->GetBorderWidth(NS_SIDE_RIGHT);
+
+  const nsStyleDisplay *disp = GetStyleDisplay();
+  if (IsThemed(disp)) {
+    nsPresContext *presContext = GetPresContext();
+    float p2t = presContext->ScaledPixelsToTwips();
+
+    nsMargin border;
+    presContext->GetTheme()->GetWidgetBorder(presContext->DeviceContext(),
+                                             this, disp->mAppearance,
+                                             &border);
+    result.hBorder = NSIntPixelsToTwips(border.LeftRight(), p2t);
+
+    nsMargin padding;
+    if (presContext->GetTheme()->GetWidgetPadding(presContext->DeviceContext(),
+                                                  this, disp->mAppearance,
+                                                  &padding)) {
+      result.hPadding = NSIntPixelsToTwips(padding.LeftRight(), p2t);
+      result.hPctPadding = 0;
+    }
+  }
 
   return result;
 }

@@ -582,6 +582,12 @@ SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
     }
 
     if (hasOverflowClip) {
+      // XXX We should be able to replace the next 14 lines with just
+      //   overflowClipRect.Deflate(aFrame->GetUsedBorderAndPadding());
+      // but unfortunately this function gets called during frame
+      // construction (why?), and GetUsedBorderAndPadding asserts when
+      // called on a frame that hasn't been reflowed yet (for good
+      // reason).
       const nsStyleBorder* borderStyle = aStyleContext->GetStyleBorder();
       const nsStylePadding* paddingStyle = aStyleContext->GetStylePadding();
 

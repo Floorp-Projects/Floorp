@@ -2989,7 +2989,20 @@ nsComputedDOMStyle::GetBorderWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  val->SetTwips(GetStyleBorder()->GetComputedBorderWidth(aSide));
+  nscoord width;
+  const nsStyleDisplay *disp = GetStyleDisplay();
+  if (mFrame->IsThemed(disp)) {
+    nsMargin result;
+    nsPresContext *presContext = mFrame->GetPresContext();
+    presContext->GetTheme()->GetWidgetBorder(presContext->DeviceContext(),
+                                             mFrame, disp->mAppearance,
+                                             &result);
+    width = NSIntPixelsToTwips(result.side(aSide),
+                               presContext->ScaledPixelsToTwips());
+  } else {
+    width = GetStyleBorder()->GetComputedBorderWidth(aSide);
+  }
+  val->SetTwips(width);
 
   return CallQueryInterface(val, aValue);
 }
