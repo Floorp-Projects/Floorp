@@ -4,13 +4,11 @@ messenger.jar:
 % overlay chrome://messenger/content/msgHdrViewOverlay.xul chrome://messenger-smime/content/msgHdrViewSMIMEOverlay.xul
 % overlay chrome://messenger/content/messenger.xul chrome://messenger-smime/content/msgReadSMIMEOverlay.xul
 % overlay chrome://messenger/content/messageWindow.xul chrome://messenger-smime/content/msgReadSMIMEOverlay.xul
-% overlay chrome://messenger/content/pref-advanced.xul chrome://messenger-smime/content/pref-smime-advanced.xul
 *  content/messenger-smime/msgReadSMIMEOverlay.xul                  (content/msgReadSMIMEOverlay.xul)
 *  content/messenger-smime/msgCompSMIMEOverlay.xul                  (content/msgCompSMIMEOverlay.xul)
 *  content/messenger-smime/msgCompSMIMEOverlay.js                   (content/msgCompSMIMEOverlay.js)
 *  content/messenger-smime/msgCompSecurityInfo.xul                  (content/msgCompSecurityInfo.xul)
 *  content/messenger-smime/msgHdrViewSMIMEOverlay.js                (content/msgHdrViewSMIMEOverlay.js)
-*  content/messenger-smime/pref-smime-advanced.xul                  (content/pref-smime-advanced.xul)
 *  content/messenger/am-smime.xul                                   (content/am-smime.xul)
 *  content/messenger/am-smime.js                                    (content/am-smime.js)
    content/messenger-smime/msgReadSMIMEOverlay.js                   (/mailnews/extensions/smime/resources/content/msgReadSMIMEOverlay.js)
