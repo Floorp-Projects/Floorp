@@ -1085,14 +1085,14 @@ public class Parser
             {
                 reportError("msg.bad.namespace");
             }
-            decompiler.addName(ts.getString());
+            decompiler.addName(" xml");
 
             if (!(matchToken(Token.NAME)
                   && ts.getString().equals("namespace")))
             {
                 reportError("msg.bad.namespace");
             }
-            decompiler.addName(ts.getString());
+            decompiler.addName(" namespace");
 
             if (!matchToken(Token.ASSIGN)) {
                 reportError("msg.bad.namespace");
