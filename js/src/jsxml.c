@@ -6581,25 +6581,6 @@ NormalizingDelete(JSContext *cx, JSObject *obj, JSXML *xml, jsval id)
     return DeleteByIndex(cx, xml, id, &junk);
 }
 
-/*
- * Erratum? the testcase js/tests/e4x/XML/13.4.4.26.js wants all-whitespace
- * text between tags to be removed by normalize.
- */
-static JSBool
-IsXMLSpace(JSString *str)
-{
-    const jschar *cp, *end;
-
-    cp = JSSTRING_CHARS(str);
-    end = cp + JSSTRING_LENGTH(str);
-    while (cp < end) {
-        if (!JS_ISXMLSPACE(*cp))
-            return JS_FALSE;
-        ++cp;
-    }
-    return JS_TRUE;
-}
-
 /* XML and XMLList */
 static JSBool
 xml_normalize(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
@@ -6640,7 +6621,7 @@ xml_normalize(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 n = xml->xml_kids.length;
                 kid->xml_value = str;
             }
-            if (IS_EMPTY(kid->xml_value) || IsXMLSpace(kid->xml_value)) {
+            if (IS_EMPTY(kid->xml_value)) {
                 if (!NormalizingDelete(cx, obj, xml, INT_TO_JSVAL(i)))
                     return JS_FALSE;
                 n = xml->xml_kids.length;
