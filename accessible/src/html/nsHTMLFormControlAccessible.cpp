@@ -43,6 +43,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSEditableElement.h"
 #include "nsIDOMNSHTMLButtonElement.h"
+#include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLLegendElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIFrame.h"
@@ -375,6 +376,33 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetExtState(PRUint32 *aExtState)
   const PRUint32 kNonEditableStates = STATE_READONLY | STATE_UNAVAILABLE;
   if (0 == (state & kNonEditableStates)) {
     *aExtState |= EXT_STATE_EDITABLE;
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
+    if (content && (content = content->GetBindingParent()) != nsnull &&
+        content->NodeInfo()->Equals(nsAccessibilityAtoms::textbox, kNameSpaceID_XUL)) {
+      // If parent is XUL textbox, then it supports autocompletion if type="autocomplete"
+      if (content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                               NS_LITERAL_STRING("autocomplete"), eIgnoreCase)) {
+        *aExtState |= EXT_STATE_SUPPORTS_AUTOCOMPLETION;
+      }
+    }
+    else if (gIsFormFillEnabled && htmlInput && !(state & STATE_PROTECTED)) {
+      // Check to see if autocompletion is allowed on this input
+      // We don't expose it for password fields even though the entire password can
+      // be remembered for a page if the user asks it to be.
+      // However, the kind of autocomplete we're talking here is based on what
+      // the user types, where a popup of possible choices comes up.
+      nsAutoString autocomplete;
+      htmlInput->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
+      if (!autocomplete.LowerCaseEqualsLiteral("off")) {
+        nsCOMPtr<nsIDOMHTMLFormElement> form;
+        htmlInput->GetForm(getter_AddRefs(form));
+        if (form)
+          form->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
+        if (!form || !autocomplete.LowerCaseEqualsLiteral("off")) {
+          *aExtState |= EXT_STATE_SUPPORTS_AUTOCOMPLETION;
+        }
+      }
+    }
   }
 
   return NS_OK;

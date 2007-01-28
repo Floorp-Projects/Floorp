@@ -44,7 +44,7 @@
 const PRUint32 kROLE_ATK_LAST_ENTRY = 0xffffffff;
 
 // Map array from cross platform roles to  ATK roles
-PRUint32 atkRoleMap[] = {
+static const PRUint32 atkRoleMap[] = {
                                   // Cross Platform Roles                  #
     ATK_ROLE_UNKNOWN,             // nsIAccessible::ROLE_NOTHING           0
     ATK_ROLE_UNKNOWN,             // nsIAccessible::ROLE_TITLEBAR          1

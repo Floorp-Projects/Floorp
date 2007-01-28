@@ -44,7 +44,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsAccessible.h"
-
 #include "prlog.h"
 
 #ifdef PR_LOGGING
@@ -77,10 +76,6 @@ public:
     AtkObject * GetAtkObject(void);
 
     PRBool IsValidObject();
-
-    static void TranslateStates(PRUint32 aState,
-                                PRUint32 aExtState,
-                                void *aAtkStateSet);
 
     static const char * ReturnString(nsAString &aString) {
       static nsCString returnedString;

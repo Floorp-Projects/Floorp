@@ -829,10 +829,11 @@ nsresult nsAccessible::GetFullKeyName(const nsAString& aModifierName, const nsAS
   return NS_OK;
 }
 
-PRBool nsAccessible::IsPartiallyVisible(PRBool *aIsOffscreen) 
+PRBool nsAccessible::IsVisible(PRBool *aIsOffscreen) 
 {
   // We need to know if at least a kMinPixels around the object is visible
-  // Otherwise it will be marked STATE_OFFSCREEN and STATE_INVISIBLE
+  // Otherwise it will be marked STATE_OFFSCREEN
+  // The STATE_INVISIBLE flag is for elements which are programmatically hidden
   
   *aIsOffscreen = PR_FALSE;
 
@@ -883,11 +884,26 @@ PRBool nsAccessible::IsPartiallyVisible(PRBool *aIsOffscreen)
                                  NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)), 
                                  &rectVisibility);
 
-  if (rectVisibility == nsRectVisibility_kVisible ||
-      (rectVisibility == nsRectVisibility_kZeroAreaRect && frame->GetNextContinuation())) {
+  if (rectVisibility == nsRectVisibility_kZeroAreaRect) {
+    if (frame->GetNextContinuation()) {
+      // Zero area rects can occur in the first frame of a multi-frame text flow,
+      // in which case the next frame exists because the text flow is visible
+      rectVisibility = nsRectVisibility_kVisible;
+    }
+    else if (IsCorrectFrameType(frame, nsAccessibilityAtoms::inlineFrame)) {
+      // Yuck. Unfortunately inline frames can contain larger frames inside of them,
+      // so we can't really believe this is a zero area rect without checking more deeply.
+      // GetBounds() will do that for us.
+      PRInt32 x, y, width, height;
+      GetBounds(&x, &y, &width, &height);
+      if (width > 0 && height > 0) {
+        rectVisibility = nsRectVisibility_kVisible;    
+      }
+    }
+  }
+
+  if (rectVisibility == nsRectVisibility_kVisible) {
     // This view says it is visible, but we need to check the parent view chain :(
-    // Note: zero area rects can occur in the first frame of a multi-frame text flow,
-    //       in which case the next frame exists because the text flow is visible
     while ((containingView = containingView->GetParent()) != nsnull) {
       if (containingView->GetVisibility() == nsViewVisibility_kHide) {
         return PR_FALSE;
@@ -896,8 +912,20 @@ PRBool nsAccessible::IsPartiallyVisible(PRBool *aIsOffscreen)
     return PR_TRUE;
   }
 
-  *aIsOffscreen = rectVisibility != nsRectVisibility_kZeroAreaRect;
-  return PR_FALSE;
+  PRBool hasArea  = rectVisibility != nsRectVisibility_kZeroAreaRect;
+  if (hasArea) {
+    *aIsOffscreen = PR_TRUE;
+  }
+  else {
+    // Is programmatically hidden, inherit offscreen flag from parent,
+    // because GetRectVisibility() didn't tell us anything useful in that case
+    nsCOMPtr<nsIAccessible> parentAccessible;
+    GetParent(getter_AddRefs(parentAccessible));
+    if (State(parentAccessible) & STATE_OFFSCREEN) {
+      *aIsOffscreen = PR_TRUE;
+    }
+  }
+  return hasArea;
 }
 
 /* readonly attribute wstring state; */
@@ -940,12 +968,14 @@ NS_IMETHODIMP nsAccessible::GetState(PRUint32 *aState)
     }
   }
 
-  // Check if STATE_OFFSCREEN bitflag should be turned on for this object
+  // Check if STATE_INVISIBLE and STATE_OFFSCREEN flags should 
+  // be turned on for this object
   PRBool isOffscreen;
-  if (!IsPartiallyVisible(&isOffscreen)) {
+  if (!IsVisible(&isOffscreen)) {
     *aState |= STATE_INVISIBLE;
-    if (isOffscreen)
-      *aState |= STATE_OFFSCREEN;
+  }
+  if (isOffscreen) {
+    *aState |= STATE_OFFSCREEN;
   }
 
   return NS_OK;
@@ -1812,6 +1842,7 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
             {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
   {"combobox", ROLE_COMBOBOX, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
             {"readonly", BOOL_STATE, STATE_READONLY},
+            {"expanded", BOOL_STATE, STATE_EXPANDED},
             {"multiselect", BOOL_STATE, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE}, END_ENTRY},
   {"description", ROLE_TEXT_CONTAINER, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
   {"dialog", ROLE_DIALOG, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
@@ -2448,17 +2479,46 @@ NS_IMETHODIMP nsAccessible::ExtendSelection()
 /* unsigned long getExtState (); */
 NS_IMETHODIMP nsAccessible::GetExtState(PRUint32 *aExtState)
 {
+  *aExtState = 0;
+
   if (!mDOMNode) {
     *aExtState = EXT_STATE_DEFUNCT;
     return NS_OK; // Node shut down
   }
-  *aExtState = (State(this) & STATE_INVISIBLE) ? 0 : EXT_STATE_SHOWING;
+  nsIFrame *frame = GetFrame();
+  if (frame) {
+    const nsStyleDisplay* display = frame->GetStyleDisplay();
+    if (display && display->mOpacity == 1.0f && !(State(this) & STATE_INVISIBLE)) {
+      *aExtState |= EXT_STATE_OPAQUE;
+    }
+    const nsStyleXUL *xulStyle = frame->GetStyleXUL();
+    if (xulStyle) {
+      // In XUL all boxes are either vertical or horizontal
+      *aExtState |= (xulStyle->mBoxOrient == NS_STYLE_BOX_ORIENT_VERTICAL) ? EXT_STATE_VERTICAL : EXT_STATE_HORIZONTAL;
+    }
+  }
 
   // XXX We can remove this hack once we support RDF-based role & state maps
   if (mRoleMapEntry && (mRoleMapEntry->role == ROLE_ENTRY || mRoleMapEntry->role == ROLE_PASSWORD_TEXT)) {
     *aExtState = NS_LITERAL_CSTRING("textarea").Equals(mRoleMapEntry->roleString) ? 
        EXT_STATE_MULTI_LINE : EXT_STATE_SINGLE_LINE;
   }
+
+  PRUint32 state ;
+  GetFinalState(&state);
+  if (0 == (state & STATE_UNAVAILABLE)) {  // If not disabled
+    // And if has at least 1 action or it is focusable, it can be ENABLED and SENSITIVE
+    PRUint8 actions;
+    GetNumActions(&actions);
+    if (actions > 0 || (state & STATE_FOCUSABLE)) {
+      *aExtState |= EXT_STATE_ENABLED | EXT_STATE_SENSITIVE;
+    }
+  }
+
+  if (state & (STATE_COLLAPSED | STATE_EXPANDED)) {
+    *aExtState |= EXT_STATE_EXPANDABLE;
+  }
+
   return NS_OK;
 }
 

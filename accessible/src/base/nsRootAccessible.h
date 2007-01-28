@@ -108,6 +108,9 @@ class nsRootAccessible : public nsDocAccessibleWrap,
                                   PRBool aForceEvent = PR_FALSE);
     void FireCurrentFocusEvent();
     void GetChromeEventHandler(nsIDOMEventTarget **aChromeTarget);
+#ifdef MOZ_XUL
+    PRUint32 GetChromeFlags();
+#endif
     already_AddRefed<nsIDocShellTreeItem>
            GetContentDocShell(nsIDocShellTreeItem *aStart);
     nsCOMPtr<nsIAccessibleCaret> mCaretAccessible;

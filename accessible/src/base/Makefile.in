@@ -46,7 +46,8 @@ MODULE = accessibility
 LIBRARY_NAME = accessibility_base_s
 LIBXUL_LIBRARY = 1
 
-REQUIRES	= commandhandler \
+REQUIRES	= appshell \
+		  commandhandler \
 		  composer \
 		  content \
 		  docshell \

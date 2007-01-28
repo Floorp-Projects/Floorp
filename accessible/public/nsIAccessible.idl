@@ -56,7 +56,7 @@ interface nsIPersistentProperties;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(09078872-bc66-4854-a9b7-e3d145ca5cd7)]
+[scriptable, uuid(c711b078-e76a-4136-9d51-e38b6c3a4cec)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -283,8 +283,8 @@ interface nsIAccessible : nsISupports
   const unsigned long  STATE_FLOATING           = 0x00001000;  // Children "owned" not "contained" by parent
   const unsigned long  STATE_MARQUEED           = 0x00002000;
   const unsigned long  STATE_ANIMATED           = 0x00004000;
-  const unsigned long  STATE_INVISIBLE          = 0x00008000;
-  const unsigned long  STATE_OFFSCREEN          = 0x00010000;
+  const unsigned long  STATE_INVISIBLE          = 0x00008000;  // Programatically hidden
+  const unsigned long  STATE_OFFSCREEN          = 0x00010000;  // Scrolled off
   const unsigned long  STATE_SIZEABLE           = 0x00020000;
   const unsigned long  STATE_MOVEABLE           = 0x00040000;
   const unsigned long  STATE_SELFVOICING        = 0x00080000;
@@ -304,7 +304,7 @@ interface nsIAccessible : nsISupports
   // as per discussions with AT vendors. On ATK there will be legitimate states for
   // STATE_REQUIRED AND STATE_INVALID
   const unsigned long  STATE_REQUIRED           = STATE_ALERT_LOW;
-  const unsigned long  STATE_IMPORTANT          = STATE_ALERT_MEDIUM;
+  const unsigned long  STATE_IMPORTANT          = STATE_ALERT_MEDIUM; // Not currently used
   const unsigned long  STATE_INVALID            = STATE_ALERT_HIGH;
   const unsigned long  STATE_CHECKABLE          = STATE_MARQUEED;
 
@@ -312,18 +312,34 @@ interface nsIAccessible : nsISupports
  * Extended state flags (for now non-MSAA, for Java and Gnome/ATK support)
  * "Extended state flags" has separate value space from "MSAA State flags".
  */
-  const unsigned long  EXT_STATE_DEFUNCT        = 0x00080000;  // Object no longer exists
-  const unsigned long  EXT_STATE_SELECTABLE_TEXT= 0x00100000;  // For text which is selectable, object must implement nsIAccessibleText
-  const unsigned long  EXT_STATE_EDITABLE       = 0x00200000;  // Used for XUL/HTML input (type = text,password) element
-  const unsigned long  EXT_STATE_ACTIVE         = 0x00400000;  // This window is currently the active window    
-  const unsigned long  EXT_STATE_EXPANDABLE     = 0x00800000;  // An item that can be expanded, such as a tree item with children    
-  const unsigned long  EXT_STATE_MODAL          = 0x01000000;  // Must do something with control before leaving it    
-  const unsigned long  EXT_STATE_MULTI_LINE     = 0x02000000;  // Edit control that can take multiple lines    
-  const unsigned long  EXT_STATE_SENSITIVE      = 0x04000000;  // No explanation given    
-  const unsigned long  EXT_STATE_SHOWING        = 0x10000000;  // This object and all of it's ancestors are visible    
-  const unsigned long  EXT_STATE_SINGLE_LINE    = 0x20000000;  // This text object can only contain 1 line of text    
-  const unsigned long  EXT_STATE_TRANSIENT      = 0x40000000;  // Tells accessibility aid "Don't add event listener - this object doesn't generate any". For example, could be used with higher level containers.    
-  const unsigned long  EXT_STATE_VERTICAL       = 0x80000000;  // Especially used for sliders and scrollbars  
+  const unsigned long  EXT_STATE_SUPPORTS_AUTOCOMPLETION = 0x00000001;  // For editable areas that have any kind of autocompletion
+  const unsigned long  EXT_STATE_DEFUNCT                 = 0x00000002;  // Object no longer exists
+  const unsigned long  EXT_STATE_SELECTABLE_TEXT         = 0x00000004;  // For text which is selectable, object must implement nsIAccessibleText
+  const unsigned long  EXT_STATE_EDITABLE                = 0x00000008;  // Implements nsIAccessibleEditableText
+  const unsigned long  EXT_STATE_ACTIVE                  = 0x00000010;  // This window is currently the active window    
+  const unsigned long  EXT_STATE_MODAL                   = 0x00000020;  // Must do something with control before leaving it    
+  const unsigned long  EXT_STATE_MULTI_LINE              = 0x00000040;  // Edit control that can take multiple lines    
+  const unsigned long  EXT_STATE_HORIZONTAL              = 0x00000080;  // Uses horizontal layout
+  const unsigned long  EXT_STATE_OPAQUE                  = 0x00000100;  // Indicates this object paints every pixel within its rectangular region.
+  const unsigned long  EXT_STATE_SINGLE_LINE             = 0x00000200;  // This text object can only contain 1 line of text    
+  const unsigned long  EXT_STATE_TRANSIENT               = 0x00000400;  // 
+  const unsigned long  EXT_STATE_VERTICAL                = 0x00000800;  // Especially used for sliders and scrollbars  
+  const unsigned long  EXT_STATE_STALE                   = 0x00001000;  // Object not dead, but not up-to-date either
+  const unsigned long  EXT_STATE_ENABLED                 = 0x00002000;  // A widget that is not unavailable
+  const unsigned long  EXT_STATE_SENSITIVE               = 0x00004000;  // Same as ENABLED for now
+  const unsigned long  EXT_STATE_EXPANDABLE              = 0x00008000;  // If COLLAPSED or EXPANDED
+  
+  /**
+   * API states we map from opposite states
+   *   VISIBLE -- mapped as the opposite of INVISIBLE
+   *   SHOWING -- mapped as the opposite of OFFSCREEN
+   *
+   * ATK states we don't have in nsIAccessible:
+   *   ARMED -- no clear use case, used briefly when button is activated
+   *   HAS_TOOLTIP -- no known use case
+   *   ICONIFIED -- Mozilla does not have elements which are collapsable into icons
+   *   TRUNCATED -- need use case. Indicates that an object's onscreen content is truncated, e.g. a text value in a spreadsheet cell. No IA2 state.
+   */   
 
 /**
  * Relation Types -- most of these come from ATK's atkrelationtype.h

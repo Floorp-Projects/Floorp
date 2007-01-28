@@ -75,6 +75,7 @@ nsITimer *nsAccessNode::gDoCommandTimer = 0;
 nsIDOMNode *nsAccessNode::gLastFocusedNode = 0;
 PRBool nsAccessNode::gIsAccessibilityActive = PR_FALSE;
 PRBool nsAccessNode::gIsCacheDisabled = PR_FALSE;
+PRBool nsAccessNode::gIsFormFillEnabled = PR_FALSE;
 nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> nsAccessNode::gGlobalDocAccessibleCache;
 
 nsIAccessibilityService *nsAccessNode::sAccService = nsnull;
@@ -207,6 +208,7 @@ void nsAccessNode::InitXPAccessibility()
   nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefBranch) {
     prefBranch->GetBoolPref("accessibility.disablecache", &gIsCacheDisabled);
+    prefBranch->GetBoolPref("browser.formfill.enable", &gIsFormFillEnabled);
   }
 
   gIsAccessibilityActive = PR_TRUE;
