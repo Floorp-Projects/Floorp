@@ -1902,6 +1902,7 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
             {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
   {"spreadsheet", ROLE_TABLE, eNameLabelOrTitle, eNoValue, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE | STATE_FOCUSABLE,
             {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY}, // Still supported, but deprecated in favor of grid
+  {"status", ROLE_STATUSBAR, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY),
   {"tab", ROLE_PAGETAB, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
   {"table", ROLE_TABLE, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
   {"td", ROLE_CELL, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
@@ -1925,6 +1926,7 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
             {"checked", BOOL_STATE, STATE_CHECKED | STATE_CHECKABLE},
             {"checked", "mixed", STATE_MIXED},
             {"checked", "false", STATE_CHECKABLE},},
+  {"treegroup", ROLE_GROUPING, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
   {nsnull, ROLE_NOTHING, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY} // Last item
 };
 
