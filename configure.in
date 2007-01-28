@@ -4518,6 +4518,7 @@ MOZ_ARG_HEADER(Toolkit Options)
         -o "$_DEFAULT_TOOLKIT" = "cairo-windows" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-beos" \
+        -o "$_DEFAULT_TOOLKIT" = "cairo-os2" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-xlib" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-mac" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-cocoa"
@@ -4620,6 +4621,14 @@ cairo-gtk2)
     ;;
 cairo-beos)
     MOZ_WIDGET_TOOLKIT=beos
+    MOZ_GFX_TOOLKIT=cairo
+    MOZ_ENABLE_CAIRO_GFX=1
+    TK_CFLAGS='$(MOZ_CAIRO_CFLAGS)'
+    TK_LIBS='$(MOZ_CAIRO_LIBS)'
+    ;;
+
+cairo-os2)
+    MOZ_WIDGET_TOOLKIT=os2
     MOZ_GFX_TOOLKIT=cairo
     MOZ_ENABLE_CAIRO_GFX=1
     TK_CFLAGS='$(MOZ_CAIRO_CFLAGS)'

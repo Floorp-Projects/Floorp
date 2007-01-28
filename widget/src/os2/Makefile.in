@@ -74,6 +74,10 @@ ifdef BUILD_STATIC_LIBS
 EXPORTS		= wdgtos2rc.h
 endif
 
+ifdef MOZ_ENABLE_CAIRO_GFX
+REQUIRES += cairo thebes
+endif
+
 CPPSRCS		= \
 		nsAppShell.cpp \
 		nsBidiKeyboard.cpp \
@@ -103,6 +107,10 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
+
+ifdef MOZ_ENABLE_CAIRO_GFX
+EXTRA_DSO_LDOPTS += -lthebes
+endif
 
 ifdef ENABLE_TESTS
 HAS_EXTRAEXPORTS = 1

@@ -102,6 +102,13 @@ public:
 
   NS_IMETHOD GetPRTQUEUE(PRTQUEUE *&p);
 
+#ifdef MOZ_CAIRO_GFX
+  NS_IMETHOD GetSurfaceForPrinter(gfxASurface **nativeSurface);
+  NS_IMETHOD BeginDocument(PRUnichar* aTitle, PRUnichar* aPrintToFileName,
+                           PRInt32 aStartPage, PRInt32 aEndPage);
+  NS_IMETHOD EndDocument();
+#endif
+
 /**
  * Destructor for nsDeviceContextSpecOS2, this will release the printrecord
  * @update  dc 2/16/98

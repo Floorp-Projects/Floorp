@@ -54,6 +54,13 @@ REQUIRES += glitzglx
 endif
 endif
 
+ifeq ($(MOZ_GFX_TOOLKIT),os2)
+EXPORTS	+=	gfxOS2Surface.h \
+		gfxOS2Platform.h \
+		gfxOS2Fonts.h \
+		$(NULL)
+endif
+
 ifeq ($(MOZ_GFX_TOOLKIT),beos)
 EXPORTS	+=	gfxBeOSSurface.h gfxBeOSPlatform.h
 EXPORTS +=	gfxPangoFonts.h
