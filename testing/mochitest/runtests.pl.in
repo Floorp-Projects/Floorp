@@ -332,7 +332,7 @@ CHROMEEND
   if ($is_win32) {
     $create_args = "$profile " . winPathFromDir($profile_dir);
   }
-  my @args = ($app, '-CreateProfile', $create_args);
+  my @args = ($app, '-no-remote', '-CreateProfile', $create_args);
   my $rc = 0xffff & system @args;
   if ($rc != 0) {
     die("FAIL Creating profile failed!\n");
@@ -429,12 +429,11 @@ sub runTests {
   my $test_start = localtime();
 
   # set env vars so Firefox doesn't quit weirdly and break the script
-  $ENV{'MOZ_NO_REMOTE'} = '1';
   $ENV{'NO_EM_RESTART'} = '1';
   $ENV{'XPCOM_DEBUG_BREAK'} = 'stack';
 
   # now run with the profile we created
-  my @runargs = ($app, '-P', "$profile", $testUrl);
+  my @runargs = ($app, '-no-remote', '-P', "$profile", $testUrl);
   my $rc = 0xffff & system @runargs;
   if ($rc != 0) {
     print "FAIL Exited with code $rc during test run\n";
