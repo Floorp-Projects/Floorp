@@ -560,7 +560,7 @@ class nsCellMapColumnIterator
 {
 public:
   nsCellMapColumnIterator(const nsTableCellMap* aMap, PRInt32 aCol) :
-    mMap(aMap), mCurMap(aMap->mFirstMap), mRow(0),
+    mMap(aMap), mCurMap(aMap->mFirstMap), mCurMapStart(0),
     mCurMapRow(0), mCol(aCol), mFoundCells(0)
   {
     NS_PRECONDITION(aMap, "Must have map");
@@ -568,11 +568,18 @@ public:
     mOrigCells = aMap->GetNumCellsOriginatingInCol(mCol);
     if (mCurMap) {
       mCurMapContentRowCount = mCurMap->GetRowCount();
-      if (mCurMapContentRowCount == 0 && mOrigCells > 0) {
+      PRUint32 rowArrayLength = mCurMap->mRows.Length();
+      mCurMapRelevantRowCount = PR_MIN(mCurMapContentRowCount, rowArrayLength);
+      if (mCurMapRelevantRowCount == 0 && mOrigCells > 0) {
         // This row group is useless; advance!
         AdvanceRowGroup();
       }
     }
+#ifdef DEBUG
+    else {
+      NS_ASSERTION(mOrigCells == 0, "Why no rowgroups?");
+    }
+#endif
   }
 
   nsTableCellFrame* GetNextFrame(PRInt32* aRow, PRInt32* aColSpan);
@@ -587,10 +594,10 @@ private:
   const nsTableCellMap* mMap;
   const nsCellMap* mCurMap;
 
-  // mRow is the row in the entire nsTableCellMap where we are right now.  This
-  // must be passable to nsTableCellMap::GetDataAt, so must be a _content_ row
-  // index.
-  PRUint32 mRow;
+  // mCurMapStart is the row in the entire nsTableCellMap where
+  // mCurMap starts.  This is used to compute row indices to pass to
+  // nsTableCellMap::GetDataAt, so must be a _content_ row index.
+  PRUint32 mCurMapStart;
   
   // In steady-state mCurMapRow is the row in our current nsCellMap
   // that we'll use the next time GetNextFrame() is called.  Due to
@@ -601,7 +608,15 @@ private:
   const PRInt32 mCol;
   PRUint32 mOrigCells;
   PRUint32 mFoundCells;
+
+  // The number of content rows in mCurMap.  This may be bigger than the number
+  // of "relevant" rows, or it might be smaller.
   PRUint32 mCurMapContentRowCount;
+
+  // The number of "relevant" rows in mCurMap.  That is, the number of rows
+  // which might have an originating cell in them.  Once mCurMapRow reaches
+  // mCurMapRelevantRowCount, we should move to the next map.
+  PRUint32 mCurMapRelevantRowCount;
 };
 
 
