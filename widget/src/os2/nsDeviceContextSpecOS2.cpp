@@ -398,6 +398,26 @@ nsresult nsDeviceContextSpecOS2::GetPRTQUEUE( PRTQUEUE *&p)
    return NS_OK;
 }
 
+#ifdef MOZ_CAIRO_GFX
+NS_IMETHODIMP nsDeviceContextSpecOS2::GetSurfaceForPrinter(gfxASurface **nativeSurface)
+{
+   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecOS2::BeginDocument(PRUnichar* aTitle,
+                                                    PRUnichar* aPrintToFileName,
+                                                    PRInt32 aStartPage,
+                                                    PRInt32 aEndPage)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecOS2::EndDocument()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+#endif
+
 //  Printer Enumerator
 nsPrinterEnumeratorOS2::nsPrinterEnumeratorOS2()
 {

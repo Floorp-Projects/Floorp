@@ -54,6 +54,8 @@ NS_IMPL_ISUPPORTS1(nsThebesFontMetrics, nsIFontMetrics)
 #include "gfxPangoFonts.h"
 #elif defined(XP_MACOSX)
 #include "gfxAtsuiFonts.h"
+#elif defined(XP_OS2)
+#include "gfxOS2Fonts.h"
 #endif
 
 nsThebesFontMetrics::nsThebesFontMetrics()
@@ -102,6 +104,8 @@ nsThebesFontMetrics::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     mFontGroup = new gfxPangoFontGroup(aFont.name, mFontStyle);
 #elif defined(XP_MACOSX)
     mFontGroup = new gfxAtsuiFontGroup(aFont.name, mFontStyle);
+#elif defined(XP_OS2)
+    mFontGroup = new gfxOS2FontGroup(aFont.name, mFontStyle);
 #else
 #error implement me
 #endif

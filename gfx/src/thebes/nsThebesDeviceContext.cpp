@@ -75,6 +75,9 @@ static nsSystemFontsGTK2 *gSystemFonts = nsnull;
 #include "gfxWindowsSurface.h"
 static nsSystemFontsWin *gSystemFonts = nsnull;
 #include <usp10.h>
+#elif defined(XP_OS2)
+#include "nsSystemFontsOS2.h"
+static nsSystemFontsOS2 *gSystemFonts = nsnull;
 #elif defined(XP_BEOS)
 #include "nsSystemFontsBeOS.h"
 static nsSystemFontsBeOS *gSystemFonts = nsnull;
@@ -362,6 +365,8 @@ nsThebesDeviceContext::GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
         gSystemFonts = new nsSystemFontsGTK2();
 #elif XP_WIN
         gSystemFonts = new nsSystemFontsWin();
+#elif XP_OS2
+        gSystemFonts = new nsSystemFontsOS2();
 #elif defined(XP_BEOS)
         gSystemFonts = new nsSystemFontsBeOS();
 #elif XP_MACOSX

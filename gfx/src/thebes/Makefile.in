@@ -44,6 +44,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = gfx
 LIBRARY_NAME = gkgfxthebes
+ifneq ($(OS_ARCH),WINNT)
+SHORT_LIBNAME = gkgfxthb
+endif
 EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
 MODULE_NAME = nsGfxModule
@@ -110,6 +113,11 @@ OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
 ifdef MOZ_ENABLE_GLITZ
 OS_LIBS += opengl32.lib 
 endif
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+CPPSRCS		+= nsSystemFontsOS2.cpp \
+		   $(NULL)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
