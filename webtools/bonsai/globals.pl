@@ -549,6 +549,7 @@ sub AddToDatabase {
                           $removelines,
                           $descid);
 
+          SwitchToWriteDB();
           &SendSQL($checkquery, @bind_values);
           my ($count) = &FetchSQLData();
           if (!$count) {
