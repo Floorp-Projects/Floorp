@@ -222,8 +222,8 @@ Requires Ant version 1.2 or later
   
   <!--
 	Run the tests using the Java port of jsdriver.pl.  Note that running this port from the command-line
-	may be superior, as it allows configuration options, such as running with a non-default optimization level or running only
-	a subset of the tests.
+	may be more useful running this Ant target, as running from the command line allows configuration options, 
+	such as running with a non-default optimization level, or running only a subset of the tests.
   -->
   <target name="jsdriver-all" depends="compile">
 	  <ant antfile="testsrc/build.xml" target="jsdriver" />
