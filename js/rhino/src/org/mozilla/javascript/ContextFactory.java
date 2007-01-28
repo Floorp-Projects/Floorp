@@ -100,7 +100,7 @@ package org.mozilla.javascript;
  *             case {@link Context#FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER}:
  *                 return true;
  *
- *             case {@link Context#FEATURE_PARENT_PROTO_PROPRTIES}:
+ *             case {@link Context#FEATURE_PARENT_PROTO_PROPERTIES}:
  *                 return false;
  *         }
  *         return super.hasFeature(cx, featureIndex);
@@ -259,7 +259,7 @@ public class ContextFactory
             version = cx.getLanguageVersion();
             return version == Context.VERSION_1_2;
 
-          case Context.FEATURE_PARENT_PROTO_PROPRTIES:
+          case Context.FEATURE_PARENT_PROTO_PROPERTIES:
             return true;
 
           case Context.FEATURE_E4X:

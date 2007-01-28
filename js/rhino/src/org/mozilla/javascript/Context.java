@@ -180,7 +180,7 @@ public class Context
     /**
      * Control if properties <tt>__proto__</tt> and <tt>__parent__</tt>
      * are treated specially.
-     * If <tt>hasFeature(FEATURE_PARENT_PROTO_PROPRTIES)</tt> returns true,
+     * If <tt>hasFeature(FEATURE_PARENT_PROTO_PROPERTIES)</tt> returns true,
      * treat <tt>__parent__</tt> and <tt>__proto__</tt> as special properties.
      * <p>
      * The properties allow to query and set scope and prototype chains for the
@@ -193,15 +193,21 @@ public class Context
      *
      * By default {@link #hasFeature(int)} returns true.
      */
-    public static final int FEATURE_PARENT_PROTO_PROPRTIES = 5;
+    public static final int FEATURE_PARENT_PROTO_PROPERTIES = 5;
 
+	/**
+	 * @deprecated In previous releases, this name was given to
+	 * FEATURE_PARENT_PROTO_PROPERTIES.
+	 */
+    public static final int FEATURE_PARENT_PROTO_PROPRTIES = 5;
+	
     /**
      * Control if support for E4X(ECMAScript for XML) extension is available.
      * If hasFeature(FEATURE_E4X) returns true, the XML syntax is available.
      * <p>
      * By default {@link #hasFeature(int)} returns true if
      * the current JS version is set to {@link #VERSION_DEFAULT}
-     * or is greater then {@link #VERSION_1_6}.
+     * or is at least {@link #VERSION_1_6}.
      * @since 1.6 Release 1
      */
     public static final int FEATURE_E4X = 6;
@@ -268,7 +274,7 @@ public class Context
     public static final String errorReporterProperty   = "error reporter";
 
     /**
-     * Convinient value to use as zero-length array of objects.
+     * Convenient value to use as zero-length array of objects.
      */
     public static final Object[] emptyArgs = ScriptRuntime.emptyArgs;
 
