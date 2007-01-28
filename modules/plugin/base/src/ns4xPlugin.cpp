@@ -975,6 +975,21 @@ _geturl(NPP npp, const char* relativeURL, const char* target)
   ("NPN_GetURL: npp=%p, target=%s, url=%s\n", (void *)npp, target,
    relativeURL));
 
+  // Block Adobe Acrobat from loading URLs that are not http:, https:,
+  // or ftp: URLs if the given target is null.
+  if (target == nsnull && relativeURL &&
+      (strncmp(relativeURL, "http:", 5) != 0) &&
+      (strncmp(relativeURL, "https:", 6) != 0) &&
+      (strncmp(relativeURL, "ftp:", 4) != 0)) {
+    ns4xPluginInstance *inst = (ns4xPluginInstance *) npp->ndata;
+
+    const char *name = nsPluginHostImpl::GetPluginName(inst);
+
+    if (name && strstr(name, "Adobe") && strstr(name, "Acrobat")) {
+      return NPERR_NO_ERROR;
+    }
+  }
+
   return MakeNew4xStreamInternal (npp, relativeURL, target,
                                   eNPPStreamTypeInternal_Get);
 }
