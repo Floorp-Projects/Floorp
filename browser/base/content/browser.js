@@ -5533,14 +5533,16 @@ var FeedHandler = {
     var etype = event.target.type;
     var etitle = event.target.title;
     const rssTitleRegex = /(^|\s)rss($|\s)/i;
-    var rels = {}
-    for each (var relValue in erel.split(/\s/)) {
-      rels[relValue] = true;
+    var rels = {};
+
+    if (erel) {
+      for each (var relValue in erel.split(/\s+/))
+        rels[relValue] = true;
     }
-    var isFeed = rels["feed"];
-    
+    var isFeed = rels.feed;
+
     if (!isFeed &&
-        (!rels["alternate"] || rels["stylesheet"] || !etype))
+        (!rels.alternate || rels.stylesheet || !etype))
       return;
 
     if (!isFeed) {
@@ -5551,14 +5553,13 @@ var FeedHandler = {
       etype = etype.toLowerCase();
       isFeed = (etype == "application/rss+xml" ||
                 etype == "application/atom+xml");
+      if (!isFeed) {
+        // really slimy: general XML types with magic letters in the title
+        isFeed = ((etype == "text/xml" || etype == "application/xml" ||
+                   etype == "application/rdf+xml") && rssTitleRegex.test(etitle));
+      }
     }
-    
-    if (!isFeed) {
-      // really slimy: general XML types with magic letters in the title
-      isFeed = ((etype == "text/xml" || etype == "application/xml" ||
-                 etype == "application/rdf+xml") && rssTitleRegex.test(etitle));
-    }
-    
+
     if (isFeed) {
       const targetDoc = event.target.ownerDocument;
 
