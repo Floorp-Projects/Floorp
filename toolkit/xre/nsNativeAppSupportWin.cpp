@@ -422,6 +422,15 @@ nsNativeAppSupportWin::CheckConsole() {
                 // Failed.  Probably because there already is one.
                 // There's little we can do, in any case.
             }
+
+            // Remove the console argument from the command line.
+            do {
+                gArgv[i] = gArgv[i + 1];
+                ++i;
+            } while (gArgv[i]);
+
+            --gArgc;
+
             // Don't bother doing this more than once.
             break;
         }
