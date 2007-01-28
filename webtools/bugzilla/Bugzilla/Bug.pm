@@ -303,17 +303,21 @@ sub create {
     # Set up dependencies (blocked/dependson)
     my $sth_deps = $dbh->prepare(
         'INSERT INTO dependencies (blocked, dependson) VALUES (?, ?)');
+    my $sth_bug_time = $dbh->prepare('UPDATE bugs SET delta_ts = ? WHERE bug_id = ?');
+
     foreach my $depends_on_id (@$depends_on) {
         $sth_deps->execute($bug->bug_id, $depends_on_id);
         # Log the reverse action on the other bug.
         LogActivityEntry($depends_on_id, 'blocked', '', $bug->bug_id,
                          $bug->{reporter_id}, $timestamp);
+        $sth_bug_time->execute($timestamp, $depends_on_id);
     }
     foreach my $blocked_id (@$blocked) {
         $sth_deps->execute($blocked_id, $bug->bug_id);
         # Log the reverse action on the other bug.
         LogActivityEntry($blocked_id, 'dependson', '', $bug->bug_id,
                          $bug->{reporter_id}, $timestamp);
+        $sth_bug_time->execute($timestamp, $blocked_id);
     }
 
     # And insert the comment. We always insert a comment on bug creation,
