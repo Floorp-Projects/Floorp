@@ -209,7 +209,7 @@ protected:
      */
     PRBool
     GetInsertionLocations(nsIXULTemplateResult* aResult,
-                          nsISupportsArray** aLocations);
+                          nsCOMArray<nsIContent>** aLocations);
 
     /**
      * Implement result replacement
@@ -1090,7 +1090,7 @@ nsXULTreeBuilder::HasGeneratedContent(nsIRDFResource* aResource,
 
 PRBool
 nsXULTreeBuilder::GetInsertionLocations(nsIXULTemplateResult* aResult,
-                                        nsISupportsArray** aLocations)
+                                        nsCOMArray<nsIContent>** aLocations)
 {
     *aLocations = nsnull;
 

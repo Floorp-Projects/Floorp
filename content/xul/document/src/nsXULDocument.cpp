@@ -1003,12 +1003,8 @@ nsXULDocument::RemoveElementForID(const nsAString& aID, nsIContent* aElement)
 
 NS_IMETHODIMP
 nsXULDocument::GetElementsForID(const nsAString& aID,
-                                nsISupportsArray* aElements)
+                                nsCOMArray<nsIContent>& aElements)
 {
-    NS_PRECONDITION(aElements != nsnull, "null ptr");
-    if (! aElements)
-        return NS_ERROR_NULL_POINTER;
-
     mElementMap.Find(aID, aElements);
     return NS_OK;
 }
@@ -2100,10 +2096,7 @@ nsXULDocument::ApplyPersistentAttributes()
 
     mApplyingPersistedAttrs = PR_TRUE;
 
-    nsresult rv;
-    nsCOMPtr<nsISupportsArray> elements;
-    rv = NS_NewISupportsArray(getter_AddRefs(elements));
-    if (NS_FAILED(rv)) return rv;
+    nsCOMArray<nsIContent> elements;
 
     nsCAutoString docurl;
     mDocumentURI->GetSpec(docurl);
@@ -2143,9 +2136,7 @@ nsXULDocument::ApplyPersistentAttributes()
         // This will clear the array if there are no elements.
         GetElementsForID(id, elements);
 
-        PRUint32 cnt = 0;
-        elements->Count(&cnt);
-        if (! cnt)
+        if (!elements.Count())
             continue;
 
         ApplyPersistentAttributesToElements(resource, elements);
@@ -2159,7 +2150,7 @@ nsXULDocument::ApplyPersistentAttributes()
 
 nsresult
 nsXULDocument::ApplyPersistentAttributesToElements(nsIRDFResource* aResource,
-                                                   nsISupportsArray* aElements)
+                                                   nsCOMArray<nsIContent>& aElements)
 {
     nsresult rv;
 
@@ -2212,17 +2203,12 @@ nsXULDocument::ApplyPersistentAttributesToElements(nsIRDFResource* aResource,
 
         nsDependentString wrapper(value);
 
-        PRUint32 cnt;
-        rv = aElements->Count(&cnt);
-        if (NS_FAILED(rv)) return rv;
+        PRUint32 cnt = aElements.Count();
 
         for (PRInt32 i = PRInt32(cnt) - 1; i >= 0; --i) {
-            nsISupports* isupports2 = aElements->ElementAt(i);
-            if (! isupports2)
+            nsCOMPtr<nsIContent> element = aElements.SafeObjectAt(i);
+            if (!element)
                 continue;
-
-            nsCOMPtr<nsIContent> element = do_QueryInterface(isupports2);
-            NS_RELEASE(isupports2);
 
             rv = element->SetAttr(/* XXX */ kNameSpaceID_None,
                                   attr,
