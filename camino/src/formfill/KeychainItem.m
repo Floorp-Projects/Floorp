@@ -120,7 +120,7 @@
   NSMutableArray* matchingItems = [NSMutableArray array];
   SecKeychainItemRef keychainItemRef;
   while ((status = SecKeychainSearchCopyNext(searchRef, &keychainItemRef)) == noErr) {
-    [matchingItems addObject:[[KeychainItem alloc] initWithRef:keychainItemRef]];
+    [matchingItems addObject:[[[KeychainItem alloc] initWithRef:keychainItemRef] autorelease]];
   }
   CFRelease(searchRef);
 
@@ -169,6 +169,8 @@
     CFRelease(mKeychainItemRef);
   [mUsername release];
   [mPassword release];
+  [mHost release];
+  [mComment release];
   [super dealloc];
 }
 
