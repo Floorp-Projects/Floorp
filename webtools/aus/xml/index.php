@@ -81,7 +81,7 @@ switch ($clean['updateVersion']) {
     
     /*
      * This is for the third revision of the URI schema, with %OS_VERSION%.
-     * /update2/2/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION/update.xml
+     * /update2/2/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/update.xml
      */
     case 2:
 
