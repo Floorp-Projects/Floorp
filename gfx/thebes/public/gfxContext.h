@@ -267,7 +267,7 @@ public:
 
     /**
      * Converts a rectangle from user to device coordinates; this has the
-     * same effect as using DeviceToUser on both the rectangle's point and
+     * same effect as using UserToDevice on both the rectangle's point and
      * size.
      */
     gfxRect UserToDevice(const gfxRect& rect) const;
