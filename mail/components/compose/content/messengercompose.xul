@@ -729,7 +729,7 @@
           </listbox>
           <hbox align="center">
             <label value="&subject.label;" accesskey="&subject.accesskey;" control="msgSubject"/>
-            <textbox id="msgSubject" flex="1" class="toolbar" disableonsend="true"
+            <textbox id="msgSubject" flex="1" class="toolbar" disableonsend="true" spellcheck="true"
                      oninput="gContentChanged=true;SetComposeWindowTitle();"
                      onkeypress="subjectKeyPress(event);" />
           </hbox>
