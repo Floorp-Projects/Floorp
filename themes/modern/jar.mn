@@ -159,6 +159,7 @@ modern.jar:
   skin/modern/global/colorpicker.css                               (global/colorpicker.css)
   skin/modern/global/config.css                                    (global/config.css)
   skin/modern/global/console.css                                   (global/console.css)
+  skin/modern/global/datetimepicker.css                            (global/datetimepicker.css)
   skin/modern/global/dropmarker.css                                (global/dropmarker.css)
   skin/modern/global/filepicker.css                                (global/filepicker.css)
   skin/modern/global/findBar.css                                   (/toolkit/themes/winstripe/global/findBar.css)

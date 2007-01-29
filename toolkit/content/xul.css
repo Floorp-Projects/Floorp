@@ -73,6 +73,7 @@ treechildren, treeitem, treeseparator, treerow, treecell {
 button,
 checkbox,
 colorpicker[type="button"],
+datepicker[type="grid"],
 menulist,
 radiogroup,
 tree,
@@ -1099,6 +1100,24 @@ richlistbox {
 
 richlistitem {
   -moz-binding: url('chrome://global/content/bindings/richlistbox.xml#richlistitem');
+}
+
+/********** datepicker and timepicker ********/
+
+datepicker {
+  -moz-binding: url('chrome://global/content/bindings/datetimepicker.xml#datepicker');
+}
+
+datepicker[type="popup"] {
+  -moz-binding: url('chrome://global/content/bindings/datetimepicker.xml#datepicker-popup');
+}
+
+datepicker[type="grid"] {
+  -moz-binding: url('chrome://global/content/bindings/datetimepicker.xml#datepicker-grid');
+}
+
+timepicker {
+  -moz-binding: url('chrome://global/content/bindings/datetimepicker.xml#timepicker');
 }
 
 

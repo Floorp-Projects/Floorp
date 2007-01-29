@@ -15,6 +15,7 @@
 * locale/@AB_CD@/global/customizeCharset.dtd            (%chrome/global/customizeCharset.dtd)
 + locale/@AB_CD@/global/customizeToolbar.dtd            (%chrome/global/customizeToolbar.dtd)
 + locale/@AB_CD@/global/customizeToolbar.properties     (%chrome/global/customizeToolbar.properties)
++ locale/@AB_CD@/global/datetimepicker.dtd              (%chrome/global/datetimepicker.dtd)
 * locale/@AB_CD@/global/dialogOverlay.dtd               (%chrome/global/dialogOverlay.dtd)
   locale/@AB_CD@/global/downloadProgress.properties     (%chrome/global/downloadProgress.properties)
 + locale/@AB_CD@/global/editMenuOverlay.dtd             (%chrome/global/editMenuOverlay.dtd)
