@@ -58,5 +58,12 @@ var gGeneralPane = {
         var selectedIndex = dateFormatMenuList.selectedIndex;
         dateFormatMenuList.selectedIndex = -1;
         dateFormatMenuList.selectedIndex = selectedIndex;
+    },
+
+    autoRefreshPrefChanged: function() {
+        var autoRefreshPref =
+            document.getElementById("calendar.autorefresh.enabled").value;
+        document.getElementById("calendar.autorefresh.timeout").disabled = 
+            !autoRefreshPref;
     }
 };

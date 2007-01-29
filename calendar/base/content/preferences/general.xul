@@ -55,6 +55,8 @@
                 src="chrome://calendar/content/preferences/general.js"/>
         <script type="application/x-javascript"
                 src="chrome://calendar/content/calendarUtils.js"/>
+        <script type="application/x-javascript"
+                src="chrome://calendar/content/calendar-dialog-utils.js"/>
 
         <!-- Get the localized text for use in the .js -->
         <script type="application/x-javascript">
@@ -71,6 +73,13 @@
                         type="int"/>
             <preference id="calendar.alarms.defaultsnoozelength"
                         name="calendar.alarms.defaultsnoozelength"
+                        type="int"/>
+            <preference id="calendar.autorefresh.enabled"
+                        name="calendar.autorefresh.enabled"
+                        type="bool"
+                        onchange="gGeneralPane.autoRefreshPrefChanged();"/>
+            <preference id="calendar.autorefresh.timeout"
+                        name="calendar.autorefresh.timeout"
                         type="int"/>
         </preferences>
 
@@ -115,6 +124,20 @@
                 <label value="&calendar.global.units.minutes;"/>
             </hbox>
 
+        </groupbox>
+
+        <groupbox>
+            <caption label="&pref.refreshbox.label;"/>
+            <hbox align="center">
+                <checkbox label="&pref.autorefresh.label;"
+                          preference="calendar.autorefresh.enabled"/>
+                <textbox id="refreshtimeout"
+                         preference="calendar.autorefresh.timeout"
+                         maxlength="3"
+                         size="3"
+                         oninput="validateNaturalNums(event);"/>
+                <label value="&calendar.global.units.minutes;"/>
+            </hbox>
         </groupbox>
 
         <separator/>
