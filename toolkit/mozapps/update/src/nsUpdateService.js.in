@@ -124,6 +124,9 @@ var gOSVersion  = null;
 var gConsole    = null;
 var gLogEnabled = { };
 
+// shared code for suppressing bad cert dialogs
+#include ../../shared/src/badCertHandler.js
+
 /**
  * Logs a string to the error console. 
  * @param   string
@@ -134,28 +137,6 @@ function LOG(module, string) {
     dump("*** " + module + ": " + string + "\n");
     gConsole.logStringMessage(string);
   }
-}
-
-/**
- * Only allow built-in certs for HTTPS connections.  See bug 340198.
- */
-function checkCert(channel) {
-  if (!channel.originalURI.schemeIs("https"))  // bypass
-    return;
-
-  const Ci = Components.interfaces;  
-  var cert =
-      channel.securityInfo.QueryInterface(Ci.nsISSLStatusProvider).
-      SSLStatus.QueryInterface(Ci.nsISSLStatus).serverCert;
-
-  var issuer = cert.issuer;
-  while (issuer && !cert.equals(issuer)) {
-    cert = issuer;
-    issuer = cert.issuer;
-  }
-
-  if (!issuer || issuer.tokenName != "Builtin Object Token")
-    throw "cert issuer is not built-in";
 }
 
 /**
@@ -1744,65 +1725,6 @@ UpdateManager.prototype = {
   }
 };
 
-/**
- * This class implements nsIBadCertListener.  It's job is to prevent "bad cert"
- * security dialogs from being shown to the user.  It is better to simply fail
- * if the certificate is bad.  See bug 304286.
- */
-function BadCertHandler() {
-}
-BadCertHandler.prototype = {
-  /**
-   * See nsIBadCertListener
-   */
-  confirmUnknownIssuer: function(socketInfo, cert, certAddType) {
-    return false;
-  },
-
-  confirmMismatchDomain: function(socketInfo, targetURL, cert) {
-    return false;
-  },
-
-  confirmCertExpired: function(socketInfo, cert) {
-    return false;
-  },
-
-  notifyCrlNextupdate: function(socketInfo, targetURL, cert) {
-  },
-
-  /**
-   * See nsIChannelEventSink
-   */
-  onChannelRedirect: function(oldChannel, newChannel, flags) {
-    // make sure the certificate of the old channel checks out before we follow
-    // a redirect from it.  See bug 340198.
-    checkCert(oldChannel);
-  },
-
-  /**
-   * See nsIInterfaceRequestor
-   */
-  getInterface: function(iid) {
-    if (iid.equals(Components.interfaces.nsIBadCertListener) ||
-        iid.equals(Components.interfaces.nsIChannelEventSink))
-      return this;
-
-    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
-    return null;
-  },
-
-  /**
-   * See nsISupports
-   */
-  QueryInterface: function(iid) {
-    if (!iid.equals(Components.interfaces.nsIBadCertListener) &&
-        !iid.equals(Components.interfaces.nsIChannelEventSink) &&
-        !iid.equals(Components.interfaces.nsIInterfaceRequestor) &&
-        !iid.equals(Components.interfaces.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    return this;
-  }
-};
 
 /**
  * Checker

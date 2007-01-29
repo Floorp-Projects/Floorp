@@ -24,6 +24,7 @@
  *  Jens Bannmann <jens.b@web.de>
  *  Robert Strong <robert.bugzilla@gmail.com>
  *  Dave Townsend <dave.townsend@blueprintit.co.uk>
+ *  Daniel Veditz <dveditz@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -176,6 +177,9 @@ var gCheckCompatibility   = true;
  * Valid GUIDs fit this pattern.
  */
 var gIDTest = /^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}|[a-z0-9-\._]*\@[a-z0-9-\._]+)$/i;
+
+// shared code for suppressing bad cert dialogs
+#include ../../shared/src/badCertHandler.js
 
 /**
  * Creates a Version Checker object.
@@ -2371,6 +2375,7 @@ var Blocklist = {
     var request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
                             .createInstance(Components.interfaces.nsIXMLHttpRequest);
     request.open("GET", uri.spec, true);
+    request.channel.notificationCallbacks = new BadCertHandler();
     request.overrideMimeType("text/xml");
     request.setRequestHeader("Cache-Control", "no-cache");
 
@@ -2382,6 +2387,13 @@ var Blocklist = {
 
   onXMLLoad: function(aEvent) {
     var request = aEvent.target;
+    try {
+      checkCert(request.channel);
+    }
+    catch (e) {
+      LOG("Blocklist::onXMLLoad: " + e);
+      return;
+    }
     var responseXML = request.responseXML;
     if (!responseXML || responseXML.documentElement.namespaceURI == XMLURI_PARSE_ERROR ||
         (request.status != 200 && request.status != 0)) {
@@ -6173,6 +6185,7 @@ RDFItemUpdater.prototype = {
     var request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
                             .createInstance(Components.interfaces.nsIXMLHttpRequest);
     request.open("GET", uri.spec, true);
+    request.channel.notificationCallbacks = new BadCertHandler();
     request.overrideMimeType("text/xml");
     request.channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
 
@@ -6184,6 +6197,25 @@ RDFItemUpdater.prototype = {
 
   onXMLLoad: function(aEvent, aItem) {
     var request = aEvent.target;
+    try {
+      checkCert(request.channel);
+    }
+    catch (e) {
+      // This may be overly restrictive in two cases: corporate installations
+      // with a corporate update server using an in-house CA cert (installed
+      // but not "built-in") and lone developers hosting their updates on a
+      // site with a self-signed cert (permanently accepted, otherwise the
+      // BadCertHandler would prevent getting this far). Update checks will
+      // fail in both these scenarios.
+      // How else can we protect the vast majority of updates served from AMO
+      // from the spoofing attack described in bug 340198 while allowing those
+      // other cases? A "hackme" pref? Domain-control certs are cheap, getting
+      // one should not be a barrier in either case.
+      LOG("RDFItemUpdater::onXMLLoad: " + e);
+      this._updater.checkForDone(aItem,
+                                 nsIAddonUpdateCheckListener.STATUS_FAILURE);
+      return;
+    }
     var responseXML = request.responseXML;
 
     // If the item does not have an update RDF and returns an error it is not
