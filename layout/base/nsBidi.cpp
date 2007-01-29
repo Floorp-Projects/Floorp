@@ -71,6 +71,10 @@ static nsCharType cc2ucd[5] = {
   eCharType_RightToLeftOverride
 };
 
+// These are #defined in <sys/regset.h> under Solaris 10 x86
+#undef CS
+#undef ES
+
 /*  Comparing the description of the Bidi algorithm with this implementation
     is easier with the same names for the Bidi types in the code as there.
 */
