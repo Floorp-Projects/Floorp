@@ -136,7 +136,7 @@ description[selectable="true"]:focus > descriptionitem[selected="true"]
 }
 
 .headerName {
-  margin: 0 .5em .5em 0;
+  margin: 0 .5em 5px 0;
   font-weight: bold;
   text-align: right;
   background-color: transparent;
@@ -150,7 +150,7 @@ description[selectable="true"]:focus > descriptionitem[selected="true"]
 }
 
 .headerValueBox {
-  margin: 0 0 .5em 0; 
+  margin: 0 0 5px 0; 
 }
 
 .headerValueUrl {
