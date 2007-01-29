@@ -1286,7 +1286,6 @@
            accesskey="&headersAllCmd.accesskey;"
            oncommand="MsgViewAllHeaders();"/>
           <menuitem id="viewnormalheaders"
-           checked="true"
            type="radio"
            name="viewheadergroup"
            label="&headersNormalCmd.label;"
