@@ -1,14 +1,10 @@
 SupportPageDefault = "http://www.mozilla.org/products/camino/support/";
 HomePageDefault = "http://www.mozilla.org/projects/camino/homepage.html";
-SearchPageDefault = "http://www.google.com/";
 StartPageDefault = "http://www.mozilla.org/projects/camino/welcome.html";
 ThrobberPageDefault = "http://www.mozilla.org/projects/camino/";
 FeedbackPageDefault = "http://www.mozilla.org/projects/camino/feedback.html";
 InfoPageDefault = "http://www.mozilla.org/projects/camino/";
 RendezvousPageDefault ="http://www.zeroconf.org/webbrowsers.html";
 CorruptedBookmarksDefault = "http://www.mozilla.org/projects/camino/damagedBookmarks.html";
-
-SearchCustomPageDefault = "http://www.mozilla.org/products/camino/features/searchCustomization.html";
-TipsTricksPageDefault = "http://www.mozilla.org/products/camino/features/tipsTricks.html";
-ReleaseNotesDefault = "http://www.mozilla.org/products/camino/releases/1.0.html";
+KeyboardShortcutsPageDefault = "http://www.mozilla.org/projects/camino/shortcuts.html";
 

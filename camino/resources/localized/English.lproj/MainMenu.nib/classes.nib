@@ -152,6 +152,7 @@
                 goHome = id; 
                 importBookmarks = id; 
                 infoLink = id; 
+                keyboardShortcutsLink = id; 
                 makeTextBigger = id; 
                 makeTextDefaultSize = id; 
                 makeTextSmaller = id; 
@@ -165,20 +166,17 @@
                 pageSetup = id; 
                 previousTab = id; 
                 printDocument = id; 
-                releaseNoteLink = id; 
                 reload = id; 
                 reloadAllTabs = id; 
                 reloadWithCharset = id; 
                 resetBrowser = id; 
                 savePage = id; 
-                searchCustomizeLink = id; 
                 sendURL = id; 
                 setFileExtension = id; 
                 showCertificates = id; 
                 showHistory = id; 
                 stop = id; 
                 supportLink = id; 
-                tipsTricksLink = id; 
                 toggleAutoCharsetDetection = id; 
                 toggleBookmarksToolbar = id; 
                 toggleOfflineMode = id; 
@@ -203,7 +201,6 @@
                 mDockMenu = BookmarkMenu; 
                 mExportPanelView = NSView; 
                 mFilterView = NSView; 
-                mGoMenu = NSMenu; 
                 mServersSubmenu = NSMenu; 
                 mShowAllBookmarksMenuItem = NSMenuItem; 
                 mTextEncodingsMenu = NSMenu; 
