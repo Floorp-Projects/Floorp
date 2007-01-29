@@ -261,16 +261,13 @@ out:
 static JSBool
 script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSScript *script;
     JSObject *scopeobj, *parent;
     JSStackFrame *fp, *caller;
     JSPrincipals *principals;
+    JSScript *script;
 
     if (!JS_InstanceOf(cx, obj, &js_ScriptClass, argv))
         return JS_FALSE;
-    script = (JSScript *) JS_GetPrivate(cx, obj);
-    if (!script)
-        return JS_TRUE;
 
     scopeobj = NULL;
     if (argc) {
@@ -329,6 +326,10 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     scopeobj = js_CheckScopeChainValidity(cx, scopeobj, js_script_exec);
     if (!scopeobj)
         return JS_FALSE;
+
+    script = (JSScript *) JS_GetPrivate(cx, obj);
+    if (!script)
+        return JS_TRUE;
 
     /* Belt-and-braces: check that this script object has access to scopeobj. */
     principals = script->principals;
