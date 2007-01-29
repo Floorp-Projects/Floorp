@@ -624,6 +624,9 @@ nsSpaceManager::AddRectToBand(BandRect* aBand, BandRect* aBandRect)
         // Insert the part of the new rect that's to the left of the existing
         // rect as a new band rect
         aBand->InsertBefore(aBandRect);
+        if (mCachedBandPosition == aBand) {
+          SetCachedBandPosition(aBandRect);
+        }
 
         // Continue below with the part that overlaps the existing rect
         aBandRect = r1;
