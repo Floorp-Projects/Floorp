@@ -920,6 +920,9 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
     }
     [openWindows release];
 
+    // clear the saved session in case we crash
+    [[SessionManager sharedInstance] clearSavedState];
+
     // remove cache
     nsCOMPtr<nsICacheService> cacheServ (do_GetService("@mozilla.org/network/cache-service;1"));
     if (cacheServ)
