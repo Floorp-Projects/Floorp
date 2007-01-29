@@ -505,7 +505,7 @@ static void DumpNode(nsIDOMNode* aNode)
   nsAutoString nodeName;
   aNode->GetNodeName(nodeName);
   nsCOMPtr<nsIContent> textContent (do_QueryInterface(aNode));
-  if (textContent)
+  if (textContent && textContent->IsNodeOfType(nsINode::eTEXT))
   {
     nsAutoString newText;
     textContent->AppendTextTo(newText);
@@ -1031,6 +1031,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
         matchAnchorNode = nsnull;
         matchAnchorOffset = 0;
         pindex = (mFindBackward ? patLen : 0);
+        inWhitespace = PR_FALSE;
       }
  
       // Get the text content:
