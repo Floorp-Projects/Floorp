@@ -219,7 +219,7 @@ gfxASurface::MarkDirty(const gfxRect& r)
 void
 gfxASurface::SetData(const cairo_user_data_key_t *key,
                      void *user_data,
-                     cairo_destroy_func_t destroy)
+                     thebes_destroy_func_t destroy)
 {
     cairo_surface_set_user_data(mSurface, key, user_data, destroy);
 }
