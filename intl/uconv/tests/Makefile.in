@@ -86,9 +86,13 @@ endif
 
 # Unit tests
 _UNIT_FILES := $(wildcard $(srcdir)/unit/*.js)
+_DATA_FILES := $(wildcard $(srcdir)/unit/data/*.txt)
 
 libs:: $(_UNIT_FILES)
 	$(INSTALL) $^ $(DIST)/bin/intl_unit_tests
+
+libs:: $(_DATA_FILES)
+	$(INSTALL) $^ $(DIST)/bin/intl_unit_tests/data
 
 check::
 	$(RUN_TEST_PROGRAM) $(DIST)/bin/test_all.sh $(DIST)/bin/intl_unit_tests
