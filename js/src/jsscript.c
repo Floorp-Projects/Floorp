@@ -79,12 +79,13 @@ script_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     jschar *s, *t;
     JSString *str;
 
+    if (!JS_InstanceOf(cx, obj, &js_ScriptClass, argv))
+        return JS_FALSE;
+
     indent = 0;
     if (argc && !js_ValueToECMAUint32(cx, argv[0], &indent))
         return JS_FALSE;
 
-    if (!JS_InstanceOf(cx, obj, &js_ScriptClass, argv))
-        return JS_FALSE;
     script = (JSScript *) JS_GetPrivate(cx, obj);
 
     /* Let n count the source string length, j the "front porch" length. */
