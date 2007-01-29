@@ -364,6 +364,7 @@ nsPipe::Init(PRBool nonBlockingIn,
 NS_IMETHODIMP
 nsPipe::GetInputStream(nsIAsyncInputStream **aInputStream)
 {
+    NS_ENSURE_TRUE(mMonitor, NS_ERROR_NOT_INITIALIZED);
     NS_ADDREF(*aInputStream = &mInput);
     return NS_OK;
 }
@@ -371,6 +372,7 @@ nsPipe::GetInputStream(nsIAsyncInputStream **aInputStream)
 NS_IMETHODIMP
 nsPipe::GetOutputStream(nsIAsyncOutputStream **aOutputStream)
 {
+    NS_ENSURE_TRUE(mMonitor, NS_ERROR_NOT_INITIALIZED);
     NS_ADDREF(*aOutputStream = &mOutput);
     return NS_OK;
 }

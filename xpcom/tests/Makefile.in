@@ -126,6 +126,12 @@ libs::
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/test.properties $(DESTDIR)$(mozappdir)/res
 
+_UNIT_FILES = $(wildcard $(srcdir)/unit/*.js)
+
+libs:: $(_UNIT_FILES)
+	$(INSTALL) $^ $(DIST)/bin/xpcom_tests
+
 check::
 	@echo "Running TestVersionComparator tests"
 	@$(PERL) -w $(srcdir)/TestVersionComparatorRunner.pl "$(RUN_TEST_PROGRAM) $(FINAL_TARGET)/TestVersionComparator$(BIN_SUFFIX)"
+	$(RUN_TEST_PROGRAM) $(DIST)/bin/test_all.sh $(DIST)/bin/xpcom_tests
