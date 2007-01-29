@@ -160,10 +160,10 @@ static JSBool
 script_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                jsval *rval)
 {
-    JSScript *oldscript, *script;
-    JSStackFrame *fp, *caller;
     JSString *str;
     JSObject *scopeobj;
+    JSScript *oldscript, *script;
+    JSStackFrame *fp, *caller;
     const char *file;
     uintN line;
     JSPrincipals *principals;
@@ -175,6 +175,19 @@ script_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     /* If no args, leave private undefined and return early. */
     if (argc == 0)
         goto out;
+
+    /* Otherwise, the first arg is the script source to compile. */
+    str = js_ValueToString(cx, argv[0]);
+    if (!str)
+        return JS_FALSE;
+    argv[0] = STRING_TO_JSVAL(str);
+
+    scopeobj = NULL;
+    if (argc >= 2) {
+        if (!js_ValueToObject(cx, argv[1], &scopeobj))
+            return JS_FALSE;
+        argv[1] = OBJECT_TO_JSVAL(scopeobj);
+    }
 
     /* XXX thread safety was completely neglected in this function... */
     oldscript = (JSScript *) JS_GetPrivate(cx, obj);
@@ -188,23 +201,11 @@ script_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         }
     }
 
-    /* Otherwise, the first arg is the script source to compile. */
-    str = js_ValueToString(cx, argv[0]);
-    if (!str)
-        return JS_FALSE;
-    argv[0] = STRING_TO_JSVAL(str);
-
     /* Compile using the caller's scope chain, which js_Invoke passes to fp. */
     fp = cx->fp;
     caller = JS_GetScriptedCaller(cx, fp);
     JS_ASSERT(!caller || fp->scopeChain == caller->scopeChain);
 
-    scopeobj = NULL;
-    if (argc >= 2) {
-        if (!js_ValueToObject(cx, argv[1], &scopeobj))
-            return JS_FALSE;
-        argv[1] = OBJECT_TO_JSVAL(scopeobj);
-    }
     if (caller) {
         if (!scopeobj) {
             scopeobj = js_GetScopeChain(cx, caller);
