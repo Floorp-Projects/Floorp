@@ -72,6 +72,7 @@ classic.jar:
 +  skin/classic/global/tabbrowser-tabs-bkgnd.png
 +  skin/classic/global/tabs-bottom-bg.png
 +  skin/classic/global/textbox.css
++  skin/classic/global/datetimepicker.css
 +  skin/classic/global/toolbar.css
 +  skin/classic/global/toolbarbutton.css
 +  skin/classic/global/tree.css
