@@ -13,6 +13,8 @@ var tests = [
   test6,
   test7,
   test8,
+  test9,
+  test10,
   null
 ];
 
@@ -287,4 +289,72 @@ function test8() {
   DOMSerializer().serializeToStream(doc2, p.outputStream, "UTF8");
   p.outputStream.close();
   do_check_eq(ScriptableInput(p).read(-1), str2);
+}
+
+function test9() {
+  // Test behavior of serializing between given charsets, using
+  // ISO-8859-1-representable text.
+  var contents = '<root>' +
+                   '\u00BD + \u00BE == \u00BD\u00B2 + \u00BC + \u00BE' +
+                 '</root>';
+  var str1 = '<?xml version="1.0" encoding="ISO-8859-1"?>\n' + contents;
+  var str2 = '<?xml version="1.0" encoding="UTF8"?>\n' + contents;
+  var str3 = '<?xml version="1.0" encoding="UTF-16"?>\n' + contents;
+  var doc1 = ParseXML(str1);
+  var doc2 = ParseXML(str2);
+  var doc3 = ParseXML(str3);
+
+  checkSerialization(doc1, "ISO-8859-1", str1);
+  checkSerialization(doc2, "ISO-8859-1", str1);
+  checkSerialization(doc3, "ISO-8859-1", str1);
+
+  checkSerialization(doc1, "UTF8", str2);
+  checkSerialization(doc2, "UTF8", str2);
+  checkSerialization(doc3, "UTF8", str2);
+
+  checkSerialization(doc1, "UTF-16", str3);
+  checkSerialization(doc2, "UTF-16", str3);
+  checkSerialization(doc3, "UTF-16", str3);
+}
+
+function test10() {
+  // Test behavior of serializing between given charsets, using
+  // Unicode characters (XXX but only BMP ones because I don't know
+  // how to create one with non-BMP characters, either with JS strings
+  // or using DOM APIs).
+  var contents = '<root>' +
+                   'AZaz09 \u007F ' +               // U+000000 to U+00007F
+                   '\u0080 \u0398 \u03BB \u0725 ' + // U+000080 to U+0007FF
+                   '\u0964 \u0F5F \u20AC \uFFFB' +  // U+000800 to U+00FFFF
+                 '</root>';
+  var str1 = '<?xml version="1.0" encoding="UTF8"?>\n' + contents;
+  var str2 = '<?xml version="1.0" encoding="UTF-16"?>\n' + contents;
+  var doc1 = ParseXML(str1);
+  var doc2 = ParseXML(str2);
+
+  checkSerialization(doc1, "UTF8", str1);
+  checkSerialization(doc2, "UTF8", str1);
+
+  checkSerialization(doc1, "UTF-16", str2);
+  checkSerialization(doc2, "UTF-16", str2);
+}
+
+function checkSerialization(doc, toCharset, expectedString) {
+  var p = Pipe();
+  DOMSerializer().serializeToStream(doc, p.outputStream, toCharset);
+  p.outputStream.close();
+
+  var cin = C["@mozilla.org/intl/converter-input-stream;1"]
+             .createInstance(I.nsIConverterInputStream);
+  cin.init(p.inputStream, toCharset, 1024, 0x0);
+
+  // compare the first expectedString.length characters for equality
+  var outString = {};
+  var count = cin.readString(expectedString.length, outString);
+  do_check_true(count == expectedString.length);
+  do_check_true(outString.value == expectedString);
+
+  // if there's anything more in the stream, it's a bug
+  do_check_eq(0, cin.readString(1, outString));
+  do_check_eq(outString.value, "");
 }
