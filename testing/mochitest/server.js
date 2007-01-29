@@ -255,14 +255,18 @@ function isTest(filename)
 function linksToListItems(links)
 {
   var response = "";
+  var children = "";
   for (var [link, value] in links) {
     var classVal = (!isTest(link) && !(value instanceof Object))
       ? "non-test invisible"
-      : "";
-    response += LI({class: classVal}, A({href: link}, link));
+      : "test";
     if (value instanceof Object) {
-      response += LI({class: "dir"}, UL(linksToListItems(value)));
+      children = UL({class: "testdir"}, linksToListItems(value)); 
+    } else {
+      children = "";
     }
+    response += LI({class: classVal}, A({href: link}, link), children);
+
   }
   return response;
 }
@@ -365,6 +369,13 @@ function testListing(metadata, response)
       BODY(
         DIV({class: "container"},
           H2("--> ", A({href: "#", id: "runtests"}, "Run Tests"), " <--"),
+            P({style: "float: right;"},
+            SMALL(
+              "Based on the ",
+              A({href:"http://www.mochikit.com/"}, "MochiKit"),
+              " unit tests."
+            )
+          ),
           DIV({class: "status"},
             H1({id: "indicator"}, "Status"),
             H2({id: "pass"}, "Passed: ", SPAN({id: "pass-count"},"0")),
@@ -394,14 +405,7 @@ function testListing(metadata, response)
             TR(TH("Passed"), TH("Failed"), TH("Todo")),
             linksToTableRows(links)
           ),
-          DIV({class: "clear"}),
-          P(
-            SMALL(
-              "Based on the ",
-              A({href:"http://www.mochikit.com/"}, "MochiKit"),
-              " unit tests."
-            )
-          )
+          DIV({class: "clear"})
         )
       )
     )
