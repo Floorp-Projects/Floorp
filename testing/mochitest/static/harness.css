@@ -8,64 +8,58 @@ body   {
 th, td {
   font-family: Verdana, Helvetica, Arial, sans-serif;
   font-size: 11px;
-}
-
-ul {
-  list-style: none;
-  padding: 0;
-  padding-left: 1em;
-  margin: 0;
-  background: #f6f6f6;
-}
-
-ul.top {
-  width: 80%;
-  float: left;
-}
-
-li, th, td {
-  border-bottom: 1px solid white;
-  height: 14px;
-}
-
-th, td {
   padding-left: .2em;
   padding-right: .2em;
   text-align: left;
+  height: 15px;
+  margin: 0;
+}
+
+li, li.test, li.dir {
+  padding: 0;
+  line-height: 15px;
+}
+
+ul { 
+  list-style: none;
+  margin: 0;
+  margin-left: 1em;
+  padding: 0;
+  border: none;
+}
+
+ul.top { 
+  position: absolute;
+  left: 11%;
+  background: #f6f6f6;
+  width: 86%;
+  padding: 0;
+  padding-left: 1em;
 }
 
 table#test-table {
+  position: absolute;
   background: #f6f6f6;
-  width: 19%;
+  left: 0%;
+  margin-left: 1em;
+  width: 10%;
+  padding: 0;
 }
 
 div.container {
   margin: 1em;
 }
 
-li a {
-  text-decoration: none;
+a#runtests, a {
+  color: #3333cc;
 }
 
-li a:hover {
-  text-decoration: underline;
-}
-
-li.dir a {
-  color: #000;
-}
-
-a {
-  color: #3333CC;
-}
-
-li.non-test a:link, li.non-test a:hover,
-li.non-test a:active, li.non-test a:visited {
+li.non-test a { 
   color: #999999;
 }
 
-a#runtests {
-  color: blue;
+small a {
+  color: #000;
 }
 
 .clear { clear: both;}
@@ -75,13 +69,11 @@ div.status {
   min-height: 170px;
   width: 100%;
   border: 1px solid #666;
-  float: left;
 }
 div.frameholder {
   min-height: 170px;
   min-width: 500px;
   background-color: #ffffff;
-  float: left;
 }
 
 div#current-test {
