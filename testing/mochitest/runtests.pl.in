@@ -100,9 +100,9 @@ my $profile = "mochitest_testing_profile";
 my $profile_dir = "$FindBin::Bin/$profile";
 
  # These are generated in mozilla/testing/mochitest/Makefile.in
-#expand my $app = __BROWSER_PATH__;
+#expand my $app = "$FindBin::Bin/" . __BROWSER_PATH__;
 #expand my $topsrcdir = __TOPSRCDIR__;
-#expand my $dist_bin = __XPC_BIN_PATH__;
+#expand my $dist_bin = "$FindBin::Bin/" . __XPC_BIN_PATH__;
 #ifdef WIN32
 #expand my $is_win32 = __WIN32__;
 #else
