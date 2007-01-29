@@ -397,7 +397,7 @@
             value = this.max;
 
           var boxobj = this.sliderController;
-          if (!isNaN(value) && this.value != value)
+          if (!isNaN(this.value) && this.value != value)
             this.eraseSlider(boxobj.getXCoordFromValue(this.value));
           this.drawSlider(boxobj.getXCoordFromValue(value));
           this.setAttribute("value", value);
