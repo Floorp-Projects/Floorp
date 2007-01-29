@@ -132,8 +132,6 @@ bool ReadConfig()
       wcscpy(s, L".ini");
 
       GetPrivateProfileString(L"Settings", L"URL", L"", sendURL, 2048, fileName);
-      if (sendURL[0] == '\0')
-        return false;
 
       TCHAR tmp[16];
       GetPrivateProfileString(L"Settings", L"Delete", L"1", tmp, 16, fileName);
@@ -325,14 +323,20 @@ bool SendCrashReport(HINSTANCE hInstance, LPCTSTR dumpFile)
 
 DWORD WINAPI SendThreadProc(LPVOID param)
 {
+  bool finishedOk;
   SENDTHREADDATA* td = (SENDTHREADDATA*)param;
   //XXX: send some extra params?
   map<wstring, wstring> params;
   wstring url(sendURL);
-  bool finishedOk = google_airbag::CrashReportSender
-    ::SendCrashReport(url,
-                      params,
-                      wstring(td->dumpFile));
+  if (url.empty()) {
+    finishedOk = false;
+  }
+  else {
+    finishedOk = google_airbag::CrashReportSender
+      ::SendCrashReport(url,
+                        params,
+                        wstring(td->dumpFile));
+  }
   PostMessage(td->hDlg, WM_UPLOADCOMPLETE, finishedOk ? 1 : 0, 0);
   delete td;
   return 0;
