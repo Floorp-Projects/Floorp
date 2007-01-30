@@ -580,14 +580,13 @@ nsJARURI::SetParam(const nsACString& param)
 NS_IMETHODIMP
 nsJARURI::GetQuery(nsACString& query)
 {
-    query.Truncate();
-    return NS_OK;
+    return mJAREntry->GetQuery(query);
 }
 
 NS_IMETHODIMP
 nsJARURI::SetQuery(const nsACString& query)
 {
-    return NS_ERROR_NOT_AVAILABLE;
+    return mJAREntry->SetQuery(query);
 }
 
 NS_IMETHODIMP
