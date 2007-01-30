@@ -65,21 +65,21 @@ public:
 
     virtual const gfxFont::Metrics& GetMetrics();
 
-    PangoFontDescription* GetPangoFontDescription() { RealizeFont(); return mPangoFontDesc; }
-    PangoContext* GetPangoContext() { RealizeFont(); return mPangoCtx; }
+    PangoFontDescription *GetPangoFontDescription() { RealizeFont(); return mPangoFontDesc; }
+    PangoContext *GetPangoContext() { RealizeFont(); return mPangoCtx; }
 
     void GetMozLang(nsACString &aMozLang);
     void GetActualFontFamily(nsACString &aFamily);
-    PangoFont* GetPangoFont();
+    PangoFont *GetPangoFont();
 
-    XftFont * GetXftFont () { RealizeXftFont (); return mXftFont; }
+    XftFont *GetXftFont () { RealizeXftFont (); return mXftFont; }
     gfxFloat GetAdjustedSize() { RealizeFont(); return mAdjustedSize; }
 
 protected:
     PangoFontDescription *mPangoFontDesc;
     PangoContext *mPangoCtx;
 
-    XftFont * mXftFont;
+    XftFont *mXftFont;
 
     PRBool mHasMetrics;
     Metrics mMetrics;
@@ -98,10 +98,10 @@ public:
 
     virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle);
 
-    virtual gfxTextRun *MakeTextRun(const PRUnichar* aString, PRUint32 aLength,
-                                    Parameters* aParams);
-    virtual gfxTextRun *MakeTextRun(const PRUint8* aString, PRUint32 aLength,
-                                    Parameters* aParams);
+    virtual gfxTextRun *MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
+                                    Parameters *aParams);
+    virtual gfxTextRun *MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
+                                    Parameters *aParams);
 
     gfxPangoFont *GetFontAt(PRInt32 i) {
         return NS_STATIC_CAST(gfxPangoFont*, 
@@ -143,50 +143,50 @@ struct TextSegment;
 class THEBES_API gfxPangoTextRun : public gfxTextRun {
 public:
     gfxPangoTextRun(gfxPangoFontGroup *aGroup,
-                    const PRUint8* aString, PRUint32 aLength,
-                    gfxTextRunFactory::Parameters* aParams);
+                    const PRUint8 *aString, PRUint32 aLength,
+                    gfxTextRunFactory::Parameters *aParams);
     gfxPangoTextRun(gfxPangoFontGroup *aGroup,
-                    const PRUnichar* aString, PRUint32 aLength,
-                    gfxTextRunFactory::Parameters* aParams);
+                    const PRUnichar *aString, PRUint32 aLength,
+                    gfxTextRunFactory::Parameters *aParams);
     ~gfxPangoTextRun();
 
     virtual void GetCharFlags(PRUint32 aStart, PRUint32 aLength,
-                              PRUint8* aFlags);
+                              PRUint8 *aFlags);
     virtual PRUint8 GetCharFlags(PRUint32 aOffset);
     virtual PRUint32 GetLength();
     virtual PRBool SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
-                                          PRPackedBool* aBreakBefore);
+                                          PRPackedBool *aBreakBefore);
     virtual void Draw(gfxContext *aContext, gfxPoint aPt,
                       PRUint32 aStart, PRUint32 aLength,
-                      const gfxRect* aDirtyRect,
-                      PropertyProvider* aBreakProvider,
-                      gfxFloat* aAdvanceWidth);
+                      const gfxRect *aDirtyRect,
+                      PropertyProvider *aBreakProvider,
+                      gfxFloat *aAdvanceWidth);
     virtual void DrawToPath(gfxContext *aContext, gfxPoint aPt,
                             PRUint32 aStart, PRUint32 aLength,
-                            PropertyProvider* aBreakProvider,
-                            gfxFloat* aAdvanceWidth);
-    virtual void DrawSpecialString(gfxContext* aContext, gfxPoint aPt,
+                            PropertyProvider *aBreakProvider,
+                            gfxFloat *aAdvanceWidth);
+    virtual void DrawSpecialString(gfxContext *aContext, gfxPoint aPt,
                                    SpecialString aString);
     virtual Metrics MeasureText(PRUint32 aStart, PRUint32 aLength,
                                 PRBool aTightBoundingBox,
-                                PropertyProvider* aBreakProvider);
+                                PropertyProvider *aBreakProvider);
     virtual void SetLineBreaks(PRUint32 aStart, PRUint32 aLength,
                                PRBool aLineBreakBefore, PRBool aLineBreakAfter,
-                               TextProvider* aProvider,
-                               gfxFloat* aAdvanceWidthDelta);
+                               TextProvider *aProvider,
+                               gfxFloat *aAdvanceWidthDelta);
     virtual Metrics MeasureTextSpecialString(SpecialString aString,
                                              PRBool aTightBoundingBox);
     virtual gfxFloat GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
-                                     PropertyProvider* aBreakProvider);
+                                     PropertyProvider *aBreakProvider);
     virtual gfxFloat GetAdvanceWidthSpecialString(SpecialString aString);
     virtual gfxFont::Metrics GetDecorationMetrics();
     virtual PRUint32 BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
                                          PRBool aLineBreakBefore, gfxFloat aWidth,
-                                         PropertyProvider* aBreakProvider,
+                                         PropertyProvider *aBreakProvider,
                                          PRBool aSuppressInitialBreak,
-                                         Metrics* aMetrics, PRBool aTightBoundingBox,
-                                         PRBool* aUsedHyphenation,
-                                         PRUint32* aLastBreak);
+                                         Metrics *aMetrics, PRBool aTightBoundingBox,
+                                         PRBool *aUsedHyphenation,
+                                         PRUint32 *aLastBreak);
     virtual void FlushSpacingCache(PRUint32 aStart);
 
     /**
@@ -297,8 +297,8 @@ public:
     };
     // The text is divided into GlyphRuns at Pango item and text segment boundaries
     struct GlyphRun {
-        PangoFont*           mPangoFont;       // strong ref; can't be null
-        cairo_scaled_font_t* mCairoFont;       // could be null
+        PangoFont           *mPangoFont;       // strong ref; can't be null
+        cairo_scaled_font_t *mCairoFont;       // could be null
         PRUint32             mCharacterOffset; // into original UTF16 string
 
         ~GlyphRun() {
@@ -313,17 +313,17 @@ public:
 
     class GlyphRunIterator {
     public:
-        GlyphRunIterator(gfxPangoTextRun* aTextRun, PRUint32 aStart, PRUint32 aLength)
+        GlyphRunIterator(gfxPangoTextRun *aTextRun, PRUint32 aStart, PRUint32 aLength)
           : mTextRun(aTextRun), mStartOffset(aStart), mEndOffset(aStart + aLength) {
             mNextIndex = mTextRun->FindFirstGlyphRunContaining(aStart);
         }
         PRBool NextRun();
-        GlyphRun* GetGlyphRun() { return mGlyphRun; }
+        GlyphRun *GetGlyphRun() { return mGlyphRun; }
         PRUint32 GetStringStart() { return mStringStart; }
         PRUint32 GetStringEnd() { return mStringEnd; }
     private:
-        gfxPangoTextRun* mTextRun;
-        GlyphRun*        mGlyphRun;
+        gfxPangoTextRun *mTextRun;
+        GlyphRun        *mGlyphRun;
         PRUint32         mStringStart;
         PRUint32         mStringEnd;
         PRUint32         mNextIndex;
@@ -338,31 +338,31 @@ public:
 
 private:
     // If aUTF16Text is null, then the string contains no characters >= 0x100
-    void Init(gfxTextRunFactory::Parameters* aParams, const gchar* aUTF8Text,
-              PRUint32 aUTF8Length, PRUint32 aUTF8HeaderLength, const PRUnichar* aUTF16Text,
+    void Init(gfxTextRunFactory::Parameters *aParams, const gchar *aUTF8Text,
+              PRUint32 aUTF8Length, PRUint32 aUTF8HeaderLength, const PRUnichar *aUTF16Text,
               PRUint32 aUTF16Length);
-    void SetupClusterBoundaries(const gchar* aUTF8, PRUint32 aUTF8Length,
-                                PRUint32 aUTF16Offset, PangoAnalysis* aAnalysis);
-    nsresult AddGlyphRun(PangoFont* aFont, PRUint32 aUTF16Offset);
-    DetailedGlyph* AllocateDetailedGlyphs(PRUint32 aIndex, PRUint32 aCount);
+    void SetupClusterBoundaries(const gchar *aUTF8, PRUint32 aUTF8Length,
+                                PRUint32 aUTF16Offset, PangoAnalysis *aAnalysis);
+    nsresult AddGlyphRun(PangoFont *aFont, PRUint32 aUTF16Offset);
+    DetailedGlyph *AllocateDetailedGlyphs(PRUint32 aIndex, PRUint32 aCount);
     // Returns NS_ERROR_FAILURE if there's a missing glyph
-    nsresult SetGlyphs(const gchar* aUTF8, PRUint32 aUTF8Length,
-                       PRUint32* aUTF16Offset, PangoGlyphString* aGlyphs,
+    nsresult SetGlyphs(const gchar *aUTF8, PRUint32 aUTF8Length,
+                       PRUint32 *aUTF16Offset, PangoGlyphString *aGlyphs,
                        PangoGlyphUnit aOverrideSpaceWidth,
                        PRBool aAbortOnMissingGlyph);
     // If aUTF16Text is null, then the string contains no characters >= 0x100.
     // Returns NS_ERROR_FAILURE if we require the itemizing path
-    nsresult CreateGlyphRunsFast(const gchar* aUTF8, PRUint32 aUTF8Length,
-                                 const PRUnichar* aUTF16Text, PRUint32 aUTF16Length);
-    void CreateGlyphRunsItemizing(const gchar* aUTF8, PRUint32 aUTF8Length,
+    nsresult CreateGlyphRunsFast(const gchar *aUTF8, PRUint32 aUTF8Length,
+                                 const PRUnichar *aUTF16Text, PRUint32 aUTF16Length);
+    void CreateGlyphRunsItemizing(const gchar *aUTF8, PRUint32 aUTF8Length,
                                   PRUint32 aUTF8HeaderLength);
 #if defined(ENABLE_XFT_FAST_PATH_8BIT) || defined(ENABLE_XFT_FAST_PATH_ALWAYS)
-    void CreateGlyphRunsXft(const gchar* aUTF8, PRUint32 aUTF8Length);
+    void CreateGlyphRunsXft(const gchar *aUTF8, PRUint32 aUTF8Length);
 #endif
     // **** general helpers **** 
 
     void SetupPangoContextDirection();
-    static void SetupCairoFont(cairo_t* aCR, GlyphRun* aGlyphRun);
+    static void SetupCairoFont(cairo_t *aCR, GlyphRun *aGlyphRun);
     // Returns the index of the GlyphRun containing the given offset.
     // Returns mGlyphRuns.Length() when aOffset is mCharacterCount.
     PRUint32 FindFirstGlyphRunContaining(PRUint32 aOffset);
@@ -384,39 +384,39 @@ private:
         gfxFloat mAfterSpacing;   // appunits
     };
     // if aProvider is null then mBeforeSpacing and mAfterSpacing are set to zero
-    LigatureData ComputeLigatureData(PRUint32 aPartOffset, PropertyProvider* aProvider);
+    LigatureData ComputeLigatureData(PRUint32 aPartOffset, PropertyProvider *aProvider);
     void GetAdjustedSpacing(PRUint32 aStart, PRUint32 aEnd,
-                            PropertyProvider* aProvider, PropertyProvider::Spacing* aSpacing);
+                            PropertyProvider *aProvider, PropertyProvider::Spacing *aSpacing);
     PRBool GetAdjustedSpacingArray(PRUint32 aStart, PRUint32 aEnd,
-                                   PropertyProvider* aProvider,
-                                   nsTArray<PropertyProvider::Spacing>* aSpacing);
-    void DrawPartialLigature(gfxContext* aCtx, PRUint32 aOffset,
-                             const gfxRect* aDirtyRect, gfxPoint* aPt,
-                             PropertyProvider* aProvider);
+                                   PropertyProvider *aProvider,
+                                   nsTArray<PropertyProvider::Spacing> *aSpacing);
+    void DrawPartialLigature(gfxContext *aCtx, PRUint32 aOffset,
+                             const gfxRect *aDirtyRect, gfxPoint *aPt,
+                             PropertyProvider *aProvider);
     // result in appunits
-    void ShrinkToLigatureBoundaries(PRUint32* aStart, PRUint32* aEnd);
-    gfxFloat GetPartialLigatureWidth(PRUint32 aStart, PRUint32 aEnd, PropertyProvider* aProvider);
-    void AccumulatePartialLigatureMetrics(PangoFont* aPangoFont,
-                                          PRUint32 aOffset, PropertyProvider* aProvider,
-                                          Metrics* aMetrics);
+    void ShrinkToLigatureBoundaries(PRUint32 *aStart, PRUint32 *aEnd);
+    gfxFloat GetPartialLigatureWidth(PRUint32 aStart, PRUint32 aEnd, PropertyProvider *aProvider);
+    void AccumulatePartialLigatureMetrics(PangoFont *aPangoFont,
+                                          PRUint32 aOffset, PropertyProvider *aProvider,
+                                          Metrics *aMetrics);
 
     // **** measurement helper ****
-    void AccumulatePangoMetricsForRun(PangoFont* aPangoFont, PRUint32 aStart,
-                                      PRUint32 aEnd, PropertyProvider* aProvider,
-                                      Metrics* aMetrics);
+    void AccumulatePangoMetricsForRun(PangoFont *aPangoFont, PRUint32 aStart,
+                                      PRUint32 aEnd, PropertyProvider *aProvider,
+                                      Metrics *aMetrics);
 
     // **** drawing helpers ****
 
     typedef void (* CairoGlyphProcessorCallback)
-        (void* aClosure, cairo_glyph_t* aGlyphs, int aNumGlyphs);
-    void ProcessCairoGlyphsWithSpacing(CairoGlyphProcessorCallback aCB, void* aClosure,
-                                       gfxPoint* aPt, PRUint32 aStart, PRUint32 aEnd,
-                                       PropertyProvider::Spacing* aSpacing);
-    void ProcessCairoGlyphs(CairoGlyphProcessorCallback aCB, void* aClosure,
-                            gfxPoint* aPt, PRUint32 aStart, PRUint32 aEnd,
-                            PropertyProvider* aProvider);
-    static void CairoShowGlyphs(void* aClosure, cairo_glyph_t* aGlyphs, int aNumGlyphs);
-    static void CairoGlyphsToPath(void* aClosure, cairo_glyph_t* aGlyphs, int aNumGlyphs);
+        (void *aClosure, cairo_glyph_t *aGlyphs, int aNumGlyphs);
+    void ProcessCairoGlyphsWithSpacing(CairoGlyphProcessorCallback aCB, void *aClosure,
+                                       gfxPoint *aPt, PRUint32 aStart, PRUint32 aEnd,
+                                       PropertyProvider::Spacing *aSpacing);
+    void ProcessCairoGlyphs(CairoGlyphProcessorCallback aCB, void *aClosure,
+                            gfxPoint *aPt, PRUint32 aStart, PRUint32 aEnd,
+                            PropertyProvider *aProvider);
+    static void CairoShowGlyphs(void *aClosure, cairo_glyph_t *aGlyphs, int aNumGlyphs);
+    static void CairoGlyphsToPath(void *aClosure, cairo_glyph_t *aGlyphs, int aNumGlyphs);
 
     nsRefPtr<gfxPangoFontGroup>     mFontGroup;
     // All our glyph data is in logical order, not visual
