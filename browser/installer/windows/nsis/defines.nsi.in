@@ -9,3 +9,4 @@
 !define FileMainEXE           "@MOZ_APP_NAME@.exe"
 !define WindowClass           "FirefoxMessageWindow"
 !define DDEApplication        "Firefox"
+!define AppRegName            "Firefox"

@@ -73,7 +73,7 @@ var gLogEnabled = { };
  *          The string to write to the error console..
  */  
 function LOG(module, string) {
-  if (module in gLogEnabled) {
+  if (module in gLogEnabled || "all" in gLogEnabled) {
     dump("*** " + module + ":" + string + "\n");
     gConsole.logStringMessage(string);
   }

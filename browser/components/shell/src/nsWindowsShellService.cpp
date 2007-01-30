@@ -62,6 +62,9 @@
 #include "shlobj.h"
 #include "nsIWindowsRegKey.h"
 
+#include "windows.h"
+#include "shellapi.h"
+
 #include <mbstring.h>
 
 #ifndef MAX_BUF
@@ -97,26 +100,40 @@ OpenUserKeyForReading(HKEY aStartKey, const char* aKeyName, HKEY* aKey)
   return NS_OK;
 }
 
+// Sets the default browser registry keys for Windows versions prior to Vista.
+// Try to open / create the key in HKLM and if that fails try to do the same
+// in HKCU. Though this is not strictly the behavior I would expect it is the
+// same behavior that IE has when setting the default browser previous to Vista.
 static nsresult
-OpenKeyForWriting(const char* aKeyName, HKEY* aKey, PRBool aForAllUsers, PRBool aCreate)
+OpenKeyForWriting(HKEY aStartKey, const char* aKeyName, HKEY* aKey,
+                  PRBool aHKLMOnly)
 {
-  nsresult rv = NS_OK;
+  DWORD dwDisp = 0;
+  DWORD rv = ::RegCreateKeyEx(aStartKey, aKeyName, 0, NULL, 0,
+                              KEY_READ | KEY_WRITE, NULL, aKey, &dwDisp);
 
-  HKEY rootKey = aForAllUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
-  DWORD result = ::RegOpenKeyEx(rootKey, aKeyName, 0, KEY_READ | KEY_WRITE, aKey);
-
-  switch (result) {
+  switch (rv) {
   case ERROR_SUCCESS:
     break;
   case ERROR_ACCESS_DENIED:
-    return NS_ERROR_FILE_ACCESS_DENIED;
+    if (aHKLMOnly || aStartKey == HKEY_CURRENT_USER)
+      return NS_ERROR_FILE_ACCESS_DENIED;
+    // fallback to HKCU immediately on access denied since we won't be able
+    // to create the key.
+    return OpenKeyForWriting(HKEY_CURRENT_USER, aKeyName, aKey, aHKLMOnly);
   case ERROR_FILE_NOT_FOUND:
-    if (aCreate)
-      result = ::RegCreateKey(HKEY_LOCAL_MACHINE, aKeyName, aKey);
-    rv = NS_ERROR_FILE_NOT_FOUND;
-    break;
+    rv = ::RegCreateKey(aStartKey, aKeyName, aKey);
+    if (rv != ERROR_SUCCESS) {
+      if (aHKLMOnly || aStartKey == HKEY_CURRENT_USER) {
+        // prevent infinite recursion on the second pass through here if 
+        // ::RegCreateKey fails in the current user case.
+        return NS_ERROR_FILE_ACCESS_DENIED;
+      }
+      return OpenKeyForWriting(HKEY_CURRENT_USER, aKeyName, aKey, aHKLMOnly);
+    }
   }
-  return rv;
+
+  return NS_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -128,55 +145,69 @@ OpenKeyForWriting(const char* aKeyName, HKEY* aKey, PRBool aForAllUsers, PRBool 
 //    .htm .html .shtml .xht .xhtml 
 //   are mapped like so:
 //
-//   HKCU\SOFTWARE\Classes\.<ext>\      (default)   REG_SZ  FirefoxHTML
+//   HKCU\SOFTWARE\Classes\.<ext>\      (default)         REG_SZ     FirefoxHTML
 //
 //   as aliases to the class:
 //
 //   HKCU\SOFTWARE\Classes\FirefoxHTML\
-//     DefaultIcon                      (default)   REG_SZ  <appname>,1
-//     shell\open\command               (default)   REG_SZ  <appname> -url "%1"
+//     DefaultIcon                      (default)         REG_SZ     <apppath>,1
+//     shell\open\command               (default)         REG_SZ     <apppath> -url "%1" -requestPending
+//     shell\open\ddeexec               (default)         REG_SZ     "%1",,0,0,,,,
+//     shell\open\ddeexec               NoActivateHandler REG_SZ
+//                       \Application   (default)         REG_SZ     Firefox
+//                       \Topic         (default)         REG_SZ     WWW_OpenURL
+//
+// - Windows Vista Protocol Handler
+//
+//   HKCU\SOFTWARE\Classes\FirefoxURL\  (default)         REG_SZ     <appname> URL
+//                                      EditFlags         REG_DWORD  2
+//                                      FriendlyTypeName  REG_SZ     <appname> URL
+//     DefaultIcon                      (default)         REG_SZ     <apppath>,0
+//     shell\open\command               (default)         REG_SZ     <apppath> -url "%1" -requestPending
+//     shell\open\ddeexec               (default)         REG_SZ     "%1",,0,0,,,,
+//     shell\open\ddeexec               NoActivateHandler REG_SZ
+//                       \Application   (default)         REG_SZ     Firefox
+//                       \Topic         (default)         REG_SZ     WWW_OpenURL
 //
 // - Protocol Mappings
 //   -----------------
 //   The following protocols:
-//    HTTP, HTTPS, FTP, GOPHER, CHROME
+//    HTTP, HTTPS, FTP, GOPHER
 //   are mapped like so:
 //
-// HKCU\SOFTWARE\Classes\<protocol>\
-//   DefaultIcon                    (default)         REG_SZ  <appname>,0
-//   shell\open\command             (default)         REG_SZ <appname> -url "%1"
-//   shell\open\ddeexec             (default)         REG_SZ  "%1",,0,0,,,,
-//   shell\open\ddeexec             NoActivateHandler REG_SZ
-//                     \application (default)         REG_SZ  Firefox
-//                     \ifexec      (default)         REG_SZ  ,,0,0,,,,
-//                     \topic       (default)         REG_SZ  WWW_OpenURL
-//                    
+//   HKCU\SOFTWARE\Classes\<protocol>\
+//     DefaultIcon                      (default)         REG_SZ     <apppath>,0
+//     shell\open\command               (default)         REG_SZ     <apppath> -url "%1" -requestPending
+//     shell\open\ddeexec               (default)         REG_SZ     "%1",,0,0,,,,
+//     shell\open\ddeexec               NoActivateHandler REG_SZ
+//                       \Application   (default)         REG_SZ     Firefox
+//                       \Topic         (default)         REG_SZ     WWW_OpenURL
 //
-// - Windows XP Start Menu Browser
-//   -----------------------------
-//   The following keys are set to make Firefox appear in the Windows XP
-//   Start Menu as the browser:
+// - Windows Start Menu (Win2K SP2, XP SP1, and newer)
+//   -------------------------------------------------
+//   The following keys are set to make Firefox appear in the Start Menu as the
+//   browser:
 //   
-//   HKCU\SOFTWARE\Clients\StartMenuInternet
-//     firefox.exe\DefaultIcon             (default)   REG_SZ  <appname>,0
-//     firefox.exe\shell\open\command      (default)   REG_SZ  <appname>
-//     firefox.exe\shell\properties        (default)   REG_SZ  Firefox &Options
-//     firefox.exe\shell\properties\command(default)   REG_SZ  <appname> -preferences
-//
-// - Uninstall Information
-//   ---------------------
-//   Every key that is set has the previous value stored in:
-//    
-//   HKCU\SOFTWARE\Mozilla\Desktop\        <keyname>   REG_SZ oldval
-//
-//   If there is no previous value, an empty value is set to indicate that the
-//   key should be removed completely. 
+//   HKCU\SOFTWARE\Clients\StartMenuInternet\FIREFOX.EXE\
+//                                      (default)         REG_SZ     <appname>
+//     DefaultIcon                      (default)         REG_SZ     <apppath>,0
+//     InstallInfo                      HideIconsCommand  REG_SZ     <uninstpath> /HideShortcuts
+//     InstallInfo                      IconsVisible      REG_DWORD  1
+//     InstallInfo                      ReinstallCommand  REG_SZ     <uninstpath> /SetAsDefaultAppGlobal
+//     InstallInfo                      ShowIconsCommand  REG_SZ     <uninstpath> /ShowShortcuts
+//     shell\open\command               (default)         REG_SZ     <apppath>
+//     shell\properties                 (default)         REG_SZ     <appname> &Options
+//     shell\properties\command         (default)         REG_SZ     <apppath> -preferences
+//     shell\safemode                   (default)         REG_SZ     <appname> &Safe Mode
+//     shell\safemode\command           (default)         REG_SZ     <apppath> -safe-mode
 //
 
-typedef enum { NO_SUBSTITUTION    = 0x00,
-               PATH_SUBSTITUTION  = 0x01,
-               EXE_SUBSTITUTION   = 0x02,
-               NON_ESSENTIAL      = 0x04} SettingFlags;
+typedef enum { NO_SUBSTITUTION           = 0x00,
+               APP_PATH_SUBSTITUTION     = 0x01,
+               EXE_NAME_SUBSTITUTION     = 0x02,
+               UNINST_PATH_SUBSTITUTION  = 0x04,
+               HKLM_ONLY                 = 0x08,
+               NON_ESSENTIAL             = 0x10 } SettingFlags;
 typedef struct {
   char* keyName;
   char* valueName;
@@ -185,20 +216,24 @@ typedef struct {
   PRInt32 flags;
 } SETTING;
 
+#define APP_REG_NAME L"Firefox"
 #define SMI "SOFTWARE\\Clients\\StartMenuInternet\\"
 #define CLS "SOFTWARE\\Classes\\"
 #define DI "\\DefaultIcon"
+#define II "\\InstallInfo"
 #define SOP "\\shell\\open\\command"
 #define DDE "\\shell\\open\\ddeexec\\"
 #define DDE_NAME "Firefox" // This must be kept in sync with ID_DDE_APPLICATION_NAME as defined in splash.rc
-#define APP_REG_NAME L"Firefox"
 #define DDE_COMMAND "\"%1\",,0,0,,,,"
-#define DDE_IFEXEC ",,0,0,,,,"
+// For the InstallInfo HideIconsCommand, ShowIconsCommand, and ReinstallCommand
+// registry keys. This must be kept in sync with the uninstaller.
+#define UNINSTALL_EXE "\\uninstall\\helper.exe"
 
 #define CLS_HTML "FirefoxHTML"
+#define CLS_URL "FirefoxURL"
 #define VAL_URL_ICON "%APPPATH%,0"
 #define VAL_FILE_ICON "%APPPATH%,1"
-#define VAL_OPEN "\"%APPPATH%\" -url \"%1\""
+#define VAL_OPEN "\"%APPPATH%\" -url \"%1\" -requestPending"
 
 #define MAKE_KEY_NAME1(PREFIX, MID) \
   PREFIX MID
@@ -210,12 +245,6 @@ typedef struct {
   PREFIX MID MID2 SUFFIX
 
 static SETTING gSettings[] = {
-  // Extension Manager Keys
-  { MAKE_KEY_NAME1(CLS, "MIME\\Database\\Content Type\\application/x-xpinstall;app=firefox"),
-    "Extension",
-    ".xpi",
-    NO_SUBSTITUTION | NON_ESSENTIAL },
-
   // File Extension Aliases
   { MAKE_KEY_NAME1(CLS, ".htm"),    "", CLS_HTML, NO_SUBSTITUTION | NON_ESSENTIAL },
   { MAKE_KEY_NAME1(CLS, ".html"),   "", CLS_HTML, NO_SUBSTITUTION | NON_ESSENTIAL },
@@ -224,64 +253,72 @@ static SETTING gSettings[] = {
   { MAKE_KEY_NAME1(CLS, ".xhtml"),  "", CLS_HTML, NO_SUBSTITUTION | NON_ESSENTIAL },
 
   // File Extension Class
-  { MAKE_KEY_NAME2(CLS, CLS_HTML, DI),  "", VAL_FILE_ICON, PATH_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(CLS, CLS_HTML, SOP), "", VAL_OPEN, PATH_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME2(CLS, CLS_HTML, DI),  "", VAL_FILE_ICON, APP_PATH_SUBSTITUTION },
+  { MAKE_KEY_NAME2(CLS, CLS_HTML, SOP), "", VAL_OPEN, APP_PATH_SUBSTITUTION },
+
+  // Protocol Handler Class - for Vista and above
+  { MAKE_KEY_NAME2(CLS, CLS_URL, DI),  "", VAL_URL_ICON, APP_PATH_SUBSTITUTION },
+  { MAKE_KEY_NAME2(CLS, CLS_URL, SOP), "", VAL_OPEN, APP_PATH_SUBSTITUTION },
 
   // Protocol Handlers
-  { MAKE_KEY_NAME2(CLS, "HTTP", DI),    "", VAL_URL_ICON, PATH_SUBSTITUTION },
-  { MAKE_KEY_NAME2(CLS, "HTTP", SOP),   "", VAL_OPEN, PATH_SUBSTITUTION },
-  { MAKE_KEY_NAME2(CLS, "HTTPS", DI),   "", VAL_URL_ICON, PATH_SUBSTITUTION },
-  { MAKE_KEY_NAME2(CLS, "HTTPS", SOP),  "", VAL_OPEN, PATH_SUBSTITUTION },
-  { MAKE_KEY_NAME2(CLS, "FTP", DI),     "", VAL_URL_ICON, PATH_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(CLS, "FTP", SOP),    "", VAL_OPEN, PATH_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(CLS, "GOPHER", DI),  "", VAL_URL_ICON, PATH_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(CLS, "GOPHER", SOP), "", VAL_OPEN, PATH_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(CLS, "CHROME", DI),  "", VAL_URL_ICON, PATH_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(CLS, "CHROME", SOP), "", VAL_OPEN, PATH_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME2(CLS, "HTTP", DI),    "", VAL_URL_ICON, APP_PATH_SUBSTITUTION },
+  { MAKE_KEY_NAME2(CLS, "HTTP", SOP),   "", VAL_OPEN, APP_PATH_SUBSTITUTION },
+  { MAKE_KEY_NAME2(CLS, "HTTPS", DI),   "", VAL_URL_ICON, APP_PATH_SUBSTITUTION },
+  { MAKE_KEY_NAME2(CLS, "HTTPS", SOP),  "", VAL_OPEN, APP_PATH_SUBSTITUTION },
+  { MAKE_KEY_NAME2(CLS, "FTP", DI),     "", VAL_URL_ICON, APP_PATH_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME2(CLS, "FTP", SOP),    "", VAL_OPEN, APP_PATH_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME2(CLS, "GOPHER", DI),  "", VAL_URL_ICON, APP_PATH_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME2(CLS, "GOPHER", SOP), "", VAL_OPEN, APP_PATH_SUBSTITUTION | NON_ESSENTIAL },
 
   // DDE settings
-  { MAKE_KEY_NAME2(CLS, CLS_HTML, DDE), "", DDE_COMMAND, NO_SUBSTITUTION },
-  { MAKE_KEY_NAME3(CLS, CLS_HTML, DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION },
-  { MAKE_KEY_NAME3(CLS, CLS_HTML, DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION },
-  { MAKE_KEY_NAME3(CLS, CLS_HTML, DDE, "ifexec"), "", DDE_IFEXEC, NO_SUBSTITUTION },
-  { MAKE_KEY_NAME2(CLS, "HTTP", DDE), "", DDE_COMMAND, NO_SUBSTITUTION },
-  { MAKE_KEY_NAME3(CLS, "HTTP", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION },
-  { MAKE_KEY_NAME3(CLS, "HTTP", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION },
-  { MAKE_KEY_NAME3(CLS, "HTTP", DDE, "ifexec"), "", DDE_IFEXEC, NO_SUBSTITUTION },
-  { MAKE_KEY_NAME2(CLS, "HTTPS", DDE), "", DDE_COMMAND, NO_SUBSTITUTION },
-  { MAKE_KEY_NAME3(CLS, "HTTPS", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION },
-  { MAKE_KEY_NAME3(CLS, "HTTPS", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION },
-  { MAKE_KEY_NAME3(CLS, "HTTPS", DDE, "ifexec"), "", DDE_IFEXEC, NO_SUBSTITUTION },
-  { MAKE_KEY_NAME2(CLS, "FTP", DDE), "", DDE_COMMAND, NO_SUBSTITUTION },
-  { MAKE_KEY_NAME3(CLS, "FTP", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION },
-  { MAKE_KEY_NAME3(CLS, "FTP", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION },
-  { MAKE_KEY_NAME3(CLS, "FTP", DDE, "ifexec"), "", DDE_IFEXEC, NO_SUBSTITUTION },
+  { MAKE_KEY_NAME2(CLS, CLS_HTML, DDE), "", DDE_COMMAND, NO_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME3(CLS, CLS_HTML, DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME3(CLS, CLS_HTML, DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME2(CLS, CLS_URL, DDE), "", DDE_COMMAND, NO_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME3(CLS, CLS_URL, DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME3(CLS, CLS_URL, DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME2(CLS, "HTTP", DDE), "", DDE_COMMAND, NO_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME3(CLS, "HTTP", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME3(CLS, "HTTP", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME2(CLS, "HTTPS", DDE), "", DDE_COMMAND, NO_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME3(CLS, "HTTPS", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME3(CLS, "HTTPS", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME2(CLS, "FTP", DDE), "", DDE_COMMAND, NO_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME3(CLS, "FTP", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME3(CLS, "FTP", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION | NON_ESSENTIAL },
   { MAKE_KEY_NAME2(CLS, "GOPHER", DDE), "", DDE_COMMAND, NO_SUBSTITUTION | NON_ESSENTIAL },
   { MAKE_KEY_NAME3(CLS, "GOPHER", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION | NON_ESSENTIAL },
   { MAKE_KEY_NAME3(CLS, "GOPHER", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME3(CLS, "GOPHER", DDE, "ifexec"), "", DDE_IFEXEC, NO_SUBSTITUTION },
-  { MAKE_KEY_NAME2(CLS, "CHROME", DDE), "", DDE_COMMAND, NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME3(CLS, "CHROME", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME3(CLS, "CHROME", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME3(CLS, "CHROME", DDE, "ifexec"), "", DDE_IFEXEC, NO_SUBSTITUTION },
 
   // Windows XP Start Menu
   { MAKE_KEY_NAME2(SMI, "%APPEXE%", DI),  
     "", 
     "%APPPATH%,0", 
-    PATH_SUBSTITUTION | EXE_SUBSTITUTION | NON_ESSENTIAL },
+    APP_PATH_SUBSTITUTION | EXE_NAME_SUBSTITUTION | HKLM_ONLY | NON_ESSENTIAL },
+  { MAKE_KEY_NAME2(SMI, "%APPEXE%", II),
+    "HideIconsCommand",
+    "\"%UNINSTPATH%\" /HideShortcuts",
+    UNINST_PATH_SUBSTITUTION | EXE_NAME_SUBSTITUTION | HKLM_ONLY | NON_ESSENTIAL },
+  { MAKE_KEY_NAME2(SMI, "%APPEXE%", II),
+    "ReinstallCommand",
+    "\"%UNINSTPATH%\" /SetAsDefaultAppGlobal",
+    UNINST_PATH_SUBSTITUTION | EXE_NAME_SUBSTITUTION | HKLM_ONLY | NON_ESSENTIAL },
+  { MAKE_KEY_NAME2(SMI, "%APPEXE%", II),
+    "ShowIconsCommand",
+    "\"%UNINSTPATH%\" /ShowShortcuts",
+    UNINST_PATH_SUBSTITUTION | EXE_NAME_SUBSTITUTION | HKLM_ONLY | NON_ESSENTIAL },
   { MAKE_KEY_NAME2(SMI, "%APPEXE%", SOP), 
     "", 
     "%APPPATH%",   
-    PATH_SUBSTITUTION | EXE_SUBSTITUTION | NON_ESSENTIAL },
+    APP_PATH_SUBSTITUTION | EXE_NAME_SUBSTITUTION | HKLM_ONLY | NON_ESSENTIAL },
   { MAKE_KEY_NAME1(SMI, "%APPEXE%\\shell\\properties\\command"),
     "", 
     "\"%APPPATH%\" -preferences",
-    PATH_SUBSTITUTION | EXE_SUBSTITUTION | NON_ESSENTIAL },
+    APP_PATH_SUBSTITUTION | EXE_NAME_SUBSTITUTION | HKLM_ONLY | NON_ESSENTIAL },
   { MAKE_KEY_NAME1(SMI, "%APPEXE%\\shell\\safemode\\command"),
     "", 
     "\"%APPPATH%\" -safe-mode",
-    PATH_SUBSTITUTION | EXE_SUBSTITUTION | NON_ESSENTIAL }
+    APP_PATH_SUBSTITUTION | EXE_NAME_SUBSTITUTION | HKLM_ONLY | NON_ESSENTIAL }
 
   // These values must be set by hand, since they contain localized strings.
   //     firefox.exe\shell\properties        (default)   REG_SZ  Firefox &Options
@@ -390,6 +427,12 @@ nsWindowsShellService::SetDefaultBrowserVista()
 NS_IMETHODIMP
 nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefaultBrowser)
 {
+  // To support side by side installs on Vista we also need to check if the
+  // FirefoxHTML and FirefoxURL registry keys in HKLM / HKCU point to our
+  // install location. If the HKLM keys point to this install location we have
+  // to verify that the keys don't exist in HKCU and remove them if the app is
+  // then set as default. If the HKLM keys don't point to this install location
+  // then we have to add these keys in HKCU to over-ride the HKLM keys.
   if (IsDefaultBrowserVista(aStartupCheck, aIsDefaultBrowser))
     return NS_OK;
 
@@ -433,7 +476,7 @@ nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefault
     nsCAutoString dataLongPath(settings->valueData);
     nsCAutoString dataShortPath(settings->valueData);
     nsCAutoString key(settings->keyName);
-    if (settings->flags & PATH_SUBSTITUTION) {
+    if (settings->flags & APP_PATH_SUBSTITUTION) {
       PRInt32 offset = dataLongPath.Find("%APPPATH%");
       dataLongPath.Replace(offset, 9, appLongPath);
       // Remove the quotes around %APPPATH% in VAL_OPEN for short paths
@@ -443,7 +486,7 @@ nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefault
       else
         dataShortPath.Replace(offset, 9, appShortPath);
     }
-    if (settings->flags & EXE_SUBSTITUTION) {
+    if (settings->flags & EXE_NAME_SUBSTITUTION) {
       PRInt32 offset = key.Find("%APPEXE%");
       key.Replace(offset, 8, exeName);
     }
@@ -502,26 +545,39 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
     return rv;
   ToUpperCase(exeName);
 
+  nsCOMPtr<nsIFile> appDir;
+  rv = lf->GetParent(getter_AddRefs(appDir));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCAutoString parentPath;
+  appDir->GetNativePath(parentPath);
+
+  nsCAutoString uninstLongPath(parentPath.get());
+  uninstLongPath.Append(UNINSTALL_EXE);
+
   for (settings = gSettings; settings < end; ++settings) {
     nsCAutoString dataLongPath(settings->valueData);
     nsCAutoString key(settings->keyName);
-    if (settings->flags & PATH_SUBSTITUTION) {
+    if (settings->flags & APP_PATH_SUBSTITUTION) {
       PRInt32 offset = dataLongPath.Find("%APPPATH%");
       dataLongPath.Replace(offset, 9, appLongPath);
     }
-    if (settings->flags & EXE_SUBSTITUTION) {
+    if (settings->flags & UNINST_PATH_SUBSTITUTION) {
+      PRInt32 offset = dataLongPath.Find("%UNINSTPATH%");
+      dataLongPath.Replace(offset, 12, uninstLongPath);
+    }
+    if (settings->flags & EXE_NAME_SUBSTITUTION) {
       PRInt32 offset = key.Find("%APPEXE%");
       key.Replace(offset, 8, exeName);
     }
 
-    PRBool replaceExisting = aClaimAllTypes ? PR_TRUE : !(settings->flags & NON_ESSENTIAL);
     SetRegKey(key.get(), settings->valueName, dataLongPath.get(),
-              replaceExisting, aForAllUsers);
+              (settings->flags & HKLM_ONLY));
   }
 
   // Select the Default Browser for the Windows XP Start Menu
-  SetRegKey(NS_LITERAL_CSTRING(SMI).get(), "", exeName.get(), aClaimAllTypes,
-            aForAllUsers);
+  SetRegKey(NS_LITERAL_CSTRING(SMI).get(), "", exeName.get(), PR_TRUE);
 
   nsCOMPtr<nsIStringBundleService> bundleService(do_GetService("@mozilla.org/intl/stringbundle;1"));
   if (!bundleService)
@@ -545,8 +601,7 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   nsCAutoString key1(NS_LITERAL_CSTRING(SMI));
   key1.Append(exeName);
   key1.Append("\\");
-  SetRegKey(key1.get(), "", nativeFullName.get(), aClaimAllTypes,
-            aForAllUsers);
+  SetRegKey(key1.get(), "", nativeFullName.get(), PR_TRUE);
 
   // Set the Options and Safe Mode start menu context menu item labels
   nsCAutoString optionsKey(SMI);
@@ -577,13 +632,11 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   // For the now, we use 'A' APIs (see bug 240272,  239279)
   NS_UTF16ToCString(optionsTitle, NS_CSTRING_ENCODING_NATIVE_FILESYSTEM,
                     nativeTitle);
-  SetRegKey(optionsKey.get(), "", nativeTitle.get(), aClaimAllTypes,
-            aForAllUsers);
+  SetRegKey(optionsKey.get(), "", nativeTitle.get(), PR_TRUE);
   // For the now, we use 'A' APIs (see bug 240272,  239279)
   NS_UTF16ToCString(safeModeTitle, NS_CSTRING_ENCODING_NATIVE_FILESYSTEM,
                     nativeTitle);
-  SetRegKey(safeModeKey.get(), "", nativeTitle.get(), aClaimAllTypes,
-            aForAllUsers);
+  SetRegKey(safeModeKey.get(), "", nativeTitle.get(), PR_TRUE);
 
   // Refresh the Shell
   SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, 0, 0);
@@ -592,19 +645,14 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
 
 void
 nsWindowsShellService::SetRegKey(const char* aKeyName, const char* aValueName, 
-                                 const char* aValue, PRBool aReplaceExisting,
-                                 PRBool aForAllUsers)
+                                 const char* aValue, PRBool aHKLMOnly)
 {
   char buf[MAX_BUF];
   DWORD len = sizeof buf;
 
   HKEY theKey;
-  nsresult rv = OpenKeyForWriting(aKeyName, &theKey, aForAllUsers, PR_TRUE);
-  if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND) return;
-
-  // If we're not allowed to replace an existing key, and one exists (i.e. the
-  // result isn't ERROR_FILE_NOT_FOUND, then just return now. 
-  if (!aReplaceExisting && rv != NS_ERROR_FILE_NOT_FOUND)
+  nsresult rv = OpenKeyForWriting(HKEY_LOCAL_MACHINE, aKeyName, &theKey, aHKLMOnly);
+  if (NS_FAILED(rv))
     return;
 
   // Get the old value

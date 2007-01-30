@@ -61,6 +61,8 @@ const nsIWindowWatcher       = Components.interfaces.nsIWindowWatcher;
 const nsICategoryManager     = Components.interfaces.nsICategoryManager;
 const nsIWebNavigationInfo   = Components.interfaces.nsIWebNavigationInfo;
 const nsIBrowserSearchService = Components.interfaces.nsIBrowserSearchService;
+const nsITimer                = Components.interfaces.nsITimer;
+const nsITimerCallback        = Components.interfaces.nsITimerCallback;
 
 const NS_BINDING_ABORTED = 0x804b0002;
 const NS_ERROR_WONT_HANDLE_CONTENT = 0x805d0001;
@@ -595,15 +597,72 @@ var nsDefaultCommandLineHandler = {
   QueryInterface : function dch_QI(iid) {
     if (!iid.equals(nsISupports) &&
         !iid.equals(nsICommandLineHandler) &&
+        !iid.equals(nsITimerCallback) &&
         !iid.equals(nsIFactory))
       throw Components.results.NS_ERROR_NO_INTERFACE;
 
     return this;
   },
 
+  // True when a DDE request will follow
+  _requestPending: false,
+  _URIs: [ ],
+  _timer: null,
+
+  /* nsITimerCallback - opens urls after the ui is sufficiently initialized */
+  notify: function (aTimer) {
+    try {
+      var navWin = getMostRecentBrowserWindow();
+      var navNav = navWin.QueryInterface(nsIInterfaceRequestor)
+                         .getInterface(nsIWebNavigation);
+      var rootItem = navNav.QueryInterface(nsIDocShellTreeItem).rootTreeItem;
+      var rootWin = rootItem.QueryInterface(nsIInterfaceRequestor)
+                            .getInterface(nsIDOMWindow);
+      var bwin = rootWin.QueryInterface(nsIDOMChromeWindow).browserDOMWindow;
+      if (bwin) {
+        var browser = navWin.getBrowser();
+        var tabPanels = browser.browsers;
+        var count = this._URIs.length;
+        for (var i = 0; i < count; ++i) {
+          var uri = this._URIs[0];
+          if (tabPanels.length == 1 &&
+              tabPanels[0].currentURI.spec == "about:blank" &&
+              !tabPanels[0].webProgress.isLoadingDocument) {
+            if (shouldLoadURI(uri))
+              handURIToExistingBrowser(uri, nsIBrowserDOMWindow.OPEN_CURRENTWINDOW);
+          }
+          else {
+            handURIToExistingBrowser(uri, nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW);
+          }
+          this._URIs.splice(0, 1);
+        }
+        this._requestPending = false;
+        this._timer.cancel();
+        this._timer = null;
+        this._URIs = [ ];
+        return;
+      }
+    }
+    catch (e) {
+    }
+  },
+
   /* nsICommandLineHandler */
   handle : function dch_handle(cmdLine) {
     var urilist = [];
+
+#ifdef XP_WIN
+    if (cmdLine.handleFlag("requestpending", false) &&
+        cmdLine.state == nsICommandLine.STATE_INITIAL_LAUNCH) {
+      this._requestPending = true;
+      // When the requestpending flag is present a dde message will follow that
+      // contains the same url. By handling the url flag here as a noop
+      // duplicate requests to open the same url are prevented. When the
+      // application needs to restart during startup the requestpending flag
+      // is removed and the url flag will be handled normally after the restart.
+      cmdLine.handleFlagWithParam("url", false);
+    }
+#endif
 
     try {
       var ar;
@@ -614,6 +673,41 @@ var nsDefaultCommandLineHandler = {
     catch (e) {
       Components.utils.reportError(e);
     }
+
+#ifdef XP_WIN
+    if (cmdLine.state == nsICommandLine.STATE_REMOTE_EXPLICIT && this._requestPending) {
+      // Handdle DDE request to open an url by first trying to open it via an
+      // existing window's openURI. If this fails a timer will be used to allow
+      // the window to finish opening so the url can be opened correctly and
+      // respect the OPEN_EXTERNAL pref.
+      try {
+        var navWin = getMostRecentBrowserWindow();
+        var navNav = navWin.QueryInterface(nsIInterfaceRequestor)
+                           .getInterface(nsIWebNavigation);
+        var rootItem = navNav.QueryInterface(nsIDocShellTreeItem).rootTreeItem;
+        var rootWin = rootItem.QueryInterface(nsIInterfaceRequestor)
+                              .getInterface(nsIDOMWindow);
+        var bwin = rootWin.QueryInterface(nsIDOMChromeWindow).browserDOMWindow;
+        bwin.openURI(urilist[0], null, nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW,
+                     nsIBrowserDOMWindow.OPEN_EXTERNAL);
+        this._requestPending = false;
+      }
+      catch (e) {
+        this._URIs.push(urilist[0]);
+        // If multiple urls (e.g. local files, etc.) are opened at the same
+        // time when the app is not running it is possible to have multiple
+        // requests before there is a window available to handle the request so
+        // a timer is used to allow the window to finish opening before
+        // attempting to open the url.
+        if (!this._timer) {
+          this._timer = Components.classes["@mozilla.org/timer;1"]
+                                  .createInstance(nsITimer);
+          this._timer.initWithCallback(this, 100, nsITimer.TYPE_REPEATING_SLACK);
+        }
+      }
+      return;
+    }
+#endif
 
     var count = cmdLine.length;
 

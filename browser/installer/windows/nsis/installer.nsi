@@ -83,7 +83,6 @@ Var fhUninstallLog
 !insertmacro GetOptions
 !insertmacro GetRoot
 !insertmacro DriveSpace
-!insertmacro GetParent
 
 ; NSIS provided macros that we have overridden
 !include overrides.nsh
@@ -97,6 +96,8 @@ Var fhUninstallLog
 !include locales.nsi
 !include version.nsh
 
+VIAddVersionKey "FileDescription" "${BrandShortName} Installer"
+
 !insertmacro RegCleanMain
 !insertmacro RegCleanUninstall
 !insertmacro CloseApp
@@ -105,9 +106,10 @@ Var fhUninstallLog
 !insertmacro CreateRegKey
 !insertmacro CanWriteToInstallDir
 !insertmacro CheckDiskSpace
+!insertmacro AddHandlerValues
 !insertmacro DisplayCopyErrMsg
-!insertmacro GetExistingInstallPath
-!insertmacro IsVista
+
+!include shared.nsh
 
 Name "${BrandFullName}"
 OutFile "setup.exe"
@@ -432,240 +434,35 @@ Section "-Application" Section1
   ; MUST add children first so they will be removed first on uninstall so they
   ; will be empty when the key is deleted. This allows the uninstaller to
   ; specify that only empty keys will be deleted.
+  ${SetAppKeys}
 
-  StrCpy $0 "Software\Mozilla\${BrandFullNameInternal}\${AppVersion} (${AB_CD})\Main"
-  ${WriteRegStr2} $TmpVal "$0" "Install Directory" "$INSTDIR" 0
-  ${WriteRegStr2} $TmpVal "$0" "PathToExe" "$INSTDIR\${FileMainEXE}" 0
-  ${WriteRegStr2} $TmpVal "$0" "Program Folder Path" "$SMPROGRAMS\$StartMenuDir" 0
-  ${WriteRegDWORD2} $TmpVal "$0" "Create Quick Launch Shortcut" $AddQuickLaunchSC 0
-  ${WriteRegDWORD2} $TmpVal "$0" "Create Desktop Shortcut" $AddDesktopSC 0
+  ; XXXrstrong - this should be set in shared.nsh along with "Create Quick
+  ; Launch Shortcut" and Create Desktop Shortcut.
+  StrCpy $0 "Software\Mozilla\${BrandFullNameInternal}\${AppVersion} (${AB_CD})\Uninstall"
   ${WriteRegDWORD2} $TmpVal "$0" "Create Start Menu Shortcut" $AddStartMenuSC 0
 
-  StrCpy $0 "Software\Mozilla\${BrandFullNameInternal}\${AppVersion} (${AB_CD})\Uninstall"
-  ${WriteRegStr2} $TmpVal "$0" "Uninstall Log Folder" "$INSTDIR\uninstall" 0
-  ${WriteRegStr2} $TmpVal "$0" "Description" "${BrandFullNameInternal} (${AppVersion})" 0
+  ${FixFileKeys}
 
-  StrCpy $0 "Software\Mozilla\${BrandFullNameInternal}\${AppVersion} (${AB_CD})"
-  ${WriteRegStr2} $TmpVal  "$0" "" "${AppVersion} (${AB_CD})" 0
+  ${FixProtocolKeys}
 
-  StrCpy $0 "Software\Mozilla\${BrandFullNameInternal} ${AppVersion}\bin"
-  ${WriteRegStr2} $TmpVal "$0" "PathToExe" "$INSTDIR\${FileMainEXE}" 0
+  ; The following keys should only be set if we can write to HKLM
+  ${If} $TmpVal == "HKLM"
+    ; Uninstall keys can only exist under HKLM on some versions of windows.
+    ${SetUninstallKeys}
 
-  StrCpy $0 "Software\Mozilla\${BrandFullNameInternal} ${AppVersion}\extensions"
-  ${WriteRegStr2} $TmpVal "$0" "Components" "$INSTDIR\components" 0
-  ${WriteRegStr2} $TmpVal "$0" "Plugins" "$INSTDIR\plugins" 0
+    ; Set the Start Menu Internet and Vista Registered App HKLM registry keys.
+    ${SetStartMenuInternet}
 
-  StrCpy $0 "Software\Mozilla\${BrandFullNameInternal} ${AppVersion}"
-  ${WriteRegStr2} $TmpVal "$0" "GeckoVer" "${GREVersion}" 0
-
-  StrCpy $0 "Software\Mozilla\${BrandFullNameInternal}"
-  ${WriteRegStr2} $TmpVal "$0" "" "${GREVersion}" 0
-  ${WriteRegStr2} $TmpVal "$0" "CurrentVersion" "${AppVersion} (${AB_CD})" 0
-
-  ; XXXrstrong - there are several values that will be overwritten by and
-  ; overwrite other installs of the same application.
-  ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
-  StrCpy $0 "Software\Clients\StartMenuInternet\$R9"
-  ${WriteRegStr2} $TmpVal "$0" "" "${BrandShortName}" 0
-
-  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\DefaultIcon"
-  StrCpy $1 "$\"$INSTDIR\${FileMainEXE}$\",0"
-  ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
-
-  ; The Reinstall Command is defined at
-  ; http://msdn.microsoft.com/library/default.asp?url=/library/en-us/shellcc/platform/shell/programmersguide/shell_adv/registeringapps.asp
-  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\InstallInfo"
-  StrCpy $1 "$\"$INSTDIR\uninstall\uninst.exe$\" /HideShortcuts"
-  ${WriteRegStr2} $TmpVal "$0" "HideIconsCommand" "$1" 0
-  ${WriteRegDWORD2} $TmpVal "$0" "IconsVisible" 1 0
-
-  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\InstallInfo"
-  StrCpy $1 "$\"$INSTDIR\${FileMainEXE}$\" -silent -setDefaultBrowser"
-  ${WriteRegStr2} $TmpVal "$0" "ReinstallCommand" "$1" 0
-  StrCpy $1 "$\"$INSTDIR\uninstall\uninst.exe$\" /ShowShortcuts"
-  ${WriteRegStr2} $TmpVal "$0" "ShowIconsCommand" "$1" 0
-
-  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\shell\open\command"
-  ${WriteRegStr2} $TmpVal "$0" "" "$INSTDIR\${FileMainEXE}" 0
-
-  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\shell\properties"
-  ${WriteRegStr2} $TmpVal "$0" "" "$(OPTIONS)" 0  
-  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\shell\properties\command"
-  ${WriteRegStr2} $TmpVal "$0" "" "$INSTDIR\${FileMainEXE} -preferences" 0
-
-
-
-  ${IsVista} $R9
-  ${If} $R9 == "true"
-    ; For Vista these keys and name / value pairs may need to be created during
-    ; install.
-    ReadRegStr $0 HKLM "Software\Classes\.shtml" "Content Type"
-    ${If} $0 == ""
-      StrCpy $0 "Software\Classes\.shtml"
-      ${WriteRegStr2} $TmpVal "$0" "" "FirefoxHTML" 0
-      ${WriteRegStr2} $TmpVal "$0" "Content Type" "text/html" 0
-      ${WriteRegStr2} $TmpVal "$0" "PerceivedType" "text" 0
+    ; If we are writing to HKLM and create the quick launch and the desktop
+    ; shortcuts set IconsVisible to 1 otherwise to 0.
+    ${If} $AddQuickLaunchSC == 1
+    ${OrIf} $AddDesktopSC == 1
+      ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
+      StrCpy $0 "Software\Clients\StartMenuInternet\$R9\InstallInfo"
+      WriteRegDWORD HKLM "$0" "IconsVisible" 1
+    ${Else}
+      WriteRegDWORD HKLM "$0" "IconsVisible" 0
     ${EndIf}
-
-    ReadRegStr $0 HKLM "Software\Classes\.xht" "Content Type"
-    ${If} $0 == ""
-      StrCpy $0 "Software\Classes\.xht"
-      ${WriteRegStr2} $TmpVal "$0" "" "FirefoxHTML" 0
-      ${WriteRegStr2} $TmpVal "$0" "Content Type" "application/xhtml+xml" 0
-    ${EndIf}
-
-    ReadRegStr $0 HKLM "Software\Classes\.xhtml" "Content Type"
-    ${If} $0 == ""
-      StrCpy $0 "Software\Classes\.xhtml"
-      ${WriteRegStr2} $TmpVal "$0" "" "FirefoxHTML" 0
-      ${WriteRegStr2} $TmpVal "$0" "Content Type" "application/xhtml+xml" 0
-    ${EndIf}
-
-    ReadRegStr $0 HKLM "Software\Classes\gopher\shell\open\command" ""
-    ${If} $0 == ""
-      StrCpy $0 "Software\Classes\gopher"
-      ${WriteRegStr2} $TmpVal "$0" "" "URL:Gopher Protocol" 0
-      ${WriteRegStr2} $TmpVal "$0" "URL Protocol" "" 0
-      ${WriteRegDWORD2} $TmpVal "$0" "EditFlags" 2 0
-
-      StrCpy $0 "Software\Classes\gopher\DefaultIcon"
-      StrCpy $1 "$\"$INSTDIR\${FileMainEXE}$\",0"
-      ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
-
-      StrCpy $0 "Software\Classes\gopher\shell\open\command"
-      StrCpy $1 "$\"$INSTDIR\${FileMainEXE}$\" -url $\"%1$\""
-      ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
-
-      StrCpy $0 "Software\Classes\gopher\shell\open\ddeexec"
-      StrCpy $1 "$\"%1$\",,0,0,,,,"
-      ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
-      ${WriteRegStr2} $TmpVal "$0" "NoActivateHandler" "" 0
-
-      StrCpy $0 "Software\Classes\gopher\shell\open\ddeexec\Application"
-      ${WriteRegStr2} $TmpVal "$0" "" "${DDEApplication}" 0
-
-      StrCpy $0 "Software\Classes\gopher\shell\open\ddeexec\ifexec"
-      StrCpy $1 ",,0,0,,,,"
-      ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
-
-      StrCpy $0 "Software\Classes\gopher\shell\open\ddeexec\Topic"
-      ${WriteRegStr2} $TmpVal "$0" "" "WWW_OpenURL" 0
-    ${EndIf}
-
-    ; Only create the key and its children if it doesn't exist
-    ReadRegStr $0 HKLM "Software\Classes\chrome\shell\open\command" ""
-    ${If} $0 == ""
-      StrCpy $0 "Software\Classes\chrome"
-      ${WriteRegStr2} $TmpVal "$0" "" "URL:Chrome Protocol" 0
-      ${WriteRegStr2} $TmpVal "$0" "URL Protocol" "" 0
-      ${WriteRegDWORD2} $TmpVal "$0" "EditFlags" 2 0
-
-      StrCpy $0 "Software\Classes\chrome\DefaultIcon"
-      StrCpy $1 "$\"$INSTDIR\${FileMainEXE}$\",0"
-      ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
-
-      StrCpy $0 "Software\Classes\chrome\shell\open\command"
-      StrCpy $1 "$\"$INSTDIR\${FileMainEXE}$\" -url $\"%1$\""
-      ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
-
-      StrCpy $0 "Software\Classes\chrome\shell\open\ddeexec"
-      StrCpy $1 "$\"%1$\",,0,0,,,,"
-      ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
-      ${WriteRegStr2} $TmpVal "$0" "NoActivateHandler" "" 0
-
-      StrCpy $0 "Software\Classes\chrome\shell\open\ddeexec\Application"
-      ${WriteRegStr2} $TmpVal "$0" "" "${DDEApplication}" 0
-
-      StrCpy $0 "Software\Classes\chrome\shell\open\ddeexec\ifexec"
-      StrCpy $1 ",,0,0,,,,"
-      ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
-
-      StrCpy $0 "Software\Classes\chrome\shell\open\ddeexec\Topic"
-      ${WriteRegStr2} $TmpVal "$0" "" "WWW_OpenURL" 0
-    ${EndIf}
-
-    ; Always set the file and protocol handlers since they may specify a
-    ; different path and the path is used by Vista when setting associations.
-    StrCpy $0 "Software\Classes\FirefoxURL"
-    ${WriteRegStr2} $TmpVal "$0" "" "Firefox URL" 0
-    ${WriteRegStr2} $TmpVal "$0" "FriendlyTypeName" "Firefox URL" 0
-    ${WriteRegStr2} $TmpVal "$0" "URL Protocol" "" 0
-    ${WriteRegDWORD2} $TmpVal "$0" "EditFlags" 2 0
-
-    StrCpy $0 "Software\Classes\FirefoxURL\DefaultIcon"
-    StrCpy $1 "$\"$INSTDIR\${FileMainEXE}$\",0"
-    ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
-
-    StrCpy $0 "Software\Classes\FirefoxURL\shell\open\command"
-    StrCpy $1 "$\"$INSTDIR\${FileMainEXE}$\" -url $\"%1$\""
-    ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
-
-    StrCpy $0 "Software\Classes\FirefoxURL\shell\open\ddeexec"
-    StrCpy $1 "$\"%1$\",,0,0,,,,"
-    ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
-    ${WriteRegStr2} $TmpVal "$0" "NoActivateHandler" "" 0
-
-    StrCpy $0 "Software\Classes\FirefoxURL\shell\open\ddeexec\Application"
-    ${WriteRegStr2} $TmpVal "$0" "" "${DDEApplication}" 0
-
-    StrCpy $0 "Software\Classes\FirefoxURL\shell\open\ddeexec\ifexec"
-    StrCpy $1 ",,0,0,,,,"
-    ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
-
-    StrCpy $0 "Software\Classes\FirefoxURL\shell\open\ddeexec\Topic"
-    ${WriteRegStr2} $TmpVal "$0" "" "WWW_OpenURL" 0
-
-    StrCpy $0 "Software\Classes\FirefoxHTML\DefaultIcon"
-    StrCpy $1 "$\"$INSTDIR\${FileMainEXE}$\",1"
-    ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
-
-    StrCpy $0 "Software\Classes\FirefoxHTML\shell\open\command"
-    StrCpy $1 "$\"$INSTDIR\${FileMainEXE}$\" -url $\"%1$\""
-    ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
-
-    StrCpy $0 "Software\Classes\FirefoxHTML\shell\open\ddeexec"
-    StrCpy $1 "$\"%1$\",,0,0,,,,"
-    ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
-    ${WriteRegStr2} $TmpVal "$0" "NoActivateHandler" "" 0
-
-    StrCpy $0 "Software\Classes\FirefoxHTML\shell\open\ddeexec\Application"
-    ${WriteRegStr2} $TmpVal "$0" "" "${DDEApplication}" 0
-
-    StrCpy $0 "Software\Classes\FirefoxHTML\shell\open\ddeexec\ifexec"
-    StrCpy $1 ",,0,0,,,,"
-    ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
-
-    StrCpy $0 "Software\Classes\FirefoxHTML\shell\open\ddeexec\Topic"
-    ${WriteRegStr2} $TmpVal "$0" "" "WWW_OpenURL" 0
-
-    ; Vista Registered Application
-    ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
-    StrCpy $0 "Software\RegisteredApplications"
-    StrCpy $1 "Software\Clients\StartMenuInternet\$R9\Capabilities"
-    ${WriteRegStr2} $TmpVal "$0" "${DDEApplication}" "$1" 0
-
-    ; Vista Capabilities registry keys
-    StrCpy $0 "Software\Clients\StartMenuInternet\$R9\Capabilities"
-    StrCpy $1 "$\"$INSTDIR\${FileMainEXE}$\",0"
-    ${WriteRegStr2} $TmpVal "$0" "ApplicationDescription" "$(REG_APP_DESC)" 0
-    ${WriteRegStr2} $TmpVal "$0" "ApplicationIcon" "$1" 0
-
-    StrCpy $0 "Software\Clients\StartMenuInternet\$R9\Capabilities\FileAssociations"
-    ${WriteRegStr2} $TmpVal "$0" ".htm" "FirefoxHTML" 0
-    ${WriteRegStr2} $TmpVal "$0" ".html" "FirefoxHTML" 0
-    ${WriteRegStr2} $TmpVal "$0" ".shtml" "FirefoxHTML" 0
-    ${WriteRegStr2} $TmpVal "$0" ".xht" "FirefoxHTML" 0
-    ${WriteRegStr2} $TmpVal "$0" ".xhtml" "FirefoxHTML" 0
-
-    StrCpy $0 "Software\Clients\StartMenuInternet\$R9\Capabilities\StartMenu"
-    ${WriteRegStr2} $TmpVal "$0" "StartMenuInternet" "$R9" 0
-
-    StrCpy $0 "Software\Clients\StartMenuInternet\$R9\Capabilities\URLAssociations"
-    ${WriteRegStr2} $TmpVal "$0" "chrome" "FirefoxURL" 0
-    ${WriteRegStr2} $TmpVal "$0" "ftp" "FirefoxURL" 0
-    ${WriteRegStr2} $TmpVal "$0" "gopher" "FirefoxURL" 0
-    ${WriteRegStr2} $TmpVal "$0" "http" "FirefoxURL" 0
-    ${WriteRegStr2} $TmpVal "$0" "https" "FirefoxURL" 0
   ${EndIf}
 
   ; These need special handling on uninstall since they may be overwritten by
@@ -674,27 +471,9 @@ Section "-Application" Section1
   ${WriteRegStr2} $TmpVal "$0" "" "$INSTDIR\${FileMainEXE}" 0
   ${WriteRegStr2} $TmpVal "$0" "Path" "$INSTDIR" 0
 
-  StrCpy $0 "Software\Classes\MIME\Database\Content Type\application/x-xpinstall;app=firefox"
-  ${WriteRegStr2} $TmpVal "$0" "Extension" ".xpi" 0
-
   StrCpy $0 "Software\Microsoft\MediaPlayer\ShimInclusionList\$R9"
   ${CreateRegKey} "$TmpVal" "$0" 0
 
-  ; Write the uninstall registry keys
-  StrCpy $0 "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullNameInternal} (${AppVersion})"
-  StrCpy $1 "$INSTDIR\uninstall\uninst.exe"
-
-  ${WriteRegStr2} $TmpVal "$0" "Comments" "${BrandFullNameInternal}" 0
-  ${WriteRegStr2} $TmpVal "$0" "DisplayIcon" "$INSTDIR\${FileMainEXE},0" 0
-  ${WriteRegStr2} $TmpVal "$0" "DisplayName" "${BrandFullNameInternal} (${AppVersion})" 0
-  ${WriteRegStr2} $TmpVal "$0" "DisplayVersion" "${AppVersion} (${AB_CD})" 0
-  ${WriteRegStr2} $TmpVal "$0" "InstallLocation" "$INSTDIR" 0
-  ${WriteRegStr2} $TmpVal "$0" "Publisher" "Mozilla" 0
-  ${WriteRegStr2} $TmpVal "$0" "UninstallString" "$1" 0
-  ${WriteRegStr2} $TmpVal "$0" "URLInfoAbout" "${URLInfoAbout}" 0
-  ${WriteRegStr2} $TmpVal "$0" "URLUpdateInfo" "${URLUpdateInfo}" 0
-  ${WriteRegDWORD2} $TmpVal "$0" "NoModify" 1 0
-  ${WriteRegDWORD2} $TmpVal "$0" "NoRepair" 1 0
   !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
 
   ; Create Start Menu shortcuts
@@ -905,7 +684,7 @@ Function CopyFile
     ; If the file is installed into the installation directory remove the
     ; installation directory's path from the file path when writing to the
     ; uninstall.log so it will be a relative path. This allows the same
-    ; uninst.exe to be used with zip builds if we supply an uninstall.log.
+    ; helper.exe to be used with zip builds if we supply an uninstall.log.
     ${WordReplace} "$R1$R3\$R7" "$INSTDIR" "" "+" $R3
     ${LogUninstall} "File: $R3"
   ${EndIf}
@@ -1067,22 +846,6 @@ Function leaveComponents
 FunctionEnd
 
 Function preDirectory
-  ${IsVista} $R9
-  ${If} $R9 == "true"
-    SetShellVarContext all  ; Set SHCTX to HKLM
-    ${GetExistingInstallPath} "Software\Mozilla" $R9
-    ${If} $R9 != "false"
-      StrCpy $INSTDIR "$R9"
-      ${CheckDiskSpace} $R9
-      ${If} $R9 == "true"
-        ${CanWriteToInstallDir} $R9
-        ${If} $R9 == "true"
-          Abort
-        ${EndIf}
-      ${EndIf}
-    ${EndIf}
-  ${EndIf}
-
   ${If} $InstallType != 4
     ${CheckDiskSpace} $R9
     ${If} $R9 != "false"

@@ -1022,7 +1022,7 @@ LaunchCallbackApp(const char *workingDir, int argc, char **argv)
 #elif defined(XP_MACOSX)
   LaunchChild(argc, argv);
 #elif defined(XP_WIN)
-  WinLaunchChild(argv[0], argc, argv);
+  WinLaunchChild(argv[0], argc, argv, -1);
 #else
 # warning "Need implementaton of LaunchCallbackApp"
 #endif
@@ -1200,8 +1200,10 @@ ActionList::Prepare()
   // If the action list is empty then we should fail in order to signal that
   // something has gone wrong. Otherwise we report success when nothing is
   // actually done. See bug 327140.
-  if (mCount == 0)
+  if (mCount == 0) {
+    LOG(("empty action list\n"));
     return UNEXPECTED_ERROR;
+  }
 
   Action *a = mFirst;
   while (a) {

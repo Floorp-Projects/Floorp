@@ -43,12 +43,12 @@
  */
 
 const URI_BRAND_PROPERTIES     = "chrome://branding/locale/brand.properties";
-const URI_UNINSTALL_PROPERTIES = "chrome://branding/content/uninstall.properties";
 
 const KEY_APPDIR          = "XCurProcD";
-const KEY_COMPONENTS_DIR  = "ComsD";
-const KEY_PLUGINS_DIR     = "APlugns";
-const KEY_EXECUTABLE_FILE = "XREExeF";
+const KEY_TMPDIR          = "TmpD";
+const KEY_LOCALDATA       = "DefProfLRt";
+const KEY_PROGRAMFILES    = "ProgF";
+const KEY_UAPPDATA        = "UAppData";
 
 // see prio.h
 const PR_RDONLY      = 0x01;
@@ -56,8 +56,12 @@ const PR_WRONLY      = 0x02;
 const PR_APPEND      = 0x10;
 
 const PERMS_FILE     = 0644;
+const PERMS_DIR      = 0700;
 
 const nsIWindowsRegKey = Components.interfaces.nsIWindowsRegKey;
+
+var gConsole = null;
+var gAppUpdateLogPostUpdate = false;
 
 //-----------------------------------------------------------------------------
 
@@ -65,7 +69,10 @@ const nsIWindowsRegKey = Components.interfaces.nsIWindowsRegKey;
  * Console logging support
  */
 function LOG(s) {
-  dump("*** PostUpdateWin: " + s + "\n");
+  if (gAppUpdateLogPostUpdate) {
+    dump("*** PostUpdateWin: " + s + "\n");
+    gConsole.logStringMessage(s);
+  }
 }
 
 /**
@@ -122,24 +129,6 @@ function openFileOutputStream(file, flags) {
   return stream;
 }
 
-/**
- * Gets the current value of the locale.  It's possible for this preference to
- * be localized, so we have to do a little extra work here.  Similar code
- * exists in nsHttpHandler.cpp when building the UA string.
- */
-function getLocale() {
-  const prefName = "general.useragent.locale";
-  var prefs =
-      Components.classes["@mozilla.org/preferences-service;1"].
-      getService(Components.interfaces.nsIPrefBranch);
-  try {
-    return prefs.getComplexValue(prefName,
-               Components.interfaces.nsIPrefLocalizedString).data;
-  } catch (e) {}
-
-  return prefs.getCharPref(prefName);
-}
-
 //-----------------------------------------------------------------------------
 
 const PREFIX_FILE = "File: ";
@@ -179,20 +168,49 @@ InstallLogWriter.prototype = {
    * updates/0 directory has already been cleaned out (see bug 311302).
    */
   _getUpdateLogFile: function() {
-    var file = getFile(KEY_APPDIR); 
-    file.append("updates");
-    file.append("0");
-    file.append("update.log");
-    if (file.exists())
-      return file;
+    function appendUpdateLogPath(root) {
+      var file = root.clone();
+      file.append("updates");
+      file.append("0");
+      file.append("update.log");
+      if (file.exists())
+        return file;
 
-    file = getFile(KEY_APPDIR); 
-    file.append("updates");
-    file.append("last-update.log");
-    if (file.exists())
-      return file;
+      file = root; 
+      file.append("updates");
+      file.append("last-update.log");
+      if (file.exists())
+        return file;
 
-    return null;
+      return null;
+    }
+
+    // See the local appdata first if app dir is under Program Files.
+    var file = null;
+    var updRoot = getFile(KEY_APPDIR); 
+    var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
+                                .getService(Components.interfaces.nsIProperties);
+    var programFilesDir = fileLocator.get(KEY_PROGRAMFILES,
+        Components.interfaces.nsILocalFile);
+    if (programFilesDir.contains(updRoot, true)) {
+      var relativePath = updRoot.QueryInterface(Components.interfaces.nsILocalFile).
+          getRelativeDescriptor(programFilesDir);
+      var userLocalDir = fileLocator.get(KEY_LOCALDATA,
+          Components.interfaces.nsILocalFile).parent;
+      updRoot.setRelativeDescriptor(userLocalDir, relativePath);
+      file = appendUpdateLogPath(updRoot);
+
+      // When updating from Fx 2.0.0.1 to 2.0.0.3 (or later) on Vista,
+      // we will have to see also user app data (see bug 351949).
+      if (!file)
+        file = appendUpdateLogPath(getFile(KEY_UAPPDATA));
+    }
+
+    // See the app dir if not found or app dir is out of Program Files.
+    if (!file)
+      file = appendUpdateLogPath(getFile(KEY_APPDIR));
+
+    return file;
   },
 
   /**
@@ -337,8 +355,27 @@ InstallLogWriter.prototype = {
     if (newEntries.length == 0)
       return;
 
+    // since we are not running with elevated privs, we can't write out
+    // the log file (at least, not on Vista).  So, write the output to
+    // temp, and then later, we'll pass the file (gCopiedLog) to
+    // the post update clean up process, which can copy it to
+    // the desired location (because it will have elevated privs)
+    gCopiedLog = getFile(KEY_TMPDIR);
+    gCopiedLog.append("uninstall");
+    gCopiedLog.createUnique(gCopiedLog.DIRECTORY_TYPE, PERMS_DIR);
+    if (uninstallLog)
+      uninstallLog.copyTo(gCopiedLog, "uninstall.log");
+    gCopiedLog.append("uninstall.log");
+    
+    LOG("uninstallLog = " + uninstallLog.path);
+    LOG("copiedLog = " + gCopiedLog.path);
+    
+    if (!gCopiedLog.exists())
+      gCopiedLog.create(Components.interfaces.nsILocalFile.NORMAL_FILE_TYPE, 
+                        PERMS_FILE);
+      
     this._outputStream =
-        openFileOutputStream(uninstallLog, PR_WRONLY | PR_APPEND);
+        openFileOutputStream(gCopiedLog, PR_WRONLY | PR_APPEND);
 
     // The NSIS uninstaller deletes all directories where the installer has
     // added a file if the directory is empty after the files have been removed
@@ -356,12 +393,15 @@ InstallLogWriter.prototype = {
 };
 
 var installLogWriter;
+var gCopiedLog;
 
 //-----------------------------------------------------------------------------
 
 /**
- * A thin wrapper around nsIWindowsRegKey that keeps track of its path
- * and notifies the installLogWriter when modifications are made.
+ * A thin wrapper around nsIWindowsRegKey
+ * note, only the "read" methods are exposed.  If you want to write
+ * to the registry on Vista, you need to be a priveleged app.
+ * We've moved that code into the uninstaller.
  */
 function RegKey() {
   // Internally, we may pass parameters to this constructor.
@@ -381,12 +421,11 @@ RegKey.prototype = {
   _path: null,
 
   ACCESS_READ:  nsIWindowsRegKey.ACCESS_READ,
-  ACCESS_WRITE: nsIWindowsRegKey.ACCESS_WRITE,
-  ACCESS_ALL:   nsIWindowsRegKey.ACCESS_ALL,
 
   ROOT_KEY_CURRENT_USER: nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
   ROOT_KEY_LOCAL_MACHINE: nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-
+  ROOT_KEY_CLASSES_ROOT: nsIWindowsRegKey.ROOT_KEY_CLASSES_ROOT,
+  
   close: function() {
     this._key.close();
     this._root = null;
@@ -404,22 +443,8 @@ RegKey.prototype = {
     return new RegKey(child, this._root, this._path + "\\" + path);
   },
 
-  createChild: function(path, mode) {
-    var child = this._key.createChild(path, mode);
-    var key = new RegKey(child, this._root, this._path + "\\" + path);
-    return key;
-  },
-
   readStringValue: function(name) {
     return this._key.readStringValue(name);
-  },
-
-  writeStringValue: function(name, value) {
-    this._key.writeStringValue(name, value);
-  },
-
-  writeIntValue: function(name, value) {
-    this._key.writeIntValue(name, value);
   },
 
   hasValue: function(name) {
@@ -438,13 +463,12 @@ RegKey.prototype = {
     return this._key.getChildName(index);
   },
 
-  removeChild: function(name) {
-    this._key.removeChild(name);
-  },
-
   toString: function() {
     var root;
     switch (this._root) {
+    case this.ROOT_KEY_CLASSES_ROOT:
+      root = "HKEY_KEY_CLASSES_ROOT";
+      break;
     case this.ROOT_KEY_LOCAL_MACHINE:
       root = "HKEY_LOCAL_MACHINE";
       break;
@@ -459,86 +483,14 @@ RegKey.prototype = {
   }
 };
 
-//-----------------------------------------------------------------------------
-
-/*
-RegKey.prototype = {
-  // The name of the registry key
-  name: "";
-
-  // An array of strings, where each even-indexed string names a value,
-  // and the subsequent string provides data for the value.
-  values: [];
-
-  // An array of RegKey objects.
-  children: [];
-}
-*/
-
-/**
- * This function creates a heirarchy of registry keys.  If any of the
- * keys or values already exist, then they will be updated instead.
- * @param rootKey
- *        The root registry key from which to create the new registry
- *        keys.
- * @param data
- *        A JS object with properties: "name", "values", and "children"
- *        as defined above.  All children of this key will be created.
- */
-function createRegistryKeys(rootKey, data) {
-  var key;
-  try {
-    key = rootKey.createChild(data.name, rootKey.ACCESS_WRITE);
-    var i;
-    if ("values" in data) {
-      for (i = 0; i < data.values.length; i += 2)
-        key.writeStringValue(data.values[i], data.values[i + 1]); 
-    }
-    if ("children" in data) {
-      for (i = 0; i < data.children.length; ++i)
-        createRegistryKeys(key, data.children[i]);
-    }
-    key.close();
-  } catch (e) {
-    LOG(e);
-    if (key)
-      key.close();
-  }
-}
-
-/**
- * This function deletes the specified registry key and optionally all of its
- * children.
- * @param rootKey
- *        The parent nsIwindowRegKey of the key to delete.
- * @param name
- *        The name of the key to delete.
- * @param recurse
- *        Pass true to also delete all children of the named key.  Take care!
- */
-function deleteRegistryKey(rootKey, name, recurse) {
-  if (!rootKey.hasChild(name)) {
-    LOG("deleteRegistryKey: rootKey does not have child: \"" + name + "\"");
-    return;
-  }
-  if (recurse) {
-    var key = rootKey.openChild(name, rootKey.ACCESS_ALL);
-    try {
-      for (var i = key.childCount - 1; i >= 0; --i)
-        deleteRegistryKey(key, key.getChildName(i), true);
-    } finally {
-      key.close();
-    }
-  }
-  rootKey.removeChild(name);
-}
-
 /**
  * This method walks the registry looking for the registry keys of
  * the previous version of the application.
  */
-function locateOldInstall(key, ourInstallDir) {
-  var result, childKey, productKey, mainKey;
+function haveOldInstall(key, brandFullName, version) {
+  var ourInstallDir = getFile(KEY_APPDIR);
+  var result = false;
+  var childKey, productKey, mainKey;
   try {
     for (var i = 0; i < key.childCount; ++i) {
       var childName = key.getChildName(i);
@@ -550,14 +502,14 @@ function locateOldInstall(key, ourInstallDir) {
           if (productKey.hasChild("Main")) {
             mainKey = productKey.openChild("Main", key.ACCESS_READ);
             var installDir = mainKey.readStringValue("Install Directory");
-            var menuPath = mainKey.readStringValue("Program Folder Path");
             mainKey.close();
-            if (newFile(installDir).equals(ourInstallDir)) {
-              result = new Object();
-              result.fullName = childName;
-              result.versionWithLocale = productVer;
-              result.version = productVer.split(" ")[0];
-              result.menuPath = menuPath;
+            LOG("old install? " + installDir + " vs " + ourInstallDir.path);
+            LOG("old install? " + childName + " vs " + brandFullName);
+            LOG("old install? " + productVer.split(" ")[0] + " vs " + version);
+            if (newFile(installDir).equals(ourInstallDir) &&
+                (childName != brandFullName ||
+                productVer.split(" ")[0] != version)) {
+              result = true;
             }
           }
           productKey.close();
@@ -570,7 +522,7 @@ function locateOldInstall(key, ourInstallDir) {
         break;
     }
   } catch (e) {
-    result = null;
+    result = false;
     if (childKey)
       childKey.close();
     if (productKey)
@@ -581,239 +533,62 @@ function locateOldInstall(key, ourInstallDir) {
   return result;
 }
 
-/**
- * Delete registry keys left-over from the previous version of the app
- * installed at our location.
- */
-function deleteOldRegKeys(key, info) {
-  deleteRegistryKey(key, info.fullName + " " + info.version, true);
-  var productKey = key.openChild(info.fullName, key.ACCESS_ALL);
-  var productCount;
+function checkRegistry()
+{
+  // XXX todo
+  // this is firefox specific
+  // figure out what to do about tbird and sunbird, etc   
+  LOG("checkRegistry");
+
+  var result = false;
   try {
-    deleteRegistryKey(productKey, info.versionWithLocale, true);
-    productCount = productKey.childCount;
-  } finally {
-    productKey.close();
+    var key = new RegKey();
+    key.open(RegKey.prototype.ROOT_KEY_CLASSES_ROOT, "FirefoxHTML\\shell\\open\\command", key.ACCESS_READ);
+    var commandKey = key.readStringValue("");
+    LOG("commandKey = " + commandKey);
+    // if "-requestPending" is not found, we need to do the cleanup
+    result = (commandKey.indexOf("-requestPending") == -1);
+  } catch (e) {
+    LOG("failed to open command key for FirefoxHTML: " + e);
   }
-  if (productCount == 0)
-    key.removeChild(info.fullName);  
+  key.close();
+  return result;
 }
 
-/**
- * The installer sets various registry keys and values that may need to be
- * updated.
- *
- * This operation is a bit tricky since we do not know the previous value of
- * brandFullName.  As a result, we must walk the registry looking for an
- * existing key that references the same install directory.  We assume that
- * the value of vendorShortName does not change across updates.
- */
-function updateRegistry(rootKey) {
-  LOG("updateRegistry");
-
-  var ourInstallDir = getFile(KEY_APPDIR);
-
-  var app =
-    Components.classes["@mozilla.org/xre/app-info;1"].
-    getService(Components.interfaces.nsIXULAppInfo).
-    QueryInterface(Components.interfaces.nsIXULRuntime);
-
-  var sbs =
-      Components.classes["@mozilla.org/intl/stringbundle;1"].
-      getService(Components.interfaces.nsIStringBundleService);
-  var brandBundle = sbs.createBundle(URI_BRAND_PROPERTIES);
-  var brandFullName = brandBundle.GetStringFromName("brandFullName");
-
-  var vendorShortName;
-  try {
-    // The Thunderbird vendorShortName is "Mozilla Thunderbird", but we
-    // just want "Thunderbird", so allow it to be overridden in prefs.
-
-    var prefs =
-      Components.classes["@mozilla.org/preferences-service;1"].
-      getService(Components.interfaces.nsIPrefBranch);
-
-    vendorShortName = prefs.getCharPref("app.update.vendorName.override");
-  }
-  catch (e) {
-    vendorShortName = brandBundle.GetStringFromName("vendorShortName");
-  }
-
+function checkOldInstall(rootKey, vendorShortName, brandFullName, version)
+{
   var key = new RegKey();
+  var result = false;
 
-  var oldInstall;
   try {
     key.open(rootKey, "SOFTWARE\\" + vendorShortName, key.ACCESS_READ);
-    oldInstall = locateOldInstall(key, ourInstallDir);
-  } catch (e) {}
-  key.close();
-
-  if (!oldInstall) {
-    LOG("no existing registry keys found");
-    return;
+    LOG("checkOldInstall: " + key + " " + brandFullName + " " + version);
+    result = haveOldInstall(key, brandFullName, version);
+  } catch (e) {
+    LOG("failed trying to find old install: " + e);
   }
-
-  const uninstallRoot =
-      "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
-  // Maybe nothing needs to be changed...
-  if (oldInstall.fullName == brandFullName &&
-      oldInstall.version == app.version) {
-    var uninst = getFile(KEY_APPDIR);
-    uninst.append("uninstall");
-    uninst.append("uninst.exe");
-    var uninstString = uninst.path;
-    nameWithVersion = oldInstall.fullName + " (" + oldInstall.version + ")";
-    try {
-      key.open(rootKey, uninstallRoot + "\\" + nameWithVersion, key.ACCESS_READ);
-      var regUninstString = key.readStringValue("UninstallString");
-      if (regUninstString != uninstString) {
-        LOG("updating UninstallString registry value");
-        key.close();
-        key.open(rootKey, uninstallRoot, key.ACCESS_READ);
-        createRegistryKeys(key, { name: nameWithVersion,
-                                  values: ["UninstallString", uninstString] });
-      } else {
-        LOG("registry is up-to-date");
-      }
-    } catch (e) {}
-    key.close();
-    return;
-  }
-
-  // Delete the old keys:
-  try {
-    key.open(rootKey, "SOFTWARE\\" + vendorShortName, key.ACCESS_READ);
-    deleteOldRegKeys(key, oldInstall);
-  } catch (e) {}
   key.close();
-
-  // Create the new keys:
-
-  var versionWithLocale = app.version + " (" + getLocale() + ")";
-  var installPath = ourInstallDir.path + "\\";
-  var pathToExe = getFile(KEY_EXECUTABLE_FILE).path;
-
-  var Key_bin = {
-    name: "bin",
-    values: [
-      "PathToExe", pathToExe
-    ]
-  };
-  var Key_extensions = {
-    name: "Extensions",
-    values: [
-      "Components", getFile(KEY_COMPONENTS_DIR).path + "\\",
-      "Plugins", getFile(KEY_PLUGINS_DIR).path + "\\"
-    ]
-  };
-  var Key_nameWithVersion = {
-    name: brandFullName + " " + app.version,
-    values: [
-      "GeckoVer", app.platformVersion
-    ],
-    children: [
-      Key_bin,
-      Key_extensions
-    ]
-  };
-  var Key_main = {
-    name: "Main",
-    values: [
-      "Install Directory", installPath,
-      "PathToExe", pathToExe,
-      "Program Folder Path", oldInstall.menuPath
-    ]
-  };
-  var Key_uninstall = {
-    name: "Uninstall",
-    values: [
-      "Description", brandFullName + " (" + app.version + ")",
-      "Uninstall Log Folder", installPath + "uninstall"
-    ]
-  };
-  var Key_versionWithLocale = {
-    name: versionWithLocale,
-    children: [
-      Key_main,
-      Key_uninstall
-    ]
-  };
-  var Key_name = {
-    name: brandFullName,
-    values: [
-      "CurrentVersion", versionWithLocale
-    ],
-    children: [
-      Key_versionWithLocale
-    ]
-  };
-  var Key_brand = {
-    name: vendorShortName,
-    children: [
-      Key_name,
-      Key_nameWithVersion
-    ]
-  };
-
-  try {
-    key.open(rootKey, "SOFTWARE", key.ACCESS_READ);
-    createRegistryKeys(key, Key_brand);
-  } catch (e) {}
-  key.close();
-
-  if (rootKey != RegKey.prototype.ROOT_KEY_LOCAL_MACHINE)
-    return;
-
-  // Now, do the same thing for the Add/Remove Programs control panel:
-  try {
-    key.open(rootKey, uninstallRoot, key.ACCESS_READ);
-    var oldName = oldInstall.fullName + " (" + oldInstall.version + ")";
-    deleteRegistryKey(key, oldName, false);
-  } catch (e) {}
-  key.close();
-
-  var uninstallBundle = sbs.createBundle(URI_UNINSTALL_PROPERTIES);
-
-  var nameWithVersion = brandFullName + " (" + app.version + ")";
-
-  var uninstaller = getFile(KEY_APPDIR);
-  uninstaller.append("uninstall");
-  uninstaller.append("uninst.exe");
-  var uninstallString = uninstaller.path;
-
-  Key_uninstall = {
-    name: nameWithVersion,
-    values: [
-      "Comment", brandFullName,
-      "DisplayIcon", pathToExe + ",0",        // XXX don't hardcode me!
-      "DisplayName", nameWithVersion,
-      "DisplayVersion", versionWithLocale, 
-      "InstallLocation", ourInstallDir.path,  // no trailing slash
-      "Publisher", vendorShortName,
-      "UninstallString", uninstallString,
-      "URLInfoAbout", uninstallBundle.GetStringFromName("URLInfoAbout"),
-      "URLUpdateInfo", uninstallBundle.GetStringFromName("URLUpdateInfo") 
-    ]
-  };
-
-  var child;
-  try {
-    key.open(rootKey, uninstallRoot, key.ACCESS_READ);
-    createRegistryKeys(key, Key_uninstall);
-
-    // Create additional DWORD keys for NoModify and NoRepair:
-    child = key.openChild(nameWithVersion, key.ACCESS_WRITE);
-    child.writeIntValue("NoModify", 1);
-    child.writeIntValue("NoRepair", 1);
-  } catch (e) {}
-  if (child)
-    child.close();
-  key.close();
+  return result;
 }
 
 //-----------------------------------------------------------------------------
 
 function nsPostUpdateWin() {
+  gConsole = Components.classes["@mozilla.org/consoleservice;1"]
+                       .getService(Components.interfaces.nsIConsoleService);
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+              getService(Components.interfaces.nsIPrefBranch);
+  try {
+    gAppUpdateLogPostUpdate = prefs.getBoolPref("app.update.log.all");
+  }
+  catch (ex) {
+  }
+  try {
+    if (!gAppUpdateLogPostUpdate) 
+      gAppUpdateLogPostUpdate = prefs.getBoolPref("app.update.log.PostUpdate");
+  }
+  catch (ex) {
+  }
 }
 
 nsPostUpdateWin.prototype = {
@@ -826,20 +601,66 @@ nsPostUpdateWin.prototype = {
 
   run: function() {
     try {
-      // We use a global object here for the install log writer, so that the
-      // registry updating code can easily inform it of registry keys that it
-      // may create.
       installLogWriter = new InstallLogWriter();
       try {
         installLogWriter.begin();
-        updateRegistry(RegKey.prototype.ROOT_KEY_CURRENT_USER);
-        updateRegistry(RegKey.prototype.ROOT_KEY_LOCAL_MACHINE);
       } finally {
         installLogWriter.end();
         installLogWriter = null;
       }
     } catch (e) {
       LOG(e);
+    } 
+    
+    var app =
+      Components.classes["@mozilla.org/xre/app-info;1"].
+        getService(Components.interfaces.nsIXULAppInfo).
+        QueryInterface(Components.interfaces.nsIXULRuntime);
+
+    var sbs =
+      Components.classes["@mozilla.org/intl/stringbundle;1"].
+      getService(Components.interfaces.nsIStringBundleService);
+    var brandBundle = sbs.createBundle(URI_BRAND_PROPERTIES);
+
+    var vendorShortName;
+    try {
+      // The Thunderbird vendorShortName is "Mozilla Thunderbird", but we
+      // just want "Thunderbird", so allow it to be overridden in prefs.
+
+      var prefs =
+        Components.classes["@mozilla.org/preferences-service;1"].
+        getService(Components.interfaces.nsIPrefBranch);
+
+      vendorShortName = prefs.getCharPref("app.update.vendorName.override");
+    }
+    catch (e) {
+      vendorShortName = brandBundle.GetStringFromName("vendorShortName");
+    }
+    var brandFullName = brandBundle.GetStringFromName("brandFullName");
+
+    if (!gCopiedLog && 
+        !checkRegistry() &&
+        !checkOldInstall(RegKey.prototype.ROOT_KEY_LOCAL_MACHINE, 
+                         vendorShortName, brandFullName, app.version) &&
+        !checkOldInstall(RegKey.prototype.ROOT_KEY_CURRENT_USER, 
+                         vendorShortName, brandFullName, app.version)) {
+      LOG("nothing to do, so don't launch the helper");
+      return;
+    }
+
+    try {
+      var winAppHelper = 
+        app.QueryInterface(Components.interfaces.nsIWinAppHelper);
+
+      // note, gCopiedLog could be null
+      if (gCopiedLog)
+        LOG("calling postUpdate with: " + gCopiedLog.path);
+      else
+        LOG("calling postUpdate without a log");
+
+      winAppHelper.postUpdate(gCopiedLog);
+    } catch (e) {
+      LOG("failed to launch the helper to do the post update cleanup: " + e); 
     }
   }
 };
