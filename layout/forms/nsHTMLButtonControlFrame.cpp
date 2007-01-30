@@ -245,31 +245,15 @@ nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 nscoord
 nsHTMLButtonControlFrame::GetMinWidth(nsIRenderingContext* aRenderingContext)
 {
-  return DoGetMinWidth(aRenderingContext, PR_TRUE);
-}
-
-nscoord
-nsHTMLButtonControlFrame::DoGetMinWidth(nsIRenderingContext* aRenderingContext,
-                                        PRBool aZeroIfWidthSpecified)
-{
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
-  
-  // Note: to fix the button equivalent of bug 40596 while still working
-  // correctly in general, we want to return our actual min width as our min
-  // width if our style width is auto.  Otherwise, we're ok with shrinking as
-  // small as needed.
-  if (!aZeroIfWidthSpecified ||
-      GetStylePosition()->mWidth.GetUnit() == eStyleUnit_Auto) {
-    nsIFrame* kid = mFrames.FirstChild();
-    result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
-                                                  kid,
-                                                  nsLayoutUtils::MIN_WIDTH);
 
-    result += mRenderer.GetAddedButtonBorderAndPadding().LeftRight();
-  } else {
-    result = 0;
-  }
+  nsIFrame* kid = mFrames.FirstChild();
+  result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
+                                                kid,
+                                                nsLayoutUtils::MIN_WIDTH);
+
+  result += mRenderer.GetAddedButtonBorderAndPadding().LeftRight();
 
   return result;
 }
@@ -373,7 +357,7 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
   // better look in such cases we adjust the available width and our left
   // offset to allow the kid to spill left into our padding.
   nscoord xoffset = aFocusPadding.left + aReflowState.mComputedBorderPadding.left;
-  nscoord extrawidth = DoGetMinWidth(aReflowState.rendContext, PR_FALSE) -
+  nscoord extrawidth = GetMinWidth(aReflowState.rendContext) -
     aReflowState.ComputedWidth();
   if (extrawidth > 0) {
     nscoord extraleft = extrawidth / 2;
