@@ -18,9 +18,9 @@
 # Contributor(s): 
 
 DEPTH		= ../../../..
-topsrcdir	= $(DEPTH)
-srcdir		= $(topsrcdir)/java/webclient/src_moz/gtk
-VPATH		= $(topsrcdir)/java/webclient/src_moz/gtk
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 JAVAHOME        = $(JDKHOME)
 

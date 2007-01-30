@@ -39,6 +39,9 @@
   <property file="../build.properties"/>         <!-- java-supplement local -->
   <property environment="myenv" />
 
+  <property name="objdir.native.path" value="${objdir}/java/dom" />
+
+
 <!-- ************ Compiler Defaults *************************************** -->
 
   <!-- Should Java compilations set the 'debug' compiler option? -->
@@ -85,30 +88,30 @@
 
   <target name="compile.src">
 
-    <exec os="SunOS" dir="${basedir}/src" failonerror="yes" 
+    <exec os="SunOS" dir="${objdir.native.path}/src" failonerror="yes" 
                      executable="gmake"/>
-    <exec os="Linux" dir="${basedir}/src" failonerror="yes" 
+    <exec os="Linux" dir="${objdir.native.path}/src" failonerror="yes" 
                      executable="make"/>
-    <exec os="Mac OS X" dir="${basedir}/src" failonerror="yes" 
+    <exec os="Mac OS X" dir="${objdir.native.path}/src" failonerror="yes" 
                      executable="make"/>
-    <exec os="Windows 2000" dir="${basedir}/src" executable="make" 
+    <exec os="Windows 2000" dir="${objdir.native.path}/src" executable="make" 
                      failonerror="yes"/>
 
   </target>
 
   <target name="compile.jni" depends="compile.javah.headers">
 
-    <exec os="SunOS" dir="${basedir}/jni" failonerror="yes" 
+    <exec os="SunOS" dir="${objdir.native.path}/jni" failonerror="yes" 
                      executable="gmake"/>
-    <exec os="Linux" dir="${basedir}/jni" failonerror="yes" 
+    <exec os="Linux" dir="${objdir.native.path}/jni" failonerror="yes" 
                      executable="make"/>
-    <exec os="Windows 2000" dir="${basedir}/jni" executable="make" 
+    <exec os="Windows 2000" dir="${objdir.native.path}/jni" executable="make" 
                      failonerror="yes"/>
 
   </target>
 
   <target name="compile.javah.headers" depends="compile.classes">
-    <javah destdir="jni" classpath="compile.classpath">
+    <javah destdir="${objdir.native.path}/jni" classpath="compile.classpath">
 	<class name="org.mozilla.dom.DOMAccessor"/>
 	<class name="org.mozilla.dom.AttrImpl"/>
 	<class name="org.mozilla.dom.CharacterDataImpl"/>
@@ -132,36 +135,36 @@
 
   <target name="clean" depends="clean.jni">
 
-    <exec os="SunOS" dir="${basedir}/src" executable="gmake" 
+    <exec os="SunOS" dir="${objdir.native.path}/src" executable="gmake" 
           failonerror="yes">
 
       <arg line="clobber_all"/>
 
     </exec>
-    <exec os="Linux" dir="${basedir}/src" executable="make" 
+    <exec os="Linux" dir="${objdir.native.path}/src" executable="make" 
           failonerror="yes">
 
       <arg line="clobber_all"/>
 
     </exec>
-    <exec os="Windows 2000" dir="${basedir}/src" executable="make" 
+    <exec os="Windows 2000" dir="${objdir.native.path}/src" executable="make" 
                      failonerror="yes">
       <arg line="clobber_all"/>
     </exec>
 
-    <exec os="SunOS" dir="${basedir}/jni" executable="gmake" 
+    <exec os="SunOS" dir="${objdir.native.path}/jni" executable="gmake" 
           failonerror="yes">
 
       <arg line="clobber_all"/>
 
     </exec>
-    <exec os="Linux" dir="${basedir}/jni" executable="make" 
+    <exec os="Linux" dir="${objdir.native.path}/jni" executable="make" 
           failonerror="yes">
 
       <arg line="clobber_all"/>
 
     </exec>
-    <exec os="Windows 2000" dir="${basedir}/jni" executable="make" 
+    <exec os="Windows 2000" dir="${objdir.native.path}/jni" executable="make" 
                      failonerror="yes">
       <arg line="clobber_all"/>
     </exec>
@@ -175,7 +178,7 @@
   <target name="clean.jni">
     <delete dir="${build.home}/org/mozilla/dom"/>
     <delete>
-      <fileset dir="jni" includes="org_mozilla_dom_*.h"/>
+      <fileset dir="${objdir.native.path}/jni" includes="org_mozilla_dom_*.h"/>
     </delete>
   </target>
 

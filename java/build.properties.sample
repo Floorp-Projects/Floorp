@@ -1,20 +1,18 @@
-# Uncomment the following to enable attaching the debugger on win32
-#debug.jvm.args=-Xdebug -Xrunjdwp:transport=dt_shmem,address=jdbconn,server=y,suspend=n
-# Uncomment the following to enable attaching the debugger on Unix
-#debug.jvm.args=-Xdebug -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n
-
-# Uncomment the right one for your system
-build.unix.classes=true
 build.win32.classes=true
 
-# On win32, make sure to use \\ for \
-build.home=/home/edburns/Projects/mozilla/NETSCAPE_7_0_RTM_RELEASE/mozilla/dist/classes
+objdir=C:\\Projects\\mozilla\\MOZILLA_NIH\\XULRUNNER_1_8_0_4\\mozilla\\win32_d.obj
+build.home=${objdir}/dist/classes
 
-# dependent jars
-junit.jar=<your junit 3.8.1 jar>
+compile.debug=true
 
+#native.waitForDebugger=true
 
-# When running under MSDev, program arguments are -Djava.library.path=D:\Projects\mozilla\MOZILLA_NIH\FIREFOX_1_5_0_1\mozilla\dist\bin;D:\Projects\mozilla\MOZILLA_NIH\FIREFOX_1_5_0_1\mozilla\dist\bin/components -DNSPR_LOG_MODULES=webclient:4,webclientstub:4 -DNSPR_LOG_FILE=logfile.txt -DBROWSER_BIN_DIR=D:\Projects\mozilla\MOZILLA_NIH\FIREFOX_1_5_0_1\mozilla\dist\bin -DMOZ_SRC=D:\Projects\mozilla\MOZILLA_NIH\FIREFOX_1_5_0_1 -Xdebug -Xrunjdwp:transport=dt_shmem,address=jdbconn,server=y,suspend=y -classpath D:\Files_2k\netbeans-5.0\ide6\modules\ext\junit-3.8.1.jar;D:\Projects\mozilla\MOZILLA_NIH\FIREFOX_1_5_0_1\mozilla\dist\classes;D:\Projects\mozilla\MOZILLA_NIH\FIREFOX_1_5_0_1\mozilla\dist\classes\test\classes;D:\Files_2k\netbeans-5.0\ide6\ant\lib\junit.jar;D:\Files_2k\netbeans-5.0\ide6\ant\lib\ant-launcher.jar;D:\Files_2k\netbeans-5.0\ide6\ant\lib\ant.jar;D:\Files_2k\netbeans-5.0\ide6\ant\lib\ant-junit.jar org.apache.tools.ant.taskdefs.optional.junit.JUnitTestRunner org.mozilla.webclient.BrowserControlFactoryTest filtertrace=true haltOnError=true haltOnFailure=true formatter=org.apache.tools.ant.taskdefs.optional.junit.SummaryJUnitResultFormatter showoutput=false formatter=org.apache.tools.ant.taskdefs.optional.junit.PlainJUnitResultFormatter propsfile=D:\Projects\mozilla\MOZILLA_NIH\FIREFOX_1_5_0_1\mozilla\java\webclient\junit.properties
+#debug.jvm.args=-Xdebug -Xrunjdwp:transport=dt_shmem,address=jdbconn,server=y,suspend=y
+
+nbide.home=C:\\PROGRA~1\\netbeans-5.5
+junit.jar=${nbide.home}/ide7/modules/ext/junit-3.8.1.jar
+
+moz.install.dir=
 
 # source level for compilation
 compile.source=1.5

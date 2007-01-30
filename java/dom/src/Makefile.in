@@ -18,8 +18,9 @@
 # Contributor(s): 
 
 DEPTH		= ../../..
-topsrcdir	= $(DEPTH)
-srcdir		= .
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 

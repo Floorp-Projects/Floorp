@@ -39,6 +39,9 @@
   <property file="../build.properties"/>         <!-- java-supplement local -->
   <property environment="myenv" />
 
+  <property name="objdir.native.path" value="${objdir}/java/webclient" />
+
+
 <!-- ************ Compiler Defaults *************************************** -->
 
   <!-- Should Java compilations set the 'debug' compiler option? -->
@@ -134,18 +137,18 @@
 
   <target name="compile.src_share" depends="compile.javah.headers">
 
-    <exec os="SunOS" dir="${basedir}/src_share" failonerror="yes" 
+    <exec os="SunOS" dir="${objdir.native.path}/src_share" failonerror="yes" 
                      executable="gmake"/>
-    <exec os="Linux" dir="${basedir}/src_share" failonerror="yes" 
+    <exec os="Linux" dir="${objdir.native.path}/src_share" failonerror="yes" 
                      executable="make"/>
-    <exec os="Windows 2000" dir="${basedir}/src_share" executable="make" 
+    <exec os="Windows 2000" dir="${objdir.native.path}/src_share" executable="make" 
                      failonerror="yes"/>
 
   </target>
 
   <target name="compile.javah.headers" depends="compile.classes_spec,compile.javah.canvas.headers">
 
-    <javah destdir="${basedir}/src_share"
+    <javah destdir="${objdir.native.path}/src_share"
            class="org.mozilla.webclient.impl.wrapper_native.BookmarksImpl,org.mozilla.webclient.impl.wrapper_native.ProfileManagerImpl,org.mozilla.webclient.impl.wrapper_native.PreferencesImpl,org.mozilla.webclient.impl.wrapper_native.CurrentPageImpl,org.mozilla.webclient.impl.wrapper_native.HistoryImpl,org.mozilla.webclient.impl.wrapper_native.WrapperFactoryImpl,org.mozilla.webclient.impl.wrapper_native.NavigationImpl,org.mozilla.webclient.impl.wrapper_native.RDFEnumeration,org.mozilla.webclient.impl.wrapper_native.RDFTreeNode,org.mozilla.webclient.impl.wrapper_native.ISupportsPeer,org.mozilla.webclient.impl.wrapper_native.WindowControlImpl,org.mozilla.webclient.impl.wrapper_native.NativeEventThread,org.mozilla.webclient.impl.wrapper_native.EventRegistrationImpl,org.mozilla.webclient.impl.wrapper_native.NativeInputStream">
       <classpath refid="compile.classpath"/>
     </javah>
@@ -156,7 +159,9 @@
 
   <target name="compile.unix.canvas.headers" if="build.unix.classes">
 
-    <javah destdir="${basedir}/src_moz/gtk"
+    <mkdir dir="${objdir.native.path}/src_moz/gtk" />
+
+    <javah destdir="${objdir.native.path}/src_moz/gtk"
       class="org.mozilla.webclient.impl.wrapper_native.GtkBrowserControlCanvas">
       <classpath refid="compile.classpath"/>
     </javah>
@@ -165,7 +170,9 @@
 
   <target name="compile.win32.canvas.headers" if="build.win32.classes">
 
-    <javah destdir="${basedir}/src_moz/win32"
+    <mkdir dir="${objdir.native.path}/src_moz/win32" />
+
+    <javah destdir="${objdir.native.path}/src_moz/win32"
       class="org.mozilla.webclient.impl.wrapper_native.Win32BrowserControlCanvas">
       <classpath refid="compile.classpath"/>
     </javah>
@@ -174,7 +181,9 @@
 
   <target name="compile.mac.canvas.headers" if="build.mac.classes">
 
-    <javah destdir="${basedir}/src_moz/cocoa"
+    <mkdir dir="${objdir.native.path}/src_moz/cocoa" />
+
+    <javah destdir="${objdir.native.path}/src_moz/cocoa"
       class="org.mozilla.webclient.impl.wrapper_native.CocoaBrowserControlCanvas">
       <classpath refid="compile.classpath"/>
     </javah>
@@ -184,16 +193,16 @@
 
   <target name="compile.src_moz" depends="compile.src_share">
 
-    <exec os="SunOS" dir="${basedir}/src_moz" executable="gmake" 
+    <exec os="SunOS" dir="${objdir.native.path}/src_moz" executable="gmake" 
                      failonerror="yes">
     </exec>
-    <exec os="Linux" dir="${basedir}/src_moz" executable="make" 
+    <exec os="Linux" dir="${objdir.native.path}/src_moz" executable="make" 
                      failonerror="yes">
     </exec>
-    <exec os="Mac OS X" dir="${basedir}/src_moz" executable="make" 
+    <exec os="Mac OS X" dir="${objdir.native.path}/src_moz" executable="make" 
                      failonerror="yes">
     </exec>
-    <exec os="Windows 2000" dir="${basedir}/src_moz" executable="make" 
+    <exec os="Windows 2000" dir="${objdir.native.path}/src_moz" executable="make" 
                      failonerror="yes"/>
 
   </target>
@@ -201,7 +210,7 @@
   <target name="compile.src_ie" depends="compile.src_share">
 
     <!-- PENDING(edburns): re-enable IE support
-    <exec os="Windows 2000" dir="${basedir}/src_ie" executable="make" 
+    <exec os="Windows 2000" dir="${objdir.native.path}/src_ie" executable="make" 
                      failonerror="yes"/>
     -->
 
@@ -222,7 +231,7 @@ if="build.win32.classes">
       </not>
     </condition>
 
-    <echo file="${basedir}/src_moz/runem.bat">set CLASSPATH=${build.home};%CLASSPATH%
+    <echo file="${objdir.native.path}/src_moz/runem.bat">set CLASSPATH=${build.home};%CLASSPATH%
 set PATH=%PATH%;${build.home}\..\bin;${build.home}\..\bin\components;${myenv.MOZ_JDKHOME}\jre\bin
 ${myenv.MOZ_JDKHOME}/bin/java ${debug.options} org.mozilla.webclient.test.EmbeddedMozillaImpl ${build.home}\..\bin %1%
     </echo>
@@ -240,11 +249,11 @@ if="build.unix.classes">
       </not>
     </condition>
 
-    <echo file="${basedir}/src_moz/runem">export CLASSPATH=${build.home}:$CLASSPATH
+    <echo file="${objdir.native.path}/src_moz/runem">export CLASSPATH=${build.home}:$CLASSPATH
 export LD_LIBRARY_PATH=${build.home}/../bin:${build.home}/../bin/components:$LD_LIBRARY_PATH:;${myenv.MOZ_JDKHOME}/jre/bin
 ${myenv.MOZ_JDKHOME}/bin/java ${debug.options} org.mozilla.webclient.test.EmbeddedMozillaImpl ${build.home}/../bin $*
     </echo>
-    <chmod perm="755" file="${basedir}/src_moz/runem"/>
+    <chmod perm="755" file="${objdir.native.path}/src_moz/runem"/>
 
   </target>
 
@@ -260,11 +269,11 @@ if="build.mac.classes">
       </not>
     </condition>
 
-    <echo file="${basedir}/src_moz/runem">export CLASSPATH=${build.home}:$CLASSPATH
+    <echo file="${objdir.native.path}/src_moz/runem">export CLASSPATH=${build.home}:$CLASSPATH
 export LD_LIBRARY_PATH=${build.home}/../bin:${build.home}/../bin/components:$LD_LIBRARY_PATH:;${myenv.MOZ_JDKHOME}/jre/bin
 ${myenv.MOZ_JDKHOME}/bin/java ${debug.options} org.mozilla.webclient.test.EmbeddedMozillaImpl ${build.home}/../bin $*
     </echo>
-    <chmod perm="755" file="${basedir}/src_moz/runem"/>
+    <chmod perm="755" file="${objdir.native.path}/src_moz/runem"/>
 
   </target>
   
@@ -280,14 +289,14 @@ ${myenv.MOZ_JDKHOME}/bin/java ${debug.options} org.mozilla.webclient.test.Embedd
 
     <ant antfile="build-tests.xml" target="clean"/>   
     <delete>
-      <fileset dir="${basedir}/src_moz">
+      <fileset dir="${objdir.native.path}/src_moz">
         <include name="**/*BrowserControlCanvas.h"/>
         <exclude name="motif/MotifBrowserControlCanvas.h"/>
       </fileset>
     </delete>
 
     <delete >
-      <fileset dir="${basedir}/src_share">
+      <fileset dir="${objdir.native.path}/src_share">
         <include name="*.h"/>
         <exclude name="bal_util.h"/>
         <exclude name="jni_util_export.h"/>
@@ -296,52 +305,52 @@ ${myenv.MOZ_JDKHOME}/bin/java ${debug.options} org.mozilla.webclient.test.Embedd
     </delete>
 
     <delete >
-      <fileset dir="${basedir}/src_moz">
+      <fileset dir="${objdir.native.path}/src_moz">
         <include name="*.ilk"/>
       </fileset>
     </delete>
 
 
     <delete >
-      <fileset dir="${basedir}/src_ie">
+      <fileset dir="${objdir.native.path}/src_ie">
         <include name="*.ilk"/>
       </fileset>
     </delete>
 
-    <exec os="SunOS" dir="${basedir}/src_moz" executable="gmake" 
+    <exec os="SunOS" dir="${objdir.native.path}/src_moz" executable="gmake" 
           failonerror="yes">
 
       <arg line="clobber_all"/>
 
     </exec>
-    <exec os="Linux" dir="${basedir}/src_moz" executable="make" 
+    <exec os="Linux" dir="${objdir.native.path}/src_moz" executable="make" 
           failonerror="yes">
 
       <arg line="clobber_all"/>
 
     </exec>
-    <exec os="Windows 2000" dir="${basedir}/src_moz" executable="make" 
+    <exec os="Windows 2000" dir="${objdir.native.path}/src_moz" executable="make" 
                      failonerror="yes">
       <arg line="clobber_all"/>
     </exec>
-    <exec os="Windows 2000" dir="${basedir}/src_ie" executable="make" 
+    <exec os="Windows 2000" dir="${objdir.native.path}/src_ie" executable="make" 
                      failonerror="yes">
       <arg line="clobber_all"/>
     </exec>
 
-    <exec os="SunOS" dir="${basedir}/src_share" executable="gmake"
+    <exec os="SunOS" dir="${objdir.native.path}/src_share" executable="gmake"
           failonerror="yes">
 
       <arg line="clobber_all"/>
 
     </exec>
-    <exec os="Linux" dir="${basedir}/src_share" executable="make"
+    <exec os="Linux" dir="${objdir.native.path}/src_share" executable="make"
           failonerror="yes">
 
       <arg line="clobber_all"/>
 
     </exec>
-    <exec os="Windows 2000" dir="${basedir}/src_share" executable="make" 
+    <exec os="Windows 2000" dir="${objdir.native.path}/src_share" executable="make" 
                      failonerror="yes">
       <arg line="clobber_all"/>
     </exec>
@@ -361,6 +370,13 @@ ${myenv.MOZ_JDKHOME}/bin/java ${debug.options} org.mozilla.webclient.test.Embedd
     
   </target>
 
+  <target name="run.cardemo" depends="prepare" description="Run unit tests">
+
+    <ant antfile="build-tests.xml" target="run.cardemo"/>
+    
+  </target>
+
+
   <target name="run.test.browser" depends="prepare" description="Run the test browser">
 
     <ant antfile="build-tests.xml" target="run.test.browser"/>
@@ -375,3 +391,4 @@ ${myenv.MOZ_JDKHOME}/bin/java ${debug.options} org.mozilla.webclient.test.Embedd
 
 
 </project>
+

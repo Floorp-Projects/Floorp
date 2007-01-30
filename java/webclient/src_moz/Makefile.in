@@ -137,7 +137,7 @@ CMMSRCS = cocoa/CocoaBrowserControlCanvas.mm
 CPPSRCS += cocoa/CocoaBrowserControlCanvasImpl.cpp
 DLL_SUFFIX = .jnilib
 #DSO_LDOPTS += -L/System/Library/Frameworks/JavaVM.Framework/Libraries -ljawt
-DSO_LDOPTS += -framework JavaVM -framework AppKit -lobjc -L../src_share
+DSO_LDOPTS += -framework JavaVM -framework AppKit -lobjc -L$(srcdir)/../src_share
 else
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS += \
@@ -148,6 +148,7 @@ CPPSRCS += \
 	gtk/GtkBrowserControlCanvas.cpp \
 	$(NULL)
 DIRS = gtk
+INCLUDES += -I./gtk
 endif
 endif
 endif
@@ -197,17 +198,17 @@ endif
 
 ifeq ($(OS_ARCH),Linux)
 INCLUDES := -I$(MOZ_JDKHOME)/include -I$(MOZ_JDKHOME)/include/linux $(INCLUDES) \
-       -I$(DEPTH)/widget/src/gtk -I../src_share
+       -I$(DEPTH)/widget/src/gtk -I$(srcdir)/../src_share -I../src_share
 else
 ifeq ($(OS_ARCH),WINNT)
 INCLUDES := -I$(MOZ_JDKHOME)/include -I$(MOZ_JDKHOME)/include/win32 $(INCLUDES) \
-       -I../src_share -I.
+       -I$(srcdir)/../src_share -I../src_share -I. -I./win32
 else
 ifeq ($(OS_ARCH),Darwin)
-INCLUDES := -I$(MOZ_JDKHOME)/include $(INCLUDES) -I../src_share -I.
+INCLUDES := -I$(MOZ_JDKHOME)/include $(INCLUDES) -I$(srcdir)/../src_share -I../src_share -I.
 else
 INCLUDES := -I$(MOZ_JDKHOME)/include -I$(MOZ_JDKHOME)/include/solaris $(INCLUDES) \
-	-I$(DEPTH)/widget/src/gtk -I../src_share
+	-I$(DEPTH)/widget/src/gtk -I$(srcdir)/../src_share -I../src_share
 endif
 endif
 endif

@@ -193,6 +193,28 @@
 
     </target>
 
+    <target name="run.cardemo" depends="compile.test">
+
+        <junit printsummary="yes" haltonfailure="yes" haltonerror="yes" fork="yes">
+            <jvmarg value="-Djava.library.path=${myenv.MOZILLA_FIVE_HOME}${PATH_SEP}${myenv.MOZILLA_FIVE_HOME}/components"/>
+            <jvmarg value="-DNSPR_LOG_MODULES=${myenv.NSPR_LOG_MODULES}"/>
+            <jvmarg value="-DNSPR_LOG_FILE=${myenv.NSPR_LOG_FILE}"/>
+            <jvmarg value="-DMOZ_SRC=${myenv.MOZ_SRC}"/>
+            <jvmarg value="-DBROWSER_BIN_DIR=${myenv.MOZILLA_FIVE_HOME}"/>
+            <sysproperty key="native.waitForDebugger" 
+                         value="${native.waitForDebugger}"/>
+            <jvmarg line="${debug.jvm.args}"/>
+            <jvmarg line="-Djava.util.logging.config.file=${basedir}${FILE_PATH_SEP}..${FILE_PATH_SEP}logging.properties"/>
+
+            <classpath refid="test.classpath"/>
+
+            <formatter type="plain" usefile="false"/>
+            <test name="org.mozilla.webclient.CarDemoTest"/>
+        </junit>
+
+    </target>
+
+
     <target name="run.test.browser" depends="compile.test">
 
         <java classname="org.mozilla.webclient.test.TestBrowser" fork="true">

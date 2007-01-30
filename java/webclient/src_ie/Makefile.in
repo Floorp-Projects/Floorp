@@ -18,9 +18,9 @@
 # Contributor(s):  Ron Capelli <capelli@us.ibm.com>
 
 DEPTH		= ../../..
-topsrcdir	= $(DEPTH)
-srcdir		= $(topsrcdir)/java/webclient/src_ie
-VPATH		= $(topsrcdir)/java/webclient/src_ie
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 
 include $(DEPTH)/config/autoconf.mk

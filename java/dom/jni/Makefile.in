@@ -18,9 +18,9 @@
 # Contributor(s): 
 
 DEPTH		= ../../..
-topsrcdir	= $(DEPTH)
-srcdir		= $(topsrcdir)/java/dom/jni
-VPATH		= $(topsrcdir)/java/dom/jni
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 JAVAHOME        = $(MOZ_JDKHOME)
 
@@ -44,7 +44,6 @@ REQUIRES	= xpcom \
  		  $(NULL)
  
 include $(DEPTH)/config/autoconf.mk
-
 MODULE          = javadomjni
 LIBRARY_NAME	= javadomjni
 
@@ -80,7 +79,7 @@ include $(topsrcdir)/config/config.mk
 DEFINES += -DMOZILLA_INTERNAL_API
 
 ifeq ($(OS_ARCH),Darwin)
- INCLUDES += -I$(MOZ_JDKHOME)/include -I.
+ INCLUDES += -I$(MOZ_JDKHOME)/include
  DSO_LDOPTS += -L/System/Library/Frameworks/JavaVM.Framework/Libraries -ljvm_compat
  DLL_SUFFIX = .jnilib
 else
@@ -94,6 +93,8 @@ INCLUDES	+= -I$(JAVAHOME)/include -I$(JAVAHOME)/include/solaris
 endif
 endif
 endif
+
+INCLUDES += -I.
 
 include $(topsrcdir)/config/rules.mk
 

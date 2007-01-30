@@ -18,9 +18,9 @@
 # Contributor(s): 
 
 DEPTH		= ../../..
-topsrcdir	= $(DEPTH)
-srcdir		= $(topsrcdir)/java/webclient/src_share
-VPATH		= $(topsrcdir)/java/webclient/src_share
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
