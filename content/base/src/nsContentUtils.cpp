@@ -3383,7 +3383,7 @@ nsContentUtils::IsInSameAnonymousTree(nsINode* aNode,
     return aContent->GetBindingParent() == nsnull;
   }
 
-  return NS_STATIC_CAST(nsIContent*, aPossibleAncestor)->GetBindingParent() ==
-         aPossibleDescendant->GetBindingParent();
+  return NS_STATIC_CAST(nsIContent*, aNode)->GetBindingParent() ==
+         aContent->GetBindingParent();
  
 }
