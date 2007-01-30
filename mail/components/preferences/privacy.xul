@@ -138,9 +138,11 @@
                     label="&enablePhishingDetector1.label;" accesskey="&enablePhishingDetector1.accesskey;"
                     oncommand="gPrivacyPane.updateDownloadedPhishingListState()" 
                     preference="mail.phishing.detection.enabled"/>
+<!--          
           <checkbox id="useDownloadedList" class="indent" label="&useDownloadedList.label;"
                     accesskey="&useDownloadedList.accesskey;" 
                     preference="browser.safebrowsing.enabled"/>
+-->                    
         </tabpanel>
 
         <!-- Anti Virus --> 
