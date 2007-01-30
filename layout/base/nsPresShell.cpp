@@ -90,7 +90,7 @@
 #include "nsISelection.h"
 #include "nsISelectionController.h"
 #include "nsLayoutCID.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"

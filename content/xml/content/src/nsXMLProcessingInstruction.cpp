@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsGenericElement.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsUnicharUtils.h"
 #include "nsXMLProcessingInstruction.h"
 #include "nsParserUtils.h"

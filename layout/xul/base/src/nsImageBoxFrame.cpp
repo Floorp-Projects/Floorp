@@ -45,7 +45,7 @@
 #include "nsImageBoxFrame.h"
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsCOMPtr.h"

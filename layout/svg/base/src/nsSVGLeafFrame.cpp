@@ -35,7 +35,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsFrame.h"
-#include "nsLayoutAtoms.h"
 
 class nsSVGLeafFrame : public nsFrame
 {

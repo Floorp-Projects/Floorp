@@ -153,7 +153,7 @@ public:
   /**
    * Get the "type" of the frame
    *
-   * @see nsLayoutAtoms::tableOuterFrame
+   * @see nsGkAtoms::tableOuterFrame
    */
   virtual nsIAtom* GetType() const;
 

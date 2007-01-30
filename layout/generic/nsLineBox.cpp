@@ -45,7 +45,7 @@
 #include "nsLineLayout.h"
 #include "prprf.h"
 #include "nsBlockFrame.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsFrameManager.h"
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"

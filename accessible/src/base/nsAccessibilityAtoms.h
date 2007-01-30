@@ -65,4 +65,4 @@ public:
 #undef ACCESSIBILITY_ATOM
 };
 
-#endif /* nsLayoutAtoms_h___ */
+#endif /* nsAccessibilityAtoms_h___ */

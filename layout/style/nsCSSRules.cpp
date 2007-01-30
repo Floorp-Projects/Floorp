@@ -47,7 +47,6 @@
 #include "nsIURL.h"
 
 #include "nsCSSRule.h"
-#include "nsLayoutAtoms.h"
 #include "nsICSSStyleSheet.h"
 
 #include "nsCOMPtr.h"

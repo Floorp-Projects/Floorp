@@ -44,7 +44,7 @@
 #include "nsPresContext.h"
 #include "nsIViewManager.h"
 #include "nsINodeInfo.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIView.h"
 #include "nsHTMLParts.h"
 

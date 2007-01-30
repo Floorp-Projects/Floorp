@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsPopupSetFrame.h"
 #include "nsIMenuParent.h"
 #include "nsMenuFrame.h"

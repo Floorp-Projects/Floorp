@@ -41,7 +41,7 @@
 
 #include "nsBidiPresUtils.h"
 #include "nsTextFragment.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsIServiceManager.h"

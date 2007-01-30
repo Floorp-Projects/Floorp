@@ -42,7 +42,7 @@
 #include "nsIDOMSVGGElement.h"
 #include "nsPresContext.h"
 #include "nsSVGContainerFrame.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 
 typedef nsSVGDisplayContainerFrame nsSVGGenericContainerFrameBase;
 
@@ -61,7 +61,7 @@ public:
   /**
    * Get the "type" of the frame
    *
-   * @see nsLayoutAtoms::svgGenericContainerFrame
+   * @see nsGkAtoms::svgGenericContainerFrame
    */
   virtual nsIAtom* GetType() const;
 

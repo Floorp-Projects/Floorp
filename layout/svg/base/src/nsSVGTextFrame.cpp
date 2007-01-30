@@ -49,7 +49,7 @@
 #include "nsISVGTextContentMetrics.h"
 #include "nsSVGRect.h"
 #include "nsSVGMatrix.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsSVGTextPathFrame.h"
 #include "nsSVGPathElement.h"
 #include "nsSVGUtils.h"

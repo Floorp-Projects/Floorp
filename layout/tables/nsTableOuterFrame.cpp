@@ -44,7 +44,7 @@
 #include "nsCSSRendering.h"
 #include "nsIContent.h"
 #include "prinrval.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
 #ifdef ACCESSIBILITY

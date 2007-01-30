@@ -46,7 +46,7 @@
 
 #ifdef IBMBIDI
 #include "nsCOMPtr.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsILineIterator.h"
 #include "nsBidiPresUtils.h"
 #endif // IBMBIDI

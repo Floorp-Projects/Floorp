@@ -41,7 +41,7 @@
 #include "nsIBindingManager.h"
 #include "nsIDOMNode.h"
 #include "nsIParser.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsHTMLTokens.h"
 #include "nsIURI.h"

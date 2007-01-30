@@ -48,7 +48,7 @@
 #include "nsSVGOuterSVGFrame.h"
 #include "nsISVGValueUtils.h"
 #include "nsRegion.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
 #include "nsSVGUtils.h"
 #include "nsIURI.h"

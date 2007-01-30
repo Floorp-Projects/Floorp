@@ -57,7 +57,7 @@
 #include "nsPresContext.h"
 #include "nsIFontMetrics.h"
 #include "nsIRenderingContext.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsPlaceholderFrame.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"

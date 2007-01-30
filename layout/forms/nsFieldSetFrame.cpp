@@ -52,7 +52,7 @@
 #include "nsPresContext.h"
 #include "nsFrameManager.h"
 #include "nsHTMLParts.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsFont.h"
 #include "nsCOMPtr.h"

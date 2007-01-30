@@ -47,7 +47,7 @@
 #endif
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
 #include "nsContentUtils.h"

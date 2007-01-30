@@ -94,7 +94,7 @@ public:
   /**
    * Get the "type" of the frame
    *
-   * @see nsLayoutAtoms::tableColFrame
+   * @see nsGkAtoms::tableColFrame
    */
   virtual nsIAtom* GetType() const;
   

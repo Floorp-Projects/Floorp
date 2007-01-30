@@ -41,7 +41,7 @@
 #include "nsIFrame.h"
 #include "nsSVGMatrix.h"
 #include "nsSVGClipPathFrame.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsSVGUtils.h"
 #include "nsISVGValueUtils.h"
 #include "nsSVGGraphicElement.h"

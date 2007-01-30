@@ -61,9 +61,8 @@
 #include "nsGenericElement.h"  // for nsDOMEventRTTearoff
 #include "nsGenericHTMLElement.h"
 #include "nsGlobalWindow.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsImageFrame.h"
-#include "nsLayoutAtoms.h"
 #include "nsLayoutStylesheetCache.h"
 #include "nsNodeInfo.h"
 #include "nsRange.h"
@@ -74,7 +73,6 @@
 #include "nsStyleSet.h"
 #include "nsTextControlFrame.h"
 #include "nsTextTransformer.h"
-#include "nsXBLAtoms.h"
 #include "nsXBLWindowKeyHandler.h"
 #include "txMozillaXSLTProcessor.h"
 #include "nsDOMStorage.h"

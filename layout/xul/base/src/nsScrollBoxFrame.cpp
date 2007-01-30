@@ -40,7 +40,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsGUIEvent.h"
 #include "nsButtonBoxFrame.h"
 #include "nsITimer.h"

@@ -37,7 +37,7 @@
 
 #include "nsIDOMCDATASection.h"
 #include "nsGenericDOMDataNode.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
 

@@ -57,7 +57,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "prmem.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
 #include "nsIURL.h"

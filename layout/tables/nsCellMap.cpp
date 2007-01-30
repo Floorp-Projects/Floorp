@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsLayoutAtoms.h"
 #include "nsVoidArray.h"
 #include "nsCellMap.h"
 #include "nsTableFrame.h"

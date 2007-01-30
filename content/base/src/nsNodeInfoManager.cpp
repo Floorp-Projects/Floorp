@@ -49,7 +49,7 @@
 #include "nsIURI.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsComponentManagerUtils.h"
 
 PRUint32 nsNodeInfoManager::gNodeManagerCount;

@@ -55,9 +55,7 @@
 #include "nsUnicharUtils.h"
 #include "nsICaseConversion.h"
 #include "prenv.h"
-#ifdef IBMBIDI
-#include "nsLayoutAtoms.h"
-#endif
+#include "nsGkAtoms.h"
 
 nsICaseConversion* nsTextTransformer::gCaseConv = nsnull;
 PRBool nsTextTransformer::sWordSelectListenerPrefChecked = PR_FALSE;

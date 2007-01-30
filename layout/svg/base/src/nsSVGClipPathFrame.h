@@ -68,7 +68,7 @@ class nsSVGClipPathFrame : public nsSVGClipPathFrameBase
   /**
    * Get the "type" of the frame
    *
-   * @see nsLayoutAtoms::svgClipPathFrame
+   * @see nsGkAtoms::svgClipPathFrame
    */
   virtual nsIAtom* GetType() const;
 

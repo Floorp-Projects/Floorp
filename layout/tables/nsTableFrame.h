@@ -46,6 +46,7 @@
 #include "nsTableColFrame.h"
 #include "nsTableColGroupFrame.h"
 #include "nsCellMap.h"
+#include "nsGkAtoms.h"
 
 class nsTableCellFrame;
 class nsTableColFrame;
@@ -68,6 +69,11 @@ enum nsPixelRound {eAlwaysRoundUp=0, eAlwaysRoundDown, eRoundUpIfHalfOrMore};
 #define NS_TABLE_FRAME_OVERFLOW_LIST_INDEX 1
 #define NS_TABLE_FRAME_LAST_LIST_INDEX    NS_TABLE_FRAME_OVERFLOW_LIST_INDEX
 
+static inline PRBool IS_TABLE_CELL(nsIAtom* frameType) {
+  return nsGkAtoms::tableCellFrame == frameType ||
+    nsGkAtoms::bcTableCellFrame == frameType;
+}
+
 /* ============================================================================ */
 
 /** nsTableFrame maps the inner portion of a table (everything except captions.)
@@ -78,7 +84,7 @@ enum nsPixelRound {eAlwaysRoundUp=0, eAlwaysRoundDown, eRoundUpIfHalfOrMore};
   * named child list:
   * - "ColGroup-list" which contains the col group frames
   *
-  * @see nsLayoutAtoms::colGroupList
+  * @see nsGkAtoms::colGroupList
   */
 class nsTableFrame : public nsHTMLContainerFrame, public nsITableLayout
 {
@@ -319,7 +325,7 @@ public:
   /**
    * Get the "type" of the frame
    *
-   * @see nsLayoutAtoms::tableFrame
+   * @see nsGkAtoms::tableFrame
    */
   virtual nsIAtom* GetType() const;
 

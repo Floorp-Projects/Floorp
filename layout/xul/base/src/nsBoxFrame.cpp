@@ -71,7 +71,7 @@
 #include "nsCOMPtr.h"
 #include "nsUnitConversion.h"
 #include "nsINameSpaceManager.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsSpaceManager.h"
 #include "nsHTMLParts.h"

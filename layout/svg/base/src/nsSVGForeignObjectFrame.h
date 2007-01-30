@@ -87,7 +87,7 @@ public:
   /**
    * Get the "type" of the frame
    *
-   * @see nsLayoutAtoms::svgForeignObjectFrame
+   * @see nsGkAtoms::svgForeignObjectFrame
    */
   virtual nsIAtom* GetType() const;
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const;

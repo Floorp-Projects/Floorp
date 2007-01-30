@@ -49,7 +49,7 @@
 #include "nsIViewManager.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsGfxScrollFrame.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsISupportsArray.h"
 #include "nsIDocument.h"

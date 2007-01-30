@@ -74,7 +74,7 @@
 #include "nsIPrintContext.h"
 #include "nsIPrintPreviewContext.h"
 #endif // USE_QI_IN_SUPPRESS_EVENT_HANDLERS
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
 #include "nsIComponentManager.h"
 #include "nsIView.h"

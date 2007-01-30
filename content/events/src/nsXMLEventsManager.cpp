@@ -38,7 +38,7 @@
 
 #include "nsIDOMMutationEvent.h"
 #include "nsXMLEventsManager.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventReceiver.h"

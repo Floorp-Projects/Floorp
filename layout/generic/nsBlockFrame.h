@@ -135,7 +135,7 @@ extern const nsIID kBlockFrameCID;
  * The block frame has an additional named child list:
  * - "Absolute-list" which contains the absolutely positioned frames
  *
- * @see nsLayoutAtoms::absoluteList
+ * @see nsGkAtoms::absoluteList
  */ 
 class nsBlockFrame : public nsBlockFrameSuper
 {

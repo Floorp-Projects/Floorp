@@ -46,7 +46,6 @@
 #include "nsAreaFrame.h"
 #include "nsLineLayout.h"
 #include "nsPresContext.h"
-#include "nsHTMLAtoms.h"
 #include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"

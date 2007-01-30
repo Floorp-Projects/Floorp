@@ -85,8 +85,7 @@
 #include "nsTextRunTransformations.h"
 
 #include "nsTextFragment.h"
-#include "nsHTMLAtoms.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsFrameSelection.h"
 #include "nsISelection.h"
 #include "nsIDOMRange.h"

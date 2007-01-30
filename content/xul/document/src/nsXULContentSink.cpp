@@ -95,7 +95,7 @@
 
 #include "nsIExpatSink.h"
 #include "nsUnicharUtils.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentUtils.h"
 #include "nsAttrName.h"

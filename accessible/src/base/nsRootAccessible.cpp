@@ -71,7 +71,6 @@
 #include "nsISelectionPrivate.h"
 #include "nsIServiceManager.h"
 #include "nsIViewManager.h"
-#include "nsLayoutAtoms.h"
 #include "nsPIDOMWindow.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsReadableUtils.h"

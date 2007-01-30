@@ -43,7 +43,7 @@
 #include "nsCOMPtr.h"
 #include "nsViewportFrame.h"
 #include "nsHTMLParts.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIViewManager.h"
 #include "nsIScrollableFrame.h"
 #include "nsIDeviceContext.h"

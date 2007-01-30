@@ -74,7 +74,7 @@
 // for IBMBIDI
 #include "nsFrameTraversal.h"
 #include "nsILineIterator.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIFrameTraversal.h"
 #include "nsLayoutUtils.h"
 #include "nsLayoutCID.h"

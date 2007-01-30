@@ -69,10 +69,6 @@ REQUIRES	= xpcom \
 		  locale \
 		  $(NULL)
 
-EXPORTS		= \
-		nsXBLAtoms.h \
-		$(NULL)
-
 CPPSRCS		= \
     nsXBLBinding.cpp \
     nsXBLPrototypeBinding.cpp \

@@ -51,7 +51,7 @@
 #include "nsIDOMAttr.h"
 #include "nsDOMError.h"
 #include "nsIDOM3Node.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsDOMString.h"
 #include "nsIDOMUserDataHandler.h"
 

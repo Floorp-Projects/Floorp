@@ -68,7 +68,6 @@
 #include "nsIChannel.h"
 #include "nsIStreamListener.h"
 
-#include "nsLayoutAtoms.h"
 #include "nsIFrame.h"
 #include "nsIDOMNode.h"
 

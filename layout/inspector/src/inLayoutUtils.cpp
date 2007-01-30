@@ -51,8 +51,6 @@
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsPresContext.h"
-#include "nsXULAtoms.h"
-#include "nsHTMLAtoms.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 

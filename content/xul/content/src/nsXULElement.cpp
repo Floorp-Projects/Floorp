@@ -134,7 +134,7 @@
 #include "nsDOMAttributeMap.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsGenericHTMLElement.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsXULContentUtils.h"
 #include "nsNodeUtils.h"
 

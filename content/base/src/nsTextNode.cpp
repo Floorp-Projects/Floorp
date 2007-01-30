@@ -41,7 +41,6 @@
 
 #include "nsGenericDOMDataNode.h"
 #include "nsIDOMText.h"
-#include "nsLayoutAtoms.h"
 #include "nsContentUtils.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"

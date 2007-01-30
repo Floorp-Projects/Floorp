@@ -45,7 +45,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocument.h"
-#include "nsLayoutAtoms.h" // XXX only needed for nsGkAtoms::id
+#include "nsGkAtoms.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDOMEvent.h"
 #include "nsGUIEvent.h"

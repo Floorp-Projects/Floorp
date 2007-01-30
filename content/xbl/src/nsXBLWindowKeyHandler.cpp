@@ -40,7 +40,6 @@
 #include "nsCOMPtr.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsXBLWindowKeyHandler.h"
-#include "nsXBLAtoms.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
 #include "nsIDOMNSUIEvent.h"
@@ -49,10 +48,9 @@
 #include "nsIDOMNSEvent.h"
 #include "nsXBLService.h"
 #include "nsIServiceManager.h"
-#include "nsHTMLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIXBLDocumentInfo.h"
 #include "nsIDOMElement.h"
-#include "nsXBLAtoms.h"
 #include "nsINativeKeyBindings.h"
 #include "nsIController.h"
 #include "nsIControllers.h"
@@ -72,7 +70,6 @@
 #include "nsIPresShell.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsISelectionController.h"
-#include "nsXULAtoms.h"
 
 static nsINativeKeyBindings *sNativeEditorBindings = nsnull;
 
@@ -215,7 +212,7 @@ BuildHandlerChain(nsIContent* aContent, nsXBLPrototypeHandler** aResult)
   for (PRUint32 j = aContent->GetChildCount(); j--; ) {
     nsIContent *key = aContent->GetChildAt(j);
 
-    if (key->NodeInfo()->Equals(nsXBLAtoms::key, kNameSpaceID_XUL)) {
+    if (key->NodeInfo()->Equals(nsGkAtoms::key, kNameSpaceID_XUL)) {
       nsXBLPrototypeHandler* handler = new nsXBLPrototypeHandler(key);
 
       if (!handler)
@@ -368,11 +365,11 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMEvent* aKeyEvent, nsIAtom* aEventType)
     }
 
     PRBool handled;
-    if (aEventType == nsXBLAtoms::keypress) {
+    if (aEventType == nsGkAtoms::keypress) {
       keyEvent->GetCharCode(&nativeEvent.charCode);
       handled = sNativeEditorBindings->KeyPress(nativeEvent,
                                                 DoCommandCallback, controllers);
-    } else if (aEventType == nsXBLAtoms::keyup) {
+    } else if (aEventType == nsGkAtoms::keyup) {
       handled = sNativeEditorBindings->KeyUp(nativeEvent,
                                              DoCommandCallback, controllers);
     } else {
@@ -390,17 +387,17 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMEvent* aKeyEvent, nsIAtom* aEventType)
 
 nsresult nsXBLWindowKeyHandler::KeyUp(nsIDOMEvent* aKeyEvent)
 {
-  return WalkHandlers(aKeyEvent, nsXBLAtoms::keyup);
+  return WalkHandlers(aKeyEvent, nsGkAtoms::keyup);
 }
 
 nsresult nsXBLWindowKeyHandler::KeyDown(nsIDOMEvent* aKeyEvent)
 {
-  return WalkHandlers(aKeyEvent, nsXBLAtoms::keydown);
+  return WalkHandlers(aKeyEvent, nsGkAtoms::keydown);
 }
 
 nsresult nsXBLWindowKeyHandler::KeyPress(nsIDOMEvent* aKeyEvent)
 {
-  return WalkHandlers(aKeyEvent, nsXBLAtoms::keypress);
+  return WalkHandlers(aKeyEvent, nsGkAtoms::keypress);
 }
 
 

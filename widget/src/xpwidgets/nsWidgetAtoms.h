@@ -47,7 +47,7 @@
  * is created when the first xul content object is created, and
  * destroyed when the last such content object is destroyed.
  *
- * It's here because we cannot use nsHTMLAtoms or nsXULAtoms from
+ * It's here because we cannot use nsGkAtoms from
  * the Widget shlb. They are components are we're not.
  */
 class nsWidgetAtoms {
@@ -68,4 +68,4 @@ public:
 
 };
 
-#endif /* nsXULAtoms_h___ */
+#endif /* nsWidgetAtoms_h___ */

@@ -61,7 +61,7 @@
 #include "nsCSSRendering.h"
 #include "nsStyleConsts.h"
 #include "nsIView.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsIPresShell.h"
 #include "nsIDOMElement.h"

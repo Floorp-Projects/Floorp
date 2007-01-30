@@ -94,7 +94,7 @@
 #include "nsPIBoxObject.h"
 #include "nsIDOMNSDocument.h"
 
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsContentUtils.h"
 #include "nsIJSContextStack.h"
 

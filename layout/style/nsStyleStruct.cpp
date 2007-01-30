@@ -54,7 +54,6 @@
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
-#include "nsLayoutAtoms.h"
 #include "nsHTMLReflowState.h"
 #include "prenv.h"
 

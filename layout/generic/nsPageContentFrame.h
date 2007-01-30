@@ -65,7 +65,7 @@ public:
   /**
    * Get the "type" of the frame
    *
-   * @see nsLayoutAtoms::pageFrame
+   * @see nsGkAtoms::pageFrame
    */
   virtual nsIAtom* GetType() const;
   

@@ -43,7 +43,6 @@
 #include "nsHTMLReflowState.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
-#include "nsLayoutAtoms.h"
 
 nsBlockBandData::nsBlockBandData()
   : mSpaceManager(nsnull),

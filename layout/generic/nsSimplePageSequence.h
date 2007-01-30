@@ -123,7 +123,7 @@ public:
   /**
    * Get the "type" of the frame
    *
-   * @see nsLayoutAtoms::sequenceFrame
+   * @see nsGkAtoms::sequenceFrame
    */
   virtual nsIAtom* GetType() const;
   

@@ -49,7 +49,7 @@
 #include "nsIContent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLParts.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIView.h"
 #include "nsIPresShell.h"
 #include "nsCOMPtr.h"
