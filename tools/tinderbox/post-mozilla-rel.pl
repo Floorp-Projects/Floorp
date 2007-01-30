@@ -393,6 +393,9 @@ sub packit {
         TinderUtils::print_log("No files to copy\n");
       }
 
+      # Also copy any built ZIP archives (such as SDK)
+      TinderUtils::run_shell_command("cp $package_location/../*.zip $stagedir/");
+
       if ( scalar(@xforms_xpi) gt 0 ) {
         my $xforms_xpi_files = join(' ', @xforms_xpi);
         TinderUtils::run_shell_command("mkdir -p $stagedir/mac-xpi/") if ( ! -e "$stagedir/mac-xpi/" );
