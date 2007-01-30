@@ -137,3 +137,6 @@ pref("dom.disable_open_during_load", true);
 
 // don't hide user:pass when fixing up URIs
 pref("browser.fixup.hide_user_pass", false);
+
+// give users the option of restoring windows after a crash
+pref("browser.sessionstore.resume_from_crash", true);
