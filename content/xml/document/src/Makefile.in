@@ -70,6 +70,7 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  windowwatcher \
 		  locale \
+		  util \
 		  $(NULL)
 
 CPPSRCS		= \

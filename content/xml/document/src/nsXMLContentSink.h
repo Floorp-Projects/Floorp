@@ -42,7 +42,7 @@
 #include "nsIXMLContentSink.h"
 #include "nsIExpatSink.h"
 #include "nsIDocumentTransformer.h"
-#include "nsCOMArray.h"
+#include "nsTArray.h"
 #include "nsCOMPtr.h"
 
 
@@ -58,6 +58,11 @@ typedef enum {
   eXMLContentSinkState_InDocumentElement,
   eXMLContentSinkState_InEpilog
 } XMLContentSinkState;
+
+struct StackNode {
+  nsCOMPtr<nsIContent> mContent;
+  PRUint32 mNumFlushed;
+};
 
 class nsXMLContentSink : public nsContentSink,
                          public nsIXMLContentSink,
@@ -79,12 +84,13 @@ public:
   NS_DECL_NSIEXPATSINK
 
   // nsIContentSink
+  NS_IMETHOD WillTokenize(void);
   NS_IMETHOD WillBuildModel(void);
   NS_IMETHOD DidBuildModel(void);
   NS_IMETHOD WillInterrupt(void);
   NS_IMETHOD WillResume(void);
   NS_IMETHOD SetParser(nsIParser* aParser);  
-  virtual void FlushPendingNotifications(mozFlushType aType) { }
+  virtual void FlushPendingNotifications(mozFlushType aType);
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
   virtual nsISupports *GetTarget();
 
@@ -97,6 +103,7 @@ public:
                           PRBool &aIsAlternate);
 
 protected:
+  virtual void MaybeStartLayout();
   void StartLayout();
 
   virtual nsresult AddAttributes(const PRUnichar** aNode, nsIContent* aContent);
@@ -127,11 +134,22 @@ protected:
   nsresult AddContentAsLeaf(nsIContent *aContent);
 
   nsIContent* GetCurrentContent();
-  PRInt32 PushContent(nsIContent *aContent);
-  already_AddRefed<nsIContent> PopContent();
+  StackNode & GetCurrentStackNode();
+  nsresult PushContent(nsIContent *aContent);
+  void PopContent();
 
   nsresult ProcessBASETag(nsIContent* aContent);
 
+  nsresult FlushTags();
+
+  void UpdateChildCounts();
+
+  void DidAddContent()
+  {
+    if (IsTimeToNotify()) {
+      FlushTags();	
+    }
+  }
   
   // nsContentSink override
   virtual nsresult ProcessStyleLink(nsIContent* aElement,
@@ -143,8 +161,12 @@ protected:
 
   nsresult LoadXSLStyleSheet(nsIURI* aUrl);
 
+  PRBool CanStillPrettyPrint();
+
   nsresult MaybePrettyPrint();
   
+  PRBool IsMonolithicContainer(nsINodeInfo* aNodeInfo);
+
   nsIContent*      mDocElement;
   PRUnichar*       mText;
 
@@ -155,6 +177,8 @@ protected:
   PRInt32 mTextLength;
   PRInt32 mTextSize;
   
+  PRInt32 mNotifyLevel;
+
   PRUint8 mConstrainSize : 1;
   PRUint8 mInTitle : 1;
   PRUint8 mPrettyPrintXML : 1;
@@ -164,7 +188,8 @@ protected:
   PRUint8 mAllowAutoXLinks : 1;
   PRUint8 unused : 1;  // bit available if someone needs one
   
-  nsCOMArray<nsIContent>           mContentStack;
+  nsTArray<StackNode>              mContentStack;
+
   nsCOMPtr<nsIDocumentTransformer> mXSLTProcessor;
 };
 

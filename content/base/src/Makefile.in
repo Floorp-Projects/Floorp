@@ -75,6 +75,7 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  rdf \
 		  xultmpl \
+ 		  util \
 		  $(NULL)
 
 EXPORTS		= \

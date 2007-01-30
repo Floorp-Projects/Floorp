@@ -2352,7 +2352,7 @@ nsParser::WillTokenize(PRBool aIsFinalChunk)
                                         NS_IPARSER_FLAG_HTML;
   nsresult result = mParserContext->GetTokenizer(type, mSink, theTokenizer);
   NS_ENSURE_SUCCESS(result, PR_FALSE);
-
+  mSink->WillTokenize();
   return NS_SUCCEEDED(theTokenizer->WillTokenize(aIsFinalChunk,
                                                  &mTokenAllocator));
 }

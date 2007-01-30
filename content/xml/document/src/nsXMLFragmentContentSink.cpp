@@ -92,6 +92,7 @@ public:
   NS_IMETHOD DidBuildModel();
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
   virtual nsISupports *GetTarget();
+  NS_IMETHOD DidProcessATokenImpl();
 
   // nsIXMLContentSink
 
@@ -110,6 +111,8 @@ protected:
                                  nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
                                  nsIContent** aResult, PRBool* aAppendContent);
   virtual nsresult CloseElement(nsIContent* aContent);
+
+  void MaybeStartLayout();
 
   // nsContentSink overrides
   virtual nsresult ProcessStyleLink(nsIContent* aElement,
@@ -197,8 +200,7 @@ NS_IMETHODIMP
 nsXMLFragmentContentSink::DidBuildModel()
 {
   if (mAllContent) {
-    // Need the nsCOMPtr to properly release
-    nsCOMPtr<nsIContent> root = PopContent();  // remove mRoot pushed above
+    PopContent();  // remove mRoot pushed above
   }
 
   nsCOMPtr<nsIParser> kungFuDeathGrip(mParser);
@@ -246,7 +248,7 @@ nsXMLFragmentContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsC
   // When we aren't grabbing all of the content we, never open a doc
   // element, we run into trouble on the first element, so we don't append,
   // and simply push this onto the content stack.
-  if (!mAllContent && mContentStack.Count() == 0) {
+  if (!mAllContent && mContentStack.Length() == 0) {
     *aAppendContent = PR_FALSE;
   }
 
@@ -258,6 +260,12 @@ nsXMLFragmentContentSink::CloseElement(nsIContent* aContent)
 {
   // don't do fancy stuff in nsXMLContentSink
   return NS_OK;
+}
+
+void
+nsXMLFragmentContentSink::MaybeStartLayout()
+{
+  return;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -422,10 +430,15 @@ nsXMLFragmentContentSink::DidBuildContent()
     if (!mParseError) {
       FlushText();
     }
-    // Need the nsCOMPtr to properly release
-    nsCOMPtr<nsIContent> root = PopContent();
+    PopContent();
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXMLFragmentContentSink::DidProcessATokenImpl()
+{
   return NS_OK;
 }
 

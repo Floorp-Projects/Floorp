@@ -125,8 +125,6 @@ public:
                                    PRInt32 aNameSpaceID,
                                    nsIAtom* aAttribute);
 
-  virtual void FlushPendingNotifications(mozFlushType aType);
-
   virtual PRBool IsCaseSensitive();
 
   // nsIMutationObserver

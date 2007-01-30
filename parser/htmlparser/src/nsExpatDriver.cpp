@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Henri Sivonen <hsivonen@iki.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -418,10 +419,11 @@ nsExpatDriver::HandleStartElement(const PRUnichar *aValue,
   }
 
   if (mSink) {
-    mSink->HandleStartElement(aValue, aAtts,
-                              attrArrayLength,
-                              XML_GetIdAttributeIndex(mExpatParser),
-                              XML_GetCurrentLineNumber(mExpatParser));
+    mInternalState = mSink->
+      HandleStartElement(aValue, aAtts, attrArrayLength,
+                         XML_GetIdAttributeIndex(mExpatParser),
+                         XML_GetCurrentLineNumber(mExpatParser));
+    MaybeStopParser();
   }
 
   return NS_OK;
@@ -432,9 +434,9 @@ nsExpatDriver::HandleEndElement(const PRUnichar *aValue)
 {
   NS_ASSERTION(mSink, "content sink not found!");
 
-  if (mSink &&
-      mSink->HandleEndElement(aValue) == NS_ERROR_HTMLPARSER_BLOCK) {
-    XML_StopParser(mExpatParser, XML_TRUE);
+  if (mSink) {
+    mInternalState = mSink->HandleEndElement(aValue);
+    MaybeStopParser();
   }
 
   return NS_OK;
@@ -451,6 +453,7 @@ nsExpatDriver::HandleCharacterData(const PRUnichar *aValue,
   }
   else if (mSink) {
     mInternalState = mSink->HandleCharacterData(aValue, aLength);
+    MaybeStopParser();
   }
 
   return NS_OK;
@@ -473,6 +476,7 @@ nsExpatDriver::HandleComment(const PRUnichar *aValue)
   }
   else if (mSink) {
     mInternalState = mSink->HandleComment(aValue);
+    MaybeStopParser();
   }
 
   return NS_OK;
@@ -497,10 +501,9 @@ nsExpatDriver::HandleProcessingInstruction(const PRUnichar *aTarget,
     mInternalSubset.Append(aData);
     mInternalSubset.AppendLiteral("?>");
   }
-  else if (mSink &&
-           mSink->HandleProcessingInstruction(aTarget, aData) ==
-           NS_ERROR_HTMLPARSER_BLOCK) {
-    XML_StopParser(mExpatParser, XML_TRUE);
+  else if (mSink) {
+    mInternalState = mSink->HandleProcessingInstruction(aTarget, aData);
+    MaybeStopParser();
   }
 
   return NS_OK;
@@ -511,7 +514,12 @@ nsExpatDriver::HandleXMLDeclaration(const PRUnichar *aVersion,
                                     const PRUnichar *aEncoding,
                                     PRInt32 aStandalone)
 {
-  return mSink->HandleXMLDeclaration(aVersion, aEncoding, aStandalone);
+  if (mSink) {
+    mInternalState = mSink->HandleXMLDeclaration(aVersion, aEncoding, aStandalone);
+    MaybeStopParser();
+  }
+
+  return NS_OK;
 }
 
 nsresult
@@ -536,6 +544,8 @@ nsExpatDriver::HandleDefault(const PRUnichar *aValue,
         mInternalState = mSink->HandleCharacterData(newline, 1);
       }
     }
+    // The line breaks should not be normalized twice. See bug 343870.
+    MaybeStopParser();
   }
 
   return NS_OK;
@@ -558,6 +568,7 @@ nsExpatDriver::HandleEndCdataSection()
   if (mSink) {
     mInternalState = mSink->HandleCDataSection(mCDataText.get(),
                                                mCDataText.Length());
+    MaybeStopParser();
   }
   mCDataText.Truncate();
 
@@ -659,7 +670,7 @@ nsExpatDriver::HandleEndDoctypeDecl()
     // Note: mInternalSubset already doesn't include the [] around it.
     mInternalState = mSink->HandleDoctypeDecl(mInternalSubset, mDoctypeName,
                                               mSystemID, mPublicID, data);
-    
+    MaybeStopParser();
   }
   
   mInternalSubset.SetCapacity(0);
@@ -960,18 +971,17 @@ nsExpatDriver::ParseBuffer(const PRUnichar *aBuffer,
   NS_ASSERTION((aBuffer && aLength != 0) || (!aBuffer && aLength == 0), "?");
   NS_ASSERTION(mInternalState != NS_OK || aIsFinal || aBuffer,
                "Useless call, we won't call Expat");
-  NS_PRECONDITION(mInternalState != NS_ERROR_HTMLPARSER_BLOCK || !aBuffer,
+  NS_PRECONDITION(!BlockedOrInterrupted() || !aBuffer,
                   "Non-null buffer when resuming");
   NS_PRECONDITION(XML_GetCurrentByteIndex(mExpatParser) % sizeof(PRUnichar) == 0,
                   "Consumed part of a PRUnichar?");
 
-  if (mExpatParser && (mInternalState == NS_OK ||
-                       mInternalState == NS_ERROR_HTMLPARSER_BLOCK)) {
+  if (mExpatParser && (mInternalState == NS_OK || BlockedOrInterrupted())) {
     PRInt32 parserBytesBefore = XML_GetCurrentByteIndex(mExpatParser);
     NS_ASSERTION(parserBytesBefore >= 0, "Unexpected value");
 
     XML_Status status;
-    if (mInternalState == NS_ERROR_HTMLPARSER_BLOCK) {
+    if (BlockedOrInterrupted()) {
       mInternalState = NS_OK; // Resume in case we're blocked.
       status = XML_ResumeParser(mExpatParser);
     }
@@ -994,10 +1004,12 @@ nsExpatDriver::ParseBuffer(const PRUnichar *aBuffer,
     NS_ASSERTION(*aConsumed <= aLength + mExpatBuffered,
                  "Too many bytes consumed?");
 
-    if (status == XML_STATUS_SUSPENDED) {
-      mInternalState = NS_ERROR_HTMLPARSER_BLOCK;
-    }
-    else if (status == XML_STATUS_ERROR) {
+    NS_ASSERTION(status != XML_STATUS_SUSPENDED || 
+                 (mInternalState == NS_ERROR_HTMLPARSER_BLOCK || 
+                  mInternalState == NS_ERROR_HTMLPARSER_INTERRUPTED), 
+                 "Inconsistent expat suspension state.");
+
+    if (status == XML_STATUS_ERROR) {
       mInternalState = NS_ERROR_HTMLPARSER_STOPPARSING;
     }
   }
@@ -1033,9 +1045,9 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, PRBool& aFlushTokens)
   // be more buffers (and so we want to flush the remaining data), or if we're
   // currently blocked and there's data in Expat's buffer.
   while (start != end || flush ||
-         (mInternalState == NS_ERROR_HTMLPARSER_BLOCK && mExpatBuffered > 0)) {
+         (BlockedOrInterrupted() && mExpatBuffered > 0)) {
     PRBool noMoreBuffers = start == end && mIsFinalChunk;
-    PRBool blocked = mInternalState == NS_ERROR_HTMLPARSER_BLOCK;
+    PRBool blocked = BlockedOrInterrupted();
 
     // If we're resuming and we know there won't be more data we want to
     // flush the remaining data after we resumed the parser (so loop once
@@ -1110,10 +1122,10 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, PRBool& aFlushTokens)
 
     mExpatBuffered += length - consumed;
 
-    if (mInternalState == NS_ERROR_HTMLPARSER_BLOCK) {
+    if (BlockedOrInterrupted()) {
       PR_LOG(gExpatDriverLog, PR_LOG_DEBUG,
-             ("Blocked parser (probably for loading linked stylesheets or "
-              "scripts)."));
+             ("Blocked or interrupted parser (probably for loading linked "
+              "stylesheets or scripts)."));
 
       aScanner.SetPosition(currentExpatPosition, PR_TRUE);
       aScanner.Mark();
@@ -1386,4 +1398,12 @@ NS_IMETHODIMP_(PRBool)
 nsExpatDriver::CanContain(PRInt32 aParent,PRInt32 aChild) const
 {
   return PR_TRUE;
+}
+
+void
+nsExpatDriver::MaybeStopParser()
+{
+  if (BlockedOrInterrupted()) {
+    XML_StopParser(mExpatParser, XML_TRUE);
+  }
 }

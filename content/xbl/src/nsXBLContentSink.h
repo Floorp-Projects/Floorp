@@ -110,6 +110,8 @@ public:
 
 protected:
     // nsXMLContentSink overrides
+    void MaybeStartLayout();
+
     PRBool OnOpenContainer(const PRUnichar **aAtts, 
                            PRUint32 aAttsCount, 
                            PRInt32 aNameSpaceID, 
