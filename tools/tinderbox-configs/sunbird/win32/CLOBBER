@@ -2,3 +2,4 @@ Edit this file and include an explanation of why you're respinning. - #build
 2007-01-09 05:54 UTC - cvs conflict on mozilla/LICENSE is causing burnination.
 2007-01-23 00:55 UTC - Moving tinderboxes to SUNBIRD_0_3_BRANCH for 0.3.1 maintenance release.
 2007-01-23 15:13 UTC - Tinders were building from SUNBIRD_0_3_RELEASE rather than SUNBIRD_0_3_BRANCH
+2007-30-01 20:20 UTC - Respin 0.3.1pre builds for testday to pickup fix for bug 368709
