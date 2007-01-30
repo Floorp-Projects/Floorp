@@ -2435,4 +2435,4 @@ static ical_timezone_data_struct ical_timezone_data[] = {
 };
 
 // needed for implementing calIICSService.tzIdPrefix
-NS_NAMED_LITERAL_CSTRING(gTzIdPrefix, "/mozilla.org/20070129_1");
+NS_NAMED_LITERAL_CSTRING(gTzIdPrefix, "/mozilla.org/20070129_1/");
