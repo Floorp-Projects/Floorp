@@ -459,6 +459,11 @@ case "$target" in
             CXXFLAGS="$CXXFLAGS -Zc:wchar_t-"
             AC_DEFINE(_CRT_SECURE_NO_DEPRECATE)
             AC_DEFINE(_CRT_NONSTDC_NO_DEPRECATE)
+        elif test "$_CC_MAJOR_VERSION" = "15"; then
+            _CC_SUITE=9
+            CXXFLAGS="$CXXFLAGS -Zc:wchar_t-"
+            AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
+            AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
         else
             AC_MSG_ERROR([This version of the MSVC compiler, $CC_VERSION , is unsupported.])
         fi
