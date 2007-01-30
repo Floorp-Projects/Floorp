@@ -393,8 +393,8 @@ protected:
                                         nsIContent** aResult);
 
     /**
-     * Create a temporary 'overlay' element to which content nodes
-     * can be attached for later resolution.
+     * Create a hook-up element to which content nodes can be attached for
+     * later resolution.
      */
     nsresult CreateOverlayElement(nsXULPrototypeElement* aPrototype, nsIContent** aResult);
 
