@@ -3361,3 +3361,29 @@ nsContentUtils::HasNonEmptyTextContent(nsINode* aNode)
 
   return PR_FALSE;
 }
+
+/* static */
+PRBool
+nsContentUtils::IsInSameAnonymousTree(nsINode* aNode,
+                                      nsIContent* aContent)
+{
+  NS_PRECONDITION(aNode,
+                  "Must have a node to work with");
+  NS_PRECONDITION(aContent,
+                  "Must have a content to work with");
+  
+  if (!aNode->IsNodeOfType(nsINode::eCONTENT)) {
+    /**
+     * The root isn't an nsIContent, so it's a document or attribute.  The only
+     * nodes in the same anonymous subtree as it will have a null
+     * bindingParent.
+     *
+     * XXXbz strictly speaking, that's not true for attribute nodes.
+     */
+    return aContent->GetBindingParent() == nsnull;
+  }
+
+  return NS_STATIC_CAST(nsIContent*, aPossibleAncestor)->GetBindingParent() ==
+         aPossibleDescendant->GetBindingParent();
+ 
+}

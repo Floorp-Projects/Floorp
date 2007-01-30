@@ -607,6 +607,22 @@ public:
                                PRUint32 *aArgCount, const char*** aArgNames);
 
   /**
+   * If aNode is not an element, return true exactly when aContent's binding
+   * parent is null.
+   *
+   * If aNode is an element, return true exactly when aContent's binding parent
+   * is the same as aNode's.
+   *
+   * This method is particularly useful for callers who are trying to ensure
+   * that they are working with a non-anonymous descendant of a given node.  If
+   * aContent is a descendant of aNode, a return value of PR_FALSE from this
+   * method means that it's an anonymous descendant from aNode's point of view.
+   *
+   * Both arguments to this method must be non-null.
+   */
+  static PRBool IsInSameAnonymousTree(nsINode* aNode, nsIContent* aContent);
+
+  /**
    * Return the nsIXPConnect service.
    */
   static nsIXPConnect *XPConnect()

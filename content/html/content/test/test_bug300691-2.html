@@ -1,0 +1,143 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=300691
+-->
+<head>
+  <title>Test for Bug 300691</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=300691">Mozilla Bug 300691</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="text/javascript">
+  // First, setup.  We'll be toggling these variables as we go.
+  // Note that scripts don't execute immediately when you put text in them --
+  // they wait for the currently-running script to finish.
+  var test1Ran = false;
+  var test2Ran = false;
+  var test3Ran = false;
+  var test4Ran = false;
+  var test5Ran = false;
+  var test6Ran = false;
+  var test7Ran = false;
+  var test8Ran = false;
+  var test9Ran = false;
+  var test10Ran = false;
+  var test11Ran = false;
+  var test12Ran = false;
+  var test13Ran = false;
+  var test14aRan = false;
+  var test14bRan = false;
+  var test15aRan = false;
+  var test15bRan = false;
+</script>
+<script id="test1" type="text/javascript">test1Ran = true;</script>
+<script id="test2" type="text/javascript"></script>
+<script id="test3" type="text/javascript">;</script>
+<script id="test4" type="text/javascript">   </script>
+<script id="test5" type="text/javascript"></script>
+<script id="test6" type="text/javascript"></script>
+<script id="test7" type="text/javascript"></script>
+<script id="test8" type="text/javascript"></script>
+<script id="test9" type="text/javascript"></script>
+<script id="test10" type="text/javascript" src="data:text/javascript,">
+  test10Ran = true;
+</script>
+<script id="test11" type="text/javascript"
+        src="data:text/javascript,test11Ran = true">
+  test11Ran = false;
+</script>
+<script id="test12" type="text/javascript"></script>
+<script id="test13" type="text/javascript"></script>
+<script id="test14" type="text/javascript"></script>
+<script id="test15" type="text/javascript"></script>
+<script class="testbody" type="text/javascript">
+  /** Test for Bug 300691 **/
+  $("test2").appendChild(document.createTextNode("test2Ran = true"));
+  is(test2Ran, false, "Not yet 2!");
+
+  $("test3").appendChild(document.createTextNode("test3Ran = true"));
+  is(test3Ran, false, "Not yet 3!");
+
+  $("test4").appendChild(document.createTextNode("test4Ran = true"));
+  is(test4Ran, false, "Not yet 4!");
+
+  $("test5").appendChild(document.createTextNode(" "));
+  $("test5").appendChild(document.createTextNode("test5Ran = true"));
+  is(test5Ran, false, "Not yet 5!");
+
+  $("test6").appendChild(document.createTextNode(" "));
+
+  $("test7").appendChild(document.createTextNode(""));
+
+  $("test8").appendChild(document.createTextNode(""));
+
+  $("test9").appendChild(document.createTextNode(""));
+
+  $("test12").src = "data:text/javascript,test12Ran = true;";
+  is(test12Ran, false, "Not yet 12!");
+
+  $("test13").setAttribute("src", "data:text/javascript,test13Ran = true;");
+  is(test13Ran, false, "Not yet 13!");
+
+  $("test14").src = "data:text/javascript,test14aRan = true;";
+  $("test14").appendChild(document.createTextNode("test14bRan = true"));
+  is(test14aRan, false, "Not yet 14a!");
+  is(test14bRan, false, "Not yet 14b!");
+
+  $("test15").src = "data:text/javascript,test15aRan = true;";
+  $("test15").appendChild(document.createTextNode("test15bRan = true"));
+  $("test15").removeAttribute("src");
+  is(test15aRan, false, "Not yet 15a!");
+  is(test15bRan, false, "Not yet 15b!");
+</script>
+<script type="text/javascript">
+  // Follow up on some of those
+  $("test6").appendChild(document.createTextNode("test6Ran = true"));
+  is(test6Ran, false, "Not yet 6!");
+
+  $("test7").appendChild(document.createTextNode("test7Ran = true"));
+  is(test7Ran, false, "Not yet 7!");
+
+  $("test8").insertBefore(document.createTextNode("test8Ran = true"),
+                          $("test8").firstChild);
+  is(test8Ran, false, "Not yet 8!");
+
+  $("test9").firstChild.data = "test9Ran = true";
+  is(test9Ran, false, "Not yet 9!");
+</script>
+<script type="text/javascript">
+  is(test1Ran, true, "Should have run!");
+  is(test2Ran, true, "Should execute empty script on child append");
+  is(test3Ran, false, "Already executed test3 script once");
+  is(test4Ran, false,
+     "Shouldn't execute whitespace-only script on child append; should have executed it before");
+  is(test5Ran, true,
+     "By the time it tries to execute, it's got both textnodes");
+  is(test6Ran, false,
+     "Shouldn't execute whitespace-only script on child append 2; should have executed it when it became nonempty");
+  is(test7Ran, true, "Should execute empty script on child append 2");
+  is(test8Ran, true, "Should execute empty script on child insert");
+  is(test9Ran, true, "Should execute empty script if child gets some text");
+  is(test10Ran, false, "Has an src; inline part shouldn't run");
+  is(test11Ran, true, "Script with src should have run");
+  is(test12Ran, true, "Setting src should execute script");
+  is(test13Ran, true, "Setting src attribute should execute script");
+  is(test14aRan, true, "src attribute takes precedence over inline content");
+  is(test14bRan, false, "src attribute takes precedence over inline content 2");
+  is(test15aRan, true,
+     "src attribute load should have started before the attribute got removed");
+  is(test15bRan, false,
+     "src attribute still got executed, so this shouldn't have been");
+</script>
+</pre>
+</body>
+</html>
+
