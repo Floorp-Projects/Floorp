@@ -1,5 +1,4 @@
 toolkit.jar:
-#ifndef MOZ_XUL_APP
 *       content/global/contents.rdf                 (resources/content/contents.rdf)
 *       content/global-platform/contents.rdf        (resources/content/contents-platform.rdf)
 *       content/global-region/contents.rdf          (resources/content/contents-region.rdf)
@@ -74,19 +73,17 @@ toolkit.jar:
 #ifdef MOZ_SVG
         content/global/svg/svgBindings.xml          (/layout/svg/base/src/resources/content/svgBindings.xml)
 #endif
-#endif
-        content/global/hiddenWindow.xul             (resources/content/hiddenWindow.xul) 
+        content/global/about.xul                    (resources/content/about.xul) 
 #ifdef MOZ_SUITE
         content/global/logo.gif                     (/suite/branding/content/logo.gif) 
 #else
         content/global/logo.gif                     (resources/content/logo.gif) 
-#endif
         content/global/aboutAbout.html              (resources/content/aboutAbout.html) 
-        content/global/about.xul                    (resources/content/about.xul) 
+        content/global/hiddenWindow.xul             (resources/content/hiddenWindow.xul) 
         content/global/fullScreen.js                (resources/content/fullScreen.js)
         content/global/build.dtd                    (build.dtd)
+#endif
 
-#ifndef MOZ_XUL_APP
 en-US.jar:
 *   locale/en-US/global/contents.rdf                (resources/locale/en-US/contents.rdf) 
     locale/en-US/global/intl.css                    (resources/locale/en-US/intl.css) 
@@ -129,4 +126,3 @@ en-US.jar:
     locale/en-US/global-platform/mac/platformDialogOverlay.dtd  (resources/locale/en-US/mac/platformDialogOverlay.dtd)
     locale/en-US/global-platform/mac/platformKeys.properties    (resources/locale/en-US/mac/platformKeys.properties)
     locale/en-US/global-platform/mac/wizard.properties          (resources/locale/en-US/mac/wizard.properties)
-#endif

@@ -53,11 +53,15 @@ DIRS += \
         $(NULL)
 else
 ifndef MOZ_SUNBIRD
-DIRS += browser global
+DIRS += browser
 ifndef MOZ_SUITE
 DIRS += communicator
 endif
 endif
+endif
+
+ifndef MOZ_XUL_APP
+DIRS += global
 endif
 
 # Because of our great use of encapsulation, there are
