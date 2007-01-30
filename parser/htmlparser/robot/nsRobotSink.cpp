@@ -85,6 +85,7 @@ public:
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
   NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode);
+  NS_IMETHOD WillTokenize(void) { return NS_OK; }
   NS_IMETHOD WillBuildModel(void) { return NS_OK; }
   NS_IMETHOD DidBuildModel(void) { return NS_OK; }
   NS_IMETHOD WillInterrupt(void) { return NS_OK; }

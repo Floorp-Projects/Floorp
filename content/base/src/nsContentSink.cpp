@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Henri Sivonen <hsivonen@iki.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -78,6 +79,107 @@
 #include "nsWeakReference.h"
 #include "nsUnicharUtils.h"
 #include "nsNodeInfoManager.h"
+#include "nsTimer.h"
+#include "nsIAppShell.h"
+#include "nsWidgetsCID.h"
+#include "nsIDOMNSDocument.h"
+#include "nsIRequest.h"
+#include "nsNodeUtils.h"
+#include "nsIDOMNode.h"
+
+PRLogModuleInfo* gContentSinkLogModuleInfo;
+
+//----------------------------------------------------------------------
+//
+// DummyParserRequest
+//
+//   This is a dummy request implementation that we add to the document's load
+//   group. It ensures that EndDocumentLoad() in the docshell doesn't fire
+//   before we've finished all of parsing and tokenizing of the document.
+//
+
+class DummyParserRequest : public nsIRequest
+{
+protected:
+  nsContentSink* mSink; // Weak reference
+
+public:
+  DummyParserRequest(nsContentSink* aSink);
+
+  NS_DECL_ISUPPORTS
+
+  // nsIRequest
+  NS_IMETHOD GetName(nsACString &result)
+  {
+    result.AssignLiteral("about:layout-dummy-request");
+    return NS_OK;
+  }
+
+  NS_IMETHOD IsPending(PRBool *_retval)
+  {
+    *_retval = PR_TRUE;
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetStatus(nsresult *status)
+  {
+    *status = NS_OK;
+    return NS_OK;
+  }
+
+  NS_IMETHOD Cancel(nsresult status);
+  NS_IMETHOD Suspend(void)
+  {
+    return NS_OK;
+  }
+
+  NS_IMETHOD Resume(void)
+  {
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetLoadGroup(nsILoadGroup **aLoadGroup)
+  {
+    *aLoadGroup = nsnull;
+
+    return NS_OK;
+  }
+
+  NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup)
+  {
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetLoadFlags(nsLoadFlags *aLoadFlags)
+  {
+    *aLoadFlags = nsIRequest::LOAD_NORMAL;
+
+    return NS_OK;
+  }
+
+  NS_IMETHOD SetLoadFlags(nsLoadFlags aLoadFlags)
+  {
+    return NS_OK;
+  }
+};
+
+NS_IMPL_ISUPPORTS1(DummyParserRequest, nsIRequest)
+
+
+DummyParserRequest::DummyParserRequest(nsContentSink* aSink)
+  : mSink(aSink)
+{
+}
+
+NS_IMETHODIMP
+DummyParserRequest::Cancel(nsresult status)
+{
+  // Cancel parser
+  if (mSink && mSink->mParser) {
+    mSink->mParser->CancelParsingEvents();
+  }
+  return NS_OK;
+}
 
 
 #ifdef ALLOW_ASYNCH_STYLE_SHEETS
@@ -85,7 +187,6 @@ const PRBool kBlockByDefault = PR_FALSE;
 #else
 const PRBool kBlockByDefault = PR_TRUE;
 #endif
-
 
 class nsScriptLoaderObserverProxy : public nsIScriptLoaderObserver
 {
@@ -146,7 +247,14 @@ NS_IMPL_ISUPPORTS3(nsContentSink,
                    nsIScriptLoaderObserver)
 
 nsContentSink::nsContentSink()
+  : mLayoutStarted(PR_FALSE),
+    mInMonolithicContainer(0)
 {
+#ifdef NS_DEBUG
+  if (!gContentSinkLogModuleInfo) {
+    gContentSinkLogModuleInfo = PR_NewLogModule("nscontentsink");
+  }
+#endif
 }
 
 nsContentSink::~nsContentSink()
@@ -186,6 +294,49 @@ nsContentSink::Init(nsIDocument* aDoc,
   ProcessHTTPHeaders(aChannel);
 
   mNodeInfoManager = aDoc->NodeInfoManager();
+
+  mNotifyOnTimer =
+    nsContentUtils::GetBoolPref("content.notify.ontimer", PR_TRUE);
+
+  // -1 means never
+  mBackoffCount =
+    nsContentUtils::GetIntPref("content.notify.backoffcount", -1);
+
+  // The mNotificationInterval has a dramatic effect on how long it
+  // takes to initially display content for slow connections.
+  // The current value provides good
+  // incremental display of content without causing an increase
+  // in page load time. If this value is set below 1/10 of second
+  // it starts to impact page load performance.
+  // see bugzilla bug 72138 for more info.
+  mNotificationInterval =
+    nsContentUtils::GetIntPref("content.notify.interval", 120000);
+
+  // The mMaxTokenProcessingTime controls how long we stay away from
+  // the event loop when processing token. A lower value makes the app
+  // more responsive, but may increase page load time.  The content
+  // sink mNotificationInterval gates how frequently the content is
+  // processed so it will also affect how interactive the app is
+  // during page load also. The mNotification prevents contents
+  // flushes from happening too frequently. while
+  // mMaxTokenProcessingTime prevents flushes from happening too
+  // infrequently.
+
+  // The current ratio of 3 to 1 was determined to be the lowest
+  // mMaxTokenProcessingTime which does not impact page load
+  // performance.  See bugzilla bug 76722 for details.
+
+  mMaxTokenProcessingTime =
+    nsContentUtils::GetIntPref("content.max.tokenizing.time",
+                               mNotificationInterval * 3);
+
+  // 3/4 second (750000us) default for switching
+  mDynamicIntervalSwitchThreshold =
+    nsContentUtils::GetIntPref("content.switch.threshold", 750000);
+
+  mCanInterruptParser =
+    nsContentUtils::GetBoolPref("content.interrupt.parsing", PR_TRUE);
+
   return NS_OK;
 
 }
@@ -808,6 +959,8 @@ nsContentSink::RefreshIfEnabled(nsIViewManager* vm)
 void
 nsContentSink::StartLayout(PRBool aIsFrameset)
 {
+  mLayoutStarted = PR_TRUE;
+  mLastNotificationTime = PR_Now();
   PRUint32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
     nsIPresShell *shell = mDocument->GetShellAt(i);
@@ -870,3 +1023,472 @@ nsContentSink::StartLayout(PRBool aIsFrameset)
     }
   }
 }
+
+void
+nsContentSink::NotifyAppend(nsIContent* aContainer, PRUint32 aStartIndex)
+{
+  if (aContainer->GetCurrentDoc() != mDocument) {
+    // aContainer is not actually in our document anymore.... Just bail out of
+    // here; notifying on our document for this append would be wrong.
+    return;
+  }
+
+  mInNotification++;
+
+  MOZ_TIMER_DEBUGLOG(("Save and stop: nsHTMLContentSink::NotifyAppend()\n"));
+  MOZ_TIMER_SAVE(mWatch)
+  MOZ_TIMER_STOP(mWatch);
+
+  nsNodeUtils::ContentAppended(aContainer, aStartIndex);
+  mLastNotificationTime = PR_Now();
+
+  MOZ_TIMER_DEBUGLOG(("Restore: nsHTMLContentSink::NotifyAppend()\n"));
+  MOZ_TIMER_RESTORE(mWatch);
+
+  mInNotification--;
+}
+
+NS_IMETHODIMP
+nsContentSink::Notify(nsITimer *timer)
+{
+  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::Notify()\n"));
+  MOZ_TIMER_START(mWatch);
+
+  if (mParsing) {
+    // We shouldn't interfere with our normal DidProcessAToken logic
+    mDroppedTimer = PR_TRUE;
+    return NS_OK;
+  }
+  
+#ifdef MOZ_DEBUG
+  {
+    PRTime now = PR_Now();
+    PRInt64 diff, interval;
+    PRInt32 delay;
+
+    LL_I2L(interval, GetNotificationInterval());
+    LL_SUB(diff, now, mLastNotificationTime);
+
+    LL_SUB(diff, diff, interval);
+    LL_L2I(delay, diff);
+    delay /= PR_USEC_PER_MSEC;
+
+    mBackoffCount--;
+    SINK_TRACE(gContentSinkLogModuleInfo, SINK_TRACE_REFLOW,
+               ("nsContentSink::Notify: reflow on a timer: %d milliseconds "
+                "late, backoff count: %d", delay, mBackoffCount));
+  }
+#endif
+
+  FlushTags();
+
+  // Now try and scroll to the reference
+  // XXX Should we scroll unconditionally for history loads??
+  TryToScrollToRef();
+  mNotificationTimer = nsnull;
+  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Notify()\n"));
+  MOZ_TIMER_STOP(mWatch);
+  return NS_OK;
+}
+
+PRBool
+nsContentSink::IsTimeToNotify()
+{
+  if (!mNotifyOnTimer || !mLayoutStarted || !mBackoffCount ||
+      mInMonolithicContainer) {
+    return PR_FALSE;
+  }
+
+  PRTime now = PR_Now();
+  PRInt64 interval, diff;
+
+  LL_I2L(interval, GetNotificationInterval());
+  LL_SUB(diff, now, mLastNotificationTime);
+
+  if (LL_CMP(diff, >, interval)) {
+    mBackoffCount--;
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+
+NS_IMETHODIMP
+nsContentSink::WillInterruptImpl()
+{
+  nsresult result = NS_OK;
+
+  SINK_TRACE(gContentSinkLogModuleInfo, SINK_TRACE_CALLS,
+             ("nsContentSink::WillInterrupt: this=%p", this));
+#ifndef SINK_NO_INCREMENTAL
+  if (mNotifyOnTimer && mLayoutStarted) {
+    if (mBackoffCount && !mInMonolithicContainer) {
+      PRInt64 now = PR_Now();
+      PRInt64 interval = GetNotificationInterval();
+      PRInt64 diff = now - mLastNotificationTime;
+
+      // If it's already time for us to have a notification
+      if (diff > interval || mDroppedTimer) {
+        mBackoffCount--;
+        SINK_TRACE(gContentSinkLogModuleInfo, SINK_TRACE_REFLOW,
+                   ("nsContentSink::WillInterrupt: flushing tags since we've "
+                    "run out time; backoff count: %d", mBackoffCount));
+        result = FlushTags();
+        if (mDroppedTimer) {
+          TryToScrollToRef();
+          mDroppedTimer = PR_FALSE;
+        }
+      } else if (!mNotificationTimer) {
+        interval -= diff;
+        PRInt32 delay = interval;
+
+        // Convert to milliseconds
+        delay /= PR_USEC_PER_MSEC;
+
+        mNotificationTimer = do_CreateInstance("@mozilla.org/timer;1",
+                                               &result);
+        if (NS_SUCCEEDED(result)) {
+          SINK_TRACE(gContentSinkLogModuleInfo, SINK_TRACE_REFLOW,
+                     ("nsContentSink::WillInterrupt: setting up timer with "
+                      "delay %d", delay));
+
+          result =
+            mNotificationTimer->InitWithCallback(this, delay,
+                                                 nsITimer::TYPE_ONE_SHOT);
+          if (NS_FAILED(result)) {
+            mNotificationTimer = nsnull;
+          }
+        }
+      }
+    }
+  } else {
+    SINK_TRACE(gContentSinkLogModuleInfo, SINK_TRACE_REFLOW,
+               ("nsContentSink::WillInterrupt: flushing tags "
+                "unconditionally"));
+    result = FlushTags();
+  }
+#endif
+
+  mParsing = PR_FALSE;
+
+  return result;
+}
+
+NS_IMETHODIMP
+nsContentSink::WillResumeImpl()
+{
+  SINK_TRACE(gContentSinkLogModuleInfo, SINK_TRACE_CALLS,
+             ("nsContentSink::WillResume: this=%p", this));
+
+  mParsing = PR_TRUE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentSink::DidProcessATokenImpl()
+{
+  if (!mCanInterruptParser) {
+    return NS_OK;
+  }
+  // There is both a high frequency interrupt mode and a low
+  // frequency interupt mode controlled by the flag
+  // mDynamicLowerValue The high frequency mode
+  // interupts the parser frequently to provide UI responsiveness at
+  // the expense of page load time. The low frequency mode
+  // interrupts the parser and samples the system clock infrequently
+  // to provide fast page load time. When the user moves the mouse,
+  // clicks or types the mode switches to the high frequency
+  // interrupt mode. If the user stops moving the mouse or typing
+  // for a duration of time (mDynamicIntervalSwitchThreshold) it
+  // switches to low frequency interrupt mode.
+
+  // Get the current user event time
+  nsIPresShell *shell = mDocument->GetShellAt(0);
+
+  if (!shell) {
+    // If there's no pres shell in the document, return early since
+    // we're not laying anything out here.
+    return NS_OK;
+  }
+
+  nsIViewManager* vm = shell->GetViewManager();
+  NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
+  PRUint32 eventTime;
+  nsCOMPtr<nsIWidget> widget;
+  nsresult rv = vm->GetWidget(getter_AddRefs(widget));
+  if (!widget || NS_FAILED(widget->GetLastInputEventTime(eventTime))) {
+      // If we can't get the last input time from the widget
+      // then we will get it from the viewmanager.
+      rv = vm->GetLastUserEventTime(eventTime);
+      NS_ENSURE_SUCCESS(rv , NS_ERROR_FAILURE);
+  }
+
+
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+  if (!mDynamicLowerValue && mLastSampledUserEventTime == eventTime) {
+    // The magic value of NS_MAX_TOKENS_DEFLECTED_IN_LOW_FREQ_MODE
+    // was selected by empirical testing. It provides reasonable
+    // user response and prevents us from sampling the clock too
+    // frequently.
+    if (mDeflectedCount < NS_MAX_TOKENS_DEFLECTED_IN_LOW_FREQ_MODE) {
+      mDeflectedCount++;
+      // return early to prevent sampling the clock. Note: This
+      // prevents us from switching to higher frequency (better UI
+      // responsive) mode, so limit ourselves to doing for no more
+      // than NS_MAX_TOKENS_DEFLECTED_IN_LOW_FREQ_MODE tokens.
+
+      return NS_OK;
+    }
+
+    // reset count and drop through to the code which samples the
+    // clock and does the dynamic switch between the high
+    // frequency and low frequency interruption of the parser.
+    mDeflectedCount = 0;
+  }
+  mLastSampledUserEventTime = eventTime;
+
+  PRUint32 currentTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+
+  // Get the last user event time and compare it with the current
+  // time to determine if the lower value for content notification
+  // and max token processing should be used. But only consider
+  // using the lower value if the document has already been loading
+  // for 2 seconds. 2 seconds was chosen because it is greater than
+  // the default 3/4 of second that is used to determine when to
+  // switch between the modes and it gives the document a little
+  // time to create windows.  This is important because on some
+  // systems (Windows, for example) when a window is created and the
+  // mouse is over it, a mouse move event is sent, which will kick
+  // us into interactive mode otherwise. It also suppresses reaction
+  // to pressing the ENTER key in the URL bar...
+
+  PRUint32 delayBeforeLoweringThreshold =
+    NS_STATIC_CAST(PRUint32, ((2 * mDynamicIntervalSwitchThreshold) +
+                              NS_DELAY_FOR_WINDOW_CREATION));
+
+  if ((currentTime - mBeginLoadTime) > delayBeforeLoweringThreshold) {
+    if ((currentTime - eventTime) <
+        NS_STATIC_CAST(PRUint32, mDynamicIntervalSwitchThreshold)) {
+
+      if (!mDynamicLowerValue) {
+        // lower the dynamic values to favor application
+        // responsiveness over page load time.
+        mDynamicLowerValue = PR_TRUE;
+        // Set the performance hint to prevent event starvation when
+        // dispatching PLEvents. This improves application responsiveness
+        // during page loads.
+        FavorPerformanceHint(PR_FALSE, 0);
+      }
+
+    }
+    else if (mDynamicLowerValue) {
+      // raise the content notification and MaxTokenProcessing time
+      // to favor overall page load speed over responsiveness.
+      mDynamicLowerValue = PR_FALSE;
+      // Reset the hint that to favoring performance for PLEvent dispatch.
+      FavorPerformanceHint(PR_TRUE, 0);
+    }
+  }
+
+  if ((currentTime - mDelayTimerStart) >
+      NS_STATIC_CAST(PRUint32, GetMaxTokenProcessingTime())) {
+    return NS_ERROR_HTMLPARSER_INTERRUPTED;
+  }
+
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+
+void
+nsContentSink::FavorPerformanceHint(PRBool perfOverStarvation, PRUint32 starvationDelay)
+{
+  static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+  nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
+  if (appShell)
+    appShell->FavorPerformanceHint(perfOverStarvation, starvationDelay);
+}
+
+void
+nsContentSink::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
+{
+  // If we're in a script and we didn't do the notification,
+  // something else in the script processing caused the
+  // notification to occur. Since this could result in frame
+  // creation, make sure we've flushed everything before we
+  // continue.
+
+  // Note that UPDATE_CONTENT_STATE notifications never cause
+  // synchronous frame construction, so we never have to worry about
+  // them here.  The code that handles the async event these
+  // notifications post will flush us out if it needs to.
+
+  // Also, if this is not an UPDATE_CONTENT_STATE notification,
+  // increment mInNotification to make sure we don't flush again until
+  // the end of this update, even if nested updates or
+  // FlushPendingNotifications calls happen during it.
+  NS_ASSERTION(aUpdateType && (aUpdateType & UPDATE_ALL) == aUpdateType,
+               "Weird update type bitmask");
+  if (aUpdateType != UPDATE_CONTENT_STATE && !mInNotification++) {
+    FlushTags();
+  }
+}
+
+void
+nsContentSink::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
+{
+  // If we're in a script and we didn't do the notification,
+  // something else in the script processing caused the
+  // notification to occur. Update our notion of how much
+  // has been flushed to include any new content if ending
+  // this update leaves us not inside a notification.  Note that we
+  // exclude UPDATE_CONTENT_STATE notifications here, since those
+  // never affect the frame model directly while inside the
+  // notification.
+  NS_ASSERTION(aUpdateType && (aUpdateType & UPDATE_ALL) == aUpdateType,
+               "Weird update type bitmask");
+  if (aUpdateType != UPDATE_CONTENT_STATE && !--mInNotification) {
+    UpdateChildCounts();
+  }
+}
+
+NS_IMETHODIMP
+nsContentSink::DidBuildModelImpl(void)
+{
+  if (mDocument && mDocument->GetDocumentTitle().IsVoid()) {
+    nsCOMPtr<nsIDOMNSDocument> dom_doc(do_QueryInterface(mDocument));
+    dom_doc->SetTitle(EmptyString());
+  }
+
+  // Cancel a timer if we had one out there
+  if (mNotificationTimer) {
+    SINK_TRACE(gContentSinkLogModuleInfo, SINK_TRACE_REFLOW,
+               ("nsContentSink::DidBuildModel: canceling notification "
+                "timeout"));
+    mNotificationTimer->Cancel();
+    mNotificationTimer = 0;
+  }	
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentSink::DropParserAndPerfHint(void)
+{
+  // Ref. Bug 49115
+  // Do this hack to make sure that the parser
+  // doesn't get destroyed, accidently, before
+  // the circularity, between sink & parser, is
+  // actually borken.
+  nsCOMPtr<nsIParser> kungFuDeathGrip(mParser);
+
+  // Drop our reference to the parser to get rid of a circular
+  // reference.
+  mParser = nsnull;
+
+  if (mDynamicLowerValue) {
+    // Reset the performance hint which was set to FALSE
+    // when mDynamicLowerValue was set.
+    FavorPerformanceHint(PR_TRUE, 0);
+  }
+
+  if (mCanInterruptParser) {
+    // Note: Don't return value from RemoveDummyParserRequest,
+    // If RemoveDummyParserRequests fails it should not affect
+    // DidBuildModel. The remove can fail if the parser request
+    // was already removed by a DummyParserRequest::Cancel
+    RemoveDummyParserRequest();
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentSink::WillProcessTokensImpl(void)
+{
+  if (mCanInterruptParser) {
+    mDelayTimerStart = PR_IntervalToMicroseconds(PR_IntervalNow());
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentSink::WillBuildModelImpl()
+{
+  if (mCanInterruptParser) {
+    nsresult rv = AddDummyParserRequest();
+    if (NS_FAILED(rv)) {
+      NS_ERROR("Adding dummy parser request failed");
+
+      // Don't return the error result, just reset flag which
+      // indicates that it can interrupt parsing. If
+      // AddDummyParserRequests fails it should not affect
+      // WillBuildModel.
+      mCanInterruptParser = PR_FALSE;
+    }
+
+    mBeginLoadTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+  }
+
+  mScrolledToRefAlready = PR_FALSE;
+  return NS_OK;
+}
+
+// If the content sink can interrupt the parser (@see mCanInteruptParsing)
+// then it needs to schedule a dummy parser request to delay the document
+// from firing onload handlers and other document done actions until all of the
+// parsing has completed.
+
+nsresult
+nsContentSink::AddDummyParserRequest(void)
+{
+  nsresult rv = NS_OK;
+
+  NS_ASSERTION(!mDummyParserRequest, "Already have a dummy parser request");
+
+  mDummyParserRequest = new DummyParserRequest(this);
+  if (!mDummyParserRequest) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  if (mDocument) {
+    loadGroup = mDocument->GetDocumentLoadGroup();
+  }
+
+  if (loadGroup) {
+    rv = mDummyParserRequest->SetLoadGroup(loadGroup);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    rv = loadGroup->AddRequest(mDummyParserRequest, nsnull);
+  }
+
+  return rv;
+}
+
+nsresult
+nsContentSink::RemoveDummyParserRequest(void)
+{
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  if (mDocument) {
+    loadGroup = mDocument->GetDocumentLoadGroup();
+  }
+
+  if (loadGroup && mDummyParserRequest) {
+    rv = loadGroup->RemoveRequest(mDummyParserRequest, nsnull, NS_OK);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    mDummyParserRequest = nsnull;
+  }
+
+  return rv;
+}
+

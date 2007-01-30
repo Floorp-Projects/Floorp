@@ -100,6 +100,7 @@ public:
                                  nsAString& aStr);
 
   // nsIContentSink
+  NS_IMETHOD WillTokenize(void) { return NS_OK; }
   NS_IMETHOD WillBuildModel(void) { return NS_OK; }
   NS_IMETHOD DidBuildModel(void) { return NS_OK; }
   NS_IMETHOD WillInterrupt(void) { return NS_OK; }

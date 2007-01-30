@@ -24,6 +24,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Peter Annema <disttsc@bart.nl>
  *   Daniel Glazman <glazman@netscape.com>
+ *   Henri Sivonen <hsivonen@iki.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -127,70 +128,17 @@
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 
-//----------------------------------------------------------------------
-
-static void
-FavorPerformanceHint(PRBool perfOverStarvation, PRUint32 starvationDelay)
-{
-  static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-  nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
-  if (appShell)
-    appShell->FavorPerformanceHint(perfOverStarvation, starvationDelay);
-}
-
-//----------------------------------------------------------------------
-
 #ifdef NS_DEBUG
 static PRLogModuleInfo* gSinkLogModuleInfo;
-
-#define SINK_TRACE_CALLS              0x1
-#define SINK_TRACE_REFLOW             0x2
-#define SINK_ALWAYS_REFLOW            0x4
-
-#define SINK_LOG_TEST(_lm, _bit) (PRIntn((_lm)->level) & (_bit))
-
-#define SINK_TRACE(_bit, _args)                       \
-  PR_BEGIN_MACRO                                      \
-    if (SINK_LOG_TEST(gSinkLogModuleInfo, _bit)) {    \
-      PR_LogPrint _args;                              \
-    }                                                 \
-  PR_END_MACRO
 
 #define SINK_TRACE_NODE(_bit, _msg, _tag, _sp, _obj) \
   _obj->SinkTraceNode(_bit, _msg, _tag, _sp, this)
 
 #else
-#define SINK_TRACE(_bit, _args)
 #define SINK_TRACE_NODE(_bit, _msg, _tag, _sp, _obj)
 #endif
 
-#undef SINK_NO_INCREMENTAL
-
 //----------------------------------------------------------------------
-
-#define NS_SINK_FLAG_SCRIPT_ENABLED       0x00000008
-
-#define NS_SINK_FLAG_FRAMES_ENABLED       0x00000010
-
-// Interrupt parsing when mMaxTokenProcessingTime is exceeded
-#define NS_SINK_FLAG_CAN_INTERRUPT_PARSER 0x00000020
-
-// Lower the value for mNotificationInterval and
-// mMaxTokenProcessingTime
-#define NS_SINK_FLAG_DYNAMIC_LOWER_VALUE  0x00000040
-
-#define NS_SINK_FLAG_FORM_ON_STACK        0x00000080
-
-#define NS_SINK_FLAG_PARSING              0x00000100
-
-#define NS_SINK_FLAG_DROPPED_TIMER        0x00000200
-
-// 1/2 second fudge factor for window creation
-#define NS_DELAY_FOR_WINDOW_CREATION  500000
-
-// 200 determined empirically to provide good user response without
-// sampling the clock too often.
-#define NS_MAX_TOKENS_DEFLECTED_IN_LOW_FREQ_MODE 200
 
 typedef nsGenericHTMLElement* (*contentCreatorCallback)(nsINodeInfo*, PRBool aFromParser);
 
@@ -217,16 +165,13 @@ class HTMLContentSink;
 static void MaybeSetForm(nsGenericHTMLElement*, nsHTMLTag, HTMLContentSink*);
 
 class HTMLContentSink : public nsContentSink,
-                        public nsIHTMLContentSink,
-                        public nsITimerCallback,
 #ifdef DEBUG
                         public nsIDebugDumpContent,
 #endif
-                        public nsStubDocumentObserver
+                        public nsIHTMLContentSink
 {
 public:
   friend class SinkContext;
-  friend class DummyParserRequest;
   friend void MaybeSetForm(nsGenericHTMLElement*, nsHTMLTag, HTMLContentSink*);
 
   HTMLContentSink();
@@ -241,6 +186,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIContentSink
+  NS_IMETHOD WillTokenize(void);
   NS_IMETHOD WillBuildModel(void);
   NS_IMETHOD DidBuildModel(void);
   NS_IMETHOD WillInterrupt(void);
@@ -269,21 +215,12 @@ public:
   NS_IMETHOD IsEnabled(PRInt32 aTag, PRBool* aReturn);
   NS_IMETHOD_(PRBool) IsFormOnStack();
 
-  // nsITimerCallback
-  NS_DECL_NSITIMERCALLBACK
-  
-  // nsIDocumentObserver
-  virtual void BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType);
-  virtual void EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType);
-
 #ifdef DEBUG
   // nsIDebugDumpContent
   NS_IMETHOD DumpContentModel();
 #endif
 
 protected:
-  PRBool IsTimeToNotify();
-
   nsresult UpdateDocumentTitle();
   // If aCheckIfPresent is true, will only set an attribute in cases
   // when it's not already set.
@@ -292,24 +229,6 @@ protected:
                          PRBool aCheckIfPresent = PR_FALSE);
   already_AddRefed<nsGenericHTMLElement>
   CreateContentObject(const nsIParserNode& aNode, nsHTMLTag aNodeType);
-
-  inline PRInt32 GetNotificationInterval()
-  {
-    if (mFlags & NS_SINK_FLAG_DYNAMIC_LOWER_VALUE) {
-      return 1000;
-    }
-
-    return mNotificationInterval;
-  }
-
-  inline PRInt32 GetMaxTokenProcessingTime()
-  {
-    if (mFlags & NS_SINK_FLAG_DYNAMIC_LOWER_VALUE) {
-      return 3000;
-    }
-
-    return mMaxTokenProcessingTime;
-  }
 
 #ifdef NS_DEBUG
   void SinkTraceNode(PRUint32 aBit,
@@ -321,18 +240,6 @@ protected:
 
   nsIHTMLDocument* mHTMLDocument;
 
-  // back off timer notification after count
-  PRInt32 mBackoffCount;
-
-  // Notification interval in microseconds
-  PRInt32 mNotificationInterval;
-
-  // Time of last notification
-  PRTime mLastNotificationTime;
-
-  // Timer used for notification
-  nsCOMPtr<nsITimer> mNotificationTimer;
-
   // The maximum length of a text run
   PRInt32 mMaxTextRun;
 
@@ -341,55 +248,21 @@ protected:
   nsRefPtr<nsGenericHTMLElement> mFrameset;
   nsGenericHTMLElement* mHead;
 
-  // Do we notify based on time?
-  PRPackedBool mNotifyOnTimer;
-
-  PRPackedBool mLayoutStarted;
-  PRPackedBool mScrolledToRefAlready;
   PRPackedBool mInTitle;
 
   nsString mTitleString;
-  PRInt32 mInNotification;
   nsRefPtr<nsGenericHTMLElement> mCurrentForm;
 
   nsAutoVoidArray mContextStack;
   SinkContext* mCurrentContext;
   SinkContext* mHeadContext;
   PRInt32 mNumOpenIFRAMES;
-  nsCOMPtr<nsIRequest> mDummyParserRequest;
 
   nsCOMPtr<nsIURI> mBaseHref;
   nsCOMPtr<nsIAtom> mBaseTarget;
 
   // depth of containment within <noembed>, <noframes> etc
   PRInt32 mInsideNoXXXTag;
-  PRInt32 mInMonolithicContainer;
-  PRUint32 mFlags;
-
-  // -- Can interrupt parsing members --
-  PRUint32 mDelayTimerStart;
-
-  // Interrupt parsing during token procesing after # of microseconds
-  PRInt32 mMaxTokenProcessingTime;
-
-  // Switch between intervals when time is exceeded
-  PRInt32 mDynamicIntervalSwitchThreshold;
-
-  PRInt32 mBeginLoadTime;
-
-  // Last mouse event or keyboard event time sampled by the content
-  // sink
-  PRUint32 mLastSampledUserEventTime;
-
-  // The number of tokens that have been processed while in the low
-  // frequency parser interrupt mode without falling through to the
-  // logic which decides whether to switch to the high frequency
-  // parser interrupt mode.
-  PRUint8 mDeflectedCount;
-
-  // Boolean indicating whether we've notified insertion of our root content
-  // yet.  We want to make sure to only do this once.
-  PRPackedBool mNotifiedRootInsertion;
 
   // Boolean indicating whether we've seen a <head> tag that might have had
   // attributes once already.
@@ -398,6 +271,8 @@ protected:
   nsCOMPtr<nsIObserverEntry> mObservers;
 
   nsINodeInfo* mNodeInfoCache[NS_HTML_TAG_MAX + 1];
+
+  nsresult FlushTags();
 
   void StartLayout();
 
@@ -435,17 +310,12 @@ protected:
   virtual void PreEvaluateScript();
   virtual void PostEvaluateScript(nsIScriptElement *aElement);
 
-  void UpdateAllContexts();
-  void NotifyAppend(nsIContent* aContent,
-                    PRUint32 aStartIndex);
+  void UpdateChildCounts();
+
   void NotifyInsert(nsIContent* aContent,
                     nsIContent* aChildContent,
                     PRInt32 aIndexInContainer);
   PRBool IsMonolithicContainer(nsHTMLTag aTag);
-
-  // CanInterrupt parsing related routines
-  nsresult AddDummyParserRequest(void);
-  nsresult RemoveDummyParserRequest(void);
 
 #ifdef NS_DEBUG
   void ForceReflow();
@@ -454,118 +324,6 @@ protected:
   // Measures content model creation time for current document
   MOZ_TIMER_DECLARE(mWatch)
 };
-
-
-//----------------------------------------------------------------------
-//
-// DummyParserRequest
-//
-//   This is a dummy request implementation that we add to the document's load
-//   group. It ensures that EndDocumentLoad() in the docshell doesn't fire
-//   before we've finished all of parsing and tokenizing of the document.
-//
-
-class DummyParserRequest : public nsIRequest
-{
-protected:
-  DummyParserRequest(nsIHTMLContentSink* aSink);
-
-  nsIHTMLContentSink* mSink; // Weak reference
-
-public:
-  static nsresult
-  Create(nsIRequest** aResult, nsIHTMLContentSink* aSink);
-
-  NS_DECL_ISUPPORTS
-
-  // nsIRequest
-  NS_IMETHOD GetName(nsACString &result)
-  {
-    result.AssignLiteral("about:layout-dummy-request");
-    return NS_OK;
-  }
-
-  NS_IMETHOD IsPending(PRBool *_retval)
-  {
-    *_retval = PR_TRUE;
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetStatus(nsresult *status)
-  {
-    *status = NS_OK;
-    return NS_OK;
-  }
-
-  NS_IMETHOD Cancel(nsresult status);
-  NS_IMETHOD Suspend(void)
-  {
-    return NS_OK;
-  }
-
-  NS_IMETHOD Resume(void)
-  {
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetLoadGroup(nsILoadGroup **aLoadGroup)
-  {
-    *aLoadGroup = nsnull;
-
-    return NS_OK;
-  }
-
-  NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup)
-  {
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetLoadFlags(nsLoadFlags *aLoadFlags)
-  {
-    *aLoadFlags = nsIRequest::LOAD_NORMAL;
-
-    return NS_OK;
-  }
-
-  NS_IMETHOD SetLoadFlags(nsLoadFlags aLoadFlags)
-  {
-    return NS_OK;
-  }
-};
-
-NS_IMPL_ISUPPORTS1(DummyParserRequest, nsIRequest)
-
-nsresult
-DummyParserRequest::Create(nsIRequest** aResult, nsIHTMLContentSink* aSink)
-{
-  *aResult = new DummyParserRequest(aSink);
-  if (!*aResult) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_ADDREF(*aResult);
-
-  return NS_OK;
-}
-
-
-DummyParserRequest::DummyParserRequest(nsIHTMLContentSink* aSink)
-{
-  mSink = aSink;
-}
-
-NS_IMETHODIMP
-DummyParserRequest::Cancel(nsresult status)
-{
-  // Cancel parser
-  nsresult rv = NS_OK;
-  HTMLContentSink* sink = NS_STATIC_CAST(HTMLContentSink*, mSink);
-  if ((sink) && (sink->mParser)) {
-    sink->mParser->CancelParsingEvents();
-  }
-  return rv;
-}
-
 
 class SinkContext
 {
@@ -960,7 +718,7 @@ SinkContext::DidAddContent(nsIContent* aContent)
       nsHTMLTag tag = nsHTMLTag(mStack[mStackPos - 1].mType);
       NS_ConvertUTF16toUTF8 str(parserService->HTMLIdToStringTag(tag));
 
-      SINK_TRACE(SINK_TRACE_REFLOW,
+      SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_REFLOW,
                  ("SinkContext::DidAddContent: Insertion notification for "
                   "parent=%s at position=%d and stackPos=%d",
                   str.get(), mStack[mStackPos - 1].mInsertionPoint - 1,
@@ -972,7 +730,7 @@ SinkContext::DidAddContent(nsIContent* aContent)
                         mStack[mStackPos - 1].mInsertionPoint - 1);
     mStack[mStackPos - 1].mNumFlushed = parent->GetChildCount();
   } else if (mSink->IsTimeToNotify()) {
-    SINK_TRACE(SINK_TRACE_REFLOW,
+    SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_REFLOW,
                ("SinkContext::DidAddContent: Notification as a result of the "
                 "interval expiring; backoff count: %d", mSink->mBackoffCount));
     FlushTags();
@@ -1096,8 +854,7 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
       break;
 
     case eHTMLTag_frameset:
-      if (!mSink->mFrameset &&
-          mSink->mFlags & NS_SINK_FLAG_FRAMES_ENABLED) {
+      if (!mSink->mFrameset && mSink->mFramesEnabled) {
         mSink->mFrameset = content;
       }
       break;
@@ -1192,7 +949,7 @@ SinkContext::CloseContainer(const nsHTMLTag aTag, PRBool aMalformed)
         const char *tagStr;
         mStack[mStackPos].mContent->Tag()->GetUTF8String(&tagStr);
 
-        SINK_TRACE(SINK_TRACE_REFLOW,
+        SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_REFLOW,
                    ("SinkContext::CloseContainer: reflow on notifyImmediate "
                     "tag=%s newIndex=%d stackPos=%d",
                     tagStr,
@@ -1226,7 +983,7 @@ SinkContext::CloseContainer(const nsHTMLTag aTag, PRBool aMalformed)
     break;
   case eHTMLTag_form:
     {
-      mSink->mFlags &= ~NS_SINK_FLAG_FORM_ON_STACK;
+      mSink->mFormOnStack = PR_FALSE;
       // If there's a FORM on the stack, but this close tag doesn't
       // close the form, then close out the form *and* close out the
       // next container up. This is since the parser doesn't do fix up
@@ -1576,6 +1333,8 @@ SinkContext::AddText(const nsAString& aText)
 }
 
 /**
+ * NOTE!! Forked into nsXMLContentSink. Please keep in sync.
+ *
  * Flush all elements that have been seen so far such that
  * they are visible in the tree. Specifically, make sure
  * that they are all added to their respective parents.
@@ -1615,7 +1374,7 @@ SinkContext::FlushTags()
         const char* tagStr;
         mStack[stackPos].mContent->Tag()->GetUTF8String(&tagStr);
 
-        SINK_TRACE(SINK_TRACE_REFLOW,
+        SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_REFLOW,
                    ("SinkContext::FlushTags: tag=%s from newindex=%d at "
                     "stackPos=%d", tagStr,
                     mStack[stackPos].mNumFlushed, stackPos));
@@ -1643,6 +1402,9 @@ SinkContext::FlushTags()
   return NS_OK;
 }
 
+/**
+ * NOTE!! Forked into nsXMLContentSink. Please keep in sync.
+ */
 void
 SinkContext::UpdateChildCounts()
 {
@@ -1926,57 +1688,15 @@ HTMLContentSink::Init(nsIDocument* aDoc,
     PRBool subFramesEnabled = PR_TRUE;
     mDocShell->GetAllowSubframes(&subFramesEnabled);
     if (subFramesEnabled) {
-      mFlags |= NS_SINK_FLAG_FRAMES_ENABLED;
+      mFramesEnabled = PR_TRUE;
     }
   }
 
   // Find out if scripts are enabled, if not, show <noscript> content
   if (IsScriptEnabled(aDoc, mDocShell)) {
-    mFlags |= NS_SINK_FLAG_SCRIPT_ENABLED;
+    mScriptEnabled = PR_TRUE;
   }
 
-  mNotifyOnTimer =
-    nsContentUtils::GetBoolPref("content.notify.ontimer", PR_TRUE);
-
-  // -1 means never
-  mBackoffCount =
-    nsContentUtils::GetIntPref("content.notify.backoffcount", -1);
-
-  // The mNotificationInterval has a dramatic effect on how long it
-  // takes to initially display content for slow connections.
-  // The current value provides good
-  // incremental display of content without causing an increase
-  // in page load time. If this value is set below 1/10 of second
-  // it starts to impact page load performance.
-  // see bugzilla bug 72138 for more info.
-  mNotificationInterval =
-    nsContentUtils::GetIntPref("content.notify.interval", 120000);
-
-  // The mMaxTokenProcessingTime controls how long we stay away from
-  // the event loop when processing token. A lower value makes the app
-  // more responsive, but may increase page load time.  The content
-  // sink mNotificationInterval gates how frequently the content is
-  // processed so it will also affect how interactive the app is
-  // during page load also. The mNotification prevents contents
-  // flushes from happening too frequently. while
-  // mMaxTokenProcessingTime prevents flushes from happening too
-  // infrequently.
-
-  // The current ratio of 3 to 1 was determined to be the lowest
-  // mMaxTokenProcessingTime which does not impact page load
-  // performance.  See bugzilla bug 76722 for details.
-
-  mMaxTokenProcessingTime =
-    nsContentUtils::GetIntPref("content.max.tokenizing.time",
-                               mNotificationInterval * 3);
-
-  // 3/4 second (750000us) default for switching
-  mDynamicIntervalSwitchThreshold =
-    nsContentUtils::GetIntPref("content.switch.threshold", 750000);
-
-  if (nsContentUtils::GetBoolPref("content.interrupt.parsing", PR_TRUE)) {
-    mFlags |= NS_SINK_FLAG_CAN_INTERRUPT_PARSER;
-  }
 
   // Changed from 8192 to greatly improve page loading performance on
   // large pages.  See bugzilla bug 77540.
@@ -2035,7 +1755,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
 #ifdef NS_DEBUG
   nsCAutoString spec;
   (void)aURI->GetSpec(spec);
-  SINK_TRACE(SINK_TRACE_CALLS,
+  SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_CALLS,
              ("HTMLContentSink::Init: this=%p url='%s'",
               this, spec.get()));
 #endif
@@ -2049,23 +1769,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
 NS_IMETHODIMP
 HTMLContentSink::WillBuildModel(void)
 {
-  if (mFlags & NS_SINK_FLAG_CAN_INTERRUPT_PARSER) {
-    nsresult rv = AddDummyParserRequest();
-    if (NS_FAILED(rv)) {
-      NS_ERROR("Adding dummy parser request failed");
-
-      // Don't return the error result, just reset flag which
-      // indicates that it can interrupt parsing. If
-      // AddDummyParserRequests fails it should not affect
-      // WillBuildModel.
-      mFlags &= ~NS_SINK_FLAG_CAN_INTERRUPT_PARSER;
-    }
-
-    mBeginLoadTime = PR_IntervalToMicroseconds(PR_IntervalNow());
-  }
-
-  mScrolledToRefAlready = PR_FALSE;
-
+  WillBuildModelImpl();
   if (mHTMLDocument) {
     NS_ASSERTION(mParser, "no parser");
     nsCompatibility mode = eCompatibility_NavQuirks;
@@ -2108,29 +1812,17 @@ HTMLContentSink::DidBuildModel(void)
   MOZ_TIMER_PRINT(mWatch);
 #endif
 
-  // Cancel a timer if we had one out there
-  if (mNotificationTimer) {
-    SINK_TRACE(SINK_TRACE_REFLOW,
-               ("HTMLContentSink::DidBuildModel: canceling notification "
-                "timeout"));
-    mNotificationTimer->Cancel();
-    mNotificationTimer = 0;
-  }
-
-  if (mDocument->GetDocumentTitle().IsVoid()) {
-    nsCOMPtr<nsIDOMNSDocument> domDoc(do_QueryInterface(mDocument));
-    domDoc->SetTitle(EmptyString());
-  }
+  DidBuildModelImpl();
 
   // Reflow the last batch of content
   if (mBody || mFrameset) {
-    SINK_TRACE(SINK_TRACE_REFLOW,
+    SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_REFLOW,
                ("HTMLContentSink::DidBuildModel: layout final content"));
     mCurrentContext->FlushTags();
   } else if (!mLayoutStarted) {
     // We never saw the body, and layout never got started. Force
     // layout *now*, to get an initial reflow.
-    SINK_TRACE(SINK_TRACE_REFLOW,
+    SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_REFLOW,
                ("HTMLContentSink::DidBuildModel: forcing reflow on empty "
                 "document"));
 
@@ -2171,149 +1863,7 @@ HTMLContentSink::DidBuildModel(void)
   
   mDocument->EndLoad();
 
-  // Ref. Bug 49115
-  // Do this hack to make sure that the parser
-  // doesn't get destroyed, accidently, before
-  // the circularity, between sink & parser, is
-  // actually borken.
-  nsCOMPtr<nsIParser> kungFuDeathGrip(mParser);
-
-  // Drop our reference to the parser to get rid of a circular
-  // reference.
-  mParser = nsnull;
-
-  if (mFlags & NS_SINK_FLAG_DYNAMIC_LOWER_VALUE) {
-    // Reset the performance hint which was set to FALSE
-    // when NS_SINK_FLAG_DYNAMIC_LOWER_VALUE was set. 
-    FavorPerformanceHint(PR_TRUE , 0);
-  }
-
-  if (mFlags & NS_SINK_FLAG_CAN_INTERRUPT_PARSER) {
-    // Note: Don't return value from RemoveDummyParserRequest,
-    // If RemoveDummyParserRequests fails it should not affect
-    // DidBuildModel. The remove can fail if the parser request
-    // was already removed by a DummyParserRequest::Cancel
-    RemoveDummyParserRequest();
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLContentSink::Notify(nsITimer *timer)
-{
-  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::Notify()\n"));
-  MOZ_TIMER_START(mWatch);
-
-  if (mFlags & NS_SINK_FLAG_PARSING) {
-    // We shouldn't interfere with our normal DidProcessAToken logic
-    mFlags |= NS_SINK_FLAG_DROPPED_TIMER;
-    return NS_OK;
-  }
-  
-#ifdef MOZ_DEBUG
-  {
-    PRTime now = PR_Now();
-    PRInt64 diff, interval;
-    PRInt32 delay;
-
-    LL_I2L(interval, GetNotificationInterval());
-    LL_SUB(diff, now, mLastNotificationTime);
-
-    LL_SUB(diff, diff, interval);
-    LL_L2I(delay, diff);
-    delay /= PR_USEC_PER_MSEC;
-
-    mBackoffCount--;
-    SINK_TRACE(SINK_TRACE_REFLOW,
-               ("HTMLContentSink::Notify: reflow on a timer: %d milliseconds "
-                "late, backoff count: %d", delay, mBackoffCount));
-  }
-#endif
-
-  if (mCurrentContext) {
-    mCurrentContext->FlushTags();
-  }
-
-  // Now try and scroll to the reference
-  // XXX Should we scroll unconditionally for history loads??
-  TryToScrollToRef();
-
-  mNotificationTimer = 0;
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Notify()\n"));
-  MOZ_TIMER_STOP(mWatch);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLContentSink::WillInterrupt()
-{
-  nsresult result = NS_OK;
-
-  SINK_TRACE(SINK_TRACE_CALLS, ("HTMLContentSink::WillInterrupt: this=%p",
-                                this));
-#ifndef SINK_NO_INCREMENTAL
-  if (mNotifyOnTimer && mLayoutStarted) {
-    if (mBackoffCount && !mInMonolithicContainer) {
-      nsInt64 now(PR_Now());
-      nsInt64 interval(GetNotificationInterval());
-      nsInt64 lastNotification(mLastNotificationTime);
-      nsInt64 diff(now - lastNotification);
-
-      // If it's already time for us to have a notification
-      if (diff > interval || (mFlags & NS_SINK_FLAG_DROPPED_TIMER)) {
-        mBackoffCount--;
-        SINK_TRACE(SINK_TRACE_REFLOW,
-                 ("HTMLContentSink::WillInterrupt: flushing tags since we've "
-                  "run out time; backoff count: %d", mBackoffCount));
-        result = mCurrentContext->FlushTags();
-        if (mFlags & NS_SINK_FLAG_DROPPED_TIMER) {
-          TryToScrollToRef();
-          mFlags &= ~NS_SINK_FLAG_DROPPED_TIMER;
-        }
-      } else if (!mNotificationTimer) {
-        interval -= diff;
-        PRInt32 delay = interval;
-        
-        // Convert to milliseconds
-        delay /= PR_USEC_PER_MSEC;
-
-        mNotificationTimer = do_CreateInstance("@mozilla.org/timer;1",
-                                               &result);
-        if (NS_SUCCEEDED(result)) {
-          SINK_TRACE(SINK_TRACE_REFLOW,
-                     ("HTMLContentSink::WillInterrupt: setting up timer with "
-                      "delay %d", delay));
-
-          result =
-            mNotificationTimer->InitWithCallback(this, delay,
-                                                 nsITimer::TYPE_ONE_SHOT);
-          if (NS_FAILED(result)) {
-            mNotificationTimer = nsnull;
-          }
-        }
-      }
-    }
-  } else {
-    SINK_TRACE(SINK_TRACE_REFLOW,
-               ("HTMLContentSink::WillInterrupt: flushing tags "
-                "unconditionally"));
-
-    result = mCurrentContext->FlushTags();
-  }
-#endif
-
-  mFlags &= ~NS_SINK_FLAG_PARSING;
-  
-  return result;
-}
-
-NS_IMETHODIMP
-HTMLContentSink::WillResume()
-{
-  SINK_TRACE(SINK_TRACE_CALLS, ("HTMLContentSink::WillResume: this=%p", this));
-
-  mFlags |= NS_SINK_FLAG_PARSING;
+  DropParserAndPerfHint();
 
   return NS_OK;
 }
@@ -2328,7 +1878,7 @@ HTMLContentSink::SetParser(nsIParser* aParser)
 NS_IMETHODIMP_(PRBool)
 HTMLContentSink::IsFormOnStack()
 {
-  return mFlags & NS_SINK_FLAG_FORM_ON_STACK;
+  return mFormOnStack;
 }
 
 NS_IMETHODIMP
@@ -2569,7 +2119,7 @@ HTMLContentSink::CloseBody()
   }
 
   // Flush out anything that's left
-  SINK_TRACE(SINK_TRACE_REFLOW,
+  SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_REFLOW,
              ("HTMLContentSink::CloseBody: layout final body content"));
 
   mCurrentContext->FlushTags();
@@ -2612,7 +2162,7 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
       mCurrentContext->IsCurrentContainer(eHTMLTag_colgroup)) {
     result = mCurrentContext->AddLeaf(aNode);
   } else {
-    mFlags |= NS_SINK_FLAG_FORM_ON_STACK;
+    mFormOnStack = PR_TRUE;
     // Otherwise the form can be a content parent.
     result = mCurrentContext->OpenContainer(aNode);
   }
@@ -2641,7 +2191,7 @@ HTMLContentSink::CloseForm()
     // if this is a well-formed form, close it too
     if (mCurrentContext->IsCurrentContainer(eHTMLTag_form)) {
       result = mCurrentContext->CloseContainer(eHTMLTag_form, PR_FALSE);
-      mFlags &= ~NS_SINK_FLAG_FORM_ON_STACK;
+      mFormOnStack = PR_FALSE;
     }
 
     mCurrentForm = nsnull;
@@ -2729,7 +2279,7 @@ HTMLContentSink::CloseFrameset()
     }
 
     // Flush out anything that's left
-    SINK_TRACE(SINK_TRACE_REFLOW,
+    SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_REFLOW,
                ("HTMLContentSink::CloseFrameset: layout final content"));
 
     sc->FlushTags();
@@ -2740,7 +2290,7 @@ HTMLContentSink::CloseFrameset()
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseFrameset()\n"));
   MOZ_TIMER_STOP(mWatch);
 
-  if (done && (mFlags & NS_SINK_FLAG_FRAMES_ENABLED)) {
+  if (done && mFramesEnabled) {
     StartLayout();
   }
 
@@ -2753,9 +2303,9 @@ HTMLContentSink::IsEnabled(PRInt32 aTag, PRBool* aReturn)
   nsHTMLTag theHTMLTag = nsHTMLTag(aTag);
 
   if (theHTMLTag == eHTMLTag_script) {
-    *aReturn = mFlags & NS_SINK_FLAG_SCRIPT_ENABLED ? PR_TRUE : PR_FALSE;
+    *aReturn = mScriptEnabled;
   } else if (theHTMLTag == eHTMLTag_frameset) {
-    *aReturn = mFlags & NS_SINK_FLAG_FRAMES_ENABLED ? PR_TRUE : PR_FALSE;
+    *aReturn = mFramesEnabled;
   } else {
     *aReturn = PR_FALSE;
   }
@@ -2808,7 +2358,7 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
           // Now update the notification information in all our
           // contexts, since we just inserted the root and notified on
           // our whole tree
-          UpdateAllContexts();          
+          UpdateChildCounts();
         }
       }
       break;
@@ -3194,15 +2744,16 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
   return rv;
 }
 
+NS_IMETHODIMP
+HTMLContentSink::WillTokenize(void)
+{
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 HTMLContentSink::WillProcessTokens(void)
 {
-  if (mFlags & NS_SINK_FLAG_CAN_INTERRUPT_PARSER) {
-    mDelayTimerStart = PR_IntervalToMicroseconds(PR_IntervalNow());
-  }
-
-  return NS_OK;
+  return WillProcessTokensImpl();
 }
 
 NS_IMETHODIMP
@@ -3220,122 +2771,19 @@ HTMLContentSink::WillProcessAToken(void)
 NS_IMETHODIMP
 HTMLContentSink::DidProcessAToken(void)
 {
-  if (mFlags & NS_SINK_FLAG_CAN_INTERRUPT_PARSER) {
-    // There is both a high frequency interrupt mode and a low
-    // frequency interupt mode controlled by the flag
-    // NS_SINK_FLAG_DYNAMIC_LOWER_VALUE The high frequency mode
-    // interupts the parser frequently to provide UI responsiveness at
-    // the expense of page load time. The low frequency mode
-    // interrupts the parser and samples the system clock infrequently
-    // to provide fast page load time. When the user moves the mouse,
-    // clicks or types the mode switches to the high frequency
-    // interrupt mode. If the user stops moving the mouse or typing
-    // for a duration of time (mDynamicIntervalSwitchThreshold) it
-    // switches to low frequency interrupt mode.
+  return DidProcessATokenImpl();
+}
 
-    // Get the current user event time
-    nsIPresShell *shell = mDocument->GetShellAt(0);
+NS_IMETHODIMP
+HTMLContentSink::WillInterrupt()
+{
+  return WillInterruptImpl();	
+}
 
-    if (!shell) {
-      // If there's no pres shell in the document, return early since
-      // we're not laying anything out here.
-
-      return NS_OK;
-    }
-
-    nsIViewManager* vm = shell->GetViewManager();
-    NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
-    PRUint32 eventTime;
-    nsCOMPtr<nsIWidget> widget;
-    nsresult rv = vm->GetWidget(getter_AddRefs(widget));
-    if (!widget || NS_FAILED(widget->GetLastInputEventTime(eventTime))) {
-        // If we can't get the last input time from the widget
-        // then we will get it from the viewmanager.
-        rv = vm->GetLastUserEventTime(eventTime);
-        NS_ENSURE_SUCCESS(rv , NS_ERROR_FAILURE);
-    }
-
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-
-    if ((!(mFlags & NS_SINK_FLAG_DYNAMIC_LOWER_VALUE)) &&
-      (mLastSampledUserEventTime == eventTime)) {
-      // The magic value of NS_MAX_TOKENS_DEFLECTED_IN_LOW_FREQ_MODE
-      // was selected by empirical testing. It provides reasonable
-      // user response and prevents us from sampling the clock too
-      // frequently.
-      if (mDeflectedCount < NS_MAX_TOKENS_DEFLECTED_IN_LOW_FREQ_MODE) {
-        mDeflectedCount++;
-
-        // return early to prevent sampling the clock. Note: This
-        // prevents us from switching to higher frequency (better UI
-        // responsive) mode, so limit ourselves to doing for no more
-        // than NS_MAX_TOKENS_DEFLECTED_IN_LOW_FREQ_MODE tokens.
-
-        return NS_OK;
-      }
-
-      // reset count and drop through to the code which samples the
-      // clock and does the dynamic switch between the high
-      // frequency and low frequency interruption of the parser.
-
-      mDeflectedCount = 0;
-    }
-
-    mLastSampledUserEventTime = eventTime;
-
-    PRUint32 currentTime = PR_IntervalToMicroseconds(PR_IntervalNow());
-
-    // Get the last user event time and compare it with the current
-    // time to determine if the lower value for content notification
-    // and max token processing should be used. But only consider
-    // using the lower value if the document has already been loading
-    // for 2 seconds. 2 seconds was chosen because it is greater than
-    // the default 3/4 of second that is used to determine when to
-    // switch between the modes and it gives the document a little
-    // time to create windows.  This is important because on some
-    // systems (Windows, for example) when a window is created and the
-    // mouse is over it, a mouse move event is sent, which will kick
-    // us into interactive mode otherwise. It also suppresses reaction
-    // to pressing the ENTER key in the URL bar...
-
-    PRUint32 delayBeforeLoweringThreshold =
-      NS_STATIC_CAST(PRUint32, ((2 * mDynamicIntervalSwitchThreshold) +
-                                NS_DELAY_FOR_WINDOW_CREATION));
-
-    if ((currentTime - mBeginLoadTime) > delayBeforeLoweringThreshold) {
-      if ((currentTime - eventTime) <
-          NS_STATIC_CAST(PRUint32, mDynamicIntervalSwitchThreshold)) {
-    
-        if (! (mFlags & NS_SINK_FLAG_DYNAMIC_LOWER_VALUE)) {
-          // lower the dynamic values to favor application
-          // responsiveness over page load time.
-          mFlags |= NS_SINK_FLAG_DYNAMIC_LOWER_VALUE;
-          // Set the performance hint to prevent event starvation when
-          // dispatching PLEvents. This improves application responsiveness 
-          // during page loads.
-          FavorPerformanceHint(PR_FALSE, 0);
-        }
-
-      } else {
-      
-        if (mFlags & NS_SINK_FLAG_DYNAMIC_LOWER_VALUE) {
-          // raise the content notification and MaxTokenProcessing time
-          // to favor overall page load speed over responsiveness.
-          mFlags &= ~NS_SINK_FLAG_DYNAMIC_LOWER_VALUE;
-          // Reset the hint that to favoring performance for PLEvent dispatch.
-          FavorPerformanceHint(PR_TRUE, 0);
-        }
-
-      }
-    }
-
-    if ((currentTime - mDelayTimerStart) >
-        NS_STATIC_CAST(PRUint32, GetMaxTokenProcessingTime())) {
-      return NS_ERROR_HTMLPARSER_INTERRUPTED;
-    }
-  }
-
-  return NS_OK;
+NS_IMETHODIMP
+HTMLContentSink::WillResume()
+{
+  return WillResumeImpl();
 }
 
 NS_IMETHODIMP
@@ -3365,10 +2813,6 @@ HTMLContentSink::StartLayout()
   if (mLayoutStarted) {
     return;
   }
-
-  mLayoutStarted = PR_TRUE;
-
-  mLastNotificationTime = PR_Now();
 
   mHTMLDocument->SetIsFrameset(mFrameset != nsnull);
 
@@ -3588,30 +3032,6 @@ HTMLContentSink::ForceReflow()
 #endif
 
 void
-HTMLContentSink::NotifyAppend(nsIContent* aContainer, PRUint32 aStartIndex)
-{
-  if (aContainer->GetCurrentDoc() != mDocument) {
-    // aContainer is not actually in our document anymore.... Just bail out of
-    // here; notifying on our document for this append would be wrong.
-    return;
-  }
-
-  mInNotification++;
-
-  MOZ_TIMER_DEBUGLOG(("Save and stop: nsHTMLContentSink::NotifyAppend()\n"));
-  MOZ_TIMER_SAVE(mWatch)
-  MOZ_TIMER_STOP(mWatch);
-
-  nsNodeUtils::ContentAppended(aContainer, aStartIndex);
-  mLastNotificationTime = PR_Now();
-
-  MOZ_TIMER_DEBUGLOG(("Restore: nsHTMLContentSink::NotifyAppend()\n"));
-  MOZ_TIMER_RESTORE(mWatch);
-
-  mInNotification--;
-}
-
-void
 HTMLContentSink::NotifyInsert(nsIContent* aContent,
                               nsIContent* aChildContent,
                               PRInt32 aIndexInContainer)
@@ -3651,30 +3071,8 @@ HTMLContentSink::IsMonolithicContainer(nsHTMLTag aTag)
   return PR_FALSE;
 }
 
-PRBool
-HTMLContentSink::IsTimeToNotify()
-{
-  if (!mNotifyOnTimer || !mLayoutStarted || !mBackoffCount ||
-      mInMonolithicContainer) {
-    return PR_FALSE;
-  }
-
-  PRTime now = PR_Now();
-  PRInt64 interval, diff;
-
-  LL_I2L(interval, GetNotificationInterval());
-  LL_SUB(diff, now, mLastNotificationTime);
-
-  if (LL_CMP(diff, >, interval)) {
-    mBackoffCount--;
-    return PR_TRUE;
-  }
-
-  return PR_FALSE;
-}
-
 void
-HTMLContentSink::UpdateAllContexts()
+HTMLContentSink::UpdateChildCounts()
 {
   PRInt32 numContexts = mContextStack.Count();
   for (PRInt32 i = 0; i < numContexts; i++) {
@@ -3687,55 +3085,11 @@ HTMLContentSink::UpdateAllContexts()
 }
 
 void
-HTMLContentSink::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
-{
-  // If we're in a script and we didn't do the notification,
-  // something else in the script processing caused the
-  // notification to occur. Since this could result in frame
-  // creation, make sure we've flushed everything before we
-  // continue.
-
-  // Note that UPDATE_CONTENT_STATE notifications never cause
-  // synchronous frame construction, so we never have to worry about
-  // them here.  The code that handles the async event these
-  // notifications post will flush us out if it needs to.
-
-  // Also, if this is not an UPDATE_CONTENT_STATE notification,
-  // increment mInNotification to make sure we don't flush again until
-  // the end of this update, even if nested updates or
-  // FlushPendingNotifications calls happen during it.
-  NS_ASSERTION(aUpdateType && (aUpdateType & UPDATE_ALL) == aUpdateType,
-               "Weird update type bitmask");
-  if (aUpdateType != UPDATE_CONTENT_STATE && !mInNotification++ &&
-      mCurrentContext) {
-    mCurrentContext->FlushTags();
-  }
-}
-
-void
-HTMLContentSink::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
-{
-  // If we're in a script and we didn't do the notification,
-  // something else in the script processing caused the
-  // notification to occur. Update our notion of how much
-  // has been flushed to include any new content if ending
-  // this update leaves us not inside a notification.  Note that we
-  // exclude UPDATE_CONTENT_STATE notifications here, since those
-  // never affect the frame model directly while inside the
-  // notification.
-  NS_ASSERTION(aUpdateType && (aUpdateType & UPDATE_ALL) == aUpdateType,
-               "Weird update type bitmask");
-  if (aUpdateType != UPDATE_CONTENT_STATE && !--mInNotification) {
-    UpdateAllContexts();
-  }
-}
-
-void
 HTMLContentSink::PreEvaluateScript()
 {
   // Eagerly append all pending elements (including the current body child)
   // to the body (so that they can be seen by scripts) and force reflow.
-  SINK_TRACE(SINK_TRACE_CALLS,
+  SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_CALLS,
              ("HTMLContentSink::PreEvaluateScript: flushing tags before "
               "evaluating script"));
 
@@ -3850,6 +3204,12 @@ HTMLContentSink::FlushPendingNotifications(mozFlushType aType)
   }
 }
 
+nsresult
+HTMLContentSink::FlushTags()
+{
+  return mCurrentContext ? mCurrentContext->FlushTags() : NS_OK;
+}
+
 NS_IMETHODIMP
 HTMLContentSink::SetDocumentCharset(nsACString& aCharset)
 {
@@ -3939,60 +3299,4 @@ HTMLContentSink::DumpContentModel()
   return NS_OK;
 }
 #endif
-
-// If the content sink can interrupt the parser (@see mCanInteruptParsing)
-// then it needs to schedule a dummy parser request to delay the document
-// from firing onload handlers and other document done actions until all of the
-// parsing has completed.
-
-nsresult
-HTMLContentSink::AddDummyParserRequest(void)
-{
-  nsresult rv = NS_OK;
-
-  NS_ASSERTION(!mDummyParserRequest, "Already have a dummy parser request");
-
-  rv = DummyParserRequest::Create(getter_AddRefs(mDummyParserRequest), this);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsCOMPtr<nsILoadGroup> loadGroup;
-  if (mDocument) {
-    loadGroup = mDocument->GetDocumentLoadGroup();
-  }
-
-  if (loadGroup) {
-    rv = mDummyParserRequest->SetLoadGroup(loadGroup);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    rv = loadGroup->AddRequest(mDummyParserRequest, nsnull);
-  }
-
-  return rv;
-}
-
-nsresult
-HTMLContentSink::RemoveDummyParserRequest(void)
-{
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsILoadGroup> loadGroup;
-  if (mDocument) {
-    loadGroup = mDocument->GetDocumentLoadGroup();
-  }
-
-  if (loadGroup && mDummyParserRequest) {
-    rv = loadGroup->RemoveRequest(mDummyParserRequest, nsnull, NS_OK);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    mDummyParserRequest = nsnull;
-  }
-
-  return rv;
-}
 

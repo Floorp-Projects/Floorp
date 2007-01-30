@@ -219,6 +219,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIContentSink (superclass of nsIHTMLContentSink)
+  NS_IMETHOD WillTokenize() { return NS_OK; }
   NS_IMETHOD WillBuildModel() { return NS_OK; }
   NS_IMETHOD DidBuildModel() { return NS_OK; }
   NS_IMETHOD WillInterrupt() { return NS_OK; }

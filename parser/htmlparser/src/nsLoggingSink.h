@@ -60,6 +60,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIContentSink
+  NS_IMETHOD WillTokenize();
   NS_IMETHOD WillBuildModel();
   NS_IMETHOD DidBuildModel();
   NS_IMETHOD WillInterrupt();

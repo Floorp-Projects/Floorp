@@ -45,6 +45,7 @@
 #include "nsIDTD.h"
 #include "nsITokenizer.h"
 #include "nsIInputStream.h"
+#include "nsIParser.h"
 
 class nsIExpatSink;
 class nsIExtendedExpatSink;
@@ -122,6 +123,14 @@ private:
   void ParseBuffer(const PRUnichar *aBuffer, PRUint32 aLength, PRBool aIsFinal,
                    PRUint32 *aConsumed);
   nsresult HandleError();
+
+  void MaybeStopParser();
+
+  PRBool BlockedOrInterrupted()
+  {
+    return mInternalState == NS_ERROR_HTMLPARSER_BLOCK ||
+           mInternalState == NS_ERROR_HTMLPARSER_INTERRUPTED;
+  }
 
   XML_Parser       mExpatParser;
   nsString         mLastLine;

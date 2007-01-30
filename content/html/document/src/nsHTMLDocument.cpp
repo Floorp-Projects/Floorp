@@ -1319,22 +1319,6 @@ nsHTMLDocument::AttributeChanged(nsIDocument* aDocument,
   }
 }
 
-void
-nsHTMLDocument::FlushPendingNotifications(mozFlushType aType)
-{
-  // Determine if it is safe to flush the sink notifications
-  // by determining if it safe to flush all the presshells.
-  if ((aType & Flush_Content) && mParser &&
-      (!(aType & Flush_SinkNotifications) || IsSafeToFlush())) {
-    nsCOMPtr<nsIContentSink> sink = mParser->GetContentSink();
-    if (sink) {
-      sink->FlushPendingNotifications(aType);
-    }
-  }
-  
-  nsDocument::FlushPendingNotifications(aType);
-}
-
 PRBool
 nsHTMLDocument::IsCaseSensitive()
 {
