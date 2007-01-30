@@ -763,8 +763,10 @@ nsXULTreeBuilder::SetTree(nsITreeBoxObject* aTree)
     mBoxObject = aTree;
 
     // If this is teardown time, then we're done.
-    if (! mBoxObject)
+    if (!mBoxObject) {
+        Uninit(PR_FALSE);
         return NS_OK;
+    }
 
     // Is our root's principal trusted?
     PRBool isTrusted = PR_FALSE;
