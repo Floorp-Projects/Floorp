@@ -82,6 +82,7 @@ ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
 CPPSRCS +=      gfxXlibSurface.cpp gfxPlatformGtk.cpp gfxXlibNativeRenderer.cpp
 CPPSRCS +=	gfxPangoFonts.cpp 
 CPPSRCS +=	gfxPDFSurface.cpp gfxPSSurface.cpp
+CPPSRCS +=	gfxFontconfigUtils.cpp
 CPPSRCS +=	nsUnicodeRange.cpp
 CSRCS = cairo-xlib-utils.c
 EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(ZLIB_LIBS) $(MOZ_XFT_LIBS) $(XLDFLAGS) $(XLIBS)
@@ -91,6 +92,7 @@ ifeq ($(MOZ_GFX_TOOLKIT),beos)
 CPPSRCS	+= 	gfxBeOSSurface.cpp gfxBeOSPlatform.cpp
 CPPSRCS +=	gfxPangoFonts.cpp 
 #CPPSRCS +=	gfxPDFSurface.cpp
+CPPSRCS +=	gfxFontconfigUtils.cpp
 CPPSRCS +=	nsUnicodeRange.cpp
 EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(CAIRO_FT_LIBS) -lfontconfig -lpangocairo-1.0
 endif

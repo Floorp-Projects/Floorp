@@ -12,14 +12,13 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Foundation code.
+ * The Original Code is Mozilla Japan code.
  *
- * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * The Initial Developer of the Original Code is Mozilla Japan.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vladimir Vukicevic <vladimir@pobox.com>
  *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -36,31 +35,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFX_PLATFORM_GTK_H
-#define GFX_PLATFORM_GTK_H
-
-#include <gdk/gdkx.h>
+#ifndef GFX_FONTCONFIG_UTILS_H
+#define GFX_FONTCONFIG_UTILS_H
 
 #include "gfxPlatform.h"
 
-class gfxFontconfigUtils;
+#include "nsTArray.h"
+#include "nsDataHashtable.h"
 
-class THEBES_API gfxPlatformGtk : public gfxPlatform {
+class gfxFontNameList : public nsTArray<nsString>
+{
 public:
-    gfxPlatformGtk();
+    THEBES_INLINE_DECL_REFCOUNTING(gfxFontList)
+    PRBool Exists(nsAString& aName);
+};
 
-    static gfxPlatformGtk *GetPlatform() {
-        return (gfxPlatformGtk*) gfxPlatform::GetPlatform();
+class gfxFontconfigUtils {
+public:
+    gfxFontconfigUtils();
+
+    static gfxFontconfigUtils* GetFontconfigUtils() {
+        static gfxFontconfigUtils* sUtils = nsnull;
+        if (!sUtils)
+            sUtils = new gfxFontconfigUtils();
+        return sUtils;
     }
-
-    already_AddRefed<gfxASurface> CreateOffscreenSurface(PRUint32 width,
-                                                         PRUint32 height,
-                                                         gfxASurface::gfxImageFormat imageFormat);
-
-    GdkDrawable *GetSurfaceGdkDrawable(gfxASurface *aSurf);
-
-    void SetSurfaceGdkWindow(gfxASurface *aSurf,
-                             GdkWindow *win);
 
     nsresult GetFontList(const nsACString& aLangGroup,
                          const nsACString& aGenericFamily,
@@ -69,22 +68,24 @@ public:
     nsresult UpdateFontList();
 
     nsresult ResolveFontName(const nsAString& aFontName,
-                             FontResolverCallback aCallback,
+                             gfxPlatform::FontResolverCallback aCallback,
                              void *aClosure, PRBool& aAborted);
 
-    static PRInt32 DPI() {
-        if (sDPI == -1) {
-            InitDPI();
-        }
-        NS_ASSERTION(sDPI != 0, "Something is wrong");
-        return sDPI;
-    }
-
 protected:
-    static void InitDPI();
+    PRInt32 IsExistingFont(const nsACString& aFontName);
+    nsresult GetResolvedFonts(const nsACString& aName,
+                              gfxFontNameList* aResult);
 
-    static PRInt32 sDPI;
-    static gfxFontconfigUtils *sFontconfigUtils;
+    nsresult GetFontListInternal(nsCStringArray& aListOfFonts,
+                                 const nsACString *aLangGroup = nsnull);
+    nsresult UpdateFontListInternal(PRBool aForce = PR_FALSE);
+
+    nsCStringArray mFonts;
+    nsCStringArray mNonExistingFonts;
+    nsCStringArray mAliasForSingleFont;
+    nsCStringArray mAliasForMultiFonts;
+
+    nsDataHashtable<nsCStringHashKey, nsRefPtr<gfxFontNameList> > mAliasTable;
 };
 
-#endif /* GFX_PLATFORM_GTK_H */
+#endif /* GFX_FONTCONFIG_UTILS_H */

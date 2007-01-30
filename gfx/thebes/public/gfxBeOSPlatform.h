@@ -42,15 +42,7 @@
 
 #include "gfxPlatform.h"
 
-#include "nsTArray.h"
-#include "nsDataHashtable.h"
-
-class gfxFontNameList : public nsTArray<nsString>
-{
-public:
-    THEBES_INLINE_DECL_REFCOUNTING(gfxFontList)
-    PRBool Exists(nsAString& aName);
-};
+class gfxFontconfigUtils;
 
 class NS_EXPORT gfxBeOSPlatform : public gfxPlatform {
 public:
@@ -74,22 +66,8 @@ public:
     nsresult ResolveFontName(const nsAString& aFontName,
                              FontResolverCallback aCallback,
                              void *aClosure, PRBool& aAborted);
-
 protected:
-    PRInt32 IsExistingFont(const nsACString& aFontName);
-    nsresult GetResolvedFonts(const nsACString& aName,
-                              gfxFontNameList* aResult);
-
-    nsresult GetFontListInternal(nsCStringArray& aListOfFonts,
-                                 const nsACString *aLangGroup = nsnull);
-    nsresult UpdateFontListInternal(PRBool aForce = PR_FALSE);
-
-    nsCStringArray mFonts;
-    nsCStringArray mNonExistingFonts;
-    nsCStringArray mAliasForSingleFont;
-    nsCStringArray mAliasForMultiFonts;
-
-    nsDataHashtable<nsCStringHashKey, nsRefPtr<gfxFontNameList> > mAliasTable;
+    static gfxFontconfigUtils *sFontconfigUtils;
 };
 
 #endif /* GFX_PLATFORM_BEOS_H */
