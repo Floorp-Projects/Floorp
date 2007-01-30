@@ -2586,7 +2586,7 @@ nsFrameSelection::GetFrameForNodeOffset(nsIContent *aNode,
         childIndex = aOffset;
     }
     
-    if (aOffset != 0 || numChildren != 0) {
+    if (childIndex > 0 || numChildren > 0) {
       nsCOMPtr<nsIContent> childNode = theNode->GetChildAt(childIndex);
 
       if (!childNode)
