@@ -2586,12 +2586,14 @@ nsFrameSelection::GetFrameForNodeOffset(nsIContent *aNode,
         childIndex = aOffset;
     }
     
-    nsCOMPtr<nsIContent> childNode = theNode->GetChildAt(childIndex);
+    if (aOffset != 0 || numChildren != 0) {
+      nsCOMPtr<nsIContent> childNode = theNode->GetChildAt(childIndex);
 
-    if (!childNode)
-      return nsnull;
+      if (!childNode)
+        return nsnull;
 
-    theNode = childNode;
+      theNode = childNode;
+    }
 
 #ifdef DONT_DO_THIS_YET
     // XXX: We can't use this code yet because the hinting
