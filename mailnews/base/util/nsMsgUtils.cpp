@@ -1506,8 +1506,12 @@ NS_MSG_BASE void MsgStripQuotedPrintable (unsigned char *src)
         c = token[1] - ('a' - 10);
       else
       {
-        // first char after '=' isn't hex. copy the '=' as a normal char and keep going
-        dest[destIdx++] = src[srcIdx++]; // aka token[0]
+        // first char after '=' isn't hex. check if it's a normal char
+        // or a soft line break.
+        if (src[srcIdx + 1] == nsCRT::CR || src[srcIdx + 1] == nsCRT::LF)
+          srcIdx++; // soft line break, ignore the '=';
+        else // normal char, copy it.
+          dest[destIdx++] = src[srcIdx++]; // aka token[0]
         continue;
       }
       
