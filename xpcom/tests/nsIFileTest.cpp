@@ -337,7 +337,80 @@ MoveTest(const char *testFile, const char *targetDir)
   printf("end move test\n");
 }
 
+// move up the number of directories in moveUpCount, then append "foo/bar" 
+void
+NormalizeTest(const char *testPath, int moveUpCount,
+	      const char *expected)
+{
+  Banner("Normalize Test");
 
+  nsresult rv;
+  nsCOMPtr<nsILocalFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
+     
+  if (!file)
+  {
+    printf("create nsILocalFile failed\n");
+    return;
+  }
+  
+  rv = file->InitWithNativePath(nsDependentCString(testPath));
+  VerifyResult(rv);
+
+  nsCOMPtr<nsIFile> parent;
+  nsAutoString path;
+  for (int i=0; i < moveUpCount; i++)
+  {
+    rv = file->GetParent(getter_AddRefs(parent));
+    VerifyResult(rv);
+    rv = parent->GetPath(path);
+    VerifyResult(rv);
+    rv = file->InitWithPath(path);
+    VerifyResult(rv);
+  }
+
+  if (!parent) {
+    printf("Getting parent failed!\n");
+    return;
+  }
+
+  rv = parent->Append(NS_LITERAL_STRING("foo"));
+  VerifyResult(rv);
+  rv = parent->Append(NS_LITERAL_STRING("bar"));
+  VerifyResult(rv);
+
+  rv = parent->Normalize();
+  VerifyResult(rv);
+
+  nsCAutoString newPath;
+  rv = parent->GetNativePath(newPath);
+  VerifyResult(rv);
+
+  nsCOMPtr<nsILocalFile> 
+    expectedFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
+     
+  if (!expectedFile)
+  {
+    printf("create nsILocalFile failed\n");
+    return;
+  }
+  rv = expectedFile->InitWithNativePath(nsDependentCString(expected));
+  VerifyResult(rv);
+
+  rv = expectedFile->Normalize();
+  VerifyResult(rv);
+
+  nsCAutoString expectedPath;
+  rv = expectedFile->GetNativePath(expectedPath);
+  VerifyResult(rv);
+
+  if (!newPath.Equals(expectedPath)) {
+    printf("ERROR: Normalize() test Failed!\n");
+    printf("     Got: %s\n", newPath.get());
+    printf("Expected: %s\n", expectedPath);
+  }
+
+  printf("end normalize test.\n");
+}
 
 int main(void)
 {
@@ -382,6 +455,12 @@ int main(void)
     CopyTest("/tmp/file", "/tmp/newDir");
     MoveTest("/tmp/file", "/tmp/newDir/anotherNewDir");
     DeletionTest("/tmp", "newDir", PR_TRUE);
+
+    CreationTest("/tmp", "qux/quux", nsIFile::NORMAL_FILE_TYPE, 0644);
+    CreationTest("/tmp", "foo/bar", nsIFile::NORMAL_FILE_TYPE, 0644);
+    NormalizeTest("/tmp/qux/quux/..", 1, "/tmp/foo/bar");
+    DeletionTest("/tmp", "qux", PR_TRUE);
+    DeletionTest("/tmp", "foo", PR_TRUE);
 
 #endif /* XP_UNIX */
 #endif /* XP_WIN || XP_OS2 */
