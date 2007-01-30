@@ -231,16 +231,16 @@ public:
      */
     struct Parameters {
         // A reference context suggesting where the textrun will be rendered
-        gfxContext*   mContext;
+        gfxContext   *mContext;
         // Pointer to arbitrary user data (which should outlive the textrun)
-        void*         mUserData;
+        void         *mUserData;
         // The language of the text, or null if not known
-        nsIAtom*      mLangGroup;
+        nsIAtom      *mLangGroup;
         // A description of which characters have been stripped from the original
         // DOM string to produce the characters in the textrun
-        gfxSkipChars* mSkipChars;
+        gfxSkipChars *mSkipChars;
         // A list of where linebreaks are currently placed in the textrun
-        PRUint32*     mInitialBreaks;
+        PRUint32     *mInitialBreaks;
         PRUint32      mInitialBreakCount;
         // The ratio to use to convert device pixels to application layout units
         gfxFloat      mPixelsToUnits;
@@ -254,14 +254,14 @@ public:
      * Create a gfxTextRun from Unicode text. The length is obtained from
      * aParams->mSkipChars->GetCharCount().
      */
-    virtual gfxTextRun *MakeTextRun(const PRUnichar* aString, PRUint32 aLength,
-                                    Parameters* aParams) = 0;
+    virtual gfxTextRun *MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
+                                    Parameters *aParams) = 0;
     /**
      * Create a gfxTextRun from 8-bit Unicode (UCS1?) text. The length is
      * obtained from aParams->mSkipChars->GetCharCount().
      */
-    virtual gfxTextRun *MakeTextRun(const PRUint8* aString, PRUint32 aLength,
-                                    Parameters* aParams) = 0;
+    virtual gfxTextRun *MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
+                                    Parameters *aParams) = 0;
 };
 
 class THEBES_API gfxFontGroup : public gfxTextRunFactory {
@@ -370,7 +370,7 @@ public:
         LINE_BREAK_BEFORE = 0x04
     };
     virtual void GetCharFlags(PRUint32 aStart, PRUint32 aLength,
-                              PRUint8* aFlags) = 0;
+                              PRUint8 *aFlags) = 0;
     virtual PRUint8 GetCharFlags(PRUint32 aStart) = 0;
 
     virtual PRUint32 GetLength() = 0;
@@ -389,8 +389,8 @@ public:
      * to be able to recover text from the gfxTextRun user you need to override
      * these.
      */
-    virtual void RememberText(const PRUnichar* aText, PRUint32 aLength) {}
-    virtual void RememberText(const PRUint8* aText, PRUint32 aLength) {}
+    virtual void RememberText(const PRUnichar *aText, PRUint32 aLength) {}
+    virtual void RememberText(const PRUint8 *aText, PRUint32 aLength) {}
 
     /**
      * Set the potential linebreaks for a substring of the textrun. These are
@@ -401,7 +401,7 @@ public:
      * breaks are the same as the old
      */
     virtual PRBool SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
-                                          PRPackedBool* aBreakBefore) = 0;
+                                          PRPackedBool *aBreakBefore) = 0;
 
     /**
      * This is provided so a textrun can (re)obtain the original text used to
@@ -435,7 +435,7 @@ public:
         // Detect hyphenation break opportunities in the given range; breaks
         // not at cluster boundaries will be ignored.
         virtual void GetHyphenationBreaks(PRUint32 aStart, PRUint32 aLength,
-                                          PRPackedBool* aBreakBefore) = 0;
+                                          PRPackedBool *aBreakBefore) = 0;
 
         // Returns the extra width that will be consumed by a hyphen. This should
         // be constant for a given textrun.
@@ -457,7 +457,7 @@ public:
          * character i must have zero before-spacing.
          */
         virtual void GetSpacing(PRUint32 aStart, PRUint32 aLength,
-                                Spacing* aSpacing) = 0;
+                                Spacing *aSpacing) = 0;
     };
 
     /**
@@ -487,9 +487,9 @@ public:
      */
     virtual void Draw(gfxContext *aContext, gfxPoint aPt,
                       PRUint32 aStart, PRUint32 aLength,
-                      const gfxRect* aDirtyRect,
-                      PropertyProvider* aProvider,
-                      gfxFloat* aAdvanceWidth) = 0;
+                      const gfxRect *aDirtyRect,
+                      PropertyProvider *aProvider,
+                      gfxFloat *aAdvanceWidth) = 0;
 
     /**
      * Renders a substring to a path. Uses only GetSpacing from aBreakProvider.
@@ -507,8 +507,8 @@ public:
      */
     virtual void DrawToPath(gfxContext *aContext, gfxPoint aPt,
                             PRUint32 aStart, PRUint32 aLength,
-                            PropertyProvider* aBreakProvider,
-                            gfxFloat* aAdvanceWidth) = 0;
+                            PropertyProvider *aBreakProvider,
+                            gfxFloat *aAdvanceWidth) = 0;
 
     /**
      * Special strings are strings that we might need to draw/measure but aren't
@@ -576,7 +576,7 @@ public:
      */
     virtual Metrics MeasureText(PRUint32 aStart, PRUint32 aLength,
                                 PRBool aTightBoundingBox,
-                                PropertyProvider* aProvider) = 0;
+                                PropertyProvider *aProvider) = 0;
 
     /**
      * Computes the ReflowMetrics for a special string.
@@ -591,7 +591,7 @@ public:
      * Uses GetSpacing from aBreakProvider.
      */
     virtual gfxFloat GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
-                                     PropertyProvider* aProvider) = 0;
+                                     PropertyProvider *aProvider) = 0;
 
     /**
      * Computes the advance width for a special string.
@@ -630,8 +630,8 @@ public:
      */
     virtual void SetLineBreaks(PRUint32 aStart, PRUint32 aLength,
                                PRBool aLineBreakBefore, PRBool aLineBreakAfter,
-                               TextProvider* aProvider,
-                               gfxFloat* aAdvanceWidthDelta) = 0;
+                               TextProvider *aProvider,
+                               gfxFloat *aAdvanceWidthDelta) = 0;
 
     /**
      * Finds the longest substring that will fit into the given width.
@@ -678,18 +678,18 @@ public:
      */
     virtual PRUint32 BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
                                          PRBool aLineBreakBefore, gfxFloat aWidth,
-                                         PropertyProvider* aProvider,
+                                         PropertyProvider *aProvider,
                                          PRBool aSuppressInitialBreak,
-                                         Metrics* aMetrics, PRBool aTightBoundingBox,
-                                         PRBool* aUsedHyphenation,
-                                         PRUint32* aLastBreak) = 0;
+                                         Metrics *aMetrics, PRBool aTightBoundingBox,
+                                         PRBool *aUsedHyphenation,
+                                         PRUint32 *aLastBreak) = 0;
 
     /**
      * Update the reference context.
      * XXX this is a hack. New text frame does not call this. Use only
      * temporarily for old text frame.
      */
-    virtual void SetContext(gfxContext* aContext) {}
+    virtual void SetContext(gfxContext *aContext) {}
 
     /**
      * Flush cached spacing data for the characters at and after aStart.
@@ -700,13 +700,13 @@ public:
 
     PRBool IsRightToLeft() const { return (mFlags & gfxTextRunFactory::TEXT_IS_RTL) != 0; }
     gfxFloat GetDirection() const { return (mFlags & gfxTextRunFactory::TEXT_IS_RTL) ? -1.0 : 1.0; }
-    void* GetUserData() const { return mUserData; }
+    void *GetUserData() const { return mUserData; }
     PRUint32 GetFlags() const { return mFlags; }
     const gfxSkipChars& GetSkipChars() const { return mSkipChars; }
     gfxFloat GetPixelsToAppUnits() { return mPixelsToAppUnits; }
 
 protected:
-    gfxTextRun(gfxTextRunFactory::Parameters* aParams, PRBool aIs8Bit)
+    gfxTextRun(gfxTextRunFactory::Parameters *aParams, PRBool aIs8Bit)
         : mUserData(aParams->mUserData), mPixelsToAppUnits(aParams->mPixelsToUnits),
           mFlags(aParams->mFlags)
     {
@@ -716,7 +716,7 @@ protected:
         }
     }
 
-    void*        mUserData;
+    void *       mUserData;
     gfxSkipChars mSkipChars;
     gfxFloat     mPixelsToAppUnits;
     PRUint32     mFlags;
