@@ -65,6 +65,7 @@
 // Unix Includes
 #include <unistd.h>
 #include <sys/stat.h>
+#include <stdlib.h>
 
 #if !defined(MAC_OS_X_VERSION_10_4) || MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_4
 #define GetAliasSizeFromRecord(aliasRecord) aliasRecord.aliasSize
@@ -412,7 +413,48 @@ NS_IMETHODIMP nsLocalFile::AppendNative(const nsACString& aNode)
 /* void normalize (); */
 NS_IMETHODIMP nsLocalFile::Normalize()
 {
-    return NS_OK;
+  // Check we are correctly initialized.
+  CHECK_mBaseRef();
+
+  // CFURL doesn't doesn't seem to resolve paths containing relative
+  // components, so we'll nick the stdlib code from nsLocalFileUnix
+  UInt8 path[PATH_MAX] = "";
+  Boolean success;
+  success = ::CFURLGetFileSystemRepresentation(mBaseRef, true, path, PATH_MAX);
+  if (!success)
+    return NS_ERROR_FAILURE;
+
+  char resolved_path[PATH_MAX] = "";
+  char *resolved_path_ptr = nsnull;
+  resolved_path_ptr = realpath((char*)path, resolved_path);
+
+  // if there is an error, the return is null.
+  if (!resolved_path_ptr)
+      return NSRESULT_FOR_ERRNO();
+
+  // Need to know whether we're a directory to create a new CFURLRef
+  PRBool isDirectory;
+  nsresult rv = IsDirectory(&isDirectory);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = NS_ERROR_FAILURE;
+  CFStringRef pathStrRef =
+    ::CFStringCreateWithCString(kCFAllocatorDefault,
+                                resolved_path,
+                                kCFStringEncodingUTF8);
+  if (pathStrRef) {
+    CFURLRef newURLRef =
+      ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, pathStrRef,
+                                      kCFURLPOSIXPathStyle, isDirectory);
+    if (newURLRef) {
+      SetBaseRef(newURLRef);
+      ::CFRelease(newURLRef);
+      rv = NS_OK;
+    }
+    ::CFRelease(pathStrRef);
+  }
+
+  return rv;
 }
 
 /* void create (in unsigned long type, in unsigned long permissions); */
