@@ -258,7 +258,7 @@ var gComposeRecyclingListener = {
     }
 
     // Stop InlineSpellCheckerUI so personal dictionary is saved
-    InlineSpellCheckerUI.enabled = false;
+    enableInlineSpellCheck(false);
     
     //Reset editor
     EditorResetFontAndColorAttributes();
@@ -1595,7 +1595,7 @@ function ComposeUnload()
   dump("\nComposeUnload from XUL\n");
 
   // Stop InlineSpellCheckerUI so personal dictionary is saved
-  InlineSpellCheckerUI.enabled = false;
+  enableInlineSpellCheck(false);
   
   EditorCleanup();
 
@@ -3614,6 +3614,12 @@ function InitEditor()
   gMsgCompose.initEditor(editor, window.content);
   
   InlineSpellCheckerUI.init(editor);
-  InlineSpellCheckerUI.enabled = sPrefs.getBoolPref("mail.spellcheck.inline");
+  enableInlineSpellCheck(sPrefs.getBoolPref("mail.spellcheck.inline")); 
   document.getElementById('menu_inlineSpellCheck').setAttribute('disabled', !InlineSpellCheckerUI.canSpellCheck);
+}
+
+function enableInlineSpellCheck(aEnableInlineSpellCheck)
+{
+  InlineSpellCheckerUI.enabled = aEnableInlineSpellCheck;
+  document.getElementById('msgSubject').setAttribute('spellcheck', aEnableInlineSpellCheck);
 }

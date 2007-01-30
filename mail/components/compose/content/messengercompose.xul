@@ -416,7 +416,7 @@
           <menuitem label="&checkSpellingCmd.label;" id="menu_checkspelling" accesskey="&checkSpellingCmd.accesskey;" key="key_checkspelling" command="cmd_spelling"/>
           <menuitem label="&enableInlineSpellChecker.label;" id="menu_inlineSpellCheck" 
                            accesskey="&enableInlineSpellChecker.accesskey;" checked="false"
-                           type="checkbox" oncommand="InlineSpellCheckerUI.enabled = !InlineSpellCheckerUI.enabled"/>
+                           type="checkbox" oncommand="enableInlineSpellCheck(!InlineSpellCheckerUI.enabled);"/>
           <menuitem label="&quoteCmd.label;" accesskey="&quoteCmd.accesskey;" command="cmd_quoteMessage"/>
           <menuseparator/>
           <menuitem id="returnReceiptMenu" type="checkbox" label="&returnReceiptMenu.label;" accesskey="&returnReceiptMenu.accesskey;" checked="false" oncommand="ToggleReturnReceipt(event.target)"/>
