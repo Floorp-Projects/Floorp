@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,15 +11,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is post update cleanup 
  *
- * The Initial Developer of the Original Code is Google Inc.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * The Initial Developer of the Original Code is
+ * Seth Spitzer <sspitzer@mozilla.org>
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Darin Fisher <darin@meer.net>
- *  Ben Turner <mozilla@songbirdnest.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,28 +34,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsUpdateDriver_h__
-#define nsUpdateDriver_h__
-
-#include "nscore.h"
-
-class nsIFile;
+#include "nsISupports.idl"
 
 /**
- * This function processes any available updates.  As part of that process, it
- * may exit the current process and relaunch it at a later time.
+ * A scriptable interface used on Windows only to do some work from
+ * a special process that gets created with elevated privileges.
  *
- * Two directories are passed to this function: greDir (where the actual
- * binary resides) and appDir (which contains application.ini for XULRunner
- * apps). If this is not a XULRunner app then appDir is identical to greDir.
- * 
- * The argc and argv passed to this function should be what is needed to
- * relaunch the current process.
- *
- * This function does not modify appDir.
+ * @status UNSTABLE - This interface is not frozen and will probably change in
+ *                    future releases.
  */
-NS_HIDDEN_(nsresult) ProcessUpdates(nsIFile *greDir, nsIFile *appDir,
-                                    nsIFile *updRootDir,
-                                    int argc, char **argv);
 
-#endif  // nsUpdateDriver_h__
+interface nsILocalFile;
+
+[scriptable, uuid(575249a7-de7a-4602-a997-b7ad2b3b6dab)]
+interface nsIWinAppHelper : nsISupports
+{
+  void postUpdate(in nsILocalFile logFile);
+  void fixReg();
+};

@@ -64,7 +64,7 @@ USE_STATIC_LIBS = 1
 HAVE_PROGRESSUI = 1
 RCINCLUDE = updater.rc
 CPPSRCS += progressui_win.cpp
-OS_LIBS += $(call EXPAND_LIBNAME,comctl32 ws2_32)
+OS_LIBS += $(call EXPAND_LIBNAME,comctl32 ws2_32 shell32)
 ifndef GNU_CC
 RCFLAGS += -I$(srcdir)
 else

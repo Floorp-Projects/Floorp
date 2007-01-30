@@ -80,4 +80,8 @@ uninstaller::
 	$(INSTALL) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/setup.ico $(CONFIG_DIR)
 	cd $(CONFIG_DIR) && makensis.exe uninstaller.nsi
 	$(NSINSTALL) -D $(DIST)/bin/uninstall
+ifdef MOZ_PHOENIX
+	cp $(CONFIG_DIR)/helper.exe $(DIST)/bin/uninstall
+else
 	cp $(CONFIG_DIR)/uninst.exe $(DIST)/bin/uninstall
+endif

@@ -531,87 +531,6 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 !macroend
 
 /**
- * Checks whether the system is running Vista. If the system is running Vista
- * this will return true... if not, this will return false.
- *
- * IMPORTANT! $R9 will be overwritten by this macro with the return value so
- *            protect yourself!
- *
- * @return  _RESULT
- *          true if the system is running Vista otherwise false.
- *
- * $R7 = value of CurrentVersion from call to ReadRegStr
- * $R8 = leftmost char from $R7 used for comparison. If this is 6 then the
- *       system is running Vista.
- * $R9 = _RESULT
- */
-!macro IsVista
-
-  !ifndef ${_MOZFUNC_UN}IsVista
-    !verbose push
-    !verbose ${_MOZFUNC_VERBOSE}
-    !define ${_MOZFUNC_UN}IsVista "!insertmacro ${_MOZFUNC_UN}IsVistaCall"
-
-    Function ${_MOZFUNC_UN}IsVista
-      Push $R7
-      Push $R8
-
-      StrCpy $R9 "false"
-
-      ClearErrors
-
-      ReadRegStr $R7 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion" CurrentVersion
-      IfErrors end 0
-
-      StrCpy $R8 $R7 1
-      StrCmp $R8 "6" 0 end
-      StrCpy $R9 "true"
-
-      end:
-
-      ClearErrors
-
-      Pop $R8
-      Pop $R7
-      Push $R9
-    FunctionEnd
-
-    !verbose pop
-  !endif
-!macroend
-
-!macro IsVistaCall _RESULT
-  !verbose push
-  !verbose ${_MOZFUNC_VERBOSE}
-  Call IsVista
-  Pop ${_RESULT}
-  !verbose pop
-!macroend
-
-!macro un.IsVistaCall _RESULT
-  !verbose push
-  !verbose ${_MOZFUNC_VERBOSE}
-  Call un.IsVista
-  Pop ${_RESULT}
-  !verbose pop
-!macroend
-
-!macro un.IsVista
-  !ifndef un.IsVista
-    !verbose push
-    !verbose ${_MOZFUNC_VERBOSE}
-    !undef _MOZFUNC_UN
-    !define _MOZFUNC_UN "un."
-
-    !insertmacro IsVista
-
-    !undef _MOZFUNC_UN
-    !define _MOZFUNC_UN
-    !verbose pop
-  !endif
-!macroend
-
-/**
  * Checks whether we can write to the install directory. If the install
  * directory already exists this will attempt to create a temporary file in the
  * install directory and then delete it. If it does not exist this will attempt
@@ -1190,12 +1109,15 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 
       ClearErrors
       WriteRegStr SHCTX "$R6" "$R7" "$R8"
+
+!ifndef NO_LOG
       IfErrors 0 +3
       FileWrite $fhInstallLog "  ** ERROR Adding Registry String: $R5 | $R6 | $R7 | $R8 **$\r$\n"
       GoTo +4
       IntCmp $R9 1 0 +2
       FileWrite $fhUninstallLog "RegVal: $R5 | $R6 | $R7$\r$\n"
       FileWrite $fhInstallLog "  Added Registry String: $R5 | $R6 | $R7 | $R8$\r$\n"
+!endif
 
       Exch $R5
       Exch 4
@@ -1292,12 +1214,14 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 
       ClearErrors
       WriteRegDWORD SHCTX "$R6" "$R7" "$R8"
+!ifndef NO_LOG
       IfErrors 0 +3
       FileWrite $fhInstallLog "  ** ERROR Adding Registry DWord: $R5 | $R6 | $R7 | $R8 **$\r$\n"
       GoTo +4
       IntCmp $R5 1 0 +2
       FileWrite $fhUninstallLog "RegVal: $R5 | $R6 | $R7$\r$\n"
       FileWrite $fhInstallLog "  Added Registry DWord: $R5 | $R6 | $R7 | $R8$\r$\n"
+!endif
 
       Exch $R5
       Exch 4
@@ -1394,12 +1318,15 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 
       ClearErrors
       WriteRegStr HKCR "$R6" "$R7" "$R8"
+
+!ifndef NO_LOG
       IfErrors 0 +3
       FileWrite $fhInstallLog "  ** ERROR Adding Registry String: $R5 | $R6 | $R7 | $R8 **$\r$\n"
       GoTo +4
       IntCmp $R5 1 0 +2
       FileWrite $fhUninstallLog "RegVal: $R5 | $R6 | $R7$\r$\n"
       FileWrite $fhInstallLog "  Added Registry String: $R5 | $R6 | $R7 | $R8$\r$\n"
+!endif
 
       Exch $R5
       Exch 4
@@ -1515,6 +1442,7 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
       ; see definition of RegCreateKey
       System::Call "${RegCreateKey}($R6, '$R8', .r14) .r15"
 
+!ifndef NO_LOG
       ; if $R5 is not 0 then there was an error creating the registry key.
       IntCmp $R5 0 +3
       FileWrite $fhInstallLog "  ** ERROR Adding Registry Key: $R7 | $R8 **$\r$\n"
@@ -1522,6 +1450,7 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
       IntCmp $R9 1 0 +2
       FileWrite $fhUninstallLog "RegKey: $R7 | $R8$\r$\n"
       FileWrite $fhInstallLog "  Added Registry Key: $R7 | $R8$\r$\n"
+!endif
 
       Pop $R4
       Pop $R5
@@ -1565,114 +1494,6 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
     !define _MOZFUNC_UN "un."
 
     !insertmacro CreateRegKey
-
-    !undef _MOZFUNC_UN
-    !define _MOZFUNC_UN
-    !verbose pop
-  !endif
-!macroend
-
-/**
- * Finds an installation of the application so we can force an install into an
- * existing location for Vista. This uses SHCTX to determine the
- * registry hive so you must call SetShellVarContext first.
- *
- * IMPORTANT! $R9 will be overwritten by this macro with the return value so
- *            protect yourself!
- *
- * @param   _KEY
- *          The registry subkey (typically this will be Software\Mozilla).
- * @return  _RESULT
- *          false if an install isn't found, path to the main exe if an install
- *          is found.
- *
- * $R3 = _KEY
- * $R4 = value returned from the outer loop's EnumRegKey
- * $R5 = value returned from ReadRegStr
- * $R6 = counter for the outer loop's EnumRegKey
- * $R7 = value returned popped from the stack for GetPathFromRegStr macro
- * $R8 = value returned popped from the stack for GetParentDir macro
- * $R9 = _RESULT
- */
-!macro GetExistingInstallPath
-
-  !ifndef ${_MOZFUNC_UN}GetExistingInstallPath
-    !verbose push
-    !verbose ${_MOZFUNC_VERBOSE}
-    !define ${_MOZFUNC_UN}GetExistingInstallPath "!insertmacro ${_MOZFUNC_UN}GetExistingInstallPathCall"
-
-    Function ${_MOZFUNC_UN}GetExistingInstallPath
-      Exch $R3
-      Push $R4
-      Push $R5
-      Push $R6
-      Push $R7
-      Push $R8
-
-      StrCpy $R9 "false"
-      StrCpy $R6 0  ; set the counter for the loop to 0
-
-      loop:
-      EnumRegKey $R4 SHCTX $R3 $R6
-      StrCmp $R4 "" end  ; if empty there are no more keys to enumerate
-      IntOp $R6 $R6 + 1  ; increment the loop's counter
-      ClearErrors
-      ReadRegStr $R5 SHCTX "$R3\$R4\bin" "PathToExe"
-      IfErrors loop
-      Push $R5
-      ${GetPathFromRegStr}
-      Pop $R7
-
-      IfFileExists "$R7" 0 +5
-      Push "$R7"
-      ${GetParent} "$R7" $R8
-      StrCpy $R9 "$R8"
-      GoTo end
-
-      GoTo loop
-
-      end:
-      ClearErrors
-
-      Pop $R8
-      Pop $R7
-      Pop $R6
-      Pop $R5
-      Pop $R4
-      Exch $R3
-      Push $R9
-    FunctionEnd
-
-    !verbose pop
-  !endif
-!macroend
-
-!macro GetExistingInstallPathCall _KEY _RESULT
-  !verbose push
-  !verbose ${_MOZFUNC_VERBOSE}
-  Push "${_KEY}"
-  Call GetExistingInstallPath
-  Pop ${_RESULT}
-  !verbose pop
-!macroend
-
-!macro un.GetExistingInstallPathCall _KEY _RESULT
-  !verbose push
-  !verbose ${_MOZFUNC_VERBOSE}
-  Push "${_KEY}"
-  Call un.GetExistingInstallPath
-  Pop ${_RESULT}
-  !verbose pop
-!macroend
-
-!macro un.GetExistingInstallPath
-  !ifndef un.GetExistingInstallPath
-    !verbose push
-    !verbose ${_MOZFUNC_VERBOSE}
-    !undef _MOZFUNC_UN
-    !define _MOZFUNC_UN "un."
-
-    !insertmacro GetExistingInstallPath
 
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN
@@ -1784,6 +1605,137 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
     !define _MOZFUNC_UN "un."
 
     !insertmacro GetSecondInstallPath
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+/**
+ * Writes common registry values for a handler using SHCTX.
+ * @param   _KEY
+ *          The subkey in relation to the key root.
+ * @param   _VALOPEN
+ *          The path and args to launch the application.
+ * @param   _VALICON
+ *          The path to an exe that contains an icon and the icon resource id.
+ * @param   _DISPNAME
+ *          The display name for the handler. If emtpy no value will be set.
+ * @param   _ISPROTOCOL
+ *          Sets protocol handler specific registry values when "true".
+ * @param   _ISDDE
+ *          Sets DDE specific registry values when "true".
+ *
+ * $R3 = string value of the current registry key path.
+ * $R4 = _KEY
+ * $R5 = _VALOPEN
+ * $R6 = _VALICON
+ * $R7 = _DISPNAME
+ * $R8 = _ISPROTOCOL
+ * $R9 = _ISDDE
+ */
+!macro AddHandlerValues
+
+  !ifndef ${_MOZFUNC_UN}AddHandlerValues
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}AddHandlerValues "!insertmacro ${_MOZFUNC_UN}AddHandlerValuesCall"
+
+    Function ${_MOZFUNC_UN}AddHandlerValues
+      Exch $R9
+      Exch 1
+      Exch $R8
+      Exch 2
+      Exch $R7
+      Exch 3
+      Exch $R6
+      Exch 4
+      Exch $R5
+      Exch 5
+      Exch $R4
+      Push $R3
+
+      StrCmp "$R7" "" +6 0
+      ReadRegStr $R3 SHCTX "$R4" "FriendlyTypeName"
+
+      StrCmp "$R3" "" 0 +3
+      WriteRegStr SHCTX "$R4" "" "$R7"
+      WriteRegStr SHCTX "$R4" "FriendlyTypeName" "$R7"
+
+      StrCmp "$R8" "true" 0 +4
+      DeleteRegValue SHCTX "$R4" "EditFlags"
+      WriteRegBin SHCTX "$R4" "EditFlags" 2
+      WriteRegStr SHCTX "$R4" "URL Protocol" ""
+
+      StrCmp "$R9" "true" 0 +13
+      WriteRegStr SHCTX "$R4\DefaultIcon" "" "$R6"
+      WriteRegStr SHCTX "$R4\shell\open\command" "" "$R5"
+      WriteRegStr SHCTX "$R4\shell\open\ddeexec" "" "$\"%1$\",,0,0,,,,"
+      WriteRegStr SHCTX "$R4\shell\open\ddeexec" "NoActivateHandler" ""
+      WriteRegStr SHCTX "$R4\shell\open\ddeexec\Application" "" "${DDEApplication}"
+      WriteRegStr SHCTX "$R4\shell\open\ddeexec\Topic" "" "WWW_OpenURL"
+      ; The ifexec key may have been added by another application so try to
+      ; delete it to prevent it from breaking this app's shell integration.
+      ; Also, IE 6 and below doesn't remove this key when it sets itself as the
+      ; default handler and if this key exists IE's shell integration breaks.
+      DeleteRegKey HKLM "$R4\shell\open\ddeexec\ifexec"
+      DeleteRegKey HKCU "$R4\shell\open\ddeexec\ifexec"
+
+      ClearErrors
+
+      Pop $R3
+      Exch $R4
+      Exch 5
+      Exch $R5
+      Exch 4
+      Exch $R6
+      Exch 3
+      Exch $R7
+      Exch 2
+      Exch $R8
+      Exch 1
+      Exch $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro AddHandlerValuesCall _KEY _VALOPEN _VALICON _DISPNAME _ISPROTOCOL _ISDDE
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_KEY}"
+  Push "${_VALOPEN}"
+  Push "${_VALICON}"
+  Push "${_DISPNAME}"
+  Push "${_ISPROTOCOL}"
+  Push "${_ISDDE}"
+  Call AddHandlerValues
+  !verbose pop
+!macroend
+
+!macro un.AddHandlerValuesCall _KEY _VALOPEN _VALICON _DISPNAME _ISPROTOCOL _ISDDE
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_KEY}"
+  Push "${_VALOPEN}"
+  Push "${_VALICON}"
+  Push "${_DISPNAME}"
+  Push "${_ISPROTOCOL}"
+  Push "${_ISDDE}"
+  Call un.AddHandlerValues
+  !verbose pop
+!macroend
+
+!macro un.AddHandlerValues
+  !ifndef un.AddHandlerValues
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro AddHandlerValues
 
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN

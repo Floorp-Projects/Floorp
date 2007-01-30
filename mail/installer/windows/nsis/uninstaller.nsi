@@ -71,6 +71,10 @@ Var TmpVal
 !include locales.nsi
 !include version.nsh
 
+; This is named BrandShortName helper because we use this for software update
+; post update cleanup.
+VIAddVersionKey "FileDescription" "${BrandShortName} Helper"
+
 !insertmacro un.RegCleanMain
 !insertmacro un.RegCleanUninstall
 !insertmacro un.CloseApp

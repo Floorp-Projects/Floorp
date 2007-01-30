@@ -44,6 +44,24 @@
 #define nsWindowsRestart_cpp
 #endif
 
+#include <shellapi.h>
+
+#ifndef ERROR_ELEVATION_REQUIRED
+#define ERROR_ELEVATION_REQUIRED 740L
+#endif
+
+BOOL (WINAPI *pCreateProcessWithTokenW)(HANDLE,
+                                        DWORD,
+                                        LPCWSTR,
+                                        LPWSTR,
+                                        DWORD,
+                                        LPVOID,
+                                        LPCWSTR,
+                                        LPSTARTUPINFOW,
+                                        LPPROCESS_INFORMATION);
+
+BOOL (WINAPI *pIsUserAnAdmin)(VOID);
+
 /**
  * Get the length that the string will take when it is quoted.
  */
@@ -118,36 +136,158 @@ MakeCommandLine(int argc, char **argv)
 }
 
 /**
+ * alloc and convert multibyte char to unicode char
+ */
+static PRUnichar *
+AllocConvertAToW(const char *buf)
+{
+  PRUint32 inputLen = strlen(buf) + 1;
+  int n = MultiByteToWideChar(CP_ACP, 0, buf, inputLen, NULL, 0);
+  if (n <= 0)
+    return NULL;
+  PRUnichar *result = (PRUnichar *)malloc(n * sizeof(PRUnichar));
+  if (!result)
+    return NULL;
+  MultiByteToWideChar(CP_ACP, 0, buf, inputLen, result, n);
+  return result;
+}
+
+/**
+ * Launch a child process without elevated privilege.
+ */
+static BOOL
+LaunchAsNormalUser(const char *exePath, char *cl)
+{
+  if (!pCreateProcessWithTokenW) {
+    // IsUserAnAdmin is not present on Win9x and not exported by name on Win2k
+    *(FARPROC *)&pIsUserAnAdmin =
+        GetProcAddress(GetModuleHandle("shell32.dll"), "IsUserAnAdmin");
+
+    // CreateProcessWithTokenW is not present on WinXP or earlier
+    *(FARPROC *)&pCreateProcessWithTokenW =
+        GetProcAddress(GetModuleHandle("advapi32.dll"),
+                       "CreateProcessWithTokenW");
+
+    if (!pCreateProcessWithTokenW)
+      return FALSE;
+  }
+
+  // do nothing here if we are not elevated or IsUserAnAdmin is not present.
+  if (!pIsUserAnAdmin || pIsUserAnAdmin && !pIsUserAnAdmin())
+    return FALSE;
+
+  // borrow the shell token to drop the privilege
+  HWND hwndShell = FindWindow("Progman", NULL);
+  DWORD dwProcessId;
+  GetWindowThreadProcessId(hwndShell, &dwProcessId);
+
+  HANDLE hProcessShell = OpenProcess(MAXIMUM_ALLOWED, FALSE, dwProcessId);
+  if (!hProcessShell)
+    return FALSE;
+
+  HANDLE hTokenShell;
+  BOOL ok = OpenProcessToken(hProcessShell, MAXIMUM_ALLOWED, &hTokenShell);
+  CloseHandle(hProcessShell);
+  if (!ok)
+    return FALSE;
+
+  HANDLE hNewToken;
+  ok = DuplicateTokenEx(hTokenShell,
+                        MAXIMUM_ALLOWED,
+                        NULL,
+                        SecurityDelegation,
+                        TokenPrimary,
+                        &hNewToken);
+  CloseHandle(hTokenShell);
+  if (!ok)
+    return FALSE;
+
+  STARTUPINFOW si = {sizeof(si), 0};
+  PROCESS_INFORMATION pi = {0};
+
+  PRUnichar *exePathW = AllocConvertAToW(exePath);
+  PRUnichar *clW = AllocConvertAToW(cl);
+  ok = exePathW && clW;
+  if (ok) {
+    ok = pCreateProcessWithTokenW(hNewToken,
+                                  0,    // profile is already loaded
+                                  exePathW,
+                                  clW,
+                                  0,    // No special process creation flags
+                                  NULL, // inherit my environment
+                                  NULL, // use my current directory
+                                  &si,
+                                  &pi);
+  }
+  free(exePathW);
+  free(clW);
+  CloseHandle(hNewToken);
+  if (!ok)
+    return FALSE;
+
+  CloseHandle(pi.hProcess);
+  CloseHandle(pi.hThread);
+
+  return TRUE;
+}
+
+/**
  * Launch a child process with the specified arguments.
+ * @param needElevation 1:need elevation, -1:want to drop priv, 0:don't care
  * @note argv[0] is ignored
  */
 BOOL
-WinLaunchChild(const char *exePath, int argc, char **argv)
+WinLaunchChild(const char *exePath, int argc, char **argv, int needElevation)
 {
-  char *cl = MakeCommandLine(argc, argv);
+  char *cl;
+  BOOL ok;
+  if (needElevation > 0) {
+    cl = MakeCommandLine(argc - 1, argv + 1);
+    if (!cl)
+      return FALSE;
+    ok = ShellExecute(NULL, // no special UI window
+                      NULL, // use default verb
+                      exePath,
+                      cl,
+                      NULL, // use my current directory
+                      SW_SHOWDEFAULT) > (HINSTANCE)32;
+    free(cl);
+    return ok;
+  }
+
+  cl = MakeCommandLine(argc, argv);
   if (!cl)
     return FALSE;
 
-  STARTUPINFO si = {sizeof(si), 0};
-  PROCESS_INFORMATION pi = {0};
+  if (needElevation < 0) {
+    // try to launch as a normal user first
+    ok = LaunchAsNormalUser(exePath, cl);
+    // if it fails, fallback to normal launching
+    if (!ok)
+      needElevation = 0;
+  }
+  if (needElevation == 0) {
+    STARTUPINFO si = {sizeof(si), 0};
+    PROCESS_INFORMATION pi = {0};
 
-  BOOL ok = CreateProcess(exePath,
-                          cl,
-                          NULL,  // no special security attributes
-                          NULL,  // no special thread attributes
-                          FALSE, // don't inherit filehandles
-                          0,     // No special process creation flags
-                          NULL,  // inherit my environment
-                          NULL,  // use my current directory
-                          &si,
-                          &pi);
+    ok = CreateProcess(exePath,
+                       cl,
+                       NULL,  // no special security attributes
+                       NULL,  // no special thread attributes
+                       FALSE, // don't inherit filehandles
+                       0,     // No special process creation flags
+                       NULL,  // inherit my environment
+                       NULL,  // use my current directory
+                       &si,
+                       &pi);
+
+    if (ok) {
+      CloseHandle(pi.hProcess);
+      CloseHandle(pi.hThread);
+    }
+  }
 
   free(cl);
-
-  if (ok) {
-    CloseHandle(pi.hProcess);
-    CloseHandle(pi.hThread);
-  }
 
   return ok;
 }

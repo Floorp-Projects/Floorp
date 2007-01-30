@@ -92,6 +92,8 @@ Var ShortPathNameToExe
 !include locales.nsi
 !include version.nsh
 
+VIAddVersionKey "FileDescription" "${BrandShortName} Installer"
+
 !insertmacro RegCleanMain
 !insertmacro RegCleanUninstall
 !insertmacro CloseApp

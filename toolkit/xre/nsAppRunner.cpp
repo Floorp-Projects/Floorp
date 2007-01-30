@@ -98,6 +98,9 @@
 #include "nsIWindowWatcher.h"
 #include "nsIXULAppInfo.h"
 #include "nsIXULRuntime.h"
+#ifdef XP_WIN
+#include "nsIWinAppHelper.h"
+#endif
 
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
@@ -138,6 +141,8 @@
 
 #ifdef XP_WIN
 #include <process.h>
+#include <shlobj.h>
+#include "nsThreadUtils.h"
 #endif
 
 #ifdef XP_OS2
@@ -407,6 +412,75 @@ CheckArg(const char* aArg, const char **aParam = nsnull)
   return ARG_NONE;
 }
 
+#if defined(XP_WIN)
+/**
+ * Check for a commandline flag from the windows shell and remove it from the
+ * argv used when restarting. Flags MUST be in the form -arg.
+ *
+ * @param aArg the parameter to check. Must be lowercase.
+ */
+static ArgResult
+CheckArgShell(const char* aArg)
+{
+  char **curarg = gRestartArgv + 1; // skip argv[0]
+
+  while (*curarg) {
+    char *arg = curarg[0];
+
+    if (arg[0] == '-') {
+      ++arg;
+
+      if (strimatch(aArg, arg)) {
+        do {
+          *curarg = *(curarg + 1);
+          ++curarg;
+        } while (*curarg);
+
+        --gRestartArgc;
+
+        return ARG_FOUND;
+      }
+    }
+
+    ++curarg;
+  }
+
+  return ARG_NONE;
+}
+
+/**
+ * Spins up Windows DDE when the app needs to restart or the profile manager
+ * will be displayed during startup and the app has been launched by the Windows
+ * shell to open an url. This prevents Windows from displaying an error message
+ * due to the DDE message not being acknowledged.
+ */
+static void
+ProcessDDE(nsINativeAppSupport* aNative)
+{
+  // When the app is launched by the windows shell the windows shell
+  // expects the app to be available for DDE messages and if it isn't
+  // windows displays an error dialog. To prevent the error the DDE server
+  // is enabled and pending events are processed when the app needs to
+  // restart after it was launched by the shell with the requestpending
+  // argument. The requestpending pending argument is removed to
+  // differentiate it from being launched when an app restart is not
+  // required.
+  ArgResult ar;
+  ar = CheckArgShell("requestpending");
+  if (ar == ARG_FOUND) {
+    aNative->Enable(); // enable win32 DDE responses
+    nsIThread *thread = NS_GetCurrentThread();
+    // This is just a guesstimate based on testing different values.
+    // If count is 8 or less windows will display an error dialog.
+    PRInt32 count = 20;
+    while(--count >= 0) {
+      NS_ProcessNextEvent(thread);
+      PR_Sleep(PR_MillisecondsToInterval(1));
+    }
+  }
+}
+#endif
+
 PRBool gSafeMode = PR_FALSE;
 
 /**
@@ -414,17 +488,29 @@ PRBool gSafeMode = PR_FALSE;
  * singleton.
  */
 class nsXULAppInfo : public nsIXULAppInfo,
+#ifdef XP_WIN
+                     public nsIWinAppHelper,
+#endif
                      public nsIXULRuntime
+                     
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIXULAPPINFO
   NS_DECL_NSIXULRUNTIME
+#ifdef XP_WIN
+  NS_DECL_NSIWINAPPHELPER
+private:
+  nsresult LaunchAppHelperWithArgs(int aArgc, char **aArgv);
+#endif
 };
 
 NS_INTERFACE_MAP_BEGIN(nsXULAppInfo)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXULRuntime)
   NS_INTERFACE_MAP_ENTRY(nsIXULRuntime)
+#ifdef XP_WIN
+  NS_INTERFACE_MAP_ENTRY(nsIWinAppHelper)
+#endif
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIXULAppInfo, gAppData)
 NS_INTERFACE_MAP_END
 
@@ -534,6 +620,92 @@ nsXULAppInfo::GetXPCOMABI(nsACString& aResult)
   return NS_ERROR_NOT_AVAILABLE;
 #endif
 }
+
+#ifdef XP_WIN
+nsresult 
+nsXULAppInfo::LaunchAppHelperWithArgs(int aArgc, char **aArgv)
+{
+  nsresult rv;
+  nsCOMPtr<nsIProperties> directoryService = 
+    do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsILocalFile> appHelper;
+  rv = directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(appHelper));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = appHelper->AppendNative(NS_LITERAL_CSTRING("uninstall"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = appHelper->AppendNative(NS_LITERAL_CSTRING("helper.exe"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString appHelperPath;
+  rv = appHelper->GetNativePath(appHelperPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!WinLaunchChild(appHelperPath.get(), aArgc, aArgv, 1))
+    return NS_ERROR_FAILURE;
+  else
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::FixReg()
+{
+  int resetRegArgc = 2;
+  char **resetRegArgv = (char**) malloc(sizeof(char*) * (resetRegArgc + 1));
+  if (!resetRegArgv)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  resetRegArgv[0] = "argv0ignoredbywinlaunchchild";
+  resetRegArgv[1] = "/fixreg";
+  resetRegArgv[2] = nsnull;
+  nsresult rv = LaunchAppHelperWithArgs(resetRegArgc, resetRegArgv);
+  free(resetRegArgv);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::PostUpdate(nsILocalFile *aLogFile)
+{
+  nsresult rv;
+  int upgradeArgc = aLogFile ? 3 : 2;
+  char **upgradeArgv = (char**) malloc(sizeof(char*) * (upgradeArgc + 1));
+
+  if (!upgradeArgv)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  upgradeArgv[0] = "argv0ignoredbywinlaunchchild";
+  upgradeArgv[1] = "/postupdate";
+
+  char *pathArg = nsnull;
+
+  if (aLogFile) {
+    nsCAutoString logFilePath;
+    rv = aLogFile->GetNativePath(logFilePath);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    pathArg = PR_smprintf("/uninstalllog=%s", logFilePath.get());
+    if (!pathArg)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    upgradeArgv[2] = pathArg;
+    upgradeArgv[3] = nsnull;
+  }
+  else {
+    upgradeArgv[2] = nsnull;
+  }
+
+  rv = LaunchAppHelperWithArgs(upgradeArgc, upgradeArgv);
+  
+  if (pathArg)
+    PR_smprintf_free(pathArg);
+
+  free(upgradeArgv);
+  return rv;
+}
+#endif
 
 static const nsXULAppInfo kAppInfo;
 static NS_METHOD AppInfoConstructor(nsISupports* aOuter,
@@ -1199,6 +1371,27 @@ XRE_GetBinaryPath(const char* argv0, nsILocalFile* *aResult)
   return NS_OK;
 }
 
+// copied from nsXREDirProvider.cpp
+#ifdef XP_WIN
+static nsresult
+GetShellFolderPath(int folder, char result[MAXPATHLEN])
+{
+  LPITEMIDLIST pItemIDList = NULL;
+
+  nsresult rv;
+  if (SUCCEEDED(SHGetSpecialFolderLocation(NULL, folder, &pItemIDList)) &&
+      SUCCEEDED(SHGetPathFromIDList(pItemIDList, result))) {
+    rv = NS_OK;
+  } else {
+    rv = NS_ERROR_NOT_AVAILABLE;
+  }
+
+  CoTaskMemFree(pItemIDList);
+
+  return rv;
+}
+#endif
+
 #define NS_ERROR_LAUNCHED_CHILD_PROCESS NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_PROFILE, 200)
 
 #ifdef XP_WIN
@@ -1237,7 +1430,7 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
     return rv;
 
 #if defined(XP_WIN)
-  if (!WinLaunchChild(exePath.get(), gRestartArgc, gRestartArgv))
+  if (!WinLaunchChild(exePath.get(), gRestartArgc, gRestartArgv, 0))
     return NS_ERROR_FAILURE;
 #elif defined(XP_OS2)
   if (_execv(exePath.get(), gRestartArgv) == -1)
@@ -1367,6 +1560,10 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
 
 #ifdef XP_MACOSX
     SetupMacCommandLine(gRestartArgc, gRestartArgv);
+#endif
+
+#ifdef XP_WIN
+    ProcessDDE(aNative);
 #endif
 
     { //extra scoping is needed so we release these components before xpcom shutdown
@@ -2251,8 +2448,45 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
 #if defined(MOZ_UPDATER)
   // Check for and process any available updates
+  nsCOMPtr<nsIFile> updRoot = dirProvider.GetAppDir();
+  nsCOMPtr<nsILocalFile> updRootl(do_QueryInterface(updRoot));
+
+#ifdef XP_WIN
+  // Use <UserLocalDataDir>\updates\<relative path to app dir from
+  // Program Files> if app dir is under Program Files to avoid the
+  // folder virtualization mess on Windows Vista
+  char path[MAXPATHLEN];
+  rv = GetShellFolderPath(CSIDL_PROGRAM_FILES, path);
+  NS_ENSURE_SUCCESS(rv, 1);
+  nsCOMPtr<nsILocalFile> programFilesDir;
+  rv = NS_NewNativeLocalFile(nsDependentCString(path), PR_FALSE,
+                             getter_AddRefs(programFilesDir));
+  NS_ENSURE_SUCCESS(rv, 1);
+
+  PRBool descendant;
+  rv = programFilesDir->Contains(updRootl, PR_TRUE, &descendant);
+  NS_ENSURE_SUCCESS(rv, 1);
+  if (descendant) {
+    nsCAutoString relativePath;
+    rv = updRootl->GetRelativeDescriptor(programFilesDir, relativePath);
+    NS_ENSURE_SUCCESS(rv, 1);
+
+    nsCOMPtr<nsILocalFile> userLocalDir;
+    rv = dirProvider.GetUserLocalDataDirectory(getter_AddRefs(userLocalDir));
+    NS_ENSURE_SUCCESS(rv, 1);
+
+    rv = NS_NewNativeLocalFile(EmptyCString(), PR_FALSE,
+                               getter_AddRefs(updRootl));
+    NS_ENSURE_SUCCESS(rv, 1);
+
+    rv = updRootl->SetRelativeDescriptor(userLocalDir, relativePath);
+    NS_ENSURE_SUCCESS(rv, 1);
+  }
+#endif
+
   ProcessUpdates(dirProvider.GetGREDir(),
                  dirProvider.GetAppDir(),
+                 updRootl,
                  gRestartArgc,
                  gRestartArgv);
 #endif
@@ -2542,6 +2776,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           // resolution for Extensions is different than for the component 
           // registry - major milestone vs. build id. 
           needsRestart = PR_TRUE;
+
+#ifdef XP_WIN
+          ProcessDDE(nativeApp);
+#endif
 
 #ifdef XP_MACOSX
           SetupMacCommandLine(gRestartArgc, gRestartArgv);
