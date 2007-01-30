@@ -226,7 +226,7 @@ interface calIIcalProperty : nsISupports
     [noscript,notxpcom] icalcomponentptr getIcalComponent();
 };
 
-[scriptable,uuid(c788a1dc-0929-4029-9a14-e1bc654eafad)]
+[scriptable,uuid(ae4ca6c3-981b-4f66-a0ce-2f2c218ad9e3)]
 interface calIICSService : nsISupports
 {
     calIIcalComponent parseICS(in AUTF8String serialized);
@@ -260,4 +260,20 @@ interface calIICSService : nsISupports
                                   in AUTF8String tzLongitude);
     
     readonly attribute nsIUTF8StringEnumerator timezoneIds;
+
+    /**
+     * This is the string that is used to prefix all tzIds that come from our
+     * local tzid database.  This includes a trailing slash character.
+     */
+    readonly attribute AUTF8String tzIdPrefix;
+
+    /** 
+     * Takes a tzId, and if it's an old version of one of ours, returns 
+     * the current version of that tzId.  Otherwise returns the empty string.
+     *
+     * @param aTzId  the tzid to check
+     *
+     * @return       updated version of the same tzid or ""
+     */
+    AUTF8String latestTzId(in AUTF8String tzId);
 };

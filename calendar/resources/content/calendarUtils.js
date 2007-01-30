@@ -300,12 +300,20 @@ function calendarDefaultTimezone() {
         var prefobj = prefService.getBranch("calendar.");
         try {
             gDefaultTimezone = prefobj.getCharPref("timezone.local");
+
+            var icsSvc = Components.classes["@mozilla.org/calendar/ics-service;1"]
+                                   .getService(Components.interfaces.calIICSService);
+
+            // Update this tzid if necessary.
+            if (icsSvc.latestTzId(gDefaultTimezone).length) {
+                gDefaultTimezone = icsSvc.latestTzId(gDefaultTimezone);
+                prefobj.setCharPref("timezone.local", gDefaultTimezone);
+            }
         } catch (e) {
             gDefaultTimezone = guessSystemTimezone();
             dump("gDefaultTimezone: " + gDefaultTimezone + "\n");
         }
     }
-    
     return gDefaultTimezone;
 }
 
@@ -399,7 +407,8 @@ function guessSystemTimezone()
             // This happens if the l10n team didn't know how to get a time from
             // tzdata.c.  To convert an Olson time to a ics-timezone-string we
             // need to append this prefix.
-            stringBundleTZ = "/mozilla.org/20050126_1/" + stringBundleTZ;
+            // XXX Get this prefix from calIICSService.tzIdPrefix
+            stringBundleTZ = "/mozilla.org/20070129_1/" + stringBundleTZ;
         }
 
         switch (checkTZ(stringBundleTZ)) {
