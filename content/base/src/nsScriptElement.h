@@ -56,7 +56,7 @@ public:
   // nsIMutationObserver
   virtual void CharacterDataChanged(nsIDocument* aDocument,
                                     nsIContent* aContent,
-                                    PRBool aAppend);
+                                    CharacterDataChangeInfo* aInfo);
   virtual void AttributeChanged(nsIDocument* aDocument,
                                 nsIContent* aContent,
                                 PRInt32 aNameSpaceID,
