@@ -250,7 +250,6 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
         break;
       case eWindowType_dialog:
         if (aInitData) {
-          // we never give dialogs a close button
           switch (aInitData->mBorderStyle)
           {
             case eBorderStyle_none:
@@ -259,6 +258,7 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
               features |= NSTitledWindowMask;
               break;
             case eBorderStyle_all:
+              features |= NSClosableWindowMask;
               features |= NSTitledWindowMask;
               features |= NSResizableWindowMask;
               features |= NSMiniaturizableWindowMask;
@@ -268,9 +268,10 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
                 features |= NSTitledWindowMask;
                 features |= NSMiniaturizableWindowMask;
               }
-              if (aInitData->mBorderStyle & eBorderStyle_resizeh) {
+              if (aInitData->mBorderStyle & eBorderStyle_resizeh)
                 features |= NSResizableWindowMask;
-              }
+              if (aInitData->mBorderStyle & eBorderStyle_close)
+                features |= NSClosableWindowMask;
               break;
           }
         }
