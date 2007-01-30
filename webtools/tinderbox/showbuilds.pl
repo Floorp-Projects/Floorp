@@ -105,14 +105,14 @@ sub do_tinderbox($) {
     my ($form_ref) = (@_);
     &require_only_one_tree($form_ref->{tree});
     my $tinderbox_data = &tb_load_data($form_ref);
-    &print_page_head($form_ref);
-    &print_table_header($form_ref);
+    &print_page_head($form_ref, $tinderbox_data);
+    &print_table_header($form_ref, $tinderbox_data);
     &print_table_body($tinderbox_data);
     &print_table_footer($form_ref);
 }
 
-sub print_page_head($) {
-    my ($form_ref) = (@_);
+sub print_page_head($$) {
+    my ($form_ref, $td) = (@_);
     my $tree = $form_ref->{tree};
     print "Content-type: text/html\n\n<HTML>\n" unless $form_ref->{static};
 
@@ -123,28 +123,23 @@ sub print_page_head($) {
     &EmitHtmlTitleAndHeader("tinderbox: $tree", "tinderbox",
                             "tree: $tree ($now)");
 
-    &print_javascript($tree);
+    &print_javascript($td);
 
     # Print rules, sheriff, and status.  Only on the first pageful.
     if ($::nowdate eq $::maxdate) {
-        undef $::rules_message;
         unless ($form_ref->{norules}) {
-            do "$tree/rules.pl";
-            print "<a NAME=\"rules\"></a>$::rules_message";  # from $tree/rules.pl
+            print "<a NAME=\"rules\"></a>" . &tb_load_rules($tree);
         }
-        
-        undef $::current_sheriff;
-        do "$tree/sheriff.pl";
-        $::current_sheriff =~ s:^\s*|\s*$::gs;
-        if ($::current_sheriff and length($::current_sheriff) gt 0) {
-            print "<a NAME=\"sheriff\"></a>$::current_sheriff";  # from $tree/sheriff.pl
+        my $current_sheriff = &tb_load_sheriff($tree);
+        $current_sheriff =~ s:^\s*|\s*$::gs;
+        if ($current_sheriff and length($current_sheriff) gt 0) {
+            print "<a NAME=\"sheriff\"></a>$current_sheriff";
         }
-        
-        undef $::status_message;
-        do "$tree/status.pl";
-        $::status_message =~ s:^\s*|\s*$::gs;
-        if ($::status_message and length($::status_message) gt 0) {
-            print "<a NAME=\"status\"></a>$::status_message";  # from $tree/status.pl
+
+        my $status_message = &tb_load_status($tree);
+        $status_message =~ s:^\s*|\s*$::gs;
+        if ($status_message and length($status_message) gt 0) {
+            print "<a NAME=\"status\"></a>$status_message";
         }
 
         # keeps the main table from clearing the IFRAME
@@ -210,21 +205,21 @@ sub print_page_head($) {
                 </table>
             };
     }
-    if (is_tree_state_available()) {
+    if (&is_tree_state_available($tree)) {
         print "<a NAME=\"open\"></a>";
         print "The tree is <font size=+2>";
-        print (is_tree_open() ? 'open' : 'closed');
+        print (&is_tree_open($tree) ? 'open' : 'closed');
         print "</font>\n";
     }
 }
 
 sub print_table_body($) {
-    my $tinderbox_data = $_[0];
+    my ($td) = (@_);
     # Reset globals
     undef @who_check_list;
-    for (my $tt=0; $tt < $::time_count; $tt++) {
-        last if $::build_time_times->[$tt] < $::mindate;
-        print_table_row($tinderbox_data, $tt);
+    for (my $tt=0; $tt < $td->{time_count}; $tt++) {
+        last if $td->{build_time_times}->[$tt] < $::mindate;
+        &print_table_row($td, $tt);
     }
 }
 
@@ -241,13 +236,13 @@ BEGIN {
         # 
         my $query_link = '';
         my $end_query  = '';
-        my $pretty_time = print_time($::build_time_times->[$tt]);
+        my $pretty_time = &print_time($td->{build_time_times}->[$tt]);
         my $hour;
 
         ($hour) = $pretty_time =~ /(\d\d):/;
 
-        if ($lasthour ne $hour or has_who_list($tt)) {
-            $query_link = query_ref($td, $::build_time_times->[$tt]);
+        if ($lasthour ne $hour or &has_who_list($td, $tt)) {
+            $query_link = &query_ref($td, $td->{build_time_times}->[$tt]);
             $end_query  = '</a>';
         }
         if ($lasthour eq $hour) {
@@ -258,21 +253,21 @@ BEGIN {
         
         my $hour_color = '';
         $hour_color = ' bgcolor=#e7e7e7'
-            if ($::build_time_times->[$tt] + 1) % 7200 <= 3600;
+            if ($td->{build_time_times}->[$tt] + 1) % 7200 <= 3600;
         print "<tr align=center><td align=right$hour_color>",
         "$query_link\n$pretty_time$end_query</td>\n";
         
         # Guilty
         #
         print '<td>';
-        for my $who (sort keys %{$::who_list->[$tt]} ){
+        for my $who (sort keys %{$td->{who_list}->[$tt]} ){
             my $qr;
             if ($tt eq 0) {
-                $qr = &who_menu($td, $::build_time_times->[$tt],
+                $qr = &who_menu($td, $td->{build_time_times}->[$tt],
                                 undef,$who);
             } else {
-                $qr = &who_menu($td, $::build_time_times->[$tt],
-                                $::build_time_times->[$tt-1],$who);
+                $qr = &who_menu($td, $td->{build_time_times}->[$tt],
+                                $td->{build_time_times}->[$tt-1],$who);
             }
             $who =~ s/%.*$//;
             print "  $qr$who</a>\n";
@@ -281,8 +276,8 @@ BEGIN {
         
         # Build Status
         #
-        for (my $build_index=0; $build_index < $::name_count; $build_index++) {
-            my $br = $::build_table->[$tt][$build_index];
+        for (my $build_index=0; $build_index < $td->{name_count}; $build_index++) {
+            my $br = $td->{build_table}->[$tt][$build_index];
             if (not defined($br)) {
                 # No build data for this time (e.g. no build after this time).
                 print "<td></td>\n";
@@ -297,8 +292,8 @@ BEGIN {
             # in a table.  Besides, if rowspan is set to that sort of invalid value,
             # that's more of a sign that there's a bug in tbglobals.pl.
             #
-            if ( $rowspan > $::mindate_time_count - $tt + 1 ) {
-                $rowspan = $::mindate_time_count - $tt + 1
+            if ( $rowspan > $td->{mindate_time_count} - $tt + 1 ) {
+                $rowspan = $td->{mindate_time_count} - $tt + 1
                 }
 
             print "<td rowspan=\"$rowspan\" bgcolor=\"$colormap{$br->{buildstatus}}\">\n";
@@ -383,10 +378,11 @@ BEGIN {
             #
             # Only add the "C" link if there have been changes since the last build.
             if ($br->{previousbuildtime}) {
-                my $previous_buildtime_index = $::build_time_index->{$br->{previousbuildtime}};
-                my $this_buildtime_index = $::build_time_index->{$br->{buildtime}} + 1;
+                my $previous_buildtime_index = $td->{build_time_index}->{$br->{previousbuildtime}};
+                my $this_buildtime_index = $td->{build_time_index}->{$br->{buildtime}} + 1;
 
-                if (&has_who_list($this_buildtime_index,
+                if (&has_who_list($td,
+                                  $this_buildtime_index,
                                   $previous_buildtime_index)) {
                     print "\n", &query_ref($br->{td}, 
                                            $br->{previousbuildtime},
@@ -430,7 +426,7 @@ BEGIN {
 }
 
 sub print_table_header($) {
-    my ($form_ref) = (@_);
+    my ($form_ref, $td) = (@_);
     print "<table border=1 bgcolor='#FFFFFF' cellspacing=1 cellpadding=1>\n";
 
     print "<tr align=center>\n";
@@ -438,14 +434,14 @@ sub print_table_header($) {
     print "<TH>Build Time</TH>\n";
     print "<TH>Guilty</th>\n";
 
-    for (my $ii=0; $ii < $::name_count; $ii++) {
+    for (my $ii=0; $ii < $td->{name_count}; $ii++) {
 
-        my $bn = $::build_names->[$ii];
+        my $bn = $td->{build_names}->[$ii];
         $bn =~ s/Clobber/Clbr/g;
         $bn =~ s/Depend/Dep/g;
         $bn = "<font face='Helvetica,Arial' size=-1>$bn</font>";
 
-        my $last_status = tb_last_status($ii);
+        my $last_status = &tb_last_status($td, $ii);
         if ($last_status eq 'busted') {
             if ($form_ref->{noflames}) {
                 print "<td rowspan=2 bgcolor=$colormap{busted}><a title='$titlemap{flames}'>$bn $textmap{flames}</a></td>";
@@ -541,16 +537,18 @@ BEGIN {
         my ($td, $mindate, $maxdate, $who) = @_;
         my $output = '<a><!-- query system not configured -->';
 
-        if ($::use_viewvc) {
-            $output = "<a href=\"$::viewvc_url?view=query&who_match=exact";
+        if ($::global_treedata->{$td->{name}}->{use_viewvc}) {
+            $output = "<a href=\"" .
+                $::global_treedata->{$td->{name}}->{viewvc_url} .
+                "?view=query&who_match=exact";
             $output .= "&date=explicit&mindate=" .
-                strftime("%Y-%m-%d %T", gmtime($::mindate));
+                strftime("%Y-%m-%d %T", gmtime($mindate));
             $output .= "&maxdate=" . 
-                strftime("%Y-%m-%d %T", gmtime($::maxdate))
-                if (defined($::maxdate) && $::maxdate ne '');
+                strftime("%Y-%m-%d %T", gmtime($maxdate))
+                if (defined($maxdate) && $maxdate ne '');
             $output .= "&who=" . &url_encode($who) if (defined($who) && $who ne '');
             $output .= "\">";
-        } elsif ($::use_bonsai) {
+        } elsif ($::global_treedata->{$td->{name}}->{use_bonsai}) {
             $output = "<a href=$::bonsai_url/cvsquery.cgi";
             $output .= "?module=$td->{cvs_module}";
             $output .= "&branch=$td->{cvs_branch}"   if $td->{cvs_branch} ne 'HEAD';
@@ -573,18 +571,19 @@ BEGIN {
         # trick who.cgi into using regexps, escaping & and =
         $treeflag .= '%26branchtype%3Dregexp' if $treeflag =~ /\+|\?|\*/;
 
-        do "$td->{name}/treedata.pl";
+        &tb_load_treedata($td->{name});
 
         my $qr = '';
         my $ret = '<a><!-- no query system configured -->';
-        if ($::use_viewvc) {
-            $qr = "$::viewvc_url?view=query&who_match=exact&who=" . 
+        if ($::global_treedata->{$td->{name}}->{use_viewvc}) {
+            $qr = $::global_treedata->{$td->{name}}->{viewvc_url} .
+                "?view=query&who_match=exact&who=" . 
                 &url_encode($who) . "&querysort=date&date=explicit" .
                 "&mindate=" . strftime("%Y-%m-%d %T", gmtime($mindate));
             $qr .= "&maxdate=" . strftime("%Y-%m-%d %T", gmtime($maxdate)) if
                 (defined($maxdate));
             $ret = "<a href='$qr'>";
-        } elsif ($::use_bonsai) {
+        } elsif ($::global_treedata->{$td->{name}}->{use_bonsai}) {
             $qr = "$::registry_url/who.cgi?email=". &url_encode($who)
                 . "&d=$td->{cvs_module}|$treeflag|$td->{cvs_root}|$mindate";
             $qr = $qr . "|$maxdate" if defined($maxdate);
@@ -597,14 +596,14 @@ BEGIN {
 # Check to see if anyone checked in during time slot.
 #   ex.  has_who_list(1);    # Check for checkins in most recent time slot.
 #   ex.  has_who_list(1,5);  # Check range of times.
-    sub has_who_list {
-        my ($time1, $time2) = @_;
+    sub has_who_list($$$) {
+        my ($td, $time1, $time2) = @_;
 
         if (not defined(@who_check_list)) {
             # Build a static array of true/false values for each time slot.
-            $who_check_list[$::time_count - 1] = 0;
-            for (my $tt = 0; $tt < $::time_count; $tt++) {
-                $who_check_list[$tt] = 1 if each %{$::who_list->[$tt]};
+            $who_check_list[$td->{time_count} - 1] = 0;
+            for (my $tt = 0; $tt < $td->{time_count}; $tt++) {
+                $who_check_list[$tt] = 1 if each %{$td->{who_list}->[$tt]};
             }
         }
         if ($time2) {
@@ -619,52 +618,58 @@ BEGIN {
 
     BEGIN {
         # Check bonsai tree for open/close state
+        
+        # Cache state in hash as multiple tinderboxes 
+        # may have different bonsai trees
+    
+        my %treestate = {};
+        my %checked_state = {};
 
-        my $treestate = undef;
-        my $checked_state = 0;
+        sub _check_tree_state($) {
+            my ($tree) = (@_);
 
-        sub _check_tree_state {
-            my $tree = shift;
-
-            $checked_state = 1;
-            tb_load_treedata($tree); # Loading for the global, $::bonsai_tree
-            return unless defined $::bonsai_tree and $::bonsai_tree ne '';
+            $checked_state{$tree} = 1;
+            &tb_load_treedata($tree);
+            my $bonsai_tree = $::global_treedata->{$tree}->{bonsai_tree};
+            return unless defined $bonsai_tree and $bonsai_tree ne '';
 
             local $_;
             $::BatchID='';
-            eval qq(require "$::bonsai_dir/data/$::bonsai_tree/batchid.pl");
+            eval qq(require "$::bonsai_dir/data/$bonsai_tree/batchid.pl");
             if ($::BatchID eq '') {
-                warn "No BatchID in $::bonsai_dir/data/$::bonsai_tree/batchid.pl\n";
+                warn "No BatchID in $::bonsai_dir/data/$bonsai_tree/batchid.pl\n";
                 return;
             }
-            open(BATCH, "<", "$::bonsai_dir/data/$::bonsai_tree/batch-$::BatchID.pl")
+            open(BATCH, "<", "$::bonsai_dir/data/$bonsai_tree/batch-$::BatchID.pl")
                 or print "can't open batch-$::BatchID.pl<br>";
             while (<BATCH>) { 
                 if (/^\$TreeOpen = '(\d+)';/) {
-                    $treestate = $1;
+                    $treestate{$tree} = $1;
                     last;
                 }
             }
             return;
         }
 
-        sub is_tree_state_available {
-            my $tree = shift;
-            return 1 if defined $treestate;
-            return 0 if $checked_state;
-            _check_tree_state($tree);
-            return is_tree_state_available();
+        sub is_tree_state_available($) {
+            my ($tree) = (@_);
+            return 1 if defined($treestate{$tree});
+            return 0 if defined($checked_state{$tree});
+            &_check_tree_state($tree);
+            return &is_tree_state_available($tree);
         }
 
-        sub is_tree_open {
-            my $tree = shift;
-            _check_tree_state($tree) unless $checked_state;
-            return $treestate;
+        sub is_tree_open($) {
+            my ($tree) = (@_);
+            &_check_tree_state($tree) unless $checked_state{$tree};
+            return $treestate{$tree};
         }
     }
 
     sub print_javascript {
-        my ($tree) = (@_);
+        my ($td) = (@_);
+        my $tree = $td->{name};
+
         my $script;
         ($script = <<"__ENDJS") =~ s/^    //gm;
         <style type="text/css">
@@ -871,22 +876,23 @@ var notes = new Array();
 var builds = new Array();
 
 __ENDJS
+
     print $script;
 
 my $ii = 0;
-while ($ii < @::note_array) {
-    my $ss = $::note_array[$ii];
-while ($ii < @::note_array && $::note_array[$ii] eq $ss) {
-    print "notes[$ii] = ";
-    $ii++;
+my $note_arrayref = $td->{note_array};
+if (defined($note_arrayref)) {
+    for ($ii=0; $ii < @$note_arrayref; $ii++) {
+        my $ss = $note_arrayref->[$ii];
+        print "notes[$ii] = ";
+        $ss =~ s/\\/\\\\/g;
+        $ss =~ s/\"/\\\"/g;
+        $ss =~ s/\n/\\n/g;
+        print "\"$ss\";\n";
+    }
 }
-$ss =~ s/\\/\\\\/g;
-$ss =~ s/\"/\\\"/g;
-$ss =~ s/\n/\\n/g;
-print "\"$ss\";\n";
-}
-for ($ii=0; $ii < $::name_count; $ii++) {
-    my $bn = $::build_names->[$ii];
+for ($ii=0; $ii < $td->{name_count}; $ii++) {
+    my $bn = $td->{build_names}->[$ii];
 print "builds[$ii]='$bn';\n";
 }
 print "var buildtree = '$tree';\n";
@@ -923,8 +929,8 @@ sub do_express($) {
     print "<table border=1 cellpadding=1 cellspacing=1><tr>";
     print "<th align=left colspan=$keycount>";
     print &open_showbuilds_href_target."$tree";
-    if (&is_tree_state_available()) {
-        print (&is_tree_open() ? ' is open' : ' is closed');
+    if (&is_tree_state_available($tree)) {
+        print (&is_tree_open($tree) ? ' is open' : ' is closed');
     }
     print ", $tm</a></tr><tr>\n";
     foreach my $buildname (@keys) {
@@ -965,8 +971,8 @@ sub do_panel($) {
     }
     print "'>$tree";
     
-    if (&is_tree_state_available()) {
-        print " is ", &is_tree_open() ? 'open' : 'closed';
+    if (&is_tree_state_available($tree)) {
+        print " is ", &is_tree_open($tree) ? 'open' : 'closed';
     }
     # Add the current time
     my ($minute,$hour,$mday,$mon) = (localtime)[1..4];
@@ -1058,7 +1064,9 @@ sub do_quickparse($) {
         next unless grep {$tt eq $_} @treelist;
         if (&is_tree_state_available($tt)) {
             my $state = &is_tree_open($tt) ? 'open' : 'closed';
-            print "State|$tt|$::bonsai_tree|$state\n";
+            print "State|$tt|" . 
+                $::global_treedata->{$form_ref->{tree}}->{bonsai_tree} .
+                "|$state\n";
         }
         my (%build, %times);
         &tb_loadquickparseinfo($tt, \%build, \%times);
@@ -1108,8 +1116,8 @@ sub do_rdf($) {
                </image>
            };    
     
-    if (&is_tree_state_available()) {
-        my $state = &is_tree_open() ? 'open' : 'closed';
+    if (&is_tree_state_available($tree)) {
+        my $state = &is_tree_open($tree) ? 'open' : 'closed';
         print "<item><title>The tree is currently $state</title>",
         "<link>$mainurl</link></item>\n";
     }
@@ -1136,8 +1144,8 @@ sub do_hdml($) {
             };
     my %state_symbols = (success=>'+',busted=>'!',testfailed=>'~');
 
-    if (&is_tree_state_available()) {
-        print "<LINE>$tree is " . (&is_tree_open() ? 'open' : 'closed');
+    if (&is_tree_state_available($tree)) {
+        print "<LINE>$tree is " . (&is_tree_open($tree) ? 'open' : 'closed');
     }
     my (%build, %times);
     &tb_loadquickparseinfo($tree, \%build, \%times);
@@ -1175,8 +1183,8 @@ sub do_vxml($) {
 
     my %state_symbols = (success=>'green.',busted=>'red.',testfailed=>'orange.');
 
-    if (&is_tree_state_available()) {
-        print "<audio>$tree is " .  (&is_tree_open() ? 'open.' : 'closed.') . "</audio>";
+    if (&is_tree_state_available($tree)) {
+        print "<audio>$tree is " .  (&is_tree_open($tree) ? 'open.' : 'closed.') . "</audio>";
     }
     my (%build, %times);
     &tb_loadquickparseinfo($tree, \%build, \%times);
@@ -1241,8 +1249,8 @@ sub do_wml($) {
 
     my %state_symbols = (success=>'green.',busted=>'red.',testfailed=>'orange.');
 
-    if (&is_tree_state_available()) {
-        print "<p align='left'>$tree is " .  (&is_tree_open() ? 'open.' : 'closed.') . "</p>";
+    if (&is_tree_state_available($tree)) {
+        print "<p align='left'>$tree is " .  (&is_tree_open($tree) ? 'open.' : 'closed.') . "</p>";
     }
     my (%build, %times);
     &tb_loadquickparseinfo($tree, \%build, \%times);

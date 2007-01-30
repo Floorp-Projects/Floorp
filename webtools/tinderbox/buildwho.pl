@@ -43,32 +43,39 @@ $tree = &trick_taint(shift);
 
 &usage() if (!defined($tree));
 
-# Grab globals for this tree:
+# Grab treedata
 #   $who_days:    Number of days of commit info to make available
 #   $cvs_module:  The checkout module
 #   $cvs_branch:  The current branch
 #   $cvs_root:    The path to the cvs root
-#   $bonsai_tree: The data directory for this tree in $bonsai_dir
+#   $bonsai_tree: The data directory for this tree in $::bonsai_dir
 #   $viewvc_repository: Repository path used by viewvc for this tree
-require "$tree/treedata.pl";
+&tb_load_treedata($tree);
+my $use_bonsai = $::global_treedata->{$tree}->{use_bonsai};
+my $use_viewvc = $::global_treedata->{$tree}->{use_viewvc};
+my $bonsai_tree = $::global_treedata->{$tree}->{bonsai_tree};
+my $cvs_module = $::global_treedata->{$tree}->{cvs_module};
+my $cvs_branch = $::global_treedata->{$tree}->{cvs_branch};
+my $cvs_root = $::global_treedata->{$tree}->{cvs_root};
+my $viewvc_repository = $::global_treedata->{$tree}->{viewvc_repository};
 
-$days = $::who_days if (!defined($days));
+$days = $::global_treedata->{$tree}->{who_days} if (!defined($days));
 
 # Exit early if no query system is enabled
-exit 0 if (!$::use_bonsai && !$::use_viewvc);
+exit 0 if (!$use_bonsai && !$use_viewvc);
 
 # Only allow one process at a time to re-write "who.dat".
 #
 my $lockfile = "$tree/buildwho.sem";
 my $lock = lock_datafile($lockfile);
 
-if ($::use_bonsai) {
+if ($use_bonsai) {
     # Setup global variables for bonsai query
     #
-    if ($::cvs_root eq '') {
+    if ($cvs_root eq '') {
         $::CVS_ROOT = "$::default_cvsroot";
     } else {
-        $::CVS_ROOT = $::cvs_root;
+        $::CVS_ROOT = $cvs_root;
     }
 
     $::CVS_REPOS_SUFIX = $::CVS_ROOT;
@@ -81,7 +88,7 @@ if ($::use_bonsai) {
     require 'cvsquery.pl';
 
     print "cvsroot='$::CVS_ROOT'\n" if $F_DEBUG;
-} elsif ($::use_viewvc) {
+} elsif ($use_viewvc) {
     require 'viewvc.pl';
 }
 
@@ -99,15 +106,16 @@ sub usage() {
 
 sub build_who {
     my ($tree) = @_;
+    my $result = undef;
     $::query_date_min = time - (60 * 60 * 24 * $days);
 
     print "Minimum date: $::query_date_min\n" if $F_DEBUG;
 
-    if ($::use_viewvc) {
-        $::query_module=$::viewvc_repository;
-    } elsif ($::use_bonsai) {
-        $::query_module=$::cvs_module;
-        $::query_branch=$::cvs_branch;
+    if ($use_viewvc) {
+        $::query_module=$viewvc_repository;
+    } elsif ($use_bonsai) {
+        $::query_module=$cvs_module;
+        $::query_branch=$cvs_branch;
     } else {
         # Should never reach this
         return;
@@ -120,12 +128,14 @@ sub build_who {
     my $temp_who_file = "$who_file.$$";
     open(WHOLOG, ">", "$temp_who_file");
 
-    if ($::use_bonsai) {
+    if ($use_bonsai) {
         chdir $::bonsai_dir;
-        $::TreeID = $::bonsai_tree;
+        $::TreeID = $bonsai_tree;
+        $result = &query_checkins(%::mod_map);
+    } elsif ($use_viewvc) {
+        $result = &query_checkins($tree, %::mod_map);
     }
-    my $result = &query_checkins(%::mod_map);
-        
+
     my $last_who='';
     my $last_date=0;
     for my $ci (@$result) {
@@ -136,7 +146,7 @@ sub build_who {
         $last_date=$ci->[$::CI_DATE];
     }
     close (WHOLOG);
-    if ($::use_bonsai) {
+    if ($use_bonsai) {
         chdir "@TINDERBOX_DIR@";
     }
     move($temp_who_file, $who_file);

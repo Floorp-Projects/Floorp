@@ -10,69 +10,74 @@ use POSIX qw(strftime mktime);
 use Time::Local;
 
 # Assume that treedata.pl & tbglobals.pl are already loaded
+my $db = undef;
 
-sub ConnectToDatabase {
-    my ($dsn);
+sub ConnectToDatabase($) {
+    my ($tree) = @_;
 
-    if (!defined $::db) {
-        $dsn = "DBI:" . $::viewvc_dbdriver . ":database=" . 
-            $::viewvc_dbname . ";";
-        $dsn .= "host=" . $::viewvc_dbhost . ";"
-            if (defined($::viewvc_dbhost) && "$::viewvc_dbhost" ne "");
-        $dsn .= "port=" . $::viewvc_dbport . ";" 
-            if (defined($::viewvc_dbport) && "$::viewvc_dbport" ne "");
+    if (!defined $db) {
+        my ($dsn);
+        my $viewvc_dbdriver = $::global_treedata->{$tree}->{viewvc_dbdriver}; 
+        my $viewvc_dbname = $::global_treedata->{$tree}->{viewvc_dbname}; 
+        my $viewvc_dbhost = $::global_treedata->{$tree}->{viewvc_dbhost}; 
+        my $viewvc_dbport = $::global_treedata->{$tree}->{viewvc_dbport}; 
+        my $viewvc_dbuser = $::global_treedata->{$tree}->{viewvc_dbuser}; 
+        my $viewvc_dbpasswd = $::global_treedata->{$tree}->{viewvc_dbpasswd}; 
+
+        $dsn = "DBI:${viewvc_dbdriver}:database=${viewvc_dbname};";
+        $dsn .= "host=${viewvc_dbhost};"
+            if (defined($viewvc_dbhost) && "$viewvc_dbhost" ne "");
+        $dsn .= "port=${viewvc_dbport};" 
+            if (defined($viewvc_dbport) && "$viewvc_dbport" ne "");
 
 #        DBI->trace(1, "/tmp/dbi.out");
 
-        $::db = DBI->connect($dsn, $::viewvc_dbuser, $::viewvc_dbpasswd)
+        $db = DBI->connect($dsn, $viewvc_dbuser, $viewvc_dbpasswd)
             || die "Can't connect to database server.";
     }
 }
 
 sub DisconnectFromDatabase {
-    if (defined $::db) {
-        $::db->disconnect();
-        undef $::db;
+    if (defined $db) {
+        $db->disconnect();
+        undef $db;
     }
 }
 
 sub SendSQL {
-    my ($str, @bind_values) = (@_);
+    my ($query_ref, $str, @bind_values) = (@_);
     my $status = 0;
 
-    $::currentquery = $::db->prepare($str) || $status++;
+    $$query_ref = $db->prepare($str) || $status++;
     if ($status) {
         print STDERR "SendSQL prepare error: '$str' with values (";
         foreach my $v (@bind_values) {
             print STDERR "'" . &shell_escape($v) . "', ";
         }
-        print STDERR ") :: " . $::db->errstr . "\n";
+        print STDERR ") :: " . $db->errstr . "\n";
         die "Cannot prepare SQL query. Please contact system administrator.\n";
     }
 
-    $::currentquery->execute(@bind_values) || $status++;
+    $$query_ref->execute(@bind_values) || $status++;
     if ($status) {
         print STDERR "SendSQL execute error: '$str' with values (";
         foreach my $v (@bind_values) {
             print STDERR "'" . &shell_escape($v) . "', ";
         }
-        print STDERR ") :: " . $::currentquery->errstr . "\n";
+        print STDERR ") :: " . $$query_ref->errstr . "\n";
         die "Cannot execute SQL query. Please contact system administrator.\n";
     }
 }
 
-sub FetchSQLData {
-    if (defined @::fetchahead) {
-        my @result = @::fetchahead;
-        undef @::fetchahead;
-        return @result;
-    }
-    return $::currentquery->fetchrow_array();
+sub FetchSQLData($) {
+    my ($query_ref) = (@_);
+    return $$query_ref->fetchrow_array();
 }
 
 
-sub FetchOneColumn {
-    my @row = &FetchSQLData();
+sub FetchOneColumn($) {
+    my ($query_ref) = @_;
+    my @row = &FetchSQLData($query_ref);
     return $row[0];
 }
 
@@ -98,10 +103,11 @@ sub GMTtoLocaltime() {
 #
 
 sub query_checkins($) {
-    my (%mod_map) = @_;
+    my ($tree, %mod_map) = @_;
     my @bind_values;
+    my $currentquery;
 
-    &ConnectToDatabase();
+    &ConnectToDatabase($tree);
 
     my $qstring = "SELECT type, UNIX_TIMESTAMP(ci_when), people.who, " .
         "repositories.repository, dirs.dir, files.file, revision, " .
@@ -127,11 +133,11 @@ sub query_checkins($) {
 
 #    print "Query: $qstring\n";
 #    print "values: @bind_values\n";
-    &SendSQL($qstring, @bind_values);
+    &SendSQL(\$currentquery, $qstring, @bind_values);
 
     my $lastlog = 0;
     my (@row, $ci, $rev, $result);
-    while (@row = &FetchSQLData()) {
+    while (@row = &FetchSQLData(\$currentquery)) {
 #print "<pre>";
         $ci = [];
         for (my $i=0 ; $i<=$::CI_LOG ; $i++) {

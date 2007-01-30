@@ -103,11 +103,14 @@ my %form;
 
 $tree = &require_only_one_tree($tree);
 $form{tree} = $tree;
-require "$tree/treedata.pl";
+&tb_load_treedata($tree);
+my $cvs_module = $::global_treedata->{$tree}->{cvs_module};
+my $cvs_root = $::global_treedata->{$tree}->{cvs_root};
+
 
 my $source_root = 'mozilla';
 my ($exclude_pat, $tag, %bases, %fullpath, %modules, %module_files);
-my (%seen, %unblamed, @who_list);
+my (%seen, %unblamed, @who_list, @cvs_modules);
 
 # ===================================================================
 # Warnings to ignore
@@ -152,9 +155,9 @@ my @ignore_match = (
 #   paths to files.
 #
 print STDERR "Building hash of file names..." if ($debug);
-my ($file_bases, $file_fullpaths) = build_file_hash($::cvs_root, @::cvs_modules)
-    if ($::cvs_module ne '');
-print STDERR "done.\n";
+my ($file_bases, $file_fullpaths) = build_file_hash($cvs_root, @cvs_modules)
+    if ($cvs_module ne '');
+print STDERR "done.\n" if ($debug);
 
 # Find the build we want and generate warnings for it
 #
@@ -173,15 +176,15 @@ my $total_ignored_count = 0;
   my $gz = gzopen("$tree/$log_file", "rb") or 
     die "gzopen($tree/$log_file): $!\n";
   if ($br->{errorparser} eq 'unix') {
-    gcc_parser($gz, $::cvs_root, $tree, $log_file, $file_bases, $file_fullpaths);
+    gcc_parser($gz, $cvs_root, $tree, $log_file, $file_bases, $file_fullpaths);
   } elsif ($br->{errorparser} eq 'mac') {
-    mac_parser($gz, $::cvs_root, $tree, $log_file, $file_bases, $file_fullpaths);
+    mac_parser($gz, $cvs_root, $tree, $log_file, $file_bases, $file_fullpaths);
   }
   $gz->gzclose();
 
   # Attach blame to all the warnings
   #   (Yes, global variables are flying around.)
-  &build_blame($::cvs_root, $file_fullpaths) if ($::cvs_module ne '');
+  &build_blame($::cvs_root, $file_fullpaths) if ($cvs_module ne '');
 
   # Come up with the temporary filenames for the output
   #
@@ -262,8 +265,8 @@ sub build_file_hash {
 sub read_cvs_modules_file
 {
   local $_;
-  open(MODULES, "<", "$::cvs_root/CVSROOT/modules")
-    or die "Unable to open modules file: $::cvs_root/CVSROOT/modules\n";
+  open(MODULES, "<", "$cvs_root/CVSROOT/modules")
+    or die "Unable to open modules file: $cvs_root/CVSROOT/modules\n";
   while (<MODULES>) {
     if (/ -a /) {
       while (/\\$/) {
@@ -300,7 +303,7 @@ sub find_cvs_files {
     return;
   }
   my $dir = $File::Find::dir;
-  $dir =~ s|^$::cvs_root/$source_root/||o;
+  $dir =~ s|^$cvs_root/$source_root/||o;
   $dir =~ s|/$||;
   my $file = substr $_, 0, -2;
 
@@ -322,12 +325,12 @@ sub find_build_record {
   $::mindate = $::maxdate - 5*60*60; # Go back 5 hours
 
   print STDERR "Loading build data..." if ($debug);
-  tb_load_data(\%form);
-  print STDERR "done\n";
+  my $td = &tb_load_data(\%form);
+  print STDERR "done\n" if ($debug);
 
-  for (my $ii=0; $ii <= $::name_count; $ii++) {
-    for (my $tt=0; $tt <= $::time_count; $tt++) {
-      if (defined($br = $::build_table->[$tt][$ii])
+  for (my $ii=0; $ii <= $td->{name_count}; $ii++) {
+    for (my $tt=0; $tt <= $td->{time_count}; $tt++) {
+      if (defined($br = $td->{build_table}->[$tt][$ii])
           and $br != -1
           and $br->{logfile} eq $log_file) {
         return $br;

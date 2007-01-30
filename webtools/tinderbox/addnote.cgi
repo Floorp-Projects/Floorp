@@ -50,8 +50,6 @@ if (defined($args = $form{log})) {
   $buildtime   = $form{buildtime};
 }
 
-require "$tree/ignorebuilds.pl" if -r "$tree/ignorebuilds.pl";
-
 print "Content-Type:text/html\n";
 
 # Remember email address in cookie
@@ -176,11 +174,12 @@ __END_FORM
   # Find the names of the "other" trees
   my (%build_status, %build_times);
   tb_loadquickparseinfo($tree, \%build_status, \%build_times);
+  my $ignore_builds = &tb_load_ignorebuilds($tree);
 
   # Add a checkbox for the each of the other builds
   for my $other_build_name (sort keys %build_status) {
     if ($other_build_name ne '' and $other_build_name ne $buildname
-        and not $::ignore_builds->{$other_build_name}) {
+        and not $ignore_builds->{$other_build_name}) {
       print "<INPUT TYPE='checkbox' NAME='$other_build_name'>";
       print "$other_build_name<BR>\n";
     }

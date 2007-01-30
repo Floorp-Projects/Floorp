@@ -47,29 +47,16 @@ if (defined($treedata)) {
     EmitHtmlHeader("administer tinderbox", "tree: $safe_tree");
 
     # Sheriff
-    if( -r "$tree/sheriff.pl" ){
-        require "$tree/sheriff.pl";
-        $::current_sheriff =~ s/\s*$//;  # Trim trailing whitespace;
-    } else {
-        $::current_sheriff = "";
-    }
+    my $current_sheriff = &tb_load_sheriff($tree);
+    $current_sheriff =~ s/\s*$//;  # Trim trailing whitespace;
 
     # Status message.
-    if( -r "$tree/status.pl" ){
-        require "$tree/status.pl";
-        $::status_message =~ s/\s*$//;  # Trim trailing whitespace;
-    } else {
-        $::status_message = "";
-    }
+    my $status_message = &tb_load_status($tree);
+    $status_message =~ s/\s*$//;  # Trim trailing whitespace;
 
     # Tree rules.
-    if( -r "$tree/rules.pl" ){
-        require "$tree/rules.pl";
-        $::rules_message =~ s/\s*$//;  # Trim trailing whitespace;
-    } else {
-        $::rules_message = "";
-    }
-
+    my $rules_message = &tb_load_rules($tree);
+    $rules_message =~ s/\s*$//;  # Trim trailing whitespace;
 
 #
 # Change sheriff
@@ -79,7 +66,7 @@ if (defined($treedata)) {
 <INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
 <INPUT TYPE=HIDDEN NAME=command VALUE=set_sheriff>
 <br><b>Change sheriff info.</b>  (mailto: url, phone number, etc.)<br>
-<TEXTAREA NAME=sheriff ROWS=8 COLS=75 WRAP=SOFT>$::current_sheriff
+<TEXTAREA NAME=sheriff ROWS=8 COLS=75 WRAP=SOFT>$current_sheriff
 </TEXTAREA>
 <br>
 <B>Password:</B> <INPUT NAME=password TYPE=password>
@@ -97,7 +84,7 @@ if (defined($treedata)) {
 <INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
 <INPUT TYPE=HIDDEN NAME=command VALUE=set_status_message>
 <br><b>Status message.</b>  (Use this for stay-out-of-the-tree warnings, etc.)<br>
-<TEXTAREA NAME=status ROWS=8 COLS=75 WRAP=SOFT>$::status_message
+<TEXTAREA NAME=status ROWS=8 COLS=75 WRAP=SOFT>$status_message
 </TEXTAREA>
 <br>
 <b>
@@ -117,7 +104,7 @@ if (defined($treedata)) {
 <INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
 <INPUT TYPE=HIDDEN NAME=command VALUE=set_rules_message>
 <br><b>The tree rules.</b>
-<br><TEXTAREA NAME=rules ROWS=18 COLS=75 WRAP=SOFT>$::rules_message
+<br><TEXTAREA NAME=rules ROWS=18 COLS=75 WRAP=SOFT>$rules_message
 </TEXTAREA>
 <br>
 <B>Password:</B> <INPUT NAME=password TYPE=password>
@@ -163,7 +150,7 @@ if (defined($treedata)) {
 <INPUT TYPE=HIDDEN NAME=command VALUE=trim_logs>
 <b>Trim Logs</b><br>
 Trim Logs to <INPUT NAME=days size=5 VALUE='$trim_days'> days<br>
-Tinderbox is configured to show up to $::who_days days of log history. Currently, there are $trim_days days of logging taking up $trim_size of space.<br>
+Tinderbox is configured to show up to $::global_treedata->{$tree}->{who_days} days of log history. Currently, there are $trim_days days of logging taking up $trim_size of space.<br>
 <B>Password:</B> <INPUT NAME=password TYPE=password>
 <INPUT TYPE=SUBMIT VALUE='Trim Logs'>
 </FORM>
@@ -191,14 +178,14 @@ Tinderbox is configured to show up to $::who_days days of log history. Currently
 <TR><TD><B>Build</B></TD><TD><B>Active</B></TD><TD><B>Scrape</B></TD><TD><B>Warnings</B></TD></TR>
 ";
 
-    @names = sort (@$::build_names) ;
+    @names = sort (@{$treedata->{build_names}}) ;
 
     for $i (@names){
         if ($i ne "") {
             my $buildname = &value_encode($i);
-            my $active_check = ($::ignore_builds->{$i} != 0 ? "": "CHECKED=1" );
-            my $scrape_check = ($::scrape_builds->{$i} != 0 ? "CHECKED=1" : "" );
-            my $warning_check = ($::warning_builds->{$i} != 0 ? "CHECKED=1": "" );
+            my $active_check = ($treedata->{ignore_builds}->{$i} != 0 ? "": "CHECKED=1" );
+            my $scrape_check = ($treedata->{scrape_builds}->{$i} != 0 ? "CHECKED=1" : "" );
+            my $warning_check = ($treedata->{warning_builds}->{$i} != 0 ? "CHECKED=1": "" );
             print "<TR>\n";
             print "<TD>$buildname</TD>\n";
             print "<TD><INPUT TYPE=checkbox NAME='active_$buildname' $active_check ></TD>\n";
