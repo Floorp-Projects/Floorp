@@ -46,7 +46,12 @@
 #include <pango/pango.h>
 #include <X11/Xft/Xft.h>
 
-//#define USE_XFT_FOR_ASCII
+// Control when we use Xft directly, bypassing Pango
+// Enable this to use Xft to glyph-convert 8bit-only textruns, but use Pango
+// to shape any textruns with non-8bit characters
+#define ENABLE_XFT_FAST_PATH_8BIT
+// Enable this to use Xft to glyph-convert all textruns
+// #define ENABLE_XFT_FAST_PATH_ALWAYS
 
 #include "nsDataHashtable.h"
 
@@ -132,52 +137,6 @@ private:
     nsDataHashtable<nsStringHashKey, nsRefPtr<gfxPangoFont> > mFontCache;
     nsTArray<gfxFontStyle> mAdditionalStyles;
 };
-
-#ifdef USE_XFT_FOR_ASCII
-
-class THEBES_API gfxXftTextRun : public gfxTextRun {
-public:
-    gfxXftTextRun(gfxPangoFontGroup *aGroup,
-                  const char* aString, PRInt32 aLength, PRUint32 aFlags);
-    ~gfxXftTextRun();
-
-    virtual nsresult Init(PRBool aIsRTL, nsIAtom* aLangGroup,
-                          gfxFloat aPixelsToUnits,
-                          gfxSkipChars* aSkipChars, void* aUserData);
-    virtual void GetCharFlags(PRUint32 aStart, PRUint32 aLength,
-                              PRUint8* aFlags);
-    virtual PRUint8 GetCharFlag(PRUint32 aOffset);
-    virtual void Draw(gfxContext* aContext, gfxPoint aPt,
-                      PRUint32 aStart, PRUint32 aLength,
-                      const gfxRect* aDirtyRect,
-                      PropertyProvider* aBreakProvider,
-                      gfxFloat* aAdvanceWidth);
-    virtual void Draw(gfxContext *aContext, gfxPoint aPt,
-                      SpecialString aString);
-    virtual Metrics MeasureText(PRUint32 aStart, PRUint32 aLength,
-                                PRBool aTightBoundingBox,
-                                PropertyProvider* aBreakProvider);
-    virtual Metrics MeasureText(SpecialString aString,
-                                PRBool aTightBoundingBox);
-    virtual gfxFloat GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
-                                     PropertyProvider* aBreakProvider);
-    virtual gfxFloat GetAdvanceWidth(SpecialString aString);
-    virtual gfxFont::Metrics& GetDecorationMetrics();
-    virtual PRUint32 BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
-                                         gfxFloat aWidth,
-                                         PropertyProvider* aBreakProvider,
-                                         PRBool aSuppressInitialBreak,
-                                         Metrics* aMetrics, PRBool aTightBoundingBox,
-                                         PRBool* aUsedHyphenation,
-                                         PRUint32* aLastBreak);
-    virtual void FlushSpacingCache(PRUint32 aStart, PRUint32 aLength);
-
-private:
-    nsString  mWString;
-    nsCString mCString;
-};
-
-#endif
 
 struct TextSegment;
 
@@ -385,6 +344,7 @@ private:
     void SetupClusterBoundaries(const gchar* aUTF8, PRUint32 aUTF8Length,
                                 PRUint32 aUTF16Offset, PangoAnalysis* aAnalysis);
     nsresult AddGlyphRun(PangoFont* aFont, PRUint32 aUTF16Offset);
+    DetailedGlyph* AllocateDetailedGlyphs(PRUint32 aIndex, PRUint32 aCount);
     // Returns NS_ERROR_FAILURE if there's a missing glyph
     nsresult SetGlyphs(const gchar* aUTF8, PRUint32 aUTF8Length,
                        PRUint32* aUTF16Offset, PangoGlyphString* aGlyphs,
@@ -396,7 +356,9 @@ private:
                                  const PRUnichar* aUTF16Text, PRUint32 aUTF16Length);
     void CreateGlyphRunsItemizing(const gchar* aUTF8, PRUint32 aUTF8Length,
                                   PRUint32 aUTF8HeaderLength);
-
+#if defined(ENABLE_XFT_FAST_PATH_8BIT) || defined(ENABLE_XFT_FAST_PATH_ALWAYS)
+    void CreateGlyphRunsXft(const gchar* aUTF8, PRUint32 aUTF8Length);
+#endif
     // **** general helpers **** 
 
     void SetupPangoContextDirection();
