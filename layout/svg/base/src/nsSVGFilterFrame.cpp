@@ -379,6 +379,9 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
                                x, y, width, height,
                                filterResX, filterResY,
                                type);
+  nsSVGFilterInstance::ColorModel 
+    colorModel(nsSVGFilterInstance::ColorModel::SRGB,
+               nsSVGFilterInstance::ColorModel::PREMULTIPLIED);
 
   if (requirements & NS_FE_SOURCEALPHA) {
     cairo_surface_t *alpha =
@@ -403,14 +406,14 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
     }
 
     instance.DefineImage(NS_LITERAL_STRING("SourceAlpha"), alpha,
-                         nsRect(0, 0, filterResX, filterResY));
+                         nsRect(0, 0, filterResX, filterResY), colorModel);
   }
 
   // this always needs to be defined last because the default image
   // for the first filter element is supposed to be SourceGraphic
   instance.DefineImage(NS_LITERAL_STRING("SourceGraphic"),
                        tmpSurface->CairoSurface(),
-                       nsRect(0, 0, filterResX, filterResY));
+                       nsRect(0, 0, filterResX, filterResY), colorModel);
 
   for (PRUint32 k=0; k<count; ++k) {
     nsIContent* child = mContent->GetChildAt(k);
@@ -426,7 +429,8 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
   nsRect filterRect;
   nsRefPtr<gfxASurface> resultSurface;
 
-  instance.LookupImage(NS_LITERAL_STRING(""), &filterResult, &filterRect);
+  instance.LookupImage(NS_LITERAL_STRING(""),
+                       &filterResult, &filterRect, colorModel);
 
   if (filterResult)
     resultSurface = gfxASurface::Wrap(filterResult);
@@ -648,7 +652,8 @@ nsSVGFilterInstance::GetImage()
 void
 nsSVGFilterInstance::LookupImage(const nsAString &aName,
                                  cairo_surface_t **aImage,
-                                 nsRect *aRegion)
+                                 nsRect *aRegion,
+                                 const ColorModel &aRequiredColorModel)
 {
   ImageEntry *entry;
 
@@ -660,6 +665,29 @@ nsSVGFilterInstance::LookupImage(const nsAString &aName,
   if (entry) {
     *aImage = entry->mImage;
     *aRegion = entry->mRegion;
+
+    if (aRequiredColorModel == entry->mColorModel)
+      return;
+
+    // convert image to desired format
+    PRUint8 *data = cairo_image_surface_get_data(entry->mImage);
+    PRInt32 stride = cairo_image_surface_get_stride(entry->mImage);
+
+    if (entry->mColorModel.mAlphaChannel == ColorModel::PREMULTIPLIED)
+      nsSVGUtils::UnPremultiplyImageDataAlpha(data, stride, entry->mRegion);
+
+    if (aRequiredColorModel.mColorSpace != entry->mColorModel.mColorSpace) {
+
+      if (aRequiredColorModel.mColorSpace == ColorModel::LINEAR_RGB)
+        nsSVGUtils::ConvertImageDataToLinearRGB(data, stride, entry->mRegion);
+      else
+        nsSVGUtils::ConvertImageDataFromLinearRGB(data, stride, entry->mRegion);
+    }
+    if (aRequiredColorModel.mAlphaChannel == ColorModel::PREMULTIPLIED)
+      nsSVGUtils::PremultiplyImageDataAlpha(data, stride, entry->mRegion);
+
+    entry->mColorModel = aRequiredColorModel;
+
   } else {
     *aImage = nsnull;
     aRegion->Empty();
@@ -669,9 +697,10 @@ nsSVGFilterInstance::LookupImage(const nsAString &aName,
 void
 nsSVGFilterInstance::DefineImage(const nsAString &aName,
                                  cairo_surface_t *aImage,
-                                 nsRect aRegion)
+                                 const nsRect &aRegion,
+                                 const ColorModel &aColorModel)
 {
-  ImageEntry *entry = new ImageEntry(aImage, aRegion);
+  ImageEntry *entry = new ImageEntry(aImage, aRegion, aColorModel);
 
   if (entry)
     mImageDictionary.Put(aName, entry);

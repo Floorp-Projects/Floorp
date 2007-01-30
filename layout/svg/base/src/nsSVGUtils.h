@@ -143,6 +143,31 @@ class nsSVGUtils
 {
 public:
   /*
+   * Converts image data from premultipled to unpremultiplied alpha
+   */
+  static void UnPremultiplyImageDataAlpha(PRUint8 *data, 
+                                          PRInt32 stride, 
+                                          const nsRect &rect);
+  /*
+   * Converts image data from unpremultipled to premultiplied alpha
+   */
+  static void PremultiplyImageDataAlpha(PRUint8 *data, 
+                                        PRInt32 stride, 
+                                        const nsRect &rect);
+  /*
+   * Converts image data from premultiplied sRGB to Linear RGB
+   */
+  static void ConvertImageDataToLinearRGB(PRUint8 *data, 
+                                          PRInt32 stride, 
+                                          const nsRect &rect);
+  /*
+   * Converts image data from LinearRGB to premultiplied sRGB
+   */
+  static void ConvertImageDataFromLinearRGB(PRUint8 *data, 
+                                            PRInt32 stride, 
+                                            const nsRect &rect);
+
+  /*
    * Report a localized error message to the error console.
    */
   static nsresult ReportToConsole(nsIDocument* doc,

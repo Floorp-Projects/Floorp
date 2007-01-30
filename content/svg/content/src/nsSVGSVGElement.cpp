@@ -1114,6 +1114,7 @@ nsSVGSVGElement::IsAttributeMapped(const nsIAtom* name) const
   static const MappedAttributeEntry* const map[] = {
     sColorMap,
     sFEFloodMap,
+    sFiltersMap,
     sFillStrokeMap,
     sFontSpecificationMap,
     sGradientStopMap,

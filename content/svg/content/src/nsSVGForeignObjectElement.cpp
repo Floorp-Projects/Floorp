@@ -114,6 +114,7 @@ nsSVGForeignObjectElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
     sFEFloodMap,
+    sFiltersMap,
     sFontSpecificationMap,
     sGradientStopMap,
     sMarkersMap,

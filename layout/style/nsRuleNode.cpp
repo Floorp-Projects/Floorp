@@ -4069,6 +4069,36 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
     svg->mClipRule = parentSVG->mClipRule;
   }
 
+  // color-interpolation: auto, sRGB, linearRGB, inherit
+  if (eCSSUnit_Enumerated == SVGData.mColorInterpolation.GetUnit()) {
+    svg->mColorInterpolation = SVGData.mColorInterpolation.GetIntValue();
+  }
+  else if (eCSSUnit_Auto == SVGData.mColorInterpolation.GetUnit()) {
+    svg->mColorInterpolation = NS_STYLE_COLOR_INTERPOLATION_AUTO;
+  }
+  else if (eCSSUnit_Inherit == SVGData.mColorInterpolation.GetUnit()) {
+    inherited = PR_TRUE;
+    svg->mColorInterpolation = parentSVG->mColorInterpolation;
+  }
+  else if (eCSSUnit_Initial == SVGData.mColorInterpolation.GetUnit()) {
+    svg->mColorInterpolation = NS_STYLE_COLOR_INTERPOLATION_SRGB;
+  }
+
+  // color-interpolation-filters: auto, sRGB, linearRGB, inherit
+  if (eCSSUnit_Enumerated == SVGData.mColorInterpolationFilters.GetUnit()) {
+    svg->mColorInterpolationFilters = SVGData.mColorInterpolationFilters.GetIntValue();
+  }
+  else if (eCSSUnit_Auto == SVGData.mColorInterpolationFilters.GetUnit()) {
+    svg->mColorInterpolationFilters = NS_STYLE_COLOR_INTERPOLATION_AUTO;
+  }
+  else if (eCSSUnit_Inherit == SVGData.mColorInterpolationFilters.GetUnit()) {
+    inherited = PR_TRUE;
+    svg->mColorInterpolationFilters = parentSVG->mColorInterpolationFilters;
+  }
+  else if (eCSSUnit_Initial == SVGData.mColorInterpolation.GetUnit()) {
+    svg->mColorInterpolation = NS_STYLE_COLOR_INTERPOLATION_LINEARRGB;
+  }
+
   // fill: 
   SetSVGPaint(SVGData.mFill, parentSVG->mFill, mPresContext, aContext, svg->mFill, inherited);
 

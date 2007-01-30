@@ -884,10 +884,12 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
           svg->mStrokeMiterlimit,
           svg->mStrokeOpacity);
   svg->mStrokeWidth.ToString(str);
-  fprintf(out, "%s %d %d %d %d %d %d %d %d %d\" />\n",
+  fprintf(out, "%s %d %d %d %d %d %d %d %d %d %d %d\" />\n",
           NS_ConvertUTF16toUTF8(str).get(),
           (int)svg->mStrokeDasharrayLength,
           (int)svg->mClipRule,
+          (int)svg->mColorInterpolation,
+          (int)svg->mColorInterpolationFilters,
           (int)svg->mFillRule,
           (int)svg->mPointerEvents,
           (int)svg->mShapeRendering,

@@ -98,42 +98,6 @@ nsSVGMaskFrame::InitSVG()
 }
 
 
-/* sRGB -> linearRGB mapping table */
-static unsigned char rgb2lin[256] = {
-  0,   0,   0,   0,   0,   0,   0,   0, 
-  0,   0,   0,   0,   0,   1,   1,   1, 
-  1,   1,   1,   1,   1,   1,   2,   2, 
-  2,   2,   2,   2,   2,   3,   3,   3, 
-  3,   3,   4,   4,   4,   4,   4,   5, 
-  5,   5,   5,   6,   6,   6,   6,   7, 
-  7,   7,   8,   8,   8,   9,   9,   9, 
- 10,  10,  10,  11,  11,  11,  12,  12, 
- 13,  13,  13,  14,  14,  15,  15,  16, 
- 16,  16,  17,  17,  18,  18,  19,  19, 
- 20,  20,  21,  22,  22,  23,  23,  24, 
- 24,  25,  26,  26,  27,  27,  28,  29, 
- 29,  30,  31,  31,  32,  33,  33,  34, 
- 35,  36,  36,  37,  38,  38,  39,  40, 
- 41,  42,  42,  43,  44,  45,  46,  47, 
- 47,  48,  49,  50,  51,  52,  53,  54, 
- 55,  55,  56,  57,  58,  59,  60,  61, 
- 62,  63,  64,  65,  66,  67,  68,  70, 
- 71,  72,  73,  74,  75,  76,  77,  78, 
- 80,  81,  82,  83,  84,  85,  87,  88, 
- 89,  90,  92,  93,  94,  95,  97,  98, 
- 99, 101, 102, 103, 105, 106, 107, 109, 
-110, 112, 113, 114, 116, 117, 119, 120, 
-122, 123, 125, 126, 128, 129, 131, 132, 
-134, 135, 137, 139, 140, 142, 144, 145, 
-147, 148, 150, 152, 153, 155, 157, 159, 
-160, 162, 164, 166, 167, 169, 171, 173, 
-175, 176, 178, 180, 182, 184, 186, 188, 
-190, 192, 193, 195, 197, 199, 201, 203, 
-205, 207, 209, 211, 213, 215, 218, 220, 
-222, 224, 226, 228, 230, 232, 235, 237, 
-239, 241, 243, 245, 248, 250, 252, 255
-};
-
 cairo_pattern_t *
 nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
                                  nsISVGChildFrame* aParent,
@@ -250,37 +214,27 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
   cairo_destroy(transferCtx);
   cairo_pattern_destroy(pattern);
 
-  /* Now convert to intensity (sRGB -> linearRGB -> intensity) and
-     store in alpha channel.  Reuse the transfer image instead of
-     allocating another CAIRO_FORMAT_A8 image. */
-
   PRUint32 width  = cairo_image_surface_get_width(image);
   PRUint32 height = cairo_image_surface_get_height(image);
   PRUint8 *data   = cairo_image_surface_get_data(image);
   PRInt32  stride = cairo_image_surface_get_stride(image);
 
+  nsRect rect(0, 0, width, height);
+  nsSVGUtils::UnPremultiplyImageDataAlpha(data, stride, rect);
+  nsSVGUtils::ConvertImageDataToLinearRGB(data, stride, rect);
+
   for (PRUint32 y = 0; y < height; y++)
     for (PRUint32 x = 0; x < width; x++) {
-      PRUint32 a;
-      float r, g, b, intensity;
-
-      /* un-premultiply and sRGB -> linearRGB conversion */
-      a = data[stride * y + 4 * x + 3];
-      if (a) {
-        b = rgb2lin[(255 * (PRUint32)data[stride * y + 4 * x])     / a] / 255.0;
-        g = rgb2lin[(255 * (PRUint32)data[stride * y + 4 * x + 1]) / a] / 255.0;
-        r = rgb2lin[(255 * (PRUint32)data[stride * y + 4 * x + 2]) / a] / 255.0;
-      } else {
-        b = g = r = 0.0f;
-      }
+      PRUint8 *pixel = data + stride * y + 4 * x;
 
       /* linearRGB -> intensity */
-      intensity = (r * 0.2125 + g * 0.7154 + b * 0.0721) * (a / 255.0) * aOpacity;
-
-      data[stride * y + 4 * x] = 255;
-      data[stride * y + 4 * x + 1] = 255;
-      data[stride * y + 4 * x + 2] = 255;
-      data[stride * y + 4 * x + 3] = (unsigned char)(intensity * 255);
+      pixel[3] = (PRUint8)((pixel[2] * 0.2125 +
+                            pixel[1] * 0.7154 +
+                            pixel[0] * 0.0721) *
+                            (pixel[3] / 255.0) * aOpacity);
+      pixel[0] = 255;
+      pixel[1] = 255;
+      pixel[2] = 255;
     }
 
   cairo_pattern_t *retval = cairo_pattern_create_for_surface(image);
