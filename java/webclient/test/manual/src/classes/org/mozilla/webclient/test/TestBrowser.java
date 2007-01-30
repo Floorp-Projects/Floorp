@@ -203,7 +203,7 @@ public class TestBrowser extends JPanel {
         jBrowserToolBar.add(jRefreshButton, null);
         jBrowserToolBar.add(jStopButton, null);
         jBrowserToolBar.add(jViewSourceButton, null);
-	//        jBrowserToolBar.add(jCopyButton, null);
+	jBrowserToolBar.add(jCopyButton, null);
         jBrowserToolBar.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createEtchedBorder(),
             BorderFactory.createEmptyBorder(2, 2, 2, 0)));

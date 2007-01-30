@@ -33,7 +33,7 @@
 #include "org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl.h"
 
 #include "ns_util.h"
-#include "rdf_util.h"
+// PENDING(edburns): 20070130 #include "rdf_util.h"
 #include "NativeBrowserControl.h"
 #include "EmbedWindow.h"
 #include "LoadCompleteProgressListener.h"

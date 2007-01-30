@@ -256,7 +256,7 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
 	}
 	if (BrowserControl.BOOKMARKS_NAME == interfaceName) {
 	    Assert.assert_it(null != bookmarks);
-	    result = bookmarks;
+	    // PENDING(edburns): 20070130 XULRunner has no bookmarks result = bookmarks;
 	}
 	if (BrowserControl.PREFERENCES_NAME == interfaceName) {
 	    Assert.assert_it(null != prefs);
@@ -338,7 +338,7 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
 			
 			((Service)WrapperFactoryImpl.this.profileManager).startup();
 			((Service)WrapperFactoryImpl.this.prefs).startup();
-			((Service)WrapperFactoryImpl.this.bookmarks).startup();
+			// PENDING(edburns): 20070130 XULRunner has no bookmarks ((Service)WrapperFactoryImpl.this.bookmarks).startup();
 			
 			WrapperFactoryImpl.this.nativeAppSetup(nativeWrapperFactory);
 			return null;
@@ -373,7 +373,7 @@ public void terminate() throws Exception
     eventThread.pushBlockingWCRunnable(new WCRunnable() {
 	    public Object run() {
 		Assert.assert_it(null != bookmarks);
-		((Service)bookmarks).shutdown();
+// PENDING(edburns): 20070130 XULRunner has no bookmarks		((Service)bookmarks).shutdown();
 		((ImplObject)bookmarks).delete();
 		bookmarks = null;
 		

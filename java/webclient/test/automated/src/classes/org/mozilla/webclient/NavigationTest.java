@@ -1,5 +1,5 @@
 /*
- * $Id: NavigationTest.java,v 1.19 2004/09/03 19:04:22 edburns%acm.org Exp $
+ * $Id: NavigationTest.java,v 1.20 2007/01/30 18:26:37 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -97,7 +97,7 @@ public class NavigationTest extends WebclientTestCase {
 	assertNotNull(currentPage);
 
 	File testPage = new File(getBrowserBinDir(), 
-				 "../../java/webclient/test/automated/src/test/NavigationTest.txt");
+				 "../../../java/webclient/test/automated/src/test/NavigationTest.txt");
 	
 	//
 	// try loading a file: url

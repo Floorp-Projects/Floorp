@@ -115,16 +115,18 @@ CPPSRCS = \
 	ns_util.cpp \
 	ns_util_export.cpp \
 	dom_util.cpp \
-	rdf_util.cpp \
-	BookmarksImpl.cpp \
-	RDFEnumeration.cpp \
-	RDFTreeNode.cpp \
-	wsRDFObserver.cpp \
 	PreferencesImpl.cpp \
 	ProfileManagerImpl.cpp \
 	WrapperFactoryImpl.cpp \
 	WindowControlImpl.cpp \
 	$(NULL)
+
+#	rdf_util.cpp \
+#	BookmarksImpl.cpp \
+#	RDFEnumeration.cpp \
+#	RDFTreeNode.cpp \
+#	wsRDFObserver.cpp \
+
 
 ifeq ($(OS_ARCH),Linux)
 CPPSRCS += \

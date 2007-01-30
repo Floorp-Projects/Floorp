@@ -1,5 +1,5 @@
 /*
- * $Id: WebclientTestCase.java,v 1.11 2007/01/17 16:20:54 edburns%acm.org Exp $
+ * $Id: WebclientTestCase.java,v 1.12 2007/01/30 18:26:37 edburns%acm.org Exp $
  */
 
 /* 
@@ -47,7 +47,7 @@ import org.mozilla.util.THTTPD;
  *
  * <B>Lifetime And Scope</B> <P>
  *
- * @version $Id: WebclientTestCase.java,v 1.11 2007/01/17 16:20:54 edburns%acm.org Exp $
+ * @version $Id: WebclientTestCase.java,v 1.12 2007/01/30 18:26:37 edburns%acm.org Exp $
  * 
  * @see	Blah
  * @see	Bloo
@@ -140,7 +140,7 @@ public static TestSuite createServerTestSuite() {
 		serverThread = 
 		    new THTTPD.ServerThread("LocalHTTPD",
 					    new File (getBrowserBinDir() +
-						      "/../../java/webclient/build.test"), -1);
+						      "/../../../java/webclient/build.test"), -1);
 		serverThread.start();
 		serverThread.P();
 		super.run(result);
