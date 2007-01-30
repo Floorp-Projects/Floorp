@@ -53,7 +53,8 @@
 
 class nsHTMLStyleElement : public nsGenericHTMLElement,
                            public nsIDOMHTMLStyleElement,
-                           public nsStyleLinkElement
+                           public nsStyleLinkElement,
+                           public nsStubMutationObserver
 {
 public:
   nsHTMLStyleElement(nsINodeInfo *aNodeInfo);
@@ -74,9 +75,6 @@ public:
   // nsIDOMHTMLStyleElement
   NS_DECL_NSIDOMHTMLSTYLEELEMENT
 
-  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 PRBool aNotify);
-  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               PRBool aCompileEventHandlers);
@@ -98,6 +96,22 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  // nsIMutationObserver
+  virtual void CharacterDataChanged(nsIDocument* aDocument,
+                                    nsIContent* aContent,
+                                    CharacterDataChangeInfo* aInfo);
+  virtual void ContentAppended(nsIDocument* aDocument,
+                                nsIContent* aContainer,
+                               PRInt32 aNewIndexInContainer);
+  virtual void ContentInserted(nsIDocument* aDocument,
+                               nsIContent* aContainer,
+                               nsIContent* aChild,
+                               PRInt32 aIndexInContainer);
+  virtual void ContentRemoved(nsIDocument* aDocument,
+                              nsIContent* aContainer,
+                              nsIContent* aChild,
+                              PRInt32 aIndexInContainer);
+
 protected:
   void GetStyleSheetURL(PRBool* aIsInline,
                         nsIURI** aURI);
@@ -114,6 +128,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Style)
 nsHTMLStyleElement::nsHTMLStyleElement(nsINodeInfo *aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
+  AddMutationObserver(this);
 }
 
 nsHTMLStyleElement::~nsHTMLStyleElement()
@@ -130,6 +145,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLStyleElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLStyleElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLinkStyle)
   NS_INTERFACE_MAP_ENTRY(nsIStyleSheetLinkingElement)
+  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLStyleElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -175,27 +191,38 @@ nsHTMLStyleElement::SetDisabled(PRBool aDisabled)
 NS_IMPL_STRING_ATTR(nsHTMLStyleElement, Media, media)
 NS_IMPL_STRING_ATTR(nsHTMLStyleElement, Type, type)
 
-nsresult
-nsHTMLStyleElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                  PRBool aNotify)
+void
+nsHTMLStyleElement::CharacterDataChanged(nsIDocument* aDocument,
+                                         nsIContent* aContent,
+                                         CharacterDataChangeInfo* aInfo)
 {
-  nsresult rv = nsGenericHTMLElement::InsertChildAt(aKid, aIndex, aNotify);
-  if (NS_SUCCEEDED(rv)) {
-    UpdateStyleSheet();
-  }
-
-  return rv;
+  UpdateStyleSheet();
 }
 
-nsresult
-nsHTMLStyleElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
+void
+nsHTMLStyleElement::ContentAppended(nsIDocument* aDocument,
+                                    nsIContent* aContainer,
+                                    PRInt32 aNewIndexInContainer)
 {
-  nsresult rv = nsGenericHTMLElement::RemoveChildAt(aIndex, aNotify);
-  if (NS_SUCCEEDED(rv)) {
-    UpdateStyleSheet();
-  }
+  UpdateStyleSheet();
+}
 
-  return rv;
+void
+nsHTMLStyleElement::ContentInserted(nsIDocument* aDocument,
+                                    nsIContent* aContainer,
+                                    nsIContent* aChild,
+                                    PRInt32 aIndexInContainer)
+{
+  UpdateStyleSheet();
+}
+
+void
+nsHTMLStyleElement::ContentRemoved(nsIDocument* aDocument,
+                                   nsIContent* aContainer,
+                                   nsIContent* aChild,
+                                   PRInt32 aIndexInContainer)
+{
+  UpdateStyleSheet();
 }
 
 nsresult

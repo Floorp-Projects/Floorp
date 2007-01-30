@@ -87,6 +87,13 @@ f== bugs/351641-2b.html bugs/351641-2-ref.html # bug 358433 (2006-10-19)
 == bugs/300691-1d.html bugs/300691-1-ref.html
 == bugs/300691-1e.html bugs/300691-1-ref.html
 == bugs/300691-1f.html bugs/300691-1-ref.html
+== bugs/367612-1a.html bugs/367612-1-ref.html
+== bugs/367612-1b.html bugs/367612-1-ref.html
+== bugs/367612-1c.html bugs/367612-1-ref.html
+== bugs/367612-1d.html bugs/367612-1-ref.html
+== bugs/367612-1e.html bugs/367612-1-ref.html
+== bugs/367612-1f.html bugs/367612-1-ref.html
+!= bugs/367612-1g.html bugs/367612-1-ref.html
 
 # table-dom/
 == table-dom/appendCells1.html table-dom/appendCells1-ref.html
