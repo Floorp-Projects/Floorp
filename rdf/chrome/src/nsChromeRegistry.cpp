@@ -304,6 +304,8 @@ nsChromeRegistry::Init()
   }
 
   CheckForNewChrome();
+  // CheckForNewChrome suppresses these during chrome registration
+  FlagXPCNativeWrappers();
 
   return NS_OK;
 }
@@ -2596,8 +2598,11 @@ nsChromeRegistry::InstallProvider(const nsACString& aProviderType,
   if (NS_FAILED(rv))
     return NS_OK;
 
-  if (!mBatchInstallFlushes)
+  if (!mBatchInstallFlushes) {
     rv = remoteInstall->Flush();
+    if (NS_SUCCEEDED(rv) && aProviderType.Equals("package"))
+      rv = FlagXPCNativeWrappers();
+  }
 
   // XXX Handle the installation of overlays.
 
@@ -2938,6 +2943,13 @@ nsChromeRegistry::AddToCompositeDataSource(PRBool aUseProfile)
   LoadDataSource(kChromeFileName, getter_AddRefs(mInstallDirChromeDataSource), PR_FALSE, nsnull);
   mChromeDataSource->AddDataSource(mInstallDirChromeDataSource);
 
+  return rv;
+}
+
+nsresult
+nsChromeRegistry::FlagXPCNativeWrappers()
+{
+  nsresult rv;
   // List all packages that want XPC native wrappers
   nsCOMPtr<nsIXPConnect> xpc(do_GetService("@mozilla.org/js/xpc/XPConnect;1", &rv));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3013,6 +3025,8 @@ nsresult nsChromeRegistry::LoadProfileDataSource()
     mProfileInitialized = mInstallInitialized = PR_TRUE;
     mChromeDataSource = nsnull;
     rv = AddToCompositeDataSource(PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+    rv = FlagXPCNativeWrappers();
     if (NS_FAILED(rv)) return rv;
 
     // XXX this sucks ASS. This is a temporary hack until we get
@@ -3153,7 +3167,9 @@ nsChromeRegistry::CheckForNewChrome()
     if (dataBuffer) {
       PRInt32 bufferSize = PR_Read(file, dataBuffer, finfo.size);
       if (bufferSize > 0) {
+        mBatchInstallFlushes = PR_TRUE;
         rv = ProcessNewChromeBuffer(dataBuffer, bufferSize);
+        mBatchInstallFlushes = PR_FALSE;
       }
       delete [] dataBuffer;
     }
@@ -3185,8 +3201,6 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
   NS_NAMED_LITERAL_CSTRING(path, "path");
   nsCAutoString fileURL;
   nsCAutoString chromeURL;
-
-  mBatchInstallFlushes = PR_TRUE;
 
   // process chromeType, chromeProfile, chromeLocType, chromeLocation
   while (aBuffer < bufferEnd) {
@@ -3303,7 +3317,6 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
       ++aBuffer;
   }
 
-  mBatchInstallFlushes = PR_FALSE;
   nsCOMPtr<nsIRDFDataSource> dataSource;
   LoadDataSource(kChromeFileName, getter_AddRefs(dataSource), PR_FALSE, nsnull);
   nsCOMPtr<nsIRDFRemoteDataSource> remote(do_QueryInterface(dataSource));
