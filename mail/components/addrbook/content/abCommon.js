@@ -43,6 +43,7 @@ var dirTree = 0;
 var abList = 0;
 var gAbResultsTree = null;
 var gAbView = null;
+var gAddressBookBundle;
 var gCurDirectory;
 
 var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
@@ -325,6 +326,7 @@ function InitCommonJS()
   dirTree = document.getElementById("dirTree");
   abList = document.getElementById("addressbookList");
   gAbResultsTree = document.getElementById("abResultsTree");
+  gAddressBookBundle = document.getElementById("bundle_addressBook");
 }
 
 function SetupAbCommandUpdateHandlers()
