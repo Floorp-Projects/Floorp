@@ -55,7 +55,7 @@
 #include "nsXPIDLString.h"
 #include "nsIServiceManager.h"
 #include "nsIDocumentEncoder.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsEscape.h"

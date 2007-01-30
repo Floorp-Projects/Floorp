@@ -44,7 +44,7 @@
 #include "nsWeakReference.h"
 #include "nsISVGValue.h"
 #include "nsISVGValueObserver.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsSVGGeometryFrame.h"
 
 class nsPresContext;
@@ -80,7 +80,7 @@ public:
   /**
    * Get the "type" of the frame
    *
-   * @see nsLayoutAtoms::svgPathGeometryFrame
+   * @see nsGkAtoms::svgPathGeometryFrame
    */
   virtual nsIAtom* GetType() const;
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const;

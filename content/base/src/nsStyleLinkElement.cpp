@@ -45,7 +45,6 @@
 
 #include "nsStyleLinkElement.h"
 
-#include "nsHTMLAtoms.h"
 #include "nsIContent.h"
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"

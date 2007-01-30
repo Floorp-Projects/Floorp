@@ -72,10 +72,6 @@ REQUIRES	= xpcom \
 		  htmlparser \
 		  $(NULL)
 
-EXPORTS		= \
-		nsXULAtoms.h \
-		$(NULL)
-
 ifdef MOZ_XUL
 CPPSRCS		+= \
 		nsXULElement.cpp \

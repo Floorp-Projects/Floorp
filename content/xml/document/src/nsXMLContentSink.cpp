@@ -62,7 +62,7 @@
 #include "nsCRT.h"
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsContentUtils.h"
 #include "nsIScriptContext.h"
 #include "nsINameSpaceManager.h"

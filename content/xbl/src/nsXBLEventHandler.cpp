@@ -45,7 +45,7 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMText.h"
 #include "nsIDOM3EventTarget.h"
-#include "nsXBLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsIDOMNSEvent.h"
 
@@ -162,19 +162,19 @@ NS_NewXBLEventHandler(nsXBLPrototypeHandler* aHandler,
                       nsIAtom* aEventType,
                       nsXBLEventHandler** aResult)
 {
-  if (aEventType == nsXBLAtoms::mousedown ||
-      aEventType == nsXBLAtoms::mouseup ||
-      aEventType == nsXBLAtoms::click ||
-      aEventType == nsXBLAtoms::dblclick ||
-      aEventType == nsXBLAtoms::mouseover ||
-      aEventType == nsXBLAtoms::mouseout ||
-      aEventType == nsXBLAtoms::mousemove ||
-      aEventType == nsXBLAtoms::contextmenu ||
-      aEventType == nsXBLAtoms::dragenter ||
-      aEventType == nsXBLAtoms::dragover ||
-      aEventType == nsXBLAtoms::dragdrop ||
-      aEventType == nsXBLAtoms::dragexit ||
-      aEventType == nsXBLAtoms::draggesture) {
+  if (aEventType == nsGkAtoms::mousedown ||
+      aEventType == nsGkAtoms::mouseup ||
+      aEventType == nsGkAtoms::click ||
+      aEventType == nsGkAtoms::dblclick ||
+      aEventType == nsGkAtoms::mouseover ||
+      aEventType == nsGkAtoms::mouseout ||
+      aEventType == nsGkAtoms::mousemove ||
+      aEventType == nsGkAtoms::contextmenu ||
+      aEventType == nsGkAtoms::dragenter ||
+      aEventType == nsGkAtoms::dragover ||
+      aEventType == nsGkAtoms::dragdrop ||
+      aEventType == nsGkAtoms::dragexit ||
+      aEventType == nsGkAtoms::draggesture) {
     *aResult = new nsXBLMouseEventHandler(aHandler);
   }
   else {

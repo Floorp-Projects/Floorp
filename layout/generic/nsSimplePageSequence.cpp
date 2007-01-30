@@ -39,7 +39,7 @@
 #include "nsSimplePageSequence.h"
 #include "nsPresContext.h"
 #include "nsIRenderingContext.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDeviceContext.h"
 #include "nsIViewManager.h"
 #include "nsIPresShell.h"

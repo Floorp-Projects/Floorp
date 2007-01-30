@@ -43,7 +43,7 @@
 #include "nsFrameManager.h"
 #include "nsFormControlFrame.h"
 #include "nsGfxButtonControlFrame.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsHTMLParts.h"
 #include "nsIFormControl.h"

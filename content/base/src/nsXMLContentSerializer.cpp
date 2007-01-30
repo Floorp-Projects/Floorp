@@ -43,7 +43,7 @@
 
 #include "nsXMLContentSerializer.h"
 
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDOMText.h"
 #include "nsIDOMCDATASection.h"
 #include "nsIDOMProcessingInstruction.h"

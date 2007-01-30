@@ -49,7 +49,7 @@
 #include "nsIDOMEvent.h"
 #include "nsStyleConsts.h"
 #include "nsIViewManager.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIEventStateManager.h"
 #include "nsIDeviceContext.h"
 #include "nsIScrollableView.h"

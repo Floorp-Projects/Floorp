@@ -42,7 +42,7 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsFrame.h"
 #include "nsIContent.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIDeviceContext.h"

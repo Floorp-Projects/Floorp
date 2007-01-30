@@ -89,7 +89,7 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsISupportsPrimitives.h"
 #include "imgIDecoderObserver.h"
 #include "imgIRequest.h"

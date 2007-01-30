@@ -39,7 +39,7 @@
 #ifdef IBMBIDI
 
 #include "nsBidiFrames.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 
 
 nsDirectionalFrame::nsDirectionalFrame(nsStyleContext* aContext, PRUnichar aChar)

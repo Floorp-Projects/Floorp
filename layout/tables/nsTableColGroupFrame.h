@@ -154,7 +154,7 @@ public:
   /**
    * Get the "type" of the frame
    *
-   * @see nsLayoutAtoms::tableColGroupFrame
+   * @see nsGkAtoms::tableColGroupFrame
    */
   virtual nsIAtom* GetType() const;
 

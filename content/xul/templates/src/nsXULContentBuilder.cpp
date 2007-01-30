@@ -56,7 +56,7 @@
 #include "nsTemplateMap.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsXULContentUtils.h"
 #include "nsXULElement.h"
 #include "nsXULTemplateBuilder.h"

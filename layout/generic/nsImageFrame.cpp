@@ -48,7 +48,7 @@
 #include "nsIPresShell.h"
 #include "nsIImage.h"
 #include "nsIWidget.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
 #include "nsContentUtils.h"

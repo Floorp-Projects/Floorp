@@ -64,7 +64,7 @@
 #include "nsIView.h"
 #include "nsIFontMetrics.h"
 #include "nsHTMLParts.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDOMEvent.h"
 #include "nsGenericHTMLElement.h"
 #include "prprf.h"

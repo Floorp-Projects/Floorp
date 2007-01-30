@@ -51,7 +51,7 @@ struct nsStylePosition;
  * The area frame has an additional named child list:
  * - "Absolute-list" which contains the absolutely positioned frames
  *
- * @see nsLayoutAtoms::absoluteList
+ * @see nsGkAtoms::absoluteList
  */
 class nsAreaFrame : public nsBlockFrame
 {
@@ -75,7 +75,7 @@ public:
   /**
    * Get the "type" of the frame
    *
-   * @see nsLayoutAtoms::areaFrame
+   * @see nsGkAtoms::areaFrame
    */
   virtual nsIAtom* GetType() const;
   

@@ -42,6 +42,7 @@
 #include "nsVoidArray.h"
 #include "nsTPtrArray.h"
 #include "nsRect.h"
+#include "nsCOMPtr.h"
 
 #undef DEBUG_TABLE_CELLMAP
 

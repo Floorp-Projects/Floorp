@@ -43,7 +43,7 @@
 #include "nsIStyleRule.h"
 #include "nsRuleNode.h"
 #include "nsString.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsAutoPtr.h"

@@ -39,7 +39,7 @@
 #include "nsIContent.h"
 #include "nsPresContext.h"
 #include "nsIRenderingContext.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIPresShell.h"
 #include "nsIDeviceContext.h"
 #include "nsReadableUtils.h"

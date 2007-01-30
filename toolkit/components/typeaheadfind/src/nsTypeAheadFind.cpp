@@ -93,7 +93,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsIWindowWatcher.h"
 #include "nsIObserverService.h"
-#include "nsLayoutAtoms.h"
 
 #include "nsTypeAheadFind.h"
 

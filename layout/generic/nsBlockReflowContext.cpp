@@ -52,7 +52,7 @@
 #include "nsLineBox.h"
 #include "nsIDOMHTMLTableCellElement.h"
 #include "nsIDOMHTMLBodyElement.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsLayoutUtils.h"
 

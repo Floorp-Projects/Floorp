@@ -43,7 +43,6 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsLineLayout.h"
-#include "nsLayoutAtoms.h"
 
 class nsAnonymousBlockFrame;
 

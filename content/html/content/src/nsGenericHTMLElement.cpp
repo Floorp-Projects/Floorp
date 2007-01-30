@@ -87,7 +87,7 @@
 #include "nsContentUtils.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIEventStateManager.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMNSEvent.h"

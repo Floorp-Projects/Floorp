@@ -62,7 +62,7 @@
 #ifdef MOZ_SVG
 #include "nsIDOMSVGListener.h"
 #include "nsIDOMSVGZoomListener.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #endif // MOZ_SVG
 #include "nsIEventStateManager.h"
 #include "nsPIDOMWindow.h"

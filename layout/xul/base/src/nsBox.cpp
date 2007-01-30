@@ -48,7 +48,7 @@
 #include "nsIPresShell.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsINameSpaceManager.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsFrameManager.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNamedNodeMap.h"

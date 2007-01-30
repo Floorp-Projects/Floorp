@@ -40,7 +40,6 @@
 #include "nsDOMCSSAttrDeclaration.h"
 #include "nsCSSDeclaration.h"
 #include "nsIDocument.h"
-#include "nsHTMLAtoms.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsICSSStyleRule.h"
 #include "nsICSSLoader.h"

@@ -56,7 +56,7 @@
 #include "nsIPrintSession.h"
 #include "nsGfxCIID.h"
 #include "nsIServiceManager.h"
-#include "nsLayoutAtoms.h" // XXX until atoms get factored into nsGkAtoms
+#include "nsGkAtoms.h"
 #include "nsISimpleEnumerator.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"

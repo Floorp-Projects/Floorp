@@ -75,7 +75,7 @@
 #define nsPlaceholderFrame_h___
 
 #include "nsSplittableFrame.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 
 nsIFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 

@@ -54,8 +54,6 @@
 #include "nsIPresShell.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsBoxFrame.h"
-#include "nsHTMLAtoms.h"
-#include "nsXULAtoms.h"
 #include "nsBoxFrame.h"
 
 nsIBoxLayout* nsSprocketLayout::gInstance = nsnull;

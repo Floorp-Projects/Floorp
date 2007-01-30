@@ -85,7 +85,7 @@
 #include "nsISelectionPrivate.h"
 #include "nsFrameSelection.h"
 #include "nsHTMLParts.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
 #include "nsIHTMLContentSink.h" 

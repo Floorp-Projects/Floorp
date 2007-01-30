@@ -54,7 +54,7 @@
 #include "nsIMediaList.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsIDOMStyleSheetList.h"

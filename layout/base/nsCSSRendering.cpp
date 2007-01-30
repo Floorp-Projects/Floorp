@@ -52,7 +52,7 @@
 #include "nsFrameManager.h"
 #include "nsStyleContext.h"
 #include "nsIScrollableView.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDrawingSurface.h"
 #include "nsTransform2D.h"
 #include "nsIDeviceContext.h"

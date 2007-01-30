@@ -45,7 +45,7 @@
 #include "nsCOMPtr.h"
 #include "nsINameSpaceManager.h"
 #include "nsContentUtils.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 
 struct nsNameSpaceEntry
 {

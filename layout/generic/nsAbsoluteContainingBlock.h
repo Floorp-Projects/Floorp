@@ -45,7 +45,7 @@
 
 #include "nsFrameList.h"
 #include "nsHTMLReflowState.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 
 class nsIAtom;
 class nsIFrame;

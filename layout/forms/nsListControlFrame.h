@@ -119,7 +119,7 @@ public:
   /**
    * Get the "type" of the frame
    *
-   * @see nsLayoutAtoms::scrollFrame
+   * @see nsGkAtoms::scrollFrame
    */
   virtual nsIAtom* GetType() const;
 

@@ -67,7 +67,6 @@
 #include "nsCOMArray.h"
 #include "nsColor.h"
 #include "nsStyleConsts.h"
-#include "nsLayoutAtoms.h"
 #include "nsCSSPseudoClasses.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSAnonBoxes.h"

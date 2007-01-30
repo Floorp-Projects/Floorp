@@ -41,7 +41,7 @@
 #include "nsHTMLParts.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 
 #include "nsHTMLCanvasFrame.h"
 #include "nsICanvasElement.h"

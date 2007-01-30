@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 
 #include "nsFrameTraversal.h"
 #include "nsFrameList.h"

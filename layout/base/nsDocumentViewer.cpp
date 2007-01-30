@@ -100,7 +100,6 @@
 #include "nsIBaseWindow.h"
 #include "nsIFrameDebug.h"
 #include "nsILayoutHistoryState.h"
-#include "nsLayoutAtoms.h"
 #include "nsIParser.h"
 #include "nsGUIEvent.h"
 #include "nsHTMLReflowState.h"
@@ -145,7 +144,6 @@
 #include "nsIPrintSettingsService.h"
 #include "nsIPrintOptions.h"
 #include "nsIServiceManager.h"
-#include "nsHTMLAtoms.h" // XXX until atoms get factored into nsLayoutAtoms
 #include "nsISimpleEnumerator.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -176,7 +174,6 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 
 // FrameSet
 #include "nsIDocument.h"
-#include "nsHTMLAtoms.h"
 
 //focus
 #include "nsIDOMEventReceiver.h"

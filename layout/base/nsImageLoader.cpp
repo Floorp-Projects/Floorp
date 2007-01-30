@@ -58,7 +58,7 @@
 #include "nsIViewManager.h"
 
 #include "nsStyleContext.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 
 // Paint forcing
 #include "prenv.h"

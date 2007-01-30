@@ -52,7 +52,7 @@
 #include "nsIHTMLDocument.h"
 #include "nsIStyleRule.h"
 #include "nsIFrame.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsPresContext.h"
 #include "nsILinkHandler.h"
 #include "nsIDocument.h"

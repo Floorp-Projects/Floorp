@@ -44,7 +44,7 @@
 #include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsFrameList.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIAtom.h"
 #include "nsCSSPseudoElements.h"
 #include "nsIView.h"

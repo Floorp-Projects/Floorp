@@ -92,7 +92,7 @@ public:
    * ancestor "Page" frame, if any.
    *
    * @param the frame to start at
-   * @return a frame of type nsLayoutAtoms::pageFrame or nsnull if no
+   * @return a frame of type nsGkAtoms::pageFrame or nsnull if no
    *         such ancestor exists
    */
   static nsIFrame* GetPageFrame(nsIFrame* aFrame);

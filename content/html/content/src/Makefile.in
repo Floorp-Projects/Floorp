@@ -75,7 +75,6 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 EXPORTS		= \
-		nsHTMLAtoms.h \
 		nsImageMapUtils.h \
 		$(NULL)
 

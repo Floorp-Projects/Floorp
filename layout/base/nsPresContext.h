@@ -58,7 +58,7 @@
 #include "nsCRT.h"
 #include "nsIPrintSettings.h"
 #include "nsPropertyTable.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIDocument.h"
 #ifdef IBMBIDI
 class nsBidiPresUtils;

@@ -94,7 +94,7 @@ public:
   /**
    * Get the "type" of the frame
    *
-   * @see nsLayoutAtoms::svgOuterSVGFrame
+   * @see nsGkAtoms::svgOuterSVGFrame
    */
   virtual nsIAtom* GetType() const;
 

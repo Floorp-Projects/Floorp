@@ -44,7 +44,6 @@
 #include "nsAbsoluteContainingBlock.h"
 #include "nsContainerFrame.h"
 #include "nsIViewManager.h"
-#include "nsLayoutAtoms.h"
 #include "nsIPresShell.h"
 #include "nsHTMLParts.h"
 #include "nsPresContext.h"
@@ -304,7 +303,7 @@ nsAbsoluteContainingBlock::DestroyFrames(nsIFrame* aDelegatingFrame)
 // reflow...
 
 // When bug 154892 is checked in, make sure that when 
-// GetChildListName() == nsLayoutAtoms::fixedList, the height is unconstrained.
+// GetChildListName() == nsGkAtoms::fixedList, the height is unconstrained.
 // since we don't allow replicated frames to split.
 
 nsresult

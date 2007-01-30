@@ -57,7 +57,6 @@
 #include "nsIXMLContentSink.h"
 #include "nsContentCID.h"
 #include "nsXMLDocument.h"
-#include "nsHTMLAtoms.h"
 #include "nsIStreamListener.h"
 #include "nsGenericDOMNodeList.h"
 

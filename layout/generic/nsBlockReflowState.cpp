@@ -47,7 +47,7 @@
 #include "nsBlockFrame.h"
 #include "nsLineLayout.h"
 #include "nsPresContext.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIFrame.h"
 #include "nsFrameManager.h"
 

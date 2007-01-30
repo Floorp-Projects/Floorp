@@ -52,7 +52,7 @@
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIServiceManager.h"
 #include "nsIXBLService.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsICSSStyleRule.h"
 #include "nsISVGSVGElement.h"
 #include "nsRuleWalker.h"

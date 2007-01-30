@@ -41,7 +41,6 @@
 
 #include "nsIDOMComment.h"
 #include "nsGenericDOMDataNode.h"
-#include "nsLayoutAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
 

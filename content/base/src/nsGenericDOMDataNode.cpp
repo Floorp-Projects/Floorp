@@ -55,7 +55,6 @@
 #include "nsIDOMText.h"
 #include "nsCOMPtr.h"
 #include "nsDOMString.h"
-#include "nsLayoutAtoms.h"
 #include "nsIDOMUserDataHandler.h"
 #include "nsChangeHint.h"
 #include "nsEventDispatcher.h"

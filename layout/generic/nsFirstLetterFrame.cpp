@@ -43,7 +43,7 @@
 #include "nsStyleContext.h"
 #include "nsIContent.h"
 #include "nsLineLayout.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
 #include "nsFrameManager.h"

@@ -44,7 +44,7 @@
 #define nsViewportFrame_h___
 
 #include "nsContainerFrame.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsAbsoluteContainingBlock.h"

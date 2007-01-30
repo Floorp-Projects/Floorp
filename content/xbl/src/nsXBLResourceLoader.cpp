@@ -52,7 +52,7 @@
 #include "nsIXBLDocumentInfo.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
-#include "nsXBLAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsFrameManager.h"
 #include "nsStyleContext.h"
 #include "nsXBLPrototypeBinding.h"
@@ -109,7 +109,7 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
                             doc->GetDocumentCharacterSet().get(), docURL)))
       continue;
 
-    if (curr->mType == nsXBLAtoms::image) {
+    if (curr->mType == nsGkAtoms::image) {
       if (!nsContentUtils::CanLoadImage(url, doc, doc)) {
         // We're not permitted to load this image, move on...
         continue;
@@ -123,7 +123,7 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
                                 nsIRequest::LOAD_BACKGROUND,
                                 getter_AddRefs(req));
     }
-    else if (curr->mType == nsXBLAtoms::stylesheet) {
+    else if (curr->mType == nsGkAtoms::stylesheet) {
       // Kick off the load of the stylesheet.
 
       // Always load chrome synchronously

@@ -39,7 +39,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsBulletFrame.h"
-#include "nsLayoutAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsIFontMetrics.h"
