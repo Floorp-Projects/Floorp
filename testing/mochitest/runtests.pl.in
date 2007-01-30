@@ -108,6 +108,7 @@ my $profile_dir = "$FindBin::Bin/$profile";
 #else
 my $is_win32 = 0;
 #endif
+my $unixish = (!($is_win32) && !($^O =~ m/darwin/));
 
  # Do everything.
  main();
@@ -264,9 +265,10 @@ sub startServer {
       $command .= "CLOSE_WHEN_DONE=1 ";
     }
 
-    #if (-e "$dist_bin/run-mozilla.sh") {
-    #  $command .= "$dist_bin/run-mozilla.sh ";
-    #}
+    if ($unixish) {
+      $ENV{'LD_LIBRARY_PATH'} = $dist_bin;
+      $ENV{'MOZILLA_FIVE_HOME'} = $dist_bin;
+    }
 
     $command .= "$dist_bin/xpcshell -v 170 ";
 
