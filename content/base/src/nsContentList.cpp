@@ -503,7 +503,7 @@ nsContentList::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
   
   if (!mFunc || !mFuncMayDependOnAttr || mState == LIST_DIRTY ||
       !MayContainRelevantNodes(aContent->GetNodeParent()) ||
-      IsContentAnonymous(aContent)) {
+      !nsContentUtils::IsInSameAnonymousTree(mRootNode, aContent)) {
     // Either we're already dirty or this notification doesn't affect
     // whether we might match aContent.
     return;
@@ -537,7 +537,8 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
    * aContainer is anonymous from our point of view, we know that we can't
    * possibly be matching any of the kids.
    */
-  if (mState == LIST_DIRTY || IsContentAnonymous(aContainer) ||
+  if (mState == LIST_DIRTY ||
+      !nsContentUtils::IsInSameAnonymousTree(mRootNode, aContainer) ||
       !MayContainRelevantNodes(aContainer))
     return;
 
@@ -620,7 +621,7 @@ nsContentList::ContentInserted(nsIDocument *aDocument,
   // should deal with that.
   if (mState != LIST_DIRTY &&
       MayContainRelevantNodes(NODE_FROM(aContainer, aDocument)) &&
-      !IsContentAnonymous(aChild) &&
+      nsContentUtils::IsInSameAnonymousTree(mRootNode, aChild) &&
       MatchSelf(aChild)) {
     SetDirty();
   }
@@ -639,7 +640,7 @@ nsContentList::ContentRemoved(nsIDocument *aDocument,
   // should deal with that.
   if (mState != LIST_DIRTY &&
       MayContainRelevantNodes(NODE_FROM(aContainer, aDocument)) &&
-      !IsContentAnonymous(aChild) &&
+      nsContentUtils::IsInSameAnonymousTree(mRootNode, aChild) &&
       MatchSelf(aChild)) {
     SetDirty();
   }
@@ -854,53 +855,6 @@ nsContentList::BringSelfUpToDate(PRBool aDoFlush)
   ASSERT_IN_SYNC;
   NS_ASSERTION(!mRootNode || mState == LIST_UP_TO_DATE,
                "PopulateSelf dod not bring content list up to date!");
-}
-
-PRBool
-nsContentList::IsContentAnonymous(nsIContent* aContent)
-{
-  NS_PRECONDITION(aContent, "Must have a content node to work with");
-  
-  /**
-   * The goal of this function is to filter out content that is "anonymous"
-   * from our point of view, so that we don't end up with it in the list.  Note
-   * that in some cases content can be anonymous but NOT from our point of
-   * view.  For example, say we're the result of calling getElementsByTagName
-   * on an anonymous node in a XBL binding.  In that case, all descendants of
-   * that node that it can see are not anonymous from our point of view.
-   */
-
-  if (!mRootNode->IsNodeOfType(nsINode::eCONTENT)) {
-    /**
-     * The root isn't an nsIContent, that means we correspond to a list gotten
-     * off the "document" object, so will always contain only nodes that the
-     * document can see, which means only nodes with a null bindingParent.
-     */
-    return aContent->GetBindingParent() != nsnull;
-  }
-
-  /**
-   * If mRootNode and aContent have _different_ bindingParents, then there
-   * are two possibilities:
-   *
-   * 1) aContent or one of its ancestors is an anonymous child of a descendant
-   *    of mRootNode (or of mRootNode itself).
-   * 2) mRootNode is not an ancestor of aContent.
-   *
-   * In either case, we don't want to be matching aContent or any of its
-   * descendants.
-   *
-   * On the other hand, if mRootNode and aContent have the same
-   * bindingParent then they are part of the same binding (or native anonymous
-   * content chunk) and then aContent may be a descendant of mRootNode and
-   * we may want to match it.
-   *
-   * So we return true if the binding parents don't match; if the binding
-   * parents are the same, the checks we normally do to determine whether we
-   * match a node should be done.
-   */
-  return NS_STATIC_CAST(nsIContent*, mRootNode)->GetBindingParent() !=
-         aContent->GetBindingParent();
 }
 
 #ifdef DEBUG_CONTENT_LIST

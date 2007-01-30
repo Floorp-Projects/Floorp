@@ -331,12 +331,6 @@ protected:
    * all the nodes we can find.
    */
   inline void BringSelfUpToDate(PRBool aDoFlush);
-  /**
-   * A function to check whether aContent is anonymous from our point
-   * of view.  If it is, we don't care about it, since we should never
-   * contain it or any of its kids.
-   */
-  PRBool IsContentAnonymous(nsIContent* aContent);
 
   /**
    * Sets the state to LIST_DIRTY and clears mElements array.

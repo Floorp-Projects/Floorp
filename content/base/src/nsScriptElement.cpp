@@ -126,7 +126,7 @@ nsScriptElement::ScriptEvaluated(nsresult aResult,
 void
 nsScriptElement::CharacterDataChanged(nsIDocument *aDocument,
                                       nsIContent* aContent,
-                                      PRBool aAppend)
+                                      CharacterDataChangeInfo* aInfo)
 {
   MaybeProcessScript();
 }

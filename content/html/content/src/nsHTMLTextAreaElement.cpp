@@ -73,6 +73,7 @@
 #include "nsEventDispatcher.h"
 #include "nsLayoutUtils.h"
 #include "nsLayoutErrors.h"
+#include "nsStubMutationObserver.h"
 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
@@ -82,7 +83,8 @@ class nsHTMLTextAreaElement : public nsGenericHTMLFormElement,
                               public nsIDOMHTMLTextAreaElement,
                               public nsIDOMNSHTMLTextAreaElement,
                               public nsITextControlElement,
-                              public nsIDOMNSEditableElement
+                              public nsIDOMNSEditableElement,
+                              public nsStubMutationObserver
 {
 public:
   nsHTMLTextAreaElement(nsINodeInfo *aNodeInfo, PRBool aFromParser = PR_FALSE);
@@ -122,9 +124,6 @@ public:
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
 
   // nsIContent
-  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 PRBool aNotify);
-  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
   virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
@@ -149,6 +148,23 @@ public:
    */
   virtual nsresult BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                  const nsAString* aValue, PRBool aNotify);
+
+  // nsIMutationObserver
+  virtual void CharacterDataChanged(nsIDocument* aDocument,
+                                    nsIContent* aContent,
+                                    CharacterDataChangeInfo* aInfo);
+  virtual void ContentAppended(nsIDocument* aDocument,
+                                nsIContent* aContainer,
+                               PRInt32 aNewIndexInContainer);
+  virtual void ContentInserted(nsIDocument* aDocument,
+                               nsIContent* aContainer,
+                               nsIContent* aChild,
+                               PRInt32 aIndexInContainer);
+  virtual void ContentRemoved(nsIDocument* aDocument,
+                              nsIContent* aContainer,
+                              nsIContent* aChild,
+                              PRInt32 aIndexInContainer);
+
 protected:
   nsCOMPtr<nsIControllers> mControllers;
   /** The current value.  This is null if the frame owns the value. */
@@ -176,6 +192,13 @@ protected:
   nsresult SetValueInternal(const nsAString& aValue,
                             nsITextControlFrame* aFrame);
   nsresult GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
+
+  /**
+   * Common method to call from the various mutation observer methods.
+   * aContent is a content node that's either the one that changed or its
+   * parent; we should only respond to the change if aContent is non-anonymous.
+   */
+  void ContentChanged(nsIContent* aContent);
 };
 
 
@@ -191,6 +214,7 @@ nsHTMLTextAreaElement::nsHTMLTextAreaElement(nsINodeInfo *aNodeInfo,
     mDoneAddingChildren(!aFromParser),
     mDisabledChanged(PR_FALSE)
 {
+  AddMutationObserver(this);
 }
 
 nsHTMLTextAreaElement::~nsHTMLTextAreaElement()
@@ -212,6 +236,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLTextAreaElement,
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLTextAreaElement)
   NS_INTERFACE_MAP_ENTRY(nsITextControlElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSEditableElement)
+  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLTextAreaElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -504,31 +529,6 @@ nsHTMLTextAreaElement::SetDefaultValue(const nsAString& aDefaultValue)
 {
   nsresult rv = nsContentUtils::SetNodeTextContent(this, aDefaultValue, PR_TRUE);
   if (NS_SUCCEEDED(rv) && !mValueChanged) {
-    Reset();
-  }
-  return rv;
-}
-
-nsresult
-nsHTMLTextAreaElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                     PRBool aNotify)
-{
-  nsresult rv;
-  rv = nsGenericHTMLFormElement::InsertChildAt(aKid, aIndex, aNotify);
-  if (!mValueChanged && mDoneAddingChildren) {
-    Reset();
-  }
-  return rv;
-}
-
-nsresult
-nsHTMLTextAreaElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
-{
-  nsresult rv;
-  rv = nsGenericHTMLFormElement::RemoveChildAt(aIndex, aNotify);
-  if (!mValueChanged) {
-    NS_ASSERTION(mDoneAddingChildren,
-                 "The HTML content sink shouldn't call this");
     Reset();
   }
   return rv;
@@ -928,4 +928,47 @@ nsHTMLTextAreaElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
   return nsGenericHTMLFormElement::BeforeSetAttr(aNameSpaceID, aName,
                                                  aValue, aNotify);
+}
+
+void
+nsHTMLTextAreaElement::CharacterDataChanged(nsIDocument* aDocument,
+                                            nsIContent* aContent,
+                                            CharacterDataChangeInfo* aInfo)
+{
+  ContentChanged(aContent);
+}
+
+void
+nsHTMLTextAreaElement::ContentAppended(nsIDocument* aDocument,
+                                       nsIContent* aContainer,
+                                       PRInt32 aNewIndexInContainer)
+{
+  ContentChanged(aContainer);
+}
+
+void
+nsHTMLTextAreaElement::ContentInserted(nsIDocument* aDocument,
+                                       nsIContent* aContainer,
+                                       nsIContent* aChild,
+                                       PRInt32 aIndexInContainer)
+{
+  ContentChanged(aChild);
+}
+
+void
+nsHTMLTextAreaElement::ContentRemoved(nsIDocument* aDocument,
+                                      nsIContent* aContainer,
+                                      nsIContent* aChild,
+                                      PRInt32 aIndexInContainer)
+{
+  ContentChanged(aChild);
+}
+
+void
+nsHTMLTextAreaElement::ContentChanged(nsIContent* aContent)
+{
+  if (!mValueChanged && mDoneAddingChildren &&
+      nsContentUtils::IsInSameAnonymousTree(this, aContent)) {
+    Reset();
+  }
 }

@@ -1,0 +1,121 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=300691
+-->
+<head>
+  <title>Test for Bug 300691</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=300691">Mozilla Bug 300691</a>
+<p id="display">
+  <textarea id="target"></textarea>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var t = $("target");
+  
+/** Test for Bug 300691 **/
+function valueIs(arg, reason) {
+  is(t.value, arg, reason);
+}
+
+function defValueIs(arg, reason) {
+  is(t.defaultValue, arg, reason);
+}
+
+valueIs("", "Nothing in the textarea");
+defValueIs("", "Nothing in the textarea 2");
+
+t.appendChild(document.createTextNode("ab"));
+valueIs("ab", "Appended textnode");
+defValueIs("ab", "Appended textnode 2");
+
+t.firstChild.data = "abcd";
+valueIs("abcd", "Modified textnode text");
+defValueIs("abcd", "Modified textnode text 2");
+
+t.appendChild(document.createTextNode("efgh"));
+valueIs("abcdefgh", "Appended another textnode");
+defValueIs("abcdefgh", "Appended another textnode 2");
+
+t.removeChild(t.lastChild);
+valueIs("abcd", "Removed textnode");
+defValueIs("abcd", "Removed textnode 2");
+
+t.appendChild(document.createTextNode("efgh"));
+valueIs("abcdefgh", "Appended yet another textnode");
+defValueIs("abcdefgh", "Appended yet another textnode 2");
+
+t.normalize();
+valueIs("abcdefgh", "Normalization changes nothing for the value");
+defValueIs("abcdefgh", "Normalization changes nothing for the value 2");
+
+t.defaultValue = "abc";
+valueIs("abc", "Just set the default value on non-edited textarea");
+defValueIs("abc", "Just set the default value on non-edited textarea 2");
+
+t.appendChild(document.createTextNode("defgh"));
+valueIs("abcdefgh", "Appended another textnode again");
+defValueIs("abcdefgh", "Appended another textnode again 2");
+
+t.focus(); // This puts the caret at the end of the textarea, and doing
+           // something like "home" in a cross-platform way is kinda hard.
+sendKey("left");
+sendKey("left");
+sendKey("left");
+sendString("Test");
+
+valueIs("abcdeTestfgh", "Typed 'Test' after three left-arrows starting from end");
+defValueIs("abcdefgh", "Typing 'Test' shouldn't affect default value");
+
+sendKey("right");
+sendKey("right");
+sendKey("back_space");
+sendKey("back_space");
+
+valueIs("abcdeTesth",
+        "Backspaced twice after two right-arrows starting from end of typing");
+defValueIs("abcdefgh", "Deleting shouldn't affect default value");
+
+t.appendChild(document.createTextNode("ijk"));
+valueIs("abcdeTesth",
+        "Appending textnode shouldn't affect value in edited textarea");
+defValueIs("abcdefghijk", "Appended textnode 3");
+
+t.lastChild.data = "lmno";
+valueIs("abcdeTesth",
+        "Modifying textnode text shouldn't affect value in edited textarea");
+defValueIs("abcdefghlmno", "Modified textnode text 3");
+
+t.removeChild(t.firstChild);
+valueIs("abcdeTesth",
+        "Removing child textnode shouldn't affect value in edited textarea");
+defValueIs("defghlmno", "Removed textnode 3");
+
+t.insertBefore(document.createTextNode("abc"), t.firstChild);
+valueIs("abcdeTesth",
+        "Inserting child textnode shouldn't affect value in edited textarea");
+defValueIs("abcdefghlmno", "Inserted a text node");
+
+t.normalize();
+valueIs("abcdeTesth", "Normalization changes nothing for the value 3");
+defValueIs("abcdefghlmno", "Normalization changes nothing for the value 4");
+
+t.defaultValue = "abc";
+valueIs("abcdeTesth", "Setting default value shouldn't affect edited textarea");
+defValueIs("abc", "Just set the default value textarea");
+
+</script>
+</pre>
+</body>
+</html>
+

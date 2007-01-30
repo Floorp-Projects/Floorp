@@ -81,6 +81,12 @@ f== bugs/351641-2b.html bugs/351641-2-ref.html # bug 358433 (2006-10-19)
 == bugs/367332-1g.html bugs/367332-1-ref.html
 == bugs/367504-margin-1.html bugs/367504-margin-1-ref.html
 == bugs/367504-float-1.html bugs/367504-float-1-ref.html
+== bugs/300691-1a.html bugs/300691-1-ref.html
+== bugs/300691-1b.html bugs/300691-1-ref.html
+== bugs/300691-1c.html bugs/300691-1-ref.html
+== bugs/300691-1d.html bugs/300691-1-ref.html
+== bugs/300691-1e.html bugs/300691-1-ref.html
+== bugs/300691-1f.html bugs/300691-1-ref.html
 
 # table-dom/
 == table-dom/appendCells1.html table-dom/appendCells1-ref.html
