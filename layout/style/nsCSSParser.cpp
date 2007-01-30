@@ -4525,6 +4525,10 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_clip_rule:
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,
                         nsCSSProps::kFillRuleKTable);
+  case eCSSProperty_color_interpolation:
+  case eCSSProperty_color_interpolation_filters:
+    return ParseVariant(aErrorCode, aValue, VARIANT_AHK,
+                        nsCSSProps::kColorInterpolationKTable);
   case eCSSProperty_dominant_baseline:
     return ParseVariant(aErrorCode, aValue, VARIANT_AHK,
                         nsCSSProps::kDominantBaselineKTable);

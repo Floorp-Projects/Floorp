@@ -61,6 +61,9 @@ protected:
                                 NumberInfo* aInfo1, NumberInfo* aInfo2,
                                 nsAttrValue& aResult);
 
+  nsSVGFilterInstance::ColorModel
+  GetColorModel(nsSVGFilterInstance::ColorModel::AlphaChannel aAlphaChannel);
+
 public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED

@@ -1048,6 +1048,12 @@ const PRInt32 nsCSSProps::kTextRenderingKTable[] = {
   eCSSKeyword_UNKNOWN, -1
 };
 
+const PRInt32 nsCSSProps::kColorInterpolationKTable[] = {
+  eCSSKeyword_srgb, NS_STYLE_COLOR_INTERPOLATION_SRGB,
+  eCSSKeyword_linearrgb, NS_STYLE_COLOR_INTERPOLATION_LINEARRGB,
+  eCSSKeyword_UNKNOWN, -1
+};
+
 #endif
 
 PRBool

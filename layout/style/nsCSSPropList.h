@@ -471,6 +471,8 @@ CSS_PROP_XUL(-moz-box-ordinal-group, box_ordinal_group, MozBoxOrdinalGroup, XUL,
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_SVGRESET(clip-path, clip_path, ClipPath, SVG, mClipPath, eCSSType_Value, nsnull)
 CSS_PROP_SVG(clip-rule, clip_rule, ClipRule, SVG, mClipRule, eCSSType_Value, kFillRuleKTable)
+CSS_PROP_SVG(color-interpolation, color_interpolation, ColorInterpolation, SVG, mColorInterpolation, eCSSType_Value, kColorInterpolationKTable)
+CSS_PROP_SVG(color-interpolation-filters, color_interpolation_filters, ColorInterpolationFilters, SVG, mColorInterpolationFilters, eCSSType_Value, kColorInterpolationKTable)
 CSS_PROP_SVGRESET(dominant-baseline, dominant_baseline, DominantBaseline, SVG, mDominantBaseline, eCSSType_Value, kDominantBaselineKTable)
 CSS_PROP_SVG(fill, fill, Fill, SVG, mFill, eCSSType_ValuePair, nsnull)
 CSS_PROP_SVG(fill-opacity, fill_opacity, FillOpacity, SVG, mFillOpacity, eCSSType_Value, nsnull)

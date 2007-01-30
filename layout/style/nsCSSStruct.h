@@ -496,6 +496,8 @@ struct nsCSSSVG : public nsCSSStruct {
 
   nsCSSValue mClipPath;
   nsCSSValue mClipRule;
+  nsCSSValue mColorInterpolation;
+  nsCSSValue mColorInterpolationFilters;
   nsCSSValue mDominantBaseline;
   nsCSSValuePair mFill;
   nsCSSValue mFillOpacity;

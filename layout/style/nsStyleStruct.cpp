@@ -652,6 +652,8 @@ nsStyleSVG::nsStyleSVG()
 
     mStrokeDasharrayLength   = 0;
     mClipRule                = NS_STYLE_FILL_RULE_NONZERO;
+    mColorInterpolation      = NS_STYLE_COLOR_INTERPOLATION_SRGB;
+    mColorInterpolationFilters = NS_STYLE_COLOR_INTERPOLATION_LINEARRGB;
     mFillRule                = NS_STYLE_FILL_RULE_NONZERO;
     mPointerEvents           = NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED;
     mShapeRendering          = NS_STYLE_SHAPE_RENDERING_AUTO;
@@ -698,6 +700,8 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
   mStrokeOpacity = aSource.mStrokeOpacity;
 
   mClipRule = aSource.mClipRule;
+  mColorInterpolation = aSource.mColorInterpolation;
+  mColorInterpolationFilters = aSource.mColorInterpolationFilters;
   mFillRule = aSource.mFillRule;
   mPointerEvents = aSource.mPointerEvents;
   mShapeRendering = aSource.mShapeRendering;
@@ -724,6 +728,8 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
        mStrokeOpacity         != aOther.mStrokeOpacity         ||
 
        mClipRule              != aOther.mClipRule              ||
+       mColorInterpolation    != aOther.mColorInterpolation    ||
+       mColorInterpolationFilters != aOther.mColorInterpolationFilters ||
        mFillRule              != aOther.mFillRule              ||
        mPointerEvents         != aOther.mPointerEvents         ||
        mShapeRendering        != aOther.mShapeRendering        ||

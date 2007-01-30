@@ -420,6 +420,7 @@ nsSVGElement::sFillStrokeMap[] = {
 nsSVGElement::sGraphicsMap[] = {
   { &nsGkAtoms::clip_path },
   { &nsGkAtoms::clip_rule },
+  { &nsGkAtoms::colorInterpolation },
   { &nsGkAtoms::cursor },
   { &nsGkAtoms::display },
   { &nsGkAtoms::filter },
@@ -493,6 +494,13 @@ nsSVGElement::sMarkersMap[] = {
 /* static */ const nsGenericElement::MappedAttributeEntry
 nsSVGElement::sColorMap[] = {
   { &nsGkAtoms::color },
+  { nsnull }
+};
+
+// PresentationAttributes-Filters
+/* static */ const nsGenericElement::MappedAttributeEntry
+nsSVGElement::sFiltersMap[] = {
+  { &nsGkAtoms::colorInterpolationFilters },
   { nsnull }
 };
 
