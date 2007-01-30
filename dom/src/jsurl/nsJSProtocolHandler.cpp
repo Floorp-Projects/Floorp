@@ -255,9 +255,31 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         // prevent it from accessing data it doesn't have permissions
         // to access.
 
-        nsIXPConnect *xpc = nsContentUtils::XPConnect();
+        // First check to make sure it's OK to evaluate this script to
+        // start with.  For example, script could be disabled.
+        if (!principal) {
+            principal = do_CreateInstance("@mozilla.org/nullprincipal;1");
+            if (!principal) {
+                return NS_ERROR_OUT_OF_MEMORY;
+            }
+        }
 
         JSContext *cx = (JSContext*)scriptContext->GetNativeContext();
+
+        PRBool ok;
+        rv = securityManager->CanExecuteScripts(cx, principal, &ok);
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+
+        if (!ok) {
+            // Treat this as returning undefined from the script.  That's what
+            // nsJSContext does.
+            return NS_ERROR_DOM_RETVAL_UNDEFINED;
+        }
+
+        nsIXPConnect *xpc = nsContentUtils::XPConnect();
+
         nsCOMPtr<nsIXPConnectJSObjectHolder> sandbox;
         rv = xpc->CreateSandbox(cx, principal, getter_AddRefs(sandbox));
         NS_ENSURE_SUCCESS(rv, rv);
