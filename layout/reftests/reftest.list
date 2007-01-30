@@ -145,9 +145,14 @@ f== bugs/351641-2b.html bugs/351641-2-ref.html # bug 358433 (2006-10-19)
 == xul-document-load/test008.xul xul-document-load/reference-green-window.xul
 == xul-document-load/test009.xul xul-document-load/reference-green-window.xul
 == xul-document-load/test010.xul xul-document-load/reference-green-window.xul
+== xul-document-load/test011.xul xul-document-load/reference-green-window.xul
 == xul-document-load/test012.xul xul-document-load/reference-green-window.xul
 == xul-document-load/test013.xul xul-document-load/reference-green-window.xul
+== xul-document-load/test014.xul xul-document-load/reference-green-window.xul
+== xul-document-load/test015.xul xul-document-load/reference-green-window.xul
+== xul-document-load/test016.xul xul-document-load/reference-green-window.xul
 == xul-document-load/test017.xul xul-document-load/reference-green-window.xul
 == xul-document-load/test018.xul xul-document-load/reference-green-window.xul
 == xul-document-load/test019.xul xul-document-load/reference-green-window.xul
 == xul-document-load/test020.xul xul-document-load/reference-green-window.xul
+== xul-document-load/test021.xul xul-document-load/reference-green-window.xul

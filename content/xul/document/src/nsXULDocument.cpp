@@ -3541,12 +3541,8 @@ nsXULDocument::CreateOverlayElement(nsXULPrototypeElement* aPrototype,
 {
     nsresult rv;
 
-    // This doesn't really do anything except create a placeholder
-    // element. I'd use an XML element, but it gets its knickers in a
-    // knot with DOM ranges when you try to remove its children.
     nsCOMPtr<nsIContent> element;
-    rv = nsXULElement::Create(aPrototype, this, PR_FALSE,
-                              getter_AddRefs(element));
+    rv = CreateElementFromPrototype(aPrototype, getter_AddRefs(element));
     if (NS_FAILED(rv)) return rv;
 
     OverlayForwardReference* fwdref =
@@ -3558,8 +3554,7 @@ nsXULDocument::CreateOverlayElement(nsXULPrototypeElement* aPrototype,
     rv = AddForwardReference(fwdref);
     if (NS_FAILED(rv)) return rv;
 
-    *aResult = element;
-    NS_ADDREF(*aResult);
+    NS_ADDREF(*aResult = element);
     return NS_OK;
 }
 
@@ -3744,7 +3739,8 @@ nsXULDocument::OverlayForwardReference::Resolve()
     // Resolve a forward reference from an overlay element; attempt to
     // hook it up into the main document.
     nsresult rv;
- 
+    nsCOMPtr<nsIContent> target;
+
     PRBool notify = PR_FALSE;
     nsIPresShell *shell = mDocument->GetShellAt(0);
     if (shell)
@@ -3753,47 +3749,41 @@ nsXULDocument::OverlayForwardReference::Resolve()
     nsAutoString id;
     mOverlay->GetAttr(kNameSpaceID_None, nsGkAtoms::id, id);
     if (id.IsEmpty()) {
-        // overlay had no id, use the root element
+        // mOverlay is a direct child of <overlay> and has no id.
+        // Insert it under the root element in the base document.
         if (!mDocument->mRootContent) {
             return eResolve_Error;
         }
-        
+
         rv = mDocument->InsertElement(mDocument->mRootContent, mOverlay, notify);
         if (NS_FAILED(rv)) return eResolve_Error;
 
-        if (!notify) {
-            // Add child and any descendants to the element map
-            rv = mDocument->AddSubtreeToDocument(mOverlay);
-            if (NS_FAILED(rv)) return eResolve_Error;
-        }
-
-        mResolved = PR_TRUE;
-        return eResolve_Succeeded;
+        target = mOverlay;
     }
+    else {
+        // The hook-up element has an id, try to match it with an element
+        // with the same id in the base document.
+        nsCOMPtr<nsIDOMElement> domtarget;
+        rv = mDocument->GetElementById(id, getter_AddRefs(domtarget));
+        if (NS_FAILED(rv)) return eResolve_Error;
 
-    nsCOMPtr<nsIDOMElement> domtarget;
-    rv = mDocument->GetElementById(id, getter_AddRefs(domtarget));
-    if (NS_FAILED(rv)) return eResolve_Error;
+        // If we can't find the element in the document, defer the hookup
+        // until later.
+        target = do_QueryInterface(domtarget);
+        NS_ASSERTION(!domtarget || target, "not an nsIContent");
+        if (!target)
+            return eResolve_Later;
 
-    // If we can't find the element in the document, defer the hookup
-    // until later.
-    if (! domtarget)
-        return eResolve_Later;
-
-    nsCOMPtr<nsIContent> target = do_QueryInterface(domtarget);
-    NS_ASSERTION(target != nsnull, "not an nsIContent");
-    if (! target)
-        return eResolve_Error;
-
-    // While merging, set the default script language of the element to be
-    // the language from the overlay - attributes will then be correctly
-    // hooked up with the appropriate language (while child nodes ignore
-    // the default language - they have it in their proto.
-    PRUint32 oldDefLang = target->GetScriptTypeID();
-    target->SetScriptTypeID(mOverlay->GetScriptTypeID());
-    rv = Merge(target, mOverlay, notify);
-    target->SetScriptTypeID(oldDefLang);
-    if (NS_FAILED(rv)) return eResolve_Error;
+        // While merging, set the default script language of the element to be
+        // the language from the overlay - attributes will then be correctly
+        // hooked up with the appropriate language (while child nodes ignore
+        // the default language - they have it in their proto.
+        PRUint32 oldDefLang = target->GetScriptTypeID();
+        target->SetScriptTypeID(mOverlay->GetScriptTypeID());
+        rv = Merge(target, mOverlay, notify);
+        target->SetScriptTypeID(oldDefLang);
+        if (NS_FAILED(rv)) return eResolve_Error;
+    }
 
     if (!notify) {
         // Add child and any descendants to the element map

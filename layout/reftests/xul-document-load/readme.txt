@@ -43,6 +43,8 @@ test014: (bug 363406) Relative URIs in overlay's <?xul-overlay ?> PI are resolve
 test015: Relative URIs in overlay's <xul:script> are resolved against overlay's 
          URI, not the document URI.
 
+test016: Non-XUL elements work in overlays.
+
 test017: (bug 359959) <?xul-overlay ?> used as a direct child of <overlay>
          should be inserted into the DOM, but not cause the overlay to be
          applied.
@@ -54,3 +56,6 @@ test018: <?xul-overlay ?> used deep inside another overlay (i.e. as a child of
 test019: Same as #017 for <?xml-stylesheet ?>
 
 test020: Same as #018 for <?xml-stylesheet ?>
+
+test021: (bug 363419) Non-XUL elements directly underneath <overlay> should
+         be merged correctly into the base document.
