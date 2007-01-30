@@ -317,7 +317,8 @@ function initializeSearchWindowWidgets()
     hideMatchAllItem();
     
     msgWindow = Components.classes[msgWindowContractID].createInstance(nsIMsgWindow);
-    msgWindow.domWindow = window;    
+    msgWindow.domWindow = window;
+    msgWindow.rootDocShell.appType = Components.interfaces.nsIDocShell.APP_TYPE_MAIL;
     msgWindow.statusFeedback = gStatusFeedback;
 
     // functionality to enable/disable buttons using nsSearchResultsController

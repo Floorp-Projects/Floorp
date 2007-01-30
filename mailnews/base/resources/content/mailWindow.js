@@ -214,7 +214,8 @@ function InitMsgWindow()
 
   var messagepane = document.getElementById("messagepane");
   messagepane.docShell.allowAuth = false;
-  msgWindow.rootDocShell.allowAuth = true; 
+  msgWindow.rootDocShell.allowAuth = true;
+  msgWindow.rootDocShell.appType = Components.interfaces.nsIDocShell.APP_TYPE_MAIL;
 }
 
 function messagePaneOnClick(event)

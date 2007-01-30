@@ -126,6 +126,7 @@ function selectOnLoad()
 {
     gMsgWindow = Components.classes[msgWindowContractID].createInstance(Components.interfaces.nsIMsgWindow);
     gMsgWindow.domWindow = window;
+    gMsgWindow.rootDocShell.appType = Components.interfaces.nsIDocShell.APP_TYPE_MAIL;
 
     gAccountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
     gSynchronizeTree = document.getElementById('synchronizeTree');

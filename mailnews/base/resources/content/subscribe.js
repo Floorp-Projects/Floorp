@@ -188,6 +188,7 @@ function SubscribeOnLoad()
   msgWindow.domWindow = window;  
   msgWindow.statusFeedback = gStatusFeedback;
   msgWindow.rootDocShell.allowAuth = true;
+  msgWindow.rootDocShell.appType = Components.interfaces.nsIDocShell.APP_TYPE_MAIL;
 
 	// look in arguments[0] for parameters
 	if (window.arguments && window.arguments[0]) {

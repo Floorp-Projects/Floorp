@@ -408,7 +408,8 @@ function GetFilterEditorMsgWindow()
     var msgWindowContractID = "@mozilla.org/messenger/msgwindow;1";
     var nsIMsgWindow = Components.interfaces.nsIMsgWindow;
     gFilterEditorMsgWindow = Components.classes[msgWindowContractID].createInstance(nsIMsgWindow);
-    gFilterEditorMsgWindow.domWindow = window; 
+    gFilterEditorMsgWindow.domWindow = window;
+    gFilterEditorMsgWindow.rootDocShell.appType = Components.interfaces.nsIDocShell.APP_TYPE_MAIL;
   }
   return gFilterEditorMsgWindow;
 }
