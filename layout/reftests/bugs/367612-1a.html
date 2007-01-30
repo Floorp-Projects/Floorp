@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style> * { color: red } </style>
+    <style id="t"></style>
+  </head>
+  <body>
+    <span class="test">This text should be green</span>
+    <script>
+      document.getElementById("t").
+        appendChild(document.createTextNode("* { color: green }"));
+    </script>
+  </body>
+</html>
