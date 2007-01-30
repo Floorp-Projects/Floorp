@@ -323,6 +323,11 @@ nsThebesImage::Draw(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface,
                    PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                    PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
+    if (NS_UNLIKELY(aDWidth == 0 || aDHeight == 0)) {
+        NS_ERROR("nsThebesImage::Draw zero dest size - please fix caller.");
+        return NS_OK;
+    }
+
     nsThebesRenderingContext *thebesRC = NS_STATIC_CAST(nsThebesRenderingContext*, &aContext);
     gfxContext *ctx = thebesRC->Thebes();
 
@@ -415,6 +420,8 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
                               const PRInt32 xPadding,
                               const PRInt32 yPadding)
 {
+    NS_ASSERTION(xPadding >= 0 && yPadding >= 0, "negative padding");
+
     if (targetRect.size.width <= 0.0 || targetRect.size.height <= 0.0)
         return NS_OK;
 
