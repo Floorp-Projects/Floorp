@@ -1411,13 +1411,11 @@ NS_IMETHODIMP nsHyperTextAccessible::GetSelectionCount(PRInt32 *aSelectionCount)
   rv = domSel->GetIsCollapsed(&isSelectionCollapsed);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (isSelectionCollapsed)
+  if (isSelectionCollapsed) {
     *aSelectionCount = 0;
-
-  rv = domSel->GetRangeCount(aSelectionCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+    return NS_OK;
+  }
+  return domSel->GetRangeCount(aSelectionCount);
 }
 
 /*

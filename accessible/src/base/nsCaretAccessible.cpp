@@ -210,15 +210,7 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
   NS_ASSERTION(textAcc, "No nsIAccessibleText for caret move event!"); // No nsIAccessibleText for caret move event!
   NS_ENSURE_TRUE(textAcc, NS_ERROR_FAILURE);
 
-  PRInt32 caretOffset;
-  if (NS_SUCCEEDED(textAcc->GetCaretOffset(&caretOffset))) {
-    mRootAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_ATK_TEXT_CARET_MOVE, accessible, &caretOffset);
-  }
-  if (!isCollapsed) {
-    mRootAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_ATK_TEXT_SELECTION_CHANGE, accessible, nsnull);
-  }
-
-  return NS_OK;
+  return mRootAccessible->FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_ATK_TEXT_CARET_MOVE, focusNode, nsnull, PR_FALSE);
 }
 
 /** Return the caret's bounds */

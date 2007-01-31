@@ -1099,6 +1099,18 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
           docAccessible->FireDocLoadEvents(nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE);
         }
       }
+      else if (eventType == nsIAccessibleEvent::EVENT_ATK_TEXT_CARET_MOVE) {
+        nsCOMPtr<nsIAccessibleText> accessibleText = do_QueryInterface(accessible);
+        PRInt32 caretOffset;
+        if (accessibleText && NS_SUCCEEDED(accessibleText->GetCaretOffset(&caretOffset))) {
+          FireToolkitEvent(nsIAccessibleEvent::EVENT_ATK_TEXT_CARET_MOVE, accessible, &caretOffset);
+          PRInt32 selectionCount;
+          accessibleText->GetSelectionCount(&selectionCount);
+          if (selectionCount) {  // There's a selection so fire selection change as well
+           FireToolkitEvent(nsIAccessibleEvent::EVENT_ATK_TEXT_SELECTION_CHANGE, accessible, nsnull);
+          }
+        }
+      }
       else {
         FireToolkitEvent(eventType, accessible, nsnull);
       }

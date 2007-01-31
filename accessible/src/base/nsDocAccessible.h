@@ -100,6 +100,10 @@ class nsDocAccessible : public nsHyperTextAccessible,
     // nsPIAccessNode
     NS_IMETHOD_(nsIFrame *) GetFrame(void);
 
+    // Non-virtual
+    nsresult FireDelayedToolkitEvent(PRUint32 aEvent, nsIDOMNode *aDOMNode,
+                                     void *aData, PRBool aAllowDupes = PR_FALSE);
+
   protected:
     virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
     virtual nsresult AddEventListeners();
@@ -111,9 +115,6 @@ class nsDocAccessible : public nsHyperTextAccessible,
     void CheckForEditor();
     virtual void SetEditor(nsIEditor *aEditor);
     virtual already_AddRefed<nsIEditor> GetEditor() { nsIEditor *editor = mEditor; NS_IF_ADDREF(editor); return editor; }
-
-    nsresult FireDelayedToolkitEvent(PRUint32 aEvent, nsIDOMNode *aDOMNode,
-                                     void *aData, PRBool aAllowDupes = PR_FALSE);
 
     nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> mAccessNodeCache;
     void *mWnd;
