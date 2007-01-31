@@ -2920,8 +2920,9 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     if (aColor.mBackgroundClip != NS_STYLE_BG_CLIP_BORDER) {
       NS_ASSERTION(aColor.mBackgroundClip == NS_STYLE_BG_CLIP_PADDING,
                    "unknown background-clip value");
-      // XXXldb What about skipSides?
-      bgClipArea.Deflate(aBorder.GetBorder());
+      nsMargin border = aForFrame->GetUsedBorder();
+      aForFrame->ApplySkipSides(border);
+      bgClipArea.Deflate(border);
     }
   }
 
@@ -2999,11 +3000,12 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   // Background images are tiled over the 'background-clip' area
   // but the origin of the tiling is based on the 'background-origin' area
   if (aColor.mBackgroundOrigin != NS_STYLE_BG_ORIGIN_BORDER) {
-    // XXXldb What about SkipSides?
-    bgOriginArea.Deflate(aBorder.GetBorder());
+    nsMargin border = aForFrame->GetUsedBorder();
+    aForFrame->ApplySkipSides(border);
+    bgOriginArea.Deflate(border);
     if (aColor.mBackgroundOrigin != NS_STYLE_BG_ORIGIN_PADDING) {
       nsMargin padding = aForFrame->GetUsedPadding();
-      // XXXldb What about SkipSides?
+      aForFrame->ApplySkipSides(padding);
       bgOriginArea.Deflate(padding);
       NS_ASSERTION(aColor.mBackgroundOrigin == NS_STYLE_BG_ORIGIN_CONTENT,
                    "unknown background-origin value");
@@ -3376,7 +3378,9 @@ nsCSSRendering::PaintBackgroundColor(nsPresContext* aPresContext,
     // to show the parent's background-color instead of its background-color.
     // This seems wrong, but we handle that here by explictly clipping the
     // background to the padding area.
-    bgClipArea.Deflate(aBorder.GetBorder());
+    nsMargin border = aForFrame->GetUsedBorder();
+    aForFrame->ApplySkipSides(border);
+    bgClipArea.Deflate(border);
   }
 
   nscolor color;
