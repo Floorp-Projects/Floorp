@@ -690,14 +690,6 @@ sub WriteCheckins {
      my ($filename, $filedest, $i, $checkin);
      my (%person, $name);
 
-     if (Param('readonly')) {
-          print "
-<P><B><font color=red>
-    Can't write checkins file; not viewing current info.
-</font></b>\n\n";
-          return;
-     }
-
      $filename = DataDir() . "/tmp-$$";
      unless (open(TEMP, "> $filename")) {
           print "
@@ -727,6 +719,14 @@ sub WriteCheckins {
      $filedest = DataDir() . "/batch-$::BatchID.pl";
      unlink($filedest);
      rename($filename, $filedest);
+
+     if (Param('readonly')) {
+         print "
+     <P><B><font color=red>
+         Can't write checkins file; not viewing current info.
+     </font></b>\n\n";
+        return;
+     }
 
      open(TEMP, "> $filename");
      chmod(0666, $filename);
