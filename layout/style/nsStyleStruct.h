@@ -918,9 +918,9 @@ struct nsStyleContentData {
   nsStyleContentData() : mType(nsStyleContentType(0)) { mContent.mString = nsnull; }
   ~nsStyleContentData();
   nsStyleContentData& operator=(const nsStyleContentData& aOther);
-  PRBool operator==(const nsStyleContentData& aOther);
+  PRBool operator==(const nsStyleContentData& aOther) const;
 
-  PRBool operator!=(const nsStyleContentData& aOther) {
+  PRBool operator!=(const nsStyleContentData& aOther) const {
     return !(*this == aOther);
   }
 private:
