@@ -35,10 +35,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = test_embedding
-
-XPCSHELL_TESTS = unit
-
 ifeq ($(OS_ARCH),OS2)
 DIRS = os2Embed
 endif

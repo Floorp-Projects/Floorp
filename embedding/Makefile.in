@@ -53,7 +53,7 @@ DIRS += lite
 endif
 
 ifdef ENABLE_TESTS
-DIRS += tests
+XPCSHELL_TESTS = tests/unit
 endif
 
 include $(topsrcdir)/config/rules.mk
