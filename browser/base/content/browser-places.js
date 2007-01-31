@@ -106,12 +106,22 @@ var PlacesCommandHook = {
   },
 
   /**
+   * Adds a bookmark to the page loaded in the given browser 
+   * @param aBrowser
+   *        a <browser> element
+   */
+  bookmarkPage: function PCH_bookmarkCurrentPage(aBrowser) {
+    var selectedBrowser = getBrowser().selectedBrowser;
+    PlacesUtils.showAddBookmarkUI(aBrowser.currentURI);
+  },
+
+  /**
    * Adds a bookmark to the page loaded in the current tab. 
    */
   bookmarkCurrentPage: function PCH_bookmarkCurrentPage() {
-    var selectedBrowser = getBrowser().selectedBrowser;
-    PlacesUtils.showAddBookmarkUI(selectedBrowser.currentURI);
+    PlacesUtils.showAddBookmarkUI(getBrowser().selectedBrowser);
   },
+
 
   /**
    * This function returns a list of nsIURI objects characterizing the

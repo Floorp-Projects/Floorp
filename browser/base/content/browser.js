@@ -278,7 +278,6 @@ function SetClickAndHoldHandlers()
 }
 #endif
 
-#ifndef MOZ_PLACES_BOOKMARKS
 function addBookmarkMenuitems()
 {
   var tabbrowser = getBrowser();
@@ -304,9 +303,12 @@ function BookmarkThisTab()
   if (tab.localName != "tab")
     tab = getBrowser().mCurrentTab;
 
+#ifdef MOZ_PLACES_BOOKMARKS
+  PlacesCommandHook.bookmarkPage(tab.linkedBrowser);
+#else
   addBookmarkAs(tab.linkedBrowser, false);
-}
 #endif
+}
 
 const gSessionHistoryObserver = {
   observe: function(subject, topic, data)
@@ -989,9 +991,10 @@ function delayedStartup()
     sidebar.setAttribute("src", sidebarBox.getAttribute("src"));
   }
 
-#ifndef MOZ_PLACES_BOOKMARKS
   // add bookmark options to context menu for tabs
   addBookmarkMenuitems();
+
+#ifndef MOZ_PLACES_BOOKMARKS
   initServices();
   initBMService();
   // now load bookmarks
