@@ -345,9 +345,13 @@ var PlacesUtils = {
    *          The Result node to wrap (serialize)
    * @param   aType
    *          The content type to serialize as
+   * @param   [optional] aOverrideURI
+   *          Used instead of the node's URI if provided.
+   *          This is useful for wrapping a container as TYPE_X_MOZ_URL,
+   *          TYPE_HTML or TYPE_UNICODE.
    * @returns A string serialization of the node
    */
-  wrapNode: function PU_wrapNode(aNode, aType) {
+  wrapNode: function PU_wrapNode(aNode, aType, aOverrideURI) {
     switch (aType) {
     case TYPE_X_MOZ_PLACE_CONTAINER:
     case TYPE_X_MOZ_PLACE:
@@ -375,12 +379,13 @@ var PlacesUtils = {
       wrapped += this.getIndexOfNode(aNode);
       return wrapped;
     case TYPE_X_MOZ_URL:
-      return aNode.uri + NEWLINE + aNode.title;
+      return (aOverrideURI || aNode.uri) + NEWLINE + aNode.title;
     case TYPE_HTML:
-      return "<A HREF=\"" + aNode.uri + "\">" + aNode.title + "</A>";
+      return "<A HREF=\"" + (aOverrideURI || aNode.uri) + "\">" +
+             aNode.title + "</A>";
     }
     // case TYPE_UNICODE:
-    return aNode.uri;
+    return (aOverrideURI || aNode.uri);
   },
 
   /**

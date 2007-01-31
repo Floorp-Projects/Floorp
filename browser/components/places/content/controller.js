@@ -1317,8 +1317,14 @@ PlacesController.prototype = {
       var node = nodes[i];
 
       var data = new TransferData();
-      function addData(type) {
-        data.addDataForFlavour(type, PlacesUtils._wrapString(PlacesUtils.wrapNode(node, type)));
+      function addData(type, overrideURI) {
+        data.addDataForFlavour(type, PlacesUtils._wrapString(PlacesUtils.wrapNode(node, type, overrideURI)));
+      }
+
+      function addURIData(overrideURI) {
+        addData(TYPE_X_MOZ_URL, overrideURI);
+        addData(TYPE_UNICODE, overrideURI);
+        addData(TYPE_HTML, overrideURI);
       }
 
       if (PlacesUtils.nodeIsFolder(node) || PlacesUtils.nodeIsQuery(node)) {
@@ -1327,6 +1333,13 @@ PlacesController.prototype = {
         // XXXben: TODO
 
         addData(TYPE_X_MOZ_PLACE_CONTAINER);
+
+        // Allow dropping the feed uri of live-bookmark folders
+        if (PlacesUtils.nodeIsLivemarkContainer(node)) {
+          var uri = PlacesUtils.livemarks.getSiteURI(asFolder(node).folderId);
+          addURIData(uri.spec);
+        }
+
       }
       else if (PlacesUtils.nodeIsSeparator(node)) {
         addData(TYPE_X_MOZ_PLACE_SEPARATOR);
@@ -1335,9 +1348,7 @@ PlacesController.prototype = {
         // This order is _important_! It controls how this and other 
         // applications select data to be inserted based on type. 
         addData(TYPE_X_MOZ_PLACE);
-        addData(TYPE_UNICODE);
-        addData(TYPE_HTML);
-        addData(TYPE_X_MOZ_URL);
+        addURIData();
       }
       dataSet.push(data);
     }
@@ -1357,21 +1368,31 @@ PlacesController.prototype = {
     var pcString = psString = placeString = mozURLString = htmlString = unicodeString = "";
     for (var i = 0; i < nodes.length; ++i) {
       var node = nodes[i];
-      function generateChunk(type) {
+      function generateChunk(type, overrideURI) {
         var suffix = i < (nodes.length - 1) ? NEWLINE : "";
-        return PlacesUtils.wrapNode(node, type) + suffix;
+        return PlacesUtils.wrapNode(node, type, overrideURI) + suffix;
       }
+
+      function generateURIChunks(overrideURI) {
+        mozURLString += generateChunk(TYPE_X_MOZ_URL, overrideURI);
+        htmlString += generateChunk(TYPE_HTML, overrideURI);
+        unicodeString += generateChunk(TYPE_UNICODE, overrideURI);
+      }
+
       if (PlacesUtils.nodeIsFolder(node) || PlacesUtils.nodeIsQuery(node)) {
         pcString += generateChunk(TYPE_X_MOZ_PLACE_CONTAINER);
+
+        // Also copy the feed URI for live-bookmark folders
+        if (PlacesUtils.nodeIsLivemarkContainer(node)) {
+          var uri = PlacesUtils.livemarks.getSiteURI(asFolder(node).folderId);
+          generateURIChunks(uri.spec);
+        }
       }
-      else if (PlacesUtils.nodeIsSeparator(node)) {
+      else if (PlacesUtils.nodeIsSeparator(node))
         psString += generateChunk(TYPE_X_MOZ_PLACE_SEPARATOR);
-      }
       else {
         placeString += generateChunk(TYPE_X_MOZ_PLACE);
-        mozURLString += generateChunk(TYPE_X_MOZ_URL);
-        htmlString += generateChunk(TYPE_HTML);
-        unicodeString += generateChunk(TYPE_UNICODE);
+        generateURIChunks();
       }
     }
 
