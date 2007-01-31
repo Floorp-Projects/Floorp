@@ -58,6 +58,7 @@
 #include "nsISchema.h"
 #include "nsIXFormsContextControl.h"
 #include "nsDataHashtable.h"
+#include "nsRefPtrHashtable.h"
 
 class nsIDOMElement;
 class nsIDOMNode;
@@ -128,16 +129,18 @@ protected:
  */
 class nsXFormsControlListItem
 {
+  nsAutoRefCnt                      mRefCnt;
+
   /** The XForms control itself */
-  nsCOMPtr<nsIXFormsControl>      mNode;
+  nsCOMPtr<nsIXFormsControl>        mNode;
 
   /** The next sibling of the node */
-  nsXFormsControlListItem        *mNextSibling;
+  nsRefPtr<nsXFormsControlListItem> mNextSibling;
 
   /** The first child of the node */
-  nsXFormsControlListItem        *mFirstChild;
+  nsRefPtr<nsXFormsControlListItem> mFirstChild;
 
-  nsDataHashtable<nsISupportsHashKey,nsXFormsControlListItem *> *mControlListHash;
+  nsRefPtrHashtable<nsISupportsHashKey, nsXFormsControlListItem> *mControlListHash;
 
 public:
 
@@ -148,10 +151,30 @@ public:
    */
   nsXFormsControlListItem(
     nsIXFormsControl* aControl,
-    nsDataHashtable<nsISupportsHashKey,nsXFormsControlListItem *> *aHash);
+    nsRefPtrHashtable<nsISupportsHashKey,nsXFormsControlListItem> *aHash);
   nsXFormsControlListItem();
   ~nsXFormsControlListItem();
   nsXFormsControlListItem(const nsXFormsControlListItem& aCopy);
+
+  nsrefcnt AddRef()
+  {
+    ++mRefCnt;
+    NS_LOG_ADDREF(this, mRefCnt, "nsXFormsControlListItem",
+                  sizeof(nsXFormsControlListItem));
+    return mRefCnt;
+  }
+
+  nsrefcnt Release()
+  {
+    --mRefCnt;
+    NS_LOG_RELEASE(this, mRefCnt, "nsXFormsControlListItem");
+    if (mRefCnt == 0) {
+      mRefCnt = 1;
+      delete this;
+      return 0;
+    }
+    return mRefCnt;
+  }
 
   /** Clear contents of current node, all siblings, and all children */
   void Clear();
@@ -443,7 +466,7 @@ private:
   nsCOMPtr<nsISchemaLoader> mSchemas;
   nsStringArray             mPendingInlineSchemas;
   nsXFormsControlListItem   mFormControls;
-  nsDataHashtable<nsISupportsHashKey,nsXFormsControlListItem *> mControlListHash;
+  nsRefPtrHashtable<nsISupportsHashKey, nsXFormsControlListItem> mControlListHash;
 
   PRInt32 mSchemaCount;
   PRInt32 mSchemaTotal;

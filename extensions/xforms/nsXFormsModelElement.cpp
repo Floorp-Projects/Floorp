@@ -249,7 +249,7 @@ nsXFormsControlListItem::iterator::operator*()
 
 nsXFormsControlListItem::nsXFormsControlListItem(
   nsIXFormsControl* aControl,
-  nsDataHashtable<nsISupportsHashKey,nsXFormsControlListItem *>* aHashtable)
+  nsRefPtrHashtable<nsISupportsHashKey,nsXFormsControlListItem>* aHashtable)
   : mNode(aControl),
     mNextSibling(nsnull),
     mFirstChild(nsnull),
@@ -288,14 +288,12 @@ nsXFormsControlListItem::Clear()
     mFirstChild->Clear();
     NS_ASSERTION(!(mFirstChild->mFirstChild || mFirstChild->mNextSibling),
                  "child did not clear members!!");
-    delete mFirstChild;
     mFirstChild = nsnull;
   }
   if (mNextSibling) {
     mNextSibling->Clear();
     NS_ASSERTION(!(mNextSibling->mFirstChild || mNextSibling->mNextSibling),
                  "sibling did not clear members!!");
-    delete mNextSibling;
     mNextSibling = nsnull;
   }
   if (mNode) {
@@ -322,10 +320,9 @@ nsXFormsControlListItem::AddControl(nsIXFormsControl *aControl,
 
   // 2) control with no parent
   if (!aParent) {
-    nsXFormsControlListItem* newNode =
+    nsRefPtr<nsXFormsControlListItem> newNode =
       new nsXFormsControlListItem(aControl, mControlListHash);
-
-    NS_ENSURE_STATE(newNode);
+    NS_ENSURE_TRUE(newNode, NS_ERROR_OUT_OF_MEMORY);
 
     // Empty tree (we have already checked mFirstChild)
     if (!mNode) {
@@ -365,10 +362,10 @@ nsXFormsControlListItem::AddControl(nsIXFormsControl *aControl,
   }
 
   // 4) first child for parentControl
-  nsXFormsControlListItem* newNode =
+  nsRefPtr<nsXFormsControlListItem> newNode =
     new nsXFormsControlListItem(aControl, mControlListHash);
+  NS_ENSURE_TRUE(newNode, NS_ERROR_OUT_OF_MEMORY);
 
-  NS_ENSURE_STATE(newNode);
   parentControl->mFirstChild = newNode;
   nsCOMPtr<nsIDOMElement> ele;
   aControl->GetElement(getter_AddRefs(ele));
@@ -458,7 +455,6 @@ nsXFormsControlListItem::RemoveControl(nsIXFormsControl *aControl,
     nsCOMPtr<nsIDOMElement> element;
     deleteMe->mNode->GetElement(getter_AddRefs(element));
     mControlListHash->Remove(element);
-    delete deleteMe;
     aRemoved = PR_TRUE;
   }
 
@@ -1193,9 +1189,9 @@ nsXFormsModelElement::RefreshSubTree(nsXFormsControlListItem *aCurrent,
                                      PRBool                   aForceRebind)
 {
   nsresult rv;
-
-  while (aCurrent) {
-    nsCOMPtr<nsIXFormsControl> control(aCurrent->Control());
+  nsRefPtr<nsXFormsControlListItem> current = aCurrent;
+  while (current) {
+    nsCOMPtr<nsIXFormsControl> control(current->Control());
     NS_ASSERTION(control, "A tree node without a control?!");
     
     // Get bound node
@@ -1232,7 +1228,7 @@ nsXFormsModelElement::RefreshSubTree(nsXFormsControlListItem *aCurrent,
         if (!boundNode) {
           // If a control uses a model binding, but has no bound node a
           // rebuild is the only thing that'll (eventually) change it
-          aCurrent = aCurrent->NextSibling();
+          current = current->NextSibling();
           continue;
         }
       } else {
@@ -1325,10 +1321,10 @@ nsXFormsModelElement::RefreshSubTree(nsXFormsControlListItem *aCurrent,
     }
 
     // Refresh children
-    rv = RefreshSubTree(aCurrent->FirstChild(), rebindChildren);
+    rv = RefreshSubTree(current->FirstChild(), rebindChildren);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    aCurrent = aCurrent->NextSibling();
+    current = current->NextSibling();
   }
 
   return NS_OK;
