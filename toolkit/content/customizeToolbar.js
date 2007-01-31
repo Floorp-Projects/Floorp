@@ -195,6 +195,8 @@ function wrapToolbarItems()
             toolbar.insertBefore(wrapper, nextSibling);
           else
             toolbar.appendChild(wrapper);
+
+          cleanupItemForToolbar(item, wrapper);
         }
       }
     }
@@ -273,7 +275,6 @@ function wrapToolbarItem(aToolbarItem)
   var wrapper = createWrapper(aToolbarItem.id);
   gToolboxDocument.adoptNode(wrapper);
 
-  cleanupItemForToolbar(aToolbarItem, wrapper);
   wrapper.flex = aToolbarItem.flex;
 
   if (aToolbarItem.parentNode)
