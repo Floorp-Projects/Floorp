@@ -187,6 +187,7 @@
               <treecol id="col-calendar-Checkbox" cycler="true" fixed="true" width="18" >
                 <image />
               </treecol>
+              <treecol id="col-calendar-Color" fixed="true" width="18"/>
               <treecol id="col-calendar-Calendar" label="&lightning.calendar.label;" flex="1"/>
             </treecols>
             <treechildren>
