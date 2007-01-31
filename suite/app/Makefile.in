@@ -67,7 +67,11 @@ CPPSRCS = nsSuiteApp.cpp
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 
 ifdef BUILD_STATIC_LIBS
+ifdef _MSC_VER
+STATIC_COMPONENTS_LINKER_PATH = -LIBPATH:$(DIST)/lib/components
+else
 STATIC_COMPONENTS_LINKER_PATH = -L$(DIST)/lib/components
+endif
 LIBS += $(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
 else
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

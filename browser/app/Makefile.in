@@ -102,7 +102,11 @@ CPPSRCS = nsBrowserApp.cpp
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 
 ifdef BUILD_STATIC_LIBS
+ifdef _MSC_VER
+STATIC_COMPONENTS_LINKER_PATH = -LIBPATH:$(DEPTH)/staticlib
+else
 STATIC_COMPONENTS_LINKER_PATH = -L$(DEPTH)/staticlib
+endif
 LIBS += $(DEPTH)/toolkit/xre/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
 else
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
