@@ -34,6 +34,8 @@
 == bugs/18217-zorder-4.html bugs/18217-zorder-ref-inline.html
 == bugs/18217-zorder-5.html bugs/18217-zorder-ref-inline.html
 == bugs/142233-1.html bugs/142233-1-ref.html
+== bugs/328829-1.xhtml bugs/328829-1-ref.xhtml
+== bugs/328829-2.xhtml bugs/328829-2-ref.xhtml
 == bugs/339289-1.html bugs/339289-1-ref.html
 == bugs/347912-1.html bugs/347912-1-ref.html
 == bugs/351641-1a.html bugs/351641-1-ref.html

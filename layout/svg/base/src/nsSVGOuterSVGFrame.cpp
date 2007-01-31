@@ -228,10 +228,6 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
     // This means that something happened to one of our descendants
     // (excluding those inside svg:foreignObject, since
     // nsSVGForeignObjectFrame is a reflow root).
-
-    // XXXldb If this incremental reflow was the result of a style
-    // change to something that *contains* a foreignObject, then we're
-    // dropping the change completely on the floor!
     aStatus = NS_FRAME_COMPLETE;
     return NS_OK;
   }

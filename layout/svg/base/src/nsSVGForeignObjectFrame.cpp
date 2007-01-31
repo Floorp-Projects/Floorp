@@ -144,6 +144,31 @@ nsSVGForeignObjectFrame::DidSetStyleContext()
   return NS_OK;
 }
 
+/* virtual */ void
+nsSVGForeignObjectFrame::MarkIntrinsicWidthsDirty()
+{
+  if (GetStateBits() & NS_FRAME_FIRST_REFLOW)
+    // If we haven't had an InitialUpdate yet, nothing to do.
+    return;
+
+  // Use the fact that we get a MarkIntrinsicWidthsDirty whenever
+  // there's a style change that requires reflow to actually cause that
+  // reflow, since the SVG outer frame doesn't know to reflow us.
+  nsIFrame* kid = GetFirstChild(nsnull);
+  if (!kid)
+    return;
+  // Since we don't know whether this is because of a style change on an
+  // ancestor or descendant, mark the kid dirty.  If it's a descendant,
+  // all we need is the NS_FRAME_IS_DIRTY_CHILDREN that our caller is
+  // going to set, though.
+  kid->AddStateBits(NS_FRAME_IS_DIRTY);
+  // This is really a style change, except we're already being called
+  // from MarkIntrinsicWidthsDirty, so say it's a resize to avoid doing
+  // the same work over again.
+  GetPresContext()->PresShell()->FrameNeedsReflow(kid,
+                                                  nsIPresShell::eResize);
+}
+
 NS_IMETHODIMP
 nsSVGForeignObjectFrame::Reflow(nsPresContext*           aPresContext,
                                 nsHTMLReflowMetrics&     aDesiredSize,
