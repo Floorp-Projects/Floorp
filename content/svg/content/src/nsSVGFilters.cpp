@@ -434,8 +434,8 @@ nsSVGFilterResource::FixupTarget()
   }
 
   // bottom
-  if (mRect.y + mRect.height < mHeight) {
-    for (PRInt32 y = mRect.y + mRect.height; y < mHeight; y++)
+  if (mRect.YMost() < mHeight) {
+    for (PRInt32 y = mRect.YMost(); y < mHeight; y++)
       if (mSourceData) {
         memcpy(mTargetData + y * mStride, mSourceData + y * mStride, mStride);
       } else {
@@ -445,7 +445,7 @@ nsSVGFilterResource::FixupTarget()
 
   // left
   if (mRect.x > 0) {
-    for (PRInt32 y = mRect.y; y < mRect.y + mRect.height; y++)
+    for (PRInt32 y = mRect.y; y < mRect.YMost(); y++)
       if (mSourceData) {
         memcpy(mTargetData + y * mStride,
                mSourceData + y * mStride,
@@ -456,16 +456,16 @@ nsSVGFilterResource::FixupTarget()
   }
 
   // right
-  if (mRect.x + mRect.width < mWidth) {
-    for (PRInt32 y = mRect.y; y < mRect.y + mRect.height; y++)
+  if (mRect.XMost() < mWidth) {
+    for (PRInt32 y = mRect.y; y < mRect.YMost(); y++)
       if (mSourceData) {
-        memcpy(mTargetData + y * mStride + 4 * (mRect.x + mRect.width),
-               mSourceData + y * mStride + 4 * (mRect.x + mRect.width),
-               4 * (mWidth - mRect.x - mRect.width));
+        memcpy(mTargetData + y * mStride + 4 * mRect.XMost(),
+               mSourceData + y * mStride + 4 * mRect.XMost(),
+               4 * (mWidth - mRect.XMost()));
       } else {
-        memset(mTargetData + y * mStride + 4 * (mRect.x + mRect.width),
+        memset(mTargetData + y * mStride + 4 * mRect.XMost(),
                0,
-               4 * (mWidth - mRect.x - mRect.width));
+               4 * (mWidth - mRect.XMost()));
       }
   }
 }
@@ -629,21 +629,21 @@ boxBlurH(PRUint8 *aInput, PRUint8 *aOutput,
 {
   PRInt32 boxSize = leftLobe + rightLobe + 1;
 
-  for (PRInt32 y = aRegion.y; y < aRegion.y + aRegion.height; y++) {
+  for (PRInt32 y = aRegion.y; y < aRegion.YMost(); y++) {
     PRUint32 sums[4] = {0, 0, 0, 0};
     for (PRInt32 i=0; i < boxSize; i++) {
       PRInt32 pos = aRegion.x - leftLobe + i;
       pos = PR_MAX(pos, aRegion.x);
-      pos = PR_MIN(pos, aRegion.x + aRegion.width - 1);
+      pos = PR_MIN(pos, aRegion.XMost() - 1);
       sums[0] += aInput[aStride*y + 4*pos    ];
       sums[1] += aInput[aStride*y + 4*pos + 1];
       sums[2] += aInput[aStride*y + 4*pos + 2];
       sums[3] += aInput[aStride*y + 4*pos + 3];
     }
-    for (PRInt32 x = aRegion.x; x < aRegion.x + aRegion.width; x++) {
+    for (PRInt32 x = aRegion.x; x < aRegion.XMost(); x++) {
       PRInt32 tmp = x - leftLobe;
       PRInt32 last = PR_MAX(tmp, aRegion.x);
-      PRInt32 next = PR_MIN(tmp + boxSize, aRegion.x + aRegion.width - 1);
+      PRInt32 next = PR_MIN(tmp + boxSize, aRegion.XMost() - 1);
 
       aOutput[aStride*y + 4*x    ] = sums[0]/boxSize;
       aOutput[aStride*y + 4*x + 1] = sums[1]/boxSize;
@@ -669,21 +669,21 @@ boxBlurV(PRUint8 *aInput, PRUint8 *aOutput,
 {
   PRInt32 boxSize = topLobe + bottomLobe + 1;
 
-  for (PRInt32 x = aRegion.x; x < aRegion.x + aRegion.width; x++) {
+  for (PRInt32 x = aRegion.x; x < aRegion.XMost(); x++) {
     PRUint32 sums[4] = {0, 0, 0, 0};
     for (PRInt32 i=0; i < boxSize; i++) {
       PRInt32 pos = aRegion.y - topLobe + i;
       pos = PR_MAX(pos, aRegion.y);
-      pos = PR_MIN(pos, aRegion.y + aRegion.height - 1);
+      pos = PR_MIN(pos, aRegion.YMost() - 1);
       sums[0] += aInput[aStride*pos + 4*x    ];
       sums[1] += aInput[aStride*pos + 4*x + 1];
       sums[2] += aInput[aStride*pos + 4*x + 2];
       sums[3] += aInput[aStride*pos + 4*x + 3];
     }
-    for (PRInt32 y = aRegion.y; y < aRegion.y + aRegion.height; y++) {
+    for (PRInt32 y = aRegion.y; y < aRegion.YMost(); y++) {
       PRInt32 tmp = y - topLobe;
       PRInt32 last = PR_MAX(tmp, aRegion.y);
-      PRInt32 next = PR_MIN(tmp + boxSize, aRegion.y + aRegion.height - 1);
+      PRInt32 next = PR_MIN(tmp + boxSize, aRegion.YMost() - 1);
 
       aOutput[aStride*y + 4*x    ] = sums[0]/boxSize;
       aOutput[aStride*y + 4*x + 1] = sums[1]/boxSize;
@@ -1507,8 +1507,8 @@ nsSVGFEComponentTransferElement::Filter(nsSVGFilterInstance *instance)
   }
 
   PRInt32 stride = fr.GetDataStride();
-  for (PRInt32 y = rect.y; y < rect.y + rect.height; y++)
-    for (PRInt32 x = rect.x; x < rect.x + rect.width; x++) {
+  for (PRInt32 y = rect.y; y < rect.YMost(); y++)
+    for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
       PRInt32 targIndex = y * stride + x * 4;
       targetData[targIndex] = tableB[sourceData[targIndex]];
       targetData[targIndex + 1] = tableG[sourceData[targIndex + 1]];
@@ -2465,9 +2465,9 @@ nsSVGFEOffsetElement::Filter(nsSVGFilterInstance *instance)
 
   PRInt32 stride = fr.GetDataStride();
   PRInt32 targetColumn = rect.x + offsetX;
-  for (PRInt32 y = rect.y; y < rect.y + rect.height; y++) {
+  for (PRInt32 y = rect.y; y < rect.YMost(); y++) {
     PRInt32 targetRow = y + offsetY;
-    if (targetRow < rect.y || targetRow >= rect.y + rect.height)
+    if (targetRow < rect.y || targetRow >= rect.YMost())
       continue;
 
     if (targetColumn < rect.x)
@@ -2995,8 +2995,8 @@ nsSVGFETurbulenceElement::Filter(nsSVGFilterInstance *instance)
       fY = hiFreq;
   }
   PRInt32 stride = fr.GetDataStride();
-  for (PRInt32 y = rect.y; y < rect.y + rect.height; y++) {
-    for (PRInt32 x = rect.x; x < rect.x + rect.width; x++) {
+  for (PRInt32 y = rect.y; y < rect.YMost(); y++) {
+    for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
       PRInt32 targIndex = y * stride + x * 4;
       double point[2];
       point[0] = filterX + (filterWidth * x ) / (rect.width - 1);
@@ -3448,12 +3448,12 @@ nsSVGFEMorphologyElement::Filter(nsSVGFilterInstance *instance)
    * kernel.   We must still scan the entire kernel if the previous extrema do
    * not fall within the current kernel or if we are starting a new row.
    */
-  for (PRInt32 y = rect.y; y < rect.y + rect.height; y++) {
+  for (PRInt32 y = rect.y; y < rect.YMost(); y++) {
     PRUint32 startY = PR_MAX(0, (int)(y - ry));
-    PRUint32 endY = PR_MIN((int)(y + ry), rect.y + rect.height - 1);
-    for (PRInt32 x = rect.x; x < rect.x + rect.width; x++) {
+    PRUint32 endY = PR_MIN((int)(y + ry), rect.YMost() - 1);
+    for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
       PRUint32 startX = PR_MAX(0, (int)(x - rx));
-      PRUint32 endX = PR_MIN((int)(x + rx), rect.x + rect.width - 1);
+      PRUint32 endX = PR_MIN((int)(x + rx), rect.XMost() - 1);
       PRUint32 targIndex = y * stride + 4 * x;
 
       // We need to scan the entire kernel
