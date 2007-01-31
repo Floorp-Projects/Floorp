@@ -40,6 +40,9 @@
 
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
+#ifdef MOZ_PLACES
+<?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
+#endif
 
 <!DOCTYPE page [
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
@@ -51,26 +54,46 @@
 <page id="webpanels-window"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="load()" onunload="unload()"> 
+        onload="load()" onunload="unload()">
+# These are loaded by placesOverlay in places-enabled builds
+#ifndef MOZ_PLACES
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
+#endif
   <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://global/content/inlineSpellCheckUI.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/nsContextMenu.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/web-panels.js"/>
+#ifndef MOZ_PLACES_BOOKMARKS
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksMenu.js"/>
+#endif
 
   <stringbundleset id="stringbundleset"> 
     <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
   </stringbundleset>
-    
+
+  <commandset id="mainCommandset">
+    <command id="Browser:Back"
+             oncommand="getPanelBrowser().webNavigation.goBack();"
+             disabled="true"/>
+    <command id="Browser:Forward"
+             oncommand="getPanelBrowser().webNavigation.goForward();"
+             disabled="true"/>
+    <command id="Browser:Stop" oncommand="PanelBrowserStop();"/>
+    <command id="Browser:Reload" oncommand="PanelBrowserReload();"/>
+  </commandset>
+
   <popupset id="mainPopupSet">
     <popup id="contentAreaContextMenu"
-           onpopupshowing="if (event.target != this) return true; gContextMenu = new nsContextMenu(this, document.getElementById('web-panels-browser')); return gContextMenu.shouldDisplay;"
-           onpopuphiding="if (event.target == this) { gContextMenu = null; }">
+           onpopupshowing="if (event.target != this)
+                             return true;
+                           gContextMenu = new nsContextMenu(this, getPanelBrowser());
+                           return gContextMenu.shouldDisplay;"
+           onpopuphiding="if (event.target == this)
+                            gContextMenu = null;">
 #include browser-context.inc
     </popup>
   </popupset>

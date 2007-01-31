@@ -173,12 +173,10 @@ function getContentAreaFrameCount()
     saveFrameItem.removeAttribute("hidden");
 }
 
-function UpdateBackForwardButtons()
+function UpdateBackForwardCommands(aWebNavigation)
 {
   var backBroadcaster = document.getElementById("Browser:Back");
   var forwardBroadcaster = document.getElementById("Browser:Forward");
-
-  var webNavigation = gBrowser.webNavigation;
 
   // Avoid setting attributes on broadcasters if the value hasn't changed!
   // Remember, guys, setting attributes on elements is expensive!  They
@@ -187,14 +185,14 @@ function UpdateBackForwardButtons()
 
   var backDisabled = backBroadcaster.hasAttribute("disabled");
   var forwardDisabled = forwardBroadcaster.hasAttribute("disabled");
-  if (backDisabled == webNavigation.canGoBack) {
+  if (backDisabled == aWebNavigation.canGoBack) {
     if (backDisabled)
       backBroadcaster.removeAttribute("disabled");
     else
       backBroadcaster.setAttribute("disabled", true);
   }
 
-  if (forwardDisabled == webNavigation.canGoForward) {
+  if (forwardDisabled == aWebNavigation.canGoForward) {
     if (forwardDisabled)
       forwardBroadcaster.removeAttribute("disabled");
     else
@@ -3853,7 +3851,7 @@ nsBrowserStatusHandler.prototype =
         }
       }
     }
-    UpdateBackForwardButtons();
+    UpdateBackForwardCommands(gBrowser.webNavigation);
 
     if (gFindBar.findMode != gFindBar.FIND_NORMAL) {
       // Close the Find toolbar if we're in old-style TAF mode

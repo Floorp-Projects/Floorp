@@ -126,12 +126,6 @@ nsContextMenu.prototype = {
   },
 
   initNavigationItems: function() {
-    var webNavigation = this.browser.webNavigation;
-    document.getElementById("context-back")
-            .disabled = !webNavigation.canGoBack;
-    document.getElementById("context-forward")
-            .disabled = !webNavigation.canGoForward;
-
     var shouldShow = !(this.isContentSelected || this.onLink || this.onImage ||
                        this.onTextInput);
     this.showItem("context-back", shouldShow);
