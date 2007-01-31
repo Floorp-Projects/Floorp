@@ -240,10 +240,24 @@ nsresult nsRootAccessibleWrap::HandleEventWithTarget(nsIDOMEvent *aEvent,
         FireCurrentFocusEvent();
     }
     else if (eventType.LowerCaseEqualsLiteral("popupshown")) {
-        FireAccessibleFocusEvent(accessible, aTargetNode, aEvent);
-    }
-    else if (eventType.EqualsLiteral("DOMMenuInactive")) {
-        //FireAccessibleFocusEvent(accessible, aTargetNode);  // Not yet used in ATK
+#ifdef MOZ_XUL
+      nsCOMPtr<nsIContent> content(do_QueryInterface(aTargetNode));
+      if (content->NodeInfo()->Equals(nsAccessibilityAtoms::tooltip, kNameSpaceID_XUL) ||
+          content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                               NS_LITERAL_STRING("autocomplete"), eIgnoreCase)) {
+        // 1) Don't fire focus events for tooltips, that wouldn't make any sense.
+        // 2) Don't fire focus events for autocomplete popups, because they come up
+        // automatically while the user is typing, and setting focus there would
+        // interrupt the user.
+        // ------------------------------------------------------------------------
+        // If the AT wants to know about these popups it can track the ATK state change
+        // event we fire for ATK_STATE_INVISIBLE on the popup.
+        // This is fired as a result of the nsIAccessibleEvent::EVENT_MENUPOPUPSTART 
+        // we fire in the nsRootAccessible event handling for all popups.
+        return NS_OK;
+      }
+#endif
+      FireAccessibleFocusEvent(accessible, aTargetNode, aEvent);      
     }
     return NS_OK;
 }
