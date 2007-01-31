@@ -1820,10 +1820,18 @@ libs::
 	    $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir; \
 	done
 
+# topsrcdir can be relative, but since we need NATIVE_TOPSRCDIR to
+# be absolute (it's passed to tests for use in getting access to
+# files), we need to convert it.
+#
+# XXX find a better way to do this, because this probably isn't
+# guaranteed to work right everywhere
+_ABS_TOPSRCDIR := `dirname $(topsrcdir)`/`basename $(topsrcdir)`
+
 ifdef CYGWIN_WRAPPER
-NATIVE_TOPSRCDIR := `cygpath -wa $(topsrcdir)`
+NATIVE_TOPSRCDIR := `cygpath -wa $(_ABS_TOPSRCDIR)`
 else
-NATIVE_TOPSRCDIR := $(topsrcdir)
+NATIVE_TOPSRCDIR := $(_ABS_TOPSRCDIR)
 endif # CYGWIN_WRAPPER
 
 # Test execution
