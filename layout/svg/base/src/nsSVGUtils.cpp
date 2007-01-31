@@ -79,6 +79,7 @@
 #include "gfxMatrix.h"
 #include "gfxRect.h"
 #include "gfxImageSurface.h"
+#include "gfxMatrix.h"
 
 struct nsSVGFilterProperty {
   nsRect mFilterRect;
@@ -1061,6 +1062,15 @@ nsSVGUtils::ToBoundingPixelRect(double xmin, double ymin,
                 nscoord(ceil(ymax) - floor(ymin)));
 }
 
+nsRect
+nsSVGUtils::ToBoundingPixelRect(const gfxRect& rect)
+{
+  return nsRect(nscoord(floor(rect.X())),
+                nscoord(floor(rect.Y())),
+                nscoord(ceil(rect.XMost()) - floor(rect.X())),
+                nscoord(ceil(rect.YMost()) - floor(rect.Y())));
+}
+
 cairo_surface_t *
 nsSVGUtils::GetCairoComputationalSurface()
 {
@@ -1108,6 +1118,19 @@ nsSVGUtils::ConvertSVGMatrixToCairo(nsIDOMSVGMatrix *aMatrix)
   aMatrix->GetF(&F);
   cairo_matrix_t m = { A, B, C, D, E, F };
   return m;
+}
+
+gfxMatrix
+nsSVGUtils::ConvertSVGMatrixToThebes(nsIDOMSVGMatrix *aMatrix)
+{
+  float A, B, C, D, E, F;
+  aMatrix->GetA(&A);
+  aMatrix->GetB(&B);
+  aMatrix->GetC(&C);
+  aMatrix->GetD(&D);
+  aMatrix->GetE(&E);
+  aMatrix->GetF(&F);
+  return gfxMatrix(A, B, C, D, E, F);
 }
 
 PRBool
