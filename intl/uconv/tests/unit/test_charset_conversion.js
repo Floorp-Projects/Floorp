@@ -31,10 +31,13 @@ function run_test()
                                "nsIConverterInputStream",
                                "init");
 
-  var dirServ = Cc["@mozilla.org/file/directory_service;1"]
-              .getService(Ci.nsIProperties);
-  dataDir = dirServ.get("CurProcD", Ci.nsILocalFile);
-  dataDir.append("intl_unit_tests");
+  dataDir = Cc["@mozilla.org/file/local;1"]
+              .getService(Ci.nsILocalFile);
+  dataDir.initWithPath(do_get_topsrcdir());
+  dataDir.append("intl");
+  dataDir.append("uconv");
+  dataDir.append("tests");
+  dataDir.append("unit");
   dataDir.append("data");
 
   test_utf8_1();

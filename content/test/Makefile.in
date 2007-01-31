@@ -45,17 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= test_content
 
+XPCSHELL_TESTS  = unit
+
 include $(topsrcdir)/config/rules.mk
-
-_UNIT_FILES := \
-	$(wildcard $(srcdir)/unit/*.js) \
-	$(wildcard $(srcdir)/unit/*.xml) \
-	$(wildcard $(srcdir)/unit/*.xul) \
-	$(NULL)
-
-libs:: $(_UNIT_FILES)
-	$(INSTALL) $^ $(DIST)/bin/content_unit_tests
-
-check::
-	$(RUN_TEST_PROGRAM) $(DIST)/bin/test_all.sh \
-		$(DIST)/bin/content_unit_tests

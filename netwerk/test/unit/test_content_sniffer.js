@@ -1,6 +1,6 @@
 // This file tests nsIContentSniffer, introduced in bug 324985
 
-do_import_script("test-harness/xpcshell-simple/httpd.js");
+do_import_script("netwerk/test/httpserver/httpd.js");
 
 const unknownType = "application/x-unknown-content-type";
 const sniffedType = "application/x-sniffed";

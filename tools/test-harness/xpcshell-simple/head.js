@@ -132,11 +132,15 @@ function do_test_finished() {
     _do_quit();
 }
 
-function do_import_script(distRelativePath) {
-  var scriptPath = environment["DIST"];
+function do_import_script(topsrcdirRelativePath) {
+  var scriptPath = environment["TOPSRCDIR"];
   if (scriptPath.charAt(scriptPath.length - 1) != "/")
     scriptPath += "/";
-  scriptPath += distRelativePath;
+  scriptPath += topsrcdirRelativePath;
 
   load(scriptPath);
+}
+
+function do_get_topsrcdir() {
+  return environment["NATIVE_TOPSRCDIR"];
 }

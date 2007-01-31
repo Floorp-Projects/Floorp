@@ -24,6 +24,7 @@
 # Contributor(s):
 #  Darin Fisher <darin@meer.net>
 #  Dave Liebreich <davel@mozilla.com>
+#  Jeff Walden <jwalden+code@mit.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,24 +46,45 @@ ulimit -c 20480 2> /dev/null
 # Make assertions fatal
 export XPCOM_DEBUG_BREAK=abort
 
-# MOZILLA_FIVE_HOME is exported by run-mozilla.sh, and is usually $(DIST)/bin
-# we need to know that dir path in order to find xpcshell
-bin=${MOZILLA_FIVE_HOME:-`dirname $0`}
-
 exit_status=0
 
-# The sample Makefile for the xpcshell-simple harness adds the directory
-# where the *.js files reside as an arg.  If no arg is specified, assume 
-# the current directory is where the *.js files live.
-testdir="$1"
+
+##########################
+# COMMAND-LINE ARGUMENTS #
+##########################
+
+# This provides the path to xpcshell.
+xpcshell="$1"
+
+# The directory containing Mozilla source code is specified as the first
+# argument to this script, in a format usable by load() in xpcshell.  This
+# enables do_import_script to work for any JS file in the source tree.
+topsrcdir="$2"
+
+# Tests which depend on files in the source directory will need a native path
+# to actually access those files, or otherwise they must rely on hacks such as
+# getting the current working/process directory and committing other atrocities.
+# This argument is a native path to the top-level source directory, useful for
+# tests which require access to files so that they can access them in a vaguely
+# clean manner.
+native_topsrcdir="$3"
+
+# The sample Makefile for the xpcshell-simple harness adds the directory where
+# the test_*.js files reside as an arg.  If no arg is specified, assume the
+# current directory is where the *.js files live.
+testdir="$4"
 if [ "x$testdir" = "x" ]; then
     testdir=.
 fi
 
-headfiles="-f $bin/test-harness/xpcshell-simple/head.js"
+
+###############################
+# SETUP FOR RUNNING THE TESTS #
+###############################
 
 # files matching the pattern head_*.js are treated like test setup files
 # - they are run after head.js but before the test file
+headfiles="-f $topsrcdir/tools/test-harness/xpcshell-simple/head.js"
 for h in $testdir/head_*.js
 do
     if [ -f $h ]; then
@@ -70,9 +92,9 @@ do
     fi
 done
 
-tailfiles="-f $bin/test-harness/xpcshell-simple/tail.js"
 # files matching the pattern tail_*.js are treated like teardown files
 # - they are run after tail.js
+tailfiles="-f $topsrcdir/tools/test-harness/xpcshell-simple/tail.js"
 for t in $testdir/tail_*.js
 do
     if [ -f $t ]; then
@@ -80,10 +102,15 @@ do
     fi
 done
 
+
+#################
+# RUN EACH TEST #
+#################
+
 for t in $testdir/test_*.js
 do
     echo -n "$t: "
-    DIST="$bin" $bin/xpcshell $headfiles -f $t $tailfiles 2> $t.log 1>&2
+    NATIVE_TOPSRCDIR="$native_topsrcdir" TOPSRCDIR="$topsrcdir" $xpcshell $headfiles -f $t $tailfiles 2> $t.log 1>&2
     if [ `grep -c '\*\*\* PASS' $t.log` = 0 ]
     then
         echo "FAIL"

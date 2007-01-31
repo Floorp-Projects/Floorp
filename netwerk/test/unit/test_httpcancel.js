@@ -1,7 +1,7 @@
 // This file ensures that canceling a channel early does not
 // send the request to the server (bug 350790)
 
-do_import_script("test-harness/xpcshell-simple/httpd.js");
+do_import_script("netwerk/test/httpserver/httpd.js");
 
 const NS_BINDING_ABORTED = 0x804b0002;
 
