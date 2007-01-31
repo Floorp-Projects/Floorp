@@ -111,7 +111,6 @@ var PlacesCommandHook = {
    *        a <browser> element
    */
   bookmarkPage: function PCH_bookmarkCurrentPage(aBrowser) {
-    var selectedBrowser = getBrowser().selectedBrowser;
     PlacesUtils.showAddBookmarkUI(aBrowser.currentURI);
   },
 

@@ -142,8 +142,6 @@
              oncommand="gFindBar.onFindAgainCommand(true);"
              observes="isImage"/>
 #ifdef MOZ_PLACES_BOOKMARKS
-    <command id="Browser:AddLinkBookmark"
-             oncommand="PlacesCommandHook.bookmarkLink(gContextMenu.linkURL, gContextMenu.linkText());"/>
     <command id="Browser:AddBookmarkAs" 
              oncommand="PlacesCommandHook.bookmarkCurrentPage();"/>
 #else
