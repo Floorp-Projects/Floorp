@@ -42,7 +42,7 @@ const nsPKCS11ModuleDB = "@mozilla.org/security/pkcs11moduledb;1";
 const nsIPKCS11ModuleDB = Components.interfaces.nsIPKCS11ModuleDB;
 const nsIPKCS11Slot = Components.interfaces.nsIPKCS11Slot;
 const nsIPK11Token = Components.interfaces.nsIPK11Token;
-
+const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
 
 var params;
 var tokenName="";
