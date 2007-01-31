@@ -42,7 +42,8 @@
 @import url("chrome://messenger/skin/");
 @import url("chrome://messenger/skin/primaryToolbar.css");
 @import url("chrome://global/skin/toolbar.css");
-  
+@import url("chrome://messenger/skin/tagColors.css");
+
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 /* ::::: message header borders ::::: */
