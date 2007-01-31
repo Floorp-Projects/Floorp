@@ -727,7 +727,7 @@ NS_IMETHODIMP nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
       mDocLoadTimer->InitWithFuncCallback(DocLoadCallback, this, 0,
                                           nsITimer::TYPE_ONE_SHOT);
     }
-    //fire EVENT_STATE_CHANGE to clear STATE_BUSY
+    // Finished loading: fire EVENT_STATE_CHANGE to clear STATE_BUSY
     StateChange stateData;
     stateData.state = STATE_BUSY;
     stateData.enable = PR_FALSE;
@@ -744,7 +744,11 @@ NS_IMETHODIMP nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
       return NS_OK; 
     }
 
-    FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, nsnull);
+    // Loading document: fire EVENT_STATE_CHANGE to set STATE_BUSY
+    StateChange stateData;
+    stateData.state = STATE_BUSY;
+    stateData.enable = PR_TRUE;
+    FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, &stateData);
   }
 
   FireToolkitEvent(aEventType, this, nsnull);
