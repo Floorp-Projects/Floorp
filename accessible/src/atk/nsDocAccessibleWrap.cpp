@@ -490,6 +490,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
       } break;
 
     case nsIAccessibleEvent::EVENT_SHOW:
+    case nsIAccessibleEvent::EVENT_MENUPOPUPSTART:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_SHOW\n"));
         atk_object_notify_state_change(accWrap->GetAtkObject(),
                                        ATK_STATE_VISIBLE, PR_TRUE);
@@ -499,6 +500,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
         break;
 
     case nsIAccessibleEvent::EVENT_HIDE:
+    case nsIAccessibleEvent::EVENT_MENUPOPUPEND:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_HIDE\n"));
         atk_object_notify_state_change(accWrap->GetAtkObject(),
                                        ATK_STATE_VISIBLE, PR_FALSE);
