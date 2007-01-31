@@ -49,6 +49,7 @@
 #include "pldhash.h"
 #include "nsIDOMAttr.h"
 #include "nsCOMArray.h"
+#include "nsPIDOMWindow.h"
 #ifdef MOZ_XUL
 #include "nsXULElement.h"
 #endif
@@ -416,6 +417,16 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
   }
   else if (nodeInfoManager) {
     aNode->mNodeInfo.swap(newNodeInfo);
+
+    nsIDocument* newDoc = aNode->GetOwnerDoc();
+    nsPIDOMWindow* window = newDoc ? newDoc->GetInnerWindow() : nsnull;
+    if (window) {
+      nsCOMPtr<nsIEventListenerManager> elm;
+      aNode->GetListenerManager(PR_FALSE, getter_AddRefs(elm));
+      if (elm) {
+        window->SetMutationListeners(elm->MutationListenerBits());
+      }
+    }
 
     if (elem) {
       elem->RecompileScriptEventListeners();
