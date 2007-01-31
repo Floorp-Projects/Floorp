@@ -122,6 +122,39 @@ static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 
+static const PRUint32 kAllMutationBits =
+  NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED |
+  NS_EVENT_BITS_MUTATION_NODEINSERTED |
+  NS_EVENT_BITS_MUTATION_NODEREMOVED |
+  NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT |
+  NS_EVENT_BITS_MUTATION_NODEINSERTEDINTODOCUMENT |
+  NS_EVENT_BITS_MUTATION_ATTRMODIFIED |
+  NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED;
+
+static PRUint32
+MutationBitForEventType(PRUint32 aEventType)
+{
+  switch (aEventType) {
+    case NS_MUTATION_SUBTREEMODIFIED:
+      return NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED;
+    case NS_MUTATION_NODEINSERTED:
+      return NS_EVENT_BITS_MUTATION_NODEINSERTED;
+    case NS_MUTATION_NODEREMOVED:
+      return NS_EVENT_BITS_MUTATION_NODEREMOVED;
+    case NS_MUTATION_NODEREMOVEDFROMDOCUMENT:
+      return NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT;
+    case NS_MUTATION_NODEINSERTEDINTODOCUMENT:
+      return NS_EVENT_BITS_MUTATION_NODEINSERTEDINTODOCUMENT;
+    case NS_MUTATION_ATTRMODIFIED:
+      return NS_EVENT_BITS_MUTATION_ATTRMODIFIED;
+    case NS_MUTATION_CHARACTERDATAMODIFIED:
+      return NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED;
+    default:
+      break;
+  }
+  return 0;
+}
+
 typedef
 NS_STDCALL_FUNCPROTO(nsresult,
                      GenericHandler,
@@ -544,39 +577,9 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
       if (ls->mTypeData) {
         // If we have type data, nsIDOMMutationListener is used and so we
         // have to listen all mutation events.
-        window->SetMutationListeners(NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED |
-                                     NS_EVENT_BITS_MUTATION_NODEINSERTED |
-                                     NS_EVENT_BITS_MUTATION_NODEREMOVED |
-                                     NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT |
-                                     NS_EVENT_BITS_MUTATION_NODEINSERTEDINTODOCUMENT |
-                                     NS_EVENT_BITS_MUTATION_ATTRMODIFIED |
-                                     NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED);
+        window->SetMutationListeners(kAllMutationBits);
       } else {
-        switch (aType) {
-          case NS_MUTATION_SUBTREEMODIFIED:
-            window->SetMutationListeners(NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED);
-            break;
-          case NS_MUTATION_NODEINSERTED:
-            window->SetMutationListeners(NS_EVENT_BITS_MUTATION_NODEINSERTED);
-            break;
-          case NS_MUTATION_NODEREMOVED:
-            window->SetMutationListeners(NS_EVENT_BITS_MUTATION_NODEREMOVED);
-            break;
-          case NS_MUTATION_NODEREMOVEDFROMDOCUMENT:
-            window->SetMutationListeners(NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT);
-            break;
-          case NS_MUTATION_NODEINSERTEDINTODOCUMENT:
-            window->SetMutationListeners(NS_EVENT_BITS_MUTATION_NODEINSERTEDINTODOCUMENT);
-            break;
-          case NS_MUTATION_ATTRMODIFIED:
-            window->SetMutationListeners(NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
-            break;
-          case NS_MUTATION_CHARACTERDATAMODIFIED:
-            window->SetMutationListeners(NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED);
-            break;
-          default:
-            break;
-        }
+        window->SetMutationListeners(MutationBitForEventType(aType));
       }
     }
   }
@@ -1908,6 +1911,29 @@ nsEventListenerManager::HasMutationListeners(PRBool* aListener)
   }
 
   return NS_OK;
+}
+
+PRUint32
+nsEventListenerManager::MutationListenerBits()
+{
+  PRUint32 bits = 0;
+  if (mMayHaveMutationListeners) {
+    PRInt32 i, count = mListeners.Count();
+    for (i = 0; i < count; ++i) {
+      nsListenerStruct* ls = NS_STATIC_CAST(nsListenerStruct*,
+                                            mListeners.FastElementAt(i));
+      if (ls && ls->mTypeData && ls->mTypeData->iid &&
+          ls->mTypeData->iid->Equals(NS_GET_IID(nsIDOMMutationListener))) {
+        return kAllMutationBits;
+      }
+      if (ls &&
+          (ls->mEventType >= NS_MUTATION_START &&
+           ls->mEventType <= NS_MUTATION_END)) {
+        bits |= MutationBitForEventType(ls->mEventType);
+      }
+    }
+  }
+  return bits;
 }
 
 PRBool

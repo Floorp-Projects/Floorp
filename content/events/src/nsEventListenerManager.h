@@ -127,6 +127,8 @@ public:
 
   virtual PRBool HasUnloadListeners();
 
+  virtual PRUint32 MutationListenerBits();
+
   static PRUint32 GetIdentifierForEvent(nsIAtom* aEvent);
 
   // nsIDOMEventTarget

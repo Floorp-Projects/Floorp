@@ -52,8 +52,8 @@ class nsIAtom;
  * Event listener manager interface.
  */
 #define NS_IEVENTLISTENERMANAGER_IID \
-{ 0x5e7dc4c0, 0x3d7e, 0x4934, \
-  { 0xb6, 0x54, 0xd7, 0xe3, 0x74, 0xa0, 0x37, 0xdf } }
+{ 0x06177dc7, 0x4ad9, 0x493c, \
+  { 0x9c, 0x04, 0x28, 0xf0, 0xf7, 0x39, 0xa0, 0xfe } }
 
 
 class nsIEventListenerManager : public nsISupports {
@@ -174,6 +174,14 @@ public:
    * listeners registered.
    */
   virtual PRBool HasUnloadListeners() = 0;
+
+  /**
+   * Returns the mutation bits depending on which mutation listeners are
+   * registered to this listener manager.
+   * @note If a listener is an nsIDOMMutationListener, all possible mutation
+   *       event bits are returned.
+   */
+  virtual PRUint32 MutationListenerBits() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIEventListenerManager,
