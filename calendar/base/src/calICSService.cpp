@@ -1420,6 +1420,9 @@ calICSService::GetTzIdPrefix(nsACString& _retval)
  */
 NS_IMETHODIMP
 calICSService::LatestTzId(const nsACString& tzid, nsACString& _retval) {
+    // Ensure _retval is both initialized and empty.
+    _retval.Truncate();
+
     // If it doesn't start with "/mozilla.org/" then it isn't ours.
     if (!StringBeginsWith(
             tzid, nsDependentCString(STRLEN_ARGS("/mozilla.org/")))) {
@@ -1440,29 +1443,29 @@ calICSService::LatestTzId(const nsACString& tzid, nsACString& _retval) {
 
     // XXX We want to make this table-driven at some point in the future.
 
-    if (continent == NS_LITERAL_CSTRING("Africa")) {
-        if (tzid == NS_LITERAL_CSTRING("/mozilla.org/20050126_1/Africa/Asmera")) {
-            _retval = NS_LITERAL_CSTRING("/mozilla.org/20070129_1/Africa/Asmara");
-        } else if (tzid == NS_LITERAL_CSTRING("/mozilla.org/20050126_1/Africa/Timbuktu")) {
-            _retval = NS_LITERAL_CSTRING("/mozilla.org/20070129_1/Africa/Bamako");
+    if (continent.EqualsLiteral("Africa")) {
+        if (tzid.EqualsLiteral("/mozilla.org/20050126_1/Africa/Asmera")) {
+            _retval.AssignLiteral("/mozilla.org/20070129_1/Africa/Asmara");
+        } else if (tzid.EqualsLiteral("/mozilla.org/20050126_1/Africa/Timbuktu")) {
+            _retval.AssignLiteral("/mozilla.org/20070129_1/Africa/Bamako");
         }
-    } else if (continent == NS_LITERAL_CSTRING("Atlantic")) {
-        if (tzid == NS_LITERAL_CSTRING("/mozilla.org/20050126_1/Atlantic/Faeroe")) {
-            _retval = NS_LITERAL_CSTRING("/mozilla.org/20070129_1/Atlantic/Faroe");
+    } else if (continent.EqualsLiteral("Atlantic")) {
+        if (tzid.EqualsLiteral("/mozilla.org/20050126_1/Atlantic/Faeroe")) {
+            _retval.AssignLiteral("/mozilla.org/20070129_1/Atlantic/Faroe");
         }
-    } else if (continent == NS_LITERAL_CSTRING("America")) {
-        if (tzid == NS_LITERAL_CSTRING("/mozilla.org/20050126_1/America/Argentina/ComodRivadavia")) {
-            _retval = NS_LITERAL_CSTRING("/mozilla.org/20070129_1/America/Argentica/Catamarca");
-        } else if (tzid == NS_LITERAL_CSTRING("/mozilla.org/20050126_1/America/Louisville")) {
-            _retval = NS_LITERAL_CSTRING("/mozilla.org/20070129_1/America/Kentucky/Louisville");
+    } else if (continent.EqualsLiteral("America")) {
+        if (tzid.EqualsLiteral("/mozilla.org/20050126_1/America/Argentina/ComodRivadavia")) {
+            _retval.AssignLiteral("/mozilla.org/20070129_1/America/Argentica/Catamarca");
+        } else if (tzid.EqualsLiteral("/mozilla.org/20050126_1/America/Louisville")) {
+            _retval.AssignLiteral("/mozilla.org/20070129_1/America/Kentucky/Louisville");
         }
-    } else if (continent == NS_LITERAL_CSTRING("Europe")) {
-        if (tzid == NS_LITERAL_CSTRING("/mozilla.org/20050126_1/Europe/Belfast")) {
-            _retval = NS_LITERAL_CSTRING("/mozilla.org/20070129_1/Europe/London");
+    } else if (continent.EqualsLiteral("Europe")) {
+        if (tzid.EqualsLiteral("/mozilla.org/20050126_1/Europe/Belfast")) {
+            _retval.AssignLiteral("/mozilla.org/20070129_1/Europe/London");
         }
-    } else if (continent == NS_LITERAL_CSTRING("Pacific")) {
-        if (tzid == NS_LITERAL_CSTRING("/mozilla.org/20050126_1/Pacific/Yap")) {
-            _retval = NS_LITERAL_CSTRING("/mozilla.org/20070129_1/Pacific/Truk");
+    } else if (continent.EqualsLiteral("Pacific")) {
+        if (tzid.EqualsLiteral("/mozilla.org/20050126_1/Pacific/Yap")) {
+            _retval.AssignLiteral("/mozilla.org/20070129_1/Pacific/Truk");
         }
     }
 
