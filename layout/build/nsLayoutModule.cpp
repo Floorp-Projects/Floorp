@@ -167,7 +167,6 @@ static NS_DEFINE_CID(kWindowCommandTableCID, NS_WINDOWCOMMANDTABLE_CID);
 #include "inDeepTreeWalker.h"
 #include "inFlasher.h"
 #include "inCSSValueSearch.h"
-#include "inFileSearch.h"
 #include "inDOMUtils.h"
 #endif
 
@@ -380,7 +379,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(inDOMView)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inDeepTreeWalker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inFlasher)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inCSSValueSearch)
-NS_GENERIC_FACTORY_CONSTRUCTOR(inFileSearch)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inDOMUtils)
 #endif
 
@@ -805,11 +803,6 @@ static const nsModuleComponentInfo gComponents[] = {
     IN_CSSVALUESEARCH_CID, 
     "@mozilla.org/inspector/search;1?type=cssvalue", 
     inCSSValueSearchConstructor },
-
-  { "File Search", 
-    IN_FILESEARCH_CID, 
-    "@mozilla.org/inspector/search;1?type=file", 
-    inFileSearchConstructor },
 
   { "DOM Utils", 
     IN_DOMUTILS_CID, 

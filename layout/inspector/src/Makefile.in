@@ -71,7 +71,6 @@ CPPSRCS= \
   inFlasher.cpp \
   inSearchLoop.cpp \
   inCSSValueSearch.cpp \
-  inFileSearch.cpp \
   inDOMUtils.cpp \
   inLayoutUtils.cpp \
 	$(NULL)
