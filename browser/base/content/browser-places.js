@@ -416,7 +416,7 @@ var BookmarksEventHandler = {
           var openInTabs = document.createElement("menuitem");
           openInTabs.setAttribute("openInTabs", "true");
           openInTabs.setAttribute("label",
-                     gNavigatorBundle.getString("menuOpenInTabs.label"));
+                     gNavigatorBundle.getString("menuOpenAllInTabs.label"));
           target.appendChild(openInTabs);
         }
       }

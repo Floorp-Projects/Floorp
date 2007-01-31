@@ -5713,12 +5713,12 @@ HistoryMenu.populateUndoSubmenu = function PHM_populateUndoSubmenu() {
     m.addEventListener("click", undoCloseMiddleClick, false);
   }
 
-  // "open in tabs"
+  // "Open All in Tabs"
   var strings = gNavigatorBundle;
   undoPopup.appendChild(document.createElement("menuseparator"));
   m = undoPopup.appendChild(document.createElement("menuitem"));
-  m.setAttribute("label", strings.getString("menuOpenInTabs.label"));
-  m.setAttribute("accesskey", strings.getString("menuOpenInTabs.accesskey"));
+  m.setAttribute("label", strings.getString("menuOpenAllInTabs.label"));
+  m.setAttribute("accesskey", strings.getString("menuOpenAllInTabs.accesskey"));
   m.addEventListener("command", function() {
     for (var i = 0; i < undoItems.length; i++)
       undoCloseTab();
