@@ -64,13 +64,6 @@ NS_NewButtonBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 } // NS_NewXULButtonFrame
 
 NS_IMETHODIMP
-nsButtonBoxFrame::GetMouseThrough(PRBool& aMouseThrough)
-{
-  aMouseThrough = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsButtonBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                               const nsRect&           aDirtyRect,
                                               const nsDisplayListSet& aLists)

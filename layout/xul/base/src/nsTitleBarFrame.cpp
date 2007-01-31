@@ -82,16 +82,6 @@ nsTitleBarFrame::Init(nsIContent*      aContent,
   return rv;
 }
 
-
-
-
-NS_IMETHODIMP
-nsTitleBarFrame::GetMouseThrough(PRBool& aMouseThrough)
-{
-  aMouseThrough = PR_FALSE;
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsTitleBarFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                              const nsRect&           aDirtyRect,

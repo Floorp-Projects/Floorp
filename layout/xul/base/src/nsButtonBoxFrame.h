@@ -56,7 +56,7 @@ public:
                                       nsGUIEvent* aEvent,
                                       nsEventStatus* aEventStatus);
 
-  NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough);
+  virtual PRBool GetMouseThrough() const { return PR_FALSE; }
 
   virtual void MouseClicked (nsPresContext* aPresContext, nsGUIEvent* aEvent)
   { DoMouseClick(aEvent, PR_FALSE); }

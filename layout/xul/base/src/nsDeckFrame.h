@@ -74,7 +74,7 @@ public:
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD ChildrenMustHaveWidgets(PRBool& aMust) const;
+  virtual PRBool ChildrenMustHaveWidgets() const { return PR_TRUE; }
 
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const

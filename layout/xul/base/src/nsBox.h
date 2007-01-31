@@ -60,12 +60,12 @@ public:
   virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState);
   virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState);
   virtual nsSize GetMaxSize(nsBoxLayoutState& aBoxLayoutState);
-  NS_IMETHOD GetFlex(nsBoxLayoutState& aBoxLayoutState, nscoord& aFlex);
-  NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
+  virtual nscoord GetFlex(nsBoxLayoutState& aBoxLayoutState);
+  virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState);
 
   virtual nsSize GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState);
 
-  NS_IMETHOD IsCollapsed(nsBoxLayoutState& aBoxLayoutState, PRBool& aCollapsed);
+  virtual PRBool IsCollapsed(nsBoxLayoutState& aBoxLayoutState);
 
   NS_IMETHOD SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
                        PRBool aRemoveOverflowArea = PR_FALSE);
@@ -83,7 +83,7 @@ public:
 
   NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild);
 
-  NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough);
+  virtual PRBool GetMouseThrough() const;
 
 #ifdef DEBUG_LAYOUT
   NS_IMETHOD GetInset(nsMargin& aInset);
@@ -94,8 +94,6 @@ public:
   NS_IMETHOD DumpBox(FILE* out);
   NS_HIDDEN_(void) PropagateDebug(nsBoxLayoutState& aState);
 #endif
-  NS_IMETHOD ChildrenMustHaveWidgets(PRBool& aMust) const;
-  NS_IMETHOD GetIndexOf(nsIBox* aChild, PRInt32* aIndex);
 
   nsBox();
   virtual ~nsBox();

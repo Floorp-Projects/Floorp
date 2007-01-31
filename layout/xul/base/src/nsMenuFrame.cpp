@@ -1031,9 +1031,6 @@ nsMenuFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
 NS_IMETHODIMP
 nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
 {
-  nsRect contentRect;
-  GetContentRect(contentRect);
-
   // lay us out
   nsresult rv = nsBoxFrame::DoLayout(aState);
 
@@ -1053,7 +1050,7 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
     BoundsCheck(minSize, prefSize, maxSize);
 
     if (sizeToPopup)
-        prefSize.width = contentRect.width;
+        prefSize.width = mRect.width;
 
     // if the pref size changed then set bounds to be the pref size
     // and sync the view. And set new pref size.
@@ -1952,10 +1949,8 @@ public:
   NS_IMETHOD Run() {
     nsIFrame* frame = mWeakFrame.GetFrame();
     if (frame) {
-      PRBool collapsed = PR_FALSE;
       nsBoxLayoutState state(frame->GetPresContext());
-      frame->IsCollapsed(state, collapsed);
-      if (!collapsed) {
+      if (!frame->IsCollapsed(state)) {
         nsIMenuFrame* imenu = nsnull;
         CallQueryInterface(frame, &imenu);
         if (imenu) {
@@ -1976,14 +1971,10 @@ public:
 PRBool
 nsMenuFrame::SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize)
 {
-  PRBool collapsed = PR_FALSE;
-  IsCollapsed(aState, collapsed);
-  if (!collapsed) {
+  if (!IsCollapsed(aState)) {
     nsSize tmpSize(-1, 0);
     nsIBox::AddCSSPrefSize(aState, this, tmpSize);
-    nscoord flex;
-    GetFlex(aState, flex);
-    if (tmpSize.width == -1 && flex == 0) {
+    if (tmpSize.width == -1 && GetFlex(aState) == 0) {
       nsIFrame* frame = mPopupFrames.FirstChild();
       if (!frame) {
         nsCOMPtr<nsIContent> child;

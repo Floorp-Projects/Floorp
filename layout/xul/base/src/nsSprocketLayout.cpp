@@ -208,9 +208,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 {
   // See if we are collapsed. If we are, then simply iterate over all our
   // children and give them a rect of 0 width and height.
-  PRBool collapsed = PR_FALSE;
-  aBox->IsCollapsed(aState, collapsed);
-  if (collapsed) {
+  if (aBox->IsCollapsed(aState)) {
     nsIBox* child;
     aBox->GetChildBox(&child);
     while(child) 
@@ -224,8 +222,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
   aState.PushStackMemory();
 
   // ----- figure out our size ----------
-  nsRect contentRect;
-  aBox->GetContentRect(contentRect);
+  nsSize originalSize = aBox->GetSize();
 
   // -- make sure we remove our border and padding  ----
   nsRect clientRect;
@@ -249,8 +246,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
   nsBoxSize*         boxSizes = nsnull;
   nsComputedBoxSize* computedBoxSizes = nsnull;
 
-  nscoord maxAscent = 0;
-  aBox->GetAscent(aState, maxAscent);
+  nscoord maxAscent = aBox->GetBoxAscent(aState);
 
   nscoord min = 0;
   nscoord max = 0;
@@ -663,14 +659,14 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
     aBox->GetInset(bp);
     tmpClientRect.Inflate(bp);
 
-    if (tmpClientRect.width > contentRect.width || tmpClientRect.height > contentRect.height)
+    if (tmpClientRect.width > originalSize.width || tmpClientRect.height > originalSize.height)
     {
       // if it did reset our bounds.
       nsRect bounds(aBox->GetRect());
-      if (tmpClientRect.width > contentRect.width)
+      if (tmpClientRect.width > originalSize.width)
         bounds.width = tmpClientRect.width;
 
-      if (tmpClientRect.height > contentRect.height)
+      if (tmpClientRect.height > originalSize.height)
         bounds.height = tmpClientRect.height;
 
       aBox->SetBounds(aState, bounds);
@@ -770,12 +766,10 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
       }
     
 
-      child->GetFlex(aState, flex);
-      PRBool collapsed = PR_FALSE;    
-      child->IsCollapsed(aState, collapsed);
+      flex = child->GetFlex(aState);
 
       currentBox->flex = flex;
-      currentBox->collapsed = collapsed;
+      currentBox->collapsed = child->IsCollapsed(aState);
     } else {
       flex = start->flex;
       start = start->next;
@@ -803,9 +797,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
     nsSize min(0,0);
     nsSize max(NS_INTRINSICSIZE,NS_INTRINSICSIZE);
     nscoord ascent = 0;
-
-    PRBool collapsed = PR_FALSE;    
-    child->IsCollapsed(aState, collapsed);
+    PRBool collapsed = child->IsCollapsed(aState);
 
     if (!collapsed) {
     // only one flexible child? Cool we will just make its preferred size
@@ -815,7 +807,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
       pref = child->GetPrefSize(aState);
       min = child->GetMinSize(aState);
       max = child->GetMaxSize(aState);
-      child->GetAscent(aState, ascent);
+      ascent = child->GetBoxAscent(aState);
       nsMargin margin;
       child->GetMargin(margin);
       ascent += margin.top;
@@ -854,8 +846,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
           prefWidth = pref.height;
       }
 
-      nscoord flex = 0;
-      child->GetFlex(aState, flex);
+      nscoord flex = child->GetFlex(aState);
 
       // set them if you collapsed you are not flexible.
       if (collapsed) {
@@ -1349,10 +1340,7 @@ nsSprocketLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aS
    while (child) 
    {  
       // ignore collapsed children
-      PRBool isCollapsed = PR_FALSE;
-      child->IsCollapsed(aState, isCollapsed);
-
-      if (!isCollapsed)
+      if (!child->IsCollapsed(aState))
       {
         nsSize pref = child->GetPrefSize(aState);
         AddMargin(child, pref);
@@ -1412,20 +1400,14 @@ nsSprocketLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSi
    while (child) 
    {  
        // ignore collapsed children
-      PRBool isCollapsed = PR_FALSE;
-      aBox->IsCollapsed(aState, isCollapsed);
-
-      if (!isCollapsed)
+      if (!aBox->IsCollapsed(aState))
       {
         nsSize min = child->GetMinSize(aState);
         nsSize pref(0,0);
-        nscoord flex = 0;
-
-        child->GetFlex(aState, flex);
         
         // if the child is not flexible then
         // its min size is its pref size.
-        if (flex == 0)  {
+        if (child->GetFlex(aState) == 0) {
             pref = child->GetPrefSize(aState);
             if (isHorizontal)
                min.width = pref.width;
@@ -1492,10 +1474,7 @@ nsSprocketLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSi
    while (child) 
    {  
       // ignore collapsed children
-      PRBool isCollapsed = PR_FALSE;
-      aBox->IsCollapsed(aState, isCollapsed);
-
-      if (!isCollapsed)
+      if (!aBox->IsCollapsed(aState))
       {
         // if completely redefined don't even ask our child for its size.
         nsSize max = child->GetMaxSize(aState);
@@ -1560,14 +1539,10 @@ nsSprocketLayout::GetAscent(nsIBox* aBox, nsBoxLayoutState& aState, nscoord& aAs
    while (child) 
    {  
       // ignore collapsed children
-      //PRBool isCollapsed = PR_FALSE;
-      //aBox->IsCollapsed(aState, isCollapsed);
-
-      //if (!isCollapsed)
+      //if (!aBox->IsCollapsed(aStatew))
       //{
         // if completely redefined don't even ask our child for its size.
-        nscoord ascent = 0;
-        child->GetAscent(aState, ascent);
+        nscoord ascent = child->GetBoxAscent(aState);
 
         nsMargin margin;
         child->GetMargin(margin);
@@ -1592,14 +1567,16 @@ nsSprocketLayout::GetAscent(nsIBox* aBox, nsBoxLayoutState& aState, nscoord& aAs
 NS_IMETHODIMP
 nsSprocketLayout::GetFlex(nsIBox* aBox, nsBoxLayoutState& aState, nscoord& aFlex)
 {
-  return aBox->GetFlex(aState, aFlex);
+  aFlex = aBox->GetFlex(aState);
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsSprocketLayout::IsCollapsed(nsIBox* aBox, nsBoxLayoutState& aState, PRBool& aIsCollapsed)
 {
-  return aBox->IsCollapsed(aState, aIsCollapsed);
+  aIsCollapsed = aBox->IsCollapsed(aState);
+  return NS_OK;
 }
 
 void

@@ -99,14 +99,16 @@ nsBoxLayout::AddInset(nsIBox* aBox, nsSize& aSize)
 NS_IMETHODIMP
 nsBoxLayout::GetFlex(nsIBox* aBox, nsBoxLayoutState& aState, nscoord& aFlex)
 {
-  return aBox->GetFlex(aState, aFlex);
+  aFlex = aBox->GetFlex(aState);
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsBoxLayout::IsCollapsed(nsIBox* aBox, nsBoxLayoutState& aState, PRBool& aCollapsed)
 {
-  return aBox->IsCollapsed(aState, aCollapsed);
+  aCollapsed = aBox->IsCollapsed(aState);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

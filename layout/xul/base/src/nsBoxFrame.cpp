@@ -220,9 +220,7 @@ nsBoxFrame::Init(nsIContent*      aContent,
 
   // see if we need a widget
   if (aParent && aParent->IsBoxFrame()) {
-    PRBool needsWidget = PR_FALSE;
-    aParent->ChildrenMustHaveWidgets(needsWidget);
-    if (needsWidget) {
+    if (aParent->ChildrenMustHaveWidgets()) {
         nsHTMLContainerFrame::CreateViewForFrame(this, nsnull, PR_TRUE);
 
         nsIView* view = GetView();
@@ -263,29 +261,21 @@ void nsBoxFrame::UpdateMouseThrough()
   }
 }
 
-NS_IMETHODIMP
-nsBoxFrame::GetMouseThrough(PRBool& aMouseThrough)
+PRBool
+nsBoxFrame::GetMouseThrough() const
 {
   switch(mMouseThrough)
   {
     case always:
-      aMouseThrough = PR_TRUE;
-      return NS_OK;
+      return PR_TRUE;
     case never:
-      aMouseThrough = PR_FALSE;      
-      return NS_OK;
+      return PR_FALSE;
     case unset:
-    {
       if (mParent && mParent->IsBoxFrame())
-        return mParent->GetMouseThrough(aMouseThrough);
-      else {
-        aMouseThrough = PR_FALSE;      
-        return NS_OK;
-      }
-    }
+        return mParent->GetMouseThrough();
   }
 
-  return NS_ERROR_FAILURE;
+  return PR_FALSE;
 }
 
 void
@@ -793,7 +783,7 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
   // getting the ascent could be a lot of work. Don't get it if
   // we are the root. The viewport doesn't care about it.
   if (!(mState & NS_STATE_IS_ROOT)) {
-    GetAscent(state, ascent);
+    ascent = GetBoxAscent(state);
   }
 
   aDesiredSize.width  = mRect.width;
@@ -840,9 +830,7 @@ nsBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState)
   PropagateDebug(aBoxLayoutState);
 #endif
 
-  PRBool collapsed = PR_FALSE;
-  IsCollapsed(aBoxLayoutState, collapsed);
-  if (collapsed)
+  if (IsCollapsed(aBoxLayoutState))
     return size;
 
   // if the size was not completely redefined in CSS then ask our children
@@ -863,34 +851,25 @@ nsBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState)
   return size;
 }
 
-NS_IMETHODIMP
-nsBoxFrame::GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent)
+nscoord
+nsBoxFrame::GetBoxAscent(nsBoxLayoutState& aBoxLayoutState)
 {
-  if (!DoesNeedRecalc(mAscent)) {
-     aAscent = mAscent;
-     return NS_OK;
-  }
+  if (!DoesNeedRecalc(mAscent))
+     return mAscent;
 
 #ifdef DEBUG_LAYOUT
   PropagateDebug(aBoxLayoutState);
 #endif
 
-  nsresult rv = NS_OK;
-  aAscent = 0;
-
-  PRBool collapsed = PR_FALSE;
-  IsCollapsed(aBoxLayoutState, collapsed);
-  if (collapsed)
-    return NS_OK;
+  if (IsCollapsed(aBoxLayoutState))
+    return 0;
 
   if (mLayoutManager)
-    rv = mLayoutManager->GetAscent(this, aBoxLayoutState, aAscent);
+    mLayoutManager->GetAscent(this, aBoxLayoutState, mAscent);
   else
-    rv = nsBox::GetAscent(aBoxLayoutState, aAscent);
+    mAscent = nsBox::GetBoxAscent(aBoxLayoutState);
 
-  mAscent = aAscent;
- 
-  return rv;
+  return mAscent;
 }
 
 nsSize
@@ -907,9 +886,7 @@ nsBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
   PropagateDebug(aBoxLayoutState);
 #endif
 
-  PRBool collapsed = PR_FALSE;
-  IsCollapsed(aBoxLayoutState, collapsed);
-  if (collapsed)
+  if (IsCollapsed(aBoxLayoutState))
     return size;
 
   // if the size was not completely redefined in CSS then ask our children
@@ -942,9 +919,7 @@ nsBoxFrame::GetMaxSize(nsBoxLayoutState& aBoxLayoutState)
   PropagateDebug(aBoxLayoutState);
 #endif
 
-  PRBool collapsed = PR_FALSE;
-  IsCollapsed(aBoxLayoutState, collapsed);
-  if (collapsed)
+  if (IsCollapsed(aBoxLayoutState))
     return size;
 
   // if the size was not completely redefined in CSS then ask our children
@@ -963,21 +938,15 @@ nsBoxFrame::GetMaxSize(nsBoxLayoutState& aBoxLayoutState)
   return size;
 }
 
-NS_IMETHODIMP
-nsBoxFrame::GetFlex(nsBoxLayoutState& aBoxLayoutState, nscoord& aFlex)
+nscoord
+nsBoxFrame::GetFlex(nsBoxLayoutState& aBoxLayoutState)
 {
-  if (!DoesNeedRecalc(mFlex)) {
-     aFlex = mFlex;
-     return NS_OK;
-  }
+  if (!DoesNeedRecalc(mFlex))
+     return mFlex;
 
-  nsresult rv = NS_OK;
+  mFlex = nsBox::GetFlex(aBoxLayoutState);
 
-  mFlex = 0;
-  rv = nsBox::GetFlex(aBoxLayoutState, mFlex);
-  aFlex = mFlex;
-
-  return rv;
+  return mFlex;
 }
 
 /**
@@ -1394,8 +1363,6 @@ nsBoxFrame::PaintXULDebugBackground(nsIRenderingContext& aRenderingContext,
                                     nsPoint aPt)
 {
   nsMargin border;
-  nsRect inner;
-
   GetBorder(border);
 
   nsMargin debugBorder;
@@ -1413,8 +1380,8 @@ nsBoxFrame::PaintXULDebugBackground(nsIRenderingContext& aRenderingContext,
   GetDebugPadding(debugPadding);
   PixelMarginToTwips(GetPresContext(), debugPadding);
 
-  GetContentRect(inner);
-  inner += aPt;
+  nsRect inner(mRect);
+  inner.MoveTo(aPt);
   inner.Deflate(debugMargin);
   inner.Deflate(border);
   //nsRect borderRect(inner);
@@ -1471,14 +1438,12 @@ nsBoxFrame::PaintXULDebugOverlay(nsIRenderingContext& aRenderingContext,
   GetDebugMargin(debugMargin);
   PixelMarginToTwips(GetPresContext(), debugMargin);
 
-  nsRect inner;
-  GetContentRect(inner);
-  inner += aPt;
+  nsRect inner(mRect);
+  inner.MoveTo(aPt);
   inner.Deflate(debugMargin);
   inner.Deflate(border);
 
   nscoord onePixel = GetPresContext()->IntScaledPixelsToTwips(1);
-  GetContentRect(r);
 
   GetChildBox(&kid);
   while (nsnull != kid) {
@@ -1505,14 +1470,9 @@ nsBoxFrame::PaintXULDebugOverlay(nsIRenderingContext& aRenderingContext,
     }
 
     nsBoxLayoutState state(GetPresContext());
-    nscoord flex = 0;
-    kid->GetFlex(state, flex);
+    nscoord flex = kid->GetFlex(state);
 
-    
-    PRBool isCollapsed = PR_FALSE;
-    kid->IsCollapsed(state, isCollapsed);
-
-    if (!isCollapsed) {
+    if (!kid->IsCollapsed(state)) {
       aRenderingContext.SetColor(NS_RGB(255,255,255));
 
       if (isHorizontal) 
@@ -1801,8 +1761,8 @@ nsBoxFrame::DisplayDebugInfoFor(nsIBox*  aBox,
     nscoord y = aPoint.y;
 
     // get the area inside our border but not our debug margins.
-    nsRect insideBorder;
-    aBox->GetContentRect(insideBorder);
+    nsRect insideBorder(aBox->mRect);
+    insideBorder.MoveTo(0,0):
     nsMargin border(0,0,0,0);
     aBox->GetBorderAndPadding(border);
     insideBorder.Deflate(border);
@@ -1862,10 +1822,6 @@ nsBoxFrame::DisplayDebugInfoFor(nsIBox*  aBox,
                     nsSize maxSizeCSS (NS_INTRINSICSIZE, NS_INTRINSICSIZE);
                     nscoord flexCSS = NS_INTRINSICSIZE;
 
-                    nscoord flexSize = 0;
-                    nscoord ascentSize = 0;
-
-
                     nsIBox::AddCSSPrefSize(state, child, prefSizeCSS);
                     nsIBox::AddCSSMinSize (state, child, minSizeCSS);
                     nsIBox::AddCSSMaxSize (state, child, maxSizeCSS);
@@ -1874,8 +1830,8 @@ nsBoxFrame::DisplayDebugInfoFor(nsIBox*  aBox,
                     nsSize prefSize = child->GetPrefSize(state);
                     nsSize minSize = child->GetMinSize(state);
                     nsSize maxSize = child->GetMaxSize(state);
-                    child->GetFlex(state, flexSize);
-                    child->GetAscent(state, ascentSize);
+                    nscoord flexSize = child->GetFlex(state);
+                    nscoord ascentSize = child->GetBoxAscent(state);
 
                     char min[100];
                     char pref[100];
@@ -2159,8 +2115,7 @@ nsBoxFrame::CheckBoxOrder(nsBoxLayoutState& aState)
   while (child) {
     ++childCount;
 
-    PRUint32 ordinal;
-    child->GetOrdinal(aState, ordinal);
+    PRUint32 ordinal = child->GetOrdinal(aState);
     if (ordinal != DEFAULT_ORDINAL_GROUP)
       orderBoxes = PR_TRUE;
 
@@ -2185,9 +2140,9 @@ nsBoxFrame::CheckBoxOrder(nsBoxLayoutState& aState)
   PRUint32 minOrd, jOrd;
   for(i = 0; i < childCount; i++) {
     min = i;
-    boxes[min]->GetOrdinal(aState, minOrd);
+    minOrd = boxes[min]->GetOrdinal(aState);
     for(j = i + 1; j < childCount; j++) {
-      boxes[j]->GetOrdinal(aState, jOrd);
+      jOrd = boxes[j]->GetOrdinal(aState);
       if (jOrd < minOrd) {
         min = j;
         minOrd = jOrd;
@@ -2241,8 +2196,7 @@ nsBoxFrame::LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& 
 NS_IMETHODIMP
 nsBoxFrame::RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)
 {
-  PRUint32 ord;
-  aChild->GetOrdinal(aState, ord);
+  PRUint32 ord = aChild->GetOrdinal(aState);
   
   nsIFrame *child = mFrames.FirstChild();
   nsIFrame *curPrevSib = nsnull, *newPrevSib = nsnull;
@@ -2254,8 +2208,7 @@ nsBoxFrame::RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)
     else if (!foundPrevSib)
       curPrevSib = child;
 
-    PRUint32 ordCmp;
-    child->GetOrdinal(aState, ordCmp);
+    PRUint32 ordCmp = child->GetOrdinal(aState);
     if (ord < ordCmp)
       foundNewPrevSib = PR_TRUE;
     else if (!foundNewPrevSib && child != aChild)
@@ -2291,27 +2244,6 @@ nsBoxFrame::RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)
   aChild->SetNextSibling(newNextSib);
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBoxFrame::GetIndexOf(nsIBox* aBox, PRInt32* aIndex)
-{
-    nsIBox* child = mFrames.FirstChild();
-    PRInt32 count = 0;
-    while (child) 
-    {       
-      if (aBox == child) {
-          *aIndex = count;
-          return NS_OK;
-      }
-
-      child->GetNextBox(&child);
-      count++;
-    }
-
-    *aIndex = -1;
-
-    return NS_OK;
 }
 
 PRBool

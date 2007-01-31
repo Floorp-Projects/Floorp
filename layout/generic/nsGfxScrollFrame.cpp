@@ -1041,23 +1041,22 @@ nsXULScrollFrame::GetType() const
   return nsGkAtoms::scrollFrame; 
 }
 
-NS_IMETHODIMP
-nsXULScrollFrame::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
+nscoord
+nsXULScrollFrame::GetBoxAscent(nsBoxLayoutState& aState)
 {
-  aAscent = 0;
   if (!mInner.mScrolledFrame)
-    return NS_OK;
+    return 0;
 
-  nsresult rv = mInner.mScrolledFrame->GetAscent(aState, aAscent);
+  nscoord ascent = mInner.mScrolledFrame->GetBoxAscent(aState);
   nsMargin m(0,0,0,0);
   GetBorderAndPadding(m);
-  aAscent += m.top;
+  ascent += m.top;
   GetMargin(m);
-  aAscent += m.top;
+  ascent += m.top;
   GetInset(m);
-  aAscent += m.top;
+  ascent += m.top;
 
-  return rv;
+  return ascent;
 }
 
 nsSize

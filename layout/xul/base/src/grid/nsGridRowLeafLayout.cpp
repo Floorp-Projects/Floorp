@@ -176,7 +176,7 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, ns
      nscoord bottomMargin = column->mBottomMargin;
 
      if (box) 
-       box->IsCollapsed(aState, collapsed);
+       collapsed = box->IsCollapsed(aState);
 
      pref = pref - (left + right);
      if (pref < 0)
@@ -264,9 +264,6 @@ nsGridRowLeafLayout::ComputeChildSizes(nsIBox* aBox,
   if (aBox) {
 
      // go up the parent chain looking for scrollframes
-     PRBool isHorizontal = PR_FALSE;
-     aBox->GetOrientation(isHorizontal);
-
      nsIBox* scrollbox = nsnull;
      aBox->GetParentBox(&aBox);
      scrollbox = nsGrid::GetScrollBox(aBox);
@@ -283,7 +280,7 @@ nsGridRowLeafLayout::ComputeChildSizes(nsIBox* aBox,
           ourRect.Deflate(padding);
 
           nscoord diff;
-          if (isHorizontal) {
+          if (aBox->IsHorizontal()) {
             diff = scrollbarSizes.left + scrollbarSizes.right;
           } else {
             diff = scrollbarSizes.top + scrollbarSizes.bottom;

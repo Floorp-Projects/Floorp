@@ -749,12 +749,8 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
   // borders padding and insets into account
   if (box && !row->mIsBogus)
   {
-     PRBool isCollapsed = PR_FALSE;
-     box->IsCollapsed(aState, isCollapsed);
-
-     if (!isCollapsed) 
-     {
-
+    if (!box->IsCollapsed(aState))
+    {
        box->GetInset(inset);
 
        // get real border and padding. GetBorderAndPadding
@@ -823,9 +819,7 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
       if (box) 
       {
         // ignore collapsed children
-        box->IsCollapsed(aState, isCollapsed);
-
-        if (!isCollapsed)
+        if (!box->IsCollapsed(aState))
         {
            // include the margin of the columns. To the row
            // at this point border/padding and margins all added
@@ -1222,8 +1216,7 @@ nsGrid::GetRowFlex(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsHorizonta
       // not flexible.
       if (parentsParent) {
         if (!IsGrid(parentsParent)) {
-          nscoord flex = 0;
-          parent->GetFlex(aState, flex);
+          nscoord flex = parent->GetFlex(aState);
           nsIBox::AddCSSFlex(aState, parent, flex);
           if (flex == 0) {
             row->mFlex = 0;
@@ -1237,9 +1230,8 @@ nsGrid::GetRowFlex(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsHorizonta
     }
     
     // get the row flex.
-    box->GetFlex(aState, row->mFlex);
+    row->mFlex = box->GetFlex(aState);
     nsIBox::AddCSSFlex(aState, box, row->mFlex);
-
   }
 
   return row->mFlex;

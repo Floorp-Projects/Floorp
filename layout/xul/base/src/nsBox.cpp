@@ -151,16 +151,6 @@ nsBox::PropagateDebug(nsBoxLayoutState& aState)
 }
 #endif
 
-/**
- * Hack for deck who requires that all its children has widgets
- */
-NS_IMETHODIMP 
-nsBox::ChildrenMustHaveWidgets(PRBool& aMust) const
-{
-  aMust = PR_FALSE;
-  return NS_OK;
-}
-
 #ifdef DEBUG_LAYOUT
 void
 nsBox::GetBoxName(nsAutoString& aName)
@@ -280,7 +270,8 @@ nsBox::GetHAlign(Halignment& aAlign)
 nsresult
 nsIFrame::GetClientRect(nsRect& aClientRect)
 {
-  GetContentRect(aClientRect);
+  aClientRect = mRect;
+  aClientRect.MoveTo(0,0);
 
   nsMargin borderPadding;
   GetBorderAndPadding(borderPadding);
@@ -299,16 +290,6 @@ nsIFrame::GetClientRect(nsRect& aClientRect)
 
  // NS_ASSERTION(aClientRect.width >=0 && aClientRect.height >= 0, "Content Size < 0");
 
-  return NS_OK;
-}
-
-nsresult
-nsIFrame::GetContentRect(nsRect& aContentRect)
-{
-  aContentRect = mRect;
-  aContentRect.x = 0;
-  aContentRect.y = 0;
-  NS_BOX_ASSERTION(this, aContentRect.width >=0 && aContentRect.height >= 0, "Content Size < 0");
   return NS_OK;
 }
 
@@ -523,9 +504,7 @@ nsBox::GetPrefSize(nsBoxLayoutState& aState)
   nsSize pref(0,0);
   DISPLAY_PREF_SIZE(this, pref);
 
-  PRBool collapsed = PR_FALSE;
-  IsCollapsed(aState, collapsed);
-  if (collapsed)
+  if (IsCollapsed(aState))
     return pref;
 
   AddBorderAndPadding(pref);
@@ -545,9 +524,7 @@ nsBox::GetMinSize(nsBoxLayoutState& aState)
   nsSize min(0,0);
   DISPLAY_MIN_SIZE(this, min);
 
-  PRBool collapsed = PR_FALSE;
-  IsCollapsed(aState, collapsed);
-  if (collapsed)
+  if (IsCollapsed(aState))
     return min;
 
   AddBorderAndPadding(min);
@@ -568,9 +545,7 @@ nsBox::GetMaxSize(nsBoxLayoutState& aState)
   nsSize max(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
   DISPLAY_MAX_SIZE(this, max);
 
-  PRBool collapsed = PR_FALSE;
-  IsCollapsed(aState, collapsed);
-  if (collapsed)
+  if (IsCollapsed(aState))
     return max;
 
   AddBorderAndPadding(max);
@@ -579,46 +554,42 @@ nsBox::GetMaxSize(nsBoxLayoutState& aState)
   return max;
 }
 
-NS_IMETHODIMP
-nsBox::GetFlex(nsBoxLayoutState& aState, nscoord& aFlex)
+nscoord
+nsBox::GetFlex(nsBoxLayoutState& aState)
 {
-  aFlex = 0;
+  nscoord flex = 0;
 
-  GetDefaultFlex(aFlex);
-  nsIBox::AddCSSFlex(aState, this, aFlex);
+  GetDefaultFlex(flex);
+  nsIBox::AddCSSFlex(aState, this, flex);
 
-  return NS_OK;
+  return flex;
 }
 
-nsresult
-nsIFrame::GetOrdinal(nsBoxLayoutState& aState, PRUint32& aOrdinal)
+PRUint32
+nsIFrame::GetOrdinal(nsBoxLayoutState& aState)
 {
-  aOrdinal = DEFAULT_ORDINAL_GROUP;
-  nsIBox::AddCSSOrdinal(aState, this, aOrdinal);
+  PRUint32 ordinal = DEFAULT_ORDINAL_GROUP;
+  nsIBox::AddCSSOrdinal(aState, this, ordinal);
 
-  return NS_OK;
+  return ordinal;
 }
 
-NS_IMETHODIMP
-nsBox::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
+nscoord
+nsBox::GetBoxAscent(nsBoxLayoutState& aState)
 {
-  aAscent = 0;
+  if (IsCollapsed(aState))
+    return 0;
+
+  return GetPrefSize(aState).height;
+}
+
+PRBool
+nsBox::IsCollapsed(nsBoxLayoutState& aState)
+{
   PRBool collapsed = PR_FALSE;
-  IsCollapsed(aState, collapsed);
-  if (collapsed)
-    return NS_OK;
+  nsIBox::AddCSSCollapsed(aState, this, collapsed);
 
-  aAscent = GetPrefSize(aState).height;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBox::IsCollapsed(nsBoxLayoutState& aState, PRBool& aCollapsed)
-{
-  aCollapsed = PR_FALSE;
-  nsIBox::AddCSSCollapsed(aState, this, aCollapsed);
-
-  return NS_OK;
+  return collapsed;
 }
 
 nsresult
@@ -1168,14 +1139,13 @@ nsBox::GetInset(nsMargin& margin)
 
 #endif
 
-NS_IMETHODIMP
-nsBox::GetMouseThrough(PRBool& aMouseThrough)
+PRBool
+nsBox::GetMouseThrough() const
 {
   if (mParent && mParent->IsBoxFrame())
-    return mParent->GetMouseThrough(aMouseThrough);
+    return mParent->GetMouseThrough();
 
-  aMouseThrough = PR_FALSE;
-  return NS_OK;
+  return PR_FALSE;
 }
 
 PRBool
@@ -1183,12 +1153,4 @@ nsBox::GetDefaultFlex(PRInt32& aFlex)
 { 
   aFlex = 0; 
   return PR_TRUE; 
-}
-
-NS_IMETHODIMP
-nsBox::GetIndexOf(nsIBox* aChild, PRInt32* aIndex)
-{
-  // return -1. We have no children
-  *aIndex = -1;
-  return NS_OK;
 }

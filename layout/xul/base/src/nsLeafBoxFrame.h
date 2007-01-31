@@ -55,8 +55,8 @@ public:
   virtual nsSize GetPrefSize(nsBoxLayoutState& aState);
   virtual nsSize GetMinSize(nsBoxLayoutState& aState);
   virtual nsSize GetMaxSize(nsBoxLayoutState& aState);
-  NS_IMETHOD GetFlex(nsBoxLayoutState& aState, nscoord& aFlex);
-  NS_IMETHOD GetAscent(nsBoxLayoutState& aState, nscoord& aAscent);
+  virtual nscoord GetFlex(nsBoxLayoutState& aState);
+  virtual nscoord GetBoxAscent(nsBoxLayoutState& aState);
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 #ifdef DEBUG
@@ -91,7 +91,7 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aModType);
 
-  NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough);
+  virtual PRBool GetMouseThrough() const;
   virtual PRBool ComputesOwnOverflowArea() { return PR_FALSE; }
 
 protected:
