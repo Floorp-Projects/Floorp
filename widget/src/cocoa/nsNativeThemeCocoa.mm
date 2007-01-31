@@ -280,6 +280,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
   if (!thebesCtx)
     return NS_ERROR_FAILURE;
 
+  thebesCtx->UpdateSurfaceClip();
+
   double offsetX = 0.0, offsetY = 0.0;
   nsRefPtr<gfxASurface> thebesSurface = thebesCtx->CurrentSurface(&offsetX, &offsetY);
   if (thebesSurface->GetType() != gfxASurface::SurfaceTypeQuartz2) {
@@ -327,13 +329,13 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
 
 #if 0
   if (1 /*aWidgetType == NS_THEME_TEXTFIELD*/) {
+    fprintf(stderr, "Native theme drawing widget %d [%p] dis:%d in rect [%d %d %d %d]\n",
+            aWidgetType, aFrame, IsDisabled(aFrame), aRect.x, aRect.y, aRect.width, aRect.height);
     fprintf (stderr, "Native theme xform[0]: [%f %f %f %f %f %f]\n",
              mm0.a, mm0.b, mm0.c, mm0.d, mm0.tx, mm0.ty);
     CGAffineTransform mm = CGContextGetCTM(cgContext);
     fprintf(stderr, "Native theme xform[1]: [%f %f %f %f %f %f]\n",
             mm.a, mm.b, mm.c, mm.d, mm.tx, mm.ty);
-    fprintf(stderr, "Native theme drawing widget %d in rect [%d %d %d %d]\n",
-            aWidgetType, aRect.x, aRect.y, aRect.width, aRect.height);
   }
 #endif
 
@@ -347,6 +349,12 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
 #if 0
   fprintf(stderr, "    --> macRect %f %f %f %f\n",
           macRect.origin.x, macRect.origin.y, macRect.size.width, macRect.size.height);
+  CGRect bounds = CGContextGetClipBoundingBox (cgContext);
+  fprintf(stderr, "    --> clip bounds: %f %f %f %f\n",
+          bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
+
+  //CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 1.0, 0.1);
+  //CGContextFillRect(cgContext, bounds);
 #endif
 
   PRInt32 eventState = GetContentState(aFrame, aWidgetType);

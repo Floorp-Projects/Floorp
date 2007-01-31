@@ -211,7 +211,7 @@ nsThebesRenderingContext::GetDrawingSurface(nsIDrawingSurface **aSurface)
 NS_IMETHODIMP 
 nsThebesRenderingContext::PushTranslation(PushedTranslation* aState)
 {
-    //PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::PushTranslation\n", this));
+    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::PushTranslation\n", this));
 
     // XXX this is slow!
     PushState();
@@ -221,7 +221,7 @@ nsThebesRenderingContext::PushTranslation(PushedTranslation* aState)
 NS_IMETHODIMP
 nsThebesRenderingContext::PopTranslation(PushedTranslation* aState)
 {
-    //PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::PopTranslation\n", this));
+    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::PopTranslation\n", this));
 
     // XXX this is slow!
     PopState();
@@ -231,6 +231,8 @@ nsThebesRenderingContext::PopTranslation(PushedTranslation* aState)
 NS_IMETHODIMP
 nsThebesRenderingContext::SetTranslation(nscoord aX, nscoord aY)
 {
+    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::SetTranslation %d %d\n", this, aX, aY));
+
     gfxMatrix newMat(mThebes->CurrentMatrix());
     newMat.x0 = aX;
     newMat.y0 = aY;
@@ -257,7 +259,7 @@ nsThebesRenderingContext::GetHints(PRUint32& aResult)
 NS_IMETHODIMP
 nsThebesRenderingContext::PushState()
 {
-    //PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::PushState\n", this));
+    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::PushState\n", this));
 
     mThebes->Save();
     return NS_OK;
@@ -266,7 +268,7 @@ nsThebesRenderingContext::PushState()
 NS_IMETHODIMP
 nsThebesRenderingContext::PopState()
 {
-    //PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::PopState\n", this));
+    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::PopState\n", this));
 
     mThebes->Restore();
     return NS_OK;
