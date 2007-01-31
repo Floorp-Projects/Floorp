@@ -78,6 +78,7 @@ public:
   }
 
   NS_IMETHOD DidSetStyleContext();
+  virtual void MarkIntrinsicWidthsDirty();
 
   NS_IMETHOD Reflow(nsPresContext*           aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
