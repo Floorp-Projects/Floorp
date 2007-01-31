@@ -267,7 +267,7 @@ nsXULMenuitemAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildr
 
 NS_IMETHODIMP nsXULMenuitemAccessible::DoAction(PRUint8 index)
 {
-  if (index == eAction_Select) {   // default action
+  if (index == eAction_Click) {   // default action
     DoCommand();
     return NS_OK;
   }
@@ -278,8 +278,8 @@ NS_IMETHODIMP nsXULMenuitemAccessible::DoAction(PRUint8 index)
 /** select us! close combo box if necessary*/
 NS_IMETHODIMP nsXULMenuitemAccessible::GetActionName(PRUint8 index, nsAString& _retval)
 {
-  if (index == eAction_Select) {
-    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("select"), _retval); 
+  if (index == eAction_Click) {
+    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("click"), _retval); 
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;
