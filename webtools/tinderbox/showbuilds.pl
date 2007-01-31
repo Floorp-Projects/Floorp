@@ -1062,10 +1062,11 @@ sub do_quickparse($) {
     my @requestedtreelist = split /,/, $tree;
     foreach my $tt (@requestedtreelist) {
         next unless grep {$tt eq $_} @treelist;
+        tb_load_treedata($tt);
         if (&is_tree_state_available($tt)) {
             my $state = &is_tree_open($tt) ? 'open' : 'closed';
             print "State|$tt|" . 
-                $::global_treedata->{$form_ref->{tree}}->{bonsai_tree} .
+                $::global_treedata->{$tt}->{bonsai_tree} .
                 "|$state\n";
         }
         my (%build, %times);
