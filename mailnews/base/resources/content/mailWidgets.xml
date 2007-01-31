@@ -2104,8 +2104,14 @@
               {
                 var msgPopup = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "folderSummaryMessage");
                 var msgHdr = msgDatabase.GetMsgHdrForKey(msgKeys.value[index++]);
-                msgPopup.setAttribute('subject', msgHdr.mime2DecodedSubject);
-                
+
+                var msgSubject = msgHdr.mime2DecodedSubject;
+                const kMsgFlagHasRe = 0x0010; // MSG_FLAG_HAS_RE
+                if(msgHdr.flags & kMsgFlagHasRe)
+                  msgSubject = "Re: " + msgSubject;
+
+                msgPopup.setAttribute('subject', msgSubject);
+
                 var previewText = msgHdr.getStringProperty('preview');
                 // convert the preview text from utf-8 to unicode          
                 if (previewText)            
