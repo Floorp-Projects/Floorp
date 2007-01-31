@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.346 $ ';
+$::UtilsVersion = '$Revision: 1.347 $ ';
 
 package TinderUtils;
 
@@ -3246,6 +3246,7 @@ sub RunUnitTests {
     return 'testfailed';
   }
 
+  print_log "TinderboxPrint:TUnit:[OK]\n";
   return 'success';
 }
 
