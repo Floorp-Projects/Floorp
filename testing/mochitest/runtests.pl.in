@@ -96,12 +96,11 @@ use constant TESTS_URL => "http://" . TEST_SERVER_HOST . TEST_PATH;
  # (particularly after a build) takes forever.
 use constant SERVER_STARTUP_TIMEOUT => 15;
 
-my $profile = "mochitest_testing_profile";
+my $profile = "mochitesttestingprofile";
 my $profile_dir = "$FindBin::Bin/$profile";
 
  # These are generated in mozilla/testing/mochitest/Makefile.in
 #expand my $app = "$FindBin::Bin/" . __BROWSER_PATH__;
-#expand my $topsrcdir = __TOPSRCDIR__;
 #expand my $dist_bin = "$FindBin::Bin/" . __XPC_BIN_PATH__;
 #ifdef WIN32
 #expand my $is_win32 = __WIN32__;
@@ -137,6 +136,14 @@ sub main {
   # we were passed an explicit path to the app
   if ($appoverride) {
     $app = $appoverride;
+  }
+
+  # make sure the application we're going to use exists
+  unless (-e $app) {
+    my $error_message = "\nError: Path \"$app\" doesn't exist.\n";
+    $error_message .= "Are you executing ";
+    $error_message .= "\$objdir/_tests/testing/mochitest/runtests.pl?\n\n";
+    die $error_message;
   }
              
   initializeProfile();
@@ -230,7 +237,7 @@ sub winPathFromDir {
           # we remember the match that is the longest
           $matchlen = $len;
           $bestmatch = $real;
-	      }
+	}
       }
     }
   }
@@ -272,17 +279,13 @@ sub startServer {
 
     $command .= "$dist_bin/xpcshell -v 170 ";
 
-    # So we get clean paths passed to the app
-    my $serverDir = abs_path("${topsrcdir}/netwerk/test/httpserver");
-    my $mochiDir = abs_path("${topsrcdir}/testing/mochitest");
-
     # this path is passed as a string, so we need to convert it on win32
     if ($is_win32) {
-      $command .= " -f \"" . winPathFromDir($serverDir) . "\\httpd.js\"";
-      $command .= " -f \"" . winPathFromDir($mochiDir) . "\\server.js\"";
+      $command .= " -f \"" . winPathFromDir($FindBin::Bin) . "\\httpd.js\"";
+      $command .= " -f \"" . winPathFromDir($FindBin::Bin) . "\\server.js\"";
     } else {
-      $command .= " -f \"" . $serverDir .  "/httpd.js\"";
-      $command .= " -f \"" . $mochiDir . "/server.js\"";
+      $command .= " -f \"" . $FindBin::Bin .  "/httpd.js\"";
+      $command .= " -f \"" . $FindBin::Bin . "/server.js\"";
     }
     print "$command\n";
     exec("$command") or die("Error running server: $!\n");
@@ -378,13 +381,14 @@ sub wait_for_server_startup {
 
   my $time_out_message;
   if ($@) {
-      if ($@ =~ /timeout/) {
-          $time_out_message = "Timed out while waiting for server startup.\n";
-      } else {
-          # Died for some other reason.
-          $time_out_message = "An unknown error occurred ";
-	        $time_out_message .= "while waiting for server startup.\n";
-      }
+    if ($@ =~ /timeout/) {
+      $time_out_message = "\nError: ";
+      $time_out_message = "Timed out while waiting for server startup.\n";
+    } else {
+      # Died for some other reason.
+      $time_out_message = "An unknown error occurred ";
+      $time_out_message .= "while waiting for server startup.\n";
+    }
   }
 
   if ($time_out_message) {
@@ -432,7 +436,12 @@ sub runTests {
 
   # set env vars so Firefox doesn't quit weirdly and break the script
   $ENV{'NO_EM_RESTART'} = '1';
-  $ENV{'XPCOM_DEBUG_BREAK'} = 'stack';
+  $ENV{'XPCOM_DEBUG_BREAK'} = 'warn';
+
+  if ($unixish) {
+    $ENV{'LD_LIBRARY_PATH'} = $dist_bin;
+    $ENV{'MOZILLA_FIVE_HOME'} = $dist_bin;
+  }
 
   # now run with the profile we created
   my @runargs = ($app, '-no-remote', '-P', "$profile", $testUrl);

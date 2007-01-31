@@ -137,7 +137,7 @@ function runServer()
   var serverAlive = Cc["@mozilla.org/file/local;1"]
                       .createInstance(Ci.nsILocalFile);
   serverAlive.initWithFile(serverBasePath);
-  serverAlive.append("mochitest_testing_profile");
+  serverAlive.append("mochitesttestingprofile");
 
   // If we're running outside of the test harness, there might
   // not be a test profile directory present

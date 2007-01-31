@@ -50,8 +50,11 @@ DIRS =	MochiKit \
 
 include $(topsrcdir)/config/rules.mk
 
+# files that get copied into $objdir/_tests/
 _SERV_FILES = 	runtests.pl \
 		gen_template.pl \
+		server.js \
+		$(topsrcdir)/netwerk/test/httpserver/httpd.js \
 		$(NULL)	
 
 
@@ -71,7 +74,6 @@ endif
 # These go in _tests/ so they need to go up an extra path segement
 TEST_DRIVER_PPARGS = 	-DBROWSER_PATH=$(browser_path) \
 			-DXPC_BIN_PATH=\"../$(DIST)/bin\" \
-			-DTOPSRCDIR=\"$(topsrcdir)\" \
 			$(NULL)
 
 runtests.pl: runtests.pl.in
