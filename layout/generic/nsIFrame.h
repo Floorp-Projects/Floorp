@@ -100,10 +100,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface 
-// f02b2868-ac80-4e38-978c-02df6477d294
+// 4ea7876f-1550-40d4-a764-739a0e4289a1
 #define NS_IFRAME_IID \
-{ 0xf02b2868, 0xac80, 0x4e38, \
-  { 0x97, 0x8c, 0x02, 0xdf, 0x64, 0x77, 0xd2, 0x94 } }
+{ 0x4ea7876f, 0x1550, 0x40d4, \
+  { 0xa7, 0x64, 0x73, 0x9a, 0x0e, 0x42, 0x89, 0xa1 } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -1845,18 +1845,18 @@ NS_PTR_TO_INT32(frame->GetProperty(nsGkAtoms::embeddingLevel))
    */    
   virtual nsSize GetMaxSize(nsBoxLayoutState& aBoxLayoutState) = 0;
 
-  NS_IMETHOD GetFlex(nsBoxLayoutState& aBoxLayoutState, nscoord& aFlex)=0;
-  NS_HIDDEN_(nsresult)
-    GetOrdinal(nsBoxLayoutState& aBoxLayoutState, PRUint32& aOrdinal);
-
   /**
    * This returns the minimum size for the scroll area if this frame is
    * being scrolled. Usually it's (0,0).
    */
   virtual nsSize GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState) = 0;
 
-  NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent)=0;
-  NS_IMETHOD IsCollapsed(nsBoxLayoutState& aBoxLayoutState, PRBool& aCollapsed)=0;
+  // Implemented in nsBox, used in nsBoxFrame
+  PRUint32 GetOrdinal(nsBoxLayoutState& aBoxLayoutState);
+
+  virtual nscoord GetFlex(nsBoxLayoutState& aBoxLayoutState) = 0;
+  virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState) = 0;
+  virtual PRBool IsCollapsed(nsBoxLayoutState& aBoxLayoutState) = 0;
   // This does not alter the overflow area. If the caller is changing
   // the box size, the caller is responsible for updating the overflow
   // area. It's enough to just call Layout or SyncLayout on the
@@ -1891,24 +1891,16 @@ NS_PTR_TO_INT32(frame->GetProperty(nsGkAtoms::embeddingLevel))
   NS_IMETHOD GetMargin(nsMargin& aMargin)=0;
   NS_IMETHOD SetLayoutManager(nsIBoxLayout* aLayout)=0;
   NS_IMETHOD GetLayoutManager(nsIBoxLayout** aLayout)=0;
-  NS_HIDDEN_(nsresult) GetContentRect(nsRect& aContentRect);
   NS_HIDDEN_(nsresult) GetClientRect(nsRect& aContentRect);
   NS_IMETHOD GetVAlign(Valignment& aAlign) = 0;
   NS_IMETHOD GetHAlign(Halignment& aAlign) = 0;
 
   PRBool IsHorizontal() const { return (mState & NS_STATE_IS_HORIZONTAL) != 0; }
-  nsresult GetOrientation(PRBool& aIsHorizontal)  /// XXX to be removed
-  { aIsHorizontal = IsHorizontal(); return NS_OK; }
-
   PRBool IsNormalDirection() const { return (mState & NS_STATE_IS_DIRECTION_NORMAL) != 0; }
-  nsresult GetDirection(PRBool& aIsNormal)  /// XXX to be removed
-  { aIsNormal = IsNormalDirection(); return NS_OK; }
 
   NS_HIDDEN_(nsresult) Redraw(nsBoxLayoutState& aState, const nsRect* aRect = nsnull, PRBool aImmediate = PR_FALSE);
   NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)=0;
-  NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough)=0;
-  NS_IMETHOD SetIncludeOverflow(PRBool aInclude) = 0;
-  NS_IMETHOD GetOverflow(nsSize& aOverflow) = 0;
+  virtual PRBool GetMouseThrough() const = 0;
 
 #ifdef DEBUG_LAYOUT
   NS_IMETHOD SetDebug(nsBoxLayoutState& aState, PRBool aDebug)=0;
@@ -1916,8 +1908,9 @@ NS_PTR_TO_INT32(frame->GetProperty(nsGkAtoms::embeddingLevel))
 
   NS_IMETHOD DumpBox(FILE* out)=0;
 #endif
-  NS_IMETHOD ChildrenMustHaveWidgets(PRBool& aMust) const=0;
-  NS_IMETHOD GetIndexOf(nsIBox* aChild, PRInt32* aIndex)=0;
+
+  // Only nsDeckFrame requires that all its children have widgets
+  virtual PRBool ChildrenMustHaveWidgets() const { return PR_FALSE; }
 
   /**
    * @return PR_TRUE if this text frame ends with a newline character.  It

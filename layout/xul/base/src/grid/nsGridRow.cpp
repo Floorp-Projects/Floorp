@@ -100,11 +100,6 @@ nsGridRow::MarkDirty(nsBoxLayoutState& aState)
 PRBool 
 nsGridRow::IsCollapsed(nsBoxLayoutState& aState)
 {
-  PRBool isCollapsed = PR_FALSE;
-
-  if (mBox)
-    mBox->IsCollapsed(aState,isCollapsed);
-
-  return isCollapsed;
+  return mBox && mBox->IsCollapsed(aState);
 }
 

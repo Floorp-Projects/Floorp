@@ -146,9 +146,7 @@ struct nsBoxLayoutMetrics
   nscoord mAscent;
 
   nsSize mLastSize;
-  nsSize mOverflow;
 
-  PRPackedBool mIncludeOverflow;
   PRPackedBool mWasCollapsed;
 };
 
@@ -5773,20 +5771,6 @@ void nsFrame::FillCursorInformationFromStyle(const nsStyleUserInterface* ui,
 }
 
 NS_IMETHODIMP
-nsFrame::GetOverflow(nsSize& aOverflow)
-{
-  aOverflow = BoxMetrics()->mOverflow;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrame::SetIncludeOverflow(PRBool aInclude)
-{
-  BoxMetrics()->mIncludeOverflow = aInclude;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
 {
 
@@ -5900,9 +5884,7 @@ nsFrame::GetPrefSize(nsBoxLayoutState& aState)
     return size;
   }
 
-  PRBool isCollapsed = PR_FALSE;
-  IsCollapsed(aState, isCollapsed);
-  if (isCollapsed)
+  if (IsCollapsed(aState))
     return size;
 
   // get our size in CSS.
@@ -5936,9 +5918,7 @@ nsFrame::GetMinSize(nsBoxLayoutState& aState)
     return size;
   }
 
-  PRBool isCollapsed = PR_FALSE;
-  IsCollapsed(aState, isCollapsed);
-  if (isCollapsed)
+  if (IsCollapsed(aState))
     return size;
 
   // get our size in CSS.
@@ -5968,9 +5948,7 @@ nsFrame::GetMaxSize(nsBoxLayoutState& aState)
     return size;
   }
 
-  PRBool isCollapsed = PR_FALSE;
-  IsCollapsed(aState, isCollapsed);
-  if (isCollapsed)
+  if (IsCollapsed(aState))
     return size;
 
   size = nsBox::GetMaxSize(aState);
@@ -5979,35 +5957,26 @@ nsFrame::GetMaxSize(nsBoxLayoutState& aState)
   return size;
 }
 
-NS_IMETHODIMP
-nsFrame::GetFlex(nsBoxLayoutState& aState, nscoord& aFlex)
+nscoord
+nsFrame::GetFlex(nsBoxLayoutState& aState)
 {
   nsBoxLayoutMetrics *metrics = BoxMetrics();
-  if (!DoesNeedRecalc(metrics->mFlex)) {
-     aFlex = metrics->mFlex;
-     return NS_OK;
-  }
+  if (!DoesNeedRecalc(metrics->mFlex))
+     return metrics->mFlex;
 
-  metrics->mFlex = 0;
-  nsBox::GetFlex(aState, metrics->mFlex);
+  metrics->mFlex = nsBox::GetFlex(aState);
 
-  aFlex = metrics->mFlex;
-
-  return NS_OK;
+  return metrics->mFlex;
 }
 
-NS_IMETHODIMP
-nsFrame::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
+nscoord
+nsFrame::GetBoxAscent(nsBoxLayoutState& aState)
 {
   nsBoxLayoutMetrics *metrics = BoxMetrics();
-  if (!DoesNeedRecalc(metrics->mAscent)) {
-    aAscent = metrics->mAscent;
-    return NS_OK;
-  }
+  if (!DoesNeedRecalc(metrics->mAscent))
+    return metrics->mAscent;
 
-  PRBool isCollapsed = PR_FALSE;
-  IsCollapsed(aState, isCollapsed);
-  if (isCollapsed) {
+  if (IsCollapsed(aState)) {
     metrics->mAscent = 0;
   } else {
     // Refresh our caches with new sizes.
@@ -6018,9 +5987,7 @@ nsFrame::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
     metrics->mAscent += m.top;
   }
 
-  aAscent = metrics->mAscent;
-
-  return NS_OK;
+  return metrics->mAscent;
 }
 
 nsresult
@@ -6038,9 +6005,7 @@ nsFrame::DoLayout(nsBoxLayoutState& aState)
     rv = BoxReflow(aState, presContext, desiredSize, rendContext,
                    ourRect.x, ourRect.y, ourRect.width, ourRect.height);
 
-    PRBool collapsed = PR_FALSE;
-    IsCollapsed(aState, collapsed);
-    if (collapsed) {
+    if (IsCollapsed(aState)) {
       SetSize(nsSize(0, 0));
     } else {
 
@@ -6242,48 +6207,40 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
 
     // see if the overflow option is set. If it is then if our child's bounds overflow then
     // we will set the child's rect to include the overflow size.
-       if (GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
-         // make sure we store the overflow size
+    if (GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
+      // make sure we store the overflow size
+      
+      // This kinda sucks. We should be able to handle the case
+      // where there's overflow above or to the left of the
+      // origin. But for now just chop that stuff off.
 
-         // This kinda sucks. We should be able to handle the case
-         // where there's overflow above or to the left of the
-         // origin. But for now just chop that stuff off.
-         metrics->mOverflow.width = aDesiredSize.mOverflowArea.XMost();
-         metrics->mOverflow.height = aDesiredSize.mOverflowArea.YMost();
+      //printf("OutsideChildren width=%d, height=%d\n", aDesiredSize.mOverflowArea.width, aDesiredSize.mOverflowArea.height);
+      aDesiredSize.width = aDesiredSize.mOverflowArea.XMost();
+      if (aDesiredSize.width <= aWidth)
+        aDesiredSize.height = aDesiredSize.mOverflowArea.YMost();
+      else {
+        if (aDesiredSize.width > aWidth)
+        {
+          nscoord computedWidth = aDesiredSize.width -
+            reflowState.mComputedBorderPadding.LeftRight();
+          computedWidth = PR_MAX(computedWidth, 0);
+          reflowState.SetComputedWidth(computedWidth);
+          reflowState.availableWidth = aDesiredSize.width;
+          DidReflow(aPresContext, &reflowState, NS_FRAME_REFLOW_FINISHED);
+          #ifdef DEBUG_REFLOW
+           nsAdaptorAddIndents();
+           nsAdaptorPrintReason(reflowState);
+           printf("\n");
+          #endif
+          AddStateBits(NS_FRAME_IS_DIRTY);
+          WillReflow(aPresContext);
+          Reflow(aPresContext, aDesiredSize, reflowState, status);
+          if (GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN)
+            aDesiredSize.height = aDesiredSize.mOverflowArea.YMost();
 
-         // include the overflow size in our child's rect?
-         if (metrics->mIncludeOverflow) {
-             //printf("OutsideChildren width=%d, height=%d\n", aDesiredSize.mOverflowArea.width, aDesiredSize.mOverflowArea.height);
-             aDesiredSize.width = aDesiredSize.mOverflowArea.XMost();
-             if (aDesiredSize.width <= aWidth)
-               aDesiredSize.height = aDesiredSize.mOverflowArea.YMost();
-             else {
-              if (aDesiredSize.width > aWidth)
-              {
-                 nscoord computedWidth = aDesiredSize.width -
-                   reflowState.mComputedBorderPadding.LeftRight();
-                 computedWidth = PR_MAX(computedWidth, 0);
-                 reflowState.SetComputedWidth(computedWidth);
-                 reflowState.availableWidth = aDesiredSize.width;
-                 DidReflow(aPresContext, &reflowState, NS_FRAME_REFLOW_FINISHED);
-                 #ifdef DEBUG_REFLOW
-                  nsAdaptorAddIndents();
-                  nsAdaptorPrintReason(reflowState);
-                  printf("\n");
-                 #endif
-                 AddStateBits(NS_FRAME_IS_DIRTY);
-                 WillReflow(aPresContext);
-                 Reflow(aPresContext, aDesiredSize, reflowState, status);
-                 if (GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN)
-                    aDesiredSize.height = aDesiredSize.mOverflowArea.YMost();
-
-              }
-             }
-         }
-       } else {
-         metrics->mOverflow.width  = aDesiredSize.width;
-         metrics->mOverflow.height = aDesiredSize.height;
-       }
+        }
+      }
+    }
 
     if (redrawAfterReflow) {
        nsRect r = GetRect();
@@ -6302,9 +6259,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
                                         aDesiredSize, aX, aY, layoutFlags | NS_FRAME_NO_MOVE_FRAME);
 
     // Save the ascent.  (bug 103925)
-    PRBool isCollapsed = PR_FALSE;
-    IsCollapsed(aState, isCollapsed);
-    if (isCollapsed) {
+    if (IsCollapsed(aState)) {
       metrics->mAscent = 0;
     } else {
       if (aDesiredSize.ascent == nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
@@ -6381,9 +6336,7 @@ nsFrame::SetParent(const nsIFrame* aParent)
     DeleteProperty(nsGkAtoms::boxMetricsProperty);
 
   if (aParent && aParent->IsBoxFrame()) {
-    PRBool needsWidget = PR_FALSE;
-    aParent->ChildrenMustHaveWidgets(needsWidget);
-    if (needsWidget) {
+    if (aParent->ChildrenMustHaveWidgets()) {
         nsHTMLContainerFrame::CreateViewForFrame(this, nsnull, PR_TRUE);
         nsIView* view = GetView();
         if (!view->HasWidget())
@@ -6415,8 +6368,6 @@ nsFrame::InitBoxMetrics(PRBool aClear)
   nsFrame::MarkIntrinsicWidthsDirty();
   metrics->mBlockAscent = 0;
   metrics->mLastSize.SizeTo(0, 0);
-  metrics->mOverflow.SizeTo(0, 0);
-  metrics->mIncludeOverflow = PR_TRUE;
   metrics->mWasCollapsed = PR_FALSE;
 }
 

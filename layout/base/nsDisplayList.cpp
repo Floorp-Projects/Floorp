@@ -346,9 +346,7 @@ nsIFrame* nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) co
       nsIFrame* f = item->HitTest(aBuilder, aPt);
       // Handle the XUL 'mousethrough' feature.
       if (f) {
-        PRBool mouseThrough = PR_FALSE;
-        f->GetMouseThrough(mouseThrough);
-        if (!mouseThrough)
+        if (!f->GetMouseThrough())
           return f;
       }
     }

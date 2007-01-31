@@ -98,13 +98,12 @@ public:
   NS_IMETHOD SetLayoutManager(nsIBoxLayout* aLayout);
   NS_IMETHOD GetLayoutManager(nsIBoxLayout** aLayout);
   NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild);
-  NS_IMETHOD GetIndexOf(nsIBox* aChild, PRInt32* aIndex);
 
   virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState);
   virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState);
   virtual nsSize GetMaxSize(nsBoxLayoutState& aBoxLayoutState);
-  NS_IMETHOD GetFlex(nsBoxLayoutState& aBoxLayoutState, nscoord& aFlex);
-  NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
+  virtual nscoord GetFlex(nsBoxLayoutState& aBoxLayoutState);
+  virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState);
 #ifdef DEBUG_LAYOUT
   NS_IMETHOD SetDebug(nsBoxLayoutState& aBoxLayoutState, PRBool aDebug);
   NS_IMETHOD GetDebug(PRBool& aDebug);
@@ -115,7 +114,7 @@ public:
   NS_IMETHOD GetHAlign(Halignment& aAlign);
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
 
-  NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough);
+  virtual PRBool GetMouseThrough() const;
   virtual PRBool ComputesOwnOverflowArea() { return PR_FALSE; }
 
   // ----- child and sibling operations ---

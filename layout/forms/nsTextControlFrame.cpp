@@ -1821,28 +1821,25 @@ nsTextControlFrame::GetMaxSize(nsBoxLayoutState& aState)
   return nsBox::GetMaxSize(aState);
 }
 
-NS_IMETHODIMP
-nsTextControlFrame::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
+nscoord
+nsTextControlFrame::GetBoxAscent(nsBoxLayoutState& aState)
 {
   // First calculate the ascent of the text inside
-  nsresult rv = nsStackFrame::GetAscent(aState, aAscent);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nscoord ascent = nsStackFrame::GetBoxAscent(aState);
     
   // Now adjust the ascent for our borders and padding
   nsMargin borderPadding;
   GetBorderAndPadding(borderPadding);
-  aAscent += borderPadding.top;
+  ascent += borderPadding.top;
   
-  return NS_OK;
+  return ascent;
 }
 
-NS_IMETHODIMP
-nsTextControlFrame::IsCollapsed(nsBoxLayoutState& aBoxLayoutState,
-                                PRBool& aCollapsed)
+PRBool
+nsTextControlFrame::IsCollapsed(nsBoxLayoutState& aBoxLayoutState)
 {
   // We're never collapsed in the box sense.
-  aCollapsed = PR_FALSE;
-  return NS_OK;
+  return PR_FALSE;
 }
 
 PRBool

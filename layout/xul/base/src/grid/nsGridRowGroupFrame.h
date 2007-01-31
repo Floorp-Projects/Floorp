@@ -75,7 +75,7 @@ public:
                       nsIBoxLayout* aLayoutManager):
     nsBoxFrame(aPresShell, aContext, aIsRoot, aLayoutManager) {}
 
-  NS_IMETHOD GetFlex(nsBoxLayoutState& aBoxLayoutState, nscoord& aFlex);
+  virtual nscoord GetFlex(nsBoxLayoutState& aBoxLayoutState);
 
 }; // class nsGridRowGroupFrame
 

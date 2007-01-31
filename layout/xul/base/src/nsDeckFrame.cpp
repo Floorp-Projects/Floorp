@@ -80,16 +80,6 @@ nsDeckFrame::nsDeckFrame(nsIPresShell* aPresShell,
   SetLayoutManager(layout);
 }
 
-/**
- * Hack for deck who requires that all its children has widgets
- */
-NS_IMETHODIMP
-nsDeckFrame::ChildrenMustHaveWidgets(PRBool& aMust) const
-{
-  aMust = PR_TRUE;
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsDeckFrame::AttributeChanged(PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,

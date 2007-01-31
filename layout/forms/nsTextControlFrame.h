@@ -89,9 +89,8 @@ public:
   virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState);
   virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState);
   virtual nsSize GetMaxSize(nsBoxLayoutState& aBoxLayoutState);
-  NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
-  NS_IMETHOD IsCollapsed(nsBoxLayoutState& aBoxLayoutState,
-                         PRBool& aCollapsed);
+  virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState);
+  virtual PRBool IsCollapsed(nsBoxLayoutState& aBoxLayoutState);
 
   DECL_DO_GLOBAL_REFLOW_COUNT_DSP(nsTextControlFrame, nsStackFrame)
 

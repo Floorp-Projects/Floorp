@@ -387,10 +387,7 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
   if ((pageIncrement + maxpospx - minpospx) > 0)
   {
     // if the thumb is flexible make the thumb bigger.
-    nscoord flex = 0;
-    thumbBox->GetFlex(aState, flex);
-
-    if (flex > 0)
+    if (thumbBox->GetFlex(aState) > 0)
     {
       mRatio = float(pageIncrement) / float(maxpospx - minpospx + pageIncrement);
       nscoord thumbsize = NSToCoordRound(ourmaxpos * mRatio);

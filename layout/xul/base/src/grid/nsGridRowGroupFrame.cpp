@@ -64,23 +64,18 @@ NS_NewGridRowGroupFrame (nsIPresShell* aPresShell,
  * This is redefined because row groups have a funny property. If they are flexible
  * then their flex must be equal to the sum of their children's flexes.
  */
-NS_IMETHODIMP
-nsGridRowGroupFrame::GetFlex(nsBoxLayoutState& aState, nscoord& aFlex)
+nscoord
+nsGridRowGroupFrame::GetFlex(nsBoxLayoutState& aState)
 {
   // if we are flexible out flexibility is determined by our columns.
   // so first get the our flex. If not 0 then our flex is the sum of
   // our columns flexes.
 
-  if (!DoesNeedRecalc(mFlex)) {
-     aFlex = mFlex;
-     return NS_OK;
-  }
+  if (!DoesNeedRecalc(mFlex))
+     return mFlex;
 
-  nsBoxFrame::GetFlex(aState, aFlex);
-
-
-  if (aFlex == 0)
-    return NS_OK;
+  if (nsBoxFrame::GetFlex(aState) == 0)
+    return 0;
 
   // ok we are flexible add up our children
   nscoord totalFlex = 0;
@@ -88,16 +83,13 @@ nsGridRowGroupFrame::GetFlex(nsBoxLayoutState& aState, nscoord& aFlex)
   GetChildBox(&child);
   while (child)
   {
-    PRInt32 flex = 0;
-    child->GetFlex(aState, flex);
-    totalFlex += flex;;
+    totalFlex += child->GetFlex(aState);
     child->GetNextBox(&child);
   }
 
-  aFlex = totalFlex;
-  mFlex = aFlex;
+  mFlex = totalFlex;
 
-  return NS_OK;
+  return totalFlex;
 }
 
 

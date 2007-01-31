@@ -100,9 +100,7 @@ nsLeafBoxFrame::Init(
 
    // see if we need a widget
   if (aParent && aParent->IsBoxFrame()) {
-    PRBool needsWidget = PR_FALSE;
-    aParent->ChildrenMustHaveWidgets(needsWidget);
-    if (needsWidget) {
+    if (aParent->ChildrenMustHaveWidgets()) {
         nsHTMLContainerFrame::CreateViewForFrame(this, nsnull, PR_TRUE); 
         nsIView* view = GetView();
 
@@ -146,29 +144,21 @@ void nsLeafBoxFrame::UpdateMouseThrough()
   }
 }
 
-NS_IMETHODIMP
-nsLeafBoxFrame::GetMouseThrough(PRBool& aMouseThrough)
+PRBool
+nsLeafBoxFrame::GetMouseThrough() const
 {
   switch (mMouseThrough)
   {
     case always:
-      aMouseThrough = PR_TRUE;
-      return NS_OK;
+      return PR_TRUE;
     case never:
-      aMouseThrough = PR_FALSE;      
-      return NS_OK;
+      return PR_FALSE;
     case unset:
-    {
       if (mParent && mParent->IsBoxFrame())
-        return mParent->GetMouseThrough(aMouseThrough);
-      else {
-        aMouseThrough = PR_FALSE;      
-        return NS_OK;
-      }
-    }
+        return mParent->GetMouseThrough();
   }
 
-  return NS_ERROR_FAILURE;
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP
@@ -344,14 +334,9 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   Layout(state);
   
   // ok our child could have gotten bigger. So lets get its bounds
-  
-  // get the ascent
-  nscoord ascent = mRect.height;
-  GetAscent(state, ascent);
-
   aDesiredSize.width  = mRect.width;
   aDesiredSize.height = mRect.height;
-  aDesiredSize.ascent = ascent;
+  aDesiredSize.ascent = GetBoxAscent(state);
 
   // NS_FRAME_OUTSIDE_CHILDREN is set in SetBounds() above
   if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
@@ -432,16 +417,16 @@ nsLeafBoxFrame::GetMaxSize(nsBoxLayoutState& aState)
     return nsBox::GetMaxSize(aState);
 }
 
-NS_IMETHODIMP
-nsLeafBoxFrame::GetFlex(nsBoxLayoutState& aState, nscoord& aFlex)
+/* virtual */ nscoord
+nsLeafBoxFrame::GetFlex(nsBoxLayoutState& aState)
 {
-    return nsBox::GetFlex(aState, aFlex);
+    return nsBox::GetFlex(aState);
 }
 
-NS_IMETHODIMP
-nsLeafBoxFrame::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
+/* virtual */ nscoord
+nsLeafBoxFrame::GetBoxAscent(nsBoxLayoutState& aState)
 {
-    return nsBox::GetAscent(aState, aAscent);
+    return nsBox::GetBoxAscent(aState);
 }
 
 /* virtual */ void

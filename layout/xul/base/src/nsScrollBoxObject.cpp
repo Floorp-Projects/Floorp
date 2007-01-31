@@ -163,8 +163,7 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollByIndex(PRInt32 dindexes)
     // now get the scrolled boxes first child.
     scrolledBox->GetChildBox(&child);
 
-    PRBool horiz = PR_FALSE;
-    scrolledBox->GetOrientation(horiz);
+    PRBool horiz = scrolledBox->IsHorizontal();
     nsPoint cp;
     scrollableView->GetScrollPosition(cp.x,cp.y);
     nscoord diff = 0;
@@ -303,8 +302,6 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollToElement(nsIDOMElement *child)
     // TODO: make sure the child is inside the box
 
     // get our current info
-    PRBool horiz = PR_FALSE;
-    scrolledBox->GetOrientation(horiz);
     nsPoint cp;
     scrollableView->GetScrollPosition(cp.x,cp.y);
 
@@ -315,7 +312,7 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollToElement(nsIDOMElement *child)
 
     // we only scroll in the direction of the scrollbox orientation
     // always scroll to left or top edge of child element
-    if (horiz) {
+    if (scrolledBox->IsHorizontal()) {
         newx = rect.x - crect.x;
     } else {
         newy = rect.y - crect.y;
@@ -429,9 +426,6 @@ NS_IMETHODIMP nsScrollBoxObject::EnsureElementIsVisible(nsIDOMElement *child)
     // TODO: make sure the child is inside the box
 
     // get our current info
-    PRBool horiz = PR_FALSE;
-    scrolledBox->GetOrientation(horiz);
-
     nsPoint cp;
     scrollableView->GetScrollPosition(cp.x,cp.y);
     GetOffsetRect(crect);    
@@ -440,11 +434,10 @@ NS_IMETHODIMP nsScrollBoxObject::EnsureElementIsVisible(nsIDOMElement *child)
     crect.width = NSToIntRound(crect.width * pixelsToTwips);
     crect.height = NSToIntRound(crect.height * pixelsToTwips);
 
-
     nscoord newx=cp.x, newy=cp.y;
 
     // we only scroll in the direction of the scrollbox orientation
-    if (horiz) {
+    if (scrolledBox->IsHorizontal()) {
         if ((rect.x - crect.x) + rect.width > cp.x + crect.width) {
             newx = cp.x + (((rect.x - crect.x) + rect.width)-(cp.x + crect.width));
         } else if (rect.x - crect.x < cp.x) {

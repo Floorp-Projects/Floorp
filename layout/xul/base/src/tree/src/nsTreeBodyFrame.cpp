@@ -759,16 +759,13 @@ FindScrollParts(nsIFrame* aCurrFrame, nsTreeBodyFrame::ScrollParts* aResult)
   nsIScrollbarFrame *sf = nsnull;
   CallQueryInterface(aCurrFrame, &sf);
   if (sf) {
-    PRBool isHorizontal = PR_FALSE;
-    if (NS_SUCCEEDED(aCurrFrame->GetOrientation(isHorizontal))) {
-      if (!isHorizontal) {
-        if (!aResult->mVScrollbar) {
-          aResult->mVScrollbar = sf;
-        }
-      } else {
-        if (!aResult->mHScrollbar) {
-          aResult->mHScrollbar = sf;
-        }
+    if (!aCurrFrame->IsHorizontal()) {
+      if (!aResult->mVScrollbar) {
+        aResult->mVScrollbar = sf;
+      }
+    } else {
+      if (!aResult->mHScrollbar) {
+        aResult->mHScrollbar = sf;
       }
     }
     // don't bother searching inside a scrollbar

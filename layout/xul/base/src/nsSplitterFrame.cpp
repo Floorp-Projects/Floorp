@@ -344,9 +344,7 @@ nsSplitterFrame::Init(nsIContent*      aContent,
   // |newContext| to Release the reference after the call to nsBoxFrame::Init
   nsRefPtr<nsStyleContext> newContext;
   if (aParent && aParent->IsBoxFrame()) {
-    PRBool isHorizontal;
-    aParent->GetOrientation(isHorizontal);
-    if (!isHorizontal) {
+    if (!aParent->IsHorizontal()) {
       if (!nsContentUtils::HasNonEmptyAttr(aContent, kNameSpaceID_None,
                                            nsGkAtoms::orient)) {
         aContent->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
@@ -400,9 +398,7 @@ nsSplitterFrame::GetInitialOrientation(PRBool& aIsHorizontal)
   nsIBox* box;
   GetParentBox(&box);
   if (box) {
-    PRBool horizontal;
-    box->GetOrientation(horizontal);
-    aIsHorizontal = !horizontal;
+    aIsHorizontal = !box->IsHorizontal();
   }
   else
     nsBoxFrame::GetInitialOrientation(aIsHorizontal);
@@ -784,8 +780,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
         mOuter->AddMargin(childBox, prefSize);
         mOuter->AddMargin(childBox, maxSize);
 
-        nscoord flex = 0;
-        childBox->GetFlex(state, flex);
+        nscoord flex = childBox->GetFlex(state);
 
         nsMargin margin(0,0,0,0);
         childBox->GetMargin(margin);
@@ -825,9 +820,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
     count++;
   }
 
-  PRBool isNormalDirection = PR_TRUE;
-  mParentBox->GetDirection(isNormalDirection);
-  if (!isNormalDirection) {
+  if (!mParentBox->IsNormalDirection()) {
     // The before array is really the after array, and the order needs to be reversed.
     // First reverse both arrays.
     Reverse(mChildInfosBefore, mChildInfosBeforeCount);
