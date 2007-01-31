@@ -159,20 +159,20 @@ nsresult nsReadConfig::readConfigFile()
     nsXPIDLCString lockVendor;
     PRUint32 fileNameLen = 0;
     
-    nsCOMPtr<nsIPrefBranch> prefBranch;
+    nsCOMPtr<nsIPrefBranch> defaultPrefBranch;
     nsCOMPtr<nsIPrefService> prefService = 
         do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv))
         return rv;
 
-    rv = prefService->GetDefaultBranch(nsnull, getter_AddRefs(prefBranch));
+    rv = prefService->GetDefaultBranch(nsnull, getter_AddRefs(defaultPrefBranch));
     if (NS_FAILED(rv))
         return rv;
         
     // This preference is set in the all.js or all-ns.js (depending whether 
     // running mozilla or netscp6)
 
-    rv = prefBranch->GetCharPref("general.config.filename", 
+    rv = defaultPrefBranch->GetCharPref("general.config.filename", 
                                   getter_Copies(lockFileName));
 
 
@@ -209,8 +209,12 @@ nsresult nsReadConfig::readConfigFile()
     // file we allow for the preference to be set (and locked) by the creator 
     // of the cfg file meaning the file can not be renamed (successfully).
 
+    nsCOMPtr<nsIPrefBranch> prefBranch;
+    rv = prefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     PRInt32 obscureValue = 0;
-    (void) prefBranch->GetIntPref("general.config.obscure_value", &obscureValue);
+    (void) defaultPrefBranch->GetIntPref("general.config.obscure_value", &obscureValue);
     PR_LOG(MCD, PR_LOG_DEBUG, ("evaluating .cfg file %s with obscureValue %d\n", lockFileName.get(), obscureValue));
     rv = openAndEvaluateJSFile(lockFileName.get(), PR_TRUE, obscureValue, PR_TRUE);
     if (NS_FAILED(rv))
