@@ -60,19 +60,19 @@
  */
 static char * sAtkPropertyNameArray[PROP_LAST] = {
     0,
-    "accessible_name",
-    "accessible_description",
-    "accessible_parent",
-    "accessible_value",
-    "accessible_role",
-    "accessible_layer",
-    "accessible_mdi_zorder",
-    "accessible_table_caption",
-    "accessible_table_column_description",
-    "accessible_table_column_header",
-    "accessible_table_row_description",
-    "accessible_table_row_header",
-    "accessible_table_summary"
+    "accessible-name",
+    "accessible-description",
+    "accessible-parent",
+    "accessible-value",
+    "accessible-role",
+    "accessible-layer",
+    "accessible-mdi-zorder",
+    "accessible-table-caption",
+    "accessible-table-column-description",
+    "accessible-table-column-header",
+    "accessible-table-row-description",
+    "accessible-table-row-header",
+    "accessible-table-summary"
 };
 
 nsDocAccessibleWrap::nsDocAccessibleWrap(nsIDOMNode *aDOMNode,
