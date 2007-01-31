@@ -236,10 +236,10 @@ InitializeJavaGlobals(JNIEnv *env)
     goto init_error;
   }
 
-  if (!(clazz = env->FindClass("org/mozilla/xpcom/nsISupports")) ||
+  if (!(clazz = env->FindClass("org/mozilla/interfaces/nsISupports")) ||
       !(nsISupportsClass = (jclass) env->NewGlobalRef(clazz)))
   {
-    NS_WARNING("Problem creating org.mozilla.xpcom.nsISupports globals");
+    NS_WARNING("Problem creating org.mozilla.interfaces.nsISupports globals");
     goto init_error;
   }
 
