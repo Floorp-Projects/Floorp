@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsock.c,v 1.50 2006/10/02 21:15:46 julien.pierre.bugs%sun.com Exp $ */
+/* $Id: sslsock.c,v 1.51 2007/01/31 04:20:26 nelson%bolyard.com Exp $ */
 #include "seccomon.h"
 #include "cert.h"
 #include "keyhi.h"
@@ -186,6 +186,7 @@ PRBool			ssl_force_locks;  	/* implicitly PR_FALSE */
 int                     ssl_lock_readers	= 1;	/* default true. */
 char                    ssl_debug;
 char                    ssl_trace;
+FILE *                  ssl_trace_iob;
 char lockStatus[] = "Locks are ENABLED.  ";
 #define LOCKSTATUS_OFFSET 10 /* offset of ENABLED */
 
@@ -2080,6 +2081,13 @@ ssl_NewSocket(PRBool makeLocks)
 	char * ev;
 	firsttime = 0;
 #ifdef DEBUG
+	ev = getenv("SSLDEBUGFILE");
+	if (ev && ev[0]) {
+	    ssl_trace_iob = fopen(ev, "w");
+	}
+	if (!ssl_trace_iob) {
+	    ssl_trace_iob = stderr;
+	}
 #ifdef TRACE
 	ev = getenv("SSLTRACE");
 	if (ev && ev[0]) {
