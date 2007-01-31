@@ -194,7 +194,7 @@ nsContextMenu.prototype = {
     this.showItem("context-viewbgimage", shouldShow);
     this.showItem("context-sep-viewbgimage", shouldShow);
     document.getElementById("context-viewbgimage")
-            .disabled = !this.hasBGImage;*
+            .disabled = !this.hasBGImage;
   },
 
   initMiscItems: function() {
