@@ -518,9 +518,12 @@ nsMacShellService::GetDefaultFeedReader(nsILocalFile** _retval)
         nsCAutoString bundleIdentifier;
 
         // don't throw if the bundle has no identifier
+        rv = NS_ERROR_FAILURE;
         if (NS_FAILED(defaultReader->GetBundleIdentifier(bundleIdentifier)) ||
-            !bundleIdentifier.Equals(SAFARI_BUNDLE_IDENTIFIER))
+            !bundleIdentifier.Equals(SAFARI_BUNDLE_IDENTIFIER)) {
           NS_ADDREF(*_retval = defaultReader);
+          rv = NS_OK;
+        }
       }
     }
 
