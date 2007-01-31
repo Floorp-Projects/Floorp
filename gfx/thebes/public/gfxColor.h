@@ -43,6 +43,40 @@
 #include "gfxTypes.h"
 
 /**
+ * Fast approximate division by 255. It has the property that
+ * for all 0 <= n <= 255*255, FAST_DIVIDE_BY_255(n) == n/255.
+ * But it only uses two adds and two shifts instead of an 
+ * integer division (which is expensive on many processors).
+ *
+ * equivalent to ((v)/255)
+ */
+#define GFX_DIVIDE_BY_255(v)  \
+     (((((unsigned)(v)) << 8) + ((unsigned)(v)) + 255) >> 16)
+
+/**
+ * Fast premultiply macro
+ *
+ * equivalent to (((c)*(a))/255)
+ */
+#define GFX_PREMULTIPLY(c,a) GFX_DIVIDE_BY_255((c)*(a))
+
+/** 
+ * Macro to pack the 4 8-bit channels (A,R,G,B) 
+ * into a 32-bit packed premultiplied pixel.
+ *
+ * The checks for 0 alpha or max alpha ensure that the
+ * compiler selects the quicked calculation when alpha is constant.
+ */
+#define GFX_PACKED_PIXEL(a,r,g,b)                                       \
+    ((a) == 0x00) ? 0x00000000 :                                        \
+    ((a) == 0xFF) ? ((0xFF << 24) | ((r) << 16) | ((g) << 8) | (b))     \
+                  : ((a) << 24) |                                       \
+                    (GFX_PREMULTIPLY(r,a) << 16) |                      \
+                    (GFX_PREMULTIPLY(g,a) << 8) |                       \
+                    (GFX_PREMULTIPLY(b,a))
+
+
+/**
  * A color value, storing red, green, blue and alpha components.
  * This class does not use premultiplied alpha.
  *
