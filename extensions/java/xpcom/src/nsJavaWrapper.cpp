@@ -128,7 +128,7 @@ CreateJavaArray(JNIEnv* env, PRUint8 aType, PRUint32 aSize, const nsID& aIID,
         return rv;
 
       // Create proper Java interface name
-      nsCAutoString class_name("org/mozilla/xpcom/");
+      nsCAutoString class_name("org/mozilla/interfaces/");
       class_name.AppendASCII(iface_name);
       jclass ifaceClass = env->FindClass(class_name.get());
       if (!ifaceClass)
@@ -1600,7 +1600,7 @@ CreateJavaProxy(JNIEnv* env, nsISupports* aXPCOMObject, const nsIID& aIID,
     jobject java_obj = nsnull;
 
     // Create proper Java interface name
-    nsCAutoString class_name("org.mozilla.xpcom.");
+    nsCAutoString class_name("org.mozilla.interfaces.");
     class_name.AppendASCII(iface_name);
     jclass ifaceClass = FindClassInLoader(env, aObjectLoader, class_name.get());
 

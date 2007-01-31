@@ -89,13 +89,15 @@ endif
 #JAVA_LIBRARY_NAME = javaxpcom
 JARFILE = javaxpcom.jar
 
+PACKAGE_DIR = org/mozilla/xpcom/internal
+
 JAVA_SRCS = \
-		org/mozilla/xpcom/internal/XPCOMJavaProxy.java \
-		org/mozilla/xpcom/internal/XPCOMJavaProxyBase.java \
-		org/mozilla/xpcom/internal/MozillaImpl.java \
-		org/mozilla/xpcom/internal/GREImpl.java \
-		org/mozilla/xpcom/internal/XPCOMImpl.java \
-		org/mozilla/xpcom/internal/JavaXPCOMMethods.java \
+		$(PACKAGE_DIR)/XPCOMJavaProxy.java \
+		$(PACKAGE_DIR)/XPCOMJavaProxyBase.java \
+		$(PACKAGE_DIR)/MozillaImpl.java \
+		$(PACKAGE_DIR)/GREImpl.java \
+		$(PACKAGE_DIR)/XPCOMImpl.java \
+		$(PACKAGE_DIR)/JavaXPCOMMethods.java \
 		$(NULL)
 
 JAVA_CLASSPATH = \

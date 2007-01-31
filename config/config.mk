@@ -501,7 +501,7 @@ endif
 # Java macros
 JAVA_GEN_DIR  = _javagen
 JAVA_DIST_DIR = $(DEPTH)/$(JAVA_GEN_DIR)
-JAVA_IFACES_PKG_NAME = org/mozilla/xpcom
+JAVA_IFACES_PKG_NAME = org/mozilla/interfaces
 
 REQ_INCLUDES	= $(foreach d,$(REQUIRES),-I$(DIST)/include/$d) -I$(DIST)/include 
 ifdef LIBXUL_SDK

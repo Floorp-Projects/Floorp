@@ -280,17 +280,17 @@ RegisterNativeMethods(JNIEnv* env, void** aFunctions)
 
   JNINativeMethod xpcom_methods[] = {
     { "initXPCOMNative",
-      "(Ljava/io/File;Lorg/mozilla/xpcom/IAppFileLocProvider;)Lorg/mozilla/xpcom/nsIServiceManager;",
+      "(Ljava/io/File;Lorg/mozilla/xpcom/IAppFileLocProvider;)Lorg/mozilla/interfaces/nsIServiceManager;",
       (void*) aFunctions[kFunc_InitXPCOM] },
-    { "shutdownXPCOM", "(Lorg/mozilla/xpcom/nsIServiceManager;)V",
+    { "shutdownXPCOM", "(Lorg/mozilla/interfaces/nsIServiceManager;)V",
       (void*) aFunctions[kFunc_ShutdownXPCOM] },
-    { "getComponentManager", "()Lorg/mozilla/xpcom/nsIComponentManager;",
+    { "getComponentManager", "()Lorg/mozilla/interfaces/nsIComponentManager;",
       (void*) aFunctions[kFunc_GetComponentManager] },
-    { "getComponentRegistrar", "()Lorg/mozilla/xpcom/nsIComponentRegistrar;",
+    { "getComponentRegistrar", "()Lorg/mozilla/interfaces/nsIComponentRegistrar;",
       (void*) aFunctions[kFunc_GetComponentRegistrar] },
-    { "getServiceManager", "()Lorg/mozilla/xpcom/nsIServiceManager;",
+    { "getServiceManager", "()Lorg/mozilla/interfaces/nsIServiceManager;",
       (void*) aFunctions[kFunc_GetServiceManager] },
-    { "newLocalFile", "(Ljava/lang/String;Z)Lorg/mozilla/xpcom/nsILocalFile;",
+    { "newLocalFile", "(Ljava/lang/String;Z)Lorg/mozilla/interfaces/nsILocalFile;",
       (void*) aFunctions[kFunc_NewLocalFile] }
   };
 

@@ -273,7 +273,7 @@ nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
   jmethodID qiMID = 0;
   jclass clazz = env->GetObjectClass(javaObject);
   if (clazz) {
-    char* sig = "(Ljava/lang/String;)Lorg/mozilla/xpcom/nsISupports;";
+    char* sig = "(Ljava/lang/String;)Lorg/mozilla/interfaces/nsISupports;";
     qiMID = env->GetMethodID(clazz, "queryInterface", sig);
     NS_ASSERTION(qiMID, "Failed to get queryInterface method ID");
   }
@@ -949,11 +949,11 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
       }
 
       if (tag != nsXPTType::T_INTERFACE_IS) {
-        aMethodSig.AppendLiteral("Lorg/mozilla/xpcom/");
+        aMethodSig.AppendLiteral("Lorg/mozilla/interfaces/");
         aMethodSig.AppendASCII(iface_name);
         aMethodSig.Append(';');
       } else {
-        aMethodSig.AppendLiteral("Lorg/mozilla/xpcom/nsISupports;");
+        aMethodSig.AppendLiteral("Lorg/mozilla/interfaces/nsISupports;");
       }
 
       nsMemory::Free(iface_name);
@@ -1138,7 +1138,7 @@ nsJavaXPTCStub::GetRetvalSig(const nsXPTParamInfo* aParamInfo,
       if (NS_FAILED(rv) || !iface_name)
         break;
 
-      aRetvalSig.AppendLiteral("Lorg/mozilla/xpcom/");
+      aRetvalSig.AppendLiteral("Lorg/mozilla/interfaces/");
       aRetvalSig.AppendASCII(iface_name);
       aRetvalSig.Append(';');
       nsMemory::Free(iface_name);
@@ -1146,7 +1146,7 @@ nsJavaXPTCStub::GetRetvalSig(const nsXPTParamInfo* aParamInfo,
     }
 
     case nsXPTType::T_INTERFACE_IS:
-      aRetvalSig.AppendLiteral("Lorg/mozilla/xpcom/nsISupports;");
+      aRetvalSig.AppendLiteral("Lorg/mozilla/interfaces/nsISupports;");
       break;
 
     case nsXPTType::T_VOID:

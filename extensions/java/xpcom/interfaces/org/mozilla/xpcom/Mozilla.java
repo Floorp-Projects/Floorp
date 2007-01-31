@@ -50,6 +50,12 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Properties;
 
+import org.mozilla.interfaces.nsIComponentManager;
+import org.mozilla.interfaces.nsIComponentRegistrar;
+import org.mozilla.interfaces.nsILocalFile;
+import org.mozilla.interfaces.nsIServiceManager;
+import org.mozilla.interfaces.nsISupports;
+
 
 /**
  * A singleton class which provides access to the Mozilla browser.  Requires

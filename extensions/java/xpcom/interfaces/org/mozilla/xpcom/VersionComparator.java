@@ -40,6 +40,9 @@ package org.mozilla.xpcom;
 import java.util.Enumeration;
 import java.util.StringTokenizer;
 
+import org.mozilla.interfaces.nsISupports;
+import org.mozilla.interfaces.nsIVersionComparator;
+
 
 /**
  * Version strings are dot-separated sequences of version-parts.
