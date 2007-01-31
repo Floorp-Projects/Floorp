@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssltrace.c,v 1.3 2004/04/27 23:04:39 gerv%gerv.net Exp $ */
+/* $Id: ssltrace.c,v 1.4 2007/01/31 04:20:26 nelson%bolyard.com Exp $ */
 #include <stdarg.h>
 #include "cert.h"
 #include "ssl.h"
@@ -262,11 +262,15 @@ void
 ssl_Trace(const char *format, ... )
 {
     char buf[2000]; 
-
     va_list args;
-    va_start(args, format);
-    PR_vsnprintf(buf, sizeof(buf), format, args);
-    va_end(args);
-    puts(buf);
+
+    if (ssl_trace_iob) {
+	va_start(args, format);
+	PR_vsnprintf(buf, sizeof(buf), format, args);
+	va_end(args);
+
+	fputs(buf,  ssl_trace_iob);
+	fputs("\n", ssl_trace_iob);
+    }
 }
 #endif
