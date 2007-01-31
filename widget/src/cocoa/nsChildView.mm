@@ -2100,6 +2100,7 @@ NSEvent* globalDragEvent = nil;
     return;
 
   CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
+
   nsRect geckoBounds;
   mGeckoChild->GetBounds(geckoBounds);
 
@@ -2165,14 +2166,17 @@ NSEvent* globalDragEvent = nil;
   // beyond this drawRect message handler)
 
 #ifdef DEBUG_UPDATE
-  fprintf (stderr, "  window coords: [%d %d %d %d]\n", tr.x, tr.y, tr.width, tr.height);
+  fprintf (stderr, "  window coords: [%d %d %d %d]\n", fullRect.x, fullRect.y, fullRect.width, fullRect.height);
   fprintf (stderr, "---- update done ----\n");
 
+#if 0
   CGContextSetRGBStrokeColor (cgContext,
                             ((((unsigned long)self) & 0xff)) / 255.0,
                             ((((unsigned long)self) & 0xff00) >> 8) / 255.0,
                             ((((unsigned long)self) & 0xff0000) >> 16) / 255.0,
                             0.5);
+#endif 
+  CGContextSetRGBStrokeColor (cgContext, 1, 0, 0, 0.8);
   CGContextSetLineWidth (cgContext, 4.0);
   CGContextStrokeRect (cgContext,
                        CGRectMake(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height));
