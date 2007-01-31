@@ -47,13 +47,17 @@ use File::Path;
 use File::Copy qw(move copy);
 use English;
 
+use File::Spec::Functions;
+
+use MozBuild::Util qw(RunShellCommand MkdirWithPath);
+
 require Exporter;
 
 @ISA = qw(Exporter);
 @EXPORT_OK = qw(CreatePartialMarFile CreatePartialMarPatchInfo
                 GetAUS2PlatformStrings GetBouncerPlatformStrings
                 ValidateToolsDirectory
-                MkdirWithPath RunShellCommand
+                EnsureDeliverablesDir
                 SubstitutePath
                );
 
@@ -66,12 +70,8 @@ use strict;
 use vars qw($MAR_BIN $MBSDIFF_BIN $MAKE_BIN
             $INCREMENTAL_UPDATE_BIN $UNWRAP_FULL_UPDATE_BIN
             $TMPDIR_PREFIX 
-            $ST_SIZE
             %BOUNCER_PLATFORMS %AUS2_PLATFORMS
-            $DEFAULT_PARTIAL_MAR_OUTPUT_FILE
-            $EXEC_TIMEOUT );
-
-$ST_SIZE = 7;
+            $DEFAULT_PARTIAL_MAR_OUTPUT_FILE);
 
 $MAR_BIN = 'dist/host/bin/mar';
 $MBSDIFF_BIN = 'dist/host/bin/mbsdiff';
@@ -95,27 +95,20 @@ $TMPDIR_PREFIX = '/dev/shm/tmp/MozAUSLib';
 
 $DEFAULT_PARTIAL_MAR_OUTPUT_FILE = 'partial.mar';
 
-$EXEC_TIMEOUT = 600;
-
-## This is a wrapper function to get easy true/false return values from a
-## mkpath()-like function. mkpath() *actually* returns the list of directories
-## it created in the pursuit of your request, and keeps its actual success 
-## status in $@. 
-
-sub MkdirWithPath
+sub EnsureDeliverablesDir
 {
-    my $dirToCreate = shift;
-    my $printProgress = shift;
-    my $dirMask = shift;
+   my %args = @_;
 
-    die "ASSERT: MkdirWithPath() needs an arg\n" if not defined($dirToCreate);
+   die "ASSERT: null config spec\n" if (not defined($args{'config'}));
+   my $configSpec = $args{'config'};
 
-    ## Defaults based on what mkpath does...
-    $printProgress = defined($printProgress) ? $printProgress : 0;
-    $dirMask = defined($dirMask) ? $dirMask : 0777;
+   my $fullDeliverableDirPath = catfile($configSpec->GetDeliverableDir(),
+                                        lc($configSpec->GetApp()));
 
-    eval { mkpath($dirToCreate, $printProgress, $dirMask) };
-    return defined($@);
+   MkdirWithPath(dir => $fullDeliverableDirPath, mask => 0751) or
+    die "ASSERT: EnsureDeliverablesDir(): " .
+    "MkdirWithPath($fullDeliverableDirPath) failed\n";
+   return $fullDeliverableDirPath;
 }
 
 sub ValidateToolsDirectory
@@ -188,7 +181,7 @@ sub CreatePartialMarFile
     my @createdDirs = ($tmpDir, $fromDir, $toDir, $partialDir);
 
     foreach my $dir (@createdDirs) {
-        if (not MkdirWithPath($dir)) {
+        if (not MkdirWithPath(dir => $dir)) {
             print STDERR "MkdirWithPath() failed on $dir: $EVAL_ERROR\n";
             return -1;
         }
@@ -207,25 +200,38 @@ sub CreatePartialMarFile
     # XXX - Add check here to verify md5/sha1 checksum of file is as-expected.
 
     # Extract the source MAR file.
-    my $extractCommand = "MAR=$mar $mozdir/$UNWRAP_FULL_UPDATE_BIN $startingWd/$fromCompleteMar";
-    printf("Decompressing $fromCompleteMar with $extractCommand... \n");
+    $ENV{'MAR'} = $mar;
+
+    my $extractCommand = catfile($mozdir, $UNWRAP_FULL_UPDATE_BIN);
+    my $unwrapArgs = [catfile($startingWd, $fromCompleteMar)];
+
+    printf("Decompressing $fromCompleteMar with $extractCommand " .
+     join(" ", @{$unwrapArgs}) . "...\n");
     chdir($fromDir) or die "chdir() $fromDir failed: $ERRNO";
 
-    my $rv = RunShellCommand(command => $extractCommand);
-    if ($rv->{'exit_value'} != 0) {
-        die "FAILED: $extractCommand: $rv->{'exit_value'}, output: $rv->{'output'}\n";
+    my $rv = RunShellCommand(command => $extractCommand,
+                             args => $unwrapArgs,
+                             output => 1);
+    
+    if ($rv->{'exitValue'} != 0) {
+        die "FAILED: $extractCommand: $rv->{'exitValue'}, output: $rv->{'output'}\n";
     }
 
     printf("done\n");
 
     # Extract the destination MAR file.
-    $extractCommand = "MAR=$mar $mozdir/$UNWRAP_FULL_UPDATE_BIN $startingWd/$toCompleteMar";
-    printf("Decompressing $toCompleteMar with $extractCommand... \n");
+ 
+    $unwrapArgs = [catfile($startingWd, $toCompleteMar)];
+    printf("Decompressing $toCompleteMar with $extractCommand " .
+     join(" ", @{$unwrapArgs}) . "...\n");
     chdir($toDir) or die "chdir() $toDir failed: $ERRNO";;
 
-    $rv = RunShellCommand(command => $extractCommand);
-    if ($rv->{'exit_value'} != 0) {
-        die "FAILED: $extractCommand: $rv->{'exit_value'}, output: $rv->{'output'}\n";
+    $rv = RunShellCommand(command => $extractCommand,
+                          args => $unwrapArgs,
+                          output => 1);
+
+    if ($rv->{'exitValue'} != 0) {
+        die "FAILED: $extractCommand: $rv->{'exitValue'}, output: $rv->{'output'}\n";
     }
 
     printf("done\n");
@@ -233,19 +239,30 @@ sub CreatePartialMarFile
     # Build the partial patch.
     chdir($mozdir);
 
-    my $forceArgument = (defined($forceList) && scalar(@{$forceList}) > 0) ?
-     ('-f ' . join(' -f ', @{$forceList})) : '';
+    my $outputMar = catfile($mozdir, $DEFAULT_PARTIAL_MAR_OUTPUT_FILE);
+    $ENV{'MBSDIFF'} = $mbsdiff;
 
-    my $outputMar = "$mozdir/$DEFAULT_PARTIAL_MAR_OUTPUT_FILE";
-    my $cmd = "MAR=$mar MBSDIFF=$mbsdiff"
-         . " $makeIncrementalUpdate $forceArgument "
-         . " $outputMar "
-         . " $fromDir $toDir";
+    my $incrUpdateArgs = [];
+    
+    # Tack any force arguments onto the beginning of the arg list
+    if (defined($forceList) && scalar(@{$forceList}) > 0) {
+        foreach my $file (@{$forceList}) {
+            push(@{$incrUpdateArgs}, ('-f', $file));
+        }
+    }
 
-    printf("Building partial update with: $cmd...\n");
-    $rv = RunShellCommand(command => $cmd, output => 1);
-    if ($rv->{'exit_value'} != 0) {
-        die "FAILED: $cmd: $rv->{'exit_value'}, output: $rv->{'output'}\n";
+    push(@{$incrUpdateArgs}, ($outputMar, $fromDir, $toDir));
+
+    printf("Building partial update with: $makeIncrementalUpdate " . 
+     join(" ", @{$incrUpdateArgs}) . "\n...");
+
+    $rv = RunShellCommand(command => $makeIncrementalUpdate,
+                          args => $incrUpdateArgs,
+                          output => 1);
+
+    if ($rv->{'exitValue'} != 0) {
+        die "FAILED: $makeIncrementalUpdate: $rv->{'exitValue'}, " . 
+         "output: $rv->{'output'}\n";
     }
 
     printf("done\n");
@@ -256,9 +273,10 @@ sub CreatePartialMarFile
         print STDERR "Couldn't find partial output mar: $outputMar\n";
     }
 
-    printf("Moving $outputMar to $outputDir/$outputFile... \n");
-    move($outputMar, "$outputDir/$outputFile") or 
-     die "move($outputMar, $outputDir/$outputFile) failed: $ERRNO";
+    my $finalDeliverable = catfile($outputDir, $outputFile);
+    printf("Moving $outputMar to $finalDeliverable... \n");
+    move($outputMar, $finalDeliverable) or 
+     die "move($outputMar, $finalDeliverable) failed: $ERRNO";
     printf("done\n");
 
     printf("Removing temporary directories...\n");
@@ -274,76 +292,6 @@ sub CreatePartialMarFile
 
     chdir($startingWd) or die "Couldn't chdir() back to $startingWd: $ERRNO";
     return 1;
-}
-
-# Stolen from the code for bug 336463
-
-sub RunShellCommand 
-{
-    my %args = @_;
-    my $shellCommand = $args{'command'};
-
-    # optional
-    my $timeout = exists($args{'timeout'}) ? $args{'timeout'} : $EXEC_TIMEOUT;
-    my $redirectStderr = exists($args{'redirectStderr'}) ? $args{'redirectStderr'} : 1;
-    my $printOutputImmediately = exists($args{'output'}) ? $args{'output'} : 0;
-
-    my $now = localtime();
-    local $_;
- 
-    chomp($shellCommand);
-
-    my $exit_value = 1;
-    my $signal_num;
-    my $sig_name;
-    my $dumped_core;
-    my $timed_out;
-    my $output;
-
-    eval {
-        local $SIG{'ALRM'} = sub { die "alarm\n" };
-        alarm $timeout;
- 
-        if (! $redirectStderr || $shellCommand =~ "2>&1") {
-            open CMD, "$shellCommand |" or die "Could not run command: $!";
-        } else {
-            open CMD, "$shellCommand 2>&1 |" or die "Could not run command: $!";
-        }
-
-        while (<CMD>) {
-            $output .= $_;
-            print $_ if ($printOutputImmediately);
-        }
-
-        close CMD or die "Could not close command: $!";
-        $exit_value = $? >> 8;
-        $signal_num = $? >> 127;
-        $dumped_core = $? & 128;
-        $timed_out = 0;
-        alarm 0;
-    };
-
-    if ($@){
-        if ($@ eq "alarm\n") {
-            $timed_out = 1;
-        } else {
-            warn "Error running $shellCommand: $@\n";
-            $output = $@;
-        }
-    }
-
-    if ($exit_value || $timed_out || $dumped_core || $signal_num) {
-        if ($timed_out) {
-            # callers expect exit_value to be non-zero if request timed out
-            $exit_value = 1;
-        }
-    }
-
-    return { timed_out => $timed_out,
-             exit_value => $exit_value,
-             sig_name => $sig_name,
-             output => $output,
-             dumped_core => $dumped_core };
 }
 
 sub SubstitutePath
@@ -367,31 +315,6 @@ sub SubstitutePath
     $string =~ s/%app%/$app/g;
 
     return $string;
-}
-
-sub DownloadFile
-{
-    my %args = @_;
-
-    my $sourceUrl = $args{'url'};
-
-    die "ASSERT: Invalid Source URL: $sourceUrl\n" 
-     if ($sourceUrl !~ m|^http://|);
-
-    my $destArgument = defined($args{'dest'}) ? "-O $args{'dest'}" : '';
-
-    my $httpUser = defined($args{'user'}) ?
-     "--http-user=\"$args{'user'}\"" : '';
-    my $httpPassword = defined($args{'password'}) ? 
-     "--http-password=\"$args{'password'}\"" : '';
-    my $httpAuthArgs = "$httpUser $httpPassword";
-
-    my $wgetCommand = "wget $destArgument $httpAuthArgs --progress=dot:mega " .
-     $sourceUrl;
-    my $rv = RunShellCommand(command => $wgetCommand);
-    if ($rv->{'exit_value'} != 0) {
-        die "$wgetCommand FAILED: $rv->{'exit_value'}, output: $rv->{'output'}\n";
-    }
 }
 
 1;
