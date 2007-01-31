@@ -107,6 +107,17 @@ nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell)
 
   // XXX aaronl should we use an algorithm for the initial cache size?
   mAccessNodeCache.Init(kDefaultCacheSize);
+
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =                              
+    GetDocShellTreeItemFor(mDOMNode);
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(docShellTreeItem);
+  if (docShell) {
+    PRUint32 busyFlags;
+    docShell->GetBusyFlags(&busyFlags);
+    if (busyFlags == nsIDocShell::BUSY_FLAGS_NONE) {
+      mIsContentLoaded = PR_TRUE;                                               
+    }
+  }
 }
 
 //-----------------------------------------------------
