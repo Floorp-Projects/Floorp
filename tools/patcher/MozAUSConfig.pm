@@ -67,13 +67,12 @@ use vars qw( @RUN_MODES
 
 @RUN_MODES = qw( build-tools
                  download 
-                 create-patches create-patchinfo
-                 move-update );
+                 create-patches create-patchinfo );
 
 $DEFAULT_CONFIG_FILE = 'patcher2.cfg';
 $DEFAULT_APP = 'MyApp';
 $DEFAULT_DOWNLOAD_DIR = 'downloads';
-$DEFAULT_DELIVERABLE_DIR = 'output';
+$DEFAULT_DELIVERABLE_DIR = 'temp';
 $DEFAULT_MAR_NAME = '%app%-%version%.%locale%.%platform%.complete.mar';
 
 sub new
@@ -107,7 +106,7 @@ sub GetStartingDir
 sub ProcessCommandLineArgs
 {
     my $this = shift;
-    my (%args, %move_args);
+    my (%args);
 
     Getopt::Long::Configure('bundling_override', 'ignore_case_always', 
      'pass_through');
@@ -151,16 +150,6 @@ sub ProcessCommandLineArgs
     }
 
     return 0 if (not scalar(@{$this->{'run'}}));
-
-    if ( grep(/^move-update$/, @{$this->{'run'}}) ) {
-        GetOptions(\%move_args, 'from=s', 'to=s') or return 0;
-
-        die "ERROR: For --move-update, please set 'from' by calling with --from=<string>!" if not defined($move_args{'from'});
-        die "ERROR: For --move-update, please set 'to' by calling with --to=<string>!" if not defined($move_args{'to'});
-
-        $this->{'move-update-from'} = $move_args{'from'};
-        $this->{'move-update-to'} = $move_args{'to'};
-    }
 
     return 1;
 }

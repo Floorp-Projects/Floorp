@@ -55,8 +55,10 @@ use File::Spec::Functions;
 use MozAUSConfig;
 use MozAUSLib qw(CreatePartialMarFile
                  GetAUS2PlatformStrings
-                 ValidateToolsDirectory MkdirWithPath SubstitutePath
-                 RunShellCommand);
+                 EnsureDeliverablesDir
+                 ValidateToolsDirectory SubstitutePath);
+
+use MozBuild::Util qw(MkdirWithPath RunShellCommand DownloadFile HashFile);
 
 $Data::Dumper::Indent = 1;
 
@@ -70,8 +72,9 @@ autoflush STDERR 1;
 use vars qw($PID_FILE
             $DEFAULT_HASH_TYPE
             $DEFAULT_CVSROOT
-            $DEFAULT_SCHEMA_VERSION
-            $CURRENT_SCHEMA_VERSION);
+            $DEFAULT_SCHEMA_VERSION $CURRENT_SCHEMA_VERSION
+            $SNIPPET_DIR $SNIPPET_TEST_DIR
+            $ST_SIZE );
 
 $PID_FILE = 'patcher2.pid';
 $DEFAULT_HASH_TYPE = 'SHA1';
@@ -79,6 +82,11 @@ $DEFAULT_CVSROOT = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
 
 $DEFAULT_SCHEMA_VERSION = 0;
 $CURRENT_SCHEMA_VERSION = 1;
+
+$SNIPPET_DIR = 'aus2';
+$SNIPPET_TEST_DIR = $SNIPPET_DIR . '.test';
+
+$ST_SIZE = 7;
 
 sub main {
     Startup();
@@ -99,9 +107,7 @@ __END_TOOLS_ERROR__
     }
 
     my $startdir = getcwd();
-    my $temp_prefix = lc($config->GetApp());
-    MkdirWithPath("temp/$temp_prefix") or
-     die "ASSERT: MkdirWithPath(temp/$temp_prefix) FAILED\n";
+    my $deliverableDir = EnsureDeliverablesDir(config => $config);
 
     #printf("PRE-REMOVE-BROKEN-UPDATES:\n\n%s", Data::Dumper::Dumper($config));
     $config->RemoveBrokenUpdates();
@@ -120,10 +126,6 @@ __END_TOOLS_ERROR__
         CreatePartialPatchinfo(config => $config);
         CreateCompletePatchinfo(config => $config);
         CreatePastReleasePatchinfo(config => $config);
-    }
-
-    if ($config->RequestedStep('move-update'))  {
-        MoveUpdate(config => $config, from => $move_args{'from'}, to => $move_args{'to'});
     }
 
     Shutdown();
@@ -153,7 +155,8 @@ sub BuildTools {
     }
 
     # Make the parent path.
-    MkdirWithPath($codir, 0, 0751) or die "ERROR: MkdirWithPath($codir) FAILED";
+    MkdirWithPath(dir => $codir, mask => 0751) or
+     die "ERROR: MkdirWithPath($codir) FAILED";
     chdir($codir);
 
     # Handle the cases where we shouldn't/can't proceed.
@@ -164,31 +167,36 @@ sub BuildTools {
     { # Create and execute CVS checkout command.
         printf("Checking out source code... \n");
         my $cvsroot = $ENV{'CVSROOT'} || $DEFAULT_CVSROOT;
-        my $checkout  = "cvs -d $cvsroot co mozilla/client.mk";
-        my $rv = RunShellCommand(command => $checkout, output => 1);
-        if ($rv->{'exit_value'} != 0) {
-            print "$checkout FAILED: $rv->{'output'}\n";
+        my $checkoutArgs = ["-d$cvsroot",
+                            'co', 'mozilla/client.mk' ];
+        my $rv = RunShellCommand(command => 'cvs',
+                                 args => $checkoutArgs, 
+                                 output => 1);
+        if ($rv->{'exitValue'} != 0) {
+            print "checkout FAILED: $rv->{'output'}\n";
         }
 
         # TODO - fix this to refer to the update-tools pull-target when
         # bug 329686 gets fixed.
-        my $makeCheckout = 'MOZ_CO_PROJECT=all ';
-        $makeCheckout .= 'make -f mozilla/client.mk checkout';
-        $rv = RunShellCommand(command => $makeCheckout, output => 1);
-        if ($rv->{'exit_value'} != 0) {
-            print "$makeCheckout FAILED: $rv->{'output'}\n";
+
+        $ENV{'MOZ_CO_PROJECT'} = 'all';
+        my $makeArgs = ['-f', 'mozilla/client.mk', 'checkout'];
+        $rv = RunShellCommand(command => 'make',
+                              args => $makeArgs,
+                              output => 1);
+
+        if ($rv->{'exitValue'} != 0) {
+            print "make " . join(" ", $makeArgs) . " FAILED: $rv->{'output'}\n";
         }
 
         printf("\n\nCheckout complete.\n");
     } # Create and execute CVS checkout command.
 
+    my $mozDir = catfile($codir, 'mozilla');
     # The checkout directory should exist but doesn't.
-    if (not -e "$codir/mozilla") { 
-        die "ERROR: Couldn't create checkout directory $codir/mozilla";
+    if (not -e $mozDir) { 
+        die "ERROR: Couldn't create checkout directory $mozDir";
     }
-
-    # Change directory to the child directory.
-    chdir("$codir/mozilla") or die "chdir into $codir/mozilla FAILED: $!";
 
     { # Build mozilla dependencies and tools.
         my $mozconfig;
@@ -201,17 +209,23 @@ sub BuildTools {
         # This is necessary because PANGO'S NOW A DEPENDANCY! WHEEEEEE.
         # (but update packaging doesn't need it)
         $mozconfig .= "ac_add_options --enable-default-toolkit=gtk2\n";
-        open(MOZCFG, '>.mozconfig') or die "ERROR: Opening .mozconfig for writing failed: $!";
+        open(MOZCFG, '>' . catfile($mozDir, '.mozconfig')) or die "ERROR: Opening .mozconfig for writing failed: $!";
         print MOZCFG $mozconfig;
         close(MOZCFG);
 
-        my $rv = RunShellCommand(command => './configure', output => 1);
-        if ($rv->{'exit_value'} != 0) {
+        my $rv = RunShellCommand(command => './configure',
+                                 dir => $mozDir,
+                                 output => 1);
+
+        if ($rv->{'exitValue'} != 0) {
             print "./configure FAILED: $rv->{'output'}\n";
         }
 
-        $rv = RunShellCommand(command => 'make', output => 1);
-        if ($rv->{'exit_value'} != 0) {
+        $rv = RunShellCommand(command => 'make',
+                              dir => $mozDir,
+                              output => 1);
+
+        if ($rv->{'exitValue'} != 0) {
             print "make FAILED: $rv->{'output'}\n";
         }
     } # Build mozilla dependencies and tools.
@@ -225,94 +239,6 @@ sub BuildTools {
 
     return 1;
 }
-
-sub hash_file {
-    my %args = @_;
-
-    my %hash_size_map = ( SHA512 => "H128",
-                          MD5 => "H128",
-                          SHA1 => "H128", );
-
-    my($file, $hash_type, $bltest_hash_type, $hash_size);
-    $file = $args{'file'};
-    $hash_type = $args{'hash_type'};
-    $bltest_hash_type = lc($hash_type);
-
-    $hash_type = $DEFAULT_HASH_TYPE if !defined($hash_type);
-    $hash_size = $hash_size_map{$hash_type};
-
-    ##
-    ## TODO - This should be reverted back to what it was once bug 329686
-    ## lands and gives us a way to build NSS standalone to get the bltest
-    ## utility (which is what was used before).
-    ##
-
-    if ($hash_type eq 'SHA512') {
-        die "ASSERT: SHA512 not ACTUALLY supported\n";
-    } elsif ($hash_type eq 'MD5' || $hash_type eq 'SHA1') {
-        $hash_type = lc($hash_type);
-    } else {
-        die "ASSERT: Unknown hash type requested: $hash_type\n";
-    }
-
-    die "ASSERT: File $file doesn't exist" if (not -r $file);
-
-    my $hexstring_hash = `openssl dgst -$hash_type $file`;
-    $? and die("$hexstring_hash of $file FAILED: $!");
-
-    # Expects input like MD5(mozconfig)= d7433cc4204b4f3c65d836fe483fa575
-    # Removes everything up to and including the "= "
-    $hexstring_hash =~ s/^.+\s+(\w+)$/$1/;
-
-    chomp($hexstring_hash);
-    return $hexstring_hash;
-}
-
-sub MoveUpdate {
-    my %args = @_;
-    my ($src, $dest);
-
-    my $config = $args{'config'};
-    my $from = $args{'from'};
-    my $to = $args{'to'};
-    my $temp_prefix = lc($config->GetApp());
-
-    my $startdir = getcwd();
-    my $app = lc($config->GetApp());
-    MkdirWithPath("temp/$temp_prefix", 0, 0751) or 
-     die "Failed to mkpath temp/$temp_prefix";
-    chdir("temp/$temp_prefix");
-    my $tempdir = getcwd();
-
-    my $u_config = $config->{'mAppConfig'}->{'update_data'};
-    my @updates = keys %$u_config;
-
-    #printf("%s", Data::Dumper::Dumper($config->{'app_config'}->{'release'}));
-    #printf("%s", Data::Dumper::Dumper(\@updates));
-
-    for my $u (@updates) {
-        chdir("$u/aus2");
-        my $currdir = getcwd();
-        my $find_output = `find . -type d -name $from -maxdepth 6`;
-        chomp($find_output);
-
-        my @dirs = split(/\n/, $find_output);
-        my @moves = map { $src = $dest = $_;
-                          $dest =~ s/^(.*)\/$from$/$1\/$to/g;
-                          { src => $src, dest => $dest } } @dirs;
-        #printf("%s", Data::Dumper::Dumper(\@moves));
-
-        for my $m (@moves) {
-            my $src = $m->{'src'};
-            my $dest = $m->{'dest'};
-            move($src, $dest) or warn "move($src, $dest) failed: $!";
-        }
-
-        chdir($tempdir);
-    }
-
-    chdir($startdir);
-} # move_update
 
 sub run_download_complete_patches {
     my %args = @_;
@@ -334,13 +260,9 @@ sub download_complete_patches {
         $calculate_total = 1;
     }
 
-    my $temp_prefix = lc($config->GetApp());
-
     my $startdir = getcwd();
-    MkdirWithPath("temp/$temp_prefix", 0, 0751) or
-     die "MkdirWithPath(temp/$temp_prefix) FAILED";
-    chdir("temp/$temp_prefix");
-    my $tempdir = getcwd();
+    my $deliverableDir = EnsureDeliverablesDir(config => $config);
+    chdir($deliverableDir);
 
     my $fromReleaseVersion = $config->GetCurrentUpdate()->{'from'};
     my $toReleaseVersion = $config->GetCurrentUpdate()->{'to'};
@@ -356,15 +278,16 @@ sub download_complete_patches {
             my $platform_locales = $rlp_config->{$p}->{'locales'};
 
             for my $l (@$platform_locales) {
-                chdir($tempdir);
-                MkdirWithPath("$r/ftp", 0, 0751) or 
-                 die "Failed to mkpath $r/ftp";
-                chdir("$r/ftp");
+                chdir($deliverableDir);
+                my $relPath = catfile($r, 'ftp');
+                MkdirWithPath(dir => $relPath, mask => 0751) or 
+                 die "MkdirWithPath($relPath) FAILED\n";
+                chdir($relPath);
 
                 my $download_url = $rl_config->{'completemarurl'};
                 $download_url = SubstitutePath(path => $download_url,
-                                                 platform => $p,
-                                                 locale => $l);
+                                               platform => $p,
+                                               locale => $l);
 
                 my $output_filename = SubstitutePath(
                  path => $MozAUSConfig::DEFAULT_MAR_NAME,
@@ -381,7 +304,8 @@ sub download_complete_patches {
                 if ( $output_filename =~ m/^(.*)\/([^\/]*)$/ ) {
                     $path = $1;
                 }
-                MkdirWithPath($path, 0, 0751) or die "Failed to mkpath($path)";
+                MkdirWithPath(dir => $path, mask => 0751) or 
+                 die "Failed to mkpath($path)";
                 chdir($path);
 
                 my $download_url_s = $download_url;
@@ -399,16 +323,16 @@ sub download_complete_patches {
                 
                 if (exists($rl_config->{'completemaruser'}) and
                  exists($rl_config->{'completemarpasswd'})) {
-                    MozAUSLib::DownloadFile(url => $download_url,
+                    DownloadFile(url => $download_url,
                      dest => $output_filename,
                      user => $rl_config->{'completemaruser'}, 
                      password => $rl_config->{'completemarpasswd'} );
                 } else {
-                    MozAUSLib::DownloadFile(url => $download_url,
+                    DownloadFile(url => $download_url,
                      dest => $output_filename );
                 }
 
-                chdir("$tempdir/$r/ftp");
+                chdir(catfile($deliverableDir, $r, 'ftp'));
 
                 my $end_time = time();
                 my $total_time = $end_time - $start_time;
@@ -461,11 +385,9 @@ sub CreateCompletePatches {
     }
     printf("Complete patches - $total to create\n");
 
-    my $temp_prefix = lc($config->GetApp());
     my $startdir = getcwd();
-    MkdirWithPath("temp/$temp_prefix", 0, 0751) or 
-     die "Failed to mkpath(temp/$temp_prefix)";
-    chdir("temp/$temp_prefix");
+    my $deliverableDir = EnsureDeliverablesDir(config => $config);
+    chdir($deliverableDir);
 
     my $u_config = $config->{'mAppConfig'}->{'update_data'};
     my @updates = sort keys %$u_config;
@@ -502,7 +424,7 @@ sub CreateCompletePatches {
 
                 #printf("%s", Data::Dumper::Dumper($to));
 
-                my $complete_pathname = "$u/ftp/$gen_complete_path";
+                my $complete_pathname = catfile($u, 'ftp', $gen_complete_path);
 
                 # Go to next iteration if this partial patch already exists.
                 next if -e $complete_pathname;
@@ -516,7 +438,7 @@ sub CreateCompletePatches {
                      string => "$u/$p/$l");
                     $complete_pathname =~ m/^(.*)\/[^\/]*/;
                     my $parentdir = $1;
-                    MkdirWithPath($parentdir, 0, 0751) or 
+                    MkdirWithPath(dir => $parentdir, mask => 0751) or 
                      die "Failed to mkpath($parentdir)";
                     system("rsync -a $to_path $complete_pathname");
 
@@ -560,11 +482,9 @@ sub CreatePartialPatches {
     }
     printf("Partial patches - $total to create\n");
 
-    my $temp_prefix = lc($config->GetApp());
     my $startdir = getcwd();
-    MkdirWithPath("temp/$temp_prefix") or
-     die "ASSERT: MkdirWithPath(temp/$temp_prefix) FAILED\n";
-    chdir("temp/$temp_prefix");
+    my $deliverableDir = EnsureDeliverablesDir(config => $config);
+    chdir($deliverableDir);
 
     my $u_config = $config->{'mAppConfig'}->{'update_data'};
     my @updates = sort keys %$u_config;
@@ -602,7 +522,7 @@ sub CreatePartialPatches {
 
                 #printf("%s", Data::Dumper::Dumper($to));
 
-                my $partial_pathname = "$u/ftp/$gen_partial_path";
+                my $partial_pathname = catfile($u, 'ftp', $gen_partial_path);
 
                 # Go to next iteration if this partial patch already exists.
                 next if -e $partial_pathname;
@@ -631,7 +551,7 @@ sub CreatePartialPatches {
                     # rename partial.mar to the expected result
                     $partial_pathname =~ m/^(.*)\/[^\/]*$/g;
                     my $partial_pathname_parent = $1;
-                    MkdirWithPath($partial_pathname_parent) or 
+                    MkdirWithPath(dir => $partial_pathname_parent) or 
                      die "ASSERT: MkdirWithPath($partial_pathname_parent) FAILED\n";
                     move('partial.mar', $partial_pathname) or 
                      die "ASSERT: move(partial.mar, $partial_pathname) FAILED\n";
@@ -682,11 +602,10 @@ sub CreateCompletePatchinfo {
     my $total = 0;
     my $update = $config->GetCurrentUpdate();
 
-    my $temp_prefix = lc($config->GetApp());
     my $startdir = getcwd();
-    MkdirWithPath("temp/$temp_prefix") or 
-     die "ASSERT: MkdirWithPath(temp/$temp_prefix) FAILED\n";
-    chdir("temp/$temp_prefix");
+    
+    my $deliverableDir = EnsureDeliverablesDir(config => $config);
+    chdir($deliverableDir);
 
     my $u_config = $config->GetAppConfig()->{'update_data'};
     my @updates = sort keys %$u_config;
@@ -761,10 +680,16 @@ sub CreateCompletePatchinfo {
                 my $updateType = $config->GetCurrentUpdate()->{'updateType'};
 
                 for my $c (@channels) {
-                    my $aus_prefix = "$u/aus2/$from_aus_app/$from_aus_version/$from_aus_platform/$from_aus_buildid/$l/$c";
+                    my $aus_prefix = catfile($u, $SNIPPET_DIR, 
+                                             $from_aus_app,
+                                             $from_aus_version,
+                                             $from_aus_platform,
+                                             $from_aus_buildid,
+                                             $l, $c);
 
                     my $complete_patch = $ul_config->{$l}->{'complete_patch'};
-                    $complete_patch->{'info_path'} = "$aus_prefix/complete.txt";
+                    $complete_patch->{'info_path'} = catfile($aus_prefix,
+                     'complete.txt');
 
                     # Go to next iteration if this partial patch already exists.
                     next if ( -e $complete_patch->{'info_path'} or ! -e $complete_pathname );
@@ -777,18 +702,19 @@ sub CreateCompletePatchinfo {
                      string => "$u/$p/$l/$c");
 
                     $complete_patch->{'patch_path'} = $to_path;
-                    $complete_patch->{'type'} = "complete";
+                    $complete_patch->{'type'} = 'complete';
 
-                    my $hash_type = 'SHA1';
+                    my $hash_type = $DEFAULT_HASH_TYPE;
                     $complete_patch->{'hash_type'} = $hash_type;
-                    $complete_patch->{'hash_value'} = hash_file(file => $to_path);
-                    chomp($complete_patch->{'hash_value'});
+                    $complete_patch->{'hash_value'} = HashFile(file => $to_path,
+                                                       type => $hash_type);
+
                     $complete_patch->{'hash_value'} =~ s/^(\S+)\s+.*$/$1/g;
 
                     $complete_patch->{'build_id'} = $to->{'build_id'};
                     $complete_patch->{'appv'} = $to->{'appv'};
                     $complete_patch->{'extv'} = $to->{'extv'};
-                    $complete_patch->{'size'} = (stat($to_path))[7];
+                    $complete_patch->{'size'} = (stat($to_path))[$ST_SIZE];
 
                     my $channelSpecificUrlKey = $c . '-url';
 
@@ -860,10 +786,9 @@ sub CreatePastReleasePatchinfo {
     my $patchInfoFilesCreated = 0;
     my $totalPastUpdates = 0;
 
-    my $tempPrefix = lc($config->GetApp());
-
     my $startDir = getcwd();
-    chdir("temp/$tempPrefix");
+    my $deliverableDir = EnsureDeliverablesDir(config => $config);
+    chdir($deliverableDir);
 
     my $update = $config->GetCurrentUpdate();
     my $prefixStr = "$update->{'from'}-$update->{'to'}";
@@ -964,11 +889,17 @@ sub CreatePastReleasePatchinfo {
                 my $updateType = $config->GetCurrentUpdate()->{'updateType'};
 
                 foreach my $channel (@{$pastUpd->{'channels'}}) {
-                    my $ausDir = ($channel =~ /test(-\w+)?$/) ? 'aus2.test' : 'aus2';
-                    my $ausPrefix = "$prefixStr/$ausDir/$fromAusApp/$fromAusVersion/$fromAusPlatform/$fromAusBuildId/$locale/$channel";
+                    my $ausDir = ($channel =~ /test(-\w+)?$/) 
+                     ? $SNIPPET_TEST_DIR : $SNIPPET_DIR;
+
+                     my $ausPrefix = catfile($prefixStr, $ausDir, $fromAusApp,
+                                             $fromAusVersion, $fromAusPlatform,
+                                             $fromAusBuildId, $locale,
+                                             $channel);
 
                     my $completePatch = {};
-                    $completePatch ->{'info_path'} = "$ausPrefix/complete.txt";
+                    $completePatch ->{'info_path'} = catfile($ausPrefix,
+                                                             'complete.txt');
 
 
                     my $prettyPrefix = "$pastUpd->{'from'}-$update->{'to'}";
@@ -982,9 +913,10 @@ sub CreatePastReleasePatchinfo {
                     $completePatch->{'patch_path'} = $to_path;
                     $completePatch->{'type'} = 'complete';
 
-                    my $hash_type = 'SHA1';
-                    $completePatch->{'hash_type'} = 'SHA1';
-                    $completePatch->{'hash_value'} = hash_file(file => $to_path);
+                    my $hash_type = $DEFAULT_HASH_TYPE;
+                    $completePatch->{'hash_type'} = $hash_type;
+                    $completePatch->{'hash_value'} = HashFile(file => $to_path,
+                                                              type => $hash_type);
                     $completePatch->{'build_id'} = $patchLocaleNode->{'build_id'};
                     $completePatch->{'appv'} = $patchLocaleNode->{'appv'};
                     $completePatch->{'extv'} = $patchLocaleNode->{'extv'};
@@ -1039,11 +971,9 @@ sub CreatePartialPatchinfo {
 
     #printf("%s", Data::Dumper::Dumper($config->{'app_config'}->{'update_data'}));
 
-    my $temp_prefix = lc($config->GetApp());
     my $startdir = getcwd();
-    MkdirWithPath("temp/$temp_prefix") or 
-     die "ASSERT: MkdirWithPath(temp/$temp_prefix) FAILED\n";
-    chdir("temp/$temp_prefix");
+    my $deliverableDir = EnsureDeliverablesDir(config => $config);
+    chdir($deliverableDir);
 
     my $u_config = $config->{'mAppConfig'}->{'update_data'};
     my @updates = sort keys %$u_config;
@@ -1119,10 +1049,17 @@ sub CreatePartialPatchinfo {
                 my $updateType = $u_config->{$u}->{'updateType'};
 
                 for my $c (@channels) {
-                    my $aus_prefix = "$u/aus2/$from_aus_app/$from_aus_version/$from_aus_platform/$from_aus_buildid/$l/$c";
+                    my $aus_prefix = catfile($u, $SNIPPET_DIR, 
+                                             $from_aus_app,
+                                             $from_aus_version,
+                                             $from_aus_platform,
+                                             $from_aus_buildid,
+                                             $l,
+                                             $c);
 
                     my $partial_patch = $ul_config->{$l}->{'partial_patch'};
-                    $partial_patch->{'info_path'} = "$aus_prefix/partial.txt";
+                    $partial_patch->{'info_path'} = catfile($aus_prefix,
+                                                            'partial.txt');
 
                     # Go to next iteration if this partial patch already exists.
                     next if ( -e $partial_patch->{'info_path'} or ! -e $partial_pathname );
@@ -1132,18 +1069,20 @@ sub CreatePartialPatchinfo {
                      string => "$u/$p/$l/$c");
 
                     $partial_patch->{'patch_path'} = $partial_pathname;
-                    $partial_patch->{'type'} = "partial";
+                    $partial_patch->{'type'} = 'partial';
 
-                    my $hash_type = 'SHA1';
+                    my $hash_type = $DEFAULT_HASH_TYPE;
                     $partial_patch->{'hash_type'} = $hash_type;
-                    $partial_patch->{'hash_value'} = hash_file(file => $partial_pathname);
-                    chomp($partial_patch->{'hash_value'});
+                    $partial_patch->{'hash_value'} = HashFile(
+                     file => $partial_pathname,
+                     type => $hash_type);
+
                     $partial_patch->{'hash_value'} =~ s/^(\S+)\s+.*$/$1/g;
 
                     $partial_patch->{'build_id'} = $to->{'build_id'};
                     $partial_patch->{'appv'} = $to->{'appv'};
                     $partial_patch->{'extv'} = $to->{'extv'};
-                    $partial_patch->{'size'} = (stat($partial_pathname))[7];
+                    $partial_patch->{'size'} = (stat($partial_pathname))[$ST_SIZE];
 
                     my $channelSpecificUrlKey = $c . '-url';
 
@@ -1270,7 +1209,7 @@ sub write_patch_info {
         die "ASSERT: Invalid schema version: $schemaVersion\n";
     }
 
-    MkdirWithPath($info_path_parent) or
+    MkdirWithPath(dir => $info_path_parent) or
      die "MkdirWithPath($info_path_parent) FAILED";
     open(PATCHINFO, ">$patch->{'info_path'}") or 
      die "ERROR: Couldn't open $patch->{'info_path'} for writing!";
