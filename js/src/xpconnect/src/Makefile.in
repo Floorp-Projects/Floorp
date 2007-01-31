@@ -95,6 +95,7 @@ CPPSRCS		= \
 		xpcwrappednativeproto.cpp \
 		xpcwrappednativescope.cpp \
 		XPCNativeWrapper.cpp \
+		XPCSafeJSObjectWrapper.cpp \
 		$(NULL)
 ifdef XPC_IDISPATCH_SUPPORT
 CPPSRCS +=	XPCDispObject.cpp	\

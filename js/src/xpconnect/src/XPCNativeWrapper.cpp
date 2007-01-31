@@ -216,18 +216,6 @@ ThrowException(nsresult ex, JSContext *cx)
   return JS_FALSE;
 }
 
-static inline
-jsval
-GetStringByIndex(JSContext *cx, uintN index)
-{
-  XPCJSRuntime *rt = nsXPConnect::GetRuntime();
-
-  if (!rt)
-    return JSVAL_VOID;
-
-  return ID_TO_VALUE(rt->GetStringID(index));
-}
-
 static JSBool
 WrapFunction(JSContext* cx, JSObject* funobj, jsval *rval)
 {
@@ -401,8 +389,8 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
                         JSBool aIsSet)
 {
   // We don't deal with the following properties here.
-  if (id == GetStringByIndex(cx, XPCJSRuntime::IDX_PROTOTYPE) ||
-      id == GetStringByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
+  if (id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_PROTOTYPE) ||
+      id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
     return JS_TRUE;
   }
 
@@ -440,13 +428,13 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
   }
 
   if (!aIsSet &&
-      id == GetStringByIndex(cx, XPCJSRuntime::IDX_WRAPPED_JSOBJECT)) {
-    // Return the underlying native object, the XPConnect wrapped
-    // object that this additional wrapper layer wraps.
+      id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_WRAPPED_JSOBJECT)) {
+    // Return a safe wrapper for the underlying native object, the
+    // XPConnect wrapped object that this additional wrapper layer
+    // wraps.
 
-    *vp = OBJECT_TO_JSVAL(nativeObj);
-
-    return JS_TRUE;
+    jsval nativeVal = OBJECT_TO_JSVAL(nativeObj);
+    return XPC_SJOW_Construct(cx, nsnull, 1, &nativeVal, vp);
   }
 
   // This will do verification and the method lookup for us.
@@ -676,8 +664,8 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
   // couldn't get at those values anyway.  Also, we always deal with
   // wrappedJSObject and toString before looking at our scriptable hooks, so no
   // need to mess with our flags yet.
-  if (id == GetStringByIndex(cx, XPCJSRuntime::IDX_WRAPPED_JSOBJECT) ||
-      id == GetStringByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
+  if (id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_WRAPPED_JSOBJECT) ||
+      id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
     return JS_TRUE;
   }
 
@@ -742,7 +730,7 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
   // For "constructor" we don't want to call into the resolve hooks on the
   // wrapped native, since that would give the wrong constructor.
   if (NATIVE_HAS_FLAG(wrappedNative, WantNewResolve) &&
-      id != GetStringByIndex(cx, XPCJSRuntime::IDX_CONSTRUCTOR)) {
+      id != GetRTStringByIndex(cx, XPCJSRuntime::IDX_CONSTRUCTOR)) {
 
     // Mark ourselves as resolving so our AddProperty hook can do the
     // right thing here.
@@ -1211,9 +1199,6 @@ XPC_NW_Mark(JSContext *cx, JSObject *obj, void *arg)
   return 0;
 }
 
-extern nsISupports *
-GetIdentityObject(JSContext *cx, JSObject *obj);
-
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
@@ -1243,7 +1228,7 @@ XPC_NW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     JSObject *other = JSVAL_TO_OBJECT(v);
 
     *bp = (obj == other ||
-           GetIdentityObject(cx, obj) == GetIdentityObject(cx, other));
+           XPC_GetIdentityObject(cx, obj) == XPC_GetIdentityObject(cx, other));
   }
 
   return JS_TRUE;

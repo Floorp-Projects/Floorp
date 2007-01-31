@@ -744,7 +744,7 @@ XPC_WN_NoHelper_Resolve(JSContext *cx, JSObject *obj, jsval idval)
 }
 
 nsISupports *
-GetIdentityObject(JSContext *cx, JSObject *obj)
+XPC_GetIdentityObject(JSContext *cx, JSObject *obj)
 {
     XPCWrappedNative *wrapper;
 
@@ -754,6 +754,10 @@ GetIdentityObject(JSContext *cx, JSObject *obj)
         wrapper = XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
 
     if(!wrapper) {
+        JSObject *unsafeObj = XPC_SJOW_GetUnsafeObject(cx, obj);
+        if(unsafeObj)
+            return XPC_GetIdentityObject(cx, unsafeObj);
+
         return nsnull;
     }
 
@@ -773,16 +777,27 @@ XPC_WN_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     if(si && si->GetFlags().WantEquality())
     {
         nsresult rv = si->GetCallback()->Equality(wrapper, cx, obj, v, bp);
-
         if(NS_FAILED(rv))
             return Throw(rv, cx);
+
+        if (!*bp && !JSVAL_IS_PRIMITIVE(v) &&
+            IsXPCSafeJSObjectWrapperClass(JS_GET_CLASS(cx,
+                                                       JSVAL_TO_OBJECT(v)))) {
+            v = OBJECT_TO_JSVAL(XPC_SJOW_GetUnsafeObject(cx,
+                                                         JSVAL_TO_OBJECT(v)));
+
+            rv = si->GetCallback()->Equality(wrapper, cx, obj, v, bp);
+            if(NS_FAILED(rv))
+                return Throw(rv, cx);
+        }
     }
     else if(!JSVAL_IS_PRIMITIVE(v))
     {
         JSObject *other = JSVAL_TO_OBJECT(v);
 
         *bp = (obj == other ||
-               GetIdentityObject(cx, obj) == GetIdentityObject(cx, other));
+               XPC_GetIdentityObject(cx, obj) ==
+               XPC_GetIdentityObject(cx, other));
     }
 
     return JS_TRUE;

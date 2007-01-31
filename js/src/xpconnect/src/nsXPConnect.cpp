@@ -600,6 +600,9 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
     if (!XPCNativeWrapper::AttachNewConstructorObject(ccx, aGlobalJSObj))
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
+    if (!XPC_SJOW_AttachNewConstructorObject(ccx, aGlobalJSObj))
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
     return NS_OK;
 }
 
@@ -709,6 +712,9 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
     if (!XPCNativeWrapper::AttachNewConstructorObject(ccx, globalJSObj))
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
+    if (!XPC_SJOW_AttachNewConstructorObject(ccx, globalJSObj))
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
     NS_ADDREF(*_retval = holder);

@@ -708,6 +708,17 @@ xpc_ForcePropertyResolve(JSContext* cx, JSObject* obj, jsval idval)
     return JS_TRUE;
 }
 
+inline jsval
+GetRTStringByIndex(JSContext *cx, uintN index)
+{
+  XPCJSRuntime *rt = nsXPConnect::GetRuntime();
+
+  if (!rt)
+    return JSVAL_VOID;
+
+  return ID_TO_VALUE(rt->GetStringID(index));
+}
+
 inline
 JSBool ThrowBadParam(nsresult rv, uintN paramNum, XPCCallContext& ccx)
 {
