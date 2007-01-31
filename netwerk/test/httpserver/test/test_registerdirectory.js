@@ -287,10 +287,6 @@ var testsDirectory;
 function run_test()
 {
   testsDirectory = do_get_topsrcdir();
-dumpn("*** topsrcdir: " + testsDirectory.path);
-dumpn("*** normalized: " + (v=testsDirectory.clone(),v.normalize(),v.path));
-do_throw("xpcshell tests don't timeout -- doing this to verify fix, " +
-         "then will remove after verifying");
   testsDirectory.append("netwerk");
   testsDirectory.append("test");
   testsDirectory.append("httpserver");
