@@ -55,12 +55,7 @@
       <menuitem id="context-bookmarklink"
                 label="&bookmarkLinkCmd.label;"
                 accesskey="&bookmarkLinkCmd.accesskey;"
-#ifdef MOZ_PLACES_BOOKMARKS
-                command="Browser:AddLinkBookmark"/>
-#else
-                oncommand="BookmarksUtils.addBookmark(gContextMenu.linkURL,
-                                                      gContextMenu.linkText());"/>
-#endif
+                oncommand="gContextMenu.bookmarkLink();"/>
       <menuitem id="context-savelink"
                 label="&saveLinkCmd.label;"
                 accesskey="&saveLinkCmd.accesskey;"
@@ -130,11 +125,7 @@
       <menuitem id="context-bookmarkpage"
                 label="&bookmarkPageCmd.label;"
                 accesskey="&bookmarkPageCmd.accesskey;"
-#ifdef MOZ_PLACES_BOOKMARKS
-                command="Browser:AddBookmarkAs"/>
-#else
                 oncommand="gContextMenu.bookmarkThisPage();"/>
-#endif
       <menuitem id="context-savepage"
                 label="&savePageCmd.label;"
                 accesskey="&savePageCmd.accesskey2;"
