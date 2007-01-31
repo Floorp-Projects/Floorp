@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.347 $ ';
+$::UtilsVersion = '$Revision: 1.348 $ ';
 
 package TinderUtils;
 
@@ -1214,7 +1214,8 @@ sub BuildIt {
             if ($Settings::RunMozillaTests) {
               $build_status = run_all_tests($full_binary_name,
                                             $full_embed_binary_name,
-                                            $build_dir);
+                                            $build_dir,
+                                            $objdir);
             } else {
               print_log "Skipping Mozilla tests.\n";
               $build_status = 'success';
@@ -1892,7 +1893,7 @@ sub print_logfile {
 # Run all tests.  Had to pass in both binary and embed_binary.
 #
 sub run_all_tests {
-    my ($binary, $embed_binary, $build_dir) = @_;
+    my ($binary, $embed_binary, $build_dir, $objdir) = @_;
 
     my $binary_basename       = File::Basename::basename($binary);
     my $binary_dir            = File::Basename::dirname($binary);
@@ -2403,7 +2404,7 @@ sub run_all_tests {
     # run TUnit
     if ($Settings::RunUnitTests and $test_result eq 'success') {
       $test_result = RunUnitTests("RunUnitTests",
-                                  $build_dir, $binary_dir,
+                                  $build_dir, $objdir,
                                   ["make", "-k", "check"]);
     }
 
@@ -3232,11 +3233,11 @@ sub BloatTest {
 #
 
 sub RunUnitTests {
-  my ($test_name, $build_dir, $binary_dir, $args) = @_;
+  my ($test_name, $build_dir, $objdir, $args) = @_;
   my $test_result;
   my $binary_log = "$build_dir/$test_name.log";
 
-  my $unit_test_result = FileBasedTest($test_name, $build_dir, $binary_dir,
+  my $unit_test_result = FileBasedTest($test_name, $build_dir, $objdir,
                                       [@$args],
                                       $Settings::RunUnitTestsTimeout,
                                       "FAIL", 0, 1);
