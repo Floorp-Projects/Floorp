@@ -629,6 +629,11 @@ else
     AC_MSG_RESULT([yes])    
 fi
 
+AC_PATH_PROGS(PYTHON, $PYTHON python)
+if test -z "$PYTHON"; then
+    AC_MSG_WARN([TinderboxPrint: python not found in \$PATH .])
+fi
+
 AC_PATH_PROG(DOXYGEN, doxygen, :)
 AC_PATH_PROG(WHOAMI, whoami, :)
 AC_PATH_PROG(AUTOCONF, autoconf, :)
