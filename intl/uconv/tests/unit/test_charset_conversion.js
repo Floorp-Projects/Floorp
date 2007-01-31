@@ -31,9 +31,7 @@ function run_test()
                                "nsIConverterInputStream",
                                "init");
 
-  dataDir = Cc["@mozilla.org/file/local;1"]
-              .getService(Ci.nsILocalFile);
-  dataDir.initWithPath(do_get_topsrcdir());
+  dataDir = do_get_topsrcdir();
   dataDir.append("intl");
   dataDir.append("uconv");
   dataDir.append("tests");
