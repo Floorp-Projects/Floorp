@@ -84,6 +84,7 @@ nsJPEGDecoder::nsJPEGDecoder()
   mBytesToSkip = 0;
   memset(&mInfo, 0, sizeof(jpeg_decompress_struct));
   memset(&mSourceMgr, 0, sizeof(mSourceMgr));
+  mInfo.client_data = (void*)this;
 
   mBuffer = nsnull;
   mBufferLen = mBufferSize = 0;
@@ -316,20 +317,21 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
      * manager, it must be allocated before the call to
      * jpeg_start_compress().
      */
-    // Note! row_stride here must match the row_stride in
-    // nsJPEGDecoder::OutputScanlines
-#if defined(MOZ_CAIRO_GFX) || defined(XP_MAC) || defined(XP_MACOSX)
+    /* 
+     * From: http://apodeline.free.fr/DOC/libjpeg/libjpeg-2.html#ss2.3 :
+     * PLEASE NOTE THAT RGB DATA IS THREE SAMPLES PER PIXEL, GRAYSCALE ONLY ONE
+     */
+    mSamples = (*mInfo.mem->alloc_sarray)((j_common_ptr) &mInfo,
+                                          JPOOL_IMAGE,
+                                          mInfo.output_width * 3, 1);
+
+#ifndef MOZ_CAIRO_GFX
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(XP_MAC) || defined(XP_MACOSX) || defined(MOZ_WIDGET_PHOTON)
+#if defined(XP_MAC) || defined(XP_MACOSX)
     const int row_stride = mInfo.output_width * 4;
 #else
     const int row_stride = mInfo.output_width * 3;
 #endif
-
-    mSamples = (*mInfo.mem->alloc_sarray)((j_common_ptr) &mInfo,
-                                           JPOOL_IMAGE,
-                                           row_stride, 1);
-
-#ifndef MOZ_CAIRO_GFX
-#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(XP_MAC) || defined(XP_MACOSX) || defined(MOZ_WIDGET_PHOTON)
     // allocate buffer to do byte flipping / padding
     mRGBRow = (PRUint8*) PR_MALLOC(row_stride);
 #endif
@@ -472,16 +474,6 @@ nsJPEGDecoder::OutputScanlines()
 {
   const PRUint32 top = mInfo.output_scanline;
   PRBool rv = PR_TRUE;
- 
-  PRUint32 bpr;
-  mFrame->GetImageBytesPerRow(&bpr);
-  // Note! row_stride here must match the row_stride in
-  // nsJPEGDecoder::WriteFrom
-#if defined(MOZ_CAIRO_GFX) || defined(XP_MAC) || defined(XP_MACOSX)
-  const int row_stride = mInfo.output_width * 4;
-#else
-  const int row_stride = mInfo.output_width * 3;
-#endif
 
 #if defined(MOZ_CAIRO_GFX)
   // we're thebes. we can write stuff directly to the data
@@ -489,13 +481,20 @@ nsJPEGDecoder::OutputScanlines()
   PRUint32 imageDataLength;
   mFrame->GetImageData(&imageData, &imageDataLength);
   nsCOMPtr<nsIImage> img(do_GetInterface(mFrame));
-  nsIntRect r(0, 0, mInfo.output_width, 1);
+#else
+  // Note! row_stride here must match the row_stride in
+  // nsJPEGDecoder::WriteFrom
+#if defined(XP_MAC) || defined(XP_MACOSX)
+  const int row_stride = mInfo.output_width * 4;
+#else
+  const int row_stride = mInfo.output_width * 3;
+#endif
+  PRUint32 bpr;
+  mFrame->GetImageBytesPerRow(&bpr);
+  JSAMPROW samples;
 #endif
 
   while ((mInfo.output_scanline < mInfo.output_height)) {
-#ifndef MOZ_CAIRO_GFX
-      JSAMPROW samples;
-#endif
 
       /* Request one scanline.  Returns 0 or 1 scanlines. */    
       if (jpeg_read_scanlines(&mInfo, mSamples, 1) != 1) {
@@ -504,8 +503,9 @@ nsJPEGDecoder::OutputScanlines()
       }
 
 #if defined(MOZ_CAIRO_GFX)
-      PRUint32 offset = (mInfo.output_scanline - 1) * bpr;
-      PRUint32 *ptrOutputBuf = (PRUint32*)(imageData + offset);
+      // offset is in Cairo pixels (PRUint32)
+      PRUint32 offset = (mInfo.output_scanline - 1) * mInfo.output_width;
+      PRUint32 *ptrOutputBuf = ((PRUint32*)imageData) + offset;
       JSAMPLE *j1 = mSamples[0];
       for (PRUint32 i=0; i < mInfo.output_width; ++i) {
         PRUint8 r = *j1++;
@@ -513,8 +513,6 @@ nsJPEGDecoder::OutputScanlines()
         PRUint8 b = *j1++;
         *ptrOutputBuf++ = (0xFF << 24) | (r << 16) | (g << 8) | b;
       }
-      r.y = mInfo.output_scanline - 1;
-      img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
 #else
 
 #if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
@@ -555,6 +553,9 @@ nsJPEGDecoder::OutputScanlines()
 
   if (top != mInfo.output_scanline) {
       nsIntRect r(0, top, mInfo.output_width, mInfo.output_scanline-top);
+#if defined(MOZ_CAIRO_GFX)
+      img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
+#endif
       mObserver->OnDataAvailable(nsnull, mFrame, &r);
   }
 
@@ -648,7 +649,7 @@ METHODDEF(void)
 skip_input_data (j_decompress_ptr jd, long num_bytes)
 {
   struct jpeg_source_mgr *src = jd->src;
-  nsJPEGDecoder *decoder = SOURCE_MGR_TO_DECODER(src);
+  nsJPEGDecoder *decoder = (nsJPEGDecoder *)(jd->client_data);
 
   if (num_bytes > (long)src->bytes_in_buffer) {
     /*
@@ -685,7 +686,7 @@ METHODDEF(boolean)
 fill_input_buffer (j_decompress_ptr jd)
 {
   struct jpeg_source_mgr *src = jd->src;
-  nsJPEGDecoder *decoder = SOURCE_MGR_TO_DECODER(src);
+  nsJPEGDecoder *decoder = (nsJPEGDecoder *)(jd->client_data);
 
   if (decoder->mReading) {
     unsigned char *new_buffer = (unsigned char *)decoder->mBuffer;
@@ -778,7 +779,7 @@ fill_input_buffer (j_decompress_ptr jd)
 METHODDEF(void)
 term_source (j_decompress_ptr jd)
 {
-  nsJPEGDecoder *decoder = SOURCE_MGR_TO_DECODER(jd->src);
+  nsJPEGDecoder *decoder = (nsJPEGDecoder *)(jd->client_data);
 
   if (decoder->mObserver) {
     decoder->mObserver->OnStopFrame(nsnull, decoder->mFrame);

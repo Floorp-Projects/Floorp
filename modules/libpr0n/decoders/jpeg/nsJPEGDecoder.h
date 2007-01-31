@@ -70,12 +70,6 @@ typedef struct {
     jmp_buf setjmp_buffer;      /* For handling catastropic errors */
 } decoder_error_mgr;
 
-/*
- *  Convert pointer to jpeg_source_mgr back to the decoder
- */
-#define SOURCE_MGR_TO_DECODER(src) \
-    (nsJPEGDecoder *)((char *)(src) - offsetof(nsJPEGDecoder, mSourceMgr))
-
 typedef enum {
     JPEG_HEADER,                          /* Reading JFIF headers */
     JPEG_START_DECOMPRESS,
