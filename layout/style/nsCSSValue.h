@@ -305,9 +305,9 @@ public:
     nsCSSValue& Item(PRUint16 aIndex) { return (*this)[aIndex]; }
     const nsCSSValue& Item(PRUint16 aIndex) const { return (*this)[aIndex]; }
 
-    PRUint16 Count() { return mCount; }
+    PRUint16 Count() const { return mCount; }
 
-    PRBool operator==(const Array& aOther)
+    PRBool operator==(const Array& aOther) const
     {
       if (mCount != aOther.mCount)
         return PR_FALSE;
@@ -393,7 +393,7 @@ public:
       MOZ_COUNT_DTOR(nsCSSValue::URL);
     }
 
-    PRBool operator==(const URL& aOther)
+    PRBool operator==(const URL& aOther) const
     {
       PRBool eq;
       return NS_strcmp(GetBufferValue(mString),

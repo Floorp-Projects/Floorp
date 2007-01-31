@@ -1271,7 +1271,7 @@ nsStyleContentData& nsStyleContentData::operator=(const nsStyleContentData& aOth
   return *this;
 }
 
-PRBool nsStyleContentData::operator==(const nsStyleContentData& aOther)
+PRBool nsStyleContentData::operator==(const nsStyleContentData& aOther) const
 {
   if (mType != aOther.mType)
     return PR_FALSE;
