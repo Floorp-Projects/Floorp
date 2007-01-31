@@ -173,15 +173,11 @@ var listener =
     },
     onStopRequest: function(request, cx, status)
     {
-      var dirServ;
       switch (currPathIndex)
       {
         case 0:
           // now set a base path
-          dirServ = Cc["@mozilla.org/file/directory_service;1"]
-                      .getService(Ci.nsIProperties);
-          serverBasePath = dirServ.get("CurProcD", Ci.nsILocalFile);
-          serverBasePath.append("httpserver_tests");
+          serverBasePath = testsDirectory.clone();
           srv.registerDirectory("/", serverBasePath);
           break;
 
@@ -204,10 +200,7 @@ var listener =
 
         case 5:
           // set the base path again
-          dirServ = Cc["@mozilla.org/file/directory_service;1"]
-                      .getService(Ci.nsIProperties);
-          serverBasePath = dirServ.get("CurProcD", Ci.nsILocalFile);
-          serverBasePath.append("httpserver_tests");
+          serverBasePath = testsDirectory.clone();
           srv.registerDirectory("/", serverBasePath);
           break;
 
@@ -230,10 +223,7 @@ var listener =
 
         case 9:
           // register /foo/ as a base path
-          dirServ = Cc["@mozilla.org/file/directory_service;1"]
-                      .getService(Ci.nsIProperties);
-          serverBasePath = dirServ.get("CurProcD", Ci.nsILocalFile);
-          serverBasePath.append("httpserver_tests");
+          serverBasePath = testsDirectory.clone();
           srv.registerDirectory("/foo/", serverBasePath);
           break;
 
@@ -292,9 +282,18 @@ function performNextTest()
 
 var srv;
 var serverBasePath;
+var testsDirectory;
 
 function run_test()
 {
+  testsDirectory = Cc["@mozilla.org/file/local;1"]
+                     .createInstance(Ci.nsILocalFile);
+  testsDirectory.initWithPath(do_get_topsrcdir());
+  testsDirectory.append("netwerk");
+  testsDirectory.append("test");
+  testsDirectory.append("httpserver");
+  testsDirectory.append("test");
+
   srv = createServer();
   srv.start(4444);
 

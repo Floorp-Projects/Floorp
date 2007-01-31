@@ -52,14 +52,3 @@ DIRS  += example
 endif
 
 include $(topsrcdir)/config/rules.mk
-
-_TEST_FILES	= test_all.sh
-_UNIT_FILES	= head.js \
-		  tail.js \
-		  $(NULL)
-
-libs:: $(_UNIT_FILES)
-	$(INSTALL) $^ $(DIST)/bin/test-harness/xpcshell-simple
-
-libs:: $(_TEST_FILES)
-	$(INSTALL) $^ $(DIST)/bin/

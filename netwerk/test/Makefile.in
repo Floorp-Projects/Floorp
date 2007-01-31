@@ -98,16 +98,12 @@ LIBS		= $(EXTRA_DSO_LIBS) \
 
 DEFINES += $(TK_CFLAGS)
 
+XPCSHELL_TESTS = unit
+
 include $(topsrcdir)/config/rules.mk
-
-_UNIT_FILES := $(wildcard $(srcdir)/unit/*.js)
-
-libs:: $(_UNIT_FILES)
-	$(INSTALL) $^ $(DIST)/bin/necko_unit_tests
 
 check::
 	$(RUN_TEST_PROGRAM) $(DIST)/bin/TestCookie
-	$(RUN_TEST_PROGRAM) $(DIST)/bin/test_all.sh $(DIST)/bin/necko_unit_tests
 
 _RES_FILES 	= urlparse.dat \
 		  urlparse_unx.dat \

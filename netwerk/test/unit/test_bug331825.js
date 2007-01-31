@@ -1,4 +1,4 @@
-do_import_script("test-harness/xpcshell-simple/httpd.js");
+do_import_script("netwerk/test/httpserver/httpd.js");
 
 var server;
 var BUGID = "331825";

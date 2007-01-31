@@ -44,8 +44,14 @@ function run_test() {
   const Ci = Components.interfaces;
 
   // the build script have created the zip we can test on in the current dir.
-  var file = Cc["@mozilla.org/file/directory_service;1"].
-              getService(Ci.nsIProperties).get("CurWorkD", Ci.nsIFile);
+  var file = Cc["@mozilla.org/file/local;1"]
+               .createInstance(Ci.nsILocalFile);
+  file.initWithPath(do_get_topsrcdir());
+  file.append("modules");
+  file.append("libjar");
+  file.append("test");
+  file.append("unit");
+  file.append("data");
   file.append("test_bug333423.zip")
   dump("Using " + file.path + " for testing\n");
 

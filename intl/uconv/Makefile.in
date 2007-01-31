@@ -72,7 +72,7 @@ endif
 ifeq ($(OS_ARCH),WINNT)
 ifdef ENABLE_TESTS
 ifndef MOZ_ENABLE_LIBXUL
-TOOL_DIRS = tests
+DIRS += tests
 endif
 endif
 endif

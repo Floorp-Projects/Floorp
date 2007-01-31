@@ -1,5 +1,3 @@
-/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,14 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is MozJSHTTP code.
+ * The Original Code is Places.
  *
  * The Initial Developer of the Original Code is
- * Jeff Walden <jwalden+code@mit.edu>.
+ * Mozilla.org
  * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Dietrich Ayala <dietrich@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,46 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-do_import_script("netwerk/test/httpserver/httpd.js");
+// put cleanup of the bookmarks test here.
 
-/**
- * Constructs a new nsHttpServer instance.  This function is intended to
- * encapsulate construction of a server so that at some point in the future
- * it is possible to run these tests (with at most slight modifications) against
- * the server when used as an XPCOM component (not as an inline script) with
- * only slight modifications.
- */
-function createServer()
-{
-  return new nsHttpServer();
-}
-
-/**
- * Creates a new HTTP channel.
- *
- * @param url
- *   the URL of the channel to create
- */
-function makeChannel(url)
-{
-  var ios = Cc["@mozilla.org/network/io-service;1"]
-              .getService(Ci.nsIIOService);
-  var chan = ios.newChannel(url, null, null)
-                .QueryInterface(Ci.nsIHttpChannel);
-
-  return chan;
-}
-
-/**
- * Make a binary input stream wrapper for the given stream.
- *
- * @param stream
- *   the nsIInputStream to wrap
- */
-function makeBIS(stream)
-{
-  var bis = Cc["@mozilla.org/binaryinputstream;1"]
-              .createInstance(Ci.nsIBinaryInputStream);
-  bis.setInputStream(stream);
-  return bis;
-}
+// remove bookmarks file
+clearDB();

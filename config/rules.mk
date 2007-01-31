@@ -23,6 +23,7 @@
 # Contributor(s):
 #  Chase Phillips <chase@mozilla.org>
 #  Benjamin Smedberg <benjamin@smedbergs.us>
+#  Jeff Walden <jwalden+code@mit.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -397,7 +398,7 @@ endif
 endif
 
 #
-# This will strip out symbols that the component shouldnt be 
+# This will strip out symbols that the component should not be 
 # exporting from the .dynsym section.
 #
 ifdef IS_COMPONENT
@@ -1529,7 +1530,7 @@ endif # XPIDLSRCS
 # General rules for exporting idl files.
 #
 # WORK-AROUND ONLY, for mozilla/tools/module-deps/bootstrap.pl build.
-# Bug to fix idl dependecy problems w/o this extra build pass is
+# Bug to fix idl dependency problems w/o this extra build pass is
 #   http://bugzilla.mozilla.org/show_bug.cgi?id=145777
 #
 $(IDL_DIR)::
@@ -1797,6 +1798,50 @@ REGCHROME_INSTALL = $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/add-ch
 	$(if $(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)),-x) \
 	$(if $(CROSS_COMPILE),-o $(OS_ARCH)) $(DESTDIR)$(mozappdir)/chrome/installed-chrome.txt \
 	$(_JAR_REGCHROME_DISABLE_JAR)
+
+
+################################################################################
+# Testing frameworks support
+################################################################################
+
+ifdef ENABLE_TESTS
+
+ifdef XPCSHELL_TESTS
+ifndef MODULE
+$(error Must define MODULE when defining XPCSHELL_TESTS.)
+endif
+
+# Test file installation
+libs::
+	@$(EXIT_ON_ERROR) \
+	for testdir in $(XPCSHELL_TESTS); do \
+	  $(INSTALL) \
+	    $(srcdir)/$$testdir/*.js \
+	    $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir; \
+	done
+
+ifdef CYGWIN_WRAPPER
+NATIVE_TOPSRCDIR := `cygpath -wa $(topsrcdir)`
+else
+NATIVE_TOPSRCDIR := $(topsrcdir)
+endif # CYGWIN_WRAPPER
+
+# Test execution
+check::
+	@$(EXIT_ON_ERROR) \
+	for testdir in $(XPCSHELL_TESTS); do \
+	  $(RUN_TEST_PROGRAM) \
+	    $(topsrcdir)/tools/test-harness/xpcshell-simple/test_all.sh \
+	      $(DIST)/bin/xpcshell \
+	      $(topsrcdir) \
+	      $(NATIVE_TOPSRCDIR) \
+	      $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir; \
+	done
+
+endif # XPCSHELL_TESTS
+
+endif # ENABLE_TESTS
+
 
 #############################################################################
 # Dependency system

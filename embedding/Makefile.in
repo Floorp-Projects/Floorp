@@ -52,16 +52,8 @@ ifndef MOZ_XUL_APP
 DIRS += lite
 endif
 
-include $(topsrcdir)/config/rules.mk
-
 ifdef ENABLE_TESTS
-
-_UNIT_FILES := $(wildcard $(srcdir)/tests/unit/*.js)
-
-libs:: $(_UNIT_FILES)
-	$(INSTALL) $^ $(DIST)/bin/embedding_unit_tests
-
-check::
-	$(RUN_TEST_PROGRAM) $(DIST)/bin/test_all.sh $(DIST)/bin/embedding_unit_tests
-
+DIRS += tests
 endif
+
+include $(topsrcdir)/config/rules.mk

@@ -104,10 +104,14 @@ var srv, serverBasePath;
 function run_test()
 {
   srv = createServer();
-  var dirServ = Cc["@mozilla.org/file/directory_service;1"]
-                  .getService(Ci.nsIProperties);
-  serverBasePath = dirServ.get("CurProcD", Ci.nsILocalFile);
-  serverBasePath.append("httpserver_tests");
+  serverBasePath = Cc["@mozilla.org/file/local;1"]
+                     .createInstance(Ci.nsILocalFile);
+  serverBasePath.initWithPath(do_get_topsrcdir());
+  serverBasePath.append("netwerk");
+  serverBasePath.append("test");
+  serverBasePath.append("httpserver");
+  serverBasePath.append("test");
+  serverBasePath.QueryInterface(Ci.nsIFile);
   srv.registerDirectory("/", serverBasePath);
   srv.setIndexHandler(myIndexHandler);
   srv.start(4444);

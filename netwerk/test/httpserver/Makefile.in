@@ -49,33 +49,6 @@ XPIDLSRCS       = \
                   nsIHttpServer.idl \
                   $(NULL)
 
+XPCSHELL_TESTS = test
+
 include $(topsrcdir)/config/rules.mk
-
-_UNIT_FILES := $(wildcard $(srcdir)/test/*.js)
-
-_SERVER_SCRIPT_FILES = \
-                       httpd.js \
-                       $(NULL)
-
-# copy the server to the xpcshell test harness directory
-libs:: $(_SERVER_SCRIPT_FILES)
-	$(INSTALL) $^ $(DIST)/bin/test-harness/xpcshell-simple
-
-#
-# Server tests don't go in with necko's tests because:
-#
-#   - we then have to think about file name conflicts in two different locations
-#   - head_*.js files in separate locations are both run, even when this is not
-#     desired (e.g., we must either always import httpd.js [slowing down test
-#     processing even for tests which don't need it] or we must manually import
-#     it in every test that uses it [which would be extremely annoying for the
-#     server tests which all want it])
-#   - httpd.js doesn't clutter the global scope too much, but it does become a
-#     concern (consider Cc/Ci/Cr in particular, which as constants cannot be
-#     safely redefined)
-#
-libs:: $(_UNIT_FILES)
-	$(INSTALL) $^ $(DIST)/bin/httpserver_tests
-
-check::
-	$(RUN_TEST_PROGRAM) $(DIST)/bin/test_all.sh $(DIST)/bin/httpserver_tests

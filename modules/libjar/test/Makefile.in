@@ -45,13 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= test_libjar
 
+XPCSHELL_TESTS = unit
+
 include $(topsrcdir)/config/rules.mk
-
-_UNIT_FILES := $(wildcard $(srcdir)/unit/*.js)
-
-libs:: $(_UNIT_FILES)
-	$(INSTALL) $^ $(DIST)/bin/$(MODULE)
-
-check::
-	$(ZIP) -q test_bug333423.zip Makefile
-	$(RUN_TEST_PROGRAM) $(DIST)/bin/test_all.sh $(DIST)/bin/$(MODULE)

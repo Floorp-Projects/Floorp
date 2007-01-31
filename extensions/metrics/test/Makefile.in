@@ -72,9 +72,9 @@ LIBS		= \
 		$(NSPR_LIBS) \
 		$(NULL)
 
-include $(topsrcdir)/config/rules.mk
+XPCSHELL_TESTS = unit
 
-_UNIT_FILES := $(wildcard $(srcdir)/unit/*.js)
+include $(topsrcdir)/config/rules.mk
 
 # Give the unit tests absolute paths to the data and temp directories.
 # For cygwin, we need to convert the paths to native Windows paths.
@@ -86,14 +86,9 @@ TESTDATA_DIR := `cd $(srcdir)/data; pwd`
 TEST_TMPDIR := `pwd`
 endif
 
-libs:: $(_UNIT_FILES)
-	$(INSTALL) $^ $(DIST)/bin/metrics_unit_tests
-
 check::
 	@echo Running tests...
 	@for f in $(SIMPLE_PROGRAMS); do \
 	  echo $$f; $(RUN_TEST_PROGRAM) $(DIST)/bin/$$f \
             $(TESTDATA_DIR) $(TEST_TMPDIR); \
 	done
-	$(RUN_TEST_PROGRAM) $(DIST)/bin/test_all.sh \
-		$(DIST)/bin/metrics_unit_tests

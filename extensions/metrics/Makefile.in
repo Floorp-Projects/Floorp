@@ -51,7 +51,7 @@ XPI_PKGNAME		= metrics-$(MOZ_APP_VERSION)
 DIRS		= public src build
 
 ifdef ENABLE_TESTS
-TOOL_DIRS += test
+DIRS += test
 endif
 
 PREF_JS_EXPORTS = $(srcdir)/metrics.js

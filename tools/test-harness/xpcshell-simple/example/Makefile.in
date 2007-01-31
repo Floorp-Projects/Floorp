@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #     Boris Zbarsky <bzbarsky@mit.edu>  (Original author)
+#     Jeff Walden <jwalden+code@mit.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -55,13 +56,13 @@ include $(DEPTH)/config/autoconf.mk
 # Note: set the test module's name to test_<yourmodule>
 MODULE		= test_harness_xpcshell_simple
 
+# This is a list of directories containing tests to run, separated by spaces.
+# Most likely, tho, you won't use more than one directory here.
+XPCSHELL_TESTS = \
+                 unit \
+                 $(NULL)
+
 include $(topsrcdir)/config/rules.mk
-
-_UNIT_FILES := $(wildcard $(srcdir)/unit/*.js)
-
-libs:: $(_UNIT_FILES)
-	$(INSTALL) $^ $(DIST)/bin/$(MODULE)
 
 # Note: Invoke any additional (non-xpcshell) test programs here.
 check::
-	$(RUN_TEST_PROGRAM) $(DIST)/bin/test_all.sh $(DIST)/bin/$(MODULE)
