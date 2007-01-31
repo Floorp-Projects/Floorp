@@ -118,6 +118,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
     case nsIAccessibleEvent::EVENT_STATE_CHANGE:
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_STATE_CHANGE\n"));
+        NS_ASSERTION(aEventData, "Event needs event data");
         if (!aEventData)
             break;
 
@@ -151,6 +152,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
         AtkPropertyValues values = { NULL };
 
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_PROPERTY_CHANGE\n"));
+        NS_ASSERTION(aEventData, "Event needs event data");
         if (!aEventData)
             break;
 
@@ -239,6 +241,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
         AtkTextChange *pAtkTextChange;
 
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_TEXT_CHANGE\n"));
+        NS_ASSERTION(aEventData, "Event needs event data");
         if (!aEventData)
             break;
 
@@ -260,6 +263,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
 
     case nsIAccessibleEvent::EVENT_ATK_TEXT_CARET_MOVE:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_TEXT_CARET_MOVE\n"));
+        NS_ASSERTION(aEventData, "Event needs event data");
         if (!aEventData)
             break;
 
@@ -280,6 +284,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
 
     case nsIAccessibleEvent::EVENT_ATK_TABLE_ROW_INSERT:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_TABLE_ROW_INSERT\n"));
+        NS_ASSERTION(aEventData, "Event needs event data");
         if (!aEventData)
             break;
 
@@ -296,6 +301,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
         
     case nsIAccessibleEvent::EVENT_ATK_TABLE_ROW_DELETE:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_TABLE_ROW_DELETE\n"));
+        NS_ASSERTION(aEventData, "Event needs event data");
         if (!aEventData)
             break;
 
@@ -319,6 +325,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
 
     case nsIAccessibleEvent::EVENT_ATK_TABLE_COLUMN_INSERT:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_TABLE_COLUMN_INSERT\n"));
+        NS_ASSERTION(aEventData, "Event needs event data");
         if (!aEventData)
             break;
 
@@ -335,6 +342,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
 
     case nsIAccessibleEvent::EVENT_ATK_TABLE_COLUMN_DELETE:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_TABLE_COLUMN_DELETE\n"));
+        NS_ASSERTION(aEventData, "Event needs event data");
         if (!aEventData)
             break;
 
