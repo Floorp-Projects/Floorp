@@ -2991,7 +2991,7 @@ nsComputedDOMStyle::GetBorderWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
 
   nscoord width;
   const nsStyleDisplay *disp = GetStyleDisplay();
-  if (mFrame->IsThemed(disp)) {
+  if (mFrame && mFrame->IsThemed(disp)) {
     nsMargin result;
     nsPresContext *presContext = mFrame->GetPresContext();
     presContext->GetTheme()->GetWidgetBorder(presContext->DeviceContext(),
