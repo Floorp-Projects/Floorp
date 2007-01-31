@@ -3664,6 +3664,26 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
 inline JSBool
 xpc_ForcePropertyResolve(JSContext* cx, JSObject* obj, jsval idval);
 
+inline jsval
+GetRTStringByIndex(JSContext *cx, uintN index);
+
+nsISupports *
+XPC_GetIdentityObject(JSContext *cx, JSObject *obj);
+
+PRBool
+IsXPCSafeJSObjectWrapperClass(JSClass *clazz);
+
+JSObject *
+XPC_SJOW_GetUnsafeObject(JSContext *cx, JSObject *obj);
+
+JSBool
+XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN, jsval *argv,
+                   jsval *rval);
+
+PRBool
+XPC_SJOW_AttachNewConstructorObject(XPCCallContext &ccx,
+                                    JSObject *aGlobalObject);
+
 #ifdef XPC_IDISPATCH_SUPPORT
 // IDispatch specific classes
 #include "XPCDispPrivate.h"

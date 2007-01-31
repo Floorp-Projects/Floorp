@@ -41,7 +41,6 @@
 /* Class used to manage the wrapped native objects within a JS scope. */
 
 #include "xpcprivate.h"
-#include "XPCNativeWrapper.h"
 
 /***************************************************************************/
 

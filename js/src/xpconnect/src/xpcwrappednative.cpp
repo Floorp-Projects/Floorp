@@ -1300,6 +1300,12 @@ return_tearoff:
 
             return XPCNativeWrapper::GetWrappedNative(cx, cur);
         }
+
+        JSObject *unsafeObj;
+        if(IsXPCSafeJSObjectWrapperClass(clazz) &&
+           (unsafeObj = JS_GetParent(cx, cur)))
+            return GetWrappedNativeOfJSObject(cx, unsafeObj, funobj, pobj2,
+                                              pTearOff);
     }
 
     // If we didn't find a wrapper using the given funobj and obj, try
