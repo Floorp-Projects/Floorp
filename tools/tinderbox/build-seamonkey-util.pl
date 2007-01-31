@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.345 $ ';
+$::UtilsVersion = '$Revision: 1.346 $ ';
 
 package TinderUtils;
 
@@ -2403,7 +2403,7 @@ sub run_all_tests {
     # run TUnit
     if ($Settings::RunUnitTests and $test_result eq 'success') {
       $test_result = RunUnitTests("RunUnitTests",
-                                  $build_dir, "mozilla",
+                                  $build_dir, $binary_dir,
                                   ["make", "-k", "check"]);
     }
 
