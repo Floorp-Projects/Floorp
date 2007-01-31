@@ -49,12 +49,14 @@
   IBOutlet NSPopUpButton* defaultFeedViewerPopUp;
   IBOutlet NSButton*      checkboxCheckDefaultBrowserOnLaunch;
   IBOutlet NSButton*      checkboxWarnWhenClosing;
+  IBOutlet NSButton*      checkboxRememberWindowState;
 }
 
 - (IBAction)checkboxStartPageClicked:(id)sender;
 - (IBAction)defaultBrowserChange:(id)sender;
 - (IBAction)defaultFeedViewerChange:(id)sender;
 - (IBAction)warningCheckboxClicked:(id)sender;
+- (IBAction)rememberWindowStateCheckboxClicked:(id)sender;
 
 // method to be called so that when the default feed viewer is modified
 // in FeedServiceController, we can rebuild the list here as well.

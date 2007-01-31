@@ -17,6 +17,7 @@
                 checkboxStartPageClicked = id; 
                 defaultBrowserChange = id; 
                 defaultFeedViewerChange = id; 
+                rememberWindowStateCheckboxClicked = id; 
                 runOpenDialogToSelectBrowser = id; 
                 runOpenDialogToSelectFeedViewer = id; 
                 warningCheckboxClicked = id; 
@@ -27,6 +28,7 @@
                 checkboxCheckDefaultBrowserOnLaunch = NSButton; 
                 checkboxNewTabBlank = NSButton; 
                 checkboxNewWindowBlank = NSButton; 
+                checkboxRememberWindowState = NSButton; 
                 checkboxWarnWhenClosing = NSButton; 
                 defaultBrowserPopUp = NSPopUpButton; 
                 defaultFeedViewerPopUp = NSPopUpButton; 

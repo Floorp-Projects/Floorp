@@ -83,12 +83,12 @@ const int kDefaultExpireDays = 9;
     return;
 
   BOOL gotPref;
-  
+
   // 0: blank page. 1: home page. 2: last page visited. Our behaviour here should
   // match what the browser does when the prefs don't exist.
   if (([self getIntPref:"browser.startup.page" withSuccess:&gotPref] == 1) || !gotPref)
     [checkboxNewWindowBlank setState:NSOnState];
-  
+
   if (([self getIntPref:"browser.tabs.startPage" withSuccess:&gotPref] == 1))
     [checkboxNewTabBlank setState:NSOnState];
 
@@ -97,15 +97,18 @@ const int kDefaultExpireDays = 9;
 
   if ([self getBooleanPref:"camino.warn_when_closing" withSuccess:&gotPref])
     [checkboxWarnWhenClosing setState:NSOnState];
-  
+
+  if ([self getBooleanPref:"camino.remember_window_state" withSuccess:&gotPref])
+    [checkboxRememberWindowState setState:NSOnState];
+
   [textFieldHomePage setStringValue:[self getCurrentHomePage]];
-  
+
   // set up default browser menu
   [self updateDefaultBrowserMenu];
- 
+
   // set up the feed viewer menu
   [self updateDefaultFeedViewerMenu];
-  
+
   // register notification if the default feed viewer is changed in the FeedServiceController
   [[NSNotificationCenter defaultCenter] addObserver:self
                                            selector:@selector(updateDefaultFeedViewerMenu)
@@ -144,6 +147,12 @@ const int kDefaultExpireDays = 9;
 {
   if (sender == checkboxWarnWhenClosing)
     [self setPref:"camino.warn_when_closing" toBoolean:([sender state] == NSOnState)];
+}
+
+- (IBAction)rememberWindowStateCheckboxClicked:(id)sender
+{
+  if (sender == checkboxRememberWindowState)
+    [self setPref:"camino.remember_window_state" toBoolean:([sender state] == NSOnState)];
 }
 
 - (NSString*)getCurrentHomePage
