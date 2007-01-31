@@ -211,6 +211,7 @@ function dirIter(dir)
  */
 function list(requestPath, directory, recurse)
 {
+  var count = 0;
   var path = requestPath;
   if (path.charAt(path.length - 1) != "/") {
     path += "/";
@@ -222,19 +223,23 @@ function list(requestPath, directory, recurse)
   // The SimpleTest directory is hidden
   var files = [file for (file in dirIter(dir))
                if (file.path.indexOf("SimpleTest") == -1)];
-               
+  
+  count = files.length;
   for each (var file in files) {
     var key = requestPath + file.leafName;
+    var childCount = 0;
     if (file.isDirectory()) {
       key += "/";
     }
     if (recurse && file.isDirectory()) {
-      links[key] = list(key, file, recurse);
+      [links[key], childCount] = list(key, file, recurse);
+      count += childCount;
     } else {
       links[key] = true;
     }
   }
-  return links;
+
+  return [links, count];
 }
 
 /**
@@ -319,9 +324,9 @@ function jsonArrayOfTestFiles(links)
  */
 function regularListing(metadata, response)
 {
-  var links = list(metadata.path,
-                   metadata.getProperty("directory"),
-                   false);
+  var [links, count] = list(metadata.path,
+                            metadata.getProperty("directory"),
+                            false);
   response.write(
     HTML(
       HEAD(
@@ -342,9 +347,10 @@ function regularListing(metadata, response)
  */
 function testListing(metadata, response)
 {
-  var links = list(metadata.path,
-                   metadata.getProperty("directory"),
-                   true);
+  var [links, count] = list(metadata.path,
+                            metadata.getProperty("directory"),
+                            true);
+  dumpn("count: " + count);
   var tests = jsonArrayOfTestFiles(links);
   response.write(
     HTML(
@@ -397,12 +403,16 @@ function testListing(metadata, response)
             A({href: "#", id: "toggleNonTests"}, "Show Non-Tests"),
             BR()
           ),
-          UL({class: "top"},
-            LI(B("Test Files")),
-            linksToListItems(links)
-          ),
+    
           TABLE({cellpadding: 0, cellspacing: 0, id: "test-table"},
-            TR(TH("Passed"), TH("Failed"), TH("Todo")),
+            TR(TD("Passed"), TD("Failed"), TD("Todo"), 
+                TD({rowspan: count+1},
+                   UL({class: "top"},
+                      LI(B("Test Files")),        
+                      linksToListItems(links)
+                      )
+                )
+            ),
             linksToTableRows(links)
           ),
           DIV({class: "clear"})

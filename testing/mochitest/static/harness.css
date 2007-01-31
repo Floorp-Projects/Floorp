@@ -29,20 +29,13 @@ ul {
 }
 
 ul.top { 
-  position: absolute;
-  left: 11%;
-  background: #f6f6f6;
-  width: 86%;
   padding: 0;
   padding-left: 1em;
 }
 
 table#test-table {
-  position: absolute;
   background: #f6f6f6;
-  left: 0%;
   margin-left: 1em;
-  width: 10%;
   padding: 0;
 }
 
