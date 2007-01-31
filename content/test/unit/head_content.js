@@ -66,9 +66,7 @@ var __testsDirectory = null;
 function ParseFile(file) {
   if (typeof(file) == "string") {
     if (!__testsDirectory) {
-      __testsDirectory = C["@mozilla.org/file/local;1"]
-                          .createInstance(I.nsILocalFile);
-      __testsDirectory.initWithPath(do_get_topsrcdir());
+      __testsDirectory = do_get_topsrcdir();
       __testsDirectory.append("content");
       __testsDirectory.append("test");
       __testsDirectory.append("unit");

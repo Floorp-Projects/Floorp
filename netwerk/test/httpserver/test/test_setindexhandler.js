@@ -104,9 +104,7 @@ var srv, serverBasePath;
 function run_test()
 {
   srv = createServer();
-  serverBasePath = Cc["@mozilla.org/file/local;1"]
-                     .createInstance(Ci.nsILocalFile);
-  serverBasePath.initWithPath(do_get_topsrcdir());
+  serverBasePath = do_get_topsrcdir();
   serverBasePath.append("netwerk");
   serverBasePath.append("test");
   serverBasePath.append("httpserver");
