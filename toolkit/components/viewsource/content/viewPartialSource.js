@@ -196,7 +196,7 @@ function viewPartialSourceForSelection(selection)
   // the load is aynchronous and so we will wait until the view-source DOM is done
   // before drawing the selection.
   if (canDrawSelection) {
-    window.document.getElementById("appcontent").addEventListener("load", drawSelection, true);
+    window.document.getElementById("content").addEventListener("load", drawSelection, true);
   }
 
   // all our content is held by the data:URI and URIs are internally stored as utf-8 (see nsIURI.idl)
