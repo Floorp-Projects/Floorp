@@ -831,6 +831,8 @@ sub CreateCompletePatchinfo {
                                   $complete->{$testUrlKey},
                                   platform => $p,
                                   locale => $l );
+                            } else {
+                                $testPatch->{'url'} = $gen_complete_url;
                             }
 
                             write_patch_info(patch => $testPatch,
@@ -892,7 +894,6 @@ sub CreatePastReleasePatchinfo {
         my $complete = $config->GetCurrentUpdate()->{'complete'};
         my $completePath = $complete->{'path'};
         my $completeUrl = $complete->{'url'};
-        my $completeTestUrl = $complete->{'testurl'};
 
         foreach my $fromPlatform (@pastFromPlatforms) {
             # XXX - This is a hack, solely to support the fact that "mac"
@@ -1186,7 +1187,7 @@ sub CreatePartialPatchinfo {
                                  platform => $p,
                                  locale => $l );
                             } else {
-                                $testPatch->{'url'} = $gen_partial_path;
+                                $testPatch->{'url'} = $gen_partial_url;
                             }
 
                             write_patch_info(patch => $testPatch,
