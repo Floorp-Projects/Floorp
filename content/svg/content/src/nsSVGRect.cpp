@@ -244,6 +244,14 @@ NS_NewSVGRect(nsIDOMSVGRect** result, float x, float y,
 }
 
 nsresult
+NS_NewSVGRect(nsIDOMSVGRect** result, const gfxRect& rect)
+{
+  return NS_NewSVGRect(result,
+                       rect.X(), rect.Y(),
+                       rect.Width(), rect.Height());
+}
+
+nsresult
 NS_NewSVGReadonlyRect(nsIDOMSVGRect** result, float x, float y,
                       float width, float height)
 {

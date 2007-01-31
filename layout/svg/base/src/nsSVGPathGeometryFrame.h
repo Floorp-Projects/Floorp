@@ -46,6 +46,7 @@
 #include "nsISVGValueObserver.h"
 #include "nsGkAtoms.h"
 #include "nsSVGGeometryFrame.h"
+#include "gfxRect.h"
 
 class nsPresContext;
 class nsIDOMSVGMatrix;
@@ -130,17 +131,13 @@ private:
   /*
    * Check for what cairo returns for the fill extents of a degenerate path
    *
-   * @param xmin the minimum x value in user units
-   * @param ymin the minimum y value in user units
-   * @param xmax the maximum x value in user units
-   * @param ymax the maximum y value in user units
-   *
    * @return PR_TRUE if the path is degenerate
    */
   static PRBool
-  IsDegeneratePath(double xmin, double ymin, double xmax, double ymax)
+  IsDegeneratePath(const gfxRect& rect)
   {
-    return (xmin == 0 && ymin == 0 && xmax == 0 && ymax == 0);
+    return (rect.X() == 0 && rect.Y() == 0 &&
+            rect.Width() == 0 && rect.Height() == 0);
   }
 
   nsSVGMarkerProperty *GetMarkerProperty();

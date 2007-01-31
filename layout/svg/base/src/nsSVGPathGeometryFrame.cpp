@@ -311,13 +311,9 @@ nsSVGPathGeometryFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
   PRBool isHit = PR_FALSE;
 
   gfxContext context(nsSVGUtils::GetThebesComputationalSurface());
-  cairo_t *ctx = context.GetCairo();
-
-  cairo_set_tolerance(ctx, 1.0);
 
   GeneratePath(&context);
-  double xx = x, yy = y;
-  cairo_device_to_user(ctx, &xx, &yy);
+  gfxPoint devicePoint = context.DeviceToUser(gfxPoint(x, y));
 
   PRUint32 fillRule;
   if (IsClipChild())
@@ -326,15 +322,15 @@ nsSVGPathGeometryFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
     fillRule = GetStyleSVG()->mFillRule;
 
   if (fillRule == NS_STYLE_FILL_RULE_EVENODD)
-    cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_EVEN_ODD);
+    context.SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
   else
-    cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_WINDING);
+    context.SetFillRule(gfxContext::FILL_RULE_WINDING);
 
   if (mask & HITTEST_MASK_FILL)
-    isHit = cairo_in_fill(ctx, xx, yy);
+    isHit = context.PointInFill(devicePoint);
   if (!isHit && (mask & HITTEST_MASK_STROKE)) {
     SetupCairoStrokeHitGeometry(&context);
-    isHit = cairo_in_stroke(ctx, xx, yy);
+    isHit = context.PointInStroke(devicePoint);
   }
 
   if (isHit && nsSVGUtils::HitTestClip(this, x, y))
@@ -402,24 +398,24 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
   mRect.Empty();
 
   gfxContext context(nsSVGUtils::GetThebesComputationalSurface());
-  cairo_t *ctx = context.GetCairo();
 
   GeneratePath(&context);
 
-  double xmin, ymin, xmax, ymax;
+  gfxRect extent;
 
   if (HasStroke()) {
     SetupCairoStrokeGeometry(&context);
-    cairo_stroke_extents(ctx, &xmin, &ymin, &xmax, &ymax);
-    if (!IsDegeneratePath(xmin, ymin, xmax, ymax)) {
-      nsSVGUtils::UserToDeviceBBox(ctx, &xmin, &ymin, &xmax, &ymax);
-      mRect = nsSVGUtils::ToBoundingPixelRect(xmin, ymin, xmax, ymax);
+    extent = context.GetUserStrokeExtent();
+    if (!IsDegeneratePath(extent)) {
+      extent = context.UserToDevice(extent);
+      mRect = nsSVGUtils::ToBoundingPixelRect(extent);
     }
   } else {
-    cairo_identity_matrix(ctx);
-    cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
-    if (!IsDegeneratePath(xmin, ymin, xmax, ymax))
-      mRect = nsSVGUtils::ToBoundingPixelRect(xmin, ymin, xmax, ymax);
+    context.IdentityMatrix();
+    extent = context.GetUserFillExtent();
+    if (!IsDegeneratePath(extent)) {
+      mRect = nsSVGUtils::ToBoundingPixelRect(extent);
+    }
   }
 
   // Add in markers
@@ -483,23 +479,19 @@ nsSVGPathGeometryFrame::SetOverrideCTM(nsIDOMSVGMatrix *aCTM)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
-  double xmin, ymin, xmax, ymax;
-
   gfxContext context(nsSVGUtils::GetThebesComputationalSurface());
-  cairo_t *ctx = context.GetCairo();
 
   GeneratePath(&context);
-  cairo_identity_matrix(ctx);
+  context.IdentityMatrix();
 
-  cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
+  gfxRect extent = context.GetUserFillExtent();
 
-  if (IsDegeneratePath(xmin, ymin, xmax, ymax)) {
-    /* cairo_stroke_extents doesn't work with stroke width zero, fudge */
-    cairo_set_line_width(ctx, 0.0001);
-    cairo_stroke_extents(ctx, &xmin, &ymin, &xmax, &ymax);
+  if (IsDegeneratePath(extent)) {
+    context.SetLineWidth(0);
+    extent = context.GetUserStrokeExtent();
   }
 
-  return NS_NewSVGRect(_retval, xmin, ymin, xmax - xmin, ymax - ymin);
+  return NS_NewSVGRect(_retval, extent);
 }
 
 //----------------------------------------------------------------------
@@ -585,27 +577,27 @@ void
 nsSVGPathGeometryFrame::Render(nsSVGRenderState *aContext)
 {
   gfxContext *gfx = aContext->GetGfxContext();
-  cairo_t *ctx = gfx->GetCairo();
 
   PRUint16 renderMode = aContext->GetRenderMode();
 
   /* save/pop the state so we don't screw up the xform */
-  cairo_save(ctx);
+  gfx->Save();
 
   GeneratePath(gfx);
 
   if (renderMode != nsSVGRenderState::NORMAL) {
-    cairo_restore(ctx);
+    gfx->Restore();
 
     if (GetClipRule() == NS_STYLE_FILL_RULE_EVENODD)
-      cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_EVEN_ODD);
+      gfx->SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
     else
-      cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_WINDING);
+      gfx->SetFillRule(gfxContext::FILL_RULE_WINDING);
 
     if (renderMode == nsSVGRenderState::CLIP_MASK) {
-      cairo_set_antialias(ctx, CAIRO_ANTIALIAS_NONE);
-      cairo_set_source_rgba(ctx, 1.0f, 1.0f, 1.0f, 1.0f);
-      cairo_fill(ctx);
+      gfx->SetAntialiasMode(gfxContext::MODE_ALIASED);
+      gfx->SetColor(gfxRGBA(1.0f, 1.0f, 1.0f, 1.0f));
+      gfx->Fill();
+      gfx->NewPath();
     }
 
     return;
@@ -614,27 +606,27 @@ nsSVGPathGeometryFrame::Render(nsSVGRenderState *aContext)
   switch (GetStyleSVG()->mShapeRendering) {
   case NS_STYLE_SHAPE_RENDERING_OPTIMIZESPEED:
   case NS_STYLE_SHAPE_RENDERING_CRISPEDGES:
-    cairo_set_antialias(ctx, CAIRO_ANTIALIAS_NONE);
+    gfx->SetAntialiasMode(gfxContext::MODE_ALIASED);
     break;
   default:
-    cairo_set_antialias(ctx, CAIRO_ANTIALIAS_DEFAULT);
+    gfx->SetAntialiasMode(gfxContext::MODE_COVERAGE);
     break;
   }
 
   void *closure;
   if (HasFill() && NS_SUCCEEDED(SetupCairoFill(gfx, &closure))) {
-    cairo_fill_preserve(ctx);
+    gfx->Fill();
     CleanupCairoFill(gfx, closure);
   }
 
   if (HasStroke() && NS_SUCCEEDED(SetupCairoStroke(gfx, &closure))) {
-    cairo_stroke(ctx);
+    gfx->Stroke();
     CleanupCairoStroke(gfx, closure);
   }
 
-  cairo_new_path(ctx);
+  gfx->NewPath();
 
-  cairo_restore(ctx);
+  gfx->Restore();
 }
 
 void
@@ -644,18 +636,18 @@ nsSVGPathGeometryFrame::GeneratePath(gfxContext* aContext)
   GetCanvasTM(getter_AddRefs(ctm));
   NS_ASSERTION(ctm, "graphic source didn't specify a ctm");
 
-  cairo_matrix_t matrix = nsSVGUtils::ConvertSVGMatrixToCairo(ctm);
+  gfxMatrix matrix = nsSVGUtils::ConvertSVGMatrixToThebes(ctm);
   cairo_t *ctx = aContext->GetCairo();
 
-  if (nsSVGUtils::IsSingular(&matrix)) {
-    cairo_identity_matrix(ctx);
-    cairo_new_path(ctx);
+  if (matrix.IsSingular()) {
+    aContext->IdentityMatrix();
+    aContext->NewPath();
     return;
   }
-  
+
   aContext->Multiply(gfxMatrix(*reinterpret_cast<gfxMatrix*>(&matrix)));
 
-  cairo_new_path(ctx);
+  aContext->NewPath();
   NS_STATIC_CAST(nsSVGPathGeometryElement*, mContent)->ConstructPath(ctx);
 }
 
