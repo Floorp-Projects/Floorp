@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #   David Hyatt <hyatt@mozilla.org>
+#   Asaf Romano <mano@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,10 +37,15 @@
 #
 # ***** END LICENSE BLOCK *****
 
+function getPanelBrowser()
+{
+    return document.getElementById("web-panels-browser");
+}
+
 var panelProgressListener = {
     onProgressChange : function (aWebProgress, aRequest,
-                                    aCurSelfProgress, aMaxSelfProgress,
-                                    aCurTotalProgress, aMaxTotalProgress) {
+                                 aCurSelfProgress, aMaxSelfProgress,
+                                 aCurTotalProgress, aMaxTotalProgress) {
     },
     
     onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
@@ -51,20 +57,19 @@ var panelProgressListener = {
         if (aStatus == NS_NET_STATUS_READ_FROM || aStatus == NS_NET_STATUS_WROTE_TO)
            return;
 
-        const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
-        const nsIChannel = Components.interfaces.nsIChannel;
-        if (aStateFlags & nsIWebProgressListener.STATE_START && 
-            aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
+        if (aStateFlags & Ci.nsIWebProgressListener.STATE_START && 
+            aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
             window.parent.document.getElementById('sidebar-throbber').setAttribute("loading", "true");
         }
-        else if (aStateFlags & nsIWebProgressListener.STATE_STOP &&
-                aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
+        else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+                aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
             window.parent.document.getElementById('sidebar-throbber').removeAttribute("loading");
         }
     }
     ,
 
     onLocationChange : function(aWebProgress, aRequest, aLocation) {
+        UpdateBackForwardCommands(getPanelBrowser().webNavigation);
     },
 
     onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage) {
@@ -75,35 +80,55 @@ var panelProgressListener = {
 
     QueryInterface : function(aIID)
     {
-        if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
-            aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
-            aIID.equals(Components.interfaces.nsISupports))
-        return this;
-        throw Components.results.NS_NOINTERFACE;
+        if (aIID.equals(Ci.nsIWebProgressListener) ||
+            aIID.equals(Ci.nsISupportsWeakReference) ||
+            aIID.equals(Ci.nsISupports))
+            return this;
+        throw Cr.NS_NOINTERFACE;
     }
 };
 
 var gLoadFired = false;
 function loadWebPanel(aURI) {
-    var panelBrowser = document.getElementById('web-panels-browser');
-    if (gLoadFired)
-        panelBrowser.webNavigation.loadURI(aURI, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
+    var panelBrowser = getPanelBrowser();
+    if (gLoadFired) {
+        panelBrowser.webNavigation
+                    .loadURI(aURI, nsIWebNavigation.LOAD_FLAGS_NONE,
+                             null, null, null);
+    }
     panelBrowser.setAttribute("cachedurl", aURI);
 }
 
 function load()
 {
-  var panelBrowser = document.getElementById('web-panels-browser');
-  panelBrowser.webProgress.addProgressListener(panelProgressListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-  if (panelBrowser.getAttribute("cachedurl"))
-    panelBrowser.webNavigation.loadURI(panelBrowser.getAttribute("cachedurl"), nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
-  gNavigatorBundle = document.getElementById("bundle_browser");
-    
-  gLoadFired = true;
+    var panelBrowser = getPanelBrowser();
+    panelBrowser.webProgress.addProgressListener(panelProgressListener,
+                                                 Ci.nsIWebProgress.NOTIFY_ALL);
+    if (panelBrowser.getAttribute("cachedurl")) {
+        panelBrowser.webNavigation
+                    .loadURI(panelBrowser.getAttribute("cachedurl"),
+                             nsIWebNavigation.LOAD_FLAGS_NONE, null,
+                             null, null);
+    }
+
+    gNavigatorBundle = document.getElementById("bundle_browser");
+    gLoadFired = true;
 }
 
 function unload()
 {
-  var panelBrowser = document.getElementById('web-panels-browser');
-  panelBrowser.webProgress.removeProgressListener(panelProgressListener);
+    getPanelBrowser().webProgress.removeProgressListener(panelProgressListener);
+}
+
+function PanelBrowserStop()
+{
+    getPanelBrowser().webNavigation.stop(nsIWebNavigation.STOP_ALL)
+}
+
+function PanelBrowserReload()
+{
+    getPanelBrowser().webNavigation
+                     .sessionHistory
+                     .QueryInterface(nsIWebNavigation)
+                     .reload(nsIWebNavigation.LOAD_FLAGS_NONE);
 }
