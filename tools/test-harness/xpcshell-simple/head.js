@@ -150,7 +150,7 @@ function do_get_topsrcdir() {
     // relative topsrcdir
     lf = Components.classes["@mozilla.org/file/directory_service;1"]
                    .getService(Components.interfaces.nsIProperties)
-                   .get("CurWorkD", Ci.nsILocalFile);
+                   .get("CurWorkD", Components.interfaces.nsILocalFile);
     lf.appendRelativePath(environment["NATIVE_TOPSRCDIR"]);
   }
   return lf;
