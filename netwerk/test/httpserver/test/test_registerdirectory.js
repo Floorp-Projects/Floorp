@@ -288,6 +288,7 @@ function run_test()
 {
   testsDirectory = Cc["@mozilla.org/file/local;1"]
                      .createInstance(Ci.nsILocalFile);
+dumpn("*** topsrcdir: " + do_get_topsrcdir());
   testsDirectory.initWithPath(do_get_topsrcdir());
   testsDirectory.append("netwerk");
   testsDirectory.append("test");
