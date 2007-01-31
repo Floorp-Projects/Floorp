@@ -307,7 +307,7 @@ var BookmarkPropertiesPanel = {
     }
     else { /* Assume "edit" */
       if (typeof(identifier) == "number") {
-        if (this._livemarks.isLivemark(identifier)) {
+        if (PlacesUtils.livemarks.isLivemark(identifier)) {
           return this.EDIT_LIVEMARK_VARIANT;
         }
         else {
