@@ -641,9 +641,9 @@ BEGIN {
                 return;
             }
             open(BATCH, "<", "$::bonsai_dir/data/$bonsai_tree/batch-$::BatchID.pl")
-                or print "can't open batch-$::BatchID.pl<br>";
+                or warn "Cannot open $::bonsai_dir/data/$bonsai_tree/batch-$::BatchID.pl";
             while (<BATCH>) { 
-                if (/^\$TreeOpen = '(\d+)';/) {
+                if (/^\$::TreeOpen = '(\d+)';/) {
                     $treestate{$tree} = $1;
                     last;
                 }
