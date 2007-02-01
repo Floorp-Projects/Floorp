@@ -253,6 +253,8 @@ var gComposeRecyclingListener = {
 
     // Stop InlineSpellCheckerUI so personal dictionary is saved
     InlineSpellCheckerUI.enabled = false;
+    // clear any suggestions in the context menu
+    InlineSpellCheckerUI.clearSuggestionsFromMenu();
 
     //Reset editor
     EditorResetFontAndColorAttributes();
