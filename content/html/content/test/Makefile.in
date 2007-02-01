@@ -53,6 +53,9 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug1366.html \
 		test_bug1400.html \
 		test_bug2082.html \
+		test_bug3348.html \
+		test_bug6296.html \
+		test_bug24958.html \
 		test_bug300691-1.html \
 		test_bug300691-2.html \
 		test_bug300691-3.xhtml \
