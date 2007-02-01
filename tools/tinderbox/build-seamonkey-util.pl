@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.348 $ ';
+$::UtilsVersion = '$Revision: 1.349 $ ';
 
 package TinderUtils;
 
@@ -2245,7 +2245,6 @@ sub run_all_tests {
       # so careful?  I'm afraid of things like bug 112767, and I assume this
       # had been done for a reason.  -mm
       unless ($Settings::BinaryName eq "TestGtkEmbed" ||
-              ($Settings::BinaryName =~ /^firefox/ && $Settings::MozProfileName eq 'default') ||
               $Settings::BinaryName eq 'Camino') {
         push(@$app_args, "-P", $Settings::MozProfileName);
       }
@@ -2281,8 +2280,7 @@ sub run_all_tests {
     # DHTML performance test.
     if ($Settings::DHTMLPerformanceTest and $test_result eq 'success') {
       my @app_args;
-      if($Settings::BinaryName eq "TestGtkEmbed" ||
-         ($Settings::BinaryName =~ /^firefox/ && $Settings::MozProfileName eq 'default')) {
+      if($Settings::BinaryName eq "TestGtkEmbed"){
         @app_args = [$binary];        
       } elsif($Settings::BinaryName eq 'Camino') {
         @app_args = [$binary, '-url'];
