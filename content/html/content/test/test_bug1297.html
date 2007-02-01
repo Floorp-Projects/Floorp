@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1297
+-->
+<head>
+  <title>Test for Bug 1297</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1297">Mozilla Bug 1297</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<table border=1>
+<tr>
+<td id="td1" onmousedown="alert(this.cellIndex)">cellIndex=0</td>
+<td id="td2" onmousedown="alert(this.cellIndex)">cellIndex=1</td>
+<td id="td3" onmousedown="alert(this.cellIndex)">cellIndex=2</td>
+<tr id="tr1"
+onmousedown="alert(this.rowIndex)"><td>rowIndex=1<td>rowIndex=1<td>rowIndex=1</t
+r>
+<tr id="tr2"
+onmousedown="alert(this.rowIndex)"><td>rowIndex=2<td>rowIndex=2<td>rowIndex=2</t
+r>
+</tr>
+</table>  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 1297 **/
+is($('td1').cellIndex, 0, "cellIndex / rowIndex working td1");
+is($('td2').cellIndex, 1, "cellIndex / rowIndex working td2");
+is($('td3').cellIndex, 2, "cellIndex / rowIndex working td3");
+is($('tr1').rowIndex, 1, "cellIndex / rowIndex working tr1");
+is($('tr2').rowIndex, 2, "cellIndex / rowIndex working tr2");
+
+
+
+
+</script>
+</pre>
+</body>
+</html>
+
