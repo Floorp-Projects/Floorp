@@ -49,9 +49,7 @@ CFLAGS +=  -Wall -Wno-format
 OS_CFLAGS = -DXP_UNIX -DSVR4 -DSYSV -D_BSD_SOURCE -DPOSIX_SOURCE -DDARWIN
 
 RANLIB = ranlib
-MKSHLIB = $(CC) -dynamiclib $(XMKSHLIBOPTS) -framework System
-
-SO_SUFFIX = dylib
+MKSHLIB = libtool $(XMKSHLIBOPTS) -framework System
 
 #.c.o:
 #      $(CC) -c -MD $*.d $(CFLAGS) $<
