@@ -13,8 +13,9 @@ sub Execute {
     my $logDir = $config->Get('var' => 'logDir');
 
     $this->Shell(
-      'cmd' => 'echo sign',
-      'logFile' => $logDir . '/sign.log',
+      'cmd' => 'echo',
+      'cmdArgs' => ['sign'],
+      'logFile' => catfile($logDir, 'sign.log'),
     );
 }
 
@@ -23,8 +24,9 @@ sub Verify {
     my $logDir = $config->Get('var' => 'logDir');
 
     $this->Shell(
-      'cmd' => 'echo Verify sign',
-      'logFile' => $logDir . '/verify-sign.log',
+      'cmd' => 'echo',
+      'cmdArgs' => ['Verify sign'],
+      'logFile' => catfile($logDir, 'sign_verify.log'),
     );
 }
 

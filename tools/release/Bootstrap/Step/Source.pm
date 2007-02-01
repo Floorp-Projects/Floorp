@@ -22,32 +22,44 @@ sub Execute {
     my $stageHome = $config->Get('var' => 'stageHome');
 
     # create staging area
-    my $stageDir = 
-      $stageHome . '/' . $product . '-' . $version . '/batch-source/rc' . $rc;
+    my $stageDir = catfile($stageHome, $product . '-' . $version, 
+                           'batch-source', 'rc' . $rc);
 
     if (not -d $stageDir) {
         MkdirWithPath('dir' => $stageDir) 
           or die "Cannot create $stageDir: $!";
     }
 
+    my $srcScript = $product . '-src-tarball-nobuild';
     $this->Shell(
-      'cmd' => $stageHome . '/bin/' . $product . '-src-tarball-nobuild -r ' . $productTag . '_RELEASE -m ' . $version,
+      'cmd' => catfile($stageHome, 'bin', $srcScript),
+      'cmdArgs' => ['-r', $productTag . '_RELEASE', '-m', $version],
       'dir' => $stageDir,
-      'logFile' => $logDir . '/source.log',
+      'logFile' => catfile($logDir, 'source.log'),
     );
               
     move("$stageDir/../*.bz2", $stageDir);
     chmod(0644, glob("$stageDir/*.bz2"));
-
-#    $this->Shell(
-#      'cmd' => 'rsync -av *.bz2 /home/ftp/pub/' . $product . '/nightly/' . $version . '-candidates/rc' . $rc,
-#      'dir' => $stageDir,
-#    );
 }
 
 sub Verify {
     my $this = shift;
-    #$this->Shell('cmd' => 'echo Verify source');
+    # TODO verify source archive
+}
+
+sub Announce {
+    my $this = shift;
+
+    my $product = $config->Get('var' => 'product');
+    my $version = $config->Get('var' => 'version');
+    my $logDir = $config->Get('var' => 'logDir');
+
+    my $logFile = catfile($logDir, 'source.log');
+
+    $this->SendAnnouncement(
+      subject => "$product $version source step finished",
+      message => "$product $version source archive is ready to be copied to the candidates dir.",
+    );
 }
 
 1;

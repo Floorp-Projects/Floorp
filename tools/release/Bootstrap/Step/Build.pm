@@ -18,15 +18,18 @@ sub Execute {
     my $logDir = $config->Get('var' => 'logDir');
     my $rcTag = $productTag . '_RC' . $rc;
 
-    my $lastBuilt = $buildDir . '/' . $buildPlatform . '/last-built';
+    my $lastBuilt = catfile($buildDir, $buildPlatform, 'last-built');
     unlink($lastBuilt) 
       or $this->Log('msg' => "Cannot unlink last-built file $lastBuilt: $!");
     $this->Log('msg' => "Unlinked $lastBuilt");
 
-    my $buildLog = $logDir . '/' . $rcTag . '-build.log';
+    my $buildLog = catfile($logDir, 'build_' . $rcTag . '-build.log');
  
     $this->Shell(
-      'cmd' => './build-seamonkey.pl --once --mozconfig mozconfig --depend --config-cvsup-dir ' . $buildDir . '/tinderbox-configs',
+      'cmd' => './build-seamonkey.pl',
+      'cmdArgs' => ['--once', '--mozconfig', 'mozconfig', '--depend', 
+                    '--config-cvsup-dir', 
+                    catfile($buildDir, 'tinderbox-configs')],
       'dir' => $buildDir,
       'logFile' => $buildLog,
       'timeout' => 36000
@@ -42,7 +45,7 @@ sub Verify {
     my $rcTag = $productTag.'_RC'.$rc;
     my $logDir = $config->Get('var' => 'logDir');
 
-    my $buildLog = $logDir . '/' . $rcTag . '-build.log';
+    my $buildLog = catfile($logDir, 'build_' . $rcTag . '-build.log');
 
     $this->CheckLog(
         'log' => $buildLog,
@@ -53,6 +56,24 @@ sub Verify {
 #        'log' => $buildLog,
 #        'notAllowed' => '^Error:',
 #    );
+}
+
+sub Announce {
+    my $this = shift;
+
+    my $product = $config->Get('var' => 'product');
+    my $productTag = $config->Get('var' => 'productTag');
+    my $version = $config->Get('var' => 'version');
+    my $rc = $config->Get('var' => 'rc');
+    my $logDir = $config->Get('var' => 'logDir');
+
+    my $rcTag = $productTag . '_RC' . $rc;
+    my $buildLog = catfile($logDir, 'build_' . $rcTag . '-build.log');
+
+    $this->SendAnnouncement(
+      subject => "$product $version build step finished",
+      message => "$product $version en-US build is ready to be copied to the candidates dir.",
+    );
 }
 
 1;

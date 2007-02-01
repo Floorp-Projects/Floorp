@@ -29,16 +29,19 @@ sub Execute {
     }
 
     $this->Shell(
-      'cmd' => 'cvs -d ' . $mozillaCvsroot . ' co -d patcher mozilla/tools/patcher',
-      'logFile' => $logDir . '/patcher_checkout.log',
+      'cmd' => 'cvs',
+      'cmdArgs' => ['-d', $mozillaCvsroot, 'co', '-d', 'patcher', 
+                    catfile('mozilla', 'tools', 'patcher')],
+      'logFile' => catfile($logDir, 'updates_patcher-checkout.log'),
       'dir' => $updateDir,
-      'timeout' => 3600,
     );
 
     # config lives in private repo
     $this->Shell(
-      'cmd' => 'cvs -d ' . $mofoCvsroot . ' co -d config release/patcher/' . $patcherConfig,
-      'logFile' => $logDir . '/patcher_config-checkout.log',
+      'cmd' => 'cvs',
+      'cmdArgs' => ['-d', $mofoCvsroot, 'co', '-d', 'config',  
+                    catfile('release', 'patcher', $patcherConfig)],
+      'logFile' => catfile($logDir, 'updates_patcher-config-checkout.log'),
       'dir' => $updateDir,
     );
 
@@ -46,10 +49,11 @@ sub Execute {
     my $originalCvsrootEnv = $ENV{'CVSROOT'};
     $ENV{'CVSROOT'} = $mozillaCvsroot;
     $this->Shell(
-      'cmd' => './patcher2.pl --build-tools --app=' . $product . ' --config=../config/moz180-branch-patcher2.cfg',
-      'logFile' => $logDir . '/patcher_build-tools.log',
-      'dir' => $updateDir . '/patcher',
-      'timeout' => 3600,
+      'cmd' => './patcher2.pl',
+      'cmdArgs' => ['--build-tools', '--app=' . $product,
+                    '--config=../config/' . $patcherConfig],
+      'logFile' => catfile($logDir, 'updates_patcher-build-tools.log'),
+      'dir' => catfile($updateDir, 'patcher'),
     );
     if ($originalCvsrootEnv) {
         $ENV{'CVSROOT'} = $originalCvsrootEnv;
@@ -57,34 +61,29 @@ sub Execute {
     
     # download complete MARs
     $this->Shell(
-      'cmd' => './patcher2.pl --download --app=' . $product . ' --config=../config/moz180-branch-patcher2.cfg',
-      'logFile' => $logDir . '/patcher_download.log',
-      'dir' => $updateDir . '/patcher',
-      'timeout' => 3600,
+      'cmd' => './patcher2.pl',
+      'cmdArgs' => ['--download', '--app=' . $product,
+                    '--config=../config/' . $patcherConfig],
+      'logFile' => catfile($logDir, 'updates_patcher-download.log'),
+      'dir' => catfile($updateDir, 'patcher'),
     );
 
     # Create partial patches and snippets
     $this->Shell(
-      'cmd' => './patcher2.pl --create-patches -app=' . $product . ' --config=../config/moz180-branch-patcher2.cfg',
-      'logFile' => $logDir . '/patcher_create-patches.log',
-      'dir' => $updateDir . '/patcher',
+      'cmd' => './patcher2.pl',
+      'cmdArgs' => ['--create-patches', '--app=' . $product, 
+                    '--config=../config/' . $patcherConfig],
+      'logFile' => catfile($logDir, 'updates_patcher-create-patches.log'),
+      'dir' => catfile($updateDir, 'patcher'),
       'timeout' => 18000,
     );
     
-    # prepare aus2-staging
-    # ssh aus2-staging.mozilla.org
-    # cd /opt/aus2/incoming/3-staging
-    # tmpdir="`date +%Y%m%d`-${SHORT_PRODUCT}-${VERSION}"
-    # sudo mkdir ${tmpdir}-test
-    # sudo chown cltbld ${tmpdir}-test
-    # sudo mkdir ${tmpdir}
-    # sudo chown cltbld ${tmpdir}
-    
-    # # copy updates from prometheus-vm.mozilla.org
-    # ssh prometheus-vm.mozilla.org
-    # cd /builds/${VERSION}-updates/release/patcher/temp/firefox/${PREVIOUS_VERSION}-${VERSION}/
-    # rsync -nav -e "ssh -i $HOME/.ssh/aus" aus2.test/ aus2-staging.mozilla.org:/opt/aus2/incoming/3-staging/${tmpdir}-test/
-    # rsync -nav -e "ssh -i $HOME/.ssh/aus" aus2/ aus2-staging.mozilla.org:/opt/aus2/incoming/3-staging/${tmpdir}/
+    ### quick verification
+    # ensure that there are only test channels
+    my $testDir = catfile($updateDir, 'patcher', 'temp', $product,  
+                          $oldVersion . '-' . $version, 'aus2.test');
+
+    File::Find::find(\&TestAusCallback, $testDir);
 }
 
 sub Verify {
@@ -98,11 +97,30 @@ sub Verify {
     my $verifyDir = $config->Get('var' => 'verifyDir');
     my $product = $config->Get('var' => 'product');
 
-    ### quick verification
-    # ensure that there are only test channels
-    my $testDir = $updateDir . '/patcher/temp/' . $product . '/' . $oldVersion . '-' . $version . '/aus2.test';
+    # Create verification area.
+    my $verifyDirVersion = catfile($verifyDir, $product . '-' . $version);
+    MkdirWithPath('dir' => $verifyDirVersion) 
+      or die("Could not mkdir $verifyDirVersion: $!");
 
-    File::Find::find(\&TestAusCallback, $testDir);
+    foreach my $dir ('updates', 'common') {
+        $this->Shell(
+          'cmd' => 'cvs',
+          'cmdArgs' => ['-d', $mozillaCvsroot, 'co', '-d', $dir,
+                        catfile('mozilla', 'testing', 'release', $dir)],
+          'logFile' => catfile($logDir, 
+                               'updates_verify_checkout-' . $dir . '.log'),
+          'dir' => $verifyDirVersion,
+        );
+    }
+    
+    # Customize updates.cfg to contain the channels you are interested in 
+    # testing.
+    $this->Shell(
+      'cmd' => './verify.sh', 
+      'cmdArgs' => ['-c'],
+      'logFile' => catfile($logDir, 'updates_verify.log'),
+      'dir' => catfile($verifyDirVersion, 'updates'),
+    );
 }
 
 sub TestAusCallback { 
@@ -112,6 +130,18 @@ sub TestAusCallback {
             die("Non-test directory found in $testDir/aus2.test: $dir");
         }
     }
+}
+
+sub Announce {
+    my $this = shift;
+
+    my $product = $config->Get('var' => 'product');
+    my $version = $config->Get('var' => 'version');
+
+    $this->SendAnnouncement(
+      subject => "$product $version update step finished",
+      message => "$product $version updates are ready to be deployed to AUS and the candidates dir.",
+    );
 }
 
 1;

@@ -4,8 +4,12 @@
 
 package Bootstrap::Step;
 use IO::Handle;
-use MozBuild::Util qw(RunShellCommand);
+use File::Spec::Functions;
+use Bootstrap::Config;
+use MozBuild::Util qw(RunShellCommand Email);
 use POSIX qw(strftime);
+use base 'Exporter';
+our @EXPORT = qw(catfile);
 
 my $DEFAULT_TIMEOUT = 3600;
 
@@ -21,33 +25,39 @@ sub Shell {
     my $this = shift;
     my %args = @_;
     my $cmd = $args{'cmd'};
+    my $cmdArgs = defined($args{'cmdArgs'}) ? $args{'cmdArgs'} : [];
     my $dir = $args{'dir'};
     my $timeout = $args{'timeout'} ? $args{'timeout'} : $DEFAULT_TIMEOUT;
     my $logFile = $args{'logFile'};
     my $rv = '';
 
+    if (ref($cmdArgs) ne 'ARRAY') {
+        die "ASSERT: Bootstrap::Step(): cmdArgs is not an array ref\n" 
+    }
+
     if ($dir) {
         $this->Log('msg' => 'Changing directory to ' . $dir);
         chdir($dir) or die "Cannot chdir to $dir: $!";
-        $this->Log('msg' => 'Running shell command ' . $cmd . ' in dir ' . $dir);
-    } else {
-        $this->Log('msg' => 'Running shell command ' . $cmd);
     }
 
+    $this->Log('msg' => 'Running shell command:');
+    $this->Log('msg' => '  arg0: ' . $cmd); 
+    my $argNum = 1;
+    foreach my $arg (@{$cmdArgs}) {
+        $this->Log('msg' => '  arg' . $argNum . ': ' . $arg); 
+        $argNum += 1;
+    }
     $this->Log('msg' => 'Starting time is ' . $this->CurrentTime());
+    $this->Log('msg' => 'Logging output to ' . $logFile);
 
-    print "Timeout: $timeout\n";
+    $this->Log('msg' => 'Timeout: ' . $timeout);
 
     if ($timeout) {
         $rv = RunShellCommand(
-           'command' => "$cmd",
-           'timeout' => "$timeout",
-           'logfile' => "$logFile",
-        );
-    } else {
-        $rv = RunShellCommand(
-           'command' => "$cmd",
-           'logfile' => "$logFile",
+           'command' => $cmd,
+           'args' => $cmdArgs,
+           'timeout' => $timeout,
+           'logfile' => $logFile,
         );
     }
 
@@ -55,14 +65,12 @@ sub Shell {
     my $timedOut  = $rv->{'timedOut'};
     my $signalName  = $rv->{'signalName'};
     my $dumpedCore = $rv->{'dumpedCore'};
-    my $pid = $rv->{'pid'};
-    print "Pid: $pid\n";
     if ($timedOut) {
         $this->Log('msg' => "output: $rv->{'output'}") if $rv->{'output'};
         die("FAIL shell call timed out after $timeout seconds");
     }
     if ($signalName) {
-        print ("WARNING shell recieved signal $signalName");
+        $this->Log('msg' => 'WARNING shell recieved signal' . $signalName);
     }
     if ($dumpedCore) {
         $this->Log('msg' => "output: $rv->{'output'}") if $rv->{'output'};
@@ -135,4 +143,42 @@ sub CurrentTime() {
     return strftime("%T %D", localtime());
 }
 
+# Overridden by child if needed
+sub Push() {
+    my $this = shift;
+}
+
+# Overridden by child if needed
+sub Announce() {
+    my $this = shift;
+}
+
+sub SendAnnouncement() {
+    my $this = shift;
+    my %args = @_;
+    
+    my $config = new Bootstrap::Config();
+
+    my $from = $args{'from'} ? $args{'from'} : $config->Get(var => 'from');
+    my $to = $args{'to'} ? $args{'to'} : $config->Get(var => 'to');
+    my $cc = $args{'cc'} ? $args{'cc'} : $config->Get(var => 'cc');
+    my $subject = $args{'subject'};
+    my $message = $args{'message'};
+
+    my @ccList = split(', ', $cc);
+
+    eval {
+        Email(
+          from => $from,
+          to => $to,
+          cc => \@ccList,
+          subject => $subject,
+          message => $message,
+        );
+    };
+    if ($@) {
+        die("Could not send announcement email: $@");
+    }
+}
+    
 1;
