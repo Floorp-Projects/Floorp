@@ -1021,6 +1021,7 @@ DumpHelp()
          "\t-v or -version\t\tPrint %s version.\n"
          "\t-P <profile>\t\tStart with <profile>.\n"
          "\t-ProfileManager\t\tStart with ProfileManager.\n"
+         "\t-no-remote\t\tOpen new instance, not a new window in running instance.\n"
          "\t-UILocale <locale>\t\tStart with <locale> resources as UI Locale.\n"
          "\t-contentLocale <locale>\t\tStart with <locale> resources as content Locale.\n"
          "\t-safe-mode\t\tDisables extensions and themes for this session.\n", gAppData->name);
