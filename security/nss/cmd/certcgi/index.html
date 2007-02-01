@@ -42,14 +42,18 @@ script_url = 'http://interzone.mcom.com/cgi-bin/certomatic/bin/certcgi.cgi'
 
 ext_page_ver1 =
   make_page_intro('Version 1 extensions', "#FFFFFF") +
-  '<layer ID="ext1">' +
+  '<IFRAME WIDTH="100%" HEIGHT="100%" FRAMEBORDER=0 ID="ext1">' +
   'Version 1 X.509 certs do not support extensions' +
-  '</layer>' +
+  '</IFRAME>' +
   '</body></html>';
 
-cur_page = 1;
-
 num_ca = 0;
+
+your_certificate_index_label       = 'Your Certificate';
+netscape_extensions_index_label    = 'Netscape X.509 Extensions';
+standard_extensions_index_label    = 'Standard X.509 Extensions';
+certifying_authorities_index_label = 'Certifying Authorities';
+add_sub_alt_name_index_label       = 'Add Subject Alternative Name';
 
 index_list = 
   '0, your_certificate_index_label,' +
@@ -57,49 +61,36 @@ index_list =
   '0, standard_extensions_index_label,' +
   '0, certifying_authorities_index_label';
 
-var main_page = 
-  make_page_intro('Your Key', "#FFFFFF") +
-  '<layer ID="main" SRC="main.html">' +
-  '</layer>' +
-  '</body></html>' ;
-
 add_index_list = '';
 
-max_pages = 13;
-
 ver = 3
+
+max_pages = 13;
+cur_page = 1;
 
 ext_page_array = new Array(max_pages);
 
 index_label = 'Options';
 
-your_certificate_index_label = 'Your Certificate';
-
-netscape_extensions_index_label = 'Netscape X.509 Extensions';
-
-standard_extensions_index_label = 'Standard X.509 Extensions';
-
-certifying_authorities_index_label = 'Certifying Authorities';
-
-add_sub_alt_name_index_label = 'Add Subject Alternative Name';
+var main_page = 
+  make_page_intro('Your Key', "#FFFFFF") +
+  '<IFRAME WIDTH="100%" HEIGHT="100%" FRAMEBORDER=0 ID="main" SRC="main.html">' +
+  '</IFRAME>' +
+  '</body></html>' ;
 
 function setSubAltNameType(form)
 {
-  with(form)
-  {
-    if (SubAltNameRadio[0].checked) 
-    {
+  with(form) {
+    if (SubAltNameRadio[0].checked) {
       return true;
     }
-    if (SubAltNameRadio[3].checked || SubAltNameRadio[5].checked)
-    {
+    if (SubAltNameRadio[3].checked || SubAltNameRadio[5].checked) {
       SubAltNameDataType.checked = true;
       return true;
     }
     if (SubAltNameRadio[1].checked || SubAltNameRadio[2].checked ||
 	SubAltNameRadio[4].checked || SubAltNameRadio[6].checked ||
-	SubAltNameRadio[7].checked || SubAltNameRadio[8].checked)
-    {
+	SubAltNameRadio[7].checked || SubAltNameRadio[8].checked) {
       SubAltNameDataType.checked = false;
       return true;
     }
@@ -109,21 +100,17 @@ function setSubAltNameType(form)
 
 function setIssuerAltNameType(form)
 {
-  with(form)
-  {
-    if (IssuerAltNameRadio[0].checked) 
-    {
+  with(form) {
+    if (IssuerAltNameRadio[0].checked) {
       return true;
     }
-    if (IssuerAltNameRadio[3].checked || IssuerAltNameRadio[5].checked)
-    {
+    if (IssuerAltNameRadio[3].checked || IssuerAltNameRadio[5].checked) {
       IssuerAltNameDataType.checked = true;
       return true;
     }
     if (IssuerAltNameRadio[1].checked || IssuerAltNameRadio[2].checked ||
 	IssuerAltNameRadio[4].checked || IssuerAltNameRadio[6].checked ||
-	IssuerAltNameRadio[7].checked || IssuerAltNameRadio[8].checked)
-    {
+	IssuerAltNameRadio[7].checked || IssuerAltNameRadio[8].checked) {
       IssuerAltNameDataType.checked = false;
       return true;
     }
@@ -134,21 +121,17 @@ function setIssuerAltNameType(form)
 
 function setNameConstraintNameType(form)
 {
-  with(form)
-  {
-    if (NameConstraintRadio[0].checked) 
-    {
+  with(form) {
+    if (NameConstraintRadio[0].checked) {
       return true;
     }
-    if (NameConstraintRadio[3].checked || NameConstraintRadio[5].checked)
-    {
+    if (NameConstraintRadio[3].checked || NameConstraintRadio[5].checked) {
       NameConstraintNameDataType.checked = true;
       return true;
     }
     if (NameConstraintRadio[1].checked || NameConstraintRadio[2].checked ||
 	NameConstraintRadio[4].checked || NameConstraintRadio[6].checked ||
-	NameConstraintRadio[7].checked || NameConstraintRadio[8].checked)
-    {
+	NameConstraintRadio[7].checked || NameConstraintRadio[8].checked) {
       NameConstraintNameDataType.checked = false;
       return true;
     }
@@ -159,45 +142,34 @@ function setNameConstraintNameType(form)
 
 function addSubAltName(form)
 {
-
-  with(form)
-  {
+  with(form) {
     var len = SubAltNameSelect.length;
     var value;
     var i = 0;
-    while(!(i == (SubAltNameRadio.length - 1)) & !(SubAltNameRadio[i].checked == true))
-    {
+    while(!(i == (SubAltNameRadio.length - 1)) & 
+          !(SubAltNameRadio[i].checked == true)) {
       i++;
     }
-    if (i != 0)
-    {
+    if (i != 0) {
       value = SubAltNameText.value + " - " + (i + 1);
-    }
-    else
-    {
-      value = SubAltNameText.value + " - " + SubAltNameOtherNameOID.value + " - ";
-      if (SubAltNameDataType.checked) 
-      {
+    } else {
+      value = SubAltNameText.value + " - " + 
+              SubAltNameOtherNameOID.value + " - ";
+      if (SubAltNameDataType.checked) {
 	value += "1 - ";
-      }
-      else
-      {
+      } else {
 	value += "0 - ";
       }
       value += (i + 1);
-      if (SubAltNameOtherNameOID.value == "")
-      {
+      if (SubAltNameOtherNameOID.value == "") {
 	alert("Other names must include an OID");
 	return false;
       }
     }
 
-    if ((SubAltNameText.value == "") | (SubAltNameRadio[i].checked != true))
-    {
+    if ((SubAltNameText.value == "") | (SubAltNameRadio[i].checked != true)) {
       alert("Alternative Names must include values for name and name type.");
-    }
-    else
-    {
+    } else {
       SubAltNameSelect.options[len] = new Option(value, value);
     }
   }
@@ -206,10 +178,8 @@ function addSubAltName(form)
 
 function deleteSubAltName(form)
 {
-  with(form)
-  {
-    while (SubAltNameSelect.selectedIndex >= 0)
-    {
+  with(form) {
+    while (SubAltNameSelect.selectedIndex >= 0) {
       SubAltNameSelect[SubAltNameSelect.selectedIndex] = null;
     }
   }
@@ -223,39 +193,31 @@ function addIssuerAltName(form)
     var value;
     var i = 0;
 
-    while(!(i == (IssuerAltNameRadio.length -1)) & !(IssuerAltNameRadio[i].checked == true))
-    {
+    while(!(i == (IssuerAltNameRadio.length -1)) & 
+          !(IssuerAltNameRadio[i].checked == true)) {
       i++;
     }
-    if (i != 0)
-    {
+    if (i != 0) {
       value = IssuerAltNameText.value + " - " + (i + 1);
-    }
-    else
-    {
-      value = IssuerAltNameText.value + " - " + IssuerAltNameOtherNameOID.value + " - ";
-      if (IssuerAltNameDataType.checked) 
-      {
+    } else {
+      value = IssuerAltNameText.value + " - " + 
+              IssuerAltNameOtherNameOID.value + " - ";
+      if (IssuerAltNameDataType.checked) {
 	value += "1 - ";
-      }
-      else
-      {
+      } else {
 	value += "0 - ";
       }
       value += (i + 1);
-      if (IssuerAltNameOtherNameOID.value == "")
-	{
+      if (IssuerAltNameOtherNameOID.value == "") {
 	  alert("Other names must include an OID");
 	  return false;
-	}
+      }
     }
-    if ((IssuerAltNameText.value == "") | (IssuerAltNameRadio[i].checked != true))
-    {
+    if ((IssuerAltNameText.value == "") | 
+        (IssuerAltNameRadio[i].checked != true)) {
       alert("Alternative Names must include values for name and name type.")
-    }
-    else
-    {
-    IssuerAltNameSelect.options[len] = new Option(value, value);
+    } else {
+      IssuerAltNameSelect.options[len] = new Option(value, value);
     }
   }
   return true;
@@ -263,10 +225,8 @@ function addIssuerAltName(form)
 
 function deleteIssuerAltName(form)
 {
-  with(form)
-  {
-    while (IssuerAltNameSelect.selectedIndex >= 0)
-    {
+  with(form) {
+    while (IssuerAltNameSelect.selectedIndex >= 0) {
       IssuerAltNameSelect[IssuerAltNameSelect.selectedIndex] = null;
     }
   }
@@ -276,52 +236,41 @@ function deleteIssuerAltName(form)
 
 function addNameConstraint(form)
 {
-  with(form)
-  {
+  with(form) {
     var len = NameConstraintSelect.length;
     var value;
     var i = 0;
     var min = NameConstraintMin.value;
     var max = NameConstraintMax.value;
 
-    while(!(i == (NameConstraintRadio.length - 1) ) & !(NameConstraintRadio[i].checked == true))
-    {
+    while(!(i == (NameConstraintRadio.length - 1) ) & 
+          !(NameConstraintRadio[i].checked == true)) {
       i++;
     }
     value = NameConstraintText.value + " - ";
-    if (i == 0) 
-    {
+    if (i == 0) {
       value += NameConstraintOtherNameOID.value + " - ";
-      if (NameConstraintNameDataType.checked) 
-      {
+      if (NameConstraintNameDataType.checked) {
 	value += "1 - ";
-      }
-      else
-      {
+      } else {
 	value += "0 - ";
       }
-      if (NameConstraintOtherNameOID.value == "")
-      {
+      if (NameConstraintOtherNameOID.value == "") {
 	alert("Other names must include an OID");
 	return false;
       }
     }
     value += (i + 1) + " - ";
-    if (NameConstraintTypeRadio[0].checked == true) 
-    {
+    if (NameConstraintTypeRadio[0].checked == true) {
       value += "p - ";
-    }
-    else
-    {
+    } else {
       value += "e - ";
     }
     value += min + " - " + max;
-    if ((min == "") | (NameConstraintText.value == "") | (NameConstraintRadio[i].checked != true))
-    {
+    if ((min == "") | (NameConstraintText.value == "") | 
+        (NameConstraintRadio[i].checked != true)) {
       alert("Name Constraints must include values for minimum, name, and name type.")
-    }
-    else
-    {
+    } else {
       NameConstraintSelect.options[len] = new Option(value, value);
     }
   }
@@ -330,10 +279,8 @@ function addNameConstraint(form)
 
 function deleteNameConstraint(form)
 {
-  with(form)
-  {
-    while (NameConstraintSelect.selectedIndex >= 0)
-    {
+  with(form) {
+    while (NameConstraintSelect.selectedIndex >= 0) {
       NameConstraintSelect[NameConstraintSelect.selectedIndex] = null;
     }
   }
@@ -344,32 +291,27 @@ function submit_it()
 {
   save_cur_page(cur_page);
 
-  var array_string;
-  var subject = ext_page_array[0][22][0];
-  var serial = ext_page_array[0][10][0];
   var ver1 = (ver == 1);
   var ver3 = (ver == 3);
+  var array_string;
+  var serial        = ext_page_array[0][10][0];
   var serial_number = ext_page_array[0][12][0];
-  var notBefore = ext_page_array[0][20][0];
-  var notAfter = ext_page_array[0][21][0];
-  var manValidity = ext_page_array[0][19][0];
+  var manValidity   = ext_page_array[0][19][0];
+  var notBefore     = ext_page_array[0][20][0];
+  var notAfter      = ext_page_array[0][21][0];
+  var subject       = ext_page_array[0][22][0];
 
-  if (subject == "")
-  {
+  if (subject == "") {
     alert("The DN field must contain some data");
     return false;
   }
-  if (!serial & serial_number == "")
-  {
+  if (!serial & serial_number == "") {
     alert("No serial number specified");
     return false;
   }
-  if (ext_page_array[0][15][0])
-  {
+  if (ext_page_array[0][15][0]) {
     var keygen = "<keygen name=\"key\" challenge=\"foo\">";
-  }
-  else
-  {
+  } else {
     switch (ext_page_array[0][17][0]) {
       case 2:
         var keygen = "<keygen keytype=\"dsa\" pqg=\"MIGdAkEAjfKklEkidqo9JXWbsGhpy+rA2Dr7jQz3y7gyTw14guXQdi/FtyEOr8Lprawyq3qsSWk9+/g3JMLsBzbuMcgCkQIVAMdzIYxzfsjumTtPLe0w9I7azpFfAkEAYm0CeDnqChNBMWOlW0y1ACmdVSKVbO/LO/8Q85nOLC5xy53l+iS6v1jlt5UhklycxC6fb0ZLCIzFcq9T5teIAg==\" name=\"key\" challenge=\"foo\">";
@@ -404,10 +346,10 @@ function submit_it()
     '</body>\n' +
     '</html>\n';
 
-  window.frames.extensions.document.write(good_submit_page);
-  window.frames.extensions.document.close();
+  window.frames['right'].document.write(good_submit_page);
+  window.frames['right'].document.close();
   cur_page = max_pages + 1;
-  make_index(window);
+  make_left_frame(window);
   return false;
 }
 
@@ -415,68 +357,60 @@ function submit_it()
 
 function build_array_string()
 {
-  var j;
+  var pg;
   var array_string = '';
   var pages;
 
-  if ((ext_page_array[3][4][0] > 0) && ext_page_array[3][3][0])
-  {
+  if ((ext_page_array[3][4][0] > 0) && ext_page_array[3][3][0]) {
     pages = 4 + parseInt(ext_page_array[3][4][0]);
-  }
-  else
-  {
+  } else {
     pages = 4;
   }
-  for (j = 1; j < pages; j++)
-  {
-    if ((j > 1 || (ver == 3)) && 
-	(ext_page_array[j].length > 1)) 
-    {
-      if (j < 4)
-      {
-	for (i = 0; i < ext_page_array[j].length; i++)
-	{
-	  if (ext_page_array[j][i][3].indexOf("radio") == -1)
-	  {
-	    if (ext_page_array[j][i][3].indexOf("multiple") == -1)
-	    {
-	      array_string +=  '<input type=\"hidden\" name=\"' + ext_page_array[j][i][1] + '\" value=\'' + ext_page_array[j][i][0] + '\'> \n';
-	    }
-	    else
-	    {
-	      for (k = 0; k < ext_page_array[j][i][0].length; k++)
-	      {
-		array_string += '<input type=\"hidden\" name=\"' + ext_page_array[j][i][1] + k + '\" value=\'' + ext_page_array[j][i][0][k] + '\'> \n';
+  for (pg = 1; pg < pages; pg++) {
+    if ((pg > 1 || (ver == 3)) && (ext_page_array[pg].length > 1)) {
+      if (pg < 4) {
+	for (i = 0; i < ext_page_array[pg].length; i++) {
+	  if (ext_page_array[pg][i][3].indexOf("radio") == -1) {
+	    if (ext_page_array[pg][i][3].indexOf("multiple") == -1) {
+	      array_string +=  '<input type=\"hidden\" name=\"' + 
+                               ext_page_array[pg][i][1] + '\" value=\'' + 
+                               ext_page_array[pg][i][0] + '\'> \n';
+	    } else {
+	      for (k = 0; k < ext_page_array[pg][i][0].length; k++) {
+		array_string += '<input type=\"hidden\" name=\"' + 
+                                ext_page_array[pg][i][1] + k + '\" value=\'' + 
+                                ext_page_array[pg][i][0][k] + '\'> \n';
 	      }
 	    }
-	  }
-	  else
-	  {
-	    array_string += '<input type=\"hidden\" name=\"' + ext_page_array[j][i][1] + '-' + ext_page_array[j][i][2] + '\" value=\'' + ext_page_array[j][i][0] + '\'> \n';
+	  } else {
+	    array_string += '<input type=\"hidden\" name=\"' + 
+                            ext_page_array[pg][i][1] + '-' + 
+			    ext_page_array[pg][i][2] + '\" value=\'' + 
+			    ext_page_array[pg][i][0] + '\'> \n';
 	  }
 	}
-      }
-      else
-      {
-	for (i = 0; i < ext_page_array[j].length; i++)
-	{
-	  if (ext_page_array[j][i][3].indexOf("radio") == -1)
-	  {
-	    if (ext_page_array[j][i][3].indexOf("multiple") == -1)
-	    {
-	      array_string += '<input type=\"hidden\" name=\"' + 'CA#' + (j - 3) + '-' + ext_page_array[j][i][1] + '\" value=\'' + ext_page_array[j][i][0] +'\'> \n';
-	    }
-	    else
-	    {
-	      for (k = 0; k < ext_page_array[j][i][0].length; k++)
-	      {
-		array_string += '<input type=\"hidden\" name=\"' + 'CA#' + (j - 3) + '-' + ext_page_array[j][i][1] + k + '\" value=\'' + ext_page_array[j][i][0][k] + '\'> \n';
+      } else {
+	for (i = 0; i < ext_page_array[pg].length; i++) {
+	  if (ext_page_array[pg][i][3].indexOf("radio") == -1) {
+	    if (ext_page_array[pg][i][3].indexOf("multiple") == -1) {
+	      array_string += '<input type=\"hidden\" name=\"' + 
+	                      'CA#' + (pg - 3) + '-' + 
+			      ext_page_array[pg][i][1] + '\" value=\'' + 
+			      ext_page_array[pg][i][0] +'\'> \n';
+	    } else {
+	      for (k = 0; k < ext_page_array[pg][i][0].length; k++) {
+		array_string += '<input type=\"hidden\" name=\"' + 
+		                'CA#' + (pg - 3) + '-' + 
+				ext_page_array[pg][i][1] + k + '\" value=\'' + 
+				ext_page_array[pg][i][0][k] + '\'> \n';
 	      }
 	    }
-	  }
-	  else
-	  {
-	    array_string += '<input type=\"hidden\" name=\"' + 'CA#' + (j - 3) + '-' + ext_page_array[j][i][1] + '-' + ext_page_array[j][i][2] + '\" value=\'' + ext_page_array[j][i][0] + '\'> \n';
+	  } else {
+	    array_string += '<input type=\"hidden\" name=\"' + 
+	                    'CA#' + (pg - 3) + '-' + 
+			    ext_page_array[pg][i][1] + '-' + 
+			    ext_page_array[pg][i][2] + '\" value=\'' + 
+			    ext_page_array[pg][i][0] + '\'> \n';
 	  }
 	}
       }
@@ -489,66 +423,54 @@ function build_array_string()
 
 function init_ext_page_array()
 {
-  for (i = 0; i < max_pages; i++)
-  {
+  for (i = 0; i < max_pages; i++) {
     ext_page_array[i] = '';
   }
 }
 
 function ca_num_change(n,ca_form)
 {
- with(ca_form)
- {
-  n = parseInt(n,10);
-  if (caChoiceradio[2].checked)
-  {
-    if (n)
-    {
-      update_index(n);
-    }
-    else
-    {
-      update_index(0);
+  with(ca_form) {
+    n = parseInt(n,10);
+    if (caChoiceradio[2].checked) {
+      if (n) {
+	update_left_frame(n);
+      } else {
+	update_left_frame(0);
+      }
     }
   }
- }
 }
 
 function choice_change(ca_form)
 {
-  with(ca_form)
-  {
-    if (caChoiceradio[2].checked)
-    {
+  with(ca_form) {
+    if (caChoiceradio[2].checked) {
       ca_num_change(manCAs.value,ca_form);
-    }
-    else
-    {
-      update_index(0);
+    } else {
+      update_left_frame(0);
     }
   }
 }
 
-function update_index(n)
+function update_left_frame(n)
 {
   var add_string = '';
-  for (var i = 0; i < n; i++)
-  {
+  for (var i = 0; i < n; i++) {
     var j = i + 1;
     add_string = add_string + ',1, \'CA #' + j + '\'';
   }
   top.add_index_list = add_string;
   num_ca = n;
-  make_index(window);
+  make_left_frame(window);
 }
 
 function set_ver1()
 // redraws the extensions page for version 1 certificates
 {
   ver = 1
-  if (cur_page == 2 || cur_page == 3)
-  {
-    sa_switch_pane(window, cur_page, cur_page);
+  if (cur_page == 2 || cur_page == 3) {
+    switch_right_frame(window, cur_page, cur_page);
   }
 }
 
@@ -557,74 +479,53 @@ function set_ver3()
 // redraws the extensions page for version 3 certificates
 {
   ver = 3
-  if (cur_page == 2)
-  {
-    sa_switch_pane(window, 0, 2);
-  }
-  else if (cur_page == 3)
-  {
-    sa_switch_pane(window, 0, 3);
+  if (cur_page == 2) {
+    switch_right_frame(window, 0, 2);
+  } else if (cur_page == 3) {
+    switch_right_frame(window, 0, 3);
   }
 }
 
 function reset_subject(marker, value, form)
 // Updates the subject field from a subordinate field
 {
-  with(form)
-  {
+  with(form) {
     var field_sep = '", ';
     var begin_index = subject.value.indexOf(marker);
-    if (begin_index != 0 && subject.value[begin_index - 1] != ' ')
-    {
+    if (begin_index != 0 && subject.value[begin_index - 1] != ' ') {
       begin_index = subject.value.indexOf(marker, begin_index +1);
     }
     var end_index = subject.value.indexOf(field_sep, begin_index);
-    if (begin_index > -1)  // is it a delete/change?
-    {
-      if (end_index == -1)  // is it the last one (includes only one)?
-      {
-        if (value.length > 0)  // do I have to change it?
-        {
-          if (begin_index == 0) // is is the only one?
-	  {
+    if (begin_index > -1) {       // is it a delete/change?
+      if (end_index == -1) {      // is it the last one (includes only one)?
+        if (value.length > 0) {   // do I have to change it?
+          if (begin_index == 0) { // is is the only one?
             subject.value = marker + '"' + value + '"';
+          } else {                // it is the last of many
+            subject.value = subject.value.substring(0,begin_index) + 
+	                    marker + '"' + value + '"';
           }
-          else    // it is the last of many
-	  {
-            subject.value = subject.value.substring(0,begin_index) + marker + '"' + value + '"';
-          }
-        }
-        else   //  must be a delete
-        {
-          if (begin_index == 0) // is it the only one?
-	  {
+        } else {                  //  must be a delete
+          if (begin_index == 0) { // is it the only one?
             begin_index += 2;
           }
           subject.value = subject.value.substring(0,(begin_index - 2));
         }
-      }
-      else  // it is the first of many or a middle one
-      {
-        if (value.length >0)  // do I have to change it?
-        {
-          subject.value = subject.value.substring(0,(begin_index + marker.length + 1)) + value + subject.value.substring(end_index,subject.length);
-        }
-        else // it is a delete
-        {
-          subject.value = subject.value.substring(0,begin_index) + subject.value.substring((end_index + 3),subject.length);
+      } else {                    // it is the first of many or a middle one
+        if (value.length >0) {    // do I have to change it?
+          subject.value = 
+	  	subject.value.substring(0,(begin_index + marker.length + 1)) + 
+		value + subject.value.substring(end_index,subject.length);
+        } else {                  // it is a delete
+          subject.value = subject.value.substring(0,begin_index) + 
+	        subject.value.substring((end_index + 3),subject.length);
         }
       }
-    }
-    else  // It is either an insert or a do nothing
-    {
-      if (value.length > 0) // is it an insert?
-      {
-        if (subject.value.length == 0)  // is subject currently empty?
-        {
+    } else {                      // It is either an insert or a do nothing
+      if (value.length > 0) {     // is it an insert?
+        if (subject.value.length == 0) {  // is subject currently empty?
           subject.value = marker + '"' + value + '"';
-        }
-        else
-        {
+        } else {
           subject.value = subject.value + ', ' + marker + '"' + value + '"';
         }
       }
@@ -636,7 +537,7 @@ function reset_subject(marker, value, form)
 
 function reset_subjectFields(form)
 // updates all the subordinate fields from the subject field of a form
-// ************ move the strings to global variables, to make maintentance easier ****************
+// **** move the strings to global variables, to make maintentance easier ****
 {
 
   update_subject_Field(form, 'CN=\"', form.name);
@@ -652,39 +553,31 @@ function reset_subjectFields(form)
 
 function update_subject_Field(form, marker, update_field)
 //updates a single subordinate field from the subject field of a form
-// *************** need to deal with the two types of e-mail addresses **************
+// *** need to deal with the two types of e-mail addresses **************
 {
-  with(form)
-  {
+  with(form) {
     var field_sep = '", ';
     var begin_index = subject.value.indexOf(marker) + marker.length;
     var end_index = subject.value.indexOf(field_sep, begin_index);
-      if (end_index == -1)
-      {
-        end_index = subject.value.indexOf('"',begin_index);
-      }
-      if (begin_index != (-1 + marker.length) )
-      {
-        update_field.value = subject.value.substring(begin_index, end_index);
-      }
-      else
-      {
-        update_field.value = '';
-      }
+    if (end_index == -1) {
+      end_index = subject.value.indexOf('"',begin_index);
+    }
+    if (begin_index != (-1 + marker.length) ) {
+      update_field.value = subject.value.substring(begin_index, end_index);
+    } else {
+      update_field.value = '';
+    }
   }
 }
 
 
 function switch_mail(form)
-  // *************** I need to figure out if I want to delete the other type of e-mail address ************
+// **** Do I want to delete the other type of e-mail address ? ************
 {
-  if (form.email_type[0].checked)
-  {
+  if (form.email_type[0].checked) {
     var del = 'E=';
     var ins = 'MAIL=';
-  }
-  else
-  {
+  } else {
     var del = 'MAIL=';
     var ins = 'E=';
   }
@@ -712,11 +605,11 @@ function make_page_intro(title, bgcolor)
 }
 
 
-function make_index(window)
+function make_left_frame(window)
 {
-  with (window.frames.index) 
-  {
-    eval ('index_string = make_index_page(cur_page, ' + index_list + add_index_list + ' )');
+  with (window.frames['index']) {
+    eval ('index_string = make_left_frame_page(cur_page, ' 
+           + index_list + add_index_list + ' )');
     fool1 = make_page_intro(index_label, "#FFFFFF") +
       index_string + '</BODY></HTML>';
     document.write(fool1);
@@ -728,40 +621,35 @@ function make_index(window)
 function save_cur_page(page_number)
 {
   var len;
-  var j = page_number - 1;
-  if (frames.extensions.document.layers.length != 0)
-  {
-    with (frames.extensions.document.layers[0].document)
-    {
+  var pg = page_number - 1;
+  if (window.frames['right'].document.forms.length != 0) {
+    with (window.frames['right'].document) {
       if ((page_number != 2 && page_number != 3 && page_number <= max_pages) || 
-	  ver == 3)
-      {
-        ext_page_array[j] = new Array(forms[0].elements.length);
-        for (i = 0; i < forms[0].elements.length; i++)
-        {
-	  ext_page_array[j][i] = new Array(4);
-          switch (forms[0].elements[i].type)
-	  {
-	    case 'radio': case 'checkbox':
-              ext_page_array[j][i][0] = forms[0].elements[i].checked;
-              break;
-            case 'select-one':
-              ext_page_array[j][i][0] = forms[0].elements[i].selectedIndex;
-              break;
-            case 'select-multiple':
-              len = forms[0].elements[i].options.length;
-	      ext_page_array[j][i][0] = new Array(len);
-	      for(k = 0; k < len; k++)
-	      {
-                ext_page_array[j][i][0][k] = forms[0].elements[i].options[k].value;
-	      }
-              break;
-            default:
-              ext_page_array[j][i][0] = forms[0].elements[i].value;
-          }
-	  ext_page_array[j][i][1] = forms[0].elements[i].name;
-	  ext_page_array[j][i][2] = forms[0].elements[i].value;
-	  ext_page_array[j][i][3] = forms[0].elements[i].type;
+	  ver == 3) {
+        ext_page_array[pg] = new Array(forms[0].elements.length);
+        for (i = 0; i < forms[0].elements.length; i++) {
+	  ext_page_array[pg][i] = new Array(4);
+	  switch (forms[0].elements[i].type) {
+	  case 'radio': 
+          case 'checkbox':
+	    ext_page_array[pg][i][0] = forms[0].elements[i].checked;
+	    break;
+	  case 'select-one':
+	    ext_page_array[pg][i][0] = forms[0].elements[i].selectedIndex;
+	    break;
+	  case 'select-multiple':
+	    len = forms[0].elements[i].options.length;
+	    ext_page_array[pg][i][0] = new Array(len);
+	    for(k = 0; k < len; k++) {
+	      ext_page_array[pg][i][0][k] = forms[0].elements[i].options[k].value;
+	    }
+	    break;
+	  default:
+	    ext_page_array[pg][i][0] = forms[0].elements[i].value;
+	  }
+	  ext_page_array[pg][i][1] = forms[0].elements[i].name;
+	  ext_page_array[pg][i][2] = forms[0].elements[i].value;
+	  ext_page_array[pg][i][3] = forms[0].elements[i].type;
         }
       }
     }
@@ -771,121 +659,95 @@ function save_cur_page(page_number)
 function reload_form(page_number)
 {
   var j = page_number - 1;
-  with (frames.extensions.document.layers[0].document)
-  {
+  with (window.frames['right'].document) {
     if (((page_number < 2 || page_number > 3) || ver == 3) 
-	&& page_number != 0 && (ext_page_array[j].length > 1))
-    {
-      for (i = 0; i < ext_page_array[j].length; i++)
-      {
-        switch (forms[0].elements[i].type)
-	{
-          case 'radio': case 'checkbox':
-            forms[0].elements[i].checked = ext_page_array[j][i][0];
-            break;
-          case 'select-one':
-            forms[0].elements[i].selectedIndex = ext_page_array[j][i][0];
-            break;
-	  case 'select-multiple':
-            for (k = 0; k < ext_page_array[j][i][0].length; k++)
-	    {
-	      forms[0].elements[i].options[k] = new Option(ext_page_array[j][i][0][k], 
-							    ext_page_array[j][i][0][k]);
-	    }
-            break;
-          default:
-            forms[0].elements[i].value = ext_page_array[j][i][0];
-        }
+	&& page_number != 0 && (ext_page_array[j].length > 1)) {
+      for (i = 0; i < ext_page_array[j].length; i++) {
+	switch (forms[0].elements[i].type) {
+	case 'radio': case 'checkbox':
+	  forms[0].elements[i].checked = ext_page_array[j][i][0];
+	  break;
+	case 'select-one':
+	  forms[0].elements[i].selectedIndex = ext_page_array[j][i][0];
+	  break;
+	case 'select-multiple':
+	  for (k = 0; k < ext_page_array[j][i][0].length; k++) {
+	    forms[0].elements[i].options[k] = 
+	        new Option(ext_page_array[j][i][0][k], 
+			   ext_page_array[j][i][0][k]);
+	  }
+	  break;
+	default:
+	  forms[0].elements[i].value = ext_page_array[j][i][0];
+	}
       }
     }
   }
 }
 
-function sa_switch_pane(top_window, old_pane, new_pane)
+function switch_right_frame(top_window, old_pane, new_pane)
 {
   var ext_page_stnd =
     make_page_intro(standard_extensions_index_label, "#FFFFFF") +
-    '<layer ID="ext" SRC="stnd_ext_form.html">' +
-    '</layer>' +
-    '</body></html>';
+    '<IFRAME WIDTH="100%" HEIGHT="100%" FRAMEBORDER=0 ID="ext" ' +
+    'SRC="stnd_ext_form.html">' +
+    '</IFRAME></body></html>';
 
   var ext_page_nscp = 
     make_page_intro(netscape_extensions_index_label, "#FFFFFF") +
-    '<layer ID="ext" SRC="nscp_ext_form.html">' +
-    '</layer>' +
-    '</body></html>';
+    '<IFRAME WIDTH="100%" HEIGHT="100%" FRAMEBORDER=0 ID="ext" ' +
+    'SRC="nscp_ext_form.html">' +
+    '</IFRAME></body></html>';
 
   var ext_page_ca =
     make_page_intro(certifying_authorities_index_label, "#FFFFFF") +
-    '<layer ID="ext" SRC="ca.html">' +
-    '</layer>' +
-    '</body</html>';
+    '<IFRAME WIDTH="100%" HEIGHT="100%" FRAMEBORDER=0 ID="ext" ' +
+    'SRC="ca.html">' +
+    '</IFRAME></body</html>';
 
   var ext_page_ca_exp =
     make_page_intro('Certifying Authority Details', "#FFFFFF") +
-    '<layer ID="ext" SRC="ca_form.html">' +
-    '</layer>' +
-    '</body></html>';
+    '<IFRAME WIDTH="100%" HEIGHT="100%" FRAMEBORDER=0 ID="ext" ' +
+    'SRC="ca_form.html">' +
+    '</IFRAME></body></html>';
 
 
-  if (old_pane > 0 && cur_page <= max_pages)
-  {
+  if (old_pane > 0 && cur_page <= max_pages) {
     save_cur_page(old_pane);
   }
   cur_page = new_pane;
-  make_index(top_window);
-  if (new_pane == 2 || new_pane == 3)
-  {
-    if (ver == 1)
-    {
-      frames.extensions.document.write(ext_page_ver1);
-      frames.extensions.document.close();
-    }
-    else
-    {
-      if (new_pane == 2)
-      {
-        frames.extensions.document.write(ext_page_nscp);
-        frames.extensions.document.close();
-	reload_form(new_pane);
-      }
-      else
-      {
-        frames.extensions.document.write(ext_page_stnd);
-        frames.extensions.document.close();
-        reload_form(new_pane);
-      }
-    }
-  }
-  else
-  {
-    if (new_pane == 4)
-    {
-      frames.extensions.document.write(ext_page_ca);
-      frames.extensions.document.close();
+  make_left_frame(top_window);
+  if (new_pane == 2 || new_pane == 3) {
+    if (ver == 1) {
+      frames['right'].document.write(ext_page_ver1);
+      frames['right'].document.close();
+    } else if (new_pane == 2) {
+      frames['right'].document.write(ext_page_nscp);
+      frames['right'].document.close();
+      reload_form(new_pane);
+    } else {
+      frames['right'].document.write(ext_page_stnd);
+      frames['right'].document.close();
       reload_form(new_pane);
     }
-    else
-    {
-      if (new_pane == 1)
-      {
-      frames.extensions.document.write(main_page);
-      frames.extensions.document.close();
-      reload_form(new_pane);
-      }
-      else
-      {
-        frames.extensions.document.write(ext_page_ca_exp);
-        frames.extensions.document.close();
-        reload_form(new_pane);
-      }
-    }
+  } else if (new_pane == 4) {
+    frames['right'].document.write(ext_page_ca);
+    frames['right'].document.close();
+    reload_form(new_pane);
+  } else if (new_pane == 1) {
+    frames['right'].document.write(main_page);
+    frames['right'].document.close();
+    reload_form(new_pane);
+  } else {
+    frames['right'].document.write(ext_page_ca_exp);
+    frames['right'].document.close();
+    reload_form(new_pane);
   }
 }
 
-function make_index_page(selected)
+function make_left_frame_page(selected)
 {
-  var n_strings = ( make_index_page.arguments.length - 1 ) / 2;
+  var n_strings = ( make_left_frame_page.arguments.length - 1 ) / 2;
   var table_background;
   var command;
   var indent;
@@ -900,8 +762,8 @@ function make_index_page(selected)
       table_background = '';
     }
 	
-    indent = make_index_page.arguments[(i*2) - 1];
-    label =  make_index_page.arguments[(i*2)];
+    indent = make_left_frame_page.arguments[(i*2) - 1];
+    label =  make_left_frame_page.arguments[(i*2)];
 
     if ( indent == 0 ) {
       ret_string += ('<TR><TD COLSPAN=2 ' + table_background + '>');
@@ -909,15 +771,14 @@ function make_index_page(selected)
       ret_string += ('<TR><TD>&nbsp;&nbsp;</TD><TD ' + table_background + '>');
     }
 
-    command = "'parent.sa_switch_pane(parent," + selected + "," + i + ")'";
+    command = "'parent.switch_right_frame(parent," + selected + "," + i + ")'";
     ret_string += ('<A HREF="javascript:void setTimeout(' + command + ',0)">');
     if ( indent == 0 ) { ret_string += "<B>"; }
     ret_string += label;
     if ( indent == 0 ) { ret_string += "</B>"; }
     ret_string += '</A></TD></TR>';
   }
-  if (selected == (max_pages + 1))
-  {
+  if (selected == (max_pages + 1)) {
     table_background = 'BGCOLOR=#BBCCBB';
   } else {
     table_background = '';
@@ -938,12 +799,13 @@ function make_page(window)
   selected = cur_page
   init_ext_page_array()
 
-  with (window.frames.extensions) {
-    document.write(main_page);
-    document.close();
+  with (window.frames['right']) {
+    location="main.html";
+//  document.write(main_page);
+//  document.close();
   }
 
-  make_index(window);
+  make_left_frame(window);
 
 }
 </script>
@@ -951,9 +813,9 @@ function make_page(window)
 </HEAD>
 <title>Cert-O-Matic</title>
   <FRAMESET cols="150,*" BORDER=3 ONLOAD="make_page(window)">
-      <FRAME SRC="about:blank" NAME="index"
+      <FRAME SRC="about:blank" ID="index" NAME="index"
            MARGINWIDTH=15 MARGINHEIGHT=10 BORDER=3>
-      <FRAME SRC="about:blank" NAME="extensions"
+      <FRAME SRC="about:blank" ID="right" NAME="right"
            MARGINWIDTH=15 MARGINHEIGHT=10 BORDER=3>
   </FRAMESET>
 </HTML>
