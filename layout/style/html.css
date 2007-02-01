@@ -173,6 +173,10 @@ table {
   text-indent: 0;
 }
 
+table, td, th {
+  border-color: gray;
+}
+
 table[align="left"] {
   float: left;
 }
@@ -386,14 +390,15 @@ dir ol dir,   dir ul dir,   dir menu dir,   dir dir dir {
 hr {
   display: block;
   height: 2px;
-  border: 1px -moz-bg-inset;
+  border: 1px inset;
   margin: 0.5em auto 0.5em auto;
+  color: gray;
   -moz-float-edge: margin-box;
   -moz-box-sizing: border-box;
 }
 
 hr[size="1"] {
-  border-style: -moz-bg-solid none none none;
+  border-style: solid none none none;
 }
 
 *|*:-moz-any-link img, img[usemap], object[usemap] {

@@ -302,8 +302,7 @@ void nsCSSRendering::FillPolygon (nsIRenderingContext& aContext,
  */
 nscolor nsCSSRendering::MakeBevelColor(PRIntn whichSide, PRUint8 style,
                                        nscolor aBackgroundColor,
-                                       nscolor aBorderColor,
-                                       PRBool aSpecialCase)
+                                       nscolor aBorderColor)
 {
 
   nscolor colors[2];
@@ -311,15 +310,11 @@ nscolor nsCSSRendering::MakeBevelColor(PRIntn whichSide, PRUint8 style,
 
   // Given a background color and a border color
   // calculate the color used for the shading
-  if(aSpecialCase)
-    NS_GetSpecial3DColors(colors, aBackgroundColor, aBorderColor);
-  else
-    NS_Get3DColors(colors, aBackgroundColor);
+  NS_GetSpecial3DColors(colors, aBackgroundColor, aBorderColor);
  
-  if ((style == NS_STYLE_BORDER_STYLE_BG_OUTSET) ||
-      (style == NS_STYLE_BORDER_STYLE_OUTSET) ||
+  if ((style == NS_STYLE_BORDER_STYLE_OUTSET) ||
       (style == NS_STYLE_BORDER_STYLE_RIDGE)) {
-    // Flip colors for these three border styles
+    // Flip colors for these two border styles
     switch (whichSide) {
     case NS_SIDE_BOTTOM: whichSide = NS_SIDE_TOP;    break;
     case NS_SIDE_RIGHT:  whichSide = NS_SIDE_LEFT;   break;
@@ -558,8 +553,7 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
                                         ((theStyle == NS_STYLE_BORDER_STYLE_RIDGE) ?
                                          NS_STYLE_BORDER_STYLE_GROOVE :
                                          NS_STYLE_BORDER_STYLE_RIDGE), 
-                                         aBackgroundColor, theColor, 
-                                         PR_TRUE));
+                                         aBackgroundColor, theColor));
     if (2 == np) {
       //aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
       DrawLine (aContext, theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y, aGap);
@@ -570,7 +564,7 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
     np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,aSkipSides,
                    BORDER_OUTSIDE, 0.5f, twipsPerPixel);
     aContext.SetColor ( MakeBevelColor (whichSide, theStyle, aBackgroundColor, 
-                                        theColor, PR_TRUE));
+                                        theColor));
     if (2 == np) {
       //aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
       DrawLine (aContext, theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y, aGap);
@@ -590,19 +584,6 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
       DrawLine (aContext, theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y, aGap);
     } else {
       //aContext.FillPolygon (theSide, np);
-      FillPolygon (aContext, theSide, np, aGap);
-    }
-    break;
-
-  case NS_STYLE_BORDER_STYLE_BG_SOLID:
-    np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside, aSkipSides,
-                   BORDER_FULL, 1.0f, twipsPerPixel);
-    nscolor colors[2]; 
-    NS_Get3DColors(colors, aBackgroundColor); 
-    aContext.SetColor (colors[0]);
-    if (2 == np) {
-      DrawLine (aContext, theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y, aGap);
-    } else {
       FillPolygon (aContext, theSide, np, aGap);
     }
     break;
@@ -629,26 +610,12 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
     }
     break;
 
-  case NS_STYLE_BORDER_STYLE_BG_OUTSET:
-  case NS_STYLE_BORDER_STYLE_BG_INSET:
-    np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,aSkipSides,
-                   BORDER_FULL, 1.0f, twipsPerPixel);
-    aContext.SetColor ( MakeBevelColor (whichSide, theStyle, aBackgroundColor,
-                                        theColor, PR_FALSE));
-    if (2 == np) {
-      //aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
-      DrawLine (aContext, theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y, aGap);
-    } else {
-      //aContext.FillPolygon (theSide, np);
-      FillPolygon (aContext, theSide, np, aGap);
-    }
-    break;
   case NS_STYLE_BORDER_STYLE_OUTSET:
   case NS_STYLE_BORDER_STYLE_INSET:
     np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,aSkipSides,
                    BORDER_FULL, 1.0f, twipsPerPixel);
     aContext.SetColor ( MakeBevelColor (whichSide, theStyle, aBackgroundColor, 
-                                        theColor, PR_TRUE));
+                                        theColor));
     if (2 == np) {
       //aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
       DrawLine (aContext, theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y, aGap);
@@ -1561,64 +1528,6 @@ nscolor   newcolor;
   return newcolor;
 }
 
-// method GetBGColorForHTMLElement
-//
-// Now here's a *fun* hack: Nav4 uses the BODY element's background color for the 
-//                          background color on tables so we need to find that element's
-//                          color and use it... Actually, we can use the HTML element as well.
-//
-// Traverse from PresContext to PresShell to Document to RootContent. The RootContent is
-// then checked to ensure that it is the HTML or BODY element, and if it is, we get
-// it's primary frame and from that the style context and from that the color to use.
-//
-PRBool GetBGColorForHTMLElement( nsPresContext *aPresContext,
-                                   const nsStyleBackground *&aBGColor )
-{
-  NS_ASSERTION(aPresContext, "null params not allowed");
-  PRBool result = PR_FALSE; // assume we did not find the HTML element
-
-  nsIPresShell* shell = aPresContext->GetPresShell();
-  if (shell) {
-    nsIDocument *doc = shell->GetDocument();
-    if (doc) {
-      nsIContent *pContent;
-      if ((pContent = doc->GetRootContent())) {
-        // make sure that this is the HTML element
-        nsIAtom *tag = pContent->Tag();
-        NS_ASSERTION(tag, "Tag could not be retrieved from root content element");
-        if (tag == nsGkAtoms::html ||
-            tag == nsGkAtoms::body) {
-          // use this guy's color
-          nsIFrame *pFrame = shell->GetPrimaryFrameFor(pContent);
-          if (pFrame) {
-            nsStyleContext *pContext = pFrame->GetStyleContext();
-            if (pContext) {
-              const nsStyleBackground* color = pContext->GetStyleBackground();
-              if (0 == (color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
-                aBGColor = color;
-                // set the reslt to TRUE to indicate we mapped the color
-                result = PR_TRUE;
-              }
-            }// if context
-          }// if frame
-        }// if tag == html or body
-#ifdef DEBUG
-        else {
-          printf( "Root Content is not HTML or BODY: cannot get bgColor of HTML or BODY\n");
-        }
-#endif
-      }// if content
-    }// if doc
-  } // if shell
-
-  return result;
-}
-
-// helper macro to determine if the borderstyle 'a' is a MOZ-BG-XXX style
-#define MOZ_BG_BORDER(a)\
-((a==NS_STYLE_BORDER_STYLE_BG_INSET) || (a==NS_STYLE_BORDER_STYLE_BG_OUTSET)\
-                                     || (a==NS_STYLE_BORDER_STYLE_BG_SOLID))
-
 static
 PRBool GetBorderColor(const nsStyleColor* aColor, const nsStyleBorder& aBorder, PRUint8 aSide, nscolor& aColorVal,
                       nsBorderColors** aCompositeColors = nsnull)
@@ -1677,29 +1586,6 @@ void nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
   const nsStyleBackground* bgColor = 
     nsCSSRendering::FindNonTransparentBackground(aStyleContext, 
                                             compatMode == eCompatibility_NavQuirks ? PR_TRUE : PR_FALSE); 
-
-  // mozBGColor is used instead of bgColor when the display type is BG_INSET or BG_OUTSET
-  // or BG_SOLID, and, in quirk mode, it is set to the BODY element's background color
-  // instead of the nearest ancestor's background color.
-  const nsStyleBackground* mozBGColor = bgColor;
-
-  // now check if we are in Quirks mode and have a border style of BG_INSET or OUTSET
-  // or BG_SOLID - if so we use the bgColor from the HTML element instead of the
-  // nearest ancestor
-  if (compatMode == eCompatibility_NavQuirks) {
-    PRBool bNeedBodyBGColor = PR_FALSE;
-    if (aStyleContext) {
-      for (cnt=0; cnt<4;cnt++) {
-        bNeedBodyBGColor = MOZ_BG_BORDER(aBorderStyle.GetBorderStyle(cnt));
-        if (bNeedBodyBGColor) {
-          break;
-        }
-      }
-    }
-    if (bNeedBodyBGColor) {
-      GetBGColorForHTMLElement(aPresContext, mozBGColor);
-    } 
-  }
 
   if (aHardBorderSize > 0) {
     border.SizeTo(aHardBorderSize, aHardBorderSize, aHardBorderSize, aHardBorderSize);
@@ -1858,9 +1744,7 @@ void nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
           DrawSide(aRenderingContext, side,
                    forceSolid ? NS_STYLE_BORDER_STYLE_SOLID : aBorderStyle.GetBorderStyle(side),
                    sideColor,
-                   MOZ_BG_BORDER(aBorderStyle.GetBorderStyle(side)) ? 
-                    mozBGColor->mBackgroundColor :
-                    bgColor->mBackgroundColor,
+                   bgColor->mBackgroundColor,
                    outerRect,innerRect, aSkipSides,
                    twipsPerPixel, aGap);
       }
@@ -3706,19 +3590,10 @@ nsCSSRendering::RenderSide(nsFloatPoint aPoints[],nsIRenderingContext& aRenderin
     switch (border_Style){
       case NS_STYLE_BORDER_STYLE_OUTSET:
       case NS_STYLE_BORDER_STYLE_INSET:
-      case NS_STYLE_BORDER_STYLE_BG_OUTSET:
-      case NS_STYLE_BORDER_STYLE_BG_INSET:
-      case NS_STYLE_BORDER_STYLE_BG_SOLID:
         {
           const nsStyleBackground* bgColor = nsCSSRendering::FindNonTransparentBackground(aStyleContext);
-          if (border_Style == NS_STYLE_BORDER_STYLE_BG_SOLID) {
-            nscolor colors[2]; 
-            NS_Get3DColors(colors, bgColor->mBackgroundColor); 
-            aRenderingContext.SetColor(colors[0]);
-          } else {
-            aRenderingContext.SetColor(MakeBevelColor(aSide, border_Style, bgColor->mBackgroundColor, sideColor, 
-                                       !MOZ_BG_BORDER(border_Style)));
-          }
+          aRenderingContext.SetColor(MakeBevelColor(aSide, border_Style,
+                                       bgColor->mBackgroundColor, sideColor));
         }
       case NS_STYLE_BORDER_STYLE_DOTTED:
       case NS_STYLE_BORDER_STYLE_DASHED:
@@ -3766,7 +3641,8 @@ nsCSSRendering::RenderSide(nsFloatPoint aPoints[],nsIRenderingContext& aRenderin
       case NS_STYLE_BORDER_STYLE_GROOVE:
         {
         const nsStyleBackground* bgColor = nsCSSRendering::FindNonTransparentBackground(aStyleContext);
-        aRenderingContext.SetColor ( MakeBevelColor (aSide, border_Style, bgColor->mBackgroundColor,sideColor, PR_TRUE));
+        aRenderingContext.SetColor(MakeBevelColor(aSide, border_Style,
+                                     bgColor->mBackgroundColor,sideColor));
 
         polypath[0].x = NSToCoordRound(aPoints[0].x);
         polypath[0].y = NSToCoordRound(aPoints[0].y);
@@ -3789,7 +3665,7 @@ nsCSSRendering::RenderSide(nsFloatPoint aPoints[],nsIRenderingContext& aRenderin
                                                 ((border_Style == NS_STYLE_BORDER_STYLE_RIDGE) ?
                                                 NS_STYLE_BORDER_STYLE_GROOVE :
                                                 NS_STYLE_BORDER_STYLE_RIDGE), 
-                                                bgColor->mBackgroundColor,sideColor, PR_TRUE));
+                                                bgColor->mBackgroundColor,sideColor));
        
         polypath[0].x = NSToCoordRound((aPoints[0].x + aPoints[11].x)/2.0f);
         polypath[0].y = NSToCoordRound((aPoints[0].y + aPoints[11].y)/2.0f);
@@ -4386,7 +4262,7 @@ nsCSSRendering::DrawTableBorderSegment(nsIRenderingContext&     aContext,
                             ? RoundFloatToPixel(0.5f * (float)aEndBevelOffset, twipsPerPixel, PR_TRUE) : 0;
       PRUint8 ridgeGrooveSide = (horizontal) ? NS_SIDE_TOP : NS_SIDE_LEFT;
       aContext.SetColor ( 
-        MakeBevelColor (ridgeGrooveSide, ridgeGroove, aBGColor->mBackgroundColor, aBorderColor, PR_TRUE));
+        MakeBevelColor(ridgeGrooveSide, ridgeGroove, aBGColor->mBackgroundColor, aBorderColor));
       nsRect rect(aBorder);
       nscoord half;
       if (horizontal) { // top, bottom
@@ -4419,7 +4295,7 @@ nsCSSRendering::DrawTableBorderSegment(nsIRenderingContext&     aContext,
       rect = aBorder;
       ridgeGrooveSide = (NS_SIDE_TOP == ridgeGrooveSide) ? NS_SIDE_BOTTOM : NS_SIDE_RIGHT;
       aContext.SetColor ( 
-        MakeBevelColor (ridgeGrooveSide, ridgeGroove, aBGColor->mBackgroundColor, aBorderColor, PR_TRUE));
+        MakeBevelColor(ridgeGrooveSide, ridgeGroove, aBGColor->mBackgroundColor, aBorderColor));
       if (horizontal) {
         rect.y = rect.y + half;
         rect.height = aBorder.height - half;
@@ -4511,13 +4387,10 @@ nsCSSRendering::DrawTableBorderSegment(nsIRenderingContext&     aContext,
       break;
     }
     // else fall through to solid
-  case NS_STYLE_BORDER_STYLE_BG_SOLID:
   case NS_STYLE_BORDER_STYLE_SOLID:
     DrawSolidBorderSegment(aContext, aBorder, twipsPerPixel, aStartBevelSide, 
                            aStartBevelOffset, aEndBevelSide, aEndBevelOffset);
     break;
-  case NS_STYLE_BORDER_STYLE_BG_OUTSET:
-  case NS_STYLE_BORDER_STYLE_BG_INSET:
   case NS_STYLE_BORDER_STYLE_OUTSET:
   case NS_STYLE_BORDER_STYLE_INSET:
     NS_ASSERTION(PR_FALSE, "inset, outset should have been converted to groove, ridge");

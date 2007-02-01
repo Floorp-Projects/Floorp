@@ -4244,18 +4244,15 @@ BCMapCellIterator::PeekBottom(BCMapCellInfo&   aRefInfo,
 // Assign priorities to border styles. For example, styleToPriority(NS_STYLE_BORDER_STYLE_SOLID)
 // will return the priority of NS_STYLE_BORDER_STYLE_SOLID. 
 static PRUint8 styleToPriority[13] = { 0,  // NS_STYLE_BORDER_STYLE_NONE
-                                       3,  // NS_STYLE_BORDER_STYLE_GROOVE
-                                       6,  // NS_STYLE_BORDER_STYLE_RIDGE
-                                       7,  // NS_STYLE_BORDER_STYLE_DOTTED
-                                       8,  // NS_STYLE_BORDER_STYLE_DASHED
-                                       10, // NS_STYLE_BORDER_STYLE_SOLID
-                                       11, // NS_STYLE_BORDER_STYLE_DOUBLE
-                                       2,  // NS_STYLE_BORDER_STYLE_INSET
-                                       5,  // NS_STYLE_BORDER_STYLE_OUTSET
-                                       12, // NS_STYLE_BORDER_STYLE_HIDDEN
-                                       1,  // NS_STYLE_BORDER_STYLE_BG_INSET
-                                       4,  // NS_STYLE_BORDER_STYLE_BG_OUTSET
-                                       9 };// NS_STYLE_BORDER_STYLE_BG_SOLID
+                                       2,  // NS_STYLE_BORDER_STYLE_GROOVE
+                                       4,  // NS_STYLE_BORDER_STYLE_RIDGE
+                                       5,  // NS_STYLE_BORDER_STYLE_DOTTED
+                                       6,  // NS_STYLE_BORDER_STYLE_DASHED
+                                       7,  // NS_STYLE_BORDER_STYLE_SOLID
+                                       8,  // NS_STYLE_BORDER_STYLE_DOUBLE
+                                       1,  // NS_STYLE_BORDER_STYLE_INSET
+                                       3,  // NS_STYLE_BORDER_STYLE_OUTSET
+                                       9 };// NS_STYLE_BORDER_STYLE_HIDDEN
 // priority rules follow CSS 2.1 spec
 // 'hidden', 'double', 'solid', 'dashed', 'dotted', 'ridge', 'outset', 'groove',
 // and the lowest: 'inset'. none is even weaker
@@ -4335,12 +4332,10 @@ GetPaintStyleInfo(const nsIFrame*  aFrame,
                   PRBool           aIgnoreTableEdge)
 {
   GetColorAndStyle(aFrame, aSide, aStyle, aColor, aTableIsLTR, aIgnoreTableEdge);
-  if ((NS_STYLE_BORDER_STYLE_INSET    == aStyle) || 
-      (NS_STYLE_BORDER_STYLE_BG_INSET == aStyle)) {
+  if (NS_STYLE_BORDER_STYLE_INSET    == aStyle) {
     aStyle = NS_STYLE_BORDER_STYLE_RIDGE;
   }
-  else if ((NS_STYLE_BORDER_STYLE_OUTSET    == aStyle) || 
-           (NS_STYLE_BORDER_STYLE_BG_OUTSET == aStyle)) {
+  else if (NS_STYLE_BORDER_STYLE_OUTSET    == aStyle) {
     aStyle = NS_STYLE_BORDER_STYLE_GROOVE;
   }
 }
