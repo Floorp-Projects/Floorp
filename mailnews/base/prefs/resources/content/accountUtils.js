@@ -166,7 +166,7 @@ function verifyAccounts(wizardcallback)
           if (!adminUrl)
             newProfile = false;
         }
-        if (newProfile || accountCount == invalidAccounts.length) {
+        if ((newProfile  && !accountCount) || accountCount == invalidAccounts.length) {
             try {
                   var messengerMigrator = Components.classes[messengerMigratorContractID].getService(Components.interfaces.nsIMessengerMigrator); 
                   messengerMigrator.UpgradePrefs();
