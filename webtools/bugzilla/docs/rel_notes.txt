@@ -68,6 +68,17 @@ Important Updates In This Point Release
 This section describes bugs fixed in releases after the original 2.22
 release.
 
+Version 2.22.2
+--------------
+
++ Make Bugzilla compatible with Template Toolkit 2.15 (bug 357374)
+
++ Make Bugzilla compatible with versions of MySQL higher than 5.0.25
+  (bug 321645)
+
++ Sanity Check can now only be run by people with the "admin" privilege.
+  (bug 91761)
+
 Version 2.22.1
 --------------
 
@@ -573,6 +584,14 @@ TRUNCATE TABLE logincookies;
 This is actually safe to do at any time--it just forces a logout of
 every single user, even those with saved sessions. (It invalidates
 every login cookie Bugzilla has ever given out.)
+
+Version 2.22.2
+--------------
+
+A Cross-Site Scripting vulnerability is fixed in Bugzilla 2.22.2. You can
+read the details of the fix at:
+
+http://www.bugzilla.org/security/2.20.3/
 
 Version 2.22.1
 --------------
