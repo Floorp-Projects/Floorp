@@ -1400,7 +1400,7 @@ nsSprocketLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSi
    while (child) 
    {  
        // ignore collapsed children
-      if (!aBox->IsCollapsed(aState))
+      if (!child->IsCollapsed(aState))
       {
         nsSize min = child->GetMinSize(aState);
         nsSize pref(0,0);
@@ -1474,7 +1474,7 @@ nsSprocketLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSi
    while (child) 
    {  
       // ignore collapsed children
-      if (!aBox->IsCollapsed(aState))
+      if (!child->IsCollapsed(aState))
       {
         // if completely redefined don't even ask our child for its size.
         nsSize max = child->GetMaxSize(aState);
@@ -1539,7 +1539,7 @@ nsSprocketLayout::GetAscent(nsIBox* aBox, nsBoxLayoutState& aState, nscoord& aAs
    while (child) 
    {  
       // ignore collapsed children
-      //if (!aBox->IsCollapsed(aStatew))
+      //if (!child->IsCollapsed(aState))
       //{
         // if completely redefined don't even ask our child for its size.
         nscoord ascent = child->GetBoxAscent(aState);
