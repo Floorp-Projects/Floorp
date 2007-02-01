@@ -33,7 +33,15 @@
 == bugs/18217-zorder-3.html bugs/18217-zorder-ref-inline.html
 == bugs/18217-zorder-4.html bugs/18217-zorder-ref-inline.html
 == bugs/18217-zorder-5.html bugs/18217-zorder-ref-inline.html
+== bugs/28811-1a.html bugs/28811-1-ref.html
+== bugs/28811-1b.html bugs/28811-1-ref.html
+== bugs/28811-2a.html bugs/28811-2-ref.html
+== bugs/28811-2b.html bugs/28811-2-ref.html
 == bugs/142233-1.html bugs/142233-1-ref.html
+== bugs/163504-1a.html bugs/163504-1-ref.html
+== bugs/163504-1b.html bugs/163504-1-ref.html
+== bugs/163504-2a.html bugs/163504-2-ref.html
+== bugs/163504-2b.html bugs/163504-2-ref.html
 == bugs/328829-1.xhtml bugs/328829-1-ref.xhtml
 == bugs/328829-2.xhtml bugs/328829-2-ref.xhtml
 == bugs/339289-1.html bugs/339289-1-ref.html
