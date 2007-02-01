@@ -172,7 +172,6 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         final synchronized void setAttributes(int value)
         {
             checkValidAttributes(value);
-            checkNotReadonly();
             attributes = (short)value;
         }
 
