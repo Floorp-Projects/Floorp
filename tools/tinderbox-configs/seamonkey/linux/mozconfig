@@ -1,42 +1,22 @@
 #
-## hostname: lhasa
-## uname: Linux lhasa.mozilla.org 2.4.20-28.8 #1 Thu Dec 18 12:53:39 EST 2003 i686 athlon i386 GNU/Linux
+## hostname: sea-linux-tbox
+## uname: Linux sea-linux-tbox.build.mozilla.org 2.6.9-42.ELsmp #1 SMP Sat Aug 12 09:39:11 CDT 2006 i686 i686 i386 GNU/Linux
 #
+
+export MOZILLA_OFFICIAL=1
+
 mk_add_options MOZ_CO_PROJECT=suite
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/objdir
 ac_add_options --enable-application=suite
 
-# tinder-config.pl contains the equvialent of this:
-#export PATH=/usr/local/gcc-3.3.4/bin:$PATH
- 
-# these are also done in tinder-config.pl since this doesn't seem to work:
-export MOZILLA_OFFICIAL=1
-mk_add_options MOZILLA_OFFICIAL=1
-export BUILD_OFFICIAL=1
-mk_add_options BUILD_OFFICIAL=1
- 
-ac_add_options --enable-tests
-
-# LDB 2005-08-21: removed irc and auth because they're part of default
-ac_add_options --enable-extensions=default,tasks
-ac_add_options --without-system-nspr
-ac_add_options --without-system-jpeg
-ac_add_options --without-system-zlib
-ac_add_options --without-system-png
-ac_add_options --without-system-mng
-ac_add_options --disable-debug
-# ac_add_options --disable-elf-dynstr-gc # since we have talkback
-# ac_add_options --enable-strip # since we have talkback
 ac_add_options --enable-optimize="-O2 -gstabs+"
-ac_add_options --enable-crypto
+ac_add_options --disable-debug
+ac_add_options --enable-tests
+ac_add_options --enable-canvas
+ac_add_options --enable-svg
+ac_add_options --enable-pango
+ac_add_options --enable-default-toolkit=cairo-gtk2
 
-# GTK2+Xft
-ac_add_options --enable-default-toolkit=gtk2
-ac_add_options --enable-xft
-MOZ_ENABLE_COREXFONTS=
-ac_add_options --disable-freetype2
-ac_add_options --disable-xprint
+mk_add_options MOZ_CO_MODULE="mozilla/tools/codesighs"
+ac_add_options --enable-codesighs
 
-# Disable Cairo.
-ac_add_options --disable-canvas
-ac_add_options --disable-svg
- 

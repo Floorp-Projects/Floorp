@@ -1,7 +1,8 @@
 #
-## hostname: lhasa
-## uname: Linux lhasa.mozilla.org 2.4.20-28.8 #1 Thu Dec 18 12:53:39 EST 2003 i686 athlon i386 GNU/Linux
+## hostname: sea-linux-tbox
+## uname: Linux sea-linux-tbox.build.mozilla.org 2.6.9-42.ELsmp #1 SMP Sat Aug 12 09:39:11 CDT 2006 i686 i686 i386 GNU/Linux
 #
+
 #- tinder-config.pl - Tinderbox configuration file.
 #-    Uncomment the variables you need to set.
 #-    The default values are the same as the commented variables.
@@ -31,10 +32,10 @@ $ENV{MOZ_PROGNAME} = "seamonkey-bin";
 #- PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
 #$BuildAdministrator = "$ENV{USER}\@$ENV{HOST}";
 #$BuildAdministrator = ($ENV{USER} || "cltbld") . "\@" . ($ENV{HOST} || "dhcp");
-$BuildAdministrator = "dbaron\@dbaron.org";
+$BuildAdministrator = 'build@mozilla.org';
 
 #- You'll need to change these to suit your machine's needs
-$DisplayServer = 'localhost:0.0';
+$DisplayServer = ':0.0';
 
 #- Default values of command-line opts
 #-
@@ -144,10 +145,10 @@ $moz_cvsroot   = ':ext:cltbld@cvs.mozilla.org:/cvsroot';
 #$moz_client_mk = 'client.mk';
 
 #- Set if you want to build in a separate object tree
-#$ObjDir = '';
+$ObjDir = "objdir";
 
 # Extra build name, if needed.
-$BuildNameExtra = 'release (gtk2+xft)';
+$BuildNameExtra = 'release';
 
 # User comment, eg. ip address for dhcp builds.
 # ex: $UserComment = "ip = 208.12.36.108";
