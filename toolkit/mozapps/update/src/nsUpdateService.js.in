@@ -1189,12 +1189,18 @@ UpdateService.prototype = {
         LOG("UpdateService", "_postUpdateProcessing: Install Succeeded, Showing UI");
         prompter.showUpdateInstalled(update);
 
+#ifdef MOZ_PHOENIX
+        // for now, this is firefox only.  
+        // we need to fix both nsPostUpdateWin.js and 
+        // the uninstaller to work for thunderbird and sunbird
+        //
         // Perform platform-specific post-update processing.
         if (POST_UPDATE_CONTRACTID in Components.classes) {
           Components.classes[POST_UPDATE_CONTRACTID].
               createInstance(Components.interfaces.nsIRunnable).run();
         }
-        
+#endif
+
         // Done with this update. Clean it up.
         cleanupActiveUpdate(updRootKey);
       }
