@@ -225,11 +225,11 @@ protected:
   nsIContent *MatchId(nsIContent *aContent, const nsAString& aId);
 
   static PRBool MatchLinks(nsIContent *aContent, PRInt32 aNamespaceID,
-                           nsIAtom* aAtom, const nsAString& aData);
+                           nsIAtom* aAtom, void* aData);
   static PRBool MatchAnchors(nsIContent *aContent, PRInt32 aNamespaceID,
-                             nsIAtom* aAtom, const nsAString& aData);
+                             nsIAtom* aAtom, void* aData);
   static PRBool MatchNameAttribute(nsIContent* aContent, PRInt32 aNamespaceID,
-                                   nsIAtom* aAtom, const nsAString& aData);
+                                   nsIAtom* aAtom, void* aData);
 
   static void DocumentWriteTerminationFunc(nsISupports *aRef);
 

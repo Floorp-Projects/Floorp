@@ -1553,6 +1553,83 @@ nsDocument::GetActiveElement(nsIDOMElement **aElement)
   return GetDocumentElement(aElement);
 }
 
+NS_IMETHODIMP
+nsDocument::GetElementsByClassName(const nsAString& aClasses,
+                                   nsIDOMNodeList** aReturn)
+{
+  return GetElementsByClassNameHelper(mRootContent, aClasses, aReturn);
+}
+
+
+// static GetElementsByClassName helpers
+nsresult
+nsDocument::GetElementsByClassNameHelper(nsIContent* aContent,
+                                         const nsAString& aClasses,
+                                         nsIDOMNodeList** aReturn)
+{
+  nsAttrValue attrValue;
+  attrValue.ParseAtomArray(aClasses);
+  // nsAttrValue::Equals is sensitive to order, so we'll send an array
+  nsCOMArray<nsIAtom>* classes = new nsCOMArray<nsIAtom>;
+  NS_ENSURE_TRUE(classes, NS_ERROR_OUT_OF_MEMORY);
+
+  if (attrValue.Type() == nsAttrValue::eAtomArray) {
+    classes->AppendObjects(*(attrValue.GetAtomArrayValue()));
+  } else if (!attrValue.IsEmptyString()) {
+    classes->AppendObject(attrValue.GetAtomValue());
+  }
+  
+  nsBaseContentList* elements;
+  if (classes->Count() > 0 && aContent) {
+    elements = new nsContentList(aContent, MatchClassNames,
+                                 DestroyClassNameArray, classes);
+  } else {
+    elements = new nsBaseContentList();
+  }
+  if (!elements) {
+    delete classes;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  *aReturn = elements;
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
+}
+
+// static
+PRBool
+nsDocument::MatchClassNames(nsIContent* aContent,
+                            PRInt32 aNamespaceID,
+                            nsIAtom* aAtom, void* aData)
+{
+  // We can't match if there are no class names
+  const nsAttrValue* classAttr = aContent->GetClasses();
+  if (!classAttr) {
+    return PR_FALSE;
+  }
+  
+  // need to match *all* of the classes
+  nsCOMArray<nsIAtom>* classes = NS_STATIC_CAST(nsCOMArray<nsIAtom>*, aData);
+  PRInt32 length = classes->Count();
+  PRInt32 i;
+  for (i = 0; i < length; ++i) {
+    if (!classAttr->Contains(classes->ObjectAt(i), eCaseMatters)) {
+      return PR_FALSE;
+    }
+  }
+  
+  return PR_TRUE;
+}
+
+// static
+void
+nsDocument::DestroyClassNameArray(void* aData)
+{
+  nsCOMArray<nsIAtom>* classes = NS_STATIC_CAST(nsCOMArray<nsIAtom>*, aData);
+  delete classes;
+}
+
 nsresult
 nsDocument::SetBaseURI(nsIURI* aURI)
 {

@@ -15,14 +15,13 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2000
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vidur Apparao <vidur@netscape.com> (original author)
- *   Johnny Stenback <jst@netscape.com>
- *   Robert Sayre <sayrer@gmail.com>
+ *   Robert Sayre <sayrer@gmail.com> (original author)
+ *
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -40,29 +39,11 @@
 
 #include "domstubs.idl"
 
-interface nsIBoxObject;
-interface nsIDOMLocation;
+interface nsIDOMNodeList;
 
-[scriptable, uuid(6b395644-9a2a-4200-8247-bf2d07b8e1ea)]
-interface nsIDOMNSDocument : nsISupports
+[scriptable, uuid(00e28154-cfee-4a85-a6e3-e966fd8ae3bc)]
+interface nsIDOMNSElement : nsISupports
 {
-  readonly attribute DOMString      characterSet;
-           attribute DOMString      dir;
-
-  readonly attribute nsIDOMLocation location;
-
-           attribute DOMString      title;
-
-  readonly attribute DOMString      contentType;
-  readonly attribute DOMString      lastModified;
-  readonly attribute DOMString      referrer;
-
-  nsIBoxObject getBoxObjectFor(in nsIDOMElement elt);
-
-  boolean      hasFocus();
-
-  readonly attribute nsIDOMElement  activeElement;
-
   /*
    * Retrieve elements matching all classes listed in a
    * space-separated string.

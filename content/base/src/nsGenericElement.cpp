@@ -83,6 +83,7 @@
 #include "nsIDOMMutationEvent.h"
 #include "nsMutationEvent.h"
 #include "nsNodeUtils.h"
+#include "nsDocument.h"
 
 #include "nsIBindingManager.h"
 #include "nsXBLBinding.h"
@@ -93,6 +94,7 @@
 #include "nsIBoxObject.h"
 #include "nsPIBoxObject.h"
 #include "nsIDOMNSDocument.h"
+#include "nsIDOMNSElement.h"
 
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
@@ -618,6 +620,24 @@ nsNode3Tearoff::IsDefaultNamespace(const nsAString& aNamespaceURI,
 }
 
 //----------------------------------------------------------------------
+
+
+NS_INTERFACE_MAP_BEGIN(nsNSElementTearoff)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSElement)
+NS_INTERFACE_MAP_END_AGGREGATED(mContent)
+
+NS_IMPL_ADDREF(nsNSElementTearoff)
+NS_IMPL_RELEASE(nsNSElementTearoff)
+
+NS_IMETHODIMP
+nsNSElementTearoff::GetElementsByClassName(const nsAString& aClasses,
+                                           nsIDOMNodeList** aReturn)
+{
+  return nsDocument::GetElementsByClassNameHelper(mContent, aClasses, aReturn);
+}
+
+//----------------------------------------------------------------------
+
 
 NS_IMPL_ISUPPORTS1(nsNodeWeakReference,
                    nsIWeakReference)
@@ -3023,6 +3043,7 @@ NS_INTERFACE_MAP_BEGIN(nsGenericElement)
   NS_INTERFACE_MAP_ENTRY(nsIContent)
   NS_INTERFACE_MAP_ENTRY(nsINode)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSElement, new nsNSElementTearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMEventReceiver,
                                  nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMEventTarget,

@@ -508,11 +508,13 @@ nsXULElement::GetElementsByAttribute(const nsAString& aAttribute,
 {
     nsCOMPtr<nsIAtom> attrAtom(do_GetAtom(aAttribute));
     NS_ENSURE_TRUE(attrAtom, NS_ERROR_OUT_OF_MEMORY);
-
+    void* attrValue = new nsString(aValue);
+    NS_ENSURE_TRUE(attrValue, NS_ERROR_OUT_OF_MEMORY);
     nsContentList *list = 
         new nsContentList(this,
                           nsXULDocument::MatchAttribute,
-                          aValue,
+                          nsContentUtils::DestroyMatchString,
+                          attrValue,
                           PR_TRUE,
                           attrAtom,
                           kNameSpaceID_Unknown);
@@ -539,10 +541,14 @@ nsXULElement::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
+    void* attrValue = new nsString(aValue);
+    NS_ENSURE_TRUE(attrValue, NS_ERROR_OUT_OF_MEMORY);
+    
     nsContentList *list = 
         new nsContentList(this,
                           nsXULDocument::MatchAttribute,
-                          aValue,
+                          nsContentUtils::DestroyMatchString,
+                          attrValue,
                           PR_TRUE,
                           attrAtom,
                           nameSpaceId);

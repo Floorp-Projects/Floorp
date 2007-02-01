@@ -1760,7 +1760,7 @@ nsHTMLDocument::GetApplets(nsIDOMHTMLCollection** aApplets)
 
 PRBool
 nsHTMLDocument::MatchLinks(nsIContent *aContent, PRInt32 aNamespaceID,
-                           nsIAtom* aAtom, const nsAString& aData)
+                           nsIAtom* aAtom, void* aData)
 {
   nsIDocument* doc = aContent->GetCurrentDoc();
 
@@ -1795,7 +1795,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetLinks(nsIDOMHTMLCollection** aLinks)
 {
   if (!mLinks) {
-    mLinks = new nsContentList(this, MatchLinks, EmptyString());
+    mLinks = new nsContentList(this, MatchLinks, nsnull, nsnull);
     if (!mLinks) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1809,7 +1809,7 @@ nsHTMLDocument::GetLinks(nsIDOMHTMLCollection** aLinks)
 
 PRBool
 nsHTMLDocument::MatchAnchors(nsIContent *aContent, PRInt32 aNamespaceID,
-                             nsIAtom* aAtom, const nsAString& aData)
+                             nsIAtom* aAtom, void* aData)
 {
   NS_ASSERTION(aContent->IsInDoc(),
                "This method should never be called on content nodes that "
@@ -1836,7 +1836,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetAnchors(nsIDOMHTMLCollection** aAnchors)
 {
   if (!mAnchors) {
-    mAnchors = new nsContentList(this, MatchAnchors, EmptyString());
+    mAnchors = new nsContentList(this, MatchAnchors, nsnull, nsnull);
     if (!mAnchors) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -2556,21 +2556,25 @@ nsHTMLDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
 
 PRBool
 nsHTMLDocument::MatchNameAttribute(nsIContent* aContent, PRInt32 aNamespaceID,
-                                   nsIAtom* aAtom, const nsAString& aData)
+                                   nsIAtom* aAtom, void* aData)
 {
   NS_PRECONDITION(aContent, "Must have content node to work with!");
-  
-  return aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, aData,
-                               eCaseMatters);
+  nsString* elementName = NS_STATIC_CAST(nsString*, aData);
+  return aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+                               *elementName, eCaseMatters);
 }
 
 NS_IMETHODIMP
 nsHTMLDocument::GetElementsByName(const nsAString& aElementName,
                                   nsIDOMNodeList** aReturn)
 {
-  nsContentList* elements = new nsContentList(this,
-                                              MatchNameAttribute,
-                                              aElementName);
+  void* elementNameData = new nsString(aElementName);
+  NS_ENSURE_TRUE(elementNameData, NS_ERROR_OUT_OF_MEMORY);
+  nsContentList* elements =
+    new nsContentList(this,
+                      MatchNameAttribute,
+                      nsContentUtils::DestroyMatchString,
+                      elementNameData);
   NS_ENSURE_TRUE(elements, NS_ERROR_OUT_OF_MEMORY);
 
   *aReturn = elements;
@@ -3537,7 +3541,7 @@ nsHTMLDocument::GetForms()
 }
 
 static PRBool MatchFormControls(nsIContent* aContent, PRInt32 aNamespaceID,
-                                nsIAtom* aAtom, const nsAString& aData)
+                                nsIAtom* aAtom, void* aData)
 {
   return aContent->IsNodeOfType(nsIContent::eHTML_FORM_CONTROL);
 }
@@ -3546,7 +3550,7 @@ nsContentList*
 nsHTMLDocument::GetFormControls()
 {
   if (!mFormControls) {
-    mFormControls = new nsContentList(this, MatchFormControls, EmptyString());
+    mFormControls = new nsContentList(this, MatchFormControls, nsnull, nsnull);
   }
 
   return mFormControls;

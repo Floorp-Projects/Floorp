@@ -53,6 +53,7 @@
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOM3Node.h"
 #include "nsIDOMNSEventTarget.h"
+#include "nsIDOMNSElement.h"
 #include "nsILinkHandler.h"
 #include "nsGenericDOMNodeList.h"
 #include "nsContentUtils.h"
@@ -139,6 +140,26 @@ protected:
 private:
   nsCOMPtr<nsIContent> mContent;
 };
+
+/**
+ * Yet another tearoff class for nsGenericElement
+ * to implement additional interfaces
+ */
+class nsNSElementTearoff : public nsIDOMNSElement
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  NS_DECL_NSIDOMNSELEMENT
+
+  nsNSElementTearoff(nsIContent *aContent) : mContent(aContent)
+  {
+  }
+  
+private:
+  nsCOMPtr<nsIContent> mContent;
+};
+
 
 /**
  * A class that implements nsIWeakReference

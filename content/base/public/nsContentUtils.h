@@ -942,6 +942,17 @@ public:
    */
   static PRBool HasNonEmptyTextContent(nsINode* aNode);
 
+  /**
+   * Delete strings allocated for nsContentList matches
+   */
+  static void DestroyMatchString(void* aData)
+  {
+    if (aData) {
+      nsString* matchString = NS_STATIC_CAST(nsString*, aData);
+      delete matchString;
+    }
+  }
+
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
                                            JSContext *cx,

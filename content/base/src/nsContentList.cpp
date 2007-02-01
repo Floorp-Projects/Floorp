@@ -295,6 +295,7 @@ nsContentList::nsContentList(nsINode* aRootNode,
   : nsBaseContentList(),
     nsContentListKey(aRootNode, aMatchAtom, aMatchNameSpaceId),
     mFunc(nsnull),
+    mDestroyFunc(nsnull),
     mData(nsnull),
     mState(LIST_DIRTY),
     mDeep(aDeep),
@@ -312,7 +313,8 @@ nsContentList::nsContentList(nsINode* aRootNode,
 
 nsContentList::nsContentList(nsINode* aRootNode,
                              nsContentListMatchFunc aFunc,
-                             const nsAString& aData,
+                             nsContentListDestroyFunc aDestroyFunc,
+                             void* aData,
                              PRBool aDeep,
                              nsIAtom* aMatchAtom,
                              PRInt32 aMatchNameSpaceId,
@@ -320,17 +322,14 @@ nsContentList::nsContentList(nsINode* aRootNode,
   : nsBaseContentList(),
     nsContentListKey(aRootNode, aMatchAtom, aMatchNameSpaceId),
     mFunc(aFunc),
-    mData(&EmptyString()),
+    mDestroyFunc(aDestroyFunc),
+    mData(aData),
     mMatchAll(PR_FALSE),
     mState(LIST_DIRTY),
     mDeep(aDeep),
     mFuncMayDependOnAttr(aFuncMayDependOnAttr)
 {
   NS_ASSERTION(mRootNode, "Must have root");
-  if (!aData.IsEmpty()) {
-    mData = new nsString(aData);
-    // If this fails, fail silently
-  }
   mRootNode->AddMutationObserver(this);
 }
 
@@ -340,10 +339,10 @@ nsContentList::~nsContentList()
   if (mRootNode) {
     mRootNode->RemoveMutationObserver(this);
   }
-  
-  if (mData && mData != &EmptyString()) {
-    // We actually allocated mData ourselves
-    delete mData;
+
+  if (mDestroyFunc) {
+    // Clean up mData
+    (*mDestroyFunc)(mData);
   }
 }
 
@@ -655,7 +654,7 @@ nsContentList::Match(nsIContent *aContent)
     return PR_FALSE;
 
   if (mFunc) {
-    return (*mFunc)(aContent, mMatchNameSpaceId, mMatchAtom, *mData);
+    return (*mFunc)(aContent, mMatchNameSpaceId, mMatchAtom, mData);
   }
 
   if (mMatchAtom) {

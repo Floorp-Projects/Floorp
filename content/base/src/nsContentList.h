@@ -64,7 +64,9 @@
 typedef PRBool (*nsContentListMatchFunc)(nsIContent* aContent,
                                          PRInt32 aNamespaceID,
                                          nsIAtom* aAtom,
-                                         const nsAString& aData);
+                                         void* aData);
+
+typedef void (*nsContentListDestroyFunc)(void* aData);
 
 class nsIDocument;
 class nsIDOMHTMLFormElement;
@@ -203,7 +205,8 @@ public:
   /**
    * @param aRootNode The node under which to limit our search.
    * @param aFunc the function to be called to determine whether we match
-   * @param aData a string that will need to be passed back to aFunc
+   * @param aDestroyFunc the function that will be called to destroy aData
+   * @param aData closure data that will need to be passed back to aFunc
    * @param aDeep If false, then look only at children of the root, nothing
    *              deeper.  If true, then look at the whole subtree rooted at
    *              our root.
@@ -214,7 +217,8 @@ public:
    */  
   nsContentList(nsINode* aRootNode,
                 nsContentListMatchFunc aFunc,
-                const nsAString& aData,
+                nsContentListDestroyFunc aDestroyFunc,
+                void* aData,
                 PRBool aDeep = PR_TRUE,
                 nsIAtom* aMatchAtom = nsnull,
                 PRInt32 aMatchNameSpaceId = kNameSpaceID_None,
@@ -348,9 +352,13 @@ protected:
    */
   nsContentListMatchFunc mFunc;
   /**
+   * Cleanup closure data with this.
+   */
+  nsContentListDestroyFunc mDestroyFunc;
+  /**
    * Closure data to pass to mFunc when we call it
    */
-  const nsAFlatString* mData;
+  void* mData;
   /**
    * True if we are looking for elements named "*"
    */

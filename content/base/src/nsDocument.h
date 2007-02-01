@@ -646,6 +646,12 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS(nsDocument)
 
+  /**
+   * Utility method for getElementsByClassName
+   */
+  static nsresult GetElementsByClassNameHelper(nsIContent* aContent,
+                                               const nsAString& aClasses,
+                                               nsIDOMNodeList** aReturn);
 protected:
 
   /**
@@ -687,6 +693,12 @@ protected:
 
   // Dispatch an event to the ScriptGlobalObject for this document
   void DispatchEventToWindow(nsEvent *aEvent);
+
+  // nsContentList match functions for GetElementsByClassName
+  static PRBool MatchClassNames(nsIContent* aContent, PRInt32 aNamespaceID,
+                                nsIAtom* aAtom, void* aData);
+
+  static void DestroyClassNameArray(void* aData);
 
 #define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_)                  \
   NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(mObservers, nsIDocumentObserver, \
