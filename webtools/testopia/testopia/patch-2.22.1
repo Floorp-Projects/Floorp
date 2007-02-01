@@ -396,7 +396,7 @@ Index: /bmo-2.22/Bugzilla/DB/Schema.pm
 +        INDEXES => [
 +            components_case_id_idx      => {FIELDS => [qw(case_id component_id)],
 +                                           TYPE => 'UNIQUE'},
-+            components_component_id_idx => ['component_id'],+        ],
++            components_component_id_idx => ['component_id'],        ],
 +    },
 +    
 +    test_run_activity => {
