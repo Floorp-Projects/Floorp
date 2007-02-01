@@ -1,36 +1,35 @@
 #
-# Tag step. Applies a CVS tag to the appropriate repositories.
+# Tag step. Sets up the tagging directory, and checks out the mozilla source.
 # 
 package Bootstrap::Step::Tag;
 use Bootstrap::Step;
+use Bootstrap::Step::Tag::Bump;
+use Bootstrap::Step::Tag::Mozilla;
+use Bootstrap::Step::Tag::l10n;
+use Bootstrap::Step::Tag::Talkback;
 use Bootstrap::Config;
 use File::Copy qw(move);
 use MozBuild::Util qw(MkdirWithPath);
-@ISA = ("Bootstrap::Step");
+@ISA = qw(Bootstrap::Step);
 
 my $config = new Bootstrap::Config;
+
+my @subSteps = ('Bump', 'Mozilla', 'l10n', 'Talkback');
 
 sub Execute {
     my $this = shift;
 
-    my $product = $config->Get('var' => 'product');
     my $productTag = $config->Get('var' => 'productTag');
+    my $rc = $config->Get('var' => 'rc');
+    my $tagDir = $config->Get('var' => 'tagDir');
+    my $mozillaCvsroot = $config->Get('var' => 'mozillaCvsroot');
     my $branchTag = $config->Get('var' => 'branchTag');
     my $pullDate = $config->Get('var' => 'pullDate');
-    my $l10n_pullDate = $config->Get('var' => 'l10n_pullDate');
-    my $rc = $config->Get('var' => 'rc');
-    my $version = $config->Get('var' => 'version');
-    my $appName = $config->Get('var' => 'appName');
     my $logDir = $config->Get('var' => 'logDir');
-    my $mozillaCvsroot = $config->Get('var' => 'mozillaCvsroot');
-    my $l10nCvsroot = $config->Get('var' => 'l10nCvsroot');
-    my $mofoCvsroot = $config->Get('var' => 'mofoCvsroot');
-    my $tagDir = $config->Get('var' => 'tagDir');
 
     my $releaseTag = $productTag.'_RELEASE';
     my $rcTag = $productTag.'_RC'.$rc;
-    my $minibranchTag = $productTag.'_MINIBRANCH';
-    my $releaseTagDir = $tagDir . '/' . $releaseTag;
+    my $releaseTagDir = catfile($tagDir, $releaseTag);
 
     # create the main tag directory
     if (not -d $releaseTagDir) {
@@ -39,185 +38,90 @@ sub Execute {
     }
 
     # Symlink to to RC dir
-    my $fromLink = $tagDir . '/' . $releaseTag;
-    my $toLink   = $tagDir . '/' .  $rcTag;
+    my $fromLink = catfile($tagDir, $releaseTag);
+    my $toLink   = catfile($tagDir, $rcTag);
     if (not -e $toLink) {
         symlink($fromLink, $toLink) 
           or die "Cannot symlink $fromLink $toLink: $!";
     }
 
     # Tagging area for Mozilla
-    if (not -d $releaseTagDir . '/cvsroot') {
-        MkdirWithPath('dir' => $releaseTagDir . '/cvsroot') 
-          or die "Cannot mkdir $releaseTagDir/cvsroot: $!";
+    my $cvsrootTagDir = catfile($releaseTagDir, 'cvsroot');
+    if (not -d $cvsrootTagDir) {
+        MkdirWithPath('dir' => $cvsrootTagDir) 
+          or die "Cannot mkdir $cvsrootTagDir: $!";
     }
 
     # Check out Mozilla from the branch you want to tag.
     # TODO this should support running without branch tag or pull date.
+
     $this->Shell(
-      'cmd' => 'cvs -d ' . $mozillaCvsroot . ' co -r ' . $branchTag . ' -D "' . $pullDate . '" mozilla/client.mk ',
-      'dir' => $releaseTagDir . '/cvsroot',
-      'logFile' => $logDir . '/client_mk.log',
+      'cmd' => 'cvs',
+      'cmdArgs' => ['-d', $mozillaCvsroot, 
+                    'co', 
+                    '-r', $branchTag, 
+                    '-D', $pullDate, 
+                     'mozilla/client.mk',
+                   ],
+      'dir' => $cvsrootTagDir,
+      'logFile' => catfile($logDir, 'tag_checkout_client_mk.log'),
     );
+
     $this->CheckLog(
-      'log' => $logDir . '/client_mk.log',
+      'log' => catfile($logDir, 'tag_checkout_client_mk.log'),
       'checkForOnly' => '^U mozilla/client.mk',
     );
-    $this->Shell(
-      'cmd' => 'gmake -f client.mk checkout MOZ_CO_PROJECT=all MOZ_CO_DATE="' . $pullDate . '"',
-      'dir' => $releaseTagDir . '/cvsroot/mozilla',
-      'timeout' => '3600',
-      'logFile' => $logDir . '/mozilla-checkout.log',
-    );
-  
-    # Create the RELEASE tag
-    $this->CvsTag(
-      'tagName' => $releaseTag,
-      'coDir'   => $releaseTagDir . '/cvsroot/mozilla',
-      'timeout' => '3600',
-      'logFile' => $logDir . '/cvsroot_tag-' . $releaseTag . '.log',
-    );
-
-    # Create the RC tag
-    $this->CvsTag(
-      'tagName' => $rcTag,
-      'coDir'   => $releaseTagDir . '/cvsroot/mozilla',
-      'timeout' => '3600',
-      'logFile' => $logDir . '/cvsroot_tag-' . $rcTag . '.log',
-    );
-
-    # Create a minibranch for the pull scripts so we can change them without
-    # changing anything on the original branch.
-    $this->CvsTag(
-      'tagName' => $minibranchTag,
-      'branch'  => '1',
-      'files'   => ['client.mk'],
-      'coDir'   => $releaseTagDir . '/cvsroot/mozilla',
-      'logFile' => $logDir . '/cvsroot_tag-' . $minibranchTag. '.log',
-    );
-
-    # Update client.mk to the minibranch you just created.
-    $this->Shell(
-      'cmd' => 'cvs up -r ' . $minibranchTag . ' client.mk',
-      'dir' => $releaseTagDir . '/cvsroot/mozilla',
-      'logFile' => $logDir . '/client_mk-update.log',
-    );
-
-    # Add the new product tag to the client.mk
-    open(INFILE,  "<$releaseTagDir/cvsroot/mozilla/client.mk");
-    open(OUTFILE, ">$releaseTagDir/cvsroot/mozilla/client.mk.tmp");
-    while(<INFILE>) {
-        $_ =~ s/$branchTag/$releaseTag/g;
-        print OUTFILE $_;
-    }
-    close INFILE;
-    close OUTFILE;
-
-    if (not move("$releaseTagDir/cvsroot/mozilla/client.mk.tmp", 
-                   "$releaseTagDir/cvsroot/mozilla/client.mk")) {
-        die "Cannot rename $releaseTagDir/cvsroot/mozilla/client.mk.tmp to $releaseTagDir/cvsroot/mozilla/client.mk";
-    }
 
     $this->Shell(
-      'cmd' => 'cvs commit -m "For ' . $product . ' ' . $version . ', redirect client.mk onto the ' . $releaseTag . ' tag." client.mk',
-      'dir' => $releaseTagDir . '/cvsroot/mozilla',
-      'logFile' => $logDir . '/client_mk-release_tag.log',
-    );
-    $this->CheckLog(
-      'log' => $logDir . '/client_mk-release_tag.log',
-      'checkFor' => '^Checking in client.mk;',
-    );
-    $this->CheckLog(
-      'log' => $logDir . '/client_mk-release_tag.log',
-      'checkFor' => '^done',
+      'cmd' => 'gmake',
+      'cmdArgs' => ['-f', 'client.mk', 'checkout', 'MOZ_CO_PROJECT=all', 
+                    'MOZ_CO_DATE=' . $pullDate],
+      'dir' => catfile($cvsrootTagDir, 'mozilla'),
+      'logFile' => catfile($logDir, 'tag_mozilla-checkout.log'),
     );
 
-    # Move the release tag onto the modified version of the pull scripts.
-    $this->CvsTag(
-      'tagName' => $releaseTag,
-      'force'   => '1',
-      'files'   => ['client.mk'],
-      'coDir'   => $releaseTagDir . '/cvsroot/mozilla',
-      'logFile' => $logDir . '/cvsroot_clientmk_tag-' . $releaseTag. '.log',
-    );
-
-    # Move the RC tag onto the modified version of the pull scripts.
-    $this->CvsTag(
-      'tagName' => $rcTag,
-      'force'   => '1',
-      'files'   => ['client.mk'],
-      'coDir'   => $releaseTagDir . '/cvsroot/mozilla',
-      'logFile' => $logDir . '/cvsroot_clientmk_tag-' . $rcTag. '.log',
-    );
-
-    # Create the mofo tag directory.
-    if (not -d "$releaseTagDir/mofo") {
-        MkdirWithPath('dir' => "$releaseTagDir/mofo") 
-          or die "Cannot mkdir $releaseTagDir/mofo: $!";
-    }
-
-    # Check out the talkback files from the branch you want to tag.
-    $this->Shell(
-      'cmd' => 'cvs -d ' . $mofoCvsroot . ' co -r ' . $branchTag . ' -D "' . $pullDate . '" talkback/fullsoft',
-      'dir' => $releaseTagDir . '/mofo',
-      'logFile' => $logDir . '/mofo-checkout.log'
-    );
-
-    # Create the talkback RELEASE tag.
-    $this->CvsTag(
-      'tagName' => $releaseTag,
-      'coDir'   => $releaseTagDir . '/mofo/talkback/fullsoft',
-      'logFile' => $logDir . '/mofo_tag-' . $releaseTag. '.log',
-    );
-
-    # Create the l10n tag directory.
-    if (not -d "$releaseTagDir/l10n") {
-        MkdirWithPath('dir' => "$releaseTagDir/l10n") 
-          or die "Cannot mkdir $releaseTagDir/l10n: $!";
-    }
-
-    # Grab list of shipped locales
-    my $shippedLocales = 
-      $releaseTagDir . '/cvsroot/mozilla/' . $appName . '/locales/shipped-locales';
-    open (FILE, "< $shippedLocales") 
-      or die "Cannot open file $shippedLocales: $!";
-    my @locales = <FILE>;
-    close FILE or die "Cannot close file $shippedLocales: $!";
-
-    # Check out the l10n files from the branch you want to tag.
-    for my $locale (@locales) {
-        # only keep first column
-        $locale =~ s/(\s+).*//;
-        # skip en-US, this is the default locale
-        if ($locale eq 'en-US') {
-            next;
+    # Call substeps
+    my $numSteps = scalar(@subSteps);
+    my $currentStep = 0;
+    while ($currentStep < $numSteps) {
+        my $stepName = $subSteps[$currentStep];
+        eval {
+            $this->Log('Tag running substep' . $stepName);
+            my $step = "Bootstrap::Step::Tag::$stepName"->new();
+            $step->Execute();
+        };
+        if ($@) {
+            die("Tag substep $stepName Execute died: $@");
         }
-        $this->Shell(
-            'cmd' => 'cvs -d ' . $l10nCvsroot . ' co -r ' . $branchTag . ' -D "' . $l10n_pullDate . '" l10n/' . $locale,
-            'dir' => $releaseTagDir . '/l10n',
-            'logFile' => $logDir . '/l10n-checkout.log',
-        );
+        $currentStep += 1;
     }
-
-    # Create the l10n RELEASE tag.
-    $this->CvsTag(
-      'tagName' => $releaseTag,
-      'coDir'   => $releaseTagDir . '/l10n/l10n',
-      'logFile' => $logDir . '/l10n_tag-' . $releaseTag. '.log',
-    );
-
-    # Create the RC tag.
-    $this->CvsTag(
-      'tagName' => $rcTag,
-      'coDir'   => $releaseTagDir . '/l10n/l10n',
-      'logFile' => $logDir . '/l10n_tag-' . $rcTag. '.log',
-    );
 }
 
 sub Verify {
     my $this = shift;
-    # TODO - independently verify that tag was applied
-    #$this->Shell('cmd' => 'echo Verify tag');
+
+    my $logDir = $config->Get('var' => 'logDir');
+
+    $this->CheckLog(
+      'log' => catfile($logDir, 'tag_mozilla-checkout.log'),
+      'checkFor' => '^U',
+    );
+
+    # Call substeps
+    my $numSteps = scalar(@subSteps);
+    my $currentStep = 0;
+    while ($currentStep < $numSteps) {
+        my $stepName = $subSteps[$currentStep];
+        eval {
+            $this->Log('Tag running substep' . $stepName);
+            my $step = "Bootstrap::Step::Tag::$stepName"->new();
+            $step->Verify();
+        };
+        if ($@) {
+            die("Tag substep $stepName Verify died: $@");
+        }
+        $currentStep += 1;
+    }
 }
 
 sub CvsTag {
@@ -235,33 +139,30 @@ sub CvsTag {
 
     # only force or branch specific files, not the whole tree
     if ($force and scalar(@{$files}) <= 0 ) {
-        die("ASSERT: Cannot specify force without files");
+        die("ASSERT: Bootstrap::Step::Tag::CvsTag(): Cannot specify force without files");
     } elsif ($branch and scalar(@{$files}) <= 0) {
-        die("ASSERT: Cannot specify branch without files");
+        die("ASSERT: Bootstrap::Step::Tag::CvsTag(): Cannot specify branch without files");
     } elsif ($branch and $force) {
-        die("ASSERT: Cannot specify both branch and force");
+        die("ASSERT: Bootstrap::Step::Tag::CvsTag(): Cannot specify both branch and force");
     } elsif (not $tagName) {
-        die("ASSERT: tagName must be specified");
+        die("ASSERT: Bootstrap::Step::Tag::CvsTag(): tagName must be specified");
     } elsif (not $logFile) {
-        die("ASSERT: logFile must be specified");
+        die("ASSERT: Bootstrap::Step::Tag::CvsTag(): logFile must be specified");
     }
 
-    my $cmd = 'cvs -q tag';
-    $cmd .= ' -F ' if ($force);
-    $cmd .= ' -b ' if ($branch);
-    $cmd .= ' ' . $tagName;
-    $cmd .= ' ' . join(' ', @{$files}) if (defined($files));
+    my @cmdArgs;
+    push(@cmdArgs, '-q');
+    push(@cmdArgs, 'tag');
+    push(@cmdArgs, '-F') if ($force);
+    push(@cmdArgs, '-b') if ($branch);
+    push(@cmdArgs, $tagName);
+    push(@cmdArgs, @$files) if defined($files);
 
     $this->Shell(
-      'cmd' => $cmd,
+      'cmd' => 'cvs',
+      'cmdArgs' => \@cmdArgs,
       'dir' => $coDir,
-      'timeout' => 3600,
       'logFile' => $logFile,
-    );
-
-    $this->CheckLog(
-      'log' => $logFile,
-      'checkForOnly' => '^T ',
     );
 }
 

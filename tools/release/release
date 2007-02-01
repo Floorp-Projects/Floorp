@@ -2,7 +2,7 @@
 use strict;
 
 use Getopt::Long;
-use MozBuild::Util;
+use MozBuild::Util qw(Email);
 use Bootstrap::Step::Tag;
 use Bootstrap::Step::Build;
 use Bootstrap::Step::Source;
@@ -32,6 +32,7 @@ sub ProcessArgs {
     GetOptions(
         \%config,
         "step|s=s", "only|o=s", "list|l", "help|h", "execute|e", "verify|v",
+        "push|p", "announce|a"
     );
 
     if ($config{'list'}) {
@@ -43,19 +44,21 @@ sub ProcessArgs {
     }
 
     if ($config{'help'}) {
-        print "Usage: release [-l] [-s Step] [-o Step] [-e | v] [-h]\n";
+        print "Usage: release [-l] [-s Step] [-o Step] [-e | -v | -p | -a] [-h]\n";
         print "    -l list all Steps\n";
         print "    -s start at Step\n";
         print "    -o only run one Step\n";
         print "    -e only run Execute\n";
         print "    -v only run Verify\n";
+        print "    -p only run Push\n";
+        print "    -a only run Announce\n";
         print "    -h this usage message\n";
         exit(0);
     }
 }
 
 sub DetermineSteps() {
-    my $currentStep = 0;
+    my $currentStep;
     my $desiredStep;
 
     if (defined($config{'step'})) {
@@ -74,12 +77,13 @@ sub DetermineSteps() {
             } else {
                 $stepNumber += 1;
             }
-            if ($stepNumber > scalar(@allSteps)) {
-                die("Step $desiredStep not found!\n");
-            }
+        }
+        if (not defined($currentStep)) {
+            die("Step $desiredStep not found!\n");
         }
     } else {
         print "Bootstrap running default steps.\n";
+        $currentStep = 0;
     }
 
     while ($currentStep < scalar(@allSteps)) {
@@ -109,15 +113,42 @@ sub PerformStep {
         } elsif (defined($config{'verify'})) {
             print "Bootstrap only running Verify\n";
             $step->Verify();
+        } elsif (defined($config{'push'})) {
+            print "Bootstrap only running Push\n";
+            $step->Push();
+        } elsif (defined($config{'announce'})) {
+            print "Bootstrap only running Announce\n";
+            $step->Announce();
         } else {
             $step->Execute();
             $step->Verify();
+            $step->Push();
+            $step->Announce();
         }
     };
-    if ($@) 
-    {
+    if ($@) {
         print "Step $stepName died: $@";
-        exit(1);
+        my $conf = new Bootstrap::Config;
+        my $from = $conf->Get(var => 'from');
+        my $to = $conf->Get(var => 'to');
+        my $cc = $conf->Get(var => 'cc');
+
+        my @ccList = split(', ', $cc);
+ 
+        eval {
+            Email(
+              from => $from,
+              to => $to,
+              cc => \@ccList,
+              subject => "Step $stepName died: $@",
+              message => "Step $stepName died: $@\nSee the release.log for more information.",
+            );
+            exit(1);
+        };
+        if ($@) {
+            print "Unable to email failure message to $to: $@";
+            exit(1);
+        }
     }
 }
 

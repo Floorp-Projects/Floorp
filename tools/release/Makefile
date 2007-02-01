@@ -1,5 +1,6 @@
 test:
 	for f in release t/test.pl `find . -name "*.pm"`; do perl -c $$f; done
+	if [ -f t/test.log ]; then rm t/test.log; fi
 	./t/test.pl
 
 stage:
@@ -15,10 +16,10 @@ stage:
 	# staging environment
 	mkdir -p /data/cltbld/firefox-1.5.0.7/batch1/stage
 
-cvsmirror: cvsmirror_main cvsmirror_mofo
+cvsmirror: cvsmirror_mofo cvsmirror_main
 
 cvsmirror_main:
-	rsync -a --delete-after cvs-mirror.mozilla.org::mozilla/ /builds/cvsmirror/cvsroot/
+	rsync -a --delete-after --exclude=CVSROOT/config --exclude=CVSROOT/loginfo cvs-mirror.mozilla.org::mozilla/ /builds/cvsmirror/cvsroot/
 	rsync -a --delete-after cvs-mirror.mozilla.org::l10n/ /builds/cvsmirror/l10n/
 	chgrp -R cvs /builds/cvsmirror/cvsroot /builds/cvsmirror/l10n /builds/cvsmirror/mofo
 	chmod -R g+rw /builds/cvsmirror/cvsroot /builds/cvsmirror/l10n /builds/cvsmirror/mofo
@@ -40,7 +41,7 @@ clean_stage:
 	rm -rf /builds/release/logs/*
 	rm -rf /builds/updates/*
 	rm -rf /builds/verify/*
-	rm -rf /data/cltbld/firefox-1.5.0.7/
+	rm -rf /data/cltbld/firefox-*/
 	rm -rf /home/ftp/pub/firefox/*
 
 clean_cvsmirror:

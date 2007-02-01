@@ -11,7 +11,7 @@ use Cwd;
 
 use base qw(Exporter);
 
-our @EXPORT_OK = qw(RunShellCommand MkdirWithPath HashFile DownloadFile);
+our @EXPORT_OK = qw(RunShellCommand MkdirWithPath HashFile DownloadFile Email);
 
 my $DEFAULT_EXEC_TIMEOUT = 600;
 my $EXEC_IO_READINCR = 1000;
@@ -297,6 +297,53 @@ sub HashFile {
    # Removes everything up to and including the "= "
    $hashValue =~ s/^.+\s+(\w+)$/$1/;
    return $hashValue;
+}
+
+sub Email {
+    my %args = @_;
+
+    my $from = $args{'from'};
+    my $to = $args{'to'};
+    my $ccList = $args{'cc'} ? $args{'cc'} : '';
+    my $subject = $args{'subject'};
+    my $message = $args{'message'};
+
+    if (not defined($from)) {
+        die("ASSERT: MozBuild::Utils::Email(): from is required");
+    } elsif (not defined($to)) {
+        die("ASSERT: MozBuild::Utils::Email(): to is required");
+    } elsif (not defined($subject)) {
+        die("ASSERT: MozBuild::Utils::Email(): subject is required");
+    } elsif (not defined($message)) {
+        die("ASSERT: MozBuild::Utils::Email(): subject is required");
+    }    
+
+    if (defined($ccList) and ref($ccList) ne 'ARRAY') {
+        die "ASSERT: MozBuild::Utils::Email(): ccList is not an array ref\n"
+    }
+
+    my $sendmailBinary = '/usr/lib/sendmail';
+    my $blatBinary = 'c:\moztools\blat.exe';
+
+    if (-f $sendmailBinary) {
+        open(SENDMAIL, "|$sendmailBinary -oi -t")
+          or die "Can’t fork for sendmail: $!\n";
+    } elsif(-f $blatBinary) {
+        open(SENDMAIL, "|$blatBinary")
+          or die "Can’t fork for blat: $!\n";
+    } else {
+        die("ASSERT: cannot find $sendmailBinary or $blatBinary");
+    }
+
+    print SENDMAIL "From: $from\n";
+    print SENDMAIL "To: $to\n";
+    foreach my $cc (@{$ccList}) {
+        print SENDMAIL "CC: $cc\n";
+    }
+    print SENDMAIL "Subject: $subject\n\n";
+    print SENDMAIL "$message";
+    close(SENDMAIL) or warn "sendmail didn’t close nicely: $!";
+
 }
 
 sub DownloadFile {

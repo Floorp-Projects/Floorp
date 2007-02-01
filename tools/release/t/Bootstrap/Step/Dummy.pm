@@ -15,6 +15,28 @@ sub Execute {
     }
 
     eval {
+        $this->Shell('cmd' => 'echo', 
+                     'cmdArgs' => ['success'],
+                     'logFile' => 't/test.log' 
+        );
+    };
+    if ($@) {
+        print("testfailed, shell call to echo success to test log should not throw exception: $!\n");
+    }
+
+    eval {
+        $this->CheckLog( 
+            'log' => './t/test.log',
+            'checkForOnly' => '^success',
+        );
+    };
+  
+    if ($@) {
+        print("testfailed, should not throw exception, log contains only success: $!\n");
+    }
+
+
+    eval {
         $this->Shell( 'cmd' => 'true', logFile => 't/test.log' );
     };
 
@@ -33,27 +55,6 @@ sub Execute {
     eval {
         $this->CheckLog( 
             'log' => './t/test.log',
-            'checkForOnly' => '^success',
-        );
-    };
-  
-    if (not $@) {
-        print("testfailed, should throw exception, log contains more than success: $!\n");
-    }
-    eval {
-        $this->CheckLog( 
-            'log' => './t/test.log',
-            'checkForOnly' => '^success',
-        );
-    };
-  
-    if (not $@) {
-        print("testfailed, should throw exception, log contains more than success: $!\n");
-    }
-
-    eval {
-        $this->CheckLog( 
-            'log' => './t/test.log',
             'checkFor' => '^success',
         );
     };
@@ -66,7 +67,8 @@ sub Execute {
 
 sub Verify {
     my $this = shift;
-    $this->Shell('cmd' => 'echo Verify tag', logFile => 't/test.log');
+    $this->Shell(
+      'cmd' => 'echo', 'cmdArgs' => ['Verify', 'tag'], logFile => 't/test.log');
     $this->Log('msg' => 'finished');
 }
 
