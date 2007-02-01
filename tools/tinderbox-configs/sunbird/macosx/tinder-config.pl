@@ -45,14 +45,15 @@ $UseTimeStamp      = 0;      # Use the CVS 'pull-by-timestamp' option, or not
 #$TestOnly          = 0;      # Only run tests, don't pull/build
 #$BuildEmbed        = 0;      # After building seamonkey, go build embed app.
 #$SkipMozilla       = 0;      # Use to debug post-mozilla.pl scripts.
-#$BuildLocales      = 0;      # Do l10n packaging?
+$BuildLocales      = 1;      # Do l10n packaging?
 
 # Tests
 $CleanProfile             = 1;
 #$ResetHomeDirForTests     = 1;
-#$ProductName              = "Sunbird";
-$ProductName              = 'Calendar';
-$MacOSProductName         = 'Calendar';
+$ProductName              = 'Sunbird';
+$MacOSProductName         = 'Sunbird';
+#$ProductName              = 'Calendar';
+#$MacOSProductName         = 'Calendar';
 $VendorName               = "";
 
 #$RunMozillaTests          = 1;  # Allow turning off of all tests if needed.
@@ -165,7 +166,7 @@ $BuildNameExtra = 'Sb-Release';
 # Configure only, don't build.
 #$ConfigureOnly = 0;
 %WGetFiles = (
-	      "http://stage.mozilla.org/pub/mozilla.org/calendar/sunbird/nightly/latest-trunk/sunbird-0.3.en-US.mac.dmg" =>
+	      "http://stage.mozilla.org/pub/mozilla.org/calendar/sunbird/nightly/latest-trunk/sunbird-0.3.1.en-US.mac.dmg" =>
 	      "/builds/tinderbox/Sb-Trunk/Darwin_8.8.4_Depend/sunbird.dmg"
 	      );
 

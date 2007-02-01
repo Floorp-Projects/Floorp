@@ -5,8 +5,8 @@
 
 mk_add_options MOZ_CO_PROJECT=calendar
 #mk_add_options MOZ_CO_MODULE="mozilla/tools/update-packaging"
-#mk_add_options MOZ_CO_LOCALES=all
-#mk_add_options LOCALES_CVSROOT=:ext:cltbld@cvs.mozilla.org:/l10n
+mk_add_options MOZ_CO_LOCALES=all
+mk_add_options LOCALES_CVSROOT=:ext:cltbld@cvs.mozilla.org:/l10n
 mk_add_options MOZ_MAKE_FLAGS="-j6"
 mk_add_options JS_READLINE=1
 
@@ -24,4 +24,4 @@ ac_add_options --disable-tests
 ac_add_options --enable-default-toolkit=gtk2
 # SVG now requires Cairo, so disable it for now.
 ac_add_options --disable-svg
-#ac_add_options --enable-official-branding
+ac_add_options --enable-official-branding

@@ -44,7 +44,7 @@ $UseTimeStamp      = 0;      # Use the CVS 'pull-by-timestamp' option, or not
 #$TestOnly          = 0;      # Only run tests, don't pull/build
 #$BuildEmbed        = 0;      # After building seamonkey, go build embed app.
 #$SkipMozilla       = 0;      # Use to debug post-mozilla.pl scripts.
-#$BuildLocales      = 1;      # Do l10n packaging?
+$BuildLocales      = 1;      # Do l10n packaging?
 
 # Tests
 $CleanProfile             = 1;
@@ -165,7 +165,7 @@ $BuildNameExtra = 'Sb-Release';
 # Configure only, don't build.
 #$ConfigureOnly = 0;
 %WGetFiles = (
-	      "http://stage.mozilla.org/pub/mozilla.org/calendar/sunbird/nightly/latest-trunk/sunbird-0.3.en-US.linux-i686.tar.bz2" =>
+	      "http://stage.mozilla.org/pub/mozilla.org/calendar/sunbird/nightly/latest-trunk/sunbird-0.3.1.en-US.linux-i686.tar.bz2" =>
 	      "/builds/tinderbox/Sb-Trunk/Linux_2.4.21-32.0.1.EL_Depend/sunbird.tar.bz2"
 	      );
 
