@@ -74,6 +74,12 @@ f== bugs/351641-2b.html bugs/351641-2-ref.html # bug 358433 (2006-10-19)
 == bugs/273681-1.html bugs/273681-1-ref.html
 == bugs/335628-1.html bugs/335628-1-ref.html
 != bugs/335628-2.xul bugs/335628-2-ref.xul
+== bugs/367247-s-visible.html bugs/367247-s-hidden.html
+== bugs/367247-s-hidden.html bugs/367247-s-auto.html
+!= bugs/367247-s-auto.html bugs/367247-s-scroll.html
+!= bugs/367247-l-visible.html bugs/367247-l-hidden.html
+!= bugs/367247-l-hidden.html bugs/367247-l-scroll.html
+== bugs/367247-l-scroll.html bugs/367247-l-auto.html
 == bugs/367332-1a.html bugs/367332-1-ref.html
 == bugs/367332-1b.html bugs/367332-1-ref.html
 == bugs/367332-1c.html bugs/367332-1-ref.html
