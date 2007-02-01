@@ -4885,7 +4885,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                 if (NS_SUCCEEDED(rv))
                 {
                   PRBool showPreviewText;
-                  prefBranch->GetBoolPref("mail.showPreviewText", &showPreviewText);
+                  prefBranch->GetBoolPref("mail.biff.alert.show_preview", &showPreviewText);
                   // if we're showing preview text, update ourselves if we got a new unread
                   // message copied so that we can download the new headers and have a chance
                   // to preview the msg bodies.
@@ -8281,7 +8281,7 @@ PRBool nsImapMailFolder::ShowPreviewText()
   PRBool showPreviewText = PR_FALSE;
   nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefBranch)
-    prefBranch->GetBoolPref("mail.showPreviewText", &showPreviewText);
+    prefBranch->GetBoolPref("mail.biff.alert.show_preview", &showPreviewText);
   return showPreviewText;
 }
 
