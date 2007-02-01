@@ -42,7 +42,7 @@
 interface nsIMsgDBHdr;
 
     /* //TODO JavaDoc
-       When implementing a custom column handler (of type nsITreeView) you must implement the following
+       When implementing a js custom column handler (of type nsITreeView) you must implement the following
        functions:
        1. isEditable
        2. GetCellProperties
@@ -52,6 +52,12 @@ interface nsIMsgDBHdr;
        6. GetSortStringForRow
        7. GetSortLongForRow
        8. isString
+       
+       You can, at your option, implement 
+       9.  GetRowProperties.
+
+      If implementing a c++ custom column handler, you must define all 
+      nsITreeView and nsIMsgCustomColumnHandler methods.
     */
 
 

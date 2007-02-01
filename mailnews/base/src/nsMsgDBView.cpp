@@ -1170,6 +1170,11 @@ NS_IMETHODIMP nsMsgDBView::GetRowProperties(PRInt32 index, nsISupportsArray *pro
   FetchKeywords(msgHdr, getter_Copies(keywordProperty));
   if (!keywordProperty.IsEmpty())
     AppendKeywordProperties(keywordProperty.get(), properties, PR_FALSE);
+
+  // give the custom column handlers a chance to style the row.
+  for (int i = 0; i < m_customColumnHandlers.Count(); i++)
+    m_customColumnHandlers[i]->GetRowProperties(index, properties);
+
   return NS_OK;
 }
 
@@ -1340,7 +1345,7 @@ NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, nsITreeColumn *col, n
   if (colHandler != nsnull) 
   {
     colHandler->GetCellProperties(aRow, col, properties);
-  	return NS_OK;
+    return NS_OK;
   }
   
   return NS_OK;
@@ -1594,7 +1599,7 @@ nsIMsgCustomColumnHandler* nsMsgDBView::GetColumnHandler(const PRUnichar *colID)
   PRInt32 index = m_customColumnHandlerIDs.IndexOf(nsDependentString(colID));
   
   if (index > -1)
-    columnHandler =  m_customColumnHandlers[index];
+    columnHandler = m_customColumnHandlers[index];
   
   return columnHandler;
 }  
