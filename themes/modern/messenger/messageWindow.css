@@ -41,5 +41,6 @@
 
 @import url("chrome://messenger/skin/");
 @import url("chrome://messenger/skin/primaryToolbar.css");
-  
+@import url("chrome://messenger/skin/threadPaneLabels.css");
+
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
