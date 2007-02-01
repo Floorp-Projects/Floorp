@@ -1820,10 +1820,20 @@ libs::
 	    $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir; \
 	done
 
+# Path formats on Windows are hard.  We require a topsrcdir formatted so that
+# it may be passed to nsILocalFile.initWithPath (in other words, an absolute
+# path of the form X:\path\to\topsrcdir), which we store in NATIVE_TOPSRCDIR.
+# We require a forward-slashed path to topsrcdir so that it may be combined
+# with a relative forward-slashed path for loading scripts, both dynamically
+# and statically for head/test/tail JS files.  Of course, on non-Windows none
+# of this matters, and things will work correctly because everything's
+# forward-slashed, everywhere, always.
 ifdef CYGWIN_WRAPPER
-NATIVE_TOPSRCDIR := `cygpath -wa $(topsrcdir)`
+NATIVE_TOPSRCDIR   := `cygpath -wa $(topsrcdir)`
+FWDSLASH_TOPSRCDIR := `cygpath -ma $(topsrcdir)`
 else
-NATIVE_TOPSRCDIR := $(topsrcdir)
+NATIVE_TOPSRCDIR   := $(topsrcdir)
+FWDSLASH_TOPSRCDIR := $(topsrcdir)
 endif # CYGWIN_WRAPPER
 
 # Test execution
@@ -1833,7 +1843,7 @@ check::
 	  $(RUN_TEST_PROGRAM) \
 	    $(topsrcdir)/tools/test-harness/xpcshell-simple/test_all.sh \
 	      $(DIST)/bin/xpcshell \
-	      $(topsrcdir) \
+	      $(FWDSLASH_TOPSRCDIR) \
 	      $(NATIVE_TOPSRCDIR) \
 	      $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir; \
 	done
