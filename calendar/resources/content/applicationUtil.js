@@ -88,6 +88,21 @@ function toAddressBook()
 
 function launchBrowser(UrlToGoTo)
 {
+  if (!UrlToGoTo) {
+    return;
+  }
+
+  // 0. Prevent people from trying to launch URLs such as javascript:foo();
+  //    by only allowing URLs starting with http or https.
+  // XXX: We likely will want to do this using nsIURLs in the future to
+  //      prevent sneaky nasty escaping issues, but this is fine for now.
+  if (UrlToGoTo.indexOf("http") != 0) {
+    Components.utils.reportError ("launchBrowser: " +
+                                  "Invalid URL provided: " + UrlToGoTo +
+                                  " Only http:// and https:// URLs are valid.");
+    return;
+  }
+
   // 1. try to get (most recent) browser window, in case in browser app.
   var navWindow;
   try {
