@@ -41,7 +41,6 @@ my $query_limit = 15000;
 require "globals.pl";
 
 Bugzilla->login();
-Bugzilla->batch(1);
    
 my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
@@ -67,7 +66,7 @@ if ($action eq 'Commit'){
     my $notes    = $cgi->param('notes');
     my $build    = $cgi->param('caserun_build');
     my $env      = $cgi->param('caserun_env');
-    my $assignee = DBNameToIdAndCheck(trim($cgi->param('assignee')));
+    my $assignee = DBNameToIdAndCheck(trim($cgi->param('assignee'))) if $cgi->param('assignee');
     
     validate_test_id($build, 'build');
     validate_test_id($env, 'environment');
@@ -87,7 +86,7 @@ if ($action eq 'Commit'){
     $caserun = $caserun->switch($build,$env);
     
     $caserun->set_status($status)     if ($caserun->status_id != $status);
-    $caserun->set_assignee($assignee) if ($caserun->assignee->id != $assignee);
+    $caserun->set_assignee($assignee) if ($caserun->assignee && $caserun->assignee->id != $assignee);
     $caserun->append_note($notes)     if ($notes && $caserun->notes !~ /$notes/);
 
     foreach my $bug (@buglist){
