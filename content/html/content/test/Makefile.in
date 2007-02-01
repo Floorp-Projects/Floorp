@@ -44,7 +44,16 @@ relativesrcdir  = content/html/content/test
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = 	test_bug300691-1.html \
+_TEST_FILES = 	test_bug589.html \
+		test_bug691.html \
+		nnc_lockup.gif \
+		test_bug694.html \
+		test_bug696.html \
+		test_bug1297.html \
+		test_bug1366.html \
+		test_bug1400.html \
+		test_bug2082.html \
+		test_bug300691-1.html \
 		test_bug300691-2.html \
 		test_bug300691-3.xhtml \
 		$(NULL)

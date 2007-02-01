@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1366
+-->
+<head>
+  <title>Test for Bug 1366</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1366">Mozilla Bug 1366</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<table id="testtable" width=150 border>
+	<tbody id="testbody">
+		<tr>
+			<td>cell content</td>
+		</tr>
+	</tbody>
+</table>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 1366 **/
+$('testtable').removeChild($('testbody'));
+$('display').innerHTML = "SCRIPT: deleted first ROWGROUP\n";
+is($('testbody'), null, "deleting tbody works");
+
+</script>
+</pre>
+</body>
+</html>
+
