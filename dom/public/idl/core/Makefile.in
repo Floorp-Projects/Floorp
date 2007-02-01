@@ -78,6 +78,7 @@ XPIDLSRCS =                                     \
 	nsIDOMUserDataHandler.idl		\
 	nsIDOMDOMConfiguration.idl		\
 	nsIDOMNSEditableElement.idl		\
+	nsIDOMNSElement.idl			\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

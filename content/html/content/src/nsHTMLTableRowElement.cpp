@@ -251,7 +251,7 @@ nsHTMLTableRowElement::GetSectionRowIndex(PRInt32* aValue)
 
 PR_STATIC_CALLBACK(PRBool)
 IsCell(nsIContent *aContent, PRInt32 aNamespaceID,
-       nsIAtom* aAtom, const nsAString& aData)
+       nsIAtom* aAtom, void *aData)
 {
   nsIAtom* tag = aContent->Tag();
 
@@ -265,7 +265,8 @@ nsHTMLTableRowElement::GetCells(nsIDOMHTMLCollection** aValue)
   if (!mCells) {
     mCells = new nsContentList(this,
                                IsCell,
-                               EmptyString(),
+                               nsnull, // destroy func
+                               nsnull, // closure data
                                PR_FALSE,
                                nsnull,
                                kNameSpaceID_None,

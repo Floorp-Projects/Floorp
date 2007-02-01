@@ -170,7 +170,7 @@ public:
     MatchAttribute(nsIContent* aContent,
                    PRInt32 aNameSpaceID,
                    nsIAtom* aAttrName,
-                   const nsAString& aValue);
+                   void* aData);
 
 protected:
     // Implementation methods

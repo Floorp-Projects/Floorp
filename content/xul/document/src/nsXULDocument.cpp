@@ -1092,15 +1092,17 @@ nsXULDocument::GetElementsByAttribute(const nsAString& aAttribute,
 {
     nsCOMPtr<nsIAtom> attrAtom(do_GetAtom(aAttribute));
     NS_ENSURE_TRUE(attrAtom, NS_ERROR_OUT_OF_MEMORY);
-
+    void* attrValue = new nsString(aValue);
+    NS_ENSURE_TRUE(attrValue, NS_ERROR_OUT_OF_MEMORY);
     nsContentList *list = new nsContentList(this,
                                             MatchAttribute,
-                                            aValue,
+                                            nsContentUtils::DestroyMatchString,
+                                            attrValue,
                                             PR_TRUE,
                                             attrAtom,
                                             kNameSpaceID_Unknown);
     NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
-
+    
     NS_ADDREF(*aReturn = list);
     return NS_OK;
 }
@@ -1113,6 +1115,8 @@ nsXULDocument::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
 {
     nsCOMPtr<nsIAtom> attrAtom(do_GetAtom(aAttribute));
     NS_ENSURE_TRUE(attrAtom, NS_ERROR_OUT_OF_MEMORY);
+    void* attrValue = new nsString(aValue);
+    NS_ENSURE_TRUE(attrValue, NS_ERROR_OUT_OF_MEMORY);
 
     PRInt32 nameSpaceId = kNameSpaceID_Wildcard;
     if (!aNamespaceURI.EqualsLiteral("*")) {
@@ -1124,7 +1128,8 @@ nsXULDocument::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
 
     nsContentList *list = new nsContentList(this,
                                             MatchAttribute,
-                                            aValue,
+                                            nsContentUtils::DestroyMatchString,
+                                            attrValue,
                                             PR_TRUE,
                                             attrAtom,
                                             nameSpaceId);
@@ -1977,21 +1982,20 @@ nsXULDocument::StartLayout(void)
     return NS_OK;
 }
 
-
 /* static */
 PRBool
 nsXULDocument::MatchAttribute(nsIContent* aContent,
                               PRInt32 aNamespaceID,
                               nsIAtom* aAttrName,
-                              const nsAString& aAttrValue)
+                              void* aData)
 {
     NS_PRECONDITION(aContent, "Must have content node to work with!");
-
+    nsString* attrValue = NS_STATIC_CAST(nsString*, aData);
     if (aNamespaceID != kNameSpaceID_Unknown &&
         aNamespaceID != kNameSpaceID_Wildcard) {
-        return aAttrValue.EqualsLiteral("*") ?
+        return attrValue->EqualsLiteral("*") ?
             aContent->HasAttr(aNamespaceID, aAttrName) :
-            aContent->AttrValueIs(aNamespaceID, aAttrName, aAttrValue,
+            aContent->AttrValueIs(aNamespaceID, aAttrName, *attrValue,
                                   eCaseMatters);
     }
 
@@ -2010,9 +2014,9 @@ nsXULDocument::MatchAttribute(nsIContent* aContent,
         }
 
         if (nameMatch) {
-            return aAttrValue.EqualsLiteral("*") ||
+            return attrValue->EqualsLiteral("*") ||
                 aContent->AttrValueIs(name->NamespaceID(), name->LocalName(),
-                                      aAttrValue, eCaseMatters);
+                                      *attrValue, eCaseMatters);
         }
     }
 
