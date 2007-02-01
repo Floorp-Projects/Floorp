@@ -101,6 +101,7 @@
     </hbox>
   
     <tree id="configTree" flex="1" class="plain focusring" seltype="single"
+          onselect="updateCommands('select');"
           enableColumnDrag="true" context="configContext">
       <treecols>
         <treecol id="prefCol" label="&prefColumn.label;" flex="7"
