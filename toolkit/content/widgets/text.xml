@@ -272,10 +272,7 @@
 
     <handlers>
       <handler event="click" action="if (this.disabled) return;
-                                     var controlElementID = this.getAttribute('control');
-                                     var controlElement;
-                                     if (controlElementID)
-                                       controlElement = document.getElementById(controlElementID);
+                                     var controlElement = this.labeledControlElement;
                                      if(controlElement)
                                        controlElement.focus();
                                     "/>
