@@ -1455,7 +1455,7 @@ calICSService::LatestTzId(const nsACString& tzid, nsACString& _retval) {
         }
     } else if (continent.EqualsLiteral("America")) {
         if (tzid.EqualsLiteral("/mozilla.org/20050126_1/America/Argentina/ComodRivadavia")) {
-            _retval.AssignLiteral("/mozilla.org/20070129_1/America/Argentica/Catamarca");
+            _retval.AssignLiteral("/mozilla.org/20070129_1/America/Argentina/Catamarca");
         } else if (tzid.EqualsLiteral("/mozilla.org/20050126_1/America/Louisville")) {
             _retval.AssignLiteral("/mozilla.org/20070129_1/America/Kentucky/Louisville");
         }
