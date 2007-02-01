@@ -265,8 +265,7 @@ protected:
 
   static nscolor MakeBevelColor(PRIntn whichSide, PRUint8 style,
                                 nscolor aBackgroundColor,
-                                nscolor aBorderColor,
-                                PRBool aSpecialCase);
+                                nscolor aBorderColor);
 
   static PRIntn MakeSide(nsPoint aPoints[],
                          nsIRenderingContext& aContext,

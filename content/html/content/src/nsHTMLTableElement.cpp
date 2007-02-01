@@ -1288,10 +1288,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
           if (aData->mMarginData->mBorderWidth.mBottom.GetUnit() == eCSSUnit_Null)
             aData->mMarginData->mBorderWidth.mBottom.SetFloatValue(1.0f, eCSSUnit_Pixel);
 
-          PRUint8 borderStyle = (eCompatibility_NavQuirks == mode) 
-                                ? NS_STYLE_BORDER_STYLE_BG_INSET : NS_STYLE_BORDER_STYLE_INSET;
-          // BG_INSET results in a border color based on background colors
-          // used for NavQuirks only...
+          PRUint8 borderStyle = NS_STYLE_BORDER_STYLE_INSET;
 
           if (aData->mMarginData->mBorderStyle.mLeft.GetUnit() == eCSSUnit_Null)
             aData->mMarginData->mBorderStyle.mLeft.SetIntValue(borderStyle, eCSSUnit_Enumerated);
@@ -1305,16 +1302,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       }
     }
     else {
-      // default border style is the Nav4.6 extension which uses the
-      // background color as the basis of the outset border. If the
-      // table has a transparent background then it finds the closest
-      // ancestor that has a non-transparent
-      // background. NS_STYLE_BORDER_OUTSET uses the border color of
-      // the table and if that is not set, then it uses the color.
-
-      PRUint8 borderStyle = (eCompatibility_NavQuirks == mode) 
-                            ? NS_STYLE_BORDER_STYLE_BG_OUTSET :
-                              NS_STYLE_BORDER_STYLE_OUTSET;
+      PRUint8 borderStyle = NS_STYLE_BORDER_STYLE_OUTSET;
       // bordercolor
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::bordercolor);
       nscolor color;

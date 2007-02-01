@@ -350,9 +350,6 @@ const PRInt32 nsCSSProps::kBorderStyleKTable[] = {
   eCSSKeyword_ridge,  NS_STYLE_BORDER_STYLE_RIDGE,
   eCSSKeyword_inset,  NS_STYLE_BORDER_STYLE_INSET,
   eCSSKeyword_outset, NS_STYLE_BORDER_STYLE_OUTSET,
-  eCSSKeyword__moz_bg_inset,  NS_STYLE_BORDER_STYLE_BG_INSET,
-  eCSSKeyword__moz_bg_outset, NS_STYLE_BORDER_STYLE_BG_OUTSET,
-  eCSSKeyword__moz_bg_solid,  NS_STYLE_BORDER_STYLE_BG_SOLID,
   eCSSKeyword_UNKNOWN,-1
 };
 
@@ -727,9 +724,6 @@ const PRInt32 nsCSSProps::kOutlineStyleKTable[] = {
   eCSSKeyword_ridge,  NS_STYLE_BORDER_STYLE_RIDGE,
   eCSSKeyword_inset,  NS_STYLE_BORDER_STYLE_INSET,
   eCSSKeyword_outset, NS_STYLE_BORDER_STYLE_OUTSET,
-  eCSSKeyword__moz_bg_inset,  NS_STYLE_BORDER_STYLE_BG_INSET,
-  eCSSKeyword__moz_bg_outset, NS_STYLE_BORDER_STYLE_BG_OUTSET,
-  eCSSKeyword__moz_bg_solid,  NS_STYLE_BORDER_STYLE_BG_SOLID,
   eCSSKeyword_UNKNOWN,-1
 };
 

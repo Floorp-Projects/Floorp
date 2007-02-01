@@ -255,25 +255,23 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       }
     }
 
-    // if a color is set, set the border-style to 'solid' so that the
-    // 'color' property takes effect, otherwise, use '-moz-bg-solid'.
-    // (we got the color attribute earlier)
-    PRInt32 style = colorIsSet ? NS_STYLE_BORDER_STYLE_SOLID :
-                                 NS_STYLE_BORDER_STYLE_BG_SOLID;
-
     nsCSSRect& borderStyle = aData->mMarginData->mBorderStyle;
     if (borderStyle.mTop.GetUnit() == eCSSUnit_Null) {
-      borderStyle.mTop.SetIntValue(style, eCSSUnit_Enumerated);
+      borderStyle.mTop.SetIntValue(NS_STYLE_BORDER_STYLE_SOLID,
+                                   eCSSUnit_Enumerated);
     }
     if (allSides) {
       if (borderStyle.mRight.GetUnit() == eCSSUnit_Null) {
-        borderStyle.mRight.SetIntValue(style, eCSSUnit_Enumerated);
+        borderStyle.mRight.SetIntValue(NS_STYLE_BORDER_STYLE_SOLID,
+                                       eCSSUnit_Enumerated);
       }
       if (borderStyle.mBottom.GetUnit() == eCSSUnit_Null) {
-        borderStyle.mBottom.SetIntValue(style, eCSSUnit_Enumerated);
+        borderStyle.mBottom.SetIntValue(NS_STYLE_BORDER_STYLE_SOLID,
+                                        eCSSUnit_Enumerated);
       }
       if (borderStyle.mLeft.GetUnit() == eCSSUnit_Null) {
-        borderStyle.mLeft.SetIntValue(style, eCSSUnit_Enumerated);
+        borderStyle.mLeft.SetIntValue(NS_STYLE_BORDER_STYLE_SOLID,
+                                      eCSSUnit_Enumerated);
       }
 
       // If it would be noticeable, set the border radius to
