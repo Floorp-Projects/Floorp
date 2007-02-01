@@ -273,3 +273,7 @@ components/autocomplete.xpt
 extensions/inspector@mozilla.org/components/inspector.xpt
 extensions/inspector@mozilla.org/components/@DLL_PREFIX@inspector@DLL_SUFFIX@
 uninstall/UninstallSunbird.exe
+# Remove any pending updates and update history to prevent a pave-over install
+updates/
+active-update.xml
+updates.xml
