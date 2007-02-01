@@ -955,20 +955,12 @@ calDateTime::InnerObject(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 /**
  * We are subclassing nsCString for mTimezone so we can check the tzid of all
  * calIDateTimes as they go by.
- *
- * AssignLiteral, which we use when setting mTimezone to "utc" or "floating",
- * calls Assign(char*).  Since "utc" and "floating" don't need to be checked
- * for "freshness", we don't bother calling LatestTzId on them.
  */
 void calTzId::Assign(char* c)
 {
-    nsCString::Assign(c);
+  this->Assign(nsDependentCString(c));
 }
 
-/**
- * We use nsACString_internal here because that is what nsCString::Assign is
- * calling.
- */
 void calTzId::Assign(const nsACString_internal& aStr)
 {
     nsCString _retVal;
