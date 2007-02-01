@@ -364,7 +364,9 @@ function ShowPrefs()
   
   gPrefBranch.addObserver("", gPrefListener, false);
 
-  document.getElementById("configTree").view = view;
+  var configTree = document.getElementById("configTree");
+  configTree.view = view;
+  configTree.controllers.insertControllerAt(0, configController);
 
   document.getElementById("configDeck").setAttribute("selectedIndex", 1);
   if (!document.getElementById("showWarningNextTime").checked)
@@ -377,7 +379,9 @@ function onConfigUnload()
 {
   if (document.getElementById("configDeck").getAttribute("selectedIndex") == 1) {
     gPrefBranch.removeObserver("", gPrefListener);
-    document.getElementById("configTree").view = null;
+    var configTree = document.getElementById("configTree");
+    configTree.view = null;
+    configTree.controllers.removeController(configController);
   }
 }
 
@@ -462,6 +466,20 @@ const gSortFunctions =
   typeCol: typeColSortFunction, 
   valueCol: valueColSortFunction
 };
+
+const configController = {
+  supportsCommand: function supportsCommand(command) {
+    return command == "cmd_copy";
+  },
+  isCommandEnabled: function isCommandEnabled(command) {
+    return view.selection && view.selection.currentIndex >= 0;
+  },
+  doCommand: function doCommand(command) {
+    copyPref();
+  },
+  onEvent: function onEvent(event) {
+  }
+}
 
 function updateContextMenu()
 {
