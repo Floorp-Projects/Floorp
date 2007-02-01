@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=51034
+-->
+<head>
+  <title>Test for Bug 51034</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=51034">Mozilla Bug 51034</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <div id="divElement">
+   <span>Subelement1</span>
+   <span>Subelement2</span>
+   <span>Subelement3</span>
+  </div>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 51034 **/
+var x = document.getElementById('divElement');
+
+isOK = false;
+try {
+x.getElementsByTagName('span');
+isOK = true;
+} catch (ex) {
+  isOK = false;
+}
+
+ok(isOK, "getElementsByTagName() doesn't cause exception");
+
+
+</script>
+</pre>
+</body>
+</html>
+
