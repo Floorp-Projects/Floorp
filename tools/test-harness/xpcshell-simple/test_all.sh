@@ -109,10 +109,6 @@ done
 
 for t in $testdir/test_*.js
 do
-    echo "headfiles: $headfiles"
-    echo "tailfiles: $tailfiles"
-    echo "native_topsrcdir: $native_topsrcdir"
-    echo "topsrcdir: $topsrcdir"
     echo -n "$t: "
     NATIVE_TOPSRCDIR="$native_topsrcdir" TOPSRCDIR="$topsrcdir" $xpcshell $headfiles -f $t $tailfiles 2> $t.log 1>&2
     if [ `grep -c '\*\*\* PASS' $t.log` = 0 ]
