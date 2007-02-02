@@ -2203,9 +2203,14 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsFrameConstructorState& aSta
     nsIFrame*     containerFrame;
     nsFrameItems  childFrames;
 
-    if (NS_STYLE_DISPLAY_BLOCK ==
-        pseudoStyleContext->GetStyleDisplay()->mDisplay) {
-      containerFrame = NS_NewBlockFrame(mPresShell, pseudoStyleContext);
+    const PRUint8 disp = pseudoStyleContext->GetStyleDisplay()->mDisplay;
+    if (disp == NS_STYLE_DISPLAY_BLOCK ||
+        disp == NS_STYLE_DISPLAY_INLINE_BLOCK) {
+      PRUint32 flags = 0;
+      if (disp == NS_STYLE_DISPLAY_INLINE_BLOCK) {
+        flags = NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT;
+      }
+      containerFrame = NS_NewBlockFrame(mPresShell, pseudoStyleContext, flags);
     } else {
       containerFrame = NS_NewInlineFrame(mPresShell, pseudoStyleContext);
     }        

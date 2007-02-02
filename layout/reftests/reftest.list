@@ -115,6 +115,7 @@ f== bugs/368020-1.html bugs/368020-1-ref.html # bug 368079
 f== bugs/368020-3.html bugs/368020-3-ref.html # bug 368085
 f== bugs/368020-4.html bugs/368020-4-ref.html # bug 368085
 == bugs/368020-5.html bugs/368020-5-ref.html
+== bugs/368622-1.html bugs/368622-1-ref.html
 
 # object/
 == object/no-attrs.html object/no-attrs-ref.html
