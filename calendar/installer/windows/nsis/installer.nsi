@@ -287,6 +287,10 @@ Section "-Application" Section1
   ${DeleteFile} "$INSTDIR\install_wizard.log"
   ${DeleteFile} "$INSTDIR\install_status.log"
 
+  RmDir /r "$INSTDIR\updates"
+  ${DeleteFile} "$INSTDIR\updates.xml"
+  ${DeleteFile} "$INSTDIR\active-update.xml"
+
   SetDetailsPrint textonly
   DetailPrint $(STATUS_INSTALL_APP)
   SetDetailsPrint none
