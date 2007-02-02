@@ -1403,7 +1403,8 @@ GetShellFolderPath(int folder, char result[MAXPATHLEN])
 // blank command line instead of being launched with the same command line that
 // it was initially started with.
 static nsresult LaunchChild(nsINativeAppSupport* aNative,
-                            PRBool aBlankCommandLine = PR_FALSE)
+                            PRBool aBlankCommandLine = PR_FALSE,
+                            int needElevation = 0)
 {
   aNative->Quit(); // release DDE mutex, if we're holding it
 
@@ -1431,7 +1432,7 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
     return rv;
 
 #if defined(XP_WIN)
-  if (!WinLaunchChild(exePath.get(), gRestartArgc, gRestartArgv, 0))
+  if (!WinLaunchChild(exePath.get(), gRestartArgc, gRestartArgv, needElevation))
     return NS_ERROR_FAILURE;
 #elif defined(XP_OS2)
   if (_execv(exePath.get(), gRestartArgv) == -1)
@@ -2818,7 +2819,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       }
 #endif
 
-      rv = LaunchChild(nativeApp, appInitiatedRestart);
+      rv = LaunchChild(nativeApp, appInitiatedRestart, upgraded ? -1 : 0);
       return rv == NS_ERROR_LAUNCHED_CHILD_PROCESS ? 0 : 1;
     }
   }
