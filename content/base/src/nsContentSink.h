@@ -210,6 +210,13 @@ protected:
   nsresult AddDummyParserRequest(void);
   nsresult RemoveDummyParserRequest(void);
 
+private:
+  // People shouldn't be allocating this class directly.  All subclasses should
+  // be allocated using a zeroing operator new.
+  void* operator new(size_t sz) CPP_THROW_NEW;  // Not to be implemented
+
+protected:
+
   nsCOMPtr<nsIDocument>         mDocument;
   nsCOMPtr<nsIParser>           mParser;
   nsCOMPtr<nsIURI>              mDocumentURI;
@@ -234,20 +241,24 @@ protected:
   // Timer used for notification
   nsCOMPtr<nsITimer> mNotificationTimer;
 
+  // The number of tokens that have been processed while in the low
+  // frequency parser interrupt mode without falling through to the
+  // logic which decides whether to switch to the high frequency
+  // parser interrupt mode.
+  PRUint8 mDeflectedCount;
+
   // Do we notify based on time?
   PRPackedBool mNotifyOnTimer;
 
   PRPackedBool mLayoutStarted;
-  PRPackedBool mScrolledToRefAlready;
-
-  PRUint8 mScriptEnabled : 1;
-  PRUint8 mFramesEnabled : 1;
+  PRUint8 mScrolledToRefAlready : 1;
   PRUint8 mCanInterruptParser : 1;
   PRUint8 mDynamicLowerValue : 1;
-  PRUint8 mFormOnStack : 1;
   PRUint8 mParsing : 1;
   PRUint8 mDroppedTimer : 1;
-
+  PRUint8 mInTitle : 1;
+  PRUint8 unused : 2;  // bits available if someone needs one
+  
   // -- Can interrupt parsing members --
   PRUint32 mDelayTimerStart;
 
@@ -262,16 +273,6 @@ protected:
   // Last mouse event or keyboard event time sampled by the content
   // sink
   PRUint32 mLastSampledUserEventTime;
-
-  // The number of tokens that have been processed while in the low
-  // frequency parser interrupt mode without falling through to the
-  // logic which decides whether to switch to the high frequency
-  // parser interrupt mode.
-  PRUint8 mDeflectedCount;
-
-  // Boolean indicating whether we've notified insertion of our root content
-  // yet.  We want to make sure to only do this once.
-  PRPackedBool mNotifiedRootInsertion;
 
   PRInt32 mInMonolithicContainer;
 

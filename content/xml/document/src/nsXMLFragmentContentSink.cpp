@@ -68,6 +68,8 @@ public:
   nsXMLFragmentContentSink(PRBool aAllContent = PR_FALSE);
   virtual ~nsXMLFragmentContentSink();
 
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 

@@ -44,6 +44,7 @@
 #include "nsIDocumentTransformer.h"
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
+#include "nsCRT.h"
 
 
 class nsIDocument;
@@ -72,6 +73,8 @@ class nsXMLContentSink : public nsContentSink,
 public:
   nsXMLContentSink();
   virtual ~nsXMLContentSink();
+
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   nsresult Init(nsIDocument* aDoc,
                 nsIURI* aURL,
@@ -180,13 +183,12 @@ protected:
   PRInt32 mNotifyLevel;
 
   PRUint8 mConstrainSize : 1;
-  PRUint8 mInTitle : 1;
   PRUint8 mPrettyPrintXML : 1;
   PRUint8 mPrettyPrintHasSpecialRoot : 1;
   PRUint8 mPrettyPrintHasFactoredElements : 1;
   PRUint8 mHasProcessedBase : 1;
   PRUint8 mAllowAutoXLinks : 1;
-  PRUint8 unused : 1;  // bit available if someone needs one
+  PRUint8 unused : 2;  // bits available if someone needs one
   
   nsTArray<StackNode>              mContentStack;
 
