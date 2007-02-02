@@ -1056,7 +1056,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
     if (localFlag)
       return (NSDragOperationCopy | NSDragOperationGeneric | NSDragOperationMove);
 
-    return (NSDragOperationDelete | NSDragOperationGeneric);
+    return (NSDragOperationCopy | NSDragOperationLink | NSDragOperationDelete | NSDragOperationGeneric);
   }
 
   return NSDragOperationGeneric;

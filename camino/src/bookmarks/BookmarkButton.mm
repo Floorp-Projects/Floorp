@@ -279,7 +279,7 @@
   if (localFlag)
     return (NSDragOperationCopy | NSDragOperationGeneric | NSDragOperationMove);
 
-  return (NSDragOperationDelete | NSDragOperationGeneric);
+  return (NSDragOperationCopy | NSDragOperationGeneric | NSDragOperationLink | NSDragOperationDelete);
 }
 
 - (void)mouseDragged:(NSEvent*)aEvent

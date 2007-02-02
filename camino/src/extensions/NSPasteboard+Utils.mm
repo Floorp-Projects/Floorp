@@ -53,6 +53,7 @@ NSString* const kWebURLsWithTitlesPboardType  = @"WebURLsWithTitlesPboardType"; 
   NSArray* allTypes = [additionalTypes arrayByAddingObjectsFromArray:
                             [NSArray arrayWithObjects:
                                         kWebURLsWithTitlesPboardType,
+                                        NSFilenamesPboardType,
                                         NSURLPboardType,
                                         NSStringPboardType,
                                         kCorePasteboardFlavorType_url,
@@ -63,7 +64,7 @@ NSString* const kWebURLsWithTitlesPboardType  = @"WebURLsWithTitlesPboardType"; 
 
 //
 // Copy a single URL (with an optional title) to the clipboard in all relevant
-// formats. Convinience methods for clients that can only ever deal with one
+// formats. Convenience method for clients that can only ever deal with one
 // URL and shouldn't have to build up the arrays for setURLs:withTitles:.
 //
 - (void)setDataForURL:(NSString*)url title:(NSString*)title
@@ -81,40 +82,50 @@ NSString* const kWebURLsWithTitlesPboardType  = @"WebURLsWithTitlesPboardType"; 
 // using all the available formats.
 // The title array should be nil, or must have the same length as the URL array.
 //
-- (void) setURLs:(NSArray*)inUrls withTitles:(NSArray*)inTitles
+- (void)setURLs:(NSArray*)inUrls withTitles:(NSArray*)inTitles
 {
+  unsigned int urlCount = [inUrls count];
+
   // Best format that we know about is Safari's URL + title arrays - build these up
   NSMutableArray* tmpTitleArray = inTitles;
   if (!inTitles) {
     tmpTitleArray = [NSMutableArray array];
-    for ( unsigned int i = 0; i < [inUrls count]; ++i )
+    for (unsigned int i = 0; i < urlCount; ++i)
       [tmpTitleArray addObject:@""];
   }
-  
+
+  NSMutableArray* filePaths = [NSMutableArray array];
+  for (unsigned int i = 0; i < urlCount; ++i) {
+    NSURL* url = [NSURL URLWithString:[inUrls objectAtIndex:i]];
+    if ([url isFileURL])
+      [filePaths addObject:[url path]];
+  }
+  [self setPropertyList:filePaths forType:NSFilenamesPboardType];
+
   NSMutableArray* clipboardData = [NSMutableArray array];
   [clipboardData addObject:[NSArray arrayWithArray:inUrls]];
   [clipboardData addObject:tmpTitleArray];
-  
+
   [self setPropertyList:clipboardData forType:kWebURLsWithTitlesPboardType];
-  
-  if ([inUrls count] == 1) {
+
+  if (urlCount == 1) {
     NSString* title = @"";
     if (inTitles)
       title = [inTitles objectAtIndex:0];
 
     NSString* url = [inUrls objectAtIndex:0];
-    
-    [[NSURL URLWithString:url] writeToPasteboard: self];
-    [self setString:url forType: NSStringPboardType];
+
+    [[NSURL URLWithString:url] writeToPasteboard:self];
+    [self setString:url forType:NSStringPboardType];
 
     const char* tempCString = [url UTF8String];
-    [self setData:[NSData dataWithBytes:tempCString length:strlen(tempCString)] forType: kCorePasteboardFlavorType_url];
+    [self setData:[NSData dataWithBytes:tempCString length:strlen(tempCString)] forType:kCorePasteboardFlavorType_url];
 
     if (inTitles)
       tempCString = [title UTF8String];
-    [self setData:[NSData dataWithBytes:tempCString length:strlen(tempCString)] forType: kCorePasteboardFlavorType_urln];
+    [self setData:[NSData dataWithBytes:tempCString length:strlen(tempCString)] forType:kCorePasteboardFlavorType_urln];
   }
-  else if ([inUrls count] > 1)
+  else if (urlCount > 1)
   {
     // With multiple URLs there aren't many other formats we can use
     // Just write a string of each URL (ignoring titles) on a separate line
@@ -123,14 +134,14 @@ NSString* const kWebURLsWithTitlesPboardType  = @"WebURLsWithTitlesPboardType"; 
     // but we have to put something in the carbon style flavors, otherwise apps will think
     // there is data there, but get nothing
 
-    NSString* firstURL    = [inUrls objectAtIndex:0];
-    NSString* firstTitle  = ([inTitles count] > 0) ? [inTitles objectAtIndex:0] : @"";
-    
+    NSString* firstURL   = [inUrls objectAtIndex:0];
+    NSString* firstTitle = ([inTitles count] > 0) ? [inTitles objectAtIndex:0] : @"";
+
     const char* tempCString = [firstURL UTF8String];
-    [self setData:[NSData dataWithBytes:tempCString length:strlen(tempCString)] forType: kCorePasteboardFlavorType_url];
+    [self setData:[NSData dataWithBytes:tempCString length:strlen(tempCString)] forType:kCorePasteboardFlavorType_url];
 
     tempCString = [firstTitle UTF8String];    // not i18n friendly
-    [self setData:[NSData dataWithBytes:tempCString length:strlen(tempCString)] forType: kCorePasteboardFlavorType_urln];
+    [self setData:[NSData dataWithBytes:tempCString length:strlen(tempCString)] forType:kCorePasteboardFlavorType_urln];
   }
 }
 

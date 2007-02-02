@@ -205,9 +205,12 @@ const int kMenuTruncationChars = 60;
 
 // NSDraggingSource methods
 
-- (unsigned int)draggingSourceOperationMaskForLocal:(BOOL)flag
+- (unsigned int)draggingSourceOperationMaskForLocal:(BOOL)isLocal
 {
-	return NSDragOperationGeneric | NSDragOperationCopy;
+  if (isLocal)
+    return (NSDragOperationGeneric | NSDragOperationCopy);
+
+  return (NSDragOperationGeneric | NSDragOperationCopy | NSDragOperationLink);
 }
 
 // NSResponder methods
