@@ -145,8 +145,13 @@ CanCallerAccess(JSContext *cx, JSObject *unsafeObj)
   if (NS_FAILED(rv) || !subsumes) {
     PRBool enabled = PR_FALSE;
     rv = ssm->IsCapabilityEnabled("UniversalXPConnect", &enabled);
+    if (NS_FAILED(rv)) {
+      return ThrowException(rv, cx);
+    }
 
-    return NS_FAILED(rv) ? ThrowException(rv, cx) : enabled;
+    if (!enabled) {
+      return ThrowException(NS_ERROR_XPC_SECURITY_MANAGER_VETO, cx);
+    }
   }
 
   return PR_TRUE;
@@ -244,6 +249,12 @@ WrapFunction(JSContext* cx, JSObject* funobj, jsval *rval)
   // XPCSafeJSObjectWrapper.
   if (native == sEvalNative) {
     return ThrowException(NS_ERROR_INVALID_ARG, cx);
+  }
+
+  // Check that the caller can access the function it's about to call.
+  if (!CanCallerAccess(cx, funobj)) {
+    // CanCallerAccess() already threw for us.
+    return JS_FALSE;
   }
 
   // If funobj is already a wrapped function, just return it. No
@@ -836,8 +847,10 @@ XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   JSObject *objToWrap = JSVAL_TO_OBJECT(argv[0]);
 
   // Prevent script created Script objects from ever being wrapped
-  // with XPCSafeJSObjectWrapper
-  if (JS_GET_CLASS(cx, objToWrap) == &js_ScriptClass) {
+  // with XPCSafeJSObjectWrapper, and never let a function object be
+  // directly wrapped.
+  if (JS_GET_CLASS(cx, objToWrap) == &js_ScriptClass ||
+      ::JS_ObjectIsFunction(cx, objToWrap)) {
     return ThrowException(NS_ERROR_INVALID_ARG, cx);
   }
 
