@@ -1,0 +1,15 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!-- http://biesi.damowmow.com/object/024.html -->
+<html lang="en">
+<head>
+<title>&lt;object&gt;: Malformed XML file with type attribute</title>
+</head>
+<body>
+<!--
+  You should _probably_ see an XML parse error below, although you could
+  argue that it should behave like a broken image (and say PASS); this
+  test currently checks for the former.
+-->
+<p><object type="text/xml" data="extra/malformed.xml" width="300" height="200">PASS</object></p>
+</body>
+</html>

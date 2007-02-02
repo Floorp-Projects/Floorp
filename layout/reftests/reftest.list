@@ -116,6 +116,58 @@ f== bugs/368020-3.html bugs/368020-3-ref.html # bug 368085
 f== bugs/368020-4.html bugs/368020-4-ref.html # bug 368085
 == bugs/368020-5.html bugs/368020-5-ref.html
 
+# object/
+== object/no-attrs.html object/no-attrs-ref.html
+== object/404-data.html object/404-data-ref.html
+== object/404-data-with-type.html object/404-data-with-type-ref.html
+== object/page-as-data.html object/page-as-data-ref.html
+== object/page-as-data-with-type.html object/page-as-data-with-type-ref.html
+== object/connection-refused.html object/connection-refused-ref.html
+== object/image.html object/image-ref.html
+== object/image-with-type.html object/image-with-type-ref.html
+== object/image-no-useful-extension-typesniff.html object/image-no-useful-extension-typesniff-ref.html
+== object/image-no-useful-extension-with-type.html object/image-no-useful-extension-with-type-ref.html
+#
+# XXX missing tests 011-015 from http://biesi.damowmow.com/object/ here; need
+#     a controllable HTTP server (or preferably one run on the test machine)
+#     to add them
+#
+== object/malformed-should-fallback.html object/malformed-should-fallback-ref.html
+== object/malformed-with-type.html object/malformed-with-type-ref.html
+#
+# XXX missing tests 018-021 from http://biesi.damowmow.com/object/ here; need
+#     a controllable HTTP server (or preferably one run on the test machine)
+#     to add them
+#
+== object/unknown-type.html object/unknown-type-ref.html
+== object/malformed-xml.html object/malformed-xml-ref.html
+== object/malformed-xml-with-type.html object/malformed-xml-with-type-ref.html
+#
+# XXX missing tests 025-28 from http://biesi.damowmow.com/object/ here; would
+#     need to require Flash on the test machine to run them
+#
+# XXX need to support <img src="foo.svg"> for these to pass
+f== object/svg.html object/svg-ref.html
+f== object/svg-with-type.html object/svg-with-type-ref.html
+#
+# XXX missing test 031 from http://biesi.damowmow.com/object/ here; need to
+#     first support the standby attribute on objects, then need to figure out
+#     how to reproduce the setup needed for that test such that reftest will
+#     handle it correctly, since a still-loading image probably delays the
+#     snapshot reftest takes
+#
+# XXX missing test 032 from http://biesi.damowmow.com/object/ here; would
+#     need to require Java on test machine to run it
+#
+# XXX missing test 033 from http://biesi.damowmow.com/object/ here; not sure
+#     how nullplugin testing should work
+#
+#
+# XXX missing test 034 from http://biesi.damowmow.com/object/ here; would
+#     need to require Flash on the test machine to run them
+#
+== object/malformed-uri.html object/malformed-uri-ref.html
+
 # table-dom/
 == table-dom/appendCells1.html table-dom/appendCells1-ref.html
 == table-dom/appendCellsRebuild1.html table-dom/appendCellsRebuild1-ref.html
