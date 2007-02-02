@@ -2170,9 +2170,9 @@
            customizable="true"
            context="toolbar-context-menu"
 #ifdef XP_MACOSX
-           defaultset="button-getmsg,button-newmsg,button-address,spacer,button-reply,button-replyall,button-forward,spacer,button-tag,button-delete,button-junk,spacer,button-print,button-stop,spring,search-container,throbber-box">
+           defaultset="button-getmsg,button-newmsg,button-address,spacer,button-reply,button-replyall,button-forward,spacer,button-tag,button-delete,button-junk,button-print,spacer,button-goback,button-goforward,spring,search-container,throbber-box">
 #else
-    defaultset="button-getmsg,button-newmsg,button-address,separator,button-reply,button-replyall,button-forward,separator,button-tag,button-delete,button-junk,separator,button-print,button-stop,spring,search-container">
+           defaultset="button-getmsg,button-newmsg,button-address,separator,button-reply,button-replyall,button-forward,separator,button-tag,button-delete,button-junk,button-print,separator,button-goback,button-goforward,spring,search-container">
 #endif
   </toolbar>
   <toolbarset id="customToolbars" context="toolbar-context-menu"/>

@@ -825,8 +825,8 @@ function OnLoadMessenger()
     }
     else // for higher resolution displays, use larger values for height and width
     {
-      defaultWidth = screen.availWidth * .8;
-      defaultHeight = screen.availHeight * .8; 
+      defaultWidth = screen.availWidth <= 1024 ? screen.availWidth * .95 : screen.availWidth * .8;      
+      defaultHeight = screen.availHeight * .8;
     }
 
     document.documentElement.setAttribute("width", defaultWidth);
