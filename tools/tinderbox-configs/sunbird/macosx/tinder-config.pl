@@ -188,6 +188,13 @@ $BuildTree  = 'Sunbird';
 #- appended for you.
 $LocaleTree = 'Mozilla-l10n';
 
+#- By default, locale builds delete the wget-ed en-US build from the local
+#- stage directory before rsyncing the freshly baked l10n builds up to the
+#- FTP server.  This prevents the rsync from accidentally overwriting the
+#- already existing en-US build on the FTP server.  This behaviour is most
+#- useful when building en-US and the other locales on different machines.
+$DeleteEnUsOnLocalesUpload = 0;
+
 #$BuildName = '';
 $BuildTag = 'SUNBIRD_0_3_BRANCH';
 #$BuildConfigDir = 'mozilla/config';
