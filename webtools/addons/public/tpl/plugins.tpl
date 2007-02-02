@@ -25,7 +25,7 @@
     <h3><img src="{$config.webpath}/images/install.png" height="24" width="24" alt=""/>&nbsp;Download</h3>
     <div style="margin-top: 5px; height: 50px">
         <div class="iconbar"><img src="{$config.webpath}/images/windows_icon.png" height="34" width="34" alt=""/>&nbsp;For Windows:<br/>&nbsp;&nbsp;<a href="http://www.adobe.com/go/getflashplayer">Version 9</a></div>
-        <div class="iconbar"><img src="{$config.webpath}/images/linux_icon.png" height="34" width="34" alt=""/>&nbsp;For Linux:<br/>&nbsp;&nbsp;<a href="http://www.adobe.com/go/getflashplayer">Version 7</a></div>
+        <div class="iconbar"><img src="{$config.webpath}/images/linux_icon.png" height="34" width="34" alt=""/>&nbsp;For Linux:<br/>&nbsp;&nbsp;<a href="http://www.adobe.com/go/getflashplayer">Version 9</a></div>
         <div class="iconbar"><img src="{$config.webpath}/images/macosx_icon.png" height="34" width="34" alt=""/>&nbsp;For MacOSX:<br/>&nbsp;&nbsp;<a href="http://www.adobe.com/go/getflashplayer">Version 9</a></div>
     </div>
 
