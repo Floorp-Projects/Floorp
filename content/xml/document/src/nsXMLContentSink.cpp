@@ -139,17 +139,8 @@ NS_NewXMLContentSink(nsIXMLContentSink** aResult,
 }
 
 nsXMLContentSink::nsXMLContentSink()
-  : mDocElement(nsnull),
-    mText(nsnull),
-    mTextLength(0),
-    mTextSize(0),
-    mNotifyLevel(0),
-    mConstrainSize(PR_TRUE),
-    mInTitle(PR_FALSE),
+  : mConstrainSize(PR_TRUE),
     mPrettyPrintXML(PR_TRUE),
-    mPrettyPrintHasSpecialRoot(PR_FALSE),
-    mPrettyPrintHasFactoredElements(PR_FALSE),
-    mHasProcessedBase(PR_FALSE),
     mAllowAutoXLinks(PR_TRUE)
 {
 }

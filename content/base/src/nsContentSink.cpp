@@ -247,9 +247,17 @@ NS_IMPL_ISUPPORTS3(nsContentSink,
                    nsIScriptLoaderObserver)
 
 nsContentSink::nsContentSink()
-  : mLayoutStarted(PR_FALSE),
-    mInMonolithicContainer(0)
 {
+  // We have a zeroing operator new
+  NS_ASSERTION(mLayoutStarted == PR_FALSE, "What?");
+  NS_ASSERTION(mDynamicLowerValue == PR_FALSE, "What?");
+  NS_ASSERTION(mParsing == PR_FALSE, "What?");
+  NS_ASSERTION(mLastSampledUserEventTime == 0, "What?");
+  NS_ASSERTION(mDeflectedCount == 0, "What?");
+  NS_ASSERTION(mDroppedTimer == PR_FALSE, "What?");
+  NS_ASSERTION(mInMonolithicContainer == 0, "What?");
+  NS_ASSERTION(mInNotification == 0, "What?");
+
 #ifdef NS_DEBUG
   if (!gContentSinkLogModuleInfo) {
     gContentSinkLogModuleInfo = PR_NewLogModule("nscontentsink");
@@ -367,7 +375,7 @@ nsContentSink::ScriptAvailable(nsresult aResult,
   // using the DOM during loading, or if the script was inline and thus
   // never blocked.
   NS_ASSERTION(mScriptElements.IndexOf(aElement) == count - 1 ||
-               mScriptElements.IndexOf(aElement) == -1,
+               mScriptElements.IndexOf(aElement) == PRUint32(-1),
                "script found at unexpected position");
 
   // Check if this is the element we were waiting for

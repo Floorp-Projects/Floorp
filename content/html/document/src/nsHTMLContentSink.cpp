@@ -248,8 +248,6 @@ protected:
   nsRefPtr<nsGenericHTMLElement> mFrameset;
   nsGenericHTMLElement* mHead;
 
-  PRPackedBool mInTitle;
-
   nsString mTitleString;
   nsRefPtr<nsGenericHTMLElement> mCurrentForm;
 
@@ -267,6 +265,15 @@ protected:
   // Boolean indicating whether we've seen a <head> tag that might have had
   // attributes once already.
   PRPackedBool mHaveSeenHead;
+
+  // Boolean indicating whether we've notified insertion of our root content
+  // yet.  We want to make sure to only do this once.
+  PRPackedBool mNotifiedRootInsertion;
+
+  PRUint8 mScriptEnabled : 1;
+  PRUint8 mFramesEnabled : 1;
+  PRUint8 mFormOnStack : 1;
+  PRUint8 unused : 5;  // bits available if someone needs one
 
   nsCOMPtr<nsIObserverEntry> mObservers;
 
@@ -1595,7 +1602,7 @@ HTMLContentSink::~HTMLContentSink()
 
   delete mHeadContext;
 
-  for (i = 0; i < NS_ARRAY_LENGTH(mNodeInfoCache); ++i) {
+  for (i = 0; PRUint32(i) < NS_ARRAY_LENGTH(mNodeInfoCache); ++i) {
     NS_IF_RELEASE(mNodeInfoCache[i]);
   }
 }
