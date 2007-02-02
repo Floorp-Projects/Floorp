@@ -435,3 +435,9 @@ sub expand_test_list_entry {
 
 }
 
+sub status {
+
+    print STDERR ("-#- ", @_ , "\n");
+
+}
+
