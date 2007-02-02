@@ -173,10 +173,6 @@ table {
   text-indent: 0;
 }
 
-table, td, th {
-  border-color: gray;
-}
-
 table[align="left"] {
   float: left;
 }
