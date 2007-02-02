@@ -68,6 +68,7 @@ XPIDLSRCS	= \
 		nsIAbView.idl \
 		nsIMsgVCardService.idl \
 		nsIAbLDIFService.idl \
+		nsIAbLDAPAttributeMap.idl \
 		$(NULL)
 ifdef MOZ_LDAP_XPCOM
 XPIDLSRCS       += \
@@ -78,7 +79,6 @@ XPIDLSRCS       += \
                 nsIAbLDAPReplicationService.idl \
                 nsIAbLDAPReplicationQuery.idl \
                 nsIAbLDAPReplicationData.idl \
-		nsIAbLDAPAttributeMap.idl \
 		nsIAbLDAPDirectory.idl \
 		$(NULL)
 endif

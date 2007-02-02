@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -57,6 +57,7 @@
 
 class nsILocalFile;
 class nsIAbDirectory;
+class nsIAbLDAPAttributeMap;
 
 #define NC_RDF_NEWABCARD            NC_NAMESPACE_URI "NewCard"
 #define NC_RDF_MODIFY               NC_NAMESPACE_URI "Modify"
@@ -69,7 +70,6 @@ class nsIAbDirectory;
 struct ExportAttributesTableStruct
 {
     const char* abColName;
-    const char* ldapPropertyName;
     PRUint32 plainTextStringID;
 };
 
@@ -119,9 +119,9 @@ protected:
 private:
   nsresult ExportDirectoryToDelimitedText(nsIAbDirectory *aDirectory, const char *aDelim, PRUint32 aDelimLen, nsILocalFile *aLocalFile);
   nsresult ExportDirectoryToLDIF(nsIAbDirectory *aDirectory, nsILocalFile *aLocalFile);
-  nsresult AppendLDIFForMailList(nsIAbCard *aCard, nsACString &aResult);
-  nsresult AppendDNForCard(const char *aProperty, nsIAbCard *aCard, nsACString &aResult);
-  nsresult AppendBasicLDIFForCard(nsIAbCard *aCard, nsACString &aResult);
+  nsresult AppendLDIFForMailList(nsIAbCard *aCard, nsIAbLDAPAttributeMap *aAttrMap, nsACString &aResult);
+  nsresult AppendDNForCard(const char *aProperty, nsIAbCard *aCard, nsIAbLDAPAttributeMap *aAttrMap, nsACString &aResult);
+  nsresult AppendBasicLDIFForCard(nsIAbCard *aCard, nsIAbLDAPAttributeMap *aAttrMap, nsACString &aResult);
   nsresult AppendProperty(const char *aProperty, const PRUnichar *aValue, nsACString &aResult);
   PRBool IsSafeLDIFString(const PRUnichar *aStr);
 };

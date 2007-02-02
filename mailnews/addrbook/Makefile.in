@@ -43,9 +43,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+EXTRA_COMPONENTS += src/nsAbLDAPAttributeMap.js
+
 ifdef MOZ_LDAP_XPCOM
 REQUIRES	+= mozldap necko
-EXTRA_COMPONENTS += src/nsLDAPPrefsService.js src/nsAbLDAPAttributeMap.js
+EXTRA_COMPONENTS += src/nsLDAPPrefsService.js
 endif
 
 DIRS		= public src
