@@ -244,13 +244,12 @@ function isEvent(item) {
 
 function isParent(item) {
     if (item.id != item.parentItem.id) {
-        throw new Components.Exception(
-            "proxy has different id than its parent!");
+        throw new Components.Exception("proxy has different id than its parent!");
     }
     return (!item.recurrenceId);
 }
 
-function forEachIcalComponent(icalRootComp, componentType, func, maxResult)
+function forEachIcalComponent(icalRootComp, componentType, func, maxResults)
 {
     var itemCount = 0;
     // libical returns the vcalendar component if there is just
@@ -260,11 +259,11 @@ function forEachIcalComponent(icalRootComp, componentType, func, maxResult)
     for ( var calComp = (icalRootComp.componentType == "VCALENDAR"
                          ? icalRootComp
                          : icalRootComp.getFirstSubcomponent("VCALENDAR"));
-          calComp != null && (!maxResult || itemCount < maxResult);
+          calComp != null && (!maxResults || itemCount < maxResults);
           calComp = icalRootComp.getNextSubcomponent("VCALENDAR") )
     {
         for ( var subComp = calComp.getFirstSubcomponent(componentType);
-              subComp != null && (!maxResult || itemCount < maxResult);
+              subComp != null && (!maxResults || itemCount < maxResults);
               subComp = calComp.getNextSubcomponent(componentType) )
         {
             func( subComp );
@@ -278,7 +277,7 @@ function filterXmlNodes(name, rootNode)
     var ret = [];
     if (rootNode) {
         var nodeList = rootNode.getElementsByTagName(name);
-        for ( var i = 0; i < nodeList.length; ++i ) {
+        for (var i = 0; i < nodeList.length; ++i) {
             var node = nodeList.item(i);
             ret.push( trimString(node.textContent) );
         }
@@ -287,7 +286,7 @@ function filterXmlNodes(name, rootNode)
 }
 
 function trimString(str) {
-    return str.replace( /(^\s+|\s+$)/g, "" );
+    return str.replace(/(^\s+|\s+$)/g, "");
 }
 
 function getTime() {

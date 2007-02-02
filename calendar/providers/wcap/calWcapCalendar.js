@@ -123,14 +123,16 @@ calWcapCalendar.prototype = {
             str += ", default calendar";
         return str;
     },
-    notifyError: function calWcapCalendar_notifyError(err)
+    notifyError: function calWcapCalendar_notifyError(err, suppressOnError)
     {
         debugger;
         var msg = logError(err, this);
-        this.notifyObservers(
-            "onError",
-            err instanceof Components.interfaces.nsIException
-            ? [err.result, err.message] : [isNaN(err) ? -1 : err, msg] );
+        if (!suppressOnError) {
+            this.notifyObservers(
+                "onError",
+                err instanceof Components.interfaces.nsIException
+                ? [err.result, err.message] : [isNaN(err) ? -1 : err, msg]);
+        }
     },
     
     // calICalendarProvider:
@@ -156,13 +158,18 @@ calWcapCalendar.prototype = {
     set name( name ) {
         getCalendarManager().setCalendarPref(
             this.session.defaultCalendar, "NAME", name);
+        return name;
     },
     
     get type() { return "wcap"; },
     
     m_superCalendar: null,
-    get superCalendar() { return this.m_superCalendar || this; },
-    set superCalendar( cal ) { this.m_superCalendar = cal; },
+    get superCalendar() {
+        return (this.m_superCalendar || this);
+    },
+    set superCalendar(cal) {
+        return (this.m_superCalendar = cal);
+    },
     
     m_bReadOnly: false,
     get readOnly() {
@@ -175,7 +182,7 @@ calWcapCalendar.prototype = {
                 !this.checkAccess(calIWcapCalendar.AC_COMP_WRITE));
     },
     set readOnly(bReadOnly) {
-        this.m_bReadOnly = bReadOnly;
+        return (this.m_bReadOnly = bReadOnly);
     },
     
     get uri() {
@@ -187,8 +194,8 @@ calWcapCalendar.prototype = {
         else
             return this.session.uri;
     },
-    set uri( thatUri ) {
-        this.session.uri = thatUri;
+    set uri(thatUri) {
+        return (this.session.uri = thatUri);
     },
     
     notifyObservers: function calWcapCalendar_notifyObservers(func, args) {
@@ -225,12 +232,14 @@ calWcapCalendar.prototype = {
                 (this.session.isLoggedIn && !this.isOwnedCalendar));
     },
     set suppressAlarms(bSuppressAlarms) {
-        this.m_bSuppressAlarms = bSuppressAlarms;
+        return (this.m_bSuppressAlarms = bSuppressAlarms);
     },
     
-    get canRefresh() { return false; },
+    get canRefresh() { return (this.m_cachedResults != null); },
     refresh: function calWcapCalendar_refresh() {
         log("refresh.", this);
+        // invalidate cached results:
+        delete this.m_cachedResults;
     },
     
     issueNetworkRequest: function calWcapCalendar_issueNetworkRequest(

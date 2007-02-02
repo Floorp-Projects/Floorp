@@ -102,31 +102,53 @@ calWcapSession.prototype = {
         }
         return str;
     },
-    notifyError: function calWcapSession_notifyError(err)
+    notifyError: function calWcapSession_notifyError(err, suppressOnError)
     {
         debugger;
         var msg = logError(err, this);
-        this.notifyObservers(
-            "onError",
-            err instanceof Components.interfaces.nsIException
-            ? [err.result, err.message] : [isNaN(err) ? -1 : err, msg] );
+        if (!suppressOnError) {
+            this.notifyObservers(
+                "onError",
+                err instanceof Components.interfaces.nsIException
+                ? [err.result, err.message] : [isNaN(err) ? -1 : err, msg]);
+        }
     },
+    
+    m_lastOnErrorTime: 0,
+    m_lastOnErrorNo: 0,
+    m_lastOnErrorMsg: null,
     
     m_observers: null,
     notifyObservers: function calWcapSession_notifyObservers(func, args)
     {
-        if (!g_bShutdown) {
-            this.m_observers.forEach(
-                function notifyFunc(obj) {
-                    try {
-                        obj[func].apply(obj, args);
-                    }
-                    catch (exc) {
-                        // don't call notifyError() here:
-                        Components.utils.reportError(exc);
-                    }
-                });
+        if (g_bShutdown)
+            return;
+        
+        // xxx todo: hack
+        // suppress identical error bursts when multiple similar calls eg on getItems() fail.
+        if (func == "onError") {
+            var now = (new Date()).getTime();
+            if ((now - this.m_lastOnError) < 2000 &&
+                (args[0] == this.m_lastOnErrorNo) &&
+                (args[1] == this.m_lastOnErrorMsg)) {
+                log("suppressing calIObserver::onError.", this);
+                return;
+            }
+            this.m_lastOnError = now;
+            this.m_lastOnErrorNo = args[0];
+            this.m_lastOnErrorMsg = args[1];
         }
+        
+        this.m_observers.forEach(
+            function notifyFunc(obj) {
+                try {
+                    obj[func].apply(obj, args);
+                }
+                catch (exc) {
+                    // don't call notifyError() here:
+                    Components.utils.reportError(exc);
+                }
+            });
     },
     
     addObserver: function calWcapSession_addObserver(observer)
@@ -187,7 +209,11 @@ calWcapSession.prototype = {
             ", length: " + this.m_loginQueue.length, this);
         
         if (this.m_loginLock) {
-            this.m_loginQueue.push(respFunc);
+            var entry = {
+                request: request,
+                respFunc: respFunc
+            };
+            this.m_loginQueue.push(entry);
             log("login queue: " + this.m_loginQueue.length);
         }
         else {
@@ -210,10 +236,7 @@ calWcapSession.prototype = {
                 function getSessionId_resp(err, sessionId) {
                     log("getSessionId_resp(): " + sessionId, this_);
                     if (err) {
-                        if (getResultCode(err) == calIWcapErrors.WCAP_LOGIN_FAILED) {
-                            // notify login failures once here only:
-                            this_.notifyError(err);
-                        }
+                        this_.notifyError(err, request.suppressOnError);
                     }
                     else {
                         this_.m_sessionId = sessionId;
@@ -224,11 +247,15 @@ calWcapSession.prototype = {
                     this_.m_loginQueue = [];
                     log("unlocked login queue.", this_);
                     
-                    // first request:
-                    respFunc(err, sessionId);
-                    // dequeue remaining:
+                    if (request.isPending) {
+                        // answere first request:
+                        respFunc(err, sessionId);
+                    }
+                    // and any remaining:
                     while (queue.length > 0) {
-                        queue.shift()(err, sessionId);
+                        var entry = queue.shift();
+                        if (entry.request.isPending)
+                            entry.respFunc(err, sessionId);
                     }
                 });
         }
@@ -302,8 +329,9 @@ calWcapSession.prototype = {
                         if (prompt.promptUsernameAndPassword(
                                 getWcapBundle().GetStringFromName("loginDialog.label"),
                                 loginText, outUser, outPW,
-                                getWcapBundle().GetStringFromName("loginDialog.check.text"),
-                                outSavePW)) {
+                                getPref("signon.rememberSignons", true)
+                                ? getWcapBundle().GetStringFromName("loginDialog.check.text")
+                                : null, outSavePW)) {
                             this_.login(request, promptAndLoginLoop_resp,
                                         outUser.value, outPW.value);
                         }
@@ -320,13 +348,12 @@ calWcapSession.prototype = {
                         if (outSavePW.value) {
                             // so try to remove old pw from db first:
                             try {
-                                passwordManager.removeUser(
-                                    pwHost, outUser.value);
+                                passwordManager.removeUser(pwHost, outUser.value);
                                 log("removed from pw db: " + pwHost, this_);
                             }
                             catch (exc) {
                             }
-                            try { // save pw under session uri:
+                            try { // to save pw under session uri:
                                 passwordManager.addUser(pwHost, outUser.value, outPW.value);
                                 log("added to pw db: " + pwHost, this_);
                             }
@@ -336,12 +363,11 @@ calWcapSession.prototype = {
                         }
                         this_.credentials.userId = outUser.value;
                         this_.credentials.pw = outPW.value;
-                        this_.setupSession(
-                            sessionId,
-                            request,
-                            function setupSession_resp(err) {
-                                respFunc(err, sessionId);
-                            });
+                        this_.setupSession(sessionId,
+                                           request,
+                                           function setupSession_resp(err) {
+                                               respFunc(err, sessionId);
+                                           });
                     }
                 }
                     
@@ -554,8 +580,8 @@ calWcapSession.prototype = {
                             this_.defaultCalendar.m_calProps = data;
                             log("installed default cal props.", this_);
                         },
-                        stringToXml, "get_calprops",
-                        "&fmt-out=text%2Fxml&calid=" +
+                        stringToXml, "search_calprops",
+                        "&fmt-out=text%2Fxml&searchOpts=3&calid=1&search-string=" +
                         encodeURIComponent(this_.defaultCalId),
                         sessionId);
                     if (getPref("calendar.wcap.subscriptions", false))
@@ -634,65 +660,61 @@ calWcapSession.prototype = {
         // user may have dangling users referred in his subscription list, so
         // retrieve each by each, don't break:
         var list = this.getUserPreferences("X-NSCP-WCAP-PREF-icsSubscribed");
-        for each( var item in list ) {
+        var calIds = {};
+        for each (var item in list) {
             var ar = item.split(',');
             // ',', '$' are not encoded. ',' can be handled here. WTF.
-            for each ( var a in ar ) {
+            for each (var a in ar) {
                 var dollar = a.indexOf('$');
                 if (dollar >= 0) {
                     var calId = a.substring(0, dollar);
-                    if (calId == this.defaultCalId)
-                        continue;
-                    try {
-                        var key = encodeURIComponent(calId);
-                        var cal = this_.m_subscribedCals[key];
-                        if (!cal) {
-                             this.issueNetworkRequest_(
-                                 request,
-                                 function calprops_resp(err, xml) {
-                                     try {
-                                         if (err)
-                                             throw err;
-                                         var cal = createWcapCalendar(this_, xml);
-                                         this_.m_subscribedCals[encodeURIComponent(cal.calId)] = cal;
-                                         getCalendarManager().registerCalendar(cal);
-                                         log("installed subscribed calendar: " + cal.calId, this_);
-                                     }
-                                     catch (exc) {
-                                         // ignore but log any errors on subscribed calendars:
-                                         logError(exc, this_);
-                                     }
-                                 },
-                                 stringToXml, "get_calprops",
-                                 "&fmt-out=text%2Fxml&calid=" + key,
-                                 sessionId);
-//                             var listener = {
-//                                 onRequestResult: function onRequestResult(request, result) {
-//                                     try {
-//                                         if (!request.succeeded)
-//                                             throw request.status;
-//                                         if (result.length < 1)
-//                                             throw Components.results.NS_ERROR_UNEXPECTED;
-//                                         var cal = result[0];
-//                                         getCalendarManager().registerCalendar(cal);
-//                                         log("installed subscribed calendar: " + cal.calId,
-//                                             this_);
-//                                     }
-//                                     catch (exc) {
-//                                         logError(exc, this_);
-//                                     }
-//                                 }
-//                             };
-//                             this.searchForCalendars(
-//                                 calId,
-//                                 calIWcapSession.SEARCH_STRING_EXACT |
-//                                 calIWcapSession.SEARCH_INCLUDE_CALID,
-//                                 listener);
+                    if (calId != this.defaultCalId)
+                        calIds[calId] = true;
+                }
+            }
+        }
+        var issuedSearchRequests = {};
+        for (var calId in calIds) {
+            if (!this_.m_subscribedCals[calId]) {
+                var listener = {
+                    onRequestResult: function search_onRequestResult(request, result) {
+                        try {
+                            if (!request.succeeded)
+                                throw request.status;
+                            if (result.length < 1)
+                                throw Components.results.NS_ERROR_UNEXPECTED;
+                            for each (var cal in result) {
+                                try {
+                                    var calId = cal.calId;
+                                    if (calIds[calId] && !this_.m_subscribedCals[calId]) {
+                                        this_.m_subscribedCals[calId] = cal;
+                                        getCalendarManager().registerCalendar(cal);
+                                        log("installed subscribed calendar: " + calId, this_);
+                                    }
+                                }
+                                catch (exc) { // ignore but log any errors on subscribed calendars:
+                                    logError(exc, this_);
+                                }
+                            }
+                        }
+                        catch (exc) { // ignore but log any errors on subscribed calendars:
+                            logError(exc, this_);
                         }
                     }
-                    catch (exc) { // ignore but log any errors on subscribed calendars:
-                        logError(exc, this);
-                    }
+                };
+                
+                var colon = calId.indexOf(':');
+                if (colon >= 0) // searching for secondary calendars doesn't work. WTF.
+                    calId = calId.substring(0, colon);
+                if (!issuedSearchRequests[calId]) {
+                    issuedSearchRequests[calId] = true;
+                    this.searchForCalendars(
+                        calId,
+                        calIWcapSession.SEARCH_STRING_EXACT |
+                        calIWcapSession.SEARCH_INCLUDE_CALID |
+                        // else searching for secondary calendars doesn't work:
+                        calIWcapSession.SEARCH_INCLUDE_OWNER,
+                        20, listener);
                 }
             }
         }
@@ -789,6 +811,7 @@ calWcapSession.prototype = {
                 log("set uri: " + this.uri.spec, this);
             }
         }
+        return thatUri;
     },
     
     get userId() { return this.credentials.userId; },
@@ -837,7 +860,7 @@ calWcapSession.prototype = {
         var ret = [];
         var ar = this.getUserPreferences("X-NSCP-WCAP-PREF-ceDefaultAlarmEmail");
         if (ar.length > 0 && ar[0].length > 0) {
-            for each ( var i in ar ) {
+            for each (var i in ar) {
                 ret = ret.concat( i.split(/[;,]/).map(trimString) );
             }
         }
@@ -846,7 +869,7 @@ calWcapSession.prototype = {
     },
     
     searchForCalendars:
-    function calWcapSession_searchForCalendars(searchString, searchOptions, listener)
+    function calWcapSession_searchForCalendars(searchString, searchOptions, maxResults, listener)
     {
         var this_ = this;
         var request = new calWcapRequest(
@@ -862,6 +885,8 @@ calWcapSession.prototype = {
             var params = ("&fmt-out=text%2Fxml&search-string=" +
                           encodeURIComponent(searchString));
             params += ("&searchOpts=" + (searchOptions & 3).toString(10));
+            if (maxResults > 0)
+                params += ("&maxResults=" + maxResults);
             if (searchOptions & calIWcapSession.SEARCH_INCLUDE_CALID)
                 params += "&calid=1";
             if (searchOptions & calIWcapSession.SEARCH_INCLUDE_NAME)
@@ -890,7 +915,7 @@ calWcapSession.prototype = {
                             var ar = filterXmlNodes("X-NSCP-CALPROPS-RELATIVE-CALID", node);
                             if (ar.length > 0) {
                                 var calId = ar[0];
-                                var cal = this_.m_subscribedCals[encodeURIComponent(calId)];
+                                var cal = this_.m_subscribedCals[calId];
                                 if (!cal) {
                                     if (calId == this_.defaultCalId)
                                         cal = this_.defaultCalendar;
@@ -943,16 +968,16 @@ calWcapSession.prototype = {
         var this_ = this;
         var request = new calWcapRequest(
             function getFreeBusyTimes_resp(request, err, data) {
-                switch (getResultCode(err)) {
-                case Components.results.NS_OK:
-                    break;
+                var rc = getResultCode(err);
+                switch (rc) {
                 case calIWcapErrors.WCAP_NO_ERRNO: // workaround
                 case calIWcapErrors.WCAP_ACCESS_DENIED_TO_CALENDAR:
                 case calIWcapErrors.WCAP_CALENDAR_DOES_NOT_EXIST:
                     log("getFreeBusyTimes_resp() error: " + errorToString(err), this_);
                     break;
                 default:
-                    this_.notifyError(err);
+                    if (!Components.isSuccessCode(rc))
+                        this_.notifyError(err);
                     break;
                 }
                 if (listener)
@@ -1069,14 +1094,12 @@ calWcapSession.prototype = {
             cal = null;
         }
         try {
-            // make sure the calendar belongs to this session:
-            if (cal && cal.session.uri.equals(this.uri)) {
-                if (!cal.isDefaultCalendar) {
-                    var key = encodeURIComponent(cal.calId);
-                    if (!this.m_subscribedCals[key])
-                        this.modifySubscriptions(cal, true/*bSubscibe*/);
-                    this.m_subscribedCals[key] = cal;
-                }
+            // make sure the calendar belongs to this session and is a subscription:
+            if (cal && cal.session.uri.equals(this.uri) && !cal.isDefaultCalendar) {
+                var calId = cal.calId;
+                if (!this.m_subscribedCals[calId])
+                    this.modifySubscriptions(cal, true/*bSubscibe*/);
+                this.m_subscribedCals[calId] = cal;
             }
         }
         catch (exc) { // never break the listener chain
@@ -1094,18 +1117,13 @@ calWcapSession.prototype = {
             cal = null;
         }
         try {
-            // make sure the calendar belongs to this session:
-            if (cal && cal.session.uri.equals(this.uri)) {
-                if (cal.isDefaultCalendar) {
-                    // whole account is being removed, so logout before:
-                    this.logout(null);
-                }
-                else {
-                    var key = encodeURIComponent(cal.calId);
-                    if (this.m_subscribedCals[key]) {
-                        delete this.m_subscribedCals[key];
-                        this.modifySubscriptions(cal, false/*bSubscibe*/);
-                    }
+            // don't logout here (even if this is the default calendar): upcoming calls may occur.
+            // make sure the calendar belongs to this session and is a subscription:
+            if (cal && cal.session.uri.equals(this.uri) && !cal.isDefaultCalendar) {
+                var calId = cal.calId;
+                if (this.m_subscribedCals[calId]) {
+                    delete this.m_subscribedCals[calId];
+                    this.modifySubscriptions(cal, false/*bSubscibe*/);
                 }
             }
         }

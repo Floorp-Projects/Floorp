@@ -65,7 +65,7 @@ function calWcapRequest(respFunc, logContext) {
     this.m_logContext = logContext;
     this.m_id = generateRequestId();
     this.m_isPending = true;
-    this.m_status = Components.results.NS_OK;
+    this.m_status = NS_OK;
     this.m_respFunc = respFunc;
     this.m_attachedRequests = [];
 }
@@ -74,7 +74,7 @@ calWcapRequest.prototype = {
     m_parentRequest: null,
     m_id: 0,
     m_isPending: true,
-    m_status: Components.results.NS_OK,
+    m_status: NS_OK,
     m_respFunc: null,
     m_attachedRequests: null,
     m_locked: false,
@@ -84,7 +84,7 @@ calWcapRequest.prototype = {
         if (this.parentRequest)
             logError("already has parent!", this);
         this.detachFromParent(); // detach without error
-        this.m_parentRequest = req;
+        return (this.m_parentRequest = req);
     },
     
     /** The following locking is necessary when scheduling multiple async
@@ -199,12 +199,10 @@ calWcapRequest.prototype = {
         return this.m_isPending;
     },
     get succeeded() {
-        return (!this.isPending &&
-                getResultCode(this.status) == Components.results.NS_OK);
+        return (!this.isPending && Components.isSuccessCode( getResultCode(this.status) ));
     },
     get status() {
-        return (this.m_status === null ? Components.results.NS_OK
-                                       : this.m_status);
+        return (this.m_status === null ? NS_OK : this.m_status);
     },
     
     cancel: function calWcapRequest_cancel(status)
@@ -256,7 +254,7 @@ calWcapNetworkRequest.prototype = {
         if (this.parentRequest)
             logError("already has parent!", this);
         this.detachFromParent(); // detach without error
-        this.m_parentRequest = req;
+        return (this.m_parentRequest = req);
     },
     
     get id() {

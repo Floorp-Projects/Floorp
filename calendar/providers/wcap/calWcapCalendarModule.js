@@ -37,26 +37,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var g_ioService = null;
-function getIoService()
-{
-    if (!g_ioService) {
-        g_ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                      .getService(Components.interfaces.nsIIOService);
-    }
-    return g_ioService;
-}
-
 //
 // init code for globals, prefs:
 //
 
 // constants:
+const NS_OK = Components.results.NS_OK;
 const nsIException = Components.interfaces.nsIException;
 const calIWcapSession = Components.interfaces.calIWcapSession;
 const calIWcapCalendar = Components.interfaces.calIWcapCalendar;
 const calIWcapErrors = Components.interfaces.calIWcapErrors;
 const calICalendar = Components.interfaces.calICalendar;
+const calIItemBase = Components.interfaces.calIItemBase;
 const calIOperationListener = Components.interfaces.calIOperationListener;
 
 // ctors:
@@ -87,8 +79,17 @@ var CACHE_LAST_RESULTS_INVALIDATE = 120;
 // logging:
 var LOG_LEVEL = 0;
 
-// whether alarms are by default turned on/off:
-var SUPPRESS_ALARMS = true;
+// whether alarms are turned on/off:
+var SUPPRESS_ALARMS = false;
+
+var g_ioService = null;
+function getIoService() {
+    if (!g_ioService) {
+        g_ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                      .getService(Components.interfaces.nsIIOService);
+    }
+    return g_ioService;
+}
 
 function initWcapProvider()
 {
@@ -123,12 +124,9 @@ function initWcapProvider()
         initLogging();
         
         // some string resources:
-        g_privateItemTitle = getWcapBundle().GetStringFromName(
-            "privateItem.title.text");
-        g_confidentialItemTitle = getWcapBundle().GetStringFromName(
-            "confidentialItem.title.text");
-        g_busyItemTitle = getWcapBundle().GetStringFromName(
-            "busyItem.title.text");
+        g_privateItemTitle = getWcapBundle().GetStringFromName("privateItem.title.text");
+        g_confidentialItemTitle = getWcapBundle().GetStringFromName("confidentialItem.title.text");
+        g_busyItemTitle = getWcapBundle().GetStringFromName("busyItem.title.text");
         g_busyPhantomItemUuidPrefix = ("PHANTOM_uuid" + getTime().icalString);
         
         SUPPRESS_ALARMS = getPref("calendar.wcap.suppress_alarms", true);
@@ -150,14 +148,13 @@ function initWcapProvider()
                 var dirService = Components.classes["@mozilla.org/file/directory_service;1"]
                                            .getService(Components.interfaces.nsIProperties);
                 cacheDir = dirService.get("ProfD", Components.interfaces.nsILocalFile);
-                cacheDir.append( "wcap" );
+                cacheDir.append("wcap");
             }
             CACHE_DIR = cacheDir;
             log(CACHE_DIR.path, "cache dir");
             if (!CACHE_DIR.exists()) {
-                CACHE_DIR.create(
-                    Components.interfaces.nsIFile.DIRECTORY_TYPE,
-                    0700 /* read, write, execute/search by owner */ );
+                CACHE_DIR.create(Components.interfaces.nsIFile.DIRECTORY_TYPE,
+                                 0700 /* read, write, execute/search by owner */);
             }
         }
     }

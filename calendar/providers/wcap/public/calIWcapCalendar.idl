@@ -142,6 +142,13 @@ interface calIWcapCalendar : calICalendar
 
     /* xxx todo: limit to currently needed ones: NEEDS-ACTION */
     
+    /**
+     * Scope: getItems only
+     * Whether getItems should only return items that have alarms set for the
+     * specified range.
+     */
+    const unsigned long ITEM_FILTER_BY_ALARM_RANGE = 1 << 23;
+    
 //     /**
 //      * Scope: Attendee
 //      * The event or todo is an invitation from another
@@ -192,6 +199,7 @@ interface calIWcapCalendar : calICalendar
 //      */
 //     const unsigned long ITEM_FILTER_REQUEST_WAITFORREPLY = 1 << 30;
     
+    const unsigned long ITEM_FILTER_SUPPRESS_ONERROR = 1 << 31;
     
     /* xxx todo sync feature: separate into own interface? */
     /** xxx todo: to be moved to calIOperationListener?

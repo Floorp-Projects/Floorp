@@ -65,7 +65,7 @@ function getErrorModule(rc) {
 const NS_ERROR_OFFLINE = generateNetFailure(16);
 
 // The async request completed successfully.
-const NS_BINDING_SUCCEEDED = Components.results.NS_OK;
+const NS_BINDING_SUCCEEDED = NS_OK;
 
 const NS_BINDING_FAILED = generateNetFailure(1);
 const NS_BINDING_ABORTED = generateNetFailure(2);
@@ -136,8 +136,8 @@ function netErrorToString( rc )
 //
 
 const g_wcapErrorCodes = [
-    /* -1 */ Components.results.NS_OK, "Logout successful.",
-    /*  0 */ Components.results.NS_OK, "Command successful.",
+    /* -1 */ NS_OK, "Logout successful.",
+    /*  0 */ NS_OK, "Command successful.",
     /*  1 */ calIWcapErrors.WCAP_LOGIN_FAILED, "Login failed. Invalid session ID.",
     /*  2 */ calIWcapErrors.WCAP_LOGIN_OK_DEFAULT_CALENDAR_NOT_FOUND, "login.wcap was successful, but the default calendar for this user was not found. A new default calendar set to the userid was created.",
     /*  3 */ Components.results.NS_ERROR_INVALID_ARG, "No WCAP error code.",
@@ -338,7 +338,7 @@ function checkWcapIcalErrno(icalRootComp, expectedErrno) {
 function getResultCode(err)
 {
     if (err === undefined || err === null)
-        return Components.results.NS_OK;
+        return NS_OK;
     if (isNaN(err)) {
         if (err instanceof nsIException)
             return err.result;
@@ -364,7 +364,7 @@ function errorToString(err)
     switch (err) {
     case undefined:
     case null:
-    case Components.results.NS_OK:
+    case NS_OK:
         return "NS_OK";
     case Components.results.NS_ERROR_INVALID_ARG:
         return "NS_ERROR_INVALID_ARG";

@@ -88,16 +88,17 @@ interface calIWcapSession : nsISupports
      * Searches for calendars matching the specified searchString.
      * Results are notified to the passed listener instance as
      * an array of calendar instances.
-     * The maximum returned count of calendars
-     * (with respect to Sun calendar servers) is limited to 200.
      *
      * @param searchString the search string to match
      * @param searchOptions the search options
+     * @param maxResults maximum number of results
+     *                   (0 means default, e.g. 200 with respect to Sun calendar servers)
      * @param listener listener called with an array of calIWcapCalendar objects
      * @return request object to track operation
      */
     calIWcapRequest searchForCalendars(in string searchString,
                                        in unsigned long searchOptions,
+                                       in unsigned long maxResults,
                                        in calIWcapRequestResultListener listener);
     
     /* xxx todo freebusy: separate into own interface? */
