@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<title>::before { display: inline-block; }</title>
+<style>
+ul li {
+  list-style-type: none;
+  counter-increment: item;
+}
+ul li::before {
+  content: counter(item);
+  display: inline-block;
+  width: 3em;
+}
+ul {
+  margin-left: 3em;
+  padding-left: 0;
+}
+</style>
+<ul>
+<li>Foo
+<li>Bar
+</ul>

@@ -2848,7 +2848,8 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
 
     PRUint8 displayValue = display->mDisplay;
     if (displayValue != NS_STYLE_DISPLAY_NONE &&
-        displayValue != NS_STYLE_DISPLAY_INLINE) {
+        displayValue != NS_STYLE_DISPLAY_INLINE &&
+        displayValue != NS_STYLE_DISPLAY_INLINE_BLOCK) {
       inherited = PR_TRUE;
       // XXX IsBlockInside?  (except for the marker bit)
       if (parentDisplay->IsBlockLevel() ||
