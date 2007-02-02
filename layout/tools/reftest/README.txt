@@ -80,6 +80,9 @@ MOZ_NO_REMOTE=1 or the -profile <directory> option)
 ./firefox -reftest /path/to/srcdir/mozilla/layout/reftests/reftest.list > reftest.out
 
 and then search/grep reftest.out for "UNEXPECTED" or "FAIL".
+ 
+You can also run clean-reftest-output.pl over reftest.out to convert the
+output to simple HTML.
 
 Testable Areas
 ==============
