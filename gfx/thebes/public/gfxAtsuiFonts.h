@@ -79,6 +79,9 @@ protected:
     cairo_scaled_font_t *mScaledFont;
 
     gfxFont::Metrics mMetrics;
+
+    gfxFloat mAdjustedSize;
+    void InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef);
 };
 
 class THEBES_API gfxAtsuiFontGroup : public gfxFontGroup {

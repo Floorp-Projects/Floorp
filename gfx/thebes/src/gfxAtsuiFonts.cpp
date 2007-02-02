@@ -54,6 +54,8 @@
 #include "gfxQuartzSurface.h"
 #include "gfxQuartzFontCache.h"
 
+#define ROUND(x) (floor((x) + 0.5))
+
 /* We might still need this for fast-pathing, but we'll see */
 #if 0
 OSStatus ATSUGetStyleGroup(ATSUStyle style, void **styleGroup);
@@ -69,10 +71,27 @@ OSStatus ATSClearGlyphVector(void *glyphVectorPtr);
 gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
                            const gfxFontStyle *fontStyle)
     : gfxFont(EmptyString(), fontStyle),
-      mFontStyle(fontStyle), mATSUFontID(fontID), mATSUStyle(nsnull)
+      mFontStyle(fontStyle), mATSUFontID(fontID), mATSUStyle(nsnull),
+      mAdjustedSize(0)
 {
     ATSFontRef fontRef = FMGetATSFontRefFromFont(fontID);
 
+    InitMetrics(fontID, fontRef);
+
+    mFontFace = cairo_atsui_font_face_create_for_atsu_font_id(mATSUFontID);
+
+    cairo_matrix_t sizeMatrix, ctm;
+    cairo_matrix_init_identity(&ctm);
+    cairo_matrix_init_scale(&sizeMatrix, mAdjustedSize, mAdjustedSize);
+
+    cairo_font_options_t *fontOptions = cairo_font_options_create();
+    mScaledFont = cairo_scaled_font_create(mFontFace, &sizeMatrix, &ctm, fontOptions);
+    cairo_font_options_destroy(fontOptions);
+}
+
+void
+gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
+{
     /* Create the ATSUStyle */
 
     ATSUAttributeTag styleTags[] = {
@@ -89,11 +108,14 @@ gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
         sizeof(Fract)
     };
 
-    //fprintf (stderr, "string: '%s', size: %f\n", NS_ConvertUTF16toUTF8(aString).get(), aGroup->GetStyle()->size);
+    gfxFloat size =
+        PR_MAX(((mAdjustedSize != 0) ? mAdjustedSize : mStyle->size), 1.0f);
+
+    //fprintf (stderr, "string: '%s', size: %f\n", NS_ConvertUTF16toUTF8(aString).get(), size);
 
     // fSize is in points (72dpi)
-    Fixed fSize = FloatToFixed(mStyle->size);
-    ATSUFontID fid = fontID;
+    Fixed fSize = FloatToFixed(size);
+    ATSUFontID fid = aFontID;
     // make the font render right-side up
     CGAffineTransform transform = CGAffineTransformMakeScale(1, -1);
     // we can't do kerning until layout draws what it measures, instead of splitting things up
@@ -106,6 +128,9 @@ gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
         &inhibitKerningFactor
     };
 
+    if (mATSUStyle)
+        ATSUDisposeStyle(mATSUStyle);
+
     ATSUCreateStyle(&mATSUStyle);
     ATSUSetAttributes(mATSUStyle,
                       sizeof(styleTags)/sizeof(ATSUAttributeTag),
@@ -116,10 +141,24 @@ gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
     /* Now pull out the metrics */
 
     ATSFontMetrics atsMetrics;
-    ATSFontGetHorizontalMetrics(fontRef, kATSOptionFlagsDefault,
+    ATSFontGetHorizontalMetrics(aFontRef, kATSOptionFlagsDefault,
                                 &atsMetrics);
 
-    gfxFloat size = mFontStyle->size;
+    if (atsMetrics.xHeight)
+        mMetrics.xHeight = atsMetrics.xHeight * size;
+    else
+        mMetrics.xHeight = GetCharHeight('x');
+
+    if (mAdjustedSize == 0) {
+        if (mStyle->sizeAdjust != 0) {
+            gfxFloat aspect = mMetrics.xHeight / size;
+            mAdjustedSize =
+                PR_MAX(ROUND(size * (mStyle->sizeAdjust / aspect)), 1.0f);
+            InitMetrics(aFontID, aFontRef);
+            return;
+        }
+        mAdjustedSize = size;
+    }
 
     mMetrics.emHeight = size;
 
@@ -138,11 +177,6 @@ gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
     mMetrics.emDescent = mMetrics.emHeight - mMetrics.emAscent;
 
     mMetrics.maxAdvance = atsMetrics.maxAdvanceWidth * size;
-
-    if (atsMetrics.xHeight)
-        mMetrics.xHeight = atsMetrics.xHeight * size;
-    else
-        mMetrics.xHeight = GetCharHeight('x');
 
     if (atsMetrics.avgAdvanceWidth != 0.0)
         mMetrics.aveCharWidth =
@@ -170,16 +204,6 @@ gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
     fprintf (stderr, "    spaceWidth: %f aveCharWidth: %f xHeight: %f\n", mMetrics.spaceWidth, mMetrics.aveCharWidth, mMetrics.xHeight);
     fprintf (stderr, "    uOff: %f uSize: %f stOff: %f stSize: %f suOff: %f suSize: %f\n", mMetrics.underlineOffset, mMetrics.underlineSize, mMetrics.strikeoutOffset, mMetrics.strikeoutSize, mMetrics.superscriptOffset, mMetrics.subscriptOffset);
 #endif
-
-    mFontFace = cairo_atsui_font_face_create_for_atsu_font_id(mATSUFontID);
-
-    cairo_matrix_t sizeMatrix, ctm;
-    cairo_matrix_init_identity(&ctm);
-    cairo_matrix_init_scale(&sizeMatrix, size, size);
-
-    cairo_font_options_t *fontOptions = cairo_font_options_create();
-    mScaledFont = cairo_scaled_font_create(mFontFace, &sizeMatrix, &ctm, fontOptions);
-    cairo_font_options_destroy(fontOptions);
 }
 
 nsString
