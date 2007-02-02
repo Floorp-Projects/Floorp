@@ -11,7 +11,7 @@ mk_add_options MOZ_MAKE_FLAGS="-j6"
 mk_add_options MOZ_CO_LOCALES=all
 mk_add_options LOCALES_CVSROOT=:ext:cltbld@cvs.mozilla.org:/l10n
 mk_add_options JS_READLINE=1
-mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../build
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../build/universal
 
 ac_add_options --enable-application="calendar"
 #ac_add_options --enable-update-channel="nightly"

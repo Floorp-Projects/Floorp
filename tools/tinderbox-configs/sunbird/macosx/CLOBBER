@@ -4,4 +4,5 @@ copied files from carbon to cocoa widgets, this always messes up tinderboxes. cl
 2007-01-23 15:13 UTC - Tinders were building from SUNBIRD_0_3_RELEASE rather than SUNBIRD_0_3_BRANCH
 2007-01-30 20:20 UTC - Respin 0.3.1pre builds for testday to pickup fix for bug 368709
 2007-02-01 23:13 UTC - Respin for 0.3.1 first RC
-2007-02-02 05:29 - Respinning to build l10n
+2007-02-02 05:29 UTC - Respinning to build l10n
+2007-02-02 20:13 UTC - Respinning to debug l10n
