@@ -158,9 +158,9 @@ PROT_DataProvider.prototype.getUrlPref_ = function(prefName) {
 
   // Parameter substitution
   url = url.replace(MOZ_PARAM_LOCALE, this.getLocale_());
-  url = url.replace(MOZ_PARAM_CLIENT, mozClientStr + appInfo.version);
+  url = url.replace(MOZ_PARAM_CLIENT, mozClientStr);
   url = url.replace(MOZ_PARAM_BUILDID, appInfo.appBuildID);
-  url = url.replace(MOZ_PARAM_VERSION, appInfo.platformVersion);
+  url = url.replace(MOZ_PARAM_VERSION, appInfo.version);
   return url;
 }
 
