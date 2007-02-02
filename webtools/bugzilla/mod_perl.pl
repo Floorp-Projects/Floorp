@@ -56,6 +56,7 @@ my $conf = <<EOT;
     PerlCleanupHandler  Bugzilla::ModPerl::CleanupHandler
     PerlOptions +ParseHeaders
     Options +ExecCGI
+    AllowOverride Limit
     DirectoryIndex index.cgi index.html
 </Directory>
 EOT
