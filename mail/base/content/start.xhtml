@@ -53,18 +53,13 @@
 body {
   font-family: Tahoma, Verdana, sans, sans-serif;
   margin: 0px;
-  background: url(startpage-back.png) repeat-y top right white;
-}
-
-body[dir="rtl"] {
-  background: url(startpage-back-rtl.png) repeat-y white;
 }
 
 h1 {
   color: white;
   background: url(startpage-h1.png) no-repeat transparent;
   font-weight: normal;
-  height: 50px;
+  height: 40px;
   padding: 0.3ex 0.3ex 0.3ex 25px;
   margin: 0px;
   font-size: 160%;
@@ -131,31 +126,6 @@ a:active, a:hover {
   -moz-border-radius: 10px;
 }
 
-#gecko {
-  font-size: 80%;
-  position: fixed;
-  bottom: 0px;
-  left: 0px;
-  text-align: right;
-  color: #fff;
-  background: url(startpage-gecko.png) no-repeat top right;
-  width: 100%;
-  height: 19px;
-  padding-top: 1px;
-}
-
-body[dir="rtl"] #gecko {
-  right: 0px;
-  text-align: left;
-  background: url(startpage-gecko-rtl.png) no-repeat top left;
-}
-
-#gecko a:link, #gecko a:visited {
-  color: #fff;
-  background: transparent;
-  -moz-padding-end: 5px;
-}
-
   </style> 
 </head>
 
@@ -181,10 +151,5 @@ body[dir="rtl"] #gecko {
 <!-- Localization-specific information, i.e. how to download a dictionary. -->
 &startpage.extra;
 </div>
-
-
-<div id="gecko"><a href="http://www.mozilla.org/">&startpage.poweredByGecko;</a></div>
-
-
 </body>
 </html>
