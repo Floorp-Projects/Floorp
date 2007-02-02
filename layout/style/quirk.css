@@ -105,6 +105,14 @@ table {
   font-variant: -moz-initial;
 }
 
+/*
+ * Make table borders gray for compatibility with what other browsers do
+ * in all modes, rather than using the foreground color.
+ */
+table, td, th {
+  border-color: gray;
+}
+
 
 /* Quirk: collapse top margin of BODY and TD and bottom margin of TD */
 
