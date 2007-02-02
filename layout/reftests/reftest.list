@@ -16,8 +16,8 @@
 == bugs/9458-zorder-1.html bugs/9458-zorder-ref.html
 == bugs/9458-zorder-2.html bugs/9458-zorder-ref.html
 == bugs/9458-zorder-3.html bugs/9458-zorder-ref-inline.html
-== bugs/9458-zorder-4.html bugs/9458-zorder-ref-inline.html
-== bugs/9458-zorder-5.html bugs/9458-zorder-ref-inline.html
+== bugs/9458-zorder-4.html bugs/9458-zorder-ref-inline-block.html
+== bugs/9458-zorder-5.html bugs/9458-zorder-ref-inline-block.html
 == bugs/18217-basic-1.html bugs/18217-basic-1-ref.html
 == bugs/18217-basic-2a.html bugs/18217-basic-2-ref.html
 == bugs/18217-basic-2b.html bugs/18217-basic-2-ref.html
@@ -31,8 +31,8 @@
 == bugs/18217-zorder-1.html bugs/18217-zorder-ref.html
 == bugs/18217-zorder-2.html bugs/18217-zorder-ref.html
 == bugs/18217-zorder-3.html bugs/18217-zorder-ref-inline.html
-== bugs/18217-zorder-4.html bugs/18217-zorder-ref-inline.html
-== bugs/18217-zorder-5.html bugs/18217-zorder-ref-inline.html
+== bugs/18217-zorder-4.html bugs/18217-zorder-ref-inline-table.html
+== bugs/18217-zorder-5.html bugs/18217-zorder-ref-inline-table.html
 == bugs/28811-1a.html bugs/28811-1-ref.html
 == bugs/28811-1b.html bugs/28811-1-ref.html
 == bugs/28811-2a.html bugs/28811-2-ref.html
