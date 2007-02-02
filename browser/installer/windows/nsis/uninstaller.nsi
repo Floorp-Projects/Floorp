@@ -65,6 +65,7 @@ Var TmpVal
 !insertmacro GetOptions
 !insertmacro GetParameters
 !insertmacro StrFilter
+!insertmacro WordFind
 !insertmacro WordReplace
 
 !insertmacro un.LineFind
