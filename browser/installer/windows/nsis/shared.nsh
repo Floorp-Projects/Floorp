@@ -53,10 +53,7 @@
 
   ${SetUninstallKeys}
 
-  ${FixFileKeys}
-
-  ${FixProtocolKeys}
-
+  ${FixClassKeys}
 !macroend
 !define PostUpdate "!insertmacro PostUpdate"
 
@@ -310,64 +307,86 @@
 !macroend
 !define SetUninstallKeys "!insertmacro SetUninstallKeys"
 
-; File handler keys and name value pairs that may need to be created during
-; install or upgrade.
-!macro FixFileKeys
-  ReadRegStr $0 HKLM "Software\Classes\.shtml" "Content Type"
-  ${If} $0 == ""
-    StrCpy $0 "Software\Classes\.shtml"
-    ${WriteRegStr2} $TmpVal "$0" "" "shtmlfile" 0
-    ${WriteRegStr2} $TmpVal "$0" "Content Type" "text/html" 0
-    ${WriteRegStr2} $TmpVal "$0" "PerceivedType" "text" 0
+!macro FixClassKeys
+  StrCpy $0 "SOFTWARE\Classes"
+
+  ; File handler keys and name value pairs that may need to be created during
+  ; install or upgrade.
+  ReadRegStr $2 SHCTX "$0\.shtml" "Content Type"
+  ${If} $2 == ""
+    StrCpy $2 "$0\.shtml"
+    ${WriteRegStr2} $TmpVal "$0\.shtml" "" "shtmlfile" 0
+    ${WriteRegStr2} $TmpVal "$0\.shtml" "Content Type" "text/html" 0
+    ${WriteRegStr2} $TmpVal "$0\.shtml" "PerceivedType" "text" 0
   ${EndIf}
 
-  ReadRegStr $0 HKLM "Software\Classes\.xht" "Content Type"
-  ${If} $0 == ""
-    StrCpy $0 "Software\Classes\.xht"
-    ${WriteRegStr2} $TmpVal "$0" "" "xhtfile" 0
-    ${WriteRegStr2} $TmpVal "$0" "Content Type" "application/xhtml+xml" 0
+  ReadRegStr $2 SHCTX "$0\.xht" "Content Type"
+  ${If} $2 == ""
+    ${WriteRegStr2} $TmpVal "$0\.xht" "" "xhtfile" 0
+    ${WriteRegStr2} $TmpVal "$0\.xht" "Content Type" "application/xhtml+xml" 0
   ${EndIf}
 
-  ReadRegStr $0 HKLM "Software\Classes\.xhtml" "Content Type"
-  ${If} $0 == ""
-    StrCpy $0 "Software\Classes\.xhtml"
-    ${WriteRegStr2} $TmpVal "$0" "" "xhtmlfile" 0
-    ${WriteRegStr2} $TmpVal "$0" "Content Type" "application/xhtml+xml" 0
+  ReadRegStr $2 SHCTX "$0\.xhtml" "Content Type"
+  ${If} $2 == ""
+    ${WriteRegStr2} $TmpVal "$0\.xhtml" "" "xhtmlfile" 0
+    ${WriteRegStr2} $TmpVal "$0\.xhtml" "Content Type" "application/xhtml+xml" 0
   ${EndIf}
-!macroend
-!define FixFileKeys "!insertmacro FixFileKeys"
 
-; Protocol handler keys and name value pairs that may need to be updated during
-; install or upgrade.
-!macro FixProtocolKeys
+  ; Protocol handler keys and name value pairs that may need to be updated during
+  ; install or upgrade.
+
   ; Bug 301073 Comment #9 makes it so Firefox no longer supports launching
   ; chrome urls from the shell so remove it during install or update if the
   ; DefaultIcon is from firefox.exe.
-  ReadRegStr $0 HKLM "Software\Classes\chrome\DefaultIcon" ""
-  ${Unless} $0 == ""
-    StrCpy $0 "$0" "" -13
-    StrCpy $0 "$0" 11
-    ${If} "$0" == "firefox.exe"
-      DeleteRegKey HKLM "Software\Classes\chrome"
-    ${EndIf}
+  ReadRegStr $2 SHCTX "$0\chrome\DefaultIcon" ""
+
+  ClearErrors
+  ${WordFind} "$2" "${FileMainEXE}" "E+1{" $R1
+
+  ${Unless} ${Errors}
+    DeleteRegKey SHCTX "$0\chrome"
   ${EndUnless}
 
   ; Store the command to open the app with an url in a register for easy access.
   GetFullPathName $8 "$INSTDIR\${FileMainEXE}"
   StrCpy $1 "$\"$8$\" -url $\"%1$\" -requestPending"
 
-  ; Only set the gopher key if it doesn't already exist with a default value
-  ReadRegStr $0 HKLM "Software\Classes\gopher" ""
-  ${If} $0 == ""
-    ${AddHandlerValues} "Software\Classes\gopher" "$1" "$8,0" "URL:Gopher Protocol" "true" "true"
-  ${EndIf}
-
   ; Always set the file and protocol handlers since they may specify a
   ; different path and the path is used by Vista when setting associations.
-  ${AddHandlerValues} "Software\Classes\FirefoxURL" "$1" "$8,0" "${AppRegName} URL" "true" "true"
+  ${AddHandlerValues} "$0\FirefoxURL" "$1" "$8,0" "${AppRegName} URL" "true" "true"
 
   ; An empty string is used for the 5th param because FirefoxHTML is not a
   ; protocol handler
-  ${AddHandlerValues} "Software\Classes\FirefoxHTML" "$1" "$8,1" "${AppRegName} Document" "" "true"
+  ${AddHandlerValues} "$0\FirefoxHTML" "$1" "$8,1" "${AppRegName} Document" "" "true"
+
+  ReadRegStr $2 SHCTX "$0\http\shell\open\command" ""
+
+  ClearErrors
+  ${WordFind} "$2" "${FileMainEXE}" "E+1{" $R1
+
+  ; If firefox.exe is in the http open command string set all system wide
+  ; default handlers.
+  ${Unless} ${Errors}
+    WriteRegStr SHCTX "$0\.htm"   "" "FirefoxHTML"
+    WriteRegStr SHCTX "$0\.html"  "" "FirefoxHTML"
+    WriteRegStr SHCTX "$0\.shtml" "" "FirefoxHTML"
+    WriteRegStr SHCTX "$0\.xht"   "" "FirefoxHTML"
+    WriteRegStr SHCTX "$0\.xhtml" "" "FirefoxHTML"
+
+    ${AddHandlerValues} "$0\gopher" "$1" "$8,0" "URL:Gopher Protocol" "true" "true"
+
+    ; An empty string is used for the 4th & 5th params because the following
+    ; protocol handlers already have a display name and additional keys required
+    ; for a protocol handler.
+    ${AddHandlerValues} "$0\ftp" "$1" "$8,0" "" "" "true"
+    ${AddHandlerValues} "$0\http" "$1" "$8,0" "" "" "true"
+    ${AddHandlerValues} "$0\https" "$1" "$8,0" "" "" "true"
+  ${Else}
+    ; Only set the gopher key if it doesn't already exist with a default value
+    ReadRegStr $2 SHCTX "$0\gopher" ""
+    ${If} $2 == ""
+      ${AddHandlerValues} "$0\gopher" "$1" "$8,0" "URL:Gopher Protocol" "true" "true"
+    ${EndIf}
+  ${EndIf}
 !macroend
-!define FixProtocolKeys "!insertmacro FixProtocolKeys"
+!define FixClassKeys "!insertmacro FixClassKeys"

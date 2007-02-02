@@ -441,9 +441,7 @@ Section "-Application" Section1
   StrCpy $0 "Software\Mozilla\${BrandFullNameInternal}\${AppVersion} (${AB_CD})\Uninstall"
   ${WriteRegDWORD2} $TmpVal "$0" "Create Start Menu Shortcut" $AddStartMenuSC 0
 
-  ${FixFileKeys}
-
-  ${FixProtocolKeys}
+  ${FixClassKeys}
 
   ; The following keys should only be set if we can write to HKLM
   ${If} $TmpVal == "HKLM"
