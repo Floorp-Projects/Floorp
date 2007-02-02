@@ -37,10 +37,14 @@
 #ifndef CAIRO_PLATFORM_H
 #define CAIRO_PLATFORM_H
 
+#include "prcpucfg.h"
+
 #if defined(MOZ_ENABLE_LIBXUL)
 
 #ifdef HAVE_VISIBILITY_HIDDEN_ATTRIBUTE
 #define CVISIBILITY_HIDDEN __attribute__((visibility("hidden")))
+#elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
+#define CVISIBILITY_HIDDEN __hidden
 #else
 #define CVISIBILITY_HIDDEN
 #endif
@@ -66,6 +70,8 @@
 # else
 #  ifdef HAVE_VISIBILITY_ATTRIBUTE
 #   define cairo_public extern __attribute__((visibility("default")))
+#  elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
+#   define cairo_public extern __global
 #  else
 #   define cairo_public extern
 #  endif
@@ -82,12 +88,7 @@
 #include "cairo-rename.h"
 #endif
 
-/*
- * Nothing guarantees any of these are defined; this is a total hack
- * just to get the Mac build working again.  Somebody should decide
- * whether we want to pull in prcpucfg.h or use autoconf for this.
- */
-#if defined(IS_BIG_ENDIAN) || defined(__BIG_ENDIAN__)
+#if defined(IS_BIG_ENDIAN)
 #define WORDS_BIGENDIAN
 #define FLOAT_WORDS_BIGENDIAN
 #endif
