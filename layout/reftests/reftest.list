@@ -42,7 +42,7 @@
 == bugs/163504-1b.html bugs/163504-1-ref.html
 == bugs/163504-2a.html bugs/163504-2-ref.html
 == bugs/163504-2b.html bugs/163504-2-ref.html
-== bugs/328829-1.xhtml bugs/328829-1-ref.xhtml
+# == bugs/328829-1.xhtml bugs/328829-1-ref.xhtml # bug 369046 (intermittent)
 == bugs/328829-2.xhtml bugs/328829-2-ref.xhtml
 == bugs/339289-1.html bugs/339289-1-ref.html
 == bugs/347912-1.html bugs/347912-1-ref.html
