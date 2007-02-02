@@ -149,6 +149,7 @@ $moz_cvsroot   = ':ext:cltbld@cvs.mozilla.org:/cvsroot';
 
 #- Set these proper values for your tinderbox server
 #$Tinderbox_server = 'tinderbox-daemon@tinderbox.mozilla.org';
+$Tinderbox_server = 'mattwillis@gmail.com';
 
 # Allow for non-client builds, e.g. camino.
 #$moz_client_mk = 'client.mk';
@@ -233,8 +234,7 @@ $url_path      = "http://ftp.mozilla.org/pub/mozilla.org/calendar/sunbird/nightl
 #$tbox_ftp_path = $ftp_path;
 #$tbox_url_path = $url_path;
 #$milestone     = "trunk";
-#$notify_list   = 'build-announce@mozilla.org';
-$notify_list = 'mattwillis@gmail.com';
+$notify_list   = 'build-announce@mozilla.org';
 $stub_installer = 0;
 $sea_installer = 0;
 $archive       = 1;
