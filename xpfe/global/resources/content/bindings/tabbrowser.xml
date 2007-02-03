@@ -2074,7 +2074,7 @@
           var t = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "tab");
           t.setAttribute("label", this.mStringBundle.getString("tabs.untitled"));
           t.setAttribute("crop", "end");
-          t.setAttribute("className", "tabbrowser-tab");
+          t.className = "tabbrowser-tab";
           t.setAttribute("maxwidth", 250);
           t.setAttribute("minwidth", 30);
           t.setAttribute("width", 0);
