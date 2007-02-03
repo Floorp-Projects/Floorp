@@ -5204,7 +5204,7 @@ NS_IMETHODIMP nsMsgDBFolder::GetMsgTextFromStream(nsIMsgDBHdr *msgHdr, nsIInputS
     {
       // Mail.app doesn't wrap the boundary id in quotes so we need 
       // to be sure to handle an unquoted boundary.
-      PRInt32 boundaryIndex = curLine.Find("boundary=");
+      PRInt32 boundaryIndex = curLine.Find("boundary=", PR_TRUE /* ignore case*/);
       if (boundaryIndex != kNotFound)
       {
         boundaryIndex += 9;
