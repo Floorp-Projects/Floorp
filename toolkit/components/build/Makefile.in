@@ -120,11 +120,11 @@ SHARED_LIBRARY_LIBS += ../alerts/src/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX)
 endif
 
 ifdef MOZ_URL_CLASSIFIER
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)urlclassifier_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS += ../url-classifier/src/$(LIB_PREFIX)urlclassifier_s.$(LIB_SUFFIX)
 endif
 
 ifdef MOZ_FEEDS
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)feed_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS += ../feeds/src/$(LIB_PREFIX)feed_s.$(LIB_SUFFIX)
 endif
 
 SHARED_LIBRARY_LIBS += ../typeaheadfind/src/$(LIB_PREFIX)fastfind_s.$(LIB_SUFFIX)
