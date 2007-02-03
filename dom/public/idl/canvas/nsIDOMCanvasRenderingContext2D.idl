@@ -54,7 +54,7 @@ interface nsIDOMCanvasPattern : nsISupports
 {
 };
 
-[scriptable, uuid(ab27f42d-e1e1-4ef6-9c83-059a81da479b)]
+[scriptable, uuid(87d2b1c4-b64e-41f6-98f7-7ac4244ce9bf)]
 interface nsIDOMCanvasRenderingContext2D : nsISupports
 {
   // back-reference to the canvas element for which
@@ -69,6 +69,8 @@ interface nsIDOMCanvasRenderingContext2D : nsISupports
   void scale(in float x, in float y);
   void rotate(in float angle);
   void translate(in float x, in float y);
+  void transform(in float m11, in float m12, in float m21, in float m22, in float dx, in float dy);
+  void setTransform(in float m11, in float m12, in float m21, in float m22, in float dx, in float dy);
 
   // compositing
   attribute float globalAlpha; /* default 1.0 -- opaque */
