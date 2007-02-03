@@ -181,6 +181,9 @@ sub main {
   my $test_finish = localtime();
   print " started: $test_start\n";
   print "finished: $test_finish\n";
+
+  # delete the profile
+  rmtree($profile_dir, 0, 0);
 }
 
  #######################
@@ -325,25 +328,12 @@ toolbar#nav-bar {
 }
 CHROMEEND
 
-  # remove the profile we created last run
+  # in case we died for some reason on the last run
   rmtree($profile_dir, 0, 0);
 
   my $chrome_dir = "$profile_dir/chrome";
   mkdir($profile_dir);
   mkdir($chrome_dir);
-
-  # first create our profile
-  my $create_args = "$profile $profile_dir";
-  if ($is_win32) {
-    $create_args = "$profile " . winPathFromDir($profile_dir);
-  }
-  my @args = ($app, '-no-remote', '-CreateProfile', $create_args);
-  my $rc = 0xffff & system @args;
-  if ($rc != 0) {
-    die("FAIL Creating profile failed!\n");
-  } else {
-    print "Creating profile succeeded\n";
-  }
 
   # append magic prefs to user.js
   open(PREFOUTFILE, ">>$profile_dir/user.js") ||
@@ -443,8 +433,13 @@ sub runTests {
     $ENV{'MOZILLA_FIVE_HOME'} = $dist_bin;
   }
 
+  my $profile_arg = "$profile_dir";
+  if ($is_win32) {
+    $profile_arg = winPathFromDir($profile_dir);
+  }
+
   # now run with the profile we created
-  my @runargs = ($app, '-no-remote', '-P', "$profile", $testUrl);
+  my @runargs = ($app, '-no-remote', '-profile', $profile_arg, $testUrl);
   my $rc = 0xffff & system @runargs;
   if ($rc != 0) {
     print "FAIL Exited with code $rc during test run\n";
