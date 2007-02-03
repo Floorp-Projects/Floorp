@@ -44,14 +44,7 @@ function run_test() {
   const Ci = Components.interfaces;
 
   // the build script have created the zip we can test on in the current dir.
-  var file = do_get_topsrcdir();
-  file.append("modules");
-  file.append("libjar");
-  file.append("test");
-  file.append("unit");
-  file.append("data");
-  file.append("test_bug333423.zip")
-  dump("Using " + file.path + " for testing\n");
+  var file = do_get_file("modules/libjar/test/unit/data/test_bug333423.zip");
 
   var zipreader = Cc["@mozilla.org/libjar/zip-reader;1"].
                   createInstance(Ci.nsIZipReader);

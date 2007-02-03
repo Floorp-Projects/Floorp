@@ -286,11 +286,7 @@ var testsDirectory;
 
 function run_test()
 {
-  testsDirectory = do_get_topsrcdir();
-  testsDirectory.append("netwerk");
-  testsDirectory.append("test");
-  testsDirectory.append("httpserver");
-  testsDirectory.append("test");
+  testsDirectory = do_get_file("netwerk/test/httpserver/test/");
 
   srv = createServer();
   srv.start(4444);
