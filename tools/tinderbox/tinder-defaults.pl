@@ -180,6 +180,18 @@ $BuildSleep = 10;
 #- change to the tree you're actually building
 $BuildTree  = 'MozillaTest';
 
+#- If you're building locales and would like locale messages reported to a
+#- tree other than $BuildTree-ab-CD, define the tree here. -ab-CD will be
+#- appended for you.
+#$LocaleTree = '';
+
+#- By default, locale builds delete the wget-ed en-US build from the local
+#- stage directory before rsyncing the freshly baked l10n builds up to the
+#- FTP server.  This prevents the rsync from accidentally overwriting the
+#- already existing en-US build on the FTP server.  This behaviour is most
+#- useful when building en-US and the other locales on different machines.
+$DeleteEnUsOnLocalesUpload = 1;
+
 $BuildName = '';
 $BuildTag = '';
 $BuildConfigDir = 'mozilla/config';

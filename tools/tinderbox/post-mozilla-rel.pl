@@ -907,8 +907,13 @@ sub packit_l10n {
 
   } # foreach
 
-  # remove en-US files since we're building that on a different system
-  TinderUtils::run_shell_command("rm -f $stagedir/*en-US* $stagedir/*-xpi");
+  # remove en-US files if directed so we don't overwrite them on upload.
+  if ($Settings::DeleteEnUsOnLocalesUpload) {
+    my $rv = unlink(glob("${stagedir}/*en-US*"), glob("${stagedir}/*-xpi"));
+    if (! $rv) {
+      die ("Couldn't delete en-US!");
+    }
+  }
 
   TinderUtils::print_log("locales completed.\n");
 
