@@ -283,8 +283,6 @@ protected:
 
   void StartLayout();
 
-  void TryToScrollToRef();
-
   /**
    * AddBaseTagInfo adds the "current" base URI and target to the content node
    * in the form of bogo-attributes.  This MUST be called before attributes are
@@ -1847,14 +1845,7 @@ HTMLContentSink::DidBuildModel(void)
     }
   }
 
-  if (mDocShell) {
-    PRUint32 LoadType = 0;
-    mDocShell->GetLoadType(&LoadType);
-
-    if (ScrollToRef(!(LoadType & nsIDocShell::LOAD_CMD_HISTORY))) {
-      mScrolledToRefAlready = PR_TRUE;
-    }
-  }
+  ScrollToRef();
 
   nsScriptLoader *loader = mDocument->GetScriptLoader();
   if (loader) {
@@ -2824,22 +2815,6 @@ HTMLContentSink::StartLayout()
   mHTMLDocument->SetIsFrameset(mFrameset != nsnull);
 
   nsContentSink::StartLayout(mFrameset != nsnull);
-}
-
-void
-HTMLContentSink::TryToScrollToRef()
-{
-  if (mRef.IsEmpty()) {
-    return;
-  }
-
-  if (mScrolledToRefAlready) {
-    return;
-  }
-
-  if (ScrollToRef(PR_TRUE)) {
-    mScrolledToRefAlready = PR_TRUE;
-  }
 }
 
 void

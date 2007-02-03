@@ -287,6 +287,12 @@ nsContentSink::Init(nsIDocument* aDoc,
   mDocumentURI = aURI;
   mDocumentBaseURI = aURI;
   mDocShell = do_QueryInterface(aContainer);
+  if (mDocShell) {
+    PRUint32 loadType = 0;
+    mDocShell->GetLoadType(&loadType);
+    mChangeScrollPosWhenScrollingToRef =
+      ((loadType & nsIDocShell::LOAD_CMD_HISTORY) == 0);
+  }
 
   // use this to avoid a circular reference sink->document->scriptloader->sink
   nsCOMPtr<nsIScriptLoaderObserver> proxy =
@@ -886,18 +892,18 @@ nsContentSink::PrefetchHref(const nsAString &aHref, PRBool aExplicit)
 }
 
 
-PRBool
-nsContentSink::ScrollToRef(PRBool aReallyScroll)
+void
+nsContentSink::ScrollToRef()
 {
   if (mRef.IsEmpty()) {
-    return PR_FALSE;
+    return;
   }
 
   PRBool didScroll = PR_FALSE;
 
   char* tmpstr = ToNewCString(mRef);
   if (!tmpstr) {
-    return PR_FALSE;
+    return;
   }
 
   nsUnescape(tmpstr);
@@ -917,7 +923,7 @@ nsContentSink::ScrollToRef(PRBool aReallyScroll)
       // Check an empty string which might be caused by the UTF-8 conversion
       if (!ref.IsEmpty()) {
         // Note that GoToAnchor will handle flushing layout as needed.
-        rv = shell->GoToAnchor(ref, aReallyScroll);
+        rv = shell->GoToAnchor(ref, mChangeScrollPosWhenScrollingToRef);
       } else {
         rv = NS_ERROR_FAILURE;
       }
@@ -931,15 +937,13 @@ nsContentSink::ScrollToRef(PRBool aReallyScroll)
         rv = nsContentUtils::ConvertStringFromCharset(docCharset, unescapedRef, ref);
 
         if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
-          rv = shell->GoToAnchor(ref, aReallyScroll);
+          rv = shell->GoToAnchor(ref, mChangeScrollPosWhenScrollingToRef);
       }
       if (NS_SUCCEEDED(rv)) {
-        didScroll = PR_TRUE;
+        mScrolledToRefAlready = PR_TRUE;
       }
     }
   }
-
-  return didScroll;
 }
 
 nsresult
@@ -1030,6 +1034,20 @@ nsContentSink::StartLayout(PRBool aIsFrameset)
       mRef = Substring(start, end);
     }
   }
+}
+
+void
+nsContentSink::TryToScrollToRef()
+{
+  if (mRef.IsEmpty()) {
+    return;
+  }
+
+  if (mScrolledToRefAlready) {
+    return;
+  }
+
+  ScrollToRef();
 }
 
 void
