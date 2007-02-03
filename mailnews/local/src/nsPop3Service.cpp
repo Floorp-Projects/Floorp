@@ -65,6 +65,7 @@
 #include "nsLocalMailFolder.h"
 #include "nsIMailboxUrl.h"
 #include "nsInt64.h"
+#include "nsIPrompt.h"
 
 #define POP3_PORT 110 // The IANA port for Pop3
 #define SECURE_POP3_PORT 995 // The port for Pop3 over SSL
@@ -250,7 +251,12 @@ nsresult nsPop3Service::RunPopUrl(nsIMsgIncomingServer * aServer, nsIURI * aUrlT
       }
     } 
     else
+    {
+      nsCOMPtr <nsIMsgMailNewsUrl> url = do_QueryInterface(aUrlToRun);
+      if (url)
+        AlertServerBusy(url);
       rv = NS_ERROR_FAILURE;
+    }
   } // if server
   
   return rv;
@@ -413,10 +419,52 @@ NS_IMETHODIMP nsPop3Service::NewURI(const nsACString &aSpec,
     return rv;
 }
 
+void nsPop3Service::AlertServerBusy(nsIMsgMailNewsUrl *url)
+{
+  nsCOMPtr <nsIMsgStringService> stringService = do_GetService(NS_MSG_POPSTRINGSERVICE_CONTRACTID);
+  nsCOMPtr<nsIMsgWindow> msgWindow;
+  nsCOMPtr<nsIPrompt> dialog;
+  nsresult rv = url->GetMsgWindow(getter_AddRefs(msgWindow)); //it is ok to have null msgWindow, for example when biffing
+  if (NS_SUCCEEDED(rv) && msgWindow)
+  {
+    rv = msgWindow->GetPromptDialog(getter_AddRefs(dialog));
+    if (NS_SUCCEEDED(rv))
+    {
+      nsXPIDLString alertString;
+      stringService->GetStringByID(POP3_MESSAGE_FOLDER_BUSY, getter_Copies(alertString));
+      if (!alertString.IsEmpty())
+        dialog->Alert(nsnull, alertString.get()); 
+    }
+  }
+}
+
 NS_IMETHODIMP nsPop3Service::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
   NS_ENSURE_ARG_POINTER(aURI);
   nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(aURI, &rv);
+  nsXPIDLCString realUserName;
+  if (NS_SUCCEEDED(rv) && url)
+  {
+    nsCOMPtr <nsIMsgIncomingServer> server;
+    url->GetServer(getter_AddRefs(server));
+    if (server)
+    {
+      // find out if the server is busy or not...if the server is busy, we are 
+      // *NOT* going to run the url. The error code isn't quite right...
+      // We might want to put up an error right here.
+      PRBool serverBusy = PR_FALSE;
+      rv = server->GetServerBusy(&serverBusy);
+      if (serverBusy)
+      {
+        AlertServerBusy(url);
+        return NS_MSG_FOLDER_BUSY;
+      }
+      server->GetRealUsername(getter_Copies(realUserName));
+    }
+  }
+  
   nsPop3Protocol * protocol = new nsPop3Protocol(aURI);
   if (protocol)
   {
@@ -426,19 +474,7 @@ NS_IMETHODIMP nsPop3Service::NewChannel(nsIURI *aURI, nsIChannel **_retval)
       delete protocol;
       return rv;
     }
-    nsCAutoString username;
-    nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(aURI, &rv);
-    if (NS_SUCCEEDED(rv) && url)
-    {
-      nsXPIDLCString realUserName;
-      nsCOMPtr <nsIMsgIncomingServer> server;
-      url->GetServer(getter_AddRefs(server));
-      if (server)
-      {
-        server->GetRealUsername(getter_Copies(realUserName));
-        protocol->SetUsername(realUserName.get());
-      }
-    }
+    protocol->SetUsername(realUserName.get());
     rv = protocol->QueryInterface(NS_GET_IID(nsIChannel), (void **) _retval);
   }
   else
