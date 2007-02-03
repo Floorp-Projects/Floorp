@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.349 $ ';
+$::UtilsVersion = '$Revision: 1.350 $ ';
 
 package TinderUtils;
 
@@ -2050,8 +2050,8 @@ sub run_all_tests {
             set_pref($pref_file, 'dom.disable_window_flip', 'false');
             set_pref($pref_file, 'dom.disable_window_move_resize', 'false');
 
-            # Suppress firefox's popup blocking
             if ($Settings::BinaryName =~ /^firefox/) {
+                # Suppress firefox's popup blocking
                 set_pref($pref_file, 'privacy.popups.firstTime', 'false');
                 set_pref($pref_file, 'dom.disable_open_during_load', 'false');
 
@@ -2067,6 +2067,11 @@ sub run_all_tests {
 
                 # Suppress session restore dialog
                 set_pref($pref_file, 'browser.sessionstore.resume_from_crash', 'false');
+            }
+            elsif ($Settings::BinaryName =~ /^seamonkey/) {
+                # Suppress seamonkey's popup blocking
+                set_pref($pref_file, 'privacy.popups.first_popup', 'false');
+                set_pref($pref_file, 'dom.disable_open_during_load', 'false');
             }
 
             # Suppress security warnings for QA test.
@@ -2140,7 +2145,8 @@ sub run_all_tests {
     if ($Settings::BloatTest and $test_result eq 'success') {
       my $app_args;
       if($Settings::BinaryName eq "TestGtkEmbed" ||
-         $Settings::BinaryName =~ /^firefox/) {
+         $Settings::BinaryName =~ /^firefox/ ||
+         $Settings::BinaryName =~ /^seamonkey/) {
         $app_args = ["resource:///res/bloatcycle.html"];
       } else {
         $app_args = ["-f", "bloaturls.txt"];
@@ -3132,7 +3138,7 @@ sub BloatTest {
     $ENV{XPCOM_MEM_BLOAT_LOG} = 1; # Turn on ref counting to track leaks.
 
     # Build up binary command, look for profile.
-    my @args = ($binary_basename);
+    my @args = ($binary);
     unless (($Settings::MozProfileName eq "") or 
             ($Settings::BinaryName eq "TestGtkEmbed")) {
         @args = (@args, "-P", $Settings::MozProfileName);
@@ -3397,12 +3403,13 @@ sub BloatTest2 {
 
     my @args;
     if($Settings::BinaryName eq "TestGtkEmbed" ||
-       $Settings::BinaryName =~ /^firefox/) {
-      @args = ($binary_basename, "-P", $Settings::MozProfileName,
+       $Settings::BinaryName =~ /^firefox/ ||
+       $Settings::BinaryName =~ /^seamonkey/) {
+      @args = ($binary, "-P", $Settings::MozProfileName,
                "resource:///res/bloatcycle.html",
                "--trace-malloc", $malloc_log);
     } else {
-      @args = ($binary_basename, "-P", $Settings::MozProfileName,
+      @args = ($binary, "-P", $Settings::MozProfileName,
                "-f", "bloaturls.txt",
                "--trace-malloc", $malloc_log);
     }
