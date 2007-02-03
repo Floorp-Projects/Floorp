@@ -691,13 +691,11 @@ nsHTMLScrollFrame::GetPadding(nsMargin& aMargin)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLScrollFrame::IsCollapsed(nsBoxLayoutState& aBoxLayoutState,
-                                PRBool& aCollapsed)
+PRBool
+nsHTMLScrollFrame::IsCollapsed(nsBoxLayoutState& aBoxLayoutState)
 {
   // We're never collapsed in the box sense.
-  aCollapsed = PR_FALSE;
-  return NS_OK;
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP
