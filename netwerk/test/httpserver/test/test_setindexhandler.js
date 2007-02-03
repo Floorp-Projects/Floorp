@@ -104,12 +104,7 @@ var srv, serverBasePath;
 function run_test()
 {
   srv = createServer();
-  serverBasePath = do_get_topsrcdir();
-  serverBasePath.append("netwerk");
-  serverBasePath.append("test");
-  serverBasePath.append("httpserver");
-  serverBasePath.append("test");
-  serverBasePath.QueryInterface(Ci.nsIFile);
+  serverBasePath = do_get_file("netwerk/test/httpserver/test/");
   srv.registerDirectory("/", serverBasePath);
   srv.setIndexHandler(myIndexHandler);
   srv.start(4444);
