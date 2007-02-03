@@ -246,7 +246,12 @@ pref("offline.send.unsent_messages",            0);
 // 2 Never synchronize the offline store when going offline
 pref("offline.download.download_messages",  0);
 pref("offline.prompt_synch_on_exit",            true);
-pref("offline.autoDetect",                      true); // automatically move the user offline or online based on the network connection
+
+#ifdef XP_WIN
+pref("offline.autoDetect", true); // automatically move the user offline or online based on the network connection
+#else
+pref("offline.autoDetect", false);
+#endif
 
 // Expose only select protocol handlers. All others should go
 // through the external protocol handler route.
