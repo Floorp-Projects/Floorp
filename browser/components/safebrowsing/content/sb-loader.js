@@ -141,7 +141,19 @@ var safebrowsing = {
     if (!uri)
       return;
 
-    var broadcaster = document.getElementById("reportPhishingBroadcaster");
+    var sbIconElt = document.getElementById("safebrowsing-urlbar-icon");
+    var helpMenuElt = document.getElementById("helpMenu");
+    var phishLevel = sbIconElt.getAttribute("level");
+    helpMenuElt.setAttribute("phishLevel", phishLevel);
+    
+    var broadcasterId;
+    if ("safe" == phishLevel) {
+      broadcasterId = "reportPhishingBroadcaster";
+    } else {
+      broadcasterId = "reportPhishingErrorBroadcaster";
+    }
+
+    var broadcaster = document.getElementById(broadcasterId);
     if (!broadcaster)
       return;
 
@@ -152,14 +164,15 @@ var safebrowsing = {
   },
   
   /**
-   * Used to report phishing pages.
+   * Used to report a phishing page or a false positive
+   * @param name String either "Phish" or "Error"
    * @return String the report phishing URL.
    */
-  getReportPhishingURL: function() {
+  getReportURL: function(name) {
     var appContext = Cc["@mozilla.org/safebrowsing/application;1"]
                      .getService().wrappedJSObject;
-    var reportUrl = appContext.getReportPhishingURL();
-    
+    var reportUrl = appContext.getReportURL(name);
+
     var pageUrl = getBrowser().currentURI.asciiSpec;
     reportUrl += "&url=" + encodeURIComponent(pageUrl);
 
