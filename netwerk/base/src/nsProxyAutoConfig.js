@@ -52,22 +52,6 @@ const nsISupports        = Components.interfaces.nsISupports;
 const nsIProxyAutoConfig = Components.interfaces.nsIProxyAutoConfig;
 const nsIDNSService      = Components.interfaces.nsIDNSService;
 
-// Loaded once per PAC script, this is a safe way for the supplied functions
-// that require chrome privileges to turn a random untrusted object into a
-// string.
-var safeToString = null;
-function myToString(thisp) {
-    return thisp + '';
-}
-
-// This is like safeToString, except that it calls a given function with a
-// given this and arguments.
-var callFunction = null;
-function myCall(thisp, funThisp, funName) {
-    var args = Array.prototype.slice.call(arguments, 3);
-    return thisp[funName].apply(funThisp, args);
-}
-
 // implementor of nsIProxyAutoConfig
 function nsProxyAutoConfig() {};
 
@@ -97,13 +81,6 @@ nsProxyAutoConfig.prototype = {
         this._sandBox = new Components.utils.Sandbox(pacURI);
         Components.utils.evalInSandbox(pacUtils, this._sandBox);
 
-        safeToString =
-            Components.utils.evalInSandbox("(" + myToString.toSource() + ")",
-                                           this._sandBox);
-        callFunction =
-            Components.utils.evalInSandbox("(" + myCall.toSource() + ")",
-                                           this._sandBox);
-
         // add predefined functions to pac
         this._sandBox.importFunction(myIpAddress);
         this._sandBox.importFunction(dnsResolve);
@@ -119,15 +96,11 @@ nsProxyAutoConfig.prototype = {
             return null;
 
         // Call the original function
-        return callFunction(this, "_findProxyForURL", this._sandBox,
-                            testURI, testHost);
+        return this._findProxyForURL.call(this._sandBox, testURI, testHost);
     }
 }
 
 function proxyAlert(msg) {
-    // Ensure that we have a string.
-    msg = safeToString(msg);
-
     try {
         // It would appear that the console service is threadsafe.
         var cns = Components.classes["@mozilla.org/consoleservice;1"]
@@ -149,8 +122,6 @@ function myIpAddress() {
 
 // wrapper for resolving hostnames called by PAC file
 function dnsResolve(host) {
-    host = safeToString(host);
-
     try {
         return dns.resolve(host, 0).getNextAddrAsString();
     } catch (e) {
