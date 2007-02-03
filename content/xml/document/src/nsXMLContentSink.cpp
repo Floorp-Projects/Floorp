@@ -347,16 +347,7 @@ nsXMLContentSink::DidBuildModel()
 
     StartLayout();
 
-#if 0 /* Disable until this works for XML */
-    //  Scroll to Anchor only if the document was *not* loaded through history means. 
-    if (mDocShell) {
-      PRUint32 documentLoadType = 0;
-      mDocShell->GetLoadType(&documentLoadType);
-      ScrollToRef(!(documentLoadType & nsIDocShell::LOAD_CMD_HISTORY));
-    }
-#else
-    ScrollToRef(PR_TRUE);
-#endif
+    ScrollToRef();
 
     mDocument->RemoveObserver(this);
 
@@ -437,14 +428,7 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
   // Start the layout process
   StartLayout();
 
-#if 0 /* Disable until this works for XML */
-  //  Scroll to Anchor only if the document was *not* loaded through history means. 
-  PRUint32 documentLoadType = 0;
-  docShell->GetLoadType(&documentLoadType);
-  ScrollToRef(!(documentLoadType & nsIDocShell::LOAD_CMD_HISTORY));
-#else
-  ScrollToRef(PR_TRUE);
-#endif
+  ScrollToRef();
 
   originalDocument->EndLoad();
 

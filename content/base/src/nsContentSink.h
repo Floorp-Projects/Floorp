@@ -169,7 +169,7 @@ protected:
 
   void PrefetchHref(const nsAString &aHref, PRBool aExplicit);
 
-  PRBool ScrollToRef(PRBool aReallyScroll);
+  void ScrollToRef();
   nsresult RefreshIfEnabled(nsIViewManager* vm);
   void StartLayout(PRBool aIsFrameset);
 
@@ -202,9 +202,7 @@ protected:
 
   virtual nsresult FlushTags() = 0;
 
-  virtual void TryToScrollToRef()
-  {
-  }
+  void TryToScrollToRef();
 
   // CanInterrupt parsing related routines
   nsresult AddDummyParserRequest(void);
@@ -257,7 +255,7 @@ protected:
   PRUint8 mParsing : 1;
   PRUint8 mDroppedTimer : 1;
   PRUint8 mInTitle : 1;
-  PRUint8 unused : 2;  // bits available if someone needs one
+  PRUint8 mChangeScrollPosWhenScrollingToRef : 1;
   
   // -- Can interrupt parsing members --
   PRUint32 mDelayTimerStart;
