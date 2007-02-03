@@ -854,6 +854,12 @@ XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return ThrowException(NS_ERROR_INVALID_ARG, cx);
   }
 
+  // Check that the caller can access the unsafe object.
+  if (!CanCallerAccess(cx, objToWrap)) {
+    // CanCallerAccess() already threw for us.
+    return JS_FALSE;
+  }
+
   JSObject *unsafeObj = GetUnsafeObject(cx, objToWrap);
 
   if (unsafeObj) {
