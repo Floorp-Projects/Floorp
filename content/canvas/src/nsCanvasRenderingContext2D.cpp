@@ -1211,6 +1211,30 @@ nsCanvasRenderingContext2D::Translate(float x, float y)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::Transform(float m11, float m12, float m21, float m22, float dx, float dy)
+{
+    if (!FloatValidate(m11,m12,m21,m22,dx,dy))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    cairo_matrix_t mat;
+    cairo_matrix_init (&mat, m11, m12, m21, m22, dx, dy);
+    cairo_transform (mCairo, &mat);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetTransform(float m11, float m12, float m21, float m22, float dx, float dy)
+{
+    if (!FloatValidate(m11,m12,m21,m22,dx,dy))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    cairo_matrix_t mat;
+    cairo_matrix_init (&mat, m11, m12, m21, m22, dx, dy);
+    cairo_set_matrix (mCairo, &mat);
+    return NS_OK;
+}
+
 //
 // colors
 //
