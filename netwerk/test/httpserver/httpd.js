@@ -50,6 +50,9 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
+/** True if debugging output is enabled, false otherwise. */
+const DEBUG = false; // tweak manually during server hacking
+
 /**
  * Asserts that the given condition holds.  If it doesn't, the given message is
  * dumped, a stack trace is printed, and an exception is thrown to attempt to
@@ -58,7 +61,7 @@ const Cr = Components.results;
  */
 function NS_ASSERT(cond, msg)
 {
-  if (debugEnabled() && !cond)
+  if (DEBUG && !cond)
   {
     dumpn("###!!!");
     dumpn("###!!! ASSERTION" + (msg ? ": " + msg : "!"));
@@ -67,7 +70,7 @@ function NS_ASSERT(cond, msg)
     var stack = new Error().stack.split(/\n/);
     dumpn(stack.map(function(val) { return "###!!!   " + val; }).join("\n"));
     
-    throw msg;
+    throw Cr.NS_ERROR_ABORT;
   }
 }
 
@@ -128,18 +131,10 @@ function range(x, y)
 /** An object (hash) whose fields are the numbers of all HTTP error codes. */
 const HTTP_ERROR_CODES = array2obj(range(400, 417).concat(range(500, 505)));
 
-/**
- * Returns true if debugging is enabled, false otherwise.
- */
-function debugEnabled()
-{
-  return true; // this code's pretty new and has no good set of tests (yet)
-}
-
-/** dump(str) with a trailing "\n" */
+/** dump(str) with a trailing "\n" -- only outputs if DEBUG */
 function dumpn(str)
 {
-  if (debugEnabled())
+  if (DEBUG)
     dump(str + "\n");
 }
 
