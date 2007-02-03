@@ -45,10 +45,11 @@
 		<em:name>ChatZilla</em:name>
 		<em:description>A clean, easy to use and highly extensible Internet Relay Chat (IRC) client.</em:description>
 		<em:creator>The ChatZilla Team</em:creator>
-		<em:contributor>Robert Ginda</em:contributor>
-		<em:contributor>Samuel Sieb</em:contributor>
-		<em:contributor>James Ross</em:contributor>
 		<em:contributor>Lim Chee Aun (graphics)</em:contributor>
+		<em:contributor>Robert Ginda</em:contributor>
+		<em:contributor>Gijs Kruitbosch</em:contributor>
+		<em:contributor>James Ross</em:contributor>
+		<em:contributor>Samuel Sieb</em:contributor>
 		<em:iconURL>chrome://chatzilla/skin/images/logo.png</em:iconURL>
 		<em:homepageURL>http://chatzilla.hacksrus.com/</em:homepageURL>
 		<em:optionsURL>javascript:opener.openDialog('chrome://chatzilla/content/config.xul','','chrome,modal,resizable');window.close();</em:optionsURL>
