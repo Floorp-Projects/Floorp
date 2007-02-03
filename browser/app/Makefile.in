@@ -120,10 +120,6 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 TK_LIBS := -framework Cocoa $(TK_LIBS)
 endif
 
-ifdef MOZ_ENABLE_CAIRO_GFX
-EXTRA_DSO_LIBS += thebes
-endif
-
 LIBS += \
 	$(STATIC_COMPONENTS_LINKER_PATH) \
 	$(EXTRA_DSO_LIBS) \
