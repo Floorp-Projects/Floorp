@@ -450,9 +450,11 @@ nsXPConnect::BeginCycleCollection()
 
     mObjRefcounts->Clear();
     XPCCallContext cx(NATIVE_CALLER);
-    JS_SetGCThingCallback(cx, XPCMarkNotification, mObjRefcounts);
-    JS_GC(cx);
-    JS_SetGCThingCallback(cx, nsnull, nsnull);
+    if (cx.IsValid()) {
+        JS_SetGCThingCallback(cx, XPCMarkNotification, mObjRefcounts);
+        JS_GC(cx);
+        JS_SetGCThingCallback(cx, nsnull, nsnull);
+    }
 
     return NS_OK;
 }
