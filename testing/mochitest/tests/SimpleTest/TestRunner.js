@@ -78,8 +78,16 @@ TestRunner.runNextTest = function() {
     }  else {
         $("current-test").innerHTML = "<b>Finished</b>";
         TestRunner._makeIframe("about:blank");
-        if (TestRunner.logEnabled)
+        if (TestRunner.logEnabled) {
             TestRunner.logger.log("SimpleTest FINISHED");
+	    TestRunner.logger.log("TinderboxPrint: mochitest<br>");
+	    TestRunner.logger.log("TinderboxPrint: Passed: " +
+				  $("pass-count").innerHTML + "<br>");
+	    TestRunner.logger.log("TinderboxPrint: Failed: " +
+				  $("fail-count").innerHTML + "<br>");
+	    TestRunner.logger.log("TinderboxPrint: Todo: " +
+				  $("todo-count").innerHTML + "<br>");
+	}
         if (TestRunner.onComplete)
             TestRunner.onComplete();
     }
