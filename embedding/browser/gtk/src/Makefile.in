@@ -187,8 +187,8 @@ include $(topsrcdir)/config/config.mk
 
 ifndef MOZ_ENABLE_LIBXUL
 SHARED_LIBRARY_LIBS += \
-		$(DIST)/lib/libembed_base_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libprofdirserviceprovider_s.$(LIB_SUFFIX) \
+		$(DEPTH)/embedding/base/libembed_base_s.$(LIB_SUFFIX) \
+		$(DEPTH)/profile/dirserviceprovider/src/libprofdirserviceprovider_s.$(LIB_SUFFIX) \
 		$(NULL)
 endif
 
