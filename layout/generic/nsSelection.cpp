@@ -2564,7 +2564,7 @@ nsFrameSelection::GetFrameForNodeOffset(nsIContent *aNode,
   if (aNode->IsNodeOfType(nsINode::eELEMENT))
   {
     PRInt32 childIndex  = 0;
-    PRInt32 numChildren = 0;
+    PRInt32 numChildren = theNode->GetChildCount();
 
     if (aHint == HINTLEFT)
     {
@@ -2575,8 +2575,6 @@ nsFrameSelection::GetFrameForNodeOffset(nsIContent *aNode,
     }
     else // HINTRIGHT
     {
-      numChildren = theNode->GetChildCount();
-
       if (aOffset >= numChildren)
       {
         if (numChildren > 0)
