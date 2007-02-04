@@ -562,7 +562,8 @@ WARNING: We are about to convert your table storage format to UTF8. This
          data (or even if you're not sure) you should press Ctrl-C now
          to interrupt checksetup.pl, and run contrib/recode.pl to make all 
          the data in your database into UTF-8. You should also back up your
-         database before continuing.
+         database before continuing. This will affect every single table
+         in the database, even non-Bugzilla tables.
 
          If you ever used a version of Bugzilla before 2.22, we STRONGLY
          recommend that you stop checksetup.pl NOW and run contrib/recode.pl.
