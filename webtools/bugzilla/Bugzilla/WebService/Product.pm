@@ -72,7 +72,7 @@ __END__
 
 =head1 NAME
 
-Bugzilla::Webservice::User - The Product API
+Bugzilla::Webservice::Product - The Product API
 
 =head1 DESCRIPTION
 
