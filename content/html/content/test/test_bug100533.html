@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=100533
+-->
+<head>
+  <title>Test for Bug 100533</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=100533">Mozilla Bug 100533</a>
+<p id="display"></p>
+<div id="content" >
+
+<button id="thebutton">Test</button>
+<iframe style='display: none;' src='bug100533_iframe.html' id='a'></iframe>
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+/** Test for Bug 100533 **/
+var submitIframeForm = function() {
+  $('a').contentDocument.getElementById('b').submit();
+}
+
+submitted = function() { 
+  ok(true, "Finished. Form submits when located in iframe set to display:none;");
+  SimpleTest.finish(); 
+};
+
+addLoadEvent(function() {
+  connect("thebutton", "click", submitIframeForm);
+  signal("thebutton", "click");
+});
+</script>
+</pre>
+</body>
+</html>
+
