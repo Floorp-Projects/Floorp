@@ -475,7 +475,7 @@ protected:
   PRPackedBool m_performingBiff;
   PRPackedBool m_folderQuotaCommandIssued;
   PRPackedBool m_folderQuotaDataIsValid;
-  
+  PRPackedBool m_updatingFolder;
   nsMsgIMAPFolderACL *m_folderACL;
   PRUint32     m_aclFlags;
   PRUint32     m_supportedUserFlags;

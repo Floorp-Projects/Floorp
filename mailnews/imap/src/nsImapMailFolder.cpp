@@ -210,6 +210,7 @@ nsImapMailFolder::nsImapMailFolder() :
     m_performingBiff(PR_FALSE),
     m_folderQuotaCommandIssued(PR_FALSE),
     m_folderQuotaDataIsValid(PR_FALSE),
+    m_updatingFolder(PR_FALSE),
     m_downloadMessageForOfflineUse(PR_FALSE),
     m_downloadingFolderForOfflineUse(PR_FALSE),
     m_folderQuotaUsedKB(0),
@@ -809,8 +810,8 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
   }
   if (!canOpenThisFolder) 
     selectFolder = PR_FALSE;
-  // don't run select if we're already running a url/select...
-  if (NS_SUCCEEDED(rv) && !m_urlRunning && selectFolder)
+  // don't run select if we can't select the folder...
+  if (NS_SUCCEEDED(rv) && !m_updatingFolder && selectFolder)
   {
     nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv); 
     if (NS_FAILED(rv)) return rv;
@@ -4783,6 +4784,13 @@ NS_IMETHODIMP
 nsImapMailFolder::OnStartRunningUrl(nsIURI *aUrl)
 {
   NS_PRECONDITION(aUrl, "sanity check - need to be be running non-null url");
+  nsCOMPtr<nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(aUrl);
+  if (mailUrl)
+  {
+    PRBool updatingFolder;
+    mailUrl->GetUpdatingFolder(&updatingFolder);
+    m_updatingFolder = updatingFolder;
+  }
   m_urlRunning = PR_TRUE;
   return NS_OK;
 }
@@ -4793,6 +4801,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
   nsresult rv = NS_OK;
   PRBool endedOfflineDownload = PR_FALSE;
   m_urlRunning = PR_FALSE;
+  m_updatingFolder = PR_FALSE;
   if (m_downloadingFolderForOfflineUse)
   {
     ReleaseSemaphore(NS_STATIC_CAST(nsIMsgImapMailFolder*, this));
