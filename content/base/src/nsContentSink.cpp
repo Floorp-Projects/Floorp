@@ -1139,7 +1139,7 @@ nsContentSink::IsTimeToNotify()
   return PR_FALSE;
 }
 
-NS_IMETHODIMP
+nsresult
 nsContentSink::WillInterruptImpl()
 {
   nsresult result = NS_OK;
@@ -1200,7 +1200,7 @@ nsContentSink::WillInterruptImpl()
   return result;
 }
 
-NS_IMETHODIMP
+nsresult
 nsContentSink::WillResumeImpl()
 {
   SINK_TRACE(gContentSinkLogModuleInfo, SINK_TRACE_CALLS,
@@ -1211,7 +1211,7 @@ nsContentSink::WillResumeImpl()
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsContentSink::DidProcessATokenImpl()
 {
   if (!mCanInterruptParser) {
@@ -1380,7 +1380,7 @@ nsContentSink::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
   }
 }
 
-NS_IMETHODIMP
+void
 nsContentSink::DidBuildModelImpl(void)
 {
   if (mDocument && mDocument->GetDocumentTitle().IsVoid()) {
@@ -1396,10 +1396,9 @@ nsContentSink::DidBuildModelImpl(void)
     mNotificationTimer->Cancel();
     mNotificationTimer = 0;
   }	
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsContentSink::DropParserAndPerfHint(void)
 {
   // Ref. Bug 49115
@@ -1426,11 +1425,9 @@ nsContentSink::DropParserAndPerfHint(void)
     // was already removed by a DummyParserRequest::Cancel
     RemoveDummyParserRequest();
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsContentSink::WillProcessTokensImpl(void)
 {
   if (mCanInterruptParser) {
@@ -1440,7 +1437,7 @@ nsContentSink::WillProcessTokensImpl(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsContentSink::WillBuildModelImpl()
 {
   if (mCanInterruptParser) {
@@ -1459,7 +1456,6 @@ nsContentSink::WillBuildModelImpl()
   }
 
   mScrolledToRefAlready = PR_FALSE;
-  return NS_OK;
 }
 
 // If the content sink can interrupt the parser (@see mCanInteruptParsing)
