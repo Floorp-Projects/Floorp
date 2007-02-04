@@ -58,6 +58,9 @@ sub MessageToMTA {
         $part->encoding_set('quoted-printable') if !is_7bit_clean($part->body);
     }
 
+    # MIME-Version must be set otherwise some mailsystems ignore the charset
+    $email->header_set('MIME-Version', '1.0') if !$email->header('MIME-Version');
+
     # Encode the headers correctly in quoted-printable
     foreach my $header qw(From To Cc Reply-To Sender Errors-To Subject) {
         if (my $value = $email->header($header)) {
