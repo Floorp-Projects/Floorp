@@ -204,6 +204,7 @@ var PlacesUtils = {
    */
   nodeIsSeparator: function PU_nodeIsSeparator(aNode) {
     NS_ASSERT(aNode, "null node");
+
     return (aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR);
   },
 
@@ -215,6 +216,7 @@ var PlacesUtils = {
    */
   nodeIsURI: function PU_nodeIsURI(aNode) {
     NS_ASSERT(aNode, "null node");
+
     const NHRN = Ci.nsINavHistoryResultNode;
     return aNode.type == NHRN.RESULT_TYPE_URI ||
            aNode.type == NHRN.RESULT_TYPE_VISIT ||
@@ -229,6 +231,7 @@ var PlacesUtils = {
    */
   nodeIsQuery: function PU_nodeIsQuery(aNode) {
     NS_ASSERT(aNode, "null node");
+
     return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY;
   },
 
@@ -241,6 +244,7 @@ var PlacesUtils = {
    */
   nodeIsReadOnly: function PU_nodeIsReadOnly(aNode) {
     NS_ASSERT(aNode, "null node");
+
     if (this.nodeIsFolder(aNode))
       return this.bookmarks.getFolderReadonly(asFolder(aNode).folderId);
     if (this.nodeIsQuery(aNode))
@@ -255,6 +259,8 @@ var PlacesUtils = {
    * @returns true if the node is a host item, false otherwise
    */
   nodeIsHost: function PU_nodeIsHost(aNode) {
+    NS_ASSERT(aNode, "null node");
+
     return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_HOST;
   },
 
@@ -265,6 +271,8 @@ var PlacesUtils = {
    * @returns true if the node is a container item, false otherwise
    */
   nodeIsContainer: function PU_nodeIsContainer(aNode) {
+    NS_ASSERT(aNode, "null node");
+
     const NHRN = Ci.nsINavHistoryResultNode;
     return aNode.type == NHRN.RESULT_TYPE_HOST ||
            aNode.type == NHRN.RESULT_TYPE_QUERY ||
@@ -287,6 +295,8 @@ var PlacesUtils = {
    * @returns true if the node is a container item, false otherwise
    */
   nodeIsRemoteContainer: function PU_nodeIsRemoteContainer(aNode) {
+    NS_ASSERT(aNode, "null node");
+
     const NHRN = Ci.nsINavHistoryResultNode;
     if (aNode.type == NHRN.RESULT_TYPE_REMOTE_CONTAINER)
       return true;
@@ -315,6 +325,8 @@ var PlacesUtils = {
    * @returns true if the node is a readonly folder.
   */
   folderIsReadonly: function(aNode) {
+    NS_ASSERT(aNode, "null node");
+
     return this.nodeIsFolder(aNode) &&
            this.bookmarks.getFolderReadonly(asFolder(aNode).folderId);
   },
@@ -327,6 +339,8 @@ var PlacesUtils = {
    *          node was not found or the node specified has no parent.
    */
   getIndexOfNode: function PU_getIndexOfNode(aNode) {
+    NS_ASSERT(aNode, "null node");
+
     var parent = aNode.parent;
     if (!parent || !PlacesUtils.nodeIsContainer(parent))
       return -1;
