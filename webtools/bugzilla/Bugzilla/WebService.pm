@@ -41,6 +41,13 @@ sub datetime_format {
     return $iso_datetime;
 }
 
+sub handle_login {
+    my ($self, $module, $method) = @_;
+    my $exempt = LOGIN_EXEMPT->{$module};
+    return if $exempt && grep { $_ eq $method } @$exempt;
+    Bugzilla->login;
+}
+
 package Bugzilla::WebService::XMLRPC::Transport::HTTP::CGI;
 
 use strict;

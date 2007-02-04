@@ -27,6 +27,8 @@ use base qw(Exporter);
 
     ERROR_AUTH_NODATA
     ERROR_UNIMPLEMENTED
+
+    LOGIN_EXEMPT
 );
 
 # This maps the error names in global/*-error.html.tmpl to numbers.
@@ -97,5 +99,14 @@ use constant ERROR_UNKNOWN_TRANSIENT => 32000;
 use constant ERROR_AUTH_NODATA   => 410;
 use constant ERROR_UNIMPLEMENTED => 910;
 use constant ERROR_GENERAL       => 999;
+
+# For some methods, we shouldn't call Bugzilla->login before we call them.
+# This is a hash--package names pointing to an arrayref of method names.
+use constant LOGIN_EXEMPT => {
+    # Callers may have to know the Bugzilla version before logging in,
+    # even on a requirelogin installation.
+    Bugzilla => ['version'],
+    User     => ['offer_account_by_email', 'login'],
+};
 
 1;

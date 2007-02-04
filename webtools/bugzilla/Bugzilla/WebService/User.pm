@@ -60,10 +60,7 @@ sub login {
 
 sub logout {
     my $self = shift;
-
-    Bugzilla->login(LOGIN_OPTIONAL);
     Bugzilla->logout;
-
     return undef;
 }
 

@@ -35,4 +35,5 @@ my $response = Bugzilla::WebService::XMLRPC::Transport::HTTP::CGI
                      'User'     => 'Bugzilla::WebService::User',
                      'Product'  => 'Bugzilla::WebService::Product',
                     })
+    ->on_action(\&Bugzilla::WebService::handle_login)
     ->handle;
