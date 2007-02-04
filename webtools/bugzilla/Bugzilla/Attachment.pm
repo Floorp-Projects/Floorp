@@ -865,7 +865,7 @@ sub insert_attachment_for_bug {
     my $error_mode_cache = Bugzilla->error_mode;
     Bugzilla->error_mode(ERROR_MODE_DIE);
     eval {
-        Bugzilla::Flag::validate($cgi, $bug->bug_id, -1);
+        Bugzilla::Flag::validate($cgi, $bug->bug_id, -1, SKIP_REQUESTEE_ON_ERROR);
         Bugzilla::Flag::process($bug, $attachment, $timestamp, $cgi);
     };
     Bugzilla->error_mode($error_mode_cache);

@@ -223,7 +223,7 @@ if (defined($cgi->upload('data')) || $cgi->param('attachurl')) {
 my $error_mode_cache = Bugzilla->error_mode;
 Bugzilla->error_mode(ERROR_MODE_DIE);
 eval {
-    Bugzilla::Flag::validate($cgi, $id);
+    Bugzilla::Flag::validate($cgi, $id, undef, SKIP_REQUESTEE_ON_ERROR);
     Bugzilla::Flag::process($bug, undef, $timestamp, $cgi);
 };
 Bugzilla->error_mode($error_mode_cache);

@@ -61,7 +61,8 @@ use Bugzilla::Mailer;
 use Bugzilla::Constants;
 use Bugzilla::Field;
 
-use base qw(Bugzilla::Object);
+use base qw(Bugzilla::Object Exporter);
+@Bugzilla::Flag::EXPORT = qw(SKIP_REQUESTEE_ON_ERROR);
 
 ###############################
 ####    Initialization     ####
@@ -79,6 +80,8 @@ use constant DB_COLUMNS => qw(
 
 use constant DB_TABLE => 'flags';
 use constant LIST_ORDER => 'id';
+
+use constant SKIP_REQUESTEE_ON_ERROR => 1;
 
 ###############################
 ####      Accessors      ######
@@ -245,7 +248,7 @@ sub count {
 
 =over
 
-=item C<validate($cgi, $bug_id, $attach_id)>
+=item C<validate($cgi, $bug_id, $attach_id, $skip_requestee_on_error)>
 
 Validates fields containing flag modifications.
 
@@ -257,7 +260,7 @@ to -1 to force its check anyway.
 =cut
 
 sub validate {
-    my ($cgi, $bug_id, $attach_id) = @_;
+    my ($cgi, $bug_id, $attach_id, $skip_requestee_on_error) = @_;
 
     my $dbh = Bugzilla->dbh;
 
@@ -324,7 +327,7 @@ sub validate {
         }
 
         _validate(undef, $flag_type, $status, undef, \@requestees, $private_attachment,
-                  $bug_id, $attach_id);
+                  $bug_id, $attach_id, $skip_requestee_on_error);
     }
 
     # Validate existing flags.
@@ -337,13 +340,14 @@ sub validate {
         my $flag = new Bugzilla::Flag($id);
         $flag || ThrowCodeError("flag_nonexistent", { id => $id });
 
-        _validate($flag, $flag->type, $status, undef, \@requestees, $private_attachment);
+        _validate($flag, $flag->type, $status, undef, \@requestees, $private_attachment,
+                  undef, undef, $skip_requestee_on_error);
     }
 }
 
 sub _validate {
     my ($flag, $flag_type, $status, $setter, $requestees, $private_attachment,
-        $bug_id, $attach_id) = @_;
+        $bug_id, $attach_id, $skip_requestee_on_error) = @_;
 
     # By default, the flag setter (or requester) is the current user.
     $setter ||= Bugzilla->user;
@@ -398,8 +402,14 @@ sub _validate {
     if ($status eq '?' && $flag_type->is_requesteeble) {
         my $old_requestee = ($flag && $flag->requestee) ?
                                 $flag->requestee->login : '';
+
+        my @legal_requestees;
         foreach my $login (@$requestees) {
-            next if $login eq $old_requestee;
+            if ($login eq $old_requestee) {
+                # This requestee was already set. Leave him alone.
+                push(@legal_requestees, $login);
+                next;
+            }
 
             # We know the requestee exists because we ran
             # Bugzilla::User::match_field before getting here.
@@ -409,6 +419,7 @@ sub _validate {
             # Note that if permissions on this bug are changed,
             # can_see_bug() will refer to old settings.
             if (!$requestee->can_see_bug($bug_id)) {
+                next if $skip_requestee_on_error;
                 ThrowUserError('flag_requestee_unauthorized',
                                { flag_type  => $flag_type,
                                  requestee  => $requestee,
@@ -423,6 +434,7 @@ sub _validate {
                 && Bugzilla->params->{'insidergroup'}
                 && !$requestee->in_group(Bugzilla->params->{'insidergroup'}))
             {
+                next if $skip_requestee_on_error;
                 ThrowUserError('flag_requestee_unauthorized_attachment',
                                { flag_type  => $flag_type,
                                  requestee  => $requestee,
@@ -431,10 +443,22 @@ sub _validate {
             }
 
             # Throw an error if the user won't be allowed to set the flag.
-            $requestee->can_set_flag($flag_type)
-              || ThrowUserError('flag_requestee_needs_privs',
-                                {'requestee' => $requestee,
-                                 'flagtype'  => $flag_type});
+            if (!$requestee->can_set_flag($flag_type)) {
+                next if $skip_requestee_on_error;
+                ThrowUserError('flag_requestee_needs_privs',
+                               {'requestee' => $requestee,
+                                'flagtype'  => $flag_type});
+            }
+
+            # This requestee can be set.
+            push(@legal_requestees, $login);
+        }
+
+        # Update the requestee list for this flag.
+        if (scalar(@legal_requestees) < scalar(@$requestees)) {
+            my $field_name = 'requestee_type-' . $flag_type->id;
+            Bugzilla->cgi->delete($field_name);
+            Bugzilla->cgi->param(-name => $field_name, -value => \@legal_requestees);
         }
     }
 
