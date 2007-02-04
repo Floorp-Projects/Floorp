@@ -4,13 +4,13 @@
 <title>Testcase for inline-table (bug 18217)</title>
 <style type="text/css">
 div { height: 1em; }
-span { display:inline-table; vertical-align: top; height: 1em; background: red; color: red; }
+div#test > span { display:inline-table; vertical-align: top; height: 1em; background: red; color: red; }
 div#after { margin-top:-1em; }
-div#after span { display: inline; background: green; color: green; border-bottom: 0.5em solid green; }
+div#after > span { display: inline; vertical-align: top; background: green; color: green; border-bottom: 0.25em solid green; border-top: 0.25em solid green; }
 </style>
 </head>
 <body>
-<div><span>X</span></div>
+<div id="test"><span>X</span></div>
 <div id="after"><span>X</span></div>
 </body>
 </html>
