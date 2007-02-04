@@ -109,11 +109,18 @@ sub ConnectToDatabase {
     my ($dsn);
 
     if (!defined $::readdb) {
-        $dsn = Param('shadowdbiparam') || Param('dbiparam');
+        my $dsn = Param('dbiparam');
+        my $dbuser = Param('mysqluser');
+        my $dbpass = Param('mysqlpassword');
+        if (Param('shadowdbiparam')) {
+            $dsn = Param('shadowdbiparam');
+            $dbuser = Param('shadowmysqluser');
+            $dbpass = Param('shadowmysqlpassword');
+        }
 
 #        DBI->trace(1, "/tmp/dbi.out");
 
-	$::readdb = DBI->connect($dsn, Param('mysqluser'), Param('mysqlpassword'))
+	$::readdb = DBI->connect($dsn, $dbuser, $dbpass)
             || die "Can't connect to database server.";
         $::db = $::readdb;
     }

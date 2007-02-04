@@ -136,6 +136,11 @@ DefParam("cvsadmin",
 	 "t",
          '%maintainer%');
 
+DefParam("dbiparam",
+         "The first parameter to pass to the DBI->connect() method.<br>Example: <code>DBI:mysql:host=localhost;database=bonsai</code>",
+         "t",
+         "DBI:mysql:database=bonsai;");
+
 DefParam("mysqluser",
          "The username of the bonsai database user.",
          "t",
@@ -146,14 +151,19 @@ DefParam("mysqlpassword",
          "p",
          "");
 
-DefParam("dbiparam",
-         "The first parameter to pass to the DBI->connect() method.<br>Example: <code>DBI:mysql:host=localhost;database=bonsai</code>",
-         "t",
-         "DBI:mysql:database=bonsai;");
-
 DefParam("shadowdbiparam",
          "The first parameter to pass to the DBI->connect() method of a read-only replicated slave database to use for queries, to help with performance on high-traffic systems.  If left blank, queries will be made against the primary database and this param will be ignored.<br>Example: <code>DBI:mysql:host=slaveserver;database=bonsai</code>",
          "t",
+         "");
+
+DefParam("shadowmysqluser",
+         "The username of the bonsai database user for the shadow database.",
+         "t",
+         "nobody");
+
+DefParam("shadowmysqlpassword",
+         "The password of the bonsai database user for the shadow database.",
+         "p",
          "");
 
 DefParam("readonly",
