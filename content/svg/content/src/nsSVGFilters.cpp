@@ -101,28 +101,6 @@ nsSVGFE::Init()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSVGFE::WillModifySVGObservable(nsISVGValue* observable,
-                                 nsISVGValue::modificationType aModType)
-{
-  nsCOMPtr<nsIDOMSVGFilterElement> filter = do_QueryInterface(GetParent());
-  nsCOMPtr<nsISVGValue> value = do_QueryInterface(GetParent());
-  if (filter && value)
-    value->BeginBatchUpdate();
-  return nsSVGFEBase::WillModifySVGObservable(observable, aModType);
-}
-
-NS_IMETHODIMP
-nsSVGFE::DidModifySVGObservable (nsISVGValue* observable,
-                                 nsISVGValue::modificationType aModType)
-{
-  nsCOMPtr<nsIDOMSVGFilterElement> filter = do_QueryInterface(GetParent());
-  nsCOMPtr<nsISVGValue> value = do_QueryInterface(GetParent());
-  if (filter && value)
-    value->EndBatchUpdate();
-  return nsSVGFEBase::DidModifySVGObservable(observable, aModType);
-}
-
 PRBool
 nsSVGFE::ScanDualValueAttribute(const nsAString& aValue, nsIAtom* aAttribute,
                                 nsSVGNumber2* aNum1, nsSVGNumber2* aNum2,
@@ -221,30 +199,6 @@ NS_IMETHODIMP nsSVGFE::GetResult(nsIDOMSVGAnimatedString * *aResult)
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
-
-void
-nsSVGFE::DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr)
-{
-  nsSVGFEBase::DidChangeLength(aAttrEnum, aDoSetAttr);
-
-  nsCOMPtr<nsISVGValue> value = do_QueryInterface(GetParent());
-  if (value) {
-    value->BeginBatchUpdate();
-    value->EndBatchUpdate();
-  }
-}
-
-void
-nsSVGFE::DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr)
-{
-  nsSVGFEBase::DidChangeNumber(aAttrEnum, aDoSetAttr);
-
-  nsCOMPtr<nsISVGValue> value = do_QueryInterface(GetParent());
-  if (value) {
-    value->BeginBatchUpdate();
-    value->EndBatchUpdate();
-  }
-}
 
 nsSVGElement::LengthAttributesInfo
 nsSVGFE::GetLengthInfo()
@@ -1396,10 +1350,6 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEComponentTransferElementBase::)
 
   // nsIContent
-  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 PRBool aNotify);
-  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
-
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
@@ -1525,42 +1475,6 @@ nsSVGFEComponentTransferElement::GetRequirements(PRUint32 *aRequirements)
   return NS_OK;
 }
 
-//----------------------------------------------------------------------
-// nsIContent methods
-
-nsresult
-nsSVGFEComponentTransferElement::InsertChildAt(nsIContent* aKid,
-                                               PRUint32 aIndex,
-                                               PRBool aNotify)
-{
-  nsCOMPtr<nsIDOMSVGFilterElement> filter = do_QueryInterface(GetParent());
-  nsCOMPtr<nsISVGValue> value = do_QueryInterface(GetParent());
-  if (filter && value)
-    value->BeginBatchUpdate();
-  nsresult rv = nsSVGFEComponentTransferElementBase::InsertChildAt(aKid,
-                                                                   aIndex,
-                                                                   aNotify);
-  if (filter && value)
-    value->EndBatchUpdate();
-
-  return rv;
-}
-
-nsresult
-nsSVGFEComponentTransferElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
-{
-  nsCOMPtr<nsIDOMSVGFilterElement> filter = do_QueryInterface(GetParent());
-  nsCOMPtr<nsISVGValue> value = do_QueryInterface(GetParent());
-  if (filter && value)
-    value->BeginBatchUpdate();
-  nsresult rv = nsSVGFEComponentTransferElementBase::RemoveChildAt(aIndex,
-                                                                   aNotify);
-  if (filter && value)
-    value->EndBatchUpdate();
-
-  return rv;
-}
-
 //--------------------------------------------
 
 typedef nsSVGElement nsSVGComponentTransferFunctionElementBase;
@@ -1572,12 +1486,6 @@ protected:
                                        nsINodeInfo *aNodeInfo);
   nsSVGComponentTransferFunctionElement(nsINodeInfo* aNodeInfo);
   nsresult Init();
-
-  // nsISVGValueObserver interface:
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
 
 public:
   // interfaces:
@@ -1671,38 +1579,6 @@ nsSVGComponentTransferFunctionElement::Init()
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGComponentTransferFunctionElement::WillModifySVGObservable(nsISVGValue* observable,
-                                 nsISVGValue::modificationType aModType)
-{
-  nsCOMPtr<nsIDOMSVGFEComponentTransferElement> element;
-  nsCOMPtr<nsIDOMSVGFilterElement> filter;
-  element = do_QueryInterface(GetParent());
-  if (GetParent())
-    filter = do_QueryInterface(GetParent()->GetParent());
-  nsCOMPtr<nsISVGValue> value = do_QueryInterface(filter);
-
-  if (element && filter && value)
-    value->BeginBatchUpdate();
-  return nsSVGComponentTransferFunctionElementBase::WillModifySVGObservable(observable, aModType);
-}
-
-NS_IMETHODIMP
-nsSVGComponentTransferFunctionElement::DidModifySVGObservable (nsISVGValue* observable,
-                                 nsISVGValue::modificationType aModType)
-{
-  nsCOMPtr<nsIDOMSVGFEComponentTransferElement> element;
-  nsCOMPtr<nsIDOMSVGFilterElement> filter;
-  element = do_QueryInterface(GetParent());
-  if (GetParent())
-    filter = do_QueryInterface(GetParent()->GetParent());
-  nsCOMPtr<nsISVGValue> value = do_QueryInterface(filter);
-
-  if (element && filter && value)
-    value->EndBatchUpdate();
-  return nsSVGComponentTransferFunctionElementBase::DidModifySVGObservable(observable, aModType);
 }
 
 //----------------------------------------------------------------------
@@ -2030,7 +1906,6 @@ protected:
   friend nsresult NS_NewSVGFEMergeElement(nsIContent **aResult,
                                           nsINodeInfo *aNodeInfo);
   nsSVGFEMergeElement(nsINodeInfo* aNodeInfo);
-  virtual ~nsSVGFEMergeElement();
 
 public:
   // interfaces:
@@ -2052,9 +1927,6 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEMergeElementBase::)
 
   // nsIContent
-  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 PRBool aNotify);
-  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
@@ -2082,10 +1954,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGFEMergeElementBase)
 
 nsSVGFEMergeElement::nsSVGFEMergeElement(nsINodeInfo *aNodeInfo)
   : nsSVGFEMergeElementBase(aNodeInfo)
-{
-}
-
-nsSVGFEMergeElement::~nsSVGFEMergeElement()
 {
 }
 
@@ -2152,38 +2020,6 @@ nsSVGFEMergeElement::GetRequirements(PRUint32 *aRequirements)
   return NS_OK;
 }
 
-//----------------------------------------------------------------------
-// nsIContent methods
-
-nsresult
-nsSVGFEMergeElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                   PRBool aNotify)
-{
-  nsCOMPtr<nsIDOMSVGFilterElement> filter = do_QueryInterface(GetParent());
-  nsCOMPtr<nsISVGValue> value = do_QueryInterface(GetParent());
-  if (filter && value)
-    value->BeginBatchUpdate();
-  nsresult rv = nsSVGFEMergeElementBase::InsertChildAt(aKid, aIndex, aNotify);
-  if (filter && value)
-    value->EndBatchUpdate();
-
-  return rv;
-}
-
-nsresult
-nsSVGFEMergeElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
-{
-  nsCOMPtr<nsIDOMSVGFilterElement> filter = do_QueryInterface(GetParent());
-  nsCOMPtr<nsISVGValue> value = do_QueryInterface(GetParent());
-  if (filter && value)
-    value->BeginBatchUpdate();
-  nsresult rv = nsSVGFEMergeElementBase::RemoveChildAt(aIndex, aNotify);
-  if (filter && value)
-    value->EndBatchUpdate();
-
-  return rv;
-}
-
 //---------------------Merge Node------------------------
 
 typedef nsSVGStylableElement nsSVGFEMergeNodeElementBase;
@@ -2196,12 +2032,6 @@ protected:
                                           nsINodeInfo *aNodeInfo);
   nsSVGFEMergeNodeElement(nsINodeInfo* aNodeInfo);
   nsresult Init();
-
-  // nsISVGValueObserver interface:
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
 
 public:
   // interfaces:
@@ -2265,38 +2095,6 @@ nsSVGFEMergeNodeElement::Init()
 // nsIDOMNode methods
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEMergeNodeElement)
-
-NS_IMETHODIMP
-nsSVGFEMergeNodeElement::WillModifySVGObservable(nsISVGValue* observable,
-                                                 nsISVGValue::modificationType aModType)
-{
-  nsCOMPtr<nsIDOMSVGFEMergeElement> element;
-  nsCOMPtr<nsIDOMSVGFilterElement> filter;
-  element = do_QueryInterface(GetParent());
-  if (GetParent())
-    filter = do_QueryInterface(GetParent()->GetParent());
-  nsCOMPtr<nsISVGValue> value = do_QueryInterface(filter);
-
-  if (element && filter && value)
-    value->BeginBatchUpdate();
-  return nsSVGFEMergeNodeElementBase::WillModifySVGObservable(observable, aModType);
-}
-
-NS_IMETHODIMP
-nsSVGFEMergeNodeElement::DidModifySVGObservable(nsISVGValue* observable,
-                                                nsISVGValue::modificationType aModType)
-{
-  nsCOMPtr<nsIDOMSVGFEMergeElement> element;
-  nsCOMPtr<nsIDOMSVGFilterElement> filter;
-  element = do_QueryInterface(GetParent());
-  if (GetParent())
-    filter = do_QueryInterface(GetParent()->GetParent());
-  nsCOMPtr<nsISVGValue> value = do_QueryInterface(filter);
-
-  if (element && filter && value)
-    value->EndBatchUpdate();
-  return nsSVGFEMergeNodeElementBase::DidModifySVGObservable(observable, aModType);
-}
 
 //----------------------------------------------------------------------
 // nsIDOMSVGFEMergeNodeElement methods
@@ -3514,7 +3312,6 @@ protected:
   friend nsresult NS_NewSVGFEUnimplementedMOZElement(nsIContent **aResult,
                                           nsINodeInfo *aNodeInfo);
   nsSVGFEUnimplementedMOZElement(nsINodeInfo* aNodeInfo);
-  virtual ~nsSVGFEUnimplementedMOZElement();
 
 public:
   // interfaces:
@@ -3561,10 +3358,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGFEUnimplementedMOZElementBase)
 
 nsSVGFEUnimplementedMOZElement::nsSVGFEUnimplementedMOZElement(nsINodeInfo *aNodeInfo)
   : nsSVGFEUnimplementedMOZElementBase(aNodeInfo)
-{
-}
-
-nsSVGFEUnimplementedMOZElement::~nsSVGFEUnimplementedMOZElement()
 {
 }
 

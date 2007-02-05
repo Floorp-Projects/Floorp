@@ -40,16 +40,12 @@
 #define NSSVGGFRAME_H
 
 #include "nsSVGContainerFrame.h"
-#include "nsISVGValueObserver.h"
-#include "nsWeakReference.h"
 
 typedef nsSVGDisplayContainerFrame nsSVGGFrameBase;
 
 class nsISVGFilterFrame;
 
-class nsSVGGFrame : public nsSVGGFrameBase,
-                    public nsISVGValueObserver,
-                    public nsSupportsWeakReference
+class nsSVGGFrame : public nsSVGGFrameBase
 {
 public:
   nsSVGGFrame(nsStyleContext* aContext) :
@@ -70,11 +66,6 @@ public:
 #endif
 
 protected:
-   // nsISupports interface:
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
-
   friend nsIFrame*
   NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
@@ -91,12 +82,6 @@ protected:
 
   // nsSVGContainerFrame methods:
   virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
-
-  // nsISVGValueObserver
-  NS_IMETHOD WillModifySVGObservable (nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
 
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
   nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;

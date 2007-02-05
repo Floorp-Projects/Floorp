@@ -80,11 +80,122 @@
 #include "gfxRect.h"
 #include "gfxImageSurface.h"
 #include "gfxMatrix.h"
+#include "nsStubMutationObserver.h"
 
-struct nsSVGFilterProperty {
-  nsRect mFilterRect;
+class nsSVGFilterProperty : public nsStubMutationObserver {
+public:
+  nsSVGFilterProperty(nsISVGFilterFrame *aFilter, nsIFrame *aFrame);
+
+  nsRect GetRect() { return mFilterRect; }
+  nsISVGFilterFrame *GetFilterFrame() { return mFilter; }
+  void RemoveMutationObserver();
+
+  // nsISupports
+  NS_DECL_ISUPPORTS
+
+  // nsIMutationObserver
+  virtual void AttributeChanged(nsIDocument* aDocument, nsIContent* aContent,
+                                PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                                PRInt32 aModType);
+  virtual void ContentAppended(nsIDocument* aDocument, nsIContent* aContainer,
+                               PRInt32 aNewIndexInContainer);
+  virtual void ContentInserted(nsIDocument* aDocument, nsIContent* aContainer,
+                               nsIContent* aChild, PRInt32 aIndexInContainer);
+  virtual void ContentRemoved(nsIDocument* aDocument, nsIContent* aContainer,
+                              nsIContent* aChild, PRInt32 aIndexInContainer);
+  virtual void NodeWillBeDestroyed(const nsINode *aNode);
+
+private:
+  void DoUpdate();
+
+  nsWeakPtr mObservedFilter;
   nsISVGFilterFrame *mFilter;
+  nsIFrame *mFrame;  // frame being filtered
+  nsRect mFilterRect;
 };
+
+NS_IMPL_ISUPPORTS1(nsSVGFilterProperty, nsIMutationObserver)
+
+nsSVGFilterProperty::nsSVGFilterProperty(nsISVGFilterFrame *aFilter,
+                                         nsIFrame *aFrame)
+  : mFilter(aFilter), mFrame(aFrame)
+{
+  mFilterRect = mFilter->GetInvalidationRegion(mFrame);
+
+  nsIFrame *filter = nsnull;
+  CallQueryInterface(mFilter, &filter);
+
+  nsCOMPtr<nsIContent> filterContent = filter->GetContent();
+  mObservedFilter = do_GetWeakReference(filterContent);
+
+  filterContent->AddMutationObserver(this);
+}
+
+void
+nsSVGFilterProperty::RemoveMutationObserver()
+{
+  nsCOMPtr<nsIContent> filter = do_QueryReferent(mObservedFilter);
+  if (filter)
+    filter->RemoveMutationObserver(this);
+}
+
+void
+nsSVGFilterProperty::DoUpdate()
+{
+  nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(mFrame);
+  if (outerSVGFrame) {
+    outerSVGFrame->InvalidateRect(mFilterRect);
+    mFilterRect = mFilter->GetInvalidationRegion(mFrame);
+    outerSVGFrame->InvalidateRect(mFilterRect);
+  }
+}
+
+void
+nsSVGFilterProperty::AttributeChanged(nsIDocument *aDocument,
+                                      nsIContent *aContent,
+                                      PRInt32 aNameSpaceID,
+                                      nsIAtom *aAttribute,
+                                      PRInt32 aModType)
+{
+  DoUpdate();
+}
+
+void
+nsSVGFilterProperty::ContentAppended(nsIDocument *aDocument,
+                                     nsIContent *aContainer,
+                                     PRInt32 aNewIndexInContainer)
+{
+  DoUpdate();
+}
+
+void
+nsSVGFilterProperty::ContentInserted(nsIDocument *aDocument,
+                                     nsIContent *aContainer,
+                                     nsIContent *aChild,
+                                     PRInt32 aIndexInContainer)
+{
+  DoUpdate();
+}
+
+void
+nsSVGFilterProperty::ContentRemoved(nsIDocument *aDocument,
+                                    nsIContent *aContainer,
+                                    nsIContent *aChild,
+                                    PRInt32 aIndexInContainer)
+{
+  DoUpdate();
+}
+
+void
+nsSVGFilterProperty::NodeWillBeDestroyed(const nsINode *aNode)
+{
+  nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(mFrame);
+  if (outerSVGFrame)
+    outerSVGFrame->InvalidateRect(mFilterRect);
+
+  mFrame->RemoveStateBits(NS_STATE_SVG_FILTERED);
+  mFrame->DeleteProperty(nsGkAtoms::filter);
+}
 
 cairo_surface_t *nsSVGUtils::mCairoComputationalSurface = nsnull;
 gfxASurface     *nsSVGUtils::mThebesComputationalSurface = nsnull;
@@ -415,7 +526,7 @@ nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame)
       nsSVGFilterProperty *property;
       property = NS_STATIC_CAST(nsSVGFilterProperty *,
                                 aFrame->GetProperty(nsGkAtoms::filter));
-      rect = property->mFilterRect;
+      rect = property->GetRect();
     }
     aFrame = aFrame->GetParent();
   }
@@ -649,27 +760,6 @@ nsSVGUtils::RemoveObserver(nsISupports *aObserver, nsISupports *aTarget)
 // Effect helper functions
 
 static void
-FilterPropertyDtor(void *aObject, nsIAtom *aPropertyName,
-                   void *aPropertyValue, void *aData)
-{
-  nsSVGFilterProperty *property = NS_STATIC_CAST(nsSVGFilterProperty *,
-                                                 aPropertyValue);
-  nsSVGUtils::RemoveObserver(NS_STATIC_CAST(nsIFrame *, aObject),
-                                            property->mFilter);
-  delete property;
-}
-
-static void
-InvalidateFilterRegion(nsIFrame *aFrame)
-{
-  nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(aFrame);
-  if (outerSVGFrame) {
-    nsRect rect = nsSVGUtils::FindFilterInvalidation(aFrame);
-    outerSVGFrame->InvalidateRect(rect);
-  }
-}
-
-static void
 AddEffectProperties(nsIFrame *aFrame)
 {
   const nsStyleSVGReset *style = aFrame->GetStyleSVGReset();
@@ -678,15 +768,15 @@ AddEffectProperties(nsIFrame *aFrame)
     nsISVGFilterFrame *filter;
     NS_GetSVGFilterFrame(&filter, style->mFilter, aFrame->GetContent());
     if (filter) {
-      nsSVGUtils::AddObserver(aFrame, filter);
-      nsSVGFilterProperty *property = new nsSVGFilterProperty;
+      nsSVGFilterProperty *property = new nsSVGFilterProperty(filter, aFrame);
       if (!property) {
         NS_ERROR("Could not create filter property");
         return;
       }
-      property->mFilter = filter;
-      property->mFilterRect = filter->GetInvalidationRegion(aFrame);
-      aFrame->SetProperty(nsGkAtoms::filter, property, FilterPropertyDtor);
+      NS_ADDREF(property); // addref to allow QI - FilterPropertyDtor releases
+      aFrame->SetProperty(nsGkAtoms::filter,
+                          NS_STATIC_CAST(nsISupports*, property),
+                          nsPropertyTable::SupportsDtorFunc);
       aFrame->AddStateBits(NS_STATE_SVG_FILTERED);
     }
   }
@@ -846,7 +936,7 @@ nsSVGUtils::PaintChildWithEffects(nsSVGRenderState *aContext,
     nsSVGFilterProperty *property;
     property = NS_STATIC_CAST(nsSVGFilterProperty *,
                               aFrame->GetProperty(nsGkAtoms::filter));
-    property->mFilter->FilterPaint(aContext, svgChildFrame);
+    property->GetFilterFrame()->FilterPaint(aContext, svgChildFrame);
   } else {
     svgChildFrame->PaintSVG(aContext, aDirtyRect);
   }
@@ -901,6 +991,11 @@ nsSVGUtils::StyleEffects(nsIFrame *aFrame)
   }
 
   if (state & NS_STATE_SVG_FILTERED) {
+    nsSVGFilterProperty *property;
+    property = NS_STATIC_CAST(nsSVGFilterProperty *,
+                              aFrame->GetProperty(nsGkAtoms::filter));
+    if (property)
+      property->RemoveMutationObserver();
     aFrame->DeleteProperty(nsGkAtoms::filter);
   }
 
@@ -911,34 +1006,6 @@ nsSVGUtils::StyleEffects(nsIFrame *aFrame)
   aFrame->RemoveStateBits(NS_STATE_SVG_CLIPPED_MASK |
                           NS_STATE_SVG_FILTERED |
                           NS_STATE_SVG_MASKED);
-}
-
-void
-nsSVGUtils::WillModifyEffects(nsIFrame *aFrame, nsISVGValue *observable,
-                              nsISVGValue::modificationType aModType)
-{
-  nsISVGFilterFrame *filter;
-  CallQueryInterface(observable, &filter);
-
-  if (filter)
-    InvalidateFilterRegion(aFrame);
-}
-
-void
-nsSVGUtils::DidModifyEffects(nsIFrame *aFrame, nsISVGValue *observable,
-                             nsISVGValue::modificationType aModType)
-{
-  nsISVGFilterFrame *filter;
-  CallQueryInterface(observable, &filter);
-
-  if (filter) {
-    InvalidateFilterRegion(aFrame);
-
-    if (aModType == nsISVGValue::mod_die) {
-      aFrame->DeleteProperty(nsGkAtoms::filter);
-      aFrame->RemoveStateBits(NS_STATE_SVG_FILTERED);
-    }
-  }
 }
 
 PRBool

@@ -54,16 +54,12 @@
 typedef nsSVGContainerFrame nsSVGFilterFrameBase;
 
 class nsSVGFilterFrame : public nsSVGFilterFrameBase,
-                         public nsSVGValue,
-                         public nsISVGFilterFrame,
-                         public nsISVGValueObserver,
-                         public nsSupportsWeakReference
+                         public nsISVGFilterFrame
 {
 protected:
   friend nsIFrame*
   NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
-  virtual ~nsSVGFilterFrame();
   NS_IMETHOD InitSVG();
 
 public:
@@ -82,17 +78,6 @@ public:
   // nsISVGValue interface:
   NS_IMETHOD SetValueString(const nsAString &aValue) { return NS_OK; }
   NS_IMETHOD GetValueString(nsAString& aValue) { return NS_ERROR_NOT_IMPLEMENTED; }
-
-  // nsISVGValueObserver interface:
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable, 
-                                     nsISVGValue::modificationType aModType);
-  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable, 
-                                    nsISVGValue::modificationType aModType);
-
-  // nsIFrame interface:
-  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
-                               nsIAtom*        aAttribute,
-                               PRInt32         aModType);
 
   /**
    * Get the "type" of the frame
@@ -114,11 +99,7 @@ private:
 };
 
 NS_INTERFACE_MAP_BEGIN(nsSVGFilterFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGValue)
   NS_INTERFACE_MAP_ENTRY(nsISVGFilterFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISVGValue)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFilterFrameBase)
 
 nsIFrame*
@@ -158,58 +139,6 @@ NS_GetSVGFilterFrame(nsISVGFilterFrame **aResult,
   return NS_OK;
 }
 
-nsSVGFilterFrame::~nsSVGFilterFrame()
-{
-  WillModify();
-  // Notify the world that we're dying
-  DidModify(mod_die);
-
-  NS_REMOVE_SVGVALUE_OBSERVER(mFilterUnits);
-  NS_REMOVE_SVGVALUE_OBSERVER(mPrimitiveUnits);
-  NS_REMOVE_SVGVALUE_OBSERVER(mFilterResX);
-  NS_REMOVE_SVGVALUE_OBSERVER(mFilterResY);
-  NS_REMOVE_SVGVALUE_OBSERVER(mContent);
-}
-
-//----------------------------------------------------------------------
-// nsISVGValueObserver methods:
-NS_IMETHODIMP
-nsSVGFilterFrame::WillModifySVGObservable(nsISVGValue* observable,
-                                          modificationType aModType)
-{
-  WillModify(aModType);
-  return NS_OK;
-}
-                                                                                
-NS_IMETHODIMP
-nsSVGFilterFrame::DidModifySVGObservable(nsISVGValue* observable, 
-                                         nsISVGValue::modificationType aModType)
-{
-  // Something we depend on was modified -- pass it on!
-  DidModify(aModType);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGFilterFrame::AttributeChanged(PRInt32         aNameSpaceID,
-                                   nsIAtom*        aAttribute,
-                                   PRInt32         aModType)
-{
-  if (aNameSpaceID == kNameSpaceID_None &&
-      (aAttribute == nsGkAtoms::x ||
-       aAttribute == nsGkAtoms::y ||
-       aAttribute == nsGkAtoms::width ||
-       aAttribute == nsGkAtoms::height)) {
-    WillModify();
-    DidModify();
-    return NS_OK;
-  }
-
-  return nsSVGFilterFrameBase::AttributeChanged(aNameSpaceID,
-                                          aAttribute, aModType);
-}
-
-
 NS_IMETHODIMP
 nsSVGFilterFrame::InitSVG()
 {
@@ -221,18 +150,9 @@ nsSVGFilterFrame::InitSVG()
   NS_ASSERTION(filter, "wrong content element");
 
   filter->GetFilterUnits(getter_AddRefs(mFilterUnits));
-  NS_ADD_SVGVALUE_OBSERVER(mFilterUnits);
-
   filter->GetPrimitiveUnits(getter_AddRefs(mPrimitiveUnits));
-  NS_ADD_SVGVALUE_OBSERVER(mPrimitiveUnits);
-
   filter->GetFilterResX(getter_AddRefs(mFilterResX));
-  NS_ADD_SVGVALUE_OBSERVER(mFilterResX);
-
   filter->GetFilterResY(getter_AddRefs(mFilterResY));
-  NS_ADD_SVGVALUE_OBSERVER(mFilterResY);
-
-  NS_ADD_SVGVALUE_OBSERVER(mContent);
 
   return NS_OK;
 }

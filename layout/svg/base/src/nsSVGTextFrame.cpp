@@ -82,15 +82,6 @@ nsSVGTextFrame::nsSVGTextFrame(nsStyleContext* aContext)
 }
 
 //----------------------------------------------------------------------
-// nsISupports methods
-
-NS_INTERFACE_MAP_BEGIN(nsSVGTextFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGTextFrameBase)
-
-
-//----------------------------------------------------------------------
 // nsIFrame methods
 
 NS_IMETHODIMP
@@ -137,28 +128,6 @@ nsIAtom *
 nsSVGTextFrame::GetType() const
 {
   return nsGkAtoms::svgTextFrame;
-}
-
-//----------------------------------------------------------------------
-// nsISVGValueObserver methods:
-
-NS_IMETHODIMP
-nsSVGTextFrame::WillModifySVGObservable(nsISVGValue* observable,
-                                        nsISVGValue::modificationType aModType)
-{
-  nsSVGUtils::WillModifyEffects(this, observable, aModType);
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsSVGTextFrame::DidModifySVGObservable (nsISVGValue* observable,
-                                        nsISVGValue::modificationType aModType)
-{  
-  nsSVGUtils::DidModifyEffects(this, observable, aModType);
-
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------

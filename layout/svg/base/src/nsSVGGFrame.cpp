@@ -46,11 +46,6 @@
 #include "nsISVGValueUtils.h"
 #include "nsSVGGraphicElement.h"
 
-NS_INTERFACE_MAP_BEGIN(nsSVGGFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGDisplayContainerFrame)
-
 //----------------------------------------------------------------------
 // Implementation
 
@@ -136,22 +131,6 @@ nsSVGGFrame::GetCanvasTM()
   nsIDOMSVGMatrix* retval = mCanvasTM.get();
   NS_IF_ADDREF(retval);
   return retval;
-}
-
-NS_IMETHODIMP
-nsSVGGFrame::WillModifySVGObservable(nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType)
-{
-  nsSVGUtils::WillModifyEffects(this, observable, aModType);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGGFrame::DidModifySVGObservable(nsISVGValue* observable,
-                                    nsISVGValue::modificationType aModType)
-{
-  nsSVGUtils::DidModifyEffects(this, observable, aModType);
-  return NS_OK;
 }
 
 NS_IMETHODIMP

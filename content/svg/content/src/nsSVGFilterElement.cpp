@@ -65,7 +65,6 @@ NS_INTERFACE_MAP_BEGIN(nsSVGFilterElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGFilterElement)
-  NS_INTERFACE_MAP_ENTRY(nsISVGValue)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFilterElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFilterElementBase)
 
@@ -209,27 +208,6 @@ nsSVGFilterElement::SetFilterRes(PRUint32 filterResX, PRUint32 filterResY)
 
 //----------------------------------------------------------------------
 // nsIContent methods
-
-nsresult
-nsSVGFilterElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                  PRBool aNotify)
-{
-  WillModify();
-  nsresult rv = nsSVGFilterElementBase::InsertChildAt(aKid, aIndex, aNotify);
-  DidModify();
-
-  return rv;
-}
-
-nsresult
-nsSVGFilterElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
-{
-  WillModify();
-  nsresult rv = nsSVGFilterElementBase::RemoveChildAt(aIndex, aNotify);
-  DidModify();
-
-  return rv;
-}
 
 nsresult
 nsSVGFilterElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
