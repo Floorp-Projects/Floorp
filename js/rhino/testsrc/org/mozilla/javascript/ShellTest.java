@@ -72,6 +72,7 @@ class ShellTest {
 	{
 		boolean finished;
 		ErrorReporterWrapper errors;
+		int exitCode = 0;
 	}
 	
 	static abstract class Status {
@@ -94,8 +95,7 @@ class ShellTest {
 		}
 		
 		abstract void running(File jsFile);
-		
-		
+
 		abstract void failed(String s);
 		abstract void threw(Throwable t);
 		abstract void timedOut();
@@ -265,6 +265,14 @@ class ShellTest {
 								runFileIfExists(cx, global, new File(jsFile.getParentFile().getParentFile(), "shell.js"));
 								runFileIfExists(cx, global, new File(jsFile.getParentFile(), "shell.js"));
 								runFileIfExists(cx, global, jsFile);
+								//	Emulate SpiderMonkey enum value from mozilla/js/src/js.c
+								for (int i=0; i<testState.errors.errors.size(); i++) {
+									Status.JsError thisOne = (Status.JsError)testState.errors.errors.get(i);
+									if (thisOne.getMessage().indexOf("java.lang.OutOfMemoryError") != -1) {
+										testState.exitCode = 5;
+										testState.errors.errors.remove(thisOne);
+									}
+								}
 								status.hadErrors( (Status.JsError[])testState.errors.errors.toArray(new Status.JsError[0]) );
 							} catch (ThreadDeath e) {
 							} catch (Throwable t) {
@@ -291,7 +299,6 @@ class ShellTest {
 				t.stop();
 			}
 		}
-		int exitCode = 0;
 		int expectedExitCode = 0;
 		p.flush();
 		status.outputWas(new String(out.toByteArray()));
@@ -309,13 +316,13 @@ class ShellTest {
 			{
 				failures += s + '\n';
 			}
-			int expex = s.indexOf("EXPECT EXIT ");
+			int expex = s.indexOf("EXPECT EXIT CODE ");
 			if(expex != -1)
 			{
-				expectedExitCode = s.charAt(expex + "EXPECT EXIT ".length()) - '0';
+				expectedExitCode = s.charAt(expex + "EXPECT EXIT CODE ".length()) - '0';
 			}
 		}
-		status.exitCodesWere(expectedExitCode, exitCode);
+		status.exitCodesWere(expectedExitCode, testState.exitCode);
 		if(failures != "")
 		{
 			status.failed(failures);
