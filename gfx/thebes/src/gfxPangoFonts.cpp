@@ -2100,6 +2100,7 @@ gfxPangoTextRun::SetGlyphs(const gchar *aUTF8, PRUint32 aUTF8Length,
                 CompressedGlyph::IsSimpleGlyphID(glyph->glyph)) {
                 mCharacterGlyphs[utf16Offset].SetSimpleGlyph(downscaledWidth, glyph->glyph);
             } else {
+                mCharacterGlyphs[utf16Offset].SetComplexCluster();
                 // Note that missing-glyph IDs are not simple glyph IDs, so we'll
                 // always get here when a glyph is missing
                 DetailedGlyph *details = AllocateDetailedGlyphs(utf16Offset, glyphClusterCount);
