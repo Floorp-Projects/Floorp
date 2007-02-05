@@ -322,11 +322,6 @@
       </toolbaritem>
 
 #ifdef MOZ_PLACES_BOOKMARKS
-      <toolbarbutton id="bookmarksBarShowPlaces" 
-                     class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&placesToolbarButton.label;" 
-                     tooltiptext="&placesToolbarButton.tooltip;" 
-                     oncommand="PlacesCommandHook.togglePlacesPopup(event);"/>
       <toolbaritem flex="1" id="personal-bookmarks" title="&bookmarksItem.title;">
          <hbox id="bookmarksBarContent" flex="1" type="places"
                place="place:&amp;folder=3&amp;group=3&amp;expandQueries=1"
