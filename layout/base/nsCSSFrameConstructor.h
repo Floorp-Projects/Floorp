@@ -899,8 +899,8 @@ private:
   // Methods support :first-line style
 
   nsresult WrapFramesInFirstLineFrame(nsFrameConstructorState& aState,
-                                      nsIContent*              aContent,
-                                      nsIFrame*                aFrame,
+                                      nsIContent*              aBlockContent,
+                                      nsIFrame*                aBlockFrame,
                                       nsFrameItems&            aFrameItems);
 
   nsresult AppendFirstLineFrames(nsFrameConstructorState& aState,
