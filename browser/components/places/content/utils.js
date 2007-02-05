@@ -129,6 +129,7 @@ var PlacesUtils = {
    * @returns A URI object for the spec.
    */
   _uri: function PU__uri(aSpec) {
+    NS_ASSERT(aSpec, "empty URL spec");
     var ios = Cc["@mozilla.org/network/io-service;1"].
               getService(Ci.nsIIOService);
     return ios.newURI(aSpec, null, null);
