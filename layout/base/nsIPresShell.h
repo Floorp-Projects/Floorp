@@ -97,10 +97,10 @@ class nsWeakFrame;
 
 typedef short SelectionType;
 
-// B6AFC710-43B8-4FD0-8B18-782FD621B270
+// 2b3dc6f2-1364-4535-9a23-2b728ebbd051
 #define NS_IPRESSHELL_IID     \
-{ 0xb6afc710, 0x43b8, 0x4fd0, \
- { 0x8b, 0x18, 0x78, 0x2f, 0xd6, 0x21, 0xb2, 0x70 } }
+{ 0x2b3dc6f2, 0x1364, 0x4535, \
+ { 0x9a, 0x23, 0x2b, 0x72, 0x8e, 0xbb, 0xd0, 0x51 } }
 
 // Constants uses for ScrollFrameIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -656,13 +656,6 @@ public:
                         nsIFrame * aFrame,
                         PRUint32 aColor) = 0;
   NS_IMETHOD SetPaintFrameCount(PRBool aOn) = 0;
-#endif
-
-#ifdef IBMBIDI
-  /**
-   * Reconstruct and reflow frame model 
-   */
-  NS_IMETHOD BidiStyleChangeReflow(void) = 0;
 #endif
 
 #ifdef DEBUG

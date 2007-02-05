@@ -932,10 +932,6 @@ public:
                              nscolor aBackgroundColor,
                              nsIRenderingContext** aRenderedContext);
 
-#ifdef IBMBIDI
-  NS_IMETHOD BidiStyleChangeReflow();
-#endif
-
   //nsIViewObserver interface
 
   NS_IMETHOD Paint(nsIView *aView,
@@ -4986,20 +4982,6 @@ PresShell::GetPlaceholderFrameFor(nsIFrame*  aFrame,
   *aResult = FrameManager()->GetPlaceholderFrameFor(aFrame);
   return NS_OK;
 }
-
-#ifdef IBMBIDI
-NS_IMETHODIMP
-PresShell::BidiStyleChangeReflow()
-{
-  // Have the root frame's style context remap its style
-  nsIFrame* rootFrame = FrameManager()->GetRootFrame();
-  if (rootFrame) {
-    mStyleSet->ClearStyleData(mPresContext);
-    ReconstructFrames();
-  }
-  return NS_OK;
-}
-#endif // IBMBIDI
 
 //nsIViewObserver
 
