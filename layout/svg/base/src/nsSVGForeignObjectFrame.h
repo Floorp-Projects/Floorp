@@ -41,8 +41,6 @@
 
 #include "nsBlockFrame.h"
 #include "nsISVGChildFrame.h"
-#include "nsISVGValueObserver.h"
-#include "nsWeakReference.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsIDOMSVGLength.h"
 #include "nsRegion.h"
@@ -52,9 +50,7 @@ typedef nsContainerFrame nsSVGForeignObjectFrameBase;
 class nsISVGFilterFrame;
 
 class nsSVGForeignObjectFrame : public nsSVGForeignObjectFrameBase,
-                                public nsISVGChildFrame,
-                                public nsISVGValueObserver,
-                                public nsSupportsWeakReference
+                                public nsISVGChildFrame
 {
   friend nsIFrame*
   NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
@@ -104,15 +100,6 @@ public:
   }
 #endif
 
-  // nsISVGValueObserver
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
-
-  // nsISupportsWeakReference
-  // implementation inherited from nsSupportsWeakReference
-  
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect);
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);  

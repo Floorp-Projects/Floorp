@@ -375,7 +375,6 @@ NS_IMETHODIMP
 nsSVGInnerSVGFrame::WillModifySVGObservable(nsISVGValue* observable,
                                             nsISVGValue::modificationType aModType)
 {
-  nsSVGUtils::WillModifyEffects(this, observable, aModType);
   return NS_OK;
 }
 	
@@ -383,15 +382,7 @@ NS_IMETHODIMP
 nsSVGInnerSVGFrame::DidModifySVGObservable (nsISVGValue* observable,
                                             nsISVGValue::modificationType aModType)
 {
-  nsISVGFilterFrame *filter;
-  CallQueryInterface(observable, &filter);
-
-  nsSVGUtils::DidModifyEffects(this, observable, aModType);
-
-  if (!filter) {
-    NotifyViewportChange();
-  }
-
+  NotifyViewportChange();
   return NS_OK;
 }
 

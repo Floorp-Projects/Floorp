@@ -51,11 +51,6 @@ protected:
   nsSVGFE(nsINodeInfo *aNodeInfo);
   nsresult Init();
 
-  // nsISVGValueObserver interface:
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
   PRBool ScanDualValueAttribute(const nsAString& aValue, nsIAtom* aAttribute,
                                 nsSVGNumber2* aNum1, nsSVGNumber2* aNum2,
                                 NumberInfo* aInfo1, NumberInfo* aInfo2,
@@ -69,12 +64,9 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES
 
-  // nsSVGElement specializations:
-  virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
-  virtual void DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr);
-
 protected:
 
+  // nsSVGElement specializations:
   virtual LengthAttributesInfo GetLengthInfo();
 
   // nsIDOMSVGFitlerPrimitiveStandardAttributes values

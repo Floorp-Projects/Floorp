@@ -252,16 +252,6 @@ public:
   static void
   StyleEffects(nsIFrame *aFrame);
 
-  /* Modification events for effects (filter/clip/mask/opacity) - call
-   * when observers on effects get called to make sure properties stay
-   * in sync. */
-  static void
-  WillModifyEffects(nsIFrame *aFrame, nsISVGValue *observable,
-                    nsISVGValue::modificationType aModType);
-  static void
-  DidModifyEffects(nsIFrame *aFrame, nsISVGValue *observable,
-                   nsISVGValue::modificationType aModType);
-
   /* Hit testing - check if point hits the clipPath of indicated
    * frame.  Returns true of no clipPath set. */
 

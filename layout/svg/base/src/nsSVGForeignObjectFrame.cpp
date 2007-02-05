@@ -90,8 +90,6 @@ nsSVGForeignObjectFrame::nsSVGForeignObjectFrame(nsStyleContext* aContext)
 
 NS_INTERFACE_MAP_BEGIN(nsSVGForeignObjectFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGChildFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGForeignObjectFrameBase)
 
 //----------------------------------------------------------------------
@@ -190,30 +188,6 @@ nsSVGForeignObjectFrame::Reflow(nsPresContext*           aPresContext,
     nsRect(nsPoint(0, 0), nsSize(aDesiredSize.width, aDesiredSize.height));
   aStatus = NS_FRAME_COMPLETE;
 
-  return NS_OK;
-}
-
-
-//----------------------------------------------------------------------
-// nsISVGValueObserver methods:
-
-NS_IMETHODIMP
-nsSVGForeignObjectFrame::WillModifySVGObservable(nsISVGValue* observable,
-                                                 nsISVGValue::modificationType aModType)
-{
-  nsSVGUtils::WillModifyEffects(this, observable, aModType);
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsSVGForeignObjectFrame::DidModifySVGObservable (nsISVGValue* observable,
-                                                 nsISVGValue::modificationType aModType)
-{
-  nsSVGUtils::DidModifyEffects(this, observable, aModType);
-  UpdateGraphic();
-   
   return NS_OK;
 }
 

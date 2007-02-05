@@ -501,8 +501,6 @@ NS_IMETHODIMP
 nsSVGPathGeometryFrame::WillModifySVGObservable(nsISVGValue* observable,
                                                 nsISVGValue::modificationType aModType)
 {
-  nsSVGUtils::WillModifyEffects(this, observable, aModType);
-
   return NS_OK;
 }
 
@@ -511,8 +509,6 @@ NS_IMETHODIMP
 nsSVGPathGeometryFrame::DidModifySVGObservable (nsISVGValue* observable,
                                                 nsISVGValue::modificationType aModType)
 {
-  nsSVGUtils::DidModifyEffects(this, observable, aModType);
-
   nsSVGPathGeometryFrameBase::DidModifySVGObservable(observable, aModType);
 
   nsIFrame *frame = nsnull;
@@ -520,9 +516,7 @@ nsSVGPathGeometryFrame::DidModifySVGObservable (nsISVGValue* observable,
   if (!frame)
     return NS_OK;
 
-  if (frame->GetType() == nsGkAtoms::svgFilterFrame) {
-    UpdateGraphic();
-  } else if (frame->GetType() == nsGkAtoms::svgMarkerFrame) {
+  if (frame->GetType() == nsGkAtoms::svgMarkerFrame) {
     if (aModType == nsISVGValue::mod_die)
       RemoveMarkerObserver(NS_STATIC_CAST(nsSVGMarkerProperty *, 
                                           GetProperty(nsGkAtoms::marker)),

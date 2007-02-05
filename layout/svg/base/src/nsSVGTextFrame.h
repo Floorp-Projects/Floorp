@@ -40,25 +40,15 @@
 #define NS_SVGTEXTFRAME_H
 
 #include "nsSVGTextContainerFrame.h"
-#include "nsISVGValueObserver.h"
-#include "nsWeakReference.h"
 
 typedef nsSVGTextContainerFrame nsSVGTextFrameBase;
 
-class nsSVGTextFrame : public nsSVGTextFrameBase,
-                       public nsISVGValueObserver,
-                       public nsSupportsWeakReference
+class nsSVGTextFrame : public nsSVGTextFrameBase
 {
   friend nsIFrame*
   NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 protected:
   nsSVGTextFrame(nsStyleContext* aContext);
-
-   // nsISupports interface:
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-private:
-  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
 
 public:
   // nsIFrame:
@@ -82,15 +72,6 @@ public:
   }
 #endif
 
-  // nsISVGValueObserver
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
-
-  // nsISupportsWeakReference
-  // implementation inherited from nsSupportsWeakReference
-  
   // nsISVGChildFrame interface:
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
