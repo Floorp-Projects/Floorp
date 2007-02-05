@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=367781
+-->
+<head>
+  <title>Test for Bug 367781</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=367781">Mozilla Bug 367781</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug  **/
+var eventCounter = 0;
+
+function handler(e) {
+  if (e.type == "DOMNodeInserted")  {
+    ++eventCounter;
+  }
+}
+
+function doTest() {
+  var i1 = document.getElementById('i1');
+  var i2 = document.getElementById('i2');
+  var pre = i1.contentDocument.getElementsByTagName("pre")[0];
+  pre.addEventListener("DOMNodeInserted", handler, false);
+  pre.textContent = pre.textContent + pre.textContent;
+  ok(eventCounter == 1, "DOMNodeInserted should have been dispatched");
+
+  pre.parentNode.removeChild(pre);
+  i2.contentDocument.adoptNode(pre);
+  i2.contentDocument.body.appendChild(pre);
+  ok(eventCounter == 2, "DOMNodeInserted should have been dispatched in the new document");
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(doTest);
+addLoadEvent(SimpleTest.finish);
+
+</script>
+</pre>
+<iframe id="i1" src="data:text/html,&lt;html&gt;&lt;body&gt;&lt;pre&gt;Foobar&lt;/pre&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
+<iframe id="i2" src="data:text/html,&lt;html&gt;&lt;body&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
+</body>
+</html>
+
