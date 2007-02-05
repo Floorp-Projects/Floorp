@@ -103,12 +103,22 @@ class XmlProcessor {
 		}
 	}
 	
+	private void addCommentsTo(java.util.Vector v, Node node) {
+		if (node instanceof Comment) {
+			v.add(node);
+		}
+		if (node.getChildNodes() != null) {
+			for (int i=0; i<node.getChildNodes().getLength(); i++) {
+				addProcessingInstructionsTo(v, node.getChildNodes().item(i));
+			}
+		}
+	}
+	
 	private void addTextNodesToRemoveAndTrim(java.util.Vector toRemove, Node node) {
 		if (node instanceof Text) {
 			Text text = (Text)node;
-			String value = text.getData();
 			text.setData(text.getData().trim());
-			if (value.trim().length() == 0) {
+			if (text.getData().length() == 0) {
 				toRemove.add(node);
 			}
 		}
@@ -135,13 +145,21 @@ class XmlProcessor {
 		//	See ECMA357 10.3.1
 		javax.xml.parsers.DocumentBuilderFactory domFactory = newDomFactory();
 		domFactory.setNamespaceAware(true);
-		domFactory.setIgnoringComments(ignoreComments);
+		domFactory.setIgnoringComments(false);
 		try {
 			String syntheticXml = "<parent xmlns=\"" + defaultNamespaceUri + "\">" + xml + "</parent>";
 			Document document = domFactory.newDocumentBuilder().parse( new org.xml.sax.InputSource(new java.io.StringReader(syntheticXml)) );
 			if (ignoreProcessingInstructions) {
 				java.util.Vector v = new java.util.Vector();
 				addProcessingInstructionsTo(v, document);
+				for (int i=0; i<v.size(); i++) {
+					Node node = (Node)v.elementAt(i);
+					node.getParentNode().removeChild(node);
+				}
+			}
+			if (ignoreComments) {
+				java.util.Vector v = new java.util.Vector();
+				addCommentsTo(v, document);
 				for (int i=0; i<v.size(); i++) {
 					Node node = (Node)v.elementAt(i);
 					node.getParentNode().removeChild(node);
