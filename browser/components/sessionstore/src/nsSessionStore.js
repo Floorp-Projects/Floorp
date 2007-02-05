@@ -551,7 +551,8 @@ SessionStoreService.prototype = {
     
     // store closed-tab data for undo
     var tabState = this._windows[aWindow.__SSi].tabs[aTab._tPos];
-    if (tabState && tabState.entries[0].url != "about:blank") {
+    if (tabState && (tabState.entries.length > 1 ||
+        tabState.entries[0].url != "about:blank")) {
       this._windows[aWindow.__SSi]._closedTabs.unshift({
         state: tabState,
         title: aTab.getAttribute("label"),
