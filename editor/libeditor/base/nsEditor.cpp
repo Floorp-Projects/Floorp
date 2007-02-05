@@ -778,6 +778,14 @@ nsEditor::GetTransactionManager(nsITransactionManager* *aTxnManager)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsEditor::SetTransactionManager(nsITransactionManager *aTxnManager)
+{
+  NS_ENSURE_TRUE(aTxnManager, NS_ERROR_FAILURE);
+
+  mTxnMgr = aTxnManager;
+  return NS_OK;
+}
 
 NS_IMETHODIMP 
 nsEditor::Undo(PRUint32 aCount)
