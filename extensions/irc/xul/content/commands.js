@@ -838,6 +838,7 @@ function cmdAblePlugin(e)
             e.plugin.scope.disablePlugin();
         }
 
+        display(getMsg(MSG_PLUGIN_DISABLED, e.plugin.id));
         e.plugin.enabled = false;
     }
     else
@@ -868,6 +869,7 @@ function cmdAblePlugin(e)
             e.plugin.scope.enablePlugin();
         }
 
+        display(getMsg(MSG_PLUGIN_ENABLED, e.plugin.id));
         e.plugin.enabled = true;
     }
 }
@@ -2490,7 +2492,7 @@ function cmdLoad(e)
                 if (!oldPlugin.disable())
                 {
                     display(getMsg(MSG_CANT_DISABLE, oldPlugin.id));
-                    display (getMsg(MSG_ERR_SCRIPTLOAD, e.url));
+                    display(getMsg(MSG_ERR_SCRIPTLOAD, e.url));
                     return null;
                 }
                 client.prefManager.removeObserver(oldPlugin.prefManager);
@@ -2503,9 +2505,10 @@ function cmdLoad(e)
             else
             {
                 display(getMsg(MSG_CANT_DISABLE, oldPlugin.id));
-                display (getMsg(MSG_ERR_SCRIPTLOAD, e.url));
+                display(getMsg(MSG_ERR_SCRIPTLOAD, e.url));
                 return null;
             }
+            display(getMsg(MSG_PLUGIN_DISABLED, oldPlugin.id));
         }
 
         return i;
