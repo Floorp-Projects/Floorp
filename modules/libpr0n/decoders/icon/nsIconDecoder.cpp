@@ -152,12 +152,15 @@ NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
   mImage->AppendFrame(mFrame);
   if (mObserver)
     mObserver->OnStartFrame(nsnull, mFrame);
-  
+ 
+  PRInt32 width, height;
+  mFrame->GetWidth(&width);
+  mFrame->GetHeight(&height);
   nsIntRect r(0, 0, width, height);
 
 #if defined(MOZ_CAIRO_GFX)
   PRUint8 *data;
-  PRUint8 dataLen;
+  PRUint32 dataLen;
   mFrame->GetImageData(&data, &dataLen);
 
   // Ensure that there enough in the inputStream
@@ -173,11 +176,8 @@ NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 
 #else
   PRUint32 bpr, abpr;
-  PRInt32 width, height;
   mFrame->GetImageBytesPerRow(&bpr);
   mFrame->GetAlphaBytesPerRow(&abpr);
-  mFrame->GetWidth(&width);
-  mFrame->GetHeight(&height);
 
   NS_ENSURE_TRUE(buf_end - data >= PRInt32(bpr + abpr) * height,
                  NS_ERROR_UNEXPECTED);
