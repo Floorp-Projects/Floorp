@@ -116,6 +116,18 @@ f== bugs/368020-3.html bugs/368020-3-ref.html # bug 368085
 f== bugs/368020-4.html bugs/368020-4-ref.html # bug 368085
 == bugs/368020-5.html bugs/368020-5-ref.html
 == bugs/368622-1.html bugs/368622-1-ref.html
+== bugs/368622-1.html bugs/368622-1-ref.html
+== bugs/40596-1a.html bugs/40596-1-ref.html
+!= bugs/40596-1b.html bugs/40596-1-ref.html
+== bugs/40596-1c.html bugs/40596-1-ref.html
+!= bugs/40596-1d.html bugs/40596-1-ref.html
+== bugs/40596-1e.html bugs/40596-1-ref.html
+!= bugs/40596-1f.html bugs/40596-1-ref.html
+== bugs/40596-1g.html bugs/40596-1-ref.html
+!= bugs/40596-1h.html bugs/40596-1-ref.html
+== bugs/40596-1i.html bugs/40596-1-ref.html
+!= bugs/40596-1j.html bugs/40596-1-ref.html
+
 
 # object/
 == object/no-attrs.html object/no-attrs-ref.html
