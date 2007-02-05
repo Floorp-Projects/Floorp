@@ -771,7 +771,7 @@ PlacesController.prototype = {
         for (var j = 0; j < names.length; ++j)
           nodeData[names[i]] = true;
       }
-      else if (nodeType = Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY) {
+      else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY) {
         // Various queries might live in the left-hand side of the organizer
         // window. If this one happens to have collected all the livemark feeds,
         // allow its context menu to contain "Reload All Livemarks". That will 
