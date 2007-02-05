@@ -1,5 +1,3 @@
-This file version: $Id: CHANGELOG,v 1.5 2007/01/21 15:28:18 inonit%inonit.com Exp $
-
 Changes since Rhino 1.6R5
 =========================
 - Added org.mozilla.javascript.PolicySecurityController as a concrete 

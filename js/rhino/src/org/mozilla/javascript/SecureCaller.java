@@ -51,7 +51,6 @@ import java.util.WeakHashMap;
 
 /**
  * @author Attila Szegedi
- * @version $Id: SecureCaller.java,v 1.2 2006/11/10 15:27:37 gerv%gerv.net Exp $
  */
 public abstract class SecureCaller
 {

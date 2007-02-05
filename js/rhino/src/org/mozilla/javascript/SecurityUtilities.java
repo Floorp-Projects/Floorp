@@ -45,7 +45,6 @@ import java.security.ProtectionDomain;
 
 /**
  * @author Attila Szegedi
- * @version $Id: SecurityUtilities.java,v 1.4 2006/11/10 15:27:37 gerv%gerv.net Exp $
  */
 public class SecurityUtilities
 {
