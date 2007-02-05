@@ -179,7 +179,17 @@ InspectorApp.prototype =
         if (aEvent.target == this.mDocPanel.viewer &&
             aEvent.subject && "location" in aEvent.subject) {
           this.locationText = aEvent.subject.location; // display document url
+
+          var docTitle = aEvent.subject.title || aEvent.subject.location; 
+          if (/Mac/.test(navigator.platform)) {
+            document.title = docTitle;
+          } else {
+            document.title = docTitle + " - " + 
+              document.documentElement.getAttribute("title");
+          }
         }
+        break;
+      }
     }
   },
   
