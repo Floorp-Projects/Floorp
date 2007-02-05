@@ -1050,7 +1050,7 @@ function insertBugzillaLink (matchText, containerTag, eventData)
 
     if (bugURL.length > 0)
     {
-        var idOrAlias = matchText.match(/bug\s+#?(\d{3,6}|[^\s,]{1,20})/i)[1];
+        var idOrAlias = matchText.match(/bug\s+#?(\d+|[^\s,]{1,20})/i)[1];
         var anchor = document.createElementNS("http://www.w3.org/1999/xhtml",
                                               "html:a");
 
