@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 //-----------------------------------------------------------------------------
-var bug = 56940;
+var bug = 347306;
 var summary = 'decompilation should not be O(N**2)';
 var actual = '';
 var expect = '';
