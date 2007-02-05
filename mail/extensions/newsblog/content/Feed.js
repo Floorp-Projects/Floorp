@@ -321,6 +321,9 @@ Feed.prototype =
 
   set link (aNewLink)
   {
+    if (!aNewLink)
+      return;
+
     var ds = getSubscriptionsDS(this.server);
     aNewLink = rdf.GetLiteral(aNewLink);
     var old_link = ds.GetTarget(this.resource, RSS_LINK, true);
