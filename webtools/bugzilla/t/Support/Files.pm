@@ -32,6 +32,8 @@ use File::Find;
 %exclude_deps = (
     'XML::Twig' => ['importxml.pl'],
     'Net::LDAP' => ['Bugzilla/Auth/Verify/LDAP.pm'],
+    'Email::Reply' => ['email_in.pl'],
+    'Email::MIME::Attachment::Stripper' => ['email_in.pl']
 );
 
 
