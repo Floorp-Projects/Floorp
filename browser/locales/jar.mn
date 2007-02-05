@@ -32,8 +32,6 @@
     locale/browser/places/bookmarkProperties.dtd   (%chrome/browser/places/bookmarkProperties.dtd)
     locale/browser/places/bookmarkProperties.properties (%chrome/browser/places/bookmarkProperties.properties)
     locale/browser/places/default_places.html      (%chrome/browser/places/default_places.html)
-    locale/browser/places/placesPopup.dtd          (%chrome/browser/places/placesPopup.dtd)
-    locale/browser/places/placesPopup.properties   (%chrome/browser/places/placesPopup.properties)
     locale/browser/preferences/selectBookmark.dtd  (%chrome/browser/preferences/selectBookmark.dtd)
     locale/browser/places/moveBookmarks.dtd        (%chrome/browser/places/moveBookmarks.dtd)
 #else

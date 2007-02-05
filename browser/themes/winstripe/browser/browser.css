@@ -1361,11 +1361,6 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
   opacity: 0.3;
 }
 
-#bookmarksBarShowPlaces {
-  list-style-image: url("chrome://browser/skin/places/placesIcon.png");
-}
-
-
 /* Personal toolbar */
 .toolbar-drop-indicator {
   height: 16px;

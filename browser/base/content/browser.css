@@ -16,12 +16,6 @@ menuitem.spell-suggestion {
   -moz-user-focus: normal;
 }
 
-%ifdef MOZ_PLACES_BOOKMARKS
-#PersonalToolbar > #bookmarksBarShowPlaces > .toolbarbutton-text {
-  visibility: collapse;
-}
-%endif
-
 /* apply Fitts' law to the notification bar's close button */
 window[sizemode="maximized"] #content .notification-inner {
 	border-right: 0px !important;

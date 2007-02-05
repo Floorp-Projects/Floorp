@@ -38,57 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 var PlacesCommandHook = {
-
-  /**
-   * Keeps a reference to the places popup window when it is open
-   */
-  _placesPopup: null,
-  
-  /**
-   * Shows the places popup
-   * @param event
-   *        DOMEvent for the button command that opens the popup.
-   */
-  showPlacesPopup: function PCH_showPlacesPopup(event) {
-    if (!this._placesPopup) {
-      // XXX - the button might not exist, need to handle this case.
-      var button = document.getElementById("bookmarksBarShowPlaces");
-      var top = button.boxObject.screenY;
-#ifndef XP_MACOSX
-      top += button.boxObject.height;
-#endif
-      var left = button.boxObject.screenX;
-      var openArguments = "chrome,dependent,";
-      openArguments += "top=" + top + ",left=" + left;
-      openArguments += ",titlebar=no"
-      this._placesPopup = window.openDialog("chrome://browser/content/places/placesPopup.xul", "placesPopup", openArguments, ORGANIZER_ROOT_BOOKMARKS);
-    }
-  },
-  
-  /**
-   * Hides the places popup
-   * @param event
-   *        DOMEvent for the button command that closes the popup.
-   */
-  hidePlacesPopup: function PCH_hidePlacesPopup(event) {
-    if (this._placesPopup) {
-      this._placesPopup.close();
-      this._placesPopup = null;
-    }
-  },
-  
-  /**
-   * Toggles the places popup
-   * @param event
-   *        DOMEvent for the button command that opens the popup.
-   */
-  togglePlacesPopup: function PCH_togglePlacesPopup(event) {
-    if (this._placesPopup)
-      this.hidePlacesPopup();
-    else
-      this.showPlacesPopup();
-  },
-
   /**
    * Adds a bookmark to the page targeted by a link.
    * @param   url
