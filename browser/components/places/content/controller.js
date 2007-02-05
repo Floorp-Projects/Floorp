@@ -915,7 +915,7 @@ PlacesController.prototype = {
    */
   openSelectedNodeWithEvent: function PC_openSelectedNodeWithEvent(aEvent) {
     var node = this._view.selectedURINode;
-    if (node)
+    if (node && PlacesUtils.checkURLSecurity(node))
       openUILink(node.uri, aEvent);
   },
 
@@ -925,7 +925,7 @@ PlacesController.prototype = {
    */
   openSelectedNodeIn: function PC_openSelectedNodeIn(aWhere) {
     var node = this._view.selectedURINode;
-    if (node)
+    if (node && PlacesUtils.checkURLSecurity(node))
       openUILinkIn(node.uri, aWhere);
   },
 
