@@ -59,6 +59,10 @@ _TEST_FILES = 	test_bug589.html \
 		bug100533_load.html \
 		bug100533_iframe.html \
 		test_bug100533.html \
+		test_bug237071.html \
+		bug277724_iframe1.html \
+		bug277724_iframe2.xhtml \
+		test_bug277724.html \
 		test_bug300691-1.html \
 		test_bug300691-2.html \
 		test_bug300691-3.xhtml \
