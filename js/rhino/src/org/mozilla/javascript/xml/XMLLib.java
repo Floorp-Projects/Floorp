@@ -43,6 +43,27 @@ import org.mozilla.javascript.*;
 public abstract class XMLLib
 {
     private static final Object XML_LIB_KEY = new Object();
+	
+	/**
+		An object which specifies an XMLLib implementation to be used at runtime.
+	 
+		This interface should be considered experimental.  It may be better
+		(and certainly more flexible) to write an interface that returns an
+		XMLLib object rather than a class name, for example.  But that would
+		cause many more ripple effects in the code, all the way back to
+		{@link ScriptRuntime}.
+	 */
+	public static abstract class Factory {
+		public static Factory create(final String className) {
+			return new Factory() {
+				public String getImplementationClassName() {
+					return className;
+				}
+			};
+		}
+		
+		public abstract String getImplementationClassName();
+	}
 
     public static XMLLib extractFromScopeOrNull(Scriptable scope)
     {
@@ -88,8 +109,7 @@ public abstract class XMLLib
                                 Scriptable scope, int memberTypeFlags);
 
     /**
-     * Escapes the reserved characters in a value of an attribute
-     * and surround it by "".
+     * Escapes the reserved characters in a value of an attribute.
      *
      * @param value Unescaped text
      * @return The escaped text
@@ -97,7 +117,7 @@ public abstract class XMLLib
     public abstract String escapeAttributeValue(Object value);
 
     /**
-     * Escapes the reserved characters in a value of a text node
+     * Escapes the reserved characters in a value of a text node.
      *
      * @param value Unescaped text
      * @return The escaped text

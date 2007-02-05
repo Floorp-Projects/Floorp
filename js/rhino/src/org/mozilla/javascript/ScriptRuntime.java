@@ -107,9 +107,6 @@ public class ScriptRuntime {
         ScriptableObjectClass
             = Kit.classOrNull("org.mozilla.javascript.ScriptableObject");
 
-    private static final String
-        XML_INIT_CLASS = "org.mozilla.javascript.xmlimpl.XMLLibImpl";
-
     private static final String[] lazilyNames = {
         "RegExp",        "org.mozilla.javascript.regexp.NativeRegExp",
         "Packages",      "org.mozilla.javascript.NativeJavaTopPackage",
@@ -117,10 +114,12 @@ public class ScriptRuntime {
         "getClass",      "org.mozilla.javascript.NativeJavaTopPackage",
         "JavaAdapter",   "org.mozilla.javascript.JavaAdapter",
         "JavaImporter",  "org.mozilla.javascript.ImporterTopLevel",
-        "XML",           XML_INIT_CLASS,
-        "XMLList",       XML_INIT_CLASS,
-        "Namespace",     XML_INIT_CLASS,
-        "QName",         XML_INIT_CLASS,
+		//	TODO	Grotesque hack using literal string (xml) just to minimize 
+		//			changes for now
+        "XML",           "(xml)",
+        "XMLList",       "(xml)",
+        "Namespace",     "(xml)",
+        "QName",         "(xml)",
     };
 
     private static final Object LIBRARY_SCOPE_KEY = new Object();
@@ -179,9 +178,11 @@ public class ScriptRuntime {
         for (int i = 0; i != lazilyNames.length; i += 2) {
             String topProperty = lazilyNames[i];
             String className = lazilyNames[i + 1];
-            if (!withXml && className == XML_INIT_CLASS) {
+            if (!withXml && className.equals("(xml)")) {
                 continue;
-            }
+            } else if (withXml && className.equals("(xml)")) {
+				className = cx.getE4xImplementationFactory().getImplementationClassName();
+			}
             new LazilyLoadedCtor(scope, topProperty, className, sealed);
         }
 

@@ -39,7 +39,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.mozilla.javascript.xmlimpl;
+package org.mozilla.javascript.xml.impl.xmlbeans;
 
 import org.mozilla.javascript.*;
 import org.mozilla.javascript.xml.*;
@@ -79,7 +79,7 @@ final class XMLWithScope extends NativeWith
         }
         // Always return the outer-most type of XML lValue of
         // XML to left of dotQuery.
-        _xmlList = lib.newXMLList();
+        _xmlList = new XMLList(lib);
     }
 
     protected Object updateDotQuery(boolean value)

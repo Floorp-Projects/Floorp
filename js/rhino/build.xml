@@ -35,8 +35,10 @@
 
 
 <!--
-Build file for Rhino using Ant (see http://jakarta.apache.org/ant/index.html)
-Requires Ant version 1.2 or later
+	Build file for Rhino using Ant (see http://jakarta.apache.org/ant/index.html)
+	Requires Ant version 1.2 or later
+	
+	Compilation currently requires JDK 1.4 or later
 -->
 
 <project name="Rhino" default="help" basedir=".">

@@ -282,6 +282,49 @@ public class ContextFactory
         // It is a bug to call the method with unknown featureIndex
         throw new IllegalArgumentException(String.valueOf(featureIndex));
     }
+	
+	private boolean isDom3Present() {
+		Class nodeClass = Kit.classOrNull("org.w3c.dom.Node");
+		if (nodeClass == null) return false;
+		//	Check to see whether DOM3 is present; use a new method defined in DOM3 that is vital to our implementation
+		try {
+			nodeClass.getMethod("getUserData", new Class[] { String.class });
+			return true;
+		} catch (NoSuchMethodException e) {
+			return false;
+		}
+	}
+	
+	/**
+		Provides a default {@link org.mozilla.javascript.xml.XMLLib.Factory XMLLib.Factory}
+		to be used by the <code>Context</code> instances produced by this factory.
+	 
+		See {@link Context#getE4xImplementationFactory} for details.
+	 */
+	protected org.mozilla.javascript.xml.XMLLib.Factory getE4xImplementationFactory() {
+		//	Must provide default implementation, rather than abstract method,
+		//	so that past implementors of ContextFactory do not fail at runtime
+		//	upon invocation of this method.
+		
+		//	Note that the default implementation "illegally" returns null if we
+		//	neither have XMLBeans nor a DOM3 implementation present.
+		//
+		//	TODO	More thinking about what to do in the failure scenario
+		
+		//	For now, if XMLBeans is in the classpath, it will be the default.
+		if (Kit.classOrNull("org.apache.xmlbeans.XmlCursor") != null) {
+			return org.mozilla.javascript.xml.XMLLib.Factory.create(
+				"org.mozilla.javascript.xml.impl.xmlbeans.XMLLibImpl"
+			);
+		} else if (isDom3Present()) {
+			return org.mozilla.javascript.xml.XMLLib.Factory.create(
+				"org.mozilla.javascript.xmlimpl.XMLLibImpl"
+			);
+		} else {
+			//	Uh-oh -- results if FEATURE_E4X is true are unknown.
+			return null;
+		}
+	}
 
 
     /**

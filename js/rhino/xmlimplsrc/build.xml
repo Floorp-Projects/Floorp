@@ -33,121 +33,124 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-
 <project name="xmlimplsrc" basedir=".." default="compile">
+	<property file="build.local.properties"/>
+	<property file="build.properties"/>
 
-  <property file="build.properties"/>
+	<path id="xmlbeans.classpath">
+		<pathelement location="${xbean.jar}"/>
+		<pathelement location="${jsr173.jar}"/>
+	</path>
 
-  <path id="xmlimpl.classpath">
-     <pathelement location="${xbean.jar}"/>
-     <pathelement location="${jsr173.jar}"/>
-  </path>
+	<target name="compile" unless="without-xmlimpl">
+		<available property="jdk1.5?" classname="java.lang.ProcessBuilder" />
+		<antcall target="do-dom-compile" />
+		<antcall target="no-dom-compile" />
+		
+		<antcall target="xmlbeans-compile" />
+	</target>
+	
+	<target name="do-dom-compile" if="jdk1.5?">
+		<javac
+			srcdir="xmlimplsrc"
+			destdir="${classes}"
+			deprecation="on"
+			debug="${debug}"
+			target="${target-jvm}"
+			source="${source-level}"
+		/>		
+	</target>
+	
+	<target name="no-dom-compile" unless="jdk1.5?">
+		<echo>Skipping DOM E4X implementation; JDK 1.5+ currently required for compilation.</echo>
+	</target>
+	
+	<target name="xmlbeans-compile">
+		<available property="xmlbeans-present?" file="${xbean.jar}" />
+		
+		<antcall target="xmlbeans-get" />
 
+		<condition property="xmlbeans-compile?">
+			<and>
+				<available file="${xbean.jar}" />
+				<available file="${jsr173.jar}" />
+			</and>
+		</condition>
 
-  <target name="compile" unless="without-xmlimpl">
-
-    <available property="xbean-present?" file="${xbean.jar}" /> 
-    <antcall target="xbean-get" />
-
-    <condition property="xmlimpl-compile?">
-      <and>
-      	<available file="${xbean.jar}" /> 
-<!--
-  Does not work under JDK 1.3 due to incompatible classes
-   
-	<available classname="javax.xml.namespace.QName" 
-	           classpathref="xmlimpl.classpath"/>
-	<available classname="org.apache.xmlbeans.XmlCursor" 
-	           classpathref="xmlimpl.classpath"/>
-	<available classname="org.apache.xmlbeans.XmlException" 
-	           classpathref="xmlimpl.classpath"/>
-	<available classname="org.apache.xmlbeans.XmlObject" 
-	           classpathref="xmlimpl.classpath"/>
-	<available classname="org.apache.xmlbeans.XmlOptions" 
-	           classpathref="xmlimpl.classpath"/>
--->
-      </and>
-    </condition>
-
-    <antcall target="do-compile" />
-    <antcall target="do-not-compile" />
-  
-  </target>
+		<antcall target="do-xmlbeans-compile" />
+		<antcall target="no-xmlbeans-compile" />  		
+	</target>
     
-  <target name="do-compile" if="xmlimpl-compile?">
+	<target name="do-xmlbeans-compile" if="xmlbeans-compile?">
+		<echo>Compiling XMLBeans E4X implementation using ${xbean.jar} and ${jsr173.jar}</echo>
+		<javac 
+			srcdir="deprecatedsrc"
+			destdir="${classes}"
+			includes="org/mozilla/javascript/xml/impl/xmlbeans/*.java"
+			deprecation="on"
+			debug="${debug}"
+			classpathref="xmlbeans.classpath"
+			failonerror="${xmlimpl.compile.failonerror}"
+			target="${target-jvm}"
+			source="${source-level}"
+		/>
+	</target>
 
-    <echo>Compiling E4X implementation using ${xbean.jar}</echo>
-    <javac srcdir="xmlimplsrc"
-           destdir="${classes}"
-           includes="org/**/*.java"
-           deprecation="on"
-           debug="${debug}"
-	   classpathref="xmlimpl.classpath"
-	   failonerror="${xmlimpl.compile.failonerror}"
-	   target="${target-jvm}"
- 	   source="${source-level}"
-	   >
-    </javac>
+	<target name="no-xmlbeans-compile" unless="xmlbeans-compile?">
+		<echo>
+			Skipping compilation of XMLBeans E4X implementation due to lack of
+			XMLBeans files
+		</echo>
+	</target>
 
-  </target>
+	<target name="copy-source">
+		<mkdir dir="${dist.dir}/xmlimplsrc"/>
+		<copy todir="${dist.dir}/xmlimplsrc">
+			<fileset 
+				dir="xmlimplsrc"
+				includes="**/*.java,**/*.properties,**/*.xml"
+			/>
+		</copy>
+	</target>
 
-  <target name="do-not-compile" unless="xmlimpl-compile?">
+	<target name="clean">
+		<delete includeEmptyDirs="true">
+			<fileset 
+				dir="${classes}"
+				includes="org/mozilla/javascript/xmlimpl/**"
+			/>
+		</delete>
+	</target>
 
-<echo>
-Skipping compilation of E4X implementation due to lack of 
-javax.xml.namespace.*, org.apache.xmlbeans.*  classes
-</echo>
+	<target name="xmlbeans-get" unless="xmlbeans-present?">
+		<property 
+			name="xmlbeans.url" 
+			value="http://www.apache.org/dist/xml/xmlbeans/xmlbeans-current.zip"
+		/>
 
-  </target>
+		<property name="xmlbeans.tmp" location="${build.dir}/tmp-xbean" /> 
+		<property name="xmlbeans.zip" location="${xmlbeans.tmp}/xbean.zip" /> 
 
-  <target name="copy-source">
-    <mkdir dir="${dist.dir}/xmlimplsrc"/>
-    <copy todir="${dist.dir}/xmlimplsrc">
-      <fileset dir="xmlimplsrc"
-               includes="**/*.java,**/*.properties,**/*.xml"
-               />
-    </copy>
-  </target>
+		<mkdir dir="${xmlbeans.tmp}" />
+		<get src="${xmlbeans.url}" dest="${xmlbeans.zip}" ignoreerrors="true" />
 
-  <target name="clean">
-    <delete includeEmptyDirs="true">
-      <fileset dir="${classes}"
-               includes="org/mozilla/javascript/xmlimpl/**"/>
-    </delete>
-  </target>
-
-
-  <target name="xbean-get" unless="xbean-present?">
-  
-    <property 
-     name="xbean.url" 
-     value="http://www.apache.org/dist/xml/xmlbeans/xmlbeans-current.zip"
-     />
-
-    <property name="xbean.tmp" location="${build.dir}/tmp-xbean" /> 
-    <property name="xbean.zip" location="${xbean.tmp}/xbean.zip" /> 
-
-    <mkdir dir="${xbean.tmp}"/>
-    <get src="${xbean.url}" dest="${xbean.zip}" ignoreerrors="true" />
-
-    <available property="xbean-zip-present?" file="${xbean.zip}" /> 
+		<available property="xmlbeans-zip-present?" file="${xmlbeans.zip}" /> 
     
-    <antcall target="xbean-unzip" />
-  </target>
+		<antcall target="xmlbeans-unzip" />
+	</target>
 
-  <target name="xbean-unzip" if="xbean-zip-present?">
-    
-    <unzip src="${xbean.zip}" dest="${xbean.tmp}">
-      <patternset includes="xmlbeans-*/lib/xbean.jar" />
-    </unzip>
-    <mkdir dir="${lib}" />
-    <copy tofile="${xbean.jar}">
-      <fileset dir="${xbean.tmp}" includes="xmlbeans-*/lib/xbean.jar" />
-    </copy>
-
-    <delete dir="${xbean.tmp}" />
-  </target>
-
-
-
+	<target name="xmlbeans-unzip" if="xmlbeans-zip-present?">
+		<unzip src="${xmlbeans.zip}" dest="${xmlbeans.tmp}">
+			<patternset includes="xmlbeans-*/lib/xbean.jar" />
+			<patternset includes="xmlbeans-*/lib/jsr173*api.jar" />
+		</unzip>
+		<mkdir dir="${lib}" />
+		<copy tofile="${xbean.jar}">
+			<fileset dir="${xbean.tmp}" includes="xmlbeans-*/lib/xbean.jar" />
+		</copy>
+		<copy tofile="${jsr173.jar}">
+			<fileset dir="${xbean.tmp}" includes="xmlbeans-*/lib/jsr173*api.jar" />
+		</copy>
+		<delete dir="${xbean.tmp}" />
+	</target>
 </project>

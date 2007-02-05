@@ -41,7 +41,7 @@
   <target name="compile">
     <javac srcdir="deprecatedsrc"
            destdir="${classes}"
-           includes="org/**/*.java"
+           includes="org/mozilla/javascript/*.java"
            deprecation="on"
            debug="${debug}"
 	   target="${target-jvm}"

@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.mozilla.javascript.xmlimpl;
+package org.mozilla.javascript.xml.impl.xmlbeans;
 
 import java.util.*;
 import org.apache.xmlbeans.XmlCursor;
