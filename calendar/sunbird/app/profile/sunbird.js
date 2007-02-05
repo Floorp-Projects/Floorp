@@ -208,7 +208,8 @@ pref("alerts.totalOpenTime", 4000);
 
 pref("signon.rememberSignons",              true);
 pref("signon.expireMasterPassword",         false);
-pref("signon.SignonFileName", "signons.txt");
+pref("signon.SignonFileName",               "signons.txt");
+pref("signon.SignonFileName2",              "signons2.txt");
 
 // We want to make sure mail URLs are handled externally...
 pref("network.protocol-handler.external.mailto", true); // for mail
