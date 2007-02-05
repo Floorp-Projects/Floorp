@@ -70,6 +70,8 @@ class nsMediaList;
 #include "nsURIHashKey.h"
 #include "nsInterfaceHashtable.h"
 #include "nsDataHashtable.h"
+#include "nsAutoPtr.h"
+#include "nsTArray.h"
 
 /**
  * OVERALL ARCHITECTURE
@@ -360,8 +362,6 @@ private:
 public:
   // Handle an event posted by PostLoadEvent
   void HandleLoadEvent(SheetLoadData* aEvent);
-  // Destroy an event created by PostLoadEvent
-  void DestroyLoadEvent(SheetLoadData* aEvent);
 
   // Note: LoadSheet is responsible for releasing aLoadData and setting the
   // sheet to complete on failure.
@@ -403,11 +403,9 @@ private:
   // some.  Allocate some storage, what the hell.
   nsAutoVoidArray   mParsingDatas;
 
-public:
   // The array of posted stylesheet loaded events (SheetLoadDatas) we have.
-  // Note that these are rare.  Public so the event destructor func can get at
-  // it easily.
-  nsSmallVoidArray  mPostedEvents;
+  // Note that these are rare.
+  nsTArray<nsRefPtr<SheetLoadData> > mPostedEvents;
 };
 
 #endif // nsCSSLoader_h__

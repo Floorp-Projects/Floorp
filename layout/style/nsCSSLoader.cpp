@@ -249,7 +249,6 @@ NS_IMETHODIMP
 SheetLoadData::Run()
 {
   mLoader->HandleLoadEvent(this);
-  mLoader->DestroyLoadEvent(this);
   return NS_OK;
 }
 
@@ -1969,7 +1968,7 @@ CSSLoaderImpl::PostLoadEvent(nsIURI* aURI,
   // observer, since we may need to unblock the parser
   // NS_PRECONDITION(aObserver, "Must have observer");
 
-  SheetLoadData *evt =
+  nsRefPtr<SheetLoadData> evt =
     new SheetLoadData(this, EmptyString(), // title doesn't matter here
                       aParserToUnblock,
                       aURI,
@@ -1979,27 +1978,21 @@ CSSLoaderImpl::PostLoadEvent(nsIURI* aURI,
                       aObserver);
   NS_ENSURE_TRUE(evt, NS_ERROR_OUT_OF_MEMORY);
 
-  NS_ADDREF(evt);
-  
   if (!mPostedEvents.AppendElement(evt)) {
-    NS_RELEASE(evt);
     return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // We'll unblock onload when we destroy the event, so make sure to block it
-  // now.  We unblock from destruction, not firing, just in case events get
-  // revoked for some reason.
-  if (mDocument) {
-    mDocument->BlockOnload();
   }
 
   nsresult rv = NS_DispatchToCurrentThread(evt);
   if (NS_FAILED(rv)) {
     NS_WARNING("failed to dispatch stylesheet load event");
-    DestroyLoadEvent(evt);
+    mPostedEvents.RemoveElement(evt);
   } else {
-    // We want to notify the observer for this data.  We didn't want to set
-    // this earlier, since we would have returned an error _and_ notified.
+    // We'll unblock onload when we handle the event.
+    if (mDocument) {
+      mDocument->BlockOnload();
+    }
+
+    // We want to notify the observer for this data.
     evt->mMustNotify = PR_TRUE;
   }
 
@@ -2014,18 +2007,14 @@ CSSLoaderImpl::HandleLoadEvent(SheetLoadData* aEvent)
   // NS_ASSERTION(aEvent->mObserver, "Must have observer");
   NS_ASSERTION(aEvent->mSheet, "Must have sheet");
   if (!aEvent->mIsCancelled) {
-    // SheetComplete will call Release(), but we want aEvent to survive to have
-    // DestroyStyleSheetLoadedEvent called on it!
+    // SheetComplete will call Release(), so give it a reference to do
+    // that with.
     NS_ADDREF(aEvent);
     SheetComplete(aEvent, NS_OK);
   }
-}
 
-void
-CSSLoaderImpl::DestroyLoadEvent(SheetLoadData* aEvent)
-{
   mPostedEvents.RemoveElement(aEvent);
-  NS_RELEASE(aEvent);
+
   if (mDocument) {
     mDocument->UnblockOnload(PR_TRUE);
   }
@@ -2065,20 +2054,6 @@ StopLoadingSheetCallback(nsIURI* aKey, SheetLoadData*& aData, void* aClosure)
   return PL_DHASH_REMOVE;
 }
 
-PR_STATIC_CALLBACK(PRBool)
-CancelSheetEventCallback(void* aData, void* aClosure)
-{
-  NS_PRECONDITION(aData, "Must have data");
-  SheetLoadData* data = NS_STATIC_CAST(SheetLoadData*, aData);
-  data->mIsCancelled = PR_TRUE;
-  // Addref to keep |data| from dying, since we're not removing it from the
-  // event queue but plan to call SheetComplete on it.
-  NS_ADDREF(data);
-  data->mLoader->SheetComplete(data, NS_BINDING_ABORTED);
-
-  return PR_TRUE;
-}
-
 NS_IMETHODIMP
 CSSLoaderImpl::Stop()
 {
@@ -2088,7 +2063,13 @@ CSSLoaderImpl::Stop()
   if (mPendingDatas.IsInitialized() && mPendingDatas.Count() > 0) {
     mPendingDatas.Enumerate(StopLoadingSheetCallback, this);
   }
-  mPostedEvents.EnumerateForwards(CancelSheetEventCallback, nsnull);
+  for (PRUint32 i = 0; i < mPostedEvents.Length(); ++i) {
+    SheetLoadData* data = mPostedEvents[i];
+    data->mIsCancelled = PR_TRUE;
+    // SheetComplete() calls Release(), so give this an extra ref.
+    NS_ADDREF(data);
+    data->mLoader->SheetComplete(data, NS_BINDING_ABORTED);
+  }
   mPostedEvents.Clear();
   return NS_OK;
 }
@@ -2112,14 +2093,13 @@ CSSLoaderImpl::StopLoadingSheet(nsIURI* aURL)
   }
     
   if (!loadData) {
-    for (PRInt32 i = 0; i < mPostedEvents.Count(); ++i) {
-      SheetLoadData* curData = NS_STATIC_CAST(SheetLoadData*, mPostedEvents[i]);
+    for (PRUint32 i = 0; i < mPostedEvents.Length(); ++i) {
+      SheetLoadData* curData = mPostedEvents[i];
       PRBool equal;
       if (curData->mURI && NS_SUCCEEDED(curData->mURI->Equals(aURL, &equal)) &&
           equal) {
         loadData = curData;
-        // Addref to keep |curData| from dying, since we're not removing it
-        // from the event queue but plan to call SheetComplete on it.
+        // SheetComplete() calls Release(), so give it an extra ref.
         NS_ADDREF(curData);
         mPostedEvents.RemoveElementAt(i);
         break;
