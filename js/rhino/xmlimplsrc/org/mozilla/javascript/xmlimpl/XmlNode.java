@@ -666,7 +666,7 @@ class XmlNode {
 			}
 			int i = 0;
 			while(prefix == null) {
-				String generatedPrefix = "e4x_" + i;
+				String generatedPrefix = "e4x_" + i++;
 				String generatedUri = node.lookupNamespaceURI(generatedPrefix);
 				if (generatedUri == null) {
 					prefix = generatedPrefix;
