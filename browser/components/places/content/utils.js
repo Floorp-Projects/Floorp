@@ -162,7 +162,7 @@ var PlacesUtils = {
     }
     return this.__bundle;
   },
-  
+
   getFormattedString: function PU_getFormattedString(key, params) {
     return this._bundle.formatStringFromName(key, params, params.length);
   },
@@ -698,5 +698,33 @@ var PlacesUtils = {
     }
 
     return null;
+  },
+
+  /**
+   * Allows opening of javascript/data URI only if the given node is
+   * bookmarked (see bug 224521).
+   * @param aURINode
+   *        a URI node
+   * @return true if it's safe to open the node in the browser, false otherwise.
+   * 
+   */
+  checkURLSecurity: function PU_checkURLSecurity(aURINode) {
+    if (!this.nodeIsBookmark(aURINode)) {
+      var uri = this._uri(aURINode.uri);
+      if (uri.schemeIs("javascript") || uri.schemeIs("data")) {
+        const BRANDING_BUNDLE_URI = "chrome://branding/locale/brand.properties";
+        var brandShortName = Cc["@mozilla.org/intl/stringbundle;1"].
+                             getService(Ci.nsIStringBundleService).
+                             createBundle(BRANDING_BUNDLE_URI).
+                             GetStringFromName("brandShortName");
+        var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+                            getService(Ci.nsIPromptService);
+
+        var errorStr = this.getString("load-js-data-url-error");
+        promptService.alert(window, brandStr, errorStr);
+        return false;
+      }
+    }
+    return true;
   }
 };
