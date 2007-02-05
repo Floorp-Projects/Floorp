@@ -438,6 +438,7 @@ sub Send {
                                           $relationship, 
                                           $diffs, 
                                           $comments{$lang},
+                                          $deptext,
                                           $changer,
                                           !$start))
                 {
