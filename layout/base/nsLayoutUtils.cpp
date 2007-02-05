@@ -1068,7 +1068,7 @@ nsLayoutUtils::GetAllInFlowBoundingRect(nsIFrame* aFrame)
     return r;
 
   for (nsIFrame* f = aFrame->GetNextContinuation(); f; f = f->GetNextContinuation()) {
-    r.UnionRect(r, f->GetRect() + f->GetOffsetTo(parent));
+    r.UnionRect(r, nsRect(f->GetOffsetTo(parent), f->GetSize()));
   }
 
   if (r.IsEmpty()) {
