@@ -62,7 +62,7 @@ typedef short EDirection;
 
 [ptr] native nsIPresShellPtr(nsIPresShell);
 
-[scriptable, uuid(36fc45c1-c4ea-4fbe-a305-9e463b134449)]
+[scriptable, uuid(470e18e4-2e82-48de-8850-7474cdbbd97d)]
 
 interface nsIEditor  : nsISupports
 {
@@ -188,7 +188,7 @@ interface nsIEditor  : nsISupports
 
   /** transactionManager Get the transaction manager the editor is using.
     */
-  readonly attribute nsITransactionManager transactionManager;
+  attribute nsITransactionManager transactionManager;
 
   /** doTransaction() fires a transaction.
     * It is provided here so clients can create their own transactions.
