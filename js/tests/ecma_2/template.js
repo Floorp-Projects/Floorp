@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
