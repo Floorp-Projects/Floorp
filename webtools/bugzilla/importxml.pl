@@ -1178,16 +1178,22 @@ Debug( "Reading xml", DEBUG_LEVEL );
 local ($/);
 $xml = <>;
 
-# If the email was encoded (Mailer::MessageToMTA() does it when using UTF-8),
-# we have to decode it first, else the XML parsing will fail.
-my $parser = MIME::Parser->new;
-$parser->output_to_core(1);
-$parser->tmp_to_core(1);
-my $entity = $parser->parse_data($xml);
-my $bodyhandle = $entity->bodyhandle;
-$xml = $bodyhandle->as_string;
+# If there's anything except whitespace before <?xml then we guess it's a mail
+# and MIME::Parser should parse it. Else don't.
+if ($xml =~ m/\S.*<\?xml/s ) {
 
-# remove everything in file before xml header (i.e. remove the mail header)
+    # If the email was encoded (Mailer::MessageToMTA() does it when using UTF-8),
+    # we have to decode it first, else the XML parsing will fail.
+    my $parser = MIME::Parser->new;
+    $parser->output_to_core(1);
+    $parser->tmp_to_core(1);
+    my $entity = $parser->parse_data($xml);
+    my $bodyhandle = $entity->bodyhandle;
+    $xml = $bodyhandle->as_string;
+
+}
+
+# remove everything in file before xml header
 $xml =~ s/^.+(<\?xml version.+)$/$1/s;
 
 Debug( "Parsing tree", DEBUG_LEVEL );
