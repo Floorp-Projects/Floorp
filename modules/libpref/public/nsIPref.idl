@@ -44,13 +44,7 @@ interface nsIFileSpec;
 #include "nsIPrefService.idl"
 #include "nsIPrefBranch.idl"
 
-/*
- * This entire interface is deprecated and should not be used.
- * See nsIPrefService and nsIPrefBranch for the new implementations.
- */
-
 %{C++
-
 
 #ifndef have_PrefChangedFunc_typedef
 typedef int (*PR_CALLBACK PrefChangedFunc)(const char *, void *);
@@ -76,7 +70,12 @@ typedef void (*PrefEnumerationFunc)(const char *, void *);
 native PrefChangedFunc(PrefChangedFunc);
 native PrefEnumerationFunc(PrefEnumerationFunc);
 
-
+/**
+ * This entire interface is deprecated and should not be used.
+ * See nsIPrefService and nsIPrefBranch for the new implementations.
+ *
+ * @status DEPRECATED  Replaced by nsIPrefService and nsIPrefBranch
+ */
 [scriptable, uuid(a22ad7b0-ca86-11d1-a9a4-00805f8a7ac4)]
 interface nsIPref : nsISupports {
 
