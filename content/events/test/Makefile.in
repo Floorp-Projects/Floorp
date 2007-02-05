@@ -49,3 +49,4 @@ _TEST_FILES = 	test_bug367781.html \
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
