@@ -7210,7 +7210,8 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
       newFrame = NS_NewSVGInnerSVGFrame(mPresShell, aContent, aStyleContext);
     }
   }
-  else if (aTag == nsGkAtoms::g) {
+  else if (aTag == nsGkAtoms::g ||
+           aTag == nsGkAtoms::svgSwitch) {
     newFrame = NS_NewSVGGFrame(mPresShell, aContent, aStyleContext);
   }
   else if (aTag == nsGkAtoms::polygon ||
@@ -7299,6 +7300,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     // information, so create the simplest possible frame.
     newFrame = NS_NewSVGLeafFrame(mPresShell, aStyleContext);
   }
+
   
   if (newFrame == nsnull) {
     // Either we have an unknown tag, or construction of a frame

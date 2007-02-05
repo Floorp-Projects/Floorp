@@ -140,6 +140,8 @@ nsresult
 NS_NewSVGFEFloodElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGFETurbulenceElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGSwitchElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
 NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
@@ -256,6 +258,8 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     return NS_NewSVGPatternElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::mask)
     return NS_NewSVGMaskElement(aResult, aNodeInfo);
+  if (name == nsGkAtoms::svgSwitch)
+    return NS_NewSVGSwitchElement(aResult, aNodeInfo);
 
   // if we don't know what to create, just create a standard xml element:
   return NS_NewXMLElement(aResult, aNodeInfo);

@@ -129,6 +129,7 @@ CPPSRCS		= \
 		nsSVGSVGElement.cpp \
 		nsSVGStopElement.cpp \
 		nsSVGStyleElement.cpp \
+		nsSVGSwitchElement.cpp \
 		nsSVGSymbolElement.cpp \
 		nsSVGTSpanElement.cpp \
 		nsSVGTextElement.cpp \
