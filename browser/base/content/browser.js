@@ -3838,7 +3838,6 @@ nsBrowserStatusHandler.prototype =
             } catch (ex) {}
           }
 
-          gURLBar.value = ""; // hack for bug 249322
           gURLBar.value = location;
           SetPageProxyState("valid");
 
