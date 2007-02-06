@@ -138,8 +138,8 @@ extern "C" {
     };
 }
 
-XPTC_PUBLIC_API(nsresult)
-XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
+EXPORT_XPCOM_API(nsresult)
+NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
                    PRUint32 paramCount, nsXPTCVariant* params)
 {
     PRUint32 result;
