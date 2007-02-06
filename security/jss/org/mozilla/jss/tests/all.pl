@@ -35,6 +35,8 @@
 #
 # ***** END LICENSE BLOCK *****
 
+use Socket;
+
 my $java;
 
 # dist <dist_dir>
@@ -68,8 +70,35 @@ my $lib_jss        = "libjss";
 my $jss_rel_dir    = "";
 my $jss_classpath  = "";
 my $portJSSEServer = 2876;
-my $portJSSServer  = 2877;
+my $portJSSServer  = 2897;
 my $hostname       = localhost;
+
+# checkPort will return a free Port number
+# otherwise it will die after trying 10 times. 
+sub checkPort {
+   my ($p) = @_; 
+   my $localhost = inet_aton("localhost");
+   my $max = $p + 10; # try to find a port 10 times
+   my $port = sockaddr_in($p, $localhost);
+
+   #create a socket 
+   socket(SOCKET, PF_INET, SOCK_STREAM, getprotobyname('tcp')) 
+   || die "Unable to create socket: $!\n";
+
+   #loop until you find a free port
+   while (connect(SOCKET, $port) && $p < $max) {
+         print "$p is in use trying to find another port.\n";
+         $p = $p + 1;
+         $port = sockaddr_in($p, $localhost);
+   }
+   close SOCKET || die "Unable to close socket: $!\n";
+   if ($p == $max) { 
+      die "Unable to find a free port..\n";
+   }
+
+   return $p;
+}
+
 
 sub setup_vars {
     my $argv = shift;
@@ -194,6 +223,10 @@ sub setup_vars {
     my $abs_base_mozilla = `cd $base_mozilla; pwd`;
     chomp $abs_base_mozilla;
     # $result_dir = Directory where the results are (mozilla/tests_results/jss)
+    my $result_dir =  $abs_base_mozilla . "/tests_results";
+    if (! -d $result_dir) {
+       mkdir( $result_dir, 0755 ) or die;
+    }
     my $result_dir =  $abs_base_mozilla . "/tests_results/jss";
     if( ! -d $result_dir ) {
       mkdir( $result_dir, 0755 ) or die;
@@ -219,6 +252,12 @@ sub setup_vars {
     close (VERSION);
     # Finally, set $testdir
     $testdir = $result_dir . "/" . $host . "." . $version;
+
+    #in case multiple tests are being run on the same machine increase  
+    #the port numbers with version number + 20
+
+    $portJSSEServer = $portJSSEServer + $version + 20;
+    $portJSSServer = $portJSSServer + $version + 20;
 
     print "*****ENVIRONMENT*****\n";
     print "java=$java\n";
@@ -289,6 +328,7 @@ print_case_result ($result,"List CA certs");
 # test sockets
 #
 print "============= test sockets\n";
+$portJSSServer = checkPort($portJSSServer);
 $result = system("echo $java org.mozilla.jss.tests.SSLClientAuth $testdir $pwfile $portJSSServer");
 $result = system("$java org.mozilla.jss.tests.SSLClientAuth $testdir $pwfile $portJSSServer");
 $result >>=8;
@@ -301,6 +341,7 @@ $portJSSServer=$portJSSServer+1;
 # test sockets in bypass mode
 #
 print "============= test sockets using bypass \n";
+$portJSSServer = checkPort($portJSSServer);
 $result = system("echo $java org.mozilla.jss.tests.SSLClientAuth $testdir $pwfile $portJSSServer bypass");
 $result = system("$java org.mozilla.jss.tests.SSLClientAuth $testdir $pwfile $portJSSServer bypass");
 $result >>=8;
@@ -414,6 +455,7 @@ print_case_result ($result,"TestSDR test");
 # Start JSSE server
 #
 print "============= Start JSSE server tests\n";
+$portJSSEServer = checkPort($portJSSEServer);
 $result=system("echo ./startJsseServ.$scriptext $jss_classpath $testdir $portJSSEServer $java");
 $result=system("./startJsseServ.$scriptext $jss_classpath $testdir $portJSSEServer $java");
 $result >>=8;
@@ -435,6 +477,7 @@ $portJSSServer=$portJSSServer+1;
 # Start JSS server
 #
 print "============= Start JSS server tests\n";
+$portJSSServer = checkPort($portJSSServer);
 $result=system("echo ./startJssServ.$scriptext $jss_classpath $testdir $portJSSServer bypassOff  fipsOff $java");
 $result=system("./startJssServ.$scriptext $jss_classpath $testdir $portJSSServer bypassOff  fipsOff $java");
 $result >>=8;
@@ -466,6 +509,7 @@ print_case_result ($result,"FIPSMODE enabled");
 # test sockets
 #
 print "============= test sockets\n";
+$portJSSServer = checkPort($portJSSServer);
 $result = system("echo $java org.mozilla.jss.tests.SSLClientAuth $testdir $pwfile $portJSSServer");
 $result = system("$java org.mozilla.jss.tests.SSLClientAuth $testdir $pwfile $portJSSServer");
 $result >>=8;
@@ -488,6 +532,7 @@ print_case_result ($result,"FIPSMODE enabled");
 # Start JSS server
 #
 print "============= Start JSS server tests\n";
+$portJSSServer = checkPort($portJSSServer);
 $result=system("echo ./startJssServ.$scriptext $jss_classpath $testdir $portJSSServer bypassOff  fips $java");
 $result=system("./startJssServ.$scriptext $jss_classpath $testdir $portJSSServer bypassOff  fips $java");
 $result >>=8;
@@ -541,6 +586,7 @@ $portJSSEServer=$portJSSEServer+1;
 # Start JSSE server to test JSS client in bypassPKCS11 mode
 #
 print "============= Start JSSE server tests to test the bypass\n";
+$portJSSEServer = checkPort($portJSSEServer);
 $result=system("echo ./startJsseServ.$scriptext $jss_classpath $testdir $portJSSEServer $java");
 $result=system("./startJsseServ.$scriptext $jss_classpath $testdir $portJSSEServer $java");
 $result >>=8;
@@ -562,6 +608,7 @@ $portJSSServer=$portJSSServer+1;
 # Start JSS server in bypassPKCS11 mode 
 #
 print "============= Start JSS server tests in bypassPKCS11 mode\n";
+$portJSSEServer = checkPort($portJSSEServer);
 $result=system("echo ./startJssServ.$scriptext $jss_classpath $testdir $portJSSServer bypass fipsOff $java");
 $result=system("./startJssServ.$scriptext $jss_classpath $testdir $portJSSServer bypass fipsOff $java");
 $result >>=8;
@@ -601,7 +648,6 @@ if ($strings_exist ne "") {
 }
 $result and print "JSS jar package information test returned $result\n";
 print_case_result ($result,"Check JSS jar version");
-
 print "JSSTEST_SUITE: $testpass / $testrun\n";
 my $rate = $testpass / $testrun * 100;
 printf "JSSTEST_RATE: %.0f %\n",$rate;
