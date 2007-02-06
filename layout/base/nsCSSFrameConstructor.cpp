@@ -8570,7 +8570,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
     ProcessPseudoFrames(state, frameItems);
   }
 
-  if (haveFirstLineStyle) {
+  if (haveFirstLineStyle && parentFrame == containingBlock) {
     // It's possible that some of the new frames go into a
     // first-line frame. Look at them and see...
     AppendFirstLineFrames(state, containingBlock->GetContent(),
@@ -9157,7 +9157,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
                           frameItems.childList))
     return NS_OK;
 
-  if (haveFirstLineStyle) {
+  if (haveFirstLineStyle && parentFrame == containingBlock) {
     // It's possible that the new frame goes into a first-line
     // frame. Look at it and see...
     if (isAppend) {
