@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=337631
+-->
+<head>
+  <title>Test for Bug 337631</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=337631">Mozilla Bug 337631</a>
+<p id="display"></p>
+<div id="content">
+  
+<a href="foo" id="test4">foo</a>
+<input id="test1" value="test">
+<p id="test2">adsf<a href="#" id="test3">asdf</a><input id="test5"></p>
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 337631 **/
+
+function getActiveElement()
+{
+  var rv;
+
+  var el = document.activeElement;
+  if (!el) {
+    rv = "none";
+    return rv;
+  }
+
+  if (el && el != document.documentElement) {
+    var nt;
+    try {
+      nt = el.nodeType;
+    } catch (e) {
+      rv = "[no permission]";
+      return rv;
+    }
+    if (!nt) {
+      rv = "[unknown]";
+    } else if (nt == 1) {
+      rv = el.tagName;
+    } else if (nt == 3) {
+      rv = "textnode"
+    } else {
+      rv = nt;
+    }
+
+    el = el.parentNode;
+    while (el && el != document.documentElement) {
+      rv += " in ";
+      try {
+        nt = el.nodeType;
+      } catch (e) {
+        rv += "[no permission]";
+        return rv;
+      }
+      if (!nt) {
+        rv += "[unknown]";
+      } else if (nt == 1) {
+        rv += el.tagName;
+      } else if (nt == 3) {
+        rv += "textnode"
+      } else {
+        rv += nt;
+      }
+
+      el = el.parentNode;
+    }
+  }
+
+  return rv;
+}
+
+$('test1').focus();
+is(getActiveElement(), "INPUT in DIV in BODY", "getActiveElement tests");
+
+$('test2').focus();
+is(getActiveElement(), "INPUT in DIV in BODY", "getActiveElement tests");
+
+$('test3').focus();
+is(getActiveElement(), "A in P in DIV in BODY", "getActiveElement tests");
+
+$('test4').focus();
+is(getActiveElement(), "A in DIV in BODY", "getActiveElement tests");
+
+$('test5').focus();
+is(getActiveElement(), "INPUT in P in DIV in BODY", "getActiveElement tests");
+
+</script>
+</pre>
+</body>
+</html>
+

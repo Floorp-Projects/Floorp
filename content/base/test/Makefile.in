@@ -51,11 +51,23 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug238409.html \
 		test_bug276037-1.html \
 		test_bug276037-2.xhtml \
+		test_bug308484.html \
+		test_bug337631.html \
+		test_bug338541.xhtml \
+		test_bug338679.html \
+		test_bug339494.html \
+		test_bug339494.xhtml \
+		test_bug339494.xul \
+		test_bug343596.html \
+		test_bug352728.html \
+		test_bug352728.xhtml \
+		test_bug355026.html \
 		test_bug357450.js \
 		test_bug357450.html \
 		test_bug357450.xhtml \
 		test_bug357450.xul \
 		test_bug357450_svg.xhtml \
+		test_bug357509.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
