@@ -44,7 +44,7 @@ $UseTimeStamp      = 0;      # Use the CVS 'pull-by-timestamp' option, or not
 #$TestOnly          = 0;      # Only run tests, don't pull/build
 #$BuildEmbed        = 0;      # After building seamonkey, go build embed app.
 #$SkipMozilla       = 0;      # Use to debug post-mozilla.pl scripts.
-$BuildLocales      = 1;      # Do l10n packaging?
+#$BuildLocales      = 0;      # Do l10n packaging?
 
 # Tests
 $CleanProfile             = 1;
@@ -181,18 +181,6 @@ $BuildLocalesArgs = "ZIP_IN=/builds/tinderbox/Sb-Trunk/Linux_2.4.21-32.0.1.EL_De
 #- Until you get the script working. When it works,
 #- change to the tree you're actually building
 $BuildTree  = 'Sunbird';
-
-#- If you're building locales and would like locale messages reported to a
-#- tree other than $BuildTree-ab-CD, define the tree here. -ab-CD will be
-#- appended for you.
-$LocaleTree = 'Mozilla-l10n';
-
-#- By default, locale builds delete the wget-ed en-US build from the local
-#- stage directory before rsyncing the freshly baked l10n builds up to the
-#- FTP server.  This prevents the rsync from accidentally overwriting the
-#- already existing en-US build on the FTP server.  This behaviour is most
-#- useful when building en-US and the other locales on different machines.
-$DeleteEnUsOnLocalesUpload = 0;
 
 #$BuildName = '';
 $BuildTag = 'SUNBIRD_0_3_BRANCH';
