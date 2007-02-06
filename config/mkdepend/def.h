@@ -48,7 +48,7 @@ in this Software without prior written authorization from The Open Group.
 #define MAXDEFINES	512
 #define MAXFILES	1024
 #define MAXINCFILES	128	/* "-include" files */
-#define MAXDIRS		64
+#define MAXDIRS		1024
 #define SYMTABINC	10	/* must be > 1 for define() to work right */
 #define	TRUE		1
 #define	FALSE		0
