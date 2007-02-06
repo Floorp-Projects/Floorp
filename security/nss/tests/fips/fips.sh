@@ -217,6 +217,10 @@ fips_140()
       echo "LIBPATH=${MANGLEDIR} dbtest -r -d ${P_R_FIPSDIR}"
       LIBPATH="${MANGLEDIR}" dbtest -r -d ${P_R_FIPSDIR} > ${TMP}/dbtestoutput.txt 2>&1
       RESULT=$?
+    elif [ "${OS_ARCH}" = "Darwin" ]; then
+      echo "DYLD_LIBRARY_PATH=${MANGLEDIR} dbtest -r -d ${P_R_FIPSDIR}"
+      DYLD_LIBRARY_PATH="${MANGLEDIR}" dbtest -r -d ${P_R_FIPSDIR} > ${TMP}/dbtestoutput.txt 2>&1
+      RESULT=$?
     else
       echo "LD_LIBRARY_PATH=${MANGLEDIR} dbtest -r -d ${P_R_FIPSDIR}"
       LD_LIBRARY_PATH="${MANGLEDIR}" dbtest -r -d ${P_R_FIPSDIR} > ${TMP}/dbtestoutput.txt 2>&1
