@@ -2,7 +2,7 @@
 use strict;
 use Bootstrap::Step;
 use t::Bootstrap::Step::Dummy;
-use t::Bootstrap::Step::Tag;
+#use t::Bootstrap::Step::Tag;
 
 my $step = t::Bootstrap::Step::Dummy->new();
 
