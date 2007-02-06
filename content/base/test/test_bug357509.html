@@ -1,0 +1,37 @@
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=357509
+-->
+<head>
+    <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script>
+    function foo(elem) {
+      rng = document.createRange();
+      rng.setStartBefore(elem);
+    }
+    </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=357509">Mozilla Bug 357509</a>
+<div style="display: none" id="rangetest">
+</div>
+<pre id="test">
+<script type="text/javascript">
+var passed = false;
+try {
+  foo(document.getElementById("rangetest"))
+  passed = true;
+}
+catch (e) {
+  passed = false;
+}
+
+<!-- The ok() function tests the first arg -->
+ok(passed, "nsIDOMRange.setStartBefore");
+
+</script>
+</pre>
+</body>
+</html>

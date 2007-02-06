@@ -1,0 +1,50 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=338541
+-->
+<head>
+  <title>Test for Bug 338541</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=338541">Mozilla Bug 338541</a>
+<p id="display"></p>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 338541 **/
+function getName(aNode, f)
+{
+  return (aNode ? aNode.nodeName : "(null)");
+}
+
+function walkDOM()
+{
+  var walker = document.createTreeWalker($('content'), Components.interfaces.nsIDOMNodeFilter.SHOW_ELEMENT, null, true);
+  var output = "";
+  while (walker.nextNode())
+  {
+    output += getName(walker.currentNode) + "\n";
+  }
+  output += "Final currentNode: " + getName(walker.currentNode);
+  is(output, "foo\nbar\nhtml:b\nqux\nbaz\nFinal currentNode: baz","treewalker returns correct nodeName");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(walkDOM, ok);
+
+</script>
+</pre>
+<div id="content" style="display: none">
+  <foo xmlns="http://example.com">
+     <bar><html:b xmlns:html="http://www.w3.org/1999/xhtml"><qux/></html:b>
+       <baz/>
+     </bar>
+  </foo>
+</div>
+</body>
+</html>
+

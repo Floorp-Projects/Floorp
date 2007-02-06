@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test from Adam Guthrie.
+
+https://bugzilla.mozilla.org/show_bug.cgi?id=355026
+-->
+<head>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=355026">Mozilla Bug 355026</a>
+<div style="display: none" id="lengthtest">
+</div>
+<pre id="test">
+<script type="text/javascript">
+
+  var foo = document.createElement("div");
+  foo.appendChild(document.createElement("div"));
+  var children = foo.getElementsByTagName("div");
+
+  is(children.length, 1, "After appending a child div to a div, div.length should be 1.");
+
+</script>
+</pre>
+</body>
+</html>

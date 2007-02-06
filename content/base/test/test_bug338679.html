@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=338679
+-->
+<head>
+<title>Testcase bug 338679</title>
+<script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=338679">Mozilla Bug 338679</a>
+<div >
+<dl>
+<dt>Actual result:</dt>
+<dd>
+    <pre id="out" style="width: 20em">
+    </pre>
+</dd>
+
+<dt>Expected result:</dt>
+
+<dd>
+    <pre>
+Previous:       width: 20em;
+New:            width: auto;
+    </pre>
+</dd>
+</dl>
+</div>
+<pre id="test">
+<script>
+
+/* This is our event handler function */
+function attr_modified(ev) {
+    $("out").textContent = "Previous:\t" + ev.prevValue + "\nNew:\t\t" + ev.newValue;
+    is(ev.newValue, "width: auto;", "DOMAttrModified event reports correct newValue");
+    todo(ev.prevValue == "width: 20em;", "DOMAttrModified event reports correct prevValue");
+    SimpleTest.finish(); // trigger the end of our test sequence
+}
+
+/* Call this to tell SimpleTest to wait for SimpleTest.finish() */
+SimpleTest.waitForExplicitFinish();
+
+$("out").addEventListener("DOMAttrModified", attr_modified, false);
+$("out").style.width = "auto";
+
+/* End of script, but SimpleTest will keep listening because 
+   we called waitForExplicitFinish() */
+
+</script>
+</pre>
+</body>
+</html>
