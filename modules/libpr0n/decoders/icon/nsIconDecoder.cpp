@@ -103,11 +103,12 @@ NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 {
   // read the data from the input stram...
   PRUint32 readLen;
+  nsresult rv;
 
 #ifdef MOZ_CAIRO_GFX
   PRUint8 buf[2];
 
-  nsresult rv = inStr->Read((char*)buf, 2, &readLen);
+  rv = inStr->Read((char*)buf, 2, &readLen);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(readLen == 2, NS_ERROR_UNEXPECTED); // w, h
   count-=2;
@@ -181,7 +182,8 @@ NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 
   NS_ENSURE_TRUE(buf_end - data >= PRInt32(bpr + abpr) * height,
                  NS_ERROR_UNEXPECTED);
-  
+
+  PRUint32 rownum;
   for (rownum = 0; rownum < height; ++rownum, data += bpr)
     mFrame->SetImageData(data, bpr, rownum * bpr);
 
