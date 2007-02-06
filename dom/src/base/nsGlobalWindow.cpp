@@ -5266,8 +5266,8 @@ nsGlobalWindow::Atob(const nsAString& aAsciiBase64String,
   }
 
   PRInt32 resultLen = dataLen;
-  if (base64[dataLen - 1] == '=') {
-    if (base64[dataLen - 2] == '=') {
+  if (!base64.IsEmpty() && base64[dataLen - 1] == '=') {
+    if (base64.Length() > 1 && base64[dataLen - 2] == '=') {
       resultLen = dataLen - 2;
     } else {
       resultLen = dataLen - 1;
