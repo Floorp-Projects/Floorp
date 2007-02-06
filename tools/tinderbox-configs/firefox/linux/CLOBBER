@@ -1,2 +1,1 @@
-bug 365974 - generate new nightly with new optimization options
-bug 366882 / bug 354449 - cvs conflict due to generated file no longer generated
+cobber per vlad; dom inspector broken

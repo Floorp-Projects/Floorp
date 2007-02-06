@@ -1,2 +1,1 @@
-bug 366882 / bug 354449 - cvs conflict due to generated file no longer generated
-bug 367768 - cairo update, symbol that wasn't being #define renamed before now is
+cobber per vlad; dom inspector broken
