@@ -4014,21 +4014,6 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsFrameConstructorState& aState,
 }
 
 static PRBool 
-MustGeneratePseudoParent(nsIContent* aContent, nsStyleContext*  aStyleContext)
-{
-  if (!aStyleContext ||
-      NS_STYLE_DISPLAY_NONE == aStyleContext->GetStyleDisplay()->mDisplay) {
-    return PR_FALSE;
-  }
-    
-  if (aContent->IsNodeOfType(nsINode::eTEXT)) {
-    return !TextIsOnlyWhitespace(aContent);
-  }
-
-  return !aContent->IsNodeOfType(nsINode::eCOMMENT);
-}
-
-static PRBool 
 NeedFrameFor(nsIFrame*   aParentFrame,
              nsIContent* aChildContent) 
 {
