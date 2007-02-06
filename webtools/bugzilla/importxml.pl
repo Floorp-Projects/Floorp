@@ -791,26 +791,36 @@ sub process_bug {
           || undef;
         push( @values, $date );
         push( @query,  "deadline" );
-        eval {
-            Bugzilla::Bug::ValidateTime($bug_fields{'estimated_time'}, "e");
-        };
-        if (!$@){
-            push( @values, $bug_fields{'estimated_time'} );
-            push( @query,  "estimated_time" );
+        if ( defined $bug_fields{'estimated_time'} ) {
+            eval {
+                Bugzilla::Bug::ValidateTime($bug_fields{'estimated_time'}, "e");
+            };
+            if (!$@){
+                push( @values, $bug_fields{'estimated_time'} );
+                push( @query,  "estimated_time" );
+            }
         }
-        eval {
-            Bugzilla::Bug::ValidateTime($bug_fields{'remaining_time'}, "r");
-        };
-        if (!$@){
-            push( @values, $bug_fields{'remaining_time'} );
-            push( @query,  "remaining_time" );
+        if ( defined $bug_fields{'remaining_time'} ) {
+            eval {
+                Bugzilla::Bug::ValidateTime($bug_fields{'remaining_time'}, "r");
+            };
+            if (!$@){
+                push( @values, $bug_fields{'remaining_time'} );
+                push( @query,  "remaining_time" );
+            }
         }
-        eval {
-            Bugzilla::Bug::ValidateTime($bug_fields{'actual_time'}, "a");
-        };
-        if ($@){
+        if ( defined $bug_fields{'actual_time'} ) {
+            eval {
+                Bugzilla::Bug::ValidateTime($bug_fields{'actual_time'}, "a");
+            };
+            if ($@){
+                $bug_fields{'actual_time'} = 0.0;
+                $err .= "Invalid Actual Time. Setting to 0.0\n";
+            }
+        }
+        else {
             $bug_fields{'actual_time'} = 0.0;
-            $err .= "Invalid Actual Time. Setting to 0.0\n";
+            $err .= "Actual time not defined. Setting to 0.0\n";
         }
     }
 
