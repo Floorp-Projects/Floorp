@@ -215,6 +215,7 @@ sub Send {
                    $when_restriction
           ORDER BY bugs_activity.bug_when", undef, @args);
 
+    my @new_depbugs;
     my $difftext = "";
     my $diffheader = "";
     my @diffparts;
@@ -238,6 +239,9 @@ sub Send {
             $old = format_time_decimal($old);
             $new = format_time_decimal($new);
         }
+        if ($fieldname eq 'dependson') {
+            push(@new_depbugs, grep {$_ =~ /^\d+$/} split(/[\s,]+/, $new));
+        }
         if ($attachid) {
             ($diffpart->{'isprivate'}) = $dbh->selectrow_array(
                 'SELECT isprivate FROM attachments WHERE attach_id = ?',
@@ -252,9 +256,19 @@ sub Send {
     }
     $values{'changed_fields'} = join(' ', @changedfields);
 
+    my @depbugs;
     my $deptext = "";
+    # Do not include data about dependent bugs when they have just been added.
+    # Completely skip checking for dependent bugs on bug creation as all
+    # dependencies bugs will just have been added.
+    if ($start) {
+        my $dep_restriction = "";
+        if (scalar @new_depbugs) {
+            $dep_restriction = "AND bugs_activity.bug_id NOT IN (" .
+                               join(", ", @new_depbugs) . ")";
+        }
 
-    my $dependency_diffs = $dbh->selectall_arrayref(
+        my $dependency_diffs = $dbh->selectall_arrayref(
            "SELECT bugs_activity.bug_id, bugs.short_desc, fielddefs.name, 
                    bugs_activity.removed, bugs_activity.added
               FROM bugs_activity
@@ -268,51 +282,49 @@ sub Send {
                AND (fielddefs.name = 'bug_status'
                     OR fielddefs.name = 'resolution')
                    $when_restriction
+                   $dep_restriction
           ORDER BY bugs_activity.bug_when, bugs.bug_id", undef, @args);
 
-    my $thisdiff = "";
-    my $lastbug = "";
-    my $interestingchange = 0;
-    my @depbugs;
-    foreach my $dependency_diff (@$dependency_diffs) {
-        my ($depbug, $summary, $what, $old, $new) = @$dependency_diff;
+        my $thisdiff = "";
+        my $lastbug = "";
+        my $interestingchange = 0;
+        foreach my $dependency_diff (@$dependency_diffs) {
+            my ($depbug, $summary, $what, $old, $new) = @$dependency_diff;
 
-        if ($depbug ne $lastbug) {
-            if ($interestingchange) {
-                $deptext .= $thisdiff;
+            if ($depbug ne $lastbug) {
+                if ($interestingchange) {
+                    $deptext .= $thisdiff;
+                }
+                $lastbug = $depbug;
+                my $urlbase = Bugzilla->params->{"urlbase"};
+                $thisdiff =
+                  "\nBug $id depends on bug $depbug, which changed state.\n\n" .
+                  "Bug $depbug Summary: $summary\n" .
+                  "${urlbase}show_bug.cgi?id=$depbug\n\n";
+                $thisdiff .= FormatTriple("What    ", "Old Value", "New Value");
+                $thisdiff .= ('-' x 76) . "\n";
+                $interestingchange = 0;
             }
-            $lastbug = $depbug;
-            my $urlbase = Bugzilla->params->{"urlbase"};
-            $thisdiff =
-              "\nBug $id depends on bug $depbug, which changed state.\n\n" . 
-              "Bug $depbug Summary: $summary\n" . 
-              "${urlbase}show_bug.cgi?id=$depbug\n\n"; 
-            $thisdiff .= FormatTriple("What    ", "Old Value", "New Value");
-            $thisdiff .= ('-' x 76) . "\n";
-            $interestingchange = 0;
+            $thisdiff .= FormatTriple($fielddescription{$what}, $old, $new);
+            if ($what eq 'bug_status'
+                && Bugzilla::Bug::is_open_state($old) ne Bugzilla::Bug::is_open_state($new))
+            {
+                $interestingchange = 1;
+            }
+            push(@depbugs, $depbug);
         }
-        $thisdiff .= FormatTriple($fielddescription{$what}, $old, $new);
-        if ($what eq 'bug_status'
-            && Bugzilla::Bug::is_open_state($old) ne Bugzilla::Bug::is_open_state($new))
-        {
-            $interestingchange = 1;
+
+        if ($interestingchange) {
+            $deptext .= $thisdiff;
         }
-        
-        push(@depbugs, $depbug);
-    }
-    
-    if ($interestingchange) {
-        $deptext .= $thisdiff;
-    }
+        $deptext = trim($deptext);
 
-    $deptext = trim($deptext);
-
-    if ($deptext) {
-        my $diffpart = {};
-        $diffpart->{'text'} = "\n" . trim("\n\n" . $deptext);
-        push(@diffparts, $diffpart);
+        if ($deptext) {
+            my $diffpart = {};
+            $diffpart->{'text'} = "\n" . trim("\n\n" . $deptext);
+            push(@diffparts, $diffpart);
+        }
     }
-
 
     my ($raw_comments, $anyprivate, $count) = get_comments_by_bug($id, $start, $end);
 
