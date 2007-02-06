@@ -189,7 +189,6 @@ InspectorApp.prototype =
           }
         }
         break;
-      }
     }
   },
   
