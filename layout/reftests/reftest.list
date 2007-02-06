@@ -127,6 +127,7 @@ f== bugs/368020-4.html bugs/368020-4-ref.html # bug 368085
 != bugs/40596-1h.html bugs/40596-1-ref.html
 == bugs/40596-1i.html bugs/40596-1-ref.html
 != bugs/40596-1j.html bugs/40596-1-ref.html
+== bugs/361091-1.html bugs/361091-1-ref.html
 
 
 # object/
