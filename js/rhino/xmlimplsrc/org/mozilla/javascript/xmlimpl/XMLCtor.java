@@ -23,6 +23,7 @@
  *
  * Contributor(s):
  *   Igor Bukanov
+ *   David P. Caldwell <inonit@inonit.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * the GNU General Public License Version 2 or later (the "GPL"), in which
@@ -267,4 +268,11 @@ class XMLCtor extends IdFunctionObject
         }
         throw new IllegalArgumentException(String.valueOf(id));
     }
+	
+	/**
+		hasInstance for XML objects works differently than other objects; see ECMA357 13.4.3.10.
+	 */
+	public boolean hasInstance(Scriptable instance) {
+		return (instance instanceof XML || instance instanceof XMLList);
+	}
 }
