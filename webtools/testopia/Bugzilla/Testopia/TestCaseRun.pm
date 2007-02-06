@@ -48,6 +48,7 @@ use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::User;
 use Bugzilla::Config;
+use Bugzilla::Constants;
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::Constants;
 use Bugzilla::Bug;
@@ -976,66 +977,11 @@ Returns true if the logged in user has rights to view this case-run.
 =cut
 
 sub canview {
-
-  my $self = shift;
-#  return $self->{'canview'} if exists $self->{'canview'};
-#  my ($case_log_id, $run_id, $plan_id, $current_user_id) = @_;
-#
-#  my $dbh = Bugzilla->dbh;
-#  my $canview = 0;
-#  my $current_user_id = Bugzilla->user->id;
-#  my ($plan_id) = $dbh->selectrow_array("SELECT plan_id FROM test_runs 
-#                                         WHERE run_id=?", 
-#                                         undef, $self->{'test_run_id'}); 
-#  
-#  if (0 == &Bugzilla::Param('private-cases-log')) {
-#    $canview = 1;
-#  } else {    
-#        
-#    if (0 == $self->{'isprivate'}) {
-#      # if !isprivate, then everybody can run it and should be able to see
-#      # the current status
-#      $canview = 1;
-#    } else {      
-#      # check is the current user is a tester:
-#      if (defined $current_user_id) {
-#
-#        SendSQL("select 1 from test_case_run_testers ".
-#                "where case_log_id=". $self->{'id'} ." and userid=$current_user_id");
-#                 
-#        if (FetchOneColumn()) {
-#          # current user is a tester
-#          $canview = 1;
-#        } else {
-#            # check editors
-#            SendSQL("select 1 from test_plans where plan_id=$plan_id and editor=$current_user_id");
-#            
-#            if (FetchOneColumn()) {
-#              $canview = 1;
-#            } else {
-#              # check watchers
-#              SendSQL("select 1 from test_plans_watchers where plan_id=$plan_id and userid=$current_user_id");
-#              if (FetchOneColumn()) {
-#                $canview = 1;
-#              } else {
-#                #check test run manager
-#                SendSQL("select 1 from test_runs where test_run_id=". $self->{'test_run_id'} ." and manager=$current_user_id");
-#                $canview = FetchOneColumn()? 1 : 0;
-#                
-#                if (0 == $canview) {
-#                  if (UserInGroup('admin')) {
-#                    $canview = 1;
-#                  }
-#                }
-#              }
-#            }
-#        }
-#      }      
-#    }    
-#  }
-  
-  $self->{'canview'} = 1;
-  return $self->{'canview'};
+    my $self = shift;
+    return 1 if Bugzilla->user->in_group('Testers');
+    return 1 if $self->run->plan->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) > 0;
+    return 1 if $self->run->plan->get_user_rights(Bugzilla->user->id, GRANT_DIRECT) > 0;
+    return 0;
 }
 
 =head2 canedit
@@ -1046,10 +992,10 @@ Returns true if the logged in user has rights to edit this case-run.
 
 sub canedit {
     my $self = shift;
-    return !$self->run->stop_date && $self->canview 
-    && (UserInGroup('managetestplans') 
-      || UserInGroup('edittestcases')
-        || UserInGroup('runtests'));
+    return 1 if Bugzilla->user->in_group('Testers');
+    return 1 if $self->run->plan->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) & 2;
+    return 1 if $self->run->plan->get_user_rights(Bugzilla->user->id, GRANT_DIRECT) & 2;
+    return 0;
 }
 
 =head2 candelete
@@ -1060,9 +1006,11 @@ Returns true if the logged in user has rights to delete this case-run.
 
 sub candelete {
     my $self = shift;
-    return 0 unless $self->canedit && Param("allow-test-deletion");
-    return 1 if Bugzilla->user->in_group("admin");
-    return 1 if Bugzilla->user->id == $self->run->manager->id;
+    return 1 if Bugzilla->user->in_group('admin');
+    return 0 unless Param("allow-test-deletion");
+    return 1 if Bugzilla->user->in_group('Testers') && Param("testopia-allow-group-member-deletes");
+    return 1 if $self->run->plan->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) & 4;
+    return 1 if $self->run->plan->get_user_rights(Bugzilla->user->id, GRANT_DIRECT) & 4;
     return 0;
 }
 

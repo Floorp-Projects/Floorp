@@ -45,6 +45,7 @@ use Bugzilla::User;
 use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::Config;
+use Bugzilla::Constants;
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::TestRun;
 use Bugzilla::Testopia::TestCase;
@@ -77,14 +78,14 @@ use base qw(Exporter);
 =cut
 
 use constant DB_COLUMNS => qw(
-    test_plans.plan_id
-    test_plans.product_id
-    test_plans.author_id
-    test_plans.type_id
-    test_plans.default_product_version
-    test_plans.name
-    test_plans.creation_date
-    test_plans.isactive
+    plan_id
+    product_id
+    author_id
+    type_id
+    default_product_version
+    name
+    creation_date
+    isactive
 );
 
 use constant NAME_MAX_LENGTH => 255;
@@ -183,6 +184,14 @@ sub store {
     my $key = $dbh->bz_last_key( 'test_plans', 'plan_id' );
     $self->store_text($key, $self->{'author_id'}, $self->text, $timestamp);
     $self->{'plan_id'} = $key;
+    
+    # Add permissions for the plan
+    $self->add_tester($self->{'author_id'},15);
+    if (Param('testopia-default-plan-testers-regexp')) {
+        $self->set_tester_regexp( Param('testopia-default-plan-testers-regexp'), 3);
+        $self->derive_regexp_testers(Param('testopia-default-plan-testers-regexp'));
+    }
+    
     return $key;
 }
 
@@ -595,6 +604,20 @@ sub check_plan_type {
     return $type;
 }
 
+sub check_tester {
+    my $self = shift;
+    my $userid = shift;
+    my $dbh = Bugzilla->dbh;    
+
+    my ($exists) = $dbh->selectrow_array(
+            "SELECT 1 
+               FROM test_plan_permissions
+              WHERE userid = ? AND plan_id = ?", 
+            undef, ($userid, $self->id));
+    
+    return $exists;
+    
+}
 =head2 update_plan_type
 
 Update the given type
@@ -772,6 +795,30 @@ sub history {
     return $ref;
 }
 
+sub copy_permissions {
+    my $self = shift;
+    my ($planid) = @_;
+    my $dbh = Bugzilla->dbh;
+    
+    my ($regexp, $perms) = $dbh->selectrow_array(
+        "SELECT user_regexp, permissions
+           FROM test_plan_permissions_regexp
+          WHERE plan_id = ?",undef, $self->id);
+
+    $dbh->do("INSERT INTO test_plan_permissions_regexp (plan_id, user_regexp, permissions)
+              VALUES(?,?,?)", undef,($planid, $regexp, $perms));
+              
+    my $ref = $dbh->selectall_arrayref(
+        "SELECT userid, permissions 
+           FROM test_plan_permissions
+          WHERE plan_id = ? AND grant_type = ?", 
+          {'Slice' =>{}}, ($self->id, GRANT_DIRECT));
+    foreach my $row (@$ref){
+        $dbh->do("INSERT INTO test_plan_permissions (userid, plan_id, permissions, grant_type)
+        VALUES(?,?,?,?)", undef, ($row->{'userid'}, $planid, $row->{'permissions'}, GRANT_DIRECT));
+    }
+}
+
 =head2 lookup_type
 
 Takes an ID of the type field and returns the value
@@ -846,7 +893,94 @@ sub lookup_product_by_name {
     return $value;
 }
 
+sub set_tester_regexp {
+    my $self = shift;
+    my ($regexp, $permissions) = @_;
+    my $dbh = Bugzilla->dbh;
+    my ($is, $oldreg, $oldperms) = $dbh->selectrow_array(
+        "SELECT 1, user_regexp, permissions 
+           FROM test_plan_permissions_regexp 
+          WHERE plan_id = ?",undef, $self->id);
+    
+    return unless ($oldreg ne $regexp || $oldperms != $permissions);
+    if ($is){
+        $dbh->do("UPDATE test_plan_permissions_regexp
+                     SET user_regexp = ?, permissions = ? 
+                   WHERE plan_id = ?", undef, ($regexp, $permissions, $self->id));
+    }
+    else { 
+        $dbh->do("INSERT INTO test_plan_permissions_regexp(plan_id, user_regexp, permissions) 
+                  VALUES(?,?,?)", 
+                  undef, ($self->id, $regexp, $permissions));
+    } 
+    
+    $self->derive_regexp_testers($regexp);
+    
+}
+sub derive_regexp_testers {
+    my $self = shift;
+    my $regexp = shift;
+    my $dbh = Bugzilla->dbh;
+    # Get the permissions of the regexp testers so we can set it later.
+    my ($permissions) = $dbh->selectrow_array(
+        "SELECT permissions 
+           FROM test_plan_permissions_regexp 
+         WHERE plan_id = ?", undef, $self->id);
+    # If something has changed, it is easier to delete everyone and add tham back in
+    $dbh->do("DELETE FROM test_plan_permissions 
+               WHERE plan_id = ? AND grant_type = ?", 
+               undef, ($self->id, GRANT_REGEXP));
+                
+    my $sth = $dbh->prepare("SELECT profiles.userid, profiles.login_name, plan_id
+                               FROM profiles
+                          LEFT JOIN test_plan_permissions
+                                 ON test_plan_permissions.userid = profiles.userid
+                                AND test_plan_permissions.plan_id = ?
+                                AND grant_type = ?");
+    my $plan_add = $dbh->prepare("INSERT INTO test_plan_permissions
+                                 (userid, plan_id, permissions, grant_type)
+                                 VALUES (?,?,?,?)");
+    my $plan_del = $dbh->prepare("DELETE FROM test_plan_permissions
+                                 WHERE user_id = ? AND plan_id = ?
+                                 AND grant_type = ?");
+    $sth->execute($self->id, GRANT_REGEXP);
+    while (my ($userid, $login, $present) = $sth->fetchrow_array()) {
+        if (($regexp =~ /\S+/) && ($login =~ m/$regexp/i)){
+            $plan_add->execute($userid, $self->id, $permissions, GRANT_REGEXP) unless $present;
+        } 
+    }
 
+}
+
+sub remove_tester {
+    my $self = shift;
+    my ($userid) = @_;
+    my $dbh = Bugzilla->dbh;
+    
+    $dbh->do("DELETE FROM test_plan_permissions 
+              WHERE userid = ? AND plan_id = ? AND grant_type = ?",
+              undef, ($userid, $self->id, GRANT_DIRECT));
+}
+
+sub add_tester {
+    my $self = shift;
+    my ($userid, $perms) = @_;
+    my $dbh = Bugzilla->dbh;
+    
+    $dbh->do("INSERT INTO test_plan_permissions(userid, plan_id, permissions) 
+              VALUES(?,?,?,?)", 
+              undef, ($userid, $self->id, $perms, GRANT_DIRECT));
+}
+
+sub update_tester {
+    my $self = shift;
+    my ($userid, $perms) = @_;
+    my $dbh = Bugzilla->dbh;
+    
+    $dbh->do("UPDATE test_plan_permissions SET permissions = ? 
+          WHERE userid = ? AND plan_id = ? AND grant_type = ?", 
+          undef, ($perms, $userid, $self->id, GRANT_DIRECT)); 
+}
 
 =head2 obliterate
 
@@ -903,7 +1037,11 @@ Returns true if the logged in user has rights to edit this plan
 
 sub canedit {
     my $self = shift;
-    return $self->canview && UserInGroup("managetestplans");
+    return 1 if Bugzilla->user->in_group('Testers');
+    return 1 if $self->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) & 2;
+    return 1 if $self->get_user_rights(Bugzilla->user->id, GRANT_DIRECT) & 2;
+    return 0;
+
 }
 
 =head2 canview
@@ -914,8 +1052,10 @@ Returns true if the logged in user has rights to view this plan
 
 sub canview {
     my $self = shift;
-    return 1 if (Bugzilla->user->id == $self->author->id); 
-    return Bugzilla::Testopia::Util::can_view_product($self->product_id);
+    return 1 if Bugzilla->user->in_group('Testers');
+    return 1 if $self->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) > 0;
+    return 1 if $self->get_user_rights(Bugzilla->user->id, GRANT_DIRECT) > 0;
+    return 0;
 }
 
 =head2 candelete
@@ -926,12 +1066,34 @@ Returns true if the logged in user has rights to delete this plan
 
 sub candelete {
     my $self = shift;
-    return 0 unless $self->canedit && Param("allow-test-deletion");
+    return 1 if Bugzilla->user->in_group('admin');
+    return 0 unless Param("allow-test-deletion");
+    return 1 if Bugzilla->user->in_group('Testers') && Param("testopia-allow-group-member-deletes");
+    return 1 if $self->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) & 4;
+    return 1 if $self->get_user_rights(Bugzilla->user->id, GRANT_DIRECT) & 4;
+    return 0;
+}
+
+sub canadmin {
+    my $self = shift;
     return 1 if Bugzilla->user->in_group("admin");
-    return 1 if Bugzilla->user->id == $self->author->id;
+    return 1 if ($self->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) & 8);
+    return 1 if ($self->get_user_rights(Bugzilla->user->id, GRANT_DIRECT) & 8);
     return 0;
 }
   
+sub get_user_rights {
+    my $self = shift;
+    my ($userid, $type) = @_;
+    
+    my $dbh = Bugzilla->dbh;
+    my ($perms) = $dbh->selectrow_array(
+        "SELECT permissions FROM test_plan_permissions 
+          WHERE userid = ? AND plan_id = ? AND grant_type = ?", 
+          undef, ($userid, $self->id, $type));
+    
+    return $perms;
+}
     
 ###############################
 ####      Accessors        ####
@@ -970,6 +1132,12 @@ Returns the type id of this plan
 
 Returns true if this plan is not archived
 
+=head2 use_product_rights
+
+If true, user access is granted based first on product groups and then on the 
+plan's access list otherwise, all right associated with this plan are 
+determined bey the ACL.
+
 =cut
 
 sub id              { return $_[0]->{'plan_id'};          }
@@ -991,6 +1159,59 @@ sub type {
     my $self = shift;
     $self->{'type'} = 'plan';
     return $self->{'type'};
+}
+
+sub tester_regexp { 
+    my ($self) = @_;
+    my $dbh = Bugzilla->dbh;
+    
+    my ($regexp) = $dbh->selectrow_array(
+        "SELECT user_regexp 
+           FROM test_plan_permissions_regexp
+          WHERE plan_id = ?", undef, $self->id);
+
+    return $regexp;
+}
+
+sub tester_regexp_permissions { 
+    my ($self) = @_;
+    my $dbh = Bugzilla->dbh;
+    
+    my ($perms) = $dbh->selectrow_array(
+        "SELECT permissions 
+           FROM test_plan_permissions_regexp
+          WHERE plan_id = ?", undef, $self->id);
+    my $p;
+    
+    $p->{'read'}   = 1 & $perms;
+    $p->{'write'}  = 2 & $perms;
+    $p->{'delete'} = 4 & $perms;
+    $p->{'admin'}  = 8 & $perms;
+  
+    return $p;
+}
+
+sub access_list {
+    my ($self) = @_;
+    my $dbh = Bugzilla->dbh;
+
+    my $ref = $dbh->selectall_arrayref(
+        "SELECT tpt.userid, permissions 
+           FROM test_plan_permissions AS tpt
+           JOIN profiles ON profiles.userid = tpt.userid 
+          WHERE plan_id = ? AND grant_type = ?
+          ORDER BY profiles.realname", {'Slice' =>{}}, ($self->id, GRANT_DIRECT));
+    my @rows;
+    foreach my $row (@$ref){
+        push @rows, {'user'   => Bugzilla::User->new($row->{'userid'}),
+                     'read'   => 1 & $row->{'permissions'},
+                     'write'  => 2 & $row->{'permissions'},
+                     'delete' => 4 & $row->{'permissions'},
+                     'admin'  => 8 & $row->{'permissions'},
+                    };
+    }
+    $self->{'access_list'} = \@rows;
+    return $self->{'access_list'};
 }
 
 =head2 attachments

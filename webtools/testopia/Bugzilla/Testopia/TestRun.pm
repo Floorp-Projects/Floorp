@@ -738,10 +738,10 @@ Returns true if the logged in user has rights to edit this test run.
 
 sub canedit {
     my $self = shift;
-    return $self->canview 
-    && (UserInGroup('managetestplans') 
-      || UserInGroup('edittestcases')
-        || UserInGroup('runtests'));
+    return 1 if Bugzilla->user->in_group('Testers');
+    return 1 if $self->plan->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) & 2;
+    return 1 if $self->plan->get_user_rights(Bugzilla->user->id, GRANT_DIRECT) & 2;
+    return 0;
 }
 
 =head2 canview
@@ -752,9 +752,11 @@ Returns true if the logged in user has rights to view this test run.
 
 sub canview {
     my $self = shift;
-    return $self->{'canview'} if exists $self->{'canview'};
-    $self->{'canview'} = Bugzilla::Testopia::Util::can_view_product($self->plan->product_id);
-    return $self->{'canview'};
+    return 1 if Bugzilla->user->in_group('Testers');
+    return 1 if $self->plan->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) > 0;
+    return 1 if $self->plan->get_user_rights(Bugzilla->user->id, GRANT_DIRECT) > 0;
+    return 0;
+
 }
 
 =head2 candelete
@@ -765,10 +767,11 @@ Returns true if the logged in user has rights to delete this test run.
 
 sub candelete {
     my $self = shift;
-    return 0 unless $self->canedit && Param("allow-test-deletion");
-    return 1 if Bugzilla->user->in_group("admin");
-    return 1 if Bugzilla->user->id == $self->manager->id;
-    return 1 if Bugzilla->user->id == $self->plan->author->id;
+    return 1 if Bugzilla->user->in_group('admin');
+    return 0 unless Param("allow-test-deletion");
+    return 1 if Bugzilla->user->in_group('Testers') && Param("testopia-allow-group-member-deletes");
+    return 1 if $self->plan->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) & 4;
+    return 1 if $self->plan->get_user_rights(Bugzilla->user->id, GRANT_DIRECT) & 4;
     return 0;
 }
 

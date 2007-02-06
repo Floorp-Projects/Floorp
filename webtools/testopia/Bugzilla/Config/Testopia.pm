@@ -44,6 +44,17 @@ sub get_param_list {
    default => 0,
   },
 
+  {
+   name    => 'testopia-allow-group-member-deletes', 
+   type    => 'b',
+   default => 0,
+  },
+
+  {
+   name    => 'testopia-default-plan-testers-regexp', 
+   type    => 't',
+  },
+
 #  {
 #   name    => 'print-tag-in-case-log', 
 #   type    => 'b',

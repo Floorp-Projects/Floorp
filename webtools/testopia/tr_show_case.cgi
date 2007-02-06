@@ -222,12 +222,37 @@ elsif ($action eq 'unlink'){
     my $plan_id = $cgi->param('plan_id');
     validate_test_id($plan_id, 'plan');
     my $case = Bugzilla::Testopia::TestCase->new($case_id);
+    ThrowUserError("testopia-read-only", {'object' => 'case'}) 
+        unless ($case->can_unlink_plan($plan_id));
+    
+    if (scalar @{$case->plans} == 1){
+        $vars->{'case'} = $case;
+        $vars->{'runcount'} = scalar @{$case->runs};
+        $vars->{'plancount'} = scalar @{$case->plans};
+        $vars->{'bugcount'} = scalar @{$case->bugs};
+        $template->process("testopia/case/delete.html.tmpl", $vars) ||
+            ThrowTemplateError($template->error());
+    }
+    else {
+        $vars->{'plan'} = Bugzilla::Testopia::TestPlan->new($plan_id);
+        $vars->{'case'} = $case;
+        $template->process("testopia/case/unlink.html.tmpl", $vars) ||
+            ThrowTemplateError($template->error());
+    }
+}
+
+elsif ($action eq 'do_unlink'){
+    Bugzilla->login(LOGIN_REQUIRED);
+    my $plan_id = $cgi->param('plan_id');
+    validate_test_id($plan_id, 'plan');
+    my $case = Bugzilla::Testopia::TestCase->new($case_id);
+    ThrowUserError("testopia-read-only", {'object' => 'case'}) 
+        unless ($case->can_unlink_plan($plan_id));
+
     if ($case->unlink_plan($plan_id)){
         $vars->{'tr_message'} = "Test plan successfully unlinked";
     }
-    else {
-        $vars->{'tr_error'} = "Test plan could not be unlinked. It is used in test runs.";
-    }
+    
     $vars->{'backlink'} = $case;
     display($case);
 }

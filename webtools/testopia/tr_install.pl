@@ -87,6 +87,9 @@ if (!GroupDoesExist($dbh, "runtests")) {
         'Can add, delete and edit test runs.', $adminid);
     tr_AssignAdminGrants($dbh, $groupid, $adminid);
 }
+
+updateACLs($dbh);
+
 print "Done.\n\n";
 ##############################################################################
 print "Cleaning up Testopia cache ...\n";
@@ -295,9 +298,9 @@ sub UpdateDB {
     $dbh->bz_drop_table('test_case_group_map');
     $dbh->bz_drop_table('test_category_templates');
     $dbh->bz_drop_table('test_plan_testers');
-
+    $dbh->bz_drop_table('test_plan_group_map');
     $dbh->bz_drop_column('test_plans', 'editor_id');
-
+    
     $dbh->bz_add_column('test_case_bugs', 'case_id', {TYPE => 'INT4', UNSIGNED => 1});
     $dbh->bz_add_column('test_case_runs', 'environment_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1}, 0);
     $dbh->bz_add_column('test_case_tags', 'userid', {TYPE => 'INT3', NOTNULL => 1}, 0);
@@ -380,7 +383,7 @@ sub UpdateDB {
     $dbh->bz_add_index('test_runs', 'test_run_plan_id_run_id_idx', [qw(plan_id run_id)]);
     $dbh->bz_add_index('test_runs', 'test_runs_summary_idx', {FIELDS => ['summary'], TYPE => 'FULLTEXT'});
 
-    if ($dbh->bz_index_info('test_case_tags', 'case_tags_case_id_idx')->{TYPE} eq '') {
+    if ($dbh->bz_index_info('test_case_tags', 'case_tags_case_id_idx') && $dbh->bz_index_info('test_case_tags', 'case_tags_case_id_idx')->{TYPE} eq '') {
         $dbh->bz_drop_index('test_case_tags', 'case_tags_case_id_idx');
         $dbh->bz_add_index('test_case_tags', 'case_tags_case_id_idx', {FIELDS => [qw(tag_id case_id)], TYPE => 'UNIQUE'});
     }
@@ -399,6 +402,21 @@ sub UpdateDB {
     migrateEnvData($dbh);
 }
 
+sub updateACLs {
+    my $dbh = shift;
+    print "Checking plan ACLs \n"; 
+    my $ref = $dbh->selectall_arrayref("SELECT plan_id, author_id FROM test_plans", {'Slice' =>{}});
+    foreach my $plan (@$ref){
+        my ($finished) = $dbh->selectrow_array(
+            "SELECT COUNT(*) FROM test_plan_permissions 
+              WHERE plan_id = ? AND userid = ?", 
+              undef, ($plan->{'plan_id'}, $plan->{'author_id'}));
+        next if ($finished);
+        $dbh->do("INSERT INTO test_plan_permissions(userid, plan_id, permissions) 
+                  VALUES(?,?,?)",
+                  undef, ($plan->{'author_id'}, $plan->{'plan_id'}, 15));
+    }
+}
 sub populateMiscTables {
     my ($dbh) = (@_);
 

@@ -1,0 +1,106 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Testopia System.
+  #
+  # The Initial Developer of the Original Code is Greg Hendricks.
+  # Portions created by Greg Hendricks are Copyright (C) 2006
+  # Novell. All Rights Reserved.
+  #
+  # Contributor(s): Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+<link href="testopia/css/default.css" rel="stylesheet" type="text/css" />
+[% PROCESS global/header.html.tmpl %]
+
+<h1>Access Control for Plan [% plan.id FILTER none %] - [% plan.name FILTER html %]</h1>
+<p>
+This page allows plan managers to permit access to a test plan. By default, members of the
+<b>Testers</b> group in Bugzilla will have read and write access. Beyond this, users login names 
+(email addresses) that match a given regular expression will be granted the level of permissions
+specified. Lastly, individuals can be granted additional permissions by adding them
+explicitly. 
+</p>
+<p>
+Delete and Admin rights are always handled by the access control list, unless the 
+<b>testopia-allow-group-member-deletes</b> parameter is set to <i>on</i>. Doing so will grant 
+delete rights to the <b>Testers</b> group.
+</p>
+
+[% PROCESS testopia/messages.html.tmpl %]
+<form action="tr_plan_access.cgi" method="POST">
+<input type="hidden" name="plan_id" value="[% plan.id FILTER none %]">
+<h3>Access Method</h3>
+<table>
+  <tr class="bz_row_header">
+    <th>User Regular Expression</th>
+    <th>Read</th>
+    <th>Write</th>
+    <th>Delete</th>
+    <th>Admin</th>
+  </tr>
+  <tr>
+    <td><input name="userregexp" value="[% plan.tester_regexp FILTER none %]" size="70"><br></td>
+    <td align="center"><input type="checkbox" name="pr" [% 'checked="checked"' IF plan.tester_regexp_permissions.read %] value="1"></td>
+    <td align="center"><input type="checkbox" name="pw" [% 'checked="checked"' IF plan.tester_regexp_permissions.write %] value="1"></td>
+    <td align="center"><input type="checkbox" name="pd" [% 'checked="checked"' IF plan.tester_regexp_permissions.delete %] value="1"></td>
+    <td align="center"><input type="checkbox" name="pa" [% 'checked="checked"' IF plan.tester_regexp_permissions.admin %] value="1"></td>
+  </tr>
+</table>
+<br>
+<h3>Access Control List</h3>
+<table>
+  <tr class="bz_row_header">
+    <th>User</th>
+    <th>Read</th>
+    <th>Write</th>
+    <th>Delete</th>
+    <th>Admin</th>
+  </tr>
+  [% FOREACH row = plan.access_list %]
+  <tr class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]">
+    <td>[%'*' IF row.user.id == plan.author.id %][% row.user.identity FILTER html %]</td>
+    <td align="center"><input type="checkbox" name="r[% row.user.id %]" [% 'checked="checked"' IF row.read %] value="1"></td>
+    <td align="center"><input type="checkbox" name="w[% row.user.id %]" [% 'checked="checked"' IF row.write %] value="1"></td>
+    <td align="center"><input type="checkbox" name="d[% row.user.id %]" [% 'checked="checked"' IF row.delete %] value="1"></td>
+    <td align="center"><input type="checkbox" name="a[% row.user.id %]" [% 'checked="checked"' IF row.admin %] value="1"></td>
+    <td><a href="tr_plan_access.cgi?action=delete&user=[% row.user.id %]&plan_id=[% plan.id FILTER none %]">Remove</a></td>
+  </tr>
+  [% END %]
+  <tr style="background-color:#D8E5EE">
+    <td style="padding: 3px;"><input style="width:200px;" name="adduser"></td>
+    <td align="center"><input type="checkbox" name="nr" value="1"></td>
+    <td align="center"><input type="checkbox" name="nw" value="1"></td>
+    <td align="center"><input type="checkbox" name="nd" value="1"></td>
+    <td align="center"><input type="checkbox" name="na" value="1"></td>
+    <td align="left"><input type="submit" name="action" value="Add User"></td>
+  </tr>
+</table>
+<p align="right">
+<input type="submit" name="action" value="Apply Changes">
+</p>
+<dl>
+  <dt>Read</dt>
+  <dd>Allows viewing rights to the plan and all test cases, test runs, and test case-runs associated with it. 
+  Test cases linked to more than one plan will not be visible unless the user has view rights on all plans linked</dd>
+  <dt>Write</dt>
+  <dd>Implies Read. Allows rights to modify the plan and associated cases, runs, and case-runs.</dd>
+  <dt>Delete</dt>
+  <dd>Implies Read and Write. Allows rights to delete the plan and associated cases, runs, and case-runs.</dd>
+  <dt>Admin</dt>
+  <dd>Implies Read, Write, and Delete. Allows rights to modify the plan's access controls (this page).</dd>
+</dl>
+* Plan author
+<p>
+<a href="tr_show_plan.cgi?plan_id=[% plan.id FILTER none %]">Back</a> to test plan
+</p>
+
+[% PROCESS global/footer.html.tmpl %]

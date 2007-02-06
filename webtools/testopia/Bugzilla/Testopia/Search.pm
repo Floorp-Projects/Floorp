@@ -104,7 +104,7 @@ sub init {
     my @fields;
     my %specialorderjoin;
     my %chartfields;
-    
+    #my ($testergroup) = $dbh->selectrow_array("SELECT id FROM groups WHERE name = ?",undef, 'Testers');
 
 # $chartid is the number of the current chart whose SQL we're constructing
 # $row is the current row of the current chart
@@ -302,7 +302,30 @@ sub init {
         }
         
     }
+    # Set up tables for access control
+    unless (Bugzilla->user->in_group('Testers')){
+        if ($obj eq 'case'){
+           push(@supptables, "INNER JOIN test_case_plans AS case_plans " .
+                  "ON test_cases.case_id = case_plans.case_id");
+           push(@supptables, "INNER JOIN test_plans " .
+                  "ON case_plans.plan_id = test_plans.plan_id");    }
+        elsif ($obj eq 'case_run'){
+           push(@supptables, "INNER JOIN test_case_runs AS case_runs " .
+                  "ON test_runs.run_id = case_runs.run_id");
+           push(@supptables, "INNER JOIN test_cases " .
+                  "ON case_runs.case_id = test_cases.case_id");
+        }
+        elsif ($obj eq 'run'){
+           push(@supptables,  "INNER JOIN test_plans " .
+                  "ON test_runs.plan_id = test_plans.plan_id");
+        }
     
+        push @supptables, "INNER JOIN test_plan_permissions ON test_plans.plan_id = test_plan_permissions.plan_id";
+        push @supptables, "INNER JOIN user_group_map AS map_testers ON map_testers.user_id = test_plan_permissions.userid";
+        push @supptables, "INNER JOIN groups on map_testers.group_id = groups.id";
+        push @wherepart, "((test_plan_permissions.permissions > 0 AND test_plan_permissions.userid = ". Bugzilla->user->id 
+                          .") OR (map_testers.user_id = ". Bugzilla->user->id ." AND groups.name = 'Testers'))";
+    }    
     # Set up tables for field sort order
     my $order = $cgi->param('order') || '';
     if ($order eq 'author') {        

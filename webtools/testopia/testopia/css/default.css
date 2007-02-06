@@ -175,3 +175,7 @@ a img {
 h3 {
   border-bottom: 1px dotted #000;
 }
+dt {
+  font-weight: bold;
+  font-size: medium;
+}

@@ -135,6 +135,17 @@ elsif ($action eq 'do_clone'){
             $newplan->add_tag($newtagid);
         }
     }
+    if ($cgi->param('copy_perms')){
+        $plan->copy_permissions($newplanid);
+        $newplan->derive_regexp_testers($plan->tester_regexp);
+    }
+    else {
+        # Give the author admin rights
+        $newplan->add_tester($author, 15);
+        $newplan->set_tester_regexp( Param('testopia-default-plan-testers-regexp'), 3)
+            if Param('testopia-default-plan-testers-regexp');
+        $newplan->derive_regexp_testers(Param('testopia-default-plan-testers-regexp'))
+    } 
     if ($cgi->param('copy_cases')){
         my @catids;
         #TODO: Copy case to the new category
@@ -478,13 +489,13 @@ sub display {
     my @time = localtime(time());
     my $date = sprintf "%04d-%02d-%02d", 1900+$time[5],$time[4]+1,$time[3];
 	my $filename = "testcases-$date.$format->{extension}";
-#	print $cgi->multipart_final if ($serverpush && $vars->{'case_table'}->list_count >= 1000);
     print $cgi->header(-type => $format->{'ctype'},
-					   -content_disposition => "$disp; filename=$filename");
+					   -content_disposition => "$disp; filename=$filename") 
+					   unless ($action eq 'do_clone');
 	
-	$vars->{'percentage'} = \&percentage;			   	  
-	$template->process($format->{'template'}, $vars) ||
-		ThrowTemplateError($template->error());
+    $vars->{'percentage'} = \&percentage;			   	  
+    $template->process($format->{'template'}, $vars) ||
+        ThrowTemplateError($template->error());
 
 }
 

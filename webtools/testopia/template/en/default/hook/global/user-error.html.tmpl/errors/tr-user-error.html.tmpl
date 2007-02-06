@@ -120,5 +120,11 @@
   [% ELSIF error == "missing-plans-list" %]
     [% title = "No plans selected" %]
     You did not select any plans to copy this case to.
+  [% ELSIF error == "testopia-tester-already-on-list" %]
+    [% title = "Selected user is already on the list" %]
+    The user [% login FILTER html %] is already a member of the ACL for this plan.
+  [% ELSIF error == "testopia-plan-acl-denied" %]
+    [% title = "Plan Administrator Privileges Required" %]
+    You must be an administrator of this test plan to modify the access control list. 
   [% END %]
   

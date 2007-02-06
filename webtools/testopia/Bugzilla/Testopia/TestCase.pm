@@ -740,18 +740,26 @@ sub unlink_plan {
     my $self = shift;
     my $dbh = Bugzilla->dbh;
     my ($plan_id) = @_;
-    
+    my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
+
+    if (scalar @{$self->plans} == 1){
+        $self->obliterate;
+        return 1;
+    }
+
     $dbh->bz_lock_tables('test_case_plans WRITE', 'test_case_runs WRITE', 
                          'test_runs READ', 'test_plans READ');
     
-    if (!$self->can_unlink_plan($plan_id)){
-        $dbh->bz_unlock_tables();
-        return 0;
+    foreach my $run (@{$plan->test_runs}){
+        $dbh->do("DELETE FROM test_case_runs 
+                   WHERE case_id = ? 
+                     AND run_id = ?", undef, $self->id, $run->id);
     }
     
     $dbh->do("DELETE FROM test_case_plans 
                WHERE plan_id = ? 
-                 AND case_id = ?", undef, $plan_id, $self->{'case_id'});
+                 AND case_id = ?", 
+                 undef, $plan_id, $self->{'case_id'});
     
     $dbh->bz_unlock_tables();   
 
@@ -1262,20 +1270,12 @@ sub can_unlink_plan {
     my $self = shift;
     my ($plan_id) = @_;
     
-    return 0 if (!UserInGroup('managetestplans'));
-    
-    return 0 if scalar @{$self->plans} < 2;
-    
-    my $dbh = Bugzilla->dbh;
-    my ($res) = $dbh->selectrow_array(
-            "SELECT 1 
-               FROM test_case_runs
-         INNER JOIN test_runs ON test_case_runs.run_id = test_runs.run_id
-              WHERE test_runs.plan_id = ? 
-                AND test_case_runs.case_id = ?",
-                undef, ($plan_id, $self->{'case_id'}));
-    
-    return !$res;
+    my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
+    return 1 if Bugzilla->user->in_group('admin');
+    return 1 if Bugzilla->user->in_group('Testers') && Param("testopia-allow-group-member-deletes");
+    return 1 if $plan->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) & 4;
+    return 1 if $plan->get_user_rights(Bugzilla->user->id, GRANT_DIRECT) & 4;
+    return 0;
 }
 
 =head2 obliterate
@@ -1315,9 +1315,10 @@ Returns true if the logged in user has rights to edit this test case.
 
 sub canedit {
     my $self = shift;
-    return $self->canview 
-      && UserInGroup('managetestplans') 
-        || UserInGroup('edittestcases');
+    return 1 if Bugzilla->user->in_group('Testers');
+    return 1 if $self->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) & 2;
+    return 1 if $self->get_user_rights(Bugzilla->user->id, GRANT_DIRECT) & 2;
+    return 0;
 }
 
 =head2 canview
@@ -1328,13 +1329,10 @@ Returns true if the logged in user has rights to view this test case.
 
 sub canview {
     my $self = shift;
-    return $self->{'canview'} if exists $self->{'canview'};
-    my $ret = 1;
-    foreach my $p (@{$self->plans}){
-        $ret = 0 unless Bugzilla::Testopia::Util::can_view_product($p->product_id);
-    }
-    $self->{'canview'} = $ret;
-    return $self->{'canview'};
+    return 1 if Bugzilla->user->in_group('Testers');
+    return 1 if $self->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) > 0;
+    return 1 if $self->get_user_rights(Bugzilla->user->id, GRANT_DIRECT) > 0;
+    return 0;
 }
 
 =head2 candelete
@@ -1345,26 +1343,36 @@ Returns true if the logged in user has rights to delete this test case.
 
 sub candelete {
     my $self = shift;
-    return 0 unless $self->canedit && Param("allow-test-deletion");
-    return 1 if Bugzilla->user->in_group("admin");
-
-    # Allow plan author to delete if this case is linked only to plans she owns.
+    return 1 if Bugzilla->user->in_group('admin');
+    return 0 unless Param("allow-test-deletion");
+    return 1 if Bugzilla->user->in_group('Testers') && Param("testopia-allow-group-member-deletes");
+    # Otherwise, check for delete rights on all the plans this is linked to
     my $own_all = 1;
     foreach my $plan (@{$self->plans}){
-        if (Bugzilla->user->id != $plan->author->id) {
+        if (!($plan->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) & 4) 
+            || !($plan->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) & 4)) {
             $own_all = 0;
             last;
         }
     }
     return 1 if $own_all;
-    
-    # Allow case author to delete if this case is not in any runs.
-    return 1 if Bugzilla->user->id == $self->author->id &&
-        $self->get_caserun_count == 0;
-
     return 0;
 }
 
+sub get_user_rights {
+    my $self = shift;
+    my ($userid, $type) = @_;
+    
+    my $dbh = Bugzilla->dbh;
+    my ($perms) = $dbh->selectrow_array(
+        "SELECT MAX(permissions) FROM test_plan_permissions
+           LEFT JOIN test_case_plans ON test_plan_permissions.plan_id = test_case_plans.plan_id
+          INNER JOIN test_cases ON test_case_plans.case_id = test_cases.case_id 
+          WHERE userid = ? AND test_plan_permissions.plan_id = ? AND grant_type = ?", 
+          undef, ($userid, $self->id, $type));
+    
+    return $perms;
+}
 ###############################
 ####      Accessors        ####
 ###############################
