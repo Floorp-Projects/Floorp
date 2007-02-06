@@ -1633,6 +1633,7 @@
 			dstPath = components;
 			dstSubfolderSpec = 6;
 			files = (
+				DE62E4300B72B3D200142851,
 				E4C7D98C0A32108500B455AD,
 				DEDDE2930ABFB4B400D415F2,
 				008115480B1811F0001CB3F0,
@@ -1865,6 +1866,7 @@
 				A708E74303FB90AB003C038B,
 				A7D88E680465D94000A80196,
 				0F5187C308858E620091F3FB,
+				DE62E42F0B72B3D200142851,
 			);
 			isa = PBXGroup;
 			name = Components;
@@ -10573,6 +10575,7 @@
 				7B9E1BFF09DD967E003256C9,
 				7BB332F40A7E99BC0075521C,
 				DEB968310B0D8E9F0023F8B1,
+				DE62E4320B72B50C00142851,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -13793,6 +13796,34 @@
 			settings = {
 			};
 		};
+		DE62E42F0B72B3D200142851 = {
+			isa = PBXFileReference;
+			lastKnownFileType = "compiled.mach-o.bundle";
+			name = libauth.dylib;
+			path = ../dist/bin/components/libauth.dylib;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		DE62E4300B72B3D200142851 = {
+			fileRef = DE62E42F0B72B3D200142851;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		DE62E4310B72B50C00142851 = {
+			isa = PBXFileReference;
+			lastKnownFileType = archive.ar;
+			name = libauth.a;
+			path = ../dist/lib/components/libauth.a;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		DE62E4320B72B50C00142851 = {
+			fileRef = DE62E4310B72B50C00142851;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		DE74F7470AB25E7D00FD1D5B = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
@@ -16493,6 +16524,7 @@
 				4DC41D3E0869D7A400947046,
 				4DC28F5D099184B80081939B,
 				7B9E1BFE09DD966F003256C9,
+				DE62E4310B72B50C00142851,
 			);
 			isa = PBXGroup;
 			name = "Gecko Static Components";

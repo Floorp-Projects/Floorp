@@ -86,6 +86,7 @@
     MODULE(nsComposerModule) \
     MODULE(xpAutoComplete) \
     MODULE(mozSpellCheckerModule) \
+    MODULE(nsAuthModule) \
     MODULE(BOOT) \
     MODULE(NSS) \
     /* end of list */
