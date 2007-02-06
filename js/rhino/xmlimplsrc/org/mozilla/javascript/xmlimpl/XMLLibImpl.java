@@ -23,6 +23,7 @@
  *
  * Contributor(s):
  *   Igor Bukanov
+ *   David P. Caldwell <inonit@inonit.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * the GNU General Public License Version 2 or later (the "GPL"), in which

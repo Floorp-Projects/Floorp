@@ -15,10 +15,12 @@
  *
  * The Initial Developer of the Original Code is
  * David P. Caldwell.
- * Portions created by David P. Caldwell are Copyright (C) 2007 David P. Caldwell
+ * Portions created by David P. Caldwell are Copyright (C) 
+ * 2007 David P. Caldwell. All Rights Reserved.
+ *
  *
  * Contributor(s):
- * David P. Caldwell <inonit@inonit.com>
+ *   David P. Caldwell <inonit@inonit.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * the GNU General Public License Version 2 or later (the "GPL"), in which
