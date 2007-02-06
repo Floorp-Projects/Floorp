@@ -360,33 +360,36 @@
   ${AddHandlerValues} "$0\FirefoxHTML" "$1" "$8,1" "${AppRegName} Document" "" "true"
 
   ReadRegStr $2 SHCTX "$0\http\shell\open\command" ""
-
   ClearErrors
   ${WordFind} "$2" "${FileMainEXE}" "E+1{" $R1
-
-  ; If firefox.exe is in the http open command string set all system wide
-  ; default handlers.
   ${Unless} ${Errors}
-    WriteRegStr SHCTX "$0\.htm"   "" "FirefoxHTML"
-    WriteRegStr SHCTX "$0\.html"  "" "FirefoxHTML"
-    WriteRegStr SHCTX "$0\.shtml" "" "FirefoxHTML"
-    WriteRegStr SHCTX "$0\.xht"   "" "FirefoxHTML"
-    WriteRegStr SHCTX "$0\.xhtml" "" "FirefoxHTML"
-
-    ${AddHandlerValues} "$0\gopher" "$1" "$8,0" "URL:Gopher Protocol" "true" "true"
-
-    ; An empty string is used for the 4th & 5th params because the following
-    ; protocol handlers already have a display name and additional keys required
-    ; for a protocol handler.
-    ${AddHandlerValues} "$0\ftp" "$1" "$8,0" "" "" "true"
     ${AddHandlerValues} "$0\http" "$1" "$8,0" "" "" "true"
+  ${EndUnless}
+
+  ReadRegStr $2 SHCTX "$0\https\shell\open\command" ""
+  ClearErrors
+  ${WordFind} "$2" "${FileMainEXE}" "E+1{" $R1
+  ${Unless} ${Errors}
     ${AddHandlerValues} "$0\https" "$1" "$8,0" "" "" "true"
+  ${EndUnless}
+
+  ReadRegStr $2 SHCTX "$0\ftp\shell\open\command" ""
+  ClearErrors
+  ${WordFind} "$2" "${FileMainEXE}" "E+1{" $R1
+  ${Unless} ${Errors}
+    ${AddHandlerValues} "$0\ftp" "$1" "$8,0" "" "" "true"
+  ${EndUnless}
+
+  ; Only set the gopher key if it doesn't already exist with a default value
+  ReadRegStr $2 SHCTX "$0\gopher" ""
+  ${If} $2 == ""
+    ${AddHandlerValues} "$0\gopher" "$1" "$8,0" "URL:Gopher Protocol" "true" "true"
   ${Else}
-    ; Only set the gopher key if it doesn't already exist with a default value
-    ReadRegStr $2 SHCTX "$0\gopher" ""
-    ${If} $2 == ""
+    ClearErrors
+    ${WordFind} "$2" "${FileMainEXE}" "E+1{" $R1
+    ${Unless} ${Errors}
       ${AddHandlerValues} "$0\gopher" "$1" "$8,0" "URL:Gopher Protocol" "true" "true"
-    ${EndIf}
+    ${EndUnless}
   ${EndIf}
 !macroend
 !define FixClassKeys "!insertmacro FixClassKeys"
