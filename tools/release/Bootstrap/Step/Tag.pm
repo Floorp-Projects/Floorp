@@ -86,7 +86,7 @@ sub Execute {
     while ($currentStep < $numSteps) {
         my $stepName = $subSteps[$currentStep];
         eval {
-            $this->Log('Tag running substep' . $stepName);
+            $this->Log(msg => 'Tag running substep' . $stepName);
             my $step = "Bootstrap::Step::Tag::$stepName"->new();
             $step->Execute();
         };
@@ -113,7 +113,7 @@ sub Verify {
     while ($currentStep < $numSteps) {
         my $stepName = $subSteps[$currentStep];
         eval {
-            $this->Log('Tag running substep' . $stepName);
+            $this->Log(msg => 'Tag running substep' . $stepName);
             my $step = "Bootstrap::Step::Tag::$stepName"->new();
             $step->Verify();
         };
