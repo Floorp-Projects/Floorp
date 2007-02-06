@@ -471,9 +471,9 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     R_FIPSBADPWFILE=../tests.fipsbadpw.$$
     R_FIPSP12PWFILE=../tests.fipsp12pw.$$
 
-    echo "fips140" > ${FIPSPWFILE}
+    echo "fIps140" > ${FIPSPWFILE}
     echo "fips104" > ${FIPSBADPWFILE}
-    echo "pkcs12fips140" > ${FIPSP12PWFILE}
+    echo "pKcs12fips140" > ${FIPSP12PWFILE}
 
     # a new log file, short - fast to search, mostly for tools to
     # see if their portion of the cert has succeeded, also for me -

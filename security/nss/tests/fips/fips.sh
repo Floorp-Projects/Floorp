@@ -175,13 +175,13 @@ fips_140()
   html_msg $? 0 "List the FIPS module keys (certutil -K)" "."
 
   echo "$SCRIPTNAME: Run PK11MODE in FIPSMODE  -----------------"
-  echo "pk11mode -d ${P_R_FIPSDIR} -p pk11 -f ${R_FIPSPWFILE}"
-  pk11mode -d ${P_R_FIPSDIR} -p pk11- -f ${R_FIPSPWFILE}  2>&1
+  echo "pk11mode -d ${P_R_FIPSDIR} -p fips- -f ${R_FIPSPWFILE}"
+  pk11mode -d ${P_R_FIPSDIR} -p fips- -f ${R_FIPSPWFILE}  2>&1
   html_msg $? 0 "Run PK11MODE in FIPS mode (pk11mode)" "."
 
   echo "$SCRIPTNAME: Run PK11MODE in Non FIPSMODE  -----------------"
-  echo "pk11mode -d ${P_R_FIPSDIR} -p pk11 -f ${R_FIPSPWFILE} -n"
-  pk11mode -d ${P_R_FIPSDIR} -p pk11- -f ${R_FIPSPWFILE} -n 2>&1
+  echo "pk11mode -d ${P_R_FIPSDIR} -p nonfips- -f ${R_FIPSPWFILE} -n"
+  pk11mode -d ${P_R_FIPSDIR} -p nonfips- -f ${R_FIPSPWFILE} -n 2>&1
   html_msg $? 0 "Run PK11MODE in Non FIPS mode (pk11mode -n)" "."
 
   LIBDIR="${DIST}/${OBJDIR}/lib"

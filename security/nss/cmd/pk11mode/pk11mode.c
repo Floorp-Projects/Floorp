@@ -542,6 +542,7 @@ CK_RV PKM_RecoverFunctions(CK_FUNCTION_LIST_PTR pFunctionList,
 void  PKM_Help(); 
 void  PKM_CheckPath(char *string);
 char  *PKM_FilePasswd(char *pwFile);
+static PRBool verbose = PR_FALSE;
 
 int main(int argc, char **argv)
 {
@@ -560,7 +561,7 @@ int main(int argc, char **argv)
     char *dbPrefix = NULL;
 
     PLOptStatus os;
-    PLOptState *opt = PL_CreateOptState(argc, argv, "nh::f:d:p:");
+    PLOptState *opt = PL_CreateOptState(argc, argv, "nvhf:d:p:");
     while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
         if (PL_OPT_BAD == os) continue;
@@ -582,6 +583,9 @@ int main(int argc, char **argv)
         case 'p':  /* opt_DBPrefix */
             if (!opt->value) PKM_Help();
             dbPrefix = strdup(opt->value);
+            break;
+        case 'v':
+            verbose = PR_TRUE;
             break;
         case 'h':  /* help message */
         default:
@@ -612,17 +616,11 @@ int main(int argc, char **argv)
         /* FIPS mode == FC_GetFunctionList */
         pC_GetFunctionList = (CK_C_GetFunctionList)
                              GetProcAddress(hModule, "FC_GetFunctionList");
-        PKM_LogIt("loading FC_GetFunctionList for FIPS Mode; slotID %d \n",
-                  slotID);
-        PKM_LogIt("pFunctionList->C_Foo == pFunctionList->FC_Foo\n");
-
     } else {
         /* NON FIPS mode  == C_GetFunctionList */
         pC_GetFunctionList = (CK_C_GetFunctionList)
                              GetProcAddress(hModule, "C_GetFunctionList");
-        PKM_LogIt("loading C_GetFunctionList for Non FIPS Mode; slotID %d \n",
-                  slotID);
-    }
+     }
     if (pC_GetFunctionList == NULL) {
         PKM_Error( "cannot load %s\n", LIB_NAME);
         goto cleanup;
@@ -649,6 +647,14 @@ int main(int argc, char **argv)
         slotID = 1;
     }
 #endif
+
+    if (MODE == FIPSMODE) {
+        printf("Loaded FC_GetFunctionList for FIPS MODE; slotID %d \n",
+               (int) slotID);
+    } else {
+        printf("loaded C_GetFunctionList for NON FIPS MODE; slotID %d \n",
+                (int) slotID);
+    }
 
     crv = (*pC_GetFunctionList)(&pFunctionList);
     assert(crv == CKR_OK);
@@ -702,8 +708,15 @@ int main(int argc, char **argv)
 
     if (!(tokenInfo.flags & CKF_USER_PIN_INITIALIZED)) {
         PKM_LogIt("Initing PW for DB\n");
-        PKM_InitPWforDB(pFunctionList, pSlotList, slotID,
+        crv = PKM_InitPWforDB(pFunctionList, pSlotList, slotID,
                         pwd, pwdLen);
+        if (crv == CKR_OK) {
+            PKM_LogIt("PKM_InitPWforDB succeeded\n\n");
+        } else {
+            PKM_Error( "PKM_InitPWforDB failed with 0x%08X, %-26s\n", crv, 
+                   PKM_CK_RVtoStr(crv));
+            goto cleanup;
+        }
     } else {
         PKM_LogIt("using existing DB\n");
     }
@@ -864,9 +877,10 @@ int main(int argc, char **argv)
                    PKM_CK_RVtoStr(crv));
         goto cleanup;
     }
-    
-    PKM_LogIt("**** ALL TESTS PASSED ****\n");
-    PKM_LogIt("**** Total number of TESTS %d. ****\n", NUMTESTS);
+
+    printf("**** Total number of TESTS ran in %s is %d. ****\n", 
+          ((MODE == FIPSMODE) ? "FIPS MODE" : "NON FIPS MODE"), (int) NUMTESTS);    
+    printf("**** ALL TESTS PASSED ****\n");
     PKM_LogIt("unloading NSS PKCS # 11 softoken and exiting\n");
 
 cleanup:
@@ -890,7 +904,7 @@ cleanup:
     PR_UnloadLibrary(lib);
 #endif
 
-    return 0;
+    return crv;
 }
 
 /*
@@ -1199,7 +1213,7 @@ CK_RV PKM_KeyTests(CK_FUNCTION_LIST_PTR pFunctionList,
             PKM_Error("C_GenerateKey succeeded when not logged in.\n");
             return CKR_GENERAL_ERROR;
         } else {
-            PKM_LogIt("C_GenerateKey failed as EXPECTED with 0x%08X, %-26s\n"
+            PKM_LogIt("C_GenerateKey returned as EXPECTED with 0x%08X, %-26s\n"
                       "since not logged in\n", crv, PKM_CK_RVtoStr(crv));
         }
         crv = pFunctionList->C_GenerateKeyPair(hRwSession, &rsaKeyPairGenMech,
@@ -1212,7 +1226,7 @@ CK_RV PKM_KeyTests(CK_FUNCTION_LIST_PTR pFunctionList,
             PKM_Error("C_GenerateKeyPair succeeded when not logged in.\n");
             return CKR_GENERAL_ERROR;
         } else {
-            PKM_LogIt("C_GenerateKeyPair failed as EXPECTED with 0x%08X, "
+            PKM_LogIt("C_GenerateKeyPair returned as EXPECTED with 0x%08X, "
                       "%-26s\n since not logged in\n", crv, 
                       PKM_CK_RVtoStr(crv));
         }
@@ -1690,17 +1704,19 @@ CK_RV PKM_KeyTests(CK_FUNCTION_LIST_PTR pFunctionList,
 
 void PKM_LogIt(const char *fmt, ...) {
     va_list args;
-    va_start (args, fmt);
-
-    if (MODE == FIPSMODE) {
-        printf("FIPS MODE: ");
-    } else if (MODE == NONFIPSMODE) {
-        printf("NON FIPS MODE: ");
-    } else if (MODE == HYBRIDMODE) {
-        printf("Hybrid MODE: ");
-    } else printf ("NO MODE: ");
-    vprintf(fmt, args);
-    va_end(args);
+    
+    if (verbose) {
+        va_start (args, fmt);
+        if (MODE == FIPSMODE) {
+            printf("FIPS MODE: ");
+        } else if (MODE == NONFIPSMODE) {
+            printf("NON FIPS MODE: ");
+        } else if (MODE == HYBRIDMODE) {
+            printf("Hybrid MODE: ");
+        } else printf ("NO MODE: ");
+        vprintf(fmt, args);
+        va_end(args);
+    }
 }
 
 void PKM_Error(const char *fmt, ...) {
@@ -1708,7 +1724,7 @@ void PKM_Error(const char *fmt, ...) {
     va_start (args, fmt);
 
     if (MODE == FIPSMODE) {
-        fprintf(stderr, "FIPS MODE PKM_Error: ");
+        fprintf(stderr, "\nFIPS MODE PKM_Error: ");
     } else if (MODE == NONFIPSMODE) {
         fprintf(stderr, "NON FIPS MODE PKM_Error: ");
     } else if (MODE == HYBRIDMODE) {
@@ -1836,7 +1852,7 @@ CK_RV PKM_InitPWforDB(CK_FUNCTION_LIST_PTR pFunctionList,
             PKM_Error( "C_SetPIN with a weak password succeeded\n");
             return crv;
         } else {
-            PKM_LogIt("C_SetPIN with a weak password failed with "
+            PKM_LogIt("C_SetPIN with a weak password returned with "
                       "0x%08X, %-26s\n", crv, PKM_CK_RVtoStr(crv));
         }
     }
@@ -1999,15 +2015,13 @@ CK_RV PKM_HybridMode(CK_UTF8CHAR_PTR pwd, CK_ULONG pwdLen,
     CK_FUNCTION_LIST_PTR pC_FunctionList;
     CK_SLOT_ID *pC_SlotList = NULL;
     CK_ULONG slotID_C = 1;
-
     CK_C_GetFunctionList pFC_GetFunctionList; /* FIPSMode */
     CK_FUNCTION_LIST_PTR pFC_FunctionList;
     CK_SLOT_ID *pFC_SlotList = NULL;
     CK_ULONG slotID_FC = 0;
-
-
     CK_RV crv = CKR_OK;
     CK_SESSION_HANDLE hSession;
+    int origMode = MODE; /* remember the orginal MODE value */ 
 
     NUMTESTS++; /* increment NUMTESTS */
     MODE = NONFIPSMODE;
@@ -2166,6 +2180,7 @@ CK_RV PKM_HybridMode(CK_UTF8CHAR_PTR pwd, CK_ULONG pwdLen,
     if (pC_SlotList) free(pC_SlotList);
     if (pFC_SlotList) free(pFC_SlotList);
 
+    MODE = origMode; /* set the mode back to the orginal Mode value */
     PKM_LogIt("PKM_HybridMode test Completed\n\n");
     return crv;
 }
@@ -2204,12 +2219,14 @@ CK_RV PKM_Mechanism(CK_FUNCTION_LIST_PTR pFunctionList,
         return crv;
     }
     PKM_LogIt("C_GetMechanismList returned the mechanism types:\n");
-    for (i = 0; i < mechanismCount; i++) {
-        printf("    0x%08lX", pMechanismList[i]);
-        if ((i != 0) && ((i % 4) == 0 )) printf("\n");
+    if (verbose) {
+        for (i = 0; i < mechanismCount; i++) {
+            printf("    0x%08lX", pMechanismList[i]);
+            if ((i != 0) && ((i % 4) == 0 )) printf("\n");
+        }
+        printf("\n");
     }
-    printf("\n");
-
+    
     for ( i = 0; i < mechanismCount; i++ ) {
         CK_MECHANISM_INFO minfo;
 
@@ -2330,7 +2347,7 @@ CK_RV PKM_SessionLogin(CK_FUNCTION_LIST_PTR pFunctionList,
     crv = pFunctionList->C_OpenSession(pSlotList[slotID], CKF_SERIAL_SESSION,
                                        NULL, NULL, &hSession);
     if (crv != CKR_OK) {
-        PKM_Error( "C_OpenSession failed with 0x%08X, %-26s\n", crv, 
+        PKM_Error("C_OpenSession failed with 0x%08X, %-26s\n", crv, 
                    PKM_CK_RVtoStr(crv));
         return crv;
     }
@@ -2338,37 +2355,36 @@ CK_RV PKM_SessionLogin(CK_FUNCTION_LIST_PTR pFunctionList,
     crv = pFunctionList->C_Login(hSession, CKU_USER, (unsigned char *) 
                                  "netscape", 8);
     if (crv == CKR_OK) {
-        PKM_Error( "C_Login with wrong password succeeded\n");
-        return crv;
+        PKM_Error("C_Login with wrong password succeeded\n");
+        return CKR_FUNCTION_FAILED;
     } else {
-        PKM_LogIt("C_Login with wrong password failed with 0x%08X, "
-                  "%-26s\n", crv, PKM_CK_RVtoStr(crv));
+        PKM_LogIt("As expected C_Login with wrong password returned 0x%08X, "
+                  "%-26s.\n ", crv, PKM_CK_RVtoStr(crv));
     }
     crv = pFunctionList->C_Login(hSession, CKU_USER, (unsigned char *) 
                                  "red hat", 7);
     if (crv == CKR_OK) {
-        PKM_Error( "C_Login with wrong password succeeded\n");
-        return crv;
+        PKM_Error("C_Login with wrong password succeeded\n");
+        return CKR_FUNCTION_FAILED;
     } else {
-        PKM_LogIt("C_Login with wrong password failed with 0x%08X, %-26s\n", 
-                  crv, PKM_CK_RVtoStr(crv));
+        PKM_LogIt("As expected C_Login with wrong password returned 0x%08X, "
+                  "%-26s.\n ", crv, PKM_CK_RVtoStr(crv));
     }
     crv = pFunctionList->C_Login(hSession, CKU_USER, 
                                  (unsigned char *) "sun", 3);
     if (crv == CKR_OK) {
-        PKM_Error( "C_Login with wrong password succeeded\n");
-        return crv;
-
+        PKM_Error("C_Login with wrong password succeeded\n");
+        return CKR_FUNCTION_FAILED;
     } else {
-        PKM_LogIt("C_Login with wrong password failed with 0x%08X, %-26s\n", 
-                   crv, PKM_CK_RVtoStr(crv));
+        PKM_LogIt("As expected C_Login with wrong password returned 0x%08X, "
+                  "%-26s.\n ", crv, PKM_CK_RVtoStr(crv));
     }
     crv = pFunctionList->C_Login(hSession, CKU_USER, pwd, pwdLen);
     if (crv == CKR_OK) {
         PKM_LogIt("C_Login with correct password succeeded\n");
     } else {
-        PKM_Error( "C_Login with correct password failed "
-                   "with 0x%08X, %-26s\n", crv, PKM_CK_RVtoStr(crv));
+        PKM_Error("C_Login with correct password failed "
+                  "with 0x%08X, %-26s\n", crv, PKM_CK_RVtoStr(crv));
         return crv;
     }
 
@@ -2549,17 +2565,18 @@ CK_RV PKM_DualFuncDigest(CK_FUNCTION_LIST_PTR pFunctionList,
         return crv;
     }
     ciphertextLen = ciphertextLen + lastLen;
-
-    printf("ciphertext = ");
-    for (i = 0; i < ciphertextLen; i++) {
-        printf("%02x", (unsigned)ciphertext[i]);
+    if (verbose) {
+        printf("ciphertext = ");
+        for (i = 0; i < ciphertextLen; i++) {
+            printf("%02x", (unsigned)ciphertext[i]);
+        }
+        printf("\n");
+        printf("eDigest = ");
+        for (i = 0; i < ulDigestLen; i++) {
+            printf("%02x", (unsigned)eDigest[i]);
+        }
+        printf("\n");
     }
-    printf("\n");
-    printf("eDigest = ");
-    for (i = 0; i < ulDigestLen; i++) {
-        printf("%02x", (unsigned)eDigest[i]);
-    }
-    printf("\n");
 
     /* Decrypt the text */
     crv = pFunctionList->C_DecryptInit(hSession, cryptMech, hSecKey);
@@ -2605,22 +2622,24 @@ CK_RV PKM_DualFuncDigest(CK_FUNCTION_LIST_PTR pFunctionList,
         return crv;
     }
 
-
     if (plaintextLen != pDataLen) {
         PKM_Error( "plaintextLen is %lu\n", plaintextLen);
         return crv;
     }
-    printf("plaintext = ");
-    for (i = 0; i < plaintextLen; i++) {
-        printf("%02x", (unsigned)plaintext[i]);
+    
+    if (verbose) {
+        printf("plaintext = ");
+        for (i = 0; i < plaintextLen; i++) {
+            printf("%02x", (unsigned)plaintext[i]);
+        }
+        printf("\n");
+        printf("dDigest = ");
+        for (i = 0; i < ulDigestLen; i++) {
+            printf("%02x", (unsigned)dDigest[i]);
+        }
+        printf("\n");
     }
-    printf("\n");
-    printf("dDigest = ");
-    for (i = 0; i < ulDigestLen; i++) {
-        printf("%02x", (unsigned)dDigest[i]);
-    }
-    printf("\n");
-
+    
     if (memcmp(eDigest, dDigest, ulDigestLen) == 0) {
         PKM_LogIt("Encrypted Digest equals Decrypted Digest\n");
     } else {
@@ -3185,7 +3204,6 @@ CK_RV PKM_PublicKey(CK_FUNCTION_LIST_PTR pFunctionList,
     CK_MECHANISM dsaWithSha1Mech = {
         CKM_DSA_SHA1, NULL, 0
     };
-    unsigned int i;
 
     NUMTESTS++; /* increment NUMTESTS */
 
@@ -3314,10 +3332,7 @@ CK_RV PKM_PublicKey(CK_FUNCTION_LIST_PTR pFunctionList,
         PKM_Error( "sha1DigestLen is %lu\n", sha1DigestLen);
         return crv;
     }
-    for (i = 0; i < sha1DigestLen; i++) {
-        printf("%02x", (unsigned)sha1Digest[i]);
-    }
-    printf("\n");
+
     if (memcmp(sha1Digest, MD, sizeof(MD)) == 0) {
         PKM_LogIt("SHA-1 SHA1ShortMsg test case Len = 136 passed\n");
     } else {
@@ -3464,7 +3479,7 @@ CK_RV PKM_PublicKey(CK_FUNCTION_LIST_PTR pFunctionList,
         PKM_Error( "C_Verify of modified data succeeded\n");
         return crv;
     } else {
-        PKM_LogIt("C_Verify of modified data failed as EXPECTED "
+        PKM_LogIt("C_Verify of modified data returned as EXPECTED "
             " with 0x%08X, %-26s\n", crv, PKM_CK_RVtoStr(crv));
     }
 
@@ -4762,7 +4777,7 @@ PKM_TLSMasterKeyDerive( CK_FUNCTION_LIST_PTR pFunctionList,
     crv = pFunctionList->C_DeriveKey(hSession, &mk_mech, pmk_obj, NULL, 0,
                                      &mk_obj);
     if (crv != CKR_MECHANISM_PARAM_INVALID) {
-        PKM_LogIt( "C_DeriveKey failed as EXPECTED with 0x%08X, %-26s\n", crv, 
+        PKM_LogIt( "C_DeriveKey returned as EXPECTED with 0x%08X, %-26s\n", crv, 
                    PKM_CK_RVtoStr(crv));
     } else {
         PKM_Error( "C_DeriveKey did not fail  with  bad data \n" );
