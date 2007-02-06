@@ -358,7 +358,25 @@ calDateTime::GetInTimezone(const nsACString& aTimezone, calIDateTime **aResult)
 
         ToIcalTime(&icalt);
 
-        nsresult rv = GetIcalTZ(aTimezone, &tz);
+        // Get the latest version of aTimezone.
+        nsresult rv;
+
+        nsCOMPtr<calIICSService> icsSvc = do_GetService(kCalICSService, &rv);
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+
+        nsCAutoString newTimezone;
+        rv = icsSvc->LatestTzId(aTimezone, newTimezone);
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+
+        if (newTimezone.Length() == 0) {
+            newTimezone = aTimezone;
+        }
+
+        rv = GetIcalTZ(newTimezone, &tz);
         if (NS_FAILED(rv))
             return rv;
 
