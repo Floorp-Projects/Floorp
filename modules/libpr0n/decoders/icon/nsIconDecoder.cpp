@@ -47,9 +47,6 @@
 #include "nsRect.h"
 #include "nsComponentManagerUtils.h"
 
-#include "nsIImage.h"
-#include "nsIInterfaceRequestorUtils.h"
-
 NS_IMPL_THREADSAFE_ADDREF(nsIconDecoder)
 NS_IMPL_THREADSAFE_RELEASE(nsIconDecoder)
 
@@ -101,51 +98,48 @@ NS_IMETHODIMP nsIconDecoder::Flush()
 
 NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval)
 {
-  // read the data from the input stram...
-  PRUint32 readLen;
   nsresult rv;
 
-#ifdef MOZ_CAIRO_GFX
-  PRUint8 buf[2];
-
-  rv = inStr->Read((char*)buf, 2, &readLen);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(readLen == 2, NS_ERROR_UNEXPECTED); // w, h
-  count-=2;
-
-  // Read size
-  PRInt32 w = buf[0];
-  PRInt32 h = buf[1];
-  NS_ENSURE_TRUE(w > 0 && h > 0, NS_ERROR_UNEXPECTED);
-  gfx_format format = gfxIFormats::BGRA; // XXX not really
-#else
   PRUint8 * const buf = (PRUint8 *)PR_Malloc(count);
   if (!buf) return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
-
+ 
+  // read the data from the input stram...
+  PRUint32 readLen;
   rv = inStr->Read((char*)buf, count, &readLen);
   NS_ENSURE_SUCCESS(rv, rv);
+#ifdef MOZ_CAIRO_GFX
+  NS_ENSURE_TRUE(readLen >= 2, NS_ERROR_UNEXPECTED); // w, h
+#else
   NS_ENSURE_TRUE(readLen >= 3, NS_ERROR_UNEXPECTED); // w, h, alphaBits
+#endif
+
   PRUint8 * const buf_end = buf + readLen;
   PRUint8 *data = buf;
 
-  // Read size & alphaBits
-  PRInt32 w = *data++;
-  PRInt32 h = *data++;
+  // since WriteFrom is only called once, go ahead and fire the on start notifications..
+
+  mObserver->OnStartDecode(nsnull);
+  // Read size
+  PRInt32 w = *(data++);
+  PRInt32 h = *(data++);
+#ifdef MOZ_CAIRO_GFX
+  NS_ENSURE_TRUE(w > 0 && h > 0, NS_ERROR_UNEXPECTED);
+#else
   PRUint8 alphaBits = *(data++);
   NS_ENSURE_TRUE(w > 0 && h > 0 && (alphaBits == 1 || alphaBits == 8),
                  NS_ERROR_UNEXPECTED);
-  gfx_format format = alphaBits == 1 ? gfx_format(gfxIFormats::RGB_A1)
-                                     : gfx_format(gfxIFormats::RGB_A8);
 #endif
 
-  // since WriteFrom is only called once, go ahead and fire the on start notifications..
-  if (mObserver)
-    mObserver->OnStartDecode(nsnull);
   mImage->Init(w, h, mObserver);
-
   if (mObserver)
     mObserver->OnStartContainer(nsnull, mImage);
 
+#ifdef MOZ_CAIRO_GFX
+  gfx_format format = gfxIFormats::BGRA; // XXX not really
+#else
+  gfx_format format = alphaBits == 1 ? gfx_format(gfxIFormats::RGB_A1)
+                                     : gfx_format(gfxIFormats::RGB_A8);
+#endif
   rv = mFrame->Init(0, 0, w, h, format, 24);
   if (NS_FAILED(rv))
     return rv;
@@ -153,46 +147,35 @@ NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
   mImage->AppendFrame(mFrame);
   if (mObserver)
     mObserver->OnStartFrame(nsnull, mFrame);
- 
-  PRInt32 width, height;
-  mFrame->GetWidth(&width);
-  mFrame->GetHeight(&height);
-  nsIntRect r(0, 0, width, height);
-
-#if defined(MOZ_CAIRO_GFX)
-  PRUint8 *data;
-  PRUint32 dataLen;
-  mFrame->GetImageData(&data, &dataLen);
-
-  // Ensure that there enough in the inputStream
-  NS_ENSURE_TRUE(count >= dataLen, NS_ERROR_UNEXPECTED);
-
-  // Read the image data direct into the frame data
-  rv = inStr->Read((char*)buf, PR_MIN(count, dataLen), &readLen);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Notify the image...
-  nsCOMPtr<nsIImage> img(do_GetInterface(mFrame));
-  img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
-
-#else
+  
   PRUint32 bpr, abpr;
+  PRInt32 width, height;
   mFrame->GetImageBytesPerRow(&bpr);
   mFrame->GetAlphaBytesPerRow(&abpr);
+  mFrame->GetWidth(&width);
+  mFrame->GetHeight(&height);
 
+  PRInt32 rownum;
+#if defined(MOZ_CAIRO_GFX)
+  NS_ENSURE_TRUE(buf_end - data >= PRInt32(bpr) * height,
+                 NS_ERROR_UNEXPECTED);
+  
+  for (rownum = 0; rownum < height; ++rownum, data += bpr)
+    mFrame->SetImageData(data, bpr, rownum * bpr);
+#else
   NS_ENSURE_TRUE(buf_end - data >= PRInt32(bpr + abpr) * height,
                  NS_ERROR_UNEXPECTED);
-
-  PRUint32 rownum;
+  
   for (rownum = 0; rownum < height; ++rownum, data += bpr)
     mFrame->SetImageData(data, bpr, rownum * bpr);
 
   for (rownum = 0; rownum < height; ++rownum, data += abpr)
     mFrame->SetAlphaData(data, abpr, rownum * abpr);   
-  PR_Free(buf);
-
 #endif
+  nsIntRect r(0, 0, width, height);
   mObserver->OnDataAvailable(nsnull, mFrame, &r);
+
+  PR_Free(buf);
 
   return NS_OK;
 }
