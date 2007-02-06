@@ -1875,9 +1875,9 @@
      <menupopup id="menu_HelpPopup" onpopupshowing="buildHelpMenu();">
 #ifdef XP_MACOSX
           <menuitem id="hintsAndTips" label="&hintsAndTips.label;" key="key_macHelp" oncommand="openRegionURL('mailnews.hints_and_tips.url');"/>
-          <menuitem id="releaseNotes" accesskey="&releaseCmd.accesskey;" label="&releaseCmd.label;" oncommand="openRegionURL('releaseNotesURL');"/>
+          <menuitem id="releaseNotes" accesskey="&releaseCmd.accesskey;" label="&releaseCmd.label;" oncommand="openFormattedRegionURL('app.releaseNotesURL');"/>
 #else
-          <menuitem id="releaseNotes" accesskey="&releaseCmd.accesskey;" label="&releaseCmd.label;" oncommand="openRegionURL('releaseNotesURL');"/>
+          <menuitem id="releaseNotes" accesskey="&releaseCmd.accesskey;" label="&releaseCmd.label;" oncommand="openFormattedRegionURL('app.releaseNotesURL');"/>
           <menuitem id="hintsAndTips" accesskey="&hintsAndTips.accesskey;" label="&hintsAndTips.label;" oncommand="openRegionURL('mailnews.hints_and_tips.url');"/>
 #endif
           <menuseparator id="menu_HelpAboutSeparator"/>

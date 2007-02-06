@@ -249,3 +249,24 @@ function openRegionURL(aResourceName)
     protocolSvc.loadUrl(uri);
   } catch (ex) {}
 }
+
+/**
+ *  Fetches the url for the passed in pref name, formats it and then loads it in the default
+ *  browser.
+ *
+ *  @param aPrefName - name of the pref that holds the url we want to format and open
+ */
+function openFormattedRegionURL(aPrefName)
+{
+  var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
+                             .getService(Components.interfaces.nsIURLFormatter);
+  var formattedUrl = formatter.formatURLPref(aPrefName);
+  
+  var uri = Components.classes["@mozilla.org/network/io-service;1"]
+            .getService(Components.interfaces.nsIIOService)
+            .newURI(formattedUrl, null, null);
+
+  var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
+                    .getService(Components.interfaces.nsIExternalProtocolService);
+  protocolSvc.loadUrl(uri);  
+}

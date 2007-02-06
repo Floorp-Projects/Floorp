@@ -74,10 +74,10 @@ pref("app.update.vendorName.override", "Mozilla");
 
 // URL user can browse to manually if for some reason all update installation
 // attempts fail.  TODO: Change this URL
-pref("app.update.url.manual", "http://www.mozilla.org/products/thunderbird/");
+pref("app.update.url.manual", "http://%LOCALE%.www.mozilla.com/%LOCALE%/%APP%/");
 // A default value for the "More information about this update" link
 // supplied in the "An update is available" page of the update wizard. 
-pref("app.update.url.details", "chrome://messenger-region/locale/region.properties");
+pref("app.update.url.details", "http://%LOCALE%.www.mozilla.com/%LOCALE%/%APP%/releases/");
 // User-settable override to app.update.url for testing purposes.
 //pref("app.update.url.override", "");
 
@@ -100,6 +100,9 @@ pref("app.update.timer", 600000);
 // a whatsNewURL field in their brand.properties that contains a link to a page
 // which tells users what's new in this new update.
 pref("app.update.showInstalledUI", false);
+
+// Release notes URL
+pref("app.releaseNotesURL", "http://%LOCALE%.www.mozilla.com/%LOCALE%/%APP%/%VERSION%/releasenotes/");
 
 // Blocklist preferences
 pref("extensions.blocklist.enabled", true);
