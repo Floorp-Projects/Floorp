@@ -99,7 +99,7 @@ class XmlNode {
 	}
 	
 	static XmlNode createElement(XmlProcessor processor, String namespaceUri, String xml) throws org.xml.sax.SAXException {
-		return createImpl( processor.parse(namespaceUri, xml) );
+		return createImpl( processor.toXml(namespaceUri, xml) );
 	}
 	
 	static XmlNode createEmpty(XmlProcessor processor) {

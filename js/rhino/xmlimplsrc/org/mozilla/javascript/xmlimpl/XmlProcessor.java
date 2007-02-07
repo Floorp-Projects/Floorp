@@ -177,7 +177,7 @@ class XmlProcessor {
 		}
 	}
 	
-	final Element parse(String defaultNamespaceUri, String xml) throws org.xml.sax.SAXException {
+	final Node toXml(String defaultNamespaceUri, String xml) throws org.xml.sax.SAXException {
 		//	See ECMA357 10.3.1
 		javax.xml.parsers.DocumentBuilderFactory domFactory = newDomFactory();
 		domFactory.setNamespaceAware(true);
@@ -214,11 +214,17 @@ class XmlProcessor {
 					node.getParentNode().removeChild(node);
 				}
 			}
-			//	Maybe not necessary adding the <parent></parent> rigamarole above
-			//	setElementDefaultNamespaces(document, defaultNamespaceUri);
-			Element rv = (Element)document.getDocumentElement().getChildNodes().item(0);
-			document.getDocumentElement().removeChild(rv);
-			return rv;
+			NodeList rv = document.getDocumentElement().getChildNodes();
+			if (rv.getLength() > 1) {
+				throw ScriptRuntime.constructError("SyntaxError", "XML objects may contain at most one node.");
+			} else if (rv.getLength() == 0) {
+				Node node = document.createTextNode("");
+				return node;
+			} else {
+				Node node = rv.item(0);
+				document.getDocumentElement().removeChild(node);
+				return node;
+			}
 		} catch (java.io.IOException e) {
 			throw new RuntimeException("Unreachable.");
 		} catch (javax.xml.parsers.ParserConfigurationException e) {
