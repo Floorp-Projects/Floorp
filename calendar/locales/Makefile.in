@@ -50,7 +50,10 @@ run_for_effects := $(shell if ! test -d $(DIST); then $(NSINSTALL) -D $(DIST); f
 _ABS_DIST := $(shell cd $(DIST) && pwd)
 
 ifdef MOZ_BRANDING_DIRECTORY
-SUBMAKEFILES += $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales/Makefile
+SUBMAKEFILES += \
+    $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/Makefile \
+    $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales/Makefile \
+    $(NULL)
 endif
 
 # This makefile uses variable overrides from the libs-% target to
