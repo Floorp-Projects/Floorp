@@ -1302,12 +1302,9 @@ void nsSVGGlyphFrame::SelectFont(gfxContext *aContext)
   // fonts in SVG to respond to the browser's "TextZoom"
   // (Ctrl++,Ctrl+-)
   nsPresContext *presContext = GetPresContext();
-  float pxPerTwips = presContext->TwipsToPixels();
-  float pixelScale;
-  presContext->DeviceContext()->GetCanonicalPixelScale(pixelScale);
   float textZoom = presContext->TextZoom();
 
-  cairo_set_font_size(ctx, fontData->mSize * pxPerTwips / pixelScale / textZoom);
+  cairo_set_font_size(ctx, presContext->AppUnitsToDevPixels(fontData->mSize) / textZoom);
 }
 
 void nsSVGGlyphFrame::UpdateGeometry(PRBool bRedraw,

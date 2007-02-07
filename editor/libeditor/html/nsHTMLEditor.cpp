@@ -5711,8 +5711,6 @@ nsHTMLEditor::GetElementOrigin(nsIDOMElement * aElement, PRInt32 & aX, PRInt32 &
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
   nsIFrame *frame = ps->GetPrimaryFrameFor(content); // not ref-counted
 
-  float t2p = ps->GetPresContext()->TwipsToPixels();
-
   if (nsHTMLEditUtils::IsHR(aElement) && frame) {
     frame = frame->GetNextSibling();
   }
@@ -5731,8 +5729,8 @@ nsHTMLEditor::GetElementOrigin(nsIDOMElement * aElement, PRInt32 & aX, PRInt32 &
     frame = frame->GetParent();
   }
 
-  aX = NSTwipsToIntPixels(offsetX , t2p);
-  aY = NSTwipsToIntPixels(offsetY , t2p);
+  aX = nsPresContext::AppUnitsToIntCSSPixels(offsetX);
+  aY = nsPresContext::AppUnitsToIntCSSPixels(offsetY);
 
   return NS_OK;
 }

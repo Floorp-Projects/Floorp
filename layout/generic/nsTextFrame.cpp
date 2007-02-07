@@ -6207,7 +6207,7 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
     // For now we add 1 pixel to the width of the invalidated rect.
     // This fixes cases where the twips to pixel roundoff causes the invalidated
     // rect's width to be one pixel short. 
-    nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
+    nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
 
     maxFrameWidth  = PR_MAX(maxFrameWidth,  mRect.width) + onePixel; 
     maxFrameHeight = PR_MAX(maxFrameHeight, mRect.height);

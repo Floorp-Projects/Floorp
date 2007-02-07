@@ -2619,10 +2619,6 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
     nsresult rv = mCSSParser->ParseColorString(PromiseFlatString(aBGColor),
                                                nsnull, 0, PR_TRUE, &bgColor);
     NS_ENSURE_SUCCESS(rv, rv);
-    
-    float p2t = presContext->PixelsToTwips();
-    nsRect r(aX, aY, aW, aH);
-    r.ScaleRoundOut(p2t);
 
 #ifndef MOZILLA_1_8_BRANCH    
     nsIPresShell* presShell = presContext->PresShell();
@@ -2652,8 +2648,10 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
     nsIFrame* rootFrame = presShell->FrameManager()->GetRootFrame();
     if (rootFrame) {
         // XXX This shadows the other |r|, above.
-        nsRect r(aX, aY, aW, aH);
-        r.ScaleRoundOut(presContext->PixelsToTwips());
+        nsRect r(nsPresContext::CSSPixelsToAppUnits(aX),
+                 nsPresContext::CSSPixelsToAppUnits(aY),
+                 nsPresContext::CSSPixelsToAppUnits(aW),
+                 nsPresContext::CSSPixelsToAppUnits(aH));
 
         nsDisplayListBuilder builder(rootFrame, PR_FALSE, PR_FALSE);
         nsDisplayList list;
@@ -2669,7 +2667,7 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
 
         rv = rootFrame->BuildDisplayListForStackingContext(&builder, r, &list);      
         if (NS_SUCCEEDED(rv)) {
-            float t2p = presContext->TwipsToPixels();
+            float t2p = presContext->AppUnitsPerDevPixel();
             // Ensure that r.x,r.y gets drawn at (0,0)
             mThebesContext->Save();
             mThebesContext->Translate(gfxPoint(-r.x*t2p, -r.y*t2p));

@@ -164,15 +164,13 @@ static void
 PaintDebugPlaceholder(nsIFrame* aFrame, nsIRenderingContext* aCtx,
                       const nsRect& aDirtyRect, nsPoint aPt)
 {
-  float p2t;
-  p2t = aFrame->GetPresContext()->PixelsToTwips();
   aCtx->SetColor(NS_RGB(0, 255, 255));
-  nscoord x = NSIntPixelsToTwips(-5, p2t);
+  nscoord x = nsPresContext::CSSPixelsToAppUnits(-5);
   aCtx->FillRect(aPt.x + x, aPt.y,
-                 NSIntPixelsToTwips(13, p2t), NSIntPixelsToTwips(3, p2t));
-  nscoord y = NSIntPixelsToTwips(-10, p2t);
+                 nsPresContext::CSSPixelsToAppUnits(13), nsPresContext::CSSPixelsToAppUnits(3));
+  nscoord y = nsPresContext::CSSPixelsToAppUnits(-10);
   aCtx->FillRect(aPt.x, aPt.y + y,
-                 NSIntPixelsToTwips(3, p2t), NSIntPixelsToTwips(10, p2t));
+                 nsPresContext::CSSPixelsToAppUnits(3), nsPresContext::CSSPixelsToAppUnits(10));
 }
 #endif // DEBUG
 

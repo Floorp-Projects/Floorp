@@ -40,13 +40,13 @@
 #include "nsIDeviceContext.h"
 #include "nsCOMPtr.h"
 #include "nsIMenuListener.h"
-#include "nsIEnumerator.h"
 #include "nsGfxCIID.h"
 #include "nsWidgetsCID.h"
 #include "nsIFullScreen.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIScreenManager.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsISimpleEnumerator.h"
 
 #ifdef DEBUG
 #include "nsIServiceManager.h"

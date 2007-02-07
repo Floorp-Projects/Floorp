@@ -415,6 +415,7 @@ nsThebesImage::Draw(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface,
 
 nsresult
 nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
+                              nsIDeviceContext* dx,
                               const gfxPoint& offset,
                               const gfxRect& targetRect,
                               const PRInt32 xPadding,
@@ -494,7 +495,12 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
             p0.x = - floor(offset.x + 0.5);
             p0.y = - floor(offset.y + 0.5);
         }
-
+        // Scale factor to account for CSS pixels; note that the offset (and 
+        // therefore p0) is in device pixels, while the width and height are in
+        // CSS pixels.
+        gfxFloat scale = gfxFloat(nsIDeviceContext::AppUnitsPerCSSPixel()) / 
+                         gfxFloat(dx->AppUnitsPerDevPixel());
+        patMat.Scale(1.0 / scale, 1.0 / scale);
         patMat.Translate(p0);
 
         pat = new gfxPattern(surface);

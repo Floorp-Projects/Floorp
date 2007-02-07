@@ -172,8 +172,7 @@ nsTreeColumn::GetX(PRInt32* aX)
   nsIFrame* frame = GetFrame();
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
-  float t2p = frame->GetPresContext()->TwipsToPixels();
-  *aX = NSToIntRound(frame->GetRect().x * t2p);
+  *aX = nsPresContext::AppUnitsToIntCSSPixels(frame->GetRect().x);
   return NS_OK;
 }
 
@@ -183,8 +182,7 @@ nsTreeColumn::GetWidth(PRInt32* aWidth)
   nsIFrame* frame = GetFrame();
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
-  float t2p = frame->GetPresContext()->TwipsToPixels();
-  *aWidth = NSToIntRound(frame->GetRect().width * t2p);
+  *aWidth = nsPresContext::AppUnitsToIntCSSPixels(frame->GetRect().width);
   return NS_OK;
 }
 

@@ -221,7 +221,6 @@ nsresult nsTextAccessibleWrap::GetCharacterExtents(PRInt32 aStartOffset, PRInt32
 {
   nsPresContext *presContext = GetPresContext();
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
-  float t2p = presContext->TwipsToPixels();
 
   nsIFrame *frame = GetFrame();
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
@@ -245,8 +244,8 @@ nsresult nsTextAccessibleWrap::GetCharacterExtents(PRInt32 aStartOffset, PRInt32
   nsIFrame *stopLoopFrame = endFrame->GetNextContinuation();
   for (; iter != stopLoopFrame; iter = iter->GetNextContinuation()) {
     nsRect rect = iter->GetScreenRectExternal();
-    nscoord start = (iter == startFrame) ? NSTwipsToIntPixels(startPoint.x, t2p) : 0;
-    nscoord end = (iter == endFrame) ? NSTwipsToIntPixels(endPoint.x, t2p) :
+    nscoord start = (iter == startFrame) ? presContext->AppUnitsToDevPixels(startPoint.x) : 0;
+    nscoord end = (iter == endFrame) ? presContext->AppUnitsToDevPixels(endPoint.x) :
                                        rect.width;
     rect.x += start;
     rect.width = end - start;

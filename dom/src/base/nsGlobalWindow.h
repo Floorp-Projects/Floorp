@@ -515,8 +515,7 @@ protected:
   nsresult GetWebBrowserChrome(nsIWebBrowserChrome** aBrowserChrome);
   // GetScrollInfo does not flush.  Callers should do it themselves as needed,
   // depending on which info they actually want off the scrollable view.
-  nsresult GetScrollInfo(nsIScrollableView** aScrollableView, float* aP2T,
-                         float* aT2P);
+  nsresult GetScrollInfo(nsIScrollableView** aScrollableView);
   nsresult SecurityCheckURL(const char *aURL);
   nsresult BuildURIfromBase(const char *aURL,
                             nsIURI **aBuiltURI,

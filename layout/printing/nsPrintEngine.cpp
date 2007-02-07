@@ -644,15 +644,6 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
       rv = mDeviceContext->GetDeviceContextFor(devspec,
                                                *getter_AddRefs(mPrt->mPrintDC));
       if (NS_SUCCEEDED(rv)) {
-        // Get the Original PixelScale incase we need to start changing it
-        mPrt->mPrintDC->GetCanonicalPixelScale(mPrt->mOrigDCScale);
-        // Shrink to Fit over rides and scaling values
-        if (!mPrt->mShrinkToFit) {
-          double scaling;
-          mPrt->mPrintSettings->GetScaling(&scaling);
-          mPrt->mPrintDC->SetCanonicalPixelScale(float(scaling)*mPrt->mOrigDCScale);
-        }
-
         if(webContainer) {
           // Always check and set the print settings first and then fall back
           // onto the PrintService if there isn't a PrintSettings
@@ -809,15 +800,6 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
   nsCOMPtr<nsIPrintingPromptService> pps(do_QueryInterface(aWebProgressListener));
   mPrt->mProgressDialogIsShown = pps != nsnull;
 
-  // Check to see if we need to transfer any of our old values
-  // over to the new PrintData object
-  if (mOldPrtPreview) {
-    mPrt->mOrigDCScale  = mOldPrtPreview->mOrigDCScale;
-  } else {
-    // Get the Original PixelScale in case we need to start changing it
-    mDeviceContext->GetCanonicalPixelScale(mPrt->mOrigDCScale);
-  }
-
   // You have to have both a PrintOptions and a PrintSetting to call
   // CheckForPrinters.
   // The user can pass in a null PrintSettings, but you can only
@@ -946,14 +928,6 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
       rv = mDeviceContext->GetDeviceContextFor(devspec, *getter_AddRefs(ppDC));
       if (NS_SUCCEEDED(rv)) {
         mDeviceContext->SetAltDevice(ppDC);
-        if (mPrt->mPrintSettings != nsnull) {
-          // Shrink to Fit over rides and scaling values
-          if (!mPrt->mShrinkToFit) {
-            double scaling;
-            mPrt->mPrintSettings->GetScaling(&scaling);
-            mDeviceContext->SetCanonicalPixelScale(float(scaling)*mPrt->mOrigDCScale);
-          }
-        }
       }
     }
   }
@@ -2024,7 +1998,11 @@ nsPrintEngine::ReflowDocList(nsPrintObject* aPO, PRBool aSetPixelScale)
     } else {
       ratio = aPO->mShrinkRatio - 0.005f; // round down
     }
-    mPrt->mPrintDC->SetCanonicalPixelScale(ratio*mPrt->mOrigDCScale);
+    aPO->mZoomRatio = ratio;
+  } else if (!mPrt->mShrinkToFit) {
+    double scaling;
+    mPrt->mPrintSettings->GetScaling(&scaling);
+    aPO->mZoomRatio = float(scaling);
   }
 
   nsresult rv;
@@ -2184,6 +2162,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
 
   aPO->mPresContext->SetPageSize(adjSize);
   aPO->mPresContext->SetIsRootPaginatedDocument(documentIsTopLevel);
+  aPO->mPresContext->SetPageScale(aPO->mZoomRatio);
 
   rv = aPO->mPresShell->InitialReflow(adjSize.width, adjSize.height);
 
@@ -3320,11 +3299,6 @@ nsPrintEngine::FinishPrintPreview()
   // then we assign it over
   mPrtPreview = mPrt;
   mPrt        = nsnull;
-
-  // Turning off the scaling of twips so any of the UI scrollbars
-  // will not get scaled
-  mPrtPreview->mPrintObject->mPresContext->SetScalingOfTwips(PR_FALSE);
-  mDeviceContext->SetCanonicalPixelScale(mPrtPreview->mOrigDCScale);
 
 #endif // NS_PRINT_PREVIEW
 

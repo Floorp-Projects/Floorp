@@ -289,7 +289,7 @@ nsMathMLmfracFrame::Place(nsIRenderingContext& aRenderingContext,
   // Get shifts
 
   nsPresContext* presContext = GetPresContext();
-  nscoord onePixel = presContext->IntScaledPixelsToTwips(1);
+  nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
 
   aRenderingContext.SetFont(GetStyleFont()->mFont, nsnull);
   nsCOMPtr<nsIFontMetrics> fm;

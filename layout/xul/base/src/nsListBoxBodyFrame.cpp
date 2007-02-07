@@ -238,10 +238,6 @@ nsListBoxBodyFrame::Init(nsIContent*     aContent,
 {
   nsresult rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
 
-  nsPresContext *presContext = GetPresContext();
-  
-  mOnePixel = presContext->IntScaledPixelsToTwips(1);
-  
   nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(this);
   if (!scrollFrame)
     return rv;
@@ -259,7 +255,7 @@ nsListBoxBodyFrame::Init(nsIContent*     aContent,
   scrollbarFrame->SetScrollbarMediatorContent(GetContent());
 
   nsCOMPtr<nsIFontMetrics> fm;
-  presContext->DeviceContext()->GetMetricsFor(
+  GetPresContext()->DeviceContext()->GetMetricsFor(
     GetStyleContext()->GetStyleFont()->mFont, *getter_AddRefs(fm)
     );
   fm->GetHeight(mRowHeight);
@@ -314,11 +310,8 @@ nsListBoxBodyFrame::AttributeChanged(PRInt32 aNameSpaceID,
     if (!rows.IsEmpty()) {
       PRInt32 dummy;
       PRInt32 count = rows.ToInteger(&dummy);
-      nsPresContext* presContext = GetPresContext();
-      float t2p;
-      t2p = presContext->TwipsToPixels();
-      PRInt32 rowHeight = GetRowHeightTwips();
-      rowHeight = NSTwipsToIntPixels(rowHeight, t2p);
+      PRInt32 rowHeight = GetRowHeightAppUnits();
+      rowHeight = nsPresContext::AppUnitsToIntCSSPixels(rowHeight);
       nsAutoString value;
       value.AppendInt(rowHeight*count);
       mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::minheight, value, PR_FALSE);
@@ -393,8 +386,8 @@ nsListBoxBodyFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState)
   nsIBox* box = nsnull;
   GetChildBox(&box);
   if (size > -1)
-    pref.height = size*GetRowHeightTwips();
-   
+    pref.height = size*GetRowHeightAppUnits();
+
   nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(this);
   if (scrollFrame &&
       scrollFrame->GetScrollbarStyles().mVertical == NS_STYLE_OVERFLOW_AUTO) {
@@ -412,9 +405,9 @@ nsListBoxBodyFrame::PositionChanged(nsISupports* aScrollbar, PRInt32 aOldIndex, 
   if (mScrolling)
     return NS_OK;
 
-  PRInt32 oldTwipIndex, newTwipIndex;
+  nscoord oldTwipIndex, newTwipIndex;
   oldTwipIndex = mCurrentIndex*mRowHeight;
-  newTwipIndex = (aNewIndex*mOnePixel);
+  newTwipIndex = nsPresContext::CSSPixelsToAppUnits(aNewIndex);
   PRInt32 twipDelta = newTwipIndex > oldTwipIndex ? newTwipIndex - oldTwipIndex : oldTwipIndex - newTwipIndex;
 
   PRInt32 rowDelta = twipDelta / mRowHeight;
@@ -727,9 +720,7 @@ nsListBoxBodyFrame::SetRowHeight(nscoord aRowHeight)
     if (!rows.IsEmpty()) {
       PRInt32 dummy;
       PRInt32 count = rows.ToInteger(&dummy);
-      float t2p;
-      t2p = GetPresContext()->TwipsToPixels();
-      PRInt32 rowHeight = NSTwipsToIntPixels(aRowHeight, t2p);
+      PRInt32 rowHeight = nsPresContext::AppUnitsToIntCSSPixels(aRowHeight);
       nsAutoString value;
       value.AppendInt(rowHeight*count);
       mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::minheight, value, PR_FALSE);
@@ -1033,7 +1024,7 @@ nsListBoxBodyFrame::CreateRows()
   // get the first tree box. If there isn't one create one.
   PRBool created = PR_FALSE;
   nsIBox* box = GetFirstItemBox(0, &created);
-  nscoord rowHeight = GetRowHeightTwips();
+  nscoord rowHeight = GetRowHeightAppUnits();
   while (box) {  
     if (created && mRowsToPrepend > 0)
       --mRowsToPrepend;

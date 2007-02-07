@@ -225,7 +225,7 @@ nscoord nsCSSValue::GetLengthTwips() const
       return NS_KILOMETERS_TO_TWIPS(mValue.mFloat);
 
     case eCSSUnit_Point:
-      return NSFloatPointsToTwips(mValue.mFloat);
+      return NS_POINTS_TO_TWIPS(mValue.mFloat);
     case eCSSUnit_Pica:
       return NS_PICAS_TO_TWIPS(mValue.mFloat);
     case eCSSUnit_Didot:

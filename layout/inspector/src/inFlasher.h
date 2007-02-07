@@ -63,10 +63,10 @@ public:
 
 protected:
   void DrawOutline(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
-                   float aP2T, nsIRenderingContext* aRenderContext,
+                   nsIRenderingContext* aRenderContext,
                    PRBool aDrawBegin, PRBool aDrawEnd);
   void DrawLine(nscoord aX, nscoord aY, nscoord aLength,
-                PRBool aDir, PRBool aBounds, float aP2T,
+                PRBool aDir, PRBool aBounds,
                 nsIRenderingContext* aRenderContext);
 
   nsCOMPtr<nsIInspectorCSSUtils> mCSSUtils;

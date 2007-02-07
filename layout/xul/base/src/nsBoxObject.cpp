@@ -210,21 +210,10 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
     origin.x -= parentBorder->GetBorderWidth(NS_SIDE_LEFT);
     origin.y -= parentBorder->GetBorderWidth(NS_SIDE_TOP);
 
-    // Get the Presentation Context from the Shell
-    nsIPresShell* shell = GetPresShell(PR_FALSE);
-    NS_ASSERTION(shell, "Must have shell if we have a frame!");
-    nsPresContext *context = shell->GetPresContext();
-    if (context) {
-      // Get the scale from that Presentation Context
-      float scale;
-      scale = context->TwipsToPixels();
-              
-      // Convert to pixels using that scale
-      aRect.x = NSTwipsToIntPixels(origin.x, scale);
-      aRect.y = NSTwipsToIntPixels(origin.y, scale);
-      aRect.width = NSTwipsToIntPixels(rcFrame.width, scale);
-      aRect.height = NSTwipsToIntPixels(rcFrame.height, scale);
-    }
+    aRect.x = nsPresContext::AppUnitsToIntCSSPixels(origin.x);
+    aRect.y = nsPresContext::AppUnitsToIntCSSPixels(origin.y);
+    aRect.width = nsPresContext::AppUnitsToIntCSSPixels(rcFrame.width);
+    aRect.height = nsPresContext::AppUnitsToIntCSSPixels(rcFrame.height);
   }
  
   return NS_OK;

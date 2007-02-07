@@ -257,7 +257,6 @@ nsIntRect nsHyperTextAccessible::GetBoundsForString(nsIFrame *aFrame, PRInt32 aS
   NS_ENSURE_SUCCESS(rv, screenRect);
 
   nsPresContext *context = shell->GetPresContext();
-  float t2p = context->TwipsToPixels();
 
   while (frame && aLength > 0) {
     // Start with this frame's screen rect, which we will 
@@ -276,13 +275,13 @@ nsIntRect nsHyperTextAccessible::GetBoundsForString(nsIFrame *aFrame, PRInt32 aS
     nsPoint frameTextStartPoint;
     rv = frame->GetPointFromOffset(context, rc, aStartOffset, &frameTextStartPoint);
     NS_ENSURE_SUCCESS(rv, nsRect());   
-    frameScreenRect.x += NSTwipsToIntPixels(frameTextStartPoint.x, t2p);
+    frameScreenRect.x += context->AppUnitsToDevPixels(frameTextStartPoint.x);
 
     // Use the point for the end offset to calculate the width
     nsPoint frameTextEndPoint;
     rv = frame->GetPointFromOffset(context, rc, aStartOffset + frameSubStringLength, &frameTextEndPoint);
     NS_ENSURE_SUCCESS(rv, nsRect());   
-    frameScreenRect.width = NSTwipsToIntPixels(frameTextEndPoint.x - frameTextStartPoint.x, t2p);
+    frameScreenRect.width = context->AppUnitsToDevPixels(frameTextEndPoint.x - frameTextStartPoint.x);
 
     screenRect.UnionRect(frameScreenRect, screenRect);
 
@@ -925,10 +924,8 @@ NS_IMETHODIMP nsHyperTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY, ns
   nsPoint pointInHyperText(aX - frameScreenRect.x, aY - frameScreenRect.y);
   nsPresContext *context = GetPresContext();
   NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
-  // Convert to twips
-  float p2t = context->PixelsToTwips();
-  pointInHyperText.x = NSIntPixelsToTwips(pointInHyperText.x, p2t);
-  pointInHyperText.y = NSIntPixelsToTwips(pointInHyperText.y, p2t);
+  pointInHyperText.x = context->DevPixelsToAppUnits(pointInHyperText.x);
+  pointInHyperText.y = context->DevPixelsToAppUnits(pointInHyperText.y);
 
   // Go through the frames to check if each one has the point.
   // When one does, add up the character offsets until we have a match

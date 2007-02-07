@@ -369,11 +369,9 @@ void nsView::DoResetWidgetBounds(PRBool aMoveOnly,
 
   NS_PRECONDITION(mWindow, "Why was this called??");
   nsIDeviceContext  *dx;
-  float             t2p, p2t;
   
   mViewManager->GetDeviceContext(dx);
-  t2p = dx->AppUnitsToDevUnits();
-  p2t = dx->DevUnitsToAppUnits();
+  PRInt32 p2a = dx->AppUnitsPerDevPixel();
   NS_RELEASE(dx);
 
   nsPoint offset(0, 0);
@@ -384,15 +382,15 @@ void nsView::DoResetWidgetBounds(PRBool aMoveOnly,
       // put offset into screen coordinates
       nsRect screenRect(0,0,1,1);
       parentWidget->WidgetToScreen(screenRect, screenRect);
-      offset += nsPoint(NSIntPixelsToTwips(screenRect.x, p2t),
-                        NSIntPixelsToTwips(screenRect.y, p2t));
+      offset += nsPoint(NSIntPixelsToAppUnits(screenRect.x, p2a),
+                        NSIntPixelsToAppUnits(screenRect.y, p2a));
     }
   }
 
-  nsRect newBounds(NSTwipsToIntPixels((mDimBounds.x + offset.x), t2p),
-                   NSTwipsToIntPixels((mDimBounds.y + offset.y), t2p),
-                   NSTwipsToIntPixels(mDimBounds.width, t2p),
-                   NSTwipsToIntPixels(mDimBounds.height, t2p));
+  nsRect newBounds(NSAppUnitsToIntPixels((mDimBounds.x + offset.x), p2a),
+                   NSAppUnitsToIntPixels((mDimBounds.y + offset.y), p2a),
+                   NSAppUnitsToIntPixels(mDimBounds.width, p2a),
+                   NSAppUnitsToIntPixels(mDimBounds.height, p2a));
     
   PRBool changedPos = PR_TRUE;
   PRBool changedSize = PR_TRUE;
@@ -632,7 +630,7 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
   NS_IF_RELEASE(mWindow);
 
   mViewManager->GetDeviceContext(dx);
-  float scale = dx->AppUnitsToDevUnits();
+  float scale = 1.0f / dx->AppUnitsPerDevPixel();
 
   trect *= scale;
 
@@ -775,7 +773,7 @@ void nsIView::List(FILE* out, PRInt32 aIndent) const
     float p2t;
     nsIDeviceContext *dx;
     mViewManager->GetDeviceContext(dx);
-    p2t = dx->DevUnitsToAppUnits();
+    p2t = dx->AppUnitsPerDevPixel();
     NS_RELEASE(dx);
     mWindow->GetClientBounds(windowBounds);
     windowBounds *= p2t;
@@ -841,9 +839,9 @@ nsIntPoint nsIView::GetScreenPosition() const
   if (widget) {
     nsCOMPtr<nsIDeviceContext> dx;
     mViewManager->GetDeviceContext(*getter_AddRefs(dx));
-    float t2p = dx->AppUnitsToDevUnits();
-    nsIntRect ourRect(NSTwipsToIntPixels(toWidgetOffset.x, t2p),
-                      NSTwipsToIntPixels(toWidgetOffset.y, t2p),
+    PRInt32 p2a = dx->AppUnitsPerDevPixel();
+    nsIntRect ourRect(NSAppUnitsToIntPixels(toWidgetOffset.x, p2a),
+                      NSAppUnitsToIntPixels(toWidgetOffset.y, p2a),
                       0,
                       0);
     widget->WidgetToScreen(ourRect, screenRect);

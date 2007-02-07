@@ -144,7 +144,7 @@ nsMathMLmsubsupFrame::PlaceSubSupScript(nsPresContext*      aPresContext,
   if (!mathMLFrame) return NS_ERROR_INVALID_ARG;
 
   // force the scriptSpace to be atleast 1 pixel
-  nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
+  nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
   aScriptSpace = PR_MAX(onePixel, aScriptSpace);
 
   ////////////////////////////////////

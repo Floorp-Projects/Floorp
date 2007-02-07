@@ -172,8 +172,8 @@ public:
    *        [OUT]
    */
   void GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent);
-  void GetScrollInfo(nsIScrollableView **aScrollableView, float *aP2T,
-                     float *aT2P, nsIFrame **aFrame = nsnull);
+  void GetScrollInfo(nsIScrollableView **aScrollableView,
+                     nsIFrame **aFrame = nsnull);
 
   /**
    * Get an element's client info if the element doesn't have a

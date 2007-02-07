@@ -274,7 +274,7 @@ public:
 protected:
     nsCOMPtr<nsIDeviceContext> mDeviceContext;
     // cached pixels2twips, twips2pixels values
-    double mP2T, mT2P;
+    double mP2A;
 
     nsCOMPtr<nsIWidget> mWidget;
 

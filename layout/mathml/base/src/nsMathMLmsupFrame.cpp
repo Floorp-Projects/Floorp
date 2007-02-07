@@ -87,7 +87,7 @@ nsMathMLmsupFrame::Place(nsIRenderingContext& aRenderingContext,
                          nsHTMLReflowMetrics& aDesiredSize)
 {
   // extra spacing after sup/subscript
-  nscoord scriptSpace = NSFloatPointsToTwips(0.5f); // 0.5pt as in plain TeX
+  nscoord scriptSpace = GetPresContext()->PointsToAppUnits(0.5f); // 0.5pt as in plain TeX
 
   // check if the superscriptshift attribute is there
   nsAutoString value;
@@ -127,7 +127,7 @@ nsMathMLmsupFrame::PlaceSuperScript(nsPresContext*      aPresContext,
   if (!mathMLFrame) return NS_ERROR_INVALID_ARG;
 
   // force the scriptSpace to be at least 1 pixel 
-  nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
+  nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
   aScriptSpace = PR_MAX(onePixel, aScriptSpace);
 
   ////////////////////////////////////

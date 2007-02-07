@@ -101,13 +101,14 @@ static PRUint32 ComputeFlags(PRBool aIsRTL, PRBool aEnableSpacing)
 
 gfxTextRun*
 gfxTextRunCache::GetOrMakeTextRun (gfxContext* aContext, gfxFontGroup *aFontGroup,
-                                   const PRUnichar *aString, PRUint32 aLength, gfxFloat aDevToApp,
-                                   PRBool aIsRTL, PRBool aEnableSpacing, PRBool *aCallerOwns)
+                                   const PRUnichar *aString, PRUint32 aLength,
+                                   PRUint32 aAppUnitsPerDevUnit, PRBool aIsRTL,
+                                   PRBool aEnableSpacing, PRBool *aCallerOwns)
 {
     gfxSkipChars skipChars;
     // Choose pessimistic flags since we don't want to bother analyzing the string
     gfxTextRunFactory::Parameters params =
-        { aContext, nsnull, nsnull, &skipChars, nsnull, 0, aDevToApp,
+        { aContext, nsnull, nsnull, &skipChars, nsnull, 0, aAppUnitsPerDevUnit,
               ComputeFlags(aIsRTL, aEnableSpacing) };
 
     gfxTextRun* tr = nsnull;
@@ -125,7 +126,7 @@ gfxTextRunCache::GetOrMakeTextRun (gfxContext* aContext, gfxFontGroup *aFontGrou
             // Check that this matches what we wanted. If it doesn't, we leave
             // this cache entry alone and return a fresh, caller-owned textrun
             // below.
-            if (cachedTR->GetPixelsToAppUnits() == aDevToApp &&
+            if (cachedTR->GetAppUnitsPerDevUnit() == aAppUnitsPerDevUnit &&
                 cachedTR->IsRightToLeft() == aIsRTL) {
                 entry->Used();
                 tr = cachedTR;
@@ -156,13 +157,14 @@ gfxTextRunCache::GetOrMakeTextRun (gfxContext* aContext, gfxFontGroup *aFontGrou
 
 gfxTextRun*
 gfxTextRunCache::GetOrMakeTextRun (gfxContext* aContext, gfxFontGroup *aFontGroup,
-                                   const char *aString, PRUint32 aLength, gfxFloat aDevToApp,
-                                   PRBool aIsRTL, PRBool aEnableSpacing, PRBool *aCallerOwns)
+                                   const char *aString, PRUint32 aLength,
+                                   PRUint32 aAppUnitsPerDevUnit, PRBool aIsRTL,
+                                   PRBool aEnableSpacing, PRBool *aCallerOwns)
 {
     gfxSkipChars skipChars;
     // Choose pessimistic flags since we don't want to bother analyzing the string
     gfxTextRunFactory::Parameters params =
-        { aContext, nsnull, nsnull, &skipChars, nsnull, 0, aDevToApp,
+        { aContext, nsnull, nsnull, &skipChars, nsnull, 0, aAppUnitsPerDevUnit,
               ComputeFlags(aIsRTL, aEnableSpacing) };
     const PRUint8* str = NS_REINTERPRET_CAST(const PRUint8*, aString);
 
@@ -181,7 +183,7 @@ gfxTextRunCache::GetOrMakeTextRun (gfxContext* aContext, gfxFontGroup *aFontGrou
             // Check that this matches what we wanted. If it doesn't, we leave
             // this cache entry alone and return a fresh, caller-owned textrun
             // below.
-            if (cachedTR->GetPixelsToAppUnits() == aDevToApp &&
+            if (cachedTR->GetAppUnitsPerDevUnit() == aAppUnitsPerDevUnit &&
                 cachedTR->IsRightToLeft() == aIsRTL) {
                 entry->Used();
                 tr = cachedTR;

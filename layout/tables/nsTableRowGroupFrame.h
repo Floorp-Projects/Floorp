@@ -193,8 +193,7 @@ public:
    */
   nscoord GetHeightBasis(const nsHTMLReflowState& aReflowState);
   
-  nsMargin* GetBCBorderWidth(float     aPixelsToTwips,
-                             nsMargin& aBorder);
+  nsMargin* GetBCBorderWidth(nsMargin& aBorder);
 
   /**
    * Gets inner border widths before collapsing with cell borders
@@ -202,8 +201,7 @@ public:
    * GetContinuousBCBorderWidth will not overwrite aBorder.top
    * see nsTablePainter about continuous borders
    */
-  void GetContinuousBCBorderWidth(float     aPixelsToTwips,
-                                  nsMargin& aBorder);
+  void GetContinuousBCBorderWidth(nsMargin& aBorder);
   /**
    * Sets full border widths before collapsing with cell borders
    * @param aForSide - side to set; only right, left, and bottom valid
@@ -307,7 +305,6 @@ protected:
 
   void InitChildReflowState(nsPresContext&    aPresContext, 
                             PRBool             aBorderCollapse,
-                            float              aPixelsToTwips,
                             nsHTMLReflowState& aReflowState);
   
   /** implement abstract method on nsHTMLContainerFrame */
@@ -417,9 +414,9 @@ inline void nsTableRowGroupFrame::SetHasStyleHeight(PRBool aValue)
 }
 
 inline void
-nsTableRowGroupFrame::GetContinuousBCBorderWidth(float     aPixelsToTwips,
-                                                 nsMargin& aBorder)
+nsTableRowGroupFrame::GetContinuousBCBorderWidth(nsMargin& aBorder)
 {
+  PRInt32 aPixelsToTwips = nsPresContext::AppUnitsPerCSSPixel();
   aBorder.right = BC_BORDER_LEFT_HALF_COORD(aPixelsToTwips,
                                             mRightContBorderWidth);
   aBorder.bottom = BC_BORDER_TOP_HALF_COORD(aPixelsToTwips,

@@ -61,10 +61,6 @@
 #include "nsIServiceManager.h"
 #include "nsIBoxLayout.h"
 
-#ifdef DEBUG_COELESCED
-static PRInt32 coelesced = 0;
-#endif
-
 #ifdef DEBUG_LAYOUT
 PRInt32 gIndent = 0;
 #endif
@@ -209,15 +205,6 @@ nsBox::EndLayout(nsBoxLayoutState& aState)
 
   return SyncLayout(aState);
 }
-
-#ifdef REFLOW_COELESCED
-void Coelesced()
-{
-   printf("Coelesed=%d\n", ++coelesced);
-
-}
-
-#endif
 
 PRBool nsBox::gGotTheme = PR_FALSE;
 nsITheme* nsBox::gTheme = nsnull;
@@ -383,11 +370,10 @@ nsBox::GetBorder(nsMargin& aMargin)
       nsMargin margin(0, 0, 0, 0);
       gTheme->GetWidgetBorder(context->DeviceContext(), this,
                               disp->mAppearance, &margin);
-      float p2t = context->ScaledPixelsToTwips();
-      aMargin.top = NSIntPixelsToTwips(margin.top, p2t);
-      aMargin.right = NSIntPixelsToTwips(margin.right, p2t);
-      aMargin.bottom = NSIntPixelsToTwips(margin.bottom, p2t);
-      aMargin.left = NSIntPixelsToTwips(margin.left, p2t);
+      aMargin.top = context->DevPixelsToAppUnits(margin.top);
+      aMargin.right = context->DevPixelsToAppUnits(margin.right);
+      aMargin.bottom = context->DevPixelsToAppUnits(margin.bottom);
+      aMargin.left = context->DevPixelsToAppUnits(margin.left);
       return NS_OK;
     }
   }
@@ -412,11 +398,10 @@ nsBox::GetPadding(nsMargin& aMargin)
                                                  this, disp->mAppearance,
                                                  &margin);
       if (useThemePadding) {
-        float p2t = context->ScaledPixelsToTwips();
-        aMargin.top = NSIntPixelsToTwips(margin.top, p2t);
-        aMargin.right = NSIntPixelsToTwips(margin.right, p2t);
-        aMargin.bottom = NSIntPixelsToTwips(margin.bottom, p2t);
-        aMargin.left = NSIntPixelsToTwips(margin.left, p2t);
+        aMargin.top = context->DevPixelsToAppUnits(margin.top);
+        aMargin.right = context->DevPixelsToAppUnits(margin.right);
+        aMargin.bottom = context->DevPixelsToAppUnits(margin.bottom);
+        aMargin.left = context->DevPixelsToAppUnits(margin.left);
         return NS_OK;
       }
     }
@@ -746,7 +731,7 @@ nsIBox::AddCSSPrefSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
             value.Trim("%");
 
             aSize.width =
-              presContext->IntScaledPixelsToTwips(value.ToInteger(&error));
+              nsPresContext::CSSPixelsToAppUnits(value.ToInteger(&error));
             widthSet = PR_TRUE;
         }
 
@@ -754,7 +739,8 @@ nsIBox::AddCSSPrefSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
         if (!value.IsEmpty()) {
             value.Trim("%");
 
-            aSize.height = presContext->IntScaledPixelsToTwips(value.ToInteger(&error));
+            aSize.height =
+              nsPresContext::CSSPixelsToAppUnits(value.ToInteger(&error));
             heightSet = PR_TRUE;
         }
     }
@@ -781,13 +767,12 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
         if (rendContext) {
           theme->GetMinimumWidgetSize(rendContext, aBox,
                                       display->mAppearance, &size, &canOverride);
-          float p2t = aState.PresContext()->ScaledPixelsToTwips();
           if (size.width) {
-            aSize.width = NSIntPixelsToTwips(size.width, p2t);
+            aSize.width = aState.PresContext()->DevPixelsToAppUnits(size.width);
             widthSet = PR_TRUE;
           }
           if (size.height) {
-            aSize.height = NSIntPixelsToTwips(size.height, p2t);
+            aSize.height = aState.PresContext()->DevPixelsToAppUnits(size.height);
             heightSet = PR_TRUE;
           }
         }
@@ -838,7 +823,7 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
             value.Trim("%");
 
             nscoord val =
-              presContext->IntScaledPixelsToTwips(value.ToInteger(&error));
+              nsPresContext::CSSPixelsToAppUnits(value.ToInteger(&error));
             if (val > aSize.width)
               aSize.width = val;
             widthSet = PR_TRUE;
@@ -850,7 +835,7 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
             value.Trim("%");
 
             nscoord val =
-              presContext->IntScaledPixelsToTwips(value.ToInteger(&error));
+              nsPresContext::CSSPixelsToAppUnits(value.ToInteger(&error));
             if (val > aSize.height)
               aSize.height = val;
 
@@ -896,7 +881,7 @@ nsIBox::AddCSSMaxSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
             value.Trim("%");
 
             nscoord val =
-              presContext->IntScaledPixelsToTwips(value.ToInteger(&error));
+              nsPresContext::CSSPixelsToAppUnits(value.ToInteger(&error));
             aSize.width = val;
             widthSet = PR_TRUE;
         }
@@ -906,7 +891,7 @@ nsIBox::AddCSSMaxSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
             value.Trim("%");
 
             nscoord val =
-              presContext->IntScaledPixelsToTwips(value.ToInteger(&error));
+              nsPresContext::CSSPixelsToAppUnits(value.ToInteger(&error));
             aSize.height = val;
 
             heightSet = PR_TRUE;

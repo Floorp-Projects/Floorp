@@ -1461,11 +1461,11 @@ nsMathMLChar::SetData(nsPresContext* aPresContext,
 
 
 // plain TeX settings (TeXbook p.152)
-#define NS_MATHML_DELIMITER_FACTOR      0.901f
-#define NS_MATHML_DELIMITER_SHORTFALL   NSFloatPointsToTwips(5.0f)
+#define NS_MATHML_DELIMITER_FACTOR             0.901f
+#define NS_MATHML_DELIMITER_SHORTFALL_POINTS   5.0f
 
 static PRBool
-IsSizeOK(nscoord a, nscoord b, PRUint32 aHint)
+IsSizeOK(nsPresContext* aPresContext, nscoord a, nscoord b, PRUint32 aHint)
 {
   // Normal: True if 'a' is around +/-10% of the target 'b' (10% is
   // 1-DelimiterFactor). This often gives a chance to the base size to
@@ -1480,7 +1480,7 @@ IsSizeOK(nscoord a, nscoord b, PRUint32 aHint)
   PRBool isNearer = PR_FALSE;
   if (aHint & (NS_STRETCH_NEARER | NS_STRETCH_LARGEOP)) {
     float c = PR_MAX(float(b) * NS_MATHML_DELIMITER_FACTOR,
-                     float(b) - NS_MATHML_DELIMITER_SHORTFALL);
+                     float(b) - aPresContext->PointsToAppUnits(NS_MATHML_DELIMITER_SHORTFALL_POINTS));
     isNearer = PRBool(float(PR_ABS(b - a)) <= (float(b) - c));
   }
   // Smaller: Mainly for transitory use, to compare two candidate
@@ -1517,7 +1517,8 @@ IsSizeBetter(nscoord a, nscoord olda, nscoord b, PRUint32 aHint)
 // overlap between the parts. This is important to cater for fonts
 // with long glues.
 static nscoord
-ComputeSizeFromParts(nsGlyphCode* aGlyphs,
+ComputeSizeFromParts(nsPresContext* aPresContext,
+                     nsGlyphCode* aGlyphs,
                      nscoord*     aSizes,
                      nscoord      aTargetSize,
                      PRUint32     aHint)
@@ -1538,7 +1539,7 @@ ComputeSizeFromParts(nsGlyphCode* aGlyphs,
     // if we can afford more room, the default is to fill-up the target area
     return aTargetSize;
   }
-  if (IsSizeOK(computedSize, aTargetSize, aHint)) {
+  if (IsSizeOK(aPresContext, computedSize, aTargetSize, aHint)) {
     // settle with the size, and let Paint() do the rest
     return computedSize;
   }
@@ -1632,7 +1633,7 @@ nsMathMLChar::Stretch(nsPresContext*      aPresContext,
   // if we are not a largeop in display mode, return if size fits
   if ((targetSize <= 0) || 
       (!largeop && ((isVertical && charSize >= targetSize) ||
-                     IsSizeOK(charSize, targetSize, aStretchHint)))) {
+                     IsSizeOK(aPresContext, charSize, targetSize, aStretchHint)))) {
     // ensure that the char later behaves like a normal char
     // (will be reset back to its intrinsic value in case of dynamic updates)
     mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
@@ -1699,7 +1700,7 @@ nsMathMLChar::Stretch(nsPresContext*      aPresContext,
                  ? bm.ascent + bm.descent
                  : bm.rightBearing - bm.leftBearing;
         // always break when largeopOnly is set
-        if (largeopOnly || IsSizeOK(charSize, targetSize, aStretchHint)) {
+        if (largeopOnly || IsSizeOK(aPresContext, charSize, targetSize, aStretchHint)) {
 #ifdef NOISY_SEARCH
           printf("    size:%d OK!\n", size-1);
 #endif
@@ -1817,7 +1818,7 @@ nsMathMLChar::Stretch(nsPresContext*      aPresContext,
 
     // Build by parts if we have successfully computed the
     // bounding metrics of all parts.
-    computedSize = ComputeSizeFromParts(chdata, sizedata, targetSize, aStretchHint);
+    computedSize = ComputeSizeFromParts(aPresContext, chdata, sizedata, targetSize, aStretchHint);
 #ifdef NOISY_SEARCH
     printf("    Font %s %s!\n",
            NS_LossyConvertUTF16toASCII(fontName).get(),
@@ -2245,7 +2246,7 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
   nsRect clipRect;
   nscoord dx, dy;
 
-  nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
+  nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
 
   // get metrics data to be re-used later
   PRInt32 i;
@@ -2439,7 +2440,7 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
   nsRect clipRect;
   nscoord dx, dy;
 
-  nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
+  nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
 
   // get metrics data to be re-used later
   PRInt32 i;

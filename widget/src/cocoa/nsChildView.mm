@@ -51,7 +51,6 @@
 
 #include "nsIFontMetrics.h"
 #include "nsIDeviceContext.h"
-#include "nsIEnumerator.h"
 #include "nsIRegion.h"
 #include "nsIRollupListener.h"
 #include "nsIEventSink.h"
@@ -1911,12 +1910,9 @@ NSEvent* globalDragEvent = nil;
   PRInt32 deltaY = (PRInt32)(newMouseLoc.y - mHandScrollStartMouseLoc.y);
 
   // convert to the nsIView coordinates
-  float mPixelsToTwips = 1.0;
-  mPixelsToTwips = mGeckoChild->GetDeviceContext()->DevUnitsToAppUnits();
-  nscoord newX = mHandScrollStartScrollX +
-    NSIntPixelsToTwips(deltaX, mPixelsToTwips);
-  nscoord newY = mHandScrollStartScrollY +
-    NSIntPixelsToTwips(deltaY, mPixelsToTwips);
+  PRInt32 p2a = mGeckoChild->GetDeviceContext()->AppUnitsPerDevPixel();
+  nscoord newX = mHandScrollStartScrollX + NSIntPixelsToAppUnits(deltaX, p2a);
+  nscoord newY = mHandScrollStartScrollY + NSIntPixelsToAppUnits(deltaY, p2a);
   aScrollableView->ScrollTo(newX, newY, NS_VMREFRESH_IMMEDIATE);
 }
 

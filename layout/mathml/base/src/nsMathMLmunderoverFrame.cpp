@@ -294,7 +294,7 @@ nsMathMLmunderoverFrame::Place(nsIRenderingContext& aRenderingContext,
                                                    aRenderingContext,
                                                    aPlaceOrigin,
                                                    aDesiredSize,
-                                                   this);
+                                                   this, 0, 0, GetPresContext()->PointsToAppUnits(0.5f));
   }
 
   ////////////////////////////////////
@@ -320,7 +320,7 @@ nsMathMLmunderoverFrame::Place(nsIRenderingContext& aRenderingContext,
   GetReflowAndBoundingMetricsFor(underFrame, underSize, bmUnder);
   GetReflowAndBoundingMetricsFor(overFrame, overSize, bmOver);
 
-  nscoord onePixel = GetPresContext()->IntScaledPixelsToTwips(1);
+  nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
 
   ////////////////////
   // Place Children

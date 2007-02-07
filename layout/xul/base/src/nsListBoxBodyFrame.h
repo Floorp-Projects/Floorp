@@ -97,7 +97,7 @@ public:
 
   // size calculation 
   PRInt32 GetRowCount();
-  PRInt32 GetRowHeightTwips() { return mRowHeight; }
+  PRInt32 GetRowHeightAppUnits() { return mRowHeight; }
   PRInt32 GetFixedRowSize();
   void SetRowHeight(PRInt32 aRowHeight);
   nscoord GetYPosition();
@@ -137,7 +137,7 @@ protected:
 
   // row height
   PRInt32 mRowCount;
-  PRInt32 mRowHeight;
+  nscoord mRowHeight;
   PRPackedBool mRowHeightWasSet;
   nscoord mAvailableHeight;
   nscoord mStringWidth;
@@ -149,7 +149,6 @@ protected:
   PRInt32 mRowsToPrepend;
 
   // scrolling
-  nscoord mOnePixel;
   PRInt32 mCurrentIndex; // Row-based
   PRInt32 mOldIndex; 
   PRPackedBool mScrolling;

@@ -167,10 +167,6 @@ inFlasher::DrawElementOutline(nsIDOMElement* aElement)
   if (!window) return NS_OK;
   nsCOMPtr<nsIPresShell> presShell = inLayoutUtils::GetPresShellFor(window);
   if (!presShell) return NS_OK;
-  
-  nsPresContext *presContext = presShell->GetPresContext();
-
-  float p2t = presContext->PixelsToTwips();
 
   PRBool isFirstFrame = PR_TRUE;
   nsCOMPtr<nsIRenderingContext> rcontext;
@@ -192,7 +188,7 @@ inFlasher::DrawElementOutline(nsIDOMElement* aElement)
     frame = frame->GetNextContinuation();
 
     PRBool isLastFrame = (frame == nsnull);
-    DrawOutline(rect.x, rect.y, rect.width, rect.height, p2t, rcontext,
+    DrawOutline(rect.x, rect.y, rect.width, rect.height, rcontext,
                 isFirstFrame, isLastFrame);
     isFirstFrame = PR_FALSE;
   }
@@ -231,27 +227,27 @@ inFlasher::ScrollElementIntoView(nsIDOMElement *aElement)
 
 void
 inFlasher::DrawOutline(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
-                       float aP2T, nsIRenderingContext* aRenderContext,
+                       nsIRenderingContext* aRenderContext,
                        PRBool aDrawBegin, PRBool aDrawEnd)
 {
   aRenderContext->SetColor(mColor);
 
-  DrawLine(aX, aY, aWidth, DIR_HORIZONTAL, BOUND_OUTER, aP2T, aRenderContext);
+  DrawLine(aX, aY, aWidth, DIR_HORIZONTAL, BOUND_OUTER, aRenderContext);
   if (aDrawBegin) {
-    DrawLine(aX, aY, aHeight, DIR_VERTICAL, BOUND_OUTER, aP2T, aRenderContext);
+    DrawLine(aX, aY, aHeight, DIR_VERTICAL, BOUND_OUTER, aRenderContext);
   }
-  DrawLine(aX, aY+aHeight, aWidth, DIR_HORIZONTAL, BOUND_INNER, aP2T, aRenderContext);
+  DrawLine(aX, aY+aHeight, aWidth, DIR_HORIZONTAL, BOUND_INNER, aRenderContext);
   if (aDrawEnd) {
-    DrawLine(aX+aWidth, aY, aHeight, DIR_VERTICAL, BOUND_INNER, aP2T, aRenderContext);
+    DrawLine(aX+aWidth, aY, aHeight, DIR_VERTICAL, BOUND_INNER, aRenderContext);
   }
 }
 
 void
 inFlasher::DrawLine(nscoord aX, nscoord aY, nscoord aLength,
-                    PRBool aDir, PRBool aBounds, float aP2T,
+                    PRBool aDir, PRBool aBounds,
                     nsIRenderingContext* aRenderContext)
 {
-  nscoord thickTwips = NSIntPixelsToTwips(mThickness, aP2T);
+  nscoord thickTwips = nsPresContext::CSSPixelsToAppUnits(mThickness);
   if (aDir) { // horizontal
     aRenderContext->FillRect(aX, aY+(aBounds?0:-thickTwips), aLength, thickTwips);
   } else { // vertical

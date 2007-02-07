@@ -72,8 +72,7 @@ public:
 protected:
 
   // Internal helper functions
-  nsresult GetScrollInfo(nsIScrollableView** aScrollableView, float* aP2T,
-                         float* aT2P);
+  nsresult GetScrollInfo(nsIScrollableView** aScrollableView);
   nsPoint GetClientPoint();
   nsPoint GetScreenPoint();
   nsPoint GetLayerPoint();

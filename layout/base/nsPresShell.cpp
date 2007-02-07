@@ -5023,7 +5023,7 @@ PresShell::RenderOffscreen(nsRect aRect, PRBool aUntrusted,
     return NS_ERROR_FAILURE;
 
   nsRect bounds(nsPoint(0, 0), aRect.Size());
-  bounds.ScaleRoundOut(mPresContext->TwipsToPixels());
+  bounds.ScaleRoundOut(1.0f / mPresContext->AppUnitsPerDevPixel());
   
   nsIDrawingSurface* surface;
   nsresult rv
@@ -7195,8 +7195,9 @@ void ReflowCountMgr::PaintCount(const char *    aName,
     IndiReflowCounter * counter = (IndiReflowCounter *)PL_HashTableLookup(mIndiFrameCounts, key);
     if (counter != nsnull && counter->mName.EqualsASCII(aName)) {
       aRenderingContext->PushState();
-      nsFont font("Times", NS_FONT_STYLE_NORMAL,NS_FONT_VARIANT_NORMAL,
-                  NS_FONT_WEIGHT_NORMAL,0,NSIntPointsToTwips(8));
+      nsFont font("Times", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
+                  NS_FONT_WEIGHT_NORMAL, 0,
+                  nsPresContext::CSSPixelsToAppUnits(11));
 
       nsCOMPtr<nsIFontMetrics> fm = aPresContext->GetMetricsFor(font);
       aRenderingContext->SetFont(fm);

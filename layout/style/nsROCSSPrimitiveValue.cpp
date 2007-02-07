@@ -45,11 +45,12 @@
 #include "nsContentUtils.h"
 #include "nsXPIDLString.h"
 #include "nsCRT.h"
+#include "nsPresContext.h"
 
-nsROCSSPrimitiveValue::nsROCSSPrimitiveValue(float aT2P)
-  : mType(CSS_PX), mT2P(aT2P)
+nsROCSSPrimitiveValue::nsROCSSPrimitiveValue(PRInt32 aAppUnitsPerInch)
+  : mType(CSS_PX), mAppUnitsPerInch(aAppUnitsPerInch)
 {
-  mValue.mTwips = 0;
+  mValue.mAppUnits = 0;
 }
 
 
@@ -122,37 +123,9 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
   switch (mType) {
     case CSS_PX :
       {
-        float val = NSTwipsToFloatPixels(mValue.mTwips, mT2P);
+        float val = nsPresContext::AppUnitsToFloatCSSPixels(mValue.mAppUnits);
         tmpStr.AppendFloat(val);
         tmpStr.AppendLiteral("px");
-        break;
-      }
-    case CSS_CM :
-      {
-        float val = NS_TWIPS_TO_CENTIMETERS(mValue.mTwips);
-        tmpStr.AppendFloat(val);
-        tmpStr.AppendLiteral("cm");
-        break;
-      }
-    case CSS_MM :
-      {
-        float val = NS_TWIPS_TO_MILLIMETERS(mValue.mTwips);
-        tmpStr.AppendFloat(val);
-        tmpStr.AppendLiteral("mm");
-        break;
-      }
-    case CSS_IN :
-      {
-        float val = NS_TWIPS_TO_INCHES(mValue.mTwips);
-        tmpStr.AppendFloat(val);
-        tmpStr.AppendLiteral("in");
-        break;
-      }
-    case CSS_PT :
-      {
-        float val = NSTwipsToFloatPoints(mValue.mTwips);
-        tmpStr.AppendFloat(val);
-        tmpStr.AppendLiteral("pt");
         break;
       }
     case CSS_IDENT :
@@ -287,6 +260,10 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
 
         break;
       }
+    case CSS_CM :
+    case CSS_MM :
+    case CSS_IN :
+    case CSS_PT :
     case CSS_PC :
     case CSS_UNKNOWN :
     case CSS_EMS :
@@ -358,32 +335,32 @@ nsROCSSPrimitiveValue::GetFloatValue(PRUint16 aUnitType, float* aReturn)
     case CSS_PX :
       if (mType != CSS_PX)
         return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-      *aReturn = NSTwipsToFloatPixels(mValue.mTwips, mT2P);
+      *aReturn = nsPresContext::AppUnitsToFloatCSSPixels(mValue.mAppUnits);
       break;
     case CSS_CM :
       if (mType != CSS_PX)
         return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-      *aReturn = NS_TWIPS_TO_CENTIMETERS(mValue.mTwips);
+      *aReturn = mValue.mAppUnits * 2.54f / float(mAppUnitsPerInch);
       break;
     case CSS_MM :
       if (mType != CSS_PX)
         return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-      *aReturn = NS_TWIPS_TO_MILLIMETERS(mValue.mTwips);
+      *aReturn = mValue.mAppUnits * 25.4f / float(mAppUnitsPerInch);
       break;
     case CSS_IN :
       if (mType != CSS_PX)
         return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-      *aReturn = NS_TWIPS_TO_INCHES(mValue.mTwips);
+      *aReturn = mValue.mAppUnits / float(mAppUnitsPerInch);
       break;
     case CSS_PT :
       if (mType != CSS_PX)
         return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-      *aReturn = NSTwipsToFloatPoints(mValue.mTwips);
+      *aReturn = mValue.mAppUnits * 72.0f / float(mAppUnitsPerInch);
       break;
     case CSS_PC :
       if (mType != CSS_PX)
         return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-      *aReturn = NS_TWIPS_TO_PICAS(mValue.mTwips);
+      *aReturn = mValue.mAppUnits * 6.0f / float(mAppUnitsPerInch);
       break;
     case CSS_PERCENTAGE :
       if (mType != CSS_PERCENTAGE)

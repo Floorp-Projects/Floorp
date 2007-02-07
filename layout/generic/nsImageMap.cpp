@@ -436,12 +436,10 @@ void RectArea::Draw(nsPresContext* aCX, nsIRenderingContext& aRC)
 {
   if (mHasFocus) {
     if (mNumCoords >= 4) {
-      float p2t;
-      p2t = aCX->PixelsToTwips();
-      nscoord x1 = NSIntPixelsToTwips(mCoords[0], p2t);
-      nscoord y1 = NSIntPixelsToTwips(mCoords[1], p2t);
-      nscoord x2 = NSIntPixelsToTwips(mCoords[2], p2t);
-      nscoord y2 = NSIntPixelsToTwips(mCoords[3], p2t);
+      nscoord x1 = nsPresContext::CSSPixelsToAppUnits(mCoords[0]);
+      nscoord y1 = nsPresContext::CSSPixelsToAppUnits(mCoords[1]);
+      nscoord x2 = nsPresContext::CSSPixelsToAppUnits(mCoords[2]);
+      nscoord y2 = nsPresContext::CSSPixelsToAppUnits(mCoords[3]);
       NS_ASSERTION(x1 <= x2 && y1 <= y2,
                    "Someone screwed up RectArea::ParseCoords");
       aRC.DrawLine(x1, y1, x1, y2);
@@ -455,12 +453,10 @@ void RectArea::Draw(nsPresContext* aCX, nsIRenderingContext& aRC)
 void RectArea::GetRect(nsPresContext* aCX, nsRect& aRect)
 {
   if (mNumCoords >= 4) {
-    float p2t;
-    p2t = aCX->PixelsToTwips();
-    nscoord x1 = NSIntPixelsToTwips(mCoords[0], p2t);
-    nscoord y1 = NSIntPixelsToTwips(mCoords[1], p2t);
-    nscoord x2 = NSIntPixelsToTwips(mCoords[2], p2t);
-    nscoord y2 = NSIntPixelsToTwips(mCoords[3], p2t);
+    nscoord x1 = nsPresContext::CSSPixelsToAppUnits(mCoords[0]);
+    nscoord y1 = nsPresContext::CSSPixelsToAppUnits(mCoords[1]);
+    nscoord x2 = nsPresContext::CSSPixelsToAppUnits(mCoords[2]);
+    nscoord y2 = nsPresContext::CSSPixelsToAppUnits(mCoords[3]);
     NS_ASSERTION(x1 <= x2 && y1 <= y2,
                  "Someone screwed up RectArea::ParseCoords");
 
@@ -571,20 +567,18 @@ void PolyArea::Draw(nsPresContext* aCX, nsIRenderingContext& aRC)
 {
   if (mHasFocus) {
     if (mNumCoords >= 6) {
-      float p2t;
-      p2t = aCX->PixelsToTwips();
-      nscoord x0 = NSIntPixelsToTwips(mCoords[0], p2t);
-      nscoord y0 = NSIntPixelsToTwips(mCoords[1], p2t);
+      nscoord x0 = nsPresContext::CSSPixelsToAppUnits(mCoords[0]);
+      nscoord y0 = nsPresContext::CSSPixelsToAppUnits(mCoords[1]);
       nscoord x1, y1;
       for (PRInt32 i = 2; i < mNumCoords; i += 2) {
-        x1 = NSIntPixelsToTwips(mCoords[i], p2t);
-        y1 = NSIntPixelsToTwips(mCoords[i+1], p2t);
+        x1 = nsPresContext::CSSPixelsToAppUnits(mCoords[i]);
+        y1 = nsPresContext::CSSPixelsToAppUnits(mCoords[i+1]);
         aRC.DrawLine(x0, y0, x1, y1);
         x0 = x1;
         y0 = y1;
       }
-      x1 = NSIntPixelsToTwips(mCoords[0], p2t);
-      y1 = NSIntPixelsToTwips(mCoords[1], p2t);
+      x1 = nsPresContext::CSSPixelsToAppUnits(mCoords[0]);
+      y1 = nsPresContext::CSSPixelsToAppUnits(mCoords[1]);
       aRC.DrawLine(x0, y0, x1, y1);
     }
   }
@@ -593,14 +587,12 @@ void PolyArea::Draw(nsPresContext* aCX, nsIRenderingContext& aRC)
 void PolyArea::GetRect(nsPresContext* aCX, nsRect& aRect)
 {
   if (mNumCoords >= 6) {
-    float p2t;
-    p2t = aCX->PixelsToTwips();
     nscoord x1, x2, y1, y2, xtmp, ytmp;
-    x1 = x2 = NSIntPixelsToTwips(mCoords[0], p2t);
-    y1 = y2 = NSIntPixelsToTwips(mCoords[1], p2t);
+    x1 = x2 = nsPresContext::CSSPixelsToAppUnits(mCoords[0]);
+    y1 = y2 = nsPresContext::CSSPixelsToAppUnits(mCoords[1]);
     for (PRInt32 i = 2; i < mNumCoords; i += 2) {
-      xtmp = NSIntPixelsToTwips(mCoords[i], p2t);
-      ytmp = NSIntPixelsToTwips(mCoords[i+1], p2t);
+      xtmp = nsPresContext::CSSPixelsToAppUnits(mCoords[i]);
+      ytmp = nsPresContext::CSSPixelsToAppUnits(mCoords[i+1]);
       x1 = x1 < xtmp ? x1 : xtmp;
       y1 = y1 < ytmp ? y1 : ytmp;
       x2 = x2 > xtmp ? x2 : xtmp;
@@ -683,11 +675,9 @@ void CircleArea::Draw(nsPresContext* aCX, nsIRenderingContext& aRC)
 {
   if (mHasFocus) {
     if (mNumCoords >= 3) {
-      float p2t;
-      p2t = aCX->PixelsToTwips();
-      nscoord x1 = NSIntPixelsToTwips(mCoords[0], p2t);
-      nscoord y1 = NSIntPixelsToTwips(mCoords[1], p2t);
-      nscoord radius = NSIntPixelsToTwips(mCoords[2], p2t);
+      nscoord x1 = nsPresContext::CSSPixelsToAppUnits(mCoords[0]);
+      nscoord y1 = nsPresContext::CSSPixelsToAppUnits(mCoords[1]);
+      nscoord radius = nsPresContext::CSSPixelsToAppUnits(mCoords[2]);
       if (radius < 0) {
         return;
       }
@@ -702,11 +692,9 @@ void CircleArea::Draw(nsPresContext* aCX, nsIRenderingContext& aRC)
 void CircleArea::GetRect(nsPresContext* aCX, nsRect& aRect)
 {
   if (mNumCoords >= 3) {
-    float p2t;
-    p2t = aCX->PixelsToTwips();
-    nscoord x1 = NSIntPixelsToTwips(mCoords[0], p2t);
-    nscoord y1 = NSIntPixelsToTwips(mCoords[1], p2t);
-    nscoord radius = NSIntPixelsToTwips(mCoords[2], p2t);
+    nscoord x1 = nsPresContext::CSSPixelsToAppUnits(mCoords[0]);
+    nscoord y1 = nsPresContext::CSSPixelsToAppUnits(mCoords[1]);
+    nscoord radius = nsPresContext::CSSPixelsToAppUnits(mCoords[2]);
     if (radius < 0) {
       return;
     }

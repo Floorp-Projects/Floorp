@@ -877,11 +877,9 @@ PRBool nsAccessible::IsVisible(PRBool *aIsOffscreen)
     relFrameRect.y = frameOffset.y;
   }
 
-  float p2t;
-  p2t = presContext->PixelsToTwips();
   nsRectVisibility rectVisibility;
-  viewManager->GetRectVisibility(containingView, relFrameRect, 
-                                 NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)), 
+  viewManager->GetRectVisibility(containingView, relFrameRect,
+                                 nsPresContext::CSSPixelsToAppUnits(kMinPixels),
                                  &rectVisibility);
 
   if (rectVisibility == nsRectVisibility_kZeroAreaRect) {
@@ -1173,9 +1171,6 @@ NS_IMETHODIMP nsAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PR
     return NS_ERROR_FAILURE;
   }
 
-  float t2p;
-  t2p = presContext->TwipsToPixels();   // Get pixels to twips conversion factor
-
   nsRect unionRectTwips;
   nsIFrame* aBoundingFrame = nsnull;
   GetBoundsRect(unionRectTwips, &aBoundingFrame);   // Unions up all primary frames for this node and all siblings after it
@@ -1184,10 +1179,10 @@ NS_IMETHODIMP nsAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PR
     return NS_ERROR_FAILURE;
   }
 
-  *x      = NSTwipsToIntPixels(unionRectTwips.x, t2p); 
-  *y      = NSTwipsToIntPixels(unionRectTwips.y, t2p);
-  *width  = NSTwipsToIntPixels(unionRectTwips.width, t2p);
-  *height = NSTwipsToIntPixels(unionRectTwips.height, t2p);
+  *x      = presContext->AppUnitsToDevPixels(unionRectTwips.x); 
+  *y      = presContext->AppUnitsToDevPixels(unionRectTwips.y);
+  *width  = presContext->AppUnitsToDevPixels(unionRectTwips.width);
+  *height = presContext->AppUnitsToDevPixels(unionRectTwips.height);
 
   // We have the union of the rectangle, now we need to put it in absolute screen coords
 

@@ -147,16 +147,19 @@ static NSRect GetDragRect(nsIDOMNode* node, nsIScriptableRegion* aDragRgn)
     nsPoint widgetOffset;
     containingView->GetNearestWidget(&widgetOffset);
 
-    float t2p = frame->GetPresContext()->TwipsToPixels();
+    nsPresContext* presContext = frame->GetPresContext();
 
     nsRect screenOffset;                                
-    screenOffset.MoveBy(NSTwipsToIntPixels(widgetOffset.x + viewOffset.x, t2p),
-                        NSTwipsToIntPixels(widgetOffset.y + viewOffset.y, t2p));
+    screenOffset.MoveBy(presContext->AppUnitsToDevPixels(widgetOffset.x +
+                                                         viewOffset.x),
+                        presContext->AppUnitsToDevPixels(widgetOffset.y +
+                                                         viewOffset.y));
 
     outRect.origin.x = (float)screenOffset.x;
-    outRect.origin.y = (float)screenOffset.y + (float)NSTwipsToIntPixels(rect.height, t2p);
-    outRect.size.width = (float)NSTwipsToIntPixels(rect.width, t2p);
-    outRect.size.height = (float)NSTwipsToIntPixels(rect.height, t2p);
+    outRect.origin.y = (float)screenOffset.y +
+                       (float)presContext->AppUnitsToDevPixels(rect.height);
+    outRect.size.width = (float)presContext->AppUnitsToDevPixels(rect.width);
+    outRect.size.height = (float)presContext->AppUnitsToDevPixels(rect.height);
   }
 
   return outRect;

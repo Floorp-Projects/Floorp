@@ -282,7 +282,7 @@ nsSVGSVGElement::GetPixelUnitToMillimeterX(float *aPixelUnitToMillimeterX)
   nsPresContext *context = presShell->GetPresContext();
   if (!context) return NS_OK;
 
-  *aPixelUnitToMillimeterX = context->ScaledPixelsToTwips() / TWIPS_PER_POINT_FLOAT / (72.0f * 0.03937f);
+  *aPixelUnitToMillimeterX = 25.4f / nsPresContext::AppUnitsToIntCSSPixels(context->AppUnitsPerInch());
   return NS_OK;
 }
 
@@ -312,9 +312,7 @@ nsSVGSVGElement::GetScreenPixelToMillimeterX(float *aScreenPixelToMillimeterX)
   nsPresContext *context = presShell->GetPresContext();
   if (!context) return NS_OK;
 
-  float TwipsPerPx;
-  TwipsPerPx = context->PixelsToTwips();
-  *aScreenPixelToMillimeterX = TwipsPerPx / TWIPS_PER_POINT_FLOAT / (72.0f * 0.03937f);
+  *aScreenPixelToMillimeterX = 25.4f / context->AppUnitsToDevPixels(context->AppUnitsPerInch());
   return NS_OK;
 }
 
@@ -1296,8 +1294,8 @@ void nsSVGSVGElement::GetOffsetToAncestor(nsIContent* ancestor,
 
   if (frame && ancestorFrame) {
     nsPoint point = frame->GetOffsetTo(ancestorFrame);
-    x = point.x * context->TwipsToPixels();
-    y = point.y * context->TwipsToPixels();
+    x = nsPresContext::AppUnitsToFloatCSSPixels(point.x);
+    y = nsPresContext::AppUnitsToFloatCSSPixels(point.y);
   }
 }
 

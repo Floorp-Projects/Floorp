@@ -365,7 +365,7 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsPoint aPt)
              nsILookAndFeel::eColor_WidgetSelectForeground :
              nsILookAndFeel::eColor_WidgetSelectBackground, color);
 
-  nscoord onePixelInTwips = presContext->IntScaledPixelsToTwips(1);
+  nscoord onePixelInTwips = nsPresContext::CSSPixelsToAppUnits(1);
 
   nsRect dirty;
   nscolor colors[] = {color, color, color, color};
@@ -714,9 +714,7 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
     // We can fix these cases later if they actually happen.
     nscoord screenHeightInPixels = 0;
     if (NS_SUCCEEDED(nsFormControlFrame::GetScreenHeight(aPresContext, screenHeightInPixels))) {
-      float   p2t;
-      p2t = aPresContext->PixelsToTwips();
-      nscoord screenHeight = NSIntPixelsToTwips(screenHeightInPixels, p2t);
+      nscoord screenHeight = aPresContext->DevPixelsToAppUnits(screenHeightInPixels);
       
       nscoord availDropHgt = (screenHeight / 2) - (heightOfARow*2); // approx half screen minus combo size
       availDropHgt -= aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;

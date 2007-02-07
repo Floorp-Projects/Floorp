@@ -450,7 +450,7 @@ nsMathMLmoFrame::ProcessOperatorData()
   // little extra tuning to round lspace & rspace to at least a pixel so that
   // operators don't look as if they are colliding with their operands
   if (leftSpace || rightSpace) {
-    nscoord onePixel = presContext->IntScaledPixelsToTwips(1);
+    nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
     if (leftSpace && leftSpace < onePixel)
       leftSpace = onePixel;
     if (rightSpace && rightSpace < onePixel)

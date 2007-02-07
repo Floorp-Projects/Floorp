@@ -165,14 +165,14 @@ protected:
                     const char* aString, PRInt32 aLength, PRBool aEnableSpacing) {
             mTextRun = gfxTextRunCache::GetCache()->GetOrMakeTextRun(
                 NS_STATIC_CAST(gfxContext*, aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT)),
-                aMetrics->mFontGroup, aString, aLength, aMetrics->mDev2App,
+                aMetrics->mFontGroup, aString, aLength, aMetrics->mP2A,
                 aMetrics->GetRightToLeftTextRunMode(), aEnableSpacing, &mOwning);
         }
         AutoTextRun(nsThebesFontMetrics* aMetrics, nsIRenderingContext* aRC,
                     const PRUnichar* aString, PRInt32 aLength, PRBool aEnableSpacing) {
             mTextRun = gfxTextRunCache::GetCache()->GetOrMakeTextRun(
                 NS_STATIC_CAST(gfxContext*, aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT)),
-                aMetrics->mFontGroup, aString, aLength, aMetrics->mDev2App,
+                aMetrics->mFontGroup, aString, aLength, aMetrics->mP2A,
                 aMetrics->GetRightToLeftTextRunMode(), aEnableSpacing, &mOwning);
         }
         ~AutoTextRun() {
@@ -194,7 +194,7 @@ protected:
 private:
     nsThebesDeviceContext *mDeviceContext;
     nsCOMPtr<nsIAtom> mLangGroup;
-    float mDev2App;
+    PRInt32 mP2A;
     PRPackedBool mIsRightToLeft;
     PRPackedBool mTextRunRTL;
 };

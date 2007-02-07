@@ -66,7 +66,6 @@
 #include "nsContentUtils.h"
 #include "nsStyleConsts.h"
 #include "nsDOMError.h"
-#include "nsIEnumerator.h"
 
 #define IMPL_STYLE_RULE_INHERIT(_class, super) \
 NS_IMETHODIMP _class::GetStyleSheet(nsIStyleSheet*& aSheet) const { return super::GetStyleSheet(aSheet); }  \
@@ -732,7 +731,8 @@ nsCSSGroupRule::GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const
 NS_IMETHODIMP
 nsCSSGroupRule::EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const
 {
-  return NS_CONST_CAST(nsCSSGroupRule*, this)->mRules.EnumerateForwards(aFunc, aData) ? NS_OK : NS_ENUMERATOR_FALSE;
+  NS_CONST_CAST(nsCSSGroupRule*, this)->mRules.EnumerateForwards(aFunc, aData);
+  return NS_OK;
 }
 
 /*

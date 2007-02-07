@@ -60,6 +60,9 @@ typedef struct _cairo cairo_t;
  * The functions like Rectangle and Arc do not do any drawing themselves.
  * When a path is drawn (stroked or filled), it is filled/stroked with a
  * pattern set by SetPattern, SetColor or SetSource.
+ *
+ * Note that the gfxContext takes coordinates in device pixels,
+ * as opposed to app units.
  */
 class THEBES_API gfxContext {
     THEBES_INLINE_DECL_REFCOUNTING(gfxContext)

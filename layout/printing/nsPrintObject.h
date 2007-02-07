@@ -88,6 +88,7 @@ public:
   PRPackedBool     mInvisible;        // Indicates PO is set to not visible by CSS
 
   float            mShrinkRatio;
+  float            mZoomRatio;
 
 private:
   nsPrintObject& operator=(const nsPrintObject& aOther); // not implemented

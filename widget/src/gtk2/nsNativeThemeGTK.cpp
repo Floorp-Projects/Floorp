@@ -541,13 +541,13 @@ GetExtraSizeForWidget(PRUint8 aWidgetType, nsIntMargin* aExtra)
 }
 
 static GdkRectangle
-ConvertToGdkRect(const nsRect &aRect, float aT2P)
+ConvertToGdkRect(const nsRect &aRect, PRInt32 aP2A)
 {
   GdkRectangle gdk_rect;
-  gdk_rect.x = NSToCoordRound(aRect.x * aT2P);
-  gdk_rect.y = NSToCoordRound(aRect.y * aT2P);
-  gdk_rect.width = NSToCoordRound(aRect.XMost() * aT2P) - gdk_rect.x;
-  gdk_rect.height = NSToCoordRound(aRect.YMost() * aT2P) - gdk_rect.y;
+  gdk_rect.x = NSAppUnitsToIntPixels(aRect.x, aP2A);
+  gdk_rect.y = NSAppUnitsToIntPixels(aRect.y, aP2A);
+  gdk_rect.width = NSAppUnitsToIntPixels(aRect.XMost(), aP2A) - gdk_rect.x;
+  gdk_rect.height = NSAppUnitsToIntPixels(aRect.YMost(), aP2A) - gdk_rect.y;
   return gdk_rect;
 }
 
@@ -616,19 +616,18 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
 #else
   nsCOMPtr<nsIDeviceContext> dctx = nsnull;
   aContext->GetDeviceContext(*getter_AddRefs(dctx));
-  double t2p = dctx->AppUnitsToDevUnits();
-  double p2t = dctx->DevUnitsToAppUnits();
+  PRInt32 p2a = dctx->AppUnitsPerDevPixel();
 
   // This is the rectangle that will actually be drawn, in appunits
   nsRect drawingRect(aClipRect);
   nsIntMargin extraSize;
   GetExtraSizeForWidget(aWidgetType, &extraSize);
   // inflate drawing rect to account for the overdraw
-  nsMargin extraSizeInTwips(NSToCoordRound(extraSize.left*p2t),
-                            NSToCoordRound(extraSize.top*p2t),
-                            NSToCoordRound(extraSize.right*p2t),
-                            NSToCoordRound(extraSize.bottom*p2t));
-  drawingRect.Inflate(extraSizeInTwips);
+  nsMargin extraSizeAppUnits(NSIntPixelsToAppUnits(extraSize.left, p2a),
+                             NSIntPixelsToAppUnits(extraSize.top, p2a),
+                             NSIntPixelsToAppUnits(extraSize.right, p2a),
+                             NSIntPixelsToAppUnits(extraSize.bottom, p2a));
+  drawingRect.Inflate(extraSizeAppUnits);
 
   // translate everything so (0,0) is the top left of the drawingRect
   nsIRenderingContext::AutoPushTranslation
@@ -651,13 +650,14 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   // widget bounds. The gdk_clip is just advisory here, meanining "you don't
   // need to draw outside this rect if you don't feel like it!"
   PRUint32 rendererFlags = gfxXlibNativeRenderer::DRAW_SUPPORTS_OFFSET;
-  GdkRectangle gdk_rect = ConvertToGdkRect(aRect - drawingRect.TopLeft(), t2p);
-  GdkRectangle gdk_clip = ConvertToGdkRect(aClipRect - drawingRect.TopLeft(), t2p);
+  GdkRectangle gdk_rect = ConvertToGdkRect(aRect - drawingRect.TopLeft(), p2a);
+  GdkRectangle gdk_clip = ConvertToGdkRect(aClipRect - drawingRect.TopLeft(), p2a);
   ThemeRenderer renderer(state, gtkWidgetType, flags, gdk_rect, gdk_clip);
 
   gfxContext* ctx =
     (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
-  gfxRect rect(0, 0, drawingRect.width*t2p, drawingRect.height*t2p);
+  gfxRect rect(0, 0, NSAppUnitsToIntPixels(drawingRect.width, p2a),
+                     NSAppUnitsToIntPixels(drawingRect.height, p2a));
   // Don't snap if it's a non-unit scale factor. We're going to have to take
   // slow paths then in any case.
   gfxMatrix current = ctx->CurrentMatrix();
@@ -767,11 +767,11 @@ nsNativeThemeGTK::GetWidgetOverflow(nsIDeviceContext* aContext,
   nsIntMargin extraSize;
   if (!GetExtraSizeForWidget(aWidgetType, &extraSize))
     return PR_FALSE;
-  float p2t = aContext->DevUnitsToAppUnits();
-  nsMargin m(NSIntPixelsToTwips(extraSize.left, p2t),
-             NSIntPixelsToTwips(extraSize.top, p2t),
-             NSIntPixelsToTwips(extraSize.right, p2t),
-             NSIntPixelsToTwips(extraSize.bottom, p2t));
+  PRInt32 p2a = aContext->AppUnitsPerDevPixel();
+  nsMargin m(NSIntPixelsToAppUnits(extraSize.left, p2a),
+             NSIntPixelsToAppUnits(extraSize.top, p2a),
+             NSIntPixelsToAppUnits(extraSize.right, p2a),
+             NSIntPixelsToAppUnits(extraSize.bottom, p2a));
   nsRect r(nsPoint(0, 0), aFrame->GetSize());
   r.Inflate(m);
   *aResult = r;

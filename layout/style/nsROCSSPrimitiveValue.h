@@ -65,7 +65,7 @@ public:
   NS_DECL_NSIDOMCSSVALUE
 
   // nsROCSSPrimitiveValue
-  nsROCSSPrimitiveValue(float aP2T);
+  nsROCSSPrimitiveValue(PRInt32 aAppUnitsPerInch);
   virtual ~nsROCSSPrimitiveValue();
 
   void SetNumber(float aValue)
@@ -96,18 +96,16 @@ public:
     mType = CSS_PERCENTAGE;
   }
 
-  void SetTwips(nscoord aValue)
+  void SetAppUnits(nscoord aValue)
   {
     Reset();
-    mValue.mTwips = aValue;
+    mValue.mAppUnits = aValue;
     mType = CSS_PX;
   }
 
-  void SetTwips(float aValue)
+  void SetAppUnits(float aValue)
   {
-    Reset();
-    mValue.mTwips = nscoord(aValue);
-    mType = CSS_PX;
+    SetAppUnits(NSToCoordRound(aValue));
   }
 
   void SetIdent(nsIAtom* aAtom)
@@ -222,7 +220,7 @@ private:
   PRUint16 mType;
 
   union {
-    nscoord         mTwips;
+    nscoord         mAppUnits;
     float           mFloat;
     nsDOMCSSRGBColor* mColor;
     nsIDOMRect*     mRect;
@@ -231,7 +229,7 @@ private:
     nsIAtom*        mAtom;
   } mValue;
   
-  float mT2P;
+  PRInt32 mAppUnitsPerInch;
 };
 
 #endif /* nsROCSSPrimitiveValue_h___ */
