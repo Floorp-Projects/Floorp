@@ -30,7 +30,7 @@ sub Parse {
     my $this = shift;
     
     open (CONFIG, "< bootstrap.cfg") 
-      || die "Can't open config file bootstrap.cfg";
+      || die("Can't open config file bootstrap.cfg");
 
     while (<CONFIG>) {
         chomp; # no newline

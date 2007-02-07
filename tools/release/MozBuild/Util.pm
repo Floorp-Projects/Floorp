@@ -44,10 +44,10 @@ sub RunShellCommand {
     my %args = @_;
 
     my $shellCommand = $args{'command'};
-    die 'ASSERT: RunShellCommand(): Empty command.' 
+    die('ASSERT: RunShellCommand(): Empty command.')
      if (not(defined($shellCommand)) || $shellCommand =~ /^\s+$/);
     my $commandArgs = $args{'args'};
-    die 'ASSERT: RunShellCommand(): commandArgs not an array ref.' 
+    die('ASSERT: RunShellCommand(): commandArgs not an array ref.')
      if (defined($commandArgs) && ref($commandArgs) ne 'ARRAY');
 
     my $logfile = $args{'logfile'};
@@ -67,7 +67,7 @@ sub RunShellCommand {
         $shellCommand =~ s/^\s+//;
         $shellCommand =~ s/\s+$//;
 
-        die "ASSERT: old RunShellCommand() calling convention detected\n" 
+        die("ASSERT: old RunShellCommand() calling convention detected\n")
          if ($shellCommand =~ /\s+/);
     }
 
@@ -103,13 +103,13 @@ sub RunShellCommand {
     my $childStartedTime = 0;
 
     if (defined($changeToDir)) {
-        chdir($changeToDir) or die "RunShellCommand(): failed to chdir() to "
-         . "$changeToDir\n";
+        chdir($changeToDir) or die("RunShellCommand(): failed to chdir() to "
+         . "$changeToDir\n");
     }
 
     eval {
-        local $SIG{'ALRM'} = sub { die "alarm\n" };
-        local $SIG{'PIPE'} = sub { die "pipe\n" };
+        local $SIG{'ALRM'} = sub { die("alarm\n") };
+        local $SIG{'PIPE'} = sub { die("pipe\n") };
   
         my @execCommand = ($shellCommand);
         push(@execCommand, @{$commandArgs}) if (defined($commandArgs) && 
@@ -144,8 +144,8 @@ sub RunShellCommand {
         if (defined($logfile)) {
             my $openArg = $appendLogfile ? '>>' : '>';
             open(LOGFILE, $openArg . $logfile) or 
-             die 'Could not ' . $appendLogfile ? 'append' : 'open' . 
-              " logfile $logfile: $!";
+             die('Could not ' . $appendLogfile ? 'append' : 'open' . 
+              " logfile $logfile: $!");
             LOGFILE->autoflush(1);
         }
 
@@ -198,20 +198,20 @@ sub RunShellCommand {
             }
         }
 
-        die 'ASSERT: RunShellCommand(): stdout handle not empty'
+        die('ASSERT: RunShellCommand(): stdout handle not empty')
          if ($childOut->sysread(undef, $EXEC_IO_READINCR) != 0);
-        die 'ASSERT: RunShellCommand(): stderr handle not empty;'
+        die('ASSERT: RunShellCommand(): stderr handle not empty')
          if ($childErr->sysread(undef, $EXEC_IO_READINCR) != 0);
     };
 
     if (defined($logfile)) {
-        close(LOGFILE) or die "Could not close logfile $logfile: $!";
+        close(LOGFILE) or die("Could not close logfile $logfile: $!");
     }
 
     if ($@) {
         if ($@ eq "alarm\n") {
             $timedOut = 1;
-            kill(9, $childPid) or die "Could not kill timed-out $childPid: $!";
+            kill(9, $childPid) or die("Could not kill timed-out $childPid: $!");
             warn "Shell command $shellCommand timed out, PID $childPid killed: $@\n";
         } else {
             warn "Error running $shellCommand: $@\n";
@@ -251,7 +251,7 @@ sub MkdirWithPath {
         $dirMask = $args{'dirMask'};
     }
 
-    die "ASSERT: MkdirWithPath() needs an arg" if not defined($dirToCreate);
+    die("ASSERT: MkdirWithPath() needs an arg") if not defined($dirToCreate);
 
     ## Defaults based on what mkpath does...
     $printProgress = defined($printProgress) ? $printProgress : 0;
@@ -293,7 +293,7 @@ sub HashFile {
       if ($ignoreErrors) {
          return '';      
       } else {
-         die "MozUtil::HashFile(): hash call failed: $rv->{'exitValue'}\n";
+         die("MozUtil::HashFile(): hash call failed: $rv->{'exitValue'}\n");
       }
    }
 
@@ -314,6 +314,8 @@ sub Email {
     my $ccList = $args{'cc'} ? $args{'cc'} : '';
     my $subject = $args{'subject'};
     my $message = $args{'message'};
+    my $sendmail = $args{'sendmail'};
+    my $blat = $args{'blat'};
 
     if (not defined($from)) {
         die("ASSERT: MozBuild::Utils::Email(): from is required");
@@ -326,31 +328,32 @@ sub Email {
     }    
 
     if (defined($ccList) and ref($ccList) ne 'ARRAY') {
-        die "ASSERT: MozBuild::Utils::Email(): ccList is not an array ref\n"
+        die("ASSERT: MozBuild::Utils::Email(): ccList is not an array ref\n");
     }
 
-    my $sendmailBinary = '/usr/lib/sendmail';
-    my $blatBinary = 'c:\moztools\blat.exe';
-
-    if (-f $sendmailBinary) {
-        open(SENDMAIL, "|$sendmailBinary -oi -t")
-          or die "Can’t fork for sendmail: $!\n";
-    } elsif(-f $blatBinary) {
-        open(SENDMAIL, "|$blatBinary")
-          or die "Can’t fork for blat: $!\n";
+    if (-f $sendmail) {
+        open(SENDMAIL, "|$sendmail -oi -t")
+          or die("Can’t fork for sendmail: $!\n");
+        print SENDMAIL "From: $from\n";
+        print SENDMAIL "To: $to\n";
+        foreach my $cc (@{$ccList}) {
+            print SENDMAIL "CC: $cc\n";
+        }
+        print SENDMAIL "Subject: $subject\n\n";
+    } elsif(-f $blat) {
+        my $toList = $to;
+        foreach my $cc (@{$ccList}) {
+            $toList .= ',';
+            $toList .= $cc;
+        }
+        open(SENDMAIL, "|$blat -to $toList -subject \"$subject\"")
+          or die("Can’t fork for blat: $!\n");
     } else {
-        die("ASSERT: cannot find $sendmailBinary or $blatBinary");
+        die("ASSERT: cannot find $sendmail or $blat");
     }
 
-    print SENDMAIL "From: $from\n";
-    print SENDMAIL "To: $to\n";
-    foreach my $cc (@{$ccList}) {
-        print SENDMAIL "CC: $cc\n";
-    }
-    print SENDMAIL "Subject: $subject\n\n";
     print SENDMAIL "$message";
     close(SENDMAIL) or warn "sendmail didn’t close nicely: $!";
-
 }
 
 sub DownloadFile {
@@ -358,7 +361,7 @@ sub DownloadFile {
 
     my $sourceUrl = $args{'url'};
 
-    die "ASSERT: DownloadFile() Invalid Source URL: $sourceUrl\n" 
+    die("ASSERT: DownloadFile() Invalid Source URL: $sourceUrl\n") 
      if (not(defined($sourceUrl)) || $sourceUrl !~ m|^http://|);
 
     my @wgetArgs = ();
@@ -381,8 +384,8 @@ sub DownloadFile {
                              args => \@wgetArgs);
 
     if ($rv->{'timedOut'} || $rv->{'exitValue'} != 0) {
-        die "DownloadFile(): FAILED: $rv->{'exitValue'}," . 
-         " output: $rv->{'output'}\n";
+        die("DownloadFile(): FAILED: $rv->{'exitValue'}," . 
+         " output: $rv->{'output'}\n");
     }
 }
 

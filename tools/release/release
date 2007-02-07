@@ -88,7 +88,7 @@ sub DetermineSteps() {
 
     while ($currentStep < scalar(@allSteps)) {
         my $stepName = $allSteps[$currentStep];
-        PerformStep( 'stepName' => $stepName );
+        PerformStep( stepName => $stepName );
         $currentStep += 1;
         if (defined($config{'only'})) {
             if ($config{'only'} eq $stepName) {
@@ -127,21 +127,26 @@ sub PerformStep {
         }
     };
     if ($@) {
-        print "Step $stepName died: $@";
-        my $conf = new Bootstrap::Config;
+        my $error = $@;
+        print "Step $stepName died: $error";
+        my $conf = new Bootstrap::Config();
         my $from = $conf->Get(var => 'from');
         my $to = $conf->Get(var => 'to');
         my $cc = $conf->Get(var => 'cc');
+        my $blat = $conf->Get(var => 'blat');
+        my $sendmail = $conf->Get(var => 'sendmail');
 
         my @ccList = split(', ', $cc);
  
         eval {
             Email(
+              blat => $blat,
+              sendmail => $sendmail,
               from => $from,
               to => $to,
               cc => \@ccList,
-              subject => "Step $stepName died: $@",
-              message => "Step $stepName died: $@\nSee the release.log for more information.",
+              subject => "Step $stepName died: $error",
+              message => "Step $stepName died: $error\nSee the release.log for more information.",
             );
             exit(1);
         };

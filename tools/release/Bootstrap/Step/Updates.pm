@@ -9,51 +9,60 @@ use File::Find qw(find);
 use MozBuild::Util qw(MkdirWithPath);
 @ISA = ("Bootstrap::Step");
 
-my $config = new Bootstrap::Config;
-
 sub Execute {
     my $this = shift;
 
-    my $product = $config->Get('var' => 'product');
-    my $logDir = $config->Get('var' => 'logDir');
-    my $version = $config->Get('var' => 'version');
-    my $mozillaCvsroot = $config->Get('var' => 'mozillaCvsroot');
-    my $mofoCvsroot = $config->Get('var' => 'mofoCvsroot');
-    my $updateDir = $config->Get('var' => 'updateDir');
-    my $patcherConfig = $config->Get('var' => 'patcherConfig');
+    my $config = new Bootstrap::Config();
+    my $product = $config->Get(var => 'product');
+    my $logDir = $config->Get(var => 'logDir');
+    my $version = $config->Get(var => 'version');
+    my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
+    my $mofoCvsroot = $config->Get(var => 'mofoCvsroot');
+    my $updateDir = $config->Get(var => 'updateDir');
+    my $patcherConfig = $config->Get(var => 'patcherConfig');
 
     # Create updates area.
     if (not -d $updateDir) {
-        MkdirWithPath('dir' => $updateDir) 
-          or die "Cannot mkdir $updateDir: $!";
+        MkdirWithPath(dir => $updateDir) 
+          or die("Cannot mkdir $updateDir: $!");
     }
 
+    # check out patcher
     $this->Shell(
-      'cmd' => 'cvs',
-      'cmdArgs' => ['-d', $mozillaCvsroot, 'co', '-d', 'patcher', 
+      cmd => 'cvs',
+      cmdArgs => ['-d', $mozillaCvsroot, 'co', '-d', 'patcher', 
                     catfile('mozilla', 'tools', 'patcher')],
-      'logFile' => catfile($logDir, 'updates_patcher-checkout.log'),
-      'dir' => $updateDir,
+      logFile => catfile($logDir, 'updates_patcher-checkout.log'),
+      dir => $updateDir,
+    );
+
+    # check out utilities
+    $this->Shell(
+      cmd => 'cvs',
+      cmdArgs => ['-d', $mozillaCvsroot, 'co', '-d', 'patcher/MozBuild', 
+                    catfile('mozilla', 'tools', 'release', 'MozBuild')],
+      logFile => catfile($logDir, 'updates_patcher-utils-checkout.log'),
+      dir => $updateDir,
     );
 
     # config lives in private repo
     $this->Shell(
-      'cmd' => 'cvs',
-      'cmdArgs' => ['-d', $mofoCvsroot, 'co', '-d', 'config',  
+      cmd => 'cvs',
+      cmdArgs => ['-d', $mofoCvsroot, 'co', '-d', 'config',  
                     catfile('release', 'patcher', $patcherConfig)],
-      'logFile' => catfile($logDir, 'updates_patcher-config-checkout.log'),
-      'dir' => $updateDir,
+      logFile => catfile($logDir, 'updates_patcher-config-checkout.log'),
+      dir => $updateDir,
     );
 
     # build tools
     my $originalCvsrootEnv = $ENV{'CVSROOT'};
     $ENV{'CVSROOT'} = $mozillaCvsroot;
     $this->Shell(
-      'cmd' => './patcher2.pl',
-      'cmdArgs' => ['--build-tools', '--app=' . $product,
+      cmd => './patcher2.pl',
+      cmdArgs => ['--build-tools', '--app=' . $product,
                     '--config=../config/' . $patcherConfig],
-      'logFile' => catfile($logDir, 'updates_patcher-build-tools.log'),
-      'dir' => catfile($updateDir, 'patcher'),
+      logFile => catfile($logDir, 'updates_patcher-build-tools.log'),
+      dir => catfile($updateDir, 'patcher'),
     );
     if ($originalCvsrootEnv) {
         $ENV{'CVSROOT'} = $originalCvsrootEnv;
@@ -61,21 +70,21 @@ sub Execute {
     
     # download complete MARs
     $this->Shell(
-      'cmd' => './patcher2.pl',
-      'cmdArgs' => ['--download', '--app=' . $product,
+      cmd => './patcher2.pl',
+      cmdArgs => ['--download', '--app=' . $product,
                     '--config=../config/' . $patcherConfig],
-      'logFile' => catfile($logDir, 'updates_patcher-download.log'),
-      'dir' => catfile($updateDir, 'patcher'),
+      logFile => catfile($logDir, 'updates_patcher-download.log'),
+      dir => catfile($updateDir, 'patcher'),
     );
 
     # Create partial patches and snippets
     $this->Shell(
-      'cmd' => './patcher2.pl',
-      'cmdArgs' => ['--create-patches', '--app=' . $product, 
+      cmd => './patcher2.pl',
+      cmdArgs => ['--create-patches', '--app=' . $product, 
                     '--config=../config/' . $patcherConfig],
-      'logFile' => catfile($logDir, 'updates_patcher-create-patches.log'),
-      'dir' => catfile($updateDir, 'patcher'),
-      'timeout' => 18000,
+      logFile => catfile($logDir, 'updates_patcher-create-patches.log'),
+      dir => catfile($updateDir, 'patcher'),
+      timeout => 18000,
     );
     
     ### quick verification
@@ -89,37 +98,38 @@ sub Execute {
 sub Verify {
     my $this = shift;
 
-    my $logDir = $config->Get('var' => 'logDir');
-    my $version = $config->Get('var' => 'version');
-    my $oldVersion = $config->Get('var' => 'oldVersion');
-    my $mozillaCvsroot = $config->Get('var' => 'mozillaCvsroot');
-    my $updateDir = $config->Get('var' => 'updateDir');
-    my $verifyDir = $config->Get('var' => 'verifyDir');
-    my $product = $config->Get('var' => 'product');
+    my $config = new Bootstrap::Config();
+    my $logDir = $config->Get(var => 'logDir');
+    my $version = $config->Get(var => 'version');
+    my $oldVersion = $config->Get(var => 'oldVersion');
+    my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
+    my $updateDir = $config->Get(var => 'updateDir');
+    my $verifyDir = $config->Get(var => 'verifyDir');
+    my $product = $config->Get(var => 'product');
 
     # Create verification area.
     my $verifyDirVersion = catfile($verifyDir, $product . '-' . $version);
-    MkdirWithPath('dir' => $verifyDirVersion) 
+    MkdirWithPath(dir => $verifyDirVersion) 
       or die("Could not mkdir $verifyDirVersion: $!");
 
     foreach my $dir ('updates', 'common') {
         $this->Shell(
-          'cmd' => 'cvs',
-          'cmdArgs' => ['-d', $mozillaCvsroot, 'co', '-d', $dir,
+          cmd => 'cvs',
+          cmdArgs => ['-d', $mozillaCvsroot, 'co', '-d', $dir,
                         catfile('mozilla', 'testing', 'release', $dir)],
-          'logFile' => catfile($logDir, 
+          logFile => catfile($logDir, 
                                'updates_verify_checkout-' . $dir . '.log'),
-          'dir' => $verifyDirVersion,
+          dir => $verifyDirVersion,
         );
     }
     
     # Customize updates.cfg to contain the channels you are interested in 
     # testing.
     $this->Shell(
-      'cmd' => './verify.sh', 
-      'cmdArgs' => ['-c'],
-      'logFile' => catfile($logDir, 'updates_verify.log'),
-      'dir' => catfile($verifyDirVersion, 'updates'),
+      cmd => './verify.sh', 
+      cmdArgs => ['-c'],
+      logFile => catfile($logDir, 'updates_verify.log'),
+      dir => catfile($verifyDirVersion, 'updates'),
     );
 }
 
@@ -135,8 +145,9 @@ sub TestAusCallback {
 sub Announce {
     my $this = shift;
 
-    my $product = $config->Get('var' => 'product');
-    my $version = $config->Get('var' => 'version');
+    my $config = new Bootstrap::Config();
+    my $product = $config->Get(var => 'product');
+    my $version = $config->Get(var => 'version');
 
     $this->SendAnnouncement(
       subject => "$product $version update step finished",

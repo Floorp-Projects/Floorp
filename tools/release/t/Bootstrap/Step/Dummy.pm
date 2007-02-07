@@ -3,21 +3,20 @@ use Bootstrap::Step;
 use Bootstrap::Config;
 @ISA = ("Bootstrap::Step");
 
-my $config = new Bootstrap::Config;
-
 sub Execute {
     my $this = shift;
 
-    my $productTag = $config->Get('var' => 'productTag');
+    my $config = new Bootstrap::Config();
+    my $productTag = $config->Get(var => 'productTag');
 
     if (not $productTag) {
         print("testfailed, could not get productTag var from Config: $!\n");
     }
 
     eval {
-        $this->Shell('cmd' => 'echo', 
-                     'cmdArgs' => ['success'],
-                     'logFile' => 't/test.log' 
+        $this->Shell(cmd => 'echo', 
+                     cmdArgs => ['success'],
+                     logFile => 't/test.log' 
         );
     };
     if ($@) {
@@ -26,8 +25,8 @@ sub Execute {
 
     eval {
         $this->CheckLog( 
-            'log' => './t/test.log',
-            'checkForOnly' => '^success',
+            log => './t/test.log',
+            checkForOnly => '^success',
         );
     };
   
@@ -37,7 +36,7 @@ sub Execute {
 
 
     eval {
-        $this->Shell( 'cmd' => 'true', logFile => 't/test.log' );
+        $this->Shell( cmd => 'true', logFile => 't/test.log' );
     };
 
     if ($@) {
@@ -45,7 +44,7 @@ sub Execute {
     }
 
     eval {
-        $this->Shell( 'cmd' => 'false', logFile => 't/test.log' );
+        $this->Shell( cmd => 'false', logFile => 't/test.log' );
     };
 
     if (not $@) {
@@ -54,8 +53,8 @@ sub Execute {
 
     eval {
         $this->CheckLog( 
-            'log' => './t/test.log',
-            'checkFor' => '^success',
+            log => './t/test.log',
+            checkFor => '^success',
         );
     };
   
@@ -68,8 +67,8 @@ sub Execute {
 sub Verify {
     my $this = shift;
     $this->Shell(
-      'cmd' => 'echo', 'cmdArgs' => ['Verify', 'tag'], logFile => 't/test.log');
-    $this->Log('msg' => 'finished');
+      cmd => 'echo', cmdArgs => ['Verify', 'tag'], logFile => 't/test.log');
+    $this->Log(msg => 'finished');
 }
 
 1;
