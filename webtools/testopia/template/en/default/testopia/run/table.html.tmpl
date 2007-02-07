@@ -33,7 +33,7 @@ Select:
 
   [% link = "${table.get_order_url}&order=" %]
   [% DECORATIVE_BORDER_100_BEGIN %]
-
+<table width="100%">
 <tr class="bz_row_header">
   [% IF dotweak %]<th></th>[% END %]
   <th align="left"><a href="[% link %]run_id[% paren %]">ID[% table.arrow IF table.last_sort == 'alias' %]</a></th>

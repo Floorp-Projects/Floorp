@@ -62,9 +62,10 @@
             content: {  component_id: comp_id, case_id: [% case.id FILTER none %], action: action },
             load:    function(type, data, evt){ 
                 if (data.ignore == 1){
-                  return;
+                  alert("That component is already associated with this test case");
                   document.getElementById("addComp").disabled = false;
                   document.getElementById("deleteComp").disabled = false;
+                  return;
                 }
                 var comps = document.getElementById("components");
                 comps.options.length = 0;

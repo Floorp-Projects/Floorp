@@ -34,7 +34,9 @@
 <a name="attributes"></a>
 <input type="hidden" name="plan_id" value="[% plan.id FILTER none %]">
 <!--input type="hidden" name="action" value="[% action FILTER none %]"-->
-
+[% IF form_action == "tr_show_plan.cgi" %]
+  [% versions = plan.product.versions %]
+[% END %]
 <table width="100%">
   <tr>
     <th class="bz_row_header" align="right" width="100">Name</th>
@@ -45,7 +47,7 @@
         [% plan.product.name FILTER html %]
         [% ELSE %]
         [% PROCESS select sel = { name      => 'product_id',
-                                  list      =>  plan.get_available_products,
+                                  list      =>  user.get_selectable_products,
                                   accesskey => 'p' 
                                   default   => plan.product_id 
                                   events    => "onChange='getProdVers(this.value)'"} %]</td>
@@ -66,7 +68,7 @@
 
     <th class="bz_row_header" align="right" width="100">Product Version</th>
     <td>[% PROCESS select sel = { name      => 'prod_version',
-                                  list      =>  plan.get_product_versions,
+                                  list      =>  versions,
                                   accesskey => 'v' 
                                   default   => plan.product_version } %]</td>
 

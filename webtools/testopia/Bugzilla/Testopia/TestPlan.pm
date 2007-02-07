@@ -232,14 +232,14 @@ and a boolean representing whether to copy the plan document as well.
 
 sub clone {
     my $self = shift;
-    my ($name, $author, $product_id, $store_doc) = @_;
+    my ($name, $author, $product_id, $version, $store_doc) = @_;
     $store_doc = 1 unless defined($store_doc);
     my $dbh = Bugzilla->dbh;
     my ($timestamp) = Bugzilla::Testopia::Util::get_time_stamp();
     $dbh->do("INSERT INTO test_plans ($columns)
               VALUES (?,?,?,?,?,?,?,?)",
               undef, (undef, $product_id, $author, 
-              $self->{'type_id'}, $self->{'default_product_version'}, $name,
+              $self->{'type_id'}, $version, $name,
               $timestamp, 1));
     my $key = $dbh->bz_last_key( 'test_plans', 'plan_id' );
     my $text = $store_doc ? $self->text : ''; 
@@ -319,176 +319,6 @@ sub remove_tag {
               undef, ($tag_id, $self->{'plan_id'}));
 }
 
-=head2 get_available_products
-
-Returns a list of user visible products
-
-=cut
-
-sub get_available_products {
-    my $self = shift;
-    my $dbh = Bugzilla->dbh;
-    
-    # TODO 2.22 use Product.pm
-    my $products = $dbh->selectall_arrayref(
-            "SELECT id, name 
-               FROM products
-           ORDER BY name", 
-             {"Slice"=>{}});
-    my @selectable;
-    foreach my $p (@{$products}){
-        if (Bugzilla::Testopia::Util::can_view_product($p->{'id'})){
-            push @selectable, $p;
-        }
-    }
-    return \@selectable;
-}
-
-=head2 get_product_versions
-
-Returns a list of versions for the given product. If one is not
-specified, use the plan product
-
-=cut
-
-sub get_product_versions {
-    my $self = shift;
-    my ($product) = @_;
-    $product = $self->{'product_id'} unless $product;
-    $product ||= 0;
-    my $dbh = Bugzilla->dbh;
-    #TODO: 2.22 use product->versions
-    # Can't use placeholders as this could be a single id (integer)
-    # or a comma separated list (string)
-    my $versions = $dbh->selectall_arrayref(
-            "SELECT DISTINCT value AS id, value AS name
-               FROM versions
-              WHERE product_id IN($product)
-           ORDER BY name", 
-             {'Slice'=>{}});
-             
-    return $versions;
-}
-
-=head2 get_product_milestones
-
-Returns al list of product milestones for the given product. If one
-is not specified, use the plan product.
-
-=cut
-
-sub get_product_milestones {
-#TODO: 2.22 use product.pm
-    my $self = shift;
-    my ($product_id) = @_;
-    $product_id ||= $self->{'product_id'};
-    my $dbh = Bugzilla->dbh;
-    my $ref = $dbh->selectall_arrayref(
-            "SELECT DISTINCT value AS id, value AS name 
-               FROM milestones
-              WHERE product_id IN($product_id)
-           ORDER BY sortkey",
-           {'Slice'=>{}});
-           
-    return $ref;
-}
-
-=head2 get_product_builds
-
-Returns al list of builds for the given product. If one
-is not specified, use the plan product.
-
-=cut
-
-sub get_product_builds {
-#TODO: 2.22 use product.pm
-    my $self = shift;
-    my ($product_id, $byid) = @_;
-    $product_id ||= $self->{'product_id'};
-    my $idfield = $byid ? 'id' : 'name';
-    my $dbh = Bugzilla->dbh;
-    my $ref = $dbh->selectall_arrayref(
-            "SELECT DISTINCT $idfield AS id, name 
-               FROM test_builds
-              WHERE product_id IN($product_id)
-           ORDER BY name",
-           {'Slice'=>{}});
-           
-    return $ref;
-}
-
-=head2 get_product_categories
-
-Returns a list of product categories for the given product. If one
-is not specified, use the plan product.
-
-=cut
-
-sub get_product_categories {
-#TODO: 2.22 use product.pm
-    my $self = shift;
-    my ($product_id, $byid) = @_;
-    $product_id ||= $self->{'product_id'};
-    my $idfield = $byid ? 'id' : 'name';
-    my $dbh = Bugzilla->dbh;
-    my $ref = $dbh->selectall_arrayref(
-            "SELECT DISTINCT $idfield AS id, name 
-               FROM test_case_categories
-              WHERE product_id IN($product_id)
-           ORDER BY name",
-           {'Slice'=>{}});
-           
-    return $ref;
-}
-
-=head2 get_product_components
-
-Returns a list of product components for the given product. If one
-is not specified, use the plan product.
-
-=cut
-
-sub get_product_components {
-#TODO: 2.22 use product.pm
-    my $self = shift;
-    my ($product_id, $byid) = @_;
-    $product_id ||= $self->{'product_id'};
-    my $idfield = $byid ? 'id' : 'name'; 
-    my $dbh = Bugzilla->dbh;
-    my $ref = $dbh->selectall_arrayref(
-            "SELECT DISTINCT $idfield AS id, name 
-               FROM components
-              WHERE product_id IN($product_id)
-           ORDER BY name",
-           {'Slice'=>{}});
-           
-    return $ref;
-}
-
-=head2 get_product_environments
-
-Returns al list of environments for the given product. If one
-is not specified, use the plan product.
-
-=cut
-
-sub get_product_environments {
-#TODO: 2.22 use product.pm
-    my $self = shift;
-    my ($product_id, $byid) = @_;
-    $product_id ||= $self->{'product_id'};
-    my $idfield = $byid ? 'id' : 'name';
-    my $dbh = Bugzilla->dbh;
-    my $ref = $dbh->selectall_arrayref(
-            "SELECT DISTINCT $idfield AS id, name 
-               FROM test_environments
-              WHERE product_id IN($product_id)
-           ORDER BY name",
-           {'Slice'=>{}});
-           
-    return $ref;
-}
-
 sub get_used_categories {
     my $self = shift;
     my $dbh = Bugzilla->dbh;
@@ -502,27 +332,6 @@ sub get_used_categories {
            {'Slice'=>{}}, $self->id);
            
     return $ref;
-    
-}
-=head2 get_case_ids_by_category
-
-Returns a list of case_ids in this plan from the selected categories.
-
-=cut
-
-sub get_case_ids_by_category {
-    my $self = shift;
-    my ($categories) = @_;
-    my $dbh = Bugzilla->dbh;
-    
-    my $ref = $dbh->selectcol_arrayref(
-        "SELECT DISTINCT test_cases.case_id from test_cases
-           JOIN test_case_plans AS tcp ON tcp.case_id = test_cases.case_id
-          WHERE tcp.plan_id = ?
-            AND category_id in (". join(',',@$categories) . ")",
-           undef, $self->id);
-    
-    return $ref; 
 }
 
 =head2 get_plan_types
@@ -856,7 +665,7 @@ sub lookup_type_by_name {
     return $value;
 }
 
-=head2 lookup_status
+=head2 lookup_product
 
 Takes an ID of the status field and returns the value
 
@@ -967,7 +776,7 @@ sub add_tester {
     my ($userid, $perms) = @_;
     my $dbh = Bugzilla->dbh;
     
-    $dbh->do("INSERT INTO test_plan_permissions(userid, plan_id, permissions) 
+    $dbh->do("INSERT INTO test_plan_permissions(userid, plan_id, permissions, grant_type) 
               VALUES(?,?,?,?)", 
               undef, ($userid, $self->id, $perms, GRANT_DIRECT));
 }
@@ -1441,20 +1250,6 @@ sub tags {
     }
     $self->{'tags'} = \@plan_tags;
     return $self->{'tags'};
-}
-
-sub plan_testers {
-    my ($self) = @_;
-    my $dbh = Bugzilla->dbh;
-    return $self->{'plan_testers'} if exists $self->{'plan_testers'};
-    my $testers = $dbh->selectcol_arrayref("SELECT p.login_name 
-                                           FROM profiles p, testers t
-                                           WHERE p.userid = t.userid
-                                           AND t.plan_id = ?", 
-                                           undef, $self->{'plan_id'});
-
-    $self->{'plan_testers'} = $testers;
-    return $self->{'plan_testers'};
 }
 
 =head2 text

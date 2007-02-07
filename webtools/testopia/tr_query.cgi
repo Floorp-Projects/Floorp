@@ -45,7 +45,70 @@ my $template = Bugzilla->template;
 push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
 
 Bugzilla->login();
-#Bugzilla->batch(1);
+
+sub get_searchable_objects{
+    my $object = shift;
+    my $dbh = Bugzilla->dbh;
+
+    my $products = Bugzilla->user->get_selectable_products;
+    my @ids;
+    foreach my $p (@{$products}){
+        push @ids, $p->id;
+    }
+    my $ref;
+    SWITCH: for ($object) {
+      /^components/ && do {
+        $ref = $dbh->selectall_arrayref(
+            "SELECT DISTINCT name AS id, name
+             FROM components WHERE product_id IN (". join(",",@ids) .")
+             ORDER BY name", {'Slice'=>{}});
+        last SWITCH;
+      };
+      
+      /^categories/ && do {
+        $ref = $dbh->selectall_arrayref(
+            "SELECT DISTINCT name AS id, name
+             FROM test_case_categories WHERE product_id IN (". join(",",@ids) .")
+             ORDER BY name", {'Slice'=>{}});
+        last SWITCH;
+      };
+      
+      /^builds/ && do {    
+        $ref = $dbh->selectall_arrayref(
+            "SELECT DISTINCT name AS id, name
+             FROM test_builds WHERE product_id IN (". join(",",@ids) .")
+             ORDER BY name", {'Slice'=>{}});
+        last SWITCH;
+      };
+      
+      /^versions/ && do {
+        $ref = $dbh->selectall_arrayref(
+            "SELECT DISTINCT value AS id, value AS name
+             FROM versions WHERE product_id IN (". join(",",@ids) .")
+             ORDER BY name", {'Slice'=>{}});
+        last SWITCH;
+      };
+      
+      /^milestones/ && do {
+        $ref = $dbh->selectall_arrayref(
+            "SELECT DISTINCT value AS id, value AS name
+             FROM milestones WHERE product_id IN (". join(",",@ids) .")
+             ORDER BY name", {'Slice'=>{}});
+        last SWITCH;
+      };
+      
+      /^environments/ && do {
+        $ref = $dbh->selectall_arrayref(
+            "SELECT DISTINCT name AS id, name
+             FROM test_environments WHERE product_id IN (". join(",",@ids) .")
+             ORDER BY name", {'Slice'=>{}});
+        last SWITCH;
+      };
+    }
+    return $ref;             
+}
+
+
 print $cgi->header;
 
 my $action = $cgi->param('action') || '';
@@ -53,13 +116,15 @@ my $action = $cgi->param('action') || '';
 if ($action eq 'getversions'){
     my @prod_ids = split(",", $cgi->param('prod_ids'));
     my $tab = $cgi->param('current_tab') || '';
+    my $plan = Bugzilla::Testopia::TestPlan->new({});
     
     my $products;
     my @validated;
     foreach my $p (@prod_ids){
         detaint_natural($p);
         validate_selection($p,'id','products');
-        push @validated, $p if can_view_product($p);
+        my $prod = $plan->lookup_product($p);
+        push @validated, $p if Bugzilla->user->can_see_product($prod);
     }
     my $prod_ids = join(",", @validated);
     my $dbh = Bugzilla->dbh;
@@ -73,12 +138,6 @@ if ($action eq 'getversions'){
     # This list must match the name of the select fields and the names above
     $products->{'selectTypes'} = [qw{version milestone component build category environment}];
 
-#    my $versions   = $plan->get_product_versions($prodlist) if ($tab eq 'run' || $tab eq 'plan' || $tab eq 'case_run');
-#    my $milestones = $plan->get_product_milestones($prodlist) if ($tab eq 'run' || $tab eq 'case_run');
-#    my $builds     = $plan->get_product_builds($prodlist) if ($tab eq 'run' || $tab eq 'case_run');
-#    my $components = $plan->get_product_components($prodlist) if ($tab eq 'case' || '' || $tab eq 'case_run');
-#    my $categories = $plan->get_product_categories($prodlist) if ($tab eq 'case' || '' || $tab eq 'case_run');
-#    my $environments = $plan->get_product_environments($prodlist) if ($tab eq 'case' || '' || $tab eq 'case_run');
     my $json = new JSON;
     $json->autoconv(0);
     print $json->objToJson($products);
@@ -230,50 +289,48 @@ else{
 }
 
 sub display {
-    my $plan = Bugzilla::Testopia::TestPlan->new({ 'plan_id' => 0 });
-    my @allversions;
-    foreach my $p (@{$plan->get_available_products}){
-        push @allversions, @{$plan->get_product_versions($p->{'id'})};
-    }
-    # weed out any repeats
-    my %versions;
-    foreach my $v (@allversions){
-        $versions{$v->{'id'}} = 1;
-    }
-    @allversions = ();
-    foreach my $k (keys %versions){
-        push @allversions, { 'id' => $k,  'name' => $k };
-    }
-    $vars->{'plan'} = $plan;
-    $vars->{'product_versions'} = \@allversions;
     
     #TODO: Support default query
     my $tab = $cgi->param('current_tab') || '';
     if ($tab eq 'plan'){
+        $vars->{'plan'} = Bugzilla::Testopia::TestPlan->new({});
         $vars->{'title'} = "Search For Test Plans";
+        $vars->{'versions'} = get_searchable_objects('versions');
     }
     elsif ($tab eq 'run'){
-        my $run = Bugzilla::Testopia::TestRun->new({ 'run_id' => 0 });
-        $vars->{'run'} = $run;
-        $vars->{'title'} = "Search For Test Runs";
+        $vars->{'title'}        = "Search For Test Runs";
+        $vars->{'run'}          = Bugzilla::Testopia::TestRun->new({});;
+        $vars->{'versions'}     = get_searchable_objects('versions');
+        $vars->{'milestones'}   = get_searchable_objects('milestones');
+        $vars->{'builds'}       = get_searchable_objects('builds');
+        $vars->{'environments'} = get_searchable_objects('environments');
     }
     elsif ($tab eq 'environment'){
+        $vars->{'title'} = "Search For Test Run Environments";
         $vars->{'classifications'} = Bugzilla->user->get_selectable_classifications;
         $vars->{'products'} = Bugzilla->user->get_selectable_products;
-        $vars->{'env'} = Bugzilla::Testopia::Environment->new({'environment_id' => 0 });
-        $vars->{'title'} = "Search For Test Run Environments";
+        $vars->{'env'} = Bugzilla::Testopia::Environment->new({});
     }
     elsif ($tab eq 'case_run'){
+        $vars->{'title'} = "Search For Test Case-Runs";
         $vars->{'case'} = Bugzilla::Testopia::TestCase->new({});
         $vars->{'run'} = Bugzilla::Testopia::TestRun->new({});
         $vars->{'caserun'} = Bugzilla::Testopia::TestCaseRun->new({});
-        $vars->{'title'} = "Search For Test Cases";
+
+        $vars->{'versions'}     = get_searchable_objects('versions');
+        $vars->{'milestones'}   = get_searchable_objects('milestones');
+        $vars->{'builds'}       = get_searchable_objects('builds');
+        $vars->{'environments'} = get_searchable_objects('environments');
+        $vars->{'components'}   = get_searchable_objects('components');
+        $vars->{'categories'}   = get_searchable_objects('categories');
     }
     else { # show the case form
         $tab = 'case';
         my $case = Bugzilla::Testopia::TestCase->new({ 'case_id' => 0 });
-        $vars->{'case'} = $case;
         $vars->{'title'} = "Search For Test Cases";
+        $vars->{'case'} = $case;
+        $vars->{'components'} = get_searchable_objects('components');
+        $vars->{'categories'} = get_searchable_objects('categories');
     }
     $vars->{'report'} = $cgi->param('report');
     $vars->{'current_tab'} = $tab;

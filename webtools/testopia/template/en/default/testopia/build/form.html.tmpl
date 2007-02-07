@@ -34,7 +34,7 @@
       <th align="right" valign="top">Milestone: </th>
       <td>[% PROCESS select sel = { name      => 'milestone',
                                     accesskey => 'm', 
-                                    list      => plan.get_product_milestones
+                                    list      => plan.product.milestones
                                     default   => build.milestone } %]
       </td>
     </tr>

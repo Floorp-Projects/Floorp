@@ -112,19 +112,22 @@ elsif ($action eq 'do_clone'){
           || ThrowTemplateError($template->error());
 
     }
-    unless ($plan->canedit){
+    unless ($plan->canview){
         print $cgi->multipart_end if $serverpush;
-        ThrowUserError("testopia-read-only", {'object' => 'plan'});
+        ThrowUserError("testopia-permission-denied", {'object' => 'plan'});
     }
     my $plan_name = $cgi->param('plan_name');
 
     # All DB actions use place holders so we are OK doing this
     my $product_id = $cgi->param('product_id');
+    my $version = $cgi->param('prod_version');
     trick_taint($plan_name);
+    trick_taint($version);
     detaint_natural($product_id);
     validate_selection($product_id,'id','products');
+    Bugzilla::Version::check_version(Bugzilla::Product->new($product_id),$version);
     my $author = $cgi->param('keepauthor') ? $plan->author->id : Bugzilla->user->id;
-    my $newplanid = $plan->clone($plan_name, $author, $product_id, $cgi->param('copy_doc'));
+    my $newplanid = $plan->clone($plan_name, $author, $product_id, $version, $cgi->param('copy_doc'));
     my $newplan = Bugzilla::Testopia::TestPlan->new($newplanid);
     if($cgi->param('copy_tags')){
         foreach my $tag (@{$plan->tags}){
@@ -147,18 +150,19 @@ elsif ($action eq 'do_clone'){
         $newplan->derive_regexp_testers(Param('testopia-default-plan-testers-regexp'))
     } 
     if ($cgi->param('copy_cases')){
-        my @catids;
-        #TODO: Copy case to the new category
+        my @case_ids;
+
         foreach my $id ($cgi->param('clone_categories')){
             detaint_natural($id);
             validate_selection($id,'category_id','test_case_categories');
-            push @catids, $id;
+            my $category = Bugzilla::Testopia::Category->new($id);
+            push @case_ids, @{$category->case_ids};
         }
-        my $caseids_ref = $plan->get_case_ids_by_category(\@catids); 
+        
         my $progress_interval = 250;
         my $i = 0;
-        my $total = scalar @$caseids_ref;
-        foreach my $id (@$caseids_ref){
+        my $total = scalar @case_ids;
+        foreach my $id (@case_ids){
             $i++;
             if ($i % $progress_interval == 0 && $serverpush){
                 print $cgi->multipart_end;

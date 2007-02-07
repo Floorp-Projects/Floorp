@@ -39,7 +39,7 @@
     <td style="padding-right: 30px;">
     [% PROCESS select sel = { name  => 'product_id',
                   accesskey => 'p', 
-                  list      => plan.get_available_products,
+                  list      => user.get_selectable_products,
                   elements  => 5,
                   mult      => 1  
                   events    => 'onChange="onProductSelection()"'  } %]
@@ -47,7 +47,7 @@
     <td style="padding-right: 30px;">
     [% PROCESS select sel = { name  => 'default_product_version',
                   accesskey => 'v', 
-                  list      => product_versions,
+                  list      => versions,
                   elements  => 5,
                   mult      => 1 } %]   
     </td>

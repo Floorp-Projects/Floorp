@@ -141,9 +141,9 @@ else {
         ThrowUserError('testopia-query-too-large', {'limit' => $query_limit});
     }
 
-    my $p = Bugzilla::Testopia::TestPlan->new({'plan_id' => 0 });
-    my $product_list   = $p->get_available_products;
-    my $prodver_list   = $p->get_product_versions;
+    my $p = Bugzilla::Testopia::TestPlan->new({});
+    my $product_list   = Bugzilla->user->get_selectable_products;
+    my $prodver_list   = [];
     my $type_list      = $p->get_plan_types;
     
     unshift @{$product_list}, {'id' => -1, 'name' => "--Do Not Change--"};

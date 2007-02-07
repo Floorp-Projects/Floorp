@@ -49,6 +49,7 @@ use Bugzilla::Testopia::TestRun;
 use Bugzilla::Testopia::TestTag;
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::XmlReferences;
+use Bugzilla::Testopia::Product
 use Bugzilla::User;
 use Bugzilla::Util;
 
@@ -127,12 +128,13 @@ sub add_component()
 	return "Cannot find product $component_product for component $component." if ( $product_id eq "" );
 	
 	# Find the component identifier for the product's componet
-	my $components_ref = Bugzilla::Testopia::TestPlan->get_product_components($product_id,1);
+	my $product = Bugzilla::Testopia::Product->new($product_id);
+	my $components_ref = $product->components;
 	foreach my $product_component ( @$components_ref )
 	{
-		if ( $component eq $product_component->{name} )
+		if ( $component eq $product_component->name )
 		{
-			$component_id = $product_component->{id};
+			$component_id = $product_component->id;
 			last;
 		}
 	}

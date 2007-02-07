@@ -231,7 +231,7 @@
 [% PROCESS testopia/case/table.html.tmpl
    table = case_table %]
   <a href="tr_new_case.cgi?plan_id=[% plan.id FILTER none %]">Create a New Test Case</a>
-  <a href="tr_list_cases.cgi?plan_id=[% plan.id FILTER none %]">List Cases</a>
+  &nbsp|&nbsp;<a href="tr_list_cases.cgi?plan_id=[% plan.id FILTER none %]">List Cases</a>
 </div>
 
 [%##### Test Runs #####%]
@@ -244,7 +244,7 @@
 [% PROCESS testopia/run/table.html.tmpl
    table = run_table %]
   <a href="tr_new_run.cgi?plan_id=[% plan.id FILTER none %]&case_status_id=2&viewall=0">Create a New Test Run</a>
-  <a href="tr_list_runs.cgi?plan_id=[% plan.id FILTER none %]">List Runs</a>
+  &nbsp|&nbsp;<a href="tr_list_runs.cgi?plan_id=[% plan.id FILTER none %]">List Runs</a>
 </div>
 [%##### Attachments #####%]
 <br><br>

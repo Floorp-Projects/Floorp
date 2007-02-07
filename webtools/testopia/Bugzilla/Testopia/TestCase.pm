@@ -214,7 +214,6 @@ associated with this case.
 
 =cut
 
-#TODO: This can be done with a single query
 sub get_selectable_components {
     my $self = shift;
     my ($byid) = @_;
@@ -241,66 +240,6 @@ sub get_selectable_components {
     return \@comps;
 }
 
-=head2 get_product_components
-
-Returns a list of components divided by product
-
-=cut
-
-sub get_product_components {
-    my $self = shift;
-    my $dbh = Bugzilla->dbh;
-    my @exclusions;
-    my $products = $dbh->selectall_arrayref(
-            "SELECT id,name FROM products ORDER BY name",{'Slice' => {}});
-    my %prods;
-    foreach my $p (@$products){
-        my $comps = $dbh->selectall_arrayref(
-            "SELECT id,name FROM components 
-             WHERE product_id = ?
-             ORDER BY name",
-             {'Slice' => {}},$p->{'id'});
-        
-        $prods{$p->{'name'}} = $comps;
-    }
-    return \%prods;
-}
- 
-=head2 get_available_components
-
-Returns a list of all user visible components for use in searches
-
-=cut
-
-#TODO: This can be done with a single query
-sub get_available_components{
-    my $self = shift;
-    my $dbh = Bugzilla->dbh;
-    #TODO: 2.22 use Product.pm
-    my $products = $dbh->selectcol_arrayref(
-            "SELECT id FROM products");
-    my @selectable;
-    foreach my $p (@{$products}){
-        if (Bugzilla::Testopia::Util::can_view_product($p)){
-            my $ref = $dbh->selectcol_arrayref(
-                "SELECT name
-                 FROM components WHERE product_id=?", 
-                 undef, $p);
-            push @selectable, @{$ref};
-        }
-    }
-    # weed out duplicate names
-    my %comps;
-    foreach my $c (@selectable){
-        $comps{$c} = 1;
-    }
-    @selectable = ();
-    foreach my $k (sort(keys %comps)){
-        push @selectable, {'id' => $k, 'name' => $k};
-    }
-    return \@selectable;             
-}
-
 =head2 get_category_list
 
 Returns a list of categories associated with products in all
@@ -308,50 +247,14 @@ plans referenced by this case.
 
 =cut
 
-#TODO: Move to Testopia::Product.pm in 2.22
 sub get_category_list{
     my $self = shift;
-    my ($by_name) = @_;
     my $dbh = Bugzilla->dbh;
     
-    my @product_ids;
-    foreach my $p (@{$self->plans}){
-        push @product_ids, $p->product_id;
-    }
-    my $id_part;
-    my $name_part;
-    if ($by_name){
-        $id_part = "cat.name AS id";
-        $name_part = ", cat.name as name";
-    }
-    else {
-        $id_part = "category_id";
-    }
-    my $query =  "SELECT DISTINCT $id_part $name_part ";
-       $query .= "FROM test_case_categories AS cat " .
-             "JOIN products ON cat.product_id = products.id " .
-             "LEFT JOIN group_control_map " .
-              "ON group_control_map.product_id = products.id ";
-    if (Param('useentrygroupdefault')) {
-        $query .= "AND group_control_map.entry != 0 ";
-    } else {
-        $query .= "AND group_control_map.membercontrol = " .
-              CONTROLMAPMANDATORY . " ";
-    }
-    if (%{Bugzilla->user->groups}) {
-        $query .= "AND group_id NOT IN(" . 
-              join(',', values(%{Bugzilla->user->groups})) . ") ";
-    }
-    $query .= "WHERE group_id IS NULL ";
-    $query .= "AND cat.product_id IN (". join(",", @product_ids) . ") " unless ($by_name || !@product_ids);  
-    $query .= "ORDER BY cat.name";
-
-    if ($by_name){
-        my $ref = $dbh->selectall_arrayref($query, {'Slice'=>{}});
-        return $ref;
-    }
-    my $ids = $dbh->selectcol_arrayref($query);
-    
+    my $ids = $dbh->selectcol_arrayref(
+        "SELECT category_id 
+           FROM test_case_categories 
+          WHERE product_id IN (". join(",", @{$self->get_product_ids}) .")");
     my @categories;
     foreach my $c (@$ids){
         push @categories, Bugzilla::Testopia::Category->new($c);
@@ -1835,8 +1738,6 @@ sub dependson_list_uncached {
 
 
 =head1 TODO
-
-Move components to use Bugzilla::Components with 2.22
 
 =head1 SEE ALSO
 

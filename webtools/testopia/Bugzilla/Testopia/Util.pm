@@ -36,12 +36,10 @@ package Bugzilla::Testopia::Util;
 use strict;
 
 use base qw(Exporter);
-@Bugzilla::Testopia::Util::EXPORT = qw(get_product_plans get_product_components 
-                                         can_view_product GetProducts
-                                         get_field_id get_time_stamp 
-                                         validate_test_id validate_selection
-                                         validate_version support_server_push
-                                         percentage);
+@Bugzilla::Testopia::Util::EXPORT = qw(get_field_id get_time_stamp 
+                                       validate_test_id validate_selection
+                                       validate_version support_server_push
+                                       percentage);
 
 use Bugzilla;
 use Bugzilla::Config;
@@ -51,62 +49,6 @@ use Bugzilla::Util;
 use Bugzilla::Testopia::TestPlan;
 
 ### Methods ###
-
-sub get_product_plans {
-    my ($product_id) = @_;
-    my $dbh = Bugzilla->dbh;
-    my @testplans;
-    
-    my $col = $dbh->selectcol_arrayref("SELECT plan_id 
-                                        FROM test_plans 
-                                        WHERE product_id=?", 
-                                        undef,$product_id);
-    foreach my $plan_id (@{$col}){
-        push @testplans, Bugzilla::Testopia::TestPlan->new($plan_id);
-    }
-    return \@testplans;
-}
-
-sub get_product_components {
-    my ($product_id) = @_;
-    my $dbh = Bugzilla->dbh;
-    
-    my $components = $dbh->selectcol_arrayref("SELECT name FROM components 
-                                               WHERE product_id=?", undef, $product_id);
-    return $components;
-}
-=head2 can_view_product
-
-Returns true if the logged in user has rights to edit bugs and
-by extension, test plans in a prodcut.
-
-=cut
-
-# Code adapted from GetSelectableProducts:
-sub can_view_product {
-    my $dbh = Bugzilla->dbh;
-    my ($product_id) = @_;
-    
-    my $query = "SELECT 1 " .
-                  "FROM products " .
-              "LEFT JOIN group_control_map " .
-              "ON group_control_map.product_id = products.id ";
-    if (Param('useentrygroupdefault')) {
-        $query .= "AND group_control_map.entry != 0 ";
-    } else {
-        $query .= "AND group_control_map.membercontrol = " .
-              CONTROLMAPMANDATORY . " ";
-    }
-    if (%{Bugzilla->user->groups}) {
-        $query .= "AND group_id NOT IN(" . 
-              join(',', values(%{Bugzilla->user->groups})) . ") ";
-    }
-    $query .= "WHERE group_id IS NULL AND products.id= ?";
-
-    my ($canedit) = $dbh->selectrow_array($query,undef,$product_id);
-    
-    return $canedit;
-}
 
 =head2 get_field_id
 

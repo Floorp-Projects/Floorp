@@ -129,15 +129,15 @@
     View [% PROCESS select sel = {list    => pagesizelist,
                                   default => table.page_size,
                                   events  => 'onchange="adjustPageSize(this.value)"' }%]
-    records at a time
+    records&nbsp;at&nbsp;a&nbsp;time
     &nbsp;&nbsp;&nbsp;
   [% IF ajax %]
-    <a href="[% url %]null,1[% pc %]">View All</a>&nbsp;
+    <a href="[% url %]null,1[% pc %]">View&nbsp;All</a>&nbsp;
   [% ELSE %]
     [% IF table.list_count < MAX_LIMIT %]
-    <a href="[% url %]&viewall=1">View All</a>&nbsp;
+    <a href="[% url %]&viewall=1">View&nbsp;All</a>&nbsp;
     [% ELSE %]
-    <span style="color:gray">View All</span>
+    <span style="color:gray">View&nbsp;All</span>
     [% END %]
   [% END %]
     </td>

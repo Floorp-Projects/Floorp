@@ -192,7 +192,8 @@ else{
         my $ref = $dbh->selectall_arrayref(
             "SELECT name, environment_id 
                FROM test_environments 
-              WHERE name like ?",
+              WHERE name like ?
+              LIMIT 20",
               undef, $search);
         print objToJson($ref);  
     }
@@ -211,14 +212,16 @@ else{
                    FROM test_tags
                    JOIN test_case_tags on test_case_tags.tag_id = test_tags.tag_id
                    JOIN test_case_runs on test_case_runs.case_id = test_case_tags.case_id  
-                  WHERE tag_name like ? AND test_case_runs.run_id = ?",
+                  WHERE tag_name like ? AND test_case_runs.run_id = ?
+                  LIMIT 20",
                   undef, ($search, $run_id));
         }
         else {
             $ref = $dbh->selectall_arrayref(
                 "SELECT tag_name, tag_id 
                    FROM test_tags 
-                  WHERE tag_name like ?",
+                  WHERE tag_name like ?
+                  LIMIT 20",
                   undef, $search);
         }
         print objToJson($ref);  

@@ -270,7 +270,6 @@ if ($cgi->param('run_id')){
 my $case = Bugzilla::Testopia::TestCase->new({'case_id' => 0});
 $vars->{'expand_report'} = $cgi->param('expand_report') || 0;
 $vars->{'expand_filter'} = $cgi->param('expand_filter') || 0;
-$vars->{'component_list'} =  $case->get_available_components();
 $vars->{'dotweak'} = UserInGroup('edittestcases');
 $vars->{'table'} = $table;
 $vars->{'action'} = 'tr_list_caserun.cgi';

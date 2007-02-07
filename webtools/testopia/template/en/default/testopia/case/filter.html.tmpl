@@ -33,7 +33,7 @@
       <td>
       [% PROCESS select sel = { name  => 'category',
                     accesskey => 't', 
-                    list      => plan.get_product_categories,
+                    list      => plan.product.categories,
                     elements  => 5,
                     mult      => 1 } %]   
       </td>
@@ -47,7 +47,7 @@
       <td style="padding-right: 30px;">
       [% PROCESS select sel = { name  => 'component',
                     accesskey => 'm', 
-                    list      => plan.get_product_components
+                    list      => plan.product.components
                     elements  => 5,
                     mult      => 1 } %]
       </td>      

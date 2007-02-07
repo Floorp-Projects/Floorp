@@ -37,7 +37,7 @@
 
       <td>
         [% PROCESS select sel = { name => "product_version", 
-                                  list => run.plan.get_product_versions, 
+                                  list => run.plan.product.versions, 
                                   default => run.product_version ? run.product_version : run.plan.product_version }
          %]
       </td>

@@ -72,7 +72,7 @@
     <td style="padding-right: 30px;">
     [% PROCESS select sel = { name  => 'product_id',
                   accesskey => 'p', 
-                  list      => plan.get_available_products,
+                  list      => user.get_selectable_products,
                   elements  => 5,
                   mult      => 1  
                   events    => 'onChange="onProductSelection()"' } %]
@@ -80,17 +80,40 @@
     <td style="padding-right: 30px;">
     [% PROCESS select sel = { name  => 'component',
                   accesskey => 'm', 
-                  list      => case.get_available_components
+                  list      => components
                   elements  => 5,
                   mult      => 1 } %]
     </td>
     <td style="padding-right: 30px;">
     [% PROCESS select sel = { name  => 'category',
                   accesskey => 't', 
-                  list      => case.get_category_list(1),
+                  list      => categories,
                   elements  => 5,
                   mult      => 1 } %]   
     </td>
+  </tr>
+</table>
+</fieldset>
+<fieldset>
+    <legend><strong>Roles</strong></legend>
+<table>
+  <tr>
+    <th align="right">Author:</tH>
+    <td>
+    [% PROCESS select sel = { name => 'author_type',
+                              list => email_variants } %]</td>
+    <td><input name="author"></td>
+  </tr>
+  <tr>
+    <th colspan=2"><input type="radio" name="andor" value="1"/>AND
+        <input type="radio" name="andor" value="0"  checked="checked"/>OR</th>
+  </tr>
+  <tr>
+    <th align="right">Default Tester:</th>
+    <td>
+    [% PROCESS select sel = { name => 'default_tester_type',
+                      list => email_variants } %]</td>
+  <td><input name="default_tester"></td>
   </tr>
 </table>
 </fieldset>
@@ -139,24 +162,8 @@
                               list => tag_variants } %]</td>
     <td><input name="tags"></td>
   </tr>
-  <tr>
-    <th align="right">Author:</tH>
-    <td>
-    [% PROCESS select sel = { name => 'author_type',
-                              list => email_variants } %]</td>
-    <td><input name="author"></td>
-    <th><input type="radio" name="andor" value="1"/>AND
-        <input type="radio" name="andor" value="0"  checked="checked"/>OR</th>
-  </tr>
-  <tr>
-    <th align="right">Default Tester:</th>
-    <td>
-    [% PROCESS select sel = { name => 'default_tester_type',
-                      list => email_variants } %]</td>
-  <td><input name="default_tester"></td>
-  </tr>
   
-  </tr>
+
 </table>
 </fieldset>
 <!--
@@ -186,24 +193,34 @@
 
    </fieldset>
 -->
-<p style="font-weight: bold;">
-  <label for="case_id">
-     Include cases numbered: 
-  </label>
-  <input name="case_id" id="case_id">
-  <br/><br/>
-  <label for="plan_id">
-     Include cases from plans numbered: 
-  </label>
-  <input name="plan_id" id="plan_id">
-  <br/><br/>
-  <label for="run_id">
-     Include cases in runs numbered: 
-  </label>
-  <input name="run_id" id="run_id">
-  <br/><br/>
-  
-</p>
-
+<fieldset>
+  <legend><strong>Associations (comma separated lists)</strong></legend>
+<table>
+  <tr>
+    <th align="right">    
+    <label for="case_id">
+       Include cases numbered: 
+    </label>
+    </th>
+    <td><input name="case_id" id="case_id"></td>
+  </tr>
+  <tr>
+    <th align="right">
+    <label for="plan_id">
+       Include cases from plans numbered: 
+    </label>
+    </th>
+    <td><input name="plan_id" id="plan_id"></td>
+  </tr>
+  <tr>
+    <th align="right">
+    <label for="run_id">
+       Include cases in runs numbered: 
+    </label>
+    </th>
+    <td><input name="run_id" id="run_id"></td>
+  </tr>  
+</table>
+</fieldset>
 <input type="submit" value="Submit">
 </form>  

@@ -80,6 +80,9 @@ if ($action eq 'Add'){
             'author_id'  => Bugzilla->user->id,
     });
     my $plan_id = $plan->store;
+    my @dojo_search;
+    push @dojo_search, "plandoc","newtag","tagTable";
+    $vars->{'dojo_search'} = objToJson(\@dojo_search);
     $vars->{'case_table'} = undef;
     $vars->{'case_table'} = undef;
     $vars->{'action'} = "Commit";
@@ -110,7 +113,8 @@ elsif ($action eq 'getversions'){
             print '{ERROR:"You do not have permission to view this product"}';
             exit;
         }
-        @versions = @{$plan->get_product_versions($prod_id)};
+        my $product = Bugzilla::Testopia::Product->new($prod_id);
+        @versions = @{$product->versions};
     }
     my $json = new JSON;
     $json->autoconv(0);
@@ -119,9 +123,15 @@ elsif ($action eq 'getversions'){
 # For use in new_case and show_case since new_plan does not require an id
 elsif ($action eq 'getcomps'){
     Bugzilla->login;
+    my $plan = Bugzilla::Testopia::TestPlan->new({});
     my $product_id = $cgi->param('product_id');
 
     detaint_natural($product_id);
+    my $prod = $plan->lookup_product($product_id);
+    unless (Bugzilla->user->can_see_product($prod)){
+        print '{ERROR:"You do not have permission to view this product"}';
+        exit;
+    }
     my $product = Bugzilla::Testopia::Product->new($product_id);
     
     my @comps;

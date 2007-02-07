@@ -126,4 +126,32 @@ sub check_product_by_name {
     return $used;  
 }
 
+sub versions {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+
+    my $values = $dbh->selectall_arrayref(
+        "SELECT value AS id, value AS name
+           FROM versions
+          WHERE product_id = ?
+          ORDER BY value", {'Slice' =>{}}, $self->id);
+
+    $self->{'versions'} = $values;
+    return $self->{'versions'};
+}
+
+sub milestones {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+
+    my $values = $dbh->selectall_arrayref(
+        "SELECT value AS id, value AS name
+           FROM milestones
+          WHERE product_id = ?
+          ORDER BY value", {'Slice' =>{}}, $self->id);
+
+    $self->{'milestones'} = $values;
+    return $self->{'milestones'};
+}
+
 1;

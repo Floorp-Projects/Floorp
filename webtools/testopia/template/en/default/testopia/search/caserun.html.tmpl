@@ -72,7 +72,7 @@
     <td colspan="3" align="center" >
     [% PROCESS select sel = { name  => 'product_id',
                               accesskey => 'p', 
-                              list      => plan.get_available_products,
+                              list      => user.get_selectable_products,
                               elements  => 5,
                               mult      => 1  
                               events    => 'onChange="onProductSelection()"' } %]
@@ -89,21 +89,21 @@
     <td style="padding-right: 30px;">
     [% PROCESS select sel = { name  => 'component',
                               accesskey => 'm', 
-                              list      => case.get_available_components
+                              list      => components
                               elements  => 5,
                               mult      => 1 } %]
     </td>
     <td style="padding-right: 30px;">
     [% PROCESS select sel = { name  => 'version',
                               accesskey => 'v', 
-                              list      => product_versions,
+                              list      => versions,
                               elements  => 5,
                               mult      => 1 } %]   
     </td>
     <td style="padding-right: 30px;">
     [% PROCESS select sel = { name  => 'milestone',
                               accesskey => 'm', 
-                              list      => run.get_distinct_milestones,
+                              list      => milestones,
                               elements  => 5,
                               mult      => 1 } %] 
     </td>
@@ -115,21 +115,21 @@
     <td style="padding-right: 30px;">
     [% PROCESS select sel = { name  => 'category',
                               accesskey => 't', 
-                              list      => case.get_category_list(1),
+                              list      => categories,
                               elements  => 5,
                               mult      => 1 } %]   
     </td>
     <td style="padding-right: 30px;">
     [% PROCESS select sel = { name  => 'build',
                               accesskey => 't', 
-                              list      => run.get_distinct_builds,
+                              list      => builds,
                               elements  => 5,
                               mult      => 1 } %]   
     </td>
     <td style="padding-right: 30px;">
     [% PROCESS select sel = { name  => 'environment',
                               accesskey => 'e', 
-                              list      => run.get_environments,
+                              list      => environments,
                               elements  => 5,
                               mult      => 1 } %] 
     </td>  
