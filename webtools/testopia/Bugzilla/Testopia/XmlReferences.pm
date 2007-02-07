@@ -52,50 +52,50 @@ sub new
     $self{IGNORECASE} = $ignorecase;
     for my $field ( split(/ /, $fields) )
     {
-    	$field = uc $field if ( $self{IGNORECASE} );
-    	$self->{$field} = [];
+        $field = uc $field if ( $self{IGNORECASE} );
+        $self->{$field} = [];
     }
     return $self;
 }
 
 sub add
 {
-	my ($self, $type, $object) = @_;
-	
-	$type = uc $type if ( $self{IGNORECASE} );
+    my ($self, $type, $object) = @_;
+    
+    $type = uc $type if ( $self{IGNORECASE} );
 
-	return 0 if ( ! exists $self->{$type} );
+    return 0 if ( ! exists $self->{$type} );
 
-	push @{$self->{$type}}, $object;
+    push @{$self->{$type}}, $object;
 }
 
 sub display
 {
-	my ($self) = @_;
-	
-	print "display() self=" . $self . "\n";
-	foreach $key (keys %$self)
-	{
-		if ( defined $self->{$key} )
-		{
-			print "display()   key=$key value=" . $self->{$key} . "\n";
-		}
-		else
-		{
-			print "display()   key=$key value=undefined\n";
-		}
-	}
+    my ($self) = @_;
+    
+    print "display() self=" . $self . "\n";
+    foreach $key (keys %$self)
+    {
+        if ( defined $self->{$key} )
+        {
+            print "display()   key=$key value=" . $self->{$key} . "\n";
+        }
+        else
+        {
+            print "display()   key=$key value=undefined\n";
+        }
+    }
 }
 
 sub get 
 {
-		my ($self, $type) = @_;
-		
-		$type = uc $type if ( $self{IGNORECASE} );
-		
-		return 0 if ( ! exists $self->{$type} );
-		
-		return $self->{$type};
+        my ($self, $type) = @_;
+        
+        $type = uc $type if ( $self{IGNORECASE} );
+        
+        return 0 if ( ! exists $self->{$type} );
+        
+        return $self->{$type};
 }
 
 1;

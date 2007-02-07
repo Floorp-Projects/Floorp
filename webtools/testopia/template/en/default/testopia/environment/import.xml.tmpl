@@ -40,18 +40,18 @@
 [% PROCESS testopia/messages.html.tmpl %]
 
 [% IF action == "admin" %]
-	<form action="tr_import_environment.cgi?action=admin" method="post">
-		<h3><font color="red">Add the above new data?</font></h3>
-		<input type="hidden" name="action" value="admin" />
-		<input type="hidden" name="xml" value="[%- xml %]" />
-		<input type="submit" name="submit" value="Add Now" /> <input type="submit" name="submit" value="Cancel" />
-	</form>
+    <form action="tr_import_environment.cgi?action=admin" method="post">
+        <h3><font color="red">Add the above new data?</font></h3>
+        <input type="hidden" name="action" value="admin" />
+        <input type="hidden" name="xml" value="[%- xml %]" />
+        <input type="submit" name="submit" value="Add Now" /> <input type="submit" name="submit" value="Cancel" />
+    </form>
 [% ELSE %]
-	<form action="tr_import_environment.cgi?action=import" enctype="multipart/form-data" method="post">
-		<p>Upload XML Environment: <input type="file" name="env_file" size="40" /></p>
-		<input type="hidden" name="action" value="import" />
-		<p><input type="submit" value="Import" /></p>
-	</form>
+    <form action="tr_import_environment.cgi?action=import" enctype="multipart/form-data" method="post">
+        <p>Upload XML Environment: <input type="file" name="env_file" size="40" /></p>
+        <input type="hidden" name="action" value="import" />
+        <p><input type="submit" value="Import" /></p>
+    </form>
 [% END %]
 
 [% PROCESS global/footer.html.tmpl %]

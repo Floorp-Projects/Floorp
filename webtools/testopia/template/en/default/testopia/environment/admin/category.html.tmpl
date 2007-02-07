@@ -16,7 +16,7 @@
   # Maciej Maczynski. All Rights Reserved.
   #
   # Contributor(s): Greg Hendricks <ghendricks@novell.com>
-  #					Michael Hight <mjhight@gmail.com>
+  #                    Michael Hight <mjhight@gmail.com>
   #%]
 
 [%# INTERFACE:
@@ -30,11 +30,11 @@
     <th class="bz_row_header" align="right">Parent Product:</th>
      <td>
       <select name="product" id="product">
-      		<option value="[% currentproduct.id %]">[% currentproduct.name %]
-      	[% FOREACH p = products %]
-      		[% IF currentproduct.id != p.id %]
-      			<option value="[% p.id %]">[% p.name %]
-      		[% END %]
+              <option value="[% currentproduct.id %]">[% currentproduct.name %]
+          [% FOREACH p = products %]
+              [% IF currentproduct.id != p.id %]
+                  <option value="[% p.id %]">[% p.name %]
+              [% END %]
         [% END %]
       </select>
      </td>

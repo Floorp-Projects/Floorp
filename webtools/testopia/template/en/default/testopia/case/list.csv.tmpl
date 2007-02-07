@@ -28,6 +28,6 @@
 [% PROCESS testopia/export/csv.caseheader.tmpl %]
 
 [% FOREACH test_case = table.list %]
-	[% PROCESS testopia/export/csv.case.tmpl case=test_case %]
+    [% PROCESS testopia/export/csv.case.tmpl case=test_case %]
 
 [% END %]

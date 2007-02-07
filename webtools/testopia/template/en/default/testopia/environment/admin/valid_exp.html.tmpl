@@ -16,8 +16,8 @@
   # Maciej Maczynski. All Rights Reserved.
   #
   # Contributor(s): Greg Hendricks <ghendricks@novell.com>
-  #					Michael Hight <mjhight@gmail.com>
-  #					Scott Sudweeks <ssudweeks@novell.com>
+  #                    Michael Hight <mjhight@gmail.com>
+  #                    Scott Sudweeks <ssudweeks@novell.com>
   #%]
 
 [%# INTERFACE:
@@ -32,33 +32,33 @@
   
   <table border="0">
     <tr> 
-    	<th class="bz_row_header" align="center">Values For:<br><img src="testopia/img/triangle.gif"/ align="bottom"> <span style="color:#C00" >[% property.name %]</span></th>
+        <th class="bz_row_header" align="center">Values For:<br><img src="testopia/img/triangle.gif"/ align="bottom"> <span style="color:#C00" >[% property.name %]</span></th>
     </tr>
     <tr>
-     	<td>
-      		<select
-      			size="10"
-      			style="width:150px"
-      			name="valid_exp"
-      			id="valid_exp"
-      			onchange="selected_expression_change(this);">
-      		[% FOREACH e = expressions %]
-      			<option value="[% e %]">[% e %]
-        	[% END %]
-      		</select>
-     	</td>
-     	<td>
-     		<input type="button" onclick="moveUp();" value="/\" />
-     		<br>
-     		<input type="button" onclick="moveDown();" value="\/" />
-     	</td>
+         <td>
+              <select
+                  size="10"
+                  style="width:150px"
+                  name="valid_exp"
+                  id="valid_exp"
+                  onchange="selected_expression_change(this);">
+              [% FOREACH e = expressions %]
+                  <option value="[% e %]">[% e %]
+            [% END %]
+              </select>
+         </td>
+         <td>
+             <input type="button" onclick="moveUp();" value="/\" />
+             <br>
+             <input type="button" onclick="moveDown();" value="\/" />
+         </td>
     </tr>
-    	<td>
-    		Value: <input type="text" name="text_exp_value" id="text_exp_value" />
-    	</td>
-    	<td>
-    		<input type="button" value="change" id="" onclick="update_text();"/>
-    	</td>
+        <td>
+            Value: <input type="text" name="text_exp_value" id="text_exp_value" />
+        </td>
+        <td>
+            <input type="button" value="change" id="" onclick="update_text();"/>
+        </td>
     </tr>
   </table>
   

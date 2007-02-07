@@ -49,22 +49,22 @@ if ($action eq 'Add'){
     my $name = $cgi->param('name');
     my $product = $cgi->param('product');
     
-	trick_taint($name);
-	detaint_natural($product);
-	
-	my $env = Bugzilla::Testopia::Environment->new({'environment_id' => 0});
-	
-	my $success = $env->store_environment_name($name, $product);
-	unless ($success){
-		$vars->{'tr_error'} = "The environment name '$name' is already taken.";
-		$vars->{'environment'} = $env;
-		$template->process("testopia/environment/add.html.tmpl", $vars)
-			|| print $template->error();
-		exit;
-	}
-	$vars->{'tr_message'} = "The environment '$name' was successfully added.";
-	
-	$env = Bugzilla::Testopia::Environment->new($success);
+    trick_taint($name);
+    detaint_natural($product);
+    
+    my $env = Bugzilla::Testopia::Environment->new({'environment_id' => 0});
+    
+    my $success = $env->store_environment_name($name, $product);
+    unless ($success){
+        $vars->{'tr_error'} = "The environment name '$name' is already taken.";
+        $vars->{'environment'} = $env;
+        $template->process("testopia/environment/add.html.tmpl", $vars)
+            || print $template->error();
+        exit;
+    }
+    $vars->{'tr_message'} = "The environment '$name' was successfully added.";
+    
+    $env = Bugzilla::Testopia::Environment->new($success);
     my $category = Bugzilla::Testopia::Environment::Category->new({'id' => 0});
     if (Param('useclassification')){
         $vars->{'allhaschild'} = $category->get_all_child_count;
@@ -80,7 +80,7 @@ if ($action eq 'Add'){
     $vars->{'environment'} = $env;
     $template->process("testopia/environment/show.html.tmpl", $vars)
         || print $template->error();
-	
+    
 }
 
 else {

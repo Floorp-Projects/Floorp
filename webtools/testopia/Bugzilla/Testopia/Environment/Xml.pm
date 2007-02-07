@@ -142,16 +142,16 @@ sub parse() {
     else {
         $self->{'message'} = "Parsing and Validating XML Environment...<BR />";
     }
-	$self->{'error'} = undef;
-	if ($xml) {
-	   trick_taint($xml);
-	}
-	my $twig = XML::Twig->new();
-	$twig->parse($xml);
-	my $root = $twig->root;
-	# Checking if Product and Environment already exist.
-	my $product_name = $root->{'att'}->{'product'};
-	my $product_id;
+    $self->{'error'} = undef;
+    if ($xml) {
+       trick_taint($xml);
+    }
+    my $twig = XML::Twig->new();
+    $twig->parse($xml);
+    my $root = $twig->root;
+    # Checking if Product and Environment already exist.
+    my $product_name = $root->{'att'}->{'product'};
+    my $product_id;
     if (lc($product_name) eq "--all--") {
         $self->{'message'} .= "..Using the <U>--ALL--</U> <STRONG>PRODUCT</STRONG>.<BR />";
         $product_id = 0;
@@ -171,33 +171,33 @@ sub parse() {
     ($self->{'product_id'}) = $product_id;
     $self->{'product_name'} = $product_name;
     my $environment_name = $root->{'att'}->{'name'};
-	$self->{'name'} = $environment_name;
+    $self->{'name'} = $environment_name;
     $self->{'message'} .= "..Checking if <U>$environment_name</U> <STRONG>ENVIRONMENT NAME</STRONG> already exists for the <U>$product_name</U> <STRONG>PRODUCT</STRONG>...";
     my $environment = Bugzilla::Testopia::Environment->new({});
     my ($env_id) = $environment->check_environment($environment_name, $product_id);
-    my $environment_id;	    
-	if ($env_id < 1) {
-	    $self->{'message'} .= "<U><FONT COLOR='RED'><STRONG>DOESN'T EXIST</STRONG></FONT></U><BR />";
-	    # Storing New Environment if Admin
+    my $environment_id;        
+    if ($env_id < 1) {
+        $self->{'message'} .= "<U><FONT COLOR='RED'><STRONG>DOESN'T EXIST</STRONG></FONT></U><BR />";
+        # Storing New Environment if Admin
         if ($admin) {
                 $self->{'message'} .= "....Storing new <U>$environment_name</U> <STRONG>ENVIRONMENT NAME</STRONG> in the <U>$self->{'product_name'}</U> <STRONG>PRODUCT</STRONG>...";
                 $environment->{'name'} = $environment_name;
                 ($environment_id) = Bugzilla::Testopia::Environment->store_environment_name($self->{'name'}, $product_id);
                 $self->{'message'} .= "DONE.<BR />";
         }
-	}
-	else {
-	    ($environment_id) = $env_id;
-	    $self->{'message'} .= "EXISTS<BR />Importing XML Environment Failed!<BR/>";
+    }
+    else {
+        ($environment_id) = $env_id;
+        $self->{'message'} .= "EXISTS<BR />Importing XML Environment Failed!<BR/>";
         $self->{'error'} .= "<U>$environment_name</U> <STRONG>ENVIRONMENT NAME</STRONG> already exists for the <U>$product_name</U> <STRONG>PRODUCT</STRONG>.  Please use another name.";
-	    return 0;
-	}
-	($self->{'environment_id'}) = $environment_id;
-	($environment->{'product_id'}) = $self->{'product_id'};
-	# Parse recursively through the nested child elements.
-	foreach my $twig_category ($root->children("category")) {
-	    my $category_name = $twig_category->{'att'}->{'name'};
-	    # Makes sure to get the category_id by name and product_id
+        return 0;
+    }
+    ($self->{'environment_id'}) = $environment_id;
+    ($environment->{'product_id'}) = $self->{'product_id'};
+    # Parse recursively through the nested child elements.
+    foreach my $twig_category ($root->children("category")) {
+        my $category_name = $twig_category->{'att'}->{'name'};
+        # Makes sure to get the category_id by name and product_id
         my $category = Bugzilla::Testopia::Environment::Category->new({});
         my ($cat_id) = $category->check_category($category_name, $product_id);
         my $category_id;
@@ -252,24 +252,24 @@ sub parse_child_elements() {
     }
     $depth++;
     my $element_name = $twig_element->{'att'}->{'name'};
-	# Checking if Elements already exist.
-	for (my $i = 1; $i < $depth; $i++) {
-	   $self->{'message'} .= "....";
-	}
-	$self->{'message'} .= "Checking if <U>$element_name</U> <STRONG>ELEMENT</STRONG> already exists in the <U>$category_name</U> <STRONG>CATEGORY</STRONG>...";
-	my ($product_id) = $self->{'product_id'};
+    # Checking if Elements already exist.
+    for (my $i = 1; $i < $depth; $i++) {
+       $self->{'message'} .= "....";
+    }
+    $self->{'message'} .= "Checking if <U>$element_name</U> <STRONG>ELEMENT</STRONG> already exists in the <U>$category_name</U> <STRONG>CATEGORY</STRONG>...";
+    my ($product_id) = $self->{'product_id'};
     my $element = Bugzilla::Testopia::Environment::Element->new({});
     my ($elem_id) = $element->check_element($element_name, $env_category_id);
     my $element_id;    
-	if ($elem_id < 1) {
-	    $self->{'message'} .= "<U><FONT COLOR='RED'><STRONG>DOESN'T EXIST</STRONG></FONT></U>.<BR />";
-	    my $new_category_elements = $self->{'new_category_elements'};
+    if ($elem_id < 1) {
+        $self->{'message'} .= "<U><FONT COLOR='RED'><STRONG>DOESN'T EXIST</STRONG></FONT></U>.<BR />";
+        my $new_category_elements = $self->{'new_category_elements'};
         my $new_category_element = {'env_category_id' => $env_category_id, 'category_name' => $category_name, 'element_name' => $element_name};
         push (@$new_category_elements, $new_category_element);
         $self->{'new_category_elements'} = $new_category_elements;
         # Storing New Elements if Admin
         if ($admin) {
-          	for (my $i = 1; $i < $depth; $i++) {
+              for (my $i = 1; $i < $depth; $i++) {
                 $self->{'message'} .= "....";
             }
             $self->{'message'} .= "..Storing new <U>$element_name</U> <STRONG>ELEMENT</STRONG> in the <U>$category_name</U> <STRONG>CATEGORY</STRONG>...";
@@ -283,11 +283,11 @@ sub parse_child_elements() {
             ($element_id) = $element->store();
             $self->{'message'} .= "DONE.<BR />";
         }
-	}
-	else {
+    }
+    else {
         ($element_id) = $elem_id;
         $self->{'message'} .= "EXISTS.<BR />";
-	}
+    }
     ($element->{'element_id'}) = $element_id;
     ($element->{'env_category_id'}) = $env_category_id;
     $element->{'name'} = $element_name;
@@ -302,13 +302,13 @@ sub parse_child_elements() {
         $self->{'message'} .= "....Checking if <U>$property_name</U> <STRONG>PROPERTY</STRONG> already exists...";
         my $property = Bugzilla::Testopia::Environment::Property->new({});
         my ($prop_id) = $property->check_property($property_name, $element_id);
-	    my $property_id;
-	    if ($prop_id < 1) {
-	        $self->{'message'} .= "<U><FONT COLOR='RED'><STRONG>DOESN'T EXIST</STRONG></FONT></U>.<BR />";
-	        my $new_property_names = $self->{'new_property_names'};
-	        push (@$new_property_names, $property_name);
-	        $self->{'new_property_names'} = $new_property_names; 
-	        # Storing New Property if Admin
+        my $property_id;
+        if ($prop_id < 1) {
+            $self->{'message'} .= "<U><FONT COLOR='RED'><STRONG>DOESN'T EXIST</STRONG></FONT></U>.<BR />";
+            my $new_property_names = $self->{'new_property_names'};
+            push (@$new_property_names, $property_name);
+            $self->{'new_property_names'} = $new_property_names; 
+            # Storing New Property if Admin
             if ($admin) {
                 for (my $i = 1; $i < $depth; $i++) {
                     $self->{'message'} .= "....";
@@ -319,30 +319,30 @@ sub parse_child_elements() {
                 ($property_id) = $property->store();
                 $self->{'message'} .= "DONE.<BR />";
             }
-	    }
-	    else {
+        }
+        else {
             ($property_id) = $prop_id;
             $self->{'message'} .= "EXISTS.<BR />";
-	    }
-	    $property = Bugzilla::Testopia::Environment::Property->new($property_id);
-	    # Checking if new Selected Value and Valid Expression exist.
-	    my $validexp;
-	    if ($property) {
-	       $validexp = $property->validexp();
-	    }
-	    my $value = $twig_property->field('value');
-	    for (my $i = 1; $i < $depth; $i++) {
+        }
+        $property = Bugzilla::Testopia::Environment::Property->new($property_id);
+        # Checking if new Selected Value and Valid Expression exist.
+        my $validexp;
+        if ($property) {
+           $validexp = $property->validexp();
+        }
+        my $value = $twig_property->field('value');
+        for (my $i = 1; $i < $depth; $i++) {
             $self->{'message'} .= "....";
         }
-	    $self->{'message'} .= "........Checking if <U>$value</U> <STRONG>VALUE</STRONG> exists in the list of selectable values...";
-	    if ( $validexp !~ m/$value/) {
-	        $self->{'message'} .= "<U><FONT COLOR='RED'><STRONG>DOESN'T EXIST</STRONG></FONT></U>.<BR/>";
-	        if ($admin) {
-	            if (!defined($validexp)) {
-	                for (my $i = 1; $i < $depth; $i++) {
+        $self->{'message'} .= "........Checking if <U>$value</U> <STRONG>VALUE</STRONG> exists in the list of selectable values...";
+        if ( $validexp !~ m/$value/) {
+            $self->{'message'} .= "<U><FONT COLOR='RED'><STRONG>DOESN'T EXIST</STRONG></FONT></U>.<BR/>";
+            if ($admin) {
+                if (!defined($validexp)) {
+                    for (my $i = 1; $i < $depth; $i++) {
                         $self->{'message'} .= "....";
                     }
-	                $self->{'message'} .= "..........Setting <U>$value</U> <STRONG>VALID EXPRESSION</STRONG> equal to the <STRONG>VALUE</STRONG> for the first time...";
+                    $self->{'message'} .= "..........Setting <U>$value</U> <STRONG>VALID EXPRESSION</STRONG> equal to the <STRONG>VALUE</STRONG> for the first time...";
                     $validexp = $value;
                 }
                 else {
@@ -354,22 +354,22 @@ sub parse_child_elements() {
                 }
                 $property->update_property_validexp($validexp);
                 $self->{'message'} .= "DONE.<BR/>";                
-	        }
-	        else {
+            }
+            else {
                 my $new_validexp_values = $self->{'new_validexp_values'};
                 my $new_validexp_value = {'property_id' => $property_id, 'property_name' => $property_name, 'value' => $value};
                 push (@$new_validexp_values, $new_validexp_value);
                 $self->{'new_validexp_values'} = $new_validexp_values;
-	        }
-	    }
-	    elsif (!defined($validexp)) {
-	       $self->{'message'} .= "<STRONG>VALID EXPRESSION</STRONG> <U><FONT COLOR='RED'><STRONG>DOESN'T EXIST</STRONG></FONT></U> YET.<BR/>";
-	    }
-	    else {
+            }
+        }
+        elsif (!defined($validexp)) {
+           $self->{'message'} .= "<STRONG>VALID EXPRESSION</STRONG> <U><FONT COLOR='RED'><STRONG>DOESN'T EXIST</STRONG></FONT></U> YET.<BR/>";
+        }
+        else {
             $self->{'message'} .= "EXISTS.<BR/>";
-	    }
-	    if ($property_id && $admin) {
-	        for (my $i = 1; $i < $depth; $i++) {
+        }
+        if ($property_id && $admin) {
+            for (my $i = 1; $i < $depth; $i++) {
                 $self->{'message'} .= "....";
             }
             $self->{'message'} .= "............Storing new <STRONG>VALUE SELECTED</STRONG> <U>$value</U>...";
@@ -379,14 +379,14 @@ sub parse_child_elements() {
         }
         $property->{'value_selected'} = $value;
         push (@properties, $property);
-	}
-	my $elm_properties = $element->{'properties'};
-	push (@$elm_properties, @properties);
-	if ($parent_element) {
-	    my $children = $parent_element->{'children'};
-	    push (@$children, $element);
-	    $parent_element->{'children'} = $children;
-	}
+    }
+    my $elm_properties = $element->{'properties'};
+    push (@$elm_properties, @properties);
+    if ($parent_element) {
+        my $children = $parent_element->{'children'};
+        push (@$children, $element);
+        $parent_element->{'children'} = $children;
+    }
     foreach my $twig_element_child ($twig_element->children("element")) {
         $self->parse_child_elements($depth, $env_category_id, $category_name, $twig_element_child, $admin, $element); 
     }

@@ -71,7 +71,7 @@ $CGI::POST_MAX = 1024 * 500;        # max file size 500K
 print $cgi->header;
 # Make sure the file isn't too big.
 if (!$env_filename && $cgi->cgi_error()) {
-	$vars->{'tr_error'} .= "File size cannot exceed 500K.<BR/>";
+    $vars->{'tr_error'} .= "File size cannot exceed 500K.<BR/>";
 }
 # Upload the file and read it into a string if it's been posted.
 if ($action eq 'import' && $env_filename) {
@@ -169,8 +169,8 @@ new data.
 =cut
 
 sub admin_approve {
-	$vars->{'action'} = "admin";
-	$vars->{'xml'} = $xml;
+    $vars->{'action'} = "admin";
+    $vars->{'xml'} = $xml;
 }
 
 
@@ -183,7 +183,7 @@ Stores the Environment based on existing Categories, Elements, Properties, and s
 =cut
 
 sub store_environment {
-	$environment->store();
+    $environment->store();
 }
 
 
@@ -199,22 +199,22 @@ sub slurp_env_file {
     my $untainted_filename;
     my $post_max = $CGI::POST_MAX;
     if (!$env_filename) {
-		$vars->{'tr_error'} .= "Please upload an Environment XML file.<BR/>";
-		return 0;
-	}
-	# untaint $env_file
-	if ($env_filename =~ /^([-\@:\/\\\w.]+)$/) {
-		$untainted_filename = $1;
-	}
-	else {
-		$vars->{'tr_error'} .= "The filename must contain numbers and letters only.  Please try again.<BR/>";
-		return 0;
-	}
-	if ($untainted_filename =~ m/\.\./) {
-		$vars->{'tr_error'} .= "The filename cannot conain the sequence '..'  Please try again.<BR/>";
-		return 0;
-	}		
-	my $num_bytes = $CGI::POST_MAX;
+        $vars->{'tr_error'} .= "Please upload an Environment XML file.<BR/>";
+        return 0;
+    }
+    # untaint $env_file
+    if ($env_filename =~ /^([-\@:\/\\\w.]+)$/) {
+        $untainted_filename = $1;
+    }
+    else {
+        $vars->{'tr_error'} .= "The filename must contain numbers and letters only.  Please try again.<BR/>";
+        return 0;
+    }
+    if ($untainted_filename =~ m/\.\./) {
+        $vars->{'tr_error'} .= "The filename cannot conain the sequence '..'  Please try again.<BR/>";
+        return 0;
+    }        
+    my $num_bytes = $CGI::POST_MAX;
     my ($totalbytes, $byteswritten, $buffer);
     while ($byteswritten = read($env_fh, $buffer, $num_bytes)) {
         $xml .= $buffer;
@@ -342,6 +342,6 @@ Displays the Import Environment template
 =cut
 
 sub display {
-	$vars->{'tr_message'} .= $message . $environment->{'message'};
-	$template->process("testopia/environment/import.xml.tmpl", $vars) || print $template->error();
+    $vars->{'tr_message'} .= $message . $environment->{'message'};
+    $template->process("testopia/environment/import.xml.tmpl", $vars) || print $template->error();
 }

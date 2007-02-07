@@ -476,9 +476,9 @@ sub lookup_status_by_name {
     
     my ($value) = $dbh->selectrow_array(
             "SELECT case_run_status_id
-			 FROM test_case_run_status
-			 WHERE name = ?",
-			 undef, $name);
+             FROM test_case_run_status
+             WHERE name = ?",
+             undef, $name);
     return $value;
 }
 

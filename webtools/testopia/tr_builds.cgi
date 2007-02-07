@@ -190,7 +190,6 @@ sub get_builds_xml {
         $ret .= "</build>";
     }
     $ret .= "</items>";
-    print STDERR "$ret";
     return $ret;
 }
 

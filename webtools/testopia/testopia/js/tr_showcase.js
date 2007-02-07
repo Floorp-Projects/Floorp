@@ -96,8 +96,8 @@ function sx_done () {
     if (s.substring(0,2)=='OK') {
         s = s.substring(3);
 
-		updateStatus(list_id, _newStatus);
-		_newStatus = null;
+        updateStatus(list_id, _newStatus);
+        _newStatus = null;
 
         displayMsg('floatMsg', 1, MSG_TEST_CASE_STATUS_UPDATED);
         setTimeout("clearMsg('floatMsg')",OK_TIMEOUT);        
@@ -164,20 +164,20 @@ function ss_done () {
     if (s.substring(0,2)=='OK') {
 
 if(_inOrder){
-		if (_order == 'up') {
-	        for(var i=0; i<list_index.length; i++) {
-	          moveup(list_index[i]);
-	        }
-		} else if (_order == 'down') {
+        if (_order == 'up') {
+            for(var i=0; i<list_index.length; i++) {
+              moveup(list_index[i]);
+            }
+        } else if (_order == 'down') {
             //reversed order:
             for(var i=list_index.length-1; i>-1; i--) {
               movedown(list_index[i]);
             }
-		}
+        }
 
-		_order = null;
-				
-		displayMsg('floatMsg', 1, MSG_TEST_CASE_ORDER_UPDATED);
+        _order = null;
+                
+        displayMsg('floatMsg', 1, MSG_TEST_CASE_ORDER_UPDATED);
         setTimeout("clearMsg('floatMsg')",OK_TIMEOUT);
 } else {
   //I give up refreshing the list dinamically, let the server do it:

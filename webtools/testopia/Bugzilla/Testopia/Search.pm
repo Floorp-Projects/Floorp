@@ -848,13 +848,13 @@ sub init {
         my $type = "anyexact";
         if ($cgi->param('caseidtype'))
         {
-        	if ($cgi->param('caseidtype') eq 'exclude') 
-        	{
-            	$type = "nowords";
-        	}
+            if ($cgi->param('caseidtype') eq 'exclude') 
+            {
+                $type = "nowords";
+            }
             else
             {
-            	$type = $cgi->param('caseidtype')
+                $type = $cgi->param('caseidtype')
             } 
         }
         if ($obj eq 'run'){
@@ -871,13 +871,13 @@ sub init {
         my $type = "anyexact";
         if ($cgi->param('runidtype'))
         {
-        	if ($cgi->param('runidtype') eq 'exclude') 
-        	{
-            	$type = "nowords";
-        	}
+            if ($cgi->param('runidtype') eq 'exclude') 
+            {
+                $type = "nowords";
+            }
             else
             {
-            	$type = $cgi->param('runidtype')
+                $type = $cgi->param('runidtype')
             } 
         }
         if ($obj eq 'case'){
@@ -891,13 +891,13 @@ sub init {
         my $type = "anyexact";
         if ($cgi->param('planidtype'))
         {
-        	if ($cgi->param('planidtype') eq 'exclude') 
-        	{
-            	$type = "nowords";
-        	}
+            if ($cgi->param('planidtype') eq 'exclude') 
+            {
+                $type = "nowords";
+            }
             else
             {
-            	$type = $cgi->param('planidtype')
+                $type = $cgi->param('planidtype')
             } 
         }
         if ($obj eq 'case'){

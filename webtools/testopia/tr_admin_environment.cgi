@@ -157,7 +157,7 @@ elsif ($action eq 'getcategories'){
     my $ret;
     foreach my $c (@{$categories}){
         $c->name =~ s/<span style='color:blue'>|<\/span>//g;
-    	$ret .= $c->id.'||'.$c->name.'|||';
+        $ret .= $c->id.'||'.$c->name.'|||';
     }
     chop($ret);
     print $ret;
@@ -172,14 +172,14 @@ elsif ($action eq 'getelements'){
     foreach my $e (@{$elements}){
         my $elem = Bugzilla::Testopia::Environment::Element->new(@$e{'element_id'});
         $elem->{'name'} =~ s/<span style='color:blue'>|<\/span>//g;
-    	$ret .= $elem->{'element_id'}.'||'.$elem->{'name'}.'|||';
+        $ret .= $elem->{'element_id'}.'||'.$elem->{'name'}.'|||';
     }
     $ret = substr($ret, 0, length($ret) - 3);
     print $ret;
 }
 
 elsif ($action eq 'getproperties'){
-	my $env = Bugzilla::Testopia::Environment->new({});
+    my $env = Bugzilla::Testopia::Environment->new({});
     my $elem_id = $cgi->param('elem_id');
    
     
@@ -189,7 +189,7 @@ elsif ($action eq 'getproperties'){
     my $ret;
     foreach my $p (@{$properties}){
         @$p[1] =~ s/<span style='color:blue'>|<\/span>//g;
-    	$ret .= @$p[0].'||'.@$p[1].'|||';
+        $ret .= @$p[0].'||'.@$p[1].'|||';
     }
     chop($ret);
     print $ret;

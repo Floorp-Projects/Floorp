@@ -16,8 +16,8 @@
   # Maciej Maczynski. All Rights Reserved.
   #
   # Contributor(s): Greg Hendricks <ghendricks@novell.com>
-  #					Michael Hight <mjhight@gmail.com>
-  #					Scott Sudweeks <ssudweeks@novell.com>
+  #                    Michael Hight <mjhight@gmail.com>
+  #                    Scott Sudweeks <ssudweeks@novell.com>
   #%]
 
 [%# INTERFACE:
@@ -28,21 +28,21 @@
 <h3>Property Administration</h3>
   <table border="0">
     <tr> 
-    	<th class="bz_row_header" align="right">Assiged to Element:</th>
-     	<td>
-      		<select name="element" id="element">
-      			<option value="[% currentelement.id %]" >[% currentelement.name %]
-      			[% FOREACH e = elements %]
-      				[% IF e.id != currentelement.id %]
-	      				<option value="[% e.id %]">[% e.name %]
-      				[% END %]
-        		[% END %]
-      		</select>
-     	</td>
+        <th class="bz_row_header" align="right">Assiged to Element:</th>
+         <td>
+              <select name="element" id="element">
+                  <option value="[% currentelement.id %]" >[% currentelement.name %]
+                  [% FOREACH e = elements %]
+                      [% IF e.id != currentelement.id %]
+                          <option value="[% e.id %]">[% e.name %]
+                      [% END %]
+                [% END %]
+              </select>
+         </td>
     </tr>
   
     <th class="bz_row_header" align="right">Property Name:</th>
-    	<td><input name="name" id="name" value="[% property.name %]" size="30" /></td>
+        <td><input name="name" id="name" value="[% property.name %]" size="30" /></td>
     </tr>
   </table>
   

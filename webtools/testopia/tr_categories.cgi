@@ -177,7 +177,6 @@ sub get_categories_xml {
         $ret .= "</category>";
     }
     $ret .= "</items>";
-    print STDERR "$ret";
     return $ret;
 }
 

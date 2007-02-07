@@ -40,8 +40,8 @@ function _cset(newstate) {
   var myform = document.getElementById('table');
   for(i=0;i<myform.length;i++) {
     if(myform[i].type == 'checkbox' && myform[i].name != 'togglearch'){
-	  myform[i].checked = newstate;
-	}
+      myform[i].checked = newstate;
+    }
   }
   //st();
 }
@@ -165,26 +165,26 @@ function createHttpReq () {
 
 
 function clearMsg(id) {
-	var o = document.getElementById(id);
-	o.style.display="none";
+    var o = document.getElementById(id);
+    o.style.display="none";
 }
 
 function displayMsg(id, type, text) {
 
-  	var o = document.getElementById(id);
-  	switch(type) {
-  	  case 1:
-    	  o.style.background='green';
-    	  o.style.color='white';
-    	  break;
-  	  case 2:
-    	  o.style.background='red';
-    	  o.style.color='white';
-    	  break;
-  	  case 3:
-    	  o.style.background='#FFDD66';
-    	  o.style.color='black';
-    	  break;
+      var o = document.getElementById(id);
+      switch(type) {
+        case 1:
+          o.style.background='green';
+          o.style.color='white';
+          break;
+        case 2:
+          o.style.background='red';
+          o.style.color='white';
+          break;
+        case 3:
+          o.style.background='#FFDD66';
+          o.style.color='black';
+          break;
     }
     o.innerHTML = text;
     o.style.display = 'inline';

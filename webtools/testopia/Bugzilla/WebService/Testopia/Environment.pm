@@ -36,18 +36,18 @@ sub _list
     
     foreach (keys(%$query))
     {
-    	$cgi->param($_, $$query{$_});
+        $cgi->param($_, $$query{$_});
     }
-    	
+        
     my $search = Bugzilla::Testopia::Search->new($cgi);
 
-	# Result is an array of environment hash maps 
-	return Bugzilla::Testopia::Table->new('environment', 
-	                                      'tr_xmlrpc.cgi', 
-	                                      $cgi, 
-	                                      undef,
-	                                      $search->query()
-	                                      )->list();
+    # Result is an array of environment hash maps 
+    return Bugzilla::Testopia::Table->new('environment', 
+                                          'tr_xmlrpc.cgi', 
+                                          $cgi, 
+                                          undef,
+                                          $search->query()
+                                          )->list();
 }
 
 sub get
@@ -57,20 +57,20 @@ sub get
 
     $self->login;    
 
-	#Result is a environment hash map
+    #Result is a environment hash map
     my $environment = new Bugzilla::Testopia::Environment($environment_id);
 
-	if (not defined $environment)
-	{
-    	$self->logout;
+    if (not defined $environment)
+    {
+        $self->logout;
         die "Environment, " . $environment_id . ", not found"; 
-	}
-	
-	if (not $environment->canview)
-	{
-	    $self->logout;
+    }
+    
+    if (not $environment->canview)
+    {
+        $self->logout;
         die "User Not Authorized";
-	}
+    }
     
     $self->logout;
 
@@ -84,88 +84,88 @@ sub list
 
     $self->login;
    
-	my $list = _list($query);
-	
+    my $list = _list($query);
+    
     $self->logout;
     
-    return $list;	
+    return $list;    
 }
 
 sub create
 {
-	my $self =shift;
-	my ($new_values) = @_;
+    my $self =shift;
+    my ($new_values) = @_;
 
     $self->login;
 
-	my $environment = new Bugzilla::Testopia::Environment($new_values);
-	
-	my $result = $environment->store(); 
-	
-	$self->logout;
-	
-	# Result is new environment id
-	return $result;
+    my $environment = new Bugzilla::Testopia::Environment($new_values);
+    
+    my $result = $environment->store(); 
+    
+    $self->logout;
+    
+    # Result is new environment id
+    return $result;
 }
 
 sub update
 {
-	my $self =shift;
-	my ($environment_id, $new_values) = @_;
+    my $self =shift;
+    my ($environment_id, $new_values) = @_;
 
     $self->login;
 
-	my $environment = new Bugzilla::Testopia::Environment($environment_id);
-	
-	if (not defined $environment)
-	{
-    	$self->logout;
+    my $environment = new Bugzilla::Testopia::Environment($environment_id);
+    
+    if (not defined $environment)
+    {
+        $self->logout;
         die "Environment, " . $environment_id . ", not found"; 
-	}
-	
-	if (not $environment->canedit)
-	{
-	    $self->logout;
+    }
+    
+    if (not $environment->canedit)
+    {
+        $self->logout;
         die "User Not Authorized";
-	}
+    }
 
     my $result = $environment->update($new_values);
 
-	$environment = new Bugzilla::Testopia::Environment($environment_id);
-	
-	$self->logout;
+    $environment = new Bugzilla::Testopia::Environment($environment_id);
+    
+    $self->logout;
 
-	# Result is modified environment, otherwise an exception will be thrown
-	return $environment;
+    # Result is modified environment, otherwise an exception will be thrown
+    return $environment;
 }
 
 sub get_runs
 {
-	my $self = shift;
+    my $self = shift;
     my ($environment_id) = @_;
 
     $self->login;
 
     my $environment = new Bugzilla::Testopia::Environment($environment_id);
 
-	if (not defined $environment)
-	{
-    	$self->logout;
+    if (not defined $environment)
+    {
+        $self->logout;
         die "Environment, " . $environment_id . ", not found"; 
-	}
-	
-	if (not $environment->canview)
-	{
-	    $self->logout;
+    }
+    
+    if (not $environment->canview)
+    {
+        $self->logout;
         die "User Not Authorized";
-	}
+    }
     
     my $result = $environment->runs();
-	
-	$self->logout;
+    
+    $self->logout;
 
-	# Result is list of test runs for the given environment
-	return $result;
+    # Result is list of test runs for the given environment
+    return $result;
 }
 
 1;

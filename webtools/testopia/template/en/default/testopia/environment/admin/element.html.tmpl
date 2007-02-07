@@ -16,8 +16,8 @@
   # Maciej Maczynski. All Rights Reserved.
   #
   # Contributor(s): Greg Hendricks <ghendricks@novell.com>
-  #					Brian Kramer <bkramer@student.neumont.edu>
-  #					Michael Hight <mjhight@gmail.com>
+  #                    Brian Kramer <bkramer@student.neumont.edu>
+  #                    Michael Hight <mjhight@gmail.com>
   #%]
 
 [%# INTERFACE:
@@ -28,94 +28,94 @@
 <h3>Element Administration</h3>
 
 <table>
-	<tr>
-		<th class="bz_row_header" align="left" width="50">Change Element Parent</th>
-	</tr>
-	<tr>
-		<td>
-			<table>
-				
-				<tr>
-					<th class="bz_row_header" align="left" width="100">Product</th>
-    				<td>
-    					<label for="product_id" accesskey="p"></label>
-    					
+    <tr>
+        <th class="bz_row_header" align="left" width="50">Change Element Parent</th>
+    </tr>
+    <tr>
+        <td>
+            <table>
+                
+                <tr>
+                    <th class="bz_row_header" align="left" width="100">Product</th>
+                    <td>
+                        <label for="product_id" accesskey="p"></label>
+                        
 [%### Product ###################################################################################### %]
-      					<select name="productCombo" id="productCombo" onChange="getCategories(this); ">
-      						<option value="[% currentproduct.id %]">[% currentproduct.name %]
-        					[% FOREACH product = products %]
-	        					[% IF currentproduct.id != product.id %]
-	        						<option value="[% product.id %]" >[% product.name %]
-        						[% END %]
-        					[% END %]
-      					</select>
-      				</td>
-				</tr>
-			</table>
-		</td>
-	</tr>
-	<tr>
-		<td>
-			<table>
-				<tr>
-					<th class="bz_row_header" align="left" width="100">Category</th>
-    				<td>				
+                          <select name="productCombo" id="productCombo" onChange="getCategories(this); ">
+                              <option value="[% currentproduct.id %]">[% currentproduct.name %]
+                            [% FOREACH product = products %]
+                                [% IF currentproduct.id != product.id %]
+                                    <option value="[% product.id %]" >[% product.name %]
+                                [% END %]
+                            [% END %]
+                          </select>
+                      </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <table>
+                <tr>
+                    <th class="bz_row_header" align="left" width="100">Category</th>
+                    <td>                
 [%### Category ###################################################################################### %]
-      					<select name="categoryCombo" id="categoryCombo" onChange="getElements(this)">
-      						<option value="[% currentcategory.env_category_id %]" >[% currentcategory.name %]
-      						[% FOREACH category = categories %]
-	        					[% IF currentcategory.env_category_id != category.name %]
-	        						<option value="[% category.id %]" >[% category.name %]
-        						[% END %]
-        					[% END %]
-      					</select>
-      				</td>
-				</tr>
-			</table>
-		</td>
-	</tr>
+                          <select name="categoryCombo" id="categoryCombo" onChange="getElements(this)">
+                              <option value="[% currentcategory.env_category_id %]" >[% currentcategory.name %]
+                              [% FOREACH category = categories %]
+                                [% IF currentcategory.env_category_id != category.name %]
+                                    <option value="[% category.id %]" >[% category.name %]
+                                [% END %]
+                            [% END %]
+                          </select>
+                      </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
 <tr>
-		<td>
-			<table>
-				<tr>
-					<th class="bz_row_header" align="left" width="100">Parent</th>
-    				<td>				
+        <td>
+            <table>
+                <tr>
+                    <th class="bz_row_header" align="left" width="100">Parent</th>
+                    <td>                
 [%### Element ###################################################################################### %]
-      					<select name="elementCombo" id="elementCombo";">
-      						[% IF element.parent_id == 0 %]
-      							<option value="0">[none]
-      							[% FOREACH e = elements %]
-      								<option value="[% e.id %]">[% e.name %]
-      							[% END %]
-      						[% ELSE %]
-      							<option value="[% currentelement.id %]">[% currentelement.name %]
-      							<option value="0">[none]
-      							[% FOREACH e = elements %]
-      								[% IF currentelement.id != e.id%]
-	      								<option value="[% e.id %]">[% e.name %]
-      								[% END %]
-      							[% END %]
-      						[% END %]
-      					</select>
-      				</td>
-				</tr>
-			</table>
-			<br/>
-		</td>
-	</tr>
-	<tr>		
-		<th class="bz_row_header" align="left" width="100">Element Name</th>
-	</tr>
-	<tr>
-		<td>
-			<table>
-				<tr>
-				<th class="bz_row_header" align="left">Name:</th>
-    				<td><input name="name" id="name" value="[% element.name %]" size="30" /></td>
-    			</tr>
-			</table>
-		</td>
-	</tr>
+                          <select name="elementCombo" id="elementCombo";">
+                              [% IF element.parent_id == 0 %]
+                                  <option value="0">[none]
+                                  [% FOREACH e = elements %]
+                                      <option value="[% e.id %]">[% e.name %]
+                                  [% END %]
+                              [% ELSE %]
+                                  <option value="[% currentelement.id %]">[% currentelement.name %]
+                                  <option value="0">[none]
+                                  [% FOREACH e = elements %]
+                                      [% IF currentelement.id != e.id%]
+                                          <option value="[% e.id %]">[% e.name %]
+                                      [% END %]
+                                  [% END %]
+                              [% END %]
+                          </select>
+                      </td>
+                </tr>
+            </table>
+            <br/>
+        </td>
+    </tr>
+    <tr>        
+        <th class="bz_row_header" align="left" width="100">Element Name</th>
+    </tr>
+    <tr>
+        <td>
+            <table>
+                <tr>
+                <th class="bz_row_header" align="left">Name:</th>
+                    <td><input name="name" id="name" value="[% element.name %]" size="30" /></td>
+                </tr>
+            </table>
+        </td>
+    </tr>
 </table>
   <br />
  <input name="submit" id="element_submit" type="submit" value="Submit" >

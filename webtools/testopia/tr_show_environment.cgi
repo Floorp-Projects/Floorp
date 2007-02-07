@@ -115,7 +115,6 @@ elsif ($action eq 'edit'){
 
 elsif ($action eq 'getChildren'){
     my $json = new JSON;
-    print STDERR $cgi->param('data');
     my $data = $json->jsonToObj($cgi->param('data'));
     
     my $node = $data->{'node'};
