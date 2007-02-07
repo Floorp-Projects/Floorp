@@ -1,5 +1,5 @@
-/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.9a2pre.en-US.linux-i686.tar.bz2
-/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.9a2pre.en-US.linux-i686.sdk.tar.bz2
-/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.9a2pre.en-US.mac-pkg.dmg
-/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.9a2pre.en-US.win32.zip
-/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.9a2pre.en-US.win32.sdk.zip
+/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.9a3pre.en-US.linux-i686.tar.bz2
+/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.9a3pre.en-US.linux-i686.sdk.tar.bz2
+/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.9a3pre.en-US.mac-pkg.dmg
+/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.9a3pre.en-US.win32.zip
+/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.9a3pre.en-US.win32.sdk.zip

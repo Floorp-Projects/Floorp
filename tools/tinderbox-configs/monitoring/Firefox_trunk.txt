@@ -1,10 +1,10 @@
-/pub/mozilla.org/firefox/nightly/latest-trunk/firefox-3.0a2pre.en-US.linux-i686.complete.mar
-/pub/mozilla.org/firefox/nightly/latest-trunk/firefox-3.0a2pre.en-US.linux-i686.tar.bz2
-/pub/mozilla.org/firefox/nightly/latest-trunk/firefox-3.0a2pre.en-US.mac.complete.mar
-/pub/mozilla.org/firefox/nightly/latest-trunk/firefox-3.0a2pre.en-US.mac.dmg
-/pub/mozilla.org/firefox/nightly/latest-trunk/firefox-3.0a2pre.en-US.win32.complete.mar
-/pub/mozilla.org/firefox/nightly/latest-trunk/firefox-3.0a2pre.en-US.win32.installer.exe
-/pub/mozilla.org/firefox/nightly/latest-trunk/firefox-3.0a2pre.en-US.win32.zip
+/pub/mozilla.org/firefox/nightly/latest-trunk/firefox-3.0a3pre.en-US.linux-i686.complete.mar
+/pub/mozilla.org/firefox/nightly/latest-trunk/firefox-3.0a3pre.en-US.linux-i686.tar.bz2
+/pub/mozilla.org/firefox/nightly/latest-trunk/firefox-3.0a3pre.en-US.mac.complete.mar
+/pub/mozilla.org/firefox/nightly/latest-trunk/firefox-3.0a3pre.en-US.mac.dmg
+/pub/mozilla.org/firefox/nightly/latest-trunk/firefox-3.0a3pre.en-US.win32.complete.mar
+/pub/mozilla.org/firefox/nightly/latest-trunk/firefox-3.0a3pre.en-US.win32.installer.exe
+/pub/mozilla.org/firefox/nightly/latest-trunk/firefox-3.0a3pre.en-US.win32.zip
 /pub/mozilla.org/firefox/nightly/latest-trunk/linux-xpi/xforms.xpi
 /pub/mozilla.org/firefox/nightly/latest-trunk/mac-xpi/xforms.xpi
 /pub/mozilla.org/firefox/nightly/latest-trunk/windows-xpi/xforms.xpi
