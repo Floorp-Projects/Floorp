@@ -17,7 +17,9 @@
   #
   # Contributor(s): Greg Hendricks <ghendricks@novell.com>
   #%]
-  
+
+[% IF user.login %]
+    
 [% IF plan_id %]
   [% plan_id = plan_id %]
 [% ELSIF plan %]
@@ -36,7 +38,6 @@
   <div class="links">
     <a href="tr_query.cgi">Search</a>&nbsp;|&nbsp;
     <a href="tr_query.cgi?report=1">Reports</a>&nbsp;|&nbsp;
-  [% IF user.login %]
     <a href="tr_new_plan.cgi">New Plan</a>&nbsp;|&nbsp;
     <a href="tr_new_case.cgi?plan_id=[% plan_id FILTER none %]">New Case</a>&nbsp;|&nbsp;
     <a href="tr_new_run.cgi?plan_id=[% plan_id FILTER none %]&case_status_id=2">New Run</a>&nbsp;|&nbsp;
@@ -45,26 +46,25 @@
     [% IF UserInGroup('admin') %]
     <a href="tr_admin.cgi">Admin</a>&nbsp;|&nbsp;
     [% END %]
-  [% END %]
     <a href="testopia/doc/Manual.pdf" target="_blank">Help</a>
-    <br />
-  [% IF user.login %]
+    <br>
     <a href="tr_list_runs.cgi?current_tab=run&run_status=0">Current Runs</a>&nbsp;|&nbsp;
     <a href="tr_list_plans.cgi?current_tab=plan&name_type=allwordssubstr&name=&plan_text_type=allwordssubstr&plan_text=&tag_type=allwords&tags=&author_type=exact&author=[% user.login FILTER url_quote %]&plan_id=">My Plans</a>&nbsp;|&nbsp;
     <a href="tr_list_cases.cgi?current_tab=case&summary_type=allwordssubstr&summary=&tcaction_type=allwordssubstr&tcaction=&tceffect_type=allwordssubstr&tceffect=&script_type=allwordssubstr&script=&requirement_type=allwordssubstr&requirement=&tag_type=allwords&tags=&author_type=exact&author=&default_tester_type=substring&default_tester=[% user.login FILTER url_quote %]&case_id=&plan_id=">My Cases</a>&nbsp;|&nbsp;
     <a href="tr_list_runs.cgi?current_tab=run&summary_type=allwordssubstr&summary=&notes_type=allwordssubstr&notes=&environment_type=allwordssubstr&environment=&tag_type=allwords&tag=&manager_type=substring&manager=[% user.login FILTER url_quote %]&run_id=&plan_id=&assignee_type=substr&assignee=[% user.login FILTER url_quote %]">My Runs</a>
-  [% END %]&nbsp;|&nbsp;
+  
     <form action="tr_quicksearch.cgi">
-      <input name="query" size="25" />
-      <input type="submit" value="Find" />
+      <input name="query" size="25" /><input type="submit" value="Find" />
     </form>
   </div>
-  [% IF user.login %]
-  <div class="links">
-    <b>Testopia Saved Searches:</b>
+  <br>
+</div>
+<div id="links-saved" class="leadcopy">
+  <div class="label">
+    Testopia<br>Saved Searches:
+  </div>
     [% FOREACH query = user.testopia_queries %]
       <a href="[% query.query %]">[% query.name FILTER html %]</a>[% '&nbsp;|&nbsp;' UNLESS loop.last %]
     [% END %]
   </div>
-  [% END %]
-</div>
+[% END %]

@@ -45,6 +45,7 @@ use strict;
 use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::User;
+use Bugzilla::Testopia::Product;
 use JSON;
 
 ###############################
@@ -431,8 +432,17 @@ sub obliterate {
     return 1;
 }
 
+sub canedit {
+    my $self = shift;
+    return 1 if Bugzilla->user->in_group('Testers');
+    my $product = Bugzilla::Testopia::Product->new($self->product_id);
+    return 1 if Bugzilla->user->can_see_product($product->name);
+    return 0;
+}
+
 sub candelete {
     my $self = shift;
+    return 0 unless $self->canedit;
     my $dbh = Bugzilla->dbh;
     my $used = $dbh->selectrow_array("SELECT 1 FROM test_environment_map
                                       WHERE element_id = ?",

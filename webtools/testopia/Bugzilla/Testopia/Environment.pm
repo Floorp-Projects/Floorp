@@ -651,10 +651,8 @@ Returns true if the logged in user has rights to edit this environment.
 
 sub canedit {
     my $self = shift;
-    return UserInGroup('managetestplans') 
-      || UserInGroup('edittestcases')
-        || UserInGroup('runtests');
-}
+    return 1 if Bugzilla->user->in_group('Testers');
+    return 1 if Bugzilla->user->can_see_product($self->product->name);}
 
 =head2 canview
 
@@ -664,9 +662,8 @@ Returns true if the logged in user has rights to view this environment.
 
 sub canview {
     my $self = shift;
-    return UserInGroup('managetestplans') 
-      || UserInGroup('edittestcases')
-        || UserInGroup('runtests');
+    return 1 if Bugzilla->user->in_group('Testers');
+    return 1 if Bugzilla->user->can_see_product($self->product->name);
 }
 
 =head2 candelete

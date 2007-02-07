@@ -41,7 +41,6 @@ use Data::Dumper;
 use JSON;
 
 Bugzilla->login(LOGIN_REQUIRED);
-Bugzilla->batch(1);
 
 my $cgi = Bugzilla->cgi;
 
@@ -58,6 +57,8 @@ unless ($env_id || $action){
       || ThrowTemplateError($template->error());
   exit;
 }
+
+Bugzilla->batch(1);
 
 if ($action eq 'delete'){
     my $env = Bugzilla::Testopia::Environment->new($env_id);
@@ -76,8 +77,6 @@ elsif ($action eq 'do_delete'){
     $vars->{'tr_message'} = "Environment Deleted";
     display_list();
 }
-
-
 
 ####################
 ### Ajax Actions ###
@@ -116,6 +115,7 @@ elsif ($action eq 'edit'){
 
 elsif ($action eq 'getChildren'){
     my $json = new JSON;
+    print STDERR $cgi->param('data');
     my $data = $json->jsonToObj($cgi->param('data'));
     
     my $node = $data->{'node'};
@@ -229,6 +229,8 @@ else {
 sub display {
 	detaint_natural($env_id);
     my $env = Bugzilla::Testopia::Environment->new($env_id);
+    ThrowUserError('testopia-permission-denied', {object => 'Environment'}) unless $env->canedit;
+    
     if(!defined($env)){
     	my $env = Bugzilla::Testopia::Environment->new({'environment_id' => 0});
 	    ThrowUserError("testopia-read-only", {'object' => 'Environment'}) unless $env->canedit;
@@ -263,11 +265,14 @@ sub display {
 sub get_products{
     my ($class_id) = (@_);
     my $class = Bugzilla::Testopia::Classification->new($class_id);
+    return unless scalar(grep {$class->id eq $class_id} @{Bugzilla->user->get_selectable_classifications});
     print $class->products_to_json(1);
 }
 
 sub get_categories{
     my ($product_id) = (@_);
+    my $product = Bugzilla::Testopia::Product->new($product_id);
+    return unless Bugzilla->user->can_see_product($product->name);
     my $category = Bugzilla::Testopia::Environment::Category->new({});
     print $category->product_categories_to_json($product_id,1);
 }
@@ -275,6 +280,7 @@ sub get_categories{
 sub get_category_element_json {
     my ($id) = (@_);
     my $category = Bugzilla::Testopia::Environment::Category->new($id);
+    return unless $category->canedit;
     my $fish = $category->elements_to_json("TRUE");
     print $fish;
 } 
@@ -282,17 +288,20 @@ sub get_category_element_json {
 sub get_element_children {
     my ($id) = (@_);
     my $element = Bugzilla::Testopia::Environment::Element->new($id);
+    return unless $element->canedit;
     print $element->children_to_json(1);
 }
 
 sub get_env_elements {
     my ($id) = (@_);
     my $env = Bugzilla::Testopia::Environment->new($id);
+    return unless $env->canedit;
     print $env->elements_to_json(1);
 }
 
 sub get_validexp_json {
     my ($id,$env_id) = (@_);
     my $property = Bugzilla::Testopia::Environment::Property->new($id);
+    return unless $property->canedit;
     print $property->valid_exp_to_json(1,$env_id);
 }

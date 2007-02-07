@@ -3,6 +3,9 @@
 <hr />
 <a name="testopia" />
 <table width="100%" border="0" cellpadding="0" cellspacing="0">
+  <tr>
+    <th colspan="2">Testopia Version 1.2</th>
+  </tr>
   <tr valign="TOP">
     <td width="128">
     <p><img
@@ -12,10 +15,15 @@
     </td>
     <td>
     <p><b>Testopia</b> choices:</p>
-    <p><a href="tr_list_runs.cgi?current_tab=run&run_status=0">Do some testing</a><br>
+  [% IF user.login %]
+    <p>
+    <a href="tr_list_runs.cgi?current_tab=run&run_status=0">Do some testing</a><br>
     <a href="tr_query.cgi?current_tab=plan">Manage test plans</a><br>
     <a href="tr_query.cgi?current_tab=case">Search existing test cases</a><br>
     <a href="tr_admin_environment.cgi">Manage run environments</a></p>
+  [% ELSE %]
+    You must login to Bugzilla to see Testopia features
+  [% END %]
     </td>
   </tr>
 </table>

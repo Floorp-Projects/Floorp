@@ -150,6 +150,8 @@ elsif($action eq 'removeNode'){
 elsif ($action eq 'getcategories'){
     my $product_id = $cgi->param('product_id');
     detaint_natural($product_id);
+    my $product = Bugzilla::Testtopia::Product->new($product_id);
+    exit unless Bugzilla->user->can_see_product($product->name);
     my $cat = Bugzilla::Testopia::Environment::Category({});
     my $categories = $cat->get_element_categories_by_product($product_id);
     my $ret;
@@ -219,24 +221,28 @@ sub display{
 sub get_products{
     my ($class_id) = (@_);
     my $class = Bugzilla::Testopia::Classification->new($class_id);
+    return unless scalar(grep {$class->id eq $class_id} @{Bugzilla->user->get_selectable_classifications});
     print $class->products_to_json;
 }
 
 sub get_categories{
     my ($product_id) = (@_);
     my $category = Bugzilla::Testopia::Environment::Category->new({});
+    return unless $category->canedit;
     print $category->product_categories_to_json($product_id);
 }
 
 sub get_category_element{
     my ($id) = (@_);
     my $category = Bugzilla::Testopia::Environment::Category->new($id);
+    return unless $category->canedit;
     print $category->elements_to_json;
 } 
 
 sub get_element_children {
     my ($id) = (@_);
     my $element = Bugzilla::Testopia::Environment::Element->new($id);
+    return unless $element->canedit;
     print $element->children_to_json;
 }
 
@@ -254,6 +260,7 @@ sub edit_category{
     my ($id) = (@_);
     my $category = Bugzilla::Testopia::Environment::Category->new($id);
     my $product = Bugzilla::Testopia::Product->new($category->product_id());
+    return unless Bugzilla->user->can_see_product($product->name);
     $category->{'name'} =~ s/<span style='color:blue'>|<\/span>//g;
 
     $vars->{'category'} = $category;
@@ -268,6 +275,7 @@ sub edit_element{
     my $element = Bugzilla::Testopia::Environment::Element->new($id);
     my $category = Bugzilla::Testopia::Environment::Category->new($element->env_category_id());
     my $product = Bugzilla::Testopia::Product->new($category->product_id());
+    return unless $category->canedit;
     $element->{'name'} =~ s/<span style='color:blue'>|<\/span>//g;
     
     $vars->{'element'} = $element;
@@ -289,6 +297,7 @@ sub edit_property{
     my ($id) = (@_);
     my $property = Bugzilla::Testopia::Environment::Property->new($id);
     my $element = Bugzilla::Testopia::Environment::Element->new($property->element_id());
+    return unless $element->canedit;
     my $cat_id = $element->env_category_id();
     my $elmnts = Bugzilla::Testopia::Environment::Category->new($cat_id)->get_elements_by_category();
     
@@ -302,7 +311,8 @@ sub edit_validexp{
     my ($id) = (@_);
     $id =~ /^(\d+)~/;
     
-    my $property = Bugzilla::Testopia::Environment::Property->new($1); 
+    my $property = Bugzilla::Testopia::Environment::Property->new($1);
+    return unless $property->canedit; 
     
     my @expressions = split /\|/, $property->validexp(); 
 
@@ -320,6 +330,7 @@ sub do_edit_category{
     my $product_id = $cgi->param('product');
     my ($id) = (@_);
     my $category = Bugzilla::Testopia::Environment::Category->new($id);
+    return unless $category->canedit;
     
     trick_taint($name);
     detaint_natural($product_id);
@@ -354,6 +365,7 @@ sub do_edit_element{
     #
     
     my $element = Bugzilla::Testopia::Environment::Element->new($id);
+    return unless $element->canedit;
     
     my $cat_id = $cgi->param('categoryCombo');
     my $parent_id = $cgi->param('elementCombo');
@@ -393,6 +405,7 @@ sub do_edit_property{
     my $name = $cgi->param('name');
     my $element_id = $cgi->param('element');
     my $property = Bugzilla::Testopia::Environment::Property->new($id);
+    return unless $property->canedit;
     
     trick_taint($name);
     detaint_natural($element_id);
@@ -418,6 +431,7 @@ sub do_edit_validexp{
     my ($id) = (@_);
     
     my $property =  Bugzilla::Testopia::Environment::Property->new($id);
+    return unless $property->canedit;
     my @expressions =  $cgi->param('valid_exp');
     
     my $exp;
@@ -439,6 +453,8 @@ sub add_category{
     my ($id) = (@_);
     
     my $category = Bugzilla::Testopia::Environment::Category->new({});
+    my $product = Bugzilla::Testopia::Product->new($id);
+    return unless Bugzilla->user->can_see_product($product->name);
     $category->{'product_id'} = $id;
     $category->{'name'} = 'New category ' . $category->new_category_count;
     
