@@ -219,7 +219,12 @@ class XMLList extends XMLObjectImpl implements Function {
 			if (targetProperty == null) {
 				xmlValue = newXMLFromJs(value.toString());
 			} else {
-				xmlValue = newTextElementXML(null, targetProperty, value.toString());
+				//	Note that later in the code, we will use this as an argument to replace(int,value)
+				//	So we will be "replacing" this element with itself
+				//	There may well be a better way to do this
+				//	TODO	Find a way to refactor this whole method and simplify it
+				xmlValue = item(index);
+				((XML)xmlValue).setChildren(value);
 			}
 		}
 		
