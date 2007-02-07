@@ -12,7 +12,8 @@
     <![CDATA[
       function getAccountForFolderPickerState()
       { 
-        return parent.getAccountFromServerId(gCurrentServerId);
+        var serverId = GetCurrentServerId();
+        return parent.getAccountFromServerId(serverId);
       }
     ]]>
   </script>

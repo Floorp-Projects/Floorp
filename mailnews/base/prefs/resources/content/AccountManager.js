@@ -965,7 +965,7 @@ function restorePage(pageId, serverId)
 
   // tell the page that new values have been loaded
   if ("onInit" in top.frames["contentFrame"])
-    top.frames["contentFrame"].onInit(pageId, serverId);
+    top.frames["contentFrame"].onInit();
 
   // everything has succeeded, vervied by setting currentPageId
   currentPageId = pageId;

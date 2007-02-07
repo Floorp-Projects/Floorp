@@ -42,7 +42,7 @@ var gFccRadioElemChoiceLocked, gDraftsRadioElemChoiceLocked, gTmplRadioElemChoic
 var gDefaultPickerMode = "1";
 
 var gFccFolderWithDelim, gDraftsFolderWithDelim, gTemplatesFolderWithDelim;
-var gCurrentServerId;
+
 var gPrefBranch = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 
 // Picker IDs
@@ -63,9 +63,8 @@ function onPreInit(account, accountValues)
  * Set the global radio element choices and initialize folder/account pickers. 
  * Also, initialize other UI elements (bcc self, fcc picker controller checkboxes). 
  */
-function onInit(aPageId, aServerId) 
+function onInit() 
 {
-  gCurrentServerId = aServerId;
     onInitCopiesAndFolders();
 }
 
@@ -114,6 +113,14 @@ function SetGlobalRadioElemChoices()
     gTmplRadioElemChoice = pickerModeElement.getAttribute("value");
     gTmplRadioElemChoiceLocked = pickerModeElement.getAttribute("disabled");
     if (!gTmplRadioElemChoice) gTmplRadioElemChoice = gDefaultPickerMode;
+}
+
+// Get Current Server ID selected in the account tree
+function GetCurrentServerId()
+{
+    var tree = window.parent.accounttree;
+    var result = getServerIdAndPageIdFromTree(tree);
+    return result.serverId;
 }
 
 /* 

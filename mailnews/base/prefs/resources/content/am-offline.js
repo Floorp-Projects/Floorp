@@ -42,7 +42,7 @@ var gImapIncomingServer;
 var gPref = null;
 var gLockedPref = null;
 
-function onInit(aPageId, aServerId) 
+function onInit() 
 {
     onLockPreference();	
 
