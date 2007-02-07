@@ -767,7 +767,7 @@ sub init {
                }
                else {
                    push(@supptables,
-                      "INNER JOIN profiles AS map_$1 " . 
+                      "LEFT JOIN profiles AS map_$1 " . 
                       "ON test_". $obj ."s.". $1 ." = map_$1.userid");
                }
                $f = "map_$1.login_name";
