@@ -51,6 +51,10 @@
 #include "nsISimpleEnumerator.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsIIOService.h"
+#include "nsIProtocolHandler.h"
+#include "nsIServiceManager.h"
+#include "nsIExternalProtocolHandler.h"
 
 #include "nsIEditor.h"
 #include "nsISelection.h"
@@ -190,6 +194,24 @@ void GeckoUtils::GetEnclosingLinkElementAndHref(nsIDOMNode* aNode, nsIDOMElement
   NS_IF_ADDREF(*aLinkContent);
   
   aHref = href;
+}
+
+/*static*/
+PRBool GeckoUtils::isProtocolInternal(const char* aProtocol)
+{
+  nsCOMPtr<nsIIOService> ioService = do_GetService("@mozilla.org/network/io-service;1");
+  if (!ioService)
+    return PR_TRUE; // something went wrong, so punt
+
+  nsCOMPtr<nsIProtocolHandler> handler;
+  // try to get an external handler for the protocol
+  nsresult rv = ioService->GetProtocolHandler(aProtocol, getter_AddRefs(handler));
+  if (NS_FAILED(rv))
+    return PR_TRUE; // something went wrong, so punt
+
+  nsCOMPtr<nsIExternalProtocolHandler> extHandler = do_QueryInterface(handler);
+  // a null external handler means it's a protocol we handle internally
+  return (extHandler == nsnull);
 }
 
 /* static */

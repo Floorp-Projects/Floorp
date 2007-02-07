@@ -57,7 +57,11 @@ class GeckoUtils
 
     static void GatherTextUnder(nsIDOMNode* aNode, nsString& aResult);
     static void GetEnclosingLinkElementAndHref(nsIDOMNode* aNode, nsIDOMElement** aLinkContent, nsString& aHref);
-  
+
+    // Returns whether or not the given protocol ('http', 'file', 'mailto', etc.)
+    // is handled internally. Returns PR_TRUE in error cases.
+    static PRBool isProtocolInternal(const char* aProtocol);
+
     /* Ouputs the docshell |aDocShell|'s URI as a nsACString. */
     static void GetURIForDocShell(nsIDocShell* aDocShell, nsACString& aURI);
   
