@@ -109,7 +109,7 @@
   <tr>
     <td valign="top">
       [% PROCESS select sel = { name => "case_run_status_id", 
-                                list => table.list.0.get_status_list,
+                                list => caserun.get_status_list,
                                 elements => 6,
                                 mult => 1, }
       %]
@@ -133,7 +133,7 @@
     </td>
     <td valign="top">
       [% PROCESS select sel = { name => "priority_id", 
-                                list => table.list.0.case.get_priority_list,
+                                list => case.get_priority_list,
                                 elements => 6,
                                 mult => 1, }
       %]

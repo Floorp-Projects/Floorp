@@ -418,6 +418,8 @@ sub display {
     my $case = Bugzilla::Testopia::TestCase->new({'case_id' => 0});
     $vars->{'expand_report'} = $cgi->param('expand_report') || 0;
     $vars->{'expand_filter'} = $cgi->param('expand_filter') || 0;
+    $vars->{'caserun'} = Bugzilla::Testopia::TestCaseRun->new({});
+    $vars->{'case'} = Bugzilla::Testopia::TestCase->new({});
     $vars->{'run'} = $run;
     $vars->{'table'} = $table;
     $vars->{'action'} = 'Commit';

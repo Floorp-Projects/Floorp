@@ -615,7 +615,7 @@ sub copy_permissions {
           WHERE plan_id = ?",undef, $self->id);
 
     $dbh->do("INSERT INTO test_plan_permissions_regexp (plan_id, user_regexp, permissions)
-              VALUES(?,?,?)", undef,($planid, $regexp, $perms));
+              VALUES(?,?,?)", undef,($planid, $regexp, $perms)) if $regexp;
               
     my $ref = $dbh->selectall_arrayref(
         "SELECT userid, permissions 
