@@ -65,8 +65,8 @@ $RunMozillaTests          = 1;  # Allow turning off of all tests if needed.
 #$BloatTest2               = 0;  # dbaron memory bloat test, require tracemalloc
 #$DomToTextConversionTest  = 0;  
 #$XpcomGlueTest            = 0;
-#$CodesizeTest             = 0;  # Z,  require mozilla/tools/codesighs
-#$EmbedCodesizeTest        = 0;  # mZ, require mozilla/tools/codesigns
+$CodesizeTest             = 1;  # Z,  require mozilla/tools/codesighs
+$EmbedCodesizeTest        = 1;  # mZ, require mozilla/tools/codesigns
 #$MailBloatTest            = 0;
 #$EmbedTest                = 0;  # Assumes you wanted $BuildEmbed=1
 $LayoutPerformanceTest    = 1;  # Tp
