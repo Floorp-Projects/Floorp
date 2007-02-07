@@ -530,10 +530,8 @@ NS_IMETHODIMP nsImageBoxFrame::OnStartContainer(imgIRequest *request,
   image->GetWidth(&w);
   image->GetHeight(&h);
 
-  nsPresContext* presContext = GetPresContext();
-  float p2t = presContext->PixelsToTwips();
-
-  mIntrinsicSize.SizeTo(NSIntPixelsToTwips(w, p2t), NSIntPixelsToTwips(h, p2t));
+  mIntrinsicSize.SizeTo(nsPresContext::CSSPixelsToAppUnits(w),
+                        nsPresContext::CSSPixelsToAppUnits(h));
 
   AddStateBits(NS_FRAME_IS_DIRTY);
   GetPresContext()->PresShell()->

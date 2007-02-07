@@ -626,7 +626,7 @@ gfxWrapperTextRun::SetupSpacingFromProvider(PropertyProvider* aProvider)
     for (i = 0; i < mLength; ++i) {
         NS_ASSERTION(spacing.Elements()[i].mBefore == 0,
                      "Can't handle before-spacing!");
-        gfxFloat nextOffset = offset + spacing.Elements()[i].mAfter/mPixelsToAppUnits;
+        gfxFloat nextOffset = offset + spacing.Elements()[i].mAfter/mAppUnitsPerDevUnit;
         spaceArray.AppendElement(ROUND(nextOffset) - ROUND(offset));
         offset = nextOffset;
     }
@@ -642,7 +642,7 @@ gfxWrapperTextRun::Draw(gfxContext *aContext, gfxPoint aPt,
 {
     NS_ASSERTION(aStart == 0 && aLength == mLength, "Can't handle substrings");
     SetupSpacingFromProvider(aBreakProvider);
-    gfxPoint pt(aPt.x/mPixelsToAppUnits, aPt.y/mPixelsToAppUnits);
+    gfxPoint pt(aPt.x/mAppUnitsPerDevUnit, aPt.y/mAppUnitsPerDevUnit);
     return mInner.Draw(mContext, pt);
 }
 
@@ -652,7 +652,7 @@ gfxWrapperTextRun::GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
 {
     NS_ASSERTION(aStart == 0 && aLength == mLength, "Can't handle substrings");
     SetupSpacingFromProvider(aBreakProvider);
-    return mInner.Measure(mContext)*mPixelsToAppUnits;
+    return mInner.Measure(mContext)*mAppUnitsPerDevUnit;
 }
 
 gfxTextRun *

@@ -65,9 +65,9 @@ public:
                     PRBool               aPlaceOrigin,
                     nsHTMLReflowMetrics& aDesiredSize,
                     nsIFrame*            aForFrame,
-                    nscoord              aUserSubScriptShift = 0,
-                    nscoord              aUserSupScriptShift = 0,
-                    nscoord              aScriptSpace = NSFloatPointsToTwips(0.5f));
+                    nscoord              aUserSubScriptShift,
+                    nscoord              aUserSupScriptShift,
+                    nscoord              aScriptSpace);
 
 protected:
   nsMathMLmsubsupFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}

@@ -87,7 +87,7 @@ nsMathMLmsubFrame::Place (nsIRenderingContext& aRenderingContext,
                           nsHTMLReflowMetrics& aDesiredSize)
 {
   // extra spacing after sup/subscript
-  nscoord scriptSpace = NSFloatPointsToTwips(0.5f); // 0.5pt as in plain TeX
+  nscoord scriptSpace = GetPresContext()->PointsToAppUnits(0.5f); // 0.5pt as in plain TeX
 
   // check if the subscriptshift attribute is there
   nscoord subScriptShift = 0;
@@ -127,7 +127,7 @@ nsMathMLmsubFrame::PlaceSubScript (nsPresContext*      aPresContext,
   if (!mathMLFrame) return NS_ERROR_INVALID_ARG;
 
   // force the scriptSpace to be atleast 1 pixel 
-  aScriptSpace = PR_MAX(aPresContext->IntScaledPixelsToTwips(1), aScriptSpace);
+  aScriptSpace = PR_MAX(nsPresContext::CSSPixelsToAppUnits(1), aScriptSpace);
 
   ////////////////////////////////////
   // Get the children's desired sizes

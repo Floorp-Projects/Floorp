@@ -129,8 +129,6 @@ protected:
   void DoReflow();
   void PostChildDirty();
   void UpdateGraphic();
-  float GetPxPerTwips();
-  float GetTwipsPerPx();
   // Get the bounding box relative to the outer SVG element, in user units
   void GetBBoxInternal(float* aX, float *aY, float* aWidth, float *aHeight);
   already_AddRefed<nsIDOMSVGMatrix> GetTMIncludingOffset();

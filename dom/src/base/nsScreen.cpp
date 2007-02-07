@@ -241,16 +241,10 @@ nsScreen::GetRect(nsRect& aRect)
 
   context->GetRect(aRect);
 
-  float devUnits;
-  devUnits = context->DevUnitsToAppUnits();
-
-  aRect.x = NSToIntRound(float(aRect.x) / devUnits);
-  aRect.y = NSToIntRound(float(aRect.y) / devUnits);
-
-  context->GetDeviceSurfaceDimensions(aRect.width, aRect.height);
-
-  aRect.height = NSToIntRound(float(aRect.height) / devUnits);
-  aRect.width = NSToIntRound(float(aRect.width) / devUnits);
+  aRect.x = nsPresContext::AppUnitsToIntCSSPixels(aRect.x);
+  aRect.y = nsPresContext::AppUnitsToIntCSSPixels(aRect.y);
+  aRect.height = nsPresContext::AppUnitsToIntCSSPixels(aRect.height);
+  aRect.width = nsPresContext::AppUnitsToIntCSSPixels(aRect.width);
 
   return NS_OK;
 }
@@ -266,13 +260,10 @@ nsScreen::GetAvailRect(nsRect& aRect)
 
   context->GetClientRect(aRect);
 
-  float devUnits;
-  devUnits = context->DevUnitsToAppUnits();
-
-  aRect.x = NSToIntRound(float(aRect.x) / devUnits);
-  aRect.y = NSToIntRound(float(aRect.y) / devUnits);
-  aRect.height = NSToIntRound(float(aRect.height) / devUnits);
-  aRect.width = NSToIntRound(float(aRect.width) / devUnits);
+  aRect.x = nsPresContext::AppUnitsToIntCSSPixels(aRect.x);
+  aRect.y = nsPresContext::AppUnitsToIntCSSPixels(aRect.y);
+  aRect.height = nsPresContext::AppUnitsToIntCSSPixels(aRect.height);
+  aRect.width = nsPresContext::AppUnitsToIntCSSPixels(aRect.width);
 
   return NS_OK;
 }

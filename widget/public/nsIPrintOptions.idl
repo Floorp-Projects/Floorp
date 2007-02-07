@@ -58,7 +58,7 @@ interface nsISimpleEnumerator;
  * John Keiser <jkeiser@netscape.com> and Roland Mainz
  * <roland.mainz@informatik.med.uni-giessen.de> for futher details.
  */
-[scriptable, uuid(d9948a4d-f49c-4456-938a-acda2c8d7741)]
+[scriptable, uuid(722566e9-5983-42e8-9dae-7178b23933c7)]
 
 interface nsIPrintOptions : nsISupports
 {
@@ -91,13 +91,6 @@ interface nsIPrintOptions : nsISupports
    */
   void displayJobProperties (in wstring aPrinter, in nsIPrintSettings
                              aPrintSettings, out boolean aDisplayed);
-
-
-  void setFontNamePointSize(in AString aName, in PRInt32 aPointSize);
-  // no script methods
-  [noscript] void SetDefaultFont(in nsNativeFontRef aFont);
-  /* Purposely made this an "in" arg */
-  [noscript] void GetDefaultFont(in nsNativeFontRef aFont);
 
   /**
    * Native data constants

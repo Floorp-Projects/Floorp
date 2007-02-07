@@ -122,7 +122,7 @@ nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(nsStyleContext* aContext) :
   // XXX Unsafe to assume successful allocation
   mPageData = new nsSharedPageData();
   mPageData->mHeadFootFont = new nsFont(*GetPresContext()->GetDefaultFont(kGenericFont_serif));
-  mPageData->mHeadFootFont->size = NSIntPointsToTwips(10);
+  mPageData->mHeadFootFont->size = GetPresContext()->PointsToAppUnits(10);
 
   nsresult rv;
   mPageData->mPrintOptions = do_GetService(sPrintOptionsContractID, &rv);
@@ -214,13 +214,8 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
     return NS_OK;
   }
 
-  // Turn on the scaling of twips so any of the scrollbars
-  // in the UI no longer get scaled
   PRBool isPrintPreview =
     aPresContext->Type() == nsPresContext::eContext_PrintPreview;
-  if (isPrintPreview) {
-    aPresContext->SetScalingOfTwips(PR_TRUE);
-  }
 
   // See if we can get a Print Settings from the Context
   if (!mPageData->mPrintSettings &&
@@ -230,7 +225,12 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 
   // now get out margins
   if (mPageData->mPrintSettings) {
-    mPageData->mPrintSettings->GetMarginInTwips(mMargin);
+    nsMargin marginTwips;
+    mPageData->mPrintSettings->GetMarginInTwips(marginTwips);
+    mMargin = nsMargin(aPresContext->TwipsToAppUnits(marginTwips.left),
+                       aPresContext->TwipsToAppUnits(marginTwips.top),
+                       aPresContext->TwipsToAppUnits(marginTwips.right),
+                       aPresContext->TwipsToAppUnits(marginTwips.bottom));
     PRInt16 printType;
     mPageData->mPrintSettings->GetPrintRange(&printType);
     mPrintRangeType = printType;
@@ -265,7 +265,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   nsSize   shadowSize(0,0);
   if (aPresContext->IsScreen()) {
     extraMargin.SizeTo(extraGap, extraGap, extraGap, extraGap);
-    nscoord fourPixels = aPresContext->IntScaledPixelsToTwips(4);
+    nscoord fourPixels = nsPresContext::CSSPixelsToAppUnits(4);
     shadowSize.SizeTo(fourPixels, fourPixels);
   }
 
@@ -381,12 +381,6 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   mSize.width  = aDesiredSize.width;
   mSize.height = aDesiredSize.height;
 
-  // Turn off the scaling of twips so any of the scrollbars
-  // in the document get scaled
-  if (isPrintPreview) {
-    aPresContext->SetScalingOfTwips(PR_FALSE);
-  }
-
   NS_FRAME_TRACE_REFLOW_OUT("nsSimplePageSequeceFrame::Reflow", aStatus);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
@@ -484,7 +478,6 @@ nsSimplePageSequenceFrame::StartPrint(nsPresContext*   aPresContext,
 
   aPrintSettings->GetStartPageRange(&mFromPageNum);
   aPrintSettings->GetEndPageRange(&mToPageNum);
-  aPrintSettings->GetMarginInTwips(mMargin);
 
   mDoingPageRange = nsIPrintSettings::kRangeSpecifiedPageRange == mPrintRangeType ||
                     nsIPrintSettings::kRangeSelection == mPrintRangeType;

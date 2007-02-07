@@ -1462,8 +1462,6 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
   const nsStyleFont* myFont = GetStyleFont();
   nsCOMPtr<nsIFontMetrics> fm = aCX->GetMetricsFor(myFont->mFont);
   nscoord bulletSize;
-  float p2t;
-  float t2p;
 
   nsAutoString text;
   switch (myList->mListStyleType) {
@@ -1475,16 +1473,10 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
     case NS_STYLE_LIST_STYLE_DISC:
     case NS_STYLE_LIST_STYLE_CIRCLE:
     case NS_STYLE_LIST_STYLE_SQUARE:
-      t2p = aCX->TwipsToPixels();
       fm->GetMaxAscent(ascent);
-      bulletSize = NSTwipsToIntPixels(
-        (nscoord)NSToIntRound(0.8f * (float(ascent) / 2.0f)), t2p);
-      if (bulletSize < MIN_BULLET_SIZE) {
-        bulletSize = MIN_BULLET_SIZE;
-      }
-      p2t = aCX->PixelsToTwips();
-      bulletSize = NSIntPixelsToTwips(bulletSize, p2t);
-      mPadding.bottom = NSIntPixelsToTwips((nscoord) NSToIntRound((float)ascent / (8.0f * p2t)),p2t);
+      bulletSize = PR_MAX(nsPresContext::CSSPixelsToAppUnits(MIN_BULLET_SIZE),
+                          NSToCoordRound(0.8f * (float(ascent) / 2.0f)));
+      mPadding.bottom = NSToCoordRound(float(ascent) / 8.0f);
       aMetrics.width = mPadding.right + bulletSize;
       aMetrics.ascent = aMetrics.height = mPadding.bottom + bulletSize;
       break;
@@ -1610,11 +1602,10 @@ NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest,
   aImage->GetWidth(&w);
   aImage->GetHeight(&h);
 
-  float p2t;
   nsPresContext* presContext = GetPresContext();
-  p2t = presContext->PixelsToTwips();
 
-  nsSize newsize(NSIntPixelsToTwips(w, p2t), NSIntPixelsToTwips(h, p2t));
+  nsSize newsize(nsPresContext::CSSPixelsToAppUnits(w),
+                 nsPresContext::CSSPixelsToAppUnits(h));
 
   if (mIntrinsicSize != newsize) {
     mIntrinsicSize = newsize;

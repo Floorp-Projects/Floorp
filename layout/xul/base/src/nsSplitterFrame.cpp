@@ -1035,7 +1035,7 @@ nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext, nsSplitterInfo
 
   nsBoxLayoutState state(aPresContext);
 
-  nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
+  nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
 
   // first set all the widths.
   nsIBox* child = nsnull;

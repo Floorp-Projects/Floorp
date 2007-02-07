@@ -196,9 +196,7 @@ ProcessTableRulesAttribute(nsStyleStruct* aStyleStruct,
         borderData->SetBorderColor(aSide, borderColor);
       }
       // set the border width to be 1 pixel
-      nscoord onePixel =
-        NSToCoordRound(aRuleData->mPresContext->ScaledPixelsToTwips());
-      borderData->SetBorderWidth(aSide, onePixel);
+      borderData->SetBorderWidth(aSide, nsPresContext::CSSPixelsToAppUnits(1));
     }
   }
 }

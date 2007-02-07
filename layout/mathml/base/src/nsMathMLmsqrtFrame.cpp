@@ -230,7 +230,7 @@ nsMathMLmsqrtFrame::Reflow(nsPresContext*          aPresContext,
   // the thickness of the overline
   ruleThickness = bmSqr.ascent;
   // make sure that the rule appears on the screen
-  nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
+  nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
   if (ruleThickness < onePixel) {
     ruleThickness = onePixel;
   }

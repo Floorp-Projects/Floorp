@@ -818,22 +818,22 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
 
   nsCOMPtr<nsIDeviceContext> dc;
   aContext->GetDeviceContext(*getter_AddRefs(dc));
-  float T2P = dc->TwipsToDevUnits();
+  PRInt32 p2a = dc->AppUnitsPerDevPixel();
   RECT widgetRect;
   RECT clipRect;
   nsRect tr(aRect);
   nsRect cr(aClipRect);
 
 #ifdef MOZ_CAIRO_GFX
-  tr.x = NSToCoordRound(tr.x * T2P);
-  tr.y = NSToCoordRound(tr.y * T2P);
-  tr.width  = NSToCoordRound(tr.width * T2P);
-  tr.height = NSToCoordRound(tr.height * T2P);
+  tr.x = NSAppUnitsToIntPixels(tr.x, p2a);
+  tr.y = NSAppUnitsToIntPixels(tr.y, p2a);
+  tr.width  = NSAppUnitsToIntPixels(tr.width, p2a);
+  tr.height = NSAppUnitsToIntPixels(tr.height, p2a);
 
-  cr.x = NSToCoordRound(cr.x * T2P);
-  cr.y = NSToCoordRound(cr.y * T2P);
-  cr.width  = NSToCoordRound(cr.width * T2P);
-  cr.height = NSToCoordRound(cr.height * T2P);
+  cr.x = NSAppUnitsToIntPixels(cr.x, p2a);
+  cr.y = NSAppUnitsToIntPixels(cr.y, p2a);
+  cr.width  = NSAppUnitsToIntPixels(cr.width, p2a);
+  cr.height = NSAppUnitsToIntPixels(cr.height, p2a);
 
   nsRefPtr<gfxContext> ctx = (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
 
@@ -2005,15 +2005,15 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
 
   nsCOMPtr<nsIDeviceContext> dc;
   aContext->GetDeviceContext(*getter_AddRefs(dc));
-  float T2P = dc->TwipsToDevUnits();
+  PRInt32 p2a = dc->AppUnitsPerDevPixel();
   RECT widgetRect;
   nsRect tr(aRect);
 
 #ifdef MOZ_CAIRO_GFX
-  tr.x = NSToCoordRound(tr.x * T2P);
-  tr.y = NSToCoordRound(tr.y * T2P);
-  tr.width  = NSToCoordRound(tr.width * T2P);
-  tr.height = NSToCoordRound(tr.height * T2P);
+  tr.x = NSAppUnitsToIntPixels(tr.x, p2a);
+  tr.y = NSAppUnitsToIntPixels(tr.y, p2a);
+  tr.width  = NSAppUnitsToIntPixels(tr.width, p2a);
+  tr.height = NSAppUnitsToIntPixels(tr.height, p2a);
 
   nsRefPtr<gfxContext> ctx = (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
 

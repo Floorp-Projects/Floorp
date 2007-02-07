@@ -88,69 +88,32 @@ inline PRInt32 NSToIntRound(float aValue)
 }
 
 /* 
- * Twips/Points conversions
+ * App Unit/Pixel conversions
  */
-inline nscoord NSFloatPointsToTwips(float aPoints)
+inline nscoord NSFloatPixelsToAppUnits(float aPixels, PRInt32 aAppUnitsPerPixel)
 {
-  return NSToCoordRound(aPoints * TWIPS_PER_POINT_FLOAT);
-}
-
-inline nscoord NSIntPointsToTwips(PRInt32 aPoints)
-{
-  // If nscoord is a float, do the multiplication as float to avoid
-  // overflow
-  return nscoord(aPoints) * TWIPS_PER_POINT_INT;
-}
-
-inline PRInt32 NSTwipsToIntPoints(nscoord aTwips)
-{
-  return NSToIntRound(aTwips / TWIPS_PER_POINT_FLOAT);
-}
-
-inline PRInt32 NSTwipsToFloorIntPoints(nscoord aTwips)
-{
-  return NSToIntFloor(aTwips / TWIPS_PER_POINT_FLOAT);
-}
-
-inline PRInt32 NSTwipsToCeilIntPoints(nscoord aTwips)
-{
-  return NSToIntCeil(aTwips / TWIPS_PER_POINT_FLOAT);
-}
-
-inline float NSTwipsToFloatPoints(nscoord aTwips)
-{
-  return (float(aTwips) / TWIPS_PER_POINT_FLOAT);
-}
-
-/* 
- * Twips/Pixel conversions
- */
-inline nscoord NSFloatPixelsToTwips(float aPixels, float aTwipsPerPixel)
-{
-  nscoord r = NSToCoordRound(aPixels * aTwipsPerPixel);
+  nscoord r = NSToCoordRound(aPixels * aAppUnitsPerPixel);
   VERIFY_COORD(r);
   return r;
 }
 
-inline nscoord NSIntPixelsToTwips(PRInt32 aPixels, float aTwipsPerPixel)
+inline nscoord NSIntPixelsToAppUnits(PRInt32 aPixels, PRInt32 aAppUnitsPerPixel)
 {
-#ifdef NS_COORD_IS_FLOAT
-  nscoord r = aPixels * aTwipsPerPixel;
-#else
-  nscoord r = NSToCoordRound(float(aPixels) * aTwipsPerPixel);
-#endif
+  // The cast to nscoord makes sure we don't overflow if we ever change
+  // nscoord to float
+  nscoord r = aPixels * (nscoord)aAppUnitsPerPixel;
   VERIFY_COORD(r);
   return r;
 }
 
-inline float NSTwipsToFloatPixels(nscoord aTwips, float aPixelsPerTwip)
+inline float NSAppUnitsToFloatPixels(nscoord aAppUnits, PRInt32 aAppUnitsPerPixel)
 {
-  return (float(aTwips) * aPixelsPerTwip);
+  return (float(aAppUnits) / aAppUnitsPerPixel);
 }
 
-inline PRInt32 NSTwipsToIntPixels(nscoord aTwips, float aPixelsPerTwip)
+inline PRInt32 NSAppUnitsToIntPixels(nscoord aAppUnits, PRInt32 aAppUnitsPerPixel)
 {
-  return NSToIntRound(float(aTwips) * aPixelsPerTwip);
+  return NSToIntRound(float(aAppUnits) / aAppUnitsPerPixel);
 }
 
 /* 
@@ -169,6 +132,7 @@ inline float NSTwipsToUnits(nscoord aTwips, float aUnitsPerPoint)
 
 /// Unit conversion macros
 //@{
+#define NS_POINTS_TO_TWIPS(x)         NSUnitsToTwips((x), 1.0f)
 #define NS_INCHES_TO_TWIPS(x)         NSUnitsToTwips((x), 72.0f)                      // 72 points per inch
 #define NS_FEET_TO_TWIPS(x)           NSUnitsToTwips((x), (72.0f * 12.0f))            // 12 inches per foot
 #define NS_MILES_TO_TWIPS(x)          NSUnitsToTwips((x), (72.0f * 12.0f * 5280.0f))  // 5280 feet per mile
@@ -182,7 +146,7 @@ inline float NSTwipsToUnits(nscoord aTwips, float aUnitsPerPoint)
 #define NS_DIDOTS_TO_TWIPS(x)         NSUnitsToTwips((x), (16.0f / 15.0f))            // 15 didots per 16 points
 #define NS_CICEROS_TO_TWIPS(x)        NSUnitsToTwips((x), (12.0f * (16.0f / 15.0f)))  // 12 didots per cicero
 
-
+#define NS_TWIPS_TO_POINTS(x)         NSTwipsToUnits((x), 1.0f)
 #define NS_TWIPS_TO_INCHES(x)         NSTwipsToUnits((x), 1.0f / 72.0f)
 #define NS_TWIPS_TO_FEET(x)           NSTwipsToUnits((x), 1.0f / (72.0f * 12.0f))
 #define NS_TWIPS_TO_MILES(x)          NSTwipsToUnits((x), 1.0f / (72.0f * 12.0f * 5280.0f))

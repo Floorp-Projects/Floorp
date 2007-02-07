@@ -129,7 +129,8 @@ nsPoint nsDOMUIEvent::GetScreenPoint() {
   nsRect bounds(mEvent->refPoint, nsSize(1, 1));
   nsRect offset;
   ((nsGUIEvent*)mEvent)->widget->WidgetToScreen ( bounds, offset );
-  return offset.TopLeft();
+  return nsPoint(nsPresContext::AppUnitsToIntCSSPixels(mPresContext->DevPixelsToAppUnits(offset.x)),
+                 nsPresContext::AppUnitsToIntCSSPixels(mPresContext->DevPixelsToAppUnits(offset.y)));
 }
 
 nsPoint nsDOMUIEvent::GetClientPoint() {
@@ -223,7 +224,8 @@ nsPoint nsDOMUIEvent::GetClientPoint() {
     }
   }
   
-  return pt;
+  return nsPoint(nsPresContext::AppUnitsToIntCSSPixels(mPresContext->DevPixelsToAppUnits(pt.x)),
+                 nsPresContext::AppUnitsToIntCSSPixels(mPresContext->DevPixelsToAppUnits(pt.y)));
 }
 
 NS_IMETHODIMP
@@ -262,13 +264,12 @@ nsDOMUIEvent::GetPageX(PRInt32* aPageX)
   nsresult ret = NS_OK;
   PRInt32 scrollX = 0;
   nsIScrollableView* view = nsnull;
-  float p2t, t2p;
 
-  GetScrollInfo(&view, &p2t, &t2p);
+  GetScrollInfo(&view);
   if(view) {
     nscoord xPos, yPos;
     ret = view->GetScrollPosition(xPos, yPos);
-    scrollX = NSTwipsToIntPixels(xPos, t2p);
+    scrollX = nsPresContext::AppUnitsToIntCSSPixels(xPos);
   }
 
   if (NS_SUCCEEDED(ret)) {
@@ -285,13 +286,12 @@ nsDOMUIEvent::GetPageY(PRInt32* aPageY)
   nsresult ret = NS_OK;
   PRInt32 scrollY = 0;
   nsIScrollableView* view = nsnull;
-  float p2t, t2p;
 
-  GetScrollInfo(&view, &p2t, &t2p);
+  GetScrollInfo(&view);
   if(view) {
     nscoord xPos, yPos;
     ret = view->GetScrollPosition(xPos, yPos);
-    scrollY = NSTwipsToIntPixels(yPos, t2p);
+    scrollY = nsPresContext::AppUnitsToIntCSSPixels(yPos);
   }
 
   if (NS_SUCCEEDED(ret)) {
@@ -382,7 +382,6 @@ nsPoint nsDOMUIEvent::GetLayerPoint() {
 
   // XXX This is supposed to be relative to the nearest view?
   // Any element can have a view, not just positioned ones.
-  float t2p = mPresContext->TwipsToPixels();
   nsIFrame* targetFrame;
   nsPoint pt;
   mPresContext->EventStateManager()->GetEventTarget(&targetFrame);
@@ -391,8 +390,8 @@ nsPoint nsDOMUIEvent::GetLayerPoint() {
   }
   if (targetFrame) {
     pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mEvent, targetFrame);
-    pt.x =  NSTwipsToIntPixels(pt.x, t2p);
-    pt.y =  NSTwipsToIntPixels(pt.y, t2p);
+    pt.x =  nsPresContext::AppUnitsToIntCSSPixels(pt.x);
+    pt.y =  nsPresContext::AppUnitsToIntCSSPixels(pt.y);
     return pt;
   } else {
     return nsPoint(0,0);
@@ -442,27 +441,18 @@ nsDOMUIEvent::GetPreventDefault(PRBool* aReturn)
 }
 
 nsresult
-nsDOMUIEvent::GetScrollInfo(nsIScrollableView** aScrollableView,
-                            float* aP2T, float* aT2P)
+nsDOMUIEvent::GetScrollInfo(nsIScrollableView** aScrollableView)
 {
   NS_ENSURE_ARG_POINTER(aScrollableView);
-  NS_ENSURE_ARG_POINTER(aP2T);
-  NS_ENSURE_ARG_POINTER(aT2P);
   if (!mPresContext) {
     *aScrollableView = nsnull;
     return NS_ERROR_FAILURE;
   }
 
-  *aP2T = mPresContext->PixelsToTwips();
-  *aT2P = mPresContext->TwipsToPixels();
+  nsIViewManager *vm = mPresContext->GetViewManager();
+  if (vm)
+    return vm->GetRootScrollableView(aScrollableView);
 
-  nsIPresShell *presShell = mPresContext->GetPresShell();
-  if (presShell) {
-    nsIViewManager* vm = presShell->GetViewManager();
-    if(vm) {
-      return vm->GetRootScrollableView(aScrollableView);
-    }
-  }
   return NS_OK;
 }
 

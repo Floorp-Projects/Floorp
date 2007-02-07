@@ -1675,13 +1675,14 @@ nsEventListenerManager::FixContextMenuEvent(nsPresContext* aPresContext,
 // nsEventListenerManager::PrepareToUseCaretPosition
 //
 //    This checks to see if we should use the caret position for popup context
-//    menus. Returns true if the caret position should be used, and the window
-//    coordinates of that position are placed into WindowX/Y. This function
+//    menus. Returns true if the caret position should be used, and the
+//    coordinates of that position is returned in aTargetPt. This function
 //    will also scroll the window as needed to make the caret visible.
 //
 //    The event widget should be the widget that generated the event, and
 //    whose coordinate system the resulting event's refPoint should be
-//    relative to.
+//    relative to.  The returned point is in device pixels realtive to the
+//    widget passed in.
 
 PRBool
 nsEventListenerManager::PrepareToUseCaretPosition(nsIWidget* aEventWidget,
@@ -1779,14 +1780,14 @@ nsEventListenerManager::PrepareToUseCaretPosition(nsIWidget* aEventWidget,
   nsPoint viewDelta = view->GetOffsetTo(widgetView) + viewToWidget;
 
   // caret coordinates are in twips, convert to pixels
-  float t2p = aShell->GetPresContext()->TwipsToPixels();
-  aTargetPt.x = NSTwipsToIntPixels(viewDelta.x + caretCoords.x + caretCoords.width, t2p);
-  aTargetPt.y = NSTwipsToIntPixels(viewDelta.y + caretCoords.y + caretCoords.height, t2p);
+  nsPresContext* presContext = aShell->GetPresContext();
+  aTargetPt.x = presContext->AppUnitsToDevPixels(viewDelta.x + caretCoords.x + caretCoords.width);
+  aTargetPt.y = presContext->AppUnitsToDevPixels(viewDelta.y + caretCoords.y + caretCoords.height);
 
   return PR_TRUE;
 }
 
-// Get coordinates relative to root view for element, 
+// Get coordinates in device pixels relative to root view for element, 
 // first ensuring the element is onscreen
 void
 nsEventListenerManager::GetCoordinatesFor(nsIDOMElement *aCurrentEl, 
@@ -1883,10 +1884,8 @@ nsEventListenerManager::GetCoordinatesFor(nsIDOMElement *aCurrentEl,
     }
 #endif
 
-    // Convert from twips to pixels
-    float t2p = aPresContext->TwipsToPixels();
-    aTargetPt.x = NSTwipsToIntPixels(frameOrigin.x + extra, t2p);
-    aTargetPt.y = NSTwipsToIntPixels(frameOrigin.y + extra, t2p) + extraPixelsY;
+    aTargetPt.x = aPresContext->AppUnitsToDevPixels(frameOrigin.x + extra);
+    aTargetPt.y = aPresContext->AppUnitsToDevPixels(frameOrigin.y + extra) + extraPixelsY;
   }
 }
 

@@ -223,7 +223,6 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
 {
     nsTableFrame *tableFrame = mTableFrame;
     nsPresContext *presContext = tableFrame->GetPresContext();
-    float p2t = presContext->ScaledPixelsToTwips();
     nsTableCellMap *cellMap = tableFrame->GetCellMap();
 
     nscoord spacing = tableFrame->GetCellSpacingX();
@@ -247,8 +246,8 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
 
         // Consider the widths on the column.
         CellWidthInfo colInfo = GetColWidthInfo(aRenderingContext, colFrame);
-        colInfo.minCoord = nsTableFrame::RoundToPixel(colInfo.minCoord, p2t);
-        colInfo.prefCoord = nsTableFrame::RoundToPixel(colInfo.prefCoord, p2t);
+        colInfo.minCoord = nsTableFrame::RoundToPixel(colInfo.minCoord);
+        colInfo.prefCoord = nsTableFrame::RoundToPixel(colInfo.prefCoord);
         colFrame->AddMinCoord(colInfo.minCoord);
         colFrame->AddPrefCoord(colInfo.prefCoord, colInfo.hasSpecifiedWidth);
         colFrame->AddPrefPercent(colInfo.prefPercent);
@@ -261,8 +260,8 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
                          nsGkAtoms::tableColGroupFrame,
                      "expected a column-group");
         colInfo = GetColWidthInfo(aRenderingContext, colFrame->GetParent());
-        colInfo.minCoord = nsTableFrame::RoundToPixel(colInfo.minCoord, p2t);
-        colInfo.prefCoord = nsTableFrame::RoundToPixel(colInfo.prefCoord, p2t);
+        colInfo.minCoord = nsTableFrame::RoundToPixel(colInfo.minCoord);
+        colInfo.prefCoord = nsTableFrame::RoundToPixel(colInfo.prefCoord);
         colFrame->AddMinCoord(colInfo.minCoord);
         colFrame->AddPrefCoord(colInfo.prefCoord, colInfo.hasSpecifiedWidth);
         colFrame->AddPrefPercent(colInfo.prefPercent);
@@ -280,8 +279,8 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
 
             CellWidthInfo info = GetCellWidthInfo(aRenderingContext, cellFrame);
 
-            info.minCoord = nsTableFrame::RoundToPixel(info.minCoord, p2t);
-            info.prefCoord = nsTableFrame::RoundToPixel(info.prefCoord, p2t);
+            info.minCoord = nsTableFrame::RoundToPixel(info.minCoord);
+            info.prefCoord = nsTableFrame::RoundToPixel(info.prefCoord);
 
             colFrame->AddMinCoord(info.minCoord);
             colFrame->AddPrefCoord(info.prefCoord, info.hasSpecifiedWidth);
@@ -592,10 +591,9 @@ BasicTableLayoutStrategy::ComputeIntrinsicWidths(nsIRenderingContext* aRendering
         pref_pct_expand += add;
     }
 
-    float p2t = mTableFrame->GetPresContext()->ScaledPixelsToTwips();
-    min = nsTableFrame::RoundToPixel(min, p2t);
-    pref = nsTableFrame::RoundToPixel(pref, p2t);
-    pref_pct_expand = nsTableFrame::RoundToPixel(pref_pct_expand, p2t);
+    min = nsTableFrame::RoundToPixel(min);
+    pref = nsTableFrame::RoundToPixel(pref);
+    pref_pct_expand = nsTableFrame::RoundToPixel(pref_pct_expand);
 
     mMinWidth = min;
     mPrefWidth = pref;
@@ -636,7 +634,6 @@ BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
         return; // nothing to do
 
     nscoord spacing = mTableFrame->GetCellSpacingX();
-    float p2t = mTableFrame->GetPresContext()->ScaledPixelsToTwips();
 
     nscoord min = mMinWidth;
 
@@ -877,7 +874,7 @@ BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
                      "assigned width smaller than min");
 
         nscoord new_x = prev_x + col_width;
-        nscoord new_x_round = nsTableFrame::RoundToPixel(new_x, p2t);
+        nscoord new_x_round = nsTableFrame::RoundToPixel(new_x);
 
         nscoord old_final = colFrame->GetFinalWidth();
         nscoord new_final = new_x_round - prev_x_round;

@@ -435,7 +435,7 @@ nsHTMLScrollFrame::ReflowScrolledFrame(const ScrollReflowState& aState,
   }
   // pixel align the content
   nsPresContext* presContext = GetPresContext();
-  nscoord twp = presContext->IntScaledPixelsToTwips(1);
+  nscoord twp = nsPresContext::CSSPixelsToAppUnits(1);
   availWidth -=  availWidth % twp;
 
   if (!aFirstPass)
@@ -1238,7 +1238,6 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter,
     mScrolledFrame(nsnull),
     mScrollCornerBox(nsnull),
     mOuter(aOuter),
-    mOnePixel(20),
     mRestoreRect(-1, -1, -1, -1),
     mLastPos(-1, -1),
     mNeverHasVerticalScrollbar(PR_FALSE),
@@ -2298,7 +2297,6 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
                "This should have been suppressed");
     
   nsPresContext* presContext = aState.PresContext();
-  mOnePixel = presContext->IntScaledPixelsToTwips(1);
   const nsStyleFont* font = mOuter->GetStyleFont();
   const nsFont& f = font->mFont;
   nsCOMPtr<nsIFontMetrics> fm = presContext->GetMetricsFor(f);
@@ -2351,7 +2349,7 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     SetScrollbarEnabled(mHScrollbarBox, maxX - minX);
     SetCoordAttribute(mHScrollbarBox, nsGkAtoms::maxpos, maxX - minX);
     SetCoordAttribute(mHScrollbarBox, nsGkAtoms::pageincrement, nscoord(float(aScrollArea.width)*0.8));
-    SetCoordAttribute(mHScrollbarBox, nsGkAtoms::increment, 10*mOnePixel);
+    SetCoordAttribute(mHScrollbarBox, nsGkAtoms::increment, nsPresContext::CSSPixelsToAppUnits(10));
 
     nsRect hRect(aScrollArea);
     hRect.height = aContentArea.height - aScrollArea.height;
@@ -2454,7 +2452,7 @@ PRBool
 nsGfxScrollFrameInner::SetCoordAttribute(nsIBox* aBox, nsIAtom* aAtom, nscoord aSize, PRBool aReflow)
 {
   // convert to pixels
-  aSize /= mOnePixel;
+  aSize = nsPresContext::AppUnitsToIntCSSPixels(aSize);
 
   // only set the attribute if it changed.
 
@@ -2533,7 +2531,7 @@ nsGfxScrollFrameInner::GetCoordAttribute(nsIBox* aBox, nsIAtom* atom, PRInt32 de
       PRInt32 error;
 
       // convert it to an integer
-      defaultValue = value.ToInteger(&error) * mOnePixel;
+      defaultValue = nsPresContext::CSSPixelsToAppUnits(value.ToInteger(&error));
     }
   }
 

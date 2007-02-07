@@ -115,12 +115,10 @@ nsresult nsRenderingContextImpl::AllocateBackbuffer(const nsRect &aRequestedSize
     } else {
       SelectOffScreenDrawingSurface(gBackbuffer);
 
-      float p2t;
       nsCOMPtr<nsIDeviceContext>  dx;
       GetDeviceContext(*getter_AddRefs(dx));
-      p2t = dx->DevUnitsToAppUnits();
       nsRect bounds = aRequestedSize;
-      bounds *= p2t;
+      bounds *= dx->AppUnitsPerDevPixel();
 
       SetClipRect(bounds, nsClipCombine_kReplace);
     }
@@ -229,17 +227,16 @@ void nsRenderingContextImpl::GetDrawingSurfaceSize(const nsRect& aMaxBackbufferS
 void nsRenderingContextImpl::CalculateDiscreteSurfaceSize(const nsRect& aMaxBackbufferSize, const nsRect& aRequestedSize, nsRect& aSurfaceSize) 
 {
   // Get the height and width of the screen
-  PRInt32 height;
-  PRInt32 width;
+  nscoord height;
+  nscoord width;
 
   nsCOMPtr<nsIDeviceContext>  dx;
   GetDeviceContext(*getter_AddRefs(dx));
   dx->GetDeviceSurfaceDimensions(width, height);
 
-  float devUnits;
-  devUnits = dx->DevUnitsToAppUnits();
-  PRInt32 screenHeight = NSToIntRound(float( height) / devUnits );
-  PRInt32 screenWidth = NSToIntRound(float( width) / devUnits );
+  PRInt32 p2a = dx->AppUnitsPerDevPixel();
+  PRInt32 screenHeight = NSAppUnitsToIntPixels(height, p2a);
+  PRInt32 screenWidth = NSAppUnitsToIntPixels(width, p2a);
 
   // These tests must go from smallest rectangle to largest rectangle.
 

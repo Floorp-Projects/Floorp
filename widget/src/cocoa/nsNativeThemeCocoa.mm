@@ -273,7 +273,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
 
   nsCOMPtr<nsIDeviceContext> dctx;
   aContext->GetDeviceContext(*getter_AddRefs(dctx));
-  float t2p = dctx->TwipsToDevUnits();
+  PRInt32 p2a = dctx->AppUnitsPerDevPixel();
 
   nsRefPtr<gfxContext> thebesCtx = (gfxContext*)
     aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
@@ -339,10 +339,10 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
   }
 #endif
 
-  CGRect macRect = CGRectMake(NSTwipsToIntPixels(aRect.x, t2p),
-                              NSTwipsToIntPixels(aRect.y, t2p),
-                              NSTwipsToIntPixels(aRect.width, t2p),
-                              NSTwipsToIntPixels(aRect.height, t2p));
+  CGRect macRect = CGRectMake(NSAppUnitsToIntPixels(aRect.x, p2a),
+                              NSAppUnitsToIntPixels(aRect.y, p2a),
+                              NSAppUnitsToIntPixels(aRect.width, p2a),
+                              NSAppUnitsToIntPixels(aRect.height, p2a));
   macRect.origin.x -= offsetX;
   macRect.origin.y -= offsetY;
 

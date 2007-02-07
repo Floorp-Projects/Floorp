@@ -63,7 +63,7 @@ nsListBoxLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, ns
 
   nsListBoxBodyFrame* frame = NS_STATIC_CAST(nsListBoxBodyFrame*, aBox);
   if (frame) {
-    nscoord rowheight = frame->GetRowHeightTwips();
+    nscoord rowheight = frame->GetRowHeightAppUnits();
     aSize.height = frame->GetRowCount() * rowheight;
     // Pad the height.
     nscoord y = frame->GetAvailableHeight();
@@ -89,7 +89,7 @@ nsListBoxLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsS
 
   nsListBoxBodyFrame* frame = NS_STATIC_CAST(nsListBoxBodyFrame*, aBox);
   if (frame) {
-    nscoord rowheight = frame->GetRowHeightTwips();
+    nscoord rowheight = frame->GetRowHeightAppUnits();
     aSize.height = frame->GetRowCount() * rowheight;
     // Pad the height.
     nscoord y = frame->GetAvailableHeight();
@@ -115,7 +115,7 @@ nsListBoxLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsS
 
   nsListBoxBodyFrame* frame = NS_STATIC_CAST(nsListBoxBodyFrame*, aBox);
   if (frame) {
-    nscoord rowheight = frame->GetRowHeightTwips();
+    nscoord rowheight = frame->GetRowHeightAppUnits();
     aSize.height = frame->GetRowCount() * rowheight;
     // Pad the height.
     nscoord y = frame->GetAvailableHeight();
@@ -140,7 +140,7 @@ nsListBoxLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
   frame->GetIndexOfFirstVisibleRow(&index);
   if (index > 0) {
     nscoord pos = frame->GetYPosition();
-    PRInt32 rowHeight = frame->GetRowHeightTwips();
+    PRInt32 rowHeight = frame->GetRowHeightAppUnits();
     if (pos != (rowHeight*index)) {
       frame->VerticalScroll(rowHeight*index);
       frame->Redraw(aState, nsnull, PR_FALSE);
@@ -195,7 +195,7 @@ nsListBoxLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
   body->GetChildBox(&box);
 
   // if the reason is resize or initial we must relayout.
-  nscoord rowHeight = body->GetRowHeightTwips();
+  nscoord rowHeight = body->GetRowHeightAppUnits();
 
   while (box) {
     // If this box is dirty or if it has dirty children, we

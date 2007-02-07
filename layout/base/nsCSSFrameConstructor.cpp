@@ -6205,22 +6205,6 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
                                                 PRBool                   aIsRoot,
                                                 nsIFrame*&               aNewFrame)
 {
-  // Check to see the type of parent frame so we know whether we need to 
-  // turn off/on scaling for the scrollbars
-  //
-  // If the parent is a viewportFrame then we are the scrollbars for the UI
-  // if not then we are scrollbars inside the document.
-  PRBool noScalingOfTwips = PR_FALSE;
-  PRBool isPrintPreview =
-    aState.mPresContext->Type() == nsPresContext::eContext_PrintPreview;
-
-  if (isPrintPreview) {
-    noScalingOfTwips = aParentFrame->GetType() == nsGkAtoms::viewportFrame;
-    if (noScalingOfTwips) {
-      aState.mPresContext->SetScalingOfTwips(PR_FALSE);
-    }
-  }
-
   nsIFrame* parentFrame = nsnull;
   nsIFrame* gfxScrollFrame = aNewFrame;
 
@@ -6262,11 +6246,7 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
      gfxScrollFrame->SetInitialChildList(nsnull, anonymousItems.childList);
   }
 
-  if (isPrintPreview && noScalingOfTwips) {
-    aState.mPresContext->SetScalingOfTwips(PR_TRUE);
-  }
-
-  return aScrolledChildStyle;;
+  return aScrolledChildStyle;
 }
 
 void

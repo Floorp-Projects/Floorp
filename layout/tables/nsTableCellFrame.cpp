@@ -292,15 +292,15 @@ nsTableCellFrame::DecorateForSelection(nsIRenderingContext& aRenderingContext,
           GetColor(nsILookAndFeel::eColor_TextSelectBackground,
                    bordercolor);
       }
-      GET_PIXELS_TO_TWIPS(presContext, p2t);
-      if ((mRect.width >(3*p2t)) && (mRect.height > (3*p2t)))
+      nscoord threePx = nsPresContext::CSSPixelsToAppUnits(3);
+      if ((mRect.width > threePx) && (mRect.height > threePx))
       {
         //compare bordercolor to ((nsStyleColor *)myColor)->mBackgroundColor)
         bordercolor = EnsureDifferentColors(bordercolor,
                                             GetStyleBackground()->mBackgroundColor);
         nsIRenderingContext::AutoPushTranslation
             translate(&aRenderingContext, aPt.x, aPt.y);
-        nscoord onePixel = NSToCoordRound(p2t);
+        nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
 
         aRenderingContext.SetColor(bordercolor);
         aRenderingContext.DrawLine(onePixel, 0, mRect.width, 0);
@@ -518,10 +518,8 @@ void nsTableCellFrame::VerticallyAlignChild(nscoord aMaxAscent)
 {
   const nsStyleTextReset* textStyle = GetStyleTextReset();
   /* It's the 'border-collapse' on the table that matters */
-  nsPresContext* presContext = GetPresContext();
-  GET_PIXELS_TO_TWIPS(presContext, p2t);
   nsMargin borderPadding = GetUsedBorderAndPadding();
-  
+
   nscoord topInset = borderPadding.top;
   nscoord bottomInset = borderPadding.bottom;
 
@@ -571,7 +569,7 @@ void nsTableCellFrame::VerticallyAlignChild(nscoord aMaxAscent)
     case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
       // Align the middle of the child frame with the middle of the content area, 
       kidYTop = (height - childHeight - bottomInset + topInset) / 2;
-      kidYTop = nsTableFrame::RoundToPixel(kidYTop, p2t, eAlwaysRoundDown);
+      kidYTop = nsTableFrame::RoundToPixel(kidYTop, eAlwaysRoundDown);
   }
   // if the content is larger than the cell height align from top
   kidYTop = PR_MAX(0, kidYTop);
@@ -589,7 +587,7 @@ void nsTableCellFrame::VerticallyAlignChild(nscoord aMaxAscent)
     nsContainerFrame::PositionChildViews(firstKid);
   }
   if (HasView()) {
-    nsContainerFrame::SyncFrameViewAfterReflow(presContext, this,
+    nsContainerFrame::SyncFrameViewAfterReflow(GetPresContext(), this,
                                                GetView(),
                                                &desiredSize.mOverflowArea, 0);
   }
@@ -691,9 +689,8 @@ nsTableCellFrame::IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext)
   result.hMargin = 0;
   result.hPctMargin = 0;
 
-  GET_PIXELS_TO_TWIPS(GetPresContext(), p2t);
   nsMargin border;
-  GetBorderWidth(p2t, border);
+  GetBorderWidth(border);
   result.hBorder = border.LeftRight();
 
   return result;
@@ -753,12 +750,11 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
 {
   DO_GLOBAL_REFLOW_COUNT("nsTableCellFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
-  GET_PIXELS_TO_TWIPS(aPresContext, p2t);
 
   // work around pixel rounding errors, round down to ensure we don't exceed the avail height in
   nscoord availHeight = aReflowState.availableHeight;
   if (NS_UNCONSTRAINEDSIZE != availHeight) {
-    availHeight = nsTableFrame::RoundToPixel(availHeight, p2t, eAlwaysRoundDown);
+    availHeight = nsTableFrame::RoundToPixel(availHeight, eAlwaysRoundDown);
   }
 
   // see if a special height reflow needs to occur due to having a pct height
@@ -774,7 +770,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
 
   nsMargin borderPadding = aReflowState.mComputedPadding;
   nsMargin border;
-  GetBorderWidth(p2t, border);
+  GetBorderWidth(border);
   borderPadding += border;
   
   nscoord topInset    = borderPadding.top;
@@ -852,7 +848,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
     cellHeight += topInset + bottomInset;
     // work around block rounding errors, round down to ensure we don't exceed the avail height in
     nsPixelRound roundMethod = (NS_UNCONSTRAINEDSIZE == availHeight) ? eAlwaysRoundUp : eAlwaysRoundDown;
-    cellHeight = nsTableFrame::RoundToPixel(cellHeight, p2t, roundMethod); 
+    cellHeight = nsTableFrame::RoundToPixel(cellHeight, roundMethod); 
   }
 
   // next determine the cell's width
@@ -862,7 +858,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
   if (NS_UNCONSTRAINEDSIZE != cellWidth) {
     cellWidth += leftInset + rightInset;    
   }
-  cellWidth = nsTableFrame::RoundToPixel(cellWidth, p2t); // work around block rounding errors
+  cellWidth = nsTableFrame::RoundToPixel(cellWidth); // work around block rounding errors
 
   // set the cell's desired size and max element size
   aDesiredSize.width   = cellWidth;
@@ -950,8 +946,7 @@ NS_NewTableCellFrame(nsIPresShell*   aPresShell,
 }
 
 nsMargin* 
-nsTableCellFrame::GetBorderWidth(float      aPixelsToTwips,
-                                 nsMargin&  aBorder) const
+nsTableCellFrame::GetBorderWidth(nsMargin&  aBorder) const
 {
   aBorder = GetStyleBorder()->GetBorder();
   return &aBorder;
@@ -999,7 +994,7 @@ nsBCTableCellFrame::GetType() const
 nsBCTableCellFrame::GetUsedBorder() const
 {
   nsMargin result;
-  GetBorderWidth(GetPresContext()->PixelsToTwips(), result);
+  GetBorderWidth(result);
   return result;
 }
 
@@ -1012,9 +1007,9 @@ nsBCTableCellFrame::GetFrameName(nsAString& aResult) const
 #endif
 
 nsMargin* 
-nsBCTableCellFrame::GetBorderWidth(float      aPixelsToTwips,
-                                   nsMargin&  aBorder) const
+nsBCTableCellFrame::GetBorderWidth(nsMargin&  aBorder) const
 {
+  PRInt32 aPixelsToTwips = nsPresContext::AppUnitsPerCSSPixel();
   aBorder.top    = BC_BORDER_BOTTOM_HALF_COORD(aPixelsToTwips, mTopBorder);
   aBorder.right  = BC_BORDER_LEFT_HALF_COORD(aPixelsToTwips, mRightBorder);
   aBorder.bottom = BC_BORDER_TOP_HALF_COORD(aPixelsToTwips, mBottomBorder);
@@ -1060,7 +1055,7 @@ nsBCTableCellFrame::SetBorderWidth(PRUint8 aSide,
 nsBCTableCellFrame::GetSelfOverflow(nsRect& aOverflowArea)
 {
   nsMargin halfBorder;
-  GET_PIXELS_TO_TWIPS(GetPresContext(), p2t);
+  PRInt32 p2t = nsPresContext::AppUnitsPerCSSPixel();
   halfBorder.top = BC_BORDER_TOP_HALF_COORD(p2t, mTopBorder);
   halfBorder.right = BC_BORDER_RIGHT_HALF_COORD(p2t, mRightBorder);
   halfBorder.bottom = BC_BORDER_BOTTOM_HALF_COORD(p2t, mBottomBorder);
@@ -1079,10 +1074,8 @@ nsBCTableCellFrame::PaintBackground(nsIRenderingContext& aRenderingContext,
 {
   // make border-width reflect the half of the border-collapse
   // assigned border that's inside the cell
-  nsPresContext* presContext = GetPresContext();
-  GET_PIXELS_TO_TWIPS(presContext, p2t);
   nsMargin borderWidth;
-  GetBorderWidth(p2t, borderWidth);
+  GetBorderWidth(borderWidth);
 
   nsStyleBorder myBorder(*GetStyleBorder());
 
@@ -1091,7 +1084,7 @@ nsBCTableCellFrame::PaintBackground(nsIRenderingContext& aRenderingContext,
   }
 
   nsRect rect(aPt, GetSize());
-  nsCSSRendering::PaintBackground(presContext, aRenderingContext, this,
+  nsCSSRendering::PaintBackground(GetPresContext(), aRenderingContext, this,
                                   aDirtyRect, rect, myBorder, *GetStylePadding(),
                                   PR_TRUE);
 }

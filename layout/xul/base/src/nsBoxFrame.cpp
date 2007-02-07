@@ -1250,11 +1250,6 @@ nsBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
   return rv;
 }
 
-
-#ifdef DEBUG_COELESCED
-static PRInt32 StyleCoelesced = 0;
-#endif
-
 #ifdef DEBUG_LAYOUT
 void
 nsBoxFrame::GetDebugPref(nsPresContext* aPresContext)
@@ -1709,7 +1704,7 @@ nsBoxFrame::GetInset(nsMargin& margin)
 void 
 nsBoxFrame::PixelMarginToTwips(nsPresContext* aPresContext, nsMargin& aMarginPixels)
 {
-  nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
+  nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
   aMarginPixels.left   *= onePixel;
   aMarginPixels.right  *= onePixel;
   aMarginPixels.top    *= onePixel;

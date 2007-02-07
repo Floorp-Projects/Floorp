@@ -64,11 +64,13 @@ public:
      * the next GetOrMakeTextRun call and the caller must not delete it.
      */
     gfxTextRun *GetOrMakeTextRun (gfxContext* aContext, gfxFontGroup *aFontGroup,
-                                  const char *aString, PRUint32 aLength, gfxFloat aDevToApp,
-                                  PRBool aIsRTL, PRBool aEnableSpacing, PRBool *aCallerOwns);
+                                  const char *aString, PRUint32 aLength,
+                                  PRUint32 aAppUnitsPerDevUnit, PRBool aIsRTL,
+                                  PRBool aEnableSpacing, PRBool *aCallerOwns);
     gfxTextRun *GetOrMakeTextRun (gfxContext* aContext, gfxFontGroup *aFontGroup,
-                                  const PRUnichar *aString, PRUint32 aLength, gfxFloat aDevToApp,
-                                  PRBool aIsRTL, PRBool aEnableSpacing, PRBool *aCallerOwns);
+                                  const PRUnichar *aString, PRUint32 aLength,
+                                  PRUint32 aAppUnitsPerDevUnit, PRBool aIsRTL,
+                                  PRBool aEnableSpacing, PRBool *aCallerOwns);
 
 protected:
     gfxTextRunCache();

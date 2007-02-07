@@ -506,10 +506,9 @@ CanvasFrame::PaintFocus(nsIRenderingContext& aRenderingContext, nsPoint aPt)
     return;
   }
 
-  float p2t = GetPresContext()->PixelsToTwips();
   // XXX the CSS border for links is specified as 2px, but it
   // is only drawn as 1px.  Match this here.
-  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+  nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
 
   nsRect borderInside(focusRect.x + onePixel,
                       focusRect.y + onePixel,

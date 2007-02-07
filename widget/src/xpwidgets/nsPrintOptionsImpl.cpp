@@ -119,8 +119,6 @@ static NS_DEFINE_IID(kPrinterEnumeratorCID, NS_PRINTER_ENUMERATOR_CID);
 
 
 nsPrintOptions::nsPrintOptions()
-: mDefaultFont("Times", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-               NS_FONT_WEIGHT_NORMAL, 0, NSIntPointsToTwips(10))
 {
 }
 
@@ -210,32 +208,6 @@ nsPrinterListEnumerator::GetNext(nsISupports **aPrinter)
   printerNameWrapper->SetData(nsDependentString(printerName));
   *aPrinter = NS_STATIC_CAST(nsISupports*, printerNameWrapper);
   NS_ADDREF(*aPrinter);
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsPrintOptions::SetFontNamePointSize(const nsAString& aFontName,
-                                     PRInt32 aPointSize)
-{
-  if (!aFontName.IsEmpty())
-    mDefaultFont.name = aFontName;
-  if (aPointSize > 0)
-    mDefaultFont.size = NSIntPointsToTwips(aPointSize);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrintOptions::SetDefaultFont(nsFont &aFont)
-{
-  mDefaultFont = aFont;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrintOptions::GetDefaultFont(nsFont &aFont)
-{
-  aFont = mDefaultFont;
   return NS_OK;
 }
 

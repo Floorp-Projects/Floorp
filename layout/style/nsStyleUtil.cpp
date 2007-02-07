@@ -220,20 +220,16 @@ nsStyleUtil::CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
   }
 
   // Make special call specifically for fonts (needed PrintPreview)
-  PRInt32 fontSize = NSTwipsToIntPixels(aBasePointSize,
-                                        aPresContext->TwipsToPixelsForFonts());
+  PRInt32 fontSize = nsPresContext::AppUnitsToIntCSSPixels(aBasePointSize);
 
   if ((fontSize >= sFontSizeTableMin) && (fontSize <= sFontSizeTableMax))
   {
-    float p2t;
-    p2t = aPresContext->PixelsToTwips();
-
     PRInt32 row = fontSize - sFontSizeTableMin;
 
 	  if (aPresContext->CompatibilityMode() == eCompatibility_NavQuirks) {
-	    dFontSize = NSIntPixelsToTwips(sQuirksFontSizeTable[row][column[aHTMLSize]], p2t);
+	    dFontSize = nsPresContext::CSSPixelsToAppUnits(sQuirksFontSizeTable[row][column[aHTMLSize]]);
 	  } else {
-	    dFontSize = NSIntPixelsToTwips(sStrictFontSizeTable[row][column[aHTMLSize]], p2t);
+	    dFontSize = nsPresContext::CSSPixelsToAppUnits(sStrictFontSizeTable[row][column[aHTMLSize]]);
 	  }
   }
   else
@@ -269,12 +265,9 @@ nscoord nsStyleUtil::FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePoi
   nscoord largestIndexFontSize;
   nscoord smallerIndexFontSize;
   nscoord largerIndexFontSize;
-  float p2t;
-  nscoord onePx;
-  
-  p2t = aPresContext->PixelsToTwips();
-  onePx = NSToCoordRound(p2t);
-    
+
+  nscoord onePx = nsPresContext::CSSPixelsToAppUnits(1);
+
 	if (aFontSizeType == eFontSize_HTML) {
 		indexMin = 1;
 		indexMax = 7;
@@ -337,12 +330,9 @@ nscoord nsStyleUtil::FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePoin
   nscoord largestIndexFontSize;
   nscoord smallerIndexFontSize;
   nscoord largerIndexFontSize;
-  float p2t;
-  nscoord onePx;
-  
-  p2t = aPresContext->PixelsToTwips();
-  onePx = NSToCoordRound(p2t);
-    
+
+  nscoord onePx = nsPresContext::CSSPixelsToAppUnits(1);
+
 	if (aFontSizeType == eFontSize_HTML) {
 		indexMin = 1;
 		indexMax = 7;
@@ -382,9 +372,7 @@ nscoord nsStyleUtil::FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePoin
     }
   }
   else { // smaller than HTML table, increase by 1px
-    float p2t;
-    p2t = aPresContext->PixelsToTwips();
-    largerSize = aFontSize + NSToCoordRound(p2t); 
+    largerSize = aFontSize + onePx; 
   }
   return largerSize;
 }

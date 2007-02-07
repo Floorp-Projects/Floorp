@@ -111,9 +111,9 @@ public:
   /** convenience method, calls into cellmap */
   PRInt32 Count() const;
 
-  nscoord GetLeftBorderWidth(float* aPixelsToTwips = nsnull);
+  nscoord GetLeftBorderWidth();
   void    SetLeftBorderWidth(BCPixelSize aWidth);
-  nscoord GetRightBorderWidth(float* aPixelsToTwips = nsnull);
+  nscoord GetRightBorderWidth();
   void    SetRightBorderWidth(BCPixelSize aWidth);
 
   /**
@@ -124,8 +124,7 @@ public:
    *
    * @return outer right border width (left inner for next column)
    */
-  nscoord GetContinuousBCBorderWidth(float     aPixelsToTwips,
-                                     nsMargin& aBorder);
+  nscoord GetContinuousBCBorderWidth(nsMargin& aBorder);
   /**
    * Set full border widths before collapsing with cell borders
    * @param aForSide - side to set; only valid for top, right, and bottom
@@ -288,10 +287,9 @@ inline void nsTableColFrame::SetColIndex (PRInt32 aColIndex)
   mColIndex = aColIndex; 
 }
 
-inline nscoord nsTableColFrame::GetLeftBorderWidth(float*  aPixelsToTwips)
+inline nscoord nsTableColFrame::GetLeftBorderWidth()
 {
-  nscoord width = (aPixelsToTwips) ? NSToCoordRound(*aPixelsToTwips * mLeftBorderWidth) : mLeftBorderWidth;
-  return width;
+  return mLeftBorderWidth;
 }
 
 inline void nsTableColFrame::SetLeftBorderWidth(BCPixelSize aWidth)
@@ -299,10 +297,9 @@ inline void nsTableColFrame::SetLeftBorderWidth(BCPixelSize aWidth)
   mLeftBorderWidth = aWidth;
 }
 
-inline nscoord nsTableColFrame::GetRightBorderWidth(float*  aPixelsToTwips)
+inline nscoord nsTableColFrame::GetRightBorderWidth()
 {
-  nscoord width = (aPixelsToTwips) ? NSToCoordRound(*aPixelsToTwips * mRightBorderWidth) : mRightBorderWidth;
-  return width;
+  return mRightBorderWidth;
 }
 
 inline void nsTableColFrame::SetRightBorderWidth(BCPixelSize aWidth)
@@ -311,9 +308,9 @@ inline void nsTableColFrame::SetRightBorderWidth(BCPixelSize aWidth)
 }
 
 inline nscoord
-nsTableColFrame::GetContinuousBCBorderWidth(float     aPixelsToTwips,
-                                            nsMargin& aBorder)
+nsTableColFrame::GetContinuousBCBorderWidth(nsMargin& aBorder)
 {
+  PRInt32 aPixelsToTwips = nsPresContext::AppUnitsPerCSSPixel();
   aBorder.top = BC_BORDER_BOTTOM_HALF_COORD(aPixelsToTwips,
                                             mTopContBorderWidth);
   aBorder.right = BC_BORDER_LEFT_HALF_COORD(aPixelsToTwips,

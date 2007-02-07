@@ -658,10 +658,9 @@ nsLayoutUtils::TranslateWidgetToView(nsPresContext* aPresContext,
   nsPoint viewToWidget;
   nsIWidget* wid = baseView->GetNearestWidget(&viewToWidget);
   NS_ASSERTION(aWidget == wid, "Clashing widgets");
-  float pixelsToTwips = aPresContext->PixelsToTwips();
-  nsPoint refPointTwips(NSIntPixelsToTwips(aPt.x, pixelsToTwips),
-                        NSIntPixelsToTwips(aPt.y, pixelsToTwips));
-  return refPointTwips - viewToWidget - aView->GetOffsetTo(baseView);
+  nsPoint refPointAppUnits(aPresContext->DevPixelsToAppUnits(aPt.x),
+                           aPresContext->DevPixelsToAppUnits(aPt.y));
+  return refPointAppUnits - viewToWidget - aView->GetOffsetTo(baseView);
 }
 
 // Combine aNewBreakType with aOrigBreakType, but limit the break types
@@ -1397,9 +1396,7 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
       GetMinimumWidgetSize(aRenderingContext, aFrame, disp->mAppearance,
                            &size, &canOverride);
 
-    // GMWS() returns size in pixels, we need to convert it back to twips
-    float p2t = presContext->ScaledPixelsToTwips();
-    nscoord themeWidth = NSIntPixelsToTwips(size.width, p2t);
+    nscoord themeWidth = presContext->DevPixelsToAppUnits(size.width);
 
     // GMWS() returns a border-box width
     themeWidth += offsets.hMargin;

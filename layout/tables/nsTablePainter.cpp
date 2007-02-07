@@ -240,7 +240,6 @@ TableBackgroundPainter::TableBackgroundPainter(nsTableFrame*        aTableFrame,
 
   mZeroPadding.RecalcData();
 
-  mP2t = mPresContext->ScaledPixelsToTwips();
   mIsBorderCollapse = aTableFrame->IsBorderCollapse();
 #ifdef DEBUG
   mCompatMode = mPresContext->CompatibilityMode();
@@ -291,20 +290,20 @@ TableBackgroundPainter::PaintTableFrame(nsTableFrame*         aTableFrame,
       nsMargin border, tempBorder;
       nsTableColFrame* colFrame = aTableFrame->GetColFrame(mNumCols - 1);
       if (colFrame) {
-        colFrame->GetContinuousBCBorderWidth(mP2t, tempBorder);
+        colFrame->GetContinuousBCBorderWidth(tempBorder);
       }
       border.right = tempBorder.right;
 
-      aLastRowGroup->GetContinuousBCBorderWidth(mP2t, tempBorder);
+      aLastRowGroup->GetContinuousBCBorderWidth(tempBorder);
       border.bottom = tempBorder.bottom;
 
       nsTableRowFrame* rowFrame = aFirstRowGroup->GetFirstRow();
       if (rowFrame) {
-        rowFrame->GetContinuousBCBorderWidth(mP2t, tempBorder);
+        rowFrame->GetContinuousBCBorderWidth(tempBorder);
         border.top = tempBorder.top;
       }
 
-      border.left = aTableFrame->GetContinuousLeftBCBorderWidth(mP2t);
+      border.left = aTableFrame->GetContinuousLeftBCBorderWidth();
 
       nsresult rv = tableData.SetBCBorder(border, this);
       if (NS_FAILED(rv)) {
@@ -381,7 +380,7 @@ TableBackgroundPainter::PaintTable(nsTableFrame* aTableFrame,
     /* BC left borders aren't stored on cols, but the previous column's
        right border is the next one's left border.*/
     //Start with table's left border.
-    nscoord lastLeftBorder = aTableFrame->GetContinuousLeftBCBorderWidth(mP2t);
+    nscoord lastLeftBorder = aTableFrame->GetContinuousLeftBCBorderWidth();
     for (nsTableColGroupFrame* cgFrame = NS_STATIC_CAST(nsTableColGroupFrame*, colGroupList.FirstChild());
          cgFrame; cgFrame = NS_STATIC_CAST(nsTableColGroupFrame*, cgFrame->GetNextSibling())) {
 
@@ -396,7 +395,7 @@ TableBackgroundPainter::PaintTable(nsTableFrame* aTableFrame,
       cgData->SetFull(cgFrame);
       if (mIsBorderCollapse && cgData->ShouldSetBCBorder()) {
         border.left = lastLeftBorder;
-        cgFrame->GetContinuousBCBorderWidth(mP2t, border);
+        cgFrame->GetContinuousBCBorderWidth(border);
         nsresult rv = cgData->SetBCBorder(border, this);
         if (NS_FAILED(rv)) {
           cgData->Destroy(mPresContext);
@@ -424,7 +423,7 @@ TableBackgroundPainter::PaintTable(nsTableFrame* aTableFrame,
         cgDataOwnershipTaken = PR_TRUE;
         if (mIsBorderCollapse) {
           border.left = lastLeftBorder;
-          lastLeftBorder = col->GetContinuousBCBorderWidth(mP2t, border);
+          lastLeftBorder = col->GetContinuousBCBorderWidth(border);
           if (mCols[colIndex].mCol.ShouldSetBCBorder()) {
             nsresult rv = mCols[colIndex].mCol.SetBCBorder(border, this);
             if (NS_FAILED(rv)) return rv;
@@ -472,11 +471,11 @@ TableBackgroundPainter::PaintRowGroup(nsTableRowGroupFrame* aFrame,
       nsMargin border;
       if (firstRow) {
         //pick up first row's top border (= rg top border)
-        firstRow->GetContinuousBCBorderWidth(mP2t, border);
+        firstRow->GetContinuousBCBorderWidth(border);
         /* (row group doesn't store its top border) */
       }
       //overwrite sides+bottom borders with rg's own
-      aFrame->GetContinuousBCBorderWidth(mP2t, border);
+      aFrame->GetContinuousBCBorderWidth(border);
       nsresult res = mRowGroup.SetBCBorder(border, this);
       if (!NS_SUCCEEDED(res)) {
         return res;
@@ -561,14 +560,14 @@ TableBackgroundPainter::PaintRow(nsTableRowFrame* aFrame,
       nsMargin border;
       nsTableRowFrame* nextRow = aFrame->GetNextRow();
       if (nextRow) { //outer top below us is inner bottom for us
-        border.bottom = nextRow->GetOuterTopContBCBorderWidth(mP2t);
+        border.bottom = nextRow->GetOuterTopContBCBorderWidth();
       }
       else { //acquire rg's bottom border
         nsTableRowGroupFrame* rowGroup = NS_STATIC_CAST(nsTableRowGroupFrame*, aFrame->GetParent());
-        rowGroup->GetContinuousBCBorderWidth(mP2t, border);
+        rowGroup->GetContinuousBCBorderWidth(border);
       }
       //get the rest of the borders; will overwrite all but bottom
-      aFrame->GetContinuousBCBorderWidth(mP2t, border);
+      aFrame->GetContinuousBCBorderWidth(border);
 
       nsresult res = mRow.SetBCBorder(border, this);
       if (!NS_SUCCEEDED(res)) {

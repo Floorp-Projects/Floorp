@@ -1113,6 +1113,7 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
 
   // Set up the variables we need, return true if we can't get at them all
   const PRUint16 kMinPixels  = 12;
+  PRUint16 minPixels = nsPresContext::CSSPixelsToAppUnits(kMinPixels);
 
   nsIViewManager* viewManager = aPresShell->GetViewManager();
   if (!viewManager)
@@ -1124,8 +1125,6 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   // for only needs to be a rough indicator
   nsIView *containingView = nsnull;
   nsPoint frameOffset;
-  float p2t;
-  p2t = aPresContext->PixelsToTwips();
   nsRectVisibility rectVisibility = nsRectVisibility_kAboveViewport;
 
   if (!aGetTopVisibleLeaf) {
@@ -1138,8 +1137,7 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
     relFrameRect.y = frameOffset.y;
 
     viewManager->GetRectVisibility(containingView, relFrameRect,
-                                   NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)),
-                                   &rectVisibility);
+                                   minPixels, &rectVisibility);
 
     if (rectVisibility != nsRectVisibility_kAboveViewport &&
         rectVisibility != nsRectVisibility_kZeroAreaRect) {
@@ -1178,8 +1176,7 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
       relFrameRect.x = frameOffset.x;
       relFrameRect.y = frameOffset.y;
       viewManager->GetRectVisibility(containingView, relFrameRect,
-                                     NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)),
-                                     &rectVisibility);
+                                     minPixels, &rectVisibility);
     }
   }
 

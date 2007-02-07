@@ -77,12 +77,12 @@ nsThebesFontMetrics::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     mFont = aFont;
     mLangGroup = aLangGroup;
     mDeviceContext = (nsThebesDeviceContext*)aContext;
-    mDev2App = aContext->DevUnitsToAppUnits();
+    mP2A = mDeviceContext->AppUnitsPerDevPixel();
     mIsRightToLeft = PR_FALSE;
     mTextRunRTL = PR_FALSE;
 
     // work around layout giving us 0 sized fonts...
-    double size = aFont.size * mDeviceContext->AppUnitsToDevUnits();
+    double size = NSAppUnitsToFloatPixels(aFont.size, mP2A);
     if (size == 0.0)
         size = 1.0;
 
@@ -119,7 +119,8 @@ nsThebesFontMetrics::Destroy()
     return NS_OK;
 }
 
-#define ROUND_TO_TWIPS(x) (nscoord)floor(((x) * mDev2App) + 0.5)
+// XXXTODO get rid of this macro
+#define ROUND_TO_TWIPS(x) (nscoord)floor(((x) * mP2A) + 0.5)
 
 const gfxFont::Metrics& nsThebesFontMetrics::GetMetrics() const
 {

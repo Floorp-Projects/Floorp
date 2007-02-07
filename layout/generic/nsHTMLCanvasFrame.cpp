@@ -76,9 +76,7 @@ nsHTMLCanvasFrame::GetCanvasSize()
     h = w = 1;
   }
 
-  float p2t = GetPresContext()->PixelsToTwips();
-
-  return nsSize(NSIntPixelsToTwips(w, p2t), NSIntPixelsToTwips(h, p2t));
+  return nsSize(w, h);
 }
 
 /* virtual */ nscoord
@@ -86,7 +84,7 @@ nsHTMLCanvasFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 {
   // XXX The caller doesn't account for constraints of the height,
   // min-height, and max-height properties.
-  nscoord result = GetCanvasSize().width;
+  nscoord result = nsPresContext::CSSPixelsToAppUnits(GetCanvasSize().width);
   DISPLAY_MIN_WIDTH(this, result);
   return result;
 }
@@ -96,7 +94,7 @@ nsHTMLCanvasFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
 {
   // XXX The caller doesn't account for constraints of the height,
   // min-height, and max-height properties.
-  nscoord result = GetCanvasSize().width;
+  nscoord result = nsPresContext::CSSPixelsToAppUnits(GetCanvasSize().width);
   DISPLAY_PREF_WIDTH(this, result);
   return result;
 }
@@ -107,7 +105,9 @@ nsHTMLCanvasFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
                                nsSize aMargin, nsSize aBorder, nsSize aPadding,
                                PRBool aShrinkWrap)
 {
-  nsSize canvasSize = GetCanvasSize();
+  nsSize size = GetCanvasSize();
+  nsSize canvasSize(nsPresContext::CSSPixelsToAppUnits(size.width),
+                    nsPresContext::CSSPixelsToAppUnits(size.height));
 
   return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
                             aRenderingContext, this, canvasSize,
@@ -183,13 +183,15 @@ nsHTMLCanvasFrame::PaintCanvas(nsIRenderingContext& aRenderingContext,
     return;
 
   nsSize canvasSize = GetCanvasSize();
+  nsSize sizeAppUnits(GetPresContext()->DevPixelsToAppUnits(canvasSize.width),
+                      GetPresContext()->DevPixelsToAppUnits(canvasSize.height));
 
   // XXXvlad clip to aDirtyRect!
 
-  if (inner.Size() != canvasSize)
+  if (inner.Size() != sizeAppUnits)
   {
-    float sx = inner.width / (float) canvasSize.width;
-    float sy = inner.height / (float) canvasSize.height;
+    float sx = inner.width / (float) sizeAppUnits.width;
+    float sy = inner.height / (float) sizeAppUnits.height;
 
     aRenderingContext.PushState();
     aRenderingContext.Translate(inner.x, inner.y);

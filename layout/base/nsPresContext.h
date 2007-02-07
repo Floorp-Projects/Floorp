@@ -48,7 +48,6 @@
 #include "nsIPresShell.h"
 #include "nsRect.h"
 #include "nsIDeviceContext.h"
-#include "nsHashtable.h"
 #include "nsFont.h"
 #include "nsIWeakReference.h"
 #include "nsITheme.h"
@@ -60,6 +59,8 @@
 #include "nsPropertyTable.h"
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
+#include "nsInterfaceHashtable.h"
+class nsImageLoader;
 #ifdef IBMBIDI
 class nsBidiPresUtils;
 #endif // IBMBIDI
@@ -425,29 +426,15 @@ public:
     { mIsRootPaginatedDocument = aIsRootPaginatedDocument; }
 
   /**
-   * Conversion from device pixels to twips.
-   * WARNING: The misuse of this function to convert CSS pixels to twips 
-   * will cause problems during printing
-   */
-  float PixelsToTwips() const { return mDeviceContext->DevUnitsToAppUnits(); }
+  * Get/set the print scaling level; used by nsPageFrame to scale up
+  * pages.  Set safe to call before reflow, get guaranteed to be set
+  * properly after reflow.
+  */
 
-  float TwipsToPixels() const { return mDeviceContext->AppUnitsToDevUnits(); }
+  float GetPageScale() { return mPageScale; }
+  void SetPageScale(float aScale) { mPageScale = aScale; }
 
-  NS_HIDDEN_(float) TwipsToPixelsForFonts() const;
 
-  //XXX this is probably not an ideal name. MMP
-  /** 
-   * Do CSS pixels to twips conversion taking into account
-   * differing size of a "pixel" from device to device.
-   */
-  NS_HIDDEN_(float) ScaledPixelsToTwips() const;
-
-  /* Convenience method for converting one pixel value to twips */
-  nscoord IntScaledPixelsToTwips(nscoord aPixels) const
-  { return NSIntPixelsToTwips(aPixels, ScaledPixelsToTwips()); }
-
-  /* Set whether twip scaling is used */
-  void SetScalingOfTwips(PRBool aOn) { mDoScaledTwips = aOn; }
 
   nsIDeviceContext* DeviceContext() { return mDeviceContext; }
   nsIEventStateManager* EventStateManager() { return mEventManager; }
@@ -465,7 +452,47 @@ public:
   void SetTextZoom(float aZoom) { SetTextZoomExternal(aZoom); }
 #endif
 
+  static PRInt32 AppUnitsPerCSSPixel() { return nsIDeviceContext::AppUnitsPerCSSPixel(); }
+  PRInt32 AppUnitsPerDevPixel() const  { return mDeviceContext->AppUnitsPerDevPixel(); }
+  PRInt32 AppUnitsPerInch() const      { return mDeviceContext->AppUnitsPerInch(); }
 
+  static nscoord CSSPixelsToAppUnits(PRInt32 aPixels)
+  { return NSIntPixelsToAppUnits(aPixels,
+                                 nsIDeviceContext::AppUnitsPerCSSPixel()); }
+
+  static nscoord CSSPixelsToAppUnits(float aPixels)
+  { return NSFloatPixelsToAppUnits(aPixels,
+                                   nsIDeviceContext::AppUnitsPerCSSPixel()); }
+
+  static PRInt32 AppUnitsToIntCSSPixels(nscoord aAppUnits)
+  { return NSAppUnitsToIntPixels(aAppUnits,
+                                 nsIDeviceContext::AppUnitsPerCSSPixel()); }
+
+  static float AppUnitsToFloatCSSPixels(nscoord aAppUnits)
+  { return NSAppUnitsToFloatPixels(aAppUnits,
+                                   nsIDeviceContext::AppUnitsPerCSSPixel()); }
+
+  nscoord DevPixelsToAppUnits(PRInt32 aPixels) const
+  { return NSIntPixelsToAppUnits(aPixels,
+                                 mDeviceContext->AppUnitsPerDevPixel()); }
+
+  PRInt32 AppUnitsToDevPixels(nscoord aAppUnits) const
+  { return NSAppUnitsToIntPixels(aAppUnits,
+                                 mDeviceContext->AppUnitsPerDevPixel()); }
+
+  nscoord TwipsToAppUnits(PRInt32 aTwips) const
+  { return NSToCoordRound(NS_TWIPS_TO_INCHES(aTwips) *
+                          mDeviceContext->AppUnitsPerInch()); }
+
+  PRInt32 AppUnitsToTwips(nscoord aTwips) const
+  { return NS_INCHES_TO_TWIPS((float)aTwips /
+                              mDeviceContext->AppUnitsPerInch()); }
+
+  nscoord PointsToAppUnits(float aPoints) const
+  { return NSToCoordRound(aPoints * mDeviceContext->AppUnitsPerInch() /
+                          72.0f); }
+  float AppUnitsToPoints(nscoord aAppUnits) const
+  { return (float)aAppUnits / mDeviceContext->AppUnitsPerInch() * 72.0f; }
 
   /**
    * Get the language-specific transform type for the current document.
@@ -720,7 +747,7 @@ protected:
   nsILinkHandler*       mLinkHandler;   // [WEAK]
   nsIAtom*              mLangGroup;     // [STRONG]
 
-  nsSupportsHashtable   mImageLoaders;
+  nsInterfaceHashtable<nsUint32HashKey, nsImageLoader> mImageLoaders;
   nsWeakPtr             mContainer;
 
   // Only used in the root prescontext (this->RootPresContext() == this)
@@ -747,6 +774,7 @@ protected:
 
   nsRect                mVisibleArea;
   nsSize                mPageSize;
+  float                 mPageScale;
 
   nscolor               mDefaultColor;
   nscolor               mBackgroundColor;

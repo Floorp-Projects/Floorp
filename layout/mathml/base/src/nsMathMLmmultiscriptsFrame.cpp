@@ -170,8 +170,8 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
 
   // scriptspace from TeX for extra spacing after sup/subscript (0.5pt in plain TeX)
   // forced to be at least 1 pixel here
-  nscoord onePixel = GetPresContext()->IntScaledPixelsToTwips(1);
-  nscoord scriptSpace = PR_MAX(NSFloatPointsToTwips(0.5f), onePixel);
+  nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
+  nscoord scriptSpace = PR_MAX(GetPresContext()->PointsToAppUnits(0.5f), onePixel);
 
   /////////////////////////////////////
   // first the shift for the subscript

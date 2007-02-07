@@ -220,16 +220,16 @@ nsStackLayout::AddOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsSize& aSize
     content->GetAttr(kNameSpaceID_None, nsGkAtoms::left, value);
     if (!value.IsEmpty()) {
       value.Trim("%");
-      offset.width = NSIntPixelsToTwips(value.ToInteger(&error),
-                                        presContext->ScaledPixelsToTwips());
+      offset.width =
+        nsPresContext::CSSPixelsToAppUnits(value.ToInteger(&error));
       offsetSpecified = PR_TRUE;
     }
 
     content->GetAttr(kNameSpaceID_None, nsGkAtoms::top, value);
     if (!value.IsEmpty()) {
       value.Trim("%");
-      offset.height = NSIntPixelsToTwips(value.ToInteger(&error),
-                                         presContext->ScaledPixelsToTwips());
+      offset.height =
+        nsPresContext::CSSPixelsToAppUnits(value.ToInteger(&error));
       offsetSpecified = PR_TRUE;
     }
   }

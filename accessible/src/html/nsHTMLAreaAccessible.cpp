@@ -144,16 +144,13 @@ NS_IMETHODIMP nsHTMLAreaAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *w
   rv = map->GetBoundsForAreaContent(ourContent, presContext, rect);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Convert from twips to pixels
-  float t2p;
-  t2p = presContext->TwipsToPixels();   // Get pixels conversion factor
-  *x      = NSTwipsToIntPixels(rect.x, t2p); 
-  *y      = NSTwipsToIntPixels(rect.y, t2p); 
+  *x      = presContext->AppUnitsToDevPixels(rect.x); 
+  *y      = presContext->AppUnitsToDevPixels(rect.y); 
 
   // XXX Areas are screwy; they return their rects as a pair of points, one pair
   // stored into the width and height.
-  *width  = NSTwipsToIntPixels(rect.width, t2p) - *x;
-  *height = NSTwipsToIntPixels(rect.height, t2p) - *y;
+  *width  = presContext->AppUnitsToDevPixels(rect.width - rect.x);
+  *height = presContext->AppUnitsToDevPixels(rect.height - rect.y);
 
   // Put coords in absolute screen coords
   orgRectPixels = frame->GetScreenRectExternal();
