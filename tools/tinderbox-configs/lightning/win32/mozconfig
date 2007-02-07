@@ -9,7 +9,6 @@ mk_add_options MOZ_CO_PROJECT=mail,calendar
 mk_add_options JS_READLINE=1
 
 ac_add_options --enable-application=mail
-ac_add_options --enable-default-toolkit=windows
 ac_add_options --enable-extensions=default,lightning,inspector,venkman
 ac_add_options --disable-static
 ac_add_options --enable-shared
