@@ -42,7 +42,7 @@
   <table border="0">
     <tr>
       <td valign="top" align="right"><b>Summary</b></td>
-      <td colspan="3"><input name="summary" size="80" value="[% case.summary FILTER none %]"></td>
+      <td colspan="3"><input name="summary" size="80" value="[% case.summary FILTER html %]"></td>
     </tr>
     <tr>
       <td align="right"><b>Default Tester</b></td>
@@ -53,9 +53,9 @@
     
     <tr>
       <td align="right"><b>Alias</b></td>
-      <td><input name="alias" size="30" value="[% case.alias FILTER none %]"></td>
+      <td><input name="alias" size="30" value="[% case.alias FILTER html %]"></td>
       <td align="right"><b>Requirement:</b></td>
-      <td><input name="requirement" size="30" value="[% case.requirement FILTER none %]"></td>
+      <td><input name="requirement" size="30" value="[% case.requirement FILTER html %]"></td>
     </tr>
   
     <tr>
@@ -89,7 +89,7 @@
       </td>
       
       <td align="right"><b>Script</b></td>
-      <td><input name="script" id="script" value="[% case.script FILTER none %]"></td>
+      <td><input name="script" id="script" value="[% case.script FILTER html %]"></td>
     </tr>
 
     <tr>
@@ -101,7 +101,7 @@
                                   default   => case.category.name } %]
       </td>
       <td align="right"><b>Arguments:</b></td>
-      <td><input name="arguments" id="arguments" value="[% case.arguments FILTER none %]"></td>
+      <td><input name="arguments" id="arguments" value="[% case.arguments FILTER html %]"></td>
     </tr>
     <tr>
       <th align="right">Add to Runs</th><td colspan="3"><input name="addruns" size="30"></td>
@@ -169,8 +169,8 @@
       </td>
     </tr>
     <tr>
-      <td> <input name="tcdependson" size="30" value="[% case.dependson_list %]"> </td>
-      <td> <input name="tcblocks" size="30" value="[% case.blocked_list %]"> </td>
+      <td> <input name="tcdependson" size="30" value="[% case.dependson_list FILTER html %]"> </td>
+      <td> <input name="tcblocks" size="30" value="[% case.blocked_list FILTER html %]"> </td>
     </tr>
     <tr>
       <td>

@@ -48,7 +48,7 @@ delete rights to the <b>Testers</b> group.
     <th>Admin</th>
   </tr>
   <tr>
-    <td><input name="userregexp" value="[% plan.tester_regexp FILTER none %]" size="70"><br></td>
+    <td><input name="userregexp" value="[% plan.tester_regexp FILTER html %]" size="70"><br></td>
     <td align="center"><input type="checkbox" name="pr" [% 'checked="checked"' IF plan.tester_regexp_permissions.read %] value="1"></td>
     <td align="center"><input type="checkbox" name="pw" [% 'checked="checked"' IF plan.tester_regexp_permissions.write %] value="1"></td>
     <td align="center"><input type="checkbox" name="pd" [% 'checked="checked"' IF plan.tester_regexp_permissions.delete %] value="1"></td>

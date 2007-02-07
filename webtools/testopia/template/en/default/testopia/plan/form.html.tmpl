@@ -40,7 +40,7 @@
 <table width="100%">
   <tr>
     <th class="bz_row_header" align="right" width="100">Name</th>
-    <td><input name="plan_name" value="[% plan.name FILTER none %]" style="width:300px;"></td>
+    <td><input name="plan_name" value="[% plan.name FILTER html %]" style="width:300px;"></td>
     <th class="bz_row_header" align="right" width="100">Product</th>
     <td>[% IF plan.test_case_count OR plan.test_run_count %]
         <input type="hidden" name='product_id' value="[% plan.product_id FILTER none %]" />

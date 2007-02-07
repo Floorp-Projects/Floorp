@@ -27,11 +27,11 @@
   <table border="0" cellpadding="2" cellspacing="0">
     <tr>
       <th align="right" valign="top">Category Name: </th>
-      <td><input size="40" name="name" value="[% category.name FILTER none %]"/></td>
+      <td><input size="40" name="name" value="[% category.name FILTER html %]"/></td>
     </tr>
     <tr>
       <th align="right" valign="top">Category Description: </th>
-      <td> <textarea rows="10" cols="70" name="desc">[% category.description FILTER none %]</textarea><br> </td>
+      <td> <textarea rows="10" cols="70" name="desc">[% category.description FILTER html %]</textarea><br> </td>
     </tr>
   </table>
   <input type="submit" value="Submit">

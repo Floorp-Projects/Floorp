@@ -28,7 +28,7 @@
   <table border="0" cellpadding="2" cellspacing="0">
     <tr>
       <th align="right" valign="top">Build Name: </th>
-      <td><input size="40" name="name" value="[% build.name FILTER none %]"/></td>
+      <td><input size="40" name="name" value="[% build.name FILTER html %]"/></td>
     </tr>
     <tr>
       <th align="right" valign="top">Milestone: </th>
@@ -40,7 +40,7 @@
     </tr>
     <tr>
       <th align="right" valign="top">Build Description: </th>
-      <td> <textarea rows="10" cols="70" name="desc">[% build.description FILTER none %]</textarea><br> </td>
+      <td> <textarea rows="10" cols="70" name="desc">[% build.description FILTER html %]</textarea><br> </td>
     </tr>
   </table>
   <input type="submit" value="Submit">

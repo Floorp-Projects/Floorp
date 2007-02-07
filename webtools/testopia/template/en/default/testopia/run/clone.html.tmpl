@@ -45,7 +45,7 @@
 <form method="POST" action="tr_show_run.cgi">
 <input type="HIDDEN" name="action" value="do_clone" /> 
 <input type="HIDDEN" name="run_id" value="[% run.id FILTER none %]" />
-<input type="HIDDEN" name="case_list" value="[% case_list FILTER none %]" />
+<input type="HIDDEN" name="case_list" value="[% case_list FILTER html %]" />
 
 <table border="0" cellspacing="4">
   <tr bgcolor="lightyellow">

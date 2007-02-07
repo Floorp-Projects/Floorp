@@ -32,7 +32,7 @@
       <input type="hidden" name="case_status_id" value="2" />
     [% END %]
     [% IF type %]
-      <input type="hidden" name="type" value="[% type FILTER none %]" />
+      <input type="hidden" name="type" value="[% type FILTER html %]" />
     [% END %]
     [% IF product %]
       <input type="hidden" name="bug" value="[% bug_id FILTER none %]" />

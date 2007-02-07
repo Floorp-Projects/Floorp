@@ -25,8 +25,8 @@
 <form method="POST" action="tr_admin.cgi">
   <input type="hidden" name="item" value="plan_type" />
   <input type="hidden" name="action" value="doedit" />
-  <input type="hidden" name="type_id" value="[% type.id FILTER none %]" />
-  Type Name: <input name="name" value="[% type.name FILTER none %]" />
+  <input type="hidden" name="type_id" value="[% type.id FILTER html %]" />
+  Type Name: <input name="name" value="[% type.name FILTER html %]" />
   <input type="submit" value="Commit" />
 </form>
 

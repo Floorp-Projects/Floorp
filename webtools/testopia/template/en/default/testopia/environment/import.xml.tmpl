@@ -43,7 +43,7 @@
     <form action="tr_import_environment.cgi?action=admin" method="post">
         <h3><font color="red">Add the above new data?</font></h3>
         <input type="hidden" name="action" value="admin" />
-        <input type="hidden" name="xml" value="[%- xml %]" />
+        <input type="hidden" name="xml" value="[%- xml FILTER xml %]" />
         <input type="submit" name="submit" value="Add Now" /> <input type="submit" name="submit" value="Cancel" />
     </form>
 [% ELSE %]
