@@ -38,23 +38,34 @@
 #import "RolloverImageButton.h"
 
 @interface RolloverImageButton (Private)
-  - (void)updateImage:(BOOL)inIsInside;
-  - (BOOL)isMouseInside;
-  - (void)removeTrackingRect;
-  - (void)updateTrackingRect;
+
+- (void)updateImage:(BOOL)inIsInside;
+- (BOOL)isMouseInside;
+- (void)removeTrackingRect;
+- (void)updateTrackingRect;
+- (void)setupDefaults;
+
 @end
 
 @implementation RolloverImageButton
 
 - (id)initWithFrame:(NSRect)inFrame
 {
-  if ((self = [super initWithFrame:inFrame])) {
-    mImage = nil;
-    mHoverImage = nil;
-    mTrackingTag = -1;
-    mTrackingIsEnabled = YES;
-  }
+  if ((self = [super initWithFrame:inFrame]))
+    [self setupDefaults];
+
   return self;
+}
+
+- (void)awakeFromNib
+{
+  [self setupDefaults];
+}
+
+- (void)setupDefaults
+{
+  mTrackingTag = -1;
+  mTrackingIsEnabled = YES;
 }
 
 - (void)dealloc
@@ -194,10 +205,6 @@
 {
   [self updateTrackingRect];
 }
-
-@end
-
-@implementation RolloverImageButton (Private)
 
 - (void)updateImage:(BOOL)inIsInside
 {
