@@ -157,16 +157,24 @@ sub RunShellCommand {
         # IF NOTHING ELSE, the alarm() we set will catch a program that
         # fails to finish executing within the timeout period.
 
+        my $childReaped = 0;
         while (my @ready = $childSelect->can_read()) {
             foreach my $fh (@ready) {
                 my $line = undef;
                 my $rv = $fh->sysread($line, $EXEC_IO_READINCR);
 
                 # Check for read()ing nothing, and getting errors...
-                next if ($rv == 0);
                 if (not defined($rv)) {
                     warn "sysread() failed with: $!\n";
                     next;
+                }
+
+                # If we didn't get anything from the read() and the child is
+                # dead, we've probably exhausted the buffer, and can stop
+                # trying...
+                if (0 == $rv) {
+                   $childSelect->remove($fh) if ($childReaped);
+                   next;
                 }
 
                 # This check is down here instead of up above because if we're
@@ -180,15 +188,13 @@ sub RunShellCommand {
                 print LOGFILE $line if (defined($logfile));
             }
 
-            if (waitpid($childPid, WNOHANG) > 0) {
+            if (!$childReaped && (waitpid($childPid, WNOHANG) > 0)) {
                 alarm(0);
                 $childEndedTime = localtime();
                 $exitValue = WEXITSTATUS($?);
                 $signalNum = WIFSIGNALED($?) && WTERMSIG($?);
                 $dumpedCore = WIFSIGNALED($?) && WCOREDUMP($?);
-                $childSelect->remove($childErr);
-                $childSelect->remove($childOut);
-
+                $childReaped = 1;
             }
         }
 
@@ -257,21 +263,22 @@ sub MkdirWithPath {
 
 sub HashFile {
    my %args = @_;
-   die "ASSERT: null file to hash\n" if (not defined($args{'file'}));
+   die "ASSERT: HashFile(): null file\n" if (not defined($args{'file'}));
 
    my $fileToHash = $args{'file'};
    my $hashFunction = lc($args{'type'}) || 'md5';
    my $dumpOutput = $args{'output'} || 0;
    my $ignoreErrors = $args{'ignoreErrors'} || 0;
 
-   die "ASSERT: unknown hashFunction; use 'md5' or 'sha1': $hashFunction\n" if 
+   die 'ASSERT: HashFile(): invalid hashFunction; use md5/sha1: ' .
+    "$hashFunction\n" if 
     ($hashFunction ne 'md5' && $hashFunction ne 'sha1');
 
    if (not(-f $fileToHash) || not(-r $fileToHash)) {
       if ($ignoreErrors) {
          return '';
       } else {
-         die "ASSERT: unusable/unreadable file to hash\n"; 
+         die "ASSERT: HashFile(): unusable/unreadable file to hash\n"; 
       }
    }
 
