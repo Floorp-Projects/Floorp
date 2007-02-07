@@ -7,7 +7,7 @@ function onLoad()
   parent.onPanelLoaded('am-addressing.xul');
 }
 
-function onInit() 
+function onInit(aPageId, aServerId) 
 {
   onInitCompositionAndAddressing();
 }

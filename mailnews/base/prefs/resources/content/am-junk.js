@@ -39,7 +39,7 @@
 const KEY_APPDIR = "XCurProcD";
 const KEY_PROFILEDIR = "PrefD";
 
-function onInit()
+function onInit(aPageId, aServerId)
 {
   // manually adjust several pref UI elements
   document.getElementById('spamLevel').checked =
@@ -48,7 +48,7 @@ function onInit()
   var spamActionTargetAccount = document.getElementById('server.spamActionTargetAccount').value;
   if (!spamActionTargetAccount)
   {
-    var server = GetMsgFolderFromUri(parent.pendingServerId, false).server;
+    var server = GetMsgFolderFromUri(aServerId, false).server;
     if (server.canCreateFoldersOnServer && server.canSearchMessages)
       spamActionTargetAccount = parent.pendingServerId;
     else

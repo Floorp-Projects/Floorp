@@ -46,7 +46,7 @@ var gRedirectorType = "";
 var gServer;
 var gObserver;
 
-function onInit() 
+function onInit(aPageId, aServerId) 
 {
     initServerType();
 
@@ -54,7 +54,7 @@ function onInit()
     setupMailOnServerUI();
     setupFixedUI();
     setupNotifyUI();
-    setupImapDeleteUI();
+    setupImapDeleteUI(aServerId);
 }
 
 function onPreInit(account, accountValues)
@@ -315,7 +315,7 @@ function BrowseForNewsrc()
     newsrcTextBox.value = fp.file.path;
 }
 
-function setupImapDeleteUI()
+function setupImapDeleteUI(aServerId)
 {
   // read delete_model preference
   var deleteModel = document.getElementById("imap.deleteModel").getAttribute("value");
@@ -323,11 +323,10 @@ function setupImapDeleteUI()
 
   // read trash_folder_name preference
   var trashFolderName = getTrashFolderName();
-  var serverId = GetCurrentServerId();
 
   // set folderPicker menulist
-  document.getElementById("msgTrashFolderPicker").setAttribute("ref", serverId);
-  var trashFolderUri = serverId+"/"+trashFolderName;
+  document.getElementById("msgTrashFolderPicker").setAttribute("ref", aServerId);
+  var trashFolderUri = aServerId+"/"+trashFolderName;
   SetFolderPicker(trashFolderUri,"msgTrashFolderPicker");
 }
 
@@ -374,12 +373,4 @@ function getTrashFolderName()
     document.getElementById("imap.trashFolderName").setAttribute("value",trashFolderName);
   }
   return trashFolderName;
-}
-
-// Get Current Server ID selected in the account tree
-function GetCurrentServerId()
-{
-  var tree = window.parent.accounttree;
-  var result = getServerIdAndPageIdFromTree(tree);
-  return result.serverId;
 }
