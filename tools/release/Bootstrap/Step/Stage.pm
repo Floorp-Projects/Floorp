@@ -12,16 +12,15 @@ use MozBuild::Util qw(MkdirWithPath);
 
 use strict;
 
-my $config = new Bootstrap::Config;
-
 sub Execute {
     my $this = shift;
 
-    my $product = $config->Get('var' => 'product');
-    my $version = $config->Get('var' => 'version');
-    my $rc = $config->Get('var' => 'rc');
-    my $logDir = $config->Get('var' => 'logDir');
-    my $stageHome = $config->Get('var' => 'stageHome');
+    my $config = new Bootstrap::Config();
+    my $product = $config->Get(var => 'product');
+    my $version = $config->Get(var => 'version');
+    my $rc = $config->Get(var => 'rc');
+    my $logDir = $config->Get(var => 'logDir');
+    my $stageHome = $config->Get(var => 'stageHome');
  
     ## Prepare the staging directory for the release.
     # Create the staging directory.
@@ -30,17 +29,17 @@ sub Execute {
     my $mergeDir = catfile($stageDir, 'stage-merged');
 
     if (not -d $stageDir) {
-        MkdirWithPath('dir' => $stageDir) 
-          or die "Could not mkdir $stageDir: $!";
-        $this->Log('msg' => "Created directory $stageDir");
+        MkdirWithPath(dir => $stageDir) 
+          or die("Could not mkdir $stageDir: $!");
+        $this->Log(msg => "Created directory $stageDir");
     }
  
     # Create skeleton batch directory.
     my $skelDir = catfile($stageDir, 'batch-skel', 'stage');
     if (not -d "$skelDir") {
-        MkdirWithPath('dir' => $skelDir) 
+        MkdirWithPath(dir => $skelDir) 
           or die "Cannot create $skelDir: $!";
-        $this->Log('msg' => "Created directory $skelDir");
+        $this->Log(msg => "Created directory $skelDir");
     }
 
     my (undef, undef, $gid) = getgrnam($product)
@@ -51,17 +50,17 @@ sub Execute {
     for my $dir ('contrib', 'contrib-localized') {
         my $fullDir = catfile($skelDir, $dir);
         if (not -d $fullDir) {
-            MkdirWithPath('dir' => $fullDir) 
+            MkdirWithPath(dir => $fullDir) 
               or die "Could not mkdir $fullDir : $!";
-            $this->Log('msg' => "Created directory $fullDir");
+            $this->Log(msg => "Created directory $fullDir");
         }
 
         chmod(oct(2775), $fullDir)
           or die "Cannot change mode on $fullDir to 2775: $!";
-        $this->Log('msg' => "Changed mode of $fullDir to 2775");
+        $this->Log(msg => "Changed mode of $fullDir to 2775");
         chown(-1, $gid, $fullDir)
           or die "Cannot chgrp $fullDir to $product: $!";
-        $this->Log('msg' => "Changed group of $fullDir to $product");
+        $this->Log(msg => "Changed group of $fullDir to $product");
     }
 
     # NOTE - should have a standard "master" copy somewhere else
@@ -72,36 +71,36 @@ sub Execute {
 
     ## Prepare the merging directory.
     $this->Shell(
-      'cmd' => 'rsync',
-      'cmdArgs' => ['-av', 'batch-skel/stage/', 'stage-merged/'],
-      'logFile' => catfile($logDir, 'stage_merge_skel.log'),
-      'dir' => $stageDir,
+      cmd => 'rsync',
+      cmdArgs => ['-av', 'batch-skel/stage/', 'stage-merged/'],
+      logFile => catfile($logDir, 'stage_merge_skel.log'),
+      dir => $stageDir,
     );
     
     # Collect the release files onto stage.mozilla.org.
 
     my $prestageDir = catfile($stageDir, 'batch1', 'prestage');
     if (not -d $prestageDir) {
-        MkdirWithPath('dir' => $prestageDir) 
+        MkdirWithPath(dir => $prestageDir) 
           or die "Cannot create $prestageDir: $!";
-        $this->Log('msg' => "Created directory $prestageDir");
+        $this->Log(msg => "Created directory $prestageDir");
     }
 
     $this->Shell(
-      'cmd' => 'rsync',
-      'cmdArgs' => ['-Lav', catfile('/home', 'ftp', 'pub', $product, 'nightly',
+      cmd => 'rsync',
+      cmdArgs => ['-Lav', catfile('/home', 'ftp', 'pub', $product, 'nightly',
                                     $version . '-candidates', 'rc' . $rc . '/'),
                     './'],
-      'logFile' => catfile($logDir, 'stage_collect.log'),
-      'dir' => catfile($stageDir, 'batch1', 'prestage'),
+      logFile => catfile($logDir, 'stage_collect.log'),
+      dir => catfile($stageDir, 'batch1', 'prestage'),
     );
 
     # Remove unreleased builds
     $this->Shell(
-      'cmd' => 'rsync',
-      'cmdArgs' => ['-av', 'prestage/', 'prestage-trimmed/'],
-      'logFile' => catfile($logDir, 'stage_collect_trimmed.log'),
-      'dir' => catfile($stageDir, 'batch1'),
+      cmd => 'rsync',
+      cmdArgs => ['-av', 'prestage/', 'prestage-trimmed/'],
+      logFile => catfile($logDir, 'stage_collect_trimmed.log'),
+      dir => catfile($stageDir, 'batch1'),
     );
 
     # Remove unshipped files and set proper mode on dirs
@@ -109,39 +108,40 @@ sub Execute {
      $stageDir . catfile('batch1', 'prestage-trimmed'));
     
     $this->Shell(
-      'cmd' => 'rsync',
-      'cmdArgs' => ['-Lav', 'prestage-trimmed/', 'stage/'],
-      'logFile' => catfile($logDir, 'stage_collect_stage.log'),
-      'dir' => catfile($stageDir, 'batch1'),
+      cmd => 'rsync',
+      cmdArgs => ['-Lav', 'prestage-trimmed/', 'stage/'],
+      logFile => catfile($logDir, 'stage_collect_stage.log'),
+      dir => catfile($stageDir, 'batch1'),
     );
 
     # Nightly builds using a different naming scheme than production.
     # Rename the files.
     # TODO should support --long filenames, for e.g. Alpha and Beta
     $this->Shell(
-      'cmd' => catfile($stageHome, 'bin', 'groom-files'),
-      'cmdArgs' => ['--short=' . $version, '.'],
-      'logFile' => catfile($logDir, 'stage_groom_files.log'),
-      'dir' => catfile($stageDir, 'batch1', 'stage'),
+      cmd => catfile($stageHome, 'bin', 'groom-files'),
+      cmdArgs => ['--short=' . $version, '.'],
+      logFile => catfile($logDir, 'stage_groom_files.log'),
+      dir => catfile($stageDir, 'batch1', 'stage'),
     );
 
     # fix xpi dir names
     my $fromFile = catfile($stageDir, 'batch1', 'stage', 'windows');
     my $toFile = catfile($stageDir, 'batch1', 'stage', 'win32');
     move($fromFile, $toFile)
-      or die('msg' => "Cannot rename $fromFile $toFile: $!");
-    $this->Log('msg' => "Moved $fromFile $toFile");
+      or die(msg => "Cannot rename $fromFile $toFile: $!");
+    $this->Log(msg => "Moved $fromFile $toFile");
 }
 
 sub Verify {
     my $this = shift;
 
-    my $product = $config->Get('var' => 'product');
-    my $appName = $config->Get('var' => 'appName');
-    my $logDir = $config->Get('var' => 'logDir');
-    my $version = $config->Get('var' => 'version');
-    my $rc = $config->Get('var' => 'rc');
-    my $stageHome = $config->Get('var' => 'stageHome');
+    my $config = new Bootstrap::Config();
+    my $product = $config->Get(var => 'product');
+    my $appName = $config->Get(var => 'appName');
+    my $logDir = $config->Get(var => 'logDir');
+    my $version = $config->Get(var => 'version');
+    my $rc = $config->Get(var => 'rc');
+    my $stageHome = $config->Get(var => 'stageHome');
  
     ## Prepare the staging directory for the release.
     # Create the staging directory.
@@ -150,16 +150,18 @@ sub Verify {
 
     # Verify locales
     $this->Shell(
-      'cmd' => catfile($stageHome, 'bin', 'verify-locales.pl'),
-      'cmdArgs' => ['-m', catfile($stageDir, 'batch-source', 'rc' . $rc,
-                    'mozilla', $appName, 'locales', 'shipped-locales')],
-      'logFile' => catfile($logDir, 'stage_verify_l10n.log'),
-      'dir' => catfile($stageDir, 'batch1', 'stage'),
+      cmd => catfile($stageHome, 'bin', 'verify-locales.pl'),
+      cmdArgs => ['-m', catfile($stageDir, 'batch-source', 'rc' . $rc,
+                  'mozilla', $appName, 'locales', 'shipped-locales')],
+      logFile => catfile($logDir, 'stage_verify_l10n.log'),
+      dir => catfile($stageDir, 'batch1', 'stage'),
     );
 }
 
 sub TrimCallback {
     my $this = shift;
+
+    my $config = new Bootstrap::Config();
     my $dirent = $File::Find::name;
 
     if (-f $dirent) {
@@ -178,22 +180,22 @@ sub TrimCallback {
         ($dirent =~ /\.zip$/) ||
         ($dirent =~ /en-US\.xpi$/)) {
             unlink($dirent) || die "Could not unlink $dirent: $!";
-            $this->Log('msg' => "Unlinked $dirent");
+            $this->Log(msg => "Unlinked $dirent");
         } else {
             chmod(0644, $dirent) 
               || die "Could not chmod $dirent to 0644: $!";
-            $this->Log('msg' => "Changed mode of $dirent to 0644");
+            $this->Log(msg => "Changed mode of $dirent to 0644");
        }
     } elsif (-d $dirent) { 
-        my $product = $config->Get('var' => 'product');
+        my $product = $config->Get(var => 'product');
         my (undef, undef, $gid) = getgrnam($product)
          or die "Could not getgrname for $product: $!";
         chown(-1, $gid, $dirent)
           or die "Cannot chgrp $dirent to $product: $!";
-        $this->Log('msg' => "Changed group of $dirent to $product");
+        $this->Log(msg => "Changed group of $dirent to $product");
         chmod(0755, $dirent) 
           or die "Could not chmod $dirent to 0755: $!";
-        $this->Log('msg' => "Changed mode of $dirent to 0755");
+        $this->Log(msg => "Changed mode of $dirent to 0755");
     } else {
         die("Unexpected non-file/non-dir directory entry: $dirent");
     }
@@ -202,8 +204,9 @@ sub TrimCallback {
 sub Announce {
     my $this = shift;
 
-    my $product = $config->Get('var' => 'product');
-    my $version = $config->Get('var' => 'version');
+    my $config = new Bootstrap::Config();
+    my $product = $config->Get(var => 'product');
+    my $version = $config->Get(var => 'version');
 
     $this->SendAnnouncement(
       subject => "$product $version stage step finished",

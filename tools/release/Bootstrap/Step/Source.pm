@@ -9,33 +9,32 @@ use File::Copy qw(move);
 use MozBuild::Util qw(MkdirWithPath);
 @ISA = ("Bootstrap::Step");
 
-my $config = new Bootstrap::Config;
-
 sub Execute {
     my $this = shift;
 
-    my $product = $config->Get('var' => 'product');
-    my $productTag = $config->Get('var' => 'productTag');
-    my $version = $config->Get('var' => 'version');
-    my $rc = $config->Get('var' => 'rc');
-    my $logDir = $config->Get('var' => 'logDir');
-    my $stageHome = $config->Get('var' => 'stageHome');
+    my $config = new Bootstrap::Config();
+    my $product = $config->Get(var => 'product');
+    my $productTag = $config->Get(var => 'productTag');
+    my $version = $config->Get(var => 'version');
+    my $rc = $config->Get(var => 'rc');
+    my $logDir = $config->Get(var => 'logDir');
+    my $stageHome = $config->Get(var => 'stageHome');
 
     # create staging area
     my $stageDir = catfile($stageHome, $product . '-' . $version, 
                            'batch-source', 'rc' . $rc);
 
     if (not -d $stageDir) {
-        MkdirWithPath('dir' => $stageDir) 
-          or die "Cannot create $stageDir: $!";
+        MkdirWithPath(dir => $stageDir) 
+          or die("Cannot create $stageDir: $!");
     }
 
     my $srcScript = $product . '-src-tarball-nobuild';
     $this->Shell(
-      'cmd' => catfile($stageHome, 'bin', $srcScript),
-      'cmdArgs' => ['-r', $productTag . '_RELEASE', '-m', $version],
-      'dir' => $stageDir,
-      'logFile' => catfile($logDir, 'source.log'),
+      cmd => catfile($stageHome, 'bin', $srcScript),
+      cmdArgs => ['-r', $productTag . '_RELEASE', '-m', $version],
+      dir => $stageDir,
+      logFile => catfile($logDir, 'source.log'),
     );
               
     move("$stageDir/../*.bz2", $stageDir);
@@ -50,9 +49,10 @@ sub Verify {
 sub Announce {
     my $this = shift;
 
-    my $product = $config->Get('var' => 'product');
-    my $version = $config->Get('var' => 'version');
-    my $logDir = $config->Get('var' => 'logDir');
+    my $config = new Bootstrap::Config();
+    my $product = $config->Get(var => 'product');
+    my $version = $config->Get(var => 'version');
+    my $logDir = $config->Get(var => 'logDir');
 
     my $logFile = catfile($logDir, 'source.log');
 

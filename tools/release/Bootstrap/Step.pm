@@ -32,32 +32,32 @@ sub Shell {
     my $rv = '';
 
     if (ref($cmdArgs) ne 'ARRAY') {
-        die "ASSERT: Bootstrap::Step(): cmdArgs is not an array ref\n" 
+        die("ASSERT: Bootstrap::Step(): cmdArgs is not an array ref\n");
     }
 
     if ($dir) {
-        $this->Log('msg' => 'Changing directory to ' . $dir);
-        chdir($dir) or die "Cannot chdir to $dir: $!";
+        $this->Log(msg => 'Changing directory to ' . $dir);
+        chdir($dir) or die("Cannot chdir to $dir: $!");
     }
 
-    $this->Log('msg' => 'Running shell command:');
-    $this->Log('msg' => '  arg0: ' . $cmd); 
+    $this->Log(msg => 'Running shell command:');
+    $this->Log(msg => '  arg0: ' . $cmd); 
     my $argNum = 1;
     foreach my $arg (@{$cmdArgs}) {
-        $this->Log('msg' => '  arg' . $argNum . ': ' . $arg); 
+        $this->Log(msg => '  arg' . $argNum . ': ' . $arg); 
         $argNum += 1;
     }
-    $this->Log('msg' => 'Starting time is ' . $this->CurrentTime());
-    $this->Log('msg' => 'Logging output to ' . $logFile);
+    $this->Log(msg => 'Starting time is ' . $this->CurrentTime());
+    $this->Log(msg => 'Logging output to ' . $logFile);
 
-    $this->Log('msg' => 'Timeout: ' . $timeout);
+    $this->Log(msg => 'Timeout: ' . $timeout);
 
     if ($timeout) {
         $rv = RunShellCommand(
-           'command' => $cmd,
-           'args' => $cmdArgs,
-           'timeout' => $timeout,
-           'logfile' => $logFile,
+           command => $cmd,
+           args => $cmdArgs,
+           timeout => $timeout,
+           logfile => $logFile,
         );
     }
 
@@ -66,29 +66,29 @@ sub Shell {
     my $signalName  = $rv->{'signalName'};
     my $dumpedCore = $rv->{'dumpedCore'};
     if ($timedOut) {
-        $this->Log('msg' => "output: $rv->{'output'}") if $rv->{'output'};
-        die("FAIL shell call timed out after $timeout seconds");
+        $this->Log(msg => "output: $rv->{'output'}") if $rv->{'output'};
+        die('FAIL shell call timed out after' . $timeout . 'seconds');
     }
     if ($signalName) {
-        $this->Log('msg' => 'WARNING shell recieved signal' . $signalName);
+        $this->Log(msg => 'WARNING shell recieved signal' . $signalName);
     }
     if ($dumpedCore) {
-        $this->Log('msg' => "output: $rv->{'output'}") if $rv->{'output'};
+        $this->Log(msg => "output: $rv->{'output'}") if $rv->{'output'};
         die("FAIL shell call dumped core");
     }
     if ($exitValue) {
         if ($exitValue != 0) {
-            $this->Log('msg' => "output: $rv->{'output'}") if $rv->{'output'};
+            $this->Log(msg => "output: $rv->{'output'}") if $rv->{'output'};
             die("shell call returned bad exit code: $exitValue");
         }
     }
 
     if ($rv->{'output'} && not defined($logFile)) {
-        $this->Log('msg' => "output: $rv->{'output'}");
+        $this->Log(msg => "output: $rv->{'output'}");
     }
 
     # current time
-    $this->Log('msg' => 'Ending time is ' . $this->CurrentTime());
+    $this->Log(msg => 'Ending time is ' . $this->CurrentTime());
 }
 
 sub Log {
@@ -108,31 +108,31 @@ sub CheckLog {
     my $checkForOnly = $args{'checkForOnly'};
 
     if (not defined($log)) {
-        die "No log file specified";
+        die("No log file specified");
     }
 
-    open (FILE, "< $log") or die "Cannot open file $log: $!";
+    open (FILE, "< $log") or die("Cannot open file $log: $!");
     my @contents = <FILE>;
-    close FILE or die "Cannot close file $log: $!";
+    close FILE or die("Cannot close file $log: $!");
   
     if ($notAllowed) {
         my @errors = grep(/$notAllowed/i, @contents);
         if (@errors) {
-            die "Errors in log ($log): \n\n @errors \n";
+            die("Errors in log ($log): \n\n @errors");
         }
     }
     if ($checkFor) {
         if (not grep(/$checkFor/i, @contents)) {
-            die "$checkFor is not present in file $log \n";
+            die("$checkFor is not present in file $log");
         }
     }
     if ($checkForOnly) {
         if (not grep(/$checkForOnly/i, @contents)) {
-            die "$checkForOnly is not present in file $log \n";
+            die("$checkForOnly is not present in file $log");
         }
         my @errors = grep(!/$checkForOnly/i, @contents);
         if (@errors) {
-            die "Errors in log ($log): \n\n @errors \n";
+            die("Errors in log ($log): \n\n @errors");
         }
     }
 }
@@ -159,9 +159,12 @@ sub SendAnnouncement() {
     
     my $config = new Bootstrap::Config();
 
+    my $blat = $config->Get(var => 'blat');
+    my $sendmail = $config->Get(var => 'sendmail');
     my $from = $args{'from'} ? $args{'from'} : $config->Get(var => 'from');
     my $to = $args{'to'} ? $args{'to'} : $config->Get(var => 'to');
     my $cc = $args{'cc'} ? $args{'cc'} : $config->Get(var => 'cc');
+
     my $subject = $args{'subject'};
     my $message = $args{'message'};
 
@@ -169,6 +172,8 @@ sub SendAnnouncement() {
 
     eval {
         Email(
+          blat => $blat,
+          sendmail => $sendmail,
           from => $from,
           to => $to,
           cc => \@ccList,

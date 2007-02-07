@@ -12,20 +12,19 @@ use File::Copy qw(move);
 use MozBuild::Util qw(MkdirWithPath);
 @ISA = qw(Bootstrap::Step);
 
-my $config = new Bootstrap::Config;
-
 my @subSteps = ('Bump', 'Mozilla', 'l10n', 'Talkback');
 
 sub Execute {
     my $this = shift;
 
-    my $productTag = $config->Get('var' => 'productTag');
-    my $rc = $config->Get('var' => 'rc');
-    my $tagDir = $config->Get('var' => 'tagDir');
-    my $mozillaCvsroot = $config->Get('var' => 'mozillaCvsroot');
-    my $branchTag = $config->Get('var' => 'branchTag');
-    my $pullDate = $config->Get('var' => 'pullDate');
-    my $logDir = $config->Get('var' => 'logDir');
+    my $config = new Bootstrap::Config();
+    my $productTag = $config->Get(var => 'productTag');
+    my $rc = $config->Get(var => 'rc');
+    my $tagDir = $config->Get(var => 'tagDir');
+    my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
+    my $branchTag = $config->Get(var => 'branchTag');
+    my $pullDate = $config->Get(var => 'pullDate');
+    my $logDir = $config->Get(var => 'logDir');
 
     my $releaseTag = $productTag.'_RELEASE';
     my $rcTag = $productTag.'_RC'.$rc;
@@ -33,8 +32,8 @@ sub Execute {
 
     # create the main tag directory
     if (not -d $releaseTagDir) {
-        MkdirWithPath('dir' => $releaseTagDir) 
-          or die "Cannot mkdir $releaseTagDir: $!";
+        MkdirWithPath(dir => $releaseTagDir) 
+          or die("Cannot mkdir $releaseTagDir: $!");
     }
 
     # Symlink to to RC dir
@@ -42,42 +41,42 @@ sub Execute {
     my $toLink   = catfile($tagDir, $rcTag);
     if (not -e $toLink) {
         symlink($fromLink, $toLink) 
-          or die "Cannot symlink $fromLink $toLink: $!";
+          or die("Cannot symlink $fromLink $toLink: $!");
     }
 
     # Tagging area for Mozilla
     my $cvsrootTagDir = catfile($releaseTagDir, 'cvsroot');
     if (not -d $cvsrootTagDir) {
-        MkdirWithPath('dir' => $cvsrootTagDir) 
-          or die "Cannot mkdir $cvsrootTagDir: $!";
+        MkdirWithPath(dir => $cvsrootTagDir) 
+          or die("Cannot mkdir $cvsrootTagDir: $!");
     }
 
     # Check out Mozilla from the branch you want to tag.
     # TODO this should support running without branch tag or pull date.
 
     $this->Shell(
-      'cmd' => 'cvs',
-      'cmdArgs' => ['-d', $mozillaCvsroot, 
-                    'co', 
-                    '-r', $branchTag, 
-                    '-D', $pullDate, 
-                     'mozilla/client.mk',
-                   ],
-      'dir' => $cvsrootTagDir,
-      'logFile' => catfile($logDir, 'tag_checkout_client_mk.log'),
+      cmd => 'cvs',
+      cmdArgs => ['-d', $mozillaCvsroot, 
+                  'co', 
+                  '-r', $branchTag, 
+                  '-D', $pullDate, 
+                  'mozilla/client.mk',
+                 ],
+      dir => $cvsrootTagDir,
+      logFile => catfile($logDir, 'tag_checkout_client_mk.log'),
     );
 
     $this->CheckLog(
-      'log' => catfile($logDir, 'tag_checkout_client_mk.log'),
-      'checkForOnly' => '^U mozilla/client.mk',
+      log => catfile($logDir, 'tag_checkout_client_mk.log'),
+      checkForOnly => '^U mozilla/client.mk',
     );
 
     $this->Shell(
-      'cmd' => 'gmake',
-      'cmdArgs' => ['-f', 'client.mk', 'checkout', 'MOZ_CO_PROJECT=all', 
+      cmd => 'gmake',
+      cmdArgs => ['-f', 'client.mk', 'checkout', 'MOZ_CO_PROJECT=all', 
                     'MOZ_CO_DATE=' . $pullDate],
-      'dir' => catfile($cvsrootTagDir, 'mozilla'),
-      'logFile' => catfile($logDir, 'tag_mozilla-checkout.log'),
+      dir => catfile($cvsrootTagDir, 'mozilla'),
+      logFile => catfile($logDir, 'tag_mozilla-checkout.log'),
     );
 
     # Call substeps
@@ -100,11 +99,12 @@ sub Execute {
 sub Verify {
     my $this = shift;
 
-    my $logDir = $config->Get('var' => 'logDir');
+    my $config = new Bootstrap::Config();
+    my $logDir = $config->Get(var => 'logDir');
 
     $this->CheckLog(
-      'log' => catfile($logDir, 'tag_mozilla-checkout.log'),
-      'checkFor' => '^U',
+      log => catfile($logDir, 'tag_mozilla-checkout.log'),
+      checkFor => '^U',
     );
 
     # Call substeps
@@ -128,6 +128,7 @@ sub CvsTag {
     my $this = shift;
     my %args = @_;
 
+    my $config = new Bootstrap::Config();
     my $tagName = $args{'tagName'};
     my $coDir = $args{'coDir'};
     my $branch = $args{'branch'};
@@ -135,7 +136,7 @@ sub CvsTag {
     my $force = $args{'force'};
     my $logFile = $args{'logFile'};
    
-    my $logDir = $config->Get('var' => 'logDir');
+    my $logDir = $config->Get(var => 'logDir');
 
     # only force or branch specific files, not the whole tree
     if ($force and scalar(@{$files}) <= 0 ) {
@@ -159,10 +160,10 @@ sub CvsTag {
     push(@cmdArgs, @$files) if defined($files);
 
     $this->Shell(
-      'cmd' => 'cvs',
-      'cmdArgs' => \@cmdArgs,
-      'dir' => $coDir,
-      'logFile' => $logFile,
+      cmd => 'cvs',
+      cmdArgs => \@cmdArgs,
+      dir => $coDir,
+      logFile => $logFile,
     );
 }
 
