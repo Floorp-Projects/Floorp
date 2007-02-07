@@ -355,32 +355,6 @@ sub set_as_current {
     $dbh->bz_unlock_tables();
 }
 
-=head2 set_build
-
-Sets the build on a case-run
-
-=cut
-
-sub set_build {
-    my $self = shift;
-    my ($build_id) = @_;
-    $self->_update_fields({'build_id' => $build_id});
-    $self->{'build_id'} = $build_id;
-}
-
-=head2 set_environment
-
-Sets the environment on a case-run
-
-=cut
-
-sub set_environment {
-    my $self = shift;
-    my ($env_id) = @_;
-    $self->_update_fields({'environment_id' => $env_id});
-    $self->{'environment_id'} = $env_id;
-}
-
 =head2 set_status
 
 Sets the status on a case-run and updates the close_date and testedby 
