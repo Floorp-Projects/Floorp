@@ -140,20 +140,21 @@ sub update
 	}
 
     # Check to see what has changed then use set methods
-    
-    if (defined($$new_values{assignee}))
-    {
-        $test_case_run->set_assignee($$new_values{assignee});
-    }
-
+    # The order is important. We need to check if the build or environment has 
+    # Changed so that we can switch to the right record first.
     if (defined($$new_values{build_id}))
     {
-        $test_case_run->set_build($$new_values{build_id});
+        $test_case_run = $test_case_run->switch($newvalues->{'build_id'}, $environment_id ,$run_id, $case_id);
     }
 
     if (defined($$new_values{environment_id}))
     {
-        $test_case_run->set_environment($$new_values{environment_id});
+        $test_case_run = $test_case_run->switch($build_id, $newvalues->{'environment_id'} ,$run_id, $case_id);
+    }
+
+    if (defined($$new_values{assignee}))
+    {
+        $test_case_run->set_assignee($$new_values{assignee});
     }
 
     if (defined($$new_values{case_run_status_id}))
