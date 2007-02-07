@@ -269,18 +269,20 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
   // Obey the camino.remember_window_state preference unless Camino crashed
   // last time, in which case the user is asked what to do.
   BOOL shouldRestoreWindowState = NO;
-  if ([self previousSessionTerminatedNormally]) {
-    shouldRestoreWindowState = [prefManager getBooleanPref:"camino.remember_window_state" withSuccess:NULL];
-  }
-  else if ([prefManager getBooleanPref:"browser.sessionstore.resume_from_crash" withSuccess:NULL]) {
-    NSAlert* restoreAfterCrashAlert = [[[NSAlert alloc] init] autorelease];
-    [restoreAfterCrashAlert addButtonWithTitle:NSLocalizedString(@"RestoreAfterCrashActionButton", nil)];
-    [restoreAfterCrashAlert addButtonWithTitle:NSLocalizedString(@"RestoreAfterCrashCancelButton", nil)];
-    [restoreAfterCrashAlert setMessageText:NSLocalizedString(@"RestoreAfterCrashTitle", nil)];
-    [restoreAfterCrashAlert setInformativeText:NSLocalizedString(@"RestoreAfterCrashMessage", nil)];
-    [restoreAfterCrashAlert setAlertStyle:NSWarningAlertStyle];
-    if ([restoreAfterCrashAlert runModal] == NSAlertFirstButtonReturn)
-      shouldRestoreWindowState = YES;
+  if ([[SessionManager sharedInstance] hasSavedState]) {
+    if ([self previousSessionTerminatedNormally]) {
+      shouldRestoreWindowState = [prefManager getBooleanPref:"camino.remember_window_state" withSuccess:NULL];
+    }
+    else if ([prefManager getBooleanPref:"browser.sessionstore.resume_from_crash" withSuccess:NULL]) {
+      NSAlert* restoreAfterCrashAlert = [[[NSAlert alloc] init] autorelease];
+      [restoreAfterCrashAlert addButtonWithTitle:NSLocalizedString(@"RestoreAfterCrashActionButton", nil)];
+      [restoreAfterCrashAlert addButtonWithTitle:NSLocalizedString(@"RestoreAfterCrashCancelButton", nil)];
+      [restoreAfterCrashAlert setMessageText:NSLocalizedString(@"RestoreAfterCrashTitle", nil)];
+      [restoreAfterCrashAlert setInformativeText:NSLocalizedString(@"RestoreAfterCrashMessage", nil)];
+      [restoreAfterCrashAlert setAlertStyle:NSWarningAlertStyle];
+      if ([restoreAfterCrashAlert runModal] == NSAlertFirstButtonReturn)
+        shouldRestoreWindowState = YES;
+    }
   }
 
   if (shouldRestoreWindowState) {

@@ -246,4 +246,10 @@ const NSTimeInterval kPersistDelay = 60.0;
   [self saveWindowState];
 }
 
+- (BOOL)hasSavedState
+{
+  NSFileManager* fileManager = [NSFileManager defaultManager];
+  return [fileManager fileExistsAtPath:mSessionStatePath];
+}
+
 @end
