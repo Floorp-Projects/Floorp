@@ -685,7 +685,9 @@ sub obliterate {
     my $dbh = Bugzilla->dbh;
     
     $dbh->do("DELETE FROM test_case_bugs WHERE case_run_id IN (" . 
-              join(",", @{$self->get_case_run_list}) . ")", undef, $self->id);
+              join(",", @{$self->get_case_run_list}) . ")", undef, $self->id)
+                  if $self->get_case_run_list;
+                  
     $dbh->do("DELETE FROM test_case_runs WHERE case_id = ? AND run_id = ?", 
               undef, ($self->case_id, $self->run_id));
     return 1;
