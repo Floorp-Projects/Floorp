@@ -311,7 +311,7 @@ sub Email {
 
     my $from = $args{'from'};
     my $to = $args{'to'};
-    my $ccList = $args{'cc'} ? $args{'cc'} : '';
+    my $ccList = $args{'cc'} ? $args{'cc'} : undef;
     my $subject = $args{'subject'};
     my $message = $args{'message'};
     my $sendmail = $args{'sendmail'};
