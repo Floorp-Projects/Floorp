@@ -89,4 +89,7 @@ class NeckoCacheHelper;
 // will attempt to look for any cached <link> image urls.
 - (NSString*)favoriteIconURLFromPageURL:(NSString*)inPageURL;
 
+// removes the favicon image associated with the page URL from cache.
+- (void)removeImageForPageURL:(NSString*)inURI;
+
 @end

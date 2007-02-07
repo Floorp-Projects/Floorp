@@ -214,6 +214,7 @@ class nsIArray;
 - (void)setTab:(NSTabViewItem*)tab;
 - (NSTabViewItem*) tab;
 
+- (void)reload:(unsigned int)reloadFlags;
 - (IBAction)reloadWithNewCharset:(NSString*)charset;
 - (NSString*)currentCharset;
 

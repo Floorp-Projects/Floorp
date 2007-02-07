@@ -328,6 +328,15 @@ NeckoCacheHelper::ClearCache()
   return faviconURL;
 }
 
+// -removeImageForPageURL:
+//
+// Public method to remove the favicon image associated with a webpage's URL inURI from cache.
+//
+- (void)removeImageForPageURL:(NSString*)inURI
+{
+  [[SiteIconCache sharedSiteIconCache] removeImageForURL:[self favoriteIconURLFromPageURL:inURI]];
+}
+
 - (void)addToMissedIconsCache:(NSString*)inURI withExpirationSeconds:(unsigned int)inExpSeconds
 {
   if (mIconsCacheHelper)

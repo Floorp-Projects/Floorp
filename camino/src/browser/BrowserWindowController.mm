@@ -552,6 +552,8 @@ enum BWCOpenDest {
 - (IBAction)backMenu:(id)inSender;
 - (IBAction)forwardMenu:(id)inSender;
 
+- (void)reloadBrowserWrapper:(BrowserWrapper *)inWrapper sender:(id)sender;
+
 // run a modal according to the users pref on opening a feed
 - (BOOL)shouldWarnBeforeOpeningFeed;
 - (void)buildFeedsDetectedListMenu:(NSNotification*)notifer; 
@@ -3062,18 +3064,41 @@ enum BWCOpenDest {
 
 - (IBAction)reload:(id)aSender
 {
-  unsigned int reloadFlags = NSLoadFlagsNone;
+  [self reloadBrowserWrapper:mBrowserView sender:aSender];
+}
 
-  if ([aSender respondsToSelector:@selector(keyEquivalent)]) {
+- (IBAction)reloadSendersTab:(id)sender
+{
+  if ([sender isMemberOfClass:[NSMenuItem class]]) {
+    BrowserTabViewItem* tabViewItem = [mTabBrowser itemWithTag:[sender tag]];
+    if (tabViewItem)
+      [self reloadBrowserWrapper:[tabViewItem view] sender:sender];
+  }
+}
+
+- (IBAction)reloadAllTabs:(id)sender
+{
+  NSEnumerator* tabsEnum = [[mTabBrowser tabViewItems] objectEnumerator];
+  BrowserTabViewItem* curTabItem;
+  while ((curTabItem = [tabsEnum nextObject])) {
+    if ([curTabItem isKindOfClass:[BrowserTabViewItem class]])
+      [self reloadBrowserWrapper:[curTabItem view] sender:sender];
+  }
+}
+
+- (void)reloadBrowserWrapper:(BrowserWrapper *)inWrapper sender:(id)sender
+{
+  unsigned int reloadFlags = NSLoadFlagsNone;
+  if ([sender respondsToSelector:@selector(keyEquivalent)]) {
     // Capital R tests for shift when there's a keyEquivalent, keyEquivalentModifierMask tests when there isn't
-    if ([[aSender keyEquivalent] isEqualToString:@"R"] || ([aSender keyEquivalentModifierMask] & NSShiftKeyMask))
+    if ([[sender keyEquivalent] isEqualToString:@"R"] || ([sender keyEquivalentModifierMask] & NSShiftKeyMask))
       reloadFlags = NSLoadFlagsBypassCacheAndProxy;
   }
   // It's a toolbar button, so we test for shift using modifierFlags
   else if ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask)
     reloadFlags = NSLoadFlagsBypassCacheAndProxy;
 
-  [[mBrowserView getBrowserView] reload:reloadFlags];
+  [inWrapper reload:reloadFlags];
 }
 
 - (IBAction)stop:(id)aSender
@@ -3468,42 +3493,6 @@ enum BWCOpenDest {
   [[tab view] windowClosed];
   [mTabBrowser removeTabViewItem:tab];
   [[NSApp delegate] delayedAdjustBookmarksMenuItemsEnabling];
-}
-
-- (IBAction)reloadSendersTab:(id)sender
-{
-  if ([sender isMemberOfClass:[NSMenuItem class]]) {
-    BrowserTabViewItem* tabViewItem = [mTabBrowser itemWithTag:[sender tag]];
-    if (tabViewItem) {
-      unsigned int reloadFlags = NSLoadFlagsNone;
-      // Capital R tests for shift when there's a keyEquivalent, keyEquivalentModifierMask tests when there isn't
-      if ([[sender keyEquivalent] isEqualToString:@"R"] || ([sender keyEquivalentModifierMask] & NSShiftKeyMask))
-        reloadFlags = NSLoadFlagsBypassCacheAndProxy;
-
-      [[[tabViewItem view] getBrowserView] reload:reloadFlags];
-    }
-  }
-}
-
-- (IBAction)reloadAllTabs:(id)sender
-{
-  unsigned int reloadFlags = NSLoadFlagsNone;
-
-  if ([sender respondsToSelector:@selector(keyEquivalent)]) {
-    // Capital R tests for shift when there's a keyEquivalent, keyEquivalentModifierMask tests when there isn't
-    if ([[sender keyEquivalent] isEqualToString:@"R"] || ([sender keyEquivalentModifierMask] & NSShiftKeyMask))
-      reloadFlags = NSLoadFlagsBypassCacheAndProxy;
-  }
-  // It's a toolbar button, so we test for shift using modifierFlags
-  else if ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask)
-    reloadFlags = NSLoadFlagsBypassCacheAndProxy;
-
-  NSEnumerator* tabsEnum = [[mTabBrowser tabViewItems] objectEnumerator];
-  BrowserTabViewItem* curTabItem;
-  while ((curTabItem = [tabsEnum nextObject])) {
-    if ([curTabItem isKindOfClass:[BrowserTabViewItem class]])
-      [[[curTabItem view] getBrowserView] reload:reloadFlags];
-  }
 }
 
 - (IBAction)moveTabToNewWindow:(id)sender

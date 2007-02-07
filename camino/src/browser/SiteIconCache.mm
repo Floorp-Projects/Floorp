@@ -54,7 +54,7 @@ static NSString* const kCacheEntryExpirationDateKey = @"exp_date";
 - (void)setUUID:(NSString*)inUUID expiration:(NSDate*)inExpirationDate forURL:(NSString*)inURL;
 - (NSString*)UUIDForURL:(NSString*)inURL expired:(BOOL*)outExpired;
 
-// uuid arg is optional (for speed)
+// Note also the public method without the uuid arg (same functionality, but slower)
 - (void)removeImageForURL:(NSString*)inURL uuid:(NSString*)inUUID;
 
 - (void)loadCache;
@@ -193,6 +193,12 @@ static NSString* const kCacheEntryExpirationDateKey = @"exp_date";
   }
   
   return [entryDict objectForKey:kCacheEntryUUIDStringKey];
+}
+
+// Simplified public call of |removeImageForURL| without the uuid arg
+- (void)removeImageForURL:(NSString*)inURL
+{
+  [self removeImageForURL:inURL uuid:nil];
 }
 
 - (void)removeImageForURL:(NSString*)inURL uuid:(NSString*)inUUID

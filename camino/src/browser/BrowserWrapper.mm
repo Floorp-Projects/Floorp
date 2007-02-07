@@ -1079,6 +1079,14 @@ enum {
             [curURI isEqualToString:@"about:config"]));
 }
 
+- (void)reload:(unsigned int)reloadFlags
+{
+  // Toss the favicon when force reloading
+  if (reloadFlags == NSLoadFlagsBypassCacheAndProxy)
+    [[SiteIconProvider sharedFavoriteIconProvider] removeImageForPageURL:[self getCurrentURI]];
+
+  [mBrowserView reload:reloadFlags];
+}
 
 - (IBAction)reloadWithNewCharset:(NSString*)charset
 {
