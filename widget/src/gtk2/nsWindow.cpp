@@ -5636,7 +5636,7 @@ nsWindow::GetThebesSurface()
                 (GDK_WINDOW_XDISPLAY(d),
                  GDK_WINDOW_XWINDOW(d),
                  GDK_VISUAL_XVISUAL(gdk_drawable_get_visual(d)),
-                 width, height);
+                 gfxIntSize(width, height));
             gfxPlatformGtk::GetPlatform()->SetSurfaceGdkWindow(mThebesSurface, GDK_WINDOW(d));
         } else {
 #ifdef MOZ_ENABLE_GLITZ
