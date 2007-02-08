@@ -402,6 +402,10 @@ JS_GetTypeName(JSContext *cx, JSType type);
 
 /*
  * Initialization, locking, contexts, and memory allocation.
+ *
+ * It is important that the first runtime and first context be created in a
+ * single-threaded fashion, otherwise the behavior of the library is undefined.
+ * See: http://developer.mozilla.org/en/docs/Category:JSAPI_Reference
  */
 #define JS_NewRuntime       JS_Init
 #define JS_DestroyRuntime   JS_Finish

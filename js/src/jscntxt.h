@@ -326,13 +326,6 @@ struct JSRuntime {
 #define NO_SCOPE_SHARING_TODO   ((JSScope *) 0xfeedbeef)
 
     /*
-     * The index for JSThread info, returned by PR_NewThreadPrivateIndex.
-     * The value is visible and shared by all threads, but the data is
-     * private to each thread.
-     */
-    PRUintn             threadTPIndex;
-
-    /*
      * Lock serializing trapList and watchPointList accesses, and count of all
      * mutations to trapList and watchPointList made by debugger threads.  To
      * keep the code simple, we define debuggerMutations for the thread-unsafe
@@ -860,6 +853,14 @@ class JSAutoTempValueRooter
 
 #define JS_HAS_NATIVE_BRANCH_CALLBACK_OPTION(cx)                              \
     JS_HAS_OPTION(cx, JSOPTION_NATIVE_BRANCH_CALLBACK)
+
+/*
+ * Initialize a library-wide thread private data index, and remember that it
+ * has already been done, so that it happens only once ever.  Returns true on
+ * success.
+ */
+extern JSBool
+js_InitThreadPrivateIndex(void *ptr);
 
 /*
  * Common subroutine of JS_SetVersion and js_SetVersion, to update per-context
