@@ -474,8 +474,6 @@ public class JsDriver {
 	}
 	
 	void run(Arguments arguments) throws Throwable {
-		//	TODO	Allow rhino-n tests to be skipped
-		
 		if (arguments.help()) {
 			System.out.println("See mozilla/js/tests/README-jsDriver.html; note that some options are not supported.");
 			System.out.println("Consult the Java source code at testsrc/org/mozilla/javascript/JsDriver.java for details.");
@@ -525,7 +523,9 @@ public class JsDriver {
 		//	Does not apply; we will use the VM's classpath
 		
 		//	-e TYPE ..., --engine=TYPE ...
-		//	Does not apply, but we should provide the ability to test various optimization levels
+		//	Does not apply; was used to select between SpiderMonkey and Rhino
+		
+		//	Not in jsDriver.pl
 		public abstract int getOptimizationLevel();
 		
 		//	-f FILE, --file=FILE
@@ -539,7 +539,7 @@ public class JsDriver {
 		
 		//	-k, --confail
 		//	TODO	Currently this is ignored; not clear precisely what it means (perhaps we should not be logging ordinary
-		//			pass/fail to the console currently?
+		//			pass/fail to the console currently?)
 		public abstract boolean logFailuresToConsole();
 		
 		//	-l FILE ..., --list=FILE ...
@@ -565,9 +565,11 @@ public class JsDriver {
 		//
 		
 		//	--ignore-rhino-n
+		//	If set, do not skip tests contained in the rhino-n file
 		public abstract boolean ignoreRhinoSkipList();
 		
-		//	--timeoutms
+		//	--timeout
+		//	Milliseconds to wait for each test
 		public abstract int getTimeout();
 		
 		public static abstract class Console {
