@@ -192,6 +192,15 @@ sub store {
         $self->derive_regexp_testers(Param('testopia-default-plan-testers-regexp'));
     }
     
+    # Create default category
+    unless (scalar @{$self->product->categories}){
+        my $category = Bugzilla::Testopia::Category->new(
+            {'name' => '--default--',
+             'description' => 'Default product category for test cases',
+             'product_id' => $self->product->id });
+        $category->store;
+    }
+             
     return $key;
 }
 
