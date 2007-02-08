@@ -166,6 +166,7 @@ function chNote(idx, cid, note){
 		            disableAllButtons(false);
                     getNote(idx,cid);
 		         },
+		sync: true,
 		error:   function(type, error){ alert(error.message);},
 		mimetype: "text/plain"
 	});
