@@ -576,8 +576,6 @@ Gets the specified text relative to aBoundaryType, which means:
 BOUNDARY_CHAR             The character before/at/after the offset is returned.
 BOUNDARY_WORD_START       From the word start before/at/after the offset to the next word start.
 BOUNDARY_WORD_END         From the word end before/at/after the offset to the next work end.
-BOUNDARY_SENTENCE_START   From the sentence start before/at/after the offset to the next sentence start.
-BOUNDARY_SENTENCE_END     From the sentence end before/at/after the offset to the next sentence end.
 BOUNDARY_LINE_START       From the line start before/at/after the offset to the next line start.
 BOUNDARY_LINE_END         From the line end before/at/after the offset to the next line start.
 */
@@ -639,13 +637,6 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
     // to the next line-end, the newline is included at the beginning of the string
     amount = eSelectLine;
     break;
-  case BOUNDARY_SENTENCE_START:
-    // XXX Need to implement
-    // isStartPreferred = PR_TRUE;
-    return NS_ERROR_NOT_IMPLEMENTED;
-  case BOUNDARY_SENTENCE_END:
-    // XXX Need to implement
-    return NS_ERROR_NOT_IMPLEMENTED;
   case BOUNDARY_ATTRIBUTE_RANGE:
     {
       // XXX We should merge identically formatted frames
@@ -662,7 +653,7 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
       endOffset = *aEndOffset;
       return GetText(startOffset, endOffset, aText);
     }
-  default:
+  default:  // Note, sentence support is deprecated and falls through to here
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -690,7 +681,7 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
   }
   else {
     // Start moving forward from the start so that we don't get 
-    // 2 words/lines/sentences if the offset occured on whitespace boundary    
+    // 2 words/lines if the offset occured on whitespace boundary    
     endOffset = startForwardSearchOffset; // Passed by reference
     nsIFrame *endFrame = GetPosAndText(startForwardSearchOffset, endOffset);
     if (!endFrame) {
