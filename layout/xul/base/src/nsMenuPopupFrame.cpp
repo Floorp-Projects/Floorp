@@ -756,8 +756,8 @@ nsMenuPopupFrame::SyncViewWithFrame(nsPresContext* aPresContext,
   rect.width  -= nsPresContext::CSSPixelsToAppUnits(3);
   rect.height -= nsPresContext::CSSPixelsToAppUnits(3);
 
-  PRInt32 screenTopTwips    = rect.x;
-  PRInt32 screenLeftTwips   = rect.y;
+  PRInt32 screenLeftTwips   = rect.x;
+  PRInt32 screenTopTwips    = rect.y;
   PRInt32 screenWidthTwips  = rect.width;
   PRInt32 screenHeightTwips = rect.height;
   PRInt32 screenRightTwips  = rect.XMost();
