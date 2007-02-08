@@ -193,6 +193,7 @@ else{
             "SELECT name, environment_id 
                FROM test_environments 
               WHERE name like ?
+              ORDER BY name
               LIMIT 20",
               undef, $search);
         print objToJson($ref);  
@@ -213,6 +214,7 @@ else{
                    JOIN test_case_tags on test_case_tags.tag_id = test_tags.tag_id
                    JOIN test_case_runs on test_case_runs.case_id = test_case_tags.case_id  
                   WHERE tag_name like ? AND test_case_runs.run_id = ?
+                  ORDER BY tag_name
                   LIMIT 20",
                   undef, ($search, $run_id));
         }
@@ -221,6 +223,7 @@ else{
                 "SELECT tag_name, tag_id 
                    FROM test_tags 
                   WHERE tag_name like ?
+                  ORDER BY tag_name
                   LIMIT 20",
                   undef, $search);
         }

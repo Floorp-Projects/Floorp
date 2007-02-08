@@ -116,7 +116,9 @@ function chEnv(idx, eid, sid, cid, oldid){
 	});
 }
 //chStat updates the status
-function chStat(idx, sid, cid){
+function chStat(idx, sid, cid, osid){
+    if (osid == sid)
+	    return;
     displayMsg('pp'+idx, 3, MSG_WAIT.blink());
 	disableAllButtons(true);
 	dojo.io.bind({
