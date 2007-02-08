@@ -82,8 +82,9 @@ nsImageToPixbuf::ImageToPixbuf(nsIImage* aImage)
         imgSurface = NS_STATIC_CAST(gfxImageSurface*,
                                     NS_STATIC_CAST(gfxASurface*, surface.get()));
     } else {
-        imgSurface = new gfxImageSurface(gfxImageSurface::ImageFormatARGB32,
-                                         width, height);
+        imgSurface = new gfxImageSurface(gfxIntSize(width, height),
+					 gfxImageSurface::ImageFormatARGB32)
+                                       
         if (!imgSurface)
             return nsnull;
 

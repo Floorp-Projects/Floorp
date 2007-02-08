@@ -131,7 +131,7 @@ nsThebesDrawingSurface::Init (nsThebesDeviceContext *aDC,
 
 #ifdef MOZ_ENABLE_GTK2
     nsresult rv;
-    nsRefPtr<gfxImageSurface> imgSurf = new gfxImageSurface(gfxImageSurface::ImageFormatARGB32, mWidth, mHeight);
+    nsRefPtr<gfxImageSurface> imgSurf = new gfxImageSurface(gfxIntSize(mWidth, mHeight), gfxImageSurface::ImageFormatARGB32);
 
     GdkPixmap* pmBlack = NS_STATIC_CAST(GdkPixmap*, aNativePixmapBlack);
     GdkPixmap* pmWhite = NS_STATIC_CAST(GdkPixmap*, aNativePixmapWhite);
