@@ -2060,7 +2060,8 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
   {
     PRInt32 numNewMessages;
     m_downloadFolder->GetNumNewMessages(PR_FALSE, &numNewMessages);
-    m_downloadFolder->SetNumNewMessages(numNewMessages - 1);
+    if (numNewMessages > 0)
+      m_downloadFolder->SetNumNewMessages(numNewMessages - 1);
   }
   return rv;
 }
