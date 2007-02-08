@@ -2068,6 +2068,17 @@ nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
 
 }
 
+NS_IMETHODIMP
+nsDownload::OnRefreshAttempted(nsIWebProgress *aWebProgress,
+                               nsIURI *aUri,
+                               PRInt32 aDelay,
+                               PRBool aSameUri,
+                               PRBool *allowRefresh)
+{
+  *allowRefresh = PR_TRUE;
+  return NS_OK;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // nsIWebProgressListener
 

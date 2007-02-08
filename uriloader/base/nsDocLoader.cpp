@@ -42,6 +42,7 @@
 #include "nsCURILoader.h"
 #include "nsNetUtil.h"
 #include "nsIHttpChannel.h"
+#include "nsIWebProgressListener2.h"
 
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
@@ -1325,6 +1326,66 @@ nsDocLoader::FireOnStatusChange(nsIWebProgress* aWebProgress,
   if (mParent) {
     mParent->FireOnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
   }
+}
+
+PRBool
+nsDocLoader::RefreshAttempted(nsIWebProgress* aWebProgress,
+                              nsIURI *aURI,
+                              PRInt32 aDelay,
+                              PRBool aSameURI)
+{
+  /*
+   * Returns true if the refresh may proceed,
+   * false if the refresh should be blocked.
+   *
+   * First notify any listeners of the refresh attempt...
+   *
+   * Iterate the elements from back to front so that if items
+   * get removed from the list it won't affect our iteration
+   */
+  PRBool allowRefresh = PR_TRUE;
+  PRInt32 count = mListenerInfoList.Count();
+
+  while (--count >= 0) {
+    nsListenerInfo *info;
+
+    info = NS_STATIC_CAST(nsListenerInfo*,mListenerInfoList.SafeElementAt(count));
+    if (!info || !(info->mNotifyMask & nsIWebProgress::NOTIFY_REFRESH)) {
+      continue;
+    }
+
+    nsCOMPtr<nsIWebProgressListener> listener =
+      do_QueryReferent(info->mWeakListener);
+    if (!listener) {
+      // the listener went away. gracefully pull it out of the list.
+      mListenerInfoList.RemoveElementAt(count);
+      delete info;
+      continue;
+    }
+
+    nsCOMPtr<nsIWebProgressListener2> listener2 =
+      do_QueryReferent(info->mWeakListener);
+    if (!listener2)
+      continue;
+
+    PRBool listenerAllowedRefresh;
+    nsresult listenerRV = listener2->OnRefreshAttempted(
+        aWebProgress, aURI, aDelay, aSameURI, &listenerAllowedRefresh);
+    if (NS_FAILED(listenerRV))
+      continue;
+
+    allowRefresh = allowRefresh && listenerAllowedRefresh;
+  }
+
+  mListenerInfoList.Compact();
+
+  // Pass the notification up to the parent...
+  if (mParent) {
+    allowRefresh = allowRefresh &&
+      mParent->RefreshAttempted(aWebProgress, aURI, aDelay, aSameURI);
+  }
+
+  return allowRefresh;
 }
 
 nsListenerInfo * 

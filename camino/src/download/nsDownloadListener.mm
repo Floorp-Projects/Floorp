@@ -222,6 +222,18 @@ nsDownloadListener::OnProgressChange64(nsIWebProgress *aWebProgress,
   return NS_OK;
 }
 
+/* boolean onRefreshAttempted (in nsIWebProgress aWebProgress, in nsIURI aRefreshURI, in long aDelay, in boolean aSameURI); */
+NS_IMETHODIMP
+nsDownloadListener::OnRefreshAttempted(nsIWebProgress *aWebProgress,
+                                       nsIURI *aUri,
+                                       PRInt32 aDelay,
+                                       PRBool aSameUri,
+                                       PRBool *allowRefresh)
+{
+    *allowRefresh = PR_TRUE;
+    return NS_OK;
+}
+
 /* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
 NS_IMETHODIMP 
 nsDownloadListener::OnProgressChange(nsIWebProgress *aWebProgress, 

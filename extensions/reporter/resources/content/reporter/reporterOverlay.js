@@ -40,6 +40,7 @@ var reporterListener = {
 
   QueryInterface: function(aIID) {
     if (aIID.equals(Components.interfaces.nsIWebProgressListener)   ||
+        aIID.equals(Components.interfaces.nsIWebProgressListener2)  ||
         aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
         aIID.equals(Components.interfaces.nsISupports))
       return this;
@@ -67,7 +68,9 @@ var reporterListener = {
   onProgressChange: function() {  },
   onStatusChange: function() {  },
   onSecurityChange: function() {  },
-  onLinkIconAvailable: function() {  }
+  onLinkIconAvailable: function() {  },
+  onProgressChange64: function() { },
+  onRefreshAttempted: function() { return true; }
 }
 
 function onBrowserLoad() {

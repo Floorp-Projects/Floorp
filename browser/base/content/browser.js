@@ -3521,12 +3521,13 @@ nsBrowserStatusHandler.prototype =
 
   QueryInterface : function(aIID)
   {
-    if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
-        aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
-        aIID.equals(Components.interfaces.nsIXULBrowserWindow) ||
-        aIID.equals(Components.interfaces.nsISupports))
+    if (aIID.equals(Ci.nsIWebProgressListener) ||
+        aIID.equals(Ci.nsIWebProgressListener2) ||
+        aIID.equals(Ci.nsISupportsWeakReference) ||
+        aIID.equals(Ci.nsIXULBrowserWindow) ||
+        aIID.equals(Ci.nsISupports))
       return this;
-    throw Components.results.NS_NOINTERFACE;
+    throw Cr.NS_NOINTERFACE;
   },
 
   init : function()
@@ -3638,6 +3639,15 @@ nsBrowserStatusHandler.prototype =
       var percentage = (aCurTotalProgress * 100) / aMaxTotalProgress;
       this.statusMeter.value = percentage;
     }
+  },
+
+  onProgressChange64 : function (aWebProgress, aRequest,
+                                 aCurSelfProgress, aMaxSelfProgress,
+                                 aCurTotalProgress, aMaxTotalProgress)
+  {
+    return this.onProgressChange(aWebProgress, aRequest,
+      aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress,
+      aMaxTotalProgress);
   },
 
   onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
@@ -3885,6 +3895,63 @@ nsBrowserStatusHandler.prototype =
   {
     this.status = aMessage;
     this.updateStatusField();
+  },
+
+  onRefreshAttempted : function(aWebProgress, aURI, aDelay, aSameURI)
+  {
+    if (gPrefService.getBoolPref("accessibility.blockautorefresh")) {
+      var brandBundle = document.getElementById("bundle_brand");
+      var brandShortName = brandBundle.getString("brandShortName");
+      var refreshButtonText = 
+        gNavigatorBundle.getString("refreshBlocked.goButton");
+      var refreshButtonAccesskey = 
+        gNavigatorBundle.getString("refreshBlocked.goButton.accesskey");
+      var message;
+      if (aSameURI)
+        message = gNavigatorBundle.getFormattedString(
+          "refreshBlocked.refreshLabel", [brandShortName]);
+      else
+        message = gNavigatorBundle.getFormattedString(
+          "refreshBlocked.redirectLabel", [brandShortName]);
+      var topBrowser = getBrowserFromContentWindow(aWebProgress.DOMWindow.top);
+      var docShell = aWebProgress.DOMWindow
+                                 .QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsIWebNavigation)
+                                 .QueryInterface(Ci.nsIDocShell);
+      var notificationBox = gBrowser.getNotificationBox(topBrowser);
+      var notification = notificationBox.getNotificationWithValue(
+        "refresh-blocked");
+      if (notification) {
+        notification.label = message;
+        notification.refreshURI = aURI;
+        notification.delay = aDelay;
+        notification.docShell = docShell;
+      }
+      else {
+        var buttons = [{
+          label: refreshButtonText,
+          accessKey: refreshButtonAccesskey,
+          callback: function(aNotification, aButton) {
+            var refreshURI = aNotification.docShell
+                                          .QueryInterface(Ci.nsIRefreshURI);
+            refreshURI.forceRefreshURI(aNotification.refreshURI,
+                                       aNotification.delay, true);
+          }
+        }];
+        const priority = notificationBox.PRIORITY_INFO_MEDIUM;
+        notification = notificationBox.appendNotification(
+          message,
+          "refresh-blocked",
+          "chrome://browser/skin/Info.png",
+          priority,
+          buttons);
+        notification.refreshURI = aURI;
+        notification.delay = aDelay;
+        notification.docShell = docShell;
+      }
+      return false;
+    }
+    return true;
   },
 
   onSecurityChange : function(aWebProgress, aRequest, aState)

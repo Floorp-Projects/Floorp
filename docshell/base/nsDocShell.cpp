@@ -4112,9 +4112,30 @@ nsDocShell::GetScriptGlobalObject()
 //*****************************************************************************   
 
 NS_IMETHODIMP
-nsDocShell::RefreshURI(nsIURI * aURI, PRInt32 aDelay, PRBool aRepeat, PRBool aMetaRefresh)
+nsDocShell::RefreshURI(nsIURI * aURI, PRInt32 aDelay, PRBool aRepeat,
+                       PRBool aMetaRefresh)
 {
     NS_ENSURE_ARG(aURI);
+
+    /* Check if Meta refresh/redirects are permitted. Some
+     * embedded applications may not want to do this.
+     * Must do this before sending out NOTIFY_REFRESH events
+     * because listeners may have side effects (e.g. displaying a
+     * button to manually trigger the refresh later).
+     */
+    PRBool allowRedirects = PR_TRUE;
+    GetAllowMetaRedirects(&allowRedirects);
+    if (!allowRedirects)
+        return NS_OK;
+
+    // If any web progress listeners are listening for NOTIFY_REFRESH events,
+    // give them a chance to block this refresh.
+    PRBool sameURI;
+    nsresult rv = aURI->Equals(mCurrentURI, &sameURI);
+    if (NS_FAILED(rv))
+        sameURI = PR_FALSE;
+    if (!RefreshAttempted(this, aURI, aDelay, sameURI))
+        return NS_OK;
 
     nsRefreshTimer *refreshTimer = new nsRefreshTimer();
     NS_ENSURE_TRUE(refreshTimer, NS_ERROR_OUT_OF_MEMORY);
@@ -4152,6 +4173,66 @@ nsDocShell::RefreshURI(nsIURI * aURI, PRInt32 aDelay, PRBool aRepeat, PRBool aMe
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDocShell::ForceRefreshURI(nsIURI * aURI,
+                            PRInt32 aDelay, 
+                            PRBool aMetaRefresh)
+{
+    NS_ENSURE_ARG(aURI);
+
+    nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+    CreateLoadInfo(getter_AddRefs(loadInfo));
+    NS_ENSURE_TRUE(loadInfo, NS_ERROR_OUT_OF_MEMORY);
+
+    /* We do need to pass in a referrer, but we don't want it to
+     * be sent to the server.
+     */
+    loadInfo->SetSendReferrer(PR_FALSE);
+
+    /* for most refreshes the current URI is an appropriate
+     * internal referrer
+     */
+    loadInfo->SetReferrer(mCurrentURI);
+
+    /* Check if this META refresh causes a redirection
+     * to another site. 
+     */
+    PRBool equalUri = PR_FALSE;
+    nsresult rv = aURI->Equals(mCurrentURI, &equalUri);
+    if (NS_SUCCEEDED(rv) && (!equalUri) && aMetaRefresh) {
+
+        /* It is a META refresh based redirection. Now check if it happened
+           within the threshold time we have in mind(15000 ms as defined by
+           REFRESH_REDIRECT_TIMER). If so, pass a REPLACE flag to LoadURI().
+         */
+        if (aDelay <= REFRESH_REDIRECT_TIMER) {
+            loadInfo->SetLoadType(nsIDocShellLoadInfo::loadNormalReplace);
+            
+            /* for redirects we mimic HTTP, which passes the
+             *  original referrer
+             */
+            nsCOMPtr<nsIURI> internalReferrer;
+            GetReferringURI(getter_AddRefs(internalReferrer));
+            if (internalReferrer) {
+                loadInfo->SetReferrer(internalReferrer);
+            }
+        }
+        else
+            loadInfo->SetLoadType(nsIDocShellLoadInfo::loadRefresh);
+        /*
+         * LoadURI(...) will cancel all refresh timers... This causes the
+         * Timer and its refreshData instance to be released...
+         */
+        LoadURI(aURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE, PR_TRUE);
+        return NS_OK;
+    }
+    else
+        loadInfo->SetLoadType(nsIDocShellLoadInfo::loadRefresh);
+
+    LoadURI(aURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE, PR_TRUE);
+
+    return NS_OK;
+}
 
 nsresult
 nsDocShell::SetupRefreshURIFromHeader(nsIURI * aBaseURI,
@@ -8596,77 +8677,12 @@ nsRefreshTimer::Notify(nsITimer * aTimer)
     NS_ASSERTION(mDocShell, "DocShell is somehow null");
 
     if (mDocShell && aTimer) {
-        /* Check if Meta refresh/redirects are permitted. Some
-         * embedded applications may not want to do this.
-         */
-        PRBool allowRedirects = PR_TRUE;
-        mDocShell->GetAllowMetaRedirects(&allowRedirects);
-        if (!allowRedirects)
-          return NS_OK;
-        // Get the delay count
+        // Get the delay count to determine load type
         PRUint32 delay = 0;
         aTimer->GetDelay(&delay);
-        // Get the current uri from the docshell.
-        nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
-        nsCOMPtr<nsIURI> currURI;
-        if (webNav) {
-            webNav->GetCurrentURI(getter_AddRefs(currURI));
-        }
-        nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-        mDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
-        NS_ENSURE_TRUE(loadInfo, NS_OK);
-
-        /* We do need to pass in a referrer, but we don't want it to
-         * be sent to the server.
-         */
-        loadInfo->SetSendReferrer(PR_FALSE);
-
-        /* for most refreshes the current URI is an appropriate
-         * internal referrer
-         */
-        loadInfo->SetReferrer(currURI);
-
-        /* Check if this META refresh causes a redirection
-         * to another site. 
-         */
-        PRBool equalUri = PR_FALSE;
-        nsresult rv = mURI->Equals(currURI, &equalUri);
-        if (NS_SUCCEEDED(rv) && (!equalUri) && mMetaRefresh) {
-
-            /* It is a META refresh based redirection. Now check if it happened within 
-             * the threshold time we have in mind(15000 ms as defined by REFRESH_REDIRECT_TIMER).
-             * If so, pass a REPLACE flag to LoadURI().
-             */
-            if (delay <= REFRESH_REDIRECT_TIMER) {
-                loadInfo->SetLoadType(nsIDocShellLoadInfo::loadNormalReplace);
-
-                /* for redirects we mimic HTTP, which passes the
-                 *  original referrer
-                 */
-                nsCOMPtr<nsIURI> internalReferrer;
-                nsCOMPtr<nsIWebNavigation> webNav =
-                    do_QueryInterface(mDocShell);
-                if (webNav) {
-                    webNav->GetReferringURI(getter_AddRefs(internalReferrer));
-                    if (internalReferrer) {
-                        loadInfo->SetReferrer(internalReferrer);
-                    }
-                }
-            }
-            else
-                loadInfo->SetLoadType(nsIDocShellLoadInfo::loadRefresh);
-            /*
-             * LoadURL(...) will cancel all refresh timers... This causes the Timer and
-             * its refreshData instance to be released...
-             */
-            mDocShell->LoadURI(mURI, loadInfo,
-                               nsIWebNavigation::LOAD_FLAGS_NONE, PR_TRUE);
-            return NS_OK;
-
-        }
-        else
-            loadInfo->SetLoadType(nsIDocShellLoadInfo::loadRefresh);
-        mDocShell->LoadURI(mURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE, PR_TRUE);
+        nsCOMPtr<nsIRefreshURI> refreshURI = do_QueryInterface(mDocShell);
+        if (refreshURI)
+            refreshURI->ForceRefreshURI(mURI, delay, mMetaRefresh);
     }
     return NS_OK;
 }

@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mark Pilgrim <pilgrim@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,10 +38,9 @@
 #include "nsIWebProgressListener.idl"
 
 /**
- * This interface is an extension to nsIWebProgressListener to support 64-bit
- * progress values.
+ * An extended version of nsIWebProgressListener.
  */
-[scriptable, uuid(3f24610d-1e1f-4151-9d2e-239884742324)]
+[scriptable, uuid(dde39de0-e4e0-11da-8ad9-0800200c9a66)]
 interface nsIWebProgressListener2 : nsIWebProgressListener {
   /**
    * Notification that the progress has changed for one of the requests
@@ -75,5 +75,28 @@ interface nsIWebProgressListener2 : nsIWebProgressListener {
                           in long long aMaxSelfProgress,
                           in long long aCurTotalProgress,
                           in long long aMaxTotalProgress);
-};
 
+  /**
+   * Notification that a refresh or redirect has been requested in aWebProgress
+   * For example, via a <meta http-equiv="refresh"> or an HTTP Refresh: header
+   *
+   * @param aWebProgress
+   *        The nsIWebProgress instance that fired the notification.
+   * @param aRefreshURI
+   *        The new URI that aWebProgress has requested redirecting to.
+   * @param aMillis
+   *        The delay (in milliseconds) before refresh.
+   * @param aSameURI
+   *        True if aWebProgress is requesting a refresh of the
+   *        current URI.
+   *        False if aWebProgress is requesting a redirection to
+   *        a different URI.
+   *
+   * @return True if the refresh may proceed.
+   *         False if the refresh should be aborted.
+   */
+  boolean onRefreshAttempted(in nsIWebProgress aWebProgress,
+                             in nsIURI aRefreshURI,
+                             in long aMillis,
+                             in boolean aSameURI);
+};

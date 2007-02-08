@@ -226,6 +226,13 @@ NS_IMETHODIMP CDownload::OnSecurityChange(nsIWebProgress *aWebProgress, nsIReque
     return NS_OK;
 }
 
+/* boolean onRefreshAttempted (in nsIWebProgress aWebProgress, in nsIURI aRefreshURI, in long aDelay, in boolean aSameURI); */
+NS_IMETHODIMP CDownload::OnRefreshAttempted(nsIWebProgress *aWebProgress, nsIURI *aUri, PRInt32 aDelay, PRBool aSameUri, PRBool *allowRefresh)
+{
+    *allowRefresh = PR_TRUE;
+    return NS_OK;
+}
+
 #pragma mark -
 #pragma mark [CDownload Internal Methods]
 
