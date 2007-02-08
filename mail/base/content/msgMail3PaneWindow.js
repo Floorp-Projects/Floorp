@@ -887,7 +887,7 @@ function delayedOnLoadMessenger()
     gStartMsgKey = (window.arguments.length > 1) ? window.arguments[1]: nsMsgKey_None;
     gSearchEmailAddress = (window.arguments.length > 2) ? window.arguments[2] : null;
   }
-  
+
 #ifdef HAVE_SHELL_SERVICE
   var nsIShellService = Components.interfaces.nsIShellService;
   var shellService;
@@ -1007,11 +1007,10 @@ function loadStartFolder(initialUri)
             defaultServer.rootFolder == defaultServer.rootMsgFolder)
           defaultServer.PerformBiff(msgWindow);        
 
-        SelectFolder(startFolder.URI);        
+        SelectFolder(startFolder.URI);
     }
     catch(ex)
     {
-
       if (initialUri)
       {
         messenger.loadURL(window, initialUri);
@@ -1021,12 +1020,12 @@ function loadStartFolder(initialUri)
       dump(ex);
       dump('Exception in LoadStartFolder caused by no default account.  We know about this\n');
     }
-    
+
     // if gLoadStartFolder is true, then we must have just created a POP3 account
     // and we aren't supposed to initially download mail. (Bug #270743)
     if (gLoadStartFolder)
       MsgGetMessagesForAllServers(defaultServer);
-    
+
     // if appropriate, send unsent messages. This may end up prompting the user
     if (MailOfflineMgr.isOnline() && MailOfflineMgr.shouldSendUnsentMessages())
       SendUnsentMessages();
@@ -1035,13 +1034,14 @@ function loadStartFolder(initialUri)
 function AddToSession()
 {
   try {
-   var mailSession = Components.classes[mailSessionContractID].getService(Components.interfaces.nsIMsgMailSession);
-   var nsIFolderListener = Components.interfaces.nsIFolderListener;
-   var notifyFlags = nsIFolderListener.intPropertyChanged | nsIFolderListener.event;
-   mailSession.AddFolderListener(folderListener, notifyFlags);
- } catch (ex) {
-     dump("Error adding to session\n");
-   }
+    var mailSession = Components.classes[mailSessionContractID]
+                                .getService(Components.interfaces.nsIMsgMailSession);
+    var nsIFolderListener = Components.interfaces.nsIFolderListener;
+    var notifyFlags = nsIFolderListener.intPropertyChanged | nsIFolderListener.event;
+    mailSession.AddFolderListener(folderListener, notifyFlags);
+  } catch (ex) {
+    dump("Error adding to session\n");
+  }
 }
 
 function InitPanes()
