@@ -66,9 +66,6 @@ pref("general.autoScroll", true);
 pref("browser.startup.page",                1);
 pref("browser.startup.homepage",	   "chrome://navigator-region/locale/region.properties");
 pref("browser.startup.homepage.count", 1);
-// "browser.startup.homepage_override" was for 4.x
-pref("browser.startup.homepage_override.1", true);
-pref("browser.startup.autoload_homepage",   true);
 
 // disable this until it can be disabled on a per-docshell basis (see bug 319368)
 pref("browser.send_pings", false);
@@ -149,13 +146,9 @@ pref("browser.translation.service", "chrome://navigator-region/locale/region.pro
 pref("browser.translation.serviceDomain", "chrome://navigator-region/locale/region.properties");
   
 // Smart Browsing prefs
-pref("browser.related.autoload", 1);  // 0 = Always, 1 = After first use, 2 = Never
 pref("browser.related.provider", "http://www-rl.netscape.com/wtgn?");
 pref("browser.related.disabledForDomains", "");
 pref("keyword.moreInfoURL", "chrome://branding/locale/brand.properties");
-
-// Bookmarks prefs
-pref("browser.bookmarks.confirm_sorting", true);
 
 //Internet Search
 pref("browser.search.defaultenginename", "chrome://communicator-region/locale/region.properties");
@@ -170,7 +163,6 @@ pref("javascript.options.showInConsole",    true);
 pref("offline.startup_state",            0);
 pref("offline.send.unsent_messages",            0);
 pref("offline.download.download_messages",  0);
-pref("offline.prompt_synch_on_exit",            true);
 
 pref("signon.rememberSignons",              true);
 pref("signon.expireMasterPassword",         false);
@@ -190,7 +182,6 @@ pref("wallet.miscPanel.hide",               false);
 pref("mail.signature_file",             "");
 pref("mail.directory",                  "");
 pref("news.directory",                  "");
-pref("browser.editor.disabled", false);
 pref("spellchecker.dictionary", "");
 pref("spellchecker.dictionaries.download.url", "chrome://branding/locale/brand.properties");
 
