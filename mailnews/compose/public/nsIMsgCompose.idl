@@ -130,8 +130,7 @@ interface nsIMsgComposeRecyclingListener : nsISupports {
   void onReopen(in nsIMsgComposeParams params);
 };
 
-
-[scriptable, uuid(bd6a81fc-e18e-413c-8086-1481b67447f4)]
+[scriptable, uuid(41A7933D-DAC3-4a42-AA88-373A7DEA9F12)]
 interface nsIMsgCompose : nsISupports {
 
   /* ... */
@@ -280,6 +279,11 @@ interface nsIMsgCompose : nsISupports {
   readonly attribute string originalMsgURI;
 
   attribute boolean deleteDraft;
+
+  /* true when the compose window is in the process of inserting quoted content
+     (i.e. via reply, forward inline or a quoting operation) into the document 
+   */
+  attribute boolean insertingQuotedContent;
 };
 
 /* send listener interface */

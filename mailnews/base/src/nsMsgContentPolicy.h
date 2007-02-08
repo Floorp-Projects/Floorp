@@ -85,7 +85,8 @@ protected:
   nsresult AllowRemoteContentForSender(nsIMsgDBHdr * aMsgHdr, PRBool * aAllowForSender);
   nsresult AllowRemoteContentForMsgHdr(nsIMsgDBHdr * aMsgHdr, nsIURI * aRequestingLocation, nsIURI * aContentLocation, PRInt16 *aDecision);
   nsresult MailShouldLoad(nsIURI * aRequestingLocation, nsIURI * aContentLocation, PRInt16 * aDecision);
-  nsresult ComposeShouldLoad(nsIDocShell * aRootDocShell, nsIURI * aContentLocation, PRInt16 * aDecision);
+  nsresult ComposeShouldLoad(nsIDocShell * aRootDocShell, nsISupports *aRequestingContext, 
+                             nsIURI * aContentLocation, PRInt16 * aDecision);
 
   nsresult GetRootDocShellForContext(nsISupports * aRequestingContext, nsIDocShell ** aDocShell);
   nsresult GetMessagePaneURI(nsIDocShell * aRootDocShell, nsIURI ** aURI);

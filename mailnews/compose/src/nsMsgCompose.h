@@ -161,6 +161,8 @@ private:
   nsCOMPtr<nsIMsgSendListener>              mExternalSendListener;
   nsCString                                 mSmtpPassword;
     
+  PRBool                                    mInsertingQuotedContent;
+    
   friend class QuotingOutputStreamListener;
 	friend class nsMsgComposeSendListener;
 };
