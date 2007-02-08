@@ -124,6 +124,12 @@ protected:
             return PR_FALSE;
         }
         
+        // protect against division by zero - this really shouldn't happen
+        // if our consumers were well behaved, but they aren't (bug 368427)
+        if (NS_UNLIKELY(aHeight == 0)) {
+            return PR_FALSE;
+        }
+
         // check to make sure we don't overflow a 32-bit
         PRInt32 tmp = aWidth * aHeight;
         if (NS_UNLIKELY(tmp / aHeight != aWidth)) {
