@@ -344,7 +344,7 @@ protected:
   // Helper methods
   
   void FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKeyArray
-    &keysToFetch, nsIImapFlagAndUidState *flagState);
+    &keysToFetch, PRUint32 &numNewUnread, nsIImapFlagAndUidState *flagState);
   void FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsgKeyArray
     &keysToFetch, nsIImapFlagAndUidState *flagState);
   void PrepareToAddHeadersToMailDB(nsIImapProtocol* aProtocol, const

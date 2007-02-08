@@ -688,24 +688,7 @@ nsresult nsImapMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 
     if(mDatabase)
     {
-      PRBool hasNewMessages = PR_FALSE; 
-      for (PRUint32 keyIndex = 0; keyIndex < m_newMsgs.GetSize(); keyIndex++) 
-      { 
-        PRBool containsKey = PR_FALSE;
-        mDatabase->ContainsKey(m_newMsgs[keyIndex], &containsKey);
-        if (!containsKey)
-          continue;
-        PRBool isRead = PR_FALSE; 
-        nsresult rv2 = mDatabase->IsRead(m_newMsgs[keyIndex], &isRead); 
-        if (NS_SUCCEEDED(rv2) && !isRead) 
-        { 
-          hasNewMessages = PR_TRUE; 
-          mDatabase->AddToNewList(m_newMsgs[keyIndex]); 
-        } 
-      } 
-      
-      SetHasNewMessages(hasNewMessages); 
-
+      UpdateNewMessages();
       if(mAddListener)
         mDatabase->AddListener(this);
       UpdateSummaryTotals(PR_TRUE);
@@ -2630,6 +2613,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
     nsMsgKeyArray existingKeys;
     nsMsgKeyArray keysToDelete;
     nsMsgKeyArray keysToFetch;
+    PRUint32 numNewUnread;
     nsCOMPtr<nsIDBFolderInfo> dbFolderInfo;
     PRInt32 imapUIDValidity = 0;
     
@@ -2729,7 +2713,8 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
       if (flagState)
       {
         nsMsgKeyArray no_existingKeys;
-        FindKeysToAdd(no_existingKeys, keysToFetch, flagState);
+
+        FindKeysToAdd(no_existingKeys, keysToFetch, numNewUnread, flagState);
       }
       if (NS_FAILED(rv))
         dbName.Delete(PR_FALSE);
@@ -2748,7 +2733,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
       aSpec->GetBox_flags(&boxFlags);
       // if this is the result of an expunge then don't grab headers
       if (!(boxFlags & kJustExpunged))
-        FindKeysToAdd(existingKeys, keysToFetch, flagState);
+        FindKeysToAdd(existingKeys, keysToFetch, numNewUnread, flagState);
     }
     
     
@@ -2767,7 +2752,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
     // stand-alone biff about the new high water mark
     if (m_performingBiff)
     {
-      if (keysToFetch.GetSize() > 0)
+      if (numNewUnread > 0)
       {
         // We must ensure that the server knows that we are performing biff.
         // Otherwise the stand-alone biff won't fire.
@@ -2775,7 +2760,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
         if (NS_SUCCEEDED(GetServer(getter_AddRefs(server))) && server)
           server->SetPerformingBiff(PR_TRUE);
         
-         SetNumNewMessages(keysToFetch.GetSize());
+         SetNumNewMessages(numNewUnread);
       }
     }
     SyncFlags(flagState);
@@ -3446,7 +3431,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
         {
           nsMsgKeyArray keysToFlag;
           keysToFlag.Add(msgKey);
-          msgHdr->OrFlags(MSG_FLAG_READ, &newFlags);
+          mDatabase->MarkHdrRead(msgHdr, PR_TRUE, nsnull);
           StoreImapFlags(kImapMsgSeenFlag, PR_TRUE, keysToFlag.GetArray(), keysToFlag.GetSize(), nsnull);
           msgIsNew = PR_FALSE;
         }
@@ -3455,6 +3440,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
         {
           nsMsgKeyArray keysToFlag;
           keysToFlag.Add(msgKey);
+          mDatabase->MarkHdrMarked(msgHdr, PR_TRUE, nsnull);
           StoreImapFlags(kImapMsgFlaggedFlag, PR_TRUE, keysToFlag.GetArray(), keysToFlag.GetSize(), nsnull);
         }
         break;
@@ -4006,13 +3992,14 @@ void nsImapMailFolder::FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsg
   }
 }
 
-void nsImapMailFolder::FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToFetch, nsIImapFlagAndUidState *flagState)
+void nsImapMailFolder::FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToFetch, PRUint32 &numNewUnread, nsIImapFlagAndUidState *flagState)
 {
   PRBool showDeletedMessages = ShowDeletedMessages();
   int dbIndex=0; // current index into existingKeys
   PRInt32 existTotal, numberOfKnownKeys;
   PRInt32 messageIndex;
-  
+ 
+  numNewUnread = 0;
   existTotal = numberOfKnownKeys = existingKeys.GetSize();
   flagState->GetNumberOfMessages(&messageIndex);
   for (PRInt32 flagIndex=0; flagIndex < messageIndex; flagIndex++)
@@ -4044,6 +4031,8 @@ void nsImapMailFolder::FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKey
           }
         }
         keysToFetch.Add(uidOfMessage);
+        if (! (flags & kImapMsgSeenFlag))
+          numNewUnread++;
       }
     }
   }
