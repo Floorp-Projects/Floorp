@@ -269,8 +269,6 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
                                          const nsRect& aClipRect)
 {
   // setup to draw into the correct port
-  CGContextRef cgContext;
-
   nsCOMPtr<nsIDeviceContext> dctx;
   aContext->GetDeviceContext(*getter_AddRefs(dctx));
   PRInt32 p2a = dctx->AppUnitsPerDevPixel();
@@ -292,7 +290,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
 
   gfxMatrix mat = thebesCtx->CurrentMatrix();
   gfxQuartzSurface* quartzSurf = (gfxQuartzSurface*) (thebesSurface.get());
-  cgContext = quartzSurf->GetCGContext();
+  CGContextRef cgContext = quartzSurf->GetCGContext();
 
   //fprintf (stderr, "surface: %p cgContext: %p\n", quartzSurf, cgContext);
 
@@ -385,9 +383,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_MENUITEM: {
-      HIRect ignored;
-      // XXX kThemeMenuItemHierBackground? PopUpBackground? instead of just Plain?
-      HIThemeMenuItemDrawInfo midi = {
+      // maybe use kThemeMenuItemHierBackground or PopUpBackground instead of just Plain?
+      HIThemeMenuItemDrawInfo drawInfo = {
         version: 0,
         itemType: kThemeMenuItemPlain,
         state: (IsDisabled(aFrame) ? kThemeMenuDisabled :
@@ -396,7 +393,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       };
 
       // XXX pass in the menu rect instead of always using the item rect
-      HIThemeDrawMenuItem(&macRect, &macRect, &midi, cgContext, HITHEME_ORIENTATION, &ignored);
+      HIRect ignored;
+      HIThemeDrawMenuItem(&macRect, &macRect, &drawInfo, cgContext, HITHEME_ORIENTATION, &ignored);
     }
       break;
 
@@ -501,7 +499,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
 
     case NS_THEME_TEXTFIELD:
       // HIThemeSetFill is not available on 10.3
-      CGContextSetRGBFillColor(cgContext, 1, 1, 1, 1);
+      CGContextSetRGBFillColor(cgContext, 1.0, 1.0, 1.0, 1.0);
       CGContextFillRect(cgContext, macRect);
       DrawFrame(cgContext, kHIThemeFrameTextFieldSquare,
                 macRect, (IsDisabled(aFrame) || IsReadOnly(aFrame)), eventState);
@@ -543,9 +541,9 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
 
     case NS_THEME_TREEVIEW_TREEITEM:
     case NS_THEME_TREEVIEW:
-      // Not on 10.3.9?!
-      //HIThemeSetFill(kThemeBrushWhite, NULL, cgContext, HITHEME_ORIENTATION);
-      CGContextSetRGBFillColor(cgContext, 1, 1, 1, 1);
+      // HIThemeSetFill is not available on 10.3
+      // HIThemeSetFill(kThemeBrushWhite, NULL, cgContext, HITHEME_ORIENTATION);
+      CGContextSetRGBFillColor(cgContext, 1.0, 1.0, 1.0, 1.0);
       CGContextFillRect(cgContext, macRect);
       break;
 
@@ -592,7 +590,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
     
     case NS_THEME_LISTBOX:
       // HIThemeSetFill is not available on 10.3
-      CGContextSetRGBFillColor(cgContext, 1, 1, 1, 1);
+      CGContextSetRGBFillColor(cgContext, 1.0, 1.0, 1.0, 1.0);
       CGContextFillRect(cgContext, macRect);
       DrawFrame(cgContext, kHIThemeFrameListBox,
                 macRect, (IsDisabled(aFrame) || IsReadOnly(aFrame)), eventState);
@@ -623,7 +621,7 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
                                     PRUint8 aWidgetType,
                                     nsMargin* aResult)
 {
-  aResult->SizeTo(0,0,0,0);
+  aResult->SizeTo(0, 0, 0, 0);
 
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
@@ -657,13 +655,13 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
   return NS_OK;
 }
 
+// return false here to indicate that CSS padding values should be used
 PRBool
 nsNativeThemeCocoa::GetWidgetPadding(nsIDeviceContext* aContext, 
                                      nsIFrame* aFrame,
                                      PRUint8 aWidgetType,
                                      nsMargin* aResult)
 {
-  // We return false here to indicate that CSS padding values should be used.
   return PR_FALSE;
 }
 
@@ -674,7 +672,6 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
                                          nsSize* aResult,
                                          PRBool* aIsOverridable)
 {
-  // XXX we should probably cache some of these metrics
   aResult->SizeTo(0,0);
   *aIsOverridable = PR_TRUE;
 
@@ -1002,7 +999,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
 PRBool
 nsNativeThemeCocoa::WidgetIsContainer(PRUint8 aWidgetType)
 {
-  // XXXdwh At some point flesh all of this out.
+  // flesh this out at some point
   switch (aWidgetType) {
    case NS_THEME_DROPDOWN_BUTTON:
    case NS_THEME_RADIO:
