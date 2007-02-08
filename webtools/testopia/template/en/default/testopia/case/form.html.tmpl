@@ -33,6 +33,15 @@
     breakdownDM = new DocumentManager("tcbreakdown", "[% action FILTER html %]", ["tcbreakdownHeading"]);
     actionDM    = new DocumentManager("tcaction",    "[% action FILTER html %]", ["tcactionHeading"]);
     effectDM    = new DocumentManager("tceffect",    "[% action FILTER html %]", ["tceffectHeading"]);
+    
+    function checkAddruns(status){
+      if (status == 2){
+        document.getElementById('addruns').disabled = false;
+      }
+      else {
+        document.getElementById('addruns').disabled = true;
+      }
+    }
 </script>
 [% END %]
 <a name="attributes"></a>
@@ -69,7 +78,8 @@
         [% PROCESS select sel = { name      => 'status',
                                   accesskey => 's', 
                                   list      => case.get_status_list
-                                  default   => status_default } %]
+                                  default   => status_default 
+                                  events => 'onChange="checkAddruns(this.value)"'} %]
       </td>
       <td align="right"><b>Automatic</b></td>
       <td><select name="isautomated" id="isautomated">
@@ -104,7 +114,7 @@
       <td><input name="arguments" id="arguments" value="[% case.arguments FILTER html %]"></td>
     </tr>
     <tr>
-      <th align="right">Add to Runs</th><td colspan="3"><input name="addruns" size="30"></td>
+      <th align="right">Add to Runs</th><td colspan="3"><input name="addruns" id="addruns" size="30" [% 'disabled="disabled"' UNLESS case.status == 'CONFIRMED' OR (Param('default-test-case-status') == 'CONFIRMED' AND form_action == 'tr_new_case.cgi') %]></td>
     </tr>  
   </table> 
  </td>

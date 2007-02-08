@@ -280,6 +280,7 @@ sub add_case_run {
     my ($case_id) = @_;
     return 0 if $self->check_case($case_id);
     my $case = Bugzilla::Testopia::TestCase->new($case_id);
+    return 0 if $case->status ne 'CONFIRMED';
     my $caserun = Bugzilla::Testopia::TestCaseRun->new({
         'run_id' => $self->{'run_id'},
         'case_id' => $case_id,

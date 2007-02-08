@@ -22,6 +22,7 @@
 <form id="filter" method="GET" action="[% table.url_loc %]">
   <input type="hidden" name="plan_id" value="[% plan.id FILTER none %]" />
   <input type="hidden" name="addrun" value="[% addrun FILTER none %]" />
+  <input type="hidden" name="case_status" value="DISABLED" />
   <table>
     <tr class="bz_row_header">
       <th>Category</th>
