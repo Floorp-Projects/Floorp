@@ -222,11 +222,10 @@ void
 BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRenderingContext)
 {
     nsTableFrame *tableFrame = mTableFrame;
-    nsPresContext *presContext = tableFrame->GetPresContext();
     nsTableCellMap *cellMap = tableFrame->GetCellMap();
 
     nscoord spacing = tableFrame->GetCellSpacingX();
-    SpanningCellSorter spanningCells(presContext->PresShell());
+    SpanningCellSorter spanningCells(tableFrame->GetPresContext()->PresShell());
 
     // Loop over the columns to consider the columns and cells *without*
     // a colspan.
@@ -246,8 +245,6 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
 
         // Consider the widths on the column.
         CellWidthInfo colInfo = GetColWidthInfo(aRenderingContext, colFrame);
-        colInfo.minCoord = nsTableFrame::RoundToPixel(colInfo.minCoord);
-        colInfo.prefCoord = nsTableFrame::RoundToPixel(colInfo.prefCoord);
         colFrame->AddMinCoord(colInfo.minCoord);
         colFrame->AddPrefCoord(colInfo.prefCoord, colInfo.hasSpecifiedWidth);
         colFrame->AddPrefPercent(colInfo.prefPercent);
@@ -260,8 +257,6 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
                          nsGkAtoms::tableColGroupFrame,
                      "expected a column-group");
         colInfo = GetColWidthInfo(aRenderingContext, colFrame->GetParent());
-        colInfo.minCoord = nsTableFrame::RoundToPixel(colInfo.minCoord);
-        colInfo.prefCoord = nsTableFrame::RoundToPixel(colInfo.prefCoord);
         colFrame->AddMinCoord(colInfo.minCoord);
         colFrame->AddPrefCoord(colInfo.prefCoord, colInfo.hasSpecifiedWidth);
         colFrame->AddPrefPercent(colInfo.prefPercent);
@@ -278,9 +273,6 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
             }
 
             CellWidthInfo info = GetCellWidthInfo(aRenderingContext, cellFrame);
-
-            info.minCoord = nsTableFrame::RoundToPixel(info.minCoord);
-            info.prefCoord = nsTableFrame::RoundToPixel(info.prefCoord);
 
             colFrame->AddMinCoord(info.minCoord);
             colFrame->AddPrefCoord(info.prefCoord, info.hasSpecifiedWidth);
@@ -590,10 +582,6 @@ BasicTableLayoutStrategy::ComputeIntrinsicWidths(nsIRenderingContext* aRendering
         pref += add;
         pref_pct_expand += add;
     }
-
-    min = nsTableFrame::RoundToPixel(min);
-    pref = nsTableFrame::RoundToPixel(pref);
-    pref_pct_expand = nsTableFrame::RoundToPixel(pref_pct_expand);
 
     mMinWidth = min;
     mPrefWidth = pref;
