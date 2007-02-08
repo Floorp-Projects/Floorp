@@ -547,7 +547,14 @@ NS_IMETHODIMP nsXULTreeitemAccessible::Shutdown()
 NS_IMETHODIMP nsXULTreeitemAccessible::GetName(nsAString& aName)
 {
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
-  return mTreeView->GetCellText(mRow, mColumn, aName);
+  mTreeView->GetCellText(mRow, mColumn, aName);
+  
+  // if still no name try cell value
+  if (aName.IsEmpty()) {
+    mTreeView->GetCellValue(mRow, mColumn, aName);
+  }
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULTreeitemAccessible::GetUniqueID(void **aUniqueID)
@@ -614,7 +621,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetState(PRUint32 *_retval)
   return NS_OK;
 }
 
-// "activate" action is available for all treeitems
+// "activate" (xor "cycle") action is available for all treeitems
 // "expand/collapse" action is avaible for treeitem which is container
 NS_IMETHODIMP nsXULTreeitemAccessible::GetNumActions(PRUint8 *_retval)
 {
@@ -632,10 +639,17 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetNumActions(PRUint8 *_retval)
 // Return the name of our actions
 NS_IMETHODIMP nsXULTreeitemAccessible::GetActionName(PRUint8 index, nsAString& _retval)
 {
-  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mColumn && mTree && mTreeView, NS_ERROR_FAILURE);
 
   if (index == eAction_Click) {
-    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("activate"), _retval);
+    PRBool isCycler;
+    mColumn->GetCycler(&isCycler);
+    if (isCycler) {
+      nsAccessible::GetTranslatedString(NS_LITERAL_STRING("cycle"), _retval);
+    }
+    else {
+      nsAccessible::GetTranslatedString(NS_LITERAL_STRING("activate"), _retval);
+    }
     return NS_OK;
   }
   else if (index == eAction_Expand) {
@@ -754,16 +768,24 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetPreviousSibling(nsIAccessible **aPrevi
 
 NS_IMETHODIMP nsXULTreeitemAccessible::DoAction(PRUint8 index)
 {
-  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mColumn && mTree && mTreeView, NS_ERROR_FAILURE);
 
   if (index == eAction_Click) {
-    nsCOMPtr<nsITreeSelection> selection;
-    mTreeView->GetSelection(getter_AddRefs(selection));
-    if (selection) {
-      nsresult rv = selection->Select(mRow);
-      mTree->EnsureRowIsVisible(mRow);
-      return rv;
+    nsresult rv = NS_OK;
+    PRBool isCycler;
+    mColumn->GetCycler(&isCycler);
+    if (isCycler) {
+      rv = mTreeView->CycleCell(mRow, mColumn);
+    } 
+    else {
+      nsCOMPtr<nsITreeSelection> selection;
+      mTreeView->GetSelection(getter_AddRefs(selection));
+      if (selection) {
+        rv = selection->Select(mRow);
+        mTree->EnsureRowIsVisible(mRow);
+      }
     }
+    return rv;
   }
   else if (index == eAction_Expand) {
     PRBool isContainer;

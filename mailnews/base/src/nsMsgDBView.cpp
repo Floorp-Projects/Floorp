@@ -1526,7 +1526,45 @@ nsMsgDBView::GetProgressMode(PRInt32 aRow, nsITreeColumn* aCol, PRInt32* _retval
 
 NS_IMETHODIMP nsMsgDBView::GetCellValue(PRInt32 aRow, nsITreeColumn* aCol, nsAString& aValue)
 {
-  return NS_OK;
+  nsCOMPtr <nsIMsgDBHdr> msgHdr;
+  nsresult rv = GetMsgHdrForViewIndex(aRow, getter_AddRefs(msgHdr));
+
+  if (NS_FAILED(rv) || !msgHdr) 
+  {
+    ClearHdrCache();
+    return NS_MSG_INVALID_DBVIEW_INDEX;
+  }
+
+  const PRUnichar* colID;
+  aCol->GetIdConst(&colID);
+
+  PRUint32 flags;
+  msgHdr->GetFlags(&flags);
+  
+  // provide a string "value" for cells that do not normally have text.
+  switch (colID[0]) 
+  {
+    case 'a': // attachment column
+      aValue.Assign(GetString ((flags & MSG_FLAG_ATTACHMENT) ? 
+      NS_LITERAL_STRING("messageHasAttachment").get()
+      : NS_LITERAL_STRING("messageHasNoAttachment").get()));
+      break;
+    case 'f': // flagged (starred) column
+      aValue.Assign(GetString ((flags & MSG_FLAG_MARKED) ? 
+      NS_LITERAL_STRING("messageHasFlag").get()
+      : NS_LITERAL_STRING("messageHasNoFlag").get()));
+      break;
+    case 'u': // read/unread column
+      aValue.Assign(GetString ((flags & MSG_FLAG_READ) ?
+      NS_LITERAL_STRING("messageRead").get()
+      : NS_LITERAL_STRING("messageUnread").get()));
+      break;
+    default:
+      aValue.Assign(colID);
+      break;
+  }
+    	  
+  return rv;
 }
 
 //add a custom column handler
