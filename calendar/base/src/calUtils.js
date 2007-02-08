@@ -336,6 +336,7 @@ calAuthPrompt.prototype = {
         }
     },
 
+    // promptAuth is needed/used on trunk only
     promptAuth: function capPA(aChannel, aLevel, aAuthInfo) {
         // need to match the way the password manager stores host/realm
         var hostRealm = aChannel.URI.host + ":" + aChannel.URI.port + " (" +
@@ -351,7 +352,11 @@ calAuthPrompt.prototype = {
             aAuthInfo.password = pw.password;
             return true;
         } else {
-            return this.mPrompter.promptAuth(aChannel, aLevel, aAuthInfo);
+            var prompter2 = 
+                Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                          .getService(Components.interfaces.nsIPromptFactory)
+                          .getPrompt(null, Components.interfaces.nsIAuthPrompt2);
+            return prompter2.promptAuth(aChannel, aLevel, aAuthInfo);
         }
     },
 
