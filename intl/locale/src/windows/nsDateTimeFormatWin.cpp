@@ -76,17 +76,6 @@ nsresult nsDateTimeFormatWin::Initialize(nsILocale* locale)
     }
   }
 
-  // get os version
-  OSVERSIONINFO os;
-  os.dwOSVersionInfoSize = sizeof(os);
-  ::GetVersionEx(&os);
-  if (VER_PLATFORM_WIN32_NT == os.dwPlatformId && os.dwMajorVersion >= 4) {
-    mW_API = PR_TRUE;   // has W API
-  }
-  else {
-    mW_API = PR_FALSE;
-  }
-
   // default LCID (en-US)
   mLCID = 1033;
 
@@ -285,25 +274,10 @@ int nsDateTimeFormatWin::nsGetTimeFormatW(DWORD dwFlags, const SYSTEMTIME *lpTim
 {
   int len = 0;
 
-#ifndef WINCE // Always use wide APIs on Win CE.
-  if (mW_API) {
-#endif
-    nsString formatString; if (format) formatString.AssignWithConversion(format);
-    LPCWSTR wstr = format ? (LPCWSTR) formatString.get() : NULL;
-    len = GetTimeFormatW(mLCID, dwFlags, lpTime, wstr, (LPWSTR) timeStr, cchTime);
-#ifndef WINCE // Always use wide APIs on Win CE.
-  }
-  else {
-    char cstr_time[NSDATETIMEFORMAT_BUFFER_LEN];
-
-    len = GetTimeFormatA(mLCID, dwFlags, lpTime, (LPCSTR) format, 
-                         (LPSTR) cstr_time, NSDATETIMEFORMAT_BUFFER_LEN);
-
-    // convert result to unicode
-    if (len > 0)
-      len = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR) cstr_time, len, (LPWSTR) timeStr, cchTime);
-  }
-#endif
+  LPCWSTR wstr = NULL;
+  if (format)
+      wstr = NS_CONST_CAST(LPCWSTR, NS_ConvertASCIItoUTF16(format).get());
+  len = GetTimeFormatW(mLCID, dwFlags, lpTime, wstr, (LPWSTR) timeStr, cchTime);
   return len;
 }
 
@@ -312,24 +286,9 @@ int nsDateTimeFormatWin::nsGetDateFormatW(DWORD dwFlags, const SYSTEMTIME *lpDat
 {
   int len = 0;
 
-#ifndef WINCE // Always use wide APIs on Win CE.
-  if (mW_API) {
-#endif
-    nsString formatString; if (format) formatString.AssignWithConversion(format);
-    LPCWSTR wstr = format ? (LPCWSTR) formatString.get() : NULL;
-    len = GetDateFormatW(mLCID, dwFlags, lpDate, wstr, (LPWSTR) dateStr, cchDate);
-#ifndef WINCE // Always use wide APIs on Win CE.
-  }
-  else {
-    char cstr_date[NSDATETIMEFORMAT_BUFFER_LEN];
-
-    len = GetDateFormatA(mLCID, dwFlags, lpDate, (LPCSTR) format, 
-                         (LPSTR) cstr_date, NSDATETIMEFORMAT_BUFFER_LEN);
-
-    // convert result to unicode
-    if (len > 0)
-      len = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR) cstr_date, len, (LPWSTR) dateStr, cchDate);
-  }
-#endif
+  LPCWSTR wstr = NULL;
+  if (format)
+      wstr = NS_CONST_CAST(LPCWSTR, NS_ConvertASCIItoUTF16(format).get());
+  len = GetDateFormatW(mLCID, dwFlags, lpDate, wstr, (LPWSTR) dateStr, cchDate);
   return len;
 }
