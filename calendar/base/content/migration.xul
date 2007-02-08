@@ -64,10 +64,6 @@
                 label="&migration.welcome;">
         <description id="wizard-desc">&migration.list.description;</description>
         <listbox id="datasource-list" flex="1">
-            <listcols>
-                <listcol/>
-                <listcol flex="1"/>
-             </listcols>
         </listbox>
     </wizardpage>
 

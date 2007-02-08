@@ -74,16 +74,9 @@ var gMigrateWizard = {
         LOG("migrators: " + window.arguments.length);
         for each (var migrator in window.arguments[0]) {
             var listItem = document.createElement("listitem");
-            var checkCell = document.createElement("listcell");
-            checkCell.setAttribute("type", "checkbox");
-
-            checkCell.setAttribute("checked", true);
-            listItem.appendChild(checkCell);
-
-            var nameCell = document.createElement("listcell");
-            nameCell.setAttribute("label", migrator.title);
-            listItem.appendChild(nameCell);
-
+            listItem.setAttribute("type", "checkbox");
+            listItem.setAttribute("checked", true);
+            listItem.setAttribute("label", migrator.title);
             listItem.migrator = migrator;
             listbox.appendChild(listItem);
         }
@@ -100,8 +93,8 @@ var gMigrateWizard = {
         // Get all the checked migrators into an array
         var listbox = document.getElementById("datasource-list");
         for (var i = listbox.childNodes.length-1; i >= 0; i--) {
-            LOG("Checking child node: " + listbox.childNodes[i].firstChild);
-            if (listbox.childNodes[i].firstChild.getAttribute("checked")) {
+            LOG("Checking child node: " + listbox.childNodes[i]);
+            if (listbox.childNodes[i].getAttribute("checked")) {
                 LOG("Adding migrator");
                 migrators.push(listbox.childNodes[i].migrator);
             }
