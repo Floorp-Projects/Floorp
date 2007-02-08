@@ -1620,7 +1620,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
             Drawable drawable = gdk_x11_drawable_get_xid(GDK_DRAWABLE(bufferPixmap));
             bufferPixmapSurface =
                 new gfxXlibSurface(display, drawable, XVisual,
-                                   boundsRect.width, boundsRect.height);
+                                   gfxIntRect(boundsRect.width, boundsRect.height));
             if (bufferPixmapSurface) {
                 bufferPixmapSurface->SetDeviceOffset(gfxPoint(-boundsRect.x, -boundsRect.y));
                 nsCOMPtr<nsIRenderingContext> newRC;
