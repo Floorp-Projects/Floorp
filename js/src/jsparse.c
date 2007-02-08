@@ -1238,7 +1238,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 /*
                  * Temporarily transfer the owneship of the recycle list to
                  * funtc. See bug 313967.
-                 */ 
+                 */
                 funtc.nodeList = tc->nodeList;
                 tc->nodeList = NULL;
                 lhs = DestructuringExpr(cx, &data, &funtc, tt);
@@ -1313,13 +1313,13 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     /*
      * Temporarily transfer the owneship of the recycle list to funtc.
      * See bug 313967.
-     */ 
+     */
     funtc.nodeList = tc->nodeList;
     tc->nodeList = NULL;
     body = FunctionBody(cx, ts, fun, &funtc);
     tc->nodeList = funtc.nodeList;
     funtc.nodeList = NULL;
-    
+
     if (!body)
         return NULL;
 

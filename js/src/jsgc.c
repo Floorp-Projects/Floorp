@@ -2105,7 +2105,7 @@ MarkGCThingChildren(JSContext *cx, void *thing, uint8 *flagp,
             next_thing = JSVAL_TO_GCTHING(v);
             next_flagp = js_GetGCThingFlags(next_thing);
             if (rt->gcThingCallback) {
-                rt->gcThingCallback(next_thing, *next_flagp, 
+                rt->gcThingCallback(next_thing, *next_flagp,
                                     rt->gcThingCallbackClosure);
             }
             if (next_thing == thing)
@@ -2163,7 +2163,7 @@ MarkGCThingChildren(JSContext *cx, void *thing, uint8 *flagp,
         thing = JSSTRDEP_BASE(str);
         flagp = js_GetGCThingFlags(thing);
         if (rt->gcThingCallback) {
-            rt->gcThingCallback(thing, *flagp, 
+            rt->gcThingCallback(thing, *flagp,
                                 rt->gcThingCallbackClosure);
         }
         if (*flagp & GCF_MARK)
@@ -2478,7 +2478,7 @@ js_MarkGCThing(JSContext *cx, void *thing)
     JS_ASSERT(*flagp != GCF_FINAL);
 
     if (cx->runtime->gcThingCallback) {
-        cx->runtime->gcThingCallback(thing, *flagp, 
+        cx->runtime->gcThingCallback(thing, *flagp,
                                      cx->runtime->gcThingCallbackClosure);
     }
 

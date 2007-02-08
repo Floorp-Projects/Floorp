@@ -991,7 +991,7 @@ js_FileWrite(JSContext *cx, JSFile *file, jschar *buf, int32 len, int32 mode)
             }
             i+=j;
         }
-        j = (!file->isNative) 
+        j = (!file->isNative)
             ? PR_Write(file->handle, utfbuf, i)
             : fwrite(utfbuf, 1, i, file->nativehandle);
 
@@ -1003,7 +1003,7 @@ js_FileWrite(JSContext *cx, JSFile *file, jschar *buf, int32 len, int32 mode)
         break;
 
       case UCS2:
-        count = (!file->isNative) 
+        count = (!file->isNative)
                 ? PR_Write(file->handle, buf, len*2) >> 1
                 : fwrite(buf, 1, len*2, file->nativehandle) >> 1;
 
@@ -2188,7 +2188,7 @@ file_constructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         *rval = OBJECT_TO_JSVAL(obj);
     }
 
-    str = (argc == 0) 
+    str = (argc == 0)
           ? JS_InternString(cx, "")
           : JS_ValueToString(cx, argv[0]);
 
