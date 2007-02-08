@@ -51,9 +51,37 @@
 //
 // This code should not change, except to fix bugs.
 //
-// TODO: verify that using encodeURI() in getCanonicalHost is OK
 // TODO: accommodate other kinds of perl-but-not-javascript qualifiers
 
+/**
+ * A fast, bit-vector map for ascii characters.
+ *
+ * Internally stores 256 bits in an array of 8 ints.
+ * Does quick bit-flicking to lookup needed characters.
+ */
+
+/**
+ * @param Takes 8 ints to initialize the character map
+ */
+function Charmap() {
+  if (arguments.length != 8) {
+    throw G_Error("charmap ctor requires 8 int args");
+  }
+  this.map_ = [];
+  for (var i = 0; i < 8; ++i) {
+    this.map_.push(arguments[i]);
+  }
+}
+
+/**
+ * Do a quick lookup to see if the letter is in the map.
+ * @param chr String of length 1 (ascii)
+ * @return Boolean true if the letter is in the map
+ */
+Charmap.prototype.contains = function(chr) {
+  var val = chr.charCodeAt(0);
+  return !!(this.map_[val >> 5] & (1 << (val & 31)));
+}
 
 /**
  * This thing knows how to generate lookup keys and decrypt values found in
@@ -66,6 +94,9 @@ function PROT_EnchashDecrypter() {
   this.base64_ = new G_Base64();
   this.streamCipher_ = Cc["@mozilla.org/security/streamcipher;1"]
                        .createInstance(Ci.nsIStreamCipher);
+  this.escapeCharmap_ = new Charmap(
+    0xffffffff, 0xfc009fff, 0xf8000001, 0xf8000001,
+    0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff);
 }
 
 PROT_EnchashDecrypter.DATABASE_SALT = "oU3q.72p";
@@ -211,9 +242,15 @@ PROT_EnchashDecrypter.prototype.getCanonicalHost = function(str, opt_maxDots) {
   if (temp)
     unescaped = temp;
 
-  // TODO: what, exactly is it supposed to escape? This doesn't esecape 
-  // ":", "/", ";", and "?"
-  var escaped = encodeURI(unescaped);
+  // Escape everything that's not alphanumeric, hyphen, or dot.
+  var escaped = '';
+  for (var i = 0; i < unescaped.length; ++i) {
+    if (this.escapeCharmap_.contains(unescaped[i])) {
+      escaped += '%' + unescaped.charCodeAt(i).toString(16);
+    } else {
+      escaped += unescaped[i];
+    }
+  }
 
   if (opt_maxDots) {
     // Limit the number of dots
