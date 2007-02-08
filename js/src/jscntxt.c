@@ -66,6 +66,30 @@
 #include "jsstr.h"
 
 #ifdef JS_THREADSAFE
+#include "prtypes.h"
+
+/*
+ * The index for JSThread info, returned by PR_NewThreadPrivateIndex.  The
+ * index value is visible and shared by all threads, but the data associated
+ * with it is private to each thread.
+ */
+static PRUintn threadTPIndex;
+static JSBool  tpIndexInited = JS_FALSE;
+
+JSBool
+js_InitThreadPrivateIndex(void *ptr)
+{
+    PRStatus status;
+
+    if (tpIndexInited)
+        return JS_TRUE;
+
+    status = PR_NewThreadPrivateIndex(&threadTPIndex, ptr);
+
+    if (status == PR_SUCCESS)
+        tpIndexInited = JS_TRUE;
+    return status == PR_SUCCESS;
+}
 
 /*
  * Callback function to delete a JSThread info when the thread that owns it
@@ -104,13 +128,13 @@ js_GetCurrentThread(JSRuntime *rt)
 {
     JSThread *thread;
 
-    thread = (JSThread *)PR_GetThreadPrivate(rt->threadTPIndex);
+    thread = (JSThread *)PR_GetThreadPrivate(threadTPIndex);
     if (!thread) {
         thread = (JSThread *) calloc(1, sizeof(JSThread));
         if (!thread)
             return NULL;
 
-        if (PR_FAILURE == PR_SetThreadPrivate(rt->threadTPIndex, thread)) {
+        if (PR_FAILURE == PR_SetThreadPrivate(threadTPIndex, thread)) {
             free(thread);
             return NULL;
         }

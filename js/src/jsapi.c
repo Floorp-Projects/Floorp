@@ -697,10 +697,8 @@ JS_NewRuntime(uint32 maxbytes)
     if (!js_InitGC(rt, maxbytes))
         goto bad;
 #ifdef JS_THREADSAFE
-    if (PR_FAILURE == PR_NewThreadPrivateIndex(&rt->threadTPIndex,
-                                               js_ThreadDestructorCB)) {
+    if (!js_InitThreadPrivateIndex(js_ThreadDestructorCB))
         goto bad;
-    }
     rt->gcLock = JS_NEW_LOCK();
     if (!rt->gcLock)
         goto bad;
