@@ -98,15 +98,15 @@ nsThebesImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequi
     mFormat = format;
 
 #ifdef XP_WIN
-    mWinSurface = new gfxWindowsSurface(mWidth, mHeight, format);
+    mWinSurface = new gfxWindowsSurface(gfxIntSize(mWidth, mHeight), format);
     mImageSurface = mWinSurface->GetImageSurface();
 
     if (!mImageSurface) {
         mWinSurface = nsnull;
-        mImageSurface = new gfxImageSurface(format, mWidth, mHeight);
+        mImageSurface = new gfxImageSurface(gfxIntSize(mWidth, mHeight), format);
     }
 #else
-    mImageSurface = new gfxImageSurface(format, mWidth, mHeight);
+    mImageSurface = new gfxImageSurface(gfxIntSize(mWidth, mHeight), format);
 #endif
     mStride = mImageSurface->Stride();
 
@@ -228,7 +228,7 @@ nsThebesImage::Optimize(nsIDeviceContext* aContext)
         // will be to make sure we don't ever make a DDB that's bigger
         // than the primary screen size (rule of thumb).
         if (mWidth <= 1024 && mHeight <= 1024) {
-            nsRefPtr<gfxWindowsSurface> wsurf = mWinSurface->OptimizeToDDB(nsnull, mFormat, mWidth, mHeight);
+            nsRefPtr<gfxWindowsSurface> wsurf = mWinSurface->OptimizeToDDB(nsnull, gfxIntSize(mWidth, mHeight), mFormat);
             if (wsurf) {
                 mOptSurface = wsurf;
             }
@@ -277,8 +277,8 @@ nsThebesImage::LockImagePixels(PRBool aMaskPixels)
         return NS_ERROR_NOT_IMPLEMENTED;
     if ((mOptSurface || mSinglePixel) && !mImageSurface) {
         // Recover the pixels
-        mImageSurface = new gfxImageSurface(gfxImageSurface::ImageFormatARGB32,
-                                            mWidth, mHeight);
+        mImageSurface = new gfxImageSurface(gfxIntSize(mWidth, mHeight),
+                                            gfxImageSurface::ImageFormatARGB32);
         if (!mImageSurface)
             return NS_ERROR_OUT_OF_MEMORY;
         nsRefPtr<gfxContext> context = new gfxContext(mImageSurface);
@@ -466,8 +466,8 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
             if (!AllowedImageSize(width, height))
                 return NS_ERROR_FAILURE;
 
-            surface = new gfxImageSurface(gfxASurface::ImageFormatARGB32,
-                                          width, height);
+            surface = new gfxImageSurface(gfxIntSize(width, height),
+                                          gfxASurface::ImageFormatARGB32);
             tmpSurfaceGrip = surface;
 
             nsRefPtr<gfxContext> tmpContext = new gfxContext(surface);

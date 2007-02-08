@@ -181,7 +181,7 @@ gfxASurface::GetContentType() const
 }
 
 void
-gfxASurface::SetDeviceOffset(gfxPoint offset)
+gfxASurface::SetDeviceOffset(const gfxPoint& offset)
 {
     cairo_surface_set_device_offset(mSurface,
                                     offset.x, offset.y);

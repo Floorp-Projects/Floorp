@@ -72,8 +72,7 @@ public:
      * create a surface that is optimized for rapid pixel
      * changing.
      */
-    virtual already_AddRefed<gfxASurface> CreateOffscreenSurface(PRUint32 width,
-                                                                 PRUint32 height,
+    virtual already_AddRefed<gfxASurface> CreateOffscreenSurface(const gfxIntSize& size,
                                                                  gfxASurface::gfxImageFormat imageFormat) = 0;
 
 

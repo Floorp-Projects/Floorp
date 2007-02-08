@@ -87,8 +87,7 @@ gfxPlatformGtk::gfxPlatformGtk()
 }
 
 already_AddRefed<gfxASurface>
-gfxPlatformGtk::CreateOffscreenSurface(PRUint32 width,
-                                       PRUint32 height,
+gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
                                        gfxASurface::gfxImageFormat imageFormat)
 {
     gfxASurface *newSurface = nsnull;
@@ -132,7 +131,7 @@ gfxPlatformGtk::CreateOffscreenSurface(PRUint32 width,
             if (imageFormat == gfxASurface::ImageFormatRGB24) {
                 vis = gdk_rgb_get_visual();
                 if (vis->type == GDK_VISUAL_TRUE_COLOR)
-                    pixmap = gdk_pixmap_new(nsnull, width, height, vis->depth);
+                    pixmap = gdk_pixmap_new(nsnull, size.width, size.height, vis->depth);
             }
 
             if (pixmap) {
@@ -140,21 +139,20 @@ gfxPlatformGtk::CreateOffscreenSurface(PRUint32 width,
                 newSurface = new gfxXlibSurface(display,
                                                 GDK_PIXMAP_XID(GDK_DRAWABLE(pixmap)),
                                                 GDK_VISUAL_XVISUAL(vis),
-                                                width,
-                                                height);
+                                                size);
             } else {
                 // we couldn't create a Gdk Pixmap; fall back to image surface for the data
-                newSurface = new gfxImageSurface(imageFormat, width, height);
+                newSurface = new gfxImageSurface(imageFormat, size.width, height);
             }
         } else {
-            pixmap = gdk_pixmap_new(nsnull, width, height,
+            pixmap = gdk_pixmap_new(nsnull, size.width, size.height,
                                     xrenderFormat->depth);
             gdk_drawable_set_colormap(GDK_DRAWABLE(pixmap), nsnull);
 
             newSurface = new gfxXlibSurface(display,
                                             GDK_PIXMAP_XID(GDK_DRAWABLE(pixmap)),
                                             xrenderFormat,
-                                            width, height);
+                                            size);
         }
 
         if (pixmap && newSurface) {
@@ -176,16 +174,16 @@ gfxPlatformGtk::CreateOffscreenSurface(PRUint32 width,
             glitz_glx_create_pbuffer_drawable(display,
                                               DefaultScreen(display),
                                               gdformat,
-                                              width,
-                                              height);
+                                              size.width,
+                                              size.height);
         glitz_format_t *gformat =
             glitz_find_standard_format(gdraw, (glitz_format_name_t)glitzf);
 
         glitz_surface_t *gsurf =
             glitz_surface_create(gdraw,
                                  gformat,
-                                 width,
-                                 height,
+                                 size.width,
+                                 size.height,
                                  0,
                                  NULL);
 

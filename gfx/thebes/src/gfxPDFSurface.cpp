@@ -37,9 +37,10 @@
 
 #include "gfxPDFSurface.h"
 
-#include <cairo-pdf.h>
+#include "cairo.h"
+#include "cairo-pdf.h"
 
-gfxPDFSurface::gfxPDFSurface(const char *filename, gfxSize aSizeInPoints)
+gfxPDFSurface::gfxPDFSurface(const char *filename, const gfxSize& aSizeInPoints)
     : mXDPI(-1), mYDPI(-1), mSize(aSizeInPoints)
 {
     Init(cairo_pdf_surface_create(filename, mSize.width, mSize.height));
@@ -47,6 +48,39 @@ gfxPDFSurface::gfxPDFSurface(const char *filename, gfxSize aSizeInPoints)
 
 gfxPDFSurface::~gfxPDFSurface()
 {
+}
+
+nsresult
+gfxPDFSurface::BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName)
+{
+    return NS_OK;
+}
+
+nsresult
+gfxPDFSurface::EndPrinting()
+{
+    return NS_OK;
+}
+
+nsresult
+gfxPDFSurface::AbortPrinting()
+{
+    return NS_OK;
+}
+
+nsresult
+gfxPDFSurface::BeginPage()
+{
+    return NS_OK;
+}
+
+nsresult
+gfxPDFSurface::EndPage()
+{
+    cairo_t *cx = cairo_create(CairoSurface());
+    cairo_show_page(cx);
+    cairo_destroy(cx);
+    return NS_OK;
 }
 
 void

@@ -1622,7 +1622,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
                 new gfxXlibSurface(display, drawable, XVisual,
                                    boundsRect.width, boundsRect.height);
             if (bufferPixmapSurface) {
-                bufferPixmapSurface->SetDeviceOffset(-boundsRect.x, -boundsRect.y);
+                bufferPixmapSurface->SetDeviceOffset(gfxPoint(-boundsRect.x, -boundsRect.y));
                 nsCOMPtr<nsIRenderingContext> newRC;
                 nsresult rv = GetDeviceContext()->
                     CreateRenderingContextInstance(*getter_AddRefs(newRC));
@@ -1669,9 +1669,9 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
             ctx->Paint();
 
             nsRefPtr<gfxImageSurface> img =
-                new gfxImageSurface(gfxImageSurface::ImageFormatA8, 
-                                    boundsRect.width, boundsRect.height);
-            img->SetDeviceOffset(-boundsRect.x, -boundsRect.y);
+                new gfxImageSurface(gfxIntSize(boundsRect.width, boundsRect.height),
+                                    gfxImageSurface::ImageFormatA8);
+            img->SetDeviceOffset(gfxPoint(-boundsRect.x, -boundsRect.y));
             
             nsRefPtr<gfxContext> imgCtx = new gfxContext(img);
             imgCtx->SetPattern(pattern);

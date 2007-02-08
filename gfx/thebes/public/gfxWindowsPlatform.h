@@ -56,8 +56,7 @@ public:
         return (gfxWindowsPlatform*) gfxPlatform::GetPlatform();
     }
 
-    already_AddRefed<gfxASurface> CreateOffscreenSurface(PRUint32 width,
-                                                         PRUint32 height,
+    already_AddRefed<gfxASurface> CreateOffscreenSurface(const gfxIntSize& size,
                                                          gfxASurface::gfxImageFormat imageFormat);
 
     nsresult GetFontList(const nsACString& aLangGroup,

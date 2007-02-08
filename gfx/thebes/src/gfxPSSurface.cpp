@@ -49,7 +49,7 @@ write_func(void *closure,
 }
 #endif
 
-gfxPSSurface::gfxPSSurface(const char *filename, gfxSize aSizeInPoints)
+gfxPSSurface::gfxPSSurface(const char *filename, const gfxSize& aSizeInPoints)
     : mXDPI(-1), mYDPI(-1), mSize(aSizeInPoints)
 {
     Init(cairo_ps_surface_create(filename, mSize.width, mSize.height));
@@ -67,6 +67,39 @@ gfxPSSurface::~gfxPSSurface()
 {
 }
 
+nsresult
+gfxPSSurface::BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName)
+{
+    return NS_OK;
+}
+
+nsresult
+gfxPSSurface::EndPrinting()
+{
+    return NS_OK;
+}
+
+nsresult
+gfxPSSurface::AbortPrinting()
+{
+    return NS_OK;
+}
+
+nsresult
+gfxPSSurface::BeginPage()
+{
+    return NS_OK;
+}
+
+nsresult
+gfxPSSurface::EndPage()
+{
+    cairo_t *cx = cairo_create(CairoSurface());
+    cairo_show_page(cx);
+    cairo_destroy(cx);
+    return NS_OK;
+}
+
 void
 gfxPSSurface::SetDPI(double xDPI, double yDPI)
 {
@@ -81,3 +114,4 @@ gfxPSSurface::GetDPI(double *xDPI, double *yDPI)
     *xDPI = mXDPI;
     *yDPI = mYDPI;
 }
+

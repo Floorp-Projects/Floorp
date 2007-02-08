@@ -101,19 +101,8 @@ public:
 
     gfxContentType GetContentType() const;
 
-    void SetDeviceOffset(gfxPoint offset);
+    void SetDeviceOffset(const gfxPoint& offset);
     gfxPoint GetDeviceOffset() const;
-
-    // XXX deprecated remove this
-    void SetDeviceOffset(gfxFloat xOff, gfxFloat yOff) {
-        SetDeviceOffset(gfxPoint(xOff, yOff));
-    }
-    // XXX deprecated remove this
-    void GetDeviceOffset(gfxFloat *xOff, gfxFloat *yOff) const {
-        gfxPoint pt = GetDeviceOffset();
-        *xOff = pt.x;
-        *yOff = pt.y;
-    }
 
     void Flush();
     void MarkDirty();

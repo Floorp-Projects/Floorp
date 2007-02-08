@@ -66,11 +66,10 @@ gfxWindowsPlatform::~gfxWindowsPlatform()
 }
 
 already_AddRefed<gfxASurface>
-gfxWindowsPlatform::CreateOffscreenSurface(PRUint32 width,
-                                           PRUint32 height,
+gfxWindowsPlatform::CreateOffscreenSurface(const gfxIntSize& size,
                                            gfxASurface::gfxImageFormat imageFormat)
 {
-    gfxASurface *surf = new gfxWindowsSurface(width, height, imageFormat);
+    gfxASurface *surf = new gfxWindowsSurface(size, imageFormat);
     NS_IF_ADDREF(surf);
     return surf;
 }

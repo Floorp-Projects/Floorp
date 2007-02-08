@@ -94,7 +94,7 @@ nsThebesDrawingSurface::Init(nsThebesDeviceContext *aDC, PRUint32 aWidth, PRUint
     // XXX Performance Problem
     // because we don't pass aDC->GetWidget() (a HWND on Windows) to this function,
     // we get DIBs instead of DDBs.
-    mSurface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(aWidth, aHeight, gfxImageSurface::ImageFormatARGB32);
+    mSurface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(aWidth, aHeight), gfxImageSurface::ImageFormatARGB32);
 
     return NS_OK;
 }

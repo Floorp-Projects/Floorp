@@ -55,62 +55,59 @@ gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual)
     : mPixmapTaken(PR_FALSE), mDisplay(dpy), mDrawable(drawable)
 {
     DoSizeQuery();
-    cairo_surface_t *surf = cairo_xlib_surface_create(dpy, drawable, visual, mWidth, mHeight);
+    cairo_surface_t *surf = cairo_xlib_surface_create(dpy, drawable, visual, mSize.width, mSize.height);
     Init(surf);
 }
 
-gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual,
-                               unsigned long width, unsigned long height)
-    : mPixmapTaken(PR_FALSE), mDisplay(dpy), mDrawable(drawable), mWidth(width), mHeight(height)
+gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual, const gfxIntSize& size)
+    : mPixmapTaken(PR_FALSE), mDisplay(dpy), mDrawable(drawable), mSize(size)
 {
-    cairo_surface_t *surf = cairo_xlib_surface_create(dpy, drawable, visual, width, height);
+    cairo_surface_t *surf = cairo_xlib_surface_create(dpy, drawable, visual, mSize.width, mSize.height);
     Init(surf);
 }
 
-gfxXlibSurface::gfxXlibSurface(Display *dpy, Visual *visual, unsigned long width, unsigned long height)
-    : mPixmapTaken(PR_FALSE), mDisplay(dpy), mWidth(width), mHeight(height)
+gfxXlibSurface::gfxXlibSurface(Display *dpy, Visual *visual, const gfxIntSize& size)
+    : mPixmapTaken(PR_FALSE), mDisplay(dpy), mSize(size)
 
 {
     mDrawable = (Drawable)XCreatePixmap(dpy,
                                         RootWindow(dpy, DefaultScreen(dpy)),
-                                        width, height,
+                                        mSize.width, mSize.height,
                                         DefaultDepth(dpy, DefaultScreen(dpy)));
 
-    cairo_surface_t *surf = cairo_xlib_surface_create(dpy, mDrawable, visual, width, height);
+    cairo_surface_t *surf = cairo_xlib_surface_create(dpy, mDrawable, visual, mSize.width, mSize.height);
 
     Init(surf);
     TakePixmap();
 }
 
 gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, XRenderPictFormat *format,
-                               unsigned long width, unsigned long height)
-    : mPixmapTaken(PR_FALSE), mDisplay(dpy), mDrawable(drawable),
-      mWidth(width), mHeight(height)
+                               const gfxIntSize& size)
+    : mPixmapTaken(PR_FALSE), mDisplay(dpy), mDrawable(drawable), mSize(size)
 {
-    cairo_surface_t *surf = cairo_xlib_surface_create_with_xrender_format (dpy, drawable,
-                                                                           ScreenOfDisplay(dpy,DefaultScreen(dpy)),
-                                                                           format, width, height);
+    cairo_surface_t *surf = cairo_xlib_surface_create_with_xrender_format(dpy, drawable,
+                                                                          ScreenOfDisplay(dpy,DefaultScreen(dpy)),
+                                                                          format, mSize.width, mSize.height);
     Init(surf);
 }
 
-gfxXlibSurface::gfxXlibSurface(Display *dpy, XRenderPictFormat *format,
-                               unsigned long width, unsigned long height)
-    : mPixmapTaken(PR_FALSE), mDisplay(dpy), mWidth(width), mHeight(height)
+gfxXlibSurface::gfxXlibSurface(Display *dpy, XRenderPictFormat *format, const gfxIntSize& size)
+    : mPixmapTaken(PR_FALSE), mDisplay(dpy), mSize(size)
 {
     mDrawable = (Drawable)XCreatePixmap(dpy,
                                         RootWindow(dpy, DefaultScreen(dpy)),
-                                        width, height,
+                                        mSize.width, mSize.height,
                                         format->depth);
 
-    cairo_surface_t *surf = cairo_xlib_surface_create_with_xrender_format (dpy, mDrawable,
-                                                                           ScreenOfDisplay(dpy,DefaultScreen(dpy)),
-                                                                           format, width, height);
+    cairo_surface_t *surf = cairo_xlib_surface_create_with_xrender_format(dpy, mDrawable,
+                                                                          ScreenOfDisplay(dpy,DefaultScreen(dpy)),
+                                                                          format, mSize.width, mSize.height);
     Init(surf);
     TakePixmap();
 }
 
 gfxXlibSurface::gfxXlibSurface(cairo_surface_t *csurf)
-    : mPixmapTaken(PR_FALSE), mWidth(-1), mHeight(-1)
+    : mPixmapTaken(PR_FALSE), mSize(-1.0, -1.0)
 {
     mDrawable = cairo_xlib_surface_get_drawable(csurf);
     mDisplay = cairo_xlib_surface_get_display(csurf);
@@ -136,8 +133,8 @@ gfxXlibSurface::DoSizeQuery()
                  &width, &height,
                  &bwidth_ignore, &depth);
 
-    mWidth = width;
-    mHeight = height;
+    mSize.width = width;
+    mSize.height = height;
 }
 
 XRenderPictFormat*

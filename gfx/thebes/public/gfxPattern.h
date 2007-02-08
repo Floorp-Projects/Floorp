@@ -53,7 +53,7 @@ class THEBES_API gfxPattern {
 
 public:
     gfxPattern(cairo_pattern_t *aPattern);
-    gfxPattern(gfxRGBA aColor);
+    gfxPattern(const gfxRGBA& aColor);
     gfxPattern(gfxASurface *surface); // from another surface
     // linear
     gfxPattern(gfxFloat x0, gfxFloat y0, gfxFloat x1, gfxFloat y1); // linear

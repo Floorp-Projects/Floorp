@@ -57,14 +57,13 @@ gfxPlatformMac::gfxPlatformMac()
 }
 
 already_AddRefed<gfxASurface>
-gfxPlatformMac::CreateOffscreenSurface(PRUint32 width,
-                                       PRUint32 height,
+gfxPlatformMac::CreateOffscreenSurface(const gfxIntSize& size,
                                        gfxASurface::gfxImageFormat imageFormat)
 {
     gfxASurface *newSurface = nsnull;
 
     if (!UseGlitz()) {
-        newSurface = new gfxQuartzSurface(imageFormat, width, height);
+        newSurface = new gfxQuartzSurface(size, imageFormat);
     } else {
 #ifdef MOZ_ENABLE_GLITZ
         int bpp, glitzf;

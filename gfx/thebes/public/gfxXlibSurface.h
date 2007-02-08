@@ -52,27 +52,28 @@ public:
 
     // create a surface for the specified dpy/drawable/visual,
     // with explicitly provided width/height.
-    gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual, unsigned long width, unsigned long height);
+    gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual, const gfxIntSize& size);
 
     // create a new Pixmap on the display dpy, with
     // the root window as the parent and the default depth
     // for the default screen, and attach the given visual
-    gfxXlibSurface(Display *dpy, Visual *visual, unsigned long width, unsigned long height);
+    gfxXlibSurface(Display *dpy, Visual *visual, const gfxIntSize& size);
 
     gfxXlibSurface(Display* dpy, Drawable drawable, XRenderPictFormat *format,
-                   unsigned long width, unsigned long height);
+                   const gfxIntSize& size);
 
     gfxXlibSurface(Display* dpy, XRenderPictFormat *format,
-                   unsigned long width, unsigned long height);
+                   const gfxIntSize& size);
 
     gfxXlibSurface(cairo_surface_t *csurf);
 
     virtual ~gfxXlibSurface();
 
-    gfxSize GetSize() {
-        if (mWidth == -1 || mHeight == -1)
+    const gfxIntSize& GetSize() {
+        if (mSize.width == -1 || mSize.height == -1)
             DoSizeQuery();
-        return gfxSize(mWidth, mHeight);
+
+        return mSize;
     }
 
     Display* XDisplay() { return mDisplay; }
@@ -93,8 +94,7 @@ protected:
 
     void DoSizeQuery();
 
-    long mWidth;
-    long mHeight;
+    gfxIntSize mSize;
 };
 
 #endif /* GFX_XLIBSURFACE_H */
