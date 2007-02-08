@@ -121,15 +121,26 @@
 			/>
 		</delete>
 	</target>
+	
+	<property name="xmlbeans.tmp" location="${build.dir}/tmp-xbean" /> 
+	<property name="xmlbeans.zip" location="${xmlbeans.tmp}/xbean.zip" /> 
+	
+	<condition property="xmlbeans-present?">
+		<or>
+			<available file="${xbean.jar}" />
+			<available file="${xmlbeans.zip}" />
+		</or>
+	</condition>
+	
+	<condition property="xmlbeans-zip-present?">
+		<available file="${xmlbeans.zip}" />
+	</condition>
 
 	<target name="xmlbeans-get" unless="xmlbeans-present?">
 		<property 
 			name="xmlbeans.url" 
-			value="http://www.apache.org/dist/xml/xmlbeans/xmlbeans-current.zip"
+			value="http://www.apache.org/dist/xmlbeans/binaries/xmlbeans-2.2.0.zip"
 		/>
-
-		<property name="xmlbeans.tmp" location="${build.dir}/tmp-xbean" /> 
-		<property name="xmlbeans.zip" location="${xmlbeans.tmp}/xbean.zip" /> 
 
 		<mkdir dir="${xmlbeans.tmp}" />
 		<get src="${xmlbeans.url}" dest="${xmlbeans.zip}" ignoreerrors="true" />
@@ -140,17 +151,9 @@
 	</target>
 
 	<target name="xmlbeans-unzip" if="xmlbeans-zip-present?">
-		<unzip src="${xmlbeans.zip}" dest="${xmlbeans.tmp}">
-			<patternset includes="xmlbeans-*/lib/xbean.jar" />
-			<patternset includes="xmlbeans-*/lib/jsr173*api.jar" />
-		</unzip>
-		<mkdir dir="${lib}" />
-		<copy tofile="${xbean.jar}">
-			<fileset dir="${xbean.tmp}" includes="xmlbeans-*/lib/xbean.jar" />
-		</copy>
-		<copy tofile="${jsr173.jar}">
-			<fileset dir="${xbean.tmp}" includes="xmlbeans-*/lib/jsr173*api.jar" />
-		</copy>
-		<delete dir="${xbean.tmp}" />
+		<unzip src="${xmlbeans.zip}" dest="${xmlbeans.tmp}" />
+		<copy tofile="${xbean.jar}" file="${xmlbeans.tmp}/xmlbeans-2.2.0/lib/xbean.jar" />
+		<copy tofile="${jsr173.jar}" file="${xmlbeans.tmp}/xmlbeans-2.2.0/lib/jsr173_1.0_api.jar" />
+		<delete dir="${xmlbeans.tmp}" />
 	</target>
 </project>
