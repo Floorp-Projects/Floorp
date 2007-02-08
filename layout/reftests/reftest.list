@@ -1,3 +1,7 @@
+# If you mark a test as failing or random, you MUST file a bug report in
+# bugzilla and note the bug number as a comment on the line with the
+# failing test.
+
 # verify the tests work
 == data:text/html,<body> about:blank
 == data:text/plain, about:blank
@@ -68,7 +72,7 @@ fails == bugs/351641-2b.html bugs/351641-2-ref.html # bug 358433 (2006-10-19)
 != bugs/315620-1b.html bugs/315620-1-ref.html
 == bugs/315620-2a.xhtml bugs/315620-2-ref.xhtml
 != bugs/315620-2b.xhtml bugs/315620-2-ref.xhtml
-#== bugs/363329-1.html bugs/363329-1-ref.html # may fail randomly (bug 366865)
+random == bugs/363329-1.html bugs/363329-1-ref.html # bug 366865
 == bugs/363329-2.html bugs/363329-2-ref.html
 == bugs/363637-1.html bugs/363637-1-ref.html
 == bugs/364079-1.html bugs/364079-1-ref.html
@@ -84,7 +88,7 @@ fails == bugs/351641-2b.html bugs/351641-2-ref.html # bug 358433 (2006-10-19)
 != bugs/335628-2.xul bugs/335628-2-ref.xul
 == bugs/367247-s-visible.html bugs/367247-s-hidden.html
 == bugs/367247-s-hidden.html bugs/367247-s-auto.html
-!= bugs/367247-s-auto.html bugs/367247-s-scroll.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") != bugs/367247-s-auto.html bugs/367247-s-scroll.html # bug 369293
 != bugs/367247-l-visible.html bugs/367247-l-hidden.html
 != bugs/367247-l-hidden.html bugs/367247-l-scroll.html
 == bugs/367247-l-scroll.html bugs/367247-l-auto.html
