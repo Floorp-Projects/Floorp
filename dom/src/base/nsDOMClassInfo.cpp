@@ -4941,10 +4941,12 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
   }
 
-  NS_ASSERTION(name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor ||
-               name_struct->mType == nsGlobalNameStruct::eTypeExternalClassInfo ||
-               name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructorAlias,
-               "The constructor was set up with a struct of the wrong type.");
+  if (name_struct->mType != nsGlobalNameStruct::eTypeClassConstructor &&
+      name_struct->mType != nsGlobalNameStruct::eTypeExternalClassInfo &&
+      name_struct->mType != nsGlobalNameStruct::eTypeExternalConstructorAlias) {
+    // Doesn't have DOM interfaces.
+    return NS_OK;
+  }
 
   if (!mClassName) {
     NS_ERROR("nsDOMConstructor::HasInstance can't get name.");
