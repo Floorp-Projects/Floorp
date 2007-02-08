@@ -95,20 +95,16 @@ libs:: $(addprefix $(LOCALE_SRCDIR)/,$(README_FILES))
 
 libs-%:
 	@$(MAKE) -C ../../toolkit/locales libs-$*
-# Renable when using reporter
-#	@$(MAKE) -C ../../extensions/reporter/locales libs AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref
 ifdef MOZ_BRANDING_DIRECTORY
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$*
 endif
 
-ifdef MOZ_BRANDING_DIRECTORY
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 MOZ_PKG_MAC_DSSTORE=$(_ABS_DIST)/branding/dsstore
 MOZ_PKG_MAC_BACKGROUND=$(_ABS_DIST)/branding/background.png
 MOZ_PKG_MAC_ICON=$(_ABS_DIST)/branding/disk.icns
 MOZ_PKG_MAC_RSRC=$(_ABS_DIST)/branding/license.r
-endif
 endif
 
 PACKAGER_NO_LIBS = 1
@@ -116,8 +112,13 @@ include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 include $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/charset.mk
 
 repackage-win32-installer: WIN32_INSTALLER_OUT=$(_ABS_DIST)/install/sea/$(PKG_BASENAME).installer.exe
-repackage-win32-installer: $(WIN32_INSTALLER_IN)
+repackage-win32-installer: $(WIN32_INSTALLER_IN) $(SUBMAKEFILES)
 	@echo "Repackaging $(WIN32_INSTALLER_IN) into $(WIN32_INSTALLER_OUT)."
+ifdef MOZ_BRANDING_DIRECTORY
+	$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY) export
+else
+	$(MAKE) -C ../installer/windows export
+endif
 	if test ! -d $(dir $(WIN32_INSTALLER_OUT)); then \
 	  $(NSINSTALL) -D $(dir $(WIN32_INSTALLER_OUT)); \
 	fi
