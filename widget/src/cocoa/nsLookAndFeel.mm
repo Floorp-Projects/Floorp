@@ -38,7 +38,6 @@
 #include "nsLookAndFeel.h"
 #include "nsIInternetConfigService.h"
 #include "nsIServiceManager.h"
-#include "nsSize.h"
 
 #import <Carbon/Carbon.h>
 
@@ -165,12 +164,10 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       res = GetMacTextColor(kThemeTextColorNotification, aColor, NS_RGB(0x00,0x00,0x00));
       break;    
     case eColor_windowtext:
-      //DialogActive is closest match to "windowtext"
       res = GetMacTextColor(kThemeTextColorDialogActive, aColor, NS_RGB(0x00,0x00,0x00));
       break;
     case eColor_activecaption:
       //no way to fetch this colour. HARDCODING to Platinum
-      //res = GetMacBrushColor(??, aColor, NS_RGB(0xCC,0xCC,0xCC));
       //active titlebar etc is #CCCCCC
       aColor = NS_RGB(0xCC,0xCC,0xCC);
       break;
@@ -185,7 +182,6 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       break;   
     case eColor_background:
       // NOTE: chances are good this is a pattern, not a pure color. What do we do?
-      // Seconded. This is almost never going to be a flat colour...
       //incidentally, this is supposed to be the colour of the desktop, though how anyone
       //is supposed to guess that from the name?
       aColor = NS_RGB(0x63,0x63,0xCE);
@@ -292,7 +288,6 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       res = GetMacTextColor(kThemeTextColorMenuItemDisabled, aColor, NS_RGB(0x99,0x99,0x99));
       break;      
     case eColor__moz_mac_menutextselect:
-      //default to white, which is what Platinum uses, if not available    
       res = GetMacTextColor(kThemeTextColorMenuItemSelected, aColor, NS_RGB(0xFF,0xFF,0xFF));
       break;      
     case eColor__moz_mac_accentlightesthighlight:
@@ -377,9 +372,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMacTextColor(const PRInt32 aTextType, nscolor & 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsLookAndFeel::GetMacAccentColor(  const nsMacAccentColorOffset aAccent, 
-                                                nscolor & aColor,
-                                                const nscolor & aDefaultColor)
+NS_IMETHODIMP nsLookAndFeel::GetMacAccentColor(const nsMacAccentColorOffset aAccent, 
+                                               nscolor & aColor,
+                                               const nscolor & aDefaultColor)
 {
   nsresult res = NS_OK;
   OSStatus err = noErr;
