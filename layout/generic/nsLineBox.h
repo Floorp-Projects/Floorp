@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   L. David Baron <dbaron@dbaron.org>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -579,7 +580,11 @@ class nsLineList_iterator {
 
     typedef nsLineLink                  link_type;
 
+#ifdef NS_DEBUG
+    nsLineList_iterator() { memset(&mCurrent, 0xcd, sizeof(mCurrent)); }
+#else
     // Auto generated default constructor OK.
+#endif
     // Auto generated copy-constructor OK.
 
     inline iterator_self_type&
@@ -737,7 +742,11 @@ class nsLineList_reverse_iterator {
 
     typedef nsLineLink                  link_type;
 
+#ifdef NS_DEBUG
+    nsLineList_reverse_iterator() { memset(&mCurrent, 0xcd, sizeof(mCurrent)); }
+#else
     // Auto generated default constructor OK.
+#endif
     // Auto generated copy-constructor OK.
 
     inline iterator_self_type&
@@ -871,7 +880,11 @@ class nsLineList_const_iterator {
 
     typedef nsLineLink                  link_type;
 
+#ifdef NS_DEBUG
+    nsLineList_const_iterator() { memset(&mCurrent, 0xcd, sizeof(mCurrent)); }
+#else
     // Auto generated default constructor OK.
+#endif
     // Auto generated copy-constructor OK.
 
     inline iterator_self_type&
@@ -997,7 +1010,11 @@ class nsLineList_const_reverse_iterator {
 
     typedef nsLineLink                  link_type;
 
+#ifdef NS_DEBUG
+    nsLineList_const_reverse_iterator() { memset(&mCurrent, 0xcd, sizeof(mCurrent)); }
+#else
     // Auto generated default constructor OK.
+#endif
     // Auto generated copy-constructor OK.
 
     inline iterator_self_type&

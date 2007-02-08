@@ -786,7 +786,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // so, disable resize reflow optimizations for the line.  (Note that,
   // to be conservative, we do this if we *try* to fit a frame on a
   // line, even if we don't succeed.)
-  if (IsPercentageAware(aFrame)) {
+  if (GetFlag(LL_GOTLINEBOX) && IsPercentageAware(aFrame)) {
     mLineBox->DisableResizeReflowOptimization();
   }
 
