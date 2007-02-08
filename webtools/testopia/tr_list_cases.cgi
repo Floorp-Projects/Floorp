@@ -242,6 +242,80 @@ if ($action eq 'Commit'){
     exit;
 
 }
+elsif ($action eq 'Delete Selected'){
+    Bugzilla->login(LOGIN_REQUIRED);
+
+    # Match the list of checked items. 
+    my $reg = qr/c_([\d]+)/;
+    my $params = join(" ", $cgi->param());
+    my @params = $cgi->param();
+
+    unless ($params =~ $reg){
+        print $cgi->multipart_end if $serverpush;
+        ThrowUserError('testopia-none-selected', {'object' => 'case'});
+    }
+    my @deletable;
+    my @undeletable;
+    foreach my $p ($cgi->param()){
+        my $case = Bugzilla::Testopia::TestCase->new($1) if $p =~ $reg;
+        next unless $case;
+        
+        if ($case->candelete){
+            push @deletable, $case;
+        }
+        else {
+            push @undeletable, $case;
+        }
+    }
+    print $cgi->multipart_end if $serverpush;
+    $vars->{'delete_list'} = \@deletable;
+    $vars->{'unable_list'} = \@undeletable;
+    $template->process("testopia/case/delete-list.html.tmpl", $vars)
+        || ThrowTemplateError($template->error());
+    print $cgi->multipart_final if $serverpush;
+    exit; 
+    
+}
+
+elsif ($action eq 'do_delete'){
+    Bugzilla->login(LOGIN_REQUIRED);
+    my @case_ids = split(",", $cgi->param('case_list'));
+    my $progress_interval = 250;
+    my $i = 0;
+    my $total = scalar @case_ids;
+    
+    foreach my $id (@case_ids){
+        
+        $i++;
+        if ($i % $progress_interval == 0 && $serverpush){
+            print $cgi->multipart_end;
+            print $cgi->multipart_start;
+            $vars->{'complete'} = $i;
+            $vars->{'total'} = $total;
+            $template->process("testopia/progress.html.tmpl", $vars)
+              || ThrowTemplateError($template->error());
+        }
+        
+        detaint_natural($id);
+        next unless $id;
+        my $case = Bugzilla::Testopia::TestCase->new($id);
+        next unless $case->candelete;
+        $case->obliterate;
+    }
+    
+    print $cgi->multipart_end if $serverpush;
+    my $case = Bugzilla::Testopia::TestCase->new({});
+    $vars->{'case'} = $case;
+    $vars->{'title'} = "Update Successful";
+    $vars->{'tr_message'} = "$i test cases deleted";
+    $vars->{'current_tab'} = 'case';
+    
+    $template->process("testopia/search/advanced.html.tmpl", $vars)
+        || ThrowTemplateError($template->error()); 
+    print $cgi->multipart_final if $serverpush;
+    exit;
+}
+
 ###############
 ### Display ###
 ###############

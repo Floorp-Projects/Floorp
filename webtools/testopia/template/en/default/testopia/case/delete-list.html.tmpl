@@ -1,0 +1,60 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Testopia.
+  #
+  # The Initial Developer of the Original Code is Greg Hendricks.
+  # Portions created by Greg Hendricks are Copyright (C) 2007
+  # Novell. All Rights Reserved.
+  #
+  # Contributor(s): Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+[%# INTERFACE:
+  # ...
+  #%]
+
+[%############################################################################%]
+[%# Template Initialization #%]
+[%############################################################################%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[%############################################################################%]
+[%# Page Header #%]
+[%############################################################################%]
+
+[% PROCESS global/header.html.tmpl 
+  title = "Deleting Multiple Test Cases" 
+%] 
+
+[% IF unable_list.size > 0 %]
+  You do not have sufficient permissions to delete the following test cases:<br>
+  [% FOREACH case = unable_list %]
+    <a href="tr_show_case.cgi?case_id=[% case.id FILTER none %]">[% case.id FILTER none %]</a>
+  [% END %]
+<p>These will be ignored</p>
+[% END %]
+<b>You are about to delete [% delete_list.size %] test cases with all of their history</b></br>
+
+<br>
+<span style="font-size:12pt; font-weight:bold; color:#cc0000;">Warning: This action cannot be undone</span>
+<br>
+<br>
+<form action="tr_list_cases.cgi">
+  <input type="hidden" name="case_list" value="[% FOREACH c = delete_list %][% c.id FILTER none %],[% END %]" />
+  <input type="hidden" name="action" value="do_delete" />
+  <input type="submit" value="Delete These Test Cases" />
+</form>
+
+<a href="tr_query.cgi">Go back to search page</a>
+
+[% PROCESS global/footer.html.tmpl %]

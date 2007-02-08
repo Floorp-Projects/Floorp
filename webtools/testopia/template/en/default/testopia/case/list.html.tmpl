@@ -89,7 +89,9 @@ No test cases
 [% END %]
 found.</b>
 </p>
-
+[% IF table.list_count > 0 %]
+<p style="float: right;"><input type="submit" name="action" value="Delete Selected"></p>
+[% END %]
 [% IF dotweak AND table.list_count %]
 <h3>Update Selected Test Cases</h3>
 
