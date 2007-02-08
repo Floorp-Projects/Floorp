@@ -1291,7 +1291,16 @@ PRBool nsImapProtocol::ProcessCurrentURL()
     EndIdle();
 
   if (m_retryUrlOnError)
+  {
+    // we clear this flag if we're re-running immediately, because that 
+    // means we never sent a start running url notification, and later we
+    // don't send start running notification if we think we're rerunning 
+    // the url (see first call to SetUrlState below). This means we won't
+    // send a start running notification, which means our stop running
+    // notification will be ignored because we don't think we were running.
+    m_runningUrl->SetRerunningUrl(PR_FALSE);
     return RetryUrl();
+  }
   Log("ProcessCurrentURL", nsnull, "entering");
   (void) GetImapHostName(); // force m_hostName to get set.
 
