@@ -59,6 +59,10 @@
 #include "nsToolkit.h"
 #include "nsSwitchToUIThread.h"
 
+#ifdef MOZ_CAIRO_GFX
+#include <gfxOS2Surface.h>
+#endif
+
 class imgIContainer;
 
 //#define DEBUG_FOCUS
@@ -123,6 +127,9 @@ class nsWindow : public nsBaseWidget,
                       nsIAppShell *aAppShell = nsnull,
                       nsIToolkit *aToolkit = nsnull,
                       nsWidgetInitData *aInitData = nsnull);
+#ifdef MOZ_CAIRO_GFX
+   gfxASurface* GetThebesSurface();
+#endif
    NS_IMETHOD Destroy(); // call before releasing
 
    // Hierarchy: only interested in widget children (it seems)
@@ -294,6 +301,9 @@ protected:
    nsFont        *mFont;
    nsIMenuBar    *mMenuBar;
    PRInt32        mWindowState;
+#ifdef MOZ_CAIRO_GFX
+   nsRefPtr<gfxOS2Surface> mThebesSurface;
+#endif
 
    // Implementation ------------------------------
    void DoCreate( HWND hwndP, nsWindow *wndP, const nsRect &rect,
