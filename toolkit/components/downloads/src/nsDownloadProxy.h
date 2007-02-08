@@ -222,7 +222,15 @@ public:
     return NS_OK;
   }
 
-
+  NS_IMETHODIMP OnRefreshAttempted(nsIWebProgress *aWebProgress,
+                                   nsIURI *aUri,
+                                   PRInt32 aDelay,
+                                   PRBool aSameUri,
+                                   PRBool *allowRefresh)
+  {
+    *allowRefresh = PR_TRUE;
+    return NS_OK;
+  }
 
   NS_IMETHODIMP OnSecurityChange(nsIWebProgress *aWebProgress,
                                  nsIRequest *aRequest, PRUint32 aState)

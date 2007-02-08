@@ -67,6 +67,7 @@
       <!-- General tab -->
       <preference id="accessibility.browsewithcaret"   name="accessibility.browsewithcaret"   type="bool"/>
       <preference id="accessibility.typeaheadfind"     name="accessibility.typeaheadfind"     type="bool"/>
+      <preference id="accessibility.blockautorefresh"  name="accessibility.blockautorefresh"  type="bool"/>
 
       <preference id="general.autoScroll"              name="general.autoScroll"              type="bool"/>
       <preference id="general.smoothScroll"            name="general.smoothScroll"            type="bool"/>
@@ -143,6 +144,10 @@
                       label="&searchStartTyping.label;"
                       accesskey="&searchStartTyping.accesskey;"
                       preference="accessibility.typeaheadfind"/>
+            <checkbox id="blockAutoRefresh"
+                      label="&blockAutoRefresh.label;"
+                      accesskey="&blockAutoRefresh.accesskey;"
+                      preference="accessibility.blockautorefresh"/>
           </groupbox>
 
           <!-- Browsing -->

@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mark Pilgrim <pilgrim@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -40,7 +41,7 @@
 #include "nsIURI.idl"
 interface nsIChannel;
 
-[scriptable, uuid(69EFC430-2EFE-11d2-9E5D-006008BF092E)]
+[scriptable, uuid(c25b6df0-e4e0-11da-8ad9-0800200c9a66)]
 interface nsIRefreshURI : nsISupports {
     /**
       * Load a uri after waiting for aMillis milliseconds. If the docshell
@@ -51,9 +52,20 @@ interface nsIRefreshURI : nsISupports {
       * @param aMillis The number of milliseconds to wait.
       * @param aRepeat Flag to indicate if the uri is to be 
       *                repeatedly refreshed every aMillis milliseconds.
-      * @parem aMetaRefresh Flag to indicate if this is a Meta refresh.
+      * @param aMetaRefresh Flag to indicate if this is a Meta refresh.
       */
-    void refreshURI(in nsIURI aURI, in long aMillis, in boolean aRepeat, in boolean aMetaRefresh);
+    void refreshURI(in nsIURI aURI, in long aMillis, in boolean aRepeat,
+                    in boolean aMetaRefresh);
+
+    /**
+      * Loads a URI immediately as if it were a refresh.
+      *
+      * @param aURI The URI to refresh.
+      * @param aMillis The number of milliseconds by which this refresh would
+      *                be delayed if it were not being forced.
+      * @param aMetaRefresh Flag to indicate if this is a meta refresh.
+      */
+    void forceRefreshURI(in nsIURI aURI, in long aMillis, in boolean aMetaRefresh);
 
     /**
       * Checks the passed in channel to see if there is a refresh header, 

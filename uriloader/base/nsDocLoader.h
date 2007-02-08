@@ -168,6 +168,11 @@ protected:
                               nsIRequest* aRequest,
                               nsIURI *aUri);
 
+    PRBool RefreshAttempted(nsIWebProgress* aWebProgress,
+                            nsIURI *aURI,
+                            PRInt32 aDelay,
+                            PRBool aSameURI);
+
     // this function is overridden by the docshell, it is provided so that we
     // can pass more information about redirect state (the normal OnStateChange
     // doesn't get the new channel).

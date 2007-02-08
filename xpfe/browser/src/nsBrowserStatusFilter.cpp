@@ -69,9 +69,10 @@ nsBrowserStatusFilter::~nsBrowserStatusFilter()
 // nsBrowserStatusFilter::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS3(nsBrowserStatusFilter,
+NS_IMPL_ISUPPORTS4(nsBrowserStatusFilter,
                    nsIWebProgress,
                    nsIWebProgressListener,
+                   nsIWebProgressListener2,
                    nsISupportsWeakReference)
 
 //-----------------------------------------------------------------------------
@@ -199,14 +200,16 @@ nsBrowserStatusFilter::OnProgressChange(nsIWebProgress *aWebProgress,
     // limit frequency of calls to OnProgressChange
     //
 
-    mCurProgress = aCurTotalProgress;
-    mMaxProgress = aMaxTotalProgress;
+    mCurProgress = (PRInt64)aCurTotalProgress;
+    mMaxProgress = (PRInt64)aMaxTotalProgress;
 
     if (mDelayedProgress)
         return NS_OK;
 
     if (!mDelayedStatus) {
-        mListener->OnProgressChange(nsnull, nsnull, 0, 0, mCurProgress, mMaxProgress);
+        mListener->OnProgressChange(nsnull, nsnull, 0, 0,
+				    (PRInt32)mCurProgress,
+				    (PRInt32)mMaxProgress);
         StartDelayTimer();
     }
 
@@ -266,6 +269,41 @@ nsBrowserStatusFilter::OnSecurityChange(nsIWebProgress *aWebProgress,
 }
 
 //-----------------------------------------------------------------------------
+// nsBrowserStatusFilter::nsIWebProgressListener2
+//-----------------------------------------------------------------------------
+NS_IMETHODIMP
+nsBrowserStatusFilter::OnProgressChange64(nsIWebProgress *aWebProgress,
+                                          nsIRequest *aRequest,
+                                          PRInt64 aCurSelfProgress,
+                                          PRInt64 aMaxSelfProgress,
+                                          PRInt64 aCurTotalProgress,
+                                          PRInt64 aMaxTotalProgress)
+{
+    // XXX truncates 64-bit to 32-bit
+    return OnProgressChange(aWebProgress, aRequest,
+			    (PRInt32)aCurSelfProgress,
+			    (PRInt32)aMaxSelfProgress,
+			    (PRInt32)aCurTotalProgress,
+			    (PRInt32)aMaxTotalProgress);
+}
+
+NS_IMETHODIMP
+nsBrowserStatusFilter::OnRefreshAttempted(nsIWebProgress *aWebProgress,
+                                          nsIURI *aUri,
+                                          PRInt32 aDelay,
+                                          PRBool aSameUri,
+                                          PRBool *allowRefresh)
+{
+    nsCOMPtr<nsIWebProgressListener2> listener =
+        do_QueryInterface(mListener);
+    if (!listener)
+        return NS_OK;
+
+    return listener->OnRefreshAttempted(aWebProgress, aUri, aDelay, aSameUri,
+                                        allowRefresh);
+}
+
+//-----------------------------------------------------------------------------
 // nsBrowserStatusFilter <private>
 //-----------------------------------------------------------------------------
 
@@ -297,7 +335,10 @@ nsBrowserStatusFilter::ProcessTimeout()
 
     if (mDelayedProgress) {
         mDelayedProgress = PR_FALSE;
-        mListener->OnProgressChange(nsnull, nsnull, 0, 0, mCurProgress, mMaxProgress);
+	// XXX truncates 64-bit to 32-bit
+        mListener->OnProgressChange(nsnull, nsnull, 0, 0,
+				    (PRInt32)mCurProgress,
+				    (PRInt32)mMaxProgress);
     }
 }
 

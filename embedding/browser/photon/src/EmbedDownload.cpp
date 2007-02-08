@@ -159,3 +159,9 @@ NS_IMETHODIMP EmbedDownload::OnStatusChange(nsIWebProgress* aWebProgress, nsIReq
 NS_IMETHODIMP EmbedDownload::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 state) {
 	return NS_OK;
 	}
+NS_IMETHODIMP EmbedDownload::OnRefreshAttempted(nsIWebProgress *aWebProgress, nsIURI *aUri, PRInt32 aDelay, PRBool aSameUri, PRBool *allowRefresh)
+{
+    *allowRefresh = PR_TRUE;
+    return NS_OK;
+}
+

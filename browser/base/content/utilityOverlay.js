@@ -529,3 +529,13 @@ function isElementVisible(aElement)
           document.defaultView
                   .getComputedStyle(aElement, null).visibility == "visible");
 }
+
+function getBrowserFromContentWindow(aContentWindow)
+{
+  var browsers = gBrowser.browsers;
+  for (var i = 0; i < browsers.length; i++) {
+    if (browsers[i].contentWindow == aContentWindow)
+      return browsers[i];
+  }
+  return null;
+}

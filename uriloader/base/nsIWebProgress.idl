@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Travis Bogard <travis@netscape.com>
  *   Darin Fisher <darin@meer.net>
+ *   Mark Pilgrim <pilgrim@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -115,16 +116,21 @@ interface nsIWebProgress : nsISupports
    *
    * NOTIFY_LOCATION
    *   Receive onLocationChange events.
+   *
+   * NOTIFY_REFRESH
+   *   Receive onRefreshAttempted events.
+   *   This is defined on nsIWebProgressListener2.
    */
   const unsigned long NOTIFY_PROGRESS       = 0x00000010;
   const unsigned long NOTIFY_STATUS         = 0x00000020;
   const unsigned long NOTIFY_SECURITY       = 0x00000040;
   const unsigned long NOTIFY_LOCATION       = 0x00000080;
+  const unsigned long NOTIFY_REFRESH        = 0x00000100;
 
   /**
    * This flag enables all notifications.
    */
-  const unsigned long NOTIFY_ALL            = 0x000000ff;
+  const unsigned long NOTIFY_ALL            = 0x000001ff;
 
   /**
    * Registers a listener to receive web progress events.
