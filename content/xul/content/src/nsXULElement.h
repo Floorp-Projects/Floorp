@@ -67,7 +67,6 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIBindingManager.h"
 #include "nsIURI.h"
-#include "nsIXMLContent.h"
 #include "nsIXULPrototypeCache.h"
 #include "nsIXULTemplateBuilder.h"
 #include "nsIBoxObject.h"
@@ -551,9 +550,6 @@ public:
     virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
     virtual nsIAtom* GetID() const;
     virtual const nsAttrValue* GetClasses() const;
-
-    // nsIXMLContent
-    NS_IMETHOD MaybeTriggerAutoLink(nsIDocShell *aShell);
 
     NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
     virtual nsICSSStyleRule* GetInlineStyleRule();
