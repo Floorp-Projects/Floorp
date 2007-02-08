@@ -558,16 +558,6 @@ nsXULElement::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
     return NS_OK;
 }
 
-
-//----------------------------------------------------------------------
-// nsIXMLContent interface
-
-NS_IMETHODIMP
-nsXULElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
-{
-  return NS_OK;
-}
-
 nsresult
 nsXULElement::GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
                                              nsISupports** aTarget,
