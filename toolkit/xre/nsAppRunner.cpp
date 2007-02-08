@@ -2116,6 +2116,20 @@ public:
 typedef void (*_g_set_application_name_fn)(const gchar *application_name);
 #endif
 
+/** 
+ * NSPR will search for the "nspr_use_zone_allocator" symbol throughout
+ * the process and use it to determine whether the application defines its own
+ * memory allocator or not.
+ *
+ * Since most applications (e.g. Firefox and Thunderbird) don't use any special
+ * allocators and therefore don't define this symbol, NSPR must search the
+ * entire process, which reduces startup performance.
+ *
+ * By defining the symbol here, we can avoid the wasted lookup and hopefully
+ * improve startup performance.
+ */
+PRBool nspr_use_zone_allocator = PR_FALSE;
+
 int
 XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 {
