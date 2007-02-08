@@ -645,11 +645,11 @@ CHBrowserListener::OnProgressChange64(nsIWebProgress *aWebProgress, nsIRequest *
 
 /* boolean onRefreshAttempted (in nsIWebProgress aWebProgress, in nsIURI aRefreshURI, in long aDelay, in boolean aSameURI); */
 NS_IMETHODIMP
-CHDownloadListener::OnRefreshAttempted(nsIWebProgress *aWebProgress,
-                                       nsIURI *aUri,
-                                       PRInt32 aDelay,
-                                       PRBool aSameUri,
-                                       PRBool *allowRefresh)
+CHBrowserListener::OnRefreshAttempted(nsIWebProgress *aWebProgress,
+                                      nsIURI *aUri,
+                                      PRInt32 aDelay,
+                                      PRBool aSameUri,
+                                      PRBool *allowRefresh)
 {
     *allowRefresh = PR_TRUE;
     return NS_OK;
