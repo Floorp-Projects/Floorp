@@ -103,18 +103,9 @@ nsRASAutodial::nsRASAutodial()
     mOSVerInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
     GetVersionEx(&mOSVerInfo);
 
-#ifndef WINCE
-    // We only need to dial on nt based systems. For all other platforms, 
-    // mAutodialBehavior will remain AUTODIAL_NEVER, and we can skip
-    // these initializations.
-    if ((mOSVerInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) 
-     && (mOSVerInfo.dwMajorVersion >= 4))
-#endif
-    {
-        // Initializations that can be made again since RAS OS settings can 
-        // change.
-        Init();
-    }
+    // Initializations that can be made again since RAS OS settings can 
+    // change.
+    Init();
 }
 
 // dtor

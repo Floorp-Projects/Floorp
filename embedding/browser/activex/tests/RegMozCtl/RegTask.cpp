@@ -114,31 +114,6 @@ HRESULT CRegTaskPATH::DoTask()
     CString szBinDirPath;
     m_pTaskMgr->GetValue(c_szValueBinDirPath, szBinDirPath);
 
-    OSVERSIONINFO osvi;
-    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO)
-    GetVersionEx(&osvi);
-
-    if (osvi.dwPlatformId == VER_PLATFORM_WIN32_NT)
-    {
-    }
-    else if (osvi.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS)
-    {
-        FILE *f = fopen("c:\\autoexec.bat", "rw");
-        if (f == NULL)
-        {
-            return NULL;
-        }
-
-        // TODO read autoexec.bat if necessary and add Mozilla bin path to it
-
-        // READ whole thing into memory
-        // grep for magic control tags
-        // if there then replace section
-        // else append new section
-
-        fclose(f);
-    }
-
     return S_OK;
 }
 

@@ -666,14 +666,6 @@ nsHttpHandler::InitUserAgentComponents()
                     PR_smprintf_free(buf);
                 }
             }
-        } else if (info.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS &&
-                   info.dwMajorVersion == 4) {
-            if (info.dwMinorVersion == 90)
-                mOscpu.AssignLiteral("Win 9x 4.90");  // Windows Me
-            else if (info.dwMinorVersion > 0)
-                mOscpu.AssignLiteral("Win98");
-            else
-                mOscpu.AssignLiteral("Win95");
         } else {
             char *buf = PR_smprintf("Windows %ld.%ld",
                                     info.dwMajorVersion,
