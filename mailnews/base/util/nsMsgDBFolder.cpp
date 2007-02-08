@@ -471,6 +471,29 @@ NS_IMETHODIMP nsMsgDBFolder::ClearNewMessages()
   return rv;
 }
 
+void nsMsgDBFolder::UpdateNewMessages()
+{
+  if (! (mFlags & MSG_FOLDER_FLAG_VIRTUAL))
+  {
+    PRBool hasNewMessages = PR_FALSE;
+    for (PRUint32 keyIndex = 0; keyIndex < m_newMsgs.GetSize(); keyIndex++)
+    {
+      PRBool containsKey = PR_FALSE;
+      mDatabase->ContainsKey(m_newMsgs[keyIndex], &containsKey);
+      if (!containsKey)
+        continue;
+      PRBool isRead = PR_FALSE;
+      nsresult rv2 = mDatabase->IsRead(m_newMsgs[keyIndex], &isRead);
+      if (NS_SUCCEEDED(rv2) && !isRead)
+      {
+        hasNewMessages = PR_TRUE;
+        mDatabase->AddToNewList(m_newMsgs[keyIndex]);
+      }
+    }
+    SetHasNewMessages(hasNewMessages);
+  }
+}
+
 // helper function that gets the cache element that corresponds to the passed in file spec.
 // This could be static, or could live in another class - it's not specific to the current
 // nsMsgDBFolder. If it lived at a higher level, we could cache the account manager and folder cache.
@@ -4182,8 +4205,8 @@ NS_IMETHODIMP nsMsgDBFolder::SetBiffState(PRUint32 aBiffState)
     // Get the server and notify it and not inbox.
   if (oldBiffState != aBiffState)
   {
-    if (aBiffState == nsMsgBiffState_NoMail)
-      SetNumNewMessages(0);
+//    if (aBiffState == nsMsgBiffState_NoMail)
+//      SetNumNewMessages(0);
 
     // we don't distinguish between unknown and noMail for servers
     if (! (oldBiffState == nsMsgBiffState_Unknown && aBiffState == nsMsgBiffState_NoMail))
