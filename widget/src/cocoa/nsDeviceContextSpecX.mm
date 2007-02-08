@@ -269,9 +269,9 @@ NS_IMETHODIMP nsDeviceContextSpecX::GetSurfaceForPrinter(gfxASurface **surface)
     nsRefPtr<gfxASurface> newSurface;
 
     if (context)
-        newSurface = new gfxQuartzSurface(context, (int)width, (int)height, PR_FALSE);
+        newSurface = new gfxQuartzSurface(context, PR_FALSE, gfxSize(width, height));
     else
-        newSurface = new gfxImageSurface(gfxASurface::ImageFormatARGB32, width, height);
+        newSurface = new gfxImageSurface(gfxIntSize(width, height), gfxASurface::ImageFormatARGB32);
 
     if (!newSurface)
         return NS_ERROR_FAILURE;
