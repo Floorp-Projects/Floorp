@@ -84,7 +84,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 DIRS += wgl
 endif
 
-ifneq (,$(filter $(MOZ_GFX_TOOLKIT),mac cocoa))
+ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),mac cocoa))
 DIRS += agl
 endif
 

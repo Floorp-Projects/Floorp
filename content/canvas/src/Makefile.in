@@ -101,7 +101,7 @@ include $(topsrcdir)/config/rules.mk
 CXXFLAGS	+= $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
 
 ifndef MOZ_ENABLE_CAIRO_GFX
-ifneq (,$(filter mac cocoa,$(MOZ_GFX_TOOLKIT)))
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 # needed for nsDrawingSurfaceMac.h
 CXXFLAGS += -I$(topsrcdir)/gfx/src/mac
 endif

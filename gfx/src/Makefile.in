@@ -101,11 +101,11 @@ else
  ifdef MOZ_ENABLE_PHOTON
  DIRS        += photon
  endif
- ifeq ($(MOZ_GFX_TOOLKIT),cocoa)
+ ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
  DIRS	     += mac
  endif
- ifneq (,$(filter windows beos os2 mac,$(MOZ_GFX_TOOLKIT)))
- DIRS        += $(MOZ_GFX_TOOLKIT)
+ ifneq (,$(filter windows beos os2 mac,$(MOZ_WIDGET_TOOLKIT)))
+ DIRS        += $(MOZ_WIDGET_TOOLKIT)
  endif
 endif
 

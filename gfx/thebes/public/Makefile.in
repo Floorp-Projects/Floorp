@@ -34,7 +34,7 @@ REQUIRES += glitz
 EXPORTS +=	gfxGlitzSurface.h
 endif
 
-ifeq ($(MOZ_GFX_TOOLKIT),windows)
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 EXPORTS	+=	gfxWindowsFonts.h \
 		gfxWindowsPlatform.h \
 		gfxWindowsSurface.h
@@ -44,7 +44,7 @@ REQUIRES += glitzwgl
 endif
 endif
 
-ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 EXPORTS +=      gfxXlibSurface.h gfxPlatformGtk.h gfxXlibNativeRenderer.h
 EXPORTS +=	gfxPangoFonts.h
 EXPORTS +=	gfxPDFSurface.h gfxPSSurface.h
@@ -54,20 +54,20 @@ REQUIRES += glitzglx
 endif
 endif
 
-ifeq ($(MOZ_GFX_TOOLKIT),os2)
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 EXPORTS	+=	gfxOS2Surface.h \
 		gfxOS2Platform.h \
 		gfxOS2Fonts.h \
 		$(NULL)
 endif
 
-ifeq ($(MOZ_GFX_TOOLKIT),beos)
+ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 EXPORTS	+=	gfxBeOSSurface.h gfxBeOSPlatform.h
 EXPORTS +=	gfxPangoFonts.h
 EXPORTS +=	gfxPDFSurface.h
 endif
 
-ifneq (,$(filter $(MOZ_GFX_TOOLKIT),mac cocoa))
+ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),mac cocoa))
 EXPORTS +=	gfxPlatformMac.h \
 		gfxQuartzSurface.h \
 		gfxQuartzPDFSurface.h \

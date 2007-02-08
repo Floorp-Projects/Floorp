@@ -154,7 +154,7 @@ ifeq ($(OS_ARCH),OS2)
 CPPSRCS		+= nsMessengerOS2Integration.cpp 
 endif
 
-ifneq (,$(filter $(MOZ_GFX_TOOLKIT),gtk gtk2))
+ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),gtk gtk2))
 CPPSRCS		+= nsMessengerUnixIntegration.cpp 
 endif
 
