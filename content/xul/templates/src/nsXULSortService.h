@@ -98,11 +98,12 @@ struct contentSortInfo {
   nsCOMPtr<nsIContent> content;
   nsCOMPtr<nsIContent> parent;
   nsCOMPtr<nsIXULTemplateResult> result;
-
-  contentSortInfo(nsIContent* aContent,
-                  nsIXULTemplateResult* aResult)
-    : content(aContent), result(aResult)
-  {}
+  void swap(contentSortInfo& other)
+  {
+    content.swap(other.content);
+    parent.swap(other.parent);
+    result.swap(other.result);
+  }
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -155,7 +156,7 @@ public:
   nsresult
   GetItemsToSort(nsIContent *aContainer,
                  nsSortState* aSortState,
-                 nsTArray<contentSortInfo *>& aSortItems);
+                 nsTArray<contentSortInfo>& aSortItems);
 
   /**
    * Get the list of items to sort for template built content
@@ -164,7 +165,7 @@ public:
   GetTemplateItemsToSort(nsIContent* aContainer,
                          nsIXULTemplateBuilder* aBuilder,
                          nsSortState* aSortState,
-                         nsTArray<contentSortInfo *>& aSortItems);
+                         nsTArray<contentSortInfo>& aSortItems);
 
   /**
    * Sort a container using the supplied sort state details.
@@ -177,7 +178,7 @@ public:
    * when simply changing the sort direction for the same key.
    */
   nsresult
-  InvertSortInfo(nsTArray<contentSortInfo *>* aData,
+  InvertSortInfo(nsTArray<contentSortInfo>& aData,
                  PRInt32 aStart, PRInt32 aNumItems);
 
   /**
