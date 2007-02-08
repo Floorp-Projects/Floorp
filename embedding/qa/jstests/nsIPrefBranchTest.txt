@@ -31,36 +31,32 @@ Test last run on 05/09/01.
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     // get the nsIPrefBranch object.
     // if you use getBranch() then the preference file that gets affected is prefs.js.
-    var nsIPrefBranchObj = nsIPrefServiceObj.getBranch("browser.startup.");
+    var nsIPrefBranchObj = nsIPrefServiceObj.getBranch("app.update.");
 
     // verifying the attribute root.
     alert("root: " + nsIPrefBranchObj.root);
 
     // checking getPrefType method.
-    var prefType = nsIPrefBranchObj.getPrefType("homepage");
-    alert("prefType: " + prefType);
+    alert("prefType: " + nsIPrefBranchObj.getPrefType("url"));
 
     // checking getBoolPref method.
 
-    var boo = nsIPrefBranchObj.getBoolPref("homepage_override.1");
+    var boo = nsIPrefBranchObj.getBoolPref("enabled");
     alert("boo: " + boo);
-
 
     // checking setBoolPref method.
 
-    nsIPrefBranchObj.setBoolPref("homepage_override.1", 0);
+    nsIPrefBranchObj.setBoolPref("enabled", !boo);
     nsIPrefServiceObj.savePrefFile(null);
 
-
     // checking getCharPref method.
-    var result = nsIPrefBranchObj.getCharPref("homepage");
-    alert("charPref: " + result);
+    var updateUrl = nsIPrefBranchObj.getCharPref("url");
+    alert("charPref: " + updateUrl);
 
     // checking setCharPref method.
 
-    nsIPrefBranchObj.setCharPref("homepage", "http://mozilla.org")
+    nsIPrefBranchObj.setCharPref("url", "http://mozilla.org")
     nsIPrefServiceObj.savePrefFile(null);
-
 
     // checking getIntPref method.
     /*
@@ -76,21 +72,21 @@ Test last run on 05/09/01.
 
     // checking clearUserPref method.
     /*
-    nsIPrefBranchObj.clearUserPref("homepage_override.1");
+    nsIPrefBranchObj.clearUserPref("url");
     nsIPrefServiceObj.savePrefFile(null);
     */
 
 	// checking lockPref method.
-	var boo = nsIPrefBranchObj.prefIsLocked("homepage_override.1");
+	boo = nsIPrefBranchObj.prefIsLocked("url");
 	alert ("prefIsLocked: " + boo);
 
-	nsIPrefBranchObj.lockPref("homepage_override.1");
+	nsIPrefBranchObj.lockPref("url");
 	nsIPrefServiceObj.savePrefFile(null);
 
 
 	// checking prefIsLocked method.
 
-	var boo = nsIPrefBranchObj.prefIsLocked("homepage_override.1");
+	var boo = nsIPrefBranchObj.prefIsLocked("url");
 	alert ("prefIsLocked: " + boo);
 
 	/*
@@ -100,9 +96,9 @@ Test last run on 05/09/01.
 
 	// checking unlockPref method.
 
-	nsIPrefBranchObj.unlockPref("homepage_override.1");
+	nsIPrefBranchObj.unlockPref("url");
 	nsIPrefServiceObj.savePrefFile(null);
-    alert("parefIsLocked: " + nsIPrefBranchObj.prefIsLocked("homepage_override.1"));
+    alert("parefIsLocked: " + nsIPrefBranchObj.prefIsLocked("url"));
 
 
     // checking deleteBranch
@@ -123,7 +119,7 @@ Test last run on 05/09/01.
     // checking getChildList method.
 
 	var aCount = {value:0};
-	var childArray = nsIPrefBranchObj.getChildList(null , aCount);
+	var childArray = nsIPrefBranchObj.getChildList("", aCount);
 	alert("aCount: " + aCount.value);
 	//alert("Array length: " + childArray.length);
 	alert("Array content: " + childArray.toString());
