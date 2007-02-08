@@ -144,8 +144,13 @@ var safebrowsing = {
     var sbIconElt = document.getElementById("safebrowsing-urlbar-icon");
     var helpMenuElt = document.getElementById("helpMenu");
     var phishLevel = sbIconElt.getAttribute("level");
-    helpMenuElt.setAttribute("phishLevel", phishLevel);
-    
+
+    // Show/hide the appropriate menu item.
+    document.getElementById("menu_HelpPopup_reportPhishingtoolmenu")
+            .hidden = ("safe" != phishLevel);
+    document.getElementById("menu_HelpPopup_reportPhishingErrortoolmenu")
+            .hidden = ("safe" == phishLevel);
+
     var broadcasterId;
     if ("safe" == phishLevel) {
       broadcasterId = "reportPhishingBroadcaster";
