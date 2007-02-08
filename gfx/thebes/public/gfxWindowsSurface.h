@@ -49,12 +49,12 @@ public:
     gfxWindowsSurface(HDC dc, PRBool deleteDC = PR_FALSE);
 
     // Create a DIB surface
-    gfxWindowsSurface(unsigned long width, unsigned long height,
+    gfxWindowsSurface(const gfxIntSize& size,
                       gfxImageFormat imageFormat = ImageFormatRGB24);
 
     // Create a DDB surface; dc may be NULL to use the screen DC
     gfxWindowsSurface(HDC dc,
-                      unsigned long width, unsigned long height,
+                      const gfxIntSize& size,
                       gfxImageFormat imageFormat = ImageFormatRGB24);
 
     gfxWindowsSurface(cairo_surface_t *csurf);
@@ -65,7 +65,9 @@ public:
 
     already_AddRefed<gfxImageSurface> GetImageSurface();
 
-    already_AddRefed<gfxWindowsSurface> OptimizeToDDB(HDC dc, gfxImageFormat format, PRUint32 width, PRUint32 height);
+    already_AddRefed<gfxWindowsSurface> OptimizeToDDB(HDC dc,
+                                                      const gfxIntSize& size,
+                                                      gfxImageFormat format);
 
     nsresult BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName);
     nsresult EndPrinting();

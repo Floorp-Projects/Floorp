@@ -43,14 +43,20 @@
 class THEBES_API gfxPDFSurface : public gfxASurface {
 public:
     /* size is in points */
-    gfxPDFSurface(const char *filename, gfxSize aSizeInPonits);
+    gfxPDFSurface(const char *filename, const gfxSize& aSizeInPonits);
     virtual ~gfxPDFSurface();
+
+    nsresult BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName);
+    nsresult EndPrinting();
+    nsresult AbortPrinting();
+    nsresult BeginPage();
+    nsresult EndPage();
 
     void SetDPI(double x, double y);
     void GetDPI(double *xDPI, double *yDPI);
 
     // this is in points!
-    gfxSize GetSize() const { return mSize; }
+    const gfxSize& GetSize() const { return mSize; }
 
 private:
     double mXDPI;

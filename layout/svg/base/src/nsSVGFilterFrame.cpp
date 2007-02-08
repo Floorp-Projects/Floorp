@@ -281,8 +281,7 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
 
   // paint the target geometry
   nsRefPtr<gfxImageSurface> tmpSurface =
-    new gfxImageSurface(gfxASurface::ImageFormatARGB32,
-                        filterResX, filterResY);
+    new gfxImageSurface(gfxIntSize(filterResX, filterResY), gfxASurface::ImageFormatARGB32);
   if (!tmpSurface) {
     FilterFailCleanup(aContext, aTarget);
     return NS_OK;

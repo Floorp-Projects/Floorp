@@ -799,7 +799,7 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
     mHeight = height;
 
 #ifdef MOZ_CAIRO_GFX
-    mThebesSurface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(width, height, gfxASurface::ImageFormatARGB32);
+    mThebesSurface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(width, height), gfxASurface::ImageFormatARGB32);
     mThebesContext = new gfxContext(mThebesSurface);
 
     mSurface = mThebesSurface->CairoSurface();

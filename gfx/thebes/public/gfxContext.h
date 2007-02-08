@@ -137,7 +137,7 @@ public:
     /**
      * Moves the pen to a new point without drawing a line.
      */
-    void MoveTo(gfxPoint pt);
+    void MoveTo(const gfxPoint& pt);
 
     /**
      * Returns the current point in the current path.
@@ -149,12 +149,12 @@ public:
      *
      * @see MoveTo
      */
-    void LineTo(gfxPoint pt);
+    void LineTo(const gfxPoint& pt);
 
     /**
      * Draws a quadratic Bézier curve with control points pt1, pt2 and pt3.
      */
-    void CurveTo(gfxPoint pt1, gfxPoint pt2, gfxPoint pt3);
+    void CurveTo(const gfxPoint& pt1, const gfxPoint& pt2, const gfxPoint& pt3);
 
     /**
      * Draws a clockwise arc (i.e. a circle segment).
@@ -163,7 +163,7 @@ public:
      * @param angle1 Starting angle for the segment
      * @param angle2 Ending angle
      */
-    void Arc(gfxPoint center, gfxFloat radius,
+    void Arc(const gfxPoint& center, gfxFloat radius,
              gfxFloat angle1, gfxFloat angle2);
 
     /**
@@ -174,21 +174,21 @@ public:
      * @param angle2 Ending angle
      */
 
-    void NegativeArc(gfxPoint center, gfxFloat radius,
+    void NegativeArc(const gfxPoint& center, gfxFloat radius,
                      gfxFloat angle1, gfxFloat angle2);
 
     // path helpers
     /**
      * Draws a line from start to end.
      */
-    void Line(gfxPoint start, gfxPoint end); // XXX snapToPixels option?
+    void Line(const gfxPoint& start, const gfxPoint& end); // XXX snapToPixels option?
 
     /**
      * Draws the rectangle given by rect.
      * @param snapToPixels ?
      */
-    void Rectangle(gfxRect rect, PRBool snapToPixels = PR_FALSE);
-    void Ellipse(gfxPoint center, gfxSize dimensions);
+    void Rectangle(const gfxRect& rect, PRBool snapToPixels = PR_FALSE);
+    void Ellipse(const gfxPoint& center, const gfxSize& dimensions);
     void Polygon(const gfxPoint *points, PRUint32 numPoints);
 
     /**
@@ -199,7 +199,7 @@ public:
      * Adds a translation to the current matrix. This translation takes place
      * before the previously set transformations.
      */
-    void Translate(gfxPoint pt);
+    void Translate(const gfxPoint& pt);
 
     /**
      * Adds a scale to the current matrix. This scaling takes place before the
@@ -315,7 +315,7 @@ public:
      *
      * @param offset ?
      */
-    void SetSource(gfxASurface *surface, gfxPoint offset = gfxPoint(0.0, 0.0));
+    void SetSource(gfxASurface *surface, const gfxPoint& offset = gfxPoint(0.0, 0.0));
 
     /**
      * Uses a pattern for drawing.
@@ -349,7 +349,7 @@ public:
      * Shorthand for creating a pattern and calling the pattern-taking
      * variant of Mask.
      */
-    void Mask(gfxASurface *surface, gfxPoint offset = gfxPoint(0.0, 0.0));
+    void Mask(gfxASurface *surface, const gfxPoint& offset = gfxPoint(0.0, 0.0));
 
     /**
      ** Shortcuts
@@ -359,7 +359,7 @@ public:
      * Creates a new path with a rectangle from 0,0 to size.w,size.h
      * and calls cairo_fill.
      */
-    void DrawSurface(gfxASurface *surface, gfxSize size);
+    void DrawSurface(gfxASurface *surface, const gfxSize& size);
 
     /**
      ** Line Properties
@@ -489,7 +489,7 @@ public:
      * Helper functions that will create a rect path and call Clip().
      * Any current path will be destroyed by these functions!
      */
-    void Clip(gfxRect rect); // will clip to a rect
+    void Clip(const gfxRect& rect); // will clip to a rect
 
     /**
      * This will ensure that the surface actually has its clip set.
@@ -505,20 +505,10 @@ public:
     void PopGroupToSource();
 
     /**
-     * Printing functions
-     */
-    // XXX look and see if the arguments here should be a separate object
-    void BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName);
-    void EndPrinting();
-    void AbortPrinting();
-    void BeginPage();
-    void EndPage();
-
-    /**
      ** Hit Testing - check if given point is in the current path
      **/
-    PRBool PointInFill(gfxPoint pt);
-    PRBool PointInStroke(gfxPoint pt);
+    PRBool PointInFill(const gfxPoint& pt);
+    PRBool PointInStroke(const gfxPoint& pt);
 
     /**
      ** Extents - returns user space extent of current path

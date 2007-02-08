@@ -290,8 +290,7 @@ nsSVGPatternFrame::PaintPattern(cairo_surface_t** surface,
 #endif
 
   nsRefPtr<gfxImageSurface> tmpSurface =
-    new gfxImageSurface(gfxASurface::ImageFormatARGB32,
-                        (int)surfaceWidth, (int)surfaceHeight);
+    new gfxImageSurface(gfxIntSize(surfaceWidth, surfaceHeight), gfxASurface::ImageFormatARGB32);
   if (!tmpSurface)
     return NS_ERROR_FAILURE;
 

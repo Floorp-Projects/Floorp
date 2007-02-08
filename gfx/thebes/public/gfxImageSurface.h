@@ -60,8 +60,7 @@ public:
      *
      * XXX why not unsigned long for the dimensions? And, why not gfxSize?
      */
-    gfxImageSurface(gfxImageFormat format, long width, long height);
-
+    gfxImageSurface(const gfxIntSize& size, gfxImageFormat format);
     gfxImageSurface(cairo_surface_t *csurf);
 
     virtual ~gfxImageSurface();
@@ -69,7 +68,7 @@ public:
     // ImageSurface methods
     gfxImageFormat Format() const { return mFormat; }
 
-    gfxSize GetSize() const { return gfxSize(mWidth, mHeight); }
+    const gfxIntSize& GetSize() const { return mSize; }
 
     /**
      * Distance in bytes between the start of a line and the start of the
@@ -83,14 +82,12 @@ public:
     unsigned char* Data() { return mData; } // delete this data under us and die.
 
 private:
-
     long ComputeStride() const;
 
+    gfxIntSize mSize;
     PRBool mOwnsData;
     unsigned char *mData;
     gfxImageFormat mFormat;
-    long mWidth;
-    long mHeight;
     long mStride;
 };
 

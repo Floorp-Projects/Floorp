@@ -135,39 +135,39 @@ gfxContext::Fill()
 }
 
 void
-gfxContext::MoveTo(gfxPoint pt)
+gfxContext::MoveTo(const gfxPoint& pt)
 {
     cairo_move_to(mCairo, pt.x, pt.y);
 }
 
 void
-gfxContext::LineTo(gfxPoint pt)
+gfxContext::LineTo(const gfxPoint& pt)
 {
     cairo_line_to(mCairo, pt.x, pt.y);
 }
 
 void
-gfxContext::CurveTo(gfxPoint pt1, gfxPoint pt2, gfxPoint pt3)
+gfxContext::CurveTo(const gfxPoint& pt1, const gfxPoint& pt2, const gfxPoint& pt3)
 {
     cairo_curve_to(mCairo, pt1.x, pt1.y, pt2.x, pt2.y, pt3.x, pt3.y);
 }
 
 void
-gfxContext::Arc(gfxPoint center, gfxFloat radius,
-                     gfxFloat angle1, gfxFloat angle2)
+gfxContext::Arc(const gfxPoint& center, gfxFloat radius,
+                gfxFloat angle1, gfxFloat angle2)
 {
     cairo_arc(mCairo, center.x, center.y, radius, angle1, angle2);
 }
 
 void
-gfxContext::NegativeArc(gfxPoint center, gfxFloat radius,
-                             gfxFloat angle1, gfxFloat angle2)
+gfxContext::NegativeArc(const gfxPoint& center, gfxFloat radius,
+                        gfxFloat angle1, gfxFloat angle2)
 {
     cairo_arc_negative(mCairo, center.x, center.y, radius, angle1, angle2);
 }
 
 void
-gfxContext::Line(gfxPoint start, gfxPoint end)
+gfxContext::Line(const gfxPoint& start, const gfxPoint& end)
 {
     MoveTo(start);
     LineTo(end);
@@ -178,7 +178,7 @@ gfxContext::Line(gfxPoint start, gfxPoint end)
 // For odd-width stroked rectangles, we need to offset x/y by
 // 0.5...
 void
-gfxContext::Rectangle(gfxRect rect, PRBool snapToPixels)
+gfxContext::Rectangle(const gfxRect& rect, PRBool snapToPixels)
 {
     if (snapToPixels) {
         gfxRect snappedRect(rect);
@@ -198,7 +198,7 @@ gfxContext::Rectangle(gfxRect rect, PRBool snapToPixels)
 }
 
 void
-gfxContext::Ellipse(gfxPoint center, gfxSize dimensions)
+gfxContext::Ellipse(const gfxPoint& center, const gfxSize& dimensions)
 {
     // circle?
     if (dimensions.width == dimensions.height) {
@@ -246,7 +246,7 @@ gfxContext::Polygon(const gfxPoint *points, PRUint32 numPoints)
 }
 
 void
-gfxContext::DrawSurface(gfxASurface *surface, gfxSize size)
+gfxContext::DrawSurface(gfxASurface *surface, const gfxSize& size)
 {
     cairo_save(mCairo);
     cairo_set_source_surface(mCairo, surface->CairoSurface(), 0, 0);
@@ -261,7 +261,7 @@ gfxContext::DrawSurface(gfxASurface *surface, gfxSize size)
 
 // transform stuff
 void
-gfxContext::Translate(gfxPoint pt)
+gfxContext::Translate(const gfxPoint& pt)
 {
     cairo_translate(mCairo, pt.x, pt.y);
 }
@@ -560,7 +560,7 @@ gfxContext::CurrentFillRule() const
 
 // clipping
 void
-gfxContext::Clip(gfxRect rect)
+gfxContext::Clip(const gfxRect& rect)
 {
     cairo_new_path(mCairo);
     cairo_rectangle(mCairo, rect.pos.x, rect.pos.y, rect.size.width, rect.size.height);
@@ -606,7 +606,7 @@ gfxContext::GetColor(gfxRGBA& c)
 }
 
 void
-gfxContext::SetSource(gfxASurface *surface, gfxPoint offset)
+gfxContext::SetSource(gfxASurface *surface, const gfxPoint& offset)
 {
     cairo_set_source_surface(mCairo, surface->CairoSurface(), offset.x, offset.y);
 }
@@ -643,7 +643,7 @@ gfxContext::Mask(gfxPattern *pattern)
 }
 
 void
-gfxContext::Mask(gfxASurface *surface, gfxPoint offset)
+gfxContext::Mask(gfxASurface *surface, const gfxPoint& offset)
 {
     cairo_mask_surface(mCairo, surface->CairoSurface(), offset.x, offset.y);
 }
@@ -677,45 +677,14 @@ gfxContext::PopGroupToSource()
     cairo_pop_group_to_source(mCairo);
 }
 
-void
-gfxContext::BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName)
-{
-    mSurface->BeginPrinting(aTitle, aPrintToFileName);
-}
-
-void
-gfxContext::EndPrinting()
-{
-    mSurface->EndPrinting();
-}
-
-void
-gfxContext::AbortPrinting()
-{
-    mSurface->AbortPrinting();
-}
-
-void
-gfxContext::BeginPage()
-{
-    mSurface->BeginPage();
-}
-
-void
-gfxContext::EndPage()
-{
-    if (NS_FAILED(mSurface->EndPage()))
-        cairo_show_page(mCairo);
-}
-
 PRBool
-gfxContext::PointInFill(gfxPoint pt)
+gfxContext::PointInFill(const gfxPoint& pt)
 {
     return cairo_in_fill(mCairo, pt.x, pt.y);
 }
 
 PRBool
-gfxContext::PointInStroke(gfxPoint pt)
+gfxContext::PointInStroke(const gfxPoint& pt)
 {
     return cairo_in_stroke(mCairo, pt.x, pt.y);
 }

@@ -46,7 +46,7 @@ gfxPattern::gfxPattern(cairo_pattern_t *aPattern)
     mPattern = cairo_pattern_reference(aPattern);
 }
 
-gfxPattern::gfxPattern(gfxRGBA aColor)
+gfxPattern::gfxPattern(const gfxRGBA& aColor)
 {
     mPattern = cairo_pattern_create_rgba(aColor.r, aColor.g, aColor.b, aColor.a);
 }

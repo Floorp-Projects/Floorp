@@ -46,14 +46,20 @@ public:
 #ifdef UNTESTED_CODE
     gfxPSSurface(FILE *file, gfxSize aSizeInPonits); /* does not close the file */
 #endif
-    gfxPSSurface(const char *filename, gfxSize aSizeInPonits);
+    gfxPSSurface(const char *filename, const gfxSize& aSizeInPonits);
     virtual ~gfxPSSurface();
+
+    nsresult BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName);
+    nsresult EndPrinting();
+    nsresult AbortPrinting();
+    nsresult BeginPage();
+    nsresult EndPage();
 
     void SetDPI(double x, double y);
     void GetDPI(double *xDPI, double *yDPI);
 
     // this is in points!
-    gfxSize GetSize() const { return mSize; }
+    const gfxSize& GetSize() const { return mSize; }
 
 private:
     double mXDPI;

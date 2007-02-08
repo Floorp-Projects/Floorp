@@ -53,8 +53,7 @@ public:
         return (gfxPlatformGtk*) gfxPlatform::GetPlatform();
     }
 
-    already_AddRefed<gfxASurface> CreateOffscreenSurface(PRUint32 width,
-                                                         PRUint32 height,
+    already_AddRefed<gfxASurface> CreateOffscreenSurface(const gfxIntSize& size,
                                                          gfxASurface::gfxImageFormat imageFormat);
 
     GdkDrawable *GetSurfaceGdkDrawable(gfxASurface *aSurf);

@@ -127,12 +127,12 @@ gfxPlatform::DoesARGBImageDataHaveAlpha(PRUint8* data,
 }
 
 already_AddRefed<gfxASurface>
-gfxPlatform::OptimizeImage(gfxImageSurface* aSurface)
+gfxPlatform::OptimizeImage(gfxImageSurface *aSurface)
 {
-    nsRefPtr<gfxASurface> optSurface;
+    const gfxIntSize& surfaceSize = aSurface->GetSize();
+
     gfxASurface::gfxImageFormat realFormat = aSurface->Format();
 
-    gfxSize surfaceSize = aSurface->GetSize();
     if (realFormat == gfxASurface::ImageFormatARGB32) {
         // this might not really need alpha; figure that out
         if (!DoesARGBImageDataHaveAlpha(aSurface->Data(),
@@ -144,9 +144,7 @@ gfxPlatform::OptimizeImage(gfxImageSurface* aSurface)
         }
     }
 
-    optSurface = CreateOffscreenSurface(surfaceSize.width,
-                                        surfaceSize.height,
-                                        realFormat);
+    nsRefPtr<gfxASurface> optSurface = CreateOffscreenSurface(surfaceSize, realFormat);
 
     if (!optSurface)
         return nsnull;

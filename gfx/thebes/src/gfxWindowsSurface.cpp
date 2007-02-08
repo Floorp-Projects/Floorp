@@ -57,11 +57,11 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, PRBool deleteDC) :
     Init(cairo_win32_surface_create(mDC));
 }
 
-gfxWindowsSurface::gfxWindowsSurface(unsigned long width, unsigned long height, gfxImageFormat imageFormat) :
+gfxWindowsSurface::gfxWindowsSurface(const gfxIntSize& size, gfxImageFormat imageFormat) :
     mOwnsDC(PR_FALSE), mWnd(nsnull)
 {
     cairo_surface_t *surf = cairo_win32_surface_create_with_dib((cairo_format_t)imageFormat,
-                                                                width, height);
+                                                                size.width, size.height);
     if (!surf || cairo_surface_status(surf)) {
         fprintf (stderr, "++++++++++++ gfxWindowsSurface: DIB surface creation failed!\n");
     }
@@ -71,11 +71,11 @@ gfxWindowsSurface::gfxWindowsSurface(unsigned long width, unsigned long height, 
     mDC = cairo_win32_surface_get_dc(CairoSurface());
 }
 
-gfxWindowsSurface::gfxWindowsSurface(HDC dc, unsigned long width, unsigned long height, gfxImageFormat imageFormat) :
+gfxWindowsSurface::gfxWindowsSurface(HDC dc, const gfxIntSize& size, gfxImageFormat imageFormat) :
     mOwnsDC(PR_FALSE), mWnd(nsnull)
 {
     cairo_surface_t *surf = cairo_win32_surface_create_with_ddb(dc, (cairo_format_t)imageFormat,
-                                                                width, height);
+                                                                size.width, size.height);
     if (!surf || cairo_surface_status(surf)) {
         fprintf (stderr, "++++++++++++ gfxWindowsSurface: DDB surface creation failed!\n");
     }
@@ -118,7 +118,7 @@ gfxWindowsSurface::GetImageSurface()
 }
 
 already_AddRefed<gfxWindowsSurface>
-gfxWindowsSurface::OptimizeToDDB(HDC dc, gfxImageFormat format, PRUint32 width, PRUint32 height)
+gfxWindowsSurface::OptimizeToDDB(HDC dc, const gfxIntSize& size, gfxImageFormat format)
 {
     gfxImageFormat realFormat = format;
     if (realFormat == ImageFormatARGB32) {
@@ -135,7 +135,7 @@ gfxWindowsSurface::OptimizeToDDB(HDC dc, gfxImageFormat format, PRUint32 width, 
     if (realFormat != ImageFormatRGB24)
         return nsnull;
 
-    nsRefPtr<gfxWindowsSurface> wsurf = new gfxWindowsSurface (dc, width, height, realFormat);
+    nsRefPtr<gfxWindowsSurface> wsurf = new gfxWindowsSurface(dc, size, realFormat);
 
     nsRefPtr<gfxContext> tmpCtx(new gfxContext(wsurf));
     tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);

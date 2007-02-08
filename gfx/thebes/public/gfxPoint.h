@@ -42,12 +42,44 @@
 
 #include "gfxTypes.h"
 
+/*
+ * gfxSize and gfxIntSize -- please keep their member functions in sync.
+ * also note: gfxIntSize may be replaced by nsIntSize at some point...
+ */
+struct THEBES_API gfxIntSize {
+    PRInt32 width, height;
+
+    gfxIntSize() {}
+    gfxIntSize(PRInt32 _width, PRInt32 _height) : width(_width), height(_height) {}
+
+    void SizeTo(PRInt32 _width, PRInt32 _height) {width = _width; height = _height;}
+
+    int operator==(const gfxIntSize& s) const {
+        return ((width == s.width) && (height == s.height));
+    }
+    int operator!=(const gfxIntSize& s) const {
+        return ((width != s.width) || (height != s.height));
+    }
+    gfxIntSize operator+(const gfxIntSize& s) const {
+        return gfxIntSize(width + s.width, height + s.height);
+    }
+    gfxIntSize operator-() const {
+        return gfxIntSize(- width, - height);
+    }
+    gfxIntSize operator*(const PRInt32 v) const {
+        return gfxIntSize(width * v, height * v);
+    }
+    gfxIntSize operator/(const PRInt32 v) const {
+        return gfxIntSize(width / v, height / v);
+    }
+};
+
 struct THEBES_API gfxSize {
     gfxFloat width, height;
 
     gfxSize() {}
-    gfxSize(const gfxSize& s) : width(s.width), height(s.height) {}
     gfxSize(gfxFloat _width, gfxFloat _height) : width(_width), height(_height) {}
+    gfxSize(const gfxIntSize& size) : width(size.width), height(size.height) {}
 
     void SizeTo(gfxFloat _width, gfxFloat _height) {width = _width; height = _height;}
 
@@ -70,6 +102,8 @@ struct THEBES_API gfxSize {
         return gfxSize(width / v, height / v);
     }
 };
+
+
 
 struct THEBES_API gfxPoint {
     gfxFloat x, y;

@@ -84,6 +84,7 @@ static nsSystemFontsBeOS *gSystemFonts = nsnull;
 #elif XP_MACOSX
 #include "nsSystemFontsMac.h"
 #include "gfxQuartzSurface.h"
+#include "gfxImageSurface.h"
 static nsSystemFontsMac *gSystemFonts = nsnull;
 #else
 #error Need to declare gSystemFonts!
@@ -524,9 +525,9 @@ nsThebesDeviceContext::BeginDocument(PRUnichar*  aTitle,
                                      PRInt32     aEndPage)
 {
     static const PRUnichar kEmpty[] = { '\0' };
-    nsRefPtr<gfxContext> thebes = new gfxContext(mPrintingSurface);
-    thebes->BeginPrinting(nsDependentString(aTitle ? aTitle : kEmpty),
-                          nsDependentString(aPrintToFileName ? aPrintToFileName : kEmpty));
+
+    mPrintingSurface->BeginPrinting(nsDependentString(aTitle ? aTitle : kEmpty),
+                                    nsDependentString(aPrintToFileName ? aPrintToFileName : kEmpty));
     if (mDeviceContextSpec)
         mDeviceContextSpec->BeginDocument(aTitle, aPrintToFileName, aStartPage, aEndPage);
     return NS_OK;
@@ -536,12 +537,8 @@ nsThebesDeviceContext::BeginDocument(PRUnichar*  aTitle,
 NS_IMETHODIMP
 nsThebesDeviceContext::EndDocument(void)
 {
-    if (mPrintingSurface) {
-        nsRefPtr<gfxContext> thebes = new gfxContext(mPrintingSurface);
-        thebes->EndPrinting();
-  
-        mPrintingSurface->Finish();
-    }
+    mPrintingSurface->EndPrinting();
+    mPrintingSurface->Finish();
 
     if (mDeviceContextSpec)
         mDeviceContextSpec->EndDocument();
@@ -552,8 +549,7 @@ nsThebesDeviceContext::EndDocument(void)
 NS_IMETHODIMP
 nsThebesDeviceContext::AbortDocument(void)
 {
-    nsRefPtr<gfxContext> thebes = new gfxContext(mPrintingSurface);
-    thebes->AbortPrinting();
+    mPrintingSurface->AbortPrinting();
 
     if (mDeviceContextSpec)
         mDeviceContextSpec->EndDocument();
@@ -564,10 +560,7 @@ nsThebesDeviceContext::AbortDocument(void)
 NS_IMETHODIMP
 nsThebesDeviceContext::BeginPage(void)
 {
-    if (mPrintingSurface) {
-        nsRefPtr<gfxContext> thebes = new gfxContext(mPrintingSurface);
-        thebes->BeginPage();
-    }
+    mPrintingSurface->BeginPage();
 
     if (mDeviceContextSpec)
         mDeviceContextSpec->BeginPage();
@@ -577,8 +570,7 @@ nsThebesDeviceContext::BeginPage(void)
 NS_IMETHODIMP
 nsThebesDeviceContext::EndPage(void)
 {
-    nsRefPtr<gfxContext> thebes = new gfxContext(mPrintingSurface);
-    thebes->EndPage();
+    mPrintingSurface->EndPage();
 
     /* uhh. yeah, don't ask.
      * We need to release this before we call end page for mac.. */
@@ -755,3 +747,4 @@ nsThebesDeviceContext::CalcPrintingSize()
         mHeight = NSToIntRound(size.height);
     }
 }
+

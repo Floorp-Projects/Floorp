@@ -39,18 +39,18 @@
 
 #include "cairo.h"
 
-gfxImageSurface::gfxImageSurface(gfxImageFormat format, long width, long height) :
-    mFormat(format), mWidth(width), mHeight(height)
+gfxImageSurface::gfxImageSurface(const gfxIntSize& size, gfxImageFormat format) :
+    mSize(size), mFormat(format)
 {
     long stride = ComputeStride();
-    mData = new unsigned char[height * stride];
+    mData = new unsigned char[mSize.height * stride];
     mOwnsData = PR_TRUE;
 
     cairo_surface_t *surface =
         cairo_image_surface_create_for_data((unsigned char*)mData,
                                             (cairo_format_t)format,
-                                            width,
-                                            height,
+                                            mSize.width,
+                                            mSize.height,
                                             stride);
     mStride = stride;
 
@@ -59,8 +59,8 @@ gfxImageSurface::gfxImageSurface(gfxImageFormat format, long width, long height)
 
 gfxImageSurface::gfxImageSurface(cairo_surface_t *csurf)
 {
-    mWidth = cairo_image_surface_get_width(csurf);
-    mHeight = cairo_image_surface_get_height(csurf);
+    mSize.width = cairo_image_surface_get_width(csurf);
+    mSize.height = cairo_image_surface_get_height(csurf);
     mData = cairo_image_surface_get_data(csurf);
     mFormat = (gfxImageFormat) cairo_image_surface_get_format(csurf);
     mOwnsData = PR_FALSE;
@@ -81,16 +81,16 @@ gfxImageSurface::ComputeStride() const
     long stride;
 
     if (mFormat == ImageFormatARGB32)
-        stride = mWidth * 4;
+        stride = mSize.width * 4;
     else if (mFormat == ImageFormatRGB24)
-        stride = mWidth * 4;
+        stride = mSize.width * 4;
     else if (mFormat == ImageFormatA8)
-        stride = mWidth;
+        stride = mSize.width;
     else if (mFormat == ImageFormatA1) {
-        stride = (mWidth + 7) / 8;
+        stride = (mSize.width + 7) / 8;
     } else {
         NS_WARNING("Unknown format specified to gfxImageSurface!");
-        stride = mWidth * 4;
+        stride = mSize.width * 4;
     }
 
     stride = ((stride + 3) / 4) * 4;
