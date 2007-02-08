@@ -52,8 +52,8 @@ interface nsIAccessibleText : nsISupports
   const nsAccessibleTextBoundary BOUNDARY_CHAR = 0;
   const nsAccessibleTextBoundary BOUNDARY_WORD_START = 1;
   const nsAccessibleTextBoundary BOUNDARY_WORD_END = 2;
-  const nsAccessibleTextBoundary BOUNDARY_SENTENCE_START = 3;
-  const nsAccessibleTextBoundary BOUNDARY_SENTENCE_END = 4;
+  const nsAccessibleTextBoundary BOUNDARY_SENTENCE_START = 3; // don't use, deprecated
+  const nsAccessibleTextBoundary BOUNDARY_SENTENCE_END = 4;  // don't use, deprecated
   const nsAccessibleTextBoundary BOUNDARY_LINE_START = 5;
   const nsAccessibleTextBoundary BOUNDARY_LINE_END = 6;
   const nsAccessibleTextBoundary BOUNDARY_ATTRIBUTE_RANGE = 7;
