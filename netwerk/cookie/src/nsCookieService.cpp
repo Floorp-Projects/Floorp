@@ -1145,7 +1145,7 @@ nsCookieService::Write()
 
   static const char kHeader[] =
       "# HTTP Cookie File\n"
-      "# http://www.netscape.com/newsref/std/cookie_spec.html\n"
+      "# http://wp.netscape.com/newsref/std/cookie_spec.html\n"
       "# This is a generated file!  Do not edit.\n"
       "# To delete cookies, use the Cookie Manager.\n\n";
   // note: kTrue and kFalse have leading/trailing tabs already added
