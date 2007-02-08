@@ -46,7 +46,7 @@
 class THEBES_API gfxQuartzSurface : public gfxASurface {
 public:
     gfxQuartzSurface(const gfxSize& size, gfxImageFormat format);
-    gfxQuartzSurface(CGContextRef context, const gfxSize& size, PRBool y_grows_down);
+    gfxQuartzSurface(CGContextRef context, PRBool y_grows_down, const gfxSize& size);
     gfxQuartzSurface(cairo_surface_t *csurf);
 
     virtual ~gfxQuartzSurface();

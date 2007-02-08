@@ -53,8 +53,8 @@ gfxQuartzSurface::gfxQuartzSurface(const gfxSize& size, gfxImageFormat format)
 }
 
 gfxQuartzSurface::gfxQuartzSurface(CGContextRef context,
-                                   const gfxSize& size,
-                                   PRBool y_grows_down)
+                                   PRBool y_grows_down,
+                                   const gfxSize& size)
     : mCGContext(context), mSize(size)
 {
     cairo_surface_t *surf = 

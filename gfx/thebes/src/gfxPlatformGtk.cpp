@@ -142,7 +142,7 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
                                                 size);
             } else {
                 // we couldn't create a Gdk Pixmap; fall back to image surface for the data
-                newSurface = new gfxImageSurface(imageFormat, size.width, height);
+                newSurface = new gfxImageSurface(gfxIntSize(size.width, size.height), imageFormat);
             }
         } else {
             pixmap = gdk_pixmap_new(nsnull, size.width, size.height,

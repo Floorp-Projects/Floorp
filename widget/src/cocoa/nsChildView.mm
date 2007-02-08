@@ -1673,7 +1673,7 @@ nsChildView::GetThebesSurface()
 {
 
   if (!mTempThebesSurface) {
-    mTempThebesSurface = new gfxQuartzSurface(gfxASurface::ImageFormatARGB32, 1, 1);
+    mTempThebesSurface = new gfxQuartzSurface(gfxSize(1, 1), gfxASurface::ImageFormatARGB32);
   }
 
   gfxASurface *surf = mTempThebesSurface.get();
@@ -2102,7 +2102,7 @@ NSEvent* globalDragEvent = nil;
 
   NSRect bounds = [self bounds];
   nsRefPtr<gfxQuartzSurface> targetSurface =
-    new gfxQuartzSurface(cgContext, (int)bounds.size.width, (int)bounds.size.height, PR_TRUE);
+    new gfxQuartzSurface(cgContext, PR_TRUE, gfxSize(bounds.size.width, bounds.size.height));
 
 #ifdef DEBUG_UPDATE
   fprintf (stderr, "---- Update[%p][%p] [%f %f %f %f] cgc: %p\n  gecko bounds: [%d %d %d %d]\n",
