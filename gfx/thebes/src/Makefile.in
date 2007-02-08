@@ -52,7 +52,7 @@ EXTRA_DSO_LDOPTS += \
 	$(NULL)
 
 
-ifeq ($(MOZ_GFX_TOOLKIT),windows)
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS	+= 	gfxWindowsFonts.cpp \
 		gfxWindowsPlatform.cpp \
 		gfxWindowsSurface.cpp \
@@ -68,7 +68,7 @@ OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
 ACDEFINES +=	-UWIN32_LEAN_AND_MEAN
 endif
 
-ifeq ($(MOZ_GFX_TOOLKIT),os2)
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CPPSRCS	+=	gfxOS2Fonts.cpp \
 		gfxOS2Platform.cpp \
 		gfxOS2Surface.cpp \
@@ -78,7 +78,7 @@ EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS)
 REQUIRES += uconv
 endif
 
-ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CPPSRCS +=      gfxXlibSurface.cpp gfxPlatformGtk.cpp gfxXlibNativeRenderer.cpp
 CPPSRCS +=	gfxPangoFonts.cpp 
 CPPSRCS +=	gfxPDFSurface.cpp gfxPSSurface.cpp
@@ -88,7 +88,7 @@ CSRCS = cairo-xlib-utils.c
 EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(ZLIB_LIBS) $(MOZ_XFT_LIBS) $(XLDFLAGS) $(XLIBS)
 endif
 
-ifeq ($(MOZ_GFX_TOOLKIT),beos)
+ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 CPPSRCS	+= 	gfxBeOSSurface.cpp gfxBeOSPlatform.cpp
 CPPSRCS +=	gfxPangoFonts.cpp 
 #CPPSRCS +=	gfxPDFSurface.cpp
@@ -98,7 +98,7 @@ EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(CAIRO_FT_LIBS) -lfontconfig -lpangocairo
 endif
 
 
-ifneq (,$(filter $(MOZ_GFX_TOOLKIT),mac cocoa))
+ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),mac cocoa))
 CPPSRCS	+= 	gfxQuartzSurface.cpp gfxQuartzPDFSurface.cpp gfxPlatformMac.cpp gfxAtsuiFonts.cpp
 #CPPSRCS +=	gfxPDFSurface.cpp
 
@@ -114,18 +114,18 @@ CPPSRCS +=	gfxGlitzSurface.cpp
 
 SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitz.$(LIB_SUFFIX)
 
-ifeq ($(MOZ_GFX_TOOLKIT),windows)
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 REQUIRES +=	glitzwgl
 SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitzwgl.$(LIB_SUFFIX)
 OS_LIBS += opengl32.lib 
 endif
 
-ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 REQUIRES +=	glitzglx
 SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitzglx.$(LIB_SUFFIX)
 endif
 
-ifneq (,$(filter $(MOZ_GFX_TOOLKIT),mac cocoa))
+ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),mac cocoa))
 REQUIRES +=	glitzagl
 SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitzagl.$(LIB_SUFFIX)
 endif
@@ -145,6 +145,6 @@ ifdef MOZ_ENABLE_PANGO
 CXXFLAGS += $(MOZ_PANGO_CFLAGS)
 endif
 
-ifeq ($(MOZ_GFX_TOOLKIT),beos)
+ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 CXXFLAGS += $(CAIRO_FT_CFLAGS)
 endif

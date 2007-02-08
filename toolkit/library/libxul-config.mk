@@ -284,22 +284,22 @@ STATIC_LIBS += thebes
 COMPONENT_LIBS += gkgfxthebes
 
 else # Platform-specific GFX layer
-  ifeq (windows,$(MOZ_GFX_TOOLKIT))
+  ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
   COMPONENT_LIBS += gkgfxwin
   endif
-  ifeq (beos,$(MOZ_GFX_TOOLKIT))
+  ifeq (beos,$(MOZ_WIDGET_TOOLKIT))
   COMPONENT_LIBS += gfx_beos
   endif
-  ifeq (os2,$(MOZ_GFX_TOOLKIT))
+  ifeq (os2,$(MOZ_WIDGET_TOOLKIT))
   COMPONENT_LIBS += gfx_os2
   endif
-  ifneq (,$(filter mac cocoa,$(MOZ_GFX_TOOLKIT)))
+  ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
   COMPONENT_LIBS += gfx_mac
   endif
-  ifeq (qt,$(MOZ_GFX_TOOLKIT))
+  ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
   COMPONENT_LIBS += widget_qt
   endif
-  ifneq (,$(filter gtk gtk2,$(MOZ_GFX_TOOLKIT)))
+  ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
   COMPONENT_LIBS += gfx_gtk
   endif
   ifdef MOZ_ENABLE_QT

@@ -53,7 +53,7 @@ PACKAGE_FILE = appcomps.pkg
 PACKAGE_VARS += MOZ_PHOENIX
 
 ifndef MOZ_XUL_APP
-ifneq (,$(filter $(MOZ_GFX_TOOLKIT),windows gtk gtk2))
+ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),windows gtk gtk2))
 ALERTS_SERVICE=1
 DEFINES += -DALERTS_SERVICE
 endif

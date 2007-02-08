@@ -60,13 +60,13 @@ MAIN_CPPSRCS = $(NULL)
 MAIN_CPPSRCS += gfxSurfaceRefCountTest.cpp
 
 # mac and win32 for now
-ifneq (,$(filter windows cocoa,$(MOZ_GFX_TOOLKIT)))
+ifneq (,$(filter windows cocoa,$(MOZ_WIDGET_TOOLKIT)))
 MAIN_CPPSRCS += gfxFontSelectionTest.cpp
 endif
 
 CPPSRCS = $(MAIN_CPPSRCS)
 
-ifeq ($(MOZ_GFX_TOOLKIT),cocoa)
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CMMSRCS = gfxTestCocoaHelper.mm
 HELPER_OBJS = gfxTestCocoaHelper.$(OBJ_SUFFIX)
 EXTRA_DEPS += gfxTestCocoaHelper.$(OBJ_SUFFIX)
@@ -85,12 +85,12 @@ LIBS =  $(HELPER_OBJS) \
 	$(ZLIB_LIBS) \
 	$(NULL)
 
-ifeq ($(MOZ_GFX_TOOLKIT),windows)
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 _OS_LIBS += usp10
 OS_LIBS += $(call EXPAND_LIBNAME,$(_OS_LIBS))
 endif
 
-ifeq ($(MOZ_GFX_TOOLKIT),cocoa)
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 OS_LIBS += -framework Cocoa
 endif
 

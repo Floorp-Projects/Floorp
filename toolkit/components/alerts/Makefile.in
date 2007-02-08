@@ -44,7 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS    = public 
 
-ifneq (,$(filter $(MOZ_GFX_TOOLKIT),windows gtk gtk2))
+ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),windows gtk gtk2))
 DIRS += src
 endif
 

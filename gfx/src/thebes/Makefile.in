@@ -124,7 +124,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 CPPSRCS		+= nsSystemFontsBeOS.cpp
 endif
 
-ifneq (,$(filter $(MOZ_GFX_TOOLKIT),mac cocoa))
+ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),mac cocoa))
 CPPSRCS          += nsSystemFontsMac.cpp
  ifdef MOZ_ENABLE_GLITZ
   REQUIRES         += glitzagl

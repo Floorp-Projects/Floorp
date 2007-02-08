@@ -118,7 +118,7 @@ SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)profilesharingsetup_s.$(LIB_SUFF
 LOCAL_INCLUDES += -I$(srcdir)/../profilesharingsetup/src
 endif
 
-ifeq ($(MOZ_GFX_TOOLKIT),os2)
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/os2 
 endif
 
@@ -126,7 +126,7 @@ ifneq (,$(filter gtk gtk2 xlib beos photon qt, $(MOZ_WIDGET_TOOLKIT)))
 LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/unixshared 
 endif
 
-ifeq ($(MOZ_GFX_TOOLKIT),windows)
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/win 
 ifneq ($(OS_ARCH), WINCE)
 OS_LIBS	+= $(call EXPAND_LIBNAME,winspool comdlg32)
