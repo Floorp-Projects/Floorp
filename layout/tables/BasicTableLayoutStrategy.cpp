@@ -788,9 +788,6 @@ BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
            l2t, c);
 #endif
 
-    // Hold previous to avoid accumulating rounding error.
-    nscoord prev_x = 0, prev_x_round = 0;
-
     for (col = 0; col < colCount; ++col) {
         nsTableColFrame *colFrame = mTableFrame->GetColFrame(col);
         if (!colFrame) {
@@ -873,18 +870,11 @@ BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
         NS_ASSERTION(col_width >= colFrame->GetMinCoord(),
                      "assigned width smaller than min");
 
-        nscoord new_x = prev_x + col_width;
-        nscoord new_x_round = nsTableFrame::RoundToPixel(new_x);
-
         nscoord old_final = colFrame->GetFinalWidth();
-        nscoord new_final = new_x_round - prev_x_round;
-        colFrame->SetFinalWidth(new_final);
+        colFrame->SetFinalWidth(col_width);
 
-        if (old_final != new_final)
+        if (old_final != col_width)
             mTableFrame->DidResizeColumns();
-
-        prev_x = new_x;
-        prev_x_round = new_x_round;
     }
 #ifdef DEBUG_TABLE_STRATEGY
     printf("ComputeColumnWidths final\n");
