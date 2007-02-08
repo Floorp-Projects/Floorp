@@ -143,7 +143,7 @@ XULSortServiceImpl::SetSortColumnHints(nsIContent *content,
 nsresult
 XULSortServiceImpl::GetItemsToSort(nsIContent *aContainer,
                                    nsSortState* aSortState,
-                                   nsTArray<contentSortInfo *>& aSortItems)
+                                   nsTArray<contentSortInfo>& aSortItems)
 {
   // if there is a template attached to the sort node, use the builder to get
   // the items to be sorted
@@ -179,11 +179,11 @@ XULSortServiceImpl::GetItemsToSort(nsIContent *aContainer,
   for (PRUint32 c = 0; c < count; c++) {
     nsIContent *child = aContainer->GetChildAt(c);
 
-    contentSortInfo* cinfo = new contentSortInfo(child, nsnull);
+    contentSortInfo* cinfo = aSortItems.AppendElement();
     if (!cinfo)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    aSortItems.AppendElement(cinfo);
+    cinfo->content = child;
       }
 
         return NS_OK;
@@ -194,7 +194,7 @@ nsresult
 XULSortServiceImpl::GetTemplateItemsToSort(nsIContent* aContainer,
                                            nsIXULTemplateBuilder* aBuilder,
                                            nsSortState* aSortState,
-                                           nsTArray<contentSortInfo *>& aSortItems)
+                                           nsTArray<contentSortInfo>& aSortItems)
 {
   PRUint32 numChildren = aContainer->GetChildCount();
   for (PRUint32 childIndex = 0; childIndex < numChildren; childIndex++) {
@@ -207,11 +207,12 @@ XULSortServiceImpl::GetTemplateItemsToSort(nsIContent* aContainer,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (result) {
-      contentSortInfo* cinfo = new contentSortInfo(child, result);
+      contentSortInfo* cinfo = aSortItems.AppendElement();
       if (!cinfo)
         return NS_ERROR_OUT_OF_MEMORY;
 
-      aSortItems.AppendElement(cinfo);
+      cinfo->content = child;
+      cinfo->result = result;
       }
     else if (aContainer->Tag() != nsGkAtoms::_template) {
       rv = GetTemplateItemsToSort(child, aBuilder, aSortState, aSortItems);
@@ -226,8 +227,8 @@ int PR_CALLBACK
 testSortCallback(const void *data1, const void *data2, void *privateData)
 {
   /// Note: testSortCallback is a small C callback stub for NS_QuickSort
-  contentSortInfo *left = *(contentSortInfo **)data1;
-  contentSortInfo *right = *(contentSortInfo **)data2;
+  contentSortInfo *left = (contentSortInfo *)data1;
+  contentSortInfo *right = (contentSortInfo *)data2;
   nsSortState* sortState = (nsSortState *)privateData;
       
   PRInt32 sortOrder = 0;
@@ -270,7 +271,7 @@ testSortCallback(const void *data1, const void *data2, void *privateData)
 nsresult
 XULSortServiceImpl::SortContainer(nsIContent *aContainer, nsSortState* aSortState)
 {
-  nsTArray<contentSortInfo *> items;
+  nsTArray<contentSortInfo> items;
   nsresult rv = GetItemsToSort(aContainer, aSortState, items);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -286,13 +287,13 @@ XULSortServiceImpl::SortContainer(nsIContent *aContainer, nsSortState* aSortStat
     for (i = 0; i < numResults; i++) {
       if (i > startIndex + 1) {
         nsAutoString type;
-        items[i]->result->GetType(type);
+        items[i].result->GetType(type);
         if (type.EqualsLiteral("separator")) {
           if (aSortState->invertSort)
-            InvertSortInfo(&items, startIndex, i - startIndex);
+            InvertSortInfo(items, startIndex, i - startIndex);
           else
             NS_QuickSort((void *)(items.Elements() + startIndex), i - startIndex,
-                         sizeof(contentSortInfo*), testSortCallback, (void*)aSortState);
+                         sizeof(contentSortInfo), testSortCallback, (void*)aSortState);
 
           startIndex = i + 1;
       }
@@ -301,31 +302,31 @@ XULSortServiceImpl::SortContainer(nsIContent *aContainer, nsSortState* aSortStat
   
     if (i > startIndex + 1) {
       if (aSortState->invertSort)
-        InvertSortInfo(&items, startIndex, i - startIndex);
+        InvertSortInfo(items, startIndex, i - startIndex);
           else
         NS_QuickSort((void *)(items.Elements() + startIndex), i - startIndex,
-                     sizeof(contentSortInfo*), testSortCallback, (void*)aSortState);
+                     sizeof(contentSortInfo), testSortCallback, (void*)aSortState);
       }
     } else {
     // if the items are just being inverted, that is, just switching between
     // ascending and descending, just reverse the list.
     if (aSortState->invertSort)
-      InvertSortInfo(&items, 0, numResults);
+      InvertSortInfo(items, 0, numResults);
     else
       NS_QuickSort((void *)items.Elements(), numResults,
-                   sizeof(contentSortInfo*), testSortCallback, (void*)aSortState);
+                   sizeof(contentSortInfo), testSortCallback, (void*)aSortState);
   }
 
   // first remove the items from the old positions
   for (i = 0; i < numResults; i++) {
-    nsIContent* child = items[i]->content;
+    nsIContent* child = items[i].content;
     nsIContent* parent = child->GetParent();
 
     if (parent) {
       // remember the parent so that it can be reinserted back
       // into the same parent. This is necessary as multiple rules
       // may generate results which get placed in different locations.
-      items[i]->parent = parent;
+      items[i].parent = parent;
       PRInt32 index = parent->IndexOf(child);
       parent->RemoveChildAt(index, PR_TRUE);
       }
@@ -334,8 +335,8 @@ XULSortServiceImpl::SortContainer(nsIContent *aContainer, nsSortState* aSortStat
   // now add the items back in sorted order
   for (i = 0; i < numResults; i++)
   {
-    nsIContent* child = items[i]->content;
-    nsIContent* parent = items[i]->parent;
+    nsIContent* child = items[i].content;
+    nsIContent* parent = items[i].parent;
     if (parent) {
       parent->AppendChildTo(child, PR_TRUE);
 
@@ -363,7 +364,7 @@ XULSortServiceImpl::SortContainer(nsIContent *aContainer, nsSortState* aSortStat
 }
 
 nsresult
-XULSortServiceImpl::InvertSortInfo(nsTArray<contentSortInfo *>* aData,
+XULSortServiceImpl::InvertSortInfo(nsTArray<contentSortInfo>& aData,
                                    PRInt32 aStart, PRInt32 aNumItems)
 {
   if (aNumItems > 1) {
@@ -372,9 +373,7 @@ XULSortServiceImpl::InvertSortInfo(nsTArray<contentSortInfo *>* aData,
     PRInt32 downPoint = (aNumItems - 2) / 2 + aStart;
     PRInt32 half = aNumItems / 2;
     while (half-- > 0) {
-      contentSortInfo *temp = (*aData)[downPoint];
-      (*aData)[downPoint--] = (*aData)[upPoint];
-      (*aData)[upPoint++] = temp;
+      aData[downPoint--].swap(aData[upPoint++]);
     }
   }
   return NS_OK;
