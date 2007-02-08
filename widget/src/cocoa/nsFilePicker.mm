@@ -401,18 +401,18 @@ NSArray *
 nsFilePicker::GenerateFilterList()
 {
   NSArray *filterArray = nil;
-  if (mFilters.Count() > 0)
-  {
+  if (mFilters.Count() > 0) {
     // Set up our filter string
     NSMutableString *giantFilterString = [[[NSMutableString alloc] initWithString:@""] autorelease];
-    if (!giantFilterString) //dang.
-      return filterArray;   
 
     // Loop through each of the filter strings
-    for (PRInt32 loop = 0; loop < mFilters.Count(); loop++)
-    {
+    for (PRInt32 loop = 0; loop < mFilters.Count(); loop++) {
       nsString *filterWide = mFilters[loop];
-      
+
+      // separate individual filters
+      if ([giantFilterString length] > 0)
+        [giantFilterString appendString:[NSString stringWithString:@";"]];
+
       // handle special case filters
       if (filterWide->Equals(NS_LITERAL_STRING("*"))) {
         // if we'll allow all files, we won't bother parsing all other
@@ -439,10 +439,11 @@ nsFilePicker::GenerateFilterList()
       aRange = [giantFilterString rangeOfCharacterFromSet:aSet];
     }   
     // OK, if string isn't empty we'll make a new filter list
-    if ([giantFilterString length] > 0)
+    if ([giantFilterString length] > 0) {
       // every time we find a semicolon, we've found a new filter.
       // components SeparatedByString should do that for us.
       filterArray = [[[NSArray alloc] initWithArray:[giantFilterString componentsSeparatedByString:@";"]] autorelease];
+    }
   }
   return filterArray;
 } // GenerateFilterList
