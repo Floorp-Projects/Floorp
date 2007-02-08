@@ -685,8 +685,6 @@ xpfe/Makefile
 xpfe/browser/Makefile
 xpfe/browser/public/Makefile
 xpfe/browser/src/Makefile
-xpfe/browser/samples/Makefile
-xpfe/browser/samples/sampleimages/Makefile
 xpfe/components/Makefile
 xpfe/components/bookmarks/Makefile
 xpfe/components/bookmarks/public/Makefile
