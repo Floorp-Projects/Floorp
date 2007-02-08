@@ -518,9 +518,41 @@ nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefault
   return NS_OK;
 }
 
+DWORD
+nsWindowsShellService::DeleteRegKeyDefaultValue(HKEY baseKey, const char *keyName)
+{
+  HKEY key;
+  DWORD rc = ::RegOpenKeyEx(baseKey, keyName, 0, KEY_WRITE, &key);
+  if (rc == ERROR_SUCCESS) {
+    rc = ::RegDeleteValue(key, "");
+    ::RegCloseKey(key);
+  }
+  return rc;
+}
+
 NS_IMETHODIMP
 nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUsers)
 {
+  // Delete the protocol and file handlers under HKCU if they exist. This way
+  // the HKCU registry is cleaned up when HKLM is writeable or if it isn't
+  // the values will then be added under HKCU.
+  (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\http\\shell\\open");
+  (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\http\\DefaultIcon");
+  (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\https\\shell\\open");
+  (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\https\\DefaultIcon");
+  (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\ftp\\shell\\open");
+  (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\ftp\\DefaultIcon");
+  (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\gopher\\shell\\open");
+  (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\gopher\\DefaultIcon");
+  (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\FirefoxURL");
+  (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\FirefoxHTML");
+
+  (void)DeleteRegKeyDefaultValue(HKEY_CURRENT_USER, "Software\\Classes\\.htm");
+  (void)DeleteRegKeyDefaultValue(HKEY_CURRENT_USER, "Software\\Classes\\.html");
+  (void)DeleteRegKeyDefaultValue(HKEY_CURRENT_USER, "Software\\Classes\\.shtml");
+  (void)DeleteRegKeyDefaultValue(HKEY_CURRENT_USER, "Software\\Classes\\.xht");
+  (void)DeleteRegKeyDefaultValue(HKEY_CURRENT_USER, "Software\\Classes\\.xhtml");
+
   if (!aForAllUsers && SetDefaultBrowserVista())
     return NS_OK;
 
@@ -641,6 +673,43 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   // Refresh the Shell
   SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, 0, 0);
   return NS_OK;
+}
+
+// Utility function to delete a registry subkey.
+DWORD
+nsWindowsShellService::DeleteRegKey(HKEY baseKey, const char *keyName)
+{
+ // Make sure input subkey isn't null. 
+ if (!keyName || !::strlen(keyName))
+   return ERROR_BADKEY;
+
+ DWORD rc;
+ // Open subkey.
+ HKEY key;
+ rc = ::RegOpenKeyEx(baseKey, keyName, 0, KEY_ENUMERATE_SUB_KEYS | DELETE, &key);
+ 
+ // Continue till we get an error or are done.
+ while (rc == ERROR_SUCCESS) {
+   char subkeyName[_MAX_PATH];
+   DWORD len = sizeof subkeyName;
+   // Get first subkey name.  Note that we always get the
+   // first one, then delete it.  So we need to get
+   // the first one next time, also.
+   rc = ::RegEnumKeyEx(key, 0, subkeyName, &len, 0, 0, 0, 0);
+   if (rc == ERROR_NO_MORE_ITEMS) {
+     // No more subkeys.  Delete the main one.
+     rc = ::RegDeleteKey(baseKey, keyName);
+     break;
+   } 
+   if (rc == ERROR_SUCCESS) {
+     // Another subkey, delete it, recursively.
+     rc = DeleteRegKey(key, subkeyName);
+   }
+ }
+ 
+ // Close the key we opened.
+ ::RegCloseKey(key);
+ return rc;
 }
 
 void
