@@ -23,7 +23,7 @@
 * locale/@AB_CD@/navigator-region/contents.rdf                              (generic/chrome/browser-region/contents.rdf)
 #endif
 * locale/@AB_CD@/branding/brand.dtd                                         (%chrome/branding/brand.dtd)
-* locale/@AB_CD@/branding/brand.properties                                  (%chrome/branding/brand.properties)
+  locale/@AB_CD@/branding/brand.properties                                  (%chrome/branding/brand.properties)
   locale/@AB_CD@/communicator/askViewZoom.dtd                               (%chrome/common/askViewZoom.dtd)
   locale/@AB_CD@/communicator/consoleOverlay.dtd                            (%chrome/common/consoleOverlay.dtd)
   locale/@AB_CD@/communicator/contentAreaCommands.dtd                       (%chrome/common/contentAreaCommands.dtd)
