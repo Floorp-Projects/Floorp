@@ -416,6 +416,16 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::EndDocument()
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP nsDeviceContextSpecOS2::BeginPage()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecOS2::EndPage()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 #endif
 
 //  Printer Enumerator

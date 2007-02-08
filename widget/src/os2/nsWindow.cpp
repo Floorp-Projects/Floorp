@@ -48,7 +48,12 @@
 #include "nsFont.h"
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
+#ifdef MOZ_CAIRO_GFX
+#include "gfxOS2Surface.h"
+#include "gfxContext.h"
+#else
 #include "nsIRenderingContextOS2.h"
+#endif
 #include "nsIDeviceContext.h"
 #include "nsIScreenManager.h"
 #include "nsRect.h"
@@ -236,6 +241,10 @@ nsWindow::nsWindow() : nsBaseWidget()
     mCssCursorHPtr      = 0;
 
     mIsTopWidgetWindow = PR_FALSE;
+
+#ifdef MOZ_CAIRO_GFX
+    mThebesSurface = nsnull;
+#endif
 
     if (!gGlobalsInitialized) {
       gGlobalsInitialized = PR_TRUE;
@@ -1091,6 +1100,21 @@ NS_METHOD nsWindow::Create(nsNativeWidget aParent,
    return NS_OK;
 }
 
+#ifdef MOZ_CAIRO_GFX
+//-------------------------------------------------------------------------
+//
+// Create a Thebes surface using the current window handle
+//
+//-------------------------------------------------------------------------
+gfxASurface* nsWindow::GetThebesSurface()
+{
+  if (mWnd && !mThebesSurface) {
+    mThebesSurface = new gfxOS2Surface(mWnd);
+  }
+  return mThebesSurface;
+}
+#endif
+
 //-------------------------------------------------------------------------
 //
 // Close this nsWindow
@@ -1100,38 +1124,41 @@ NS_METHOD nsWindow::Destroy()
 {
   // Switch to the "main gui thread" if necessary... This method must
   // be executed on the "gui thread"...
-   // Switch to the PM thread if necessary...
-   if( mToolkit && !mOS2Toolkit->IsGuiThread())
-   {
-      MethodInfo info( this, nsWindow::DESTROY);
-      mOS2Toolkit->CallMethod( &info);
-   }
-   else
-   {
-      // avoid calling into other objects if we're being deleted, 'cos
-      // they must have no references to us.
-      if( (mWindowState & nsWindowState_eLive) && mParent )
-         nsBaseWidget::Destroy();
+  // Switch to the PM thread if necessary...
+  if (mToolkit && !mOS2Toolkit->IsGuiThread()) {
+    MethodInfo info(this, nsWindow::DESTROY);
+    mOS2Toolkit->CallMethod(&info);
+  } else {
+    // avoid calling into other objects if we're being deleted, 'cos
+    // they must have no references to us.
+    if ((mWindowState & nsWindowState_eLive) && mParent) {
+      nsBaseWidget::Destroy();
+    }
 
-      // just to be safe. If we're going away and for some reason we're still
-      // the rollup widget, rollup and turn off capture.
-      if (this == gRollupWidget) {
-         if (gRollupListener)
-            gRollupListener->Rollup();
-         CaptureRollupEvents(nsnull, PR_FALSE, PR_TRUE);
+    // just to be safe. If we're going away and for some reason we're still
+    // the rollup widget, rollup and turn off capture.
+    if (this == gRollupWidget) {
+      if (gRollupListener) {
+        gRollupListener->Rollup();
       }
+      CaptureRollupEvents(nsnull, PR_FALSE, PR_TRUE);
+    }
 
-      if( mWnd)
-      {
-         HWND hwndBeingDestroyed = mFrameWnd ? mFrameWnd : mWnd;
-         DEBUGFOCUS(Destroy);
-         if (hwndBeingDestroyed == WinQueryFocus(HWND_DESKTOP)) {
-           WinSetFocus(HWND_DESKTOP, WinQueryWindow(hwndBeingDestroyed, QW_PARENT));
-         }
-         WinDestroyWindow(hwndBeingDestroyed);
+#ifdef MOZ_CAIRO_GFX
+    // Destroy thebes surface now, XXX do we need this at all??
+    mThebesSurface = nsnull;
+#endif
+
+    if (mWnd) {
+      HWND hwndBeingDestroyed = mFrameWnd ? mFrameWnd : mWnd;
+      DEBUGFOCUS(Destroy);
+      if (hwndBeingDestroyed == WinQueryFocus(HWND_DESKTOP)) {
+        WinSetFocus(HWND_DESKTOP, WinQueryWindow(hwndBeingDestroyed, QW_PARENT));
       }
-   }
-   return NS_OK;
+      WinDestroyWindow(hwndBeingDestroyed);
+    }
+  }
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -2537,12 +2564,12 @@ PRBool nsWindow::OnKey(MPARAM mp1, MPARAM mp2)
 
     if (pressEvent.isControl && !(fsFlags & (KC_VIRTUALKEY | KC_DEADKEY))) {
       if (!pressEvent.isShift && (pressEvent.charCode >= 'A' && pressEvent.charCode <= 'Z')) {
-          pressEvent.charCode = tolower(pressEvent.charCode);
-        }
+        pressEvent.charCode = tolower(pressEvent.charCode);
+      }
       if (pressEvent.isShift && (pressEvent.charCode >= 'a' && pressEvent.charCode <= 'z')) {
-          pressEvent.charCode = toupper(pressEvent.charCode);
-        }
-        pressEvent.keyCode = 0;
+        pressEvent.charCode = toupper(pressEvent.charCode);
+      }
+      pressEvent.keyCode = 0;
     } else if (!pressEvent.isControl && !pressEvent.isAlt && pressEvent.charCode != 0) {
       if (!(fsFlags & KC_VIRTUALKEY) || // not virtual key
           ((fsFlags & KC_CHAR) && (pressEvent.keyCode == 0)) ) {
@@ -2610,7 +2637,6 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
     PRBool result = PR_FALSE; // call the default window procedure
 
     switch (msg) {
-//#if 0
         case WM_COMMAND: // fire off menu selections
         {
            nsMenuEvent event(PR_TRUE, NS_MENU_SELECTED, this);
@@ -2620,12 +2646,6 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
            NS_RELEASE(event.widget);
         }
 #if 0
-          USHORT usSrc = SHORT1FROMMP( mp2);
-          if( usSrc == CMDSRC_MENU || usSrc == CMDSRC_ACCELERATOR)
-            result = OnMenuClick( SHORT1FROMMP(mp1));
-          break;
-        }
-
         case WM_INITMENU:
           result = OnActivateMenu( HWNDFROMMP(mp2), TRUE);
           break;
@@ -2635,21 +2655,6 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           break;
 #endif
 
-#if 0  // Tooltips appear to be gone
-        case WMU_SHOW_TOOLTIP:
-        {
-          nsTooltipEvent event(PR_TRUE, NS_SHOW_TOOLTIP, this);
-          InitEvent( event );
-          event.tipIndex = LONGFROMMP(mp1);
-          result = DispatchWindowEvent(&event);
-          NS_RELEASE(event.widget);
-          break;
-        }
-
-        case WMU_HIDE_TOOLTIP:
-          result = DispatchStandardEvent( NS_HIDE_TOOLTIP );
-          break;
-#endif
         case WM_CONTROL: // remember this is resent to the orginator...
           result = OnControl( mp1, mp2);
           break;
@@ -3153,119 +3158,137 @@ PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
 //-------------------------------------------------------------------------
 PRBool nsWindow::OnPaint()
 {
-   PRBool rc = PR_FALSE;
-   nsEventStatus eventStatus = nsEventStatus_eIgnore;
+  PRBool rc = PR_FALSE;
+  nsEventStatus eventStatus = nsEventStatus_eIgnore;
 
 #ifdef NS_DEBUG
-   HRGN debugPaintFlashRegion = NULL;
-   HPS debugPaintFlashPS = NULL;
+  HRGN debugPaintFlashRegion = NULL;
+  HPS debugPaintFlashPS = NULL;
 
-   if (debug_WantPaintFlashing())
-   {
-      debugPaintFlashPS = ::WinGetPS(mWnd);
-      debugPaintFlashRegion = ::GpiCreateRegion(debugPaintFlashPS, 0, NULL);
-      ::WinQueryUpdateRegion(mWnd, debugPaintFlashRegion);
-   }
+  if (debug_WantPaintFlashing()) {
+    debugPaintFlashPS = ::WinGetPS(mWnd);
+    debugPaintFlashRegion = ::GpiCreateRegion(debugPaintFlashPS, 0, NULL);
+    ::WinQueryUpdateRegion(mWnd, debugPaintFlashRegion);
+  } // if paint flashing
 #endif
 
-   if( mContext && (mEventCallback || mEventListener))
-   {
-      // Get rect to redraw and validate window
-      RECTL rcl = { 0 };
+  if (mContext && (mEventCallback || mEventListener)) {
+    // Get rect to redraw and validate window
+    RECTL rcl = { 0 };
 
-      // get the current drag status;  if we're currently in a Moz-originated
-      // drag, get the special drag HPS then pass it to WinBeginPaint();
-      // if there is no hpsDrag, WinBeginPaint() will return a normal HPS
-      HPS hpsDrag = 0;
-      CheckDragStatus(ACTION_PAINT, &hpsDrag);
-      HPS hPS = WinBeginPaint(mWnd, hpsDrag, &rcl);
-      nsPaletteOS2::SelectGlobalPalette(hPS, mWnd);
+    // get the current drag status;  if we're currently in a Moz-originated
+    // drag, get the special drag HPS then pass it to WinBeginPaint();
+    // if there is no hpsDrag, WinBeginPaint() will return a normal HPS
+    HPS hpsDrag = 0;
+    CheckDragStatus(ACTION_PAINT, &hpsDrag);
+    HPS hPS = WinBeginPaint(mWnd, hpsDrag, &rcl);
+    nsPaletteOS2::SelectGlobalPalette(hPS, mWnd);
 
-      // if the update rect is empty, suppress the paint event
-      if (!WinIsRectEmpty(0, &rcl))
-      {
-          // call the event callback 
-          if (mEventCallback) 
-          {
-              nsPaintEvent event(PR_TRUE, NS_PAINT, this);
-              InitEvent(event);
-     
-              // build XP rect from in-ex window rect
-              nsRect rect;
-              rect.x = rcl.xLeft;
-              rect.y = GetClientHeight() - rcl.yTop;
-              rect.width = rcl.xRight - rcl.xLeft;
-              rect.height = rcl.yTop - rcl.yBottom;
-              event.rect = &rect;
-              event.region = nsnull;
-     
+    // if the update rect is empty, suppress the paint event
+    if (!WinIsRectEmpty(0, &rcl)) {
+      // call the event callback
+      if (mEventCallback) {
+        nsPaintEvent event(PR_TRUE, NS_PAINT, this);
+        InitEvent(event);
+
+        // build XP rect from in-ex window rect
+        nsRect rect;
+        rect.x = rcl.xLeft;
+        rect.y = GetClientHeight() - rcl.yTop;
+        rect.width = rcl.xRight - rcl.xLeft;
+        rect.height = rcl.yTop - rcl.yBottom;
+        event.rect = &rect;
+        event.region = nsnull;
+
 #ifdef NS_DEBUG
-          debug_DumpPaintEvent(stdout,
-                               this,
-                               &event,
-                               nsCAutoString("noname"),
-                               (PRInt32) mWnd);
+        debug_DumpPaintEvent(stdout, this, &event, nsCAutoString("noname"),
+                             (PRInt32)mWnd);
 #endif // NS_DEBUG
 
-              //nsresult  res;
-             
-              static NS_DEFINE_CID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-             
-              if (NS_SUCCEEDED(CallCreateInstance(kRenderingContextCID, &event.renderingContext)))
-              {
-                 nsIRenderingContextOS2 *winrc;
+#ifdef MOZ_CAIRO_GFX // Thebes code version, adapted from windows/nsWindow.cpp
+        nsRefPtr<gfxASurface> targetSurface =
+          new gfxOS2Surface(hPS, gfxIntSize(rect.width, rect.height));
+        nsRefPtr<gfxContext> thebesContext = new gfxContext(targetSurface);
 
-                 if (NS_OK == event.renderingContext->QueryInterface(NS_GET_IID(nsIRenderingContextOS2), (void **)&winrc))
-                 {
-                    nsIDrawingSurface* surf;
-                   
-                    //i know all of this seems a little backwards. i'll fix it, i swear. MMP
-                   
-                    if (NS_OK == winrc->CreateDrawingSurface(hPS, surf, event.widget))
-                    {
-                      event.renderingContext->Init(mContext, surf);
-                      rc = DispatchWindowEvent(&event, eventStatus);
-                      event.renderingContext->DestroyDrawingSurface(surf);
-                    }
+        nsCOMPtr<nsIRenderingContext> context;
+        nsresult rv = mContext->CreateRenderingContextInstance(*getter_AddRefs(context));
+        if (NS_FAILED(rv)) {
+          NS_WARNING("CreateRenderingContextInstance failed");
+          return PR_FALSE;
+        }
 
-                    NS_RELEASE(winrc);
-                 }
-              }
-     
-              NS_RELEASE(event.renderingContext);
-              NS_RELEASE(event.widget);
-          }
-      }
-     
-      WinEndPaint(hPS);
-      if (hpsDrag)
-        ReleaseIfDragHPS(hpsDrag);
-   }
+        rv = context->Init(mContext, thebesContext);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("context::Init failed");
+          return PR_FALSE;
+        }
+
+        event.renderingContext = context;
+        rc = DispatchWindowEvent(&event, eventStatus);
+        event.renderingContext = nsnull;
+
+        if (rc) {
+          // Only update if DispatchWindowEvent returned TRUE; otherwise, nothing handled
+          // this, and we'll just end up painting with black.
+          thebesContext->PopGroupToSource();
+          thebesContext->SetOperator(gfxContext::OPERATOR_SOURCE);
+          thebesContext->Paint();
+        }
+#else   // code without Thebes follows
+        static NS_DEFINE_CID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
+
+        if (NS_SUCCEEDED(CallCreateInstance(kRenderingContextCID, &event.renderingContext))) {
+          nsIRenderingContextOS2 *winrc;
+
+          if (NS_OK == event.renderingContext->QueryInterface(NS_GET_IID(nsIRenderingContextOS2), (void **)&winrc)) {
+            nsIDrawingSurface* surf;
+
+            //i know all of this seems a little backwards. i'll fix it, i swear. MMP
+
+            if (NS_OK == winrc->CreateDrawingSurface(hPS, surf, event.widget)) {
+              event.renderingContext->Init(mContext, surf);
+              rc = DispatchWindowEvent(&event, eventStatus);
+              event.renderingContext->DestroyDrawingSurface(surf);
+            }
+
+            NS_RELEASE(winrc);
+          } // if event.renderingContext->QI
+        } // instance of rendering context
+
+        NS_RELEASE(event.renderingContext);
+        NS_RELEASE(event.widget);
+#endif  // this was the code without Thebes
+      } // if (mEventCallback)
+    } // if (!WinIsRectEmpty(0, &rcl))
+
+    WinEndPaint(hPS);
+    if (hpsDrag) {
+      ReleaseIfDragHPS(hpsDrag);
+    }
+  } // if (mContext && (mEventCallback || mEventListener))
 
 #ifdef NS_DEBUG
-  if (debug_WantPaintFlashing())
-  {
-     // Only flash paint events which have not ignored the paint message.
-     // Those that ignore the paint message aren't painting anything so there
-     // is only the overhead of the dispatching the paint event.
-     if (nsEventStatus_eIgnore != eventStatus)
-     {
-        LONG CurMix = ::GpiQueryMix(debugPaintFlashPS);
-        ::GpiSetMix(debugPaintFlashPS, FM_INVERT);
+  if (debug_WantPaintFlashing()) {
+    // Only flash paint events which have not ignored the paint message.
+    // Those that ignore the paint message aren't painting anything so there
+    // is only the overhead of the dispatching the paint event.
+    if (nsEventStatus_eIgnore != eventStatus) {
+      LONG CurMix = ::GpiQueryMix(debugPaintFlashPS);
+      ::GpiSetMix(debugPaintFlashPS, FM_INVERT);
 
-        ::GpiPaintRegion(debugPaintFlashPS, debugPaintFlashRegion);
-        PR_Sleep(PR_MillisecondsToInterval(30));
-        ::GpiPaintRegion(debugPaintFlashPS, debugPaintFlashRegion);
-        PR_Sleep(PR_MillisecondsToInterval(30));
+      ::GpiPaintRegion(debugPaintFlashPS, debugPaintFlashRegion);
+      PR_Sleep(PR_MillisecondsToInterval(30));
+      ::GpiPaintRegion(debugPaintFlashPS, debugPaintFlashRegion);
+      PR_Sleep(PR_MillisecondsToInterval(30));
 
-        ::GpiSetMix (debugPaintFlashPS, CurMix);
-     }
-     ::GpiDestroyRegion(debugPaintFlashPS, debugPaintFlashRegion);
-     ::WinReleasePS(debugPaintFlashPS);
-  }
+      ::GpiSetMix(debugPaintFlashPS, CurMix);
+    } // if not eIgnore
+    ::GpiDestroyRegion(debugPaintFlashPS, debugPaintFlashRegion);
+    ::WinReleasePS(debugPaintFlashPS);
+  } // if paint flashing
 #endif
 
-   return rc;
+  return rc;
 }
 
 

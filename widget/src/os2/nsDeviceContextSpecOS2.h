@@ -107,6 +107,8 @@ public:
   NS_IMETHOD BeginDocument(PRUnichar* aTitle, PRUnichar* aPrintToFileName,
                            PRInt32 aStartPage, PRInt32 aEndPage);
   NS_IMETHOD EndDocument();
+  NS_IMETHOD BeginPage();
+  NS_IMETHOD EndPage();
 #endif
 
 /**

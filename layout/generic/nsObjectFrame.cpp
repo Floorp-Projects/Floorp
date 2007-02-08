@@ -1102,7 +1102,9 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
   // delegate all painting to the plugin instance.
   if (mInstanceOwner)
       mInstanceOwner->Paint(aDirtyRect);
-#elif defined (XP_WIN) || defined(XP_OS2)
+#elif defined (XP_WIN) // || defined(XP_OS2)
+  // XXX for OS/2 we need to overhaul this for Cairo builds
+  //     for now just ignore plugin stuff
   nsCOMPtr<nsIPluginInstance> inst;
   GetPluginInstance(*getter_AddRefs(inst));
   if (inst) {
