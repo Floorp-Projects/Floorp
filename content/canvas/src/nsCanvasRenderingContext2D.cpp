@@ -3212,5 +3212,5 @@ nsCanvasRenderingContext2D::PutImageData()
         cairo_surface_destroy (imgsurf);
     }
 
-    return NS_OK;
+    return Redraw();
 }
