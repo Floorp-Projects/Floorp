@@ -21,5 +21,11 @@ browser.jar:
 # to prevent having to worry about between versions of the browser
 *   content/browser/history/history-panel.xul            (content/history-panel.xul) 
 *   content/browser/places/history-panel.js              (content/history-panel.js)
+#ifdef MOZ_PLACES_BOOKMARKS
+# ditto for the bookmarks sidebar
+*   content/browser/bookmarks/bookmarksPanel.xul         (content/bookmarksPanel.xul)
+*   content/browser/bookmarks/bookmarksPanel.js          (content/bookmarksPanel.js)
+#endif
+*   content/browser/bookmarks/sidebarUtils.js            (content/sidebarUtils.js)
 *   content/browser/places/moveBookmarks.xul             (content/moveBookmarks.xul)
 *   content/browser/places/moveBookmarks.js              (content/moveBookmarks.js)

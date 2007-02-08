@@ -61,6 +61,8 @@
       onload="HistorySidebarInit();">
 
   <script type="application/x-javascript" 
+          src="chrome://browser/content/bookmarks/sidebarUtils.js"/>
+  <script type="application/x-javascript" 
           src="chrome://browser/content/places/history-panel.js"/>
 #ifndef MOZ_PLACES_BOOKMARKS
   <script type="application/x-javascript" 
@@ -143,9 +145,9 @@
         type="places"
         place="place:&amp;beginTime=-2592000000000&amp;beginTimeRef=1&amp;endTime=7200000000&amp;endTimeRef=2&amp;type=1"
         context="historyContextMenu"
-        onkeypress="if (event.keyCode == 13) openURL(event);"
+        onkeypress="if (event.keyCode == 13) this.controller.openSelectedNodeWithEvent(event);"
         hidecolumnpicker="true"
-        onclick="handleHistoryClick(event);">
+        onclick="SidebarUtils.handleClick(this, event, true);">
     <treecols>
       <treecol id="title" flex="1" primary="true" hideheader="true"/>
     </treecols>

@@ -104,22 +104,18 @@
           query.searchTerms = filterString;
           query.onlyBookmarked = onlyBookmarks;
           
-          // If we're searching over everything, or this is not an exclusively
-          // bookmarks search, we need to make sure that we remove "group by
-          // folder" from the options list, because otherwise we will end up
-          // with _no_ results if the user searches while a bookmarks folder 
-          // is selected, since the options for the current view say group by
-          // folder and none of the results will match!
-          if (!onlyBookmarks) {
-            var groupings = options.getGroupingMode({});
-            function isFolderGrouping(grouping, index, ary) {
-              return grouping != Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER;
-            }
-            var folderGroupings = groupings.filter(isFolderGrouping);
-            options.setGroupingMode(folderGroupings, folderGroupings.length);            
+          // Remove "group by folder" from the options list, because
+          // nsNavHistory::RecursiveGroup doesn't support it.
+          function isFolderGrouping(grouping, index, ary) {
+            return grouping != Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER;
           }
-          if (onlyBookmarks)
+          var groupings = options.getGroupingMode({});
+          var folderGroupings = groupings.filter(isFolderGrouping);
+          options.setGroupingMode(folderGroupings, folderGroupings.length);
+
+          if (onlyBookmarks && folderRestrict)
             query.setFolders(folderRestrict, folderRestrict.length);
+
           this.load([query], options);
         ]]></body>
       </method>
