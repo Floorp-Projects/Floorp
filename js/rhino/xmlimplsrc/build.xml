@@ -34,23 +34,38 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <project name="xmlimplsrc" basedir=".." default="compile">
+	<!--
+		Properties which affect this build file:
+		
+		no-e4x: Will cause E4X not to be built
+		no-xmlbeans: Will cause the old, XMLBeans-based implementation of E4X not to be built
+	-->
+	
 	<property file="build.local.properties"/>
 	<property file="build.properties"/>
+	
+	<!--
+		Provide support for the old name for skipping E4X compilation, in case someone is still using it
+	-->
+	<condition property="no-e4x">
+		<isset property="without-xmlimpl" />
+	</condition>
 
 	<path id="xmlbeans.classpath">
 		<pathelement location="${xbean.jar}"/>
 		<pathelement location="${jsr173.jar}"/>
 	</path>
 
-	<target name="compile" unless="without-xmlimpl">
-		<available property="jdk1.5?" classname="java.lang.ProcessBuilder" />
-		<antcall target="do-dom-compile" />
-		<antcall target="no-dom-compile" />
+	<target name="compile" unless="no-e4x">
+		<antcall target="e4x-compile" />
+		<antcall target="no-e4x-compile" />
 		
-		<antcall target="xmlbeans-compile" />
+		<antcall target="old-e4x" />
 	</target>
 	
-	<target name="do-dom-compile" if="jdk1.5?">
+	<available property="jdk1.5?" classname="java.lang.ProcessBuilder" />
+	
+	<target name="e4x-compile" if="jdk1.5?">
 		<javac
 			srcdir="xmlimplsrc"
 			destdir="${classes}"
@@ -61,27 +76,22 @@
 		/>		
 	</target>
 	
-	<target name="no-dom-compile" unless="jdk1.5?">
-		<echo>Skipping DOM E4X implementation; JDK 1.5+ currently required for compilation.</echo>
+	<target name="no-e4x-compile" unless="jdk1.5?">
+		<echo>
+			Skipping DOM E4X implementation; JDK 1.5+ currently required for compilation.
+			<!--
+				If the compiler is outfitted with DOM3 using the endorsed standards override mechanism, presumably the code
+				could be built under 1.4.  Not tested.
+			-->
+		</echo>
 	</target>
 	
-	<target name="xmlbeans-compile">
-		<available property="xmlbeans-present?" file="${xbean.jar}" />
-		
-		<antcall target="xmlbeans-get" />
-
-		<condition property="xmlbeans-compile?">
-			<and>
-				<available file="${xbean.jar}" />
-				<available file="${jsr173.jar}" />
-			</and>
-		</condition>
-
-		<antcall target="do-xmlbeans-compile" />
-		<antcall target="no-xmlbeans-compile" />  		
+	<target name="old-e4x" unless="no-xmlbeans">
+		<antcall target="old-e4x-compile" />
+		<antcall target="no-old-e4x-compile" />		
 	</target>
-    
-	<target name="do-xmlbeans-compile" if="xmlbeans-compile?">
+	
+	<target name="old-e4x-compile" depends="xmlbeans-unzip">
 		<echo>Compiling XMLBeans E4X implementation using ${xbean.jar} and ${jsr173.jar}</echo>
 		<javac 
 			srcdir="deprecatedsrc"
@@ -96,10 +106,9 @@
 		/>
 	</target>
 
-	<target name="no-xmlbeans-compile" unless="xmlbeans-compile?">
+	<target name="no-old-e4x-compile" if="no-xmlbeans">
 		<echo>
-			Skipping compilation of XMLBeans E4X implementation due to lack of
-			XMLBeans files
+			Skipping compilation of XMLBeans E4X implementation due to missing XMLBeans files
 		</echo>
 	</target>
 
@@ -126,17 +135,17 @@
 	<property name="xmlbeans.zip" location="${xmlbeans.tmp}/xbean.zip" /> 
 	
 	<condition property="xmlbeans-present?">
-		<or>
+		<and>
 			<available file="${xbean.jar}" />
-			<available file="${xmlbeans.zip}" />
-		</or>
+			<available file="${jsr173.jar}" />			
+		</and>
 	</condition>
 	
 	<condition property="xmlbeans-zip-present?">
 		<available file="${xmlbeans.zip}" />
 	</condition>
 
-	<target name="xmlbeans-get" unless="xmlbeans-present?">
+	<target name="xmlbeans-get" unless="xmlbeans-zip-present?">
 		<property 
 			name="xmlbeans.url" 
 			value="http://www.apache.org/dist/xmlbeans/binaries/xmlbeans-2.2.0.zip"
@@ -144,13 +153,9 @@
 
 		<mkdir dir="${xmlbeans.tmp}" />
 		<get src="${xmlbeans.url}" dest="${xmlbeans.zip}" ignoreerrors="true" />
-
-		<available property="xmlbeans-zip-present?" file="${xmlbeans.zip}" /> 
-    
-		<antcall target="xmlbeans-unzip" />
 	</target>
 
-	<target name="xmlbeans-unzip" if="xmlbeans-zip-present?">
+	<target name="xmlbeans-unzip" depends="xmlbeans-get" unless="xmlbeans-present?">
 		<unzip src="${xmlbeans.zip}" dest="${xmlbeans.tmp}" />
 		<copy tofile="${xbean.jar}" file="${xmlbeans.tmp}/xmlbeans-2.2.0/lib/xbean.jar" />
 		<copy tofile="${jsr173.jar}" file="${xmlbeans.tmp}/xmlbeans-2.2.0/lib/jsr173_1.0_api.jar" />
