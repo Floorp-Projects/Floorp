@@ -42,14 +42,14 @@
 == bugs/163504-1b.html bugs/163504-1-ref.html
 == bugs/163504-2a.html bugs/163504-2-ref.html
 == bugs/163504-2b.html bugs/163504-2-ref.html
-# == bugs/328829-1.xhtml bugs/328829-1-ref.xhtml # bug 369046 (intermittent)
+random == bugs/328829-1.xhtml bugs/328829-1-ref.xhtml # bug 369046 (intermittent)
 == bugs/328829-2.xhtml bugs/328829-2-ref.xhtml
 == bugs/339289-1.html bugs/339289-1-ref.html
 == bugs/347912-1.html bugs/347912-1-ref.html
 == bugs/351641-1a.html bugs/351641-1-ref.html
 == bugs/351641-1b.html bugs/351641-1-ref.html
 == bugs/351641-2a.html bugs/351641-2-ref.html
-f== bugs/351641-2b.html bugs/351641-2-ref.html # bug 358433 (2006-10-19)
+fails == bugs/351641-2b.html bugs/351641-2-ref.html # bug 358433 (2006-10-19)
 == bugs/362594-1a.html bugs/362594-1-quirks-ref.html
 == bugs/362594-1b.html bugs/362594-1-quirks-ref.html
 == bugs/362594-1c.html bugs/362594-1-standards-ref.html
@@ -110,10 +110,10 @@ f== bugs/351641-2b.html bugs/351641-2-ref.html # bug 358433 (2006-10-19)
 == bugs/367612-1e.html bugs/367612-1-ref.html
 == bugs/367612-1f.html bugs/367612-1-ref.html
 != bugs/367612-1g.html bugs/367612-1-ref.html
-f== bugs/368020-1.html bugs/368020-1-ref.html # bug 368079
-#== bugs/368020-2.html bugs/368020-2-ref.html # bug 368157 (X11 only?)
-f== bugs/368020-3.html bugs/368020-3-ref.html # bug 368085
-f== bugs/368020-4.html bugs/368020-4-ref.html # bug 368085
+fails == bugs/368020-1.html bugs/368020-1-ref.html # bug 368079
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == bugs/368020-2.html bugs/368020-2-ref.html # bug 368157
+fails == bugs/368020-3.html bugs/368020-3-ref.html # bug 368085
+fails == bugs/368020-4.html bugs/368020-4-ref.html # bug 368085
 == bugs/368020-5.html bugs/368020-5-ref.html
 == bugs/368622-1.html bugs/368622-1-ref.html
 == bugs/368622-1.html bugs/368622-1-ref.html
@@ -163,8 +163,8 @@ f== bugs/368020-4.html bugs/368020-4-ref.html # bug 368085
 #     need to require Flash on the test machine to run them
 #
 # XXX need to support <img src="foo.svg"> for these to pass
-f== object/svg.html object/svg-ref.html
-f== object/svg-with-type.html object/svg-with-type-ref.html
+fails == object/svg.html object/svg-ref.html
+fails == object/svg-with-type.html object/svg-with-type-ref.html
 #
 # XXX missing test 031 from http://biesi.damowmow.com/object/ here; need to
 #     first support the standby attribute on objects, then need to figure out

@@ -48,4 +48,20 @@ EXTRA_COMPONENTS= \
 		reftest-cmdline.js \
 		$(NULL)
 
+CHROME_DEPS	= \
+		autoconf.js \
+		$(NULL)
+
 include $(topsrcdir)/config/rules.mk
+
+autoconf.js: $(DEPTH)/config/autoconf.mk Makefile
+	echo 'var gAutoconfVars = {' > $@
+	# strip comments, escape \ and ", use only assignment lines that
+	# don't end in backslashes and don't have variables, and then
+	# convert to JS properties
+	cat $< | sed 's/#.*//;s,\\,\\\\,g;s,",\\",g' | grep '=' | grep -v '\\$$' | grep -v '\$$' | sed 's/[ \t]*:\?= *\(.*\)/: "\1",/' >> $@
+	echo 'dummy_var: null' >> $@ # to avoid trailing comma
+	echo '};' >> $@
+
+ALL_TRASH	+= autoconf.js
+

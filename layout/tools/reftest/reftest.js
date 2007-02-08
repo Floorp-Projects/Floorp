@@ -53,6 +53,10 @@ var gURLs;
 var gState;
 var gPart1Key;
 
+const EXPECTED_PASS = 0;
+const EXPECTED_FAIL = 1;
+const EXPECTED_RANDOM = 2;
+
 function OnRefTestLoad()
 {
     gBrowser = document.getElementById("browser");
@@ -98,6 +102,10 @@ function ReadManifest(aURL)
     fis.init(listURL.file, -1, -1, false);
     var lis = fis.QueryInterface(CI.nsILineInputStream);
 
+    var sandbox = new Components.utils.Sandbox(aURL.spec);
+    for (var prop in gAutoconfVars)
+        sandbox[prop] = gAutoconfVars[prop];
+
     var line = {value:null};
     var lineNo = 0;
     do {
@@ -113,16 +121,41 @@ function ReadManifest(aURL)
             continue;
         var items = str.split(/\s+/); // split on whitespace
 
+        var expected_status = EXPECTED_PASS;
+        while (items[0].match(/^(fails|random)/)) {
+            var item = items.shift();
+            var stat;
+            var cond;
+            var m = item.match(/^(fails|random)-if(\(.*\))$/);
+            if (m) {
+                stat = m[1];
+                // Note: m[2] contains the parentheses, and we want them.
+                cond = Components.utils.evalInSandbox(m[2], sandbox);
+            } else if (item.match(/^(fails|random)$/)) {
+                stat = item;
+                cond = true;
+            } else {
+                throw "Error in manifest file " + aURL + " line " + lineNo;
+            }
+
+            if (cond) {
+                if (stat == "fails") {
+                    expected_status = EXPECTED_FAIL;
+                } else if (stat == "random") {
+                    expected_status = EXPECTED_RANDOM;
+                }
+            }
+        }
+
         if (items[0] == "include") {
             if (items.length != 2)
                 throw "Error in manifest file " + aURL + " line " + lineNo;
             ReadManifest(ios.newURI(items[1], null, listURL));
-        } else if (items[0] == "==" || items[0] == "!=" ||
-                   items[0] == "f==" || items[0] == "f!=") {
+        } else if (items[0] == "==" || items[0] == "!=") {
             if (items.length != 3)
                 throw "Error in manifest file " + aURL + " line " + lineNo;
-            gURLs.push( { equal: (items[0] == "==" || items[0] == "f=="),
-                          fail_expected: (items[0][0] == "f"),
+            gURLs.push( { equal: (items[0] == "=="),
+                          expected: expected_status,
                           url1: ios.newURI(items[1], null, listURL),
                           url2: ios.newURI(items[2], null, listURL)} );
         } else {
@@ -167,9 +200,17 @@ function DocumentLoaded()
             var equal = (key == gPart1Key);
             var result = "REFTEST ";
             var test_passed = (equal == gURLs[0].equal);
-            var result_expected = (test_passed == !gURLs[0].fail_expected);
-            if (!result_expected) {
-                result += "UNEXPECTED ";
+            var expected = gURLs[0].expected;
+            switch (expected) {
+                case EXPECTED_PASS:
+                    if (!test_passed) result += "UNEXPECTED ";
+                    break;
+                case EXPECTED_FAIL:
+                    if (test_passed) result += "UNEXPECTED ";
+                    break;
+                case EXPECTED_RANDOM:
+                    result += "(RESULT EXPECTED TO BE RANDOM) "
+                    break;
             }
             if (test_passed) {
                 result += "PASS: ";
@@ -181,9 +222,9 @@ function DocumentLoaded()
             }
             result += gURLs[0].url1.spec;
             dump(result + "\n");
-            if (!test_passed && !result_expected) {
-                dump("REFTEST   IMAGE 1: " + gPart1Key + "\n");
-                dump("REFTEST   IMAGE 2: " + key + "\n");
+            if (!test_passed && expected == EXPECTED_PASS) {
+                dump("REFTEST   IMAGE 1 (TEST): " + gPart1Key + "\n");
+                dump("REFTEST   IMAGE 2 (REFERENCE): " + key + "\n");
             }
 
             gPart1Key = undefined;
