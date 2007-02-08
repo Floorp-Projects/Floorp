@@ -349,11 +349,11 @@ PRMJ_basetime(JSInt64 tsecs, PRMJTime *prtm)
     JSInt64 result;
     JSInt64	result1;
     JSInt64	result2;
-    
+
     JSInt64 base;
 
     /* Some variables for intermediate result storage to make computing isleap
-       easier/faster */    
+       easier/faster */
     JSInt32 fourCenturyBlocks;
     JSInt32 centuriesLeft;
     JSInt32 fourYearBlocksLeft;
@@ -369,7 +369,7 @@ PRMJ_basetime(JSInt64 tsecs, PRMJTime *prtm)
 
     JSLL_I2L(fourYears, PRMJ_FOUR_YEARS_DAYS);
     JSLL_MUL(fourYears, fourYears, result);
-    
+
     JSLL_I2L(century, PRMJ_CENTURY_DAYS);
     JSLL_MUL(century, century, result);
 
@@ -428,7 +428,7 @@ PRMJ_basetime(JSInt64 tsecs, PRMJTime *prtm)
         (yearsLeft == 3) && (fourYearBlocksLeft != 24 || centuriesLeft == 3);
     JS_ASSERT(isleap ==
               ((year % 4 == 0) && (year % 100 != 0 || year % 400 == 0)));
-    
+
     JSLL_UI2L(result1,PRMJ_DAY_SECONDS);
 
     JSLL_DIV(result,tsecs,result1);
