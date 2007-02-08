@@ -314,7 +314,14 @@ struct nsBorderColors {
 // Border widths are rounded to the nearest integer number of pixels, but values
 // between zero and one device pixels are always rounded up to one device pixel.
 #define NS_ROUND_BORDER_TO_PIXELS(l,tpp) \
-    ((l) == 0) ? 0 : PR_MAX((tpp), ((l) + ((tpp) / 2)) / (tpp) * (tpp))
+  ((l) == 0) ? 0 : PR_MAX((tpp), ((l) + ((tpp) / 2)) / (tpp) * (tpp))
+// Outline offset is rounded to the nearest integer number of pixels, but values
+// between zero and one device pixels are always rounded up to one device pixel.
+// Note that the offset can be negative.
+#define NS_ROUND_OFFSET_TO_PIXELS(l,tpp) \
+  (((l) == 0) ? 0 : \
+    ((l) > 0) ? PR_MAX( (tpp), ((l) + ((tpp) / 2)) / (tpp) * (tpp)) : \
+                PR_MIN(-(tpp), ((l) - ((tpp) / 2)) / (tpp) * (tpp)))
 
 struct nsStyleBorder: public nsStyleStruct {
   nsStyleBorder(nsPresContext* aContext);
@@ -529,7 +536,7 @@ struct nsStyleOutline: public nsStyleStruct {
   {
     if (mOutlineOffset.GetUnit() == eStyleUnit_Coord) {
       nscoord offset = mOutlineOffset.GetCoordValue();
-      aOffset = NS_ROUND_BORDER_TO_PIXELS(offset, mTwipsPerPixel);
+      aOffset = NS_ROUND_OFFSET_TO_PIXELS(offset, mTwipsPerPixel);
       return PR_TRUE;
     } else {
       NS_NOTYETIMPLEMENTED("GetOutlineOffset: eStyleUnit_Chars");
