@@ -416,6 +416,7 @@ sub display {
     ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->view_count > $query_limit;
     
     my $case = Bugzilla::Testopia::TestCase->new({'case_id' => 0});
+    $vars->{'fullwidth'} = 1;
     $vars->{'expand_report'} = $cgi->param('expand_report') || 0;
     $vars->{'expand_filter'} = $cgi->param('expand_filter') || 0;
     $vars->{'caserun'} = Bugzilla::Testopia::TestCaseRun->new({});

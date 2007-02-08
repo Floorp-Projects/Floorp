@@ -37,6 +37,7 @@
       </table>
     </td>
     <td align="left"><a href="tr_show_case.cgi?case_id=[% caserun.case.id FILTER none %]" title="[% caserun.case.summary FILTER html %]">[% caserun.case.id FILTER html %]</a></td>
+    <td align="right"><input name="sortkey_[% index %]" id="sortkey_[% index %]" value="[% caserun.sortkey FILTER html %]" size="5"><input type="button" value="Change" onclick="chNote([% index %], [% caserun.id FILTER none %], document.getElementById('notes[% index %]').value); chSortKey([% index %], [% caserun.id FILTER none %], document.getElementById('sortkey_[% index %]').value)"></td>
     <td align="right" valign="top">
     [% PROCESS select sel = { name => "caserun_build", 
                               list => caserun.run.plan.product.builds, 
@@ -44,7 +45,7 @@
                            events  => "onChange='chBld($index, this.value, \"$caserun.status\", $caserun.id)'"}
      %]
     </td>
-    <td align="left" valign="top" width="80px">
+    <td align="left" valign="top">
       [% caserun.environment.name FILTER html %]
           <input dojoType="combobox" 
                  dataUrl="tr_quicksearch.cgi?action=getenv&search=%{searchString}" 

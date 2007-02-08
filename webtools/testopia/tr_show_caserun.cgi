@@ -226,6 +226,20 @@ elsif ($action eq 'update_assignee'){
     }
     $caserun->set_assignee($assignee_id);
 }
+elsif ($action eq 'update_sortkey'){
+    Bugzilla->login(LOGIN_REQUIRED);
+    my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
+    if (!$caserun->canedit){
+        print "Error - You don't have permission";
+        exit;
+    }
+    my $sortkey = $cgi->param('sortkey');
+    unless (detaint_natural($sortkey)){
+        print "Error - Please enter a number";
+        exit;
+    }
+    $caserun->set_sortkey($sortkey);
+}
 elsif ($action eq 'get_notes'){
     Bugzilla->login(LOGIN_REQUIRED);
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);

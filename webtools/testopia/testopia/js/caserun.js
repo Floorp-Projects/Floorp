@@ -194,6 +194,27 @@ function chOwn(idx, cid, owner){
 	});
 
 }
+//chSortKey
+function chSortKey(idx, cid, svalue){
+    displayMsg('pp'+idx, 3, MSG_WAIT.blink());
+	disableAllButtons(true);
+	dojo.io.bind({
+		url:     "tr_show_caserun.cgi",
+		content: {  caserun_id: cid, index: idx, sortkey: svalue, action: 'update_sortkey'},
+		load:    function(type, data, evt){ fillrow(data, idx);
+					if (data.substring(0,5) == 'Error'){
+						displayMsg('pp'+ idx, 2, data);
+						return;
+					}
+		            displayMsg('pp'+ idx, 1, MSG_TESTLOG_UPDATED);
+		            setTimeout("clearMsg('pp"+ idx +"')",OK_TIMEOUT);
+		            disableAllButtons(false);
+		         },
+		error:   function(type, error){ alert(error.message);},
+		mimetype: "text/plain"
+	});
+
+}
 //Attach bugs
 function attch(idx, cid, bugs){
     displayMsg('pp'+idx, 3, MSG_WAIT.blink());

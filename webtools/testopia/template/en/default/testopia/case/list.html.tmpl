@@ -89,7 +89,7 @@ No test cases
 [% END %]
 found.</b>
 </p>
-[% IF table.list_count > 0 %]
+[% IF table.list_count > 0 && Param('allow-test-deletion') %]
 <p style="float: right;"><input type="submit" name="action" value="Delete Selected"></p>
 [% END %]
 [% IF dotweak AND table.list_count %]

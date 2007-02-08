@@ -397,6 +397,17 @@ sub set_status {
     $self->{'status'} = undef;
 }
 
+sub set_sortkey {
+    my $self = shift;
+    my ($sortkey) = @_;
+    my $dbh = Bugzilla->dbh;
+    
+    $dbh->do("UPDATE test_case_runs SET sortkey = ?
+              WHERE case_id = ? AND run_id = ?",
+              undef, ($sortkey, $self->case_id, $self->run_id));
+    
+}
+
 =head2 set_assignee
 
 Sets the assigned tester for the case-run
