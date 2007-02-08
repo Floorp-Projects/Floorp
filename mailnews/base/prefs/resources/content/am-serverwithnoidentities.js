@@ -38,7 +38,7 @@
 
 var gServer;
 
-function onInit() {
+function onInit(aPageId, aServerId) {
 }
 
 function onPreInit(account, accountValues)

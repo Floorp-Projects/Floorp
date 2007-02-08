@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function onInit() 
+function onInit(aPageId, aServerId)
 {
   var accountName = document.getElementById("server.prettyName");
   var title = document.getElementById("am-main-title");
