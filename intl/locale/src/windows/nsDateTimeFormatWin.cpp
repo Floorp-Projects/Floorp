@@ -273,13 +273,12 @@ int nsDateTimeFormatWin::nsGetTimeFormatW(DWORD dwFlags, const SYSTEMTIME *lpTim
                                           const char* format, PRUnichar *timeStr, int cchTime)
 {
   int len = 0;
-
-  LPCWSTR wstr = NULL;
-  if (format) {
-      NS_ConvertASCIItoUTF16 wFormat(format);
-      wstr = NS_CONST_CAST(LPCWSTR, wFormat.get());
-  }
-  len = GetTimeFormatW(mLCID, dwFlags, lpTime, wstr, (LPWSTR) timeStr, cchTime);
+  len = GetTimeFormatW(mLCID, dwFlags, lpTime, 
+                       format ?
+                       NS_CONST_CAST(LPCWSTR,
+                                     NS_ConvertASCIItoUTF16(format).get()) :
+                       NULL,
+                       (LPWSTR) timeStr, cchTime);
   return len;
 }
 
@@ -287,12 +286,11 @@ int nsDateTimeFormatWin::nsGetDateFormatW(DWORD dwFlags, const SYSTEMTIME *lpDat
                                           const char* format, PRUnichar *dateStr, int cchDate)
 {
   int len = 0;
-
-  LPCWSTR wstr = NULL;
-  if (format) {
-      NS_ConvertASCIItoUTF16 wFormat(format);
-      wstr = NS_CONST_CAST(LPCWSTR, wFormat.get());
-  }
-  len = GetDateFormatW(mLCID, dwFlags, lpDate, wstr, (LPWSTR) dateStr, cchDate);
+  len = GetDateFormatW(mLCID, dwFlags, lpDate, 
+                       format ?
+                       NS_CONST_CAST(LPCWSTR,
+                                     NS_ConvertASCIItoUTF16(format).get()) :
+                       NULL,
+                       (LPWSTR) dateStr, cchDate);
   return len;
 }
