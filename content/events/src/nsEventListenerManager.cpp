@@ -50,14 +50,10 @@
 #include "nsIDOMFormListener.h"
 #include "nsIDOMLoadListener.h"
 #include "nsIDOMDragListener.h"
-#include "nsIDOMPaintListener.h"
 #include "nsIDOMTextListener.h"
 #include "nsIDOMCompositionListener.h"
 #include "nsIDOMXULListener.h"
-#include "nsIDOMScrollListener.h"
-#include "nsIDOMMutationListener.h"
 #include "nsIDOMUIListener.h"
-#include "nsIDOMPageTransitionListener.h"
 #include "nsITextControlFrame.h"
 #ifdef MOZ_SVG
 #include "nsIDOMSVGListener.h"
@@ -264,27 +260,12 @@ static const EventDispatchData sLoadEvents[] = {
   { NS_BEFORE_PAGE_UNLOAD, HANDLER(&nsIDOMLoadListener::BeforeUnload) }
 };
 
-static const EventDispatchData sPaintEvents[] = {
-  { NS_PAINT,        HANDLER(&nsIDOMPaintListener::Paint)  },
-  { NS_RESIZE_EVENT, HANDLER(&nsIDOMPaintListener::Resize) },
-  { NS_SCROLL_EVENT, HANDLER(&nsIDOMPaintListener::Scroll) }
-};
-
 static const EventDispatchData sDragEvents[] = {
   { NS_DRAGDROP_ENTER,      HANDLER(&nsIDOMDragListener::DragEnter)   },
   { NS_DRAGDROP_OVER_SYNTH, HANDLER(&nsIDOMDragListener::DragOver)    },
   { NS_DRAGDROP_EXIT_SYNTH, HANDLER(&nsIDOMDragListener::DragExit)    },
   { NS_DRAGDROP_DROP,       HANDLER(&nsIDOMDragListener::DragDrop)    },
   { NS_DRAGDROP_GESTURE,    HANDLER(&nsIDOMDragListener::DragGesture) }
-};
-
-static const EventDispatchData sScrollEvents[] = {
-  { NS_SCROLLPORT_OVERFLOW,
-    HANDLER(&nsIDOMScrollListener::Overflow)        },
-  { NS_SCROLLPORT_UNDERFLOW,
-    HANDLER(&nsIDOMScrollListener::Underflow)       },
-  { NS_SCROLLPORT_OVERFLOWCHANGED,
-    HANDLER(&nsIDOMScrollListener::OverflowChanged) }
 };
 
 static const EventDispatchData sXULEvents[] = {
@@ -298,32 +279,10 @@ static const EventDispatchData sXULEvents[] = {
   { NS_XUL_COMMAND_UPDATE, HANDLER(&nsIDOMXULListener::CommandUpdate) }
 };
 
-static const EventDispatchData sMutationEvents[] = {
-  { NS_MUTATION_SUBTREEMODIFIED,
-    HANDLER(&nsIDOMMutationListener::SubtreeModified)          },
-  { NS_MUTATION_NODEINSERTED,
-    HANDLER(&nsIDOMMutationListener::NodeInserted)             },
-  { NS_MUTATION_NODEREMOVED,
-    HANDLER(&nsIDOMMutationListener::NodeRemoved)              },
-  { NS_MUTATION_NODEINSERTEDINTODOCUMENT,
-    HANDLER(&nsIDOMMutationListener::NodeInsertedIntoDocument) },
-  { NS_MUTATION_NODEREMOVEDFROMDOCUMENT,
-    HANDLER(&nsIDOMMutationListener::NodeRemovedFromDocument)  },
-  { NS_MUTATION_ATTRMODIFIED,
-    HANDLER(&nsIDOMMutationListener::AttrModified)             },
-  { NS_MUTATION_CHARACTERDATAMODIFIED,
-    HANDLER(&nsIDOMMutationListener::CharacterDataModified)    }
-};
-
 static const EventDispatchData sUIEvents[] = {
   { NS_UI_ACTIVATE, HANDLER(&nsIDOMUIListener::Activate) },
   { NS_UI_FOCUSIN,  HANDLER(&nsIDOMUIListener::FocusIn)  },
   { NS_UI_FOCUSOUT, HANDLER(&nsIDOMUIListener::FocusOut) }
-};
-
-static const EventDispatchData sPageTransitionEvents[] = {
-  { NS_PAGE_SHOW, HANDLER(&nsIDOMPageTransitionListener::PageShow) },
-  { NS_PAGE_HIDE, HANDLER(&nsIDOMPageTransitionListener::PageHide) }
 };
 
 #ifdef MOZ_SVG
@@ -359,14 +318,10 @@ static const EventTypeData sEventTypes[] = {
   IMPL_EVENTTYPEDATA(Focus),
   IMPL_EVENTTYPEDATA(Form),
   IMPL_EVENTTYPEDATA(Drag),
-  IMPL_EVENTTYPEDATA(Paint),
   IMPL_EVENTTYPEDATA(Text),
   IMPL_EVENTTYPEDATA(Composition),
   IMPL_EVENTTYPEDATA(XUL),
-  IMPL_EVENTTYPEDATA(Scroll),
-  IMPL_EVENTTYPEDATA(Mutation),
-  IMPL_EVENTTYPEDATA(UI),
-  IMPL_EVENTTYPEDATA(PageTransition)
+  IMPL_EVENTTYPEDATA(UI)
 #ifdef MOZ_SVG
  ,
   IMPL_EVENTTYPEDATA(SVG),
@@ -553,9 +508,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
 
   // For mutation listeners, we need to update the global bit on the DOM window.
   // Otherwise we won't actually fire the mutation event.
-  if ((aType >= NS_MUTATION_START && aType <= NS_MUTATION_END) ||
-      (ls->mTypeData && ls->mTypeData->iid &&
-       ls->mTypeData->iid->Equals(NS_GET_IID(nsIDOMMutationListener)))) {
+  if (aType >= NS_MUTATION_START && aType <= NS_MUTATION_END) {
     mMayHaveMutationListeners = PR_TRUE;
     // Go from our target to the nearest enclosing DOM window.
     nsCOMPtr<nsPIDOMWindow> window;
@@ -574,13 +527,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
     if (window) {
       NS_ASSERTION(window->IsInnerWindow(),
                    "Setting mutation listener bits on outer window?");
-      if (ls->mTypeData) {
-        // If we have type data, nsIDOMMutationListener is used and so we
-        // have to listen all mutation events.
-        window->SetMutationListeners(kAllMutationBits);
-      } else {
-        window->SetMutationListeners(MutationBitForEventType(aType));
-      }
+      window->SetMutationListeners(MutationBitForEventType(aType));
     }
   }
 
@@ -1899,10 +1846,8 @@ nsEventListenerManager::HasMutationListeners(PRBool* aListener)
       nsListenerStruct* ls = NS_STATIC_CAST(nsListenerStruct*,
                                             mListeners.FastElementAt(i));
       if (ls &&
-          (ls->mEventType >= NS_MUTATION_START &&
-           ls->mEventType <= NS_MUTATION_END) ||
-          (ls->mTypeData && ls->mTypeData->iid &&
-           ls->mTypeData->iid->Equals(NS_GET_IID(nsIDOMMutationListener)))) {
+          ls->mEventType >= NS_MUTATION_START &&
+          ls->mEventType <= NS_MUTATION_END) {
         *aListener = PR_TRUE;
         break;
       }
@@ -1921,10 +1866,6 @@ nsEventListenerManager::MutationListenerBits()
     for (i = 0; i < count; ++i) {
       nsListenerStruct* ls = NS_STATIC_CAST(nsListenerStruct*,
                                             mListeners.FastElementAt(i));
-      if (ls && ls->mTypeData && ls->mTypeData->iid &&
-          ls->mTypeData->iid->Equals(NS_GET_IID(nsIDOMMutationListener))) {
-        return kAllMutationBits;
-      }
       if (ls &&
           (ls->mEventType >= NS_MUTATION_START &&
            ls->mEventType <= NS_MUTATION_END)) {
