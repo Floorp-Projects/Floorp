@@ -12,9 +12,9 @@
 
 /*
  * This file has been modified for the Mozilla/Netscape environment.
- * Modifications are distributed under the Netscape Public License and are
+ * Modifications are distributed under the mozilla.org tri-license and are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * Reserved. See http://www.mozilla.org/MPL/
  */
 
 
