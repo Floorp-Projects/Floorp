@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+span { color: green }
+:default:checked + span { color: red }
+input { display: none }
+</style>
+</head>
+<body>
+<input type="checkbox" checked="checked" id="foo"><span>There should be no red</span>
+ <script>
+  var foo = document.body.offsetWidth;
+  onload='document.getElementById("foo").removeAttribute("checked");'
+</script>
+</body>
+</html>
