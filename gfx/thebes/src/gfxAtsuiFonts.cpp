@@ -476,6 +476,7 @@ gfxTextRun *
 gfxAtsuiFontGroup::MakeTextRun(const PRUint8* aString, PRUint32 aLength,
                                Parameters* aParams)
 {
+    aParams->mFlags |= TEXT_IS_8BIT;
     return new gfxWrapperTextRun(this, aString, aLength, aParams);
 }
 
