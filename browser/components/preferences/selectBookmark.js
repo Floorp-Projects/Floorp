@@ -59,18 +59,25 @@ var SelectBookmarkDialog = {
   selectionChanged: function SBD_selectionChanged() {
     var accept = document.documentElement.getButton("accept");
     var bookmarks = document.getElementById("bookmarks");
-    accept.disabled = !bookmarks.hasSelection;
+    var disableAcceptButton = true;
+    if (bookmarks.hasSelection) {
+      if (!PlacesUtils.nodeIsSeparator(bookmarks.selectedNode))
+        disableAcceptButton = false;
+    }
+    accept.disabled = disableAcceptButton;
   },
   
-  /**
-   * The user has double clicked on a tree row that is a link. Take this to
-   * mean that they want that link to be their homepage, and close the dialog.
-   */
-  linkChosen: function SBD_linkChosen() {
+
+  onItemDblClick: function SBD_onItemDblClick() {
     var bookmarks = document.getElementById("bookmarks");
     if (bookmarks.hasSingleSelection && 
-        PlacesUtils.nodeIsURI(bookmarks.selectedNode))
+        PlacesUtils.nodeIsURI(bookmarks.selectedNode)) {
+      /**
+       * The user has double clicked on a tree row that is a link. Take this to
+       * mean that they want that link to be their homepage, and close the dialog.
+       */
       document.documentElement.getButton("accept").click();
+    }
   },
   
   /**
@@ -107,5 +114,3 @@ var SelectBookmarkDialog = {
     window.arguments[0].names = names;
   }
 };
-
-#include ../../../toolkit/content/debug.js
