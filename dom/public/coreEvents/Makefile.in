@@ -52,16 +52,12 @@ EXPORTS =				\
 	nsIDOMLoadListener.h		\
 	nsIDOMMouseListener.h		\
 	nsIDOMMouseMotionListener.h	\
-	nsIDOMMutationListener.h	\
-	nsIDOMPaintListener.h		\
 	nsIDOMDragListener.h		\
 	nsIDOMTextListener.h		\
 	nsIDOMCompositionListener.h	\
 	nsIDOMXULListener.h		\
-	nsIDOMScrollListener.h		\
 	nsIDOMContextMenuListener.h	\
 	nsIDOMUIListener.h		\
-	nsIDOMPageTransitionListener.h	\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
