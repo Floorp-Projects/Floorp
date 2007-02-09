@@ -971,7 +971,7 @@ nsGenericElement::nsDOMSlots::~nsDOMSlots()
 }
 
 nsGenericElement::nsGenericElement(nsINodeInfo *aNodeInfo)
-  : nsIXMLContent(aNodeInfo)
+  : nsIContent(aNodeInfo)
 {
   // Set the default scriptID to JS - but skip SetScriptTypeID as it
   // does extra work we know isn't necessary here...
@@ -1938,12 +1938,6 @@ nsGenericElement::DispatchDOMEvent(nsEvent* aEvent,
   return nsEventDispatcher::DispatchDOMEvent(NS_STATIC_CAST(nsIContent*, this),
                                              aEvent, aDOMEvent,
                                              aPresContext, aEventStatus);
-}
-
-NS_IMETHODIMP
-nsGenericElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
-{
-  return NS_OK;
 }
 
 nsIAtom*

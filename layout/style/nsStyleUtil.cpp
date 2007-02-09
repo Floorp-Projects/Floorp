@@ -44,7 +44,7 @@
 #include "nsGkAtoms.h"
 #include "nsILinkHandler.h"
 #include "nsILink.h"
-#include "nsIXMLContent.h"
+#include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsIURI.h"
