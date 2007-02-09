@@ -252,6 +252,10 @@ function ComposeMessage(type, format, folder, messageArray)
       // If we treat reply from sent specially, do we check for that folder flag here ?
       var hintForIdentity = (type == msgComposeType.Template) ? hdr.author : hdr.recipients + hdr.ccList;
       var customIdentity = null;
+      
+      // override the passed in folder (which could very well be a saved search folder, and use
+      // the underlying folder for the particular message.
+      folder = hdr.folder;
       if (folder)
       {
         server = folder.server;
