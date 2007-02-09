@@ -95,7 +95,7 @@
 
   <popup id="placesContext"
          onpopupshowing="this._view = PlacesUtils.getViewForNode(document.popupNode);
-                         this._view.buildContextMenu(this);"
+                         return this._view.buildContextMenu(this);"
          onpopuphiding="this._view.destroyContextMenu();">
     <menuitem id="placesContext_open"
               command="placesCmd_open"
@@ -161,7 +161,7 @@
               command="cmd_delete"
               label="&deleteCmd.label;"
               accesskey="&deleteCmd.accesskey;"
-              selection="host|separator|link|folder"
+              selection="host|separator|link|folder|day"
               forcehideselection="livemark/bookmarkFeedURI"/>
     <menuseparator id="placesContext_deleteSeparator"/>
     <menuitem id="placesContext_reload"
@@ -184,7 +184,7 @@
               label="&cmd.show_infoWin.label;" 
               accesskey="&cmd.show_infoWin.accesskey;"
 #endif
-              selection="bookmark|folder|query"
+              selection="bookmark|folder"
               forcehideselection="livemark/bookmarkFeedURI"/>
   </popup>
 

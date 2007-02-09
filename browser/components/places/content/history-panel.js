@@ -22,6 +22,7 @@
 # Contributor(s):
 #   Alec Flett <alecf@netscape.com> (original author of history.js)
 #   Seth Spitzer <sspizer@mozilla.org> (port to Places)
+#   Asaf Romano <mano@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -61,6 +62,8 @@ function HistorySidebarInit()
   else
     document.getElementById("byday").setAttribute("checked", "true");
 
+  initContextMenu();
+
   // XXXBlake we should persist the last search value
   // If it's empty, this will do the right thing and 
   // just group by the old grouping.
@@ -68,18 +71,32 @@ function HistorySidebarInit()
   searchHistory(gSearchBox.value);
   gSearchBox.focus();
 }
-  
+
+function initContextMenu() {
+  // Force-hide items in the context menu which never apply to this view
+  var alwaysHideElements = ["placesContext_new:folder",
+                            "placesContext_new:separator",
+                            "placesContext_cut",
+                            "placesContext_paste",
+                            "placesContext_sortby:name"];
+  for (var i=0; i < alwaysHideElements.length; i++) {
+    var elt = document.getElementById(alwaysHideElements[i]);
+    elt.removeAttribute("selection");
+    elt.removeAttribute("forcehideselection");
+    elt.hidden = true;
+  }
+
+  // Insert "Bookmark This Link" right before the copy item
+  document.getElementById("placesContext")
+          .insertBefore(document.getElementById("addBookmarkContextItem"),
+                        document.getElementById("placesContext_copy"));
+}
+
 function GroupBy(groupingType)
 {
   gHistoryGrouping = groupingType;
   gSearchBox.value = "";
   searchHistory("");
-}
-
-function collapseExpand()
-{
-  var currentIndex = gHistoryTree.currentIndex; 
-  gHistoryTree.view.toggleOpenState(currentIndex);
 }
 
 function historyAddBookmarks()
@@ -96,65 +113,6 @@ function historyAddBookmarks()
 #else
   BookmarksUtils.addBookmark(node.uri, node.title, undefined);
 #endif
-}
-
-function historyCopyLink()
-{
-  var node = gHistoryTree.selectedURINode;
-  var clipboard = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
-                            .getService(Ci.nsIClipboardHelper);
-  clipboard.copyString(node.uri);
-}   
-
-function buildContextMenu(aEvent)
-{
-  var view = gHistoryTree.view;
-  // if nothing is selected, bail and don't show a context menu
-  if (view.selection.count != 1) {
-    aEvent.preventDefault();
-    return;
-  }
-
-  var openItem = document.getElementById("miOpen");
-  var openItemInNewWindow = document.getElementById("miOpenInNewWindow");
-  var openItemInNewTab = document.getElementById("miOpenInNewTab");
-  var bookmarkItem = document.getElementById("miAddBookmark");
-  var copyLocationItem = document.getElementById("miCopyLink");
-  var sep1 = document.getElementById("pre-bookmarks-separator");
-  var sep2 = document.getElementById("post-bookmarks-separator");
-  var expandItem = document.getElementById("miExpand");
-  var collapseItem = document.getElementById("miCollapse");
-
-  var currentIndex = gHistoryTree.currentIndex;
-  if ((gHistoryGrouping == "day" || gHistoryGrouping == "dayandsite")
-      && view.isContainer(currentIndex)) {
-    openItem.hidden = true;
-    openItemInNewWindow.hidden = true;
-    openItemInNewTab.hidden = true;
-    bookmarkItem.hidden = true;
-    copyLocationItem.hidden = true;
-    sep1.hidden = true;
-    sep2.hidden = false;
-
-    if (view.isContainerOpen(currentIndex)) {
-      expandItem.hidden = true;
-      collapseItem.hidden = false;
-    } else {
-      expandItem.hidden = false;
-      collapseItem.hidden = true;
-    }
-  }
-  else {
-    openItem.hidden = false;
-    openItemInNewWindow.hidden = false;
-    openItemInNewTab.hidden = false;
-    bookmarkItem.hidden = false;
-    copyLocationItem.hidden = false;
-    sep1.hidden = false;
-    sep2.hidden = false;
-    expandItem.hidden = true;
-    collapseItem.hidden = true;
-  }
 }
 
 function SetSortingAndGrouping() {
@@ -206,4 +164,3 @@ function searchHistory(aInput)
                            0 /* folderRestrict */, null); 
 }
 
-#include ../../../../toolkit/content/debug.js

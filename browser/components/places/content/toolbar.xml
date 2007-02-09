@@ -893,7 +893,7 @@
         <parameter name="aPopup"/>
         <body><![CDATA[
           this.focus();
-          this.controller.buildContextMenu(aPopup);
+          return this.controller.buildContextMenu(aPopup);
         ]]></body>
       </method>
 

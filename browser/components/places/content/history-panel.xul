@@ -52,7 +52,6 @@
 %placesDTD;
 ]>
 
-
 <!-- we need to keep id="history-panel" for upgrade and switching
      between versions of the browser -->
 
@@ -78,35 +77,12 @@
 #endif
   </keyset>
 
-  <popup id="historyContextMenu" onpopupshowing="buildContextMenu(event);">
-    <menuitem id="miExpand" label="&expand.label;" 
-              accesskey="&expand.accesskey;"
-              default="true" oncommand="collapseExpand();"/>
-    <menuitem id="miCollapse" label="&collapse.label;" 
-              accesskey="&collapse.accesskey;"
-              default="true" oncommand="collapseExpand();"/>
-    <menuitem id="miOpen"
-              command="placesCmd_open"
-              label="&openLinkInWindow.label;" 
-              accesskey="&openLinkInWindow.accesskey;"
-              default="true"/>
-    <menuitem id="miOpenInNewWindow"
-              command="placesCmd_open:window"
-              label="&openInNewWindow.label;" 
-              accesskey="&openInNewWindow.accesskey;"/>
-    <menuitem id="miOpenInNewTab"
-              command="placesCmd_open:tab"
-              label="&openInNewTab.label;" 
-              accesskey="&openInNewTab.accesskey;"/>
-    <menuseparator id="pre-bookmarks-separator"/>
-    <menuitem id="miAddBookmark" label="&bookmarkLink.label;" 
-              accesskey="&bookmarkLink.accesskey;" 
+  <popup id="placesContext">
+    <menuitem id="addBookmarkContextItem"
+              label="&bookmarkLink.label;"
+              accesskey="&bookmarkLink.accesskey;"
+              selection="link"
               oncommand="historyAddBookmarks();"/>
-    <menuitem id="miCopyLink" label="&copyLink.label;" 
-              accesskey="&copyLink.accesskey;" 
-              oncommand="historyCopyLink();"/>
-    <menuseparator id="post-bookmarks-separator"/>
-    <menuitem id="cMenu_delete"/>
   </popup>
 
   <hbox align="center">
@@ -144,7 +120,7 @@
         flex="1"
         type="places"
         place="place:&amp;beginTime=-2592000000000&amp;beginTimeRef=1&amp;endTime=7200000000&amp;endTimeRef=2&amp;type=1"
-        context="historyContextMenu"
+        context="placesContext"
         onkeypress="if (event.keyCode == 13) this.controller.openSelectedNodeWithEvent(event);"
         hidecolumnpicker="true"
         onclick="SidebarUtils.handleClick(this, event, true);">
