@@ -39,7 +39,7 @@
   <img src="[% query.match('assignee') AND expand_report ? 'testopia/img/td.gif' : 'testopia/img/tr.gif' %]" id="cft" onclick="_sr(document.getElementById('caserun_report'),document.getElementById('cft')); toggleExp(document.getElementById('expand_report'))">
   <a href="javascript:_sr(document.getElementById('caserun_report'),document.getElementById('cft'));  toggleExp(document.getElementById('expand_report'))" style="text-decoration:none;">Reports</a>
 </div>
-<div id="caserun_report" [% query.match('assignee') AND expand_report ? 'style="display:block"' : 'style="display:none"' %]>
+<div id="caserun_report" [% expand_report ? 'style="display:block"' : 'style="display:none"' %]>
 [% PROCESS "testopia/search/report-matrix.html.tmpl" 
    obj = table.list.0
 %]
@@ -49,10 +49,10 @@
 </div>
 [% END %]
 <div class="bz_row_header" style="font-size:12pt; font-weight: bold;">
-  <img src="[% query.match('assignee') AND expand_filter ? 'testopia/img/td.gif' : 'testopia/img/tr.gif' %]" id="ft" onclick="_sr(document.getElementById('filter'),document.getElementById('ft')); toggleExp(document.getElementById('expand_filter'))">
+  <img src="[% filtered OR expand_filter ? 'testopia/img/td.gif' : 'testopia/img/tr.gif' %]" id="ft" onclick="_sr(document.getElementById('filter'),document.getElementById('ft')); toggleExp(document.getElementById('expand_filter'))">
   <a href="javascript:_sr(document.getElementById('filter'),document.getElementById('ft')); toggleExp(document.getElementById('expand_filter'))" style="text-decoration:none;">Filter</a>
 </div>
-<div id="filter" [% query.match('assignee') AND expand_filter ? 'style="display:block"' : 'style="display:none"' %]>
+<div id="filter" [% filtered OR expand_filter ? 'style="display:block"' : 'style="display:none"' %]>
 <table>
   <tr class="bz_row_header">
     <th>Status</th>
@@ -156,9 +156,13 @@
                   mult      => 1 } %]
     </td>
     <td valign="bottom">
-      <input type="button" value="Clear" onclick="document.location='[% table.url_loc FILTER none %]?run_id=[% run.id FILTER none %]'"/><br/>
-      <input type="submit" value="Filter" /></td>
+      <input type="button" value="Clear" onclick="document.location='[% table.url_loc FILTER none %]?run_id=[% run.id FILTER none %]&action=clear_filter'"/><br/>
+      <input type="submit" value="Filter" name="action" /></td>
   </tr>
 </table>
+[% IF filtered %]
+<br>
+<b>Results have been filtered. Click 'Clear' to see the full list.</b>
+[% END %]
 </div>
 </form>

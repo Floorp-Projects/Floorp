@@ -47,6 +47,9 @@ $cgi->send_cookie(-name => "TEST_LAST_ORDER",
                   -value => $cgi->param('order'),
                   -expires => "Fri, 01-Jan-2038 00:00:00 GMT");
 Bugzilla->login();
+
+$vars->{'fullwidth'} = 1;
+
 my $serverpush = support_server_push($cgi);
 if ($serverpush) {
     print $cgi->multipart_init;
@@ -144,7 +147,15 @@ if ($action eq 'Commit'){
     if ($cgi->param('run_id')){
         my $run_id = $cgi->param('run_id');
         my $run = Bugzilla::Testopia::TestRun->new($run_id);
-        $cgi->delete_all;
+        
+        # See if there is a saved filter
+        if ($cgi->cookie('TESTOPIA-FILTER-RUN-' . $run_id) && $action ne 'Filter' && $action ne 'clear_filter'){
+            $cgi = Bugzilla::CGI->new($cgi->cookie('TESTOPIA-FILTER-RUN-' . $run_id));
+            $vars->{'filtered'} = 1;
+        }
+        else {
+            $cgi->delete_all;
+        }
         $cgi->param('run_id', $run_id);
         $cgi->param('current_tab', 'case_run');
         my $search = Bugzilla::Testopia::Search->new($cgi);
@@ -155,6 +166,9 @@ if ($action eq 'Commit'){
         $vars->{'action'} = 'Commit';
         $vars->{'backlink'} = $run;
         $vars->{'form_action'} = "tr_show_run.cgi";
+        $vars->{'caserun'} = Bugzilla::Testopia::TestCaseRun->new({});
+        $vars->{'case'} = Bugzilla::Testopia::TestCase->new({});
+        
         $template->process("testopia/run/show.html.tmpl", $vars) ||
             ThrowTemplateError($template->error());
         
@@ -268,11 +282,14 @@ if ($cgi->param('run_id')){
     $vars->{'run'} = Bugzilla::Testopia::TestRun->new($cgi->param('run_id'));
 }
 my $case = Bugzilla::Testopia::TestCase->new({'case_id' => 0});
+$vars->{'filtered'} = 1 if $cgi->cookie('TESTOPIA-FILTER-RUN-' . $vars->{'run'}->id) && $cgi->param('action') ne 'clear_filter';
 $vars->{'expand_report'} = $cgi->param('expand_report') || 0;
 $vars->{'expand_filter'} = $cgi->param('expand_filter') || 0;
 $vars->{'dotweak'} = UserInGroup('edittestcases');
 $vars->{'table'} = $table;
 $vars->{'action'} = 'tr_list_caserun.cgi';
+$vars->{'caserun'} = Bugzilla::Testopia::TestCaseRun->new({});
+$vars->{'case'} = Bugzilla::Testopia::TestCase->new({});
 if ($serverpush && !$cgi->param('debug')) {
     print $cgi->multipart_end;
     print $cgi->multipart_start;

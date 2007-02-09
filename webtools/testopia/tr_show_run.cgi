@@ -245,6 +245,24 @@ elsif ($action eq 'do_clone'){
     display($newrun);
     print $cgi->multipart_final if $serverpush; 
 }
+elsif ($action eq 'Filter'){
+    $cgi->send_cookie(-name => 'TESTOPIA-FILTER-RUN-' . $run_id,
+                      -value => $cgi->canonicalise_query('run_id'),
+                      -expires => 'Fri, 01-Jan-2038 00:00:00 GMT');
+    
+    $vars->{'filtered'} = 1;
+    print $cgi->header;
+    display(Bugzilla::Testopia::TestRun->new($run_id));
+    
+}
+elsif ($action eq 'clear_filter'){
+    $cgi->remove_cookie('TESTOPIA-FILTER-RUN-' . $run_id);
+    $vars->{'filtered'} = 0;    
+    print $cgi->header;
+    display(Bugzilla::Testopia::TestRun->new($run_id));
+
+}
+
 ####################
 ### Ajax Actions ###
 ####################
@@ -409,7 +427,15 @@ sub do_update {
 
 sub display {
     my $run = shift;
-
+    
+    # See if there is a saved filter
+    if ($cgi->cookie('TESTOPIA-FILTER-RUN-' . $run_id) && $action ne 'Filter' && $action ne 'clear_filter'){
+        $cgi = Bugzilla::CGI->new($cgi->cookie('TESTOPIA-FILTER-RUN-' . $run_id));
+        $cgi->param('run_id', $run_id);
+        $vars->{'filtered'} = 1;
+        
+    }
+        
     $cgi->param('current_tab', 'case_run');
     my $search = Bugzilla::Testopia::Search->new($cgi);
     my $table = Bugzilla::Testopia::Table->new('case_run', 'tr_show_run.cgi', $cgi, undef, $search->query);
@@ -424,6 +450,10 @@ sub display {
     $vars->{'run'} = $run;
     $vars->{'table'} = $table;
     $vars->{'action'} = 'Commit';
+    if ($cgi->param('case_id')){
+        $vars->{'expand_filter'} = 1;
+        $vars->{'filtered'} = 1;
+    }
     $template->process("testopia/run/show.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());
 }

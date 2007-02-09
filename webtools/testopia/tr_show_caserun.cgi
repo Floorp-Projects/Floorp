@@ -52,7 +52,7 @@ validate_test_id($caserun_id, 'case_run');
 
 ThrowUserError('testopia-missing-parameter', {'param' => 'caserun_id'}) unless ($caserun_id);
 push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
-
+$vars->{'fullwidth'} = 1;
 my $action = $cgi->param('action') || '';
 
 # For use on the classic form
@@ -112,7 +112,15 @@ elsif ($action eq 'do_delete'){
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
     ThrowUserError("testopia-read-only", {'object' => 'case run'}) if !$caserun->candelete;
     $caserun->obliterate;
-    $cgi->delete_all;
+
+    # See if there is a saved filter
+    if ($cgi->cookie('TESTOPIA-FILTER-RUN-' . $caserun->run->id) && $action ne 'Filter' && $action ne 'clear_filter'){
+        $cgi = Bugzilla::CGI->new($cgi->cookie('TESTOPIA-FILTER-RUN-' . $caserun->run->id));
+        $vars->{'filtered'} = 1;
+    }
+    else {
+        $cgi->delete_all;
+    }
     $cgi->param('current_tab', 'case_run');
     $cgi->param('run_id', $caserun->run->id);
     my $search = Bugzilla::Testopia::Search->new($cgi);
@@ -128,6 +136,13 @@ elsif ($action eq 'do_delete'){
     $vars->{'table'} = $table;
     $vars->{'case_list'} = join(",", @case_list);
     $vars->{'action'} = 'Commit';
+    $vars->{'tr_message'} = "Case removed";
+    $vars->{'backlink'} = $caserun->run;
+    
+    # We need these to provide the filter values. 
+    $vars->{'caserun'} = Bugzilla::Testopia::TestCaseRun->new({});
+    $vars->{'case'} = Bugzilla::Testopia::TestCase->new({});
+
     $template->process("testopia/run/show.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());
 
