@@ -59,9 +59,14 @@
  * nsStringHashKey
  * nsCStringHashKey
  * nsUint32HashKey
+ * nsVoidPtrHashKey
+ * nsClearingVoidPtrHashKey
  * nsISupportsHashKey
  * nsIDHashKey
  * nsDepCharHashKey
+ * nsCharPtrHashKey
+ * nsUnicharPtrHashKey
+ * nsHashableHashKey
  */
 
 NS_COM_GLUE PRUint32 HashString(const nsAString& aStr);

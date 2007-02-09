@@ -747,7 +747,7 @@ protected:
   nsILinkHandler*       mLinkHandler;   // [WEAK]
   nsIAtom*              mLangGroup;     // [STRONG]
 
-  nsInterfaceHashtable<nsUint32HashKey, nsImageLoader> mImageLoaders;
+  nsInterfaceHashtable<nsVoidPtrHashKey, nsImageLoader> mImageLoaders;
   nsWeakPtr             mContainer;
 
   // Only used in the root prescontext (this->RootPresContext() == this)

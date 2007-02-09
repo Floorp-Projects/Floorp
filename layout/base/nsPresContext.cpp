@@ -144,7 +144,7 @@ IsVisualCharset(const nsCString& aCharset)
 
 
 PR_STATIC_CALLBACK(PLDHashOperator)
-destroy_loads(const PRUint32& aKey, nsCOMPtr<nsImageLoader>& aData, void* closure)
+destroy_loads(const void * aKey, nsCOMPtr<nsImageLoader>& aData, void* closure)
 {
   aData->Destroy();
   return PL_DHASH_NEXT;
@@ -915,7 +915,7 @@ static void SetImgAnimModeOnImgReq(imgIRequest* aImgReq, PRUint16 aMode)
 
  // Enumeration call back for HashTable
 PR_STATIC_CALLBACK(PLDHashOperator)
-set_animation_mode(const PRUint32& aKey, nsCOMPtr<nsImageLoader>& aData, void* closure)
+set_animation_mode(const void * aKey, nsCOMPtr<nsImageLoader>& aData, void* closure)
 {
   imgIRequest* imgReq = aData->GetRequest();
   SetImgAnimModeOnImgReq(imgReq, (PRUint16)NS_PTR_TO_INT32(closure));
@@ -1046,7 +1046,7 @@ nsPresContext::LoadImage(imgIRequest* aImage, nsIFrame* aTargetFrame)
 {
   // look and see if we have a loader for the target frame.
   nsCOMPtr<nsImageLoader> loader;
-  mImageLoaders.Get(NS_PTR_TO_INT32(aTargetFrame), getter_AddRefs(loader));
+  mImageLoaders.Get(aTargetFrame, getter_AddRefs(loader));
 
   if (!loader) {
     loader = new nsImageLoader();
@@ -1054,7 +1054,7 @@ nsPresContext::LoadImage(imgIRequest* aImage, nsIFrame* aTargetFrame)
       return nsnull;
 
     loader->Init(aTargetFrame, this);
-    mImageLoaders.Put(NS_PTR_TO_INT32(aTargetFrame), loader);
+    mImageLoaders.Put(aTargetFrame, loader);
   }
 
   loader->Load(aImage);
@@ -1069,12 +1069,12 @@ void
 nsPresContext::StopImagesFor(nsIFrame* aTargetFrame)
 {
   nsCOMPtr<nsImageLoader> loader;
-  mImageLoaders.Get(NS_PTR_TO_INT32(aTargetFrame), getter_AddRefs(loader));
+  mImageLoaders.Get(aTargetFrame, getter_AddRefs(loader));
 
   if (loader) {
     loader->Destroy();
 
-    mImageLoaders.Remove(NS_PTR_TO_INT32(aTargetFrame));
+    mImageLoaders.Remove(aTargetFrame);
   }
 }
 
