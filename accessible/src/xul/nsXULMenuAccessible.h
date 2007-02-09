@@ -41,6 +41,31 @@
 
 #include "nsAccessibleWrap.h"
 #include "nsAccessibleTreeWalker.h"
+#include "nsIAccessibleSelectable.h"
+#include "nsIDOMXULSelectCntrlEl.h"
+
+/*
+ * The basic implemetation of nsIAccessibleSelectable.
+ */
+class nsXULSelectableAccessible : public nsAccessibleWrap
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIACCESSIBLESELECTABLE
+
+  nsXULSelectableAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
+  virtual ~nsXULSelectableAccessible() {}
+  NS_IMETHOD Shutdown();
+
+protected:
+  nsresult ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState);
+  nsresult AppendFlatStringFromSubtree(nsIContent *aContent, nsAString *aFlatString)
+    { return NS_OK; }  // Overrides base impl in nsAccessible
+
+  // nsIDOMXULMultiSelectControlElement inherits from this, so we'll always have
+  // one of these if the widget is valid and not defunct
+  nsCOMPtr<nsIDOMXULSelectControlElement> mSelectControl;
+};
 
 /* Accessible for supporting XUL menus
  */
@@ -51,6 +76,7 @@ public:
   enum { eAction_Click = 0 };
 
   nsXULMenuitemAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  NS_IMETHOD Init();
   NS_IMETHOD GetName(nsAString& _retval); 
   NS_IMETHOD GetDescription(nsAString& aDescription); 
   NS_IMETHOD GetKeyboardShortcut(nsAString& _retval);
@@ -61,7 +87,6 @@ public:
   NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren);
-  void CacheChildren();
 };
 
 class nsXULMenuSeparatorAccessible : public nsXULMenuitemAccessible
@@ -76,13 +101,16 @@ public:
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
 };
 
-class nsXULMenupopupAccessible : public nsAccessibleWrap
+class nsXULMenupopupAccessible : public nsXULSelectableAccessible
 {
 public:
   nsXULMenupopupAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
   NS_IMETHOD GetName(nsAString& _retval); 
   NS_IMETHOD GetState(PRUint32 *_retval); 
   NS_IMETHOD GetRole(PRUint32 *_retval); 
+  static already_AddRefed<nsIDOMNode> FindInNodeList(nsIDOMNodeList *aNodeList,
+                                                     nsIAtom *aAtom, PRUint32 aNameSpaceID);
+  static void GenerateMenu(nsIDOMNode *aNode);
 };
 
 class nsXULMenubarAccessible : public nsAccessibleWrap

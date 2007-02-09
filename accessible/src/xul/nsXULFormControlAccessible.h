@@ -169,6 +169,8 @@ public:
   NS_IMETHOD GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren);
 
 protected:
+  already_AddRefed<nsIDOMNode> GetInputField();
+
   // Editor helpers, subclasses of nsHyperTextAccessible may have editor
   virtual void SetEditor(nsIEditor *aEditor);
   virtual already_AddRefed<nsIEditor> GetEditor() { nsIEditor *editor = mEditor; NS_IF_ADDREF(editor); return editor; }

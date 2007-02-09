@@ -801,7 +801,7 @@ NS_IMETHODIMP nsHTMLSelectOptGroupAccessible::GetNumActions(PRUint8 *_retval)
 /** ----- nsHTMLComboboxAccessible ----- */
 
 nsHTMLComboboxAccessible::nsHTMLComboboxAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell):
-nsHTMLSelectableAccessible(aDOMNode, aShell)
+nsAccessibleWrap(aDOMNode, aShell)
 {
 }
 
