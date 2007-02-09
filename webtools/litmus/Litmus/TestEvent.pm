@@ -103,6 +103,11 @@ sub getBreakdownByLocale {
   my $locale_sql_group_by = "GROUP BY tr.locale_abbrev";
   my $locale_sql_order_by = "ORDER BY num_results DESC";
 
+  if ($self->{_product_id}) {
+    $locale_sql_from .= ", testcases t";
+    $locale_sql_where .= " AND tr.testcase_id=t.testcase_id AND t.product_id=" . $self->{_product_id};
+  }
+
   if ($self->{_testgroup_id}) {
     $locale_sql_from .= ", testcase_subgroups tsg, subgroup_testgroups sgtg";
     $locale_sql_where .= " AND tr.testcase_id=tsg.testcase_id AND tsg.subgroup_id=sgtg.subgroup_id AND sgtg.testgroup_id=".$self->{_testgroup_id};
@@ -143,6 +148,10 @@ sub getBreakdownByPlatform {
   my $platform_sql_where = "WHERE tr.testcase_id=t.testcase_id AND tr.submission_time>=$self->{_start_timestamp} and tr.submission_time<$self->{_finish_timestamp} AND tr.opsys_id=o.opsys_id AND o.platform_id=pl.platform_id";
   my $platform_sql_group_by = "GROUP BY o.platform_id";
   my $platform_sql_order_by = "ORDER BY num_results DESC";
+
+  if ($self->{_product_id}) {
+    $platform_sql_where .= " AND t.product_id=" . $self->{_product_id};
+  }
 
   if ($self->{_testgroup_id}) {
     $platform_sql_from .= ",  testcase_subgroups tsg, subgroup_testgroups sgtg";
@@ -185,6 +194,11 @@ sub getBreakdownByResultStatus {
   my $status_sql_group_by = "GROUP BY tr.result_status_id";
   my $status_sql_order_by = "ORDER BY num_results DESC";
  
+  if ($self->{_product_id}) {
+    $status_sql_from .= ", testcases t";
+    $status_sql_where .= " AND tr.testcase_id=t.testcase_id AND t.product_id=" . $self->{_product_id};
+  }
+
   if ($self->{_testgroup_id}) {
     $status_sql_from .= ",  testcase_subgroups tsg, subgroup_testgroups sgtg";
     $status_sql_where .= " AND tr.testcase_id=tsg.testcase_id AND tsg.subgroup_id=sgtg.subgroup_id AND sgtg.testgroup_id=" . $self->{_testgroup_id};
@@ -225,6 +239,10 @@ sub getBreakdownBySubgroup {
   my $subgroup_sql_where = "WHERE tr.submission_time>=$self->{_start_timestamp} and tr.submission_time<$self->{_finish_timestamp} AND tg.product_id=p.product_id AND tg.testgroup_id=sgtg.testgroup_id AND sgtg.subgroup_id=s.subgroup_id AND tsg.subgroup_id=s.subgroup_id AND tsg.testcase_id=t.testcase_id AND tr.testcase_id=t.testcase_id";
   my $subgroup_sql_group_by = "GROUP BY tg.product_id,tg.testgroup_id,s.subgroup_id";
   my $subgroup_sql_order_by = "ORDER BY num_results DESC, p.name ASC, tg.name ASC, sgtg.sort_order ASC";
+
+  if ($self->{_product_id}) {
+    $subgroup_sql_where .= " AND t.product_id=" . $self->{_product_id};
+  }
 
   if ($self->{_testgroup_id}) {
     $subgroup_sql_where .= " AND tg.testgroup_id=" . $self->{_testgroup_id};
@@ -276,6 +294,10 @@ sub getBreakdownByUser {
   my $user_sql_group_by = "GROUP BY tr.user_id";
   my $user_sql_order_by = "ORDER BY num_results DESC";
 
+  if ($self->{_product_id}) {
+    $user_sql_where .= " AND t.product_id=" . $self->{_product_id};
+  }
+
   if ($self->{_testgroup_id}) {
     $user_sql_from .= ",  testcase_subgroups tsg, subgroup_testgroups sgtg";
     $user_sql_where .= " AND tr.testcase_id=tsg.testcase_id AND tsg.subgroup_id=sgtg.subgroup_id AND sgtg.testgroup_id=" . $self->{_testgroup_id};
@@ -316,6 +338,11 @@ sub getBreakdownByUserAndResultStatus {
   my $tester_sql_group_by = "GROUP BY tr.user_id,rs.name";
   my $tester_sql_order_by = "ORDER BY u.irc_nickname DESC, u.email DESC";
   
+  if ($self->{_product_id}) {
+    $tester_sql_from .= ", testcases t";
+    $tester_sql_where .= " AND tr.testcase_id=t.testcase_id AND t.product_id=" . $self->{_product_id};
+  }
+
   if ($self->{_testgroup_id}) {
     $tester_sql_from .= ",  testcase_subgroups tsg, subgroup_testgroups sgtg";
     $tester_sql_where .= " AND tr.testcase_id=tsg.testcase_id AND tsg.subgroup_id=sgtg.subgroup_id AND sgtg.testgroup_id=$self->{_testgroup_id}";
