@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Bob Lord <lord@netscape.com>
  *   Ian McGreer <mcgreer@netscape.com>
+ *   Kai Engert <kengert@redhat.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,6 +51,7 @@ const nsDialogParamBlock = "@mozilla.org/embedcomp/dialogparam;1";
 
 var bundle;
 var secmoddb;
+var skip_enable_buttons = false;
 
 /* Do the initial load of all PKCS# modules and list them. */
 function LoadModules()
@@ -193,6 +195,9 @@ function getSelectedItem()
 
 function enableButtons()
 {
+  if (skip_enable_buttons)
+    return;
+
   var login_toggle = "true";
   var logout_toggle = "true";
   var pw_toggle = "true";
@@ -242,10 +247,17 @@ function ClearInfoList()
 
 function ClearDeviceList()
 {
+  ClearInfoList();
+
+  skip_enable_buttons = true;
+  var tree = document.getElementById('device_tree');
+  tree.view.selection.clearSelection();
+  skip_enable_buttons = false;
+
   // Remove the existing listed modules so that refresh doesn't 
   // display the module that just changed.
   var device_list = document.getElementById("device_list");
-  while (device_list.firstChild)
+  while (device_list.hasChildNodes())
     device_list.removeChild(device_list.firstChild);
 }
 
@@ -383,11 +395,23 @@ function doLoad()
   RefreshDeviceList();
 }
 
-function doUnload()
+function deleteSelected()
 {
   getSelectedItem();
   if (selected_module) {
-    pkcs11.deletemodule(selected_module.name);
+    var retval = pkcs11.deletemodule(selected_module.name);
+    if (retval == 1 || retval == 2) {
+      // successful deletion of internal or external module
+      selected_module = null;
+      return true;
+    }
+  }
+  return false;
+}
+
+function doUnload()
+{
+  if (deleteSelected()) {
     ClearDeviceList();
     RefreshDeviceList();
   }
