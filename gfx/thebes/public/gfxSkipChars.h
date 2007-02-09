@@ -246,7 +246,12 @@ public:
      * The empty constructor creates an object that is useless until it is assigned.
      */
     gfxSkipCharsIterator() : mSkipChars(nsnull) {}
-  
+
+    /**
+     * Return true if this iterator is properly initialized and usable.
+     */  
+    PRBool IsInitialized() { return mSkipChars != nsnull; }
+
     /**
      * Set the iterator to aOriginalStringOffset in the original string.
      * This can efficiently move forward or backward from the current position.
