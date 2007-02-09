@@ -48,6 +48,7 @@
 #include "nsIFrame.h"
 #include "nsISVGChildFrame.h"
 #include "nsIDOMSVGPoint.h"
+#include "nsSVGUtils.h"
 #include "nsDOMError.h"
 
 //----------------------------------------------------------------------
@@ -93,18 +94,19 @@ NS_IMETHODIMP nsSVGGraphicElement::GetBBox(nsIDOMSVGRect **_retval)
 
   nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
 
-  if (frame) {
-    nsISVGChildFrame* svgframe;
-    CallQueryInterface(frame, &svgframe);
-    NS_ASSERTION(svgframe, "wrong frame type");
-    if (svgframe) {
-      svgframe->SetMatrixPropagation(PR_FALSE);
-      svgframe->NotifyCanvasTMChanged(PR_TRUE);
-      nsresult rv = svgframe->GetBBox(_retval);
-      svgframe->SetMatrixPropagation(PR_TRUE);
-      svgframe->NotifyCanvasTMChanged(PR_TRUE);
-      return rv;
-    }
+  if (!frame || (frame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD))
+    return NS_ERROR_FAILURE;
+
+  nsISVGChildFrame* svgframe;
+  CallQueryInterface(frame, &svgframe);
+  NS_ASSERTION(svgframe, "wrong frame type");
+  if (svgframe) {
+    svgframe->SetMatrixPropagation(PR_FALSE);
+    svgframe->NotifyCanvasTMChanged(PR_TRUE);
+    nsresult rv = svgframe->GetBBox(_retval);
+    svgframe->SetMatrixPropagation(PR_TRUE);
+    svgframe->NotifyCanvasTMChanged(PR_TRUE);
+    return rv;
   }
   return NS_ERROR_FAILURE;
 }
