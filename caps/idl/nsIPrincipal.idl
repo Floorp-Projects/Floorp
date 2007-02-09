@@ -51,7 +51,7 @@ interface nsIURI;
 [ptr] native JSContext(JSContext);
 [ptr] native JSPrincipals(JSPrincipals);
 
-[scriptable, uuid(fb9ddeb9-26f9-46b8-85d5-3978aaee05aa)]
+[scriptable, uuid(635c413b-47c3-4ee1-87c8-e7919cc65f5a)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -71,12 +71,14 @@ interface nsIPrincipal : nsISerializable
      * fingerprint or the origin.  subjectName is a name that identifies the
      * entity this principal represents (may be empty).  grantedList and
      * deniedList are space-separated lists of capabilities which were
-     * explicitly granted or denied by a pref.
+     * explicitly granted or denied by a pref.  isTrusted is a boolean that
+     * indicates whether this is a codebaseTrusted certificate.
      */
     [noscript] void getPreferences(out string prefBranch, out string id,
                                    out string subjectName,
                                    out string grantedList,
-                                   out string deniedList);
+                                   out string deniedList,
+                                   out boolean isTrusted);
 
     /**
      * Returns whether the other principal is equivalent to this principal.

@@ -87,7 +87,8 @@ nsSystemPrincipal::Release()
 NS_IMETHODIMP
 nsSystemPrincipal::GetPreferences(char** aPrefName, char** aID,
                                   char** aSubjectName,
-                                  char** aGrantedList, char** aDeniedList)
+                                  char** aGrantedList, char** aDeniedList,
+                                  PRBool* aIsTrusted)
 {
     // The system principal should never be streamed out
     *aPrefName = nsnull;
@@ -95,6 +96,7 @@ nsSystemPrincipal::GetPreferences(char** aPrefName, char** aID,
     *aSubjectName = nsnull;
     *aGrantedList = nsnull;
     *aDeniedList = nsnull;
+    *aIsTrusted = PR_FALSE;
 
     return NS_ERROR_FAILURE; 
 }

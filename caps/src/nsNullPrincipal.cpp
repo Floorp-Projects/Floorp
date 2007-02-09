@@ -139,7 +139,8 @@ nsNullPrincipal::Init()
 NS_IMETHODIMP
 nsNullPrincipal::GetPreferences(char** aPrefName, char** aID,
                                 char** aSubjectName,
-                                char** aGrantedList, char** aDeniedList)
+                                char** aGrantedList, char** aDeniedList,
+                                PRBool* aIsTrusted)
 {
   // The null principal should never be written to preferences.
   *aPrefName = nsnull;
@@ -147,6 +148,7 @@ nsNullPrincipal::GetPreferences(char** aPrefName, char** aID,
   *aSubjectName = nsnull;
   *aGrantedList = nsnull;
   *aDeniedList = nsnull;
+  *aIsTrusted = PR_FALSE;
 
   return NS_ERROR_FAILURE; 
 }
