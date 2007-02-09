@@ -1085,9 +1085,7 @@
           this._updateCaseSensitivity(val);
 
           var fastFind = this.browser.fastFind;
-          var res = fastFind.find(val,
-                                  this._findMode == this.FIND_LINKS,
-                                  this._findField.getAttribute("focused") == "true");
+          var res = fastFind.find(val, this._findMode == this.FIND_LINKS);
           this._updateFoundLink(res);
           this._updateStatusUI(res, false);
 
@@ -1130,11 +1128,8 @@
         <parameter name="aFindPrevious"/>
         <body><![CDATA[
           var fastFind = this.browser.fastFind;
-          var findFieldFocused =
-            this._findField.getAttribute("focused") == "true";
           var res = fastFind.findAgain(aFindPrevious,
-                                       this._findMode == this.FIND_LINKS,
-                                       findFieldFocused);
+                                       this._findMode == this.FIND_LINKS);
           this._updateFoundLink(res);
           this._updateStatusUI(res, aFindPrevious);
 
