@@ -135,20 +135,20 @@ fails == bugs/368020-4.html bugs/368020-4-ref.html # bug 368085
 == bugs/144004-1.html bugs/144004-1-ref.html
 == bugs/144004-2.html bugs/144004-2-ref.html
 != bugs/144004-3.html bugs/144004-3-ref.html
-== bugs/348801-1a.html bugs/348801-1-ref.html
-== bugs/348801-1b.html bugs/348801-1-ref.html
-== bugs/348801-1c.html bugs/348801-1-ref.html
-== bugs/348801-1d.html bugs/348801-1-ref.html
-== bugs/348801-1e.html bugs/348801-1-ref.html
-== bugs/348801-1f.html bugs/348801-1-ref.html
-== bugs/348801-2a.html bugs/348801-2-ref.html
-== bugs/348801-2b.html bugs/348801-2-ref.html
-== bugs/348801-2c.html bugs/348801-2-ref.html
-== bugs/348801-2d.html bugs/348801-2-ref.html
-== bugs/348801-2e.html bugs/348801-2-ref.html
-== bugs/348801-2f.html bugs/348801-2-ref.html
-== bugs/348801-2g.html bugs/348801-2-ref.html
-== bugs/348801-2h.html bugs/348801-2-ref.html
+== bugs/348809-1a.html bugs/348809-1-ref.html
+== bugs/348809-1b.html bugs/348809-1-ref.html
+== bugs/348809-1c.html bugs/348809-1-ref.html
+== bugs/348809-1d.html bugs/348809-1-ref.html
+== bugs/348809-1e.html bugs/348809-1-ref.html
+== bugs/348809-1f.html bugs/348809-1-ref.html
+== bugs/348809-2a.html bugs/348809-2-ref.html
+== bugs/348809-2b.html bugs/348809-2-ref.html
+== bugs/348809-2c.html bugs/348809-2-ref.html
+== bugs/348809-2d.html bugs/348809-2-ref.html
+== bugs/348809-2e.html bugs/348809-2-ref.html
+== bugs/348809-2f.html bugs/348809-2-ref.html
+== bugs/348809-2g.html bugs/348809-2-ref.html
+== bugs/348809-2h.html bugs/348809-2-ref.html
 
 # object/
 == object/no-attrs.html object/no-attrs-ref.html
