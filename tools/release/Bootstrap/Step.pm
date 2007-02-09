@@ -137,23 +137,23 @@ sub CheckLog {
     }
 }
 
-sub CurrentTime() {
+sub CurrentTime {
     my $this = shift;
 
     return strftime("%T %D", localtime());
 }
 
 # Overridden by child if needed
-sub Push() {
+sub Push {
     my $this = shift;
 }
 
 # Overridden by child if needed
-sub Announce() {
+sub Announce {
     my $this = shift;
 }
 
-sub SendAnnouncement() {
+sub SendAnnouncement {
     my $this = shift;
     my %args = @_;
     
@@ -161,14 +161,13 @@ sub SendAnnouncement() {
 
     my $blat = $config->Get(var => 'blat');
     my $sendmail = $config->Get(var => 'sendmail');
-    my $from = $args{'from'} ? $args{'from'} : $config->Get(var => 'from');
-    my $to = $args{'to'} ? $args{'to'} : $config->Get(var => 'to');
-    my $cc = $args{'cc'} ? $args{'cc'} : $config->Get(var => 'cc');
+    my $from = $config->Get(var => 'from');
+    my $to = $config->Get(var => 'to');
+    my @ccList = $config->Exists(var => 'cc') ? split(/[,\s]+/, 
+     $config->Get(var => 'cc')) : ();
 
     my $subject = $args{'subject'};
     my $message = $args{'message'};
-
-    my @ccList = split(', ', $cc);
 
     eval {
         Email(

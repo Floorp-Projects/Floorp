@@ -57,4 +57,12 @@ sub Get {
     }
 }
 
+sub Exists {
+    my $this = shift;
+    my %args = @_;
+
+    my $var = $args{'var'};
+    return exists($config{$var});
+}
+
 1;
