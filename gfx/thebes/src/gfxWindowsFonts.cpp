@@ -654,7 +654,7 @@ gfxTextRun *
 gfxWindowsFontGroup::MakeTextRun(const PRUint8* aString, PRUint32 aLength,
                                  Parameters* aParams)
 {
-    aParams->mFlags |= gfxTextRunFactory::TEXT_IS_8BIT;
+    aParams->mFlags |= TEXT_IS_8BIT;
     return new gfxWrapperTextRun(this, aString, aLength, aParams);
 }
 
