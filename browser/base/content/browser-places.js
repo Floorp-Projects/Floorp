@@ -67,7 +67,7 @@ var PlacesCommandHook = {
    * Adds a bookmark to the page loaded in the current tab. 
    */
   bookmarkCurrentPage: function PCH_bookmarkCurrentPage() {
-    PlacesUtils.showAddBookmarkUI(getBrowser().selectedBrowser);
+    this.bookmarkPage(getBrowser().selectedBrowser);
   },
 
 
