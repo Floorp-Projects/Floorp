@@ -52,7 +52,7 @@
   // so we have to make sure that gecko has been initted
   [mainController ensureGeckoInitted];
 
-  [mainController openNewWindowOrTabWithURL:[self directParameter] andReferrer:nil alwaysInFront:YES];
+  [mainController showURL:[self directParameter]];
   return nil;
 }
 

@@ -1385,9 +1385,7 @@ static BookmarkManager* gBookmarkManager = nil;
                       NSLocalizedString(@"CancelButtonText", nil),
                       nil) == NSAlertDefaultReturn)
   {
-    [[NSApp delegate] openNewWindowOrTabWithURL:NSLocalizedStringFromTable(@"CorruptedBookmarksDefault", @"WebsiteDefaults", nil)
-                                    andReferrer:nil
-                                  alwaysInFront:YES];
+    [[NSApp delegate] showURL:NSLocalizedStringFromTable(@"CorruptedBookmarksDefault", @"WebsiteDefaults", nil)];
   }
 }
 

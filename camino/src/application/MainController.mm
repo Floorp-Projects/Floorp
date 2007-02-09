@@ -654,43 +654,50 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
   return browser;
 }
 
-// open a new URL, observing the prefs on how to behave
-- (void)openNewWindowOrTabWithURL:(NSString*)inURLString andReferrer:(NSString*)aReferrer alwaysInFront:(BOOL)forceFront
+// Shows a given URL by finding and showing an existing tab/window with that URL, or
+// opening a new window or tab (observing the user's pref) if it's not already open
+- (void)showURL:(NSString*)aURL
 {
   // make sure we're initted
   [PreferenceManager sharedInstance];
 
   PRInt32 reuseWindow = 0;
-  PRBool loadInBackground = PR_FALSE;
 
   nsCOMPtr<nsIPref> prefService(do_GetService(NS_PREF_CONTRACTID));
-  if (prefService) {
+  if (prefService)
     prefService->GetIntPref("browser.reuse_window", &reuseWindow);
-    if (!forceFront)
-      prefService->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
+
+  // Check to see if we already have the URL somewhere, and just show it if we do.
+  NSEnumerator* windowEnumerator = [[NSApp orderedWindows] objectEnumerator];
+  NSWindow* window;
+  while ((window = [windowEnumerator nextObject])) {
+    if ([[window windowController] isMemberOfClass:[BrowserWindowController class]]) {
+      BrowserWindowController* browser = (BrowserWindowController*)[window windowController];
+      BrowserTabView* tabView = [browser getTabBrowser];
+      int tabIndex = [tabView indexOfTabViewItemWithURL:aURL];
+      if (tabIndex != NSNotFound) {
+        [tabView selectTabViewItemAtIndex:tabIndex];
+        [[browser window] makeKeyAndOrderFront:self];
+        return;
+      }
+    }
   }
 
-  // reuse the main window (if there is one) based on the pref in the
-  // tabbed browsing panel. The user may have closed all of
-  // them or we may get this event at startup before we've had time to load
-  // our window.
+  // If we got here, we didn't find it already open. Open it based on user prefs.
   BrowserWindowController* controller = (BrowserWindowController*)[[self getFrontmostBrowserWindow] windowController];
   if (controller) {
     BOOL tabOrWindowIsAvailable = ([[controller getBrowserWrapper] isEmpty] && ![[controller getBrowserWrapper] isBusy]);
 
     if (tabOrWindowIsAvailable || reuseWindow == kReuseWindowOnAE)
-      [controller loadURL:inURLString];
+      [controller loadURL:aURL];
     else if (reuseWindow == kOpenNewTabOnAE)
-      [controller openNewTabWithURL:inURLString referrer:aReferrer loadInBackground:loadInBackground allowPopups:NO setJumpback:NO];
-    else {
-      // note that we're opening a new window here
-      controller = [controller openNewWindowWithURL:inURLString referrer:aReferrer loadInBackground:loadInBackground allowPopups:NO];
-    }
-    if (!loadInBackground)
-      [[controller window] makeKeyAndOrderFront:nil];
+      [controller openNewTabWithURL:aURL referrer:nil loadInBackground:NO allowPopups:NO setJumpback:NO];
+    else
+      controller = [controller openNewWindowWithURL:aURL referrer:nil loadInBackground:NO allowPopups:NO];
+    [[controller window] makeKeyAndOrderFront:nil];
   }
   else
-    controller = [self openBrowserWindowWithURL:inURLString andReferrer:aReferrer behind:nil allowPopups:NO];
+    controller = [self openBrowserWindowWithURL:aURL andReferrer:nil behind:nil allowPopups:NO];
 }
 
 // Convenience function for loading application pages either in a new window or a new
@@ -701,7 +708,7 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
   if (browserController && [[browserController window] attachedSheet])
     [self openBrowserWindowWithURL:pageURL andReferrer:nil behind:nil allowPopups:NO];
   else
-    [self openNewWindowOrTabWithURL:pageURL andReferrer:nil alwaysInFront:YES];
+    [self showURL:pageURL];
 }
 
 - (BOOL)application:(NSApplication*)theApplication openFile:(NSString*)filename
@@ -711,7 +718,7 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
   [self ensureGeckoInitted];
 
   NSURL* urlToOpen = [MainController decodeLocalFileURL:[NSURL fileURLWithPath:filename]];
-  [self openNewWindowOrTabWithURL:[urlToOpen absoluteString] andReferrer:nil alwaysInFront:YES];
+  [self showURL:[urlToOpen absoluteString]];
   return YES;
 }
 
@@ -811,13 +818,13 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
 
   if (resolvedURLs) {
     if ([resolvedURLs count] == 1)
-      [self openNewWindowOrTabWithURL:[resolvedURLs lastObject] andReferrer:nil alwaysInFront:YES];
+      [self showURL:[resolvedURLs lastObject]];
     else
       [self openBrowserWindowWithURLs:resolvedURLs behind:nil allowPopups:NO];
   }
   else {
     urlString = [urlString stringByRemovingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-    [self openNewWindowOrTabWithURL:urlString andReferrer:nil alwaysInFront:YES];
+    [self showURL:urlString];
   }
 }
 
@@ -1878,7 +1885,7 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void*
 {
   NSDictionary* dict = [note userInfo];
   if ([dict objectForKey:NetworkServicesClientKey] == self)
-    [self openNewWindowOrTabWithURL:[dict objectForKey:NetworkServicesResolvedURLKey] andReferrer:nil alwaysInFront:YES];
+    [self showURL:[dict objectForKey:NetworkServicesResolvedURLKey]];
 }
 
 //

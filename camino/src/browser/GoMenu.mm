@@ -454,7 +454,7 @@ static const unsigned int kMaxTitleLength = 50;
         if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL])
           [bwc openNewTabWithURL:itemURL referrer:nil loadInBackground:backgroundLoad allowPopups:NO setJumpback:NO];
         else
-          [bwc openNewWindowWithURL:itemURL referrer: nil loadInBackground:backgroundLoad allowPopups:NO];
+          [bwc openNewWindowWithURL:itemURL referrer:nil loadInBackground:backgroundLoad allowPopups:NO];
       }
       else
       {
@@ -462,7 +462,7 @@ static const unsigned int kMaxTitleLength = 50;
       }
     }
     else
-      [(MainController *)[NSApp delegate] openNewWindowOrTabWithURL:itemURL andReferrer:nil alwaysInFront:NO];
+      [(MainController *)[NSApp delegate] openBrowserWindowWithURL:itemURL andReferrer:nil behind:nil allowPopups:NO];
   }
 }
 

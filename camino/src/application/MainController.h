@@ -187,7 +187,7 @@ typedef enum EBookmarkOpenBehavior
 
 - (BrowserWindowController*)openBrowserWindowWithURL:(NSString*)aURL andReferrer:(NSString*)aReferrer behind:(NSWindow*)window allowPopups:(BOOL)inAllowPopups;
 - (BrowserWindowController*)openBrowserWindowWithURLs:(NSArray*)urlArray behind:(NSWindow*)window allowPopups:(BOOL)inAllowPopups;
-- (void)openNewWindowOrTabWithURL:(NSString*)inURLString andReferrer:(NSString*)aReferrer alwaysInFront:(BOOL)forceFront;
+- (void)showURL:(NSString*)aURL;
 - (void)loadBookmark:(BookmarkItem*)item withBWC:(BrowserWindowController*)browserWindowController openBehavior:(EBookmarkOpenBehavior)behavior reverseBgToggle:(BOOL)reverseBackgroundPref;
 
 - (void)adjustCloseWindowMenuItemKeyEquivalent:(BOOL)inHaveTabs;
