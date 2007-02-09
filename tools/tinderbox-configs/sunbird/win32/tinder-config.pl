@@ -195,7 +195,7 @@ $BuildLocalesArgs = "ZIP_IN=/cygdrive/d/builds/tinderbox/Sunbird-Trunk/WINNT_5.2
 $BuildTree  = 'Sunbird';
 
 #$BuildName = '';
-$BuildTag = 'SUNBIRD_0_3_BRANCH';
+$BuildTag = 'SUNBIRD_0_3_1_RELEASE';
 #$BuildConfigDir = 'mozilla/config';
 #$Topsrcdir = 'mozilla';
 

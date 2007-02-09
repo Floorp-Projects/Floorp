@@ -184,7 +184,7 @@ $BuildLocalesArgs = "ZIP_IN=/builds/tinderbox/Sb-Trunk/Darwin_8.8.4_Depend/sunbi
 $BuildTree  = 'Sunbird';
 
 #$BuildName = '';
-$BuildTag = 'SUNBIRD_0_3_BRANCH';
+$BuildTag = 'SUNBIRD_0_3_1_RELEASE';
 #$BuildConfigDir = 'mozilla/config';
 #$Topsrcdir = 'mozilla';
 
