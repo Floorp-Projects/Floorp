@@ -1018,13 +1018,13 @@ while (my @row = $buglist_sth->fetchrow_array()) {
         # Put in the change date as a time, so that the template date plugin
         # can format the date in any way needed by the template. ICS and Atom
         # have specific, and different, date and time formatting.
-        $bug->{'changedtime'} = str2time($bug->{'changeddate'});
+        $bug->{'changedtime'} = str2time($bug->{'changeddate'}, Bugzilla->params->{'timezone'});
         $bug->{'changeddate'} = DiffDate($bug->{'changeddate'});        
     }
 
     if ($bug->{'opendate'}) {
         # Put in the open date as a time for the template date plugin.
-        $bug->{'opentime'} = str2time($bug->{'opendate'});
+        $bug->{'opentime'} = str2time($bug->{'opendate'}, Bugzilla->params->{'timezone'});
         $bug->{'opendate'} = DiffDate($bug->{'opendate'});
     }
 
