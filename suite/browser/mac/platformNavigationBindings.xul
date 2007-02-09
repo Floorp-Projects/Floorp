@@ -11,7 +11,6 @@
     <key keycode="&goForwardCmd.keyCode;" command="Browser:Forward" modifiers="accel"/>
     <key id="goBackKb" key="&goBackCmd.commandKey;" command="Browser:Back" modifiers="accel"/>
     <key id="goForwardKb" key="&goForwardCmd.commandKey;" command="Browser:Forward" modifiers="accel"/>
-    <key id="goUpKb" keycode="VK_UP" command="Browser:Up" modifiers="accel"/>
     <key id="key_stop2" keycode="VK_ESCAPE" oncommand="BrowserStop();"/>
     <key id="key_stop" key="." oncommand="BrowserStop();" modifiers="accel"/>
     <key id="goHome" keycode="VK_HOME" command="Browser:Home" modifiers="meta"/>

@@ -10,7 +10,6 @@
          Alt+Left arrow and Alt+Right arrow. -->
     <key id="goBackKb"  keycode="&goBackCmd.keyCode;" command="Browser:Back" modifiers="alt"/>
     <key id="goForwardKb"  keycode="&goForwardCmd.keyCode;" command="Browser:Forward" modifiers="alt"/>
-    <key id="goUpKb"  keycode="VK_UP" command="Browser:Up" modifiers="alt"/>
     <key id="key_stop" keycode="VK_ESCAPE" oncommand="BrowserStop();"/>
 
     <!-- Supporting IE 'refresh' shortcut key -->
