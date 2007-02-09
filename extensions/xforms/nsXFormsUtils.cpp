@@ -212,6 +212,27 @@ struct EventItem
   nsCOMPtr<nsIDOMElement> srcElement;
 };
 
+static PRBool gExperimentalFeaturesEnabled = PR_FALSE;
+
+PR_STATIC_CALLBACK(int) PrefChangedCallback(const char* aPref, void* aData)
+{
+  nsresult rv;
+  nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && pref) {
+
+    // if our experimental pref changed, make sure to update our static
+    // variable.
+    if (strcmp(aPref, PREF_EXPERIMENTAL_FEATURES) == 0) {
+      PRBool val;
+      if (NS_SUCCEEDED(pref->GetBoolPref(PREF_EXPERIMENTAL_FEATURES, &val))) {
+        gExperimentalFeaturesEnabled = val;
+      }
+    }
+  }
+
+  return 0; // PREF_OK
+}
+
 /* static */ nsresult
 nsXFormsUtils::Init()
 {
@@ -241,6 +262,40 @@ nsXFormsUtils::Init()
     sEventDefaults.Put(NS_ConvertUTF8toUTF16(sEventDefaultsEntries[i].name),
                                              flag);
   }
+
+  nsresult rv;
+  nsCOMPtr<nsIPrefBranch> prefBranch =
+    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && prefBranch) {
+    PRBool val;
+    rv = prefBranch->GetBoolPref(PREF_EXPERIMENTAL_FEATURES, &val);
+    if (NS_SUCCEEDED(rv)) {
+      gExperimentalFeaturesEnabled = val;
+    }
+  }
+
+  nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID, &rv);
+  NS_ENSURE_STATE(pref);
+  rv = pref->RegisterCallback(PREF_EXPERIMENTAL_FEATURES,
+                              PrefChangedCallback, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+/* static */ nsresult
+nsXFormsUtils::Shutdown()
+{
+  // unregister our pref listeners
+
+  nsresult rv;
+  nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID, &rv);
+  NS_ENSURE_STATE(pref);
+  rv = pref->UnregisterCallback(PREF_EXPERIMENTAL_FEATURES,
+                                PrefChangedCallback, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+  gExperimentalFeaturesEnabled = PR_FALSE;
+
   return NS_OK;
 }
 
@@ -426,7 +481,7 @@ nsXFormsUtils::GetModel(nsIDOMElement     *aElement,
 nsXFormsUtils::CreateExpression(nsIXPathEvaluatorInternal  *aEvaluator,
                                 const nsAString            &aExpression,
                                 nsIDOMXPathNSResolver      *aResolver,
-                                nsISupports                *aState,
+                                nsIXFormsXPathState        *aState,
                                 nsIDOMXPathExpression     **aResult)
 {
   nsStringArray ns;
@@ -469,8 +524,12 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
   nsresult rv = eval->CreateNSResolver(aResolverNode, getter_AddRefs(resolver));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIXFormsXPathState> state = new nsXFormsXPathState(aResolverNode,
+                                                               aContextNode);
+  NS_ENSURE_TRUE(state, NS_ERROR_OUT_OF_MEMORY);
+
   nsCOMPtr<nsIDOMXPathExpression> expression;
-  rv = CreateExpression(evalInternal, aExpression, resolver, aResolverNode,
+  rv = CreateExpression(evalInternal, aExpression, resolver, state,
                         getter_AddRefs(expression));
 
   PRBool throwException = PR_FALSE;
@@ -499,7 +558,7 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
       /// @see http://bugzilla.mozilla.org/show_bug.cgi?id=265212
       if (aSet) {
         nsXFormsXPathParser parser;
-        nsXFormsXPathAnalyzer analyzer(evalInternal, resolver, aResolverNode);
+        nsXFormsXPathAnalyzer analyzer(evalInternal, resolver, state);
         nsAutoPtr<nsXFormsXPathNode> xNode(parser.Parse(aExpression));
         rv = analyzer.Analyze(aContextNode,
                               xNode,
@@ -545,7 +604,7 @@ nsXFormsUtils::EvaluateXPath(nsIXPathEvaluatorInternal  *aEvaluator,
                              const nsAString            &aExpression,
                              nsIDOMNode                 *aContextNode,
                              nsIDOMXPathNSResolver      *aResolver,
-                             nsISupports                *aState,
+                             nsIXFormsXPathState        *aState,
                              PRUint16                    aResultType,
                              PRInt32                     aContextPosition,
                              PRInt32                     aContextSize,
@@ -562,7 +621,9 @@ nsXFormsUtils::EvaluateXPath(nsIXPathEvaluatorInternal  *aEvaluator,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // if somehow the contextNode and the evaluator weren't spawned from the same
-  // document, this could fail with NS_ERROR_DOM_WRONG_DOCUMENT_ERR
+  // document, this could fail with NS_ERROR_DOM_WRONG_DOCUMENT_ERR.  We are
+  // NOT setting the state's original context node here.  We'll assume that
+  // the state was set up correctly prior to this function being called.
   nsCOMPtr<nsISupports> supResult;
   rv = nsExpression->EvaluateWithContext(aContextNode, aContextPosition,
                                          aContextSize, aResultType,
@@ -2751,3 +2812,10 @@ nsXFormsUtils::NodeHasItemset(nsIDOMNode *aNode)
   return hasItemset;
 }
 
+/* static */ PRBool
+nsXFormsUtils::ExperimentalFeaturesEnabled()
+{
+  // Return the value of the preference that surrounds all of our
+  // 'not yet standardized' XForms work.
+  return gExperimentalFeaturesEnabled;
+}

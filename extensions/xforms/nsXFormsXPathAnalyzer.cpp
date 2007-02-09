@@ -50,7 +50,7 @@
 
 nsXFormsXPathAnalyzer::nsXFormsXPathAnalyzer(nsIXPathEvaluatorInternal *aEvaluator,
                                              nsIDOMXPathNSResolver     *aResolver,
-                                             nsISupports               *aState)
+                                             nsIXFormsXPathState       *aState)
   : mEvaluator(aEvaluator),
     mResolver(aResolver),
     mState(aState)

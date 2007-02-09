@@ -48,6 +48,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
+#include "nsIXFormsXPathState.h"
 
 /**
  * This class analyzes an XPath Expression parse tree (nsXFormsXPathNode), and
@@ -60,7 +61,7 @@ class nsXFormsXPathAnalyzer {
 private:
   nsCOMPtr<nsIXPathEvaluatorInternal> mEvaluator;
   nsCOMPtr<nsIDOMXPathNSResolver>     mResolver;
-  nsCOMPtr<nsISupports>               mState;
+  nsCOMPtr<nsIXFormsXPathState>       mState;
 
   nsCOMArray<nsIDOMNode>              *mCurSet;
   nsCOMPtr<nsIDOMNSXPathExpression>    mCurExpression;
@@ -77,7 +78,7 @@ private:
 public:
   nsXFormsXPathAnalyzer(nsIXPathEvaluatorInternal *aEvaluator,
                         nsIDOMXPathNSResolver     *aResolver,
-                        nsISupports               *aState);
+                        nsIXFormsXPathState       *aState);
   ~nsXFormsXPathAnalyzer();
   
   nsresult Analyze(nsIDOMNode                *aContextNode,

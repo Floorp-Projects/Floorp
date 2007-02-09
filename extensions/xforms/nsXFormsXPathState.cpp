@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -36,14 +36,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIXFormsXPathFunctions.h"
-#include "nsIXFormsXPathState.h"
-#include "nsIDOMNode.h"
-#include "nsCOMPtr.h"
+#include "nsXFormsXPathState.h"
 
-class nsXFormsXPathFunctions : public nsIXFormsXPathFunctions
+NS_IMPL_ISUPPORTS1(nsXFormsXPathState, nsIXFormsXPathState)
+
+// nsXFormsXPathState methods
+
+NS_IMETHODIMP
+nsXFormsXPathState::GetXformsNode(nsIDOMNode **aResolverNode)
 {
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIXFORMSXPATHFUNCTIONS
-};
+  NS_ENSURE_ARG_POINTER(aResolverNode);
+  NS_IF_ADDREF(*aResolverNode = mXFormsNode);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsXPathState::GetOriginalContextNode(nsIDOMNode **aContextNode)
+{
+  NS_ENSURE_ARG_POINTER(aContextNode);
+  NS_IF_ADDREF(*aContextNode = mOriginalContextNode);
+  return NS_OK;
+}

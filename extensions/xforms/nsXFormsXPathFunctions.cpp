@@ -154,9 +154,10 @@ nsXFormsXPathFunctions::Index(txIFunctionEvaluationContext *aContext,
     //   make sure that it is a xforms:repeat node.  Given that, must query
     //   its index.
 
-    nsCOMPtr<nsISupports> state;
+    nsCOMPtr<nsIXFormsXPathState> state;
     aContext->GetState(getter_AddRefs(state));
-    nsCOMPtr<nsIDOMNode> resolverNode = do_QueryInterface(state);
+    nsCOMPtr<nsIDOMNode> resolverNode;
+    state->GetXformsNode(getter_AddRefs(resolverNode));
     NS_ENSURE_TRUE(resolverNode, NS_ERROR_FAILURE);
 
     // here document is the XForms document
@@ -197,9 +198,10 @@ nsXFormsXPathFunctions::Instance(txIFunctionEvaluationContext *aContext,
     // The state is the node in the XForms document that contained
     //   the expression we are evaluating.  We'll use this to get the
     //   document.  If this isn't here, then something is wrong. Bail.
-    nsCOMPtr<nsISupports> state;
+    nsCOMPtr<nsIXFormsXPathState> state;
     aContext->GetState(getter_AddRefs(state));
-    nsCOMPtr<nsIDOMNode> resolverNode = do_QueryInterface(state);
+    nsCOMPtr<nsIDOMNode> resolverNode;
+    state->GetXformsNode(getter_AddRefs(resolverNode));
     NS_ENSURE_TRUE(resolverNode, NS_ERROR_FAILURE);
 
     // here document is the XForms document
@@ -426,4 +428,32 @@ nsXFormsXPathFunctions::SecondsFromDateTime(const nsAString &aDateTime,
     }
 
     return rv;
+}
+
+NS_IMETHODIMP
+nsXFormsXPathFunctions::Current(txIFunctionEvaluationContext *aContext,
+                                txINodeSet **aResult)
+{
+  *aResult = nsnull;
+
+  if (!nsXFormsUtils::ExperimentalFeaturesEnabled()) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  // now get the contextNode passed in to the evaluation
+  nsCOMPtr<nsIXFormsXPathState> state;
+  aContext->GetState(getter_AddRefs(state));
+  nsCOMPtr<nsIDOMNode> origContextNode;
+  state->GetOriginalContextNode(getter_AddRefs(origContextNode));
+  NS_ENSURE_STATE(origContextNode);
+  
+  nsresult rv;
+  nsCOMPtr<txINodeSet> result =
+    do_CreateInstance("@mozilla.org/transformiix-nodeset;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  result->Add(origContextNode);
+  result.swap(*aResult);
+
+  return NS_OK;
 }

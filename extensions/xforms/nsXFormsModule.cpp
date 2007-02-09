@@ -112,6 +112,8 @@ UnregisterXFormsModule(nsIComponentManager *aCompMgr,
   printf("XFORMS Module: Unregistering\n");
 #endif
 
+  nsXFormsUtils::Shutdown();
+
   nsCOMPtr<nsICategoryManager> catman =
     do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
 

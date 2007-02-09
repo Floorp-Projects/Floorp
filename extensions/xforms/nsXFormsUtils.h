@@ -50,6 +50,7 @@
 #include "nsIScriptError.h"
 #include "nsVoidArray.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsXFormsXPathState.h"
 
 class nsIDOMElement;
 class nsIXFormsModelElement;
@@ -69,6 +70,8 @@ class nsIXPathEvaluatorInternal;
 #define NS_NAMESPACE_MOZ_XFORMS_TYPE     "http://www.mozilla.org/projects/xforms/2005/type"
 #define NS_NAMESPACE_SOAP_ENVELOPE       "http://schemas.xmlsoap.org/soap/envelope/"
 #define NS_NAMESPACE_MOZ_XFORMS_LAZY     "http://www.mozilla.org/projects/xforms/2005/lazy"
+
+#define PREF_EXPERIMENTAL_FEATURES       "xforms.enableExperimentalFeatures"
 
 #define NS_ERROR_XFORMS_CALCULATION_EXCEPTION \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL, 3001)
@@ -184,6 +187,12 @@ public:
     Init();
 
   /**
+   * Shutdown nsXFormsUtils.
+   */
+  static NS_HIDDEN_(nsresult)
+    Shutdown();
+
+  /**
    * Locate the model that is a parent of |aBindElement|.  This method walks
    * up the content tree looking for the containing model.
    *
@@ -266,7 +275,7 @@ public:
     CreateExpression(nsIXPathEvaluatorInternal  *aEvaluator,
                      const nsAString            &aExpression,
                      nsIDOMXPathNSResolver      *aResolver,
-                     nsISupports                *aState,
+                     nsIXFormsXPathState        *aState,
                      nsIDOMXPathExpression     **aResult);
 
   /**
@@ -291,7 +300,7 @@ public:
                   const nsAString            &aExpression,
                   nsIDOMNode                 *aContextNode,
                   nsIDOMXPathNSResolver      *aResolver,
-                  nsISupports                *aState,
+                  nsIXFormsXPathState        *aState,
                   PRUint16                    aResultType,
                   PRInt32                     aContextPosition,
                   PRInt32                     aContextSize,
@@ -712,6 +721,22 @@ public:
 
    */
   static NS_HIDDEN_(PRBool) NodeHasItemset(nsIDOMNode *aNode);
+
+  /**
+   * Variable is true if the 'xforms.enableExperimentalFeatures' preference has
+   * been enabled in the browser.  We currently use this preference to surround
+   * code that implements features from future XForms specs.  Specs that have
+   * not yet reached recommendation.
+   */
+  static NS_HIDDEN_(PRBool) experimentalFeaturesEnabled;
+
+  /**
+   * Returns true if the 'xforms.enableExperimentalFeatures' preference has
+   * been enabled in the browser.  We currently use this preference to surround
+   * code that implements features from future XForms specs.  Specs that have
+   * not yet reached recommendation.
+   */
+  static NS_HIDDEN_(PRBool) ExperimentalFeaturesEnabled();
 
 private:
   /**

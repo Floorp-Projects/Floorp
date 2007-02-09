@@ -808,17 +808,9 @@ nsXFormsSubmissionElement::SerializeDataXML(nsIDOMDocument  *data,
   mElement->GetAttribute(NS_LITERAL_STRING("mediatype"), mediaType);
 
   // Check for preference, disabling SOAP requests
-  PRBool enableExperimental = PR_FALSE;
-  nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv) && pref) {
-    PRBool val;
-    if (NS_SUCCEEDED(pref->GetBoolPref("xforms.enableExperimentalFeatures",
-                                       &val)))
-      enableExperimental = val;
-  }
+  if (nsXFormsUtils::ExperimentalFeaturesEnabled()) {
 
-  // Check for SOAP Envelope and handle SOAP
-  if (enableExperimental) {
+    // Check for SOAP Envelope and handle SOAP
     nsAutoString nodeName, nodeNS;
     data->GetLocalName(nodeName);
     data->GetNamespaceURI(nodeNS);

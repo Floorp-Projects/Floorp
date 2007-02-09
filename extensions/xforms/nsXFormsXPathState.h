@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -36,14 +36,39 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIXFormsXPathFunctions.h"
 #include "nsIXFormsXPathState.h"
 #include "nsIDOMNode.h"
 #include "nsCOMPtr.h"
 
-class nsXFormsXPathFunctions : public nsIXFormsXPathFunctions
+class nsXFormsXPathState : public nsIXFormsXPathState
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIXFORMSXPATHFUNCTIONS
+  NS_DECL_NSIXFORMSXPATHSTATE
+
+  /**
+   * Constructors.
+   *
+   * @param aXFormsNode     The XForms control upon which the expression
+   *                        appears.  Used to allow our XForms XPath functions
+   *                        access to the XForms document.
+   * @param aContextNode    The original context node used to build and
+   *                        evaluate the XPath expression.  This can be useful
+   *                        to remember since this is the context node used
+   *                        for the parse context part of XPath.  But the
+   *                        context that our XFormsXPath functions has access
+   *                        to is the evaluation context.  The context node
+   *                        for the evaluation context can chnage as XPath
+   *                        works its way through the expression.
+   */
+
+  nsXFormsXPathState(nsIDOMNode *aXFormsNode,
+                     nsIDOMNode *aContextNode)
+    : mXFormsNode(aXFormsNode),
+      mOriginalContextNode(aContextNode) {};
+
+private:
+
+  nsCOMPtr<nsIDOMNode> mXFormsNode;
+  nsCOMPtr<nsIDOMNode> mOriginalContextNode;
 };

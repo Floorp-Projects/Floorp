@@ -2321,8 +2321,11 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
     exprString = NS_LITERAL_STRING(".");
   }
 
+  nsCOMPtr<nsIXFormsXPathState> state = new nsXFormsXPathState(aBindElement,
+                                                               aContextNode);
+  NS_ENSURE_TRUE(state, NS_ERROR_OUT_OF_MEMORY);
   rv = nsXFormsUtils::EvaluateXPath(eval, exprString, aContextNode, resolver,
-                                    aBindElement,
+                                    state,
                                     nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
                                     aContextPosition, aContextSize,
                                     nsnull, getter_AddRefs(result));
@@ -2410,9 +2413,14 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
   // bind contains (aka nested binds).
   while (node && snapItem < snapLen) {
 
+    // set the context node for the expression that is being analyzed.
+    nsCOMPtr<nsIXFormsXPathState> stateForMIP =
+      new nsXFormsXPathState(aBindElement, node);
+    NS_ENSURE_TRUE(stateForMIP, NS_ERROR_OUT_OF_MEMORY);
+
     // Apply MIPs
     nsXFormsXPathParser parser;
-    nsXFormsXPathAnalyzer analyzer(eval, resolver, aBindElement);
+    nsXFormsXPathAnalyzer analyzer(eval, resolver, stateForMIP);
     PRBool multiMIP = PR_FALSE;
     for (PRUint32 j = 0; j < eModel__count; ++j) {
       if (propStrings[j].IsEmpty())
@@ -2441,15 +2449,15 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
         if (j == eModel_type) {
           // Inform MDG that it needs to check type. The only arguments
           // actually used are |eModel_constraint| and |node|.
-          rv = mMDG.AddMIP(eModel_constraint, nsnull, nsnull, PR_FALSE, node, 1,
-                           1);
+          rv = mMDG.AddMIP(eModel_constraint, nsnull, nsnull, PR_FALSE, node,
+                           1, 1);
           NS_ENSURE_SUCCESS(rv, rv);
         }
       } else {
 
         rv = nsXFormsUtils::CreateExpression(nodesetEvalInternal,
                                              propStrings[j], resolver,
-                                             aBindElement,
+                                             stateForMIP,
                                              getter_AddRefs(props[j]));
         if (NS_FAILED(rv)) {
           const PRUnichar *strings[] = { propStrings[j].get() };
