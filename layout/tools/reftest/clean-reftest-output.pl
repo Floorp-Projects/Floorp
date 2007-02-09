@@ -53,7 +53,7 @@ EOM
 ;
 
 while (<>) {
-    next unless /^REFTEST/;
+    next unless /REFTEST/;
     chomp;
     chop if /\r$/;
     s,(PASS|FAIL):( \(!=\))? (.*),\1:\2 <a href="\3">\3</a>,;
