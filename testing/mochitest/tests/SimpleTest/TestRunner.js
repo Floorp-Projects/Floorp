@@ -80,19 +80,10 @@ TestRunner.runNextTest = function() {
         TestRunner._makeIframe("about:blank");
         if (TestRunner.logEnabled) {
             TestRunner.logger.log("SimpleTest FINISHED");
-	    TestRunner.logger.log("TinderboxPrint: <table cellpadding='0' " +
-				  "cellspacing='2' border='0'>" +
-				  "<tr><td colspan='2'>mochitest</td></tr>" +
-				  "<tr><td>Passed: </td>" +
-				  "<td>" + $("pass-count").innerHTML +
-				  "</td></tr>" +
-				  "<tr><td>Failed: </td>" +
-				  "<td>" + $("fail-count").innerHTML +
-				  "</td></tr>" +
-				  "<tr><td>Todo: </td>" +
-				  "<td>" + $("todo-count").innerHTML +
-				  "</td></tr></table>");
-		}
+	    TestRunner.logger.log("Passed: " + $("pass-count").innerHTML);
+ 	    TestRunner.logger.log("Failed: " + $("fail-count").innerHTML);
+	    TestRunner.logger.log("Todo:   " + $("todo-count").innerHTML);
+	}
         if (TestRunner.onComplete)
             TestRunner.onComplete();
     }
