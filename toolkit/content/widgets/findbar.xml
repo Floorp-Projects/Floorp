@@ -247,8 +247,8 @@
                     accesskey="&caseSensitiveCheckbox.accesskey;"
                     xbl:inherits="accesskey=matchcaseaccesskey"/>
       <xul:label anonid="match-case-status" class="findbar-find-fast"/>
-      <xul:image anonid="find-status-icon" class="find-status-icon"/>
-      <xul:label anonid="find-status" class="findbar-find-status"/>
+      <xul:image anonid="find-status-icon" class="findbar-find-fast find-status-icon"/>
+      <xul:label anonid="find-status" class="findbar-find-fast findbar-find-status"/>
     </content>
 
     <implementation implements="nsIDOMEventListener">
