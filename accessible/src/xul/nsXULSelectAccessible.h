@@ -39,7 +39,6 @@
 #define __nsXULSelectAccessible_h__
 
 #include "nsCOMPtr.h"
-#include "nsIAccessibleSelectable.h"
 #include "nsXULMenuAccessible.h"
 
 class nsIWeakReference;
@@ -61,30 +60,6 @@ class nsIWeakReference;
 
 /** ------------------------------------------------------ */
 /**  First, the common widgets                             */
-/** ------------------------------------------------------ */
-
-/*
- * The basic implemetation of nsIAccessibleSelectable.
- */
-class nsXULSelectableAccessible : public nsAccessibleWrap
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIACCESSIBLESELECTABLE
-
-  nsXULSelectableAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
-  virtual ~nsXULSelectableAccessible() {}
-
-  NS_IMETHOD GetName(nsAString& _retval);
-
-protected:
-  NS_IMETHOD ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState);
-  nsresult AppendFlatStringFromSubtree(nsIContent *aContent, nsAString *aFlatString)
-    { return NS_ERROR_FAILURE; }  // Overrides base impl in nsAccessible
-};
-
-/** ------------------------------------------------------ */
-/**  Secondly, the Listbox widget                          */
 /** ------------------------------------------------------ */
 
 /*
@@ -121,8 +96,6 @@ public:
   NS_IMETHOD GetRole(PRUint32 *_retval);
   NS_IMETHOD GetState(PRUint32 *_retval);
   NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
-  // Don't use XUL menu's special child aggregator, this can be a rich list item
-  void CacheChildren() { nsAccessibleWrap::CacheChildren(); }
   // Don't use XUL menuitems's description attribute
   NS_IMETHOD GetDescription(nsAString& aDesc) { return nsAccessibleWrap::GetDescription(aDesc); }
 
@@ -137,7 +110,7 @@ private:
 /*
  * A class the represents the XUL Combobox widget.
  */
-class nsXULComboboxAccessible : public nsXULSelectableAccessible
+class nsXULComboboxAccessible : public nsAccessibleWrap
 {
 public:
   enum { eAction_Click = 0 };
@@ -145,8 +118,10 @@ public:
   nsXULComboboxAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
   virtual ~nsXULComboboxAccessible() {}
 
+  /* ----- nsPIAccessible ---- */
+  NS_IMETHOD Init();
+
   /* ----- nsIAccessible ----- */
-  void CacheChildren();
   NS_IMETHOD GetRole(PRUint32 *_retval);
   NS_IMETHOD GetState(PRUint32 *_retval);
   NS_IMETHOD GetValue(nsAString& _retval);

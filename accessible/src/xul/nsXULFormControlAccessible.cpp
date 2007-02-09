@@ -42,6 +42,7 @@
 #include "nsHTMLFormControlAccessible.h"
 #include "nsAccessibilityAtoms.h"
 #include "nsAccessibleTreeWalker.h"
+#include "nsXULMenuAccessible.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSEditableElement.h"
 #include "nsIDOMXULButtonElement.h"
@@ -662,6 +663,10 @@ NS_IMETHODIMP nsXULTextFieldAccessible::GetValue(nsAString& aValue)
   if (textBox) {
     return textBox->GetValue(aValue);
   }
+  nsCOMPtr<nsIDOMXULMenuListElement> menuList(do_QueryInterface(mDOMNode));
+  if (menuList) {
+    return menuList->GetLabel(aValue);
+  }
   return NS_ERROR_FAILURE;
 }
 
@@ -687,16 +692,30 @@ NS_IMETHODIMP nsXULTextFieldAccessible::GetExtState(PRUint32 *aExtState)
   return NS_OK;
 }
 
+already_AddRefed<nsIDOMNode> nsXULTextFieldAccessible::GetInputField()
+{
+  nsIDOMNode *inputField = nsnull;
+  nsCOMPtr<nsIDOMXULTextBoxElement> textBox = do_QueryInterface(mDOMNode);
+  if (textBox) {
+    textBox->GetInputField(&inputField);
+    return inputField;
+  }
+  nsCOMPtr<nsIDOMXULMenuListElement> menuList = do_QueryInterface(mDOMNode);
+  if (menuList) {   // <xul:menulist droppable="false">
+    menuList->GetInputField(&inputField);
+  }
+  NS_ASSERTION(inputField, "No input field for nsXULTextFieldAccessible");
+  return inputField;
+}
+
 NS_IMETHODIMP nsXULTextFieldAccessible::GetState(PRUint32 *aState)
 {
-  nsCOMPtr<nsIDOMXULTextBoxElement> textBox(do_QueryInterface(mDOMNode));
-  if (!textBox) {
+  if (!mDOMNode) {
     return NS_ERROR_FAILURE;
   }
   nsHyperTextAccessible::GetState(aState);
 
-  nsCOMPtr<nsIDOMNode> inputField;
-  textBox->GetInputField(getter_AddRefs(inputField));
+  nsCOMPtr<nsIDOMNode> inputField = GetInputField();
   if (!inputField) {
     return NS_ERROR_FAILURE;
   }
@@ -710,15 +729,26 @@ NS_IMETHODIMP nsXULTextFieldAccessible::GetState(PRUint32 *aState)
   }
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  NS_ASSERTION(content, "Not possible since we are a nsIDOMXULTextBoxElement");
-  if (content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
-                           nsAccessibilityAtoms::password, eIgnoreCase)) {
-    *aState |= STATE_PROTECTED;
-  }
+  NS_ASSERTION(content, "Not possible since we have an mDOMNode");
 
-  if (content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::readonly,
-                           nsAccessibilityAtoms::_true, eIgnoreCase)) {
-    *aState |= STATE_READONLY;
+  nsCOMPtr<nsIDOMXULMenuListElement> menuList(do_QueryInterface(mDOMNode));
+  if (menuList) {
+    // <xul:menulist droppable="false">
+    if (!content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::editable,
+                              nsAccessibilityAtoms::_true, eIgnoreCase)) {
+      *aState |= STATE_READONLY;
+    }
+  }
+  else {
+    // <xul:textbox>
+    if (content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                             nsAccessibilityAtoms::password, eIgnoreCase)) {
+      *aState |= STATE_PROTECTED;
+    }
+    if (content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::readonly,
+                             nsAccessibilityAtoms::_true, eIgnoreCase)) {
+      *aState |= STATE_READONLY;
+    }
   }
 
   return rv;
@@ -791,17 +821,7 @@ void nsXULTextFieldAccessible::SetEditor(nsIEditor* aEditor)
 
 void nsXULTextFieldAccessible::CheckForEditor()
 {
-  nsCOMPtr<nsIDOMXULTextBoxElement> textBox(do_QueryInterface(mDOMNode));
-  if (!textBox) {
-    return;
-  }
-
-  nsCOMPtr<nsIDOMNode> inputField;
-  textBox->GetInputField(getter_AddRefs(inputField));
-  if (!inputField) {
-    return;
-  }
-
+  nsCOMPtr<nsIDOMNode> inputField = GetInputField();
   nsCOMPtr<nsIDOMNSEditableElement> editableElt(do_QueryInterface(inputField));
   if (!editableElt) {
     return;

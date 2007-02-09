@@ -193,7 +193,7 @@ public:
 /*
  * A class the represents the HTML Combobox widget.
  */
-class nsHTMLComboboxAccessible : public nsHTMLSelectableAccessible
+class nsHTMLComboboxAccessible : public nsAccessibleWrap
 {
 public:
   enum { eAction_Click = 0 };
