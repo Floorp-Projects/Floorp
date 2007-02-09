@@ -1411,7 +1411,7 @@ static int HandleRemoteArguments(int argc, char* argv[], PRBool *aArgUsed)
   char *response = NULL;
   PRBool success = PR_FALSE;
   rv = client.SendCommand(program, username, profile, remote,
-                          &response, &success);
+                          nsnull, &response, &success);
 
   // did the command fail?
   if (NS_FAILED(rv)) {
