@@ -68,6 +68,13 @@ function myCall(fun, thisp) {
     return fun.apply(thisp, args);
 }
 
+// Like the above, except that this gets a property off of an untrusted
+// object.
+var safeGetProperty = null;
+function myGet(thisp, id) {
+    return thisp[id];
+}
+
 // implementor of nsIProxyAutoConfig
 function nsProxyAutoConfig() {};
 
@@ -103,6 +110,9 @@ nsProxyAutoConfig.prototype = {
         callFunction =
             Components.utils.evalInSandbox("(" + myCall.toSource() + ")",
                                            this._sandBox);
+        safeGetProperty =
+            Components.utils.evalInSandbox("(" + myGet.toSource() + ")",
+                                           this._sandBox);
 
         // add predefined functions to pac
         this._sandBox.importFunction(myIpAddress);
@@ -111,7 +121,8 @@ nsProxyAutoConfig.prototype = {
 
         // evaluate loaded js file
         Components.utils.evalInSandbox(pacText, this._sandBox);
-        this._findProxyForURL = this._sandBox.FindProxyForURL;
+        this._findProxyForURL =
+            safeGetProperty(this._sandBox, "FindProxyForURL");
     },
 
     getProxyForURI: function(testURI, testHost) {
