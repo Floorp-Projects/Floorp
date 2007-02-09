@@ -185,6 +185,8 @@ nsNSSSocketInfo::nsNSSSocketInfo()
     mCanceled(PR_FALSE),
     mHasCleartextPhase(PR_FALSE),
     mHandshakeInProgress(PR_FALSE),
+    mAllowTLSIntoleranceTimeout(PR_TRUE),
+    mBlockedOnBadCertUI(PR_FALSE),
     mHandshakeStartTime(0),
     mPort(0),
     mCAChain(nsnull)
@@ -473,11 +475,29 @@ void nsNSSSocketInfo::SetHandshakeInProgress(PRBool aIsIn)
   }
 }
 
-#define HANDSHAKE_TIMEOUT_SECONDS 8
+void nsNSSSocketInfo::SetBlockedOnBadCertUI(PRBool aCurrentlyBlockedOnUI)
+{
+  if (mBlockedOnBadCertUI && !aCurrentlyBlockedOnUI)
+  {
+    // we were blocked and going back to unblocked,
+    // so let's reset the handshake start time, in order to ensure
+    // we do not count the amount of time while the UI was shown.
+    mHandshakeStartTime = PR_IntervalNow();
+  }
+
+  mBlockedOnBadCertUI = aCurrentlyBlockedOnUI;
+}
+
+void nsNSSSocketInfo::SetAllowTLSIntoleranceTimeout(PRBool aAllow)
+{
+  mAllowTLSIntoleranceTimeout = aAllow;
+}
+
+#define HANDSHAKE_TIMEOUT_SECONDS 25
 
 PRBool nsNSSSocketInfo::HandshakeTimeout()
 {
-  if (!mHandshakeInProgress)
+  if (!mHandshakeInProgress || !mAllowTLSIntoleranceTimeout || mBlockedOnBadCertUI)
     return PR_FALSE;
 
   return ((PRIntervalTime)(PR_IntervalNow() - mHandshakeStartTime)
@@ -2488,6 +2508,7 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
     return SECFailure;
   } 
   NS_ADDREF(nssCert);
+  infoObject->SetBlockedOnBadCertUI(PR_TRUE);
   while (rv != SECSuccess) {
      //Func nsContinueDespiteCertError does the same set of checks as func.
      //nsCertErrorNeedsDialog. So, removing call to nsCertErrorNeedsDialog
@@ -2498,6 +2519,7 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
     rv = verifyCertAgain(peerCert, sslSocket, infoObject);
 	error = PR_GetError();
   }
+  infoObject->SetBlockedOnBadCertUI(PR_FALSE);
   NS_RELEASE(nssCert);
   CERT_DestroyCertificate(peerCert); 
   if (rv != SECSuccess) {
@@ -2568,6 +2590,8 @@ nsSSLIOLayerSetOptions(PRFileDesc *fd, PRBool forSTARTTLS,
   if (nsSSLIOLayerHelpers::isKnownAsIntolerantSite(key)) {
     if (SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_TLS, PR_FALSE))
       return NS_ERROR_FAILURE;
+
+    infoObject->SetAllowTLSIntoleranceTimeout(PR_FALSE);
       
     // We assume that protocols that use the STARTTLS mechanism should support
     // modern hellos. For other protocols, if we suspect a site 

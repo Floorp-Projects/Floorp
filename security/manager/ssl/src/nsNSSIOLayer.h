@@ -160,6 +160,9 @@ public:
   PRBool GetHandshakeInProgress() { return mHandshakeInProgress; }
   PRBool HandshakeTimeout();
 
+  void SetAllowTLSIntoleranceTimeout(PRBool aAllow);
+  void SetBlockedOnBadCertUI(PRBool aCurrentlyBlockedOnUI);
+
   nsresult RememberCAChain(CERTCertList *aCertList);
 
   /* Set SSL Status values */
@@ -177,6 +180,8 @@ protected:
   PRPackedBool mCanceled;
   PRPackedBool mHasCleartextPhase;
   PRPackedBool mHandshakeInProgress;
+  PRPackedBool mAllowTLSIntoleranceTimeout;
+  PRPackedBool mBlockedOnBadCertUI;
   PRIntervalTime mHandshakeStartTime;
   PRInt32 mPort;
   nsXPIDLCString mHostName;
