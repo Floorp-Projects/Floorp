@@ -55,8 +55,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=172261
   function doTest() {
     is($("test").contentDocument.domain, document.domain,
        "Domains should match 2");
-    // Make that into an is() once bug 269270 is fixed.
-    todo($("test").contentDocument.location.href == location.href,
+    is($("test").contentDocument.location.href == location.href,
          "Locations should match");
     is(callable, true, "Subframe should be able to call us");
     SimpleTest.finish();
