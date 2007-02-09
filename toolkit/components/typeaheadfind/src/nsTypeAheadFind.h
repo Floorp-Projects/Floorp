@@ -89,7 +89,7 @@ protected:
                         PRBool *aUsesIndependentSelection);
   nsresult FindItNow(nsIPresShell *aPresShell, PRBool aIsLinksOnly,
                      PRBool aIsFirstVisiblePreferred, PRBool aFindPrev,
-                     PRBool aHasFocus, PRUint16* aResult);
+                     PRUint16* aResult);
   nsresult GetSearchContainers(nsISupports *aContainer,
                                nsISelectionController *aSelectionController,
                                PRBool aIsFirstVisiblePreferred,

@@ -23,6 +23,7 @@
  *   Aaron Leventhal (aaronl@netscape.com)
  *   Blake Ross      (blake@cs.stanford.edu)
  *   Masayuki Nakano (masayuki@d-toybox.com)
+ *   Asaf Romano     (mano@mozilla.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -305,7 +306,7 @@ nsTypeAheadFind::PlayNotFoundSound()
 nsresult
 nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, PRBool aIsLinksOnly,
                            PRBool aIsFirstVisiblePreferred, PRBool aFindPrev,
-                           PRBool aHasFocus, PRUint16* aResult)
+                           PRUint16* aResult)
 {
   *aResult = FIND_NOTFOUND;
   mFoundLink = nsnull;
@@ -453,7 +454,41 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, PRBool aIsLinksOnly,
         mPresShell = do_GetWeakReference(presShell);
       }
 
+      nsCOMPtr<nsIDocument> document =
+        do_QueryInterface(presShell->GetDocument());
+      NS_ASSERTION(document, "Wow, presShell doesn't have document!");
+      if (!document)
+        return NS_ERROR_UNEXPECTED;
+
+      nsCOMPtr<nsPIDOMWindow> window = document->GetWindow();
+      NS_ASSERTION(window, "document has no window");
+      if (!window)
+        return NS_ERROR_UNEXPECTED;
+
       if (usesIndependentSelection) {
+        /* If a search result is found inside an editable element, we'll focus
+         * the element only if focus is in our content window, i.e.
+         * |if (focusedWindow.top == ourWindow.top)| */
+        PRBool shouldFocusEditableElement = false;
+        nsIFocusController* focusController = window->GetRootFocusController();
+        if (focusController) {
+          nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
+          nsresult rv = focusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
+          if (NS_SUCCEEDED(rv)) {
+            nsCOMPtr<nsPIDOMWindow> fwPI(do_QueryInterface(focusedWindow, &rv));
+            if (NS_SUCCEEDED(rv)) {
+              nsCOMPtr<nsIDocShellTreeItem> fwTreeItem
+                (do_QueryInterface(fwPI->GetDocShell(), &rv));
+              if (NS_SUCCEEDED(rv)) {
+                nsCOMPtr<nsIDocShellTreeItem> fwRootTreeItem;
+                rv = fwTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(fwRootTreeItem));
+                if (NS_SUCCEEDED(rv) && fwRootTreeItem == rootContentTreeItem)
+                  shouldFocusEditableElement = PR_TRUE;
+              }
+            }
+          }
+        }
+
         // We may be inside an editable element, and therefore the selection
         // may be controlled by a different selection controller.  Walk up the
         // chain of parent nodes to see if we find one.
@@ -479,10 +514,8 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, PRBool aIsLinksOnly,
             }
             mFoundEditable = do_QueryInterface(node);
 
-            // Check if find field is focused, if so do nothing
-            if (aHasFocus) {
+            if (!shouldFocusEditableElement)
               break;
-            }
 
             // Otherwise move focus/caret to editable element
             nsCOMPtr<nsIContent> content = do_QueryInterface(mFoundEditable);
@@ -548,17 +581,8 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, PRBool aIsLinksOnly,
           nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
       }
 
-      nsCOMPtr<nsIDocument> doc =
-        do_QueryInterface(presShell->GetDocument());
-      NS_ASSERTION(doc, "Wow, presShell doesn't have document!");
-      mCurrentWindow = doc->GetWindow();
-
-      if (hasWrapped) {
-        *aResult = FIND_WRAPPED;
-      } else {
-        *aResult = FIND_FOUND;
-      }
-
+      mCurrentWindow = window;
+      *aResult = hasWrapped ? FIND_WRAPPED : FIND_FOUND;
       return NS_OK;
     }
 
@@ -870,21 +894,21 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
 /* Find another match in the page. */
 NS_IMETHODIMP
 nsTypeAheadFind::FindAgain(PRBool aFindBackwards, PRBool aLinksOnly,
-                           PRBool aHasFocus, PRUint16* aResult)
+                           PRUint16* aResult)
 
 {
   *aResult = FIND_NOTFOUND;
 
   mLinksOnly = aLinksOnly;
   if (!mTypeAheadBuffer.IsEmpty())
-    FindItNow(nsnull, mLinksOnly, PR_FALSE, aFindBackwards, aHasFocus, aResult);
+    FindItNow(nsnull, mLinksOnly, PR_FALSE, aFindBackwards, aResult);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTypeAheadFind::Find(const nsAString& aSearchString, PRBool aLinksOnly,
-                      PRBool aHasFocus, PRUint16* aResult)
+                      PRUint16* aResult)
 {
   *aResult = FIND_NOTFOUND;
 
@@ -1001,7 +1025,7 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, PRBool aLinksOnly,
 
   // ----------- Find the text! ---------------------
   nsresult rv = FindItNow(nsnull, mLinksOnly, isFirstVisiblePreferred,
-                          PR_FALSE, aHasFocus, aResult);
+                          PR_FALSE, aResult);
 
   // ---------Handle success or failure ---------------
   if (NS_SUCCEEDED(rv)) {

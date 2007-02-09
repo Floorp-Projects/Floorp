@@ -51,7 +51,7 @@ interface nsIDocShell;
 
 /****************************** nsTypeAheadFind ******************************/
 
-[scriptable, uuid(1280e20d-d739-45cc-980b-182abda4fbe0)]
+[scriptable, uuid(0749a445-19d3-4eb9-9d66-78eca8c6f604)]
 interface nsITypeAheadFind : nsISupports
 {
   /****************************** Initializer ******************************/
@@ -65,12 +65,11 @@ interface nsITypeAheadFind : nsISupports
   /***************************** Core functions ****************************/
 
   /* Find aSearchString in page.  If aLinksOnly is true, only search the page's
-   * hyperlinks for the string.  aHasFocus will be true if the "Find" textfield
-   * has focus. */
-  unsigned short find(in AString aSearchString, in boolean aLinksOnly, in boolean aHasFocus);
+   * hyperlinks for the string. */
+  unsigned short find(in AString aSearchString, in boolean aLinksOnly);
 
   /* Find another match in the page. */
-  unsigned short findAgain(in boolean findBackwards, in boolean aLinksOnly, in boolean aHasFocus);
+  unsigned short findAgain(in boolean findBackwards, in boolean aLinksOnly);
 
 
   /**************************** Helper functions ***************************/
