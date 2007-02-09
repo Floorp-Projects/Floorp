@@ -183,7 +183,7 @@ FindObjectPrincipals(JSContext *cx, JSObject *obj)
 JSExtendedClass sXPC_SJOW_JSClass = {
   // JSClass (JSExtendedClass.base) initialization
   { "XPCSafeJSObjectWrapper",
-    JSCLASS_NEW_RESOLVE | JSCLASS_IS_EXTENDED | JSCLASS_HAS_RESERVED_SLOTS(4),
+    JSCLASS_NEW_RESOLVE | JSCLASS_IS_EXTENDED | JSCLASS_HAS_RESERVED_SLOTS(5),
     XPC_SJOW_AddProperty, XPC_SJOW_DelProperty,
     XPC_SJOW_GetProperty, XPC_SJOW_SetProperty,
     XPC_SJOW_Enumerate,   (JSResolveOp)XPC_SJOW_NewResolve,
@@ -223,6 +223,11 @@ static JSFunctionSpec sXPC_SJOW_JSClass_methods[] = {
 // Slot for caching a compiled scripted function for calling
 // toString().
 #define XPC_SJOW_SLOT_SCRIPTED_TOSTRING      3
+
+// Slot for holding on to the principal to use if a principal other
+// than that of the unsafe object is desired for this wrapper
+// (nsIPrincipal, strong reference).
+#define XPC_SJOW_SLOT_PRINCIPAL              4
 
 
 static JSObject *
@@ -282,6 +287,9 @@ WrapFunction(JSContext* cx, JSObject* funobj, jsval *rval)
   return JS_TRUE;
 }
 
+// Wrap a JS value in a safe wrapper of a function wrapper if
+// needed. Note that rval must point to something rooted when calling
+// this function.
 static JSBool
 WrapJSValue(JSContext *cx, JSObject *obj, jsval val, jsval *rval)
 {
@@ -302,6 +310,10 @@ WrapJSValue(JSContext *cx, JSObject *obj, jsval val, jsval *rval)
       return JS_FALSE;
     }
 
+    // Set *rval to safeObj here to ensure it doesn't get collected in
+    // any of the code below.
+    *rval = OBJECT_TO_JSVAL(safeObj);
+
     // If obj and safeObj are from the same scope, propagate cached
     // scripted functions to the new safe object.
     if (GetGlobalObject(cx, obj) == GetGlobalObject(cx, safeObj)) {
@@ -316,9 +328,49 @@ WrapJSValue(JSContext *cx, JSObject *obj, jsval val, jsval *rval)
                                 rsval)) {
         return JS_FALSE;
       }
-    }
+    } else {
+      // Check to see if the new object we just wrapped is accessible
+      // from the unsafe object we got the new object through. If not,
+      // force the new wrapper to use the principal of the unsafe
+      // object we got the new object from.
+      nsCOMPtr<nsIPrincipal> srcObjPrincipal;
+      nsCOMPtr<nsIPrincipal> valObjPrincipal;
 
-    *rval = OBJECT_TO_JSVAL(safeObj);
+      nsresult rv = FindPrincipals(cx, obj, getter_AddRefs(srcObjPrincipal),
+                                   nsnull, nsnull);
+      if (NS_FAILED(rv)) {
+        return ThrowException(rv, cx);
+      }
+
+      rv = FindPrincipals(cx, JSVAL_TO_OBJECT(val),
+                          getter_AddRefs(valObjPrincipal), nsnull, nsnull);
+      if (NS_FAILED(rv)) {
+        return ThrowException(rv, cx);
+      }
+
+      PRBool subsumes = PR_FALSE;
+      rv = srcObjPrincipal->Subsumes(valObjPrincipal, &subsumes);
+      if (NS_FAILED(rv)) {
+        return ThrowException(rv, cx);
+      }
+
+      if (!subsumes) {
+        // The unsafe object we got the new object from can not access
+        // the new object, force the wrapper we just created to use
+        // the principal of the unsafe object to prevent users of the
+        // new object wrapper from evaluating code through the new
+        // wrapper with the principal of the new object.
+        if (!::JS_SetReservedSlot(cx, safeObj, XPC_SJOW_SLOT_PRINCIPAL,
+                                  PRIVATE_TO_JSVAL(srcObjPrincipal.get()))) {
+          return JS_FALSE;
+        }
+
+        // Pass on ownership of the new object principal to the
+        // wrapper.
+        nsIPrincipal *tmp = nsnull;
+        srcObjPrincipal.swap(tmp);
+      }
+    }
   }
 
   return ok;
@@ -413,7 +465,26 @@ GetScriptedFunction(JSContext *cx, JSObject *obj, JSObject *unsafeObj,
   if (JSVAL_IS_VOID(*scriptedFunVal) ||
       GetGlobalObject(cx, unsafeObj) !=
       GetGlobalObject(cx, JSVAL_TO_OBJECT(*scriptedFunVal))) {
-    JSPrincipals *jsprin = FindObjectPrincipals(cx, unsafeObj);
+    // Check whether we have a cached principal or not.
+    jsval pv;
+    if (!::JS_GetReservedSlot(cx, obj, XPC_SJOW_SLOT_PRINCIPAL, &pv)) {
+      return JS_FALSE;
+    }
+
+    JSPrincipals *jsprin = nsnull;
+
+    if (!JSVAL_IS_VOID(pv)) {
+      nsIPrincipal *principal = (nsIPrincipal *)JSVAL_TO_PRIVATE(pv);
+
+      // Found a cached principal, use it rather than looking up the
+      // principal of the unsafe object.
+      principal->GetJSPrincipals(cx, &jsprin);
+    } else {
+      // No cached principal found, look up the principal based on the
+      // unsafe object.
+      jsprin = FindObjectPrincipals(cx, unsafeObj);
+    }
+
     if (!jsprin) {
       return ThrowException(NS_ERROR_UNEXPECTED, cx);
     }
@@ -541,6 +612,12 @@ XPC_SJOW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return ThrowException(NS_ERROR_UNEXPECTED, cx);
   }
 
+  // Check that the caller can access the unsafe object.
+  if (!CanCallerAccess(cx, unsafeObj)) {
+    // CanCallerAccess() already threw for us.
+    return JS_FALSE;
+  }
+
   // The real function being called is the parent of this function's
   // JSObject.
   JSObject *functionToCallObj = ::JS_GetParent(cx, funObj);
@@ -557,7 +634,7 @@ XPC_SJOW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                            "var args = [];"
                            "for (var i = 1; i < arguments.length; i++)"
                            "args.push(arguments[i]);"
-                           "arguments[0].apply(this, args);");
+                           "return arguments[0].apply(this, args);");
 
   jsval scriptedFunVal;
   if (!GetScriptedFunction(cx, obj, unsafeObj, XPC_SJOW_SLOT_SCRIPTED_FUN,
@@ -794,6 +871,14 @@ XPC_SJOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 JS_STATIC_DLL_CALLBACK(void)
 XPC_SJOW_Finalize(JSContext *cx, JSObject *obj)
 {
+  // Release the reference to the cached principal if we have one.
+  jsval v;
+  if (::JS_GetReservedSlot(cx, obj, XPC_SJOW_SLOT_PRINCIPAL, &v) &&
+      !JSVAL_IS_VOID(v)) {
+    nsIPrincipal *principal = (nsIPrincipal *)JSVAL_TO_PRIVATE(v);
+
+    NS_RELEASE(principal);
+  }
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
