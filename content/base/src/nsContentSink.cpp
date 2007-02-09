@@ -89,99 +89,6 @@
 
 PRLogModuleInfo* gContentSinkLogModuleInfo;
 
-//----------------------------------------------------------------------
-//
-// DummyParserRequest
-//
-//   This is a dummy request implementation that we add to the document's load
-//   group. It ensures that EndDocumentLoad() in the docshell doesn't fire
-//   before we've finished all of parsing and tokenizing of the document.
-//
-
-class DummyParserRequest : public nsIRequest
-{
-protected:
-  nsContentSink* mSink; // Weak reference
-
-public:
-  DummyParserRequest(nsContentSink* aSink);
-
-  NS_DECL_ISUPPORTS
-
-  // nsIRequest
-  NS_IMETHOD GetName(nsACString &result)
-  {
-    result.AssignLiteral("about:layout-dummy-request");
-    return NS_OK;
-  }
-
-  NS_IMETHOD IsPending(PRBool *_retval)
-  {
-    *_retval = PR_TRUE;
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetStatus(nsresult *status)
-  {
-    *status = NS_OK;
-    return NS_OK;
-  }
-
-  NS_IMETHOD Cancel(nsresult status);
-  NS_IMETHOD Suspend(void)
-  {
-    return NS_OK;
-  }
-
-  NS_IMETHOD Resume(void)
-  {
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetLoadGroup(nsILoadGroup **aLoadGroup)
-  {
-    *aLoadGroup = nsnull;
-
-    return NS_OK;
-  }
-
-  NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup)
-  {
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetLoadFlags(nsLoadFlags *aLoadFlags)
-  {
-    *aLoadFlags = nsIRequest::LOAD_NORMAL;
-
-    return NS_OK;
-  }
-
-  NS_IMETHOD SetLoadFlags(nsLoadFlags aLoadFlags)
-  {
-    return NS_OK;
-  }
-};
-
-NS_IMPL_ISUPPORTS1(DummyParserRequest, nsIRequest)
-
-
-DummyParserRequest::DummyParserRequest(nsContentSink* aSink)
-  : mSink(aSink)
-{
-}
-
-NS_IMETHODIMP
-DummyParserRequest::Cancel(nsresult status)
-{
-  // Cancel parser
-  if (mSink && mSink->mParser) {
-    mSink->mParser->CancelParsingEvents();
-  }
-  return NS_OK;
-}
-
-
 #ifdef ALLOW_ASYNCH_STYLE_SHEETS
 const PRBool kBlockByDefault = PR_FALSE;
 #else
@@ -1419,11 +1326,7 @@ nsContentSink::DropParserAndPerfHint(void)
   }
 
   if (mCanInterruptParser) {
-    // Note: Don't return value from RemoveDummyParserRequest,
-    // If RemoveDummyParserRequests fails it should not affect
-    // DidBuildModel. The remove can fail if the parser request
-    // was already removed by a DummyParserRequest::Cancel
-    RemoveDummyParserRequest();
+    mDocument->UnblockOnload(PR_TRUE);
   }
 }
 
@@ -1441,76 +1344,10 @@ void
 nsContentSink::WillBuildModelImpl()
 {
   if (mCanInterruptParser) {
-    nsresult rv = AddDummyParserRequest();
-    if (NS_FAILED(rv)) {
-      NS_ERROR("Adding dummy parser request failed");
-
-      // Don't return the error result, just reset flag which
-      // indicates that it can interrupt parsing. If
-      // AddDummyParserRequests fails it should not affect
-      // WillBuildModel.
-      mCanInterruptParser = PR_FALSE;
-    }
+    mDocument->BlockOnload();
 
     mBeginLoadTime = PR_IntervalToMicroseconds(PR_IntervalNow());
   }
 
   mScrolledToRefAlready = PR_FALSE;
 }
-
-// If the content sink can interrupt the parser (@see mCanInteruptParsing)
-// then it needs to schedule a dummy parser request to delay the document
-// from firing onload handlers and other document done actions until all of the
-// parsing has completed.
-
-nsresult
-nsContentSink::AddDummyParserRequest(void)
-{
-  nsresult rv = NS_OK;
-
-  NS_ASSERTION(!mDummyParserRequest, "Already have a dummy parser request");
-
-  mDummyParserRequest = new DummyParserRequest(this);
-  if (!mDummyParserRequest) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsCOMPtr<nsILoadGroup> loadGroup;
-  if (mDocument) {
-    loadGroup = mDocument->GetDocumentLoadGroup();
-  }
-
-  if (loadGroup) {
-    rv = mDummyParserRequest->SetLoadGroup(loadGroup);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    rv = loadGroup->AddRequest(mDummyParserRequest, nsnull);
-  }
-
-  return rv;
-}
-
-nsresult
-nsContentSink::RemoveDummyParserRequest(void)
-{
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsILoadGroup> loadGroup;
-  if (mDocument) {
-    loadGroup = mDocument->GetDocumentLoadGroup();
-  }
-
-  if (loadGroup && mDummyParserRequest) {
-    rv = loadGroup->RemoveRequest(mDummyParserRequest, nsnull, NS_OK);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    mDummyParserRequest = nsnull;
-  }
-
-  return rv;
-}
-

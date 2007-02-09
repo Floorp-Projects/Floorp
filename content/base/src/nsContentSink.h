@@ -113,8 +113,6 @@ class nsContentSink : public nsICSSLoaderObserver,
                       public nsStubDocumentObserver,
                       public nsITimerCallback
 {
-  friend class DummyParserRequest;
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSISCRIPTLOADEROBSERVER
 
@@ -204,10 +202,6 @@ protected:
 
   void TryToScrollToRef();
 
-  // CanInterrupt parsing related routines
-  nsresult AddDummyParserRequest(void);
-  nsresult RemoveDummyParserRequest(void);
-
 private:
   // People shouldn't be allocating this class directly.  All subclasses should
   // be allocated using a zeroing operator new.
@@ -275,8 +269,6 @@ protected:
   PRInt32 mInMonolithicContainer;
 
   PRInt32 mInNotification;
-
-  nsCOMPtr<nsIRequest> mDummyParserRequest;
 };
 
 
