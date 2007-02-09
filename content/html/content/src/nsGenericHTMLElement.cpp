@@ -2920,6 +2920,9 @@ nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     }
 
     if (mForm && aName == nsGkAtoms::type) {
+      nsIDocument* doc = GetDocument();
+      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, aNotify);
+      
       nsAutoString tmp;
 
       GetAttr(kNameSpaceID_None, nsGkAtoms::name, tmp);
@@ -2935,6 +2938,12 @@ nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       }
 
       mForm->AddElement(this, aNotify);
+
+      // Note: no need to notify on CanBeDisabled(), since type attr
+      // changes can't affect that.
+      if (doc && aNotify) {
+        doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_DEFAULT);
+      }
     }
 
     // And notify on content state changes, if any
@@ -2999,6 +3008,9 @@ nsGenericHTMLFormElement::FindAndSetForm()
 PRInt32
 nsGenericHTMLFormElement::IntrinsicState() const
 {
+  // If you add attribute-dependent states here, you need to add them them to
+  // AfterSetAttr too.  And add them to AfterSetAttr for all subclasses that
+  // implement IntrinsicState() and are affected by that attribute.
   PRInt32 state = nsGenericHTMLElement::IntrinsicState();
 
   if (CanBeDisabled()) {

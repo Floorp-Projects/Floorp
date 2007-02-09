@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+span { color: green }
+:default:checked + span { color: red }
+input { display: none }
+</style>
+</head>
+<body>
+<form>
+<div>
+  <input type="submit">
+  <input type="radio" checked="checked" id="foo">
+  <span>There should be no red.</span>
+</div>
+</form>
+<script>
+  var foo = document.body.offsetWidth;
+  document.getElementById("foo").setAttribute("type", "submit");
+</script>
+</body>
+</html>

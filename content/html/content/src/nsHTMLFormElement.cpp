@@ -1259,16 +1259,16 @@ nsHTMLFormElement::AddElement(nsIFormControl* aChild,
       mDefaultSubmitElement = aChild;
     }
 
-    // Notify that the states of the new default submit and the previous
-    // default submit element have changed if the element which is the 
-    // default submit element has changed.
+    // Notify that the state of the previous default submit element has changed
+    // if the element which is the default submit element has changed.  The new
+    // default submit element is responsible for its own ContentStatesChanged
+    // call.
     if (aNotify && oldControl != mDefaultSubmitElement) {
       nsIDocument* document = GetCurrentDoc();
       if (document) {
         MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, PR_TRUE);
         nsCOMPtr<nsIContent> oldElement(do_QueryInterface(oldControl));
-        nsCOMPtr<nsIContent> newElement(do_QueryInterface(mDefaultSubmitElement));
-        document->ContentStatesChanged(oldElement, newElement,
+        document->ContentStatesChanged(oldElement, nsnull,
                                        NS_EVENT_STATE_DEFAULT);
       }
     }
@@ -1329,16 +1329,18 @@ nsHTMLFormElement::ResetDefaultSubmitElement(PRBool aNotify,
   mDefaultSubmitElement = FindDefaultSubmit(aPrevDefaultInElements,
                                             aPrevDefaultIndex);
 
-  // Inform about change.
+  // Inform about change.  Note that we dont' notify on the old default submit
+  // (which is being removed) because it's either being removed from the DOM or
+  // changing attributes in a way that makes it responsible for sending its own
+  // notifications.
   if (aNotify && (oldDefaultSubmit || mDefaultSubmitElement)) {
     NS_ASSERTION(mDefaultSubmitElement != oldDefaultSubmit,
                  "Notifying but elements haven't changed.");
     nsIDocument* document = GetCurrentDoc();
     if (document) {
       MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, PR_TRUE);
-      nsCOMPtr<nsIContent> oldElement(do_QueryInterface(oldDefaultSubmit));
       nsCOMPtr<nsIContent> newElement(do_QueryInterface(mDefaultSubmitElement));
-      document->ContentStatesChanged(oldElement, newElement,
+      document->ContentStatesChanged(newElement, nsnull,
                                      NS_EVENT_STATE_DEFAULT);
     }
   }

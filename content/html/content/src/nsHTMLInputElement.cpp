@@ -538,6 +538,11 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     }
 
     if (aName == nsGkAtoms::type) {
+      // Changing type means notifying on state changes.  Just start a batch
+      // now.
+      nsIDocument* document = GetCurrentDoc();
+      MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, aNotify);
+      
       if (!aValue) {
         // We're now a text input.  Note that we have to handle this manually,
         // since removing an attribute (which is what happened, since aValue is
@@ -571,6 +576,21 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         if (GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
           LoadImage(src, PR_FALSE, aNotify);
         }
+      }
+
+      if (aNotify && document) {
+        // Changing type affects the applicability of some states.  Just notify
+        // on them all now, just in case.  Note that we can't rely on the
+        // notifications LoadImage or CancelImageRequests might have sent,
+        // because those didn't include all the possibly-changed states in the
+        // mask.
+        document->ContentStatesChanged(this, nsnull,
+                                       NS_EVENT_STATE_CHECKED |
+                                       NS_EVENT_STATE_DEFAULT |
+                                       NS_EVENT_STATE_BROKEN |
+                                       NS_EVENT_STATE_USERDISABLED |
+                                       NS_EVENT_STATE_SUPPRESSED |
+                                       NS_EVENT_STATE_LOADING);
       }
     }
   }
@@ -2556,6 +2576,9 @@ nsHTMLInputElement::DoneCreatingElement()
 PRInt32
 nsHTMLInputElement::IntrinsicState() const
 {
+  // If you add states here, and they're type-dependent, you need to add them
+  // to the type case in AfterSetAttr.
+  
   PRInt32 state = nsGenericHTMLFormElement::IntrinsicState();
   if (mType == NS_FORM_INPUT_CHECKBOX || mType == NS_FORM_INPUT_RADIO) {
     // Check current checked state (:checked)
