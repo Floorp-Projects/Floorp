@@ -186,10 +186,6 @@
 #endif
 
   <broadcasterset id="mainBroadcasterSet">
-#ifdef MOZ_PLACES_NEW_HISTORY_UI
-    <broadcaster id="viewHistoryPlaces" autoCheck="false" label="&historyButton.label;"
-                 oncommand="PlacesCommandHook.showPlacesPopup(event);"/>
-#else
     <broadcaster id="viewBookmarksSidebar" autoCheck="false" label="&bookmarksButton.label;"
                  type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/bookmarks/bookmarksPanel.xul"
                  oncommand="toggleSidebar('viewBookmarksSidebar');"/>
@@ -205,7 +201,6 @@
     <broadcaster id="viewWebPanelsSidebar" autoCheck="false" 
                  type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/web-panels.xul"
                  oncommand="toggleSidebar('viewWebPanelsSidebar');"/>
-#endif
 
     <!-- popup blocking menu items -->
     <broadcaster id="blockedPopupAllowSite" 
@@ -329,11 +324,7 @@
 #ifndef MOZ_WIDGET_GTK2
     <key id="bookmarkAllTabsKb" key="&addCurPageAsCmd.commandkey;" command="Browser:BookmarkAllTabs" modifiers="accel,shift"/>
 #endif
-#ifdef MOZ_PLACES_BOOKMARKS
-    <key id="searchBookmarksKb" key="&searchBookmarksCmd.commandkey;" command="Browser:ShowBookmarks" modifiers="accel"/>
-#else
     <key id="viewBookmarksSidebarKb" key="&bookmarksSidebarCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
-#endif
 #ifdef XP_WIN
 # Cmd+I is conventially mapped to Info on MacOS X, thus it should not be 
 # overridden for other purposes there. 
@@ -348,16 +339,6 @@
     <key id="key_stop_mac" modifiers="accel" key="&stopCmd.macCommandKey;" oncommand="BrowserStop();"/>
 #endif
 
-#ifdef MOZ_PLACES_NEW_HISTORY_UI
-    <key id="searchHistoryKb"
-         key="&historySidebarCmd.commandKey;"
-#ifdef XP_MACOSX
-         modifiers="accel,shift"
-#else
-         modifiers="accel"
-#endif
-         command="viewHistoryPlaces"/>
-#else
     <key id="key_gotoHistory"
          key="&historySidebarCmd.commandKey;"
 #ifdef XP_MACOSX
@@ -366,7 +347,6 @@
          modifiers="accel"
 #endif
          command="viewHistorySidebar"/>
-#endif
 
     <key id="key_textZoomReduce"  key="&textZoomReduceCmd.commandkey;"   command="cmd_textZoomReduce"  modifiers="accel"/>
     <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"  command="cmd_textZoomEnlarge" modifiers="accel"/>
