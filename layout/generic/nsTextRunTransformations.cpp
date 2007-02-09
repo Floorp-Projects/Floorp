@@ -80,16 +80,7 @@ class WrapperTextRun : public gfxTextRun {
 public:
   WrapperTextRun(gfxTextRun* aInner, gfxTextRunFactory::Parameters* aParams)
   // WrapperTextRuns always take Unicode
-    : gfxTextRun(aParams, PR_FALSE), mInner(aInner) {}
-
-  virtual void DrawSpecialString(gfxContext *aContext, gfxPoint aPt, SpecialString aString)
-  { mInner->DrawSpecialString(aContext, aPt, aString); }
-  virtual gfxFloat GetAdvanceWidthSpecialString(SpecialString aString)
-  { return mInner->GetAdvanceWidthSpecialString(aString); }
-  virtual Metrics MeasureTextSpecialString(SpecialString aString, PRBool aTightBoundingBox)
-  { return mInner->MeasureTextSpecialString(aString, aTightBoundingBox); }
-  virtual gfxFont::Metrics GetDecorationMetrics()
-  { return mInner->GetDecorationMetrics(); }
+    : gfxTextRun(aParams), mInner(aInner) {}
 
 protected:
   nsAutoPtr<gfxTextRun> mInner;
@@ -190,11 +181,6 @@ public:
     GermanProviderWrapper wrapper(aBreakProvider, *this);
     TranslateSubstring(&aStart, &aLength);
     return mInner->GetAdvanceWidth(aStart, aLength, &wrapper);
-  }
-  virtual void FlushSpacingCache(PRUint32 aStart)
-  {
-    TranslateOffset(&aStart);
-    mInner->FlushSpacingCache(aStart);
   }
 
   // Tricky forwarding where output conversion is required
@@ -491,7 +477,6 @@ public:
                              gfxFloat* aAdvanceWidthDelta);
   virtual gfxFloat GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
                                    PropertyProvider* aBreakProvider);
-  virtual void FlushSpacingCache(PRUint32 aStart);
   virtual void GetCharFlags(PRUint32 aStart, PRUint32 aLength, PRUint8* aFlags);
   virtual PRUint32 BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
                                        PRBool aLineBreakBefore, gfxFloat aWidth,
@@ -818,19 +803,6 @@ nsMultiTextRun::GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
   return result;
 }
 
-void
-nsMultiTextRun::FlushSpacingCache(PRUint32 aStart)
-{
-  PRUint32 index = FindChildIndexContaining(aStart);
-  ChildRun* child = &mRuns[index];
-  child->mChild->FlushSpacingCache(aStart - child->mOffset);
-  while (index + 1 < mRuns.Length()) {
-    ++index;
-    child = &mRuns[index];
-    child->mChild->FlushSpacingCache(0);
-  }
-}
-
 // ==============================
 // Now define factories that use the above textruns
 // ==============================
@@ -842,7 +814,7 @@ GetParametersForInner(const gfxTextRunFactory::Parameters& aParams,
   gfxTextRunFactory::Parameters params =
     { aParams.mContext, nsnull, aParams.mLangGroup, aDummy,
       aParams.mInitialBreaks, aParams.mInitialBreakCount,
-      aParams.mPixelsToUnits, aParams.mFlags };
+      aParams.mAppUnitsPerDevUnit, aParams.mFlags };
   return params;
 }
 
@@ -947,7 +919,7 @@ public:
     : nsMultiTextRun(aBaseTextRun, aParams), mString(aString, aLength),
       mFactory(aFactory), mRefContext(aParams->mContext),
       mLangGroup(aParams->mLangGroup),
-      mPixelsToUnits(aParams->mPixelsToUnits),
+      mAppUnitsPerDevUnit(aParams->mAppUnitsPerDevUnit),
       mFlags(aParams->mFlags)
   {
     PRUint32 i;
@@ -978,7 +950,7 @@ private:
   nsTArray<PRUint32>                      mLineBreaks;
   nsTArray<PRPackedBool>                  mLineBreakOpportunities;
   nsTArray<nsRefPtr<nsStyleContext> >     mStyles;
-  gfxFloat                                mPixelsToUnits;
+  gfxFloat                                mAppUnitsPerDevUnit;
   PRUint32                                mFlags;
 };
 
@@ -1056,7 +1028,7 @@ nsCaseTransformingTextRun::Build()
   gfxSkipChars dummy;
   gfxTextRunFactory::Parameters innerParams = 
     { mRefContext, nsnull, mLangGroup, &dummy, mLineBreaks.Elements(),
-      mLineBreaks.Length(), mPixelsToUnits,
+      mLineBreaks.Length(), PRUint32(mAppUnitsPerDevUnit),
       mFlags | gfxTextRunFactory::TEXT_IS_PERSISTENT };
 
   if (mFactory->GetInnerTransformingTextRunFactory()) {

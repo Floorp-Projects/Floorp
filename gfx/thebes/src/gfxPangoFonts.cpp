@@ -878,7 +878,7 @@ gfxPangoTextRun::GetAdjustedSpacing(PRUint32 aStart, PRUint32 aEnd,
     if (aStart >= aEnd)
         return;
 
-    aProvider->GetSpacing(aStart, aEnd, aSpacing);
+    aProvider->GetSpacing(aStart, aEnd - aStart, aSpacing);
 
     // XXX the following loop could be avoided if we add some kind of
     // TEXT_HAS_LIGATURES flag
