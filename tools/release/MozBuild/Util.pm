@@ -333,7 +333,7 @@ sub Email {
 
     if (-f $sendmail) {
         open(SENDMAIL, "|$sendmail -oi -t")
-          or die("Can’t fork for sendmail: $!\n");
+          or die("Can't fork for sendmail: $!\n");
         print SENDMAIL "From: $from\n";
         print SENDMAIL "To: $to\n";
         foreach my $cc (@{$ccList}) {
@@ -347,13 +347,13 @@ sub Email {
             $toList .= $cc;
         }
         open(SENDMAIL, "|$blat -to $toList -subject \"$subject\"")
-          or die("Can’t fork for blat: $!\n");
+          or die("Can't fork for blat: $!\n");
     } else {
         die("ASSERT: cannot find $sendmail or $blat");
     }
 
     print SENDMAIL "$message";
-    close(SENDMAIL) or warn "sendmail didn’t close nicely: $!";
+    close(SENDMAIL) or warn "sendmail didn't close nicely: $!";
 }
 
 sub DownloadFile {
