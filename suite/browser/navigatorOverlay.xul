@@ -121,7 +121,7 @@
     <!-- Misc -->
           <!-- the amazing fishcam dept. -->
     <key key="f" modifiers="control,alt" oncommand="loadURI('http://home.netscape.com/fishcam/fishcam.html');"/>
-    <key id="goUpKb" keycode="VK_UP" modifiers="alt" command="Browser:Up"/>
+    <key id="goUpKb" keycode="VK_UP" command="Browser:Up" modifiers="alt"/>
     <key id="key_gotoHistory"  key="&history.commandKey;"        oncommand="toHistory();" modifiers="accel"/>
     <keyset id="viewZoomKeys"/>
     <keyset id="navigationKeys"/>  
