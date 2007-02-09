@@ -104,7 +104,6 @@
 #define XML_HTTP_REQUEST_XSITEENABLED   (1 << 10) // Internal
 #define XML_HTTP_REQUEST_SYNCLOOPING    (1 << 11) // Internal
 #define XML_HTTP_REQUEST_MULTIPART      (1 << 12) // Internal
-#define XML_HTTP_REQUEST_ROOTED         (1 << 13) // Internal
 
 #define XML_HTTP_REQUEST_LOADSTATES         \
   (XML_HTTP_REQUEST_UNINITIALIZED |         \
@@ -946,14 +945,13 @@ nsXMLHttpRequest::NotifyEventListeners(const nsCOMArray<nsIDOMEventListener>& aL
 void
 nsXMLHttpRequest::ClearEventListeners()
 {
-  if (mState & XML_HTTP_REQUEST_ROOTED) {
-    mState &= ~XML_HTTP_REQUEST_ROOTED;
-  }
-
   // This isn't *really* needed anymore now that we use a cycle
   // collector, but we may as well keep it for safety (against leaks)
   // and compatibility, and also for the code to clear the first
   // listener arrays (called from the destructor).
+  // XXXbz per spec we shouldn't be doing this, actually.  And we
+  // don't need to clear the arrays from the destructor now that we're
+  // using nsCOMArray.
 
   mLoadEventListeners.Clear();
   mErrorEventListeners.Clear();
@@ -1709,12 +1707,6 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
         break;
       }
     }
-  } else {
-    // If we're asynchronous, we need to prevent our event listeners
-    // from being garbage collected even if this object becomes
-    // unreachable from script, since they can fire as a result of our
-    // reachability from the network stack.
-    mState |= XML_HTTP_REQUEST_ROOTED;
   }
 
   if (!mChannel) {
