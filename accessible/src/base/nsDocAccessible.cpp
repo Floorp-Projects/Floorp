@@ -890,7 +890,8 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
     return;
   }
 
-  if (aAttribute == nsAccessibilityAtoms::href || aAttribute == nsAccessibilityAtoms::onclick) {
+  if (aAttribute == nsAccessibilityAtoms::href || aAttribute == nsAccessibilityAtoms::onclick ||
+      aAttribute == nsAccessibilityAtoms::droppable) {
     InvalidateCacheSubtree(aContent, nsIAccessibleEvent::EVENT_REORDER);
     return;
   }
