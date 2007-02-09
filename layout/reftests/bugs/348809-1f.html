@@ -11,7 +11,7 @@ input { display: none }
 <input type="checkbox" checked="checked" id="foo"><span>There should be no red</span>
  <script>
   var foo = document.body.offsetWidth;
-  onload='document.getElementById("foo").removeAttribute("checked");'
+  document.getElementById("foo").removeAttribute("checked");
 </script>
 </body>
 </html>
