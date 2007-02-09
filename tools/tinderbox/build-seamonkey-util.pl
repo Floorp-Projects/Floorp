@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.350 $ ';
+$::UtilsVersion = '$Revision: 1.351 $ ';
 
 package TinderUtils;
 
@@ -1471,6 +1471,33 @@ sub PrintEnv {
     my $key;
     foreach $key (sort keys %ENV) {
         print_log "$key=$ENV{$key}\n";
+    }
+
+    # If we're on auto-update, print out the version/branch of the configs
+    # we're using to do this build.
+    if (defined($Settings::TboxBuildConfigDir)) {
+        print_log "-->Tinderbox Config Info<--------------------------\n";
+        my $confDir = $Settings::TboxBuildConfigDir;
+        if (not(-d "$confDir/CVS")) {
+            print_log '--config-cvsup-dir is set, but refers to an invalid ' .
+             "(not-CVS) directory\n";
+        } else {
+            my $cwd = get_system_cwd();
+            if (chdir($confDir)) {
+                my $status = run_shell_command_with_timeout('cvs stat', 
+                 $co_default_timeout); 
+
+                if ($status->{'exit_value'} != 0) {
+                    print_log "cvs stat of configs in $confDir FAILED\n";
+                }
+                
+                chdir($cwd) or die "Couldn't find my way back: $!\n";
+            } else {
+                print_log "chdir() to $confDir FAILED\n";
+            }
+        }
+
+        print_log "-->END Tinderbox Configuration Information<--------------\n";
     }
 
     # Print out mozconfig if found.
