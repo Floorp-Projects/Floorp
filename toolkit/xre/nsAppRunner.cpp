@@ -98,6 +98,12 @@
 #include "nsIWindowWatcher.h"
 #include "nsIXULAppInfo.h"
 #include "nsIXULRuntime.h"
+#include "nsPIDOMWindow.h"
+#include "nsIBaseWindow.h"
+#include "nsIWidget.h"
+#include "nsIDocShell.h"
+#include "nsAppShellCID.h"
+
 #ifdef XP_WIN
 #include "nsIWinAppHelper.h"
 #endif
@@ -265,6 +271,9 @@ static char **gRestartArgv;
 #if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
 #include <gtk/gtk.h>
 #endif //MOZ_WIDGET_GTK || MOZ_WIDGET_GTK2
+#if defined(MOZ_WIDGET_GTK2)
+#include "nsGTKToolkit.h"
+#endif
 
 #if defined(MOZ_WIDGET_QT)
 #include <qapplication.h>
@@ -1122,7 +1131,7 @@ DumpVersion()
 // use int here instead of a PR type since it will be returned
 // from main - just to keep types consistent
 static int
-HandleRemoteArgument(const char* remote)
+HandleRemoteArgument(const char* remote, const char* aDesktopStartupID)
 {
   nsresult rv;
   ArgResult ar;
@@ -1163,7 +1172,7 @@ HandleRemoteArgument(const char* remote)
   nsXPIDLCString response;
   PRBool success = PR_FALSE;
   rv = client.SendCommand(program.get(), username, profile, remote,
-                           getter_Copies(response), &success);
+                          aDesktopStartupID, getter_Copies(response), &success);
   // did the command fail?
   if (NS_FAILED(rv)) {
     PR_fprintf(PR_STDERR, "Error: Failed to send command: %s\n",
@@ -1180,7 +1189,7 @@ HandleRemoteArgument(const char* remote)
 }
 
 static PRBool
-RemoteCommandLine()
+RemoteCommandLine(const char* aDesktopStartupID)
 {
   nsresult rv;
   ArgResult ar;
@@ -1212,7 +1221,7 @@ RemoteCommandLine()
   nsXPIDLCString response;
   PRBool success = PR_FALSE;
   rv = client.SendCommandLine(program.get(), username, nsnull,
-                              gArgc, gArgv,
+                              gArgc, gArgv, aDesktopStartupID,
                               getter_Copies(response), &success);
   // did the command fail?
   if (NS_FAILED(rv) || !success)
@@ -2114,6 +2123,52 @@ public:
 #ifdef MOZ_WIDGET_GTK2
 #include "prlink.h"
 typedef void (*_g_set_application_name_fn)(const gchar *application_name);
+typedef void (*_gtk_window_set_auto_startup_notification_fn)(gboolean setting);
+
+static PRFuncPtr FindFunction(const char* aName)
+{
+  PRLibrary *lib = nsnull;
+  PRFuncPtr result = PR_FindFunctionSymbolAndLibrary(aName, &lib);
+  // Since the library was already loaded, we can safely unload it here.
+  if (lib) {
+    PR_UnloadLibrary(lib);
+  }
+  return result;
+}
+
+static nsIWidget* GetMainWidget(nsIDOMWindow* aWindow)
+{
+  // get the native window for this instance
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aWindow));
+  NS_ENSURE_TRUE(window, nsnull);
+
+  nsCOMPtr<nsIBaseWindow> baseWindow
+    (do_QueryInterface(window->GetDocShell()));
+  NS_ENSURE_TRUE(baseWindow, nsnull);
+
+  nsCOMPtr<nsIWidget> mainWidget;
+  baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
+  return mainWidget;
+}
+
+static nsGTKToolkit* GetGTKToolkit()
+{
+  nsCOMPtr<nsIAppShellService> svc = do_GetService(NS_APPSHELLSERVICE_CONTRACTID);
+  if (!svc)
+    return nsnull;
+  nsCOMPtr<nsIDOMWindowInternal> window;
+  svc->GetHiddenDOMWindow(getter_AddRefs(window));
+  if (!window)
+    return nsnull;
+  nsIWidget* widget = GetMainWidget(window);
+  if (!widget)
+    return nsnull;
+  nsIToolkit* toolkit = widget->GetToolkit();
+  if (!toolkit)
+    return nsnull;
+  return NS_STATIC_CAST(nsGTKToolkit*, toolkit);
+}
+
 #endif
 
 /** 
@@ -2359,6 +2414,16 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       return 0;
     }
 
+#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2) || defined(MOZ_ENABLE_XREMOTE)
+    // Stash DESKTOP_STARTUP_ID in malloc'ed memory because gtk_init will clear it.
+#define HAVE_DESKTOP_STARTUP_ID
+    const char* desktopStartupIDEnv = PR_GetEnv("DESKTOP_STARTUP_ID");
+    nsCAutoString desktopStartupID;
+    if (desktopStartupIDEnv) {
+      desktopStartupID.Assign(desktopStartupIDEnv);
+    }
+#endif
+
 #if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
     // setup for private colormap.  Ideally we'd like to do this
     // in nsAppShell::Create, but we need to get in before gtk
@@ -2375,14 +2440,15 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
 #if defined(MOZ_WIDGET_GTK2)
     // g_set_application_name () is only defined in glib2.2 and higher.
-    PRLibrary *glib2 = nsnull;
     _g_set_application_name_fn _g_set_application_name =
-      (_g_set_application_name_fn)PR_FindFunctionSymbolAndLibrary("g_set_application_name", &glib2);
+      (_g_set_application_name_fn)FindFunction("g_set_application_name");
     if (_g_set_application_name) {
       _g_set_application_name(gAppData->name);
     }
-    if (glib2) {
-      PR_UnloadLibrary(glib2);
+    _gtk_window_set_auto_startup_notification_fn _gtk_window_set_auto_startup_notification =
+      (_gtk_window_set_auto_startup_notification_fn)FindFunction("gtk_window_set_auto_startup_notification");
+    if (_gtk_window_set_auto_startup_notification) {
+      _gtk_window_set_auto_startup_notification(PR_FALSE);
     }
 #endif
 
@@ -2451,13 +2517,15 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       PR_fprintf(PR_STDERR, "Error: -remote requires an argument\n");
       return 1;
     }
+    const char* desktopStartupIDPtr =
+      desktopStartupID.IsEmpty() ? nsnull : desktopStartupID.get();
     if (ar) {
-      return HandleRemoteArgument(xremotearg);
+      return HandleRemoteArgument(xremotearg, desktopStartupIDPtr);
     }
 
     if (!PR_GetEnv("MOZ_NO_REMOTE")) {
       // Try to remote the entire command line. If this fails, start up normally.
-      if (RemoteCommandLine())
+      if (RemoteCommandLine(desktopStartupIDPtr))
         return 0;
     }
 #endif
@@ -2677,6 +2745,13 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
         NS_TIMELINE_LEAVE("appStartup->CreateHiddenWindow");
         NS_ENSURE_SUCCESS(rv, 1);
 
+#if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_WIDGET_GTK2)
+        nsRefPtr<nsGTKToolkit> toolkit = GetGTKToolkit();
+        if (toolkit && !desktopStartupID.IsEmpty()) {
+          toolkit->SetDesktopStartupID(desktopStartupID);
+        }
+#endif
+
         // Extension Compatibility Checking and Startup
         if (gAppData->flags & NS_XRE_ENABLE_EXTENSION_MANAGER) {
           nsCOMPtr<nsIExtensionManager> em(do_GetService("@mozilla.org/extensions/manager;1"));
@@ -2830,6 +2905,21 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
         static char kEnvVar[MAXPATHLEN];
         sprintf(kEnvVar, "XRE_BINARY_PATH=%s", gBinaryPath);
         PR_SetEnv(kEnvVar);
+      }
+#endif
+
+#if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_TOOLKIT_GTK2)
+      nsGTKToolkit* toolkit = GetGTKToolkit();
+      if (toolkit) {
+        nsCAutoString currentDesktopStartupID;
+        toolkit->GetDesktopStartupID(&currentDesktopStartupID);
+        if (!currentDesktopStartupID.IsEmpty()) {
+          nsCAutoString desktopStartupEnv;
+          desktopStartupEnv.AssignLiteral("DESKTOP_STARTUP_ID=");
+          desktopStartupEnv.Append(currentDesktopStartupID);
+          // Leak it with extreme prejudice!
+          PR_SetEnv(ToNewCString(desktopStartupEnv));
+        }
       }
 #endif
 

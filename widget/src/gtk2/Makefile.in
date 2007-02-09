@@ -127,6 +127,7 @@ EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \
 		-lgkgfx \
 		-lgtkxtbin \
+                $(MOZ_STARTUP_NOTIFICATION_LIBS) \
 		$(XLDFLAGS) \
 		$(XLIBS) \
 		$(MOZ_GTK2_LIBS)
@@ -140,6 +141,7 @@ endif
 
 EXPORTS		= \
 		nsIGdkPixbufImage.h \
+                nsGTKToolkit.h \
 		nsIImageToPixbuf.h \
 		mozdrawingarea.h \
 		mozcontainer.h \
@@ -153,8 +155,8 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-CFLAGS		+= $(MOZ_GTK2_CFLAGS)
-CXXFLAGS	+= $(MOZ_GTK2_CFLAGS)
+CFLAGS          += $(MOZ_GTK2_CFLAGS) $(MOZ_STARTUP_NOTIFICATION_CFLAGS)
+CXXFLAGS        += $(MOZ_GTK2_CFLAGS) $(MOZ_STARTUP_NOTIFICATION_CFLAGS)
 
 DEFINES         += -DUSE_XIM
 

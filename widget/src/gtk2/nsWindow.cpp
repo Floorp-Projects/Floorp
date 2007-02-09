@@ -41,7 +41,7 @@
 #include "prlink.h"
 
 #include "nsWindow.h"
-#include "nsToolkit.h"
+#include "nsGTKToolkit.h"
 #include "nsIDeviceContext.h"
 #include "nsIRenderingContext.h"
 #include "nsIRegion.h"
@@ -59,6 +59,11 @@
 #include <gtk/gtkwindow.h>
 #include <gdk/gdkx.h>
 #include <gdk/gdkkeysyms.h>
+
+#ifdef MOZ_ENABLE_STARTUP_NOTIFICATION
+#define SN_API_NOT_YET_FROZEN
+#include <startup-notification-1.0/libsn/sn.h>
+#endif
 
 #include "gtk2xtbin.h"
 
@@ -697,6 +702,75 @@ nsWindow::Enable(PRBool aState)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+typedef void (* SetUserTimeFunc)(GdkWindow* aWindow, guint32 aTimestamp);
+
+// This will become obsolete when new GTK APIs are widely supported,
+// as described here: http://bugzilla.gnome.org/show_bug.cgi?id=347375
+static void
+SetUserTimeAndStartupIDForActivatedWindow(GtkWidget* aWindow)
+{
+    nsCOMPtr<nsIToolkit> toolkit;
+    NS_GetCurrentToolkit(getter_AddRefs(toolkit));
+    if (!toolkit)
+        return;
+
+    nsGTKToolkit* GTKToolkit = NS_STATIC_CAST(nsGTKToolkit*,
+        NS_STATIC_CAST(nsIToolkit*, toolkit));
+    nsCAutoString desktopStartupID;
+    GTKToolkit->GetDesktopStartupID(&desktopStartupID);
+    if (desktopStartupID.IsEmpty()) {
+        // We don't have the data we need. Fall back to an
+        // approximation ... using the timestamp of the remote command
+        // being received as a guess for the timestamp of the user event
+        // that triggered it.
+        PRUint32 timestamp = GTKToolkit->GetFocusTimestamp();
+        if (timestamp) {
+            gdk_window_focus(aWindow->window, timestamp);
+            GTKToolkit->SetFocusTimestamp(0);
+        }
+        return;
+    }
+ 
+#ifdef MOZ_ENABLE_STARTUP_NOTIFICATION
+    GdkDrawable* drawable = GDK_DRAWABLE(aWindow->window);
+    GtkWindow* win = GTK_WINDOW(aWindow);
+    if (!win) {
+        NS_WARNING("Passed in widget was not a GdkWindow!");
+        return;
+    }
+    GdkScreen* screen = gtk_window_get_screen(win);
+    SnDisplay* snd =
+        sn_display_new(gdk_x11_drawable_get_xdisplay(drawable), nsnull, nsnull);
+    if (!snd)
+        return;
+    SnLauncheeContext* ctx =
+        sn_launchee_context_new(snd, gdk_screen_get_number(screen),
+                                desktopStartupID.get());
+    if (!ctx) {
+        sn_display_unref(snd);
+        return;
+    }
+
+    if (sn_launchee_context_get_id_has_timestamp(ctx)) {
+        PRLibrary* gtkLibrary;
+        SetUserTimeFunc setUserTimeFunc = (SetUserTimeFunc)
+            PR_FindFunctionSymbolAndLibrary("gdk_x11_window_set_user_time", &gtkLibrary);
+        if (setUserTimeFunc) {
+            setUserTimeFunc(aWindow->window, sn_launchee_context_get_timestamp(ctx));
+            PR_UnloadLibrary(gtkLibrary);
+        }
+    }
+
+    sn_launchee_context_setup_window(ctx, gdk_x11_drawable_get_xid(drawable));
+    sn_launchee_context_complete(ctx);
+
+    sn_launchee_context_unref(ctx);
+    sn_display_unref(snd);
+#endif
+ 
+    GTKToolkit->SetDesktopStartupID(EmptyCString());
+} 
+
 NS_IMETHODIMP
 nsWindow::SetFocus(PRBool aRaise)
 {
@@ -1207,7 +1281,7 @@ nsWindow::GetNativeData(PRUint32 aDataType)
 
     case NS_NATIVE_GRAPHIC: {
         NS_ASSERTION(nsnull != mToolkit, "NULL toolkit, unable to get a GC");
-        return (void *)NS_STATIC_CAST(nsToolkit *, mToolkit)->GetSharedGC();
+        return (void *)NS_STATIC_CAST(nsGTKToolkit *, mToolkit)->GetSharedGC();
         break;
     }
 
@@ -3183,13 +3257,18 @@ nsWindow::NativeShow (PRBool  aAction)
         // is shown.
         // XXX that may or may not be true for GTK+ 2.x
         if (mTransparencyBitmap) {
-          ApplyTransparencyBitmap();
+            ApplyTransparencyBitmap();
         }
 
         // unset our flag now that our window has been shown
         mNeedsShow = PR_FALSE;
 
         if (mIsTopLevel) {
+            // Set up usertime/startupID metadata for the created window.
+            if (mWindowType != eWindowType_invisible) {
+                SetUserTimeAndStartupIDForActivatedWindow(mShell);
+            }
+
             moz_drawingarea_set_visibility(mDrawingarea, aAction);
             gtk_widget_show(GTK_WIDGET(mContainer));
             gtk_widget_show(mShell);
