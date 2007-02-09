@@ -379,20 +379,10 @@ public:
                             PropertyProvider* aBreakProvider,
                             gfxFloat* aAdvanceWidth)
     { NS_ERROR("NOT IMPLEMENTED"); }
-    virtual void DrawSpecialString(gfxContext* aContext, gfxPoint aPt,
-                                   SpecialString aString)
-    { NS_ERROR("NOT IMPLEMENTED"); }
     virtual Metrics MeasureText(PRUint32 aStart, PRUint32 aLength,
                                 PRBool aTightBoundingBox,
                                 PropertyProvider* aBreakProvider)
     { NS_ERROR("NOT IMPLEMENTED"); return Metrics(); }
-    virtual Metrics MeasureTextSpecialString(SpecialString aString,
-                                             PRBool aTightBoundingBox)
-    { NS_ERROR("NOT IMPLEMENTED"); return Metrics(); }
-    virtual gfxFloat GetAdvanceWidthSpecialString(SpecialString aString)
-    { NS_ERROR("NOT IMPLEMENTED"); return 0; }
-    virtual gfxFont::Metrics GetDecorationMetrics()
-    { NS_ERROR("NOT IMPLEMENTED"); return gfxFont::Metrics(); }
     virtual void SetLineBreaks(PRUint32 aStart, PRUint32 aLength,
                                PRBool aLineBreakBefore, PRBool aLineBreakAfter,
                                TextProvider* aProvider,
@@ -406,8 +396,6 @@ public:
                                          PRBool* aUsedHyphenation,
                                          PRUint32* aLastBreak)
     { NS_ERROR("NOT IMPLEMENTED"); return 0; }
-    virtual void FlushSpacingCache(PRUint32 aStart)
-    { NS_ERROR("NOT IMPLEMENTED"); }
 
     virtual void Draw(gfxContext *aContext, gfxPoint aPt,
                       PRUint32 aStart, PRUint32 aLength,
