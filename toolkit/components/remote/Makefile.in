@@ -56,7 +56,8 @@ REQUIRES = \
 	string \
 	appcomps \
 	toolkitcomps \
-	appcomps \
+        appshell \
+        layout \
 	xulapp \
 	widget \
 	gfx \

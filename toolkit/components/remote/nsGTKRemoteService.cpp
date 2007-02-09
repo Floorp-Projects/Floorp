@@ -57,12 +57,18 @@
 #include "nsIServiceManager.h"
 #include "nsIWeakReference.h"
 #include "nsIWidget.h"
+#include "nsIAppShellService.h"
+#include "nsAppShellCID.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "prprf.h"
 #include "prenv.h"
 #include "nsCRT.h"
+
+#ifdef MOZ_WIDGET_GTK2
+#include "nsGTKToolkit.h"
+#endif
 
 #ifdef MOZ_XUL_APP
 #include "nsICommandLineRunner.h"
@@ -154,19 +160,45 @@ nsGTKRemoteService::StartupHandler(const void* aKey,
   return PL_DHASH_NEXT;
 }
 
-NS_IMETHODIMP
-nsGTKRemoteService::RegisterWindow(nsIDOMWindow* aWindow)
+static nsIWidget* GetMainWidget(nsIDOMWindow* aWindow)
 {
   // get the native window for this instance
   nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aWindow));
-  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(window, nsnull);
 
   nsCOMPtr<nsIBaseWindow> baseWindow
     (do_QueryInterface(window->GetDocShell()));
-  NS_ENSURE_TRUE(baseWindow, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(baseWindow, nsnull);
 
   nsCOMPtr<nsIWidget> mainWidget;
   baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
+  return mainWidget;
+}
+
+#ifdef MOZ_WIDGET_GTK2
+static nsGTKToolkit* GetGTKToolkit()
+{
+  nsCOMPtr<nsIAppShellService> svc = do_GetService(NS_APPSHELLSERVICE_CONTRACTID);
+  if (!svc)
+    return nsnull;
+  nsCOMPtr<nsIDOMWindowInternal> window;
+  svc->GetHiddenDOMWindow(getter_AddRefs(window));
+  if (!window)
+    return nsnull;
+  nsIWidget* widget = GetMainWidget(window);
+  if (!widget)
+    return nsnull;
+  nsIToolkit* toolkit = widget->GetToolkit();
+  if (!toolkit)
+    return nsnull;
+  return NS_STATIC_CAST(nsGTKToolkit*, toolkit);
+}
+#endif
+
+NS_IMETHODIMP
+nsGTKRemoteService::RegisterWindow(nsIDOMWindow* aWindow)
+{
+  nsIWidget* mainWidget = GetMainWidget(aWindow);
   NS_ENSURE_TRUE(mainWidget, NS_ERROR_FAILURE);
 
   // walk up the widget tree and find the toplevel window in the
@@ -258,7 +290,7 @@ nsGTKRemoteService::EnsureAtoms(void)
 
 #ifndef MOZ_XUL_APP
 const char*
-nsGTKRemoteService::HandleCommand(char* aCommand, nsIDOMWindow* aWindow)
+nsGTKRemoteService::HandleCommand(char* aCommand, nsIDOMWindow* aWindow, PRUint32 aTimestamp)
 {
   nsresult rv;
 
@@ -281,8 +313,60 @@ nsGTKRemoteService::HandleCommand(char* aCommand, nsIDOMWindow* aWindow)
 }
 
 #else //MOZ_XUL_APP
+
+// Set desktop startup ID to the passed ID, if there is one, so that any created
+// windows get created with the right window manager metadata, and any windows
+// that get new tabs and are activated also get the right WM metadata.
+// If there is no desktop startup ID, then use the X event's timestamp
+// for _NET_ACTIVE_WINDOW when the window gets focused or shown.
+static void
+SetDesktopStartupIDOrTimestamp(const nsACString& aDesktopStartupID,
+                               PRUint32 aTimestamp) {
+#ifdef MOZ_WIDGET_GTK2
+  nsGTKToolkit* toolkit = GetGTKToolkit();
+  if (!toolkit)
+    return;
+  if (!aDesktopStartupID.IsEmpty()) {
+    toolkit->SetDesktopStartupID(aDesktopStartupID);
+  } else {
+    toolkit->SetFocusTimestamp(aTimestamp);
+  }
+#endif
+}
+
+static PRBool
+FindExtensionParameterInCommand(const char* aParameterName,
+                                const nsACString& aCommand,
+                                char aSeparator,
+                                nsACString* aValue)
+{
+  nsCAutoString searchFor;
+  searchFor.Append(aSeparator);
+  searchFor.Append(aParameterName);
+  searchFor.Append('=');
+
+  nsACString::const_iterator start, end;
+  aCommand.BeginReading(start);
+  aCommand.EndReading(end);
+  if (!FindInReadable(searchFor, start, end))
+    return PR_FALSE;
+
+  nsACString::const_iterator charStart, charEnd;
+  charStart = end;
+  aCommand.EndReading(charEnd);
+  nsACString::const_iterator idStart = charStart, idEnd;
+  if (FindCharInReadable(aSeparator, charStart, charEnd)) {
+    idEnd = charStart;
+  } else {
+    idEnd = charEnd;
+  }
+  *aValue = nsDependentCSubstring(idStart, idEnd);
+  return PR_TRUE;
+}
+
 const char*
-nsGTKRemoteService::HandleCommand(char* aCommand, nsIDOMWindow* aWindow)
+nsGTKRemoteService::HandleCommand(char* aCommand, nsIDOMWindow* aWindow,
+                                  PRUint32 aTimestamp)
 {
   nsresult rv;
 
@@ -312,6 +396,12 @@ nsGTKRemoteService::HandleCommand(char* aCommand, nsIDOMWindow* aWindow)
 #endif
 
   if (!command.EqualsLiteral("ping")) {
+    nsCAutoString desktopStartupID;
+    nsDependentCString cmd(aCommand);
+    FindExtensionParameterInCommand("DESKTOP_STARTUP_ID",
+                                    cmd, '\n',
+                                    &desktopStartupID);
+
     char* argv[3] = {"dummyappname", "-remote", aCommand};
     rv = cmdline->Init(3, argv, nsnull, nsICommandLine::STATE_REMOTE_EXPLICIT);
     if (NS_FAILED(rv))
@@ -319,6 +409,8 @@ nsGTKRemoteService::HandleCommand(char* aCommand, nsIDOMWindow* aWindow)
 
     if (aWindow)
       cmdline->SetWindowContext(aWindow);
+
+    SetDesktopStartupIDOrTimestamp(desktopStartupID, aTimestamp);
 
     rv = cmdline->Run();
     if (NS_ERROR_ABORT == rv)
@@ -331,7 +423,8 @@ nsGTKRemoteService::HandleCommand(char* aCommand, nsIDOMWindow* aWindow)
 }
 
 const char*
-nsGTKRemoteService::HandleCommandLine(char* aBuffer, nsIDOMWindow* aWindow)
+nsGTKRemoteService::HandleCommandLine(char* aBuffer, nsIDOMWindow* aWindow,
+                                      PRUint32 aTimestamp)
 {
   nsresult rv;
 
@@ -362,6 +455,8 @@ nsGTKRemoteService::HandleCommandLine(char* aBuffer, nsIDOMWindow* aWindow)
   if (NS_FAILED(rv))
     return "509 internal error";
 
+  nsCAutoString desktopStartupID;
+
   char **argv = (char**) malloc(sizeof(char*) * argc);
   if (!argv) return "509 internal error";
 
@@ -370,6 +465,12 @@ nsGTKRemoteService::HandleCommandLine(char* aBuffer, nsIDOMWindow* aWindow)
   for (int i = 0; i < argc; ++i) {
     argv[i] = aBuffer + TO_LITTLE_ENDIAN32(offset[i]);
 
+    if (i == 0) {
+      nsDependentCString cmd(argv[0]);
+      FindExtensionParameterInCommand("DESKTOP_STARTUP_ID",
+                                      cmd, ' ',
+                                      &desktopStartupID);
+    }
 #ifdef DEBUG_bsmedberg
     printf("  argv[%i]:\t%s\n", i, argv[i]);
 #endif
@@ -384,7 +485,10 @@ nsGTKRemoteService::HandleCommandLine(char* aBuffer, nsIDOMWindow* aWindow)
   if (aWindow)
     cmdline->SetWindowContext(aWindow);
 
+  SetDesktopStartupIDOrTimestamp(desktopStartupID, aTimestamp);
+
   rv = cmdline->Run();
+  
   if (NS_ERROR_ABORT == rv)
     return "500 command not parseable";
   
@@ -484,7 +588,7 @@ nsGTKRemoteService::HandlePropertyChange(GtkWidget *aWidget,
       return FALSE;
 
     // cool, we got the property data.
-    const char *response = HandleCommand(data, window);
+    const char *response = HandleCommand(data, window, pevent->time);
 
     // put the property onto the window as the response
     XChangeProperty (GDK_DISPLAY(), GDK_WINDOW_XWINDOW(pevent->window),
@@ -529,7 +633,7 @@ nsGTKRemoteService::HandlePropertyChange(GtkWidget *aWidget,
       return FALSE;
 
     // cool, we got the property data.
-    const char *response = HandleCommandLine(data, window);
+    const char *response = HandleCommandLine(data, window, pevent->time);
 
     // put the property onto the window as the response
     XChangeProperty (GDK_DISPLAY(), GDK_WINDOW_XWINDOW(pevent->window),

@@ -76,6 +76,10 @@ public:
    * @param aCommand This is the command that is passed to the server.
    * Please see the additional information located at:
    * http://www.mozilla.org/unix/remote.html
+   * 
+   * @param aDesktopStartupID the contents of the DESKTOP_STARTUP_ID environment
+   * variable defined by the Startup Notification specification
+   * http://standards.freedesktop.org/startup-notification-spec/startup-notification-0.1.txt
    *
    * @param aResponse If there is a response, it will be here.  This
    * includes error messages.  The string is allocated using stdlib
@@ -85,10 +89,15 @@ public:
    */
   virtual nsresult SendCommand(const char *aProgram, const char *aUsername,
                                const char *aProfile, const char *aCommand,
+                               const char* aDesktopStartupID,
                                char **aResponse, PRBool *aSucceeded) = 0;
 
   /**
    * Send a complete command line to a running instance.
+   *
+   * @param aDesktopStartupID the contents of the DESKTOP_STARTUP_ID environment
+   * variable defined by the Startup Notification specification
+   * http://standards.freedesktop.org/startup-notification-spec/startup-notification-0.1.txt
    *
    * @see sendCommand
    * @param argc The number of command-line arguments.
@@ -97,6 +106,7 @@ public:
   virtual nsresult SendCommandLine(const char *aProgram, const char *aUsername,
                                    const char *aProfile,
                                    PRInt32 argc, char **argv,
+                                   const char* aDesktopStartupID,
                                    char **aResponse, PRBool *aSucceeded) = 0;
 };
 
