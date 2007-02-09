@@ -40,7 +40,6 @@
 #define nsXMLElement_h___
 
 #include "nsIDOMElement.h"
-#include "nsIXMLContent.h"
 #include "nsGenericElement.h"
 
 class nsIDocShell;
@@ -64,11 +63,9 @@ public:
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  // nsIXMLContent
-  NS_IMETHOD MaybeTriggerAutoLink(nsIDocShell *aShell);
-
   // nsIContent
   virtual PRBool IsLink(nsIURI** aURI) const;
+  virtual nsresult MaybeTriggerAutoLink(nsIDocShell *aShell);
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
 
   // nsGenericElement specializations

@@ -58,7 +58,7 @@ class nsSVGCoordCtx;
 class nsSVGLength2;
 class nsSVGNumber2;
 
-class nsSVGElement : public nsGenericElement,    // :nsIXMLContent:nsIContent
+class nsSVGElement : public nsGenericElement,    // nsIContent
                      public nsISVGValueObserver, 
                      public nsSupportsWeakReference, // :nsISupportsWeakReference
                      public nsISVGContent

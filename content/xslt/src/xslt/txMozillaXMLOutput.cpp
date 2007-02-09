@@ -48,7 +48,7 @@
 #include "nsIParser.h"
 #include "nsIRefreshURI.h"
 #include "nsPIDOMWindow.h"
-#include "nsIXMLContent.h"
+#include "nsIContent.h"
 #include "nsContentCID.h"
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"

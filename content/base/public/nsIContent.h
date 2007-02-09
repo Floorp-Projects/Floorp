@@ -59,11 +59,12 @@ class nsRuleWalker;
 class nsAttrValue;
 class nsAttrName;
 class nsTextFragment;
+class nsIDocShell;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x43511041, 0xae82, 0x45aa, \
-  { 0xb9, 0x48, 0xd6, 0x1d, 0x81, 0xc9, 0xc3, 0x25 } }
+{ 0x53a5757c, 0xf602, 0x41ee, \
+  { 0xac, 0x55, 0xfc, 0x3c, 0x89, 0x4e, 0xb8, 0x97 } }
 
 
 // hack to make egcs / gcc 2.95.2 happy
@@ -560,6 +561,26 @@ public:
    * XXXjwatt: IMO IsInteractiveLink would be a better name.
    */
   virtual PRBool IsLink(nsIURI** aURI) const = 0;
+
+  /**
+   * Give this element a chance to fire links that should be fired
+   * automatically when loaded. If the element was an autoloading link
+   * and it was successfully handled, we will throw special nsresult values.
+   *
+   * @param aShell the current doc shell (to possibly load the link on)
+   * @throws NS_OK if nothing happened
+   * @throws NS_XML_AUTOLINK_EMBED if the caller is loading the link embedded
+   * @throws NS_XML_AUTOLINK_NEW if the caller is loading the link in a new
+   *         window
+   * @throws NS_XML_AUTOLINK_REPLACE if it is loading a link that will replace
+   *         the current window (and thus the caller must stop parsing)
+   * @throws NS_XML_AUTOLINK_UNDEFINED if it is loading in any other way--in
+   *         which case, the caller should stop parsing as well.
+   */
+  virtual nsresult MaybeTriggerAutoLink(nsIDocShell *aShell)
+  {
+    return NS_OK;
+  }
 
   /**
    * This method is called when the parser finishes creating the element.  This

@@ -431,8 +431,6 @@ nsXULElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
         inst = NS_STATIC_CAST(nsIDOMElement *, this);
     } else if (aIID.Equals(NS_GET_IID(nsIDOMXULElement))) {
         inst = NS_STATIC_CAST(nsIDOMXULElement *, this);
-    } else if (aIID.Equals(NS_GET_IID(nsIXMLContent))) {
-        inst = NS_STATIC_CAST(nsIXMLContent *, this);
     } else if (aIID.Equals(NS_GET_IID(nsIScriptEventHandlerOwner))) {
         inst = NS_STATIC_CAST(nsIScriptEventHandlerOwner*,
                               new nsXULElement::nsScriptEventHandlerOwnerTearoff(this));

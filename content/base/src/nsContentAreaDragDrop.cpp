@@ -79,7 +79,6 @@
 #include "nsIDocShell.h"
 #include "nsIContent.h"
 #include "nsIImageLoadingContent.h"
-#include "nsIXMLContent.h"
 #include "nsINameSpaceManager.h"
 #include "nsUnicharUtils.h"
 #include "nsIURL.h"

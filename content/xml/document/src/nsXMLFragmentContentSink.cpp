@@ -45,7 +45,7 @@
 #include "nsIParser.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocumentFragment.h"
-#include "nsIXMLContent.h"
+#include "nsIContent.h"
 #include "nsGkAtoms.h"
 #include "nsINodeInfo.h"
 #include "nsNodeInfoManager.h"

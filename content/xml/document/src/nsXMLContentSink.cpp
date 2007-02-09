@@ -45,7 +45,7 @@
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMNSDocument.h"
-#include "nsIXMLContent.h"
+#include "nsIContent.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsIDocShell.h"
@@ -1433,15 +1433,12 @@ nsXMLContentSink::AddAttributes(const PRUnichar** aAtts,
 
   // Give autoloading links a chance to fire
   if (mDocShell && mAllowAutoXLinks) {
-    nsCOMPtr<nsIXMLContent> xmlcontent(do_QueryInterface(aContent));
-    if (xmlcontent) {
-      nsresult rv = xmlcontent->MaybeTriggerAutoLink(mDocShell);
-      if (rv == NS_XML_AUTOLINK_REPLACE ||
-          rv == NS_XML_AUTOLINK_UNDEFINED) {
-        // If we do not terminate the parse, we just keep generating link trigger
-        // events. We want to parse only up to the first replace link, and stop.
-        mParser->Terminate();
-      }
+    nsresult rv = aContent->MaybeTriggerAutoLink(mDocShell);
+    if (rv == NS_XML_AUTOLINK_REPLACE ||
+        rv == NS_XML_AUTOLINK_UNDEFINED) {
+      // If we do not terminate the parse, we just keep generating link trigger
+      // events. We want to parse only up to the first replace link, and stop.
+      mParser->Terminate();
     }
   }
 

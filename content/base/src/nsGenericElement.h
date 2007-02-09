@@ -46,7 +46,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
-#include "nsIXMLContent.h"
+#include "nsIContent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMEventReceiver.h"
@@ -368,7 +368,7 @@ private:
  * A generic base class for DOM elements, implementing many nsIContent,
  * nsIDOMNode and nsIDOMElement methods.
  */
-class nsGenericElement : public nsIXMLContent
+class nsGenericElement : public nsIContent
 {
 public:
   nsGenericElement(nsINodeInfo *aNodeInfo);
@@ -488,9 +488,6 @@ public:
   FindAttributeDependence(const nsIAtom* aAttribute,
                           const MappedAttributeEntry* const aMaps[],
                           PRUint32 aMapCount);
-
-  // nsIXMLContent interface methods
-  NS_IMETHOD MaybeTriggerAutoLink(nsIDocShell *aShell);
 
   // nsIDOMNode method implementation
   NS_IMETHOD GetNodeName(nsAString& aNodeName);

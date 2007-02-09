@@ -81,8 +81,6 @@ nsXMLElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     inst = NS_STATIC_CAST(nsIDOMNode *, this);
   } else if (aIID.Equals(NS_GET_IID(nsIDOMElement))) {
     inst = NS_STATIC_CAST(nsIDOMElement *, this);
-  } else if (aIID.Equals(NS_GET_IID(nsIXMLContent))) {
-    inst = NS_STATIC_CAST(nsIXMLContent *, this);
   } else if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
     inst = nsContentUtils::GetClassInfoInstance(eDOMClassInfo_Element_id);
     NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
@@ -121,7 +119,7 @@ nsXMLElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   return PostHandleEventForLinks(aVisitor);
 }
 
-NS_IMETHODIMP
+nsresult
 nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
 {
   NS_ENSURE_ARG_POINTER(aShell);
