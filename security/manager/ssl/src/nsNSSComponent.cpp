@@ -966,6 +966,8 @@ static void setOCSPOptions(nsIPrefBranch * pref)
     break;
   case 1:
     CERT_EnableOCSPChecking(CERT_GetDefaultCertDB());
+    CERT_DisableOCSPDefaultResponder(CERT_GetDefaultCertDB());
+    SSL_ClearSessionCache();
     break;
   case 2:
     {
@@ -980,6 +982,7 @@ static void setOCSPOptions(nsIPrefBranch * pref)
       CERT_EnableOCSPChecking(CERT_GetDefaultCertDB());
       CERT_SetOCSPDefaultResponder(CERT_GetDefaultCertDB(), url, signingCA);
       CERT_EnableOCSPDefaultResponder(CERT_GetDefaultCertDB());
+      SSL_ClearSessionCache();
 
       nsMemory::Free(signingCA);
       nsMemory::Free(url);
