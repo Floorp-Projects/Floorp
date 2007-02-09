@@ -754,6 +754,8 @@ PlacesController.prototype = {
           if (PlacesUtils.bookmarks.isBookmarked(PlacesUtils._uri(node.uri)))
             nodeData["bookmark"] = true;
           break;
+        case Ci.nsINavHistoryResultNode.RESULT_TYPE_DAY:
+          nodeData["day"] = true;
       }
 
       // Mutability is whether or not a container can have selected items
@@ -863,18 +865,21 @@ PlacesController.prototype = {
    *     visibility state is "auto-detected."
    * @param   aPopup
    *          The menupopup to build children into.
+   * @return true if at least one item is visible, false otherwise.
    */
   buildContextMenu: function PC_buildContextMenu(aPopup) {
     var metadata = this._buildSelectionMetadata();
 
     var separator = null;
     var visibleItemsBeforeSep = false;
+    var anyVisible = false;
     for (var i = 0; i < aPopup.childNodes.length; ++i) {
       var item = aPopup.childNodes[i];
       if (item.localName != "menuseparator") {
-        item.hidden = !this._shouldShowMenuItem(item, metadata)
+        item.hidden = !this._shouldShowMenuItem(item, metadata);
         if (!item.hidden) {
           visibleItemsBeforeSep = true;
+          anyVisible = true;
 
           // Show the separator above the menu-item if any
           if (separator) {
@@ -896,7 +901,8 @@ PlacesController.prototype = {
         visibleItemsBeforeSep = false;
       }
     }
-    return true;
+
+    return anyVisible;
   },
 
   /**
