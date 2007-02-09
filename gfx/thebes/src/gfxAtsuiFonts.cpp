@@ -344,7 +344,7 @@ public:
     gfxWrapperTextRun(gfxAtsuiFontGroup *aGroup,
                       const PRUint8* aString, PRUint32 aLength,
                       gfxTextRunFactory::Parameters* aParams)
-        : gfxTextRun(aParams, PR_TRUE),
+        : gfxTextRun(aParams),
           mContext(aParams->mContext),
           mInner(NS_ConvertASCIItoUTF16(nsDependentCSubstring(reinterpret_cast<const char*>(aString),
                                         reinterpret_cast<const char*>(aString + aLength))),
@@ -356,7 +356,7 @@ public:
     gfxWrapperTextRun(gfxAtsuiFontGroup *aGroup,
                       const PRUnichar* aString, PRUint32 aLength,
                       gfxTextRunFactory::Parameters* aParams)
-        : gfxTextRun(aParams, PR_TRUE), mContext(aParams->mContext),
+        : gfxTextRun(aParams), mContext(aParams->mContext),
           mInner(nsDependentSubstring(aString, aString + aLength), aGroup),
           mLength(aLength)
     {
