@@ -353,14 +353,6 @@
                 <menuitem label="&historyHomeCmd.label;"
                           command="Browser:Home"
                           key="historyHome"/>
-#ifdef MOZ_PLACES_NEW_HISTORY_UI
-                <menuseparator/>
-                <menuitem label="&historySearchCmd.label;"
-                          command="Browser:SearchHistory"
-                          key="searchHistoryKb"/>
-                <menuitem label="&historyShowCmd.label;"
-                          command="Browser:ShowHistory"/>
-#endif
                 <menuseparator id="startTabHistorySeparator"/>
                 <menuseparator hidden="true" id="endTabHistorySeparator"/>
                 <menu id="historyUndoMenu" label="&historyUndoMenu.label;" disabled="true">
@@ -490,8 +482,6 @@
       </menu>
       <menuitem label="&addCurPagesCmd.label;" 
                 command="Browser:BookmarkAllTabs" key="bookmarkAllTabsKb"/>
-      <menuitem label="&searchBookmarksCmd.label;" 
-                command="Browser:ShowBookmarks" key="searchBookmarksKb"/>
       <menuitem label="&manBookmarksCmd.label;" 
                 command="Browser:ShowBookmarks" key="manBookmarkKb"/>
       <menuseparator builder="start"/>

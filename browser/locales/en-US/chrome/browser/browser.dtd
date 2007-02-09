@@ -67,9 +67,6 @@
 <!ENTITY manBookmarksCmd.label "Organize Bookmarks...">
 <!ENTITY manBookmarksCmd.accesskey "M">
 <!ENTITY bookmarkAllCmd.label "Bookmark All Tabs...">
-<!ENTITY searchBookmarksCmd.label "Search in Bookmarks...">
-<!ENTITY searchBookmarksCmd.accesskey "S">
-<!ENTITY searchBookmarksCmd.commandkey "B">
 
 <!ENTITY backCmd.label                "Back">
 <!ENTITY backCmd.accesskey            "B">
