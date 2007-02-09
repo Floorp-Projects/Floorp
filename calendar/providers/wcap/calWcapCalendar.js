@@ -356,7 +356,7 @@ calWcapCalendar.prototype = {
             // cut mozilla prefix: assuming that the latter string portion
             //                     semantically equals the demanded timezone
             tzid = tzid.substring( // next slash after "/mozilla.org/"
-                tzid.indexOf("/", "/mozilla.org/".length) + 1 );
+                tzid.indexOf("/", "/mozilla.org/".length) + 1);
         }
         if (!this.session.isSupportedTimezone(tzid)) {
             // xxx todo: we could further on search for a matching region,

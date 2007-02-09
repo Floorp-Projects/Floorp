@@ -97,11 +97,11 @@ function initWcapProvider()
         // xxx todo: hack
         // the master password prompt is currently not guarded against
         // multiple prompt; this initializes/raises the pw db at early stage.
-        var tokenDB = Components.classes["@mozilla.org/security/pk11tokendb;1"]
-                                .getService(Components.interfaces.nsIPK11TokenDB);
-        var token = tokenDB.getInternalKeyToken();
-        if (token.needsLogin && !token.needsUserInit)
-            token.login(false);
+        var passwordManager = Components.classes["@mozilla.org/passwordmanager;1"]
+                                        .getService(Components.interfaces.nsIPasswordManager);
+        var enumerator = passwordManager.enumerator;
+        if (enumerator.hasMoreElements())
+            enumerator.getNext(); // actually prompts...
     }
     catch (exc) {
     }

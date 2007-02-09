@@ -54,7 +54,7 @@ function calWcapCalendar_encodeAttendee(att)
                 params += "^";
             if (attr)
                 params += (attr + "=");
-            params += val;
+            params += encodeURIComponent(val);
         }
         return params;
     }
@@ -239,21 +239,21 @@ function getAttendeeByCalId(atts, calId) {
 calWcapCalendar.prototype.isInvitation =
 function calWcapCalendar_isInvitation(item)
 {
-    var ownerId = this.ownerId;
-    var orgUID = getCalId(item.organizer);
-    if (!orgUID)
+    if (!this.session.isLoggedIn)
+        return false; // don't know
+    var orgCalId = getCalId(item.organizer);
+    if (!orgCalId)
         return false;
-    // xxx todo: we assume calid globally unique. If X-S1CS-CALID is
-    //           not available, we assume an invitation => REPLY
-    if (orgUID && orgUID == ownerId)
+    var calId = this.calId;
+    if (orgCalId == calId)
         return false;
-    return (getAttendeeByCalId(item.getAttendees({}), ownerId) != null);
+    return (getAttendeeByCalId(item.getAttendees({}), calId) != null);
 };
 
 calWcapCalendar.prototype.getInvitedAttendee =
 function calWcapCalendar_getInvitedAttendee(item)
 {
-    return getAttendeeByCalId(item.getAttendees({}), this.ownerId);
+    return getAttendeeByCalId(item.getAttendees({}), this.calId);
 };
 
 function equalDatetimes(one, two) {
@@ -262,20 +262,17 @@ function equalDatetimes(one, two) {
 
 // @return null if nothing has changed else value to be written
 function diffProperty(newItem, oldItem, propName) {
-    var val = null;
-    if (newItem.hasProperty(propName))
-        val = newItem.getProperty(propName);
-    if (oldItem) {
-        if (oldItem.hasProperty(propName)) {
-            if (!val) // property to be deleted
-                val = "";
-            else if (val == oldItem.getProperty(propName))
-                val = null; // property hasn't changed
-        }
+    var val = newItem.getProperty(propName);
+    var oldVal = (oldItem ? oldItem.getProperty(propName) : null);
+    if (val === null) {
+        // force being set when - no old item, eg when adding new item
+        //                      - property is to be deleted
+        if (!oldItem || oldVal)
+            val = "";
     }
-    else if (!val) {
-        // force value being set when no old item, eg when adding new item:
-        val = "";
+    else {
+        if (val == oldVal)
+            val = null;
     }
     return val;
 }
@@ -291,39 +288,89 @@ function calWcapCalendar_storeItem(bAddItem, item, oldItem, request, netRespFunc
     var bOrgRequest = false;
     var params = "";
     
-    var ownerId = this.ownerId;
+    var calId = this.calId;
     if (oldItem && this.isInvitation(oldItem)) { // REPLY
         bAttendeeReply = true;
-        var att = getAttendeeByCalId(item.getAttendees({}), ownerId);
+        var att = getAttendeeByCalId(item.getAttendees({}), calId);
         if (att) {
             log("attendee: " + att.icalProperty.icalString, this);
-            var oldAtt = getAttendeeByCalId(oldItem.getAttendees({}), ownerId);
+            var oldAtt = getAttendeeByCalId(oldItem.getAttendees({}), calId);
             if (att.participationStatus != oldAtt.participationStatus) {
-                // REPLY first for just this calendar owner:
+                // REPLY first for just this calendar:
                 params += ("&attendees=PARTSTAT=" + att.participationStatus +
-                           "^" + ownerId);
+                           "^" + encodeURIComponent(att.id));
             }
         }
     }
     else { // PUBLISH, REQUEST
+        
+        // workarounds for server bugs concerning recurrences/exceptions:
+        // - if first occurrence is an exception
+        //   and an EXDATE for that occurrence ought to be written,
+        //   then the master item's data is replaced with that EXDATEd exception. WTF.
+        // - if start/end date is being written on master, the previously EXDATEd
+        //   exception overwrites master, why ever.
+        // So in these cases: write all data of master.
+        
+        var bIsAllDay = false;
+        if (bIsEvent) {
+            var dtstart = item.startDate;
+            var dtend = item.endDate;
+            bIsAllDay = (dtstart.isDate && dtend.isDate);
+            if (!oldItem || !equalDatetimes(dtstart, oldItem.startDate)
+                         || !equalDatetimes(dtend, oldItem.endDate)) {
+                params += ("&dtstart=" + getIcalUTC(dtstart));
+                params += ("&X-NSCP-DTSTART-TZID=" +
+                           "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-REPLACE^" + 
+                           encodeURIComponent(this.getAlignedTimezone(dtstart.timezone)));
+                params += ("&dtend=" + getIcalUTC(dtend));
+                params += ("&X-NSCP-DTEND-TZID=" +
+                           "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-REPLACE^" + 
+                           encodeURIComponent(this.getAlignedTimezone(dtend.timezone)));
+                params += (bIsAllDay ? "&isAllDay=1" : "&isAllDay=0");
+                
+                if (bIsParent && item.recurrenceInfo)
+                    oldItem = null; // recurrence/exceptions hack: write whole master
+            }
+        }
+        else { // calITodo
+            // xxx todo: dtstart is mandatory for cs, so if this is
+            //           undefined, assume an allDay todo???
+            var dtstart = item.entryDate;
+            var dtend = item.dueDate;
+            bIsAllDay = (dtstart && dtstart.isDate);
+            if (!oldItem || !equalDatetimes(dtstart, oldItem.entryDate)
+                         || !equalDatetimes(dtend, oldItem.dueDate)) {
+                params += ("&dtstart=" + getIcalUTC(dtstart));
+                if (dtstart) {
+                    params += ("&X-NSCP-DTSTART-TZID=" +
+                               "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-REPLACE^" + 
+                               encodeURIComponent(this.getAlignedTimezone(dtstart.timezone)));
+                }
+                params += ("&due=" + getIcalUTC(dtend));
+                if (dtend) {
+                    params += ("&X-NSCP-DUE-TZID=" +
+                               "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-REPLACE^" + 
+                               encodeURIComponent(this.getAlignedTimezone(dtend.timezone)));
+                }
+                params += (bIsAllDay ? "&isAllDay=1" : "&isAllDay=0");
+                
+                if (bIsParent && item.recurrenceInfo)
+                    oldItem = null; // recurrence/exceptions hack: write whole master
+            }
+        }
         if (bIsParent) {
             var recParams = this.encodeRecurrenceParams(item, oldItem);
             if (recParams.length > 0) {
-                // workaround server bug: if first occurrence is an exception
-                // and an EXDATE for that occurrence ought to be written,
-                // then the master item is replaced with that EXDATEd exception. WTF.
-                // therefore write whole master:
-                oldItem = null;
+                oldItem = null; // recurrence/exceptions hack: write whole master
                 params += recParams;
             }
         }
         
         var attendees = item.getAttendees({});
         if (attendees.length > 0) {
-            // xxx todo: we assume calid globally unique. If X-S1CS-CALID is
-            //           not available, we assume a REPLY
-            //           why ever, X-S1CS-EMAIL is unsupported though documented
-            //           for get_calprops... WTF.
+            // xxx todo: why ever, X-S1CS-EMAIL is unsupported though documented
+            //           for calprops... WTF.
             bOrgRequest = true;
             function encodeAttendees(atts) {
                 function stringSort(one, two) {
@@ -343,7 +390,7 @@ function calWcapCalendar_storeItem(bAddItem, item, oldItem, request, netRespFunc
             }
             var attParam = encodeAttendees(attendees);
             if (!oldItem || attParam != encodeAttendees(oldItem.getAttendees({}))) {
-                params += ("&orgUID=" + encodeURIComponent(ownerId));
+                params += ("&orgCalid=" + encodeURIComponent(calId));
                 params += ("&attendees=" + attParam);
             }
         }
@@ -357,23 +404,21 @@ function calWcapCalendar_storeItem(bAddItem, item, oldItem, request, netRespFunc
             params += ("&summary=" + encodeURIComponent(val));
         // xxx todo: missing relatedTos= in cal api
         val = diffProperty(item, oldItem, "CATEGORIES");
-        if (val) // xxx todo: check whether ;-separated:
+        if (val !== null) // xxx todo: check whether ;-separated:
             params += ("&categories=" + encodeURIComponent( val.replace(/,/g, ";") ));
-        // desc: xxx todo attribute "description" not impl in calItemBase.js
         val = diffProperty(item, oldItem, "DESCRIPTION");
-        if (val)
+        if (val !== null)
             params += ("&desc=" + encodeURIComponent(val));
-        // location: xxx todo currently not impl in calItemBase.js
         val = diffProperty(item, oldItem, "LOCATION");
-        if (val)
+        if (val !== null)
             params += ("&location=" + encodeURIComponent(val));
-        // xxx todo: default prio is 0 (5 in sjs cs)
-        val = diffProperty(item, oldItem, "PRIORITY");
-        if (val)
-            params += ("&priority=" + encodeURIComponent(val));
         val = diffProperty(item, oldItem, "URL");
-        if (val)
+        if (val !== null)
             params += ("&icsUrl=" + encodeURIComponent(val));
+        // xxx todo: default prio is 0 (5 in sjs cs)
+        val = item.priority;
+        if (!oldItem || val != oldItem.priority)
+            params += ("&priority=" + encodeURIComponent(val));
         
         function getPrivacy(item) {
             return ((item.privacy && item.privacy != "") ? item.privacy : "PUBLIC");
@@ -398,84 +443,8 @@ function calWcapCalendar_storeItem(bAddItem, item, oldItem, request, netRespFunc
             }
         }
         
-        // attachment urls:
-        function getAttachments(item) {
-            var ret = "";
-            var attachments = item.attachments;
-            if (attachments) {
-                var strings = [];
-                for each (var att in attachements) {
-                    if (typeof(att) == "string")
-                        strings.push(encodeURIComponent(att));
-                    else
-                        logError("only URLs supported as attachment, not: " + att, this_);
-                }
-                strings.sort();
-                for (var i = 0; i < strings.length; ++i) {
-                    if (i > 0)
-                        ret += ";";
-                    ret += strings[i];
-                }
-            }
-            return ret;
-        }
-        var val = getAttachments(item);
-        if (!oldItem || val != getAttachments(oldItem))
-            params += ("&attachments=" + val);
-        
-        var dtstart = null;
-        var dtend = null;
-        var bIsAllDay = false;
-        
-        if (bIsEvent) {
-            dtstart = item.startDate;
-            var dtend = item.endDate;
-            bIsAllDay = (dtstart.isDate && dtend.isDate);
-            if (!oldItem || !equalDatetimes(dtstart, oldItem.startDate)
-                         || !equalDatetimes(dtend, oldItem.endDate)) {
-                params += ("&dtstart=" + getIcalUTC(dtstart));
-                params += ("&X-NSCP-DTSTART-TZID=" +
-                           "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-REPLACE^" + 
-                           encodeURIComponent(this.getAlignedTimezone(dtstart.timezone)));
-                params += ("&dtend=" + getIcalUTC(dtend));
-                params += ("&X-NSCP-DTEND-TZID=" +
-                           "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-REPLACE^" + 
-                           encodeURIComponent(this.getAlignedTimezone(dtend.timezone)));
-                params += (bIsAllDay ? "&isAllDay=1" : "&isAllDay=0");
-            }
-        }
-        else { // calITodo:
-               // xxx todo: dtstart is mandatory for cs, so if this is
-               //           undefined, assume an allDay todo???
-            dtstart = item.entryDate;
-            dtend = item.dueDate;
-            bIsAllDay = (dtstart && dtstart.isDate);
-            if (!oldItem || !equalDatetimes(dtstart, oldItem.entryDate)
-                         || !equalDatetimes(dtend, oldItem.dueDate)) {
-                params += ("&dtstart=" + getIcalUTC(dtstart));
-                if (dtstart) {
-                    params += ("&X-NSCP-DTSTART-TZID=" +
-                               "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-REPLACE^" + 
-                               encodeURIComponent(this.getAlignedTimezone(dtstart.timezone)));
-                }
-                params += ("&due=" + getIcalUTC(dtend));
-                if (dtend) {
-                    params += ("&X-NSCP-DUE-TZID=" +
-                               "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-REPLACE^" + 
-                               encodeURIComponent(this.getAlignedTimezone(dtend.timezone)));
-                }
-                params += (bIsAllDay ? "&isAllDay=1" : "&isAllDay=0");
-            }
-            log("dtstart=" + dtstart + "\ndtend=" + dtend + "\nid=" + item.id, this);
-            
-            if (!oldItem || item.percentComplete != oldItem.percentComplete)
-                params += ("&percent=" + item.percentComplete.toString(10));
-            if (!oldItem || !equalDatetimes(item.completedDate, oldItem.completedDate))
-                params += ("&completed=" + getIcalUTC(item.completedDate));
-        }
-        
         val = diffProperty(item, oldItem, "TRANSP");
-        if (val) {
+        if (val !== null) {
             switch (val) {
             case "TRANSPARENT":
                 params += "&transparent=1";
@@ -489,6 +458,38 @@ function calWcapCalendar_storeItem(bAddItem, item, oldItem, request, netRespFunc
                 break;
             }
         }
+        
+        if (!bIsEvent) {
+            if (!oldItem || item.percentComplete != oldItem.percentComplete)
+                params += ("&percent=" + item.percentComplete.toString(10));
+            if (!oldItem || !equalDatetimes(item.completedDate, oldItem.completedDate))
+                params += ("&completed=" + getIcalUTC(item.completedDate));
+        }
+        
+        // attachment urls:
+        function getAttachments(item) {
+            var ret = "";
+            var attachments = item.attachments;
+            if (attachments) {
+                var strings = [];
+                for each (var att in attachements) {
+                    if (typeof(att) == "string")
+                        strings.push(encodeURIComponent(att));
+                    else // xxx todo
+                        logError("only URLs supported as attachment, not: " + att, this_);
+                }
+                strings.sort();
+                for (var i = 0; i < strings.length; ++i) {
+                    if (i > 0)
+                        ret += ";";
+                    ret += strings[i];
+                }
+            }
+            return ret;
+        }
+        var val = getAttachments(item);
+        if (!oldItem || val != getAttachments(oldItem))
+            params += ("&attachments=" + val);        
     } // PUBLISH, REQUEST
     
     var alarmParams = this.getAlarmParams(item);
@@ -508,6 +509,13 @@ function calWcapCalendar_storeItem(bAddItem, item, oldItem, request, netRespFunc
         request.execRespFunc(null, item);
     }
     else {
+        var someDate = (item.startDate || item.entryDate || item.dueDate);
+        if (someDate) {
+            // provide some date: eMail notification dates are influenced by this parameter...
+            params += ("&tzid=" + encodeURIComponent(
+                           this.getAlignedTimezone(someDate.timezone)));
+        }
+        
         if (item.id)
             params += ("&uid=" + encodeURIComponent(item.id));
         
@@ -602,7 +610,6 @@ function calWcapCalendar_adoptItem(item, listener)
         if (!isParent(item)) {
             this_.logError("adoptItem(): unexpected proxy!");
             debugger;
-            item.parentItem.recurrenceInfo.modifyException(item);
         }
         this.storeItem(true/*bAddItem*/,
                        item, null, request,
@@ -660,11 +667,14 @@ function calWcapCalendar_modifyItem(newItem, oldItem, listener)
     try {
         if (!newItem.id)
             throw new Components.Exception("new item has no id!");
+        var oldItem_ = oldItem;
+        if (oldItem && !isParent(newItem) &&
+            !oldItem.parentItem.recurrenceInfo.getExceptionFor(newItem.recurrenceId, false)) {
+            // pass null for oldItem when creating new exceptions, write whole item:
+            oldItem_ = null;
+        }
         this.storeItem(false/*bAddItem*/,
-                       newItem,
-                       // pass null for oldItem when creating new exceptions:
-                       (oldItem && !isParent(newItem) && isParent(oldItem)) ? null : oldItem,
-                       request,
+                       newItem, oldItem_, request,
                        function netResp(err, icalRootComp) {
                            if (err)
                                throw err;
@@ -1077,8 +1087,9 @@ function calWcapCalendar_getItems(itemFilter, maxResults, rangeStart, rangeEnd, 
     if (itemFilter & calIWcapCalendar.ITEM_FILTER_SUPPRESS_ONERROR)
         request.suppressOnError = true;
     
-    if (this.session.aboutToLogout) { // limiting the amount of network traffic:
-        log("about to logout, no results.", this);
+    if (this.aboutToBeUnregistered) {
+        // limiting the amount of network traffic while unregistering
+        log("being unregistered, no results.", this);
         request.execRespFunc(null, []);
         return request;
     }

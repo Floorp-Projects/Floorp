@@ -427,27 +427,11 @@ calWcapSession.prototype = {
     
     logout: function calWcapSession_logout(listener)
     {
-        this.m_aboutToLogout = true;
-        
-        // unregister all subscribed cals first, don't modify subscriptions upon
-        // unregisterCalendar:
-        var subscribedCals = this.m_subscribedCals;
-        this.m_subscribedCals = {};
-        if (!g_bShutdown) {
-            for each (var cal in subscribedCals) {
-                try {
-                    getCalendarManager().unregisterCalendar(cal);
-                }
-                catch (exc) {
-                    this.notifyError(exc);
-                }
-            }
-        }
+        this.unregisterSubscribedCals();
         
         var this_ = this;
         var request = new calWcapRequest(
             function logout_resp(request, err) {
-                this_.m_aboutToLogout = false;
                 if (err)
                     logError(err, this_);
                 else
@@ -720,6 +704,27 @@ calWcapSession.prototype = {
         }
     },
     
+    unregisterSubscribedCals:
+    function calWcapSession_unregisterSubscribedCals() {
+        // unregister all subscribed cals, don't modify subscriptions upon unregisterCalendar:
+        var subscribedCals = this.m_subscribedCals;
+        this.m_subscribedCals = {};
+        // tag al to limit network traffic, listener chain will cause getItems calls:
+        for each (var cal in subscribedCals) {
+            cal.aboutToBeUnregistered = true;
+        }
+        if (!g_bShutdown) {
+            for each (var cal in subscribedCals) {
+                try {
+                    getCalendarManager().unregisterCalendar(cal);
+                }
+                catch (exc) {
+                    this.notifyError(exc);
+                }
+            }
+        }
+    },
+    
     getCommandUrl: function calWcapSession_getCommandUrl(wcapCommand, params, sessionId)
     {
         var url = this.sessionUri.spec;
@@ -819,11 +824,6 @@ calWcapSession.prototype = {
     get defaultCalId() {
         var list = this.getUserPreferences("X-NSCP-WCAP-PREF-icsCalendar");
         return (list.length > 0 ? list[0] : this.credentials.userId);
-    },
-    
-    m_aboutToLogout: false,
-    get aboutToLogout() {
-        return this.m_aboutToLogout;
     },
     
     get isLoggedIn() {
@@ -1099,7 +1099,7 @@ calWcapSession.prototype = {
                 var calId = cal.calId;
                 if (!this.m_subscribedCals[calId])
                     this.modifySubscriptions(cal, true/*bSubscibe*/);
-                this.m_subscribedCals[calId] = cal;
+                this.m_subscribedCals[calId] = cal.wrappedJSObject;
             }
         }
         catch (exc) { // never break the listener chain
@@ -1117,13 +1117,19 @@ calWcapSession.prototype = {
             cal = null;
         }
         try {
-            // don't logout here (even if this is the default calendar): upcoming calls may occur.
+            // don't logout here (even if this is the default calendar):
+            // upcoming calls may occur.
             // make sure the calendar belongs to this session and is a subscription:
-            if (cal && cal.session.uri.equals(this.uri) && !cal.isDefaultCalendar) {
-                var calId = cal.calId;
-                if (this.m_subscribedCals[calId]) {
-                    delete this.m_subscribedCals[calId];
-                    this.modifySubscriptions(cal, false/*bSubscibe*/);
+            if (cal && cal.session.uri.equals(this.uri)) {
+                if (cal.isDefaultCalendar) {
+                    this.unregisterSubscribedCals();
+                }
+                else {
+                    var calId = cal.calId;
+                    if (this.m_subscribedCals[calId]) {
+                        delete this.m_subscribedCals[calId];
+                        this.modifySubscriptions(cal, false/*bSubscibe*/);
+                    }
                 }
             }
         }
