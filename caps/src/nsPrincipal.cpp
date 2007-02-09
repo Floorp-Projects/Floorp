@@ -730,7 +730,8 @@ AppendCapability(nsHashKey *aKey, void *aData, void *capListPtr)
 NS_IMETHODIMP
 nsPrincipal::GetPreferences(char** aPrefName, char** aID,
                             char** aSubjectName,
-                            char** aGrantedList, char** aDeniedList)
+                            char** aGrantedList, char** aDeniedList,
+                            PRBool* aIsTrusted)
 {
   if (mPrefName.IsEmpty()) {
     if (mCert) {
@@ -749,6 +750,7 @@ nsPrincipal::GetPreferences(char** aPrefName, char** aID,
   *aSubjectName = nsnull;
   *aGrantedList = nsnull;
   *aDeniedList = nsnull;
+  *aIsTrusted = mTrusted;
 
   char *prefName = nsnull;
   char *id = nsnull;

@@ -1853,13 +1853,17 @@ nsScriptSecurityManager::DoGetCertificatePrincipal(const nsACString& aCertFinger
             nsXPIDLCString subjectName;
             nsXPIDLCString granted;
             nsXPIDLCString denied;
+            PRBool isTrusted;
             rv = fromTable->GetPreferences(getter_Copies(prefName),
                                            getter_Copies(id),
                                            getter_Copies(subjectName),
                                            getter_Copies(granted),
-                                           getter_Copies(denied));
+                                           getter_Copies(denied),
+                                           &isTrusted);
             // XXXbz assert something about subjectName and aSubjectName here?
             if (NS_SUCCEEDED(rv)) {
+                NS_ASSERTION(!isTrusted, "Shouldn't have isTrusted true here");
+                
                 certificate = new nsPrincipal();
                 if (!certificate)
                     return NS_ERROR_OUT_OF_MEMORY;
@@ -1869,8 +1873,10 @@ nsScriptSecurityManager::DoGetCertificatePrincipal(const nsACString& aCertFinger
                                                      granted, denied,
                                                      aCertificate,
                                                      PR_TRUE, PR_FALSE);
-                if (NS_SUCCEEDED(rv))
-                    certificate->SetURI(aURI);
+                if (NS_FAILED(rv))
+                    return rv;
+                
+                certificate->SetURI(aURI);
             }
         }
     }
@@ -1922,10 +1928,15 @@ nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI,
         //-- Check to see if we already have this principal.
         nsCOMPtr<nsIPrincipal> fromTable;
         mPrincipals.Get(principal, getter_AddRefs(fromTable));
-        if (fromTable)
-            principal = fromTable;
-        else //-- Check to see if we have a more general principal
+        if (!fromTable)
         {
+            //-- Check to see if we have a more general principal
+
+            // XXXbz if only GetOrigin returned a URI!  Or better yet if the
+            // HashKey function on principals were smarter.  As it is, we can
+            // have cases where two principals will have different hashkeys but
+            // test equal via KeyEquals, which is absolutely silly.  That's
+            // what we're working around here.
             nsXPIDLCString originUrl;
             rv = principal->GetOrigin(getter_Copies(originUrl));
             if (NS_FAILED(rv)) return rv;
@@ -1936,8 +1947,44 @@ nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI,
             rv = CreateCodebasePrincipal(newURI, getter_AddRefs(principal2));
             if (NS_FAILED(rv)) return rv;
             mPrincipals.Get(principal2, getter_AddRefs(fromTable));
-            if (fromTable)
-                principal = fromTable;
+        }
+
+        if (fromTable) {
+            // We found an existing codebase principal.  But it might have a
+            // generic codebase for this origin on it.  Install our particular
+            // codebase.
+            // XXXbz this is kinda similar to the code in
+            // GetCertificatePrincipal, but just ever so slightly different.
+            // Oh, well.
+            nsXPIDLCString prefName;
+            nsXPIDLCString id;
+            nsXPIDLCString subjectName;
+            nsXPIDLCString granted;
+            nsXPIDLCString denied;
+            PRBool isTrusted;
+            rv = fromTable->GetPreferences(getter_Copies(prefName),
+                                           getter_Copies(id),
+                                           getter_Copies(subjectName),
+                                           getter_Copies(granted),
+                                           getter_Copies(denied),
+                                           &isTrusted);
+            if (NS_SUCCEEDED(rv)) {
+                nsRefPtr<nsPrincipal> codebase = new nsPrincipal();
+                if (!codebase)
+                    return NS_ERROR_OUT_OF_MEMORY;
+
+                rv = codebase->InitFromPersistent(prefName, id,
+                                                  subjectName, EmptyCString(),
+                                                  granted, denied,
+                                                  nsnull, PR_FALSE,
+                                                  isTrusted);
+                if (NS_FAILED(rv))
+                    return rv;
+                
+                codebase->SetURI(aURI);
+                principal = codebase;
+            }
+
         }
     }
 
@@ -2235,11 +2282,13 @@ nsScriptSecurityManager::SavePrincipal(nsIPrincipal* aToSave)
     nsXPIDLCString subjectName;
     nsXPIDLCString grantedList;
     nsXPIDLCString deniedList;
+    PRBool isTrusted;
     nsresult rv = aToSave->GetPreferences(getter_Copies(idPrefName),
                                           getter_Copies(id),
                                           getter_Copies(subjectName),
                                           getter_Copies(grantedList),
-                                          getter_Copies(deniedList));
+                                          getter_Copies(deniedList),
+                                          &isTrusted);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
     nsCAutoString grantedPrefName;
