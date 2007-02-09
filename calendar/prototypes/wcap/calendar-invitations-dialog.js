@@ -68,9 +68,9 @@ function onLoad() {
     updatingBox.removeAttribute("hidden");
 
     var args = window.arguments[0];
-    args.operationListenerWrapper.operationListener = operationListener;
     args.invitationsManager.getInvitations(
-        args.operationListenerWrapper,
+        false,
+        operationListener,
         args.onLoadOperationListener);
 
     opener.setCursor("auto");
@@ -78,7 +78,7 @@ function onLoad() {
 
 function onUnload() {
     var args = window.arguments[0];
-    args.operationListenerWrapper.operationListener = null;
+    args.requestManager.cancelPendingRequests();
 }
 
 function onAccept() {

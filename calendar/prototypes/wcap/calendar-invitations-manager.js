@@ -35,6 +35,68 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var gInvitationsRequestManager = null;
+
+function getInvitationsRequestManager() {
+    if (!gInvitationsRequestManager) {
+        gInvitationsRequestManager = new InvitationsRequestManager();
+    }
+    return gInvitationsRequestManager;
+}
+
+function InvitationsRequestManager() {
+    this.mRequestStatusList = {};
+}
+
+InvitationsRequestManager.prototype = {
+
+    mRequestStatusList: null,
+
+    getRequestStatus: function(calendar) {
+        var calendarId = this._getCalendarId(calendar);
+        if (calendarId in this.mRequestStatusList) {
+            return this.mRequestStatusList[calendarId];
+        }
+        return null;
+    },
+
+    addRequestStatus: function(calendar, requestStatus) {
+        var calendarId = this._getCalendarId(calendar);
+        this.mRequestStatusList[calendarId] = requestStatus;
+    },
+
+    deleteRequestStatus: function(calendar) {
+        var calendarId = this._getCalendarId(calendar);
+        if (calendarId in this.mRequestStatusList) {
+            delete this.mRequestStatusList[calendarId];
+        }
+    },
+
+    getPendingRequests: function() {
+        var count = 0;
+        for each (var requestStatus in this.mRequestStatusList) {
+            var request = requestStatus.request;
+            if (request && request.isPending) {
+                count++;
+            }
+        }
+        return count;
+    },
+
+    cancelPendingRequests: function() {
+        for each (var requestStatus in this.mRequestStatusList) {
+            var request = requestStatus.request;
+            if (request && request.isPending) {
+                request.cancel(null);
+            }
+        }
+    },
+
+    _getCalendarId: function(calendar) {
+        return encodeURIComponent(calendar.uri.spec);
+    }
+}
+
 var gInvitationsManager = null;
 
 function getInvitationsManager() {
@@ -46,8 +108,6 @@ function getInvitationsManager() {
 
 function InvitationsManager() {
     this.mItemList = new Array();
-    this.mRequestStatusList = new Array();
-    this.mRequestsPending = 0;
     this.mOperationListeners = new Array();
     this.mStartDate = null;
     this.mJobsPending = 0;
@@ -73,8 +133,6 @@ function InvitationsManager() {
 InvitationsManager.prototype = {
 
     mItemList: null,
-    mRequestStatusList: null,
-    mRequestsPending: 0,
     mOperationListeners: null,
     mStartDate: null,
     mJobsPending: 0,
@@ -99,7 +157,7 @@ InvitationsManager.prototype = {
                     timer.delay = this.mRepeatDelay;
                 }
                 this.mInvitationsManager.getInvitations(
-                    this.mOperationListener);
+                    true, this.mOperationListener);
             }
         };
         this.mTimer.initWithCallback(callback, firstDelay,
@@ -112,7 +170,7 @@ InvitationsManager.prototype = {
         }
     },
 
-    getInvitations: function(operationListener1, operationListener2) {
+    getInvitations: function(suppressOnError, operationListener1, operationListener2) {
         if (operationListener1) {
             this.addOperationListener(operationListener1);
         }
@@ -120,6 +178,7 @@ InvitationsManager.prototype = {
             this.addOperationListener(operationListener2);
         }
         this.updateStartDate();
+        var requestManager = getInvitationsRequestManager();
         var calendars = getCalendarManager().getCalendars({});
         for each (var calendar in calendars) {
             try {
@@ -129,6 +188,7 @@ InvitationsManager.prototype = {
                     continue;
                 }
                 var listener = {
+                    mRequestManager: requestManager,
                     mInvitationsManager: this,
                     QueryInterface: function(aIID) {
                         if (!aIID.equals(Components.interfaces.nsISupports) &&
@@ -146,7 +206,7 @@ InvitationsManager.prototype = {
                             return;
                         }
                         var requestStatus =
-                            this.mInvitationsManager.getRequestStatus(aCalendar);
+                            this.mRequestManager.getRequestStatus(aCalendar);
                         if (Components.isSuccessCode(aStatus)) {
                             if (requestStatus.firstRequest) {
                                 requestStatus.firstRequest = false;
@@ -155,9 +215,7 @@ InvitationsManager.prototype = {
                                 requestStatus.lastUpdate = aDetail;
                             }
                         }
-                        requestStatus.requestPending = false;
-                        this.mInvitationsManager.mRequestsPending--;
-                        if (this.mInvitationsManager.mRequestsPending == 0) {
+                        if (this.mRequestManager.getPendingRequests() == 0) {
                             this.mInvitationsManager.deleteUnregisteredCalendarItems();
                             this.mInvitationsManager.mItemList.sort(
                                 function (a, b) {
@@ -212,35 +270,36 @@ InvitationsManager.prototype = {
                     onError: function(aErrNo, aMessage) {
                     }
                 };
-                var requestStatus = this.getRequestStatus(wcapCalendar);
+                var requestStatus = requestManager.getRequestStatus(wcapCalendar);
                 if (!requestStatus) {
                     requestStatus = {
-                        calendar: wcapCalendar,
+                        request: null,
                         firstRequest: true,
                         firstRequestStarted: null,
-                        requestPending: false,
                         lastUpdate: null
                     };
-                    this.addRequestStatus(requestStatus);
+                    requestManager.addRequestStatus(wcapCalendar, requestStatus);
                 }
-                if (!requestStatus.requestPending) {
-                    requestStatus.requestPending = true;
-                    this.mRequestsPending++;
+                if (!requestStatus.request || !requestStatus.request.isPending) {
+                    var filter = (suppressOnError
+                        ? wcapCalendar.ITEM_FILTER_SUPPRESS_ONERROR : 0);
+                    var request;
                     if (requestStatus.firstRequest) {
                         requestStatus.firstRequestStarted = this.getDate();
-                        wcapCalendar.getItems(
-                            wcapCalendar.ITEM_FILTER_REQUEST_NEEDS_ACTION, 0,
-                            this.mStartDate, null, listener);
+                        filter |= wcapCalendar.ITEM_FILTER_REQUEST_NEEDS_ACTION;
+                        request = wcapCalendar.wrappedJSObject.getItems(filter,
+                            0, this.mStartDate, null, listener);
                     } else {
-                        wcapCalendar.syncChangesTo(null,
-                            wcapCalendar.ITEM_FILTER_TYPE_EVENT,
+                        filter |= wcapCalendar.ITEM_FILTER_TYPE_EVENT;
+                        request = wcapCalendar.syncChangesTo(null, filter,
                             requestStatus.lastUpdate, listener);
                     }
+                    requestStatus.request = request;
                 }
             } catch(e) {
             }
         }
-        if (this.mRequestsPending == 0) {
+        if (requestManager.getPendingRequests() == 0) {
             this.deleteUnregisteredCalendarItems();
             var listener;
             while ((listener = this.mOperationListeners.shift())) {
@@ -259,23 +318,7 @@ InvitationsManager.prototype = {
         args.onLoadOperationListener = onLoadOperationListener;
         args.queue = new Array();
         args.finishedCallBack = finishedCallBack;
-        args.operationListenerWrapper = {
-            operationListener: null,
-            onOperationComplete:
-            function(aCalendar, aStatus, aOperationType, aId, aDetail) {
-                if(this.operationListener) {
-                    this.operationListener.onOperationComplete(
-                        aCalendar, aStatus, aOperationType, aId, aDetail);
-                }
-            },
-            onGetResult:
-            function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
-                if(this.operationListener) {
-                    this.operationListener.onGetResult(
-                        aCalendar, aStatus, aItemType, aDetail, aCount, aItems);
-                }
-            }
-        };
+        args.requestManager = getInvitationsRequestManager();
         args.invitationsManager = this;
         // the dialog will reset this to auto when it is done loading
         window.setCursor("wait");
@@ -364,30 +407,6 @@ InvitationsManager.prototype = {
                 this.mItemList.splice(i, 1);
             } else {
                 i++;
-            }
-        }
-    },
-
-    getRequestStatus: function(calendar) {
-        var requestStatus = null;
-        for each (var entry in this.mRequestStatusList) {
-            if (entry.calendar.uri.equals(calendar.uri)) {
-                requestStatus = entry;
-                break;
-            }
-        }
-        return requestStatus;
-    },
-
-    addRequestStatus: function(requestStatus) {
-        this.mRequestStatusList.push(requestStatus);
-    },
-
-    deleteRequestStatus: function(calendar) {
-        for (var i = 0; i < this.mRequestStatusList.length; ++i) {
-            if (this.mRequestStatusList[i].calendar == calendar) {
-                this.mRequestStatusList.splice(i, 1);
-                break;
             }
         }
     },
@@ -487,7 +506,7 @@ InvitationsManager.prototype = {
                 }
             }
             // delete unregistered calendar request status entry
-            this.deleteRequestStatus(calendar);
+            getInvitationsRequestManager().deleteRequestStatus(calendar);
         }
     }
 };
