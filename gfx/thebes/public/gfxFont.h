@@ -181,7 +181,9 @@ class THEBES_API gfxTextRunFactory {
     THEBES_INLINE_DECL_REFCOUNTING(gfxTextRunFactory)
 
 public:
-    // Flags >= 0x10000 are reserved for textrun clients
+    // Flags in the mask 0xFFFF0000 are reserved for textrun clients
+    // Flags in the mask 0x0000F000 are reserved for per-platform fonts
+    // Flags in the mask 0x00000FFF are set by the textrun creator.
     enum {
         /**
          * When set, the text string pointer used to create the text run
@@ -237,9 +239,11 @@ public:
         // The language of the text, or null if not known
         nsIAtom      *mLangGroup;
         // A description of which characters have been stripped from the original
-        // DOM string to produce the characters in the textrun
+        // DOM string to produce the characters in the textrun. May be null
+        // if that information is not relevant.
         gfxSkipChars *mSkipChars;
-        // A list of where linebreaks are currently placed in the textrun
+        // A list of where linebreaks are currently placed in the textrun. May
+        // be null if mInitialBreakCount is zero.
         PRUint32     *mInitialBreaks;
         PRUint32      mInitialBreakCount;
         // The ratio to use to convert device pixels to application layout units
@@ -312,6 +316,27 @@ public:
 
     const nsString& GetFamilies() { return mFamilies; }
 
+    /**
+     * Special strings are strings that we might need to draw/measure but aren't
+     * actually substrings of DOM text. They never have extra spacing and
+     * aren't involved in breaking.
+     */
+    enum SpecialString {
+        STRING_ELLIPSIS,
+        STRING_HYPHEN,
+        STRING_SPACE,
+        STRING_MAX = STRING_SPACE
+    };
+
+    // Get the textrun for the given special string. Ownership remains
+    // with this gfxFontGroup. Copy relevant parameters from the template textrun.
+    // SpecialString textruns do not use spacing and it's fine to pass null
+    // as the PropertyProvider* in their methods.
+    // This is stubbed out until we have full textrun support on all platforms.
+    virtual gfxTextRun *GetSpecialStringTextRun(SpecialString aString,
+                                                gfxTextRun *aTemplate)
+    { return nsnull; }
+
 protected:
     nsString mFamilies;
     gfxFontStyle mStyle;
@@ -337,12 +362,11 @@ protected:
  * 
  * gfxTextRuns are mostly immutable. The only things that can change are
  * inter-cluster spacing and line break placement. Spacing is always obtained
- * lazily by methods that need it; cached spacing is flushed via
- * FlushSpacingCache(). Line breaks are stored persistently (insofar
- * as they affect the shaping of glyphs; gfxTextRun does not actually do anything
- * to explicitly account for line breaks). Initially there are no line breaks.
- * The textrun can record line breaks before or after any given cluster. (Line
- * breaks specified inside clusters are ignored.)
+ * lazily by methods that need it, it is not cached. Line breaks are stored
+ * persistently (insofar as they affect the shaping of glyphs; gfxTextRun does
+ * not actually do anything to explicitly account for line breaks). Initially
+ * there are no line breaks. The textrun can record line breaks before or after
+ * any given cluster. (Line breaks specified inside clusters are ignored.)
  * 
  * gfxTextRuns don't need to remember their text ... often it's enough just to
  * convert text to glyphs and store glyphs plus some geometry data in packed
@@ -510,25 +534,6 @@ public:
                             PropertyProvider *aBreakProvider,
                             gfxFloat *aAdvanceWidth) = 0;
 
-    /**
-     * Special strings are strings that we might need to draw/measure but aren't
-     * actually substrings of the given text. They never have extra spacing and
-     * aren't involved in breaking.
-     */
-    enum SpecialString {
-        STRING_ELLIPSIS,
-        STRING_HYPHEN,
-        STRING_SPACE,
-        STRING_MAX = STRING_SPACE
-    };
-    /**
-     * Draw special string.
-     * The provided point is the baseline origin on the left of the string
-     * for LTR, on the right of the string for RTL.
-     */
-    virtual void DrawSpecialString(gfxContext *aContext, gfxPoint aPt,
-                                   SpecialString aString) = 0;
-
     // Metrics needed by reflow
     struct Metrics {
         Metrics() {
@@ -579,31 +584,11 @@ public:
                                 PropertyProvider *aProvider) = 0;
 
     /**
-     * Computes the ReflowMetrics for a special string.
-     * Uses GetSpacing from aBreakProvider.
-     * @param aTightBoundingBox if true, we make the bounding box tight
-     */
-    virtual Metrics MeasureTextSpecialString(SpecialString aString,
-                                             PRBool aTightBoundingBox) = 0;
-
-    /**
      * Computes just the advance width for a substring.
      * Uses GetSpacing from aBreakProvider.
      */
     virtual gfxFloat GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
                                      PropertyProvider *aProvider) = 0;
-
-    /**
-     * Computes the advance width for a special string.
-     */
-    virtual gfxFloat GetAdvanceWidthSpecialString(SpecialString aString) = 0;
-
-    /**
-     * Get the font metrics that we should use for drawing text decorations.
-     * Overriden here so that transforming gfxTextRuns such as smallcaps
-     * can do something special if they want to.
-     */
-    virtual gfxFont::Metrics GetDecorationMetrics() = 0;
 
     /**
      * Clear all stored line breaks for the given range (both before and after),
@@ -691,11 +676,6 @@ public:
      */
     virtual void SetContext(gfxContext *aContext) {}
 
-    /**
-     * Flush cached spacing data for the characters at and after aStart.
-     */
-    virtual void FlushSpacingCache(PRUint32 aStart) = 0;
-
     // Utility getters
 
     PRBool IsRightToLeft() const { return (mFlags & gfxTextRunFactory::TEXT_IS_RTL) != 0; }
@@ -706,14 +686,13 @@ public:
     float GetAppUnitsPerDevUnit() { return mAppUnitsPerDevUnit; }
 
 protected:
-    gfxTextRun(gfxTextRunFactory::Parameters *aParams, PRBool aIs8Bit)
+    gfxTextRun(gfxTextRunFactory::Parameters *aParams)
         : mUserData(aParams->mUserData),
           mAppUnitsPerDevUnit(aParams->mAppUnitsPerDevUnit),
           mFlags(aParams->mFlags)
     {
-        mSkipChars.TakeFrom(aParams->mSkipChars);
-        if (aIs8Bit) {
-            mFlags |= gfxTextRunFactory::TEXT_IS_8BIT;
+        if (aParams->mSkipChars) {
+            mSkipChars.TakeFrom(aParams->mSkipChars);
         }
     }
 
