@@ -1282,10 +1282,10 @@ nsCellMap::InsertRows(nsTableCellMap& aMap,
       return;
     }
   }
-  // update mContentRowCount, since non-empty rows will be added
-  mContentRowCount = PR_MAX(aFirstRowIndex, mContentRowCount);
- 
+
   if (!aConsiderSpans) {
+    // update mContentRowCount, since non-empty rows will be added
+    mContentRowCount = PR_MAX(aFirstRowIndex, mContentRowCount);
     ExpandWithRows(aMap, aRows, aFirstRowIndex, aDamageArea);
     return;
   }
@@ -1293,6 +1293,9 @@ nsCellMap::InsertRows(nsTableCellMap& aMap,
   // if any cells span into or out of the row being inserted, then rebuild
   PRBool spansCauseRebuild = CellsSpanInOrOut(aFirstRowIndex,
                                               aFirstRowIndex, 0, numCols - 1);
+  
+  // update mContentRowCount, since non-empty rows will be added
+  mContentRowCount = PR_MAX(aFirstRowIndex, mContentRowCount);
 
   // if any of the new cells span out of the new rows being added, then rebuild
   // XXX it would be better to only rebuild the portion of the map that follows the new rows
@@ -1612,6 +1615,12 @@ PRBool nsCellMap::CellsSpanInOrOut(PRInt32 aStartRowIndex,
       cellData = GetDataAt(aStartRowIndex, colX);
       if (cellData && (cellData->IsRowSpan())) {
         return PR_TRUE; // there is a row span into the region
+      }
+      if ((aStartRowIndex >= mContentRowCount) &&  (mContentRowCount > 0)) {
+        cellData = GetDataAt(mContentRowCount - 1, colX);
+        if (cellData && cellData->IsZeroRowSpan()) {
+          return PR_TRUE;  // When we expand the zerospan it'll span into our row
+        }
       }
     }
     if (aEndRowIndex < numRows - 1) { // is there anything below aEndRowIndex
@@ -1974,8 +1983,9 @@ nsCellMap::GetRowSpanForNewCell(nsTableCellFrame* aCellFrameToAdd,
   aIsZeroRowSpan = PR_FALSE;
   PRInt32 rowSpan = aCellFrameToAdd->GetRowSpan();
   if (0 == rowSpan) {
-    // use a min value of 2 for a zero rowspan to make computations easier elsewhere 
-    rowSpan = PR_MAX(2, mContentRowCount - aRowIndex);
+    // Use a min value of 2 for a zero rowspan to make computations easier
+    // elsewhere. Zero rowspans are only content dependent!
+    rowSpan = PR_MAX(2, mContentRowCount - aRowIndex); 
     aIsZeroRowSpan = PR_TRUE;
   }
   return rowSpan;
