@@ -167,22 +167,25 @@ var PlacesCommandHook = {
 
   /**
    * Opens the Places Organizer. 
-   * @param   place
+   * @param   aPlace
    *          The place to select in the organizer window (a place: URI) 
+   * @param   aForcePlace
+   *          If true, aPlace will be set even if the organizer window is 
+   *          already open
    */
-  showPlacesOrganizer: function PCH_showPlacesOrganizer(place) {
-    var wm = 
-        Cc["@mozilla.org/appshell/window-mediator;1"].
-        getService(Ci.nsIWindowMediator);
+  showPlacesOrganizer: function PCH_showPlacesOrganizer(aPlace, aForcePlace) {
+    var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+             getService(Ci.nsIWindowMediator);
     var organizer = wm.getMostRecentWindow("Places:Organizer");
     if (!organizer) {
       // No currently open places window, so open one with the specified mode.
       openDialog("chrome://browser/content/places/places.xul", 
-                 "", "chrome,toolbar=yes,dialog=no,resizable", place);
+                 "", "chrome,toolbar=yes,dialog=no,resizable", aPlace);
     }
     else {
-      // Set the mode on an existing places window. 
-      organizer.selectPlaceURI(place);
+      if (aForcePlace)
+        organizer.selectPlaceURI(aPlace);
+
       organizer.focus();
     }
   },
