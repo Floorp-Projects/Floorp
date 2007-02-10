@@ -47,6 +47,7 @@
 
 #include "TextDebugLog.h"
 #include "plstr.h"
+#include "nsCRT.h"
 
 #define kWhitespace    " \t\b\r\n"
 
@@ -163,7 +164,10 @@ nsresult nsTextAddress::ReadRecord(nsILineInputStream *aLineStream, nsCString &a
       // Read the line and append it
       rv = aLineStream->ReadLine(line, &more);
       if (NS_SUCCEEDED(rv)) {
-        aLine += line;
+        if (!aLine.IsEmpty())
+          aLine.AppendLiteral(NS_LINEBREAK);
+        aLine.Append(line);
+
         numQuotes += line.CountChar('"');
       }
     }
@@ -358,13 +362,6 @@ PRBool nsTextAddress::GetField( const char *pLine, PRInt32 maxLen, PRInt32 index
     }
 
     return( result);
-}
-
-void nsTextAddress::SanitizeSingleLine( nsCString& val)
-{
-    val.ReplaceSubstring( "\x0D\x0A", ", ");
-    val.ReplaceChar( 13, ' ');
-    val.ReplaceChar( 10, ' ');
 }
 
 nsresult nsTextAddress::DetermineDelim(nsIFile *aSrc)

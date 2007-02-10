@@ -71,7 +71,6 @@ private:
 	nsresult ProcessLine(const char *pLine, PRInt32 len, nsString& errors);
 	
 	static PRInt32 CountFields(const char *pLine, PRInt32 maxLen, char delim);
-	static void	SanitizeSingleLine( nsCString& val);
 	static nsresult ReadRecord(nsILineInputStream *pSrc, nsCString &aLine, char delim, PRBool *aMore);
 
 	char m_delim;
