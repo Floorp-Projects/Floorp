@@ -174,10 +174,6 @@
 
 #ifdef MOZ_PLACES
   <commandset id="placesCommands">
-    <command id="Browser:ShowHistory" 
-             oncommand="PlacesCommandHook.showPlacesOrganizer(ORGANIZER_ROOT_HISTORY);"/>
-    <command id="Browser:SearchHistory"
-             oncommand="HistoryMenu.showPlacesSearch();"/>
 #ifdef MOZ_PLACES_BOOKMARKS
     <command id="Browser:ShowBookmarks" 
              oncommand="PlacesCommandHook.showPlacesOrganizer(ORGANIZER_ROOT_BOOKMARKS);"/>           
