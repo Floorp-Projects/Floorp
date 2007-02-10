@@ -54,7 +54,7 @@ use Bugzilla::Testopia::Constants;
 use Bugzilla::Bug;
 
 use Date::Format;
-
+use Date::Parse;
 
 ###############################
 ####    Initialization     ####
@@ -72,6 +72,7 @@ use Date::Format;
     build_id
     environment_id
     notes
+    running_date
     close_date
     iscurrent
     sortkey
@@ -89,6 +90,7 @@ use constant DB_COLUMNS => qw(
     build_id
     environment_id
     notes
+    running_date
     close_date
     iscurrent
     sortkey
@@ -205,11 +207,22 @@ sub store {
     my $self = shift;
     my $dbh = Bugzilla->dbh;    
     $dbh->do("INSERT INTO test_case_runs ($columns)
-              VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)", undef,
-              (undef, $self->{'run_id'}, $self->{'case_id'}, $self->{'assignee'},
-               undef, IDLE, $self->{'case_text_version'}, 
-               $self->{'build_id'}, $self->{'environment_id'}, 
-               undef, undef, 1, 0));
+              VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)", undef,
+              (undef,                         # case_run_id 
+               $self->{'run_id'},             # run_id
+               $self->{'case_id'},            # case_id
+               $self->{'assignee'},           # assignee
+               undef,                         # testedby
+               IDLE,                          # case_run_status_id
+               $self->{'case_text_version'},  # case_text_version
+               $self->{'build_id'},           # build_id
+               $self->{'environment_id'},     # environment_id
+               undef,                         # notes
+               undef,                         # running_date
+               undef,                         # close_date
+               1,                             # iscurrent
+               0,                             # sortkey
+              ));
 
     my $key = $dbh->bz_last_key( 'test_case_runs', 'case_run_id' );
     return $key;               
@@ -229,11 +242,22 @@ sub clone {
     
     my $dbh = Bugzilla->dbh;    
     $dbh->do("INSERT INTO test_case_runs ($columns)
-              VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)", undef,
-              (undef, $run_id, $case_id, $self->{'assignee'},
-               undef, IDLE, $self->{'case_text_version'}, 
-               $build_id, $env_id, 
-               undef, undef, 1, 0));
+              VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)", undef,
+              (undef,                         # case_run_id 
+               $run_id,                       # run_id
+               $case_id,                      # case_id
+               $self->{'assignee'},           # assignee
+               undef,                         # testedby
+               IDLE,                          # case_run_status_id
+               $self->{'case_text_version'},  # case_text_version
+               $build_id,                     # build_id
+               $env_id,                       # environment_id
+               undef,                         # notes
+               undef,                         # running_date
+               undef,                         # close_date
+               1,                             # iscurrent
+               0,                             # sortkey
+              ));
 
     my $key = $dbh->bz_last_key( 'test_case_runs', 'case_run_id' );
     
@@ -377,6 +401,8 @@ sub set_status {
         $self->{'testedby'} = undef;
     }
     elsif ($status_id == RUNNING || $status_id == PAUSED){
+        my $timestamp = Bugzilla::Testopia::Util::get_time_stamp();
+        $self->_update_fields({'running_date' => $timestamp}) if $status_id == RUNNING; 
         $self->_update_fields({'close_date' => undef});
         $self->{'close_date'} = undef;
     }
@@ -741,6 +767,7 @@ sub run_id            { return $_[0]->{'run_id'};          }
 sub testedby          { return Bugzilla::User->new($_[0]->{'testedby'});   }
 sub assignee          { return Bugzilla::User->new($_[0]->{'assignee'});   }
 sub case_text_version { return $_[0]->{'case_text_version'};   }
+sub running_date      { return $_[0]->{'running_date'};   }
 sub close_date        { return $_[0]->{'close_date'};   }
 sub iscurrent         { return $_[0]->{'iscurrent'};   }
 sub status_id         { return $_[0]->{'case_run_status_id'};   }
@@ -998,6 +1025,16 @@ sub candelete {
     return 1 if Bugzilla->user->in_group('Testers') && Param("testopia-allow-group-member-deletes");
     return 1 if $self->run->plan->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) & 4;
     return 1 if $self->run->plan->get_user_rights(Bugzilla->user->id, GRANT_DIRECT) & 4;
+    return 0;
+}
+
+sub completion_time {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+    if ($self->running_date && $self->close_date){
+        my $seconds = str2time($self->close_date) - str2time($self->running_date);
+        return $seconds;
+    } 
     return 0;
 }
 

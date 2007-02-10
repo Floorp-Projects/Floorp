@@ -93,6 +93,7 @@ if ($action eq 'Add'){
     my $tcdependson = $cgi->param("tcdependson")|| '';
     my $tcblocks    = $cgi->param("tcblocks")|| '';
     my $tester      = $cgi->param("tester") || '';
+    my $est_time    = $cgi->param("estimated_time") || '';
     my @comps       = $cgi->param("components");
     if ($tester){
         $tester = DBNameToIdAndCheck($cgi->param('tester'));
@@ -105,6 +106,11 @@ if ($action eq 'Add'){
     detaint_natural($priority);
     detaint_natural($isautomated);
 
+    $est_time =~ m/(\d+)[:\s](\d+)[:\s](\d+)/;
+    ThrowUserError('testopia-format-error', {'field' => 'Estimated Time' })
+      unless ($1 < 24 && $2 < 60 && $3 < 60);
+    $est_time = "$1:$2:$3";
+    
     # All inserts are done with placeholders so this is OK
     trick_taint($alias);
     trick_taint($script);
@@ -139,6 +145,7 @@ if ($action eq 'Add'){
             'category_id'    => $category,
             'priority_id'    => $priority,
             'isautomated'    => $isautomated,
+            'estimated_time' => $est_time,
             'script'         => $script,
             'arguments'      => $arguments,
             'summary'        => $summary,

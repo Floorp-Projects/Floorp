@@ -77,6 +77,7 @@ use Text::Diff;
     author_id
     default_tester_id  
     creation_date
+    estimated_time
     isautomated
     sortkey
     script
@@ -88,20 +89,21 @@ use Text::Diff;
 =cut
 
 use constant DB_COLUMNS => qw(
-    test_cases.case_id
+    case_id
     test_cases.case_status_id
-    test_cases.category_id
-    test_cases.priority_id
-    test_cases.author_id
-    test_cases.default_tester_id  
-    test_cases.creation_date
-    test_cases.isautomated
-    test_cases.sortkey
-    test_cases.script
-    test_cases.arguments
-    test_cases.summary
-    test_cases.requirement
-    test_cases.alias
+    category_id
+    priority_id
+    author_id
+    default_tester_id  
+    creation_date
+    estimated_time
+    isautomated
+    sortkey
+    script
+    arguments
+    summary
+    requirement
+    alias
 );
 
 use constant ALIAS_MAX_LENGTH => 255;
@@ -552,13 +554,24 @@ sub store {
     my $dbh = Bugzilla->dbh;    
     my ($timestamp) = Bugzilla::Testopia::Util::get_time_stamp();
     $dbh->do("INSERT INTO test_cases ($columns)
-              VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-              undef, (undef, $self->{'case_status_id'}, $self->{'category_id'}, 
-              $self->{'priority_id'}, $self->{'author_id'}, $self->{'default_tester_id'},
-              $timestamp, $self->{'isautomated'}, $self->sortkey, $self->{'script'},
-              $self->{'arguments'}, $self->{'summary'}, $self->{'requirement'},
-              $self->{'alias'}));
-
+              VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+              undef,                      ## Database Column ##
+              (undef,                        # case_id
+               $self->{'case_status_id'},    # case_status_id 
+               $self->{'category_id'},       # category_id
+               $self->{'priority_id'},       # priority_id 
+               $self->{'author_id'},         # author_id 
+               $self->{'default_tester_id'}, # default_tester_id
+               $timestamp,                   # creation_date 
+               $self->{'estimated_time'},    # estimated_time 
+               $self->{'isautomated'},       # isautomated 
+               $self->sortkey,               # sortkey 
+               $self->{'script'},            # script
+               $self->{'arguments'},         # arguments 
+               $self->{'summary'},           # summary 
+               $self->{'requirement'},       # requirement
+               $self->{'alias'},             # alias
+              ));
     my $key = $dbh->bz_last_key( 'test_cases', 'case_id' );
 
     $self->store_text($key, $self->{'author_id'}, $self->{'action'}, $self->{'effect'},  
@@ -685,12 +698,24 @@ sub copy {
     my ($planid, $author, $copydoc) = @_;
     my ($timestamp) = Bugzilla::Testopia::Util::get_time_stamp();
     $dbh->do("INSERT INTO test_cases ($columns)
-              VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-              undef, (undef, $self->{'case_status_id'}, $self->{'category_id'}, 
-              $self->{'priority_id'}, $author, $self->{'default_tester_id'}, 
-              $timestamp, $self->{'isautomated'}, $self->sortkey, $self->{'script'},
-              $self->{'arguments'}, $self->{'summary'}, $self->{'requirement'},
-              undef));
+              VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+              undef, 
+              (undef,                        # case_id
+               $self->{'case_status_id'},    # case_status_id 
+               $self->{'category_id'},       # category_id
+               $self->{'priority_id'},       # priority_id 
+               $author,                      # author_id 
+               $self->{'default_tester_id'}, # default_tester_id
+               $timestamp,                   # creation_date 
+               $self->{'estimated_time'},    # estimated_time 
+               $self->{'isautomated'},       # isautomated 
+               $self->sortkey,               # sortkey 
+               $self->{'script'},            # script
+               $self->{'arguments'},         # arguments 
+               $self->{'summary'},           # summary 
+               $self->{'requirement'},       # requirement
+               undef                         # alias
+              ));
 
     my $key = $dbh->bz_last_key( 'test_cases', 'case_id' );
     
@@ -1332,6 +1357,7 @@ sub id              { return $_[0]->{'case_id'};       }
 sub author          { return Bugzilla::User->new($_[0]->{'author_id'});  }
 sub default_tester  { return Bugzilla::User->new($_[0]->{'default_tester_id'});  }
 sub creation_date   { return $_[0]->{'creation_date'}; }
+sub estimated_time  { return $_[0]->{'estimated_time'}; }
 sub isautomated     { return $_[0]->{'isautomated'};   }
 sub script          { return $_[0]->{'script'};        }
 sub status_id       { return $_[0]->{'case_status_id'};}
@@ -1620,6 +1646,17 @@ sub runs {
     return $self->{'runs'};
 }
 
+sub run_count {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+    my ($runcount) = $dbh->selectrow_array(
+        "SELECT DISTINCT count(run_id)
+           FROM test_case_runs
+          WHERE case_id = ?",
+          undef, $self->id);
+    return $runcount;     
+}
+
 =head2 caseruns
 
 Returns a reference to a list of Bugzilla::Testopia::TestCaseRun objects 
@@ -1734,6 +1771,32 @@ sub dependson_list_uncached {
     my ($self) = @_;
     my $ref = _get_dep_lists("blocked", "dependson", $self->{'case_id'});
     return join(" ", @$ref)
+}
+
+sub calculate_average_time {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+    my $totalseconds;
+    my $min = 0;
+    my $hours = 0;
+    my $sec = 0;
+    my $i = 0;
+    foreach my $cr (@{$self->caseruns}){
+        if ($cr->completion_time){
+            $totalseconds += $cr->completion_time;
+            $i++;
+        }
+    }
+    
+    my $average = $i ? int($totalseconds / $i) : 0;
+    $min = int($average/60);
+    $sec = $average % 60;
+    if ($min > 60){
+        $hours = int($min/60);
+        $min = $min % 60;
+    }
+     
+    return "$hours:$min:$sec";
 }
 
 

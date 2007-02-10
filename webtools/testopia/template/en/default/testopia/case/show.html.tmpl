@@ -157,7 +157,7 @@
     <tr class="bz_row_header">
       <th>Used in Plans</th>
       <th>[% terms.Bugs %] Detected</th>
-      <th>Found in Runs</th>
+      <th>Found in Runs (total)</th>
     </tr>
     <tr class="bz_row_data">
       <td>
@@ -174,7 +174,7 @@
         <a href="show_bug.cgi?id=[% bug.id FILTER none %]">[% bug.id FILTER none %]</a>
       [% END %]
       </td>
-      <td>[% case.run_count FILTER none %]</td>
+      <td><a href="tr_list_runs.cgi?case_id=[% case.id FILTER none %]">[% case.run_count FILTER none %]</a></td>
     </tr>
     <tr class="bz_row_data">
       <td colspan="3"><div align="right">
@@ -258,8 +258,29 @@
 [%##### Reports #####%]
 <br><br>
 <h3>Reports</h3>
-<img src="tr_case_reports.cgi?case_id=[% case.id FILTER none %]&type=status-breakdown">
-<a href="tr_query.cgi?current_tab=case&report=1">General Reports</a>
+<table>
+  <tr>
+    <td>
+      <img src="tr_case_reports.cgi?case_id=[% case.id FILTER none %]&type=status-breakdown">
+    </td>
+    <td>
+    <table>
+    <tr class="bz_row_header">
+      <th>Tabular Reports</th>
+      <th>Time Reports</th>
+    </tr>
+    <tr>
+    <td valign="top"><a href="tr_query.cgi?current_tab=case&report=1">General Reports</a></td>
+    <td valign="top" align="center">
+      <b>Estimated Time</b><br>
+      [% case.estimated_time FILTER html %]<br><br>
+      <b>Actual Average Time</b><br>
+      [% case.calculate_average_time FILTER html %]
+    </td>
+    </tr>
+    </table>
+  </tr>
+</table>
 [%##### Attachments #####%]
 <br><br>
 <h3>Attachments</h3>

@@ -419,7 +419,10 @@ sub updateACLs {
 }
 sub populateMiscTables {
     my ($dbh) = (@_);
-
+    
+    $dbh->do("INSERT INTO test_fielddefs (fieldid, name, description, table_name) VALUES (24, 'estimated_time', 'Estimated Time', 'test_cases')")
+      if $dbh->selectrow_array("SELECT COUNT(*) FROM test_fieldefs WHERE name = 'estimated_time' AND table_name = 'test_cases'") == 0;
+      
     # Insert initial values in static tables. Going out on a limb and
     # assuming that if one table is empty, they all are.
     return unless $dbh->selectrow_array("SELECT COUNT(*) FROM test_case_run_status") == 0;

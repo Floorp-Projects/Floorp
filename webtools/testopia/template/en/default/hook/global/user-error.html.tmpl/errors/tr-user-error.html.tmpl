@@ -126,5 +126,8 @@
   [% ELSIF error == "testopia-plan-acl-denied" %]
     [% title = "Plan Administrator Privileges Required" %]
     You must be an administrator of this test plan to modify the access control list. 
+  [% ELSIF error == "testopia-format-error" %]
+    [% title = "Field format error" %]
+    [% field %] is not formatted correctly.
   [% END %]
   

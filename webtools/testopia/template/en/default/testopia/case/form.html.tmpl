@@ -46,29 +46,29 @@
 [% END %]
 <a name="attributes"></a>
   <input type="hidden" name="case_id" value="[% case.id FILTER none %]"/>
-<table border="0">
+<table>
 <tr><td>  
-  <table border="0">
+  <table>
     <tr>
-      <td valign="top" align="right"><b>Summary</b></td>
+      <th align="right">Summary</td>
       <td colspan="3"><input name="summary" size="80" value="[% case.summary FILTER html %]"></td>
     </tr>
     <tr>
-      <td align="right"><b>Default Tester</b></td>
+      <th align="right">Default Tester</td>
       <td><input name="tester" id="tester" size="30" value="[% case.default_tester.login FILTER html %]" /></td>
-      <td align="right"><b>Add Tags</b></td>
+      <th align="right">Add Tags</td>
       <td><input name="addtags" size="30" /></td>
     </tr>
     
     <tr>
-      <td align="right"><b>Alias</b></td>
+      <th align="right">Alias</td>
       <td><input name="alias" size="30" value="[% case.alias FILTER html %]"></td>
-      <td align="right"><b>Requirement:</b></td>
+      <th align="right">Requirement:</td>
       <td><input name="requirement" size="30" value="[% case.requirement FILTER html %]"></td>
     </tr>
   
     <tr>
-      <td align="right"><b>Status</b></td>
+      <th align="right">Status</td>
       <td>
         [% IF action == 'Add' %]
           [% status_default = Param('default-test-case-status') %]
@@ -81,7 +81,7 @@
                                   default   => status_default 
                                   events => 'onChange="checkAddruns(this.value)"'} %]
       </td>
-      <td align="right"><b>Automatic</b></td>
+      <th align="right">Automatic</td>
       <td><select name="isautomated" id="isautomated">
             <option value="0">Manual</option>
             <option value="1" [% 'selected' IF case.isautomated %]>Automatic</option>
@@ -90,7 +90,7 @@
     </tr>
 
     <tr>
-      <td align="right"><b>Priority<b></b></b></td>
+      <th align="right">Priority</td>
       <td>
         [% PROCESS select sel = { name      => 'priority',
                                   accesskey => 'p', 
@@ -98,23 +98,26 @@
                                   default   => case.priority ? case.priority : Param('defaultpriority')} %]
       </td>
       
-      <td align="right"><b>Script</b></td>
+      <th align="right">Script</td>
       <td><input name="script" id="script" value="[% case.script FILTER html %]"></td>
     </tr>
 
     <tr>
-      <td align="right"><b><a href="tr_categories.cgi?plan_id=[% case.plans.0.id %]" target="_blank">Category</a></b></td>
+      <th align="right"><a href="tr_categories.cgi?plan_id=[% case.plans.0.id %]" target="_blank">Category</a></td>
       <td>
         [% PROCESS select sel = { name      => 'category',
                                   accesskey => 'c', 
                                   list      => case.get_category_list
                                   default   => case.category.name } %]
       </td>
-      <td align="right"><b>Arguments:</b></td>
+      <th align="right">Arguments:</td>
       <td><input name="arguments" id="arguments" value="[% case.arguments FILTER html %]"></td>
     </tr>
     <tr>
-      <th align="right">Add to Runs</th><td colspan="3"><input name="addruns" id="addruns" size="30" [% 'disabled="disabled"' UNLESS case.status == 'CONFIRMED' OR (Param('default-test-case-status') == 'CONFIRMED' AND form_action == 'tr_new_case.cgi') %]></td>
+      <th align="right">Estimated&nbsp;Time:<br>(HH:MM:SS)</th>
+      <td><input name="estimated_time" value="[% case.estimated_time FILTER html %]"></td>
+      <th align="right">Add to Runs</th>
+      <td><input name="addruns" id="addruns" size="30" [% 'disabled="disabled"' UNLESS case.status == 'CONFIRMED' OR (Param('default-test-case-status') == 'CONFIRMED' AND form_action == 'tr_new_case.cgi') %]></td>
     </tr>  
   </table> 
  </td>
