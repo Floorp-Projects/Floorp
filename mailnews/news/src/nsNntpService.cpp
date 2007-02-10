@@ -1776,9 +1776,6 @@ nsNntpService::HandleContent(const char * aContentType, nsIInterfaceRequestor* a
     if (uri)
     {
       nsXPIDLCString uriStr;
-      nsCOMPtr<nsIWindowMediator> mediator(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv));
-      NS_ENSURE_SUCCESS(rv, rv);
-      nsCOMPtr<nsIDOMWindowInternal> window;
       nsCOMPtr <nsIMsgFolder> msgFolder;
       nsCOMPtr <nsINNTPProtocol> protocol = do_QueryInterface(aChannel);
       if (protocol)
@@ -1788,11 +1785,24 @@ nsNntpService::HandleContent(const char * aContentType, nsIInterfaceRequestor* a
 
       if (!uriStr.IsEmpty())
       {
-        nsCOMPtr <nsIMessengerWindowService> messengerWindowService = do_GetService(NS_MESSENGERWINDOWSERVICE_CONTRACTID,&rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        rv = messengerWindowService->OpenMessengerWindowWithUri("mail:3pane", uriStr.get(), nsMsgKey_None);
-        NS_ENSURE_SUCCESS(rv, rv);
+        nsCOMPtr <nsIURI> originalUri;
+        aChannel->GetOriginalURI(getter_AddRefs(originalUri));
+        if (originalUri)
+        {
+          nsCOMPtr <nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(originalUri);
+          if (mailUrl)
+          {
+            nsCOMPtr <nsIMsgWindow> msgWindow;
+            mailUrl->GetMsgWindow(getter_AddRefs(msgWindow));
+            if (msgWindow)
+            {
+              nsCOMPtr <nsIMsgWindowCommands> windowCommands;
+              msgWindow->GetWindowCommands(getter_AddRefs(windowCommands));
+              if (windowCommands)
+                windowCommands->SelectFolder(uriStr);
+            }
+          }
+        }
       }
     }
   } else 

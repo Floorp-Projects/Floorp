@@ -1011,7 +1011,8 @@ function loadStartFolder(initialUri)
     }
     catch(ex)
     {
-      if (initialUri)
+      // this is the case where we're trying to auto-subscribe to a folder.
+      if (initialUri && !startFolder.parent)
       {
         messenger.loadURL(window, initialUri);
         return;
