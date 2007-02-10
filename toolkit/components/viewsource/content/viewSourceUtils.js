@@ -119,6 +119,7 @@ var gViewSourceUtils = {
       }
     } catch (ex) {
       // we failed loading it with the external editor.
+      Components.utils.reportError(ex);
       this.handleCallBack(aCallBack, false, data);
       return;
     }
@@ -165,7 +166,7 @@ var gViewSourceUtils = {
       }
     }
     catch (ex) {
-      dump(ex);
+      Components.utils.reportError(ex);
     }
     return editor;
   },
@@ -224,6 +225,7 @@ var gViewSourceUtils = {
           gViewSourceUtils.handleCallBack(this.callBack, true, this.data);
         } catch (ex) {
           // we failed loading it with the external editor.
+          Components.utils.reportError(ex);
           gViewSourceUtils.handleCallBack(this.callBack, false, this.data);
         } finally {
           this.destroy();
