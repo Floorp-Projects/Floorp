@@ -98,7 +98,7 @@
               return;
             }
 
-            this.findbar._findAgain(aEvent.shiftKey);
+            this.findbar.onFindAgainCommand(aEvent.shiftKey);
           }
           else {
             // We need to keep a reference to _foundLink because
@@ -264,6 +264,11 @@
 
       <field name="_flashFindBar">0</field>
       <field name="_initialFlashFindBarCount">6</field>
+
+      <property name="prefillWithSelection"
+                onget="return this.getAttribute('prefillwithselection') != 'false'"
+                onset="this.setAttribute('prefillwithselection', val); return val;"/>
+      <field name="_selectionMaxLen">150</field>
 
       <method name="getElement">
         <parameter name="aAnonymousID"/>
@@ -1091,6 +1096,8 @@
 
           if (this._findMode != this.FIND_NORMAL)
             this._setFindCloseTimeout();
+
+          return res;
         ]]></body>
       </method>
 
@@ -1166,6 +1173,42 @@
         ]]></body>
       </method>
 
+      <method name="_getInitialSelection">
+        <body><![CDATA[
+          var focusedElement = document.commandDispatcher.focusedElement;
+          var selText;
+
+          if (focusedElement instanceof Components.interfaces.nsIDOMNSEditableElement &&
+            focusedElement.ownerDocument.defaultView.top == this._browser.contentWindow)
+          {
+            // The user may have a selection in an input or textarea
+            selText = focusedElement.editor.selectionController
+              .getSelection(Components.interfaces.nsISelectionController.SELECTION_NORMAL)
+              .toString();
+          }
+          else {
+            // Look for any selected text on the actual page
+            var focusedWindow = document.commandDispatcher.focusedWindow;
+            if (focusedWindow.top == this._browser.contentWindow)
+              selText = focusedWindow.getSelection().toString();
+          }
+
+          if (!selText)
+            return "";
+
+          // Process our text to get rid of unwanted characters
+          if (selText.length > this._selectionMaxLen) {
+            var pattern = new RegExp("^(?:\\s*.){0," + this._selectionMaxLen + "}");
+            pattern.test(selText);
+            selText = RegExp.lastMatch;
+          }
+          return selText.replace(/^\s+/, "")
+                        .replace(/\s+$/, "")
+                        .replace(/\s+/g, " ")
+                        .substr(0, this._selectionMaxLen);
+        ]]></body>
+      </method>
+
       <!--
         - Opens the findbar, focuses the findfield and selects its contents.
         - Also flashes the findbar the first time it's used.
@@ -1177,17 +1220,31 @@
       <method name="startFind">
         <parameter name="aMode"/>
         <body><![CDATA[
+          var prefsvc =
+            Components.classes["@mozilla.org/preferences-service;1"]
+                      .getService(Components.interfaces.nsIPrefBranch2);
+          var userWantsPrefill = true;
           this.open(aMode);
+
           if (this._flashFindBar) {
             this._flashFindBarTimeout =
               setInterval(function(aSelf) { aSelf._flash(); }, 500, this);
-            var prefsvc =
-              Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefBranch2);
-
             prefsvc.setIntPref("accessibility.typeaheadfind.flashBar",
                                --this._flashFindBar);
           }
+
+          if (this.prefillWithSelection)
+            userWantsPrefill = 
+              prefsvc.getBoolPref("accessibility.typeaheadfind.prefillwithselection");
+
+          var initialString = (this.prefillWithSelection && userWantsPrefill) ?
+                              this._getInitialSelection() : null;
+          if (initialString) {
+            this._findField.value = initialString;
+            this._enableFindButtons(true);
+          }
+          else if (!this._findField.value)
+            this._enableFindButtons(false);
 
           this._findField.select();
           this._findField.focus();
@@ -1214,13 +1271,20 @@
       <method name="onFindAgainCommand">
         <parameter name="aFindPrevious"/>
         <body><![CDATA[
-          var findString = this.browser.fastFind.searchString;
+          var findString = this._browser.fastFind.searchString || this._findField.value;
           if (!findString) {
             this.startFind();
             return;
           }
 
-          var res = this._findAgain(aFindPrevious);
+          var res;
+          // Ensure the stored SearchString is in sync with what we want to find
+          if (this._findField.value != this._browser.fastFind.searchString &&
+              !this.hidden)
+            res = this._find(this._findField.value);
+          else
+            res = this._findAgain(aFindPrevious);
+
           if (res == this.nsITypeAheadFind.FIND_NOTFOUND) {
             if (this.open()) {
               if (this._findMode != this.FIND_NORMAL)
