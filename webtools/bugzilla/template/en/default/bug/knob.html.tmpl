@@ -106,8 +106,8 @@
         <input type="radio" id="knob-reassign-cmp" name="knob" value="reassignbycomponent">
         <label for="knob-reassign-cmp">
           Reassign [% terms.bug %] to default assignee
-          [% " and QA contact" IF Param('useqacontact') %],
-          and add Default CC, of selected component
+          [% " and QA contact," IF Param('useqacontact') %]
+          and add Default CC of selected component
         </label>
         <br>
         [% IF bug.isunconfirmed && bug.user.canconfirm %]
