@@ -148,6 +148,7 @@ pref("accessibility.typeaheadfind.timeout", 4000);
 pref("accessibility.typeaheadfind.enabletimeout", true);
 pref("accessibility.typeaheadfind.soundURL", "beep");
 pref("accessibility.typeaheadfind.enablesound", true);
+pref("accessibility.typeaheadfind.prefillwithselection", true);
 
 pref("browser.history_expire_days", 9);
 
