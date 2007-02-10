@@ -36,8 +36,8 @@
 #
 # ***** END LICENSE BLOCK *****
 */
-const KEY_APPDIR = "XCurProcD";
-const KEY_PROFILEDIR = "PrefD";
+
+const KEY_ISP_DIRECTORY_LIST = "ISPDL";
 
 function onInit(aPageId, aServerId)
 {
@@ -120,19 +120,16 @@ function onActionTargetChange(aMenuList, aWSMElementId)
 
 function buildServerFilterMenuList()
 {
-  // First, scan the profile directory for any .sfd files we may have there. 
   var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
                               .getService(Components.interfaces.nsIProperties);
-
-  var profileDir = fileLocator.get(KEY_PROFILEDIR, Components.interfaces.nsIFile);
-  buildServerFilterListFromDir(profileDir);
-
-  // Then, fall back to defaults\messenger and list the default sfd files we shipped with
-  var appDir = fileLocator.get(KEY_APPDIR, Components.interfaces.nsIFile);
-  appDir.append('defaults');
-  appDir.append('messenger');
-
-  buildServerFilterListFromDir(appDir);
+  // Now walk through the isp directories looking for sfd files
+  var ispDirectories = fileLocator.get(KEY_ISP_DIRECTORY_LIST, Components.interfaces.nsISimpleEnumerator);
+  while (ispDirectories.hasMoreElements()) 
+  {
+    ispDirectory = ispDirectories.getNext().QueryInterface(Components.interfaces.nsIFile);
+    if (ispDirectory)
+      buildServerFilterListFromDir(ispDirectory);
+  }
 }
 
 // helper function called by buildServerFilterMenuList. Enumerates over the passed in

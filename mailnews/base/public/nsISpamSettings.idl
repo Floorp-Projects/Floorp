@@ -44,8 +44,9 @@
 interface nsIOutputStream;
 interface nsIMsgIncomingServer;
 interface nsIMsgDBHdr;
+interface nsIFile;
 
-[scriptable, uuid(A2C3A171-5A1B-41e2-AB43-3C4F22E96638)]
+[scriptable, uuid(60BF2B22-AA8C-4cb2-80C8-ADC8B508E425)]
 interface nsISpamSettings: nsISupports {
   /**
    * 0 for nothing, 100 for highest
@@ -93,6 +94,7 @@ interface nsISpamSettings: nsISupports {
    */
   attribute boolean useServerFilter;
   attribute ACString serverFilterName;
+  readonly attribute nsIFile serverFilterFile;
   const long TRUST_POSITIVES = 1;
   const long TRUST_NEGATIVES = 2;
   attribute long serverFilterTrustFlags;

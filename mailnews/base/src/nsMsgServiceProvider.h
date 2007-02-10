@@ -60,9 +60,7 @@ class nsMsgServiceProviderService : public nsIRDFDataSource
   nsCOMPtr<nsIRDFCompositeDataSource> mInnerDataSource;
   nsresult LoadDataSource(const char *aURL);
 
-#ifdef MOZ_XUL_APP
   void LoadISPFilesFromDir(nsIFile* aDir);
   void LoadISPFiles();
-#endif
 };
 #endif

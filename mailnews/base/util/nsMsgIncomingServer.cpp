@@ -1955,37 +1955,13 @@ nsMsgIncomingServer::ConfigureTemporaryServerSpamFilters(nsIMsgFilterList *filte
   if (newFilter)
     return NS_OK;
 
-  nsCAutoString serverFilterFileName(serverFilterName);
-  serverFilterFileName.Append(".sfd");
   nsCOMPtr<nsIFile> file;
-  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
-  NS_ENSURE_SUCCESS(rv, rv);
+  spamSettings->GetServerFilterFile(getter_AddRefs(file));
 
-  rv = file->AppendNative(serverFilterFileName);
-
-  // if the file doesn't exist, we should try to get it from the defaults directory and copy it over
-  PRBool exists = PR_FALSE;
-  file->Exists(&exists);
-  if (!exists)
-  {
-      nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-      nsCOMPtr<nsIFile> defaultServerFilterFile;
-      rv = mailSession->GetDataFilesDir("messenger", getter_AddRefs(defaultServerFilterFile));
-      rv = defaultServerFilterFile->AppendNative(serverFilterFileName);
-
-      nsCOMPtr<nsIFileSpec> defaultServerFilterSpec;
-      rv = NS_NewFileSpecFromIFile(defaultServerFilterFile, getter_AddRefs(defaultServerFilterSpec));
-      
-      // get the profile directory
-      rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(defaultServerFilterFile));
-      
-      // convert to spec
-      nsCOMPtr<nsIFileSpec> profileDirSpec;
-      rv = NS_NewFileSpecFromIFile(defaultServerFilterFile, getter_AddRefs(profileDirSpec));
-      // now copy the file over to the profile directory
-      defaultServerFilterSpec->CopyToDir(profileDirSpec);
-  }
+  // it's possible that we can no longer find the sfd file (i.e. the user disabled an extnsion that
+  // was supplying the .sfd file.
+  if (!file)
+    return NS_OK;
 
   nsCOMPtr<nsIFileSpec> serverFilterSpec;
   rv = NS_NewFileSpecFromIFile(file, getter_AddRefs(serverFilterSpec));

@@ -130,6 +130,7 @@ CPPSRCS		= \
 		nsMsgContentPolicy.cpp \
 		nsMsgTagService.cpp\
                 nsMsgFolderNotificationService.cpp\
+		nsMailDirProvider.cpp\
 		$(NULL)
 
 # MacOSX requires the MoreFiles module
@@ -156,10 +157,6 @@ endif
 
 ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),gtk gtk2))
 CPPSRCS		+= nsMessengerUnixIntegration.cpp 
-endif
-
-ifdef MOZ_XUL_APP
-CPPSRCS += nsMailDirProvider.cpp
 endif
 
 ifdef MOZ_LDAP_XPCOM

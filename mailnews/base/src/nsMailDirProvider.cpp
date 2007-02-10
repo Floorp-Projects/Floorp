@@ -37,7 +37,9 @@
 
 #include "nsMailDirProvider.h"
 #include "nsMailDirServiceDefs.h"
+#ifdef MOZ_XUL_APP
 #include "nsXULAppAPI.h"
+#endif
 #include "nsMsgBaseCID.h"
 #include "nsArrayEnumerator.h"
 #include "nsCOMArray.h"
@@ -78,29 +80,27 @@ nsMailDirProvider::GetFiles(const char *aKey,
   nsresult rv = dirSvc->Get(NS_XPCOM_CURRENT_PROCESS_DIR,
                    NS_GET_IID(nsIFile), getter_AddRefs(currentProcessDir));
   NS_ENSURE_SUCCESS(rv, rv);
-  // now turn this into an enumerator, is there a more direct way to do this?
-  nsCOMArray<nsIFile> directories;
-  directories.AppendObject(currentProcessDir);
-  nsCOMPtr<nsISimpleEnumerator> currentProcessDirEnum;
-  NS_NewArrayEnumerator(getter_AddRefs(currentProcessDirEnum), directories);
 
-  nsCOMPtr<nsISimpleEnumerator> appEnum = new AppendingEnumerator(currentProcessDirEnum);
-  if (!appEnum)
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsCOMPtr<nsISimpleEnumerator> directoryEnumerator;
+  rv = NS_NewSingletonEnumerator(getter_AddRefs(directoryEnumerator), currentProcessDir);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsISimpleEnumerator> list;
+  nsCOMPtr<nsISimpleEnumerator> combinedEnumerator;
+
+#ifdef MOZ_XUL_APP
+  nsCOMPtr<nsISimpleEnumerator> extensionsEnum;
   rv = dirSvc->Get(XRE_EXTENSIONS_DIR_LIST,
 			    NS_GET_IID(nsISimpleEnumerator),
-			    getter_AddRefs(list));
-  if (NS_FAILED(rv))
-    return rv;
+			    getter_AddRefs(extensionsEnum));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsISimpleEnumerator> extensionsEnum = new AppendingEnumerator(list);
-  if (!extensionsEnum)
-    return NS_ERROR_OUT_OF_MEMORY;
+  rv = NS_NewUnionEnumerator(getter_AddRefs(combinedEnumerator), directoryEnumerator, extensionsEnum);
+  NS_ENSURE_SUCCESS(rv, rv);
+#else
+  directoryEnumerator.swap(combinedEnumerator);
+#endif
    
-  // now combine the app enumerator with the extensions enumerator
-  rv = NS_NewUnionEnumerator(aResult, appEnum, extensionsEnum);
+  NS_IF_ADDREF(*aResult = new AppendingEnumerator(combinedEnumerator));
   return NS_SUCCESS_AGGREGATE_RESULT;
 }
 

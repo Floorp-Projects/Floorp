@@ -42,12 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef MOZ_XUL_APP
 EXPORT_DIR      = $(DIST)/bin/isp
-else
-EXPORT_DIR	= $(DIST)/bin/defaults/isp
-EXPORT_DIR_L10N	= $(DIST)/bin/defaults/isp/$(AB_CD)
-endif
 
 EXPORT_RESOURCE_FILES = gmail.rdf \
 		$(NULL)
@@ -75,11 +70,4 @@ libs:: $(EXPORT_RESOURCE_FILES)
 install:: $(EXPORT_RESOURCE_FILES)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/isp
 
-ifndef MOZ_XUL_APP
-libs:: $(EXPORT_RESOURCE_FILES)
-	$(INSTALL) $^ $(EXPORT_DIR_L10N)
-
-install:: $(EXPORT_RESOURCE_FILES)
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/isp/$(AB_CD)
-endif
 endif

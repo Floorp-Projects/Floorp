@@ -51,13 +51,11 @@
 #include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
 
-#ifdef MOZ_XUL_APP
 #include "nsMailDirServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIDirectoryEnumerator.h"
-#endif
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
@@ -81,47 +79,10 @@ nsMsgServiceProviderService::Init()
   mInnerDataSource = do_CreateInstance(kRDFCompositeDataSourceCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef MOZ_XUL_APP
   LoadISPFiles();
-#else
-  nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Get defaults directory for isp files. MailSession service appends 'isp' to the 
-  // the app defaults folder and returns it. Locale will be added to the path, if there is one.
-  nsCOMPtr<nsIFile> dataFilesDir;
-  rv = mailSession->GetDataFilesDir("isp", getter_AddRefs(dataFilesDir));
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // test if there is a locale provider
-  PRBool isexists = PR_FALSE;
-  rv = dataFilesDir->Exists(&isexists);
-  NS_ENSURE_SUCCESS(rv,rv);
-  if (isexists) {    
-    // now enumerate every file in the directory, and suck it into the datasource
-    PRBool hasMore = PR_FALSE;
-    nsCOMPtr<nsISimpleEnumerator> dirIterator;
-    rv = dataFilesDir->GetDirectoryEntries(getter_AddRefs(dirIterator));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIFile> dirEntry;
-
-    while ((rv = dirIterator->HasMoreElements(&hasMore)) == NS_OK && hasMore) {
-      rv = dirIterator->GetNext((nsISupports**)getter_AddRefs(dirEntry));
-      if (NS_FAILED(rv))
-        continue;
-
-      nsCAutoString urlSpec;
-      rv = NS_GetURLSpecFromFile(dirEntry, urlSpec);
-      rv = LoadDataSource(urlSpec.get());
-      NS_ASSERTION(NS_SUCCEEDED(rv), "Failed reading in the datasource\n");
-    }
-  }
-#endif
   return NS_OK;
 }
 
-#ifdef MOZ_XUL_APP
 /**
  * Looks for ISP configuration files in <.exe>\isp and any sub directories called isp
  * located in the user's extensions directory.
@@ -189,7 +150,6 @@ void nsMsgServiceProviderService::LoadISPFilesFromDir(nsIFile* aDir)
       LoadDataSource(urlSpec.get());
   }
 }
-#endif
 
 nsresult
 nsMsgServiceProviderService::LoadDataSource(const char *aURI)

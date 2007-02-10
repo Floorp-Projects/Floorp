@@ -47,7 +47,7 @@ XPIDL_MODULE	= msgsearch
 LIBRARY_NAME	= msgsearch_s
 META_COMPONENT = mail
 MOZILLA_INTERNAL_API = 1
-EXPORT_DIR	= $(DIST)/bin/defaults/messenger
+EXPORT_DIR	= $(DIST)/bin/isp
 
 REQUIRES	= xpcom \
 		  xpcom_obsolete \

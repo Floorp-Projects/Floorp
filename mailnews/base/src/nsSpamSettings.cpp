@@ -59,6 +59,12 @@
 #include "nsIStringBundle.h"
 #include "nsDateTimeFormatCID.h"
 
+#include "nsMailDirServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsISimpleEnumerator.h"
+#include "nsIDirectoryEnumerator.h"
+
 nsSpamSettings::nsSpamSettings()
 {
   mLevel = 0;
@@ -486,8 +492,55 @@ NS_IMETHODIMP nsSpamSettings::GetServerFilterName(nsACString &aFilterName)
 NS_IMETHODIMP nsSpamSettings::SetServerFilterName(const nsACString &aFilterName)
 {
   mServerFilterName = aFilterName;
+  mServerFilterFile = nsnull; // clear out our stored location value
   return NS_OK;
 }
+
+NS_IMETHODIMP nsSpamSettings::GetServerFilterFile(nsIFile ** aFile)
+{
+  NS_ENSURE_ARG_POINTER(aFile);
+  if (!mServerFilterFile)
+  {
+    nsresult rv;
+    nsCAutoString serverFilterFileName;
+    GetServerFilterName(serverFilterFileName);
+    serverFilterFileName.Append(".sfd");
+
+    nsCOMPtr<nsIProperties> dirSvc = do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Walk through the list of isp directories
+    nsCOMPtr<nsISimpleEnumerator> ispDirectories;
+    rv = dirSvc->Get(ISP_DIRECTORY_LIST, NS_GET_IID(nsISimpleEnumerator), getter_AddRefs(ispDirectories));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool hasMore;
+    nsCOMPtr<nsIFile> file;
+    while (NS_SUCCEEDED(ispDirectories->HasMoreElements(&hasMore)) && hasMore) 
+    {
+      nsCOMPtr<nsISupports> elem;
+      ispDirectories->GetNext(getter_AddRefs(elem));
+      file = do_QueryInterface(elem);
+
+      if (file)
+      {
+        // append our desired leaf name then test to see if the file exists. If it does, we've found
+        // mServerFilterFile.
+        file->AppendNative(serverFilterFileName);
+        PRBool exists;
+        if (NS_SUCCEEDED(file->Exists(&exists)) && exists)
+        {
+          file.swap(mServerFilterFile);
+          break;
+        }
+      } // if file
+    } // until we find the location of mServerFilterName
+  } // if we haven't already stored mServerFilterFile
+
+  NS_IF_ADDREF(*aFile = mServerFilterFile);
+  return NS_OK;
+}
+
 
 NS_IMPL_GETSET(nsSpamSettings, ServerFilterTrustFlags, PRBool, mServerFilterTrustFlags)
 
