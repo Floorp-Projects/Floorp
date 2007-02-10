@@ -1322,7 +1322,9 @@ EmitNonLocalJumpFixup(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
         JS_ASSERT(*returnop == JSOP_RETURN);
         for (stmt = cg->treeContext.topStmt; stmt != toStmt;
              stmt = stmt->down) {
-            if (stmt->type == STMT_FINALLY) {
+            if (stmt->type == STMT_FINALLY ||
+                ((cg->treeContext.flags & TCF_FUN_HEAVYWEIGHT) &&
+                 STMT_MAYBE_SCOPE(stmt))) {
                 if (js_Emit1(cx, cg, JSOP_SETRVAL) < 0)
                     return JS_FALSE;
                 *returnop = JSOP_RETRVAL;
@@ -4017,16 +4019,18 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             OBJ_DROP_PROPERTY(cx, pobj, prop);
 
             /*
-             * If this local function is in a body block, flag cg so that any
-             * outer function will be flagged with JSFUN_BLOCKLOCALFUN, which
-             * helps JSOP_DEFLOCALFUN capture the body block including any let
-             * variables in the local function's scope chain.
+             * If this local function is declared in a body block induced by
+             * let declarations, reparent fun->object to the compiler-created
+             * body block object so that JSOP_DEFLOCALFUN can clone that block
+             * into the runtime scope chain.
              */
             stmt = cg->treeContext.topStmt;
             if (stmt && stmt->type == STMT_BLOCK &&
                 stmt->down && stmt->down->type == STMT_BLOCK &&
                 (stmt->down->flags & SIF_SCOPE)) {
-                cg->treeContext.flags |= TCF_HAS_BLOCKLOCALFUN;
+                obj = ATOM_TO_OBJECT(stmt->down->atom);
+                JS_ASSERT(LOCKED_OBJ_GET_CLASS(obj) == &js_BlockClass);
+                OBJ_SET_PARENT(cx, fun->object, obj);
             }
 
             if (!EmitIndexConstOp(cx, JSOP_DEFLOCALFUN, slot, atomIndex, cg))
