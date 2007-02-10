@@ -351,7 +351,7 @@ function fillFolderPaneContextMenu()
   EnableMenuItem("folderPaneContext-markMailFolderAllRead", !isVirtualFolder);
 
   ShowMenuItem("folderPaneContext-searchMessages", (numSelected<=1) && !isVirtualFolder);
-  EnableMenuItem("folderPaneContext-searchMessages", IsCanSearchMessagesEnabled() && !isVirtualFolder);
+  goUpdateCommand('cmd_search');
 
   // Hide / Show our menu separators based on the menu items we are showing.
   ShowMenuItem("folderPaneContext-sep1", (numSelected <= 1) && !isServer);

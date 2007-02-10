@@ -123,7 +123,6 @@
   <!--The cmd_createFilterFromPopup is used to notify the email context popup -->
   <command id="cmd_createFilterFromPopup"/>
   <command id="cmd_pageSetup"/>
-  <command id="cmd_search" oncommand="goDoCommand('cmd_search')" disabled="true"/>
 </commandset>
 
 <commandset id="mailViewMenuItems"
@@ -292,6 +291,7 @@
   <command id="cmd_applyFilters" oncommand="goDoCommand('cmd_applyFilters');" disabled="true"/>
   <command id="cmd_runJunkControls" oncommand="goDoCommand('cmd_runJunkControls');" disabled="true"/>
   <command id="cmd_deleteJunk" oncommand="goDoCommand('cmd_deleteJunk');" disabled="true"/>
+  <command id="cmd_search" oncommand="goDoCommand('cmd_search')"/>
 </commandset>
 
 #ifdef XP_MACOSX
@@ -421,9 +421,9 @@
 
   <!-- Tools Keys -->
 #ifdef MOZ_WIDGET_GTK2
-  <key id="key_searchMail" key="&searchMailCmd.key;" oncommand="MsgSearchMessages();" modifiers="shift"/>
+  <key id="key_searchMail" key="&searchMailCmd.key;" oncommand="goDoCommand('cmd_search')" modifiers="shift"/>
 #else
-  <key id="key_searchMail" key="&searchMailCmd.key;" oncommand="MsgSearchMessages();" modifiers="accel, shift"/>
+  <key id="key_searchMail" key="&searchMailCmd.key;" oncommand="goDoCommand('cmd_search')" modifiers="accel, shift"/>
 #endif
   <key id="key_mail"  key="&messengerCmd.commandkey;" oncommand="toMessengerWindow();" modifiers="accel"/>
   <key id="key_addressbook"  key="&addressBookCmd.commandkey;" oncommand="toAddressBook();" modifiers="accel"/>
@@ -1269,7 +1269,7 @@
             <menuitem id="searchMailCmd" label="&searchMailCmd.label;" 
                       key="key_searchMail" 
                       accesskey="&searchMailCmd.accesskey;" 
-                      oncommand="MsgSearchMessages();"/>
+                      command="cmd_search"/>
             <menuitem id="searchAddressesCmd" label="&searchAddressesCmd.label;" 
                       accesskey="&searchAddressesCmd.accesskey;" 
                       oncommand="MsgSearchAddresses()"/>
