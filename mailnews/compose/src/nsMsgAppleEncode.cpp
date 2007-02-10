@@ -138,7 +138,7 @@ int fill_apple_mime_header(
 		return status;
 		
 	PR_snprintf(tmpstr, sizeof(tmpstr),
-			"\"\nContent-Disposition: inline; filename=\"%s\"\n\n\n--=\n",
+			"\"\r\nContent-Disposition: inline; filename=\"%s\"\r\n\r\n\r\n--=\r\n",
 			p_ap_encode_obj->fname);
 #endif
 	PR_snprintf(tmpstr, sizeof(tmpstr), "--%s"CRLF, p_ap_encode_obj->boundary);
@@ -318,7 +318,7 @@ int ap_encode_header(
 	if (firstime)
 	{
     PL_strcpy(rd_buff, 
-			"Content-Type: application/applefile\nContent-Transfer-Encoding: base64\n\n");
+			"Content-Type: application/applefile\r\nContent-Transfer-Encoding: base64\r\n\r\n");
 		status = write_stream(p_ap_encode_obj,
 			 				rd_buff, 
 			 				strlen(rd_buff)); 
