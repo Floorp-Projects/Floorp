@@ -68,8 +68,6 @@ struct JSFunction {
 };
 
 #define JSFUN_INTERPRETED    0x8000 /* use u.i if set, u.n if unset */
-#define JSFUN_BLOCKLOCALFUN  0x4000 /* has body block containing both let vars
-                                       and local function declarations */
 
 #define FUN_INTERPRETED(fun) ((fun)->flags & JSFUN_INTERPRETED)
 #define FUN_NATIVE(fun)      (FUN_INTERPRETED(fun) ? NULL : (fun)->u.n.native)

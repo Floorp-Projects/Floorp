@@ -183,8 +183,6 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_FUN_FLAGS         0x1E0 /* flags to propagate from FunctionBody */
 #define TCF_HAS_DEFXMLNS      0x200 /* default xml namespace = ...; parsed */
 #define TCF_HAS_FUNCTION_STMT 0x400 /* block contains a function statement */
-#define TCF_HAS_BLOCKLOCALFUN 0x800 /* inner function declared in let-bearing
-                                       outer function body */
 
 #define TREE_CONTEXT_INIT(tc)                                                 \
     ((tc)->flags = (tc)->numGlobalVars = 0,                                   \
