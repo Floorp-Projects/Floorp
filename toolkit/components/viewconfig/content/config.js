@@ -486,8 +486,9 @@ function updateContextMenu()
   var typeCol = nsIPrefBranch.PREF_STRING;
   var valueCol = "";
   var copyDisabled = true;
+  var prefSelected = view.selection.currentIndex >= 0;
 
-  if (view.selection.currentIndex >= 0) {
+  if (prefSelected) {
     var prefRow = gPrefView[view.selection.currentIndex];
     lockCol = prefRow.lockCol;
     typeCol = prefRow.typeCol;
@@ -508,19 +509,19 @@ function updateContextMenu()
   resetSelected.setAttribute("disabled", lockCol != PREF_IS_USER_SET);
 
   var canToggle = typeCol == nsIPrefBranch.PREF_BOOL && valueCol != "";
+  // indicates that a pref is locked or no pref is selected at all
+  var isLocked = lockCol == PREF_IS_LOCKED;
 
   var modifySelected = document.getElementById("modifySelected");
-  modifySelected.setAttribute("disabled", lockCol == PREF_IS_LOCKED);
+  modifySelected.setAttribute("disabled", isLocked);
   modifySelected.hidden = canToggle;
 
   var toggleSelected = document.getElementById("toggleSelected");
-  toggleSelected.setAttribute("disabled", lockCol == PREF_IS_LOCKED);
+  toggleSelected.setAttribute("disabled", isLocked);
   toggleSelected.hidden = !canToggle;
-  
-  var entry = gPrefView[view.selection.currentIndex];
-  var isLocked = gPrefBranch.prefIsLocked(entry.prefCol);
-  document.getElementById("lockSelected").hidden = isLocked;
-  document.getElementById("unlockSelected").hidden = !isLocked;
+
+  document.getElementById("lockSelected").hidden = !prefSelected || isLocked;
+  document.getElementById("unlockSelected").hidden = !prefSelected || !isLocked;
 }
 
 function copyPref()
