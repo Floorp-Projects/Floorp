@@ -90,13 +90,13 @@ if ($form{note}) {
   print NOTES "$buildtime|$buildname|$who|$now|$enc_note\n"; 
 
   # Find the latest times for the "other" trees
-  my (%build_status, %build_times);
-  tb_loadquickparseinfo($tree, \%build_status, \%build_times, 1);
+  my (%quickdata);
+  tb_loadquickparseinfo($tree, \%quickdata, 1);
 
   foreach my $element (keys %form) {
     # The checkboxes for the builds have "NAME" set to the build name
-    if (defined $build_times{$element}) {
-      print NOTES "$build_times{$element}|$element|$who|$now|$enc_note\n"; 
+    if (defined $quickdata{$element}->{buildtime}) {
+      print NOTES "$quickdata{$element}->{buildtime}|$element|$who|$now|$enc_note\n"; 
     }
   }
   close NOTES;
@@ -172,12 +172,12 @@ if ($form{note}) {
 __END_FORM
 
   # Find the names of the "other" trees
-  my (%build_status, %build_times);
-  tb_loadquickparseinfo($tree, \%build_status, \%build_times);
+  my (%quickdata);
+  tb_loadquickparseinfo($tree, \%quickdata);
   my $ignore_builds = &tb_load_ignorebuilds($tree);
 
   # Add a checkbox for the each of the other builds
-  for my $other_build_name (sort keys %build_status) {
+  for my $other_build_name (sort keys %quickdata) {
     if ($other_build_name ne '' and $other_build_name ne $buildname
         and not $ignore_builds->{$other_build_name}) {
       print "<INPUT TYPE='checkbox' NAME='$other_build_name'>";

@@ -920,10 +920,10 @@ sub do_express($) {
 
     print "Content-type: text/html\nRefresh: 900\n\n<HTML>\n";
 
-    my (%build, %times);
-    &tb_loadquickparseinfo($tree, \%build, \%times);
+    my (%quickdata);
+    tb_loadquickparseinfo($tree, \%quickdata);
 
-    my @keys = sort keys %build;
+    my @keys = sort keys %quickdata;
     my $keycount = @keys;
     my $tm = &print_time(time);
     print "<table border=1 cellpadding=1 cellspacing=1><tr>";
@@ -934,7 +934,7 @@ sub do_express($) {
     }
     print ", $tm</a></tr><tr>\n";
     foreach my $buildname (@keys) {
-        print "<td bgcolor='$colormap{$build{$buildname}}'>$buildname</td>";
+        print "<td bgcolor='$colormap{$quickdata{$buildname}->{buildstatus}}'>$buildname</td>";
     }
     print "</tr></table>\n";
 }
@@ -946,8 +946,8 @@ sub do_panel($) {
 
     print "Content-type: text/html\n\n<HTML>\n" unless $form_ref->{static};
 
-    my (%build, %times);
-    &tb_loadquickparseinfo($tree, \%build, \%times);
+    my (%quickdata);
+    tb_loadquickparseinfo($tree, \%quickdata);
 
     print q(
             <head>
@@ -980,8 +980,8 @@ sub do_panel($) {
     print ", $tm</a><br>";
 
     print "<table border=0 cellpadding=1 cellspacing=1>";
-    foreach my $buildname (sort {$times{$b} cmp $times{$a}} keys %build) {
-        print "<tr><td bgcolor='$colormap{$build{$buildname}}'>$buildname</td></tr>";
+    foreach my $buildname (sort {$quickdata{$b}->{buildtime} cmp $quickdata{$a}->{buildtime}} keys %quickdata) {
+        print "<tr><td bgcolor='$colormap{$quickdata{$buildname}->{buildstatus}}'>$buildname</td></tr>";
     }
     print "</table></body>";
 }
@@ -992,13 +992,13 @@ sub do_flash($) {
 
     print "Content-type: text/rdf\n\n" unless $form_ref->{static};
 
-    my (%build, %times);
-    &tb_loadquickparseinfo($tree, \%build, \%times);
+    my (%quickdata);
+    tb_loadquickparseinfo($tree, \%quickdata);
 
     my ($mac,$unix,$win) = (0,0,0);
 
-    while (my ($name, $status) = each %build) {
-        next if $status eq 'success';
+    foreach my $name (keys %quickdata) {
+        next if $quickdata{$name}->{buildstatus} eq 'success';
         $mac = 1, next if $name =~ /Mac/;
         $win = 1, next if $name =~ /Win/;
         $unix = 1;
@@ -1069,11 +1069,16 @@ sub do_quickparse($) {
                 $::global_treedata->{$tt}->{bonsai_tree} .
                 "|$state\n";
         }
-        my (%build, %times);
-        &tb_loadquickparseinfo($tt, \%build, \%times);
+        my (%quickdata);
+        tb_loadquickparseinfo($tt, \%quickdata);
         
-        foreach my $buildname (sort keys %build) {
-            print "Build|$tt|$buildname|$build{$buildname}|$times{$buildname}\n";
+        # URL encode binaryurl so that urls with | will not
+        # break the quickparse format
+        foreach my $buildname (sort keys %quickdata) {
+            print "Build|$tt|$buildname|" .
+                "$quickdata{$buildname}->{buildstatus}|" .
+                "$quickdata{$buildname}->{buildtime}|" . 
+                url_encode($quickdata{$buildname}->{binaryurl}) . "\n";
         }
     }
 }
@@ -1089,13 +1094,13 @@ sub do_rdf($) {
 
     $dirurl =~ s@/[^/]*$@@;
 
-    my (%build, %times);
-    &tb_loadquickparseinfo($tree, \%build, \%times);
+    my (%quickdata);
+    tb_loadquickparseinfo($tree, \%quickdata);
 
     my $image = "channelok.gif";
     my $imagetitle = "OK";
-    foreach my $buildname (sort keys %build) {
-        if ($build{$buildname} eq 'busted') {
+    foreach my $buildname (sort keys %quickdata) {
+        if ($quickdata{$buildname}->{buildstatus} eq 'busted') {
             $image = "channelflames.gif";
             $imagetitle = "Bad";
             last;
@@ -1123,8 +1128,8 @@ sub do_rdf($) {
         "<link>$mainurl</link></item>\n";
     }
 
-    foreach my $buildname (sort keys %build) {
-        if ($build{$buildname} eq 'busted') {
+    foreach my $buildname (sort keys %quickdata) {
+        if ($quickdata{$buildname}->{buildstatus} eq 'busted') {
             print "<item><title>$buildname is in flames</title>",
             "<link>$mainurl</link></item>\n";
         }
@@ -1148,11 +1153,11 @@ sub do_hdml($) {
     if (&is_tree_state_available($tree)) {
         print "<LINE>$tree is " . (&is_tree_open($tree) ? 'open' : 'closed');
     }
-    my (%build, %times);
-    &tb_loadquickparseinfo($tree, \%build, \%times);
+    my (%quickdata);
+    tb_loadquickparseinfo($tree, \%quickdata);
     
-    foreach my $buildname (sort keys %build) {
-        print "<LINE>$state_symbols{$build{$buildname}} $buildname\n";
+    foreach my $buildname (sort keys %quickdata) {
+        print "<LINE>$state_symbols{$quickdata{$buildname}->{buildstatus}} $buildname\n";
     }
 
     print q{
@@ -1187,17 +1192,17 @@ sub do_vxml($) {
     if (&is_tree_state_available($tree)) {
         print "<audio>$tree is " .  (&is_tree_open($tree) ? 'open.' : 'closed.') . "</audio>";
     }
-    my (%build, %times);
-    &tb_loadquickparseinfo($tree, \%build, \%times);
+    my (%quickdata);
+    tb_loadquickparseinfo($tree, \%quickdata);
 
     my $testFailed = 0;
     my $flames = 0;
 
     print "\n";
-    foreach my $buildname (sort keys %build) {
-        if ($build{$buildname} eq 'busted') {
+    foreach my $buildname (sort keys %quickdata) {
+        if ($quickdata{$buildname}->{buildstatus} eq 'busted') {
             $flames = 1;
-        } elsif ($build{$buildname} eq 'testfailed') {
+        } elsif ($quickdata{$buildname}->{buildstatus} eq 'testfailed') {
             $testFailed = 1;
         }
     }
@@ -1211,18 +1216,18 @@ sub do_vxml($) {
         }
         print "\n";
 
-        foreach my $buildname (sort keys %build) {
+        foreach my $buildname (sort keys %quickdata) {
             print "<pause>500</pause>";
             print "\n";
-            if ($build{$buildname} eq 'busted' ||
-                $build{$buildname} eq 'testfailed') {
+            if ($quickdata{$buildname}->{buildstatus} eq 'busted' ||
+                $quickdata{$buildname}->{buildstatus} eq 'testfailed') {
                 print '<audio src="http://www.boulderdesign.com/sounds/getfixed.wav">bustage</audio>';
                 print "\n";
             }
 
             print "<pause>500</pause>";
             print "\n";
-            print "<audio>$buildname is $state_symbols{$build{$buildname}} </audio>";
+            print "<audio>$buildname is $state_symbols{$quickdata{$buildname}->{buildstatus}} </audio>";
             print "\n";
         }
     } else {
@@ -1253,17 +1258,17 @@ sub do_wml($) {
     if (&is_tree_state_available($tree)) {
         print "<p align='left'>$tree is " .  (&is_tree_open($tree) ? 'open.' : 'closed.') . "</p>";
     }
-    my (%build, %times);
-    &tb_loadquickparseinfo($tree, \%build, \%times);
+    my (%quickdata);
+    tb_loadquickparseinfo($tree, \%quickdata);
 
     my $testFailed = 0;
     my $flames = 0;
 
     print "\n";
-    foreach my $buildname (sort keys %build) {
-        if ($build{$buildname} eq 'busted') {
+    foreach my $buildname (sort keys %quickdata) {
+        if ($quickdata{$buildname}->{buildstatus} eq 'busted') {
             $flames = 1;
-        } elsif ($build{$buildname} eq 'testfailed') {
+        } elsif ($quickdata{$buildname}->{buildstatus} eq 'testfailed') {
             $testFailed = 1;
         }
     }
@@ -1285,11 +1290,11 @@ sub do_wml($) {
     print '<p align="center"><b><u>Builds</u></b></p>';
     print '<p mode="nowrap"><table columns="2">';
 
-    foreach my $buildname (sort keys %build) {
+    foreach my $buildname (sort keys %quickdata) {
         print "<tr><td>[";
-        if ($build{$buildname} eq 'busted') {
+        if ($quickdata{$buildname}->{buildstatus} eq 'busted') {
             print '<b>RED</b>';
-        } elsif ($build{$buildname} eq 'testfailed') {
+        } elsif ($quickdata{$buildname}->{buildstatus} eq 'testfailed') {
             print '<b>TEST FAILED</b>';
         } else {
             print 'GREEN';

@@ -568,7 +568,7 @@ sub tb_load_data($) {
 }
 
 sub tb_loadquickparseinfo {
-  my ($tree, $build, $times, $includeStatusOfBuilding) = (@_);
+  my ($tree, $qdref, $includeStatusOfBuilding) = (@_);
   local $_;
 
   return if (! -d "$tree" || ! -r "$tree/build.dat");
@@ -581,7 +581,7 @@ sub tb_loadquickparseinfo {
   my $tooearly = 0;
   while( $_ = $bw->readline ) {
     chop;
-    my ($buildtime, $buildname, $buildstatus) = (split /\|/)[1,2,4];
+    my ($buildtime, $buildname, $buildstatus, $binaryurl) = (split /\|/)[1,2,4,6];
     
     if ($includeStatusOfBuilding or
         $buildstatus =~ /^success|busted|testfailed$/) {
@@ -606,11 +606,12 @@ sub tb_loadquickparseinfo {
       $tooearly = 0;
 
       next if exists $ignore_builds->{$buildname};
-      next if exists $build->{$buildname}
-              and $times->{$buildname} >= $buildtime;
+      next if exists $qdref->{$buildname}->{buildstatus}
+              and $qdref->{$buildname}->{buildtime} >= $buildtime;
       
-      $build->{$buildname} = $buildstatus;
-      $times->{$buildname} = $buildtime;
+      $qdref->{$buildname}->{buildstatus} = $buildstatus;
+      $qdref->{$buildname}->{buildtime} = $buildtime;
+      $qdref->{$buildname}->{binaryurl} = $binaryurl;
     }
   }
 }
