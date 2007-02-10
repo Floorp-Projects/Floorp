@@ -1775,15 +1775,16 @@ JS_EXPORT_DATA(void *) js_LiveThingToFind;
 #endif
 
 static void
-GetObjSlotName(JSScope *scope, JSObject *obj, uint32 slot, char *buf,
-               size_t bufsize)
+GetObjSlotName(JSObject *obj, uint32 slot, char *buf, size_t bufsize)
 {
+    JSScope *scope;
     jsval nval;
     JSScopeProperty *sprop;
     JSClass *clasp;
     uint32 key;
     const char *slotname;
 
+    scope = OBJ_IS_NATIVE(obj) ? OBJ_SCOPE(obj) : NULL;
     if (!scope) {
         JS_snprintf(buf, bufsize, "**UNKNOWN OBJECT MAP ENTRY**");
         return;
@@ -2038,15 +2039,13 @@ MarkGCThingChildren(JSContext *cx, void *thing, uint8 *flagp,
     JSObject *obj;
     jsval v;
     uint32 i, end;
+#ifndef GC_MARK_DEBUG
     void *next_thing;
     uint8 *next_flagp;
+#endif
     JSString *str;
 #ifdef JS_GCMETER
     uint32 tailCallNesting;
-#endif
-#ifdef GC_MARK_DEBUG
-    JSScope *scope;
-    char name[32];
 #endif
 
     /*
@@ -2095,13 +2094,22 @@ MarkGCThingChildren(JSContext *cx, void *thing, uint8 *flagp,
               : LOCKED_OBJ_NSLOTS(obj);
         thing = NULL;
         flagp = NULL;
-#ifdef GC_MARK_DEBUG
-        scope = OBJ_IS_NATIVE(obj) ? OBJ_SCOPE(obj) : NULL;
-#endif
         for (i = 0; i != end; ++i) {
             v = STOBJ_GET_SLOT(obj, i);
             if (!JSVAL_IS_GCTHING(v) || v == JSVAL_NULL)
                 continue;
+#ifdef GC_MARK_DEBUG
+            /*
+             * Do not inline GC_MARK or eliminate tail recursion when
+             * debugging to allow js_MarkNamedGCThing to build a full
+             * dump of live GC things.
+             */
+            {
+                char name[32];
+                GetObjSlotName(obj, i, name, sizeof name);
+                GC_MARK(cx, JSVAL_TO_GCTHING(v), name);
+            }
+#else            
             next_thing = JSVAL_TO_GCTHING(v);
             next_flagp = js_GetGCThingFlags(next_thing);
             if (rt->gcThingCallback) {
@@ -2114,12 +2122,8 @@ MarkGCThingChildren(JSContext *cx, void *thing, uint8 *flagp,
                 continue;
             JS_ASSERT(*next_flagp != GCF_FINAL);
             if (thing) {
-#ifdef GC_MARK_DEBUG
-                GC_MARK(cx, thing, name);
-#else
                 *flagp |= GCF_MARK;
                 MarkGCThingChildren(cx, thing, flagp, JS_TRUE);
-#endif
                 if (*next_flagp & GCF_MARK) {
                     /*
                      * This happens when recursive MarkGCThingChildren marks
@@ -2129,9 +2133,6 @@ MarkGCThingChildren(JSContext *cx, void *thing, uint8 *flagp,
                     continue;
                 }
             }
-#ifdef GC_MARK_DEBUG
-            GetObjSlotName(scope, obj, i, name, sizeof name);
-#endif
             thing = next_thing;
             flagp = next_flagp;
         }
@@ -2146,6 +2147,7 @@ MarkGCThingChildren(JSContext *cx, void *thing, uint8 *flagp,
              */
             shouldCheckRecursion = JS_FALSE;
             goto on_tail_recursion;
+#endif
         }
         break;
 
@@ -2161,6 +2163,10 @@ MarkGCThingChildren(JSContext *cx, void *thing, uint8 *flagp,
         if (!JSSTRING_IS_DEPENDENT(str))
             break;
         thing = JSSTRDEP_BASE(str);
+#ifdef GC_MARK_DEBUG
+        GC_MARK(cx, thing, "base");
+        break;
+#else
         flagp = js_GetGCThingFlags(thing);
         if (rt->gcThingCallback) {
             rt->gcThingCallback(thing, *flagp,
@@ -2168,21 +2174,10 @@ MarkGCThingChildren(JSContext *cx, void *thing, uint8 *flagp,
         }
         if (*flagp & GCF_MARK)
             break;
-#ifdef GC_MARK_DEBUG
-        strcpy(name, "base");
-#endif
+
         /* Fallthrough to code to deal with the tail recursion. */
 
       on_tail_recursion:
-#ifdef GC_MARK_DEBUG
-        /*
-         * Do not eliminate C recursion when debugging to allow
-         * js_MarkNamedGCThing to build a full dump of live GC
-         * things.
-         */
-        GC_MARK(cx, thing, name);
-        break;
-#else
         /* Eliminate tail recursion for the last unmarked child. */
         JS_ASSERT(*flagp != GCF_FINAL);
         METER(++tailCallNesting);
