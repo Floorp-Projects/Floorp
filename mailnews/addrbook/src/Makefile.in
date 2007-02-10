@@ -69,7 +69,6 @@ REQUIRES	= xpcom \
 		  msgbaseutil \
 		  mime \
 		  intl \
-		  import \
 		  windowwatcher \
 		  uriloader \
 		  embed_base \
