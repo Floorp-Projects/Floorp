@@ -15,50 +15,49 @@
   #%]
 
 [% IF user.id && user.settings.per_bug_queries.value == "on" %]
-  <script type="text/javascript">
-    <!--
-    function update_text() {
-      // 'lob' means list_of_bugs.
-      var lob_action = document.getElementById('lob_action');
-      var action = lob_action.options[lob_action.selectedIndex].value;
-      var text = document.getElementById('lob_direction');
-      var new_query_text = document.getElementById('lob_new_query_text');
-
-      if (action == "add") {
-        text.innerHTML = "to";
-        new_query_text.style.display = 'inline';
-      }
-      else {
-        text.innerHTML = "from";
-        new_query_text.style.display = 'none';
-      }
-    }
-
-    function manage_old_lists() {
-      var old_lists = document.getElementById('lob_oldqueryname');
-      // If there is no saved searches available, returns.
-      if (!old_lists) return;
-
-      var new_query = document.getElementById('lob_newqueryname').value;
-
-      if (new_query != "") {
-        old_lists.disabled = true;
-      }
-      else {
-        old_lists.disabled = false;
-      }
-    }
-    //-->
-  </script>
-
-  [%# Get existing lists of bugs for this user %]
-  [% lists_of_bugs = [] %]
-  [% FOREACH q = user.queries %]
-    [% NEXT UNLESS q.bug_ids_only %]
-    [% lists_of_bugs.push(q.name) %]
-  [% END %]
-
   <li id="links-special">
+    <script type="text/javascript">
+      <!--
+      function update_text() {
+        // 'lob' means list_of_bugs.
+        var lob_action = document.getElementById('lob_action');
+        var action = lob_action.options[lob_action.selectedIndex].value;
+        var text = document.getElementById('lob_direction');
+        var new_query_text = document.getElementById('lob_new_query_text');
+
+        if (action == "add") {
+          text.innerHTML = "to";
+          new_query_text.style.display = 'inline';
+        }
+        else {
+          text.innerHTML = "from";
+          new_query_text.style.display = 'none';
+        }
+      }
+
+      function manage_old_lists() {
+        var old_lists = document.getElementById('lob_oldqueryname');
+        // If there is no saved searches available, returns.
+        if (!old_lists) return;
+
+        var new_query = document.getElementById('lob_newqueryname').value;
+
+        if (new_query != "") {
+          old_lists.disabled = true;
+        }
+        else {
+          old_lists.disabled = false;
+        }
+      }
+      //-->
+    </script>
+
+    [%# Get existing lists of bugs for this user %]
+    [% lists_of_bugs = [] %]
+    [% FOREACH q = user.queries %]
+      [% NEXT UNLESS q.bug_ids_only %]
+      [% lists_of_bugs.push(q.name) %]
+    [% END %]
     <div class="label"></div>
     <ul class="links"><li class="form">
       <form id="list_of_bugs" action="buglist.cgi" method="get">

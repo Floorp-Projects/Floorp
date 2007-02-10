@@ -260,10 +260,6 @@
   'content', 
 ],
 
-'global/useful-links.html.tmpl' => [
-  'sep',
-],
-
 # You are not permitted to add any values here. Everything in this file should 
 # be filtered unless there's an extremely good reason why not, in which case,
 # use the "none" dummy filter.
