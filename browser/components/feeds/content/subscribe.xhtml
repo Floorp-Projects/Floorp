@@ -28,7 +28,7 @@
     <script type="application/x-javascript"
             src="chrome://browser/content/feeds/subscribe.js"/>
   </head>
-  <body onload="SubscribeHandler.init();" onunload="SubscribeHandler.uninit();">
+  <body onload="SubscribeHandler.writeContent();" onunload="SubscribeHandler.uninit();">
     <div id="feedHeaderContainer">
       <div id="feedHeader" dir="&locale.dir;">
         <div id="feedIntroText">
@@ -50,7 +50,11 @@
       <p>&error.message;</p>
       <p id="errorCode"/>
     </div>
-    
+
+    <script type="application/x-javascript">
+      SubscribeHandler.init();
+    </script>
+
     <div id="feedBody">
       <div id="feedTitle">
         <a id="feedTitleLink">
