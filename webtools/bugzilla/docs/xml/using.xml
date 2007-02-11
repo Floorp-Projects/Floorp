@@ -1476,6 +1476,8 @@
     
     <para>
       To unset a flag, click its drop-down menu and select the blank value.
+      Note that marking an attachment as obsolete automatically cancels all
+      pending requests for the attachment.
     </para>
     
     <para>
