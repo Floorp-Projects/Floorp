@@ -107,8 +107,8 @@ Check your webserver configuration and try again.\n";
 
 # Try to execute a cgi script
 my $response = fetch($ARGV[0] . "/testagent.cgi");
-if ($response =~ /^OK/) {
-    print "TEST-OK Webserver is executing CGIs.\n";
+if ($response =~ /^OK (.*)$/) {
+    print "TEST-OK Webserver is executing CGIs via $1.\n";
 } elsif ($response =~ /^#!/) {
     print 
 "TEST-FAILED Webserver is fetching rather than executing CGI files.
