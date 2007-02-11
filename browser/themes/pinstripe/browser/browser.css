@@ -1193,19 +1193,6 @@ tabpanels.plain {
 }
 
 %ifdef MOZ_PLACES_BOOKMARKS
-#places-bookmark {
-  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");
-}
-
-#places-subscribe {
-  list-style-image: url("chrome://browser/skin/page-livemarks.png");
-  opacity: 1.0;
-}
-
-#places-subscribe[disabled="true"] {
-  opacity: 0.3;
-}
-
 /* Personal toolbar */
 .toolbar-drop-indicator {
   height: 16px;

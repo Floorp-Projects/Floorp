@@ -191,25 +191,6 @@ var PlacesCommandHook = {
   },
 
   /**
-   * Update the state of the tagging icon, depending on whether or not the 
-   * current page is bookmarked. 
-   */
-  updateTagButton: function PCH_updateTagButton() {
-    var bookmarkButton = document.getElementById("places-bookmark");
-    if (!bookmarkButton) 
-      return;
-
-    var currentLocation = getBrowser().selectedBrowser.webNavigation.currentURI;
-    if (PlacesUtils.bookmarks.isBookmarked(currentLocation)) {
-      bookmarkButton.label = PlacesUtils.getString("locationStatusBookmarked");
-      bookmarkButton.setAttribute("bookmarked", "true");
-    } else {
-      bookmarkButton.label = PlacesUtils.getString("locationStatusNotBookmarked");
-      bookmarkButton.removeAttribute("bookmarked");
-    }
-  },
-
-  /**
    * This method should be called when the bookmark button is clicked.
    */
   onBookmarkButtonClick: function PCH_onBookmarkButtonClick() {

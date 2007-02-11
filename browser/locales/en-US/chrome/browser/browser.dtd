@@ -374,10 +374,3 @@
 <!ENTITY spellAddDictionaries.label "Add dictionaries...">
 <!ENTITY spellAddDictionaries.accesskey "A">
 
-<!-- new bookmarks and history -->
-<!ENTITY location.status.not_bookmarked
-  "Star (Off)">
-<!ENTITY location.status.bookmarked
-  "Star (On)">
-<!ENTITY location.status.bookmark.tooltip
-  "Add a Bookmark to this page">
