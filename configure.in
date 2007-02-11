@@ -1473,7 +1473,7 @@ case "$target" in
 *-beos*)
     no_x=yes
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -Wl,-h,$@ -o $@'
-    _PLATFORM_DEFAULT_TOOLKIT="beos"
+    _PLATFORM_DEFAULT_TOOLKIT="cairo-beos"
     DSO_LDOPTS='-nostart'
     TK_LIBS='-lbe -lroot'
     LIBS="$LIBS -lbe"
