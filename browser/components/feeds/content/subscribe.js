@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Ben Goodger <beng@google.com>
+ *   Asaf Romano <mano@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,9 +44,13 @@ var SubscribeHandler = {
   
   init: function SH_init() {
     this._feedWriter = new BrowserFeedWriter();
-    this._feedWriter.write(window);
+    this._feedWriter.init(window);
   },
-  
+
+  writeContent: function SH_writeContent() {
+    this._feedWriter.writeContent();
+  },
+
   uninit: function SH_uninit() {
     this._feedWriter.close();
   },

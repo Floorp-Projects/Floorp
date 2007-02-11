@@ -753,12 +753,12 @@ FeedWriter.prototype = {
   /**
    * Returns the original URI object of the feed and ensures that this
    * component is only ever invoked from the preview document.  
-   * @param window 
+   * @param aWindow 
    *        The window of the document invoking the BrowserFeedWriter
    */
-  _getOriginalURI: function FW__getOriginalURI(window) {
+  _getOriginalURI: function FW__getOriginalURI(aWindow) {
     var chan = 
-        window.QueryInterface(Ci.nsIInterfaceRequestor).
+        aWindow.QueryInterface(Ci.nsIInterfaceRequestor).
         getInterface(Ci.nsIWebNavigation).
         QueryInterface(Ci.nsIDocShell).currentDocumentChannel;
 
@@ -770,8 +770,8 @@ FeedWriter.prototype = {
 
     if (resolvedURI.equals(chan.URI))
       return chan.originalURI;
-    else
-      return null;
+
+    return null;
   },
 
   _window: null,
@@ -781,40 +781,45 @@ FeedWriter.prototype = {
   /**
    * See nsIFeedWriter
    */
-  write: function FW_write(window) {
+  init: function FW_init(aWindow) {
     // Explicitly wrap |window| in an XPCNativeWrapper to make sure
     // it's a real native object! This will throw an exception if we
     // get a non-native object.
-    window = new XPCNativeWrapper(window);
-
+    var window = new XPCNativeWrapper(aWindow);
     this._feedURI = this._getOriginalURI(window);
     if (!this._feedURI)
       return;
+
+    this._window = window;
+    this._document = window.document;
+
+    LOG("Subscribe Preview: feed uri = " + this._window.location.href);
+
+    // Set up the subscription UI
+    this._initSubscriptionUI();
+    var prefs = Cc["@mozilla.org/preferences-service;1"].
+                getService(Ci.nsIPrefBranch2);
+    prefs.addObserver(PREF_SELECTED_ACTION, this, false);
+    prefs.addObserver(PREF_SELECTED_READER, this, false);
+    prefs.addObserver(PREF_SELECTED_WEB, this, false);
+    prefs.addObserver(PREF_SELECTED_APP, this, false);
+  },
+
+  /**
+   * See nsIFeedWriter
+   */
+  writeContent: function FW_writeContent() {
+    if (!this._window)
+      return;
+
     try {
-      this._window = window;
-      this._document = window.document;
-      
-      LOG("Subscribe Preview: feed uri = " + this._window.location.href);
-      
-      // Set up the subscription UI
-      this._initSubscriptionUI();
-      var prefs =   
-        Cc["@mozilla.org/preferences-service;1"].
-        getService(Ci.nsIPrefBranch2);
-      prefs.addObserver(PREF_SELECTED_ACTION, this, false);
-      prefs.addObserver(PREF_SELECTED_READER, this, false);
-      prefs.addObserver(PREF_SELECTED_WEB, this, false);
-      prefs.addObserver(PREF_SELECTED_APP, this, false);
-      
       // Set up the feed content
       var container = this._getContainer();
       if (!container)
         return;
       
       this._setTitleText(container);
-      
       this._setTitleImage(container);
-      
       this._writeFeedContent(container);
     }
     finally {
