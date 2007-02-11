@@ -28,6 +28,7 @@
  *   Vidur Apparao <vidur@netscape.com>
  *   Johnny Stenback <jst@netscape.com>
  *   Mark Hammond <mhammond@skippinet.com.au>
+ *   Ryan Jones <sciguyryan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -319,6 +320,29 @@ IsAboutBlank(nsIURI* aURI)
   nsCAutoString str;
   aURI->GetSpec(str);
   return str.EqualsLiteral("about:blank");  
+}
+
+static void
+StripNullChars(const nsAString& aInStr,
+               nsAString& aOutStr)
+{
+  // In common cases where we don't have nulls in the
+  // string we can simple simply bypass the checking code.
+  PRInt32 firstNullPos = aInStr.FindChar('\0');
+  if (firstNullPos == kNotFound) {
+    aOutStr.Assign(aInStr);
+    return;
+  }
+  
+  nsAString::const_iterator start, end;
+  aInStr.BeginReading(start); 
+  aInStr.EndReading(end); 
+
+  while (start != end) {
+    if (*start != '\0')
+      aOutStr.Append(*start);
+    ++start;
+  }
 }
 
 /**
@@ -3504,7 +3528,12 @@ nsGlobalWindow::Alert(const nsAString& aString)
   nsAutoString title;
   MakeScriptDialogTitle(title);
 
-  return prompter->Alert(title.get(), PromiseFlatString(*str).get());
+  // Remove non-terminating null characters from the 
+  // string. See bug #310037. 
+  nsAutoString final;
+  StripNullChars(*str, final);
+
+  return prompter->Alert(title.get(), final.get());
 }
 
 NS_IMETHODIMP
@@ -3529,8 +3558,13 @@ nsGlobalWindow::Confirm(const nsAString& aString, PRBool* aReturn)
   nsAutoString title;
   MakeScriptDialogTitle(title);
 
-  return prompter->Confirm(title.get(),
-                           PromiseFlatString(aString).get(), aReturn);
+  // Remove non-terminating null characters from the 
+  // string. See bug #310037. 
+  nsAutoString final;
+  StripNullChars(aString, final);
+
+  return prompter->Confirm(title.get(), final.get(),
+                           aReturn);
 }
 
 NS_IMETHODIMP
@@ -3565,9 +3599,15 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
 
   nsAutoString title;
   MakeScriptDialogTitle(title);
+  
+  // Remove non-terminating null characters from the 
+  // string. See bug #310037. 
+  nsAutoString fixedMessage, fixedInitial;
+  StripNullChars(aMessage, fixedMessage);
+  StripNullChars(aInitial, fixedInitial);
 
-  rv = prompter->Prompt(title.get(), PromiseFlatString(aMessage).get(), nsnull,
-                        aSavePassword, PromiseFlatString(aInitial).get(),
+  rv = prompter->Prompt(title.get(), fixedMessage.get(), nsnull,
+                        aSavePassword, fixedInitial.get(),
                         getter_Copies(uniResult), &b);
   NS_ENSURE_SUCCESS(rv, rv);
 
