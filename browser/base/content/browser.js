@@ -3886,9 +3886,6 @@ nsBrowserStatusHandler.prototype =
   asyncUpdateUI : function () {
     FeedHandler.updateFeeds();
     BrowserSearch.updateSearchButton();
-#ifdef MOZ_PLACES_BOOKMARKS
-    PlacesCommandHook.updateTagButton();
-#endif
   },
 
   onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)

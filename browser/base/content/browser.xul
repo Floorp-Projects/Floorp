@@ -332,10 +332,6 @@
                ondragexit="PlacesMenuDNDController.onDragExit(event);"
                tooltip="btTooltip"/>
       </toolbaritem>
-      <toolbarbutton id="places-bookmark" 
-                     label="&location.status.not_bookmarked;" 
-                     tooltiptext="&location.status.bookmark.tooltip;" 
-                     oncommand="PlacesCommandHook.onBookmarkButtonClick();"/>
 #else
       <toolbaritem id="personal-bookmarks" title="&bookmarksItem.title;" flex="1"
                    class="chromeclass-directories">
