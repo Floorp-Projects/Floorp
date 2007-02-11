@@ -130,7 +130,6 @@ AuthPrompt2.prototype = {
   }
 };
 
-
 function Requestor(flags, versions) {
   this.flags = flags;
   this.versions = versions;
@@ -165,6 +164,35 @@ Requestor.prototype = {
 
   prompt1: null,
   prompt2: null
+};
+
+function RealmTestRequestor() {}
+
+RealmTestRequestor.prototype = {
+  QueryInterface: function realmtest_qi(iid) {
+    if (iid.equals(Components.interfaces.nsISupports) ||
+        iid.equals(Components.interfaces.nsIInterfaceRequestor) ||
+        iid.equals(Components.interfaces.nsIAuthPrompt2))
+      return this;
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+
+  getInterface: function realmtest_interface(iid) {
+    if (iid.equals(Components.interfaces.nsIAuthPrompt2))
+      return this;
+
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+
+  promptAuth: function realmtest_checkAuth(channel, level, authInfo) {
+    do_check_eq(authInfo.realm, '\\"foo_bar');
+
+    return false;
+  },
+
+  asyncPromptAuth: function realmtest_async(chan, cb, ctx, lvl, info) {
+    do_throw("not implemented yet");
+  }
 };
 
 var listener = {
@@ -222,7 +250,8 @@ function makeChan(url) {
 }
 
 var tests = [test_noauth, test_returnfalse1, test_wrongpw1, test_prompt1,
-             test_returnfalse2, test_wrongpw2, test_prompt2, test_ntlm];
+             test_returnfalse2, test_wrongpw2, test_prompt2, test_ntlm,
+             test_auth];
 var current_test = 0;
 
 var httpserv = null;
@@ -232,6 +261,7 @@ function run_test() {
 
   httpserv.registerPathHandler("/auth", authHandler);
   httpserv.registerPathHandler("/auth/ntlm/simple", authNtlmSimple);
+  httpserv.registerPathHandler("/auth/realm", authRealm);
 
   httpserv.start(4444);
 
@@ -317,6 +347,16 @@ function test_ntlm() {
   do_test_pending();
 }
 
+function test_auth() {
+  var chan = makeChan("http://localhost:4444/auth/realm");
+
+  chan.notificationCallbacks = new RealmTestRequestor();
+  listener.expectedCode = 401; // Unauthorized
+  chan.asyncOpen(listener, null);
+
+  do_test_pending();
+}
+
 // PATH HANDLERS
 
 // /auth
@@ -354,6 +394,15 @@ function authNtlmSimple(metadata, response) {
              "accepts the authentication. It also closes\n" +
              "the connection after sending the challenge\n";
 
+
+  response.bodyOutputStream.write(body, body.length);
+}
+
+// /auth/realm
+function authRealm(metadata, response) {
+  response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
+  response.setHeader("WWW-Authenticate", 'Basic realm="\\"foo_bar"', false);
+  var body = "success";
 
   response.bodyOutputStream.write(body, body.length);
 }

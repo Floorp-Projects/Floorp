@@ -2653,12 +2653,24 @@ nsHttpChannel::ParseRealm(const char *challenge, nsACString &realm)
     //
     const char *p = PL_strcasestr(challenge, "realm=");
     if (p) {
+        PRBool has_quote = PR_FALSE;
         p += 6;
-        if (*p == '"')
+        if (*p == '"') {
+            has_quote = PR_TRUE;
             p++;
-        const char *end = PL_strchr(p, '"');
-        if (!end)
-            end = PL_strchr(p, ' ');
+        }
+
+        const char *end = p;
+        while (*end && has_quote) {
+           // Loop through all the string characters to find the closing
+           // quote, ignoring escaped quotes.
+            if (*end == '"' && end[-1] != '\\')
+                break;
+            ++end;
+        }
+
+        if (!has_quote)
+            end = strchr(p, ' '); 
         if (end)
             realm.Assign(p, end - p);
         else
