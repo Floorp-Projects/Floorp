@@ -66,17 +66,11 @@ var PlacesOrganizer = {
       placeURI = window.arguments[0];
     selectPlaceURI(placeURI);
 
-    /**
-     * XXXmano: this used to be a hack which allowed using few places commands
-     * when the search field is focused. Re-implementing it would probably
-     * require adding a controller to the searchbox which would forward over
-     * those commands to the places tree controller.
-     *
-     * // Initialize the active view so that all commands work properly without
-     * // the user needing to explicitly click in a view (since the search box is
-     * // focused by default). 
-     * PlacesController.activeView = this._places;
-     */
+    var view = this._content.treeBoxObject.view;
+    if (view.rowCount > 0)
+      view.selection.select(0);
+
+    this._content.focus();
 
     // Set up the search UI.
     PlacesSearchBox.init();
@@ -405,7 +399,6 @@ var PlacesSearchBox = {
     var searchFilter = this.searchFilter;
     searchFilter.grayText = PlacesUtils.getString("searchDefault");
     searchFilter.reset();
-    searchFilter.focus();
   },
   
   /**
