@@ -350,6 +350,18 @@ protected:
   nsresult AddFrames(nsIFrame* aFrameList,
                      nsIFrame* aPrevSibling);
 
+#ifdef IBMBIDI
+  /**
+   * Test whether the frame is a form control in a visual Bidi page.
+   * This is necessary for backwards-compatibility, because most visual
+   * pages use logical order for form controls so that they will
+   * display correctly on native widgets in OSs with Bidi support
+   * @param aPresContext the pres context
+   * @return whether the frame is a BIDI form control
+   */
+  PRBool IsVisualFormControl(nsPresContext* aPresContext);
+#endif
+
 public:
   /** does all the real work for removing aDeletedFrame from this
     * finds the line containing aFrame.
