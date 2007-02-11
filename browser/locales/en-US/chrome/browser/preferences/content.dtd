@@ -19,13 +19,13 @@
 
 <!ENTITY  fontsAndColors.label        "Fonts &amp; Colors">
 
-<!ENTITY  defaultFont.label                       "Default font:">
-<!ENTITY  defaultFont.accesskey                   "D">
-<!ENTITY  defaultSize.label                       "Size:">
-<!ENTITY  defaultSize.accesskey                   "i">
+<!ENTITY  defaultFont.label           "Default font:">
+<!ENTITY  defaultFont.accesskey       "D">
+<!ENTITY  defaultSize.label           "Size:">
+<!ENTITY  defaultSize.accesskey       "S">
 
 <!ENTITY  advancedFonts.label         "Advanced...">
-<!ENTITY  advancedFonts.accesskey     "d">
+<!ENTITY  advancedFonts.accesskey     "A">
 
 <!ENTITY  colors.label                "Colors...">
 <!ENTITY  colors.accesskey            "C">
