@@ -109,7 +109,6 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*       aPresContext,
   mPercentHeightReflowInitiator = nsnull;
   Init(aPresContext);
 #ifdef IBMBIDI
-  mFlags.mVisualBidiFormControl = IsBidiFormControl(aPresContext);
   mRightEdge = NS_UNCONSTRAINEDSIZE;
 #endif
 }
@@ -177,8 +176,6 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*           aPresContext,
   }
 
 #ifdef IBMBIDI
-  mFlags.mVisualBidiFormControl = (aParentReflowState.mFlags.mVisualBidiFormControl) ?
-                                  PR_TRUE : IsBidiFormControl(aPresContext);
   mRightEdge = aParentReflowState.mRightEdge;
 #endif // IBMBIDI
 }
@@ -2104,47 +2101,3 @@ nsHTMLReflowState::ComputeMinMaxValues(nscoord aContainingBlockWidth,
     mComputedMaxHeight = mComputedMinHeight;
   }
 }
-
-#ifdef IBMBIDI
-PRBool
-nsHTMLReflowState::IsBidiFormControl(nsPresContext* aPresContext)
-{
-  // This check is only necessary on visual bidi pages, because most
-  // visual pages use logical order for form controls so that they will
-  // display correctly on native widgets in OSs with Bidi support.
-  // So bail out if the page is not Bidi, or not visual, or if the pref is
-  // set to use visual order on forms in visual pages
-  if (!aPresContext->BidiEnabled()) {
-    return PR_FALSE;
-  }
-
-  if (!aPresContext->IsVisualMode()) {
-    return PR_FALSE;
-  }
-
-  PRUint32 options = aPresContext->GetBidi();
-  if (IBMBIDI_CONTROLSTEXTMODE_LOGICAL != GET_BIDI_OPTION_CONTROLSTEXTMODE(options)) {
-    return PR_FALSE;
-  }
-
-  nsIContent* content = frame->GetContent();
-  if (!content) {
-    return PR_FALSE;
-  }
-
-  // If this is a root reflow, we have to walk up the content tree to
-  // find out if the reflow root is a descendant of a form control.
-  // Otherwise, just test this content node
-  if (mReflowDepth == 0) {
-    for ( ; content; content = content->GetParent()) {
-      if (content->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
-        return PR_TRUE;
-      }
-    }
-  } else {
-    return (content->IsNodeOfType(nsINode::eHTML_FORM_CONTROL));
-  }
-  
-  return PR_FALSE;
-}
-#endif

@@ -305,7 +305,6 @@ public:
                                      // is changing
     PRUint16 mIsTopOfPage:1;         // is the current context at the top of a page?
     PRUint16 mBlinks:1;              // Keep track of text-decoration: blink
-    PRUint16 mVisualBidiFormControl:1; // Keep track of descendants of form controls on Visual Bidi pages
     PRUint16 mHasClearance:1;        // Block has clearance
     PRUint16 mAssumingHScrollbar:1;  // parent frame is an nsIScrollableFrame and it
                                      // is assuming a horizontal scrollbar
@@ -457,17 +456,6 @@ protected:
 
   nscoord CalculateHorizBorderPaddingMargin(nscoord aContainingBlockWidth);
 
-#ifdef IBMBIDI
-  /**
-   * Test whether the frame is a form control in a visual Bidi page.
-   * This is necessary for backwards-compatibility, because most visual
-   * pages use logical order for form controls so that they will
-   * display correctly on native widgets in OSs with Bidi support
-   * @param aPresContext the pres context
-   * @return whether the frame is a BIDI form control
-   */
-  PRBool IsBidiFormControl(nsPresContext* aPresContext);
-#endif
 };
 
 #endif /* nsHTMLReflowState_h___ */

@@ -868,7 +868,7 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
       if (bidiUtils) {
         bidiUtils->Resolve(aPresContext, this,
                            mLines.front()->mFirstChild,
-                           aReflowState.mFlags.mVisualBidiFormControl);
+                           IsVisualFormControl(aPresContext));
       }
     }
   }
@@ -6278,6 +6278,35 @@ nsBlockFrame::SetParent(const nsIFrame* aParent)
 }
 
 // XXX keep the text-run data in the first-in-flow of the block
+
+#ifdef IBMBIDI
+PRBool
+nsBlockFrame::IsVisualFormControl(nsPresContext* aPresContext)
+{
+  // This check is only necessary on visual bidi pages, because most
+  // visual pages use logical order for form controls so that they will
+  // display correctly on native widgets in OSs with Bidi support.
+  // So bail out if the page is not visual, or if the pref is
+  // set to use visual order on forms in visual pages
+  if (!aPresContext->IsVisualMode()) {
+    return PR_FALSE;
+  }
+
+  PRUint32 options = aPresContext->GetBidi();
+  if (IBMBIDI_CONTROLSTEXTMODE_LOGICAL != GET_BIDI_OPTION_CONTROLSTEXTMODE(options)) {
+    return PR_FALSE;
+  }
+
+  nsIContent* content = GetContent();
+  for ( ; content; content = content->GetParent()) {
+    if (content->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
+      return PR_TRUE;
+    }
+  }
+  
+  return PR_FALSE;
+}
+#endif
 
 #ifdef DEBUG
 void
