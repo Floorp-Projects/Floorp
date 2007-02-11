@@ -414,7 +414,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     bindingManager->RemoveLoadingDocListener(documentURI);
 
     if (!mBindingDocument->GetRootContent()) {
-      NS_ERROR("*** XBL doc with no root element! Something went horribly wrong! ***");
+      NS_WARNING("*** XBL doc with no root element! Something went horribly wrong! ***");
       return NS_ERROR_FAILURE;
     }
 
