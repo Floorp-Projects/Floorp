@@ -424,7 +424,7 @@ NS_IMETHODIMP nsAbLDAPDirectory::StartSearch ()
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIAbLDAPAttributeMap> attrMap;
-    rv = mapSvc->GetMapForPrefBranch(prefName, getter_AddRefs(attrMap));
+    rv = mapSvc->GetMapForPrefBranch(m_DirPrefId, getter_AddRefs(attrMap));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsISupports> typeSpecificArg = do_QueryInterface(attrMap, &rv);
