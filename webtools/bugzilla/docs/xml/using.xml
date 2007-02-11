@@ -328,8 +328,7 @@
           You can attach files (e.g. testcases or patches) to bugs. If there
           are any attachments, they are listed in this section.  Attachments are
           normally stored in the Bugzilla database, unless they are marked as
-          Big Files, which are stored directly on disk and (unlike attachments
-          kept in the database) may be deleted at some future time.
+          Big Files, which are stored directly on disk.
         </para>
       </listitem>
 
@@ -855,6 +854,15 @@
       disk instead of in the database, and can be deleted when it is no longer
       needed.  The maximum size of a <quote>Big File</quote> is normally larger
       than the maximum size of a regular attachment.
+    </para>
+
+    <para>
+      Also, if the administrator turned on the <quote>allow_attach_url</quote>
+      parameter, you can enter the URL pointing to the attachment instead of
+      uploading the attachment itself. For example, this is useful if you want to
+      point to an external application, a website or a very large file. Note that
+      there is no guarantee that the source file will always be available, nor
+      that its content will remain unchanged.
     </para>
 
     <section id="patchviewer">
