@@ -325,6 +325,8 @@ protected:
 
   PRPackedBool mIsFrameset;
 
+  PRPackedBool mTooDeepWriteRecursion;
+
   PRBool IdTableIsLive() const {
     // live if we've had over 63 misses
     return (mIdMissCount & 0x40) != 0;
