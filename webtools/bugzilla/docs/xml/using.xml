@@ -1021,6 +1021,34 @@
     </section>
   </section>
 
+  <section id="timetracking">
+    <title>Time Tracking Information</title>
+
+    <para>
+      Users who belong to the group specified by the <quote>timetrackinggroup</quote>
+      parameter have access to time-related fields. Developers can see
+      deadlines and estimated times to fix bugs, and can provide time spent
+      on these bugs.
+    </para>
+
+    <para>
+      At any time, a summary of the time spent by developers on bugs is
+      accessible either from bug lists when clicking the <quote>Time Summary</quote>
+      button or from individual bugs when clicking the <quote>Summarize time</quote>
+      link in the time tracking table. The <filename>summarize_time.cgi</filename>
+      page lets you view this information either per developer or per bug,
+      and can be split on a month basis to have greater details on how time
+      is spent by developers.
+    </para>
+
+    <para>
+      As soon as a bug is marked as RESOLVED, the remaining time expected
+      to fix the bug is set to zero. This lets QA people set it again for
+      their own usage, and it will be set to zero again when the bug will
+      be marked as CLOSED.
+    </para>
+  </section>
+
   <section id="userpreferences">
     <title>User Preferences</title>
 
