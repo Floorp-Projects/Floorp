@@ -22,7 +22,6 @@ bin/searchplugins/*
 bin/defaults/profile/bookmarks.html
 bin/defaults/profile/localstore.rdf
 bin/defaults/profile/prefs.js
-bin/defaults/profile/search.rdf
 bin/defaults/profile/mimeTypes.rdf
 bin/defaults/profile/chrome/*
 bin/updater.ini

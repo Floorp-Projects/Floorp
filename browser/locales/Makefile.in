@@ -98,7 +98,6 @@ endif
 PROFILE_FILES = \
 	bookmarks.html \
 	localstore.rdf \
-	search.rdf \
 	$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)

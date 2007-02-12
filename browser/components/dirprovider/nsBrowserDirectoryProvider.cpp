@@ -130,12 +130,6 @@ nsBrowserDirectoryProvider::GetFile(const char *aKey, PRBool *aPersist,
       }
     }
   }
-  else if (!strcmp(aKey, NS_APP_USER_PANELS_50_FILE)) {
-    leafName = "panels.rdf";
-  }
-  else if (!strcmp(aKey, NS_APP_SEARCH_50_FILE)) {
-    leafName = "search.rdf";
-  }
   else if (!strcmp(aKey, NS_APP_MICROSUMMARY_DIR)) {
     rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
                                 getter_AddRefs(file));

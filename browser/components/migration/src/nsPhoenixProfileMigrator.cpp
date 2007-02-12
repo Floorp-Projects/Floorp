@@ -63,7 +63,6 @@
 #define FILE_NAME_DOWNLOADS       NS_LITERAL_STRING("downloads.rdf")
 #define FILE_NAME_PREFS           NS_LITERAL_STRING("prefs.js")
 #define FILE_NAME_USER_PREFS      NS_LITERAL_STRING("user.js")
-#define FILE_NAME_SEARCH          NS_LITERAL_STRING("search.rdf")
 #define FILE_NAME_USERCHROME      NS_LITERAL_STRING("userChrome.css")
 #define FILE_NAME_USERCONTENT     NS_LITERAL_STRING("userContent.css")
 #define DIR_NAME_CHROME           NS_LITERAL_STRING("chrome")
@@ -435,7 +434,6 @@ nsPhoenixProfileMigrator::CopyOtherData(PRBool aReplace)
 
   nsresult rv = NS_OK;
   rv |= CopyFile(FILE_NAME_DOWNLOADS, FILE_NAME_DOWNLOADS);
-  rv |= CopyFile(FILE_NAME_SEARCH, FILE_NAME_SEARCH);
   rv |= CopyFile(FILE_NAME_LOCALSTORE, FILE_NAME_LOCALSTORE);
   rv |= CopyFile(FILE_NAME_FORMHISTORY, FILE_NAME_FORMHISTORY);
 
