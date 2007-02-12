@@ -29,18 +29,19 @@ bin\js3250.dll
 bin\plc4.dll
 bin\plds4.dll
 bin\xpcom.dll
-#ifdef MOZILLA_1_8_BRANCH
-bin\xpcom_compat.dll
-#endif
 bin\xpcom_core.dll
 bin\xpistub.dll
 bin\nspr4.dll
 bin\components\xpinstal.dll
 bin\components\jar50.dll
+#ifdef MOZILLA_1_8_BRANCH
+bin\xpcom_compat.dll
+#else
 bin\Microsoft.VC80.CRT.manifest
 bin\msvcm80.dll
 bin\msvcp80.dll
 bin\msvcr80.dll
+#endif
 
 [calendar]
 ; [Base Calendar Files]
