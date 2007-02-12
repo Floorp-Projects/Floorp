@@ -2151,9 +2151,11 @@ function HandleJunkStatusChanged(folder)
     var msgHdr = null;
     if (GetNumSelectedMessages() == 1)
       msgHdr = messenger.msgHdrFromURI(loadedMessage);
+    var junkBarWasDisplayed = gMessageNotificationBar.isFlagSet(kMsgNotificationJunkBar);
     gMessageNotificationBar.setJunkMsg(msgHdr);
-    
-    if (msgHdr)
+
+    // only reload message if junk bar display state has changed.    
+    if (msgHdr && junkBarWasDisplayed != gMessageNotificationBar.isFlagSet(kMsgNotificationJunkBar))
     {
       // we may be forcing junk mail to be rendered with sanitized html. In that scenario, we want to 
       // reload the message if the status has just changed to not junk. 
