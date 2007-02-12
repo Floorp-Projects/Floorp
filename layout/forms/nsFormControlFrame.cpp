@@ -41,6 +41,7 @@
 #include "nsIEventStateManager.h"
 #include "nsIScrollableView.h"
 #include "nsILookAndFeel.h"
+#include "nsIViewManager.h"
 
 //#define FCF_NOISY
 
