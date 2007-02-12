@@ -5822,6 +5822,7 @@ interrupt:
           END_CASE(JSOP_SETMETHOD)
 
           BEGIN_CASE(JSOP_GETFUNNS)
+            SAVE_SP_AND_PC(fp);
             ok = js_GetFunctionNamespace(cx, &rval);
             if (!ok)
                 goto out;
