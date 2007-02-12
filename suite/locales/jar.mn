@@ -120,6 +120,8 @@
   locale/@AB_CD@/communicator/history/historyTreeOverlay.dtd                (%chrome/common/history/historyTreeOverlay.dtd)
   locale/@AB_CD@/communicator/history/history.properties                    (%chrome/common/history/history.properties)
   locale/@AB_CD@/communicator/history/findHistory.dtd                       (%chrome/common/history/findHistory.dtd)
+  locale/@AB_CD@/communicator/migration/migration.dtd                       (%chrome/common/migration/migration.dtd)
+  locale/@AB_CD@/communicator/migration/migration.properties                (%chrome/common/migration/migration.properties)
   locale/@AB_CD@/communicator/permissions/aboutPopups.dtd                   (%chrome/common/permissions/aboutPopups.dtd)
   locale/@AB_CD@/communicator/permissions/cookieP3P.dtd                     (%chrome/common/permissions/cookieP3P.dtd)
   locale/@AB_CD@/communicator/permissions/cookieTasksOverlay.dtd            (%chrome/common/permissions/cookieTasksOverlay.dtd)
