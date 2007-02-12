@@ -991,8 +991,11 @@
       <handler event="select"><![CDATA[
         // This additional complexity is here for the sidebars
         var win = window;
-        while (win != window.top) {
+        while (true) {
           win.document.commandDispatcher.updateCommands("focus");
+          if (win == window.top)
+            break;
+
           win = win.parent;
         }
       ]]></handler>
