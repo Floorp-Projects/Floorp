@@ -53,7 +53,6 @@ var gCanvas;
 var gURLs;
 var gState;
 var gPart1Key;
-var gFailureTimeout;
 
 const EXPECTED_PASS = 0;
 const EXPECTED_FAIL = 1;
@@ -175,8 +174,6 @@ function StartCurrentTest()
 
 function StartCurrentURI(aState)
 {
-    gFailureTimeout = setTimeout(LoadFailed, LOAD_FAILURE_TIMEOUT);
-
     gState = aState;
     gBrowser.loadURI(gURLs[0]["url" + aState].spec);
 }
@@ -199,7 +196,6 @@ function IFrameToKey()
 
 function OnDocumentLoad()
 {
-    clearTimeout(gFailureTimeout);
     setTimeout(DocumentLoaded, 0);
 }
 
@@ -250,12 +246,4 @@ function DocumentLoaded()
         default:
             throw "Unexpected state."
     }
-}
-
-function LoadFailed()
-{
-    dump("REFTEST UNEXPECTED FAIL (LOADING): " +
-         gURLs[0]["url" + gState].spec + "\n");
-    gURLs.shift();
-    StartCurrentTest();
 }
