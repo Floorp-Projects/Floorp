@@ -46,8 +46,6 @@
 #include "nsIBaseWindow.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
-#include "nsIViewManager.h"
-#include "nsIView.h"
 #include "nsIWidget.h"
 
 #include "nsIStringBundle.h"

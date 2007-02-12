@@ -72,6 +72,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIBaseWindow.h"
+#include "nsIViewManager.h"
 
 #define NS_MENU_POPUP_LIST_INDEX   0
 

@@ -67,8 +67,6 @@
 #include "nsILinkHandler.h"
 #include "nsIURL.h"
 #include "nsILoadGroup.h"
-#include "nsIView.h"
-#include "nsIViewManager.h"
 #include "nsHTMLContainerFrame.h"
 #include "prprf.h"
 #include "nsIFontMetrics.h"

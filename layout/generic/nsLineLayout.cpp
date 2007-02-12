@@ -62,8 +62,6 @@
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsIContent.h"
-#include "nsIView.h"
-#include "nsIViewManager.h"
 #include "nsTextFragment.h"
 #include "nsBidiUtils.h"
 #include "nsLayoutUtils.h"

@@ -52,7 +52,6 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIBaseWindow.h"
 #include "nsPIDOMWindow.h"
-#include "nsIViewManager.h"
 #include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
 

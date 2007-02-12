@@ -63,8 +63,6 @@
 #include "nsISupportsPriority.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
-#include "nsIView.h"
-#include "nsIViewManager.h"
 #include "nsHTMLContainerFrame.h"
 #include "prprf.h"
 #include "nsIFontMetrics.h"

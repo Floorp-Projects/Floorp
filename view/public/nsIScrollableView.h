@@ -39,12 +39,9 @@
 #define nsIScrollableView_h___
 
 #include "nsCoord.h"
-#include "nsIViewManager.h"
-#include "nsIView.h"
 
 class nsIView;
 class nsIScrollPositionListener;
-struct nsMargin;
 struct nsSize;
 
 // IID for the nsIScrollableView interface

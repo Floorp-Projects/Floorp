@@ -77,6 +77,8 @@
 #include "nsINameSpaceManager.h"
 #include "nsIBaseWindow.h"
 #include "nsIScrollableView.h"
+#include "nsIView.h"
+#include "nsIViewManager.h"
 #include "nsISelection.h"
 #include "nsFrameSelection.h"
 #include "nsIDeviceContext.h"

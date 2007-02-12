@@ -51,8 +51,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsMenuPopupFrame.h"
-#include "nsIViewManager.h"
-#include "nsIWidget.h"
 
 
 class nsPopupBoxObject : public nsBoxObject,

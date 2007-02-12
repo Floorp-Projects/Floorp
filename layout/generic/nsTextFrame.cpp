@@ -63,8 +63,6 @@
 #include "nsIFontMetrics.h"
 #include "nsIRenderingContext.h"
 #include "nsIPresShell.h"
-#include "nsIView.h"
-#include "nsIViewManager.h"
 #include "nsITimer.h"
 #include "prtime.h"
 #include "nsVoidArray.h"

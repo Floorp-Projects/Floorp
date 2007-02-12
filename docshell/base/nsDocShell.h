@@ -44,8 +44,6 @@
 #include "nsIPresShell.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
-#include "nsIViewManager.h"
-#include "nsIScrollableView.h"
 #include "nsIContentViewer.h"
 #include "nsIPrefBranch.h"
 #include "nsVoidArray.h"
@@ -106,6 +104,8 @@
 #include "nsISecureBrowserUI.h"
 #include "nsIObserver.h"
 #include "nsDocShellLoadTypes.h"
+
+class nsIScrollableView;
 
 /* load commands were moved to nsIDocShell.h */
 /* load types were moved to nsDocShellLoadTypes.h */

@@ -61,7 +61,6 @@
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsFrameManager.h"
-#include "nsIViewManager.h"
 #include "nsCoord.h"
 #include "nsIImageMap.h"
 #include "nsIConsoleService.h"

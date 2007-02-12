@@ -42,10 +42,8 @@
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
-#include "nsIViewManager.h"
 #include "nsINodeInfo.h"
 #include "nsGkAtoms.h"
-#include "nsIView.h"
 #include "nsHTMLParts.h"
 
 #ifdef MOZ_XUL

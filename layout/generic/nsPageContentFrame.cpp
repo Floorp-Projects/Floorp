@@ -46,13 +46,6 @@
 #include "nsSimplePageSequence.h"
 #include "nsDisplayList.h"
 
-#include "nsIView.h"
-
-#if defined(DEBUG_rods) || defined(DEBUG_dcone)
-//#define DEBUG_PRINTING
-#endif
-
-
 nsIFrame*
 NS_NewPageContentFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
@@ -106,18 +99,6 @@ NS_IMETHODIMP nsPageContentFrame::Reflow(nsPresContext*   aPresContext,
 
     NS_ASSERTION(aPresContext->IsDynamic() || !NS_FRAME_IS_COMPLETE(aStatus) ||
                   !frame->GetNextInFlow(), "bad child flow list");
-
-#ifdef DEBUG_PRINTING
-    nsRect r = frame->GetRect();
-    printf("PCF: Area Frame %p Bounds: %5d,%5d,%5d,%5d\n", frame, r.x, r.y, r.width, r.height);
-    nsIView* view = frame->GetView();
-    if (view) {
-      r = view->GetBounds();
-      printf("PCF: Area Frame View Bounds: %5d,%5d,%5d,%5d\n", r.x, r.y, r.width, r.height);
-    } else {
-      printf("PCF: Area Frame View Bounds: NO VIEW\n");
-    }
-#endif
   }
   // Reflow our fixed frames 
   mFixedContainer.Reflow(this, aPresContext, aReflowState,
