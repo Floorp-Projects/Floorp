@@ -65,7 +65,6 @@
 #define FILE_NAME_DOWNLOADS       NS_LITERAL_STRING("downloads.rdf")
 #define FILE_NAME_PREFS           NS_LITERAL_STRING("prefs.js")
 #define FILE_NAME_USER_PREFS      NS_LITERAL_STRING("user.js")
-#define FILE_NAME_SEARCH          NS_LITERAL_STRING("search.rdf")
 #define FILE_NAME_USERCONTENT     NS_LITERAL_STRING("userContent.css")
 #define DIR_NAME_CHROME           NS_LITERAL_STRING("chrome")
 
