@@ -82,7 +82,6 @@ res/builtin/platformHTMLBindings.xml
 res/builtin/
 res/platform-forms.css
 components.ini
-xpcom_compat.dll
 #
 # Clean out obsolete files from Sunbird 0.3a1/0.3a2 installer
 #
@@ -258,7 +257,9 @@ regxpcom.exe
 sunbird.url
 unins000.dat
 unins000.exe
+#ifndef MOZILLA_1_8_BRANCH
 xpcom_compat.dll
+#endif
 xpcshell.exe
 xpidl.exe
 xpt_dump.exe
