@@ -74,7 +74,8 @@ else
 # Darwin needs to use the dylib_file linker option for nss to
 # find its dependencies (libsoftokn3.dylib).
 ifeq ($(OS_ARCH),Darwin)
-	EXTRA_SHARED_LIBS += -dylib_file @executable_path/libsoftokn3.dylib:$(DIST)/lib/libsoftokn3.dylib
+    EXTRA_SHARED_LIBS += -dylib_file @executable_path/libsoftokn3.dylib:$(DIST)/lib/libsoftokn3.dylib
+    DLL_SUFFIX = jnilib
 endif
 
 EXTRA_SHARED_LIBS += \

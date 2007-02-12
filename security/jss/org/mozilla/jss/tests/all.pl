@@ -110,6 +110,9 @@ sub setup_vars {
         $ld_lib_path = "SHLIB_PATH";
         $scriptext = "sh";
         $lib_suffix = ".sl";
+    } elsif( $osname =~ /Darwin/) {
+        $ld_lib_path = "DYLD_LIBRARY_PATH";
+        $lib_suffix = ".jnilib";
     } elsif( $osname =~ /win/i ) {
         $ld_lib_path = "PATH";
         $truncate_lib_path = 0;
@@ -190,11 +193,16 @@ sub setup_vars {
         exit(1);
     }
 
+    if ($osname =~ /Darwin/) {
+        $java = "$ENV{JAVA_HOME}/bin/java";
+    } else {
+        $java = "$ENV{JAVA_HOME}/jre/bin/java$exe_suffix";
+    }
+
     #
     # Use 64-bit Java on AMD64.
     #
 
-    $java = "$ENV{JAVA_HOME}/jre/bin/java$exe_suffix";
     my $java_64bit = 0;
     if ($osname eq "SunOS") {
         if ($ENV{USE_64}) {
@@ -202,15 +210,20 @@ sub setup_vars {
             if ($cpu == "amd64") {
                 $java = "$ENV{JAVA_HOME}/jre/bin/amd64/java$exe_suffix";
                 $java_64bit = 1;
+            }
         }
-    }
     }
     (-f $java) or die "'$java' does not exist\n";
     $java = $java . $ENV{NATIVE_FLAG};
 
     if ($ENV{USE_64} && !$java_64bit) {
-    $java = $java . " -d64";
+        $java = $java . " -d64";
     }
+
+    #MAC OS X have the -Djava.library.path for the JSS JNI library
+    if ($osname =~ /Darwin/) {
+        $java = $java . " -Djava.library.path=$nss_lib_dir";        
+    } 
 
     $pwfile = "passwords";
 
