@@ -64,6 +64,8 @@
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
 #include "nsIScrollableView.h"
+#include "nsIViewManager.h"
+#include "nsIView.h"
 #include "nsUnicharUtils.h"
 #include "nsIURI.h"
 #include "nsIWebNavigation.h"
