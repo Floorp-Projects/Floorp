@@ -39,6 +39,7 @@
 #include "nsISupports.idl"
 
 interface nsIMutableArray;
+interface nsIAbLDAPAttributeMap;
 
 %{C++
 #define kLDAPDirectoryRoot         "moz-abldapdirectory://"
@@ -49,7 +50,7 @@ interface nsIMutableArray;
  * XXX This should really inherit from nsIAbDirectory, and some day it will.
  * But for now, doing that complicates implementation.
  */
-[scriptable, uuid(78d1b2df-ab00-4ffc-abca-16b286a63df6)]
+[scriptable, uuid(9857182c-9051-4788-9393-735ae7bdd8b3)]
 interface nsIAbLDAPDirectory : nsISupports
 {
   /**
@@ -83,5 +84,10 @@ interface nsIAbLDAPDirectory : nsISupports
    * The LDAP server's scoping of the lastChangeNumber.
    */
   attribute ACString dataVersion;
+
+  /**
+   * The attribute map that is associated with this directory's server.
+   */
+  readonly attribute nsIAbLDAPAttributeMap attributeMap;
 };
 

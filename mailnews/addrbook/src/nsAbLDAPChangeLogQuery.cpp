@@ -121,21 +121,8 @@ NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryAuthDN(const nsACString & aValueUsedT
   if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
-    nsresult rv = NS_OK;
-
-    nsCOMPtr<nsIAbLDAPAttributeMapService> mapSvc = 
-      do_GetService("@mozilla.org/addressbook/ldap-attribute-map-service;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIAbDirectory> abDirectory(do_QueryInterface(mDirectory, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsXPIDLCString prefBaseName;
-  rv = abDirectory->GetDirPrefId(prefBaseName);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIAbLDAPAttributeMap> attrMap;
-  rv = mapSvc->GetMapForPrefBranch(prefBaseName, getter_AddRefs(attrMap));
+  nsresult rv = mDirectory->GetAttributeMap(getter_AddRefs(attrMap));
   NS_ENSURE_SUCCESS(rv, rv);
 
     nsCAutoString filter;

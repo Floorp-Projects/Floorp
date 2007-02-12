@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Dan Mosedale <dan.mosedale@oracle.com>
+ *  Mark Banner <bugzilla@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -67,7 +68,7 @@ nsAbLDAPProcessReplicationData::nsAbLDAPProcessReplicationData()
 nsAbLDAPProcessReplicationData::~nsAbLDAPProcessReplicationData()
 {
   /* destructor code */
-  if(mDBOpen && mReplicationDB) 
+  if(mDBOpen && mReplicationDB)
       mReplicationDB->Close(PR_FALSE);
 }
 
@@ -80,31 +81,10 @@ NS_IMETHODIMP nsAbLDAPProcessReplicationData::Init(nsIAbLDAPReplicationQuery *qu
    nsresult rv = mQuery->GetLDAPDirectory(getter_AddRefs(mDirectory));
    if(NS_FAILED(rv)) {
        mQuery = nsnull;
-       return rv;   
+       return rv;
    }
 
-   nsCOMPtr<nsIAbLDAPAttributeMapService> mapSvc = 
-       do_GetService("@mozilla.org/addressbook/ldap-attribute-map-service;1",
-                     &rv);
-   if (NS_FAILED(rv)) {
-     mQuery = nsnull;
-     return rv;
-   }
-
-   nsCOMPtr<nsIAbDirectory> abDirectory(do_QueryInterface(mDirectory, &rv));
-   if (NS_FAILED(rv)) {
-     mQuery = nsnull;
-     return rv;
-   }
-
-   nsXPIDLCString prefBaseName;
-   rv = abDirectory->GetDirPrefId(prefBaseName);
-   if (NS_FAILED(rv)) {
-     mQuery = nsnull;
-     return rv;
-   }
-
-   rv = mapSvc->GetMapForPrefBranch(prefBaseName, getter_AddRefs(mAttrMap));
+   rv = mDirectory->GetAttributeMap(getter_AddRefs(mAttrMap));
    if (NS_FAILED(rv)) {
      mQuery = nsnull;
      return rv;
