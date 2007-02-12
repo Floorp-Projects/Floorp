@@ -196,7 +196,7 @@ function IFrameToKey()
 
 function OnDocumentLoad()
 {
-    setTimeout(DocumentLoaded, 0);
+    setTimeout(DocumentLoaded, 20);
 }
 
 function DocumentLoaded()
