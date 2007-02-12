@@ -5251,16 +5251,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       break;
 #endif
 
-    case WM_ENDSESSION:
-      // XXXzeniko allow components to deal with a rough shutdown as long as there's no
-      //           clean fix for bug 333907
-      if (wParam) {
-        nsCOMPtr<nsIObserverService> observerService
-          = do_GetService("@mozilla.org/observer-service;1");
-        if (observerService)
-          observerService->NotifyObservers(nsnull, "quit-application-roughly", nsnull);
-      }
-      break;
 
 #ifdef WINCE
   case WM_HIBERNATE:        
