@@ -1,0 +1,3 @@
+comm.jar:
+  content/communicator/migration/migration.xul
+  content/communicator/migration/migration.js
