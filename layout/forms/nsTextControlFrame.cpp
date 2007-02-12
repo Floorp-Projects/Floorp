@@ -78,6 +78,7 @@
 #include "nsLayoutUtils.h"
 #include "nsIComponentManager.h"
 #include "nsIView.h"
+#include "nsIViewManager.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsISupportsArray.h"
 #include "nsIDOMElement.h"

@@ -57,6 +57,7 @@
 #include "nsIPresShell.h"
 #include "nsIDeviceContext.h"
 #include "nsIView.h"
+#include "nsIViewManager.h"
 #include "nsIScrollableView.h"
 #include "nsEventDispatcher.h"
 #include "nsIEventStateManager.h"
