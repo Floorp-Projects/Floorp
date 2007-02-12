@@ -123,8 +123,8 @@ function getSelectedIdentity()
 
 function onEdit(event)
 {
-  if (gIdentityListBox.selectedItems.length > 0) 
-    openIdentityEditor(getSelectedIdentity());
+  var id = (event.target.localName == 'listbox') ? null : getSelectedIdentity();
+  openIdentityEditor(id);
 }
 
 function updateButtons()
