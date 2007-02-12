@@ -81,12 +81,6 @@
     attributes[usedAttributes].length = strlen(hostString);
     ++usedAttributes;
   }
-  if (port != kAnyPort) {
-    attributes[usedAttributes].tag = kSecPortItemAttr;
-    attributes[usedAttributes].data = (void*)(&port);
-    attributes[usedAttributes].length = sizeof(port);
-    ++usedAttributes;
-  }
   if (protocol) {
     attributes[usedAttributes].tag = kSecProtocolItemAttr;
     attributes[usedAttributes].data = (void*)(&protocol);
@@ -123,6 +117,22 @@
     [matchingItems addObject:[[[KeychainItem alloc] initWithRef:keychainItemRef] autorelease]];
   }
   CFRelease(searchRef);
+
+  // Safari (and possibly others) store some things without ports, so we always
+  // search without a port. If any results match the port we wanted then
+  // discard all the other results; if not discard any non-generic entries
+  if (port != kAnyPort) {
+    NSMutableArray* exactMatches = [NSMutableArray array];
+    for (int i = [matchingItems count] - 1; i >= 0; --i) {
+      KeychainItem* item = [matchingItems objectAtIndex:i];
+      if ([item port] == port)
+        [exactMatches insertObject:item atIndex:0];
+      else if ([item port] != kAnyPort)
+        [matchingItems removeObjectAtIndex:i];
+    }
+    if ([exactMatches count] > 0)
+      matchingItems = exactMatches;
+  }
 
   return matchingItems;
 }
