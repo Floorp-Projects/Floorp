@@ -1,17 +1,14 @@
 <!ENTITY virtualFolderProperties.title "New Saved Search Folder">
-<!ENTITY name.label                 "Name:">
-<!ENTITY name.accesskey             "n">
-<!ENTITY description.label          "Create as a subfolder of:">
-<!ENTITY description.accesskey      "C">
-<!ENTITY searchCriteriaText.label   "Modify the search criteria used for this saved search:">
-<!ENTITY searchCriteriaButton.label "Search Criteria...">
-<!ENTITY searchCriteriaButton.accesskey "S">
+<!ENTITY name.label                    "Name:">
+<!ENTITY name.accesskey                "N">
+<!ENTITY description.label             "Create as a subfolder of:">
+<!ENTITY description.accesskey         "C">
 
-<!ENTITY searchTermCaption.label "Configure the search criteria used for this saved search folder: ">
+<!ENTITY searchTermCaption.label       "Configure the search criteria used for this saved search folder: ">
 
-<!ENTITY folderSelectionCaption.label "Select the folders to search: ">
-<!ENTITY chooseFoldersButton.label "Choose...">
+<!ENTITY folderSelectionCaption.label  "Select the folders to search: ">
+<!ENTITY chooseFoldersButton.label     "Choose...">
 <!ENTITY chooseFoldersButton.accesskey "h">
 
-<!ENTITY searchOnline.label "Search Online (Gives up-to-date results for IMAP and News folders but increases time to open the folder)">
-<!ENTITY searchOnline.accesskey "O">
+<!ENTITY searchOnline.label            "Search Online (Gives up-to-date results for IMAP and News folders but increases time to open the folder)">
+<!ENTITY searchOnline.accesskey        "S">
