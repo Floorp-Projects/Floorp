@@ -100,6 +100,9 @@
 #include "nsWidgetsCID.h"
 #include "nsDOMJSUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIView.h"
+#include "nsIViewManager.h"
+#include "nsIScrollableView.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.

@@ -50,7 +50,6 @@
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLParts.h"
 #include "nsGkAtoms.h"
-#include "nsIView.h"
 #include "nsIPresShell.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMHTMLTableCellElement.h"

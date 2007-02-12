@@ -60,7 +60,6 @@
 #include "nsPresContext.h"
 #include "nsCSSRendering.h"
 #include "nsStyleConsts.h"
-#include "nsIView.h"
 #include "nsGkAtoms.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsIPresShell.h"

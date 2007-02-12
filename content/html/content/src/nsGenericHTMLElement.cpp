@@ -71,6 +71,8 @@
 #include "nsIScrollableFrame.h"
 #include "nsIScrollableView.h"
 #include "nsIScrollableViewProvider.h"
+#include "nsIView.h"
+#include "nsIViewManager.h"
 #include "nsRange.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"

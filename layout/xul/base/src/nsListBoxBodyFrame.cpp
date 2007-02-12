@@ -58,6 +58,8 @@
 #include "nsIScrollableFrame.h"
 #include "nsIScrollbarFrame.h"
 #include "nsIScrollableView.h"
+#include "nsIView.h"
+#include "nsIViewManager.h"
 #include "nsStyleContext.h"
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"

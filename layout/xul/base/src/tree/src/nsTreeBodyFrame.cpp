@@ -77,6 +77,7 @@
 #include "nsXPIDLString.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsIView.h"
+#include "nsIViewManager.h"
 #include "nsWidgetsCID.h"
 #include "nsBoxFrame.h"
 #include "nsBoxObject.h"

@@ -34,25 +34,13 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #include "nsHTMLParts.h"
-#include "nsContainerFrame.h"
-#include "nsCSSRendering.h"
 #include "nsIDocument.h"
-#include "nsPresContext.h"
-#include "nsViewsCID.h"
-#include "nsIView.h"
-#include "nsIViewManager.h"
-#include "nsIWidget.h"
-#include "nsPageFrame.h"
 #include "nsIRenderingContext.h"
 #include "nsGUIEvent.h"
-#include "nsIDOMEvent.h"
 #include "nsStyleConsts.h"
-#include "nsIViewManager.h"
 #include "nsGkAtoms.h"
-#include "nsIEventStateManager.h"
-#include "nsIDeviceContext.h"
-#include "nsIScrollableView.h"
 #include "nsIPresShell.h"
 #include "nsBoxFrame.h"
 #include "nsStackLayout.h"

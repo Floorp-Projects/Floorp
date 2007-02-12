@@ -58,8 +58,6 @@
 
 #include "nsIEventStateManager.h"
 
-#include "nsIViewManager.h"
-#include "nsIView.h"
 #include "nsISupportsArray.h"
 #include "nsContentUtils.h"
 

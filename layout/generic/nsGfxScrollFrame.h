@@ -49,6 +49,7 @@
 #include "nsGUIEvent.h"
 #include "nsThreadUtils.h"
 #include "nsIScrollableView.h"
+#include "nsIView.h"
 
 class nsISupportsArray;
 class nsPresContext;

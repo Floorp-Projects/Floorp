@@ -82,6 +82,7 @@
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScrollableView.h"
+#include "nsIView.h"
 #include "nsAttrName.h"
 #include "nsNodeUtils.h"
 

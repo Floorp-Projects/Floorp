@@ -64,8 +64,6 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsStyleConsts.h"
-#include "nsIView.h"
-#include "nsIViewManager.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
 #include "nsIEventStateManager.h"

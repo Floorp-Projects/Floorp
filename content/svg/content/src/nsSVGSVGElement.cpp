@@ -50,11 +50,8 @@
 #include "nsSVGPoint.h"
 #include "nsSVGTransform.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIViewManager.h"
 #include "nsIBindingManager.h"
-#include "nsIWidget.h"
 #include "nsIFrame.h"
-#include "nsIScrollableView.h"
 #include "nsISVGSVGFrame.h" //XXX
 #include "nsSVGNumber.h"
 #include "nsSVGRect.h"

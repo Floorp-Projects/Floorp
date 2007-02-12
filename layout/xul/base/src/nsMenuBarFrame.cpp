@@ -51,8 +51,6 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsGkAtoms.h"
 #include "nsMenuFrame.h"
-#include "nsIView.h"
-#include "nsIViewManager.h"
 #include "nsMenuPopupFrame.h"
 #include "nsGUIEvent.h"
 #include "nsUnicharUtils.h"
@@ -754,17 +752,6 @@ nsMenuBarFrame::GetWidget(nsIWidget **aWidget)
   // why we need a widget at all.
   *aWidget = nsnull;
   return NS_OK;
-
-#if DONT_WANT_TO_DO_THIS
-  // Get parent view
-  nsIView * view = nsnull;
-  nsMenuPopupFrame::GetNearestEnclosingView(GetPresContext(), this, &view);
-  if (!view)
-    return NS_OK;
-
-  *aWidget = view->GetWidget();
-  NS_IF_ADDREF(*aWidget);
-#endif
 }
 
 NS_IMETHODIMP

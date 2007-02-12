@@ -45,7 +45,6 @@
 #include "nsIContent.h"
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
-#include "nsIView.h"
 #include "nsCSSRendering.h"
 #include "nsHTMLParts.h"
 #include "nsTableColGroupFrame.h"

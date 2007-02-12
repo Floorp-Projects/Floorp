@@ -119,6 +119,8 @@
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScrollableView.h"
+#include "nsIView.h"
+#include "nsIViewManager.h"
 #include "nsISelectionController.h"
 #include "nsISelection.h"
 #include "nsIPrompt.h"

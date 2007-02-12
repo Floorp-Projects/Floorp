@@ -41,14 +41,12 @@
 #include "nsCoord.h"
 #include "nsRect.h"
 #include "nsPoint.h"
-#include <stdio.h>
 #include "nsIWidget.h"
 
 class nsIViewManager;
 class nsIScrollableView;
 class nsViewManager;
 class nsView;
-struct nsRect;
 
 // Enumerated type to indicate the visibility of a layer.
 // hide - the layer is not shown.
