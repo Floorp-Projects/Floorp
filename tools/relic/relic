@@ -75,6 +75,8 @@
 
         -f, --force         Continue processing after an error. (Errors
                             are summarized at end.)
+        -q, --quick         Quick scanning. Use only basic license checks
+                            (only use in report mode).
         -M, --MPL           Replace NPL licenses with MPL ones.
         -a, --all           Check all files (only skip CVS directories).
         --dry-run           Go through motions but don't actually change
@@ -145,7 +147,7 @@ log = logging.getLogger("relic")
 
 #---- globals
 
-_version_ = (0, 7, 0)
+_version_ = (0, 7, 1)
 
 # When processing files, 'relic' skips files and directories according
 # to these settings. Note: files identified in .cvsignore files are also
@@ -161,6 +163,11 @@ _g_skip_file_basenames = [
 
     # Auto-generated from other files
     "configure",
+
+    # license and readme files
+    "license",
+    "readme",
+
 ]
 _g_skip_files = [
     # TODO: update with MPL block - or CVS remove (check history)
@@ -737,10 +744,12 @@ def _should_skip_dir(path):
     return 0
 
 
-def _get_license_info(filename, show_initial):
+def _get_license_info(filename, show_initial=0, quick=0):
     """Return license block information for the given file.
 
         "filename" is the path to the file to scan.
+        "show_initial" is a boolean that indicates if initial developer info
+          should be displayed.
         "quick" is a boolean that can be set for a quick scan. In this
             case, only the "parts" field of the return dictionary will
             be filled out.
@@ -780,6 +789,9 @@ def _get_license_info(filename, show_initial):
     finally:
         fin.close()
     
+    # Help me find filena
+    log.info("Next file is: %s", filename)
+
     # do quick search to see if any of the desired licenses is in here
     # - if it looks like all the parts are there, good, done
     # - if some but not all parts, continue
@@ -794,20 +806,32 @@ def _get_license_info(filename, show_initial):
         re.VERBOSE)
     parts = [] # found license parts in this file
     start = 0
+    blocks = 0
     while 1:
         match = parts_pattern.search(content, start)
         if match:
-            parts = match.groupdict()
-            for part in parts:
-                if parts[part]:
-                    lic_info["parts"].append(part)
-                    log.info("%s license/delimeter found", part)
-                    start = match.end()
-                    break
+            # Skip this block, if the last license block is more than 10 lines
+            # away (file is probably used for autogeneration of files then).
+            if blocks == 1 and (match.start()-start) > 10:
+                break
             else:
-                raise RelicError("unexpected license part: %r" % parts)
+                parts = match.groupdict()
+                for part in parts:
+                    if parts[part]:
+                        lic_info["parts"].append(part)
+                        log.info("%s license/delimeter found", part)
+                        start = match.end()
+                        if part == "block_end":
+                            blocks = blocks + 1
+                        else:
+                            blocks = 0
+                        break
+                else:
+                    raise RelicError("unexpected license part: %r" % parts)
         else:
             break
+
+    # no license block at all
     if not parts:
         # - if not, check to see if License or Copyright shows up in the
         #   file; if so, then error out; if not, skip out
@@ -820,9 +844,18 @@ def _get_license_info(filename, show_initial):
         else:
             log.info("no license found")
         return lic_info
-    elif (parts == ["block_begin", "mpl", "gpl", "lgpl", "block_end"] or
-          parts == ["block_begin", "npl", "gpl", "lgpl", "block_end"]):
+
+    # license block with non-tri-license version headers
+    elif lic_info["parts"] == ["block_begin", "block_end"]:
+        lic_info["parts"].append("unknown")
+        log.info("unknown license found (license block with non-tri-license)")
+        return lic_info
+
+    # license block with tri-license version headers   
+    elif (lic_info["parts"] == ["block_begin", "mpl", "gpl", "lgpl", "block_end"] or
+          lic_info["parts"] == ["block_begin", "npl", "gpl", "lgpl", "block_end"]):
         log.info("license looks good, no changes necessary")
+    if quick:
         return lic_info
 
     # Otherwise, the license needs to be fixed, so gather more detailed
@@ -916,7 +949,7 @@ def _get_license_info(filename, show_initial):
     else:
         raise RelicError("couldn't find start line with this pattern (even "
                          "though it looks like there is a license block in "
-                         "this file): %s" % lic_begin_pattern.pattern)
+                         "%s): %s" % (filename, lic_begin_pattern.pattern))
     log.info("comment delimiters: %s", comment_delims)
     log.debug("beginline dict: %s", beginline)
     lic_info["comment_delims"] = comment_delims
@@ -1357,60 +1390,60 @@ def _get_license_info(filename, show_initial):
     return lic_info
 
 
-def _report_on_file(path, (results, switch_to_mpl, show_initial, _errors)):
+def _report_on_file(path, (results, switch_to_mpl, show_initial, quick, _errors)):
     log.debug("_report_on_file(path='%s', results)", path)
     output = path + "\n"
     if _is_binary(path):
         output += "... binary, skipping this file\n"
-        return
-
-    try:
-        lic_info = _get_license_info(path, show_initial)
-    except RelicError, ex:
-        return _relicensing_error(ex, path, _errors)
-
-    if log.isEnabledFor(logging.DEBUG):
-        pprint.pprint(lic_info)
-    parts = lic_info["parts"]
-    if not parts:
-        output += "... no license found\n"
-    elif "unknown" in parts:
-        output += "... unknown license (possibly) found\n"
-    elif ((parts == ["block_begin", "mpl", "gpl", "lgpl", "block_end"] or
-           parts == ["block_begin", "npl", "gpl", "lgpl", "block_end"]) and
-          not lic_info.get("unindented_contributor_lines")):
-        if (switch_to_mpl and
-            parts == ["block_begin", "npl", "gpl", "lgpl", "block_end"]):
-            output += "... %s found (looks complete, but is not MPL)"\
-                      % "/".join(parts) + "\n"
-        else:
-            output += "... %s found (looks complete)"\
-                      % "/".join(parts) + "\n"
     else:
-        output += "... %s found" % "/".join(parts) + "\n"
-        output += "... license block lines: %(begin_line)d-%(end_line)d"\
-	          % lic_info + "\n"
-        if lic_info["original_code_is"]:
-            output += "... original code is: %(original_code_is)s"\
-		      % lic_info + "\n"
-        if lic_info["original_code_date"]:
-            output += "... original code date: %(original_code_date)s"\
-	              % lic_info + "\n"
-        if lic_info["initial_developer"]:
-            output += "... initial developer: %(initial_developer)s"\
-	              % lic_info + "\n"
-        if lic_info["initial_copyright_date"]:
-            output += "... initial copyright date: %(initial_copyright_date)s"\
-	              % lic_info + "\n"
-        if lic_info["contributors"]:
-            output += "... contributors: %s"\
-		      % ", ".join(lic_info["contributors"]) + "\n"
-        if lic_info.get("unindented_contributor_lines"):
-            output += "... one or more contributor lines were not indented properly"\
-	              + "\n"
+        try:
+            lic_info = _get_license_info(path, show_initial, quick)
+        except RelicError, ex:
+            return _relicensing_error(ex, path, _errors)
+    
+        if log.isEnabledFor(logging.DEBUG):
+            pprint.pprint(lic_info)
+        parts = lic_info["parts"]
+        if not parts:
+            output += "... no license found\n"
+        elif "unknown" in parts:
+            output += "... unknown license (possibly) found\n"
+        elif ((parts == ["block_begin", "mpl", "gpl", "lgpl", "block_end"] or
+               parts == ["block_begin", "npl", "gpl", "lgpl", "block_end"]) and
+              not lic_info.get("unindented_contributor_lines")):
+            if (switch_to_mpl and
+                parts == ["block_begin", "npl", "gpl", "lgpl", "block_end"]):
+                output += "... %s found (looks complete, but is not MPL)"\
+                          % "/".join(parts) + "\n"
+            else:
+                output += "... %s found (looks complete)"\
+                          % "/".join(parts) + "\n"
+        else:
+            output += "... %s found" % "/".join(parts) + "\n"
 
-        if (not show_initial):
-	    print output;
+        if not quick:
+            if "begin_line" in lic_info and "end_line" in lic_info:
+                output += "... license block lines: %(begin_line)d-%(end_line)d"\
+    	          % lic_info + "\n"
+            if "original_code_is" in lic_info:
+                output += "... original code is: %(original_code_is)s"\
+    		      % lic_info + "\n"
+            if "original_code_date" in lic_info:
+                output += "... original code date: %(original_code_date)s"\
+    	              % lic_info + "\n"
+            if "initial_developer" in lic_info:
+                output += "... initial developer: %(initial_developer)s"\
+    	              % lic_info + "\n"
+            if "initial_copyright_date" in lic_info:
+                output += "... initial copyright date: %(initial_copyright_date)s"\
+    	              % lic_info + "\n"
+            if "contributors" in lic_info:
+                output += "... contributors: %s"\
+    		      % ", ".join(lic_info["contributors"]) + "\n"
+            if lic_info.get("unindented_contributor_lines"):
+                output += "... one or more contributor lines were not indented properly"\
+    	              + "\n"
+    print output;
 
 
 def _gather_info_on_file(path, (results, _errors)):
@@ -1426,7 +1459,7 @@ def _gather_info_on_file(path, (results, _errors)):
             path, _errors)
 
     try:
-        results[path] = _get_license_info(path, show_initial)
+        results[path] = _get_license_info(path)
     except RelicError, ex:
         return _relicensing_error(ex, path, _errors, 1)
 
@@ -1557,7 +1590,7 @@ def _relicense_file(original_path,
             original_path, _errors)
 
     try:
-        lic_info = _get_license_info(original_path, show_initial)
+        lic_info = _get_license_info(original_path, 0)
     except RelicError, ex:
         return _relicensing_error(ex, original_path, _errors)
 
@@ -1668,13 +1701,20 @@ def _relicense_file(original_path,
         trilicense += _g_trilicense_parts["gpl/lgpl for npl"]
     else: # trilicense_name == "MPL/GPL/LGPL"
         trilicense += _g_trilicense_parts["gpl/lgpl for mpl"]
+
+    # get fallback comment subsequent prefix
+    fallback_prefix = _get_comment_delim_sets(original_path)
+
     # - add the comment delimiters
     lines = trilicense.splitlines()
     for i in range(len(lines)):
         if i == 0:
             prefix = lic_info["first_prefix"]
         else:
-            prefix = lic_info["subsequent_prefix"]
+            if lic_info["subsequent_prefix"]:
+                prefix = lic_info["subsequent_prefix"]
+            else:
+                prefix = fallback_prefix[0][1]
         if lines[i]:
             if len(lic_info["comment_delims"]) == 0:
                 lines[i] = prefix + lines[i]
@@ -1686,7 +1726,10 @@ def _relicense_file(original_path,
         lines[-1] += ' ' + lic_info["last_suffix"]
     for i in range(len(lines)): lines[i] += '\n'
     trilicense_lines = lines
-    #pprint.pprint(lines)
+
+    ##### uncomment to debug license block
+    # pprint.pprint(lines)
+    # return
 
     # Skip out now if doing a dry-run.
     if _g_dry_run:
@@ -2176,7 +2219,7 @@ def addlicense(paths,
     print "-----------------------------------------------------------------"
 
 
-def report(paths, switch_to_mpl, show_initial, _errors):
+def report(paths, switch_to_mpl=0, show_initial=1, quick=0, _errors=None):
     """Report on the existing licenses in the given file(s).
     
         "paths" is either a list of files or directories, or it is an
@@ -2184,26 +2227,32 @@ def report(paths, switch_to_mpl, show_initial, _errors):
         "switch_to_mpl" (optional, default false) is a boolean
             indicating if an NPL-based license should be converted to
             MPL.
+        "show_initial" (optional, default true) is a boolean indicating
+            if the initial developer should be displayed for each file.
+        "quick" (optional, default false) is a boolean indicating if only
+            basic license checking should be applied.
         "_errors" (optional) is a dictionary on which errors are reported
             (keyed by file path) when the force option is in effect.
 
-    This method does not return anything.  It will raise RelicError if
+    This method does not return anything. It will raise RelicError if
     there is a problem.
     """
     log.debug("report(paths=%s)", paths)
     results = {}
     _traverse(paths,\
 	      _report_on_file,\
-	      (results, switch_to_mpl, show_initial, _errors))
+	      (results, switch_to_mpl, show_initial, quick, _errors))
 
 
-def statistics(paths, extended=0, _errors=None):
+def statistics(paths, extended=0, quick=0, _errors=None):
     """Show a summary table of licenses in files in the given path(s).
 
         "paths" is either a list of files or directories, or it is an
             input stream with a path on each line.
         "extended" (optional) is a boolean indicating if extended
             statistics should be shown
+        "quick" (optional) is a boolean indicating if quick scan mode should
+            be enabled.
         "_errors" (optional) is a dictionary on which errors are reported
             (keyed by file path) when the force option is in effect.
 
@@ -2307,11 +2356,11 @@ def statistics(paths, extended=0, _errors=None):
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv[1:], "VvadhfML:sxry:i:o:D:ARI",
+        opts, args = getopt.getopt(argv[1:], "VvadhqfML:sxry:i:o:D:ARI",
             ["version", "verbose", "all", "help", "debug",
              "dry-run", "force", "MPL", "license=",
              "statistics", "relicense", "backup", "add", "defaults",
-             "force-relicense", "initial-developers"])
+             "force-relicense", "initial-developers", "quick"])
     except getopt.GetoptError, ex:
         log.error(str(ex))
         log.error("Try `%s --help'.", argv[0])
@@ -2321,6 +2370,7 @@ def main(argv):
     mode = "report"
     extended = 0
     backup = 0
+    quick = 0
     force_relicensing = 0
     fallback_initial_copyright_date = None
     fallback_initial_developer = None
@@ -2379,6 +2429,8 @@ def main(argv):
             fallback_original_code_is = "mozilla.org Code"
             fallback_initial_copyright_date = "2001"
             fallback_initial_developer = "Netscape Communications Corporation"
+        elif opt in ("-q", "--quick"):
+            quick = 1
 
     try:
         # Prepare the input.
@@ -2401,9 +2453,9 @@ def main(argv):
                       force_relicensing,
                       _errors=_errors)
         elif mode == "statistics":
-            statistics(paths, extended, _errors=_errors)
+            statistics(paths, extended, quick, _errors=_errors)
         elif mode == "report":
-            report(paths, switch_to_mpl, show_initial, _errors=_errors)
+            report(paths, switch_to_mpl, show_initial, quick, _errors=_errors)
         elif mode == "add":
             addlicense(paths,
                        fallback_initial_copyright_date,
@@ -2440,8 +2492,3 @@ def main(argv):
 
 if __name__ == "__main__":
     sys.exit( main(sys.argv) )
-
-
-
-
-
