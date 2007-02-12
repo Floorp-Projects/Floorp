@@ -79,6 +79,7 @@ CPPSRCS = \
   nsMaiInterfaceHyperlinkImpl.cpp \
   nsMaiInterfaceTable.cpp \
   nsMaiInterfaceDocument.cpp \
+  nsMaiInterfaceImage.cpp \
   $(NULL)
 
 ifdef MOZ_XUL

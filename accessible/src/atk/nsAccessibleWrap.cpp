@@ -60,6 +60,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIPersistentProperties2.h"
 #include "nsMaiInterfaceDocument.h"
+#include "nsMaiInterfaceImage.h"
 
 extern "C" GType g_atk_hyperlink_impl_type; //defined in nsAppRootAccessible.cpp
 
@@ -87,7 +88,8 @@ enum MaiInterfaceType {
     MAI_INTERFACE_SELECTION,
     MAI_INTERFACE_TABLE,
     MAI_INTERFACE_TEXT,
-    MAI_INTERFACE_DOCUMENT /* 9 */
+    MAI_INTERFACE_DOCUMENT, 
+    MAI_INTERFACE_IMAGE /* 10 */
 };
 
 static GType GetAtkTypeForMai(MaiInterfaceType type)
@@ -113,6 +115,8 @@ static GType GetAtkTypeForMai(MaiInterfaceType type)
       return ATK_TYPE_TEXT;
     case MAI_INTERFACE_DOCUMENT:
       return ATK_TYPE_DOCUMENT;
+    case MAI_INTERFACE_IMAGE:
+      return ATK_TYPE_IMAGE;
   }
   return G_TYPE_INVALID;
 }
@@ -137,6 +141,8 @@ static const GInterfaceInfo atk_if_infos[] = {
     {(GInterfaceInitFunc)textInterfaceInitCB,
      (GInterfaceFinalizeFunc) NULL, NULL},
     {(GInterfaceInitFunc)documentInterfaceInitCB,
+     (GInterfaceFinalizeFunc) NULL, NULL},
+    {(GInterfaceInitFunc)imageInterfaceInitCB,
      (GInterfaceFinalizeFunc) NULL, NULL}
 };
 
@@ -173,7 +179,8 @@ static void finalizeCB(GObject *aObj);
 
 /* callbacks for AtkObject virtual functions */
 static const gchar*        getNameCB (AtkObject *aAtkObj);
-static const gchar*        getDescriptionCB (AtkObject *aAtkObj);
+/* getDescriptionCB is also used by image interface */
+       const gchar*        getDescriptionCB (AtkObject *aAtkObj);
 static AtkRole             getRoleCB(AtkObject *aAtkObj);
 static AtkAttributeSet*    getAttributesCB(AtkObject *aAtkObj);
 static AtkObject*          getParentCB(AtkObject *aAtkObj);
@@ -403,6 +410,14 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
                               getter_AddRefs(accessInterfaceDocument));
     if (accessInterfaceDocument) {
         interfacesBits |= 1 << MAI_INTERFACE_DOCUMENT;
+    }
+
+    //nsIAccessibleImage
+    nsCOMPtr<nsIAccessibleImage> accessInterfaceImage;
+    QueryInterface(NS_GET_IID(nsIAccessibleImage),
+                              getter_AddRefs(accessInterfaceImage));
+    if (accessInterfaceImage) {
+        interfacesBits |= 1 << MAI_INTERFACE_IMAGE;
     }
 
     return interfacesBits;
