@@ -640,10 +640,12 @@ NS_IMETHODIMP nsAppRootAccessible::GetChildAt(PRInt32 aChildNum,
     if (mChildren)
         rv = mChildren->GetLength(&count);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (aChildNum >= NS_STATIC_CAST(PRInt32, count))
+
+    if (aChildNum >= NS_STATIC_CAST(PRInt32, count) || count == 0)
         return NS_ERROR_INVALID_ARG;
+
     if (aChildNum < 0)
-        return NS_ERROR_INVALID_ARG;
+        aChildNum = count - 1;
 
     nsCOMPtr<nsIWeakReference> childWeakRef;
     rv = mChildren->QueryElementAt(aChildNum, NS_GET_IID(nsIWeakReference),
