@@ -46,12 +46,14 @@ const IO_SERVICE_CONTRACTID = "@mozilla.org/network/io-service;1";
 const NS_LOCALFILEINPUTSTREAM_CONTRACTID =
           "@mozilla.org/network/file-input-stream;1";
 
+const LOAD_FAILURE_TIMEOUT = 10000; // ms
+
 var gBrowser;
-var gProgressListener;
 var gCanvas;
 var gURLs;
 var gState;
 var gPart1Key;
+var gFailureTimeout;
 
 const EXPECTED_PASS = 0;
 const EXPECTED_FAIL = 1;
@@ -60,9 +62,8 @@ const EXPECTED_RANDOM = 2;
 function OnRefTestLoad()
 {
     gBrowser = document.getElementById("browser");
-    gProgressListener = new RefTestProgressListener;
-    gBrowser.webProgress.addProgressListener(gProgressListener,
-         CI.nsIWebProgress.NOTIFY_STATE_NETWORK);
+
+    gBrowser.addEventListener("load", OnDocumentLoad, true);
 
     gCanvas = document.createElementNS(XHTML_NS, "canvas");
     var windowElem = document.documentElement;
@@ -71,7 +72,7 @@ function OnRefTestLoad()
 
     try {
         ReadTopManifest(window.arguments[0]);
-        StartCurrentURI();
+        StartCurrentTest();
     } catch (ex) {
         gBrowser.loadURI('data:text/plain,' + ex);
     }
@@ -79,7 +80,7 @@ function OnRefTestLoad()
 
 function OnRefTestUnload()
 {
-    gBrowser.webProgress.removeProgressListener(gProgressListener);
+    gBrowser.removeEventListener("load", OnDocumentLoad, true);
 }
 
 function ReadTopManifest(aFileURL)
@@ -164,10 +165,20 @@ function ReadManifest(aURL)
     } while (more);
 }
 
-function StartCurrentURI()
+function StartCurrentTest()
 {
-    gState = 1;
-    gBrowser.loadURI(gURLs[0].url1.spec);
+    if (gURLs.length == 0)
+        DoneTests();
+    else
+        StartCurrentURI(1);
+}
+
+function StartCurrentURI(aState)
+{
+    gFailureTimeout = setTimeout(LoadFailed, LOAD_FAILURE_TIMEOUT);
+
+    gState = aState;
+    gBrowser.loadURI(gURLs[0]["url" + aState].spec);
 }
 
 function DoneTests()
@@ -186,6 +197,12 @@ function IFrameToKey()
     return gCanvas.toDataURL();
 }
 
+function OnDocumentLoad()
+{
+    clearTimeout(gFailureTimeout);
+    setTimeout(DocumentLoaded, 0);
+}
+
 function DocumentLoaded()
 {
     var key = IFrameToKey();
@@ -193,8 +210,7 @@ function DocumentLoaded()
         case 1:
             gPart1Key = key;
 
-            gState = 2;
-            gBrowser.loadURI(gURLs[0].url2.spec);
+            StartCurrentURI(2);
             break;
         case 2:
             var equal = (key == gPart1Key);
@@ -229,67 +245,17 @@ function DocumentLoaded()
 
             gPart1Key = undefined;
             gURLs.shift();
-            if (gURLs.length == 0)
-                DoneTests();
-            else
-                StartCurrentURI();
+            StartCurrentTest();
             break;
         default:
             throw "Unexpected state."
     }
 }
 
-function RefTestProgressListener()
+function LoadFailed()
 {
-}
-
-RefTestProgressListener.prototype = {
-
-    QueryInterface : function(aIID)
-    {
-      if (aIID.equals(CI.nsIWebProgressListener) ||
-          aIID.equals(CI.nsISupportsWeakReference) ||
-          aIID.equals(CI.nsISupports))
-          return this;
-      throw CR.NS_NOINTERFACE;
-    },
-
-    // nsIWebProgressListener implementation
-    onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
-    {
-        if (!(aStateFlags & CI.nsIWebProgressListener.STATE_IS_NETWORK) ||
-            aWebProgress != gBrowser.webProgress)
-            return;
-
-        if (aStateFlags & CI.nsIWebProgressListener.STATE_START) {
-            this.mLoading = true;
-        } else if (aStateFlags & CI.nsIWebProgressListener.STATE_STOP) {
-            if (this.mLoading) {
-                this.mLoading = false;
-                // Let other things happen in the first 20ms, since this
-                // doesn't really seem to be when the page is done loading.
-                setTimeout(DocumentLoaded, 20);
-            }
-        }
-    },
-
-    onProgressChange : function(aWebProgress, aRequest,
-                                aCurSelfProgress, aMaxSelfProgress,
-                                aCurTotalProgress, aMaxTotalProgress)
-    {
-    },
-
-    onLocationChange : function(aWebProgress, aRequest, aLocation)
-    {
-    },
-
-    onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
-    {
-    },
-
-    onSecurityChange : function(aWebProgress, aRequest, aState)
-    {
-    },
-
-    mLoading : false
+    dump("REFTEST UNEXPECTED FAIL (LOADING): " +
+         gURLs[0]["url" + gState].spec + "\n");
+    gURLs.shift();
+    StartCurrentTest();
 }
