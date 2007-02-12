@@ -72,7 +72,6 @@ const PRIVACY_FULL = 2;
 const OBSERVING = [
   "domwindowopened", "domwindowclosed",
   "quit-application-requested", "quit-application-granted",
-  "quit-application-roughly", // XXXzeniko work-around for bug 333907
   "quit-application", "browser:purge-session-history"
 ];
 
@@ -283,7 +282,6 @@ SessionStoreService.prototype = {
       this._loadState = STATE_QUITTING;
       break;
     case "quit-application":
-    case "quit-application-roughly":
       if (aData == "restart")
         this._prefBranch.setBoolPref("sessionstore.resume_session_once", true);
       this._loadState = STATE_QUITTING; // just to be sure
