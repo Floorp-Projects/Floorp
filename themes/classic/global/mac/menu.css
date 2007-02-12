@@ -96,7 +96,9 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
 }
 
 menulist > menupopup > menuitem > .menu-iconic-left,
+menulist > menupopup > menu > .menu-iconic-left,
 .menulist-menupopup > menuitem > .menu-iconic-left,
+.menulist-menupopup > menu > .menu-iconic-left,
 menuitem[type="checkbox"] > .menu-iconic-left,
 menuitem[type="radio"] > .menu-iconic-left {
   margin: 0 2px 0 0 !important;
