@@ -75,6 +75,8 @@ nsLinkableAccessible(aDOMNode, aShell)
   }
 }
 
+NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLImageAccessible, nsLinkableAccessible, nsIAccessibleImage)
+
 NS_IMETHODIMP nsHTMLImageAccessible::GetState(PRUint32 *_retval)
 {
   // The state is a bitfield, get our inherited state, then logically OR it with STATE_ANIMATED if this
@@ -238,3 +240,7 @@ NS_IMETHODIMP nsHTMLImageAccessible::DoAction(PRUint8 index)
   return nsLinkableAccessible::DoAction(index);
 }
 
+NS_IMETHODIMP nsHTMLImageAccessible::GetImageBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height)
+{
+  return GetBounds(x, y, width, height);
+}

@@ -69,6 +69,7 @@ XPIDLSRCS = \
       nsIAccessibleTable.idl \
       nsIAccessibleText.idl \
       nsIAccessibleValue.idl \
+      nsIAccessibleImage.idl \
       $(NULL)
 
 ifdef MOZ_XUL
