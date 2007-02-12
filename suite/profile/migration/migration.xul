@@ -1,0 +1,139 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is The Browser Profile Migrator.
+   -
+   - The Initial Developer of the Original Code is
+   - Ben Goodger.
+   - Portions created by the Initial Developer are Copyright (C) 2004
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Mark Banner <bugzilla@standard8.demon.co.uk>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!DOCTYPE dialog SYSTEM "chrome://communicator/locale/migration/migration.dtd" >
+
+<wizard id="migrationWizard"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&migrationWizard.title;"
+        onload="MigrationWizard.init()"
+        onunload="MigrationWizard.uninit()"
+        style="width: 40em; height: 30em;"
+        buttons="accept,cancel"
+        xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
+        xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#">
+
+  <script type="application/x-javascript"
+          src="chrome://communicator/content/migration/migration.js"/>
+
+  <stringbundle id="bundle"
+                src="chrome://communicator/locale/migration/migration.properties"/>
+
+  <wizardpage id="importSource" pageid="importSource" next="selectProfile"
+              label="&importSource.title;"
+              onpageadvanced="MigrationWizard.onImportSourcePageAdvanced();">
+    <description id="importAll"
+                 control="importSourceGroup">&importAllFrom.label;</description>
+    <description id="importBookmarks" control="importSourceGroup"
+                 hidden="true">&importBookmarksFrom.label;</description>
+
+    <radiogroup id="importSourceGroup" align="start">
+      <radio id="seamonkey" label="&importFromSeamonkey.label;"
+             accesskey="&importFromSeamonkey.accesskey;" value="seamonkey"/>
+      <radio id="thunderbird" label="&importFromThunderbird.label;"
+             accesskey="&importFromThunderbird.accesskey;"
+             value="thunderbird"/>
+      <!-- fromfile is used for bookmark importing -->
+      <radio id="fromFile" label="&importFromFile.label;" value="fromFile"
+             accesskey="&importFromFile.accesskey;" hidden="true"/>
+      <radio id="nothing" label="&importFromNothing.label;" value="nothing"
+             accesskey="&importFromNothing.accesskey;" hidden="true"/>
+    </radiogroup>
+  </wizardpage>
+
+  <wizardpage id="selectProfile" pageid="selectProfile"
+              label="&selectProfile.title;" next="importItems"
+              onpageshow="return MigrationWizard.onSelectProfilePageShow();"
+              onpageadvanced="return MigrationWizard.onSelectProfilePageAdvanced();">
+    <description control="profiles">&selectProfile.label;</description>
+
+    <radiogroup id="profiles" align="left"/>
+  </wizardpage>
+
+  <wizardpage id="importItems" pageid="importItems" label="&importItems.title;"
+              next="homePageImport"
+              onpageshow="return MigrationWizard.onImportItemsPageShow();"
+              onpageadvanced="return MigrationWizard.onImportItemsPageAdvanced();"
+              oncommand="MigrationWizard.onImportItemCommand();">
+    <description control="dataSources">&importItems.label;</description>
+
+    <vbox id="dataSources" style="overflow-y: auto;"
+          align="left" flex="1" xhtml2:role="wairole:groupbox"/>
+  </wizardpage>
+
+  <wizardpage id="homePageImport" pageid="homePageImport"
+              next="migrating"
+              onpageshow="return MigrationWizard.onHomePageMigrationPageShow();"
+              onpageadvanced="return MigrationWizard.onHomePageMigrationPageAdvanced();">
+
+    <description id="homePageImportDesc" control="homePageRadioGroup"/>
+    <radiogroup id="homePageRadioGroup" align="start">
+      <radio id="oldHomePage" hidden="true"/>
+      <radio id="homePageSingleStart"/>
+      <radio id="homePageMultipleStartMain" hidden="true"/>
+      <radiogroup id="multipleStartRadioGroup" class="indent">
+        <radio id="homePageMultipleStart1" hidden="true" selected="true"/>
+        <radio id="homePageMultipleStart2" hidden="true"/>
+        <radio id="homePageMultipleStart3" hidden="true"/>
+      </radiogroup>
+    </radiogroup>
+  </wizardpage>
+
+  <wizardpage id="migrating" pageid="migrating" label="&migrating.title;"
+              next="done" onpageshow="MigrationWizard.onMigratingPageShow();">
+    <description control="migratingItems">&migrating.label;</description>
+
+    <vbox id="migratingItems" style="overflow-y: auto;" align="left"
+          xhtml2:role="wairole:groupbox"/>
+
+    <hbox>
+      <progressmeter class="progressmeter-statusbar" id="progressBar"
+                     flex="1" mode="normal" value="0"/>
+    </hbox>
+  </wizardpage>
+
+  <wizardpage id="done" pageid="done" label="&done.title;"
+              onpageshow="MigrationWizard.onDonePageShow();">
+    <description control="doneItems">&done.label;</description>
+
+    <vbox id="doneItems" style="overflow-y: auto;" align="left"
+          xhtml2:role="wairole:groupbox"/>
+  </wizardpage>
+</wizard>
