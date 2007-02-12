@@ -112,7 +112,7 @@ dnl ========================================================
 GLIB_VERSION=1.2.0
 GTK_VERSION=1.2.0
 LIBIDL_VERSION=0.6.3
-PERL_VERSION=5.004
+PERL_VERSION=5.006
 QT_VERSION=3.2.0
 QT_VERSION_NUM=320
 LIBART_VERSION=2.3.4
@@ -611,6 +611,7 @@ if test -z "$PERL" || test "$PERL" = ":"; then
     AC_MSG_ERROR([perl not found in \$PATH])
 fi
 
+if test -z "$TINDERBOX_SKIP_PERL_VERSION_CHECK"; then
 AC_MSG_CHECKING([for minimum required perl version >= $PERL_VERSION])
 _perl_version=`PERL_VERSION=$PERL_VERSION $PERL -e 'print "$]"; if ($] >= $ENV{PERL_VERSION}) { exit(0); } else { exit(1); }' 2>&5`
 _perl_res=$?
@@ -618,6 +619,7 @@ AC_MSG_RESULT([$_perl_version])
 
 if test "$_perl_res" != 0; then
     AC_MSG_ERROR([Perl $PERL_VERSION or higher is required.])
+fi
 fi
 
 AC_MSG_CHECKING([for full perl installation])
