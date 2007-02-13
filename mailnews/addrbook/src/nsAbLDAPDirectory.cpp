@@ -47,16 +47,9 @@
 #include "nsIAddrBookSession.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
-
-#include "nsString.h"
-#include "nsXPIDLString.h"
 #include "nsAutoLock.h"
 #include "nsNetCID.h"
 #include "nsIIOService.h"
-#include "nsXPCOM.h"
-#include "nsISupportsPrimitives.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsCOMArray.h"
 #include "nsArrayEnumerator.h"
 #include "nsEnumeratorUtils.h"
@@ -138,17 +131,12 @@ nsresult nsAbLDAPDirectory::InitiateConnection ()
     mURL = do_CreateInstance(NS_LDAPURL_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // use mURINoQuery to get a prefName
-    nsCAutoString prefName;
-    prefName = nsDependentCString(mURINoQuery.get() + kLDAPDirectoryRootLen) + NS_LITERAL_CSTRING(".uri");
-
-    // turn moz-abldapdirectory://ldap_2.servers.nscpphonebook into -> "ldap_2.servers.nscpphonebook.uri"
-    nsXPIDLCString URI;
-    rv = prefs->GetCharPref(prefName.get(), getter_Copies(URI));
-    if (NS_FAILED(rv))
+    // Rather than using GetURI here we call GetStringValue directly so
+    // we can handle the case where the URI isn't specified (see comments
+    // below)
+    nsCAutoString URI;
+    rv = GetStringValue("uri", EmptyCString(), URI);
+    if (NS_FAILED(rv) || URI.IsEmpty())
     {
         /*
          * A recent change in Mozilla now means that the LDAP Address Book
@@ -210,13 +198,12 @@ nsresult nsAbLDAPDirectory::InitiateConnection ()
 NS_IMETHODIMP nsAbLDAPDirectory::GetURI(nsACString &aURI)
 {
   nsresult rv = GetStringValue("uri", EmptyCString(), aURI);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (aURI.IsEmpty())
   {
-    rv = GetFileName(aURI);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    aURI.Insert(kLDAPDirectoryRoot, 0);
+    aURI.AppendLiteral(kLDAPDirectoryRoot);
+    aURI.Append(m_DirPrefId);
   }
 
   return NS_OK;
@@ -607,10 +594,10 @@ NS_IMETHODIMP nsAbLDAPDirectory::SetDataVersion(const nsACString &aDataVersion)
 
 NS_IMETHODIMP nsAbLDAPDirectory::GetAttributeMap(nsIAbLDAPAttributeMap **aAttributeMap)
 {
+  nsresult rv;
   nsCOMPtr<nsIAbLDAPAttributeMapService> mapSvc = 
-    do_GetService("@mozilla.org/addressbook/ldap-attribute-map-service;1");
-  if (!mapSvc)
-    return NS_ERROR_FAILURE;
+    do_GetService("@mozilla.org/addressbook/ldap-attribute-map-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return mapSvc->GetMapForPrefBranch(m_DirPrefId, aAttributeMap);
 }
