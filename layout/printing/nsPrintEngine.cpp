@@ -935,7 +935,13 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
   // we want to view every page in PrintPreview each time
   mPrt->mPrintSettings->SetPrintRange(nsIPrintSettings::kRangeAllPages);
 
-  mPrt->mPrintDC = ppDC ? ppDC : mDeviceContext;
+  if (ppDC)
+    mPrt->mPrintDC = ppDC;
+  else
+    mPrt->mPrintDC = mDeviceContext;
+
+  if (!mPrt->mPrintDC)
+    return NS_ERROR_FAILURE;
 
   if (aWebProgressListener != nsnull) {
     mPrt->mPrintProgressListeners.AppendObject(aWebProgressListener);
