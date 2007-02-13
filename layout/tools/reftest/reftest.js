@@ -194,8 +194,12 @@ function IFrameToKey()
     return gCanvas.toDataURL();
 }
 
-function OnDocumentLoad()
+function OnDocumentLoad(event)
 {
+    if (event.target != gBrowser.contentDocument)
+        // Ignore load events for subframes.
+        return;
+
     // Since we can't use a bubbling-phase load listener from chrome,
     // this is a capturing phase listener.  So do setTimeout twice, the
     // first to get us after the onload has fired in the content, and
