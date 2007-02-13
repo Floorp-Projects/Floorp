@@ -133,10 +133,11 @@ nsSVGAnimatedInteger::SetValueString(const nsAString& aValue)
     tmp++;
 
     while (*tmp) {
-      if (!isdigit(*str)) {
+      if (!isdigit(*tmp)) {
         rv = NS_ERROR_FAILURE;
         break;
       }
+      tmp++;
     }
 
     if (NS_SUCCEEDED(rv))
