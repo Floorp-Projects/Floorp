@@ -1,0 +1,39 @@
+a:visited {
+	color: #800080;
+}
+
+td.Event, td.BuildStep, td.Activity, td.Change, td.Time, td.Builder {
+    border-top: 1px solid;
+    border-right: 1px solid;
+}
+
+/* Activity states */
+.offline { 
+        background-color: red;
+}
+.idle {
+	background-color: white;
+}
+.waiting { 
+        background-color: yellow;
+}
+.building { 
+        background-color: yellow;
+}
+
+/* LastBuild, BuildStep states */
+.success {
+	background-color: #72ff75;
+}
+.failure {
+	background-color: red;
+}
+.warnings {
+	background-color: #ff8000;
+}
+.exception {
+	background-color: #c000c0;
+}
+.start,.running {
+	background-color: yellow;
+}

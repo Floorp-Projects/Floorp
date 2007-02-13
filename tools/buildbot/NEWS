@@ -1,0 +1,1917 @@
+User visible changes in Buildbot.             -*- outline -*-
+
+* Release 0.7.5 (10 Dec 2006)
+
+** Things You Need To Know
+
+*** The Great BuildStep Renaming
+
+All BuildSteps have moved! They used to be classes in buildbot.process.step,
+but now they all have separate modules in buildbot.steps.* . They have been
+split out into separate categories: for example, the source checkout steps
+are now buildbot.steps.source.CVS, buildbot.steps.source.Darcs, etc. The most
+commonly used one is probably buildbot.steps.shell.ShellCommand . The
+python-specific steps are in buildbot.steps.python, and the Twisted-specific
+steps are in buildbot.steps.python_twisted .
+
+You will need to update your master.cfg files to use the new names. The old
+names are deprecated and will be removed altogether in the next release.
+
+*** Compatibility
+
+Buildbot now requires python-2.3 or later. Buildbot now requires
+Twisted-2.0.0 or later. Support for earlier versions of both has finally been
+removed. If you discover it works with unsupported versions, please return
+your Buildbot to the factory for repairs :-).
+
+Buildbot has *not* yet been tested against the recent python-2.5 release. It
+has been tested against the latest SVN version of Twisted, but only in
+conjunction with python-2.4 .
+
+** new features
+
+*** reconfiguring a Builder no longer causes a disconnect/reconnect cycle
+
+This means that sending SIGHUP to the master or running 'buildbot reconfig
+MASTERDIR' command no longer interrupts any current builds, nor does it lose
+pending builds like it did before. This involved a fairly substantial
+refactoring of the various internal BotPerspective/BotMaster/Builder classes.
+Note that reconfiguring Schedulers still loses any Changes that were waiting
+for the tree to become stable: hopefully this will be fixed in the next
+release.
+
+*** 'buildbot start/restart/reconfig' now show logs until startup is complete
+
+These commands now have additional code to follow twistd.log and display all
+the lines that are emitted from the beginning of the start/reconfig action
+until it has completed. This gives you a chance to see any problems detected
+in the config file without needing to manually look in twistd.log or use
+another shell to 'tail -f' it. This also makes it clear which config file is
+being used. This functionality is not available under windows.
+
+In addition, if any problems are detected during 'start' or 'restart' (but
+not reconfig), the buildbot command will terminate with a non-zero exit
+status, making it easier to use in scripts. Closes SF#1517975.
+
+*** Locks now take maxCount=N to allow multiple simultaneous owners
+
+This allows Locks to be non-exclusive but still limit maximum concurrency.
+Thanks to James Knight for the patch. Closes SF#1434997.
+
+*** filetransfer steps
+
+buildbot.steps.transfer.FileUpload is a buildstep that will move files from
+the slave to the master. Likewise, FileDownload will move files from the
+master down to the buildslave. Many thanks to Albert Hofkamp for contributing
+these classes. Closes SF#1504631.
+
+*** pyflakes step
+
+buildbot.steps.python.PyFlakes will run the simple 'pyflakes' static analysis
+tool and parse the results to tell you about undefined names, unused imports,
+etc. You'll need to tell it how to run pyflakes, usually with something like
+command=["pyflakes", "src/packagedir"] or the like. The default command is
+"make pyflakes", which assumes that you have a suitable target in your
+top-level Makefile.
+
+*** Monotone support
+
+Nathaniel Smith has contributed initial support for the Monotone version
+control system. The code still needs docs and tests, but on the other hand it
+has been in use by the Monotone buildbot for a long time now, so it is
+probably fairly stable.
+
+*** Tinderbox support
+
+Ben Hearsum and the Mozilla crew have contributed some classes to allow
+Buildbot to work with Tinderbox clients. One piece is
+buildbot.changes.bonsaipoller.BonsaiPoller, which is a ChangeSource that
+polls a Bonsai server (which is a kind of web-vased viewcvs CGI script) to
+discover source code changes. The other piece is
+buildbot.status.tinderbox.TinderboxMailNotifier, which is a status plugin
+that sends email in the same format as Tinderbox does, which allows a number
+of Tinderbox tools to be driven by Buildbot instead.
+
+*** SVN Poller
+
+Niklaus Giger contributed a ChangeSource (buildbot.changes.svnpoller) which
+polls a remote SVN repository on a periodic basis. This is useful when, for
+whatever reason, you cannot add a post-commit hook script to the repository.
+This obsoletes the external contrib/svn_watcher.py script.
+
+** notes for plugin developers
+
+*** IStatusLog.readlines()
+
+This new method makes it easier for a status plugin (or a
+BuildStep.createSummary method) to walk through a StatusLog one line at a
+time. For example, if you wanted to create an extra logfile that just
+contained all the GCC warnings from the main log, you could use the
+following:
+
+    def createSummary(self, log):
+        warnings = []
+        for line in log.readlines():
+            if "warning:" in line:
+                warnings.append()
+        self.addCompleteLog('warnings', "".join(warnings))
+
+The "BuildStep LogFiles" section of the user's manual contains more
+information. This method is not particularly memory-efficient yet (it reads
+the whole logfile into memory first, then splits it into lines); this will be
+improved in a future release.
+
+** bug fixes
+
+*** Update source.SVN to work with the new SVN-1.4.0
+
+The latest subversion changed the behavior in an unusual situation which
+caused the unit tests to fail. This was unlikely to cause a problem in actual
+usage, but the tests have been updated to pass with the new version.
+
+*** update svn_buildbot.py to avoid mangling filenames
+
+Older versions of this script were stripping the wrong number of columns from
+the output of 'svnlook changed', and would sometimes mangle filenames. This
+has been fixed. Closes SF#1545146.
+
+*** logfiles= caused subsequent build failures under Windows
+
+Earlier versions of buildbot didn't explicitly close any logfiles= file
+handles when the build finished. On windows (where you cannot delete a file
+that someone else is reading), this could cause the next build to fail as the
+source checkout step was unable to delete the old working directory. This has
+been fixed. Closes SF#1568415.
+
+*** logfiles= didn't work on OS-X
+
+Macintosh OS-X has a different behavior when reading files that have reached
+EOF, the result was that logfiles= sometimes didn't work. Thanks to Mark Rowe
+for the patch.
+
+** other changes
+
+The 'buildbot sighup MASTERDIR' command has been replaced with 'buildbot
+reconfig MASTERDIR', since that seems to be a slightly more meaningful name.
+The 'sighup' form will remain as an alias.
+
+
+* Release 0.7.4 (23 Aug 2006)
+
+** Things You Need To Know
+
+The PBChangeSource's prefix= argument has changed, you probably need to add a
+slash now. This is mostly used by sites which use Subversion and
+svn_buildbot.py.
+
+The subcommands that are used to create a buildmaster or a buildslave have
+changed. They used to be called 'buildbot master' and 'buildbot slave'. Now
+they are called 'buildbot create-master' and 'buildbot create-slave'. Zipf's
+Law suggests that these are more appropriate names for these
+infrequently-used commands.
+
+The syntax for the c['manhole'] feature has changed.
+
+** new features
+
+*** full Perforce support
+
+SF#1473939: large patch from Scott Lamb, with docs and unit tests! This
+includes both the step.P4 source-checkout BuildStep, and the changes.p4poller
+ChangeSource you'll want to feed it. P4 is now supported just as well as all
+the other VC systems. Thanks Scott!
+
+*** SSH-based Manhole
+
+The 'manhole' feature allows buildbot developers to get access to a python
+read/eval/print loop (REPL) inside the buildmaster through a network
+connection. Previously, this ran over unencrypted telnet, using a simple
+username/password for access control. The new release defaults to encrypted
+SSH access, using either username/password or an authorized_keys file (just
+like sshd). There also exists an unencrypted telnet form, but its use is
+discouraged. The syntax for setting up a manhole has changed, so master.cfg
+files that use them must be updated. The "Debug options" section in the
+user's manual provides a complete description.
+
+*** Multiple Logfiles
+
+BuildSteps can watch multiple log files in realtime, not just stdout/stderr.
+This works in a similar fashion to 'tail -f': the file is polled once per
+second, and any new data is sent to the buildmaster.
+
+This requires a buildslave running 0.7.4 or later, and a warning message is
+produced if used against an old buildslave (which will otherwise produce no
+data). Use "logfiles={'name': 'filename'}" to take advantage of this feature
+from master.cfg, and see the "ShellCommand" section of the user's manual for
+full documentation.
+
+The 'Trial' buildstep has been updated to use this, to display
+_trial_temp/test.log in realtime. It also knows to fall back to the previous
+"cat" command if the buildslave is too old.
+
+*** BuildStep URLs
+
+BuildSteps can now add arbitrary URLs which will be displayed on the
+Waterfall page in the same place that Logs are presented. This is intended to
+provide a link to generated HTML pages, such as the output of a code coverage
+tool. The step is responsible for somehow uploading the HTML to a web server:
+this feature merely provides an easy way to present the HREF link to the
+user. See the "BuildStep URLs" section of the user's manual for details and
+examples.
+
+*** LogObservers
+
+BuildSteps can now attach LogObservers to various logfiles, allowing them to
+get real-time log output. They can use this to watch for progress-indicating
+events (like counting the number of files compiled, or the number of tests
+which have run), and update both ETA/progress-tracking and step text. This
+allows for more accurate ETA information, and more information passed to the
+user about how much of the process has completed.
+
+The 'Trial' buildstep has been updated to use this for progress tracking, by
+counting how many test cases have run.
+
+** new documentation
+
+What classes are useful in your master.cfg file? A table of them has been
+added to the user's manual, in a section called "Index of Useful Classes".
+
+Want a list of all the keys in master.cfg? Look in the "Index of master.cfg
+keys" section.
+
+A number of pretty diagrams have been added to the "System Architecture"
+portion of the manual, explaining how all the buildbot pieces fit together.
+
+An HTML form of the user's manual is now shipped in the source tarball. This
+makes it a bit bigger: sorry about that. The old PyCon-2003 paper has been
+removed from the distribution, as it is mostly supplanted by the user's
+manual by this point.
+
+** bugfixes
+
+SF#1217699 + SF#1381867: The prefix= argument to PBChangeSource has been
+changed: now it does just a simple string-prefix match and strip. The
+previous behavior was buggy and unhelpful. NOTE: if you were using prefix=
+before, you probably need to add a slash to the end of it.
+
+SF#1398174: ignore SVN property changes better, fixed by Olivier Bonnet
+
+SF#1452801: don't double-escape the build URL, fixed by Olivier Bonnet
+
+SF#1401121: add support for running py2exe on windows, by Mark Hammond
+
+reloading unchanged config files with WithProperties shouldn't change anything.
+
+All svn commands now include --non-interactive so they won't ask for
+passwords. Instead, the command will fail if it cannot be performed without
+user input.
+
+Deprecation warnings with newer versions of Twisted have been hushed.
+
+** compatibility
+
+I haven't actually removed support for Twisted-1.3.0 yet, but I'd like to.
+
+The step_twisted default value for --reporter matches modern Twisteds,
+though, and won't work under 1.3.0.
+
+ShellCommand.flunkOnFailure now defaults to True, so any shell command which
+fails counts as a build failure. Set this to False if you don't want this
+behavior.
+
+** minor features
+
+contrib/darcs_buildbot.py contains a new script suitable for use in a darcs
+commit-hook.
+
+Hovering a cursor over the yellow "Build #123" box in the Waterfall display
+will pop up an HTML tooltip to show the reason for the build. Thanks to Zandr
+Milewski for the suggestion.
+
+contrib/CSS/*.css now contains several contributed stylesheets to make the
+Waterfall display a bit less ugly. Thanks to John O'Duinn for gathering them.
+
+ShellCommand and its derivatives can now accept either a string or a list of
+strings in the description= and descriptionDone= arguments. Thanks to Paul
+Winkler for the catch.
+
+
+* Release 0.7.3 (23 May 2006)
+
+** compatibility
+
+This release is compatible with Twisted-1.3.0, but the next one will not be.
+Please upgrade to at least Twisted-2.0.x soon, as the next buildbot release
+will require it.
+
+** new features
+
+*** Mercurial support
+
+Support for Mercurial version control system (http://selenic.com/mercurial)
+has been added. This adds a buildbot.process.step.Mercurial BuildStep. A
+suitable hook script to deliver changes to the buildmaster is still missing.
+
+*** 'buildbot restart' command
+
+The 'buildbot restart BASEDIR' command will perform a 'buildbot stop' and
+'buildbot start', and will attempt to wait for the buildbot process to shut
+down in between. This is useful when you need to upgrade the code on your
+buildmaster or buildslave and want to take it down for a minimum amount of
+time.
+
+*** build properties
+
+Each build now has a set of named "Build Properties", which can be set by
+steps and interpolated into ShellCommands. The 'revision' and 'got_revision'
+properties are the most interesting ones available at this point, and can be
+used e.g. to get the VC revision number into the filename of a generated
+tarball. See the user's manual section entited "Build Properties" for more
+details.
+
+** minor features
+
+*** IRC now takes password= argument
+
+Useful for letting your bot claim a persistent identity.
+
+*** svn_buildbot.py is easier to modify to understand branches
+*** BuildFactory has a new .addStep method
+*** p4poller has new arguments
+*** new contrib scripts: viewcvspoll, svnpoller, svn_watcher
+
+These poll an external VC repository to watch for changes, as opposed to
+adding a hook script to the repository that pushes changes into the
+buildmaster. This means higher latency but may be easier to configure,
+especially if you do not have authority on the repository host.
+
+*** VC build property 'got_revision'
+
+The 'got_revision' property reports what revision a VC step actually
+acquired, which may be useful to know when building from HEAD.
+
+*** improved CSS in Waterfall
+
+The Waterfall display has a few new class= tags, which may make it easier to
+write custom CSS to make it look prettier.
+
+*** robots_txt= argument in Waterfall
+
+You can now pass a filename to the robots_txt= argument, which will be served
+as the "robots.txt" file. This can be used to discourage search engine
+spiders from crawling through the numerous build-status pages.
+
+** bugfixes
+
+*** tests more likely to pass on non-English systems
+
+The unit test suite now sets $LANG='C' to make subcommands emit error
+messages in english instead of whatever native language is in use on the
+host. This improves the chances that the unit tests will pass on such
+systems. This affects certain VC-related subcommands too.
+
+test_vc was assuming that the system time was expressed with a numeric
+timezone, which is not always the case, especially under windows. This
+probably works better now than it did before. This only affects the CVS
+tests.
+
+'buildbot try' (for CVS) now uses UTC instead of the local timezone. The
+'got_revision' property is also expressed in UTC. Both should help deal with
+buggy versions of CVS that don't parse numeric timezones properly.
+
+
+* Release 0.7.2 (17 Feb 2006)
+
+** new features
+
+*** all TCP port numbers in config file now accept a strports string
+
+Sometimes it is useful to restrict certain TCP ports that the buildmaster
+listens on to use specific network interfaces. In particular, if the
+buildmaster and SVN repository live on the same machine, you may want to
+restrict the PBChangeSource to only listen on the loopback interface,
+insuring that no external entities can inject Changes into the buildbot.
+Likewise, if you are using something like Apache's reverse-proxy feature to
+provide access to the buildmaster's HTML status page, you might want to hide
+the real Waterfall port by having it only bind to the loopback interface.
+
+To accomplish this, use a string like "tcp:12345:interface=127.0.0.1" instead
+of a number like 12345. These strings are called "strports specification
+strings", and are documented in twisted's twisted.application.strports module
+(you can probably type 'pydoc twisted.application.strports' to see this
+documentation). Pretty much everywhere the buildbot takes a port number will
+now accept a strports spec, and any bare numbers are translated into TCP port
+numbers (listening on all network interfaces) for compatibility.
+
+*** buildslave --umask control
+
+Twisted's daemonization utility (/usr/bin/twistd) automatically sets the
+umask to 077, which means that all files generated by both the buildmaster
+and the buildslave will only be readable by the account under which the
+respective daemon is running. This makes it unnecessarily difficult to share
+build products (e.g. by symlinking ~/public_html/current_docs/ to a directory
+within the slave's build directory where each build puts the results of a
+"make docs" step).
+
+The 'buildbot slave <PARAMS>' command now accepts a --umask argument, which
+can be used to override the umask set by twistd. If you create the buildslave
+with '--umask=022', then all build products will be world-readable, making it
+easier for other processes (run under other accounts) to access them.
+
+** bug fixes
+
+The 0.7.1 release had a bug whereby reloading the config file could break all
+configured Schedulers, causing them to raise an exception when new changes
+arrived but not actually schedule a new build. This has been fixed.
+
+Fixed a bug which caused the AnyBranchScheduler to explode when branch==None.
+Thanks to Kevin Turner for the catch. I also think I fixed a bug whereby the
+TryScheduler would explode when it was given a Change (which it is supposed
+to simply ignore).
+
+The Waterfall display now does more quoting of names (including Builder
+names, BuildStep names, etc), so it is more likely that these names can
+contain unusual characters like spaces, quotes, and slashes. There may still
+be some problems with these kinds of names, however.. please report any bugs
+to the mailing list.
+
+
+* Release 0.7.1 (26 Nov 2005)
+
+** new features
+
+*** scheduler.Nightly
+
+Dobes Vandermeer contributed a cron-style 'Nightly' scheduler. Unlike the
+more-primitive Periodic class (which only lets you specify the duration
+between build attempts), Nightly lets you schedule builds for specific times
+of day, week, month, or year. The interface is very much like the crontab(5)
+file. See the buildbot.scheduler.Nightly docstring for complete details.
+
+** minor new features
+
+*** step.Trial can work with Trial from Twisted >2.1.0
+
+The 'Trial' step now accepts the trialMode= argument, which should be a list
+of strings to be added to trial's argv array. This defaults to ["-to"], which
+is appropriate for the Trial that ships in Twisted-2.1.0 and earlier, and
+tells Trial to emit non-colorized verbose output. To use this step with
+trials from later versions of Twisted, this should be changed to
+["--reporter=bwverbose"].
+
+In addition, you can now set other Trial command-line parameters through the
+trialArgs= argument. This is a list of strings, and defaults to an empty list.
+
+*** Added a 'resubmit this build' button to the web page
+
+*** Make the VC-checkout step's description more useful
+
+Added the word "[branch]" to the VC step's description (used in the Step's
+box on the Waterfall page, among others) when we're checking out a
+non-default branch. Also add "rNNN" where appropriate to indicate which
+revision is being checked out. Thanks to Brad Hards and Nathaniel Smith for
+the suggestion.
+
+** bugs fixed
+
+Several patches from Dobes Vandermeer: Escape the URLs in email, in case they
+have spaces and such. Fill otherwise-empty <td> elements, as a workaround for
+buggy browsers that might optimize them away. Also use binary mode when
+opening status pickle files, to make windows work better. The
+AnyBranchScheduler now works even when you don't provide a fileIsImportant=
+argument.
+
+Stringify the base revision before stuffing it into a 'try' jobfile, helping
+SVN and Arch implement 'try' builds better. Thanks to Steven Walter for the
+patch.
+
+Fix the compare_attrs list in PBChangeSource, FreshCVSSource, and Waterfall.
+Before this, certain changes to these objects in the master.cfg file were
+ignored, such that you would have to stop and re-start the buildmaster to
+make them take effect.
+
+The config file is now loaded serially, shutting down old (or replaced)
+Status/ChangeSource plugins before starting new ones. This fixes a bug in
+which changing an aspect of, say, the Waterfall display would cause an
+exception as both old and new instances fight over the same TCP port. This
+should also fix a bug whereby new Periodic Schedulers could fire a build
+before the Builders have finished being added.
+
+There was a bug in the way Locks were handled when the config file was
+reloaded: changing one Builder (but not the others) and reloading master.cfg
+would result in multiple instances of the same Lock object, so the Locks
+would fail to prevent simultaneous execution of Builds or Steps. This has
+been fixed.
+
+** other changes
+
+For a long time, certain StatusReceiver methods (like buildStarted and
+stepStarted) have been able to return another StatusReceiver instance
+(usually 'self') to indicate that they wish to subscribe to events within the
+new object. For example, if the buildStarted() method returns 'self', the
+status receiver will also receive events for the new build, like
+stepStarted() and buildETAUpdate(). Returning a 'self' from buildStarted() is
+equivalent to calling build.subscribe(self).
+
+Starting with buildbot-0.7.1, this auto-subscribe convenience will also
+register to automatically unsubscribe the target when the build or step has
+finished, just as if build.unsubscribe(self) had been called. Also, the
+unsubscribe() method has been changed to not explode if the same receiver is
+unsubscribed multiple times. (note that it will still explode is the same
+receiver is *subscribed* multiple times, so please continue to refrain from
+doing that).
+
+
+* Release 0.7.0 (24 Oct 2005)
+
+** new features
+
+*** new c['schedulers'] config-file element (REQUIRED)
+
+The code which decides exactly *when* a build is performed has been massively
+refactored, enabling much more flexible build scheduling. YOU MUST UPDATE
+your master.cfg files to match: in general this will merely require you to
+add an appropriate c['schedulers'] entry. Any old ".treeStableTime" settings
+on the BuildFactory instances will now be ignored. The user's manual has
+complete details with examples of how the new Scheduler classes work.
+
+*** c['interlocks'] removed, Locks and Dependencies now separate items
+
+The c['interlocks'] config element has been removed, and its functionality
+replaced with two separate objects. Locks are used to tell the buildmaster
+that certain Steps or Builds should not run at the same time as other Steps
+or Builds (useful for test suites that require exclusive access to some
+external resource: of course the real fix is to fix the tests, because
+otherwise your developers will be suffering from the same limitations). The
+Lock object is created in the config file and then referenced by a Step
+specification tuple or by the 'locks' key of the Builder specification
+dictionary. Locks come in two flavors: MasterLocks are buildmaster-wide,
+while SlaveLocks are specific to a single buildslave.
+
+When you want to have one Build run or not run depending upon whether some
+other set of Builds have passed or failed, you use a special kind of
+Scheduler defined in the scheduler.Dependent class. This scheduler watches an
+upstream Scheduler for builds of a given source version to complete, and only
+fires off its own Builders when all of the upstream's Builders have built
+that version successfully.
+
+Both features are fully documented in the user's manual.
+
+*** 'buildbot try'
+
+The 'try' feature has finally been added. There is some configuration
+involved, both in the buildmaster config and on the developer's side, but
+once in place this allows the developer to type 'buildbot try' in their
+locally-modified tree and to be given a report of what would happen if their
+changes were to be committed. This works by computing a (base revision,
+patch) tuple that describes the developer's tree, sending that to the
+buildmaster, then running a build with that source on a given set of
+Builders. The 'buildbot try' tool then emits status messages until the builds
+have finished.
+
+'try' exists to allow developers to run cross-platform tests on their code
+before committing it, reducing the chances they will inconvenience other
+developers by breaking the build. The UI is still clunky, but expect it to
+change and improve over the next few releases.
+
+Instructions for developers who want to use 'try' (and the configuration
+changes necessary to enable its use) are in the user's manual.
+
+*** Build-On-Branch
+
+When suitably configured, the buildbot can be used to build trees from a
+variety of related branches. You can set up Schedulers to build a tree using
+whichever branch was last changed, or users can request builds of specific
+branches through IRC, the web page, or (eventually) the CLI 'buildbot force'
+subcommand.
+
+The IRC 'force' command now takes --branch and --revision arguments (not that
+they always make sense). Likewise the HTML 'force build' button now has an
+input field for branch and revision. Your build's source-checkout step must
+be suitably configured to support this: for SVN it involves giving both a
+base URL and a default branch. Other VC systems are configured differently.
+The ChangeSource must also provide branch information: the 'buildbot
+sendchange' command now takes a --branch argument to help hook script writers
+accomplish this.
+
+*** Multiple slaves per Builder
+
+You can now attach multiple buildslaves to each Builder. This can provide
+redundancy or primitive load-balancing among many machines equally capable of
+running the build. To use this, define a key in the Builder specification
+dictionary named 'slavenames' with a list of buildslave names (instead of the
+usual 'slavename' that contains just a single slavename).
+
+*** minor new features
+
+The IRC and email status-reporting facilities now provide more specific URLs
+for particular builds, in addition to the generic buildmaster home page. The
+HTML per-build page now has more information.
+
+The Twisted-specific test classes have been modified to match the argument
+syntax preferred by Trial as of Twisted-2.1.0 and newer. The generic trial
+steps are still suitable for the Trial that comes with older versions of
+Twisted, but may produce deprecation warnings or errors when used with the
+latest Trial.
+
+** bugs fixed
+
+DNotify, used by the maildir-watching ChangeSources, had problems on some
+64-bit systems relating to signed-vs-unsigned constants and the DN_MULTISHOT
+flag. A workaround was provided by Brad Hards.
+
+The web status page should now be valid XHTML, thanks to a patch by Brad
+Hards. The charset parameter is specified to be UTF-8, so VC comments,
+builder names, etc, should probably all be in UTF-8 to be displayed properly.
+
+** creeping version dependencies
+
+The IRC 'force build' command now requires python2.3 (for the shlex.split
+function).
+
+
+* Release 0.6.6 (23 May 2005)
+
+** bugs fixed
+
+The 'sendchange', 'stop', and 'sighup' subcommands were broken, simple bugs
+that were not caught by the test suite. Sorry.
+
+The 'buildbot master' command now uses "raw" strings to create .tac files
+that will still function under windows (since we must put directory names
+that contain backslashes into that file).
+
+The keep-on-disk behavior added in 0.6.5 included the ability to upgrade old
+in-pickle LogFile instances. This upgrade function was not added to the
+HTMLLogFile class, so an exception would be raised when attempting to load or
+display any build with one of these logs (which are normally used only for
+showing build exceptions). This has been fixed.
+
+Several unnecessary imports were removed, so the Buildbot should function
+normally with just Twisted-2.0.0's "Core" module installed. (of course you
+will need TwistedWeb, TwistedWords, and/or TwistedMail if you use status
+targets that require them). The test suite should skip all tests that cannot
+be run because of missing Twisted modules.
+
+The master/slave's basedir is now prepended to sys.path before starting the
+daemon. This used to happen implicitly (as a result of twistd's setup
+preamble), but 0.6.5 internalized the invocation of twistd and did not copy
+this behavior. This change restores the ability to access "private.py"-style
+modules in the basedir from the master.cfg file with a simple "import
+private" statement. Thanks to Thomas Vander Stichele for the catch.
+
+
+* Release 0.6.5 (18 May 2005)
+
+** deprecated config keys removed
+
+The 'webPortnum', 'webPathname', 'irc', and 'manholePort' config-file keys,
+which were deprecated in the previous release, have now been removed. In
+addition, Builders must now always be configured with dictionaries: the
+support for configuring them with tuples has been removed.
+
+** master/slave creation and startup changed
+
+The buildbot no longer uses .tap files to store serialized representations of
+the buildmaster/buildslave applications. Instead, this release now uses .tac
+files, which are human-readable scripts that create new instances (rather
+than .tap files, which were pickles of pre-created instances). 'mktap
+buildbot' is gone.
+
+You will need to update your buildbot directories to handle this. The
+procedure is the same as creating a new buildmaster or buildslave: use
+'buildbot master BASEDIR' or 'buildbot slave BASEDIR ARGS..'. This will
+create a 'buildbot.tac' file in the target directory. The 'buildbot start
+BASEDIR' will use twistd to start the application.
+
+The 'buildbot start' command now looks for a Makefile.buildbot, and if it
+finds one (and /usr/bin/make exists), it will use it to start the application
+instead of calling twistd directly. This allows you to customize startup,
+perhaps by adding environment variables. The setup commands create a sample
+file in Makefile.sample, but you must copy this to Makefile.buildbot to
+actually use it. The previous release looked for a bare 'Makefile', and also
+installed a 'Makefile', so you were always using the customized approach,
+even if you didn't ask for it. That old Makefile launched the .tap file, so
+changing names was also necessary to make sure that the new 'buildbot start'
+doesn't try to run the old .tap file.
+
+'buildbot stop' now uses os.kill instead of spawning an external process,
+making it more likely to work under windows. It waits up to 5 seconds for the
+daemon to go away, so you can now do 'buildbot stop BASEDIR; buildbot start
+BASEDIR' with less risk of launching the new daemon before the old one has
+fully shut down. Likewise, 'buildbot start' imports twistd's internals
+directly instead of spawning an external copy, so it should work better under
+windows.
+
+** new documentation
+
+All of the old Lore-based documents were converted into a new Texinfo-format
+manual, and considerable new text was added to describe the installation
+process. The docs are not yet complete, but they're slowly shaping up to form
+a proper user's manual.
+
+** new features
+
+Arch checkouts can now use precise revision stamps instead of always using
+the latest revision. A separate Source step for using Bazaar (an alternative
+Arch client) instead of 'tla' was added. A Source step for Cogito (the new
+linux kernel VC system) was contributed by Brandon Philips. All Source steps
+now accept a retry= argument to indicate that failing VC checkouts should be
+retried a few times (SF#1200395), note that this requires an updated
+buildslave.
+
+The 'buildbot sendchange' command was added, to be used in VC hook scripts to
+send changes at a pb.PBChangeSource . contrib/arch_buildbot.py was added to
+use this tool; it should be installed using the 'Arch meta hook' scheme.
+
+Changes can now accept a branch= parameter, and Builders have an
+isBranchImportant() test that acts like isFileImportant(). Thanks to Thomas
+Vander Stichele. Note: I renamed his tag= to branch=, in anticipation of an
+upcoming feature to build specific branches. "tag" seemed too CVS-centric.
+
+LogFiles have been rewritten to stream the incoming data directly to disk
+rather than keeping a copy in memory all the time (SF#1200392). This
+drastically reduces the buildmaster's memory requirements and makes 100MB+
+log files feasible. The log files are stored next to the serialized Builds,
+in files like BASEDIR/builder-dir/12-log-compile-output, so you'll want a
+cron job to delete old ones just like you do with old Builds. Old-style
+Builds from 0.6.4 and earlier are converted when they are first read, so the
+first load of the Waterfall display after updating to this release may take
+quite some time.
+
+** build process updates
+
+BuildSteps can now return a status of EXCEPTION, which terminates the build
+right away. This allows exceptions to be caught right away, but still make
+sure the build stops quickly.
+
+** bug fixes
+
+Some more windows incompatibilities were fixed. The test suite now has two
+failing tests remaining, both of which appear to be Twisted issues that
+should not affect normal operation.
+
+The test suite no longer raises any deprecation warnings when run against
+twisted-2.0 (except for the ones which come from Twisted itself).
+
+
+* Release 0.6.4 (28 Apr 2005)
+
+** major bugs fixed
+
+The 'buildbot' tool in 0.6.3, when used to create a new buildmaster, failed
+unless it found a 'changes.pck' file. As this file is created by a running
+buildmaster, this made 0.6.3 completely unusable for first-time
+installations. This has been fixed.
+
+** minor bugs fixed
+
+The IRC bot had a bug wherein asking it to watch a certain builder (the "I'll
+give a shout when the build finishes" message) would cause an exception, so
+it would not, in fact, shout. The HTML page had an exception in the "change
+sources" page (reached by following the "Changes" link at the top of the
+column that shows the names of commiters). Re-loading the config file while
+builders were already attached would result in a benign error message. The
+server side of the PBListener status client had an exception when providing
+information about a non-existent Build (e.g., when the client asks for the
+Build that is currently running, and the server says "None").
+
+These bugs have all been fixed.
+
+The unit tests now pass under python2.2; they were failing before because of
+some 2.3isms that crept in. More unit tests which failed under windows now
+pass, only one (test_webPathname_port) is still failing.
+
+** 'buildbot' tool looks for a .buildbot/options file
+
+The 'statusgui' and the 'debugclient' subcommands can both look for a
+.buildbot/ directory, and an 'options' file therein, to extract default
+values for the location of the buildmaster. This directory is searched in the
+current directory, its parent, etc, all the way up to the filesystem root
+(assuming you own the directories in question). It also look in ~/.buildbot/
+for this file. This feature allows you to put a .buildbot at the top of your
+working tree, telling any 'buildbot' invocations you perform therein how to
+get to the buildmaster associated with that tree's project.
+
+Windows users get something similar, using %APPDATA%/buildbot instead of
+~/.buildbot .
+
+** windows ShellCommands are launched with 'cmd.exe'
+
+The buildslave has been modified to run all list-based ShellCommands by
+prepending [os.environ['COMSPEC'], '/c'] to the argv list before execution.
+This should allow the buildslave's PATH to be searched for commands,
+improving the chances that it can run the same 'trial -o foo' commands as a
+unix buildslave. The potential downside is that spaces in argv elements might
+be re-parsed, or quotes might be re-interpreted. The consensus on the mailing
+list was that this is a useful thing to do, but please report any problems
+you encounter with it.
+
+** minor features
+
+The Waterfall display now shows the buildbot's home timezone at the top of
+the timestamp column. The default favicon.ico is now much nicer-looking (it
+is generated with Blender.. the icon.blend file is available in CVS in
+docs/images/ should you care to play with it).
+
+
+
+* Release 0.6.3 (25 Apr 2005)
+
+** 'buildbot' tool gets more uses
+
+The 'buildbot' executable has acquired three new subcommands. 'buildbot
+debugclient' brings up the small remote-control panel that connects to a
+buildmaster (via the slave port and the c['debugPassword']). This tool,
+formerly in contrib/debugclient.py, lets you reload the config file, force
+builds, and simulate inbound commit messages. It requires gtk2, glade, and
+the python bindings for both to be installed.
+
+'buildbot statusgui' brings up a live status client, formerly available by
+running buildbot/clients/gtkPanes.py as a program. This connects to the PB
+status port that you create with:
+
+  c['status'].append(client.PBListener(portnum))
+
+and shows two boxes per Builder, one for the last build, one for current
+activity. These boxes are updated in realtime. The effect is primitive, but
+is intended as an example of what's possible with the PB status interface.
+
+'buildbot statuslog' provides a text-based running log of buildmaster events.
+
+Note: command names are subject to change. These should get much more useful
+over time.
+
+** web page has a favicon
+
+When constructing the html.Waterfall instance, you can provide the filename
+of an image that will be provided when the "favicon.ico" resource is
+requested. Many web browsers display this as an icon next to the URL or
+bookmark. A goofy little default icon is included.
+
+** web page has CSS
+
+Thanks to Thomas Vander Stichele, the Waterfall page is now themable through
+CSS. The default CSS is located in buildbot/status/classic.css, and creates a
+page that is mostly identical to the old, non-CSS based table.
+
+You can specify a different CSS file to use by passing it as the css=
+argument to html.Waterfall(). See the docstring for Waterfall for some more
+details.
+
+** builder "categories"
+
+Thomas has added code which places each Builder in an optional "category".
+The various status targets (Waterfall, IRC, MailNotifier) can accept a list
+of categories, and they will ignore any activity in builders outside this
+list. This makes it easy to create some Builders which are "experimental" or
+otherwise not yet ready for the world to see, or indicate that certain
+builders should not harass developers when their tests fail, perhaps because
+the build slaves for them are not yet fully functional.
+
+** Deprecated features
+
+*** defining Builders with tuples is deprecated
+
+For a long time, the preferred way to define builders in the config file has
+been with a dictionary. The less-flexible old style of a 4-item tuple (name,
+slavename, builddir, factory) is now officially deprecated (i.e., it will
+emit a warning if you use it), and will be removed in the next release.
+Dictionaries are more flexible: additional keys like periodicBuildTime are
+simply unavailable to tuple-defined builders.
+
+Note: it is a good idea to watch the logfile (usually in twistd.log) when you
+first start the buildmaster, or whenever you reload the config file. Any
+warnings or errors in the config file will be found there.
+
+*** c['webPortnum'], c['webPathname'], c['irc'] are deprecated
+
+All status reporters should be defined in the c['status'] array, using
+buildbot.status.html.Waterfall or buildbot.status.words.IRC . These have been
+deprecated for a while, but this is fair warning that these keys will be
+removed in the next release.
+
+*** c['manholePort'] is deprecated
+
+Again, this has been deprecated for a while, in favor of:
+
+ c['manhole'] = master.Manhole(port, username, password)
+
+The preferred syntax will eventually let us use other, better kinds of debug
+shells, such as the experimental curses-based ones in the Twisted sandbox
+(which would offer command-line editing and history).
+
+** bug fixes
+
+The waterfall page has been improved a bit. A circular-reference bug in the
+web page's TextLog class was fixed, which caused a major memory leak in a
+long-running buildmaster with large logfiles that are viewed frequently.
+Modifying the config file in a way which only changed a builder's base
+directory now works correctly. The 'buildbot' command tries to create
+slightly more useful master/slave directories, adding a Makefile entry to
+re-create the .tap file, and removing global-read permissions from the files
+that may contain buildslave passwords.
+
+** twisted-2.0.0 compatibility
+
+Both buildmaster and buildslave should run properly under Twisted-2.0 . There
+are still some warnings about deprecated functions, some of which could be
+fixed, but there are others that would require removing compatibility with
+Twisted-1.3, and I don't expect to do that until 2.0 has been out and stable
+for at least several months. The unit tests should pass under 2.0, whereas
+the previous buildbot release had tests which could hang when run against the
+new "trial" framework in 2.0.
+
+The Twisted-specific steps (including Trial) have been updated to match 2.0
+functionality.
+
+** win32 compatibility
+
+Thankt to Nick Trout, more compatibility fixes have been incorporated,
+improving the chances that the unit tests will pass on windows systems. There
+are still some problems, and a step-by-step "running buildslaves on windows"
+document would be greatly appreciated.
+
+** API docs
+
+Thanks to Thomas Vander Stichele, most of the docstrings have been converted
+to epydoc format. There is a utility in docs/gen-reference to turn these into
+a tree of cross-referenced HTML pages. Eventually these docs will be
+auto-generated and somehow published on the buildbot web page.
+
+
+
+* Release 0.6.2 (13 Dec 2004)
+
+** new features
+
+It is now possible to interrupt a running build. Both the web page and the
+IRC bot feature 'stop build' commands, which can be used to interrupt the
+current BuildStep and accelerate the termination of the overall Build. The
+status reporting for these still leaves something to be desired (an
+'interrupt' event is pushed into the column, and the reason for the interrupt
+is added to a pseudo-logfile for the step that was stopped, but if you only
+look at the top-level status it appears that the build failed on its own).
+
+Builds are also halted if the connection to the buildslave is lost. On the
+slave side, any active commands are halted if the connection to the
+buildmaster is lost.
+
+** minor new features
+
+The IRC log bot now reports ETA times in a MMSS format like "2m45s" instead
+of the clunky "165 seconds".
+
+** bug fixes
+
+*** Slave Disconnect
+
+Slave disconnects should be handled better now: the current build should be
+abandoned properly. Earlier versions could get into weird states where the
+build failed to finish, clogging the builder forever (or at least until the
+buildmaster was restarted).
+
+In addition, there are weird network conditions which could cause a
+buildslave to attempt to connect twice to the same buildmaster. This can
+happen when the slave is sending large logfiles over a slow link, while using
+short keepalive timeouts. The buildmaster has been fixed to allow the second
+connection attempt to take precedence over the first, so that the older
+connection is jettisoned to make way for the newer one.
+
+In addition, the buildslave has been fixed to be less twitchy about timeouts.
+There are now two parameters: keepaliveInterval (which is controlled by the
+mktap 'keepalive' argument), and keepaliveTimeout (which requires editing the
+.py source to change from the default of 30 seconds). The slave expects to
+see *something* from the master at least once every keepaliveInterval
+seconds, and will try to provoke a response (by sending a keepalive request)
+'keepaliveTimeout' seconds before the end of this interval just in case there
+was no regular traffic. Any kind of traffic will qualify, including
+acknowledgements of normal build-status updates.
+
+The net result is that, as long as any given PB message can be sent over the
+wire in less than 'keepaliveTimeout' seconds, the slave should not mistakenly
+disconnect because of a timeout. There will be traffic on the wire at least
+every 'keepaliveInterval' seconds, which is what you want to pay attention to
+if you're trying to keep an intervening NAT box from dropping what it thinks
+is an abandoned connection. A quiet loss of connection will be detected
+within 'keepaliveInterval' seconds.
+
+*** Large Logfiles
+
+The web page rendering code has been fixed to deliver large logfiles in
+pieces, using a producer/consumer apparatus. This avoids the large spike in
+memory consumption when the log file body was linearized into a single string
+and then buffered in the socket's application-side transmit buffer. This
+should also avoid the 640k single-string limit for web.distrib servers that
+could be hit by large (>640k) logfiles.
+
+
+
+* Release 0.6.1 (23 Nov 2004)
+
+** win32 improvements/bugfixes
+
+Several changes have gone in to improve portability to non-unix systems. It
+should be possible to run a build slave under windows without major issues
+(although step-by-step documentation is still greatly desired: check the
+mailing list for suggestions from current win32 users).
+
+*** PBChangeSource: use configurable directory separator, not os.sep
+
+The PBChangeSource, which listens on a TCP socket for change notices
+delivered from tools like contrib/svn_buildbot.py, was splitting source
+filenames with os.sep . This is inappropriate, because those file names are
+coming from the VC repository, not the local filesystem, and the repository
+host may be running a different OS (with a different separator convention)
+than the buildmaster host. In particular, a win32 buildmaster using a CVS
+repository running on a unix box would be confused.
+
+PBChangeSource now takes a sep= argument to indicate the separator character
+to use.
+
+*** build saving should work better
+
+windows cannot do the atomic os.rename() trick that unix can, so under win32
+the buildmaster falls back to save/delete-old/rename, which carries a slight
+risk of losing a saved build log (if the system were to crash between the
+delete-old and the rename).
+
+** new features
+
+*** test-result tracking
+
+Work has begun on fine-grained test-result handling. The eventual goal is to
+be able to track individual tests over time, and create problem reports when
+a test starts failing (which then are resolved when the test starts passing
+again). The first step towards this is an ITestResult interface, and code in
+the TrialTestParser to create such results for all non-passing tests (the
+ones for which Trial emits exception tracebacks).
+
+These test results are currently displayed in a tree-like display in a page
+accessible from each Build's page (follow the numbered link in the yellow
+box at the start of each build to get there).
+
+This interface is still in flux, as it really wants to be able to accomodate
+things like compiler warnings and tests that are skipped because of missing
+libraries or unsupported architectures.
+
+** bug fixes
+
+*** VC updates should survive temporary failures
+
+Some VC systems (CVS and SVN in particular) get upset when files are turned
+into directories or vice versa, or when repository items are moved without
+the knowledge of the VC system. The usual symptom is that a 'cvs update'
+fails where a fresh checkout succeeds.
+
+To avoid having to manually intervene, the build slaves' VC commands have
+been refactored to respond to update failures by deleting the tree and
+attempting a full checkout. This may cause some unnecessary effort when,
+e.g., the CVS server falls off the net, but in the normal case it will only
+come into play when one of these can't-cope situations arises.
+
+*** forget about an existing build when the slave detaches
+
+If the slave was lost during a build, the master did not clear the
+.currentBuild reference, making that builder unavailable for later builds.
+This has been fixed, so that losing a slave should be handled better. This
+area still needs some work, I think it's still possible to get both the
+slave and the master wedged by breaking the connection at just the right
+time. Eventually I want to be able to resume interrupted builds (especially
+when the interruption is the result of a network failure and not because the
+slave or the master actually died).
+
+*** large logfiles now consume less memory
+
+Build logs are stored as lists of (type,text) chunks, so that
+stdout/stderr/headers can be displayed differently (if they were
+distinguishable when they were generated: stdout and stderr are merged when
+usePTY=1). For multi-megabyte logfiles, a large list with many short strings
+could incur a large overhead. The new behavior is to merge same-type string
+chunks together as they are received, aiming for a chunk size of about 10kb,
+which should bring the overhead down to a more reasonable level.
+
+There remains an issue with actually delivering large logfiles over, say,
+the HTML interface. The string chunks must be merged together into a single
+string before delivery, which causes a spike in the memory usage when the
+logfile is viewed. This can also break twisted.web.distrib -type servers,
+where the underlying PB protocol imposes a 640k limit on the size of
+strings. This will be fixed (with a proper Producer/Consumer scheme) in the
+next release.
+
+
+* Release 0.6.0 (30 Sep 2004)
+
+** new features
+
+*** /usr/bin/buildbot control tool
+
+There is now an executable named 'buildbot'. For now, this just provides a
+convenient front-end to mktap/twistd/kill, but eventually it will provide
+access to other client functionality (like the 'try' builds, and a status
+client). Assuming you put your buildbots in /var/lib/buildbot/master/FOO,
+you can do 'buildbot create-master /var/lib/buildbot/master/FOO' and it will
+create the .tap file and set up a sample master.cfg for you. Later,
+'buildbot start /var/lib/buildbot/master/FOO' will start the daemon.
+
+
+*** build status now saved in external files, -shutdown.tap unnecessary
+
+The status rewrite included a change to save all build status in a set of
+external files. These files, one per build, are put in a subdirectory of the
+master's basedir (named according to the 'builddir' parameter of the Builder
+configuration dictionary). This helps keep the buildmaster's memory
+consumption small: the (potentially large) build logs are kept on disk
+instead of in RAM. There is a small cache (2 builds per builder) kept in
+memory, but everything else lives on disk.
+
+The big change is that the buildmaster now keeps *all* status in these
+files. It is no longer necessary to preserve the buildbot-shutdown.tap file
+to run a persistent buildmaster. The buildmaster may be launched with
+'twistd -f buildbot.tap' each time, in fact the '-n' option can be added to
+prevent twistd from automatically creating the -shutdown.tap file.
+
+There is still one lingering bug with this change: the Expectations object
+for each builder (which records how long the various steps took, to provide
+an ETA value for the next time) is not yet saved. The result is that the
+first build after a restart will not provide an ETA value.
+
+0.6.0 keeps status in a single file per build, as opposed to 0.5.0 which
+kept status in many subdirectories (one layer for builds, another for steps,
+and a third for logs). 0.6.0 will detect and delete these subdirectories as
+it overwrites them.
+
+The saved builds are optional. To prevent disk usage from growing without
+bounds, you may want to set up a cron job to run 'find' and delete any which
+are too old. The status displays will happily survive without those saved
+build objects.
+
+The set of recorded Changes is kept in a similar file named 'changes.pck'.
+
+
+*** source checkout now uses timestamp/revision
+
+Source checkouts are now performed with an appropriate -D TIMESTAMP (for
+CVS) or -r REVISION (for SVN) marker to obtain the exact sources that were
+specified by the most recent Change going into the current Build. This
+avoids a race condition in which a change might be committed after the build
+has started but before the source checkout has completed, resulting in a
+mismatched set of source files. Such changes are now ignored.
+
+This works by keeping track of repository-wide revision/transaction numbers
+(for version control systems that offer them, like SVN). The checkout or
+update is performed with the highest such revision number. For CVS (which
+does not have them), the timestamp of each commit message is used, and a -D
+argument is created to place the checkout squarely in the middle of the "tree
+stable timer"'s window.
+
+This also provides the infrastructure for the upcoming 'try' feature. All
+source-checkout commands can now obtain a base revision marker and a patch
+from the Build, allowing certain builds to be performed on something other
+than the most recent sources.
+
+See source.xhtml and steps.xhtml for details.
+
+
+*** Darcs and Arch support added
+
+There are now build steps which retrieve a source tree from Darcs and Arch
+repositories. See steps.xhtml for details.
+
+Preliminary P4 support has been added, thanks to code from Dave Peticolas.
+You must manually set up each build slave with an appropriate P4CLIENT: all
+buildbot does is run 'p4 sync' at the appropriate times.
+
+
+*** Status reporting rewritten
+
+Status reporting was completely revamped. The config file now accepts a
+BuildmasterConfig['status'] entry, with a list of objects that perform status
+delivery. The old config file entries which controlled the web status port
+and the IRC bot have been deprecated in favor of adding instances to
+['status']. The following status-delivery classes have been implemented, all
+in the 'buildbot.status' package:
+
+ client.PBListener(port, username, passwd)
+ html.Waterfall(http_port, distrib_port)
+ mail.MailNotifier(fromaddr, mode, extraRecipients..)
+ words.IRC(host, nick, channels)
+
+See the individual docstrings for details about how to use each one. You can
+create new status-delivery objects by following the interfaces found in the
+buildbot.interfaces module.
+
+
+*** BuildFactory configuration process changed
+
+The basic BuildFactory class is now defined in buildbot.process.factory
+rather than buildbot.process.base, so you will have to update your config
+files. factory.BuildFactory is the base class, which accepts a list of Steps
+to run. See docs/factories.xhtml for details.
+
+There are now easier-to-use BuildFactory classes for projects which use GNU
+Autoconf, perl's MakeMaker (CPAN), python's distutils (but no unit tests),
+and Twisted's Trial. Each one takes a separate 'source' Step to obtain the
+source tree, and then fills in the rest of the Steps for you.
+
+
+*** CVS/SVN VC steps unified, simplified
+
+The confusing collection of arguments for the CVS step ('clobber=',
+'copydir=', and 'export=') have been removed in favor of a single 'mode'
+argument. This argument describes how you want to use the sources: whether
+you want to update and compile everything in the same tree (mode='update'),
+or do a fresh checkout and full build each time (mode='clobber'), or
+something in between.
+
+The SVN (Subversion) step has been unified and accepts the same mode=
+parameter as CVS. New version control steps will obey the same interface.
+
+Most of the old configuration arguments have been removed. You will need to
+update your configuration files to use the new arguments. See
+docs/steps.xhtml for a description of all the new parameters.
+
+
+*** Preliminary Debian packaging added
+
+Thanks to the contributions of Kirill Lapshin, we can now produce .deb
+installer packages. These are still experimental, but they include init.d
+startup/shutdown scripts, which the the new /usr/bin/buildbot to invoke
+twistd. Create your buildmasters in /var/lib/buildbot/master/FOO, and your
+slaves in /var/lib/buildbot/slave/BAR, then put FOO and BAR in the
+appropriate places in /etc/default/buildbot . After that, the buildmasters
+and slaves will be started at every boot.
+
+Pre-built .debs are not yet distributed. Use 'debuild -uc -us' from the
+source directory to create them.
+
+
+** minor features
+
+
+*** Source Stamps
+
+Each build now has a "source stamp" which describes what sources it used. The
+idea is that the sources for this particular build can be completely
+regenerated from the stamp. The stamp is a tuple of (revision, patch), where
+the revision depends on the VC system being used (for CVS it is either a
+revision tag like "BUILDBOT-0_5_0" or a datestamp like "2004/07/23", for
+Subversion it is a revision number like 11455). This must be combined with
+information from the Builder that is constant across all builds (something to
+point at the repository, and possibly a branch indicator for CVS and other VC
+systems that don't fold this into the repository string).
+
+The patch is an optional unified diff file, ready to be applied by running
+'patch -p0 <PATCH' from inside the workdir. This provides support for the
+'try' feature that will eventually allow developers to run buildbot tests on
+their code before checking it in.
+
+
+*** SIGHUP causes the buildmaster's configuration file to be re-read
+
+*** IRC bot now has 'watch' command
+
+You can now tell the buildbot's IRC bot to 'watch <buildername>' on a builder
+which is currently performing a build. When that build is finished, the
+buildbot will make an announcement (including the results of the build).
+
+The IRC 'force build' command will also announce when the resulting build has
+completed.
+
+
+*** the 'force build' option on HTML and IRC status targets can be disabled
+
+The html.Waterfall display and the words.IRC bot may be constructed with an
+allowForce=False argument, which removes the ability to force a build through
+these interfaces. Future versions will be able to restrict this build-forcing
+capability to authenticated users. The per-builder HTML page no longer
+displays the 'Force Build' buttons if it does not have this ability. Thanks
+to Fred Drake for code and design suggestions.
+
+
+*** master now takes 'projectName' and 'projectURL' settings
+
+These strings allow the buildbot to describe what project it is working for.
+At the moment they are only displayed on the Waterfall page, but in the next
+release they will be retrieveable from the IRC bot as well.
+
+
+*** survive recent (SVN) Twisted versions
+
+The buildbot should run correctly (albeit with plenty of noisy deprecation
+warnings) under the upcoming Twisted-2.0 release.
+
+
+*** work-in-progress realtime Trial results acquisition
+
+Jonathan Simms (<slyphon>) has been working on 'retrial', a rewrite of
+Twisted's unit test framework that will most likely be available in
+Twisted-2.0 . Although it is not yet complete, the buildbot will be able to
+use retrial in such a way that build status is reported on a per-test basis,
+in real time. This will be the beginning of fine-grained test tracking and
+Problem management, described in docs/users.xhtml .
+
+
+* Release 0.5.0 (22 Jul 2004)
+
+** new features
+
+*** web.distrib servers via TCP
+
+The 'webPathname' config option, which specifies a UNIX socket on which to
+publish the waterfall HTML page (for use by 'mktap web -u' or equivalent),
+now accepts a numeric port number. This publishes the same thing via TCP,
+allowing the parent web server to live on a separate machine.
+
+This config option could be named better, but it will go away altogether in
+a few releases, when status delivery is unified. It will be replaced with a
+WebStatusTarget object, and the config file will simply contain a list of
+various kinds of status targets.
+
+*** 'master.cfg' filename is configurable
+
+The buildmaster can use a config file named something other than
+"master.cfg". Use the --config=foo.cfg option to mktap to control this.
+
+*** FreshCVSSource now uses newcred (CVSToys >= 1.0.10)
+
+The FreshCVSSource class now defaults to speaking to freshcvs daemons from
+modern CVSToys releases. If you need to use the buildbot with a daemon from
+CVSToys-1.0.9 or earlier, use FreshCVSSourceOldcred instead. Note that the
+new form only requires host/port/username/passwd: the "serviceName"
+parameter is no longer meaningful.
+
+*** Builders are now configured with a dictionary, not a tuple
+
+The preferred way to set up a Builder in master.cfg is to provide a
+dictionary with various keys, rather than a (non-extensible) 4-tuple. See
+docs/config.xhtml for details. The old tuple-way is still supported for now,
+it will probably be deprecated in the next release and removed altogether in
+the following one.
+
+*** .periodicBuildTime is now exposed to the config file
+
+To set a builder to run at periodic intervals, simply add a
+'periodicBuildTime' key to its master.cfg dictionary. Again, see
+docs/config.xhtml for details.
+
+*** svn_buildbot.py adds --include, --exclude
+
+The commit trigger script now gives you more control over which files are
+sent to the buildmaster and which are not.
+
+*** usePTY is controllable at slave mktap time
+
+The buildslaves usually run their child processes in a pty, which creates a
+process group for all the children, which makes it much easier to kill them
+all at once (i.e. if a test hangs). However this causes problems on some
+systems. Rather than hacking slavecommand.py to disable the use of these
+ptys, you can now create the slave's .tap file with --usepty=0 at mktap
+time.
+
+** Twisted changes
+
+A summary of warnings (e.g. DeprecationWarnings) is provided as part of the
+test-case summarizer. The summarizer also counts Skips, expectedFailures,
+and unexpectedSuccesses, displaying the counts on the test step's event box.
+
+The RunUnitTests step now uses "trial -R twisted" instead of "trial
+twisted.test", which is a bit cleaner. All .pyc files are deleted before
+starting trial, to avoid getting tripped up by deleted .py files.
+
+** documentation
+
+docs/config.xhtml now describes the syntax and allowed contents of the
+'master.cfg' configuration file.
+
+** bugfixes
+
+Interlocks had a race condition that could cause the lock to get stuck
+forever.
+
+FreshCVSSource has a prefix= argument that was moderately broken (it used to
+only work if the prefix was a single directory component). It now works with
+subdirectories.
+
+The buildmaster used to complain when it saw the "info" directory in a
+slave's workspace. This directory is used to publish information about the
+slave host and its administrator, and is not a leftover build directory as
+the complaint suggested. This complain has been silenced.
+
+
+* Release 0.4.3 (30 Apr 2004)
+
+** PBChangeSource made explicit
+
+In 0.4.2 and before, an internal interface was available which allowed
+special clients to inject changes into the Buildmaster. This interface is
+used by the contrib/svn_buildbot.py script. The interface has been extracted
+into a proper PBChangeSource object, which should be created in the
+master.cfg file just like the other kinds of ChangeSources. See
+docs/sources.xhtml for details.
+
+If you were implicitly using this change source (for example, if you use
+Subversion and the svn_buildbot.py script), you *must* add this source to
+your master.cfg file, or changes will not be delivered and no builds will be
+triggered.
+
+The PBChangeSource accepts the same "prefix" argument as all other
+ChangeSources. For a SVN repository that follows the recommended practice of
+using "trunk/" for the trunk revisions, you probably want to construct the
+source like this:
+
+ source = PBChangeSource(prefix="trunk")
+
+to make sure that the Builders are given sensible (trunk-relative)
+filenames for each changed source file.
+
+** Twisted changes
+
+*** step_twisted.RunUnitTests can change "bin/trial"
+
+The twisted RunUnitTests step was enhanced to let you run something other
+than "bin/trial", making it easier to use a buildbot on projects which use
+Twisted but aren't actually Twisted itself.
+
+*** Twisted now uses Subversion
+
+Now that Twisted has moved from CVS to SVN, the Twisted build processes have
+been modified to perform source checkouts from the Subversion repository.
+
+** minor feature additions
+
+*** display Changes with HTML
+
+Changes are displayed with a bit more pizazz, and a links= argument was
+added to allow things like ViewCVS links to be added to the display
+(although it is not yet clear how this argument should be used: the
+interface remains subject to change untill it has been documented).
+
+*** display ShellCommand logs with HTML
+
+Headers are in blue, stderr is in red (unless usePTY=1 in which case stderr
+and stdout are indistinguishable). A link is provided which returns the same
+contents as plain text (by appending "?text=1" to the URL).
+
+*** buildslaves send real tracebacks upon error
+
+The .unsafeTracebacks option has been turned on for the buildslaves,
+allowing them to send a full stack trace when an exception occurs, which is
+logged in the buildmaster's twistd.log file. This makes it much easier to
+determine what went wrong on the slave side.
+
+*** BasicBuildFactory refactored
+
+The BasicBuildFactory class was refactored to make it easier to create
+derivative classes, in particular the BasicSVN variant.
+
+*** "ping buildslave" web button added
+
+There is now a button on the "builder information" page that lets a web user
+initiate a ping of the corresponding build slave (right next to the button
+that lets them force a build). This was added to help track down a problem
+with the slave keepalives.
+
+** bugs fixed:
+
+You can now have multiple BuildSteps with the same name (the names are used
+as hash keys in the data structure that helps determine ETA values for each
+step, the new code creates unique key names if necessary to avoid
+collisions). This means that, for example, you do not have to create a
+BuildStep subclass just to have two Compile steps in the same process.
+
+If CVSToys is not installed, the tests that depend upon it are skipped.
+
+Some tests in 0.4.2 failed because of a missing set of test files, they are
+now included in the tarball properly.
+
+Slave keepalives should work better now in the face of silent connection
+loss (such as when an intervening NAT box times out the association), the
+connection should be reestablished in minutes instead of hours.
+
+Shell commands on the slave are invoked with an argument list instead of the
+ugly and error-prone split-on-spaces approach. If the ShellCommand is given
+a string (instead of a list), it will fall back to splitting on spaces.
+Shell commands should work on win32 now (using COMSPEC instead of /bin/sh).
+
+Buildslaves under w32 should theoretically work now, and one was running for
+the Twisted buildbot for a while until the machine had to be returned.
+
+The "header" lines in ShellCommand logs (which include the first line, that
+displays the command being run, and the last, which shows its exit status)
+are now generated by the buildslave side instead of the local (buildmaster)
+side. This can provide better error handling and is generally cleaner.
+However, if you have an old buildslave (running 0.4.2 or earlier) and a new
+buildmaster, then neither end will generate these header lines.
+
+CVSCommand was improved, in certain situations 0.4.2 would perform
+unnecessary checkouts (when an update would have sufficed). Thanks to Johan
+Dahlin for the patches. The status output was fixed as well, so that
+failures in CVS and SVN commands (such as not being able to find the 'svn'
+executable) make the step status box red.
+
+Subversion support was refactored to make it behave more like CVS. This is a
+work in progress and will be improved in the next release.
+
+
+* Release 0.4.2 (08 Jan 2004)
+
+** test suite updated
+
+The test suite has been completely moved over to Twisted's "Trial"
+framework, and all tests now pass. To run the test suite (consisting of 64
+tests, probably covering about 30% of BuildBot's logic), do this:
+
+ PYTHONPATH=. trial -v buildbot.test
+
+** Mail parsers updated
+
+Several bugs in the mail-parsing code were fixed, allowing a buildmaster to
+be triggered by mail sent out by a CVS repository. (The Twisted Buildbot is
+now using this to trigger builds, as their CVS server machine is having some
+difficulties with FreshCVS). The FreshCVS mail format for directory
+additions appears to have changed recently: the new parser should handle
+both old and new-style messages.
+
+A parser for Bonsai commit messages (buildbot.changes.mail.parseBonsaiMail)
+was contributed by Stephen Davis. Thanks Stephen!
+
+** CVS "global options" now available
+
+The CVS build step can now accept a list of "global options" to give to the
+cvs command. These go before the "update"/"checkout" word, and are described
+fully by "cvs --help-options". Two useful ones might be "-r", which causes
+checked-out files to be read-only, and "-R", which assumes the repository is
+read-only (perhaps by not attempting to write to lock files).
+
+
+* Release 0.4.1 (09 Dec 2003)
+
+** MaildirSources fixed
+
+Several bugs in MaildirSource made them unusable. These have been fixed (for
+real this time). The Twisted buildbot is using an FCMaildirSource while they
+fix some FreshCVS daemon problems, which provided the encouragement for
+getting these bugs fixed.
+
+In addition, the use of DNotify (only available under linux) was somehow
+broken, possibly by changes in some recent version of Python. It appears to
+be working again now (against both python-2.3.3c1 and python-2.2.1).
+
+** master.cfg can use 'basedir' variable
+
+As documented in the sample configuration file (but not actually implemented
+until now), a variable named 'basedir' is inserted into the namespace used
+by master.cfg . This can be used with something like:
+
+  os.path.join(basedir, "maildir")
+
+to obtain a master-basedir-relative location.
+
+
+* Release 0.4.0 (05 Dec 2003)
+
+** newapp
+
+I've moved the codebase to Twisted's new 'application' framework, which
+drastically cleans up service startup/shutdown just like newcred did for
+authorization. This is mostly an internal change, but the interface to
+IChangeSources was modified, so in the off chance that someone has written a
+custom change source, it may have to be updated to the new scheme.
+
+The most user-visible consequence of this change is that now both
+buildmasters and buildslaves are generated with the standard Twisted 'mktap'
+utility. Basic documentation is in the README file.
+
+Both buildmaster and buildslave .tap files need to be re-generated to run
+under the new code. I have not figured out the styles.Versioned upgrade path
+well enough to avoid this yet. Sorry.
+
+This also means that both buildslaves and the buildmaster require
+Twisted-1.1.0 or later.
+
+** reloadable master.cfg
+
+Most aspects of a buildmaster is now controlled by a configuration file
+which can be re-read at runtime without losing build history. This feature
+makes the buildmaster *much* easier to maintain.
+
+In the previous release, you would create the buildmaster by writing a
+program to define the Builders and ChangeSources and such, then run it to
+create the .tap file. In the new release, you use 'mktap' to create the .tap
+file, and the only parameter you give it is the base directory to use. Each
+time the buildmaster starts, it will look for a file named 'master.cfg' in
+that directory and parse it as a python script. That script must define a
+dictionary named 'BuildmasterConfig' with various keys to define the
+builders, the known slaves, what port to use for the web server, what IRC
+channels to connect to, etc.
+
+This config file can be re-read at runtime, and the buildmaster will compute
+the differences and add/remove services as necessary. The re-reading is
+currently triggered through the debug port (contrib/debugclient.py is the
+debug port client), but future releases will add the ability to trigger the
+reconfiguration by IRC command, web page button, and probably a local UNIX
+socket (with a helper script to trigger a rebuild locally).
+
+docs/examples/twisted_master.cfg contains a sample configuration file, which
+also lists all the keys that can be set.
+
+There may be some bugs lurking, such as re-configuring the buildmaster while
+a build is running. It needs more testing.
+
+** MaxQ support
+
+Radix contributed some support scripts to run MaxQ test scripts. MaxQ
+(http://maxq.tigris.org/) is a web testing tool that allows you to record
+HTTP sessions and play them back.
+
+** Builders can now wait on multiple Interlocks
+
+The "Interlock" code has been enhanced to allow multiple builders to wait on
+each one. This was done to support the new config-file syntax for specifying
+Interlocks (in which each interlock is a tuple of A and [B], where A is the
+builder the Interlock depends upon, and [B] is a list of builders that
+depend upon the Interlock).
+
+"Interlock" is misnamed. In the next release it will be changed to
+"Dependency", because that's what it really expresses. A new class (probably
+called Interlock) will be created to express the notion that two builders
+should not run at the same time, useful when multiple builders are run on
+the same machine and thrashing results when several CPU- or disk- intensive
+compiles are done simultaneously.
+
+** FreshCVSSource can now handle newcred-enabled FreshCVS daemons
+
+There are now two FreshCVSSource classes: FreshCVSSourceNewcred talks to
+newcred daemons, and FreshCVSSourceOldcred talks to oldcred ones. Mind you,
+FreshCVS doesn't yet do newcred, but when it does, we'll be ready.
+
+'FreshCVSSource' maps to the oldcred form for now. That will probably change
+when the current release of CVSToys supports newcred by default.
+
+** usePTY=1 on posix buildslaves
+
+When a buildslave is running under POSIX (i.e. pretty much everything except
+windows), child processes are created with a pty instead of separate
+stdin/stdout/stderr pipes. This makes it more likely that a hanging build
+(when killed off by the timeout code) will have all its sub-childred cleaned
+up. Non-pty children would tend to leave subprocesses running because the
+buildslave was only able to kill off the top-level process (typically
+'make').
+
+Windows doesn't have any concept of ptys, so non-posix systems do not try to
+enable them.
+
+** mail parsers should actually work now
+
+The email parsing functions (FCMaildirSource and SyncmailMaildirSource) were
+broken because of my confused understanding of how python class methods
+work. These sources should be functional now.
+
+** more irc bot sillyness
+
+The IRC bot can now perform half of the famous AYBABTO scene.
+
+
+* Release 0.3.5 (19 Sep 2003)
+
+** newcred
+
+Buildbot has moved to "newcred", a new authorization framework provided by
+Twisted, which is a good bit cleaner and easier to work with than the
+"oldcred" scheme in older versions. This causes both buildmaster and
+buildslaves to depend upon Twisted 1.0.7 or later. The interface to
+'makeApp' has changed somewhat (the multiple kinds of remote connections all
+use the same TCP port now).
+
+Old buildslaves will get "_PortalWrapper instance has no attribute
+'remote_username'" errors when they try to connect. They must be upgraded.
+
+The FreshCVSSource uses PB to connect to the CVSToys server. This has been
+upgraded to use newcred too. If you get errors (TODO: what do they look
+like?) in the log when the buildmaster tries to connect, you need to upgrade
+your FreshCVS service or use the 'useOldcred' argument when creating your
+FreshCVSSource. This is a temporary hack to allow the buildmaster to talk to
+oldcred CVSToys servers. Using it will trigger deprecation warnings. It will
+go away eventually.
+
+In conjunction with this change, makeApp() now accepts a password which can
+be applied to the debug service.
+
+** new features
+
+*** "copydir" for CVS checkouts
+
+The CVS build step can now accept a "copydir" parameter, which should be a
+directory name like "source" or "orig". If provided, the CVS checkout is
+done once into this directory, then copied into the actual working directory
+for compilation etc. Later updates are done in place in the copydir, then
+the workdir is replaced with a copy.
+
+This reduces CVS bandwidth (update instead of full checkout) at the expense
+of twice the disk space (two copies of the tree).
+
+*** Subversion (SVN) support
+
+Radix (Christopher Armstrong) contributed early support for building
+Subversion-based trees. The new 'SVN' buildstep behaves roughly like the
+'CVS' buildstep, and the contrib/svn_buildbot.py script can be used as a
+checkin trigger to feed changes to a running buildmaster.
+
+** notable bugfixes
+
+*** .tap file generation
+
+We no longer set the .tap filename, because the buildmaster/buildslave
+service might be added to an existing .tap file and we shouldn't presume to
+own the whole thing. You may want to manually rename the "buildbot.tap" file
+to something more meaningful (like "buildslave-bot1.tap").
+
+*** IRC reconnect
+
+If the IRC server goes away (it was restarted, or the network connection was
+lost), the buildmaster will now schedule a reconnect attempt.
+
+*** w32 buildslave fixes
+
+An "rm -rf" was turned into shutil.rmtree on non-posix systems.
+
+
+* Release 0.3.4 (28 Jul 2003)
+
+** IRC client
+
+The buildmaster can now join a set of IRC channels and respond to simple
+queries about builder status.
+
+** slave information
+
+The build slaves can now report information from a set of info/* files in
+the slave base directory to the buildmaster. This will be used by the slave
+administrator to announce details about the system hosting the slave,
+contact information, etc. For now, info/admin should contain the name/email
+of the person who is responsible for the buildslave, and info/host should
+describe the system hosting the build slave (OS version, CPU speed, memory,
+etc). The contents of these files are made available through the waterfall
+display.
+
+** change notification email parsers
+
+A parser for Syncmail (syncmail.sourceforge.net) was added. SourceForge
+provides examples of setting up syncmail to deliver CVS commit messages to
+mailing lists, so hopefully this will make it easier for sourceforge-hosted
+projects to set up a buildbot.
+
+email processors were moved into buildbot.changes.mail . FCMaildirSource was
+moved, and the compatibility location (buildbot.changes.freshcvsmail) will
+go away in the next release.
+
+** w32 buildslave ought to work
+
+Some non-portable code was changed to make it more likely that the
+buildslave will run under windows. The Twisted buildbot now has a
+(more-or-less) working w32 buildslave.
+
+
+* Release 0.3.3 (21 May 2003):
+
+** packaging changes
+
+*** include doc/examples in the release. Oops again.
+
+** network changes
+
+*** add keepalives to deal with NAT boxes
+
+Some NAT boxes drop port mappings if the TCP connection looks idle for too
+long (maybe 30 minutes?). Add application-level keepalives (dummy commands
+sent from slave to master every 10 minutes) to appease the NAT box and keep
+our connection alive. Enable this with --keepalive in the slave mktap
+command line. Check the README for more details.
+
+** UI changes
+
+*** allow slaves to trigger any build that they host
+
+Added an internal function to ask the buildmaster to start one of their
+builds. Must be triggered with a debugger or manhole on the slave side for
+now, will add a better UI later.
+
+*** allow web page viewers to trigger any build
+
+Added a button to the per-build page (linked by the build names on the third
+row of the waterfall page) to allow viewers to manually trigger builds.
+There is a field for them to indicate who they are and why they are
+triggering the build. It is possible to abuse this, but for now the benefits
+outweigh the damage that could be done (worst case, someone can make your
+machine run builds continuously).
+
+** generic buildprocess changes
+
+*** don't queue multiple builds for offline slaves
+
+If a slave is not online when a build is ready to run, that build is queued
+so the slave will run it when it next connects. However, the buildmaster
+used to queue every such build, so the poor slave machine would be subject
+to tens or hundreds of builds in a row when they finally did come online.
+The buildmaster has been changed to merge these multiple builds into a
+single one.
+
+*** bump ShellCommand default timeout to 20 minutes
+
+Used for testing out the win32 twisted builder. I will probably revert this
+in the next relese.
+
+*** split args in ShellCommand ourselves instead of using /bin/sh
+
+This should remove the need for /bin/sh on the slave side, improving the
+chances that the buildslave can run on win32.
+
+*** add configureEnv argument to Configure step, pass env dict to slave
+
+Allows build processes to do things like 'CFLAGS=-O0 ./configure' without
+using /bin/sh to set the environment variable
+
+** Twisted buildprocess changes
+
+*** warn instead of flunk the build when cReactor or qtreactor tests fail
+
+These two always fail. For now, downgrade those failures to a warning
+(orange box instead of red).
+
+*** don't use 'clobber' on remote builds
+
+Builds that run on remote machines (freebsd, OS-X) now use 'cvs update'
+instead of clobbering their trees and doing a fresh checkout. The multiple
+simultaneous CVS checkouts were causing a strain on Glyph's upstream
+bandwidth.
+
+*** use trial --testmodule instead of our own test-case-name grepper
+
+The Twisted coding/testing convention has developers put 'test-case-name'
+tags (emacs local variables, actually) in source files to indicate which
+test cases should be run to exercise that code. Twisted's unit-test
+framework just acquired an argument to look for these tags itself. Use that
+instead of the extra FindUnitTestsForFiles build step we were doing before.
+Removes a good bit of code from buildbot and into Twisted where it really
+belongs.
+
+
+* Release 0.3.2 (07 May 2003):
+
+** packaging changes
+
+*** fix major packaging bug: none of the buildbot/* subdirectories were
+included in the 0.3.1 release. Sorry, I'm still figuring out distutils
+here..
+
+** internal changes
+
+*** use pb.Cacheable to update Events in remote status client. much cleaner.
+
+*** start to clean up BuildProcess->status.builder interface
+
+** bug fixes
+
+*** waterfall display was missing a <tr>, causing it to be misrendered in most
+browsers (except the one I was testing it with, of course)
+
+*** URL without trailing slash (when served in a twisted-web distributed
+server, with a url like "http://twistedmatrix.com/~warner.twistd") should do
+redirect to URL-with-trailing-slash, otherwise internal hrefs are broken.
+
+*** remote status clients: forget RemoteReferences at shutdown, removes
+warnings about "persisting Ephemerals"
+
+** Twisted buildprocess updates:
+
+*** match build process as of twisted-1.0.5
+**** use python2.2 everywhere now that twisted rejects python2.1
+**** look for test-result constants in multiple places
+*** move experimental 'trial --jelly' code to separate module
+*** add FreeBSD builder
+*** catch rc!=0 in HLint step
+*** remove RunUnitTestsRandomly, use randomly=1 parameter instead
+*** parameterize ['twisted.test'] default test case to make subclassing easier
+*** ignore internal distutils warnings in python2.3 builder
+
+
+* Release 0.3.1 (29 Apr 2003):
+
+** First release.
+
+** Features implemented:
+
+ change notification from FreshCVS server or parsed maildir contents
+
+ timed builds
+
+ basic builds, configure/compile/test
+
+ some Twisted-specific build steps: docs, unit tests, debuild
+
+ status reporting via web page
+
+** Features still experimental/unpolished
+
+ status reporting via PB client

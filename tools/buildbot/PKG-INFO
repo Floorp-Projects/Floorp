@@ -1,0 +1,30 @@
+Metadata-Version: 1.0
+Name: buildbot
+Version: 0.7.5
+Summary: BuildBot build automation system
+Home-page: http://buildbot.sourceforge.net/
+Author: Brian Warner
+Author-email: warner-buildbot@lothar.com
+License: GNU GPL
+Description: 
+        The BuildBot is a system to automate the compile/test cycle required by
+        most software projects to validate code changes. By automatically
+        rebuilding and testing the tree each time something has changed, build
+        problems are pinpointed quickly, before other developers are
+        inconvenienced by the failure. The guilty developer can be identified
+        and harassed without human intervention. By running the builds on a
+        variety of platforms, developers who do not have the facilities to test
+        their changes everywhere before checkin will at least know shortly
+        afterwards whether they have broken the build or not. Warning counts,
+        lint checks, image size, compile time, and other build parameters can
+        be tracked over time, are more visible, and are therefore easier to
+        improve.
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: No Input/Output (Daemon)
+Classifier: Environment :: Web Environment
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: GNU General Public License (GPL)
+Classifier: Topic :: Software Development :: Build Tools
+Classifier: Topic :: Software Development :: Testing

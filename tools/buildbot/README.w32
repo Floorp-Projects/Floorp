@@ -1,0 +1,95 @@
+Several users have reported success in running a buildslave under Windows.
+The following list of steps might help you accomplish the same. They are a
+list of what I did as a unix guy struggling to make a winXP box run the
+buildbot unit tests. When I was done, most of the unit tests passed.
+
+If you discover things that are missing or incorrect, please send your
+corrections to the buildbot-devel mailing list (archives and subscription
+information are available at http://buildbot.sourceforge.net).
+
+Many thanks to Mike "Bear" Taylor for developing this list.
+
+
+0. Check to make sure your PATHEXT environment variable has ";.PY" in 
+it -- if not set your global environment to include it.
+
+ Control Panels / System / Advanced / Environment Variables / System variables
+
+1. Install python -- 2.4 -- http://python.org
+	* run win32 installer - no special options needed so far
+
+2. install zope interface package -- 3.0.1final -- 
+http://www.zope.org/Products/ZopeInterface
+	* run win32 installer - it should auto-detect your python 2.4
+          installation
+
+3. python for windows extensions -- build 203 -- 
+http://pywin32.sourceforge.net/
+	* run win32 installer - it should auto-detect your python 2.4 
+          installation
+
+ the installer complains about a missing DLL. Download mfc71.dll from the
+ site mentioned in the warning
+ (http://starship.python.net/crew/mhammond/win32/) and move it into
+ c:\Python24\DLLs
+
+4. at this point, to preserve my own sanity, I grabbed cygwin.com's setup.exe
+   and started it. It behaves a lot like dselect. I installed bash and other
+   tools (but *not* python). I added C:\cygwin\bin to PATH, allowing me to
+   use tar, md5sum, cvs, all the usual stuff. I also installed emacs, going
+   from the notes at http://www.gnu.org/software/emacs/windows/ntemacs.html .
+   Their FAQ at http://www.gnu.org/software/emacs/windows/faq3.html#install
+   has a note on how to swap CapsLock and Control.
+
+ I also modified PATH (in the same place as PATHEXT) to include C:\Python24
+ and C:\Python24\Scripts . This will allow 'python' and (eventually) 'trial'
+ to work in a regular command shell.
+
+5. twisted -- 2.0 -- http://twistedmatrix.com/projects/core/
+	* unpack tarball and run
+		python setup.py install
+	Note: if you want to test your setup - run:
+		python c:\python24\Scripts\trial.py -o -R twisted
+	(the -o will format the output for console and the "-R twisted" will 
+         recursively run all unit tests)
+
+ I had to edit Twisted (core)'s setup.py, to make detectExtensions() return
+ an empty list before running builder._compile_helper(). Apparently the test
+ it uses to detect if the (optional) C modules can be compiled causes the
+ install process to simply quit without actually installing anything.
+
+ I installed several packages: core, Lore, Mail, Web, and Words. They all got
+ copied to C:\Python24\Lib\site-packages\
+
+ At this point
+
+   trial --version
+
+ works, so 'trial -o -R twisted' will run the Twisted test suite. Note that
+ this is not necessarily setting PYTHONPATH, so it may be running the test
+ suite that was installed, not the one in the current directory.
+
+6. I used CVS to grab a copy of the latest Buildbot sources. To run the
+   tests, you must first add the buildbot directory to PYTHONPATH. Windows
+   does not appear to have a Bourne-shell-style syntax to set a variable just
+   for a single command, so you have to set it once and remember it will
+   affect all commands for the lifetime of that shell session.
+
+  set PYTHONPATH=.
+  trial -o -r win32 buildbot.test
+
+ To run against both buildbot-CVS and, say, Twisted-SVN, do:
+
+  set PYTHONPATH=.;C:\path to\Twisted-SVN
+
+
+All commands are done using the normal cmd.exe command shell. As of
+buildbot-0.6.4, only one unit test fails (test_webPathname_port) when you run
+under the 'win32' reactor. (if you run under the default reactor, many of the
+child-process-spawning commands fail, but test_webPathname_port passes. go
+figure.)
+
+Actually setting up a buildslave is not yet covered by this document. Patches
+gladly accepted.
+
+ -Brian
