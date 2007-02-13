@@ -3324,6 +3324,33 @@ nsGenericHTMLElement::RegUnRegAccessKey(PRBool aDoReg)
   }
 }
 
+void
+nsGenericHTMLElement::PerformAccesskey(PRBool aKeyCausesActivation,
+                                       PRBool aIsTrustedEvent)
+{
+  nsPresContext *presContext = GetPresContext();
+  if (!presContext)
+    return;
+
+  nsIEventStateManager *esm = presContext->EventStateManager();
+  if (!esm)
+    return;
+
+  // It's hard to say what HTML4 wants us to do in all cases.
+  esm->ChangeFocusWith(this, nsIEventStateManager::eEventFocusedByKey);
+
+  if (aKeyCausesActivation) {
+    // Click on it if the users prefs indicate to do so.
+    nsMouseEvent event(aIsTrustedEvent, NS_MOUSE_CLICK,
+                       nsnull, nsMouseEvent::eReal);
+
+    nsAutoPopupStatePusher popupStatePusher(aIsTrustedEvent ?
+                                            openAllowed : openAbused);
+
+    nsEventDispatcher::Dispatch(this, presContext, &event);
+  }
+}
+
 // static
 nsresult
 nsGenericHTMLElement::SetProtocolInHrefString(const nsAString &aHref,

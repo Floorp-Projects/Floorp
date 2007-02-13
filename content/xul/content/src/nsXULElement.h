@@ -544,6 +544,8 @@ public:
 
     virtual void SetFocus(nsPresContext* aPresContext);
     virtual void RemoveFocus(nsPresContext* aPresContext);
+    virtual void PerformAccesskey(PRBool aKeyCausesActivation,
+                                  PRBool aIsTrustedEvent);
 
     virtual nsIContent *GetBindingParent() const;
     virtual PRBool IsNodeOfType(PRUint32 aFlags) const;

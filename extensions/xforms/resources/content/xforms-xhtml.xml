@@ -315,7 +315,7 @@
   <binding id="xformswidget-trigger"
            extends="chrome://xforms/content/xforms.xml#xformswidget-trigger-base">
     <content>
-      <html:button anonid="control" xbl:inherits="accesskey">
+      <html:button anonid="control">
         <children/>
       </html:button>
     </content>
@@ -360,7 +360,7 @@
   <binding id="xformswidget-trigger-minimal"
             extends="chrome://xforms/content/xforms.xml#xformswidget-trigger-base">
     <content>
-      <html:span tabindex="0" anonid="control" xbl:inherits="accesskey">
+      <html:span tabindex="0" anonid="control">
         <children/>
       </html:span>
     </content>
@@ -518,7 +518,7 @@
     <content>
       <children includes="label"/>
       <html:input anonid="text_control" class="xf-value" readonly="readonly"/>
-      <html:button anonid="browse_button" xbl:inherits="accesskey">
+      <html:button anonid="browse_button">
         &xforms.upload.browsetext;
       </html:button>
       <html:button anonid="clear_button">
@@ -590,11 +590,11 @@
            extends="chrome://xforms/content/xforms.xml#xformswidget-upload-base">
     <content>
       <children includes="label"/>
-      <html:input readonly="readonly" class="xf-value" xbl:inherits="accesskey"/>
-      <html:button disabled="disabled" xbl:inherits="accesskey">
+      <html:input readonly="readonly" class="xf-value"/>
+      <html:button disabled="disabled">
         &xforms.upload.browsetext;
       </html:button>
-      <html:button disabled="disabled" xbl:inherits="accesskey">
+      <html:button disabled="disabled">
         &xforms.upload.cleartext;
       </html:button>
       <children/>

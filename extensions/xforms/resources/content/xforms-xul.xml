@@ -230,7 +230,7 @@
   <binding id="xformswidget-trigger"
            extends="#xformswidget-trigger-base">
     <content>
-      <xul:button anonid="control" xbl:inherits="accesskey" flex="1">
+      <xul:button anonid="control" flex="1">
         <children/>
       </xul:button>
     </content>
@@ -260,7 +260,7 @@
            extends="#xformswidget-trigger-base">
     <content>
       <xul:box tabindex="0" anonid="control" flex="1"
-               xbl:inherits="accesskey, orient">
+               xbl:inherits="orient">
         <children/>
       </xul:box>
     </content>

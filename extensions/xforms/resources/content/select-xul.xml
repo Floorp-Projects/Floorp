@@ -65,7 +65,7 @@
     <content>
       <xul:hbox flex="1">
         <children includes="label"/>
-        <xul:box anonid="control" xbl:inherits="style, accesskey"
+        <xul:box anonid="control" xbl:inherits="style"
                  class="xf-value" flex="1"/>
       </xul:hbox>
       <children/>
@@ -77,7 +77,7 @@
     <content>
       <xul:hbox flex="1">
         <children includes="label"/>
-        <xul:box anonid="control" xbl:inherits="style, accesskey"
+        <xul:box anonid="control" xbl:inherits="style"
                  class="xf-value" flex="1"/>
       </xul:hbox>
       <children/>
@@ -112,7 +112,7 @@
            extends="chrome://xforms/content/select.xml#controlwidget-base">
 
     <content>
-      <xul:listbox xbl:inherits="style, accesskey, disabled=readonly"
+      <xul:listbox xbl:inherits="style, disabled=readonly"
                    rows="5" flex="1"
                    seltype="multiple"
                    anonid="control"/>
@@ -245,7 +245,7 @@
            extends="chrome://xforms/content/select.xml#controlwidget-base">
 
     <content>
-      <xul:menulist xbl:inherits="style, accesskey, disabled=readonly"
+      <xul:menulist xbl:inherits="style, disabled=readonly"
                     anonid="control" flex="1">
         <xul:menupopup/>
       </xul:menulist>
@@ -384,7 +384,7 @@
   <binding id="controlwidget-select1-compact"
            extends="#controlwidget-select-compact">
     <content>
-      <xul:listbox xbl:inherits="style, accesskey, disabled=readonly"
+      <xul:listbox xbl:inherits="style, disabled=readonly"
                    rows="5" anonid="control"/>
     </content>
   </binding>

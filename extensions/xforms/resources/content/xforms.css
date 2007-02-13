@@ -452,7 +452,8 @@ html|*:root trigger[accesskey] > label,
 html|*:root submit[accesskey] > label,
 html|*:root select[accesskey] > label,
 html|*:root select1[accesskey] > label,
-html|*:root upload[accesskey] > label {
+html|*:root upload[accesskey] > label,
+html|*:root range[accesskey] > label {
   -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-label-accesskey');
 }
 

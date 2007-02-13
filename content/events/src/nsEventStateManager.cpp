@@ -1185,93 +1185,14 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
 
     nsVoidKey key(NS_INT32_TO_PTR(accKey));
     if (mAccessKeys->Exists(&key)) {
-      nsCOMPtr<nsIContent> content = dont_AddRef(NS_STATIC_CAST(nsIContent*, mAccessKeys->Get(&key)));
-
-      // if it's a XUL element...
-      if (content->IsNodeOfType(nsINode::eXUL)) {
-        // find out what type of content node this is
-        if (content->Tag() == nsGkAtoms::label) {
-          // If anything fails, this will be null ...
-          nsCOMPtr<nsIDOMElement> element;
-
-          nsAutoString control;
-          content->GetAttr(kNameSpaceID_None, nsGkAtoms::control, control);
-          if (!control.IsEmpty()) {
-            nsCOMPtr<nsIDOMDocument> domDocument =
-              do_QueryInterface(content->GetDocument());
-            if (domDocument)
-              domDocument->GetElementById(control, getter_AddRefs(element));
-          }
-          // ... that here we'll either change |content| to the element
-          // referenced by |element|, or clear it.
-          content = do_QueryInterface(element);
-        }
-
-        if (!content)
-          return;
-
-        nsIFrame* frame = aPresContext->PresShell()->GetPrimaryFrameFor(content);
-
-        if (frame) {
-          const nsStyleVisibility* vis = frame->GetStyleVisibility();
-          PRBool viewShown = frame->AreAncestorViewsVisible();
-
-          // get the XUL element
-          nsCOMPtr<nsIDOMXULElement> element = do_QueryInterface(content);
-
-          // if collapsed or hidden, we don't get tabbed into.
-          if (viewShown &&
-            vis->mVisible != NS_STYLE_VISIBILITY_COLLAPSE &&
-            vis->mVisible != NS_STYLE_VISIBILITY_HIDDEN &&
-            element) {
-
-            // find out what type of content node this is
-            nsIAtom *atom = content->Tag();
-
-            // define behavior for each type of XUL element:
-            if (atom == nsGkAtoms::textbox || atom == nsGkAtoms::menulist) {
-              // if it's a text box or menulist, give it focus
-              element->Focus();
-            } else if (atom == nsGkAtoms::toolbarbutton) {
-              // if it's a toolbar button, just click
-              element->Click();
-            } else {
-              // otherwise, focus and click in it
-              element->Focus();
-              element->Click();
-            }
-          }
-        }
-      } else { // otherwise, it must be HTML
-        // It's hard to say what HTML4 wants us to do in all cases.
-        // So for now we'll settle for A) Set focus (except for <label>s
-        // which focus their control in nsHTMLLabelElement::PostHandleEvent)
-        if (content->Tag() != nsGkAtoms::label || !sKeyCausesActivation) {
-          ChangeFocusWith(content, eEventFocusedByKey);
-        }
-        if (sKeyCausesActivation) {
-          // B) Click on it if the users prefs indicate to do so.
-
-          // Propagate trusted state to the new event.
-          nsEventStatus status = nsEventStatus_eIgnore;
-          nsMouseEvent event(NS_IS_TRUSTED_EVENT(aEvent), NS_MOUSE_CLICK,
-                             nsnull, nsMouseEvent::eReal);
-
-          nsAutoPopupStatePusher popupStatePusher(NS_IS_TRUSTED_EVENT(aEvent) ?
-                                                  openAllowed : openAbused);
-
-          nsCOMPtr<nsIContent> oldTargetContent = mCurrentTargetContent;
-          mCurrentTargetContent = content;
-          nsEventDispatcher::Dispatch(content, mPresContext, &event, nsnull,
-                                      &status);
-          mCurrentTargetContent = oldTargetContent;
-        }
-
-      }
-
+      nsCOMPtr<nsIContent> content =
+        dont_AddRef(NS_STATIC_CAST(nsIContent*, mAccessKeys->Get(&key)));
+      content->PerformAccesskey(sKeyCausesActivation,
+                                NS_IS_TRUSTED_EVENT(aEvent));
       *aStatus = nsEventStatus_eConsumeNoDefault;
     }
   }
+
   // after the local accesskey handling
   if (nsEventStatus_eConsumeNoDefault != *aStatus) {
     // checking all sub docshells

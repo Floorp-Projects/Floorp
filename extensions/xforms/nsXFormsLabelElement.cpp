@@ -84,6 +84,7 @@ public:
   NS_IMETHOD ChildRemoved(PRUint32 aIndex);
   NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aSrc);
   NS_IMETHOD AttributeRemoved(nsIAtom *aName);
+  NS_IMETHOD PerformAccesskey();
 
   nsXFormsLabelElement() : mWidgetLoaded(PR_FALSE) {};
 
@@ -113,7 +114,8 @@ nsXFormsLabelElement::OnCreated(nsIXTFElementWrapper *aWrapper)
   aWrapper->SetNotificationMask(kStandardNotificationMask |
                                 nsIXTFElement::NOTIFY_CHILD_INSERTED |
                                 nsIXTFElement::NOTIFY_CHILD_APPENDED |
-                                nsIXTFElement::NOTIFY_CHILD_REMOVED);
+                                nsIXTFElement::NOTIFY_CHILD_REMOVED |
+                                nsIXTFElement::NOTIFY_PERFORM_ACCESSKEY);
   return NS_OK;
 }
 
@@ -185,6 +187,23 @@ nsXFormsLabelElement::AttributeRemoved(nsIAtom *aName)
   }
 
   return nsXFormsDelegateStub::AttributeRemoved(aName);
+}
+
+NS_IMETHODIMP
+nsXFormsLabelElement::PerformAccesskey()
+{
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mElement));
+  nsCOMPtr<nsIDOMNode> parent;
+  node->GetParentNode(getter_AddRefs(parent));
+  if (parent) {
+    nsCOMPtr<nsIXFormsUIWidget> widget(do_QueryInterface(parent));
+    if (widget) {
+      PRBool isFocused;
+      widget->Focus(&isFocused);
+    }
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

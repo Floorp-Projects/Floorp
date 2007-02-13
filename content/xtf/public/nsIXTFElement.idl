@@ -42,10 +42,11 @@ interface nsIAtom;
 interface nsIDOMDocument;
 interface nsIDOMElement;
 interface nsIDOMNode;
+interface nsIDOMAttr;
 interface nsIDOMEvent;
 interface nsIXTFElementWrapper;
 
-[scriptable, uuid(9987c448-5a9d-4df5-a217-86ef6fedc366)]
+[scriptable, uuid(4f144387-796d-4baf-8641-5db45dba1808)]
 interface nsIXTFElement : nsISupports
 {
   // onCreated will be called before any notifications are sent to
@@ -103,7 +104,9 @@ interface nsIXTFElement : nsISupports
   const unsigned long NOTIFY_DONE_ADDING_CHILDREN  = 0x00008000;
   
   const unsigned long NOTIFY_HANDLE_DEFAULT        = 0x00010000;
-  
+
+  const unsigned long NOTIFY_PERFORM_ACCESSKEY     = 0x00020000;
+
   // Event notifications:
 
   void willChangeDocument(in nsIDOMDocument newDoc);
@@ -144,5 +147,15 @@ interface nsIXTFElement : nsISupports
   // to worry about copying attributes or child nodes, but should copy any
   // other needed state.
   void cloneState(in nsIDOMElement aElement);
+
+  /**
+   * Returns accesskey attribute node.
+   */
+  readonly attribute nsIDOMAttr accesskeyNode;
+
+  /**
+   * Performs accesskey. The method is called when accesskey is activated.
+   */
+  void performAccesskey();
 };
 

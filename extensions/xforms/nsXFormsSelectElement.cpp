@@ -94,7 +94,8 @@ nsXFormsSelectElement::OnCreated(nsIXTFElementWrapper *aWrapper)
   aWrapper->SetNotificationMask(kStandardNotificationMask |
                                 nsIXTFElement::NOTIFY_CHILD_INSERTED |
                                 nsIXTFElement::NOTIFY_CHILD_APPENDED |
-                                nsIXTFElement::NOTIFY_CHILD_REMOVED);
+                                nsIXTFElement::NOTIFY_CHILD_REMOVED |
+                                nsIXTFElement::NOTIFY_PERFORM_ACCESSKEY);
   return NS_OK;
 }
 

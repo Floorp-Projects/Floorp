@@ -76,12 +76,31 @@ nsXFormsDelegateStub::WillChangeParent(nsIDOMElement *aNewParent)
 }
 
 NS_IMETHODIMP
+nsXFormsDelegateStub::GetAccesskeyNode(nsIDOMAttr** aNode)
+{
+  return mElement->GetAttributeNode(NS_LITERAL_STRING("accesskey"), aNode);
+}
+
+NS_IMETHODIMP
+nsXFormsDelegateStub::PerformAccesskey()
+{
+  nsCOMPtr<nsIXFormsUIWidget> widget(do_QueryInterface(mElement));
+  if (widget) {
+    PRBool isFocused;
+    widget->Focus(&isFocused);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXFormsDelegateStub::OnCreated(nsIXTFElementWrapper *aWrapper)
 {
   nsresult rv = nsXFormsControlStub::OnCreated(aWrapper);
   NS_ENSURE_SUCCESS(rv, rv);
   aWrapper->SetNotificationMask(kStandardNotificationMask |
-                                nsIXTFElement::NOTIFY_WILL_CHANGE_PARENT);
+                                nsIXTFElement::NOTIFY_WILL_CHANGE_PARENT |
+                                nsIXTFElement::NOTIFY_PERFORM_ACCESSKEY);
   return rv;
 }
 

@@ -117,8 +117,7 @@
            extends="#xformswidget-input-base">
     <content>
       <children includes="label"/>
-      <xul:textbox class="xf-value" anonid="control"
-                   xbl:inherits="accesskey" flex="1"/>
+      <xul:textbox class="xf-value" anonid="control" flex="1"/>
       <children/>
     </content>
 
@@ -137,7 +136,7 @@
            extends="chrome://xforms/content/input.xml#xformswidget-input-boolean-base">
     <content>
       <children includes="label"/>
-      <xul:checkbox anonid="control" xbl:inherits="accesskey" class="xf-value"/>
+      <xul:checkbox anonid="control" class="xf-value"/>
       <children/>
     </content>
 
@@ -195,7 +194,7 @@
     <content>
       <children includes="label"/>
       <xul:hbox class="-moz-menulist-container" flex="1">
-        <html:input anonid="control" xbl:inherits="accesskey" flex="1"
+        <html:input anonid="control" flex="1"
                     class="-moz-menulist-textfield"
                     allowevents="true"/>
         <xul:dropmarker mozType:dropmarker="true" anonid="dropmarker"
@@ -393,8 +392,7 @@
            extends="#xformswidget-input-number-base">
     <content>
       <children includes="label"/>
-      <xul:textbox type="number" class="xf-value" anonid="control"
-                   xbl:inherits="accesskey" flex="1"
+      <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
                    min="Number.MIN_VALUE" max="Number.MAX_VALUE"/>
       <children/>
     </content>
@@ -405,8 +403,7 @@
            extends="#xformswidget-input-number-base">
     <content>
       <children includes="label"/>
-      <xul:textbox type="number" class="xf-value" anonid="control"
-                   xbl:inherits="accesskey" flex="1"
+      <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
                    min="Number.MIN_VALUE" max="0"/>
       <children/>
     </content>
@@ -417,8 +414,7 @@
            extends="#xformswidget-input-number-base">
     <content>
       <children includes="label"/>
-      <xul:textbox type="number" class="xf-value" anonid="control"
-                   xbl:inherits="accesskey" flex="1"
+      <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
                    min="Number.MIN_VALUE" max="-1"/>
       <children/>
     </content>
@@ -429,8 +425,7 @@
            extends="#xformswidget-input-number-base">
     <content>
       <children includes="label"/>
-      <xul:textbox type="number" class="xf-value" anonid="control"
-                   xbl:inherits="accesskey" flex="1"
+      <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
                    min="-9223372036854775807" max="9223372036854775807"/>
       <children/>
     </content>
@@ -441,8 +436,7 @@
            extends="#xformswidget-input-number-base">
     <content>
       <children includes="label"/>
-      <xul:textbox type="number" class="xf-value" anonid="control"
-                   xbl:inherits="accesskey" flex="1"
+      <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
                    min="-2147483647" max="2147483647"/>
       <children/>
     </content>
@@ -453,8 +447,7 @@
            extends="#xformswidget-input-number-base">
     <content>
       <children includes="label"/>
-      <xul:textbox type="number" class="xf-value" anonid="control"
-                   xbl:inherits="accesskey" flex="1"
+      <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
                    min="-32767" max="32767"/>
       <children/>
     </content>
@@ -465,8 +458,7 @@
            extends="#xformswidget-input-number-base">
     <content>
       <children includes="label"/>
-      <xul:textbox type="number" class="xf-value" anonid="control"
-                   xbl:inherits="accesskey" flex="1"
+      <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
                    min="-127" max="127"/>
       <children/>
     </content>
@@ -477,8 +469,7 @@
            extends="#xformswidget-input-number-base">
     <content>
       <children includes="label"/>
-      <xul:textbox type="number" class="xf-value" anonid="control"
-                   xbl:inherits="accesskey" flex="1"
+      <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
                    min="0" max="Number.MAX_VALUE"/>
       <children/>
     </content>
@@ -490,8 +481,7 @@
            extends="#xformswidget-input-number-base">
     <content>
       <children includes="label"/>
-      <xul:textbox type="number" class="xf-value" anonid="control"
-                   xbl:inherits="accesskey" flex="1"
+      <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
                    min="0" max="18446744073709551615"/>
       <children/>
     </content>
@@ -502,8 +492,7 @@
            extends="#xformswidget-input-number-base">
     <content>
       <children includes="label"/>
-      <xul:textbox type="number" class="xf-value" anonid="control"
-                   xbl:inherits="accesskey" flex="1"
+      <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
                    min="0" max="4294967295"/>
       <children/>
     </content>
@@ -514,8 +503,7 @@
            extends="#xformswidget-input-number-base">
     <content>
       <children includes="label"/>
-      <xul:textbox type="number" class="xf-value" anonid="control"
-                   xbl:inherits="accesskey" flex="1"
+      <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
                    min="0" max="65535"/>
       <children/>
     </content>
@@ -526,8 +514,7 @@
            extends="#xformswidget-input-number-base">
     <content>
       <children includes="label"/>
-      <xul:textbox type="number" class="xf-value" anonid="control"
-                   xbl:inherits="accesskey" flex="1"
+      <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
                    min="0" max="255"/>
       <children/>
     </content>
@@ -538,8 +525,7 @@
            extends="#xformswidget-input-number-base">
     <content>
       <children includes="label"/>
-      <xul:textbox type="number" class="xf-value" anonid="control"
-                   xbl:inherits="accesskey" flex="1"
+      <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
                    min="1" max="Number.MAX_VALUE"/>
       <children/>
     </content>
@@ -551,8 +537,7 @@
            extends="#xformswidget-input-base">
     <content>
       <children includes="label"/>
-      <xul:textbox type="password" anonid="control"
-                  xbl:inherits="accesskey" flex="1"/>
+      <xul:textbox type="password" anonid="control" flex="1"/>
       <children/>
     </content>
 
@@ -580,7 +565,7 @@
     <content>
       <children includes="label"/>
       <xul:textbox multiline="true" class="xf-value" 
-                   anonid="control" xbl:inherits="accesskey" flex="1"/>
+                   anonid="control" flex="1"/>
       <children/>
     </content>
   </binding>

@@ -63,8 +63,8 @@ class nsIDocShell;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x53a5757c, 0xf602, 0x41ee, \
-  { 0xac, 0x55, 0xfc, 0x3c, 0x89, 0x4e, 0xb8, 0x97 } }
+{ 0xb6408b0, 0x20c6, 0x4d60, \
+  { 0xb7, 0x2f, 0x90, 0xb7, 0x7a, 0x9d, 0xb9, 0xb6 } }
 
 
 // hack to make egcs / gcc 2.95.2 happy
@@ -494,6 +494,19 @@ public:
     if (aTabIndex) 
       *aTabIndex = -1; // Default, not tabbable
     return PR_FALSE;
+  }
+
+  /**
+   * The method focuses (or activates) element that accesskey is bound to. It is
+   * called when accesskey is activated.
+   *
+   * @param aKeyCausesActivation - if true then element should be activated
+   * @param aIsTrustedEvent - if true then event that is cause of accesskey
+   *                          execution is trusted.
+   */
+  virtual void PerformAccesskey(PRBool aKeyCausesActivation,
+                                PRBool aIsTrustedEvent)
+  {
   }
 
   /*

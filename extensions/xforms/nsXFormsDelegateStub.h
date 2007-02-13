@@ -84,6 +84,8 @@ public:
   NS_IMETHOD OnDestroyed();
   NS_IMETHOD WillChangeParent(nsIDOMElement *aNewParent);
   NS_IMETHOD WillChangeDocument(nsIDOMDocument *aNewDocument);
+  NS_IMETHOD GetAccesskeyNode(nsIDOMAttr** aNode);
+  NS_IMETHOD PerformAccesskey();
 
   // nsIXFormsControl
   NS_IMETHOD TryFocus(PRBool* aOK);

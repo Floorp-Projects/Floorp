@@ -81,7 +81,7 @@
            extends="#xformswidget-input-base">
     <content>
       <children includes="label"/>
-      <html:input class="xf-value" anonid="control" xbl:inherits="accesskey"/>
+      <html:input class="xf-value" anonid="control"/>
       <children/>
     </content>
 
@@ -144,8 +144,7 @@
            extends="chrome://xforms/content/input.xml#xformswidget-input-boolean-base">
     <content>
       <children includes="label"/>
-      <html:input anonid="control" xbl:inherits="accesskey" type="checkbox"
-                  class="xf-value"/>
+      <html:input anonid="control" type="checkbox" class="xf-value"/>
       <children/>
     </content>
 
@@ -209,7 +208,7 @@
     <content>
       <children includes="label"/>
       <html:span class="-moz-date-container">
-        <html:input anonid="control" xbl:inherits="accesskey" size="10"
+        <html:input anonid="control" size="10"
                     class="-moz-xforms-date-input xf-value"/>
         <html:input mozType:dropmarker="true"
                     type="button" anonid="dropmarker"
@@ -591,7 +590,7 @@
            extends="chrome://xforms/content/input.xml#xformswidget-input-month-base">
     <content>
       <children includes="label"/>
-      <html:select anonid="control" xbl:inherits="style, accesskey">
+      <html:select anonid="control" xbl:inherits="style">
         <html:option value=""></html:option>
       </html:select>
       <children/>
@@ -640,7 +639,7 @@
            extends="chrome://xforms/content/input.xml#xformswidget-input-day-base">
     <content>
       <children includes="label"/>
-      <html:select anonid="control" xbl:inherits="style, accesskey">
+      <html:select anonid="control" xbl:inherits="style">
         <html:option value=""></html:option>
       </html:select>
       <children/>
@@ -689,7 +688,7 @@
            extends="#xformswidget-input">
     <content>
       <children includes="label"/>
-      <html:input anonid="control" xbl:inherits="accesskey" type="password"/>
+      <html:input anonid="control" type="password"/>
       <children/>
     </content>
 
@@ -708,8 +707,7 @@
            extends="#xformswidget-input-base">
     <content>
        <children includes="label"/>
-       <html:textarea class="xf-value" anonid="control"
-                      xbl:inherits="accesskey"/>
+       <html:textarea class="xf-value" anonid="control"/>
       <children/>
     </content>
 

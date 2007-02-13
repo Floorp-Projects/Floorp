@@ -623,6 +623,67 @@ nsXULElement::IsFocusable(PRInt32 *aTabIndex)
   return tabIndex >= 0 || (!disabled && HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex));
 }
 
+void
+nsXULElement::PerformAccesskey(PRBool aKeyCausesActivation,
+                               PRBool aIsTrustedEvent)
+{
+    nsCOMPtr<nsIContent> content(this);
+
+    if (Tag() == nsGkAtoms::label) {
+        nsCOMPtr<nsIDOMElement> element;
+
+        nsAutoString control;
+        GetAttr(kNameSpaceID_None, nsGkAtoms::control, control);
+        if (!control.IsEmpty()) {
+            nsCOMPtr<nsIDOMDocument> domDocument =
+                do_QueryInterface(content->GetCurrentDoc());
+            if (domDocument)
+                domDocument->GetElementById(control, getter_AddRefs(element));
+        }
+        // here we'll either change |content| to the element referenced by
+        // |element|, or clear it.
+        content = do_QueryInterface(element);
+
+        if (!content)
+            return;
+    }
+
+    nsIDocument* doc = GetCurrentDoc();
+    if (!doc)
+        return;
+
+    nsIPresShell *shell = doc->GetShellAt(0);
+    if (!shell)
+        return;
+
+    nsIFrame* frame = shell->GetPrimaryFrameFor(content);
+    if (!frame)
+        return;
+
+    const nsStyleVisibility* vis = frame->GetStyleVisibility();
+
+    if (vis->mVisible == NS_STYLE_VISIBILITY_COLLAPSE ||
+        vis->mVisible == NS_STYLE_VISIBILITY_HIDDEN ||
+        !frame->AreAncestorViewsVisible())
+        return;
+
+    nsCOMPtr<nsIDOMXULElement> elm(do_QueryInterface(content));
+
+    // Define behavior for each type of XUL element.
+    nsIAtom *tag = content->Tag();
+    if (tag == nsGkAtoms::textbox || tag == nsGkAtoms::menulist) {
+        // if it's a text box or menulist, give it focus
+        elm->Focus();
+    } else if (tag == nsGkAtoms::toolbarbutton) {
+        // if it's a toolbar button, just click
+        elm->Click();
+    } else {
+        // otherwise, focus and click in it
+        elm->Focus();
+        elm->Click();
+    }
+}
+
 
 //----------------------------------------------------------------------
 // nsIScriptEventHandlerOwner interface

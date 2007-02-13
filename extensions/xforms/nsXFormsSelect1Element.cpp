@@ -104,7 +104,8 @@ nsXFormsSelect1Element::OnCreated(nsIXTFElementWrapper *aWrapper)
                                 nsIXTFElement::NOTIFY_CHILD_APPENDED |
                                 nsIXTFElement::NOTIFY_CHILD_REMOVED |
                                 nsIXTFElement::NOTIFY_BEGIN_ADDING_CHILDREN |
-                                nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN);
+                                nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN |
+                                nsIXTFElement::NOTIFY_PERFORM_ACCESSKEY);
   return NS_OK;
 }
 

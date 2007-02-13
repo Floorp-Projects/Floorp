@@ -177,6 +177,18 @@ nsXFormsStubElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
 }
 
 NS_IMETHODIMP
+nsXFormsStubElement::GetAccesskeyNode(nsIDOMAttr** aNode)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsStubElement::PerformAccesskey()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXFormsStubElement::OnCreated(nsIXTFElementWrapper *aWrapper)
 {
   return aWrapper->SetClassAttributeName(nsXFormsAtoms::clazz);

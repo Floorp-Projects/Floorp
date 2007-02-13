@@ -192,6 +192,8 @@ public:
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
   virtual void RemoveFocus(nsPresContext *aPresContext);
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
+  virtual void PerformAccesskey(PRBool aKeyCausesActivation,
+                                PRBool aIsTrustedEvent);
 
   nsresult PostHandleEventForAnchors(nsEventChainPostVisitor& aVisitor);
   PRBool IsHTMLLink(nsIURI** aURI) const;

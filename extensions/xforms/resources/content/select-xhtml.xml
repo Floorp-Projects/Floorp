@@ -68,7 +68,7 @@
       <html:span class="label-container">
          <children includes="label"/>
       </html:span>
-      <html:span anonid="control" xbl:inherits="style, accesskey"/>
+      <html:span anonid="control" xbl:inherits="style"/>
       <children/>
     </content>
   </binding>
@@ -81,7 +81,7 @@
         <html:span class="label-container">
            <children includes="label"/>
         </html:span>
-        <html:span anonid="control" xbl:inherits="style, accesskey"/>
+        <html:span anonid="control" xbl:inherits="style"/>
         <children/>
       </html:label>
     </content>
@@ -107,7 +107,7 @@
            extends="chrome://xforms/content/select.xml#controlwidget-base">
 
     <content>
-      <html:select xbl:inherits="style, accesskey, disabled=readonly"
+      <html:select xbl:inherits="style, disabled=readonly"
                    class="xf-value" multiple="true" size="5" anonid="control"/>
     </content>
 
@@ -212,7 +212,7 @@
   <binding id="controlwidget-select1-compact"
            extends="#controlwidget-select-compact">
     <content>
-      <html:select xbl:inherits="style, accesskey, disabled=readonly"
+      <html:select xbl:inherits="style, disabled=readonly"
                    class="xf-value" size="5" anonid="control"/>
     </content>
   </binding>
