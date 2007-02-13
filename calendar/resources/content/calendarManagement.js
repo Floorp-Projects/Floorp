@@ -297,13 +297,16 @@ function initCalendarManager()
  
      // Set up a pref listener so the proper UI bits can be refreshed when prefs
      // are changed.
-     var pb2 = prefService.getBranch("").QueryInterface(
-         Components.interfaces.nsIPrefBranch2);
+     var prefService = Cc["@mozilla.org/preferences-service;1"].
+                       getService(Ci.nsIPrefService);
+     var pb2 = prefService.getBranch("").QueryInterface(Ci.nsIPrefBranch2);
      pb2.addObserver("calendar.", calPrefObserver, false);
 }
 
 function finishCalendarManager() {
     // Remove the category color pref observer
+    var prefService = Cc["@mozilla.org/preferences-service;1"].
+                      getService(Ci.nsIPrefService);
     var pbi = prefService.getBranch("");
     pbi = pbi.QueryInterface(Components.interfaces.nsIPrefBranch2);
     pbi.removeObserver("calendar.category.color.", categoryPrefObserver);
@@ -341,6 +344,8 @@ function initColors() {
     for (var j in calendars) 
         updateStyleSheetForObject(calendars[j], gCachedStyleSheet);
 
+    var prefService = Cc["@mozilla.org/preferences-service;1"].
+                      getService(Ci.nsIPrefService);
     var categoryPrefBranch = prefService.getBranch("calendar.category.color.");
     var prefArray = categoryPrefBranch.getChildList("", {});
     for (var i = 0; i < prefArray.length; i++) 

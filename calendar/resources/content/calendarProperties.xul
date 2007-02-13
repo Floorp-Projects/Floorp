@@ -57,7 +57,7 @@
    xmlns:nc="http://home.netscape.com/NC-rdf#">
     
    <script type="application/x-javascript" src="chrome://calendar/content/calendarProperties.js"/>
-   <script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
+   <script type="application/x-javascript" src="chrome://calendar/content/calUtils.js"/>
    
    <!-- STRING BUNDLE for calendar properties -->
    <stringbundleset id="stringbundleset">

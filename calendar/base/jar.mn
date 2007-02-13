@@ -26,6 +26,7 @@ calendar.jar:
     content/calendar/calendar-view-bindings.css  (content/calendar-view-bindings.css)
     content/calendar/calendar-view-core.xml      (content/calendar-view-core.xml)
     content/calendar/calendar-views.js           (content/calendar-views.js)
+    content/calendar/calUtils.js                 (src/calUtils.js)
     content/calendar/calErrorPrompt.xul          (content/calErrorPrompt.xul)
     content/calendar/chooseCalendarDialog.xul    (content/chooseCalendarDialog.xul)
     content/calendar/import-export.js            (content/import-export.js)

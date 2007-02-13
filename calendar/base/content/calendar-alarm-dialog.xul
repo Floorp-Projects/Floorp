@@ -62,7 +62,7 @@
 
 <!-- Javascript includes -->
 <script type="application/x-javascript" src="chrome://calendar/content/calendar-alarm-dialog.js"/>
-<script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/calUtils.js"/>
 
 <!-- The dialog -->
     <vbox id="alarmlist" flex="1" style="overflow: auto;">

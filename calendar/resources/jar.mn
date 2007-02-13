@@ -5,7 +5,6 @@ calendar.jar:
 *   content/calendar/applicationUtil.js (content/applicationUtil.js)
     content/calendar/attachFile.js (content/attachFile.js)
 *   content/calendar/calendar.js (content/calendar.js)
-    content/calendar/calendarUtils.js (content/calendarUtils.js)
     content/calendar/calendarManagement.js (content/calendarManagement.js)
     content/calendar/calendarWindow.js (content/calendarWindow.js)
     content/calendar/calendarCreation.xul (content/calendarCreation.xul)

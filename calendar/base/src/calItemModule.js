@@ -81,10 +81,15 @@ function initBaseComponent()
 /* Update these in calBaseCID.h */
 const componentData =
     [
-     /* calItemBase must be first: later scripts depend on it */
+     /* calItemBase and calUtils must be first: later scripts depend on them */
     {cid: null,
      contractid: null,
      script: "calItemBase.js",
+     constructor: null},
+
+    {cid: null,
+     contractid: null,
+     script: "calUtils.js",
      constructor: null},
 
     {cid: Components.ID("{f42585e7-e736-4600-985d-9624c1c51992}"),

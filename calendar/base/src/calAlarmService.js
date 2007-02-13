@@ -48,27 +48,6 @@ function newTimerWithCallback(callback, delay, repeating)
     return timer;
 }
 
-function jsDateToDateTime(date)
-{
-    var newDate = Components.classes["@mozilla.org/calendar/datetime;1"].createInstance(Components.interfaces.calIDateTime);
-    newDate.jsDate = date;
-    return newDate;
-}
-
-function jsDateToFloatingDateTime(date)
-{
-    var newDate = Components.classes["@mozilla.org/calendar/datetime;1"].createInstance(Components.interfaces.calIDateTime);
-    newDate.timezone = "floating";
-    newDate.year = date.getFullYear();
-    newDate.month = date.getMonth();
-    newDate.day = date.getDate();
-    newDate.hour = date.getHours();
-    newDate.minute = date.getMinutes();
-    newDate.second = date.getSeconds();
-    newDate.normalize();
-    return newDate;
-}
-
 function calAlarmService() {
     this.wrappedJSObject = this;
 

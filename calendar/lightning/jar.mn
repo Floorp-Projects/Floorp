@@ -37,7 +37,6 @@ calendar.jar:
   content/calendar/calendarCreation.xul		(/calendar/resources/content/calendarCreation.xul) 
   content/calendar/calendarCreation.js		(/calendar/resources/content/calendarCreation.js) 
   content/calendar/mouseoverPreviews.js		(/calendar/resources/content/mouseoverPreviews.js) 
-  content/calendar/calendarUtils.js		(/calendar/resources/content/calendarUtils.js)
   content/calendar/datetimepickers/datetimepickers.css (/calendar/resources/content/datetimepickers/datetimepickers.css)
   content/calendar/datetimepickers/datetimepickers.xml (/calendar/resources/content/datetimepickers/datetimepickers.xml)
   content/calendar/datetimepickers/minimonth.css (/calendar/resources/content/datetimepickers/minimonth.css)

@@ -55,7 +55,7 @@
         <script type="application/x-javascript"
                 src="chrome://calendar/content/preferences/timezones.js"/>
         <script type="application/x-javascript"
-                src="chrome://calendar/content/calendarUtils.js"/>
+                src="chrome://calendar/content/calUtils.js"/>
 
         <preferences>
             <preference id="calendar.timezone.local"

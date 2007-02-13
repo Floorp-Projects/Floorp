@@ -40,7 +40,7 @@
    - ***** END LICENSE BLOCK *****
 -->
 
-<!-- Note that this file depends on helper functions in calendarUtils.js-->
+<!-- Note that this file depends on helper functions in calUtils.js-->
 
 <bindings id="calendar-month-view-bindings"
   xmlns="http://www.mozilla.org/xbl"
@@ -71,11 +71,11 @@
 
           var str = null;
           // if val is an event and not an all day event, show start time in title
-          if (val instanceof Components.interfaces.calIEvent && !val.startDate.isDate) {
-            var df = Components.classes["@mozilla.org/calendar/datetime-formatter;1"]
-                               .getService(Components.interfaces.calIDateTimeFormatter);
+          if (isEvent(val) && !val.startDate.isDate) {
+            var df = Cc["@mozilla.org/calendar/datetime-formatter;1"].
+                     getService(Ci.calIDateTimeFormatter);
             str = df.formatTime(val.startDate.getInTimezone(this.calendarView.mTimezone));
-          } else if (val instanceof Components.interfaces.calITodo) {
+          } else if (isToDo(val)) {
             // yeah, this should really be a little picture instead of a "*"
             str = "* ";
           } else {
@@ -97,21 +97,21 @@
 
     <handlers>
       <handler event="draggesture"><![CDATA[
-        var dragService = Components.classes["@mozilla.org/widget/dragservice;1"]
-                                    .getService(Components.interfaces.nsIDragService);
-        var transfer = Components.classes["@mozilla.org/widget/transferable;1"]
-                                 .createInstance(Components.interfaces.nsITransferable);
+        var dragService = Cc["@mozilla.org/widget/dragservice;1"].
+                          getService(Ci.nsIDragService);
+        var transfer = Cc["@mozilla.org/widget/transferable;1"].
+                       createInstance(Ci.nsITransferable);
 
         var item = this.occurrence;
         transfer.addDataFlavor("text/calendar");
 
         var flavourProvider = {
             QueryInterface: function(aIID) {
-                if (aIID.equals(Components.interfaces.nsIFlavorDataProvider) ||
-                    aIID.equals(Components.interfaces.nsISupports)) {
+                if (aIID.equals(Ci.nsIFlavorDataProvider) ||
+                    aIID.equals(Ci.nsISupports)) {
                     return this;
                 }
-                throw Components.results.NS_NOINTERFACE;
+                throw Cr.NS_NOINTERFACE;
             },
             item: item,
 
@@ -120,31 +120,31 @@
                     (aInFlavor == "application/vnd.x-moz-cal-task")) {
                     aOutData.value = this.item;
                     aOutDataLen.value = 1;
-                    return Components.results.NS_OK;
+                    return Cr.NS_OK;
                 } else {
                     alert("error:"+aInFlavor);
                 }
             }
         };
 
-        if (item instanceof Components.interfaces.calIEvent) {
+        if (isEvent(item)) {
           transfer.addDataFlavor("application/vnd.x-moz-cal-event");
           transfer.setTransferData("application/vnd.x-moz-cal-event", flavourProvider, 0);
-        } else if (item instanceof Components.interfaces.calITodo) {
+        } else if (isToDo(item)) {
           transfer.addDataFlavor("application/vnd.x-moz-cal-task");
           transfer.setTransferData("application/vnd.x-moz-cal-task", flavourProvider, 0);
         }
 
         // Also set some normal data-types, in case we drag into another app
-        var supportsString = Components.classes["@mozilla.org/supports-string;1"]
-                                       .createInstance(Components.interfaces.nsISupportsString);
+        var supportsString = Cc["@mozilla.org/supports-string;1"].
+                             createInstance(Ci.nsISupportsString);
         supportsString.data = item.icalComponent.serializeToICS();
         transfer.setTransferData("text/calendar", supportsString, supportsString.data.length*2);
         transfer.setTransferData("text/unicode", supportsString, supportsString.data.length*2);
 
         var action = dragService.DRAGDROP_ACTION_MOVE;
-        var supArray = Components.classes["@mozilla.org/supports-array;1"]
-                                 .createInstance(Components.interfaces.nsISupportsArray);
+        var supArray = Cc["@mozilla.org/supports-array;1"].
+                       createInstance(Ci.nsISupportsArray);
         supArray.AppendElement(transfer);
 
         // OK, now that the data is all set up, start playing with the shadows
@@ -167,8 +167,8 @@
         // for that case.
         var monthbox = this.parentBox;
         monthbox.monthView.dropListener = function checkStillDragging() {
-            var dragService = Components.classes["@mozilla.org/widget/dragservice;1"]
-                                        .getService(Components.interfaces.nsIDragService);
+            var dragService = Cc["@mozilla.org/widget/dragservice;1"].
+                              getService(Ci.nsIDragService);
             var session;
             try {
                 session = dragService.getCurrentSession();
@@ -270,7 +270,7 @@
         <parameter name="aDate"/>
         <body><![CDATA[
           if (!aDate)
-            throw Components.results.NS_ERROR_NULL_POINTER;
+            throw Cr.NS_ERROR_NULL_POINTER;
 
           // Remove all the old events
           this.mItemData = new Array();
@@ -370,11 +370,11 @@
 
           this.mItemData.sort(
             function (a, b) {
-              var aIsEvent = (a.item instanceof Components.interfaces.calIEvent);
-              var aIsTodo = (a.item instanceof Components.interfaces.calITodo);
+              var aIsEvent = isEvent(a.item);
+              var aIsTodo = isToDo(a.item);
 
-              var bIsEvent = (b.item instanceof Components.interfaces.calIEvent);
-              var bIsTodo = (b.item instanceof Components.interfaces.calITodo);
+              var bIsEvent = isEvent(b.item);
+              var bIsTodo = isToDo(b.item);
 
               if ((!aIsEvent && !aIsTodo) || (!bIsEvent && !bIsTodo)) {
                 // XXX ????
@@ -508,8 +508,8 @@
         this.monthView.controller.createNewEvent();
       ]]></handler>
       <handler event="dragenter"><![CDATA[
-        var dragService = Components.classes["@mozilla.org/widget/dragservice;1"]
-                                    .getService(Components.interfaces.nsIDragService);
+        var dragService = Cc["@mozilla.org/widget/dragservice;1"].
+                          getService(Ci.nsIDragService);
         var session = dragService.getCurrentSession();
         session.canDrop = true;
         this.removeDropShadows();
@@ -517,8 +517,8 @@
       ]]></handler>
 
       <handler event="dragover"><![CDATA[
-        var dragService = Components.classes["@mozilla.org/widget/dragservice;1"]
-                                    .getService(Components.interfaces.nsIDragService);
+        var dragService = Cc["@mozilla.org/widget/dragservice;1"].
+                          getService(Ci.nsIDragService);
         var session = dragService.getCurrentSession();
         session.canDrop = true;
       ]]></handler>
@@ -527,19 +527,19 @@
             return;
         }
         this.removeDropShadows();
-        var dragService = Components.classes["@mozilla.org/widget/dragservice;1"]
-                                    .getService(Components.interfaces.nsIDragService);
+        var dragService = Cc["@mozilla.org/widget/dragservice;1"].
+                          getService(Ci.nsIDragService);
         var session = dragService.getCurrentSession();
         session.canDrop = false;
       ]]></handler>
 
       <handler event="dragdrop"><![CDATA[
-         var dragService = Components.classes["@mozilla.org/widget/dragservice;1"]
-                                     .getService(Components.interfaces.nsIDragService);
+         var dragService = Cc["@mozilla.org/widget/dragservice;1"].
+                           getService(Ci.nsIDragService);
          var session = dragService.getCurrentSession();
 
-         var transfer = Components.classes["@mozilla.org/widget/transferable;1"]
-                                  .createInstance(Components.interfaces.nsITransferable);
+         var transfer = Cc["@mozilla.org/widget/transferable;1"].
+                        createInstance(Ci.nsITransferable);
          transfer.addDataFlavor("application/x-moz-cal-event");
          session.getData(transfer, 0);
          var flavor = {};
@@ -570,7 +570,7 @@
 
          event.stopPropagation();
          var item = session.sourceNode.occurrence;
-         if (item instanceof Components.interfaces.calIEvent) {
+         if (isEvent(item)) {
            var beginMove = item.startDate.clone();
            beginMove.isDate = true;
            var duration = boxDate.subtractDate(beginMove);
@@ -580,7 +580,7 @@
            newEnd = item.endDate.clone();
            newEnd.addDuration(duration);
            newEnd.normalize();
-         } else if (item instanceof Components.interfaces.calITodo) {
+         } else if (isToDo(item)) {
            if (item.entryDate && item.dueDate) {
              var beginMove = item.entryDate.clone();
              beginMove.isDate = true;
@@ -1018,7 +1018,7 @@
         <parameter name="aCount"/>
         <parameter name="aDates"/>
         <body><![CDATA[
-           throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+           throw Cr.NS_ERROR_NOT_IMPLEMENTED;
         ]]></body>
       </method>
 
@@ -1283,10 +1283,10 @@
           var boxes = new Array();
 
           // All our boxes are in default tz, so we need these times in them too.
-          if (aItem instanceof Components.interfaces.calIEvent) {
+          if (isEvent(aItem)) {
             targetDate = aItem.startDate.getInTimezone(this.mTimezone);
             finishDate = aItem.endDate.getInTimezone(this.mTimezone);
-          } else if (aItem instanceof Components.interfaces.calITodo) {
+          } else if (isToDo(aItem)) {
             if (aItem.entryDate) {
               targetDate = aItem.entryDate.getInTimezone(this.mTimezone);
               if (aItem.dueDate) {
@@ -1378,8 +1378,7 @@
 
       <method name="today">
         <body><![CDATA[
-          var date = Components.classes["@mozilla.org/calendar/datetime;1"]
-                               .createInstance(Components.interfaces.calIDateTime);
+          var date = createDateTime();
           date.jsDate = new Date();
           date = date.getInTimezone(this.mTimezone);
           date.isDate = true;
@@ -1394,9 +1393,9 @@
           calView: this,
 
           QueryInterface: function (aIID) {
-            if (!aIID.equals(Components.interfaces.calIOperationListener) &&
-                !aIID.equals(Components.interfaces.nsISupports)) {
-              throw Components.results.NS_ERROR_NO_INTERFACE;
+            if (!aIID.equals(Ci.calIOperationListener) &&
+                !aIID.equals(Ci.nsISupports)) {
+              throw Cr.NS_ERROR_NO_INTERFACE;
             }
 
             return this;
@@ -1426,10 +1425,10 @@
           calView: this,
 
           QueryInterface: function (aIID) {
-            if (!aIID.equals(Components.interfaces.calIObserver) &&
-                !aIID.equals(Components.interfaces.calICompositeObserver) &&
-                !aIID.equals(Components.interfaces.nsISupports)) {
-              throw Components.results.NS_ERROR_NO_INTERFACE;
+            if (!aIID.equals(Ci.calIObserver) &&
+                !aIID.equals(Ci.calICompositeObserver) &&
+                !aIID.equals(Ci.nsISupports)) {
+              throw Cr.NS_ERROR_NO_INTERFACE;
             }
 
             return this;
@@ -1452,9 +1451,9 @@
                 return;
             }
 
-            if (aItem instanceof Components.interfaces.calITodo &&
-                !this.calView.mTasksInView)
+            if (isToDo(aItem) && !this.calView.mTasksInView) {
                 return;
+            }
 
             var occs = aItem.getOccurrencesBetween(this.calView.startDate,
                                                    this.calView.queryEndDate,
@@ -1467,10 +1466,10 @@
                 return;
             }
 
-            if (aNewItem instanceof Components.interfaces.calITodo &&
-                aOldItem instanceof Components.interfaces.calITodo &&
-                !this.calView.mTasksInView)
+            if (isToDo(aNewItem) && isToDo(aOldItem) &&
+                !this.calView.mTasksInView) {
                 return;
+            }
 
             var occs;
             occs = aOldItem.getOccurrencesBetween(this.calView.startDate,
@@ -1479,8 +1478,7 @@
             for each (var occ in occs)
               this.calView.doDeleteItem(occ);
 
-            if (aNewItem instanceof Components.interfaces.calITodo &&
-                !this.mTasksInView) {
+            if (isToDo(aNewItem) && !this.mTasksInView) {
                 return;
             }
             occs = aNewItem.getOccurrencesBetween(this.calView.startDate,
@@ -1494,9 +1492,9 @@
                 return;
             }
 
-            if (aItem instanceof Components.interfaces.calITodo &&
-                !this.calView.mTasksInView)
+            if (isToDo(aItem) && !this.calView.mTasksInView) {
                 return;
+            }
 
             var occs = aItem.getOccurrencesBetween(this.calView.startDate,
                                                    this.calView.queryEndDate,
@@ -1529,7 +1527,7 @@
 
     <handlers>
       <handler event="keypress"><![CDATA[
-        const kKE = Components.interfaces.nsIDOMKeyEvent;
+        const kKE = Ci.nsIDOMKeyEvent;
         if (event.keyCode == kKE.DOM_VK_BACK_SPACE ||
             event.keyCode == kKE.DOM_VK_DELETE)
         {

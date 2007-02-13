@@ -41,7 +41,7 @@
    - ***** END LICENSE BLOCK *****
 -->
 
-<!-- Note that this file depends on helper functions in calendarUtils.js-->
+<!-- Note that this file depends on helper functions in calUtils.js-->
 
 <bindings id="calendar-multiday-view-bindings"
   xmlns="http://www.mozilla.org/xbl"
@@ -131,9 +131,8 @@
           while (topbox.lastChild)
               topbox.removeChild(topbox.lastChild);
 
-          var formatter = 
-              Components.classes["@mozilla.org/intl/scriptabledateformat;1"]
-              .getService(Components.interfaces.nsIScriptableDateFormat);
+          var formatter = Cc["@mozilla.org/intl/scriptabledateformat;1"].
+                          getService(Ci.nsIScriptableDateFormat);
           var timeString;
           var theMin = this.mStartMin;
           var theHour = Math.floor(theMin / 60);
@@ -154,8 +153,8 @@
                   box = makeTimeBox("", dur * this.mPixPerMin);
               } else {
                   timeString = formatter.FormatTime("",
-                               Components.interfaces.nsIScriptableDateFormat
-                               .timeFormatNoSeconds, theHour, 0, 0);
+                                                    Ci.nsIScriptableDateFormat.timeFormatNoSeconds,
+                                                    theHour, 0, 0);
                   box = makeTimeBox(timeString, dur * this.mPixPerMin);
               }
 
@@ -1258,15 +1257,14 @@
           var endhr = Math.floor(realendmin / 60);
           var endmin = realendmin % 60;
 
-          var formatter = 
-              Components.classes["@mozilla.org/intl/scriptabledateformat;1"]
-              .getService(Components.interfaces.nsIScriptableDateFormat);
+          var formatter = Cc["@mozilla.org/intl/scriptabledateformat;1"].
+                          getService(Ci.nsIScriptableDateFormat);
           var startstr = formatter.FormatTime("", 
-                             Components.interfaces.nsIScriptableDateFormat.timeFormatNoSeconds,
-                             starthr, startmin, 0);
+                                              Ci.nsIScriptableDateFormat.timeFormatNoSeconds,
+                                              starthr, startmin, 0);
           var endstr = formatter.FormatTime("", 
-                           Components.interfaces.nsIScriptableDateFormat.timeFormatNoSeconds,
-                           endhr, endmin, 0);
+                                            Ci.nsIScriptableDateFormat.timeFormatNoSeconds,
+                                            endhr, endmin, 0);
 
           this.fgboxes.startlabel.setAttribute("value", startstr);
           this.fgboxes.endlabel.setAttribute("value", endstr);
@@ -1721,9 +1719,9 @@
         // the calIObserver, and calICompositeObserver
         ({
             QueryInterface: function QueryInterface(aIID) {
-                if (!aIID.equals(Components.interfaces.calIObserver) &&
-                    !aIID.equals(Components.interfaces.calICompositeObserver) &&
-                    !aIID.equals(Components.interfaces.nsISupports)) {
+                if (!aIID.equals(Ci.calIObserver) &&
+                    !aIID.equals(Ci.calICompositeObserver) &&
+                    !aIID.equals(Ci.nsISupports)) {
                     throw Components.results.NS_ERROR_NO_INTERFACE;
                 }
 
@@ -1749,13 +1747,13 @@
                     return;
                 }
 
-                if (aItem instanceof Components.interfaces.calITodo && 
-                    (!aItem.entryDate || !aItem.dueDate))
+                if (isToDo(aItem) && (!aItem.entryDate || !aItem.dueDate)) {
                     return;
+                }
 
-                if (aItem instanceof Components.interfaces.calITodo &&
-                    !this.calView.mTasksInView)
+                if (isToDo(aItem) && !this.calView.mTasksInView) {
                     return;
+                }
 
                 var occs = aItem.getOccurrencesBetween(this.calView.startDate,
                                                        this.calView.queryEndDate,
@@ -1772,14 +1770,13 @@
                     return;
                 }
 
-                if (aNewItem instanceof Components.interfaces.calITodo &&
-                    aOldItem instanceof Components.interfaces.calITodo &&
+                if (isToDo(aNewItem) && isToDo(aOldItem) &&
                     !this.calView.mTasksInView)
                     return;
 
                 var occs;
 
-                if (!(aOldItem instanceof Components.interfaces.calITodo) ||
+                if (!isToDo(aOldItem) ||
                     (aOldItem.entryDate && aOldItem.dueDate)) {
                     occs = aOldItem.getOccurrencesBetween(this.calView.startDate,
                                                           this.calView.queryEndDate,
@@ -1788,9 +1785,10 @@
                         this.calView.doDeleteEvent(occ);
                     }
                 }
-                if (aNewItem instanceof Components.interfaces.calITodo && 
-                    (!aNewItem.entryDate || !aNewItem.dueDate || !this.mTasksInView))
+                if (isToDo(Ci.calITodo) &&
+                    (!aNewItem.entryDate || !aNewItem.dueDate || !this.mTasksInView)) {
                     return;
+                }
                 occs = aOldItem.getOccurrencesBetween(this.calView.startDate,
                                                       this.calView.queryEndDate,
                                                       {});
@@ -1810,13 +1808,13 @@
                     return;
                 }
 
-                if (aItem instanceof Components.interfaces.calITodo &&
-                    !this.calView.mTasksInView)
+                if (isToDo(Ci.calITodo) && !this.calView.mTasksInView) {
                     return;
+                }
 
-                if (aItem instanceof Components.interfaces.calITodo && 
-                    (!aItem.entryDate || !aItem.dueDate))
+                if (isToDo(Ci.calITodo) && (!aItem.entryDate || !aItem.dueDate)) {
                     return;
+                }
 
                 var occs = aItem.getOccurrencesBetween(this.calView.startDate,
                                                        this.calView.queryEndDate,
@@ -1868,8 +1866,7 @@
                   return;
 
               function hasGoodDates(item) {
-                  if (item instanceof Components.interfaces.calITodo && 
-                      (!item.entryDate || !item.dueDate)) {
+                  if (isToDo(item) && (!item.entryDate || !item.dueDate)) {
                       return false;
                   }
                   return true;
@@ -2471,8 +2468,8 @@
 
               var labelbox;
 
-              var df = Components.classes["@mozilla.org/calendar/datetime-formatter;1"]
-                                 .getService(Components.interfaces.calIDateTimeFormatter);
+              var df = Cc["@mozilla.org/calendar/datetime-formatter;1"].
+                       getService(Ci.calIDateTimeFormatter);
               if (counter < labelboxkids.length) {
                   labelbox = labelboxkids[counter];
                   labelbox.firstChild.setAttribute("value", df.formatDateWithoutYear(d));
@@ -2684,8 +2681,7 @@
 
       <method name="today">
         <body><![CDATA[
-          var date = Components.classes["@mozilla.org/calendar/datetime;1"]
-                               .createInstance(Components.interfaces.calIDateTime);
+          var date = createDateTime();
           date.jsDate = new Date();
           date = date.getInTimezone(this.mTimezone);
           date.isDate = true;
@@ -2723,7 +2719,7 @@
         <body><![CDATA[
           var minute = 0;
           var childbox = document.getAnonymousElementByAttribute(this, "anonid", "childbox");
-          var scrollBoxObject = childbox.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+          var scrollBoxObject = childbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
           if (scrollBoxObject != null) {
             var x = {};
             var y = {};
@@ -2742,7 +2738,7 @@
         <parameter name="aMinute"/>
         <body><![CDATA[
           var childbox = document.getAnonymousElementByAttribute(this, "anonid", "childbox");
-          var scrollBoxObject = childbox.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+          var scrollBoxObject = childbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
           if (scrollBoxObject != null) {
             var x = {};
             var y = {};
@@ -2760,7 +2756,7 @@
 
     <handlers>
       <handler event="keypress"><![CDATA[
-        const kKE = Components.interfaces.nsIDOMKeyEvent;
+        const kKE = Ci.nsIDOMKeyEvent;
         if (event.keyCode == kKE.DOM_VK_BACK_SPACE ||
             event.keyCode == kKE.DOM_VK_DELETE)
         {

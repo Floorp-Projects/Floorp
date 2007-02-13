@@ -64,7 +64,7 @@
    
    <!-- Javascript includes -->
    
-   <script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
+   <script type="application/x-javascript" src="chrome://calendar/content/calUtils.js"/>
    <script type="application/x-javascript" src="chrome://calendar/content/publishDialog.js"/>
    
    <script type="application/x-javascript" >

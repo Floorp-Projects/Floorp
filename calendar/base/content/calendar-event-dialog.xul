@@ -64,7 +64,7 @@
   <!-- Javascript includes -->
   <script type="application/x-javascript" src="chrome://calendar/content/calendar-event-dialog.js"/>
   <script type="application/x-javascript" src="chrome://calendar/content/calendar-dialog-utils.js"/>
-  <script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
+  <script type="application/x-javascript" src="chrome://calendar/content/calUtils.js"/>
   <script type="application/x-javascript" src="chrome://calendar/content/applicationUtil.js"/>
 
   <!-- Used for the button to show/hide details -->

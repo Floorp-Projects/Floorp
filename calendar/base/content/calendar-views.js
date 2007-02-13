@@ -180,6 +180,17 @@ function currentView() {
     return getViewDeck().selectedPanel;
 }
 
+/**
+ * Returns the selected day in the views in a app (Sunbird vs. Lightning)
+ * neutral way
+ */
+function getSelectedDay() {
+    var sbView = document.getElementById("view-deck");
+    var ltnView = document.getElementById("calendar-view-box");
+    var viewDeck = sbView || ltnView;
+    return viewDeck.selectedPanel.selectedDay;
+}
+
 /** Creates a timer that will fire after midnight.  Pass in a function as 
  * aRefreshCallback that should be called at that time.
  */

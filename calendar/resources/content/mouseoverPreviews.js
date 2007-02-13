@@ -417,3 +417,30 @@ function createTooltipHeaderDescription(text)
   label.appendChild(document.createTextNode(text));
   return label;
 }
+
+/** If now is during an occurrence, return the ocurrence.
+    Else if now is before an ocurrence, return the next ocurrence.
+    Otherwise return the previous ocurrence. **/
+function getCurrentNextOrPreviousRecurrence(calendarEvent)
+{
+    if (!calendarEvent.recurrenceInfo) {
+        return calendarEvent;
+    }
+
+    var dur = calendarEvent.duration.clone();
+    dur.isNegative = true;
+
+    // To find current event when now is during event, look for occurrence
+    // starting duration ago.
+    var probeTime = now();
+    probeTime.addDuration(dur);
+
+    var occ = calendarEvent.recurrenceInfo.getNextOccurrence(probeTime);
+
+    if (!occ) {
+        var occs = calendarEvent.recurrenceInfo.getOccurrences(calendarEvent.startDate, probeTime, 0, {});
+        occ = occs[occs.length -1];
+    }
+    return occ;
+}
+

@@ -37,7 +37,7 @@
    - ***** END LICENSE BLOCK *****
 -->
 
-<!-- Note that this file depends on helper functions in calendarUtils.js-->
+<!-- Note that this file depends on helper functions in calUtils.js-->
 
 <bindings id="calendar-core-view-bindings"
     xmlns="http://www.mozilla.org/xbl"

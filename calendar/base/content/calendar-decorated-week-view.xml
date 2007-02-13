@@ -38,7 +38,7 @@
    - ***** END LICENSE BLOCK *****
 -->
 
-<!-- Note that we depend on some helper functions in calendarUtils.js here-->
+<!-- Note that we depend on some helper functions in calUtils.js here-->
 
 <bindings id="calendar-specific-view-bindings"
     xmlns="http://www.mozilla.org/xbl"
@@ -61,9 +61,8 @@
                 this.mWeekStartOffset = getPrefSafe("calendar.week.start", 0);
 
                 // add a preference observer to monitor changes
-                var pb2 = Components.classes
-                          ["@mozilla.org/preferences-service;1"]
-                          .getService(Components.interfaces.nsIPrefBranch2);
+                var pb2 = Cc["@mozilla.org/preferences-service;1"].
+                          getService(Ci.nsIPrefBranch2);
                 pb2.addObserver("calendar.", this.mPrefObserver, false);
 
                 this.updateDaysOffPrefs();
@@ -71,9 +70,8 @@
             ]]></constructor>
 
             <destructor><![CDATA[
-                var pb2 = Components.classes
-                          ["@mozilla.org/preferences-service;1"]
-                          .getService(Components.interfaces.nsIPrefBranch2);
+                var pb2 = Cc["@mozilla.org/preferences-service;1"].
+                          getService(Ci.nsIPrefBranch2);
                 pb2.removeObserver("calendar.", this.mPrefObserver);
                 return;
             ]]></destructor>

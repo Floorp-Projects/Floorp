@@ -59,10 +59,324 @@ function createDateTime() {
            createInstance(Ci.calIDateTime);
 }
 
+/* Returns a clean new calIRecurrenceInfo */
+function createRecurrenceInfo() {
+    return Cc["@mozilla.org/calendar/recurrence-info;1"].
+           createInstance(Ci.calIRecurrenceInfo);
+}
+
+/* Returns a clean new calIAttendee */
+function createAttendee() {
+    return Cc["@mozilla.org/calendar/attendee;1"].
+           createInstance(Ci.calIAttendee);
+}
+
 /* Shortcut to the calendar-manager service */
 function getCalendarManager() {
     return Components.classes["@mozilla.org/calendar/manager;1"].
            getService(Ci.calICalendarManager);
+}
+
+/**
+ * Function to get the (cached) best guess at a user's default timezone.  We'll
+ * use the value of the calendar.timezone.local preference, if it exists.  If
+ * not, we'll do our best guess.
+ *
+ * @returns  a string of the Mozilla TZID for the user's default timezone.
+ */
+var gDefaultTimezone;
+function calendarDefaultTimezone() {
+    if (!gDefaultTimezone) {
+        gDefaultTimezone = getPrefSafe("calendar.timezone.local", null);
+        if (!gDefaultTimezone) {
+            gDefaultTimezone = guessSystemTimezone();
+        }
+    }
+    return gDefaultTimezone;
+}
+
+/**
+ * We're going to do everything in our power, short of rumaging through the
+ * user's actual file-system, to figure out the time-zone they're in.  The
+ * deciding factors are the offsets given by (northern-hemisphere) summer and
+ * winter JSdates.  However, when available, we also use the name of the
+ * timezone in the JSdate, or a string-bundle term from the locale.
+ *
+ * @returns  a ICS timezone string.
+*/
+function guessSystemTimezone() {
+    var probableTZ = null;
+    var TZname1 = null;
+    var TZname2 = null;
+    var Date1 = (new Date(2005,6,20)).toString();
+    var Date2 = (new Date(2005,12,20)).toString();
+    var nameData1 = Date1.match(/[^(]* ([^ ]*) \(([^)]+)\)/);
+    var nameData2 = Date2.match(/[^(]* ([^ ]*) \(([^)]+)\)/);
+
+    if (nameData1 && nameData1[2]) {
+        TZname1 = nameData1[2];
+    }
+    if (nameData2 && nameData2[2]) {
+        TZname2 = nameData2[2];
+    }
+
+    var index = Date1.indexOf('+');
+    if (index < 0) {
+        index = Date2.indexOf('-');
+    }
+
+    // the offset is always 5 characters long
+    var TZoffset1 = Date1.substr(index, 5);
+    index = Date2.indexOf('+');
+    if (index < 0)
+        index = Date2.indexOf('-');
+    // the offset is always 5 characters long
+    var TZoffset2 = Date2.substr(index, 5);
+
+    dump("Guessing system timezone:\n");
+    dump("TZoffset1: " + TZoffset1 + "\nTZoffset2: " + TZoffset2 + "\n");
+    if (TZname1 && TZname2) {
+        dump("TZname1: " + TZname1 + "\nTZname2: " + TZname2 + "\n");
+    }
+
+    var icsSvc = Cc["@mozilla.org/calendar/ics-service;1"].
+                 getService(Ci.calIICSService);
+
+    // returns 0=definitely not, 1=maybe, 2=likely
+    function checkTZ(someTZ)
+    {
+        var comp = icsSvc.getTimezone(someTZ);
+        var subComp = comp.getFirstSubcomponent("VTIMEZONE");
+        var standard = subComp.getFirstSubcomponent("STANDARD");
+        var standardTZOffset = standard.getFirstProperty("TZOFFSETTO").valueAsIcalString;
+        var standardName = standard.getFirstProperty("TZNAME").valueAsIcalString;
+        var daylight = subComp.getFirstSubcomponent("DAYLIGHT");
+        var daylightTZOffset = null;
+        var daylightName = null;
+        if (daylight) {
+            daylightTZOffset = daylight.getFirstProperty("TZOFFSETTO").valueAsIcalString;
+            daylightName = daylight.getFirstProperty("TZNAME").valueAsIcalString;
+        }
+
+        if (TZoffset2 == standardTZOffset && TZoffset2 == TZoffset1 &&
+           !daylight) {
+            if (!standardName || standardName == TZname1) {
+                return 2;
+            }
+            return 1;
+        }
+
+        if (TZoffset2 == standardTZOffset && TZoffset1 == daylightTZOffset) {
+            if ((!standardName || standardName == TZname1) &&
+                (!daylightName || daylightName == TZname2)) {
+                return 2;
+            }
+            return 1;
+        }
+
+        // Now flip them and check again, to cover the southern hemisphere case
+        if (TZoffset1 == standardTZOffset && TZoffset2 == TZoffset1 &&
+           !daylight) {
+            if (!standardName || standardName == TZname2) {
+                return 2;
+            }
+            return 1;
+        }
+
+        if (TZoffset1 == standardTZOffset && TZoffset2 == daylightTZOffset) {
+            if ((!standardName || standardName == TZname2) &&
+                (!daylightName || daylightName == TZname1)) {
+                return 2;
+            }
+            return 1;
+        }
+        return 0;
+    }
+
+    try {
+        var stringBundleTZ = gCalendarBundle.getString("likelyTimezone");
+
+        if (stringBundleTZ.indexOf("/mozilla.org/") == -1) {
+            // This happens if the l10n team didn't know how to get a time from
+            // tzdata.c.  To convert an Olson time to a ics-timezone-string we
+            // need to append this prefix.
+            stringBundleTZ = "/mozilla.org/20050126_1/" + stringBundleTZ;
+        }
+
+        switch (checkTZ(stringBundleTZ)) {
+            case 0:
+                break;
+            case 1:
+                if (!probableTZ)
+                    probableTZ = stringBundleTZ;
+                break;
+            case 2:
+                return stringBundleTZ;
+        }
+    }
+    catch (ex) { // Oh well, this didn't work, next option...
+    }
+        
+    var tzIDs = icsSvc.timezoneIds;
+    while (tzIDs.hasMore()) {
+        var theTZ = tzIDs.getNext();
+        switch (checkTZ(theTZ)) {
+            case 0: break;
+            case 1: 
+                if (!probableTZ) {
+                    probableTZ = theTZ;
+                }
+                break;
+            case 2:
+                return theTZ;
+        }
+    }
+
+    // If we get to this point, should we alert the user?
+    if (probableTZ) {
+        return probableTZ;
+    }
+
+    // Everything failed, so this is our only option.
+    return "floating";
+}
+
+/**
+ * Shared dialog functions
+ */
+
+/**
+ * Opens the Create Calendar wizard
+ *
+ * @param aCallback  a function to be performed after calendar creation
+ */
+function openCalendarWizard(aCallback) {
+    openDialog("chrome://calendar/content/calendarCreation.xul", "caEditServer",
+               "chrome,titlebar,modal", aCallback);
+}
+
+/**
+ * Opens the calendar properties window for aCalendar
+ *
+ * @param aCalendar  the calendar whose properties should be displayed
+ * @param aCallback  function that should be run when the dialog is accepted
+ */
+function openCalendarProperties(aCalendar, aCallback) {
+    openDialog("chrome://calendar/content/calendarProperties.xul",
+               "caEditServer", "chrome,titlebar,modal",
+               {calendar: aCalendar, onOk: aCallback});
+}
+
+/**
+ * Opens the print dialog
+ */
+function calPrint() {
+    openDialog("chrome://calendar/content/printDialog.xul", "Print",
+               "centerscreen,chrome,resizable");
+}
+
+/**
+ * Other functions
+ */
+
+/**
+ * Takes a string and returns an nsIURI
+ *
+ * @param aUriString  the string of the address to for the spec of the nsIURI
+ *
+ * @returns  an nsIURI whose spec is aUriString
+ */
+function makeURL(aUriString) {
+    var ioSvc = Cc["@mozilla.org/network/io-service;1"].
+                getService(Ci.nsIIOService);
+    return ioSvc.newURI(aUriString, null, null);
+}
+
+/**
+ * Returns a calIDateTime that corresponds to the current time in the user's
+ * default timezone.
+ */
+function now() {
+    var d = createDateTime();
+    d.jsDate = new Date();
+    return d.getInTimezone(calendarDefaultTimezone());
+}
+
+/**
+ * Returns a calIDateTime corresponding to a javascript Date
+ *
+ * @param aDate  a javascript date
+ * @returns      a calIDateTime whose jsDate is aDate
+ *
+ * @warning  Use of this function is strongly discouraged.  calIDateTime should
+ *           be used directly whenever possible.
+ */
+function jsDateToDateTime(aDate) {
+    var newDate = createDateTime();
+    newDate.jsDate = aDate;
+    return newDate;
+}
+
+/**
+ * Returns a calIDateTime with a floating timezone and each field the same as
+ * the equivalent field of the javascript date aDate
+ *
+ * @param aDate a javascript date
+ * @returns     a calIDateTime with all of the fields the same as aDate
+ *
+ * @warning  Like jsDateToDateTime, use of the function is strongly discouraged.
+ */
+function jsDateToFloatingDateTime(aDate) {
+    var newDate = createDateTime();
+    newDate.timezone = "floating";
+    newDate.year = aDate.getFullYear();
+    newDate.month = aDate.getMonth();
+    newDate.day = aDate.getDate();
+    newDate.hour = aDate.getHours();
+    newDate.minute = aDate.getMinutes();
+    newDate.second = aDate.getSeconds();
+    newDate.normalize();
+    return newDate;
+}
+
+/**
+ * Selects an item with id aItemId in the radio group with id aRadioGroupId
+ *
+ * @param aRadioGroupId  the id of the radio group which contains the item
+ * @param aItemId        the item to be selected
+ */
+function calRadioGroupSelectItem(aRadioGroupId, aItemId) {
+    var radioGroup = document.getElementById(aRadioGroupId);
+    var items = radioGroup.getElementsByTagName("radio");
+    var index;
+    for (var i in items) {
+        if (items[i].getAttribute("id") == aItemId) {
+            index = i;
+            break;
+        }
+    }
+    ASSERT(index && index != 0, "Can't find radioGroup item to select.", true);
+    radioGroup.selectedIndex = index;
+}
+
+/**
+ * Determines whether or not the aObject is a calIEvent
+ *
+ * @param aObject  the object to test
+ * @returns        true if the object is a calIEvent, false otherwise
+ */
+function isEvent(aObject) {
+    return aObject instanceof Ci.calIEvent;
+}
+
+/**
+ * Determines whether or not the aObject is a calITodo
+ *
+ * @param aObject  the object to test
+ * @returns        true if the object is a calITodo, false otherwise
+ */
+function isToDo(aObject) {
+    return aObject instanceof Ci.calITodo;
 }
 
 /**
@@ -112,6 +426,39 @@ function setPref(aPrefName, aPrefType, aPrefValue) {
             prefB.setCharPref(aPrefName, aPrefValue);
             break;
     }
+}
+
+/**
+ * Helper function to set a localized (complex) pref from a given string
+ *
+ * @param aPrefName   the (full) name of preference to set
+ * @param aString     the string to which the preference value should be set
+ */
+function setLocalizedPref(aPrefName, aString) {
+    const prefB = Cc["@mozilla.org/preferences-service;1"].
+                  getService(Ci.nsIPrefBranch);
+    var str = Cc["@mozilla.org/supports-string;1"].
+              createInstance(Ci.nsISupportsString);
+    str.data = aString;
+    prefB.setComplexValue(aPrefName, Ci.nsISupportsString, str);
+}
+
+/**
+ * Like getPrefSafe, except for complex prefs (those used for localized data).
+ *
+ * @param aPrefName   the (full) name of preference to get
+ * @param aDefault    (optional) the value to return if the pref is undefined
+ */
+function getLocalizedPref(aPrefName, aDefault) {
+    const pb2 = Cc["@mozilla.org/preferences-service;1"].
+                getService(Ci.nsIPrefBranch2);
+    var result;
+    try {
+        result = pb2.getComplexValue(aPrefName, Ci.nsISupportsString).data;
+    } catch(ex) {
+        return aDefault;
+    }
+    return result;
 }
 
 /**
@@ -385,8 +732,6 @@ calAuthPrompt.prototype = {
  * color against a background of bgColor. 
  *
  * @param bgColor   the background color as a "#RRGGBB" string
- *
- * (copied from calendarUtils.js to be available to print formatters)
  */
 function getContrastingTextColor(bgColor)
 {

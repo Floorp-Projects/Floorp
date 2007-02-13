@@ -64,7 +64,7 @@
 <overlay id="ltnSidebarOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/calUtils.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendarCreation.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/mouseoverPreviews.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendar-item-editing.js"/>

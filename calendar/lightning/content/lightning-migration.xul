@@ -41,7 +41,7 @@
    - exists so we can check for whether that extension is installed and nuke it
    - in that case.  Note that this check *cannot* be done in any file that may
    - die as a result of the conflict (including messanger-overlay-sidebar.js).
-   - Nor can it depend on files which may conflict, like calendarUtils.js.
+   - Nor can it depend on files which may conflict.
   -->
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>

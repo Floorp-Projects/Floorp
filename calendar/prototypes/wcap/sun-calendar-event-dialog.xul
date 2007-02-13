@@ -68,7 +68,7 @@
   <!-- Javascript includes -->
   <script type="application/x-javascript" src="chrome://calendar/content/sun-calendar-event-dialog.js"/>
   <script type="application/x-javascript" src="chrome://calendar/content/calendar-dialog-utils.js"/>
-  <script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
+  <script type="application/x-javascript" src="chrome://calendar/content/calUtils.js"/>
   <script type="application/x-javascript" src="chrome://calendar/content/applicationUtil.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>
