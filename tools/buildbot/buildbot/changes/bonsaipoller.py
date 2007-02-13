@@ -66,7 +66,16 @@ class BonsaiParser:
 
     def __init__(self, bonsaiQuery):
         try:
-            self.dom = minidom.parse(bonsaiQuery)
+        # this is a fix for non-ascii characters
+        # readlines() + join is being used because read() is not guaranteed
+        # to work. because bonsai does not give us an encoding to work with
+        # it impossible to be 100% sure what to decode it as but latin1 covers
+        # the broadest base
+            data = "".join(bonsaiQuery.readlines())
+            data = data.decode("latin1")
+            data = data.encode("ascii", "replace")
+            self.dom = minidom.parseString(data)
+            log.msg(data)
         except:
             raise InvalidResultError("Malformed XML in result")
 
