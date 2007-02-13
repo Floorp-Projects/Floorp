@@ -374,7 +374,7 @@ sub link_case {
         return;
     }
 
-    $dbh->do("INSERT INTO test_case_attachments (attachment_id, plan_id)
+    $dbh->do("INSERT INTO test_case_attachments (attachment_id, case_id)
               VALUES (?,?)",
               undef, ($self->id, $case_id));
     $dbh->bz_unlock_tables();

@@ -117,6 +117,12 @@ elsif ($action eq 'do_clone'){
             my $newcaseid = $case->copy($pid, $author, $cgi->param('copy_doc'));
             $case->link_plan($pid, $newcaseid);
             $newcase = Bugzilla::Testopia::TestCase->new($newcaseid);
+
+            if($cgi->param('copy_attachments')){
+                foreach my $att (@{$case->attachments}){
+                    $att->link_case($newcaseid);
+                }
+            }
             if ($cgi->param('copy_tags')){
                 foreach my $tag (@{$case->tags}){
                     # Doing it this way avoids collisions
