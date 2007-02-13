@@ -175,12 +175,7 @@ class BonsaiParser:
         return filename
 
     def _getRevision(self):
-        """Returns the revision of the current <f> node"""
-        rev = self.currentFileNode.getAttribute("rev")
-        if rev == "":
-            raise InvalidResultError("A revision was missing from a file")
-
-        return rev
+        return self.currentFileNode.getAttribute("rev")
 
 
 class BonsaiPoller(base.ChangeSource):
@@ -215,7 +210,8 @@ class BonsaiPoller(base.ChangeSource):
         @param  cvsroot:        The cvsroot of the repository. Usually this is
                                 '/cvsroot'
         @type   pollInterval:   int
-        @param  pollInterval:   The time (in seconds) between queries for changes
+        @param  pollInterval:   The time (in seconds) between queries for
+                                changes
         """
 
         self.bonsaiURL = bonsaiURL

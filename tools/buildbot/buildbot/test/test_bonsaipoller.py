@@ -74,9 +74,6 @@ badUnparsedResult = badUnparsedResult.replace("</queryResults>", "")
 invalidDateResult = deepcopy(goodUnparsedResult)
 invalidDateResult = invalidDateResult.replace(str(date1), "foobar")
 
-missingRevisionResult = deepcopy(goodUnparsedResult)
-missingRevisionResult = missingRevisionResult.replace("rev=\""+rev3+"\"", "")
-
 missingFilenameResult = deepcopy(goodUnparsedResult)
 missingFilenameResult = missingFilenameResult.replace(file2, "")
 
@@ -135,13 +132,6 @@ class TestBonsaiPoller(unittest.TestCase):
         try:
             BonsaiParser(StringIO(invalidDateResult))
             self.fail(badResultMsgs["invalidDateResult"])
-        except InvalidResultError:
-            pass
-
-    def testMissingRevisionResult(self):
-        try:
-            BonsaiParser(StringIO(missingRevisionResult))
-            self.fail(badResultMsgs["missingRevisionResult"])
         except InvalidResultError:
             pass
 
