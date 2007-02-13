@@ -1049,19 +1049,19 @@ IXPCOMError {
 	public long wrapJavaObject(Object aJavaObject, String aIID) {
 		try {
 			return jxutils.wrapJavaObject(aJavaObject, aIID);
-    } catch (NullPointerException e) {
-      throw new XPCOMInitializationException("Must call " +
-          "Mozilla.getInstance().initialize() before using this method", e);
-    }
+		} catch (NullPointerException e) {
+			throw new XPCOMInitializationException("Must call " +
+					"Mozilla.getInstance().initialize() before using this method", e);
+		}
 	}
-	
+
 	public Object wrapXPCOMObject(long aXPCOMObject, String aIID) {
 		try {
 			return jxutils.wrapXPCOMObject(aXPCOMObject, aIID);
-    } catch (NullPointerException e) {
-      throw new XPCOMInitializationException("Must call " +
-          "Mozilla.getInstance().initialize() before using this method", e);
-    }
+		} catch (NullPointerException e) {
+			throw new XPCOMInitializationException("Must call " +
+					"Mozilla.getInstance().initialize() before using this method", e);
+		}
 	}
 
 }
