@@ -131,6 +131,9 @@ public:
   NS_IMETHOD  GetFrameName(nsAString& aResult) const;
 #endif
 
+  void PaintPageSequence(nsIRenderingContext& aRenderingContext,
+                         const nsRect&        aDirtyRect,
+                         nsPoint              aPt);
 
 protected:
   nsSimplePageSequenceFrame(nsStyleContext* aContext);
@@ -174,9 +177,6 @@ protected:
 
   // I18N date formatter service which we'll want to cache locally.
   nsCOMPtr<nsIDateTimeFormat> mDateFormatter;
-
-private:
-  void CacheBackground(nsPresContext* aPresContext);
 
 };
 

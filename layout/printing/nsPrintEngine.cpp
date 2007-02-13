@@ -926,9 +926,6 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
     rv = devspec->Init(mParentWidget, mPrt->mPrintSettings, PR_TRUE);
     if (NS_SUCCEEDED(rv)) {
       rv = mDeviceContext->GetDeviceContextFor(devspec, *getter_AddRefs(ppDC));
-      if (NS_SUCCEEDED(rv)) {
-        mDeviceContext->SetAltDevice(ppDC);
-      }
     }
   }
 
@@ -938,13 +935,7 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
   // we want to view every page in PrintPreview each time
   mPrt->mPrintSettings->SetPrintRange(nsIPrintSettings::kRangeAllPages);
 
-  mPrt->mPrintDC = mDeviceContext;
-
-  if (mDeviceContext) {
-    mDeviceContext->SetUseAltDC(kUseAltDCFor_FONTMETRICS, PR_TRUE);
-    mDeviceContext->SetUseAltDC(kUseAltDCFor_CREATERC_REFLOW, PR_TRUE);
-    mDeviceContext->SetUseAltDC(kUseAltDCFor_SURFACE_DIM, PR_TRUE);
-  }
+  mPrt->mPrintDC = ppDC ? ppDC : mDeviceContext;
 
   if (aWebProgressListener != nsnull) {
     mPrt->mPrintProgressListeners.AppendObject(aWebProgressListener);
@@ -2163,6 +2154,12 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
   aPO->mPresContext->SetPageSize(adjSize);
   aPO->mPresContext->SetIsRootPaginatedDocument(documentIsTopLevel);
   aPO->mPresContext->SetPageScale(aPO->mZoomRatio);
+  // Calculate scale factor from printer to screen
+  PRInt32 printDPI = mPrt->mPrintDC->AppUnitsPerInch() /
+                     mPrt->mPrintDC->AppUnitsPerDevPixel();
+  PRInt32 screenDPI = mDeviceContext->AppUnitsPerInch() /
+                      mDeviceContext->AppUnitsPerDevPixel();
+  aPO->mPresContext->SetPrintPreviewScale(float(screenDPI) / float(printDPI));
 
   rv = aPO->mPresShell->InitialReflow(adjSize.width, adjSize.height);
 
@@ -3266,10 +3263,6 @@ nsPrintEngine::FinishPrintPreview()
   rv = DocumentReadyForPrinting();
 
   SetIsCreatingPrintPreview(PR_FALSE);
-
-  if (mPrt->mPrintDC) {
-    mPrt->mPrintDC->SetAltDevice(nsnull);
-  }
 
   /* cleaup on failure + notify user */
   if (NS_FAILED(rv)) {

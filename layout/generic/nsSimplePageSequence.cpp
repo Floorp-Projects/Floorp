@@ -369,8 +369,10 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 #endif
 
   // Return our desired size
-  aDesiredSize.height  = y; // includes page heights and dead space
-  aDesiredSize.width   = x + availSize.width + deadSpaceGap;
+  // Adjustr the reflow size by PrintPreviewScale so the scrollbars end up the
+  // correct size
+  aDesiredSize.height  = y * GetPresContext()->GetPrintPreviewScale(); // includes page heights and dead space
+  aDesiredSize.width   = (x + availSize.width + deadSpaceGap) * GetPresContext()->GetPrintPreviewScale();
 
   aDesiredSize.mOverflowArea = nsRect(0, 0, aDesiredSize.width,
                                       aDesiredSize.height);
@@ -743,7 +745,43 @@ nsSimplePageSequenceFrame::DoPageEnd()
   return rv;
 }
 
+static void PaintPageSequence(nsIFrame* aFrame, nsIRenderingContext* aCtx,
+                             const nsRect& aDirtyRect, nsPoint aPt)
+{
+  NS_STATIC_CAST(nsSimplePageSequenceFrame*, aFrame)->PaintPageSequence(*aCtx, aDirtyRect, aPt);
+}
+
 //------------------------------------------------------------------------------
+void
+nsSimplePageSequenceFrame::PaintPageSequence(nsIRenderingContext& aRenderingContext,
+                                             const nsRect&        aDirtyRect,
+                                             nsPoint              aPt) {
+  nsRect rect = aDirtyRect;
+  float scale = GetPresContext()->GetPrintPreviewScale();
+  aRenderingContext.PushState();
+  nsPoint framePos = aPt;
+  aRenderingContext.Translate(framePos.x, framePos.y);
+  rect -= framePos;
+  aRenderingContext.Scale(scale, scale);
+  rect.ScaleRoundOut(1.0f / scale);
+
+  // Now the rect and the rendering coordinates are are relative to this frame.
+  // Loop over the pages and paint them.
+  nsIFrame* child = GetFirstChild(nsnull);
+  while (child) {
+    nsPoint pt = child->GetPosition();
+    // The rendering context has to be translated before each call to PaintFrame
+    aRenderingContext.PushState();
+    aRenderingContext.Translate(pt.x, pt.y);
+    nsLayoutUtils::PaintFrame(&aRenderingContext, child,
+                              nsRegion(rect - pt), NS_RGBA(0,0,0,0));
+    aRenderingContext.PopState();
+    child = child->GetNextSibling();
+  }
+
+  aRenderingContext.PopState();
+}
+
 NS_IMETHODIMP
 nsSimplePageSequenceFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                             const nsRect&           aDirtyRect,
@@ -752,10 +790,11 @@ nsSimplePageSequenceFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Treat each page as a psuedo-stack so everything goes in the Content() list.
-  return
-    BuildDisplayListForNonBlockChildren(aBuilder, aDirtyRect, aLists,
-                                        DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT);
+  rv = aLists.Content()->AppendNewToTop(new (aBuilder)
+        nsDisplayGeneric(this, ::PaintPageSequence, "PageSequence"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 nsIAtom*

@@ -434,7 +434,16 @@ public:
   float GetPageScale() { return mPageScale; }
   void SetPageScale(float aScale) { mPageScale = aScale; }
 
-
+  /**
+  * Get/set the scaling facor to use when rendering the pages for print preview.
+  * Only safe to get after print preview set up; safe to set anytime.
+  * This is a scaling factor for the display of the print preview.  It
+  * does not affect layout.  It only affects the size of the onscreen pages
+  * in print preview.
+  * XXX Temporary: see http://wiki.mozilla.org/Gecko:PrintPreview
+  */
+  float GetPrintPreviewScale() { return mPPScale; }
+  void SetPrintPreviewScale(float aScale) { mPPScale = aScale; }
 
   nsIDeviceContext* DeviceContext() { return mDeviceContext; }
   nsIEventStateManager* EventStateManager() { return mEventManager; }
@@ -775,6 +784,7 @@ protected:
   nsRect                mVisibleArea;
   nsSize                mPageSize;
   float                 mPageScale;
+  float                 mPPScale;
 
   nscolor               mDefaultColor;
   nscolor               mBackgroundColor;
