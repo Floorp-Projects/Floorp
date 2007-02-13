@@ -57,6 +57,11 @@ descriptionitem {
 
 mail-emailaddress {
   -moz-binding: url("chrome://messenger/content/mailWidgets.xml#mail-emailaddress");
+  -moz-user-focus: normal;
+}
+
+mail-emailaddress:focus { 
+  border: dotted; border-width: 1px;
 }
 
 mail-emailheaderfield {
