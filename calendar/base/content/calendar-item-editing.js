@@ -107,7 +107,7 @@ function createTodoWithDialog(calendar, dueDate, summary, todo)
         return;
     }
 
-    todo = createToDo();
+    todo = createTodo();
 
     if (calendar) {
         todo.calendar = calendar;

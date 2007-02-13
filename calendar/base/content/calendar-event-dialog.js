@@ -475,7 +475,7 @@ function updateComponentType(aValue) {
         newItem.startDate = oldItem.entryDate || now();
         newItem.endDate = oldItem.dueDate || now();
     } else {
-        newItem = createToDo();
+        newItem = createTodo();
         oldItem.wrappedJSObject.cloneItemBaseInto(newItem.wrappedJSObject);
         newItem.entryDate = oldItem.startDate;
         newItem.dueDate = oldItem.endDate;
