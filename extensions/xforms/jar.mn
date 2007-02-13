@@ -36,6 +36,7 @@ xforms.jar:
   locale/en-US/xforms/xforms.properties        (resources/locale/en-US/xforms.properties)
   locale/en-US/xforms/xforms.dtd               (resources/locale/en-US/xforms.dtd)
 * skin/xforms/contents.rdf                     (resources/skin/contents.rdf)
+  skin/xforms/xforms-xul.css                   (resources/skin/xforms-xul.css)
   skin/xforms/widgets-xhtml.css                (resources/skin/widgets-xhtml.css)
   skin/xforms/widgets-xul.css                  (resources/skin/widgets-xul.css)
   skin/xforms/input-xul.css                    (resources/skin/input-xul.css)

@@ -50,7 +50,8 @@
 <bindings id="widgetsBindingsForXHTML"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:html="http://www.w3.org/1999/xhtml"
-          xmlns:xbl="http://www.mozilla.org/xbl">
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:mozType="http://www.mozilla.org/projects/xforms/2005/type">
 
 
 <!-- CALENDAR WIDGETS -->
@@ -361,7 +362,8 @@
     <content>
       <html:span anonid="minlabel"/>
       <!-- XXX: width and height set by CSS, see bug 350870. -->
-      <html:canvas tabindex="0" anonid="canvas" width="260" height="40"/>
+      <html:canvas tabindex="0" anonid="canvas" width="260" height="40"
+                   xbl:inherits="tabindex=mozType:tabindex"/>
       <html:span anonid="maxlabel"/>
     </content>
 

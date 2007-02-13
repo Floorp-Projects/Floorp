@@ -58,32 +58,29 @@
           xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#">
 
 
-  <!-- OUTPUT: <DEFAULT> -->
+  <!-- OUTPUT: <DEFAULT>
+    @note - xf:output can support tab navigation
+  -->
   <binding id="xformswidget-output"
            extends="chrome://xforms/content/xforms.xml#xformswidget-output-base">
     <content>
       <children includes="label"/>
-      <!-- XXX initialize span with a space until repeat is xbl-ized.  Part
-           of workaround for bug 322975
-      -->
-      <html:span class="xf-value" anonid="control"> </html:span>
-      <children/>
+      <html:span anonid="control"
+                 class="xf-value"
+                 xbl:inherits="tabindex">
+        <children/>
+      </html:span>
     </content>
 
     <implementation>
       <method name="getControlElement">
         <body>
           return {
-            __proto__: this.ownerDocument.
-              getAnonymousElementByAttribute(this, 'anonid', 'control'),
-
-          // XXX changing from setting textContent to setting nodeValue of
-          // first child (text node created by space character initializer
-          // above).  Workaround for bug 322975.  Probably should be changed
-          // back after repeat is xbl-ized
+             __proto__: this.ownerDocument.
+               getAnonymousElementByAttribute(this, 'anonid', 'control'),
 
             set value(val) {
-              this.firstChild.nodeValue = val;
+              this.firstChild.data = val ? val : "";
             }
           };
         </body>
@@ -117,7 +114,8 @@
            extends="chrome://xforms/content/xforms.xml#xformswidget-output-base">
     <content>
       <children includes="label"/>
-      <html:img class="xf-value" anonid="control"/>
+      <html:img class="xf-value" anonid="control"
+                xbl:inherits="tabindex"/>
       <children/>
     </content>
 
@@ -143,7 +141,8 @@
            extends="chrome://xforms/content/xforms.xml#xformswidget-output-base">
     <content>
       <children includes="label"/>
-      <html:img class="xf-value" anonid="control"/>
+      <html:img class="xf-value" anonid="control"
+                xbl:inherits="tabindex"/>
       <children/>
     </content>
 
@@ -164,12 +163,16 @@
   </binding>
 
 
-  <!-- LABEL: <DEFAULT> -->
+  <!-- LABEL: <DEFAULT>
+    @note - xf:label can support tab navigation
+  -->
   <binding id="xformswidget-label"
            extends="chrome://xforms/content/xforms.xml#xformswidget-label-base">
     <content>
-      <html:span anonid="implicitcontent"/>
-      <html:span anonid="explicitcontent"><children/></html:span>
+      <html:span anonid="implicitcontent"
+                 xbl:inherits="tabindex"/>
+      <html:span anonid="explicitcontent"
+                 xbl:inherits="tabindex"><children/></html:span>
     </content>
 
     <implementation>
@@ -184,11 +187,13 @@
 
             set value(val) {
               if (val != null) {
-                this._implicitContent.textContent = val;
                 this._explicitContent.style.display = 'none';
+                this._implicitContent.style.display = 'inline';
+                this._implicitContent.textContent = val;
               } else {
-                this._implicitContent.textContent = '';
                 this._explicitContent.style.display = 'inline';
+                this._implicitContent.style.display = 'none';
+                this._implicitContent.textContent = '';
               }
             },
 
@@ -223,8 +228,10 @@
   <binding id="xformswidget-label-accesskey"
            extends="chrome://xforms/content/xforms.xml#xformswidget-label-base">
     <content>
-      <html:span anonid="implicitcontent"/>
-      <html:span anonid="explicitcontent"><children/></html:span>
+      <html:span anonid="implicitcontent"
+                 xbl:inherits="tabindex"/>
+      <html:span anonid="explicitcontent"
+                 xbl:inherits="tabindex"><children/></html:span>
     </content>
 
     <implementation>
@@ -244,8 +251,9 @@
               var textnode = null;
 
               if (val != null) {
-                this._implicitContent.textContent = val;
                 this._explicitContent.style.display = 'none';
+                this._implicitContent.style.display = 'inline';
+                this._implicitContent.textContent = val;
                 textnode = this._implicitContent.firstChild;
               } else {
                 // XXX: if label has element node children, we skip accesskey
@@ -258,13 +266,15 @@
                   }
                 }
                 if (!underline) {
-                  this._implicitContent.textContent = '';
                   this._explicitContent.style.display = 'inline';
+                  this._implicitContent.style.display = 'none';
+                  this._implicitContent.textContent = '';
                   return;
                 }
 
-                this._implicitContent.textContent = this._labelControl.textContent;
                 this._explicitContent.style.display = 'none';
+                this._implicitContent.style.display = 'inline';
+                this._implicitContent.textContent = this._labelControl.textContent;
                 textnode = this._implicitContent.firstChild;
               }
 
@@ -315,7 +325,8 @@
   <binding id="xformswidget-trigger"
            extends="chrome://xforms/content/xforms.xml#xformswidget-trigger-base">
     <content>
-      <html:button anonid="control">
+      <html:button anonid="control"
+                   xbl:inherits="tabindex">
         <children/>
       </html:button>
     </content>
@@ -360,7 +371,8 @@
   <binding id="xformswidget-trigger-minimal"
             extends="chrome://xforms/content/xforms.xml#xformswidget-trigger-base">
     <content>
-      <html:span tabindex="0" anonid="control">
+      <html:span tabindex="0" anonid="control"
+                 xbl:inherits="tabindex">
         <children/>
       </html:span>
     </content>
@@ -517,11 +529,14 @@
            extends="chrome://xforms/content/xforms.xml#xformswidget-upload-base">
     <content>
       <children includes="label"/>
-      <html:input anonid="text_control" class="xf-value" readonly="readonly"/>
-      <html:button anonid="browse_button">
+      <html:input anonid="text_control" class="xf-value" readonly="readonly"
+                  tabindex="-1"/>
+      <html:button anonid="browse_button"
+                   xbl:inherits="tabindex">
         &xforms.upload.browsetext;
       </html:button>
-      <html:button anonid="clear_button">
+      <html:button anonid="clear_button"
+                   xbl:inherits="tabindex">
         &xforms.upload.cleartext;
       </html:button>
       <children/>

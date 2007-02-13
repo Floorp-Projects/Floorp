@@ -56,6 +56,7 @@
                  anonid="container"><html:input
                  class="-moz-xforms-select1-input xf-value"
                  anonid="control"
+                 xbl:inherits="tabindex"
                  onfocus="this.parentNode.parentNode.dispatchDOMUIEvent('DOMFocusIn')"
                  onblur="this.parentNode.parentNode.handleBlur(); this.parentNode.parentNode.dispatchDOMUIEvent('DOMFocusOut');"
                  onclick="this.parentNode.parentNode.handleControlClick();"

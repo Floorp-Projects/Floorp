@@ -117,7 +117,8 @@
            extends="#xformswidget-input-base">
     <content>
       <children includes="label"/>
-      <xul:textbox class="xf-value" anonid="control" flex="1"/>
+      <xul:textbox class="xf-value" anonid="control" flex="1"
+                   xbl:inherits="tabindex"/>
       <children/>
     </content>
 
@@ -136,7 +137,8 @@
            extends="chrome://xforms/content/input.xml#xformswidget-input-boolean-base">
     <content>
       <children includes="label"/>
-      <xul:checkbox anonid="control" class="xf-value"/>
+      <xul:checkbox anonid="control" class="xf-value"
+                    xbl:inherits="tabindex"/>
       <children/>
     </content>
 
@@ -196,7 +198,8 @@
       <xul:hbox class="-moz-menulist-container" flex="1">
         <html:input anonid="control" flex="1"
                     class="-moz-menulist-textfield"
-                    allowevents="true"/>
+                    allowevents="true"
+                    xbl:inherits="tabindex"/>
         <xul:dropmarker mozType:dropmarker="true" anonid="dropmarker"
                         xbl:inherits="disabled"/>
       </xul:hbox>
@@ -393,7 +396,8 @@
     <content>
       <children includes="label"/>
       <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
-                   min="Number.MIN_VALUE" max="Number.MAX_VALUE"/>
+                   min="Number.MIN_VALUE" max="Number.MAX_VALUE"
+                   xbl:inherits="tabindex"/>
       <children/>
     </content>
   </binding>
@@ -404,7 +408,8 @@
     <content>
       <children includes="label"/>
       <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
-                   min="Number.MIN_VALUE" max="0"/>
+                   min="Number.MIN_VALUE" max="0"
+                   xbl:inherits="tabindex"/>
       <children/>
     </content>
   </binding>
@@ -415,7 +420,8 @@
     <content>
       <children includes="label"/>
       <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
-                   min="Number.MIN_VALUE" max="-1"/>
+                   min="Number.MIN_VALUE" max="-1"
+                   xbl:inherits="tabindex"/>
       <children/>
     </content>
   </binding>
@@ -426,7 +432,8 @@
     <content>
       <children includes="label"/>
       <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
-                   min="-9223372036854775807" max="9223372036854775807"/>
+                   min="-9223372036854775807" max="9223372036854775807"
+                   xbl:inherits="tabindex"/>
       <children/>
     </content>
   </binding>
@@ -437,7 +444,8 @@
     <content>
       <children includes="label"/>
       <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
-                   min="-2147483647" max="2147483647"/>
+                   min="-2147483647" max="2147483647"
+                   xbl:inherits="tabindex"/>
       <children/>
     </content>
   </binding>
@@ -448,7 +456,8 @@
     <content>
       <children includes="label"/>
       <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
-                   min="-32767" max="32767"/>
+                   min="-32767" max="32767"
+                   xbl:inherits="tabindex"/>
       <children/>
     </content>
   </binding>
@@ -459,7 +468,8 @@
     <content>
       <children includes="label"/>
       <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
-                   min="-127" max="127"/>
+                   min="-127" max="127"
+                   xbl:inherits="tabindex"/>
       <children/>
     </content>
   </binding>
@@ -470,7 +480,8 @@
     <content>
       <children includes="label"/>
       <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
-                   min="0" max="Number.MAX_VALUE"/>
+                   min="0" max="Number.MAX_VALUE"
+                   xbl:inherits="tabindex"/>
       <children/>
     </content>
   </binding>
@@ -482,7 +493,8 @@
     <content>
       <children includes="label"/>
       <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
-                   min="0" max="18446744073709551615"/>
+                   min="0" max="18446744073709551615"
+                   xbl:inherits="tabindex"/>
       <children/>
     </content>
   </binding>
@@ -493,7 +505,8 @@
     <content>
       <children includes="label"/>
       <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
-                   min="0" max="4294967295"/>
+                   min="0" max="4294967295"
+                   xbl:inherits="tabindex"/>
       <children/>
     </content>
   </binding>
@@ -504,7 +517,8 @@
     <content>
       <children includes="label"/>
       <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
-                   min="0" max="65535"/>
+                   min="0" max="65535"
+                   xbl:inherits="tabindex"/>
       <children/>
     </content>
   </binding>
@@ -515,7 +529,8 @@
     <content>
       <children includes="label"/>
       <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
-                   min="0" max="255"/>
+                   min="0" max="255"
+                   xbl:inherits="tabindex"/>
       <children/>
     </content>
   </binding>
@@ -526,7 +541,8 @@
     <content>
       <children includes="label"/>
       <xul:textbox type="number" class="xf-value" anonid="control" flex="1"
-                   min="1" max="Number.MAX_VALUE"/>
+                   min="1" max="Number.MAX_VALUE"
+                   xbl:inherits="tabindex"/>
       <children/>
     </content>
   </binding>
@@ -537,7 +553,8 @@
            extends="#xformswidget-input-base">
     <content>
       <children includes="label"/>
-      <xul:textbox type="password" anonid="control" flex="1"/>
+      <xul:textbox type="password" anonid="control" flex="1"
+                   xbl:inherits="tabindex"/>
       <children/>
     </content>
 
@@ -564,8 +581,9 @@
            extends="#xformswidget-input-base">
     <content>
       <children includes="label"/>
-      <xul:textbox multiline="true" class="xf-value" 
-                   anonid="control" flex="1"/>
+      <xul:textbox multiline="true" class="xf-value"
+                   anonid="control" flex="1"
+                   xbl:inherits="tabindex"/>
       <children/>
     </content>
   </binding>

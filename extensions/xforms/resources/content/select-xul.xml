@@ -47,7 +47,8 @@
           xmlns:html="http://www.w3.org/1999/xhtml"
           xmlns:xbl="http://www.mozilla.org/xbl"
           xmlns:xforms="http://www.w3.org/2002/xforms"
-          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:mozType="http://www.mozilla.org/projects/xforms/2005/type">
 
 
 <!-- SELECT, SELECT1 CONTROLS
@@ -65,7 +66,8 @@
     <content>
       <xul:hbox flex="1">
         <children includes="label"/>
-        <xul:box anonid="control" xbl:inherits="style"
+        <xul:box anonid="control"
+                 xbl:inherits="style, mozType:tabindex=tabindex"
                  class="xf-value" flex="1"/>
       </xul:hbox>
       <children/>
@@ -77,7 +79,8 @@
     <content>
       <xul:hbox flex="1">
         <children includes="label"/>
-        <xul:box anonid="control" xbl:inherits="style"
+        <xul:box anonid="control"
+                 xbl:inherits="style, mozType:tabindex=tabindex"
                  class="xf-value" flex="1"/>
       </xul:hbox>
       <children/>
@@ -112,7 +115,7 @@
            extends="chrome://xforms/content/select.xml#controlwidget-base">
 
     <content>
-      <xul:listbox xbl:inherits="style, disabled=readonly"
+      <xul:listbox xbl:inherits="style, disabled=readonly, tabindex=mozType:tabindex"
                    rows="5" flex="1"
                    seltype="multiple"
                    anonid="control"/>
@@ -245,7 +248,7 @@
            extends="chrome://xforms/content/select.xml#controlwidget-base">
 
     <content>
-      <xul:menulist xbl:inherits="style, disabled=readonly"
+      <xul:menulist xbl:inherits="style, disabled=readonly, tabindex=mozType:tabindex"
                     anonid="control" flex="1">
         <xul:menupopup/>
       </xul:menulist>
@@ -384,7 +387,7 @@
   <binding id="controlwidget-select1-compact"
            extends="#controlwidget-select-compact">
     <content>
-      <xul:listbox xbl:inherits="style, disabled=readonly"
+      <xul:listbox xbl:inherits="style, disabled=readonly, tabindex=mozType:tabindex"
                    rows="5" anonid="control"/>
     </content>
   </binding>

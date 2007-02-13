@@ -49,13 +49,21 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:mozType="http://www.mozilla.org/projects/xforms/2005/type">
 
-  <!-- OUTPUT: <DEFAULT> -->
+  <!-- OUTPUT: <DEFAULT>
+    @note - xf:output can support tab navigation
+  -->
   <binding id="xformswidget-output"
            extends="chrome://xforms/content/xforms.xml#xformswidget-output-base">
+    <resources>
+      <stylesheet src="chrome://xforms/skin/xforms-xul.css"/>
+    </resources>
+
     <content>
       <children includes="label"/>
-      <xul:description class="xf-value" anonid="control"/>
-      <children/>
+      <xul:description class="xf-value" anonid="control"
+                       xbl:inherits="tabindex">
+        <children/>
+      </xul:description>
     </content>
 
     <implementation>
@@ -66,7 +74,7 @@
               getAnonymousElementByAttribute(this, 'anonid', 'control'),
 
             set value(val) {
-              this.textContent = val;
+              this.firstChild.data = val ? val : "";
             }
           };
         </body>
@@ -80,7 +88,8 @@
            extends="chrome://xforms/content/xforms.xml#xformswidget-output-base">
     <content>
       <children includes="label"/>
-      <xul:box mozType:calendar="true" anonid="control" readonly="true"/>
+      <xul:box mozType:calendar="true" anonid="control" readonly="true"
+               xbl:inherits="tabindex"/>
       <children/>
     </content>
 
@@ -100,7 +109,8 @@
            extends="chrome://xforms/content/xforms.xml#xformswidget-output-base">
     <content>
       <children includes="label"/>
-      <xul:image class="xf-value" anonid="control"/>
+      <xul:image class="xf-value" anonid="control"
+                 xbl:inherits="tabindex"/>
       <children/>
     </content>
 
@@ -126,7 +136,8 @@
            extends="chrome://xforms/content/xforms.xml#xformswidget-output-base">
     <content>
       <children includes="label"/>
-      <xul:image class="xf-value" anonid="control"/>
+      <xul:image class="xf-value" anonid="control"
+                 xbl:inherits="tabindex"/>
       <children/>
     </content>
 
@@ -147,38 +158,46 @@
   </binding>
 
 
-  <!-- LABEL: <DEFAULT> -->
+  <!-- LABEL: <DEFAULT>
+    @note - xf:label can support tab navigation
+  -->
   <binding id="xformswidget-label"
            extends="chrome://xforms/content/xforms.xml#xformswidget-label-base">
+    <resources>
+      <stylesheet src="chrome://xforms/skin/xforms-xul.css"/>
+    </resources>
+
     <content>
-      <xul:deck anonid="contentswitcher" flex="1" selectedIndex="1">
-        <xul:label anonid="implicitcontent"/>
-        <xul:label><children/></xul:label>
-      </xul:deck>
+      <xul:label anonid="implicitcontent"
+                 xbl:inherits="tabindex"/>
+      <xul:label anonid="explicitcontent"
+                 xbl:inherits="tabindex"><children/></xul:label>
     </content>
 
     <implementation>
       <method name="getControlElement">
         <body>
           return {
-            _contentSwitcher: this.ownerDocument.
-              getAnonymousElementByAttribute(this, 'anonid', 'contentswitcher'),
             _implicitContent: this.ownerDocument.
               getAnonymousElementByAttribute(this, 'anonid', 'implicitcontent'),
+            _explicitContent: this.ownerDocument.
+              getAnonymousElementByAttribute(this, 'anonid', 'explicitcontent'),
             __proto__: this,
 
             set value(val) {
               if (val != null) {
+                this._implicitContent.hidden = false;
+                this._explicitContent.hidden = true;
                 this._implicitContent.textContent = val;
-                this._contentSwitcher.selectedIndex = 0;
               } else {
+                this._implicitContent.hidden = true;
+                this._explicitContent.hidden = false;
                 this._implicitContent.textContent = '';
-                this._contentSwitcher.selectedIndex = 1;
               }
             },
 
             get textValue() {
-              if (this._contentSwitcher.selectedIndex == '0')
+              if (!this._implicitContent.hidden)
                 return this._implicitContent.textContent;
               return this.textContent;
             },
@@ -186,7 +205,7 @@
               var fragment = this.ownerDocument.createDocumentFragment();
 
               var container = null;
-              if (this._contentSwitcher.selectedIndex == '0')
+              if (!this._implicitContent.hidden)
                 container = this._implicitContent;
               else
                 container = this;
@@ -230,7 +249,8 @@
   <binding id="xformswidget-trigger"
            extends="#xformswidget-trigger-base">
     <content>
-      <xul:button anonid="control" flex="1">
+      <xul:button anonid="control" flex="1"
+                  xbl:inherits="tabindex">
         <children/>
       </xul:button>
     </content>
@@ -260,7 +280,7 @@
            extends="#xformswidget-trigger-base">
     <content>
       <xul:box tabindex="0" anonid="control" flex="1"
-               xbl:inherits="orient">
+               xbl:inherits="tabindex, orient">
         <children/>
       </xul:box>
     </content>

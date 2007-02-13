@@ -48,7 +48,8 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:html="http://www.w3.org/1999/xhtml"
           xmlns:xbl="http://www.mozilla.org/xbl"
-          xmlns:xforms="http://www.w3.org/2002/xforms">
+          xmlns:xforms="http://www.w3.org/2002/xforms"
+          xmlns:mozType="http://www.mozilla.org/projects/xforms/2005/type">
 
 
 <!-- SELECT/SELECT1 CONTROLS
@@ -68,7 +69,8 @@
       <html:span class="label-container">
          <children includes="label"/>
       </html:span>
-      <html:span anonid="control" xbl:inherits="style"/>
+      <html:span anonid="control"
+                 xbl:inherits="style, mozType:tabindex=tabindex"/>
       <children/>
     </content>
   </binding>
@@ -81,7 +83,8 @@
         <html:span class="label-container">
            <children includes="label"/>
         </html:span>
-        <html:span anonid="control" xbl:inherits="style"/>
+        <html:span anonid="control"
+                   xbl:inherits="style, mozType:tabindex=tabindex"/>
         <children/>
       </html:label>
     </content>
@@ -107,7 +110,7 @@
            extends="chrome://xforms/content/select.xml#controlwidget-base">
 
     <content>
-      <html:select xbl:inherits="style, disabled=readonly"
+      <html:select xbl:inherits="style, disabled=readonly, tabindex=mozType:tabindex"
                    class="xf-value" multiple="true" size="5" anonid="control"/>
     </content>
 
@@ -212,7 +215,7 @@
   <binding id="controlwidget-select1-compact"
            extends="#controlwidget-select-compact">
     <content>
-      <html:select xbl:inherits="style, disabled=readonly"
+      <html:select xbl:inherits="style, disabled=readonly, tabindex=mozType:tabindex"
                    class="xf-value" size="5" anonid="control"/>
     </content>
   </binding>

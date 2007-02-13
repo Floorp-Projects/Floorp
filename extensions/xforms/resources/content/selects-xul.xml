@@ -87,7 +87,8 @@
            extends="chrome://xforms/content/selects.xml#select1-base">
     <content>
       <children includes="label"/>
-      <xul:radiogroup flex="1" class="xf-value" anonid="control">
+      <xul:radiogroup flex="1" class="xf-value" anonid="control"
+                      xbl:inherits="tabindex">
         <children/>
       </xul:radiogroup>
     </content>

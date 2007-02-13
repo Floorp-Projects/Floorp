@@ -54,7 +54,7 @@
     <content mozType:deferredrefresh="true">
       <children includes="label"/>
       <html:span mozType:slider="true" anonid="slider"
-                 xbl:inherits="min=start,max=end,step=step"/>
+                 xbl:inherits="min=start,max=end,step=step,mozType:tabindex=tabindex"/>
       <children/>
     </content>
 
