@@ -138,6 +138,11 @@ elsif ($action eq 'do_clone'){
             $newplan->add_tag($newtagid);
         }
     }
+    if($cgi->param('copy_attachments')){
+        foreach my $att (@{$plan->attachments}){
+            $att->link_plan($newplanid);
+        }
+    }
     if ($cgi->param('copy_perms')){
         $plan->copy_permissions($newplanid);
         $newplan->derive_regexp_testers($plan->tester_regexp);

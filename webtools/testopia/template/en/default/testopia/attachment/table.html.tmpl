@@ -33,17 +33,17 @@
   </tr>
 [% FOREACH a = item.attachments %]
   <tr>
-    <td><a href="tr_attachment.cgi?attach_id=[% a.id FILTER none %]&action=view">[% a.description FILTER html %]</a></td>
+    <td><a href="tr_attachment.cgi?attach_id=[% a.id FILTER none %]&action=view&[% item.type FILTER none %]_id=[% item.id FILTER none %]">[% a.description FILTER html %]</a></td>
     <td>[% a.submitter.login FILTER html %]</td>
     <td>[% a.mime_type FILTER html %]</td>
     <td>[% a.creation_ts FILTER time %]</td>
     <td>[% a.datasize FILTER unitconvert %]</td>
-    <td><a href="tr_attachment.cgi?attach_id=[% a.id FILTER none %]&action=edit">Edit</a> 
-         [% IF Param("allow-test-deletion") %]<a href="tr_attachment.cgi?attach_id=[% a.id FILTER none %]&action=delete">Delete</a>[% END %]</td>
+    <td><a href="tr_attachment.cgi?attach_id=[% a.id FILTER none %]&action=edit&[% item.type FILTER none %]_id=[% item.id FILTER none %]">Edit</a> 
+         [% IF Param("allow-test-deletion") %]<a href="tr_attachment.cgi?attach_id=[% a.id FILTER none %]&action=delete&[% item.type FILTER none %]_id=[% item.id FILTER none %]">Delete</a>[% END %]</td>
   </tr>
 [% END %]
 
-<input type="hidden" name="[% type FILTER none %]_id" value="[% item.id FILTER none %]">
+<input type="hidden" name="[% item.type FILTER none %]_id" value="[% item.id FILTER none %]">
 <table border="0" width="100%" style="border: 1px solid #000;">
   <tr>
     <th align="right">File</td>

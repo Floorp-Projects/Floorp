@@ -1045,7 +1045,7 @@ sub attachments {
 
     my $attachments = $dbh->selectcol_arrayref(
             "SELECT attachment_id
-               FROM test_attachments
+               FROM test_plan_attachments
               WHERE plan_id = ?", 
              undef, $self->{'plan_id'});
     

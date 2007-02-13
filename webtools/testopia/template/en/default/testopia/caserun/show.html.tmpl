@@ -116,7 +116,10 @@
 [% END %]
 </table>
 <h3>Attributes</h3>
-<form action="[% action FILTER none %]" method="POST">
+<form action="[% action FILTER none %]" method="POST" enctype="multipart/form-data">
+[% PROCESS testopia/attachment/table.html.tmpl
+   item = caserun.case
+%]
 [% PROCESS testopia/caserun/form.html.tmpl %]
 </form>
 [% PROCESS global/footer.html.tmpl %]

@@ -61,8 +61,6 @@ use base qw(Exporter);
 =head1 FIELDS
 
     attachment_id
-    plan_id
-    case_id
     submitter_id
     description
     filename
@@ -72,14 +70,12 @@ use base qw(Exporter);
 =cut
 
 use constant DB_COLUMNS => qw(
-    test_attachments.attachment_id
-    test_attachments.plan_id
-    test_attachments.case_id
-    test_attachments.submitter_id
-    test_attachments.description
-    test_attachments.filename
-    test_attachments.creation_ts
-    test_attachments.mime_type
+    attachment_id
+    submitter_id
+    description
+    filename
+    creation_ts
+    mime_type
 );
 
 our $columns = join(", ", DB_COLUMNS);
@@ -155,16 +151,29 @@ sub store {
     $self->{'filename'} = $self->strip_path($self->{'filename'});
     my $dbh = Bugzilla->dbh;
     my ($timestamp) = Bugzilla::Testopia::Util::get_time_stamp();
- 
+
+         
     $dbh->do("INSERT INTO test_attachments ($columns)
-              VALUES (?,?,?,?,?,?,?,?)",
-              undef, (undef, $self->{'plan_id'}, $self->{'case_id'}, 
+              VALUES (?,?,?,?,?,?)",
+              undef, (undef,  
               $self->{'submitter_id'}, $self->{'description'}, 
               $self->{'filename'}, $timestamp, $self->{'mime_type'}));
  
     my $key = $dbh->bz_last_key( 'test_attachments', 'attachment_id' );
     $dbh->do("INSERT INTO test_attachment_data (attachment_id, contents) VALUES(?,?)",
               undef, $key, $self->{'contents'});
+
+    if ($self->{'case_id'}){
+
+        $dbh->do("INSERT INTO test_case_attachments (attachment_id, case_id, case_run_id)
+                  VALUES (?,?,?)",
+                  undef, ($key, $self->{'case_id'}, $self->{'case_run_id'}));
+    }
+    elsif ($self->{'plan_id'}){
+        $dbh->do("INSERT INTO test_plan_attachments (attachment_id, plan_id)
+                  VALUES (?,?)",
+                  undef, ($key, $self->{'plan_id'}));
+    }
 
     return $key;    
 }
@@ -296,6 +305,7 @@ sub update {
             $dbh->do("UPDATE test_attachments 
                       SET $field = ? WHERE attachment_id = ?",
                       undef, $newvalues->{$field}, $self->{'attachment_id'});
+            $self->{$field} = $newvalues->{$field};
         }
     }
     $dbh->bz_unlock_tables();
@@ -315,9 +325,96 @@ sub obliterate {
     
     $dbh->do("DELETE FROM test_attachment_data 
               WHERE attachment_id = ?", undef, $self->{'attachment_id'});
+    $dbh->do("DELETE FROM test_case_attachments 
+              WHERE attachment_id = ?", undef, $self->{'attachment_id'});
+    $dbh->do("DELETE FROM test_plan_attachments 
+              WHERE attachment_id = ?", undef, $self->{'attachment_id'});
     $dbh->do("DELETE FROM test_attachments 
               WHERE attachment_id = ?", undef, $self->{'attachment_id'});
     return 1;
+}
+
+sub link_plan {
+    my $self = shift;
+    my ($plan_id) = @_;
+    my $dbh = Bugzilla->dbh;
+
+    $dbh->bz_lock_tables('test_plan_attachments WRITE');
+    my ($is) = $dbh->selectrow_array(
+            "SELECT 1 
+               FROM test_plan_attachments
+              WHERE attachment_id = ?
+                AND plan_id = ?",
+               undef, ($self->id, $plan_id));
+    if ($is) {
+        $dbh->bz_unlock_tables();
+        return;
+    }
+
+    $dbh->do("INSERT INTO test_plan_attachments (attachment_id, plan_id)
+              VALUES (?,?)",
+              undef, ($self->id, $plan_id));
+    $dbh->bz_unlock_tables(); 
+}
+
+sub link_case {
+    my $self = shift;
+    my ($case_id) = @_;
+    my $dbh = Bugzilla->dbh;
+
+    $dbh->bz_lock_tables('test_case_attachments WRITE');
+    my ($is) = $dbh->selectrow_array(
+            "SELECT 1 
+               FROM test_case_attachments
+              WHERE attachment_id = ?
+                AND case_id = ?",
+               undef, ($self->id, $case_id));
+    if ($is) {
+        $dbh->bz_unlock_tables();
+        return;
+    }
+
+    $dbh->do("INSERT INTO test_case_attachments (attachment_id, plan_id)
+              VALUES (?,?)",
+              undef, ($self->id, $case_id));
+    $dbh->bz_unlock_tables();
+}
+    
+sub unlink_plan {
+    my $self = shift;
+    my ($plan_id) = @_;
+    my $dbh = Bugzilla->dbh;
+    my ($refcount) = $dbh->selectrow_array(
+        "SELECT COUNT(*) 
+           FROM test_plan_attachments 
+          WHERE attachment_id = ?", undef, $self->id);
+    if ($refcount > 1){
+        $dbh->do("DELETE FROM test_plan_attachments 
+                  WHERE plan_id = ? AND attachment_id = ?",
+                  undef, ($plan_id, $self->id));
+    }
+    else {
+        $self->obliterate;
+    }
+}
+
+sub unlink_case {
+    my $self = shift;
+    my ($case_id) = @_;
+    my $dbh = Bugzilla->dbh;
+    
+    my ($refcount) = $dbh->selectrow_array(
+        "SELECT COUNT(*) 
+           FROM test_case_attachments 
+          WHERE attachment_id = ?", undef, $self->id);
+    if ($refcount > 1){
+        $dbh->do("DELETE FROM test_case_attachments 
+                  WHERE case_id = ? AND attachment_id = ?",
+                  undef, ($case_id, $self->id));
+    }
+    else {
+        $self->obliterate;
+    }
 }
 
 =head2 canview
@@ -359,8 +456,8 @@ Returns true if the logged in user has rights to delete this attachment
 
 sub candelete {
     my $self = shift;
-    return 0 unless $self->canedit && Param("allow-test-deletion");
     return 1 if Bugzilla->user->in_group("admin");
+    return 0 unless $self->canedit && Param("allow-test-deletion");
     return 1 if Bugzilla->user->id == $self->submitter->id;
     return 0;
 }

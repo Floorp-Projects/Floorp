@@ -45,13 +45,38 @@ my $template = Bugzilla->template;
 push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
 my $action  = $cgi->param('action') || '';
 my $attach_id = $cgi->param('attach_id');
+my $plan_id = $cgi->param('plan_id');
+my $case_id = $cgi->param('case_id');
+my $caserun_id = $cgi->param('caserun_id');
 
-unless ($attach_id){
+detaint_natural($attach_id);
+detaint_natural($plan_id);
+detaint_natural($case_id);
+detaint_natural($caserun_id);
+
+unless ($attach_id && ($plan_id || $case_id || $caserun_id)){
     print $cgi->header();
     $template->process("testopia/attachment/choose.html.tmpl", $vars) 
         || ThrowTemplateError($template->error());
     exit;
 }
+
+my $obj;
+if ($plan_id){
+    $obj = Bugzilla::Testopia::TestPlan->new($plan_id);
+}
+elsif ($case_id){
+    $obj = Bugzilla::Testopia::TestCase->new($case_id);
+}
+elsif ($caserun_id){
+    $obj = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
+}
+unless ($obj->canview){
+    print $cgi->header;
+    ThrowUserError('testopia-permission-denied', {'object' => 'Attachment'});
+    exit;
+}
+
 ##################
 ###    Edit    ###
 ##################
@@ -60,6 +85,7 @@ if ($action eq 'edit'){
     my $attachment = validate();
     $vars->{'attachment'} = validate();
     $vars->{'isviewable'} = $attachment->isViewable($cgi);
+    $vars->{'obj'} = $obj;
     print $cgi->header();
     $template->process("testopia/attachment/show.html.tmpl", $vars)
         || ThrowTemplateError($template->error());
@@ -73,8 +99,16 @@ elsif ($action eq 'do_edit') {
         'mime_type'   => $cgi->param('mime_type'),
     );
     $attachment->update(\%newvalues);
+
+    print $cgi->header();
+    $vars->{'attachment'} = $attachment;
     $vars->{'tr_message'} = "Attachment updated";
-    go_on($attachment);
+    $vars->{'backlink'} = $obj;
+    $vars->{'obj'} = $obj;
+    $vars->{'isviewable'} = $attachment->isViewable($cgi);
+    $template->process("testopia/attachment/show.html.tmpl", $vars)
+        || ThrowTemplateError($template->error());
+
 }
 ####################
 ###    Delete    ###
@@ -84,6 +118,7 @@ elsif ($action eq 'delete') {
     my $attachment = validate();
     ThrowUserError('testopia-no-delete', {'object' => 'Attachment'}) unless $attachment->candelete;
     $vars->{'attachment'} = validate();
+    $vars->{'obj'} = $obj;
     print $cgi->header();
     $template->process("testopia/attachment/delete.html.tmpl", $vars)
         || ThrowTemplateError($template->error());
@@ -94,8 +129,20 @@ elsif ($action eq 'do_delete') {
     my $attachment = validate();
     $vars->{'tr_message'} = "Attachment ". $attachment->description ." deleted";
     ThrowUserError('testopia-no-delete', {'object' => 'Attachment'}) unless $attachment->candelete;
-    $attachment->obliterate;
-    go_on($attachment);
+    if ($plan_id){
+        $attachment->unlink_plan($plan_id);
+    }
+    elsif ($case_id){
+        $attachment->unlink_plan($case_id);
+    }
+
+    print $cgi->header();
+    $vars->{'tr_message'} = "Attachment deleted";
+    $vars->{'backlink'} = $obj;
+    $vars->{'deleted'} = 1;
+    $template->process("testopia/attachment/delete.html.tmpl", $vars)
+        || ThrowTemplateError($template->error());
+
 }
 ################
 ###   View   ###
@@ -121,45 +168,6 @@ else {
 sub validate {
     validate_test_id($attach_id,'attachment');
     my $attachment = Bugzilla::Testopia::Attachment->new($attach_id);
-    if ($attachment->plan_id){
-        my $plan = Bugzilla::Testopia::TestPlan->new($attachment->plan_id);
-        ThrowUserError('testopia-read-only', {'object' => 'Plan'}) unless $plan->canedit;
-    }
-    if ($attachment->case_id){
-        my $case = Bugzilla::Testopia::TestCase->new($attachment->case_id);
-        ThrowUserError('testopia-read-only', {'object' => 'Case'}) unless $case->canedit;
-    }
+    ThrowUserError('testopia-read-only', {'object' => 'Case'}) unless $obj->canedit;
     return $attachment;
-}
-
-sub go_on {
-    my $attachment = shift;
-    print $cgi->header();
-    $vars->{'action'} = "Commit";
-    if ($attachment->plan_id){
-        $vars->{'form_action'} = "tr_show_plan.cgi";
-        $cgi->param('plan_id', $attachment->plan_id); 
-        my $casequery = new Bugzilla::CGI($cgi);
-        my $runquery  = new Bugzilla::CGI($cgi);
-    
-        $casequery->param('current_tab', 'case');
-        my $search = Bugzilla::Testopia::Search->new($casequery);
-        my $table = Bugzilla::Testopia::Table->new('case', 'tr_show_plan.cgi', $casequery, undef, $search->query);
-        $vars->{'case_table'} = $table;    
-      
-        $runquery->param('current_tab', 'run');
-        $search = Bugzilla::Testopia::Search->new($runquery);
-        $table = Bugzilla::Testopia::Table->new('run', 'tr_show_plan.cgi', $runquery, undef, $search->query);
-        $vars->{'run_table'} = $table;
-
-        $vars->{'plan'} = Bugzilla::Testopia::TestPlan->new($attachment->plan_id);
-        $template->process("testopia/plan/show.html.tmpl", $vars)
-            || ThrowTemplateError($template->error());
-    }
-    else {
-        $vars->{'form_action'} = "tr_show_case.cgi";
-        $vars->{'case'} = Bugzilla::Testopia::TestCase->new($attachment->case_id);
-        $template->process("testopia/case/show.html.tmpl", $vars)
-            || ThrowTemplateError($template->error());
-    }
 }

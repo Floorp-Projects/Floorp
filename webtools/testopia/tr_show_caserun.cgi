@@ -60,42 +60,43 @@ my $action = $cgi->param('action') || '';
 if ($action eq 'Commit'){
     Bugzilla->login(LOGIN_REQUIRED);
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
-    ThrowUserError("testopia-read-only", {'object' => 'case run'}) if !$caserun->canedit;
+    display(do_update($caserun));
+}
+elsif ($action eq 'Attach'){
+    Bugzilla->login(LOGIN_REQUIRED);
+    my $caserun = do_update(Bugzilla::Testopia::TestCaseRun->new($caserun_id));
 
-    my $status   = $cgi->param('status');
-    my $notes    = $cgi->param('notes');
-    my $build    = $cgi->param('caserun_build');
-    my $env      = $cgi->param('caserun_env');
-    my $assignee = DBNameToIdAndCheck(trim($cgi->param('assignee'))) if $cgi->param('assignee');
+    defined $cgi->upload('data')
+        || ThrowUserError("file_not_specified");
+    my $filename = $cgi->upload('data');       
+    $cgi->param('description')
+        || ThrowUserError("missing_attachment_description");
+    my $description = $cgi->param('description');
+    my $contenttype = $cgi->uploadInfo($cgi->param('data'))->{'Content-Type'};
+    trick_taint($description);
+    my $fh = $cgi->upload('data');
+    my $data;
+    # enable 'slurp' mode
+    local $/;
+    $data = <$fh>;       
+    $data || ThrowUserError("zero_length_file");
     
-    validate_test_id($build, 'build');
-    validate_test_id($env, 'environment');
-    my @buglist;
-    foreach my $bug (split(/[\s,]+/, $cgi->param('bugs'))){
-        ValidateBugID($bug);
-        push @buglist, $bug;
-    }
-    
-    detaint_natural($env);
-    detaint_natural($build);
-    detaint_natural($status);
-    trick_taint($notes);
+    my $attachment = Bugzilla::Testopia::Attachment->new({
+                        caserun_id   => $caserun_id,
+                        case_id      => $caserun->case->id,
+                        submitter_id => Bugzilla->user->id,
+                        description  => $description,
+                        filename     => $filename,
+                        mime_type    => $contenttype,
+                        contents     => $data
+    });
 
-    # Switch to the record representing this build and environment combo.
-    # If there is not one, it will create it and switch to that.
-    $caserun = $caserun->switch($build,$env);
-    
-    $caserun->set_status($status)     if ($caserun->status_id != $status);
-    $caserun->set_assignee($assignee) if ($caserun->assignee && $caserun->assignee->id != $assignee);
-    $caserun->append_note($notes)     if ($notes && $caserun->notes !~ /$notes/);
-
-    foreach my $bug (@buglist){
-        $caserun->attach_bug($bug);
-    }
-    
-    $vars->{'tr_message'} = "Case-run updated.";
+    $attachment->store;
+    $vars->{'tr_message'} = "File attached.";
+    $vars->{'backlink'} = $caserun;
     display($caserun);
 }
+
 elsif ($action eq 'delete'){
     Bugzilla->login(LOGIN_REQUIRED);
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
@@ -308,6 +309,47 @@ elsif ($action eq 'detach_bug'){
 }
 else {
     display(Bugzilla::Testopia::TestCaseRun->new($caserun_id));
+}
+
+sub do_update {
+    my $caserun = shift;
+    
+    ThrowUserError("testopia-read-only", {'object' => 'case run'}) unless $caserun->canedit;
+    
+    my $status   = $cgi->param('status');
+    my $notes    = $cgi->param('notes');
+    my $build    = $cgi->param('caserun_build');
+    my $env      = $cgi->param('caserun_env');
+    my $assignee = DBNameToIdAndCheck(trim($cgi->param('assignee'))) if $cgi->param('assignee');
+    
+    validate_test_id($build, 'build');
+    validate_test_id($env, 'environment');
+    my @buglist;
+    foreach my $bug (split(/[\s,]+/, $cgi->param('bugs'))){
+        ValidateBugID($bug);
+        push @buglist, $bug;
+    }
+    
+    detaint_natural($env);
+    detaint_natural($build);
+    detaint_natural($status);
+    trick_taint($notes);
+
+    # Switch to the record representing this build and environment combo.
+    # If there is not one, it will create it and switch to that.
+    $caserun = $caserun->switch($build,$env);
+    
+    $caserun->set_status($status)     if ($caserun->status_id != $status);
+    $caserun->set_assignee($assignee) if ($caserun->assignee && $caserun->assignee->id != $assignee);
+    $caserun->append_note($notes)     if ($notes && $caserun->notes !~ /$notes/);
+
+    foreach my $bug (@buglist){
+        $caserun->attach_bug($bug);
+    }
+    
+    $vars->{'tr_message'} = "Case-run updated.";
+    
+    return $caserun;
 }
 
 sub display {

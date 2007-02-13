@@ -51,6 +51,7 @@ use Bugzilla::Config;
 use Bugzilla::Constants;
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::Constants;
+use Bugzilla::Testopia::Attachment;
 use Bugzilla::Bug;
 
 use Date::Format;
@@ -874,6 +875,33 @@ sub status {
          WHERE case_run_status_id=?", undef,
          $self->{'case_run_status_id'});
     return $self->{'status'};
+}
+
+=head2 attachments
+
+Returns a reference to a list of attachments associated with this
+case.
+
+=cut
+
+sub attachments {
+    my ($self) = @_;
+    my $dbh = Bugzilla->dbh;
+    return $self->{'attachments'} if exists $self->{'attachments'};
+
+    my $attachments = $dbh->selectcol_arrayref(
+        "SELECT attachment_id
+           FROM test_case_attachments
+          WHERE caserun_id = ?", 
+         undef, $self->{'case_id'});
+    
+    my @attachments;
+    foreach my $a (@{$attachments}){
+        push @attachments, Bugzilla::Testopia::Attachment->new($a);
+    }
+    $self->{'attachments'} = \@attachments;
+    return $self->{'attachments'};
+    
 }
 
 =head2 bugs

@@ -28,25 +28,24 @@
 
 [% PROCESS global/variables.none.tmpl %]
 
-[% IF attachment.case_id %]
-    [% SET item = "Test Case $attachment.case_id" %]
-[% ELSE %]
-    [% SET item = "Test Plan $attachment.plan_id" %]
-[% END %]
-[% title = "Delete Attachment $attachment.description for $item" %]
-
 [%############################################################################%]
 [%# Page Header                                                              #%]
 [%############################################################################%]
 
-[% PROCESS global/header.html.tmpl %]
-
+[% IF deleted %]
+  [% title = "Attachment Deleted" %]
+  [% PROCESS global/header.html.tmpl %]
+  [% PROCESS testopia/messages.html.tmpl %]
+[% ELSE %]
+  [% title = "Delete Attachment '$attachment.description' from $obj.type $obj.id" %]
+  [% PROCESS global/header.html.tmpl %]
 You are about to permanantly delete this attachment.
 
 <form method="POST" action="tr_attachment.cgi">
   <input type="hidden" name="action" value="do_delete" />
   <input type="hidden" name="attach_id" value="[% attachment.id FILTER none %]" />
+  <input type="hidden" name="[% obj.type FILTER none %]_id" value="[% obj.id FILTER none %]" />
   <input type="submit" value="Continue" />
 </form>  
-  
+[% END %]  
 [% PROCESS global/footer.html.tmpl %]

@@ -28,22 +28,19 @@
 
 [% PROCESS global/variables.none.tmpl %]
 
-[% IF attachment.case_id %]
-    [% SET item = "Test Case $attachment.case_id" %]
-[% ELSE %]
-    [% SET item = "Test Plan $attachment.plan_id" %]
-[% END %]
-[% title = "Edit Attachment $attachment.description for $item" %]
+[% title = "Edit Attachment '$attachment.description' for $obj.type $obj.id" %]
 
 [%############################################################################%]
 [%# Page Header                                                              #%]
 [%############################################################################%]
 
 [% PROCESS global/header.html.tmpl %]
+[% PROCESS testopia/messages.html.tmpl %]
 <p><a href="[% attachment.plan_id ? "tr_show_plan.cgi?plan_id=$attachment.plan_id" : "tr_show_case.cgi?case_id=$attachment.case_id" %]">Back</a> to  [% attachment.plan_id ? "test plan" : "test case" %]</p>
 <form method="POST" action="tr_attachment.cgi">
   <input type="hidden" name="action" value="do_edit" />
   <input type="hidden" name="attach_id" value="[% attachment.id FILTER none %]" />
+  <input type="hidden" name="[% obj.type FILTER none %]_id" value="[% obj.id FILTER none %]" />
 <table border="0">
   <tr>
     <th class="bz_row_header" align="right">Description:</th>
@@ -74,7 +71,7 @@
   <tr>  
 [% IF isviewable %]
     <td colspan="4" width="75%">
-      <iframe id="viewFrame" src="tr_attachment.cgi?attach_id=[% attachment.id FILTER none %]&action=view" style="height: 400px; width: 100%;">
+      <iframe id="viewFrame" src="tr_attachment.cgi?attach_id=[% attachment.id FILTER none %]&action=view&[% obj.type FILTER none %]_id=[% obj.id FILTER none %]" style="height: 400px; width: 100%;">
         <b>You cannot view the attachment while editing it because your browser does not support IFRAMEs.
         <a href="tr_attachment.cgi?attach_id=[% attachment.id FILTER none %]&action=view">View the attachment on a separate page</a>.</b>
       </iframe>
@@ -95,7 +92,7 @@
 <input type="submit" value="Submit">
 </form>
 [% IF Param("allow-test-deletion") %]
-<p><a href="tr_attachment.cgi?attach_id=[% attachment.id FILTER none %]&action=delete">Delete Attachment</a></p>
+<p><a href="tr_attachment.cgi?attach_id=[% attachment.id FILTER none %]&action=delete&[% obj.type FILTER none %]_id=[% obj.id FILTER none %]">Delete Attachment</a></p>
 <p><a href="[% attachment.plan_id ? "tr_show_plan.cgi?plan_id=$attachment.plan_id" : "tr_show_case.cgi?case_id=$attachment.case_id" %]">Back</a> to  [% attachment.plan_id ? "test plan" : "test case" %]</p>
 [% END %]
 
