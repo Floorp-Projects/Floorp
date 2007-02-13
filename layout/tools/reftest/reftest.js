@@ -53,6 +53,7 @@ var gCanvas;
 var gURLs;
 var gState;
 var gPart1Key;
+var gFailureTimeout;
 
 const EXPECTED_PASS = 0;
 const EXPECTED_FAIL = 1;
@@ -174,6 +175,8 @@ function StartCurrentTest()
 
 function StartCurrentURI(aState)
 {
+    gFailureTimeout = setTimeout(LoadFailed, LOAD_FAILURE_TIMEOUT);
+
     gState = aState;
     gBrowser.loadURI(gURLs[0]["url" + aState].spec);
 }
@@ -200,6 +203,7 @@ function OnDocumentLoad(event)
         // Ignore load events for subframes.
         return;
 
+    clearTimeout(gFailureTimeout);
     // Since we can't use a bubbling-phase load listener from chrome,
     // this is a capturing phase listener.  So do setTimeout twice, the
     // first to get us after the onload has fired in the content, and
@@ -254,4 +258,12 @@ function DocumentLoaded()
         default:
             throw "Unexpected state."
     }
+}
+
+function LoadFailed()
+{
+    dump("REFTEST UNEXPECTED FAIL (LOADING): " +
+         gURLs[0]["url" + gState].spec + "\n");
+    gURLs.shift();
+    StartCurrentTest();
 }
