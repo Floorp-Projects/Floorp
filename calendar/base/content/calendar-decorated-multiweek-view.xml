@@ -211,7 +211,8 @@
                     var d1 = this.startDay.clone();
                     var savedSelectedDay = this.selectedDay.clone();
                     // aNumber only corresponds to the number of weeks to move
-                    d1.day += 7*aNumber;
+                    // make sure to compensate for previous weeks in view too
+                    d1.day += 7 * (aNumber + getPrefSafe("calendar.previousweeks.inview", 4));
                     d1.normalize();
                     this.goToDay(d1);
                     var viewElement = document.getAnonymousElementByAttribute(this, "anonid", "view-element");
