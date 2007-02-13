@@ -287,6 +287,8 @@ IsSupportedTextType(const char* aMIMEType)
 NS_IMETHODIMP
 nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
 {
+  mDoneSetup = PR_TRUE;
+
   nsresult rv;
 
   //MIME CHECKING
@@ -1196,11 +1198,9 @@ nsEditingSession::GetEditorDocShellFromWindow(nsIDOMWindow *aWindow,
 nsresult
 nsEditingSession::PrepareForEditing(nsIDOMWindow *aWindow)
 {
-  if (mDoneSetup || mProgressListenerRegistered)
+  if (mProgressListenerRegistered)
     return NS_OK;
     
-  mDoneSetup = PR_TRUE;
-
   nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
   
   // register callback
