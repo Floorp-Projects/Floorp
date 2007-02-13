@@ -259,14 +259,15 @@ PlacesController.prototype = {
     case "placesCmd_show:info":
       if (this._view.hasSingleSelection) {
         var selectedNode = this._view.selectedNode;
-        if (PlacesUtils.nodeIsBookmark(selectedNode))
-          return true;
-        if (PlacesUtils.nodeIsFolder(selectedNode)) {
-          if (!this._selectionOverlapsSystemArea()) {
-            var parent = selectedNode.parent;
-            if (!parent || !PlacesUtils.nodeIsLivemarkContainer(parent))
-              return true;
-          }
+        if (PlacesUtils.nodeIsBookmark(selectedNode)) {
+          var uri = PlacesUtils._uri(selectedNode.uri);
+          if (!PlacesUtils.annotations
+                          .hasAnnotation(uri, "livemark/bookmarkFeedURI")) 
+            return true;
+        }
+        else if (PlacesUtils.nodeIsFolder(selectedNode)) {
+          if (!this._selectionOverlapsSystemArea())
+            return true;
         }
       }
       return false;
