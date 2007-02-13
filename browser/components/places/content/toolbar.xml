@@ -282,7 +282,10 @@
           var t = this;
           popup.popupShowingCallback = function() {t.chevronPopupShowing();};
 
-          this.updateChevron();
+          // This needs to be in a timeout to make sure our boxObject has time
+          // to get its proper size
+          var self = this;
+          setTimeout(function() { self.updateChevron(); }, 0);
         ]]></body>
         
       </method>
