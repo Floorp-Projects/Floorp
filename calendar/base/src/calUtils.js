@@ -758,3 +758,19 @@ function getContrastingTextColor(bgColor)
     return "black";
 }
 
+/**
+ * Returns the start date of an item, ie either an event's start date or a task's entry date.
+ */
+function calGetStartDate(aItem)
+{
+    return (isEvent(aItem) ? aItem.startDate : aItem.entryDate);
+}
+
+/**
+ * Returns the end date of an item, ie either an event's end date or a task's due date.
+ */
+function calGetEndDate(aItem)
+{
+    return (isEvent(aItem) ? aItem.endDate : aItem.dueDate);
+}
+
