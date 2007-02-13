@@ -107,7 +107,8 @@ my $profile_dir = "$FindBin::Bin/$profile";
 #else
 my $is_win32 = 0;
 #endif
-my $unixish = (!($is_win32) && !($^O =~ m/darwin/));
+my $is_mac = ($^O =~ m/darwin/);
+my $unixish = (!($is_win32) && !($is_mac));
 
  # Do everything.
  main();
@@ -127,12 +128,12 @@ sub main {
              "console-level:s" => \$console_level,
              "file-level:s" => \$file_level,
              "help!" => \$help);
-  
+
   # if the switches include --help, exit and print directions
   if ($help) {
     usage_and_exit();
   }
-  
+
   # we were passed an explicit path to the app
   if ($appoverride) {
     $app = $appoverride;
@@ -145,7 +146,7 @@ sub main {
     $error_message .= "\$objdir/_tests/testing/mochitest/runtests.pl?\n\n";
     die $error_message;
   }
-             
+
   initializeProfile();
   my $serverPid = startServer($close_when_done);
 
@@ -176,7 +177,7 @@ sub main {
   my $test_start = runTests($url);
 
   shutdownServer($serverPid);
-  
+
   # print test run times
   my $test_finish = localtime();
   print " started: $test_start\n";
@@ -419,7 +420,7 @@ sub kill_process {
  ##################
 
 sub runTests {
-  my ($testUrl) = @_;
+  my ($test_url) = @_;
 
   # mark the start
   my $test_start = localtime();
@@ -439,8 +440,17 @@ sub runTests {
   }
 
   # now run with the profile we created
-  my @runargs = ($app, '-no-remote', '-profile', $profile_arg, $testUrl);
-  my $rc = 0xffff & system @runargs;
+
+  # On Windows and Linux, the application is focused for us. On OS X, we
+  # need to use applescript to focus the app and then set the url.
+  my $rc = -1;
+  if (!$is_mac) {
+    my @runargs = ($app, '-no-remote', '-profile', $profile_arg, $test_url);
+    $rc = 0xffff & system @runargs;
+  } else {
+    $rc = executeMac($profile_arg, $test_url);
+  }
+
   if ($rc != 0) {
     print "FAIL Exited with code $rc during test run\n";
   }
@@ -448,8 +458,42 @@ sub runTests {
   return $test_start;
 }
 
+ # The mac needs to fork() and then send an applescript command to focus
+ # the application.
+sub executeMac {
+  my ($profile_arg, $test_url) = @_;
+  my $did_run_osa = 0;
+  my $pid = fork();
+  if (not defined $pid) {
+    die "cannot fork: $!";
+  } elsif ($pid == 0) {
+    # run only the executable so we get a pid we can focus
+    $app .= "-bin";
+    my @runargs = ($app, '-no-remote', '-profile', $profile_arg, $test_url);
+    exec @runargs or die("Error starting application: $!\n");
+  } else {
+    if (!$did_run_osa ) {
+      # wait for the Cache dir to appear, so we know the app is alive
+      my $loop_count = 0;
+      while ($loop_count++ < 100) {
+          last if (-e "$profile_dir/Cache");
+          sleep 1;
+      }
+      die "timeout waiting for app startup." if ($loop_count >= 100);
+
+      # use applescript to focus the application
+      `osascript -e 'tell application "System Events"' -e 'set myApp to name of first application process whose unix id is $pid' -e 'end tell' -e 'tell application myApp' -e 'activate' -e 'end tell'`;
+      $did_run_osa = 1;
+    }
+    waitpid($pid,0);
+  }
+
+  # return the exit code we received from waitpid
+  return $?;
+}
+
  ##################
- # TEST EXECUTION #
+ # SHUT DOWN      #
  ##################
 
 sub shutdownServer {
