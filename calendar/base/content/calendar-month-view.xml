@@ -392,6 +392,10 @@
               }
 
               if (aIsEvent && bIsEvent) {
+                // sort all day events before events with a duration
+                if (a.item.startDate.isDate && !b.item.startDate.isDate) return -1;
+                if (!a.item.startDate.isDate && b.item.startDate.isDate) return 1;
+
                 var cmp;
 
                 cmp = a.item.startDate.compare(b.item.startDate);
