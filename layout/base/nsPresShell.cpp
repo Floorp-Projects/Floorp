@@ -1666,6 +1666,14 @@ PresShell::Destroy()
     mDocument->DeleteShell(this);
   }
 
+  // Revoke any pending reflow event.  We need to do this and cancel
+  // pending reflows before we destroy the frame manager, since
+  // apparently frame destruction sometimes spins the event queue when
+  // plug-ins are involved(!).
+  mReflowEvent.Revoke();
+
+  CancelAllPendingReflows();
+
   // Destroy the frame manager. This will destroy the frame hierarchy
   mFrameConstructor->WillDestroyFrameTree();
   FrameManager()->Destroy();
@@ -1699,11 +1707,6 @@ PresShell::Destroy()
     mViewEventListener->SetPresShell((nsIPresShell*)nsnull);
     NS_RELEASE(mViewEventListener);
   }
-
-  // Revoke any pending reflow event
-  mReflowEvent.Revoke();
-
-  CancelAllPendingReflows();
 
   NS_ASSERTION(!mDocumentOnloadBlocked,
                "CancelAllPendingReflows() didn't unblock onload?");
@@ -5881,7 +5884,6 @@ PresShell::ReflowEvent::Run() {
     // Set a kung fu death grip on the view manager associated with the pres shell
     // before processing that pres shell's reflow commands.  Fixes bug 54868.
     nsCOMPtr<nsIViewManager> viewManager = ps->GetViewManager();
-    NS_ENSURE_TRUE(viewManager, NS_OK);
     viewManager->BeginUpdateViewBatch();
     ps->ProcessReflowCommands(PR_TRUE);
     viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
