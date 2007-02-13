@@ -61,7 +61,7 @@
 #include "nsIContentSink.h"
 #include "prlog.h"
 #include "nsIRequest.h"
-
+#include "nsTimer.h"
 
 class nsIDocument;
 class nsIURI;
@@ -269,6 +269,9 @@ protected:
   PRInt32 mInMonolithicContainer;
 
   PRInt32 mInNotification;
+
+  // Measures content model creation time for current document
+  MOZ_TIMER_DECLARE(mWatch)
 };
 
 
