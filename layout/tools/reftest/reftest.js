@@ -196,7 +196,11 @@ function IFrameToKey()
 
 function OnDocumentLoad()
 {
-    setTimeout(DocumentLoaded, 0);
+    // Since we can't use a bubbling-phase load listener from chrome,
+    // this is a capturing phase listener.  So do setTimeout twice, the
+    // first to get us after the onload has fired in the content, and
+    // the second to get us after any setTimeout(foo, 0) in the content.
+    setTimeout(setTimeout, 0, DocumentLoaded, 0);
 }
 
 function DocumentLoaded()
