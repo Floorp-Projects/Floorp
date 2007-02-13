@@ -164,7 +164,13 @@
           var tempDate = new Date(2005, 0, 1);
           for (var month = 0; month < 12; month++) {
             tempDate.setMonth(month);
-            this.kMonthNames[month] = tempDate.toLocaleFormat("%B");
+            // if available, use UILocale months, else operating system format
+            try {
+              this.kMonthNames[month] =
+                calGetString("dateFormat", "month." + (month + 1) + ".name");
+            } catch (e) {
+              this.kMonthNames[month] = tempDate.toLocaleFormat("%B");
+            }
           }
           this.mPopup = null;
           // save references for convenience
@@ -219,7 +225,14 @@
             var i, j;
             tempDate.setDate(tempDate.getDate() - (tempDate.getDay() - this.weekStart));
             for (i = 0; i < header.childNodes.length; i++) {
-              dayList[i] = tempDate.toLocaleFormat("%a")
+              // if available, use UILocale days, else operating system format
+              try {
+                dayList[i] =
+                  calGetString("dateFormat",
+                               "day." + (tempDate.getDay() + 1) + ".short");
+              } catch (e) {
+                dayList[i] = tempDate.toLocaleFormat("%a");
+              }
               tempDate.setDate(tempDate.getDate() + 1);
             }
             

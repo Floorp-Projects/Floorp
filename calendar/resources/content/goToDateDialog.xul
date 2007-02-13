@@ -67,6 +67,8 @@
   <!-- Javascript includes -->
   <script type="application/x-javascript"
    src="chrome://calendar/content/goToDateDialog.js"/>
+  <script type="application/x-javascript"
+   src="chrome://calendar/content/calendarUtils.js"/>
 
   <keyset id="dialogKeys"/>
 
