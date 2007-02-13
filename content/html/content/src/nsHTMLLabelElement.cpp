@@ -52,6 +52,7 @@
 #include "nsGUIEvent.h"
 #include "nsIEventStateManager.h"
 #include "nsEventDispatcher.h"
+#include "nsPIDOMWindow.h"
 
 class nsHTMLLabelElement : public nsGenericHTMLFormElement,
                            public nsIDOMHTMLLabelElement
@@ -101,6 +102,8 @@ public:
                            PRBool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
+  virtual void PerformAccesskey(PRBool aKeyCausesActivation,
+                                PRBool aIsTrustedEvent);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
@@ -316,6 +319,31 @@ nsHTMLLabelElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   }
 
   return nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
+}
+
+void
+nsHTMLLabelElement::PerformAccesskey(PRBool aKeyCausesActivation,
+                                     PRBool aIsTrustedEvent)
+{
+  if (!aKeyCausesActivation) {
+    nsCOMPtr<nsIContent> content = GetForContent();
+    if (content)
+      content->PerformAccesskey(aKeyCausesActivation, aIsTrustedEvent);
+  } else {
+    nsPresContext *presContext = GetPresContext();
+    if (!presContext)
+      return;
+
+    // Click on it if the users prefs indicate to do so.
+    nsMouseEvent event(aIsTrustedEvent, NS_MOUSE_CLICK,
+                       nsnull, nsMouseEvent::eReal);
+
+    nsAutoPopupStatePusher popupStatePusher(aIsTrustedEvent ?
+                                            openAllowed : openAbused);
+
+    nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this), presContext,
+                                &event);
+  }
 }
 
 inline PRBool IsNonLabelFormControl(nsIContent *aContent)

@@ -46,11 +46,16 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocument.h"
 #include "nsGkAtoms.h"
+#include "nsIPresShell.h"
+#include "nsPresContext.h"
+#include "nsIEventStateManager.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDOMEvent.h"
 #include "nsGUIEvent.h"
 #include "nsContentUtils.h"
 #include "nsIXTFService.h"
+#include "nsIDOMAttr.h"
+#include "nsIAttribute.h"
 #include "nsDOMAttributeMap.h"
 #include "nsUnicharUtils.h"
 #include "nsEventDispatcher.h"
@@ -175,6 +180,9 @@ nsXTFElementWrapper::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (mNotificationMask & nsIXTFElement::NOTIFY_PERFORM_ACCESSKEY)
+    RegUnregAccessKey(PR_TRUE);
+
   if (domDocument &&
       (mNotificationMask & (nsIXTFElement::NOTIFY_DOCUMENT_CHANGED))) {
     GetXTFElement()->DocumentChanged(domDocument);
@@ -193,6 +201,7 @@ nsXTFElementWrapper::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
   // XXXbz making up random order for the notifications... Perhaps
   // this api should more closely match BindToTree/UnbindFromTree?
+
   PRBool inDoc = IsInDoc();
   if (inDoc &&
       (mNotificationMask & nsIXTFElement::NOTIFY_WILL_CHANGE_DOCUMENT)) {
@@ -205,6 +214,9 @@ nsXTFElementWrapper::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
       (mNotificationMask & nsIXTFElement::NOTIFY_WILL_CHANGE_PARENT)) {
     GetXTFElement()->WillChangeParent(nsnull);
   }
+
+  if (mNotificationMask & nsIXTFElement::NOTIFY_PERFORM_ACCESSKEY)
+    RegUnregAccessKey(PR_FALSE);
 
   nsXTFElementWrapperBase::UnbindFromTree(aDeep, aNullParent);
 
@@ -280,7 +292,15 @@ nsXTFElementWrapper::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   if (aNameSpaceID == kNameSpaceID_None &&
       (mNotificationMask & nsIXTFElement::NOTIFY_ATTRIBUTE_SET))
     GetXTFElement()->AttributeSet(aName, aValue);
-  
+
+  if (mNotificationMask & nsIXTFElement::NOTIFY_PERFORM_ACCESSKEY) {
+    nsCOMPtr<nsIDOMAttr> accesskey;
+    GetXTFElement()->GetAccesskeyNode(getter_AddRefs(accesskey));
+    nsCOMPtr<nsIAttribute> attr(do_QueryInterface(accesskey));
+    if (attr && attr->NodeInfo()->Equals(aName, aNameSpaceID))
+      RegUnregAccessKey(PR_TRUE);
+  }
+
   return rv;
 }
 
@@ -406,7 +426,15 @@ nsXTFElementWrapper::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr,
   if (aNameSpaceID == kNameSpaceID_None &&
       (mNotificationMask & nsIXTFElement::NOTIFY_WILL_REMOVE_ATTRIBUTE))
     GetXTFElement()->WillRemoveAttribute(aAttr);
-  
+
+  if (mNotificationMask & nsIXTFElement::NOTIFY_PERFORM_ACCESSKEY) {
+    nsCOMPtr<nsIDOMAttr> accesskey;
+    GetXTFElement()->GetAccesskeyNode(getter_AddRefs(accesskey));
+    nsCOMPtr<nsIAttribute> attr(do_QueryInterface(accesskey));
+    if (attr && attr->NodeInfo()->Equals(aAttr, aNameSpaceID))
+      RegUnregAccessKey(PR_FALSE);
+  }
+
   if (aNameSpaceID==kNameSpaceID_None && HandledByInner(aAttr)) {
     nsDOMSlots *slots = GetExistingDOMSlots();
     if (slots && slots->mAttributeMap) {
@@ -499,6 +527,14 @@ PRInt32
 nsXTFElementWrapper::IntrinsicState() const
 {
   return nsXTFElementWrapperBase::IntrinsicState() | mIntrinsicState;
+}
+
+void
+nsXTFElementWrapper::PerformAccesskey(PRBool aKeyCausesActivation,
+                                      PRBool aIsTrustedEvent)
+{
+  if (mNotificationMask & nsIXTFElement::NOTIFY_PERFORM_ACCESSKEY)
+    GetXTFElement()->PerformAccesskey();
 }
 
 nsresult
@@ -884,6 +920,41 @@ nsXTFElementWrapper::SetClassAttributeName(nsIAtom* aName)
   
   mClassAttributeName = aName;
   return NS_OK;
+}
+
+void
+nsXTFElementWrapper::RegUnregAccessKey(PRBool aDoReg)
+{
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc)
+    return;
+
+  // Get presentation shell 0
+  nsIPresShell *presShell = doc->GetShellAt(0);
+  if (!presShell)
+    return;
+
+  nsPresContext *presContext = presShell->GetPresContext();
+  if (!presContext)
+    return;
+
+  nsIEventStateManager *esm = presContext->EventStateManager();
+  if (!esm)
+    return;
+
+  // Register or unregister as appropriate.
+  nsCOMPtr<nsIDOMAttr> accesskeyNode;
+  GetXTFElement()->GetAccesskeyNode(getter_AddRefs(accesskeyNode));
+  if (!accesskeyNode)
+    return;
+
+  nsAutoString accessKey;
+  accesskeyNode->GetValue(accessKey);
+
+  if (aDoReg && !accessKey.IsEmpty())
+    esm->RegisterAccessKey(this, (PRUint32)accessKey.First());
+  else
+    esm->UnregisterAccessKey(this, (PRUint32)accessKey.First());
 }
 
 nsresult

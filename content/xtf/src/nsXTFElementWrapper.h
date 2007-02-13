@@ -109,6 +109,9 @@ public:
   virtual nsIAtom *GetClassAttributeName() const;
   virtual const nsAttrValue* GetClasses() const;
 
+  virtual void PerformAccesskey(PRBool aKeyCausesActivation,
+                                PRBool aIsTrustedEvent);
+
   // nsIDOMElement specializations:
   NS_IMETHOD GetAttribute(const nsAString& aName,
                           nsAString& aReturn);
@@ -136,6 +139,8 @@ protected:
   PRBool QueryInterfaceInner(REFNSIID aIID, void** result);
 
   PRBool HandledByInner(nsIAtom* attr) const;
+
+  void RegUnregAccessKey(PRBool aDoReg);
 
   nsCOMPtr<nsIXTFElement> mXTFElement;
 
