@@ -110,7 +110,6 @@
 #include "nsISelectElement.h"
 
 #include "nsIStyleSheetLinkingElement.h"
-#include "nsTimer.h"
 #include "nsITimer.h"
 #include "nsDOMError.h"
 #include "nsContentPolicyUtils.h"
@@ -325,9 +324,6 @@ protected:
 #ifdef NS_DEBUG
   void ForceReflow();
 #endif
-
-  // Measures content model creation time for current document
-  MOZ_TIMER_DECLARE(mWatch)
 };
 
 class SinkContext

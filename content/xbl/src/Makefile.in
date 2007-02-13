@@ -67,6 +67,7 @@ REQUIRES	= xpcom \
 		  imglib2 \
 		  unicharutil \
 		  locale \
+		  util \
 		  $(NULL)
 
 CPPSRCS		= \

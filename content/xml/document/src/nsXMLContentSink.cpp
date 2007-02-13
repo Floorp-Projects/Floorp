@@ -95,7 +95,6 @@
 #include "nsContentErrors.h"
 #include "nsIDOMProcessingInstruction.h"
 #include "nsNodeUtils.h"
-#include "nsTimer.h"
 #include "nsIScriptGlobalObject.h"
 
 #ifdef MOZ_SVG
