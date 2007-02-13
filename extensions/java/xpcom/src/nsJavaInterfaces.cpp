@@ -357,7 +357,7 @@ MOZILLA_NATIVE(getNativeHandleFromAWT) (JNIEnv* env, jobject clazz,
   return handle;
 }
 
-extern "C" NS_EXPORT jlong
+extern "C" NS_EXPORT jlong JNICALL
 JXUTILS_NATIVE(wrapJavaObject) (JNIEnv* env, jobject, jobject aJavaObject,
                                 jstring aIID)
 {
@@ -388,7 +388,7 @@ JXUTILS_NATIVE(wrapJavaObject) (JNIEnv* env, jobject, jobject aJavaObject,
   return NS_REINTERPRET_CAST(jlong, xpcomObject);
 }
 
-extern "C" NS_EXPORT jobject
+extern "C" NS_EXPORT jobject JNICALL
 JXUTILS_NATIVE(wrapXPCOMObject) (JNIEnv* env, jobject, jlong aXPCOMObject,
                                  jstring aIID)
 {
