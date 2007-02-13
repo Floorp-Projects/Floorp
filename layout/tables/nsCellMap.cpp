@@ -2783,11 +2783,11 @@ nsCellMapColumnIterator::GetNextFrame(PRInt32* aRow, PRInt32* aColSpan)
     }
 
     if (cellData->IsColSpan()) {
-      // Look up the originating data for this cell, advance by its rowspan.
-      CellData* origData = row[mCol - cellData->GetColSpanOffset()];
-      NS_ASSERTION(origData && origData->IsOrig() && origData->GetCellFrame(),
-                   "Must have usable originating data here");
-      IncrementRow(origData->GetCellFrame()->GetRowSpan());
+      // Look up the originating data for this cell, advance by its relative rowspan.
+      PRInt32 rowspanOffset = cellData->GetRowSpanOffset();
+      nsTableCellFrame* cellFrame = mCurMap->GetCellFrame(mCurMapRow, mCol, *cellData, PR_FALSE); 
+      NS_ASSERTION(cellFrame,"Must have usable originating data here");  
+      IncrementRow(cellFrame->GetRowSpan() - rowspanOffset);
       continue;
     }
 
