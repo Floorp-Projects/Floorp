@@ -280,6 +280,7 @@ function findPeriodForItem(item)
     var start = item.startDate || item.entryDate || item.dueDate;
     if (!start) 
         return null;
+    start = start.getInTimezone(calendarDefaultTimezone());
     if (start.compare(this.today.end) == -1)
         return this.today;
         
