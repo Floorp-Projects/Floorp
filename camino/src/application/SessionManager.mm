@@ -114,7 +114,7 @@ const NSTimeInterval kPersistDelay = 60.0;
       NSEnumerator* tabEnumerator = [[tabView tabViewItems] objectEnumerator];
       BrowserTabViewItem* tab;
       while ((tab = [tabEnumerator nextObject])) {
-        NSString* foundWindowURL = [(BrowserWrapper*)[tab view] getCurrentURI];
+        NSString* foundWindowURL = [(BrowserWrapper*)[tab view] currentURI];
         [storedTabs addObject:foundWindowURL];
       }
       int selectedTabIndex = [tabView indexOfTabViewItem:[tabView selectedTabViewItem]];

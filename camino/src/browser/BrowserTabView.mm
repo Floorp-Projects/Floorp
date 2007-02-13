@@ -199,13 +199,13 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
 - (int)indexOfTabViewItemWithURL:(NSString*)aURL
 {
   // Try the selected tab first.
-  if ([[(BrowserWrapper*)[[self selectedTabViewItem] view] getCurrentURI] isEqualToString:aURL])
+  if ([[(BrowserWrapper*)[[self selectedTabViewItem] view] currentURI] isEqualToString:aURL])
     return [self indexOfTabViewItem:[self selectedTabViewItem]];
   // Otherwise just walk all the tabs and return the first match.
   NSArray* tabViewItems = [self tabViewItems];
   for (unsigned int i = 0; i < [tabViewItems count]; i++) {
     id tab = [tabViewItems objectAtIndex:i];
-    if ([[(BrowserWrapper*)[tab view] getCurrentURI] isEqualToString:aURL]) {
+    if ([[(BrowserWrapper*)[tab view] currentURI] isEqualToString:aURL]) {
       return i;
     }
   }

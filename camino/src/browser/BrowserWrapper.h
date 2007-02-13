@@ -136,11 +136,8 @@ class nsIArray;
     // the global lock icon whenever we become the primary. Value is one of
     // security enums in nsIWebProgressListener.
   unsigned long             mSecureState;
-    // the title associated with this tab's url. We need to hold it so that we
-    // can set the window title whenever we become the primary. 
-  NSString*                 mTitle;
-    // the title we use for the tab. This differs for mTitle when the tab is loading
-  NSString*                 mTabTitle;
+    // the display title for this page (which may be different than the page title)
+  NSString*                 mDisplayTitle;
     // array of popupevents that have been blocked. We can use them to reconstruct the popups
     // later. If nil, no sites are blocked. Cleared after each new page.
   nsIMutableArray*          mBlockedSites;
@@ -161,7 +158,6 @@ class nsIArray;
   NSMutableDictionary*      mContentViewProviders;   // ContentViewProviders keyed by the url that shows them
   
   BOOL mIsBusy;
-  BOOL mOffline;
   BOOL mListenersAttached; // We hook up our click and context menu listeners lazily.
                            // If we never become the primary view, we don't bother creating the listeners.
   BOOL mActivateOnLoad;    // If set, activate the browser view when loading starts.
@@ -190,7 +186,8 @@ class nsIArray;
 - (BOOL)isInternalURI;
 - (BOOL)canReload;
 
-- (NSString*)windowTitle;
+- (NSString*)currentURI;
+- (NSString*)displayTitle;
 - (NSString*)pageTitle;
 - (NSImage*)siteIcon;
 - (NSString*)statusString;
@@ -199,8 +196,6 @@ class nsIArray;
 - (BOOL)feedsDetected;
 - (unsigned long)securityState;
 - (NSArray*)feedList;
-
-- (NSString*)getCurrentURI;
 
 - (IBAction)configurePopupBlocking:(id)sender;
 - (IBAction)unblockPopupSites:(id)sender;
@@ -220,7 +215,6 @@ class nsIArray;
 
 - (NSWindow*)nativeWindow;
 - (NSMenu*)contextMenu;
-- (void)getTitle:(NSString **)outTitle andHref:(NSString**)outHrefString;
 
 // Custom view embedding
 - (void)registerContentViewProvider:(id<ContentViewProvider>)inProvider forURL:(NSString*)inURL;

@@ -155,13 +155,9 @@ static const int kEscapeKeyCode = 53;
 // accessor for the 'URL' Apple Event attribute
 - (NSString*)getURL
 {
-  BrowserWindowController* windowController = (BrowserWindowController*)[self delegate];
-  
-  NSString* titleString = nil;
-  NSString* urlString = nil;
+  BrowserWrapper* browserWrapper = [(BrowserWindowController*)[self delegate] getBrowserWrapper];
 
-  [[windowController getBrowserWrapper] getTitle:&titleString andHref:&urlString];
-  return urlString;
+  return [browserWrapper currentURI];
 }
 
 // True when the window has the unified toolbar bit set and is capable of

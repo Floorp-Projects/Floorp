@@ -84,8 +84,6 @@
 
 class nsIDOMPopupBlockedEvent;
 
-static NSString* const kOfflineNotificationName = @"offlineModeChanged";
-
 // for camino.enable_plugins; needs to match string in WebFeatures.mm
 static NSString* const kEnablePluginsChangedNotificationName = @"EnablePluginsChanged";
 
@@ -111,10 +109,8 @@ enum {
 
 - (void)updateSiteIconImage:(NSImage*)inSiteIcon withURI:(NSString *)inSiteIconURI loadError:(BOOL)inLoadError;
 
-- (void)setTabTitle:(NSString*)tabTitle windowTitle:(NSString*)windowTitle;
 - (NSString*)displayTitleForPageURL:(NSString*)inURL title:(NSString*)inTitle;
 
-- (void)updateOfflineStatus;
 - (void)updatePluginsEnabledState;
 
 - (void)checkForCustomViewOnLoad:(NSString*)inURL;
@@ -174,7 +170,7 @@ enum {
     mStatusStrings = [[NSMutableArray alloc] initWithObjects:[NSNull null], [NSNull null],
                                                              [NSNull null], [NSNull null], nil];
 
-    mTitle = [[NSString alloc] init];
+    mDisplayTitle = [[NSString alloc] init];
     
     [self registerNotificationListener];
   }
@@ -194,8 +190,7 @@ enum {
   [mStatusStrings release];
 
   [mToolTip release];
-  [mTitle release];
-  [mTabTitle release];
+  [mDisplayTitle release];
   
   NS_IF_RELEASE(mBlockedSites);
   
@@ -258,7 +253,7 @@ enum {
   return mTabItem;
 }
 
--(NSString*)getCurrentURI
+-(NSString*)currentURI
 {
   return [mBrowserView getCurrentURI];
 }
@@ -316,9 +311,9 @@ enum {
   return mIsBusy;
 }
 
-- (NSString*)windowTitle
+- (NSString*)displayTitle
 {
-  return mTitle;
+  return mDisplayTitle;
 }
 
 - (NSString*)pageTitle
@@ -414,19 +409,12 @@ enum {
 - (void)didBecomeActiveBrowser
 {
   [self ensureContentClickListeners];
-  [self updateOfflineStatus];
-  [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(offlineModeChanged:)
-                                               name:kOfflineNotificationName
-                                             object:nil];
-
 }
 
 -(void)willResignActiveBrowser
 {
   [mToolTip closeToolTip];
 
-  [[NSNotificationCenter defaultCenter] removeObserver:self name:kOfflineNotificationName object:nil];
   [mBrowserView setActive:NO];
 }
 
@@ -493,9 +481,7 @@ enum {
   [mDelegate showFeedDetected:NO];
   [mFeedList removeAllObjects];
   
-  [mTabTitle autorelease];
-  mTabTitle = [NSLocalizedString(@"TabLoading", @"") retain];
-  [mTabItem setLabel:mTabTitle];
+  [mTabItem setLabel:NSLocalizedString(@"TabLoading", @"")];
 }
 
 - (void)onLoadingCompleted:(BOOL)succeeded
@@ -511,9 +497,8 @@ enum {
 
   [(BrowserTabViewItem*)mTabItem stopLoadAnimation];
 
-  NSString *urlString = nil;
-  NSString *titleString = nil;
-  [self getTitle:&titleString andHref:&urlString];
+  NSString *urlString = [self currentURI];
+  NSString *titleString = [self pageTitle];
   
   // If we never got a page title, then the tab title will be stuck at "Loading..."
   // so be sure to set the title here
@@ -640,7 +625,7 @@ enum {
   else
     index = eStatusLinkTarget;
 
-  [mStatusStrings replaceObjectAtIndex:index withObject:(statusString ? statusString : [NSNull null])];
+  [mStatusStrings replaceObjectAtIndex:index withObject:(statusString ? (id)statusString : (id)[NSNull null])];
   [mDelegate updateStatus:[self statusString]];
 }
 
@@ -650,35 +635,19 @@ enum {
     [mStatusStrings replaceObjectAtIndex:i withObject:[NSNull null]];
 }
 
-- (NSString *)title 
+- (NSString *)title
 {
-  return mTitle;
+  return mDisplayTitle;
 }
 
 // this should only be called from the CHBrowserListener
 - (void)setTitle:(NSString *)title
 {
-  [self setTabTitle:title windowTitle:title];
-}
-
-- (void)setTabTitle:(NSString*)tabTitle windowTitle:(NSString*)windowTitle
-{
-  NSString* curURL = [self getCurrentURI];
-
-  [mTabTitle autorelease];
-  mTabTitle  = [[self displayTitleForPageURL:curURL title:tabTitle] retain];
+  [mDisplayTitle autorelease];
+  mDisplayTitle = [[self displayTitleForPageURL:[self currentURI] title:title] retain];
   
-  [mTitle autorelease];
-  
-  NSString* newWindowTitle = [self displayTitleForPageURL:curURL title:windowTitle];
-  if (mOffline)
-    newWindowTitle = [NSString stringWithFormat:NSLocalizedString(@"OfflineTitleFormat", @""), newWindowTitle];
-  mTitle = [newWindowTitle retain];
-  
-  [mDelegate updateWindowTitle:mTitle];
-  
-  // Always set the tab.
-  [mTabItem setLabel:mTabTitle];		// tab titles get truncated when setting them to tabs
+  [mTabItem setLabel:mDisplayTitle];
+  [mDelegate updateWindowTitle:mDisplayTitle];
 }
 
 - (NSString*)displayTitleForPageURL:(NSString*)inURL title:(NSString*)inTitle
@@ -699,16 +668,6 @@ enum {
   }
 
   return NSLocalizedString(@"UntitledPageTitle", @"");
-}
-
-- (void)updateOfflineStatus
-{
-  nsCOMPtr<nsIIOService> ioService(do_GetService("@mozilla.org/network/io-service;1"));
-  if (!ioService)
-      return;
-  PRBool offline = PR_FALSE;
-  ioService->GetOffline(&offline);
-  mOffline = offline;
 }
 
 - (void)updatePluginsEnabledState
@@ -779,7 +738,7 @@ enum {
     // imageLoadedNotification selector gets called.
     if (![inIconURI isEqualToString:mSiteIconURI])
     {
-      [[SiteIconProvider sharedFavoriteIconProvider] fetchFavoriteIconForPage:[self getCurrentURI]
+      [[SiteIconProvider sharedFavoriteIconProvider] fetchFavoriteIconForPage:[self currentURI]
                                                              withIconLocation:inIconURI
                                                                  allowNetwork:YES
                                                               notifyingClient:self];
@@ -854,26 +813,6 @@ enum {
 - (void)didDismissPrompt
 {
   [[mWindow delegate] didDismissPromptForBrowser:self];
-}
-
-
-- (void)getTitle:(NSString **)outTitle andHref:(NSString**)outHrefString
-{
-  *outTitle = [self pageTitle];
-  *outHrefString = [self getCurrentURI];
-}
-
-- (void)offlineModeChanged:(NSNotification*)aNotification
-{
-  [self updateOfflineStatus];
-
-  // This is pretty broken, and unused. We'd need to do this title futzing
-  // on every title change, not just now.
-  // XXX localize me
-  NSString* titleTrailer = mOffline ? @" [Working Offline]" : @" [Working Offline]";
-  NSString* newWindowTitle = [mTitle stringByAppendingString:titleTrailer];
-
-  [mDelegate updateWindowTitle:newWindowTitle];
 }
 
 - (void)enablePluginsChanged:(NSNotification*)aNote
@@ -1048,7 +987,7 @@ enum {
     if (iconImage == nil)
       siteIconURI = @"";	// go back to default image
   
-    if ([pageURI isEqualToString:[self getCurrentURI]]) // make sure it's for the current page
+    if ([pageURI isEqualToString:[self currentURI]]) // make sure it's for the current page
       [self updateSiteIconImage:iconImage withURI:siteIconURI loadError:NO];
   }
 }
@@ -1061,18 +1000,18 @@ enum {
 //
 - (BOOL) isEmpty
 {
-  return [[self getCurrentURI] isEqualToString:@"about:blank"];
+  return [[self currentURI] isEqualToString:@"about:blank"];
 }
 
 - (BOOL)isInternalURI
 {
-  NSString* currentURI = [self getCurrentURI];
+  NSString* currentURI = [self currentURI];
   return ([currentURI hasPrefix:@"about:"] || [currentURI hasPrefix:@"view-source:"]);
 }
 
 - (BOOL)canReload
 {
-  NSString* curURI = [[self getCurrentURI] lowercaseString];
+  NSString* curURI = [[self currentURI] lowercaseString];
   return (![self isEmpty] &&
           !([curURI isEqualToString:@"about:bookmarks"] ||
             [curURI isEqualToString:@"about:history"] ||
@@ -1083,7 +1022,7 @@ enum {
 {
   // Toss the favicon when force reloading
   if (reloadFlags == NSLoadFlagsBypassCacheAndProxy)
-    [[SiteIconProvider sharedFavoriteIconProvider] removeImageForPageURL:[self getCurrentURI]];
+    [[SiteIconProvider sharedFavoriteIconProvider] removeImageForPageURL:[self currentURI]];
 
   [mBrowserView reload:reloadFlags];
 }

@@ -1123,7 +1123,7 @@ enum BWCOpenDest {
 
 - (void)windowDidResize:(NSNotification *)aNotification
 {
-  [self updateWindowTitle:[mBrowserView windowTitle]];
+  [self updateWindowTitle:[mBrowserView displayTitle]];
 
   // Update the cached windowframe unless we are zooming the window
   if (!mShouldZoom)
@@ -2095,13 +2095,13 @@ enum BWCOpenDest {
 
 - (void)updateFromFrontmostTab
 {
-  [self updateWindowTitle:[mBrowserView windowTitle]];
+  [self updateWindowTitle:[mBrowserView displayTitle]];
   [self setLoadingActive:[mBrowserView isBusy]];
   [self setLoadingProgress:[mBrowserView loadingProgress]];
   [self showSecurityState:[mBrowserView securityState]];
   [self updateSiteIcons:[mBrowserView siteIcon] ignoreTyping:NO];
   [self updateStatus:[mBrowserView statusString]];
-  [self updateLocationFields:[mBrowserView getCurrentURI] ignoreTyping:NO];
+  [self updateLocationFields:[mBrowserView currentURI] ignoreTyping:NO];
   [self showFeedDetected:[mBrowserView feedsDetected]];
 }
 
@@ -2481,7 +2481,7 @@ enum BWCOpenDest {
   // If it's a capital V, shift is down
   BOOL loadInBackground = ([[aSender keyEquivalent] isEqualToString:@"V"]);
 
-  NSString* urlStr = [[mBrowserView getBrowserView] getCurrentURI];
+  NSString* urlStr = [mBrowserView currentURI];
   [self loadSourceOfURL:urlStr inBackground:loadInBackground];
 }
 
@@ -2540,7 +2540,7 @@ enum BWCOpenDest {
   NSMutableString *searchURL = [NSMutableString stringWithString:
     [[BrowserWindowController searchURLDictionary] objectForKey:
       [inSearchField titleOfSelectedPopUpItem]]];
-  NSString *currentURL = [[self getBrowserWrapper] getCurrentURI];
+  NSString *currentURL = [[self getBrowserWrapper] currentURI];
   NSString *searchString = [inSearchField stringValue];
   
   const char *aURLSpec = [currentURL lossyCString];
@@ -2580,7 +2580,7 @@ enum BWCOpenDest {
         [self loadURL:aDomain];
     } 
   } else {
-    aURLSpec = [[[self getBrowserWrapper] getCurrentURI] UTF8String];
+    aURLSpec = [[[self getBrowserWrapper] currentURI] UTF8String];
     
     // Get the domain so that we can replace %d in our searchURL
     if (NS_NewURI(&aURI, aURLSpec, nsnull, nsnull) == NS_OK) {
@@ -2624,19 +2624,17 @@ enum BWCOpenDest {
 
 - (IBAction)sendURL:(id)aSender
 {
-  NSString* titleString = nil;
-  NSString* urlString = nil;
-
-  [[self getBrowserWrapper] getTitle:&titleString andHref:&urlString];
-  
+  BrowserWrapper* browserWrapper = [self getBrowserWrapper];
+  NSString* urlString = [browserWrapper currentURI];
   if (!urlString)
     return;
 
-  if (!titleString)
-    titleString = @"";
-
   // put < > around the URL to minimise problems when e-mailing
   urlString = [NSString stringWithFormat:@"<%@>", urlString];
+
+  NSString* titleString = [browserWrapper pageTitle];
+  if (!titleString)
+    titleString = @"";
 
   // we need to encode entities in the title and url strings first. For some reason
   // CFURLCreateStringByAddingPercentEscapes is only happy with UTF-8 strings.
@@ -2783,7 +2781,7 @@ enum BWCOpenDest {
 
 - (BOOL)bookmarkManagerIsVisible
 {
-  NSString* currentURL = [[[self getBrowserWrapper] getCurrentURI] lowercaseString];
+  NSString* currentURL = [[[self getBrowserWrapper] currentURI] lowercaseString];
   return [currentURL isEqualToString:@"about:bookmarks"] || [currentURL isEqualToString:@"about:history"];
 }
 
@@ -2818,9 +2816,8 @@ enum BWCOpenDest {
   for (int i = 0; i < numTabs; i++)
   {
     BrowserWrapper* browserWrapper = (BrowserWrapper*)[[mTabBrowser tabViewItemAtIndex:i] view];
-    NSString* curTitleString = nil;
-    NSString* hrefString = nil;
-    [browserWrapper getTitle:&curTitleString andHref:&hrefString];
+    NSString* curTitleString = [browserWrapper pageTitle];
+    NSString* hrefString = [browserWrapper currentURI];
 
     NSMutableDictionary* itemInfo = [NSMutableDictionary dictionaryWithObject:hrefString forKey:kAddBookmarkItemURLKey];
 
@@ -2846,9 +2843,9 @@ enum BWCOpenDest {
   BookmarkManager* bookmarkManager = [BookmarkManager sharedBookmarkManager];
   BookmarkFolder*  parentFolder = [bookmarkManager lastUsedBookmarkFolder];
 
-  NSString* itemTitle = nil;
-  NSString* itemURL = nil;
-  [[self getBrowserWrapper] getTitle:&itemTitle andHref:&itemURL];
+  BrowserWrapper* browserWrapper = [self getBrowserWrapper];
+  NSString* itemTitle = [browserWrapper pageTitle];
+  NSString* itemURL = [browserWrapper currentURI];
 
   [parentFolder addBookmark:itemTitle url:itemURL inPosition:[parentFolder count] isSeparator:NO];
   [bookmarkManager setLastUsedBookmarkFolder:parentFolder];
@@ -2861,16 +2858,16 @@ enum BWCOpenDest {
 
   unsigned int folderPosition = [parentFolder count];
   unsigned int numItems = [mTabBrowser numberOfTabViewItems];
-  NSString* itemTitle = nil;
-  NSString* itemURL = nil;
-  [[self getBrowserWrapper] getTitle:&itemTitle andHref:&itemURL];
+  BrowserWrapper* browserWrapper = [self getBrowserWrapper];
 
-  NSString* titleString = [NSString stringWithFormat:NSLocalizedString(@"defaultTabGroupTitle", nil), numItems, itemTitle];
+  NSString* titleString = [NSString stringWithFormat:NSLocalizedString(@"defaultTabGroupTitle", nil),
+                                                       numItems, [browserWrapper pageTitle]];
   BookmarkFolder* newGroup = [parentFolder addBookmarkFolder:titleString inPosition:folderPosition isGroup:YES];
 
   for (unsigned int i = 0; i < numItems; i++) {
-    BrowserWrapper* browserWrapper = (BrowserWrapper*)[[mTabBrowser tabViewItemAtIndex:i] view];
-    [browserWrapper getTitle:&itemTitle andHref:&itemURL];
+    browserWrapper = (BrowserWrapper*)[[mTabBrowser tabViewItemAtIndex:i] view];
+    NSString* itemTitle = [browserWrapper pageTitle];
+    NSString* itemURL = [browserWrapper currentURI];
 
     [newGroup addBookmark:itemTitle url:itemURL inPosition:i isSeparator:NO];
   }
@@ -3500,7 +3497,7 @@ enum BWCOpenDest {
   if ([sender isMemberOfClass:[NSMenuItem class]]) {
     BrowserTabViewItem* tabViewItem = [mTabBrowser itemWithTag:[sender tag]];
     if (tabViewItem) {
-      NSString* url = [[tabViewItem view] getCurrentURI];
+      NSString* url = [[tabViewItem view] currentURI];
       BOOL backgroundLoad = [BrowserWindowController shouldLoadInBackground:nil];
 
       [self openNewWindowWithURL:url referrer:nil loadInBackground:backgroundLoad allowPopups:NO];
@@ -4742,7 +4739,7 @@ enum BWCOpenDest {
     // kill any autocomplete that was in progress
     [mURLBar revertText];
     // set the text in the URL bar back to the current URL
-    [self updateLocationFields:[mBrowserView getCurrentURI] ignoreTyping:YES];
+    [self updateLocationFields:[mBrowserView currentURI] ignoreTyping:YES];
     
   // see if command-return came in the search field
   } else if ([mSearchBar isFirstResponder]) {
