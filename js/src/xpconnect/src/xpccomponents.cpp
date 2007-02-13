@@ -103,7 +103,6 @@ char * xpc_CheckAccessList(const PRUnichar* wideName, const char* list[])
 NS_IMETHODIMP
 nsXPCComponents_Interfaces::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
-    nsresult rv = NS_OK;
     PRUint32 count = 2;
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
     ++count;
@@ -449,7 +448,6 @@ private:
 NS_IMETHODIMP
 nsXPCComponents_InterfacesByID::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
-    nsresult rv = NS_OK;
     PRUint32 count = 2;
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
     ++count;
@@ -784,7 +782,6 @@ public:
 NS_IMETHODIMP 
 nsXPCComponents_Classes::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
-    nsresult rv = NS_OK;
     PRUint32 count = 2;
     *aCount = count;
     nsIID **array;
@@ -1040,7 +1037,6 @@ public:
 NS_IMETHODIMP 
 nsXPCComponents_ClassesByID::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
-    nsresult rv = NS_OK;
     PRUint32 count = 2;
     *aCount = count;
     nsIID **array;
@@ -1315,7 +1311,6 @@ public:
 NS_IMETHODIMP 
 nsXPCComponents_Results::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
-    nsresult rv = NS_OK;
     PRUint32 count = 2;
     *aCount = count;
     nsIID **array;
@@ -1548,7 +1543,6 @@ private:
 NS_IMETHODIMP 
 nsXPCComponents_ID::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
-    nsresult rv = NS_OK;
     PRUint32 count = 2;
     *aCount = count;
     nsIID **array;
@@ -1776,7 +1770,6 @@ private:
 NS_IMETHODIMP 
 nsXPCComponents_Exception::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
-    nsresult rv = NS_OK;
     PRUint32 count = 2;
     *aCount = count;
     nsIID **array;
@@ -2070,7 +2063,6 @@ private:
 NS_IMETHODIMP 
 nsXPCConstructor::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
-    nsresult rv = NS_OK;
     PRUint32 count = 2;
     *aCount = count;
     nsIID **array;
@@ -2336,7 +2328,6 @@ private:
 NS_IMETHODIMP 
 nsXPCComponents_Constructor::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
-    nsresult rv = NS_OK;
     PRUint32 count = 2;
     *aCount = count;
     nsIID **array;
@@ -3607,7 +3598,6 @@ NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents)
 NS_IMETHODIMP 
 nsXPCComponents::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
-    nsresult rv = NS_OK;
     PRUint32 count = 2;
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
     ++count;
