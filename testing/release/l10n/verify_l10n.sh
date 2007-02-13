@@ -17,7 +17,7 @@ do
   unpack_build $platform source $release/*.en-US.${platform}.*
   # check for read-only files
   find "./source" -not -perm -u=w -exec echo "FAIL read-only file" {} \;
-  locales=`ls $release/*.${platform}.* | grep -v en-US | cut -d\. -f5`
+  locales=`ls $release/*.${platform}.* | grep -v en-US | cut -d\. -f8`
   for locale in $locales
   do
     rm -rf target/*
