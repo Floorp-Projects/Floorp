@@ -28,7 +28,10 @@
 
 #include <nsCWebBrowser.h>
 #include <nsIComponentManager.h>
+#include <nsICommandManager.h>
+#include <nsICommandParams.h>
 #include <nsIDocShellTreeItem.h>
+#include <nsITransferable.h>
 #include "nsIContentViewer.h"
 #include "nsIContentViewerEdit.h"
 #include "nsIDOMWindowInternal.h"
@@ -38,6 +41,7 @@
 #include "nsIDOMNode.h"
 #include "nsIWidget.h"
 #include "nsReadableUtils.h"
+#include "nsISupportsPrimitives.h"
 #include "nsIContentViewer.h"
 #include "nsIContentViewerEdit.h"
 #include "nsIDocShell.h"
@@ -59,6 +63,7 @@ EmbedWindow::EmbedWindow(void)
   mOwner       = nsnull;
   mVisibility  = PR_FALSE;
   mIsModal     = PR_FALSE;
+  aCurrentPageObj = nsnull;
 }
 
 EmbedWindow::~EmbedWindow(void)
@@ -67,6 +72,7 @@ EmbedWindow::~EmbedWindow(void)
     mBaseWindow = nsnull;
     mWebBrowser = nsnull;
     mOwner = nsnull;
+    aCurrentPageObj = nsnull;
 }
 
 nsresult
@@ -297,7 +303,7 @@ EmbedWindow::GetSelection(JNIEnv *env, jobject mSelection)
 }
 
 nsresult
-EmbedWindow::CopySelection()
+EmbedWindow::CopySelection(jobject obj)
 {
     nsCOMPtr<nsIDocShell> docShell = do_GetInterface(mWebBrowser);
     nsCOMPtr<nsIContentViewer> contentViewer = nsnull;
@@ -318,8 +324,47 @@ EmbedWindow::CopySelection()
     if (!contentViewerEdit || NS_FAILED(rv)) {
         return rv;
     }
+
+    nsCOMPtr<nsICommandParams> params = 
+        do_CreateInstance(NS_COMMAND_PARAMS_CONTRACTID,&rv);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+    
+    nsCOMPtr<nsISupports> thisAsSupports(NS_ISUPPORTS_CAST(nsIWebBrowserChrome *, 
+                                                           this));
+    if (!thisAsSupports) {
+        return rv;
+    }
+    
+    nsCOMPtr<nsICommandManager> commandManager = 
+        do_GetInterface(mWebBrowser, &rv);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+    rv = params->SetISupportsValue("addhook", thisAsSupports);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    rv = mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+    if (NS_FAILED(rv) || !domWindow)  {
+        return rv;
+    }
+
+    rv = commandManager->DoCommand("cmd_clipboardDragDropHook",
+                                   params, domWindow);
+    if (NS_FAILED(rv))  {
+        return rv;
+    }
+
+    aCurrentPageObj = obj;
     
     rv = contentViewerEdit->CopySelection();
+
+    aCurrentPageObj = nsnull;
     return rv;
 }
 
@@ -415,6 +460,7 @@ NS_INTERFACE_MAP_BEGIN(EmbedWindow)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChromeFocus)
   NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
+  NS_INTERFACE_MAP_ENTRY(nsIClipboardDragDropHooks)
   NS_INTERFACE_MAP_ENTRY(nsITooltipListener)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
 NS_INTERFACE_MAP_END
@@ -686,6 +732,129 @@ EmbedWindow::SetVisibility(PRBool aVisibility)
 
   return NS_OK;
 }
+
+// nsIClipboardDragDropHooks
+
+/* boolean allowStartDrag (in nsIDOMEvent event); */
+NS_IMETHODIMP EmbedWindow::AllowStartDrag(nsIDOMEvent *event, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean allowDrop (in nsIDOMEvent event, in nsIDragSession session); */
+NS_IMETHODIMP EmbedWindow::AllowDrop(nsIDOMEvent *event, nsIDragSession *session, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean onCopyOrDrag (in nsIDOMEvent aEvent, in nsITransferable trans); */
+NS_IMETHODIMP EmbedWindow::OnCopyOrDrag(nsIDOMEvent *aEvent, 
+                                        nsITransferable *aTransferable, 
+                                        PRBool *_retval)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    PR_ASSERT(nsnull != aCurrentPageObj);
+
+
+    // Taken from nsClipboard::SetupNativeDataObject() in
+    // widget/src/windows/nsClipboard.cpp
+    
+    // Get the transferable list of data flavors
+    nsCOMPtr<nsISupportsArray> dfList;
+    aTransferable->FlavorsTransferableCanExport(getter_AddRefs(dfList));
+
+    // Walk through flavors that contain data and send them back to java
+    PRUint32 i;
+    PRUint32 cnt;
+    dfList->Count(&cnt);
+    for (i=0;i<cnt;i++) {
+        nsCOMPtr<nsISupports> genericFlavor;
+        dfList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
+        nsCOMPtr<nsISupportsCString> currentFlavor ( do_QueryInterface(genericFlavor) );
+        if ( currentFlavor ) {
+            nsXPIDLCString flavorStr;
+            currentFlavor->ToString(getter_Copies(flavorStr));
+            UINT format = GetFormat(flavorStr);
+
+            // Do various things internal to the implementation, like
+            // map one flavor to another or add additional flavors based
+            // on what's required for the win32 impl.
+            if ( strcmp(flavorStr, kUnicodeMime) == 0 ) {
+                // if we find text/unicode, also advertise text/plain
+                // (which we will convert on our own in
+                // nsDataObj::GetText().
+            }
+            else if ( strcmp(flavorStr, kHTMLMime) == 0 ) {      
+                // if we find text/html, also advertise win32's html flavor (which we will convert
+                // on our own in nsDataObj::GetText().
+            }
+            else if ( strcmp(flavorStr, kURLMime) == 0 ) {
+                // if we're a url, in addition to also being text, we
+                // need to register the "file" flavors so that the win32
+                // shell knows to create an internet shortcut when it
+                // sees one of these beasts.
+            }
+            else if ( strcmp(flavorStr, kPNGImageMime) == 0 || strcmp(flavorStr, kJPEGImageMime) == 0 ||
+                      strcmp(flavorStr, kGIFImageMime) == 0 || strcmp(flavorStr, kNativeImageMime) == 0  ) {
+            }
+#ifndef WINCE
+            else if ( strcmp(flavorStr, kFilePromiseMime) == 0 ) {
+                // if we're a file promise flavor, also register the
+                // CFSTR_PREFERREDDROPEFFECT format.  The data object
+                // returns a value of DROPEFFECTS_MOVE to the drop
+                // target when it asks for the value of this format.
+                // This causes the file to be moved from the temporary
+                // location instead of being copied.  The right thing to
+                // do here is to call SetData() on the data object and
+                // set the value of this format to DROPEFFECTS_MOVE on
+                // this particular data object.  But, since all the
+                // other clipboard formats follow the model of setting
+                // data on the data object only when the drop object
+                // calls GetData(), I am leaving this format's value
+                // hard coded in the data object.  We can change this if
+                // other consumers of this format get added to this
+                // codebase and they need different values.
+            }
+#endif
+        }
+    }
+    return NS_OK;
+}
+
+/* boolean onPasteOrDrop (in nsIDOMEvent event, in nsITransferable trans); */
+NS_IMETHODIMP EmbedWindow::OnPasteOrDrop(nsIDOMEvent *event, nsITransferable *trans, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+UINT EmbedWindow::GetFormat(const char* aMimeStr)
+{
+  UINT format;
+
+  if (strcmp(aMimeStr, kTextMime) == 0)
+    format = CF_TEXT;
+  else if (strcmp(aMimeStr, kUnicodeMime) == 0)
+    format = CF_UNICODETEXT;
+#ifndef WINCE
+  else if (strcmp(aMimeStr, kJPEGImageMime) == 0 ||
+           strcmp(aMimeStr, kNativeImageMime) == 0)
+    format = CF_DIB;
+  else if (strcmp(aMimeStr, kFileMime) == 0 || 
+           strcmp(aMimeStr, kFilePromiseMime) == 0)
+    format = CF_HDROP;
+#endif
+  else if (strcmp(aMimeStr, kURLMime) == 0 || 
+           strcmp(aMimeStr, kURLDataMime) == 0 || 
+           strcmp(aMimeStr, kURLDescriptionMime) == 0 || 
+           strcmp(aMimeStr, kFilePromiseURLMime) == 0)
+    format = CF_UNICODETEXT;
+  else
+    format = ::RegisterClipboardFormat(aMimeStr);
+
+  return format;
+}
+
 
 // nsITooltipListener
 

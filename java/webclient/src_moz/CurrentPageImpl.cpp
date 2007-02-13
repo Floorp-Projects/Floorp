@@ -67,7 +67,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
         return;
     }
     
-    nsresult rv = nativeBrowserControl->mWindow->CopySelection();
+    nsresult rv = nativeBrowserControl->mWindow->CopySelection(obj);
     if (NS_FAILED(rv)) {
         ::util_ThrowExceptionToJava(env, "Exception: Can't get Selection from browser");
         return;

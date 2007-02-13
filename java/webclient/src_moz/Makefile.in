@@ -67,6 +67,7 @@ REQUIRES	= xpcom \
 	rdf \
 	bookmarks \
 	content \
+	commandhandler \
 	editor \
 	string \
 	embed_base \

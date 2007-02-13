@@ -38,6 +38,7 @@
 #include <nsIWebBrowser.h>
 #include <nsIBaseWindow.h>
 #include <nsIInterfaceRequestor.h>
+#include <nsIClipboardDragDropHooks.h>
 #include <nsCOMPtr.h>
 #include "nsString.h"
 
@@ -50,10 +51,11 @@ class nsIWeakReference;
 #include "ns_util.h"
 
 class EmbedWindow : public nsIWebBrowserChrome,
-		    public nsIWebBrowserChromeFocus,
+                    public nsIWebBrowserChromeFocus,
                     public nsIEmbeddingSiteWindow,
+                    public nsIClipboardDragDropHooks,
                     public nsITooltipListener,
-		    public nsIInterfaceRequestor
+                    public nsIInterfaceRequestor
 {
     
 public:
@@ -68,7 +70,7 @@ public:
 
     nsresult SelectAll       ();
     nsresult GetSelection    (JNIEnv *env, jobject selection);
-    nsresult CopySelection    ();
+    nsresult CopySelection    (jobject obj);
 
     nsresult LoadStream      (nsIInputStream *aStream, nsIURI * aURI,
                               const nsACString &aContentType,
@@ -94,6 +96,8 @@ public:
     NS_DECL_NSIWEBBROWSERCHROMEFOCUS
     
     NS_DECL_NSIEMBEDDINGSITEWINDOW
+
+    NS_DECL_NSICLIPBOARDDRAGDROPHOOKS
     
     NS_DECL_NSITOOLTIPLISTENER
     
@@ -106,12 +110,16 @@ public:
     nsCOMPtr<nsIBaseWindow>  mBaseWindow; // [OWNER]
     
 private:
+
+    UINT                     GetFormat(const char* aMimeStr);
     
     NativeBrowserControl     *mOwner;
     nsCOMPtr<nsIWebBrowser>  mWebBrowser; // [OWNER]
     // PENDING(edburns): what about the tooltip window?
     PRBool                   mVisibility;
     PRBool                   mIsModal;
+
+    jobject                  aCurrentPageObj;
 
 };
 
