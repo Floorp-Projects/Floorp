@@ -494,10 +494,11 @@
               <menuitem label="&search.label;" accesskey="&search.accesskey;" 
                         key="key_search" command="Tools:Search"/>
               <menuseparator/>
-              <menuitem label="&downloads.label;" accesskey="&downloads.accesskey;"
+              <menuitem id="menu_openDownloads" label="&downloads.label;"
+                        accesskey="&downloads.accesskey;"
                         key="key_openDownloads" command="Tools:Downloads"/>
-              <menuitem label="&addons.label;" accesskey="&addons.accesskey;" 
-                        command="Tools:Addons"/>
+              <menuitem id="menu_openAddons" label="&addons.label;"
+                        accesskey="&addons.accesskey;" command="Tools:Addons"/>
               <menuseparator id="devToolsSeparator"/>
               <menuitem id="javascriptConsole" 
                         label="&errorConsoleCmd.label;" accesskey="&errorConsoleCmd.accesskey;" 
