@@ -958,10 +958,8 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
     // remove downloads
     [[ProgressDlgController sharedDownloadController] clearAllDownloads];
 
-#if 0   // disable this for now (see bug 3202080)
     // remove saved names and passwords
     [[KeychainService instance] removeAllUsernamesAndPasswords];
-#endif
 
     // re-set all bookmarks visit counts to zero
     [[BookmarkManager sharedBookmarkManager] clearAllVisits];

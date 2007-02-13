@@ -116,16 +116,14 @@ enum KeychainPromptResult { kSave, kDontRemember, kNeverRemember } ;
 @interface KeychainDenyList : NSObject
 {
   NSMutableArray* mDenyList;     // the list
-  BOOL mIsDirty;                 // do we need to write the list to disk?
 }
 
-+ (KeychainDenyList*) instance;
-- (void) shutdown:(id)sender;
++ (KeychainDenyList*)instance;
 
-- (BOOL) isHostPresent:(NSString*)host;
-- (void) addHost:(NSString*)host;
-- (void) removeHost:(NSString*)host;
-- (void) writeToDisk;
+- (BOOL)isHostPresent:(NSString*)host;
+- (void)addHost:(NSString*)host;
+- (void)removeHost:(NSString*)host;
+- (void)removeAllHosts;
 
 @end
 

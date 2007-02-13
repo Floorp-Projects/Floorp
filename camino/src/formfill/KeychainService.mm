@@ -327,6 +327,9 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
   while ((item = [keychainEnumerator nextObject])) {
     [item removeFromKeychain];
   }
+
+  // Reset the deny list as well
+  [[KeychainDenyList instance] removeAllHosts];
 }
 
 //
@@ -414,6 +417,7 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
 
 
 @interface KeychainDenyList (KeychainDenyListPrivate)
+- (void)writeToDisk;
 - (NSString*)pathToDenyListFile;
 @end
 
@@ -433,48 +437,24 @@ static KeychainDenyList *sDenyListInstance = nil;
     mDenyList = [[NSUnarchiver unarchiveObjectWithFile:[self pathToDenyListFile]] retain];
     if (!mDenyList)
       mDenyList = [[NSMutableArray alloc] init];
-    
-    mIsDirty = NO;
-    
-    // register for the cocoa notification posted when XPCOM shutdown so we
-    // can release our singleton and flush the file
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(shutdown:) name:XPCOMShutDownNotificationName object:nil];
   }
   return self;
 }
 
 - (void)dealloc
 {
-  [self writeToDisk];
   [mDenyList release];
   [super dealloc];
 }
 
 //
-// shutdown:
-//
-// Called in response to the cocoa notification "XPCOM Shutdown" sent by the cocoa
-// browser service before it terminates embedding and shuts down xpcom. Allows us
-// to get rid of anything we're holding onto for the length of the app.
-//
-- (void)shutdown:(id)unused
-{
-  [sDenyListInstance release];
-}
-
-//
 // writeToDisk
 //
-// flushes the deny list to the save file in the user's profile, but only
-// if it has changed since we read it in.
+// flushes the deny list to the save file in the user's profile.
 //
 - (void)writeToDisk
 {
-  if (mIsDirty) {
-    // XXX erm, why not save it in a format that mortals can read (like a plist???)
-    [NSArchiver archiveRootObject:mDenyList toFile:[self pathToDenyListFile]];
-  }
-  mIsDirty = NO;
+  [NSArchiver archiveRootObject:mDenyList toFile:[self pathToDenyListFile]];
 }
 
 - (BOOL)isHostPresent:(NSString*)host
@@ -486,7 +466,7 @@ static KeychainDenyList *sDenyListInstance = nil;
 {
   if (![self isHostPresent:host]) {
     [mDenyList addObject:host];
-    mIsDirty = YES;
+    [self writeToDisk];
   }
 }
 
@@ -494,8 +474,14 @@ static KeychainDenyList *sDenyListInstance = nil;
 {
   if ([self isHostPresent:host]) {
     [mDenyList removeObject:host];
-    mIsDirty = YES;
+    [self writeToDisk];
   }
+}
+
+- (void)removeAllHosts
+{
+  [mDenyList removeAllObjects];
+  [self writeToDisk];
 }
 
 
@@ -507,15 +493,14 @@ static KeychainDenyList *sDenyListInstance = nil;
 //
 - (NSString*)pathToDenyListFile
 {
-  NSMutableString* path = [[[NSMutableString alloc] init] autorelease];
+  NSString* path = nil;
 
   nsCOMPtr<nsIFile> appProfileDir;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(appProfileDir));
   if (appProfileDir) {
     nsAutoString profilePath;
     appProfileDir->GetPath(profilePath);
-    [path setString:[NSString stringWith_nsAString:profilePath]];
-    [path appendString:@"/Keychain Deny List"];    // |profilePath| is '/' delimited
+    path = [[NSString stringWith_nsAString:profilePath] stringByAppendingPathComponent:@"Keychain Deny List"];
   }
   
   return path;
