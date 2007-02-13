@@ -85,17 +85,17 @@ import org.mozilla.interfaces.nsISupports;
  * 
  * @see http://www.mozilla.org/projects/embedding/GRE.html
  */
-public class Mozilla implements IMozilla, IGRE, IXPCOM, IXPCOMError {
+public class Mozilla implements IMozilla, IGRE, IXPCOM, IJavaXPCOMUtils,
+IXPCOMError {
 
   private static Mozilla mozillaInstance = new Mozilla();
 
   private static final String JAVAXPCOM_JAR = "javaxpcom.jar";
 
   private IMozilla mozilla = null;
-
   private IGRE gre = null;
-
   private IXPCOM xpcom = null;
+  private IJavaXPCOMUtils jxutils = null;
 
   /**
    * @return
@@ -655,6 +655,11 @@ public class Mozilla implements IMozilla, IGRE, IXPCOM, IXPCOMError {
       Class xpcomClass = Class.forName("org.mozilla.xpcom.internal.XPCOMImpl",
                                        true, loader);
       xpcom = (IXPCOM) xpcomClass.newInstance();
+
+      Class javaXPCOMClass =
+    	  Class.forName("org.mozilla.xpcom.internal.JavaXPCOMMethods",
+    			  true, loader);
+      jxutils  = (IJavaXPCOMUtils) javaXPCOMClass.newInstance();
     } catch (Exception e) {
       throw new XPCOMInitializationException("Could not load " +
           "org.mozilla.xpcom.internal.* classes", e);
@@ -1040,5 +1045,23 @@ public class Mozilla implements IMozilla, IGRE, IXPCOM, IXPCOMError {
           "Mozilla.getInstance().initialize() before using this method", e);
     }
   }
+
+	public long wrapJavaObject(Object aJavaObject, String aIID) {
+		try {
+			return jxutils.wrapJavaObject(aJavaObject, aIID);
+    } catch (NullPointerException e) {
+      throw new XPCOMInitializationException("Must call " +
+          "Mozilla.getInstance().initialize() before using this method", e);
+    }
+	}
+	
+	public Object wrapXPCOMObject(long aXPCOMObject, String aIID) {
+		try {
+			return jxutils.wrapXPCOMObject(aXPCOMObject, aIID);
+    } catch (NullPointerException e) {
+      throw new XPCOMInitializationException("Must call " +
+          "Mozilla.getInstance().initialize() before using this method", e);
+    }
+	}
 
 }

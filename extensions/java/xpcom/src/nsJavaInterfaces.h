@@ -46,6 +46,8 @@
 #define JAVAPROXY_NATIVE(func) \
           Java_org_mozilla_xpcom_internal_XPCOMJavaProxy_##func
 #define LOCKPROXY_NATIVE(func) Java_org_mozilla_xpcom_ProfileLock_##func
+#define JXUTILS_NATIVE(func) \
+          Java_org_mozilla_xpcom_internal_JavaXPCOMMethods_##func
 
 
 extern "C" NS_EXPORT void JNICALL
@@ -100,5 +102,13 @@ LOCKPROXY_NATIVE(release) (JNIEnv *env, jclass that, jlong aLockObject);
 
 extern "C" NS_EXPORT jlong JNICALL
 MOZILLA_NATIVE(getNativeHandleFromAWT) (JNIEnv* env, jobject, jobject widget);
+
+extern "C" NS_EXPORT jlong JNICALL
+JXUTILS_NATIVE(wrapJavaObject) (JNIEnv* env, jobject, jobject aJavaObject,
+                                jstring aIID);
+
+extern "C" NS_EXPORT jobject JNICALL
+JXUTILS_NATIVE(wrapXPCOMObject) (JNIEnv* env, jobject, jlong aXPCOMObject,
+                                 jstring aIID);
 
 #endif // _nsJavaInterfaces_h_

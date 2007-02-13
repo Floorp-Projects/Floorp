@@ -356,3 +356,67 @@ MOZILLA_NATIVE(getNativeHandleFromAWT) (JNIEnv* env, jobject clazz,
 
   return handle;
 }
+
+extern "C" NS_EXPORT jlong
+JXUTILS_NATIVE(wrapJavaObject) (JNIEnv* env, jobject, jobject aJavaObject,
+                                jstring aIID)
+{
+  nsresult rv;
+  nsISupports* xpcomObject = nsnull;
+
+  if (!aJavaObject || !aIID) {
+    rv = NS_ERROR_NULL_POINTER;
+  } else {
+    const char* str = env->GetStringUTFChars(aIID, nsnull);
+    if (!str) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    } else {
+      nsID iid;
+      if (iid.Parse(str)) {
+        rv = GetNewOrUsedXPCOMObject(env, aJavaObject, iid, &xpcomObject);
+      } else {
+        rv = NS_ERROR_INVALID_ARG;
+      }
+
+      env->ReleaseStringUTFChars(aIID, str);
+    }
+  }
+
+  if (NS_FAILED(rv)) {
+    ThrowException(env, rv, "Failed to create XPCOM proxy for Java object");
+  }
+  return NS_REINTERPRET_CAST(jlong, xpcomObject);
+}
+
+extern "C" NS_EXPORT jobject
+JXUTILS_NATIVE(wrapXPCOMObject) (JNIEnv* env, jobject, jlong aXPCOMObject,
+                                 jstring aIID)
+{
+  nsresult rv;
+  jobject javaObject = nsnull;
+  nsISupports* xpcomObject = NS_REINTERPRET_CAST(nsISupports*, aXPCOMObject);
+
+  if (!xpcomObject || !aIID) {
+    rv = NS_ERROR_NULL_POINTER;
+  } else {
+    const char* str = env->GetStringUTFChars(aIID, nsnull);
+    if (!str) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    } else {
+      nsID iid;
+      if (iid.Parse(str)) {
+        // XXX Should we be passing something other than NULL for aObjectLoader?
+        rv = GetNewOrUsedJavaObject(env, xpcomObject, iid, nsnull, &javaObject);
+      } else {
+        rv = NS_ERROR_INVALID_ARG;
+      }
+
+      env->ReleaseStringUTFChars(aIID, str);
+    }
+  }
+
+  if (NS_FAILED(rv)) {
+    ThrowException(env, rv, "Failed to create XPCOM proxy for Java object");
+  }
+  return javaObject;
+}
