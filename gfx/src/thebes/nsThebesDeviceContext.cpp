@@ -584,28 +584,6 @@ nsThebesDeviceContext::EndPage(void)
     return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsThebesDeviceContext::SetAltDevice(nsIDeviceContext* aAltDC)
-{
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsThebesDeviceContext::GetAltDevice(nsIDeviceContext** aAltDC)
-{
-    *aAltDC = nsnull;
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsThebesDeviceContext::SetUseAltDC(PRUint8 aValue, PRBool aOn)
-{
-    return NS_OK;
-}
-
 /** End printing methods **/
 
 int

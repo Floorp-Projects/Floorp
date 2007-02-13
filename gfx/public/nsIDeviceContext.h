@@ -469,25 +469,6 @@ public:
    */
   NS_IMETHOD EndPage(void) = 0;
 
-#ifdef NS_PRINT_PREVIEW
-  /**
-   * Set an Alternative Device Context where some of the calls
-   * are deferred to it
-   */
-  NS_IMETHOD SetAltDevice(nsIDeviceContext* aAltDC) = 0;
-
-  /**
-   * Get the Alternate Device Context
-   */
-  NS_IMETHOD GetAltDevice(nsIDeviceContext** aAltDC) = 0;
-
-  /**
-   * Turn on/off which types of information is retrieved 
-   * via the alt device context
-   */
-  NS_IMETHOD SetUseAltDC(PRUint8 aValue, PRBool aOn) = 0;
-#endif
-
   /**
    * Clear cached system fonts (refresh from theme when
    * requested).  This method is effectively static,

@@ -108,9 +108,6 @@ public:
     NS_IMETHOD AbortDocument(void);
     NS_IMETHOD BeginPage(void);
     NS_IMETHOD EndPage(void);
-    NS_IMETHOD SetAltDevice(nsIDeviceContext* aAltDC);
-    NS_IMETHOD GetAltDevice(nsIDeviceContext** aAltDC);
-    NS_IMETHOD SetUseAltDC(PRUint8 aValue, PRBool aOn);
     /* end printing goop */
 
     static void DebugShowCairoSurface (const char *aName, cairo_surface_t *aSurface);
