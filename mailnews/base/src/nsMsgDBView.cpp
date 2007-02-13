@@ -1554,6 +1554,33 @@ NS_IMETHODIMP nsMsgDBView::GetCellValue(PRInt32 aRow, nsITreeColumn* aCol, nsASt
       NS_LITERAL_STRING("messageHasFlag").get()
       : NS_LITERAL_STRING("messageHasNoFlag").get()));
       break;
+    case 'j': // junk column
+      if (!mIsNews) 
+      {
+        nsXPIDLCString junkScoreStr;
+        msgHdr->GetStringProperty("junkscore", getter_Copies(junkScoreStr));
+        aValue.Assign(GetString((!junkScoreStr.IsEmpty() && (atoi(junkScoreStr.get()) > 50)) ?
+         NS_LITERAL_STRING("messageJunk").get() : NS_LITERAL_STRING("messageNotJunk").get()));
+      }
+      break;
+    case 't': 
+      if (colID[1] == 'h' && (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay))
+      {       // thread column
+        PRBool isContainer, isContainerEmpty, isContainerOpen;
+        IsContainer(aRow, &isContainer);
+        if (isContainer) 
+        {
+          IsContainerEmpty(aRow, &isContainerEmpty);
+          if (!isContainerEmpty) 
+          {
+            IsContainerOpen(aRow, &isContainerOpen);
+            aValue.Assign(GetString (isContainerOpen ? 
+             NS_LITERAL_STRING("messageExpanded").get()
+             : NS_LITERAL_STRING("messageCollapsed").get()));
+          }
+        }
+      }
+      break;
     case 'u': // read/unread column
       aValue.Assign(GetString ((flags & MSG_FLAG_READ) ?
       NS_LITERAL_STRING("messageRead").get()
