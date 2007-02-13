@@ -96,6 +96,11 @@
                         document.getAnonymousElementByAttribute(this, "anonid", "title-"+i)
                                 .setAttribute("label", aNameArray[i+2]);
                     }
+                    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                        .getService(Components.interfaces.nsIStringBundleService);
+                    var brand = sbs.createBundle("chrome://branding/locale/brand.properties");
+
+                    document.title = aNameArray[2] + " - " + brand.GetStringFromName("brandShortName");
                 ]]></body>
             </method>
             <method name="moveView">
