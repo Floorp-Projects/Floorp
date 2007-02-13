@@ -7,6 +7,11 @@
 
 <p>We've got a list of some of our <a href="{$config.webpath}/{$app}/recommended/">favorite add-ons</a> to get you started, including the one featured below.</p>
 
+<div class="corner-box">
+<h3 style="font-weight: bold; color: #f7941d;">Hey, where's the new site?</h3>
+<p>The new add-ons site is a little behind, but it's coming soon.  <a href="http://blog.mozilla.com/webdev/2007/02/12/amo-v3-remora-launch-delayed-24-hours/">See our announcement</a> for more information.</p>
+</div>
+
 <div class="addon-feature clearfix">
 	<div class="corner-box">
 		<h3>Featured Add-on: <a href="{$config.webpath}/{$app}/{$feature.id}/">{$feature.name}</a></h3>
