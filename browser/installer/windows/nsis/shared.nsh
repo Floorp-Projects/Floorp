@@ -385,6 +385,7 @@
   ${If} $2 == ""
     ${AddHandlerValues} "$0\gopher" "$1" "$8,0" "URL:Gopher Protocol" "true" "true"
   ${Else}
+    ReadRegStr $2 SHCTX "$0\gopher\shell\open\command" ""
     ClearErrors
     ${WordFind} "$2" "${FileMainEXE}" "E+1{" $R1
     ${Unless} ${Errors}

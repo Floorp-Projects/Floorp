@@ -1663,10 +1663,14 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
       WriteRegStr SHCTX "$R4" "" "$R7"
       WriteRegStr SHCTX "$R4" "FriendlyTypeName" "$R7"
 
-      StrCmp "$R8" "true" 0 +4
-      DeleteRegValue SHCTX "$R4" "EditFlags"
-      WriteRegBin SHCTX "$R4" "EditFlags" 2
+      StrCmp "$R8" "true" 0 +8
       WriteRegStr SHCTX "$R4" "URL Protocol" ""
+      StrCpy $R3 ""
+      ClearErrors
+      ReadRegDWord $R3 SHCTX "$R4" "EditFlags"
+      StrCmp $R3 "" 0 +3 ; Only add EditFlags if a value doesn't exist
+      DeleteRegValue SHCTX "$R4" "EditFlags"
+      WriteRegDWord SHCTX "$R4" "EditFlags" 0x00000002
 
       StrCmp "$R9" "true" 0 +13
       WriteRegStr SHCTX "$R4\DefaultIcon" "" "$R6"
