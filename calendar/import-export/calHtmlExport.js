@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Michiel van Leeuwen <mvl@exedo.nl>
+ *   Daniel Boelzle <daniel.boelzle@sun.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -104,19 +105,26 @@ function html_exportToStream(aStream, aCount, aItems, aTitle) {
     html.head.style += "div.summary {background: lightgray; font-weight: bold; margin: 0px; padding: 3px;}\n";
 
     // Sort aItems
-    aItems.sort(function (a,b) { return a.startDate.compare(b.startDate); });
+    function sortFunc(a, b) {
+        var start_a = calGetStartDate(a);
+        if (!start_a) {
+            return -1;
+        }
+        var start_b = calGetStartDate(b);
+        if (!start_b) {
+            return 1;
+        }
+        return start_a.compare(start_b);
+    }
+    aItems.sort(sortFunc);
 
     var prefixTitle = calGetString("calendar", "htmlPrefixTitle");
     var prefixWhen = calGetString("calendar", "htmlPrefixWhen");
     var prefixLocation = calGetString("calendar", "htmlPrefixLocation");
     var prefixDescription = calGetString("calendar", "htmlPrefixDescription");
 
-    for each (item in aItems) {
-        try {
-            item = item.QueryInterface(Components.interfaces.calIEvent);
-        } catch(e) {
-            continue;
-        }
+    for (var pos = 0; pos < aItems.length; ++pos) {
+        var item = aItems[pos];
 
         // Put properties of the event in a definition list
         // Use hCalendar classes as bonus
@@ -130,10 +138,18 @@ function html_exportToStream(aStream, aCount, aItems, aTitle) {
             </div>
         );
 
+        var startDate = calGetStartDate(item);
+        var endDate = calGetEndDate(item);
+
         // Start and end
         var startstr = new Object();
         var endstr = new Object();
-        dateFormatter.formatInterval(item.startDate, item.endDate, startstr, endstr);
+        if (startDate && endDate)
+            dateFormatter.formatInterval(startDate, endDate, startstr, endstr);
+        else {
+            startstr.value = "";
+            endstr.value = "";
+        }
 
         // Include the end date anyway, even when empty, because the dtend
         // class should be there, for hCalendar goodness.
@@ -146,9 +162,9 @@ function html_exportToStream(aStream, aCount, aItems, aTitle) {
             <div>
                 <div class='key'>{prefixWhen}</div>
                 <div class='value'>
-                    <abbr class='dtstart' title={item.startDate.icalString}>{startstr.value}</abbr>
+                    <abbr class='dtstart' title={startDate ? startDate.icalString : "none"}>{startstr.value}</abbr>
                     {seperator}
-                    <abbr class='dtend' title={item.endDate.icalString}>{endstr.value}</abbr>
+                    <abbr class='dtend' title={endDate ? endDate.icalString : "none"}>{endstr.value}</abbr>
                 </div>
             </div>
         );
