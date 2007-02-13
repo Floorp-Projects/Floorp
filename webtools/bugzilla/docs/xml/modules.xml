@@ -140,15 +140,6 @@
     </para>
 
     <para>
-      MIME::Base64:
-      <literallayout>
-        CPAN Download Page: <ulink url="http://search.cpan.org/dist/MIME-Base64/"/>
-        PPM Download Link: <ulink url="http://ppm.activestate.com/PPMPackages/zips/8xx-builds-only/Windows/MIME-Base64-2.20.zip"/>
-        Documentation: <ulink url="http://search.cpan.org/dist/MIME-Base64/Base64.pm"/>
-      </literallayout>
-    </para>
-
-    <para>
       MIME::Parser (part of MIME-tools):
       <literallayout>
         CPAN Download Page: <ulink url="http://search.cpan.org/dist/MIME-tools/"/>

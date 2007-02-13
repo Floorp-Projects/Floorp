@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.135 2006/11/29 18:00:53 lpsolit%gmail.com Exp $ -->
+<!-- $Id: installation.xml,v 1.136 2007/02/13 00:19:00 mkanat%bugzilla.org Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -331,18 +331,6 @@
 
         <listitem>
           <para>
-            MIME::Base64 (&min-mime-base64-ver;)
-          </para>
-        </listitem>
-
-        <listitem>
-          <para>
-            MIME::Parser (&min-mime-parser-ver;)
-          </para>
-        </listitem>
-
-        <listitem>
-          <para>
             Email::Send (&min-email-send-ver;)
           </para>
         </listitem>
@@ -394,7 +382,13 @@
         <listitem>
           <para>
             <link linkend="install-modules-xml-twig">XML::Twig</link>
-            (&min-xml-twig-ver;) for the XML interface
+            (&min-xml-twig-ver;) for bug import/export
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            MIME::Parser (&min-mime-parser-ver;) for bug import/export
           </para>
         </listitem>
 

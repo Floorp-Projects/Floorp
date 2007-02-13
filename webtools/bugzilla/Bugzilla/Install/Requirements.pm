@@ -83,17 +83,6 @@ sub REQUIRED_MODULES {
         version => '2.12'
     },
     {
-        package => 'MIME-Base64',
-        module  => 'MIME::Base64',
-        version => '3.01'
-    },
-    {
-        package => 'MIME-tools',
-        # MIME::Parser is packaged as MIME::Tools on ActiveState Perl
-        module  => ON_WINDOWS ? 'MIME::Tools' : 'MIME::Parser',
-        version => '5.406'
-    },
-    {
         package => 'Email-Send',
         module  => 'Email::Send',
         version => ON_WINDOWS ? '2.16' : '2.00'
@@ -149,6 +138,13 @@ sub OPTIONAL_MODULES {
         package => 'XML-Twig',
         module  => 'XML::Twig',
         version => 0,
+        feature => 'Move Bugs Between Installations'
+    },
+    {
+        package => 'MIME-tools',
+        # MIME::Parser is packaged as MIME::Tools on ActiveState Perl
+        module  => ON_WINDOWS ? 'MIME::Tools' : 'MIME::Parser',
+        version => '5.406',
         feature => 'Move Bugs Between Installations'
     },
     {
