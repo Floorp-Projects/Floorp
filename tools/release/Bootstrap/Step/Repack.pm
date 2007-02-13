@@ -40,7 +40,6 @@ sub Verify {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
-    my $buildDir = $config->Get(var => 'buildDir');
     my $productTag = $config->Get(var => 'productTag');
     my $product = $config->Get(var => 'product');
     my $rc = $config->Get(var => 'rc');
@@ -86,7 +85,7 @@ sub Verify {
                      . '/nightly/' . $version . '-candidates/rc' . $rc . '/',
                     $product . '-' . $version . '-rc' . $rc . '/',
                    ],
-      dir => $buildDir,
+      dir => $verifyDir,
       logFile => 
         catfile($logDir, 'repack_verify-download_' . $version . '.log'),
       timeout => 3600
@@ -106,7 +105,7 @@ sub Verify {
                      . $oldRc . '/',
                     $product . '-' . $oldVersion . '-rc' . $oldRc . '/',
                    ],
-      dir => $buildDir,
+      dir => $verifyDir,
       logFile => 
         catfile($logDir, 'repack_verify-download_' . $oldVersion . '.log'),
       timeout => 3600
