@@ -1,0 +1,195 @@
+#!/usr/bin/env python
+
+import sys
+import os
+
+from twisted.python import reflect
+from twisted.internet import reactor
+
+# epydoc
+import epydoc
+assert epydoc.__version__[0] == '2', "You need epydoc 2.x!"
+from epydoc.cli import cli
+
+class FakeModule:
+
+    def __init__(self, name, level):
+        self.__level = level
+        self.__name__ = name
+
+    def __repr__(self):
+        return '<Fake %s>' % self.__name__
+    __str__ = __repr__
+
+    def __nonzero__(self):
+        return 1
+
+    def __call__(self, *args, **kw):
+        pass #print 'Called:', args
+
+    def __getattr__(self, attr):
+        if self.__level == 0:
+            raise AttributeError
+        return FakeModule(self.__name__+'.'+attr, self.__level-1)
+
+    def __cmp__(self, other):
+        if not hasattr(other, '___name__'):
+            return -1
+        return cmp(self.__name__, other.__name__)
+
+
+def fakeOut(modname):
+    modpath = modname.split('.')
+    prevmod = None
+    for m in range(len(modpath)):
+        mp = '.'.join(modpath[:m+1])
+        nm = FakeModule(mp, 4)
+        if prevmod:
+            setattr(prevmod, modpath[m], nm)
+        sys.modules[mp] = nm
+        prevmod = nm
+
+#fakeOut("twisted")
+
+# HACK: Another "only doc what we tell you". We don't want epydoc to
+# automatically recurse into subdirectories: "twisted"'s presence was
+# causing "twisted/test" to be docced, even thought we explicitly
+# didn't put any twisted/test in our modnames.
+
+from epydoc import imports
+orig_find_modules = imports.find_modules
+
+import re
+
+def find_modules(dirname):
+    if not os.path.isdir(dirname): return []
+    found_init = 0
+    modules = {}
+    dirs = []
+
+    # Search for directories & modules, and check for __init__.py.
+    # Don't include duplicates (like foo.py and foo.pyc), and give
+    # precedance to the .py files.
+    for file in os.listdir(dirname):
+        filepath = os.path.join(dirname, file)
+        if os.path.isdir(filepath): dirs.append(filepath)
+        elif not re.match(r'\w+.py.?', file):
+            continue # Ignore things like ".#foo.py" or "a-b.py"
+        elif file[-3:] == '.py':
+            modules[file] = os.path.join(dirname, file)
+            if file == '__init__.py': found_init = 1
+        elif file[-4:-1] == '.py':
+            modules.setdefault(file[:-1], file)
+            if file[:-1] == '__init__.py': found_init = 1
+    modules = modules.values()
+
+    # If there was no __init__.py, then this isn't a package
+    # directory; return nothing.
+    if not found_init: return []
+
+    # Recurse to the child directories.
+    # **twisted** here's the change: commented next line out
+    #for d in dirs: modules += find_modules(d)
+    return modules
+
+imports.find_modules = find_modules
+
+
+
+# Now, set up the list of modules for epydoc to document
+modnames = []
+def addMod(arg, path, files):
+    for fn in files:
+        file = os.path.join(path, fn).replace('%s__init__'%os.sep, '')
+        if file[-3:] == '.py' and not file.count('%stest%s' % (os.sep,os.sep)):
+            modName = file[:-3].replace(os.sep,'.')
+            try:
+                #print 'pre-loading', modName
+                reflect.namedModule(modName)
+            except ImportError, e:
+                print 'import error:', modName, e
+            except Exception, e:
+                print 'other error:', modName, e
+            else:
+                modnames.append(modName)
+
+document_all = True # are we doing a full build?
+names = ['buildbot/'] #default, may be overriden below
+
+#get list of modules/pkgs on cmd-line
+try:
+    i = sys.argv.index("--modules")
+except:
+    pass
+else:
+    names = sys.argv[i+1:]
+    document_all = False
+    sys.argv[i:] = []
+    #sanity check on names
+    for i in range(len(names)):
+        try:
+            j = names[i].rindex('buildbot/') 
+        except:
+            raise SystemExit, 'You can only specify buildbot modules or packages'
+        else:
+            #strip off any leading directories before the 'twisted/'
+            #dir. this makes it easy to specify full paths, such as
+            #from TwistedEmacs
+            names[i] = names[i][j:]
+
+    old_out_dir = "html"
+    #if -o was specified, we need to change it to point to a tmp dir
+    #otherwise add our own -o option
+    try:
+        i = sys.argv.index('-o')
+        old_out_dir = sys.argv[i+1]
+        try:
+            os.mkdir(tmp_dir)
+        except OSError:
+            pass
+        sys.argv[i+1] = tmp_dir
+    except ValueError:
+        sys.argv[1:1] = ['-o', tmp_dir]
+
+osrv = sys.argv
+sys.argv=["IGNORE"]
+
+for name in names:
+    if name.endswith(".py"):
+        # turn it in to a python module name
+        name = name[:-3].replace(os.sep, ".")
+        try:
+            reflect.namedModule(name)
+        except ImportError:
+            print 'import error:', name
+        except:
+            print 'other error:', name
+        else:
+            modnames.append(name)
+    else: #assume it's a dir
+        os.path.walk(name, addMod, None)
+
+sys.argv = osrv
+
+if 'buildbot.test' in modnames:
+    modnames.remove('buildbot.test')
+##if 'twisted' in modnames:
+##    modnames.remove('twisted')
+
+sys.argv.extend(modnames)
+
+import buildbot
+
+
+sys.argv[1:1] = [
+    '-n', 'BuildBot %s' % buildbot.version,
+    '-u', 'http://buildbot.sourceforge.net/', '--no-private']
+
+# Make it easy to profile epyrun
+if 0:
+    import profile
+    profile.run('cli()', 'epyrun.prof')
+else:
+    cli()
+
+print 'Done!'

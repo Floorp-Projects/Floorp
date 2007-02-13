@@ -1,0 +1,193 @@
+
+BuildBot: build/test automation
+  http://buildbot.sourceforge.net/
+  Brian Warner <warner-buildbot @ lothar . com>
+
+
+Abstract:
+
+The BuildBot is a system to automate the compile/test cycle required by most
+software projects to validate code changes. By automatically rebuilding and
+testing the tree each time something has changed, build problems are
+pinpointed quickly, before other developers are inconvenienced by the
+failure. The guilty developer can be identified and harassed without human
+intervention. By running the builds on a variety of platforms, developers
+who do not have the facilities to test their changes everywhere before
+checkin will at least know shortly afterwards whether they have broken the
+build or not. Warning counts, lint checks, image size, compile time, and
+other build parameters can be tracked over time, are more visible, and
+are therefore easier to improve.
+
+The overall goal is to reduce tree breakage and provide a platform to run
+tests or code-quality checks that are too annoying or pedantic for any human
+to waste their time with. Developers get immediate (and potentially public)
+feedback about their changes, encouraging them to be more careful about
+testing before checkin.
+
+
+Features:
+
+ * run builds on a variety of slave platforms
+ * arbitrary build process: handles projects using C, Python, whatever
+ * minimal host requirements: python and Twisted
+ * slaves can be behind a firewall if they can still do checkout
+ * status delivery through web page, email, IRC, other protocols
+ * track builds in progress, provide estimated completion time
+ * flexible configuration by subclassing generic build process classes
+ * debug tools to force a new build, submit fake Changes, query slave status
+ * released under the GPL
+
+
+DOCUMENTATION:
+
+The PyCon paper has a good description of the overall architecture. It is
+available in HTML form in docs/PyCon-2003/buildbot.html, or on the web page.
+
+The User's Manual is in docs/buildbot.info, and the Installation chapter is
+the best guide to use for setup instructions. The .texinfo source can also be
+turned into printed documentation. An HTML representation is available on the
+Buildbot home page.
+
+REQUIREMENTS:
+
+ Python: http://www.python.org
+
+   Buildbot requires python-2.3 or later, and is primarily developed against
+   python-2.4 . It has *not* yet been tested against python-2.5 .
+
+ Twisted: http://twistedmatrix.com
+
+   Both the buildmaster and the buildslaves require Twisted-2.0.x or later.
+   As always, the most recent version is recommended. It has been tested
+   against Twisted-2.4.0 and Twisted SVN as of the date of release.
+
+   Twisted is delivered as a collection of subpackages. You'll need at least
+   "Twisted" (the core package), and you'll also want TwistedMail,
+   TwistedWeb, and TwistedWords (for sending email, serving a web status
+   page, and delivering build status via IRC, respectively). You might also
+   want TwistedConch (for the encrypted Manhole debug port). Note that
+   Twisted requires ZopeInterface to be installed as well.
+
+ACCESSORIES:
+
+ CVSToys: http://purl.net/net/CVSToys
+
+   If your buildmaster uses FreshCVSSource to receive change notification
+   from a cvstoys daemon, it will require CVSToys be installed (tested with
+   CVSToys-1.0.10). If the it doesn't use that source (i.e. if you only use
+   a mail-parsing change source, or the SVN notification script), you will
+   not need CVSToys.
+
+INSTALLATION:
+
+Please read the User's Manual in docs/buildbot.info or docs/buildbot.html for
+complete instructions. This file only contains a brief summary.
+
+ RUNNING THE UNIT TESTS
+
+If you would like to run the unit test suite, use a command like this:
+
+ PYTHONPATH=. trial buildbot.test
+
+This should run up to 221 tests, depending upon what VC tools you have
+installed. On my desktop machine it takes about six minutes to complete.
+Nothing should fail (at least under unix), a few might be skipped. If any of
+the tests fail, you should stop and investigate the cause before continuing
+the installation process, as it will probably be easier to track down the bug
+early. There are a few known failures under windows and OS-X, but please
+report these to the mailing list so we can isolate and resolve them.
+
+Neither CVS nor SVN support file based repositories on network filesystem
+(or network drives in Windows parlance). Therefore it is recommended to run
+all unit tests on local hard disks.
+
+ INSTALLING THE LIBRARIES:
+
+The first step is to install the python libraries. This package uses the
+standard 'distutils' module, so installing them is usually a matter of
+doing something like:
+
+ python ./setup.py install
+
+To test this, shift to a different directory (like /tmp), and run:
+
+ buildbot --version
+
+If it announces the versions of Buildbot and Twisted, the install went ok.
+
+
+ SETTING UP A BUILD SLAVE:
+
+If you want to run a build slave, you need to obtain the following pieces of
+information from the administrator of the buildmaster you intend to connect
+to:
+
+ your buildslave's name
+ the password assigned to your buildslave
+ the hostname and port number of the buildmaster, i.e. example.com:8007
+ 
+You also need to pick a working directory for the buildslave. All commands
+will be run inside this directory.
+
+Now run the 'buildbot' command as follows:
+
+ buildbot create-slave WORKDIR MASTERHOST:PORT SLAVENAME PASSWORD
+
+This will create a file called "buildbot.tac", which bundles up all the state
+needed by the build slave application. Twisted has a tool called "twistd"
+which knows how to load these saved applications and start running them.
+twistd takes care of logging and daemonization (running the program in the
+background). /usr/bin/buildbot is a front end which runs twistd for you.
+
+Once you've set up the directory with the .tac file, you start it running
+like this:
+
+ buildbot start WORKDIR
+
+This will start the build slave in the background and finish, so you don't
+need to put it in the background yourself with "&". The process ID of the
+background task is written to a file called "twistd.pid", and all output from
+the program is written to a log file named "twistd.log". Look in twistd.log
+to make sure the buildslave has started.
+
+To shut down the build slave, use:
+
+ buildbot stop WORKDIR
+
+
+ RUNNING BEHIND A NAT BOX:
+
+Some network environments will not properly maintain a TCP connection that
+appears to be idle. NAT boxes which do some form of connection tracking may
+drop the port mapping if it looks like the TCP session has been idle for too
+long. The buildslave attempts to turn on TCP "keepalives" (supported by
+Twisted 1.0.6 and later), and if these cannot be activated, it uses
+application level keepalives (which send a dummy message to the build master
+on a periodic basis). The TCP keepalive is typically sent at intervals of
+about 2 hours, and is configurable through the kernel. The application-level
+keepalive defaults to running once every 10 minutes.
+
+To manually turn on application-level keepalives, or to set them to use some
+other interval, add "--keepalive NNN" to the 'buildbot slave' command line.
+NNN is the number of seconds between keepalives. Use as large a value as your
+NAT box allows to reduce the amount of unnecessary traffic on the wire. 600
+seconds (10 minutes) is a reasonable value.
+
+
+ SETTING UP A BUILD MASTER:
+
+Please read the user's manual for instructions. The short form is that you
+use 'buildbot create-master MASTERDIR' to create the base directory, then you
+edit the 'master.cfg' file to configure the buildmaster. Once this is ready,
+you use 'buildbot START MASTERDIR' to launch it.
+
+A sample configuration file will be created for you in WORKDIR/master.cfg .
+There are more examples in docs/examples/, and plenty of documentation in the
+user's manual. Everything is controlled by the config file.
+
+
+SUPPORT:
+
+ Please send questions, bugs, patches, etc, to the buildbot-devel mailing
+ list reachable through http://buildbot.sourceforge.net/, so that everyone
+ can see them.
