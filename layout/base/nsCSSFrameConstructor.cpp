@@ -5651,33 +5651,13 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
 
       nsresult rv;
       nsIContent* bindingParent = content;
-#ifdef MOZ_XUL
-      // Only cut XUL scrollbars off if they're not in a XUL document.
-      // This allows scrollbars to be styled from XUL (although not
-      // from XML or HTML).
-      nsINodeInfo *ni = content->NodeInfo();
-      nsIAtom *localName = ni->NameAtom();
-      if (ni->NamespaceID() == kNameSpaceID_XUL &&
-          (localName == nsGkAtoms::scrollbar ||
-           localName == nsGkAtoms::scrollcorner)) {
-        nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(aDocument));
-        if (xulDoc)
-          bindingParent = aParent;
-      }
-      else
-#endif
 #ifdef MOZ_SVG
       // least-surprise CSS binding until we do the SVG specified
       // cascading rules for <svg:use> - bug 265894
       if (aParent &&
           aParent->NodeInfo()->Equals(nsGkAtoms::use, kNameSpaceID_SVG))
         bindingParent = aParent;
-      else
 #endif
-      // Empty block to serve as the else clause to keep the
-      // following statement from accidentally falling into the
-      // |else| when the #defines are changed.
-      {}
       
       rv = content->BindToTree(aDocument, aParent, bindingParent, PR_TRUE);
       if (NS_FAILED(rv)) {
