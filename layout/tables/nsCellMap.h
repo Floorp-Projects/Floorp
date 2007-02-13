@@ -288,6 +288,9 @@ public:
     */
   ~nsCellMap();
 
+  static nsresult Init();
+  static void Shutdown();
+
   nsCellMap* GetNextSibling() const;
   void SetNextSibling(nsCellMap* aSibling);
 
