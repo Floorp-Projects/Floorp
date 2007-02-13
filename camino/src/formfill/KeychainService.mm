@@ -91,6 +91,9 @@ nsresult
 FindUsernamePasswordFields(nsIDOMHTMLFormElement* inFormElement, nsIDOMHTMLInputElement** outUsername,
                            nsIDOMHTMLInputElement** outPassword, PRBool inStopWhenFound);
 
+NSWindow*
+GetNSWindow(nsIDOMWindow* inWindow);
+
 @interface KeychainService(Private)
 - (KeychainItem*)findLegacyKeychainEntryForHost:(NSString*)host port:(PRInt32)port;
 @end
@@ -260,6 +263,7 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
 - (void)storeUsername:(NSString*)username
              password:(NSString*)password
               forHost:(NSString*)host
+       securityDomain:(NSString*)securityDomain
                  port:(PRInt32)port
                scheme:(NSString*)scheme
                isForm:(BOOL)isForm
@@ -276,6 +280,8 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
                                                   withUsername:username
                                                       password:password];
   [newItem setCreator:kCaminoKeychainCreatorCode];
+  if (securityDomain)
+    [newItem setSecurityDomains:[NSArray arrayWithObject:securityDomain]];
 }
 
 // Stores changes to a site's stored account. Because we don't handle multiple accounts, we want to
@@ -375,8 +381,8 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
 //
 - (KeychainPromptResult)confirmStorePassword:(NSWindow*)parent
 {
-  int result = [NSApp runModalForWindow:confirmStorePasswordPanel relativeToWindow:parent];
-  [confirmStorePasswordPanel close];
+  int result = [NSApp runModalForWindow:mConfirmStorePasswordPanel relativeToWindow:parent];
+  [mConfirmStorePasswordPanel close];
   
   KeychainPromptResult keychainAction = kDontRemember;
   switch (result) {
@@ -390,16 +396,30 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
 }
 
 //
-// confirmChangedPassword:
+// confirmChangePassword:
 //
 // The password stored in the keychain differs from what the user typed
 // in. Ask what they want to do to resolve the issue.
 //
-- (BOOL)confirmChangedPassword:(NSWindow*)parent
+- (BOOL)confirmChangePassword:(NSWindow*)parent
 {
-  int result = [NSApp runModalForWindow:confirmChangePasswordPanel relativeToWindow:parent];
-  [confirmChangePasswordPanel close];
+  int result = [NSApp runModalForWindow:mConfirmChangePasswordPanel relativeToWindow:parent];
+  [mConfirmChangePasswordPanel close];
   return (result == NSAlertDefaultReturn);
+}
+
+//
+// confirmFillPassword:
+//
+// The password stored in the keychain has an action domain that
+// doesn't match the stored value; ask the user whether to fill.
+//
+- (BOOL)confirmFillPassword:(NSWindow*)parent
+{
+  int result = [NSApp runModalForWindow:mConfirmFillPasswordPanel relativeToWindow:parent];
+  [mConfirmFillPasswordPanel close];
+  // Default is not to fill
+  return (result != NSAlertDefaultReturn);
 }
 
 
@@ -622,7 +642,7 @@ KeychainPrompt::ProcessPrompt(const PRUnichar* realm, bool checked, PRUnichar* u
   // choice and whether or not we found the username/password in the
   // keychain.
   if (checked && !existingEntry)
-    [keychain storeUsername:username password:password forHost:(NSString*)host port:port scheme:scheme isForm:NO];
+    [keychain storeUsername:username password:password forHost:(NSString*)host securityDomain:nil port:port scheme:scheme isForm:NO];
   else if (checked && existingEntry && (![[existingEntry username] isEqualToString:username] ||
                                         ![[existingEntry password] isEqualToString:password]))
     [keychain updateKeychainEntry:existingEntry withUsername:username password:password scheme:scheme isForm:NO];
@@ -783,6 +803,13 @@ KeychainFormSubmitObserver::Notify(nsIContent* node, nsIDOMWindowInternal* windo
     PRInt32 port = -1;
     docURL->GetPort(&port);
 
+    nsAutoString action;
+    formNode->GetAction(action);
+    NSString* actionHost = [[NSURL URLWithString:[NSString stringWith_nsAString:action]] host];
+    // Forms without an action specified submit to the page
+    if (!actionHost)
+      actionHost = host;
+
     //
     // If there's already an entry in the keychain, check if the username
     // and password match. If not, ask the user what they want to do and replace
@@ -792,13 +819,18 @@ KeychainFormSubmitObserver::Notify(nsIContent* node, nsIDOMWindowInternal* windo
     KeychainItem* existingEntry = [keychain findKeychainEntryForHost:host port:port scheme:scheme isForm:YES];
     if (existingEntry) {
       if (!([[existingEntry username] isEqualToString:username] && [[existingEntry password] isEqualToString:password]))
-        if (CheckChangeDataYN(window))
+        if ([keychain confirmChangePassword:GetNSWindow(window)])
           [keychain updateKeychainEntry:existingEntry withUsername:username password:password scheme:scheme isForm:YES];
+      // If the password doesn't have an action host associated with it,
+      // add the host for the first form it is submitted to.
+      if ([[existingEntry securityDomains] count] == 0) {
+        [existingEntry setSecurityDomains:[NSArray arrayWithObject:actionHost]];
+      }
     }
     else {
-      switch (CheckStorePasswordYN(window)) {
+      switch ([keychain confirmStorePassword:GetNSWindow(window)]) {
         case kSave:
-          [keychain storeUsername:username password:password forHost:host port:port scheme:scheme isForm:YES];
+          [keychain storeUsername:username password:password forHost:host securityDomain:actionHost port:port scheme:scheme isForm:YES];
           break;
 
         case kNeverRemember:
@@ -816,28 +848,6 @@ KeychainFormSubmitObserver::Notify(nsIContent* node, nsIDOMWindowInternal* windo
   return NS_OK;
 }
 
-
-NSWindow*
-KeychainFormSubmitObserver::GetNSWindow(nsIDOMWindowInternal* inWindow)
-{
-  CHBrowserView* browserView = [CHBrowserView browserViewFromDOMWindow:inWindow];
-  return [browserView nativeWindow];
-}
-
-KeychainPromptResult
-KeychainFormSubmitObserver::CheckStorePasswordYN(nsIDOMWindowInternal* window)
-{
-  NSWindow* nswindow = GetNSWindow(window);
-  return [[KeychainService instance] confirmStorePassword:nswindow];
-}
-
-
-BOOL
-KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
-{
-  NSWindow* nswindow = GetNSWindow(window);
-  return [[KeychainService instance] confirmChangedPassword:nswindow];
-}
 
 @implementation KeychainBrowserListener
 
@@ -885,6 +895,7 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
   if (NS_FAILED(rv) || !forms)
     return;
 
+  BOOL silentlyDenySuspiciousForms = NO;
   PRUint32 numForms;
   forms->GetLength(&numForms);
 
@@ -929,6 +940,31 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
 
       KeychainItem* keychainEntry = [keychain findKeychainEntryForHost:host port:port scheme:scheme isForm:YES];
       if (keychainEntry) {
+        // To help prevent password stealing on sites that allow user-created HTML (but not JS),
+        // only fill if the form's action host is one that has been authorized by the user.
+        // If the keychain entry doesn't have any authorized hosts, either because it pre-dates
+        // this code or because it's a non-Camino entry, fill any form.
+        nsAutoString action;
+        formElement->GetAction(action);
+        NSString* actionHost = [[NSURL URLWithString:[NSString stringWith_nsAString:action]] host];
+        if (!actionHost)
+          actionHost = host;
+        NSArray* allowedActionHosts = [keychainEntry securityDomains];
+        if ([allowedActionHosts count] > 0 && ![allowedActionHosts containsObject:actionHost]) {
+          // The form has an un-authorized action domain. If we haven't
+          // asked the user about this page, ask. If we have and they said
+          // no, don't ask (to prevent a malicious page from throwing
+          // dialogs until the user tries the other button).
+          if (silentlyDenySuspiciousForms)
+            continue;
+          if (![keychain confirmFillPassword:GetNSWindow(inDOMWindow)]) {
+            silentlyDenySuspiciousForms = YES;
+            continue;
+          }
+          // Remember the approval
+          [keychainEntry setSecurityDomains:[allowedActionHosts arrayByAddingObject:actionHost]];
+        }
+
         nsAutoString user, pwd;
         [[keychainEntry username] assignTo_nsAString:user];
         [[keychainEntry password] assignTo_nsAString:pwd];
@@ -1025,6 +1061,18 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
 }
 
 @end
+
+//
+// GetNSWindow
+//
+// Finds the native window for the given DOM window
+//
+NSWindow*
+GetNSWindow(nsIDOMWindow* inWindow)
+{
+  CHBrowserView* browserView = [CHBrowserView browserViewFromDOMWindow:inWindow];
+  return [browserView nativeWindow];
+}
 
 //
 // FindUsernamePasswordFields

@@ -48,6 +48,7 @@
   NSString* mPassword;                 // strong
   NSString* mHost;                     // strong
   NSString* mComment;                  // strong
+  NSArray* mSecurityDomains;           // strong
   SecProtocolType mPort;
   SecProtocolType mProtocol;
   SecAuthenticationType mAuthenticationType;
@@ -91,6 +92,8 @@
 - (void)setCreator:(OSType)creator;
 - (NSString*)comment;
 - (void)setComment:(NSString*)comment;
+- (void)setSecurityDomains:(NSArray*)securityDomains;
+- (NSArray*)securityDomains;
 
 - (void)removeFromKeychain;
 

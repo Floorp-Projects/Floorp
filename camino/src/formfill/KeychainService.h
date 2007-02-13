@@ -58,8 +58,9 @@ enum KeychainPromptResult { kSave, kDontRemember, kNeverRemember } ;
 
 @interface KeychainService : NSObject
 {
-  IBOutlet id confirmStorePasswordPanel;
-  IBOutlet id confirmChangePasswordPanel;
+  IBOutlet id mConfirmStorePasswordPanel;
+  IBOutlet id mConfirmChangePasswordPanel;
+  IBOutlet id mConfirmFillPasswordPanel;
 
   BOOL mFormPasswordFillIsEnabled;
 
@@ -74,7 +75,8 @@ enum KeychainPromptResult { kSave, kDontRemember, kNeverRemember } ;
 - (IBAction)hitButtonOther:(id)sender;
 
 - (KeychainPromptResult)confirmStorePassword:(NSWindow*)parent;
-- (BOOL)confirmChangedPassword:(NSWindow*)parent;
+- (BOOL)confirmChangePassword:(NSWindow*)parent;
+- (BOOL)confirmFillPassword:(NSWindow*)parent;
 
 - (KeychainItem*)findKeychainEntryForHost:(NSString*)host
                                      port:(PRInt32)port
@@ -83,6 +85,7 @@ enum KeychainPromptResult { kSave, kDontRemember, kNeverRemember } ;
 - (void)storeUsername:(NSString*)username
              password:(NSString*)password
               forHost:(NSString*)host
+       securityDomain:(NSString*)host
                  port:(PRInt32)port
                scheme:(NSString*)scheme
                isForm:(BOOL)isForm;
@@ -162,13 +165,6 @@ public:
 
   // NS_DECL_NSIFORMSUBMITOBSERVER
   NS_IMETHOD Notify(nsIContent* formNode, nsIDOMWindowInternal* window, nsIURI* actionURL, PRBool* cancelSubmit);
-
-private:
-
-  static KeychainPromptResult CheckStorePasswordYN(nsIDOMWindowInternal*);
-  static BOOL CheckChangeDataYN(nsIDOMWindowInternal*);
-  
-  static NSWindow* GetNSWindow(nsIDOMWindowInternal* inWindow);
 };
 
 //

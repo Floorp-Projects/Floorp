@@ -3,10 +3,20 @@
         {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {CLASS = KeychainBrowserListener; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {
+            ACTIONS = {shutdown = id; }; 
+            CLASS = KeychainDenyList; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {
             ACTIONS = {hitButtonCancel = id; hitButtonOK = id; hitButtonOther = id; shutdown = id; }; 
             CLASS = KeychainService; 
             LANGUAGE = ObjC; 
-            OUTLETS = {confirmChangePasswordPanel = id; confirmStorePasswordPanel = id; }; 
+            OUTLETS = {
+                mConfirmChangePasswordPanel = id; 
+                mConfirmFillPasswordPanel = id; 
+                mConfirmStorePasswordPanel = id; 
+            }; 
             SUPERCLASS = NSObject; 
         }
     ); 
