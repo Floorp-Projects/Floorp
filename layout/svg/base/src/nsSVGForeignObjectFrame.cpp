@@ -125,8 +125,12 @@ nsSVGForeignObjectFrame::AttributeChanged(PRInt32         aNameSpaceID,
       UpdateCoveredRegion();
       UpdateGraphic();
     } else if (aAttribute == nsGkAtoms::x ||
-               aAttribute == nsGkAtoms::y ||
-               aAttribute == nsGkAtoms::transform) {
+               aAttribute == nsGkAtoms::y) {
+      UpdateCoveredRegion();
+      UpdateGraphic();
+    } else if (aAttribute == nsGkAtoms::transform) {
+      // make sure our cached transform matrix gets (lazily) updated
+      mCanvasTM = nsnull;
       UpdateCoveredRegion();
       UpdateGraphic();
     }
