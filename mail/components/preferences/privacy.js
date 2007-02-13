@@ -51,7 +51,7 @@ var gPrivacyPane = {
     this.updateMasterPasswordButton();
     
     // update the checkbox for downloading phishing url tables
-    this.updateDownloadedPhishingListState();
+    // this.updateDownloadedPhishingListState();
 
     var preference = document.getElementById("mail.preferences.privacy.selectedTabIndex");
     if (preference.value)
