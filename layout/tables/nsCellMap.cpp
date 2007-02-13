@@ -42,7 +42,7 @@
 #include "nsTableRowGroupFrame.h"
 
 // Empty static array used for SafeElementAt() calls on mRows.
-static nsCellMap::CellDataArray sEmptyRow;
+static nsCellMap::CellDataArray * sEmptyRow;
 
 // CellData 
 
@@ -1216,6 +1216,25 @@ nsCellMap::~nsCellMap()
   }
 }
 
+/* static */
+nsresult
+nsCellMap::Init()
+{
+  NS_ASSERTION(!sEmptyRow, "How did that happen?");
+  sEmptyRow = new nsCellMap::CellDataArray();
+  NS_ENSURE_TRUE(sEmptyRow, NS_ERROR_OUT_OF_MEMORY);
+
+  return NS_OK;
+}
+
+/* static */
+void
+nsCellMap::Shutdown()
+{
+  delete sEmptyRow;
+  sEmptyRow = nsnull;
+}
+
 nsTableCellFrame* 
 nsCellMap::GetCellFrame(PRInt32   aRowIndexIn,
                         PRInt32   aColIndexIn,
@@ -1234,7 +1253,7 @@ nsCellMap::GetCellFrame(PRInt32   aRowIndexIn,
   }
 
   CellData* data =
-    mRows.SafeElementAt(rowIndex, sEmptyRow).SafeElementAt(colIndex);
+    mRows.SafeElementAt(rowIndex, *sEmptyRow).SafeElementAt(colIndex);
   if (data) {
     return data->GetCellFrame();
   }
@@ -1993,7 +2012,7 @@ nsCellMap::GetRowSpanForNewCell(nsTableCellFrame* aCellFrameToAdd,
 
 PRBool nsCellMap::HasMoreThanOneCell(PRInt32 aRowIndex) const
 {
-  const CellDataArray& row = mRows.SafeElementAt(aRowIndex, sEmptyRow);
+  const CellDataArray& row = mRows.SafeElementAt(aRowIndex, *sEmptyRow);
   PRUint32 maxColIndex = row.Length();
   PRUint32 count = 0;
   PRUint32 colIndex;
@@ -2010,7 +2029,7 @@ PRBool nsCellMap::HasMoreThanOneCell(PRInt32 aRowIndex) const
 PRInt32
 nsCellMap::GetNumCellsOriginatingInRow(PRInt32 aRowIndex) const
 {
-  const CellDataArray& row = mRows.SafeElementAt(aRowIndex, sEmptyRow);
+  const CellDataArray& row = mRows.SafeElementAt(aRowIndex, *sEmptyRow);
   PRUint32 count = 0;
   PRUint32 maxColIndex = row.Length();
   PRUint32 colIndex;
@@ -2533,7 +2552,7 @@ nsCellMap::IsZeroColSpan(PRInt32 aRowIndex,
                          PRInt32 aColIndex) const
 {
   CellData* data =
-    mRows.SafeElementAt(aRowIndex, sEmptyRow).SafeElementAt(aColIndex);
+    mRows.SafeElementAt(aRowIndex, *sEmptyRow).SafeElementAt(aColIndex);
   return data && data->IsZeroColSpan();
 }
 
@@ -2541,7 +2560,8 @@ CellData*
 nsCellMap::GetDataAt(PRInt32         aMapRowIndex,
                      PRInt32         aColIndex) const
 {
-  return mRows.SafeElementAt(aMapRowIndex, sEmptyRow).SafeElementAt(aColIndex);
+  return
+    mRows.SafeElementAt(aMapRowIndex, *sEmptyRow).SafeElementAt(aColIndex);
 }
 
 // only called if the cell at aMapRowIndex, aColIndex is null or dead

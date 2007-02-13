@@ -76,6 +76,7 @@
 #include "nsXBLWindowKeyHandler.h"
 #include "txMozillaXSLTProcessor.h"
 #include "nsDOMStorage.h"
+#include "nsCellMap.h"
 
 #ifdef MOZ_XUL
 #include "nsXULContentUtils.h"
@@ -135,6 +136,12 @@ nsLayoutStatics::Initialize()
   rv = nsTextFragment::Init();
   if (NS_FAILED(rv)) {
     NS_ERROR("Could not initialize nsTextFragment");
+    return rv;
+  }
+
+  rv = nsCellMap::Init();
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Could not initialize nsCellMap");
     return rv;
   }
 
@@ -216,6 +223,7 @@ nsLayoutStatics::Shutdown()
 #ifdef DEBUG
   nsFrame::DisplayReflowShutdown();
 #endif
+  nsCellMap::Shutdown();
 
   // Release all of our atoms
   nsColorNames::ReleaseTable();
