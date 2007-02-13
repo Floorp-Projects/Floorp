@@ -63,12 +63,11 @@
    id="calendar-new-printwindow"
    title="&calendar.print.window.title;"
    onload="loadCalendarPrintDialog()"
-   onunload="unloadCalendarPrintDialog()"
    buttons="accept,cancel"
    buttonlabelaccept="&calendar.print.button.label;"
    buttonaccesskeyaccept="&calendar.print.accesskey;"
    defaultButton="accept"
-   ondialogaccept="PrintUtils.print();"
+   ondialogaccept="return printAndClose();"
    ondialogcancel="return true;"
    persist="screenX screenY width height"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -122,7 +121,7 @@
         <radiogroup id="view-field" oncommand="refreshHtml();">
           <radio id="printCurrentViewRadio"
                  label="&calendar.print.currentview.label;"
-                 value="currentview" selected="true" />
+                 value="currentview"/>
           <radio id="selected" label="&calendar.print.selected.label;"
                  value="selected"/>
           <radio id="custom-range" label="&calendar.print.custom.label;"
