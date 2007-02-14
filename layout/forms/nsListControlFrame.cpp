@@ -318,7 +318,7 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsPoint aPt)
       }
     }
 
-    // if we found a node use, if not get the first child (this is for empty selects)
+    // if we found a node use it, if not get the first child (this is for empty selects)
     if (node) {
       focusedContent = do_QueryInterface(node);
       childframe = presShell->GetPrimaryFrameFor(focusedContent);
@@ -373,7 +373,6 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsPoint aPt)
   nsRect innerRect = fRect;
   innerRect.Deflate(nsSize(onePixelInTwips, onePixelInTwips));
   nsCSSRendering::DrawDashedSides(0, aRC, dirty, borderStyle, colors, fRect, innerRect, 0, nsnull);
-
 }
 
 //---------------------------------------------------------
@@ -965,7 +964,7 @@ nsListControlFrame::HandleListSelection(nsIDOMEvent* aEvent,
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
   PRBool isShift;
   PRBool isControl;
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
   mouseEvent->GetMetaKey(&isControl);
 #else
   mouseEvent->GetCtrlKey(&isControl);
@@ -2330,7 +2329,7 @@ nsListControlFrame::DragMove(nsIDOMEvent* aMouseEvent)
       nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
       NS_ASSERTION(mouseEvent, "aMouseEvent is not an nsIDOMMouseEvent!");
       PRBool isControl;
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
       mouseEvent->GetMetaKey(&isControl);
 #else
       mouseEvent->GetCtrlKey(&isControl);
