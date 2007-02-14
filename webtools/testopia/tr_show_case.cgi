@@ -448,7 +448,6 @@ sub do_update{
 
 sub display {
     my $case = shift;    
-    $cgi->delete_all;
     $cgi->param('case_id', $case->id);
     $cgi->param('isactive', 1);
     $cgi->param('current_tab', 'case_run');
