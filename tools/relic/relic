@@ -22,6 +22,7 @@
 #
 # Contributor(s):
 #   Gervase Markham <gerv@gerv.net>
+#   Patrick Fey <bugzilla@nachtarbeiter.net>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -147,7 +148,7 @@ log = logging.getLogger("relic")
 
 #---- globals
 
-_version_ = (0, 7, 1)
+_version_ = (0, 7, 2)
 
 # When processing files, 'relic' skips files and directories according
 # to these settings. Note: files identified in .cvsignore files are also
@@ -179,6 +180,7 @@ _g_skip_files = [
 ###########################################################################
     
     # Files containing copies of licence text which confuses the script
+    "LICENSE",
     "js2/COPYING",
     "security/svrcore/LICENSE",
     "extensions/xmlterm/doc/MPL",
@@ -206,6 +208,7 @@ _g_skip_files = [
     "intl/uconv/tools/parse-mozilla-encoding-table.pl",
     "intl/uconv/tools/gen-big5hkscs-2001-mozilla.pl",
     "js2/missing",
+    "tools/buildbot",
     
     # Files which the script doesn't handle well. All have been relicensed
     # manually.
@@ -237,6 +240,10 @@ _g_skip_files = [
     "toolkit/airbag/airbag/autotools/missing",
     "toolkit/airbag/airbag/autotools/ltmain.sh",
     "js/tamarin/pcre/ltmain.sh",
+    "security/svrcore/compile",
+    "security/svrcore/ltmain.sh",
+    "security/svrcore/missing",
+    "security/svrcore/depcomp",
     
     # Public domain or equivalent
     "nsprpub/config/nspr.m4",
@@ -370,15 +377,15 @@ _g_basename_to_comment_info = {
 }
 
 _g_ext_to_comment_info = {
-    ".txt":   (["##"], ["#"], []),
-    ".TXT":   (["##"], ["#"], []),
+    ".txt":   (["##", "#", ]),
+    ".TXT":   (["##", "#", ]),
 
-    ".doc":   ([""], ),
-    ".build": ([""], ),
-    ".1st":   ([""], ),
-    ".lsm":   ([""], ),
-    ".FP":    ([""], ),
-    ".spec":  ([""], ),
+    ".doc":   (["", ]),
+    ".build": (["", ]),
+    ".1st":   (["", ]),
+    ".lsm":   (["", ]),
+    ".FP":    (["", ]),
+    ".spec":  (["", ]),
 
     ".CPP":    (["/*", " *", "*/"], ),
     ".cpp":    (["/*", " *", "*/"], ),
@@ -1504,12 +1511,12 @@ def _get_comment_delim_sets(filename):
         xfilename = os.path.splitext(filename)[0]
     else:
         xfilename = filename
-    if not comment_delims: # special cases for some basenames
-        basename = os.path.basename(xfilename)
-        try:
-            comment_delims = _g_basename_to_comment_info[basename]
-        except KeyError:
-            pass
+    # special cases for some basenames
+    basename = os.path.basename(xfilename)
+    try:
+        comment_delims = _g_basename_to_comment_info[basename]
+    except KeyError:
+        pass
     if not comment_delims: # use the file extension
         ext = os.path.splitext(xfilename)[1]
         try:
@@ -1704,7 +1711,7 @@ def _relicense_file(original_path,
 
     # get fallback comment subsequent prefix
     fallback_prefix = _get_comment_delim_sets(original_path)
-
+    
     # - add the comment delimiters
     lines = trilicense.splitlines()
     for i in range(len(lines)):
