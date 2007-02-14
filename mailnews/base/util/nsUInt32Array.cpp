@@ -321,7 +321,7 @@ static int PR_CALLBACK CompareDWord (const void *v1, const void *v2, void *)
   // QuickSort callback to compare array values
   PRUint32 i1 = *(PRUint32 *)v1;
   PRUint32 i2 = *(PRUint32 *)v2;
-  return i1 - i2;
+  return i1 < i2 ? -1 : (i1 == i2 ? 0 : 1);
 }
 
 void nsUInt32Array::QuickSort (int (* PR_CALLBACK compare) (const void *elem1, const void *elem2, void *data))
