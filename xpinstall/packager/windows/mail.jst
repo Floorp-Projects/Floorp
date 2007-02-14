@@ -358,6 +358,12 @@ function upgradeCleanup()
   deleteThisFile("Components", "smimestb.dll");
   deleteThisFile("Components", "nsMapiRegistry.dll");
   deleteThisFile("Components", "absyncsv.dll");
+  // Obsolete files from SeaMonkey 1.1 that need to be cleaned up
+  deleteThisFile("Components", "importOE.dll");
+  deleteThisFile("Components", "impOutlk.dll");
+  deleteThisFile("Components", "impEudra.dll");
+  deleteThisFile("Components", "impText.dll");
+  deleteThisFile("Components", "impComm4xMail.dll");
 }
 
 function updateWinIni()
