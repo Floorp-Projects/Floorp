@@ -774,3 +774,34 @@ function calGetEndDate(aItem)
     return (isEvent(aItem) ? aItem.endDate : aItem.dueDate);
 }
 
+/**
+ *  Delete the current selected items with focus from the unifinder list
+ */
+function deleteEventCommand(doNotConfirm)
+{
+    var selectedItems = currentView().getSelectedItems({});
+    deleteItems(selectedItems,doNotConfirm);
+}
+
+/**
+ *  This is called from the unifinder's delete command
+ */
+function deleteItems(selectedItems, doNotConfirm)
+{
+    if (!selectedItems) {
+        return;
+    }
+
+    startBatchTransaction();
+    for (var i in selectedItems) {
+        var aOccurrence = selectedItems[i];
+        if (aOccurrence.parentItem != aOccurrence) {
+            var event = aOccurrence.parentItem.clone();
+            event.recurrenceInfo.removeOccurrenceAt(aOccurrence.recurrenceId);
+            doTransaction('modify', event, event.calendar, aOccurrence.parentItem, null);
+        } else {
+            doTransaction('delete', aOccurrence, aOccurrence.calendar, null, null);
+        }
+    }
+    endBatchTransaction();
+}
