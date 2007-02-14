@@ -37,6 +37,14 @@
 == bugs/18217-zorder-3.html bugs/18217-zorder-ref-inline.html
 == bugs/18217-zorder-4.html bugs/18217-zorder-ref-inline-table.html
 == bugs/18217-zorder-5.html bugs/18217-zorder-ref-inline-table.html
+fails == bugs/25888-1l.html bugs/25888-1l-ref.html # bug 25888
+fails != bugs/25888-1l.html bugs/25888-1l-notref.html # bug 25888
+fails == bugs/25888-1r.html bugs/25888-1r-ref.html # bug 25888
+fails != bugs/25888-1r.html bugs/25888-1r-notref.html # bug 25888
+fails == bugs/25888-2l.html bugs/25888-2l-ref.html # bug 25888
+fails == bugs/25888-2r.html bugs/25888-2r-ref.html # bug 25888
+fails == bugs/25888-3l.html bugs/25888-3l-ref.html # bug 25888
+fails == bugs/25888-3r.html bugs/25888-3r-ref.html # bug 25888
 random-if(MOZ_WIDGET_TOOLKIT=="windows") == bugs/28811-1a.html bugs/28811-1-ref.html # bug 369040
 random-if(MOZ_WIDGET_TOOLKIT=="windows") == bugs/28811-1b.html bugs/28811-1-ref.html # bug 369040
 random-if(MOZ_WIDGET_TOOLKIT=="windows") == bugs/28811-2a.html bugs/28811-2-ref.html # bug 369040
