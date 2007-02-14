@@ -94,6 +94,8 @@ extern __ptr_t __libc_malloc(size_t);
 extern __ptr_t __libc_calloc(size_t, size_t);
 extern __ptr_t __libc_realloc(__ptr_t, size_t);
 extern void    __libc_free(__ptr_t);
+extern __ptr_t __libc_memalign(size_t, size_t);
+extern __ptr_t __libc_valloc(size_t);
 #ifdef WRAP_SYSTEM_INCLUDES
 #pragma GCC visibility pop
 #endif
@@ -1659,6 +1661,99 @@ realloc(__ptr_t ptr, size_t size)
     return ptr;
 }
 
+NS_EXTERNAL_VIS_(void*)
+valloc(size_t size)
+{
+    PRUint32 start, end;
+    __ptr_t ptr;
+    callsite *site;
+    PLHashEntry *he;
+    allocation *alloc;
+
+    if (!PR_Initialized()) {
+        return __libc_valloc(size);
+    }
+
+    start = PR_IntervalNow();
+    ptr = __libc_valloc(size);
+    end = PR_IntervalNow();
+    TM_ENTER_MONITOR();
+    tmstats.malloc_calls++; /* XXX valloc_calls ? */
+    if (!ptr) {
+        tmstats.malloc_failures++; /* XXX valloc_failures ? */
+    } else if (suppress_tracing == 0) {
+        site = backtrace(1);
+        if (site)
+            log_event5(logfp, TM_EVENT_MALLOC, /* XXX TM_EVENT_VALLOC? */
+                       site->serial, start, end - start,
+                       (uint32)NS_PTR_TO_INT32(ptr), size);
+        if (get_allocations()) {
+            suppress_tracing++;
+            he = PL_HashTableAdd(allocations, ptr, site);
+            suppress_tracing--;
+            if (he) {
+                alloc = (allocation*) he;
+                alloc->size = size;
+                alloc->trackfp = NULL;
+            }
+        }
+    }
+    TM_EXIT_MONITOR();
+    return ptr;
+}
+
+NS_EXTERNAL_VIS_(void*)
+memalign(size_t boundary, size_t size)
+{
+    PRUint32 start, end;
+    __ptr_t ptr;
+    callsite *site;
+    PLHashEntry *he;
+    allocation *alloc;
+
+    if (!PR_Initialized()) {
+        return __libc_memalign(boundary, size);
+    }
+
+    start = PR_IntervalNow();
+    ptr = __libc_memalign(boundary, size);
+    end = PR_IntervalNow();
+    TM_ENTER_MONITOR();
+    tmstats.malloc_calls++; /* XXX memalign_calls ? */
+    if (!ptr) {
+        tmstats.malloc_failures++; /* XXX memalign_failures ? */
+    } else if (suppress_tracing == 0) {
+        site = backtrace(1);
+        if (site) {
+            log_event5(logfp, TM_EVENT_MALLOC, /* XXX TM_EVENT_MEMALIGN? */
+                       site->serial, start, end - start,
+                       (uint32)NS_PTR_TO_INT32(ptr), size);
+        }
+        if (get_allocations()) {
+            suppress_tracing++;
+            he = PL_HashTableAdd(allocations, ptr, site);
+            suppress_tracing--;
+            if (he) {
+                alloc = (allocation*) he;
+                alloc->size = size;
+                alloc->trackfp = NULL;
+            }
+        }
+    }
+    TM_EXIT_MONITOR();
+    return ptr;
+}
+
+NS_EXTERNAL_VIS_(int)
+posix_memalign(void **memptr, size_t alignment, size_t size)
+{
+    __ptr_t ptr = memalign(alignment, size);
+    if (!ptr)
+        return ENOMEM;
+    *memptr = ptr;
+    return 0;
+}
+
 NS_EXTERNAL_VIS_(void)
 free(__ptr_t ptr)
 {
@@ -1710,6 +1805,12 @@ free(__ptr_t ptr)
                    (uint32)NS_PTR_TO_INT32(ptr), size);
         TM_EXIT_MONITOR();
     }
+}
+
+NS_EXTERNAL_VIS_(void)
+cfree(void *ptr)
+{
+    free(ptr);
 }
 
 #endif /* XP_UNIX */
