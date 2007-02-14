@@ -263,6 +263,9 @@ public:
   nsresult    ApplyForwardAndReplyFilter(nsIMsgWindow *msgWindow);
   void        NotifyGlobalListeners(nsIMsgDBHdr *newHdr);
 
+  // this keeps track of how many messages we downloaded that
+  // aren't new - e.g., marked read, or moved to an other server.
+  PRInt32     m_numNotNewMessages;
 protected:
   virtual nsresult GetTrashFolder(nsIMsgFolder **pTrashFolder);
   virtual nsresult  MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 

@@ -1533,6 +1533,7 @@ nsParseNewMailState::nsParseNewMailState()
   m_ibuffer_size = 0;
   m_ibuffer_fp = 0;
   m_moveCoalescer = nsnull;
+  m_numNotNewMessages = 0;
  }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsParseNewMailState, nsMsgMailboxParser, nsIMsgFilterHitNotify)
@@ -2062,6 +2063,7 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
     m_downloadFolder->GetNumNewMessages(PR_FALSE, &numNewMessages);
     if (numNewMessages > 0)
       m_downloadFolder->SetNumNewMessages(numNewMessages - 1);
+    m_numNotNewMessages++;
   }
   return rv;
 }
