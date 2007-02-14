@@ -1,0 +1,96 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998-2007
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ *   Robert Kaiser (kairo@kairo.at)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ===== toolbar.css ====================================================
+  == Styles used by XUL grippytoolbar in addition to general toolbar styles.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: toolbar & menubar ::::: */
+
+.toolbar-holder {
+  border-left: 1px solid ThreeDHighlight;
+}
+
+/* ::::: toolbargrippy ::::: */
+
+toolbargrippy {
+  -moz-box-orient: vertical;
+  -moz-box-align: center;
+  border-right: 1px solid ThreeDShadow;
+  width: 10px;
+  padding: 2px 1px;
+  list-style-image: url("chrome://communicator/skin/toolbar/tbgrip-arrow.gif");
+}
+
+toolbargrippy:hover {
+  background-color: ThreeDHighlight;
+}
+
+.toolbargrippy-texture {
+  margin-top: 2px;
+  width: 6px;
+  background: url("chrome://communicator/skin/toolbar/tbgrip-texture.gif");
+}
+
+/* ::::: collapsed tray and grippies ::::: */
+
+toolbargrippy[tbgrippy-collapsed="true"] {
+  -moz-box-orient: horizontal;
+  border-left: 1px solid ThreeDHighlight;
+  border-top: 1px solid ThreeDHighlight;
+  border-right: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDShadow;
+  width: 40px;
+  height: 10px;
+  padding: 1px 2px;
+  list-style-image: url("chrome://communicator/skin/toolbar/tbgrip-arrow-clps.gif");
+}
+
+toolbargrippy[tbgrippy-collapsed="true"] > .toolbargrippy-texture {
+  margin-top: 0;
+  margin-left: 2px;
+  width: 0px;
+  height: 6px;
+}
+
+.collapsed-tray-spacer {
+  border-bottom: 1px solid ThreeDShadow;
+}

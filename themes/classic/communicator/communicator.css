@@ -43,6 +43,7 @@
 @import url("chrome://communicator/content/communicator.css");
 @import url("chrome://communicator/skin/brand.css");
 @import url("chrome://communicator/skin/button.css");
+@import url("chrome://communicator/skin/toolbar.css");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 

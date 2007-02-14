@@ -114,6 +114,16 @@ classic.jar:
   skin/classic/communicator/taskbar/composer-16.gif                     (communicator/taskbar/composer-16.gif)
   skin/classic/communicator/taskbar/addressbook-hov.gif                 (communicator/taskbar/addressbook-hov.gif)
   skin/classic/communicator/alerts/alert.css                            (communicator/alerts/alert.css)
+#ifdef XP_MACOSX
+  skin/classic/communicator/toolbar.css                                 (communicator/mac/toolbar.css)
+#elif XP_OS2
+  skin/classic/communicator/toolbar.css                                 (communicator/os2/toolbar.css)
+#else
+  skin/classic/communicator/toolbar.css                                 (communicator/win/toolbar.css)
+#endif
+  skin/classic/communicator/toolbar/tbgrip-arrow.gif                    (communicator/toolbar/tbgrip-arrow.gif)
+  skin/classic/communicator/toolbar/tbgrip-arrow-clps.gif               (communicator/toolbar/tbgrip-arrow-clps.gif)
+  skin/classic/communicator/toolbar/tbgrip-texture.gif                  (communicator/toolbar/tbgrip-texture.gif)
   skin/classic/editor/EdImageMapPage.css                                (editor/EdImageMapPage.css)
   skin/classic/editor/editor.css                                        (editor/editor.css)
   skin/classic/editor/EditorDialog.css                                  (editor/EditorDialog.css)
