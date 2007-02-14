@@ -50,23 +50,6 @@
     <stringbundle id="bundle_preferences" src="chrome://browser/locale/preferences/preferences.properties"/>
   </stringbundleset>
 
-  <commandset id="globalEditCommandSet"
-              commandupdater="true"
-              events="focus,select"
-              oncommandupdate="goUpdateGlobalEditMenuItems()"/>
-  <commandset id="selectEditCommandSet"
-              commandupdater="true"
-              events="select"
-              oncommandupdate="goUpdateSelectEditMenuItems()"/>
-  <commandset id="undoEditCommandSet"
-              commandupdater="true"
-              events="undo"
-              oncommandupdate="goUpdateUndoEditMenuItems()"/>
-  <commandset id="pasteCommandSet"
-              commandupdater="true"
-              events="clipboard"
-              oncommandupdate="goUpdatePasteMenuItems()"/>
-  
   <commandset id="mainCommandSet">
     <command id="cmd_newNavigator"                 oncommand="OpenBrowserWindow()"/>
     <command id="cmd_bm_open"                      oncommand="goDoCommand('cmd_bm_open');"/>
@@ -103,31 +86,7 @@
     <command id="cmd_CustomizeToolbars" oncommand="BrowserCustomizeToolbar()"/>
 
 
-    <command id="cmd_undo" 
-             oncommand="goDoCommand('cmd_undo')"
-             disabled="true"/>
-    <command id="cmd_redo" 
-             oncommand="goDoCommand('cmd_redo')"
-             disabled="true"/>
-    <command id="cmd_cut" 
-             oncommand="goDoCommand('cmd_cut')"
-             disabled="true"/>
-    <command id="cmd_copy" 
-             oncommand="goDoCommand('cmd_copy')"
-             disabled="true"/>
-    <command id="cmd_paste" 
-             oncommand="goDoCommand('cmd_paste')"
-             disabled="true"/>
-    <command id="cmd_delete"
-             oncommand="goDoCommand('cmd_delete')"
-             valueDefault="&deleteCmd.label;"
-             disabled="true"/>
-    <command id="cmd_selectAll"
-             oncommand="goDoCommand('cmd_selectAll')"
-             disabled="true"/>
-    <command id="cmd_switchTextDirection"
-             oncommand="goDoCommand('cmd_switchTextDirection');"
-             disabled="true"/>
+    <commandset id="editMenuCommands"/>
 
     <command id="View:PageSource" oncommand="BrowserViewSourceOfDocument(content.document);" observes="isImage"/>
     <command id="View:PageInfo" oncommand="BrowserPageInfo();"/>

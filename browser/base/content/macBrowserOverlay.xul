@@ -45,6 +45,7 @@
 #endif
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
+<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
 #ifdef MOZ_PLACES
 <?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
