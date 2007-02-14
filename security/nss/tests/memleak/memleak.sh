@@ -13,7 +13,7 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The original code is the Network Security Services (NSS)
+# The Original Code is the Network Security Services (NSS)
 #
 # The Initial Developer of the Original Code is
 # Sun Microsystems, Inc.
