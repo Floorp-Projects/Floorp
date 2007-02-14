@@ -608,10 +608,35 @@ var nsDefaultCommandLineHandler = {
   // running and have already been handled. This is compared against uri's
   // opened using DDE on Win32 so we only open one of the requests.
   _handledURIs: [ ],
+#ifdef XP_WIN
+  _haveProfile: false,
+#endif
 
   /* nsICommandLineHandler */
   handle : function dch_handle(cmdLine) {
     var urilist = [];
+
+#ifdef XP_WIN
+    // If we don't have a profile selected yet (e.g. the Profile Manager is
+    // displayed) we will crash if we open an url and then select a profile. To
+    // prevent this handle all url command line flags and set the command line's
+    // preventDefault to true to prevent the display of the ui. The initial
+    // command line will be retained when nsAppRunner calls LaunchChild though
+    // urls launched after the initial launch will be lost.
+    if (!this._haveProfile) {
+      try {
+        // This will throw when a profile has not been selected.
+        var fl = Components.classes["@mozilla.org/file/directory_service;1"]
+                           .getService(Components.interfaces.nsIProperties);
+        var dir = fl.get("ProfD", Components.interfaces.nsILocalFile);
+        this._haveProfile = true;
+      }
+      catch (e) {
+        while ((ar = cmdLine.handleFlagWithParam("url", false))) { }
+        cmdLine.preventDefault = true;
+      }
+    }
+#endif
 
     try {
       var ar;
