@@ -178,7 +178,7 @@ else {
     $vars->{'status_list'} = $status_list;
     
     $vars->{'fullwidth'} = 1; #novellonly
-    $vars->{'dotweak'} = UserInGroup('runtests');
+    $vars->{'dotweak'} = UserInGroup('Testers');
     $vars->{'table'} = $table;
     if ($serverpush && !$cgi->param('debug')) {
         print $cgi->multipart_end;

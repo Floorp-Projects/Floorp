@@ -154,7 +154,7 @@ else {
     $vars->{'type_list'} = $type_list;
     
     $vars->{'fullwidth'} = 1; #novellonly
-    $vars->{'dotweak'} = UserInGroup('managetestplans');
+    $vars->{'dotweak'} = UserInGroup('Testers');
     $vars->{'table'} = $table;
     if ($serverpush && !$cgi->param('debug')) {
         print $cgi->multipart_end;

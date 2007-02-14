@@ -42,11 +42,6 @@ Bugzilla->login(LOGIN_REQUIRED);
 my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
 
-unless (UserInGroup('edittestcases')){
-    print $cgi->header;
-    ThrowUserError("testopia-create-denied", {'object' => 'Test Run'});
-}
-
 push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
 
 my $action = $cgi->param('action') || '';
@@ -63,6 +58,12 @@ detaint_natural($plan_id);
 validate_test_id($plan_id, 'plan');
 
 my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
+
+unless ($plan->canedit){
+    print $cgi->header;
+    ThrowUserError("testopia-create-denied", {'object' => 'Test Run'});
+}
+
 unless (scalar @{$plan->product->builds} >0){
     print $cgi->header;
     ThrowUserError('testopia-create-build', {'plan' => $plan});

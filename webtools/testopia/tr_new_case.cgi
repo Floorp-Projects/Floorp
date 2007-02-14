@@ -37,7 +37,6 @@ use vars qw($template $vars);
 my $template = Bugzilla->template;
 
 Bugzilla->login(LOGIN_REQUIRED);
-ThrowUserError("testopia-create-denied", {'object' => 'Test Case'}) unless UserInGroup('edittestcases');
 
 print Bugzilla->cgi->header();
    
@@ -70,6 +69,7 @@ foreach my $entry (@plan_id){
 }
 foreach my $id (keys %seen){
     my $plan = Bugzilla::Testopia::TestPlan->new($id);
+    ThrowUserError("testopia-create-denied", {'object' => 'Test Case'}) unless $plan->canedit;
     push @plan_ids, $id;
     push @plans, $plan;
     push @categories, @{$plan->product->categories};

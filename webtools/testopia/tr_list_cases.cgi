@@ -380,7 +380,7 @@ $vars->{'fullwidth'} = 1; #novellonly
 $vars->{'case'} = $c;
 $vars->{'status_list'} = $status_list;
 $vars->{'priority_list'} = $priority_list;
-$vars->{'dotweak'} = UserInGroup('edittestcases');
+$vars->{'dotweak'} = UserInGroup('Testers');
 $vars->{'table'} = $table;
 $vars->{'urlquerypart'} = $cgi->canonicalise_query('cmdtype');
 

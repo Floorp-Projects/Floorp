@@ -38,7 +38,7 @@ use vars qw($template $vars);
 my $template = Bugzilla->template;
 
 Bugzilla->login(LOGIN_REQUIRED);
-ThrowUserError("testopia-create-denied", {'object' => 'Test Plan'}) unless UserInGroup('managetestplans');
+ThrowUserError("testopia-create-denied", {'object' => 'Test Plan'}) unless UserInGroup('Testers');
 
 print Bugzilla->cgi->header();
    

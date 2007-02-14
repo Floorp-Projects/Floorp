@@ -285,7 +285,7 @@ my $case = Bugzilla::Testopia::TestCase->new({'case_id' => 0});
 $vars->{'filtered'} = 1 if $cgi->cookie('TESTOPIA-FILTER-RUN-' . $vars->{'run'}->id) && $cgi->param('action') ne 'clear_filter';
 $vars->{'expand_report'} = $cgi->param('expand_report') || 0;
 $vars->{'expand_filter'} = $cgi->param('expand_filter') || 0;
-$vars->{'dotweak'} = UserInGroup('edittestcases');
+$vars->{'dotweak'} = UserInGroup('Testers');
 $vars->{'table'} = $table;
 $vars->{'action'} = 'tr_list_caserun.cgi';
 $vars->{'caserun'} = Bugzilla::Testopia::TestCaseRun->new({});
