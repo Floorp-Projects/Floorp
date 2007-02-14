@@ -78,6 +78,10 @@ const NEWLINE= "\n";
 const NEWLINE = "\r\n";
 #endif
 
+// The minimum amount of transactions we should tell our observers to begin
+// batching (rather than letting them do incremental drawing).
+const MIN_TRANSACTIONS_FOR_BATCH = 5;
+
 function STACK(args) {
   var temp = arguments.callee.caller;
   while (temp) {
@@ -1700,27 +1704,31 @@ PlacesAggregateTransaction.prototype = {
   
   doTransaction: function() {
     this.LOG("== " + this._name + " (Aggregate) ==============");
-    this.bookmarks.beginUpdateBatch();
+    if (this._transactions.length >= MIN_TRANSACTIONS_FOR_BATCH)
+      this.bookmarks.beginUpdateBatch();
     for (var i = 0; i < this._transactions.length; ++i) {
       var txn = this._transactions[i];
       if (this.container > -1) 
         txn.container = this.container;
       txn.doTransaction();
     }
-    this.bookmarks.endUpdateBatch();
+    if (this._transactions.length >= MIN_TRANSACTIONS_FOR_BATCH)
+      this.bookmarks.endUpdateBatch();
     this.LOG("== " + this._name + " (Aggregate Ends) =========");
   },
   
   undoTransaction: function() {
     this.LOG("== UN" + this._name + " (UNAggregate) ============");
-    this.bookmarks.beginUpdateBatch();
+    if (this._transactions.length >= MIN_TRANSACTIONS_FOR_BATCH)
+      this.bookmarks.beginUpdateBatch();
     for (var i = this._transactions.length - 1; i >= 0; --i) {
       var txn = this._transactions[i];
       if (this.container > -1) 
         txn.container = this.container;
       txn.undoTransaction();
     }
-    this.bookmarks.endUpdateBatch();
+    if (this._transactions.length >= MIN_TRANSACTIONS_FOR_BATCH)
+      this.bookmarks.endUpdateBatch();
     this.LOG("== UN" + this._name + " (UNAggregate Ends) =======");
   }
 };
