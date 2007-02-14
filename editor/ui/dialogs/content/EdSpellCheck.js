@@ -592,10 +592,9 @@ function ExitSpellChecker()
       }
       // now check the document over again with the new dictionary
       // if we have an inline spellchecker
-      if (("InlineSpellChecker" in window.opener) &&
-          ("inlineSpellChecker" in window.opener.InlineSpellChecker))
-        if (window.opener.InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell)
-          window.opener.InlineSpellChecker.checkDocument(window.opener.content.document);
+      if (("InlineSpellCheckerUI" in window.opener) &&
+          window.opener.InlineSpellCheckerUI.enabled)
+        window.opener.InlineSpellCheckerUI.mInlineSpellChecker.spellCheckRange(null);
     }
     finally
     {
