@@ -16,6 +16,11 @@
  *
  * The Original Code is mozilla.org code.
  *
+ * The Initial Developer of the Original Code is
+ * timeless <timeless@mozdev.org>.
+ * Portions created by the Initial Developer are Copyright (C) 2006
+ * the Initial Developer. All Rights Reserved.
+ *
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
