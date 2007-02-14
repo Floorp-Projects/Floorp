@@ -52,7 +52,6 @@ class nsIDeviceContextSpec;
 class nsIAtom;
 
 struct nsFont;
-struct nsColor;
 
 //a cross platform way of specifying a native device context
 typedef void * nsNativeDeviceContext;
