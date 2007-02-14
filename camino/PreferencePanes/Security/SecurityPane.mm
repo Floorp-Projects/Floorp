@@ -92,23 +92,22 @@ const unsigned int kAskEveryTimeMatrixRowValue        = 1;
 
 //
 // clickEnableViewMixed:
-// clickEnableLoadLowGrade:
 // clickEnableLeaveEncrypted:
 //
 // Set prefs for warnings/alerts wrt secure sites
 //
 
--(IBAction) clickEnableViewMixed:(id)sender
+- (IBAction)clickEnableViewMixed:(id)sender
 {
   [self setPref:MIXEDCONTENT_PREF toBoolean:[sender state] == NSOnState];
 }
 
--(IBAction) clickEnableLeaveEncrypted:(id)sender
+- (IBAction)clickEnableLeaveEncrypted:(id)sender
 {
   [self setPref:LEAVE_SITE_PREF toBoolean:[sender state] == NSOnState];
 }
 
--(IBAction)clickCertificateSelectionBehavior:(id)sender
+- (IBAction)clickCertificateSelectionBehavior:(id)sender
 {
   unsigned int row = [mCertificateBehavior selectedRow];
 
@@ -118,7 +117,7 @@ const unsigned int kAskEveryTimeMatrixRowValue        = 1;
     [self setPref:"security.default_personal_cert" toString:@"Ask Every Time"];
 }
 
--(IBAction)showCertificates:(id)sender
+- (IBAction)showCertificates:(id)sender
 {
   // we'll just fire off a notification and let the application show the UI
   NSDictionary* userInfoDict = [NSDictionary dictionaryWithObject:[mLeaveEncrypted window]  // any view's window

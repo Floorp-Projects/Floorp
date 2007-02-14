@@ -45,17 +45,15 @@ class nsIPref;
 @interface OrgMozillaChimeraPreferenceSecurity : PreferencePaneBase
 {
   IBOutlet NSButton* mLeaveEncrypted;
-  IBOutlet NSButton* mLoadLowGrade;
   IBOutlet NSButton* mViewMixed;  
 
   IBOutlet NSMatrix* mCertificateBehavior;
 }
 
--(IBAction) clickEnableLeaveEncrypted:(id)sender;
--(IBAction) clickEnableLoadLowGrade:(id)sender;
--(IBAction) clickEnableViewMixed:(id)sender;
+- (IBAction)clickEnableLeaveEncrypted:(id)sender;
+- (IBAction)clickEnableViewMixed:(id)sender;
 
--(IBAction)clickCertificateSelectionBehavior:(id)sender;
--(IBAction)showCertificates:(id)sender;
+- (IBAction)clickCertificateSelectionBehavior:(id)sender;
+- (IBAction)showCertificates:(id)sender;
 
 @end
