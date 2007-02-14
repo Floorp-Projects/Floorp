@@ -75,6 +75,7 @@
 <script type="application/x-javascript" src="chrome://lightning/content/messenger-overlay-sidebar.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendar-views.js"/>
 <script type="application/x-javascript" src="chrome://lightning/content/imip-bar.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/clipboard.js"/>
 <window id="messengerWindow">
   <commandset id="calendar_commands">
     <command id="publish_calendar" oncommand="ltnPublishCalendar()"/>

@@ -46,6 +46,7 @@ calendar.jar:
   content/calendar/publish.js                   (/calendar/resources/content/publish.js)
   content/calendar/publishDialog.js             (/calendar/resources/content/publishDialog.js)    
   content/calendar/publishDialog.xul            (/calendar/resources/content/publishDialog.xul)
+  content/calendar/clipboard.js                 (/calendar/resources/content/clipboard.js)
   content/calendar/sun-calendar-event-dialog.css  (/calendar/prototypes/wcap/sun-calendar-event-dialog.css)
   content/calendar/sun-calendar-event-dialog.js  (/calendar/prototypes/wcap/sun-calendar-event-dialog.js)
   content/calendar/sun-calendar-event-dialog.xul  (/calendar/prototypes/wcap/sun-calendar-event-dialog.xul)

@@ -42,6 +42,56 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var CalendarController =
+{
+  supportsCommand: function ccSC(command) {
+    switch (command) {
+      case "cmd_cut":
+      case "cmd_copy":
+      case "cmd_paste":
+        return true;
+    }
+    return false;
+  },
+
+  isCommandEnabled: function ccICE(command) {
+    switch (command) {
+      case "cmd_cut":
+      case "cmd_copy":
+        return currentView().getSelectedItems({}).length != 0;
+      case "cmd_paste":
+        return canPaste();
+    }
+    return false;
+  },
+
+  doCommand: function ccDC(command) {
+    // if the user invoked a key short cut then it is possible that we got
+    // here for a command which is really disabled. kick out if the
+    // command should be disabled.
+    if (!this.isCommandEnabled(command)) {
+      return;
+    }
+
+    switch ( command )
+    {
+      case "cmd_cut":
+        cutToClipboard();
+        break;
+      case "cmd_copy":
+        copyToClipboard();
+        break;
+      case "cmd_paste":
+        pasteFromClipboard();
+        break;
+    }
+  },
+
+  onEvent: function ccOE(event) {
+    // do nothing here...
+  }
+};
+
 function ltnSidebarCalendarSelected(tree)
 {
    getCompositeCalendar().defaultCalendar = ltnSelectedCalendar();
@@ -195,6 +245,8 @@ function ltnOnLoad(event)
             "chrome://lightning/content/sun-messenger-overlay-sidebar.xul",
             null);
     }
+
+    top.controllers.insertControllerAt(0, CalendarController);
 
     return;
 }
