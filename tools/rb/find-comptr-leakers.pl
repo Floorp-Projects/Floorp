@@ -16,7 +16,7 @@
 # The Original Code is mozilla.org Code.
 #
 # The Initial Developer of the Original Code is
-# L. David Baron <dbaron@fas.harvard.edu> 
+# L. David Baron <dbaron@dbaron.org> 
 # Portions created by the Initial Developer are Copyright (C) 1998
 # the Initial Developer. All Rights Reserved.
 #

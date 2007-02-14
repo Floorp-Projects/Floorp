@@ -19,7 +19,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   dbaron@fas.harvard.edu, pschwartau@netscape.com
+ *   L. David Baron <dbaron@dbaron.org>,
+ *   pschwartau@netscape.com
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
