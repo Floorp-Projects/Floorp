@@ -2318,6 +2318,9 @@
       <method name="popRefreshQueue">
         <body><![CDATA[
           if (this.mRefreshPending) {
+            if(this.mRefreshQueue.length > 0) {
+              this.relayout();
+            }
             return;
           }
 
