@@ -291,7 +291,7 @@ calDateTime::SubtractDate(calIDateTime *aDate, calIDuration **aDuration)
     // for a duration, need to convert the difference in microseconds (prtime)
     // to seconds (libical), so divide by one million.
     icaldurationtype idt = 
-        icaldurationtype_from_int(NS_STATIC_CAST(int, (mNativeTime - t2t) / PR_USEC_PER_SEC));
+        icaldurationtype_from_int(NS_STATIC_CAST(int, (mNativeTime - t2t) / PRInt64(PR_USEC_PER_SEC)));
 
     nsCOMPtr<calIDuration> result(do_CreateInstance("@mozilla.org/calendar/duration;1"));
     if (!result)
