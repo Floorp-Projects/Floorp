@@ -840,7 +840,6 @@ sub obliterate {
 
     $dbh->do("DELETE FROM test_plan_texts WHERE plan_id = ?", undef, $self->id);
     $dbh->do("DELETE FROM test_plan_tags WHERE plan_id = ?", undef, $self->id);
-    $dbh->do("DELETE FROM test_plan_group_map WHERE plan_id = ?", undef, $self->id);
     $dbh->do("DELETE FROM test_plan_activity WHERE plan_id = ?", undef, $self->id);
     $dbh->do("DELETE FROM test_case_plans WHERE plan_id = ?", undef, $self->id);
     $dbh->do("DELETE FROM test_plans WHERE plan_id = ?", undef, $self->id);
@@ -949,12 +948,6 @@ Returns the type id of this plan
 =head2 isactive
 
 Returns true if this plan is not archived
-
-=head2 use_product_rights
-
-If true, user access is granted based first on product groups and then on the 
-plan's access list otherwise, all right associated with this plan are 
-determined bey the ACL.
 
 =cut
 

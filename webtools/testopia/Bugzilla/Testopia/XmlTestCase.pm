@@ -49,7 +49,7 @@ use Bugzilla::Testopia::TestRun;
 use Bugzilla::Testopia::TestTag;
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::XmlReferences;
-use Bugzilla::Testopia::Product
+use Bugzilla::Testopia::Product;
 use Bugzilla::User;
 use Bugzilla::Util;
 

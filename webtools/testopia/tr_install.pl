@@ -68,28 +68,17 @@ my $dbh = Bugzilla::DB::connect_main();
 UpdateDB($dbh);
 print "Done.\n\n";
 ##############################################################################
-print "Checking Testopia groups ...\n";
-# Create groups if needed and grant permissions to the admin group over them
+print "Checking Testopia group ...\n";
+# Create group if needed and grant permissions to the admin group over it.
 my $adminid = GetAdminGroup($dbh);
 my $groupid;
-if (!GroupDoesExist($dbh, "managetestplans")) {
-    $groupid = tr_AddGroup($dbh, 'managetestplans',
-        'Can create, destroy, run and edit test plans.', $adminid);
+if (!GroupExists($dbh, "Testers")) {
+    $groupid = tr_AddGroup($dbh, 'Testers',
+        'Can read, write, and delete all test plans, runs, and cases.', $adminid);
     tr_AssignAdminGrants($dbh, $groupid, $adminid);
 }
-if (!GroupDoesExist($dbh, "edittestcases")) {
-    $groupid = tr_AddGroup($dbh, 'edittestcases',
-        'Can add, delete and edit test cases.', $adminid);
-    tr_AssignAdminGrants($dbh, $groupid, $adminid);
-}
-if (!GroupDoesExist($dbh, "runtests")) {
-    $groupid = tr_AddGroup($dbh, 'runtests',
-        'Can add, delete and edit test runs.', $adminid);
-    tr_AssignAdminGrants($dbh, $groupid, $adminid);
-}
-
 updateACLs($dbh);
-
+migrateAttachments($dbh);
 print "Done.\n\n";
 ##############################################################################
 print "Cleaning up Testopia cache ...\n";
@@ -300,7 +289,7 @@ sub UpdateDB {
     $dbh->bz_drop_table('test_plan_testers');
     $dbh->bz_drop_table('test_plan_group_map');
     $dbh->bz_drop_column('test_plans', 'editor_id');
-    
+
     $dbh->bz_add_column('test_case_bugs', 'case_id', {TYPE => 'INT4', UNSIGNED => 1});
     $dbh->bz_add_column('test_case_runs', 'environment_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1}, 0);
     $dbh->bz_add_column('test_case_tags', 'userid', {TYPE => 'INT3', NOTNULL => 1}, 0);
@@ -309,8 +298,8 @@ sub UpdateDB {
     $dbh->bz_add_column('test_environments', 'product_id', {TYPE => 'INT2', NOTNULL => 1}, 0);
     $dbh->bz_add_column('test_environments', 'isactive', {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => '1'}, 1);
     $dbh->bz_add_column('test_plan_tags', 'userid', {TYPE => 'INT3', NOTNULL => 1}, 0);
-    $dbh->bz_add_column('test_run_tags', 'userid', {TYPE => 'INT3', NOTNULL => 1}, 0);
     $dbh->bz_add_column('test_runs', 'default_tester_id', {TYPE => 'INT3'});
+    $dbh->bz_add_column('test_run_tags', 'userid', {TYPE => 'INT3', NOTNULL => 1}, 0);
 
     $dbh->bz_alter_column('test_attachment_data', 'attachment_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_attachments', 'attachment_id', {TYPE => 'INTSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
@@ -319,83 +308,142 @@ sub UpdateDB {
     $dbh->bz_alter_column('test_attachments', 'plan_id', {TYPE => 'INT4', UNSIGNED => 1});
     $dbh->bz_alter_column('test_builds', 'build_id', {TYPE => 'INTSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_case_activity', 'case_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_case_bugs', 'case_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_case_bugs', 'case_run_id', {TYPE => 'INT4', UNSIGNED => 1});
     $dbh->bz_alter_column('test_case_components', 'case_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_case_dependencies', 'blocked', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_case_dependencies', 'dependson', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_case_plans', 'case_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_case_plans', 'plan_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
-    $dbh->bz_alter_column('test_case_run_status', 'case_run_status_id', {TYPE => 'TINYSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_case_runs', 'build_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_case_runs', 'case_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_case_runs', 'case_run_id', {TYPE => 'INTSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_case_runs', 'environment_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_case_runs', 'iscurrent', {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => '0'});
     $dbh->bz_alter_column('test_case_runs', 'run_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_case_run_status', 'case_run_status_id', {TYPE => 'TINYSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_cases', 'case_id', {TYPE => 'INTSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_case_status', 'case_status_id', {TYPE => 'TINYSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_case_tags', 'case_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_case_texts', 'case_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_case_texts', 'creation_ts', {TYPE => 'DATETIME', NOTNULL => 1});
-    $dbh->bz_alter_column('test_cases', 'case_id', {TYPE => 'INTSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_environment_map', 'environment_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_environments', 'environment_id', {TYPE => 'INTSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_named_queries', 'isvisible', {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 1});
     $dbh->bz_alter_column('test_plan_activity', 'plan_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
-    $dbh->bz_alter_column('test_plan_group_map', 'plan_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_plans', 'plan_id', {TYPE => 'INTSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_plan_tags', 'plan_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_plan_texts', 'creation_ts', {TYPE => 'DATETIME', NOTNULL => 1});
     $dbh->bz_alter_column('test_plan_texts', 'plan_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_plan_texts', 'plan_text', {TYPE => 'MEDIUMTEXT'});
-    $dbh->bz_alter_column('test_plans', 'plan_id', {TYPE => 'INTSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_run_activity', 'run_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_run_cc', 'run_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
-    $dbh->bz_alter_column('test_run_tags', 'run_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_runs', 'build_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_runs', 'environment_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_runs', 'plan_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_runs', 'run_id', {TYPE => 'INTSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_runs', 'start_date', {TYPE => 'DATETIME', NOTNULL => 1});
+    $dbh->bz_alter_column('test_run_tags', 'run_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
 
+    $dbh->bz_drop_index('test_attachments', 'AI_attachment_id');
+    $dbh->bz_drop_index('test_attachments', 'attachment_id');
+    $dbh->bz_drop_index('test_builds', 'build_id');
+    $dbh->bz_drop_index('test_case_bugs', 'case_run_bug_id_idx');
+    $dbh->bz_drop_index('test_case_bugs', 'case_run_id_idx');
+    $dbh->bz_drop_index('test_case_categories', 'AI_category_id');
+    $dbh->bz_drop_index('test_case_categories', 'category_name_idx');
+    $dbh->bz_drop_index('test_case_categories', 'category_name_indx');
     $dbh->bz_drop_index('test_case_components', 'case_commponents_component_id_idx');
     $dbh->bz_drop_index('test_case_components', 'case_components_case_id_idx');
     $dbh->bz_drop_index('test_case_components', 'case_components_component_id_idx');
+    $dbh->bz_drop_index('test_case_plans', 'case_plans_case_id_idx');
+    $dbh->bz_drop_index('test_case_plans', 'case_plans_plan_id_idx');
+    $dbh->bz_drop_index('test_case_runs', 'AI_case_run_id');
+    $dbh->bz_drop_index('test_case_runs', 'case_run_build_idx');
+    $dbh->bz_drop_index('test_case_runs', 'case_run_env_idx');
+    $dbh->bz_drop_index('test_case_runs', 'case_run_id');
+    $dbh->bz_drop_index('test_case_runs', 'case_run_id_2');
+    $dbh->bz_drop_index('test_case_runs', 'case_run_run_id_idx');
+    $dbh->bz_drop_index('test_case_runs', 'case_run_shortkey_idx');
+    $dbh->bz_drop_index('test_case_runs', 'case_run_sortkey_idx');
     $dbh->bz_drop_index('test_case_run_status', 'AI_case_run_status_id');
+    $dbh->bz_drop_index('test_case_run_status', 'case_run_status_name_idx');
+    $dbh->bz_drop_index('test_case_run_status', 'case_run_status_sortkey_idx');
     $dbh->bz_drop_index('test_case_run_status', 'sortkey');
     $dbh->bz_drop_index('test_cases', 'AI_case_id');
     $dbh->bz_drop_index('test_cases', 'alias');
     $dbh->bz_drop_index('test_cases', 'case_id');
     $dbh->bz_drop_index('test_cases', 'case_id_2');
+    $dbh->bz_drop_index('test_case_status', 'AI_case_status_id');
+    $dbh->bz_drop_index('test_case_status', 'case_status_id');
+    $dbh->bz_drop_index('test_case_status', 'test_case_status_name_idx');
     $dbh->bz_drop_index('test_cases', 'test_case_requirment_idx');
+    $dbh->bz_drop_index('test_case_tags', 'case_tags_case_id_idx');
+    $dbh->bz_drop_index('test_case_tags', 'case_tags_case_id_idx_v2');
+    $dbh->bz_drop_index('test_case_tags', 'case_tags_tag_id_idx');
+    $dbh->bz_drop_index('test_case_tags', 'case_tags_user_idx');
+    $dbh->bz_drop_index('test_email_settings', 'test_event_user_event_dx');
+    $dbh->bz_drop_index('test_email_settings', 'test_event_user_event_idx');
     $dbh->bz_drop_index('test_environments', 'environment_id');
+    $dbh->bz_drop_index('test_environments', 'environment_name_idx');
+    $dbh->bz_drop_index('test_fielddefs', 'AI_fieldid');
+    $dbh->bz_drop_index('test_fielddefs', 'fielddefs_name_idx') if $dbh->isa('Bugzilla::DB::Mysql');
+    $dbh->bz_drop_index('test_fielddefs', 'test_fielddefs_name_idx');
+    $dbh->bz_drop_index('test_plans', 'AI_plan_id');
+    $dbh->bz_drop_index('test_plans', 'plan_id');
+    $dbh->bz_drop_index('test_plans', 'plan_id_2');
+    $dbh->bz_drop_index('test_plan_tags', 'plan_tags_idx');
+    $dbh->bz_drop_index('test_plan_tags', 'plan_tags_user_idx');
+    $dbh->bz_drop_index('test_plan_types', 'AI_type_id');
+    $dbh->bz_drop_index('test_plan_types', 'plan_type_name_idx');
+    $dbh->bz_drop_index('test_run_cc', 'run_cc_run_id_who_idx');
     $dbh->bz_drop_index('test_runs', 'AI_run_id');
     $dbh->bz_drop_index('test_runs', 'run_id');
     $dbh->bz_drop_index('test_runs', 'run_id_2');
     $dbh->bz_drop_index('test_runs', 'test_run_plan_id_run_id__idx');
+    $dbh->bz_drop_index('test_run_tags', 'run_tags_idx');
+    $dbh->bz_drop_index('test_run_tags', 'run_tags_user_idx');
+    $dbh->bz_drop_index('test_tags', 'AI_tag_id');
+    $dbh->bz_drop_index('test_tags', 'tag_name');
+    $dbh->bz_drop_index('test_tags', 'test_tag_name_idx');
+    $dbh->bz_drop_index('test_tags', 'test_tag_name_indx');
 
+    $dbh->bz_add_index('test_builds', 'build_milestone_idx', ['milestone']);
     $dbh->bz_add_index('test_builds', 'build_name_idx', ['name']);
+    $dbh->bz_add_index('test_builds', 'build_prod_idx', {FIELDS => [qw(build_id product_id)], TYPE => 'UNIQUE'});
     $dbh->bz_add_index('test_builds', 'build_product_id_name_idx', {FIELDS => [qw(product_id name)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_case_bugs', 'case_bugs_bug_id_idx', ['bug_id']);
+    $dbh->bz_add_index('test_case_bugs', 'case_bugs_case_id_idx', ['case_id']);
+    $dbh->bz_add_index('test_case_bugs', 'case_bugs_case_run_id_idx', ['case_run_id']);
+    $dbh->bz_add_index('test_case_categories', 'category_name_idx_v2', ['name']);
     $dbh->bz_add_index('test_case_categories', 'category_product_id_name_idx', {FIELDS => [qw(product_id name)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_case_categories', 'category_product_idx', {FIELDS => [qw(category_id product_id)], TYPE => 'UNIQUE'} );
     $dbh->bz_add_index('test_case_components', 'components_case_id_idx', {FIELDS => [qw(case_id component_id)], TYPE => 'UNIQUE'});
     $dbh->bz_add_index('test_case_components', 'components_component_id_idx', ['component_id']);
+    $dbh->bz_add_index('test_case_dependencies', 'case_dependencies_blocked_idx', ['blocked']);
+    $dbh->bz_add_index('test_case_dependencies', 'case_dependencies_primary_idx', {FIELDS => [qw(dependson blocked)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_case_plans', 'test_case_plans_case_idx', [qw(case_id)]);
+    $dbh->bz_add_index('test_case_plans', 'test_case_plans_primary_idx', {FIELDS => [qw(plan_id case_id)], TYPE => 'UNIQUE'});
     $dbh->bz_add_index('test_case_runs', 'case_run_build_env_idx', {FIELDS => [qw(run_id case_id build_id environment_id)], TYPE => 'UNIQUE'});
     $dbh->bz_add_index('test_cases', 'test_case_requirement_idx', ['requirement']);
-    $dbh->bz_add_index('test_case_tags', 'case_tags_user_idx', [qw(tag_id userid)]);
+    $dbh->bz_add_index('test_case_tags', 'case_tags_case_id_idx_v3', [qw(case_id)]);
+    $dbh->bz_add_index('test_case_tags', 'case_tags_primary_idx', {FIELDS => [qw(tag_id case_id userid)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_case_tags', 'case_tags_secondary_idx', {FIELDS => [qw(tag_id case_id)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_case_tags', 'case_tags_userid_idx', [qw(userid)]);
+    $dbh->bz_add_index('test_environments', 'environment_name_idx_v2', ['name']);
+    $dbh->bz_add_index('test_plan_tags', 'plan_tags_plan_id_idx', [qw(plan_id)]);
+    $dbh->bz_add_index('test_plan_tags', 'plan_tags_primary_idx', {FIELDS => [qw(tag_id plan_id userid)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_plan_tags', 'plan_tags_secondary_idx', {FIELDS => [qw(tag_id plan_id)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_plan_tags', 'plan_tags_userid_idx', [qw(userid)]);
+    $dbh->bz_add_index('test_run_cc', 'test_run_cc_primary_idx', {FIELDS => [qw(run_id who)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_run_cc', 'test_run_cc_who_idx', [qw(who)]);
     $dbh->bz_add_index('test_runs', 'test_run_plan_id_run_id_idx', [qw(plan_id run_id)]);
     $dbh->bz_add_index('test_runs', 'test_runs_summary_idx', {FIELDS => ['summary'], TYPE => 'FULLTEXT'});
-
-    if ($dbh->bz_index_info('test_case_tags', 'case_tags_case_id_idx') && $dbh->bz_index_info('test_case_tags', 'case_tags_case_id_idx')->{TYPE} eq '') {
-        $dbh->bz_drop_index('test_case_tags', 'case_tags_case_id_idx');
-        $dbh->bz_add_index('test_case_tags', 'case_tags_case_id_idx', {FIELDS => [qw(tag_id case_id)], TYPE => 'UNIQUE'});
-    }
-    if ($dbh->bz_index_info('test_environments', 'environment_name_idx')->{TYPE} eq 'UNIQUE') {
-        $dbh->bz_drop_index('test_environments', 'environment_name_idx');
-        $dbh->bz_add_index('test_environments', 'environment_name_idx', ['name']);
-    }
-    if ($dbh->isa('Bugzilla::DB::Mysql') and
-            $dbh->bz_index_info('test_fielddefs', 'fielddefs_name_idx')) {
-        $dbh->bz_drop_index('test_fielddefs', 'fielddefs_name_idx');
-        $dbh->bz_add_index('test_fielddefs', 'test_fielddefs_name_idx', ['name']);
-    }
+    $dbh->bz_add_index('test_run_tags', 'run_tags_primary_idx', {FIELDS => [qw(tag_id run_id userid)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_run_tags', 'run_tags_run_id_idx', [qw(run_id)]);
+    $dbh->bz_add_index('test_run_tags', 'run_tags_secondary_idx', {FIELDS => [qw(tag_id run_id)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_run_tags', 'run_tags_userid_idx', [qw(userid)]);
+    $dbh->bz_add_index('test_tags', 'test_tag_name_idx_v2', [qw(tag_name)]);
 
     populateMiscTables($dbh);
     populateEnvTables($dbh);
@@ -404,7 +452,9 @@ sub UpdateDB {
 
 sub updateACLs {
     my $dbh = shift;
-    print "Checking plan ACLs \n"; 
+    return unless $dbh->selectrow_array("SELECT COUNT(*) FROM test_plan_permissions") == 0;
+
+    print "Populating plan ACLs ...\n"; 
     my $ref = $dbh->selectall_arrayref("SELECT plan_id, author_id FROM test_plans", {'Slice' =>{}});
     foreach my $plan (@$ref){
         my ($finished) = $dbh->selectrow_array(
@@ -417,12 +467,41 @@ sub updateACLs {
                   undef, ($plan->{'author_id'}, $plan->{'plan_id'}, 15));
     }
 }
+
+sub migrateAttachments {
+    my $dbh = shift;
+    return unless grep /case_id/, @{$dbh->selectcol_arrayref("DESCRIBE test_attachments")};
+    print "Migrating attachments...\n";
+    
+    my $rows = $dbh->selectall_arrayref(
+        "SELECT attachment_id, case_id, plan_id 
+           FROM test_attachments", {'Slice' => {}});
+    
+    foreach my $row (@$rows){
+        if ($row->{'case_id'}){
+            $dbh->do("INSERT INTO test_case_attachments (attachment_id, case_id)
+                      VALUES (?,?)", undef, ($row->{'attachment_id'}, $row->{'case_id'}));
+        }
+        elsif ($row->{'plan_id'}){
+            $dbh->do("INSERT INTO test_plan_attachments (attachment_id, plan_id)
+                      VALUES (?,?)", undef, ($row->{'attachment_id'}, $row->{'plan_id'}));
+        }
+    }
+    $dbh->bz_drop_column('test_attachments', 'case_id');
+    $dbh->bz_drop_column('test_attachments', 'plan_id');
+}
+
 sub populateMiscTables {
     my ($dbh) = (@_);
-    
-    $dbh->do("INSERT INTO test_fielddefs (fieldid, name, description, table_name) VALUES (24, 'estimated_time', 'Estimated Time', 'test_cases')")
-      if $dbh->selectrow_array("SELECT COUNT(*) FROM test_fieldefs WHERE name = 'estimated_time' AND table_name = 'test_cases'") == 0;
-      
+
+    if ($dbh->selectrow_array("SELECT COUNT(*) FROM test_fielddefs " .
+            "WHERE table_name = 'test_cases' " .
+            "AND name = 'estimated_time'") == 0) {
+        $dbh->do("INSERT INTO test_fielddefs " .
+                "(fieldid, name, description, table_name) " .
+                "VALUES (24, 'estimated_time', 'Estimated Time', 'test_cases')");
+    }
+
     # Insert initial values in static tables. Going out on a limb and
     # assuming that if one table is empty, they all are.
     return unless $dbh->selectrow_array("SELECT COUNT(*) FROM test_case_run_status") == 0;
@@ -554,8 +633,6 @@ sub migrateEnvData {
 sub tr_AddGroup {
     my ($dbh, $name, $desc) = @_;
 
-    return 0 if GroupDoesExist($dbh, $name);
-    
     print "Adding group $name ...\n";
     my $sth = $dbh->prepare("INSERT INTO groups " .
         "(name, description, userregexp, isbuggroup, last_changed) " .
@@ -607,7 +684,7 @@ sub tr_AssignAdminGrants {
            "VALUES ($adminid, $id," . $group_membership . ")");
 }
 
-sub GroupDoesExist {
+sub GroupExists {
   my ($dbh, $name) = @_;
   return $dbh->selectrow_array("SELECT COUNT(*) FROM groups WHERE name = ?",
       undef, $name);
