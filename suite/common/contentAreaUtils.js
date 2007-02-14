@@ -97,8 +97,9 @@ function getReferrer(doc)
 
 function openAsExternal(aURL)
 {
-  openNewTabWindowOrExistingWith(pref.getIntPref("browser.link.open_external"),
-                                 aURL, null, false);
+  var loadType = pref.getIntPref("browser.link.open_external");
+  var loadInBackground = pref.getBoolPref("browser.tabs.loadDivertedInBackground");
+  openNewTabWindowOrExistingWith(loadType, aURL, null, loadInBackground);
 }
 
 function openNewWindowWith(aURL, aDoc)
@@ -108,10 +109,16 @@ function openNewWindowWith(aURL, aDoc)
 
 function openNewTabWith(aURL, aDoc, aReverseBackgroundPref)
 {
-  openNewTabWindowOrExistingWith(kNewTab, aURL, aDoc, aReverseBackgroundPref);
+  var loadInBackground = false;
+  if (pref) {
+    loadInBackground = pref.getBoolPref("browser.tabs.loadInBackground");
+    if (aReverseBackgroundPref)
+      loadInBackground = !loadInBackground;
+  }
+  openNewTabWindowOrExistingWith(kNewTab, aURL, aDoc, loadInBackground);
 }
 
-function openNewTabWindowOrExistingWith(aType, aURL, aDoc, aReverseBackgroundPref)
+function openNewTabWindowOrExistingWith(aType, aURL, aDoc, aLoadInBackground)
 {
   // Make sure we are allowed to open this url
   urlSecurityCheck(aURL, document);
@@ -154,13 +161,9 @@ function openNewTabWindowOrExistingWith(aType, aURL, aDoc, aReverseBackgroundPre
   }
 
   // open link in new tab
-  var loadInBackground = false;
-  if (pref) {
-    loadInBackground = pref.getBoolPref("browser.tabs.loadInBackground");
-    if (aReverseBackgroundPref)
-      loadInBackground = !loadInBackground;
-  }
-  browser.addTab(aURL, referrer, originCharset, !loadInBackground);
+  browser.addTab(aURL, referrer, originCharset, !aLoadInBackground);
+  if (!aLoadInBackground)
+    browserWin.content.focus();
 }
 
 // Clientelle: (Make sure you don't break any of these)

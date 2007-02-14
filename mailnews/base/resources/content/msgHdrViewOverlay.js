@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Karsten Düsterloh <mnyromyr@tprac.de>
+ *   Manuel Reimer <manuel.reimer@gmx.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1007,11 +1008,19 @@ createNewAttachmentInfo.prototype.viewAttachment = function viewAttachment()
 
 createNewAttachmentInfo.prototype.openAttachment = function openAttachment()
 {
-  messenger.openAttachment(this.contentType, 
-                           this.url, 
-                           encodeURIComponent(this.displayName), 
-                           this.uri,
-                           this.isExternalAttachment);
+    var webNavigationInfo =
+          Components.classes["@mozilla.org/webnavigation-info;1"]
+                    .getService(Components.interfaces.nsIWebNavigationInfo);
+
+    if (webNavigationInfo.isTypeSupported(this.contentType, null))
+        openAsExternal(this.url);
+    else {
+        messenger.openAttachment(this.contentType, 
+                                 this.url, 
+                                 encodeURIComponent(this.displayName), 
+                                 this.uri,
+                                 this.isExternalAttachment);
+    }
 }
 
 createNewAttachmentInfo.prototype.printAttachment = function printAttachment()
