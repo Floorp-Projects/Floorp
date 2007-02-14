@@ -40,6 +40,10 @@
 #include "nspr.h"
 #include "secutil.h"
 
+
+extern PRBool dumpChain;
+extern void dumpCertChain(CERTCertificate *, SECCertUsage);
+
 /* Declare SSL cipher suites. */
 
 int ssl2CipherSuites[] = {
@@ -136,6 +140,10 @@ myAuthCertificate(void *arg, PRFileDesc *socket,
     cert = SSL_PeerCertificate(socket);
 	
     pinArg = SSL_RevealPinArg(socket);
+    
+    if (dumpChain == PR_TRUE) {
+        dumpCertChain(cert, certUsage);
+    }
 
     secStatus = CERT_VerifyCertificateNow((CERTCertDBHandle *)arg,
 				   cert,
@@ -616,3 +624,43 @@ lockedVars_AddToCount(lockedVars * lv, int addend)
     return rv;
 }
 
+
+/*
+ * Dump cert chain in to cert.* files. This function is will
+ * create collisions while dumping cert chains if called from
+ * multiple treads. But it should not be a problem since we
+ * consider vfyserv to be single threaded(see bug 353477).
+ */
+
+void
+dumpCertChain(CERTCertificate *cert, SECCertUsage usage)
+{
+    CERTCertificateList *certList;
+    int count = 0;
+
+    certList = CERT_CertChainFromCert(cert, usage, PR_TRUE);
+    if (certList == NULL) {
+        errWarn("CERT_CertChainFromCert");
+        return;
+    }
+
+    for(count = 0; count < (unsigned int)certList->len; count++) {
+        char certFileName[16];
+        PRFileDesc *cfd;
+
+        PR_snprintf(certFileName, sizeof certFileName, "cert.%03d",
+                    count);
+        cfd = PR_Open(certFileName, PR_WRONLY|PR_CREATE_FILE|PR_TRUNCATE, 
+                      0664);
+        if (!cfd) {
+            PR_fprintf(PR_STDOUT,
+                       "Error: couldn't save cert der in file '%s'\n",
+                       certFileName);
+        } else {
+            PR_Write(cfd,  certList->certs[count].data,  certList->certs[count].len);
+            PR_Close(cfd);
+            PR_fprintf(PR_STDOUT, "Cert file %s was created.\n", certFileName);
+        }
+    }
+    CERT_DestroyCertificateList(certList);
+}
