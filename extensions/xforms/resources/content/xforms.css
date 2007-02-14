@@ -247,19 +247,6 @@ html|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#double"] h
   -moz-binding: url('chrome://xforms/content/widgets-xhtml.xml#slider');
 }
 
-/* numberbox widgets */
-
-xul|textbox[type="number"] {
-  -moz-binding: url('chrome://xforms/content/widgets-xul.xml#numberbox');
-  display: -moz-box;
-}
-
-/* spinbuttons widgets */
-
-xul|spinbuttons {
-  -moz-binding: url('chrome://xforms/content/widgets-xul.xml#spinbuttons');
-}
-
 /* input widgets */
 
   /* input */
@@ -777,5 +764,26 @@ xul|*:root xul|dropmarker[mozType|dropmarker] {
 
 html|*:root html|div[mozType|comboboxpopup] {
   -moz-binding: url('chrome://xforms/content/widgets-xhtml.xml#comboboxpopup');
+}
+
+  /* spinbuttons widget */
+xul|spinbuttons {
+  -moz-binding: url('chrome://xforms/content/widgets-xul.xml#spinbuttons');
+}
+
+  /* numberbox widget */
+xul|textbox[type="number"] {
+  -moz-binding: url('chrome://xforms/content/widgets-xul.xml#numberbox');
+  display: -moz-box;
+}
+
+  /* monthbox widget */
+xul|textbox[type="month"] {
+  -moz-binding: url('chrome://xforms/content/widgets-xul.xml#monthbox');
+  display: -moz-box;
+}
+
+xul|hbox[mozType|monthyearbox] {
+  -moz-binding: url('chrome://xforms/content/widgets-xul.xml#monthyearbox');
 }
 

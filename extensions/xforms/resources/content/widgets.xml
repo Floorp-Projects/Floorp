@@ -338,6 +338,8 @@
           var currentIndex = null;
           if (aCurrentDay)
             currentIndex = this.dayOffset + parseInt(aCurrentDay) - 1;
+          else
+            currentIndex = this.currentDayIndex;
 
           this.setSelectedDayByIndex(selectedIndex, currentIndex);
         ]]>
@@ -404,10 +406,9 @@
         <parameter name="aSkipFocus"/>
         <body>
         <![CDATA[
-          if (!aDay)
-            aDay = this.currentDayIndex - this.dayOffset + 1;
+          if (aDay != null)
+            aDay = parseInt(aDay);
 
-          aDay = parseInt(aDay);
           switch (aActionType) {
             case "prevMonth":
               this.setDate(this.year, this.month - 1, aDay);
@@ -422,7 +423,8 @@
                 this.selectedDate = new Date(this.year, this.month - 1, aDay);
                 this.fireChangeEvent();
               } else {
-                this.currentDayIndex = this.dayOffset + aDay - 1;
+                if (aDay != null)
+                  this.currentDayIndex = this.dayOffset + aDay - 1;
               }
               break;
           }

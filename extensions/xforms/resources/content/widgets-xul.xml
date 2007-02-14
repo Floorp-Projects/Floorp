@@ -45,7 +45,8 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xbl="http://www.mozilla.org/xbl"
           xmlns:html="http://www.w3.org/1999/xhtml"
-          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:mozType="http://www.mozilla.org/projects/xforms/2005/type">
 
 
 <!--
@@ -196,17 +197,22 @@
       </handler>
 
       <handler event="keypress" phase="capturing">
+      <![CDATA[
         // Stop event propagation to prevent event processing of
         // button binding, i.e. to prevent default behaviour of button
         // that is to advance/rewind focus on arrow keys.
-        switch (event.keyCode) {
-          case event.DOM_VK_UP:
-          case event.DOM_VK_DOWN:
-          case event.DOM_VK_LEFT:
-          case event.DOM_VK_RIGHT:
-            event.stopPropagation();
-            break;
+        if (event.originalTarget.namespaceURI == this.XUL_NS &&
+            event.originalTarget.localName == "toolbarbutton") {
+          switch (event.keyCode) {
+            case event.DOM_VK_UP:
+            case event.DOM_VK_DOWN:
+            case event.DOM_VK_LEFT:
+            case event.DOM_VK_RIGHT:
+              event.stopPropagation();
+              break;
+          }
         }
+      ]]>
       </handler>
     </handlers>
   </binding>
@@ -217,29 +223,7 @@
     <content orient="vertical"
              xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
              xmlns:xhtml="http://www.w3.org/1999/xhtml">
-      <xul:hbox>
-        <!-- month selection section -->
-        <xul:hbox class="list" flex="1">
-          <xul:description anonid="months-label" flex="1"/>
-          <xul:vbox class="control-buttons-box">
-            <xul:toolbarbutton anonid="prevmonth-btn" class="toolbarbutton-up"
-                               tooltiptext="&xforms.datepicker.prevMonth.title;"/>
-            <xul:toolbarbutton anonid="nextmonth-btn" class="toolbarbutton-dn"
-                               tooltiptext="&xforms.datepicker.nextMonth.title;"/>
-          </xul:vbox>
-        </xul:hbox>
-        <!-- year selection section -->
-        <xul:hbox class="list">
-          <xul:description anonid="years-label"/>
-          <xul:vbox class="control-buttons-box">
-            <xul:toolbarbutton anonid="prevyear-btn" class="toolbarbutton-up"
-                               tooltiptext="&xforms.datepicker.prevYear.title;"/>
-            <xul:toolbarbutton anonid="nextyear-btn" class="toolbarbutton-dn"
-                               tooltiptext="&xforms.datepicker.nextYear.title;"/>
-          </xul:vbox>
-        </xul:hbox>
-      </xul:hbox>
-
+      <xul:hbox mozType:monthyearbox="true" anonid="monthyear"/>
       <!-- calendar days container-->
       <xul:grid xhtml:role="wairole:grid">
         <xul:columns>
@@ -265,103 +249,62 @@
         <body>
           this.refreshInternal(aCurrentDay, aDaysRefreshOnly);
 
-          this.monthsLabel.value =
-            new Date(this.year, this.month - 1).toLocaleFormat("%B");
-
-          this.yearsLabel.value = this.year;
+          this.monthyearBox.month = this.month - 1;
+          this.monthyearBox.year = this.year;
         </body>
       </method>
 
     <!-- private -->
+      <constructor>
+        var handler = {
+          handleEvent: function handleEvent(aEvent) {
+            this.widget.setDate(this.monthyear.year, this.monthyear.month + 1);
+          },
+          widget: this,
+          monthyear: this.monthyearBox
+        };
+        this.monthyearBox.addEventListener("change", handler, false);
+      </constructor>
 
-      <property name="prevmonthButton" readonly="true">
+      <property name="monthyearBox" readonly="true">
         <getter>
-          if (!this._prevmonthButton) {
-            this._prevmonthButton = this.ownerDocument.
-              getAnonymousElementByAttribute(this, "anonid", "prevmonth-btn");
+          if (!this._monthyearBox) {
+            this._monthyearBox = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "monthyear");
           }
-          return this._prevmonthButton;
+          return this._monthyearBox;
         </getter>
       </property>
-      <field name="_prevmonthButton">null</field>
-
-      <property name="nextmonthButton" readonly="true">
-        <getter>
-          if (!this._nextmonthButton) {
-            this._nextmonthButton = this.ownerDocument.
-              getAnonymousElementByAttribute(this, "anonid", "nextmonth-btn");
-          }
-          return this._nextmonthButton;
-        </getter>
-      </property>
-      <field name="_nextmonthButton">null</field>
-
-      <property name="prevyearButton" readonly="true">
-        <getter>
-          if (!this._prevyearButton) {
-            this._prevyearButton = this.ownerDocument.
-              getAnonymousElementByAttribute(this, "anonid", "prevyear-btn");
-          }
-          return this._prevyearButton;
-        </getter>
-      </property>
-      <field name="_prevyearButton">null</field>
-
-      <property name="nextyearButton" readonly="true">
-        <getter>
-          if (!this._nextyearButton) {
-            this._nextyearButton = this.ownerDocument.
-              getAnonymousElementByAttribute(this, "anonid", "nextyear-btn");
-          }
-          return this._nextyearButton;
-        </getter>
-      </property>
-      <field name="_nextyearButton">null</field>
-
-      <property name="monthsLabel" readonly="true">
-        <getter>
-          if (!this._monthsLabel) {
-            this._monthsLabel = this.ownerDocument.
-              getAnonymousElementByAttribute(this, "anonid", "months-label");
-          }
-          return this._monthsLabel;
-        </getter>
-      </property>
-      <field name="_monthsLabel">null</field>
-
-      <property name="yearsLabel" readonly="true">
-        <getter>
-          if (!this._yearsLabel) {
-            this._yearsLabel = this.ownerDocument.
-              getAnonymousElementByAttribute(this, "anonid", "years-label");
-          }
-          return this._yearsLabel;
-        </getter>
-      </property>
-      <field name="_yearsLabel">null</field>
+      <field name="_monthyearBox">null</field>
     </implementation>
 
     <handlers>
-      <handler event="command">
-        var target = event.originalTarget;
-        switch (target) {
-          case this.prevmonthButton:
-            this.processAction("prevMonth", null, true);
-            break;
-          case this.nextmonthButton:
-            this.processAction("nextMonth", null, true);
-            break;
-          case this.prevyearButton:
-            this.year--;
-            break;
-          case this.nextyearButton:
-            this.year++;
-            break;
-        }
+      <handler event="keypress" keycode="VK_TAB">
+        if (!this.hasAttribute("internaltabhandling"))
+          return;
+
+        event.preventDefault();
+
+        if (this.monthyearBox.isMonthFocused())
+          this.monthyearBox.focusYear();
+        else if (this.monthyearBox.isYearFocused())
+          this.focus();
+        else
+          this.monthyearBox.focusMonth();
       </handler>
 
-      <handler event="change">
-        this.year = this.yearsLabel.value;
+      <handler event="keypress" keycode="VK_TAB" modifiers="shift">
+        if (!this.hasAttribute("internaltabhandling"))
+          return;
+
+        event.preventDefault();
+
+        if (this.monthyearBox.isMonthFocused())
+          this.focus();
+        else if (this.monthyearBox.isYearFocused())
+          this.monthyearBox.focusMonth();
+        else
+          this.monthyearBox.focusYear();
       </handler>
     </handlers>
   </binding>
@@ -762,11 +705,11 @@
         ]]>
       </handler>
 
-      <handler event="keypress" keycode="VK_UP">
+      <handler event="keypress" keycode="VK_UP" phase="capturing">
         this._modifyUp();
       </handler>
 
-      <handler event="keypress" keycode="VK_DOWN">
+      <handler event="keypress" keycode="VK_DOWN" phase="capturing">
         this._modifyDown();
       </handler>
 
@@ -778,7 +721,186 @@
         }
       </handler>
     </handlers>
+  </binding>
 
+
+  <!-- MONTHBOX -->
+  <binding id="monthbox"
+           extends="chrome://global/content/bindings/textbox.xml#textbox">
+
+    <resources>
+      <stylesheet src="chrome://xforms/skin/widgets-xul.css"/>
+    </resources>
+
+    <content>
+      <xul:hbox class="textbox-input-box numberbox-input-box" flex="1"
+                xbl:inherits="context">
+        <html:input class="numberbox-input textbox-input" flex="1"
+                    anonid="input" readonly="true"
+                    xbl:inherits="onfocus,onblur,value,type,maxlength,disabled,size,tabindex,accesskey"/>
+      </xul:hbox>
+      <xul:spinbuttons anonid="buttons"
+                       xbl:inherits="disabled,hidden=hidespinbuttons"
+                       onup="this.parentNode._modifyUp();"
+                       ondown="this.parentNode._modifyDown();"/>
+    </content>
+
+    <implementation>
+      <property name="value"
+                onget="return this.monthValues[this.inputField.value];">
+        <setter>
+        <![CDATA[
+          if (val < 0)
+            val = 11;
+          else if (val > 11)
+            val = 0;
+
+          if (!this.monthNames.length) {
+            for (var month = 0; month < 12; month++) {
+              var loc = new Date(1970, month).toLocaleFormat("%B");
+              this.monthNames.push(loc);
+              this.monthValues[loc] = month;
+            }
+          }
+
+          this.inputField.value = this.monthNames[val];
+        ]]>
+        </setter>
+      </property>
+
+      <method name="_modifyUp">
+        <body>
+          this.value++;
+          this.fireEvent("change");
+          this.fireEvent("spinup");
+        </body>
+      </method>
+
+      <method name="_modifyDown">
+        <body>
+          this.value--;
+          this.fireEvent("change");
+          this.fireEvent("spindown");
+        </body>
+      </method>
+
+      <method name="fireEvent">
+        <parameter name="aName"/>
+        <body>
+          var evt = document.createEvent("Events");
+          evt.initEvent(aName, true, false);
+          this.dispatchEvent(evt);
+        </body>
+      </method>
+
+      <constructor>
+        if (this.value == undefined)
+          this.value = 0;
+      </constructor>
+
+      <field name="monthNames">new Array()</field>
+      <field name="monthValues">new Object()</field>
+    </implementation>
+
+    <handlers>
+      <handler event="keydown" keycode="VK_UP">
+        this._modifyUp();
+      </handler>
+      <handler event="keypress" keycode="VK_DOWN">
+        this._modifyDown();
+      </handler>
+    </handlers>
+  </binding>
+
+
+  <binding id="monthyearbox">
+    <content>
+      <xul:textbox type="month" anonid="month" size="10" flex="1"/>
+      <xul:textbox type="number" anonid="year" size="4"/>
+    </content>
+
+    <implementation>
+    <!-- interface -->
+      <property name="year"
+                onget="return this.yearField.value;"
+                onset="this.yearField.value = val;"/>
+
+      <property name="month"
+                onget="return this.monthField.value;"
+                onset="this.monthField.value = val;"/>
+
+      <method name="focusMonth">
+        <body>
+          this.monthField.focus();
+        </body>
+      </method>
+
+      <method name="focusYear">
+        <body>
+          this.yearField.focus();
+        </body>
+      </method>
+
+      <method name="isMonthFocused">
+        <body>
+          return this.getFocusedElement() == this.monthField;
+        </body>
+      </method>
+
+      <method name="isYearFocused">
+        <body>
+          return this.getFocusedElement() == this.yearField;
+        </body>
+      </method>
+
+    <!-- private -->
+      <method name="getFocusedElement">
+        <body>
+          var focused = this.ownerDocument.commandDispatcher.focusedElement;
+          if (!focused)
+            return;
+
+          var binding = this.ownerDocument.getBindingParent(focused);
+          return binding;
+        </body>
+      </method>
+
+      <constructor>
+        var handler = {
+          handleEvent: function handleEvent(aEvent) {
+            if (aEvent.type == "spinup") {
+              if (this.widget.month == 0)
+                this.widget.year++;
+            } else if (this.widget.month == 11) {
+              this.widget.year--;
+            }
+          },
+          widget: this
+        };
+        this.monthField.addEventListener("spinup", handler, false);
+        this.monthField.addEventListener("spindown", handler, false);
+      </constructor>
+
+      <property name="monthField" readonly="true">
+        <getter>
+          if (!this._monthField)
+            this._monthField = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "month");
+          return this._monthField;
+        </getter>
+      </property>
+      <field name="_monthField">null</field>
+
+      <property name="yearField" readonly="true">
+        <getter>
+          if (!this._yearField)
+            this._yearField = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "year");
+          return this._yearField;
+        </getter>
+      </property>
+      <field name="_yearField">null</field>
+    </implementation>
   </binding>
 
 </bindings>

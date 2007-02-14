@@ -204,7 +204,8 @@
                         xbl:inherits="disabled"/>
       </xul:hbox>
       <xul:popup anonid="popup" ignorekeys="true">
-        <xul:box mozType:calendar="true" anonid="picker"/>
+        <xul:box mozType:calendar="true" anonid="picker"
+                 internaltabhandling="true"/>
       </xul:popup>
       <children/>
     </content>
@@ -241,8 +242,10 @@
         var pickerChangeHandler = {
           inputControl: this,
           handleEvent: function(aEvent) {
-            this.inputControl.control.value = this.inputControl.picker.value;
-            this.inputControl.hidePicker();
+            if (aEvent.originalTarget == this.inputControl.picker) {
+              this.inputControl.control.value = this.inputControl.picker.value;
+              this.inputControl.hidePicker();
+            }
           }
         };
         this.picker.addEventListener("change", pickerChangeHandler, false);

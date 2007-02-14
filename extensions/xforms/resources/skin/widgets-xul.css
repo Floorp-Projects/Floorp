@@ -96,7 +96,7 @@ box[mozType|calendar] toolbarbutton:focus {
 
 /* numberbox widget */
 
-textbox[type="number"] {
+textbox[type="number"], textbox[type="month"] {
   padding: 0 !important;
   cursor: default;
 }
