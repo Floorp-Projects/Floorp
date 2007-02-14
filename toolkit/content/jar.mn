@@ -23,7 +23,7 @@ toolkit.jar:
    content/global/customizeToolbar.css        (customizeToolbar.css)
 *  content/global/customizeToolbar.js         (customizeToolbar.js)
 *  content/global/customizeToolbar.xul        (customizeToolbar.xul)
-+  content/global/editMenuOverlay.js          (editMenuOverlay.js)
+*+ content/global/editMenuOverlay.js          (editMenuOverlay.js)
 *+ content/global/editMenuOverlay.xul         (editMenuOverlay.xul)
 *+ content/global/finddialog.js               (finddialog.js)
 *+ content/global/finddialog.xul              (finddialog.xul)
