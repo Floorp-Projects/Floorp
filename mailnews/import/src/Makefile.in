@@ -43,17 +43,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = import
-
-ifndef MOZ_STATIC_MAIL_BUILD
-
-LIBRARY_NAME = import
-EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
-MODULE_NAME	= nsImportServiceModule
-
-else
 LIBRARY_NAME = import_s
-endif
 
 META_COMPONENT = mail
 MOZILLA_INTERNAL_API = 1
@@ -92,28 +82,7 @@ CPPSRCS		= 	\
 			nsImportFieldMap.cpp			\
 			$(NULL)
 
-ifndef MOZ_STATIC_MAIL_BUILD
-CPPSRCS += nsImportFactory.cpp
-
-ifeq ($(USE_SHORT_LIBNAME),1)
-EXTRA_DSO_LIBS = msgbsutl
-else
-EXTRA_DSO_LIBS = msgbaseutil
-endif
-
-EXTRA_DSO_LDOPTS += \
-	$(LIBS_DIR) \
-	$(EXTRA_DSO_LIBS) \
-	$(MOZ_UNICHARUTIL_LIBS) \
-	$(MOZ_COMPONENT_LIBS) \
-	$(MOZ_XPCOM_OBSOLETE_LIBS) \
-	$(NULL)
-
-else
-
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
-
-endif
 
 include $(topsrcdir)/config/rules.mk

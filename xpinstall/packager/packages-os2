@@ -456,12 +456,6 @@ bin/components/vcard.dll
 bin/components/smimestb.dll
 bin/components/import.dll
 bin/components/import.xpt
-;bin/components/importOE.dll
-;bin/components/impOutlk.dll
-;bin/components/impEudra.dll
-bin/components/impText.dll
-;bin/components/impComm4xMail.dll
-bin/components/imp4Mail.dll
 bin/components/impComm4xMail.xpt
 bin/components/nsAbLDAPAttributeMap.js
 bin/components/nsLDAPPrefsService.js

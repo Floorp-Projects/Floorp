@@ -44,18 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= impOutlk
 PACKAGE_FILE = importoutlook.pkg
-
-ifndef MOZ_STATIC_MAIL_BUILD
-
-LIBRARY_NAME	= impOutlk
-EXPORT_LIBRARY	= 1
-IS_COMPONENT	= 1
-MODULE_NAME	= nsOutlookImport
-
-else
 LIBRARY_NAME   = impOutlk_s
-endif
-
 META_COMPONENT	= mail
 MOZILLA_INTERNAL_API = 1
 
@@ -93,29 +82,7 @@ CPPSRCS		= \
 		nsOutlookCompose.cpp		\
 		$(NULL)
 
-ifndef MOZ_STATIC_MAIL_BUILD
-
-CPPSRCS	+= nsOutlookFactory.cpp
-
-ifdef USE_SHORT_LIBNAME
-EXTRA_DSO_LIBS	= msgbsutl
-else
-EXTRA_DSO_LIBS	= msgbaseutil
-endif
-
-EXTRA_DSO_LDOPTS = \
-	$(LIBS_DIR) \
-	$(EXTRA_DSO_LIBS) \
-	$(MOZ_UNICHARUTIL_LIBS) \
-	$(MOZ_COMPONENT_LIBS) \
-	$(MOZ_XPCOM_OBSOLETE_LIBS) \
-	$(NULL)
-
-else
-
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
-
-endif
 
 include $(topsrcdir)/config/rules.mk

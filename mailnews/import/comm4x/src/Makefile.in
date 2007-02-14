@@ -43,27 +43,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= impComm4xMail
-
-ifndef MOZ_STATIC_MAIL_BUILD
-
-LIBRARY_NAME	= impComm4xMail
-
-# don't define SHORT_LIBNAME on WINNT
-# see bug # 141438
-
-ifneq ($(OS_ARCH),WINNT)
-SHORT_LIBNAME	= imp4Mail
-endif
-
-EXPORT_LIBRARY  = 1
-IS_COMPONENT	= 1
-MODULE_NAME     = nsComm4xMailImportModule
-
-else
-
 LIBRARY_NAME   = imp4mail_s
-
-endif
 
 PACKAGE_FILE = importcomm4x.pkg
 MOZILLA_INTERNAL_API = 1
@@ -87,31 +67,8 @@ CPPSRCS		= 	\
 			nsComm4xProfile.cpp				\
 			$(NULL)
 
-
-ifndef MOZ_STATIC_MAIL_BUILD
-
-CPPSRCS	 += nsComm4xMailFactory.cpp 
-
-ifeq ($(USE_SHORT_LIBNAME),1)
-EXTRA_DSO_LIBS = msgbsutl
-else
-EXTRA_DSO_LIBS = msgbaseutil
-endif
-
-EXTRA_DSO_LDOPTS = \
-	$(LIBS_DIR) \
-	$(EXTRA_DSO_LIBS) \
-	$(DEPTH)/modules/libreg/src/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX) \
-	$(MOZ_COMPONENT_LIBS) \
-	$(MOZ_XPCOM_OBSOLETE_LIBS) \
-	$(NULL)
-
-else
-
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
-
-endif
 
 include $(topsrcdir)/config/rules.mk
 

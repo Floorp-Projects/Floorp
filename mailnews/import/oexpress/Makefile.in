@@ -44,18 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= importOE
 PACKAGE_FILE = importoe.pkg
-
-ifndef MOZ_STATIC_MAIL_BUILD
-
-LIBRARY_NAME	= importOE
-EXPORT_LIBRARY	= 1
-IS_COMPONENT	= 1
-MODULE_NAME	= nsOEImport
-
-else
 LIBRARY_NAME   = importOE_s
-endif
-
 MOZILLA_INTERNAL_API = 1
 META_COMPONENT	= mail
 
@@ -89,28 +78,7 @@ CPPSRCS		= \
 		nsOEStringBundle.cpp		\
 		$(NULL)
 
-ifndef MOZ_STATIC_MAIL_BUILD
-
-CPPSRCS += nsOEFactory.cpp
-
-ifdef USE_SHORT_LIBNAME
-EXTRA_DSO_LIBS	= msgbsutl
-else
-EXTRA_DSO_LIBS	= msgbaseutil
-endif
-
-EXTRA_DSO_LDOPTS = \
-	$(EXTRA_DSO_LIBS) \
-	$(MOZ_COMPONENT_LIBS) \
-	$(MOZ_UNICHARUTIL_LIBS) \
-	$(MOZ_XPCOM_OBSOLETE_LIBS) \
-	$(NULL)
-
-else
-
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
-
-endif
 
 include $(topsrcdir)/config/rules.mk

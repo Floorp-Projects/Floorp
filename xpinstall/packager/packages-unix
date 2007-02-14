@@ -450,8 +450,6 @@ bin/components/libmsgnews.so
 bin/components/libvcard.so
 bin/components/libsmimestb.so
 bin/components/libimport.so
-bin/components/libimpText.so
-bin/components/libimpComm4xMail.so
 bin/components/mailnews.xpt
 bin/components/mime.xpt
 bin/components/msgbase.xpt

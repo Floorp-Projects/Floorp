@@ -124,9 +124,19 @@ LOCAL_INCLUDES += -I$(srcdir)/../oexpress \
 endif
 endif
 
+ifdef MOZ_STATIC_MAIL_BUILD
+EXTRA_DSO_LDOPTS += ../../base/util/$(LIB_PREFIX)msgbsutl_s.$(LIB_SUFFIX)
+else
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS = msgbsutl
+else
+EXTRA_DSO_LIBS = msgbaseutil
+endif # ifeq
+endif # MOZ_STATIC_MAIL_BUILD
+
 EXTRA_DSO_LDOPTS += \
 	$(LIBS_DIR) \
-	../../base/util/$(LIB_PREFIX)msgbsutl_s.$(LIB_SUFFIX) \
+	$(EXTRA_DSO_LIBS) \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(DEPTH)/modules/libreg/src/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX) \
 	$(MOZ_COMPONENT_LIBS) \

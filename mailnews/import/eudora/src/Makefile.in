@@ -44,20 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= impEudra
 PACKAGE_FILE = importeudora.pkg
-
-ifndef MOZ_STATIC_MAIL_BUILD
-
-LIBRARY_NAME	= impEudra
-EXPORT_LIBRARY	= 1
-IS_COMPONENT	= 1
-MODULE_NAME	= nsEudoraImportModule
-
-else
-
 LIBRARY_NAME   = impEudra_s
-
-endif
-
 META_COMPONENT	= mail
 MOZILLA_INTERNAL_API = 1
 
@@ -99,33 +86,7 @@ REQUIRES += macmorefiles
 CPPSRCS += nsEudoraMac.cpp 
 endif
 
-ifndef MOZ_STATIC_MAIL_BUILD
-
-CPPSRCS += nsEudoraFactory.cpp
-
-ifeq ($(USE_SHORT_LIBNAME),1)
-EXTRA_DSO_LIBS = msgbsutl
-else
-EXTRA_DSO_LIBS = msgbaseutil
-endif
-
-EXTRA_DSO_LDOPTS = \
-		$(LIBS_DIR) \
-		$(EXTRA_DSO_LIBS) \
-		$(MOZ_XPCOM_OBSOLETE_LIBS) \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
-
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-EXTRA_DSO_LDOPTS += $(TK_LIBS)
-endif
-
-else
-
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
-
-endif
 
 include $(topsrcdir)/config/rules.mk

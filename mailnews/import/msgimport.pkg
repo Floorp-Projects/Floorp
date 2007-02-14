@@ -1,6 +1,1 @@
-[xpfe-mailnews]
-#if !MOZ_STATIC_MAIL_BUILD
-dist/bin/components/@DLLP@import@DLLS@
-#endif
-
 !xpt dist/bin/components/import.xpt

@@ -3,6 +3,10 @@ function upgradeCleanup()
   // Obsolete files from Netscape 6.0 and Netscape 6.01 that
   // need to be cleaned up.
   deleteThisFile("Components", "libsigned.so");
+  // Obsolete files from SeaMonkey 1.1 that need to be cleaned up
+  deleteThisFile("Components", "impComm4xMail.xpt");
+  deleteThisFile("Components", "impComm4xMail.so");
+  deleteThisFile("Components", "impText.so");
 }
 
 var srDest = $SpaceRequired$;

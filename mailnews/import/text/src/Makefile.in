@@ -45,30 +45,21 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= impText
 PACKAGE_FILE = importtext.pkg
 
-ifndef MOZ_STATIC_MAIL_BUILD
-
-LIBRARY_NAME	= impText
-EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
-MODULE_NAME	= nsTextImportModule
-
-else
 LIBRARY_NAME   = imptext_s
-endif
 
 META_COMPONENT = mail
 MOZILLA_INTERNAL_API = 1
 
-REQUIRES	= xpcom \
-          xpcom_obsolete \
-		  string \
-		  import \
-		  intl \
-		  necko \
-		  addrbook \
-		  pref \
-		  mork \
-		  $(NULL)
+REQUIRES =	xpcom \
+		xpcom_obsolete \
+		string \
+		import \
+		intl \
+		necko \
+		addrbook \
+		pref \
+		mork \
+		$(NULL)
 
 CPPSRCS		= \
 		nsTextStringBundle.cpp			\
@@ -76,20 +67,9 @@ CPPSRCS		= \
 		nsTextAddress.cpp 				\
 		$(NULL)
 
-ifndef MOZ_STATIC_MAIL_BUILD
-
-CPPSRCS += nsTextFactory.cpp 
-
-EXTRA_DSO_LDOPTS = \
-	$(MOZ_COMPONENT_LIBS) \
-	$(MOZ_XPCOM_OBSOLETE_LIBS) \
-	$(NULL)
-
-else
+LOCAL_INCLUDES += -I$(srcdir)/../../src
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
-
-endif
 
 include $(topsrcdir)/config/rules.mk
