@@ -21,10 +21,9 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *      Brian Ryner <bryner@brianryner.com>
- * Modified by:
- *      romaxa@gmail.com (from original:  mozilla/toolkit/components/passwordmgr/base/nsPasswordManager.cpp)
- *      Antonio Gomes <tonikitoo@gmail.com>
+ *   Brian Ryner <bryner@brianryner.com>
+ *   romaxa@gmail.com (Modified from original:  mozilla/toolkit/components/passwordmgr/base/nsPasswordManager.cpp)
+ *   Antonio Gomes <tonikitoo@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
