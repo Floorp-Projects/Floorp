@@ -2172,16 +2172,17 @@ allocation_enumerator(PLHashEntry *he, PRIntn i, void *arg)
     callsite *site = (callsite*) he->value;
 
     extern const char* nsGetTypeName(const void* ptr);
-    void **p, **end;
+    unsigned long *p, *end;
 
     fprintf(ofp, "%p <%s> (%lu)\n",
             he->key,
             nsGetTypeName(he->key),
             (unsigned long) alloc->size);
 
-    end = (void**)(((char*) he->key) + alloc->size);
-    for (p = (void**)he->key; p < end; ++p)
-        fprintf(ofp, "\t%p\n", *p);
+    for (p   = (unsigned long*) he->key,
+         end = (unsigned long*) ((char*)he->key + alloc->size);
+         p < end; ++p)
+        fprintf(ofp, "\t0x%08lX\n", *p);
 
     while (site) {
         if (site->name || site->parent) {
