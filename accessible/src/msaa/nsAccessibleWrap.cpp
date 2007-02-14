@@ -469,6 +469,12 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
   NS_ASSERTION(msaaRoleMap[nsIAccessible::ROLE_LAST_ENTRY] == ROLE_MSAA_LAST_ENTRY,
                "MSAA role map skewed");
 
+  // Special case, not a great place for this, but it's better than adding extra role buttonmenu role to ARIA
+  // Other APIs do not have a special role for this.
+  // Really the HASPOPUP state should have been enough for MSAA, but this avoids asking vendors for a fix.
+  if (msaaRole == ROLE_SYSTEM_PUSHBUTTON && (State(xpAccessible) & STATE_HASPOPUP)) {
+    msaaRole = ROLE_SYSTEM_BUTTONMENU;
+  }
   // -- Try enumerated role
   if (msaaRole != USE_ROLE_STRING) {
     pvarRole->vt = VT_I4;
