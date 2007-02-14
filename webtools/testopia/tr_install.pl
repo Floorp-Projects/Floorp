@@ -303,6 +303,9 @@ sub UpdateDB {
     $dbh->bz_add_column('test_builds', 'isactive', {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => '1'}, 1);
     $dbh->bz_add_column('test_cases', 'estimated_time', {TYPE => 'TIME'}, 0);
     $dbh->bz_add_column('test_case_runs', 'running_date', {TYPE => 'DATETIME'}, 0);
+    $dbh->bz_add_column('test_plan_types', 'description', {TYPE => 'MEDIUMTEXT'}, 0);
+    $dbh->bz_add_column('test_case_status', 'description', {TYPE => 'MEDIUMTEXT'}, 0);
+    $dbh->bz_add_column('test_case_run_status', 'description', {TYPE => 'MEDIUMTEXT'}, 0);
     
     $dbh->bz_alter_column('test_attachment_data', 'attachment_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_attachments', 'attachment_id', {TYPE => 'INTSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
