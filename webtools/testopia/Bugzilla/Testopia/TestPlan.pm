@@ -382,19 +382,19 @@ sub last_changed {
     return $date;
 }
 
-=head2 lookup_plan_type
+=head2 plan_type_ref
 
 Returns a type name matching the given type id
 
 =cut
 
-sub lookup_plan_type {
+sub plan_type_ref {
     my $self = shift;
     my $type_id = shift;
     my $dbh = Bugzilla->dbh;    
 
     my $type = $dbh->selectrow_hashref(
-            "SELECT type_id AS id, name 
+            "SELECT type_id AS id, name, description 
                FROM test_plan_types
               WHERE type_id = ?", 
             undef, $type_id);
@@ -444,14 +444,14 @@ Update the given type
 
 sub update_plan_type {
     my $self = shift;
-    my ($type_id, $name) = @_;
+    my ($type_id, $name, $desc) = @_;
     my $dbh = Bugzilla->dbh;    
 
     my $type = $dbh->do(
             "UPDATE test_plan_types
-                SET name = ? 
+                SET name = ?, description = ? 
               WHERE type_id = ?", 
-            undef, ($name,$type_id));
+            undef, ($name, $desc, $type_id));
     
 }
 
@@ -463,13 +463,13 @@ Add the given type
 
 sub add_plan_type {
     my $self = shift;
-    my ($name) = @_;
+    my ($name, $desc) = @_;
     my $dbh = Bugzilla->dbh;    
 
     my $type = $dbh->do(
-            "INSERT INTO test_plan_types (type_id, name)
-                VALUES(?,?)", 
-            undef, (undef, $name));
+            "INSERT INTO test_plan_types (type_id, name, description)
+                VALUES(?,?,?)", 
+            undef, (undef, $name, $desc));
 }
 
 =head2 get_fields

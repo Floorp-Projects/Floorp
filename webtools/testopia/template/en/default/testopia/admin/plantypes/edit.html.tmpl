@@ -26,7 +26,16 @@
   <input type="hidden" name="item" value="plan_type" />
   <input type="hidden" name="action" value="doedit" />
   <input type="hidden" name="type_id" value="[% type.id FILTER html %]" />
-  Type Name: <input name="name" value="[% type.name FILTER html %]" />
+<table>
+  <tr>
+    <th align="right">Type Name:</th>
+    <td><input name="name" value="[% type.name FILTER html %]"/></td>
+  </tr>
+  <tr>
+    <th align="right" valign="top">Description:</th>
+    <td><textarea cols="40" name="description" >[% type.description FILTER html %]</textarea></td>
+  </tr>
+</table>
   <input type="submit" value="Commit" />
 </form>
 

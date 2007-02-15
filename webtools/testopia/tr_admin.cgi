@@ -51,7 +51,7 @@ if ($item eq 'plan_type'){
     if( $action eq 'edit'){
         my $type_id = $cgi->param('type_id');
         detaint_natural($type_id);
-        $vars->{'type'} = $plan->lookup_plan_type($type_id) 
+        $vars->{'type'} = $plan->plan_type_ref($type_id) 
             || ThrowUserError("invalid-test-id-non-existent", {'id' => $type_id, 'type' => 'Plan Type'});
         $template->process("testopia/admin/plantypes/edit.html.tmpl", $vars) 
             || ThrowTemplateError($template->error());
@@ -59,14 +59,16 @@ if ($item eq 'plan_type'){
     elsif ($action eq 'doedit'){
         my $type_id = $cgi->param('type_id');
         my $type_name = $cgi->param('name') || '';
+        my $type_desc = $cgi->param('description') || '';
         
         ThrowUserError('testopia-missing-required-field', {'field' => 'name'})  if $type_name  eq '';
         detaint_natural($type_id);
         ThrowUserError("invalid-test-id-non-existent", 
-            {'id' => $type_id, 'type' => 'Plan Type'}) unless $plan->lookup_plan_type($type_id);
+            {'id' => $type_id, 'type' => 'Plan Type'}) unless $plan->plan_type_ref($type_id);
         trick_taint($type_name);
+        trick_taint($type_desc);
         
-        $plan->update_plan_type($type_id, $type_name);
+        $plan->update_plan_type($type_id, $type_name, $type_desc);
         display();
     }
     elsif ($action eq 'add'){
@@ -75,13 +77,15 @@ if ($item eq 'plan_type'){
     }
     elsif ($action eq 'doadd'){
         my $type_name = $cgi->param('name') || '';
+        my $type_desc = $cgi->param('description') || '';
         
         ThrowUserError('testopia-missing-required-field', {'field' => 'name'})  if $type_name  eq '';
         trick_taint($type_name);
+        trick_taint($type_desc);
         ThrowUserError('testopia-name-not-unique', 
             {'object' => 'Plan Type', 'name' => $type_name}) if $plan->check_plan_type($type_name);
         
-        $plan->add_plan_type($type_name);
+        $plan->add_plan_type($type_name, $type_desc);
         display();
     }
     else{

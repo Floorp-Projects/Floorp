@@ -25,7 +25,16 @@
 <form method="POST" action="tr_admin.cgi">
   <input type="hidden" name="item" value="plan_type" />
   <input type="hidden" name="action" value="doadd" />
-  Type Name: <input name="name" />
+<table>
+  <tr>
+    <th align="right">Type Name:</th>
+    <td><input name="name" /></td>
+  </tr>
+  <tr>
+    <th align="right" valign="top">Description:</th>
+    <td><textarea cols="40" name="description" ></textarea></td>
+  </tr>
+</table>
   <input type="submit" value="Commit" />
 </form>
 
