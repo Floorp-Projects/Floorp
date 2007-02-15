@@ -70,10 +70,6 @@
 #include "nsIContent.h"
 #include "nsIAtom.h"
 #include "nsPresContext.h"
-#ifdef USE_QI_IN_SUPPRESS_EVENT_HANDLERS
-#include "nsIPrintContext.h"
-#include "nsIPrintPreviewContext.h"
-#endif // USE_QI_IN_SUPPRESS_EVENT_HANDLERS
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
 #include "nsIComponentManager.h"
@@ -1058,31 +1054,10 @@ SuppressEventHandlers(nsPresContext* aPresContext)
     // Right now we only suppress event handlers and controller manipulation
     // when in a print preview or print context!
 
-#ifdef USE_QI_IN_SUPPRESS_EVENT_HANDLERS
-
-    // Using QI to see if we're printing or print previewing is more
-    // accurate, but a bit more heavy weight then just checking
-    // the pagination bool, which will return the right answer to us
-    // with the current implementation.
-
-    nsCOMPtr<nsIPrintContext> printContext = do_QueryInterface(aPresContext);
-    if (printContext)
-      suppressHandlers = PR_TRUE;
-    else
-    {
-      nsCOMPtr<nsIPrintPreviewContext> printPreviewContext = do_QueryInterface(aPresContext);
-      if (printPreviewContext)
-        suppressHandlers = PR_TRUE;
-    }
-
-#else
-
     // In the current implementation, we only paginate when
     // printing or in print preview.
 
     suppressHandlers = aPresContext->IsPaginated();
-
-#endif
   }
 
   return suppressHandlers;

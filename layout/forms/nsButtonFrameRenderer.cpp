@@ -38,8 +38,6 @@
 #include "nsIRenderingContext.h"
 #include "nsCSSRendering.h"
 #include "nsPresContext.h"
-#include "nsIView.h"
-#include "nsIViewManager.h"
 #include "nsGkAtoms.h"
 #include "nsCSSPseudoElements.h"
 #include "nsINameSpaceManager.h"

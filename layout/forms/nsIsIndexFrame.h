@@ -96,7 +96,6 @@ public:
                               PRInt32         aModType);
 
   void           SetFocus(PRBool aOn, PRBool aRepaint);
-  void           ScrollIntoView(nsPresContext* aPresContext);
 
   // from nsIAnonymousContentCreator
   NS_IMETHOD CreateAnonymousContent(nsPresContext* aPresContext,
