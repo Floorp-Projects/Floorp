@@ -68,6 +68,7 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
 
     NS_IMETHOD Init(nsNativeWidget aWidget);
+    NS_IMETHOD InitForPrinting(nsIDeviceContextSpec* aDevSpec);
     NS_IMETHOD CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext);
 
     NS_IMETHOD CreateRenderingContext(nsIDrawingSurface *aSurface, nsIRenderingContext *&aContext);
@@ -93,9 +94,6 @@ public:
     NS_IMETHOD GetClientRect(nsRect &aRect);
 
     /* printing goop */
-    NS_IMETHOD GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
-                                   nsIDeviceContext *&aContext);
-
     NS_IMETHOD PrepareDocument(PRUnichar * aTitle, 
                                PRUnichar*  aPrintToFileName);
 

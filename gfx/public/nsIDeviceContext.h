@@ -223,6 +223,13 @@ public:
   NS_IMETHOD  Init(nsNativeWidget aWidget) = 0;
 
   /**
+   * Initialize the device context from a device context spec
+   * @param aDevSpec the specification of the printng device (platform-specific)
+   * @return error status
+   */
+  NS_IMETHOD  InitForPrinting(nsIDeviceContextSpec* aDevSpec) = 0;
+
+  /**
    * Create a rendering context and initialize it from an nsIView
    * @param aView view to initialize context from
    * @param aContext out parameter for new rendering context
@@ -392,19 +399,6 @@ public:
    * @return error status
    */
   NS_IMETHOD GetClientRect(nsRect &aRect) = 0;
-
-  /**
-   * Returns a new nsIDeviceContext suitable for the device context
-   * specification passed in.
-   * @param aDevice a device context specification. this is a platform
-   *        specific structure that only a platform specific device
-   *        context can interpret.
-   * @param aContext out parameter for new device context. nsnull on
-   *        failure to create new device context.
-   * @return error status
-   */
-  NS_IMETHOD GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
-                                 nsIDeviceContext *&aContext) = 0;
 
   /**
    * This is enables the DeviceContext to anything it needs to do for Printing
