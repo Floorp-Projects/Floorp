@@ -469,6 +469,7 @@ MicrosummaryService.prototype = {
       // This generator is already installed.  Save it in the existing file
       // (i.e. update the existing generator with the newly downloaded XML).
       file = generator.localURI.QueryInterface(Ci.nsIFileURL).file.clone();
+      this._obs.notifyObservers(generator, "microsummary-generator-updated", null);
     }
     else {
       // This generator is not already installed.  Save it as a new file.
@@ -480,6 +481,7 @@ MicrosummaryService.prototype = {
       generator = new MicrosummaryGenerator();
       generator.localURI = this._ios.newFileURI(file);
       this._localGenerators[generatorID] = generator;
+      this._obs.notifyObservers(generator, "microsummary-generator-installed", null);
     }
  
     // Initialize (or reinitialize) the generator from its XML definition,
