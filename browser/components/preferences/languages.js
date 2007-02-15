@@ -162,7 +162,7 @@ var gLanguagesDialog = {
     var preference = document.getElementById("intl.accept_languages");
     if (preference.value == "") 
       return undefined;
-    var languages = preference.value.split(/\s*,\s*/);
+    var languages = preference.value.toLowerCase().split(/\s*,\s*/);
     for (var i = 0; i < languages.length; ++i) {
       var name = this._getLanguageName(languages[i]);
       if (!name)
@@ -204,7 +204,7 @@ var gLanguagesDialog = {
   {
     var selectedID = this._availableLanguages.selectedItem.id;
     var preference = document.getElementById("intl.accept_languages");
-    var arrayOfPrefs = preference.value.split(/\s*,\s*/);
+    var arrayOfPrefs = preference.value.toLowerCase().split(/\s*,\s*/);
     for (var i = 0; i < arrayOfPrefs.length; ++i ){
       if (arrayOfPrefs[i] == selectedID)
         return;
