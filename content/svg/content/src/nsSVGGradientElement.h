@@ -66,7 +66,7 @@ public:
   // URI Reference
   NS_DECL_NSIDOMSVGURIREFERENCE
 
-  // nsISVGContent specializations:
+  // nsSVGElement specializations:
   virtual void ParentChainChanged();
 
   // nsIContent

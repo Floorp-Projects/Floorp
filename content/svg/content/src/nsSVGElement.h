@@ -51,7 +51,6 @@
 #include "nsISVGValue.h"
 #include "nsISVGValueObserver.h"
 #include "nsWeakReference.h"
-#include "nsISVGContent.h"
 #include "nsICSSStyleRule.h"
 
 class nsSVGCoordCtx;
@@ -60,8 +59,7 @@ class nsSVGNumber2;
 
 class nsSVGElement : public nsGenericElement,    // nsIContent
                      public nsISVGValueObserver, 
-                     public nsSupportsWeakReference, // :nsISupportsWeakReference
-                     public nsISVGContent
+                     public nsSupportsWeakReference // :nsISupportsWeakReference
 {
 protected:
   nsSVGElement(nsINodeInfo *aNodeInfo);
@@ -119,7 +117,6 @@ public:
   // nsISupportsWeakReference
   // implementation inherited from nsSupportsWeakReference
 
-  // nsISVGContent
   nsSVGCoordCtx *GetCtxByType(PRUint16 aCtxType);
 
   virtual void ParentChainChanged(); 
