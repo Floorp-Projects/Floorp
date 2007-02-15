@@ -38,14 +38,14 @@ lc3/Exceptions/throw_js_types.js
 lc3/JavaClass/ToJSObject-001.js
 lc3/JSObject/ToJSObject-001.js
 # getter and setters are non-ECMA and not implemented in Rhino.
-js1_5/GetSet/getset-001.js
+js1_5/extensions/getset-001.js
 js1_5/GetSet/getset-002.js
-js1_5/GetSet/getset-003.js
-js1_5/GetSet/getset-004.js
-js1_5/GetSet/getset-005.js
-js1_5/GetSet/getset-006.js
+js1_5/extensions/getset-003.js
+js1_5/extensions/getset-004.js
+js1_5/extensions/getset-005.js
+js1_5/extensions/getset-006.js
 # the const keyword is non-ECMA and  not currently implemented in Rhino (2000-11-01)
-js1_5/Scope/scope-001.js
+js1_5/extensions/scope-001.js
 js1_5/Regress/regress-238881.js
 js1_5/Regress/regress-252892.js
 #Rhino implements Date.toLocaleTimeString() differently than SpiderMonkey
@@ -62,7 +62,7 @@ js1_5/Regress/regress-90445.js
 js1_5/Regress/regress-111557.js
 #Rhino relies on JVM to throw StackOverflow exception and does not 
 #detect too deep recursion explicitly.
-js1_5/Regress/regress-192465.js
+js1_5/extensions/regress-192465.js
 #Skip these two; see http://bugzilla.mozilla.org/show_bug.cgi?id=81086
 ecma_3/Statements/regress-74474-002.js
 ecma_3/Statements/regress-74474-003.js
@@ -109,11 +109,11 @@ js1_5/Regress/regress-249211.js
 # exclude new test  which assumes the defaults are 
 # set according to Spidermonkey.
 #
-js1_5/Exceptions/regress-50447-1.js
+js1_5/extensions/regress-50447-1.js
 #
 # __noSuchMethod__ handler is Spidermonkey only
 #
-js1_5/Object/no-such-method.js
+js1_5/extensions/no-such-method.js
 #
 # Invalid bug
 #

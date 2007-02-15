@@ -16,7 +16,7 @@ js1_5/Regress/regress-119719.js
 # exclude original test which assumes the defaults are 
 # 0 and ''
 #
-js1_5/Exceptions/regress-50447.js
+js1_5/extensions/regress-50447.js
 #
 # Invalid bug
 #
@@ -81,3 +81,7 @@ e4x/Types/9.2.1.7.js
 e4x/XML/13.4.4.1.js
 ecma_2/RegExp/exec-001.js
 ecma_2/String/replace-001.js
+#
+# pre ecma warnings are doa
+#
+js1_5/Regress/regerss-106244.js

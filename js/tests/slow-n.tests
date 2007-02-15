@@ -15,10 +15,15 @@ js1_5/Array/regress-330812.js
 js1_5/Array/regress-350256-03.js
 js1_5/Function/regress-338121-01.js
 js1_5/Function/regress-338121-02.js
-js1_5/GC/regress-345967.js
 js1_5/GC/regress-346794.js
+js1_5/Object/regress-335700.js
 js1_5/Regress/regress-271716-n.js
 js1_5/Regress/regress-312588.js
-js1_5/Regress/regress-350531.js
+js1_5/extensions/regress-336409-1.js
+js1_5/extensions/regress-336409-2.js
+js1_5/extensions/regress-336410-1.js
+js1_5/extensions/regress-342960.js 
+js1_5/extensions/regress-345967.js
+js1_5/extensions/regress-350531.js
 js1_7/iterable/regress-341815.js
 js1_7/iterable/regress-341821.js
