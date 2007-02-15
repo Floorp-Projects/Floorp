@@ -48,7 +48,7 @@
     <td align="left" valign="top">
       [% caserun.environment.name FILTER html %]
           <input dojoType="combobox" 
-                 dataUrl="tr_quicksearch.cgi?action=getenv&search=%{searchString}" 
+                 dataUrl="tr_quicksearch.cgi?action=getenv&product_id=[% caserun.run.plan.product_id FILTER none %]&search=%{searchString}" 
                  mode="remote"
                  autoComplete="false"
                  id="env_[% index %]"

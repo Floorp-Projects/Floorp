@@ -80,7 +80,7 @@
       <th align="right" valign="top">Environment:</th>
       <td valign="top">
           <input dojoType="select" 
-                 dataUrl="tr_quicksearch.cgi?action=getenv&search=%{searchString}" 
+                 dataUrl="tr_quicksearch.cgi?action=getenv&product_id=[% run.plan.product_id FILTER none %]&search=%{searchString}" 
                  mode="remote"
                  autoComplete="false"
                  id="environment"

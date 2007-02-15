@@ -43,7 +43,7 @@
 <script type="text/javascript">
   djConfig = {
     parseWidgets: false,
-    searchIds: ["tags"]
+    searchIds: ["tags", "addtags"]
   };
 </script>
 <script src="testopia/js/util.js" type="text/javascript"></script>
@@ -101,7 +101,11 @@ found.</b>
     <td align="right"><b>Requirement</b></td>
     <td><input name="requirement" value="--Do Not Change--" size="30"></td>
     <td align="right"><b>Add Tags</b></td>
-    <td><input name="addtags" size="30"></td>
+    <td><input id="addtags" name="tags"
+                   dojoType="combobox" 
+                   dataUrl="tr_quicksearch.cgi?action=gettag&search=%{searchString}" 
+                   mode="remote"
+                   maxListLength="10"></td>
     <td rowspan="5">
       <table>
         <tr><th align="center">Add Components From</th></tr>

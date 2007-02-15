@@ -279,10 +279,13 @@ if ($table->list_count > 0){
     
 } 
 if ($cgi->param('run_id')){
-    $vars->{'run'} = Bugzilla::Testopia::TestRun->new($cgi->param('run_id'));
+    my @runs = split(",", $cgi->param('run_id'));
+    if (scalar @runs == 1){
+        $vars->{'run'} = Bugzilla::Testopia::TestRun->new($cgi->param('run_id'));
+        $vars->{'filtered'} = 1 if $cgi->cookie('TESTOPIA-FILTER-RUN-' . $vars->{'run'}->id) && $cgi->param('action') ne 'clear_filter';
+    }
 }
 my $case = Bugzilla::Testopia::TestCase->new({'case_id' => 0});
-$vars->{'filtered'} = 1 if $cgi->cookie('TESTOPIA-FILTER-RUN-' . $vars->{'run'}->id) && $cgi->param('action') ne 'clear_filter';
 $vars->{'expand_report'} = $cgi->param('expand_report') || 0;
 $vars->{'expand_filter'} = $cgi->param('expand_filter') || 0;
 $vars->{'dotweak'} = UserInGroup('Testers');

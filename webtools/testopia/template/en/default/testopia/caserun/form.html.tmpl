@@ -86,6 +86,7 @@
 <table>
   <tr>
     <th align="right">Build</th>
+[% IF run %]
     <td>
   [% PROCESS select sel = { name => "caserun_build", 
                             list => build_list, 
@@ -94,7 +95,7 @@
     </td>
     <th align="right">Environment</th>
     <td><input dojoType="select" 
-               dataUrl="tr_quicksearch.cgi?action=getenv&search=%{searchString}" 
+               dataUrl="tr_quicksearch.cgi?action=getenv&product_id=[% caserun.run.plan.product_id FILTER none %]&search=%{searchString}" 
                mode="remote"
                autoComplete="false"
                id="caserun_env"
@@ -105,6 +106,7 @@
                value="[% caserun.environment.id FILTER none %]" 
             [% END %]>
     </td>
+[% END %]
     <th align="right">Assignee</th>
     <td><input name="assignee" value="[% dotweak ? "--Do Not Change--" : caserun.assignee.login FILTER html %]"></td>
     <th align="right" colspan="2">Attach [% terms.Bugs %]</th>

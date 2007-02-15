@@ -98,7 +98,7 @@
           <td><input type="hidden" name="tags_type" value="anywords" />
               <input id="tags" name="tags"
                      dojoType="combobox" 
-                     dataUrl="tr_quicksearch.cgi?action=gettag&run_id=[% run.id FILTER none %]&search=%{searchString}" 
+                     dataUrl="tr_quicksearch.cgi?action=gettag&product_id=[% run.plan.product_id FILTER none %]&search=%{searchString}" 
                      mode="remote"
                      maxListLength="10">
           </td>

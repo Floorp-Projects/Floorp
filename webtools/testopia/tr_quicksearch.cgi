@@ -182,41 +182,73 @@ else{
 # Environment Lookup
     if ($action eq 'getenv'){
         my $search = $cgi->param('search');
+        my $product_id = $cgi->param('product_id');
+        
+        detaint_natural($product_id);
         trick_taint($search);
         $search = "%$search%";
         my $dbh = Bugzilla->dbh;
         
-        # The order of name and environment are important here.
+        # The order of name and environment are important in the select statment.
         # JSON will convert this to an array of arrays which Dojo will interpret
         # as a select list in the ComboBox widget.
-        my $ref = $dbh->selectall_arrayref(
-            "SELECT name, environment_id 
-               FROM test_environments 
-              WHERE name like ?
-              ORDER BY name
-              LIMIT 20",
-              undef, $search);
+        my $ref;
+        if ($product_id){
+            $ref = $dbh->selectall_arrayref(
+                "SELECT name, environment_id 
+                   FROM test_environments 
+                  WHERE name like ? AND product_id = ?
+                  ORDER BY name",
+                  undef, ($search, $product_id));
+        }
+        else{
+            $ref = $dbh->selectall_arrayref(
+                "SELECT name, environment_id 
+                   FROM test_environments 
+                  WHERE name like ?
+                  ORDER BY name
+                  LIMIT 20",
+                  undef, ($search));
+        }
         print objToJson($ref);  
     }
 
 # Tag lookup
     elsif ($action eq 'gettag'){
         my $search = $cgi->param('search');
+        my @product_ids;
+        foreach my $id (split(",", $cgi->param('product_id'))){
+            push @product_ids, $id if detaint_natural($id);
+        }
+        my $product_ids = join(",". @product_ids);
+        
         trick_taint($search);
         $search = "%$search%";
         my $dbh = Bugzilla->dbh;
         my $ref;
         my $run_id = $cgi->param('run_id');
-        if ($run_id && validate_test_id($run_id, 'run')){
+        if ($product_ids){
             $ref = $dbh->selectall_arrayref(
                 "SELECT tag_name, test_tags.tag_id 
-                   FROM test_tags
-                   JOIN test_case_tags on test_case_tags.tag_id = test_tags.tag_id
-                   JOIN test_case_runs on test_case_runs.case_id = test_case_tags.case_id  
-                  WHERE tag_name like ? AND test_case_runs.run_id = ?
-                  ORDER BY tag_name
-                  LIMIT 20",
-                  undef, ($search, $run_id));
+                     FROM test_tags
+                    INNER JOIN test_case_tags ON test_tags.tag_id = test_case_tags.tag_id
+                    INNER JOIN test_cases on test_cases.case_id = test_case_tags.case_id
+                    INNER JOIN test_case_plans on test_case_plans.case_id = test_cases.case_id
+                    INNER JOIN test_plans ON test_plans.plan_id = test_case_plans.plan_id
+                    WHERE tag_name like ? AND test_plans.product_id IN ($product_ids)  
+                 UNION SELECT tag_name, test_tags.tag_id
+                     FROM test_tags
+                    INNER JOIN test_plan_tags ON test_plan_tags.tag_id = test_tags.tag_id
+                    INNER JOIN test_plans ON test_plan_tags.plan_id = test_plans.plan_id
+                    WHERE tag_name like ? AND test_plans.product_id IN ($product_ids)
+                 UNION SELECT tag_name, test_tags.tag_id
+                     FROM test_tags
+                    INNER JOIN test_run_tags ON test_run_tags.tag_id = test_tags.tag_id
+                    INNER JOIN test_runs ON test_runs.run_id = test_run_tags.run_id
+                    INNER JOIN test_plans ON test_plans.plan_id = test_runs.plan_id
+                    WHERE tag_name like ? AND test_plans.product_id IN ($product_ids)
+                 ORDER BY tag_name",
+                  undef, ($search,$search,$search));
         }
         else {
             $ref = $dbh->selectall_arrayref(

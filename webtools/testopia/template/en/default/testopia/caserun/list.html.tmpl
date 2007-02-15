@@ -48,7 +48,7 @@
 </script>
 <script src="testopia/js/util.js" type="text/javascript"></script>
 <script src="testopia/dojo/dojo.js" type="text/javascript"></script>
-[% IF table.list_count %]
+[% IF table.list_count && run %]
 [% PROCESS "testopia/caserun/filter.html.tmpl" %]
 [% END %]
 <form id="table" action="tr_list_caseruns.cgi" method="POST">

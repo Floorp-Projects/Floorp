@@ -44,11 +44,16 @@
 [%# More than this will cause your browser to get really slow 
   # So we won't show the action and effects %]
 [% SET MAX_LIMIT = 500 %]
-
-<script src="testopia/js/util.js" type="text/javascript"></script>
 [% IF table.view_count < MAX_LIMIT %]
-<script src="testopia/dojo/dojo.js" type="text/javascript"></script>
+<script type="text/javascript">
+  djConfig = {
+    parseWidgets: false,
+    searchIds: ["tags", "addtags"]
+  };
+</script>
 [% END %] 
+<script src="testopia/js/util.js" type="text/javascript"></script>
+<script src="testopia/dojo/dojo.js" type="text/javascript"></script>
 
 <form id="table" action="tr_list_runs.cgi" method="POST">
 
@@ -76,7 +81,11 @@ found.
     <td align="right"><b>Manager</b></td>
     <td><input name="manager"/></td>
     <td align="right"><b>Add Tags</b></td>
-    <td><input name="addtags" size="30" /></td>
+    <td><input id="addtags" name="tags"
+                   dojoType="combobox" 
+                   dataUrl="tr_quicksearch.cgi?action=gettag&search=%{searchString}" 
+                   mode="remote"
+                   maxListLength="10"></td>
   </tr>
   <tr>
     </td>

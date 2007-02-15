@@ -24,10 +24,16 @@
 <script type="text/javascript">
     dojo.require("dojo.widget.ComboBox");
 </script>
-
+[% IF item.type == 'case' %]
+  [% product_id = join(",", case.get_product_ids) %]
+[% ELSIF item.type == 'plan' %]
+  [% product_id = plan.product_id %]
+[% ELSIF item.type == 'run' %]
+  [% product_id = run.plan.product_id %]
+[% END %]
 <input id="newtag" name="newtag"
        dojoType="combobox" 
-       dataUrl="tr_quicksearch.cgi?action=gettag&search=%{searchString}" 
+       dataUrl="tr_quicksearch.cgi?action=gettag&product_id=[% product_id %]&search=%{searchString}" 
        mode="remote"
        maxListLength="10">
 
