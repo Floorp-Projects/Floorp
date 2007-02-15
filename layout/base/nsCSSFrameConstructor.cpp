@@ -4765,7 +4765,7 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
                                                                aStyleContext);
                                                                
   nsIFrame* areaFrame = NS_NewAreaFrame(mPresShell, styleContext,
-    NS_BLOCK_SPACE_MGR | NS_BLOCK_SHRINK_WRAP);
+                                        NS_BLOCK_SPACE_MGR);
 
   if (NS_UNLIKELY(!areaFrame)) {
     buttonFrame->Destroy();
@@ -4861,7 +4861,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
         // a dropdown list. The display area and button are created through anonymous content.
         // The drop-down list's frame is created explicitly. The combobox frame shares its content
         // with the drop-down list.
-      PRUint32 flags = NS_BLOCK_SHRINK_WRAP | NS_BLOCK_SPACE_MGR;
+      PRUint32 flags = NS_BLOCK_SPACE_MGR;
       nsIFrame* comboboxFrame = NS_NewComboboxControlFrame(mPresShell, aStyleContext, flags);
 
       // Save the history state so we don't restore during construction
@@ -4968,7 +4968,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
       }
 
       nsIFrame* scrolledFrame = NS_NewSelectsAreaFrame(
-        mPresShell, aStyleContext, NS_BLOCK_SHRINK_WRAP | NS_BLOCK_SPACE_MGR);
+        mPresShell, aStyleContext, NS_BLOCK_SPACE_MGR);
 
       // ******* this code stolen from Initialze ScrollFrame ********
       // please adjust this code to use BuildScrollFrame.
@@ -5111,7 +5111,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
                                                                aStyleContext);
   
   nsIFrame* areaFrame = NS_NewAreaFrame(mPresShell, styleContext,
-    NS_BLOCK_SPACE_MGR | NS_BLOCK_SHRINK_WRAP | NS_BLOCK_MARGIN_ROOT);
+                                     NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
   InitAndRestoreFrame(aState, aContent, newFrame, nsnull, areaFrame);
 
   nsresult rv = aState.AddChild(newFrame, aFrameItems, aStyleDisplay, aContent,
@@ -5814,7 +5814,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
         if ((aTag == nsGkAtoms::label || aTag == nsGkAtoms::description) && 
             (! aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::value))) {
           newFrame = NS_NewAreaFrame(mPresShell, aStyleContext,
-            NS_BLOCK_SPACE_MGR | NS_BLOCK_SHRINK_WRAP | NS_BLOCK_MARGIN_ROOT);
+                                     NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
         }
         else {
           newFrame = NS_NewTextBoxFrame(mPresShell, aStyleContext);
@@ -6361,7 +6361,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
     // pass a temporary stylecontext, the correct one will be set later
     nsIFrame* scrolledFrame =
         NS_NewAreaFrame(mPresShell, aStyleContext,
-            NS_BLOCK_SPACE_MGR | NS_BLOCK_SHRINK_WRAP | NS_BLOCK_MARGIN_ROOT);
+                        NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
 
     nsFrameItems blockItem;
     rv = ConstructBlock(aState,
