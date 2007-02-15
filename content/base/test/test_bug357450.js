@@ -57,8 +57,8 @@ addLoadEvent(function() {
     is(anchorNodes[0].getAttribute("name"), "nametest", 
        "getElementsByName still works");
   }
-  //testGetElements($("content"), 1);
-  //testGetElements(document.documentElement, 3);
+  testGetElements($("content"), 1);
+  testGetElements(document.documentElement, 3);
   testGetElements(document, 3); 
 });
 addLoadEvent(SimpleTest.finish);
