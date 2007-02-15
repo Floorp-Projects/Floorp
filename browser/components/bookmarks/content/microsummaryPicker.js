@@ -122,30 +122,29 @@ var MicrosummaryPicker = {
    *
    */
   get enabled() {
-    if (this._mode == ADD_BOOKMARK_MODE) {
+    if (!("_enabled" in this)) {
       // If we're adding a bookmark, we only have to worry about livemarks
-      // and bookmarking multiple tabs.
-      if ("feedURL" in gArg || gArg.bBookmarkAllTabs)
-        return false;
-    }
-    else if (this._mode == EDIT_BOOKMARK_MODE) {
+      // and bookmarking multiple tabs; otherwise, the picker is enabled.
+      if (this._mode == ADD_BOOKMARK_MODE)
+        this._enabled = !("feedURL" in gArg || gArg.bBookmarkAllTabs);
+
       // If we're modifying a bookmark, it could be a livemark, separator,
       // folder, or regular page.  The picker is only enabled for regular pages.
-      var isLivemark = BookmarksUtils.resolveType(gResource) == "Livemark";
-      var isSeparator = BookmarksUtils.resolveType(gResource) == "BookmarkSeparator";
-      var isContainer = RDFCU.IsContainer(BMDS, gResource);
-      if (isLivemark || isSeparator || isContainer)
-        return false;
-    }
-    else {
+      else if (this._mode == EDIT_BOOKMARK_MODE) {
+        var bookmarkType = BookmarksUtils.resolveType(gResource);
+        this._enabled = !(bookmarkType == "Livemark" ||
+                          bookmarkType == "BookmarkSeparator" ||
+                          RDFCU.IsContainer(BMDS, gResource));
+      }
+
       // We should never get to this point, since we're only being used
       // in the Add Bookmark and Bookmark Properties dialogs, but if we're here
       // for some reason, be conservative and assume the picker is disabled.
-      return false;
+      else
+        this._enabled = false;
     }
   
-    // We haven't found a reason to disable the picker, so say it's enabled.
-    return true;
+    return this._enabled;
   },
 
   init: function MSP_init() {
@@ -153,7 +152,21 @@ var MicrosummaryPicker = {
     this._updateUserEnteredNameItem();
 
     if (this._pageURI) {
-      this._microsummaries = this._mss.getMicrosummaries(this._pageURI, this._bookmarkID);
+      try {
+        this._microsummaries = this._mss.getMicrosummaries(this._pageURI, this._bookmarkID);
+      }
+      catch(ex) {
+        // There was a problem retrieving microsummaries; disable the picker.
+        // The microsummary service will throw an exception in at least
+        // two cases:
+        // 1. the bookmarked URI contains a scheme that the service won't
+        //    download for security reasons (currently it only handles http,
+        //    https, and file);
+        // 2. the page to which the URI refers isn't HTML or XML (the only two
+        //    content types the service knows how to summarize).
+        this._enabled = false;
+        return;
+      }
       this._microsummaries.addObserver(this._observer);
       this.rebuild();
     }
