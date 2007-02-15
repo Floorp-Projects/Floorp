@@ -435,7 +435,36 @@ void nsSSLThread::restoreOriginalSocket_locked(nsNSSSocketInfo *si)
   }
 }
 
-PRInt32 nsSSLThread::requestRead(nsNSSSocketInfo *si, void *buf, PRInt32 amount)
+PRStatus nsSSLThread::getRealFDIfBlockingSocket_locked(nsNSSSocketInfo *si, 
+                                                       PRFileDesc *&out_fd)
+{
+  out_fd = nsnull;
+
+  PRFileDesc *realFD = 
+    (si->mThreadData->mReplacedSSLFileDesc) ?
+      si->mThreadData->mReplacedSSLFileDesc : si->mFd->lower;
+
+  if (si->mBlockingState == nsNSSSocketInfo::blocking_state_unknown)
+  {
+    PRSocketOptionData sod;
+    sod.option = PR_SockOpt_Nonblocking;
+    if (PR_GetSocketOption(realFD, &sod) == PR_FAILURE)
+      return PR_FAILURE;
+
+    si->mBlockingState = sod.value.non_blocking ?
+      nsNSSSocketInfo::is_nonblocking_socket : nsNSSSocketInfo::is_blocking_socket;
+  }
+
+  if (si->mBlockingState == nsNSSSocketInfo::is_blocking_socket)
+  {
+    out_fd = realFD;
+  }
+
+  return PR_SUCCESS;
+}
+
+PRInt32 nsSSLThread::requestRead(nsNSSSocketInfo *si, void *buf, PRInt32 amount, 
+                                 PRIntervalTime timeout)
 {
   if (!ssl_thread_singleton || !si || !buf || !amount || !ssl_thread_singleton->mThreadHandle)
   {
@@ -446,6 +475,7 @@ PRInt32 nsSSLThread::requestRead(nsNSSSocketInfo *si, void *buf, PRInt32 amount)
   PRBool this_socket_is_busy = PR_FALSE;
   PRBool some_other_socket_is_busy = PR_FALSE;
   nsSSLSocketThreadData::ssl_state my_ssl_state;
+  PRFileDesc *blockingFD = nsnull;
 
   {
     nsAutoLock threadLock(ssl_thread_singleton->mMutex);
@@ -455,37 +485,52 @@ PRInt32 nsSSLThread::requestRead(nsNSSSocketInfo *si, void *buf, PRInt32 amount)
       return -1;
     }
 
-    my_ssl_state = si->mThreadData->mSSLState;
-
-    if (ssl_thread_singleton->mBusySocket == si)
-    {
-      this_socket_is_busy = PR_TRUE;
-
-      if (my_ssl_state == nsSSLSocketThreadData::ssl_reading_done)
-      {
-        // we will now care for the data that's ready,
-        // the socket is no longer busy on the ssl thread
-        
-        restoreOriginalSocket_locked(si);
-
-        ssl_thread_singleton->mBusySocket = nsnull;
-        
-        // We'll handle the results further down,
-        // while not holding the lock.
-      }
-    }
-    else if (ssl_thread_singleton->mBusySocket)
-    {
-      some_other_socket_is_busy = PR_TRUE;
-    }
-
-    if (!this_socket_is_busy && si->HandshakeTimeout())
-    {
-      restoreOriginalSocket_locked(si);
-      PR_SetError(PR_CONNECT_RESET_ERROR, 0);
-      checkHandshake(-1, si->mFd->lower, si);
+    if (getRealFDIfBlockingSocket_locked(si, blockingFD) == PR_FAILURE) {
       return -1;
     }
+
+    if (!blockingFD)
+    {
+      my_ssl_state = si->mThreadData->mSSLState;
+  
+      if (ssl_thread_singleton->mBusySocket == si)
+      {
+        this_socket_is_busy = PR_TRUE;
+  
+        if (my_ssl_state == nsSSLSocketThreadData::ssl_reading_done)
+        {
+          // we will now care for the data that's ready,
+          // the socket is no longer busy on the ssl thread
+          
+          restoreOriginalSocket_locked(si);
+  
+          ssl_thread_singleton->mBusySocket = nsnull;
+          
+          // We'll handle the results further down,
+          // while not holding the lock.
+        }
+      }
+      else if (ssl_thread_singleton->mBusySocket)
+      {
+        some_other_socket_is_busy = PR_TRUE;
+      }
+  
+      if (!this_socket_is_busy && si->HandshakeTimeout())
+      {
+        restoreOriginalSocket_locked(si);
+        PR_SetError(PR_CONNECT_RESET_ERROR, 0);
+        checkHandshake(-1, si->mFd->lower, si);
+        return -1;
+      }
+    }
+    // leave this mutex protected scope before the blockingFD handling
+  }
+
+  if (blockingFD)
+  {
+    // this is an exception, we do not use our SSL thread at all,
+    // just pass the call through to libssl.
+    return blockingFD->methods->recv(blockingFD, buf, amount, 0, timeout);
   }
 
   switch (my_ssl_state)
@@ -645,7 +690,8 @@ PRInt32 nsSSLThread::requestRead(nsNSSSocketInfo *si, void *buf, PRInt32 amount)
   return -1;
 }
 
-PRInt32 nsSSLThread::requestWrite(nsNSSSocketInfo *si, const void *buf, PRInt32 amount)
+PRInt32 nsSSLThread::requestWrite(nsNSSSocketInfo *si, const void *buf, PRInt32 amount,
+                                  PRIntervalTime timeout)
 {
   if (!ssl_thread_singleton || !si || !buf || !amount || !ssl_thread_singleton->mThreadHandle)
   {
@@ -656,6 +702,7 @@ PRInt32 nsSSLThread::requestWrite(nsNSSSocketInfo *si, const void *buf, PRInt32 
   PRBool this_socket_is_busy = PR_FALSE;
   PRBool some_other_socket_is_busy = PR_FALSE;
   nsSSLSocketThreadData::ssl_state my_ssl_state;
+  PRFileDesc *blockingFD = nsnull;
   
   {
     nsAutoLock threadLock(ssl_thread_singleton->mMutex);
@@ -665,37 +712,52 @@ PRInt32 nsSSLThread::requestWrite(nsNSSSocketInfo *si, const void *buf, PRInt32 
       return -1;
     }
 
-    my_ssl_state = si->mThreadData->mSSLState;
-
-    if (ssl_thread_singleton->mBusySocket == si)
-    {
-      this_socket_is_busy = PR_TRUE;
-      
-      if (my_ssl_state == nsSSLSocketThreadData::ssl_writing_done)
-      {
-        // we will now care for the data that's ready,
-        // the socket is no longer busy on the ssl thread
-        
-        restoreOriginalSocket_locked(si);
-
-        ssl_thread_singleton->mBusySocket = nsnull;
-        
-        // We'll handle the results further down,
-        // while not holding the lock.
-      }
-    }
-    else if (ssl_thread_singleton->mBusySocket)
-    {
-      some_other_socket_is_busy = PR_TRUE;
-    }
-
-    if (!this_socket_is_busy && si->HandshakeTimeout())
-    {
-      restoreOriginalSocket_locked(si);
-      PR_SetError(PR_CONNECT_RESET_ERROR, 0);
-      checkHandshake(-1, si->mFd->lower, si);
+    if (getRealFDIfBlockingSocket_locked(si, blockingFD) == PR_FAILURE) {
       return -1;
     }
+
+    if (!blockingFD)
+    {
+      my_ssl_state = si->mThreadData->mSSLState;
+  
+      if (ssl_thread_singleton->mBusySocket == si)
+      {
+        this_socket_is_busy = PR_TRUE;
+        
+        if (my_ssl_state == nsSSLSocketThreadData::ssl_writing_done)
+        {
+          // we will now care for the data that's ready,
+          // the socket is no longer busy on the ssl thread
+          
+          restoreOriginalSocket_locked(si);
+  
+          ssl_thread_singleton->mBusySocket = nsnull;
+          
+          // We'll handle the results further down,
+          // while not holding the lock.
+        }
+      }
+      else if (ssl_thread_singleton->mBusySocket)
+      {
+        some_other_socket_is_busy = PR_TRUE;
+      }
+  
+      if (!this_socket_is_busy && si->HandshakeTimeout())
+      {
+        restoreOriginalSocket_locked(si);
+        PR_SetError(PR_CONNECT_RESET_ERROR, 0);
+        checkHandshake(-1, si->mFd->lower, si);
+        return -1;
+      }
+    }
+    // leave this mutex protected scope before the blockingFD handling
+  }
+
+  if (blockingFD)
+  {
+    // this is an exception, we do not use our SSL thread at all,
+    // just pass the call through to libssl.
+    return blockingFD->methods->send(blockingFD, buf, amount, 0, timeout);
   }
 
   switch (my_ssl_state)
