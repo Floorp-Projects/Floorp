@@ -699,13 +699,15 @@ JSJ_AttachCurrentThreadToJava(JSJavaVM *jsjava_vm, const char *name, JNIEnv **ja
         return NULL;
 
     /* Try to attach a Java thread to the current native thread */
+    if (!JSJ_callbacks || !JSJ_callbacks->attach_current_thread)
+        return NULL;
+
     java_vm = jsjava_vm->java_vm;
-    if (JSJ_callbacks && JSJ_callbacks->attach_current_thread)
-        jEnv = JSJ_callbacks->attach_current_thread(java_vm);
-    else
+    if (!(jEnv = JSJ_callbacks->attach_current_thread(java_vm)))
         return NULL;
-    if (jEnv == NULL) 
-        return NULL;
+
+    if (java_envp)
+        *java_envp = jEnv;
 
     /* If we found an existing thread state, just return it. */
     jsj_env = find_jsjava_thread(jEnv);
@@ -715,8 +717,6 @@ JSJ_AttachCurrentThreadToJava(JSJavaVM *jsjava_vm, const char *name, JNIEnv **ja
     /* Create a new wrapper around the thread/VM state */
     jsj_env = new_jsjava_thread_state(jsjava_vm, name, jEnv);
 
-    if (java_envp)
-        *java_envp = jEnv;
     return jsj_env;
 }
 
