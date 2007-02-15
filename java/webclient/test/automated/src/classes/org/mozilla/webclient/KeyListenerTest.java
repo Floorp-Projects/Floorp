@@ -1,5 +1,5 @@
 /*
- * $Id: KeyListenerTest.java,v 1.3 2005/08/20 19:25:52 edburns%acm.org Exp $
+ * $Id: KeyListenerTest.java,v 1.4 2007/02/15 04:59:50 edburns%acm.org Exp $
  */
 
 /* 
@@ -235,7 +235,7 @@ public class KeyListenerTest extends WebclientTestCase {
 	robot.keyPress(KeyEvent.VK_BACK_SPACE);
 	robot.keyRelease(KeyEvent.VK_BACK_SPACE);
 
-	Thread.currentThread().sleep(3000);
+	Thread.currentThread().sleep(5000);
 
 	assertTrue(bitSet.get(0));
 	assertTrue(bitSet.get(1));
