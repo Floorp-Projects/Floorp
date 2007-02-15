@@ -469,22 +469,9 @@ sub executeMac {
   } elsif ($pid == 0) {
     # run only the executable so we get a pid we can focus
     $app .= "-bin";
-    my @runargs = ($app, '-no-remote', '-profile', $profile_arg, $test_url);
+    my @runargs = ($app, '-foreground', '-no-remote', '-profile', $profile_arg, $test_url);
     exec @runargs or die("Error starting application: $!\n");
   } else {
-    if (!$did_run_osa ) {
-      # wait for the Cache dir to appear, so we know the app is alive
-      my $loop_count = 0;
-      while ($loop_count++ < 100) {
-          last if (-e "$profile_dir/Cache");
-          sleep 1;
-      }
-      die "timeout waiting for app startup." if ($loop_count >= 100);
-
-      # use applescript to focus the application
-      `osascript -e 'tell application "System Events"' -e 'set myApp to name of first application process whose unix id is $pid' -e 'end tell' -e 'tell application myApp' -e 'activate' -e 'end tell'`;
-      $did_run_osa = 1;
-    }
     waitpid($pid,0);
   }
 
