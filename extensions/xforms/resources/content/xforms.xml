@@ -83,6 +83,9 @@
         </getter>
       </property>
 
+      <property name="XHTML_NS" readonly="true"
+                onget="return 'http://www.w3.org/1999/xhtml';"/>
+
       <!-- Dispatch UI Event to the control itself -->
       <method name="dispatchDOMUIEvent">
         <parameter name="aType"/>
@@ -379,6 +382,51 @@
         this.advanceFocusToParent();
       </handler>
     </handlers>
+  </binding>
+
+
+  <!-- LABEL: <ACCESKEY SUPPORT>
+    The label widget assumes successors bindings implement getElementControl()
+    method what returns the object:
+    {
+      set value(); // set "string" value
+    }
+  -->
+  <binding id="xformswidget-label-accesskey-base"
+           extends="#xformswidget-label-base">
+
+    <implementation>
+      <method name="formatWithAccesskey">
+        <parameter name="aAccesskey"/>
+        <parameter name="aTextNode"/>
+        <body>
+          var text = aTextNode.nodeValue;
+          var location = text.indexOf(aAccesskey);
+          var span = this.ownerDocument.createElementNS(this.XHTML_NS, "span");
+
+          if (location > -1) {
+            // We create a range around the character we want and surround
+            // it with an html:span.
+            var range = this.ownerDocument.createRange();
+            range.setStart(aTextNode, location);
+            range.setEnd(aTextNode, location + 1);
+
+            span.setAttribute("class", "xf-accesskey-inline");
+            range.surroundContents(span);
+          } else {
+            // If we didn't find the accesskey, append it to the end.
+            span.setAttribute("class", "xf-accesskey-appended");
+            span.textContent = aAccesskey;
+            if (aTextNode.nextSibling) {
+              aTextNode.parentNode.insertBefore(span,
+                                                aTextNode.nextSibling);
+            } else {
+              aTextNode.parentNode.appendChild(span);
+            }
+          }
+        </body>
+      </method>
+    </implementation>
   </binding>
 
 

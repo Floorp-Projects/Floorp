@@ -444,14 +444,27 @@ html|*:root range[accesskey] > label {
   -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-label-accesskey');
 }
 
-html|*:root html|span.xf-accesskey-inline {
+/* label widgets */
+xul|*:root input[accesskey] > label,
+xul|*:root secret[accesskey] > label,
+xul|*:root textarea[accesskey] > label,
+xul|*:root trigger[accesskey] > label,
+xul|*:root submit[accesskey] > label,
+xul|*:root select[accesskey] > label,
+xul|*:root select1[accesskey] > label,
+xul|*:root upload[accesskey] > label,
+xul|*:root range[accesskey] > label {
+  -moz-binding: url('chrome://xforms/content/xforms-xul.xml#xformswidget-label-accesskey');
+}
+
+html|span.xf-accesskey-inline {
   text-decoration: underline;
 }
 
-html|*:root html|span.xf-accesskey-appended:before {
+html|span.xf-accesskey-appended:before {
   content: "(";
 }
-html|*:root html|span.xf-accesskey-appended:after {
+html|span.xf-accesskey-appended:after {
   content: ")";
 }
 

@@ -224,6 +224,74 @@
   </binding>
 
 
+  <!-- LABEL: <ACCESKEY SUPPORT> -->
+  <binding id="xformswidget-label-accesskey"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-label-accesskey-base">
+    <resources>
+      <stylesheet src="chrome://xforms/skin/xforms-xul.css"/>
+    </resources>
+
+    <content>
+      <xul:label anonid="implicitcontent"
+                 xbl:inherits="tabindex"/>
+      <xul:label anonid="explicitcontent"
+                 xbl:inherits="tabindex"><children/></xul:label>
+    </content>
+
+    <implementation>
+      <method name="getControlElement">
+        <body>
+        <![CDATA[
+          return {
+            _labelControl: this,
+            _implicitContent: this.ownerDocument.
+              getAnonymousElementByAttribute(this, 'anonid', 'implicitcontent'),
+            _explicitContent: this.ownerDocument.
+              getAnonymousElementByAttribute(this, 'anonid', 'explicitcontent'),
+
+            set value(val) {
+              var textnode = null;
+
+              if (val != null) {
+                this._explicitContent.hidden = true;
+                this._implicitContent.hidden = false;
+                this._implicitContent.textContent = val;
+                textnode = this._implicitContent.firstChild;
+              } else {
+                // XXX: How should we handle underlining if label contains
+                // non-text nodes (see bug 370483)?
+                var underline = true;
+                for (var node = this._labelControl.firstChild; node; node = node.nextSibling) {
+                  if (node.nodeType == Node.ELEMENT_NODE) {
+                    underline = false;
+                    break;
+                  }
+                }
+                if (!underline) {
+                  this._explicitContent.hidden = false;
+                  this._implicitContent.hidden = true;
+                  this._implicitContent.textContent = '';
+                  return;
+                }
+
+                this._explicitContent.hidden = true;
+                this._implicitContent.hidden = false;
+                this._implicitContent.textContent = this._labelControl.textContent;
+                textnode = this._implicitContent.firstChild;
+              }
+
+              var accesskey = this._labelControl.parentNode.getAttribute("accesskey");
+              if (accesskey.length == 1 && textnode)
+                this._labelControl.formatWithAccesskey(accesskey, textnode);
+            }
+          };
+        ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+
   <!-- TRIGGER: base widget for triggers -->
   <binding id="xformswidget-trigger-base"
            extends="chrome://xforms/content/xforms.xml#xformswidget-trigger-base">

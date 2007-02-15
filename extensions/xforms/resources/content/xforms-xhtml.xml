@@ -226,7 +226,7 @@
 
   <!-- LABEL: <ACCESKEY SUPPORT> -->
   <binding id="xformswidget-label-accesskey"
-           extends="chrome://xforms/content/xforms.xml#xformswidget-label-base">
+           extends="chrome://xforms/content/xforms.xml#xformswidget-label-accesskey-base">
     <content>
       <html:span anonid="implicitcontent"
                  xbl:inherits="tabindex"/>
@@ -256,8 +256,8 @@
                 this._implicitContent.textContent = val;
                 textnode = this._implicitContent.firstChild;
               } else {
-                // XXX: if label has element node children, we skip accesskey
-                // underlining.
+                // XXX: How should we handle underlining if label contains
+                // non-text nodes (see bug 370483)?
                 var underline = true;
                 for (var node = this._labelControl.firstChild; node; node = node.nextSibling) {
                   if (node.nodeType == Node.ELEMENT_NODE) {
@@ -279,39 +279,8 @@
               }
 
               var accesskey = this._labelControl.parentNode.getAttribute("accesskey");
-              if (accesskey.length == 1 && textnode) {
-                this.setAccesskeyOnNode(accesskey, textnode);
-              }
-            },
-
-            setAccesskeyOnNode: function(aAccesskey, aTextNode) {
-              var text = aTextNode.nodeValue;
-              var location = text.indexOf(aAccesskey);
-
-              if (location > -1) {
-                // we create a range around the character we want and surround
-                // it with an <html:u>
-                var range = this._ownerDocument.createRange();
-                range.setStart(aTextNode, location);
-                range.setEnd(aTextNode, location + 1);
-
-                var span = this._ownerDocument.
-                  createElementNS("http://www.w3.org/1999/xhtml", "span");
-                span.setAttribute("class", "xf-accesskey-inline");
-                range.surroundContents(span);
-              } else {
-                // if we didn't find the accesskey, append it to the end
-                var span = this._ownerDocument.
-                  createElementNS("http://www.w3.org/1999/xhtml", "span");
-                span.setAttribute("class", "xf-accesskey-appended");
-                span.textContent = aAccesskey;
-                if (aTextNode.nextSibling) {
-                  aTextNode.parentNode.insertBefore(span,
-                                                    aTextNode.nextSibling);
-                } else {
-                  aTextNode.parentNode.appendChild(span);
-                }
-              }
+              if (accesskey.length == 1 && textnode)
+                this._labelControl.formatWithAccesskey(accesskey, textnode);
             }
           };
         ]]>
