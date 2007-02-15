@@ -433,8 +433,6 @@ nsXULElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
         inst = NS_STATIC_CAST(nsIScriptEventHandlerOwner*,
                               new nsXULElement::nsScriptEventHandlerOwnerTearoff(this));
         NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-    } else if (aIID.Equals(NS_GET_IID(nsIChromeEventHandler))) {
-        inst = NS_STATIC_CAST(nsIChromeEventHandler *, this);
     } else if (aIID.Equals(NS_GET_IID(nsIDOMElementCSSInlineStyle))) {
         inst = NS_STATIC_CAST(nsIDOMElementCSSInlineStyle *,
                               new nsXULElementTearoff(this));
@@ -2241,22 +2239,6 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
     target->AddEventListener(NS_LITERAL_STRING("mousedown"), eventListener, PR_FALSE);
     target->AddEventListener(NS_LITERAL_STRING("contextmenu"), eventListener, PR_FALSE);
     return NS_OK;
-}
-
-//*****************************************************************************
-// nsXULElement::nsIChromeEventHandler
-//*****************************************************************************
-
-NS_IMETHODIMP
-nsXULElement::PreHandleChromeEvent(nsEventChainPreVisitor& aVisitor)
-{
-  return PreHandleEvent(aVisitor);
-}
-
-NS_IMETHODIMP
-nsXULElement::PostHandleChromeEvent(nsEventChainPostVisitor& aVisitor)
-{
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------

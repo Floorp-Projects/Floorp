@@ -45,7 +45,7 @@
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsIChromeEventHandler.h"
+#include "nsPIDOMEventTarget.h"
 #include "nsIDOMDocument.h"
 #include "nsCOMPtr.h"
 #include "nsEvent.h"
@@ -72,8 +72,8 @@ class nsPresContext;
 struct nsTimeout;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0xbebce53b, 0xa4ec, 0x49e5, \
- { 0x82, 0x8e, 0x23, 0x08, 0x61, 0x2b, 0x41, 0x9b } }
+{ 0xbf81c452, 0xbd39, 0x4001, \
+  { 0x85, 0xf4, 0x21, 0x79, 0x36, 0xc5, 0x85, 0x7d } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -87,7 +87,7 @@ public:
   virtual nsresult Activate() = 0;
   virtual nsresult Deactivate() = 0;
 
-  nsIChromeEventHandler* GetChromeEventHandler() const
+  nsPIDOMEventTarget* GetChromeEventHandler() const
   {
     return mChromeEventHandler;
   }
@@ -312,55 +312,6 @@ public:
   virtual PRBool WouldReuseInnerWindow(nsIDocument *aNewDocument) = 0;
 
   /**
-   * Called before the capture phase of the event flow.
-   * This is used to create the event target chain and implementations
-   * should set the necessary members of nsEventChainPreVisitor.
-   * At least aVisitor.mCanHandle must be set,
-   * usually also aVisitor.mParentTarget if mCanHandle is PR_TRUE.
-   * First one tells that this object can handle the aVisitor.mEvent event and
-   * the latter one is the possible parent object for the event target chain.
-   * @see nsEventDispatcher.h for more documentation about aVisitor.
-   *
-   * @param aVisitor the visitor object which is used to create the
-   *                 event target chain for event dispatching.
-   *
-   * @note Only nsEventDispatcher should call this method.
-   */
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) = 0;
-
-  /**
-   * Called after the bubble phase of the system event group.
-   * The default handling of the event should happen here.
-   * @param aVisitor the visitor object which is used during post handling.
-   *
-   * @see nsEventDispatcher.h for documentation about aVisitor.
-   * @note Only nsEventDispatcher should call this method.
-   */
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor) = 0;
-
-
-  /**
-   * Dispatch an event.
-   * @param aEvent the event that is being dispatched.
-   * @param aDOMEvent the event that is being dispatched, use if you want to
-   *                  dispatch nsIDOMEvent, not only nsEvent.
-   * @param aPresContext the current presentation context, can be nsnull.
-   * @param aEventStatus the status returned from the function, can be nsnull.
-   *
-   * @note If both aEvent and aDOMEvent are used, aEvent must be the internal
-   *       event of the aDOMEvent.
-   *
-   * If aDOMEvent is not nsnull (in which case aEvent can be nsnull) it is used
-   * for dispatching, otherwise aEvent is used.
-   *
-   * @deprecated This method is here just until all the callers outside Gecko
-   *             have been converted to use nsIDOMEventTarget::dispatchEvent.
-   */
-  virtual nsresult DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
-                                    nsPresContext* aPresContext,
-                                    nsEventStatus* aEventStatus) = 0;
-
-  /**
    * Get the docshell in this window.
    */
   nsIDocShell *GetDocShell()
@@ -427,7 +378,7 @@ protected:
   // These two variables are special in that they're set to the same
   // value on both the outer window and the current inner window. Make
   // sure you keep them in sync!
-  nsCOMPtr<nsIChromeEventHandler> mChromeEventHandler; // strong
+  nsCOMPtr<nsPIDOMEventTarget> mChromeEventHandler; // strong
   nsCOMPtr<nsIDOMDocument> mDocument; // strong
 
   // These members are only used on outer windows.

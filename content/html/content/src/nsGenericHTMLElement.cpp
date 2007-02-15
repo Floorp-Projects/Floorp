@@ -3052,7 +3052,6 @@ nsGenericHTMLFrameElement::~nsGenericHTMLFrameElement()
 
 NS_INTERFACE_MAP_BEGIN(nsGenericHTMLFrameElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLFrameElement)
-  NS_INTERFACE_MAP_ENTRY(nsIChromeEventHandler)
   NS_INTERFACE_MAP_ENTRY(nsIFrameLoaderOwner)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
@@ -3199,18 +3198,6 @@ nsGenericHTMLFrameElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   }
 
   return rv;
-}
-
-NS_IMETHODIMP
-nsGenericHTMLFrameElement::PreHandleChromeEvent(nsEventChainPreVisitor& aVisitor)
-{
-  return PreHandleEvent(aVisitor);
-}
-
-NS_IMETHODIMP
-nsGenericHTMLFrameElement::PostHandleChromeEvent(nsEventChainPostVisitor& aVisitor)
-{
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------

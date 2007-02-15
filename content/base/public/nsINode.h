@@ -38,6 +38,7 @@
 #ifndef nsINode_h___
 #define nsINode_h___
 
+#include "nsPIDOMEventTarget.h"
 #include "nsEvent.h"
 #include "nsPropertyTable.h"
 #include "nsTObserverArray.h"
@@ -96,11 +97,11 @@ class nsNodeSupportsWeakRefTearoff;
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x0d2a583d, 0x7a99, 0x426b, \
-  { 0x89, 0xfa, 0xca, 0x8d, 0x63, 0xbb, 0xd7, 0x3f } }
+{ 0x22ab1440, 0xa6ee, 0x4da7, \
+  { 0xbc, 0x3b, 0x94, 0x2e, 0x56, 0x0d, 0xdc, 0xe0 } }
 
 // hack to make egcs / gcc 2.95.2 happy
-class nsINode_base : public nsISupports {
+class nsINode_base : public nsPIDOMEventTarget {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INODE_IID)
 };
@@ -443,65 +444,6 @@ public:
   }
 
   /**
-   * Called before the capture phase of the event flow.
-   * This is used to create the event target chain and implementations
-   * should set the necessary members of nsEventChainPreVisitor.
-   * At least aVisitor.mCanHandle must be set,
-   * usually also aVisitor.mParentTarget if mCanHandle is PR_TRUE.
-   * First one tells that this object can handle the aVisitor.mEvent event and
-   * the latter one is the possible parent object for the event target chain.
-   * @see nsEventDispatcher.h for more documentation about aVisitor.
-   *
-   * @param aVisitor the visitor object which is used to create the
-   *                 event target chain for event dispatching.
-   *
-   * @note Only nsEventDispatcher should call this method.
-   */
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) = 0;
-
-  /**
-   * Called after the bubble phase of the system event group.
-   * The default handling of the event should happen here.
-   * @param aVisitor the visitor object which is used during post handling.
-   *
-   * @see nsEventDispatcher.h for documentation about aVisitor.
-   * @note Only nsEventDispatcher should call this method.
-   */
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor) = 0;
-
-  /**
-   * Dispatch an event.
-   * @param aEvent the event that is being dispatched.
-   * @param aDOMEvent the event that is being dispatched, use if you want to
-   *                  dispatch nsIDOMEvent, not only nsEvent.
-   * @param aPresContext the current presentation context, can be nsnull.
-   * @param aEventStatus the status returned from the function, can be nsnull.
-   *
-   * @note If both aEvent and aDOMEvent are used, aEvent must be the internal
-   *       event of the aDOMEvent.
-   *
-   * If aDOMEvent is not nsnull (in which case aEvent can be nsnull) it is used
-   * for dispatching, otherwise aEvent is used.
-   *
-   * @deprecated This method is here just until all the callers outside Gecko
-   *             have been converted to use nsIDOMEventTarget::dispatchEvent.
-   */
-  virtual nsresult DispatchDOMEvent(nsEvent* aEvent,
-                                    nsIDOMEvent* aDOMEvent,
-                                    nsPresContext* aPresContext,
-                                    nsEventStatus* aEventStatus) = 0;
-
-  /**
-   * Get the event listener manager, the guy you talk to to register for events
-   * on this node.
-   * @param aCreateIfNotFound If PR_FALSE, returns a listener manager only if
-   *                          one already exists. [IN]
-   * @param aResult           The event listener manager [OUT]
-   */
-  NS_IMETHOD GetListenerManager(PRBool aCreateIfNotFound,
-                                nsIEventListenerManager** aResult);
-
-  /**
    * Get the parent nsIContent for this node.
    * @return the parent, or null if no parent or the parent is not an nsIContent
    */
@@ -609,6 +551,9 @@ public:
     nsNodeWeakReference* mWeakReference;
   };
 
+  /**
+   * Functions for managing flags and slots
+   */
 #ifdef DEBUG
   nsSlots* DebugGetSlots()
   {
@@ -616,10 +561,34 @@ public:
   }
 #endif
 
+  PRBool HasFlag(PtrBits aFlag) const
+  {
+    return !!(GetFlags() & aFlag);
+  }
+
+  PtrBits GetFlags() const
+  {
+    return NS_UNLIKELY(HasSlots()) ? FlagsAsSlots()->mFlags : mFlagsOrSlots;
+  }
+
+  void SetFlags(PtrBits aFlagsToSet)
+  {
+    NS_ASSERTION(!(aFlagsToSet & (NODE_IS_ANONYMOUS | NODE_MAY_HAVE_FRAME)) ||
+                 IsNodeOfType(eCONTENT),
+                 "Flag only permitted on nsIContent nodes");
+    PtrBits* flags = HasSlots() ? &FlagsAsSlots()->mFlags :
+                                  &mFlagsOrSlots;
+    *flags |= aFlagsToSet;
+  }
+
+  void UnsetFlags(PtrBits aFlagsToUnset)
+  {
+    PtrBits* flags = HasSlots() ? &FlagsAsSlots()->mFlags :
+                                  &mFlagsOrSlots;
+    *flags &= ~aFlagsToUnset;
+  }
+
 protected:
-  /**
-   * Functions for managing flags and slots
-   */
 
   // Override this function to create a custom slots class.
   virtual nsINode::nsSlots* CreateSlots();
@@ -652,33 +621,6 @@ protected:
     }
 
     return slots;
-  }
-
-  PtrBits GetFlags() const
-  {
-    return NS_UNLIKELY(HasSlots()) ? FlagsAsSlots()->mFlags : mFlagsOrSlots;
-  }
-
-  PRBool HasFlag(PtrBits aFlag) const
-  {
-    return !!(GetFlags() & aFlag);
-  }
-
-  void SetFlags(PtrBits aFlagsToSet)
-  {
-    NS_ASSERTION(!(aFlagsToSet & (NODE_IS_ANONYMOUS | NODE_MAY_HAVE_FRAME)) ||
-                 IsNodeOfType(eCONTENT),
-                 "Flag only permitted on nsIContent nodes");
-    PtrBits* flags = HasSlots() ? &FlagsAsSlots()->mFlags :
-                                  &mFlagsOrSlots;
-    *flags |= aFlagsToSet;
-  }
-
-  void UnsetFlags(PtrBits aFlagsToUnset)
-  {
-    PtrBits* flags = HasSlots() ? &FlagsAsSlots()->mFlags :
-                                  &mFlagsOrSlots;
-    *flags &= ~aFlagsToUnset;
   }
 
   nsCOMPtr<nsINodeInfo> mNodeInfo;

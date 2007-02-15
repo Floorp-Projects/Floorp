@@ -67,7 +67,7 @@
 #include "nsIMarkupDocumentViewer.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "nsIChromeEventHandler.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIWebBrowserChrome.h"
@@ -1110,10 +1110,12 @@ nsDocShell::GetContentViewer(nsIContentViewer ** aContentViewer)
 }
 
 NS_IMETHODIMP
-nsDocShell::SetChromeEventHandler(nsIChromeEventHandler * aChromeEventHandler)
+nsDocShell::SetChromeEventHandler(nsIDOMEventTarget* aChromeEventHandler)
 {
+    nsCOMPtr<nsPIDOMEventTarget> piTarget =
+      do_QueryInterface(aChromeEventHandler);
     // Weak reference. Don't addref.
-    mChromeEventHandler = aChromeEventHandler;
+    mChromeEventHandler = piTarget;
 
     NS_ASSERTION(!mScriptGlobal,
                  "SetChromeEventHandler() called after the script global "
@@ -1126,12 +1128,11 @@ nsDocShell::SetChromeEventHandler(nsIChromeEventHandler * aChromeEventHandler)
 }
 
 NS_IMETHODIMP
-nsDocShell::GetChromeEventHandler(nsIChromeEventHandler ** aChromeEventHandler)
+nsDocShell::GetChromeEventHandler(nsIDOMEventTarget** aChromeEventHandler)
 {
     NS_ENSURE_ARG_POINTER(aChromeEventHandler);
-
-    *aChromeEventHandler = mChromeEventHandler;
-    NS_IF_ADDREF(*aChromeEventHandler);
+    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mChromeEventHandler);
+    target.swap(*aChromeEventHandler);
     return NS_OK;
 }
 

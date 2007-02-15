@@ -2911,12 +2911,14 @@ nsContentUtils::TraverseListenerManager(nsINode *aNode,
 nsresult
 nsContentUtils::GetListenerManager(nsINode *aNode,
                                    PRBool aCreateIfNotFound,
-                                   nsIEventListenerManager **aResult,
-                                   PRBool *aCreated)
+                                   nsIEventListenerManager **aResult)
 {
   *aResult = nsnull;
-  *aCreated = PR_FALSE;
 
+  if (!aCreateIfNotFound && !aNode->HasFlag(NODE_HAS_LISTENERMANAGER)) {
+    return NS_OK;
+  }
+  
   if (!sEventListenerManagersHash.ops) {
     // We're already shut down, don't bother creating an event listener
     // manager.
@@ -2957,7 +2959,7 @@ nsContentUtils::GetListenerManager(nsINode *aNode,
 
     entry->mListenerManager->SetListenerTarget(aNode);
 
-    *aCreated = PR_TRUE;
+    aNode->SetFlags(NODE_HAS_LISTENERMANAGER);
   }
 
   NS_ADDREF(*aResult = entry->mListenerManager);

@@ -70,7 +70,6 @@
 #include "nsIXULPrototypeCache.h"
 #include "nsIXULTemplateBuilder.h"
 #include "nsIBoxObject.h"
-#include "nsIChromeEventHandler.h"
 #include "nsIXBLService.h"
 #include "nsICSSOMFactory.h"
 #include "nsLayoutCID.h"
@@ -440,9 +439,7 @@ public:
 
 #define XUL_ELEMENT_LAZY_STATE_OFFSET NODE_TYPE_SPECIFIC_BITS_OFFSET
 
-class nsXULElement : public nsGenericElement,
-                     public nsIDOMXULElement,
-                     public nsIChromeEventHandler
+class nsXULElement : public nsGenericElement, public nsIDOMXULElement
 {
 public:
     /**
@@ -578,9 +575,6 @@ public:
 
     // nsIDOMXULElement
     NS_DECL_NSIDOMXULELEMENT
-
-    // nsIChromeEventHandler
-    NS_DECL_NSICHROMEEVENTHANDLER
 
     virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 

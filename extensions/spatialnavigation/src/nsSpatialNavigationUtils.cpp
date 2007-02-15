@@ -251,7 +251,7 @@ nsresult getEventTargetFromWindow(nsIDOMWindow* aWindow, nsIDOM3EventTarget** aE
   if (!privateWindow)
     return NS_ERROR_UNEXPECTED; // assert
   
-  nsIChromeEventHandler *chromeEventHandler = privateWindow->GetChromeEventHandler();
+  nsPIDOMEventTarget *chromeEventHandler = privateWindow->GetChromeEventHandler();
   
   nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(chromeEventHandler));
   if (!receiver)

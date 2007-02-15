@@ -52,7 +52,6 @@
 #include "nsIArray.h"
 #include "nsIBaseWindow.h"
 #include "nsICategoryManager.h"
-#include "nsIChromeEventHandler.h"
 #include "nsIComponentManager.h"
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOMAbstractView.h"

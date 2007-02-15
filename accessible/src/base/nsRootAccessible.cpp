@@ -43,7 +43,6 @@
 #include "nsIAccessibleCaret.h"
 #include "nsIBaseWindow.h"
 #include "nsICaret.h"
-#include "nsIChromeEventHandler.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
@@ -264,7 +263,7 @@ nsRootAccessible::GetChromeEventHandler(nsIDOMEventTarget **aChromeTarget)
   nsCOMPtr<nsIDOMWindow> domWin;
   GetWindow(getter_AddRefs(domWin));
   nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(domWin));
-  nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
+  nsCOMPtr<nsPIDOMEventTarget> chromeEventHandler;
   if (privateDOMWindow) {
     chromeEventHandler = privateDOMWindow->GetChromeEventHandler();
   }

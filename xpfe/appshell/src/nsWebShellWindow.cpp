@@ -778,8 +778,9 @@ PRBool nsWebShellWindow::ExecuteCloseHandler()
   nsCOMPtr<nsIXULWindow> kungFuDeathGrip(this);
 
   nsCOMPtr<nsPIDOMWindow> window(do_GetInterface(mDocShell));
+  nsCOMPtr<nsPIDOMEventTarget> eventTarget = do_QueryInterface(window);
 
-  if (window) {
+  if (eventTarget) {
     nsCOMPtr<nsIContentViewer> contentViewer;
     mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
     nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(contentViewer));
@@ -793,7 +794,7 @@ PRBool nsWebShellWindow::ExecuteCloseHandler()
                          nsMouseEvent::eReal);
 
       nsresult rv =
-        window->DispatchDOMEvent(&event, nsnull, presContext, &status);
+        eventTarget->DispatchDOMEvent(&event, nsnull, presContext, &status);
       if (NS_SUCCEEDED(rv) && status == nsEventStatus_eConsumeNoDefault)
         return PR_TRUE;
       // else fall through and return PR_FALSE

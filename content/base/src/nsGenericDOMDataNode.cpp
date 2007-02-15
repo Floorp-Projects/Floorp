@@ -90,6 +90,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_INTERFACE_MAP_BEGIN(nsGenericDOMDataNode)
   NS_INTERFACE_MAP_ENTRY(nsIContent)
   NS_INTERFACE_MAP_ENTRY(nsINode)
+  NS_INTERFACE_MAP_ENTRY(nsPIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMEventReceiver,
                                  nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMEventTarget,
@@ -700,6 +701,13 @@ nsGenericDOMDataNode::DispatchDOMEvent(nsEvent* aEvent,
   return nsEventDispatcher::DispatchDOMEvent(NS_STATIC_CAST(nsINode*, this),
                                              aEvent, aDOMEvent,
                                              aPresContext, aEventStatus);
+}
+
+nsresult
+nsGenericDOMDataNode::GetListenerManager(PRBool aCreateIfNotFound,
+                                         nsIEventListenerManager** aResult)
+{
+  return nsContentUtils::GetListenerManager(this, aCreateIfNotFound, aResult);
 }
 
 PRUint32

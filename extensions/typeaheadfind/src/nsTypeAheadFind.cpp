@@ -52,7 +52,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMNSUIEvent.h"
-#include "nsIChromeEventHandler.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranch2.h"
@@ -2377,7 +2376,7 @@ nsTypeAheadFind::GetChromeEventHandler(nsIDOMWindow *aDOMWin,
                                        nsIDOMEventTarget **aChromeTarget)
 {
   nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(aDOMWin));
-  nsIChromeEventHandler *chromeEventHandler = nsnull;
+  nsPIDOMEventTarget* chromeEventHandler = nsnull;
   if (privateDOMWindow) {
     chromeEventHandler = privateDOMWindow->GetChromeEventHandler();
   }

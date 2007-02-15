@@ -52,7 +52,6 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMDocument.h"
-#include "nsIChromeEventHandler.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIWebProgressListener.h"

@@ -67,7 +67,6 @@
 #include <nsIDOMWindow.h>
 #include <nsPIDOMWindow.h>
 #include <nsIDOMWindowInternal.h>
-#include <nsIChromeEventHandler.h>
 #include <nsIContentViewer.h>
 #include <nsIContentViewerEdit.h>
 #include <nsIWebBrowserSetup.h>

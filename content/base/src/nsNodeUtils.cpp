@@ -219,9 +219,8 @@ nsNodeUtils::LastRelease(nsINode* aNode, PRBool aDelete)
 #ifdef DEBUG
     if (nsContentUtils::IsInitialized()) {
       nsCOMPtr<nsIEventListenerManager> manager;
-      PRBool created;
       nsContentUtils::GetListenerManager(aNode, PR_FALSE,
-                                         getter_AddRefs(manager), &created);
+                                         getter_AddRefs(manager));
       if (!manager) {
         NS_ERROR("Huh, our bit says we have a listener manager list, "
                  "but there's nothing in the hash!?!!");

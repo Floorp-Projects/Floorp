@@ -46,7 +46,6 @@
 #include "nsIURI.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
-#include "nsIChromeEventHandler.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIWidget.h"
 

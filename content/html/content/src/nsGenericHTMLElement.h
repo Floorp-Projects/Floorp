@@ -43,7 +43,6 @@
 #include "nsINameSpaceManager.h"  // for kNameSpaceID_None
 #include "nsIFormControl.h"
 #include "nsIDOMNSHTMLFrameElement.h"
-#include "nsIChromeEventHandler.h"
 #include "nsFrameLoader.h"
 
 class nsIDOMAttr;
@@ -843,8 +842,7 @@ protected:
 
 class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
                                   public nsIDOMNSHTMLFrameElement,
-                                  public nsIFrameLoaderOwner,
-                                  public nsIChromeEventHandler
+                                  public nsIFrameLoaderOwner
 {
 public:
   nsGenericHTMLFrameElement(nsINodeInfo *aNodeInfo)
@@ -858,9 +856,6 @@ public:
 
   // nsIDOMNSHTMLFrameElement
   NS_DECL_NSIDOMNSHTMLFRAMEELEMENT
-
-  // nsIChromeEventHandler
-  NS_DECL_NSICHROMEEVENTHANDLER
 
   // nsIFrameLoaderOwner
   NS_DECL_NSIFRAMELOADEROWNER
