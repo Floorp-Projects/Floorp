@@ -8,41 +8,38 @@
 #   
 # @author Wil Clouser <wclouser@mozilla.com>
 
-
-# Fill in the correct values below
-my $output_dir = '.';
-
-my $dsn  = 'dbi:mysql:survey:localhost:3306';
-my $user = '';
-my $pass = '';
-
-my $csv_dsn  = "dbi:CSV:f_dir=$output_dir;csv_eol=\n;";
-
-# If this is true phone numbers and email addresses will be obscured (you probably
-# want this)
-my $privacy = 1;
-
-
-# ---- End of configuration ----
-# ------------------------------
-
 use strict;
 use DBI;
 
+# We bring variables from the config, and perl will complain
+no warnings 'once';
+
+# All configuration values should be in config.pl
+my $config = "config.pl";
+
+if (-r $config) {
+    my $return = do "config.pl";
+    exit_with_error("Couldn't parse configuration: $@") if $@;
+    exit_with_error("Couldn't \"do\" configuration (read permissions?): $!") unless defined $return;
+} else {
+    exit_with_error("Can't read the configuration file ($config)");
+}
+
+
 # Do some initial tests to make sure things don't break further on
-    if (! -d $output_dir) {
-        die "Destination is not a directory: $output_dir\n";
+    if (! -d $main::output_dir) {
+        die "Destination is not a directory: $main::output_dir\n";
     }
 
-    if (! -w $output_dir) {
-        die "Cannot write to directory: $output_dir\n";
+    if (! -w $main::output_dir) {
+        die "Cannot write to directory: $main::output_dir\n";
     }
 
-    my $dbh = DBI->connect($dsn, $user, $pass)
+    my $dbh = DBI->connect($main::dsn, $main::user, $main::pass)
         or die "Can't connect to the db: $DBI::errstr\n";
         
-    my $csvh = DBI->connect($csv_dsn)
-        or die "Can't connect to the db: $DBI::errstr\n";
+    my $csvh = DBI->connect($main::csv_dsn)
+        or die "Can't connect to the csv db: $DBI::errstr\n";
 
 
 # Setup some variables for use in the main loop
@@ -91,8 +88,8 @@ use DBI;
 
         # If the file doesn't exist, this will create it.
         if (! -f $filename) {
-            open CSVFILE, ">$output_dir/$filename" or
-                die "ERROR: Could not open file: $output_dir/$filename!";
+            open CSVFILE, ">$main::output_dir/$filename" or
+                die "ERROR: Could not open file: $main::output_dir/$filename!";
             close CSVFILE;
         } else {
             # Pull out the max ID for an incremental update
@@ -106,7 +103,7 @@ use DBI;
 
         # grab results from the db and send to the csv
         while ( my @row = $results_query->fetchrow_array ) {
-            if ($privacy) {
+            if ($main::privacy) {
                 # Pull out phone numbers and email addresses.  We have to compile the
                 # right side of the substitution because of 'use strict;'
                 if ($row[3]) {
@@ -140,4 +137,11 @@ sub get_current_applications {
 sub get_max_id {
     # Pulling only visible rows is purely a speed consideration - feel free to remove it
     return $dbh->selectall_arrayref("SELECT MAX(id) FROM applications WHERE visible=1 ORDER BY id", { Slice => {} });
+}
+
+sub exit_with_error {
+    my $error = shift;
+    print "\n$error\n";
+    print "Exiting.\n";
+    exit 1;
 }

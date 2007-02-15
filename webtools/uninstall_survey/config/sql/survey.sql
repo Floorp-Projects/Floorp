@@ -161,6 +161,17 @@ CREATE TABLE `results` (
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+
+DROP TABLE IF EXISTS `cache_choices_results`;
+CREATE TABLE `cache_choices_results` (
+  `application_id` int(10) unsigned NOT NULL default '0',
+  `collection_id` int(10) unsigned NOT NULL default '0',
+  `choice_id` int(10) unsigned NOT NULL default '0',
+  `results_total` bigint(20) unsigned NOT NULL default '0',
+  `modified` datetime default NULL,
+  PRIMARY KEY  (`application_id`,`collection_id`,`choice_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;

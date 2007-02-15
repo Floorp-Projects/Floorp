@@ -236,7 +236,12 @@ class Application extends AppModel {
         }
 
         $_application_id = $this->findAll($_conditions, 'Application.id');
-        return $this->getCollections($_application_id[0]['Application']['id'], $type);
+
+        if (is_numeric($_application_id[0]['Application']['id'])) {
+            return $this->getCollections($_application_id[0]['Application']['id'], $type);
+        } else {
+            return false;
+        }
     }
 
     /**

@@ -122,26 +122,27 @@ class Result extends AppModel {
             $_collection_id['Collection']['id'] = $_id[0][0]['max'];
         }
 
-        // SQL_CALC_FOUND_ROWS used for counting comments
+        // SQL_CALC_FOUND_ROWS used for counting comments.
+        // The nested query brings back too many rows (all applications) but this
+        // query is 300% faster than doing joins to get the correct rows back (look
+        // in CVS history if you want that query)
         $_query = "
             SELECT 
-                SQL_CALC_FOUND_ROWS DISTINCT
+                SQL_CALC_FOUND_ROWS DISTINCT 
                 `Result`.`id`, 
                 `Result`.`comments`, 
-                `Result`.`created`
+                `Result`.`created` 
             FROM 
-                `results` AS `Result`
-            
-            JOIN choices_results ON choices_results.result_id = Result.id
-            JOIN choices ON choices_results.choice_id = choices.id
-            JOIN choices_collections ON choices_collections.choice_id = choices.id
-            
-            WHERE  
-                comments != '' 
-            AND 
-                collection_id={$_collection_id['Collection']['id']}
-            AND 
-                Result.application_id={$_application_id}
+                `results` AS `Result` 
+            WHERE comments != ''
+            AND Result.application_id={$_application_id}
+            AND Result.id IN (
+                SELECT choices_results.result_id
+                FROM choices_results
+                JOIN choices ON choices_results.choice_id = choices.id 
+                JOIN choices_collections ON choices_collections.choice_id = choices.id 
+                WHERE collection_id={$_collection_id['Collection']['id']}
+            )
             ";
 
         $_start =($pagination['page'] -1) * $pagination['show'];
@@ -336,20 +337,34 @@ class Result extends AppModel {
             $_query .= " GROUP BY `issues`.`description`
                          ORDER BY `issues`.`description` DESC";
         * 
+        * Update (Months later update with 220k results):  
+        *   Running this query gets:     20 rows in set (53 min 28.78 sec)
+        *
+        * Update 2:
+        *   The dataset is too large to support these queries on every pageload, so
+        *   by default it will load from a cache table (does the queries if a date
+        *   range is specified)
         */
-
-        $_conditions = "1=1";
 
         // Firstly, determine our application
         $_application_id = $this->Application->getIdFromUrl($params);
-        $_conditions .= " AND `Result`.`application_id`={$_application_id}";
+
+        if (!is_numeric($_application_id)) {
+            // Not a lot we can do here, but might as well not run the queries. I'm
+            // not going to put in a default, because URL params don't exist by
+            // default - they requested something that we don't have, give them back
+            // nothing.
+            return false;
+
+        }
         
         // Next determine our collection
         if (!empty($params['collection'])) {
             $_collection_id = $this->Choice->Collection->findByDescription($params['collection']);
             // Check if the current app has a collection by that name.  If it doesn't
             // fall back to max (this way they can jump between apps without having
-            // messages that say "no data found"
+            // messages that say "no data found".  This has the unfortunate side
+            // effect of returning a result set, even with bad $_GET data
             $clear = true;
             foreach ($_collection_id['Application'] as $var => $val) {
                 if ($_application_id == $val['id']) {
@@ -366,83 +381,109 @@ class Result extends AppModel {
             $_collection_id['Collection']['id'] = $_id[0][0]['max'];
         }
 
-        // The second query will retrieve all the issues that are related to our
-        // application.
-        $_query = "
-            SELECT 
-                choices.description, choices.id
-            FROM
-                choices
-            JOIN choices_collections ON choices_collections.choice_id = choices.id
-            JOIN collections ON collections.id = choices_collections.collection_id
-            JOIN applications_collections ON applications_collections.collection_id = collections.id
-            JOIN applications ON applications.id = applications_collections.application_id
-            AND applications.id = {$_application_id}
-            AND collections.id = {$_collection_id['Collection']['id']}
-            AND choices.type = 'issue'
-            ORDER BY choices.pos ASC
-                ";
+        // If they are looking for data without the date parameters set, use our
+        // caching table.  This should save us some expensive queries.
+        if (!empty($params['start_date']) || !empty($params['end_date'])) {
 
-        $_issues = $this->query($_query);
+            // The next query will retrieve all the issues that are related to our
+            // application.
+            $_query = "
+                SELECT 
+                    choices.description, choices.id
+                FROM
+                    choices
+                JOIN choices_collections ON choices_collections.choice_id = choices.id
+                JOIN collections ON collections.id = choices_collections.collection_id
+                JOIN applications_collections ON applications_collections.collection_id = collections.id
+                JOIN applications ON applications.id = applications_collections.application_id
+                AND applications.id = {$_application_id}
+                AND collections.id = {$_collection_id['Collection']['id']}
+                AND choices.type = 'issue'
+                ORDER BY choices.pos ASC
+                    ";
 
-        $_query = '';
-        $_issue_ids = '';//used in the query
-        $_results = array();
+            $_issues = $this->query($_query);
 
-        foreach ($_issues as $var => $val) {
-            // Cake has a pretty specific way it stores data, and this is consistent
-            // with the old query.  Here we start our results array so it's holding the
-            // descriptions and a zeroed total
-            $_results[$val['choices']['id']]['choices']['description'] = $val['choices']['description'];
-            $_results[$val['choices']['id']][0]['total'] = 0; // default to nothing - this will get filled in later
+            $_query = '';
+            $_issue_ids = '';//used in the query
+            $_results = array();
 
-            // Since we're already walking through this loop, we might as well build
-            // up a query string to get our totals
-            $_issue_ids .= empty($_issue_ids) ? $val['choices']['id'] : ',
-            '.$val['choices']['id'];
-        }
+            foreach ($_issues as $var => $val) {
+                // Cake has a pretty specific way it stores data, and this is consistent
+                // with the old query.  Here we start our results array so it's holding the
+                // descriptions and a zeroed total
+                $_results[$val['choices']['id']]['choices']['description'] = $val['choices']['description'];
+                $_results[$val['choices']['id']][0]['total'] = 0; // default to nothing - this will get filled in later
 
-        $_query = "
-            SELECT 
-                choices_results.choice_id, count(results.id) 
-            AS 
-                total 
-            FROM 
-                results 
-            JOIN choices_results ON results.id = choices_results.result_id
-            WHERE 
-                results.application_id = {$_application_id}
-            AND 
-                choices_results.choice_id in ({$_issue_ids})
-        ";
+                // Since we're already walking through this loop, we might as well build
+                // up a query string to get our totals
+                $_issue_ids .= empty($_issue_ids) ? $val['choices']['id'] : ',
+                '.$val['choices']['id'];
+            }
 
-        if (!empty($params['start_date'])) {
-            $_timestamp = strtotime($params['start_date']);
+            $_query = "
+                SELECT 
+                    choices_results.choice_id, count(results.id) 
+                AS 
+                    total 
+                FROM 
+                    results 
+                JOIN choices_results ON results.id = choices_results.result_id
+                WHERE 
+                    results.application_id = {$_application_id}
+                AND 
+                    choices_results.choice_id in ({$_issue_ids})
+            ";
 
-            if (!($_timestamp == -1) || $_timestamp == false) {
-                $_date = date('Y-m-d H:i:s', $_timestamp);//sql format
-                $_query.= " AND `results`.`created` >= '{$_date}'";
+            if (!empty($params['start_date'])) {
+                $_timestamp = strtotime($params['start_date']);
+
+                if (!($_timestamp == -1) || $_timestamp == false) {
+                    $_date = date('Y-m-d H:i:s', $_timestamp);//sql format
+                    $_query.= " AND `results`.`created` >= '{$_date}'";
+                }
+            }
+
+            if (!empty($params['end_date'])) {
+                $_timestamp = strtotime($params['end_date']);
+
+                if (!($_timestamp == -1) || $_timestamp == false) {
+                    $_date = date('Y-m-d 23:59:59', $_timestamp);//sql format
+                    $_query .= " AND `results`.`created` <= '{$_date}'";
+                }
+            }
+
+            $_query .= " GROUP BY choices_results.choice_id";
+
+            $ret = $this->query($_query);
+
+            foreach ($ret as $var => $val) {
+                // fill in the totals we retrieved
+                $_results[$val['choices_results']['choice_id']][0]['total'] = $val[0]['total'];
+            }
+        } else {
+
+            // We're in luck - use the cached table
+            $_query = "
+                SELECT 
+                    choices.id, choices.description, cache_choices_results.results_total
+                FROM
+                    choices
+                JOIN cache_choices_results ON cache_choices_results.choice_id = choices.id
+                AND cache_choices_results.application_id = {$_application_id}
+                AND cache_choices_results.collection_id = {$_collection_id['Collection']['id']}
+                ORDER BY choices.pos ASC
+                    ";
+
+            $ret = $this->query($_query);
+
+            foreach ($ret as $var => $val) {
+                // fill in the totals we retrieved in a cake style array
+                $_results[$val['choices']['id']]['choices']['description'] = $val['choices']['description'];
+                $_results[$val['choices']['id']][0]['total'] = $val['cache_choices_results']['results_total'];
             }
         }
 
-        if (!empty($params['end_date'])) {
-            $_timestamp = strtotime($params['end_date']);
-
-            if (!($_timestamp == -1) || $_timestamp == false) {
-                $_date = date('Y-m-d 23:59:59', $_timestamp);//sql format
-                $_query .= " AND `results`.`created` <= '{$_date}'";
-            }
-        }
-
-        $_query .= " GROUP BY choices_results.choice_id";
-
-        $ret = $this->query($_query);
-
-        foreach ($ret as $var => $val) {
-            // fill in the totals we retrieved
-            $_results[$val['choices_results']['choice_id']][0]['total'] = $val[0]['total'];
-        }
-        
         return $_results;
 
     }
