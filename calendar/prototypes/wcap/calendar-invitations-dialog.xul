@@ -60,7 +60,7 @@
 
   <!-- Javascript includes -->
   <script type="application/x-javascript" src="chrome://calendar/content/calendar-invitations-dialog.js"/>
-  <script type="application/x-javascript" src="chrome://calendar/content/caleUtils.js"/>
+  <script type="application/x-javascript" src="chrome://calendar/content/calUtils.js"/>
 
   <script type="application/x-javascript" >
     var invitationsText = "&calendar.invitations.dialog.invitations.text;";
