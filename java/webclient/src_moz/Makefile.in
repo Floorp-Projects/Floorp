@@ -61,6 +61,8 @@ REQUIRES	= xpcom \
 	find \
 	appcomps \
 	appshell \
+	uconv \
+	unicharutil \
 	pref \
 	locale \
 	intl \
@@ -163,6 +165,7 @@ EXTRA_LIBS		+= \
 			$(DIST)/lib/$(LIB_PREFIX)embed_base_s.$(LIB_SUFFIX) \
 			$(NULL)
 
+
 ifeq ($(OS_ARCH),WINNT)
 EXTRA_LIBS += \
 		$(DIST)/lib/wc_share.lib \
@@ -199,6 +202,8 @@ EXTRA_DSO_LDOPTS += -lwc_share
 endif
 endif
 
+INCLUDES += -I$(MOZ_SRC)/mozilla/widget/src/xpwidgets
+
 ifeq ($(OS_ARCH),Linux)
 INCLUDES := -I$(MOZ_JDKHOME)/include -I$(MOZ_JDKHOME)/include/linux $(INCLUDES) \
        -I$(DEPTH)/widget/src/gtk -I$(srcdir)/../src_share -I../src_share
@@ -218,4 +223,3 @@ endif
 
 
 clobber_all:: clobber
-

@@ -49,6 +49,10 @@
 #include "nsIInputStream.h"
 #include "nsIURI.h"
 #include "nsIDocShellLoadInfo.h"
+#include "nsIUnicodeEncoder.h"
+#include "nsISaveAsCharset.h"
+#include "nsIPlatformCharset.h"
+#include "nsIEntityConverter.h"
 #include "nsNetUtil.h" // for NS_NewPostDataStream
 
 #include "NativeBrowserControl.h"
@@ -58,6 +62,15 @@
 
 #include "nsCRT.h"
 
+void nsPrimitiveHelpers_CreateDataFromPrimitive(const char* aFlavor, 
+                                                nsISupports* aPrimitive, 
+                                                void** aDataBuff, 
+                                                PRUint32 aDataLen);
+nsresult
+nsPrimitiveHelpers_ConvertUnicodeToPlatformPlainText (PRUnichar* inUnicode, 
+                                                      PRInt32 inUnicodeLen, 
+                                                      char** outPlainTextData, 
+                                                      PRInt32* outPlainTextLen);
 EmbedWindow::EmbedWindow(void)
 {
   mOwner       = nsnull;
@@ -763,6 +776,8 @@ NS_IMETHODIMP EmbedWindow::OnCopyOrDrag(nsIDOMEvent *aEvent,
     // Get the transferable list of data flavors
     nsCOMPtr<nsISupportsArray> dfList;
     aTransferable->FlavorsTransferableCanExport(getter_AddRefs(dfList));
+    jstring textData = nsnull;
+    jstring mimeType = nsnull;
 
     // Walk through flavors that contain data and send them back to java
     PRUint32 i;
@@ -772,8 +787,8 @@ NS_IMETHODIMP EmbedWindow::OnCopyOrDrag(nsIDOMEvent *aEvent,
         nsCOMPtr<nsISupports> genericFlavor;
         dfList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
         nsCOMPtr<nsISupportsCString> currentFlavor ( do_QueryInterface(genericFlavor) );
+        nsXPIDLCString flavorStr;
         if ( currentFlavor ) {
-            nsXPIDLCString flavorStr;
             currentFlavor->ToString(getter_Copies(flavorStr));
             UINT format = GetFormat(flavorStr);
 
@@ -781,6 +796,7 @@ NS_IMETHODIMP EmbedWindow::OnCopyOrDrag(nsIDOMEvent *aEvent,
             // map one flavor to another or add additional flavors based
             // on what's required for the win32 impl.
             if ( strcmp(flavorStr, kUnicodeMime) == 0 ) {
+                rv = GetText(env, aTransferable, flavorStr, &textData);
                 // if we find text/unicode, also advertise text/plain
                 // (which we will convert on our own in
                 // nsDataObj::GetText().
@@ -788,6 +804,7 @@ NS_IMETHODIMP EmbedWindow::OnCopyOrDrag(nsIDOMEvent *aEvent,
             else if ( strcmp(flavorStr, kHTMLMime) == 0 ) {      
                 // if we find text/html, also advertise win32's html flavor (which we will convert
                 // on our own in nsDataObj::GetText().
+                rv = GetText(env, aTransferable, flavorStr, &textData);
             }
             else if ( strcmp(flavorStr, kURLMime) == 0 ) {
                 // if we're a url, in addition to also being text, we
@@ -817,6 +834,15 @@ NS_IMETHODIMP EmbedWindow::OnCopyOrDrag(nsIDOMEvent *aEvent,
                 // codebase and they need different values.
             }
 #endif
+        }
+
+        if (NS_SUCCEEDED(rv) && textData) {
+            mimeType = ::util_NewStringUTF(env, flavorStr);
+            rv = SendTextToJava(env, mimeType, textData);
+            ::util_DeleteStringUTF(env, mimeType);
+        }
+        if (textData) {
+            ::util_DeleteStringUTF(env, textData);
         }
     }
     return NS_OK;
@@ -853,6 +879,84 @@ UINT EmbedWindow::GetFormat(const char* aMimeStr)
     format = ::RegisterClipboardFormat(aMimeStr);
 
   return format;
+}
+
+NS_IMETHODIMP
+EmbedWindow::GetText(JNIEnv *env,
+                     nsITransferable *aTransferable, 
+                     const nsACString & aDataFlavor, 
+                     jstring *result)
+{
+    if (nsnull == result) {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    // taken from widget\src\windows\nsDataObj.cpp nsDataObj::GetText(). 
+    
+    void* data;
+    PRUint32   len;
+    
+    // if someone asks for text/plain, look up text/unicode instead in the transferable.
+    const char* flavorStr;
+    const nsPromiseFlatCString& flat = PromiseFlatCString(aDataFlavor);
+    if ( aDataFlavor.Equals("text/plain") ) {
+        flavorStr = kUnicodeMime;
+    }
+    else {
+        flavorStr = flat.get();
+    }
+    
+    // NOTE: CreateDataFromPrimitive creates new memory, that needs to be deleted
+    nsCOMPtr<nsISupports> genericDataWrapper;
+    aTransferable->GetTransferData(flavorStr, getter_AddRefs(genericDataWrapper), &len);
+    if ( !len ) { 
+        return NS_ERROR_NULL_POINTER;
+    }
+    nsPrimitiveHelpers_CreateDataFromPrimitive(flavorStr, genericDataWrapper,
+                                                &data, len );
+    
+    // We play games under the hood and advertise flavors that we know we
+    // can support, only they require a bit of conversion or munging of the data.
+    // Do that here.
+    //
+    // Someone is asking for text/plain; convert the unicode (assuming it's present)
+    // to text with the correct platform encoding.
+    char* plainTextData = nsnull;
+    PRUnichar* castedUnicode = NS_REINTERPRET_CAST(PRUnichar*, data);
+    PRInt32 plainTextLen = 0;
+    nsPrimitiveHelpers_ConvertUnicodeToPlatformPlainText ( castedUnicode, len / 2, &plainTextData, &plainTextLen );
+
+    *result = ::util_NewStringUTF(env, plainTextData);
+    
+    nsMemory::Free(data);
+    
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+EmbedWindow::SendTextToJava(JNIEnv *env, jstring mimeType, jstring textData)
+{
+    PR_ASSERT(nsnull != aCurrentPageObj);
+
+    jclass clazz = nsnull;
+    jmethodID mid = nsnull;
+
+    if (nsnull == (clazz = env->GetObjectClass(aCurrentPageObj))) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    if (nsnull == (mid = env->GetMethodID(clazz, "addStringToTransferable",
+                                          "(Ljava/lang/String;Ljava/lang/String;)V"))) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    env->CallVoidMethod(aCurrentPageObj, mid,
+                        mimeType, textData);
+    if (env->ExceptionOccurred()) {
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
 }
 
 
@@ -967,3 +1071,86 @@ EmbedWindow::GetInterface(const nsIID &aIID, void** aInstancePtr)
 
   return rv;
 }
+
+
+//
+// CreateDataFromPrimitive
+//
+// Given a nsISupports* primitive and the flavor it represents, creates a new data
+// buffer with the data in it. This data will be null terminated, but the length
+// parameter does not reflect that.
+//
+
+void
+nsPrimitiveHelpers_CreateDataFromPrimitive ( const char* aFlavor, nsISupports* aPrimitive, 
+                                             void** aDataBuff, PRUint32 aDataLen )
+{
+  if ( !aDataBuff )
+    return;
+
+  if ( strcmp(aFlavor,kTextMime) == 0 ) {
+    nsCOMPtr<nsISupportsCString> plainText ( do_QueryInterface(aPrimitive) );
+    if ( plainText ) {
+      nsCAutoString data;
+      plainText->GetData ( data );
+      *aDataBuff = ToNewCString(data);
+    }
+  }
+  else {
+    nsCOMPtr<nsISupportsString> doubleByteText ( do_QueryInterface(aPrimitive) );
+    if ( doubleByteText ) {
+      nsAutoString data;
+      doubleByteText->GetData ( data );
+      *aDataBuff = ToNewUnicode(data);
+    }
+  }
+
+}
+
+//
+// ConvertUnicodeToPlatformPlainText
+//
+// Given a unicode buffer (flavor text/unicode), this converts it to plain text using
+// the appropriate platform charset encoding. |inUnicodeLen| is the length of the input
+// string, not the # of bytes in the buffer. The |outPlainTextData| is null terminated, 
+// but its length parameter, |outPlainTextLen|, does not reflect that.
+//
+nsresult
+nsPrimitiveHelpers_ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, PRInt32 inUnicodeLen, 
+                                                       char** outPlainTextData, PRInt32* outPlainTextLen )
+{
+  if ( !outPlainTextData || !outPlainTextLen )
+    return NS_ERROR_INVALID_ARG;
+
+  // Get the appropriate unicode encoder. We're guaranteed that this won't change
+  // through the life of the app so we can cache it.
+  nsresult rv;
+  nsCOMPtr<nsIUnicodeEncoder> encoder;
+
+  // get the charset
+  nsCAutoString platformCharset;
+  nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv))
+    rv = platformCharsetService->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, platformCharset);
+  if (NS_FAILED(rv))
+    platformCharset.AssignLiteral("ISO-8859-1");
+  
+
+  // use transliterate to convert things like smart quotes to normal quotes for plain text
+
+  nsCOMPtr<nsISaveAsCharset> converter = do_CreateInstance("@mozilla.org/intl/saveascharset;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = converter->Init(platformCharset.get(),
+                  nsISaveAsCharset::attr_EntityAfterCharsetConv +
+                  nsISaveAsCharset::attr_FallbackQuestionMark,
+                  nsIEntityConverter::transliterate);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = converter->Convert(inUnicode, outPlainTextData);
+  *outPlainTextLen = *outPlainTextData ? strlen(*outPlainTextData) : 0;
+
+  NS_ASSERTION ( NS_SUCCEEDED(rv), "Error converting unicode to plain text" );
+  
+  return rv;
+} // ConvertUnicodeToPlatformPlainText

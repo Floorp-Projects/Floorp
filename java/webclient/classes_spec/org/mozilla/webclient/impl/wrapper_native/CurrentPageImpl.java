@@ -336,6 +336,10 @@ public void printPreview(boolean pre)
 	});
 }
 
+void addStringToTransferable(String mimeType, String text) {
+    System.out.println("mimeType:" + mimeType + " text:" + text);
+}
+
 //
 // Native methods
 //
