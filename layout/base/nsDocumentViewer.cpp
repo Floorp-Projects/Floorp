@@ -86,7 +86,6 @@
 #include "nsIPageSequenceFrame.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
-#include "nsIChromeEventHandler.h"
 #include "nsIContentViewerEdit.h"
 #include "nsIContentViewerFile.h"
 #include "nsICSSLoader.h"
@@ -2203,7 +2202,7 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
   // Append chrome sheets (scrollbars + forms).
   PRBool shouldOverride = PR_FALSE;
   nsCOMPtr<nsIDocShell> ds(do_QueryInterface(docShell));
-  nsCOMPtr<nsIChromeEventHandler> chromeHandler;
+  nsCOMPtr<nsIDOMEventTarget> chromeHandler;
   nsCOMPtr<nsIURI> uri;
   nsCOMPtr<nsICSSStyleSheet> csssheet;
 

@@ -116,10 +116,9 @@ GetEventReceiver ( nsWebBrowser* inBrowser, nsIDOMEventReceiver** outEventRcvr )
   NS_ENSURE_TRUE(domWindowPrivate, NS_ERROR_FAILURE);
   nsPIDOMWindow *rootWindow = domWindowPrivate->GetPrivateRoot();
   NS_ENSURE_TRUE(rootWindow, NS_ERROR_FAILURE);
-  nsIChromeEventHandler *chromeHandler = rootWindow->GetChromeEventHandler();
-  NS_ENSURE_TRUE(chromeHandler, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDOMEventReceiver> rcvr = do_QueryInterface(chromeHandler);
+  nsCOMPtr<nsIDOMEventReceiver> rcvr =
+    do_QueryInterface(rootWindow->GetChromeEventHandler());
+  NS_ENSURE_TRUE(rcvr, NS_ERROR_FAILURE);
   *outEventRcvr = rcvr;
   NS_IF_ADDREF(*outEventRcvr);
   

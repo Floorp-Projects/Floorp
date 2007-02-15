@@ -214,25 +214,11 @@ nsINode::UnsetProperty(PRUint16 aCategory, nsIAtom *aPropertyName,
                                              aStatus);
 }
 
-NS_IMETHODIMP
-nsINode::GetListenerManager(PRBool aCreateIfNotFound,
-                            nsIEventListenerManager** aResult)
+nsresult
+nsGenericElement::GetListenerManager(PRBool aCreateIfNotFound,
+                                     nsIEventListenerManager** aResult)
 {
-  // No need to call nsContentUtils::GetListenerManager if we don't have
-  // an event listener manager.
-  if (!aCreateIfNotFound && !HasFlag(NODE_HAS_LISTENERMANAGER)) {
-    *aResult = nsnull;
-    return NS_OK;
-  }
-
-  PRBool created;
-  nsresult rv =
-    nsContentUtils::GetListenerManager(this, aCreateIfNotFound, aResult,
-                                       &created);
-  if (NS_SUCCEEDED(rv) && created) {
-    SetFlags(NODE_HAS_LISTENERMANAGER);
-  }
-  return rv;
+  return nsContentUtils::GetListenerManager(this, aCreateIfNotFound, aResult);
 }
 
 nsINode::nsSlots*
@@ -3034,6 +3020,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_INTERFACE_MAP_BEGIN(nsGenericElement)
   NS_INTERFACE_MAP_ENTRY(nsIContent)
   NS_INTERFACE_MAP_ENTRY(nsINode)
+  NS_INTERFACE_MAP_ENTRY(nsPIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSElement, new nsNSElementTearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMEventReceiver,

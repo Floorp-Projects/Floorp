@@ -40,7 +40,7 @@
 #include "nsIAtom.h"
 #include "nsDOMEvent.h"
 #include "nsINode.h"
-#include "nsIChromeEventHandler.h"
+#include "nsPIDOMEventTarget.h"
 #include "nsPresContext.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEventReceiver.h"
@@ -54,22 +54,13 @@
 #include NEW_H
 #include "nsFixedSizeAllocator.h"
 
-#define NS_TARGET_CHAIN_IS_NODE                (1 << 0)
-#define NS_TARGET_CHAIN_IS_WINDOW              (1 << 1)
-#define NS_TARGET_CHAIN_IS_CHROMEHANDLER       (1 << 2)
-
-#define NS_TARGET_CHAIN_FORCE_CONTENT_DISPATCH (1 << 3)
-
-#define NS_TARGET_CHAIN_TYPE_MASK \
-  (NS_TARGET_CHAIN_IS_NODE | NS_TARGET_CHAIN_IS_WINDOW | \
-   NS_TARGET_CHAIN_IS_CHROMEHANDLER)
+#define NS_TARGET_CHAIN_FORCE_CONTENT_DISPATCH (1 << 0)
 
 // nsEventTargetChainItem represents a single item in the event target chain.
 class nsEventTargetChainItem
 {
 private:
   nsEventTargetChainItem(nsISupports* aTarget,
-                         PRBool aTargetIsChromeHandler,
                          nsEventTargetChainItem* aChild = nsnull);
 
   void Destroy(nsFixedSizeAllocator* aAllocator);
@@ -77,13 +68,11 @@ private:
 public:
   static nsEventTargetChainItem* Create(nsFixedSizeAllocator* aAllocator, 
                                         nsISupports* aTarget,
-                                        PRBool aTargetIsChromeHandler,
                                         nsEventTargetChainItem* aChild = nsnull)
   {
     void* place = aAllocator->Alloc(sizeof(nsEventTargetChainItem));
     return place
-      ? ::new (place) nsEventTargetChainItem(aTarget, aTargetIsChromeHandler,
-                                             aChild)
+      ? ::new (place) nsEventTargetChainItem(aTarget, aChild)
       : nsnull;
   }
 
@@ -97,7 +86,7 @@ public:
 
   PRBool IsValid()
   {
-    return !!(mFlags & NS_TARGET_CHAIN_TYPE_MASK);
+    return !!(mTarget);
   }
 
   nsISupports* GetNewTarget()
@@ -122,10 +111,10 @@ public:
     return !!(mFlags & NS_TARGET_CHAIN_FORCE_CONTENT_DISPATCH);
   }
 
-  nsISupports* CurrentTarget();
-
-  already_AddRefed<nsIEventListenerManager> GetListenerManager(
-    PRBool aCreateIfNotFound);
+  nsISupports* CurrentTarget()
+  {
+    return mTarget;
+  }
 
   /**
    * Dispatches event through the event target chain.
@@ -138,9 +127,8 @@ public:
                                   nsDispatchingCallback* aCallback);
 
   /**
-   * Resets aVisitor object and calls PreHandleEvent
-   * (or PreHandleChromeEvent). Copies mItemFlags and mItemData to the
-   * current nsEventTargetChainItem.
+   * Resets aVisitor object and calls PreHandleEvent.
+   * Copies mItemFlags and mItemData to the current nsEventTargetChainItem.
    */
   nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
 
@@ -152,64 +140,28 @@ public:
   nsresult HandleEvent(nsEventChainPostVisitor& aVisitor, PRUint32 aFlags);
 
   /**
-   * Copies mItemFlags and mItemData to aVisitor and calls PostHandleEvent
-   * (or PostHandleChromeEvent).
+   * Copies mItemFlags and mItemData to aVisitor and calls PostHandleEvent.
    */
   nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
 
 
-  union {
-    nsINode*                  mNode;
-    nsPIDOMWindow*            mWindow;
-    nsIChromeEventHandler*    mChromeHandler;
-  };
-  nsEventTargetChainItem*     mChild;
-  nsEventTargetChainItem*     mParent;
-  PRUint16                    mFlags;
-  PRUint16                    mItemFlags;
-  nsCOMPtr<nsISupports>       mItemData;
+  nsCOMPtr<nsPIDOMEventTarget> mTarget;
+  nsEventTargetChainItem*      mChild;
+  nsEventTargetChainItem*      mParent;
+  PRUint16                     mFlags;
+  PRUint16                     mItemFlags;
+  nsCOMPtr<nsISupports>        mItemData;
   // Event retargeting must happen whenever mNewTarget is non-null.
-  nsCOMPtr<nsISupports>       mNewTarget;
+  nsCOMPtr<nsISupports>        mNewTarget;
 };
 
 nsEventTargetChainItem::nsEventTargetChainItem(nsISupports* aTarget,
-                                               PRBool aTargetIsChromeHandler,
                                                nsEventTargetChainItem* aChild)
-: mNode(nsnull), mChild(aChild), mParent(nsnull), mFlags(0), mItemFlags(0)
+: mTarget(do_QueryInterface(aTarget)), mChild(aChild), mParent(nsnull), mFlags(0), mItemFlags(0)
 {
   if (mChild) {
     mChild->mParent = this;
   }
-
-  // If the target is explicitly marked to be a chrome handler.
-  if (aTargetIsChromeHandler) {
-    nsCOMPtr<nsIChromeEventHandler> ceh = do_QueryInterface(aTarget);
-    if (ceh) {
-      ceh.swap(mChromeHandler);
-      mFlags |= NS_TARGET_CHAIN_IS_CHROMEHANDLER;
-    }
-  } else {
-    nsCOMPtr<nsINode> node = do_QueryInterface(aTarget);
-    if (node) {
-      node.swap(mNode);
-      mFlags |= NS_TARGET_CHAIN_IS_NODE;
-    }  else {
-      nsCOMPtr<nsPIDOMWindow> window =
-        do_QueryInterface(aTarget);
-      if (window) {
-        window.swap(mWindow);
-        mFlags |= NS_TARGET_CHAIN_IS_WINDOW;
-      } else {
-        nsCOMPtr<nsIChromeEventHandler> ceh = do_QueryInterface(aTarget);
-        if (ceh) {
-          ceh.swap(mChromeHandler);
-          mFlags |= NS_TARGET_CHAIN_IS_CHROMEHANDLER;
-        }
-      }
-    }
-  }
-  NS_POSTCONDITION((mFlags & NS_TARGET_CHAIN_TYPE_MASK),
-                   "No event target in event target chain!");
 }
 
 void
@@ -225,119 +177,17 @@ nsEventTargetChainItem::Destroy(nsFixedSizeAllocator* aAllocator)
     mParent = nsnull;
   }
 
-  switch (mFlags & NS_TARGET_CHAIN_TYPE_MASK) {
-    case NS_TARGET_CHAIN_IS_NODE:
-      NS_RELEASE(mNode);
-      break;
-    case NS_TARGET_CHAIN_IS_WINDOW:
-      NS_RELEASE(mWindow);
-      break;
-    case NS_TARGET_CHAIN_IS_CHROMEHANDLER:
-      NS_RELEASE(mChromeHandler);
-      break;
-    default:
-      NS_WARNING("Unknown type in event target chain!!!");
-      break;
-  }
-}
-
-already_AddRefed<nsIEventListenerManager>
-nsEventTargetChainItem::GetListenerManager(PRBool aCreateIfNotFound)
-{
-  nsIEventListenerManager* manager = nsnull;
-  switch (mFlags & NS_TARGET_CHAIN_TYPE_MASK) {
-    case NS_TARGET_CHAIN_IS_NODE:
-    {
-      mNode->GetListenerManager(aCreateIfNotFound, &manager);
-      break;
-    }
-    case NS_TARGET_CHAIN_IS_WINDOW:
-    {
-      nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mWindow));
-      if (receiver) {
-        receiver->GetListenerManager(aCreateIfNotFound, &manager);
-      }
-      break;
-    }
-    case NS_TARGET_CHAIN_IS_CHROMEHANDLER:
-    {
-      nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mChromeHandler));
-      if (receiver) {
-        receiver->GetListenerManager(aCreateIfNotFound, &manager);
-      }
-      break;
-    }
-    default:
-    {
-      NS_WARNING("Unknown type in event target chain!!!");
-      break;
-    }
-  }
-
-  return manager;
-}
-
-nsISupports*
-nsEventTargetChainItem::CurrentTarget()
-{
-  nsCOMPtr<nsIDOMEventTarget> eventTarget;
-  switch (mFlags & NS_TARGET_CHAIN_TYPE_MASK) {
-    case NS_TARGET_CHAIN_IS_NODE:
-    {
-      return mNode;
-    }
-    case NS_TARGET_CHAIN_IS_WINDOW:
-    {
-      return mWindow;
-      break;
-    }
-    case NS_TARGET_CHAIN_IS_CHROMEHANDLER:
-    {
-      return mChromeHandler;
-      break;
-    }
-    default:
-    {
-      NS_WARNING("Unknown type in event target chain!!!");
-      break;
-    }
-  }
-
-  return nsnull;
+  mTarget = nsnull;
 }
 
 nsresult
 nsEventTargetChainItem::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
   aVisitor.Reset();
-  nsresult rv = NS_OK;
-  switch (mFlags & NS_TARGET_CHAIN_TYPE_MASK) {
-    case NS_TARGET_CHAIN_IS_NODE:
-    {
-      rv = mNode->PreHandleEvent(aVisitor);
-      break;
-    }
-    case NS_TARGET_CHAIN_IS_WINDOW:
-    {
-      rv = mWindow->PreHandleEvent(aVisitor);
-      break;
-    }
-    case NS_TARGET_CHAIN_IS_CHROMEHANDLER:
-    {
-      rv = mChromeHandler->PreHandleChromeEvent(aVisitor);
-      break;
-    }
-    default:
-    {
-      NS_WARNING("Unknown type in event target chain!!!");
-      break;
-    }
-  }
-
+  nsresult rv = mTarget->PreHandleEvent(aVisitor);
   SetForceContentDispatch(aVisitor.mForceContentDispatch);
   mItemFlags = aVisitor.mItemFlags;
   mItemData = aVisitor.mItemData;
-
   return rv;
 }
 
@@ -345,8 +195,8 @@ nsresult
 nsEventTargetChainItem::HandleEvent(nsEventChainPostVisitor& aVisitor,
                                     PRUint32 aFlags)
 {
-  nsCOMPtr<nsIEventListenerManager> lm =
-    nsEventTargetChainItem::GetListenerManager(PR_FALSE);
+  nsCOMPtr<nsIEventListenerManager> lm;
+  mTarget->GetListenerManager(PR_FALSE, getter_AddRefs(lm));
 
   if (lm) {
     aVisitor.mEvent->currentTarget = CurrentTarget();
@@ -363,26 +213,7 @@ nsEventTargetChainItem::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   aVisitor.mItemFlags = mItemFlags;
   aVisitor.mItemData = mItemData;
-  switch (mFlags & NS_TARGET_CHAIN_TYPE_MASK) {
-    case NS_TARGET_CHAIN_IS_NODE:
-    {
-      return mNode->PostHandleEvent(aVisitor);
-    }
-    case NS_TARGET_CHAIN_IS_WINDOW:
-    {
-      return mWindow->PostHandleEvent(aVisitor);
-    }
-    case NS_TARGET_CHAIN_IS_CHROMEHANDLER:
-    {
-      return mChromeHandler->PostHandleChromeEvent(aVisitor);
-    }
-    default:
-    {
-      NS_WARNING("Unknown type in event target chain!!!");
-      break;
-    }
-  }
-
+  mTarget->PostHandleEvent(aVisitor);
   return NS_OK;
 }
 
@@ -534,8 +365,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
                             nsEvent* aEvent,
                             nsIDOMEvent* aDOMEvent,
                             nsEventStatus* aEventStatus,
-                            nsDispatchingCallback* aCallback,
-                            PRBool aTargetIsChromeHandler)
+                            nsDispatchingCallback* aCallback)
 {
   NS_ASSERTION(aEvent, "Trying to dispatch without nsEvent!");
   NS_ENSURE_TRUE(!NS_IS_EVENT_IN_DISPATCH(aEvent),
@@ -569,7 +399,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
 
   // Create the event target chain item for the event target.
   nsEventTargetChainItem* targetEtci =
-    nsEventTargetChainItem::Create(pool.GetPool(), aTarget, aTargetIsChromeHandler);
+    nsEventTargetChainItem::Create(pool.GetPool(), aTarget);
   NS_ENSURE_TRUE(targetEtci, NS_ERROR_OUT_OF_MEMORY);
   if (!targetEtci->IsValid()) {
     nsEventTargetChainItem::Destroy(pool.GetPool(), targetEtci);
@@ -602,7 +432,6 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
     while (preVisitor.mParentTarget) {
       nsEventTargetChainItem* parentEtci =
         nsEventTargetChainItem::Create(pool.GetPool(), preVisitor.mParentTarget,
-                                       preVisitor.mParentIsChromeHandler,
                                        topEtci);
       if (!parentEtci) {
         rv = NS_ERROR_OUT_OF_MEMORY;

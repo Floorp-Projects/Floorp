@@ -802,13 +802,10 @@ public:
    * @param aCreateIfNotFound If PR_FALSE, returns a listener manager only if
    *                          one already exists.
    * @param aResult [out] Set to the eventlistener manager for aNode.
-   * @param aCreated [out] Set to PR_TRUE if a new eventlistener manager was
-   *                       created.
    */
   static nsresult GetListenerManager(nsINode *aNode,
                                      PRBool aCreateIfNotFound,
-                                     nsIEventListenerManager **aResult,
-                                     PRBool *aCreated);
+                                     nsIEventListenerManager **aResult);
 
   /**
    * Remove the eventlistener manager for aNode.

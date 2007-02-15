@@ -56,7 +56,7 @@ interface nsIURI;
 interface nsIChannel;
 interface nsIContentViewer;
 interface nsIURIContentListener;
-interface nsIChromeEventHandler;
+interface nsIDOMEventTarget;
 interface nsIDocShellLoadInfo;
 interface nsIDocumentCharsetInfo;
 interface nsIWebNavigation;
@@ -68,7 +68,7 @@ interface nsILayoutHistoryState;
 interface nsISecureBrowserUI;
 interface nsIDOMStorage;
 
-[scriptable, uuid(539355C0-F5C8-4929-A4AA-CB105E8F9997)]
+[scriptable, uuid(fbe2a673-4b8b-46a2-b225-398c52cc05cb)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -213,7 +213,7 @@ interface nsIDocShell : nsISupports
    * This attribute allows chrome to tie in to handle DOM events that may
    * be of interest to chrome.
    */
-  attribute nsIChromeEventHandler chromeEventHandler;
+  attribute nsIDOMEventTarget chromeEventHandler;
 
   /**
    * The document charset info.  This is used by a load to determine priorities

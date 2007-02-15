@@ -104,6 +104,7 @@
 #include "nsISecureBrowserUI.h"
 #include "nsIObserver.h"
 #include "nsDocShellLoadTypes.h"
+#include "nsPIDOMEventTarget.h"
 
 class nsIScrollableView;
 
@@ -600,7 +601,7 @@ protected:
     // For that reasons don't use nsCOMPtr.
 
     nsIDocShellTreeOwner *     mTreeOwner; // Weak Reference
-    nsIChromeEventHandler *    mChromeEventHandler; //Weak Reference
+    nsPIDOMEventTarget *       mChromeEventHandler; //Weak Reference
 
     static nsIURIFixup *sURIFixup;
 

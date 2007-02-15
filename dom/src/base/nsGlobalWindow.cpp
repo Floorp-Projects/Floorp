@@ -681,6 +681,7 @@ NS_INTERFACE_MAP_BEGIN(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
+  NS_INTERFACE_MAP_ENTRY(nsPIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
@@ -1810,7 +1811,9 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
 
     // Get our enclosing chrome shell and retrieve its global window impl, so
     // that we can do some forwarding to the chrome document.
-    mDocShell->GetChromeEventHandler(getter_AddRefs(mChromeEventHandler));
+    nsCOMPtr<nsIDOMEventTarget> chromeEventHandler;
+    mDocShell->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
+    mChromeEventHandler = do_QueryInterface(chromeEventHandler);
     if (!mChromeEventHandler) {
       // We have no chrome event handler. If we have a parent,
       // get our chrome event handler from the parent. If
@@ -1895,11 +1898,7 @@ nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     mIsHandlingResizeEvent = PR_TRUE;
   }
 
-  // Check chrome document capture here.
-  if (mChromeEventHandler) {
-    aVisitor.mParentTarget = mChromeEventHandler;
-    aVisitor.mParentIsChromeHandler = PR_TRUE;
-  }
+  aVisitor.mParentTarget = mChromeEventHandler;
   return NS_OK;
 }
 
@@ -1910,7 +1909,7 @@ nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   /* mChromeEventHandler and mContext go dangling in the middle of this
    function under some circumstances (events that destroy the window)
    without this addref. */
-  nsCOMPtr<nsIChromeEventHandler> kungFuDeathGrip1(mChromeEventHandler);
+  nsCOMPtr<nsPIDOMEventTarget> kungFuDeathGrip1(mChromeEventHandler);
   nsCOMPtr<nsIScriptContext> kungFuDeathGrip2(GetContextInternal());
   nsGlobalWindow* outer = GetOuterWindowInternal();
 
@@ -4072,7 +4071,7 @@ nsGlobalWindow::GetWindowRoot(nsIDOMEventTarget **aWindowRoot)
     return NS_OK;
   }
 
-  nsIChromeEventHandler *chromeHandler = piWin->GetChromeEventHandler();
+  nsPIDOMEventTarget *chromeHandler = piWin->GetChromeEventHandler();
   if (!chromeHandler) {
     return NS_OK;
   }
@@ -5623,7 +5622,7 @@ nsGlobalWindow::GetPrivateRoot()
   // Get the chrome event handler from the doc shell, since we only
   // want to deal with XUL chrome handlers and not the new kind of
   // window root handler.
-  nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
+  nsCOMPtr<nsIDOMEventTarget> chromeEventHandler;
   docShell->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
 
   nsCOMPtr<nsIContent> chromeElement(do_QueryInterface(mChromeEventHandler));
@@ -5721,18 +5720,16 @@ nsGlobalWindow::Deactivate()
 nsIFocusController*
 nsGlobalWindow::GetRootFocusController()
 {
-  nsIDOMWindowInternal *rootWindow = nsGlobalWindow::GetPrivateRoot();
+  nsIDOMWindowInternal* rootWindow = nsGlobalWindow::GetPrivateRoot();
   nsCOMPtr<nsIFocusController> fc;
 
-  if (rootWindow) {
+  nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(rootWindow));
+  if (piWin) {
     // Obtain the chrome event handler.
-    nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(rootWindow));
-    nsIChromeEventHandler *chromeHandler = piWin->GetChromeEventHandler();
-    if (chromeHandler) {
-      nsCOMPtr<nsPIWindowRoot> windowRoot(do_QueryInterface(chromeHandler));
-      if (windowRoot) {
-        windowRoot->GetFocusController(getter_AddRefs(fc));
-      }
+    nsPIDOMEventTarget* chromeHandler = piWin->GetChromeEventHandler();
+    nsCOMPtr<nsPIWindowRoot> windowRoot(do_QueryInterface(chromeHandler));
+    if (windowRoot) {
+      windowRoot->GetFocusController(getter_AddRefs(fc));
     }
   }
 

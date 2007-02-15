@@ -97,7 +97,6 @@
 #include "nsIServiceManager.h"
 #include "nsIScriptSecurityManager.h"
 
-#include "nsIChromeEventHandler.h"
 #include "nsIFocusController.h"
 
 #include "nsIDOMXULElement.h"

@@ -44,7 +44,7 @@
 class nsIContent;
 class nsIDocument;
 class nsPresContext;
-class nsIChromeEventHandler;
+class nsPIDOMEventTarget;
 class nsIScriptGlobalObject;
 class nsEventTargetChainItem;
 
@@ -53,21 +53,20 @@ class nsEventTargetChainItem;
  * About event dispatching:
  * When either nsEventDispatcher::Dispatch or
  * nsEventDispatcher::DispatchDOMEvent is called an event target chain is
- * created. nsEventDispatcher creates the chain by calling PreHandleEvent
- * (or PreHandleChromeEvent) on each event target and the creation continues
- * until either the mCanHandle member of the nsEventChainPreVisitor object is
- * PR_FALSE or the mParentTarget does not point to a new target.
- * The event target chain is created on the stack.
+ * created. nsEventDispatcher creates the chain by calling PreHandleEvent 
+ * on each event target and the creation continues until either the mCanHandle
+ * member of the nsEventChainPreVisitor object is PR_FALSE or the mParentTarget
+ * does not point to a new target. The event target chain is created in the
+ * heap.
  *
  * If the event needs retargeting, mEventTargetAtParent must be set in
- * PreHandleEvent or PreHandleChromeEvent.
+ * PreHandleEvent.
  *
  * The capture, target and bubble phases of the event dispatch are handled
  * by iterating through the event target chain. Iteration happens twice,
  * first for the default event group and then for the system event group.
  * While dispatching the event for the system event group PostHandleEvent
- * (or PostHandleChromeEvent) is called right after calling event listener for
- * the current event target.
+ * is called right after calling event listener for the current event target.
  */
 
 class nsEventChainVisitor {
@@ -132,33 +131,24 @@ public:
                          nsIDOMEvent* aDOMEvent,
                          nsEventStatus aEventStatus = nsEventStatus_eIgnore)
   : nsEventChainVisitor(aPresContext, aEvent, aDOMEvent, aEventStatus),
-    mCanHandle(PR_TRUE), mParentIsChromeHandler(PR_FALSE),
-    mForceContentDispatch(PR_FALSE) {}
+    mCanHandle(PR_TRUE), mForceContentDispatch(PR_FALSE) {}
 
   void Reset() {
     mItemFlags = 0;
     mItemData = nsnull;
     mCanHandle = PR_TRUE;
-    mParentIsChromeHandler = PR_FALSE;
     mForceContentDispatch = PR_FALSE;
     mParentTarget = nsnull;
     mEventTargetAtParent = nsnull;
   }
 
   /**
-   * Member that must be set in PreHandleEvent or PreHandleChromeEvent by event
-   * targets. If set to false, indicates that this event target will not be
-   * handling the event and construction of the event target chain is complete.
-   * The target that sets mCanHandle to false is NOT included in the event target
-   * chain.
+   * Member that must be set in PreHandleEvent by event targets. If set to false,
+   * indicates that this event target will not be handling the event and
+   * construction of the event target chain is complete. The target that sets
+   * mCanHandle to false is NOT included in the event target chain.
    */
   PRPackedBool          mCanHandle;
-
-  /**
-   * Member that is set to PR_TRUE in PreHandleEvent or PreHandleChromeEvent if
-   * and only if mParentTarget is set to a chrome event handler.
-   */
-  PRPackedBool          mParentIsChromeHandler;
 
   /**
    * If mForceContentDispatch is set to PR_TRUE,
@@ -206,7 +196,7 @@ class nsEventDispatcher
 {
 public:
   /**
-   * aTarget should QI to nsINode, nsPIDOMWindow or nsIChromeEventHandler.
+   * aTarget should QI to nsPIDOMEventTarget.
    * If the target of aEvent is set before calling this method, the target of 
    * aEvent is used as the target (unless there is event
    * retargeting) and the originalTarget of the DOM Event.
@@ -220,8 +210,7 @@ public:
                            nsEvent* aEvent,
                            nsIDOMEvent* aDOMEvent = nsnull,
                            nsEventStatus* aEventStatus = nsnull,
-                           nsDispatchingCallback* aCallback = nsnull,
-                           PRBool aTargetIsChromeHandler = PR_FALSE);
+                           nsDispatchingCallback* aCallback = nsnull);
 
   /**
    * Dispatches an event.

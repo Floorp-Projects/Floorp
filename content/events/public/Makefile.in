@@ -54,6 +54,7 @@ EXPORTS		= \
 		nsIPrivateCompositionEvent.h \
 		nsPLDOMEvent.h \
 		nsEventDispatcher.h \
+		nsPIDOMEventTarget.h \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -53,7 +53,6 @@
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIWebNavigation.h"
-#include "nsIChromeEventHandler.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
@@ -65,6 +64,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsFrameLoader.h"
+#include "nsIDOMEventTarget.h"
 
 #include "nsIURI.h"
 #include "nsIURL.h"
@@ -397,7 +397,7 @@ nsFrameLoader::EnsureDocShell()
 
     // Make sure all shells have links back to the content element
     // in the nearest enclosing chrome shell.
-    nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
+    nsCOMPtr<nsIDOMEventTarget> chromeEventHandler;
 
     if (parentType == nsIDocShellTreeItem::typeChrome) {
       // Our parent shell is a chrome shell. It is therefore our nearest
