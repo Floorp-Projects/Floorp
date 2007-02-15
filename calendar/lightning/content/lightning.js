@@ -51,7 +51,7 @@ pref("calendar.alarms.onfortodos", 0);
 pref("calendar.alarms.todoalarmlen", 15);
 pref("calendar.alarms.todoalarmunit", "minutes");
 
-+ // autorefresh settings
+// autorefresh settings
 pref("calendar.autorefresh.enabled", true);
 pref("calendar.autorefresh.timeout", 30);
 
