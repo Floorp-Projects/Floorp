@@ -82,7 +82,62 @@ var calendarViewController = {
         }
     },
 
+    pendingJobs: [],
+
+    // in order to initiate a modification for the occurrence passed as argument
+    // we create an object that records the necessary details and store it in an
+    // internal array ('pendingJobs'). this way we're in a position to terminate
+    // any pending modification if need should be.
+    createPendingModification: function (aOccurrence) {
+        // finalize a (possibly) pending modification. this will notify
+        // an open dialog to save any outstanding modifications.
+        aOccurrence = this.finalizePendingModification(aOccurrence);
+
+        var pendingModification = {
+            controller: this,
+            item: aOccurrence,
+            finalize: null,
+            dispose: function() {
+                var array = this.controller.pendingJobs;
+                for (var i=0; i<array.length; i++) {
+                    if (array[i] == this) {
+                        array.splice(i,1);
+                        break;
+                    }
+                }
+            }
+        }
+
+        this.pendingJobs.push(pendingModification);
+
+        modifyEventWithDialog(aOccurrence,pendingModification);
+    },
+
+    // iterate the list of pending modifications and see if the occurrence
+    // passed as argument is currently about to be modified (event dialog is
+    // open with the item in question). if this should be the case we call
+    // finalize() in order to bring the dialog down and avoid dataloss.
+    finalizePendingModification: function (aOccurrence) {
+
+      for each (var job in this.pendingJobs) {
+          var item = job.item;
+          var parent = item.parent;
+          if (item.hasSameIds(aOccurrence) ||
+              item.parentItem.hasSameIds(aOccurrence) ||
+              item.hasSameIds(aOccurrence.parentItem)) {
+              // terminate() will most probably create a modified item instance.
+              aOccurrence = job.finalize();
+              break;
+        }
+      }
+
+      return aOccurrence;
+    },
+
     modifyOccurrence: function (aOccurrence, aNewStartTime, aNewEndTime, aNewTitle) {
+
+        aOccurrence = this.finalizePendingModification(aOccurrence);
+
         // if modifying this item directly (e.g. just dragged to new time),
         // then do so; otherwise pop up the dialog
         if ((aNewStartTime && aNewEndTime) || aNewTitle) {
@@ -115,7 +170,8 @@ var calendarViewController = {
             if (!itemToEdit) {
                 return;  // user cancelled
             }
-            modifyEventWithDialog(itemToEdit);
+
+            this.createPendingModification(itemToEdit);
         }
     },
 
@@ -124,6 +180,7 @@ var calendarViewController = {
         if (!itemToDelete) {
             return;
         }
+        itemToDelete = this.finalizePendingModification(itemToDelete);
         if (!itemToDelete.parentItem.hasSameIds(itemToDelete)) {
             var event = itemToDelete.parentItem.clone();
             event.recurrenceInfo.removeOccurrenceAt(itemToDelete.recurrenceId);

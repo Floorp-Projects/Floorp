@@ -55,6 +55,32 @@ function onLoad()
     window.mode = args.mode;
     window.recurrenceInfo = null;
 
+    // the calling entity provides us with an object that is responsible
+    // for recording details about the initiated modification. the 'finalize'-property
+    // is our hook in order to receive a notification in case the operation needs
+    // to be terminated prematurely. this function will be called if the calling
+    // entity needs to immediately terminate the pending modification. in this
+    // case we serialize the item and close the window.
+    if (args.job) {
+
+        // keep this context...
+        var self = this;
+
+        // store the 'finalize'-functor in the provided job-object.
+        args.job.finalize = function finalize() {
+
+            // store any pending modifications...
+            self.onAccept();
+
+            var item = window.calendarItem;
+
+            // ...and close the window.
+            window.close();
+
+            return item;
+        }
+    }
+
     if (window.calendarItem.calendar && window.calendarItem.calendar.readOnly) {
         gReadOnlyMode = true;
     }
@@ -99,6 +125,13 @@ function onLoad()
     self.focus();
 }
 
+function dispose()
+{
+    var args = window.arguments[0];
+    if(args.job && args.job.dispose)
+      args.job.dispose();
+}
+
 function onAccept()
 {
     // if this event isn't mutable, we need to clone it like a sheep
@@ -115,12 +148,16 @@ function onAccept()
     // of a bug on 1_8_BRANCH we need this to make it really persist.
     document.persist("description-row", "collapsed");
 
+    dispose();
+
+    window.calendarItem = item;
+
     return true;
 }
 
 function onCancel()
 {
-
+    dispose();
 }
 
 function loadDialog(item)

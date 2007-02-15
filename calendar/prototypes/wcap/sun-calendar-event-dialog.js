@@ -86,6 +86,32 @@ function onLoad()
   // arguments this window has been called with.
   var args = window.arguments[0];
   
+  // the calling entity provides us with an object that is responsible
+  // for recording details about the initiated modification. the 'finalize'-property
+  // is our hook in order to receive a notification in case the operation needs
+  // to be terminated prematurely. this function will be called if the calling
+  // entity needs to immediately terminate the pending modification. in this
+  // case we serialize the item and close the window.
+  if(args.job) {
+
+    // keep this context...
+    var self = this;
+
+    // store the 'finalize'-functor in the provided job-object.
+    args.job.finalize = function() {
+
+      // store any pending modifications...
+      self.onAccept();
+
+      var item = window.calendarItem;
+
+      // ...and close the window.
+      window.close();
+
+      return item;
+    }
+  }
+
   window.fbWrapper = args.fbWrapper;
 
   // the most important attribute we expect from the
@@ -158,20 +184,33 @@ function onLoad()
 }
 
 //////////////////////////////////////////////////////////////////////////////
+// dispose
+//////////////////////////////////////////////////////////////////////////////
+
+function dispose()
+{
+  var args = window.arguments[0];
+  if(args.job && args.job.dispose)
+    args.job.dispose();
+}
+
+//////////////////////////////////////////////////////////////////////////////
 // onAccept
 //////////////////////////////////////////////////////////////////////////////
 
 function onAccept()
 {
+  dispose();
+
   onCommandSave();
   return true;
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// onCancel
+// onCommandCancel
 //////////////////////////////////////////////////////////////////////////////
 
-function onCancel()
+function onCommandCancel()
 {
   // assume that new items need to be asked whether or
   // not the newly created item wants to be saved.
@@ -222,6 +261,19 @@ function onCancel()
       default:
         return false;
   }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// onCancel
+//////////////////////////////////////////////////////////////////////////////
+
+function onCancel()
+{
+  var result = onCommandCancel();
+  if(result == true) {
+    dispose();
+  }
+  return result;
 }
 
 //////////////////////////////////////////////////////////////////////////////

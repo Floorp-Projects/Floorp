@@ -48,7 +48,7 @@ function createEventWithDialog(calendar, startDate, endDate, summary, event)
     }
 
     if (event) {
-        openEventDialog(event, calendar, "new", onNewEvent);
+        openEventDialog(event, calendar, "new", onNewEvent, null);
         return;
     }
     
@@ -91,7 +91,7 @@ function createEventWithDialog(calendar, startDate, endDate, summary, event)
 
     setDefaultAlarmValues(event);
 
-    openEventDialog(event, calendar, "new", onNewEvent);
+    openEventDialog(event, calendar, "new", onNewEvent, null);
 }
 
 function createTodoWithDialog(calendar, dueDate, summary, todo)
@@ -103,7 +103,7 @@ function createTodoWithDialog(calendar, dueDate, summary, todo)
     }
 
     if (todo) {
-        openEventDialog(todo, calendar, "new", onNewItem);
+        openEventDialog(todo, calendar, "new", onNewItem, null);
         return;
     }
 
@@ -128,11 +128,11 @@ function createTodoWithDialog(calendar, dueDate, summary, todo)
 
     setDefaultAlarmValues(todo);
 
-    openEventDialog(todo, calendar, "new", onNewItem);
+    openEventDialog(todo, calendar, "new", onNewItem, null);
 }
 
 
-function modifyEventWithDialog(item)
+function modifyEventWithDialog(item, job)
 {
     var onModifyItem = function(item, calendar, originalItem) {
         // compare cal.uri because there may be multiple instances of
@@ -147,29 +147,30 @@ function modifyEventWithDialog(item)
     }
 
     if (item) {
-        openEventDialog(item, item.calendar, "modify", onModifyItem);
+        openEventDialog(item, item.calendar, "modify", onModifyItem, job);
     }
 }
 
-function openEventDialog(calendarItem, calendar, mode, callback)
+function openEventDialog(calendarItem, calendar, mode, callback, job)
 {
     var args = new Object();
     args.calendarEvent = calendarItem;
     args.calendar = calendar;
     args.mode = mode;
     args.onOk = callback;
+    args.job = job;
 
     // the dialog will reset this to auto when it is done loading.
     window.setCursor("wait");
 
-    // open the dialog modally
+    // open the dialog modeless
+    var url = "chrome://calendar/content/calendar-event-dialog.xul";
+
     if (getPrefSafe("calendar.prototypes.wcap", false)) {
-      openDialog("chrome://calendar/content/sun-calendar-event-dialog.xul", "_blank",
-                 "chrome,titlebar,modal,resizable", args);
-    } else {
-      openDialog("chrome://calendar/content/calendar-event-dialog.xul", "_blank",
-                 "chrome,titlebar,modal,resizable", args);
+      url = "chrome://calendar/content/sun-calendar-event-dialog.xul";
     }
+
+    openDialog(url, "_blank", "chrome,titlebar,resizable", args);
 }
 
 // When editing a single instance of a recurring event, we need to figure out
