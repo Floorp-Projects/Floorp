@@ -641,8 +641,9 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
     }
 
     if (NS_SUCCEEDED(rv)) {
-      rv = mDeviceContext->GetDeviceContextFor(devspec,
-                                               *getter_AddRefs(mPrt->mPrintDC));
+      mPrt->mPrintDC = do_CreateInstance("@mozilla.org/gfx/devicecontext;1", &rv);
+      if (NS_SUCCEEDED(rv))
+        rv = mPrt->mPrintDC->InitForPrinting(devspec);
       if (NS_SUCCEEDED(rv)) {
         if(webContainer) {
           // Always check and set the print settings first and then fall back
@@ -919,29 +920,21 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
   }
 #endif
 
-  nsCOMPtr<nsIDeviceContext> ppDC;
-  nsCOMPtr<nsIDeviceContextSpec> devspec =
-    do_CreateInstance("@mozilla.org/gfx/devicecontextspec;1");
-  if (devspec) {
-    rv = devspec->Init(mParentWidget, mPrt->mPrintSettings, PR_TRUE);
-    if (NS_SUCCEEDED(rv)) {
-      rv = mDeviceContext->GetDeviceContextFor(devspec, *getter_AddRefs(ppDC));
-    }
-  }
+  nsCOMPtr<nsIDeviceContextSpec> devspec
+    (do_CreateInstance("@mozilla.org/gfx/devicecontextspec;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = devspec->Init(mParentWidget, mPrt->mPrintSettings, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+  mPrt->mPrintDC = do_CreateInstance("@mozilla.org/gfx/devicecontext;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mPrt->mPrintDC->InitForPrinting(devspec);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   mPrt->mPrintSettings->SetPrintFrameType(nsIPrintSettings::kFramesAsIs);
 
   // override any UI that wants to PrintPreview any selection or page range
   // we want to view every page in PrintPreview each time
   mPrt->mPrintSettings->SetPrintRange(nsIPrintSettings::kRangeAllPages);
-
-  if (ppDC)
-    mPrt->mPrintDC = ppDC;
-  else
-    mPrt->mPrintDC = mDeviceContext;
-
-  if (!mPrt->mPrintDC)
-    return NS_ERROR_FAILURE;
 
   if (aWebProgressListener != nsnull) {
     mPrt->mPrintProgressListeners.AppendObject(aWebProgressListener);

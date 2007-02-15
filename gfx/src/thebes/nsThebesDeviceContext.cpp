@@ -461,33 +461,22 @@ nsThebesDeviceContext::PrepareNativeWidget(nsIWidget* aWidget, void** aOut)
 
 
 /*
- * below methods are for printing and are not implemented
+ * below methods are for printing
  */
 NS_IMETHODIMP
-nsThebesDeviceContext::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
-                                           nsIDeviceContext *&aContext)
+nsThebesDeviceContext::InitForPrinting(nsIDeviceContextSpec *aDevice)
 {
-    nsThebesDeviceContext *newDevCon = new nsThebesDeviceContext();
+    NS_ENSURE_ARG_POINTER(aDevice);
 
-    if (newDevCon) {
-        // this will ref count it
-        nsresult rv = newDevCon->QueryInterface(NS_GET_IID(nsIDeviceContext), (void**)&aContext);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "This has to support nsIDeviceContext");
-    } else {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    
-    NS_ADDREF(aDevice);
+    NS_ADDREF(mDeviceContextSpec = aDevice);
 
-    newDevCon->mDeviceContextSpec = aDevice;
+    mPrinter = PR_TRUE;
 
-    newDevCon->mPrinter = PR_TRUE;
+    aDevice->GetSurfaceForPrinter(getter_AddRefs(mPrintingSurface));
 
-    aDevice->GetSurfaceForPrinter(getter_AddRefs(newDevCon->mPrintingSurface));
+    Init(nsnull);
 
-    newDevCon->Init(nsnull);
-
-    newDevCon->CalcPrintingSize();
+    CalcPrintingSize();
 
     return NS_OK;
 }
