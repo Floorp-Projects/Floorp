@@ -62,14 +62,23 @@ function test()
   var expectStringPrototypeInvariant = true;
   var actualStringPrototypeInvariant;
 
-  s = Script('var tmp = function(o) { switch(o) { case String: case 1: return ""; } }; actualStringInvariant = (String === S); actualStringPrototypeInvariant = (String.prototype === Sp); actual = "".trim();');
-  try
+  if (typeof Script == 'undefined')
   {
-    s();
+    print('Test skipped. Script is not defined');
+    var actualStringInvariant = true;
+    var actualStringPrototypeInvariant = true;
   }
-  catch(ex)
+  else
   {
-    actual = ex + '';
+    s = Script('var tmp = function(o) { switch(o) { case String: case 1: return ""; } }; actualStringInvariant = (String === S); actualStringPrototypeInvariant = (String.prototype === Sp); actual = "".trim();');
+    try
+    {
+      s();
+    }
+    catch(ex)
+    {
+      actual = ex + '';
+    }
   }
   
   reportCompare(expect, actual, 'trim() returned');

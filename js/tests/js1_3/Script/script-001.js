@@ -145,17 +145,24 @@ var TITLE   = "NativeScript";
 startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-var s = new Script();
-s.getJSClass = Object.prototype.toString;
+if (typeof Script == 'undefined')
+{
+  print('Test skipped. Script not defined.');
+}
+else
+{
+  var s = new Script();
+  s.getJSClass = Object.prototype.toString;
 
-new TestCase( SECTION,
-	      "var s = new Script(); typeof s",
-	      "function",
-	      typeof s );
+  new TestCase( SECTION,
+                "var s = new Script(); typeof s",
+                "function",
+                typeof s );
 
-new TestCase( SECTION,
-	      "s.getJSClass()",
-	      "[object Script]",
-	      s.getJSClass() );
+  new TestCase( SECTION,
+                "s.getJSClass()",
+                "[object Script]",
+                s.getJSClass() );
+}
 
 test();

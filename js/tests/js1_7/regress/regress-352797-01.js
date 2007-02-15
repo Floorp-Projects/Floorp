@@ -51,7 +51,14 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
   
-  (function(){let x = 'fafafa'.replace(/a/g, new Script(''))})();
+  if (typeof Script == 'undefined')
+  {
+    print('Test skipped. Script not defined.');
+  }
+  else
+  {
+    (function(){let x = 'fafafa'.replace(/a/g, new Script(''))})();
+  }
 
   reportCompare(expect, actual, summary);
 

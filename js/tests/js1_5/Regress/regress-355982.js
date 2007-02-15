@@ -55,7 +55,14 @@ function test()
   actual = 'No Error';
   try
   {
-    Script('');
+    if (typeof Script == 'undefined')
+    {
+      print('Test skipped. Script not defined.');
+    }
+    else
+    {
+      Script('');
+    }
   }
   catch(ex)
   {
