@@ -13,7 +13,6 @@ REQUIRES	= cairo
 EXPORTS		= 	gfxASurface.h \
 			gfxColor.h \
 			gfxContext.h \
-			gfxFilter.h \
 			gfxFont.h \
 			gfxImageSurface.h \
 			gfxMatrix.h \
@@ -21,8 +20,7 @@ EXPORTS		= 	gfxASurface.h \
 			gfxPlatform.h \
 			gfxPoint.h \
 			gfxRect.h \
-			gfxRegion.h \
-                        gfxSkipChars.h \
+			gfxSkipChars.h \
 			gfxTypes.h \
 			gfxTextRunCache.h \
 			$(NULL)
