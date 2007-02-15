@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -120,15 +121,22 @@ source += source;
  * In Rhino, eval() always uses interpreted mode.
  * To use compiled mode, use Script.exec() instead.
  */
-var script = Script(source);
-script();
+if (typeof Script == 'undefined')
+{
+  print('Test skipped. Script not defined.');
+  expect = actual = 0;
+}
+else
+{
+  var script = Script(source);
+  script();
 
 
-status = inSection(1);
-actual = counter;
-expect = (N + 1) * 2;
+  status = inSection(1);
+  actual = counter;
+  expect = (N + 1) * 2;
+}
 addThis();
-
 
 
 //-----------------------------------------------------------------------------

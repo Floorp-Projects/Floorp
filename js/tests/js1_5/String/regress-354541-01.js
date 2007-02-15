@@ -53,7 +53,14 @@ const Sp = String.prototype;
 expect = 'No Error';
 actual = 'No Error';
 
-var s = Script('var tmp = function(o) { switch(o) { case String: case 1: return ""; } }; print(String === S); print(String.prototype === Sp); "".trim();');
-s();
+if (typeof Script == 'undefined')
+{
+  print('Test skipped. Script not defined.');
+}
+else
+{
+  var s = Script('var tmp = function(o) { switch(o) { case String: case 1: return ""; } }; print(String === S); print(String.prototype === Sp); "".trim();');
+  s();
+}
   
 reportCompare(expect, actual, summary);

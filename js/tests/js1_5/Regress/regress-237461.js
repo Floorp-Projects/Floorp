@@ -57,16 +57,22 @@ function g()
   return core;
 }
 
-var s = new Script(""+g.toString());
-try
+if (typeof Script == 'undefined')
 {
-  var frozen = s.freeze(); // crash.
-  printStatus("len:" + frozen.length);
+  print('Test skipped. Script not defined.');
 }
-catch(e)
+else
 {
-}
-  
+  var s = new Script(""+g.toString());
+  try
+  {
+    var frozen = s.freeze(); // crash.
+    printStatus("len:" + frozen.length);
+  }
+  catch(e)
+  {
+  }
+} 
 actual = 'No Crash';
 
 reportCompare(expect, actual, summary);

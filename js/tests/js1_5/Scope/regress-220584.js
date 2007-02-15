@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -55,12 +56,18 @@ var s;
 
 
 // invoke |Script| as a function
-s = Script('1;');
-
 status = inSection(1);
-actual = s instanceof Object;
-expect = true;
-addThis();
+if (typeof Script == 'undefined')
+{
+  print('Test skipped. Script not defined.');
+}
+else
+{
+  s = Script('1;');
+  actual = s instanceof Object;
+  expect = true;
+  addThis();
+}
 
 status = inSection(2);
 actual = (s.__parent__ == undefined) || (s.__parent__ == null);
@@ -79,12 +86,19 @@ addThis();
 
 
 // invoke |Script| as a constructor
-s = new Script('1;');
-
 status = inSection(5);
-actual = s instanceof Object;
-expect = true;
-addThis();
+if (typeof Script == 'undefined')
+{
+  print('Test skipped. Script not defined.');
+}
+else
+{
+  s = new Script('1;');
+
+  actual = s instanceof Object;
+  expect = true;
+  addThis();
+}
 
 status = inSection(6);
 actual = (s.__parent__ == undefined) || (s.__parent__ == null);
