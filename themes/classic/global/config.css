@@ -48,12 +48,13 @@
 
 #warningScreen
 {
-  background: -moz-Dialog;
+  background-color: -moz-Dialog;
 }
 
 #warningBox
 {
-  background: white;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
   border: 1px solid ThreeDShadow;
   -moz-border-radius: 10px;
   padding: 3em;
