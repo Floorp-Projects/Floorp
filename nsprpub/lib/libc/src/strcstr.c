@@ -59,14 +59,15 @@ PR_IMPLEMENT(char *)
 PL_strcaserstr(const char *big, const char *little)
 {
     const char *p;
-    PRUint32 ll;
+    PRUint32 bl, ll;
 
     if( ((const char *)0 == big) || ((const char *)0 == little) ) return (char *)0;
     if( ((char)0 == *big) || ((char)0 == *little) ) return (char *)0;
 
+    bl = PL_strlen(big);
     ll = PL_strlen(little);
-    p = &big[ PL_strlen(big) - ll ];
-    if( p < big ) return (char *)0;
+    if( bl < ll ) return (char *)0;
+    p = &big[ bl - ll ];
 
     for( ; p >= big; p-- )
         /* obvious improvement available here */
