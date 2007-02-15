@@ -112,7 +112,7 @@ public:
 
     static void DebugShowCairoSurface (const char *aName, cairo_surface_t *aSurface);
 
-    static int prefChanged(const char *aPref, void *aClosure);
+    virtual PRBool CheckDPIChange();
 
     nsNativeWidget GetWidget() { return mWidget; }
 #ifdef XP_WIN
@@ -126,7 +126,7 @@ public:
 #endif
 
 protected:
-    nsresult SetDPI(PRInt32 aPrefDPI);
+    nsresult SetDPI();
     void ComputeClientRectUsingScreen(nsRect* outRect);
     void ComputeFullAreaUsingScreen(nsRect* outRect);
     void FindScreen(nsIScreen** outScreen);
@@ -137,8 +137,8 @@ protected:
 private:
     nsCOMPtr<nsIScreenManager> mScreenManager;
 
-    PRInt32 mWidth;
-    PRInt32 mHeight;
+    nscoord mWidth;
+    nscoord mHeight;
     PRBool mPrinter;
 
     nsRefPtrHashtable<nsISupportsHashKey, gfxASurface> mWidgetSurfaceCache;

@@ -477,6 +477,13 @@ public:
    */
   NS_IMETHOD ClearCachedSystemFonts() = 0;
 
+  /**
+   * Check to see if the DPI has changed
+   * @return whether there was actually a change in the DPI
+   *         (whether AppUnitsPerDevPixel() or AppUnitsPerInch() changed)
+  */
+  virtual PRBool CheckDPIChange() = 0;
+
 protected:
   PRInt32 mAppUnitsPerDevPixel;
   PRInt32 mAppUnitsPerInch;

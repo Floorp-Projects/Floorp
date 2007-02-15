@@ -76,6 +76,7 @@
 #include "nsThreadUtils.h"
 #include "nsFrameManager.h"
 #include "nsLayoutUtils.h"
+#include "nsIViewManager.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -273,6 +274,9 @@ nsPresContext::~nsPresContext()
 
   delete mBidiUtils;
 #endif // IBMBIDI
+  nsContentUtils::UnregisterPrefCallback("layout.css.dpi",
+                                         nsPresContext::PrefChangedCallback,
+                                         this);
 
   NS_IF_RELEASE(mDeviceContext);
   NS_IF_RELEASE(mLookAndFeel);
@@ -654,6 +658,21 @@ nsPresContext::ClearStyleDataAndReflow()
 void
 nsPresContext::PreferenceChanged(const char* aPrefName)
 {
+  if (!nsCRT::strcmp(aPrefName, "layout.css.dpi")) {
+    nsRect bounds(mVisibleArea);
+    bounds *= 1.0f / AppUnitsPerDevPixel();
+    if (mDeviceContext->CheckDPIChange() && mShell) {
+      mDeviceContext->FlushFontCache();
+
+      nsIViewManager* vm = GetViewManager();
+      nscoord width = DevPixelsToAppUnits(bounds.width);
+      nscoord height = DevPixelsToAppUnits(bounds.height);
+      vm->SetWindowDimensions(width, height);
+
+      ClearStyleDataAndReflow();
+    }
+    return;
+  }
   // we use a zero-delay timer to coalesce multiple pref updates
   if (!mPrefChangedTimer)
   {
@@ -743,6 +762,9 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
   nsContentUtils::RegisterPrefCallback("bidi.", PrefChangedCallback,
                                        this);
 #endif
+  nsContentUtils::RegisterPrefCallback("layout.css.dpi",
+                                       nsPresContext::PrefChangedCallback,
+                                       this);
 
   rv = mEventManager->Init();
   NS_ENSURE_SUCCESS(rv, rv);
