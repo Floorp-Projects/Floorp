@@ -50,8 +50,8 @@ MODULE = jss
 # org/mozilla/jss/CryptoManager.java, and the PRODUCT_VERSION
 # and PRODUCT_NAME values in pkg/solaris/Makefile.com.
 #
-IMPORTS =	nss/NSS_3_11_3_RTM \
-			nspr20/v4.6.3 \
+IMPORTS =	nss/NSS_3_11_6_RTM \
+			nspr20/v4.6.6 \
 			$(NULL)
 
 DIRS =  org     \
