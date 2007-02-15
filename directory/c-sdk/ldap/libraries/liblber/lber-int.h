@@ -105,7 +105,6 @@ extern "C" {
 #endif /* _WINDOWS */
 
 #ifdef XP_OS2
-#include <os2sock.h>
 #include <io.h>
 #endif /* XP_OS2 */
 

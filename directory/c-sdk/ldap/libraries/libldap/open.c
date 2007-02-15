@@ -380,12 +380,18 @@ nsldapi_initialize_defaults( void )
 	pthread_mutex_init( &nsldapi_init_mutex, NULL );
 #endif /* _WINDOWS */
 
+#if defined(USE_PTHREADS) || defined(_WINDOWS)
 	pthread_mutex_lock( &nsldapi_init_mutex );
 
 	if ( nsldapi_initialized ) {
 		pthread_mutex_unlock( &nsldapi_init_mutex );
 		return;
 	}
+#else
+         if ( nsldapi_initialized ) {
+                 return;
+         }
+#endif /* use_pthreads || _windows */
 
 #ifdef USE_PTHREADS
         if ( pthread_key_create(&nsldapi_key, free ) != 0) {
@@ -447,6 +453,8 @@ nsldapi_initialize_defaults( void )
 #endif /* _WINDOWS */
 	nsldapi_initialized = 1;
 	pthread_mutex_unlock( &nsldapi_init_mutex );
+#else
+        nsldapi_initialized = 1;
 #endif /* use_pthreads || _windows */
 }
 
