@@ -214,7 +214,7 @@ nsINode::UnsetProperty(PRUint16 aCategory, nsIAtom *aPropertyName,
                                              aStatus);
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericElement::GetListenerManager(PRBool aCreateIfNotFound,
                                      nsIEventListenerManager** aResult)
 {

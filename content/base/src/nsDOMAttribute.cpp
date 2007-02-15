@@ -735,7 +735,7 @@ nsDOMAttribute::DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult
+NS_IMETHODIMP
 nsDOMAttribute::GetListenerManager(PRBool aCreateIfNotFound,
                                    nsIEventListenerManager** aResult)
 {

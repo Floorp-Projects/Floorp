@@ -51,6 +51,7 @@ REQUIRES	= xpcom \
 		  string \
 		  wallet \
 		  dom \
+		  content \
 		  layout \
 		  necko \
 		  widget \

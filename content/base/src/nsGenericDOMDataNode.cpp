@@ -703,7 +703,7 @@ nsGenericDOMDataNode::DispatchDOMEvent(nsEvent* aEvent,
                                              aPresContext, aEventStatus);
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericDOMDataNode::GetListenerManager(PRBool aCreateIfNotFound,
                                          nsIEventListenerManager** aResult)
 {
