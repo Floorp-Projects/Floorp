@@ -88,8 +88,7 @@ NS_NewIsIndexFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 nsIsIndexFrame::nsIsIndexFrame(nsStyleContext* aContext) :
   nsAreaFrame(aContext)
 {
-    //Shrink the area around its contents
-  SetFlags(NS_BLOCK_SHRINK_WRAP | NS_BLOCK_SPACE_MGR);
+  SetFlags(NS_BLOCK_SPACE_MGR);
 }
 
 nsIsIndexFrame::~nsIsIndexFrame()

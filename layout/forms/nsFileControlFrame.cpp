@@ -87,8 +87,6 @@ nsFileControlFrame::nsFileControlFrame(nsStyleContext* aContext):
   mTextFrame(nsnull), 
   mCachedState(nsnull)
 {
-    //Shrink the area around its contents
-  SetFlags(NS_BLOCK_SHRINK_WRAP);
 }
 
 nsFileControlFrame::~nsFileControlFrame()

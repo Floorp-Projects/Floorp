@@ -275,9 +275,6 @@ nsComboboxControlFrame::nsComboboxControlFrame(nsStyleContext* aContext)
 
   mRecentSelectedIndex = NS_SKIP_NOTIFY_INDEX;
 
-  //Shrink the area around its contents
-  //SetFlags(NS_BLOCK_SHRINK_WRAP);
-
   REFLOW_COUNTER_INIT()
 }
 
