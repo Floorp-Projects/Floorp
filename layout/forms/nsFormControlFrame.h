@@ -41,29 +41,6 @@
 #include "nsIFormControlFrame.h"
 #include "nsLeafFrame.h"
 
-#define ATTR_NOTSET -1
-
-#ifdef DEBUG_rods
-
-#define COMPARE_QUIRK_SIZE(__class, __navWidth, __navHeight) \
-{ \
-  float t2p;                                            \
-  t2p = aPresContext->TwipsToPixels();                  \
-  printf ("%-25s::Size=%4d,%4d %3d,%3d Nav:%3d,%3d Diffs: %3d,%3d\n",  \
-           (__class),                                   \
-           aDesiredSize.width, aDesiredSize.height,     \
-           NSToCoordRound(aDesiredSize.width * t2p),    \
-           NSToCoordRound(aDesiredSize.height * t2p),   \
-           (__navWidth),                                \
-           (__navHeight),                               \
-           NSToCoordRound(aDesiredSize.width * t2p) - (__navWidth),   \
-           NSToCoordRound(aDesiredSize.height * t2p) - (__navHeight)); \
-}
-
-#else
-#define COMPARE_QUIRK_SIZE(__class, __navWidth, __navHeight)
-#endif
-
 /** 
   * nsFormControlFrame is the base class for frames of form controls. It
   * provides a uniform way of creating widgets, resizing, and painting.
@@ -90,13 +67,6 @@ public:
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
-
-  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
-
-  NS_IMETHOD DidReflow(nsPresContext*           aPresContext,
-                       const nsHTMLReflowState*  aReflowState,
-                       nsDidReflowStatus         aStatus);
 
   /**
     * Respond to the request to resize and/or reflow
@@ -127,14 +97,6 @@ public:
    */
   static nsresult GetScreenHeight(nsPresContext* aPresContext, nscoord& aHeight);
 
-  /**
-   * Helper method to get the absolute position of a frame
-   *
-   */
-  static nsresult GetAbsoluteFramePosition(nsPresContext* aPresContext,
-                                           nsIFrame *aFrame, 
-                                           nsRect& aAbsoluteTwipsRect, 
-                                           nsRect& aAbsolutePixelRect);
 protected:
 
   virtual ~nsFormControlFrame();
@@ -154,8 +116,6 @@ protected:
     */
 
   void GetCurrentCheckState(PRBool* aState);
-
-  PRBool       mDidInit;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }

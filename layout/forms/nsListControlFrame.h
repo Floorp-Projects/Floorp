@@ -62,10 +62,8 @@ class nsIDOMHTMLSelectElement;
 class nsIDOMHTMLOptionsCollection;
 class nsIDOMHTMLOptionElement;
 class nsIComboboxControlFrame;
-class nsIViewManager;
 class nsPresContext;
 class nsVoidArray;
-class nsIScrollableView;
 
 class nsVoidArray;
 class nsListEventListener;

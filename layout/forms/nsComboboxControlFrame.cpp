@@ -495,11 +495,8 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
   return rv;
 }
 
-nsresult 
-nsComboboxControlFrame::PositionDropdown(nsPresContext* aPresContext, 
-                                         nscoord aHeight, 
-                                         nsRect aAbsoluteTwipsRect, 
-                                         nsRect aAbsolutePixelRect)
+void
+nsComboboxControlFrame::AbsolutelyPositionDropDown()
 {
    // Position the dropdown list. It is positioned below the display frame if there is enough
    // room on the screen to display the entire list. Otherwise it is placed above the display
@@ -514,34 +511,33 @@ nsComboboxControlFrame::PositionDropdown(nsPresContext* aPresContext,
 
    // Use the height calculated for the area frame so it includes both
    // the display and button heights.
-  nsresult rv = NS_OK;
-  nscoord dropdownYOffset = aHeight;
+  nscoord dropdownYOffset = GetRect().height;
+  nsPresContext* presContext = GetPresContext();
 // XXX: Enable this code to debug popping up above the display frame, rather than below it
-  nsRect dropdownRect = mDropdownFrame->GetRect();
+  nsSize dropdownSize = mDropdownFrame->GetSize();
 
   nscoord screenHeightInPixels = 0;
-  if (NS_SUCCEEDED(nsFormControlFrame::GetScreenHeight(aPresContext, screenHeightInPixels))) {
-     // Get the height of the dropdown list in pixels.
-     nscoord absoluteDropDownHeight = aPresContext->AppUnitsToDevPixels(dropdownRect.height);
-    
-      // Check to see if the drop-down list will go offscreen
-    if (NS_SUCCEEDED(rv) && ((aAbsolutePixelRect.y + aAbsolutePixelRect.height + absoluteDropDownHeight) > screenHeightInPixels)) {
+  if (NS_SUCCEEDED(nsFormControlFrame::GetScreenHeight(presContext, screenHeightInPixels))) {
+    // Get the height of the dropdown list in pixels.
+    nscoord absoluteDropDownHeight = presContext->AppUnitsToDevPixels(dropdownSize.height);
+    // Check to see if the drop-down list will go offscreen
+    if (GetScreenRect().YMost() + absoluteDropDownHeight > screenHeightInPixels) {
       // move the dropdown list up
-      dropdownYOffset = - (dropdownRect.height);
+      dropdownYOffset = - (dropdownSize.height);
     }
   }
- 
+
+  nsPoint dropdownPosition;
   const nsStyleVisibility* vis = GetStyleVisibility();
   if (vis->mDirection == NS_STYLE_DIRECTION_RTL) {
     // Align the right edge of the drop-down with the right edge of the control.
-    dropdownRect.x = aAbsoluteTwipsRect.width - dropdownRect.width;
+    dropdownPosition.x = GetRect().width - dropdownSize.width;
   } else {
-    dropdownRect.x = 0;
+    dropdownPosition.x = 0;
   }
-  dropdownRect.y = dropdownYOffset; 
+  dropdownPosition.y = dropdownYOffset; 
 
-  mDropdownFrame->SetRect(dropdownRect);
-  return rv;
+  mDropdownFrame->SetPosition(dropdownPosition);
 }
 
 //----------------------------------------------------------
@@ -748,17 +744,6 @@ nsComboboxControlFrame::ToggleList(nsPresContext* aPresContext)
   ShowList(aPresContext, (PR_FALSE == mDroppedDown));
 
   return NS_OK;
-}
-
-void
-nsComboboxControlFrame::AbsolutelyPositionDropDown()
-{
-  nsRect absoluteTwips;
-  nsRect absolutePixels;
-
-  if (NS_SUCCEEDED(nsFormControlFrame::GetAbsoluteFramePosition(GetPresContext(), this,  absoluteTwips, absolutePixels))) {
-    PositionDropdown(GetPresContext(), GetRect().height, absoluteTwips, absolutePixels);
-  }
 }
 
 ///////////////////////////////////////////////////////////////

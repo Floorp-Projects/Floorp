@@ -203,11 +203,6 @@ protected:
   nsresult ReflowDropdown(nsPresContext*          aPresContext, 
                           const nsHTMLReflowState& aReflowState);
 
-public:
-  nsresult PositionDropdown(nsPresContext* aPresContext,
-                            nscoord aHeight, 
-                            nsRect aAbsoluteTwipsRect, 
-                            nsRect aAbsolutePixelRect);
 protected:
   class RedisplayTextEvent;
   friend class RedisplayTextEvent;
