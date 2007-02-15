@@ -173,15 +173,20 @@ var BookmarkPropertiesPanel = {
    * of the dialog.
    */
   _isMicrosummaryVisible: function BPP__isMicrosummaryVisible() {
-    switch(this._variant) {
-    case this.EDIT_FOLDER_VARIANT:
-    case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
-    case this.ADD_LIVEMARK_VARIANT:
-    case this.EDIT_LIVEMARK_VARIANT:
-      return false;
-    default:
-      return true;
+    if (!("_microsummaryVisible" in this)) {
+      switch(this._variant) {
+      case this.EDIT_FOLDER_VARIANT:
+      case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
+      case this.ADD_LIVEMARK_VARIANT:
+      case this.EDIT_LIVEMARK_VARIANT:
+        this._microsummaryVisible = false;
+        break;
+      default:
+        this._microsummaryVisible = true;
+        break;
+      }
     }
+    return this._microsummaryVisible;
   },
 
   /**
@@ -406,6 +411,28 @@ var BookmarkPropertiesPanel = {
     this._folderTree.load([query], options);
   },
 
+  _initMicrosummaryPicker: function BPP__initMicrosummaryPicker() {
+    try {
+      this._microsummaries = this._mss.getMicrosummaries(this._bookmarkURI,
+                                                         this._bookmarkURI);
+    }
+    catch(ex) {
+      // There was a problem retrieving microsummaries; disable the picker.
+      // The microsummary service will throw an exception in at least
+      // two cases:
+      // 1. the bookmarked URI contains a scheme that the service won't
+      //    download for security reasons (currently it only handles http,
+      //    https, and file);
+      // 2. the page to which the URI refers isn't HTML or XML (the only two
+      //    content types the service knows how to summarize).
+      this._microsummaryVisible = false;
+      this._hide("microsummaryRow");
+      return;
+    }
+    this._microsummaries.addObserver(this._microsummaryObserver);
+    this._rebuildMicrosummaryPicker();
+  },
+
   /**
    * This is a shorter form of getElementById for the dialog document.
    * Given a XUL element ID from the dialog, returns the corresponding
@@ -495,15 +522,10 @@ var BookmarkPropertiesPanel = {
     }
 
     if (this._isMicrosummaryVisible()) {
-      this._microsummaries = this._mss.getMicrosummaries(this._bookmarkURI,
-                                                         this._bookmarkURI);
-      this._microsummaries.addObserver(this._microsummaryObserver);
-      this._rebuildMicrosummaryPicker();
+      this._initMicrosummaryPicker();
     }
     else {
-      var microsummaryRow =
-        this._dialogWindow.document.getElementById("microsummaryRow");
-      microsummaryRow.setAttribute("hidden", "true");
+      this._hide("microsummaryRow");
     }
 
     if (this._isFolderEditable()) {
