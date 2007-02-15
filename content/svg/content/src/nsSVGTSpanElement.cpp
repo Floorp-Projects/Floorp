@@ -77,7 +77,7 @@ public:
   // nsIContent interface
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
-  // nsISVGContent specializations:
+  // nsSVGElement specializations:
   virtual void ParentChainChanged();
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -380,7 +380,7 @@ nsSVGTSpanElement::IsAttributeMapped(const nsIAtom* name) const
 }
 
 //----------------------------------------------------------------------
-// nsISVGContent methods
+// nsSVGElement methods
 
 void nsSVGTSpanElement::ParentChainChanged()
 {

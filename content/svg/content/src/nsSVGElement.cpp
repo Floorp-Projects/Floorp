@@ -118,7 +118,6 @@ NS_IMPL_RELEASE_INHERITED(nsSVGElement,nsGenericElement)
 NS_INTERFACE_MAP_BEGIN(nsSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
-  NS_INTERFACE_MAP_ENTRY(nsISVGContent)
 // provided by nsGenericElement:
 //  NS_INTERFACE_MAP_ENTRY(nsIContent)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericElement)
@@ -681,7 +680,6 @@ nsSVGElement::DidModifySVGObservable(nsISVGValue* aObservable,
 }
 
 //----------------------------------------------------------------------
-// nsISVGContent methods:
 
 // recursive helper to call ParentChainChanged across non-SVG elements
 static void CallParentChainChanged(nsIContent*elem)
@@ -691,10 +689,8 @@ static void CallParentChainChanged(nsIContent*elem)
   PRUint32 count = elem->GetChildCount();
   for (PRUint32 i=0; i<count; ++i) {
     nsIContent* child = elem->GetChildAt(i);
-
-    nsCOMPtr<nsISVGContent> svgChild = do_QueryInterface(child);
-    if (svgChild) {
-      svgChild->ParentChainChanged();
+    if (child && child->IsNodeOfType(nsINode::eSVG)) {
+      NS_STATIC_CAST(nsSVGElement*, child)->ParentChainChanged();
     }
     else {
       // non-svg element might have an svg child, so recurse

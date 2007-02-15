@@ -181,7 +181,7 @@ nsSVGGradientElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
 }
 
 //----------------------------------------------------------------------
-// nsISVGContent methods
+// nsSVGElement methods
 
 void nsSVGGradientElement::ParentChainChanged()
 {

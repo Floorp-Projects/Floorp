@@ -303,7 +303,7 @@ nsSVGMarkerElement::IsAttributeMapped(const nsIAtom* name) const
 }
 
 //----------------------------------------------------------------------
-// nsISVGContent methods
+// nsSVGElement methods
 
 nsresult
 nsSVGMarkerElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
