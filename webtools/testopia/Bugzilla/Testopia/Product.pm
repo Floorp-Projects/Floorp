@@ -46,14 +46,14 @@ sub environments {
 
 sub builds {
     my $self = shift;
+    my($active) = @_;
     my $dbh = Bugzilla->dbh;
     
-    my $ref = $dbh->selectcol_arrayref(
-                   "SELECT build_id 
-                      FROM test_builds 
-                     WHERE product_id = ?
-                  ORDER BY name",
-                    undef, $self->{'id'});
+    my $query = "SELECT build_id FROM test_builds WHERE product_id = ?";
+    $query .= " AND isactive = 1" if $active; 
+    $query .= " ORDER BY name";
+    
+    my $ref = $dbh->selectcol_arrayref($query, undef, $self->{'id'});
     my @objs;
     foreach my $id (@{$ref}){
         push @objs, Bugzilla::Testopia::Build->new($id);

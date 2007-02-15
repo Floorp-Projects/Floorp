@@ -64,7 +64,7 @@ unless ($plan->canedit){
     ThrowUserError("testopia-create-denied", {'object' => 'Test Run'});
 }
 
-unless (scalar @{$plan->product->builds} >0){
+unless (scalar @{$plan->product->builds(1)} >0){
     print $cgi->header;
     ThrowUserError('testopia-create-build', {'plan' => $plan});
 }
@@ -116,7 +116,8 @@ if ($action eq 'Add'){
                 'name'        => $new_build,
                 'milestone'   => '---',
                 'product_id'  => $plan->product_id,
-                'description' => '' 
+                'description' => '',
+                'isactive'    => 1, 
         });
         my $bid = $b->check_name($new_build);
         $bid ? $build = $bid : $build = $b->store; 

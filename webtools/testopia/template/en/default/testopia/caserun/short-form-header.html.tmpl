@@ -40,7 +40,7 @@
     <td align="right"><input name="sortkey_[% index %]" id="sortkey_[% index %]" value="[% caserun.sortkey FILTER html %]" size="5"><input type="button" value="Change" onclick="chNote([% index %], [% caserun.id FILTER none %], document.getElementById('notes[% index %]').value); chSortKey([% index %], [% caserun.id FILTER none %], document.getElementById('sortkey_[% index %]').value)"></td>
     <td align="right" valign="top">
     [% PROCESS select sel = { name => "caserun_build", 
-                              list => caserun.run.plan.product.builds, 
+                              list => caserun.run.plan.product.builds(1), 
                            default => caserun.build.name 
                            events  => "onChange='chBld($index, this.value, \"$caserun.status\", $caserun.id)'"}
      %]

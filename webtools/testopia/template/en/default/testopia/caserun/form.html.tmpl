@@ -24,7 +24,7 @@
   #%]
   
 [% IF NOT dotweak %]
-  [% build_list = caserun.run.plan.product.builds %]
+  [% build_list = caserun.run.plan.product.builds(1) %]
   [% default_build = caserun.build.name %]
   <script type="text/javascript">
     dojo.addOnLoad(

@@ -56,15 +56,17 @@ use base qw(Exporter);
     name
     description
     milestone
+    isactive
 
 =cut
 
 use constant DB_COLUMNS => qw(
-    test_builds.build_id
-    test_builds.product_id
-    test_builds.name
-    test_builds.description
-    test_builds.milestone
+    build_id
+    product_id
+    name
+    description
+    milestone
+    isactive
 );
 
 our $columns = join(", ", DB_COLUMNS);
@@ -130,9 +132,9 @@ sub store {
     my $self = shift;
     my $dbh = Bugzilla->dbh;
     $dbh->do("INSERT INTO test_builds ($columns)
-              VALUES (?,?,?,?,?)",
+              VALUES (?,?,?,?,?,?)",
               undef, (undef, $self->{'product_id'}, $self->{'name'}, 
-              $self->{'description'}, $self->{'milestone'}));
+              $self->{'description'}, $self->{'milestone'}, $self->{'isactive'}));
     my $key = $dbh->bz_last_key( 'test_builds', 'build_id' );
     return $key;
 }
@@ -200,12 +202,12 @@ Takes the new name, description, and milestone.
 
 sub update {
     my $self = shift;
-    my ($name, $desc, $milestone) = @_;
+    my ($name, $desc, $milestone, $isactive) = @_;
     my $dbh = Bugzilla->dbh;
     $dbh->do("UPDATE test_builds
-                 SET name = ?, description = ?, milestone = ?
+                 SET name = ?, description = ?, milestone = ?, isactive= ?
                WHERE build_id = ?", undef,
-              ($name, $desc, $milestone, $self->{'build_id'}));
+              ($name, $desc, $milestone, $isactive, $self->{'build_id'}));
 }
 
 ###############################
@@ -239,6 +241,7 @@ sub product_id      { return $_[0]->{'product_id'}; }
 sub name            { return $_[0]->{'name'};       }
 sub description     { return $_[0]->{'description'};}
 sub milestone       { return $_[0]->{'milestone'};}
+sub isactive        { return $_[0]->{'isactive'};}
 
 =head2 run_count
 

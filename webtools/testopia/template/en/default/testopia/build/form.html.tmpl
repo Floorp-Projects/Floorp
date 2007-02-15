@@ -28,19 +28,20 @@
   <table border="0" cellpadding="2" cellspacing="0">
     <tr>
       <th align="right" valign="top">Build Name: </th>
-      <td><input size="40" name="name" value="[% build.name FILTER html %]"/></td>
+      <td colspan="3"><input size="40" name="name" value="[% build.name FILTER html %]"/></td>
     </tr>
     <tr>
       <th align="right" valign="top">Milestone: </th>
       <td>[% PROCESS select sel = { name      => 'milestone',
                                     accesskey => 'm', 
                                     list      => plan.product.milestones
-                                    default   => build.milestone } %]
-      </td>
+                                    default   => build.milestone } %]</td>
+      <th align="right">Active:</th>
+      <td width="20"><input type="checkbox" name="isactive" value="1" [% 'checked="checked"' IF build.isactive OR action == 'do_add'%]</td>
     </tr>
     <tr>
       <th align="right" valign="top">Build Description: </th>
-      <td> <textarea rows="10" cols="70" name="desc">[% build.description FILTER html %]</textarea><br> </td>
+      <td colspan="3"> <textarea rows="10" cols="70" name="desc">[% build.description FILTER html %]</textarea><br> </td>
     </tr>
   </table>
   <input type="submit" value="Submit">

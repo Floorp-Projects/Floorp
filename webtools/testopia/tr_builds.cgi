@@ -38,6 +38,7 @@ Bugzilla->login(LOGIN_REQUIRED);
 my $cgi = Bugzilla->cgi;
 
 print $cgi->header;
+
 use vars qw($vars $template);
 my $template = Bugzilla->template;
 
@@ -79,7 +80,8 @@ elsif ($action eq 'do_add'){
                                       product_id  => $plan->product_id,
                                       name        => $cname,
                                       description => $desc,
-                                      milestone   => $tm
+                                      milestone   => $tm,
+                                      isactive    => $cgi->param('isactive') ? 1 : 0,
                    });
     ThrowUserError('testopia-name-not-unique', 
                     {'object' => 'Build', 
@@ -127,7 +129,7 @@ elsif ($action eq 'do_edit'){
                   {'object' => 'Build', 
                    'name' => $cname}) if ($orig_id && $orig_id != $bid);
     
-    $build->update($cname, $desc, $milestone);
+    $build->update($cname, $desc, $milestone, $cgi->param('isactive') ? 1 : 0);
     # Search.pm thinks we are searching for a build_id
     $cgi->delete('build_id');
     $vars->{'tr_message'} = "Build successfully updated";
