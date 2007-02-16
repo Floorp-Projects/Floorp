@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Percent widths on table cells</title>
+<style type="text/css">
+
+td > table {
+  border-spacing: 3px 5px;
+  padding: 2px 3px 4px 5px;
+}
+
+td {
+  border: none;
+  padding: 0;
+}
+
+span {
+  display: inline-block;
+  width: 50px;
+  background: fuchsia;
+  color: fuchsia;
+}
+
+</style>
+</head>
+<body>
+
+<table border><tr><td>
+<table><tr>
+<td style="background: yellow;color:yellow" width="50%"><span>x</span></td>
+<td style="background:aqua;color:aqua"><span>x</span>&#x200b;<span>x</span>&#x200b;<span>x</span></td>
+</tr></table>
+</td></tr></table>
+
+</body>
+</html>
