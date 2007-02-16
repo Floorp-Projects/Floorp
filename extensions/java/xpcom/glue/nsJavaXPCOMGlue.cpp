@@ -171,7 +171,7 @@ LoadXULMethods(JNIEnv* env, jobject aXPCOMPath, void** aFunctions)
             (NSFuncPtr*) &aFunctions[kFunc_GetNativeHandleFromAWT] },
     { "_Java_org_mozilla_xpcom_internal_JavaXPCOMMethods_wrapJavaObject@16",
             (NSFuncPtr*) &aFunctions[kFunc_WrapJavaObject] },
-    { "_Java_org_mozilla_xpcom_internal_JavaXPCOMMethods_wrapXPCOMObject@16",
+    { "_Java_org_mozilla_xpcom_internal_JavaXPCOMMethods_wrapXPCOMObject@20",
             (NSFuncPtr*) &aFunctions[kFunc_WrapXPCOMObject] },
     { nsnull, nsnull }
   };
