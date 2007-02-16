@@ -61,6 +61,8 @@ OS_LIBS		+= ole32.lib
 FORCE_USE_PIC	= 1 
 FORCE_SHARED_LIB = 1
 
+EMBED_MANIFEST_AT = 2
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES	+= -DUNICODE -D_UNICODE
