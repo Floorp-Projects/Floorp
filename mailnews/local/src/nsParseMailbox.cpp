@@ -1978,8 +1978,8 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
           msgIsNew = PR_FALSE;
         nsMsgKey msgKey;
         msgHdr->GetMessageKey(&msgKey);
-        m_mailDB->SetStringProperty(msgKey, "junkscore", junkScoreStr.get());
-        m_mailDB->SetStringProperty(msgKey, "junkscoreorigin", /* ### should this be plugin? */"plugin");
+        msgHdr->SetStringProperty("junkscore", junkScoreStr.get());
+        msgHdr->SetStringProperty("junkscoreorigin", "plugin");
         break;
       }
       case nsMsgFilterAction::Forward:
