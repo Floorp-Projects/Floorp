@@ -66,16 +66,9 @@ var TITLE   = "Properties of the Date Prototype Object";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-
-Date.prototype.getClass = Object.prototype.toString;
-
 new TestCase( SECTION,
-	      "Date.prototype.getClass",
-	      "[object Date]",
-	      Date.prototype.getClass() );
-new TestCase( SECTION,
-	      "Date.prototype.valueOf()",
-	      NaN,
-	      Date.prototype.valueOf() );
+	      "Date.prototype.__proto__ == Object.prototype",
+	      true,
+	      Date.prototype.__proto__ == Object.prototype );
 test();
 
