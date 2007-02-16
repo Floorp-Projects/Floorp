@@ -188,7 +188,7 @@
   WriteRegStr HKLM "$0\shell\properties\command" "" "$\"$8$\" -preferences"
 
   WriteRegStr HKLM "$0\shell\safemode" "" "$(CONTEXT_SAFE_MODE)"
-  WriteRegStr HKLM "$0\shell\safemode\command" "" "$\"$8$\" -safemode"
+  WriteRegStr HKLM "$0\shell\safemode\command" "" "$\"$8$\" -safe-mode"
 
   ; Vista Capabilities registry keys
   WriteRegStr HKLM "$0\Capabilities" "ApplicationDescription" "$(REG_APP_DESC)"
