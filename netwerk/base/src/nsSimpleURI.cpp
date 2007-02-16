@@ -165,7 +165,7 @@ nsSimpleURI::SetSpec(const nsACString &aSpec)
     NS_EscapeURL(specPtr, specLen, esc_OnlyNonASCII|esc_AlwaysCopy, spec);
 
     PRInt32 pos = spec.FindChar(':');
-    if (pos == -1)
+    if (pos == -1 || !net_IsValidScheme(spec.get(), pos))
         return NS_ERROR_MALFORMED_URI;
 
     mScheme.Truncate();
@@ -193,7 +193,13 @@ NS_IMETHODIMP
 nsSimpleURI::SetScheme(const nsACString &scheme)
 {
     NS_ENSURE_STATE(mMutable);
-    
+
+    const nsPromiseFlatCString &flat = PromiseFlatCString(scheme);
+    if (!net_IsValidScheme(flat)) {
+        NS_ERROR("the given url scheme contains invalid characters");
+        return NS_ERROR_MALFORMED_URI;
+    }
+
     mScheme = scheme;
     ToLowerCase(mScheme);
     return NS_OK;
