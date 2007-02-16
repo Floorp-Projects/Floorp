@@ -1871,10 +1871,11 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
     (aOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_VISIT ||
      aOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_FULL_VISIT);
 
-  nsCAutoString commonConditions("visit_count > 0 ");
+  nsCAutoString commonConditions;
+
   if (! aOptions->IncludeHidden()) {
     // The hiding code here must match the notification behavior in AddVisit
-    commonConditions.AppendLiteral("AND hidden <> 1 ");
+    commonConditions.AssignLiteral("hidden <> 1 ");
 
     // Some items are unhidden but are subframe navigations that we shouldn't
     // show. This happens especially on imported profiles because the previous
@@ -1998,7 +1999,9 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
     queryString.AppendLiteral(" ");
   }
 
-  //printf("Constructed the query: %s\n", PromiseFlatCString(queryString).get());
+#ifdef DEBUG_thunder
+  printf("Constructed the query: %s\n", PromiseFlatCString(queryString).get());
+#endif
 
   // Put this in a transaction. Even though we are only reading, this will
   // speed up the grouped queries to the annotation service for titles and
@@ -3038,8 +3041,6 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
   *aParamCount = 0;
   nsCAutoString paramString;
 
-  // note common condition visit_count > 0 is set under the annotation section
-
   // begin time
   if (NS_SUCCEEDED(aQuery->GetHasBeginTime(&hasIt)) && hasIt) {
     parameterString(aStartParameter + *aParamCount, paramString);
@@ -3057,6 +3058,23 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
   }
 
   // search terms FIXME
+
+  // min and max visit count
+  if (aQuery->MinVisits() >= 0) {
+    if (! aClause->IsEmpty())
+      *aClause += NS_LITERAL_CSTRING(" AND ");
+    parameterString(aStartParameter + *aParamCount, paramString);
+    *aClause += NS_LITERAL_CSTRING("h.visit_count >= ") + paramString;
+    (*aParamCount) ++;
+  }
+
+  if (aQuery->MaxVisits() >= 0) {
+    if (! aClause->IsEmpty())
+      *aClause += NS_LITERAL_CSTRING(" AND ");
+    parameterString(aStartParameter + *aParamCount, paramString);
+    *aClause += NS_LITERAL_CSTRING("h.visit_count <= ") + paramString;
+    (*aParamCount) ++;
+  }
 
   // only bookmarked
   if (aQuery->OnlyBookmarked()) {
@@ -3119,9 +3137,10 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
 
   // annotation
   aQuery->GetHasAnnotation(&hasIt);
-  if (! aClause->IsEmpty())
-    *aClause += NS_LITERAL_CSTRING(" AND ");
   if (hasIt) {
+    if (! aClause->IsEmpty())
+      *aClause += NS_LITERAL_CSTRING(" AND ");
+
     nsCAutoString paramString;
     parameterString(aStartParameter + *aParamCount, paramString);
     (*aParamCount) ++;
@@ -3134,7 +3153,8 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
     // annotation-based queries don't get the common conditions, so you get
     // all URLs with that annotation
   } else {
-    // all non-annotation queries return only visited items
+    if (!(aClause->IsEmpty() || aCommonConditions.IsEmpty()))
+      *aClause += NS_LITERAL_CSTRING(" AND ");
     aClause->Append(aCommonConditions);
   }
 
@@ -3176,6 +3196,21 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
   }
 
   // search terms FIXME
+
+  // min and max visit count
+  PRInt32 visits = aQuery->MinVisits();
+  if (visits >= 0) {
+    rv = statement->BindInt32Parameter(aStartParameter + *aParamCount, visits);
+    NS_ENSURE_SUCCESS(rv, rv);
+    (*aParamCount) ++;
+  }
+
+  visits = aQuery->MaxVisits();
+  if (visits >= 0) {
+    rv = statement->BindInt32Parameter(aStartParameter + *aParamCount, visits);
+    NS_ENSURE_SUCCESS(rv, rv);
+    (*aParamCount) ++;
+  }
 
   // onlyBookmarked: nothing to bind
 

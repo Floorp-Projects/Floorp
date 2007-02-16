@@ -67,6 +67,8 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVHISTORYQUERY
 
+  PRInt32 MinVisits() { return mMinVisits; }
+  PRInt32 MaxVisits() { return mMaxVisits; }
   PRTime BeginTime() { return mBeginTime; }
   PRUint32 BeginTimeReference() { return mBeginTimeReference; }
   PRTime EndTime() { return mEndTime; }
@@ -86,6 +88,8 @@ private:
 
 protected:
 
+  PRInt32 mMinVisits;
+  PRInt32 mMaxVisits;
   PRTime mBeginTime;
   PRUint32 mBeginTimeReference;
   PRTime mEndTime;

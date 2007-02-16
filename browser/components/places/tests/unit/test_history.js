@@ -22,6 +22,7 @@
  * Contributor(s):
  *  Darin Fisher <darin@meer.net>
  *  Dietrich Ayala <dietrich@mozilla.com>
+ *  Dan Mills <thunder@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,24 +45,27 @@ try {
   do_throw("Could not get history service\n");
 } 
 
-// main
-function run_test() {
-  // test URI
-  var testURI = uri("http://mozilla.com/");
-
-  // add a visit
-  var placeID = histsvc.addVisit(testURI,
+// adds a test URI visit to the database, and checks for a valid place ID
+function add_visit(aURI) {
+  var placeID = histsvc.addVisit(aURI,
                                  Date.now(),
                                  0, // no referrer
                                  histsvc.TRANSITION_TYPED, // user typed in URL bar
                                  false, // not redirect
                                  0);
-  // test for valid place ID
   do_check_true(placeID > 0);
+  return placeID;
+}
 
-  // query for the visit
+// main
+function run_test() {
+  // add a visit
+  var testURI = uri("http://mozilla.com");
+  add_visit(testURI);
+
+  // now query for the visit, setting sorting and limit such that
+  // we should retrieve only the visit we just added
   var options = histsvc.getNewQueryOptions();
-  // set sorting and limit such that we should retrieve only the visit we just added
   options.sortingMode = options.SORT_BY_DATE_DESCENDING;
   options.maxResults = 1;
   // TODO: using full visit crashes in xpcshell test
@@ -81,6 +85,55 @@ function run_test() {
     //do_check_eq(node.transitionType, histsvc.TRANSITION_TYPED);
   }
   root.containerOpen = false;
+
+  // add another visit for the same URI, and a third visit for a different URI
+  var testURI2 = uri("http://google.com/");
+  add_visit(testURI);
+  add_visit(testURI2);
+
+  options.maxResults = 5;
+  options.resultType = options.RESULTS_AS_URI;
+
+  // test minVisits
+  query.minVisits = 0;
+  result = histsvc.executeQuery(query, options);
+  result.root.containerOpen = true;
+  do_check_eq(result.root.childCount, 2);
+  query.minVisits = 1;
+  result = histsvc.executeQuery(query, options);
+  result.root.containerOpen = true;
+  do_check_eq(result.root.childCount, 2);
+  query.minVisits = 2;
+  result = histsvc.executeQuery(query, options);
+  result.root.containerOpen = true;
+  do_check_eq(result.root.childCount, 1);
+  query.minVisits = 3;
+  result = histsvc.executeQuery(query, options);
+  result.root.containerOpen = true;
+  do_check_eq(result.root.childCount, 0);
+
+  // test maxVisits
+  query.minVisits = -1;
+  query.maxVisits = -1;
+  result = histsvc.executeQuery(query, options);
+  result.root.containerOpen = true;
+  do_check_eq(result.root.childCount, 2);
+  query.maxVisits = 0;
+  result = histsvc.executeQuery(query, options);
+  result.root.containerOpen = true;
+  do_check_eq(result.root.childCount, 0);
+  query.maxVisits = 1;
+  result = histsvc.executeQuery(query, options);
+  result.root.containerOpen = true;
+  do_check_eq(result.root.childCount, 1);
+  query.maxVisits = 2;
+  result = histsvc.executeQuery(query, options);
+  result.root.containerOpen = true;
+  do_check_eq(result.root.childCount, 2);
+  query.maxVisits = 3;
+  result = histsvc.executeQuery(query, options);
+  result.root.containerOpen = true;
+  do_check_eq(result.root.childCount, 2);
 
   // by default, browser.history_expire_days is 9
   do_check_true(!histsvc.historyDisabled);
