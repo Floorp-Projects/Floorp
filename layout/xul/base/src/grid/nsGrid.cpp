@@ -807,8 +807,6 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
     // pick the largest top border or bottom border
     PRInt32 count = GetColumnCount(aIsHorizontal); 
 
-    PRBool isCollapsed = PR_FALSE;
-
     for (PRInt32 i=0; i < count; i++)
     {  
       nsMargin totalChildBorderPadding(0,0,0,0);

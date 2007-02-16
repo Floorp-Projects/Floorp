@@ -2346,9 +2346,8 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
       SetIsPrinting(PR_FALSE);
 #endif
     } else {
-      nsIFrame* rootFrame = poPresShell->FrameManager()->GetRootFrame();
-
 #ifdef EXTENDED_DEBUG_PRINTING
+      nsIFrame* rootFrame = poPresShell->FrameManager()->GetRootFrame();
       if (aPO->IsPrintable()) {
         char * docStr;
         char * urlStr;

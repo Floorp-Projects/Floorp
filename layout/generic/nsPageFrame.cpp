@@ -576,8 +576,8 @@ nsPageFrame::PaintPageContent(nsIRenderingContext& aRenderingContext,
                                   rect, backgroundRect, *border, *padding,
                                   PR_TRUE);
 
-  nsresult rv = nsLayoutUtils::PaintFrame(&aRenderingContext, pageContentFrame,
-                                          nsRegion(rect), NS_RGBA(0,0,0,0));
+  nsLayoutUtils::PaintFrame(&aRenderingContext, pageContentFrame,
+                            nsRegion(rect), NS_RGBA(0,0,0,0));
 
   aRenderingContext.PopState();
 }

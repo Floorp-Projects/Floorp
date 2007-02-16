@@ -213,7 +213,6 @@ nsStackLayout::AddOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsSize& aSize
   nsIContent* content = aChild->GetContent();
 
   if (content) {
-    nsPresContext* presContext = aState.PresContext();
     nsAutoString value;
     PRInt32 error;
 
