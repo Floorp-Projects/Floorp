@@ -72,61 +72,24 @@ var arr;
 
 
 // create empty array or pseudo-array objects in various ways
-var arr1 = Array();
-var arr2 = new Array();
-var arr3 = [];
-var arr4 = [1];
-arr4.pop();
+function f () {return arguments};
+var arr5 = f();
+arr5.__proto__ = Array.prototype;
 
 
-status = inSection(1);
-arr = arr1.sort();
-actual = arr instanceof Array && arr.length === 0 && arr === arr1;
+status = inSection(5);
+arr = arr5.sort();
+actual = arr instanceof Array && arr.length === 0 && arr === arr5;
 expect = true;
 addThis();
 
-status = inSection(2);
-arr = arr2.sort();
-actual = arr instanceof Array && arr.length === 0 && arr === arr2;
-expect = true;
-addThis();
-
-status = inSection(3);
-arr = arr3.sort();
-actual = arr instanceof Array && arr.length === 0 && arr === arr3;
-expect = true;
-addThis();
-
-status = inSection(4);
-arr = arr4.sort();
-actual = arr instanceof Array && arr.length === 0 && arr === arr4;
-expect = true;
-addThis();
 
 // now do the same thing, with non-default sorting:
 function g() {return 1;}
 
-status = inSection('1a');
-arr = arr1.sort(g);
-actual = arr instanceof Array && arr.length === 0 && arr === arr1;
-expect = true;
-addThis();
-
-status = inSection('2a');
-arr = arr2.sort(g);
-actual = arr instanceof Array && arr.length === 0 && arr === arr2;
-expect = true;
-addThis();
-
-status = inSection('3a');
-arr = arr3.sort(g);
-actual = arr instanceof Array && arr.length === 0 && arr === arr3;
-expect = true;
-addThis();
-
-status = inSection('4a');
-arr = arr4.sort(g);
-actual = arr instanceof Array && arr.length === 0 && arr === arr4;
+status = inSection('5a');
+arr = arr5.sort(g);
+actual = arr instanceof Array && arr.length === 0 && arr === arr5;
 expect = true;
 addThis();
 
