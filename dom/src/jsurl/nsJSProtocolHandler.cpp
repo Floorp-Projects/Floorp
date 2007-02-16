@@ -889,12 +889,14 @@ nsJSChannel::SetExecutionPolicy(PRUint32 aPolicy)
     NS_ENSURE_ARG(aPolicy <= EXECUTE_NORMAL);
     
     mExecutionPolicy = aPolicy;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJSChannel::GetExecutionPolicy(PRUint32* aPolicy)
 {
     *aPolicy = mExecutionPolicy;
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
