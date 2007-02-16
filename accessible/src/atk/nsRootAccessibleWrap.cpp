@@ -117,9 +117,10 @@ nsresult nsRootAccessibleWrap::HandleEventWithTarget(nsIDOMEvent *aEvent,
     
     nsCOMPtr<nsIAccessible> accessible;
     nsCOMPtr<nsIAccessibilityService> accService = GetAccService();
-    if (NS_FAILED(accService->GetAccessibleFor(aTargetNode, getter_AddRefs(accessible))))
-        return NS_OK;
-    
+    accService->GetAccessibleFor(aTargetNode, getter_AddRefs(accessible));
+    if (!accessible)
+      return NS_OK;
+
     nsCOMPtr<nsPIAccessible> privAcc(do_QueryInterface(accessible));
     
 #ifdef MOZ_XUL

@@ -699,10 +699,10 @@ nsAccessibilityService::CreateHTMLObjectFrameAccessible(nsObjectFrame *aFrame,
   // 3) for images and imagemaps, or anything else with a child frame
   // we have the object frame, get the image frame
   frame = aFrame->GetFirstChild(nsnull);
-  if (frame) {
+  if (frame)
     return frame->GetAccessible(aAccessible);
-  }
-  return NS_ERROR_FAILURE;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -999,12 +999,11 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleInWeakShell(nsIDOMNode *aNode
                        &outFrameUnused, &isHiddenUnused, aAccessible);
 }
 
-nsresult nsAccessibilityService::InitAccessible(nsIAccessible *aAccessibleIn, 
+nsresult nsAccessibilityService::InitAccessible(nsIAccessible *aAccessibleIn,
                                                 nsIAccessible **aAccessibleOut)
 {
+  NS_ENSURE_TRUE(aAccessibleIn, NS_ERROR_FAILURE);
   NS_ASSERTION(aAccessibleOut && !*aAccessibleOut, "Out param should already be cleared out");
-  if (!aAccessibleIn)
-    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsPIAccessNode> privateAccessNode = do_QueryInterface(aAccessibleIn);
   NS_ASSERTION(privateAccessNode, "All accessibles must support nsPIAccessNode");
@@ -1015,12 +1014,12 @@ nsresult nsAccessibilityService::InitAccessible(nsIAccessible *aAccessibleIn,
   return rv;
 }
 
-NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode, 
+NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
                                                     nsIPresShell *aPresShell,
                                                     nsIWeakReference *aWeakShell,
                                                     nsIFrame **aFrameHint,
                                                     PRBool *aIsHidden,
-                                                    nsIAccessible **aAccessible) 
+                                                    nsIAccessible **aAccessible)
 {
   NS_ENSURE_ARG_POINTER(aAccessible);
   NS_ENSURE_ARG_POINTER(aFrameHint);
@@ -1055,7 +1054,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     // The nsHTMLAreaAccessible's they contain are attached as
     // children of the appropriate nsHTMLImageAccessible.
     *aIsHidden = PR_TRUE;
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
 
   // Check to see if we already have an accessible for this
@@ -1068,10 +1067,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     // Retrieved from cache
     // QI might not succeed if it's a node that's not accessible
     newAcc = do_QueryInterface(accessNode);
-    if (!newAcc) {
-      return NS_ERROR_FAILURE;
-    }
-    NS_ADDREF(*aAccessible = newAcc);
+    NS_IF_ADDREF(*aAccessible = newAcc);
     return NS_OK;
   }
 
@@ -1079,12 +1075,12 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   // Check to see if hidden first
   nsCOMPtr<nsIDocument> nodeIsDoc;
   if (!content) {
+    // This happens when we're on the document node, which will not QI to an
+    // nsIContent.
     nodeIsDoc = do_QueryInterface(aNode);
-    if (!nodeIsDoc) {
-      return NS_ERROR_FAILURE;   // No content, and not doc node
-    }
-    // This happens when we're on the document node, which will not QI to an nsIContent, 
-    nsCOMPtr<nsIAccessibleDocument> accessibleDoc = 
+    NS_ENSURE_TRUE(nodeIsDoc, NS_ERROR_FAILURE); // No content, and not doc node
+
+    nsCOMPtr<nsIAccessibleDocument> accessibleDoc =
       nsAccessNode::GetDocAccessibleFor(aWeakShell);
     if (accessibleDoc) {
       newAcc = do_QueryInterface(accessibleDoc);
@@ -1095,10 +1091,8 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
       NS_WARN_IF_FALSE(newAcc, "No root/doc accessible created");
     }
 
-    NS_ENSURE_STATE(newAcc);
-
     *aFrameHint = aPresShell->GetRootFrame();
-    NS_ADDREF(*aAccessible = newAcc );
+    NS_IF_ADDREF(*aAccessible = newAcc);
     return NS_OK;
   }
 
@@ -1155,7 +1149,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
           }
         }
 
-        return NS_ERROR_FAILURE;
+        return NS_OK;
       }
       *aFrameHint = frame;
     }
@@ -1166,9 +1160,8 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     *aIsHidden = PR_TRUE;
   }
 
-  if (*aIsHidden) {
-    return NS_ERROR_FAILURE;
-  }
+  if (*aIsHidden)
+    return NS_OK;
 
   /**
    * Attempt to create an accessible based on what we know
@@ -1177,7 +1170,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     // --- Create HTML for visible text frames ---
     if (frame->IsEmpty()) {
       *aIsHidden = PR_TRUE;
-      return NS_ERROR_FAILURE;
+      return NS_OK;
     }
     frame->GetAccessible(getter_AddRefs(newAcc));
     return InitAccessible(newAcc, aAccessible);
@@ -1190,7 +1183,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     // Only create accessible for role=":presentation" if it is focusable --
     // in that case we need an accessible in case it gets focused, we
     // don't want focus ever to be 'lost'
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
 
   // Elements may implement nsIAccessibleProvider via XBL. This allows them to
@@ -1560,7 +1553,7 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
 #endif
 
     default:
-      return NS_OK;
+      return NS_ERROR_FAILURE;
   }
 
   if (!*aAccessible)

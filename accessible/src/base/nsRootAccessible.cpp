@@ -647,10 +647,11 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   }
 
   nsCOMPtr<nsIAccessible> accessible;
-  if (NS_FAILED(accService->GetAccessibleInShell(aTargetNode, eventShell,
-                                                 getter_AddRefs(accessible))))
+  accService->GetAccessibleInShell(aTargetNode, eventShell,
+                                   getter_AddRefs(accessible));
+  if (!accessible)
     return NS_OK;
-  
+
 #ifdef MOZ_XUL
   // If it's a tree element, need the currently selected item
   nsCOMPtr<nsIAccessible> treeItemAccessible;
@@ -743,11 +744,13 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
           focusedItem = do_QueryInterface(selectedItem);
         }
 
-        if (!focusedItem ||
-            NS_FAILED(accService->GetAccessibleInShell(focusedItem, eventShell,
-                      getter_AddRefs(accessible)))) {
+        if (!focusedItem)
           return NS_OK;
-        }
+
+        accService->GetAccessibleInShell(focusedItem, eventShell,
+                                         getter_AddRefs(accessible));
+        if (!accessible)
+          return NS_OK;
       }
     }
     if (accessible == this) {

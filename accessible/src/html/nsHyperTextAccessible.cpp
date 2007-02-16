@@ -695,9 +695,12 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
       if (NS_SUCCEEDED(endFrame->GetOffsets(startFrameOffsetUnused, endFrameOffset))) {
         nsCOMPtr<nsIDOMNode> endNode = do_QueryInterface(endFrame->GetContent());
         nsCOMPtr<nsIAccessible> endAccessible;
-        if (endNode && NS_SUCCEEDED(GetAccService()->GetAccessibleFor(endNode, getter_AddRefs(endAccessible))) &&
-            NextChild(endAccessible) && Role(endAccessible) == ROLE_WHITESPACE) {
-          ++ endOffset; // Make sure endOffset comes after <br>
+        if (endNode) {
+          GetAccService()->GetAccessibleFor(endNode, getter_AddRefs(endAccessible));
+          if (endAccessible && NextChild(endAccessible) &&
+              Role(endAccessible) == ROLE_WHITESPACE) {
+            ++ endOffset; // Make sure endOffset comes after <br>
+          }
         }
         // End line fixup: include \n for <br> at end of string,
         // only if aBoundaryType == BOUNDARY_LINE_START
