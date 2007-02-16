@@ -233,18 +233,6 @@ NS_IMETHODIMP nsDocAccessible::GetState(PRUint32 *aState)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocAccessible::GetExtState(PRUint32 *aExtState)
-{
-  nsresult rv = nsHyperTextAccessible::GetExtState(aExtState);
-  // Our default calculation for ENABLED/SENSITIVE checks to see if
-  // something is focusable but not disabled.
-  // Documents are focusable but are not controls that can be
-  // enabled or sensitive, so here we clear those states,
-  // since they will have been set by the default GetExtState()
-  *aExtState &= ~(EXT_STATE_ENABLED | EXT_STATE_SENSITIVE);
-  return rv;
-}
-
 NS_IMETHODIMP nsDocAccessible::GetFocusedChild(nsIAccessible **aFocusedChild)
 {
   if (!gLastFocusedNode) {
