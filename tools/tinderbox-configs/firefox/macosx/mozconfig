@@ -6,7 +6,7 @@
 . $topsrcdir/build/macosx/universal/mozconfig
 
 mk_add_options MOZ_MAKE_FLAGS="-j4"
-mk_add_options MOZ_CO_MODULE="mozilla/tools/update-packaging"
+mk_add_options MOZ_CO_MODULE="mozilla/tools/update-packaging mozilla/tools/codesighs"
 mk_add_options MOZ_CO_PROJECT="browser"
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../build/universal
 
@@ -23,3 +23,5 @@ ac_add_options --disable-shared
 ac_add_app_options ppc --enable-prebinding
 ac_add_options --enable-svg
 ac_add_options --enable-canvas
+
+ac_add_options --enable-codesighs
