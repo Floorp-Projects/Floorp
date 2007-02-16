@@ -369,11 +369,8 @@ Section "-Application" Section1
   ${EndIf}
 
   ${LogHeader} "Adding Additional Files"
-  ; Only for Firefox and only if they don't already exist
-  ; Check if QuickTime is installed and copy the contents of its plugins
-  ; directory into the app's plugins directory. Previously only the
-  ; nsIQTScriptablePlugin.xpt files was copied which is not enough to enable
-  ; QuickTime as a plugin.
+  ; Check if QuickTime is installed and copy the nsIQTScriptablePlugin.xpt from
+  ; its plugins directory into the app's components directory.
   ClearErrors
   ReadRegStr $R0 HKLM "Software\Apple Computer, Inc.\QuickTime" "InstallDir"
   ${Unless} ${Errors}
@@ -381,12 +378,16 @@ Section "-Application" Section1
     ${GetPathFromRegStr}
     Pop $R0
     ${Unless} ${Errors}
-      GetFullPathName $R0 "$R0\Plugins"
+      GetFullPathName $R0 "$R0\Plugins\nsIQTScriptablePlugin.xpt"
       ${Unless} ${Errors}
-        ${LogHeader} "Copying QuickTime Plugin Files"
-        ${LogMsg} "Source Directory: $R0\Plugins"
-        StrCpy $R1 "$INSTDIR\plugins"
-        Call DoCopyFiles
+        ${LogHeader} "Copying QuickTime Scriptable Component"
+        CopyFiles /SILENT "$R0" "$INSTDIR\components"
+        ${If} ${Errors}
+          ${LogMsg} "** ERROR Installing File: $INSTDIR\components\nsIQTScriptablePlugin.xpt **"
+        ${Else}
+          ${LogMsg} "Installed File: $INSTDIR\components\nsIQTScriptablePlugin.xpt"
+          ${LogUninstall} "File: $R3"
+        ${EndIf}
       ${EndUnless}
     ${EndUnless}
   ${EndUnless}
