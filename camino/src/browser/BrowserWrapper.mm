@@ -76,7 +76,7 @@
 #include "nsIWebBrowserSetup.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLDocument.h"
-#include "nsIChromeEventHandler.h"
+#include "nsPIDOMEventTarget.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIWebProgressListener.h"
@@ -399,7 +399,7 @@ enum {
     
     nsCOMPtr<nsIDOMWindow> contentWindow = [[self getBrowserView] getContentWindow];
     nsCOMPtr<nsPIDOMWindow> piWindow(do_QueryInterface(contentWindow));
-    nsIChromeEventHandler *chromeHandler = piWindow->GetChromeEventHandler();
+    nsPIDOMEventTarget *chromeHandler = piWindow->GetChromeEventHandler();
     nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(chromeHandler));
     if ( rec )
       rec->AddEventListenerByIID(clickListener, NS_GET_IID(nsIDOMMouseListener));

@@ -55,7 +55,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
-#include "nsIChromeEventHandler.h"
+#include "nsPIDOMEventTarget.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIWidget.h"
 #include "nsIPrefBranch.h"
@@ -239,7 +239,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
     
     nsCOMPtr<nsIDOMWindow> contentWindow = [self getContentWindow];
     nsCOMPtr<nsPIDOMWindow> piWindow(do_QueryInterface(contentWindow));
-    nsIChromeEventHandler *chromeHandler = piWindow->GetChromeEventHandler();
+    nsPIDOMEventTarget *chromeHandler = piWindow->GetChromeEventHandler();
     nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(chromeHandler));
     if ( rec )
       rec->AddEventListenerByIID(clickListener, NS_GET_IID(nsIDOMMouseListener));
