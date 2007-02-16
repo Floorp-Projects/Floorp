@@ -37,6 +37,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+ 
+/* Replaces mozilla/themes/classic/global/config.css to add Camino-like styles 
+   for the about:config warning screen (see bug 355080) */
 
 /* ===== config.css ==============================================
    == Styles for about:config
@@ -49,12 +52,13 @@
 
 #warningScreen
 {
-  background: -moz-Dialog;
+  background-color: -moz-Dialog;
 }
 
 #warningBox
 {
-  background: white;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
   border: 1px solid ThreeDShadow;
   -moz-border-radius: 10px;
   padding: 3em;
