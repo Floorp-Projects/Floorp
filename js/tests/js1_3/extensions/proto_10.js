@@ -61,7 +61,13 @@ startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 function InstanceOf( object, constructor ) {
-  return object instanceof constructor;
+  while ( object != null ) {
+    if ( object == constructor.prototype ) {
+      return true;
+    }
+    object = object.__proto__;
+  }
+  return false;
 }
 function Employee ( name, dept ) {
   this.name = name || "";
@@ -94,6 +100,32 @@ function Engineer ( name, projs, machine ) {
 Engineer.prototype = new WorkerBee();
 
 var pat = new Engineer();
+
+new TestCase( SECTION,
+              "pat.__proto__ == Engineer.prototype",
+              true,
+              pat.__proto__ == Engineer.prototype );
+
+new TestCase( SECTION,
+              "pat.__proto__.__proto__ == WorkerBee.prototype",
+              true,
+              pat.__proto__.__proto__ == WorkerBee.prototype );
+
+new TestCase( SECTION,
+              "pat.__proto__.__proto__.__proto__ == Employee.prototype",
+              true,
+              pat.__proto__.__proto__.__proto__ == Employee.prototype );
+
+new TestCase( SECTION,
+              "pat.__proto__.__proto__.__proto__.__proto__ == Object.prototype",
+              true,
+              pat.__proto__.__proto__.__proto__.__proto__ == Object.prototype );
+
+new TestCase( SECTION,
+              "pat.__proto__.__proto__.__proto__.__proto__.__proto__ == null",
+              true,
+              pat.__proto__.__proto__.__proto__.__proto__.__proto__ == null );
+
 
 new TestCase( SECTION,
               "InstanceOf( pat, Engineer )",
