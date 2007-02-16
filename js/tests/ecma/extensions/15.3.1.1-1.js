@@ -69,66 +69,12 @@ myfunc.toString = Object.prototype.toString;
 //    new TestCase( SECTION,  "myfunc.toString()",     "function anonymous() { }",    myfunc.toString() );
 
 myfunc.toString = Object.prototype.toString;
-new TestCase(   SECTION,
-		"myfunc = Function(); myfunc.toString = Object.prototype.toString; myfunc.toString()",
-		"[object Function]",
-		myfunc.toString() );
 
 new TestCase( SECTION,  
-	      "myfunc.length",                            
-	      0,                      
-	      myfunc.length );
+	      "MyObject.__proto__ == Function.prototype",     
+	      true,   
+	      MyObject.__proto__ == Function.prototype );
 
-new TestCase( SECTION,  
-	      "myfunc.prototype.toString()",              
-	      "[object Object]",      
-	      myfunc.prototype.toString() );
-
-new TestCase( SECTION,  
-	      "myfunc.prototype.constructor",             
-	      myfunc,                 
-	      myfunc.prototype.constructor );
-
-new TestCase( SECTION,  
-	      "myfunc.arguments",                         
-	      null,                   
-	      myfunc.arguments );
-
-new TestCase( SECTION,  
-	      "var OBJ = new MyObject(true); OBJ.valueOf()",    
-	      true,             
-	      eval("var OBJ = new MyObject(true); OBJ.valueOf()") );
-
-new TestCase( SECTION,  
-	      "OBJ.toString()",                           
-	      "true",                 
-	      OBJ.toString() );
-
-new TestCase( SECTION,  
-	      "OBJ.toString = Object.prototype.toString; OBJ.toString()", 
-	      "[object Object]",  
-	      eval("OBJ.toString = Object.prototype.toString; OBJ.toString()") );
-
-new TestCase( SECTION,  
-	      "MyObject.toString = Object.prototype.toString; MyObject.toString()",    
-	      "[object Function]",   
-	      eval("MyObject.toString = Object.prototype.toString; MyObject.toString()") );
-
-new TestCase( SECTION,  
-	      "MyObject.length",                              
-	      1,      
-	      MyObject.length );
-
-new TestCase( SECTION,  
-	      "MyObject.prototype.constructor",               
-	      MyObject,   
-	      MyObject.prototype.constructor );
-
-new TestCase( SECTION,  
-	      "MyObject.arguments",                           
-	      null,   
-	      MyObject.arguments );
-    
 test();
 
 
