@@ -154,4 +154,51 @@ sub milestones {
     return $self->{'milestones'};
 }
 
+sub tags {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+    my $ref = $dbh->selectcol_arrayref(
+    "(SELECT test_tags.tag_id, test_tags.tag_name AS name 
+         FROM test_tags
+        INNER JOIN test_case_tags ON test_tags.tag_id = test_case_tags.tag_id
+        INNER JOIN test_cases on test_cases.case_id = test_case_tags.case_id
+        INNER JOIN test_case_plans on test_case_plans.case_id = test_cases.case_id
+        INNER JOIN test_plans ON test_plans.plan_id = test_case_plans.plan_id
+        WHERE test_plans.product_id = ?)  
+     UNION 
+      (SELECT test_tags.tag_id, test_tags.tag_name AS name
+         FROM test_tags
+        INNER JOIN test_plan_tags ON test_plan_tags.tag_id = test_tags.tag_id
+        INNER JOIN test_plans ON test_plan_tags.plan_id = test_plans.plan_id
+        WHERE test_plans.product_id = ?)
+     UNION 
+      (SELECT test_tags.tag_id, test_tags.tag_name AS name
+         FROM test_tags
+        INNER JOIN test_run_tags ON test_run_tags.tag_id = test_tags.tag_id
+        INNER JOIN test_runs ON test_runs.run_id = test_run_tags.run_id
+        INNER JOIN test_plans ON test_plans.plan_id = test_runs.plan_id
+        WHERE test_plans.product_id = ?)
+     ORDER BY name", undef, ($self->id,$self->id,$self->id));
+    
+    my @product_tags;
+    foreach my $id (@$ref){
+        push @product_tags, Bugzilla::Testopia::TestTag->new($id);
+    }
+
+    $self->{'tags'} = \@product_tags;
+    return $self->{'tags'};
+}
+
+=head2 type
+
+Returns 'product'
+
+=cut
+
+sub type {
+    my $self = shift;
+    $self->{'type'} = 'product';
+    return $self->{'type'};
+}
+
 1;

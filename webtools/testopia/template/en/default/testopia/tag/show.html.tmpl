@@ -1,0 +1,115 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Testopia System.
+  #
+  # The Initial Developer of the Original Code is Greg Hendricks.
+  # Portions created by Greg Hendricks are Copyright (C) 2007
+  # Novell. All Rights Reserved.
+  #
+  # Contributor(s): Greg Hendricks <ghendricks@novell.com>
+  #%]
+  
+
+[% PROCESS global/header.html.tmpl 
+   title = "Tags" %]
+[% PROCESS testopia/messages.html.tmpl %]
+[% PROCESS testopia/blocks.html.tmpl %]
+
+[% IF viewall %]
+  [% PROCESS testopia/tag/list.html.tmpl %]
+[% ELSE %]
+
+[% IF UserInGroup('admin') %]
+<a href="tr_tags.cgi?action=show_all">Show All Tags</a>
+[% END %]
+
+[% IF case %]
+    <h3>Tags for Case [% case.id FILTER none %] - [% case.summary FILTER html %]</h3>
+    [% PROCESS testopia/tag/list.html.tmpl
+      item = case
+    %]
+[% END %]
+
+[% IF plan %]
+    <h3>Tags for Plan [% plan.id FILTER none %] - [% plan.name FILTER html %]</h3>
+    [% PROCESS testopia/tag/list.html.tmpl
+      item = plan
+    %]
+[% END %]
+
+[% IF run %]
+    <h3>Tags for Run [% run.id FILTER none %] - [% run.summary FILTER html %]</h3>
+    [% PROCESS testopia/tag/list.html.tmpl
+      item = run
+    %]
+[% END %]
+
+[% item = undef %]
+
+<table>
+  <tr>
+    <td valign="top">
+      [% IF user_name == user.login %]
+      <h3>My Tags</h3>
+      [% ELSE %]
+      <h3>[% user_name %]'s Tags</h3>
+      [% END %]
+      
+      <form method="GET" action="tr_tags.cgi">
+        <table>
+          <tr>
+            <th align="right">
+              Lookup Tags by User:
+            </th>
+            <td>
+              <input name="user">
+              <input type="submit">
+            </td>
+          </tr>
+        </table>
+      </form>
+      
+      [% PROCESS testopia/tag/list.html.tmpl
+        tags = user_tags
+      %]
+    </td>
+    <td valign="top" style="padding-left:20px;">
+      <h3>Tags by Product</h3>
+      <form method="GET" action="tr_tags.cgi">
+      <table>
+        <tr>
+          <th align="right">
+            Lookup Tags by Product:
+          </th>
+          <td>
+            [% PROCESS select sel = { name      => 'product',
+                                      list      => user.get_selectable_products,
+                                      default   => products.0.id,
+                                      accesskey => 'p' } %]
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" align="right"><input type="submit"></td>
+  </tr>
+</table>
+</form>
+  [% FOREACH p = products %]
+  <b>[% p.name FILTER html %]</b><br>
+    [% PROCESS testopia/tag/list.html.tmpl
+      item = p
+    %]
+  [% END %]
+
+</td></tr></table>
+
+[% END %]
+[% PROCESS global/footer.html.tmpl %]

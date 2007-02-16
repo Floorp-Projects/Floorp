@@ -18,28 +18,16 @@
   # Contributor(s): Greg Hendricks <ghendricks@novell.com>
   #%]
 
-[%# INTERFACE:
-  # ...
-  #%]
-  
-[%############################################################################%]
-[%# Template Initialization                                                  #%]
-[%############################################################################%]
+[% IF item %]
+  [% SET tags = item.tags %]
+[% END %]
 
-[%# PROCESS global/variables.none.tmpl %]
-
-[%############################################################################%]
-[%# Page Header                                                              #%]
-[%############################################################################%]
-
-[% PROCESS global/header.html.tmpl %]
-[% PROCESS testopia/messages.html.tmpl %]
 <table>
   <tr class="bz_row_header">
-    <th><a href="tr_tags.cgi?field=t[% IF desc %]&desc=[% desc FILTER none %][% END %][% IF id %]&id=[% id FILTER none %]&type=[% type FILTER none %][% END %]">Tag</a></th>
-    <th><a href="tr_tags.cgi?field=c[% IF desc %]&desc=[% desc FILTER none %][% END %][% IF id %]&id=[% id FILTER none %]&type=[% type FILTER none %][% END %]">Cases</a></th>
-    <th><a href="tr_tags.cgi?field=p[% IF desc %]&desc=[% desc FILTER none %][% END %][% IF id %]&id=[% id FILTER none %]&type=[% type FILTER none %][% END %]">Plans</a></th>
-    <th><a href="tr_tags.cgi?field=r[% IF desc %]&desc=[% desc FILTER none %][% END %][% IF id %]&id=[% id FILTER none %]&type=[% type FILTER none %][% END %]">Runs</a></th>
+    <th>Tag</a></th>
+    <th>Cases</a></th>
+    <th>Plans</a></th>
+    <th>Runs</a></th>
   [% IF UserInGroup("admin") %]
     <th>Actions</th>
   [% END %]
@@ -51,8 +39,8 @@
     <td align="center"><a href="tr_list_plans.cgi?tags_type=anyexact&tags=[% tag.name FILTER url_quote %]">[% tag.plan_count FILTER html %]</a></td>
     <td align="center"><a href="tr_list_runs.cgi?tags_type=anyexact&tags=[% tag.name FILTER url_quote %]">[% tag.run_count FILTER html %]</a></td>
     <td>
-  [% IF type %]
-      <a href="tr_tags.cgi?tagid=[% tag.id FILTER none %]&action=removetag&id=[% id FILTER none %]&type=[% type FILTER url_quote %]&method=html">Remove</a>
+  [% IF item AND item.type != 'product' %]
+      <a href="tr_tags.cgi?tagid=[% tag.id FILTER none %]&action=removetag&id=[% id FILTER none %]&type=[% item.type FILTER url_quote %]&method=html">Remove</a>
   [% END %]
   [% IF UserInGroup("admin") %]
       <a href="tr_tags.cgi?tagid=[% tag.id FILTER none %]&action=delete" title="Remove tag from all objects and delete from system">Delete</a>
@@ -61,16 +49,18 @@
   </tr>
 [% END %]
 </table>
-[% IF type %]
+
+[% IF item AND item.type != 'product' %]
 <form action="tr_tags.cgi">
   <input name="tag">
   <input type="submit" value="Add">
-  <input type="hidden" name="id" value="[% id FILTER none %]">
-  <input type="hidden" name="type" value="[% type FILTER url_quote %]">
+  <input type="hidden" name="id" value="[% item.id FILTER none %]">
+  <input type="hidden" name="type" value="[% item.type FILTER url_quote %]">
   <input type="hidden" name="action" value="addtag">
   <input type="hidden" name="method" value="html">
 </form>
-<p><a href="tr_tags.cgi">Show All Tags</a></p>
-[% END %]
+  [% IF UserInGroup('admin') %]
+<p><a href="tr_tags.cgi&action=show_all">Show All Tags</a></p>
+  [% END %]
 
-[% PROCESS global/footer.html.tmpl %]
+[% END %]

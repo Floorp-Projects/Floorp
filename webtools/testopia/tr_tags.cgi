@@ -36,6 +36,7 @@ use Bugzilla::Testopia::TestCase;
 
 Bugzilla->login(LOGIN_REQUIRED);
 
+require "globals.pl";
 my $cgi = Bugzilla->cgi;
 
 use vars qw($vars $template);
@@ -52,10 +53,10 @@ $vars->{'id'} = $id;
 $vars->{'type'} = $type;
 
 if ($action eq 'delete'){
-    ThrowUserError("testopia-no-delete", {'object' => 'Tag'}) unless UserInGroup("admin") && Param("allow-test-deletion");
     my $tag_id   = $cgi->param('tagid');
     validate_test_id($tag_id, 'tag');
     my $tag = Bugzilla::Testopia::TestTag->new($tag_id);
+    ThrowUserError("testopia-no-delete", {'object' => 'Tag'}) unless $tag->candelete;
     $tag->obliterate;
     $vars->{'tr_message'} = "Tag " . $tag->name . " deleted";
     display();
@@ -91,7 +92,8 @@ elsif ($action eq 'addtag'){
     }
     else{
         if ($cgi->param('method')){
-            $vars->{'tr_message'} = "Added tag " . $tag->name;
+            $vars->{'tr_message'} = "Added tag " . $tag->name . " To $type " . $obj->id;
+            $cgi->param($type.'_id', $obj->id);
             display();
             exit;
         }
@@ -120,7 +122,8 @@ elsif ($action eq 'removetag'){
     ThrowUserError("testopia-read-only", {'object' => $type}) unless $obj->canedit;
     $obj->remove_tag($tag_id);
     if ($cgi->param('method')){
-        $vars->{'tr_message'} = "Removed tag";    
+        $vars->{'tr_message'} = "Removed tag From $type " . $obj->id;
+        $cgi->param($type.'_id', $obj->id);
         display();
         exit;
     }
@@ -139,98 +142,79 @@ else {
 ###################
 ### Subroutines ###
 ###################
-sub case      { $a->{'case_count'} <=> $b->{'case_count'}; }
-sub case_desc { $b->{'case_count'} <=> $a->{'case_count'}; }
-sub plan      { $a->{'plan_count'} <=> $b->{'plan_count'}; }
-sub plan_desc { $b->{'plan_count'} <=> $a->{'plan_count'}; }
-sub run       { $a->{'run_count'}  <=> $b->{'run_count'}; }
-sub run_desc  { $b->{'run_count'}  <=> $a->{'run_count'}; }
-sub name      { $a->{'tag_name'}   cmp $b->{'tag_name'}; }
-sub name_desc { $b->{'tag_name'}   cmp $a->{'tag_name'}; }
 
 sub display {
-    my $tags;
-    my $name = $cgi->param('tag');
-    if (defined $name){
-        my @tags;
-        trick_taint($name);
-        push @tags, Bugzilla::Testopia::TestTag->check_name($name);
-        $tags = \@tags;
-    }
-    elsif ($type eq 'plan'){
-        my $plan = Bugzilla::Testopia::TestPlan->new($id);
-        $tags = $plan->tags;
-        $vars->{'title'} = "Tags for Plan: " . $plan->name;
-    }
-    elsif ($type eq 'case') {
-        my $case = Bugzilla::Testopia::TestCase->new($id);
-        $tags = $case->tags;
-        $vars->{'title'} = "Tags for Case: " . $case->summary;        
-    }
-    elsif ($type eq 'run') {
-        my $run = Bugzilla::Testopia::TestRun->new($id);
-        $tags = $run->tags;
-        $vars->{'title'} = "Tags for Run: " . $run->summary;
+    my $dbh = Bugzilla->dbh;
+    my @tags;
+    if ($cgi->param('action') eq 'show_all' && Bugzilla->user->in_group('admin')){
+        my $tags = $dbh->selectcol_arrayref(
+                "SELECT tag_id FROM test_tags 
+                 ORDER BY tag_name");
+        foreach my $t (@{$tags}){
+            push @tags, Bugzilla::Testopia::TestTag->new($t);
+        }
+        $vars->{'viewall'} = 1;
     }
     else {
-        my $dbh = Bugzilla->dbh;
-        my $desc;
-        $tags = $dbh->selectcol_arrayref(
-                "SELECT tag_id FROM test_tags 
-                 ORDER BY tag_name $desc");
-        my @tags;
-        foreach my $t (@{$tags}){
-            my $tag = Bugzilla::Testopia::TestTag->new($t);
-            push @tags, $tag;
-
-            #use Data::Dumper; print Dumper($tag); print "\n\n\n";
+        my $userid = $cgi->param('user') ? DBNameToIdAndCheck($cgi->param('user')) : Bugzilla->user->id;
+        
+        my $user_tags = $dbh->selectcol_arrayref(
+                 "(SELECT test_tags.tag_id, test_tags.tag_name AS name FROM test_case_tags
+              INNER JOIN test_tags ON test_case_tags.tag_id = test_tags.tag_id 
+                   WHERE userid = ?)
+            UNION (SELECT test_tags.tag_id, test_tags.tag_name AS name FROM test_plan_tags 
+              INNER JOIN test_tags ON test_plan_tags.tag_id = test_tags.tag_id
+                   WHERE userid = ?)
+            UNION (SELECT test_tags.tag_id, test_tags.tag_name AS name FROM test_run_tags 
+              INNER JOIN test_tags ON test_run_tags.tag_id = test_tags.tag_id
+                   WHERE userid = ?)
+                   ORDER BY name", undef, ($userid, $userid, $userid)); 
+        my @user_tags;
+        foreach my $id (@$user_tags){
+            push @user_tags, Bugzilla::Testopia::TestTag->new($id);
         }
-        $tags = \@tags;
-        $vars->{'title'} = "Tags";
-    }
-    my @sorted;
-    if ($cgi->param('field')){
-        if ($cgi->param('field') eq 'c'){
-            if (!$cgi->param('desc')){
-                @sorted = sort case @{$tags};
-                $vars->{'desc'} = 1;
-            }
-            else {
-                @sorted = sort case_desc @{$tags};
-            }
+        
+        $vars->{'user_tags'} = \@user_tags;
+        $vars->{'user_name'} = $cgi->param('user') ? $cgi->param('user') : Bugzilla->user->login;
+    
+        if ($cgi->param('case_id')){
+            my $case_id = $cgi->param('case_id');
+            detaint_natural($case_id);
+            $vars->{'case'} = Bugzilla::Testopia::TestCase->new($case_id);
         }
-        if ($cgi->param('field') eq 'p'){
-            if (!$cgi->param('desc')){
-                @sorted = sort plan @{$tags};
-                $vars->{'desc'} = 1;
-            }
-            else {
-                @sorted = sort plan_desc @{$tags};
-            }
+        if ($cgi->param('plan_id')){
+            my $plan_id = $cgi->param('plan_id');
+            detaint_natural($plan_id);
+            $vars->{'plan'} = Bugzilla::Testopia::TestPlan->new($plan_id);
         }
-        if ($cgi->param('field') eq 'r'){
-            if (!$cgi->param('desc')){
-                @sorted = sort run @{$tags};
-                $vars->{'desc'} = 1;
-            }
-            else {
-                @sorted = sort run_desc @{$tags};
-            }
+        if ($cgi->param('run_id')){
+            my $run_id = $cgi->param('run_id');
+            detaint_natural($run_id);
+            $vars->{'run'} = Bugzilla::Testopia::TestRun->new($run_id);
         }
-        if ($cgi->param('field') eq 't'){
-            if (!$cgi->param('desc')){
-                @sorted = sort name @{$tags};
-                $vars->{'desc'} = 1;
-            }
-            else {
-                @sorted = sort name_desc @{$tags};
-            }
+        
+        my @products;
+        foreach my $id (split(",", $cgi->param('product'))){
+            push @products, Bugzilla::Testopia::Product->new($id) if detaint_natural($id);;
         }
-    $tags = \@sorted;
+        $vars->{'products'} = \@products;
+        
+        my @tagids = split(/[\s,]/, $cgi->param('tag_id'));
+        
+        foreach my $id (@tagids){
+            detaint_natural($id);
+            push @tags, Bugzilla::Testopia::TestTag->new($id);
+        }
+        my @tagnames = split(/[\s,]/, $cgi->param('tag'));
+        foreach my $name (@tagnames){
+            $name = trim($name);
+            trick_taint($name);
+            push @tags, Bugzilla::Testopia::TestTag->new($name);
+        }
     }
     
-    $vars->{'tags'} = $tags;
-    $template->process("testopia/tag/list.html.tmpl", $vars)
+    $vars->{'tags'} = \@tags;
+    $template->process("testopia/tag/show.html.tmpl", $vars)
         || print $template->error();
 
 }

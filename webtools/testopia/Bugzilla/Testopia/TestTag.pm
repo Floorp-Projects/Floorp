@@ -104,6 +104,10 @@ sub _init {
         $obj = $dbh->selectrow_hashref(qq{
             SELECT $columns FROM test_tags
             WHERE tag_id = ?}, undef, $id);
+    } elsif ($name){
+        $obj = $dbh->selectrow_hashref(qq{
+            SELECT $columns FROM test_tags
+            WHERE tag_name = ?}, undef, $name);
     } elsif (ref $param eq 'HASH'){
          $obj = $param;   
     } else {
@@ -241,6 +245,11 @@ sub run_list {
             "SELECT run_id FROM test_run_tags
              WHERE tag_id = ?", undef, $self->{'tag_id'});
     return join(",", @{$list});
+}
+
+sub candelete {
+    my $self = shift;
+    return 0 unless Bugzilla->user->in_group("admin");
 }
 
 ###############################
