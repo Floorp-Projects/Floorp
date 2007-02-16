@@ -47,7 +47,10 @@
   <!--
     Interface binding that is base for bindings of xul:listbox and
     xul:richlistbox elements. This binding assumes that successors bindings
-    will implement the following methods:
+    will implement the following properties and methods:
+
+    /** Return the number of items */
+    readonly itemCount
 
     /** Return index of given item
     * @param aItem - given item element */
@@ -632,6 +635,9 @@
         </body>
       </method>
 
+      <property name="itemCount" readonly="true"
+                onget="return this.listBoxObject.getRowCount()"/>
+
       <!-- ///////////////// nsIListBoxObject ///////////////// -->
       <method name="getIndexOfItem">
         <parameter name="item"/>
@@ -639,7 +645,6 @@
           return this.listBoxObject.getIndexOfItem(item);
         </body>
       </method>
-
       <method name="getItemAtIndex">
         <parameter name="index"/>
         <body>
