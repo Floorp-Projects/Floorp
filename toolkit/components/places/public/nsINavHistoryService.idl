@@ -807,7 +807,7 @@ interface nsINavHistoryObserver : nsISupports
  * can be non-negligible.
  */
 
-[scriptable, uuid(884819a6-1860-4a71-8fd7-89d962c1d984)]
+[scriptable, uuid(53B51AFE-9DE8-40AD-9C81-F2CC1701F1FF)]
 interface nsINavHistoryQuery : nsISupports
 {
   /**
@@ -853,6 +853,14 @@ interface nsINavHistoryQuery : nsISupports
    */
   attribute AString searchTerms;
   readonly attribute boolean hasSearchTerms;
+
+  /**
+   * Set lower or upper limits for how many times an item has been
+   * visited.  The default is -1, and in that case all items are
+   * matched regardless of their visit count.
+   */
+  attribute PRInt32 minVisits;
+  attribute PRInt32 maxVisits;
 
   /**
    * When set, returns only bookmarked items, when unset, returns anything. Setting this

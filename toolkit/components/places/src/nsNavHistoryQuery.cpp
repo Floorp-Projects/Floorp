@@ -138,6 +138,8 @@ static void SetOptionsKeyUint32(const nsCString& aValue,
 #define QUERYKEY_END_TIME "endTime"
 #define QUERYKEY_END_TIME_REFERENCE "endTimeRef"
 #define QUERYKEY_SEARCH_TERMS "terms"
+#define QUERYKEY_MIN_VISITS "minVisits"
+#define QUERYKEY_MAX_VISITS "maxVisits"
 #define QUERYKEY_ONLY_BOOKMARKED "onlyBookmarked"
 #define QUERYKEY_DOMAIN_IS_HOST "domainIsHost"
 #define QUERYKEY_DOMAIN "domain"
@@ -306,6 +308,21 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
       AppendAmpersandIfNonempty(aQueryString);
       aQueryString += NS_LITERAL_CSTRING(QUERYKEY_SEARCH_TERMS "=");
       aQueryString += escapedTerms;
+    }
+
+    // min and max visits
+    PRInt32 minVisits;
+    if (NS_SUCCEEDED(query->GetMinVisits(&minVisits)) && minVisits >= 0) {
+      AppendAmpersandIfNonempty(aQueryString);
+      aQueryString.Append(NS_LITERAL_CSTRING(QUERYKEY_MIN_VISITS "="));
+      AppendInt32(aQueryString, minVisits);
+    }
+
+    PRInt32 maxVisits;
+    if (NS_SUCCEEDED(query->GetMaxVisits(&maxVisits)) && maxVisits >= 0) {
+      AppendAmpersandIfNonempty(aQueryString);
+      aQueryString.Append(NS_LITERAL_CSTRING(QUERYKEY_MAX_VISITS "="));
+      AppendInt32(aQueryString, maxVisits);
     }
 
     // only bookmarked
@@ -544,6 +561,22 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
       rv = query->SetSearchTerms(NS_ConvertUTF8toUTF16(unescapedTerms));
       NS_ENSURE_SUCCESS(rv, rv);
 
+    // min visits
+    } else if (kvp.key.EqualsLiteral(QUERYKEY_MIN_VISITS)) {
+      PRInt32 visits = kvp.value.ToInteger((PRInt32*)&rv);
+      if (NS_SUCCEEDED(rv))
+        query->SetMinVisits(visits);
+      else
+        NS_WARNING("Bad number for minVisits in query");
+
+    // max visits
+    } else if (kvp.key.EqualsLiteral(QUERYKEY_MAX_VISITS)) {
+      PRInt32 visits = kvp.value.ToInteger((PRInt32*)&rv);
+      if (NS_SUCCEEDED(rv))
+        query->SetMaxVisits(visits);
+      else
+        NS_WARNING("Bad number for maxVisits in query");
+
     // onlyBookmarked flag
     } else if (kvp.key.EqualsLiteral(QUERYKEY_ONLY_BOOKMARKED)) {
       SetQueryKeyBool(kvp.value, query, &nsINavHistoryQuery::SetOnlyBookmarked);
@@ -715,10 +748,12 @@ NS_IMPL_ISUPPORTS2(nsNavHistoryQuery, nsNavHistoryQuery, nsINavHistoryQuery)
 //    just set the things it's interested in.
 
 nsNavHistoryQuery::nsNavHistoryQuery()
-  : mBeginTime(0), mBeginTimeReference(TIME_RELATIVE_EPOCH),
+  : mMinVisits(-1), mMaxVisits(-1), mBeginTime(0),
+    mBeginTimeReference(TIME_RELATIVE_EPOCH),
     mEndTime(0), mEndTimeReference(TIME_RELATIVE_EPOCH),
-    mOnlyBookmarked(PR_FALSE), mDomainIsHost(PR_FALSE),
-    mUriIsPrefix(PR_FALSE), mAnnotationIsNot(PR_FALSE)
+    mOnlyBookmarked(PR_FALSE),
+    mDomainIsHost(PR_FALSE), mUriIsPrefix(PR_FALSE),
+    mAnnotationIsNot(PR_FALSE)
 {
   // differentiate not set (IsVoid) from empty string (local files)
   mDomain.SetIsVoid(PR_TRUE);
@@ -818,6 +853,32 @@ NS_IMETHODIMP nsNavHistoryQuery::SetSearchTerms(const nsAString& aSearchTerms)
 NS_IMETHODIMP nsNavHistoryQuery::GetHasSearchTerms(PRBool* _retval)
 {
   *_retval = (! mSearchTerms.IsEmpty());
+  return NS_OK;
+}
+
+/* attribute PRInt32 minVisits; */
+NS_IMETHODIMP nsNavHistoryQuery::GetMinVisits(PRInt32* _retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = mMinVisits;
+  return NS_OK;
+}
+NS_IMETHODIMP nsNavHistoryQuery::SetMinVisits(PRInt32 aVisits)
+{
+  mMinVisits = aVisits;
+  return NS_OK;
+}
+
+/* attribute PRint32 maxVisits; */
+NS_IMETHODIMP nsNavHistoryQuery::GetMaxVisits(PRInt32* _retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = mMaxVisits;
+  return NS_OK;
+}
+NS_IMETHODIMP nsNavHistoryQuery::SetMaxVisits(PRInt32 aVisits)
+{
+  mMaxVisits = aVisits;
   return NS_OK;
 }
 
