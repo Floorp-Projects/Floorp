@@ -899,9 +899,9 @@ function delayedOnLoadMessenger()
   
   // show the default client dialog only if we have at least one account, 
   // if we should check for the default client, 
-  // and we aren't already the default for all of our recognized types (mail, news, rss)
+  // and we aren't already the default for mail)
   if (shellService && defaultAccount && shellService.shouldCheckDefaultClient 
-      && !shellService.isDefaultClient(true, nsIShellService.MAIL | nsIShellService.NEWS | nsIShellService.RSS))
+      && !shellService.isDefaultClient(true, nsIShellService.MAIL))
     window.openDialog("chrome://messenger/content/defaultClientDialog.xul", "DefaultClient", 
                       "modal,centerscreen,chrome,resizable=no");
 #endif
