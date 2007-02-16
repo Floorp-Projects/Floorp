@@ -355,6 +355,8 @@ nsAccessNode::GetInnerHTML(nsAString& aInnerHTML)
 nsresult
 nsAccessNode::MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode)
 {
+  *aAccessNode = nsnull;
+  
   nsIAccessibilityService *accService = GetAccService();
   NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
 
@@ -388,74 +390,81 @@ nsAccessNode::MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode)
 NS_IMETHODIMP
 nsAccessNode::GetFirstChildNode(nsIAccessNode **aAccessNode)
 {
+  NS_ENSURE_ARG_POINTER(aAccessNode);
+  *aAccessNode = nsnull;
   NS_ENSURE_TRUE(mDOMNode, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsIDOMNode> domNode;
   mDOMNode->GetFirstChild(getter_AddRefs(domNode));
-  NS_ENSURE_TRUE(domNode, NS_ERROR_NULL_POINTER);
 
-  return MakeAccessNode(domNode, aAccessNode);
+  return domNode ? MakeAccessNode(domNode, aAccessNode) : NS_OK;
 }
 
 NS_IMETHODIMP
 nsAccessNode::GetLastChildNode(nsIAccessNode **aAccessNode)
 {
+  NS_ENSURE_ARG_POINTER(aAccessNode);
+  *aAccessNode = nsnull;
   NS_ENSURE_TRUE(mDOMNode, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsIDOMNode> domNode;
   mDOMNode->GetLastChild(getter_AddRefs(domNode));
-  NS_ENSURE_TRUE(domNode, NS_ERROR_NULL_POINTER);
 
-  return MakeAccessNode(domNode, aAccessNode);
+  return domNode ? MakeAccessNode(domNode, aAccessNode) : NS_OK;
 }
 
 NS_IMETHODIMP
 nsAccessNode::GetParentNode(nsIAccessNode **aAccessNode)
 {
+  NS_ENSURE_ARG_POINTER(aAccessNode);
+  *aAccessNode = nsnull;
   NS_ENSURE_TRUE(mDOMNode, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsIDOMNode> domNode;
   mDOMNode->GetParentNode(getter_AddRefs(domNode));
-  NS_ENSURE_TRUE(domNode, NS_ERROR_NULL_POINTER);
 
-  return MakeAccessNode(domNode, aAccessNode);
+  return domNode ? MakeAccessNode(domNode, aAccessNode) : NS_OK;
 }
 
 NS_IMETHODIMP
 nsAccessNode::GetPreviousSiblingNode(nsIAccessNode **aAccessNode)
 {
+  NS_ENSURE_ARG_POINTER(aAccessNode);
+  *aAccessNode = nsnull;
   NS_ENSURE_TRUE(mDOMNode, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsIDOMNode> domNode;
   mDOMNode->GetPreviousSibling(getter_AddRefs(domNode));
-  NS_ENSURE_TRUE(domNode, NS_ERROR_NULL_POINTER);
 
-  return MakeAccessNode(domNode, aAccessNode);
+  return domNode ? MakeAccessNode(domNode, aAccessNode) : NS_OK;
 }
 
 NS_IMETHODIMP
 nsAccessNode::GetNextSiblingNode(nsIAccessNode **aAccessNode)
 {
+  NS_ENSURE_ARG_POINTER(aAccessNode);
+  *aAccessNode = nsnull;
   NS_ENSURE_TRUE(mDOMNode, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsIDOMNode> domNode;
   mDOMNode->GetNextSibling(getter_AddRefs(domNode));
-  NS_ENSURE_TRUE(domNode, NS_ERROR_NULL_POINTER);
 
-  return MakeAccessNode(domNode, aAccessNode);
+  return domNode ? MakeAccessNode(domNode, aAccessNode) : NS_OK;
 }
 
 NS_IMETHODIMP
 nsAccessNode::GetChildNodeAt(PRInt32 aChildNum, nsIAccessNode **aAccessNode)
 {
+  NS_ENSURE_ARG_POINTER(aAccessNode);
+  *aAccessNode = nsnull;
+
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   NS_ENSURE_TRUE(content, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsIDOMNode> domNode =
     do_QueryInterface(content->GetChildAt(aChildNum));
-  NS_ENSURE_TRUE(domNode, NS_ERROR_NULL_POINTER);
 
-  return MakeAccessNode(domNode, aAccessNode);
+  return domNode ? MakeAccessNode(domNode, aAccessNode) : NS_OK;
 }
 
 NS_IMETHODIMP
