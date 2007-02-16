@@ -78,7 +78,6 @@ new TestCase( SECTION,  "var MYPROPS = ''; for ( var p in myfunc1.prototype ) { 
 new TestCase( SECTION,  "myfunc2 = new Function('a','b','c'); myfunc.toString = Object.prototype.toString; myfunc.toString()",
 	      "[object Function]",
 	      myfunc2.toString() );
-new TestCase( SECTION,  "myfunc2.__proto__",                         Function.prototype,     myfunc2.__proto__ );
 new TestCase( SECTION,  "myfunc2.length",                            3,                      myfunc2.length );
 new TestCase( SECTION,  "myfunc2.prototype.toString()",              "[object Object]",      myfunc2.prototype.toString() );
 
@@ -92,7 +91,6 @@ new TestCase( SECTION,  "var MYPROPS = ''; for ( var p in myfunc2.prototype ) { 
 new TestCase( SECTION,  "myfunc3 = new Function('a','b','c'); myfunc.toString = Object.prototype.toString; myfunc.toString()",
 	      "[object Function]",
 	      myfunc3.toString() );
-new TestCase( SECTION,  "myfunc3.__proto__",                         Function.prototype,     myfunc3.__proto__ );
 new TestCase( SECTION,  "myfunc3.length",                            3,                      myfunc3.length );
 new TestCase( SECTION,  "myfunc3.prototype.toString()",              "[object Object]",      myfunc3.prototype.toString() );
 new TestCase( SECTION,  "myfunc3.prototype.valueOf() +''",           "[object Object]",      myfunc3.prototype.valueOf() +'' );
