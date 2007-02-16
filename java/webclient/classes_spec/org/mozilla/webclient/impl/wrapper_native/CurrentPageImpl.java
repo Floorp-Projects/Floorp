@@ -47,7 +47,6 @@ import org.mozilla.webclient.UnimplementedException;
 
 import org.mozilla.dom.DOMAccessor;
 import org.mozilla.util.Log;
-import org.mozilla.util.TransferableImpl;
 
 public class CurrentPageImpl extends ImplObjectNative implements CurrentPage2, 
         ClipboardOwner
