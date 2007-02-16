@@ -83,74 +83,59 @@
 
     writeHeaderToLog( SECTION + " The Addition operator ( + )");
 
-    // tests for boolean primitive, boolean object, Object object, a "MyObject" whose value is
-    // a boolean primitive and a boolean object.
+    // tests for "MyValuelessObject", where the value is
+    // set in the object's prototype, not the object itself.
 
 new TestCase(   SECTION,
-                                    "var EXP_1 = true; var EXP_2 = false; EXP_1 + EXP_2",
+                                    "var EXP_1 = new MyValuelessObject(true); var EXP_2 = new MyValuelessObject(false); EXP_1 + EXP_2",
                                     1,
-                                    eval("var EXP_1 = true; var EXP_2 = false; EXP_1 + EXP_2") );
+                                    eval("var EXP_1 = new MyValuelessObject(true); var EXP_2 = new MyValuelessObject(false); EXP_1 + EXP_2") );
 
 new TestCase(   SECTION,
-                                    "var EXP_1 = new Boolean(true); var EXP_2 = new Boolean(false); EXP_1 + EXP_2",
-                                    1,
-                                    eval("var EXP_1 = new Boolean(true); var EXP_2 = new Boolean(false); EXP_1 + EXP_2") );
+                                    "var EXP_1 = new MyValuelessObject(new Boolean(true)); var EXP_2 = new MyValuelessObject(new Boolean(false)); EXP_1 + EXP_2",
+                                    "truefalse",
+                                    eval("var EXP_1 = new MyValuelessObject(new Boolean(true)); var EXP_2 = new MyValuelessObject(new Boolean(false)); EXP_1 + EXP_2") );
+
+    // tests for "MyValuelessObject", where the value is
+    // set in the object's prototype, not the object itself.
+
 
 new TestCase(   SECTION,
-                                    "var EXP_1 = new Object(true); var EXP_2 = new Object(false); EXP_1 + EXP_2",
-                                    1,
-                                    eval("var EXP_1 = new Object(true); var EXP_2 = new Object(false); EXP_1 + EXP_2") );
-
-new TestCase(   SECTION,
-                                    "var EXP_1 = new Object(new Boolean(true)); var EXP_2 = new Object(new Boolean(false)); EXP_1 + EXP_2",
-                                    1,
-                                    eval("var EXP_1 = new Object(new Boolean(true)); var EXP_2 = new Object(new Boolean(false)); EXP_1 + EXP_2") );
-
-new TestCase(   SECTION,
-                                    "var EXP_1 = new MyObject(true); var EXP_2 = new MyObject(false); EXP_1 + EXP_2",
-                                    1,
-                                    eval("var EXP_1 = new MyObject(true); var EXP_2 = new MyObject(false); EXP_1 + EXP_2") );
-
-new TestCase(   SECTION,
-                                    "var EXP_1 = new MyObject(new Boolean(true)); var EXP_2 = new MyObject(new Boolean(false)); EXP_1 + EXP_2",
-                                    "[object Object][object Object]",
-                                    eval("var EXP_1 = new MyObject(new Boolean(true)); var EXP_2 = new MyObject(new Boolean(false)); EXP_1 + EXP_2") );
-
-    // tests for number primitive, number object, Object object, a "MyObject" whose value is
-    // a number primitive and a number object.
-
-new TestCase(   SECTION,
-                                    "var EXP_1 = 100; var EXP_2 = -1; EXP_1 + EXP_2",
+                                    "var EXP_1 = new MyValuelessObject(100); var EXP_2 = new MyValuelessObject(-1); EXP_1 + EXP_2",
                                     99,
-                                    eval("var EXP_1 = 100; var EXP_2 = -1; EXP_1 + EXP_2") );
+                                    eval("var EXP_1 = new MyValuelessObject(100); var EXP_2 = new MyValuelessObject(-1); EXP_1 + EXP_2") );
 
 new TestCase(   SECTION,
-                                    "var EXP_1 = new Number(100); var EXP_2 = new Number(-1); EXP_1 + EXP_2",
-                                    99,
-                                    eval("var EXP_1 = new Number(100); var EXP_2 = new Number(-1); EXP_1 + EXP_2") );
+                                    "var EXP_1 = new MyValuelessObject(new Number(100)); var EXP_2 = new MyValuelessObject(new Number(-1)); EXP_1 + EXP_2",
+                                    "100-1",
+                                    eval("var EXP_1 = new MyValuelessObject(new Number(100)); var EXP_2 = new MyValuelessObject(new Number(-1)); EXP_1 + EXP_2") );
 
 new TestCase(   SECTION,
-                                    "var EXP_1 = new Object(100); var EXP_2 = new Object(-1); EXP_1 + EXP_2",
-                                    99,
-                                    eval("var EXP_1 = new Object(100); var EXP_2 = new Object(-1); EXP_1 + EXP_2") );
-
-new TestCase(   SECTION,
-                                    "var EXP_1 = new Object(new Number(100)); var EXP_2 = new Object(new Number(-1)); EXP_1 + EXP_2",
-                                    99,
-                                    eval("var EXP_1 = new Object(new Number(100)); var EXP_2 = new Object(new Number(-1)); EXP_1 + EXP_2") );
-
-new TestCase(   SECTION,
-                                    "var EXP_1 = new MyObject(100); var EXP_2 = new MyObject(-1); EXP_1 + EXP_2",
-                                    99,
-                                    eval("var EXP_1 = new MyObject(100); var EXP_2 = new MyObject(-1); EXP_1 + EXP_2") );
-
-new TestCase(   SECTION,
-                                    "var EXP_1 = new MyObject(new Number(100)); var EXP_2 = new MyObject(new Number(-1)); EXP_1 + EXP_2",
-                                    "[object Object][object Object]",
-                                    eval("var EXP_1 = new MyObject(new Number(100)); var EXP_2 = new MyObject(new Number(-1)); EXP_1 + EXP_2") );
-
+                                    "var EXP_1 = new MyValuelessObject( new MyValuelessObject( new Boolean(true) ) ); EXP_1 + EXP_1",
+                                    "truetrue",
+                                    eval("var EXP_1 = new MyValuelessObject( new MyValuelessObject( new Boolean(true) ) ); EXP_1 + EXP_1") );
 
 test();
+
+function MyProtoValuelessObject() {
+    this.valueOf = new Function ( "" );
+    this.__proto__ = null;
+}
+
+function MyProtolessObject( value ) {
+    this.valueOf = new Function( "return this.value" );
+    this.__proto__ = null;
+    this.value = value;
+}
+
+function MyValuelessObject(value) {
+    this.__proto__ = new MyPrototypeObject(value);
+}
+function MyPrototypeObject(value) {
+    this.valueOf = new Function( "return this.value;" );
+    this.toString = new Function( "return (this.value + '');" );
+    this.value = value;
+}
 
 function MyObject( value ) {
     this.valueOf = new Function( "return this.value" );
