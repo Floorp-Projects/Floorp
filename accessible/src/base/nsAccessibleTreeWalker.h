@@ -47,7 +47,6 @@
 #include "nsIAccessible.h"
 #include "nsIDOMNodeList.h"
 #include "nsIAccessibilityService.h"
-#include "nsIBindingManager.h"
 #include "nsIWeakReference.h"
 
 enum { eSiblingsUninitialized = -1, eSiblingsWalkFrames = -2 };
@@ -92,7 +91,7 @@ protected:
 
   nsCOMPtr<nsIWeakReference> mWeakShell;
   nsCOMPtr<nsIAccessibilityService> mAccService;
-  nsCOMPtr<nsIBindingManager> mBindingManager;
+  PRBool mWalkAnonContent;
 };
 
 #endif 

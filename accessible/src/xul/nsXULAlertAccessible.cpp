@@ -73,13 +73,10 @@ NS_IMETHODIMP nsXULAlertAccessible::GetName(nsAString &aName)
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   NS_ASSERTION(content, "Should not be null if we still have a presShell");
 
-  nsCOMPtr<nsIBindingManager> bindingManager = presShell->GetDocument()->BindingManager();
-  if (!bindingManager) {
-    return NS_OK;
-  }
-
   nsCOMPtr<nsIDOMNodeList> siblingList;
-  bindingManager->GetXBLChildNodesFor(content, getter_AddRefs(siblingList)); // returns null if no anon nodes
+  // returns null if no anon nodes
+  presShell->GetDocument()->GetXBLChildNodesFor(content,
+                                                getter_AddRefs(siblingList));
   if (siblingList) {
     PRUint32 length, count;
     siblingList->GetLength(&length);

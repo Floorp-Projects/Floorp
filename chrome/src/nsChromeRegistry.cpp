@@ -65,7 +65,6 @@
 #include "nsXULAppAPI.h"
 
 #include "nsIAtom.h"
-#include "nsIBindingManager.h"
 #include "nsICommandLine.h"
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
@@ -836,7 +835,7 @@ static void FlushSkinBindingsForWindow(nsIDOMWindowInternal* aWindow)
     return;
 
   // Annihilate all XBL bindings.
-  document->BindingManager()->FlushSkinBindings();
+  document->FlushSkinBindings();
 }
 
 // XXXbsmedberg: move this to nsIWindowMediator

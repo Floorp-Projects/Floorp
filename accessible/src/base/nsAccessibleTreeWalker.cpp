@@ -48,7 +48,8 @@
 
 nsAccessibleTreeWalker::nsAccessibleTreeWalker(nsIWeakReference* aPresShell, nsIDOMNode* aNode, PRBool aWalkAnonContent): 
   mWeakShell(aPresShell), 
-  mAccService(do_GetService("@mozilla.org/accessibilityService;1"))
+  mAccService(do_GetService("@mozilla.org/accessibilityService;1")),
+  mWalkAnonContent(aWalkAnonContent)
 {
   mState.domNode = aNode;
   mState.prevState = nsnull;
@@ -57,11 +58,6 @@ nsAccessibleTreeWalker::nsAccessibleTreeWalker(nsIWeakReference* aPresShell, nsI
   mState.isHidden = false;
   mState.frame = nsnull;
 
-  if (aWalkAnonContent) {
-    nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
-    if (presShell)
-      mBindingManager = presShell->GetDocument()->BindingManager();
-  }
   MOZ_COUNT_CTOR(nsAccessibleTreeWalker);
 }
 
@@ -91,9 +87,14 @@ void nsAccessibleTreeWalker::GetKids(nsIDOMNode *aParentNode)
   // Walk anonymous content? Not currently used for HTML -- anonymous content there uses frame walking
   mState.siblingIndex = 0;   // Indicates our index into the sibling list
   if (parentContent) {
-    if (mBindingManager) {
+    if (mWalkAnonContent) {
       // Walk anonymous content
-      mBindingManager->GetXBLChildNodesFor(parentContent, getter_AddRefs(mState.siblingList)); // returns null if no anon nodes
+      nsIDocument* doc = parentContent->GetOwnerDoc();
+      if (doc) {
+        // returns null if no anon nodes
+        doc->GetXBLChildNodesFor(parentContent,
+                                 getter_AddRefs(mState.siblingList));
+      }
     }
     if (!mState.siblingList) {
       // Walk normal DOM. Just use nsIContent -- it doesn't require 

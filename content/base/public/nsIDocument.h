@@ -42,7 +42,6 @@
 #include "nsIDocumentObserver.h" // for nsUpdateType
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
-#include "nsIBindingManager.h"
 #include "nsWeakPtr.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsILoadGroup.h"
@@ -89,6 +88,8 @@ class nsIVariant;
 class nsIDOMUserDataHandler;
 template<class E> class nsCOMArray;
 class nsIDocumentObserver;
+class nsBindingManager;
+class nsIDOMNodeList;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
@@ -112,6 +113,7 @@ public:
   nsIDocument()
     : nsINode(nsnull),
       mCharacterSet(NS_LITERAL_CSTRING("ISO-8859-1")),
+      mBindingManager(nsnull),
       mNodeInfoManager(nsnull),
       mCompatMode(eCompatibility_FullStandards),
       mIsInitialDocumentInWindow(PR_FALSE),
@@ -580,7 +582,7 @@ public:
    */
   virtual void FlushPendingNotifications(mozFlushType aType) = 0;
 
-  nsIBindingManager* BindingManager() const
+  nsBindingManager* BindingManager() const
   {
     return mBindingManager;
   }
@@ -827,6 +829,23 @@ public:
     return mCompatMode;
   }
 
+  /**
+   * See GetXBLChildNodesFor on nsBindingManager
+   */
+  virtual nsresult GetXBLChildNodesFor(nsIContent* aContent,
+                                       nsIDOMNodeList** aResult) = 0;
+
+  /**
+   * See GetContentListFor on nsBindingManager
+   */
+  virtual nsresult GetContentListFor(nsIContent* aContent,
+                                     nsIDOMNodeList** aResult) = 0;
+
+  /**
+   * See FlushSkinBindings on nsBindingManager
+   */
+  virtual nsresult FlushSkinBindings() = 0;
+
 protected:
   ~nsIDocument()
   {
@@ -834,6 +853,7 @@ protected:
     //     releasing it) happens in the nsDocument destructor. We'd prefer to
     //     do it here but nsNodeInfoManager is a concrete class that we don't
     //     want to expose to users of the nsIDocument API outside of Gecko.
+    // XXX Same thing applies to mBindingManager
   }
 
   nsString mDocumentTitle;
@@ -854,7 +874,9 @@ protected:
   // such element exists.
   nsIContent* mRootContent;
 
-  nsCOMPtr<nsIBindingManager> mBindingManager;
+  // We'd like these to be nsRefPtrs, but that'd require us to include
+  // additional headers that we don't want to expose.
+  nsBindingManager* mBindingManager; // [STRONG]
   nsNodeInfoManager* mNodeInfoManager; // [STRONG]
 
   nsICSSLoader* mCSSLoader; // [STRONG; not a COMPtr to avoid
