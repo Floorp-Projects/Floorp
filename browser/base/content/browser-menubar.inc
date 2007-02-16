@@ -328,7 +328,10 @@
                   onclick="checkForMiddleClick(this, event);"
                   label="&historyMenu.label;"
                   accesskey="&historyMenu.accesskey;">
-              <menupopup id="goPopup" onpopupshowing="HistoryMenu.update(this);">
+              <menupopup id="goPopup"
+                         type="places"
+                         onpopupshowing="HistoryMenu.onPoupShowing(this);"
+                         place="place:&amp;beginTime=-2592000000000&amp;beginTimeRef=1&amp;endTime=7200000000&amp;endTimeRef=2&amp;type=1&amp;sort=4&amp;maxResults=10">
                 <menuitem label="&backCmd.label;"
 #ifdef XP_MACOSX
                           key="goBackKb2"
@@ -353,8 +356,8 @@
                 <menuitem label="&historyHomeCmd.label;"
                           command="Browser:Home"
                           key="historyHome"/>
-                <menuseparator id="startTabHistorySeparator"/>
-                <menuseparator hidden="true" id="endTabHistorySeparator"/>
+                <menuseparator id="startHistorySeparator" builder="start"/>
+                <menuseparator id="endHistorySeparator" builder="end"/>
                 <menu id="historyUndoMenu" label="&historyUndoMenu.label;" disabled="true">
                   <menupopup id="historyUndoPopup" onpopupshowing="HistoryMenu.populateUndoSubmenu();"/>
                 </menu>

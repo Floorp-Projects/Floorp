@@ -201,25 +201,23 @@ var PlacesCommandHook = {
 
 // Functions for the history menu.
 var HistoryMenu = {
-
   /**
-   * Updates the history menu with the session history of the current tab.
-   * This function is called every time the history menu is shown.
-   * @param menu 
-   *        XULNode for the history menu
+   * popupshowing handler for the history menu.
+   * @param aMenuPopup
+   *        XULNode for the history menupopup
    */
-  update: function PHM_update(menu) {
-    FillHistoryMenu(menu, "history", document.getElementById("endTabHistorySeparator"));
-  },
+  onPoupShowing: function PHM_onPopupShowing(aMenuPopup) {
+    var resultNode = aMenuPopup.getResultNode();
+    var wasOpen = resultNode.containerOpen;
+    resultNode.containerOpen = true;
+    document.getElementById("endHistorySeparator").hidden =
+      resultNode.childCount == 0;
 
-  /**
-   * Shows the places search page.
-   * (Will be fully implemented when there is a places search page.)
-   */
-  showPlacesSearch: function PHM_showPlacesSearch() {
-    // XXX The places view needs to be updated before this
-    // does something different than show history.
-    PlacesCommandHook.showPlacesOrganizer(ORGANIZER_ROOT_HISTORY);
+    if (!wasOpen)
+      resultNode.containerOpen = false;
+
+    // HistoryMenu.toggleRecentlyClosedTabs is defined in browser.js
+    this.toggleRecentlyClosedTabs();
   }
 };
 

@@ -3116,17 +3116,12 @@ const BrowserSearch = {
   }
 }
 
-function FillHistoryMenu(aParent, aMenu, aInsertBefore)
+function FillHistoryMenu(aParent, aMenu)
   {
     // Remove old entries if any
     deleteHistoryItems(aParent);
 
     var webNav = getWebNavigation();
-    if (!webNav) {
-      // This is always the case for non-browser windows (and the hidden window)
-      // on OS X
-      return true;
-    }
     var sessionHistory = webNav.sessionHistory;
 
     var count = sessionHistory.count;
@@ -3157,25 +3152,7 @@ function FillHistoryMenu(aParent, aMenu, aInsertBefore)
                 createMenuItem(aParent, j, entry.title);
             }
           break;
-        case "history":
-          aInsertBefore.hidden = (count == 0);
-          end = count > MAX_HISTORY_MENU_ITEMS ? count - MAX_HISTORY_MENU_ITEMS : 0;
-          for (j = count - 1; j >= end; j--)
-            {
-              entry = sessionHistory.getEntryAtIndex(j, false);
-              if (entry)
-                createRadioMenuItem(aParent,
-                                    j,
-                                    entry.title,
-                                    entry.URI ? entry.URI.spec : null,
-                                    j==index,
-                                    aInsertBefore);
-            }
-          break;
       }
-
-    // enable/disable RCT sub menu
-    HistoryMenu.toggleRecentlyClosedTabs();
 
     return true;
   }
@@ -3210,21 +3187,6 @@ function createMenuItem( aParent, aIndex, aLabel)
     menuitem.setAttribute( "label", aLabel );
     menuitem.setAttribute( "index", aIndex );
     aParent.appendChild( menuitem );
-  }
-
-function createRadioMenuItem( aParent, aIndex, aLabel, aStatusText, aChecked, aInsertBefore)
-  {
-    var menuitem = document.createElement( "menuitem" );
-    menuitem.setAttribute( "type", "radio" );
-    menuitem.setAttribute( "label", aLabel );
-    menuitem.setAttribute( "index", aIndex );
-    menuitem.setAttribute( "statustext", aStatusText );
-    if (aChecked==true)
-      menuitem.setAttribute( "checked", "true" );
-    if (aInsertBefore)
-      aParent.insertBefore( menuitem, aInsertBefore );
-    else
-      aParent.appendChild( menuitem );
   }
 
 function deleteHistoryItems(aParent)
