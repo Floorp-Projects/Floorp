@@ -43,7 +43,7 @@
 //-- nsPrintObject Class Impl
 //---------------------------------------------------
 nsPrintObject::nsPrintObject() :
-  mFrameType(eFrame), mContent(nsnull), mParent(nsnull),
+  mContent(nsnull), mFrameType(eFrame), mParent(nsnull),
   mHasBeenPrinted(PR_FALSE), mDontPrint(PR_TRUE), mPrintAsIs(PR_FALSE),
   mSharedPresShell(PR_FALSE), mInvisible(PR_FALSE),
   mShrinkRatio(1.0), mZoomRatio(1.0)

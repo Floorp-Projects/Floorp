@@ -146,12 +146,12 @@ NS_INTERFACE_MAP_END_INHERITING(nsLeafBoxFrame)
 // Constructor
 nsTreeBodyFrame::nsTreeBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 :nsLeafBoxFrame(aPresShell, aContext),
+ mTopRowIndex(0), 
  mHorzPosition(0),
  mHorzWidth(0),
  mRowHeight(0),
  mIndentation(0),
  mStringWidth(-1),
- mTopRowIndex(0),
  mFocused(PR_FALSE),
  mHasFixedRowCount(PR_FALSE),
  mVerticalOverflow(PR_FALSE),
@@ -890,7 +890,6 @@ nsTreeBodyFrame::InvalidateScrollbars(const ScrollParts& aParts)
   if (mUpdateBatchNest || !mView)
     return;
   nsWeakFrame weakFrame(this);
-  nsPresContext* presContext = GetPresContext();
 
   nsCOMPtr<nsIContent> vScrollbar = aParts.mVScrollbarContent;
   nsCOMPtr<nsIContent> hScrollbar = aParts.mHScrollbarContent;
@@ -2484,9 +2483,9 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
         mSlots->mDropAllowed = PR_FALSE;
         InvalidateDropFeedback(lastDropRow, lastDropOrient);
       }
-#if !defined(XP_MAC) && !defined(XP_MACOSX)
+#if !defined(XP_MACOSX)
       if (!lastScrollLines) {
-        // Cancel any previosly initialized timer.
+        // Cancel any previously initialized timer.
         if (mSlots->mTimer) {
           mSlots->mTimer->Cancel();
           mSlots->mTimer = nsnull;
@@ -3609,7 +3608,6 @@ nsTreeBodyFrame::PaintDropFeedback(const nsRect&        aDropFeedbackRect,
     }
 
     const nsStylePosition* stylePosition = feedbackContext->GetStylePosition();
-    nsPresContext* presContext = GetPresContext();
 
     // Obtain the width for the drop feedback or use default value.
     nscoord width;

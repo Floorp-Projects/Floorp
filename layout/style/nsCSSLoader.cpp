@@ -1120,7 +1120,6 @@ CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet,
   NS_PRECONDITION(aDocument, "Must have a document to insert into");
 
   // all nodes that link in sheets should be implementing nsIDOM3Node
-  nsresult rv = NS_OK;
 
   // XXX Need to cancel pending sheet loads for this element, if any
 
