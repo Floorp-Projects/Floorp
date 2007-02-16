@@ -1,5 +1,5 @@
 /*
- * $Id: CurrentPageTest.java,v 1.13 2007/01/30 18:26:37 edburns%acm.org Exp $
+ * $Id: CurrentPageTest.java,v 1.14 2007/02/16 13:29:15 edburns%acm.org Exp $
  */
 
 /* 
@@ -90,7 +90,7 @@ public class CurrentPageTest extends WebclientTestCase implements ClipboardOwner
     // Testcases
     // 
 
-    public void NOT_testCopyCurrentSelectionToSystemClipboard() throws Exception {
+    public void testCopyCurrentSelectionToSystemClipboard() throws Exception {
 	BrowserControl firstBrowserControl = null;
 	DocumentLoadListenerImpl listener = null;
 	Selection selection = null;
@@ -145,15 +145,23 @@ public class CurrentPageTest extends WebclientTestCase implements ClipboardOwner
 	contents = clipboard.getContents(this);
 	assertNotNull(contents);
 
-	DataFlavor bestTextFlavor = DataFlavor.getTextPlainUnicodeFlavor();
-	BufferedReader clipReader = 
-	    new BufferedReader(bestTextFlavor.getReaderForText(contents));
-	String contentLine;
-	StringBuffer buf = new StringBuffer();
-	while (null != (contentLine = clipReader.readLine())) {
-	    buf.append(contentLine);
-	    System.out.println(contentLine);
-	}
+	DataFlavor bestTextFlavor = DataFlavor.selectBestTextFlavor(clipboard.getAvailableDataFlavors());
+
+        BufferedReader clipReader = null;
+        try {
+            clipReader = new BufferedReader(bestTextFlavor.getReaderForText(contents));
+            
+        }
+        catch (Throwable e) {
+            fail("Can't get reader for text: Throwable: " + e.toString() + " " + 
+                    e.getMessage());
+        }
+        String contentLine;
+        StringBuffer buf = new StringBuffer();
+        while (null != (contentLine = clipReader.readLine())) {
+            buf.append(contentLine);
+            System.out.println(contentLine);
+        }
 	assertEquals("HistoryTest0This is page 0 of the history test.next",
 		     buf.toString());
 

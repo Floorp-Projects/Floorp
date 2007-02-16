@@ -21,20 +21,21 @@
 
 package org.mozilla.webclient.impl.wrapper_native;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.ClipboardOwner;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import org.mozilla.util.Assert;
-import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
 
 import org.mozilla.webclient.BrowserControl;
 import org.mozilla.webclient.CurrentPage2;
 import org.mozilla.webclient.Selection;
-import org.mozilla.webclient.WindowControl;
 import org.mozilla.webclient.impl.WrapperFactory;
 import org.mozilla.webclient.impl.DOMTreeDumper;
 
 import java.util.Properties;
-import java.io.*;
-import java.net.*;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -43,7 +44,8 @@ import org.mozilla.webclient.UnimplementedException;
 
 import org.mozilla.dom.DOMAccessor;
 
-public class CurrentPageImpl extends ImplObjectNative implements CurrentPage2
+public class CurrentPageImpl extends ImplObjectNative implements CurrentPage2, 
+        ClipboardOwner
 {
 //
 // Protected Constants
@@ -100,7 +102,12 @@ public void copyCurrentSelectionToSystemClipboard()
 
     NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
 	    public Object run() {
+                transferable = null;
 		nativeCopyCurrentSelectionToSystemClipboard(CurrentPageImpl.this.getNativeBrowserControl());
+                if (null != transferable) {
+                    Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
+                    clip.setContents(transferable, CurrentPageImpl.this);
+                }
 		return null;
 	    }
             public String toString() {
@@ -336,9 +343,20 @@ public void printPreview(boolean pre)
 	});
 }
 
+private Transferable transferable = null;
+
 void addStringToTransferable(String mimeType, String text) {
     System.out.println("mimeType:" + mimeType + " text:" + text);
+    if (null == transferable) {
+        if (mimeType.equals("text/unicode")) {
+            transferable = new StringSelection(text);
+        }
+    }
 }
+
+public void lostOwnership(Clipboard clipboard, Transferable contents) {
+}
+
 
 //
 // Native methods
@@ -371,5 +389,6 @@ native public void nativeSelectAll(int webShellPtr);
 native public void nativePrint(int webShellPtr);
 
 native public void nativePrintPreview(int webShellPtr, boolean preview);
+
 
 } // end of class CurrentPageImpl
