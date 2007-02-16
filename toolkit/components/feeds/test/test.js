@@ -40,6 +40,17 @@ var ran = 0;
 if(tests.length < 1){
   dump("FAILED! tests.length was " + tests.length  + "\n");
 }
+
+function logResult(didPass, testcase, extra) {
+  var start = didPass ? "PASS | " : "FAIL | ";
+  print(start + testcase.path + " | Test was: \"" +
+        testcase.desc + "\" | " + testcase.expect + " |");
+  if (extra) {
+    print(extra);
+  }
+}
+
+
 function isIID(a,iid){
   var rv = false;
   try{
@@ -57,15 +68,15 @@ TestListener.prototype = {
     (isIID(feed, Components.interfaces.nsIFeed));
     try {
       if(!eval(testcase.expect)){
-        print(testcase.path + ": \n");
-        print("FAILED! Test was: \"" + testcase.desc + "\" |\n" + testcase.expect + '|\n');
+        logResult(false, testcase);
+  
       }else{
+        logResult(true, testcase);
         passed += 1;
       }
     }
     catch(e) {
-      print(testcase.path + ": \n");
-      print("FAILED! Test was: " + testcase.expect + "\nex: " + e.message + "\n");
+      logResult(false, testcase, "ex: " + e.message);
     }
 
     ran += 1;
