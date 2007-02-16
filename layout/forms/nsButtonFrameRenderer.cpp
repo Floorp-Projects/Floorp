@@ -43,6 +43,8 @@
 #include "nsINameSpaceManager.h"
 #include "nsStyleSet.h"
 #include "nsDisplayList.h"
+#include "nsITheme.h"
+#include "nsThemeConstants.h"
 
 #define ACTIVE   "active"
 #define HOVER    "hover"
@@ -146,12 +148,14 @@ void nsDisplayButtonForeground::Paint(nsDisplayListBuilder* aBuilder,
                                       nsIRenderingContext* aCtx,
                                       const nsRect& aDirtyRect)
 {
-  NS_ASSERTION(mFrame, "No frame?");
-  nsPresContext* pc = mFrame->GetPresContext();
-  nsRect r = nsRect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
-  
-  // draw the focus and outline borders
-  mBFR->PaintOutlineAndFocusBorders(pc, *aCtx, aDirtyRect, r);
+  nsPresContext *presContext = mFrame->GetPresContext();
+  const nsStyleDisplay *disp = mFrame->GetStyleDisplay();
+  if (!mFrame->IsThemed(disp) ||
+      !presContext->GetTheme()->ThemeDrawsFocusForWidget(presContext, mFrame, disp->mAppearance)) {
+    // draw the focus and outline borders
+    nsRect r = nsRect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
+    mBFR->PaintOutlineAndFocusBorders(presContext, *aCtx, aDirtyRect, r);
+  }
 }
 
 nsresult
@@ -173,7 +177,7 @@ nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsPresContext* aPresContext,
           const nsRect& aDirtyRect,
           const nsRect& aRect)
 {
-  // once we have all that let draw the focus if we have it. We will need to draw 2 focuses.
+  // once we have all that we'll draw the focus if we have it. We will need to draw 2 focuses,
   // the inner and the outer. This is so we can do any kind of look and feel some buttons have
   // focus on the outside like mac and motif. While others like windows have it inside (dotted line).
   // Usually only one will be specifed. But I guess you could have both if you wanted to.

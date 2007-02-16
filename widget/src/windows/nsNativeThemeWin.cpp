@@ -1330,6 +1330,11 @@ nsNativeThemeWin::WidgetIsContainer(PRUint8 aWidgetType)
   return PR_TRUE;
 }
 
+PRBool
+nsNativeThemeWin::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType)
+{
+  return PR_FALSE;
+}
 
 /* Windows 9x/NT/2000/Classic XP Theme Support */
 

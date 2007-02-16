@@ -86,6 +86,9 @@ public:
                                           PRUint8 aWidgetType);
 
   NS_IMETHOD_(PRBool) WidgetIsContainer(PRUint8 aWidgetType);
+  
+  NS_IMETHOD_(PRBool) ThemeDrawsFocusForWidget(nsPresContext* aPresContext,
+                                               nsIFrame* aFrame, PRUint8 aWidgetType);
 
   nsNativeThemeGTK();
   virtual ~nsNativeThemeGTK();

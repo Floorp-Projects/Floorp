@@ -1059,3 +1059,9 @@ nsNativeThemeGTK::WidgetIsContainer(PRUint8 aWidgetType)
     return PR_FALSE;
   return PR_TRUE;
 }
+
+PRBool
+nsNativeThemeGTK::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType)
+{
+  return PR_FALSE;
+}

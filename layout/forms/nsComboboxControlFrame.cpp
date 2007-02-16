@@ -90,6 +90,8 @@
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
 #include "nsBoxLayoutState.h"
+#include "nsITheme.h"
+#include "nsThemeConstants.h"
 
 NS_IMETHODIMP
 nsComboboxControlFrame::RedisplayTextEvent::Run()
@@ -1334,16 +1336,13 @@ nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // nsITheme should take care of drawing the focus border, but currently does so only on Mac.
-  // If all of the nsITheme implementations are fixed to draw the focus border correctly,
-  // this #ifdef should be replaced with a -moz-appearance / ThemeSupportsWidget() check.
-
-  if (!ToolkitHasNativePopup() && mDisplayFrame &&
-      IsVisibleForPainting(aBuilder)) {
-    // REVIEW: We used to paint mDisplayFrame *again* here, with clipping,
-    // but that makes no sense.
+  nsPresContext *presContext = GetPresContext();
+  const nsStyleDisplay *disp = GetStyleDisplay();
+  if ((!IsThemed(disp) ||
+       !presContext->GetTheme()->ThemeDrawsFocusForWidget(presContext, this, disp->mAppearance)) &&
+      mDisplayFrame && IsVisibleForPainting(aBuilder)) {
     nsresult rv = aLists.Content()->AppendNewToTop(new (aBuilder)
-        nsDisplayComboboxFocus(this));
+                                                   nsDisplayComboboxFocus(this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
