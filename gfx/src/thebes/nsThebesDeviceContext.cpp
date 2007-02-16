@@ -509,9 +509,10 @@ nsThebesDeviceContext::BeginDocument(PRUnichar*  aTitle,
 NS_IMETHODIMP
 nsThebesDeviceContext::EndDocument(void)
 {
-    mPrintingSurface->EndPrinting();
-    mPrintingSurface->Finish();
-
+    if (mPrintingSurface) {
+        mPrintingSurface->EndPrinting();
+        mPrintingSurface->Finish();
+    }
     if (mDeviceContextSpec)
         mDeviceContextSpec->EndDocument();
     return NS_OK;
