@@ -73,6 +73,7 @@
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"
 #include "nsIJSContextStack.h"
+#include "nsIScriptChannel.h"
 
 class nsJSThunk : public nsIInputStream
 {
@@ -83,7 +84,9 @@ public:
     NS_FORWARD_SAFE_NSIINPUTSTREAM(mInnerStream)
 
     nsresult Init(nsIURI* uri);
-    nsresult EvaluateScript(nsIChannel *aChannel, PopupControlState aPopupState);
+    nsresult EvaluateScript(nsIChannel *aChannel,
+                            PopupControlState aPopupState,
+                            PRUint32 aExecutionPolicy);
 
 protected:
     virtual ~nsJSThunk();
@@ -149,15 +152,30 @@ nsIScriptGlobalObject* GetGlobalObject(nsIChannel* aChannel)
 }
 
 nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
-                                   PopupControlState aPopupState)
+                                   PopupControlState aPopupState,
+                                   PRUint32 aExecutionPolicy)
 {
-    nsresult rv;
-
+    if (aExecutionPolicy == nsIScriptChannel::NO_EXECUTION) {
+        // Nothing to do here.
+        return NS_ERROR_DOM_RETVAL_UNDEFINED;
+    }
+    
     NS_ENSURE_ARG_POINTER(aChannel);
+
+    // Get principal of code for execution
+    nsCOMPtr<nsISupports> owner;
+    aChannel->GetOwner(getter_AddRefs(owner));
+    nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(owner);
+    if (!principal) {
+        // No execution without a principal!
+        NS_ASSERTION(!owner, "Non-principal owner?");
+        NS_WARNING("No principal to execute JS with");
+        return NS_ERROR_DOM_RETVAL_UNDEFINED;
+    }
 
     // Get the script string to evaluate...
     nsCAutoString script;
-    rv = mURI->GetPath(script);
+    nsresult rv = mURI->GetPath(script);
     if (NS_FAILED(rv)) return rv;
 
     // Get the global object we should be running on.
@@ -201,47 +219,31 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
     rv = mURI->GetSpec(url);
     if (NS_FAILED(rv)) return rv;
 
-    // Get principal of code for execution
-    nsCOMPtr<nsISupports> owner;
-    rv = aChannel->GetOwner(getter_AddRefs(owner));
-    nsCOMPtr<nsIPrincipal> principal;
-    if (NS_FAILED(rv))
-        return rv;
-
     nsCOMPtr<nsIScriptSecurityManager> securityManager;
     securityManager = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv))
         return rv;
 
-    PRBool useSandbox = PR_TRUE;
+    PRBool useSandbox =
+        (aExecutionPolicy == nsIScriptChannel::EXECUTE_IN_SANDBOX);
 
-    if (owner) {
-        principal = do_QueryInterface(owner, &rv);
-        NS_ASSERTION(principal, "Channel's owner is not a principal");
-        if (!principal)
-            return NS_ERROR_FAILURE;
-
-        //-- Don't run if the script principal is different from the principal
-        //   of the context, unless the script has the system principal.
+    if (!useSandbox) {
+        //-- Don't outside a sandbox unless the script principal subsumes the
+        //   principal of the context.
         nsCOMPtr<nsIPrincipal> objectPrincipal;
-        rv = securityManager->GetObjectPrincipal(
-                                (JSContext*)scriptContext->GetNativeContext(),
-                                globalJSObject,
-                                getter_AddRefs(objectPrincipal));
+        rv = securityManager->
+            GetObjectPrincipal((JSContext*)scriptContext->GetNativeContext(),
+                               globalJSObject,
+                               getter_AddRefs(objectPrincipal));
         if (NS_FAILED(rv))
             return rv;
 
-        nsCOMPtr<nsIPrincipal> systemPrincipal;
-        securityManager->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
-        if (principal != systemPrincipal) {
-            rv = securityManager->CheckSameOriginPrincipal(principal,
-                                                           objectPrincipal);
-            if (NS_SUCCEEDED(rv)) {
-                useSandbox = PR_FALSE;
-            }
-        } else {
-            useSandbox = PR_FALSE;
-        }
+        PRBool subsumes;
+        rv = principal->Subsumes(objectPrincipal, &subsumes);
+        if (NS_FAILED(rv))
+            return rv;
+
+        useSandbox = !subsumes;
     }
 
     nsString result;
@@ -250,20 +252,13 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
     // Finally, we have everything needed to evaluate the expression.
 
     if (useSandbox) {
-        // No owner from channel, or we have a principal
-        // mismatch. Evaluate the javascript URL in a sandbox to
-        // prevent it from accessing data it doesn't have permissions
-        // to access.
+        // We were asked to use a sandbox, or the channel owner isn't allowed
+        // to execute in this context.  Evaluate the javascript URL in a
+        // sandbox to prevent it from accessing data it doesn't have
+        // permissions to access.
 
         // First check to make sure it's OK to evaluate this script to
         // start with.  For example, script could be disabled.
-        if (!principal) {
-            principal = do_CreateInstance("@mozilla.org/nullprincipal;1");
-            if (!principal) {
-                return NS_ERROR_OUT_OF_MEMORY;
-            }
-        }
-
         JSContext *cx = (JSContext*)scriptContext->GetNativeContext();
 
         PRBool ok;
@@ -394,7 +389,8 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsJSChannel : public nsIChannel,
-                    public nsIStreamListener
+                    public nsIStreamListener,
+                    public nsIScriptChannel
 {
 public:
     nsJSChannel();
@@ -404,6 +400,7 @@ public:
     NS_DECL_NSICHANNEL
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSISCRIPTCHANNEL
 
     nsresult Init(nsIURI *aURI);
 
@@ -428,8 +425,9 @@ protected:
 
     nsRefPtr<nsJSThunk>     mIOThunk;
     PopupControlState       mPopupState;
+    PRUint32                mExecutionPolicy;
     PRPackedBool            mIsActive;
-    PRPackedBool            mOpenedStreamChannel;    
+    PRPackedBool            mOpenedStreamChannel;
 };
 
 nsJSChannel::nsJSChannel() :
@@ -437,6 +435,7 @@ nsJSChannel::nsJSChannel() :
     mLoadFlags(LOAD_NORMAL),
     mActualLoadFlags(LOAD_NORMAL),
     mPopupState(openOverridden),
+    mExecutionPolicy(NO_EXECUTION),
     mIsActive(PR_FALSE),
     mOpenedStreamChannel(PR_FALSE)
 {
@@ -501,6 +500,7 @@ NS_INTERFACE_MAP_BEGIN(nsJSChannel)
     NS_INTERFACE_MAP_ENTRY(nsIChannel)
     NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
     NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+    NS_INTERFACE_MAP_ENTRY(nsIScriptChannel)
 NS_INTERFACE_MAP_END
 
 //
@@ -576,7 +576,8 @@ nsJSChannel::GetURI(nsIURI * *aURI)
 NS_IMETHODIMP
 nsJSChannel::Open(nsIInputStream **aResult)
 {
-    nsresult rv = mIOThunk->EvaluateScript(mStreamChannel, mPopupState);
+    nsresult rv = mIOThunk->EvaluateScript(mStreamChannel, mPopupState,
+                                           mExecutionPolicy);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return mStreamChannel->Open(aResult);
@@ -642,7 +643,8 @@ nsJSChannel::EvaluateScript()
     // script returns it).
     
     if (NS_SUCCEEDED(mStatus)) {
-        nsresult rv = mIOThunk->EvaluateScript(mStreamChannel, mPopupState);
+        nsresult rv = mIOThunk->EvaluateScript(mStreamChannel, mPopupState,
+                                               mExecutionPolicy);
 
         // Note that evaluation may have canceled us, so recheck mStatus again
         if (NS_FAILED(rv) && NS_SUCCEEDED(mStatus)) {
@@ -879,6 +881,20 @@ nsJSChannel::OnStopRequest(nsIRequest* aRequest,
     mContext = nsnull;
     
     return listener->OnStopRequest(this, aContext, aStatus);
+}
+
+NS_IMETHODIMP
+nsJSChannel::SetExecutionPolicy(PRUint32 aPolicy)
+{
+    NS_ENSURE_ARG(aPolicy <= EXECUTE_NORMAL);
+    
+    mExecutionPolicy = aPolicy;
+}
+
+NS_IMETHODIMP
+nsJSChannel::GetExecutionPolicy(PRUint32* aPolicy)
+{
+    *aPolicy = mExecutionPolicy;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
