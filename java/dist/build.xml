@@ -26,7 +26,7 @@
 
 -->
 
-<project name="webclient" default="main" basedir=".">
+<project name="webclient" default="release" basedir=".">
 
   <property name="Name" value="webclient"/>
   <property name="name" value="webclient"/>
@@ -39,19 +39,37 @@
   <property file="../build.properties"/>         <!-- java-supplement local -->
   <property environment="myenv" />
 
-  <property name="dist.home" value="${basedir}/dist" />
+  <property name="dist.home" value="${objdir}/${name}" />
   <property name="dist.javadocs" value="${dist.home}/javadocs" />
   <property name="source.home" value="${basedir}/.." />
-  <property name="moz.dist" value="${myenv.MOZ_SRC}/mozilla/dist" />
+  <property name="moz.dist" value="${objdir}/dist" />
+  <property name="dist.classes" value="${moz.dist}/classes" />
   <property name="javadoc.private"  value="false"/>
   <property name="javadoc.protected"  value="true"/>
+  <property name="dist.jar"  value="${dist.home}/lib/${name}-${version}.jar"/>
 
-  <path id="compile.classpath">
-    <pathelement location="${dist.home}/classes"/>
-  </path>
+  <target name="release">
 
+    <antcall target="prepare" />
+    <antcall target="uptodate.core.java.classes" />
+    <antcall target="compile.all" />
+    <antcall target="build.dist.jar" />
+    <antcall target="copy.binaries" />
+    <antcall target="copy.samples.src" />
 
-  <target name="props">
+  </target>
+
+  <target name="clean">
+    <delete dir="${dist.home}" />
+  </target>
+
+  <target name="prepare">
+    <mkdir dir="${dist.home}" />
+    <mkdir dir="${dist.home}/lib" />
+    <mkdir dir="${dist.home}/bin" />
+    <mkdir dir="${dist.home}/javadocs" />
+    <mkdir dir="${dist.home}/samples" />
+
     <condition property="so.prefix" value="">
       <and>
         <os family="windows" />
@@ -87,55 +105,19 @@
         <os family="unix" />
       </and>
     </condition>
-  </target>
-
-  <target name="prepare" depends="props">
-  
-    <mkdir dir="${dist.home}" />
-    <mkdir dir="${dist.home}/components" />
-    <mkdir dir="${dist.javadocs}" />
 
   </target>
 
-  <target name="javadoc_check">
-    <uptodate property="javadoc.notrequired" targetfile="${dist.javadocs}/packages.html" >
-        <srcfiles dir= "${source.home}" includes="**/*.java"/>
+
+  <target name="uptodate.core.java.classes">
+    <uptodate property="core.java.classes.uptodate" 
+              targetfile="${dist.jar}">
+      <srcfiles dir="${dist.classes}" />
     </uptodate>
   </target>
 
-  <target name="javadocs" depends="prepare, javadoc_check"
-          unless="javadoc.notrequired"
-          description="Create the JavaDoc API documentation">
-    <javadoc packagenames="org.mozilla.*"
-             destdir="${dist.javadocs}"
-             Overview="${source.home}/webclient/classes_spec/org/mozilla/webclient/overview.html"
-             private="${javadoc.private}"
-             protected="${javadoc.protected}"
-             windowtitle="${Name} (${version})"
-             doctitle="${Name} (${version})"
-             bottom="Copyright &#169; 2002-2005 Mozilla.org All Rights Reserved.">
-       <fileset dir="${source.home}">
-         <include name="**/*.java"/>
-         <exclude name="**/impl/**/*.java" />
-         <exclude name="**/wrapper_nonnative/**/*.java" />
-         <exclude name="**/*Impl.java" />
-         <exclude name="**/test*/**/*.java" />
-         <exclude name="plugins/**/*.*" />
-         <exclude name="xpcom/**/*.*" />
-         <exclude name="dom/blackconnect/**/*.*" />
-         <exclude name="pluggable-jvm/**/*.*" />
-       </fileset>
-      <classpath refid="compile.classpath"/>
-    </javadoc>
-  </target>
-
-  <target name="main" depends="dist,src.dist"/>
-
-  <target name="dist" depends="prepare,compile.test,javadocs">
-
-    <echo message="${build.home}" />
-
-    <jar jarfile="${dist.home}/${name}.jar" >
+  <target name="build.dist.jar">
+    <jar jarfile="${dist.jar}" >
        <manifest>
         <attribute name="Specification-Title" value="${Name}"/>
         <attribute name="Specification-Version" value="2.0"/>
@@ -146,84 +128,36 @@
         <attribute name="Extension-Name" value="org.mozilla.webclient"/>
        </manifest>
 
-       <fileset dir="${build.home}" 
+       <fileset dir="${dist.classes}" 
                 excludes="**/test/**" />
-       <fileset dir="${build.home}/test/classes" 
-                includes="org/mozilla/webclient/test/**" /> 
     </jar>
+  </target>
 
-    <copy todir="${dist.home}/components" 
-          file="${basedir}/../dom/src/${so.prefix}javadom.${so.extension}" />
-    <copy todir="${dist.home}" 
-         file="${basedir}/../dom/jni/${so.prefix}javadomjni.${so.extension}" />
-    <copy todir="${dist.home}" 
-          file="${basedir}/../webclient/src_moz/${so.prefix}${name}.${so.extension}" />
+  <target name="compile.all" unless="core.java.classes.uptodate">
+    <ant inheritAll="false" dir="${source.home}" />
+  </target>
 
-    <copy tofile="${dist.home}/build.xml" file="webclient-dist.xml" />
-
-    <zip destfile="${name}_${version}_${platform}.zip" 
-         basedir="${dist.home}" />
-    <copy todir="${dist.home}" file="${name}_${version}_${platform}.zip" />
-    <delete file="${name}_${version}_${platform}.zip" />
+  <target name="copy.binaries" depends="prepare">
+    <copy todir="${dist.home}/bin/components" 
+          file="${objdir}/java/dom/src/${so.prefix}javadom.${so.extension}" />
+    <copy todir="${dist.home}/bin" 
+         file="${objdir}/java/dom/jni/${so.prefix}javadomjni.${so.extension}" />
+    <copy todir="${dist.home}/bin" 
+          file="${objdir}/java/webclient/src_moz/${so.prefix}${name}.${so.extension}" />
 
   </target>
 
-  <target name="src.dist">
-    <ant inheritAll="false" dir="${source.home}" target="clean"/>
-    <antcall target="prepare" />
-
-    <zip     destfile="${dist.home}/${name}-src-${version}.zip">
-      <zipfileset dir="${source.home}"
-             excludes="**/CVS/**,build.properties,**/.deps/**,**/build.test/**,**/dist/dist/**,**/Makefile"
-               prefix="${name}-src-${version}/src"/>
-    </zip>
-  </target>
-
-  <target name="unzip.dist" depends="prepare">
-    <unzip dest="${moz.install.dir}" src="${dist.home}/${name}_${version}_${platform}.zip" />
-  </target>
-
-  <target name="test.dist" depends="prepare">
-
-    <antcall target="unzip.dist" />
-
-    <ant inheritAll="false" dir="${moz.install.dir}"/>
-
-    <antcall target="clean.test.dist" />
+  <target name="copy.samples.src" depends="prepare">
+    <copy todir="${dist.home}/samples/automated/src/main/java">
+      <fileset dir="${source.home}/webclient/test/automated/src/classes" />
+    </copy>
+    <copy todir="${dist.home}/samples/automated/src/main/resources">
+      <fileset dir="${source.home}/webclient/test/automated/src/test">
+         <exclude name="*basic*/" />
+      </fileset>
+    </copy>
 
   </target>
-
-  <target name="clean.test.dist" depends="props">
-
-    <delete file="${moz.install.dir}/build.xml" />
-    <delete dir="${moz.install.dir}/javadocs" />
-    <delete file="${moz.install.dir}/components/${so.prefix}javadom.${so.extension}" />
-    <delete file="${moz.install.dir}/${so.prefix}javadomjni.${so.extension}" />
-    <delete file="${moz.install.dir}/${so.prefix}${name}.${so.extension}" />
-    <delete file="${moz.install.dir}/${name}.jar" />
-
-  </target>
-
-  <target name="clean.dev.build" depends="prepare"
-          description="remove in-place binaries for development work">
-    <delete file="${basedir}/../dom/src/${so.prefix}javadom.${so.extension}" />
-    <delete file="${basedir}/../dom/jni/${so.prefix}javadomjni.${so.extension}" />
-    <delete file="${basedir}/../webclient/src_moz/${so.prefix}webclient.${so.extension}" />
-    <delete dir="${build.home}" />
-
-    <delete file="${moz.dist}/lib/components/${so.prefix}javadom.${so.extension}" />
-    <delete file="${moz.dist}/bin/components/${so.prefix}javadom.${so.extension}" />
-    <delete file="${moz.dist}/bin/${so.prefix}javadomjni.${so.extension}" />
-    <delete file="${moz.dist}/bin/${so.prefix}webclient.${so.extension}" />
-
-  </target>
-
-  <target name="compile.test">
-    <ant dir="${basedir}/../webclient" target="compile.test" />
-  </target>
-
-  <target name="clean">
-    <delete dir="${dist.home}" />
-  </target>
+  
 
 </project>
