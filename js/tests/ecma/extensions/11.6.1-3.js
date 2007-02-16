@@ -83,60 +83,47 @@ startTest();
 
 writeHeaderToLog( SECTION + " The Addition operator ( + )");
 
-// tests for boolean primitive, boolean object, Object object, a "MyObject" whose value is
-// a boolean primitive and a boolean object.
+// tests for a boolean primitive and a boolean object, and
+// "MyValuelessObject", where the value is set in the object's
+// prototype, not the object itself.
 
 var DATE1 = new Date();
 
-new TestCase(   SECTION,
-                "var DATE1 = new Date(); DATE1 + DATE1",
-                DATE1.toString() + DATE1.toString(),
-                DATE1 + DATE1 );
-
-new TestCase(   SECTION,
-                "var DATE1 = new Date(); DATE1 + 0",
-                DATE1.toString() + 0,
-                DATE1 + 0 );
-
-new TestCase(   SECTION,
-                "var DATE1 = new Date(); DATE1 + new Number(0)",
-                DATE1.toString() + 0,
-                DATE1 + new Number(0) );
-
-new TestCase(   SECTION,
-                "var DATE1 = new Date(); DATE1 + true",
-                DATE1.toString() + "true",
-                DATE1 + true );
-
-new TestCase(   SECTION,
-                "var DATE1 = new Date(); DATE1 + new Boolean(true)",
-                DATE1.toString() + "true",
-                DATE1 + new Boolean(true) );
-
-new TestCase(   SECTION,
-                "var DATE1 = new Date(); DATE1 + new Boolean(true)",
-                DATE1.toString() + "true",
-                DATE1 + new Boolean(true) );
-
 var MYOB1 = new MyObject( DATE1 );
+var MYOB2 = new MyValuelessObject( DATE1 );
+var MYOB3 = new MyProtolessObject( DATE1 );
+var MYOB4 = new MyProtoValuelessObject( DATE1 );
 
 new TestCase(   SECTION,
-                "MYOB1 = new MyObject(DATE1); MYOB1 + new Number(1)",
-                "[object Object]1",
-                MYOB1 + new Number(1) );
+                "MYOB2 = new MyValuelessObject(DATE1); MYOB3 + 'string'",
+                DATE1.toString() + "string",
+                MYOB2 + 'string' );
 
 new TestCase(   SECTION,
-                "MYOB1 = new MyObject(DATE1); MYOB1 + 1",
-                "[object Object]1",
-                MYOB1 + 1 );
-
-new TestCase(   SECTION,
-                "MYOB1 = new MyObject(DATE1); MYOB1 + true",
-                "[object Object]true",
-                MYOB1 + true );
+                "MYOB2 = new MyValuelessObject(DATE1); MYOB3 + new String('string')",
+                DATE1.toString() + "string",
+                MYOB2 + new String('string') );
+/*
+  new TestCase(   SECTION,
+  "MYOB3 = new MyProtolessObject(DATE1); MYOB3 + new Boolean(true)",
+  DATE1.toString() + "true",
+  MYOB3 + new Boolean(true) );
+*/
 
 test();
 
+function MyProtoValuelessObject() {
+  this.valueOf = new Function ( "" );
+  this.__proto__ = null;
+}
+function MyProtolessObject( value ) {
+  this.valueOf = new Function( "return this.value" );
+  this.__proto__ = null;
+  this.value = value;
+}
+function MyValuelessObject(value) {
+  this.__proto__ = new MyPrototypeObject(value);
+}
 function MyPrototypeObject(value) {
   this.valueOf = new Function( "return this.value;" );
   this.toString = new Function( "return (this.value + '');" );
