@@ -40,14 +40,14 @@
 #ifndef nsBindingManager_h_
 #define nsBindingManager_h_
 
-#include "nsIBindingManager.h"
-#include "nsIStyleRuleSupplier.h"
 #include "nsIMutationObserver.h"
 #include "pldhash.h"
 #include "nsInterfaceHashtable.h"
 #include "nsRefPtrHashtable.h"
 #include "nsURIHashKey.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsXBLBinding.h"
+#include "nsTArray.h"
 
 class nsIContent;
 class nsIXPConnectWrappedJS;
@@ -58,13 +58,11 @@ class nsIURI;
 class nsIXBLDocumentInfo;
 class nsIStreamListener;
 class nsStyleSet;
-template<class E> class nsTArray;
+class nsXBLBinding;
 template<class E> class nsRefPtr;
 typedef nsTArray<nsRefPtr<nsXBLBinding> > nsBindingList;
 
-class nsBindingManager : public nsIBindingManager,
-                         public nsIStyleRuleSupplier,
-                         public nsIMutationObserver
+class nsBindingManager : public nsIMutationObserver
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -73,71 +71,138 @@ public:
   nsBindingManager();
   ~nsBindingManager();
 
-  virtual nsXBLBinding* GetBinding(nsIContent* aContent);
-  NS_IMETHOD SetBinding(nsIContent* aContent, nsXBLBinding* aBinding);
+  nsXBLBinding* GetBinding(nsIContent* aContent);
+  nsresult SetBinding(nsIContent* aContent, nsXBLBinding* aBinding);
 
-  NS_IMETHOD GetInsertionParent(nsIContent* aContent, nsIContent** aResult);
-  NS_IMETHOD SetInsertionParent(nsIContent* aContent, nsIContent* aResult);
+  nsresult GetInsertionParent(nsIContent* aContent, nsIContent** aResult);
+  nsresult SetInsertionParent(nsIContent* aContent, nsIContent* aResult);
 
-  NS_IMETHOD GetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS** aResult);
-  NS_IMETHOD SetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS* aResult);
+  nsresult GetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS** aResult);
+  nsresult SetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS* aResult);
 
-  NS_IMETHOD ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocument,
-                               nsIDocument* aNewDocument);
+  /**
+   * Notify the binding manager that an element
+   * has been moved from one document to another,
+   * so that it can update any bindings or
+   * nsIAnonymousContentCreator-created anonymous
+   * content that may depend on the document.
+   * @param aContent the element that's being moved
+   * @param aOldDocument the old document in which the
+   *   content resided. May be null if the the content
+   *   was not in any document.
+   * @param aNewDocument the document in which the
+   *   content will reside. May be null if the content
+   *   will not reside in any document, or if the
+   *   content is being destroyed.
+   */
+  nsresult ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocument,
+                             nsIDocument* aNewDocument);
 
-  NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult);
+  nsresult ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult);
 
-  NS_IMETHOD GetContentListFor(nsIContent* aContent, nsIDOMNodeList** aResult);
-  NS_IMETHOD SetContentListFor(nsIContent* aContent,
-                               nsInsertionPointList* aList);
-  NS_IMETHOD HasContentListFor(nsIContent* aContent, PRBool* aResult);
+  /**
+   * Return a list of all explicit children, including any children
+   * that may have been inserted via XBL insertion points.
+   */
+  nsresult GetContentListFor(nsIContent* aContent, nsIDOMNodeList** aResult);
 
-  NS_IMETHOD GetAnonymousNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult);
-  NS_IMETHOD SetAnonymousNodesFor(nsIContent* aContent,
-                                  nsInsertionPointList* aList);
+  /**
+   * Set the insertion point children for the specified element.
+   * The binding manager assumes ownership of aList.
+   */
+  nsresult SetContentListFor(nsIContent* aContent,
+                             nsInsertionPointList* aList);
 
-  NS_IMETHOD GetXBLChildNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult);
+  /**
+   * Determine whether or not the explicit child list has been altered
+   * by XBL insertion points.
+   */
+  nsresult HasContentListFor(nsIContent* aContent, PRBool* aResult);
 
+  /**
+   * For a given element, retrieve the anonymous child content.
+   */
+  nsresult GetAnonymousNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult);
+
+  /**
+   * Set the anonymous child content for the specified element.
+   * The binding manager assumes ownership of aList.
+   */
+  nsresult SetAnonymousNodesFor(nsIContent* aContent,
+                                nsInsertionPointList* aList);
+
+  /**
+   * Retrieves the anonymous list of children if the element has one;
+   * otherwise, retrieves the list of explicit children. N.B. that if
+   * the explicit child list has not been altered by XBL insertion
+   * points, then aResult will be null.
+   */
+  nsresult GetXBLChildNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult);
+
+  /**
+   * Given a parent element and a child content, determine where the
+   * child content should be inserted in the parent element's
+   * anonymous content tree. Specifically, aChild should be inserted
+   * beneath aResult at the index specified by aIndex.
+   */
   virtual nsIContent* GetInsertionPoint(nsIContent* aParent,
                                         nsIContent* aChild, PRUint32* aIndex);
+
+  /**
+   * Return the unfiltered insertion point for the specified parent
+   * element. If other filtered insertion points exist,
+   * aMultipleInsertionPoints will be set to true.
+   */
   virtual nsIContent* GetSingleInsertionPoint(nsIContent* aParent,
                                               PRUint32* aIndex,  
                                               PRBool* aMultipleInsertionPoints);
 
-  NS_IMETHOD AddLayeredBinding(nsIContent* aContent, nsIURI* aURL);
-  NS_IMETHOD RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL);
-  NS_IMETHOD LoadBindingDocument(nsIDocument* aBoundDoc, nsIURI* aURL,
-                                 nsIDocument** aResult);
+  nsresult AddLayeredBinding(nsIContent* aContent, nsIURI* aURL);
+  nsresult RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL);
+  nsresult LoadBindingDocument(nsIDocument* aBoundDoc, nsIURI* aURL,
+                               nsIDocument** aResult);
 
-  NS_IMETHOD AddToAttachedQueue(nsXBLBinding* aBinding);
-  NS_IMETHOD ClearAttachedQueue();
-  NS_IMETHOD ProcessAttachedQueue();
+  nsresult AddToAttachedQueue(nsXBLBinding* aBinding);
+  nsresult ClearAttachedQueue();
+  nsresult ProcessAttachedQueue();
 
-  NS_IMETHOD ExecuteDetachedHandlers();
+  nsresult ExecuteDetachedHandlers();
 
-  NS_IMETHOD PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo);
-  NS_IMETHOD GetXBLDocumentInfo(nsIURI* aURI, nsIXBLDocumentInfo** aResult);
-  NS_IMETHOD RemoveXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo);
+  nsresult PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo);
+  nsresult GetXBLDocumentInfo(nsIURI* aURI, nsIXBLDocumentInfo** aResult);
+  nsresult RemoveXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo);
 
-  NS_IMETHOD PutLoadingDocListener(nsIURI* aURL, nsIStreamListener* aListener);
-  NS_IMETHOD GetLoadingDocListener(nsIURI* aURL, nsIStreamListener** aResult);
-  NS_IMETHOD RemoveLoadingDocListener(nsIURI* aURL);
+  nsresult PutLoadingDocListener(nsIURI* aURL, nsIStreamListener* aListener);
+  nsresult GetLoadingDocListener(nsIURI* aURL, nsIStreamListener** aResult);
+  nsresult RemoveLoadingDocListener(nsIURI* aURL);
 
-  NS_IMETHOD FlushSkinBindings();
+  nsresult FlushSkinBindings();
 
-  NS_IMETHOD GetBindingImplementation(nsIContent* aContent, REFNSIID aIID, void** aResult);
+  nsresult GetBindingImplementation(nsIContent* aContent, REFNSIID aIID, void** aResult);
 
-  NS_IMETHOD ShouldBuildChildFrames(nsIContent* aContent, PRBool* aResult);
+  nsresult ShouldBuildChildFrames(nsIContent* aContent, PRBool* aResult);
 
-  virtual NS_HIDDEN_(void) AddObserver(nsIMutationObserver* aObserver);
+  /**
+   * Add a new observer of document change notifications. Whenever content is
+   * changed, appended, inserted or removed the observers are informed.  This
+   * is like nsIDocument::AddObserver, but these observers will be notified
+   * after the XBL data structures are updated for
+   * ContentInserted/ContentAppended and before they're updated for
+   * ContentRemoved.
+   */
+  void AddObserver(nsIMutationObserver* aObserver);
 
-  virtual NS_HIDDEN_(PRBool) RemoveObserver(nsIMutationObserver* aObserver);  
+  /**
+   * Remove an observer of document change notifications. This will
+   * return false if the observer cannot be found.
+   */
+  PRBool RemoveObserver(nsIMutationObserver* aObserver);  
 
-  // nsIStyleRuleSupplier
-  NS_IMETHOD WalkRules(nsStyleSet* aStyleSet, 
-                       nsIStyleRuleProcessor::EnumFunc aFunc,
-                       RuleProcessorData* aData,
-                       PRBool* aCutOffInheritance);
+  // Style rule methods
+  nsresult WalkRules(nsStyleSet* aStyleSet, 
+                     nsIStyleRuleProcessor::EnumFunc aFunc,
+                     RuleProcessorData* aData,
+                     PRBool* aCutOffInheritance);
 
   NS_DECL_CYCLE_COLLECTION_CLASS(nsBindingManager)
 
@@ -148,10 +213,6 @@ protected:
   nsresult GetAnonymousNodesInternal(nsIContent* aContent,
                                      nsIDOMNodeList** aResult,
                                      PRBool* aIsAnonymousContentList);
-
-  nsIContent* GetEnclosingScope(nsIContent* aContent) {
-    return aContent->GetBindingParent();
-  }
 
   nsresult GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult);
 

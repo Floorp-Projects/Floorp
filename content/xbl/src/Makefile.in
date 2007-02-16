@@ -89,6 +89,11 @@ CPPSRCS		= \
     nsXBLInsertionPoint.cpp \
 		$(NULL)
 
+EXPORTS   = \
+  nsBindingManager.h \
+  nsXBLBinding.h \
+  $(NULL)
+
 include $(topsrcdir)/config/config.mk
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

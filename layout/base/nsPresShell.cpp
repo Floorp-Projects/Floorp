@@ -185,7 +185,6 @@
 // For style data reconstruction
 #include "nsStyleChangeList.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsIBindingManager.h"
 #ifdef MOZ_XUL
 #include "nsIMenuFrame.h"
 #include "nsITreeBoxObject.h"

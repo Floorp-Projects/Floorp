@@ -172,7 +172,7 @@
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMXULCommandDispatcher.h"
 
-#include "nsIBindingManager.h"
+#include "nsBindingManager.h"
 #include "nsIXBLService.h"
 
 // used for popup blocking, needs to be converted to something

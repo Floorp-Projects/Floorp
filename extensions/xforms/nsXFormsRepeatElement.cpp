@@ -52,7 +52,6 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXPathResult.h"
 #include "nsIContent.h"
-#include "nsIBindingManager.h"
 
 #include "nsXFormsControlStub.h"
 #include "nsIXFormsContextControl.h"
@@ -770,16 +769,13 @@ nsXFormsRepeatElement::InsertTemplateContent(nsIDOMNode *aNode)
   NS_ENSURE_STATE(domDocument);
 
   nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
-  nsCOMPtr<nsIBindingManager> bindingMgr(document->BindingManager());
-  NS_ENSURE_STATE(bindingMgr);
-
   nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
   NS_ENSURE_STATE(content);
 
   // Get a list of all explicit children, including any children that may have
   // been inserted via XBL insertion points.
   nsCOMPtr<nsIDOMNodeList> children;
-  bindingMgr->GetContentListFor(content, getter_AddRefs(children));
+  document->GetContentListFor(content, getter_AddRefs(children));
 
   PRUint32 length = 0;
   children->GetLength(&length);

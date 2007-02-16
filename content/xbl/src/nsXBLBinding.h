@@ -36,6 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef nsXBLBinding_h_
+#define nsXBLBinding_h_
+
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsIDOMNodeList.h"
@@ -49,6 +52,8 @@ class nsIAtom;
 class nsIDocument;
 class nsIScriptContext;
 class nsObjectHashtable;
+class nsXBLInsertionPoint;
+typedef nsTArray<nsRefPtr<nsXBLInsertionPoint> > nsInsertionPointList;
 struct JSContext;
 struct JSObject;
 
@@ -91,7 +96,7 @@ public:
   }
 
   nsXBLPrototypeBinding* PrototypeBinding() { return mPrototypeBinding; }
-  nsIContent* GetAnonymousContent() { return mContent; }
+  nsIContent* GetAnonymousContent() { return mContent.get(); }
 
   nsXBLBinding* GetBaseBinding() { return mNextBinding; }
   void SetBaseBinding(nsXBLBinding *aBinding);
@@ -170,3 +175,5 @@ protected:
   PRPackedBool mIsStyleBinding;
   PRPackedBool mMarkedForDeath;
 };
+
+#endif // nsXBLBinding_h_

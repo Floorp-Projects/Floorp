@@ -43,7 +43,7 @@
 
 #include "nsChildIterator.h"
 #include "nsIDocument.h"
-#include "nsIBindingManager.h"
+#include "nsBindingManager.h"
 
 nsresult
 ChildIterator::Init(nsIContent*    aContent,

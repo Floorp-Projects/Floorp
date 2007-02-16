@@ -65,7 +65,7 @@
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFResource.h"
 #include "nsIScriptObjectOwner.h"
-#include "nsIBindingManager.h"
+#include "nsBindingManager.h"
 #include "nsIURI.h"
 #include "nsIXULPrototypeCache.h"
 #include "nsIXULTemplateBuilder.h"

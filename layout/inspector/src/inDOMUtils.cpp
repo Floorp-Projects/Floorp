@@ -130,7 +130,7 @@ inDOMUtils::GetParentForNode(nsIDOMNode* aNode,
     nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
     if (content) {
       nsCOMPtr<nsIContent> bparent;
-      nsCOMPtr<nsIBindingManager> bindingManager = inLayoutUtils::GetBindingManagerFor(aNode);
+      nsRefPtr<nsBindingManager> bindingManager = inLayoutUtils::GetBindingManagerFor(aNode);
       if (bindingManager) {
         bindingManager->GetInsertionParent(content, getter_AddRefs(bparent));
       }

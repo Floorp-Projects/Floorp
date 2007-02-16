@@ -52,7 +52,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMMutationEvent.h"
-#include "nsIBindingManager.h"
+#include "nsBindingManager.h"
 #include "nsIDocument.h"
 #include "nsIServiceManager.h"
 #include "nsITreeColumns.h"
@@ -1243,7 +1243,7 @@ inDOMView::GetChildNodesFor(nsIDOMNode* aNode, nsCOMArray<nsIDOMNode>& aResult)
       if (mShowAnonymous) {
         nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
         if (content) {
-          nsCOMPtr<nsIBindingManager> bindingManager = inLayoutUtils::GetBindingManagerFor(aNode);
+          nsRefPtr<nsBindingManager> bindingManager = inLayoutUtils::GetBindingManagerFor(aNode);
           if (bindingManager) {
             bindingManager->GetAnonymousNodesFor(content, getter_AddRefs(kids));
             if (!kids) {

@@ -49,7 +49,7 @@
 #include "nsIStyleRuleProcessor.h"
 #include "nsICSSStyleSheet.h"
 #include "nsVoidArray.h"
-#include "nsIStyleRuleSupplier.h"
+#include "nsBindingManager.h"
 #include "nsRuleNode.h"
 
 class nsIURI;
@@ -142,14 +142,9 @@ class nsStyleSet
 
   // APIs for registering objects that can supply additional
   // rules during processing.
-  void SetStyleRuleSupplier(nsIStyleRuleSupplier* aSupplier)
+  void SetBindingManager(nsBindingManager* aBindingManager)
   {
-    mStyleRuleSupplier = aSupplier;
-  }
-
-  nsIStyleRuleSupplier* GetStyleRuleSupplier() const
-  {
-    return mStyleRuleSupplier;
+    mBindingManager = aBindingManager;
   }
 
   // Free global data at module shutdown
@@ -250,7 +245,7 @@ class nsStyleSet
   // cached instance for enabling/disabling
   nsCOMPtr<nsIStyleSheet> mQuirkStyleSheet;
 
-  nsCOMPtr<nsIStyleRuleSupplier> mStyleRuleSupplier;
+  nsRefPtr<nsBindingManager> mBindingManager;
 
   // To be used only in case of emergency, such as being out of memory
   // or operating on a deleted rule node.  The latter should never

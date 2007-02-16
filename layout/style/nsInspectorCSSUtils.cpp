@@ -53,6 +53,7 @@
 #include "nsXBLPrototypeBinding.h"
 #include "nsIDOMElement.h"
 #include "nsIMutableArray.h"
+#include "nsBindingManager.h"
 
 nsInspectorCSSUtils::nsInspectorCSSUtils()
 {

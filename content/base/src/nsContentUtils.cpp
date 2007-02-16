@@ -121,7 +121,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "jsdbgapi.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIDOMDocumentXBL.h"
-#include "nsIBindingManager.h"
+#include "nsBindingManager.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsXBLBinding.h"

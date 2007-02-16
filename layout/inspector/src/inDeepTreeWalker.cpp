@@ -271,7 +271,7 @@ inDeepTreeWalker::PushNode(nsIDOMNode* aNode)
   if (!kids) {
     if (mShowAnonymousContent) {
       nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-      nsCOMPtr<nsIBindingManager> bindingManager;
+      nsRefPtr<nsBindingManager> bindingManager;
       if (content &&
           (bindingManager = inLayoutUtils::GetBindingManagerFor(aNode))) {
         bindingManager->GetAnonymousNodesFor(content, getter_AddRefs(kids));

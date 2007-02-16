@@ -44,7 +44,7 @@
 #include "nsSVGMatrix.h"
 #include "nsISVGSVGElement.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIBindingManager.h"
+#include "nsBindingManager.h"
 #include "nsIFrame.h"
 #include "nsISVGChildFrame.h"
 #include "nsIDOMSVGPoint.h"
@@ -142,7 +142,7 @@ NS_IMETHODIMP nsSVGGraphicElement::GetCTM(nsIDOMSVGMatrix **_retval)
   nsresult rv;
   *_retval = nsnull;
 
-  nsIBindingManager *bindingManager = nsnull;
+  nsBindingManager *bindingManager = nsnull;
   // XXXbz I _think_ this is right.  We want to be using the binding manager
   // that would have attached the binding that gives us our anonymous parent.
   // That's the binding manager for the document we actually belong to, which
@@ -184,7 +184,7 @@ NS_IMETHODIMP nsSVGGraphicElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
   nsresult rv;
   *_retval = nsnull;
 
-  nsIBindingManager *bindingManager = nsnull;
+  nsBindingManager *bindingManager = nsnull;
   // XXXbz I _think_ this is right.  We want to be using the binding manager
   // that would have attached the binding that gives us our anonymous parent.
   // That's the binding manager for the document we actually belong to, which

@@ -870,6 +870,8 @@ nsDocument::~nsDocument()
     mStyleAttrStyleSheet->SetOwningDocument(nsnull);
   }
 
+  NS_IF_RELEASE(mBindingManager);
+
   delete mHeaderData;
   delete mBoxObjectTable;
   delete mContentWrapperHash;
@@ -945,8 +947,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument, nsIDocument)
     cb.NoteXPCOMChild(tmp->mChildren.ChildAt(indx - 1));
   }
 
-  // Traverse all nsIDocument nsCOMPtrs.
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mBindingManager)
+  // Traverse all nsIDocument pointer members.
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mBindingManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSecurityInfo)
 
   // Traverse all nsDocument nsCOMPtrs.
@@ -1011,7 +1013,7 @@ nsDocument::Init()
   // Force initialization.
   nsBindingManager *bindingManager = new nsBindingManager();
   NS_ENSURE_TRUE(bindingManager, NS_ERROR_OUT_OF_MEMORY);
-  mBindingManager = bindingManager;
+  NS_ADDREF(mBindingManager = bindingManager);
 
   // The binding manager needs to come before everything but us in our
   // mutation observer list.
@@ -3644,6 +3646,24 @@ nsDocument::ClearBoxObjectFor(nsIContent* aContent)
       mBoxObjectTable->Remove(aContent);
     }
   }
+}
+
+nsresult
+nsDocument::GetXBLChildNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult)
+{
+  return mBindingManager->GetXBLChildNodesFor(aContent, aResult);
+}
+
+nsresult
+nsDocument::GetContentListFor(nsIContent* aContent, nsIDOMNodeList** aResult)
+{
+  return mBindingManager->GetContentListFor(aContent, aResult);
+}
+
+nsresult
+nsDocument::FlushSkinBindings()
+{
+  return mBindingManager->FlushSkinBindings();
 }
 
 struct DirTable {

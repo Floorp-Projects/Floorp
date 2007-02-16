@@ -60,6 +60,7 @@
 #include "nsEventDispatcher.h"
 #include "nsCOMArray.h"
 #include "nsNodeUtils.h"
+#include "nsBindingManager.h"
 
 #include "pldhash.h"
 #include "prprf.h"

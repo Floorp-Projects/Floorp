@@ -184,7 +184,7 @@
 // XBL related includes.
 #include "nsIXBLService.h"
 #include "nsXBLBinding.h"
-#include "nsIBindingManager.h"
+#include "nsBindingManager.h"
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
 #include "nsIDOMViewCSS.h"

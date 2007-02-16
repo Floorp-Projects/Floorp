@@ -71,7 +71,6 @@
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDocument.h"
-#include "nsIBindingManager.h"
 #include "nsIScrollableFrame.h"
 
 #include "nsIHTMLDocument.h"
