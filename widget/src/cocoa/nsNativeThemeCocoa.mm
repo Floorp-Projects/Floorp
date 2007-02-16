@@ -57,6 +57,8 @@
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
 
+#define DRAW_IN_FRAME_DEBUG 0
+
 extern "C" {
   CG_EXTERN void CGContextSetCTM(CGContextRef, CGAffineTransform);
 }
@@ -103,6 +105,11 @@ nsNativeThemeCocoa::DrawCheckboxRadio(CGContextRef cgContext, ThemeButtonKind in
   bdi.value = inChecked ? kThemeButtonOn : kThemeButtonOff;
   bdi.adornment = (inState & NS_EVENT_STATE_FOCUS) ? kThemeAdornmentFocus : kThemeAdornmentNone;
 
+#if DRAW_IN_FRAME_DEBUG
+  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.8);
+  CGContextFillRect(cgContext, inBoxRect);
+#endif
+
   HIThemeDrawButton(&inBoxRect, &bdi, cgContext, HITHEME_ORIENTATION, NULL);
 }
 
@@ -131,6 +138,11 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
 
   if (inIsDefault && !inDisabled)
     bdi.adornment |= kThemeAdornmentDefault;
+
+#if DRAW_IN_FRAME_DEBUG
+  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.8);
+  CGContextFillRect(cgContext, inBoxRect);
+#endif
 
   HIThemeDrawButton(&inBoxRect, &bdi, cgContext, HITHEME_ORIENTATION, NULL);
 }
@@ -164,6 +176,11 @@ nsNativeThemeCocoa::DrawFrame(CGContextRef cgContext, HIThemeFrameKind inKind,
   fdi.kind = inKind;
   fdi.state = inIsDisabled ? (ThemeDrawState) kThemeStateDisabled : (ThemeDrawState) kThemeStateActive;
   fdi.isFocused = (inState & NS_EVENT_STATE_FOCUS) != 0;
+
+#if DRAW_IN_FRAME_DEBUG
+  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.8);
+  CGContextFillRect(cgContext, inBoxRect);
+#endif
 
   HIThemeDrawFrame(&inBoxRect, &fdi, cgContext, HITHEME_ORIENTATION);
 }
@@ -283,8 +300,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
   double offsetX = 0.0, offsetY = 0.0;
   nsRefPtr<gfxASurface> thebesSurface = thebesCtx->CurrentSurface(&offsetX, &offsetY);
   if (thebesSurface->GetType() != gfxASurface::SurfaceTypeQuartz2) {
-    fprintf (stderr, "Expected surface of type Quartz2, got %d\n",
-             thebesSurface->GetType());
+    fprintf(stderr, "Expected surface of type Quartz2, got %d\n",
+            thebesSurface->GetType());
     return NS_ERROR_FAILURE;
   }
 
@@ -329,8 +346,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
   if (1 /*aWidgetType == NS_THEME_TEXTFIELD*/) {
     fprintf(stderr, "Native theme drawing widget %d [%p] dis:%d in rect [%d %d %d %d]\n",
             aWidgetType, aFrame, IsDisabled(aFrame), aRect.x, aRect.y, aRect.width, aRect.height);
-    fprintf (stderr, "Native theme xform[0]: [%f %f %f %f %f %f]\n",
-             mm0.a, mm0.b, mm0.c, mm0.d, mm0.tx, mm0.ty);
+    fprintf(stderr, "Native theme xform[0]: [%f %f %f %f %f %f]\n",
+            mm0.a, mm0.b, mm0.c, mm0.d, mm0.tx, mm0.ty);
     CGAffineTransform mm = CGContextGetCTM(cgContext);
     fprintf(stderr, "Native theme xform[1]: [%f %f %f %f %f %f]\n",
             mm.a, mm.b, mm.c, mm.d, mm.tx, mm.ty);
@@ -347,7 +364,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
 #if 0
   fprintf(stderr, "    --> macRect %f %f %f %f\n",
           macRect.origin.x, macRect.origin.y, macRect.size.width, macRect.size.height);
-  CGRect bounds = CGContextGetClipBoundingBox (cgContext);
+  CGRect bounds = CGContextGetClipBoundingBox(cgContext);
   fprintf(stderr, "    --> clip bounds: %f %f %f %f\n",
           bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
 
