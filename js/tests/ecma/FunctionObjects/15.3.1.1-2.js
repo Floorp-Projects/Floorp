@@ -109,11 +109,6 @@ new TestCase( SECTION,
 	      myfunc2.toString() );
 
 new TestCase( SECTION,  
-	      "myfunc2.__proto__",                         
-	      Function.prototype,     
-	      myfunc2.__proto__ );
-
-new TestCase( SECTION,  
 	      "myfunc2.length",                            
 	      3,                      
 	      myfunc2.length );
@@ -147,11 +142,6 @@ new TestCase( SECTION,
 	      "myfunc3 =  Function('a','b','c'); myfunc.toString = Object.prototype.toString; myfunc.toString()",
 	      "[object Function]",
 	      myfunc3.toString() );
-
-new TestCase( SECTION,  
-	      "myfunc3.__proto__",                         
-	      Function.prototype,     
-	      myfunc3.__proto__ );
 
 new TestCase( SECTION,  
 	      "myfunc3.length",                            
