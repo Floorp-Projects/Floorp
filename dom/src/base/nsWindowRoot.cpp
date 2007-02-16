@@ -250,7 +250,7 @@ nsWindowRoot::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsWindowRoot::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = PR_TRUE;
@@ -260,7 +260,7 @@ nsWindowRoot::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindowRoot::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   return NS_OK;
