@@ -108,7 +108,7 @@ IsAncestorBinding(nsIDocument* aDocument,
   NS_ASSERTION(aChild, "expected a child content");
 
   nsIContent* bindingParent = aChild->GetBindingParent();
-  nsIBindingManager* bindingManager = aDocument->BindingManager();
+  nsBindingManager* bindingManager = aDocument->BindingManager();
   for (nsIContent* prev = aChild;
        bindingParent && prev != bindingParent;
        prev = bindingParent, bindingParent = bindingParent->GetBindingParent()) {
@@ -409,7 +409,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     }
 
     // Remove ourselves from the set of pending docs.
-    nsIBindingManager *bindingManager = doc->BindingManager();
+    nsBindingManager *bindingManager = doc->BindingManager();
     nsIURI* documentURI = mBindingDocument->GetDocumentURI();
     bindingManager->RemoveLoadingDocListener(documentURI);
 
@@ -420,7 +420,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
 
     // Put our doc info in the doc table.
     nsCOMPtr<nsIXBLDocumentInfo> info;
-    nsIBindingManager *xblDocBindingManager = mBindingDocument->BindingManager();
+    nsBindingManager *xblDocBindingManager = mBindingDocument->BindingManager();
     xblDocBindingManager->GetXBLDocumentInfo(documentURI, getter_AddRefs(info));
     xblDocBindingManager->RemoveXBLDocumentInfo(info); // Break the self-imposed cycle.
     if (!info) {
@@ -543,7 +543,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
   if (!document)
     return NS_OK;
 
-  nsIBindingManager *bindingManager = document->BindingManager();
+  nsBindingManager *bindingManager = document->BindingManager();
   
   nsXBLBinding *binding = bindingManager->GetBinding(aContent);
   if (binding && !aAugmentFlag) {
@@ -682,7 +682,7 @@ nsXBLService::FlushStyleBindings(nsIContent* aContent)
   if (! document)
     return NS_OK;
 
-  nsIBindingManager *bindingManager = document->BindingManager();
+  nsBindingManager *bindingManager = document->BindingManager();
   
   nsXBLBinding *binding = bindingManager->GetBinding(aContent);
   
@@ -1072,7 +1072,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
 
   if (!info) {
     // The second line of defense is the binding manager's document table.
-    nsIBindingManager *bindingManager = nsnull;
+    nsBindingManager *bindingManager = nsnull;
 
     nsCOMPtr<nsIURL> bindingURL(do_QueryInterface(aBindingURI, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1126,7 +1126,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
                            bindingURL, aForceSyncLoad, getter_AddRefs(document));
    
       if (document) {
-        nsIBindingManager *xblDocBindingManager = document->BindingManager();
+        nsBindingManager *xblDocBindingManager = document->BindingManager();
         xblDocBindingManager->GetXBLDocumentInfo(documentURI, getter_AddRefs(info));
         if (!info) {
           NS_ERROR("An XBL file is malformed.  Did you forget the XBL namespace on the bindings tag?");
@@ -1212,7 +1212,7 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
     rec->AddEventListener(NS_LITERAL_STRING("load"), (nsIDOMLoadListener*)xblListener, PR_FALSE);
 
     // Add ourselves to the list of loading docs.
-    nsIBindingManager *bindingManager;
+    nsBindingManager *bindingManager;
     if (aBoundDocument)
       bindingManager = aBoundDocument->BindingManager();
     else

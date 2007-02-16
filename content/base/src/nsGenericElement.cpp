@@ -83,7 +83,7 @@
 #include "nsNodeUtils.h"
 #include "nsDocument.h"
 
-#include "nsIBindingManager.h"
+#include "nsBindingManager.h"
 #include "nsXBLBinding.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMViewCSS.h"
@@ -3678,7 +3678,7 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent,
       }
     }
 
-    nsIBindingManager* bindingManager = document->BindingManager();
+    nsBindingManager* bindingManager = document->BindingManager();
     nsCOMPtr<nsIDOMNodeList> anonymousChildren;
     bindingManager->GetAnonymousNodesFor(NS_CONST_CAST(nsGenericElement*, this),
                                          getter_AddRefs(anonymousChildren));

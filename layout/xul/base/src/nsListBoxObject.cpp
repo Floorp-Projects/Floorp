@@ -42,7 +42,7 @@
 #include "nsBoxObject.h"
 #include "nsIFrame.h"
 #include "nsIDocument.h"
-#include "nsIBindingManager.h"
+#include "nsBindingManager.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
 #include "nsGkAtoms.h"

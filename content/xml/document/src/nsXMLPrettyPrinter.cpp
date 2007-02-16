@@ -43,7 +43,6 @@
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMViewCSS.h"
 #include "nsIDOMDocumentXBL.h"
-#include "nsIBindingManager.h"
 #include "nsIObserver.h"
 #include "nsIXSLTProcessor.h"
 #include "nsSyncLoadService.h"
@@ -54,6 +53,7 @@
 #include "nsNetUtil.h"
 #include "nsIContent.h"
 #include "nsIDOMDocumentFragment.h"
+#include "nsBindingManager.h"
 
 NS_IMPL_ISUPPORTS2(nsXMLPrettyPrinter,
                    nsIDocumentObserver,

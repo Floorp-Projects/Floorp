@@ -64,7 +64,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDocument.h"
-#include "nsIBindingManager.h"
+#include "nsBindingManager.h"
 #include "nsIDOMNodeList.h"
 #include "nsINameSpaceManager.h"
 #include "nsIRDFCompositeDataSource.h"

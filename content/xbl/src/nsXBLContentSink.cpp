@@ -38,7 +38,7 @@
 
 #include "nsXBLContentSink.h"
 #include "nsIDocument.h"
-#include "nsIBindingManager.h"
+#include "nsBindingManager.h"
 #include "nsIDOMNode.h"
 #include "nsIParser.h"
 #include "nsGkAtoms.h"

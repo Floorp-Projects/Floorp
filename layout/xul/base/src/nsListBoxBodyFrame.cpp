@@ -49,7 +49,6 @@
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDocument.h"
-#include "nsIBindingManager.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMElement.h"

@@ -145,6 +145,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant,
     _class *tmp = NS_STATIC_CAST(_class*, NS_STATIC_CAST(_base*, s));          \
     NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class)
 
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(_field)                       \
+    if (tmp->_field) { cb.NoteXPCOMChild(tmp->_field); }
+
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(_field)                     \
     if (tmp->_field) { cb.NoteXPCOMChild(tmp->_field.get()); }
 

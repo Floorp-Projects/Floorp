@@ -46,7 +46,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIEventStateManager.h"
 #include "nsIDOMDocument.h"
-#include "nsIBindingManager.h"
+#include "nsBindingManager.h"
 
 class inLayoutUtils
 {
@@ -57,7 +57,7 @@ public:
   static nsIFrame* GetFrameFor(nsIDOMElement* aElement, nsIPresShell* aShell);
   static already_AddRefed<nsIRenderingContext> GetRenderingContextFor(nsIPresShell* aShell);
   static nsIEventStateManager* GetEventStateManagerFor(nsIDOMElement *aElement);
-  static nsIBindingManager* GetBindingManagerFor(nsIDOMNode* aNode);
+  static nsBindingManager* GetBindingManagerFor(nsIDOMNode* aNode);
   static nsIDOMDocument* GetSubDocumentFor(nsIDOMNode* aNode);
   static nsIDOMNode* GetContainerFor(nsIDOMDocument* aDoc);
   /**

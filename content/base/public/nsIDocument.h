@@ -876,12 +876,10 @@ protected:
 
   // We'd like these to be nsRefPtrs, but that'd require us to include
   // additional headers that we don't want to expose.
+  // The cleanup is handled by the nsDocument destructor.
   nsBindingManager* mBindingManager; // [STRONG]
   nsNodeInfoManager* mNodeInfoManager; // [STRONG]
-
-  nsICSSLoader* mCSSLoader; // [STRONG; not a COMPtr to avoid
-                            // including nsICSSLoader.h; the ownership
-                            // is managed by nsDocument]
+  nsICSSLoader* mCSSLoader; // [STRONG]
 
   // Table of element properties for this document.
   nsPropertyTable mPropertyTable;

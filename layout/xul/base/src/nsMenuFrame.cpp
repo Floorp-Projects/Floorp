@@ -67,7 +67,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsIScrollableFrame.h"
 #include "nsIViewManager.h"
-#include "nsIBindingManager.h"
+#include "nsBindingManager.h"
 #include "nsIServiceManager.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsIDOMKeyEvent.h"

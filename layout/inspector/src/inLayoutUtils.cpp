@@ -145,7 +145,7 @@ inLayoutUtils::GetClientOrigin(nsIFrame* aFrame)
   return result;
 }
 
-nsIBindingManager* 
+nsBindingManager* 
 inLayoutUtils::GetBindingManagerFor(nsIDOMNode* aNode)
 {
   nsCOMPtr<nsIDOMDocument> domdoc;

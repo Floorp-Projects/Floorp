@@ -70,7 +70,7 @@
 #include "nsIDOM3Node.h"
 #include "nsIPrincipal.h"
 #include "nsIParser.h"
-#include "nsIBindingManager.h"
+#include "nsBindingManager.h"
 #include "nsINodeInfo.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOM3DocumentEvent.h"
@@ -643,6 +643,12 @@ public:
   virtual NS_HIDDEN_(void) NotifyURIVisitednessChanged(nsIURI* aURI);
 
   NS_HIDDEN_(void) ClearBoxObjectFor(nsIContent* aContent);
+
+  virtual NS_HIDDEN_(nsresult) GetXBLChildNodesFor(nsIContent* aContent,
+                                                   nsIDOMNodeList** aResult);
+  virtual NS_HIDDEN_(nsresult) GetContentListFor(nsIContent* aContent,
+                                                 nsIDOMNodeList** aResult);
+  virtual NS_HIDDEN_(nsresult) FlushSkinBindings();
 
   NS_DECL_CYCLE_COLLECTION_CLASS(nsDocument)
 

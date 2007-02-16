@@ -263,10 +263,10 @@ struct EnumData {
 };
 
 struct ContentListData : public EnumData {
-  nsIBindingManager* mBindingManager;
-  nsresult           mRv;
+  nsBindingManager* mBindingManager;
+  nsresult          mRv;
 
-  ContentListData(nsXBLBinding* aBinding, nsIBindingManager* aManager)
+  ContentListData(nsXBLBinding* aBinding, nsBindingManager* aManager)
     :EnumData(aBinding), mBindingManager(aManager), mRv(NS_OK)
   {};
 };
@@ -277,7 +277,7 @@ BuildContentLists(nsISupports* aKey,
                   void* aClosure)
 {
   ContentListData* data = (ContentListData*)aClosure;
-  nsIBindingManager* bm = data->mBindingManager;
+  nsBindingManager* bm = data->mBindingManager;
   nsXBLBinding* binding = data->mBinding;
 
   nsIContent *boundElement = binding->GetBoundElement();
@@ -366,7 +366,7 @@ RealizeDefaultContent(nsISupports* aKey,
                       void* aClosure)
 {
   ContentListData* data = (ContentListData*)aClosure;
-  nsIBindingManager* bm = data->mBindingManager;
+  nsBindingManager* bm = data->mBindingManager;
   nsXBLBinding* binding = data->mBinding;
 
   PRInt32 count = aData->Length();
@@ -480,7 +480,7 @@ nsXBLBinding::GenerateAnonymousContent()
     if (! doc)
       return;
     
-    nsIBindingManager *bindingManager = doc->BindingManager();
+    nsBindingManager *bindingManager = doc->BindingManager();
 
     nsCOMPtr<nsIDOMNodeList> children;
     bindingManager->GetContentListFor(mBoundElement, getter_AddRefs(children));
@@ -961,7 +961,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
 
     // Make sure that henceforth we don't claim that mBoundElement's children
     // have insertion parents in the old document.
-    nsIBindingManager* bindingManager = aOldDocument->BindingManager();
+    nsBindingManager* bindingManager = aOldDocument->BindingManager();
     for (PRUint32 i = mBoundElement->GetChildCount(); i > 0; --i) {
       NS_ASSERTION(mBoundElement->GetChildAt(i-1),
                    "Must have child at i for 0 <= i < GetChildCount()!");

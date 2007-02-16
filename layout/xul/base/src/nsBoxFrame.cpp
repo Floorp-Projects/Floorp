@@ -84,7 +84,6 @@
 #include "nsIBoxLayout.h"
 #include "nsSprocketLayout.h"
 #include "nsIDocument.h"
-#include "nsIBindingManager.h"
 #include "nsIScrollableFrame.h"
 #include "nsWidgetsCID.h"
 #include "nsCSSAnonBoxes.h"

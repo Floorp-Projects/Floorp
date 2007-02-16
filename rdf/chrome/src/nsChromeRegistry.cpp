@@ -78,7 +78,6 @@
 #include "nsIDocumentObserver.h"
 #include "nsIIOService.h"
 #include "nsLayoutCID.h"
-#include "nsIBindingManager.h"
 #include "prio.h"
 #include "nsInt64.h"
 #include "nsIDirectoryService.h"
@@ -1306,7 +1305,7 @@ static void FlushSkinBindingsForWindow(nsIDOMWindowInternal* aWindow)
     return;
 
   // Annihilate all XBL bindings.
-  document->BindingManager()->FlushSkinBindings();
+  document->FlushSkinBindings();
 }
 
 // XXXbsmedberg: move this to nsIWindowMediator

@@ -50,7 +50,7 @@
 #include "nsSVGPoint.h"
 #include "nsSVGTransform.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIBindingManager.h"
+#include "nsBindingManager.h"
 #include "nsIFrame.h"
 #include "nsISVGSVGFrame.h" //XXX
 #include "nsSVGNumber.h"
@@ -715,7 +715,7 @@ nsSVGSVGElement::GetCTM(nsIDOMSVGMatrix **_retval)
 
   // first try to get the "screen" CTM of our nearest SVG ancestor
 
-  nsIBindingManager *bindingManager = nsnull;
+  nsBindingManager *bindingManager = nsnull;
   // XXXbz I _think_ this is right.  We want to be using the binding manager
   // that would have attached the bindings that gives us our anonymous
   // ancestors. That's the binding manager for the document we actually belong
@@ -828,7 +828,7 @@ nsSVGSVGElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
 
   // first try to get the "screen" CTM of our nearest SVG ancestor
 
-  nsIBindingManager *bindingManager = nsnull;
+  nsBindingManager *bindingManager = nsnull;
   // XXXbz I _think_ this is right.  We want to be using the binding manager
   // that would have attached the bindings that gives us our anonymous
   // ancestors. That's the binding manager for the document we actually belong
