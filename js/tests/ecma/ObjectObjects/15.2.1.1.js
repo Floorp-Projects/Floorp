@@ -75,13 +75,11 @@ var NULL_OBJECT = Object(null);
 
 new TestCase( SECTION, "Object(null).valueOf()",    NULL_OBJECT,           (NULL_OBJECT).valueOf() );
 new TestCase( SECTION, "typeof Object(null)",       "object",               typeof (Object(null)) );
-new TestCase( SECTION, "Object(null).__proto__",    Object.prototype,       (Object(null)).__proto__ );
 
 var UNDEFINED_OBJECT = Object( void 0 );
 
 new TestCase( SECTION, "Object(void 0).valueOf()",    UNDEFINED_OBJECT,           (UNDEFINED_OBJECT).valueOf() );
 new TestCase( SECTION, "typeof Object(void 0)",       "object",               typeof (Object(void 0)) );
-new TestCase( SECTION, "Object(void 0).__proto__",    Object.prototype,       (Object(void 0)).__proto__ );
 
 new TestCase( SECTION, "Object(true).valueOf()",    true,                   (Object(true)).valueOf() );
 new TestCase( SECTION, "typeof Object(true)",       "object",               typeof Object(true) );
