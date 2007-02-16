@@ -61,7 +61,10 @@
         ]]>
         </setter>
       </property>
-      
+
+      <property name="itemCount" readonly="true"
+                onget="return this._getRadioChildren().length"/>
+
       <property name="selectedIndex">
         <getter>
         <![CDATA[
@@ -80,7 +83,7 @@
         ]]>
         </setter>
       </property>
- 
+
       <property name="selectedItem">
         <getter>
         <![CDATA[
@@ -242,6 +245,23 @@
         </body>
       </method>
 
+      <method name="getIndexOfItem">
+        <parameter name="item"/>
+        <body>
+          return this._getRadioChildren().indexOf(item);
+        </body>
+      </method>
+
+      <method name="getItemAtIndex">
+        <parameter name="index"/>
+        <body>
+        <![CDATA[
+          var children = this._getRadioChildren();
+          return (index >= 0 && index < children.length) ? children[index] : null;
+        ]]>
+        </body>
+      </method>
+
       <method name="appendItem">
         <parameter name="label"/>
         <parameter name="value"/>
@@ -252,6 +272,7 @@
           radio.setAttribute("label", label);
           radio.setAttribute("value", value);
           this.appendChild(radio);
+          this.mRadioChildren = null;
           return radio;
         ]]>
         </body>
@@ -267,11 +288,12 @@
           var radio = document.createElementNS(XULNS, "radio");
           radio.setAttribute("label", label);
           radio.setAttribute("value", value);
-          var before = this.childNodes[index];
+          var before = this.getItemAtIndex(index);
           if (before)
-            this.insertBefore(radio, before);
+            before.parentNode.insertBefore(radio, before);
           else
             this.appendChild(radio);
+          this.mRadioChildren = null;
           return radio;
         ]]>
         </body>
@@ -281,9 +303,11 @@
         <parameter name="index"/>
         <body>
         <![CDATA[
-          var remove = this.childNodes[index];
-          if (remove)
-            this.removeChild(remove);
+          var remove = this.getItemAtIndex(index);
+          if (remove) {
+            remove.parentNode.removeChild(remove);
+            this.mRadioChildren = null;
+          }
           return remove;
         ]]>
         </body>

@@ -107,6 +107,9 @@
                                    return val;"
                             onget="return this.hasAttribute('open');"/>
 
+      <property name="itemCount" readonly="true"
+                onget="return this.menupopup ? this.menupopup.childNodes.length : 0"/>
+
       <property name="menupopup" readonly="true">
         <getter>
           <![CDATA[
@@ -218,6 +221,38 @@
         </setter>
       </property>
 
+      <method name="getIndexOfItem">
+        <parameter name="item"/>
+        <body>
+        <![CDATA[
+          var popup = this.menupopup;
+          if (popup) {
+            var children = popup.childNodes;
+            var i = children.length;
+            while (i--)
+              if (children[i] == item)
+                return i;
+          }
+          return -1;
+        ]]>
+        </body>
+      </method>
+
+      <method name="getItemAtIndex">
+        <parameter name="index"/>
+        <body>
+        <![CDATA[
+          var popup = this.menupopup;
+          if (popup) {
+            var children = popup.childNodes;
+            if (index >= 0 && index < children.length)
+              return children[index];
+          }
+          return null;
+        ]]>
+        </body>
+      </method>
+
       <method name="handleEvent">
         <parameter name="event"/>
         <body>
@@ -274,7 +309,7 @@
           if (description)
             item.setAttribute("description", description);
 
-          if (index < popup.childNodes.length)
+          if (index >= 0 && index < popup.childNodes.length)
             popup.insertBefore(item, popup.childNodes[index]);
           else
             popup.appendChild(item);

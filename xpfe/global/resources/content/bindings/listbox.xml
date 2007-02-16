@@ -240,7 +240,10 @@
       </property>
 
       <property name="selectedCount" onget="return this.selectedItems.length;"/>
-      
+
+      <property name="itemCount" readonly="true"
+                onget="return this.listBoxObject.getRowCount()"/>
+
       <method name="getSelectedItem">
         <parameter name="index"/>
         <body>

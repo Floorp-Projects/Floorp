@@ -149,6 +149,9 @@
         </body>
       </method>
 
+      <property name="itemCount" readonly="true"
+                onget="return this.children.length"/>
+
       <method name="getIndexOfItem">
         <parameter name="aItem"/>
         <body>

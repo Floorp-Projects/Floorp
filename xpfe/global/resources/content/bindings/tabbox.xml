@@ -233,6 +233,9 @@
         </getter>
       </property>
 
+      <property name="itemCount" readonly="true"
+                onget="return this.childNodes.length"/>
+
       <property name="selectedIndex">
         <getter>
         <![CDATA[
@@ -311,7 +314,33 @@
         ]]>
         </setter>
       </property>
-    
+
+      <method name="getIndexOfItem">
+        <parameter name="item"/>
+        <body>
+        <![CDATA[
+          var children = this.childNodes;
+          var i = children.length;
+          while (i--)
+            if (children[i] == item)
+              return i;
+          return -1;
+        ]]>
+        </body>
+      </method>
+
+      <method name="getItemAtIndex">
+        <parameter name="index"/>
+        <body>
+        <![CDATA[
+          var children = this.childNodes;
+          if (index >= 0 && index < children.length)
+            return children[index];
+          return null;
+        ]]>
+        </body>
+      </method>
+
       <method name="selectNewTab">
         <parameter name="aNewTab"/>
         <body>
@@ -394,7 +423,7 @@
           var tab = document.createElementNS(XULNS, "tab");
           tab.setAttribute("label", label);
           tab.setAttribute("value", value);
-          var before = this.childNodes[index];
+          var before = this.getItemAtIndex(index);
           if (before)
             this.insertBefore(tab, before);
           else
@@ -408,7 +437,7 @@
         <parameter name="index"/>
         <body>
         <![CDATA[
-          var remove = this.childNodes[index];
+          var remove = this.getItemAtIndex(index);
           if (remove)
             this.removeChild(remove);
           return remove;
