@@ -1010,3 +1010,15 @@ nsNativeThemeCocoa::WidgetIsContainer(PRUint8 aWidgetType)
   }
   return PR_TRUE;
 }
+
+
+PRBool
+nsNativeThemeCocoa::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType)
+{
+  if (aWidgetType == NS_THEME_DROPDOWN ||
+      aWidgetType == NS_THEME_BUTTON ||
+      aWidgetType == NS_THEME_BUTTON_SMALL)
+    return PR_TRUE;
+  
+  return PR_FALSE;
+}

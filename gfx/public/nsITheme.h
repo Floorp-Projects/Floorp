@@ -57,9 +57,9 @@ class nsIContent;
 class nsIAtom;
 
 // IID for the nsITheme interface
-// {75220e36-b77a-464c-bd82-988cf86391cc}
+// {df8baf21-5ea7-49eb-a2bc-f2fd4a9fd896}
 #define NS_ITHEME_IID     \
-{ 0x75220e36, 0xb77a, 0x464c, { 0xbd, 0x82, 0x98, 0x8c, 0xf8, 0x63, 0x91, 0xcc } }
+{ 0xdf8baf21, 0x5ea7, 0x49eb, { 0xa2, 0xbc, 0xf2, 0xfd, 0x4a, 0x9f, 0xd8, 0x96 } }
 
 // {D930E29B-6909-44e5-AB4B-AF10D6923705}
 #define NS_THEMERENDERER_CID \
@@ -144,6 +144,13 @@ public:
                                      PRUint8 aWidgetType)=0;
 
   virtual PRBool WidgetIsContainer(PRUint8 aWidgetType)=0;
+
+  /**
+   * Does the nsITheme implementation draw its own focus ring for this widget?
+   */
+  virtual PRBool ThemeDrawsFocusForWidget(nsPresContext* aPresContext,
+                                          nsIFrame* aFrame,
+                                          PRUint8 aWidgetType)=0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITheme, NS_ITHEME_IID)
