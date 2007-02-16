@@ -507,11 +507,12 @@ net_ExtractURLScheme(const nsACString &inURI,
 PRBool
 net_IsValidScheme(const char *scheme, PRUint32 schemeLen)
 {
-    // first char much be alpha
+    // first char must be alpha
     if (!nsCRT::IsAsciiAlpha(*scheme))
         return PR_FALSE;
-    
-    for (; schemeLen && *scheme; ++scheme, --schemeLen) {
+
+    // nsCStrings may have embedded nulls -- reject those too
+    for (; schemeLen; ++scheme, --schemeLen) {
         if (!(nsCRT::IsAsciiAlpha(*scheme) ||
               nsCRT::IsAsciiDigit(*scheme) ||
               *scheme == '+' ||
