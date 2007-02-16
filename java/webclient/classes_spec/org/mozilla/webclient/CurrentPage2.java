@@ -83,5 +83,12 @@ public interface CurrentPage2 extends CurrentPage {
      */
 
     public boolean findNext();
+    
+    /**
+     * <p>Like {@link CurrentPage#copyCurrentSelectionToSystemClipboard} but
+     * puts the html of the selection on the clipboard, instead of the plain text
+     * </p>
+     */
+    public void copyCurrentSelectionHtmlToSystemClipboard();
 }
 // end of interface CurrentPage2

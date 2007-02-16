@@ -21,6 +21,7 @@
 
 package org.mozilla.webclient.impl.wrapper_native;
 
+import java.awt.HeadlessException;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
@@ -36,6 +37,8 @@ import org.mozilla.webclient.impl.WrapperFactory;
 import org.mozilla.webclient.impl.DOMTreeDumper;
 
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -43,6 +46,8 @@ import org.w3c.dom.Node;
 import org.mozilla.webclient.UnimplementedException;
 
 import org.mozilla.dom.DOMAccessor;
+import org.mozilla.util.Log;
+import org.mozilla.util.TransferableImpl;
 
 public class CurrentPageImpl extends ImplObjectNative implements CurrentPage2, 
         ClipboardOwner
@@ -54,6 +59,11 @@ public class CurrentPageImpl extends ImplObjectNative implements CurrentPage2,
 //
 // Class Variables
 //
+    
+    public static final String LOG = "org.mozilla.impl.wrapper_native.CurrentPageImpl";
+
+    public static final Logger LOGGER = Log.getLogger(LOG);
+    
 
 private static boolean domInitialized = false;
 
@@ -100,21 +110,73 @@ public void copyCurrentSelectionToSystemClipboard()
     getWrapperFactory().verifyInitialized();
     Assert.assert_it(-1 != getNativeBrowserControl());
 
+    plainTextSelection = null;
     NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
-	    public Object run() {
-                transferable = null;
-		nativeCopyCurrentSelectionToSystemClipboard(CurrentPageImpl.this.getNativeBrowserControl());
-                if (null != transferable) {
-                    Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
-                    clip.setContents(transferable, CurrentPageImpl.this);
-                }
-		return null;
-	    }
-            public String toString() {
-                return "WCRunnable.nativeCopyCurrentSelectionToSystemClipboard";
+        public Object run() {
+            nativeCopyCurrentSelectionToSystemClipboard(CurrentPageImpl.this.getNativeBrowserControl());
+            return null;
+        }
+        public String toString() {
+            return "WCRunnable.nativeCopyCurrentSelectionToSystemClipboard";
+        }
+    });
+    if (null != plainTextSelection) {
+        try {
+            Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clip.setContents(plainTextSelection, this);
+        } catch (IllegalStateException ise) {
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.warning("Unable to set transferable to clipboard: " +
+                        plainTextSelection.toString());
             }
+        } catch (HeadlessException he) {
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.severe("Unable to set clipboard contents because GraphicsEnvironment is Headless: "+
+                        he.getMessage());
+            }
+        }
+        finally {
+            plainTextSelection = null;
+        }
+        
+    }
+}
 
-	});
+public void copyCurrentSelectionHtmlToSystemClipboard()
+{
+    getWrapperFactory().verifyInitialized();
+    Assert.assert_it(-1 != getNativeBrowserControl());
+
+    htmlSelection = null;
+    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+        public Object run() {
+            nativeCopyCurrentSelectionToSystemClipboard(CurrentPageImpl.this.getNativeBrowserControl());
+            return null;
+        }
+        public String toString() {
+            return "WCRunnable.nativeCopyCurrentSelectionHtmlToSystemClipboard";
+        }
+    });
+    if (null != htmlSelection) {
+        try {
+            Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clip.setContents(htmlSelection, this);
+        } catch (IllegalStateException ise) {
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.warning("Unable to set transferable to clipboard: " +
+                        htmlSelection.toString());
+            }
+        } catch (HeadlessException he) {
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.severe("Unable to set clipboard contents because GraphicsEnvironment is Headless: "+
+                        he.getMessage());
+            }
+        }
+        finally {
+            htmlSelection = null;
+        }
+        
+    }
 }
 
 public Selection getSelection() {
@@ -343,14 +405,22 @@ public void printPreview(boolean pre)
 	});
 }
 
-private Transferable transferable = null;
+private StringSelection plainTextSelection = null;
+private StringSelection htmlSelection = null;
 
 void addStringToTransferable(String mimeType, String text) {
-    System.out.println("mimeType:" + mimeType + " text:" + text);
-    if (null == transferable) {
-        if (mimeType.equals("text/unicode")) {
-            transferable = new StringSelection(text);
+    if (null == mimeType || null == text) {
+        if (LOGGER.isLoggable(Level.WARNING)) {
+            LOGGER.warning("Browser requested addition of transferable with " + 
+                    "null mimeType or text.");
         }
+        return;
+    }
+    if (mimeType.equals("text/html")) {
+        htmlSelection = new StringSelection(text);
+    }
+    if (mimeType.equals("text/unicode") || mimeType.equals("text/plain")) {
+        plainTextSelection = new StringSelection(text);
     }
 }
 
