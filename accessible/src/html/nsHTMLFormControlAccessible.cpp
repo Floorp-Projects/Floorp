@@ -352,6 +352,13 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetState(PRUint32 *aState)
                            nsAccessibilityAtoms::password, eIgnoreCase)) {
     *aState |= STATE_PROTECTED;
   }
+  else {
+    nsCOMPtr<nsIAccessible> parent;
+    GetParent(getter_AddRefs(parent));
+    if (parent && Role(parent) == ROLE_AUTOCOMPLETE) {
+      *aState |= STATE_HASPOPUP;
+    }
+  }
 
   if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::readonly)) {
     *aState |= STATE_READONLY;
