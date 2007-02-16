@@ -54,6 +54,7 @@ PACKAGE_FILE = xremote.pkg
 REQUIRES	= xpcom \
 		  string \
 		  dom \
+		  content \
 		  layout \
 		  widget \
 		  uriloader \
