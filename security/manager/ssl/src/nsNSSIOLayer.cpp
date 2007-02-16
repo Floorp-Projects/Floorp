@@ -79,6 +79,7 @@
 #include "secasn1.h"
 #include "certdb.h"
 #include "cert.h"
+#include "keyhi.h"
 
 
 //#define DEBUG_SSL_VERBOSE //Enable this define to get minimal 
@@ -2245,6 +2246,8 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
       privKey = PK11_FindKeyByAnyCert(node->cert, wincx);
       if (privKey != NULL) {
         if (hasExplicitKeyUsageNonRepudiation(node->cert)) {
+          SECKEY_DestroyPrivateKey(privKey);
+          privKey = NULL;
           // Not a prefered cert
           if (!low_prio_nonrep_cert) // did not yet find a low prio cert
             low_prio_nonrep_cert = CERT_DupCertificate(node->cert);
@@ -2267,6 +2270,7 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
     if (!cert && low_prio_nonrep_cert) {
       cert = low_prio_nonrep_cert;
       low_prio_nonrep_cert = NULL; // take it away from the cleaner
+      privKey = PK11_FindKeyByAnyCert(cert, wincx);
     }
 
     if (cert == NULL) {
