@@ -271,12 +271,9 @@ PRBool nsAccessibleTreeWalker::GetAccessible()
   mState.accessible = nsnull;
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
 
-  if (NS_SUCCEEDED(mAccService->GetAccessible(mState.domNode, presShell, mWeakShell, 
-                                              &mState.frame, &mState.isHidden,
-                                              getter_AddRefs(mState.accessible)))) {
-    NS_ASSERTION(mState.accessible, "No accessible but no failure return code");
-    return PR_TRUE;
-  }
-  return PR_FALSE;
+  mAccService->GetAccessible(mState.domNode, presShell, mWeakShell,
+                             &mState.frame, &mState.isHidden,
+                             getter_AddRefs(mState.accessible));
+  return mState.accessible ? PR_TRUE : PR_FALSE;
 }
 

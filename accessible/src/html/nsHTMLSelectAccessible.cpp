@@ -532,8 +532,8 @@ nsIFrame* nsHTMLSelectOptionAccessible::GetBoundsFrame()
   if (selectNode) {
     nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
     nsCOMPtr<nsIAccessible> selAcc;
-    if (NS_SUCCEEDED(accService->GetAccessibleFor(selectNode, 
-                                                  getter_AddRefs(selAcc)))) {
+    accService->GetAccessibleFor(selectNode, getter_AddRefs(selAcc));
+    if (selAcc) {
       PRUint32 state;
       selAcc->GetFinalState(&state);
       if (state & STATE_COLLAPSED) {
