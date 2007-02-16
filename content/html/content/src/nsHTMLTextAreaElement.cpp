@@ -636,6 +636,18 @@ nsHTMLTextAreaElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     aVisitor.mEvent->flags &= ~NS_EVENT_FLAG_NO_CONTENT_DISPATCH;
   }
 
+  // Fire onchange (if necessary), before we do the blur, bug 370521.
+  if (aVisitor.mEvent->message == NS_BLUR_CONTENT) {
+    nsIFrame* primaryFrame = GetPrimaryFrame();
+    if (primaryFrame) {
+      nsITextControlFrame* textFrame = nsnull;
+      CallQueryInterface(primaryFrame, &textFrame);
+      if (textFrame) {
+        textFrame->CheckFireOnChange();
+      }
+    }
+  }
+
   return nsGenericHTMLElement::PreHandleEvent(aVisitor);
 }
 
