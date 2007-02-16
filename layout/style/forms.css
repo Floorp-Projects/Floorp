@@ -597,12 +597,7 @@ input[disabled] {
 textarea,
 textarea[disabled] {
   -moz-appearance: none; /* we'll draw by hand, thanks */
-  border-style: solid;
-  border-color: #737373 #999999 #999999 #999999;
-  border-width: 1px;
-  padding: 0px 0px 0px 0px;
   font-size: 11px;
-  margin: 1px 1px 1px 0px;
   background-color: -moz-field;
 }
 
@@ -708,14 +703,6 @@ button[disabled],
 button:active:hover,
 button[disabled]:active {
   -moz-appearance: none;
-}
-
-/* this turns off the mozilla focus ring shown inside clicked or selected buttons */
-input[type="reset"]::-moz-focus-inner,
-input[type="button"]::-moz-focus-inner,
-input[type="submit"]::-moz-focus-inner,
-input[type="file"] > input[type="button"]::-moz-focus-inner {
-  border: 0;
 }
 
 /* tweak position of button part of file selector */

@@ -175,14 +175,30 @@ nsNativeThemeCocoa::DrawFrame(CGContextRef cgContext, HIThemeFrameKind inKind,
   fdi.version = 0;
   fdi.kind = inKind;
   fdi.state = inIsDisabled ? (ThemeDrawState) kThemeStateDisabled : (ThemeDrawState) kThemeStateActive;
-  fdi.isFocused = (inState & NS_EVENT_STATE_FOCUS) != 0;
+  // We do not draw focus rings for frame widgets because their complex layout has nasty
+  // drawing bugs and it looks terrible.
+  // fdi.isFocused = (inState & NS_EVENT_STATE_FOCUS) != 0;
+  fdi.isFocused = 0;
+
+  // HIThemeDrawFrame takes the rect for the content area of the frame, not
+  // the bounding rect for the frame. Here we reduce the size of the rect we
+  // will pass to make it the size of the content.
+  HIRect drawRect = inBoxRect;
+  if (inKind == kHIThemeFrameTextFieldSquare) {
+    SInt32 frameOutset = 0;
+    ::GetThemeMetric(kThemeMetricEditTextFrameOutset, &frameOutset);
+    drawRect.origin.x += frameOutset;
+    drawRect.origin.y += frameOutset;
+    drawRect.size.width -= frameOutset * 2;
+    drawRect.size.height -= frameOutset * 2;
+  }
 
 #if DRAW_IN_FRAME_DEBUG
   CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.8);
   CGContextFillRect(cgContext, inBoxRect);
 #endif
 
-  HIThemeDrawFrame(&inBoxRect, &fdi, cgContext, HITHEME_ORIENTATION);
+  HIThemeDrawFrame(&drawRect, &fdi, cgContext, HITHEME_ORIENTATION);
 }
 
 void
@@ -657,8 +673,11 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
                       kAquaDropwdonRightEndcap, kAquaPushButtonTopBottom);
       break;
     
-    case NS_THEME_TEXTFIELD:
-      aResult->SizeTo(2, 2, 2, 2);
+    case NS_THEME_TEXTFIELD: {
+      SInt32 frameOutset = 0;
+      ::GetThemeMetric(kThemeMetricEditTextFrameOutset, &frameOutset);
+      aResult->SizeTo(frameOutset, frameOutset, frameOutset, frameOutset);
+    }
       break;
 
     case NS_THEME_LISTBOX: {
@@ -679,6 +698,13 @@ nsNativeThemeCocoa::GetWidgetPadding(nsIDeviceContext* aContext,
                                      PRUint8 aWidgetType,
                                      nsMargin* aResult)
 {
+  if (aWidgetType == NS_THEME_TEXTFIELD) {
+    SInt32 nativePadding = 0;
+    ::GetThemeMetric(kThemeMetricEditTextWhitespace, &nativePadding);
+    aResult->SizeTo(nativePadding, nativePadding, nativePadding, nativePadding);
+    return PR_TRUE;
+  }
+
   return PR_FALSE;
 }
 
