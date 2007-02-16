@@ -112,3 +112,6 @@
 <!ENTITY paragraphAddressCmd.label "Address">
 <!ENTITY paragraphPreformatCmd.label "Preformat">
 <!ENTITY genericContainerCmd.label "Generic container (div)">
+
+<!ENTITY unorderedList.tooltip "Unordered list">
+<!ENTITY orderedList.tooltip "Ordered list">

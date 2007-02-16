@@ -45,7 +45,8 @@
 }
 
 #boldButton, #italicButton, #underlineButton,
-#strongButton, #emButton {
+#strongButton, #emButton,
+#ulButton, #olButton {
   list-style-image: url("chrome://composer/skin/icons/btn3.png");
 }
 
@@ -127,4 +128,36 @@
 }
 #underlineButton[disabled="true"] {
   -moz-image-region: rect(64px 64px 80px 48px);
+}
+
+#ulButton{
+  -moz-image-region: rect(80px 16px 96px 0);
+}
+#ulButton:hover {
+  -moz-image-region: rect(80px 32px 96px 16px);
+}
+#ulButton:hover:active {
+  -moz-image-region: rect(80px 48px 96px 32px);
+}
+#ulButton[checked="true"] {
+  -moz-image-region: rect(80px 16px 96px 0);
+}
+#ulButton[disabled="true"] {
+  -moz-image-region: rect(80px 64px 96px 48px);
+}
+
+#olButton{
+  -moz-image-region: rect(96px 16px 112px 0);
+}
+#olButton:hover {
+  -moz-image-region: rect(96px 32px 112px 16px);
+}
+#olButton:hover:active {
+  -moz-image-region: rect(96px 48px 112px 32px);
+}
+#olButton[checked="true"] {
+  -moz-image-region: rect(96px 16px 112px 0);
+}
+#olButton[disabled="true"] {
+  -moz-image-region: rect(96px 64px 112px 48px);
 }

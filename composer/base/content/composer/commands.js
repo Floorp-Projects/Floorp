@@ -113,6 +113,9 @@ var ComposerCommands = {
         case "cmd_underline":
         case "cmd_strong":
         case "cmd_em":
+
+        case "cmd_ul":
+        case "cmd_ol":
           this.pokeStyleUI(command, params.getBooleanValue("state_all"));
           break;
 

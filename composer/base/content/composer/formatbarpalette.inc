@@ -48,4 +48,14 @@
         </menulist>
       </toolbaritem>
 
+    <toolbarbutton id="ulButton" type="radio" group="lists" autoCheck="false" observes="cmd_ul"
+                   tooltiptext="&unorderedList.tooltip;">
+        <observes element="cmd_ul" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_ul')"/>
+    </toolbarbutton>
+
+    <toolbarbutton id="olButton" type="radio" group="lists" autoCheck="false" observes="cmd_ol"
+                   tooltiptext="&orderedList.tooltip;">
+        <observes element="cmd_ol" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_ol')"/>
+    </toolbarbutton>
+
     </toolbarpalette>
