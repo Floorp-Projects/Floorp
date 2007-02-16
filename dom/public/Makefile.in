@@ -49,6 +49,7 @@ DIRS		= idl coreEvents base
 
 XPIDLSRCS	= nsIScriptContextOwner.idl \
 		  nsIEntropyCollector.idl \
+		  nsIScriptChannel.idl \
 		  $(NULL)
 
 EXPORTS=nsIScriptContext.h		\

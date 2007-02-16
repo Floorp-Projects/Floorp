@@ -103,6 +103,7 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsIScrollableView.h"
+#include "nsIScriptChannel.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -6963,6 +6964,12 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     rv = URIInheritsSecurityContext(aURI, &inherit);
     if (NS_SUCCEEDED(rv) && (inherit || IsAboutBlank(aURI))) {
         channel->SetOwner(aOwner);
+        nsCOMPtr<nsIScriptChannel> scriptChannel = do_QueryInterface(channel);
+        if (scriptChannel) {
+            // Allow execution against our context if the principals match
+            scriptChannel->
+                SetExecutionPolicy(nsIScriptChannel::EXECUTE_NORMAL);
+        }
     }
 
     if (aIsNewWindowTarget) {
