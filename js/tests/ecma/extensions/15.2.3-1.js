@@ -57,6 +57,6 @@ startTest();
 
 writeHeaderToLog( SECTION + " Properties of the Object Constructor");
 
-new TestCase( SECTION,  "Object.length",        1,                      Object.length );
+new TestCase( SECTION,  "Object.__proto__",     Function.prototype,     Object.__proto__ );
 
 test();
