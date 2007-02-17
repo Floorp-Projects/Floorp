@@ -3440,8 +3440,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 lval = "";
               do_qname:
                 sn = js_GetSrcNote(jp->script, pc);
-                rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom),
-                                   inXML ? DONT_ESCAPE : 0);
+                rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                 if (!rval)
                     return NULL;
                 RETRACT(&ss->sprinter, rval);
@@ -3931,7 +3930,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
               BEGIN_LITOPX_CASE(JSOP_QNAMEPART, 0)
-                inXML = JS_TRUE;
                 if (pc[JSOP_QNAMEPART_LENGTH] == JSOP_TOATTRNAME) {
                     saveop = JSOP_TOATTRNAME;
                     len += JSOP_TOATTRNAME_LENGTH;
@@ -4043,16 +4041,14 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               BEGIN_LITOPX_CASE(JSOP_XMLCDATA, 0)
                 todo = SprintPut(&ss->sprinter, "<![CDATA[", 9);
-                if (!QuoteString(&ss->sprinter, ATOM_TO_STRING(atom),
-                                 DONT_ESCAPE))
+                if (!QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0))
                     return NULL;
                 SprintPut(&ss->sprinter, "]]>", 3);
               END_LITOPX_CASE
 
               BEGIN_LITOPX_CASE(JSOP_XMLCOMMENT, 0)
                 todo = SprintPut(&ss->sprinter, "<!--", 4);
-                if (!QuoteString(&ss->sprinter, ATOM_TO_STRING(atom),
-                                 DONT_ESCAPE))
+                if (!QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0))
                     return NULL;
                 SprintPut(&ss->sprinter, "-->", 3);
               END_LITOPX_CASE
