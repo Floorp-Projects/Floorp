@@ -260,7 +260,7 @@ NPIdentifier NPN_GetStringIdentifier(const NPUTF8 *name)
 void NPN_GetStringIdentifiers(const NPUTF8 **names, int32_t nameCount,
                               NPIdentifier *identifiers)
 {
-    return CallNPN_GetStringIdentifiersProc(gNetscapeFuncs.getstringidentifiers,
+    CallNPN_GetStringIdentifiersProc(gNetscapeFuncs.getstringidentifiers,
         names, nameCount, identifiers);
 }
 
@@ -299,7 +299,7 @@ NPObject *NPN_RetainObject(NPObject *obj)
 
 void NPN_ReleaseObject(NPObject *obj)
 {
-    return CallNPN_ReleaseObjectProc(gNetscapeFuncs.releaseobject, obj);
+    CallNPN_ReleaseObjectProc(gNetscapeFuncs.releaseobject, obj);
 }
 
 bool NPN_Invoke(NPP npp, NPObject* obj, NPIdentifier methodName,
