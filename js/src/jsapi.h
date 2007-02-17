@@ -568,6 +568,12 @@ JS_StringToVersion(const char *string);
                                                    being converted to error
                                                    reports */
 
+#define JSOPTION_RELIMIT        JS_BIT(9)       /* Throw exception on any
+                                                   regular expression which
+                                                   backtracks more than n^3
+                                                   times, where n is length
+                                                   of the input string */
+
 extern JS_PUBLIC_API(uint32)
 JS_GetOptions(JSContext *cx);
 
