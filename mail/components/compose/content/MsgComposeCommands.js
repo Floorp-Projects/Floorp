@@ -123,7 +123,7 @@ var gAttachVCardOptionChanged;
 var gMailSession;
 var gAutoSaveInterval;
 var gAutoSaveTimeout;
-var gExplicitSave;
+var gAutoSaveKickedIn;
 var gEditingDraft;
 
 const kComposeAttachDirPrefName = "mail.compose.attach.dir";
@@ -1461,7 +1461,7 @@ function ComposeStartup(recycled, aParams)
   if (gAutoSaveInterval)
     gAutoSaveTimeout = setTimeout(AutoSave, gAutoSaveInterval);
 
-  gExplicitSave = false;
+  gAutoSaveKickedIn = false;
 }
 
 // The new, nice, simple way of getting notified when a new editor has been created
@@ -2034,7 +2034,8 @@ function SaveAsDraft()
 {
   dump("SaveAsDraft from XUL\n");
 
-  gExplicitSave = true;
+  gAutoSaveKickedIn = false;
+  gEditingDraft = true;
 
   GenericSendMessage(nsIMsgCompDeliverMode.SaveAsDraft);
   defaultSaveOperation = "draft";
@@ -2043,6 +2044,9 @@ function SaveAsDraft()
 function SaveAsTemplate()
 {
   dump("SaveAsTemplate from XUL\n");
+
+  gAutoSaveKickedIn = false;
+  gEditingDraft = false;
 
   GenericSendMessage(nsIMsgCompDeliverMode.SaveAsTemplate);
   defaultSaveOperation = "template";
@@ -2492,7 +2496,7 @@ function ComposeCanClose()
   }
 
   // Returns FALSE only if user cancels save action
-  if (gContentChanged || gMsgCompose.bodyModified || !gExplicitSave)
+  if (gContentChanged || gMsgCompose.bodyModified || gAutoSaveKickedIn)
   {
     // call window.focus, since we need to pop up a dialog
     // and therefore need to be visible (to prevent user confusion)
@@ -2518,7 +2522,7 @@ function ComposeCanClose()
         case 2: //Don't Save
           // don't delete the draft if we didn't start off editing a draft
           // and the user hasn't explicitly saved it.
-          if (!gEditingDraft && !gExplicitSave)
+          if (!gEditingDraft && gAutoSaveKickedIn)
             RemoveDraft();
           break;
       }
@@ -3605,7 +3609,10 @@ function AutoSave()
 {
   if (gMsgCompose.editor && (gContentChanged || gMsgCompose.bodyModified) 
       && !gSendOrSaveOperationInProgress)
+  {
     GenericSendMessage(nsIMsgCompDeliverMode.AutoSaveAsDraft);
+    gAutoSaveKickedIn = true;
+  }
 
   gAutoSaveTimeout = setTimeout(AutoSave, gAutoSaveInterval);
 }
