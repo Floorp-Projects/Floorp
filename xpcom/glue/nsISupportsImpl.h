@@ -120,9 +120,10 @@ public:
       // The sentinel value "purple bit alone, refcount 0" means
       // that we're stabilized, during finalization. In this
       // state we lie about our actual refcount if anyone asks
-      // and say it's 1, which is basically true: the caller who
-      // is deleting us has a reference still.
-      return 1;
+      // and say it's 2, which is basically true: the caller who
+      // is incrementing has a reference, as does the decr() frame
+      // that stabilized-and-is-deleting us.
+      return 2;
     }
 
     nsrefcnt tmp = get();
