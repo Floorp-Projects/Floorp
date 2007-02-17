@@ -66,16 +66,27 @@
         <body><![CDATA[
           var stack = document.getAnonymousElementByAttribute(this, "anonid", "stack");
           var spacer = document.getAnonymousElementByAttribute(this, "anonid", "spacer");
-          var position = -1;
+
+          var isLTR = 
+           document.defaultView.getComputedStyle(this, null).direction == "ltr";
+
+          var position = isLTR ? 4 : -1;
           var interval = setInterval(function nextStep() {
             try {
               var width = stack.boxObject.width >> 2;
               spacer.height = stack.boxObject.height;
               spacer.width = width;
               spacer.left = width * position;
-              position += 15 / (width + 150);
-              if (position >= 4)
-                position = -1;
+              if (isLTR) {
+                position += 15 / (width + 150);
+                if (position >= 4)
+                  position = -1;
+              }
+              else {
+                position -= 15 / (width + 150);
+                if (position < 0)
+                  position = 4;
+              }
             } catch (e) {
               clearInterval(interval);
             }
