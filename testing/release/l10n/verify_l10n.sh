@@ -28,3 +28,5 @@ do
     diff -r source target > $release/diffs/${platform}.${locale}.diff
   done
 done
+
+exit 0
