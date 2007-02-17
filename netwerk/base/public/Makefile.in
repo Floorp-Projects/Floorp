@@ -113,6 +113,7 @@ XPIDLSRCS	= \
 		nsISecretDecoderRing.idl \
 		nsISecureBrowserUI.idl \
 		nsICryptoFIPSInfo.idl \
+		nsINSSErrorsService.idl \
 		nsICachingChannel.idl \
 		nsIByteRangeRequest.idl \
 		nsIMultiPartChannel.idl \

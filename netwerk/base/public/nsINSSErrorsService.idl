@@ -16,13 +16,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Red Hat, Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Doug Turner <dougt@netscape.com>
- *   Brian Ryner <bryner@brianryner.com>
+ *   Kai Engert <kengert@redhat.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,10 +39,26 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(0d0a6b62-d4a9-402e-a197-6bc6e358fec9)]
-interface nsITransportSecurityInfo : nsISupports {
-    readonly attribute unsigned long    securityState;
-    readonly attribute wstring          shortSecurityDescription;
-    readonly attribute wstring          errorMessage;
-};
+[scriptable, uuid(c6ac6e5d-9db1-4cad-bedc-e2d226913c21)]
+interface nsINSSErrorsService : nsISupports
+{
+    /**
+     *  @param aNSPRCode An error code obtained using PR_GetError()
+     *  @return True if it is error code defined by the NSS library
+     */
+    boolean isNSSErrorCode(in PRInt32 aNSPRCode);
 
+    /**
+     *  Function will fail if aNSPRCode is not an NSS error code.
+     *  @param aNSPRCode An error code obtained using PR_GetError()
+     *  @return The result of the conversion, an XPCOM error code
+     */
+    nsresult getXPCOMFromNSSError(in PRInt32 aNSPRCode);
+
+    /**
+     *  Function will fail if aXPCOMErrorCode is not an NSS error code.
+     *  @param aXPCOMErrorCode An error code obtain using getXPCOMFromNSSError
+     *  return A localized human readable error explanation.
+     */
+    AString getErrorMessage(in nsresult aXPCOMErrorCode);
+};
