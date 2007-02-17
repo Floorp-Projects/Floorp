@@ -52,11 +52,17 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IRANGE_IID)
 
   nsIRange()
-    : mStartOffset(0),
+    : mRoot(nsnull),
+      mStartOffset(0),
       mEndOffset(0),
       mIsPositioned(PR_FALSE),
       mIsDetached(PR_FALSE)
   {
+  }
+
+  nsINode* GetRoot()
+  {
+    return mRoot;
   }
 
   nsINode* GetStartParent()
@@ -100,6 +106,7 @@ public:
   virtual void Reset() = 0;
 
 protected:
+  nsINode* mRoot;
   nsCOMPtr<nsINode> mStartParent;
   nsCOMPtr<nsINode> mEndParent;
   PRInt32 mStartOffset;

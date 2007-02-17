@@ -1236,6 +1236,9 @@ nsRange::CompareBoundaryPoints(PRUint16 aHow, nsIDOMRange* aOtherRange,
       return NS_ERROR_ILLEGAL_VALUE;
   }
 
+  if (mRoot != otherRange->GetRoot())
+    return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
+
   *aCmpRet = nsContentUtils::ComparePoints(ourNode, ourOffset,
                                            otherNode, otherOffset);
 
