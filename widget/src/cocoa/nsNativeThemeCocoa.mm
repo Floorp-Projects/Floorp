@@ -73,8 +73,6 @@ nsNativeThemeCocoa::nsNativeThemeCocoa()
 {
   if (!sInitializedBorders) {
     sInitializedBorders = PR_TRUE;
-    sTextfieldBorderSize.left = sTextfieldBorderSize.top = 2;
-    sTextfieldBorderSize.right = sTextfieldBorderSize.bottom = 2;
     sTextfieldBGTransparent = PR_FALSE;
     sListboxBGTransparent = PR_TRUE;
     sTextfieldDisabledBGColorID = nsILookAndFeel::eColor__moz_field;
@@ -139,12 +137,23 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
   if (inIsDefault && !inDisabled)
     bdi.adornment |= kThemeAdornmentDefault;
 
+  // Certain buttons draw outside their frame with nsITheme, we adjust for that here.
+  HIRect drawRect = inBoxRect;
+  if (inKind == kThemePushButton ||
+      inKind == kThemePopupButton) {
+    // these buttons draw one pixel too wide on each side and two pixels too
+    // far down on the bottom
+    drawRect.origin.x += 1;
+    drawRect.size.width -= 2;
+    drawRect.size.height -= 2;
+  }
+
 #if DRAW_IN_FRAME_DEBUG
   CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.8);
   CGContextFillRect(cgContext, inBoxRect);
 #endif
 
-  HIThemeDrawButton(&inBoxRect, &bdi, cgContext, HITHEME_ORIENTATION, NULL);
+  HIThemeDrawButton(&drawRect, &bdi, cgContext, HITHEME_ORIENTATION, NULL);
 }
 
 void
@@ -464,13 +473,10 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_BUTTON:
-      DrawButton(cgContext, kThemePushButton, macRect,
-                 IsDefaultButton(aFrame), IsDisabled(aFrame),
-                 kThemeButtonOn, kThemeAdornmentNone, eventState);
-      break;
-
     case NS_THEME_BUTTON_SMALL:
-      DrawButton(cgContext, kThemePushButtonSmall, macRect,
+      // NS_THEME_BUTTON and NS_THEME_BUTTON_SMALL draw the same way because larger native pushbuttons
+      // are capable of drawing themselves at any size the small native pushbuttons can.
+      DrawButton(cgContext, kThemePushButton, macRect,
                  IsDefaultButton(aFrame), IsDisabled(aFrame),
                  kThemeButtonOn, kThemeAdornmentNone, eventState);
       break;
@@ -658,13 +664,9 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
 
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
+    case NS_THEME_BUTTON_SMALL:
       aResult->SizeTo(kAquaPushButtonEndcaps, kAquaPushButtonTopBottom, 
                       kAquaPushButtonEndcaps, kAquaPushButtonTopBottom);
-      break;
-
-    case NS_THEME_BUTTON_SMALL:
-      aResult->SizeTo(kAquaSmallPushButtonEndcaps, kAquaPushButtonTopBottom,
-                      kAquaSmallPushButtonEndcaps, kAquaPushButtonTopBottom);
       break;
 
     case NS_THEME_DROPDOWN:
@@ -704,8 +706,33 @@ nsNativeThemeCocoa::GetWidgetPadding(nsIDeviceContext* aContext,
     aResult->SizeTo(nativePadding, nativePadding, nativePadding, nativePadding);
     return PR_TRUE;
   }
+  else if (aWidgetType == NS_THEME_BUTTON ||
+           aWidgetType == NS_THEME_BUTTON_SMALL) {
+    // The button draws with a shadow on the bottom so we have to move the text
+    // up one pixel to center it
+    aResult->SizeTo(0, -1, 0, 1);
+    return PR_TRUE;
+  }
 
   return PR_FALSE;
+}
+
+PRBool
+nsNativeThemeCocoa::GetWidgetOverflow(nsIDeviceContext* aContext, nsIFrame* aFrame,
+                                      PRUint8 aWidgetType, nsRect* aResult)
+{
+  // We assume that all native widgets can draw a focus ring that will be less than
+  // or equal to 4 pixels thick.
+  nsIntMargin extraSize = nsIntMargin(4, 4, 4, 4);
+  PRInt32 p2a = aContext->AppUnitsPerDevPixel();
+  nsMargin m(NSIntPixelsToAppUnits(extraSize.left, p2a),
+             NSIntPixelsToAppUnits(extraSize.top, p2a),
+             NSIntPixelsToAppUnits(extraSize.right, p2a),
+             NSIntPixelsToAppUnits(extraSize.bottom, p2a));
+  nsRect r(nsPoint(0, 0), aFrame->GetSize());
+  r.Inflate(m);
+  *aResult = r;
+  return PR_TRUE;  
 }
 
 NS_IMETHODIMP
@@ -719,22 +746,17 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
   *aIsOverridable = PR_TRUE;
 
   switch (aWidgetType) {
+    // These are the same since a normal native pushbutton can become as small
+    // as the small native pushbutton.
     case NS_THEME_BUTTON:
+    case NS_THEME_BUTTON_SMALL:
     {
       SInt32 buttonHeight = 0;
       ::GetThemeMetric(kThemeMetricPushButtonHeight, &buttonHeight);
       aResult->SizeTo(kAquaPushButtonEndcaps * 2, buttonHeight);
       break;
     }
-      
-    case NS_THEME_BUTTON_SMALL:
-    {
-      SInt32 buttonHeight = 0;
-      ::GetThemeMetric(kThemeMetricSmallPushButtonHeight, &buttonHeight);
-      aResult->SizeTo(kAquaSmallPushButtonEndcaps * 2, buttonHeight);
-      break;
-    }
-    
+
     case NS_THEME_SPINNER:
     {
       SInt32 buttonHeight = 0;

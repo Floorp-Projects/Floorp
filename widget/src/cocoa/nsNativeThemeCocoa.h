@@ -72,6 +72,9 @@ public:
                                   PRUint8 aWidgetType,
                                   nsMargin* aResult);
 
+  virtual PRBool GetWidgetOverflow(nsIDeviceContext* aContext, nsIFrame* aFrame,
+                                   PRUint8 aWidgetType, nsRect* aResult);
+
   NS_IMETHOD GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   nsSize* aResult, PRBool* aIsOverridable);
@@ -86,9 +89,8 @@ protected:
 
     // Some widths and margins. You'd think there would be metrics for these, but no.
   enum {
-    kAquaPushButtonEndcaps = 14,
+    kAquaPushButtonEndcaps = 10,
     kAquaPushButtonTopBottom = 2,
-    kAquaSmallPushButtonEndcaps = 10,
 
     kAquaDropdownLeftEndcap = 9,
     kAquaDropwdonRightEndcap = 20     // wider on right to encompass the button
