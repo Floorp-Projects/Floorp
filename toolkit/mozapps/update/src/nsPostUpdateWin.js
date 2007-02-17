@@ -622,20 +622,7 @@ nsPostUpdateWin.prototype = {
       getService(Components.interfaces.nsIStringBundleService);
     var brandBundle = sbs.createBundle(URI_BRAND_PROPERTIES);
 
-    var vendorShortName;
-    try {
-      // The Thunderbird vendorShortName is "Mozilla Thunderbird", but we
-      // just want "Thunderbird", so allow it to be overridden in prefs.
-
-      var prefs =
-        Components.classes["@mozilla.org/preferences-service;1"].
-        getService(Components.interfaces.nsIPrefBranch);
-
-      vendorShortName = prefs.getCharPref("app.update.vendorName.override");
-    }
-    catch (e) {
-      vendorShortName = brandBundle.GetStringFromName("vendorShortName");
-    }
+    var vendorShortName = brandBundle.GetStringFromName("vendorShortName");
     var brandFullName = brandBundle.GetStringFromName("brandFullName");
 
     if (!gCopiedLog && 
