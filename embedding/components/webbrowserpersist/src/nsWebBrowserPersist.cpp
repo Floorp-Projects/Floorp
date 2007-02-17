@@ -225,7 +225,8 @@ const char *kNonpersistableSchemes[] = {
     "javascript:",
     "view-source:",
     "irc:",
-    "mailbox:"
+    "mailbox:",
+    "data:"
 };
 const PRUint32 kNonpersistableSchemesSize = sizeof(kNonpersistableSchemes) / sizeof(kNonpersistableSchemes[0]);
 
