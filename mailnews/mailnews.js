@@ -162,7 +162,9 @@ pref("mail.use_fcc",                        true);
 pref("mail.cc_self",                        false);
 pref("mail.strictly_mime",                  false);
 pref("mail.strictly_mime_headers",          true);
-pref("mail.strictly_mime.parm_folding",     2);  // 0/1 (RFC 2047), 2(RFC 2231)
+// 0/1 (RFC 2047), 2(RFC 2231), 3/4(RFC 2231, but name param is encoded by RFC 2047)
+// 0/3 the name param is never separated to multiple lines.
+pref("mail.strictly_mime.parm_folding",     3);  
 pref("mail.label_ascii_only_mail_as_us_ascii", false); 
 pref("mail.file_attach_binary",             false);
 pref("mail.show_headers",                   1); // some

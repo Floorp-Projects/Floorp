@@ -804,9 +804,13 @@ char
            rand_buf[8], rand_buf[9], rand_buf[10], rand_buf[11]);
 }
 
-static  char *
+static char *
 RFC2231ParmFolding(const char *parmName, const nsAFlatCString& charset,
                    const char *language, const nsAFlatString& parmValue);
+
+static char *
+RFC2047ParmFolding(const nsAFlatCString& aCharset,
+                   const nsAFlatCString& aFileName, PRInt32 aParmFolding);
 
 char * 
 mime_generate_attachment_headers (const char *type,
@@ -851,8 +855,7 @@ mime_generate_attachment_headers (const char *type,
         charset.Assign("UTF-8"); // set to UTF-8 if fails again
     }
 
-
-    if (parmFolding == 2) {
+    if (parmFolding == 2 || parmFolding == 3 || parmFolding == 4) {
       encodedRealName = RFC2231ParmFolding("filename", charset, nsnull, 
                                            realName);
       // somehow RFC2231ParamFolding failed. fall back to RFC 2047     
@@ -863,29 +866,9 @@ mime_generate_attachment_headers (const char *type,
     }
 
     // Not RFC 2231 style encoding (it's not standard-compliant)
-    // parmFolding = 0  or 1
-    if (parmFolding != 2) {
-      PRBool usemime = nsMsgMIMEGetConformToStandard();
-      encodedRealName = nsMsgI18NEncodeMimePartIIStr(real_name, PR_FALSE,
-                                                     charset.get(), 0, usemime);
-                          
-      if (!encodedRealName || !*encodedRealName)
-      {
-        PR_FREEIF(encodedRealName);
-        encodedRealName = (char *) PR_Malloc(strlen(real_name) + 1);
-        if (encodedRealName)
-          PL_strcpy(encodedRealName, real_name);
-        charset.Assign("us-ascii");
-      }
-
-      // Now put backslashes before special characters per RFC 822 
-      char *qtextName = msg_make_filename_qtext(encodedRealName,
-                        (parmFolding == 0 ? PR_TRUE : PR_FALSE));    
-      if (qtextName)
-      {
-        PR_FREEIF(encodedRealName);
-        encodedRealName = qtextName;
-      }
+    if (parmFolding == 0 || parmFolding == 1) {
+      encodedRealName =
+        RFC2047ParmFolding(charset, nsDependentCString(real_name), parmFolding);
     }
   }
 
@@ -979,19 +962,22 @@ mime_generate_attachment_headers (const char *type,
 
 #ifdef EMIT_NAME_IN_CONTENT_TYPE
   if (encodedRealName && *encodedRealName) {
-    if (parmFolding == 0 || parmFolding == 1) {
-      buf.Append(";\r\n name=\"");
-      buf.Append(encodedRealName);
-      buf.Append("\"");
-    }
-    else 
-    {
-      char *nameParm = RFC2231ParmFolding("name", charset, nsnull, realName);
-      if (nameParm && *nameParm) {
-        buf.Append(";\r\n ");
-        buf.Append(nameParm);
+    // Note that we don't need to output the name field if the name encoding is
+    // RFC 2231. If the MUA knows the RFC 2231, it should know the RFC 2183 too.
+    if (parmFolding != 2) {
+      char *nameValue = nsnull;
+      if (parmFolding == 3 || parmFolding == 4)
+        nameValue = RFC2047ParmFolding(charset, nsDependentCString(real_name),
+                                       parmFolding);
+      if (!nameValue || !*nameValue) {
+        PR_FREEIF(nameValue);
+        nameValue = encodedRealName;
       }
-      PR_FREEIF(nameParm);
+      buf.Append(";\r\n name=\"");
+      buf.Append(nameValue);
+      buf.Append("\"");
+      if (nameValue != encodedRealName)
+        PR_FREEIF(nameValue);
     }
   }
 #endif /* EMIT_NAME_IN_CONTENT_TYPE */
@@ -1054,7 +1040,7 @@ mime_generate_attachment_headers (const char *type,
       buf.Append(encodedRealName);
       buf.Append("\"" CRLF);
     }
-    else // if (parmFolding == 2)
+    else // if (parmFolding == 2 || parmFolding == 3 || parmFolding == 4)
     {
       buf.Append(";\r\n ");
       buf.Append(encodedRealName);
@@ -1381,6 +1367,33 @@ done:
   else 
     PR_Free(dupParm);
   return foldedParm;
+}
+
+/*static */ char *
+RFC2047ParmFolding(const nsAFlatCString& aCharset,
+                   const nsAFlatCString& aFileName, PRInt32 aParmFolding)
+{
+  PRBool usemime = nsMsgMIMEGetConformToStandard();
+  char *encodedRealName =
+    nsMsgI18NEncodeMimePartIIStr(aFileName.get(), PR_FALSE, aCharset.get(),
+                                 0, usemime);
+
+  if (!encodedRealName || !*encodedRealName) {
+    PR_FREEIF(encodedRealName);
+    encodedRealName = (char *) PR_Malloc(aFileName.Length() + 1);
+    if (encodedRealName)
+      PL_strcpy(encodedRealName, aFileName.get());
+  }
+
+  // Now put backslashes before special characters per RFC 822 
+  char *qtextName =
+    msg_make_filename_qtext(encodedRealName,
+      aParmFolding == 0 || aParmFolding == 3 ? PR_TRUE : PR_FALSE);
+  if (qtextName) {
+    PR_FREEIF(encodedRealName);
+    encodedRealName = qtextName;
+  }
+  return encodedRealName;
 }
 
 PRBool 
