@@ -206,11 +206,12 @@ function nsTreeController_delete()
     } catch (ex) {
     }
   }
-  if (max.value) {
-    var newIndex = max.value - (max.value - min.value);
+  if (max.value != -1) {
+    var newIndex = min.value;
     if (newIndex >= this.treeView.rowCount)
       --newIndex;
-    this.treeSelection.select(newIndex);
+    if (newIndex >= 0)
+      this.treeSelection.select(newIndex);
   }
   return true;
 }
