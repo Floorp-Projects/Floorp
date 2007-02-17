@@ -2030,7 +2030,7 @@ nsWSRunObject::GetWSPointBefore(nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *out
     // appropriate character
     nsCOMPtr<nsIContent> textNode(do_QueryInterface(mNodeArray[curNum]));
     WSPoint point(textNode, 0, 0);
-    return GetCharAfter(point, outPoint);
+    return GetCharBefore(point, outPoint);
   }
 }
 
