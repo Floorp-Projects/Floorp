@@ -2,15 +2,17 @@
     IBClasses = (
         {
             ACTIONS = {
-                configurePopupBlocking = id; 
+                blacklistPopups = id; 
                 hideBlockedPopupView = id; 
                 reloadWithNewCharset = id; 
-                unblockPopupSites = id; 
+                showPopups = id; 
+                unblockPopups = id; 
             }; 
             CLASS = BrowserWrapper; 
             LANGUAGE = ObjC; 
             OUTLETS = {
                 mBlockedPopupCloseButton = RolloverImageButton; 
+                mBlockedPopupLabel = NSTextField; 
                 mBlockedPopupView = NSView; 
                 mCreateDelegate = id; 
                 mDelegate = id; 

@@ -66,10 +66,10 @@ class nsIArray;
 - (void)updateSiteIcons:(NSImage*)icon ignoreTyping:(BOOL)ignoreTyping;
 
 - (void)showPopupBlocked:(BOOL)blocked;
-- (void)configurePopupBlocking;
-- (void)unblockAllPopupSites:(nsIArray*)inSites;
 - (void)showSecurityState:(unsigned long)state;
 - (void)showFeedDetected:(BOOL)inDetected;
+- (void)showBlockedPopups:(nsIArray*)blockedSites whitelistingSource:(BOOL)shouldWhitelist;
+- (void)blacklistPopupsFromURL:(NSString*)inURL;
 
 - (BOOL)userChangedLocationField;
 
@@ -140,7 +140,7 @@ class nsIArray;
   NSString*                 mDisplayTitle;
     // array of popupevents that have been blocked. We can use them to reconstruct the popups
     // later. If nil, no sites are blocked. Cleared after each new page.
-  nsIMutableArray*          mBlockedSites;
+  nsIMutableArray*          mBlockedPopups;
   NSMutableArray*           mFeedList;        // list of feeds found on page
 
   CHBrowserView*            mBrowserView;     // retained
@@ -148,7 +148,8 @@ class nsIArray;
   NSMutableArray*           mStatusStrings;   // current status bar messages, STRONG
 
   IBOutlet NSView*          mBlockedPopupView;   // loaded on demand, can be nil, STRONG
-  IBOutlet RolloverImageButton* mBlockedPopupCloseButton; 
+  IBOutlet RolloverImageButton* mBlockedPopupCloseButton;
+  IBOutlet NSTextField*     mBlockedPopupLabel;
 
   double                    mProgress;
   
@@ -197,8 +198,9 @@ class nsIArray;
 - (unsigned long)securityState;
 - (NSArray*)feedList;
 
-- (IBAction)configurePopupBlocking:(id)sender;
-- (IBAction)unblockPopupSites:(id)sender;
+- (IBAction)showPopups:(id)sender;
+- (IBAction)unblockPopups:(id)sender;
+- (IBAction)blacklistPopups:(id)sender;
 - (IBAction)hideBlockedPopupView:(id)sender;
 
 - (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags focusContent:(BOOL)focusContent allowPopups:(BOOL)inAllowPopups;

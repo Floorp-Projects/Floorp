@@ -66,6 +66,7 @@
 
 #include "nsIArray.h"
 #include "nsIURI.h"
+#include "nsNetUtil.h"
 #include "nsIIOService.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
@@ -79,6 +80,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIWebProgressListener.h"
 #include "nsIBrowserDOMWindow.h"
+#include "nsIPermissionManager.h"
 
 class nsIDOMPopupBlockedEvent;
 
@@ -113,6 +115,8 @@ enum {
 
 - (void)checkForCustomViewOnLoad:(NSString*)inURL;
 
+- (BOOL)popupsAreBlacklistedForURL:(NSString*)inURL;
+- (void)showPopupsWhitelistingSource:(BOOL)shouldWhitelist;
 - (void)addBlockedPopupViewAndDisplay;
 - (void)removeBlockedPopupViewAndDisplay;
 
@@ -190,7 +194,7 @@ enum {
   [mToolTip release];
   [mDisplayTitle release];
   
-  NS_IF_RELEASE(mBlockedSites);
+  NS_IF_RELEASE(mBlockedPopups);
   
   [mFeedList release];
   
@@ -343,10 +347,10 @@ enum {
 
 - (BOOL)popupsBlocked
 {
-  if (!mBlockedSites) return NO;
+  if (!mBlockedPopups) return NO;
   
   PRUint32 numBlocked = 0;
-  mBlockedSites->GetLength(&numBlocked);
+  mBlockedPopups->GetLength(&numBlocked);
   
   return (numBlocked > 0);
 }
@@ -540,8 +544,8 @@ enum {
   {
     // defer hiding of blocked popup view until we've loaded the new page
     [self removeBlockedPopupViewAndDisplay];
-    if(mBlockedSites)
-      mBlockedSites->Clear();
+    if(mBlockedPopups)
+      mBlockedPopups->Clear();
     [mDelegate showPopupBlocked:NO];
   
     NSString* faviconURI = [SiteIconProvider defaultFaviconLocationStringFromURI:urlSpec];
@@ -704,20 +708,21 @@ enum {
 }
 
 //
-// - onPopupBlocked:fromSite:
+// - onPopupBlocked:
 //
 // Called when gecko blocks a popup, telling us who it came from, the modifiers of the popup
-// and more data that we'll need if the user wants to unblock the popup later. This
-// doesn't show the blocked popup view, we wait until the page finishes loading
-// to do that.
+// and more data that we'll need if the user wants to unblock the popup later.
 //
 - (void)onPopupBlocked:(nsIDOMPopupBlockedEvent*)eventData;
 {
+  // If popups from this site have been blacklisted, silently discard the event.
+  if ([self popupsAreBlacklistedForURL:[self currentURI]])
+    return;
   // lazily instantiate.
-  if (!mBlockedSites)
-    CallCreateInstance(NS_ARRAY_CONTRACTID, &mBlockedSites);
-  if (mBlockedSites) {
-    mBlockedSites->AppendElement((nsISupports*)eventData, PR_FALSE);
+  if (!mBlockedPopups)
+    CallCreateInstance(NS_ARRAY_CONTRACTID, &mBlockedPopups);
+  if (mBlockedPopups) {
+    mBlockedPopups->AppendElement((nsISupports*)eventData, PR_FALSE);
     [self addBlockedPopupViewAndDisplay];
     [mDelegate showPopupBlocked:YES];
   }
@@ -1047,31 +1052,66 @@ enum {
 
 #pragma mark -
 
-//
-// -configurePopupBlocking:
-//
-// Called when the user clicks on the "configure" button in the blocked popup view.
-// Sends the msg along to our UI delegate so they can handle it
-//
-- (IBAction)configurePopupBlocking:(id)sender
+- (BOOL)popupsAreBlacklistedForURL:(NSString*)inURL
 {
-  [mDelegate configurePopupBlocking];
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), [inURL UTF8String]);
+  nsCOMPtr<nsIPermissionManager> pm(do_GetService(NS_PERMISSIONMANAGER_CONTRACTID));
+  if (pm && uri) {
+    PRUint32 permission;
+    pm->TestPermission(uri, "popup", &permission);
+    return (permission == nsIPermissionManager::DENY_ACTION);
+  }
+  return NO;
 }
 
 //
-// -unblockPopupSites:
+// -showPopups:
 //
-// Called when the user clicks on the "unblock" button in the blocked popup view.
-// Sends the msg along with the list of sites whose popups we just blocked to our UI
-// delegate so they can handle it. This also removes the blocked popup UI from
-// the current window.
+// Called when the user clicks on the "Allow Once" button in the blocked popup view.
+// Shows the blocked popups without whitelisting the source page.
 //
-- (IBAction)unblockPopupSites:(id)sender
+- (IBAction)showPopups:(id)sender
+{
+  [self showPopupsWhitelistingSource:NO];
+}
+
+//
+// -unblockPopups:
+//
+// Called when the user clicks on the "Always Allow" button in the blocked popup view.
+// Shows the blocked popups and whitelists the source page.
+//
+- (IBAction)unblockPopups:(id)sender
+{
+  [self showPopupsWhitelistingSource:YES];
+}
+
+//
+// -blacklistPopups:
+//
+// Called when the user clicks on the "Never Allow" button in the blocked popup view.
+// Adds the current site to the blacklist, and dismisses the blocked popup UI.
+//
+- (IBAction)blacklistPopups:(id)sender
+{
+  [mDelegate blacklistPopupsFromURL:[self currentURI]];
+  [self removeBlockedPopupViewAndDisplay];
+}
+
+//
+// -showPopupsWhitelistingSource:
+//
+// Private helper method to handle showing blocked popups.
+// Sends the the list of popups we just blocked to our UI delegate so it can
+// handle them. This also removes the blocked popup UI from the current window.
+//
+- (void)showPopupsWhitelistingSource:(BOOL)shouldWhitelist
 {
   NS_ASSERTION([self popupsBlocked], "no popups to unblock!");
   if ([self popupsBlocked]) {
-    nsCOMPtr<nsIArray> blockedSites = do_QueryInterface(mBlockedSites);
-    [mDelegate unblockAllPopupSites:blockedSites];
+    nsCOMPtr<nsIArray> blockedSites = do_QueryInterface(mBlockedPopups);
+    [mDelegate showBlockedPopups:blockedSites whitelistingSource:shouldWhitelist];
     [self removeBlockedPopupViewAndDisplay];
   }
 }
@@ -1087,6 +1127,10 @@ enum {
   if ([self popupsBlocked] && !mBlockedPopupView) {
     [NSBundle loadNibNamed:@"PopupBlockView" owner:self];
     
+    NSString* currentHost = [[NSURL URLWithString:[self currentURI]] host];
+    if (!currentHost)
+      currentHost = NSLocalizedString(@"GenericHostString", nil);
+    [mBlockedPopupLabel setStringValue:[NSString stringWithFormat:NSLocalizedString(@"PopupDisplayRequest", nil), currentHost]];
     [mBlockedPopupCloseButton setImage:[NSImage imageNamed:@"popup_close"]];
     [mBlockedPopupCloseButton setAlternateImage:[NSImage imageNamed:@"popup_close_pressed"]];
     [mBlockedPopupCloseButton setHoverImage:[NSImage imageNamed:@"popup_close_hover"]];

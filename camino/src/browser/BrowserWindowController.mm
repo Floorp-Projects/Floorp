@@ -551,8 +551,8 @@ enum BWCOpenDest {
 - (void)sessionHistoryItemAtRelativeOffset:(int)indexOffset forWrapper:(BrowserWrapper*)inWrapper title:(NSString**)outTitle URL:(NSString**)outURLString;
 - (NSString *)locationToolTipWithFormat:(NSString *)format title:(NSString *)backTitle URL:(NSString *)backURL;
 
-- (void)whitelistURL:(nsIURI*)URL;
-- (void)whitelistAndShowPopup:(nsIDOMPopupBlockedEvent*)aBlockedPopup;
+- (void)whitelistPopupsFromURL:(NSString*)inURL;
+- (void)showPopup:(nsIDOMPopupBlockedEvent*)aBlockedPopup;
 
 - (void)clearContextMenuTarget;
 - (void)updateLock:(unsigned int)securityState;
@@ -1897,18 +1897,6 @@ enum BWCOpenDest {
 }
 
 //
-// -configurePopupBlocking
-//
-// Called to display our popup blocking configuration ui, which is in prefs. 
-// Show the prefs window focused on the "web features" panel.
-//
-- (void)configurePopupBlocking
-{
-  [[MVPreferencesController sharedInstance] showPreferences:nil];
-  [[MVPreferencesController sharedInstance] selectPreferencePaneByIdentifier:@"org.mozilla.camino.preference.webfeatures"];
-}
-
-//
 // -openFeedPrefPane
 //
 // Opens the preference pane that contains the options for opening feeds
@@ -1920,15 +1908,14 @@ enum BWCOpenDest {
 }
 
 //
-// -unblockAllPopupSites:
+// showBlockedPopups:whitelistingSource:
 //
-// Called in response to the menu item from the unblock popup. Puts all the
-// blocked popups in the array on the whitelist, and shows them.
+// UI delegate method to show the given blocked popups, optionally whitelisting the source.
 //
-- (void)unblockAllPopupSites:(nsIArray*)inSites
+- (void)showBlockedPopups:(nsIArray*)blockedSites whitelistingSource:(BOOL)shouldWhitelist
 {
   nsCOMPtr<nsISimpleEnumerator> enumerator;
-  inSites->Enumerate(getter_AddRefs(enumerator));
+  blockedSites->Enumerate(getter_AddRefs(enumerator));
   PRBool hasMore = PR_FALSE;
 
   // iterate over the array of blocked popup events, and unblock & show
@@ -1942,11 +1929,15 @@ enum BWCOpenDest {
     nsCOMPtr<nsIDOMPopupBlockedEvent> evt;
     evt = do_QueryInterface(curSupports);
     if (evt)
-      [self whitelistAndShowPopup:evt];
+      [self showPopup:evt];
   }
+  // Because of the way our UI is set up, we white/blacklist based on the top-level window URI,
+  // rather than the requesting URI (which can be different on framed sites).
+  if (shouldWhitelist)
+    [self whitelistPopupsFromURL:[mBrowserView currentURI]];
 }
 
-- (void)whitelistAndShowPopup:(nsIDOMPopupBlockedEvent*)aPopupBlockedEvent
+- (void)showPopup:(nsIDOMPopupBlockedEvent*)aPopupBlockedEvent
 { 
   nsCOMPtr<nsIDOMWindow> requestingWindow;
   aPopupBlockedEvent->GetRequestingWindow(getter_AddRefs(requestingWindow));
@@ -1980,17 +1971,6 @@ enum BWCOpenDest {
   nsCAutoString uriStr;
   popupWindowURI->GetSpec(uriStr);
   
-  // whitelist the URL
-  nsCOMPtr<nsIURI> requestingWindowURI;
-  nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(requestingWindow);
-  if (webNav)
-    webNav->GetCurrentURI(getter_AddRefs(requestingWindowURI));
-  
-  if (requestingWindowURI)
-    [self whitelistURL:requestingWindowURI];
-  else
-    NSLog(@"Couldn't whitelist the URI");
-  
   // show the blocked popup
   nsCOMPtr<nsIDOMWindow> openedWindow;
   nsresult rv = piDomWin->Open(NS_ConvertUTF8toUTF16(uriStr), windowName, features, getter_AddRefs(openedWindow));
@@ -1998,10 +1978,22 @@ enum BWCOpenDest {
     NSLog(@"Couldn't show the blocked popup window for %@", [NSString stringWith_nsACString:uriStr]);
 }
 
-- (void)whitelistURL:(nsIURI*)URL
+- (void)whitelistPopupsFromURL:(NSString*)inURL
 {
-  nsCOMPtr<nsIPermissionManager> pm (do_GetService(NS_PERMISSIONMANAGER_CONTRACTID));
-  pm->Add(URL, "popup", nsIPermissionManager::ALLOW_ACTION);
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), [inURL UTF8String]);
+  nsCOMPtr<nsIPermissionManager> pm(do_GetService(NS_PERMISSIONMANAGER_CONTRACTID));
+  if (pm && uri)
+    pm->Add(uri, "popup", nsIPermissionManager::ALLOW_ACTION);
+}
+
+- (void)blacklistPopupsFromURL:(NSString*)inURL
+{
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), [inURL UTF8String]);
+  nsCOMPtr<nsIPermissionManager> pm(do_GetService(NS_PERMISSIONMANAGER_CONTRACTID));
+  if (pm && uri)
+    pm->Add(uri, "popup", nsIPermissionManager::DENY_ACTION);
 }
 
 //
