@@ -31,7 +31,8 @@ sub Execute {
     # pull version files
     my $moduleVer = catfile($appName, 'app', 'module.ver');
     my $versionTxt = catfile($appName, 'config', 'version.txt');
-    my @bumpFiles = ('client.mk', $moduleVer, $versionTxt);
+    my $milestoneTxt = catfile($appName, 'config', 'milestone.txt');
+    my @bumpFiles = ('client.mk', $moduleVer, $versionTxt, $milestoneTxt);
 
     # Check out Mozilla from the branch you want to tag.
     # TODO this should support running without branch tag or pull date.
@@ -73,7 +74,8 @@ sub Execute {
 
     my $parentDir = catfile($cvsrootTagDir, 'mozilla');
     foreach my $file (catfile($parentDir, $moduleVer), 
-                      catfile($parentDir, $versionTxt)) {
+                      catfile($parentDir, $versionTxt),
+                      catfile($parentDir, $milestoneTxt)) {
         my $found = 0;
         open(INFILE,  "< $file") or die("Could not open $file: $!");
         open(OUTFILE, "> $file.tmp") or die("Could not open $file.tmp: $!");
@@ -146,7 +148,8 @@ sub Verify {
 
     my $moduleVer = catfile($appName, 'app', 'module.ver');
     my $versionTxt = catfile($appName, 'config', 'version.txt');
-    my @bumpFiles = ('client.mk', $moduleVer, $versionTxt);
+    my $milestoneTxt = catfile($appName, 'config', 'milestone.txt');
+    my @bumpFiles = ('client.mk', $moduleVer, $versionTxt, $milestoneTxt);
 
     foreach my $file (@bumpFiles) {
         foreach my $rule ('^Checking in ' . $file, '^done') {
