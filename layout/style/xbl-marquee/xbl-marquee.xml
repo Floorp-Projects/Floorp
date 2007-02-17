@@ -44,7 +44,7 @@
           xmlns:xbl="http://www.mozilla.org/xbl">
 
 
-  <binding id="marquee" inheritstyle="false">
+  <binding id="marquee">
 
     <resources>
       <stylesheet src="chrome://xbl-marquee/content/xbl-marquee.css"/>
@@ -642,14 +642,16 @@
            extends="chrome://xbl-marquee/content/xbl-marquee.xml#marquee"
            inheritstyle="false">
 
+    <!-- White-space isn't allowed because a marquee could be 
+         inside 'white-space: pre' -->
     <content>
-      <html:div xbl:inherits="" style="overflow: hidden">
-        <html:div style="display: -moz-box; margin: 0 100%;"> 
-          <html:div class="innerDiv">
-            <children/>
-          </html:div>
-        </html:div>
-      </html:div>
+      <html:div xbl:inherits="" style="overflow: hidden"
+        ><html:div style="display: -moz-box; margin: 0 100%;"
+          ><html:div class="innerDiv"
+            ><children
+          /></html:div
+        ></html:div
+      ></html:div>
     </content>
 
   </binding>
@@ -659,12 +661,14 @@
            extends="chrome://xbl-marquee/content/xbl-marquee.xml#marquee"
            inheritstyle="false">
 
+    <!-- White-space isn't allowed because a marquee could be 
+         inside 'white-space: pre' -->
     <content>
-      <html:div xbl:inherits="" style="overflow: hidden; width: 100%; margin-right: 100%">
-        <html:div class="innerDiv">
-          <children/>
-        </html:div>
-      </html:div>
+      <html:div xbl:inherits="" style="overflow: hidden; width: 100%; margin-right: 100%"
+        ><html:div class="innerDiv"
+          ><children
+        /></html:div
+      ></html:div>
     </content>
 
   </binding>
