@@ -3937,12 +3937,14 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     NS_ASSERTION(!(mTransactionPump && mCachePump) || mCachedContentIsPartial,
                  "If we have both pumps, the cache content must be partial");
 
-    // don't enter this block if we're reading from the cache...
-    if (NS_SUCCEEDED(mStatus) && !mCachePump && mTransaction) {
+    if (!mSecurityInfo && !mCachePump && mTransaction) {
         // grab the security info from the connection object; the transaction
         // is guaranteed to own a reference to the connection.
         mSecurityInfo = mTransaction->SecurityInfo();
+    }
 
+    // don't enter this block if we're reading from the cache...
+    if (NS_SUCCEEDED(mStatus) && !mCachePump && mTransaction) {
         NS_ASSERTION(mResponseHead == nsnull, "leaking mResponseHead");
 
         // all of the response headers have been acquired, so we can take ownership

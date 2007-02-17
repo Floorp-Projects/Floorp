@@ -855,4 +855,9 @@
  */
 #define NS_CONTENT_SNIFFER_CATEGORY "net-content-sniffers"
 
+/**
+ * Must implement nsINSSErrorsService.
+ */
+#define NS_NSS_ERRORS_SERVICE_CONTRACTID "@mozilla.org/nss_errors_service;1"
+
 #endif // nsNetCID_h__
