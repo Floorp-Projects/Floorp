@@ -88,6 +88,8 @@ public:
 
   virtual PRBool IsLeaf() const;
 
+  virtual nsIFrame* GetContentInsertionFrame();
+
 protected:
   nsresult GetDefaultLabel(nsXPIDLString& aLabel);
 
