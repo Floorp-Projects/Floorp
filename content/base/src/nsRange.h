@@ -81,7 +81,6 @@ class nsRange : public nsIRange,
 {
 public:
   nsRange()
-    : mRoot(nsnull)
   {
   }
   virtual ~nsRange();
@@ -130,8 +129,6 @@ public:
                                      PRBool *outNodeAfter);
 
 protected:
-  nsINode* mRoot;
- 
   void DoSetRange(nsINode* aStartN, PRInt32 aStartOffset,
                   nsINode* aEndN, PRInt32 aEndOffset,
                   nsINode* aRoot);
