@@ -510,6 +510,15 @@ public:
 
 #pragma mark -
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4
+// Declare private NSSpellChecker method.
+@interface NSSpellChecker (CurrentlyPrivateWordLearning)
+- (void)learnWord:(NSString *)word;
+@end
+#endif
+
+#pragma mark -
+
 enum BWCOpenDest {
   kDestinationNewWindow = 0,
   kDestinationNewTab,
@@ -563,6 +572,11 @@ enum BWCOpenDest {
 - (BOOL)prepareSpellingSuggestionMenu:(NSMenu*)inMenu tag:(int)inTag;
 
 - (void)setZoomState:(NSRect)newFrame defaultFrame:(NSRect)defaultFrame;
+
+- (void)currentEditor:(nsIEditor**)outEditor;
+- (void)getMisspelledWordRange:(nsIDOMRange**)outRange inlineSpellChecker:(nsIInlineSpellChecker**)outInlineChecker;
+- (void)focusedElement:(nsIDOMElement**)outElement;
+- (void)focusController:(nsIFocusController**)outController;
 
 @end
 
@@ -4216,120 +4230,192 @@ enum BWCOpenDest {
 }
 
 //
-// -prepareSpellingSuggestionMenu:tag:
+// -getMisspelledRange:inlineSpellChecker:
 //
-// Adds suggestions to the top of |inMenu| for the currently mispelled word
-// under the insertion point. Starts inserting before the first item in the menu
-// with |inTag| and will insert up to |kMaxSuggestions|. 
+// Upon return, |outRange| contains the range of the currently misspelled word and 
+// |outInlineChecker| contains the inline spell checker to allow for further action.
+// This method AddRef's both out parameters.
 //
-- (BOOL)prepareSpellingSuggestionMenu:(NSMenu*)inMenu tag:(int)inTag
+- (void)getMisspelledWordRange:(nsIDOMRange**)outRange inlineSpellChecker:(nsIInlineSpellChecker**)outInlineChecker
 {
-  #define ENSURE_TRUE(x) if (!x) return NO;
-  BOOL showSuggestions = YES;
-  
+  #define ENSURE_TRUE(x) if (!x) return;
+
+  if (!(outRange && outInlineChecker))
+    return;
+  *outRange = nsnull;
+  *outInlineChecker = nsnull;
+
   nsCOMPtr<nsIEditor> editor;
   [self currentEditor:getter_AddRefs(editor)];
   ENSURE_TRUE(editor);
 
+  editor->GetInlineSpellChecker(PR_TRUE, outInlineChecker);
+  ENSURE_TRUE(*outInlineChecker);
+
+  PRBool checkingIsEnabled = NO;
+  (*outInlineChecker)->GetEnableRealTimeSpell(&checkingIsEnabled);
+  ENSURE_TRUE(checkingIsEnabled);
+
+  nsCOMPtr<nsISelection> selection;
+  editor->GetSelection(getter_AddRefs(selection));
+  ENSURE_TRUE(selection);
+
+  nsCOMPtr<nsIDOMNode> selectionEndNode;
+  PRInt32 selectionEndOffset = 0;
+  selection->GetFocusNode(getter_AddRefs(selectionEndNode));
+  selection->GetFocusOffset(&selectionEndOffset);
+
+  (*outInlineChecker)->GetMispelledWord(selectionEndNode, (long)selectionEndOffset, outRange);
+
+  #undef ENSURE_TRUE
+}
+
+//
+// -prepareSpellingSuggestionMenu:tag:
+//
+// Adds suggestions to the top of |inMenu| for the currently misspelled word
+// under the insertion point. Starts inserting before the first item in the menu
+// with |inTag| and will insert up to |kMaxSuggestions|.
+// Returns a BOOL indicating whether suggestions are shown.
+//
+- (BOOL)prepareSpellingSuggestionMenu:(NSMenu*)inMenu tag:(int)inTag
+{
+  nsCOMPtr<nsIDOMRange> misspelledRange;
   nsCOMPtr<nsIInlineSpellChecker> inlineChecker;
-  editor->GetInlineSpellChecker(PR_TRUE, getter_AddRefs(inlineChecker));
-  ENSURE_TRUE(inlineChecker);
-  
-  // verify inline spellchecking is "on" before we continue
-  PRBool enabled = NO;
-  inlineChecker->GetEnableRealTimeSpell(&enabled);
-  if (!enabled)
+  [self getMisspelledWordRange:getter_AddRefs(misspelledRange) inlineSpellChecker:getter_AddRefs(inlineChecker)];
+  if (!(misspelledRange && inlineChecker))
     return NO;
-  
+
   nsCOMPtr<nsIEditorSpellCheck> spellCheck;
   inlineChecker->GetSpellChecker(getter_AddRefs(spellCheck));
-  ENSURE_TRUE(spellCheck);
-  
-  // if there is a mispelled word, ask the spellchecker to check it, which seems redundant
-  // but is also used to generate the suggestions list. 
+  if (!spellCheck)
+    return NO;
+
+  // ask the spellchecker to check the misspelled word, which seems redundant but is also
+  // used to generate the suggestions list. 
+  nsString currentWord;
+  misspelledRange->ToString(currentWord);
   PRBool isIncorrect = NO;
-  nsCOMPtr<nsIDOMNode> anchorNode;
-  PRInt32 anchorOffset = 0;
-  GeckoUtils::GetAnchorNodeFromSelection(editor, getter_AddRefs(anchorNode), &anchorOffset);
-  // the anchor is at the beginning of the word, which the spelling system for whatever reason
-  // doesn't consider to be inside of the mispelled range, so we check one character further
-  ++anchorOffset;
-  nsCOMPtr<nsIDOMRange> mispelledRange;
-  inlineChecker->GetMispelledWord(anchorNode, (long)anchorOffset, getter_AddRefs(mispelledRange));
-  if (mispelledRange) {
-    nsString currentWord;
-    mispelledRange->ToString(currentWord);
-    spellCheck->CheckCurrentWord(currentWord.get(), &isIncorrect);
-  }
-  if (isIncorrect) {
-    // there's still a mispelled word, loop over the suggestions. The spellchecker will return
-    // an empty string when it's done (NOT nil), so keep going until we get that or our
-    // max.
-    const unsigned long insertBase = [inMenu indexOfItemWithTag:inTag];
-    const unsigned long kMaxSuggestions = 7;
-    unsigned long numSuggestions = 0;
-    do {
-      PRUnichar* suggestion = nil;
-      spellCheck->GetSuggestedWord(&suggestion);
-      if (!nsCRT::strlen(suggestion))
-        break;
-      
-      NSString* suggStr = [NSString stringWithPRUnichars:suggestion];
-      NSMenuItem* item = [inMenu insertItemWithTitle:suggStr action:@selector(replaceMispelledWord:) keyEquivalent:@"" atIndex:numSuggestions + insertBase];
-      [item setTarget:self];
-      
-      ++numSuggestions;
-      nsCRT::free(suggestion);
-    } while (numSuggestions < kMaxSuggestions);
+  spellCheck->CheckCurrentWord(currentWord.get(), &isIncorrect);
+  if (!isIncorrect)
+    return NO;
 
-    if (numSuggestions == 0) {
-      NSMenuItem* item = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"No Guesses Found", nil) action:NULL keyEquivalent:@""] autorelease];
-      [item setEnabled:NO];
-      [inMenu insertItem:item atIndex:insertBase];
-    }
-  }
-  else
-    showSuggestions = NO;
+  // there's still a misspelled word, loop over the suggestions. The spellchecker will return
+  // an empty string when it's done (NOT nil), so keep going until we get that or our max.
+  const unsigned long insertBase = [inMenu indexOfItemWithTag:inTag];
+  const unsigned long kMaxSuggestions = 7;
+  unsigned long numSuggestions = 0;
+  do {
+    PRUnichar* suggestion = nil;
+    spellCheck->GetSuggestedWord(&suggestion);
+    if (!nsCRT::strlen(suggestion))
+      break;
 
-  return showSuggestions;
-  #undef ENSURE_TRUE
+    NSString* suggStr = [NSString stringWithPRUnichars:suggestion];
+    NSMenuItem* item = [inMenu insertItemWithTitle:suggStr action:@selector(replaceWord:) keyEquivalent:@"" atIndex:numSuggestions + insertBase];
+    [item setTarget:self];
+
+    ++numSuggestions;
+    nsCRT::free(suggestion);
+  } while (numSuggestions < kMaxSuggestions);
+
+  if (numSuggestions == 0) {
+    NSMenuItem* item = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"No Guesses Found", nil) action:NULL keyEquivalent:@""] autorelease];
+    [item setEnabled:NO];
+    [inMenu insertItem:item atIndex:insertBase];
+  }
+
+  // |inTag| has moved to a new location; fetch the current index
+  int dictionaryItemsInsertBase = [inMenu indexOfItemWithTag:inTag];
+
+  [inMenu insertItem:[NSMenuItem separatorItem] atIndex:dictionaryItemsInsertBase];
+
+  [inMenu insertItemWithTitle:NSLocalizedString(@"IgnoreSpelling", nil) 
+                       action:@selector(ignoreWord:) 
+                keyEquivalent:@"" 
+                      atIndex:(dictionaryItemsInsertBase + 1)];
+
+  [inMenu insertItemWithTitle:NSLocalizedString(@"LearnSpelling", nil) 
+                       action:@selector(learnWord:) 
+                keyEquivalent:@"" 
+                      atIndex:(dictionaryItemsInsertBase + 2)];
+
+  return YES;
 }
 
 // Context menu methods
 
 //
-// -replaceMispelledWord:
+// -replaceWord:
 //
 // Context menu action for the suggestions in a text field. Replaces the
 // current word in the editor with string that's the title of the chosen menu
 // item.
 //
-- (IBAction)replaceMispelledWord:(id)inSender
+- (IBAction)replaceWord:(id)inSender
 {
-  #define ENSURE_TRUE(x) if (!x) return;
+  nsCOMPtr<nsIDOMRange> misspelledRange;
+  nsCOMPtr<nsIInlineSpellChecker> inlineChecker;
+  [self getMisspelledWordRange:getter_AddRefs(misspelledRange) inlineSpellChecker:getter_AddRefs(inlineChecker)];
+  if (!(misspelledRange && inlineChecker))
+    return;
 
+  // a node and offset are used to replace the word.
   // it's unfortunate that we have to re-fetch this stuff since we just did it
   // when buliding the context menu, but we don't really have any convenient place
   // to stash it where we can guarantee it will get cleaned up when the menu goes
   // away.
-  nsCOMPtr<nsIEditor> editor;
-  [self currentEditor:getter_AddRefs(editor)];
-  ENSURE_TRUE(editor);
-
-  nsCOMPtr<nsIInlineSpellChecker> inlineChecker;
-  editor->GetInlineSpellChecker(PR_TRUE, getter_AddRefs(inlineChecker));
-  ENSURE_TRUE(inlineChecker);
-  nsCOMPtr<nsIDOMNode> anchorNode;
-  PRInt32 anchorOffset = 0;
-  GeckoUtils::GetAnchorNodeFromSelection(editor, getter_AddRefs(anchorNode), &anchorOffset);
-  // once again, we shift the anchor off the beginning of the word to make the spelling system happy
-  ++anchorOffset;
-  
+  nsCOMPtr<nsIDOMNode> endNode;
+  PRInt32 endOffset = 0;
+  misspelledRange->GetEndContainer(getter_AddRefs(endNode));
+  misspelledRange->GetEndOffset(&endOffset);
   nsString newWord;
   [[inSender title] assignTo_nsAString:newWord];
-  inlineChecker->ReplaceWord(anchorNode, anchorOffset, newWord);
+  inlineChecker->ReplaceWord(endNode, endOffset, newWord);
+}
 
-  #undef ENSURE_TRUE
+//
+// -ignoreWord:
+//
+// Context menu action for ignoring a misspelled word in a text field.
+// Ignores during the active editing session only.
+//
+- (IBAction)ignoreWord:(id)inSender
+{
+  nsCOMPtr<nsIDOMRange> misspelledRange;
+  nsCOMPtr<nsIInlineSpellChecker> inlineChecker;
+  [self getMisspelledWordRange:getter_AddRefs(misspelledRange) inlineSpellChecker:getter_AddRefs(inlineChecker)];
+  if (!(misspelledRange && inlineChecker))
+    return;
+
+  nsString misspelledWord;
+  misspelledRange->ToString(misspelledWord);
+  inlineChecker->IgnoreWord(misspelledWord);
+}
+
+//
+// -learnWord:
+//
+// Context menu action for adding a word to the spell checking dictionary.
+//
+// nsIInlineSpellChecker's AddWordToDictionary does not insert the learned
+// word into the shared system dictionary and instead remembers it using its
+// own personal dictionary. As an alternative, we use a currently undocumented
+// NSSpellChecker method |learnWord:| to achieve this functionality.
+//
+- (IBAction)learnWord:(id)inSender
+{
+  nsCOMPtr<nsIDOMRange> misspelledRange;
+  nsCOMPtr<nsIInlineSpellChecker> inlineChecker;
+  [self getMisspelledWordRange:getter_AddRefs(misspelledRange) inlineSpellChecker:getter_AddRefs(inlineChecker)];
+  if (!(misspelledRange && inlineChecker))
+    return;
+
+  nsString misspelledWord;
+  misspelledRange->ToString(misspelledWord);
+  [[NSSpellChecker sharedSpellChecker] learnWord:[NSString stringWith_nsAString:misspelledWord]];
+  // check the range again to remove the misspelled word indication
+  inlineChecker->SpellCheckRange(misspelledRange);
 }
 
 - (IBAction)openLinkInNewWindow:(id)aSender
