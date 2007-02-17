@@ -352,10 +352,6 @@ MimeInlineTextPlainFlowed_parse_line (const char *aLine, PRInt32 length, MimeObj
           (RFC 3676) */
     {
       length--;
-      while(index < length) {
-        line[index] = line[index + 1];
-        index++;
-      }
       line[index] = '\0';
     }
   }
