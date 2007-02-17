@@ -7685,7 +7685,12 @@ nsCSSFrameConstructor::GetFrameFor(nsIContent* aContent)
   if (!frame)
     return nsnull;
 
-  return frame->GetContentInsertionFrame();
+  nsIFrame* insertionFrame = frame->GetContentInsertionFrame();
+
+  NS_ASSERTION(insertionFrame == frame || !frame->IsLeaf(),
+    "The insertion frame is the primary frame or the primary frame isn't a leaf");
+
+  return insertionFrame;
 }
 
 nsIFrame*

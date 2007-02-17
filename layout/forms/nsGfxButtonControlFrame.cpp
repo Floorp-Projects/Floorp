@@ -305,6 +305,12 @@ nsGfxButtonControlFrame::IsLeaf() const
   return PR_TRUE;
 }
 
+nsIFrame*
+nsGfxButtonControlFrame::GetContentInsertionFrame()
+{
+  return this;
+}
+
 NS_IMETHODIMP
 nsGfxButtonControlFrame::HandleEvent(nsPresContext* aPresContext, 
                                       nsGUIEvent*     aEvent,
