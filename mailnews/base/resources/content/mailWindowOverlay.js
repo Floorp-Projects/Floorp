@@ -1858,14 +1858,23 @@ function DoGetNewMailWhenOffline()
   {
     if (this.CheckForUnsentMessages != undefined && CheckForUnsentMessages())
     {
-      sendUnsent = gPromptService.confirmEx(window, 
-                          gOfflinePromptsBundle.getString('sendMessagesOfflineWindowTitle'), 
-                          gOfflinePromptsBundle.getString('sendMessagesLabel'),
-                          gPromptService.BUTTON_TITLE_IS_STRING * (gPromptService.BUTTON_POS_0 + 
-                            gPromptService.BUTTON_POS_1),
-                          gOfflinePromptsBundle.getString('sendMessagesSendButtonLabel'),
-                          gOfflinePromptsBundle.getString('sendMessagesNoSendButtonLabel'),
-                          null, null, {value:0}) == 0;
+      var sendUnsentPref = gPrefBranch.getIntPref("offline.send.unsent_messages");
+      switch (sendUnsentPref)
+      {
+        case 0: // ask
+          sendUnsent = gPromptService.confirmEx(window,
+                            gOfflinePromptsBundle.getString('sendMessagesOfflineWindowTitle'),
+                            gOfflinePromptsBundle.getString('sendMessagesLabel'),
+                            gPromptService.BUTTON_TITLE_IS_STRING * (gPromptService.BUTTON_POS_0 +
+                              gPromptService.BUTTON_POS_1),
+                            gOfflinePromptsBundle.getString('sendMessagesSendButtonLabel'),
+                            gOfflinePromptsBundle.getString('sendMessagesNoSendButtonLabel'),
+                            null, null, {value: 0}) == 0;
+          break;
+        case 1: // always send
+          sendUnsent = true;
+          break;
+      }
     }
     if (!gOfflineManager) 
       GetOfflineMgrService();
