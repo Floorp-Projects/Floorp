@@ -35,8 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
  
-#include <math.h>
-
 #import "NSString+Utils.h"
 #import "NSView+Utils.h"
 #import "ImageAdditions.h"
@@ -1180,7 +1178,7 @@ enum {
   while ((currentSubview = [subviewEnum nextObject])) {
     NSRect currentSubviewFrame = [currentSubview frame];
     // The panel's NSButtons draw incorrectly on non-integral pixel boundaries.
-    float verticallyCenteredYLocation = ceilf((panelFrame.size.height - currentSubviewFrame.size.height) / 2.0f);
+    float verticallyCenteredYLocation = (int)((panelFrame.size.height - currentSubviewFrame.size.height) / 2.0f);
 
     [currentSubview setFrameOrigin:NSMakePoint(currentSubviewFrame.origin.x, verticallyCenteredYLocation)];
   }
