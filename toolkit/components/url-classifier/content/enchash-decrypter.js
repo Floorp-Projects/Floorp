@@ -106,7 +106,7 @@ PROT_EnchashDecrypter.MAX_DOTS = 5;
 
 PROT_EnchashDecrypter.REs = {};
 PROT_EnchashDecrypter.REs.FIND_DODGY_CHARS_GLOBAL =
-  new RegExp("[\x01-\x1f\x7f-\xff]+", "g");
+  new RegExp("[\x00-\x1f\x7f-\xff]+", "g");
 PROT_EnchashDecrypter.REs.FIND_END_DOTS_GLOBAL =
   new RegExp("^\\.+|\\.+$", "g");
 PROT_EnchashDecrypter.REs.FIND_MULTIPLE_DOTS_GLOBAL =
