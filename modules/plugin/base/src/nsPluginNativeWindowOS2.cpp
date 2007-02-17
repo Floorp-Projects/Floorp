@@ -77,8 +77,8 @@ public:
   MPARAM GetWParam() { return mWParam; };
   MPARAM GetLParam() { return mLParam; };
   PRBool InUse()     { return (mWnd!=NULL || mMsg!=0); };
-
-  NS_IMETHOD Run();
+  
+  NS_DECL_NSIRUNNABLE
 
 protected:
   PluginWindowWeakRef mPluginWindowRef;

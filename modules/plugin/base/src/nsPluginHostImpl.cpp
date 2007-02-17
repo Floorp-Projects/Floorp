@@ -297,7 +297,9 @@ PRBool ReadSectionHeader(nsPluginManifestLineReader& reader, const char *token)
 class nsPluginDocReframeEvent: public nsRunnable {
 public:
   nsPluginDocReframeEvent(nsISupportsArray* aDocs) { mDocs = aDocs; }
-  NS_IMETHOD Run();
+
+  NS_DECL_NSIRUNNABLE
+
   nsCOMPtr<nsISupportsArray> mDocs;
 };
 
@@ -955,19 +957,22 @@ public:
   nsPluginUnloadEvent(PRLibrary* aLibrary)
     : mLibrary(aLibrary)
   {}
-
-  NS_IMETHOD Run() {
-    if (mLibrary) {
-      // put our unload call in a saftey wrapper
-      NS_TRY_SAFE_CALL_VOID(PR_UnloadLibrary(mLibrary), nsnull, nsnull);
-    } else {
-      NS_WARNING("missing library from nsPluginUnloadEvent");
-    }
-    return NS_OK;
-  }
-
+ 
+  NS_DECL_NSIRUNNABLE
+ 
   PRLibrary* mLibrary;
 };
+
+NS_IMETHODIMP nsPluginUnloadEvent::Run()
+{
+  if (mLibrary) {
+    // put our unload call in a saftey wrapper
+    NS_TRY_SAFE_CALL_VOID(PR_UnloadLibrary(mLibrary), nsnull, nsnull);
+  } else {
+    NS_WARNING("missing library from nsPluginUnloadEvent");
+  }
+  return NS_OK;
+}
 
 // unload plugin asynchronously if possible, otherwise just unload now
 nsresult PostPluginUnloadEvent(PRLibrary* aLibrary)
@@ -1050,8 +1055,8 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  // nsIPluginStreamInfo interface
-
+  // nsI4xPluginStreamInfo interface
+ 
   NS_IMETHOD
   GetContentType(nsMIMEType* result);
 
