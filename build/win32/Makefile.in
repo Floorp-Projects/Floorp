@@ -19,7 +19,7 @@
 # Portions created by the Initial Developer are Copyright (C) 2005
 # the Mozilla Foundation <http://www.mozilla.org/>. All Rights Reserved.
 #
-# Contributor(s):
+# Contributor(s): Stefanik Gábor
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -52,6 +52,15 @@ REDIST_FILES = \
 	msvcm80.dll \
 	msvcp80.dll \
 	msvcr80.dll \
+	$(NULL)
+endif
+
+ifeq (1500,$(_MSC_VER))
+REDIST_FILES = \
+	Microsoft.VC90.CRT.manifest \
+	msvcm90.dll \
+	msvcp90.dll \
+	msvcr90.dll \
 	$(NULL)
 endif
 
