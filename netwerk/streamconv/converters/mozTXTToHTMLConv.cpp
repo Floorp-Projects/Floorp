@@ -263,6 +263,7 @@ mozTXTToHTMLConv::FindURLStart(const PRUnichar * aInString, PRInt32 aInLength,
     // This disallows non-ascii-characters for email.
     // Currently correct, but revisit later after standards changed.
     PRBool isEmail = aInString[pos] == (PRUnichar)'@';
+    // These chars mark the start of the URL
     for (; i >= 0
              && aInString[PRUint32(i)] != '>' && aInString[PRUint32(i)] != '<'
              && aInString[PRUint32(i)] != '"' && aInString[PRUint32(i)] != '\''
@@ -320,22 +321,34 @@ mozTXTToHTMLConv::FindURLEnd(const PRUnichar * aInString, PRInt32 aInStringLengt
   case abbreviated:
   {
     PRUint32 i = pos + 1;
-    // This disallows non-ascii-characters for email.
-    // Currently correct, but revisit later after standards changed.
     PRBool isEmail = aInString[pos] == (PRUnichar)'@';
-    for (; PRInt32(i) < aInStringLength
-             && aInString[i] != '>' && aInString[i] != '<'
-             && aInString[i] != '"' && aInString[i] != '\''
-             && aInString[i] != '`'
-             && aInString[i] != '}' && aInString[i] != ']'
-             && aInString[i] != ')' && aInString[i] != '|'
-             && !IsSpace(aInString[i])
-             && (!isEmail || nsCRT::IsAscii(aInString[i]))
-         ; i++)
-      ;
+    PRBool haveOpeningBracket = PR_FALSE;
+    for (; PRInt32(i) < aInStringLength; i++)
+    {
+      // These chars mark the end of the URL
+      if (aInString[i] == '>' || aInString[i] == '<' ||
+          aInString[i] == '"' || aInString[i] == '`' ||
+          aInString[i] == '}' || aInString[i] == ']' ||
+          aInString[i] == '{' || aInString[i] == '[' ||
+          aInString[i] == '|' ||
+          (aInString[i] == ')' && !haveOpeningBracket) ||
+          IsSpace(aInString[i])    )
+          break;
+      // Disallow non-ascii-characters for email.
+      // Currently correct, but revisit later after standards changed.
+      if (isEmail && (
+            aInString[i] == '(' || aInString[i] == '\'' ||
+            !nsCRT::IsAscii(aInString[i])       ))
+          break;
+      if (aInString[i] == '(')
+        haveOpeningBracket = PR_TRUE;
+    }
+    // These chars are allowed in the middle of the URL, but not at end.
+    // Technically they are, but are used in normal text after the URL.
     while (--i > pos && (
              aInString[i] == '.' || aInString[i] == ',' || aInString[i] == ';' ||
-             aInString[i] == '!' || aInString[i] == '?' || aInString[i] == '-'
+             aInString[i] == '!' || aInString[i] == '?' || aInString[i] == '-' ||
+             aInString[i] == '\''
              ))
         ;
     if (i > pos)
@@ -480,10 +493,10 @@ NS_IMETHODIMP mozTXTToHTMLConv::FindURLInPlaintext(const PRUnichar * aInString, 
 {
   // call FindURL on the passed in string
   nsAutoString outputHTML; // we'll ignore the generated output HTML
-  
+
   *aStartPos = -1;
   *aEndPos = -1;
-  
+
   FindURL(aInString, aInLength, aPos, kURLs, outputHTML, *aStartPos, *aEndPos);
 
   return NS_OK;
