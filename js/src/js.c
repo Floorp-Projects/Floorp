@@ -398,6 +398,10 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             JS_ToggleOptions(cx, JSOPTION_STRICT);
             break;
 
+        case 'E':
+            JS_ToggleOptions(cx, JSOPTION_RELIMIT);
+            break;
+
         case 'x':
             JS_ToggleOptions(cx, JSOPTION_XML);
             break;
@@ -509,6 +513,7 @@ static struct {
     {"werror",          JSOPTION_WERROR},
     {"atline",          JSOPTION_ATLINE},
     {"xml",             JSOPTION_XML},
+    {"relimit",         JSOPTION_RELIMIT },
     {0,                 0}
 };
 

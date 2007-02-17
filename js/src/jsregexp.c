@@ -332,6 +332,8 @@ typedef struct REGlobalData {
     REBackTrackData *backTrackSP;
     size_t backTrackStackSize;
     size_t cursz;                   /* size of current stack entry */
+    size_t backTrackCount;          /* how many times we've backtracked */
+    size_t backTrackLimit;          /* upper limit on backtrack states */
 
     JSArenaPool     pool;           /* It's faster to use one malloc'd pool
                                        than to malloc/free the three items
@@ -3138,6 +3140,17 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 gData->ok = JS_FALSE;
                 return NULL;
             }
+
+            /* Potentially detect explosive regex here. */
+            gData->backTrackCount++;
+            if (gData->backTrackLimit &&
+                gData->backTrackCount >= gData->backTrackLimit) {
+                JS_ReportErrorNumber(gData->cx, js_GetErrorMessage, NULL,
+                                     JSMSG_REGEXP_TOO_COMPLEX);
+                gData->ok = JS_FALSE;
+                return NULL;
+            }
+
             backTrackData = gData->backTrackSP;
             gData->cursz = backTrackData->sz;
             gData->backTrackSP =
@@ -3205,9 +3218,10 @@ MatchRegExp(REGlobalData *gData, REMatchState *x)
     return NULL;
 }
 
+#define MIN_BACKTRACK_LIMIT 400000
 
 static REMatchState *
-InitMatch(JSContext *cx, REGlobalData *gData, JSRegExp *re)
+InitMatch(JSContext *cx, REGlobalData *gData, JSRegExp *re, size_t length)
 {
     REMatchState *result;
     uintN i;
@@ -3221,6 +3235,13 @@ InitMatch(JSContext *cx, REGlobalData *gData, JSRegExp *re)
 
     gData->backTrackSP = gData->backTrackStack;
     gData->cursz = 0;
+    gData->backTrackCount = 0;
+    gData->backTrackLimit = 0;
+    if (JS_GetOptions(cx) & JSOPTION_RELIMIT) {
+        gData->backTrackLimit = length * length * length; /* O(n^3) */
+        if (gData->backTrackLimit < MIN_BACKTRACK_LIMIT)
+            gData->backTrackLimit = MIN_BACKTRACK_LIMIT;
+    }
 
     gData->stateStackLimit = INITIAL_STATESTACK;
     JS_ARENA_ALLOCATE_CAST(gData->stateStack, REProgState *,
@@ -3291,7 +3312,8 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
     gData.skipped = 0;
 
     JS_InitArenaPool(&gData.pool, "RegExpPool", 8096, 4);
-    x = InitMatch(cx, &gData, re);
+    x = InitMatch(cx, &gData, re, length);
+
     if (!x) {
         ok = JS_FALSE;
         goto out;
