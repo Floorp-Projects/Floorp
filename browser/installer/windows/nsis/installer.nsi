@@ -114,7 +114,7 @@ VIAddVersionKey "FileDescription" "${BrandShortName} Installer"
 Name "${BrandFullName}"
 OutFile "setup.exe"
 InstallDirRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullNameInternal} (${AppVersion})" "InstallLocation"
-InstallDir "$PROGRAMFILES\${BrandFullName}"
+InstallDir "$PROGRAMFILES\${BrandFullName}\"
 ShowInstDetails nevershow
 
 ReserveFile options.ini
