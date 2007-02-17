@@ -263,6 +263,8 @@ fails == object/svg-with-type.html object/svg-with-type-ref.html
 == table-width/percent-small.html table-width/percent-small-ref.html
 == table-width/percent-small-min.html table-width/percent-small-min-ref.html
 == table-width/percent-small-nested.html table-width/percent-small-nested-ref.html
+== table-width/percent-small-2.html table-width/percent-small-2-ref.html
+== table-width/percent-zero.html table-width/percent-zero-ref.html
 == table-width/shrink-wrap-pref.html table-width/shrink-wrap-pref-ref.html
 == table-width/shrink-wrap-avail.html table-width/shrink-wrap-avail-ref.html
 == table-width/shrink-wrap-min.html table-width/shrink-wrap-min-ref.html
@@ -279,6 +281,12 @@ fails == object/svg-with-type.html object/svg-with-type-ref.html
 == table-width/conflicting-widths-8.html table-width/conflicting-widths-8-ref.html
 == table-width/conflicting-widths-9.html table-width/conflicting-widths-9-ref.html
 == table-width/conflicting-widths-10.html table-width/conflicting-widths-10-ref.html
+== table-width/conflicting-percent-widths-1.html table-width/conflicting-percent-widths-1-ref.html
+== table-width/conflicting-percent-widths-2.html table-width/conflicting-percent-widths-2-ref.html
+== table-width/conflicting-percent-widths-3.html table-width/conflicting-percent-widths-3-ref.html
+== table-width/percent-truncation-1.html table-width/percent-truncation-1-ref.html
+== table-width/percent-truncation-2.html table-width/percent-truncation-2-ref.html
+random == table-width/percent-truncation-3.html table-width/percent-truncation-3-ref.html # bug 370720
 
 # xul-document-load/
 == xul-document-load/test001.xul xul-document-load/reference-green-window.xul

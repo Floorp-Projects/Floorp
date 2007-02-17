@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Conflicting percent widths on table cells</title>
+<style type="text/css">
+
+table, td {
+  border-spacing: 0;
+  border: none;
+  padding: 0;
+}
+
+</style>
+</head>
+<body>
+
+<!-- large percentage effect operates per-column -->
+
+<!-- also depends on truncation of percentages to 100% -->
+
+<table>
+  <tr>
+    <td style="background: yellow">x</td>
+    <td style="background: aqua">x</td>
+  </tr>
+  <tr>
+    <td style="background: blue">x</td>
+    <td style="background: fuchsia">x</td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td style="background: blue">x</td>
+    <td style="background: fuchsia">x</td>
+  </tr>
+  <tr>
+    <td style="background: yellow">x</td>
+    <td style="background: aqua">x</td>
+  </tr>
+</table>
+
+</body>
+</html>
