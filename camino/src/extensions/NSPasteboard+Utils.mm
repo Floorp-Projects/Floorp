@@ -53,7 +53,6 @@ NSString* const kWebURLsWithTitlesPboardType  = @"WebURLsWithTitlesPboardType"; 
   NSArray* allTypes = [additionalTypes arrayByAddingObjectsFromArray:
                             [NSArray arrayWithObjects:
                                         kWebURLsWithTitlesPboardType,
-                                        NSFilenamesPboardType,
                                         NSURLPboardType,
                                         NSStringPboardType,
                                         kCorePasteboardFlavorType_url,
@@ -97,10 +96,13 @@ NSString* const kWebURLsWithTitlesPboardType  = @"WebURLsWithTitlesPboardType"; 
   NSMutableArray* filePaths = [NSMutableArray array];
   for (unsigned int i = 0; i < urlCount; ++i) {
     NSURL* url = [NSURL URLWithString:[inUrls objectAtIndex:i]];
-    if ([url isFileURL])
+    if ([url isFileURL] && [[NSFileManager defaultManager] fileExistsAtPath:[url path]])
       [filePaths addObject:[url path]];
   }
-  [self setPropertyList:filePaths forType:NSFilenamesPboardType];
+  if ([filePaths count] > 0) {
+    [self addTypes:[NSArray arrayWithObject:NSFilenamesPboardType] owner:nil];
+    [self setPropertyList:filePaths forType:NSFilenamesPboardType];
+  }
 
   NSMutableArray* clipboardData = [NSMutableArray array];
   [clipboardData addObject:[NSArray arrayWithArray:inUrls]];
