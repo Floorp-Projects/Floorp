@@ -138,12 +138,12 @@ nsThebesDeviceContext::SetDPI()
 {
     PRInt32 dpi = 96;
 
-    // Set prefVal the value of the preference
+    // Get prefVal the value of the preference
     // "layout.css.dpi"
     // or -1 if we can't get it.
-    // If it's negative, we pretend it's not set.
-    // If it's 0, it means force use of the operating system's logical
-    // resolution.
+    // If it's negative, use the default DPI setting
+    // If it's 0, force the use of the OS's set resolution.  Set this if your
+    //      X server has the correct DPI and it's less than 96dpi.
     // If it's positive, we use it as the logical resolution
     nsresult rv;
     PRInt32 prefDPI;
@@ -196,7 +196,12 @@ nsThebesDeviceContext::SetDPI()
     if (prefDPI > 0 && !mPrinter)
       dpi = prefDPI;
 
-    mAppUnitsPerDevPixel = AppUnitsPerCSSPixel() / PR_MAX(1, (dpi + 48) / 96);
+    // First figure out the closest multiple of 96, which is the number of
+    // dev pixels per CSS pixel.  Then, divide that into AppUnitsPerCSSPixel()
+    // to get the number of app units per dev pixel.  The PR_MAXes are to
+    // make sure we don't end up dividing by zero.
+    mAppUnitsPerDevPixel = PR_MAX(1, AppUnitsPerCSSPixel() /
+                                     PR_MAX(1, (dpi + 48) / 96));
     mAppUnitsPerInch = NSIntPixelsToAppUnits(dpi, mAppUnitsPerDevPixel);
 
     return NS_OK;
