@@ -9,6 +9,7 @@
 * locale/@AB_CD@/pippki/contents.rdf          (generic/chrome/pippki/contents.rdf)
 #endif
   locale/@AB_CD@/pipnss/pipnss.properties     (%chrome/pipnss/pipnss.properties)
+  locale/@AB_CD@/pipnss/nsserrors.properties  (%chrome/pipnss/nsserrors.properties)
   locale/@AB_CD@/pipnss/security.properties   (%chrome/pipnss/security.properties)
   locale/@AB_CD@/pippki/pippki.dtd            (%chrome/pippki/pippki.dtd)
   locale/@AB_CD@/pippki/pref-ssl.dtd          (%chrome/pippki/pref-ssl.dtd)

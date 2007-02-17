@@ -250,6 +250,13 @@ static const nsModuleComponentInfo components[] =
   },
   
   {
+    PSM_COMPONENT_CLASSNAME,
+    NS_NSSCOMPONENT_CID,
+    NS_NSS_ERRORS_SERVICE_CONTRACTID,
+    nsNSSComponentConstructor
+  },
+  
+  {
     NS_SSLSOCKETPROVIDER_CLASSNAME,
     NS_SSLSOCKETPROVIDER_CID,
     NS_SSLSOCKETPROVIDER_CONTRACTID,
