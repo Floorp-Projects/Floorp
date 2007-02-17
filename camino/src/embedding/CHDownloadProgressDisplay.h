@@ -121,6 +121,8 @@ class CHDownloader;
 - (void)setDestinationPath:(NSString*)aDestPath;
 - (NSString*)destinationPath;
 
+- (void)displayWillBeRemoved;
+
 @end
 
 // A formal protocol which is implemented by a factory of progress UI.

@@ -23,6 +23,7 @@
  *   Simon Fraser <sfraser@netscape.com>
  *   Calum Robinson <calumr@mac.com>
  *   Josh Aas <josh@mozilla.com>
+ *   Nick Kreeger <nick.kreeger@park.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -68,6 +69,7 @@
 
 #import "CHDownloadProgressDisplay.h"
 #import "ProgressViewController.h"
+#import "FileChangeWatcher.h"
 
 //
 // interface ProgressDlgController
@@ -79,16 +81,18 @@
 
 @interface ProgressDlgController : NSWindowController<CHDownloadDisplayFactory, CHStackViewDataSource>
 {
-  IBOutlet CHStackView  *mStackView;
-  IBOutlet NSScrollView *mScrollView;
+  IBOutlet CHStackView*  mStackView;
+  IBOutlet NSScrollView* mScrollView;
   
   NSSize                mDefaultWindowSize;
-  NSTimer               *mDownloadTimer;            // used for updating the status, STRONG ref
-  NSMutableArray        *mProgressViewControllers;  // the downloads we manage, STRONG ref
+  NSTimer*              mDownloadTimer;            // used for updating the status, STRONG ref
+  NSMutableArray*       mProgressViewControllers;  // the downloads we manage, STRONG ref
   int                   mNumActiveDownloads;
   int                   mSelectionPivotIndex;
   BOOL                  mShouldCloseWindow;         // true when a download completes when termination modal sheet is up
   BOOL                  mAwaitingTermination;       // true when we are waiting for users termination modal sheet
+  
+  FileChangeWatcher*    mFileChangeWatcher;         // strong ref.
 }
 
 +(ProgressDlgController *)sharedDownloadController;           // creates if necessary
@@ -104,12 +108,15 @@
 
 -(int)numDownloadsInProgress;
 -(void)clearAllDownloads;
--(void)didStartDownload:(id <CHDownloadProgressDisplay>)progressDisplay;
+-(void)didStartDownload:(ProgressViewController*)progressDisplay;
 -(void)didEndDownload:(id <CHDownloadProgressDisplay>)progressDisplay withSuccess:(BOOL)completedOK statusCode:(nsresult)status;
 -(void)removeDownload:(id <CHDownloadProgressDisplay>)progressDisplay suppressRedraw:(BOOL)suppressRedraw;
 -(NSApplicationTerminateReply)allowTerminate;
 -(void)applicationWillTerminate;
 -(void)saveProgressViewControllers;
 -(void)loadProgressViewControllers;
+
+-(void)addFileDelegateToWatchList:(id<WatchedFileDelegate>)aWatchedFileDelegate;
+-(void)removeFileDelegateFromWatchList:(id<WatchedFileDelegate>)aWatchedFileDelegate;
 
 @end

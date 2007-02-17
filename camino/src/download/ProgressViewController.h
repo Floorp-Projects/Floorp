@@ -42,6 +42,7 @@
 
 
 #import "CHDownloadProgressDisplay.h"
+#import "FileChangeWatcher.h"
 
 class CHDownloader;
 @class ProgressDlgController;
@@ -70,7 +71,7 @@ const int kRemoveUponSuccessfulDownloadPrefValue = 2;
 // well as managing the download. It holds onto two views, one for while
 // the item is downloading, the other for after it has completed.
 //
-@interface ProgressViewController : NSObject<CHDownloadProgressDisplay>
+@interface ProgressViewController : NSObject<CHDownloadProgressDisplay, WatchedFileDelegate>
 {
   IBOutlet NSProgressIndicator *mProgressBar;
 
@@ -83,10 +84,8 @@ const int kRemoveUponSuccessfulDownloadPrefValue = 2;
   BOOL            mDownloadDone;
   BOOL            mRefreshIcon;
   BOOL            mFileExists;
+  BOOL            mFileIsWatched;
   BOOL            mIsSelected;
-  
-  FNSubscriptionRef mSubRef;
-  FNSubscriptionUPP mSubUPP;
 
   NSTimeInterval  mDownloadTime; // only set when done
 
@@ -106,7 +105,10 @@ const int kRemoveUponSuccessfulDownloadPrefValue = 2;
 +(NSString *)formatFuzzyTime:(int)aSeconds;
 +(NSString *)formatBytes:(float)aBytes;
 
--(id)initWithDictionary:(NSDictionary*)aDict;
+-(id)initWithWindowController:(ProgressDlgController*)aWindowController;
+-(id)initWithDictionary:(NSDictionary*)aDict 
+    andWindowController:(ProgressDlgController*)aWindowController;
+
 -(ProgressView *)view;
 
 -(IBAction)cancel:(id)sender;
@@ -131,7 +133,5 @@ const int kRemoveUponSuccessfulDownloadPrefValue = 2;
 -(NSDictionary*)downloadInfoDictionary;
 
 -(NSMenu*)contextualMenu;
-
--(void)setProgressWindowController:(ProgressDlgController*)progressWindowController;
 
 @end

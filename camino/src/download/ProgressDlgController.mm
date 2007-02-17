@@ -142,6 +142,8 @@ static id gSharedProgressController = nil;
   [toolbar setAutosavesConfiguration:YES];
   [[self window] setToolbar:toolbar];    
   
+  mFileChangeWatcher = [[FileChangeWatcher alloc] init];
+  
   // load the saved instances to mProgressViewControllers array
   [self loadProgressViewControllers];
 }
@@ -153,6 +155,7 @@ static id gSharedProgressController = nil;
     gSharedProgressController = nil;
   }
   [mProgressViewControllers release];
+  [mFileChangeWatcher release];
   [self killDownloadTimer];
   [super dealloc];
 }
@@ -526,7 +529,7 @@ static id gSharedProgressController = nil;
   }
 }
 
--(void)didStartDownload:(id <CHDownloadProgressDisplay>)progressDisplay
+-(void)didStartDownload:(ProgressViewController*)progressDisplay
 {
   if (![[self window] isVisible]) {
     [self showWindow:nil]; // make sure the window is visible
@@ -645,6 +648,7 @@ static id gSharedProgressController = nil;
 
 -(void)removeDownload:(id <CHDownloadProgressDisplay>)progressDisplay suppressRedraw:(BOOL)suppressRedraw
 {
+  [progressDisplay displayWillBeRemoved];
   [mProgressViewControllers removeObject:progressDisplay];
   
   if ([mProgressViewControllers count] == 0) {
@@ -808,13 +812,24 @@ static id gSharedProgressController = nil;
     NSDictionary* downloadsDictionary;
     while((downloadsDictionary = [downloadsEnum nextObject]))
     {
-      ProgressViewController* curController = [[ProgressViewController alloc] initWithDictionary:downloadsDictionary];
+      ProgressViewController* curController = [[ProgressViewController alloc] initWithDictionary:downloadsDictionary
+                                                                             andWindowController:self];
       [mProgressViewControllers addObject:curController];
       [curController release];
     }
     
     [self rebuildViews];
   }
+}
+
+-(void)addFileDelegateToWatchList:(id<WatchedFileDelegate>)aWatchedFileDelegate
+{
+  [mFileChangeWatcher addWatchedFileDelegate:aWatchedFileDelegate];
+}
+
+-(void)removeFileDelegateFromWatchList:(id<WatchedFileDelegate>)aWatchedFileDelegate
+{
+  [mFileChangeWatcher removeWatchedFileDelegate:aWatchedFileDelegate];
 }
 
 // Remove the successful downloads from the downloads list
@@ -1201,8 +1216,7 @@ static id gSharedProgressController = nil;
  */
 -(id <CHDownloadProgressDisplay>)createProgressDisplay
 {
-  ProgressViewController *newController = [[[ProgressViewController alloc] init] autorelease];
-  [newController setProgressWindowController:self];
+  ProgressViewController* newController = [[[ProgressViewController alloc] initWithWindowController:self] autorelease];
   [mProgressViewControllers addObject:newController];
   
   return newController;
