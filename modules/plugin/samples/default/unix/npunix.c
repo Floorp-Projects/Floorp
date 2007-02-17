@@ -251,6 +251,117 @@ void NPN_PopPopupsEnabledState(NPP instance)
         instance);
 }
 
+NPIdentifier NPN_GetStringIdentifier(const NPUTF8 *name)
+{
+    return CallNPN_GetStringIdentifierProc(gNetscapeFuncs.getstringidentifier,
+                                           name);
+}
+
+void NPN_GetStringIdentifiers(const NPUTF8 **names, int32_t nameCount,
+                              NPIdentifier *identifiers)
+{
+    return CallNPN_GetStringIdentifiersProc(gNetscapeFuncs.getstringidentifiers,
+        names, nameCount, identifiers);
+}
+
+NPIdentifier NPN_GetIntIdentifier(int32_t intid)
+{
+    return CallNPN_GetIntIdentifierProc(gNetscapeFuncs.getintidentifier, intid);
+}
+
+bool NPN_IdentifierIsString(NPIdentifier identifier)
+{
+    return CallNPN_IdentifierIsStringProc(gNetscapeFuncs.identifierisstring,
+        identifier);
+}
+
+NPUTF8 *NPN_UTF8FromIdentifier(NPIdentifier identifier)
+{
+    return CallNPN_UTF8FromIdentifierProc(gNetscapeFuncs.utf8fromidentifier,
+        identifier);
+}
+
+int32_t NPN_IntFromIdentifier(NPIdentifier identifier)
+{
+    return CallNPN_IntFromIdentifierProc(gNetscapeFuncs.intfromidentifier,
+        identifier);
+}
+
+NPObject *NPN_CreateObject(NPP npp, NPClass *aClass)
+{
+    return CallNPN_CreateObjectProc(gNetscapeFuncs.createobject, npp, aClass);
+}
+
+NPObject *NPN_RetainObject(NPObject *obj)
+{
+    return CallNPN_RetainObjectProc(gNetscapeFuncs.retainobject, obj);
+}
+
+void NPN_ReleaseObject(NPObject *obj)
+{
+    return CallNPN_ReleaseObjectProc(gNetscapeFuncs.releaseobject, obj);
+}
+
+bool NPN_Invoke(NPP npp, NPObject* obj, NPIdentifier methodName,
+                const NPVariant *args, uint32_t argCount, NPVariant *result)
+{
+    return CallNPN_InvokeProc(gNetscapeFuncs.invoke, npp, obj, methodName,
+        args, argCount, result);
+}
+
+bool NPN_InvokeDefault(NPP npp, NPObject* obj, const NPVariant *args,
+                       uint32_t argCount, NPVariant *result)
+{
+    return CallNPN_InvokeDefaultProc(gNetscapeFuncs.invokeDefault, npp, obj,
+        args, argCount, result);
+}
+
+bool NPN_Evaluate(NPP npp, NPObject* obj, NPString *script,
+                  NPVariant *result)
+{
+    return CallNPN_EvaluateProc(gNetscapeFuncs.evaluate, npp, obj, script, result);
+}
+
+bool NPN_GetProperty(NPP npp, NPObject* obj, NPIdentifier propertyName,
+                     NPVariant *result)
+{
+    return CallNPN_GetPropertyProc(gNetscapeFuncs.getproperty, npp, obj,
+        propertyName, result);
+}
+
+bool NPN_SetProperty(NPP npp, NPObject* obj, NPIdentifier propertyName,
+                     const NPVariant *value)
+{
+    return CallNPN_SetPropertyProc(gNetscapeFuncs.setproperty, npp, obj,
+        propertyName, value);
+}
+
+bool NPN_RemoveProperty(NPP npp, NPObject* obj, NPIdentifier propertyName)
+{
+    return CallNPN_RemovePropertyProc(gNetscapeFuncs.removeproperty, npp, obj,
+        propertyName);
+}
+
+bool NPN_HasProperty(NPP npp, NPObject* obj, NPIdentifier propertyName)
+{
+    return CallNPN_HasPropertyProc(gNetscapeFuncs.hasproperty, npp, obj,
+        propertyName);
+}
+
+bool NPN_HasMethod(NPP npp, NPObject* obj, NPIdentifier methodName)
+{
+    return CallNPN_HasMethodProc(gNetscapeFuncs.hasmethod, npp, obj, methodName);
+}
+
+void NPN_ReleaseVariantValue(NPVariant *variant)
+{
+    CallNPN_ReleaseVariantValueProc(gNetscapeFuncs.releasevariantvalue, variant);
+}
+
+void NPN_SetException(NPObject* obj, const NPUTF8 *message)
+{
+    CallNPN_SetExceptionProc(gNetscapeFuncs.setexception, obj, message);
+}
 
 
 /***********************************************************************
@@ -438,7 +549,7 @@ NP_Initialize(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs)
     if (err == NPERR_NO_ERROR) {
         if ((nsTable->version >> 8) > NP_VERSION_MAJOR)
             err = NPERR_INCOMPATIBLE_VERSION_ERROR;
-        if (nsTable->size < sizeof(NPNetscapeFuncs))
+        if (nsTable->size < ((void *)&nsTable->posturlnotify - (void *)nsTable))
             err = NPERR_INVALID_FUNCTABLE_ERROR;
         if (pluginFuncs->size < sizeof(NPPluginFuncs))      
             err = NPERR_INVALID_FUNCTABLE_ERROR;
@@ -473,8 +584,69 @@ NP_Initialize(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs)
         gNetscapeFuncs.getJavaPeer   = nsTable->getJavaPeer;
 #endif
         gNetscapeFuncs.getvalue      = nsTable->getvalue;
-        gNetscapeFuncs.pushpopupsenabledstate = nsTable->pushpopupsenabledstate;
-        gNetscapeFuncs.poppopupsenabledstate  = nsTable->poppopupsenabledstate;
+        gNetscapeFuncs.setvalue      = nsTable->setvalue;
+        gNetscapeFuncs.posturlnotify = nsTable->posturlnotify;
+
+        if (nsTable->size >= ((void *)&nsTable->setexception - (void *)nsTable))
+        {
+          gNetscapeFuncs.invalidaterect = nsTable->invalidaterect;
+          gNetscapeFuncs.invalidateregion = nsTable->invalidateregion;
+          gNetscapeFuncs.forceredraw = nsTable->forceredraw;
+          gNetscapeFuncs.getstringidentifier = nsTable->getstringidentifier;
+          gNetscapeFuncs.getstringidentifiers = nsTable->getstringidentifiers;
+          gNetscapeFuncs.getintidentifier = nsTable->getintidentifier;
+          gNetscapeFuncs.identifierisstring = nsTable->identifierisstring;
+          gNetscapeFuncs.utf8fromidentifier = nsTable->utf8fromidentifier;
+          gNetscapeFuncs.intfromidentifier = nsTable->intfromidentifier;
+          gNetscapeFuncs.createobject = nsTable->createobject;
+          gNetscapeFuncs.retainobject = nsTable->retainobject;
+          gNetscapeFuncs.releaseobject = nsTable->releaseobject;
+          gNetscapeFuncs.invoke = nsTable->invoke;
+          gNetscapeFuncs.invokeDefault = nsTable->invokeDefault;
+          gNetscapeFuncs.evaluate = nsTable->evaluate;
+          gNetscapeFuncs.getproperty = nsTable->getproperty;
+          gNetscapeFuncs.setproperty = nsTable->setproperty;
+          gNetscapeFuncs.removeproperty = nsTable->removeproperty;
+          gNetscapeFuncs.hasproperty = nsTable->hasproperty;
+          gNetscapeFuncs.hasmethod = nsTable->hasmethod;
+          gNetscapeFuncs.releasevariantvalue = nsTable->releasevariantvalue;
+          gNetscapeFuncs.setexception = nsTable->setexception;
+        }
+         else
+        {
+          gNetscapeFuncs.invalidaterect = NULL;
+          gNetscapeFuncs.invalidateregion = NULL;
+          gNetscapeFuncs.forceredraw = NULL;
+          gNetscapeFuncs.getstringidentifier = NULL;
+          gNetscapeFuncs.getstringidentifiers = NULL;
+          gNetscapeFuncs.getintidentifier = NULL;
+          gNetscapeFuncs.identifierisstring = NULL;
+          gNetscapeFuncs.utf8fromidentifier = NULL;
+          gNetscapeFuncs.intfromidentifier = NULL;
+          gNetscapeFuncs.createobject = NULL;
+          gNetscapeFuncs.retainobject = NULL;
+          gNetscapeFuncs.releaseobject = NULL;
+          gNetscapeFuncs.invoke = NULL;
+          gNetscapeFuncs.invokeDefault = NULL;
+          gNetscapeFuncs.evaluate = NULL;
+          gNetscapeFuncs.getproperty = NULL;
+          gNetscapeFuncs.setproperty = NULL;
+          gNetscapeFuncs.removeproperty = NULL;
+          gNetscapeFuncs.hasproperty = NULL;
+          gNetscapeFuncs.releasevariantvalue = NULL;
+          gNetscapeFuncs.setexception = NULL;
+        }
+        if (nsTable->size >=
+            ((void *)&nsTable->poppopupsenabledstate - (void *)nsTable))
+        {
+          gNetscapeFuncs.pushpopupsenabledstate = nsTable->pushpopupsenabledstate;
+          gNetscapeFuncs.poppopupsenabledstate  = nsTable->poppopupsenabledstate;
+        }
+         else
+        {
+          gNetscapeFuncs.pushpopupsenabledstate = NULL;
+          gNetscapeFuncs.poppopupsenabledstate  = NULL;
+        }
 
         /*
          * Set up the plugin function table that Netscape will use to
@@ -498,6 +670,9 @@ NP_Initialize(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs)
 #ifdef OJI
         pluginFuncs->javaClass  = Private_GetJavaClass();
 #endif
+        // This function is supposedly loaded magically, but that doesn't
+        // seem to be true.
+        pluginFuncs->getvalue      = NewNPP_GetValueProc(NP_GetValue);
 
         err = NPP_Initialize();
     }
