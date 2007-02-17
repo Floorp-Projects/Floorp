@@ -49,6 +49,5 @@ _TEST_FILES = test_bug356355.xhtml \
 	test_bug368998.xhtml \
 	$(NULL)
 
-# Broken tests
-#libs:: $(_TEST_FILES)
-#	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+libs:: $(_TEST_FILES)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
