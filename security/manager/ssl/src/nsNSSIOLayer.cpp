@@ -71,6 +71,8 @@
 #include "nsNSSCertHelper.h"
 #include "nsNSSCleaner.h"
 #include "nsThreadUtils.h"
+#include "nsIDocShell.h"
+#include "nsISecureBrowserUI.h"
 
 #include "ssl.h"
 #include "secerr.h"
@@ -182,6 +184,7 @@ nsNSSSocketInfo::nsNSSSocketInfo()
   : mFd(nsnull),
     mBlockingState(blocking_state_unknown),
     mSecurityState(nsIWebProgressListener::STATE_IS_INSECURE),
+    mExternalErrorReporting(PR_FALSE),
     mForSTARTTLS(PR_FALSE),
     mHandshakePending(PR_TRUE),
     mCanceled(PR_FALSE),
@@ -316,6 +319,44 @@ nsNSSSocketInfo::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
                        getter_AddRefs(proxiedCallbacks));
 
   mCallbacks = proxiedCallbacks;
+
+// XXX enable this code when 107491 error page gets approved
+#if 0
+  // Are we running within a context that wants external SSL error reporting?
+  // We'll look at the presence of a security UI object inside docshell.
+  // If the docshell wants the lock icon, you'll get the ssl error pages, too.
+  // This is helpful to distinguish from all other contexts, like mail windows,
+  // or any other SSL connections running in the background.
+  // We must query it now and remember, because fatal SSL errors will come 
+  // with a socket close, and the socket transport might detach the callbacks 
+  // instance prior to our error reporting.
+
+  nsCOMPtr<nsIDocShell> docshell(do_GetInterface(mCallbacks));
+  if (docshell)
+  {
+    nsCOMPtr<nsISecureBrowserUI> secureUI;
+    docshell->GetSecurityUI(getter_AddRefs(secureUI));
+    if (secureUI)
+    {
+      mExternalErrorReporting = PR_TRUE;
+    }
+  }
+#endif
+
+  return NS_OK;
+}
+
+nsresult
+nsNSSSocketInfo::GetExternalErrorReporting(PRBool* state)
+{
+  *state = mExternalErrorReporting;
+  return NS_OK;
+}
+
+nsresult
+nsNSSSocketInfo::SetExternalErrorReporting(PRBool aState)
+{
+  mExternalErrorReporting = aState;
   return NS_OK;
 }
 
@@ -347,6 +388,23 @@ nsNSSSocketInfo::GetShortSecurityDescription(PRUnichar** aText) {
 nsresult
 nsNSSSocketInfo::SetShortSecurityDescription(const PRUnichar* aText) {
   mShortDesc.Assign(aText);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::GetErrorMessage(PRUnichar** aText) {
+  if (mErrorMessage.IsEmpty())
+    *aText = nsnull;
+  else {
+    *aText = ToNewUnicode(mErrorMessage);
+    NS_ENSURE_TRUE(*aText, NS_ERROR_OUT_OF_MEMORY);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsNSSSocketInfo::SetErrorMessage(const PRUnichar* aText) {
+  mErrorMessage.Assign(aText);
   return NS_OK;
 }
 
@@ -521,6 +579,39 @@ void nsSSLIOLayerHelpers::Cleanup()
 }
 
 static nsresult
+getErrorMessage(PRInt32 err, const nsString &host,
+                nsINSSComponent *component,
+                nsString &returnedMessage)
+{
+  NS_ENSURE_ARG_POINTER(component);
+
+  const PRUnichar *params[1];
+  nsresult rv;
+
+  if (host.Length())
+  {
+    params[0] = host.get();
+
+    nsString formattedString;
+    rv = component->PIPBundleFormatStringFromName("SSLConnectionErrorPrefix", 
+                                                  params, 1, 
+                                                  formattedString);
+    if (NS_SUCCEEDED(rv))
+    {
+      returnedMessage.Append(formattedString);
+      returnedMessage.Append(NS_LITERAL_STRING("\n"));
+    }
+  }
+
+  nsString explanation;
+  rv = nsNSSErrors::getErrorMessageFromCode(err, component, explanation);
+  if (NS_SUCCEEDED(rv))
+    returnedMessage.Append(explanation);
+
+  return NS_OK;
+}
+
+static nsresult
 displayAlert(nsAFlatString &formattedString, nsNSSSocketInfo *infoObject)
 {
   // The interface requestor object may not be safe, so proxy the call to get
@@ -566,10 +657,6 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
   if (NS_FAILED(rv))
     return rv;
 
-  char buf[80];
-  PR_snprintf(buf, 80, "%ld", err);
-  NS_ConvertASCIItoUTF16 errorCode(buf);
-
   nsXPIDLCString hostName;
   socketInfo->GetHostName(getter_Copies(hostName));
   NS_ConvertASCIItoUTF16 hostNameU(hostName);
@@ -577,320 +664,18 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
   NS_DEFINE_CID(StringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
   nsCOMPtr<nsIStringBundleService> service = 
                               do_GetService(StringBundleServiceCID, &rv);
-  nsCOMPtr<nsIStringBundle> brandBundle;
-  service->CreateBundle("chrome://branding/locale/brand.properties",
-                        getter_AddRefs(brandBundle));
-  nsXPIDLString brandShortName;
-  brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
-                                 getter_Copies(brandShortName));
-    
-  const PRUnichar *params[2];
-  nsAutoString formattedString;
 
-  switch (err) {
-  case SSL_ERROR_SSL_DISABLED:
-    params[0] = brandShortName.get();
-    params[1] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("SSL_Disabled",
-                                                params, 2, formattedString);
-    break;
-  case SSL_ERROR_SSL2_DISABLED:
-    params[0] = brandShortName.get();
-    params[1] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("SSL2_Disabled",
-                                                params, 2, formattedString);
-    break;
-  case SSL_ERROR_EXPORT_ONLY_SERVER:
-  case SSL_ERROR_US_ONLY_SERVER:
-  case SSL_ERROR_NO_CYPHER_OVERLAP:
-  case SSL_ERROR_UNSUPPORTED_VERSION:
-  case SSL_ERROR_UNKNOWN_CIPHER_SUITE:
-  case SSL_ERROR_NO_CIPHERS_SUPPORTED:
-  case SSL_ERROR_FORTEZZA_PQG:
-    params[0] = brandShortName.get();
-    params[1] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("SSL_NoMatchingCiphers",
-                                                params, 2, formattedString);
-                                                  
-    break;
+  nsString formattedString;
+  rv = getErrorMessage(err, hostNameU, nssComponent, formattedString);
 
-  //Clients Cert Rejected
-  case SSL_ERROR_REVOKED_CERT_ALERT :
-    params[0] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("UsersCertRevoked",
-                                                params, 1, formattedString);
-    break;
-
-  case SSL_ERROR_EXPIRED_CERT_ALERT:
-    params[0] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("UsersCertExpired",
-                                                params, 1, formattedString);
-    break;
-
-  case SSL_ERROR_BAD_CERT_ALERT:
-  case SSL_ERROR_UNSUPPORTED_CERT_ALERT:
-  case SSL_ERROR_CERTIFICATE_UNKNOWN_ALERT:
-    params[0] = hostNameU.get();
-    params[1] = errorCode.get();
-    nssComponent->PIPBundleFormatStringFromName("UsersCertRejected",
-                                                params, 2, formattedString);
-    break;
-
-  //Errors related to Peers Certificate
-  case SEC_ERROR_CRL_EXPIRED:
-    params[0] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("CRLExpired", 
-                                                params, 1, formattedString);
-    break;
-
-  case SEC_ERROR_CRL_NOT_YET_VALID:
-    params[0] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("CRLNotYetValid", 
-                                                params, 1, formattedString);
-    break;
-
-  case SEC_ERROR_CRL_INVALID:
-    params[0] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("CRLSNotValid", 
-                                                params, 1, formattedString);
-    break;
-
-  case SEC_ERROR_CRL_BAD_SIGNATURE:
-    params[0] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("CRLSigNotValid", 
-                                                params, 1, formattedString);
-    break;
-
-  case SEC_ERROR_OCSP_MALFORMED_REQUEST:
-    params[0] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("OCSPMalformedRequest", 
-                                             params, 1, formattedString);
-    break;
-
-  case SEC_ERROR_OCSP_REQUEST_NEEDS_SIG:
-    params[0] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("OCSPRequestNeedsSig", 
-                                             params, 1, formattedString);
-    break;
-
-  case SEC_ERROR_OCSP_UNAUTHORIZED_REQUEST:
-    params[0] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("OCSPUnauthorizedReq", 
-                                             params, 1, formattedString);
-    break;
-
-  case SEC_ERROR_OCSP_SERVER_ERROR:
-    params[0] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("OCSPServerError", 
-                                             params, 1, formattedString);
-    break;
-
-  case SEC_ERROR_OCSP_TRY_SERVER_LATER:
-    params[0] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("OCSPTryServerLater", 
-                                             params, 1, formattedString);
-    break;
+  PRBool external = PR_FALSE;
+  socketInfo->GetExternalErrorReporting(&external);
   
-  case SEC_ERROR_OCSP_FUTURE_RESPONSE:
-    params[0] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("OCSPFutureResponse", 
-                                             params, 1, formattedString);
-    break;
-
-  case SEC_ERROR_OCSP_OLD_RESPONSE:
-    params[0] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("OCSPOldResponse", 
-                                             params, 1, formattedString);
-    break;
-
-  case SEC_ERROR_OCSP_UNKNOWN_RESPONSE_TYPE:
-  case SEC_ERROR_OCSP_BAD_HTTP_RESPONSE:
-  case SEC_ERROR_OCSP_UNKNOWN_RESPONSE_STATUS:
-  case SEC_ERROR_OCSP_MALFORMED_RESPONSE:
-    params[0] = hostNameU.get();
-    params[1] = errorCode.get();
-    nssComponent->PIPBundleFormatStringFromName("OCSPCorruptedResponse", 
-                                             params, 2, formattedString);
-    break;
-
-  case SEC_ERROR_OCSP_UNAUTHORIZED_RESPONSE:
-    params[0] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("OCSPUnauthorizedResponse", 
-                                             params, 1, formattedString);
-    break;
-    
-  case SEC_ERROR_OCSP_UNKNOWN_CERT:
-    params[0] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("OCSPUnknownCert", 
-                                             params, 1, formattedString);
-    break;
-
-
-  case SEC_ERROR_OCSP_NO_DEFAULT_RESPONDER:
-    params[0] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("OCSPNoDefaultResponder", 
-                                             params, 1, formattedString);
-    break;
-  
-  case PR_DIRECTORY_LOOKUP_ERROR:
-    params[0] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("OCSPDirLookup", 
-                                             params, 1, formattedString);
-    break;
-
-  case SEC_ERROR_REVOKED_CERTIFICATE:
-    params[0] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("PeersCertRevoked", 
-                                             params, 1, formattedString);
-    break;
-
-  case SEC_ERROR_UNTRUSTED_CERT:
-    params[0] = hostNameU.get();
-	  nssComponent->PIPBundleFormatStringFromName("PeersCertUntrusted", 
-                                            params, 1, formattedString);
-	  break;
-
-  case SSL_ERROR_BAD_CERT_DOMAIN:
-    params[0] = hostNameU.get();
-	  nssComponent->PIPBundleFormatStringFromName("PeersCertWrongDomain", 
-                                            params, 1, formattedString);
-	  break;
-
-  case SEC_ERROR_EXPIRED_CERTIFICATE:
-    params[0] = hostNameU.get();
-	  nssComponent->PIPBundleFormatStringFromName("PeersCertExpired", 
-                                            params, 1, formattedString);
-	  break;
-
-  case SEC_ERROR_BAD_SIGNATURE:
-    params[0] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("PeersCertBadSignature", 
-                                                params, 1, formattedString);
-    break;
-
-  //A generic error handler for peer cert
-  case SEC_ERROR_UNKNOWN_CERT:
-  case SEC_ERROR_BAD_KEY:
-  case SEC_ERROR_CERT_USAGES_INVALID:
-  case SEC_ERROR_INADEQUATE_KEY_USAGE:
-  case SEC_ERROR_INADEQUATE_CERT_TYPE:
-  case SEC_ERROR_CERT_NOT_IN_NAME_SPACE:
-  case SEC_ERROR_CERT_NOT_VALID:
-  case SEC_ERROR_CERT_ADDR_MISMATCH:
-  case SSL_ERROR_BAD_CERTIFICATE:
-  case SSL_ERROR_UNSUPPORTED_CERTIFICATE_TYPE:
-  case SSL_ERROR_WRONG_CERTIFICATE:
-  case SSL_ERROR_CERT_KEA_MISMATCH:
-  case SEC_ERROR_EXTENSION_VALUE_INVALID :
-  case SEC_ERROR_EXTENSION_NOT_FOUND:
-  case SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION:
-    params[0] = hostNameU.get();
-    params[1] = errorCode.get();
-    nssComponent->PIPBundleFormatStringFromName("PeersCertNoGood", 
-                                               params, 2, formattedString);
-	  break;
-
-  case SSL_ERROR_BAD_MAC_READ:
-    params[0] = brandShortName.get();
-    nssComponent->PIPBundleFormatStringFromName("BadMac",
-                                                params, 1, formattedString);
-    break;
-
-  case SSL_ERROR_BAD_MAC_ALERT:
-    params[0] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("BadMac",
-                                                params, 1, formattedString);
-    break;
-
-  //Connection Reset by peer
-  case SSL_ERROR_CLOSE_NOTIFY_ALERT:
-  case SSL_ERROR_SOCKET_WRITE_FAILURE:
-    params[0] = hostNameU.get();
-    params[1] = errorCode.get();
-    nssComponent->PIPBundleFormatStringFromName("PeerResetConnection",
-                                                params, 2, formattedString);
-    break;
-
-  //Connection reset by host
-  case SEC_ERROR_USER_CANCELLED:
-  case SEC_ERROR_MESSAGE_SEND_ABORTED:
-    nssComponent->GetPIPNSSBundleString("HostResetConnection", formattedString);
-    break;
-
-  //Bad password
-  case SEC_ERROR_BAD_PASSWORD:
-  case SEC_ERROR_RETRY_PASSWORD:
-    nssComponent->GetPIPNSSBundleString("BadPassword", formattedString);
-    break;
-
-  //Bad Database
-  case SEC_ERROR_BAD_DATABASE:
-  case SEC_ERROR_NO_KEY:
-  case SEC_ERROR_CERT_NO_RESPONSE:
-    params[0] = errorCode.get();
-    nssComponent->PIPBundleFormatStringFromName("BadDatabase",
-                                                params, 1, formattedString);
-    break;
-
-  //Malformed or unxepected data or message was received from server
-  case SSL_ERROR_BAD_SERVER:
-  case SSL_ERROR_BAD_BLOCK_PADDING:
-  case SSL_ERROR_RX_RECORD_TOO_LONG:
-  case SSL_ERROR_TX_RECORD_TOO_LONG:
-  case SSL_ERROR_RX_MALFORMED_HELLO_REQUEST:
-  case SSL_ERROR_RX_MALFORMED_SERVER_HELLO:
-  case SSL_ERROR_RX_MALFORMED_CERTIFICATE:
-  case SSL_ERROR_RX_MALFORMED_SERVER_KEY_EXCH:
-  case SSL_ERROR_RX_MALFORMED_CERT_REQUEST:
-  case SSL_ERROR_RX_MALFORMED_HELLO_DONE:
-  case SSL_ERROR_RX_MALFORMED_FINISHED:
-  case SSL_ERROR_RX_MALFORMED_CHANGE_CIPHER:
-  case SSL_ERROR_RX_MALFORMED_ALERT:
-  case SSL_ERROR_RX_MALFORMED_HANDSHAKE:
-  case SSL_ERROR_RX_MALFORMED_APPLICATION_DATA:
-  case SSL_ERROR_RX_UNEXPECTED_HELLO_REQUEST:
-  case SSL_ERROR_RX_UNEXPECTED_SERVER_HELLO:
-  case SSL_ERROR_RX_UNEXPECTED_CERTIFICATE:
-  case SSL_ERROR_RX_UNEXPECTED_SERVER_KEY_EXCH:
-  case SSL_ERROR_RX_UNEXPECTED_CERT_REQUEST:
-  case SSL_ERROR_RX_UNEXPECTED_HELLO_DONE:
-  case SSL_ERROR_RX_UNEXPECTED_FINISHED:
-  case SSL_ERROR_RX_UNEXPECTED_CHANGE_CIPHER:
-  case SSL_ERROR_RX_UNEXPECTED_ALERT:
-  case SSL_ERROR_RX_UNEXPECTED_HANDSHAKE:
-  case SSL_ERROR_RX_UNEXPECTED_APPLICATION_DATA:
-  case SSL_ERROR_RX_UNKNOWN_RECORD_TYPE:
-  case SSL_ERROR_RX_UNKNOWN_HANDSHAKE:
-  case SSL_ERROR_RX_UNKNOWN_ALERT:
-    params[0] = hostNameU.get();
-    params[1] = errorCode.get();
-    nssComponent->PIPBundleFormatStringFromName("BadServer",
-                                                params, 2, formattedString);
-    break;
-
-  //Alert for Malformed or unexpected data or message recieved by server
-  case SSL_ERROR_HANDSHAKE_UNEXPECTED_ALERT:
-  case SSL_ERROR_DECOMPRESSION_FAILURE_ALERT:
-  case SSL_ERROR_HANDSHAKE_FAILURE_ALERT:
-  case SSL_ERROR_ILLEGAL_PARAMETER_ALERT:
-    params[0] = hostNameU.get();
-    params[1] = errorCode.get();
-    nssComponent->PIPBundleFormatStringFromName("BadClient",
-                                                params, 2, formattedString);
-    break;
-
-  case SEC_ERROR_REUSED_ISSUER_AND_SERIAL:
-    nssComponent->GetPIPNSSBundleString("HostReusedIssuerSerial", formattedString);
-    break;
-
-  default:
-    params[0] = hostNameU.get();
-    params[1] = errorCode.get(); 
-    nssComponent->PIPBundleFormatStringFromName("SSLGenericError",
-                                                params, 2, formattedString);
-      
+  if (external)
+  {
+    socketInfo->SetErrorMessage(formattedString.get());
   }
-
+  else
   {
     nsPSMUITracker tracker;
     if (tracker.isUIForbidden()) {
@@ -1187,6 +972,7 @@ nsSSLThread::checkHandshake(PRInt32 bytesTransfered, PRFileDesc* ssl_layer_fd, n
 static PRInt16 PR_CALLBACK
 nsSSLIOLayerPoll(PRFileDesc *fd, PRInt16 in_flags, PRInt16 *out_flags)
 {
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] polling SSL socket\n", (void*)fd));
   nsNSSShutDownPreventionLock locker;
 
   if (!out_flags)

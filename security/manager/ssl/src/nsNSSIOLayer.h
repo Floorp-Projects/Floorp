@@ -134,6 +134,7 @@ public:
 
   nsresult SetSecurityState(PRUint32 aState);
   nsresult SetShortSecurityDescription(const PRUnichar *aText);
+  nsresult SetErrorMessage(const PRUnichar *aText);
 
   nsresult SetForSTARTTLS(PRBool aForSTARTTLS);
   nsresult GetForSTARTTLS(PRBool *aForSTARTTLS);
@@ -163,6 +164,9 @@ public:
   void SetAllowTLSIntoleranceTimeout(PRBool aAllow);
   void SetBlockedOnBadCertUI(PRBool aCurrentlyBlockedOnUI);
 
+  nsresult GetExternalErrorReporting(PRBool* state);
+  nsresult SetExternalErrorReporting(PRBool aState);
+
   nsresult RememberCAChain(CERTCertList *aCertList);
 
   /* Set SSL Status values */
@@ -178,6 +182,8 @@ protected:
   } mBlockingState;
   PRUint32 mSecurityState;
   nsString mShortDesc;
+  nsString mErrorMessage;
+  PRPackedBool mExternalErrorReporting;
   PRPackedBool mForSTARTTLS;
   PRPackedBool mHandshakePending;
   PRPackedBool mCanceled;

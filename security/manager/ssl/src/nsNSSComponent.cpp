@@ -116,6 +116,8 @@
 #include "cms.h"
 #include "nssckbi.h"
 #include "base64.h"
+#include "secerr.h"
+#include "sslerr.h"
 
 extern "C" {
 #include "pkcs12.h"
@@ -1674,13 +1676,14 @@ nsNSSComponent::Init()
 }
 
 /* nsISupports Implementation for the class */
-NS_IMPL_THREADSAFE_ISUPPORTS6(nsNSSComponent,
+NS_IMPL_THREADSAFE_ISUPPORTS7(nsNSSComponent,
                               nsISignatureVerifier,
                               nsIEntropyCollector,
                               nsINSSComponent,
                               nsIObserver,
                               nsISupportsWeakReference,
-                              nsITimerCallback)
+                              nsITimerCallback,
+                              nsINSSErrorsService)
 
 
 /* Callback functions for decoder. For now, use empty/default functions. */
@@ -2157,6 +2160,76 @@ nsNSSComponent::RememberCert(CERTCertificate *cert)
   }
   
   return NS_OK;
+}
+
+#define EXPECTED_SEC_ERROR_BASE (-0x2000)
+#define EXPECTED_SSL_ERROR_BASE (-0x3000)
+
+#if SEC_ERROR_BASE != EXPECTED_SEC_ERROR_BASE || SSL_ERROR_BASE != EXPECTED_SSL_ERROR_BASE
+#error "Unexpected change of error code numbers in lib NSS, please adjust the mapping code"
+/*
+ * Please ensure the NSS error codes are mapped into the positive range 0x1000 to 0xf000
+ * Search for NS_ERROR_MODULE_SECURITY to ensure there are no conflicts.
+ * The current code also assumes that NSS library error codes are negative.
+ */
+#endif
+
+NS_IMETHODIMP
+nsNSSComponent::IsNSSErrorCode(PRInt32 aNSPRCode, PRBool *_retval)
+{
+  if (!_retval)
+    return NS_ERROR_FAILURE;
+
+  *_retval = IS_SEC_ERROR(aNSPRCode) || IS_SSL_ERROR(aNSPRCode);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSComponent::GetXPCOMFromNSSError(PRInt32 aNSPRCode, nsresult *aXPCOMErrorCode)
+{
+  if (!IS_SEC_ERROR(aNSPRCode) && !IS_SSL_ERROR(aNSPRCode))
+    return NS_ERROR_FAILURE;
+
+  if (!aXPCOMErrorCode)
+    return NS_ERROR_INVALID_ARG;
+
+  // The error codes within each module may be a 16 bit value.
+  // For simplicity let's use the positive value of the NSS code.
+
+  *aXPCOMErrorCode =
+    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY,
+                              -1 * aNSPRCode);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSComponent::GetErrorMessage(nsresult aXPCOMErrorCode, nsAString &aErrorMessage)
+{
+  if (NS_ERROR_GET_MODULE(aXPCOMErrorCode) != NS_ERROR_MODULE_SECURITY
+      || NS_ERROR_GET_SEVERITY(aXPCOMErrorCode) != NS_ERROR_SEVERITY_ERROR)
+    return NS_ERROR_FAILURE;
+  
+  PRInt32 aNSPRCode = -1 * NS_ERROR_GET_CODE(aXPCOMErrorCode);
+
+  if (!IS_SEC_ERROR(aNSPRCode) && !IS_SSL_ERROR(aNSPRCode))
+    return NS_ERROR_FAILURE;
+
+  const char *id_str = nsNSSErrors::getOverrideErrorStringName(aNSPRCode);
+
+  if (!id_str)
+    id_str = nsNSSErrors::getDefaultErrorStringName(aNSPRCode);
+
+  if (!id_str || !mPIPNSSBundle)
+    return NS_ERROR_FAILURE;
+
+  nsAutoString msg;
+  nsresult rv =
+    mPIPNSSBundle->GetStringFromName(NS_ConvertASCIItoUTF16(id_str).get(),
+                                     getter_Copies(msg));
+  if (NS_SUCCEEDED(rv)) {
+    aErrorMessage = msg;
+  }
+  return rv;
 }
 
 //---------------------------------------------
