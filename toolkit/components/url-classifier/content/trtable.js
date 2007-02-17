@@ -47,9 +47,7 @@ function UrlClassifierTable() {
   this.name = '';
   this.needsUpdate = false;
   this.enchashDecrypter_ = new PROT_EnchashDecrypter();
-#ifdef DEBUG
   this.wrappedJSObject = this;
-#endif
 }
 
 UrlClassifierTable.prototype.QueryInterface = function(iid) {
