@@ -503,3 +503,79 @@ function getBrowserFromContentWindow(aContentWindow)
   }
   return null;
 }
+
+
+/**
+ * openNewTabWith: opens a new tab with the given URL.
+ *
+ * @param aURL
+ *        The URL to open (as a string).
+ * @param aDocument
+ *        The document from which the URL came, or null. This is used to set the
+ *        referrer header and to do a security check of whether the document is
+ *        allowed to reference the URL. If null, there will be no referrer
+ *        header and no security check.
+ * @param aPostData
+ *        Form POST data, or null.
+ * @param aEvent
+ *        The triggering event (for the purpose of determining whether to open
+ *        in the background), or null.
+ * @param aAllowThirdPartyFixup
+ *        If true, then we allow the URL text to be sent to third party services
+ *        (e.g., Google's I Feel Lucky) for interpretation. This parameter may
+ *        be undefined in which case it is treated as false.
+ */ 
+function openNewTabWith(aURL, aDocument, aPostData, aEvent,
+                        aAllowThirdPartyFixup)
+{
+  if (aDocument)
+    urlSecurityCheck(aURL, aDocument.nodePrincipal);
+
+  var prefSvc = Components.classes["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefService);
+  prefSvc = prefSvc.getBranch(null);
+
+  // should we open it in a new tab?
+  var loadInBackground = true;
+  try {
+    loadInBackground = prefSvc.getBoolPref("browser.tabs.loadInBackground");
+  }
+  catch(ex) {
+  }
+
+  if (aEvent && aEvent.shiftKey)
+    loadInBackground = !loadInBackground;
+
+  // As in openNewWindowWith(), we want to pass the charset of the
+  // current document over to a new tab. 
+  var wintype = document.documentElement.getAttribute("windowtype");
+  var originCharset;
+  if (wintype == "navigator:browser")
+    originCharset = window.content.document.characterSet;
+
+  // open link in new tab
+  var referrerURI = aDocument ? aDocument.documentURIObject : null;
+  var browser = top.document.getElementById("content");
+  browser.loadOneTab(aURL, referrerURI, originCharset, aPostData,
+                     loadInBackground, aAllowThirdPartyFixup || false);
+}
+
+function openNewWindowWith(aURL, aDocument, aPostData, aAllowThirdPartyFixup)
+{
+  if (aDocument)
+    urlSecurityCheck(aURL, aDocument.nodePrincipal);
+
+  // if and only if the current window is a browser window and it has a
+  // document with a character set, then extract the current charset menu
+  // setting from the current document and use it to initialize the new browser
+  // window...
+  var charsetArg = null;
+  var wintype = document.documentElement.getAttribute("windowtype");
+  if (wintype == "navigator:browser")
+    charsetArg = "charset=" + window.content.document.characterSet;
+
+  var referrerURI = aDocument ? aDocument.documentURIObject : null;
+  window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no",
+                    aURL, charsetArg, referrerURI, aPostData,
+                    aAllowThirdPartyFixup);
+}

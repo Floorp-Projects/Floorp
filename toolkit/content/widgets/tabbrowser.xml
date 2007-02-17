@@ -856,12 +856,6 @@
               return; // Refuse to load if we can't do a security check.
             }
 
-            // Verify that the load of this icon is legal.
-            // We check first with the security manager
-            const secMan =
-              Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-                        .getService(Components.interfaces.nsIScriptSecurityManager);
-
             // Get the IOService so we can make URIs
             const ioService =
               Components.classes["@mozilla.org/network/io-service;1"]
@@ -870,28 +864,27 @@
             const targetDoc = event.target.ownerDocument;
             // Make a URI out of our href.
             var uri = ioService.newURI(href, targetDoc.characterSet, null);
-
-            var origURI = ioService.newURI(targetDoc.documentURI, targetDoc.characterSet, null);
-
-            const nsIScriptSecMan =
-              Components.interfaces.nsIScriptSecurityManager;
-
             try {
-              // error pages can load their favicon
-              // to be on the safe side, only allow chrome:// favicons
+              // Verify that the load of this icon is legal.
+              // error pages can load their favicon, to be on the safe side,
+              // only allow chrome:// favicons
+              const nsIScriptSecMan =
+                Components.interfaces.nsIScriptSecurityManager;
+              var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                                     .getService(nsIScriptSecMan);
               const aboutNeterr = "about:neterror?";
-              if (origURI.spec.substr(0, aboutNeterr.length) != aboutNeterr ||
+              if (targetDoc.documentURI.substr(0, aboutNeterr.length) != aboutNeterr ||
                   !uri.schemeIs("chrome"))
-                secMan.checkLoadURI(origURI, uri,
-                                    nsIScriptSecMan.DISALLOW_SCRIPT);
+                secMan.checkLoadURIWithPrincipal(targetDoc.nodePrincipal, uri,
+                                                 nsIScriptSecMan.DISALLOW_SCRIPT);
             } catch(e) {
               return;
             }
 
             // Security says okay, now ask content policy
             if (contentPolicy.shouldLoad(nsIContentPolicy.TYPE_IMAGE,
-                                         uri, origURI, event.target,
-                                         event.target.type,
+                                         uri, targetDoc.documentURIObject,
+                                         event.target, event.target.type,
                                          null) != nsIContentPolicy.ACCEPT)
               return;
 
@@ -2280,6 +2273,10 @@
 
       <property name="contentTitle"
                 onget="return this.mCurrentBrowser.contentTitle;"
+                readonly="true"/>
+
+      <property name="contentPrincipal"
+                onget="return this.mCurrentBrowser.contentPrincipal;"
                 readonly="true"/>
 
       <property name="securityUI"

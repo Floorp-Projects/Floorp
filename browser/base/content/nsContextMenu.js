@@ -373,10 +373,6 @@ nsContextMenu.prototype = {
     // Remember the node that was clicked.
     this.target = aNode;
 
-    // Remember the URL of the document containing the node
-    // for referrer header and for security checks.
-    this.docURL = aNode.ownerDocument.location.href;
-
     // First, do checks for nodes that never have children.
     if (this.target.nodeType == Node.ELEMENT_NODE) {
       // See if the user clicked on an image.
@@ -610,12 +606,12 @@ nsContextMenu.prototype = {
 
   // Open linked-to URL in a new window.
   openLink : function () {
-    openNewWindowWith(this.linkURL, this.docURL, null, false);
+    openNewWindowWith(this.linkURL, this.target.ownerDocument, null, false);
   },
 
   // Open linked-to URL in a new tab.
   openLinkInTab: function() {
-    openNewTabWith(this.linkURL, this.docURL, null, null, false);
+    openNewTabWith(this.linkURL, this.target.ownerDocument, null, null, false);
   },
 
   // Open frame in a new tab.
@@ -640,7 +636,7 @@ nsContextMenu.prototype = {
     var frameURL = this.target.ownerDocument.location.href;
 
     try {
-      urlSecurityCheck(frameURL, this.browser.currentURI.spec,
+      urlSecurityCheck(frameURL, this.browser.contentPrincipal,
                        Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
       this.browser.loadURI(frameURL);
     } catch(e) {}
@@ -689,15 +685,17 @@ nsContextMenu.prototype = {
 
   // Change current window to the URL of the image.
   viewImage: function(e) {
-    urlSecurityCheck(this.imageURL, this.browser.currentURI.spec,
-                     Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT );
+    urlSecurityCheck(this.imageURL,
+                     this.browser.contentPrincipal,
+                     Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
     openUILink( this.imageURL, e );
   },
 
   // Change current window to the URL of the background image.
   viewBGImage: function(e) {
-    urlSecurityCheck(this.bgImageURL, this.browser.currentURI.spec,
-                      Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT );
+    urlSecurityCheck(this.bgImageURL,
+                     this.browser.contentPrincipal,
+                     Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
     openUILink(this.bgImageURL, e );
   },
 
@@ -728,7 +726,8 @@ nsContextMenu.prototype = {
     if (this.disableSetDesktopBackground())
       return;
 
-    urlSecurityCheck(this.target.currentURI.spec, this.docURL);
+    urlSecurityCheck(this.target.currentURI.spec,
+                     this.target.ownerDocument.nodePrincipal);
 
     // Confirm since it's annoying if you hit this accidentally.
     const kDesktopBackgroundURL = 
@@ -763,9 +762,10 @@ nsContextMenu.prototype = {
 
   // Save URL of clicked-on link.
   saveLink: function() {
-    urlSecurityCheck(this.linkURL, this.docURL);
+    var doc =  this.target.ownerDocument;
+    urlSecurityCheck(this.linkURL, doc.nodePrincipal);
     saveURL(this.linkURL, this.linkText(), null, true, false,
-            makeURI(this.docURL, this.target.ownerDocument.characterSet));
+            doc.documentURIObject);
   },
 
   sendLink: function() {
@@ -775,9 +775,10 @@ nsContextMenu.prototype = {
 
   // Save URL of clicked-on image.
   saveImage: function() {
-    urlSecurityCheck(this.imageURL, this.docURL);
+    var doc =  this.target.ownerDocument;
+    urlSecurityCheck(this.imageURL, doc.nodePrincipal);
     saveImageURL(this.imageURL, null, "SaveImageTitle", false,
-                 false, makeURI(this.docURL));
+                 false, doc.documentURIObject);
   },
 
   sendImage: function() {

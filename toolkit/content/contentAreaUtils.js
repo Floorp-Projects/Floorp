@@ -38,97 +38,38 @@
 #
 # ***** END LICENSE BLOCK *****
 
-
 /**
- * openNewTabWith: opens a new tab with the given URL.
+ * urlSecurityCheck: JavaScript wrapper for checkLoadURIWithPrincipal
+ * and checkLoadURIStrWithPrincipal.
+ * If |aPrincipal| is not allowed to link to |aURL|, this function throws with
+ * an error message.
  *
- * @param href The URL to open (as a string).
- * @param sourceURL The URL of the document from which the URL came, or null.
- *          This is used to set the referrer header and to do a security check of whether
- *          the document as allowed to reference the URL.
- *          If null, there will be no referrer header and no security check.
- * @param postData Form POST data, or null.
- * @param event The triggering event (for the purpose of determining whether to open in the background), or null
- * @param allowThirdPartyFixup if true, then we allow the URL text to be sent to third party
- * services (e.g., Google's I Feel Lucky) for interpretation. This parameter may be undefined in
- * which case it is treated as false.
- */ 
-function openNewTabWith(href, sourceURL, postData, event, allowThirdPartyFixup)
-{
-  if (sourceURL)
-    urlSecurityCheck(href, sourceURL);
-
-  var prefSvc = Components.classes["@mozilla.org/preferences-service;1"]
-                          .getService(Components.interfaces.nsIPrefService);
-  prefSvc = prefSvc.getBranch(null);
-
-  // should we open it in a new tab?
-  var loadInBackground = true;
-  try {
-    loadInBackground = prefSvc.getBoolPref("browser.tabs.loadInBackground");
-  }
-  catch(ex) {
-  }
-
-  if (event && event.shiftKey)
-    loadInBackground = !loadInBackground;
-
-  // As in openNewWindowWith(), we want to pass the charset of the
-  // current document over to a new tab. 
-  var wintype = document.documentElement.getAttribute('windowtype');
-  var originCharset;
-  if (wintype == "navigator:browser")
-    originCharset = window.content.document.characterSet;
-
-  // open link in new tab
-  var browser = top.document.getElementById("content");
-
-  var referrerURI = sourceURL ? makeURI(sourceURL) : null;
-
-  browser.loadOneTab(href, referrerURI, originCharset, postData, loadInBackground,
-                     allowThirdPartyFixup || false);
-}
-
-function openNewWindowWith(href, sourceURL, postData, allowThirdPartyFixup)
-{
-  if (sourceURL)
-    urlSecurityCheck(href, sourceURL);
-
-  // if and only if the current window is a browser window and it has a document with a character
-  // set, then extract the current charset menu setting from the current document and use it to
-  // initialize the new browser window...
-  var charsetArg = null;
-  var wintype = document.documentElement.getAttribute('windowtype');
-  if (wintype == "navigator:browser")
-    charsetArg = "charset=" + window.content.document.characterSet;
-
-  var referrerURI = sourceURL ? makeURI(sourceURL) : null;
-
-  window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no",
-                    href, charsetArg, referrerURI, postData, allowThirdPartyFixup);
-}
-
-/**
- * urlSecurityCheck: JavaScript wrapper for CheckLoadURIStr.
- * If |sourceURL| is not allowed to link to |url|, this function throws with an error message.
- *
- * @param url The URL a page has linked to.
- * @param sourceURL The URL of the document from which the URL came.
- * @param flags Flags to be passed to checkLoadURIStr. If undefined,
- *              nsIScriptSecurityManager.STANDARD will be passed to checkLoadURIStr.
+ * @param aURL
+ *        The URL a page has linked to. This could be passed either as a string
+ *        or as a nsIURI object.
+ * @param aPrincipal
+ *        The principal of the document from which aURL came.
+ * @param aFlags
+ *        Flags to be passed to checkLoadURIStr. If undefined,
+ *        nsIScriptSecurityManager.STANDARD will be passed.
  */
-function urlSecurityCheck(url, sourceURL, flags)
+function urlSecurityCheck(aURL, aPrincipal, aFlags)
 {
-  const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
+  const nsIScriptSecurityManager =
+    Components.interfaces.nsIScriptSecurityManager;
   var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
                          .getService(nsIScriptSecurityManager);
-  if (flags === undefined)
-    flags = nsIScriptSecurityManager.STANDARD;
+  if (aFlags === undefined)
+    aFlags = nsIScriptSecurityManager.STANDARD;
 
   try {
-    secMan.checkLoadURIStr(sourceURL, url, flags);
+    if (aURL instanceof Components.interfaces.nsIURI)
+      secMan.checkLoadURIWithPrincipal(aPrincipal, aURL, aFlags);
+    else
+      secMan.checkLoadURIStrWithPrincipal(aPrincipal, aURL, aFlags);
   } catch (e) {
-    throw "Load of " + url + " from " + sourceURL + " denied.";
+    // XXXmano: dump the prinicipal url here too
+    throw "Load of " + aURL + " denied.";
   }
 }
 

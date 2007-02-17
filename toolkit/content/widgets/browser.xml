@@ -314,6 +314,10 @@
                 onget="return this.contentDocument.title;"
                 readonly="true"/>
 
+      <property name="contentPrincipal"
+                onget="return this.contentDocument.nodePrincipal;"
+                readonly="true"/>
+
       <field name="mPrefs" readonly="true">
         Components.classes['@mozilla.org/preferences-service;1']
                   .getService(Components.interfaces.nsIPrefService)
