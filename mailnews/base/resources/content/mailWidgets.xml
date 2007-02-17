@@ -1718,8 +1718,11 @@
               // XXXbz We really want client*, but event.client* is bogus inside a popup!
               var eventX = event.screenX - document.documentElement.boxObject.screenX;
               var eventY = event.screenY - document.documentElement.boxObject.screenY;
-              box.view.selection.select(box.getRowAt(eventX, eventY));
+              var index = box.getRowAt(eventX, eventY);
+              box.view.selection.select(index);
+              return index;
             }
+            return -1;
           ]]>
         </body>
       </method>
