@@ -54,16 +54,7 @@ class ns4xPluginStreamListener : public nsIPluginStreamListener,
 {
 public:
   NS_DECL_ISUPPORTS
-
-  // from nsIPluginStreamListener:
-  NS_IMETHOD OnStartBinding(nsIPluginStreamInfo* pluginInfo);
-  NS_IMETHOD OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
-                             nsIInputStream* input, PRUint32 length);
-  NS_IMETHOD OnFileAvailable( nsIPluginStreamInfo* pluginInfo,
-                              const char* fileName);
-  NS_IMETHOD OnStopBinding(nsIPluginStreamInfo* pluginInfo, nsresult status);
-  NS_IMETHOD GetStreamType(nsPluginStreamType *result);
-
+  NS_DECL_NSIPLUGINSTREAMLISTENER
   NS_DECL_NSITIMERCALLBACK
 
   // ns4xPluginStreamListener specific methods:

@@ -38,6 +38,7 @@
 #ifndef ns4xPlugin_h__
 #define ns4xPlugin_h__
 
+#include "nsIFactory.h"
 #include "nsIPlugin.h"
 #include "nsIPluginInstancePeer.h"
 #include "nsIWindowlessPlugInstPeer.h"
@@ -116,34 +117,9 @@ public:
   virtual ~ns4xPlugin(void);
 
   NS_DECL_ISUPPORTS
-
-  //nsIFactory interface
-
-  NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                            REFNSIID aIID,
-                            void **aResult);
-
-  NS_IMETHOD LockFactory(PRBool aLock);
-
-  //nsIPlugin interface
-
-  /**
-   * Creates a new plugin instance, based on a MIME type. This
-   * allows different impelementations to be created depending on
-   * the specified MIME type.
-   */
-  NS_IMETHOD CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID, 
-                                  const char* aPluginMIMEType,
-                                  void **aResult);
+  NS_DECL_NSIFACTORY
+  NS_DECL_NSIPLUGIN
   
-  NS_IMETHOD Initialize(void);
-
-  NS_IMETHOD Shutdown(void);
-
-  NS_IMETHOD GetMIMEDescription(const char* *resultingDesc);
-
-  NS_IMETHOD GetValue(nsPluginVariable variable, void *value);
-
   ////////////////////////////////////////////////////////////////////
   // ns4xPlugin-specific methods
 

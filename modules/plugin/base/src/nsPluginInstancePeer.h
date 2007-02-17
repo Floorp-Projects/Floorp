@@ -61,104 +61,13 @@ public:
   virtual ~nsPluginInstancePeerImpl();
 
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIPLUGININSTANCEPEER
+  NS_DECL_NSIWINDOWLESSPLUGININSTANCEPEER
+  NS_DECL_NSIPLUGININSTANCEPEER2
+  NS_DECL_NSIPLUGINTAGINFO
+  NS_DECL_NSIPLUGINTAGINFO2
 
-  // nsIPluginInstancePeer interface
-
-  NS_IMETHOD
-  GetValue(nsPluginInstancePeerVariable variable, void *value);
-
-  NS_IMETHOD
-  GetMIMEType(nsMIMEType *result);
-
-  NS_IMETHOD
-  GetMode(nsPluginMode *result);
-
-  NS_IMETHOD
-  NewStream(nsMIMEType type, const char* target, nsIOutputStream* *result);
-
-  NS_IMETHOD
-  ShowStatus(const char* message);
-
-  NS_IMETHOD
-  SetWindowSize(PRUint32 width, PRUint32 height);
-
-  // nsIPluginInstancePeer2 interface
-
-  NS_IMETHOD
-  GetJSWindow(JSObject* *outJSWindow);
-  
-  NS_IMETHOD
-  GetJSThread(PRUint32 *outThreadID);
-
-  NS_IMETHOD
-  GetJSContext(JSContext* *outContext);
-
-  // nsIWindowlessPluginInstancePeer
-
-  // (Corresponds to NPN_InvalidateRect.)
-  NS_IMETHOD
-  InvalidateRect(nsPluginRect *invalidRect);
-
-  // (Corresponds to NPN_InvalidateRegion.)
-  NS_IMETHOD
-  InvalidateRegion(nsPluginRegion invalidRegion);
-
-  // (Corresponds to NPN_ForceRedraw.)
-  NS_IMETHOD
-  ForceRedraw(void);
-
-  /* The tag info interfaces all pass through calls to the 
-     nsPluginInstanceOwner (see nsObjectFrame.cpp) */
-
-  //nsIPluginTagInfo interface
-
-  NS_IMETHOD
-  GetAttributes(PRUint16& n, const char*const*& names, const char*const*& values);
-
-  NS_IMETHOD
-  GetAttribute(const char* name, const char* *result);
-
-  NS_IMETHOD
-  GetDOMElement(nsIDOMElement* *result);
-
-  //nsIPluginTagInfo2 interface
-
-  NS_IMETHOD
-  GetTagType(nsPluginTagType *result);
-
-  NS_IMETHOD
-  GetTagText(const char* *result);
-
-  NS_IMETHOD
-  GetParameters(PRUint16& n, const char*const*& names, const char*const*& values);
-
-  NS_IMETHOD
-  GetParameter(const char* name, const char* *result);
-  
-  NS_IMETHOD
-  GetDocumentBase(const char* *result);
-  
-  NS_IMETHOD
-  GetDocumentEncoding(const char* *result);
-  
-  NS_IMETHOD
-  GetAlignment(const char* *result);
-  
-  NS_IMETHOD
-  GetWidth(PRUint32 *result);
-  
-  NS_IMETHOD
-  GetHeight(PRUint32 *result);
-  
-  NS_IMETHOD
-  GetBorderVertSpace(PRUint32 *result);
-  
-  NS_IMETHOD
-  GetBorderHorizSpace(PRUint32 *result);
-
-  NS_IMETHOD
-  GetUniqueID(PRUint32 *result);
-
+  //XXX Why isn't this ifdef'd like the class declaration?
   //nsIJVMPluginTagInfo interface
 
   NS_IMETHOD
@@ -176,10 +85,7 @@ public:
   NS_IMETHOD
   GetMayScript(PRBool *result);
 
-  // nsPIPluginInstancePeer interface
-
-  NS_IMETHOD
-  GetOwner(nsIPluginInstanceOwner **aOwner);
+  NS_DECL_NSPIPLUGININSTANCEPEER
 
   //locals
 

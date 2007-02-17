@@ -81,7 +81,7 @@ public:
   LPARAM GetLParam() { return mLParam; };
   PRBool InUse()     { return (mWnd!=NULL || mMsg!=0); };
 
-  NS_IMETHOD Run();
+  NS_DECL_NSIRUNNABLE
 
 protected:
   PluginWindowWeakRef mPluginWindowRef;
@@ -183,13 +183,18 @@ public:
   nsDelayedPopupsEnabledEvent(nsIPluginInstanceInternal *inst)
     : mInst(inst)
   {}
-  NS_IMETHOD Run() {
-    mInst->PushPopupsEnabledState(PR_FALSE);
-    return NS_OK;
-  }
+
+  NS_DECL_NSIRUNNABLE
+
 private:
   nsCOMPtr<nsIPluginInstanceInternal> mInst;
 };
+
+NS_IMETHODIMP nsDelayedPopupsEnabledEvent::Run()
+{
+  mInst->PushPopupsEnabledState(PR_FALSE);
+  return NS_OK;	
+}
 
 /**
  *   New plugin window procedure

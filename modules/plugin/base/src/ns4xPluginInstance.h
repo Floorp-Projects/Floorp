@@ -90,42 +90,8 @@ class ns4xPluginInstance : public nsIPluginInstance,
 public:
 
     NS_DECL_ISUPPORTS
-
-    ////////////////////////////////////////////////////////////////////////
-    // nsIPluginInstance methods
-
-    /**
-     * Actually initialize the plugin instance. This calls the 4.x <b>newp</b>
-     * callback, and may return an error (which is why it is distinct from the
-     * constructor.) If an error is returned, the caller should <i>not</i>
-     * continue to use the <b>ns4xPluginInstance</b> object.
-     */
-    NS_METHOD Initialize(nsIPluginInstancePeer* peer);
-
-    NS_IMETHOD GetPeer(nsIPluginInstancePeer* *resultingPeer);
-
-    NS_IMETHOD Start(void);
-
-    NS_IMETHOD Stop(void);
-
-    NS_IMETHOD Destroy(void);
-
-    NS_IMETHOD SetWindow(nsPluginWindow* window);
-
-    NS_IMETHOD NewStream(nsIPluginStreamListener** listener);
-
-    NS_IMETHOD Print(nsPluginPrint* platformPrint);
-
-    NS_IMETHOD GetValue(nsPluginInstanceVariable variable, void *value);
-
-    NS_IMETHOD HandleEvent(nsPluginEvent* event, PRBool* handled);
-    
-    ////////////////////////////////////////////////////////////////////////
-    // nsIScriptablePlugin methods
-
-    NS_IMETHOD GetScriptablePeer(void * *aScriptablePeer);
-
-    NS_IMETHOD GetScriptableInterface(nsIID * *aScriptableInterface);
+    NS_DECL_NSIPLUGININSTANCE
+    NS_DECL_NSISCRIPTABLEPLUGIN
 
     ////////////////////////////////////////////////////////////////////////
     // nsIPluginInstanceInternal methods

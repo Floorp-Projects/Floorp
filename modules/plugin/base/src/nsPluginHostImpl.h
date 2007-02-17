@@ -64,6 +64,9 @@
 #include "nsIPrefBranch.h"
 #include "nsWeakReference.h"
 
+// XXX this file really doesn't think this is possible, but ...
+#include "nsIFactory.h"
+
 class ns4xPlugin;
 class nsIComponentManager;
 class nsIFile;
@@ -274,139 +277,18 @@ public:
 
   //nsIPluginHost interface - used to communicate to the nsPluginInstanceOwner
 
-  NS_IMETHOD
-  Init(void);
-
-  NS_IMETHOD
-  Destroy(void);
-
-  NS_IMETHOD
-  LoadPlugins(void);
-
-  NS_IMETHOD
-  GetPluginFactory(const char *aMimeType, nsIPlugin** aPlugin);
-
-
-  NS_IMETHOD
-  InstantiatePluginForChannel(nsIChannel* aChannel,
-                              nsIPluginInstanceOwner* aOwner,
-                              nsIStreamListener** aListener);
-
-  NS_IMETHOD
-  InstantiateEmbeddedPlugin(const char *aMimeType, nsIURI* aURL, nsIPluginInstanceOwner *aOwner);
-
-  NS_IMETHOD
-  InstantiateFullPagePlugin(const char *aMimeType, nsIURI* aURI, nsIStreamListener *&aStreamListener, nsIPluginInstanceOwner *aOwner);
-
-  NS_IMETHOD
-  SetUpPluginInstance(const char *aMimeType, nsIURI *aURL, nsIPluginInstanceOwner *aOwner);
-
-  NS_IMETHOD
-  IsPluginEnabledForType(const char* aMimeType);
-
-  NS_IMETHOD
-  IsPluginEnabledForExtension(const char* aExtension, const char* &aMimeType);
-
-  NS_IMETHOD
-  GetPluginCount(PRUint32* aPluginCount);
-  
-  NS_IMETHOD
-  GetPlugins(PRUint32 aPluginCount, nsIDOMPlugin** aPluginArray);
-
-  NS_IMETHOD
-  HandleBadPlugin(PRLibrary* aLibrary, nsIPluginInstance *instance);
-
-  //nsIPluginManager2 interface - secondary methods that nsIPlugin communicates to
-
-  NS_IMETHOD
-  BeginWaitCursor(void);
-
-  NS_IMETHOD
-  EndWaitCursor(void);
-
-  NS_IMETHOD
-  SupportsURLProtocol(const char* protocol, PRBool *result);
-
-  NS_IMETHOD
-  NotifyStatusChange(nsIPlugin* plugin, nsresult errorStatus);
-  
-  NS_IMETHOD
-  FindProxyForURL(const char* url, char* *result);
-
-  NS_IMETHOD
-  RegisterWindow(nsIEventHandler* handler, nsPluginPlatformWindowRef window);
-  
-  NS_IMETHOD
-  UnregisterWindow(nsIEventHandler* handler, nsPluginPlatformWindowRef window);
-
-  NS_IMETHOD
-  AllocateMenuID(nsIEventHandler* handler, PRBool isSubmenu, PRInt16 *result);
-
-  NS_IMETHOD
-  DeallocateMenuID(nsIEventHandler* handler, PRInt16 menuID);
-
-  NS_IMETHOD
-  HasAllocatedMenuID(nsIEventHandler* handler, PRInt16 menuID, PRBool *result);
+  NS_DECL_NSIPLUGINHOST
+  NS_DECL_NSIPLUGINMANAGER2
 
   NS_IMETHOD
   ProcessNextEvent(PRBool *bEventHandled);
 
-  // nsIFactory interface, from nsIPlugin.
   // XXX not currently used?
-  NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                            REFNSIID aIID,
-                            void **aResult);
-
-  NS_IMETHOD LockFactory(PRBool aLock);
-
-  // nsIFileUtilities interface
-
-  NS_IMETHOD GetProgramPath(const char* *result);
-
-  NS_IMETHOD GetTempDirPath(const char* *result);
-
-  NS_IMETHOD NewTempFileName(const char* prefix, PRUint32 bufLen, char* resultBuf);
-
-  // nsICookieStorage interface
-
-  /**
-   * Retrieves a cookie from the browser's persistent cookie store.
-   * @param inCookieURL        URL string to look up cookie with.
-   * @param inOutCookieBuffer  buffer large enough to accomodate cookie data.
-   * @param inOutCookieSize    on input, size of the cookie buffer, on output cookie's size.
-   */
-  NS_IMETHOD
-  GetCookie(const char* inCookieURL, void* inOutCookieBuffer, PRUint32& inOutCookieSize);
-  
-  /**
-   * Stores a cookie in the browser's persistent cookie store.
-   * @param inCookieURL        URL string store cookie with.
-   * @param inCookieBuffer     buffer containing cookie data.
-   * @param inCookieSize       specifies  size of cookie data.
-   */
-  NS_IMETHOD
-  SetCookie(const char* inCookieURL, const void* inCookieBuffer, PRUint32 inCookieSize);
-  
-  // Methods from nsIObserver
-  NS_IMETHOD
-  Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData);
-
-  // Methods from nsPIPluginHost
-  NS_IMETHOD
-  SetIsScriptableInstance(nsIPluginInstance *aPluginInstance, PRBool aScriptable);
-
-  NS_IMETHOD
-  ParsePostBufferToFixHeaders(const char *inPostData, PRUint32 inPostDataLen, 
-              char **outPostData, PRUint32 *outPostDataLen);
-  
-  NS_IMETHOD
-  CreateTmpFileToPost(const char *postDataURL, char **pTmpFileName);
-
-  NS_IMETHOD
-  NewPluginNativeWindow(nsPluginNativeWindow ** aPluginNativeWindow);
-
-  NS_IMETHOD
-  DeletePluginNativeWindow(nsPluginNativeWindow * aPluginNativeWindow);
+  NS_DECL_NSIFACTORY
+  NS_DECL_NSIFILEUTILITIES
+  NS_DECL_NSICOOKIESTORAGE
+  NS_DECL_NSIOBSERVER
+  NS_DECL_NSPIPLUGINHOST
 
   /* Called by GetURL and PostURL */
 
@@ -427,9 +309,6 @@ public:
   NS_IMETHOD
   AddHeadersToChannel(const char *aHeadersData, PRUint32 aHeadersDataLen, 
                       nsIChannel *aGenericChannel);
-
-  NS_IMETHOD
-  StopPluginInstance(nsIPluginInstance* aInstance);
 
   NS_IMETHOD
   AddUnusedLibrary(PRLibrary * aLibrary);
