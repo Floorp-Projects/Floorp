@@ -179,6 +179,9 @@ public:
     static nsresult SetToEmpty(nsDiscriminatedUnion* data);
     static nsresult SetToEmptyArray(nsDiscriminatedUnion* data);
 
+    static void Traverse(const nsDiscriminatedUnion& data,
+                         nsCycleCollectionTraversalCallback &cb);
+
 private:
     ~nsVariant();
 

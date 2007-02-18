@@ -481,6 +481,10 @@ public:
     nsresult Unroot(const nsDeque &nodes);
     nsresult Traverse(void *p, nsCycleCollectionTraversalCallback &cb);
     nsresult FinishCycleCollection();
+    JSObjectRefcounts* GetJSObjectRefcounts() {return mObjRefcounts;}
+#ifndef XPCONNECT_STANDALONE
+    void RecordTraversal(void *p, nsISupports *s);
+#endif
 
 #ifdef XPC_IDISPATCH_SUPPORT
 public:
@@ -1118,6 +1122,15 @@ public:
     void SetGlobal(XPCCallContext& ccx, JSObject* aGlobal);
 
     static void InitStatics() { gScopes = nsnull; gDyingScopes = nsnull; }
+
+    void Traverse(nsCycleCollectionTraversalCallback &cb);
+
+#ifndef XPCONNECT_STANDALONE
+    /**
+     * Fills the hash mapping global object to principal.
+     */
+    static void TraverseScopes(XPCCallContext& ccx);
+#endif
 
 protected:
     XPCWrappedNativeScope(XPCCallContext& ccx, JSObject* aGlobal);
@@ -3551,8 +3564,10 @@ extern char * xpc_CheckAccessList(const PRUnichar* wideName, const char* list[])
 class XPCVariant : public nsIVariant
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_NSIVARIANT
+    NS_DECL_CYCLE_COLLECTION_CLASS(XPCVariant)
+
     // If this class ever implements nsIWritableVariant, take special care with
     // the case when mJSVal is JSVAL_STRING, since we don't own the data in
     // that case.
@@ -3593,6 +3608,10 @@ protected:
 
     // For faster GC-thing locking and unlocking
     JSRuntime*           mJSRuntime;
+
+#ifdef GC_MARK_DEBUG
+    char *mGCRootName;
+#endif
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(XPCVariant, XPCVARIANT_IID)

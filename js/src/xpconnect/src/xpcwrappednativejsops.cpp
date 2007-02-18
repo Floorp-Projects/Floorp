@@ -698,12 +698,6 @@ xpc_MarkForValidWrapper(JSContext *cx, XPCWrappedNative* wrapper, void *arg)
 
     wrapper->MarkBeforeJSFinalize(cx);
      
-    if(wrapper->HasProto())
-    {
-        JSObject* obj = wrapper->GetProto()->GetJSProtoObject();
-        NS_ASSERTION(obj, "bad proto");
-        JS_MarkGCThing(cx, obj, "XPCWrappedNativeProto::mJSProtoObject", arg);
-    }
     MarkScopeJSObjects(cx, wrapper->GetScope(), arg);
 }
 

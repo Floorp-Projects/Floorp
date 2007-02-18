@@ -42,7 +42,19 @@
 
 #include "xpcprivate.h"
 
-NS_IMPL_ISUPPORTS2_CI(XPCVariant, XPCVariant, nsIVariant)
+NS_IMPL_CYCLE_COLLECTION_CLASS(XPCVariant)
+
+NS_INTERFACE_MAP_BEGIN(XPCVariant)
+  NS_INTERFACE_MAP_ENTRY(XPCVariant)
+  NS_INTERFACE_MAP_ENTRY(nsIVariant)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_IMPL_QUERY_CLASSINFO(XPCVariant)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(XPCVariant)
+NS_INTERFACE_MAP_END
+NS_IMPL_CI_INTERFACE_GETTER2(XPCVariant, XPCVariant, nsIVariant)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(XPCVariant)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(XPCVariant)
 
 XPCVariant::XPCVariant(JSRuntime* aJSRuntime)
     : mJSVal(JSVAL_VOID),
@@ -61,9 +73,29 @@ XPCVariant::~XPCVariant()
     if(JSVAL_IS_GCTHING(mJSVal))
     {
         NS_ASSERTION(mJSRuntime, "Must have a runtime!");
+#ifdef GC_MARK_DEBUG
+        JS_RemoveRootRT(mJSRuntime, &mJSVal);
+        JS_smprintf_free(mGCRootName);
+        mGCRootName = nsnull;
+#else
         JS_UnlockGCThingRT(mJSRuntime, JSVAL_TO_GCTHING(mJSVal));
+#endif
     }
 }
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(XPCVariant)
+    if(JSVAL_IS_OBJECT(tmp->mJSVal))
+        cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
+                           JSVAL_TO_OBJECT(tmp->mJSVal));
+
+    nsVariant::Traverse(tmp->mData, cb);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+// NB: We might unlink our outgoing references in the future; for now we do
+// nothing. This is a harmless conservative behavior; it just means that we rely
+// on the cycle being broken by some of the external XPCOM objects' unlink()
+// methods, not our own. Typically *any* unlinking will break the cycle.
+NS_IMPL_CYCLE_COLLECTION_UNLINK_0(XPCVariant)
 
 // static 
 XPCVariant* XPCVariant::newVariant(XPCCallContext& ccx, jsval aJSVal)
@@ -78,9 +110,16 @@ XPCVariant* XPCVariant::newVariant(XPCCallContext& ccx, jsval aJSVal)
 
     if(JSVAL_IS_GCTHING(variant->mJSVal))
     {
+        PRBool ok;
+#ifdef GC_MARK_DEBUG
+        variant->mGCRootName = JS_smprintf("XPCVariant::mJSVal[0x%p]", variant);
+        ok = JS_AddNamedRoot(ccx, &variant->mJSVal, variant->mGCRootName);
+#else
         // use JS_LockGCThingRT, because we get better performance in a lot of
         // cases than with adding a named GC root.
-        if(!JS_LockGCThing(ccx, JSVAL_TO_GCTHING(variant->mJSVal)))
+        ok = JS_LockGCThing(ccx, JSVAL_TO_GCTHING(variant->mJSVal));
+#endif
+        if(!ok)
         {
             NS_RELEASE(variant); // Also sets variant to nsnull.
         }

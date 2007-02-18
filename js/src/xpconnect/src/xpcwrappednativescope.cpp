@@ -793,3 +793,32 @@ XPCWrappedNativeScope::DebugDump(PRInt16 depth)
 #endif
 }
 
+void
+XPCWrappedNativeScope::Traverse(nsCycleCollectionTraversalCallback &cb)
+{
+    // See MarkScopeJSObjects.
+    cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, mGlobalJSObject);
+    JSObject *obj = mPrototypeJSObject;
+    if(obj)
+        cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, obj);
+    obj = mPrototypeJSFunction;
+    if(obj)
+        cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, obj);
+}
+
+#ifndef XPCONNECT_STANDALONE
+// static
+void
+XPCWrappedNativeScope::TraverseScopes(XPCCallContext& ccx)
+{
+    // Hold the lock throughout.
+    XPCAutoLock lock(ccx.GetRuntime()->GetMapLock());
+
+    for(XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext)
+        if(cur->mGlobalJSObject && cur->mScriptObjectPrincipal)
+        {
+            ccx.GetXPConnect()->RecordTraversal(cur->mGlobalJSObject,
+                                                cur->mScriptObjectPrincipal);
+        }
+}
+#endif

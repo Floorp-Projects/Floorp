@@ -54,7 +54,22 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(nsISupports *s,
                                                           nsCycleCollectionTraversalCallback &cb)
 {
     XPCWrappedNative *tmp = NS_STATIC_CAST(XPCWrappedNative*, s);
+    if(!tmp->IsValid())
+        return NS_OK;
+
+#ifdef DEBUG
+    char name[72];
+    XPCNativeScriptableInfo* si = tmp->GetScriptableInfo();
+    if(si)
+        snprintf(name, sizeof(name), "XPCWrappedNative (%s)",
+                 si->GetJSClass()->name);
+    else
+        snprintf(name, sizeof(name), "XPCWrappedNative");
+
+    cb.DescribeNode(tmp->mRefCnt.get(), sizeof(XPCWrappedNative), name);
+#else
     cb.DescribeNode(tmp->mRefCnt.get(), sizeof(XPCWrappedNative), "XPCWrappedNative");
+#endif
 
     if (tmp->mRefCnt.get() > 1) {
 
@@ -75,6 +90,27 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(nsISupports *s,
         }
     }
 
+    // XXX If there is a scriptable helper we will not be able to find out what
+    //     it marked.
+
+
+    // xpc_MarkForValidWrapper calls MarkBeforeJSFinalize and
+    // MarkScopeJSObjects.
+
+    // XPCWrappedNative marks its proto (see MarkBeforeJSFinalize).
+    if(tmp->HasProto())
+        cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
+                           tmp->GetProto()->GetJSProtoObject());
+
+    // XPCWrappedNative marks its mNativeWrapper (see MarkBeforeJSFinalize).
+    if(tmp->mNativeWrapper)
+        cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
+                           tmp->mNativeWrapper);
+
+    // XPCWrappedNative marks its scope.
+    tmp->GetScope()->Traverse(cb);
+
+    // XPCWrappedNative keeps its native object alive.
     if (tmp->GetIdentityObject()) {
         cb.NoteXPCOMChild(tmp->GetIdentityObject());
     }

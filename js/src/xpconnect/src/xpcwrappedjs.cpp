@@ -63,23 +63,56 @@ NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
     // knows for how long. 
 
     nsresult rv;
-    nsCOMPtr<nsIXPConnectWrappedJS> owner = do_QueryInterface(s, &rv);
-    if (NS_FAILED(rv))
-        return rv;
+    nsIXPConnectWrappedJS *base;
+    nsXPCWrappedJS *tmp;
+    {
+        // Put the nsCOMPtr in a local scope, to avoid messing up the refcount
+        // below.
+        nsCOMPtr<nsIXPConnectWrappedJS> owner = do_QueryInterface(s, &rv);
+        if (NS_FAILED(rv))
+            return rv;
 
-    nsIXPConnectWrappedJS *base = owner.get();
-    nsXPCWrappedJS *tmp = NS_STATIC_CAST(nsXPCWrappedJS*, base);
+        base = owner.get();
+        tmp = NS_STATIC_CAST(nsXPCWrappedJS*, base);
+        NS_ASSERTION(tmp->mRefCnt.get() > 2,
+                     "How can this be, no one else holds a strong ref?");
+    }
 
-    // REVIEW ME PLEASE:
-    // 
-    // I am not sure when this represents the true refcount.
+    NS_ASSERTION(tmp->IsValid(), "How did we get here?");
 
-    cb.DescribeNode(tmp->mRefCnt.get(), sizeof(nsXPCWrappedJS), 
-                    "nsXPCWrappedJS");
+    nsrefcnt refcnt = tmp->mRefCnt.get();
+#ifdef DEBUG
+    char name[72];
+    snprintf(name, sizeof(name), "nsXPCWrappedJS (%s)",
+             tmp->GetClass()->GetInterfaceName());
+    cb.DescribeNode(refcnt, sizeof(nsXPCWrappedJS), name);
+#else
+    cb.DescribeNode(refcnt, sizeof(nsXPCWrappedJS), "nsXPCWrappedJS");
+#endif
 
-    if (tmp->IsValid()) 
-        cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, 
+    // nsXPCWrappedJS keeps its own refcount artificially at or above 1, see the
+    // comment above nsXPCWrappedJS::AddRef.
+    cb.NoteXPCOMChild(base);
+
+    if(refcnt > 1)
+        // nsXPCWrappedJS roots its mJSObj when its refcount is > 1, see
+        // the comment above nsXPCWrappedJS::AddRef.
+        cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
                            tmp->GetJSObject());
+
+    nsXPCWrappedJS* root = tmp->GetRootWrapper();
+    if(root == tmp)
+    {
+        // The root wrapper keeps the aggregated native object alive.
+        nsISupports* outer = tmp->GetAggregatedNativeObject();
+        if (outer)
+            cb.NoteXPCOMChild(outer);
+    }
+    else
+    {
+        // Non-root wrappers keep their root alive.
+        cb.NoteXPCOMChild(NS_STATIC_CAST(nsIXPConnectWrappedJS*, root));
+    }
 
     return NS_OK;
 }
@@ -131,6 +164,14 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
     if ( aIID.Equals(NS_GET_IID(nsCycleCollectionParticipant)) ) {
         *aInstancePtr = & NS_CYCLE_COLLECTION_NAME(nsXPCWrappedJS);
+        return NS_OK;
+    }
+
+    if(aIID.Equals(NS_GET_IID(nsCycleCollectionISupports)))
+    {
+        NS_ADDREF(this);
+        *aInstancePtr =
+            NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Upcast(this);
         return NS_OK;
     }
 

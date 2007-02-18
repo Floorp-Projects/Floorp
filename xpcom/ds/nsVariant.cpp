@@ -45,6 +45,7 @@
 #include "prdtoa.h"
 #include <math.h>
 #include "nsCRT.h"
+#include "nsCycleCollectionParticipant.h"
 
 /***************************************************************************/
 // Helpers for static convert functions...
@@ -1655,6 +1656,36 @@ nsVariant::Cleanup(nsDiscriminatedUnion* data)
 
     data->mType = nsIDataType::VTYPE_EMPTY;
     return NS_OK;
+}
+
+/* static */ void
+nsVariant::Traverse(const nsDiscriminatedUnion& data,
+                    nsCycleCollectionTraversalCallback &cb)
+{
+    switch(data.mType)
+    {
+        case nsIDataType::VTYPE_INTERFACE:
+        case nsIDataType::VTYPE_INTERFACE_IS:
+            if (data.u.iface.mInterfaceValue) {
+                cb.NoteXPCOMChild(data.u.iface.mInterfaceValue);
+            }
+            break;
+        case nsIDataType::VTYPE_ARRAY:
+            switch(data.u.array.mArrayType) {
+                case nsIDataType::VTYPE_INTERFACE:
+                case nsIDataType::VTYPE_INTERFACE_IS:
+                {
+                    nsISupports** p = (nsISupports**) data.u.array.mArrayValue;
+                    for(PRUint32 i = data.u.array.mArrayCount; i > 0; p++, i--)
+                        if(*p)
+                            cb.NoteXPCOMChild(*p);
+                }
+                default:
+                    break;
+            }
+        default:
+            break;
+    }
 }
 
 /***************************************************************************/
