@@ -328,8 +328,8 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
 
             // Before looping over the spanned columns to distribute
             // this cell's width over the columns it spans, we first
-            // compute that loop's invariants, which include totals over
-            // the spanned columns and ratios derived from those totals.
+            // compute totals over the spanned columns so we know how to
+            // allocate the space.
 
             // Accumulate information about the spanned columns, and
             // subtract the already-used space from |info|.
@@ -372,24 +372,19 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
             if (info.prefPercent < 0.0f)
                 info.prefPercent = 0.0f;
 
-            // Compute the ratios used to distribute this cell's width
-            // appropriately among the spanned columns.
-            float pctRatio = 0.0f;
-            if (nonPctCount && info.prefPercent > 0.0f) {
-                if (totalSNonPctPref > 0) {
-                    pctRatio = info.prefPercent / float(totalSNonPctPref);
-                } else {
-                    pctRatio = info.prefPercent / float(nonPctCount);
-                }
-            }
-
             // The min-width of this cell that fits inside the
             // pref-width of the spanned columns gets distributed
             // according to different ratios.
             nscoord minWithinPref =
                 PR_MIN(info.minCoord, totalSPref - totalSMin);
             NS_ASSERTION(minWithinPref >= 0, "neither value can be negative");
-            info.minCoord -= minWithinPref;
+            nscoord minOutsidePref = info.minCoord - minWithinPref;
+
+            // Loop invariants (that we might get confused about as we
+            // subtract amounts for completed columns)
+            const PRBool spanHasNonPctPref = totalSNonPctPref > 0;
+            const PRBool spanHasPref = totalSPref > 0;
+            const PRBool spanHasNonPct = nonPctCount > 0;
 
             // ... and actually do the distribution of the widths of
             // this cell exceeding the totals already in the spanned
@@ -405,15 +400,25 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
                 // the percentage width (only to columns that don't
                 // already have percentage widths, in proportion to
                 // the existing pref widths)
-                if (scolFrame->GetPrefPercent() == 0.0f) {
-                    float spp;
-                    if (totalSNonPctPref > 0) {
-                        spp = pctRatio * scolFrame->GetPrefCoord();
+                float allocatedPct = 0.0f;
+                if (scolFrame->GetPrefPercent() == 0.0f &&
+                    info.prefPercent != 0.0f) {
+                    NS_ASSERTION((!spanHasNonPctPref ||
+                                  totalSNonPctPref != 0) &&
+                                 nonPctCount != 0,
+                                 "should not be zero if we haven't allocated "
+                                 "all pref percent");
+                    if (spanHasNonPctPref) {
+                        // Group so we're multiplying by 1.0f when we need
+                        // to use up info.prefPercent.
+                        allocatedPct = info.prefPercent *
+                                           (float(scolFrame->GetPrefCoord()) /
+                                            float(totalSNonPctPref));
                     } else {
                         // distribute equally when all pref widths are 0
-                        spp = pctRatio;
+                        allocatedPct = info.prefPercent / float(nonPctCount);
                     }
-                    scolFrame->AddSpanPrefPercent(spp);
+                    scolFrame->AddSpanPrefPercent(allocatedPct);
                 }
 
                 // the part of the min width that fits within the
@@ -428,22 +433,55 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
                 // the rest of the min width, and the pref width (in
                 // proportion to the existing pref widths)
                 float coordRatio; // for both min and pref
-                if (totalSPref > 0) {
-                    coordRatio = float(scolFrame->GetPrefCoord()) /
-                                 float(totalSPref);
+                if (spanHasPref) {
+                    if (scolFrame->GetPrefCoord() == 0) {
+                        // We might have already subtracted all of
+                        // totalSPref.
+                        coordRatio = 0.0f;
+                    } else {
+                        coordRatio = float(scolFrame->GetPrefCoord()) /
+                                     float(totalSPref);
+                    }
                 } else {
                     // distribute equally when all pref widths are 0
-                    coordRatio = 1.0f / float(colSpan);
+                    coordRatio = 1.0f / float(scol_end - scol);
                 }
 
                 // combine the two min-width distributions, and record
                 // min and pref
-                scolFrame->AddSpanMinCoord(NSToCoordRound(
-                               float(info.minCoord) * coordRatio +
-                               float(minWithinPref) * minRatio));
-                scolFrame->AddSpanPrefCoord(NSToCoordRound(
-                               float(info.prefCoord) * coordRatio));
+                nscoord allocatedMinWithinPref =
+                    NSToCoordRound(float(minWithinPref) * minRatio);
+                nscoord allocatedMinOutsidePref =
+                    NSToCoordRound(float(minOutsidePref) * coordRatio);
+                scolFrame->AddSpanMinCoord(allocatedMinWithinPref +
+                                           allocatedMinOutsidePref);
+                nscoord allocatedPref =
+                    NSToCoordRound(float(info.prefCoord) * coordRatio);
+                scolFrame->AddSpanPrefCoord(allocatedPref);
+
+                // To avoid accumulating rounding error from division,
+                // subtract everything to do with the column we've
+                // passed from the totals.
+                minWithinPref -= allocatedMinWithinPref;
+                minOutsidePref -= allocatedMinOutsidePref;
+                info.prefCoord -= allocatedPref;
+                info.prefPercent -= allocatedPct;
+                totalSPref -= scolFrame->GetPrefCoord();
+                totalSMin -= scolFrame->GetMinCoord();
+                if (scolFrame->GetPrefPercent() == 0.0f) {
+                    totalSNonPctPref -= scolFrame->GetPrefCoord();
+                    --nonPctCount;
+                }
             }
+
+            // Note that we only distribute the percentage if
+            // spanHasNonPct.
+            NS_ASSERTION(totalSPref == 0 && totalSMin == 0 &&
+                         totalSNonPctPref == 0 && nonPctCount == 0 &&
+                         minOutsidePref == 0 && minWithinPref == 0 &&
+                         info.prefCoord == 0 &&
+                         (info.prefPercent == 0.0f || !spanHasNonPct),
+                         "didn't subtract all that we added");
         } while ((item = item->next));
 
         // Combine the results of the span analysis into the main results,
@@ -734,46 +772,54 @@ BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
     };
 
     Loop2Type l2t;
-    float c; // the constant (over columns) for each case's math
+    // These are constants (over columns) for each case's math.  We use
+    // a pair of nscoords rather than a float so that we can subtract
+    // each column's allocation so we avoid accumulating rounding error.
+    nscoord space; // the amount of extra width to allocate
+    union {
+        nscoord c;
+        float f;
+    } basis; // the sum of the statistic over columns to divide it
     if (width < guess_pref) {
         NS_ASSERTION(width >= guess_min, "bad width");
         if (width < guess_min_pct) {
             l2t = FLEX_PCT_SMALL;
-            c = float(width - guess_min) /
-                float(guess_min_pct - guess_min);
+            space = width - guess_min;
+            basis.c = guess_min_pct - guess_min;
         } else if (width < guess_min_spec) {
             l2t = FLEX_FIXED_SMALL;
-            c = float(width - guess_min_pct) /
-                float(guess_min_spec - guess_min_pct);
+            space = width - guess_min_pct;
+            basis.c = guess_min_spec - guess_min_pct;
         } else {
             l2t = FLEX_FLEX_SMALL;
-            c = float(width - guess_min_spec) /
-                float(guess_pref - guess_min_spec);
+            space = width - guess_min_spec;
+            basis.c = guess_pref - guess_min_spec;
         }
     } else {
+        space = width - guess_pref;
         if (total_flex_pref > 0) {
             l2t = FLEX_FLEX_LARGE;
-            c = float(width - guess_pref) / float(total_flex_pref);
+            basis.c = total_flex_pref;
         } else if (total_fixed_pref > 0) {
             l2t = FLEX_FIXED_LARGE;
-            c = float(width - guess_pref) / float(total_fixed_pref);
+            basis.c = total_fixed_pref;
         } else if (total_pct > 0.0f) {
             l2t = FLEX_PCT_LARGE;
-            c = float(width - guess_pref) / float(total_pct);
+            basis.f = total_pct;
         } else {
             l2t = FLEX_ALL_LARGE;
-            c = 1.0f / float(colCount);
+            basis.c = colCount;
         }
     }
 
 #ifdef DEBUG_dbaron_off
     printf("ComputeColumnWidths: %d columns in width %d,\n"
            "  guesses=[%d,%d,%d,%d], totals=[%d,%d,%f],\n"
-           "  l2t=%d, c=%f\n",
+           "  l2t=%d, space=%d, basis.c=%d\n",
            colCount, width,
            guess_min, guess_min_pct, guess_min_spec, guess_pref,
            total_flex_pref, total_fixed_pref, total_pct,
-           l2t, c);
+           l2t, space, basis.c);
 #endif
 
     for (col = 0; col < colCount; ++col) {
@@ -794,14 +840,18 @@ BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
             col_width = colFrame->GetPrefCoord();
         }
 
+        nscoord col_width_before_adjust = col_width;
+
         switch (l2t) {
             case FLEX_PCT_SMALL:
-                col_width = colFrame->GetMinCoord();
+                col_width = col_width_before_adjust = colFrame->GetMinCoord();
                 if (pct != 0.0f) {
-                    nscoord width_from_pct = nscoord(float(width) * pct);
-                    if (width_from_pct > col_width) {
-                        col_width += NSToCoordRound(
-                            float(width_from_pct - col_width) * c);
+                    nscoord pct_minus_min =
+                        nscoord(float(width) * pct) - col_width;
+                    if (pct_minus_min > 0) {
+                        float c = float(space) / float(basis.c);
+                        basis.c -= pct_minus_min;
+                        col_width += NSToCoordRound(float(pct_minus_min) * c);
                     }
                 }
                 break;
@@ -811,10 +861,17 @@ BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
                                  "wrong width assigned");
                     if (colFrame->GetHasSpecifiedCoord()) {
                         nscoord col_min = colFrame->GetMinCoord();
-                        col_width = col_min + NSToCoordRound(
-                            float(col_width - col_min) * c);
+                        nscoord pref_minus_min = col_width - col_min;
+                        col_width = col_width_before_adjust = col_min;
+                        if (pref_minus_min != 0) {
+                            float c = float(space) / float(basis.c);
+                            basis.c -= pref_minus_min;
+                            col_width += NSToCoordRound(
+                                float(pref_minus_min) * c);
+                        }
                     } else
-                        col_width = colFrame->GetMinCoord();
+                        col_width = col_width_before_adjust =
+                            colFrame->GetMinCoord();
                 }
                 break;
             case FLEX_FLEX_SMALL:
@@ -823,8 +880,14 @@ BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
                     NS_ASSERTION(col_width == colFrame->GetPrefCoord(),
                                  "wrong width assigned");
                     nscoord col_min = colFrame->GetMinCoord();
-                    col_width = col_min + NSToCoordRound(
-                        float(col_width - col_min) * c);
+                    nscoord pref_minus_min = col_width - col_min;
+                    col_width = col_width_before_adjust = col_min;
+                    if (pref_minus_min != 0) {
+                        float c = float(space) / float(basis.c);
+                        basis.c -= pref_minus_min;
+                        col_width += NSToCoordRound(
+                            float(pref_minus_min) * c);
+                    }
                 }
                 break;
             case FLEX_FLEX_LARGE:
@@ -832,7 +895,11 @@ BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
                     !colFrame->GetHasSpecifiedCoord()) {
                     NS_ASSERTION(col_width == colFrame->GetPrefCoord(),
                                  "wrong width assigned");
-                    col_width += NSToCoordRound(float(col_width) * c);
+                    if (col_width != 0) {
+                        float c = float(space) / float(basis.c);
+                        basis.c -= col_width;
+                        col_width += NSToCoordRound(float(col_width) * c);
+                    }
                 }
                 break;
             case FLEX_FIXED_LARGE:
@@ -842,18 +909,32 @@ BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
                     NS_ASSERTION(colFrame->GetHasSpecifiedCoord() ||
                                  colFrame->GetPrefCoord() == 0,
                                  "wrong case");
-                    col_width += NSToCoordRound(float(col_width) * c);
+                    if (col_width != 0) {
+                        float c = float(space) / float(basis.c);
+                        basis.c -= col_width;
+                        col_width += NSToCoordRound(float(col_width) * c);
+                    }
                 }
                 break;
             case FLEX_PCT_LARGE:
                 NS_ASSERTION(pct != 0.0f || colFrame->GetPrefCoord() == 0,
                              "wrong case");
-                col_width += NSToCoordRound(pct * c);
+                if (pct != 0.0f) {
+                    float c = float(space) / basis.f;
+                    col_width += NSToCoordRound(pct * c);
+                    basis.f -= pct;
+                }
                 break;
             case FLEX_ALL_LARGE:
-                col_width += NSToCoordRound(float(width - guess_pref) * c);
+                {
+                    float c = float(space) / float(basis.c);
+                    col_width += NSToCoordRound(c);
+                    --basis.c;
+                }
                 break;
         }
+
+        space -= col_width - col_width_before_adjust;
 
         NS_ASSERTION(col_width >= colFrame->GetMinCoord(),
                      "assigned width smaller than min");
@@ -864,6 +945,11 @@ BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
         if (old_final != col_width)
             mTableFrame->DidResizeColumns();
     }
+    NS_ASSERTION(space == 0 &&
+                 ((l2t == FLEX_PCT_LARGE)
+                    ? (-0.001f < basis.f && basis.f < 0.001f)
+                    : (basis.c == 0)),
+                 "didn't subtract all that we added");
 #ifdef DEBUG_TABLE_STRATEGY
     printf("ComputeColumnWidths final\n");
     mTableFrame->Dump(PR_FALSE, PR_TRUE, PR_FALSE);

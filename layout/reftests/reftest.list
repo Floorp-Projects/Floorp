@@ -80,7 +80,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="windows") == bugs/359903-1.html bugs/359903-1-ref
 != bugs/315620-1b.html bugs/315620-1-ref.html
 == bugs/315620-2a.xhtml bugs/315620-2-ref.xhtml
 != bugs/315620-2b.xhtml bugs/315620-2-ref.xhtml
-random == bugs/363329-1.html bugs/363329-1-ref.html # bug 366865
+== bugs/363329-1.html bugs/363329-1-ref.html
 == bugs/363329-2.html bugs/363329-2-ref.html
 == bugs/363637-1.html bugs/363637-1-ref.html
 == bugs/364079-1.html bugs/364079-1-ref.html
