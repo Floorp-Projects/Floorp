@@ -57,7 +57,9 @@ class nsBlockFrame;
 #define BRS_ISFIRSTINFLOW         0x00000010
 // Set when mLineAdjacentToTop is valid
 #define BRS_HAVELINEADJACENTTOTOP 0x00000020
-#define BRS_LASTFLAG              BRS_HAVELINEADJACENTTOTOP
+// Set when the block has the equivalent of NS_BLOCK_SPACE_MGR
+#define BRS_SPACE_MGR             0x00000040
+#define BRS_LASTFLAG              BRS_SPACE_MGR
 
 class nsBlockReflowState {
 public:
@@ -65,7 +67,8 @@ public:
                      nsPresContext* aPresContext,
                      nsBlockFrame* aFrame,
                      const nsHTMLReflowMetrics& aMetrics,
-                     PRBool aTopMarginRoot, PRBool aBottomMarginRoot);
+                     PRBool aTopMarginRoot, PRBool aBottomMarginRoot,
+                     PRBool aBlockNeedsSpaceManager);
 
   ~nsBlockReflowState();
 

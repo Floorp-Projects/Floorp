@@ -507,8 +507,6 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
           NS_NOTREACHED("Couldn't create continuation");
           break;
         }
-        
-        kidNextInFlow->AddStateBits(NS_BLOCK_SPACE_MGR);
       }
         
       if (columnCount >= aConfig.mBalanceColCount) {

@@ -63,7 +63,8 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
                                        nsBlockFrame* aFrame,
                                        const nsHTMLReflowMetrics& aMetrics,
                                        PRBool aTopMarginRoot,
-                                       PRBool aBottomMarginRoot)
+                                       PRBool aBottomMarginRoot,
+                                       PRBool aBlockNeedsSpaceManager)
   : mBlock(aFrame),
     mPresContext(aPresContext),
     mReflowState(aReflowState),
@@ -84,6 +85,9 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   }
   if (GetFlag(BRS_ISTOPMARGINROOT)) {
     SetFlag(BRS_APPLYTOPMARGIN, PR_TRUE);
+  }
+  if (aBlockNeedsSpaceManager) {
+    SetFlag(BRS_SPACE_MGR, PR_TRUE);
   }
   
   mSpaceManager = aReflowState.mSpaceManager;
@@ -346,8 +350,7 @@ nsBlockReflowState::ReconstructMarginAbove(nsLineList::iterator aLine)
     if (aLine == firstLine) {
       // If the top margin was carried out (and thus already applied),
       // set it to zero.  Either way, we're done.
-      if ((0 == mReflowState.mComputedBorderPadding.top) &&
-          !(block->mState & NS_BLOCK_MARGIN_ROOT)) {
+      if (!GetFlag(BRS_ISTOPMARGINROOT)) {
         mPrevBottomMargin.Zero();
       }
       break;
@@ -401,7 +404,7 @@ nsBlockReflowState::RecoverFloats(nsLineList::iterator aLine,
     // don't recover any state inside a block that has its own space
     // manager (we don't currently have any blocks like this, though,
     // thanks to our use of extra frames for 'overflow')
-    if (kid && !(kid->GetStateBits() & NS_BLOCK_SPACE_MGR)) {
+    if (kid && !nsBlockFrame::BlockNeedsSpaceManager(kid)) {
       nscoord tx = kid->mRect.x, ty = kid->mRect.y;
 
       // If the element is relatively positioned, then adjust x and y

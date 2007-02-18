@@ -849,7 +849,8 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
   // than keeping it around only during reflow then we should create it
   // only when there are actually floats to manage.  Otherwise things
   // like tables will gain significant bloat.
-  if (NS_BLOCK_SPACE_MGR & mState)
+  PRBool needSpaceManager = nsBlockFrame::BlockNeedsSpaceManager(this);
+  if (needSpaceManager)
     autoSpaceManager.CreateSpaceManagerFor(aPresContext, this);
 
   // OK, some lines may be reflowed. Blow away any saved line cursor because
@@ -871,9 +872,9 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
     return NS_OK;
   }
 
+  PRBool marginRoot = BlockIsMarginRoot(this);
   nsBlockReflowState state(aReflowState, aPresContext, this, aMetrics,
-                           (NS_BLOCK_MARGIN_ROOT & mState),
-                           (NS_BLOCK_MARGIN_ROOT & mState));
+                           marginRoot, marginRoot, needSpaceManager);
 
 #ifdef IBMBIDI
   if (! mLines.empty()) {
@@ -1126,7 +1127,7 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
   // Clear the space manager pointer in the block reflow state so we
   // don't waste time translating the coordinate system back on a dead
   // space manager.
-  if (NS_BLOCK_SPACE_MGR & mState)
+  if (needSpaceManager)
     state.mSpaceManager = nsnull;
 
   aStatus = state.mReflowStatus;
@@ -1299,7 +1300,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       }
     }
 
-    if (NS_BLOCK_SPACE_MGR & mState) {
+    if (aState.GetFlag(BRS_SPACE_MGR)) {
       // Include the space manager's state to properly account for the
       // bottom margin of any floated elements; e.g., inside a table cell.
       nscoord ymost;
@@ -5907,9 +5908,6 @@ nsBlockFrame::Init(nsIContent*      aContent,
 
   nsresult rv = nsBlockFrameSuper::Init(aContent, aParent, aPrevInFlow);
 
-  if (IsBoxWrapped())
-    mState |= NS_BLOCK_SPACE_MGR;
-
   return rv;
 }
 
@@ -6278,17 +6276,37 @@ nsBlockFrame::CheckFloats(nsBlockReflowState& aState)
   }
 }
 
-NS_IMETHODIMP
-nsBlockFrame::SetParent(const nsIFrame* aParent)
+/* static */
+PRBool
+nsBlockFrame::BlockIsMarginRoot(nsIFrame* aBlock)
 {
-  nsresult rv = nsBlockFrameSuper::SetParent(aParent);
-  if (IsBoxWrapped())
-    mState |= NS_BLOCK_SPACE_MGR;
+  NS_PRECONDITION(aBlock, "Must have a frame");
+#ifdef DEBUG
+  nsBlockFrame* blockFrame;
+  aBlock->QueryInterface(kBlockFrameCID, (void**)&blockFrame);
+  NS_ASSERTION(blockFrame, "aBlock must be a block");
+#endif
 
-  // XXX should we clear NS_BLOCK_SPACE_MGR if we were the child of a box
-  // but no longer are?
+  nsIFrame* parent = aBlock->GetParent();
+  return (aBlock->GetStateBits() & NS_BLOCK_MARGIN_ROOT) ||
+    (parent && !parent->IsFloatContainingBlock() &&
+     parent->GetType() != nsGkAtoms::columnSetFrame);
+}
 
-  return rv;
+/* static */
+PRBool
+nsBlockFrame::BlockNeedsSpaceManager(nsIFrame* aBlock)
+{
+  NS_PRECONDITION(aBlock, "Must have a frame");
+#ifdef DEBUG
+  nsBlockFrame* blockFrame;
+  aBlock->QueryInterface(kBlockFrameCID, (void**)&blockFrame);
+  NS_ASSERTION(blockFrame, "aBlock must be a block");
+#endif
+
+  nsIFrame* parent = aBlock->GetParent();
+  return (aBlock->GetStateBits() & NS_BLOCK_SPACE_MGR) ||
+    (parent && !parent->IsFloatContainingBlock());
 }
 
 // XXX keep the text-run data in the first-in-flow of the block

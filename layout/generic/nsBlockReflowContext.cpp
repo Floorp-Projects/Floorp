@@ -114,8 +114,8 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
   nsIFrame* frame = DescendIntoBlockLevelFrame(aRS.frame);
   nsPresContext* prescontext = frame->GetPresContext();
   if (0 == aRS.mComputedBorderPadding.top &&
-      !(frame->GetStateBits() & NS_BLOCK_MARGIN_ROOT) &&
-      NS_SUCCEEDED(frame->QueryInterface(kBlockFrameCID, &bf))) {
+      NS_SUCCEEDED(frame->QueryInterface(kBlockFrameCID, &bf)) &&
+      !nsBlockFrame::BlockIsMarginRoot(frame)) {
     // iterate not just through the lines of 'block' but also its
     // overflow lines and the normal and overflow lines of its next in
     // flows. Note that this will traverse some frames more than once:
