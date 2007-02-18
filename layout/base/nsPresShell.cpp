@@ -3197,6 +3197,17 @@ nsIPresShell::GetRootScrollFrame() const
   return theFrame;
 }
 
+nsIScrollableFrame*
+nsIPresShell::GetRootScrollFrameAsScrollable() const
+{
+  nsIFrame* frame = GetRootScrollFrame();
+  if (!frame)
+    return nsnull;
+  nsIScrollableFrame* scrollableFrame = nsnull;
+  CallQueryInterface(frame, &scrollableFrame);
+  return scrollableFrame;
+}
+
 NS_IMETHODIMP
 PresShell::GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const
 {

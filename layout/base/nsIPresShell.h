@@ -94,6 +94,7 @@ class nsCSSFrameConstructor;
 class nsISelection;
 template<class E> class nsCOMArray;
 class nsWeakFrame;
+class nsIScrollableFrame;
 
 typedef short SelectionType;
 
@@ -299,6 +300,11 @@ public:
    * Get root scroll frame from FrameManager()->GetRootFrame().
    */
   nsIFrame* GetRootScrollFrame() const;
+
+  /*
+   * The same as GetRootScrollFrame, but returns an nsIScrollableFrame
+   */
+  nsIScrollableFrame* GetRootScrollFrameAsScrollable() const;
 
   /**
    * Returns the page sequence frame associated with the frame hierarchy.

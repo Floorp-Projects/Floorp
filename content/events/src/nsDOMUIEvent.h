@@ -72,10 +72,10 @@ public:
 protected:
 
   // Internal helper functions
-  nsresult GetScrollInfo(nsIScrollableView** aScrollableView);
   nsPoint GetClientPoint();
   nsPoint GetScreenPoint();
   nsPoint GetLayerPoint();
+  nsPoint GetPagePoint();
   
 protected:
   nsCOMPtr<nsIDOMAbstractView> mView;

@@ -75,6 +75,8 @@
 #include "nsIDOMHTMLMapElement.h"
 #include "nsEventDispatcher.h"
 
+#include "nsLayoutUtils.h"
+
 // XXX nav attrs: suppress
 
 class nsHTMLImageElement : public nsGenericHTMLElement,
@@ -244,14 +246,8 @@ nsHTMLImageElement::GetXY()
     return point;
   }
 
-  // XXX This should search for the nearest abs. pos. container
-  nsPoint origin(0, 0);
-  nsIView* parentView;
-  nsresult rv = frame->GetOffsetFromView(origin, &parentView);
-  if (NS_FAILED(rv)) {
-    return point;
-  }
-
+  nsIFrame* layer = nsLayoutUtils::GetClosestLayer(frame->GetParent());
+  nsPoint origin(frame->GetOffsetTo(layer));
   // Convert to pixels using that scale
   point.x = nsPresContext::AppUnitsToIntCSSPixels(origin.x);
   point.y = nsPresContext::AppUnitsToIntCSSPixels(origin.y);
