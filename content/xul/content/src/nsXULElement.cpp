@@ -171,6 +171,33 @@ nsIXULPrototypeCache* nsXULPrototypeScript::sXULPrototypeCache = nsnull;
 nsIXBLService * nsXULElement::gXBLService = nsnull;
 nsICSSOMFactory* nsXULElement::gCSSOMFactory = nsnull;
 
+/**
+ * A tearoff class for nsXULElement to implement nsIScriptEventHandlerOwner.
+ */
+class nsScriptEventHandlerOwnerTearoff : public nsIScriptEventHandlerOwner
+{
+public:
+    nsScriptEventHandlerOwnerTearoff(nsXULElement* aElement)
+    : mElement(aElement) {}
+
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS(nsScriptEventHandlerOwnerTearoff)
+
+    // nsIScriptEventHandlerOwner
+    virtual nsresult CompileEventHandler(nsIScriptContext* aContext,
+                                         nsISupports* aTarget,
+                                         nsIAtom *aName,
+                                         const nsAString& aBody,
+                                         const char* aURL,
+                                         PRUint32 aLineNo,
+                                         nsScriptObjectHolder &aHandler);
+    virtual nsresult GetCompiledEventHandler(nsIAtom *aName,
+                                             nsScriptObjectHolder &aHandler);
+
+private:
+    nsRefPtr<nsXULElement> mElement;
+};
+
 //----------------------------------------------------------------------
 
 static NS_DEFINE_CID(kXULPopupListenerCID,        NS_XULPOPUPLISTENER_CID);
@@ -431,7 +458,7 @@ nsXULElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
         inst = NS_STATIC_CAST(nsIDOMXULElement *, this);
     } else if (aIID.Equals(NS_GET_IID(nsIScriptEventHandlerOwner))) {
         inst = NS_STATIC_CAST(nsIScriptEventHandlerOwner*,
-                              new nsXULElement::nsScriptEventHandlerOwnerTearoff(this));
+                              new nsScriptEventHandlerOwnerTearoff(this));
         NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
     } else if (aIID.Equals(NS_GET_IID(nsIDOMElementCSSInlineStyle))) {
         inst = NS_STATIC_CAST(nsIDOMElementCSSInlineStyle *,
@@ -686,15 +713,24 @@ nsXULElement::PerformAccesskey(PRBool aKeyCausesActivation,
 //----------------------------------------------------------------------
 // nsIScriptEventHandlerOwner interface
 
-NS_INTERFACE_MAP_BEGIN(nsXULElement::nsScriptEventHandlerOwnerTearoff)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsScriptEventHandlerOwnerTearoff)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsScriptEventHandlerOwnerTearoff)
+  tmp->mElement = nsnull;
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsScriptEventHandlerOwnerTearoff)
+  cb.NoteXPCOMChild(NS_STATIC_CAST(nsIContent*, tmp->mElement));
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_INTERFACE_MAP_BEGIN(nsScriptEventHandlerOwnerTearoff)
   NS_INTERFACE_MAP_ENTRY(nsIScriptEventHandlerOwner)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsScriptEventHandlerOwnerTearoff)
 NS_INTERFACE_MAP_END_AGGREGATED(mElement)
 
-NS_IMPL_ADDREF(nsXULElement::nsScriptEventHandlerOwnerTearoff)
-NS_IMPL_RELEASE(nsXULElement::nsScriptEventHandlerOwnerTearoff)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsScriptEventHandlerOwnerTearoff)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsScriptEventHandlerOwnerTearoff)
 
 nsresult
-nsXULElement::nsScriptEventHandlerOwnerTearoff::GetCompiledEventHandler(
+nsScriptEventHandlerOwnerTearoff::GetCompiledEventHandler(
                                                 nsIAtom *aName,
                                                 nsScriptObjectHolder &aHandler)
 {
@@ -712,7 +748,7 @@ nsXULElement::nsScriptEventHandlerOwnerTearoff::GetCompiledEventHandler(
 }
 
 nsresult
-nsXULElement::nsScriptEventHandlerOwnerTearoff::CompileEventHandler(
+nsScriptEventHandlerOwnerTearoff::CompileEventHandler(
                                                 nsIScriptContext* aContext,
                                                 nsISupports* aTarget,
                                                 nsIAtom *aName,

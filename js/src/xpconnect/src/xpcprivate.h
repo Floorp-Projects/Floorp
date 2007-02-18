@@ -2251,7 +2251,8 @@ public:
     NS_DECL_NSIXPCONNECTWRAPPEDJS
     NS_DECL_NSISUPPORTSWEAKREFERENCE
     NS_DECL_NSIPROPERTYBAG
-    NS_DECL_CYCLE_COLLECTION_CLASS(nsXPCWrappedJS)
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXPCWrappedJS,
+                                             nsIXPConnectWrappedJS)
 
     NS_IMETHOD CallMethod(PRUint16 methodIndex,
                           const XPTMethodDescriptor *info,

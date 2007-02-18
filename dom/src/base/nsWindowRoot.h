@@ -88,7 +88,7 @@ public:
   // nsPIWindowRoot
   NS_IMETHOD GetFocusController(nsIFocusController** aResult);
 
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsWindowRoot)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsWindowRoot, nsIDOMEventReceiver)
 
 protected:
   // Members

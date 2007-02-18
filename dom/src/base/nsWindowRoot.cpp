@@ -80,8 +80,7 @@ nsWindowRoot::~nsWindowRoot()
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_2_AMBIGUOUS(nsWindowRoot, nsIDOMEventReceiver, 
-                                     mListenerManager, mFocusController)
+NS_IMPL_CYCLE_COLLECTION_2(nsWindowRoot, mListenerManager, mFocusController)
 
 NS_INTERFACE_MAP_BEGIN(nsWindowRoot)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventReceiver)
@@ -91,7 +90,7 @@ NS_INTERFACE_MAP_BEGIN(nsWindowRoot)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
-  NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(nsWindowRoot)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsWindowRoot)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsWindowRoot, nsIDOMEventReceiver)

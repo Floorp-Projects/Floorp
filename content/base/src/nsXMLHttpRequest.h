@@ -115,7 +115,7 @@ public:
   // nsIInterfaceRequestor
   NS_DECL_NSIINTERFACEREQUESTOR
 
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsXMLHttpRequest)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXMLHttpRequest, nsIXMLHttpRequest)
 
 protected:
 

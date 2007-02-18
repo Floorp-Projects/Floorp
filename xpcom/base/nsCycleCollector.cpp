@@ -620,8 +620,9 @@ GraphWalker::DescribeNode(size_t refCount, size_t objSz, const char *objName)
 static nsISupports *
 canonicalize(nsISupports *in)
 {
-    // Use the canonical nsISupports pointer throughout the system.
-    nsCOMPtr<nsISupports> child = do_QueryInterface(in);
+    nsCOMPtr<nsISupports> child;
+    in->QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
+                       getter_AddRefs(child));
     return child.get();
 }
 

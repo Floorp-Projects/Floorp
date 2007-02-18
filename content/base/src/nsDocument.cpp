@@ -917,7 +917,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocument)
   NS_INTERFACE_MAP_ENTRY(nsIRadioGroupContainer)
   NS_INTERFACE_MAP_ENTRY(nsINode)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
-  NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(nsDocument)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDocument)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocument)
   if (aIID.Equals(NS_GET_IID(nsIDOMXPathEvaluator)) ||
       aIID.Equals(NS_GET_IID(nsIXPathEvaluatorInternal))) {
@@ -941,7 +941,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS_WITH_DESTROY(nsDocument,
                                                         LastRelease())
 
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument, nsIDocument)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
   // Traverse the mChildren nsAttrAndChildArray.
   for (PRInt32 indx = PRInt32(tmp->mChildren.ChildCount()); indx > 0; --indx) {
     cb.NoteXPCOMChild(tmp->mChildren.ChildAt(indx - 1));
@@ -978,7 +978,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument, nsIDocument)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument, nsIDocument)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   // Unlink the mChildren nsAttrAndChildArray.
   for (PRInt32 indx = PRInt32(tmp->mChildren.ChildCount()) - 1; 
        indx >= 0; --indx) {

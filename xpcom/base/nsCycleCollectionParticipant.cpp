@@ -35,7 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "xpcom/nsCycleCollectionParticipant.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsCOMPtr.h"
 
 NS_INTERFACE_MAP_BEGIN(nsCycleCollectionParticipant)
   NS_INTERFACE_MAP_ENTRY(nsCycleCollectionParticipant)
@@ -64,3 +65,14 @@ nsCycleCollectionParticipant::Traverse(nsISupports *n,
 {
   return NS_OK;
 }
+
+#ifdef DEBUG
+PRBool
+nsCycleCollectionParticipant::CheckForRightISupports(nsISupports *s)
+{
+    nsCOMPtr<nsISupports> foo;
+    s->QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
+                      getter_AddRefs(foo));
+    return s == foo;
+}
+#endif

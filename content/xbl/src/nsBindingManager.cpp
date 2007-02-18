@@ -281,8 +281,7 @@ SetOrRemoveObject(PLDHashTable& table, nsISupports* aKey, nsISupports* aValue)
 
 // Implement our nsISupports methods
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsBindingManager, nsIMutationObserver)
-
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsBindingManager)
   if (tmp->mBindingTable.IsInitialized())
     tmp->mBindingTable.Clear();
 
@@ -355,7 +354,7 @@ XBLBindingHashtableTraverser(nsISupports* key,
   return PL_DHASH_NEXT;
 }
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsBindingManager, nsIMutationObserver)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsBindingManager)
   if (tmp->mBindingTable.IsInitialized())
       tmp->mBindingTable.EnumerateRead(&XBLBindingHashtableTraverser, &cb);
   if (tmp->mDocumentTable.IsInitialized())
@@ -369,7 +368,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsBindingManager)
 NS_INTERFACE_MAP_BEGIN(nsBindingManager)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(nsBindingManager)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsBindingManager)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsBindingManager)
