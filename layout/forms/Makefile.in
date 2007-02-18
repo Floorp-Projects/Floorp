@@ -74,7 +74,6 @@ REQUIRES	= xpcom \
 
 EXPORTS		= \
 		nsIListControlFrame.h \
-		nsIImageControlFrame.h \
 		nsIComboboxControlFrame.h \
 		nsIFormControlFrame.h \
 		nsIRadioControlFrame.h \

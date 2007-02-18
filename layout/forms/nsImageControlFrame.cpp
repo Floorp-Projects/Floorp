@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
-#include "nsIImageControlFrame.h"
 #include "nsImageFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIFormControl.h"
@@ -61,16 +60,27 @@
 #include "nsIAccessibilityService.h"
 #endif
 
+void
+IntPointDtorFunc(void *aObject, nsIAtom *aPropertyName,
+                 void *aPropertyValue, void *aData)
+{
+  nsIntPoint *propertyValue = NS_STATIC_CAST(nsIntPoint*, aPropertyValue);
+  delete propertyValue;
+}
+
+
 #define nsImageControlFrameSuper nsImageFrame
 class nsImageControlFrame : public nsImageControlFrameSuper,
-                            public nsIFormControlFrame,
-                            public nsIImageControlFrame
+                            public nsIFormControlFrame
 {
 public:
   nsImageControlFrame(nsStyleContext* aContext);
   ~nsImageControlFrame();
 
   virtual void Destroy();
+  NS_IMETHOD Init(nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIFrame*        aPrevInFlow);
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
@@ -102,22 +112,15 @@ public:
   virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue);
   virtual nsresult GetFormProperty(nsIAtom* aName, nsAString& aValue) const; 
 
-  // nsIImageControlFrame
-  NS_IMETHOD GetClickedX(PRInt32* aX);
-  NS_IMETHOD GetClickedY(PRInt32* aY);
-
 protected:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
-
-  nsPoint mLastClickPoint; 
 };
 
 
 nsImageControlFrame::nsImageControlFrame(nsStyleContext* aContext):
   nsImageControlFrameSuper(aContext)
 {
-  mLastClickPoint = nsPoint(0,0);
 }
 
 nsImageControlFrame::~nsImageControlFrame()
@@ -137,6 +140,21 @@ NS_NewImageControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsImageControlFrame(aContext);
 }
 
+NS_IMETHODIMP
+nsImageControlFrame::Init(nsIContent*      aContent,
+                          nsIFrame*        aParent,
+                          nsIFrame*        aPrevInFlow)
+{
+  nsresult rv = nsImageControlFrameSuper::Init(aContent, aParent, aPrevInFlow);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // nsIntPoint allocation can fail, in which case we just set the property 
+  // to null, which is safe
+  return  mContent->SetProperty(nsGkAtoms::imageClickedPoint,
+                                 new nsIntPoint(0, 0),
+                                 IntPointDtorFunc);
+}
+
 // Frames are not refcounted, no need to AddRef
 NS_IMETHODIMP
 nsImageControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
@@ -149,10 +167,6 @@ nsImageControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
     return NS_OK;
   } 
-  if (aIID.Equals(NS_GET_IID(nsIImageControlFrame))) {
-    *aInstancePtr = (void*) ((nsIImageControlFrame*) this);
-    return NS_OK;
-  }
 
   return nsImageControlFrameSuper::QueryInterface(aIID, aInstancePtr);
 }
@@ -239,10 +253,16 @@ nsImageControlFrame::HandleEvent(nsPresContext* aPresContext,
   if (aEvent->eventStructType == NS_MOUSE_EVENT &&
       aEvent->message == NS_MOUSE_BUTTON_UP &&
       NS_STATIC_CAST(nsMouseEvent*, aEvent)->button == nsMouseEvent::eLeftButton) {
-    // Store click point for GetNamesValues
+    // Store click point for nsHTMLInputElement::SubmitNamesValues
     // Do this on MouseUp because the specs don't say and that's what IE does
-    nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
-    TranslateEventCoords(pt, mLastClickPoint);
+    nsIntPoint* lastClickPoint =
+      NS_STATIC_CAST(nsIntPoint*,
+                     mContent->GetProperty(nsGkAtoms::imageClickedPoint));
+    if (lastClickPoint) {
+      // normally lastClickedPoint is not null, as it's allocated in Init()
+      nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
+      TranslateEventCoords(pt, *lastClickPoint);
+    }
   }
   return nsImageControlFrameSuper::HandleEvent(aPresContext, aEvent,
                                                aEventStatus);
@@ -280,19 +300,5 @@ nsImageControlFrame::GetFormProperty(nsIAtom* aName,
                                      nsAString& aValue) const
 {
   aValue.Truncate();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageControlFrame::GetClickedX(PRInt32* aX)
-{
-  *aX = mLastClickPoint.x;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageControlFrame::GetClickedY(PRInt32* aY)
-{
-  *aY = mLastClickPoint.y;
   return NS_OK;
 }

@@ -1455,7 +1455,7 @@ nsImageFrame::IsServerImageMap()
 // content area of this frame (inside the border+padding).
 void
 nsImageFrame::TranslateEventCoords(const nsPoint& aPoint,
-                                   nsPoint&       aResult)
+                                   nsIntPoint&     aResult)
 {
   nscoord x = aPoint.x;
   nscoord y = aPoint.y;
@@ -1508,7 +1508,7 @@ nsImageFrame::GetContentForEvent(nsPresContext* aPresContext,
   map = GetImageMap(aPresContext);
 
   if (nsnull != map) {
-    nsPoint p;
+    nsIntPoint p;
     TranslateEventCoords(
       nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this), p);
     PRBool inside = PR_FALSE;
@@ -1542,7 +1542,7 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
     map = GetImageMap(aPresContext);
     PRBool isServerMap = IsServerImageMap();
     if ((nsnull != map) || isServerMap) {
-      nsPoint p;
+      nsIntPoint p;
       TranslateEventCoords(
         nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this), p);
       PRBool inside = PR_FALSE;
@@ -1597,7 +1597,7 @@ nsImageFrame::GetCursor(const nsPoint& aPoint,
   nsPresContext* context = GetPresContext();
   nsImageMap* map = GetImageMap(context);
   if (nsnull != map) {
-    nsPoint p;
+    nsIntPoint p;
     TranslateEventCoords(aPoint, p);
     nsCOMPtr<nsIContent> area;
     if (map->IsInside(p.x, p.y, getter_AddRefs(area))) {
