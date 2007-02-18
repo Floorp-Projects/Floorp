@@ -2807,7 +2807,13 @@ nsCellMapColumnIterator::GetNextFrame(PRInt32* aRow, PRInt32* aColSpan)
       PRInt32 rowspanOffset = cellData->GetRowSpanOffset();
       nsTableCellFrame* cellFrame = mCurMap->GetCellFrame(mCurMapRow, mCol, *cellData, PR_FALSE); 
       NS_ASSERTION(cellFrame,"Must have usable originating data here");  
-      IncrementRow(cellFrame->GetRowSpan() - rowspanOffset);
+      PRInt32 rowSpan = cellFrame->GetRowSpan();
+      if (rowSpan == 0) {
+        AdvanceRowGroup();
+      }
+      else {
+        IncrementRow(rowSpan - rowspanOffset);
+      }
       continue;
     }
 
