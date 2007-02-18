@@ -1480,6 +1480,7 @@ IsAutoHeight(const nsStyleCoord &aCoord, nscoord aCBHeight)
           aCBHeight == NS_AUTOHEIGHT);
 }
 
+#define MULDIV(a,b,c) (nscoord(PRInt64(a) * PRInt64(b) / PRInt64(c)))
 
 /* static */ nsSize
 nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
@@ -1574,10 +1575,10 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
       nscoord heightAtMaxWidth, heightAtMinWidth,
               widthAtMaxHeight, widthAtMinHeight;
       if (aIntrinsicSize.width > 0) {
-        heightAtMaxWidth = maxWidth * aIntrinsicSize.height / aIntrinsicSize.width;
+        heightAtMaxWidth = MULDIV(maxWidth, aIntrinsicSize.height, aIntrinsicSize.width);
         if (heightAtMaxWidth < minHeight)
           heightAtMaxWidth = minHeight;
-        heightAtMinWidth = minWidth * aIntrinsicSize.height / aIntrinsicSize.width;
+        heightAtMinWidth = MULDIV(minWidth, aIntrinsicSize.height, aIntrinsicSize.width);
         if (heightAtMinWidth > maxHeight)
           heightAtMinWidth = maxHeight;
       } else {
@@ -1586,10 +1587,10 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
       }
 
       if (aIntrinsicSize.height > 0) {
-        widthAtMaxHeight = maxHeight * aIntrinsicSize.width / aIntrinsicSize.height;
+        widthAtMaxHeight = MULDIV(maxHeight, aIntrinsicSize.width, aIntrinsicSize.height);
         if (widthAtMaxHeight < minWidth)
           widthAtMaxHeight = minWidth;
-        widthAtMinHeight = minHeight * aIntrinsicSize.width / aIntrinsicSize.height;
+        widthAtMinHeight = MULDIV(minHeight, aIntrinsicSize.width, aIntrinsicSize.height);
         if (widthAtMinHeight > maxWidth)
           widthAtMinHeight = maxWidth;
       } else {
@@ -1599,7 +1600,8 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
 
       if (aIntrinsicSize.width > maxWidth) {
         if (aIntrinsicSize.height > maxHeight) {
-          if (maxWidth * aIntrinsicSize.height <= maxHeight * aIntrinsicSize.width) {
+          if (PRInt64(maxWidth) * PRInt64(aIntrinsicSize.height) <=
+              PRInt64(maxHeight) * PRInt64(aIntrinsicSize.width)) {
             width = maxWidth;
             height = heightAtMaxWidth;
           } else {
@@ -1612,7 +1614,8 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
         }
       } else if (aIntrinsicSize.width < minWidth) {
         if (aIntrinsicSize.height < minHeight) {
-          if (minWidth * aIntrinsicSize.height <= minHeight * aIntrinsicSize.width) {
+          if (PRInt64(minWidth) * PRInt64(aIntrinsicSize.height) <= 
+              PRInt64(minHeight) * PRInt64(aIntrinsicSize.width)) {
             height = minHeight;
             width = widthAtMinHeight;
           } else {
@@ -1641,7 +1644,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
       // 'auto' width, non-'auto' height
       height = NS_CSS_MINMAX(height, minHeight, maxHeight);
       if (aIntrinsicSize.height != 0) {
-        width = aIntrinsicSize.width * height / aIntrinsicSize.height;
+        width = MULDIV(aIntrinsicSize.width, height, aIntrinsicSize.height);
       } else {
         width = aIntrinsicSize.width;
       }
@@ -1654,7 +1657,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
       // non-'auto' width, 'auto' height
       width = NS_CSS_MINMAX(width, minWidth, maxWidth);
       if (aIntrinsicSize.width != 0) {
-        height = aIntrinsicSize.height * width / aIntrinsicSize.width;
+        height = MULDIV(aIntrinsicSize.height, width, aIntrinsicSize.width);
       } else {
         height = aIntrinsicSize.height;
       }
