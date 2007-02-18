@@ -55,7 +55,7 @@
       <preference id="mail.pane_config.dynamic" name="mail.pane_config.dynamic" type="int"/>
       <preference id="mailnews.reuse_message_window" name="mailnews.reuse_message_window" type="bool"/>
       <preference id="mailnews.start_page.enabled" name="mailnews.start_page.enabled" type="bool"/>
-      <preference id="mailnews.start_page.url" name="mailnews.start_page.url" type="wstring"/>
+      <preference id="mailnews.start_page.url" name="mailnews.start_page.url" type="string"/>
       <preference id="mail.biff.show_alert" name="mail.biff.show_alert" type="bool"/>
       <preference id="mail.biff.play_sound" name="mail.biff.play_sound" type="bool"/>
       <preference id="pref.general.disable_button.default_mail"
@@ -94,9 +94,11 @@
         </hbox>
         <hbox align="center">
           <label value="&location.label;" accesskey="&location1.accesskey;" control="mailnewsStartPageUrl"/>
-          <textbox id="mailnewsStartPageUrl" flex="1" preference="mailnews.start_page.url"/>
+          <textbox id="mailnewsStartPageUrl" flex="1" preference="mailnews.start_page.url" 
+                   onsyncfrompreference="return gGeneralPane.readStartPageUrl();"
+                   onsynctopreference="return gGeneralPane.writeStartPageUrl();"/>
           <button label="&useDefault.label;" accesskey="&useDefault.accesskey;"
-                  oncommand="gGeneralPane.setHomePageToDefaultPage();">
+                  oncommand="gGeneralPane.restoreDefaultStartPage();">
             <observes element="mailnewsStartPageUrl" attribute="disabled"/>
           </button>
         </hbox>

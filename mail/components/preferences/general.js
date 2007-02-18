@@ -38,6 +38,7 @@
 
 var gGeneralPane = {
   mPane: null,
+  mStartPageUrl: "",
 
   init: function ()
   {
@@ -91,17 +92,39 @@ var gGeneralPane = {
     document.getElementById("mailnewsStartPageUrl").disabled = !document.getElementById("mailnewsStartPageEnabled").checked;
   },
   
-  setHomePageToDefaultPage: function ()
+  /**
+   * Restores the default start page as the user's start page
+   */
+  restoreDefaultStartPage: function()
   {
-    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                                .getService(Components.interfaces.nsIPrefService);
-    var pref = prefService.getDefaultBranch(null);
-    var url = pref.getComplexValue("mailnews.start_page.url",
-                                   Components.interfaces.nsIPrefLocalizedString).data;
-    var startPageUrlField = document.getElementById("mailnewsStartPageUrl");
-    startPageUrlField.value = url;
-    
-    this.mPane.userChangedValue(startPageUrlField);
+    var startPage = document.getElementById("mailnews.start_page.url");
+    startPage.value = startPage.defaultValue;
+  },
+  
+  /**
+   * Returns a formatted url corresponding to the value of mailnews.start_page.url 
+   * Stores the original value of mailnews.start_page.url 
+   */
+  readStartPageUrl: function()
+  {
+    var pref = document.getElementById("mailnews.start_page.url");
+    this.mStartPageUrl = pref.value;
+    var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"].
+                               getService(Components.interfaces.nsIURLFormatter);
+    return formatter.formatURL(this.mStartPageUrl); 
+  },
+  
+  /**
+   * Returns the value of the mailnews start page url represented by the UI.
+   * If the url matches the formatted version of our stored value, then 
+   * return the unformatted url.
+   */
+  writeStartPageUrl: function()
+  {
+    var startPage = document.getElementById('mailnewsStartPageUrl');
+    var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"].
+                               getService(Components.interfaces.nsIURLFormatter);
+    return formatter.formatURL(this.mStartPageUrl) == startPage.value ? this.mStartPageUrl : startPage.value;         
   },
   
   customizeMailAlert: function()

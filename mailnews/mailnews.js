@@ -171,6 +171,7 @@ pref("mail.show_headers",                   1); // some
 pref("mail.pane_config",                    0);
 pref("mail.addr_book.mapit_url.format", "chrome://messenger-region/locale/region.properties");
 #ifdef MOZ_SUITE
+pref("mailnews.start_page.url", "chrome://messenger-region/locale/region.properties");
 pref("mail.addr_book.im.onlineCheckAllowed", false);
 pref("messenger.throbber.url","chrome://messenger-region/locale/region.properties");
 pref("compose.throbber.url","chrome://messenger-region/locale/region.properties");
@@ -395,7 +396,6 @@ pref("mailnews.reuse_message_window", true);
 pref("mailnews.reuse_thread_window2", false);
 pref("mailnews.open_window_warning", 10); // warn user if they attempt to open more than this many messages at once
 
-pref("mailnews.start_page.url", "chrome://messenger-region/locale/region.properties");
 pref("mailnews.start_page.enabled", true);
 
 pref("mailnews.remember_selected_message", true);

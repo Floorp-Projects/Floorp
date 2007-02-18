@@ -449,36 +449,50 @@ function StopUrls()
   msgWindow.StopUrls();
 }
 
+/** 
+ * Every time the application version changes, we should load the welcome url for that version
+ * instead of the usual start page. 
+ * @return true if we should use the welcome url
+ */
+function useWelcomeUrl()
+{
+  var savedVersion = null;
+  try {
+    savedVersion = pref.getCharPref("mailnews.start_page_override.mstone");
+  } catch (ex) {}
+  
+  // ability to always bypass the welcome url
+  if (savedVersion == "ignore")
+    return false;
+    
+  // look up the current version. Firefox uses the platform version it extracts from nsIHttpProtocolHandler.
+  // Can we use an application version instead? For now, also use the platform version.
+  var currentPlatformVersion = Components.classes["@mozilla.org/xre/app-info;1"].
+              getService(Components.interfaces.nsIXULAppInfo).platformVersion;
+  pref.setCharPref("mailnews.start_page_override.mstone", currentPlatformVersion);
+  return currentPlatformVersion != savedVersion;
+}
+
 function loadStartPage() 
 {
-  try 
+  try
   {
     gMessageNotificationBar.clearMsgNotifications();
     
     var startpageenabled = pref.getBoolPref("mailnews.start_page.enabled");
-    if (startpageenabled) 
+    // only load the start page if we are online
+    if (startpageenabled && MailOfflineMgr.isOnline())
     {
-      
-      var startpage = pref.getComplexValue("mailnews.start_page.url", Components.interfaces.nsIPrefLocalizedString).data;
-
-      // Some users have our old default start page
-      // showing up as a user pref instead of a default pref. If this is the case, clear the user pref by hand 
-      // and re-read it again so we get the correct default start page.
-      if (startpage == "chrome://messenger/locale/start.html")
-      {
-        pref.clearUserPref("mailnews.start_page.url");
-        startpage = pref.getComplexValue("mailnews.start_page.url", Components.interfaces.nsIPrefLocalizedString).data;
-      }
-
-      if (startpage != "") 
+      var startpage = getFormattedRegionURL(useWelcomeUrl() ? "mailnews.start_page.welcome_url" :
+                                            "mailnews.start_page.url");
+      if (startpage)
       {
         GetMessagePaneFrame().location.href = startpage;
-        //dump("start message pane with: " + startpage + "\n");
         ClearMessageSelection();
       }
     }
   }
-  catch (ex) 
+  catch (ex)
   {
     dump("Error loading start page.\n");
     return;

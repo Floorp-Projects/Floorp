@@ -258,15 +258,27 @@ function openRegionURL(aResourceName)
  */
 function openFormattedRegionURL(aPrefName)
 {
-  var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
-                             .getService(Components.interfaces.nsIURLFormatter);
-  var formattedUrl = formatter.formatURLPref(aPrefName);
+  var formattedUrl = getFormattedRegionURL(aPrefName);
   
-  var uri = Components.classes["@mozilla.org/network/io-service;1"]
-            .getService(Components.interfaces.nsIIOService)
-            .newURI(formattedUrl, null, null);
+  var uri = Components.classes["@mozilla.org/network/io-service;1"].
+                       getService(Components.interfaces.nsIIOService).
+                       newURI(formattedUrl, null, null);
 
-  var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
-                    .getService(Components.interfaces.nsIExternalProtocolService);
+  var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"].
+                               getService(Components.interfaces.nsIExternalProtocolService);
   protocolSvc.loadUrl(uri);  
+}
+
+/**
+ *  Fetches the url for the passed in pref name and uses the URL formatter service to 
+ *    process it.
+ *
+ *  @param aPrefName - name of the pref that holds the url we want to format and open
+ *  @returns the formatted url string
+ */
+function getFormattedRegionURL(aPrefName)
+{
+  var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"].
+                             getService(Components.interfaces.nsIURLFormatter);
+  return formatter.formatURLPref(aPrefName);
 }
