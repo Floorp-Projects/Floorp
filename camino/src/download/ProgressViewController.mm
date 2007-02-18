@@ -67,7 +67,7 @@ enum {
 -(void)refreshDownloadInfo;
 -(void)launchFileIfAppropriate;
 -(void)setProgressViewFromDictionary:(NSDictionary*)aDict;
--(void)removeFromDownloadListIfAppropriate;
+-(BOOL)shouldRemoveFromDownloadList;
 
 @end
 
@@ -366,7 +366,10 @@ enum {
     
     [self refreshDownloadInfo];
     [self launchFileIfAppropriate];
-    [self removeFromDownloadListIfAppropriate];
+    if ([self shouldRemoveFromDownloadList])
+      [mProgressWindowController removeDownload:self suppressRedraw:NO];
+    else if (!mDownloadFailed)
+      [self setupFileSystemNotification];
   }
 }
 
@@ -379,14 +382,13 @@ enum {
   }
 }
 
-// Remove the download from the view if the pref is set to remove upon successful download
--(void)removeFromDownloadListIfAppropriate
+-(BOOL)shouldRemoveFromDownloadList
 {
+  if (![self hasSucceeded])
+    return NO;
   int downloadRemoveActionValue = [[PreferenceManager sharedInstance] getIntPref:"browser.download.downloadRemoveAction" 
                                                                      withSuccess:NULL];
-  
-  if (!mUserCancelled && !mDownloadFailed && downloadRemoveActionValue == kRemoveUponSuccessfulDownloadPrefValue)
-    [mProgressWindowController removeDownload:self suppressRedraw:NO];
+  return (downloadRemoveActionValue == kRemoveUponSuccessfulDownloadPrefValue);
 }
 
 // this handles lots of things - all of the status updates
@@ -687,8 +689,6 @@ enum {
 
   [self downloadDidEnd];
   [mProgressWindowController didEndDownload:self withSuccess:completedOK statusCode:aStatus];
-  if (completedOK)
-    [self setupFileSystemNotification];
 }
 
 -(void)setProgressTo:(long long)aCurProgress ofMax:(long long)aMaxProgress

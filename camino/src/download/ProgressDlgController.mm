@@ -649,6 +649,10 @@ static id gSharedProgressController = nil;
 -(void)removeDownload:(id <CHDownloadProgressDisplay>)progressDisplay suppressRedraw:(BOOL)suppressRedraw
 {
   [progressDisplay displayWillBeRemoved];
+  // This is sometimes called by code that thinks it can continue
+  // to use |progressDisplay|. Extended the lifetime slightly as a
+  // band-aid, but this logic should really be reworked.
+  [[progressDisplay retain] autorelease];
   [mProgressViewControllers removeObject:progressDisplay];
   
   if ([mProgressViewControllers count] == 0) {
