@@ -161,6 +161,7 @@
              style="height: 0px; min-height: 1px" flex="1" name="messagepane" 
              disablesecurity="true" disablehistory="true" type="content-primary" 
              src="about:blank" onclick="return contentAreaClick(event);" autofind="false"/>
+    <splitter id="attachment-splitter" collapse="after" resizebefore="closest" resizeafter="closest" collapsed="true"/>
     <hbox id="attachmentView"/>
     <findbar id="FindToolbar" browserid="messagepane"/>
   </vbox>  

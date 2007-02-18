@@ -43,7 +43,6 @@
 
 /* ::::: msg header toolbars ::::: */
 
-#attachmentView,
 #collapsedHeaderView,
 #expandedHeaderView {
   min-width: 1px;
@@ -61,18 +60,9 @@
 
 #attachmentList
 {
-  -moz-appearance: listbox; 
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
-  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  margin: 0px;
   background-color: -moz-Field;
   color: -moz-FieldText;
-  margin-top: 5px;
-  margin-bottom: 5px;
-  -moz-margin-start: 15px;
-  -moz-margin-end: 30px;
 }
 
 /* XXX: Move all of the description attributes to the toolkit */
@@ -118,9 +108,11 @@ description[selectable="true"]:focus > descriptionitem[selected="true"]
 
 #attachmentView
 {
-  border-top: 1px solid ThreeDShadow;
-  border-bottom: none;
-  background-color: -moz-Dialog;
+  min-height: 55px;
+}
+
+#attachmentView[attachmentOverflow="true"] {
+  overflow: auto;
 }
 
 /* ::::: msg header captions ::::: */

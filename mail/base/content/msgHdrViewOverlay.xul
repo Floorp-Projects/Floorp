@@ -162,10 +162,10 @@
 </hbox>
 
 <!-- the message pane consists of 3 'boxes'. Box #3 is the attachment box which can be toggled into a slim or an expanded view -->   
-<hbox id="attachmentView" class="headerContainer" collapsed="true">
-  <label id="attachmentLabel" class="subjectvalue" value="&attachmentsTree.label;"/>
-    <description flex="1" id="attachmentList" selectable="true" seltype="multiple"
-      onclick="attachmentListClick(event);" ondraggesture="nsDragAndDrop.startDrag(event,attachmentAreaDNDObserver);" ondragover="nsDragAndDrop.dragOver(event, attachmentAreaDNDObserver);" context="attachmentListContext">
+<hbox id="attachmentView" collapsed="true">
+  <description flex="1" id="attachmentList" selectable="true" seltype="multiple"
+               onclick="attachmentListClick(event);" ondraggesture="nsDragAndDrop.startDrag(event,attachmentAreaDNDObserver);"
+               ondragover="nsDragAndDrop.dragOver(event, attachmentAreaDNDObserver);" context="attachmentListContext">
   </description>
 </hbox>
 

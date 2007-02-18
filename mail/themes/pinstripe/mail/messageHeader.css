@@ -43,8 +43,6 @@
 
 
 /* ::::: msg header toolbars ::::: */
-
-#attachmentView,
 #collapsedHeaderView,
 #expandedHeaderView {
   min-width: 1px;
@@ -60,7 +58,7 @@
 
 #attachmentList
 {
-  margin: 5px 30px 5px 15px;
+  margin: 0px;
 }
 
 /* XXX: Move all of the description attributes to the toolkit */
@@ -110,20 +108,24 @@ description[selectable="true"]:focus > descriptionitem[selected="true"]
   -moz-box-pack: center;
 }
 
-#attachmentView {
+#attachmentView
+{
   background-color: #E6E6E6;
   border: 1px solid #C8C8C8;
   -moz-border-radius: 7px;
-  margin: 6px;
-  padding: 4px;
+  margin: 0px 6px 6px 6px;
+  padding: 4px;  
+  min-height: 55px;
 }
 
-#attachmentLabel {
-  color: #505050;
-  -moz-box-orient: vertical;
-  -moz-box-align: center;
+#attachmentView[attachmentOverflow="true"] {
+  overflow: auto;
 }
 
+#attachment-splitter {
+  min-height: 7px;
+  border-top: 1px solid #C8C8C8;
+}
 
 /* ::::: msg header captions ::::: */
 
@@ -214,15 +216,13 @@ description[selectable="true"]:focus > descriptionitem[selected="true"]
 }
 
 .emailDisplayImage:hover, .emailDisplayImage[open] {
-list-style-image: url("chrome://messenger/skin/addressbook/icons/silhouette-hover.png");
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/silhouette-hover.png");
 }
  
 /* ::::: email address twisty ::::: */
 
 .addresstwisty {
-
   padding-right: 5px;
-
   padding-top: 3px;
   list-style-image:url("chrome://global/skin/tree/treetwisty.png");
   height: 9px !important;

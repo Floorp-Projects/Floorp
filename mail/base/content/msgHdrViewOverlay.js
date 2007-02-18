@@ -775,6 +775,11 @@ function UpdateMessageHeaders()
   // header view table...
 
   var headerName;
+
+  // Remove the height attr so that it redraws correctly. Works around a problem that
+  // attachment-splitter causes if it's moved high enough to affect the header box:
+  document.getElementById('msgHeaderView').removeAttribute('height');
+
   for (headerName in currentHeaderData)
   {
     var headerField = currentHeaderData[headerName];
@@ -858,6 +863,7 @@ function HideMessageHeaderPane()
   document.getElementById("fileAttachmentMenu").setAttribute("disabled", "true");
   // disable the attachment box
   document.getElementById("attachmentView").collapsed = true;
+  document.getElementById("attachment-splitter").collapsed = true;
 }
 
 function OutputNewsgroups(headerEntry, headerValue)
@@ -1223,17 +1229,26 @@ function cloneAttachment(aAttachment)
 
 function displayAttachmentsForExpandedView()
 {
-  var numAttachments = currentAttachments.length;
-  
-  // IMPORTANT: make sure we uncollapse the attachment box BEFORE we start adding
-  // our attachments to the view. Otherwise, layout doesn't calculate the correct height for
-  // the attachment view and we end up with a box that is too tall.
-
+  var numAttachments = currentAttachments.length; 
   var expandedAttachmentBox = document.getElementById('attachmentView');
-  expandedAttachmentBox.collapsed = numAttachments <= 0;
+  var attachmentSplitter = document.getElementById('attachment-splitter');
 
-  if (numAttachments > 0 && !gBuildAttachmentsForCurrentMsg)
+  if (numAttachments <= 0)
   {
+    expandedAttachmentBox.collapsed = true;
+    attachmentSplitter.collapsed = true;
+  }
+  else if (!gBuildAttachmentsForCurrentMsg)
+  {
+    // IMPORTANT: make sure we uncollapse the attachment box BEFORE we start adding
+    // our attachments to the view. Otherwise, layout doesn't calculate the correct height for
+    // the attachment view and we end up with a box that is too tall.
+    expandedAttachmentBox.collapsed = false;
+    attachmentSplitter.collapsed = false;
+
+    // Remove height attribute, or the attachments box could be drawn badly:
+    expandedAttachmentBox.removeAttribute("height");
+
     var attachmentList = document.getElementById('attachmentList');
     for (index in currentAttachments)
     {
@@ -1262,7 +1277,19 @@ function displayAttachmentsForExpandedView()
       var item = attachmentList.appendChild(attachmentView);
     } // for each attachment
     gBuildAttachmentsForCurrentMsg = true;
-  }
+
+    // Switch overflow off (via css attribute selector) temporarily to get the preferred window height:
+    var attachmentContainer = document.getElementById('attachmentView');
+    attachmentContainer.setAttribute("attachmentOverflow", "false");
+    var attachmentHeight = expandedAttachmentBox.boxObject.height;
+    attachmentContainer.setAttribute("attachmentOverflow", "true");
+
+    // If the attachments box takes up too much of the message pane, downsize:
+    var maxAttachmentHeight = document.getElementById('messagepanebox').boxObject.height / 4;
+    if (attachmentHeight > maxAttachmentHeight)
+      attachmentHeight = maxAttachmentHeight;
+    expandedAttachmentBox.setAttribute("height", attachmentHeight);
+ }
 }
 
 // attachment --> the attachment struct containing all the information on the attachment
@@ -1271,7 +1298,7 @@ function setApplicationIconForAttachment(attachment, listitem, largeView)
 {
   var iconSize = largeView ? kLargeIcon : kSmallIcon;
   // generate a moz-icon url for the attachment so we'll show a nice icon next to it.
-  if ( attachment.contentType == 'text/x-moz-deleted' )
+  if (attachment.contentType == 'text/x-moz-deleted')
     listitem.setAttribute('image', 'chrome://messenger/skin/icons/message-mail-attach-del.png');
   else
     listitem.setAttribute('image', "moz-icon:" + "//" + attachment.displayName + "?size=" + iconSize + "&contentType=" + attachment.contentType);

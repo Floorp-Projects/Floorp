@@ -403,6 +403,7 @@
                    minheight="1" flex="1" name="messagepane"
                    disablehistory="true" type="content-primary" src="about:blank"
                    disablesecurity="true" onclick="return contentAreaClick(event);"/>
+          <splitter id="attachment-splitter" collapse="after" resizebefore="closest" resizeafter="closest" collapsed="true"/>
           <hbox id="attachmentView"/>
           <findbar id="FindToolbar" browserid="messagepane"/>
         </vbox>  

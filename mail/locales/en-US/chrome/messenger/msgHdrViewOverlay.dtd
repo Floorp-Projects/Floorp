@@ -54,7 +54,6 @@
 <!ENTITY saveAll.label "Save All..">
 
 <!ENTITY editMessage.label "Edit Draft...">
-<!ENTITY attachmentsTree.label "Attachments:">
 
 <!ENTITY openAttachmentCmd.label    "Open">  
 <!ENTITY openAttachmentCmd.accesskey		"O">  
