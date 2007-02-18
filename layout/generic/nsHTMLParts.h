@@ -99,7 +99,7 @@ NS_NewAreaFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFl
 // These AreaFrame's shrink wrap around their contents
 inline nsIFrame*
 NS_NewTableCellInnerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext) {
-  return NS_NewBlockFrame(aPresShell, aContext, NS_BLOCK_SPACE_MGR|NS_BLOCK_MARGIN_ROOT);
+  return NS_NewBlockFrame(aPresShell, aContext);
 }
 
 // This type of AreaFrame is the document root, a margin root, and the

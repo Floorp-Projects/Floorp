@@ -173,7 +173,6 @@ public:
   NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
   virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
-  NS_IMETHOD  SetParent(const nsIFrame* aParent);
   virtual nscoord GetBaseline() const;
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
   virtual void Destroy();
@@ -277,6 +276,9 @@ public:
   PRBool HandleOverflowPlaceholdersOnPulledLine(
     nsBlockReflowState& aState, nsLineBox* aLine);
 
+  static PRBool BlockIsMarginRoot(nsIFrame* aBlock);
+  static PRBool BlockNeedsSpaceManager(nsIFrame* aBlock);
+  
 protected:
   nsBlockFrame(nsStyleContext* aContext)
     : nsHTMLContainerFrame(aContext)

@@ -1037,20 +1037,10 @@ nsComboboxControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   return NS_OK;
 }
 
-// XXXbz this is a for-now hack until display:inline-block works.
-class nsComboboxDisplayFrame;
-
-static nsComboboxDisplayFrame*
-NS_NewComboboxDisplayFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
-                           nsComboboxControlFrame* aComboBox);
-
+// XXXbz this is a for-now hack.  Now that display:inline-block works,
+// need to revisit this.
 class nsComboboxDisplayFrame : public nsBlockFrame {
 public:
-  friend nsComboboxDisplayFrame*
-  NS_NewComboboxDisplayFrame(nsIPresShell* aPresShell,
-                             nsStyleContext* aContext,
-                             nsComboboxControlFrame* aComboBox);
-  
   nsComboboxDisplayFrame (nsStyleContext* aContext,
                           nsComboboxControlFrame* aComboBox)
     : nsBlockFrame(aContext),
@@ -1097,20 +1087,6 @@ nsComboboxDisplayFrame::Reflow(nsPresContext*           aPresContext,
   return nsBlockFrame::Reflow(aPresContext, aDesiredSize, state, aStatus);
 }
 
-static nsComboboxDisplayFrame*
-NS_NewComboboxDisplayFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
-                           nsComboboxControlFrame* aComboBox)
-{
-  nsComboboxDisplayFrame* it =
-    new (aPresShell) nsComboboxDisplayFrame(aContext, aComboBox);
-
-  if (it) {
-    it->SetFlags(NS_BLOCK_SPACE_MGR);
-  }
-    
-  return it;
-}
-
 nsIFrame*
 nsComboboxControlFrame::CreateFrameFor(nsIContent*      aContent)
 { 
@@ -1144,7 +1120,7 @@ nsComboboxControlFrame::CreateFrameFor(nsIContent*      aContent)
   }
 
   // Start by by creating our anonymous block frame
-  mDisplayFrame = NS_NewComboboxDisplayFrame(shell, styleContext, this);
+  mDisplayFrame = new (shell) nsComboboxDisplayFrame(styleContext, this);
   if (NS_UNLIKELY(!mDisplayFrame)) {
     return nsnull;
   }
