@@ -1157,7 +1157,6 @@
             </menupopup>
           </menu>
           <menuitem id="openMessageFileMenuitem" label="&openMessageFileCmd.label;"
-            command="cmd_openFileMessage"
             key="key_openFileMessage"
             accesskey="&openMessageFileCmd.accesskey;"
             oncommand="MsgOpenFromFile();"/>
@@ -1241,8 +1240,8 @@
     <!-- Edit -->
     <menu id="menu_Edit" oncommand="CommandUpdate_UndoRedo();">
       <menupopup onpopupshowing="InitEditMessagesMenu()">
-        <menuitem id="menu_undo" label="&undoDefaultCmd.label;" accesskey="&undoDefaultCmd.accesskey;" key="key_undo" command="cmd_undo" oncommand="Undo()"/>
-        <menuitem id="menu_redo" label="&redoDefaultCmd.label;" accesskey="&redoDefaultCmd.accesskey;" key="key_redo" command="cmd_redo" oncommand="Redo()"/>
+        <menuitem id="menu_undo" label="&undoDefaultCmd.label;" accesskey="&undoDefaultCmd.accesskey;" key="key_undo" command="cmd_undo"/>
+        <menuitem id="menu_redo" label="&redoDefaultCmd.label;" accesskey="&redoDefaultCmd.accesskey;" key="key_redo" command="cmd_redo"/>
         <menuseparator/>
         <menuitem id="menu_cut"/>
         <menuitem id="menu_copy"/>
