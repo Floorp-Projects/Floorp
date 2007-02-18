@@ -2557,8 +2557,18 @@ gc_lock_marker(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num, void *arg)
     JSGCLockHashEntry *lhe = (JSGCLockHashEntry *)hdr;
     void *thing = (void *)lhe->thing;
     JSContext *cx = (JSContext *)arg;
+    JSRuntime *rt = cx->runtime;
+    uint32 i, end;
+    uint8 *flagp;
 
     GC_MARK(cx, thing, "locked object");
+    if (rt->gcThingCallback) {
+        end = lhe->count - 1;
+        flagp = js_GetGCThingFlags(thing);
+        for (i = 0; i != end; ++i) {
+            rt->gcThingCallback(thing, *flagp, rt->gcThingCallbackClosure);
+        }
+    }
     return JS_DHASH_NEXT;
 }
 
