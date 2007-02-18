@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=366946
+-->
+<head>
+  <title>Test for Bug 366946</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=366946">Mozilla Bug 366946</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <div id="1"></div>
+  <div id="2"></div>
+  <div id="3"></div>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+  /** Test for Bug 366946 **/
+  SimpleTest.waitForExplicitFinish();
+
+  addLoadEvent(function() {
+    var doc1 = document;
+
+    // Set up a new document.
+    var doc2 = document.implementation.createDocument('', '', null);
+
+    // Copy some nodes into doc2
+    var node1 = doc2.importNode(doc1.getElementById('1'), false);
+    var node2 = doc2.importNode(doc1.getElementById('1'), false);
+    node1.appendChild(node2);
+    doc2.appendChild(node1);
+
+    // Create two ranges in doc1 to compare.
+    var range1 = doc1.createRange();
+    range1.setStart(doc1.getElementById('1'), 0);
+    range1.setEnd(doc1.getElementById('2'), 0);
+    
+    var range2 = doc1.createRange();
+    range2.setStart(doc1.getElementById('2'), 0);
+    range2.setEnd(doc1.getElementById('3'), 0);
+
+    // Create a range in doc2.
+    var range3 = doc2.createRange();
+    range3.setStart(node1, 0);
+    range3.setEnd(node2, 0);
+
+    // Compare range1 and range2: Should return 1.
+    try {
+      var result1 = range2.compareBoundaryPoints(Range.START_TO_START, range1);
+    }
+    catch (ex) {
+    }
+    ok(result1 ===  1, "range1 and range2 are compared correctly.");
+
+    // Compare range1 and range3: Should throw DOMException WRONG_DOCUMENT_ERR.
+    try {
+      var result2 = range3.compareBoundaryPoints(Range.START_TO_START, range1);
+    }
+    catch (ex) {
+      var errorCode = ex.code;
+    }
+
+    ok(errorCode == DOMException.WRONG_DOCUMENT_ERR,
+      "The exception thrown when comparing ranges from different documents " +
+      "has the code DOMException.WRONG_DOCUMENT_ERR");
+    ok(result2 === undefined, "range1 and range3 couldn't be compared as expected.");
+    SimpleTest.finish();
+  });
+</script>
+</pre>
+</body>
+</html>
