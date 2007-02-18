@@ -403,9 +403,8 @@ NS_IMETHODIMP nsMsgTagService::GetAllTags(PRUint32 *aCount, nsIMsgTag ***aTagArr
           if (NS_SUCCEEDED(rv))
           {
             // .color MAY exist
-            rv = GetColorForKey(key, color);
-            if (NS_FAILED(rv))
-              color.Truncate();
+            color.Truncate();
+            GetColorForKey(key, color);
             // .ordinal MAY exist
             rv = GetOrdinalForKey(key, ordinal);
             if (NS_FAILED(rv))
