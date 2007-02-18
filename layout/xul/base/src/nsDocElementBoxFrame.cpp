@@ -128,7 +128,7 @@ nsDocElementBoxFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   // create the top-secret default tooltip node. shhhhh!
   rv = nodeInfoManager->GetNodeInfo(nsGkAtoms::tooltip, nsnull,
                                     kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = NS_NewXULElement(getter_AddRefs(mTooltipContent), nodeInfo);
   NS_ENSURE_SUCCESS(rv, rv);
