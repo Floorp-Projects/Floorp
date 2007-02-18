@@ -66,6 +66,7 @@
 #include "nsISocketProviderService.h"
 #include "nsISocketProvider.h"
 #include "nsISSLSocketControl.h"
+#include "nsINSSErrorsService.h"
 #include "nsIPipe.h"
 #include "nsIProgrammingLanguage.h"
 
@@ -149,7 +150,7 @@ static PRErrorCode RandomizeConnectError(PRErrorCode code)
 static nsresult
 ErrorAccordingToNSPR(PRErrorCode errorCode)
 {
-    nsresult rv;
+    nsresult rv = NS_ERROR_FAILURE;
     switch (errorCode) {
     case PR_WOULD_BLOCK_ERROR:
         rv = NS_BASE_STREAM_WOULD_BLOCK;
@@ -176,7 +177,18 @@ ErrorAccordingToNSPR(PRErrorCode errorCode)
         rv = NS_ERROR_NET_TIMEOUT;
         break;
     default:
-        rv = NS_ERROR_FAILURE;
+        {
+            nsCOMPtr<nsINSSErrorsService> nsserr =
+                do_GetService(NS_NSS_ERRORS_SERVICE_CONTRACTID);
+            if (nsserr) {
+                nsresult nssXPCOMCode;
+                nsresult conversionStatus =
+                  nsserr->GetXPCOMFromNSSError(errorCode, &nssXPCOMCode);
+
+                if (NS_SUCCEEDED(conversionStatus))
+                    rv = nssXPCOMCode;
+            }
+        }
     }
     LOG(("ErrorAccordingToNSPR [in=%d out=%x]\n", errorCode, rv));
     return rv;
