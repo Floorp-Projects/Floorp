@@ -40,6 +40,7 @@
 #include "nsIDOMSVGUseElement.h"
 #include "nsIDOMSVGTransformable.h"
 #include "nsSVGElement.h"
+#include "nsSVGUseElement.h"
 
 typedef nsSVGGFrame nsSVGUseFrameBase;
 
@@ -54,6 +55,7 @@ protected:
 
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
@@ -63,6 +65,8 @@ public:
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
+
+  virtual void Destroy();
 
   // nsSVGContainerFrame methods:
   virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
@@ -82,11 +86,7 @@ public:
 #endif
 
   // nsIAnonymousContentCreator
-  NS_IMETHOD CreateAnonymousContent(nsPresContext* aPresContext,
-                                    nsISupportsArray& aAnonymousItems);
-  NS_IMETHOD CreateFrameFor(nsPresContext *aPresContext,
-                            nsIContent *aContent,
-                            nsIFrame **aFrame);
+  virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements);
 };
 
 //----------------------------------------------------------------------
@@ -147,6 +147,14 @@ nsSVGUseFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                              aAttribute, aModType);
 }
 
+void
+nsSVGUseFrame::Destroy()
+{
+  nsSVGUseElement *use = NS_STATIC_CAST(nsSVGUseElement*, mContent);
+  use->DestroyAnonymousContent();
+  nsSVGUseFrameBase::Destroy();
+}
+
 
 //----------------------------------------------------------------------
 // nsSVGContainerFrame methods:
@@ -184,23 +192,15 @@ nsSVGUseFrame::GetCanvasTM()
 //----------------------------------------------------------------------
 // nsIAnonymousContentCreator methods:
 
-NS_IMETHODIMP
-nsSVGUseFrame::CreateAnonymousContent(nsPresContext* aPresContext,
-                                      nsISupportsArray& aAnonymousItems)
+nsresult
+nsSVGUseFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 {
-  nsCOMPtr<nsIAnonymousContentCreator> use = do_QueryInterface(mContent);
+  nsSVGUseElement *use = NS_STATIC_CAST(nsSVGUseElement*, mContent);
 
-  if (use)
-    return use->CreateAnonymousContent(aPresContext, aAnonymousItems);
-  else
+  nsIContent* clone = use->CreateAnonymousContent();
+  if (!clone)
     return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsSVGUseFrame::CreateFrameFor(nsPresContext *aPresContext,
-                              nsIContent *aContent,
-                              nsIFrame **aFrame)
-{
-  *aFrame = nsnull;
-  return NS_ERROR_FAILURE;
+  if (!aElements.AppendElement(clone))
+    return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
 }

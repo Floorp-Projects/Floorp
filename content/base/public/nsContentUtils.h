@@ -950,6 +950,11 @@ public:
     }
   }
 
+  /**
+   * Unbinds the content from the tree and nulls it out if it's not null.
+   */
+  static void DestroyAnonymousContent(nsCOMPtr<nsIContent>* aContent);
+
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
                                            JSContext *cx,

@@ -76,7 +76,6 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsISupportsArray.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIPresShell.h"
@@ -1165,6 +1164,7 @@ nsTextControlFrame::Destroy()
   if (!mDidPreDestroy) {
     PreDestroy();
   }
+  nsContentUtils::DestroyAnonymousContent(&mAnonymousDiv);
   nsBoxFrame::Destroy();
 }
 
@@ -1351,26 +1351,22 @@ void nsTextControlFrame::PostCreateFrames() {
   InitEditor();
 }
 
-NS_IMETHODIMP
-nsTextControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
-                                   nsIContent*      aContent,
-                                   nsIFrame**       aFrame)
+nsIFrame*
+nsTextControlFrame::CreateFrameFor(nsIContent*      aContent)
 {
 #ifdef DEBUG
   NS_ASSERTION(!mCreateFrameForCalled, "CreateFrameFor called more than once!");
   mCreateFrameForCalled = PR_TRUE;
 #endif
   
-  // Note, we must set aFrame to nsnull.
-  *aFrame = nsnull;
-
-  nsIPresShell *shell = aPresContext->GetPresShell();
+  nsPresContext *presContext = GetPresContext();
+  nsIPresShell *shell = presContext->GetPresShell();
   if (!shell)
-    return NS_ERROR_FAILURE;
+    return nsnull;
   
   nsCOMPtr<nsIDOMDocument> domdoc = do_QueryInterface(shell->GetDocument());
   if (!domdoc)
-    return NS_ERROR_FAILURE;
+    return nsnull;
 
   // Don't create any frames here, but just setup the editor.
   // This way DOM Ranges (which editor uses) work properly since the anonymous
@@ -1378,26 +1374,24 @@ nsTextControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
   // method.
   nsresult rv = NS_OK;
   mEditor = do_CreateInstance(kTextEditorCID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-  if (!mEditor) 
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (NS_FAILED(rv) || !mEditor) 
+    return nsnull;
 
   // Create selection
 
   mFrameSel = do_CreateInstance(kFrameSelectionCID, &rv);
   if (NS_FAILED(rv))
-    return rv;
+    return nsnull;
 
   // Create a SelectionController
 
   mSelCon = NS_STATIC_CAST(nsISelectionController*,
               new nsTextInputSelectionImpl(mFrameSel, shell, aContent));
   if (!mSelCon)
-    return NS_ERROR_OUT_OF_MEMORY;
+    return nsnull;
   mTextListener = new nsTextInputListener();
   if (!mTextListener)
-    return NS_ERROR_OUT_OF_MEMORY;
+    return nsnull;
   NS_ADDREF(mTextListener);
 
   mTextListener->SetFrame(this);
@@ -1432,11 +1426,11 @@ nsTextControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
   rv = mEditor->Init(domdoc, shell, aContent, mSelCon, editorFlags);
 
   if (NS_FAILED(rv))
-    return rv;
+    return nsnull;
 
   // Initialize the controller for the editor
 
-  if (!SuppressEventHandlers(aPresContext)) {
+  if (!SuppressEventHandlers(presContext)) {
     nsCOMPtr<nsIControllers> controllers;
     nsCOMPtr<nsIDOMNSHTMLInputElement> inputElement =
       do_QueryInterface(mContent);
@@ -1447,13 +1441,13 @@ nsTextControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
         do_QueryInterface(mContent);
 
       if (!textAreaElement)
-        return NS_ERROR_FAILURE;
+        return nsnull;
 
       rv = textAreaElement->GetControllers(getter_AddRefs(controllers));
     }
 
     if (NS_FAILED(rv))
-      return rv;
+      return nsnull;
 
     if (controllers) {
       PRUint32 numControllers;
@@ -1528,7 +1522,7 @@ nsTextControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
     rv = mEditor->GetFlags(&editorFlags);
 
     if (NS_FAILED(rv))
-      return rv;
+      return nsnull;
 
     // Check if the readonly attribute is set.
 
@@ -1547,7 +1541,7 @@ nsTextControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
 
     mEditor->SetFlags(editorFlags);
   }
-  return NS_OK;
+  return nsnull;
 }
 
 nsresult
@@ -1646,20 +1640,14 @@ nsTextControlFrame::InitEditor()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsTextControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
-                                           nsISupportsArray& aChildList)
+nsresult
+nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 {
-  // Get the PresShell
-
   mState |= NS_FRAME_INDEPENDENT_SELECTION;
 
-  nsIPresShell *shell = aPresContext->GetPresShell();
-
+  nsIPresShell* shell = GetPresContext()->GetPresShell();
   if (!shell)
     return NS_ERROR_FAILURE;
-
-  // Get the DOM document
 
   nsIDocument *doc = shell->GetDocument();
   if (!doc)
@@ -1670,30 +1658,20 @@ nsTextControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
   nsresult rv = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::div, nsnull,
                                                     kNameSpaceID_XHTML,
                                                     getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (!nodeInfo)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIContent> divContent;
-  rv = NS_NewHTMLElement(getter_AddRefs(divContent), nodeInfo);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (!divContent)
-    return NS_ERROR_FAILURE;
+  rv = NS_NewHTMLElement(getter_AddRefs(mAnonymousDiv), nodeInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Set the div native anonymous, so CSS will be its style language
   // no matter what.
-  divContent->SetNativeAnonymous(PR_TRUE);
+  mAnonymousDiv->SetNativeAnonymous(PR_TRUE);
 
   // Set the necessary style attributes on the text control.
 
-  rv = divContent->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                           NS_LITERAL_STRING("anonymous-div"), PR_FALSE);
+  rv = mAnonymousDiv->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
+                              NS_LITERAL_STRING("anonymous-div"), PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (!IsSingleLineTextControl()) {
     // We can't just inherit the overflow because setting visible overflow will
@@ -1703,17 +1681,18 @@ nsTextControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
     const nsStyleDisplay* disp = GetStyleDisplay();
     if (disp->mOverflowX != NS_STYLE_OVERFLOW_VISIBLE &&
         disp->mOverflowX != NS_STYLE_OVERFLOW_CLIP) {
-      rv = divContent->SetAttr(kNameSpaceID_None, nsGkAtoms::style,
-                               NS_LITERAL_STRING("overflow: inherit;"),
-                               PR_FALSE);
+      rv = mAnonymousDiv->SetAttr(kNameSpaceID_None, nsGkAtoms::style,
+                                  NS_LITERAL_STRING("overflow: inherit;"),
+                                  PR_FALSE);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
-  if (NS_FAILED(rv))
-    return rv;
+  if (!aElements.AppendElement(mAnonymousDiv))
+    return NS_ERROR_OUT_OF_MEMORY;
 
   // rv = divContent->SetAttr(kNameSpaceID_None,nsGkAtoms::debug, NS_LITERAL_STRING("true"), PR_FALSE);
-  return aChildList.AppendElement(divContent);
+  return NS_OK;
 }
 
 nscoord

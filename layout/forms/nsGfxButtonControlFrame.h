@@ -58,6 +58,8 @@ class nsGfxButtonControlFrame : public nsHTMLButtonControlFrame,
 public:
   nsGfxButtonControlFrame(nsStyleContext* aContext);
 
+  virtual void Destroy();
+
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
@@ -74,13 +76,14 @@ public:
 #endif
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
- 
+
   // nsIAnonymousContentCreator
-  NS_IMETHOD CreateAnonymousContent(nsPresContext* aPresContext,
-                                    nsISupportsArray& aChildList);
-  NS_IMETHOD CreateFrameFor(nsPresContext*   aPresContext,
-                            nsIContent *      aContent,
-                            nsIFrame**        aFrame);
+  virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements);
+  virtual nsIFrame* CreateFrameFor(nsIContent* aContent);
+
+  // nsIFormControlFrame
+  virtual nsresult GetFormProperty(nsIAtom* aName, nsAString& aValue) const; 
+
 
   NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,

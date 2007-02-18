@@ -57,7 +57,6 @@
 #include "nsIFocusController.h"
 #include "nsILinkHandler.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsISupportsArray.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIFrame.h"
@@ -3666,29 +3665,7 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent,
   // XXX sXBL/XBL2 issue! Owner or current document?
   nsIDocument *document = GetOwnerDoc();
   if (document) {
-    nsIPresShell *shell = document->GetShellAt(0);
-    nsCOMPtr<nsISupportsArray> anonymousElements;
-    if (shell) {
-      shell->GetAnonymousContentFor(NS_CONST_CAST(nsGenericElement*, this),
-                                    getter_AddRefs(anonymousElements));
-    }
-
-    if (anonymousElements) {
-      anonymousElements->Count(&length);
-      if (length > 0) {
-        for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
-        fputs("native-anonymous-children<\n", out);
-
-        for (i = 0; i < length; ++i) {
-          nsCOMPtr<nsIDOMNode> node = do_QueryElementAt(anonymousElements, i);
-          nsCOMPtr<nsIContent> child = do_QueryInterface(node);
-          child->List(out, aIndent + 1);
-        }
-
-        for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
-        fputs(">\n", out);
-      }
-    }
+    // Note: not listing nsIAnonymousContentCreator-created content...
 
     nsBindingManager* bindingManager = document->BindingManager();
     nsCOMPtr<nsIDOMNodeList> anonymousChildren;

@@ -239,8 +239,9 @@ nsContainerFrame::RemoveFrame(nsIAtom*  aListName,
   return NS_OK;
 }
 
-static void
-CleanupGeneratedContentIn(nsIContent* aRealContent, nsIFrame* aRoot) {
+void
+nsContainerFrame::CleanupGeneratedContentIn(nsIContent* aRealContent,
+                                            nsIFrame* aRoot) {
   nsIAtom* frameList = nsnull;
   PRInt32 listIndex = 0;
   do {
@@ -253,7 +254,7 @@ CleanupGeneratedContentIn(nsIContent* aRealContent, nsIFrame* aRoot) {
         aRoot->GetPresContext()->EventStateManager()->ContentRemoved(content);
         content->UnbindFromTree();
       }
-      ::CleanupGeneratedContentIn(aRealContent, child);
+      CleanupGeneratedContentIn(aRealContent, child);
       child = child->GetNextSibling();
     }
     frameList = aRoot->GetAdditionalChildListName(listIndex++);
@@ -266,16 +267,6 @@ nsContainerFrame::Destroy()
   // Prevent event dispatch during destruction
   if (HasView()) {
     GetView()->SetClientData(nsnull);
-  }
-
-  if (mState & NS_FRAME_GENERATED_CONTENT) {
-    // Make sure all the content nodes for the generated content inside
-    // this frame know it's going away.
-    // XXXbz would this be better done via a global structure in
-    // nsCSSFrameConstructor that could key off of
-    // GeneratedContentFrameRemoved or something?  The problem is that
-    // our kids are gone by the time that's called.
-    ::CleanupGeneratedContentIn(mContent, this);
   }
 
   // Delete the primary child list

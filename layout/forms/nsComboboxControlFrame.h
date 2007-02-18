@@ -96,15 +96,12 @@ public:
   nsComboboxControlFrame(nsStyleContext* aContext);
   ~nsComboboxControlFrame();
 
-   // nsISupports
+  // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-  
-   // nsIAnonymousContentCreator
-  NS_IMETHOD CreateAnonymousContent(nsPresContext* aPresContext,
-                                    nsISupportsArray& aChildList);
-  NS_IMETHOD CreateFrameFor(nsPresContext*   aPresContext,
-                            nsIContent *      aContent,
-                            nsIFrame**        aFrame);
+
+  // nsIAnonymousContentCreator
+  virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements);
+  virtual nsIFrame* CreateFrameFor(nsIContent* aContent);
 
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
@@ -227,6 +224,7 @@ protected:
 
   nsFrameList              mPopupFrames;             // additional named child list
   nsCOMPtr<nsIContent>     mDisplayContent;          // Anonymous content used to display the current selection
+  nsCOMPtr<nsIContent>     mButtonContent;           // Anonymous content for the button
   nsIFrame*                mDisplayFrame;            // frame to display selection
   nsIFrame*                mButtonFrame;             // button frame
   nsIFrame*                mDropdownFrame;           // dropdown list frame

@@ -64,7 +64,6 @@
 #include "nsIEventListenerManager.h"
 #include "nsIDOMNode.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsISupportsArray.h"
 #include "nsISelectControlFrame.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -969,9 +968,8 @@ nsComboboxControlFrame::GetContentInsertionFrame() {
   return mInRedisplayText ? mDisplayFrame : mDropdownFrame->GetContentInsertionFrame();
 }
 
-NS_IMETHODIMP
-nsComboboxControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
-                                               nsISupportsArray& aChildList)
+nsresult
+nsComboboxControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 {
   // The frames used to display the combo box and the button used to popup the dropdown list
   // are created through anonymous content. The dropdown list is not created through anonymous
@@ -993,44 +991,48 @@ nsComboboxControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 
   nsNodeInfoManager *nimgr = mContent->NodeInfo()->NodeInfoManager();
 
-  nsCOMPtr<nsIContent> labelContent;
-  NS_NewTextNode(getter_AddRefs(labelContent), nimgr);
+  NS_NewTextNode(getter_AddRefs(mDisplayContent), nimgr);
+  if (!mDisplayContent)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-  if (labelContent) {
-    // set the value of the text node
-    mDisplayContent.swap(labelContent);
-    mDisplayedIndex = mListControlFrame->GetSelectedIndex();
-    if (mDisplayedIndex != -1) {
-      mListControlFrame->GetOptionText(mDisplayedIndex, mDisplayedOptionText);
-    }
-    ActuallyDisplayText(PR_FALSE);
-
-    nsCOMPtr<nsINodeInfo> nodeInfo;
-    nimgr->GetNodeInfo(nsGkAtoms::input, nsnull, kNameSpaceID_None,
-                       getter_AddRefs(nodeInfo));
-
-    aChildList.AppendElement(mDisplayContent);
-
-    // create button which drops the list down
-    nsCOMPtr<nsIContent> btnContent;
-    nsresult rv = NS_NewHTMLElement(getter_AddRefs(btnContent), nodeInfo);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // make someone to listen to the button. If its pressed by someone like Accessibility
-    // then open or close the combo box.
-    nsCOMPtr<nsIDOMEventReceiver> eventReceiver(do_QueryInterface(btnContent));
-    if (eventReceiver) {
-       mButtonListener = new nsComboButtonListener(this);
-       eventReceiver->AddEventListenerByIID(mButtonListener, NS_GET_IID(nsIDOMMouseListener));
-    }
-
-    btnContent->SetAttr(kNameSpaceID_None, nsGkAtoms::type, NS_LITERAL_STRING("button"), PR_FALSE);
-    // Set tabindex="-1" so that the button is not tabbable
-    btnContent->SetAttr(kNameSpaceID_None, nsGkAtoms::tabindex,
-                        NS_LITERAL_STRING("-1"), PR_FALSE);
-
-    aChildList.AppendElement(btnContent);
+  // set the value of the text node
+  mDisplayedIndex = mListControlFrame->GetSelectedIndex();
+  if (mDisplayedIndex != -1) {
+    mListControlFrame->GetOptionText(mDisplayedIndex, mDisplayedOptionText);
   }
+  ActuallyDisplayText(PR_FALSE);
+
+  if (!aElements.AppendElement(mDisplayContent))
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nimgr->GetNodeInfo(nsGkAtoms::input, nsnull, kNameSpaceID_None,
+                     getter_AddRefs(nodeInfo));
+
+  // create button which drops the list down
+  NS_NewHTMLElement(getter_AddRefs(mButtonContent), nodeInfo);
+  if (!mButtonContent)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // make someone to listen to the button. If its pressed by someone like Accessibility
+  // then open or close the combo box.
+  nsCOMPtr<nsIDOMEventReceiver> eventReceiver(do_QueryInterface(mButtonContent));
+  if (eventReceiver) {
+    mButtonListener = new nsComboButtonListener(this);
+    if (!mButtonListener)
+      return NS_ERROR_OUT_OF_MEMORY;
+    eventReceiver->AddEventListenerByIID(mButtonListener,
+                                         NS_GET_IID(nsIDOMMouseListener));
+  }
+
+  mButtonContent->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
+                          NS_LITERAL_STRING("button"), PR_FALSE);
+  // Set tabindex="-1" so that the button is not tabbable
+  mButtonContent->SetAttr(kNameSpaceID_None, nsGkAtoms::tabindex,
+                          NS_LITERAL_STRING("-1"), PR_FALSE);
+
+  if (!aElements.AppendElement(mButtonContent))
+    return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
 }
@@ -1109,25 +1111,20 @@ NS_NewComboboxDisplayFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
   return it;
 }
 
-NS_IMETHODIMP 
-nsComboboxControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
-                                       nsIContent *      aContent,
-                                       nsIFrame**        aFrame) 
+nsIFrame*
+nsComboboxControlFrame::CreateFrameFor(nsIContent*      aContent)
 { 
-  NS_PRECONDITION(nsnull != aFrame, "null ptr");
   NS_PRECONDITION(nsnull != aContent, "null ptr");
-  NS_PRECONDITION(nsnull != aPresContext, "null ptr");
 
-  *aFrame = nsnull;
   NS_ASSERTION(mDisplayContent, "mDisplayContent can't be null!");
 
   if (mDisplayContent != aContent) {
     // We only handle the frames for mDisplayContent here
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
   
   // Get PresShell
-  nsIPresShell *shell = aPresContext->PresShell();
+  nsIPresShell *shell = GetPresContext()->PresShell();
   nsStyleSet *styleSet = shell->StyleSet();
 
   // create the style contexts for the anonymous block frame and text frame
@@ -1137,32 +1134,32 @@ nsComboboxControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
                           nsCSSAnonBoxes::mozDisplayComboboxControlFrame,
                           mStyleContext);
   if (NS_UNLIKELY(!styleContext)) {
-    return NS_ERROR_NULL_POINTER;
+    return nsnull;
   }
 
   nsRefPtr<nsStyleContext> textStyleContext;
   textStyleContext = styleSet->ResolveStyleForNonElement(styleContext);
   if (NS_UNLIKELY(!textStyleContext)) {
-    return NS_ERROR_NULL_POINTER;
+    return nsnull;
   }
 
   // Start by by creating our anonymous block frame
   mDisplayFrame = NS_NewComboboxDisplayFrame(shell, styleContext, this);
   if (NS_UNLIKELY(!mDisplayFrame)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    return nsnull;
   }
 
   nsresult rv = mDisplayFrame->Init(mContent, this, nsnull);
   if (NS_FAILED(rv)) {
     mDisplayFrame->Destroy();
     mDisplayFrame = nsnull;
-    return rv;
+    return nsnull;
   }
 
   // Create a text frame and put it inside the block frame
   mTextFrame = NS_NewTextFrame(shell, textStyleContext);
   if (NS_UNLIKELY(!mTextFrame)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    return nsnull;
   }
 
   // initialize the text frame
@@ -1172,12 +1169,11 @@ nsComboboxControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
     mDisplayFrame = nsnull;
     mTextFrame->Destroy();
     mTextFrame = nsnull;
-    return rv;
+    return nsnull;
   }
 
   mDisplayFrame->SetInitialChildList(nsnull, mTextFrame);
-  *aFrame = mDisplayFrame;
-  return NS_OK;
+  return mDisplayFrame;
 }
 
 void
@@ -1195,7 +1191,7 @@ nsComboboxControlFrame::Destroy()
       nsIView* view = listFrame->GetView();
       NS_ASSERTION(view, "nsComboboxControlFrame view is null");
       if (view) {
-    	  nsIWidget* widget = view->GetWidget();
+        nsIWidget* widget = view->GetWidget();
         if (widget)
           widget->CaptureRollupEvents((nsIRollupListener *)this, PR_FALSE, PR_TRUE);
       }
@@ -1204,7 +1200,8 @@ nsComboboxControlFrame::Destroy()
 
   // Cleanup frames in popup child list
   mPopupFrames.DestroyFrames();
-
+  nsContentUtils::DestroyAnonymousContent(&mDisplayContent);
+  nsContentUtils::DestroyAnonymousContent(&mButtonContent);
   nsAreaFrame::Destroy();
 }
 

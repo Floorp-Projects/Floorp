@@ -510,18 +510,6 @@ nsBindingManager::ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocum
   SetContentListFor(aContent, nsnull);
   SetAnonymousNodesFor(aContent, nsnull);
 
-  PRUint32 count = aOldDocument->GetNumberOfShells();
-
-  for (PRUint32 i = 0; i < count; ++i) {
-    nsIPresShell *shell = aOldDocument->GetShellAt(i);
-    NS_ASSERTION(shell != nsnull, "Zoiks! nsIDocument::GetShellAt() broke");
-
-    // now clear out the anonymous content for this node in the old presshell.
-    // XXXbz this really doesn't belong here, somehow... either that, or we
-    // need to better define what sort of bindings we're managing.
-    shell->SetAnonymousContentFor(aContent, nsnull);
-  }
-
   return NS_OK;
 }
 

@@ -269,6 +269,14 @@ protected:
                     nsIFrame*       aFromChild,
                     nsIFrame*       aPrevSibling);
 
+  /**
+   * A helper for frames corresponding to generated content, which is used to
+   * remove the generated content from the tree when the :before or :after
+   * frame is destroyed.
+   */
+  static void CleanupGeneratedContentIn(nsIContent* aRealContent,
+                                        nsIFrame* aRoot);
+
   nsFrameList mFrames;
 };
 

@@ -49,7 +49,6 @@
 #include "nsIFormControl.h"
 #include "nsINameSpaceManager.h"
 #include "nsCOMPtr.h"
-#include "nsISupportsArray.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
@@ -119,20 +118,21 @@ nsFileControlFrame::Destroy()
     nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mBrowse));
     receiver->RemoveEventListenerByIID(mMouseListener,
                                        NS_GET_IID(nsIDOMMouseListener));
+    nsContentUtils::DestroyAnonymousContent(&mBrowse);
   }
   if (mTextContent) {
     nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mTextContent));
     receiver->RemoveEventListenerByIID(mMouseListener,
                                        NS_GET_IID(nsIDOMMouseListener));
+    nsContentUtils::DestroyAnonymousContent(&mTextContent);
   }
 
   mMouseListener->ForgetFrame();
   nsAreaFrame::Destroy();
 }
 
-NS_IMETHODIMP
-nsFileControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
-                                           nsISupportsArray& aChildList)
+nsresult
+nsFileControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 {
   // Get the NodeInfoManager and tag necessary to create input elements
   nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
@@ -143,65 +143,63 @@ nsFileControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
                                       getter_AddRefs(nodeInfo));
 
   // Create the text content
-  nsCOMPtr<nsIContent> content;
-  nsresult rv = NS_NewHTMLElement(getter_AddRefs(content), nodeInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_NewHTMLElement(getter_AddRefs(mTextContent), nodeInfo);
+  if (!mTextContent)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-  content.swap(mTextContent);
+  mTextContent->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
+                        NS_LITERAL_STRING("text"), PR_FALSE);
 
-  if (mTextContent) {
-    mTextContent->SetAttr(kNameSpaceID_None, nsGkAtoms::type, NS_LITERAL_STRING("text"), PR_FALSE);
-
-    nsCOMPtr<nsIDOMHTMLInputElement> textControl = do_QueryInterface(mTextContent);
-    if (textControl) {
-      nsCOMPtr<nsIFileControlElement> fileControl = do_QueryInterface(mContent);
-      if (fileControl) {
-        // Initialize value when we create the content in case the value was set
-        // before we got here
-        nsAutoString value;
-        fileControl->GetFileName(value);
-        textControl->SetValue(value);
-      }
-      
-      textControl->SetTabIndex(-1);
-      textControl->SetDisabled(PR_TRUE);
-      textControl->SetReadOnly(PR_TRUE);
+  nsCOMPtr<nsIDOMHTMLInputElement> textControl = do_QueryInterface(mTextContent);
+  if (textControl) {
+    nsCOMPtr<nsIFileControlElement> fileControl = do_QueryInterface(mContent);
+    if (fileControl) {
+      // Initialize value when we create the content in case the value was set
+      // before we got here
+      nsAutoString value;
+      fileControl->GetFileName(value);
+      textControl->SetValue(value);
     }
 
-    aChildList.AppendElement(mTextContent);
-
-    // register as an event listener of the textbox to open file dialog on mouse click
-    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mTextContent));
-    receiver->AddEventListenerByIID(mMouseListener,
-                                    NS_GET_IID(nsIDOMMouseListener));
+    textControl->SetTabIndex(-1);
+    textControl->SetDisabled(PR_TRUE);
+    textControl->SetReadOnly(PR_TRUE);
   }
+
+  if (!aElements.AppendElement(mTextContent))
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // register as an event listener of the textbox to open file dialog on mouse click
+  nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mTextContent);
+  receiver->AddEventListenerByIID(mMouseListener,
+                                  NS_GET_IID(nsIDOMMouseListener));
 
   // Create the browse button
-  rv = NS_NewHTMLElement(getter_AddRefs(content), nodeInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_NewHTMLElement(getter_AddRefs(mBrowse), nodeInfo);
+  if (!mBrowse)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-  mBrowse = do_QueryInterface(content);
-  if (mBrowse) {
-    mBrowse->SetAttr(kNameSpaceID_None, nsGkAtoms::type, NS_LITERAL_STRING("button"), PR_FALSE);
-    nsCOMPtr<nsIDOMHTMLInputElement> fileContent = do_QueryInterface(mContent);
-    nsCOMPtr<nsIDOMHTMLInputElement> browseControl = do_QueryInterface(mBrowse);
-    if (fileContent && browseControl) {
-      PRInt32 tabIndex;
-      nsAutoString accessKey;
-      
-      fileContent->GetAccessKey(accessKey);
-      browseControl->SetAccessKey(accessKey);
-      fileContent->GetTabIndex(&tabIndex);
-      browseControl->SetTabIndex(tabIndex);
-    }
+  mBrowse->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
+                   NS_LITERAL_STRING("button"), PR_FALSE);
+  nsCOMPtr<nsIDOMHTMLInputElement> fileContent = do_QueryInterface(mContent);
+  nsCOMPtr<nsIDOMHTMLInputElement> browseControl = do_QueryInterface(mBrowse);
+  if (fileContent && browseControl) {
+    PRInt32 tabIndex;
+    nsAutoString accessKey;
 
-    aChildList.AppendElement(mBrowse);
-
-    // register as an event listener of the button to open file dialog on mouse click
-    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mBrowse));
-    receiver->AddEventListenerByIID(mMouseListener,
-                                    NS_GET_IID(nsIDOMMouseListener));
+    fileContent->GetAccessKey(accessKey);
+    browseControl->SetAccessKey(accessKey);
+    fileContent->GetTabIndex(&tabIndex);
+    browseControl->SetTabIndex(tabIndex);
   }
+
+  if (!aElements.AppendElement(mBrowse))
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // register as an event listener of the button to open file dialog on mouse click
+  receiver = do_QueryInterface(mBrowse);
+  receiver->AddEventListenerByIID(mMouseListener,
+                                  NS_GET_IID(nsIDOMMouseListener));
 
   SyncAttr(kNameSpaceID_None, nsGkAtoms::size,     SYNC_TEXT);
   SyncAttr(kNameSpaceID_None, nsGkAtoms::disabled, SYNC_BOTH);

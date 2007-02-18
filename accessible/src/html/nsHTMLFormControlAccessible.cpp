@@ -49,7 +49,6 @@
 #include "nsIFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsISelectionController.h"
-#include "nsISupportsArray.h"
 #include "nsITextControlFrame.h"
 
 // --- checkbox -----
@@ -201,15 +200,14 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetName(nsAString& aName)
       GetHTMLName(name, PR_FALSE);
     }
     if (name.IsEmpty()) {
-      // Use anonymous text child of button if nothing else works.
-      // This is necessary for submit, reset and browse buttons.
-      nsCOMPtr<nsIPresShell> shell(GetPresShell());
-      NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
-      nsCOMPtr<nsISupportsArray> anonymousElements;
-      shell->GetAnonymousContentFor(content, getter_AddRefs(anonymousElements));
-      nsCOMPtr<nsIDOMNode> domNode(do_QueryElementAt(anonymousElements, 0));
-      if (domNode) {
-        domNode->GetNodeValue(name);
+      // Use the button's (default) label if nothing else works
+      nsIFrame* frame = GetFrame();
+      if (frame) {
+        nsIFormControlFrame* fcFrame;
+        frame->QueryInterface(NS_GET_IID(nsIFormControlFrame),
+                              (void**) &fcFrame);
+        if (fcFrame)
+          fcFrame->GetFormProperty(nsAccessibilityAtoms::defaultLabel, name);
       }
     }
     if (name.IsEmpty() &&

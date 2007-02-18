@@ -67,7 +67,6 @@
 class nsIDOMAttr;
 class nsIDOMEventListener;
 class nsIFrame;
-class nsISupportsArray;
 class nsIDOMNamedNodeMap;
 class nsDOMCSSDeclaration;
 class nsIDOMCSSStyleDeclaration;

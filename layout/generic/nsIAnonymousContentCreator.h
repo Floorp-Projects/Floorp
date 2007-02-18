@@ -45,45 +45,56 @@
 
 #include "nsISupports.h"
 #include "nsIContent.h"
-#include "nsCOMPtr.h"
 
 class nsPresContext;
-class nsISupportsArray;
-class nsIAtom;
 class nsIFrame;
 
 
-// {41a69e00-2d6d-11d3-b033-a1357139787c}
-#define NS_IANONYMOUS_CONTENT_CREATOR_IID { 0x41a69e00, 0x2d6d, 0x11d3, { 0xb0, 0x33, 0xa1, 0x35, 0x71, 0x39, 0x78, 0x7c } }
+// {7568a516-3831-4db4-88a7-a42578acc136}
+#define NS_IANONYMOUS_CONTENT_CREATOR_IID \
+{ 0x7568a516, 0x3831, 0x4db4, \
+  { 0x88, 0xa7, 0xa4, 0x25, 0x78, 0xac, 0xc1, 0x36 } }
 
 
 /**
  * Any source for anonymous content can implement this interface to provide it.
  * HTML frames like nsFileControlFrame currently use this as well as XUL frames
- * like nsScrollbarFrame & nsSliderFrame.
+ * like nsScrollbarFrame and nsSliderFrame.
+ *
+ * @see nsCSSFrameConstructor
  */
 class nsIAnonymousContentCreator : public nsISupports {
 public:
-     NS_DECLARE_STATIC_IID_ACCESSOR(NS_IANONYMOUS_CONTENT_CREATOR_IID)
-     NS_IMETHOD CreateAnonymousContent(nsPresContext* aPresContext,
-                                       nsISupportsArray& aAnonymousItems)=0;
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IANONYMOUS_CONTENT_CREATOR_IID)
 
-     // If the creator doesn't want to create a special frame or frame hierarchy
-     // then it should null out aFrame and return NS_ERROR_FAILURE
-     NS_IMETHOD CreateFrameFor(nsPresContext*   aPresContext,
-                               nsIContent *      aContent,
-                               nsIFrame**        aFrame)=0;
+  /**
+   * Creates "native" anonymous content and adds the created content to
+   * the aElements array. None of the returned elements can be nsnull.
+   *
+   * @note The returned elements are owned by this object. This object is
+   *       responsible for calling UnbindFromTree on the elements it returned
+   *       from CreateAnonymousContent when appropriate (i.e. before releasing
+   *       them).
+   */
+  virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements)=0;
 
-     // This gets called after the frames for the anonymous content have been
-     // created and added to the frame tree. By default it does nothing.
-     virtual void PostCreateFrames() {}
+  /**
+   * Implementations can override this method to create special frames for the
+   * anonymous content returned from CreateAnonymousContent.
+   * By default this method returns nsnull, which means the default frame
+   * is created.
+   */
+  virtual nsIFrame* CreateFrameFor(nsIContent* aContent) { return nsnull; }
+
+  /**
+   * This gets called after the frames for the anonymous content have been
+   * created and added to the frame tree. By default it does nothing.
+   */
+  virtual void PostCreateFrames() {}
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIAnonymousContentCreator,
                               NS_IANONYMOUS_CONTENT_CREATOR_IID)
-
-nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNameSpaceId, nsCOMPtr<nsIContent>& aNewNode);
-
 
 #endif
 

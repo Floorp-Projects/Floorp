@@ -51,7 +51,6 @@
 #include "nsGfxScrollFrame.h"
 #include "nsGkAtoms.h"
 #include "nsINameSpaceManager.h"
-#include "nsISupportsArray.h"
 #include "nsIDocument.h"
 #include "nsIFontMetrics.h"
 #include "nsIDocumentObserver.h"
@@ -73,6 +72,7 @@
 #include "nsDocShellCID.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsEventDispatcher.h"
+#include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
@@ -144,12 +144,10 @@ nsIBox* nsHTMLScrollFrame::GetScrollbarBox(PRBool aVertical)
   return aVertical ? mInner.mVScrollbarBox : mInner.mHScrollbarBox;
 }
 
-NS_IMETHODIMP
-nsHTMLScrollFrame::CreateAnonymousContent(nsPresContext* aPresContext,
-                                         nsISupportsArray& aAnonymousChildren)
+nsresult
+nsHTMLScrollFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 {
-  mInner.CreateAnonymousContent(aAnonymousChildren);
-  return NS_OK;
+  return mInner.CreateAnonymousContent(aElements);
 }
 
 void
@@ -161,6 +159,7 @@ nsHTMLScrollFrame::Destroy()
   NS_ASSERTION(view, "unexpected null pointer");
   if (view)
     view->RemoveScrollPositionListener(&mInner);
+  mInner.Destroy();
   nsHTMLContainerFrame::Destroy();
 }
 
@@ -950,12 +949,10 @@ nsIBox* nsXULScrollFrame::GetScrollbarBox(PRBool aVertical)
   return aVertical ? mInner.mVScrollbarBox : mInner.mHScrollbarBox;
 }
 
-NS_IMETHODIMP
-nsXULScrollFrame::CreateAnonymousContent(nsPresContext* aPresContext,
-                                         nsISupportsArray& aAnonymousChildren)
+nsresult
+nsXULScrollFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 {
-  mInner.CreateAnonymousContent(aAnonymousChildren);
-  return NS_OK;
+  return mInner.CreateAnonymousContent(aElements);
 }
 
 void
@@ -967,6 +964,7 @@ nsXULScrollFrame::Destroy()
   NS_ASSERTION(view, "unexpected null pointer");
   if (view)
     view->RemoveScrollPositionListener(&mInner);
+  mInner.Destroy();
   nsBoxFrame::Destroy();
 }
 
@@ -1623,8 +1621,8 @@ nsGfxScrollFrameInner::ReloadChildFrames()
   }
 }
   
-void
-nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
+nsresult
+nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 {
   nsPresContext* presContext = mOuter->GetPresContext();
   nsIFrame* parent = mOuter->GetParent();
@@ -1636,7 +1634,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildr
     // we must be the scrollbars for the print preview window
     if (!(mIsRoot && presContext->HasPaginatedScrolling())) {
       mNeverHasVerticalScrollbar = mNeverHasHorizontalScrollbar = PR_TRUE;
-      return;
+      return NS_OK;
     }
   }
 
@@ -1660,9 +1658,10 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildr
   ScrollbarStyles styles = scrollable->GetScrollbarStyles();
   PRBool canHaveHorizontal = styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN;
   PRBool canHaveVertical = styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN;
-  if (!canHaveHorizontal && !canHaveVertical)
+  if (!canHaveHorizontal && !canHaveVertical) {
     // Nothing to do.
-    return;
+    return NS_OK;
+  }
 
   // The anonymous <div> used by <inputs> never gets scrollbars.
   nsCOMPtr<nsITextControlFrame> textFrame(do_QueryInterface(parent));
@@ -1671,38 +1670,59 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildr
     nsCOMPtr<nsIDOMHTMLTextAreaElement> textAreaElement(do_QueryInterface(parent->GetContent()));
     if (!textAreaElement) {
       mNeverHasVerticalScrollbar = mNeverHasHorizontalScrollbar = PR_TRUE;
-      return;
+      return NS_OK;
     }
   }
+
+  nsresult rv;
 
   nsNodeInfoManager *nodeInfoManager =
     presContext->Document()->NodeInfoManager();
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollbar, nsnull,
-                               kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
-
-  nsCOMPtr<nsIContent> content;
+  rv = nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollbar, nsnull,
+                                    kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (canHaveHorizontal) {
-    NS_NewElement(getter_AddRefs(content), kNameSpaceID_XUL, nodeInfo);
-    content->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
-                     NS_LITERAL_STRING("horizontal"), PR_FALSE);
-    aAnonymousChildren.AppendElement(content);
+    rv = NS_NewElement(getter_AddRefs(mHScrollbarContent),
+                       kNameSpaceID_XUL, nodeInfo);
+    NS_ENSURE_SUCCESS(rv, rv);
+    mHScrollbarContent->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
+                                NS_LITERAL_STRING("horizontal"), PR_FALSE);
+    if (!aElements.AppendElement(mHScrollbarContent))
+      return NS_ERROR_OUT_OF_MEMORY;
   }
 
   if (canHaveVertical) {
-    NS_NewElement(getter_AddRefs(content), kNameSpaceID_XUL, nodeInfo);
-    content->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
-                     NS_LITERAL_STRING("vertical"), PR_FALSE);
-    aAnonymousChildren.AppendElement(content);
+    rv = NS_NewElement(getter_AddRefs(mVScrollbarContent),
+                       kNameSpaceID_XUL, nodeInfo);
+    NS_ENSURE_SUCCESS(rv, rv);
+    mVScrollbarContent->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
+                                NS_LITERAL_STRING("vertical"), PR_FALSE);
+    if (!aElements.AppendElement(mVScrollbarContent))
+      return NS_ERROR_OUT_OF_MEMORY;
   }
 
   if (canHaveHorizontal && canHaveVertical) {
     nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollcorner, nsnull,
                                  kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
-    NS_NewElement(getter_AddRefs(content), kNameSpaceID_XUL, nodeInfo);
-    aAnonymousChildren.AppendElement(content);
+    rv = NS_NewElement(getter_AddRefs(mScrollCornerContent),
+                       kNameSpaceID_XUL, nodeInfo);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!aElements.AppendElement(mScrollCornerContent))
+      return NS_ERROR_OUT_OF_MEMORY;
   }
+
+  return NS_OK;
+}
+
+void
+nsGfxScrollFrameInner::Destroy()
+{
+  // Unbind any content created in CreateAnonymousContent from the tree
+  nsContentUtils::DestroyAnonymousContent(&mHScrollbarContent);
+  nsContentUtils::DestroyAnonymousContent(&mVScrollbarContent);
+  nsContentUtils::DestroyAnonymousContent(&mScrollCornerContent);
 }
 
 NS_IMETHODIMP

@@ -47,8 +47,6 @@
 #include "nsTextControlFrame.h"
 typedef   nsTextControlFrame nsNewFrame;
 
-class nsISupportsArray;
-
 class nsFileControlFrame : public nsAreaFrame,
                            public nsIFormControlFrame,
                            public nsIAnonymousContentCreator
@@ -92,12 +90,8 @@ public:
 
 
 
-  // from nsIAnonymousContentCreator
-  NS_IMETHOD CreateAnonymousContent(nsPresContext* aPresContext,
-                                    nsISupportsArray& aChildList);
-  NS_IMETHOD CreateFrameFor(nsPresContext*   aPresContext,
-                            nsIContent *      aContent,
-                            nsIFrame**        aFrame) { if (aFrame) *aFrame = nsnull; return NS_ERROR_FAILURE; }
+  // nsIAnonymousContentCreator
+  virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements);
 
 protected:
   class MouseListener;

@@ -1922,7 +1922,6 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
     if (!data.mContent.mImage) {
       // CSS had something specified that couldn't be converted to an
       // image object
-      *aFrame = nsnull;
       return NS_ERROR_FAILURE;
     }
     
@@ -2151,16 +2150,6 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
       // Return the text frame
       *aFrame = textFrame;
     }
-  }
-
-  if (content) {
-    nsCOMPtr<nsISupportsArray> anonymousItems;
-    nsresult rv = NS_NewISupportsArray(getter_AddRefs(anonymousItems));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    anonymousItems->AppendElement(content);
-
-    mPresShell->SetAnonymousContentFor(aContent, anonymousItems);
   }
 
   return NS_OK;
@@ -4913,11 +4902,6 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
       // initialized as absolutely positioned.
       nsIFrame* scrolledFrame = NS_NewSelectsAreaFrame(mPresShell, aStyleContext, flags);
 
-      // make sure any existing anonymous content is cleared out. Gfx scroll frame construction
-      // should reset it to just be the anonymous scrollbars, but we don't want to depend
-      // on that.
-      mPresShell->SetAnonymousContentFor(aContent, nsnull);
-
       InitializeSelectFrame(aState, listFrame, scrolledFrame, aContent,
                             comboboxFrame, listStyle, PR_TRUE, aFrameItems);
 
@@ -5594,95 +5578,66 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
                                              nsFrameItems&            aChildItems)
 {
   nsCOMPtr<nsIAnonymousContentCreator> creator(do_QueryInterface(aParentFrame));
-
   if (!creator)
     return NS_OK;
 
-  nsCOMPtr<nsISupportsArray> anonymousItems;
-  NS_NewISupportsArray(getter_AddRefs(anonymousItems));
+  nsresult rv;
 
-  creator->CreateAnonymousContent(aState.mPresContext, *anonymousItems);
-  
-  PRUint32 count = 0;
-  anonymousItems->Count(&count);
+  nsAutoTArray<nsIContent*, 4> newAnonymousItems;
+  rv = creator->CreateAnonymousContent(newAnonymousItems);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (count) {
-    // save the incoming pseudo frame state, so that we don't end up
-    // with those pseudoframes in aChildItems
-    nsPseudoFrames priorPseudoFrames; 
-    aState.mPseudoFrames.Reset(&priorPseudoFrames);
-
-    // A content element can have multiple sources of anonymous content. For example,
-    // SELECTs have a combobox dropdown button and also scrollbars in the list view.
-    // nsPresShell doesn't handle this very well. It's a problem because a reframe could
-    // cause anonymous content from one source to be destroyed and recreated while
-    // (in theory) leaving the rest intact, but the presshell doesn't have a way of tracking
-    // the anonymous content at that granularity.
-
-    // So what we're doing right now is wiping out existing content whenever we get new
-    // anonymous content, except for the one case we care about where there are multiple
-    // sources (SELECTs). This case is handled by having SELECT initialization tell us
-    // explicitly not to wipe out the scrollbars when the combobox anonymous content is
-    // added.
-    // Note that we only wipe out existing content when there is actual new content.
-    // Otherwise we wipe out scrollbars and other anonymous content when we check sources
-    // that never provide anonymous content (e.g. the call to CreateAnonymousFrames
-    // from ConstructBlock).
-
-    // What we SHOULD do is get rid of the presshell's need to track anonymous
-    // content. It's only used for cleanup as far as I can tell.
-    if (!aAppendToExisting) {
-      mPresShell->SetAnonymousContentFor(aParent, nsnull);
-    }
-
-    // Inform the pres shell about the anonymous content
-    mPresShell->SetAnonymousContentFor(aParent, anonymousItems);
-
-    for (PRUint32 i=0; i < count; i++) {
-      // get our child's content and set its parent to our content
-      nsCOMPtr<nsIContent> content;
-      if (NS_FAILED(anonymousItems->QueryElementAt(i, NS_GET_IID(nsIContent), getter_AddRefs(content))))
-        continue;
-
-      content->SetNativeAnonymous(PR_TRUE);
-
-      nsresult rv;
-      nsIContent* bindingParent = content;
-#ifdef MOZ_SVG
-      // least-surprise CSS binding until we do the SVG specified
-      // cascading rules for <svg:use> - bug 265894
-      if (aParent &&
-          aParent->NodeInfo()->Equals(nsGkAtoms::use, kNameSpaceID_SVG))
-        bindingParent = aParent;
-#endif
-      
-      rv = content->BindToTree(aDocument, aParent, bindingParent, PR_TRUE);
-      if (NS_FAILED(rv)) {
-        content->UnbindFromTree();
-        return rv;
-      }
-
-      nsIFrame * newFrame = nsnull;
-      rv = creator->CreateFrameFor(aState.mPresContext, content, &newFrame);
-      if (NS_SUCCEEDED(rv) && newFrame != nsnull) {
-        aChildItems.AddChild(newFrame);
-      }
-      else {
-        // create the frame and attach it to our frame
-        ConstructFrame(aState, content, aParentFrame, aChildItems);
-      }
-
-      creator->PostCreateFrames();
-    }
-
-    // process the current pseudo frame state
-    if (!aState.mPseudoFrames.IsEmpty()) {
-      ProcessPseudoFrames(aState, aChildItems);
-    }
-
-    // restore the incoming pseudo frame state 
-    aState.mPseudoFrames = priorPseudoFrames;
+  PRUint32 count = newAnonymousItems.Length();
+  if (count == 0) {
+    return NS_OK;
   }
+
+  // save the incoming pseudo frame state, so that we don't end up
+  // with those pseudoframes in aChildItems
+  nsPseudoFrames priorPseudoFrames; 
+  aState.mPseudoFrames.Reset(&priorPseudoFrames);
+
+  for (PRUint32 i=0; i < count; i++) {
+    // get our child's content and set its parent to our content
+    nsIContent* content = newAnonymousItems[i];
+    NS_ASSERTION(content, "null anonymous content?");
+
+    content->SetNativeAnonymous(PR_TRUE);
+
+    nsIContent* bindingParent = content;
+#ifdef MOZ_SVG
+    // least-surprise CSS binding until we do the SVG specified
+    // cascading rules for <svg:use> - bug 265894
+    if (aParent &&
+        aParent->NodeInfo()->Equals(nsGkAtoms::use, kNameSpaceID_SVG))
+      bindingParent = aParent;
+#endif
+
+    rv = content->BindToTree(aDocument, aParent, bindingParent, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      content->UnbindFromTree();
+      return rv;
+    }
+
+    nsIFrame* newFrame = creator->CreateFrameFor(content);
+    if (newFrame) {
+      aChildItems.AddChild(newFrame);
+    }
+    else {
+      // create the frame and attach it to our frame
+      ConstructFrame(aState, content, aParentFrame, aChildItems);
+    }
+
+    creator->PostCreateFrames();
+  }
+
+  // process the current pseudo frame state
+  if (!aState.mPseudoFrames.IsEmpty()) {
+    ProcessPseudoFrames(aState, aChildItems);
+  }
+
+  // restore the incoming pseudo frame state 
+  aState.mPseudoFrames = priorPseudoFrames;
 
   return NS_OK;
 }
