@@ -320,8 +320,6 @@ nsNSSSocketInfo::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
 
   mCallbacks = proxiedCallbacks;
 
-// XXX enable this code when 107491 error page gets approved
-#if 0
   // Are we running within a context that wants external SSL error reporting?
   // We'll look at the presence of a security UI object inside docshell.
   // If the docshell wants the lock icon, you'll get the ssl error pages, too.
@@ -341,7 +339,6 @@ nsNSSSocketInfo::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
       mExternalErrorReporting = PR_TRUE;
     }
   }
-#endif
 
   return NS_OK;
 }
