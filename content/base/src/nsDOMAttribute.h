@@ -107,7 +107,7 @@ public:
   static void Initialize();
   static void Shutdown();
 
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMAttribute)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMAttribute, nsIAttribute)
 
 protected:
   static PRBool sInitialized;

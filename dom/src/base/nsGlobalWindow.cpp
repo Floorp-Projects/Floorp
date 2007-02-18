@@ -691,16 +691,17 @@ NS_INTERFACE_MAP_BEGIN(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageWindow)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-  NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(nsGlobalWindow)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsGlobalWindow)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Window)
 NS_INTERFACE_MAP_END
 
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsGlobalWindow, nsIScriptGlobalObject)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsGlobalWindow, nsIScriptGlobalObject)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsGlobalWindow,
+                                           nsIScriptGlobalObject)
 
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow, nsIScriptGlobalObject)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContext)
 
   // Strange bug: If you uncomment this line you will find that
@@ -756,7 +757,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow, nsIScriptGlobalObject)
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow, nsIScriptGlobalObject)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mContext)
 
   // See comment about traversing mOpener above.

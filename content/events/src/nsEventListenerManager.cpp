@@ -389,13 +389,13 @@ NS_INTERFACE_MAP_BEGIN(nsEventListenerManager)
    NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
    NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
    NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
-   NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(nsEventListenerManager)
+   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsEventListenerManager)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsEventListenerManager, nsIEventListenerManager)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsEventListenerManager, nsIEventListenerManager)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEventListenerManager, nsIEventListenerManager)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEventListenerManager)
   PRInt32 i, count = tmp->mListeners.Count();
   nsListenerStruct *ls;
   for (i = 0; i < count; i++) {
@@ -406,7 +406,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEventListenerManager, nsIEventListener
   }  
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsEventListenerManager, nsIEventListenerManager)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsEventListenerManager)
   tmp->Disconnect();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 

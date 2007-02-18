@@ -439,6 +439,8 @@ public:
 
 #define XUL_ELEMENT_LAZY_STATE_OFFSET NODE_TYPE_SPECIFIC_BITS_OFFSET
 
+class nsScriptEventHandlerOwnerTearoff;
+
 class nsXULElement : public nsGenericElement, public nsIDOMXULElement
 {
 public:
@@ -687,31 +689,8 @@ protected:
     static already_AddRefed<nsXULElement>
     Create(nsXULPrototypeElement* aPrototype, nsINodeInfo *aNodeInfo,
            PRBool aIsScriptable);
-    /**
-     * A tearoff class for nsXULElement to implement nsIScriptEventHandlerOwner.
-     */
-    class nsScriptEventHandlerOwnerTearoff : public nsIScriptEventHandlerOwner
-    {
-    public:
-        nsScriptEventHandlerOwnerTearoff(nsXULElement* aElement)
-        : mElement(aElement) {}
 
-        NS_DECL_ISUPPORTS
-
-        // nsIScriptEventHandlerOwner
-        virtual nsresult CompileEventHandler(nsIScriptContext* aContext,
-                                             nsISupports* aTarget,
-                                             nsIAtom *aName,
-                                             const nsAString& aBody,
-                                             const char* aURL,
-                                             PRUint32 aLineNo,
-                                             nsScriptObjectHolder &aHandler);
-        virtual nsresult GetCompiledEventHandler(nsIAtom *aName,
-                                                 nsScriptObjectHolder &aHandler);
-
-    private:
-        nsRefPtr<nsXULElement> mElement;
-    };
+    friend class nsScriptEventHandlerOwnerTearoff;
 };
 
 #endif // nsXULElement_h__

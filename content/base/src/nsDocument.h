@@ -650,7 +650,7 @@ public:
                                                  nsIDOMNodeList** aResult);
   virtual NS_HIDDEN_(nsresult) FlushSkinBindings();
 
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsDocument)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDocument, nsIDocument)
 
   /**
    * Utility method for getElementsByClassName

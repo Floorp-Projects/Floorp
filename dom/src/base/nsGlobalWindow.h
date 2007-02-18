@@ -403,7 +403,8 @@ public:
 
   friend class WindowStateHolder;
 
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsGlobalWindow)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsGlobalWindow,
+                                           nsIScriptGlobalObject)
 
 protected:
   // Object Management

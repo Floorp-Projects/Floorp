@@ -426,18 +426,19 @@ static PRBool IsChromeURI(nsIURI* aURI)
 
 /* Implementation file */
 
-NS_IMPL_CYCLE_COLLECTION_2_AMBIGUOUS(nsXBLDocumentInfo, nsIXBLDocumentInfo, mDocument, mGlobalObject)
+NS_IMPL_CYCLE_COLLECTION_2(nsXBLDocumentInfo, mDocument, mGlobalObject)
 
 NS_INTERFACE_MAP_BEGIN(nsXBLDocumentInfo)
   NS_INTERFACE_MAP_ENTRY(nsIXBLDocumentInfo)
   NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObjectOwner)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXBLDocumentInfo)
-  NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(nsXBLDocumentInfo)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsXBLDocumentInfo)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXBLDocumentInfo, nsIXBLDocumentInfo)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsXBLDocumentInfo, nsIXBLDocumentInfo)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsXBLDocumentInfo,
+                                           nsIXBLDocumentInfo)
 
 nsXBLDocumentInfo::nsXBLDocumentInfo(nsIDocument* aDocument)
   : mDocument(aDocument),

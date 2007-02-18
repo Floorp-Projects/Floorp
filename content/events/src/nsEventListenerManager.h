@@ -149,7 +149,8 @@ public:
 
   static void Shutdown();
 
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsEventListenerManager)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsEventListenerManager,
+                                           nsIEventListenerManager)
 
 protected:
   nsresult HandleEventSubType(nsListenerStruct* aListenerStruct,

@@ -68,7 +68,8 @@ public:
   // nsIScriptGlobalObjectOwner methods
   virtual nsIScriptGlobalObject* GetScriptGlobalObject();
 
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsXBLDocumentInfo)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXBLDocumentInfo,
+                                           nsIXBLDocumentInfo)
 
 private:
   nsCOMPtr<nsIDocument> mDocument;

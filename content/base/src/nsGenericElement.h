@@ -115,9 +115,11 @@ private:
 class nsNode3Tearoff : public nsIDOM3Node
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   NS_DECL_NSIDOM3NODE
+
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsNode3Tearoff)
 
   nsNode3Tearoff(nsIContent *aContent) : mContent(aContent)
   {
@@ -202,10 +204,12 @@ public:
   }
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   // nsISupportsWeakReference
   NS_DECL_NSISUPPORTSWEAKREFERENCE
+
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsNodeSupportsWeakRefTearoff)
 
 private:
   nsCOMPtr<nsINode> mNode;
@@ -263,7 +267,7 @@ public:
   static void Shutdown();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   // nsIDOMEventTarget
   NS_DECL_NSIDOMEVENTTARGET
@@ -283,6 +287,9 @@ public:
 
   // nsIDOMNSEventTarget
   NS_DECL_NSIDOMNSEVENTTARGET
+
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMEventRTTearoff,
+                                           nsIDOMEventTarget)
 
 private:
   /**

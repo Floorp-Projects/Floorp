@@ -174,33 +174,38 @@ nsGenericHTMLElement::Init(nsINodeInfo *aNodeInfo)
 class nsGenericHTMLElementTearoff : public nsIDOMNSHTMLElement,
                                     public nsIDOMElementCSSInlineStyle
 {
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   nsGenericHTMLElementTearoff(nsGenericHTMLElement *aElement)
     : mElement(aElement)
   {
-    NS_ADDREF(mElement);
   }
 
   virtual ~nsGenericHTMLElementTearoff()
   {
-    NS_RELEASE(mElement);
   }
 
   NS_FORWARD_NSIDOMNSHTMLELEMENT(mElement->)
   NS_FORWARD_NSIDOMELEMENTCSSINLINESTYLE(mElement->)
 
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsGenericHTMLElementTearoff,
+                                           nsIDOMNSHTMLElement)
+
 private:
-  nsGenericHTMLElement *mElement;
+  nsCOMPtr<nsGenericHTMLElement> mElement;
 };
 
+NS_IMPL_CYCLE_COLLECTION_1(nsGenericHTMLElementTearoff, mElement)
 
-NS_IMPL_ADDREF(nsGenericHTMLElementTearoff)
-NS_IMPL_RELEASE(nsGenericHTMLElementTearoff)
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsGenericHTMLElementTearoff,
+                                          nsIDOMNSHTMLElement)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsGenericHTMLElementTearoff,
+                                           nsIDOMNSHTMLElement)
 
 NS_INTERFACE_MAP_BEGIN(nsGenericHTMLElementTearoff)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMElementCSSInlineStyle)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsGenericHTMLElementTearoff)
 NS_INTERFACE_MAP_END_AGGREGATED(mElement)
 
 
