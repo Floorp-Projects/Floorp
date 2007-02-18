@@ -52,7 +52,6 @@
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
 
-class nsISupportsArray;
 class nsIEditor;
 class nsISelectionController;
 class nsTextInputSelectionImpl;
@@ -110,12 +109,9 @@ public:
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 
-  // from nsIAnonymousContentCreator
-  NS_IMETHOD CreateAnonymousContent(nsPresContext* aPresContext,
-                                    nsISupportsArray& aChildList);
-  NS_IMETHOD CreateFrameFor(nsPresContext*   aPresContext,
-                               nsIContent *      aContent,
-                               nsIFrame**        aFrame);
+  // nsIAnonymousContentCreator
+  virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements);
+  virtual nsIFrame* CreateFrameFor(nsIContent* aContent);
   virtual void PostCreateFrames();
 
   // Utility methods to set current widget state
@@ -274,6 +270,8 @@ private:
   nsresult SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd);
   
 private:
+  nsCOMPtr<nsIContent> mAnonymousDiv;
+
   nsCOMPtr<nsIEditor> mEditor;
 
   // these packed bools could instead use the high order bits on mState, saving 4 bytes 

@@ -89,6 +89,25 @@ nsInlineFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return nsInlineFrameSuper::QueryInterface(aIID, aInstancePtr);
 }
 
+void
+nsInlineFrame::Destroy()
+{
+  if (mState & NS_FRAME_GENERATED_CONTENT) {
+    // Make sure all the content nodes for the generated content inside
+    // this frame know it's going away.
+    // This is duplicated in nsBlockFrame::Destroy.
+    // See also nsCSSFrameConstructor::CreateGeneratedContentFrame which
+    // created this frame.
+
+    // XXXbz would this be better done via a global structure in
+    // nsCSSFrameConstructor that could key off of
+    // GeneratedContentFrameRemoved or something?  The problem is that
+    // our kids are gone by the time that's called.
+    nsContainerFrame::CleanupGeneratedContentIn(mContent, this);
+  }
+  nsInlineFrameSuper::Destroy();
+}
+
 #ifdef DEBUG
 NS_IMETHODIMP
 nsInlineFrame::GetFrameName(nsAString& aResult) const

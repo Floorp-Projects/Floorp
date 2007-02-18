@@ -898,10 +898,6 @@ public:
 
   NS_IMETHOD CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState, PRBool aLeavingPage);
 
-  NS_IMETHOD SetAnonymousContentFor(nsIContent* aContent, nsISupportsArray* aAnonymousElements);
-  NS_IMETHOD GetAnonymousContentFor(nsIContent* aContent, nsISupportsArray** aAnonymousElements);
-  NS_IMETHOD ReleaseAnonymousContent();
-
   NS_IMETHOD IsPaintingSuppressed(PRBool* aResult);
   NS_IMETHOD UnsuppressPainting();
   
@@ -1127,7 +1123,6 @@ protected:
   PRPackedBool mDocumentLoading;
   PRPackedBool mDocumentOnloadBlocked;
   PRPackedBool mIsReflowing;
-  PRPackedBool mIsReleasingAnonymousContent;
 
   PRPackedBool mIgnoreFrameDestruction;
   PRPackedBool mHaveShutDown;
@@ -1141,7 +1136,6 @@ protected:
   nsCOMPtr<nsIContent> mCurrentEventContent;
   nsVoidArray mCurrentEventFrameStack;
   nsCOMArray<nsIContent> mCurrentEventContentStack;
-  nsSupportsHashtable* mAnonymousContentTable;
 
 #ifdef NS_DEBUG
   nsRect mCurrentTargetRect;
@@ -1403,7 +1397,6 @@ PresShell::PresShell()
 #endif
   mSelectionFlags = nsISelectionDisplay::DISPLAY_TEXT | nsISelectionDisplay::DISPLAY_IMAGES;
   mIsThemeSupportDisabled = PR_FALSE;
-  mIsReleasingAnonymousContent = PR_FALSE;
 
   new (this) nsFrameManager();
 }
@@ -1626,9 +1619,6 @@ PresShell::Destroy()
   
   // release our pref style sheet, if we have one still
   ClearPreferenceStyleRules();
-
-  // free our table of anonymous content
-  ReleaseAnonymousContent();
 
   mIsDestroying = PR_TRUE;
 
@@ -4337,107 +4327,6 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, PRBool aLeavingPa
 
   FrameManager()->CaptureFrameState(rootFrame, historyState);  
  
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PresShell::SetAnonymousContentFor(nsIContent* aContent, nsISupportsArray* aAnonymousElements)
-{
-  NS_PRECONDITION(aContent != nsnull, "null ptr");
-  if (! aContent)
-    return NS_ERROR_NULL_POINTER;
-
-  if (! mAnonymousContentTable) {
-    mAnonymousContentTable = new nsSupportsHashtable;
-    if (! mAnonymousContentTable)
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsISupportsKey key(aContent);
-
-  nsCOMPtr<nsISupportsArray> oldAnonymousElements =
-    getter_AddRefs(NS_STATIC_CAST(nsISupportsArray*, mAnonymousContentTable->Get(&key)));
-
-  if (!oldAnonymousElements) {
-    if (aAnonymousElements) {
-      mAnonymousContentTable->Put(&key, aAnonymousElements);
-    }
-  } else {
-    if (aAnonymousElements) {
-      oldAnonymousElements->AppendElements(aAnonymousElements);
-    } else {
-      // If we're trying to clear anonymous content for an element that
-      // already had anonymous content, then we need to be sure to clean
-      // up after the old content. (This can happen, for example, when a
-      // reframe occurs.)
-      PRUint32 count;
-      oldAnonymousElements->Count(&count);
-      
-      while (PRInt32(--count) >= 0) {
-        nsCOMPtr<nsIContent> content = do_QueryElementAt(oldAnonymousElements,
-                                                         count);
-        NS_ASSERTION(content != nsnull, "not an nsIContent");
-        if (! content)
-          continue;
-        
-        content->UnbindFromTree();
-      }
-
-      if (!mIsReleasingAnonymousContent)
-        mAnonymousContentTable->Remove(&key);
-    }
-  }
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-PresShell::GetAnonymousContentFor(nsIContent* aContent, nsISupportsArray** aAnonymousElements)
-{
-  if (! mAnonymousContentTable) {
-    *aAnonymousElements = nsnull;
-    return NS_OK;
-  }
-
-  nsISupportsKey key(aContent);
-  *aAnonymousElements =
-    NS_REINTERPRET_CAST(nsISupportsArray*, mAnonymousContentTable->Get(&key)); // addrefs
-
-  return NS_OK;
-}
-
-
-static PRBool PR_CALLBACK
-ClearDocumentEnumerator(nsHashKey* aKey, void* aData, void* aClosure)
-{
-  nsISupportsArray* anonymousElements =
-    NS_STATIC_CAST(nsISupportsArray*, aData);
-
-  PRUint32 count;
-  anonymousElements->Count(&count);
-  while (PRInt32(--count) >= 0) {
-    nsCOMPtr<nsIContent> content = do_QueryElementAt(anonymousElements, count);
-    NS_ASSERTION(content != nsnull, "not an nsIContent");
-    if (! content)
-      continue;
-
-    content->UnbindFromTree();
-  }
-
-  return PR_TRUE;
-}
-
-
-NS_IMETHODIMP
-PresShell::ReleaseAnonymousContent()
-{
-  if (mAnonymousContentTable) {
-    mIsReleasingAnonymousContent = PR_TRUE;
-    mAnonymousContentTable->Enumerate(ClearDocumentEnumerator);
-    delete mAnonymousContentTable;
-    mAnonymousContentTable = nsnull;
-  }
   return NS_OK;
 }
 

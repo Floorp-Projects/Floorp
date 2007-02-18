@@ -5405,19 +5405,6 @@ nsDocument::Destroy()
     // So we're just creating an inconsistent DOM for now and hoping.  :(
     mChildren.ChildAt(indx)->UnbindFromTree();
   }
-
-  // Propagate the out-of-band notification to each PresShell's anonymous
-  // content as well. This ensures that there aren't any accidental references
-  // left in anonymous content keeping the document alive. (While not strictly
-  // necessary -- the PresShell owns us -- it's tidy.)
-  for (count = GetNumberOfShells() - 1; count >= 0; --count) {
-    nsCOMPtr<nsIPresShell> shell = GetShellAt(count);
-    if (!shell)
-      continue;
-
-    shell->ReleaseAnonymousContent();
-  }
-
   mLayoutHistoryState = nsnull;
 
   nsContentList::OnDocumentDestroy(this);

@@ -98,10 +98,10 @@ class nsIScrollableFrame;
 
 typedef short SelectionType;
 
-// 2b3dc6f2-1364-4535-9a23-2b728ebbd051
+// 6995eb7c-ffe8-4da2-ae32-c2117a740f0e
 #define NS_IPRESSHELL_IID     \
-{ 0x2b3dc6f2, 0x1364, 0x4535, \
- { 0x9a, 0x23, 0x2b, 0x72, 0x8e, 0xbb, 0xd0, 0x51 } }
+{ 0x6995eb7c, 0xffe8, 0x4da2, \
+ { 0xae, 0x32, 0xc2, 0x11, 0x7a, 0x74, 0x0f, 0x0e } }
 
 // Constants uses for ScrollFrameIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -557,36 +557,6 @@ public:
    * @param aIsReflowLocked returns PR_TRUE if reflow is locked, PR_FALSE otherwise
    */
   NS_IMETHOD IsReflowLocked(PRBool* aIsLocked) = 0;  
-
-  /**
-   * Store the nsIAnonymousContentCreator-generated anonymous
-   * content that's associated with an element. The new anonymous content
-   * is added to whatever anonymous content might already be associated with
-   * the element.
-   * @param aContent the element with which the anonymous
-   *   content is to be associated with
-   * @param aAnonymousElements an array of nsIContent
-   *   objects, or null to indicate that any anonymous
-   *   content should be dissociated from the aContent
-   */
-  NS_IMETHOD SetAnonymousContentFor(nsIContent* aContent, nsISupportsArray* aAnonymousElements) = 0;
-
-  /**
-   * Retrieve the nsIAnonymousContentCreator-generated anonymous
-   * content that's associated with an element.
-   * @param aContent the element for which to retrieve the
-   *   associated anonymous content
-   * @param aAnonymousElements an array of nsIContent objects,
-   *   or null to indicate that there are no anonymous elements
-   *   associated with aContent
-   */
-  NS_IMETHOD GetAnonymousContentFor(nsIContent* aContent, nsISupportsArray** aAnonymousElements) = 0;
-
-  /**
-   * Release all nsIAnonymousContentCreator-generated
-   * anonymous content associated with the shell.
-   */
-  NS_IMETHOD ReleaseAnonymousContent() = 0;
 
   /**
    * Called to find out if painting is suppressed for this presshell.  If it is suppressd,

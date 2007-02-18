@@ -3845,31 +3845,14 @@ PRInt32 nsFrame::ContentIndexInContainer(const nsIFrame* aFrame)
   return result;
 }
 
-#ifdef DEBUG_waterson
-
-/**
- * List a single frame to stdout. Meant to be called from gdb.
- */
-void
-DebugListFrame(nsPresContext* aPresContext, nsIFrame* aFrame)
-{
-  ((nsFrame*) aFrame)->List(stdout, 0);
-  printf("\n");
-}
-
 /**
  * List a frame tree to stdout. Meant to be called from gdb.
  */
 void
-DebugListFrameTree(nsPresContext* aPresContext, nsIFrame* aFrame)
+DebugListFrameTree(nsIFrame* aFrame)
 {
-  nsIFrameDebug* fdbg;
-  aFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**) &fdbg);
-  if (fdbg)
-    fdbg->List(stdout, 0);
+  ((nsFrame*)aFrame)->List(stdout, 0);
 }
-
-#endif
 
 
 // Debugging

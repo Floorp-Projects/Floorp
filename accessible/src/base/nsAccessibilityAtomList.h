@@ -179,3 +179,8 @@ ACCESSIBILITY_ATOM(valuenow, "valuenow")    // For DHTML widget values
 ACCESSIBILITY_ATOM(valuemin, "valuemin")
 ACCESSIBILITY_ATOM(valuemax, "valuemax")
 ACCESSIBILITY_ATOM(hidden, "hidden")
+
+  // misc atoms
+// a form property used to obtain the default label
+// of an HTML button from the button frame
+ACCESSIBILITY_ATOM(defaultLabel, "defaultLabel")

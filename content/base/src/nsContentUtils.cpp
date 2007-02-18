@@ -3389,3 +3389,13 @@ nsContentUtils::IsInSameAnonymousTree(nsINode* aNode,
          aContent->GetBindingParent();
  
 }
+
+/* static */
+void
+nsContentUtils::DestroyAnonymousContent(nsCOMPtr<nsIContent>* aContent)
+{
+  if (*aContent) {
+    (*aContent)->UnbindFromTree();
+    *aContent = nsnull;
+  }
+}

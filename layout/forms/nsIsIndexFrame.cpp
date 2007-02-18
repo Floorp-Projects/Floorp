@@ -49,7 +49,6 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsCOMPtr.h"
-#include "nsISupportsArray.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
@@ -97,6 +96,16 @@ nsIsIndexFrame::~nsIsIndexFrame()
     nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mInputContent));
     receiver->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMKeyListener));
   }
+}
+
+void
+nsIsIndexFrame::Destroy()
+{
+  nsContentUtils::DestroyAnonymousContent(&mTextContent);
+  nsContentUtils::DestroyAnonymousContent(&mInputContent);
+  nsContentUtils::DestroyAnonymousContent(&mPreHr);
+  nsContentUtils::DestroyAnonymousContent(&mPostHr);
+  nsAreaFrame::Destroy();
 }
 
 // REVIEW: We don't need to override BuildDisplayList, nsAreaFrame will honour
@@ -174,12 +183,9 @@ nsIsIndexFrame::SetFocus(PRBool aOn, PRBool aRepaint)
   }
 }
 
-NS_IMETHODIMP
-nsIsIndexFrame::CreateAnonymousContent(nsPresContext* aPresContext,
-                                       nsISupportsArray& aChildList)
+nsresult
+nsIsIndexFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 {
-  nsresult result;
-
   // Get the node info manager (used to create hr's and input's)
   nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
   nsNodeInfoManager *nimgr = doc->NodeInfoManager();
@@ -189,48 +195,45 @@ nsIsIndexFrame::CreateAnonymousContent(nsPresContext* aPresContext,
   nimgr->GetNodeInfo(nsGkAtoms::hr, nsnull, kNameSpaceID_None,
                      getter_AddRefs(hrInfo));
 
-  nsCOMPtr<nsIContent> prehr;
-  result = NS_NewHTMLElement(getter_AddRefs(prehr), hrInfo);
-  NS_ENSURE_SUCCESS(result, result);
-
-  result = aChildList.AppendElement(prehr);
+  NS_NewHTMLElement(getter_AddRefs(mPreHr), hrInfo);
+  if (!mPreHr || !aElements.AppendElement(mPreHr))
+    return NS_ERROR_OUT_OF_MEMORY;
 
   // Add a child text content node for the label
-  if (NS_SUCCEEDED(result)) {
-    nsCOMPtr<nsIContent> labelContent;
-    NS_NewTextNode(getter_AddRefs(labelContent), nimgr);
-    if (labelContent) {
-      // set the value of the text node and add it to the child list
-      mTextContent.swap(labelContent);
-      UpdatePromptLabel();
-      aChildList.AppendElement(mTextContent);
-    }
-  }
+  NS_NewTextNode(getter_AddRefs(mTextContent), nimgr);
+  if (!mTextContent)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // set the value of the text node and add it to the child list
+  UpdatePromptLabel();
+  if (!aElements.AppendElement(mTextContent))
+    return NS_ERROR_OUT_OF_MEMORY;
 
   // Create text input field
   nsCOMPtr<nsINodeInfo> inputInfo;
   nimgr->GetNodeInfo(nsGkAtoms::input, nsnull, kNameSpaceID_None,
                      getter_AddRefs(inputInfo));
 
-  result = NS_NewHTMLElement(getter_AddRefs(mInputContent), inputInfo);
-  NS_ENSURE_SUCCESS(result, result);
+  NS_NewHTMLElement(getter_AddRefs(mInputContent), inputInfo);
+  if (!mInputContent)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-  mInputContent->SetAttr(kNameSpaceID_None, nsGkAtoms::type, NS_LITERAL_STRING("text"), PR_FALSE);
+  mInputContent->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
+                         NS_LITERAL_STRING("text"), PR_FALSE);
 
-  aChildList.AppendElement(mInputContent);
+  if (!aElements.AppendElement(mInputContent))
+    return NS_ERROR_OUT_OF_MEMORY;
 
   // Register as an event listener to submit on Enter press
   nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mInputContent));
   receiver->AddEventListenerByIID(this, NS_GET_IID(nsIDOMKeyListener));
 
   // Create an hr
-  nsCOMPtr<nsIContent> posthr;
-  result = NS_NewHTMLElement(getter_AddRefs(posthr), hrInfo);
-  NS_ENSURE_SUCCESS(result, result);
+  NS_NewHTMLElement(getter_AddRefs(mPostHr), hrInfo);
+  if (!mPostHr || !aElements.AppendElement(mPostHr))
+    return NS_ERROR_OUT_OF_MEMORY;
 
-  aChildList.AppendElement(posthr);
-
-  return result;
+  return NS_OK;
 }
 
 // Frames are not refcounted, no need to AddRef
