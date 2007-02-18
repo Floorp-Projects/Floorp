@@ -1852,3 +1852,16 @@ nsLayoutUtils::GetLastLineBaseline(const nsIFrame* aFrame, nscoord* aResult)
   }
   return PR_FALSE;
 }
+
+/* static */ nsIFrame*
+nsLayoutUtils::GetClosestLayer(nsIFrame* aFrame)
+{
+  nsIFrame* layer;
+  for (layer = aFrame; layer; layer = layer->GetParent()) {
+    if (layer->GetStyleDisplay()->IsPositioned() ||
+        (layer->GetParent() &&
+          layer->GetParent()->GetType() == nsGkAtoms::scrollFrame))
+      break;
+  }
+  return layer;
+}

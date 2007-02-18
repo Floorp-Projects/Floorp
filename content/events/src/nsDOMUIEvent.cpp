@@ -45,13 +45,13 @@
 #include "nsIDOMNode.h"
 #include "nsIContent.h"
 #include "nsContentUtils.h"
-#include "nsIViewManager.h"
-#include "nsIScrollableView.h"
 #include "nsIWidget.h"
 #include "nsIPresShell.h"
 #include "nsIEventStateManager.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
+#include "nsIScrollableFrame.h"
+#include "nsIViewManager.h"
 
 nsDOMUIEvent::nsDOMUIEvent(nsPresContext* aPresContext, nsGUIEvent* aEvent)
   : nsDOMEvent(aPresContext, aEvent ?
@@ -256,49 +256,42 @@ nsDOMUIEvent::InitUIEvent(const nsAString & typeArg, PRBool canBubbleArg, PRBool
 }
 
 // ---- nsDOMNSUIEvent implementation -------------------
+nsPoint
+nsDOMUIEvent::GetPagePoint()
+{
+  if (((nsGUIEvent*)mEvent)->widget) {
+    // Native event; calculate using presentation
+    nsPoint pt(0, 0);
+    nsIScrollableFrame* scrollframe =
+            mPresContext->PresShell()->GetRootScrollFrameAsScrollable();
+    if (scrollframe)
+      pt += scrollframe->GetScrollPosition();
+    nsIFrame* rootFrame = mPresContext->PresShell()->GetRootFrame();
+    if (rootFrame)
+      pt += nsLayoutUtils::GetEventCoordinatesRelativeTo(mEvent, rootFrame);
+    return nsPoint(nsPresContext::AppUnitsToIntCSSPixels(pt.x),
+                   nsPresContext::AppUnitsToIntCSSPixels(pt.y));
+  }
+
+  return GetClientPoint();
+}
+
+
 
 NS_IMETHODIMP
 nsDOMUIEvent::GetPageX(PRInt32* aPageX)
 {
   NS_ENSURE_ARG_POINTER(aPageX);
-  nsresult ret = NS_OK;
-  PRInt32 scrollX = 0;
-  nsIScrollableView* view = nsnull;
-
-  GetScrollInfo(&view);
-  if(view) {
-    nscoord xPos, yPos;
-    ret = view->GetScrollPosition(xPos, yPos);
-    scrollX = nsPresContext::AppUnitsToIntCSSPixels(xPos);
-  }
-
-  if (NS_SUCCEEDED(ret)) {
-    *aPageX = GetClientPoint().x + scrollX;
-  }
-
-  return ret;
+  *aPageX = GetPagePoint().x;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMUIEvent::GetPageY(PRInt32* aPageY)
 {
   NS_ENSURE_ARG_POINTER(aPageY);
-  nsresult ret = NS_OK;
-  PRInt32 scrollY = 0;
-  nsIScrollableView* view = nsnull;
-
-  GetScrollInfo(&view);
-  if(view) {
-    nscoord xPos, yPos;
-    ret = view->GetScrollPosition(xPos, yPos);
-    scrollY = nsPresContext::AppUnitsToIntCSSPixels(yPos);
-  }
-
-  if (NS_SUCCEEDED(ret)) {
-    *aPageY = GetClientPoint().y + scrollY;
-  }
-
-  return ret;
+  *aPageY = GetPagePoint().y;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -379,23 +372,16 @@ nsPoint nsDOMUIEvent::GetLayerPoint() {
       !mPresContext) {
     return nsPoint(0,0);
   }
-
-  // XXX This is supposed to be relative to the nearest view?
-  // Any element can have a view, not just positioned ones.
+  // XXX I'm not really sure this is correct; it's my best shot, though
   nsIFrame* targetFrame;
-  nsPoint pt;
   mPresContext->EventStateManager()->GetEventTarget(&targetFrame);
-  while (targetFrame && !targetFrame->HasView()) {
-    targetFrame = targetFrame->GetParent();
-  }
-  if (targetFrame) {
-    pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mEvent, targetFrame);
-    pt.x =  nsPresContext::AppUnitsToIntCSSPixels(pt.x);
-    pt.y =  nsPresContext::AppUnitsToIntCSSPixels(pt.y);
-    return pt;
-  } else {
+  if (!targetFrame)
     return nsPoint(0,0);
-  }
+  nsIFrame* layer = nsLayoutUtils::GetClosestLayer(targetFrame);
+  nsPoint pt(nsLayoutUtils::GetEventCoordinatesRelativeTo(mEvent, layer));
+  pt.x =  nsPresContext::AppUnitsToIntCSSPixels(pt.x);
+  pt.y =  nsPresContext::AppUnitsToIntCSSPixels(pt.y);
+  return pt;
 }
 
 NS_IMETHODIMP
@@ -436,22 +422,6 @@ nsDOMUIEvent::GetPreventDefault(PRBool* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = mEvent && (mEvent->flags & NS_EVENT_FLAG_NO_DEFAULT);
-
-  return NS_OK;
-}
-
-nsresult
-nsDOMUIEvent::GetScrollInfo(nsIScrollableView** aScrollableView)
-{
-  NS_ENSURE_ARG_POINTER(aScrollableView);
-  if (!mPresContext) {
-    *aScrollableView = nsnull;
-    return NS_ERROR_FAILURE;
-  }
-
-  nsIViewManager *vm = mPresContext->GetViewManager();
-  if (vm)
-    return vm->GetRootScrollableView(aScrollableView);
 
   return NS_OK;
 }
