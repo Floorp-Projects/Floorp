@@ -136,6 +136,8 @@
 #include "nsIPromptFactory.h"
 #include "nsIObserver.h"
 #include "nsINestedURI.h"
+#include "nsITransportSecurityInfo.h"
+#include "nsINSSErrorsService.h"
 
 // Editor-related
 #include "nsIEditingSession.h"
@@ -2818,6 +2820,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
     nsAutoString formatStrs[kMaxFormatStrArgs];
     PRUint32 formatStrCount = 0;
     nsresult rv = NS_OK;
+    nsAutoString messageStr;
 
     // Turn the error code into a human readable error message.
     if (NS_ERROR_UNKNOWN_PROTOCOL == aError) {
@@ -2892,6 +2895,27 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
         formatStrCount = 1;
         error.AssignLiteral("netTimeout");
     }
+    else if (NS_ERROR_GET_MODULE(aError) == NS_ERROR_MODULE_SECURITY) {
+        nsCOMPtr<nsISupports> securityInfo;
+        nsCOMPtr<nsITransportSecurityInfo> tsi;
+        if (aFailedChannel)
+            aFailedChannel->GetSecurityInfo(getter_AddRefs(securityInfo));
+        tsi = do_QueryInterface(securityInfo);
+        if (tsi) {
+            // Usually we should have aFailedChannel and get a detailed message
+            tsi->GetErrorMessage(getter_Copies(messageStr));
+        }
+        else {
+            // No channel, let's obtain the generic error message
+            nsCOMPtr<nsINSSErrorsService> nsserr =
+                do_GetService(NS_NSS_ERRORS_SERVICE_CONTRACTID);
+            if (nsserr) {
+                nsserr->GetErrorMessage(aError, messageStr);
+            }
+        }
+        if (!messageStr.IsEmpty())
+            error.AssignLiteral("nssFailure");
+    }
     else {
         // Errors requiring simple formatting
         switch (aError) {
@@ -2946,8 +2970,10 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
     }
 
     // Test if the error needs to be formatted
-    nsAutoString messageStr;
-    if (formatStrCount > 0) {
+    if (!messageStr.IsEmpty()) {
+        // already obtained message
+    }
+    else if (formatStrCount > 0) {
         const PRUnichar *strs[kMaxFormatStrArgs];
         for (PRUint32 i = 0; i < formatStrCount; i++) {
             strs[i] = formatStrs[i].get();
