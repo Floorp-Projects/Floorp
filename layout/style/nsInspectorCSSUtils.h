@@ -62,7 +62,6 @@ public:
     NS_IMETHOD GetRuleNodeParent(nsRuleNode *aNode, nsRuleNode **aParent);
     NS_IMETHOD GetRuleNodeRule(nsRuleNode *aNode, nsIStyleRule **aRule);
     NS_IMETHOD IsRuleNodeRoot(nsRuleNode *aNode, PRBool *aIsRoot);
-    NS_IMETHOD AdjustRectForMargins(nsIFrame* aFrame, nsRect& aRect);
     NS_IMETHOD GetRuleNodeForContent(nsIContent* aContent,
                                      nsRuleNode** aRuleNode);
     NS_IMETHOD GetBindingURLs(nsIDOMElement *aElement, nsIArray **aResult);

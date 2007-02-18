@@ -55,22 +55,10 @@ public:
   static nsIDOMWindowInternal* GetWindowFor(nsIDOMDocument* aDoc);
   static nsIPresShell* GetPresShellFor(nsISupports* aThing);
   static nsIFrame* GetFrameFor(nsIDOMElement* aElement, nsIPresShell* aShell);
-  static already_AddRefed<nsIRenderingContext> GetRenderingContextFor(nsIPresShell* aShell);
   static nsIEventStateManager* GetEventStateManagerFor(nsIDOMElement *aElement);
   static nsBindingManager* GetBindingManagerFor(nsIDOMNode* aNode);
   static nsIDOMDocument* GetSubDocumentFor(nsIDOMNode* aNode);
   static nsIDOMNode* GetContainerFor(nsIDOMDocument* aDoc);
-  /**
-   * This function returns the offset of a frame with respect to the
-   * root view of the aPresContext's viewmanager (for use by
-   * inFlasher::DrawElementOutline and the like)   
-   *
-   * @param aFrame the frame whose offset we want
-   * @param aPresContext the presentation context
-   * @return the offset
-   */
-  static nsPoint GetClientOrigin(nsIFrame* aFrame);
-
 };
 
 #endif // __inLayoutUtils_h__

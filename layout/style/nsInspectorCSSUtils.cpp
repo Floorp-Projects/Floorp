@@ -96,35 +96,6 @@ nsInspectorCSSUtils::IsRuleNodeRoot(nsRuleNode *aNode, PRBool *aIsRoot)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsInspectorCSSUtils::AdjustRectForMargins(nsIFrame* aFrame, nsRect& aRect)
-{
-    const nsStyleMargin* margins = aFrame->GetStyleMargin();
-
-    // adjust coordinates for margins
-    nsStyleCoord coord;
-    if (margins->mMargin.GetTopUnit() == eStyleUnit_Coord) {
-        margins->mMargin.GetTop(coord);
-        aRect.y -= coord.GetCoordValue();
-        aRect.height += coord.GetCoordValue();
-    }
-    if (margins->mMargin.GetLeftUnit() == eStyleUnit_Coord) {
-        margins->mMargin.GetLeft(coord);
-        aRect.x -= coord.GetCoordValue();
-        aRect.width += coord.GetCoordValue();
-    }
-    if (margins->mMargin.GetRightUnit() == eStyleUnit_Coord) {
-        margins->mMargin.GetRight(coord);
-        aRect.width += coord.GetCoordValue();
-    }
-    if (margins->mMargin.GetBottomUnit() == eStyleUnit_Coord) {
-        margins->mMargin.GetBottom(coord);
-        aRect.height += coord.GetCoordValue();
-    }
-
-    return NS_OK;
-}
-
 /* static */
 nsStyleContext*
 nsInspectorCSSUtils::GetStyleContextForFrame(nsIFrame* aFrame)
