@@ -115,6 +115,15 @@
 </ul>
 ">
 
+<!ENTITY nssFailure.title "Secure Connection Failed">
+<!ENTITY nssFailure.longDesc "
+<ul>
+  <li>The page you are trying to view can not be shown because the web site uses an invalid or unsupported security protocol.</li>
+  <li>Please contact the web site owners to inform them of this problem. Alternatively, use the command found in the help menu to report this broken site.</li>
+</ul>
+">
+
+
 <!ENTITY sharedLongDesc "
 <ul>
   <li>The site could be temporarily unavailable or too busy. Try again in a few
