@@ -50,3 +50,6 @@
 
 <!ENTITY unknownSocketType.title "Incorrect Response">
 <!ENTITY unknownSocketType.longDesc "<p>The site responded to the network request in an unexpected way and Camino cannot continue.</p>">
+
+<!ENTITY nssFailure.title "Secure Connection Failed">
+<!ENTITY nssFailure.longDesc "<p>The page you are trying to view can not be shown because the web site uses an invalid or unsupported security protocol.</p><ul><li>Please contact the web site owners to inform them of this problem.</li></ul>">
