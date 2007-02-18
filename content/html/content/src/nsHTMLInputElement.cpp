@@ -81,7 +81,6 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsICheckboxControlFrame.h"
-#include "nsIImageControlFrame.h"
 #include "nsLinebreakConverter.h" //to strip out carriage returns
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
@@ -2284,33 +2283,18 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   // Submit .x, .y for input type=image
   //
   if (mType == NS_FORM_INPUT_IMAGE) {
-    // Go to the frame to find out where it was clicked.  This is the only
-    // case where I can actually see using the frame, because you're talking
-    // about a value--mouse click--that is rightfully the domain of the frame.
-    //
-    // If the frame isn't there or isn't an ImageControlFrame, then we're not
-    // submitting these values no matter *how* nicely you ask.
-    PRInt32 clickedX;
-    PRInt32 clickedY;
-    nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
-
-    nsIImageControlFrame* imageControlFrame = nsnull;
-    if (formControlFrame) {
-      CallQueryInterface(formControlFrame, &imageControlFrame);
-    }
-    
+    // Get a property set by the frame to find out where it was clicked.
     nsAutoString xVal;
     nsAutoString yVal;
-    
-    if (imageControlFrame) {
-      imageControlFrame->GetClickedX(&clickedX);
-      imageControlFrame->GetClickedY(&clickedY);
 
+    nsIntPoint* lastClickedPoint =
+      NS_STATIC_CAST(nsIntPoint*, GetProperty(nsGkAtoms::imageClickedPoint));
+    if (lastClickedPoint) {
       // Convert the values to strings for submission
-      xVal.AppendInt(clickedX);
-      yVal.AppendInt(clickedY);
+      xVal.AppendInt(lastClickedPoint->x);
+      yVal.AppendInt(lastClickedPoint->y);
     }
-    
+
     if (!name.IsEmpty()) {
       aFormSubmission->AddNameValuePair(this,
                                         name + NS_LITERAL_STRING(".x"), xVal);
@@ -2318,7 +2302,7 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                         name + NS_LITERAL_STRING(".y"), yVal);
     } else {
       // If the Image Element has no name, simply return x and y
-      // to Nav and IE compatability.
+      // to Nav and IE compatibility.
       aFormSubmission->AddNameValuePair(this, NS_LITERAL_STRING("x"), xVal);
       aFormSubmission->AddNameValuePair(this, NS_LITERAL_STRING("y"), yVal);
     }

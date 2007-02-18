@@ -186,7 +186,7 @@ protected:
   PRBool IsServerImageMap();
 
   void TranslateEventCoords(const nsPoint& aPoint,
-                            nsPoint& aResult);
+                            nsIntPoint& aResult);
 
   PRBool GetAnchorHREFTargetAndNode(nsIURI** aHref, nsString& aTarget,
                                     nsINode** aNode);
