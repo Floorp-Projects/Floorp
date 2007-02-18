@@ -169,6 +169,15 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant,
     return NS_OK;                                                              \
   }
 
+#define NS_IMPL_CYCLE_COLLECTION_UNLINK_0(_class)                              \
+  NS_IMETHODIMP                                                                \
+  NS_CYCLE_COLLECTION_CLASSNAME(_class)::Unlink(nsISupports *s)                \
+  {                                                                            \
+    NS_ASSERTION(CheckForRightISupports(s),                                    \
+                 "not the nsISupports pointer we expect");                     \
+    return NS_OK;                                                              \
+  }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Helpers for implementing nsCycleCollectionParticipant::Traverse

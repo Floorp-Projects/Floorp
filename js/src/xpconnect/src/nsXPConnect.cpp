@@ -108,18 +108,42 @@ nsXPConnect::nsXPConnect()
 }
 
 typedef nsBaseHashtable<nsClearingVoidPtrHashKey, PRUint32, PRUint32> PointerSet;
+#ifndef XPCONNECT_STANDALONE
+typedef nsBaseHashtable<nsClearingVoidPtrHashKey, nsISupports*, nsISupports*> ScopeSet;
+#endif
 
 struct JSObjectRefcounts 
 {
     PointerSet mRefCounts;
-    JSObjectRefcounts()
+#ifndef XPCONNECT_STANDALONE
+    ScopeSet mScopes;
+#endif
+    PRBool mMarkEnded;
+    JSObjectRefcounts() : mMarkEnded(PR_FALSE)
     {
         mRefCounts.Init();
+#ifndef XPCONNECT_STANDALONE
+        mScopes.Init();
+#endif
     }
 
     void Clear()
     {
         mRefCounts.Clear();
+#ifndef XPCONNECT_STANDALONE
+        mScopes.Clear();
+#endif
+    }
+
+    void MarkStart()
+    {
+        Clear();
+        mMarkEnded = PR_FALSE;
+    }
+
+    void MarkEnd()
+    {
+        mMarkEnded = PR_TRUE;
     }
 
     void Ref(void *obj, uint8 flags)
@@ -430,6 +454,23 @@ nsXPConnect::GetInfoForName(const char * name, nsIInterfaceInfo** info)
     return FindInfo(NameTester, name, mInterfaceInfoManager, info);
 }
 
+static JSGCCallback gOldJSGCCallback;
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+XPCCycleGCCallback(JSContext *cx, JSGCStatus status)
+{
+    // Chain to old GCCallback first, we want to get all the mark notifications
+    // before recording the end of the mark phase.
+    JSBool ok = gOldJSGCCallback ? gOldJSGCCallback(cx, status) : JS_TRUE;
+
+    // Record the end of a mark phase. If we get more mark notifications then
+    // the GC has restarted and we'll need to clear the refcounts first.
+    if(status == JSGC_MARK_END)
+        nsXPConnect::GetXPConnect()->GetJSObjectRefcounts()->MarkEnd();
+
+    return ok;
+}
+
 void XPCMarkNotification(void *thing, uint8 flags, void *closure)
 {
     uint8 ty = flags & GCF_TYPEMASK;
@@ -439,6 +480,12 @@ void XPCMarkNotification(void *thing, uint8 flags, void *closure)
         return;
 
     JSObjectRefcounts* jsr = NS_STATIC_CAST(JSObjectRefcounts*, closure);
+    // We're marking after a mark phase ended, so the GC restarted itself and
+    // we want to clear the refcounts first.
+    // XXX With GC_MARK_DEBUG defined we end up too many times in
+    //     XPCMarkNotification, even while taking JSGC_MARK_END into account.
+    if(jsr->mMarkEnded)
+        jsr->MarkStart();
     jsr->Ref(thing, flags);
 }
 
@@ -448,16 +495,31 @@ nsXPConnect::BeginCycleCollection()
     if (!mObjRefcounts)
         mObjRefcounts = new JSObjectRefcounts;
 
-    mObjRefcounts->Clear();
+    mObjRefcounts->MarkStart();
     XPCCallContext cx(NATIVE_CALLER);
     if (cx.IsValid()) {
+        gOldJSGCCallback = JS_SetGCCallback(cx, XPCCycleGCCallback);
         JS_SetGCThingCallback(cx, XPCMarkNotification, mObjRefcounts);
         JS_GC(cx);
         JS_SetGCThingCallback(cx, nsnull, nsnull);
+        JS_SetGCCallback(cx, gOldJSGCCallback);
+        gOldJSGCCallback = nsnull;
+
+#ifndef XPCONNECT_STANDALONE
+        XPCWrappedNativeScope::TraverseScopes(cx);
+#endif
     }
 
     return NS_OK;
 }
+
+#ifndef XPCONNECT_STANDALONE
+void
+nsXPConnect::RecordTraversal(void *p, nsISupports *s)
+{
+    mObjRefcounts->mScopes.Put(p, s);
+}
+#endif
 
 nsresult 
 nsXPConnect::FinishCycleCollection()
@@ -524,23 +586,90 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     if (!mObjRefcounts->Get(p, refcount))
         return NS_OK;
 
-    cb.DescribeNode(refcount, sizeof(JSObject), "JS Object");
+    JSObject *obj = NS_STATIC_CAST(JSObject*, p);
+    JSClass* clazz = OBJ_GET_CLASS(cx, obj);
 
+#ifdef DEBUG
+    char name[72];
+    if(XPCNativeWrapper::IsNativeWrapperClass(clazz))
+    {
+        XPCWrappedNative* wn = XPCNativeWrapper::GetWrappedNative(cx, obj);
+        XPCNativeScriptableInfo* si = wn ? wn->GetScriptableInfo() : nsnull;
+        if(si)
+            snprintf(name, sizeof(name), "XPCNativeWrapper (%s)",
+                     si->GetJSClass()->name);
+        else
+            snprintf(name, sizeof(name), "XPCNativeWrapper");
+    }
+    else if(obj)
+    {
+        XPCNativeScriptableInfo* si = nsnull;
+        if(IS_PROTO_CLASS(clazz))
+        {
+            XPCWrappedNativeProto* p =
+                (XPCWrappedNativeProto*) JS_GetPrivate(cx, obj);
+            si = p->GetScriptableInfo();
+        }
+        if(si)
+            snprintf(name, sizeof(name), "JS Object (%s - %s)", clazz->name,
+                     si->GetJSClass()->name);
+        else
+            snprintf(name, sizeof(name), "JS Object (%s)", clazz->name);
+    }
+    else
+    {
+        snprintf(name, sizeof(name), "JS Object");
+    }
+    cb.DescribeNode(refcount, sizeof(JSObject), name);
+#else
+    cb.DescribeNode(refcount, sizeof(JSObject), "JS Object");
+#endif
     if (!p)
         return NS_OK;    
-    
-    JSObject *obj = NS_STATIC_CAST(JSObject*, p);
 
-    if (OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_HAS_PRIVATE
-        && OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) 
+    if(XPCNativeWrapper::IsNativeWrapperClass(clazz))
+    {
+        // XPCNativeWrapper keeps its wrapped native alive (see XPC_NW_Mark).
+        XPCWrappedNative* wn = XPCNativeWrapper::GetWrappedNative(cx, obj);
+        if(wn)
+            cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
+                               wn->GetFlatJSObject());
+    }
+    else if(clazz == &XPC_WN_Tearoff_JSClass)
+    {
+        // A tearoff holds a strong reference to its native object
+        // (see XPCWrappedNative::FlatJSObjectFinalized). Its XPCWrappedNative
+        // will be held alive through the parent of the JSObject of the tearoff.
+        XPCWrappedNativeTearOff *to =
+            (XPCWrappedNativeTearOff*) JS_GetPrivate(cx, obj);
+        cb.NoteXPCOMChild(to->GetNative());
+    }
+    else if(IS_PROTO_CLASS(clazz))
+    {
+        // See XPC_WN_Shared_Proto_Mark.
+        XPCWrappedNativeProto* p =
+            (XPCWrappedNativeProto*) JS_GetPrivate(cx, obj);
+        if(p)
+            // Mark scope.
+            p->GetScope()->Traverse(cb);
+    }
+    else if(clazz->flags & JSCLASS_HAS_PRIVATE &&
+            clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS)
     {
         void *v = JS_GetPrivate(cx, obj);
         if (v)
             cb.NoteXPCOMChild(NS_STATIC_CAST(nsISupports*, v));
     }
+
+    JSObject *parent = OBJ_GET_PARENT(cx, obj);
+    if(parent)
+        cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, parent);
     
-    for (uint32 i = JSSLOT_START(OBJ_GET_CLASS(cx, obj)); 
-         i < STOBJ_NSLOTS(obj); ++i) 
+    JSObject *proto = OBJ_GET_PROTO(cx, obj);
+    if(proto)
+        cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, proto);
+
+    for(uint32 i = JSSLOT_START(clazz); i < STOBJ_NSLOTS(obj); ++i) 
     {
         jsval val = STOBJ_GET_SLOT(obj, i);
         if (!JSVAL_IS_NULL(val) 
@@ -551,7 +680,17 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
                 cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, child);
         }
     }
-    
+
+#ifndef XPCONNECT_STANDALONE
+    if(clazz->flags & JSCLASS_IS_GLOBAL)
+    {
+        nsISupports *principal = nsnull;
+        mObjRefcounts->mScopes.Get(obj, &principal);
+        if(principal)
+            cb.NoteXPCOMChild(principal);
+    }
+#endif
+
     return NS_OK;
 }
 
