@@ -76,11 +76,6 @@ PRLogModuleInfo * kWidgetPrintingLogMod = PR_NewLogModule("printing-widget");
 #define PR_PL(_p1)
 #endif
 
-//-----------------------------------------------
-// Global Data
-//-----------------------------------------------
-static HWND gParentWnd = NULL;
-
 //----------------------------------------------------------------------------------
 // The printer data is shared between the PrinterEnumerator and the nsDeviceContextSpecWin
 // The PrinterEnumerator creates the printer info
@@ -423,8 +418,6 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
 {
   mPrintSettings = aPrintSettings;
 
-  gParentWnd = (HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW);
-
   nsresult rv = NS_ERROR_FAILURE;
   if (aPrintSettings) {
     nsCOMPtr<nsIPrintSettingsWin> psWin(do_QueryInterface(aPrintSettings));
@@ -732,7 +725,7 @@ nsDeviceContextSpecWin::GetDataFromPrinter(const PRUnichar * aName, nsIPrintSett
     DWORD       dwNeeded, dwRet;
 
     // Allocate a buffer of the correct size.
-    dwNeeded = ::DocumentProperties(gParentWnd, hPrinter,
+    dwNeeded = ::DocumentProperties(NULL, hPrinter,
                                     NS_CONST_CAST(char*, nativeName.get()),
                                     NULL, NULL, 0);
 
@@ -740,14 +733,14 @@ nsDeviceContextSpecWin::GetDataFromPrinter(const PRUnichar * aName, nsIPrintSett
     if (!pDevMode) return NS_ERROR_FAILURE;
 
     // Get the default DevMode for the printer and modify it for our needs.
-    dwRet = DocumentProperties(gParentWnd, hPrinter, 
+    dwRet = DocumentProperties(NULL, hPrinter, 
                                NS_CONST_CAST(char*, nativeName.get()),
                                pDevMode, NULL, DM_OUT_BUFFER);
 
     if (dwRet == IDOK && aPS) {
       SetupDevModeFromSettings(pDevMode, aPS);
       // Sets back the changes we made to the DevMode into the Printer Driver
-      dwRet = ::DocumentProperties(gParentWnd, hPrinter,
+      dwRet = ::DocumentProperties(NULL, hPrinter,
                                    NS_CONST_CAST(char*, nativeName.get()),
                                    pDevMode, pDevMode,
                                    DM_IN_BUFFER | DM_OUT_BUFFER);
@@ -994,93 +987,8 @@ nsPrinterEnumeratorWin::EnumeratePrinters(PRUint32* aCount, PRUnichar*** aResult
 // Display the AdvancedDocumentProperties for the selected Printer
 NS_IMETHODIMP nsPrinterEnumeratorWin::DisplayPropertiesDlg(const PRUnichar *aPrinterName, nsIPrintSettings* aPrintSettings)
 {
-#ifdef WINCE
-  return NS_ERROR_NOT_IMPLEMENTED;
-#else
-  nsresult rv = NS_ERROR_FAILURE;
-  HANDLE hPrinter = NULL;
-  nsCAutoString nativeName;
-  NS_CopyUnicodeToNative(nsDependentString(aPrinterName), nativeName);
-  BOOL status = ::OpenPrinter(NS_CONST_CAST(char*, nativeName.get()),
-                              &hPrinter, NULL);
-  if (status) {
-
-    LPDEVMODE   pDevMode;
-    LPDEVMODE   pNewDevMode;
-    DWORD       dwNeeded, dwRet;
-
-    // Get the buffer correct buffer size
-    dwNeeded = ::DocumentProperties(gParentWnd, hPrinter,
-                                   NS_CONST_CAST(char*, nativeName.get()),
-                                   NULL, NULL, 0);
-
-    // Allocate a buffer of the correct size.
-    pNewDevMode = (LPDEVMODE)::HeapAlloc (::GetProcessHeap(), HEAP_ZERO_MEMORY, dwNeeded);
-    if (!pNewDevMode) return NS_ERROR_FAILURE;
-
-    dwRet = ::DocumentProperties(gParentWnd, hPrinter,
-                                 NS_CONST_CAST(char*, nativeName.get()),
-                                 pNewDevMode, NULL, DM_OUT_BUFFER);
-
-    if (dwRet != IDOK) {
-       ::HeapFree(::GetProcessHeap(), 0, pNewDevMode);
-       ::ClosePrinter(hPrinter);
-       PR_PL(("***** nsDeviceContextSpecWin::DisplayPropertiesDlg - Couldn't get DocumentProperties (pNewDevMode) for [%s]\n", nativeName.get()));
-       return NS_ERROR_FAILURE;
-    }
-
-    pDevMode = (LPDEVMODE)::HeapAlloc (::GetProcessHeap(), HEAP_ZERO_MEMORY, dwNeeded);
-    if (!pDevMode) return NS_ERROR_FAILURE;
-
-    dwRet = ::DocumentProperties(gParentWnd, hPrinter,
-                                 NS_CONST_CAST(char*, nativeName.get()),
-                                 pDevMode, NULL, DM_OUT_BUFFER);
-
-    if (dwRet != IDOK) {
-       ::HeapFree(::GetProcessHeap(), 0, pDevMode);
-       ::HeapFree(::GetProcessHeap(), 0, pNewDevMode);
-       ::ClosePrinter(hPrinter);
-       PR_PL(("***** nsDeviceContextSpecWin::DisplayPropertiesDlg - Couldn't get DocumentProperties (pDevMode) for [%s]\n", nativeName.get()));
-       return NS_ERROR_FAILURE;
-    }
-
-
-    if (pDevMode && pNewDevMode) {
-      SetupDevModeFromSettings(pDevMode, aPrintSettings);
-
-      // Display the Dialog and get the new DevMode
-#if 0 // need more to do more work to see why AdvancedDocumentProperties fails 
-      // when cancel is pressed
-      LONG stat = ::AdvancedDocumentProperties(gParentWnd, hPrinter,
-                                               NS_CONST_CAST(char*, nativeName.get()),
-                                               pNewDevMode, pDevMode);
-#else
-      LONG stat = ::DocumentProperties(gParentWnd, hPrinter,
-                                       NS_CONST_CAST(char*, nativeName.get()),
-                                       pDevMode, NULL,
-                                       DM_IN_PROMPT|DM_OUT_BUFFER);
-#endif
-      if (stat == IDOK) {
-        // Now set the print options from the native Page Setup
-        nsDeviceContextSpecWin::SetPrintSettingsFromDevMode(aPrintSettings, pDevMode);
-      }
-      ::HeapFree(::GetProcessHeap(), 0, pDevMode);
-      ::HeapFree(::GetProcessHeap(), 0, pNewDevMode);
-      rv = NS_OK;
-    } else {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    ::ClosePrinter(hPrinter);
-
-  } else {
-    rv = NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND;
-    PR_PL(("***** nsDeviceContextSpecWin::DisplayPropertiesDlg - Couldn't open printer [%s]\n", nativeName.get()));
-    DISPLAY_LAST_ERROR
-  }
-
-  return rv;
-#endif //WINCE
+  // Implementation removed because it is unused
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------------------
