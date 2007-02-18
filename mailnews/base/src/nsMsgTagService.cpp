@@ -228,8 +228,15 @@ NS_IMETHODIMP nsMsgTagService::GetTopKey(const char * keyList, nsACString & _ret
     key = keyArray[i];
     if (key->IsEmpty())
       continue;
+
+    // ignore unknown keywords
+    nsAutoString tagValue;
+    nsresult rv = GetTagForKey(*key, tagValue);
+    if (NS_FAILED(rv) || tagValue.IsEmpty())
+      continue;
+
     // new top key, judged by ordinal order?
-    nsresult rv = GetOrdinalForKey(*key, ordinal);
+    rv = GetOrdinalForKey(*key, ordinal);
     if (NS_FAILED(rv) || ordinal.IsEmpty())
       ordinal = *key;
     if ((ordinal < topOrdinal) || topOrdinal.IsEmpty())
@@ -281,9 +288,9 @@ NS_IMETHODIMP nsMsgTagService::AddTag(const nsAString  &tag,
   while (PR_TRUE)
   {
     nsAutoString tagValue;
-    GetUnicharPref(prefName.get(), tagValue);
-    if (tagValue.IsEmpty() || tagValue.Equals(tag))
-      return AddTagForKey(key, tag, color, ordinal);
+    nsresult rv = GetTagForKey(prefName, tagValue);
+    if (NS_FAILED(rv) || tagValue.IsEmpty() || tagValue.Equals(tag))
+      return AddTagForKey(prefName, tag, color, ordinal);
     prefName.Append('A');
   }
   NS_ASSERTION(PR_FALSE, "can't get here");
