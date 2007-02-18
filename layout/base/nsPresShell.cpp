@@ -3562,9 +3562,23 @@ PresShell::CreateRenderingContext(nsIFrame *aFrame,
   }
 
   nsIWidget* widget = nsnull;
-  // Never pass a widget to a print rendering context
-  if (mPresContext->IsScreen())
-    widget = aFrame->GetWindow();
+  nsPoint offset(0,0);
+  if (mPresContext->IsScreen()) {
+    // Get the widget to create the rendering context for and calculate
+    // the offset from the frame to it.  (Calculating the offset is important
+    // if the frame isn't the root frame.)
+    nsPoint viewOffset;
+    nsIView* view = aFrame->GetClosestView(&viewOffset);
+    nsPoint widgetOffset;
+    widget = view->GetNearestWidget(&widgetOffset);
+    offset = viewOffset + widgetOffset;
+  } else {
+    nsIFrame* pageFrame = nsLayoutUtils::GetPageFrame(aFrame);
+    // This might not always come up with a frame, i.e. during reflow;
+    // that's fine, because the translation doesn't matter during reflow.
+    if (pageFrame)
+      offset = aFrame->GetOffsetTo(pageFrame);
+  }
 
   nsresult rv;
   nsIRenderingContext* result = nsnull;
@@ -3576,6 +3590,8 @@ PresShell::CreateRenderingContext(nsIFrame *aFrame,
     rv = deviceContext->CreateRenderingContext(result);
   }
   *aResult = result;
+
+  result->Translate(offset.x, offset.y);
 
   return rv;
 }

@@ -40,9 +40,6 @@
 #include "inLayoutUtils.h"
 
 #include "nsIServiceManager.h"
-#include "nsIViewManager.h" 
-#include "nsIDeviceContext.h"
-#include "nsIWidget.h"
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsReadableUtils.h"
@@ -58,7 +55,6 @@ inFlasher::inFlasher() :
   mThickness(0),
   mInvert(PR_FALSE)
 {
-  mCSSUtils = do_GetService(kInspectorCSSUtilsCID);
 }
 
 inFlasher::~inFlasher()
@@ -145,17 +141,7 @@ inFlasher::RepaintElement(nsIDOMElement* aElement)
   nsIFrame* frame = inLayoutUtils::GetFrameFor(aElement, presShell);
   if (!frame) return NS_OK;
 
-  nsIFrame* parentWithView = frame->GetAncestorWithViewExternal();
-  if (parentWithView) {
-    nsIView* view = parentWithView->GetViewExternal();
-    if (view) {
-      nsIViewManager* viewManager = view->GetViewManager();
-      if (viewManager) {
-        nsRect rect = parentWithView->GetRect();
-        viewManager->UpdateView(view, rect, NS_VMREFRESH_NO_SYNC);
-      }
-    }
-  }
+  frame->Invalidate(frame->GetRect());
 
   return NS_OK;
 }
@@ -168,18 +154,14 @@ inFlasher::DrawElementOutline(nsIDOMElement* aElement)
   nsCOMPtr<nsIPresShell> presShell = inLayoutUtils::GetPresShellFor(window);
   if (!presShell) return NS_OK;
 
-  PRBool isFirstFrame = PR_TRUE;
-  nsCOMPtr<nsIRenderingContext> rcontext;
   nsIFrame* frame = inLayoutUtils::GetFrameFor(aElement, presShell);
+
+  PRBool isFirstFrame = PR_TRUE;
+
   while (frame) {
-    if (!rcontext) {
-      presShell->CreateRenderingContext(frame, getter_AddRefs(rcontext));
-    }
-    // get view bounds in case this frame is being scrolled
-    nsRect rect = frame->GetRect();
-    nsPoint origin = inLayoutUtils::GetClientOrigin(frame);
-    rect.MoveTo(origin);
-    mCSSUtils->AdjustRectForMargins(frame, rect);
+    nsCOMPtr<nsIRenderingContext> rcontext;
+    presShell->CreateRenderingContext(frame, getter_AddRefs(rcontext));
+    nsRect rect(nsPoint(0,0), frame->GetSize());
 
     if (mInvert) {
       rcontext->InvertRect(rect);
