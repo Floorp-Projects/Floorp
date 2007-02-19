@@ -160,6 +160,7 @@ fails == bugs/368020-4.html bugs/368020-4-ref.html # bug 368085
 == bugs/370586-1.xhtml bugs/370586-1-ref.xhtml
 == bugs/370629-1.html bugs/370629-1-ref.html
 == bugs/370629-2.html bugs/370629-2-ref.html
+== bugs/370692-1.xhtml bugs/370692-1-ref.xhtml
 
 # object/
 == object/no-attrs.html object/no-attrs-ref.html
