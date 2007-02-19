@@ -222,6 +222,8 @@
 #endif
 #ifdef XP_OS2
 #include "nsCP869ToUnicode.h"
+#include "nsCP1125ToUnicode.h"
+#include "nsCP1131ToUnicode.h"
 #endif
 #include "nsUnicodeToCP850.h"
 #include "nsUnicodeToCP852.h"
@@ -235,6 +237,8 @@
 #endif
 #ifdef XP_OS2
 #include "nsUnicodeToCP869.h"
+#include "nsUnicodeToCP1125.h"
+#include "nsUnicodeToCP1131.h"
 #endif
 
 // ucvja
@@ -410,6 +414,8 @@ NS_UCONV_REG_UNREG("x-IBM1046", NS_CP1046TOUNICODE_CID, NS_UNICODETOCP1046_CID)
 #endif
 #ifdef XP_OS2
 NS_UCONV_REG_UNREG("IBM869", NS_CP869TOUNICODE_CID, NS_UNICODETOCP869_CID)
+NS_UCONV_REG_UNREG("IBM1125", NS_CP1125TOUNICODE_CID, NS_UNICODETOCP1125_CID)
+NS_UCONV_REG_UNREG("IBM1131", NS_CP1131TOUNICODE_CID, NS_UNICODETOCP1131_CID)
 #endif
 
     // ucvja
@@ -1498,6 +1504,16 @@ static const nsModuleComponentInfo components[] =
     NS_UNICODEDECODER_CONTRACTID_BASE "IBM869",
     nsCP869ToUnicodeConstructor ,
   },
+  {
+    DECODER_NAME_BASE "IBM1125" , NS_CP1125TOUNICODE_CID,
+    NS_UNICODEDECODER_CONTRACTID_BASE "IBM1125",
+    nsCP1125ToUnicodeConstructor ,
+  },
+  {
+    DECODER_NAME_BASE "IBM1131" , NS_CP1131TOUNICODE_CID,
+    NS_UNICODEDECODER_CONTRACTID_BASE "IBM1131",
+    nsCP1131ToUnicodeConstructor ,
+  },
 #endif
   { 
     ENCODER_NAME_BASE "IBM850" , NS_UNICODETOCP850_CID, 
@@ -1546,6 +1562,16 @@ static const nsModuleComponentInfo components[] =
     ENCODER_NAME_BASE "IBM869" , NS_UNICODETOCP869_CID,
     NS_UNICODEENCODER_CONTRACTID_BASE "IBM869",
     nsUnicodeToCP869Constructor,
+  },
+  {
+    ENCODER_NAME_BASE "IBM1125" , NS_UNICODETOCP1125_CID,
+    NS_UNICODEENCODER_CONTRACTID_BASE "IBM1125",
+    nsUnicodeToCP1125Constructor,
+  },
+  {
+    ENCODER_NAME_BASE "IBM1131" , NS_UNICODETOCP1131_CID,
+    NS_UNICODEENCODER_CONTRACTID_BASE "IBM1131",
+    nsUnicodeToCP1131Constructor,
   },
 #endif
     // ucvja
