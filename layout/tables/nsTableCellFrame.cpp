@@ -632,8 +632,11 @@ PRInt32 nsTableCellFrame::GetRowSpan()
   PRInt32 rowSpan=1;
   nsGenericHTMLElement *hc = nsGenericHTMLElement::FromContent(mContent);
 
-  if (hc) {
-    const nsAttrValue* attr = hc->GetParsedAttr(nsGkAtoms::rowspan); 
+  // Don't look at the content's rowspan if we're a pseudo cell
+  if (hc && !GetStyleContext()->GetPseudoType()) {
+    const nsAttrValue* attr = hc->GetParsedAttr(nsGkAtoms::rowspan);
+    // Note that we don't need to check the tag name, because only table cells
+    // and table headers parse the "rowspan" attribute into an integer.
     if (attr && attr->Type() == nsAttrValue::eInteger) { 
        rowSpan = attr->GetIntegerValue(); 
     }
@@ -646,8 +649,11 @@ PRInt32 nsTableCellFrame::GetColSpan()
   PRInt32 colSpan=1;
   nsGenericHTMLElement *hc = nsGenericHTMLElement::FromContent(mContent);
 
-  if (hc) {
+  // Don't look at the content's colspan if we're a pseudo cell
+  if (hc && !GetStyleContext()->GetPseudoType()) {
     const nsAttrValue* attr = hc->GetParsedAttr(nsGkAtoms::colspan); 
+    // Note that we don't need to check the tag name, because only table cells
+    // and table headers parse the "colspan" attribute into an integer.
     if (attr && attr->Type() == nsAttrValue::eInteger) { 
        colSpan = attr->GetIntegerValue(); 
     }
