@@ -47,8 +47,7 @@
 
 class nsSVGAnimatedRect : public nsIDOMSVGAnimatedRect,
                           public nsSVGValue,
-                          public nsISVGValueObserver,
-                          public nsSupportsWeakReference
+                          public nsISVGValueObserver
 {  
 protected:
   friend nsresult NS_NewSVGAnimatedRect(nsIDOMSVGAnimatedRect** result,

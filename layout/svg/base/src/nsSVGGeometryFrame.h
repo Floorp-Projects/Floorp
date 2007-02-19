@@ -53,8 +53,7 @@ typedef nsFrame nsSVGGeometryFrameBase;
  * servers. */
 
 class nsSVGGeometryFrame : public nsSVGGeometryFrameBase,
-                           public nsISVGValueObserver,
-                           public nsSupportsWeakReference
+                           public nsISVGValueObserver
 {
 public:
   nsSVGGeometryFrame(nsStyleContext *aContext);

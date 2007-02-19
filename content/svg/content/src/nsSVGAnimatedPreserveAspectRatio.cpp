@@ -47,8 +47,7 @@
 
 class nsSVGAnimatedPreserveAspectRatio : public nsIDOMSVGAnimatedPreserveAspectRatio,
                                          public nsSVGValue,
-                                         public nsISVGValueObserver,
-                                         public nsSupportsWeakReference
+                                         public nsISVGValueObserver
 {
 protected:
   friend nsresult NS_NewSVGAnimatedPreserveAspectRatio(

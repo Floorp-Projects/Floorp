@@ -52,8 +52,7 @@
 
 class nsSVGPathSegList : public nsIDOMSVGPathSegList,
                          public nsSVGValue,
-                         public nsISVGValueObserver,
-                         public nsSupportsWeakReference
+                         public nsISVGValueObserver
 {  
 protected:
   friend nsresult NS_NewSVGPathSegList(nsIDOMSVGPathSegList** result);

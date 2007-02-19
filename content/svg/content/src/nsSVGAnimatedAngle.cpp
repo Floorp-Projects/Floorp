@@ -46,8 +46,7 @@
 
 class nsSVGAnimatedAngle : public nsIDOMSVGAnimatedAngle,
                            public nsSVGValue,
-                           public nsISVGValueObserver,
-                           public nsSupportsWeakReference
+                           public nsISVGValueObserver
 {
 protected:
   friend nsresult NS_NewSVGAnimatedAngle(nsIDOMSVGAnimatedAngle** result,

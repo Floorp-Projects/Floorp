@@ -47,8 +47,7 @@
 
 class nsSVGAnimatedNumberList : public nsIDOMSVGAnimatedNumberList,
                                 public nsSVGValue,
-                                public nsISVGValueObserver,
-                                public nsSupportsWeakReference
+                                public nsISVGValueObserver
 {  
 protected:
   friend nsresult

@@ -54,8 +54,7 @@
 // hide the nsISVGValueObserver interface which we require to listen
 // in on viewbox (mCtxRect) size changes.
 
-class nsSVGCoordCtxHolder : nsISVGValueObserver,
-                            nsSupportsWeakReference
+class nsSVGCoordCtxHolder : nsISVGValueObserver
 {
 private:
   friend class nsSVGCoordCtxProvider;

@@ -47,8 +47,7 @@
 
 class nsSVGAnimatedEnumeration : public nsIDOMSVGAnimatedEnumeration,
                                  public nsSVGValue,
-                                 public nsISVGValueObserver,
-                                 public nsSupportsWeakReference
+                                 public nsISVGValueObserver
 {
 protected:
   friend nsresult NS_NewSVGAnimatedEnumeration(nsIDOMSVGAnimatedEnumeration** result,
