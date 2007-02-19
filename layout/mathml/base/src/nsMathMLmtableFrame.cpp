@@ -812,13 +812,17 @@ PRInt32
 nsMathMLmtdFrame::GetRowSpan()
 {
   PRInt32 rowspan = 1;
-  nsAutoString value;
-  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::rowspan, value);
-  if (!value.IsEmpty()) {
-    PRInt32 error;
-    rowspan = value.ToInteger(&error);
-    if (error || rowspan < 0)
-      rowspan = 1;
+
+  // Don't look at the content's rowspan if we're not an mtd.
+  if (mContent->Tag() == nsGkAtoms::mtd_) {
+    nsAutoString value;
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::rowspan, value);
+    if (!value.IsEmpty()) {
+      PRInt32 error;
+      rowspan = value.ToInteger(&error);
+      if (error || rowspan < 0)
+        rowspan = 1;
+    }
   }
   return rowspan;
 }
@@ -827,13 +831,17 @@ PRInt32
 nsMathMLmtdFrame::GetColSpan()
 {
   PRInt32 colspan = 1;
-  nsAutoString value;
-  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::columnspan_, value);
-  if (!value.IsEmpty()) {
-    PRInt32 error;
-    colspan = value.ToInteger(&error);
-    if (error || colspan < 0)
-      colspan = 1;
+
+  // Don't look at the content's rowspan if we're not an mtd.
+  if (mContent->Tag() == nsGkAtoms::mtd_) {
+    nsAutoString value;
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::columnspan_, value);
+    if (!value.IsEmpty()) {
+      PRInt32 error;
+      colspan = value.ToInteger(&error);
+      if (error || colspan < 0)
+        colspan = 1;
+    }
   }
   return colspan;
 }
