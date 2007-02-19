@@ -218,6 +218,8 @@ sub readData {
     # We need to handle errors better.
     my $series_ids = join(",", $self->getSeriesIDs());
 
+    return [] unless $series_ids;
+
     # Work out the date boundaries for our data.
     my $dbh = Bugzilla->dbh;
     
