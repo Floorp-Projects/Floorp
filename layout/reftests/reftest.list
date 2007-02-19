@@ -290,7 +290,7 @@ fails == object/svg-with-type.html object/svg-with-type-ref.html
 == table-width/conflicting-percent-widths-3.html table-width/conflicting-percent-widths-3-ref.html
 == table-width/percent-truncation-1.html table-width/percent-truncation-1-ref.html
 == table-width/percent-truncation-2.html table-width/percent-truncation-2-ref.html
-random == table-width/percent-truncation-3.html table-width/percent-truncation-3-ref.html # bug 370720
+== table-width/percent-truncation-3.html table-width/percent-truncation-3-ref.html
 
 # xul-document-load/
 include xul-document-load/reftest.list
