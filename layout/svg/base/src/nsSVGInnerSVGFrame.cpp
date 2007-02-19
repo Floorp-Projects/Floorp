@@ -50,7 +50,6 @@ typedef nsSVGDisplayContainerFrame nsSVGInnerSVGFrameBase;
 
 class nsSVGInnerSVGFrame : public nsSVGInnerSVGFrameBase,
                            public nsISVGValueObserver,
-                           public nsSupportsWeakReference,
                            public nsISVGSVGFrame
 {
   friend nsIFrame*

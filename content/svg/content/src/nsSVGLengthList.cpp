@@ -53,8 +53,7 @@
 
 class nsSVGLengthList : public nsISVGLengthList,
                         public nsSVGValue,
-                        public nsISVGValueObserver,
-                        public nsSupportsWeakReference
+                        public nsISVGValueObserver
 {  
 protected:
   friend nsresult NS_NewSVGLengthList(nsISVGLengthList** result);

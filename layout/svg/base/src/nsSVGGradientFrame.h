@@ -51,8 +51,7 @@ class nsIDOMSVGStopElement;
 typedef nsSVGPaintServerFrame  nsSVGGradientFrameBase;
 
 class nsSVGGradientFrame : public nsSVGGradientFrameBase,
-                           public nsISVGValueObserver,
-                           public nsSupportsWeakReference
+                           public nsISVGValueObserver
 {
 public:
   // nsSVGPaintServerFrame methods:

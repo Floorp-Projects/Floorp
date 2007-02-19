@@ -58,8 +58,7 @@ class nsSVGLength2;
 class nsSVGNumber2;
 
 class nsSVGElement : public nsGenericElement,    // nsIContent
-                     public nsISVGValueObserver, 
-                     public nsSupportsWeakReference // :nsISupportsWeakReference
+                     public nsISVGValueObserver  // :nsISupportsWeakReference
 {
 protected:
   nsSVGElement(nsINodeInfo *aNodeInfo);

@@ -53,8 +53,7 @@
 
 class nsSVGAngle : public nsIDOMSVGAngle,
                    public nsSVGValue,
-                   public nsISVGValueObserver,
-                   public nsSupportsWeakReference
+                   public nsISVGValueObserver
 {
 protected:
   friend nsresult NS_NewSVGAngle(nsIDOMSVGAngle** result,

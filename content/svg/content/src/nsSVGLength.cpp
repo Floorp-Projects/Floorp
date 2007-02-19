@@ -55,8 +55,7 @@
 
 class nsSVGLength : public nsISVGLength,
                     public nsSVGValue,
-                    public nsISVGValueObserver,
-                    public nsSupportsWeakReference
+                    public nsISVGValueObserver
 {
 protected:
   friend nsresult NS_NewSVGLength(nsISVGLength** result,

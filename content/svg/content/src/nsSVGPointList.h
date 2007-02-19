@@ -48,8 +48,7 @@
 
 class nsSVGPointList : public nsSVGValue,
                        public nsIDOMSVGPointList,
-                       public nsISVGValueObserver,
-                       public nsSupportsWeakReference
+                       public nsISVGValueObserver
 {
 public:
   static nsresult Create(const nsAString& aValue, nsISVGValue** aResult);

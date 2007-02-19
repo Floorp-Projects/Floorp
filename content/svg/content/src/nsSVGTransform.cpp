@@ -54,8 +54,7 @@
 
 class nsSVGTransform : public nsIDOMSVGTransform,
                        public nsSVGValue,
-                       public nsISVGValueObserver,
-                       public nsSupportsWeakReference
+                       public nsISVGValueObserver
 {
 public:
   static nsresult Create(nsIDOMSVGTransform** aResult);
