@@ -41,6 +41,7 @@
 #include "nsSVGAnimatedNumberList.h"
 #include "nsSVGNumber2.h"
 #include "nsGenericHTMLElement.h"
+#include "prdtoa.h"
 
 typedef nsSVGStylableElement nsSVGStopElementBase;
 
@@ -135,32 +136,28 @@ nsSVGStopElement::ParseAttribute(PRInt32 aNamespaceID,
 								 const nsAString& aValue,
 								 nsAttrValue& aResult)
 {
-  if (nsSVGElement::ParseAttribute(aNamespaceID, aAttribute, aValue, aResult)) {
-    return PR_TRUE;
-  }
-
   if (aNamespaceID == kNameSpaceID_None) {
-      if (aAttribute == nsGkAtoms::offset) {
-        char percentSymbol, remainder;
-        float offset;
-        char *str;
-        str = ToNewCString(aValue);
-        int num = sscanf(str, "%f %c %c", &offset, &percentSymbol, &remainder);
-        if (num == 2 && percentSymbol == '%') {
+    if (aAttribute == nsGkAtoms::offset) {
+      NS_ConvertUTF16toUTF8 value(aValue);
+      const char *str = value.get();
+
+      char *rest;
+      float offset = NS_STATIC_CAST(float, PR_strtod(str, &rest));
+      if (str != rest) {
+        if (*rest == '%') {
           offset /= 100;
-        } else if (num != 1) {
-          mOffset.SetBaseValue(0, this, PR_FALSE);
-          return PR_FALSE;
+          ++rest;
         }
-
-        mOffset.SetBaseValue(offset, this, PR_FALSE);
-        aResult.SetTo(aValue);
-
-        nsMemory::Free(str);
-        return PR_TRUE;
+        if (*rest == '\0') {
+          mOffset.SetBaseValue(offset, this, PR_FALSE);
+          aResult.SetTo(aValue);
+          return PR_TRUE;
+        }
       }
     }
-  return PR_FALSE;
+  }
+  return nsSVGElement::ParseAttribute(aNamespaceID, aAttribute,
+                                      aValue, aResult);
 }
 
 //----------------------------------------------------------------------
