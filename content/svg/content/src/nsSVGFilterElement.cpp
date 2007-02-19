@@ -41,6 +41,7 @@
 #include "nsSVGCoordCtxProvider.h"
 #include "nsSVGAnimatedEnumeration.h"
 #include "nsSVGAnimatedInteger.h"
+#include "nsSVGAnimatedString.h"
 #include "nsSVGEnum.h"
 #include "nsSVGFilterElement.h"
 
@@ -65,6 +66,7 @@ NS_INTERFACE_MAP_BEGIN(nsSVGFilterElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGFilterElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGURIReference)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFilterElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFilterElementBase)
 
@@ -124,6 +126,17 @@ nsSVGFilterElement::Init()
   // DOM property: filterResY , #IMPLIED attrib: filterRes
   {
     rv = NS_NewSVGAnimatedInteger(getter_AddRefs(mFilterResY), 0);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  // nsIDOMSVGURIReference properties
+
+  // DOM property: href , #REQUIRED attrib: xlink:href
+  // XXX: enforce requiredness
+  {
+    rv = NS_NewSVGAnimatedString(getter_AddRefs(mHref));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsGkAtoms::href, mHref, kNameSpaceID_XLink);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -203,6 +216,18 @@ nsSVGFilterElement::SetFilterRes(PRUint32 filterResX, PRUint32 filterResY)
 {
   mFilterResX->SetBaseVal(filterResX);
   mFilterResY->SetBaseVal(filterResY);
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// nsIDOMSVGURIReference methods
+
+/* readonly attribute nsIDOMSVGAnimatedString href; */
+NS_IMETHODIMP 
+nsSVGFilterElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
+{
+  *aHref = mHref;
+  NS_IF_ADDREF(*aHref);
   return NS_OK;
 }
 

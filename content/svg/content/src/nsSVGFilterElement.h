@@ -39,12 +39,14 @@
 
 #include "nsSVGGraphicElement.h"
 #include "nsIDOMSVGFilterElement.h"
+#include "nsIDOMSVGURIReference.h"
 #include "nsSVGLength2.h"
 
 typedef nsSVGGraphicElement nsSVGFilterElementBase;
 
 class nsSVGFilterElement : public nsSVGFilterElementBase,
-                           public nsIDOMSVGFilterElement
+                           public nsIDOMSVGFilterElement,
+                           public nsIDOMSVGURIReference
 {
   friend class nsSVGFilterFrame;
 
@@ -63,6 +65,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSVGFILTERELEMENT
+  NS_DECL_NSIDOMSVGURIREFERENCE
 
   // xxx I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE(nsSVGFilterElementBase::)
@@ -89,6 +92,7 @@ protected:
   nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mPrimitiveUnits;
   nsCOMPtr<nsIDOMSVGAnimatedInteger> mFilterResX;
   nsCOMPtr<nsIDOMSVGAnimatedInteger> mFilterResY;
+  nsCOMPtr<nsIDOMSVGAnimatedString> mHref;
 };
 
 #endif
