@@ -128,8 +128,9 @@ gboolean
 xpidl_parse_iid(nsID *id, const char *str)
 {
     PRInt32 count = 0;
-    PRInt32 n1, n2, n3[8];
-    PRInt32 n0, i;
+    PRUint32 n0, n1, n2;
+    PRUint32 n3[8];
+    PRUint32 i;
 
     XPT_ASSERT(str != NULL);
     
@@ -146,11 +147,11 @@ xpidl_parse_iid(nsID *id, const char *str)
                    &n3[0],&n3[1],&n3[2],&n3[3],
                    &n3[4],&n3[5],&n3[6],&n3[7]);
 
-    id->m0 = (PRInt32) n0;
-    id->m1 = (PRInt16) n1;
-    id->m2 = (PRInt16) n2;
+    id->m0 = n0;
+    id->m1 = (PRUint16) n1;
+    id->m2 = (PRUint16) n2;
     for (i = 0; i < 8; i++) {
-      id->m3[i] = (PRInt8) n3[i];
+      id->m3[i] = (PRUint8) n3[i];
     }
 
 #ifdef DEBUG_shaver_iid
