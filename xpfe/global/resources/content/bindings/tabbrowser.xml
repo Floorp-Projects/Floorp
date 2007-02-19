@@ -1256,7 +1256,7 @@
               this.mCurrentBrowser = null;
 
             // Clean up before/afterselected attributes before removing the tab
-            aTab.selected = false;
+            aTab._selected = false;
             this.mTabContainer.removeChild(aTab);
 
             // When the current tab is removed select a new tab
@@ -1630,13 +1630,13 @@
             this.mTabFilters.splice(aDestIndex, 0, this.mTabFilters.splice(aSrcIndex, 1)[0]);
             this.mTabListeners.splice(aDestIndex, 0, this.mTabListeners.splice(aSrcIndex, 1)[0]);
 
-            this.mCurrentTab.selected = false;
+            this.mCurrentTab._selected = false;
 
             if (aDestIndex >= aSrcIndex)
               ++aDestIndex;
             var tab = this.mTabContainer.insertBefore(this.mTabs[aSrcIndex], this.mTabs.item(aDestIndex));
 
-            this.mCurrentTab.selected = true;
+            this.mCurrentTab._selected = true;
 
             var evt = document.createEvent("UIEvents");
             evt.initUIEvent("TabMove", true, false, window, aSrcIndex);
