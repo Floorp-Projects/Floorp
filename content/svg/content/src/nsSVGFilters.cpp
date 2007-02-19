@@ -252,14 +252,6 @@ public:
   }
 
   /*
-   * Releasing a source image will prevent FixupTarget() from copying pixels
-   * outside of the filter sub-region to the target surface.
-   */
-  void ReleaseSource() {
-    mSourceData = nsnull;
-  }
-
-  /*
    * Returns total length of data buffer in bytes
    */
   PRUint32 GetDataLength() {
@@ -273,15 +265,19 @@ public:
     return mStride;
   }
 
-private:
-  void ReleaseTarget();
+  /*
+   * Copy current sourceImage to targetImage
+   */
+  void CopySourceImage() { CopyImageSubregion(mTargetData, mSourceData); }
 
   /*
-   * FixupTarget copies the parts of the source image that lie outside of the
-   * filter subregion into the target image.  If no source image exists, then
-   * the area outside the filter region is filled with transparent black.
+   * Copy subregion from aSrc to aDest.
+   current sourceImage to targetImage
    */
-  void FixupTarget();
+  void CopyImageSubregion(PRUint8 *aDest, const PRUint8 *aSrc);
+
+private:
+  void ReleaseTarget();
 
   nsAutoString mInput, mResult;
   nsRect mRect;
@@ -366,7 +362,6 @@ nsSVGFilterResource::ReleaseTarget()
   if (!mTargetImage) {
     return;
   }
-  FixupTarget();
   mInstance->DefineImage(mResult, mTargetImage, mRect, mColorModel);
 
   // filter instance now owns the image
@@ -375,52 +370,15 @@ nsSVGFilterResource::ReleaseTarget()
 }
 
 void
-nsSVGFilterResource::FixupTarget()
+nsSVGFilterResource::CopyImageSubregion(PRUint8 *aDest, const PRUint8 *aSrc)
 {
-  // top
-  if (mRect.y > 0) {
-    for (PRInt32 y = 0; y < mRect.y; y++)
-      if (mSourceData) {
-        memcpy(mTargetData + y * mStride, mSourceData + y * mStride, mStride);
-      } else {
-        memset(mTargetData + y * mStride, 0, mStride);
-      }
-  }
+  if (!aDest || !aSrc)
+    return;
 
-  // bottom
-  if (mRect.YMost() < mHeight) {
-    for (PRInt32 y = mRect.YMost(); y < mHeight; y++)
-      if (mSourceData) {
-        memcpy(mTargetData + y * mStride, mSourceData + y * mStride, mStride);
-      } else {
-        memset(mTargetData + y * mStride, 0, mStride);
-      }
-  }
-
-  // left
-  if (mRect.x > 0) {
-    for (PRInt32 y = mRect.y; y < mRect.YMost(); y++)
-      if (mSourceData) {
-        memcpy(mTargetData + y * mStride,
-               mSourceData + y * mStride,
-               4 * mRect.x);
-      } else {
-        memset(mTargetData + y * mStride, 0, 4 * mRect.x);
-      }
-  }
-
-  // right
-  if (mRect.XMost() < mWidth) {
-    for (PRInt32 y = mRect.y; y < mRect.YMost(); y++)
-      if (mSourceData) {
-        memcpy(mTargetData + y * mStride + 4 * mRect.XMost(),
-               mSourceData + y * mStride + 4 * mRect.XMost(),
-               4 * (mWidth - mRect.XMost()));
-      } else {
-        memset(mTargetData + y * mStride + 4 * mRect.XMost(),
-               0,
-               4 * (mWidth - mRect.XMost()));
-      }
+  for (PRInt32 y = mRect.y; y < mRect.YMost(); y++) {
+    memcpy(aDest + y * mStride + 4 * mRect.x,
+           aSrc + y * mStride + 4 * mRect.x,
+           4 * mRect.width);
   }
 }
 
@@ -470,6 +428,21 @@ protected:
   static NumberInfo sNumberInfo[2];
 
   nsCOMPtr<nsIDOMSVGAnimatedString> mIn1;
+
+private:
+
+  void BoxBlurH(PRUint8 *aInput, PRUint8 *aOutput,
+                PRInt32 aStride, nsRect aRegion,
+                PRUint32 leftLobe, PRUint32 rightLobe);
+
+  void BoxBlurV(PRUint8 *aInput, PRUint8 *aOutput,
+                PRInt32 aStride, nsRect aRegion,
+                unsigned topLobe, unsigned bottomLobe);
+
+  nsresult GaussianBlur(PRUint8 *aInput, PRUint8 *aOutput,
+                        nsSVGFilterResource *aFilterResource,
+                        float aStdX, float aStdY);
+
 };
 
 nsSVGElement::NumberInfo nsSVGFEGaussianBlurElement::sNumberInfo[2] =
@@ -576,10 +549,10 @@ nsSVGFEGaussianBlurElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                                                         aValue, aResult);
 }
 
-static void
-boxBlurH(PRUint8 *aInput, PRUint8 *aOutput,
-         PRInt32 aStride, nsRect aRegion,
-         PRUint32 leftLobe, PRUint32 rightLobe)
+void
+nsSVGFEGaussianBlurElement::BoxBlurH(PRUint8 *aInput, PRUint8 *aOutput,
+                                     PRInt32 aStride, nsRect aRegion,
+                                     PRUint32 leftLobe, PRUint32 rightLobe)
 {
   PRInt32 boxSize = leftLobe + rightLobe + 1;
 
@@ -616,10 +589,10 @@ boxBlurH(PRUint8 *aInput, PRUint8 *aOutput,
   }
 }
 
-static void
-boxBlurV(PRUint8 *aInput, PRUint8 *aOutput,
-         PRInt32 aStride, nsRect aRegion,
-         unsigned topLobe, unsigned bottomLobe)
+void
+nsSVGFEGaussianBlurElement::BoxBlurV(PRUint8 *aInput, PRUint8 *aOutput,
+                                     PRInt32 aStride, nsRect aRegion,
+                                     unsigned topLobe, unsigned bottomLobe)
 {
   PRInt32 boxSize = topLobe + bottomLobe + 1;
 
@@ -656,17 +629,16 @@ boxBlurV(PRUint8 *aInput, PRUint8 *aOutput,
   }
 }
 
-static nsresult
-gaussianBlur(PRUint8 *aInput, PRUint8 *aOutput,
-             PRUint32 aLength, PRInt32 aStride, nsRect aRegion,
-             float aStdX, float aStdY)
+nsresult
+nsSVGFEGaussianBlurElement::GaussianBlur(PRUint8 *aInput, PRUint8 *aOutput,
+                                         nsSVGFilterResource *aFilterResource,
+                                         float aStdX, float aStdY)
 {
   if (aStdX < 0 || aStdY < 0) {
     return NS_ERROR_FAILURE;
   }
 
   if (aStdX == 0 || aStdY == 0) {
-    memset(aOutput, 0, aLength);
     return NS_OK;
   }
 
@@ -674,41 +646,44 @@ gaussianBlur(PRUint8 *aInput, PRUint8 *aOutput,
   dX = (PRUint32) floor(aStdX * 3*sqrt(2*M_PI)/4 + 0.5);
   dY = (PRUint32) floor(aStdY * 3*sqrt(2*M_PI)/4 + 0.5);
 
-  PRUint8 *tmp = new PRUint8[aLength];
+  PRUint8 *tmp = NS_STATIC_CAST(PRUint8*,
+                                calloc(aFilterResource->GetDataLength(), 1));
+  nsRect rect = aFilterResource->GetRect();
+  PRUint32 stride = aFilterResource->GetDataStride();
 
   if (dX & 1) {
     // odd
-    boxBlurH(aInput, tmp,  aStride, aRegion, dX/2, dX/2);
-    boxBlurH(tmp, aOutput, aStride, aRegion, dX/2, dX/2);
-    boxBlurH(aOutput, tmp, aStride, aRegion, dX/2, dX/2);
+    BoxBlurH(aInput, tmp,  stride, rect, dX/2, dX/2);
+    BoxBlurH(tmp, aOutput, stride, rect, dX/2, dX/2);
+    BoxBlurH(aOutput, tmp, stride, rect, dX/2, dX/2);
   } else {
     // even
     if (dX == 0) {
-      memcpy(tmp, aInput, aLength);
+      aFilterResource->CopyImageSubregion(tmp, aInput);
     } else {
-      boxBlurH(aInput, tmp,  aStride, aRegion, dX/2,     dX/2 - 1);
-      boxBlurH(tmp, aOutput, aStride, aRegion, dX/2 - 1, dX/2);
-      boxBlurH(aOutput, tmp, aStride, aRegion, dX/2,     dX/2);
+      BoxBlurH(aInput, tmp,  stride, rect, dX/2,     dX/2 - 1);
+      BoxBlurH(tmp, aOutput, stride, rect, dX/2 - 1, dX/2);
+      BoxBlurH(aOutput, tmp, stride, rect, dX/2,     dX/2);
     }
   }
 
   if (dY & 1) {
     // odd
-    boxBlurV(tmp, aOutput, aStride, aRegion, dY/2, dY/2);
-    boxBlurV(aOutput, tmp, aStride, aRegion, dY/2, dY/2);
-    boxBlurV(tmp, aOutput, aStride, aRegion, dY/2, dY/2);
+    BoxBlurV(tmp, aOutput, stride, rect, dY/2, dY/2);
+    BoxBlurV(aOutput, tmp, stride, rect, dY/2, dY/2);
+    BoxBlurV(tmp, aOutput, stride, rect, dY/2, dY/2);
   } else {
     // even
     if (dY == 0) {
-      memcpy(aOutput, tmp, aLength);
+      aFilterResource->CopyImageSubregion(aOutput, tmp);
     } else {
-      boxBlurV(tmp, aOutput, aStride, aRegion, dY/2,     dY/2 - 1);
-      boxBlurV(aOutput, tmp, aStride, aRegion, dY/2 - 1, dY/2);
-      boxBlurV(tmp, aOutput, aStride, aRegion, dY/2,     dY/2);
+      BoxBlurV(tmp, aOutput, stride, rect, dY/2,     dY/2 - 1);
+      BoxBlurV(aOutput, tmp, stride, rect, dY/2 - 1, dY/2);
+      BoxBlurV(tmp, aOutput, stride, rect, dY/2,     dY/2);
     }
   }
 
-  delete [] tmp;
+  free(tmp);
   return NS_OK;
 }
 
@@ -724,9 +699,9 @@ nsSVGFEGaussianBlurElement::Filter(nsSVGFilterInstance *instance)
   NS_ENSURE_SUCCESS(rv, rv);
   rv = fr.AcquireTargetImage(mResult, &targetData);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsRect rect = fr.GetRect();
 
 #ifdef DEBUG_tor
+  nsRect rect = fr.GetRect();
   fprintf(stderr, "FILTER GAUSS rect: %d,%d  %dx%d\n",
           rect.x, rect.y, rect.width, rect.height);
 #endif
@@ -741,11 +716,7 @@ nsSVGFEGaussianBlurElement::Filter(nsSVGFilterInstance *instance)
   val.Init(nsSVGUtils::Y, 0xff, stdY, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
   stdY = instance->GetPrimitiveLength(&val);
 
-  rv = gaussianBlur(sourceData, targetData, fr.GetDataLength(),
-                    fr.GetDataStride(), rect, stdX, stdY);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  return GaussianBlur(sourceData, targetData, &fr, stdX, stdY);
 }
 
 static PRUint32
@@ -955,7 +926,7 @@ nsSVGFEBlendElement::Filter(nsSVGFilterInstance *instance)
           rect.x, rect.y, rect.width, rect.height);
 #endif
 
-  memcpy(targetData, sourceData, rect.height * stride);
+  fr.CopySourceImage();
 
   rv = fr.AcquireSourceImage(mIn2, this, &sourceData);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1249,7 +1220,7 @@ nsSVGFECompositeElement::Filter(nsSVGFilterInstance *instance)
 #endif
 
     // Copy the first source image
-    memcpy(targetData, sourceData, rect.height * stride);
+    fr.CopySourceImage();
 
     // Blend in the second source image
     rv = fr.AcquireSourceImage(mIn1, this, &sourceData);
@@ -1995,7 +1966,6 @@ nsSVGFEMergeElement::Filter(nsSVGFilterInstance *instance)
     cairo_set_source_surface(cr, sourceSurface, 0, 0);
     cairo_paint(cr);
   }
-  fr.ReleaseSource();
   cairo_destroy(cr);
   return NS_OK;
 }
@@ -3236,7 +3206,7 @@ nsSVGFEMorphologyElement::Filter(nsSVGFilterInstance *instance)
   mOperator->GetAnimVal(&op);
 
   if (rx == 0 && ry == 0) {
-    memcpy(targetData, sourceData, rect.height * stride);
+    fr.CopySourceImage();
     return NS_OK;
   }
   /* Scan the kernel for each pixel to determine max/min RGBA values.  Note that
