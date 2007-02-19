@@ -142,10 +142,6 @@
     <key id="placesKey_rename"
          command="placesCmd_rename" 
          keycode="VK_F2"/>
-    <key id="placesKey_reload"
-         command="placesCmd_reload" 
-         key="&cmd.reload.key;"
-         modifiers="accel"/>
   </keyset>
 
   <keyset id="editMenuKeys">
@@ -203,11 +199,6 @@
           <menuseparator/>
           <menuitem id="menu_selectAll"/>
           <menuseparator/>
-          <menuitem id="editSortByName"
-                    command="placesCmd_sortby:name"
-                    label="&cmd.sortby_name.label;"
-                    accesskey="&cmd.sortby_name.accesskey;"/>
-          <menuseparator/>
           <menuitem id="editFindAll"
                     command="OrganizerCommand_find:all"
                     key="placesKey_find:all"/>
@@ -218,6 +209,11 @@
           <menuitem command="placesCmd_moveBookmarks"
                     label="&cmd.moveBookmarks.menuLabel;"
                     accesskey="&cmd.moveBookmarks.menuAccesskey;"/>
+          <menuseparator/>
+          <menuitem id="editReload"
+                    command="placesCmd_reload"
+                    label="&cmd.reloadLivebookmark.label;"
+                    accesskey="&cmd.reloadLivebookmark.accesskey;"/>
           <menuseparator/>
           <menuitem id="properties"
                     command="placesCmd_show:info"
@@ -235,12 +231,6 @@
             onpopupshowing="ViewMenu.populate(event);"
             oncommand="ViewMenu.setSortColumn(event.target.getAttribute('column'), null);">
         <menupopup>
-          <menuitem id="viewReload"
-                    command="placesCmd_reload"
-                    key="placesKey_reload"
-                    label="&cmd.reload.label;"
-                    accesskey="&cmd.reload.accesskey;"/>
-          <menuseparator/>
           <menuitem id="viewToolbar" type="checkbox"
                     label="&view.toolbar.label;" accesskey="&view.toolbar.accesskey;"/>
           <menu id="viewColumns" 

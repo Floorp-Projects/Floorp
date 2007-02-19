@@ -275,6 +275,30 @@ PlacesController.prototype = {
         }
       }
       return false;
+    case "placesCmd_reload":
+      if (this._view.hasSingleSelection) {
+        var selectedNode = this._view.selectedNode;
+
+        // Livemark containers
+        if (PlacesUtils.nodeIsLivemarkContainer(selectedNode))
+          return true;
+
+#ifdef EXTENDED_LIVEBOOKMARKS_UI
+        // Subscriptions View - not yet exposed anywhere 
+        if (selectedNode.uri.indexOf("livemark%2F") != -1)
+          return true;
+
+        // children of a live bookmark (legacy bookmarks UI doesn't support
+        // this)
+        if (PlacesUtils.nodeIsURI(selectedNode)) {
+          var uri = PlacesUtils._uri(selectedNode.uri);
+          if (PlacesUtils.annotations
+                         .hasAnnotation(uri, "livemark/bookmarkFeedURI"))
+            return true;
+        }
+#endif
+      }
+      return false;
 #endif
     default:
       return false;
@@ -352,6 +376,9 @@ PlacesController.prototype = {
       break;
     case "placesCmd_moveBookmarks":
       this.moveSelectedBookmarks();
+      break;
+    case "placesCmd_reload":
+      this.reloadSelectedLivemarks();
       break;
 #endif
     }
@@ -647,50 +674,6 @@ PlacesController.prototype = {
     return false;
   },
 
-#ifdef MOZ_PLACES_BOOKMARKS
-  /**
-   * Updates Livemark Commands: Reload
-   * @param   hasSingleSelection
-   *          true if only one item is selected in the view
-   * @param   selectedNode
-   *          The selected nsINavHistoryResultNode
-   */
-  _updateLivemarkCommands: 
-  function PC__updateLivemarkCommands(hasSingleSelection, selectedNode) {
-    var isLivemarkItem = false;
-    var strings = document.getElementById("placeBundle");
-    var command = document.getElementById("placesCmd_reload");
-    if (hasSingleSelection) {
-      if (selectedNode.uri.indexOf("livemark%2F") != -1) {
-        isLivemarkItem = true;
-        command.setAttribute("label", PlacesUtils.getString("livemarkReloadAll"));
-      }
-      else {
-        var name;
-        if (PlacesUtils.nodeIsLivemarkContainer(selectedNode)) {
-          isLivemarkItem = true;
-          name = selectedNode.title;
-        }
-        else if (PlacesUtils.nodeIsURI(selectedNode)) {
-          var uri = PlacesUtils._uri(selectedNode.uri);
-          isLivemarkItem = PlacesUtils.annotations.hasAnnotation(uri, "livemark/bookmarkFeedURI");
-          if (isLivemarkItem)
-            name = selectedNode.parent.title;
-        }
-
-        if (isLivemarkItem)
-          command.setAttribute("label", PlacesUtils.getFormattedString("livemarkReloadOne", [name]));
-      }
-    }
-    
-    if (!isLivemarkItem)
-      command.setAttribute("label", PlacesUtils.getString("livemarkReload"));
-      
-    this._setEnabled("placesCmd_reload", isLivemarkItem);  
-  },
-#endif
-
-
   /** 
    * Gathers information about the selected nodes according to the following
    * rules:
@@ -965,31 +948,35 @@ PlacesController.prototype = {
   },
 
   /**
-   *
-   * Reloads the livemarks associated with the selection.  For the "Subscriptions"
-   * folder, reloads all livemarks; for a livemark folder, reloads its children;
-   * for a single livemark, reloads its siblings (the children of its parent).
+   * Reloads the livemarks associated with the selection. For the 
+   * "Subscriptions" folder, reloads all livemarks; for a livemark folder,
+   * reloads its children; for a single livemark, reloads its siblings (the
+   * children of its parent).
    */
   reloadSelectedLivemarks: function PC_reloadSelectedLivemarks() {
     var selectedNode = this._view.selectedNode;
     if (this._view.hasSingleSelection) {
+#ifdef EXTENDED_LIVEBOOKMARKS_UI
       if (selectedNode.uri.indexOf("livemark%2F") != -1) {
         PlacesUtils.livemarks.reloadAllLivemarks();
+        return;
       }
-      else {
-        var folder = null;
-        if (PlacesUtils.nodeIsLivemarkContainer(selectedNode)) {
-          folder = asFolder(selectedNode);
-        }
-        else if (PlacesUtils.nodeIsURI(selectedNode)) {
-          var uri = PlacesUtils._uri(selectedNode.uri);
-          var isLivemarkItem = PlacesUtils.annotations.hasAnnotation(uri, "livemark/bookmarkFeedURI");
-          if (isLivemarkItem)
-            folder = asFolder(selectedNode.parent);
-        }
-        if (folder)
-          PlacesUtils.livemarks.reloadLivemarkFolder(folder.folderId);
+#endif
+      var folder = null;
+      if (PlacesUtils.nodeIsLivemarkContainer(selectedNode)) {
+        folder = asFolder(selectedNode);
       }
+#ifdef EXTENDED_LIVEBOOKMARKS_UI
+      else if (PlacesUtils.nodeIsURI(selectedNode)) {
+        var uri = PlacesUtils._uri(selectedNode.uri);
+        var isLivemarkItem =
+          PlacesUtils.annotations.hasAnnotation(uri, "livemark/bookmarkFeedURI");
+        if (isLivemarkItem)
+          folder = asFolder(selectedNode.parent);
+      }
+#endif
+      if (folder)
+        PlacesUtils.livemarks.reloadLivemarkFolder(folder.folderId);
     }
   },
 
@@ -2145,6 +2132,7 @@ function goUpdatePlacesCommands() {
   goUpdateCommand("placesCmd_new:separator");
   goUpdateCommand("placesCmd_show:info");
   goUpdateCommand("placesCmd_moveBookmarks");
-  // XXXmano todo: sort and livemarks commands handling
+  goUpdateCommand("placesCmd_reload");
+  // XXXmano todo: sort commands handling
 #endif
 }
