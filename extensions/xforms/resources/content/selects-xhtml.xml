@@ -51,6 +51,15 @@
         <children/>
       </html:div>
     </content>
+
+    <implementation>
+    <!-- nsIAccessibleProvider -->
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsSelectFull;
+        </getter>
+      </property>
+    </implementation>
   </binding>
 
   <!-- SELECT1: APPEARANCE FULL -->
@@ -62,6 +71,15 @@
         <children/>
       </html:div>
     </content>
+
+    <implementation>
+      <!-- nsIAccessibleProvider -->
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsSelectFull;
+        </getter>
+      </property>
+    </implementation>
 
     <handlers>
       <handler event="keypress" keycode="VK_UP" preventdefault="true">

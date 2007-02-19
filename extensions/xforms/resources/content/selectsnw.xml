@@ -1,0 +1,991 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla XForms support.
+   -
+   - The Initial Developer of the Original Code is
+   - Mozilla Foundation.
+   - Portions created by the Initial Developer are Copyright (C) 2007
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -  Alexander Surkov <surkov.alexander@gmail.com> (original author)
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<bindings id="xformsSelectsNativeWidgetBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+<!--
+  This file implements the "abstract" UI classes for XForms select/select1
+  controls that are used native widgets for their representation.
+-->
+
+  <!-- BASE binding for select/select1 elements that are used native widgets -->
+  <binding id="selectcontrols-base"
+           extends="chrome://xforms/content/selects.xml#selectcontrols-base">
+
+    <implementation>
+    <!-- nsIAccessibleProvider -->
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsSelect;
+        </getter>
+      </property>
+
+    <!-- overriding the methods from the 'selectcontrols-base' binding -->
+      <method name="getFreeEntryValues">
+        <body>
+          return this.nativeWidget.getFreeEntryValues();
+        </body>
+      </method>
+
+      <method name="allowFreeEntry">
+        <parameter name="aAllowed"/>
+        <body>
+          return this.nativeWidget.allowFreeEntry(aAllowed);
+        </body>
+      </method>
+
+      <method name="appendFreeEntryItem">
+        <parameter name="aValue"/>
+        <body>
+          this.nativeWidget.appendFreeEntryItem(aValue);
+        </body>
+      </method>
+
+      <method name="markItemSelected">
+        <parameter name="aItem"/>
+        <parameter name="aIsSelected"/>
+        <body>
+          this.nativeWidget.selectItem(aItem, aIsSelected);
+        </body>
+      </method>
+
+      <method name="isItemMarkedSelected">
+        <parameter name="aItem"/>
+        <body>
+          return this.nativeWidget.isItemSelected(aItem);
+        </body>
+      </method>
+
+      <method name="markItemDisabled">
+        <parameter name="aItem"/>
+        <parameter name="aIsDisabled"/>
+        <body>
+          this.nativeWidget.disableItem(aItem, aIsDisabled);
+        </body>
+      </method>
+
+      <method name="isItemMarkedDisabled">
+        <parameter name="aItem"/>
+        <body>
+          return this.nativeWidget.isItemDisabled(aItem);
+        </body>
+      </method>
+
+      <method name="focusItem">
+        <parameter name="aItem"/>
+        <body>
+          this.nativeWidget.focus();
+        </body>
+      </method>
+
+    <!-- private -->
+      <constructor>
+        this.handleInsertion(this, null);
+      </constructor>
+
+      <!-- Return native widget control -->
+      <property name="nativeWidget">
+        <getter>
+          if (!this._nativeWidget)
+            this._nativeWidget = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "nativewidget");
+          return this._nativeWidget;
+        </getter>
+      </property>
+
+      <!-- Try to update label element when DOM tree has been changed.
+
+        @param aNode - the node that was inserted or will be removed
+        @param aIsInsertion - if true then node was inserted
+      -->
+      <method name="handleLabel">
+        <parameter name="aNode"/>
+        <parameter name="aIsInsertion"/>
+        <body>
+        <![CDATA[
+          var node = aNode;
+          while (node && node != this && (node.namespaceURI != this.XFORMS_NS ||
+                 node.localName != "label")) {
+            node = node.parentNode;
+          }
+
+          if (!node)
+            return;
+
+          if (!node || node == this)
+            return;
+
+          var label = node;
+
+          var parent = label.parentNode;
+          var labels = parent.getElementsByTagNameNS(this.XFORMS_NS, "label");
+          if (labels[0] != label)
+            return;
+
+          label = ((aNode == label) && !aIsInsertion) ? null : label;
+          if (parent.namespaceURI == this.XFORMS_NS) {
+            // Set label only for xf:item or xf:choices elements.
+            switch (parent.localName) {
+              case "choices":
+              case "item":
+                this.nativeWidget.setLabelFor(parent, label);
+                break;
+              case "contextcontainer":
+                // Parent of xf:contextcontainer element is xf:item element in
+                // the case of auto-generated content of xf:itemset.
+                this.nativeWidget.setLabelFor(parent.parentNode, label);
+                break;
+            }
+          }
+        ]]>
+        </body>
+      </method>
+
+      <!-- Updates native widget when DOM tree has been changed i.e. "item"/
+        "itemset"/"choices" elements have been inserted or removed.
+
+        @param aNode - the given node, is is either "select"/"select1" elements
+                       to initialize native widget or "choices"/"item"/"itemset"
+                       if it was inserted
+        @param aParentNode - either parent node of the given node or null if
+                             native widget is initialized
+        @param aParentIndex - index of parent node (for recursive calls)
+        @param aPrevSiblingIndex - index of previous sibling node (for recursive
+                                   calls)
+      -->
+      <method name="handleInsertion">
+        <parameter name="aNode"/>
+        <parameter name="aParentNode"/>
+        <parameter name="aParentIndex"/>
+        <parameter name="aPrevSiblingIndex"/>
+        <body>
+        <![CDATA[
+          const nsIXFormsItemSetUIElement =
+            Components.interfaces.nsIXFormsItemSetUIElement;
+          if (aNode.namespaceURI != this.XFORMS_NS)
+            return -1;
+
+          var container = null;
+          var index = -1;
+          var prevIndex = -1;
+
+          switch (aNode.localName) {
+            case "select1":
+            case "select":
+            case "choices":
+              container = aNode;
+              break;
+            case "item":
+              break;
+            case "itemset":
+              var itemset = aNode.QueryInterface(nsIXFormsItemSetUIElement);
+              container = itemset.anonymousItemSetContent;
+              index = aParentIndex;
+              prevIndex = aPrevSiblingIndex;
+              break;
+            default:
+              return -1;
+          }
+
+          // Create native item/choices and insert it into native widget
+          // hierarchy if inserted elements are xf:item or xf:choices only.
+          if (index == -1) {
+            this.isInsertionHandlingPrevented = true;
+            if (aParentIndex != null && aParentIndex != -1) {
+              index = this.nativeWidget.appendElm(aNode, aParentIndex,
+                                                  aPrevSiblingIndex);
+            } else {
+              index = this.nativeWidget.insertElm(aNode, aParentNode);
+            }
+            this.isInsertionHandlingPrevented = false;
+          }
+
+          // We return whether inserted element is not container of
+          // select/select1 child elements or native element wasn't inserted
+          // successfully.
+          if (index == -1 || !container)
+            return index;
+
+          // Create/insert native elements for choices/item/itemset child
+          // elements of inserted element if any.
+          var hasChildNodes = false;
+          for (var child = container.firstChild; child; child = child.nextSibling) {
+            if (child.namespaceURI != this.XFORMS_NS)
+              continue;
+
+            switch (child.localName) {
+              case "choices":
+              case "itemset":
+              case "item":
+                hasChildNodes = true;
+                prevIndex = this.handleInsertion(child, null, index, prevIndex);
+                break;
+            }
+          }
+
+          return hasChildNodes ? prevIndex : index;
+        ]]>
+        </body>
+      </method>
+
+      <!-- Flag prevents to handle DOM mutation events if mutation events are
+        cause of native widget is updated. -->
+      <field name="isInsertionHandlingPrevented">false</field>
+    </implementation>
+
+    <handlers>
+      <handler event="DOMNodeInserted">
+      <![CDATA[
+        if (this.isInsertionHandlingPrevented)
+          return;
+
+        var target = event.originalTarget;
+        var parent = event.relatedNode;
+
+        // If inserted element is item/itemset/choides element then we should
+        // update native widget
+        if (target.namespaceURI == this.XFORMS_NS &&
+            (target.localName == "choices" || target.localName == "itemset" ||
+             target.localName == "item")) {
+
+          // Search for parent element that is reflected by native widget.
+          // The parent element can be select/select1, itemset or choices
+          // element so we skip itemset element because it isn't presented
+          // in native widget.
+          while (parent != this && (parent.namespaceURI != this.XFORMS_NS ||
+                 parent.localName != "choices"))
+            parent = parent.parentNode;
+
+          this.handleInsertion(target, parent);
+          return;
+        }
+
+        // otherwise we try to update label for item/choices element.
+        this.handleLabel(target, true);
+      ]]>
+      </handler>
+
+      <handler event="DOMNodeRemoved">
+        if (this.isInsertionHandlingPrevented)
+          return;
+
+        var target = event.originalTarget;
+
+        if (target.namespaceURI == this.XFORMS_NS) {
+          switch (target.localName) {
+            case "choices":
+            case "item":
+              this.nativeWidget.removeNativeElm(target);
+              return;
+
+            case "itemset":
+              var itemset = target.QueryInterface(Components.interfaces.nsIXFormsItemSetUIElement);
+              var container = itemset.anonymousItemSetContent;
+              for (var child = container.firstChild; child; child = child.nextSibling)
+                this.nativeWidget.removeNativeElm(child);
+              return;
+          }
+        }
+
+        this.handleLabel(target, false);
+      </handler>
+
+      <handler event="DOMCharacterDataModified">
+        if (this.isInsertionHandlingPrevented)
+          return;
+
+        this.handleLabel(event.originalTarget, true);
+      </handler>
+    </handlers>
+  </binding>
+
+
+  <!-- SELECT: BASE
+    Note, keep synchronized with 'selects.xml#select-base' binding
+  -->
+  <binding id="select-base"
+           extends="#selectcontrols-base">
+
+    <implementation implements="nsIXFormsNSSelectElement">
+
+    <!-- nsIXFormsNSSelectElement -->
+      <property name="selectedItems" readonly="true">
+        <getter>
+          function _isSelected(aItem, aItemList) {
+            if (this.isItemMarkedSelected(aItem))
+              aItemList.push(aItem);
+            return true;
+          }
+          var list = [];
+          this.traverseItems(this, _isSelected, list);
+          return list;
+        </getter>
+      </property>
+
+      <method name="addItemToSelection">
+        <parameter name="aItem"/>
+        <body>
+          this.markItemSelected(aItem, true);
+        </body>
+      </method>
+
+      <method name="removeItemFromSelection">
+        <parameter name="aItem"/>
+        <body>
+          this.markItemSelected(aItem, false);
+        </body>
+      </method>
+
+      <method name="clearSelection">
+        <body>
+          function _clearSelection(aItem) {
+            this.markItemSelected(aItem, false);
+            return true;
+          }
+          this.traverseItems(this, _clearSelection);
+        </body>
+      </method>
+
+      <method name="selectAll">
+        <body>
+          function _selectAll(aItem) {
+            this.markItemSelected(aItem, true);
+            return true;
+          }
+          this.traverseItems(this, _selectAll);
+        </body>
+      </method>
+
+      <method name="isItemSelected">
+        <parameter name="aItem"/>
+        <body>
+          return this.isItemMarkedSelected(aItem);
+        </body>
+      </method>
+
+    <!-- Private implementation -->
+      <method name="getValuesArrayFor">
+        <parameter name="aString"/>
+        <parameter name="aWhiteSpaceExpr"/>
+        <body>
+          // A limitation of the XML Schema list datatypes is that white space
+          // characters in the storage values (the value element) are always
+          // interpreted as separators between individual data values.
+          // Therefore, authors should avoid using white space characters within
+          // storage values with list simpleContent.
+
+          // Replace new line (\n), tabs (\t) and carriage returns (\r) with
+          // space (" ").
+          var value = aString.replace(aWhiteSpaceExpr, " ");
+          return value.split(/\s/);
+        </body>
+      </method>
+
+      <method name="selectFreeEntryItemElements">
+        <body>
+          for (var i = 0; this.values.length; ++i) {
+            if (!this.values[i].isUsed) {
+              this.appendFreeEntryItem(this.values[i].value);
+              this.values[i].isUsed = true;
+            }
+          }
+        </body>
+      </method>
+
+      <method name="isOutOfRange">
+        <parameter name="aHitArray"/>
+        <body>
+        <![CDATA[
+          if (!aHitArray)
+            return false;
+
+          var i = 0;
+          for (; i < aHitArray.length && aHitArray[i].isUsed; ++i);
+          return i != aHitArray.length;
+        ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+
+  <!-- SELECT1: BASE
+    Note, keep synchronized with 'selects.xml#select1-base' binding.
+  -->
+  <binding id="select1-base"
+           extends="#selectcontrols-base">
+
+    <implementation implements="nsIXFormsNSSelect1Element">
+    <!-- nsIXFormsNSSelect1Element -->
+      <property name="selectedItem">
+        <getter>
+          function getSelectedItem(aItem, aSelectedItem) {
+            var selected = this.isItemMarkedSelected(aItem);
+            if (selected)
+              aSelectedItem.value = aItem;
+            return !selected;
+          }
+          var selectedItem = {value: null};
+          this.traverseItems(this, getSelectedItem, selectedItem);
+          return selectedItem.value;
+        </getter>
+        <setter>
+          function setSelectedItem(aItem, aSelectedItem) {
+            this.markItemSelected(aItem, aItem == aSelectedItem);
+            return true;
+          }
+          this.traverseItems(this, setSelectedItem, val);
+        </setter>
+      </property>
+
+    <!-- Private implementation -->
+      <method name="getValuesArrayFor">
+        <parameter name="aString"/>
+        <parameter name="aWhiteSpaceExpr"/>
+        <body>
+          return [aString];
+        </body>
+      </method>
+
+      <method name="selectFreeEntryItemElements">
+        <body>
+          if (this.values.length != 1)
+            return;
+
+          if (!this.values[0].isUsed) {
+            this.appendFreeEntryItem(this.values[0].value);
+            this.values[0].isUsed = true;
+          }
+        </body>
+      </method>
+
+      <method name="isOutOfRange">
+        <parameter name="aHitArray"/>
+        <body>
+        <![CDATA[
+          return aHitArray && (aHitArray.length > 1 || aHitArray.length == 1 &&
+            !aHitArray[0].isUsed);
+        ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+
+  <!-- BASE binding for NATIVE WIDGET CONTROL -->
+  <binding id="nativewidget-select">
+
+    <implementation>
+    <!-- public -->
+      <method name="selectItem">
+        <parameter name="aItem"/>
+        <parameter name="aDoSelect"/>
+        <body>
+          var index = this.getIndexByElm(aItem);
+          if (index != -1) {
+            var listElm = this.nodeList[index];
+            this.selectItemNative(listElm.nativeElm, aDoSelect);
+            listElm.wasSelected = aDoSelect;
+          }
+        </body>
+      </method>
+
+      <method name="isItemSelected">
+        <parameter name="aItem"/>
+        <body>
+          var index = this.getIndexByElm(aItem);
+          if (index != -1)
+            return this.isItemSelectedNative(this.nodeList[index].nativeElm);
+          return false;
+        </body>
+      </method>
+
+      <method name="disableItem">
+        <parameter name="aItem"/>
+        <parameter name="aDoDisable"/>
+        <body>
+          var index = this.getIndexByElm(aItem);
+          if (index != -1)
+            this.disableItemNative(this.nodeList[index].nativeElm, aDoDisable);
+        </body>
+      </method>
+
+      <method name="isItemDisabled">
+        <parameter name="aItem"/>
+        <body>
+          var index = this.getIndexByElm(aItem);
+          if (index != -1)
+            return this.isItemDisabledNative(this.nodeList[index].nativeElm);
+          return false;
+        </body>
+      </method>
+
+      <method name="focus">
+        <body>
+          this.control.focus();
+        </body>
+      </method>
+
+      <method name="getFreeEntryValues">
+        <body>
+          return "";
+        </body>
+      </method>
+
+      <method name="allowFreeEntry">
+        <parameter name="aAllowed"/>
+        <body>
+          return false;
+        </body>
+      </method>
+
+      <method name="appendFreeEntryItem">
+        <parameter name="aValue"/>
+        <body>
+        </body>
+      </method>
+
+      <method name="setLabelFor">
+        <parameter name="aNode"/>
+        <parameter name="aLabelNode"/>
+        <body>
+          var index = this.getIndexByElm(aNode);
+          if (index != -1)
+            this.setLabelForNative(this.nodeList[index].nativeElm, aLabelNode);
+        </body>
+      </method>
+
+      <!-- Create and appends native element.
+
+        @param aElm - the given element
+        @param aParentIndex - the index of parent element
+        @param aPrevSiblingIndex - the index of previous sibling element
+
+        @note - previous sibling elements must be in native widget already
+      -->
+      <method name="appendElm">
+        <parameter name="aElm"/>
+        <parameter name="aParentIndex"/>
+        <parameter name="aPrevSiblingIndex"/>
+        <body>
+        <![CDATA[
+          var parentListElm = this.nodeList[aParentIndex];
+          var nativeParentElm = parentListElm.nativeElm;
+
+          var isItemElm = {value: false};
+          var nativeElm = this.createNativeElm(aElm, nativeParentElm, null,
+                                               isItemElm);
+          if (!nativeElm)
+            return -1;
+
+          var parentElm = parentListElm.elm;
+          var parentLevel = parentListElm.level;
+
+          var listElm = {
+            elm: aElm,
+            nativeElm: nativeElm,
+            level: parentLevel + 1,
+          };
+
+          if (isItemElm.value)
+            listElm.wasSelected = false;
+
+          var index = -1;
+          if (aPrevSiblingIndex == null || aPrevSiblingIndex == -1)
+            index = aParentIndex + 1;
+          else
+            index = aPrevSiblingIndex + 1;
+
+          this.nodeList.splice(index, 0, listElm);
+
+          return index;
+        ]]>
+        </body>
+      </method>
+
+      <!-- Create and insert native element.
+
+        @param aElm - the given element
+        @param aParent - parent of the given element
+      -->
+      <method name="insertElm">
+        <parameter name="aElm"/>
+        <parameter name="aParent"/>
+        <body>
+        <![CDATA[
+          if (!aParent)
+            return this.appendTopElm(aElm);
+
+          var parentIndex = this.getIndexByElm(aParent);
+          if (parentIndex == -1)
+            return -1;
+
+          var nativeParent = this.nodeList[parentIndex].nativeElm;
+
+          var index = this.getInsertionIndexForElm(aElm, parentIndex);
+          if (index == -1)
+            return;
+
+          var isItemElm = {value: false};
+          var nextElm = aElm.nextSibling ? this.nodeList[index].nativeElm : null;
+
+          var nativeElm = this.createNativeElm(aElm, nativeParent, nextElm,
+                                               isItemElm);
+          if (!nativeElm)
+            return -1;
+
+          var parentLevel = this.nodeList[parentIndex].level;
+          var listElm = {
+            elm: aElm,
+            nativeElm: nativeElm,
+            level: parentLevel + 1,
+          };
+
+          if (isItemElm.value)
+            listElm.wasSelected = false;
+
+          this.nodeList.splice(index, 0, listElm);
+
+          return index;
+        ]]>
+        </body>
+      </method>
+
+      <!-- Remove native node and its children. -->
+      <method name="removeNativeElm">
+        <parameter name="aElm"/>
+        <body>
+        <![CDATA[
+          var index = this.getIndexByElm(aElm);
+          if (index == -1)
+            return;
+
+          var nativeElm = this.nodeList[index];
+          nativeElm.parentNode.removeChild(nativeElm);
+
+          var childCount = 1;
+          var level = this.nodeList[index];
+          for (var i = index + 1; i < this.nodeList.length; ++i) {
+            var childLevel = this.nodeList[i].level;
+            if (childLevel <= level)
+              break;
+
+            childCount++;
+          }
+
+          this.nodeList.splice(index - 1, childCount);
+        ]]>
+        </body>
+      </method>
+
+    <!-- overrideable -->
+      <method name="disableItemNative">
+        <parameter name="aItem"/>
+        <parameter name="aDoDisable"/>
+        <body>
+        </body>
+      </method>
+
+      <method name="isItemDisabledNative">
+        <parameter name="aItem"/>
+        <body>
+          return false;
+        </body>
+      </method>
+
+    <!-- private -->
+      <method name="appendTopElm">
+        <parameter name="aSelect"/>
+        <body>
+          var listElm = {
+            elm: aSelect,
+            nativeElm: this.control,
+            level: 0,
+            wasSelected: false
+          };
+
+          this.nodeList = [listElm];
+          this.selectControl = aSelect;
+          return 0;
+        </body>
+      </method>
+
+      <!-- Create and append native element.
+
+        @param aElm - the given element, this is either item or choices element
+        @param aParentElm - parent element of the given element
+        @param aNextElm - next sibling of the given element if any
+        @param aIsItemElm - [out] returns true if the given element is item
+      -->
+      <method name="createNativeElm">
+        <parameter name="aElm"/>
+        <parameter name="aParentElm"/>
+        <parameter name="aNextElm"/>
+        <parameter name="aIsItemElm"/>
+        <body>
+          switch (aElm.localName) {
+            case "choices":
+              aIsItemElm.value = false;
+              var group = this.createGroupElm(aParentElm, aNextElm,
+                                              this.getLabelFor(aElm));
+              return group ? group : this.control;
+            case "item":
+              aIsItemElm.value = true;
+              return this.createItemElm(aParentElm, aNextElm,
+                                        this.getLabelFor(aElm));
+          }
+          return null;
+        </body>
+      </method>
+
+      <!-- Return label element for the given element -->
+      <method name="getLabelFor">
+        <parameter name="aNode"/>
+        <body>
+        <![CDATA[
+          if (!aNode)
+            return null;
+
+          for (var child = aNode.firstChild; child; child = child.nextSibling) {
+            if (child.namespaceURI == this.XFORMS_NS) {
+              if (child.localName == "label")
+                return child;
+
+              if (child.localName == "contextcontainer")
+                return this.getLabelFor(child);
+            }
+          }
+          return null;
+        ]]>
+        </body>
+      </method>
+
+      <!-- Returns index for the given element.
+        @param aElm - the given element
+        @return - index of the given element
+      -->
+      <method name="getIndexByElm">
+        <parameter name="aElm"/>
+        <body>
+        <![CDATA[
+          for (var i = 0; i < this.nodeList.length; ++i) {
+            if (this.nodeList[i].elm == aElm)
+              return i;
+          }
+
+          dump("ERROR: selectsnw binding, can't locate the given element in the node list\n");
+          return -1;
+        ]]>
+        </body>
+      </method>
+
+      <!-- Return index that the given element will be inserted at
+        @param aElm - the inserted element
+        @param aParentIndex - index of parent element
+        @return - index for inserted element
+      -->
+      <method name="getInsertionIndexForElm">
+        <parameter name="aElm"/>
+        <parameter name="aParentIndex"/>
+        <body>
+        <![CDATA[
+          var delta = 0;
+          var elm = aElm;
+          while (elm = elm.previousSibling)
+            delta++;
+
+          var parentLevel = this.nodeList[aParentIndex].level;
+          var index = aParentIndex + 1;
+          var length = this.nodeList.length;
+          for (; index < length && delta; ++index) {
+            if (this.nodeList[index].level == parentLevel + 1)
+              delta--;
+          }
+
+          if (!delta)
+            return index;
+
+          dump("ERROR: selectsnw binding, can't find insertion point in the node list for the given element\n");
+          return -1;
+          ]]>
+        </body>
+      </method>
+
+      <!-- Fires 'xforms-select'/'xforms-deselect' events and updates instance
+        data. The method is used by bindings of native widget implementation.
+
+        @param aIncremental - specifies if update is incremental
+      -->
+      <method name="updateInstanceData">
+        <parameter name="aIncremental"/>
+        <body>
+        <![CDATA[
+          if (!this.selectControl)
+            return;
+
+          if (aIncremental) {
+            var deferredEventTargets = [];
+            for (var index = 0; index < this.nodeList.length; ++index) {
+              var listElm = this.nodeList[index];
+              if (!("wasSelected" in listElm))
+                continue;
+
+              // event state can be either:
+              // 0 - the state of element wasn't changed
+              // 1 - the element was selected
+              // 2 - the element was unselected
+              var eventState = 0;
+
+              var selected = this.isItemSelectedNative(listElm.nativeElm);
+              if (listElm.wasSelected && !selected)
+                eventState = 1;
+              else if (!listElm.wasSelected && selected)
+                eventState = 2;
+
+              if (!eventState)
+                continue;
+
+              var target = listElm.elm;
+              var parent = target.parentNode;
+              while (parent && parent != this.selectControl) {
+                if (parent.namespaceURI == this.XFORMS_NS &&
+                    parent.localName == "itemset") {
+                  target = parent;
+                  break;
+                }
+                parent = parent.parentNode;
+              }
+
+              // First we should send 'xforms-unselect' events for all
+              // unselected item elements and then 'xforms-select' events.
+              if (eventState == 1) {
+                listElm.wasSelected = false;
+                this.selectControl.
+                  dispatchXFormsNotificationEvent("xforms-deselect", target);
+              } else {
+                listElm.wasSelected = true;
+                deferredEventTargets.push(target);
+              }
+            }
+
+            for (var index = 0; index < deferredEventTargets.length; ++index) {
+              this.selectControl.dispatchXFormsNotificationEvent("xforms-select",
+                                                                 target);
+            }
+          }
+
+          this.selectControl.updateInstanceData(aIncremental);
+        ]]>
+        </body>
+      </method>
+
+      <!-- Returns the underlying control (native widget) -->
+      <property name="control" readonly="true">
+        <getter>
+          if (!this._control)
+            this._control = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "control");
+          return this._control;
+        </getter>
+      </property>
+
+      <!-- Reference on xforms 'select'/'select1' element -->
+      <field name="selectControl">null</field>
+
+      <!-- Contains a list of objects each of them has the following properties:
+        elm - xforms element (may be select/select1, item or choices)
+        nativeElm - native element that represents related xforms element
+        level - level of elements hierarchy (level of select/select1 is 0)
+        wasSelected - if 'elm' property contains item element then this property
+                      is presented and takes boolean value
+
+        First object in the list is for 'select'/'select1' element.
+      -->
+      <field name="nodeList">new Array()</field>
+
+      <!-- Debug method. Dumps current state of node list into console. -->
+      <method name="dumpNodeList">
+        <body>
+        <![CDATA[
+          dump("\n\n");
+          for (var i = 0; i < this.nodeList.length; ++i) {
+            var obj = this.nodeList[i];
+            for (var j = 0; j < obj.level; j++)
+              dump("  ");
+            dump("elm: " + obj.elm.localName + "\n");
+
+            for (var j = 0; j < obj.level; j++)
+              dump("  ");
+            dump("native elm: " + obj.nativeElm.localName);
+            var label = this.getLabelFor(obj.elm);
+            if (label)
+              dump(", label: " + label.textContent);
+            dump("\n");
+          }
+        ]]>
+        </body>
+      </method>
+
+      <property name="XFORMS_NS" readonly="true"
+                onget="return 'http://www.w3.org/2002/xforms';"/>
+
+      <property name="XHTML_NS" readonly="true"
+                onget="return 'http://www.w3.org/1999/xhtml';"/>
+
+      <property name="XUL_NS" readonly="true"
+                onget="return 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';"/>
+    </implementation>
+
+    <handlers>
+      <handler event="focus" phase="capturing">
+        if (this.selectControl)
+          this.selectControl.dispatchDOMUIEvent("DOMFocusIn");
+      </handler>
+
+      <handler event="blur" phase="capturing">
+        if (this.selectControl)
+          this.selectControl.dispatchDOMUIEvent("DOMFocusOut");
+      </handler>
+    </handlers>
+  </binding>
+
+</bindings>
+

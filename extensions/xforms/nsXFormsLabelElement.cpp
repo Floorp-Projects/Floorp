@@ -311,20 +311,6 @@ nsXFormsLabelElement::Refresh()
   nsCOMPtr<nsIDOMNode> parent;
   mElement->GetParentNode(getter_AddRefs(parent));
 
-  // If <label> is inside <select1> its parent is <item>
-  // or <contextcontainer> (which parent is <item>).
-  nsCOMPtr<nsIXFormsItemElement> item(do_QueryInterface(parent));
-  if (item) {
-    item->LabelRefreshed();
-  } else if (parent) {
-    nsCOMPtr<nsIDOMNode> grandparent;
-    parent->GetParentNode(getter_AddRefs(grandparent));
-    item = do_QueryInterface(grandparent);
-    if (item) {
-      item->LabelRefreshed();
-    }
-  }
-
   return NS_OK;
 }
 

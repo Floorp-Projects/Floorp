@@ -482,27 +482,6 @@ nsXFormsItemElement::GetLabelText(nsAString& aValue)
 }
 
 NS_IMETHODIMP
-nsXFormsItemElement::LabelRefreshed()
-{
-  NS_ENSURE_STATE(mElement);
-  nsCOMPtr<nsIDOMNode> parent, current;
-  current = mElement;
-  do {
-    current->GetParentNode(getter_AddRefs(parent));
-    if (nsXFormsUtils::IsXFormsElement(parent, NS_LITERAL_STRING("select1")) ||
-        nsXFormsUtils::IsXFormsElement(parent, NS_LITERAL_STRING("select"))) {
-      nsCOMPtr<nsIXFormsControl> select(do_QueryInterface(parent));
-      if (select) {
-        select->Refresh();
-      }
-      return NS_OK;
-    }
-    current = parent;
-  } while(current);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXFormsItemElement::GetIsCopyItem(PRBool *aIsCopyItem)
 {
   NS_ENSURE_ARG(aIsCopyItem);

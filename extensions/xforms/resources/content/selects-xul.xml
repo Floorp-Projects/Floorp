@@ -51,6 +51,15 @@
         <children/>
       </xul:vbox>
     </content>
+
+    <implementation>
+      <!-- nsIAccessibleProvider -->
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsSelectFull;
+        </getter>
+      </property>
+    </implementation>
   </binding>
 
 
@@ -94,6 +103,13 @@
     </content>
 
     <implementation>
+    <!-- nsIAccessibleProvider -->
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsSelectFull;
+        </getter>
+      </property>
+
       <method name="getControlElement">
         <body>
           return this.ownerDocument.

@@ -44,29 +44,19 @@
 
 <!--
   This file implements the "abstract" UI classes for XForms select/select1
-  controls. The approach used here is different from approach that is realized
-  in select.xml file. Here we don't build programmaticaly native widget that
-  will represent select/select1 control. Instead that every item or choices
-  element is visible and represented. An example is the controls for XHTML in
-  select-xhtml.xml.
+  controls. Bindings defined here are base bindings that are used for two
+  approaches of select/select1 elements implementations:
+  1. Every item or choices element is visible and represented. An example is
+     the controls for XHTML in "selects-xhtml.xml" file
+  2. Using of native widget that represents select/select1 elements. An example
+     is the controls for XHTML in "selectsnw-xhtml.xml" file.
 -->
 
-  <!-- BASE for select/select1 elements.
-    Right now this binding is used only by full appearance select/select1
-    elements. Be care with this accessible type and implementation logic if you
-    want to use this binding for other types of select/select1 elements.
-  -->
+  <!-- BASE for select/select1 elements. -->
   <binding id="selectcontrols-base"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
 
     <implementation implements="nsIAccessibleProvider">
-
-    <!-- nsIAccessibleProvider -->
-      <property name="accessibleType" readonly="true">
-        <getter>
-          return Components.interfaces.nsIAccessibleProvider.XFormsSelectFull;
-        </getter>
-      </property>
 
     <!-- nsIXFormsUIWidget -->
       <method name="refresh">
@@ -83,6 +73,8 @@
           this.values = this.getValuesArray(boundNode);
 
           this.traverseItems(this, this.selectItemElements);
+          if (this.freeEntryAllowed)
+            this.selectFreeEntryItemElements();
 
           var outOfRange = this.isOutOfRange(this.values) ||
             this.isOutOfRange(this.nodes);
@@ -97,14 +89,16 @@
       <method name="focus">
         <body>
           function focusItem(aItem) {
-            if (!aItem.disabled)
-              aItem.focus();
-            return aItem.disabled;
+            var disabled = this.isItemMarkedDisabled(aItem);
+            if (!disabled)
+              this.focusItem(aItem);
+            return disabled;
           }
           this.traverseItems(this, focusItem);
         </body>
       </method>
 
+    <!-- public -->
       <property name="incremental">
         <getter>
           return this.getAttribute("incremental") != "false";
@@ -114,6 +108,16 @@
             this.setAttribute("incremental", "false");
           else
             this.removeAttribute("incremental");
+        </setter>
+      </property>
+
+      <property name="selection">
+        <getter>
+          return this.getAttribute("selection");
+        </getter>
+        <setter>
+          this.setAttribute("selection", val);
+          this.freeEntryAllowed = this.allowFreeEntry(val == "open");
         </setter>
       </property>
 
@@ -131,36 +135,38 @@
         <parameter name="aItem"/>
         <body>
         <![CDATA[
-          aItem.disabled = this.accessors.isReadonly();
+          this.markItemDisabled(aItem, this.accessors.isReadonly());
 
           if (aItem.isCopyItem) {
             if (!this.nodes || !aItem.copyNode) {
               // aNodes is empty only if select controls is bound to non element
               // node. We just disable item element since it's value can't be
               // saved in bound node.
-              aItem.disabled = true;
+              this.markItemDisabled(aItem, true);
               return true;
             }
 
-            for (var i = 0; i < this.nodes.length; i++) {
+            var length = this.nodes.length;
+            for (var i = 0; i < length; i++) {
               if (aItem.copyNodeEquals(this.nodes[i].node)) {
-                aItem.selected = true;
+                this.markItemSelected(aItem, true);
                 this.nodes[i].isUsed = true;
                 return true;
               }
             }
           } else {
-            for (var i = 0; i < this.values.length; i++) {
+            var length = this.values.length;
+            for (var i = 0; i < length; i++) {
               if (this.values[i].value == aItem.value) {
-                aItem.selected = true;
+                this.markItemSelected(aItem, true);
                 this.values[i].isUsed = true;
                 return true;
               }
             }
           }
 
-          if (aItem.selected)
-            aItem.selected = false;
+          if (this.isItemMarkedSelected(aItem))
+            this.markItemSelected(aItem, false);
 
           return true;
         ]]>
@@ -274,6 +280,8 @@
 
           var forceRebuild = {value: false};
           this.traverseItems(this, this.buildInstanceData, node, forceRebuild);
+          if (this.freeEntryAllowed)
+            this.appendValueForInstanceNode(node, this.getFreeEntryValues());
 
           var nsIDOMNode = Components.interfaces.nsIDOMNode;
 
@@ -306,24 +314,38 @@
         <parameter name="aForceRebuild"/>
         <body>
         <![CDATA[
+          const nsIDOMNode = Components.interfaces.nsIDOMNode;
+
           if (aItem.isCopyItem) {
-            // Per specs we should fire 'xforms-binding-exception' event if
-            // bound node is not element and copy item is selected. We don't do
-            // it because in this case copy items are disabled and can't be
-            // selected.
             var wasSelected = false;
             if (this.nodes) {
-              for (var i = 0; i < this.nodes.length; i++) {
+              var length = this.nodes.length;
+              for (var i = 0; i < length; i++) {
                 if (aItem.copyNodeEquals(this.nodes[i].node)) {
                   wasSelected = true;
                   break;
                 }
               }
             }
-            if (wasSelected != aItem.selected)
+            if (wasSelected != this.isItemMarkedSelected(aItem))
               aForceRebuild.value = true;
 
-            if (aItem.selected) {
+            if (this.isItemMarkedSelected(aItem)) {
+              if (aInstanceNode.nodeType != nsIDOMNode.ELEMENT_NODE) {
+                // Per specs we should fire 'xforms-binding-exception' event if
+                // bound node is not element and copy item is selected.
+                this.dispatchXFormsNotificationEvent("xforms-binding-exception",
+                                                     this);
+
+                // We should probably un-select the item so that the list
+                // of selected data is accurate. This WON'T cause a
+                // xforms-select/deselect to fire. Since the user just selected
+                // this item and we are automatically deselecting it from
+                // underneath the user, we'll treat it like nothing happened.
+                this.markItemSelected(aItem, false);
+                return true;
+            }
+
               var importedNode =
                 aInstanceNode.ownerDocument.importNode(aItem.copyNode, true);
               aInstanceNode.appendChild(importedNode);
@@ -331,10 +353,8 @@
             return true;
           }
 
-          if (!aItem.selected)
+          if (!this.isItemMarkedSelected(aItem))
             return true;
-
-          var nsIDOMNode = Components.interfaces.nsIDOMNode;
 
           if (aInstanceNode.nodeType != nsIDOMNode.ELEMENT_NODE) {
             if (aInstanceNode.textContent)
@@ -343,22 +363,37 @@
             return true;
           }
 
+          this.appendValueForInstanceNode(aInstanceNode, aItem.value);
+          return true;
+        ]]>
+        </body>
+      </method>
+
+      <!-- Append the given value for the instance node
+        @param aInstanceNode - the given instance node
+        @param aValue - appended value.
+      -->
+      <method name="appendValueForInstanceNode">
+        <parameter name="aInstanceNode"/>
+        <parameter name="aValue"/>
+        <body>
+        <![CDATA[
+          const nsIDOMNode = Components.interfaces.nsIDOMNode;
+
           var fchild = aInstanceNode.firstChild;
           if (fchild && (fchild.nodeType == nsIDOMNode.TEXT_NODE ||
               fchild.nodeType == nsIDOMNode.CDATA_SECTION_NODE)) {
             if (fchild.nodeValue)
               fchild.nodeValue += " ";
-            fchild.nodeValue += aItem.value;
+            fchild.nodeValue += aValue;
           } else {
             var textnode =
-              aInstanceNode.ownerDocument.createTextNode(aItem.value);
+              aInstanceNode.ownerDocument.createTextNode(aValue);
             if (fchild)
               aInstanceNode.insertBefore(textnode, fchild);
             else
               aInstanceNode.appendChild(textnode);
           }
-
-          return true;
         ]]>
         </body>
       </method>
@@ -481,8 +516,124 @@
         </body>
       </method>
 
+      <!-- Return values of free entry. The method implementation is a stub and
+        it should be removed when all native controls will support
+        @selection="open".
+
+        @note - should be overriden by implementation binding
+      -->
+      <method name="getFreeEntryValues">
+        <body>
+          return "";
+        </body>
+      </method>
+
+      <!-- Allow free entry. The method implementation is a stub and it should
+        be removed when all native controls will support @selection="open".
+
+        @return - true if free entries has been allowed
+        @note - should be overriden by implementation binding
+      -->
+      <method name="allowFreeEntry">
+        <parameter name="aAllowed"/>
+        <body>
+          return false;
+        </body>
+      </method>
+
+      <!-- Append and select free entry item. The implementations of this method
+        for xf:select should consider the scenario where several items may have
+        been selected by the user in addition to the user typing several values
+        directly into the editable field.  In that case, these additional values
+        should be appended to the control's value and the items that represent
+        these additional values should be selected.  In the case of
+        implementations for xf:select1, we'll assume that the widget that
+        represents the select1 will deselect the currently selected item if a
+        user types in the editable field.  So the free entry value, if present,
+        is the only value that the control can have.
+
+        The method implementation is a stub and it should be removed when all
+        native controls will support @selection="open".
+
+        @param aValue - the value of free entry item
+        @note - should be overriden by implementation binding
+      -->
+      <method name="appendFreeEntryItem">
+        <parameter name="aValue"/>
+        <body>
+        </body>
+      </method>
+
+      <!-- Select/Unselect item element.
+
+        @param aItem - the given item element
+        @param aIsSelected - if true then item should be selected, otherwise
+                             unselected
+      -->
+      <method name="markItemSelected">
+        <parameter name="aItem"/>
+        <parameter name="aIsSelected"/>
+        <body>
+          if (aItem)
+            aItem.selected = aIsSelected;
+        </body>
+      </method>
+
+      <!-- Return true if item is selected
+
+        @param aItem - the given item.
+      -->
+      <method name="isItemMarkedSelected">
+        <parameter name="aItem"/>
+        <body>
+          return aItem ? aItem.selected : false;
+        </body>
+      </method>
+
+      <!-- Disable/enable the given item element
+
+        @param aItem - the given item
+        @param aIsDisabled - if true then item should be disabled, otherwise
+                             enabled
+      -->
+      <method name="markItemDisabled">
+        <parameter name="aItem"/>
+        <parameter name="aIsDisabled"/>
+        <body>
+          if (aItem)
+            aItem.disabled = aIsDisabled;
+        </body>
+      </method>
+
+      <!-- Return true if the given item element disabled
+
+        @param aItem - the given item
+      -->
+      <method name="isItemMarkedDisabled">
+        <parameter name="aItem"/>
+        <body>
+          return aItem ? aItem.disabled : false;
+        </body>
+      </method>
+
+      <method name="focusItem">
+        <parameter name="aItem"/>
+        <body>
+          if (aItem)
+            aItem.focus();
+        </body>
+      </method>
+
+      <constructor>
+        this.freeEntryAllowed = this.allowFreeEntry(this.selection == "open");
+      </constructor>
+
       <!-- Storage for previous value of 'in-range' state of select element -->
       <field name="outOfRange">null</field>
+
+      <!-- Specifies whether free entry is allowed by certain implementation of
+        select/select1 element. -->
+      <field name="freeEntryAllowed">false</field>
 
       <!-- Arrays of selected values and nodes that combine to build the content
         of the bound instance node. -->
@@ -492,7 +643,9 @@
   </binding>
 
 
-  <!-- SELECT: BASE -->
+  <!-- SELECT: BASE
+    Note, keep synchronized with 'selectsnw.xml#select-base' binding
+  -->
   <binding id="select-base"
            extends="#selectcontrols-base">
 
@@ -502,7 +655,7 @@
       <property name="selectedItems" readonly="true">
         <getter>
           function _isSelected(aItem, aItemList) {
-            if (aItem.selected)
+            if (this.isItemMarkedSelected(aItem))
               aItemList.push(aItem);
             return true;
           }
@@ -515,23 +668,21 @@
       <method name="addItemToSelection">
         <parameter name="aItem"/>
         <body>
-          if (aItem)
-            aItem.selected = true;
+          this.markItemSelected(aItem, true);
         </body>
       </method>
 
       <method name="removeItemFromSelection">
         <parameter name="aItem"/>
         <body>
-          if (aItem)
-            aItem.selected = false;
+          this.markItemSelected(aItem, false);
         </body>
       </method>
 
       <method name="clearSelection">
         <body>
           function _clearSelection(aItem) {
-            aItem.selected = false;
+            this.markItemSelected(aItem, false);
             return true;
           }
           this.traverseItems(this, _clearSelection);
@@ -541,7 +692,7 @@
       <method name="selectAll">
         <body>
           function _selectAll(aItem) {
-            aItem.selected = true;
+            this.markItemSelected(aItem, true);
             return true;
           }
           this.traverseItems(this, _selectAll);
@@ -551,7 +702,7 @@
       <method name="isItemSelected">
         <parameter name="aItem"/>
         <body>
-          return aItem ? aItem.selected : false;
+          return this.isItemMarkedSelected(aItem);
         </body>
       </method>
 
@@ -586,11 +737,26 @@
             var parent = this.ownerDocument.getBindingParent(aItem);
             var target = parent && parent.localName == "itemset" ? parent : aItem;
 
-            var eventName = aItem.selected ? "xforms-select" : "xforms-deselect";
+            var eventName = this.isItemMarkedSelected(aItem) ?
+              "xforms-select" : "xforms-deselect";
             this.dispatchXFormsNotificationEvent(eventName, target);
           }
 
           this.updateInstanceData(aIncremental);
+        ]]>
+        </body>
+      </method>
+
+      <method name="selectFreeEntryItemElements">
+        <body>
+        <![CDATA[
+          var length = this.values.length;
+          for (var i = 0; i < length; ++i) {
+            if (!this.values[i].isUsed) {
+              this.appendFreeEntryItem(this.values[i].value);
+              this.values[i].isUsed = true;
+            }
+          }
         ]]>
         </body>
       </method>
@@ -612,7 +778,9 @@
   </binding>
 
 
-  <!-- SELECT1: BASE -->
+  <!-- SELECT1: BASE
+    Note, keep synchronized with 'selects.xml#select1-base' binding.
+  -->
   <binding id="select1-base"
            extends="#selectcontrols-base">
 
@@ -621,9 +789,9 @@
       <property name="selectedItem">
         <getter>
           function getSelectedItem(aItem, aSelectedItem) {
-            if (aItem.selected)
+            if (this.isItemMarkedSelected(aItem))
               aSelectedItem.value = aItem;
-            return !aItem.selected;
+            return !this.isItemMarkedSelected(aItem);
           }
           var selectedItem = {value: null};
           this.traverseItems(this, getSelectedItem, selectedItem);
@@ -631,7 +799,7 @@
         </getter>
         <setter>
           function setSelectedItem(aItem, aSelectedItem) {
-            aItem.selected = aItem == aSelectedItem;
+            this.markItemSelected(aItem, aItem == aSelectedItem);
             return true;
           }
           this.traverseItems(this, setSelectedItem, val);
@@ -662,8 +830,8 @@
 
             function _unselectItems(aItem, aNewSelectedItem, aTarget) {
               if (aItem != aNewSelectedItem) {
-                if (aItem.selected) {
-                  aItem.selected = false;
+                if (this.isItemMarkedSelected(aItem)) {
+                  this.markItemSelected(aItem, false);
                   this.dispatchXFormsNotificationEvent("xforms-deselect",
                                                        aTarget);
                   return false;
@@ -673,12 +841,25 @@
             }
             this.traverseItems(this, _unselectItems, aItem, target);
 
-            var eventName = aItem.selected ? "xforms-select" : "xforms-deselect";
+            var eventName = this.isItemMarkedSelected(aItem) ?
+              "xforms-select" : "xforms-deselect";
             this.dispatchXFormsNotificationEvent(eventName, target);
           }
 
           this.updateInstanceData(aIncremental);
         ]]>
+        </body>
+      </method>
+
+      <method name="selectFreeEntryItemElements">
+        <body>
+          if (this.values.length != 1)
+            return;
+
+          if (!this.values[0].isUsed) {
+            this.appendFreeEntryItem(this.values[0].value);
+            this.values[0].isUsed = true;
+          }
         </body>
       </method>
 

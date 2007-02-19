@@ -43,7 +43,7 @@
 /**
  * Interface implemented by the item element.
  */
-[scriptable, uuid(e7e65a10-bf37-488f-9c74-add34abdd309)]
+[scriptable, uuid(0acdfa92-0b0a-4c7a-bcd8-7256ec04673c)]
 interface nsIXFormsItemElement : nsISupports
 {
   /**
@@ -62,13 +62,6 @@ interface nsIXFormsItemElement : nsISupports
    * styling the element.
    */
   void setActive(in boolean aActive);
-
-  /**
-   * This is called by the \<label\> child element whenever it is refreshed.
-   * This information will be propagated by the \<item\> to the nearest
-   * \<select1\> element, which can then refresh its UI.
-   */
-  void labelRefreshed();
 
   /**
    * Indicates whether the item element contains a value child or a copy

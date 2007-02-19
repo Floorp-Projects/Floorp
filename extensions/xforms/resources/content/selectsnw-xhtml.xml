@@ -1,0 +1,180 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla XForms support.
+   -
+   - The Initial Developer of the Original Code is
+   - Mozilla Foundation.
+   - Portions created by the Initial Developer are Copyright (C) 2007
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -  Alexander Surkov <surkov.alexander@gmail.com> (original author)
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<bindings id="xformsSelectsNativeWidgetBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+<!-- SELECT, SELECT1 CONTROLS
+  The section contains xforms select and select1 controls implementations for
+  XHTML. All controls are inherited from interface bindings realized in
+  'selectsnw.xml' file.
+
+  XXX: Element select of minimal appearance is not implemented (see bug 332928).
+
+  select/select1 of full appearance implementation uses a different approach
+  taken in 'selects.xml' file, their implementation is hosted in
+  'selects-xhtml.xml' file.
+-->
+
+  <binding id="select"
+           extends="chrome://xforms/content/selectsnw.xml#select-base">
+
+    <content>
+      <children includes="label"/>
+      <html:span anonid="nativewidget" xbl:inherits="style, accesskey"/>
+      <children/>
+    </content>
+  </binding>
+
+
+  <binding id="select1"
+           extends="chrome://xforms/content/selectsnw.xml#select1-base">
+
+    <content>
+      <children includes="label"/>
+      <html:span anonid="nativewidget" xbl:inherits="style, accesskey"/>
+      <children/>
+    </content>
+  </binding>
+
+
+<!-- CONTROL WIDGETS FOR SELECT/SELECT1 CONTROLS
+  The section contains underlying widgets implementations needed for xforms
+  select controls. All underlying widgets implement the interface what base
+  widget for xforms select controls ask for. You can find interface description
+  in 'selectsnw.xml' file.
+-->
+
+  <binding id="nativewidget-select-compact"
+           extends="chrome://xforms/content/selectsnw.xml#nativewidget-select">
+    <content>
+      <html:select xbl:inherits="style, accesskey, disabled=readonly"
+                   class="xf-value" multiple="true" size="5" anonid="control"/>
+    </content>
+
+    <implementation>
+      <method name="createGroupElm">
+        <parameter name="aParentElm"/>
+        <parameter name="aNextElm"/>
+        <parameter name="aXFLabel"/>
+        <body>
+          var elm = this.ownerDocument.createElementNS(this.XHTML_NS,
+                                                       "optgroup");
+          if (aXFLabel)
+            elm.textContent = aXFLabel.textValue;
+
+          return aParentElm.insertBefore(elm, aNextElm);
+        </body>
+      </method>
+
+      <method name="createItemElm">
+        <parameter name="aParentElm"/>
+        <parameter name="aNextElm"/>
+        <parameter name="aXFLabel"/>
+        <body>
+          var elm = this.ownerDocument.createElementNS(this.XHTML_NS, "option");
+          if (aXFLabel)
+            elm.textContent = aXFLabel.textValue;
+
+          return aParentElm.insertBefore(elm, aNextElm);
+        </body>
+      </method>
+
+      <method name="setLabelForNative">
+        <parameter name="aElm"/>
+        <parameter name="aXFLabel"/>
+        <body>
+          aElm.textContent = aXFLabel ? aXFLabel.textValue : "";
+        </body>
+      </method>
+
+      <method name="isItemSelectedNative">
+        <parameter name="aItem"/>
+        <body>
+          return aItem.selected;
+        </body>
+      </method>
+
+      <method name="selectItemNative">
+        <parameter name="aItem"/>
+        <parameter name="aDoSelect"/>
+        <body>
+          aItem.selected = aDoSelect;
+        </body>
+      </method>
+
+      <method name="isItemDisabledNative">
+        <parameter name="aItem"/>
+        <body>
+          return aItem.disabled;
+        </body>
+      </method>
+
+      <method name="disableItemNative">
+        <parameter name="aItem"/>
+        <parameter name="aDoDisable"/>
+        <body>
+          aItem.disabled = aDoDisable;
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="change">
+        this.updateInstanceData(true);
+      </handler>
+
+      <handler event="blur" phase="capturing">
+        this.updateInstanceData(false);
+      </handler>
+    </handlers>
+  </binding>
+
+
+  <binding id="nativewidget-select1-compact"
+           extends="#nativewidget-select-compact">
+    <content>
+      <html:select xbl:inherits="style, accesskey, disabled=readonly"
+                   class="xf-value" anonid="control"/>
+    </content>
+  </binding>
+
+</bindings>

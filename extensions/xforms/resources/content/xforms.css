@@ -110,18 +110,15 @@ contextcontainer-inline {
 xul|*:root select1:not([appearance]) item,
 xul|*:root select1[appearance='minimal'] item,
 select1[appearance='compact'] item,
-select:not([appearance]) item,
-select[appearance='compact'] item,
+select:not([appearance="full"]) item,
 xul|*:root select1:not([appearance]) itemset,
 xul|*:root select1[appearance='minimal'] itemset,
 select1[appearance='compact'] itemset,
-select:not([appearance]) itemset,
-select[appearance='compact'] itemset,
+select:not([appearance="full"]) itemset,
 xul|*:root select1:not([appearance]) choices,
 xul|*:root select1[appearance='minimal'] choices,
 select1[appearance='compact'] choices,
-select:not([appearance]) choices,
-select[appearance='compact'] choices {
+select:not([appearance="full"]) choices {
   display: none;
 }
 
@@ -531,25 +528,25 @@ html|*:root select1[appearance='minimal'] item {
 }
 
 xul|*:root select1 {
-  -moz-binding: url('chrome://xforms/content/select-xul.xml#xformswidget-select1-minimal');
+  -moz-binding: url('chrome://xforms/content/selectsnw-xul.xml#select1-minimal');
 }
-xul|*:root select1 xul|box[anonid="control"] {
-  -moz-binding: url('chrome://xforms/content/select-xul.xml#controlwidget-select1-minimal');
+xul|*:root select1 xul|box[anonid="nativewidget"] {
+  -moz-binding: url('chrome://xforms/content/selectsnw-xul.xml#nativewidget-select1-minimal');
 }
 
   /* select1 appearance='compact' */
 html|*:root select1[appearance="compact"] {
-  -moz-binding: url('chrome://xforms/content/select-xhtml.xml#xformswidget-select1-compact');
+  -moz-binding: url('chrome://xforms/content/selectsnw-xhtml.xml#select1');
 }
-html|*:root select1[appearance="compact"] html|span[anonid="control"] {
-  -moz-binding: url('chrome://xforms/content/select-xhtml.xml#controlwidget-select1-compact');
+html|*:root select1[appearance="compact"] html|span[anonid="nativewidget"] {
+  -moz-binding: url('chrome://xforms/content/selectsnw-xhtml.xml#nativewidget-select1-compact');
 }
 
 xul|*:root select1[appearance="compact"] {
-  -moz-binding: url('chrome://xforms/content/select-xul.xml#xformswidget-select1-compact');
+  -moz-binding: url('chrome://xforms/content/selectsnw-xul.xml#select1');
 }
-xul|*:root select1[appearance="compact"] xul|box[anonid="control"] {
-  -moz-binding: url('chrome://xforms/content/select-xul.xml#controlwidget-select1-compact');
+xul|*:root select1[appearance="compact"] xul|box[anonid="nativewidget"] {
+  -moz-binding: url('chrome://xforms/content/selectsnw-xul.xml#nativewidget-select1-compact');
 }
 
   /* select1 appearance='full' */
@@ -669,17 +666,17 @@ select1[appearance="full"] choices > choices {
 
   /* select appearance="compact" (default) */
 html|*:root select {
-  -moz-binding: url('chrome://xforms/content/select-xhtml.xml#xformswidget-select-compact');
+  -moz-binding: url('chrome://xforms/content/selectsnw-xhtml.xml#select');
 }
-html|*:root select html|span[anonid="control"] {
-  -moz-binding: url('chrome://xforms/content/select-xhtml.xml#controlwidget-select-compact');
+html|*:root select html|span[anonid="nativewidget"] {
+  -moz-binding: url('chrome://xforms/content/selectsnw-xhtml.xml#nativewidget-select-compact');
 }
 
 xul|*:root select {
-  -moz-binding: url('chrome://xforms/content/select-xul.xml#xformswidget-select-compact');
+  -moz-binding: url('chrome://xforms/content/selectsnw-xul.xml#select');
 }
-xul|*:root select xul|box[anonid="control"] {
-  -moz-binding: url('chrome://xforms/content/select-xul.xml#controlwidget-select-compact');
+xul|*:root select xul|box[anonid="nativewidget"] {
+  -moz-binding: url('chrome://xforms/content/selectsnw-xul.xml#nativewidget-select-compact');
 }
 
   /* select appearance="full" */

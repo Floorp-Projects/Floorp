@@ -1220,6 +1220,53 @@
           }
         </body>
       </method>
+
+      <property name="parentControl" readonly="true">
+        <getter>
+        <![CDATA[
+          if (!this._parentControl) {
+            var parent = this.parentNode;
+            for (; parent; parent = parent.parentNode) {
+              if (parent.namespaceURI == this.XFORMS_NS &&
+                  (parent.localName == "select" ||
+                   parent.localName == "select1"))
+                break;
+            }
+            this._parentControl = parent;
+          }
+          return this._parentControl;
+        ]]>
+        </getter>
+      </property>
+
+      <method name="refreshParentControl">
+        <parameter name="aTarget"/>
+        <body>
+        <![CDATA[
+          if (!this.parentControl)
+            return;
+
+          var parent = aTarget.parentNode;
+          for (; parent; parent = parent.parentNode) {
+            if (parent.namespaceURI == this.XFORMS_NS &&
+                parent.localName == "label") {
+              this.parentControl.refreshWidth();
+              return;
+            }
+          }
+        ]]>
+        </body>
+      </method>
+
+      <property name="XFORMS_NS" readonly="true"
+                onget="return 'http://www.w3.org/2002/xforms';"/>
     </implementation>
+
+    <handlers>
+      <handler event="DOMNodeInserted"
+               action="refreshParentControl(event.originalTarget);"/>
+      <handler event="DOMNodeRemoved"
+               action="refreshParentControl(event.originalTarget);"/>
+    </handlers>
   </binding>
 </bindings>
