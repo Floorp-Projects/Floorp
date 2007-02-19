@@ -4416,8 +4416,6 @@ function asyncOpenWebPanel(event)
        // XXX Now that markLinkVisited is gone, we may not need to field _main and
        // _content here.
        target = wrapper.getAttribute("target");
-       var docWrapper = wrapper.ownerDocument;
-       var locWrapper = docWrapper.location;
        if (fieldNormalClicks &&
            (!target || target == "_content" || target  == "_main"))
          // IE uses _main, SeaMonkey uses _content, we support both
@@ -4433,8 +4431,12 @@ function asyncOpenWebPanel(event)
          if (wrapper.href.substr(0, 5) === "data:")
            return true;
 
-         if (!webPanelSecurityCheck(locWrapper.href, wrapper.href))
+         try {
+           urlSecurityCheck(wrapper.href, wrapper.ownerDocument.nodePrincipal);
+         }
+         catch(ex) {
            return false;
+         } 
 
          var postData = { };
          var url = getShortcutOrURI(wrapper.href, postData);
@@ -4466,17 +4468,17 @@ function asyncOpenWebPanel(event)
          // Used in WinIE as a way of transiently loading pages in a sidebar.  We
          // mimic that WinIE functionality here and also load the page transiently.
 
-         // javascript links targeting the sidebar shouldn't be allowed
-         // we copied this from IE, and IE blocks this completely
-         if (wrapper.href.substr(0, 11) === "javascript:")
+         // DISALLOW_INHERIT_PRINCIPAL is used here in order to also
+         // block javascript and data: links targeting the sidebar.
+         try {
+           const nsIScriptSecurityMan = Ci.nsIScriptSecurityManager;
+           urlSecurityCheck(wrapper.href,
+                            wrapper.ownerDocument.nodePrincipal,
+                            nsIScriptSecurityMan.DISALLOW_INHERIT_PRINCIPAL);
+         }
+         catch(ex) {
            return false;
-
-         // data: URIs are just as dangerous
-         if (wrapper.href.substr(0, 5) === "data:")
-           return false;
-
-         if (!webPanelSecurityCheck(locWrapper.href, wrapper.href))
-           return false;
+         } 
 
          openWebPanel(gNavigatorBundle.getString("webPanels"), wrapper.href);
          event.preventDefault();

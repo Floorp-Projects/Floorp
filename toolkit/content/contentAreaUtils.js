@@ -68,21 +68,9 @@ function urlSecurityCheck(aURL, aPrincipal, aFlags)
     else
       secMan.checkLoadURIStrWithPrincipal(aPrincipal, aURL, aFlags);
   } catch (e) {
-    // XXXmano: dump the prinicipal url here too
+    // XXXmano: dump the principal url here too
     throw "Load of " + aURL + " denied.";
   }
-}
-
-function webPanelSecurityCheck(aSourceURL, aDestURL) {
-  const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
-  var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-                         .getService(nsIScriptSecurityManager);
-  try {
-    secMan.checkLoadURIStr(aSourceURL, aDestURL, nsIScriptSecurityManager.STANDARD);
-  } catch (e) {
-    return false;
-  }
-  return true;
 }
 
 function isContentFrame(aFocusedWindow)
