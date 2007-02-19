@@ -35,9 +35,3 @@ functionality used by mozIStorageConnection.preload to fill the cache with
 pages from the disk.
 
 -- Brett Wilson <brettw@gmail.com> 04/2006
-
-While updating do not remove the files os_os2.c and os_os2.h and be sure to
-leave the parts in os.h intact that refer to OS_OS2. Once the OS/2 changes
-have made it into SQLite upstream this note can be removed.
-
--- Peter Weilbacher <mozilla@weilbacher.org> 05/2006
