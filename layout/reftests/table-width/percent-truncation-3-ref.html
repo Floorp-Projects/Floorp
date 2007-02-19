@@ -20,10 +20,12 @@ td {
 </head>
 <body>
 
+<!-- column min widths must match tests, since we have to size slightly
+     smaller than percents because of the extra space from the borders -->
 <table width="100%"><tr height="50">
-<td style="background:yellow"  width="40%"></td>
-<td style="background:aqua"    width="40%"></td>
-<td style="background:fuchsia" width="20%"></td>
+<td style="background:yellow"  width="40%"><div style="width:100px"></div></td>
+<td style="background:aqua"    width="40%"><div style="width:100px"></div></td>
+<td style="background:fuchsia" width="20%"><div style="width:100px"></div></td>
 <td style="background:blue"></td>
 </tr></table>
 
