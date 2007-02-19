@@ -39,36 +39,12 @@ DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir  = content/html/content/test
+relativesrcdir  = content/xul/content/test
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = 	test_bug589.html \
-		test_bug691.html \
-		nnc_lockup.gif \
-		test_bug694.html \
-		test_bug696.html \
-		test_bug1297.html \
-		test_bug1366.html \
-		test_bug1400.html \
-		test_bug2082.html \
-		test_bug3348.html \
-		test_bug6296.html \
-		test_bug24958.html \
-		bug100533_load.html \
-		bug100533_iframe.html \
-		test_bug100533.html \
-		test_bug237071.html \
-		bug277724_iframe1.html \
-		bug277724_iframe2.xhtml \
-		test_bug277724.html \
-		test_bug300691-1.html \
-		test_bug300691-2.html \
-		test_bug300691-3.xhtml \
-		bug340800_iframe.txt \
-		test_bug340800.html \
-                test_bug330705-1.html \
+_TEST_FILES = 	test_bug330705-2.xul \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
