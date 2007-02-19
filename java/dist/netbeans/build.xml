@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- You may freely edit this file. See commented blocks below for -->
+<!-- some examples of how to customize the build. -->
+<!-- (If you delete it and reopen the project it will be recreated.) -->
+<project name="webclient" default="default" basedir=".">
+    <description>Builds, tests, and runs the project webclient.</description>
+    <import file="nbproject/build-impl.xml"/>
+
+    <!--
+
+    There exist several targets which are by default empty and which can be 
+    used for execution of your tasks. These targets are usually executed 
+    before and after some main targets. They are: 
+
+      -pre-init:                 called before initialization of project properties
+      -post-init:                called after initialization of project properties
+      -pre-compile:              called before javac compilation
+      -post-compile:             called after javac compilation
+      -pre-compile-single:       called before javac compilation of single file
+      -post-compile-single:      called after javac compilation of single file
+      -pre-compile-test:         called before javac compilation of JUnit tests
+      -post-compile-test:        called after javac compilation of JUnit tests
+      -pre-compile-test-single:  called before javac compilation of single JUnit test
+      -post-compile-test-single: called after javac compilation of single JUunit test
+      -pre-jar:                  called before JAR building
+      -post-jar:                 called after JAR building
+      -post-clean:               called after cleaning build products
+
+    (Targets beginning with '-' are not intended to be called on their own.)
+
+    Example of inserting an obfuscator after compilation could look like this:
+
+        <target name="-post-compile">
+            <obfuscate>
+                <fileset dir="${build.classes.dir}"/>
+            </obfuscate>
+        </target>
+
+    For list of available properties check the imported 
+    nbproject/build-impl.xml file. 
+
+
+    Another way to customize the build is by overriding existing main targets.
+    The targets of interest are: 
+
+      -init-macrodef-javac:     defines macro for javac compilation
+      -init-macrodef-junit:     defines macro for junit execution
+      -init-macrodef-debug:     defines macro for class debugging
+      -init-macrodef-java:      defines macro for class execution
+      -do-jar-with-manifest:    JAR building (if you are using a manifest)
+      -do-jar-without-manifest: JAR building (if you are not using a manifest)
+      run:                      execution of project 
+      -javadoc-build:           Javadoc generation
+      test-report:              JUnit report generation
+
+    An example of overriding the target for project execution could look like this:
+
+        <target name="run" depends="webclient-impl.jar">
+            <exec dir="bin" executable="launcher.exe">
+                <arg file="${dist.jar}"/>
+            </exec>
+        </target>
+
+    Notice that the overridden target depends on the jar target and not only on 
+    the compile target as the regular run target does. Again, for a list of available 
+    properties which you can use, check the target you are overriding in the
+    nbproject/build-impl.xml file. 
+
+    -->
+    
+    <target name="-pre-init">
+        <condition property="so.prefix" value="">
+            <and>
+                <os family="windows" />
+            </and>
+        </condition>
+
+        <condition property="so.prefix" value="lib">
+            <and>
+                <os family="unix" />
+            </and>
+        </condition>
+
+        <condition property="so.extension" value="dll">
+            <and>
+                <os family="windows" />
+            </and>
+        </condition>
+
+        <condition property="so.extension" value="so">
+            <and>
+                <os family="unix" />
+            </and>
+        </condition>
+
+        <condition property="platform" value="win32">
+            <and>
+                <os family="windows" />
+            </and>
+        </condition>
+
+        <condition property="platform" value="linux">
+            <and>
+                <os family="unix" />
+            </and>
+        </condition>
+
+        <property file="webclient.properties" />
+        
+        <condition property="preconditions.met">
+            <and>
+                <available file="${browser.bin.dir}/${so.prefix}xul.${so.extension}" />
+            </and>
+        </condition>
+        
+        <uptodate property="do.copy.binaries">
+            <srcfiles dir="${basedir}/../bin" includes="**/*.*" />
+            <mapper type="identity" to="${browser.bin.dir}/**/*.*" />
+        </uptodate>
+        
+                <fail unless="preconditions.met">
+                    
+Conditions for compilation have not been met.
+Have you verified that the property browser.bin.dir has been set
+to the binary directory of the host browser in the webclient.properties
+file?  The current value of this property is:
+${browser.bin.dir} and this directory must contain the file
+${so.prefix}xul.${so.extension}.
+    </fail>
+        
+    </target>
+    
+    <target name="-post-init">
+        <antcall target="copy.binaries" />
+    </target>
+    
+    <target name="-post-clean">
+        <delete>
+            <fileset dir="${browser.bin.dir}" 
+                     includes="${bin.artifacts.pattern}"/>
+        </delete>
+    </target>
+    
+    <target name="copy.binaries" if="do.copy.binaries">
+        <copy todir="${browser.bin.dir}">
+            <fileset dir="${basedir}/../bin" />
+        </copy>
+    </target>
+</project>

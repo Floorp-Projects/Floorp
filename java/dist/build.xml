@@ -56,6 +56,7 @@
     <antcall target="build.dist.jar" />
     <antcall target="copy.binaries" />
     <antcall target="copy.samples.src" />
+    <antcall target="copy.build.support" />
 
   </target>
 
@@ -114,6 +115,7 @@
               targetfile="${dist.jar}">
       <srcfiles dir="${dist.classes}" />
     </uptodate>
+    <echo message="java classes up to date: ${core.java.classes.uptodate}" />
   </target>
 
   <target name="build.dist.jar">
@@ -133,7 +135,8 @@
     </jar>
   </target>
 
-  <target name="compile.all" unless="core.java.classes.uptodate">
+  <target name="compile.all" unless="core.java.classes.uptodate" 
+          depends="uptodate.core.java.classes">
     <ant inheritAll="false" dir="${source.home}" />
   </target>
 
@@ -157,6 +160,17 @@
       </fileset>
     </copy>
 
+    <copy todir="${dist.home}/samples/manual/src/main/java">
+      <fileset dir="${source.home}/webclient/test/manual/src/classes" />
+    </copy>
+
+
+  </target>
+
+  <target name="copy.build.support" depends="prepare">
+    <copy todir="${dist.home}/netbeans">
+      <fileset dir="${basedir}/netbeans" />
+    </copy>
   </target>
   
 
