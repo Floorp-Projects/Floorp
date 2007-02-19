@@ -157,12 +157,10 @@
   "New Separator">
 <!ENTITY cmd.new_separator.accesskey
   "S">
-<!ENTITY cmd.reload.label
-  "Reload">
-<!ENTITY cmd.reload.accesskey
+<!ENTITY cmd.reloadLivebookmark.label
+  "Reload Live Bookmark">
+<!ENTITY cmd.reloadLivebookmark.accesskey
   "R">
-<!ENTITY cmd.reload.key
-  "r">
 <!ENTITY cmd.groupby_site.label
   "Group by Site">
 <!ENTITY cmd.groupby_site.accesskey

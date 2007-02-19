@@ -83,10 +83,11 @@
     <command id="placesCmd_rename"
              oncommand="goDoCommand('placesCmd_show:info');"
              observes="placesCmd_show:info"/>
-    <!-- XXXmano bug 364644: not yet supported -->
     <command id="placesCmd_reload"
-             disabled="true"/>
-    <command id="placesCmd_sortby:name"/>
+             oncommand="goDoCommand('placesCmd_reload');"/>
+
+    <!-- Bug 325342 -->
+    <command id="placesCmd_sortby:name" disabled="true"/>
 
     <command id="placesCmd_moveBookmarks"
              oncommand="goDoCommand('placesCmd_moveBookmarks');"/>
@@ -166,8 +167,8 @@
     <menuseparator id="placesContext_deleteSeparator"/>
     <menuitem id="placesContext_reload"
               command="placesCmd_reload"
-              label="&cmd.reload.label;"
-              accesskey="&cmd.reload.accesskey;"
+              label="&cmd.reloadLivebookmark.label;"
+              accesskey="&cmd.reloadLivebookmark.accesskey;"
               selection="livemark/feedURI|allLivemarks"/>
     <menuitem id="placesContext_sortby:name"
               command="placesCmd_sortby:name"
