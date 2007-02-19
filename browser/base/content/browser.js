@@ -38,7 +38,7 @@
 #   Jesse Ruderman <jruderman@gmail.com>
 #   Joe Hughes <joe@retrovirus.com>
 #   Pamela Greene <pamg.bugs@gmail.com>
-#   Michael Ventnor <ventnors_dogs234@yahoo.com.au>
+#   Michael Ventnor <m.ventnor@gmail.com>
 #   Simon Bünzli <zeniko@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
@@ -974,6 +974,9 @@ function delayedStartup()
   if (gURLBar && document.documentElement.getAttribute("chromehidden").indexOf("toolbar") != -1) {
     gURLBar.setAttribute("readonly", "true");
     gURLBar.setAttribute("enablehistory", "false");
+    var goButtonStack = document.getElementById("go-button-stack");
+    if (goButtonStack)
+      goButtonStack.setAttribute("hidden", "true");
   }
 
   if (gURLBar)
