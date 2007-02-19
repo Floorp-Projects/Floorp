@@ -596,10 +596,10 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         XPCWrappedNative* wn = XPCNativeWrapper::GetWrappedNative(cx, obj);
         XPCNativeScriptableInfo* si = wn ? wn->GetScriptableInfo() : nsnull;
         if(si)
-            snprintf(name, sizeof(name), "XPCNativeWrapper (%s)",
-                     si->GetJSClass()->name);
+            JS_snprintf(name, sizeof(name), "XPCNativeWrapper (%s)",
+                        si->GetJSClass()->name);
         else
-            snprintf(name, sizeof(name), "XPCNativeWrapper");
+            JS_snprintf(name, sizeof(name), "XPCNativeWrapper");
     }
     else if(obj)
     {
@@ -611,14 +611,14 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
             si = p->GetScriptableInfo();
         }
         if(si)
-            snprintf(name, sizeof(name), "JS Object (%s - %s)", clazz->name,
-                     si->GetJSClass()->name);
+            JS_snprintf(name, sizeof(name), "JS Object (%s - %s)", clazz->name,
+                        si->GetJSClass()->name);
         else
-            snprintf(name, sizeof(name), "JS Object (%s)", clazz->name);
+            JS_snprintf(name, sizeof(name), "JS Object (%s)", clazz->name);
     }
     else
     {
-        snprintf(name, sizeof(name), "JS Object");
+        JS_snprintf(name, sizeof(name), "JS Object");
     }
     cb.DescribeNode(refcount, sizeof(JSObject), name);
 #else

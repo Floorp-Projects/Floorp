@@ -83,8 +83,8 @@ NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
     nsrefcnt refcnt = tmp->mRefCnt.get();
 #ifdef DEBUG
     char name[72];
-    snprintf(name, sizeof(name), "nsXPCWrappedJS (%s)",
-             tmp->GetClass()->GetInterfaceName());
+    JS_snprintf(name, sizeof(name), "nsXPCWrappedJS (%s)",
+                tmp->GetClass()->GetInterfaceName());
     cb.DescribeNode(refcnt, sizeof(nsXPCWrappedJS), name);
 #else
     cb.DescribeNode(refcnt, sizeof(nsXPCWrappedJS), "nsXPCWrappedJS");
