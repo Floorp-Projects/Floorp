@@ -47,8 +47,6 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsSVGUseElement, NS_SVG_USE_ELEMENT_IMPL_CID)
-
 ////////////////////////////////////////////////////////////////////////
 // implementation
 

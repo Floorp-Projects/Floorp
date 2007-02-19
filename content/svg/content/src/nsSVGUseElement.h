@@ -120,4 +120,6 @@ protected:
   nsCOMPtr<nsIContent> mSourceContent;  // observed element
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsSVGUseElement, NS_SVG_USE_ELEMENT_IMPL_CID)
+
 #endif
