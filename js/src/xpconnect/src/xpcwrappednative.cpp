@@ -61,10 +61,10 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(nsISupports *s,
     char name[72];
     XPCNativeScriptableInfo* si = tmp->GetScriptableInfo();
     if(si)
-        snprintf(name, sizeof(name), "XPCWrappedNative (%s)",
-                 si->GetJSClass()->name);
+        JS_snprintf(name, sizeof(name), "XPCWrappedNative (%s)",
+                    si->GetJSClass()->name);
     else
-        snprintf(name, sizeof(name), "XPCWrappedNative");
+        JS_snprintf(name, sizeof(name), "XPCWrappedNative");
 
     cb.DescribeNode(tmp->mRefCnt.get(), sizeof(XPCWrappedNative), name);
 #else
