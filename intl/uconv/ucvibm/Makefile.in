@@ -80,6 +80,10 @@ ifeq ($(OS_ARCH),OS2)
 CPPSRCS		+= \
 		nsCP869ToUnicode.cpp \
 		nsUnicodeToCP869.cpp \
+		nsCP1125ToUnicode.cpp \
+		nsUnicodeToCP1125.cpp \
+		nsCP1131ToUnicode.cpp \
+		nsUnicodeToCP1131.cpp \
 		$(NULL)
 endif
 
