@@ -145,18 +145,30 @@ NS_IMETHODIMP nsChromeTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
 {
   NS_ENSURE_ARG_POINTER(aSink);
 
-  if(aIID.Equals(NS_GET_IID(nsIPrompt)))
+  if(aIID.Equals(NS_GET_IID(nsIPrompt))) {
+    NS_ENSURE_STATE(mXULWindow);
     return mXULWindow->GetInterface(aIID, aSink);
-  if(aIID.Equals(NS_GET_IID(nsIAuthPrompt)))
+  }
+  if(aIID.Equals(NS_GET_IID(nsIAuthPrompt))) {
+    NS_ENSURE_STATE(mXULWindow);
     return mXULWindow->GetInterface(aIID, aSink);
-  if(aIID.Equals(NS_GET_IID(nsIWebBrowserChrome)))
+  }
+  if(aIID.Equals(NS_GET_IID(nsIWebBrowserChrome))) {
+    NS_ENSURE_STATE(mXULWindow);
     return mXULWindow->GetInterface(aIID, aSink);
-  if (aIID.Equals(NS_GET_IID(nsIEmbeddingSiteWindow)))
+  }
+  if (aIID.Equals(NS_GET_IID(nsIEmbeddingSiteWindow))) {
+    NS_ENSURE_STATE(mXULWindow);
     return mXULWindow->GetInterface(aIID, aSink);
-  if (aIID.Equals(NS_GET_IID(nsIEmbeddingSiteWindow2)))
+  }
+  if (aIID.Equals(NS_GET_IID(nsIEmbeddingSiteWindow2))) {
+    NS_ENSURE_STATE(mXULWindow);
     return mXULWindow->GetInterface(aIID, aSink);
-  if (aIID.Equals(NS_GET_IID(nsIXULWindow)))
+  }
+  if (aIID.Equals(NS_GET_IID(nsIXULWindow))) {
+    NS_ENSURE_STATE(mXULWindow);
     return mXULWindow->QueryInterface(aIID, aSink);
+  }
 
   return QueryInterface(aIID, aSink);
 }
@@ -187,6 +199,7 @@ NS_IMETHODIMP nsChromeTreeOwner::FindItemWithName(const PRUnichar* aName,
    // see bug 217886 for details
    if(name.LowerCaseEqualsLiteral("_content") || name.EqualsLiteral("_main"))
       {
+      NS_ENSURE_STATE(mXULWindow);
       fIs_Content = PR_TRUE;
       mXULWindow->GetPrimaryContentShell(aFoundItem);
       if(*aFoundItem)
@@ -265,12 +278,14 @@ NS_IMETHODIMP nsChromeTreeOwner::ContentShellAdded(nsIDocShellTreeItem* aContent
 
 NS_IMETHODIMP nsChromeTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
 {
+   NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->GetPrimaryContentShell(aShell);
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
    PRInt32 aCX, PRInt32 aCY)
 {
+   NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->SizeShellTo(aShellItem, aCX, aCY);
 }
 
@@ -279,6 +294,7 @@ nsChromeTreeOwner::SetPersistence(PRBool aPersistPosition,
                                   PRBool aPersistSize,
                                   PRBool aPersistSizeMode)
 {
+  NS_ENSURE_STATE(mXULWindow);
   nsCOMPtr<nsIDOMElement> docShellElement;
   mXULWindow->GetWindowDOMElement(getter_AddRefs(docShellElement));
   if (!docShellElement)
@@ -316,6 +332,7 @@ nsChromeTreeOwner::GetPersistence(PRBool* aPersistPosition,
                                   PRBool* aPersistSize,
                                   PRBool* aPersistSizeMode)
 {
+  NS_ENSURE_STATE(mXULWindow);
   nsCOMPtr<nsIDOMElement> docShellElement;
   mXULWindow->GetWindowDOMElement(getter_AddRefs(docShellElement));
   if (!docShellElement) 
@@ -359,48 +376,57 @@ NS_IMETHODIMP nsChromeTreeOwner::Create()
 
 NS_IMETHODIMP nsChromeTreeOwner::Destroy()
 {
+   NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->Destroy();
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::SetPosition(PRInt32 x, PRInt32 y)
 {
+   NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->SetPosition(x, y);
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::GetPosition(PRInt32* x, PRInt32* y)
 {
+   NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->GetPosition(x, y);
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
 {
+   NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->SetSize(cx, cy, fRepaint);
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::GetSize(PRInt32* cx, PRInt32* cy)
 {
+   NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->GetSize(cx, cy);
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
    PRInt32 cy, PRBool fRepaint)
 {
+   NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->SetPositionAndSize(x, y, cx, cy, fRepaint);
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::GetPositionAndSize(PRInt32* x, PRInt32* y, PRInt32* cx,
    PRInt32* cy)
 {
+   NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->GetPositionAndSize(x, y, cx, cy);
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::Repaint(PRBool aForce)
 {
+   NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->Repaint(aForce);
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::GetParentWidget(nsIWidget** aParentWidget)
 {
+   NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->GetParentWidget(aParentWidget);
 }
 
@@ -412,6 +438,7 @@ NS_IMETHODIMP nsChromeTreeOwner::SetParentWidget(nsIWidget* aParentWidget)
 
 NS_IMETHODIMP nsChromeTreeOwner::GetParentNativeWindow(nativeWindow* aParentNativeWindow)
 {
+   NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->GetParentNativeWindow(aParentNativeWindow);
 }
 
@@ -423,37 +450,44 @@ NS_IMETHODIMP nsChromeTreeOwner::SetParentNativeWindow(nativeWindow aParentNativ
 
 NS_IMETHODIMP nsChromeTreeOwner::GetVisibility(PRBool* aVisibility)
 {
+   NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->GetVisibility(aVisibility);
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::SetVisibility(PRBool aVisibility)
 {
+   NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->SetVisibility(aVisibility);
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::GetEnabled(PRBool *aEnabled)
 {
+   NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->GetEnabled(aEnabled);
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::SetEnabled(PRBool aEnable)
 {
+   NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->SetEnabled(aEnable);
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::GetBlurSuppression(PRBool *aBlurSuppression)
 {
+  NS_ENSURE_STATE(mXULWindow);
   return mXULWindow->GetBlurSuppression(aBlurSuppression);
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::SetBlurSuppression(PRBool aBlurSuppression)
 {
+  NS_ENSURE_STATE(mXULWindow);
   return mXULWindow->SetBlurSuppression(aBlurSuppression);
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::GetMainWidget(nsIWidget** aMainWidget)
 {
    NS_ENSURE_ARG_POINTER(aMainWidget);
+   NS_ENSURE_STATE(mXULWindow);
 
    *aMainWidget = mXULWindow->mWindow;
    NS_IF_ADDREF(*aMainWidget);
@@ -463,16 +497,19 @@ NS_IMETHODIMP nsChromeTreeOwner::GetMainWidget(nsIWidget** aMainWidget)
 
 NS_IMETHODIMP nsChromeTreeOwner::SetFocus()
 {
+   NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->SetFocus();
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::GetTitle(PRUnichar** aTitle)
 {
+   NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->GetTitle(aTitle);
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::SetTitle(const PRUnichar* aTitle)
 {
+   NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->SetTitle(aTitle);
 }
 
@@ -507,6 +544,7 @@ NS_IMETHODIMP nsChromeTreeOwner::OnLocationChange(nsIWebProgress* aWebProgress,
   PRBool itsForYou = PR_TRUE;
 
   if (aWebProgress) {
+    NS_ENSURE_STATE(mXULWindow);
     nsCOMPtr<nsIDOMWindow> progressWin;
     aWebProgress->GetDOMWindow(getter_AddRefs(progressWin));
 
@@ -519,8 +557,10 @@ NS_IMETHODIMP nsChromeTreeOwner::OnLocationChange(nsIWebProgress* aWebProgress,
   }
 
    // If loading a new root .xul document, then redo chrome.
-  if (itsForYou)
+  if (itsForYou) {
+    NS_ENSURE_STATE(mXULWindow);
     mXULWindow->mChromeLoaded = PR_FALSE;
+  }
   return NS_OK;
 }
 
