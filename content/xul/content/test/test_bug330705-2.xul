@@ -1,0 +1,40 @@
+﻿<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:html="http://www.w3.org/1999/xhtml"
+  title="Test for Bug 330705">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=330705
+-->
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>         
+  <body  xmlns="http://www.w3.org/1999/xhtml">
+    <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=330705">Mozilla Bug 330705</a>
+    <p id="display">
+      <box tabindex="1" style="-moz-user-focus:normal;" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>
+      <box tabindex="1" style="-moz-user-focus:normal;" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>
+    </p>
+    <div id="content" style="display: none">
+      <script class="testbody" type="text/javascript">
+      <![CDATA[
+        SimpleTest.waitForExplicitFinish();
+
+        function onLoad() {
+          var isFocused = false;
+          var box = document.getElementsByTagName('box')[0];
+          box.addEventListener('focus', function() { isFocused = true; }, true);
+          box.addEventListener('blur', function() { isFocused = false;}, true);
+          box.focus();
+          document.getElementsByTagName('box')[1].blur();
+          ok(isFocused == true, "The first box element is still focused after blur() has been called on the second box element");
+          SimpleTest.finish();
+        }
+
+        addLoadEvent(onLoad);
+      ]]>
+      </script>
+      <pre id="test">
+      </pre>
+    </div>
+  </body>
+</window>
