@@ -198,7 +198,7 @@
   </binding>
 
   <binding id="tabs"
-           extends="chrome://global/content/bindings/general.xml#control-item">
+           extends="chrome://global/content/bindings/general.xml#basecontrol">
     <resources>
       <stylesheet src="chrome://global/skin/tabbox.css"/>
     </resources>
@@ -529,7 +529,7 @@
   </binding>
 
   <binding id="tab" display="xul:button"
-           extends="chrome://global/content/bindings/tabbox.xml#tab-base">
+           extends="chrome://global/content/bindings/general.xml#control-item">
     <resources>
       <stylesheet src="chrome://global/skin/tabbox.css"/>
     </resources>
