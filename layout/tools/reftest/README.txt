@@ -43,25 +43,42 @@ comments) must be one of the following:
 
 2. A test item
 
-   <type> <url> <url_ref>
+   <failure-type>* <type> <url> <url_ref>
 
    where
 
-   a. <type> is one of the following:
+   a. <failure-type> (optional) is one of the following:
+
+      fails  The test passes if the images of the two renderings DO NOT
+             meet the conditions specified in the <type>.
+
+      fails-if(condition) If the condition is met, the test passes if the 
+                          images of the two renderings DO NOT meet the 
+                          conditions of <type>. If the condition is not met,
+                          the test passes if the conditions of <type> are met.
+
+      random  The results of the test are random and therefore not to be
+              considered in the output.
+
+      random-if(condition) The results of the test are random if a given
+                           condition is met.
+
+      Examples of random-if:
+          random-if(MOZ_WIDGET_TOOLKIT=="windows")
+          random-if(MOZ_WIDGET_TOOLKIT=="cocoa")
+          random-if(MOZ_WIDGET_TOOLKIT=="gtk2") ...
+
+   b. <type> is one of the following:
 
       ==  The test passes if the images of the two renderings are the
-          SAME, and it is currently expected to PASS.
-      !=  The test passes if the images of the two renderings are the
-          DIFFERENT, and it is currently expected to PASS.
-      f== The test passes if the images of the two renderings are the
-          SAME, and it is currently expected to FAIL.
-      f!= The test passes if the images of the two renderings are the
-          DIFFERENT, and it is currently expected to FAIL.
+          SAME.
+      !=  The test passes if the images of the two renderings are 
+          DIFFERENT.
 
-   b. <url> is either a relative file path or an absolute URL for the
+   c. <url> is either a relative file path or an absolute URL for the
       test page
 
-   c. <url_ref> is either a relative file path or an absolute URL for
+   d. <url_ref> is either a relative file path or an absolute URL for
       the reference page
 
    The only difference between <url> and <url_ref> is that results of
@@ -79,7 +96,7 @@ MOZ_NO_REMOTE=1 or the -profile <directory> option)
 
 ./firefox -reftest /path/to/srcdir/mozilla/layout/reftests/reftest.list > reftest.out
 
-and then search/grep reftest.out for "UNEXPECTED" or "FAIL".
+and then search/grep reftest.out for "UNEXPECTED".
  
 You can also run clean-reftest-output.pl over reftest.out to convert the
 output to simple HTML.
