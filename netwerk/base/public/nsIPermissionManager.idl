@@ -66,7 +66,7 @@
 interface nsIURI;
 interface nsIObserver;
 
-[scriptable, uuid(4F6B5E00-0C36-11d5-A535-0010A401EB10)]
+[scriptable, uuid(00708302-684c-42d6-a5a3-995d51b1d17c)]
 interface nsIPermissionManager : nsISupports
 {
   /**
@@ -127,6 +127,17 @@ interface nsIPermissionManager : nsISupports
    */
   PRUint32 testPermission(in nsIURI uri,
                           in string type);
+
+  /**
+   * Test whether a website has permission to perform the given action.
+   * This requires an exact hostname match, subdomains are not a match.
+   * @param uri     the uri to be tested
+   * @param type    a case-sensitive ASCII string, identifying the consumer
+   * @param return  see add(), param permission. returns UNKNOWN_ACTION when
+   *                there is no stored permission for this uri and / or type.
+   */
+  PRUint32 testExactPermission(in nsIURI uri,
+                               in string type);
 
   /**
    * Allows enumeration of all stored permissions

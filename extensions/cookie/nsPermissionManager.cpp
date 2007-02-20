@@ -337,7 +337,7 @@ nsPermissionManager::Remove(const nsACString &aHost,
   // so just return NS_OK
   if (typeIndex == -1) return NS_OK;
 
-  nsHostEntry *entry = GetHostEntry(PromiseFlatCString(aHost), typeIndex);
+  nsHostEntry *entry = GetHostEntry(PromiseFlatCString(aHost), typeIndex, PR_FALSE);
   if (entry) {
     // cache the old permission before we delete it, to notify observers
     PRUint32 oldPermission = entry->GetPermission(typeIndex);
@@ -372,9 +372,26 @@ nsPermissionManager::RemoveAll()
 }
 
 NS_IMETHODIMP
+nsPermissionManager::TestExactPermission(nsIURI     *aURI,
+                                         const char *aType,
+                                         PRUint32   *aPermission)
+{
+  return CommonTestPermission(aURI, aType, aPermission, PR_TRUE);
+}
+
+NS_IMETHODIMP
 nsPermissionManager::TestPermission(nsIURI     *aURI,
                                     const char *aType,
                                     PRUint32   *aPermission)
+{
+  return CommonTestPermission(aURI, aType, aPermission, PR_FALSE);
+}
+
+nsresult
+nsPermissionManager::CommonTestPermission(nsIURI     *aURI,
+                                          const char *aType,
+                                          PRUint32   *aPermission,
+                                          PRBool      aExactHostMatch)
 {
   NS_ENSURE_ARG_POINTER(aURI);
   NS_ENSURE_ARG_POINTER(aType);
@@ -392,7 +409,7 @@ nsPermissionManager::TestPermission(nsIURI     *aURI,
   // so just return NS_OK
   if (typeIndex == -1) return NS_OK;
 
-  nsHostEntry *entry = GetHostEntry(host, typeIndex);
+  nsHostEntry *entry = GetHostEntry(host, typeIndex, aExactHostMatch);
   if (entry)
     *aPermission = entry->GetPermission(typeIndex);
 
@@ -404,7 +421,8 @@ nsPermissionManager::TestPermission(nsIURI     *aURI,
 // return null if nothing found.
 nsHostEntry *
 nsPermissionManager::GetHostEntry(const nsAFlatCString &aHost,
-                                  PRUint32              aType)
+                                  PRUint32              aType,
+                                  PRBool                aExactHostMatch)
 {
   PRUint32 offset = 0;
   nsHostEntry *entry;
@@ -417,6 +435,9 @@ nsPermissionManager::GetHostEntry(const nsAFlatCString &aHost,
       // reset entry, to be able to return null on failure
       entry = nsnull;
     }
+    if (aExactHostMatch)
+      break; // do not try super domains
+
     offset = aHost.FindChar('.', offset) + 1;
 
   // walk up the domaintree (we stop as soon as we find a match,
