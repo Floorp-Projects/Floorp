@@ -21,6 +21,7 @@ package Bugzilla::Version;
 
 use base qw(Bugzilla::Object);
 
+use Bugzilla::Install::Requirements qw(vers_cmp);
 use Bugzilla::Util;
 use Bugzilla::Error;
 
@@ -39,7 +40,9 @@ use constant DB_COLUMNS => qw(
 );
 
 use constant NAME_FIELD => 'value';
-use constant LIST_ORDER => NAME_FIELD;
+# This is "id" because it has to be filled in and id is probably the fastest.
+# We do a custom sort in new_from_list below.
+use constant LIST_ORDER => 'id';
 
 sub new {
     my $class = shift;
@@ -68,6 +71,12 @@ sub new {
 
     unshift @_, $param;
     return $class->SUPER::new(@_);
+}
+
+sub new_from_list {
+    my $self = shift;
+    my $list = $self->SUPER::new_from_list(@_);
+    return [sort { vers_cmp(lc($a->name), lc($b->name)) } @$list];
 }
 
 sub bug_count {
