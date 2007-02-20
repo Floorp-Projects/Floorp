@@ -1866,5 +1866,7 @@ nsLayoutUtils::GetClosestLayer(nsIFrame* aFrame)
           layer->GetParent()->GetType() == nsGkAtoms::scrollFrame))
       break;
   }
-  return layer;
+  if (layer)
+    return layer;
+  return aFrame->GetPresContext()->PresShell()->FrameManager()->GetRootFrame();
 }
