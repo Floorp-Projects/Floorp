@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -103,19 +104,23 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       res = NS_OK;
     }
       break;
-    case eColor_highlight: // CSS2 color
     case eColor_TextSelectBackground:
-    case eColor__moz_menuhover:
       res = GetMacBrushColor(kThemeBrushPrimaryHighlightColor, aColor, NS_RGB(0x00,0x00,0x00));
       break;
-    case eColor_highlighttext:  // CSS2 color
+    case eColor_highlight: // CSS2 color
+    case eColor__moz_menuhover:
+      res = GetMacAccentColor(eColorOffset_mac_accentregularshadow, aColor, NS_RGB(0x33,0x6F,0xCB));
+      break;      
     case eColor_TextSelectForeground:
+      GetColor(eColor_TextSelectBackground, aColor);
+      if (aColor == 0x000000)
+        aColor = NS_RGB(0xff,0xff,0xff);
+      else
+        aColor = NS_DONT_CHANGE_COLOR;
+      break;
+    case eColor_highlighttext:  // CSS2 color
     case eColor__moz_menuhovertext:
-        GetColor(eColor_TextSelectBackground, aColor);
-        if (aColor == 0x000000)
-          aColor = NS_RGB(0xff,0xff,0xff);
-        else
-          aColor = NS_DONT_CHANGE_COLOR;
+      res = GetMacTextColor(kThemeTextColorMenuItemSelected, aColor, NS_RGB(0xFF,0xFF,0xFF));
       break;
     case eColor_IMESelectedRawTextBackground:
     case eColor_IMESelectedConvertedTextBackground:
