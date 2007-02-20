@@ -98,10 +98,10 @@ class nsIScrollableFrame;
 
 typedef short SelectionType;
 
-// 6995eb7c-ffe8-4da2-ae32-c2117a740f0e
+// 252622d2-161e-4240-a912-e921179d9c9d
 #define NS_IPRESSHELL_IID     \
-{ 0x6995eb7c, 0xffe8, 0x4da2, \
- { 0xae, 0x32, 0xc2, 0x11, 0x7a, 0x74, 0x0f, 0x0e } }
+{ 0x252622d2, 0x161e, 0x4240, \
+  { 0xa9, 0x12, 0xe9, 0x21, 0x17, 0x9d, 0x9c, 0x9d } }
 
 // Constants uses for ScrollFrameIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -694,6 +694,11 @@ public:
 
   void AddWeakFrame(nsWeakFrame* aWeakFrame);
   void RemoveWeakFrame(nsWeakFrame* aWeakFrame);
+
+#ifdef NS_DEBUG
+  nsIFrame* GetDrawEventTargetFrame() { return mDrawEventTargetFrame; }
+#endif
+
 protected:
   // IMPORTANT: The ownership implicit in the following member variables
   // has been explicitly checked.  If you add any members to this class,
@@ -709,6 +714,10 @@ protected:
   nsFrameSelection*         mSelection;
   nsFrameManagerBase        mFrameManager;  // [OWNS]
   nsWeakPtr                 mForwardingContainer;
+
+#ifdef NS_DEBUG
+  nsIFrame*                 mDrawEventTargetFrame;
+#endif
 
   PRPackedBool              mStylesHaveChanged;
   PRPackedBool              mDidInitialReflow;
