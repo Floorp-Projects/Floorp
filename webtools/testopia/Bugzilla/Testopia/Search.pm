@@ -90,7 +90,7 @@ sub init {
     detaint_natural($page) if $page;
     $page = undef if ($cgi->param('viewall'));
     my $pagesize = $cgi->param('pagesize') if $cgi->param('pagesize');
-    detaint_natural($pagesize);
+    detaint_natural($pagesize) if defined $pagesize;
     $pagesize ||= 25;
     
     my @specialchart;
@@ -1016,10 +1016,12 @@ sub init {
         $t = $cgi->param($profile . "_type") || '';
         if ($t eq "exact"  || $t eq '') {
             $t = "anyexact";
-            foreach my $name (split(',', $cgi->param($profile))) {
-                $name = trim($name);
-                if ($name) {
-                    &::DBNameToIdAndCheck($name);
+            if ($cgi->param($profile)){
+                foreach my $name (split(',', $cgi->param($profile))) {
+                    $name = trim($name);
+                    if ($name) {
+                        &::DBNameToIdAndCheck($name);
+                    }
                 }
             }
         }

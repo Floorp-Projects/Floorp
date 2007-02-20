@@ -400,13 +400,12 @@ sub get_page_url {
 }
 
 sub get_url {
-    my $self = shift;
-    my $regxp = shift;
+    my ($self, $regxp) = @_;
     my $cgi = $self->{'cgi'};
     my @keys = $cgi->param;
-    my $qstring;
+    my $qstring ='';
     foreach my $key (@keys){
-        if ($key =~ /$regxp/){
+        if ((defined $regxp) && ($key =~ $regxp)){
             next;
         }
         my @vals = $cgi->param($key);
