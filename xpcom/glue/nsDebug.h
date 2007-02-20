@@ -250,7 +250,7 @@
  */
 PR_BEGIN_EXTERN_C
 
-void
+NS_COM_GLUE void
 printf_stderr(const char *fmt, ...);
 
 PR_END_EXTERN_C
