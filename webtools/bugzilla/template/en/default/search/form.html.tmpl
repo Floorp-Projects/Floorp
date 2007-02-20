@@ -58,7 +58,8 @@ var tms = new Array();
 
 [% n = 0 %]
 [% FOREACH p = product %]
-  [% IF Param('useclassification') && p.components.size %]
+  [% NEXT IF NOT p.components.size %]
+  [% IF Param('useclassification') %]
   prods['[% p.name FILTER js %]'] = [% n %]
   [% END %]
   cpts[[% n %]] = [
