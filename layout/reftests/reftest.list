@@ -254,43 +254,7 @@ fails == object/svg-with-type.html object/svg-with-type-ref.html
 == table-dom/insertTbodyRebuild1.html table-dom/insertTbodyRebuild1-ref.html
 
 # table-width/
-== table-width/spacing-invariance-quirks-min.html table-width/spacing-invariance-quirks-min-ref.html
-== table-width/spacing-invariance-quirks-pref.html table-width/spacing-invariance-quirks-pref-ref.html
-== table-width/spacing-invariance-standards-min.html table-width/spacing-invariance-standards-min-ref.html
-== table-width/spacing-invariance-standards-pref.html table-width/spacing-invariance-standards-pref-ref.html
-== table-width/min-width.html table-width/min-width-ref.html
-== table-width/pref-width.html table-width/pref-width-ref.html
-!= table-width/min-width-ref.html table-width/pref-width-ref.html
-== table-width/percent-large.html table-width/percent-large-ref.html
-== table-width/percent-large-min.html table-width/percent-large-min-ref.html
-== table-width/percent-large-nested.html table-width/percent-large-nested-ref.html
-== table-width/percent-small.html table-width/percent-small-ref.html
-== table-width/percent-small-min.html table-width/percent-small-min-ref.html
-== table-width/percent-small-nested.html table-width/percent-small-nested-ref.html
-== table-width/percent-small-2.html table-width/percent-small-2-ref.html
-== table-width/percent-zero.html table-width/percent-zero-ref.html
-== table-width/shrink-wrap-pref.html table-width/shrink-wrap-pref-ref.html
-== table-width/shrink-wrap-avail.html table-width/shrink-wrap-avail-ref.html
-== table-width/shrink-wrap-min.html table-width/shrink-wrap-min-ref.html
-!= table-width/shrink-wrap-min-ref.html table-width/shrink-wrap-pref-ref.html
-!= table-width/shrink-wrap-pref-ref.html table-width/shrink-wrap-avail-ref.html
-!= table-width/shrink-wrap-avail-ref.html table-width/shrink-wrap-min-ref.html
-== table-width/conflicting-widths-1.html table-width/conflicting-widths-ref-100xx.html
-== table-width/conflicting-widths-2.html table-width/conflicting-widths-ref-100xx.html
-== table-width/conflicting-widths-3.html table-width/conflicting-widths-ref-100xx.html
-== table-width/conflicting-widths-4.html table-width/conflicting-widths-ref-100xx.html
-== table-width/conflicting-widths-5.html table-width/conflicting-widths-5-ref.html
-== table-width/conflicting-widths-6.html table-width/conflicting-widths-6-ref.html
-== table-width/conflicting-widths-7.html table-width/conflicting-widths-7-ref.html
-== table-width/conflicting-widths-8.html table-width/conflicting-widths-8-ref.html
-== table-width/conflicting-widths-9.html table-width/conflicting-widths-9-ref.html
-== table-width/conflicting-widths-10.html table-width/conflicting-widths-10-ref.html
-== table-width/conflicting-percent-widths-1.html table-width/conflicting-percent-widths-1-ref.html
-== table-width/conflicting-percent-widths-2.html table-width/conflicting-percent-widths-2-ref.html
-== table-width/conflicting-percent-widths-3.html table-width/conflicting-percent-widths-3-ref.html
-== table-width/percent-truncation-1.html table-width/percent-truncation-1-ref.html
-== table-width/percent-truncation-2.html table-width/percent-truncation-2-ref.html
-== table-width/percent-truncation-3.html table-width/percent-truncation-3-ref.html
+include table-width/reftest.list
 
 # xul-document-load/
 include xul-document-load/reftest.list
