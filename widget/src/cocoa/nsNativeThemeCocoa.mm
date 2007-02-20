@@ -721,18 +721,32 @@ PRBool
 nsNativeThemeCocoa::GetWidgetOverflow(nsIDeviceContext* aContext, nsIFrame* aFrame,
                                       PRUint8 aWidgetType, nsRect* aResult)
 {
-  // We assume that all native widgets can draw a focus ring that will be less than
-  // or equal to 4 pixels thick.
-  nsIntMargin extraSize = nsIntMargin(4, 4, 4, 4);
-  PRInt32 p2a = aContext->AppUnitsPerDevPixel();
-  nsMargin m(NSIntPixelsToAppUnits(extraSize.left, p2a),
-             NSIntPixelsToAppUnits(extraSize.top, p2a),
-             NSIntPixelsToAppUnits(extraSize.right, p2a),
-             NSIntPixelsToAppUnits(extraSize.bottom, p2a));
-  nsRect r(nsPoint(0, 0), aFrame->GetSize());
-  r.Inflate(m);
-  *aResult = r;
-  return PR_TRUE;  
+  switch (aWidgetType) {
+    case NS_THEME_BUTTON:
+    case NS_THEME_BUTTON_SMALL:
+    case NS_THEME_TEXTFIELD:
+    case NS_THEME_LISTBOX:
+    case NS_THEME_DROPDOWN:
+    case NS_THEME_DROPDOWN_BUTTON:
+    case NS_THEME_CHECKBOX:
+    case NS_THEME_CHECKBOX_SMALL:
+    case NS_THEME_RADIO:
+    case NS_THEME_RADIO_SMALL:
+    // We assume that the above widgets can draw a focus ring that will be less than
+    // or equal to 4 pixels thick.
+    nsIntMargin extraSize = nsIntMargin(4, 4, 4, 4);
+    PRInt32 p2a = aContext->AppUnitsPerDevPixel();
+    nsMargin m(NSIntPixelsToAppUnits(extraSize.left, p2a),
+               NSIntPixelsToAppUnits(extraSize.top, p2a),
+               NSIntPixelsToAppUnits(extraSize.right, p2a),
+               NSIntPixelsToAppUnits(extraSize.bottom, p2a));
+    nsRect r(nsPoint(0, 0), aFrame->GetSize());
+    r.Inflate(m);
+    *aResult = r;
+    return PR_TRUE;
+  }
+  
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP
