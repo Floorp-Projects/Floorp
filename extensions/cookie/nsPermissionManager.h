@@ -168,7 +168,13 @@ private:
                        PRBool      aAdd);
 
   nsHostEntry *GetHostEntry(const nsAFlatCString &aHost,
-                            PRUint32              aType);
+                            PRUint32              aType,
+                            PRBool                aExactHostMatch);
+
+  nsresult CommonTestPermission(nsIURI     *aURI,
+                                const char *aType,
+                                PRUint32   *aPermission,
+                                PRBool      aExactHostMatch);
 
   // Use LazyWrite to save the permissions file on a timer. It will write
   // the file only once if repeatedly hammered quickly.
