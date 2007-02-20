@@ -748,6 +748,7 @@ sub modify {
             # Now update the flag object with its new values.
             $flag->{'setter'} = $setter;
             $flag->{'requestee'} = undef;
+            $flag->{'requestee_id'} = undef;
             $flag->{'status'} = $status;
 
             # Send an email notifying the relevant parties about the fulfillment,
@@ -764,11 +765,13 @@ sub modify {
             if ($requestee_email) {
                 $requestee_id = login_to_id($requestee_email);
                 $flag->{'requestee'} = new Bugzilla::User($requestee_id);
+                $flag->{'requestee_id'} = $requestee_id;
             }
             else {
                 # If the status didn't change but we only removed the
                 # requestee, we have to clear the requestee field.
                 $flag->{'requestee'} = undef;
+                $flag->{'requestee_id'} = undef;
             }
 
             # Update the database with the changes.
