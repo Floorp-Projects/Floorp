@@ -319,13 +319,26 @@ var PlacesUtils = {
                "@mozilla.org/browser/livemark-service;2");
   },
 
+ /**
+  * Determines whether a ResultNode is a live-bookmark item
+  * @param aNode
+  *        A NavHistory Result Node
+  * @returns true if the node is a livemark container item
+  */
+  nodeIsLivemarkItem: function PU_nodeIsLivemarkItem(aNode) {
+    NS_ASSERT(aNode, "null node");
+
+    return this.annotations.hasAnnotation(this._uri(aNode.uri),
+                                          "livemark/bookmarkFeedURI");
+  },
+
   /**
    * Determines whether or not a node is a readonly folder. 
    * @param   aNode
    *          The node to test.
    * @returns true if the node is a readonly folder.
   */
-  folderIsReadonly: function(aNode) {
+  isReadonlyFolder: function(aNode) {
     NS_ASSERT(aNode, "null node");
 
     return this.nodeIsFolder(aNode) &&

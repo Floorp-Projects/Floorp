@@ -1,4 +1,4 @@
-//* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -55,11 +55,11 @@ var PlacesOrganizer = {
 
   init: function PO_init() {
     this._places = document.getElementById("placesList");
-    this._content = document.getElementById("placeContent");  
-    
+    this._content = document.getElementById("placeContent");
+
     OptionsFilter.init(Groupers);
     Groupers.init();
-    
+
     // Select the specified place in the places list. 
     var placeURI = "place:";
     if ("arguments" in window)
@@ -74,19 +74,19 @@ var PlacesOrganizer = {
 
     // Set up the search UI.
     PlacesSearchBox.init();
-    
+
     // Set up the advanced query builder UI
     PlacesQueryBuilder.init();
   },
-  
+
   destroy: function PO_destroy() {
     OptionsFilter.destroy();
   },
-  
+
   HEADER_TYPE_SHOWING: 1,
   HEADER_TYPE_SEARCH: 2,
   HEADER_TYPE_ADVANCED_SEARCH: 3,
-  
+
   /**
    * Updates the text shown in the heading banner above the content view. 
    * @param   type
@@ -101,7 +101,7 @@ var PlacesOrganizer = {
     var prefix = document.getElementById("showingPrefix");
     prefix.setAttribute("value",
                         PlacesUtils.getString("headerTextPrefix" + type));
-    
+
     var contentTitle = document.getElementById("contentTitle");
     contentTitle.setAttribute("value", text);
     
@@ -109,16 +109,17 @@ var PlacesOrganizer = {
     var searchModifiers = document.getElementById("searchModifiers");
     searchModifiers.hidden = type == this.HEADER_TYPE_SHOWING;
   },
-  
-  onPlaceURIKeypress: function PO_onPlaceURIKeypress(event) {
-    if (event.keyCode == 13)
+
+  onPlaceURIKeypress: function PO_onPlaceURIKeypress(aEvent) {
+    var keyCode = aEvent.keyCode;
+    if (keyCode == KeyEvent.DOM_VK_RETURN)
       this.loadPlaceURI();
-    else if (event.keyCode == 27) {
+    else if (keyCode == KeyEvent.DOM_VK_ESCAPE) {
       event.target.value = "";
       this.onPlaceSelected(true);
     }
   },
-  
+
   /**
    * Shows or hides the debug panel.
    */
@@ -128,7 +129,7 @@ var PlacesOrganizer = {
     if (!dp.hidden)
       document.getElementById("placeURI").focus();
   },
-  
+
   /**
    * Loads the place URI entered in the debug 
    */
@@ -146,14 +147,14 @@ var PlacesOrganizer = {
     else
       options = optionsRef.value;
     this._content.load(queriesRef.value, options);
-    
+
     this.setHeaderText(this.HEADER_TYPE_SHOWING, "Debug results for: " + placeURI.value);
-    
+
     this.updateLoadedURI();
-    
+
     placeURI.focus();
   },
-  
+
   /**
    * Updates the URI displayed in the debug panel.
    */
@@ -166,7 +167,7 @@ var PlacesOrganizer = {
       PlacesUtils.history.queriesToQueryString(queries, queries.length, 
                                                options);
   },
-  
+
   /**
    * Called when a place folder is selected in the left pane.
    * @param   resetSearchBox
@@ -194,9 +195,9 @@ var PlacesOrganizer = {
     }
 
     this.setHeaderText(this.HEADER_TYPE_SHOWING, node.title);
-    
+
     this.updateLoadedURI();
-    
+
     // Update the "Find in <current collection>" command and the gray text in
     // the search box in the toolbar if the active collection is the current
     // collection.
@@ -208,27 +209,28 @@ var PlacesOrganizer = {
       PlacesSearchBox.syncGrayText();
     }
   },
-  
+
   /**
    * Handle clicks on the tree. If the user middle clicks on a URL, load that 
    * URL according to rules. Single clicks or modified clicks do not result in 
    * any special action, since they're related to selection. 
-   * @param   event
+   * @param   aEvent
    *          The mouse event.
    */
-  onTreeClick: function PO_onTreeClicked(event) {
-    var currentView = event.currentTarget;
+  onTreeClick: function PO_onTreeClicked(aEvent) {
+    var currentView = aEvent.currentTarget;
     var controller = currentView.controller;
 
     // If the user clicked on a tree column header, update the sorting 
     // preferences to reflect their choices.
-    if (event.target.localName == "treecol") {
+    // XXXmano: should be done in tree.xml
+    if (aEvent.target.localName == "treecol") {
       OptionsFilter.update(this._content.getResult());
       return;
     }
-    if (currentView.hasSingleSelection && event.button == 1) {
+    if (currentView.hasSingleSelection && aEvent.button == 1) {
       if (PlacesUtils.nodeIsURI(currentView.selectedNode))
-        controller.openSelectedNodeWithEvent(event);
+        controller.openSelectedNodeWithEvent(aEvent);
       else if (PlacesUtils.nodeIsContainer(currentView.selectedNode)) {
         // The command execution function will take care of seeing the 
         // selection is a folder/container and loading its contents in 
@@ -237,7 +239,7 @@ var PlacesOrganizer = {
       }
     }
   },
-  
+
   /**
    * Returns the options associated with the query currently loaded in the
    * main places pane.
@@ -258,20 +260,17 @@ var PlacesOrganizer = {
   /**
    * Allows simple exporting of bookmarks.
    */
-  exportBookmarks: function PO_export() {
+  exportBookmarks: function PO_exportBookmarks() {
     var fp = Cc["@mozilla.org/filepicker;1"].
-            createInstance(Ci.nsIFilePicker);
+             createInstance(Ci.nsIFilePicker);
     fp.init(window, "", Ci.nsIFilePicker.modeSave);
     fp.appendFilters(Ci.nsIFilePicker.filterHTML);
     fp.defaultString = "bookmarks.html";
-    if (fp.show() != Ci.nsIFilePicker.returnCancel) {
-      var bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-                getService(Ci.nsINavBookmarksService);
-      bms.exportBookmarksHTML(fp.file);
-    }
+    if (fp.show() != Ci.nsIFilePicker.returnCancel)
+      PlacesUtils.exportBookmarksHTML(fp.file);
   },
 
-  updateStatusBarForView: function G_updateStatusBarForView(aView) {
+  updateStatusBarForView: function PO_updateStatusBarForView(aView) {
     var statusText = "";
     var selectedNode = aView.selectedNode;
     if (selectedNode) {
@@ -300,7 +299,7 @@ var PlacesSearchBox = {
   get searchFilter() {
     return document.getElementById("searchFilter");
   },
-  
+
   /**
    * Run a search for the specified text, over the collection specified by
    * the dropdown arrow. The default is all bookmarks and history, but can be
@@ -314,10 +313,10 @@ var PlacesSearchBox = {
     // update the view.
     if (filterString == "" || this.searchFilter.hasAttribute("empty")) 
       return;
-    
+
     var content = PlacesOrganizer._content;
     var PO = PlacesOrganizer;
-      
+
     switch (PlacesSearchBox.filterCollection) {
     case "collection":
       var folderId = asFolder(content.getResult().root).folderId;
@@ -332,7 +331,7 @@ var PlacesSearchBox = {
     
     this.searchFilter.setAttribute("filtered", "true");
   },
-  
+
   /**
    * Finds across all bookmarks and history.
    */
@@ -340,7 +339,7 @@ var PlacesSearchBox = {
     this.filterCollection = "all";
     this.focus();
   },
-  
+
   /**
    * Finds in the currently selected Place.
    */
@@ -348,7 +347,7 @@ var PlacesSearchBox = {
     this.filterCollection = "collection";
     this.focus();
   },
-  
+
   /**
    * Updates the display with the title of the current collection.
    * @param   title
@@ -362,14 +361,14 @@ var PlacesSearchBox = {
     else
       this.searchFilter.grayText = PlacesUtils.getString("searchDefault");
   },
-  
+
   /**
    * Updates the display with the current gray text.
    */
   syncGrayText: function PSB_syncGrayText() {
     this.searchFilter.value = this.searchFilter.grayText;
   },
-  
+
   /**
    * Gets/sets the active collection from the dropdown menu.
    */
@@ -384,14 +383,14 @@ var PlacesSearchBox = {
     this.updateCollectionTitle(newGrayText);
     return collectionName;
   },
-  
+
   /**
    * Focus the search box
    */
   focus: function PSB_focus() {
     this.searchFilter.focus();
   },
-  
+
   /** 
    * Set up the gray text in the search bar as the Places View loads. 
    */
@@ -418,7 +417,7 @@ var PlacesSearchBox = {
 var PlacesQueryBuilder = {
 
   _numRows: 0,
-  
+
   /**
    * The maximum number of terms that can be added. 
    * XXXben - this should be generated dynamically based on the contents of a 
@@ -426,7 +425,7 @@ var PlacesQueryBuilder = {
    *          a hard coded number.
    */
   _maxRows: 3,
-  
+
   _keywordSearch: {
     advancedSearch_N_Subject: "advancedSearch_N_SubjectKeyword",
     advancedSearch_N_LocationMenulist: false,
@@ -461,7 +460,7 @@ var PlacesQueryBuilder = {
   },
   _nextSearch: null,
   _queryBuilders: null,
-  
+
   init: function PQB_init() {
     // Initialize advanced search
     this._nextSearch = {
@@ -475,11 +474,11 @@ var PlacesQueryBuilder = {
       "visited": this.setVisitedQuery,
       "location": this.setLocationQuery
     };
-    
+
     this._dateService = Cc["@mozilla.org/intl/scriptabledateformat;1"].
-                          getService(Ci.nsIScriptableDateFormat);
+                        getService(Ci.nsIScriptableDateFormat);
   },
-  
+
   /**
    * Hides the query builder, and the match rule UI if visible.
    */
@@ -517,14 +516,14 @@ var PlacesQueryBuilder = {
       this._setRowId(element.childNodes[i], rowId);
     }
   },
-  
+
   _updateUIForRowChange: function PQB__updateUIForRowChange() {
     // Titlebar should show "match any/all" iff there are > 1 queries visible.
     var titleDeck = document.getElementById("titleDeck");
     titleDeck.setAttribute("selectedIndex", (this._numRows <= 1) ? 0 : 1);
     const asType = PlacesOrganizer.HEADER_TYPE_ADVANCED_SEARCH;
     PlacesOrganizer.setHeaderText(asType, "");
-    
+
     // Update the "can add more criteria" command to make sure various +
     // buttons are disabled.
     var command = document.getElementById("OrganizerCommand_find:moreCriteria");
@@ -533,7 +532,7 @@ var PlacesQueryBuilder = {
     else
       command.removeAttribute("disabled");
   },
-  
+
   /**
    * Adds a row to the view, prefilled with the next query subject. If the 
    * query builder is not visible, it will be shown.
@@ -543,7 +542,7 @@ var PlacesQueryBuilder = {
     // of search query subjects.
     if (this._numRows >= this._maxRows)
       return;
-    
+
     // Clone the template row and unset the hidden attribute.
     var gridRows = document.getElementById("advancedSearchRows");
     var newRow = gridRows.firstChild.cloneNode(true);
@@ -567,13 +566,13 @@ var PlacesQueryBuilder = {
     // determined, since this will interfere with the computation.
     gridRows.appendChild(newRow);
     this._setRowId(newRow, ++this._numRows);
-    
+
     // Ensure the Advanced Search container is visible, if this is the first 
     // row being added.
     var advancedSearch = document.getElementById("advancedSearch");
     if (advancedSearch.collapsed) {
       this.show();
-      
+
       // Update the header.
       const asType = PlacesOrganizer.HEADER_TYPE_ADVANCED_SEARCH;
       PlacesOrganizer.setHeaderText(asType, "");
@@ -585,7 +584,7 @@ var PlacesQueryBuilder = {
       var searchTermsField = document.getElementById("advancedSearch1Textbox");
       if (searchTermsField)
         setTimeout(function() { searchTermsField.value = PlacesSearchBox.value; }, 10);
-      
+
       // Call ourselves again to add a second row so that the user is presented
       // with more than just "Keyword Search" which they already performed from
       // the toolbar.
@@ -596,7 +595,7 @@ var PlacesQueryBuilder = {
     this.showSearch(this._numRows, searchType);
     this._updateUIForRowChange();
   },
-  
+
   /**
    * Remove a row from the set of terms
    * @param   row
@@ -608,10 +607,10 @@ var PlacesQueryBuilder = {
       row = document.getElementById("advancedSearch" + this._numRows + "Row");
     row.parentNode.removeChild(row);
     --this._numRows;
-    
+
     if (this._numRows < 1) {
       this.hide();
-      
+
       // Re-do the original toolbar-search-box search that the user used to
       // spawn the advanced UI... this effectively "reverts" the UI to the
       // point it was in before they began monkeying with advanced search.
@@ -622,7 +621,7 @@ var PlacesQueryBuilder = {
     this.doSearch();
     this._updateUIForRowChange();
   },
-  
+
   onDateTyped: function PQB_onDateTyped(event, row) {
     var textbox = document.getElementById("advancedSearch" + row + "TimePicker");
     var dateString = textbox.value;
@@ -650,7 +649,7 @@ var PlacesQueryBuilder = {
     if (d0 == null || d0 == "Invalid Date") {
       d0 = new Date(dateString);
     }
-    
+
     if (d0 != null && d0 != "Invalid Date") {
       // Parsing succeeded -- update the calendar.
       var calendar = document.getElementById("advancedSearch" + row + "Calendar");
@@ -664,12 +663,12 @@ var PlacesQueryBuilder = {
       else {
         calendar.updateSelection(d0, d0);
       }
-      
+
       // And update the search.
       this.doSearch();
     }
   },
-  
+
   onCalendarChanged: function PQB_onCalendarChanged(event, row) {
     var calendar = document.getElementById("advancedSearch" + row + "Calendar");
     var begin = calendar.beginrange;
@@ -716,7 +715,7 @@ var PlacesQueryBuilder = {
     
     return true;
   },
-  
+
   handleTimePickerClick: function PQB_handleTimePickerClick(event, row) {
     var popup = document.getElementById("advancedSearch" + row + "DatePopup");
     if (popup.showing)
@@ -726,7 +725,7 @@ var PlacesQueryBuilder = {
       popup.showPopup(textbox, -1, -1, "popup", "bottomleft", "topleft");
     }
   },
-  
+
   showSearch: function PQB_showSearch(row, values) {
     for (val in values) {
       var id = val.replace("_N_", row);
@@ -764,11 +763,11 @@ var PlacesQueryBuilder = {
     
     this.doSearch();
   },
-  
+
   setKeywordQuery: function PQB_setKeywordQuery(query, prefix) {
     query.searchTerms += document.getElementById(prefix + "Textbox").value + " ";
   },
-  
+
   setLocationQuery: function PQB_setLocationQuery(query, prefix) {
     var type = document.getElementById(prefix + "LocationMenulist").selectedItem.value;
     if (type == "onsite") {
@@ -795,7 +794,7 @@ var PlacesQueryBuilder = {
       }
     }
   },
-  
+
   setVisitedQuery: function PQB_setVisitedQuery(query, prefix) {
     var searchType = document.getElementById(prefix + "TimeMenulist").selectedItem.value;
     const DAY_MSEC = 86400000;
@@ -835,7 +834,7 @@ var PlacesQueryBuilder = {
         break;
     }
   },
-  
+
   doSearch: function PQB_doSearch() {
     // Create the individual queries.
     var queryType = document.getElementById("advancedSearchType").selectedItem.value;
@@ -845,7 +844,7 @@ var PlacesQueryBuilder = {
     var updated = 0;
     for (var i = 1; updated < this._numRows; ++i) {
       var prefix = "advancedSearch" + i;
-      
+
       // The user can remove rows from the middle and start of the list, not 
       // just from the end, so we need to make sure that this row actually
       // exists before attempting to construct a query for it.
@@ -931,7 +930,7 @@ var ViewMenu = {
     }
     return null;
   },
-  
+
   /**
    * Fills a menupopup with a list of columns
    * @param   event
@@ -956,7 +955,7 @@ var ViewMenu = {
   fillWithColumns: function VM_fillWithColumns(event, startID, endID, type, propertyPrefix) {
     var popup = event.target;  
     var pivot = this._clean(popup, startID, endID);
-    
+
     // If no column is "sort-active", the "Unsorted" item needs to be checked, 
     // so track whether or not we find a column that is sort-active. 
     var isSorted = false;
@@ -1006,7 +1005,7 @@ var ViewMenu = {
    */
   populate: function VM_populate(event) {
     this.fillWithColumns(event, "viewUnsorted", "directionSeparator", "radio", "view.sortBy.");
-    
+
     var sortColumn = this._getSortColumn();
     var viewSortAscending = document.getElementById("viewSortAscending");
     var viewSortDescending = document.getElementById("viewSortDescending");
@@ -1055,7 +1054,7 @@ var ViewMenu = {
       splitter.setAttribute("hidden", "true");
     }    
   },
-  
+
   /**
    * Gets the last column that was sorted. 
    * @returns  the currently sorted column, null if there is no sorted column. 
@@ -1071,7 +1070,7 @@ var ViewMenu = {
     }
     return null;
   },
-  
+
   /**
    * Sorts the view by the specified key.
    * @param   aColumnID
@@ -1173,7 +1172,7 @@ function GroupingConfig(substr, onLabel, onAccesskey, offLabel, offAccesskey,
 var Groupers = {
   defaultGrouper: null,
   annotationGroupers: [],
-  
+
   /**
    * Initializes groupings for various vie types. 
    */
@@ -1194,7 +1193,7 @@ var Groupers = {
                          "Groupers.groupByPost()", false);
     this.annotationGroupers.push(subscriptionConfig);
   },
-  
+
   /**
    * Get the most appropriate GroupingConfig for the set of queries that are 
    * about to be executed.
@@ -1207,13 +1206,13 @@ var Groupers = {
   _getConfig: function G__getConfig(queries, handler) {
     if (!handler)
       handler = OptionsFilter.getHandler(queries);
-    
+
     // If the queries will generate a bookmarks folder, there is no "grouper 
     // config" since all of the grouping UI should be hidden (there is only one
     // grouping mode - group by folder).
     if (handler == OptionsFilter.bookmarksHandler)
       return null;
-    
+
     var query = queries[0];
     for (var i = 0; i < this.annotationGroupers.length; ++i) {
       var config = this.annotationGroupers[i];
@@ -1221,10 +1220,10 @@ var Groupers = {
           !config.disabled)
         return config;
     }
-    
+
     return this.defaultGrouper;
   },
-  
+
   /**
    * Updates the grouping broadcasters for the given result. 
    * @param   queries
@@ -1285,7 +1284,7 @@ var Groupers = {
       groupingOn.removeAttribute("checked");
     }
   },
-  
+
   /**
    * Shows visited pages grouped by site. 
    */
@@ -1302,7 +1301,7 @@ var Groupers = {
     this._updateBroadcasters(true);
     OptionsFilter.update(content.getResult());
   },
-  
+
   /**
    * Shows visited pages without grouping. 
    */
@@ -1335,7 +1334,7 @@ var Groupers = {
     this._updateBroadcasters(false);
     OptionsFilter.update(content.getResult());
   },
-  
+
   /**
    * Shows all subscribed feed (Live Bookmarks) content in a flat list
    */
@@ -1353,4 +1352,3 @@ var Groupers = {
   }
 };
 
-#include ../../../../toolkit/content/debug.js
