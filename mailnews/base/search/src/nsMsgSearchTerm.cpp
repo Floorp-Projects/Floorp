@@ -799,22 +799,36 @@ nsresult nsMsgSearchTerm::MatchBody (nsIMsgSearchScopeTerm *scope, PRUint32 offs
   PRBool isQuotedPrintable = !nsMsgI18Nstateful_charset(folderCharset) &&
     (PL_strchr (m_value.string, '=') == nsnull);
   
+  nsCString compare;
   while (!endOfFile && result == boolContinueLoop)
   {
     if (bodyHan->GetNextLine(buf) >= 0)
     {
+      PRBool softLineBreak = PR_FALSE;
       // Do in-place decoding of quoted printable
       if (isQuotedPrintable)
+      {
+        softLineBreak = StringEndsWith(buf, NS_LITERAL_CSTRING("="));
         MsgStripQuotedPrintable ((unsigned char*)buf.get());
-      nsCString  compare(buf);
-      //				ConvertToUnicode(charset, buf, compare);
-      if (!compare.IsEmpty()) {
+        if (softLineBreak)
+          buf.Truncate(buf.Length() - 1);
+      }
+      compare.Append(buf);
+      // If this line ends with a soft line break, loop around
+      // and get the next line before looking for the search string.
+      // This assumes the message can't end on a QP soft-line break.
+      // That seems like a pretty safe assumption.
+      if (softLineBreak) 
+        continue;
+      if (!compare.IsEmpty())
+      {
         char startChar = (char) compare.CharAt(0);
         if (startChar != nsCRT::CR && startChar != nsCRT::LF)
         {
           err = MatchString (compare.get(), folderCharset, &result);
           lines++; 
         }
+        compare.Truncate();
       }
     }
     else 
