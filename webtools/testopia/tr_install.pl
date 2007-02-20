@@ -36,14 +36,25 @@ if (! -e "testopia") {
     "Can't continue.\n");
 }
 
-if (! -e "localconfig") {
-  DieWithStyle("Can't find file: localconfig\nBugzilla is not installed in this directory.\n".
+# use localconfig file default or as specified by $PROJECT variable
+our $project;
+our $localconfig;
+if ($ENV{'PROJECT'} && $ENV{'PROJECT'} =~ /^(\w+)$/) {
+    $project = $1;
+    $localconfig = "localconfig.$project";
+    
+} else {
+    $localconfig = "localconfig";
+}
+
+if (! -e "$localconfig") {
+  DieWithStyle("Can't find file: $localconfig\nBugzilla is not installed in this directory.\n".
     "Can't continue.\n");
 }
 
 ##############################################################################
-print "Now installing Testopia ...\n\n";
-do 'localconfig';
+print "Now installing Testopia using $localconfig...\n\n";
+do "$localconfig";
 ##############################################################################
 # Patching.
 my $rollbackPatchOnFail = 0;
