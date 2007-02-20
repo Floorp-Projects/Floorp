@@ -294,3 +294,6 @@ fails == object/svg-with-type.html object/svg-with-type-ref.html
 
 # xul-document-load/
 include xul-document-load/reftest.list
+
+# box-properties/
+include box-properties/reftest.list

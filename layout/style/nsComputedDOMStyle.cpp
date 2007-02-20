@@ -552,22 +552,9 @@ nsComputedDOMStyle::GetColumnWidth(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleColumn* column = GetStyleColumn();
-
-  switch (column->mColumnWidth.GetUnit()) {
-    case eStyleUnit_Coord:
-      val->SetAppUnits(column->mColumnWidth.GetCoordValue());
-      break;
-    case eStyleUnit_Auto:
-      // XXX fix this. When we actually have a column frame, I think
-      // we should return the computed column width.
-      val->SetIdent(nsGkAtoms::_auto);
-      break;
-    default:
-      NS_ERROR("Unexpected column width unit");
-      val->SetAppUnits(0);
-      break;
-  }
+  // XXX fix the auto case. When we actually have a column frame, I think
+  // we should return the computed column width.
+  SetValueToCoord(val, GetStyleColumn()->mColumnWidth);
 
   return CallQueryInterface(val, aValue);
 }
@@ -579,25 +566,11 @@ nsComputedDOMStyle::GetColumnGap(nsIDOMCSSValue** aValue)
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   const nsStyleColumn* column = GetStyleColumn();
-
-  switch (column->mColumnGap.GetUnit()) {
-    case eStyleUnit_Coord:
-      val->SetAppUnits(column->mColumnGap.GetCoordValue());
-      break;
-    case eStyleUnit_Percent:
-      if (mFrame) {
-        val->SetAppUnits(column->mColumnGap.GetPercentValue()*mFrame->GetSize().width);
-      } else {
-        val->SetPercent(column->mColumnGap.GetPercentValue());
-      }
-      break;
-    case eStyleUnit_Normal:
-      val->SetAppUnits(GetStyleFont()->mFont.size);
-      break;
-    default:
-      NS_ERROR("Unexpected column gap unit");
-      val->SetAppUnits(0);
-      break;
+  if (column->mColumnGap.GetUnit() == eStyleUnit_Normal) {
+    val->SetAppUnits(GetStyleFont()->mFont.size);
+  } else {
+    SetValueToCoord(val, GetStyleColumn()->mColumnGap,
+                    &nsComputedDOMStyle::GetFrameContentWidth);
   }
 
   return CallQueryInterface(val, aValue);
@@ -1248,23 +1221,7 @@ nsComputedDOMStyle::GetMarkerOffset(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleContent* content = GetStyleContent();
-
-  switch (content->mMarkerOffset.GetUnit()) {
-    case eStyleUnit_Coord:
-      val->SetAppUnits(content->mMarkerOffset.GetCoordValue());
-      break;
-    case eStyleUnit_Auto:
-      val->SetIdent(nsGkAtoms::_auto);
-      break;
-    case eStyleUnit_Null: // XXX doesn't seem like a valid unit per CSS2?
-      val->SetIdent(nsGkAtoms::none);
-      break;
-    default:
-      NS_ERROR("Unexpected marker offset unit");
-      val->SetAppUnits(0);
-      break;
-  }
+  SetValueToCoord(val, GetStyleContent()->mMarkerOffset);
 
   return CallQueryInterface(val, aValue);
 }
@@ -1293,27 +1250,7 @@ nsComputedDOMStyle::GetOutlineWidth(nsIDOMCSSValue** aValue)
   } else {
     coord = outline->mOutlineWidth;
   }
-  switch (coord.GetUnit()) {
-    case eStyleUnit_Coord:
-      val->SetAppUnits(coord.GetCoordValue());
-      break;
-    case eStyleUnit_Enumerated:
-      {
-        const nsAFlatCString& width =
-          nsCSSProps::ValueToKeyword(coord.GetIntValue(),
-                                     nsCSSProps::kBorderWidthKTable);
-        val->SetIdent(width);
-        break;
-      }
-    case eStyleUnit_Chars:
-      // XXX we need a frame and a rendering context to calculate this, bug 281972, bug 282126.
-      val->SetAppUnits(0);
-      break;
-    default:
-      NS_ERROR("Unexpected outline width unit");
-      val->SetAppUnits(0);
-      break;
-  }
+  SetValueToCoord(val, coord, nsnull, nsCSSProps::kBorderWidthKTable);
 
   return CallQueryInterface(val, aValue);
 }
@@ -1348,21 +1285,7 @@ nsComputedDOMStyle::GetOutlineOffset(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleOutline* outline = GetStyleOutline();
-
-  switch (outline->mOutlineOffset.GetUnit()) {
-    case eStyleUnit_Coord:
-      val->SetAppUnits(outline->mOutlineOffset.GetCoordValue());
-      break;
-    case eStyleUnit_Chars:
-      // XXX we need a frame and a rendering context to calculate this, bug 281972, bug 282126.
-      val->SetAppUnits(0);
-      break;
-    default:
-      NS_ERROR("Unexpected outline offset unit");
-      val->SetAppUnits(0);
-      break;
-  }
+  SetValueToCoord(val, GetStyleOutline()->mOutlineOffset);
 
   return CallQueryInterface(val, aValue);
 }
@@ -1416,23 +1339,8 @@ nsComputedDOMStyle::GetOutlineRadiusFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   nsStyleCoord coord;
-  GetStyleOutline()->mOutlineRadius.Get(aSide, coord);
-
-  switch (coord.GetUnit()) {
-    case eStyleUnit_Coord:
-      val->SetAppUnits(coord.GetCoordValue());
-      break;
-    case eStyleUnit_Percent:
-      if (mFrame) {
-        val->SetAppUnits(coord.GetPercentValue() * mFrame->GetSize().width);
-      } else {
-        val->SetPercent(coord.GetPercentValue());
-      }
-      break;
-    default:
-      NS_ERROR("Unexpected outline radius unit");
-      break;
-  }
+  SetValueToCoord(val, GetStyleOutline()->mOutlineRadius.Get(aSide, coord),
+                  &nsComputedDOMStyle::GetFrameBorderRectWidth);
 
   return CallQueryInterface(val, aValue);
 }
@@ -1443,19 +1351,7 @@ nsComputedDOMStyle::GetZIndex(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStylePosition* position = GetStylePosition();
-
-  switch (position->mZIndex.GetUnit()) {
-    case eStyleUnit_Integer:
-      val->SetNumber(position->mZIndex.GetIntValue());
-      break;
-    default:
-      NS_ERROR("Unexpected z-index unit");
-      // fall through
-    case eStyleUnit_Auto:
-      val->SetIdent(nsGkAtoms::_auto);
-      break;
-  }
+  SetValueToCoord(val, GetStylePosition()->mZIndex);
     
   return CallQueryInterface(val, aValue);
 }
@@ -1572,28 +1468,11 @@ nsComputedDOMStyle::GetLineHeight(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleText *text = GetStyleText();
-
   nscoord lineHeight;
-  nsresult rv = GetLineHeightCoord(text, lineHeight);
-
-  if (NS_SUCCEEDED(rv)) {
+  if (GetLineHeightCoord(lineHeight)) {
     val->SetAppUnits(lineHeight);
   } else {
-    switch (text->mLineHeight.GetUnit()) {
-      case eStyleUnit_Percent:
-        val->SetPercent(text->mLineHeight.GetPercentValue());
-        break;
-      case eStyleUnit_Factor:
-        val->SetNumber(text->mLineHeight.GetFactorValue());
-        break;
-      case eStyleUnit_Normal:
-        val->SetIdent(nsGkAtoms::normal);
-        break;
-      default:
-        NS_ERROR("Unexpected line-height unit");
-        break;
-    }
+    SetValueToCoord(val, GetStyleText()->mLineHeight);
   }
 
   return CallQueryInterface(val, aValue);
@@ -1605,39 +1484,9 @@ nsComputedDOMStyle::GetVerticalAlign(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleTextReset *text = GetStyleTextReset();
-
-  switch (text->mVerticalAlign.GetUnit()) {
-    case eStyleUnit_Coord:
-      val->SetAppUnits(text->mVerticalAlign.GetCoordValue());
-      break;
-    case eStyleUnit_Enumerated:
-      {
-        const nsAFlatCString& align =
-          nsCSSProps::ValueToKeyword(text->mVerticalAlign.GetIntValue(),
-                                     nsCSSProps::kVerticalAlignKTable);
-        val->SetIdent(align);
-        break;
-      }
-    case eStyleUnit_Percent:
-      {
-        const nsStyleText *textData = GetStyleText();
-
-        nscoord lineHeight = 0;
-        nsresult rv = GetLineHeightCoord(textData, lineHeight);
-
-        if (NS_SUCCEEDED(rv)) {
-          val->SetAppUnits(lineHeight * text->mVerticalAlign.GetPercentValue());
-        } else {
-          val->SetPercent(text->mVerticalAlign.GetPercentValue());
-        }
-
-        break;
-      }
-    default:
-      NS_ERROR("double check the vertical-align");
-      break;
-  }
+  SetValueToCoord(val, GetStyleTextReset()->mVerticalAlign,
+                  &nsComputedDOMStyle::GetLineHeightCoord,
+                  nsCSSProps::kVerticalAlignKTable);
 
   return CallQueryInterface(val, aValue);
 }
@@ -1715,30 +1564,8 @@ nsComputedDOMStyle::GetTextIndent(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleText *text = GetStyleText();
-
-  FlushPendingReflows();
-
-  switch (text->mTextIndent.GetUnit()) {
-    case eStyleUnit_Coord:
-      val->SetAppUnits(text->mTextIndent.GetCoordValue());
-      break;
-    case eStyleUnit_Percent:
-      {
-        nsIFrame *container = GetContainingBlockFor(mFrame);
-        if (container) {
-          val->SetAppUnits(container->GetSize().width *
-                           text->mTextIndent.GetPercentValue());
-        } else {
-          // no containing block
-          val->SetPercent(text->mTextIndent.GetPercentValue());
-        }
-        break;
-      }
-    default:
-      val->SetAppUnits(0);
-      break;
-  }
+  SetValueToCoord(val, GetStyleText()->mTextIndent,
+                  &nsComputedDOMStyle::GetCBContentWidth);
 
   return CallQueryInterface(val, aValue);
 }
@@ -1769,13 +1596,7 @@ nsComputedDOMStyle::GetLetterSpacing(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleText *text = GetStyleText();
-
-  if (text->mLetterSpacing.GetUnit() == eStyleUnit_Coord) {
-    val->SetAppUnits(text->mLetterSpacing.GetCoordValue());
-  } else {
-    val->SetIdent(nsGkAtoms::normal);
-  }
+  SetValueToCoord(val, GetStyleText()->mLetterSpacing);
 
   return CallQueryInterface(val, aValue);
 }
@@ -1786,13 +1607,7 @@ nsComputedDOMStyle::GetWordSpacing(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleText *text = GetStyleText();
-
-  if (text->mWordSpacing.GetUnit() == eStyleUnit_Coord) {
-    val->SetAppUnits(text->mWordSpacing.GetCoordValue());
-  } else {
-    val->SetIdent(nsGkAtoms::normal);
-  }
+  SetValueToCoord(val, GetStyleText()->mWordSpacing);
 
   return CallQueryInterface(val, aValue);
 }
@@ -2343,8 +2158,6 @@ nsComputedDOMStyle::GetHeight(nsIDOMCSSValue** aValue)
   if (mFrame) {
     calcHeight = PR_TRUE;
 
-    FlushPendingReflows();
-  
     const nsStyleDisplay* displayData = GetStyleDisplay();
     if (displayData->mDisplay == NS_STYLE_DISPLAY_INLINE &&
         !(mFrame->IsFrameOfType(nsIFrame::eReplaced))) {
@@ -2353,25 +2166,14 @@ nsComputedDOMStyle::GetHeight(nsIDOMCSSValue** aValue)
   }
 
   if (calcHeight) {
+    FlushPendingReflows();
+  
     val->SetAppUnits(mFrame->GetContentRect().height);
   } else {
     // Just return the value in the style context
-    const nsStylePosition* positionData = GetStylePosition();
-    switch (positionData->mHeight.GetUnit()) {
-      case eStyleUnit_Coord:
-        val->SetAppUnits(positionData->mHeight.GetCoordValue());
-        break;
-      case eStyleUnit_Percent:
-        val->SetPercent(positionData->mHeight.GetPercentValue());
-        break;
-      case eStyleUnit_Auto:
-        val->SetIdent(nsGkAtoms::_auto);
-        break;
-      default:
-        NS_ERROR("Unexpected height unit");
-        val->SetAppUnits(0);
-        break;
-    }
+    // XXXbz if not mFrame, why aren't we including the min-height the
+    // way max-height does?
+    SetValueToCoord(val, GetStylePosition()->mHeight);
   }
   
   return CallQueryInterface(val, aValue);
@@ -2388,8 +2190,6 @@ nsComputedDOMStyle::GetWidth(nsIDOMCSSValue** aValue)
   if (mFrame) {
     calcWidth = PR_TRUE;
 
-    FlushPendingReflows();
-
     const nsStyleDisplay *displayData = GetStyleDisplay();
     if (displayData->mDisplay == NS_STYLE_DISPLAY_INLINE &&
         !(mFrame->IsFrameOfType(nsIFrame::eReplaced))) {
@@ -2398,25 +2198,14 @@ nsComputedDOMStyle::GetWidth(nsIDOMCSSValue** aValue)
   }
 
   if (calcWidth) {
+    FlushPendingReflows();
+
     val->SetAppUnits(mFrame->GetContentRect().width);
   } else {
     // Just return the value in the style context
-    const nsStylePosition *positionData = GetStylePosition();
-    switch (positionData->mWidth.GetUnit()) {
-      case eStyleUnit_Coord:
-        val->SetAppUnits(positionData->mWidth.GetCoordValue());
-        break;
-      case eStyleUnit_Percent:
-        val->SetPercent(positionData->mWidth.GetPercentValue());
-        break;
-      case eStyleUnit_Auto:
-        val->SetIdent(nsGkAtoms::_auto);
-        break;
-      default:
-        NS_ERROR("Unexpected width unit");
-        val->SetAppUnits(0);
-        break;
-    }
+    // XXXbz if not mFrame, why aren't we including the min-width the
+    // way max-width does?
+    SetValueToCoord(val, GetStylePosition()->mWidth);
   }
 
   return CallQueryInterface(val, aValue);
@@ -2430,49 +2219,13 @@ nsComputedDOMStyle::GetMaxHeight(nsIDOMCSSValue** aValue)
 
   const nsStylePosition *positionData = GetStylePosition();
 
-  FlushPendingReflows();
+  nscoord minHeight =
+    StyleCoordToNSCoord(positionData->mMinHeight,
+                        &nsComputedDOMStyle::GetCBContentHeight);
 
-  nsIFrame *container = nsnull;
-  nsSize size;
-  nscoord minHeight = 0;
-
-  if (positionData->mMinHeight.GetUnit() == eStyleUnit_Percent) {
-    container = GetContainingBlockFor(mFrame);
-    if (container) {
-      size = container->GetSize();
-      minHeight = nscoord(size.height *
-                          positionData->mMinHeight.GetPercentValue());
-    }
-  } else if (positionData->mMinHeight.GetUnit() == eStyleUnit_Coord) {
-    minHeight = positionData->mMinHeight.GetCoordValue();
-  }
-
-  switch (positionData->mMaxHeight.GetUnit()) {
-    case eStyleUnit_Coord:
-      val->SetAppUnits(PR_MAX(minHeight,
-                              positionData->mMaxHeight.GetCoordValue()));
-      break;
-    case eStyleUnit_Percent:
-      if (!container) {
-        container = GetContainingBlockFor(mFrame);
-        if (container) {
-          size = container->GetSize();
-        } else {
-          // no containing block
-          val->SetPercent(positionData->mMaxHeight.GetPercentValue());
-        }
-      }
-      if (container) {
-        val->SetAppUnits(PR_MAX(minHeight, size.height *
-                                positionData->mMaxHeight.GetPercentValue()));
-      }
-
-      break;
-  default:
-    val->SetIdent(nsGkAtoms::none);
-
-    break;
-  }
+  SetValueToCoord(val, positionData->mMaxHeight,
+                  &nsComputedDOMStyle::GetCBContentHeight,
+                  nsnull, minHeight);
 
   return CallQueryInterface(val, aValue);
 }
@@ -2485,49 +2238,13 @@ nsComputedDOMStyle::GetMaxWidth(nsIDOMCSSValue** aValue)
 
   const nsStylePosition *positionData = GetStylePosition();
 
-  FlushPendingReflows();
+  nscoord minWidth =
+    StyleCoordToNSCoord(positionData->mMinWidth,
+                        &nsComputedDOMStyle::GetCBContentWidth);
 
-  nsIFrame *container = nsnull;
-  nsSize size;
-  nscoord minWidth = 0;
-
-  if (positionData->mMinWidth.GetUnit() == eStyleUnit_Percent) {
-    container = GetContainingBlockFor(mFrame);
-    if (container) {
-      size = container->GetSize();
-      minWidth = nscoord(size.width *
-                         positionData->mMinWidth.GetPercentValue());
-    }
-  } else if (positionData->mMinWidth.GetUnit() == eStyleUnit_Coord) {
-    minWidth = positionData->mMinWidth.GetCoordValue();
-  }
-
-  switch (positionData->mMaxWidth.GetUnit()) {
-    case eStyleUnit_Coord:
-      val->SetAppUnits(PR_MAX(minWidth,
-                              positionData->mMaxWidth.GetCoordValue()));
-      break;
-    case eStyleUnit_Percent:
-      if (!container) {
-        container = GetContainingBlockFor(mFrame);
-        if (container) {
-          size = container->GetSize();
-        } else {
-          // no containing block
-          val->SetPercent(positionData->mMaxWidth.GetPercentValue());
-        }
-      }
-      if (container) {
-        val->SetAppUnits(PR_MAX(minWidth, size.width *
-                                positionData->mMaxWidth.GetPercentValue()));
-      }
-
-      break;
-    default:
-      val->SetIdent(nsGkAtoms::none);
-
-      break;
-  }
+  SetValueToCoord(val, positionData->mMaxWidth,
+                  &nsComputedDOMStyle::GetCBContentWidth,
+                  nsnull, minWidth);
 
   return CallQueryInterface(val, aValue);
 }
@@ -2538,31 +2255,8 @@ nsComputedDOMStyle::GetMinHeight(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStylePosition *positionData = GetStylePosition();
-
-  FlushPendingReflows();
-
-  nsIFrame *container = nsnull;
-  switch (positionData->mMinHeight.GetUnit()) {
-    case eStyleUnit_Coord:
-      val->SetAppUnits(positionData->mMinHeight.GetCoordValue());
-      break;
-    case eStyleUnit_Percent:
-      container = GetContainingBlockFor(mFrame);
-      if (container) {
-        val->SetAppUnits(container->GetSize().height *
-                         positionData->mMinHeight.GetPercentValue());
-      } else {
-        // no containing block
-        val->SetPercent(positionData->mMinHeight.GetPercentValue());
-      }
-
-      break;
-    default:
-      val->SetAppUnits(0);
-
-      break;
-  }
+  SetValueToCoord(val, GetStylePosition()->mMinHeight,
+                  &nsComputedDOMStyle::GetCBContentHeight);
 
   return CallQueryInterface(val, aValue);
 }
@@ -2573,29 +2267,8 @@ nsComputedDOMStyle::GetMinWidth(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStylePosition *positionData = GetStylePosition();
-
-  FlushPendingReflows();
-
-  nsIFrame *container = nsnull;
-  switch (positionData->mMinWidth.GetUnit()) {
-    case eStyleUnit_Coord:
-      val->SetAppUnits(positionData->mMinWidth.GetCoordValue());
-      break;
-    case eStyleUnit_Percent:
-      container = GetContainingBlockFor(mFrame);
-      if (container) {
-        val->SetAppUnits(container->GetSize().width *
-                         positionData->mMinWidth.GetPercentValue());
-      } else {
-        // no containing block
-        val->SetPercent(positionData->mMinWidth.GetPercentValue());
-      }
-      break;
-    default:
-      val->SetAppUnits(0);
-      break;
-  }
+  SetValueToCoord(val, GetStylePosition()->mMinWidth,
+                  &nsComputedDOMStyle::GetCBContentWidth);
 
   return CallQueryInterface(val, aValue);
 }
@@ -2785,26 +2458,7 @@ nsComputedDOMStyle::GetStaticOffset(PRUint8 aSide, nsIDOMCSSValue** aValue)
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   nsStyleCoord coord;
-  GetStylePosition()->mOffset.Get(aSide, coord);
-  switch(coord.GetUnit()) {
-    case eStyleUnit_Coord:
-      val->SetAppUnits(coord.GetCoordValue());
-
-      break;
-    case eStyleUnit_Percent:
-      val->SetPercent(coord.GetPercentValue());
-
-      break;
-    case eStyleUnit_Auto:
-      val->SetIdent(nsGkAtoms::_auto);
-
-      break;
-    default:
-      NS_ERROR("Unexpected left/right/top/bottom unit");
-      val->SetAppUnits(0);
-
-      break;
-  }
+  SetValueToCoord(val, GetStylePosition()->mOffset.Get(aSide, coord));
   
   return CallQueryInterface(val, aValue);
 }
@@ -2848,60 +2502,38 @@ nsComputedDOMStyle::GetPaddingWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  FlushPendingReflows();
-  
-  val->SetAppUnits(0);
-
   if (!mFrame) {
     nsStyleCoord c;
-    GetStylePadding()->mPadding.Get(aSide, c);
-    switch (c.GetUnit()) {
-      case eStyleUnit_Coord:
-        val->SetAppUnits(c.GetCoordValue());
-        break;
-      case eStyleUnit_Percent:
-        val->SetPercent(c.GetPercentValue());
-        break;
-      default:
-        break;
-    }
+    SetValueToCoord(val, GetStylePadding()->mPadding.Get(aSide, c));
   } else {
+    FlushPendingReflows();
+  
     val->SetAppUnits(mFrame->GetUsedPadding().side(aSide));
   }
 
   return CallQueryInterface(val, aValue);
 }
 
-nsresult
-nsComputedDOMStyle::GetLineHeightCoord(const nsStyleText *aText,
-                                       nscoord& aCoord)
+PRBool
+nsComputedDOMStyle::GetLineHeightCoord(nscoord& aCoord)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-
-  if (aText) {
-    const nsStyleFont *font = GetStyleFont();
-    switch (aText->mLineHeight.GetUnit()) {
-      case eStyleUnit_Coord:
-        aCoord = aText->mLineHeight.GetCoordValue();
-        rv = NS_OK;
-        break;
-      case eStyleUnit_Percent:
-        aCoord = nscoord(aText->mLineHeight.GetPercentValue() * font->mSize);
-        rv = NS_OK;
-        break;
-      case eStyleUnit_Factor:
-        aCoord = nscoord(aText->mLineHeight.GetFactorValue() * font->mSize);
-        rv = NS_OK;
-        break;
+  const nsStyleText* text = GetStyleText();
+  const nsStyleFont *font = GetStyleFont();
+  switch (text->mLineHeight.GetUnit()) {
+    case eStyleUnit_Coord:
+      aCoord = text->mLineHeight.GetCoordValue();
+      return PR_TRUE;
+    case eStyleUnit_Percent:
+      aCoord = nscoord(text->mLineHeight.GetPercentValue() * font->mSize);
+      return PR_TRUE;
+    case eStyleUnit_Factor:
+      aCoord = nscoord(text->mLineHeight.GetFactorValue() * font->mSize);
+      return PR_TRUE;
     default:
-        break;
-    }
+      break;
   }
 
-  if (NS_FAILED(rv))
-    aCoord = 0;
-
-  return rv;
+  return PR_FALSE;
 }
 
 nsresult
@@ -2962,23 +2594,8 @@ nsComputedDOMStyle::GetBorderRadiusFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   nsStyleCoord coord;
-  GetStyleBorder()->mBorderRadius.Get(aSide, coord);
-    
-  switch (coord.GetUnit()) {
-    case eStyleUnit_Coord:
-      val->SetAppUnits(coord.GetCoordValue());
-      break;
-    case eStyleUnit_Percent:
-      if (mFrame) {
-        val->SetAppUnits(coord.GetPercentValue() * mFrame->GetSize().width);
-      } else {
-        val->SetPercent(coord.GetPercentValue());
-      }
-      break;
-    default:
-      NS_ERROR("Unexpected border radius unit");
-      break;
-  }
+  SetValueToCoord(val, GetStyleBorder()->mBorderRadius.Get(aSide, coord),
+                  &nsComputedDOMStyle::GetFrameBorderRectWidth);
 
   return CallQueryInterface(val, aValue);
 }
@@ -3041,27 +2658,12 @@ nsComputedDOMStyle::GetMarginWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  FlushPendingReflows();
-
-  val->SetAppUnits(0);
-
   if (!mFrame) {
     nsStyleCoord c;
-    GetStyleMargin()->mMargin.Get(aSide, c);
-    switch (c.GetUnit()) {
-      case eStyleUnit_Coord:
-        val->SetAppUnits(c.GetCoordValue());
-        break;
-      case eStyleUnit_Percent:
-        val->SetPercent(c.GetPercentValue());
-        break;
-      case eStyleUnit_Auto:
-        val->SetIdent(nsGkAtoms::_auto);
-        break;
-      default:
-        break;
-    }
+    SetValueToCoord(val, GetStyleMargin()->mMargin.Get(aSide, c));
   } else {
+    FlushPendingReflows();
+
     val->SetAppUnits(mFrame->GetUsedMargin().side(aSide));
   }
 
@@ -3088,8 +2690,160 @@ nsComputedDOMStyle::GetBorderStyleFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
   return CallQueryInterface(val, aValue);
 }
 
+void
+nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
+                                    nsStyleCoord aCoord,
+                                    PercentageBaseGetter aPercentageBaseGetter,
+                                    const PRInt32 aTable[],
+                                    nscoord aMinAppUnits)
+{
+  NS_PRECONDITION(aValue, "Must have a value to work with");
+  
+  switch (aCoord.GetUnit()) {
+    case eStyleUnit_Normal:
+      aValue->SetIdent(nsGkAtoms::normal);
+      break;
+      
+    case eStyleUnit_Auto:
+      aValue->SetIdent(nsGkAtoms::_auto);
+      break;
+      
+    case eStyleUnit_Percent:
+      {
+        nscoord percentageBase;
+        if (aPercentageBaseGetter &&
+            (this->*aPercentageBaseGetter)(percentageBase)) {
+          nscoord val = nscoord(aCoord.GetPercentValue() * percentageBase);
+          aValue->SetAppUnits(PR_MAX(aMinAppUnits, val));
+        } else {
+          aValue->SetPercent(aCoord.GetPercentValue());
+        }
+      }
+      break;
+      
+    case eStyleUnit_Factor:
+      aValue->SetNumber(aCoord.GetFactorValue());
+      break;
+      
+    case eStyleUnit_Coord:
+      {
+        nscoord val = aCoord.GetCoordValue();
+        aValue->SetAppUnits(PR_MAX(aMinAppUnits, val));
+      }
+      break;
+      
+    case eStyleUnit_Integer:
+      aValue->SetNumber(aCoord.GetIntValue());
+      break;
+      
+    case eStyleUnit_Enumerated:
+      NS_ASSERTION(aTable, "Must have table to handle this case");
+      aValue->SetIdent(nsCSSProps::ValueToKeyword(aCoord.GetIntValue(),
+                                                  aTable));
+      break;
+      
+    case eStyleUnit_Chars:
+      // XXX we need a frame and a rendering context to calculate this, bug 281972, bug 282126.
+      aValue->SetAppUnits(0);
+      break;
+      
+    case eStyleUnit_Null:
+      aValue->SetIdent(nsGkAtoms::none);
+      break;
+      
+    default:
+      // eStyleUnit_Proportional
+      NS_ERROR("Can't handle this unit");
+      break;
+  }
+}
 
-#define COMPUTED_STYLE_MAP_ENTRY(_prop, _method)  \
+nscoord
+nsComputedDOMStyle::StyleCoordToNSCoord(nsStyleCoord aCoord,
+                                        PercentageBaseGetter aPercentageBaseGetter)
+{
+  NS_PRECONDITION(aPercentageBaseGetter, "Must have a percentage base getter");
+  switch (aCoord.GetUnit()) {
+    case eStyleUnit_Coord:
+      return aCoord.GetCoordValue();
+    case eStyleUnit_Percent:
+      {
+        nscoord percentageBase;
+        if ((this->*aPercentageBaseGetter)(percentageBase)) {
+          return nscoord(aCoord.GetPercentValue() * percentageBase);
+        }
+      }
+      // Fall through to returning 0 if we have no percentage base
+    default:
+      break;
+  }
+      
+  return 0;
+}
+
+PRBool
+nsComputedDOMStyle::GetFrameContentWidth(nscoord& aWidth)
+{
+  if (!mFrame) {
+    return PR_FALSE;
+  }
+
+  FlushPendingReflows();
+
+  aWidth = mFrame->GetContentRect().width;
+  return PR_TRUE;
+}
+
+PRBool
+nsComputedDOMStyle::GetCBContentWidth(nscoord& aWidth)
+{
+  if (!mFrame) {
+    return PR_FALSE;
+  }
+
+  nsIFrame* container = GetContainingBlockFor(mFrame);
+  if (!container) {
+    return PR_FALSE;
+  }
+
+  FlushPendingReflows();
+
+  aWidth = container->GetContentRect().width;
+  return PR_TRUE;
+}
+
+PRBool
+nsComputedDOMStyle::GetCBContentHeight(nscoord& aHeight)
+{
+  if (!mFrame) {
+    return PR_FALSE;
+  }
+
+  nsIFrame* container = GetContainingBlockFor(mFrame);
+  if (!container) {
+    return PR_FALSE;
+  }
+
+  FlushPendingReflows();
+
+  aHeight = container->GetContentRect().height;
+  return PR_TRUE;
+}
+
+PRBool
+nsComputedDOMStyle::GetFrameBorderRectWidth(nscoord& aWidth)
+{
+  if (!mFrame) {
+    return PR_FALSE;
+  }
+
+  FlushPendingReflows();
+
+  aWidth = mFrame->GetSize().width;
+  return PR_TRUE;
+}
+
+#define COMPUTED_STYLE_MAP_ENTRY(_prop, _method)              \
   { eCSSProperty_##_prop, &nsComputedDOMStyle::Get##_method }
 
 const nsComputedDOMStyle::ComputedStyleMapEntry*
