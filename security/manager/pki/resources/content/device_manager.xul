@@ -61,7 +61,7 @@
 <grid flex="1" style="margin:5px">
   <columns>
     <column flex="1"/> 
-    <column flex="1"/> 
+    <column flex="3"/> 
     <column/>
   </columns>
   <rows>
