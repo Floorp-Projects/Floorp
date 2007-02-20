@@ -904,6 +904,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGFEBlendElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGFEColorMatrixElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGFEComponentTransferElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGFECompositeElement, nsElementSH,
@@ -2581,6 +2583,13 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(SVGFEBlendElement, nsIDOMSVGFEBlendElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFEBlendElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFilterPrimitiveStandardAttributes)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGStylable)
+    DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGFEColorMatrixElement, nsIDOMSVGFEColorMatrixElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFEColorMatrixElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFilterPrimitiveStandardAttributes)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGStylable)
     DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES

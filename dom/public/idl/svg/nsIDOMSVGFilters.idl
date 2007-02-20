@@ -69,6 +69,21 @@ interface nsIDOMSVGFEBlendElement : nsIDOMSVGFilterPrimitiveStandardAttributes
     readonly attribute nsIDOMSVGAnimatedEnumeration   mode;
 };
 
+[scriptable, uuid(0E966878-EBF1-4455-86FD-F4C7B1F24777)]
+interface nsIDOMSVGFEColorMatrixElement : nsIDOMSVGFilterPrimitiveStandardAttributes
+{
+    // Color Matrix Types
+    const unsigned short SVG_FECOLORMATRIX_TYPE_UNKNOWN            = 0;
+    const unsigned short SVG_FECOLORMATRIX_TYPE_MATRIX             = 1;
+    const unsigned short SVG_FECOLORMATRIX_TYPE_SATURATE           = 2;
+    const unsigned short SVG_FECOLORMATRIX_TYPE_HUE_ROTATE         = 3;
+    const unsigned short SVG_FECOLORMATRIX_TYPE_LUMINANCE_TO_ALPHA = 4;
+
+    readonly attribute nsIDOMSVGAnimatedString in1;
+    readonly attribute nsIDOMSVGAnimatedEnumeration type;
+    readonly attribute nsIDOMSVGAnimatedNumberList  values;
+};
+
 [scriptable, uuid(4de6b44a-f909-4948-bc43-5ee2ca6de55b)]
 interface nsIDOMSVGFEComponentTransferElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 {

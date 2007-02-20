@@ -109,6 +109,8 @@ NS_NewSVGFilterElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGFEBlendElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
+NS_NewSVGFEColorMatrixElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
 NS_NewSVGFEComponentTransferElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGFECompositeElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
@@ -220,6 +222,8 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     return NS_NewSVGFilterElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::feBlend)
     return NS_NewSVGFEBlendElement(aResult, aNodeInfo);
+  if (name == nsGkAtoms::feColorMatrix)
+    return NS_NewSVGFEColorMatrixElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::feComponentTransfer)
     return NS_NewSVGFEComponentTransferElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::feComposite)
@@ -246,8 +250,7 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     return NS_NewSVGFEFloodElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::feTurbulence)
     return NS_NewSVGFETurbulenceElement(aResult, aNodeInfo);
-  if (name == nsGkAtoms::feColorMatrix      ||
-      name == nsGkAtoms::feConvolveMatrix   ||
+  if (name == nsGkAtoms::feConvolveMatrix   ||
       name == nsGkAtoms::feDiffuseLighting  ||
       name == nsGkAtoms::feDisplacementMap  ||
       name == nsGkAtoms::feImage            ||

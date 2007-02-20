@@ -246,6 +246,7 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_SVGDescElement_id,
   eDOMClassInfo_SVGEllipseElement_id,
   eDOMClassInfo_SVGFEBlendElement_id,
+  eDOMClassInfo_SVGFEColorMatrixElement_id,
   eDOMClassInfo_SVGFEComponentTransferElement_id,
   eDOMClassInfo_SVGFECompositeElement_id,
   eDOMClassInfo_SVGFEFloodElement_id,
