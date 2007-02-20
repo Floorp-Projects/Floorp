@@ -79,8 +79,6 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 
 // Print Preview
 #include "imgIContainer.h" // image animation mode constants
-#include "nsIScrollableView.h"
-#include "nsIScrollable.h"
 #include "nsIWebBrowserPrint.h" // needed for PrintPreview Navigation constants
 
 // Print Progress
@@ -623,7 +621,7 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
 
     // Initialize the DevSpec created earlier, now that we have
     // print settings.
-    rv = devspec->Init(mParentWidget, mPrt->mPrintSettings, PR_FALSE);
+    rv = devspec->Init(nsnull, mPrt->mPrintSettings, PR_FALSE);
 
     // If the page was intended to be destroyed while we were in the print dialog 
     // then we need to clean up and abort the printing.
@@ -923,7 +921,7 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
   nsCOMPtr<nsIDeviceContextSpec> devspec
     (do_CreateInstance("@mozilla.org/gfx/devicecontextspec;1", &rv));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = devspec->Init(mParentWidget, mPrt->mPrintSettings, PR_TRUE);
+  rv = devspec->Init(nsnull, mPrt->mPrintSettings, PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
   mPrt->mPrintDC = do_CreateInstance("@mozilla.org/gfx/devicecontext;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2394,8 +2392,9 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
 
             if (startPageNum == endPageNum) {
               {
-                startRect.y -= margin.top;
-                endRect.y   -= margin.top;
+                nsPresContext* presContext = poPresShell->GetPresContext();
+                startRect.y -= presContext->TwipsToAppUnits(margin.top);
+                endRect.y   -= presContext->TwipsToAppUnits(margin.top);
                 // XXX This is temporary fix for printing more than one page of a selection
                 pageSequence->SetSelectionHeight(startRect.y, endRect.y+endRect.height-startRect.y);
 
