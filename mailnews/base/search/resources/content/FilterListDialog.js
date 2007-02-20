@@ -427,16 +427,14 @@ function runSelectedFilters()
   // make sure the tmp filter list uses the real filter list log stream
   filterList.logStream = currentFilterList().logStream;
   filterList.loggingEnabled = currentFilterList().loggingEnabled;
-  var sel = gFilterTree.view.selection;
+  var index = 0, sel = gFilterTree.view.selection;
   for (var i = 0; i < sel.getRangeCount(); i++) {
     var start = {}, end = {};
     sel.getRangeAt(i, start, end);
     for (var j = start.value; j <= end.value; j++) {
       var curFilter = getFilter(j);
       if (curFilter)
-      {
-        filterList.insertFilterAt(start.value - j, curFilter);
-      }
+        filterList.insertFilterAt(index++, curFilter);
     }
   }
 
