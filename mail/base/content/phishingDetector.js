@@ -223,7 +223,8 @@ var gPhishingDetector = {
        {
          var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
          aLinkTextURL.value = ioService.newURI(aLinkNodeText, null, null);
-         return aHrefURL.host != aLinkTextURL.value.host;
+         // compare hosts, but ignore possible www. prefix
+         return !(aHrefURL.host.replace(/^www\./, "") == aLinkTextURL.value.host.replace(/^www\./, ""));
        }
     }
 

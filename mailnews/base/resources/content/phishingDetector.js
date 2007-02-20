@@ -153,7 +153,8 @@ function misMatchedHostWithLinkText(aLinkNode, aHrefURL, aLinkTextURL)
        var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
        var linkTextURL  = ioService.newURI(linkNodeText, null, null);
        aLinkTextURL.value = linkTextURL;
-       return aHrefURL.host != linkTextURL.host;
+       // compare hosts, but ignore possible www. prefix
+       return !(aHrefURL.host.replace(/^www\./, "") == aLinkTextURL.value.host.replace(/^www\./, ""));
      }
   }
 
