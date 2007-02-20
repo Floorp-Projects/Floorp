@@ -108,7 +108,10 @@ function getPings(elem)
   var docURI = ios.newURI(doc.documentURI, doc.characterSet, null);
 
   // The URL strings returned by elem.ping are absolute URLs.
-  var pings = elem.ping.split(" ");
+  var pings = elem.ping;
+  if (!pings)
+    return result;
+  pings = pings.split(" ");
   for (var i = 0; i < pings.length; ++i) {
     if (requireSameHost) {
       var uri = ios.newURI(pings[i], doc.characterSet, null);
