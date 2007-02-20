@@ -123,8 +123,6 @@ function hookup() {
   connect("toggleNonTests", "onclick", toggleNonTests);
   // run automatically if
   if (params.autorun) {
-    connect(window, 'onload', RunSet, "runall");
     RunSet.runall();
   }
 }
-connect(window, 'onload', hookup);
