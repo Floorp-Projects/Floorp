@@ -1407,10 +1407,8 @@ function ctrlNumberTabSelection(event)
 
   var oldTab = gBrowser.selectedTab;
   var newTab = gBrowser.tabContainer.childNodes[index];
-  if (newTab != oldTab) {
-    oldTab.selected = false;
+  if (newTab != oldTab)
     gBrowser.selectedTab = newTab;
-  }
 
   event.preventDefault();
   event.stopPropagation();
