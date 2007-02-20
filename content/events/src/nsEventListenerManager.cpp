@@ -667,7 +667,8 @@ InitializeEventIdTable() {
     { &nsGkAtoms::ondraggesture,                 NS_DRAGDROP_GESTURE },
     { &nsGkAtoms::onoverflow,                    NS_SCROLLPORT_OVERFLOW },
     { &nsGkAtoms::onunderflow,                   NS_SCROLLPORT_UNDERFLOW },
-    { &nsGkAtoms::onoverflowchanged,             NS_SCROLLPORT_OVERFLOWCHANGED }
+    { &nsGkAtoms::onoverflowchanged,             NS_SCROLLPORT_OVERFLOWCHANGED },
+    { &nsGkAtoms::onDOMMouseScroll,              NS_MOUSE_SCROLL }
 #ifdef MOZ_SVG
    ,{ &nsGkAtoms::onSVGLoad,                     NS_SVG_LOAD },
     { &nsGkAtoms::onSVGUnload,                   NS_SVG_UNLOAD },

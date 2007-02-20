@@ -69,7 +69,7 @@ static const char* const sEventNames[] = {
   "DOMNodeRemovedFromDocument", "DOMNodeInsertedIntoDocument",
   "DOMAttrModified", "DOMCharacterDataModified",
   "DOMActivate", "DOMFocusIn", "DOMFocusOut",
-  "pageshow", "pagehide"
+  "pageshow", "pagehide", "DOMMouseScroll"
 #ifdef MOZ_SVG
  ,
   "SVGLoad", "SVGUnload", "SVGAbort", "SVGError", "SVGResize", "SVGScroll",
@@ -393,6 +393,9 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_MOUSE_MOVE;
     else if (atom == nsGkAtoms::oncontextmenu)
       mEvent->message = NS_CONTEXTMENU;
+  } else if (mEvent->eventStructType == NS_MOUSE_SCROLL_EVENT) {
+    if (atom == nsGkAtoms::onDOMMouseScroll)
+      mEvent->message = NS_MOUSE_SCROLL;
   } else if (mEvent->eventStructType == NS_KEY_EVENT) {
     if (atom == nsGkAtoms::onkeydown)
       mEvent->message = NS_KEY_DOWN;
@@ -1210,6 +1213,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_pageshow];
   case NS_PAGE_HIDE:
     return sEventNames[eDOMEvents_pagehide];
+  case NS_MOUSE_SCROLL:
+    return sEventNames[eDOMEvents_DOMMouseScroll];
 #ifdef MOZ_SVG
   case NS_SVG_LOAD:
     return sEventNames[eDOMEvents_SVGLoad];
