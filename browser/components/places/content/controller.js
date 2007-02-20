@@ -82,32 +82,24 @@ const NEWLINE = "\r\n";
 // batching (rather than letting them do incremental drawing).
 const MIN_TRANSACTIONS_FOR_BATCH = 5;
 
-function STACK(args) {
-  var temp = arguments.callee.caller;
-  while (temp) {
-    LOG("NAME: " + temp.name + "\n");
-    temp = temp.arguments.callee.caller;    
-  }
-}
-
 /**
  * Represents an insertion point within a container where we can insert
  * items. 
- * @param   folderId
+ * @param   aFolderId
  *          The folderId of the parent container
- * @param   index
+ * @param   aIndex
  *          The index within the container where we should insert
- * @param   orientation
+ * @param   aOrientation
  *          The orientation of the insertion. NOTE: the adjustments to the
  *          insertion point to accommodate the orientation should be done by
  *          the person who constructs the IP, not the user. The orientation
  *          is provided for informational purposes only!
  * @constructor
  */
-function InsertionPoint(folderId, index, orientation) {
-  this.folderId = folderId;
-  this.index = index;
-  this.orientation = orientation;
+function InsertionPoint(aFolderId, aIndex, aOrientation) {
+  this.folderId = aFolderId;
+  this.index = aIndex;
+  this.orientation = aOrientation;
 }
 InsertionPoint.prototype.toString = function IP_toString() {
   return "[object InsertionPoint(folder:" + this.folderId + ",index:" + this.index + ",orientation:" + this.orientation + ")]";
@@ -139,14 +131,14 @@ var ViewConfigurator = {
     "folder=1": new ViewConfig([TYPE_X_MOZ_PLACE_CONTAINER], 
                                ViewConfig.GENERIC_DROP_TYPES, 4)
   },
-  
+
   /**
    * Applies rules to a specific view. 
    */
   configure: function PC_configure(view) {
     // Determine what place the view is showing.
     var place = view.place;
-    
+
     // Find a ruleset that matches the current place.
     var rules = null;
     for (var test in this.rules) {
@@ -155,14 +147,11 @@ var ViewConfigurator = {
         break;
       }
     }
-    
+
     // If rules are found, apply them. 
     if (rules) {
       view.peerDropTypes = rules.peerDropTypes;
       view.childDropTypes = rules.childDropTypes;
-      view.excludeItems = rules.excludeItems;
-      view.excludeQueries = rules.excludeQueries;
-      view.expandQueries = rules.expandQueries;
       view.peerDropIndex = rules.peerDropIndex;
     }
   }
@@ -181,9 +170,9 @@ PlacesController.prototype = {
    * The places view. 
    */
   _view: null,
-  
-  isCommandEnabled: function PC_isCommandEnabled(command) {
-    switch (command) {
+
+  isCommandEnabled: function PC_isCommandEnabled(aCommand) {
+    switch (aCommand) {
     case "cmd_undo":
       return PlacesUtils.tm.numberOfUndoItems > 0;
     case "cmd_redo":
@@ -263,16 +252,12 @@ PlacesController.prototype = {
     case "placesCmd_show:info":
       if (this._view.hasSingleSelection) {
         var selectedNode = this._view.selectedNode;
-        if (PlacesUtils.nodeIsBookmark(selectedNode)) {
-          var uri = PlacesUtils._uri(selectedNode.uri);
-          if (!PlacesUtils.annotations
-                          .hasAnnotation(uri, "livemark/bookmarkFeedURI")) 
-            return true;
-        }
-        else if (PlacesUtils.nodeIsFolder(selectedNode)) {
-          if (!this._selectionOverlapsSystemArea())
-            return true;
-        }
+        if (PlacesUtils.nodeIsBookmark(selectedNode) &&
+            !PlacesUtils.nodeIsLivemarkItem(selectedNode))
+          return true;
+        else if (PlacesUtils.nodeIsFolder(selectedNode) &&
+                 !this._selectionOverlapsSystemArea())
+          return true;
       }
       return false;
     case "placesCmd_reload":
@@ -290,12 +275,9 @@ PlacesController.prototype = {
 
         // children of a live bookmark (legacy bookmarks UI doesn't support
         // this)
-        if (PlacesUtils.nodeIsURI(selectedNode)) {
-          var uri = PlacesUtils._uri(selectedNode.uri);
-          if (PlacesUtils.annotations
-                         .hasAnnotation(uri, "livemark/bookmarkFeedURI"))
-            return true;
-        }
+        if (PlacesUtils.nodeIsURI() &&
+            PlacesUtils.nodeIsLivemarkItem(selectedNode))
+          return true;
 #endif
       }
       return false;
@@ -384,26 +366,8 @@ PlacesController.prototype = {
     }
   },
 
-  onEvent: function PC_onEvent(eventName) {
-    //LOG("onEvent: " + eventName);
-  },
-  
-  /**
-   * Updates the enabled state of a command element. 
-   * @param   commandId
-   *          The id of the command element to update
-   * @param   enabled
-   *          Whether or not the command element should be enabled.
-   */
-  _setEnabled: function PC__setEnabled(commandId, enabled) {
-    var command = document.getElementById(commandId);
-    // Prevents excessive setAttributes
-    var disabled = command.hasAttribute("disabled");
-    if (enabled && disabled)
-      command.removeAttribute("disabled");
-    else if (!enabled && !disabled)
-      command.setAttribute("disabled", "true");
-  },
+  onEvent: function PC_onEvent(eventName) { },
+
   
   /**
    * Determine whether or not the selection can be removed, either by the 
@@ -432,15 +396,12 @@ PlacesController.prototype = {
       // children, e.g. live bookmark folder children. It doesn't make sense
       // to delete a child of a live bookmark folder, since when the folder
       // refreshes, the child will return. 
-      if (PlacesUtils.nodeIsFolder(parent)) {
-        var readOnly = PlacesUtils.bookmarks.getFolderReadonly(asFolder(parent).folderId);
-        if (readOnly)
-          return false;
-      }
+      if (PlacesUtils.isReadonlyFolder(parent))
+        return false;
     }
     return true;
   },
-  
+
   /**
    * Determines whether or not the clipboard contains data that the active
    * view can support in a paste operation. 
@@ -465,7 +426,7 @@ PlacesController.prototype = {
     return clipboard.hasDataMatchingFlavors(flavors, 
                                             Ci.nsIClipboard.kGlobalClipboard);
   },
-  
+
   /**
    * Determines whether or not nodes can be inserted relative to the selection.
    */
@@ -517,7 +478,7 @@ PlacesController.prototype = {
     return true;
   },
 
-#ifdef MOZ_PLACES_BOOKMARKS
+#ifdef BROKEN_SORT_CODE
   /**
    * Updates commands for persistent sorting
    * @param   inSysArea
@@ -554,7 +515,7 @@ PlacesController.prototype = {
       sortFolder = selectedNode;
       sortingChildren = true;
     }
-    
+
     // Count the children of the container. If there aren't at least two, we 
     // don't want to enable the command since there's nothing to be sorted.
     // We need to get the unfiltered contents of the container to make this
@@ -583,18 +544,6 @@ PlacesController.prototype = {
 #endif
 
   /**
-   * Determines if the active view can support inserting items of a certain type.
-   */
-  _viewSupportsInsertingType: function PC__viewSupportsInsertingType(type) {
-    var types = this._view.peerDropTypes;
-    for (var i = 0; i < types.length; ++i) {
-      if (types[i] == type.value) 
-        return true;
-    }
-    return true;
-  },
-  
-  /**
    * Looks at the data on the clipboard to see if it is paste-able. 
    * Paste-able data is:
    *   - in a format that the view can receive
@@ -611,22 +560,22 @@ PlacesController.prototype = {
     xferable.addDataFlavor(TYPE_X_MOZ_PLACE_SEPARATOR);
     xferable.addDataFlavor(TYPE_X_MOZ_PLACE);
     xferable.addDataFlavor(TYPE_X_MOZ_URL);
-    
+
     var clipboard = Cc["@mozilla.org/widget/clipboard;1"].
                     getService(Ci.nsIClipboard);
     clipboard.getData(xferable, Ci.nsIClipboard.kGlobalClipboard);
-    
+
     try {
       // getAnyTransferData can throw if no data is available. 
       var data = { }, type = { };
       xferable.getAnyTransferData(type, data, { });
       data = data.value.QueryInterface(Ci.nsISupportsString).data;
-      if (!this._viewSupportsInsertingType(type.value))
+      if (this._view.peerDropTypes.indexOf(type.value) == -1)
         return false;
-      
+
       // unwrapNodes will throw if the data blob is malformed. 
       var nodes = PlacesUtils.unwrapNodes(data, type.value);
-      
+
       var ip = this._view.insertionPoint;
       if (!ip)
         return false;
@@ -651,7 +600,7 @@ PlacesController.prototype = {
         }
         return false;
       }
-      
+
       // Since the bookmarks data model enforces only one instance of a URI per
       // folder, it is not possible to paste a selection into a folder where 
       // all of the URIs already exist. Thus we need to return false to disable
@@ -752,7 +701,7 @@ PlacesController.prototype = {
       // aren't  reorderable can have items removed from them, e.g. a history
       // list. 
       if (!PlacesUtils.nodeIsReadOnly(node) &&
-          !PlacesUtils.folderIsReadonly(node.parent || root))
+          !PlacesUtils.isReadonlyFolder(node.parent || root))
         nodeData["mutable"] = true;
 
       // annotations
@@ -761,6 +710,7 @@ PlacesController.prototype = {
         for (var j = 0; j < names.length; ++j)
           nodeData[names[i]] = true;
       }
+#ifdef EXTENDED_LIVEBOOKMARKS_UI
       else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY) {
         // Various queries might live in the left-hand side of the organizer
         // window. If this one happens to have collected all the livemark feeds,
@@ -773,6 +723,7 @@ PlacesController.prototype = {
         if (uri.spec == ORGANIZER_SUBSCRIPTIONS_QUERY)
           nodeData["allLivemarks"] = true;
       }
+#endif
       metadata.push(nodeData);
     }
 
@@ -788,7 +739,7 @@ PlacesController.prototype = {
    * @returns true if the conditions (see buildContextMenu) are satisfied
    *          and the item can be displayed, false otherwise. 
    */
-  _shouldShowMenuItem: function(aMenuItem, aMetaData) {
+  _shouldShowMenuItem: function PC__shouldShowMenuItem(aMenuItem, aMetaData) {
     var selectiontype = aMenuItem.getAttribute("selectiontype");
     if (selectiontype == "multiple" && aMetaData.length == 1)
       return false;
@@ -896,7 +847,7 @@ PlacesController.prototype = {
   /**
    * Select all links in the current view. 
    */
-  selectAll: function() {
+  selectAll: function PC_selectAll() {
     this._view.selectAll();
   },
 
@@ -967,11 +918,8 @@ PlacesController.prototype = {
         folder = asFolder(selectedNode);
       }
 #ifdef EXTENDED_LIVEBOOKMARKS_UI
-      else if (PlacesUtils.nodeIsURI(selectedNode)) {
-        var uri = PlacesUtils._uri(selectedNode.uri);
-        var isLivemarkItem =
-          PlacesUtils.annotations.hasAnnotation(uri, "livemark/bookmarkFeedURI");
-        if (isLivemarkItem)
+      else if (PlacesUtils.nodeIsURI()) {
+        if (PlacesUtils.nodeIsLivemarkItem(selectedNode))
           folder = asFolder(selectedNode.parent);
       }
 #endif
@@ -1026,7 +974,7 @@ PlacesController.prototype = {
     }
     return reallyOpen;
   },
-    
+
   /**
    * Opens the links in the selected folder, or the selected links in new tabs. 
    * XXXben this needs to handle the case when there are no open browser windows
@@ -1128,29 +1076,26 @@ PlacesController.prototype = {
       }
     }
   },
-  
+
   /**
    * Create a new Bookmark folder somewhere. Prompts the user for the name
    * of the folder. 
    */
   newFolder: function PC_newFolder() {
-    var view = this._view;
-    
-    view.saveSelection(view.SAVE_SELECTION_INSERT);
-    var ps =
-        Cc["@mozilla.org/embedcomp/prompt-service;1"].
-        getService(Ci.nsIPromptService);
+    this._view.saveSelection(this._view.SAVE_SELECTION_INSERT);
+    var ps = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+             getService(Ci.nsIPromptService);
     var title = PlacesUtils.getString("newFolderTitle");
     var text = PlacesUtils.getString("newFolderMessage");
     var value = { value: PlacesUtils.getString("newFolderDefault") };
     if (ps.prompt(window, title, text, value, null, { })) {
-      var ip = view.insertionPoint;
+      var ip = this._view.insertionPoint;
       if (!ip)
         throw Cr.NS_ERROR_NOT_AVAILABLE;
       var txn = new PlacesCreateFolderTransaction(value.value, ip.folderId, 
                                                   ip.index);
       PlacesUtils.tm.doTransaction(txn);
-      view.restoreSelection();
+      this._view.restoreSelection();
     }
   },
 
@@ -1185,9 +1130,9 @@ PlacesController.prototype = {
   _removeRange: function PC__removeRange(range, transactions) {
     NS_ASSERT(transactions instanceof Array, "Must pass a transactions array");
     var index = PlacesUtils.getIndexOfNode(range[0]);
-    
+
     var removedFolders = [];
-    
+
     /**
      * Determines if a node is contained by another node within a resultset. 
      * @param   node
@@ -1205,7 +1150,7 @@ PlacesController.prototype = {
       }
       return false;
     }
-    
+
     /**
      * Walk the list of folders we're removing in this delete operation, and
      * see if the selected node specified is already implicitly being removed 
@@ -1221,12 +1166,12 @@ PlacesController.prototype = {
       }
       return false;          
     }
-    
+
     for (var i = 0; i < range.length; ++i) {
       var node = range[i];
       if (shouldSkipNode(node))
         continue;
-      
+
       if (PlacesUtils.nodeIsFolder(node)) {
         // TODO -- node.parent might be a query and not a folder.  See bug 324948
         var folder = asFolder(node);
@@ -1245,7 +1190,7 @@ PlacesController.prototype = {
       }
     }
   },
-  
+
   /**
    * Removes the set of selected ranges from bookmarks.
    * @param   txnName
@@ -1261,7 +1206,7 @@ PlacesController.prototype = {
       PlacesUtils.tm.doTransaction(txn);
     }
   },
-  
+
   /**
    * Removes the set of selected ranges from history. 
    */
@@ -1278,28 +1223,28 @@ PlacesController.prototype = {
         bhist.removePage(PlacesUtils._uri(node.uri));
     }
   },
-   
+
   /**
    * Removes the selection
-   * @param   txnName
+   * @param   aTxnName
    *          A name for the transaction if this is being performed
    *          as part of another operation.
    */
-  remove: function PC_remove(txnName) {
-    NS_ASSERT(txnName !== undefined, "Must supply Transaction Name");
+  remove: function PC_remove(aTxnName) {
+    NS_ASSERT(aTxnName !== undefined, "Must supply Transaction Name");
     this._view.saveSelection(this._view.SAVE_SELECTION_REMOVE);
 
     // Delete the selected rows. Do this by walking the selection backward, so
     // that when undo is performed they are re-inserted in the correct order.
     var type = this._view.getResult().root.type; 
     if (PlacesUtils.nodeIsFolder(this._view.getResult().root))
-      this._removeRowsFromBookmarks(txnName);
+      this._removeRowsFromBookmarks(aTxnName);
     else
       this._removeRowsFromHistory();
 
     this._view.restoreSelection();
   },
-  
+
   /**
    * Get a TransferDataSet containing the content of the selection that can be
    * dropped elsewhere. 
@@ -1360,7 +1305,7 @@ PlacesController.prototype = {
   /**
    * Copy Bookmarks and Folders to the clipboard
    */
-  copy: function() {
+  copy: function PC_copy() {
     var nodes = this._view.getCopyableSelection();
 
     var xferable = 
@@ -1416,7 +1361,7 @@ PlacesController.prototype = {
       addData(TYPE_UNICODE, unicodeString);
     if (htmlString)
       addData(TYPE_HTML, htmlString);
-    
+
     if (pcString || psString || placeString || unicodeString || htmlString || 
         mozURLString) {
       var clipboard = 
@@ -1428,7 +1373,7 @@ PlacesController.prototype = {
   /**
    * Cut Bookmarks and Folders to the clipboard
    */
-  cut: function() {
+  cut: function PC_cut() {
     this.copy();
     this.remove("Cut Selection");
   },
@@ -1551,7 +1496,7 @@ var PlacesControllerDragHelper = {
                       getService(Ci.nsIDragService);
     return dragService.getCurrentSession();
   },
-  
+
   /**
    * Determines whether or not the data currently being dragged can be dropped
    * on the specified view. 

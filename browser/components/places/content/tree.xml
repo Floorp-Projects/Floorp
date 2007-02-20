@@ -645,9 +645,6 @@
           // Items that are "static" - i.e. above the user-configurable area
           // of the view - can not be moved. 
           var nodes = this.getSelectionNodes();
-          var bms = 
-              Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-              getService(Ci.nsINavBookmarksService);
           for (var i = 0; i < nodes.length; ++i) {
             var node = nodes[i];
             

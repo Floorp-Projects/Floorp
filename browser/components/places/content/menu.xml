@@ -239,13 +239,7 @@
                 if (PlacesUtils.nodeIsLivemarkContainer(child)) {
                   element.setAttribute("livemark", "true");
                   var folder = asFolder(child).folderId;
-                  var bms =
-                    Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-                    getService(Ci.nsINavBookmarksService);
-                  var lms =
-                    Cc["@mozilla.org/browser/livemark-service;2"].
-                    getService(Ci.nsILivemarkService);
-                  var siteURI = lms.getSiteURI(folder);
+                  var siteURI = PlacesUtils.livemarks.getSiteURI(folder);
                   if (siteURI) {            
                     element.setAttribute("siteURI", siteURI.spec);
                   }
