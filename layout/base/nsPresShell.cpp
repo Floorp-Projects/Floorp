@@ -1137,11 +1137,6 @@ protected:
   nsVoidArray mCurrentEventFrameStack;
   nsCOMArray<nsIContent> mCurrentEventContentStack;
 
-#ifdef NS_DEBUG
-  nsRect mCurrentTargetRect;
-  nsIView* mCurrentTargetView;
-#endif
-  
   nsCOMPtr<nsICaret>            mCaret;
   PRInt16                       mSelectionFlags;
   PresShellViewEventListener    *mViewEventListener;
@@ -3530,6 +3525,12 @@ PresShell::ClearFrameRefs(nsIFrame* aFrame)
     mCurrentEventFrame = nsnull;
   }
 
+#ifdef NS_DEBUG
+  if (aFrame == mDrawEventTargetFrame) {
+    mDrawEventTargetFrame = nsnull;
+  }
+#endif
+
   for (int i=0; i<mCurrentEventFrameStack.Count(); i++) {
     if (aFrame == (nsIFrame*)mCurrentEventFrameStack.ElementAt(i)) {
       //One of our stack frames was deleted.  Get its content so that when we
@@ -5038,20 +5039,6 @@ PresShell::Paint(nsIView*             aView,
   nsLayoutUtils::PaintFrame(aRenderingContext, frame, aDirtyRegion,
                             backgroundColor);
 
-#ifdef NS_DEBUG
-  // Draw a border around the frame
-  if (nsIFrameDebug::GetShowFrameBorders()) {
-    nsRect r = frame->GetRect();
-    aRenderingContext->SetColor(NS_RGB(0,0,255));
-    aRenderingContext->DrawRect(0, 0, r.width, r.height);
-  }
-  // Draw a border around the current event target
-  if ((nsIFrameDebug::GetShowEventTargetFrameBorder()) && (aView == mCurrentTargetView)) {
-    aRenderingContext->SetColor(NS_RGB(128,0,128));
-    aRenderingContext->DrawRect(mCurrentTargetRect.x, mCurrentTargetRect.y, mCurrentTargetRect.width, mCurrentTargetRect.height);
-  }
-#endif
-
   return rv;
 }
 
@@ -5388,31 +5375,16 @@ PresShell::HandleEvent(nsIView         *aView,
 void
 PresShell::ShowEventTargetDebug()
 {
-  if ((nsIFrameDebug::GetShowEventTargetFrameBorder()) &&
-      (GetCurrentEventFrame())) {
-    nsIView *oldView = mCurrentTargetView;
-    nsPoint offset(0,0);
-    nsRect oldTargetRect(mCurrentTargetRect);
-    mCurrentTargetRect = mCurrentEventFrame->GetRect();
-    mCurrentTargetView = mCurrentEventFrame->GetView();
-    if (!mCurrentTargetView ) {
-      mCurrentEventFrame->GetOffsetFromView(offset, &mCurrentTargetView);
+  if (nsIFrameDebug::GetShowEventTargetFrameBorder() &&
+      GetCurrentEventFrame()) {
+    if (mDrawEventTargetFrame) {
+      mDrawEventTargetFrame->Invalidate(
+          nsRect(nsPoint(0, 0), mDrawEventTargetFrame->GetSize()));
     }
-    if (mCurrentTargetView) {
-      mCurrentTargetRect.x = offset.x;
-      mCurrentTargetRect.y = offset.y;
-      // use aView or mCurrentTargetView??
-      if ((mCurrentTargetRect != oldTargetRect) ||
-          (mCurrentTargetView != oldView)) {
 
-        nsIViewManager* vm = GetViewManager();
-        if (vm) {
-          vm->UpdateView(mCurrentTargetView,mCurrentTargetRect,0);
-          if (oldView)
-            vm->UpdateView(oldView,oldTargetRect,0);
-        }
-      }
-    }
+    mDrawEventTargetFrame = mCurrentEventFrame;
+    mDrawEventTargetFrame->Invalidate(
+        nsRect(nsPoint(0, 0), mDrawEventTargetFrame->GetSize()));
   }
 }
 #endif

@@ -1280,6 +1280,43 @@ BuildDisplayListWithOverflowClip(nsDisplayListBuilder* aBuilder, nsIFrame* aFram
   return aFrame->OverflowClip(aBuilder, set, aSet, aClipRect);
 }
 
+#ifdef NS_DEBUG
+static void PaintDebugBorder(nsIFrame* aFrame, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect, nsPoint aPt) {
+  nsRect r(aPt, aFrame->GetSize());
+  if (aFrame->HasView()) {
+    aCtx->SetColor(NS_RGB(0,0,255));
+  } else {
+    aCtx->SetColor(NS_RGB(255,0,0));
+  }
+  aCtx->DrawRect(r);
+}
+
+static void PaintEventTargetBorder(nsIFrame* aFrame, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect, nsPoint aPt) {
+  nsRect r(aPt, aFrame->GetSize());
+  aCtx->SetColor(NS_RGB(128,0,128));
+  aCtx->DrawRect(r);
+}
+
+static void
+DisplayDebugBorders(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                    const nsDisplayListSet& aLists) {
+  // Draw a border around the child
+  // REVIEW: From nsContainerFrame::PaintChild
+  if (nsIFrameDebug::GetShowFrameBorders() && !aFrame->GetRect().IsEmpty()) {
+    aLists.Outlines()->AppendNewToTop(new (aBuilder)
+        nsDisplayGeneric(aFrame, PaintDebugBorder, "DebugBorder"));
+  }
+  // Draw a border around the current event target
+  if (nsIFrameDebug::GetShowEventTargetFrameBorder() &&
+      aFrame->GetPresContext()->PresShell()->GetDrawEventTargetFrame() == aFrame) {
+    aLists.Outlines()->AppendNewToTop(new (aBuilder)
+        nsDisplayGeneric(aFrame, PaintEventTargetBorder, "EventTargetBorder"));
+  }
+}
+#endif
+
 nsresult
 nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
                                              const nsRect&         aDirtyRect,
@@ -1369,7 +1406,11 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   // items.
   set.Outlines()->SortByContentOrder(aBuilder, GetContent());
   resultList.AppendToTop(set.Outlines());
-  
+
+#ifdef NS_DEBUG
+  DisplayDebugBorders(aBuilder, this, set);
+#endif
+
   if (applyAbsPosClipping) {
     nsAbsPosClipWrapper wrapper(absPosClip);
     nsDisplayItem* item = wrapper.WrapList(aBuilder, this, &resultList);
@@ -1387,19 +1428,6 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   
   return rv;
 }
-
-#ifdef NS_DEBUG
-static void PaintDebugBorder(nsIFrame* aFrame, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect, nsPoint aPt) {
-  nsRect r(aPt, aFrame->GetSize());
-  if (aFrame->HasView()) {
-    aCtx->SetColor(NS_RGB(0,0,255));
-  } else {
-    aCtx->SetColor(NS_RGB(255,0,0));
-  }
-  aCtx->DrawRect(r);
-}
-#endif
 
 nsresult
 nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
@@ -1496,16 +1524,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       !GetPresContext()->GetTheme()->WidgetIsContainer(ourDisp->mAppearance))
     return NS_OK;
 
-#ifdef NS_DEBUG
-  // Draw a border around the child
-  // REVIEW: From nsContainerFrame::PaintChild
-  if (nsIFrameDebug::GetShowFrameBorders() && !aChild->GetRect().IsEmpty()) {
-    nsresult rv = aLists.Outlines()->AppendNewToTop(new (aBuilder)
-        nsDisplayGeneric(aChild, PaintDebugBorder, "DebugBorder"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-#endif
-
   PRBool isComposited = disp->mOpacity != 1.0f;
   PRBool isPositioned = disp->IsPositioned();
   if (isComposited || isPositioned || (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT)) {
@@ -1538,6 +1556,9 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
         rv = aBuilder->DisplayCaret(aChild, dirty, aLists);
       }
     }
+#ifdef NS_DEBUG
+    DisplayDebugBorders(aBuilder, aChild, aLists);
+#endif
     return rv;
   }
   
@@ -1590,6 +1611,9 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     list.AppendToTop(pseudoStack.Content());
     extraPositionedDescendants.AppendToTop(pseudoStack.PositionedDescendants());
     aLists.Outlines()->AppendToTop(pseudoStack.Outlines());
+#ifdef NS_DEBUG
+    DisplayDebugBorders(aBuilder, aChild, aLists);
+#endif
   }
   NS_ENSURE_SUCCESS(rv, rv);
     
