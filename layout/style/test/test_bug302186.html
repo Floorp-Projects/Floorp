@@ -1,0 +1,423 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=302186
+-->
+<head>
+  <title>Test for Bug 302186</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<style>
+
+
+span { color: red }
+:default + span { color: green }
+
+
+/* static default 5 */
+span.reverse5 { color: green }
+:default + span.reverse5 { color: red }
+
+
+/* dynamic default 6 */
+span.reverse6 { color: green }
+:default + span.reverse6 { color: red }
+
+/* dynamic default 7 */
+span.reverse7 { color: green }
+:default + span.reverse7 { color: red }
+
+/* dynamic default 8 */
+span.reverse8 { color: green }
+:default + span.reverse8 { color: red }
+
+/* dynamic default 9 */
+span.reverse9 { color: green }
+:default + span.reverse9 { color: red }
+
+/* dynamic default 10 */
+span.reverse10 { color: green }
+:default + span.reverse10 { color: red }
+
+/* dynamic default 11 */
+span.reverse11 { color: green }
+:default + span.reverse11 { color: red }
+
+/* dynamic default 12 */
+span.reverse12 { color: green }
+:default + span.reverse12 { color: red }
+
+/* dynamic default 13 */
+span.reverse13 { color: green }
+:default + span.reverse13 { color: red }
+
+/* dynamic default 14 */
+span.reverse14 { color: green }
+:default + span.reverse14 { color: red }
+
+/* dynamic default 15 */
+span.reverse15 { color: green }
+:default + span.reverse15 { color: red }
+
+/* dynamic default 16 */
+span.reverse16 { color: green }
+:default + span.reverse16 { color: red }
+
+/* dynamic default 17 */
+span.reverse17 { color: green }
+:default + span.reverse17 { color: red }
+
+/* dynamic default 18 */
+span.reverse18 { color: green }
+:default + span.reverse18 { color: red }
+
+/* dynamic default 19 */
+span.reverse19 { color: green }
+:default + span.reverse19 { color: red }
+
+/* dynamic default 20 */
+span.reverse20 { color: green }
+:default + span.reverse20 { color: red }
+
+
+button { display: none }
+input { display: none }
+</style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=302186">Mozilla Bug 302186</a>
+<p id="display"></p>
+<div id="content" style="display: block">
+   
+  <!-- static default 5 -->
+  <form>
+   <div>
+    <input type="image"><span id="5a">There should be no red.</span>
+   </div>
+   <div>
+  <input type="image"><span id="5b" class="reverse5">There should be no red.</span>
+
+   </div>
+  </form>
+
+  <!-- dynamic default 6 -->
+  <form>
+  <div id="div6">
+  <span id="6a">There should be no red.</span>
+</div>
+<div>
+  <input type="submit"><span id="6b" class="reverse6">There should be no red.</span>
+</div>
+  </form>
+
+  <!-- dynamic default 7 -->
+  <form>
+<div>
+  <input type="submit"><span id="7a">There should be no red.</span>
+</div>
+<div id="div7">
+  <span class="reverse7" id="7b">There should be no red.</span>
+
+</div>
+</form>
+
+  <!-- dynamic default 8 -->
+<form>
+<div id="div8"><span id="8a">There should be no red.</span>
+</div>
+<div>
+  <input type="image" id="foo"><span class="reverse8" id="8b">There should be no red.</span>
+
+</div>
+</form>
+
+  <!-- dynamic default 9 -->
+<form>
+<div>
+  <input type="image"><span id="9a">There should be no red.</span>
+</div>
+<div id="div9">
+  <span class="reverse9" id="9b">There should be no red.</span>
+
+</div>
+</form>
+
+  <!-- dynamic default 10 -->
+<form>
+<div id="div10">
+  <input type="submit"><span id="10a" class="reverse10">There should be no red.</span>
+</div>
+<div>
+  <input type="submit"><span id="10b" >There should be no red.</span>
+
+</div>
+</form>
+
+<!-- dynamic default 11 -->
+<form>
+<div id="div11a">
+  <input type="submit"><span id="11a">There should be no red.</span>
+</div>
+<div id="div11">
+  <input type="submit"><span id="11b" class="reverse11">There should be no red.</span>
+
+</div>
+</form>
+
+<!-- dynamic default 12 -->
+<form>
+<div id="div12">
+  <input type="image"><span id="12a" class="reverse12">There should be no red.</span>
+</div>
+<div>
+  <input type="image"><span id="12b">There should be no red.</span>
+
+</div>
+</form>
+
+<!-- dynamic default 13 -->
+<form>
+<div id="div13a">
+  <input type="image"><span id="13a">There should be no red.</span>
+</div>
+<div id="div13">
+  <input type="image"><span id="13b" class="reverse13">There should be no red.</span>
+
+</div>
+</form>
+
+<!-- dynamic default 14 -->
+<form>
+<div id="div14a">
+  <input type="submit" id="foo14"><span id="14a">There should be no red.</span>
+</div>
+<div id="div14b">
+  <input type="submit" id="foo14b"><span id="14b" class="reverse14">There should be no red.</span>
+
+</div>
+</form>
+
+<!-- dynamic default 15 -->
+<form>
+<div id="div15a">
+  <input type="image" id="foo15a"><span id="15a">There should be no red.</span>
+</div>
+<div id="div15b">
+  <input type="image" id="foo15b"><span id="15b" class="reverse15">There should be no red.</span>
+
+</div>
+</form>
+
+<!-- dynamic default 16 -->
+<form>
+<div>
+  <input type="image" checked="checked" id="foo16"></button>
+  <span class="reverse16" id="16a">There should be no red.</span>
+</div>
+<div>
+  <input type="image"></button><span id="16b">There should be no red.</span>
+
+</div>
+</form>
+
+<!-- dynamic default 17 -->
+<form>
+<div>
+  <button type="button" id="foo17"></button>
+  <span id="17a">There should be no red.</span>
+</div>
+<div>
+  <button type="submit"></button><span class="reverse17" id="17b">There should be no red.</span>
+</div>
+</form>
+
+<!-- dynamic default 18 -->
+<form>
+<div>
+  <input type="button" id="foo18"></button>
+  <span id="18a">There should be no red.</span>
+</div>
+<div>
+  <input type="submit"></button><span id="18b" class="reverse18">There should be no red.</span>
+
+</div>
+</form>
+
+
+
+<!-- dynamic default 19 -->
+<form>
+<div id="div19">
+  <span id="19a">There should be no red.</span>
+</div>
+</form>
+
+<!-- dynamic default 20 -->
+<form>
+<div id="div20">
+  <span id="20a">There should be no red.</span>
+</div>
+</form>
+
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 302186 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function idColor(anId) {
+ var color = Color.fromComputedStyle(anId, "color");
+ return color.toRGBString();
+}
+
+is(idColor("5a"),"rgb(0,128,0)", "CSS static-default 5a");
+is(idColor("5b"),"rgb(0,128,0)", "CSS static-default 5b");
+
+function dynamicDefault6() {
+  var but = document.createElement("input");
+  but.setAttribute("type", "submit");
+  $('div6').insertBefore(but, $('div6').firstChild);
+  is(idColor("6a"),"rgb(0,128,0)", "CSS dynamic-default 6a");
+  is(idColor("6b"),"rgb(0,128,0)", "CSS dynamic-default 6b");
+}
+
+function dynamicDefault7() {
+  var but = document.createElement("input");
+  but.setAttribute("type", "submit");
+  $('div7').insertBefore(but, $('div7').firstChild);
+  is(idColor("7a"),"rgb(0,128,0)", "CSS dynamic-default 7a");
+  is(idColor("7b"),"rgb(0,128,0)", "CSS dynamic-default 7b");
+}
+
+function dynamicDefault8() {
+  var but = document.createElement("input");
+  but.setAttribute("type", "image");
+  $('div8').insertBefore(but, $('div8').firstChild);
+  is(idColor("8a"),"rgb(0,128,0)", "CSS dynamic-default 8a");
+  is(idColor("8b"),"rgb(0,128,0)", "CSS dynamic-default 8b");
+}
+
+function dynamicDefault9() {
+  var but = document.createElement("input");
+  but.setAttribute("type", "image");
+  $('div9').insertBefore(but, $('div9').firstChild);
+  is(idColor("9a"),"rgb(0,128,0)", "CSS dynamic-default 9a");
+  is(idColor("9b"),"rgb(0,128,0)", "CSS dynamic-default 9b");
+}
+
+function dynamicDefault10() {
+  var inputs = $('div10').getElementsByTagName("input");
+  $('div10').removeChild(inputs[0]);
+  todo(idColor("10a") == "rgb(0,128,0)", "CSS dynamic-default 10a");
+  is(idColor("10b"),"rgb(0,128,0)", "CSS dynamic-default 10b");
+}
+
+function dynamicDefault11() {
+  var inputs = $('div11').getElementsByTagName("input");
+  $('div11').removeChild(inputs[0]);
+  is(idColor("11a"),"rgb(0,128,0)", "CSS dynamic-default 11a");
+  is(idColor("11b"),"rgb(0,128,0)", "CSS dynamic-default 11b");
+}
+
+function dynamicDefault12() {
+  var inputs = $('div12').getElementsByTagName("input");
+  $('div12').removeChild(inputs[0]);
+  todo(idColor("12a") == "rgb(0,128,0)", "CSS dynamic-default 12a");
+  is(idColor("12b"),"rgb(0,128,0)", "CSS dynamic-default 12b");
+}
+
+function dynamicDefault13() {
+  var inputs = $('div13').getElementsByTagName("input");
+  $('div13').removeChild(inputs[0]);
+  is(idColor("13a"),"rgb(0,128,0)", "CSS dynamic-default 13a");
+  is(idColor("13b"),"rgb(0,128,0)", "CSS dynamic-default 13b");
+}
+
+function dynamicDefault14() {
+  var div1 = document.getElementById("div14a");
+  var inputs = div1.getElementsByTagName("input");
+  var firstElement = div1.removeChild(inputs[0]);
+  var div2 = document.getElementById("div14b");
+  inputs = div2.getElementsByTagName("input");
+  var secondElement = div2.removeChild(inputs[0]);
+  div1.insertBefore(secondElement, div1.firstChild);
+  div2.insertBefore(firstElement, div2.firstChild);
+  is(idColor("14a"),"rgb(0,128,0)", "CSS dynamic-default 14a");
+  is(idColor("14b"),"rgb(0,128,0)", "CSS dynamic-default 14b");
+}
+
+function dynamicDefault15() {
+  var div1 = document.getElementById("div15a");
+  var inputs = div1.getElementsByTagName("input");
+  var firstElement = div1.removeChild(inputs[0]);
+  var div2 = document.getElementById("div15b");
+  inputs = div2.getElementsByTagName("input");
+  var secondElement = div2.removeChild(inputs[0]);
+  div1.insertBefore(secondElement, div1.firstChild);
+  div2.insertBefore(firstElement, div2.firstChild);
+  is(idColor("15a"),"rgb(0,128,0)", "CSS dynamic-default 15a");
+  is(idColor("15b"),"rgb(0,128,0)", "CSS dynamic-default 15b");
+}
+
+function dynamicDefault16() {
+  $("foo16").setAttribute("type", "button");
+  is(idColor("16a"),"rgb(0,128,0)", "CSS dynamic-default 16a");
+  is(idColor("16b"),"rgb(0,128,0)", "CSS dynamic-default 16b");
+}
+
+function dynamicDefault17() {
+  $("foo17").setAttribute("type", "submit");
+  is(idColor("17a"),"rgb(0,128,0)", "CSS dynamic-default 17a");
+  is(idColor("17b"),"rgb(0,128,0)", "CSS dynamic-default 17b");
+}
+
+function dynamicDefault18() {
+  $("foo18").setAttribute("type", "submit");
+  is(idColor("18a"),"rgb(0,128,0)", "CSS dynamic-default 18a");
+  is(idColor("18b"),"rgb(0,128,0)", "CSS dynamic-default 18b");
+}
+
+function dynamicDefault19() {
+  var newSubmit = document.createElement("input");
+  newSubmit.setAttribute("type", "submit");
+  var div1 = document.getElementById("div19");
+  div1.insertBefore(newSubmit, div1.firstChild);
+  is(idColor("19a"),"rgb(0,128,0)", "CSS dynamic-default 19a");
+}
+
+function dynamicDefault20() {
+  var newSubmit = document.createElement("input");
+  newSubmit.setAttribute("type", "image");
+  var div1 = document.getElementById("div20");
+  div1.insertBefore(newSubmit, div1.firstChild);
+  is(idColor("20a"),"rgb(0,128,0)", "CSS dynamic-default 20a");
+}
+
+addLoadEvent(dynamicDefault6);
+addLoadEvent(dynamicDefault7);
+addLoadEvent(dynamicDefault8);
+addLoadEvent(dynamicDefault9);
+addLoadEvent(dynamicDefault10);
+addLoadEvent(dynamicDefault11);
+addLoadEvent(dynamicDefault12);
+addLoadEvent(dynamicDefault13);
+addLoadEvent(dynamicDefault14);
+addLoadEvent(dynamicDefault15);
+addLoadEvent(dynamicDefault16);
+addLoadEvent(dynamicDefault17);
+addLoadEvent(dynamicDefault18);
+addLoadEvent(dynamicDefault19);
+addLoadEvent(dynamicDefault20);
+
+addLoadEvent(SimpleTest.finish);
+
+</script>
+</pre>
+</body>
+</html>
+
