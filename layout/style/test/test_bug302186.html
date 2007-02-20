@@ -282,7 +282,7 @@ function dynamicDefault6() {
   var but = document.createElement("input");
   but.setAttribute("type", "submit");
   $('div6').insertBefore(but, $('div6').firstChild);
-  is(idColor("6a"),"rgb(0,128,0)", "CSS dynamic-default 6a");
+  todo(idColor("6a") == "rgb(0,128,0)", "CSS dynamic-default 6a");
   is(idColor("6b"),"rgb(0,128,0)", "CSS dynamic-default 6b");
 }
 
@@ -298,7 +298,7 @@ function dynamicDefault8() {
   var but = document.createElement("input");
   but.setAttribute("type", "image");
   $('div8').insertBefore(but, $('div8').firstChild);
-  is(idColor("8a"),"rgb(0,128,0)", "CSS dynamic-default 8a");
+  todo(idColor("8a") == "rgb(0,128,0)", "CSS dynamic-default 8a");
   is(idColor("8b"),"rgb(0,128,0)", "CSS dynamic-default 8b");
 }
 
@@ -387,7 +387,7 @@ function dynamicDefault19() {
   newSubmit.setAttribute("type", "submit");
   var div1 = document.getElementById("div19");
   div1.insertBefore(newSubmit, div1.firstChild);
-  is(idColor("19a"),"rgb(0,128,0)", "CSS dynamic-default 19a");
+  todo(idColor("19a") == "rgb(0,128,0)", "CSS dynamic-default 19a");
 }
 
 function dynamicDefault20() {
@@ -395,7 +395,7 @@ function dynamicDefault20() {
   newSubmit.setAttribute("type", "image");
   var div1 = document.getElementById("div20");
   div1.insertBefore(newSubmit, div1.firstChild);
-  is(idColor("20a"),"rgb(0,128,0)", "CSS dynamic-default 20a");
+  todo(idColor("20a") == "rgb(0,128,0)", "CSS dynamic-default 20a");
 }
 
 addLoadEvent(dynamicDefault6);
