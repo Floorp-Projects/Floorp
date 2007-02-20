@@ -123,7 +123,8 @@ public:
     eDOMEvents_DOMFocusIn,
     eDOMEvents_DOMFocusOut,
     eDOMEvents_pageshow,
-    eDOMEvents_pagehide
+    eDOMEvents_pagehide,
+    eDOMEvents_DOMMouseScroll
 #ifdef MOZ_SVG
    ,
     eDOMEvents_SVGLoad,
