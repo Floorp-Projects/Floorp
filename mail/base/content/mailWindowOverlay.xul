@@ -1284,12 +1284,12 @@
         <menuitem id="menu_properties" label="&folderPropsCmd.label;"
                   accesskey="&folderPropsCmd.accesskey;"
                   command="cmd_properties"/>
-        #ifdef XP_UNIX
-        #ifndef XP_MACOSX
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
         <menuitem id="menu_accountmgr" label="&accountManagerCmd.label;" accesskey="&accountManagerCmdUnix.accesskey;" oncommand="MsgAccountManager(null);"/>
         <menuitem id="menu_preferences" oncommand="openOptionsDialog()"/>
-        #endif
-        #endif
+#endif
+#endif
       </menupopup>
     </menu>
 
