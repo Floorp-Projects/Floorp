@@ -440,6 +440,13 @@ nsHTMLScrollFrame::ReflowScrolledFrame(const ScrollReflowState& aState,
   if (!aFirstPass)
     mInner.mScrolledFrame->AddStateBits(NS_FRAME_IS_DIRTY);
 
+  // We're forcing the padding on our scrolled frame, so let it know what that
+  // padding is.
+  mInner.mScrolledFrame->
+    SetProperty(nsGkAtoms::usedPaddingProperty,
+                new nsMargin(aState.mReflowState.mComputedPadding),
+                nsCSSOffsetState::DestroyMarginFunc);  
+  
   // Pass PR_FALSE for aInit so we can pass in the correct padding
   nsHTMLReflowState kidReflowState(presContext, aState.mReflowState,
                                    mInner.mScrolledFrame,

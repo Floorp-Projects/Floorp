@@ -1923,11 +1923,12 @@ nsHTMLReflowState::CalcLineHeight(nsPresContext* aPresContext,
   return lineHeight;
 }
 
-static void
-DestroyMarginFunc(void*    aFrame,
-                  nsIAtom* aPropertyName,
-                  void*    aPropertyValue,
-                  void*    aDtorData)
+/* static */
+void
+nsCSSOffsetState::DestroyMarginFunc(void*    aFrame,
+                                    nsIAtom* aPropertyName,
+                                    void*    aPropertyValue,
+                                    void*    aDtorData)
 {
   delete NS_STATIC_CAST(nsMargin*, aPropertyValue);
 }
