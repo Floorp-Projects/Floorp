@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/static/harness.css" 
+                 type="text/css"?>
+<window title="Chrome Test Harness"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="text/javascript"
+	  src="chrome://mochikit/content/tests/SimpleTest/TestRunner.js"/>
+  <script type="text/javascript"
+   src="chrome://mochikit/content/tests/SimpleTest/MozillaFileLogger.js"/>
+  <script type="text/javascript"
+	  src="chrome://mochikit/content/tests/SimpleTest/quit.js" />
+  <script type="text/javascript" 
+	  src="chrome://mochikit/content/tests/SimpleTest/setup.js" />
+  <script type="application/javascript;version=1.7"><![CDATA[
+    /** Find our chrome dir **/
+    var ios = Cc["@mozilla.org/network/io-service;1"].
+                getService(Ci.nsIIOService);
+    var chromeURI = ios.newURI("chrome://mochikit/content/",
+                               null, null);
+    var resolvedURI = Cc["@mozilla.org/chrome/chrome-registry;1"].
+                        getService(Ci.nsIChromeRegistry).
+                        convertChromeURL(chromeURI);
+    var chromeDir = Cc["@mozilla.org/file/local;1"].
+                      createInstance(Ci.nsILocalFile);
+    chromeDir.initWithPath(resolvedURI.path);
+    chromeDir = chromeDir.parent.QueryInterface(Ci.nsILocalFile);
+    chromeDir.appendRelativePath("chrome");
+
+    /** load server.js in so we can share template functions **/
+    var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
+                         getService(Ci.mozIJSSubScriptLoader);
+    var srvScope = {};
+    scriptLoader.loadSubScript("chrome://mochikit/content/server.js", srvScope);
+
+    /** generate our test list **/
+    srvScope.makeTags();
+    var [links, count] = srvScope.list("chrome://mochikit/content/chrome/",
+                                       chromeDir, true);
+    var listContent = srvScope.linksToListItems(links);
+    var tableContent = srvScope.linksToTableRows(links);
+    function populate() {
+      $("list-holder").setAttribute("rowspan", 1 + count);
+      $("test-list").innerHTML += listContent.toLowerCase();
+      $("test-table").innerHTML += tableContent.toLowerCase();
+      $("wrapper").innerHTML += " "; // redraw the table
+    }
+    gTestList = eval(srvScope.jsonArrayOfTestFiles(links));
+    connect(window, 'onload', populate);
+    connect(window, 'onload', hookup);
+  ]]>
+  </script>
+  <vbox>   
+    <button label="Run Chrome Tests" id="runtests" />
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <div class="container">
+	<p style="float:right;">
+	  <small>Based on the MochiKit unit tests.</small>
+	</p>
+	<div class="status">
+	  <h1 id="indicator">Status</h1>
+	  <h2 id="pass">Passed: <span id="pass-count">0</span></h2>
+	  <h2 id="fail">Failed: <span id="fail-count">0</span></h2>
+	  <h2 id="fail">Todo: <span id="todo-count">0</span></h2>
+	</div>
+	<div class="clear"></div>
+	<div id="current-test">
+	  <b>Currently Executing: <span id="current-test-path">_</span></b>
+	</div>
+	<div class="clear"></div>
+	<div class="frameholder">
+	  <iframe
+           scrolling="no" id="testframe" width="500"></iframe>
+	</div>
+	<div class="clear"></div>
+	<div class="toggle">
+	  <a href="#" id="toggleNonTests">Show Non-Tests</a>
+          <br />
+	</div>
+        <div id="wrapper">
+	  <table cellpadding="0" cellspacing="0" id="test-table">
+	    <tr>
+	      <td>Passed</td>
+	      <td>Failed</td>
+	      <td>Todo</td>
+	      <td id="list-holder"><ul class="top" id="test-list"><li><b>Test Files</b></li></ul></td>
+	    </tr>
+	  </table>
+        </div>
+      </div>
+    </body>
+  </vbox>
+</window>

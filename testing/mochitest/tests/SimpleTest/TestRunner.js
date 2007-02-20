@@ -41,8 +41,7 @@ TestRunner._toggle = function(el) {
 TestRunner._makeIframe = function (url) {
     var iframe = $('testframe');
     iframe.src = url;
-    iframe.name = url;
-   
+    iframe.name = url; 
     iframe.width = "500";
     return iframe;
 };
@@ -57,7 +56,6 @@ TestRunner.runTests = function (/*url...*/) {
     if (TestRunner.logEnabled)
         TestRunner.logger.log("SimpleTest START");
   
-    var body = document.getElementsByTagName("body")[0];
     TestRunner._urls = flattenArguments(arguments);
     $('testframe').src="";
     TestRunner.runNextTest();
@@ -98,7 +96,7 @@ TestRunner.testFinished = function(doc) {
     if (TestRunner.logEnabled)
         TestRunner.logger.debug("SimpleTest finished " + finishedURL);
     
-    TestRunner._updateUI();
+    TestRunner.updateUI();
     TestRunner._currentTest++;
     TestRunner.runNextTest();
 };
@@ -119,7 +117,7 @@ TestRunner.countResults = function(doc) {
   return {"OK": nOK, "notOK": nNotOK, "todo": nTodo};
 }
 
-TestRunner._updateUI = function() {
+TestRunner.updateUI = function() {
   var results = TestRunner.countResults($('testframe').contentDocument);
   var passCount = parseInt($("pass-count").innerHTML) + results.OK;
   var failCount = parseInt($("fail-count").innerHTML) + results.notOK;

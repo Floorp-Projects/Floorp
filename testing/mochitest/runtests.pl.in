@@ -89,7 +89,9 @@ use strict;
  # Path to the test script on the server
 use constant TEST_SERVER_HOST => "localhost:8888";
 use constant TEST_PATH => "/tests/";
+use constant CHROME_PATH => "/redirect.html";
 use constant TESTS_URL => "http://" . TEST_SERVER_HOST . TEST_PATH;
+use constant CHROMETESTS_URL => "http://" . TEST_SERVER_HOST . CHROME_PATH;
 
  # Max time in seconds to wait for server startup before tests will fail -- if
  # this seems big, it's mostly for debug machines where cold startup
@@ -109,6 +111,7 @@ my $is_win32 = 0;
 #endif
 my $is_mac = ($^O =~ m/darwin/);
 my $unixish = (!($is_win32) && !($is_mac));
+my $manifest = "$dist_bin/chrome/mochikit.manifest";
 
  # Do everything.
  main();
@@ -120,13 +123,14 @@ my $unixish = (!($is_win32) && !($is_mac));
 
 sub main {
   my ($close_when_done, $appoverride, $log_path, $autorun,
-      $console_level, $file_level, $help); 
+      $console_level, $file_level, $help, $do_chrome); 
   GetOptions("close-when-done!"=> \$close_when_done,
              "appname:s"=> \$appoverride,
              "log-file:s" => \$log_path,
              "autorun!" => \$autorun,
              "console-level:s" => \$console_level,
              "file-level:s" => \$file_level,
+	     "chrome!" => \$do_chrome,
              "help!" => \$help);
 
   # if the switches include --help, exit and print directions
@@ -147,7 +151,7 @@ sub main {
     die $error_message;
   }
 
-  initializeProfile();
+  initializeProfile($app);
   my $serverPid = startServer($close_when_done);
 
   # If we're lucky, the server has fully started by now, and all paths are
@@ -157,7 +161,13 @@ sub main {
   # execution.  If we fail, we try to kill the server and exit with an error.
   wait_for_server_startup($serverPid, SERVER_STARTUP_TIMEOUT);
 
-  my $url = TESTS_URL . "?";
+  my $url;
+  if ($do_chrome) {
+   $url = CHROMETESTS_URL . "?";
+  } else {
+   $url = TESTS_URL . "?";
+  }
+
   if ($autorun) {
     $url .= "&autorun=1";
   }
@@ -173,7 +183,7 @@ sub main {
   if ($console_level) {
     $url .= "&consoleLevel=$console_level";
   }
-
+  
   my $test_start = runTests($url);
 
   shutdownServer($serverPid);
@@ -183,8 +193,9 @@ sub main {
   print " started: $test_start\n";
   print "finished: $test_finish\n";
 
-  # delete the profile
+  # delete the profile and manifest
   rmtree($profile_dir, 0, 0);
+  unlink($manifest);
 }
 
  #######################
@@ -194,11 +205,13 @@ sub main {
 sub usage_and_exit {
   print "\n";
   print "Usage instructons for runtests.pl.\n";
-  print "If --log-file is specified, --file-level must be specified as well.";
+  print "If --log-file is specified, --file-level must be specified as well.\n";
+  print "If --chrome is specified, chrome tests will be run instead of web content tests";
   print "\n\n";
   print "Syntax:\n";
   print "  runtests.pl \\\n";
   print "   [--autorun] \\\n";
+  print "   [--chrome] \\\n";
   print "   [--close-when-done] \\\n";
   print "   [--appname=/path/to/app] \\\n";
   print "   [--log-file=/path/to/logfile] \\\n";
@@ -304,6 +317,7 @@ sub startServer {
  ##############
 
 sub initializeProfile {
+  my ($app_path) = @_;
   my $pref_content = <<PREFEND;
 user_pref("browser.dom.window.dump.enabled", true);
 user_pref("capability.principal.codebase.p1.granted", "UniversalXPConnect UniversalBrowserRead UniversalBrowserWrite UniversalPreferencesRead UniversalPreferencesWrite UniversalFileRead");
@@ -347,6 +361,16 @@ CHROMEEND
     die("Could not open userChrome.css file $!");
   print CHROMEOUTFILE ($chrome_content);
   close(CHROMEOUTFILE);
+
+  # register our chrome dir
+  my $chrometest_dir = "$FindBin::Bin/";
+  if ($is_win32) {
+    $chrometest_dir = winPathFromDir($chrometest_dir);
+  }
+  open(MANIFEST, ">>$manifest") ||
+    die("Could not open manifest file $!");
+  print MANIFEST ("content mochikit $chrometest_dir");
+  close(MANIFEST);
 }
 
  ###################
@@ -445,7 +469,8 @@ sub runTests {
   # need to use applescript to focus the app and then set the url.
   my $rc = -1;
   if (!$is_mac) {
-    my @runargs = ($app, '-no-remote', '-profile', $profile_arg, $test_url);
+    my @runargs = ($app, '-no-remote', '-profile', $profile_arg);
+    push(@runargs, $test_url);
     $rc = 0xffff & system @runargs;
   } else {
     $rc = executeMac($profile_arg, $test_url);
@@ -458,18 +483,16 @@ sub runTests {
   return $test_start;
 }
 
- # The mac needs to fork() and then send an applescript command to focus
- # the application.
 sub executeMac {
   my ($profile_arg, $test_url) = @_;
-  my $did_run_osa = 0;
   my $pid = fork();
   if (not defined $pid) {
     die "cannot fork: $!";
   } elsif ($pid == 0) {
     # run only the executable so we get a pid we can focus
     $app .= "-bin";
-    my @runargs = ($app, '-foreground', '-no-remote', '-profile', $profile_arg, $test_url);
+    my @runargs = ($app, '-foreground', '-no-remote', '-profile', $profile_arg);
+    push(@runargs, $test_url);
     exec @runargs or die("Error starting application: $!\n");
   } else {
     waitpid($pid,0);

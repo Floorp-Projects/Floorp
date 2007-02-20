@@ -35,55 +35,17 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir  = testing/mochitest
+relativesrcdir  = testing/mochitest/chrome
 
 include $(DEPTH)/config/autoconf.mk
-
-DIRS =	MochiKit \
-	static \
-	tests \
-	chrome \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
-# files that get copied into $objdir/_tests/
-_SERV_FILES = 	runtests.pl \
-		gen_template.pl \
-		server.js \
-		harness.xul \
-		redirect.html \
-		$(topsrcdir)/netwerk/test/httpserver/httpd.js \
-		$(NULL)	
+_STATIC_FILES = test_sample.xul \
+		$(NULL)
 
-
-_DEST_DIR = $(DEPTH)/_tests/$(relativesrcdir)
-
-# XXXsayrer will work on making this work better with other apps
-# You can still pass --appname with a path to use something else
-ifeq ($(OS_ARCH),Darwin)
-ifdef MOZ_DEBUG
-browser_path = \"../$(DIST)/MinefieldDebug.app/Contents/MacOS/firefox\"
-else
-browser_path = \"../$(DIST)/Minefield.app/Contents/MacOS/firefox\"
-endif
-else
-browser_path = \"../$(DIST)/bin/firefox\"
-endif
-
-# These go in _tests/ so they need to go up an extra path segement
-TEST_DRIVER_PPARGS = 	-DBROWSER_PATH=$(browser_path) \
-			-DXPC_BIN_PATH=\"../$(DIST)/bin\" \
-			$(NULL)
-
-runtests.pl: runtests.pl.in
-	$(PERL) $(MOZILLA_DIR)/config/preprocessor.pl \
-	$(TEST_DRIVER_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
-
-
-libs:: $(_SERV_FILES)
-	$(INSTALL) $^ $(_DEST_DIR)
+libs:: $(_STATIC_FILES)
+	$(INSTALL) $^ $(DEPTH)/_tests/$(relativesrcdir)

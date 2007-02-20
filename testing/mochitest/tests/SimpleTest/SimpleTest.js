@@ -14,9 +14,17 @@ if (typeof(SimpleTest) == "undefined") {
     var SimpleTest = {};
 }
 
-// Check to see if the TestRunner is present and has logging
+var parentRunner = null;
 if (typeof(parent) != "undefined" && parent.TestRunner) {
-    SimpleTest._logEnabled = parent.TestRunner.logEnabled;
+    parentRunner = parent.TestRunner;
+} else if (parent && parent.wrappedJSObject &&
+	   parent.wrappedJSObject.TestRunner) {
+    parentRunner = parent.wrappedJSObject.TestRunner;
+}
+
+// Check to see if the TestRunner is present and has logging
+if (parentRunner) {
+    SimpleTest._logEnabled = parentRunner.logEnabled;
 }
 
 SimpleTest._tests = [];
@@ -59,15 +67,15 @@ SimpleTest._logResult = function(test, passString, failString) {
   msg += " | " + test.name;
   if (test.result) {
       if (test.todo)
-          parent.TestRunner.logger.error(msg)
+          parentRunner.logger.error(msg)
       else
-          parent.TestRunner.logger.log(msg);
+          parentRunner.logger.log(msg);
   } else {
       msg += " | " + test.diag;
       if (test.todo)
-          parent.TestRunner.logger.log(msg)
+          parentRunner.logger.log(msg)
       else
-          parent.TestRunner.logger.error(msg);
+          parentRunner.logger.error(msg);
   }
 }
 
@@ -172,8 +180,8 @@ SimpleTest.waitForExplicitFinish = function () {
  * TestRunner object.
 **/
 SimpleTest.talkToRunner = function () {
-    if (typeof(parent) != "undefined" && parent.TestRunner) {
-        parent.TestRunner.testFinished(document);
+    if (parentRunner) {
+        parentRunner.testFinished(document);
     }
 };
 

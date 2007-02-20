@@ -99,22 +99,34 @@ function makeTagFunc(tagName)
   }
 }
 
-//
-// SCRIPT CODE
-//
-runServer();
+function makeTags() {
+  // map our global HTML generation functions
+  for each(var tag in tags) {
+      this[tag] = makeTagFunc(tag);
+  }
+}
 
-// We can only have gotten here if CLOSE_WHEN_DONE was specified and the
-// /server/shutdown path was requested.  We can shut down the xpcshell now
-// that all testing requests have been served.
-quit(0);
+// only run the "main" section if httpd.js was loaded ahead of us
+if (this["nsHttpServer"]) {
+  //
+  // SCRIPT CODE
+  //
+  runServer();
+
+  // We can only have gotten here if CLOSE_WHEN_DONE was specified and the
+  // /server/shutdown path was requested.  We can shut down the xpcshell now
+  // that all testing requests have been served.
+  quit(0);
+}
+
+var serverBasePath;
 
 //
 // SERVER SETUP
 //
 function runServer()
 {
-  var serverBasePath = Cc["@mozilla.org/file/local;1"]
+  serverBasePath = Cc["@mozilla.org/file/local;1"]
                      .createInstance(Ci.nsILocalFile);
   var procDir = Cc["@mozilla.org/file/directory_service;1"]
                   .getService(Ci.nsIProperties).get("CurProcD", Ci.nsIFile);
@@ -150,10 +162,7 @@ function runServer()
     foStream.close();
   }
 
-  // map our global HTML generation functions
-  for each(var tag in tags) {
-      this[tag] = makeTagFunc(tag);
-  }
+  makeTags();
 
   //
   // The following is threading magic to spin an event loop -- this has to
@@ -369,7 +378,7 @@ function testListing(metadata, response)
         SCRIPT({type: "text/javascript",
                  src: "/tests/SimpleTest/setup.js"}),
         SCRIPT({type: "text/javascript"},
-               "gTestList=" + tests + ";"
+               "connect(window, 'onload', hookup); gTestList=" + tests + ";"
         )
       ),
       BODY(
