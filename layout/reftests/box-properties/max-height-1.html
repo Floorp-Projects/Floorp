@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      div:empty { background: yellow; border: 1px solid black;
+                  padding: 0; margin: 0; }
+      body > div:not(:empty) { height: 20px; }
+    </style>
+  </head>
+  <body>
+    <div style="height: 10px;"></div>
+    <div style="height: 5px;"></div>
+    <div style="height: 5px;"></div>
+    <div style="height: 15px;"></div>
+    <div style="height: 15px;"></div>
+    <div>
+      <div style="height: 10px;"></div>
+    </div>
+    <div>
+      <div style="height: 10px;"></div>
+    </div>
+    <div>
+      <div style="height: 5px;"></div>
+    </div>
+    <div>
+      <div style="height: 10px;"></div>
+    </div>
+    <div>
+      <div style="height: 2px;"></div>
+    </div>
+    <div style="padding: 10px 0;">
+      <div style="height: 10px;"></div>
+    </div>
+    <div style="padding: 10px 0;">
+      <div style="height: 2px;"></div>
+    </div>
+    <div style="border-width: 10px 0; border-style: solid;
+                border-color: transparent;">
+      <div style="height: 10px;"></div>
+    </div>
+    <div style="border-width: 10px 0; border-style: solid;
+                border-color: transparent;">
+      <div style="height: 2px;"></div>
+    </div>
+  </body>
+</html>

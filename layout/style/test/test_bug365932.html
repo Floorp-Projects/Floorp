@@ -1,0 +1,192 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=365932
+-->
+<head>
+  <title>Test for Bug 365932</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>
+    #content {
+      width: 800px;
+      padding: 0 200px;
+      border-width: 0 200px;
+      border-style: solid;
+      border-color: transparent
+    }
+    #content2 {
+      display: none;
+    }
+    #content > div, #content2 > div {
+      width: 400px;
+      padding: 0 100px;
+      border-width: 0 100px;
+      border-style: solid;
+      border-color: transparent
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=365932">Mozilla Bug 365932</a>
+<p id="display"></p>
+<div id="content">
+  <div id="column1" style="-moz-column-gap: 200px;"></div>
+  <div id="column2" style="-moz-column-gap: 50%;"></div>
+  <div id="indent1" style="text-indent: 400px"></div>
+  <div id="indent2" style="text-indent: 50%"></div>
+
+  <div id="minwidth1-1" style="min-width: 200px"></div>
+  <div id="minwidth1-2" style="min-width: 25%"></div>
+  <div id="minwidth2-1" style="min-width: 600px"></div>
+  <div id="minwidth2-2" style="min-width: 75%"></div>
+  <div id="radius1" style="-moz-border-radius: 80px"></div>
+  <div id="radius2" style="-moz-border-radius: 10%"></div>
+  <div id="outlineradius1" style="-moz-outline-radius: 160px"></div>
+  <div id="outlineradius2" style="-moz-outline-radius: 20%"></div>
+</div>
+<div id="content2" style="display: none">
+  <div id="column3" style="-moz-column-gap: 200px;"></div>
+  <div id="column4" style="-moz-column-gap: 50%;"></div>
+  <div id="indent3" style="text-indent: 400px"></div>
+  <div id="indent4" style="text-indent: 50%"></div>
+
+  <div id="minwidth1-3" style="min-width: 200px"></div>
+  <div id="minwidth1-4" style="min-width: 25%"></div>
+  <div id="minwidth2-3" style="min-width: 600px"></div>
+  <div id="minwidth2-4" style="min-width: 75%"></div>
+  <div id="radius3" style="-moz-border-radius: 80px"></div>
+  <div id="radius4" style="-moz-border-radius: 10%"></div>
+  <div id="outlineradius3" style="-moz-outline-radius: 160px"></div>
+  <div id="outlineradius4" style="-moz-outline-radius: 20%"></div>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 365932 **/
+
+document.body.offsetWidth;
+
+doATest("-moz-column-gap", "column", 200, 50);
+doATest("text-indent", "indent", 400, 50);
+//doATest("min-width", "minwidth1-", 200, 25);
+//doATest("min-width", "minwidth2-", 600, 75);
+// doATest("width", "minwidth2-", 600, 0);
+doATest("-moz-border-radius-topleft", "radius", 80, 10);
+doATest("-moz-outline-radius-topleft", "outlineradius", 160, 20);
+
+function style(id) {
+  return document.defaultView.getComputedStyle($(id), "");
+}
+
+function round(num, decimals) {
+  return Math.round(num * Math.pow(10, decimals))/Math.pow(10, decimals);
+}
+
+function doATest(propName, idBase, coordVal, percentVal)
+{
+  var cssPropertiesPropName = "";
+  var parts = propName.split("-");
+  ok(parts.length > 0, "prop name", "Empty css prop name");
+  var i;
+  if (parts[0]) {
+    i = 0;
+  } else {
+    is(parts[1], "moz", "Testing an extension property that's not -moz");
+    ok(parts.length > 2, "prop name 2", "Bogus -moz prop name");
+    cssPropertiesPropName = "Moz";
+    i = 2;
+  }
+  for (; i < parts.length; ++i) {
+    var part = parts[i];
+    isnot(part, "", "Must have a nonempty part");             
+    if (cssPropertiesPropName) {
+      cssPropertiesPropName += part.charAt(0).toUpperCase() +
+                               part.substring(1, part.length);
+    } else {
+      cssPropertiesPropName += part;
+    }
+  }
+
+  var decl = style(idBase+"1");
+
+  is(decl[cssPropertiesPropName], coordVal+"px",
+     "Coord " + propName + " displayed");
+  is(decl.getPropertyCSSValue(propName).cssValueType,
+     CSSValue.CSS_PRIMITIVE_VALUE,
+     "displayed coord " + propName + " is primitive value");
+  is(decl.getPropertyCSSValue(propName).primitiveType,
+     CSSPrimitiveValue.CSS_PX, "displayed coord " + propName + " is px");
+  is(decl.getPropertyCSSValue(propName).cssText, coordVal + "px",
+     "displayed coord " + propName + " length");
+  /* Since floats are only accurate to like 6 decimal places, round to 3 decimal
+     places here. */
+  is(round(decl.getPropertyCSSValue(propName)
+               .getFloatValue(CSSPrimitiveValue.CSS_PX),
+           3),
+     coordVal, "displayed coord " + propName + " length as float value");
+
+  decl = style(idBase+"2");
+
+  is(decl[cssPropertiesPropName], coordVal+"px",
+     "Percent " + propName + " displayed");
+  is(decl.getPropertyCSSValue(propName).cssValueType,
+     CSSValue.CSS_PRIMITIVE_VALUE,
+     "displayed percent " + propName + " is primitive value");
+  is(decl.getPropertyCSSValue(propName).primitiveType,
+     CSSPrimitiveValue.CSS_PX, "displayed percent " + propName + " is px");
+  is(decl.getPropertyCSSValue(propName).cssText, coordVal+"px",
+     "displayed percent " + propName + " length");
+  /* Since floats are only accurate to like 6 decimal places, round to 3 decimal
+     places here. */
+  is(round(decl.getPropertyCSSValue(propName)
+               .getFloatValue(CSSPrimitiveValue.CSS_PX),
+           3),
+     coordVal, "displayed percent " + propName + " length as float value");
+
+  if (percentVal) {
+    decl = style(idBase+"3");
+    
+    is(decl[cssPropertiesPropName], coordVal+"px",
+       "Coord " + propName +" undisplayed");
+    is(decl.getPropertyCSSValue(propName).cssValueType,
+       CSSValue.CSS_PRIMITIVE_VALUE,
+       "undisplayed coord " + propName + " is primitive value");
+    is(decl.getPropertyCSSValue(propName).primitiveType,
+       CSSPrimitiveValue.CSS_PX, "undisplayed coord " + propName + " is px");
+    is(decl.getPropertyCSSValue(propName).cssText, coordVal+"px",
+       "undisplayed coord " + propName + " length");
+    /* Since floats are only accurate to like 6 decimal places, round to 3 decimal
+       places here. */
+    is(round(decl.getPropertyCSSValue(propName)
+                 .getFloatValue(CSSPrimitiveValue.CSS_PX),
+             3),
+       coordVal, "undisplayed coord " + propName + " length as float value");
+
+    decl = style(idBase+"4");
+    
+    is(decl[cssPropertiesPropName], percentVal+"%",
+       "Percent " + propName + " undisplayed");
+    is(decl.getPropertyCSSValue(propName).cssValueType,
+       CSSValue.CSS_PRIMITIVE_VALUE,
+       "undisplayed percent " + propName + " is primitive value");
+    is(decl.getPropertyCSSValue(propName).primitiveType,
+     CSSPrimitiveValue.CSS_PERCENTAGE,
+     "undisplayed percent " + propName + " is percent");
+    is(decl.getPropertyCSSValue(propName).cssText, percentVal+"%",
+       "undisplayed percent " + propName + " length");
+    /* Since floats are only accurate to like 6 decimal places, round to 3 decimal
+       places here. */
+    is(round(decl.getPropertyCSSValue(propName)
+                 .getFloatValue(CSSPrimitiveValue.CSS_PERCENTAGE),
+             3),
+       percentVal, "undisplayed percent " + propName + " percentage as float value");
+  
+  }
+}
+</script>
+</pre>
+</body>
+</html>
+

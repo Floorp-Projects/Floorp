@@ -43,6 +43,10 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = xbl-marquee
 
+ifdef MOZ_MOCHITEST
+DIRS		+= test
+endif
+
 MODULE		= layout
 LIBRARY_NAME	= gkstyle_s
 LIBXUL_LIBRARY	= 1

@@ -112,8 +112,7 @@ private:
 
   nsresult GetMarginWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue);
 
-  nsresult GetLineHeightCoord(const nsStyleText *aText,
-                              nscoord& aCoord);
+  PRBool GetLineHeightCoord(nscoord& aCoord);
 
   /* Properties Queryable as CSSValues */
 
@@ -273,6 +272,45 @@ private:
   nsROCSSPrimitiveValue* GetROCSSPrimitiveValue();
   nsDOMCSSValueList* GetROCSSValueList(PRBool aCommaDelimited);
   nsresult SetToRGBAColor(nsROCSSPrimitiveValue* aValue, nscolor aColor);
+  
+  /**
+   * A method to get a percentage base for a percentage value.  Returns PR_TRUE
+   * if a percentage base value was determined, PR_FALSE otherwise.
+   */
+  typedef PRBool (nsComputedDOMStyle::*PercentageBaseGetter)(nscoord&);
+
+  /**
+   * Method to set aValue to aCoord.  If aCoord is a percentage value and
+   * aPercentageBaseGetter is not null, aPercentageBaseGetter is called.  If it
+   * returns PR_TRUE, the percentage base it outputs in its out param is used
+   * to compute an nscoord value.  If the getter is null or returns PR_FALSE,
+   * the percent value of aCoord is set as a percent value on aValue.  aTable,
+   * if not null, is the keyword table to handle eStyleUnit_Enumerated.  When
+   * calling SetAppUnits on aValue (for coord or percent values), the value
+   * passed in will be PR_MAX of the actual value in aCoord and the value in
+   * aMinAppUnits.
+   *
+   * XXXbz should caller pass in some sort of bitfield indicating which units
+   * can be expected or something?
+   */
+  void SetValueToCoord(nsROCSSPrimitiveValue* aValue, nsStyleCoord aCoord,
+                       PercentageBaseGetter aPercentageBaseGetter = nsnull,
+                       const PRInt32 aTable[] = nsnull,
+                       nscoord aMinAppUnits = nscoord_MIN);
+
+  /**
+   * If aCoord is a eStyleUnit_Coord returns the nscoord.  If it's
+   * eStyleUnit_Percent, attempts to resolve the percentage base and returns the
+   * resulting nscoord.  If it's some other unit or a percentge base can't be
+   * determined, returns 0.
+   */
+  nscoord StyleCoordToNSCoord(nsStyleCoord aCoord,
+                              PercentageBaseGetter aPercentageBaseGetter);
+
+  PRBool GetFrameContentWidth(nscoord& aWidth);
+  PRBool GetCBContentWidth(nscoord& aWidth);
+  PRBool GetCBContentHeight(nscoord& aWidth);
+  PRBool GetFrameBorderRectWidth(nscoord& aWidth);
 
   struct ComputedStyleMapEntry
   {

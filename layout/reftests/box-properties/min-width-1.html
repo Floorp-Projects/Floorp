@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      div:empty { background: yellow; border: 1px solid black; height: 10px;
+                  padding: 0; margin: 0; }
+      body > div:not(:empty) { width: 400px; }
+    </style>
+  </head>
+  <body>
+    <div style="width: 100px; min-width: 50px;"></div>
+    <div style="width: 100px; min-width: 150px;"></div>
+    <div>
+      <div style="width: 50%;"></div>
+    </div>
+    <div>
+      <div style="width: 50%; min-width: 100px;"></div>
+    </div>
+    <div>
+      <div style="width: 50%; min-width: 300px;"></div>
+    </div>
+    <div>
+      <div style="width: 50%; min-width: 10%;"></div>
+    </div>
+    <div>
+      <div style="width: 50%; min-width: 75%;"></div>
+    </div>
+    <div style="padding: 0 100px;">
+      <div style="width: 50%; min-width: 10%;"></div>
+    </div>
+    <div style="padding: 0 100px;">
+      <div style="width: 50%; min-width: 75%;"></div>
+    </div>
+    <div style="border-width: 0 100px; border-style: solid;
+                border-color: transparent;">
+      <div style="width: 50%; min-width: 10%;"></div>
+    </div>
+    <div style="border-width: 0 100px; border-style: solid;
+                border-color: transparent;">
+      <div style="width: 50%; min-width: 75%;"></div>
+    </div>
+  </body>
+</html>
