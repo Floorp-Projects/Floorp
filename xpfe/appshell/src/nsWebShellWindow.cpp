@@ -354,21 +354,6 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         // the state and pass the event on to the OS. The day is coming
         // when we'll handle the event here, and the return result will
         // then need to be different.
-#ifdef XP_WIN
-        // This is a nasty hack to get around the fact that win32 sends the kill focus
-        // event in a different sequence than the deactivate depending on if you're
-        // minimizing the window vs. just clicking in a different window to cause
-        // the deactivation. Bug #82534
-        if(modeEvent->mSizeMode == nsSizeMode_Minimized) {
-          nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_GetInterface(docShell);
-          if(privateDOMWindow) {
-            nsIFocusController *focusController =
-              privateDOMWindow->GetRootFocusController();
-            if (focusController)
-              focusController->RewindFocusState();
-          }
-        }
-#endif
         break;
       }
       case NS_OS_TOOLBAR: {
