@@ -901,7 +901,6 @@ sub CreatePastReleasePatchinfo {
                     $completePatch ->{'info_path'} = catfile($ausPrefix,
                                                              'complete.txt');
 
-
                     my $prettyPrefix = "$pastUpd->{'from'}-$update->{'to'}";
                     PrintProgress(total => $totalPastUpdates,
                      current => ++$patchInfoFilesCreated,
@@ -920,13 +919,13 @@ sub CreatePastReleasePatchinfo {
                     $completePatch->{'build_id'} = $patchLocaleNode->{'build_id'};
                     $completePatch->{'appv'} = $patchLocaleNode->{'appv'};
                     $completePatch->{'extv'} = $patchLocaleNode->{'extv'};
-                    $completePatch->{'size'} = (stat($to_path))[$MozAUSLib::ST_SIZE];
+                    $completePatch->{'size'} = (stat($to_path))[$ST_SIZE];
 
                     my $channelSpecificUrlKey = $channel . '-url';
 
-                    if (exists($completePatch->{$channelSpecificUrlKey})) {
+                    if (exists($complete->{$channelSpecificUrlKey})) {
                         $completePatch->{'url'} = SubstitutePath(
-                         path => $completePatch->{$channelSpecificUrlKey},
+                         path => $complete->{$channelSpecificUrlKey},
                          platform => $toPlatform,
                          locale => $locale);
                     } else {
