@@ -3046,9 +3046,7 @@ nsImapProtocol::FetchMessage(const char * messageIds,
         else
           headersToDL = PR_smprintf("%s %s",dbHeaders, arbitraryHeaders.get());
         
-        if (aolImapServer)
-          what = strdup(" XAOL-ENVELOPE INTERNALDATE)");
-        else if (gUseEnvelopeCmd)
+        if (gUseEnvelopeCmd)
           what = PR_smprintf(" ENVELOPE BODY.PEEK[HEADER.FIELDS (%s)])", headersToDL);
         else
           what = PR_smprintf(" BODY.PEEK[HEADER.FIELDS (%s)])",headersToDL);
