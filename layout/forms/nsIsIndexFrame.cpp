@@ -91,18 +91,18 @@ nsIsIndexFrame::nsIsIndexFrame(nsStyleContext* aContext) :
 
 nsIsIndexFrame::~nsIsIndexFrame()
 {
-  // remove ourself as a listener of the text control (bug 40533)
-  if (mInputContent) {
-    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mInputContent));
-    receiver->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMKeyListener));
-  }
 }
 
 void
 nsIsIndexFrame::Destroy()
 {
+  // remove ourself as a listener of the text control (bug 40533)
+  if (mInputContent) {
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mInputContent));
+    receiver->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMKeyListener));
+    nsContentUtils::DestroyAnonymousContent(&mInputContent);
+  }
   nsContentUtils::DestroyAnonymousContent(&mTextContent);
-  nsContentUtils::DestroyAnonymousContent(&mInputContent);
   nsContentUtils::DestroyAnonymousContent(&mPreHr);
   nsContentUtils::DestroyAnonymousContent(&mPostHr);
   nsAreaFrame::Destroy();
