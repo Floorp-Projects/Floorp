@@ -229,10 +229,10 @@ else {
         $summary =~ s/%id%/$bug_id/g;
         $summary =~ s/%summary%/$short_desc/g;
         
-        $action  =~ s/%id%/<a href="show_bug.cgi?bug=$bug_id">$bug_id<\/a>/g;
+        $action  =~ s/%id%/<a href="show_bug.cgi?id=$bug_id">$bug_id<\/a>/g;
         $action  =~ s/%description%/$description/g;
         
-        $effect  =~ s/%id%/<a href="show_bug.cgi?bug=$bug_id">$bug_id<\/a>/g;
+        $effect  =~ s/%id%/<a href="show_bug.cgi?id=$bug_id">$bug_id<\/a>/g;
         
         $text = {'action' => $action, 'effect' => $effect};
     }
