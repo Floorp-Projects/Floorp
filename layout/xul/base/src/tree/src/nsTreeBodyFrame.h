@@ -232,6 +232,10 @@ protected:
   // coordinate system of this frame.
   PRInt32 GetRowAt(nscoord aX, nscoord aY);
 
+  // Check for bidi characters in the text, and if there are any, ensure
+  // that the prescontext is in bidi mode.
+  void CheckTextForBidi(nsAutoString& aText);
+
   void AdjustForCellText(nsAutoString& aText,
                          PRInt32 aRowIndex,  nsTreeColumn* aColumn,
                          nsIRenderingContext& aRenderingContext,
