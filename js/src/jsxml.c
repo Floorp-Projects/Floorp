@@ -3110,6 +3110,34 @@ ReportBadXMLName(JSContext *cx, jsval id)
     js_ReportValueError(cx, JSMSG_BAD_XML_NAME, JSDVG_IGNORE_STACK, id, NULL);
 }
 
+static JSBool
+IsFunctionQName(JSContext *cx, JSXMLQName *qn, jsid *funidp)
+{
+    JSAtom *atom;
+
+    atom = cx->runtime->atomState.lazy.functionNamespaceURIAtom;
+    if (qn->uri && atom &&
+        (qn->uri == ATOM_TO_STRING(atom) ||
+         js_EqualStrings(qn->uri, ATOM_TO_STRING(atom)))) {
+        return JS_ValueToId(cx, STRING_TO_JSVAL(qn->localName), funidp);
+    }
+    *funidp = 0;
+    return JS_TRUE;
+}
+
+JSBool
+js_IsFunctionQName(JSContext *cx, JSObject *obj, jsid *funidp)
+{
+    JSXMLQName *qn;
+
+    if (OBJ_GET_CLASS(cx, obj) == &js_QNameClass.base) {
+        qn = (JSXMLQName *) JS_GetPrivate(cx, obj);
+        return IsFunctionQName(cx, qn, funidp);
+    }
+    *funidp = 0;
+    return JS_TRUE;
+}
+
 static JSXMLQName *
 ToXMLName(JSContext *cx, jsval v, jsid *funidp)
 {
@@ -3118,7 +3146,6 @@ ToXMLName(JSContext *cx, jsval v, jsid *funidp)
     JSClass *clasp;
     uint32 index;
     JSXMLQName *qn;
-    JSAtom *atom;
 
     if (JSVAL_IS_STRING(v)) {
         name = JSVAL_TO_STRING(v);
@@ -3173,15 +3200,8 @@ construct:
 
 out:
     qn = (JSXMLQName *) JS_GetPrivate(cx, obj);
-    atom = cx->runtime->atomState.lazy.functionNamespaceURIAtom;
-    if (qn->uri && atom &&
-        (qn->uri == ATOM_TO_STRING(atom) ||
-         js_EqualStrings(qn->uri, ATOM_TO_STRING(atom)))) {
-        if (!JS_ValueToId(cx, STRING_TO_JSVAL(qn->localName), funidp))
-            return NULL;
-    } else {
-        *funidp = 0;
-    }
+    if (!IsFunctionQName(cx, qn, funidp))
+        return NULL;
     return qn;
 
 bad:

@@ -549,9 +549,6 @@ typedef enum JSSrcNoteType {
     SRC_PCBASE      = 12,       /* distance back from annotated getprop or
                                    setprop op to left-most obj.prop.subprop
                                    bytecode -- always a backward delta */
-    SRC_METHODBASE  = 13,       /* SRC_PCBASE variant for obj.function::foo
-                                   gets and sets; disjoint from SRC_LABEL by
-                                   bytecode to which it applies */
     SRC_LABEL       = 13,       /* JSOP_NOP for label: with atomid immediate */
     SRC_LABELBRACE  = 14,       /* JSOP_NOP for label: {...} begin brace */
     SRC_ENDBRACE    = 15,       /* JSOP_NOP for label: {...} end brace */

@@ -639,7 +639,7 @@ NoSuchMethod(JSContext *cx, JSStackFrame *fp, jsval *vp, uint32 flags,
       case JSOP_NAME:
       case JSOP_GETPROP:
 #if JS_HAS_XML_SUPPORT
-      case JSOP_GETMETHOD:
+      case JSOP_CALLPROP:
 #endif
         atom = js_GetAtomFromBytecode(fp->script, pc, 0);
         argc = *argcp;
@@ -1965,11 +1965,19 @@ InternNonIntElementId(JSContext *cx, jsval idval, jsid *idp)
 }
 
 #if JS_HAS_XML_SUPPORT
+static JSBool
+InternNonXmlObjectId(JSContext *cx, JSObject *obj, jsid *idp)
+{
+    if (!js_IsFunctionQName(cx, obj, idp))
+        return JS_FALSE;
+    return *idp != 0 || InternStringElementId(cx, OBJECT_TO_JSVAL(obj), idp);
+}
+
 #define CHECK_ELEMENT_ID(obj, id)                                             \
     JS_BEGIN_MACRO                                                            \
         if (JSID_IS_OBJECT(id) && !OBJECT_IS_XML(cx, obj)) {                  \
             SAVE_SP_AND_PC(fp);                                               \
-            ok = InternStringElementId(cx, OBJECT_JSID_TO_JSVAL(id), &id);    \
+            ok = InternNonXmlObjectId(cx, JSID_TO_OBJECT(id), &id);           \
             if (!ok)                                                          \
                 goto out;                                                     \
         }                                                                     \
@@ -5760,7 +5768,7 @@ interrupt:
             STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
           END_CASE(JSOP_XMLPI)
 
-          BEGIN_CASE(JSOP_GETMETHOD)
+          BEGIN_CASE(JSOP_CALLPROP)
             /* Get an immediate atom naming the property. */
             LOAD_ATOM(0);
             id = ATOM_TO_JSID(atom);
@@ -5806,31 +5814,7 @@ interrupt:
             if (!ok)
                 goto out;
             STORE_OPND(-1, rval);
-          END_CASE(JSOP_GETMETHOD)
-
-          BEGIN_CASE(JSOP_SETMETHOD)
-            /* Get an immediate atom naming the property. */
-            LOAD_ATOM(0);
-            id = ATOM_TO_JSID(atom);
-            rval = FETCH_OPND(-1);
-            FETCH_OBJECT(cx, -2, lval, obj);
-            SAVE_SP_AND_PC(fp);
-
-            /* Special-case XML object method lookup, per ECMA-357. */
-            if (OBJECT_IS_XML(cx, obj)) {
-                JSXMLObjectOps *ops;
-
-                ops = (JSXMLObjectOps *) obj->map->ops;
-                ok = ops->setMethod(cx, obj, id, &rval);
-            } else {
-                ok = OBJ_SET_PROPERTY(cx, obj, id, &rval);
-            }
-            if (!ok)
-                goto out;
-            --sp;
-            STORE_OPND(-1, rval);
-            obj = NULL;
-          END_CASE(JSOP_SETMETHOD)
+          END_CASE(JSOP_CALLPROP)
 
           BEGIN_CASE(JSOP_GETFUNNS)
             SAVE_SP_AND_PC(fp);
@@ -6063,6 +6047,7 @@ interrupt:
 #if JS_THREADED_INTERP
           L_JSOP_BACKPATCH:
           L_JSOP_BACKPATCH_POP:
+          L_JSOP_UNUSED194:
           L_JSOP_UNUSED197:
 #else
           default:

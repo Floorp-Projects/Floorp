@@ -253,6 +253,13 @@ js_InitXMLClasses(JSContext *cx, JSObject *obj);
 extern JSBool
 js_GetFunctionNamespace(JSContext *cx, jsval *vp);
 
+/*
+ * If obj is QName corresponding to function::name, set *funidp to name's id,
+ * otherwise set *funidp to 0.
+ */
+JSBool
+js_IsFunctionQName(JSContext *cx, JSObject *obj, jsid *funidp);
+
 extern JSBool
 js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp);
 
