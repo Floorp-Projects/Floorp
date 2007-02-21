@@ -9,7 +9,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
 			name = libthebes.a;
-			path = ../gfx/thebes/src/libthebes.a;
+			path = ../staticlib/libthebes.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -1564,7 +1564,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
 			name = libpermissions.a;
-			path = ../dist/lib/components/libpermissions.a;
+			path = ../staticlib/components/libpermissions.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -7887,7 +7887,7 @@
 				HEADER_SEARCH_PATHS = "../dist/include/txtsvc ../dist/include/editor ../dist/include/spellchecker ../dist/include/composer ../dist/include/helperAppDlg ../dist/include/exthandler ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/uconv ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/nkcache ../dist/include/docshell ../dist/include/profdirserviceprovider ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/chardet ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/xpcom_obsolete ../dist/include/cookie ../dist/include/mork ../dist/include/js ../dist/include/xpconnect ../dist/include/ ../dist/public/nss $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon $(LOCAL_LIBRARY_DIR)/Frameworks/SharedMenusCocoa.framework/Headers";
 				INFOPLIST_FILE = "Info-CaminoStatic.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../js/src/liveconnect ../js/src/xpconnect/loader";
+				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../staticlib ../staticlib/components ../embedding/base ../js/src/liveconnect ../js/src/xpconnect/loader ../jpeg ../modules/libimg/png ../gfx/cairo/cairo/src ../gfx/cairo/libpixman/src ../profile/dirserviceprovider/src";
 				OTHER_CFLAGS = "-fshort-wchar";
 				OTHER_LDFLAGS = "-lpthread -lm";
 				PRODUCT_NAME = Camino;
@@ -12824,7 +12824,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
 			name = libucvmath.a;
-			path = ../dist/lib/components/libucvmath.a;
+			path = ../staticlib/components/libucvmath.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -12846,7 +12846,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
 			name = libmozjpeg.a;
-			path = ../dist/lib/libmozjpeg.a;
+			path = ../jpeg/libmozjpeg.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -12854,7 +12854,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
 			name = libmozpng.a;
-			path = ../dist/lib/libmozpng.a;
+			path = ../modules/libimg/png/libmozpng.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -12862,7 +12862,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
 			name = libmozcairo.a;
-			path = ../dist/lib/libmozcairo.a;
+			path = ../gfx/cairo/cairo/src/libmozcairo.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -12870,7 +12870,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
 			name = libmozlibpixman.a;
-			path = ../dist/lib/libmozlibpixman.a;
+			path = ../gfx/cairo/libpixman/src/libmozlibpixman.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -13040,7 +13040,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
 			name = libspellchecker.a;
-			path = ../dist/lib/components/libspellchecker.a;
+			path = ../staticlib/components/libspellchecker.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -13250,7 +13250,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
 			name = libcomposer.a;
-			path = ../dist/lib/components/libcomposer.a;
+			path = ../staticlib/components/libcomposer.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -13818,7 +13818,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
 			name = libauth.a;
-			path = ../dist/lib/components/libauth.a;
+			path = ../staticlib/components/libauth.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -16625,7 +16625,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
 			name = libhtmlpars.a;
-			path = ../dist/lib/components/libhtmlpars.a;
+			path = ../staticlib/components/libhtmlpars.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -16737,7 +16737,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
 			name = libxpautocomplete.a;
-			path = ../dist/lib/components/libxpautocomplete.a;
+			path = ../staticlib/components/libxpautocomplete.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
