@@ -321,8 +321,8 @@ public:
    * Record where an optional break could have been placed. During line reflow,
    * frames containing optional break points (e.g., whitespace in text frames)
    * can call SetLastOptionalBreakPosition to record where a break could
-   * have been made, but wasn't because there appeared to be enough room
-   * to place more content on the line. For non-text frames, offset 0 means
+   * have been made, but wasn't because we decided to place more content on
+   * the line. For non-text frames, offset 0 means
    * before the content, offset PR_INT32_MAX means after the content.
    * 
    * Currently this is used to handle cases where a single word comprises
@@ -332,17 +332,21 @@ public:
    * optional break position could be in a text frame or else after a frame
    * that cannot be part of a text run, so those are the positions we record.
    * 
-   * It is imperative that this only gets called for break points that
-   * are within the available width.
+   * @param aFits set to true if the break position is within the available width.
    * 
    * @return PR_TRUE if we are actually reflowing with forced break position and we
    * should break here
    */
-  PRBool NotifyOptionalBreakPosition(nsIContent* aContent, PRInt32 aOffset) {
+  PRBool NotifyOptionalBreakPosition(nsIContent* aContent, PRInt32 aOffset,
+                                     PRBool aFits) {
     NS_ASSERTION(!GetFlag(LL_NEEDBACKUP),
                   "Shouldn't be updating the break position after we've already flagged an overrun");
-    mLastOptionalBreakContent = aContent;
-    mLastOptionalBreakContentOffset = aOffset;
+    // Remember the last break position that fits; if there was no break that fit,
+    // just remember the first break
+    if (aFits || !mLastOptionalBreakContent) {
+      mLastOptionalBreakContent = aContent;
+      mLastOptionalBreakContentOffset = aOffset;
+    }
     return aContent && mForceBreakContent == aContent &&
       mForceBreakContentOffset == aOffset;
   }
@@ -355,7 +359,11 @@ public:
     mLastOptionalBreakContent = aContent;
     mLastOptionalBreakContentOffset = aOffset;
   }
+  /**
+   * Signal that no backing up will be required after all.
+   */
   void ClearOptionalBreakPosition() {
+    SetFlag(LL_NEEDBACKUP, PR_FALSE);
     mLastOptionalBreakContent = nsnull;
     mLastOptionalBreakContentOffset = -1;
   }
