@@ -25,9 +25,9 @@
     var resolvedURI = Cc["@mozilla.org/chrome/chrome-registry;1"].
                         getService(Ci.nsIChromeRegistry).
                         convertChromeURL(chromeURI);
-    var chromeDir = Cc["@mozilla.org/file/local;1"].
-                      createInstance(Ci.nsILocalFile);
-    chromeDir.initWithPath(resolvedURI.path);
+    var fileHandler = Cc["@mozilla.org/network/protocol;1?name=file"].
+                        getService(Ci.nsIFileProtocolHandler);
+    var chromeDir = fileHandler.getFileFromURLSpec(resolvedURI.spec);
     chromeDir = chromeDir.parent.QueryInterface(Ci.nsILocalFile);
     chromeDir.appendRelativePath("chrome");
 

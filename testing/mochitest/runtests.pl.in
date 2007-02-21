@@ -69,6 +69,7 @@
 use FindBin;
 use File::Path;
 use File::Spec;
+use File::Basename;
 use Getopt::Long;
 use Cwd 'abs_path';
 use POSIX qw(sys_wait_h strftime);
@@ -111,7 +112,6 @@ my $is_win32 = 0;
 #endif
 my $is_mac = ($^O =~ m/darwin/);
 my $unixish = (!($is_win32) && !($is_mac));
-my $manifest = "$dist_bin/chrome/mochikit.manifest";
 
  # Do everything.
  main();
@@ -151,7 +151,7 @@ sub main {
     die $error_message;
   }
 
-  initializeProfile($app);
+  my $manifest = initializeProfile($app);
   my $serverPid = startServer($close_when_done);
 
   # If we're lucky, the server has fully started by now, and all paths are
@@ -365,12 +365,20 @@ CHROMEEND
   # register our chrome dir
   my $chrometest_dir = "$FindBin::Bin/";
   if ($is_win32) {
-    $chrometest_dir = winPathFromDir($chrometest_dir);
+    # we don't have LWP, so we can't use its file url stuff
+    $chrometest_dir = winPathFromDir($chrometest_dir) . "\\";
+    $chrometest_dir =~ s/\\/\//g;
+    $chrometest_dir = "file:///$chrometest_dir";
   }
+  
+  my($filename, $directories, $suffix) = fileparse($app_path);
+  my $manifest = $directories . "chrome/mochikit.manifest";
   open(MANIFEST, ">>$manifest") ||
     die("Could not open manifest file $!");
   print MANIFEST ("content mochikit $chrometest_dir");
   close(MANIFEST);
+
+  return $manifest;
 }
 
  ###################
