@@ -69,6 +69,9 @@
     -->
     
     <target name="-pre-init">
+        
+        <property name="debug.jvm.args" value="" />
+        
         <condition property="so.prefix" value="">
             <and>
                 <os family="windows" />
@@ -99,7 +102,58 @@
             </and>
         </condition>
 
-        <condition property="platform" value="linux">
+        <condition property="platform" value="unix">
+            <and>
+                <os family="unix" />
+            </and>
+        </condition>
+        
+        <condition property="platform" value="mac">
+            <and>
+                <os family="mac" />
+            </and>
+        </condition>
+        
+        <condition property="build.unix.classes">
+            <and>
+                <isset property="platform" />
+                <equals arg1="${platform}" arg2="unix" />
+            </and>
+        </condition>
+
+        <condition property="build.win32.classes">
+            <and>
+                <isset property="platform" />
+                <equals arg1="${platform}" arg2="win32" />
+            </and>
+        </condition>
+        
+        <condition property="build.mac.classes">
+            <and>
+                <isset property="platform" />
+                <equals arg1="${platform}" arg2="mac" />
+            </and>
+        </condition>
+        
+        <condition property="PATH_SEP" value=";">
+            <and>
+                <os family="windows" />
+            </and>
+        </condition>
+
+        <condition property="PATH_SEP" value=":">
+            <and>
+                <os family="unix" />
+            </and>
+        </condition>
+
+        <condition property="FILE_PATH_SEP" value="\">
+            <and>
+                <os family="windows" />
+            </and>
+        </condition>
+
+        <condition property="FILE_PATH_SEP" value="/">
             <and>
                 <os family="unix" />
             </and>
@@ -146,4 +200,85 @@ ${so.prefix}xul.${so.extension}.
             <fileset dir="${basedir}/../bin" />
         </copy>
     </target>
+    
+    <target name="run">
+        
+        <java classname="org.mozilla.webclient.test.TestBrowser" fork="true">
+            <jvmarg value="-DNSPR_LOG_MODULES=webclient:4,webclientstub:4,pluglets:4"/>
+            <jvmarg value="-DNSPR_LOG_FILE=${build.dir}/webclient.log"/>
+            <jvmarg value="-Dbuild.test.results.dir=${build.test.results.dir}" />
+            <jvmarg value="-DBROWSER_BIN_DIR=${browser.bin.dir}"/>
+            <jvmarg line="${debug.jvm.args}"/>
+            <jvmarg line="-Djava.util.logging.config.file=${basedir}${FILE_PATH_SEP}logging.properties"/>
+            
+            <classpath refid="run.classpath"/>
+        </java>
+    </target>
+    
+    <target name="-init-macrodef-javac">
+        <macrodef name="javac" uri="http://www.netbeans.org/ns/j2se-project/3">
+            <attribute name="srcdir" default="${src.dir}"/>
+            <attribute name="destdir" default="${build.classes.dir}"/>
+            <attribute name="classpath" default="${javac.classpath}"/>
+            <attribute name="debug" default="${javac.debug}"/>
+            <element name="customize" optional="true"/>
+            <sequential>
+                <javac srcdir="@{srcdir}" destdir="@{destdir}" debug="@{debug}" deprecation="${javac.deprecation}" source="${javac.source}" target="${javac.target}" includeantruntime="false">
+                    <classpath>
+                        <path path="@{classpath}"/>
+                    </classpath>
+                    <compilerarg line="${javac.compilerargs}"/>
+                    <customize/>
+                    <patternset>
+                        <exclude name="**/*Win32*.java" if="build.unix.classes"/>
+                        <exclude name="**/*Cocoa*.java" if="build.unix.classes"/>
+                    </patternset>
+
+                    <patternset>
+                        <exclude name="**/*Gtk*.java" if="build.win32.classes"/>
+                        <exclude name="**/*Cocoa*.java" if="build.win32.classes"/>
+                    </patternset>
+
+                    <patternset>
+                        <exclude name="**/*Gtk*.java" if="build.mac.classes"/>
+                        <exclude name="**/*Win32*.java" if="build.mac.classes"/>
+                    </patternset>
+                    
+                </javac>
+            </sequential>
+        </macrodef>
+    </target>
+    
+    <target name="-init-macrodef-junit">
+        <macrodef name="junit" uri="http://www.netbeans.org/ns/j2se-project/3">
+            <attribute name="includes" default="**/*Test.java"/>
+            <sequential>
+                <junit showoutput="true" fork="true" dir="${basedir}" failureproperty="tests.failed" errorproperty="tests.failed">
+                    <jvmarg value="-DNSPR_LOG_MODULES=webclient:4,webclientstub:4,pluglets:4"/>
+                    <jvmarg value="-DNSPR_LOG_FILE=${build.dir}/webclient.log"/>
+                    <jvmarg value="-Dbuild.test.results.dir=${build.test.results.dir}" />
+                    <jvmarg value="-DBROWSER_BIN_DIR=${browser.bin.dir}"/>
+                    <jvmarg line="${debug.jvm.args}"/>
+                    <jvmarg line="-Djava.util.logging.config.file=${basedir}${FILE_PATH_SEP}logging.properties"/>
+                    
+                    <batchtest todir="${build.test.results.dir}">
+                        <fileset dir="${test.src.dir}" includes="@{includes}"/>
+                    </batchtest>
+                    <classpath>
+                        <path path="${run.test.classpath}"/>
+                    </classpath>
+                    <syspropertyset>
+                        <propertyref prefix="test-sys-prop."/>
+                        <mapper type="glob" from="test-sys-prop.*" to="*"/>
+                    </syspropertyset>
+                    <formatter type="brief" usefile="false"/>
+                    <formatter type="xml"/>
+                    <jvmarg line="${run.jvmargs}"/>
+                </junit>
+            </sequential>
+        </macrodef>
+    </target>
+    
+    
+    
 </project>

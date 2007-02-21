@@ -1,5 +1,5 @@
 /*
- * $Id: WebclientTestCase.java,v 1.12 2007/01/30 18:26:37 edburns%acm.org Exp $
+ * $Id: WebclientTestCase.java,v 1.13 2007/02/21 01:40:44 edburns%acm.org Exp $
  */
 
 /* 
@@ -47,7 +47,7 @@ import org.mozilla.util.THTTPD;
  *
  * <B>Lifetime And Scope</B> <P>
  *
- * @version $Id: WebclientTestCase.java,v 1.12 2007/01/30 18:26:37 edburns%acm.org Exp $
+ * @version $Id: WebclientTestCase.java,v 1.13 2007/02/21 01:40:44 edburns%acm.org Exp $
  * 
  * @see	Blah
  * @see	Bloo
@@ -113,14 +113,21 @@ public void setUp()
 {
     verifyPreconditions();
     
+    // Set the OUTPUT_FILE_ROOT
     String mozSrcValue = null;
+    File outputRoot = null;
     
-    assertTrue(null != (mozSrcValue = 
-            System.getProperty("MOZ_SRC")));
-    OUTPUT_FILE_ROOT = mozSrcValue + File.separator + 
-            "mozilla" + File.separator + "java" + File.separator + 
-            "webclient" + File.separator + OUTPUT_FILE_ROOT;
-    
+    if (null != (mozSrcValue = System.getProperty("MOZ_SRC"))) {
+        OUTPUT_FILE_ROOT = mozSrcValue + File.separator +
+                "mozilla" + File.separator + "java" + File.separator +
+                "webclient" + File.separator + OUTPUT_FILE_ROOT;
+    }
+    else {
+        assertTrue(null != (OUTPUT_FILE_ROOT = System.getProperty("build.test.results.dir")));
+    }
+    outputRoot = new File(OUTPUT_FILE_ROOT);
+    assertTrue(outputRoot.exists());
+
     LOGGER.info(this.getClass().getName() + " setUp()");
     
 }

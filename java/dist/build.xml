@@ -152,7 +152,9 @@
 
   <target name="copy.samples.src" depends="prepare">
     <copy todir="${dist.home}/samples/automated/src/main/java">
-      <fileset dir="${source.home}/webclient/test/automated/src/classes" />
+      <fileset dir="${source.home}/webclient/test/automated/src/classes">
+        <exclude name="**/*Bookmark*.java" />
+      </fileset>
     </copy>
     <copy todir="${dist.home}/samples/automated/src/main/resources">
       <fileset dir="${source.home}/webclient/test/automated/src/test">

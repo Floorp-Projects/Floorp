@@ -30,7 +30,7 @@
 
   <property name="Name" value="Webclient"/>
   <property name="name" value="webclient"/>
-  <property name="version" value="20040929"/>
+  <property name="version" value="20070216"/>
 
 <!-- ************ Per user local properties ******************************* -->
 
@@ -57,6 +57,7 @@
   <target name="external">
 
     <mkdir dir="${build.home}"/>
+    
 
   </target>
 
