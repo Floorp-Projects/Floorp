@@ -159,6 +159,7 @@ protected:
     PRPackedBool                mDestroyHandlerCalled;
     PRPackedBool                mNeedsRebuild;
     PRPackedBool                mConstructed;
+    PRPackedBool                mXBLAttached;
     PRPackedBool                mVisible;               // are we visible to the user?
 };
 
