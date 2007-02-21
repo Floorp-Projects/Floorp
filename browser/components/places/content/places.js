@@ -184,6 +184,11 @@ var PlacesOrganizer = {
     // Items are only excluded on the left pane
     var options = node.queryOptions.clone();
     options.excludeItems = false;
+    // Unset excludeQueries so incremental update is enabled for the content
+    // pane.
+    // XXXmano: remove that once we unset excludeQueries for the left pane.
+    options.excludeQueries = false;
+
     this._content.load(queries, 
                        OptionsFilter.filter(queries, options, null));
     
