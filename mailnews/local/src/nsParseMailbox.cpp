@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   David Bienvenu <bienvenu@mozilla.org>
+ *   Karsten Düsterloh <mnyromyr@tprac.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -2050,6 +2051,14 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
           }
         }
         break;
+
+      case nsMsgFilterAction::StopExecution:
+      {
+        // don't apply any more filters
+        *applyMore = PR_FALSE; 
+      }
+      break;
+
       default:
         break;
       }

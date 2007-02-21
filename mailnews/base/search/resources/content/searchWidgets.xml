@@ -21,6 +21,7 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
+   -    Karsten Düsterloh <mnyromyr@tprac.de>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -80,6 +81,8 @@
             <xul:menuseparator enablefornews="true"/>
             <xul:menuitem label="&ignoreThread.label;" value="ignorethread" enablefornews="true"/>
             <xul:menuitem label="&watchThread.label;"  value="watchthread" enablefornews="true"/>
+            <xul:menuseparator/>
+            <xul:menuitem label="&stopExecution.label;" value="stopexecution"/>
           </xul:menupopup>
       </xul:menulist>
     </content>

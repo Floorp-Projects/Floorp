@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Seth Spitzer <sspitzer@netscape.com>
+ *   Karsten Düsterloh <mnyromyr@tprac.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -482,6 +483,7 @@ NS_IMETHODIMP nsMsgFilterAfterTheFact::OnNewSearch()
 nsresult nsMsgFilterAfterTheFact::ApplyFilter()
 {
   nsresult rv = NS_OK;
+  PRBool applyMoreActions = PR_TRUE;
   if (m_curFilter && m_curFolder)
   {
     // we're going to log the filter actions before firing them because some actions are async
@@ -496,7 +498,6 @@ nsresult nsMsgFilterAfterTheFact::ApplyFilter()
     NS_ENSURE_SUCCESS(rv, rv);
     PRUint32 numActions;
     actionList->Count(&numActions);
-    PRBool applyMoreActions = PR_TRUE;
 
     for (PRUint32 actionIndex =0; actionIndex < numActions && applyMoreActions; actionIndex++)
     {
@@ -774,12 +775,23 @@ nsresult nsMsgFilterAfterTheFact::ApplyFilter()
           }
         }
         break;
+
+      case nsMsgFilterAction::StopExecution:
+      {
+        // don't apply any more filters
+        applyMoreActions = PR_FALSE; 
+      }
+      break;
+
       default:
         break;
       }
     }
   }
-  return RunNextFilter();
+  if (applyMoreActions)
+    rv = RunNextFilter();
+
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgFilterService::GetTempFilterList(nsIMsgFolder *aFolder, nsIMsgFilterList **aFilterList)

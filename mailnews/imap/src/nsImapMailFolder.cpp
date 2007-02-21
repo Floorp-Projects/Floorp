@@ -23,6 +23,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Seth Spitzer <sspitzer@netscape.com>
  *   Lorenzo Colitti <lorenzo@colitti.com>
+ *   Karsten Düsterloh <mnyromyr@tprac.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -3532,6 +3533,13 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
             if (compService)
               rv = compService->ReplyWithTemplate(msgHdr, replyTemplateUri, msgWindow, server);
           }
+        }
+        break;
+
+        case nsMsgFilterAction::StopExecution:
+        {
+          // don't apply any more filters
+          *applyMore = PR_FALSE; 
         }
         break;
 

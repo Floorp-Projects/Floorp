@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Henrik Gemal <mozilla@gemal.dk>
+ *   Karsten Düsterloh <mnyromyr@tprac.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -857,6 +858,14 @@ NS_IMETHODIMP nsNNTPNewsgroupList::ApplyFilterHit(nsIMsgFilter *aFilter, nsIMsgW
           m_newsDB->SetLabel(msgKey, filterLabel);
         }
         break;
+
+      case nsMsgFilterAction::StopExecution:
+      {
+        // don't apply any more filters
+        *aApplyMore = PR_FALSE; 
+      }
+      break;
+
       default:
         NS_ASSERTION(0, "unexpected action");
         break;

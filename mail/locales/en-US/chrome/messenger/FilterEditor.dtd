@@ -50,5 +50,4 @@
 <!ENTITY fetchFromPOP.label "Fetch From POP Server">
 <!ENTITY ignoreThread.label "Ignore Thread">
 <!ENTITY watchThread.label "Watch Thread">
-
-
+<!ENTITY stopExecution.label "Stop Filter Execution">

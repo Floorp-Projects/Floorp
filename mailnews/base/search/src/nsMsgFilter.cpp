@@ -23,6 +23,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Seth Spitzer <sspitzer@netscape.com>
  *   Howard Chu <hyc@symas.com>
+ *   Karsten Düsterloh <mnyromyr@tprac.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -275,60 +276,96 @@ nsMsgFilter::CreateAction(nsIMsgRuleAction **aAction)
   return NS_OK;
 }
 
+// All the rules' actions form a unit, with no real order imposed.
+// But certain actions like MoveToFolder or StopExecution would make us drop
+// consecutive actions, while actions like AddTag implicitly care about the
+// order of invocation. Hence we do as little reordering as possible, keeping
+// the user-defined order as much as possible.
+// We explicitly don't allow for filters which do "tag message as Important,
+// copy it to another folder, tag it as To Do also, copy this different state
+// elsewhere" in one go. You need to define separate filters for that.
+//
+// The order of actions returned by this method:
+//   index    action(s)
+//  -------   ---------
+//     0      FetchBodyFromPop3Server
+//    1..n    all other 'normal' actions, in their original order
+//  n+1..m    CopyToFolder
+//    m+1     MoveToFolder or Delete
+//    m+2     StopExecution
 NS_IMETHODIMP 
 nsMsgFilter::GetSortedActionList(nsISupportsArray *actionList)
 {
   NS_ENSURE_ARG_POINTER(actionList);
   PRUint32 numActions;
-  nsresult err = m_actionList->Count(&numActions);
-  NS_ENSURE_SUCCESS(err, err);
-  PRBool insertedFinalAction = PR_FALSE;
-  PRUint32 front = 0;
+  nsresult rv = m_actionList->Count(&numActions);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRUint32 index =0; index < numActions; index++)
+  // hold separate pointers into the action list
+  PRUint32 nextIndexForNormal = 0, nextIndexForCopy = 0, nextIndexForMove = 0;
+  for (PRUint32 index = 0; index < numActions; ++index)
   {
     nsCOMPtr<nsIMsgRuleAction> action;
-    err = m_actionList->QueryElementAt(index, NS_GET_IID(nsIMsgRuleAction), (void **)getter_AddRefs(action));
+    rv = m_actionList->QueryElementAt(index, NS_GET_IID(nsIMsgRuleAction), (void **)getter_AddRefs(action));
     if (!action)
       continue;
  
     nsMsgRuleActionType actionType;
     action->GetType(&actionType);
-    
-    //we always want MoveToFolder action to be last (or delete to trash)
-    if (actionType == nsMsgFilterAction::MoveToFolder || actionType == nsMsgFilterAction::Delete)
+    switch (actionType)
     {
-      err = actionList->AppendElement(action);
-      NS_ENSURE_SUCCESS(err, err);
-      insertedFinalAction = PR_TRUE;
-    }
-    // Copy is always last, except for move/delete
-    else if (actionType == nsMsgFilterAction::CopyToFolder)
-    {
-      if (!insertedFinalAction)
+      case nsMsgFilterAction::FetchBodyFromPop3Server:
       {
-        err = actionList->AppendElement(action);
-        NS_ENSURE_SUCCESS(err, err);
+        // always insert in front
+        rv = actionList->InsertElementAt(action, 0);
+        NS_ENSURE_SUCCESS(rv, rv);
+        ++nextIndexForNormal;
+        ++nextIndexForCopy;
+        ++nextIndexForMove;
+        break;
       }
-      else
+
+      case nsMsgFilterAction::CopyToFolder:
       {
-        // If we already have a move/delete action in place, we want to
-        // place ourselves just before that final action.
-        PRUint32 count;
-        actionList->Count(&count);
-        err = actionList->InsertElementAt(action, count - 2);
-        NS_ENSURE_SUCCESS(err, err);
+        // insert into copy actions block, in order of appearance
+        rv = actionList->InsertElementAt(action, nextIndexForCopy);
+        NS_ENSURE_SUCCESS(rv, rv);
+        ++nextIndexForCopy;
+        ++nextIndexForMove;
+        break;
       }
-    }
-    else
-    {
-      actionList->InsertElementAt(action,front);
-      // we always want FetchBodyFromPop3Server to be first
-      if (actionType == nsMsgFilterAction::FetchBodyFromPop3Server)
-        front = 1;
+
+      case nsMsgFilterAction::MoveToFolder:
+      case nsMsgFilterAction::Delete:
+      {
+        // insert into move/delete action block
+        rv = actionList->InsertElementAt(action, nextIndexForMove);
+        NS_ENSURE_SUCCESS(rv, rv);
+        ++nextIndexForMove;
+        break;
+      }
+
+      case nsMsgFilterAction::StopExecution:
+      {
+        // insert into stop action block
+        rv = actionList->AppendElement(action);
+        NS_ENSURE_SUCCESS(rv, rv);
+        break;
+      }
+
+      default:
+      {
+        // insert into normal action block, in order of appearance
+        rv = actionList->InsertElementAt(action, nextIndexForNormal);
+        NS_ENSURE_SUCCESS(rv, rv);
+        ++nextIndexForNormal;
+        ++nextIndexForCopy;
+        ++nextIndexForMove;
+        break;
+      }
     }
   }
-  return err;
+  return rv;
 }
 
 NS_IMETHODIMP
