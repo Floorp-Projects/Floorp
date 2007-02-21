@@ -1688,8 +1688,14 @@ void nsCellMap::InsertCells(nsTableCellMap& aMap,
   PRInt32 startColIndex;
   for (startColIndex = aColIndexBefore + 1; startColIndex < numCols; startColIndex++) {
     CellData* data = GetDataAt(aRowIndex, startColIndex);
-    if (!data || data->IsOrig() || data->IsDead()) { // stop unless it is a span
+    if (!data || data->IsOrig() || data->IsDead()) { 
+      // // Not a span.  Stop.
       break; 
+    }
+    if (data->IsZeroColSpan()) {
+      // Zero colspans collapse.  Stop in this case too.
+      CollapseZeroColSpan(aMap, data, aRowIndex, startColIndex);
+      break;
     }
   }
 
