@@ -1729,6 +1729,8 @@ out:
 }
 #endif /* JS_HAS_EXPORT_IMPORT */
 
+#define JSPROP_INITIALIZER 0x100   /* NB: Not a valid property attribute. */
+
 JSBool
 js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
                       JSObject **objp, JSProperty **propp)
@@ -1770,34 +1772,37 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
         prop = NULL;
     }
 
-    /* If either property is readonly, we have an error. */
-    report = ((oldAttrs | attrs) & JSPROP_READONLY)
-             ? JSREPORT_ERROR
-             : JSREPORT_WARNING | JSREPORT_STRICT;
+    if (attrs == JSPROP_INITIALIZER) {
+        report = JSREPORT_WARNING | JSREPORT_STRICT;
+    } else {
+        /* We allow redeclaring some non-readonly properties. */
+        if (((oldAttrs | attrs) & JSPROP_READONLY) == 0) {
+            /*
+             * Allow redeclaration of variables and functions, but insist that
+             * the new value is not a getter if the old value was, ditto for
+             * setters -- unless prop is impermanent (in which case anyone
+             * could delete it and redefine it, willy-nilly).
+             */
+            if (!(attrs & (JSPROP_GETTER | JSPROP_SETTER)))
+                return JS_TRUE;
+            if ((~(oldAttrs ^ attrs) & (JSPROP_GETTER | JSPROP_SETTER)) == 0)
+                return JS_TRUE;
+            if (!(oldAttrs & JSPROP_PERMANENT))
+                return JS_TRUE;
+        }
 
-    if (report != JSREPORT_ERROR) {
-        /*
-         * Allow redeclaration of variables and functions, but insist that the
-         * new value is not a getter if the old value was, ditto for setters --
-         * unless prop is impermanent (in which case anyone could delete it and
-         * redefine it, willy-nilly).
-         */
-        if (!(attrs & (JSPROP_GETTER | JSPROP_SETTER)))
-            return JS_TRUE;
-        if ((~(oldAttrs ^ attrs) & (JSPROP_GETTER | JSPROP_SETTER)) == 0)
-            return JS_TRUE;
-        if (!(oldAttrs & JSPROP_PERMANENT))
-            return JS_TRUE;
         report = JSREPORT_ERROR;
+        isFunction = (oldAttrs & (JSPROP_GETTER | JSPROP_SETTER)) != 0;
+        if (!isFunction) {
+            if (!OBJ_GET_PROPERTY(cx, obj, id, &value))
+                goto bad;
+            isFunction = VALUE_IS_FUNCTION(cx, value);
+        }
     }
 
-    isFunction = (oldAttrs & (JSPROP_GETTER | JSPROP_SETTER)) != 0;
-    if (!isFunction) {
-        if (!OBJ_GET_PROPERTY(cx, obj, id, &value))
-            goto bad;
-        isFunction = VALUE_IS_FUNCTION(cx, value);
-    }
-    type = (oldAttrs & attrs & JSPROP_GETTER)
+    type = (attrs == JSPROP_INITIALIZER)
+           ? "property"
+           : (oldAttrs & attrs & JSPROP_GETTER)
            ? js_getter_str
            : (oldAttrs & attrs & JSPROP_SETTER)
            ? js_setter_str
@@ -5270,6 +5275,10 @@ interrupt:
 
             /* Set the property named by obj[id] to rval. */
             SAVE_SP_AND_PC(fp);
+            ok = js_CheckRedeclaration(cx, obj, id, JSPROP_INITIALIZER, NULL,
+                                       NULL);
+            if (!ok)
+                goto out;
             ok = OBJ_SET_PROPERTY(cx, obj, id, &rval);
             if (!ok)
                 goto out;
