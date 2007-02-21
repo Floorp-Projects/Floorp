@@ -719,20 +719,12 @@ GetHistoryFileName(char **aHistoryFile)
   // Get the history file in our profile dir.
   // Notice we are not just getting NS_APP_HISTORY_50_FILE
   // because it is used by the "real" global history component.
-#ifdef MOZ_ENABLE_LIBXUL
   if (EmbedPrivate::sProfileDir) {
     nsCString path;
     EmbedPrivate::sProfileDir->GetNativePath(path);
     *aHistoryFile = g_strdup_printf("%s/history.dat", path.get());
     BROKEN_STRING_BUILDER(aHistoryFile);
-  } else
-#else
-    if (EmbedPrivate::sProfileDirS) {
-      *aHistoryFile = g_strdup_printf("%s/history.dat", EmbedPrivate::sProfileDirS);
-      BROKEN_STRING_BUILDER(aHistoryFile);
-    } else
-#endif
-  {
+  } else {
     *aHistoryFile = g_strdup_printf("%s/history.dat", g_get_tmp_dir());
     BROKEN_STRING_BUILDER(aHistoryFile);
   }
