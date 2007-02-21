@@ -56,6 +56,7 @@ use Bugzilla::User;
 use Bugzilla::Config;
 use Bugzilla::Error;
 use Bugzilla::Constants;
+use Bugzilla::Testopia::Constants;
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::TestPlan;
 use Bugzilla::Testopia::TestRun;
@@ -1188,24 +1189,6 @@ sub _generate_dep_tree {
     }
 }
 
-=head2 can_unlink_plan
-
-Returns true if this test case can be unlinked from the given plan
-
-=cut
-
-sub can_unlink_plan {
-    my $self = shift;
-    my ($plan_id) = @_;
-    
-    my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
-    return 1 if Bugzilla->user->in_group('admin');
-    return 1 if Bugzilla->user->in_group('Testers') && Param("testopia-allow-group-member-deletes");
-    return 1 if $plan->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) & 4;
-    return 1 if $plan->get_user_rights(Bugzilla->user->id, GRANT_DIRECT) & 4;
-    return 0;
-}
-
 =head2 obliterate
 
 Removes this case and all things that reference it.
@@ -1235,20 +1218,6 @@ sub obliterate {
     return 1;
 }
 
-=head2 canedit
-
-Returns true if the logged in user has rights to edit this test case.
-
-=cut
-
-sub canedit {
-    my $self = shift;
-    return 1 if Bugzilla->user->in_group('Testers');
-    return 1 if $self->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) & 2;
-    return 1 if $self->get_user_rights(Bugzilla->user->id, GRANT_DIRECT) & 2;
-    return 0;
-}
-
 =head2 canview
 
 Returns true if the logged in user has rights to view this test case.
@@ -1258,8 +1227,20 @@ Returns true if the logged in user has rights to view this test case.
 sub canview {
     my $self = shift;
     return 1 if Bugzilla->user->in_group('Testers');
-    return 1 if $self->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) > 0;
-    return 1 if $self->get_user_rights(Bugzilla->user->id, GRANT_DIRECT) > 0;
+    return 1 if $self->get_user_rights(Bugzilla->user->id) & TR_READ;
+    return 0;
+}
+
+=head2 canedit
+
+Returns true if the logged in user has rights to edit this test case.
+
+=cut
+
+sub canedit {
+    my $self = shift;
+    return 1 if Bugzilla->user->in_group('Testers');
+    return 1 if $self->get_user_rights(Bugzilla->user->id) & TR_WRITE;
     return 0;
 }
 
@@ -1277,8 +1258,7 @@ sub candelete {
     # Otherwise, check for delete rights on all the plans this is linked to
     my $own_all = 1;
     foreach my $plan (@{$self->plans}){
-        if (!($plan->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) & 4) 
-            || !($plan->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) & 4)) {
+        if (!($plan->get_user_rights(Bugzilla->user->id) & TR_DELETE)) {
             $own_all = 0;
             last;
         }
@@ -1287,17 +1267,34 @@ sub candelete {
     return 0;
 }
 
+=head2 can_unlink_plan
+
+Returns true if this test case can be unlinked from the given plan
+
+=cut
+
+sub can_unlink_plan {
+    my $self = shift;
+    my ($plan_id) = @_;
+    
+    my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
+    return 1 if Bugzilla->user->in_group('admin');
+    return 1 if Bugzilla->user->in_group('Testers') && Param("testopia-allow-group-member-deletes");
+    return 1 if $plan->get_user_rights(Bugzilla->user->id) & DELETE;
+    return 0;
+}
+
 sub get_user_rights {
     my $self = shift;
-    my ($userid, $type) = @_;
+    my ($userid) = @_;
     
     my $dbh = Bugzilla->dbh;
     my ($perms) = $dbh->selectrow_array(
         "SELECT MAX(permissions) FROM test_plan_permissions
            LEFT JOIN test_case_plans ON test_plan_permissions.plan_id = test_case_plans.plan_id
           INNER JOIN test_cases ON test_case_plans.case_id = test_cases.case_id 
-          WHERE userid = ? AND test_plan_permissions.plan_id = ? AND grant_type = ?", 
-          undef, ($userid, $self->id, $type));
+          WHERE userid = ? AND test_plan_permissions.plan_id = ?", 
+          undef, ($userid, $self->id));
     
     return $perms;
 }

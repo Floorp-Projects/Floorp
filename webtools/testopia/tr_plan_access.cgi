@@ -30,13 +30,13 @@ use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::Product;
 
 use vars qw($vars);
-use Data::Dumper;
 
 require 'globals.pl';
 
 my $template = Bugzilla->template;
 my $cgi = Bugzilla->cgi;
-Bugzilla->login();
+
+Bugzilla->login(LOGIN_REQUIRED);
 print $cgi->header;
 
 my $plan_id = trim($cgi->param('plan_id') || '');
@@ -55,9 +55,6 @@ unless ($plan->canadmin){
      ThrowUserError('testopia-plan-acl-denied', {plan_id => $plan->id});
 }
 
-
-#print Dumper($plan->access_list);
-
 if ($action eq 'Apply Changes'){
     do_update();
     display();
@@ -65,7 +62,6 @@ if ($action eq 'Apply Changes'){
 elsif ($action eq 'Add User'){
     do_update();
 
-    my $dbh = Bugzilla->dbh;
     my $userid = DBNameToIdAndCheck(trim($cgi->param('adduser')));
     ThrowUserError('testopia-tester-already-on-list', {'login' => $cgi->param('adduser')}) 
         if ($plan->check_tester($userid));
@@ -74,10 +70,10 @@ elsif ($action eq 'Add User'){
     
     # The order we check these is important since each permission 
     # implies the prior ones.
-    $perms = $cgi->param("nr") ? 1 : $perms;
-    $perms = $cgi->param("nw") ? 3 : $perms;
-    $perms = $cgi->param("nd") ? 7 : $perms;
-    $perms = $cgi->param("na") ? 15 : $perms;
+    $perms |= TR_READ   if $cgi->param("nr");
+    $perms |= TR_WRITE  if $cgi->param("nw");
+    $perms |= TR_DELETE if $cgi->param("nd");
+    $perms |= TR_ADMIN  if $cgi->param("na");
 
     $plan->add_tester($userid, $perms); 
 
@@ -97,9 +93,9 @@ else{
 }
 
 sub do_update {
-    # We need at least on admin    
+    # We need at least one admin    
     my $params = join(" ", $cgi->param());
-    ThrowUserErorr('testopia-no-admins') unless $params =~ /a\d+/;
+    ThrowUserError('testopia-no-admins') unless $params =~ /(^|\s)a\d+($|\s)/;
     
     my $tester_regexp = $cgi->param('userregexp');
     trick_taint($tester_regexp);
@@ -108,23 +104,22 @@ sub do_update {
 
     # The order we check these is important since each permission 
     # implies the prior ones.
-    $regexp_perms = $cgi->param('pr') ? 1  : $regexp_perms;
-    $regexp_perms = $cgi->param('pw') ? 3  : $regexp_perms;
-    $regexp_perms = $cgi->param('pd') ? 7  : $regexp_perms;
-    $regexp_perms = $cgi->param('pa') ? 15 : $regexp_perms;
+    $regexp_perms |= TR_READ   if $cgi->param('pr');
+    $regexp_perms |= TR_WRITE  if $cgi->param('pw');
+    $regexp_perms |= TR_DELETE if $cgi->param('pd');
+    $regexp_perms |= TR_ADMIN  if $cgi->param('pa');
     
     $plan->set_tester_regexp($tester_regexp, $regexp_perms);
     
-    my $dbh = Bugzilla->dbh;
     foreach my $row (@{$plan->access_list}){
         my $perms = 0;
 
         # The order we check these is important since each permission 
         # implies the prior ones.
-        $perms = $cgi->param('r'.$row->{'user'}->id) ? 1  : $perms;
-        $perms = $cgi->param('w'.$row->{'user'}->id) ? 3  : $perms;
-        $perms = $cgi->param('d'.$row->{'user'}->id) ? 7  : $perms;
-        $perms = $cgi->param('a'.$row->{'user'}->id) ? 15 : $perms;
+        $perms |= TR_READ   if $cgi->param('r'.$row->{'user'}->id);
+        $perms |= TR_WRITE  if $cgi->param('w'.$row->{'user'}->id);
+        $perms |= TR_DELETE if $cgi->param('d'.$row->{'user'}->id);
+        $perms |= TR_ADMIN  if $cgi->param('a'.$row->{'user'}->id);
         
         $plan->update_tester($row->{'user'}->id, $perms);
     }

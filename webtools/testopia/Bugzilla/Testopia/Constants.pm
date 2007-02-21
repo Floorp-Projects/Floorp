@@ -34,13 +34,10 @@ RUNNING
 PAUSED
 BLOCKED
 
-UNIT
-INTEGRATION
-FUNCTION
-SYSTEM
-ACCEPTANCE
-INSTALLATION
-PERFORMANCE
+TR_READ
+TR_WRITE
+TR_DELETE
+TR_ADMIN
 
 REL_AUTHOR
 REL_EDITOR
@@ -97,11 +94,11 @@ use constant RUNNING => 4;
 use constant PAUSED  => 5;
 use constant BLOCKED => 6;
 
-# Test Plan Types
-use constant UNIT        => 1;
-use constant INTEGRATION => 2;
-use constant SYSTEM      => 3;
-use constant PERFORMANCE => 4;
+# Test Plan Permissions (bit flags)
+use constant READ    => 1;
+use constant WRITE   => 2;
+use constant DELETE  => 4;
+use constant ADMIN   => 8;
 
 use constant REL_AUTHOR             => 0;
 use constant REL_EDITOR             => 1;

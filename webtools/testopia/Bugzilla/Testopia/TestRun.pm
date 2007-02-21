@@ -46,6 +46,7 @@ use strict;
 use Bugzilla::Util;
 use Bugzilla::User;
 use Bugzilla::Constants;
+use Bugzilla::Testopia::Constants
 use Bugzilla::Config;
 use Bugzilla::Testopia::Environment;
 use Bugzilla::Bug;
@@ -74,17 +75,17 @@ use base qw(Exporter);
 =cut
 
 use constant DB_COLUMNS => qw(
-    test_runs.run_id
-    test_runs.plan_id
-    test_runs.environment_id
-    test_runs.product_version
-    test_runs.build_id
-    test_runs.plan_text_version
-    test_runs.manager_id  
-    test_runs.start_date
-    test_runs.stop_date
-    test_runs.summary
-    test_runs.notes
+    run_id
+    plan_id
+    environment_id
+    product_version
+    build_id
+    plan_text_version
+    manager_id  
+    start_date
+    stop_date
+    summary
+    notes
 );
 
 our $columns = join(", ", DB_COLUMNS);
@@ -731,20 +732,6 @@ sub get_environments {
     return $ref;
 }
 
-=head2 canedit
-
-Returns true if the logged in user has rights to edit this test run.
-
-=cut
-
-sub canedit {
-    my $self = shift;
-    return 1 if Bugzilla->user->in_group('Testers');
-    return 1 if $self->plan->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) & 2;
-    return 1 if $self->plan->get_user_rights(Bugzilla->user->id, GRANT_DIRECT) & 2;
-    return 0;
-}
-
 =head2 canview
 
 Returns true if the logged in user has rights to view this test run.
@@ -754,10 +741,22 @@ Returns true if the logged in user has rights to view this test run.
 sub canview {
     my $self = shift;
     return 1 if Bugzilla->user->in_group('Testers');
-    return 1 if $self->plan->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) > 0;
-    return 1 if $self->plan->get_user_rights(Bugzilla->user->id, GRANT_DIRECT) > 0;
+    return 1 if $self->plan->get_user_rights(Bugzilla->user->id) & TR_READ;
     return 0;
 
+}
+
+=head2 canedit
+
+Returns true if the logged in user has rights to edit this test run.
+
+=cut
+
+sub canedit {
+    my $self = shift;
+    return 1 if Bugzilla->user->in_group('Testers');
+    return 1 if $self->plan->get_user_rights(Bugzilla->user->id) & TR_WRITE;
+    return 0;
 }
 
 =head2 candelete
@@ -771,8 +770,7 @@ sub candelete {
     return 1 if Bugzilla->user->in_group('admin');
     return 0 unless Param("allow-test-deletion");
     return 1 if Bugzilla->user->in_group('Testers') && Param("testopia-allow-group-member-deletes");
-    return 1 if $self->plan->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) & 4;
-    return 1 if $self->plan->get_user_rights(Bugzilla->user->id, GRANT_DIRECT) & 4;
+    return 1 if $self->plan->get_user_rights(Bugzilla->user->id) & TR_DELETE;
     return 0;
 }
 

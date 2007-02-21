@@ -46,6 +46,7 @@ use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::Config;
 use Bugzilla::Constants;
+use Bugzilla::Testopia::Constants;
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::TestRun;
 use Bugzilla::Testopia::TestCase;
@@ -430,12 +431,13 @@ sub check_tester {
     my ($exists) = $dbh->selectrow_array(
             "SELECT 1 
                FROM test_plan_permissions
-              WHERE userid = ? AND plan_id = ?", 
-            undef, ($userid, $self->id));
+              WHERE userid = ? AND plan_id = ? AND grant_type = ?", 
+            undef, ($userid, $self->id, GRANT_DIRECT));
     
     return $exists;
     
 }
+
 =head2 update_plan_type
 
 Update the given type
@@ -727,7 +729,8 @@ sub set_tester_regexp {
                    WHERE plan_id = ?", undef, ($regexp, $permissions, $self->id));
     }
     else { 
-        $dbh->do("INSERT INTO test_plan_permissions_regexp(plan_id, user_regexp, permissions) 
+        $dbh->do("INSERT INTO test_plan_permissions_regexp
+                  (plan_id, user_regexp, permissions) 
                   VALUES(?,?,?)", 
                   undef, ($self->id, $regexp, $permissions));
     } 
@@ -785,7 +788,8 @@ sub add_tester {
     my ($userid, $perms) = @_;
     my $dbh = Bugzilla->dbh;
     
-    $dbh->do("INSERT INTO test_plan_permissions(userid, plan_id, permissions, grant_type) 
+    $dbh->do("INSERT INTO test_plan_permissions
+              (userid, plan_id, permissions, grant_type) 
               VALUES(?,?,?,?)", 
               undef, ($userid, $self->id, $perms, GRANT_DIRECT));
 }
@@ -846,21 +850,6 @@ sub obliterate {
     return 1;
 }
 
-=head2 canedit
-
-Returns true if the logged in user has rights to edit this plan
-
-=cut
-
-sub canedit {
-    my $self = shift;
-    return 1 if Bugzilla->user->in_group('Testers');
-    return 1 if $self->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) & 2;
-    return 1 if $self->get_user_rights(Bugzilla->user->id, GRANT_DIRECT) & 2;
-    return 0;
-
-}
-
 =head2 canview
 
 Returns true if the logged in user has rights to view this plan
@@ -870,9 +859,22 @@ Returns true if the logged in user has rights to view this plan
 sub canview {
     my $self = shift;
     return 1 if Bugzilla->user->in_group('Testers');
-    return 1 if $self->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) > 0;
-    return 1 if $self->get_user_rights(Bugzilla->user->id, GRANT_DIRECT) > 0;
+    return 1 if $self->get_user_rights(Bugzilla->user->id) & TR_READ;
     return 0;
+}
+
+=head2 canedit
+
+Returns true if the logged in user has rights to edit this plan
+
+=cut
+
+sub canedit {
+    my $self = shift;
+    return 1 if Bugzilla->user->in_group('Testers');
+    return 1 if $self->get_user_rights(Bugzilla->user->id) & TR_WRITE;
+    return 0;
+
 }
 
 =head2 candelete
@@ -886,28 +888,26 @@ sub candelete {
     return 1 if Bugzilla->user->in_group('admin');
     return 0 unless Param("allow-test-deletion");
     return 1 if Bugzilla->user->in_group('Testers') && Param("testopia-allow-group-member-deletes");
-    return 1 if $self->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) & 4;
-    return 1 if $self->get_user_rights(Bugzilla->user->id, GRANT_DIRECT) & 4;
+    return 1 if $self->get_user_rights(Bugzilla->user->id) & TR_DELETE;
     return 0;
 }
 
 sub canadmin {
     my $self = shift;
     return 1 if Bugzilla->user->in_group("admin");
-    return 1 if ($self->get_user_rights(Bugzilla->user->id, GRANT_REGEXP) & 8);
-    return 1 if ($self->get_user_rights(Bugzilla->user->id, GRANT_DIRECT) & 8);
+    return 1 if ($self->get_user_rights(Bugzilla->user->id) & TR_ADMIN);
     return 0;
 }
   
 sub get_user_rights {
     my $self = shift;
-    my ($userid, $type) = @_;
+    my ($userid) = @_;
     
     my $dbh = Bugzilla->dbh;
     my ($perms) = $dbh->selectrow_array(
         "SELECT permissions FROM test_plan_permissions 
-          WHERE userid = ? AND plan_id = ? AND grant_type = ?", 
-          undef, ($userid, $self->id, $type));
+          WHERE userid = ? AND plan_id = ?", 
+          undef, ($userid, $self->id));
     
     return $perms;
 }
@@ -1007,9 +1007,9 @@ sub access_list {
     my $dbh = Bugzilla->dbh;
 
     my $ref = $dbh->selectall_arrayref(
-        "SELECT tpt.userid, permissions 
-           FROM test_plan_permissions AS tpt
-           JOIN profiles ON profiles.userid = tpt.userid 
+        "SELECT tpp.userid, permissions 
+           FROM test_plan_permissions AS tpp
+           JOIN profiles ON profiles.userid = tpp.userid 
           WHERE plan_id = ? AND grant_type = ?
           ORDER BY profiles.realname", {'Slice' =>{}}, ($self->id, GRANT_DIRECT));
     my @rows;

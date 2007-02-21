@@ -56,8 +56,8 @@ use Bugzilla::Error;
 =cut
 
 use constant DB_COLUMNS => qw(
-    test_tags.tag_id
-    test_tags.tag_name
+    tag_id
+    tag_name
 
 );
 
