@@ -480,6 +480,36 @@ nsBrowserAccess.prototype = {
   }
 }
 
+function HandleAppCommandEvent(aEvent)
+{
+  aEvent.stopPropagation();
+  switch (aEvent.command) {
+    case "Back":
+      BrowserBack();
+      break;
+    case "Forward":
+      BrowserForward();
+      break;
+    case "Reload":
+      BrowserReloadSkipCache();
+      break;
+    case "Stop":
+      BrowserStop();
+      break;
+    case "Search":
+      BrowserSearchInternet();
+      break;
+    case "Bookmarks":
+      BrowserEditBookmarks();
+      break;
+    case "Home":
+      BrowserHome(null);
+      break;
+    default:
+      break;
+  }
+}
+
 function Startup()
 {
   // init globals
@@ -689,6 +719,8 @@ function Startup()
 
   addEventListener("PopupWindow", onPopupWindow, true);
   addEventListener("DOMPopupBlocked", onPopupBlocked, true);
+
+  addEventListener("AppCommand", HandleAppCommandEvent, true);
 
   // does clicking on the urlbar select its contents?
   gClickSelectsAll = pref.getBoolPref("browser.urlbar.clickSelectsAll");
