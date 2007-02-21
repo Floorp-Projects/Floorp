@@ -1359,7 +1359,6 @@ function ComposeStartup(recycled, aParams)
 
         // Do setup common to Message Composer and Web Composer
         EditorSharedStartup();
-        InitLanguageMenu();
       }
 
       var msgCompFields = gMsgCompose.compFields;
