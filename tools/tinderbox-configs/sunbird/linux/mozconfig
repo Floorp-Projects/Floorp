@@ -19,4 +19,5 @@ ac_add_options --disable-installer
 ac_add_options --disable-tests
 # Use gtk2 until pango is upgraded
 ac_add_options --enable-default-toolkit=gtk2
+ac_add_options --disable-svg
 #ac_add_options --enable-official-branding
