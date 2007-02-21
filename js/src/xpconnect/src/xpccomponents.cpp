@@ -318,6 +318,105 @@ nsXPCComponents_Interfaces::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
     }
 }
 
+/**
+ * This class serves as a functor to look up interfaces based on name
+ */
+class xpc_InterfaceInfoNameLookup
+{
+public:
+    xpc_InterfaceInfoNameLookup(const char * name) : m_Name(name) {}
+    nsIInterfaceInfo * operator()(nsIInterfaceInfoManager * pManager)
+    {
+        nsIInterfaceInfo * pInfo = nsnull;
+        pManager->GetInfoForName(m_Name, &pInfo);
+        return pInfo;
+    }
+private:
+    const char * m_Name;
+};
+
+/**
+ * This class serves as a functor to look up interfaces based on IID
+ */
+class xpc_InterfaceInfoIIDLookup
+{
+public:
+    xpc_InterfaceInfoIIDLookup(const nsID & iid) : m_IID(iid) {}
+    nsIInterfaceInfo * operator()(nsIInterfaceInfoManager * pManager)
+    {
+        nsIInterfaceInfo * pInfo = nsnull;
+        pManager->GetInfoForIID(&m_IID, &pInfo);
+        return pInfo;
+    }
+private:
+    const nsID & m_IID;
+};
+
+/**
+ * This is a helper function that returns the list of managers for a super
+ * manager or null if here is no super manager or the list is empty
+ * @param pManager The manager being check for super manager support
+ * @return The enumerator 
+ */
+static already_AddRefed<nsISimpleEnumerator>
+GetSuperManagerList(nsIInterfaceInfoManager * pManager)
+{
+    nsISimpleEnumerator * enumerator = nsnull;
+    // get the super manager
+    nsCOMPtr<nsIInterfaceInfoSuperManager> superManager =
+        do_QueryInterface(pManager);
+    if(superManager != nsnull) 
+    {
+        // check for additional manager and retrieve the list if it has them
+        PRBool additionalManagers;
+        if(NS_SUCCEEDED(superManager->HasAdditionalManagers(&additionalManagers)) && additionalManagers)
+        {
+            superManager->EnumerateAdditionalManagers(&enumerator);
+        }
+    }
+    return enumerator;
+}
+
+/**
+ * This function iterates managers looking for the interface that matches what
+ * lookup is looking for
+ * @param pManager The manager and possibly super manager
+ * @param lookup Holds the logic to inspect a manager for a desired interface
+ * @return The desired interface, will be null if not found
+ */
+template <typename Lookup>
+already_AddRefed<nsIInterfaceInfo>
+xpc_FindInterfaceInfo(nsIInterfaceInfoManager * pManager,
+                      Lookup lookup)
+{
+    // See if the manager has the interface
+    nsIInterfaceInfo * ppInfo = lookup(pManager);
+    if(ppInfo == nsnull)
+    {
+        // The manager didn't, so check the super manager managers
+        nsCOMPtr<nsISimpleEnumerator> list = GetSuperManagerList(pManager);
+        if(list != nsnull)
+        {
+            // Iterate over the managers looking for the interface
+            nsCOMPtr<nsIInterfaceInfoManager> current;
+            PRBool more;
+            while(NS_SUCCEEDED(list->HasMoreElements(&more)) && more &&
+                  NS_SUCCEEDED(list->GetNext(getter_AddRefs(current))) &&
+                  current)
+            {
+                // Check the current manager for the interface
+                ppInfo = lookup(current);
+                // If we found the interface exit the loop
+                if(ppInfo != nsnull)
+                {
+                    break;
+                }
+            }
+        }
+    }
+    return ppInfo;
+}
+
 /* PRBool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal id, in PRUint32 flags, out JSObjectPtr objp); */
 NS_IMETHODIMP
 nsXPCComponents_Interfaces::NewResolve(nsIXPConnectWrappedNative *wrapper,
@@ -332,8 +431,8 @@ nsXPCComponents_Interfaces::NewResolve(nsIXPConnectWrappedNative *wrapper,
        nsnull != (name = JS_GetStringBytes(JSVAL_TO_STRING(id))) &&
        name[0] != '{') // we only allow interfaces by name here
     {
-        nsCOMPtr<nsIInterfaceInfo> info;
-        mManager->GetInfoForName(name, getter_AddRefs(info));
+        nsCOMPtr<nsIInterfaceInfo> info =
+            xpc_FindInterfaceInfo(mManager, xpc_InterfaceInfoNameLookup(name));
         if(!info)
             return NS_OK;
 
@@ -673,8 +772,8 @@ nsXPCComponents_InterfacesByID::NewResolve(nsIXPConnectWrappedNative *wrapper,
 name)).get()))
             return NS_OK;
 
-        nsCOMPtr<nsIInterfaceInfo> info;
-        mManager->GetInfoForIID(&iid, getter_AddRefs(info));
+        nsCOMPtr<nsIInterfaceInfo> info =
+            xpc_FindInterfaceInfo(mManager, xpc_InterfaceInfoIIDLookup(iid));
         if(!info)
             return NS_OK;
 
