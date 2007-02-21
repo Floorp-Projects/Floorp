@@ -45,11 +45,6 @@ static const PRUint16 g_utMappingTable[] = {
 #include "cp1131.ut"
 };
 
-static const PRInt16 g_utShiftTable[] =  {
-  0, u1ByteCharset ,
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
 //----------------------------------------------------------------------
 // Class nsCP1131ToUnicode [implementation]
 
@@ -57,7 +52,7 @@ NS_METHOD
 nsCP1131ToUnicodeConstructor(nsISupports* aOuter, REFNSIID aIID,
                             void **aResult) 
 {
-  return CreateOneByteDecoder((uShiftTable*) &g_utShiftTable, 
+  return CreateOneByteDecoder(u1ByteCharset, 
                               (uMappingTable*) &g_utMappingTable,
                               aOuter, aIID, aResult);
 }
