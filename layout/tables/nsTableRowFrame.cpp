@@ -1056,6 +1056,7 @@ nsTableRowFrame::Reflow(nsPresContext*          aPresContext,
 nscoord 
 nsTableRowFrame::ReflowCellFrame(nsPresContext*          aPresContext,
                                  const nsHTMLReflowState& aReflowState,
+                                 PRBool                   aIsTopOfPage,
                                  nsTableCellFrame*        aCellFrame,
                                  nscoord                  aAvailableHeight,
                                  nsReflowStatus&          aStatus)
@@ -1072,6 +1073,7 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*          aPresContext,
   nsTableCellReflowState cellReflowState(aPresContext, aReflowState,
                                          aCellFrame, availSize, PR_FALSE);
   InitChildReflowState(*aPresContext, availSize, borderCollapse, cellReflowState);
+  cellReflowState.mFlags.mIsTopOfPage = aIsTopOfPage;
 
   nsHTMLReflowMetrics desiredSize;
 

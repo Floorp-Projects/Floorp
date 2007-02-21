@@ -158,6 +158,7 @@ public:
   /** used by row group frame code */
   nscoord ReflowCellFrame(nsPresContext*          aPresContext,
                           const nsHTMLReflowState& aReflowState,
+                          PRBool                   aIsTopOfPage,
                           nsTableCellFrame*        aCellFrame,
                           nscoord                  aAvailableHeight,
                           nsReflowStatus&          aStatus);
