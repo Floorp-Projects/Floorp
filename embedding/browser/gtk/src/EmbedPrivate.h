@@ -55,11 +55,6 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsVoidArray.h"
 
-#ifndef MOZ_ENABLE_LIBXUL
-// for profiles
-#include "nsIPref.h"
-#endif
-
 // app component registration
 #include "nsIGenericFactory.h"
 #include "nsIComponentRegistrar.h"
@@ -84,9 +79,6 @@ class EmbedEventListener;
 
 class nsPIDOMWindow;
 class nsIDirectoryServiceProvider;
-#ifndef MOZ_ENABLE_LIBXUL
-class nsProfileDirServiceProvider;
-#endif
 
 class EmbedCommon {
  public:
@@ -124,11 +116,6 @@ class EmbedPrivate {
   static void PopStartup      (void);
   static void SetPath         (const char *aPath);
   static void SetCompPath     (const char *aPath);
-
-#ifndef MOZ_ENABLE_LIBXUL
-  static nsresult StartupProfile (void);
-  static void     ShutdownProfile(void);
-#endif
 
   static void SetAppComponents (const nsModuleComponentInfo* aComps,
                                 int aNumComponents);
@@ -224,18 +211,9 @@ class EmbedPrivate {
   static nsIAppShell            *sAppShell;
   // the list of all open windows
   static nsVoidArray            *sWindowList;
-#ifdef MOZ_ENABLE_LIBXUL
   // what is our profile path?
   static nsILocalFile           *sProfileDir;
   static nsISupports            *sProfileLock;
-#else
-  // what is our profile path?
-  static char                   *sProfileDirS;
-  static char                   *sProfileName;
-  // for profiles
-  static nsProfileDirServiceProvider *sProfileDirServiceProvider;
-  static nsIPref                *sPrefs;
-#endif
 
   static nsIDirectoryServiceProvider * sAppFileLocProvider;
 

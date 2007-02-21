@@ -75,14 +75,6 @@
 // for the clipboard actions we need to do
 #include "nsIClipboardCommands.h"
 
-#ifndef MOZ_ENABLE_LIBXUL
-// for profiles
-#include "nsProfileDirServiceProvider.h"
-#include "nsEmbedAPI.h"
-// for NS_APPSHELL_CID
-#include "nsWidgetsCID.h"
-#endif
-
 // app component registration
 #include "nsIGenericFactory.h"
 #include "nsIComponentRegistrar.h"
@@ -181,17 +173,8 @@ PRUint32     EmbedPrivate::sWidgetCount = 0;
 char        *EmbedPrivate::sPath        = nsnull;
 char        *EmbedPrivate::sCompPath    = nsnull;
 nsVoidArray *EmbedPrivate::sWindowList  = nsnull;
-#ifdef MOZ_ENABLE_LIBXUL
 nsILocalFile *EmbedPrivate::sProfileDir  = nsnull;
 nsISupports  *EmbedPrivate::sProfileLock = nsnull;
-#else
-static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-char        *EmbedPrivate::sProfileDirS  = nsnull;
-char        *EmbedPrivate::sProfileName = nsnull;
-nsIPref     *EmbedPrivate::sPrefs       = nsnull;
-nsIAppShell *EmbedPrivate::sAppShell    = nsnull;
-nsProfileDirServiceProvider *EmbedPrivate::sProfileDirServiceProvider = nsnull;
-#endif
 GtkWidget   *EmbedPrivate::sOffscreenWindow = 0;
 GtkWidget   *EmbedPrivate::sOffscreenFixed  = 0;
 
@@ -257,22 +240,10 @@ GTKEmbedDirectoryProvider::GetFile(const char *aKey, PRBool *aPersist,
   }
 
   if (!strcmp(aKey, NS_APP_USER_PROFILE_50_DIR)) {
-#ifdef MOZ_ENABLE_LIBXUL
     if (EmbedPrivate::sProfileDir) {
       *aPersist = PR_TRUE;
       return EmbedPrivate::sProfileDir->Clone(aResult);
     }
-#else
-    nsCOMPtr<nsILocalFile> profDir =
-      do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-      return rv;
-    rv = profDir->InitWithNativePath(nsDependentCString(EmbedPrivate::sProfileDirS));
-    if (NS_FAILED(rv))
-      return rv;
-    NS_ADDREF(*aResult = profDir);
-    return NS_OK;
-#endif
   }
 
   *aResult = nsnull;
@@ -826,8 +797,6 @@ EmbedPrivate::PushStartup(void)
     } else
       NS_ASSERTION(EmbedPrivate::sCompPath, "Warning: Failed to init Component Path.\n");
 
-#ifdef MOZ_ENABLE_LIBXUL
-
     const char *grePath = sPath;
     NS_ASSERTION(grePath, "Warning: Failed to init grePath.\n");
 
@@ -854,35 +823,6 @@ EmbedPrivate::PushStartup(void)
       XRE_NotifyProfile();
     }
 
-#else
-
-    rv = NS_InitEmbedding(binDir, sAppFileLocProvider);
-    if (NS_FAILED(rv))
-      return;
-
-    // we no longer need a reference to the DirectoryServiceProvider
-    if (sAppFileLocProvider) {
-      NS_RELEASE(sAppFileLocProvider);
-      sAppFileLocProvider = nsnull;
-    }
-
-    rv = StartupProfile();
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Warning: Failed to start up profiles.\n");
-
-    nsCOMPtr<nsIAppShell> appShell;
-    appShell = do_CreateInstance(kAppShellCID);
-    if (!appShell) {
-      NS_WARNING("Failed to create appshell in EmbedPrivate::PushStartup!\n");
-      return;
-    }
-    sAppShell = appShell.get();
-    NS_ADDREF(sAppShell);
-#ifdef MOZILLA_1_8_BRANCH
-    sAppShell->Create(0, nsnull);
-    sAppShell->Spinup();
-#endif
-#endif
-
     rv = RegisterAppComponents();
     NS_ASSERTION(NS_SUCCEEDED(rv), "Warning: Failed to register app components.\n");
   }
@@ -899,23 +839,6 @@ EmbedPrivate::PopStartup(void)
     // destroy the offscreen window
     DestroyOffscreenWindow();
 
-#ifndef MOZ_ENABLE_LIBXUL
-    // shut down the profiles
-    ShutdownProfile();
-
-    if (sAppShell) {
-#ifdef MOZILLA_1_8_BRANCH
-      // Shutdown the appshell service.
-      sAppShell->Spindown();
-#endif
-      NS_RELEASE(sAppShell);
-      sAppShell = 0;
-    }
-
-    // shut down XPCOM/Embedding
-    NS_TermEmbedding();
-#else
-
     // we no longer need a reference to the DirectoryServiceProvider
     if (EmbedPrivate::sAppFileLocProvider) {
       NS_RELEASE(EmbedPrivate::sAppFileLocProvider);
@@ -924,7 +847,7 @@ EmbedPrivate::PopStartup(void)
 
     // shut down XPCOM/Embedding
     XRE_TermEmbedding();
-#endif
+
 #ifdef MOZ_WIDGET_GTK2
     EmbedGlobalHistory::DeleteInstance();
 #endif
@@ -967,7 +890,6 @@ EmbedPrivate::SetAppComponents(const nsModuleComponentInfo* aComps,
 void
 EmbedPrivate::SetProfilePath(const char *aDir, const char *aName)
 {
-#ifdef MOZ_ENABLE_LIBXUL
   if (EmbedPrivate::sProfileDir) {
     if (sWidgetCount) {
       NS_ERROR("Cannot change profile directory during run.");
@@ -1001,23 +923,6 @@ EmbedPrivate::SetProfilePath(const char *aDir, const char *aName)
   // Failed
   NS_IF_RELEASE(EmbedPrivate::sProfileDir);
   NS_IF_RELEASE(EmbedPrivate::sProfileLock);
-#else
-  if (sProfileDirS) {
-    nsMemory::Free(sProfileDirS);
-    sProfileDirS = nsnull;
-  }
-
-  if (sProfileName) {
-    nsMemory::Free(sProfileName);
-    sProfileName = nsnull;
-  }
-
-  if (aDir)
-    sProfileDirS = (char *)nsMemory::Clone(aDir, strlen(aDir) + 1);
-
-  if (aName)
-    sProfileName = (char *)nsMemory::Clone(aName, strlen(aName) + 1);
-#endif
 }
 
 void
@@ -1506,58 +1411,6 @@ EmbedPrivate::GetAtkObjectForCurrentDocument()
   return nsnull;
 }
 #endif /* MOZ_ACCESSIBILITY_ATK */
-
-#ifndef MOZ_ENABLE_LIBXUL
-/* static */
-nsresult
-EmbedPrivate::StartupProfile(void)
-{
-  // initialize profiles
-  if (sProfileDirS && sProfileName) {
-    nsresult rv;
-    nsCOMPtr<nsILocalFile> profileDir;
-    NS_NewNativeLocalFile(nsDependentCString(sProfileDirS), PR_TRUE,
-                          getter_AddRefs(profileDir));
-    if (!profileDir)
-      return NS_ERROR_FAILURE;
-    rv = profileDir->AppendNative(nsDependentCString(sProfileName));
-    if (NS_FAILED(rv))
-      return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsProfileDirServiceProvider> locProvider;
-    NS_NewProfileDirServiceProvider(PR_TRUE, getter_AddRefs(locProvider));
-    if (!locProvider)
-      return NS_ERROR_FAILURE;
-    rv = locProvider->Register();
-    if (NS_FAILED(rv))
-      return rv;
-    rv = locProvider->SetProfileDir(profileDir);
-    if (NS_FAILED(rv))
-      return rv;
-    // Keep a ref so we can shut it down.
-    NS_ADDREF(sProfileDirServiceProvider = locProvider);
-    // get prefs
-    nsCOMPtr<nsIPref> pref;
-    pref = do_GetService(NS_PREF_CONTRACTID);
-    if (!pref)
-      return NS_ERROR_FAILURE;
-    sPrefs = pref.get();
-    NS_ADDREF(sPrefs);
-  }
-  return NS_OK;
-}
-
-/* static */
-void
-EmbedPrivate::ShutdownProfile(void)
-{
-  if (sProfileDirServiceProvider) {
-    sProfileDirServiceProvider->Shutdown();
-    NS_RELEASE(sProfileDirServiceProvider);
-  }
-  NS_IF_RELEASE(sPrefs);
-}
-#endif
 
 /* static */
 nsresult

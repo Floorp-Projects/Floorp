@@ -77,15 +77,14 @@ CPPSRCS += dlldeps-xul.cpp
 endif
 
 # dependent libraries
-SHARED_LIBRARY_LIBS += \
-	$(DEPTH)/toolkit/xre/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
-	$(NULL)
-
 ifneq (,$(MOZ_ENABLE_GTK)$(MOZ_ENABLE_GTK2))
 SHARED_LIBRARY_LIBS += \
   $(DEPTH)/embedding/browser/gtk/src/$(LIB_PREFIX)gtkembedmoz.$(LIB_SUFFIX)
 endif
 
+SHARED_LIBRARY_LIBS += \
+	$(DEPTH)/toolkit/xre/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
+	$(NULL)
 
 SHARED_LIBRARY_LIBS += \
 	$(foreach component,$(COMPONENT_LIBS),$(DEPTH)/staticlib/components/$(LIB_PREFIX)$(component).$(LIB_SUFFIX)) \
