@@ -3993,7 +3993,7 @@
 				HEADER_SEARCH_PATHS = "../dist/include/txtsvc ../dist/include/editor ../dist/include/spellchecker ../dist/include/composer ../dist/include/exthandler ../dist/include/helperAppDlg ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/uconv ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/nkcache ../dist/include/docshell ../dist/include/profdirserviceprovider ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/chardet ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/xpcom_obsolete ../dist/include/cookie ../dist/include/mork ../dist/include/js ../dist/include/xpconnect ../dist/include/ ../dist/public/nss ../ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon $(LOCAL_LIBRARY_DIR)/Frameworks/SharedMenusCocoa.framework/Headers";
 				INFOPLIST_FILE = "Info-Camino.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/Embed/components";
+				LIBRARY_SEARCH_PATHS = "../embedding/base ../dist/bin ../dist/lib ../dist/Embed/components ../profile/dirserviceprovider/src";
 				OTHER_CFLAGS = "-fshort-wchar";
 				OTHER_LDFLAGS = "-lpthread -lm";
 				PREBINDING = NO;
