@@ -334,16 +334,17 @@ typedef struct JSWatchPoint {
 static JSBool
 DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
 {
-    JSScopeProperty *sprop;
     JSBool ok;
+    JSScopeProperty *sprop;
     JSObject *pobj;
     JSProperty *prop;
     JSPropertyOp setter;
 
+    ok = JS_TRUE;
     wp->flags &= ~flag;
     if (wp->flags != 0) {
         DBG_UNLOCK(cx->runtime);
-        return JS_TRUE;
+        return ok;
     }
 
     /*
