@@ -132,7 +132,6 @@ FINAL_LINK_COMPS = $(DEPTH)/config/final-link-comps
 FINAL_LINK_COMP_NAMES = $(DEPTH)/config/final-link-comp-names
 
 MOZ_UNICHARUTIL_LIBS = $(LIBXUL_DIST)/lib/$(LIB_PREFIX)unicharutil_s.$(LIB_SUFFIX)
-MOZ_REGISTRY_LIBS          = $(DIST)/lib/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX)
 MOZ_WIDGET_SUPPORT_LIBS    = $(DIST)/lib/$(LIB_PREFIX)widgetsupport_s.$(LIB_SUFFIX)
 
 # determine debug-related options
@@ -317,7 +316,6 @@ else
 $(error Component makefile does not specify MODULE_NAME.)
 endif
 endif
-EXPORT_LIBRARY=
 FORCE_STATIC_LIB=1
 _ENABLE_PIC=1
 SHORT_LIBNAME=

@@ -62,8 +62,11 @@ ifdef ENABLE_TESTS
 PACKAGE_FILE += xpcom-tests.pkg
 endif
 
-# Do not set EXPORT_LIBRARY as we do not want xpcom in the static libs list
-#EXPORT_LIBRARY = 1
+# This is only a static library in libxul builds
+ifdef MOZ_ENABLE_LIBXUL
+EXPORT_LIBRARY = 1
+endif
+
 GRE_MODULE	= 1
 MOZILLA_INTERNAL_API = 1
 

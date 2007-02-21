@@ -876,11 +876,11 @@ HOST_AR='$(AR)'
 HOST_AR_FLAGS='$(AR_FLAGS)'
 
 MOZ_JPEG_CFLAGS=
-MOZ_JPEG_LIBS='-L$(LIBXUL_DIST)/lib -lmozjpeg'
+MOZ_JPEG_LIBS='$(call EXPAND_LIBNAME_PATH,mozjpeg,$(DEPTH)/jpeg)'
 MOZ_ZLIB_CFLAGS=
-MOZ_ZLIB_LIBS='-L$(LIBXUL_DIST)/lib -lmozz'
+MOZ_ZLIB_LIBS='$(call EXPAND_LIBNAME_PATH,mozz,$(DEPTH)/modules/zlib/src)'
 MOZ_PNG_CFLAGS=
-MOZ_PNG_LIBS='-L$(LIBXUL_DIST)/lib -lmozpng'
+MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,mozpng,$(DEPTH)/modules/libimg/png)'
 
 MOZ_JS_LIBS='-L$(LIBXUL_DIST)/bin -lmozjs'
 DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/bin -lxpcom -lxpcom_core'
@@ -1705,12 +1705,9 @@ case "$target" in
     MOZ_DEBUG_FLAGS='-Zi'
     MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
     MOZ_FIX_LINK_PATHS=
-    MOZ_JPEG_LIBS='$(LIBXUL_DIST)/lib/mozjpeg.lib'
     MOZ_JS_LIBS='$(LIBXUL_DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib'
     MOZ_OPTIMIZE_FLAGS='-O1'
-    MOZ_PNG_LIBS='$(LIBXUL_DIST)/lib/mozpng.lib'
     MOZ_XPCOM_OBSOLETE_LIBS='$(LIBXUL_DIST)/lib/xpcom_compat.lib'
-    MOZ_ZLIB_LIBS='$(LIBXUL_DIST)/lib/mozz.lib'
     OBJ_SUFFIX=obj
     RANLIB='echo not_ranlib'
     STRIP='echo not_strip'
@@ -1766,10 +1763,6 @@ case "$target" in
         RCFLAGS='-O coff --use-temp-file'
         # mingw doesn't require kernel32, user32, and advapi32 explicitly
         LIBS="$LIBS -lgdi32 -lwinmm -lwsock32"
-        MOZ_JPEG_LIBS='-L$(LIBXUL_DIST)/lib -ljpeg$(MOZ_BITS)$(VERSION_NUMBER)'
-        MOZ_ZLIB_LIBS='-L$(LIBXUL_DIST)/lib -lmozz'
-        MOZ_PNG_LIBS='-L$(LIBXUL_DIST)/lib -lpng'
-        MOZ_JS_LIBS='-L$(LIBXUL_DIST)/lib -ljs$(MOZ_BITS)$(VERSION_NUMBER)'
         MOZ_FIX_LINK_PATHS=
         DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib -lxpcom -lxpcom_core'
         XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/lib -lxpcom'
@@ -1805,9 +1798,6 @@ case "$target" in
         MOZ_DEBUG_FLAGS='-Zi'
         MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
     	MOZ_OPTIMIZE_FLAGS='-O1'
-        MOZ_JPEG_LIBS='$(LIBXUL_DIST)/lib/jpeg$(MOZ_BITS)$(VERSION_NUMBER).lib'
-        MOZ_ZLIB_LIBS='$(LIBXUL_DIST)/lib/mozz.lib'
-        MOZ_PNG_LIBS='$(LIBXUL_DIST)/lib/png.lib'
         MOZ_JS_LIBS='$(LIBXUL_DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib'
         MOZ_FIX_LINK_PATHS=
         DYNAMIC_XPCOM_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib'
@@ -1816,6 +1806,8 @@ case "$target" in
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
         MOZ_XPCOM_OBSOLETE_LIBS='$(LIBXUL_DIST)/lib/xpcom_compat.lib'
     fi
+    MOZ_JPEG_LIBS='$(call EXPAND_LIBNAME_PATH,jpeg$(MOZ_BITS)$(VERSION_NUMBER),$(DEPTH)/jpeg)'
+    MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,png,$(DEPTH)/modules/libimg/png)'
     AC_DEFINE(HAVE_SNPRINTF)
     AC_DEFINE(_WINDOWS)
     AC_DEFINE(_WIN32)
@@ -2154,9 +2146,6 @@ case "$target" in
         MOZ_XPCOM_OBSOLETE_LIBS='$(LIBXUL_DIST)/lib/xpcomct.lib'
         DYNAMIC_XPCOM_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcomcor.lib'
         LIBXUL_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib'
-        MOZ_JPEG_LIBS='$(LIBXUL_DIST)/lib/mozjpeg.$(LIB_SUFFIX)'
-        MOZ_ZLIB_LIBS='$(LIBXUL_DIST)/lib/mozz.$(LIB_SUFFIX)'
-        MOZ_PNG_LIBS='$(LIBXUL_DIST)/lib/mozpng.$(LIB_SUFFIX)'
     fi
     ;;
 
@@ -7306,24 +7295,24 @@ if test "$MOZ_SVG" -o "$MOZ_ENABLE_CANVAS" -o "$MOZ_ENABLE_CAIRO_GFX" ; then
        AC_SUBST(PNG_FUNCTIONS_FEATURE)
 
        if test "$_WIN32_MSVC"; then
-           MOZ_CAIRO_LIBS='$(LIBXUL_DIST)/lib/mozcairo.lib $(LIBXUL_DIST)/lib/mozlibpixman.lib'
+           MOZ_CAIRO_LIBS='$(DEPTH)/gfx/cairo/cairo/src/mozcairo.lib $(DEPTH)/gfx/cairo/libpixman/src/mozlibpixman.lib'
            if test "$MOZ_ENABLE_GLITZ"; then
-               MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS "'$(LIBXUL_DIST)/lib/mozglitz.lib $(LIBXUL_DIST)/lib/mozglitzwgl.lib'
+               MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS "'$(DEPTH)/gfx/cairo/glitz/src/mozglitz.lib $(DEPTH)/gfx/cairo/glitz/src/wgl/mozglitzwgl.lib'
            fi
        else
-           MOZ_CAIRO_LIBS='-L$(LIBXUL_DIST)/lib'" -lmozcairo -lmozlibpixman $CAIRO_FT_LIBS"
+           MOZ_CAIRO_LIBS='-L$(DEPTH)/gfx/cairo/cairo/src -lmozcairo -L$(DEPTH)/gfx/cairo/libpixman/src -lmozlibpixman'" $CAIRO_FT_LIBS"
 
            if test "$MOZ_X11"; then
                MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $XLDFLAGS -lXrender -lfreetype -lfontconfig"
            fi
 
            if test "$MOZ_ENABLE_GLITZ"; then
-               MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS -lmozglitz"
+               MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS "'-L$(DEPTH)/gfx/cairo/glitz/src -lmozglitz'
                if test "$MOZ_X11"; then
-                   MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS -lmozglitzglx -lGL"
+                   MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS "'-L$(DEPTH)/gfx/cairo/glitz/src/glx -lmozglitzglx -lGL'
                fi
                if test "$MOZ_WIDGET_TOOLKIT" = "windows"; then
-                   MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS -lmozglitzwgl"
+                   MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS "'-L$(DEPTH)/gfx/cairo/glitz/src/wgl -lmozglitzwgl'
                fi
            fi
        fi
