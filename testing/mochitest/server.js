@@ -297,7 +297,7 @@ function linksToTableRows(links)
       : "";
     if (value instanceof Object) {
       response += TR({class: "dir", id: "tr-" + link },
-                     TD({colspan: "3"},"&nbsp;"));
+                     TD({colspan: "3"},"&#160;"));
       response += linksToTableRows(value);
     } else {
       response += TR({class: classVal, id: "tr-" + link},
