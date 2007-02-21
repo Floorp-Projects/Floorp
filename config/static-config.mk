@@ -48,13 +48,13 @@ STATIC_REQUIRES += \
 	$(NULL)
 
 STATIC_EXTRA_LIBS += \
-	$(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/components/$(LIB_PREFIX),$(shell cat $(FINAL_LINK_COMPS)))) \
-	$(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/$(LIB_PREFIX),$(shell cat $(FINAL_LINK_LIBS)))) \
+	$(addsuffix .$(LIB_SUFFIX),$(addprefix $(DEPTH)/staticlib/components/$(LIB_PREFIX),$(shell cat $(FINAL_LINK_COMPS)))) \
+	$(addsuffix .$(LIB_SUFFIX),$(addprefix $(DEPTH)/staticlib/$(LIB_PREFIX),$(shell cat $(FINAL_LINK_LIBS)))) \
 	$(NULL)
 
 STATIC_COMPONENT_LIST = $(shell cat $(FINAL_LINK_COMP_NAMES))
 
-STATIC_EXTRA_DEPS	+= $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/components/$(LIB_PREFIX),$(shell cat $(FINAL_LINK_COMPS)))) $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/$(LIB_PREFIX),$(shell cat $(FINAL_LINK_LIBS))))
+STATIC_EXTRA_DEPS	+= $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DEPTH)/staticlib/components/$(LIB_PREFIX),$(shell cat $(FINAL_LINK_COMPS)))) $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DEPTH)/staticlib/$(LIB_PREFIX),$(shell cat $(FINAL_LINK_LIBS))))
 
 STATIC_EXTRA_DEPS	+= \
 	$(topsrcdir)/config/static-config.mk \

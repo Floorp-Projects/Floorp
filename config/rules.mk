@@ -687,20 +687,24 @@ HOST_LIBS_DEPS = $(filter %.$(LIB_SUFFIX), $(HOST_LIBS))
 DSO_LDOPTS_DEPS = $(EXTRA_DSO_LIBS) $(filter %.$(LIB_SUFFIX), $(EXTRA_DSO_LDOPTS))
 
 ##############################################
-libs:: $(SUBMAKEFILES) $(MAKE_DIRS) $(HOST_LIBRARY) $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(HOST_PROGRAM) $(PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(SIMPLE_PROGRAMS) $(MAPS) $(JAVA_LIBRARY)
+libs:: $(SUBMAKEFILES) $(MAKE_DIRS) $(HOST_LIBRARY) $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(HOST_PROGRAM) $(PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(SIMPLE_PROGRAMS) $(JAVA_LIBRARY)
 ifndef NO_DIST_INSTALL
-ifneq (,$(BUILD_STATIC_LIBS)$(FORCE_STATIC_LIB))
 ifdef LIBRARY
+ifdef EXPORT_LIBRARY # Stage libs that will be linked into a static build
 ifdef IS_COMPONENT
-	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(DIST)/lib/components
+	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(DEPTH)/staticlib/components
+else
+	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(DEPTH)/staticlib
+endif
+endif # EXPORT_LIBRARY
+ifdef DIST_INSTALL
+ifdef IS_COMPONENT
+	$(error Shipping static component libs makes no sense.)
 else
 	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(DIST)/lib
 endif
+endif # DIST_INSTALL
 endif # LIBRARY
-endif # BUILD_STATIC_LIBS || FORCE_STATIC_LIB
-ifdef MAPS
-	$(INSTALL) $(IFLAGS1) $(MAPS) $(FINAL_TARGET)
-endif
 ifdef SHARED_LIBRARY
 ifdef IS_COMPONENT
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(FINAL_TARGET)/components
