@@ -188,6 +188,9 @@ include $(topsrcdir)/config/config.mk
 ifndef MOZ_ENABLE_LIBXUL
 SHARED_LIBRARY_LIBS += \
 		$(DEPTH)/embedding/base/libembed_base_s.$(LIB_SUFFIX) \
+		$(NULL)
+
+EXTRA_DSO_LDOPTS += \
 		$(DEPTH)/profile/dirserviceprovider/src/libprofdirserviceprovider_s.$(LIB_SUFFIX) \
 		$(NULL)
 endif
