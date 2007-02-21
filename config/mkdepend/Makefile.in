@@ -81,3 +81,4 @@ endif
 
 export:: $(HOST_PROGRAM)
 
+$(HOST_OBJS): def.h ifparser.h imakemdep.h
