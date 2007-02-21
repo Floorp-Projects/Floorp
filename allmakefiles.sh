@@ -1096,6 +1096,7 @@ calendar/sunbird/base/Makefile
 
 MAKEFILES_macbrowser="
 camino/Makefile
+camino/flashblock/Makefile
 camino/installer/Makefile
 "
 
