@@ -52,7 +52,6 @@ NS_METHOD
 nsCP1125ToUnicodeConstructor(nsISupports* aOuter, REFNSIID aIID,
                             void **aResult) 
 {
-  return CreateOneByteDecoder(u1ByteCharset, 
-                              (uMappingTable*) &g_utMappingTable,
+  return CreateOneByteDecoder((uMappingTable*) &g_utMappingTable,
                               aOuter, aIID, aResult);
 }
