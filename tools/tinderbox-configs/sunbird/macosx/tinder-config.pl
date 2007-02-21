@@ -40,7 +40,7 @@ $BuildAdministrator = 'build@mozilla.org';
 #$BuildDebug        = 0;      # Debug or Opt (Darwin)
 #$ReportStatus      = 1;      # Send results to server, or not
 #$ReportFinalStatus = 1;      # Finer control over $ReportStatus.
-$UseTimeStamp      = 0;      # Use the CVS 'pull-by-timestamp' option, or not
+#$UseTimeStamp      = 1;      # Use the CVS 'pull-by-timestamp' option, or not
 #$BuildOnce         = 0;      # Build once, don't send results to server
 #$TestOnly          = 0;      # Only run tests, don't pull/build
 #$BuildEmbed        = 0;      # After building seamonkey, go build embed app.
@@ -50,10 +50,10 @@ $UseTimeStamp      = 0;      # Use the CVS 'pull-by-timestamp' option, or not
 # Tests
 $CleanProfile             = 1;
 #$ResetHomeDirForTests     = 1;
-$ProductName              = 'Sunbird';
-$MacOSProductName         = 'Sunbird';
-#$ProductName              = 'Calendar';
-#$MacOSProductName         = 'Calendar';
+#$ProductName              = 'Sunbird';
+#$MacOSProductName         = 'Sunbird';
+$ProductName              = 'Calendar';
+$MacOSProductName         = 'Calendar';
 $VendorName               = "";
 
 #$RunMozillaTests          = 1;  # Allow turning off of all tests if needed.
@@ -184,7 +184,7 @@ $BuildLocalesArgs = "ZIP_IN=/builds/tinderbox/Sb-Trunk/Darwin_8.8.4_Depend/sunbi
 $BuildTree  = 'Sunbird';
 
 #$BuildName = '';
-$BuildTag = 'SUNBIRD_0_3_1_RELEASE';
+#$BuildTag = 'SUNBIRD_0_3_1_RELEASE';
 #$BuildConfigDir = 'mozilla/config';
 #$Topsrcdir = 'mozilla';
 
@@ -207,8 +207,8 @@ $BinaryName = 'sunbird-bin';
 $ReleaseBuild  = 1;
 $LocaleProduct = "calendar";
 $shiptalkback  = 1;
-#$ReleaseToLatest = 1; # Push the release to latest-<milestone>?
-#$ReleaseToDated = 1; # Push the release to YYYY-MM-DD-HH-<milestone>?
+$ReleaseToLatest = 1; # Push the release to latest-<milestone>?
+$ReleaseToDated = 1; # Push the release to YYYY-MM-DD-HH-<milestone>?
 $build_hour    = "3";
 $package_creation_path = "/calendar/installer";
 # needs setting for mac + talkback:
@@ -220,20 +220,20 @@ $ftp_path      = "/home/ftp/pub/calendar/sunbird/nightly";
 $url_path      = "http://ftp.mozilla.org/pub/mozilla.org/calendar/sunbird/nightly";
 #$tbox_ftp_path = $ftp_path;
 #$tbox_url_path = $url_path;
-#$milestone     = "trunk";
+$milestone     = "trunk";
 $notify_list   = 'build-announce@mozilla.org';
 $stub_installer = 0;
 $sea_installer = 0;
 $archive       = 1;
 $push_raw_xpis = 0;
-#$update_package = 1;
-#$update_product = "Sunbird";
-#$update_version = "trunk";
-#$update_platform = "Darwin_Universal-gcc3";
-#$update_hash = "sha1";
-#$update_filehost = "ftp.mozilla.org";
-#$update_ver_file = 'calendar/sunbird/config/version.txt';
-#$update_pushinfo = 1;
+$update_package = 1;
+$update_product = "Sunbird";
+$update_version = "trunk";
+$update_platform = "Darwin_Universal-gcc3";
+$update_hash = "sha1";
+$update_filehost = "ftp.mozilla.org";
+$update_ver_file = 'calendar/sunbird/config/version.txt';
+$update_pushinfo = 1;
 
 # Reboot the OS at the end of build-and-test cycle. This is primarily
 # intended for Win9x, which can't last more than a few cycles before
