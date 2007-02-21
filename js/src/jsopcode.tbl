@@ -401,7 +401,7 @@ OPDEF(JSOP_XMLOBJECT,     180,"xmlobject",  NULL,     3,  0,  1, 19,  JOF_CONST)
 OPDEF(JSOP_XMLCDATA,      181,"xmlcdata",   NULL,     3,  0,  1, 19,  JOF_CONST)
 OPDEF(JSOP_XMLCOMMENT,    182,"xmlcomment", NULL,     3,  0,  1, 19,  JOF_CONST)
 OPDEF(JSOP_XMLPI,         183,"xmlpi",      NULL,     3,  1,  1, 19,  JOF_CONST)
-OPDEF(JSOP_GETMETHOD,     184,"getmethod",  NULL,     3,  1,  1, 18,  JOF_CONST|JOF_PROP)
+OPDEF(JSOP_CALLPROP,      184,"callprop",   NULL,     3,  1,  1, 18,  JOF_CONST|JOF_PROP)
 OPDEF(JSOP_GETFUNNS,      185,"getfunns",   NULL,     1,  0,  1, 19,  JOF_BYTE)
 OPDEF(JSOP_FOREACH,       186,"foreach",    NULL,     1,  1,  1,  0,  JOF_BYTE)
 OPDEF(JSOP_DELDESC,       187,"deldesc",    NULL,     1,  2,  1, 17,  JOF_BYTE |JOF_ELEM|JOF_DEL)
@@ -426,7 +426,7 @@ OPDEF(JSOP_RESETBASE0,    191,"resetbase0", NULL,     1,  0,  0,  0,  JOF_BYTE)
  */
 OPDEF(JSOP_STARTXML,      192,"startxml",    NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_STARTXMLEXPR,  193,"startxmlexpr",NULL,    1,  0,  0,  0,  JOF_BYTE)
-OPDEF(JSOP_SETMETHOD,     194,"setmethod",   NULL,    3,  2,  1,  3,  JOF_CONST|JOF_PROP|JOF_SET|JOF_ASSIGNING|JOF_DETECTING)
+OPDEF(JSOP_UNUSED194,     194,"",            NULL,    1,  0,  0,  0,  0)
 
 /*
  * Stop interpretation, emitted at end of script to save the threaded bytecode

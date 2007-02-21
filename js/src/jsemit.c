@@ -2276,25 +2276,6 @@ CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
     return ok;
 }
 
-/*
- * Secret handshake with js_EmitTree's TOK_LP/TOK_NEW case logic, to flag all
- * uses of JSOP_GETMETHOD that implicitly qualify the method property's name
- * with a function:: prefix.  All other JSOP_GETMETHOD and JSOP_SETMETHOD uses
- * must be explicit, so we need a distinct source note (SRC_METHODBASE rather
- * than SRC_PCBASE) for round-tripping through the beloved decompiler.
- */
-#define JSPROP_IMPLICIT_FUNCTION_NAMESPACE      0x100
-
-static jssrcnote
-SrcNoteForPropOp(JSParseNode *pn, JSOp op)
-{
-    return ((op == JSOP_GETMETHOD &&
-             !(pn->pn_attrs & JSPROP_IMPLICIT_FUNCTION_NAMESPACE)) ||
-            op == JSOP_SETMETHOD)
-           ? SRC_METHODBASE
-           : SRC_PCBASE;
-}
-
 static JSBool
 EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 {
@@ -2374,7 +2355,7 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 
         do {
             /* Walk back up the list, emitting annotated name ops. */
-            if (js_NewSrcNote2(cx, cg, SrcNoteForPropOp(pndot, pndot->pn_op),
+            if (js_NewSrcNote2(cx, cg, SRC_PCBASE,
                                CG_OFFSET(cg) - pndown->pn_offset) < 0) {
                 return JS_FALSE;
             }
@@ -2391,7 +2372,7 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
             return JS_FALSE;
     }
 
-    if (js_NewSrcNote2(cx, cg, SrcNoteForPropOp(pn, op),
+    if (js_NewSrcNote2(cx, cg, SRC_PCBASE,
                        CG_OFFSET(cg) - pn2->pn_offset) < 0) {
         return JS_FALSE;
     }
@@ -5396,8 +5377,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             pn2->pn_type != TOK_RB &&
             pn2->pn_type != TOK_RC &&
 #endif
-            js_NewSrcNote2(cx, cg, SrcNoteForPropOp(pn2, pn2->pn_op),
-                           CG_OFFSET(cg) - top) < 0) {
+            js_NewSrcNote2(cx, cg, SRC_PCBASE, CG_OFFSET(cg) - top) < 0) {
             return JS_FALSE;
         }
 
@@ -5832,16 +5812,15 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * constructable object expression.
          *
          * For E4X, if this expression is a dotted member reference, select
-         * JSOP_GETMETHOD instead of JSOP_GETPROP.  ECMA-357 separates XML
+         * JSOP_CALLPROP instead of JSOP_GETPROP.  ECMA-357 separates XML
          * method lookup from the normal property id lookup done for native
          * objects.
          */
         pn2 = pn->pn_head;
 #if JS_HAS_XML_SUPPORT
-        if (pn2->pn_type == TOK_DOT && pn2->pn_op != JSOP_GETMETHOD) {
+        if (pn2->pn_type == TOK_DOT) {
             JS_ASSERT(pn2->pn_op == JSOP_GETPROP);
-            pn2->pn_op = JSOP_GETMETHOD;
-            pn2->pn_attrs |= JSPROP_IMPLICIT_FUNCTION_NAMESPACE;
+            pn2->pn_op = JSOP_CALLPROP;
         }
 #endif
         if (!js_EmitTree(cx, cg, pn2))

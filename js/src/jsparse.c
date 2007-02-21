@@ -3810,9 +3810,7 @@ AssignExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             tc->flags |= TCF_FUN_HEAVYWEIGHT;
         break;
       case TOK_DOT:
-        pn2->pn_op = (pn2->pn_op == JSOP_GETMETHOD)
-                     ? JSOP_SETMETHOD
-                     : JSOP_SETPROP;
+        pn2->pn_op = JSOP_SETPROP;
         break;
       case TOK_LB:
         pn2->pn_op = JSOP_SETELEM;
@@ -4315,11 +4313,8 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             if (!pn3)
                 return NULL;
             tt = pn3->pn_type;
-            if (tt == TOK_NAME ||
-                (tt == TOK_DBLCOLON &&
-                 pn3->pn_arity == PN_NAME &&
-                 pn3->pn_expr->pn_type == TOK_FUNCTION)) {
-                pn2->pn_op = (tt == TOK_NAME) ? JSOP_GETPROP : JSOP_GETMETHOD;
+            if (tt == TOK_NAME) {
+                pn2->pn_op = JSOP_GETPROP;
                 pn2->pn_expr = pn;
                 pn2->pn_atom = pn3->pn_atom;
                 RecycleTree(pn3, tc);

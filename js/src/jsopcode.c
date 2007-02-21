@@ -3273,14 +3273,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 (void) PopOff(ss, lastop);
                 /* FALL THROUGH */
 
+#if JS_HAS_XML_SUPPORT
+              case JSOP_CALLPROP:
+#endif
               case JSOP_GETPROP:
               case JSOP_GETXPROP:
                 LOAD_ATOM(0);
 
               do_getprop:
                 GET_QUOTE_AND_FMT(index_format, dot_format, rval);
-
-              do_getprop_lval:
                 lval = POP_STR();
                 todo = Sprint(&ss->sprinter, fmt, lval, rval);
                 break;
@@ -3311,31 +3312,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     return NULL;
                 goto do_getprop;
 
-#if JS_HAS_XML_SUPPORT
-              BEGIN_LITOPX_CASE(JSOP_GETMETHOD, 0)
-                sn = js_GetSrcNote(jp->script, pc);
-                if (sn && SN_TYPE(sn) == SRC_PCBASE)
-                    goto do_getprop;
-                GET_QUOTE_AND_FMT("%s.function::[%s]", "%s.function::%s", rval);
-                goto do_getprop_lval;
-
-              BEGIN_LITOPX_CASE(JSOP_SETMETHOD, 0)
-                sn = js_GetSrcNote(jp->script, pc);
-                if (sn && SN_TYPE(sn) == SRC_PCBASE)
-                    goto do_setprop;
-                GET_QUOTE_AND_FMT("%s.function::[%s] %s= %s",
-                                  "%s.function::%s %s= %s",
-                                  xval);
-                goto do_setprop_rval;
-#endif
-
               case JSOP_SETPROP:
                 LOAD_ATOM(0);
-
-              do_setprop:
                 GET_QUOTE_AND_FMT("%s[%s] %s= %s", "%s.%s %s= %s", xval);
-
-              do_setprop_rval:
                 rval = POP_STR();
 
                 /*
