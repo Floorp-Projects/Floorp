@@ -3086,7 +3086,7 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
       if (LINE_REFLOW_REDO_NO_PULL == lineReflowStatus ||
           LINE_REFLOW_REDO_NEXT_BAND == lineReflowStatus) {
         if (lineLayout.NeedsBackup()) {
-          NS_ASSERTION(!forceBreakInContent, "Backuping up twice; this should never be necessary");
+          NS_ASSERTION(!forceBreakInContent, "Backing up twice; this should never be necessary");
           // If there is no saved break position, then this will set
           // set forceBreakInContent to null and we won't back up, which is
           // correct.
@@ -3219,7 +3219,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   if (impactedByFloats) {
     // There is a soft break opportunity at the start of the line, because
     // we can always move this line down below float(s).
-    if (aLineLayout.NotifyOptionalBreakPosition(frame->GetContent(), 0)) {
+    if (aLineLayout.NotifyOptionalBreakPosition(frame->GetContent(), 0, PR_TRUE)) {
       lineReflowStatus = LINE_REFLOW_REDO_NEXT_BAND;
     }
   }
@@ -3290,7 +3290,8 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
     (lineReflowStatus == LINE_REFLOW_STOP || lineReflowStatus == LINE_REFLOW_OK);
   if (needsBackup && aLineLayout.HaveForcedBreakPosition()) {
   	NS_WARNING("We shouldn't be backing up more than once! "
-               "Someone must have set a break opportunity beyond the available width");
+               "Someone must have set a break opportunity beyond the available width, "
+               "even though there were better break opportunities before it");
     needsBackup = PR_FALSE;
   }
   if (needsBackup) {

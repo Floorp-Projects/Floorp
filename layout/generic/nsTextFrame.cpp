@@ -5368,7 +5368,7 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
           if (canBreak) {
             // Remember that we *could* have broken here, even if we choose not to
             PRBool forceBreak =
-              lineLayout.NotifyOptionalBreakPosition(GetContent(), aTextData.mOffset);
+              lineLayout.NotifyOptionalBreakPosition(GetContent(), aTextData.mOffset, PR_TRUE);
             // See if there is room for the text
             if (forceBreak || (aTextData.mX + dimensions.width > maxWidth)) {
               // The text will not fit, or a break was forced.
@@ -5407,7 +5407,7 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
 #ifdef DEBUG
           PRBool forceBreak =
 #endif
-            lineLayout.NotifyOptionalBreakPosition(GetContent(), aTextData.mOffset);
+            lineLayout.NotifyOptionalBreakPosition(GetContent(), aTextData.mOffset, PR_TRUE);
           NS_ASSERTION(!forceBreak, "If we're supposed to break, we should be "
                        "really measuring");
         }
@@ -5530,7 +5530,8 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
         endsInWhitespace ? lastSegment : lastSegment - 1;
       if (lastWhitespaceSegment >= 0) {
         lineLayout.NotifyOptionalBreakPosition(GetContent(),
-            aTextData.mOffset + textRun.mSegments[lastWhitespaceSegment].ContentLen());
+            aTextData.mOffset + textRun.mSegments[lastWhitespaceSegment].ContentLen(),
+            PR_TRUE);
       }
   
       column += numCharsFit;
@@ -5633,9 +5634,10 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
   }
 
   if (rs == NS_FRAME_COMPLETE && 0 != aTextData.mX && endsInWhitespace &&
-      aTextData.mWrapping && aTextData.mX <= maxWidth) {
+      aTextData.mWrapping) {
     // Remember the break opportunity at the end of this frame
-    if (lineLayout.NotifyOptionalBreakPosition(GetContent(), aTextData.mOffset))
+    if (lineLayout.NotifyOptionalBreakPosition(GetContent(), aTextData.mOffset,
+                                               aTextData.mX <= maxWidth))
       return NS_INLINE_LINE_BREAK_AFTER(rs);
   }
 
