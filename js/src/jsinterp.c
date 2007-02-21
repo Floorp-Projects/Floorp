@@ -1968,9 +1968,13 @@ InternNonIntElementId(JSContext *cx, jsval idval, jsid *idp)
 static JSBool
 InternNonXmlObjectId(JSContext *cx, JSObject *obj, jsid *idp)
 {
-    if (!js_IsFunctionQName(cx, obj, idp))
-        return JS_FALSE;
-    return *idp != 0 || InternStringElementId(cx, OBJECT_TO_JSVAL(obj), idp);
+    if (obj) {
+        if (!js_IsFunctionQName(cx, obj, idp))
+            return JS_FALSE;
+        if (*idp != 0)
+            return JS_TRUE;
+    }
+    return InternStringElementId(cx, OBJECT_TO_JSVAL(obj), idp);
 }
 
 #define CHECK_ELEMENT_ID(obj, id)                                             \
