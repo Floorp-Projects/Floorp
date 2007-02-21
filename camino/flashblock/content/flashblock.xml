@@ -1,0 +1,267 @@
+<?xml version="1.0"?>
+
+<bindings
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:html="http://www.w3.org/1999/xhtml"
+>
+
+<binding id="flash">
+  <implementation>
+    <constructor>
+        <![CDATA[
+
+//From Jesse's XPCNativeWrapper: http://mavra.perilith.com/~luser/content/native.js
+function nativeMethod(untrustedObject, methodName)
+{
+  // happier stack traces and faster multiple calls
+  var fun = Components.lookupMethod(untrustedObject, methodName);
+  
+  return function()
+  {
+    return fun.apply(untrustedObject, arguments);
+  }
+}
+
+function flashblockCreatePlaceholder(isStandalone) {
+	// Create placeholder
+	var flashblockCreateElement = nativeMethod(document, "createElement");
+	var placeholder = flashblockCreateElement("div");
+	placeholder.isStandalone = isStandalone;
+	return placeholder;
+}
+
+// Substitute the animation with a placeholder
+function flashblockShowPlaceholder() {
+	// Just in case the object has been moved away from under our feet during
+	// the timeout, re-assign the parent node. See bug 13680
+	// parent = current.parentNode;
+	var newParent = current.parentNode;
+	parent = newParent ? newParent : parent;
+	parent.insertBefore(placeholder, current);
+	if(placeholder.isStandalone) {
+		placeholder.flashblock = "frame";
+		current.StopPlay();
+		current.LoadMovie(0, "");
+		current.prevWidth = current.width;
+		current.prevHeight = current.height;
+		current.width = current.height = 0;
+	} else {
+		placeholder.flashblock = "normal";
+		parent.removeChild(current); 
+	}
+}
+
+// Show the original animation
+function flashblockShowFlash() {
+	if(placeholder.flashblock == "frame") {
+		current.height = current.prevHeight;
+		current.width = current.prevWidth;
+		current.LoadMovie(0, current.src);
+	} else {
+		parent.insertBefore(current, placeholder);
+	}
+	parent.removeChild(placeholder);
+}
+
+function flashblockIsWhitelisted() {
+	// Check if the page that loaded the Flash site is whitelisted
+	// Thanks to Neil on #mozilla for suggesting this method, I would never have
+	// thought of it on my own. :-)
+	// Lor 20041215: Use "UIEvents" to make it work in post-1.0 FF
+	// (thanks to Neil again)
+	var flashblockEvent = document.createEvent("UIEvents");
+
+	if(flashblockEvent) {
+		flashblockEvent.initEvent("flashblockCheckLoad", true, true);
+		document.dispatchEvent(flashblockEvent);
+		if(flashblockEvent.getPreventDefault() == true) {
+			// Whitelisted
+			return true;
+		}
+	}
+	return false;
+}
+
+function flashblockSetImage(placeholder, type) {
+	var inactiveurl = "chrome://flashblock/content/" + type + ".png";
+	var activeurl = "chrome://flashblock/content/flashplay.png";
+	placeholder.bgInactive = "url(" + inactiveurl + ") no-repeat center";
+	placeholder.bgActive = "url(" + activeurl + ") no-repeat center";
+	placeholder.style.background = placeholder.bgInactive;
+}
+
+function flashblockStylePlaceholder(flash, placeholder) {
+	// If object's size was relative, use that.
+	// Otherwise, set size to minimum 32x32 px
+	placeholder.style.minWidth = "32px !important";
+	placeholder.style.minHeight = "32px !important";
+	// The size and positioning may come from a class
+	placeholder.setAttribute("class", flash.getAttribute("class"));
+
+	if(flash.width.match("%$")) {
+		placeholder.style.width = current.width;
+	} else {
+		var width = parseInt(flash.width || flash.style.width);
+		if (width && width >= 32) {
+			placeholder.style.width = width + "px";
+		}
+	}
+
+	if(flash.height.match("%$")) {
+		placeholder.style.height = flash.height;
+	} else {
+		var height = parseInt(flash.height || flash.style.height);
+		if (height && height >= 32) {
+			placeholder.style.height = height + "px";
+		}
+	}
+
+	// Add styling rules to placeholder div.
+	placeholder.style.background = placeholder.bgInactive;
+	placeholder.style.border = "1px solid #dfdfdf";
+	placeholder.style.cursor = "pointer";
+	placeholder.style.overflow = "hidden";
+
+	// The size of the placeholder should include borders too,
+	// otherwise scrollbars appear for blocked standalone objects
+	placeholder.style.MozBoxSizing = "border-box";
+}
+
+var current = this;
+var parent = current.parentNode;
+
+if(flashblockIsWhitelisted())
+	return;
+
+// Check parent too (case of working EMBED inside broken OBJECT)
+if (current.overrideCTV || parent.overrideCTV) {
+	return;
+}
+current.overrideCTV = true;
+
+if (this.brokenObject) {
+	var params = this.getElementsByTagName("param");
+	var isFlash = false;
+	for (var ii = 0; ii < params.length; ii++) {
+		var pvalue = params[ii].getAttribute("value");
+		if (/\.swf/i.test(pvalue)) {
+			isFlash = true;
+			break;
+		}
+	}
+	var embeds = this.getElementsByTagName("embed");
+	for (var jj = 0; jj < embeds.length; jj++) {
+		var embed = embeds[jj];
+		if (/x-shockwave-flash/i.test(embed.getAttribute("type")) ||
+			/\.swf/i.test(embed.getAttribute("src"))) {
+			isFlash = true;
+			break;
+		}
+	}
+	if (!isFlash) {return;}
+}
+
+// Create placeholder div
+var isStandalone = ("src" in current && current.src == current.ownerDocument.location);
+var placeholder = flashblockCreatePlaceholder(isStandalone);
+
+// Set placeholder image
+var type = this.flashblockType ? this.flashblockType : "flash"
+flashblockSetImage(placeholder, type);
+
+flashblockStylePlaceholder(current, placeholder);
+
+// Change the placeholder background when the mouse enters/exits the div.
+placeholder.onmouseover = function()
+{
+	this.style.background = this.bgActive;
+}
+
+placeholder.onmouseout = function()
+{
+	this.style.background = this.bgInactive;
+}
+
+// Replace the flash document with a placeholder.
+var flashblockSetTimeout = nativeMethod(window, "setTimeout");
+flashblockSetTimeout(flashblockShowPlaceholder, 0);
+
+// Replace the placeholder with the flash document.
+placeholder.onclick = flashblockShowFlash;
+
+        ]]>
+    </constructor>
+  </implementation>
+</binding>
+
+<binding id="director" extends="#flash">
+  <implementation>
+    <field name="flashblockType">"director"</field>
+  </implementation>
+</binding>
+
+<binding id="authorware" extends="#flash">
+  <implementation>
+    <field name="flashblockType">"authorware"</field>
+  </implementation>
+</binding>
+
+<binding id="brokenobject" extends="#flash">
+  <implementation>
+    <field name="brokenObject">"yes"</field>
+  </implementation>
+</binding>
+
+<binding id="sifr-replaced">
+  <implementation>
+    <constructor>
+        <![CDATA[
+event = document.createEvent("UIEvents");
+
+if(event) {
+	event.initEvent("flashblockCheckLoad", true, true);
+	document.dispatchEvent(event);
+	if(event.getPreventDefault() == true) {
+		// Whitelisted
+		return;
+	}
+}
+
+this.style.height = 0;
+this.style.width = 0;
+this.style.display = "none !important";
+this.style.position ="absolute";
+this.style.overflow ="hidden";
+        ]]>
+    </constructor>
+  </implementation>
+</binding>
+
+<binding id="sifr-alternate">
+  <implementation>
+    <constructor>
+        <![CDATA[
+var event = document.createEvent("UIEvents");
+
+if(event) {
+	event.initEvent("flashblockCheckLoad", true, true);
+	document.dispatchEvent(event);
+	if(event.getPreventDefault() == true) {
+		// Whitelisted
+		return;
+	}
+}
+
+this.style.visibility = "visible !important";
+this.style.display = "block !important";
+//this.style.position = "static !important";
+this.style.left = "auto !important";
+this.style.top = "auto !important";
+this.style.height = "auto !important";
+this.style.width = "auto !important";
+        ]]>
+    </constructor>
+  </implementation>
+</binding>
+
+</bindings>

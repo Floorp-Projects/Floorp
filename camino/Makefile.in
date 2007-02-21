@@ -44,6 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = \
 	IBPalette \
+	flashblock \
 	$(NULL)
 
 APP_NAME	= Camino

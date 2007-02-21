@@ -58,6 +58,7 @@ class nsISupportsArray;
   IBOutlet NSButton *mImageResize;
   IBOutlet NSButton *mPreventAnimation;
   IBOutlet NSButton *mEditWhitelist;
+  IBOutlet NSButton *mEnableFlashBlock;  
 
   IBOutlet id mWhitelistPanel;
   IBOutlet ExtendedTableView*   mWhitelistTable;
@@ -82,6 +83,7 @@ class nsISupportsArray;
 -(IBAction) clickEnableImageResizing:(id)sender;
 -(IBAction) clickPreventAnimation:(id)sender;
 -(IBAction) editWhitelist:(id)sender;
+-(IBAction) clickEnableFlashBlock:(id)sender;
 
 -(IBAction) clickEnableAnnoyanceBlocker:(id)sender;
 -(void) setAnnoyingWindowPrefsTo:(BOOL)inValue;

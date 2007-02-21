@@ -56,8 +56,9 @@
 // but that requires linkage and extra search paths.                            
 static NSString* XPCOMShutDownNotificationName = @"XPCOMShutDown";              
 
-// needs to match the string in PreferenceManager.mm
+// need to match the strings in PreferenceManager.mm
 static NSString* const AdBlockingChangedNotificationName = @"AdBlockingChanged";
+static NSString* const kFlashBlockChangedNotificationName = @"FlashBlockChanged";
 
 // for camino.enable_plugins; needs to match string in BrowserWrapper.mm
 static NSString* const kEnablePluginsChangedNotificationName = @"EnablePluginsChanged";
@@ -76,6 +77,8 @@ const int kAnnoyancePrefSome = 3;
 -(NSString*)profilePath;
 - (int)annoyingWindowPrefs;
 - (int)preventAnimationCheckboxState;
+- (BOOL)isFlashBlockAllowed;
+- (void)updateFlashBlock;
 
 @end
 
@@ -144,6 +147,15 @@ const int kAnnoyancePrefSome = 3;
   BOOL enableAdBlock = [self getBooleanPref:"camino.enable_ad_blocking" withSuccess:&gotPref];
   [mEnableAdBlocking setState:enableAdBlock];
 
+  // Only allow FlashBlock if dependencies are set correctly
+  BOOL flashBlockAllowed = [self isFlashBlockAllowed];
+  [mEnableFlashBlock setEnabled:flashBlockAllowed];
+ 
+  if (flashBlockAllowed) {
+    BOOL enableFlashBlock = [self getBooleanPref:"camino.enable_flashblock" withSuccess:nil];
+    [mEnableFlashBlock setState:(enableFlashBlock ? NSOnState : NSOffState)];
+  }
+
   // Set inital values for tabfocus pref.  Internally, it's a bitwise additive pref:
   // bit 0 adds focus for text fields (not exposed in the UI, so not given a constant)
   // bit 1 adds focus for other form elements (kFocusForms)
@@ -167,6 +179,9 @@ const int kAnnoyancePrefSome = 3;
 -(IBAction) clickEnableJS:(id)sender
 {
   [self setPref:"javascript.enabled" toBoolean:([sender state] == NSOnState)];
+
+  // FlashBlock depends on Javascript so make sure to update the FlashBlock settings
+  [self updateFlashBlock];
 }
 
 //
@@ -188,6 +203,9 @@ const int kAnnoyancePrefSome = 3;
 {
   [self setPref:"camino.enable_plugins" toBoolean:([sender state] == NSOnState)];
   [[NSNotificationCenter defaultCenter] postNotificationName:kEnablePluginsChangedNotificationName object:nil];
+
+  // FlashBlock depends on plug-ins so make sure to update the FlashBlock settings
+  [self updateFlashBlock];
 }
 
 //
@@ -233,6 +251,18 @@ const int kAnnoyancePrefSome = 3;
 {
   [sender setAllowsMixedState:NO];
   [self setPref:"image.animation_mode" toString:([sender state] ? @"once" : @"normal")];
+}
+
+//
+// clickEnableFlashBlock:
+//
+// Enable and disable FlashBlock.  When enabled, an icon is displayed and the 
+// Flash animation plays when the user clicks it.  When disabled, Flash plays automatically
+//
+-(IBAction) clickEnableFlashBlock:(id)sender
+{
+  [self setPref:"camino.enable_flashblock" toBoolean:([sender state] == NSOnState)];
+  [[NSNotificationCenter defaultCenter] postNotificationName:kFlashBlockChangedNotificationName object:nil];
 }
 
 //
@@ -499,6 +529,45 @@ const int kAnnoyancePrefSome = 3;
   if (NS_FAILED(rv))
     return nil;
   return [NSString stringWithUTF8String:nativePath.get()];
+}
+
+//
+// isFlashBlockAllowed
+//
+// Checks whether FlashBlock can be enabled
+// FlashBlock only allowed if javascript and plug-ins enabled
+// NOTE: This code is duplicated in PreferenceManager.mm since the FlashBlock checkbox
+// settings are done by WebFeatures and stylesheet loading is done by PreferenceManager
+//
+-(BOOL) isFlashBlockAllowed
+{
+  BOOL gotPref = NO;
+  BOOL jsEnabled = [self getBooleanPref:"javascript.enabled" withSuccess:&gotPref] && gotPref;
+  BOOL pluginsEnabled = [self getBooleanPref:"camino.enable_plugins" withSuccess:&gotPref] || !gotPref;
+
+  return jsEnabled && pluginsEnabled;
+}
+
+//
+// updateFlashBlock
+//
+// Update the state of the FlashBlock checkbox
+//
+-(void) updateFlashBlock
+{
+  BOOL allowed = [self isFlashBlockAllowed];
+  [mEnableFlashBlock setEnabled:allowed];
+
+  // FlashBlock state can only change if it's already enabled 
+  // since changing dependencies won't have affect on disabled FlashBlock
+  if (![self getBooleanPref:"camino.enable_flashblock" withSuccess:nil])
+    return;
+
+  // FlashBlock preference is enabled.  Checkbox is on if FlashBlock also allowed
+  [mEnableFlashBlock setState:(allowed ? NSOnState : NSOffState)];
+ 
+  // Always send a notification, dependency verification is done by receiver.
+  [[NSNotificationCenter defaultCenter] postNotificationName:kFlashBlockChangedNotificationName object:nil];
 }
 
 @end

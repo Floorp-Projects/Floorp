@@ -1,0 +1,79 @@
+/*
+ * Flash Click to View by Ted Mielczarek (luser_mozilla@perilith.com)
+ * Original code by Jesse Ruderman (jruderman@hmc.edu)
+ * taken from http://www.squarefree.com/userstyles/xbl.html
+ *
+ * Change XBL binding for <object> tags, click to view flash
+ */
+
+/*
+ * Flash identifiers.
+*/
+object[classid*=":D27CDB6E-AE6D-11cf-96B8-444553540000"],
+object[codebase*="swflash.cab"],
+object[data*=".swf"],
+embed[type="application/x-shockwave-flash"],
+embed[src*=".swf"],
+object[type="application/x-shockwave-flash"],
+object[src*=".swf"]
+{ -moz-binding: url("chrome://flashblock/content/flashblock.xml#flash") !important; }
+
+/*
+ * Director identifiers.
+*/
+object[classid*=":166B1BCA-3F9C-11CF-8075-444553540000"],
+object[codebase*="sw.cab"],
+object[data*=".dcr"],
+embed[type="application/x-director"],
+embed[src*=".dcr"],
+object[type="application/x-director"],
+object[src*=".dcr"]
+{ -moz-binding: url("chrome://flashblock/content/flashblock.xml#director") !important; }
+
+/*
+ * Authorware identifiers.
+*/
+object[classid*=":15B782AF-55D8-11D1-B477-006097098764"],
+object[codebase*="awswaxf.cab"],
+object[data*=".aam"],
+embed[type="application/x-authorware-map"],
+embed[src*=".aam"],
+object[type="application/x-authorware-map"],
+object[src*=".aam"]
+{ -moz-binding: url("chrome://flashblock/content/flashblock.xml#authorware") !important; }
+
+/*
+ * Broken Objects.
+*/
+object
+{ -moz-binding: url("chrome://flashblock/content/flashblock.xml#brokenobject") !important; }
+
+/*
+* Java identifiers.
+*/
+/*
+applet,
+object[classid*=":8AD9C840-044E-11D1-B3E9-00805F499D93"],
+object[classid^="clsid:CAFEEFAC-"],
+object[classid^="java:"],
+object[type="application/x-java-applet"],
+embed[classid*=":8AD9C840-044E-11D1-B3E9-00805F499D93"],
+embed[classid^="clsid:CAFEEFAC-"],
+embed[classid^="java:"],
+embed[type="application/x-java-applet"]
+{
+ -moz-binding: none !important;
+}
+*/
+
+/* sIFR styles */
+.sIFR-flash, .sIFR-flash object, .sIFR-flash embed,
+.sIFR-replaced div[style*="chrome://flashblock"] {
+  -moz-binding: url("chrome://flashblock/content/flashblock.xml#sifr-replaced") !important;
+}
+
+span.sIFR-alternate {
+  -moz-binding: url("chrome://flashblock/content/flashblock.xml#sifr-alternate") !important;
+  position: static !important;
+  letter-spacing: normal !important;
+}

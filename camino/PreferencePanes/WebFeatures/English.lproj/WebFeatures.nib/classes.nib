@@ -18,6 +18,7 @@
                 addWhitelistSite = id; 
                 clickEnableAdBlocking = id; 
                 clickEnableAnnoyanceBlocker = id; 
+                clickEnableFlashBlock = id; 
                 clickEnableImageResizing = id; 
                 clickEnableJS = id; 
                 clickEnableJava = id; 
@@ -37,6 +38,7 @@
                 mEditWhitelist = NSButton; 
                 mEnableAdBlocking = NSButton; 
                 mEnableAnnoyanceBlocker = NSButton; 
+                mEnableFlashBlock = NSButton; 
                 mEnableJS = NSButton; 
                 mEnableJava = NSButton; 
                 mEnablePlugins = NSButton; 

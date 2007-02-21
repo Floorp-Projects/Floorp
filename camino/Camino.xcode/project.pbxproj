@@ -6564,6 +6564,7 @@
 			dstSubfolderSpec = 6;
 			files = (
 				3F44AD5805BDFB9F00CB4B08,
+				3F44AD5805BDFB9F00CB4B18,
 				3F44AD5905BDFB9F00CB4B08,
 			);
 			isa = PBXCopyFilesBuildPhase;
@@ -6571,6 +6572,12 @@
 		};
 		3F44AD5805BDFB9F00CB4B08 = {
 			fileRef = F6BD650001B3184301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3F44AD5805BDFB9F00CB4B18 = {
+			fileRef = F6BD650001B3184301A96307;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -10294,6 +10301,7 @@
 			dstSubfolderSpec = 6;
 			files = (
 				3F44AF7305BDFBA000CB4B08,
+				3F44AF7305BDFBA000CB4B18,
 				3F44AF7405BDFBA000CB4B08,
 			);
 			isa = PBXCopyFilesBuildPhase;
@@ -10301,6 +10309,12 @@
 		};
 		3F44AF7305BDFBA000CB4B08 = {
 			fileRef = F6BD650001B3184301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3F44AF7305BDFBA000CB4B18 = {
+			fileRef = F6BD650001B3184301A96307;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -18744,6 +18758,7 @@
 		F6BD64FF01B3184301A962F7 = {
 			children = (
 				F6BD650001B3184301A962F7,
+				F6BD650001B3184301A96307,
 				F54EF7ED022A2F9C01A80165,
 				F5DA444A027DD5AA01A80166,
 			);
@@ -18757,6 +18772,14 @@
 			lastKnownFileType = archive.jar;
 			name = embed.jar;
 			path = ../dist/Embed/chrome/embed.jar;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		F6BD650001B3184301A96307 = {
+			isa = PBXFileReference;
+			lastKnownFileType = archive.jar;
+			name = flashblock.jar;
+			path = ../dist/Embed/chrome/flashblock.jar;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};

@@ -1,0 +1,10 @@
+Flash blocking for Camino is implemented using the FlashBlock extension
+from http://flashblock.mozdev.org/.  FlashBlock is available under the
+MPL/GPL/LGPL tri-license.  The files necessary for operation in Camino
+are placed in the content directory and referenced by the jar.mn
+manifest.  A contents.rdf file is included to allow Camino to identify
+the contents of flashblock.jar.
+
+Camino's bundled FlashBlock extension is currently synchronized with
+FlashBlock 1.5.2 from
+http://downloads.mozdev.org/flashblock/flashblock-1.5.2.xpi.

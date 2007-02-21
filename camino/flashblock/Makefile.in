@@ -1,0 +1,63 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is just a lowly Makefile.
+#
+# The Initial Developer of the Original Code is Google Inc.
+# Portions created by the Initial Developer are Copyright (C) 2007
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#  Mark Mentovai <mark@moxienet.com> (Original Author)
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/rules.mk
+
+# The presence of jar.mn causes $(SOURCE_CHROME_DIR)/$(JAR_FILE).jar to be
+# built and $(SOURCE_CHROME_DIR)/installed-chrome.txt to be updated.  Camino
+# uses $(TARGET_CHROME_DIR)/installed-chrome.txt instead, though, so copy
+# the jar and update the correct installed-chrome.txt file.
+
+SOURCE_CHROME_DIR	= $(DIST)/bin/chrome
+TARGET_CHROME_DIR	= $(DIST)/Embed/chrome
+INSTALLED_CHROME	= $(TARGET_CHROME_DIR)/installed-chrome.txt
+CHROME_TYPE		= content
+CHROME_PKG_NAME		= flashblock
+JAR_FILE		= $(CHROME_PKG_NAME)
+
+libs realchrome:: $(CHROME_DEPS)
+	chmod a-x $(INSTALLED_CHROME)
+	$(NSINSTALL) -t -m 0644 \
+	  $(SOURCE_CHROME_DIR)/$(JAR_FILE).jar $(TARGET_CHROME_DIR)
+	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/add-chrome.pl \
+	  $(INSTALLED_CHROME) 0 $(CHROME_TYPE) $(CHROME_PKG_NAME) $(JAR_FILE)
