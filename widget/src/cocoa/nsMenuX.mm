@@ -69,6 +69,11 @@
 
 #include "nsCRT.h"
 
+#include "jsapi.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIScriptContext.h"
+#include "nsIXPConnect.h"
+
 // externs defined in nsChildView.mm
 extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
@@ -102,7 +107,8 @@ NS_IMPL_ISUPPORTS4(nsMenuX, nsIMenu, nsIMenuListener, nsIChangeObserver, nsISupp
 nsMenuX::nsMenuX()
 : mParent(nsnull), mManager(nsnull), mMacMenuID(0), mMacMenu(nil),
   mIsEnabled(PR_TRUE), mDestroyHandlerCalled(PR_FALSE),
-  mNeedsRebuild(PR_TRUE), mConstructed(PR_FALSE), mVisible(PR_TRUE)
+  mNeedsRebuild(PR_TRUE), mConstructed(PR_FALSE), mVisible(PR_TRUE),
+  mXBLAttached(PR_FALSE)
 {
   mMenuDelegate = [[MenuDelegate alloc] initWithGeckoMenu:this];
     
@@ -469,7 +475,32 @@ nsEventStatus nsMenuX::MenuConstruct(
   GetMenuPopupContent(getter_AddRefs(menuPopup));
   if (!menuPopup)
     return nsEventStatus_eIgnore;
-      
+
+  // bug 365405: Manually wrap the menupopup node to make sure it's bounded
+  if (!mXBLAttached) {
+    nsresult rv;
+    nsCOMPtr<nsIXPConnect> xpconnect =
+      do_GetService(nsIXPConnect::GetCID(), &rv);
+    if (NS_SUCCEEDED(rv)) {
+      nsIDocument* ownerDoc = menuPopup->GetOwnerDoc();
+      nsIScriptGlobalObject* sgo;
+      if (ownerDoc && (sgo = ownerDoc->GetScriptGlobalObject())) {
+        nsCOMPtr<nsIScriptContext> scriptContext = sgo->GetContext();
+        JSObject* global = sgo->GetGlobalJSObject();
+        if (scriptContext && global) {
+          JSContext* cx = (JSContext*)scriptContext->GetNativeContext();
+          if (cx) {
+            nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
+            xpconnect->WrapNative(cx, global,
+                                  menuPopup, NS_GET_IID(nsISupports),
+                                  getter_AddRefs(wrapper));
+            mXBLAttached = PR_TRUE;
+          }
+        }
+      } 
+    }
+  }
+
   // Iterate over the kids
   PRUint32 count = menuPopup->GetChildCount();
   for (PRUint32 i = 0; i < count; i++) {
@@ -485,7 +516,7 @@ nsEventStatus nsMenuX::MenuConstruct(
         LoadSubMenu(this, child);
     }
   } // for each menu item
-  
+
   gConstructingMenu = PR_FALSE;
   mNeedsRebuild = PR_FALSE;
   // printf("Done building, mMenuItemVoidArray.Count() = %d \n", mMenuItemVoidArray.Count());

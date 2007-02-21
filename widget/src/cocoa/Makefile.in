@@ -74,6 +74,8 @@ REQUIRES = xpcom \
 		  appshell \
 		  thebes \
 		  cairo \
+		  js \
+		  xpconnect \
 		  $(NULL)
 
 ifdef MOZ_ENABLE_GLITZ
