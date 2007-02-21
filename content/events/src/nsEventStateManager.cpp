@@ -3020,6 +3020,15 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
   //If mouse is still over same element, clickcount will be > 1.
   //If it has moved it will be zero, so no click.
   if (0 != aEvent->clickCount) {
+    //Check that the window isn't disabled before firing a click
+    //(see bug 366544).
+    if (aEvent->widget) {
+      PRBool enabled;
+      aEvent->widget->IsEnabled(&enabled);
+      if (!enabled) {
+        return ret;
+      }
+    }
     //fire click
     if (aEvent->button == nsMouseEvent::eMiddleButton ||
         aEvent->button == nsMouseEvent::eRightButton) {
