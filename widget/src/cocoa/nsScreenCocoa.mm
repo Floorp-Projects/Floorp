@@ -39,6 +39,7 @@
 #include "nsUnitConversion.h"
 
 #include "nsScreenCocoa.h"
+#include "nsCocoaUtils.h"
 
 NS_IMPL_ISUPPORTS1(nsScreenCocoa, nsIScreen)
 
@@ -55,12 +56,12 @@ nsScreenCocoa::~nsScreenCocoa ()
 NS_IMETHODIMP
 nsScreenCocoa::GetRect(PRInt32 *outX, PRInt32 *outY, PRInt32 *outWidth, PRInt32 *outHeight)
 {
-    NSRect r = [mScreen frame];
+    nsRect r = cocoaRectToGeckoRect([mScreen frame]);
 
-    *outX = NSToIntFloor(r.origin.x);
-    *outY = NSToIntFloor(r.origin.y);
-    *outWidth = NSToIntFloor(r.size.width);
-    *outHeight = NSToIntFloor(r.size.height);
+    *outX = r.x;
+    *outY = r.y;
+    *outWidth = r.width;
+    *outHeight = r.height;
 
     return NS_OK;
 }
@@ -68,12 +69,12 @@ nsScreenCocoa::GetRect(PRInt32 *outX, PRInt32 *outY, PRInt32 *outWidth, PRInt32 
 NS_IMETHODIMP
 nsScreenCocoa::GetAvailRect(PRInt32 *outX, PRInt32 *outY, PRInt32 *outWidth, PRInt32 *outHeight)
 {
-    NSRect r = [mScreen visibleFrame];
+    nsRect r = cocoaRectToGeckoRect([mScreen visibleFrame]);
 
-    *outX = NSToIntFloor(r.origin.x);
-    *outY = NSToIntFloor(r.origin.y);
-    *outWidth = NSToIntFloor(r.size.width);
-    *outHeight = NSToIntFloor(r.size.height);
+    *outX = r.x;
+    *outY = r.y;
+    *outWidth = r.width;
+    *outHeight = r.height;
 
     return NS_OK;
 }

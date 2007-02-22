@@ -63,6 +63,7 @@
 #include "nsDragService.h"
 #include "nsCursorManager.h"
 #include "nsWindowMap.h"
+#include "nsCocoaUtils.h"
 
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
@@ -183,14 +184,9 @@ ConvertGeckoRectToMacRect(const nsRect& aRect, Rect& outMacRect)
 // Flips a screen coordinate from a point in the cocoa coordinate system (bottom-left rect) to a point
 // that is a "flipped" cocoa coordinate system (starts in the top-left).
 static inline void
-FlipCocoaScreenCoordinate (NSPoint &inPoint) {
-  // need to flip the point relative to the main screen
-  if ([[NSScreen screens] count] > 0) {  // paranoia
-    // "global" coords are relative to the upper left of the main screen,
-    // which is the first screen in the array (not [NSScreen mainScreen]).
-    NSRect topLeftScreenFrame = [[[NSScreen screens] objectAtIndex:0] frame];
-    inPoint.y = NSMaxY(topLeftScreenFrame) - inPoint.y;
-  }
+FlipCocoaScreenCoordinate (NSPoint &inPoint)
+{  
+  inPoint.y = HighestPointOnAnyScreen() - inPoint.y;
 }
   
 

@@ -39,6 +39,7 @@
 #include "nsCOMPtr.h"
 
 #include "nsScreenManagerCocoa.h"
+#include "nsCocoaUtils.h"
 
 NS_IMPL_ISUPPORTS1(nsScreenManagerCocoa, nsIScreenManager)
 
@@ -73,7 +74,7 @@ nsScreenManagerCocoa::ScreenForRect (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRI
                                      nsIScreen **outScreen)
 {
     NSEnumerator *screenEnum = [[NSScreen screens] objectEnumerator];
-    NSRect inRect = { { aX, aY }, { aWidth, aHeight } };
+    NSRect inRect = geckoRectToCocoaRect(nsRect(aX, aY, aWidth, aHeight));
 
     while (NSScreen *screen = [screenEnum nextObject]) {
         NSDictionary *desc = [screen deviceDescription];
