@@ -856,20 +856,6 @@ nsPythonContext::SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts)
   }
 }
 
-void
-nsPythonContext::SetOwner(nsIScriptContextOwner* owner)
-{
-  // The owner should not be addrefed!! We'll be told
-  // when the owner goes away.
-  mOwner = owner;
-}
-
-nsIScriptContextOwner *
-nsPythonContext::GetOwner()
-{
-  return mOwner;
-}
-
 nsresult
 nsPythonContext::SetTerminationFunction(nsScriptTerminationFunc aFunc,
                                     nsISupports* aRef)

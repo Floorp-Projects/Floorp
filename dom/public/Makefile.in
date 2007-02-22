@@ -47,8 +47,7 @@ GRE_MODULE	= 1
 
 DIRS		= idl coreEvents base
 
-XPIDLSRCS	= nsIScriptContextOwner.idl \
-		  nsIEntropyCollector.idl \
+XPIDLSRCS	= nsIEntropyCollector.idl \
 		  nsIScriptChannel.idl \
 		  $(NULL)
 
