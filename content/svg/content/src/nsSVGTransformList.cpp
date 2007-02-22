@@ -263,7 +263,7 @@ NS_IMETHODIMP nsSVGTransformList::Initialize(nsIDOMSVGTransform *newItem,
 /* nsIDOMSVGTransform getItem (in unsigned long index); */
 NS_IMETHODIMP nsSVGTransformList::GetItem(PRUint32 index, nsIDOMSVGTransform **_retval)
 {
-  if ((PRInt32)index >= mTransforms.Count()) {
+  if (index >= NS_STATIC_CAST(PRUint32, mTransforms.Count())) {
     *_retval = nsnull;
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
@@ -341,7 +341,7 @@ NS_IMETHODIMP nsSVGTransformList::RemoveItem(PRUint32 index, nsIDOMSVGTransform 
 {
   nsSVGValueAutoNotifier autonotifier(this);
 
-  if ((PRInt32)index >= mTransforms.Count()) {
+  if (index >= NS_STATIC_CAST(PRUint32, mTransforms.Count())) {
     *_retval = nsnull;
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
