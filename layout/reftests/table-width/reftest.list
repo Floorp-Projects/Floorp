@@ -37,3 +37,10 @@
 == percent-truncation-3.html percent-truncation-3-ref.html
 == balancing-1.html balancing-1-ref.html
 == balancing-2.html balancing-2-ref.html
+== cellpadding.html cellpadding-ref.html
+== cellspacing.html cellspacing-ref.html
+== percent-basis.html percent-basis-ref.html
+== default-box-sizing-separate-standards.html default-box-sizing-separate-standards-ref.html
+== default-box-sizing-separate-quirks.html default-box-sizing-separate-quirks-ref.html
+fails == default-box-sizing-collapse-standards.html default-box-sizing-collapse-standards-ref.html # bug 155955, bug 371180, bug 371182
+fails == default-box-sizing-collapse-quirks.html default-box-sizing-collapse-quirks-ref.html # bug 371180, bug 371182
