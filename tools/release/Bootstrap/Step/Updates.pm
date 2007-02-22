@@ -21,10 +21,12 @@ sub Execute {
     my $updateDir = $config->Get(var => 'updateDir');
     my $patcherConfig = $config->Get(var => 'patcherConfig');
 
+    my $versionedUpdateDir = catfile($updateDir, $product . '-' . $version);
+
     # Create updates area.
-    if (not -d $updateDir) {
-        MkdirWithPath(dir => $updateDir) 
-          or die("Cannot mkdir $updateDir: $!");
+    if (not -d $versionedUpdateDir) {
+        MkdirWithPath(dir => $versionedUpdateDir) 
+          or die("Cannot mkdir $versionedUpdateDir: $!");
     }
 
     # check out patcher
@@ -33,16 +35,16 @@ sub Execute {
       cmdArgs => ['-d', $mozillaCvsroot, 'co', '-d', 'patcher', 
                     catfile('mozilla', 'tools', 'patcher')],
       logFile => catfile($logDir, 'updates_patcher-checkout.log'),
-      dir => $updateDir,
+      dir => $versionedUpdateDir,
     );
 
     # check out utilities
     $this->Shell(
       cmd => 'cvs',
-      cmdArgs => ['-d', $mozillaCvsroot, 'co', '-d', 'patcher/MozBuild', 
+      cmdArgs => ['-d', $mozillaCvsroot, 'co', '-d', 'MozBuild', 
                     catfile('mozilla', 'tools', 'release', 'MozBuild')],
       logFile => catfile($logDir, 'updates_patcher-utils-checkout.log'),
-      dir => $updateDir,
+      dir => catfile($versionedUpdateDir, 'patcher'),
     );
 
     # config lives in private repo
@@ -51,7 +53,7 @@ sub Execute {
       cmdArgs => ['-d', $mofoCvsroot, 'co', '-d', 'config',  
                     catfile('release', 'patcher', $patcherConfig)],
       logFile => catfile($logDir, 'updates_patcher-config-checkout.log'),
-      dir => $updateDir,
+      dir => $versionedUpdateDir,
     );
 
     # build tools
@@ -62,7 +64,7 @@ sub Execute {
       cmdArgs => ['--build-tools', '--app=' . $product,
                     '--config=../config/' . $patcherConfig],
       logFile => catfile($logDir, 'updates_patcher-build-tools.log'),
-      dir => catfile($updateDir, 'patcher'),
+      dir => catfile($versionedUpdateDir, 'patcher'),
     );
     if ($originalCvsrootEnv) {
         $ENV{'CVSROOT'} = $originalCvsrootEnv;
@@ -74,7 +76,7 @@ sub Execute {
       cmdArgs => ['--download', '--app=' . $product,
                     '--config=../config/' . $patcherConfig],
       logFile => catfile($logDir, 'updates_patcher-download.log'),
-      dir => catfile($updateDir, 'patcher'),
+      dir => catfile($versionedUpdateDir, 'patcher'),
     );
 
     # Create partial patches and snippets
@@ -83,13 +85,13 @@ sub Execute {
       cmdArgs => ['--create-patches', '--app=' . $product, 
                     '--config=../config/' . $patcherConfig],
       logFile => catfile($logDir, 'updates_patcher-create-patches.log'),
-      dir => catfile($updateDir, 'patcher'),
+      dir => catfile($versionedUpdateDir, 'patcher'),
       timeout => 18000,
     );
     
     ### quick verification
     # ensure that there are only test channels
-    my $testDir = catfile($updateDir, 'patcher', 'temp', $product,  
+    my $testDir = catfile($versionedUpdateDir, 'patcher', 'temp', $product,  
                           $oldVersion . '-' . $version, 'aus2.test');
 
     File::Find::find(\&TestAusCallback, $testDir);
@@ -103,7 +105,6 @@ sub Verify {
     my $version = $config->Get(var => 'version');
     my $oldVersion = $config->Get(var => 'oldVersion');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
-    my $updateDir = $config->Get(var => 'updateDir');
     my $verifyDir = $config->Get(var => 'verifyDir');
     my $product = $config->Get(var => 'product');
 
