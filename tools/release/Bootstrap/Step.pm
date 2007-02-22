@@ -29,6 +29,7 @@ sub Shell {
     my $dir = $args{'dir'};
     my $timeout = $args{'timeout'} ? $args{'timeout'} : $DEFAULT_TIMEOUT;
     my $logFile = $args{'logFile'};
+    my $ignoreExitValue = $args{'ignoreExitValue'};
     my $rv = '';
 
     if (ref($cmdArgs) ne 'ARRAY') {
@@ -76,7 +77,9 @@ sub Shell {
         $this->Log(msg => "output: $rv->{'output'}") if $rv->{'output'};
         die("FAIL shell call dumped core");
     }
-    if ($exitValue) {
+    if ($ignoreExitValue) {
+        $this->Log(msg => "Exit value $rv->{'output'}, but ignoring as told");
+    }elsif ($exitValue) {
         if ($exitValue != 0) {
             $this->Log(msg => "output: $rv->{'output'}") if $rv->{'output'};
             die("shell call returned bad exit code: $exitValue");
