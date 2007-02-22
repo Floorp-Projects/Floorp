@@ -46,7 +46,6 @@
 
 class nsIScriptGlobalObject;
 class nsIScriptSecurityManager;
-class nsIScriptContextOwner;
 class nsIPrincipal;
 class nsIAtom;
 class nsIArray;
@@ -360,22 +359,6 @@ public:
    */
   virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                nsScriptObjectHolder &aResult) = 0;
-
-  /**
-   * Let the script context know who its owner is.
-   * The script context should not addref the owner. It
-   * will be told when the owner goes away.
-   * @return NS_OK if the method is successful
-   */
-  virtual void SetOwner(nsIScriptContextOwner* owner) = 0;
-
-  /**
-   * Get the script context of the owner. The method
-   * addrefs the returned reference according to regular
-   * XPCOM rules, even though the internal reference itself
-   * is a "weak" reference.
-   */
-  virtual nsIScriptContextOwner *GetOwner() = 0;
 
   /**
    * JS only - this function need not be implemented by languages other

@@ -184,8 +184,6 @@ public:
   virtual void GC();
 
   virtual void ScriptEvaluated(PRBool aTerminated);
-  virtual void SetOwner(nsIScriptContextOwner* owner);
-  virtual nsIScriptContextOwner *GetOwner();
   virtual nsresult SetTerminationFunction(nsScriptTerminationFunc aFunc,
                                           nsISupports* aRef);
   virtual PRBool GetScriptsEnabled();
@@ -231,8 +229,7 @@ protected:
   PRPackedBool mScriptsEnabled;
   PRPackedBool mProcessingScriptTag;
 
-  nsIScriptContextOwner* mOwner;  /* NB: weak reference, not ADDREF'd */
-  // ditto - not ADDREF'd - but Python itself takes one!
+  // not ADDREF'd - but Python itself takes one!
   nsIScriptGlobalObject *mScriptGlobal;
 
   nsresult HandlePythonError();

@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsJSEnvironment.h"
-#include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIDOMChromeWindow.h"
@@ -956,7 +955,6 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
   }
   mIsInitialized = PR_FALSE;
   mNumEvaluations = 0;
-  mOwner = nsnull;
   mTerminations = nsnull;
   mScriptsEnabled = PR_TRUE;
   mBranchCallbackCount = 0;
@@ -3059,20 +3057,6 @@ nsJSContext::ScriptEvaluated(PRBool aTerminated)
 
   mBranchCallbackCount = 0;
   mBranchCallbackTime = LL_ZERO;
-}
-
-void
-nsJSContext::SetOwner(nsIScriptContextOwner* owner)
-{
-  // The owner should not be addrefed!! We'll be told
-  // when the owner goes away.
-  mOwner = owner;
-}
-
-nsIScriptContextOwner *
-nsJSContext::GetOwner()
-{
-  return mOwner;
 }
 
 nsresult

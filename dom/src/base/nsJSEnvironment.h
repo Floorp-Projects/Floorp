@@ -135,8 +135,6 @@ public:
   virtual void GC();
 
   virtual void ScriptEvaluated(PRBool aTerminated);
-  virtual void SetOwner(nsIScriptContextOwner* owner);
-  virtual nsIScriptContextOwner *GetOwner();
   virtual nsresult SetTerminationFunction(nsScriptTerminationFunc aFunc,
                                           nsISupports* aRef);
   virtual PRBool GetScriptsEnabled();
@@ -194,8 +192,6 @@ protected:
 private:
   JSContext *mContext;
   PRUint32 mNumEvaluations;
-
-  nsIScriptContextOwner* mOwner;  /* NB: weak reference, not ADDREF'd */
 
 protected:
   struct TerminationFuncHolder;
