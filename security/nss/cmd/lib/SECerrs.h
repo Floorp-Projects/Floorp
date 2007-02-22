@@ -131,7 +131,7 @@ ER3(SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE,	(SEC_ERROR_BASE + 30),
 "The certificate issuer's certificate has expired.  Check your system date and time.")
 
 ER3(SEC_ERROR_CRL_EXPIRED,			(SEC_ERROR_BASE + 31),
-"The CRL for the certificate's issuer has expired.  Update it or check your system data and time.")
+"The CRL for the certificate's issuer has expired.  Update it or check your system date and time.")
 
 ER3(SEC_ERROR_CRL_BAD_SIGNATURE,		(SEC_ERROR_BASE + 32),
 "The CRL for the certificate's issuer has an invalid signature.")
@@ -476,7 +476,7 @@ ER3(SEC_ERROR_UNSUPPORTED_EC_POINT_FORM,	(SEC_ERROR_BASE + 142),
 "Unsupported elliptic curve point form.")
 
 ER3(SEC_ERROR_UNRECOGNIZED_OID,			(SEC_ERROR_BASE + 143),
-"Unrecognized Object IDentifier.")
+"Unrecognized Object Identifier.")
 
 ER3(SEC_ERROR_OCSP_INVALID_SIGNING_CERT,	(SEC_ERROR_BASE + 144),
 "Invalid OCSP signing certificate in OCSP response.")
