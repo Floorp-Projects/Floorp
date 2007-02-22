@@ -79,12 +79,11 @@ nsGridRowGroupFrame::GetFlex(nsBoxLayoutState& aState)
 
   // ok we are flexible add up our children
   nscoord totalFlex = 0;
-  nsIBox* child = nsnull;
-  GetChildBox(&child);
+  nsIBox* child = GetChildBox();
   while (child)
   {
     totalFlex += child->GetFlex(aState);
-    child->GetNextBox(&child);
+    child = child->GetNextBox();
   }
 
   mFlex = totalFlex;

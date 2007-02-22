@@ -134,10 +134,7 @@ static nsIFrame* GetScrolledBox(nsBoxObject* aScrollBox) {
   nsIFrame* scrolledFrame = scrollFrame->GetScrolledFrame();
   if (!scrolledFrame)
     return nsnull;
-  nsIBox* scrolledBox;
-  if (NS_FAILED(scrolledFrame->GetChildBox(&scrolledBox)))
-    return nsnull;
-  return scrolledBox;
+  return scrolledFrame->GetChildBox();
 }
 
 /* void scrollByIndex (in long dindexes); */
@@ -151,10 +148,9 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollByIndex(PRInt32 dindexes)
        return NS_ERROR_FAILURE;
 
     nsRect rect;
-    nsIFrame* child;
 
     // now get the scrolled boxes first child.
-    scrolledBox->GetChildBox(&child);
+    nsIFrame* child = scrolledBox->GetChildBox();
 
     PRBool horiz = scrolledBox->IsHorizontal();
     nsPoint cp;
@@ -194,7 +190,7 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollByIndex(PRInt32 dindexes)
           break;
         }
       }
-      child->GetNextBox(&child);
+      child = child->GetNextBox();
       curIndex++;
     }
 
@@ -205,7 +201,7 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollByIndex(PRInt32 dindexes)
 
     if (dindexes > 0) {
       while(child) {
-        child->GetNextBox(&child);
+        child = child->GetNextBox();
         if (child)
           rect = child->GetRect();
         count++;
@@ -214,14 +210,14 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollByIndex(PRInt32 dindexes)
       }
 
    } else if (dindexes < 0) {
-      scrolledBox->GetChildBox(&child);
+      child = scrolledBox->GetChildBox();
       while(child) {
         rect = child->GetRect();
         if (count >= curIndex + dindexes)
           break;
 
         count++;
-        child->GetNextBox(&child);
+        child = child->GetNextBox();
 
       }
    }

@@ -262,7 +262,6 @@ nsTreeBodyFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
   min.height = mRowHeight * desiredRows;
 
   AddBorderAndPadding(min);
-  AddInset(min);
   nsIBox::AddCSSMinSize(aBoxLayoutState, this, min);
 
   return min;
@@ -403,7 +402,7 @@ nsTreeBodyFrame::EnsureView()
   }
 }
 
-NS_IMETHODIMP
+void
 nsTreeBodyFrame::SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
                            PRBool aRemoveOverflowArea)
 {
@@ -415,7 +414,7 @@ nsTreeBodyFrame::SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRec
 
   mHorzWidth = horzWidth;
 
-  return nsLeafBoxFrame::SetBounds(aBoxLayoutState, aRect, aRemoveOverflowArea);
+  nsLeafBoxFrame::SetBounds(aBoxLayoutState, aRect, aRemoveOverflowArea);
 }
 
 

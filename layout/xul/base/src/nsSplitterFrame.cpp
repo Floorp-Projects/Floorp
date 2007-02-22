@@ -384,7 +384,7 @@ nsSplitterFrame::DoLayout(nsBoxLayoutState& aState)
 {
   if (GetStateBits() & NS_FRAME_FIRST_REFLOW) 
   {
-    GetParentBox(&mInner->mParentBox);
+    mInner->mParentBox = GetParentBox();
     mInner->UpdateState();
   }
 
@@ -395,8 +395,7 @@ nsSplitterFrame::DoLayout(nsBoxLayoutState& aState)
 void
 nsSplitterFrame::GetInitialOrientation(PRBool& aIsHorizontal)
 {
-  nsIBox* box;
-  GetParentBox(&box);
+  nsIBox* box = GetParentBox();
   if (box) {
     aIsHorizontal = !box->IsHorizontal();
   }
@@ -715,7 +714,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
                     nsGkAtoms::_true, eCaseMatters))
     return NS_OK;
 
-  mOuter->GetParentBox(&mParentBox);
+  mParentBox = mOuter->GetParentBox();
   if (!mParentBox)
     return NS_OK;
   
@@ -752,8 +751,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   mChildInfosBeforeCount = 0;
   mChildInfosAfterCount = 0;
 
-  nsIBox* childBox = nsnull;
-  mParentBox->GetChildBox(&childBox); 
+  nsIBox* childBox = mParentBox->GetChildBox();
 
   while (nsnull != childBox) 
   { 
@@ -815,8 +813,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
         } 
     }
     
-    rv = childBox->GetNextBox(&childBox);
-    NS_ASSERTION(rv == NS_OK,"failed to get next child");
+    childBox = childBox->GetNextBox();
     count++;
   }
 
@@ -1016,14 +1013,13 @@ nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext)
 
 static nsIBox* GetChildBoxForContent(nsIBox* aParentBox, nsIContent* aContent)
 {
-  nsIBox* childBox = nsnull;
-  aParentBox->GetChildBox(&childBox); 
+  nsIBox* childBox = aParentBox->GetChildBox();
 
   while (nsnull != childBox) {
     if (childBox->GetContent() == aContent) {
       return childBox;
     }
-    childBox->GetNextBox(&childBox);
+    childBox = childBox->GetNextBox();
   }
   return nsnull;
 }
@@ -1038,12 +1034,11 @@ nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext, nsSplitterInfo
   nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
 
   // first set all the widths.
-  nsIBox* child = nsnull;
-  mOuter->GetChildBox(&child);
+  nsIBox* child =  mOuter->GetChildBox();
   while(child)
   {
     SetPreferredSize(state, child, onePixel, aIsHorizontal, nsnull);
-    child->GetNextBox(&child);
+    child = child->GetNextBox();
   }
 
   // now set our changed widths.

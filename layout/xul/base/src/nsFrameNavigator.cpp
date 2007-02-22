@@ -51,8 +51,7 @@ nsIBox*
 nsFrameNavigator::GetChildBeforeAfter(nsPresContext* aPresContext,
                                       nsIBox* start, PRBool before)
 {
-   nsIBox* parent = nsnull;
-   start->GetParentBox(&parent);
+   nsIBox* parent = start->GetParentBox();
    PRInt32 index = IndexOf(aPresContext, parent,start);
    PRInt32 count = CountFrames(aPresContext, parent);
 
@@ -79,15 +78,13 @@ nsFrameNavigator::IndexOf(nsPresContext* aPresContext, nsIBox* parent, nsIBox* c
 {
   PRInt32 count = 0;
 
-  nsIBox* box = nsnull;
-  parent->GetChildBox(&box); 
-  while (nsnull != box) 
+  nsIBox* box = parent->GetChildBox();
+  while (box)
   {    
     if (box == child)
        return count;
 
-    nsresult rv = box->GetNextBox(&box);
-    NS_ASSERTION(rv == NS_OK,"failed to get next child");
+    box = box->GetNextBox();
     count++;
   }
 
@@ -99,12 +96,10 @@ nsFrameNavigator::CountFrames(nsPresContext* aPresContext, nsIBox* aBox)
 {
   PRInt32 count = 0;
 
-  nsIBox* box;
-  aBox->GetChildBox(&box); 
-  while (nsnull != box) 
+  nsIBox* box = aBox->GetChildBox();
+  while (box)
   {    
-    nsresult rv = box->GetNextBox(&box);
-    NS_ASSERTION(rv == NS_OK,"failed to get next child");
+    box = box->GetNextBox();
     count++;
   }
 
@@ -116,15 +111,13 @@ nsFrameNavigator::GetChildAt(nsPresContext* aPresContext, nsIBox* parent, PRInt3
 {
   PRInt32 count = 0;
 
-  nsIBox* box;
-  parent->GetChildBox(&box); 
-  while (nsnull != box) 
+  nsIBox* box = parent->GetChildBox();
+  while (box)
   {    
     if (count == index)
        return box;
 
-    nsresult rv = box->GetNextBox(&box);
-    NS_ASSERTION(rv == NS_OK,"failed to get next child");
+    box = box->GetNextBox();
     count++;
   }
 

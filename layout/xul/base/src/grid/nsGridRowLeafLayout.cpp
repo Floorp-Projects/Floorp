@@ -83,7 +83,6 @@ nsGridRowLeafLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize&
   else {
     aSize = grid->GetPrefRowSize(aState, index, isHorizontal);
     //AddBorderAndPadding(aBox, aSize);
-    //AddInset(aBox, aSize);
     return NS_OK;
   }
 }
@@ -100,7 +99,6 @@ nsGridRowLeafLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& 
   else {
     aSize = grid->GetMinRowSize(aState, index, isHorizontal);
     AddBorderAndPadding(aBox, aSize);
-    AddInset(aBox, aSize);
     return NS_OK;
   }
 }
@@ -117,7 +115,6 @@ nsGridRowLeafLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& 
   else {
     aSize = grid->GetMaxRowSize(aState, index, isHorizontal);
     AddBorderAndPadding(aBox, aSize);
-    AddInset(aBox, aSize);
     return NS_OK;
   }
 }
@@ -151,8 +148,7 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, ns
    nsBoxSize* start = nsnull;
    nsBoxSize* last = nsnull;
    nsBoxSize* current = nsnull;
-   nsIBox* child = nsnull;
-   aBox->GetChildBox(&child);
+   nsIBox* child = aBox->GetChildBox();
    for (int i=0; i < count; i++)
    {
      column = grid->GetColumnAt(i,isHorizontal); 
@@ -243,7 +239,7 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, ns
      }
 
      if (child)
-       child->GetNextBox(&child);
+       child = child->GetNextBox();
 
    }
    aBoxSizes = start;
@@ -264,9 +260,8 @@ nsGridRowLeafLayout::ComputeChildSizes(nsIBox* aBox,
   if (aBox) {
 
      // go up the parent chain looking for scrollframes
-     nsIBox* scrollbox = nsnull;
-     aBox->GetParentBox(&aBox);
-     scrollbox = nsGrid::GetScrollBox(aBox);
+     aBox = aBox->GetParentBox();
+     nsIBox* scrollbox = nsGrid::GetScrollBox(aBox);
        
        nsCOMPtr<nsIScrollableFrame> scrollable = do_QueryInterface(scrollbox);
        if (scrollable) {
@@ -275,8 +270,6 @@ nsGridRowLeafLayout::ComputeChildSizes(nsIBox* aBox,
           nsRect ourRect(scrollbox->GetRect());
           nsMargin padding(0,0,0,0);
           scrollbox->GetBorderAndPadding(padding);
-          ourRect.Deflate(padding);
-          scrollbox->GetInset(padding);
           ourRect.Deflate(padding);
 
           nscoord diff;
@@ -333,13 +326,12 @@ void
 nsGridRowLeafLayout::CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount)
 {
   if (aBox) {
-    nsIBox* child = nsnull;
-    aBox->GetChildBox(&child);
+    nsIBox* child = aBox->GetChildBox();
 
     // count the children
     PRInt32 columnCount = 0;
     while(child) {
-      child->GetNextBox(&child);
+      child = child->GetNextBox();
       columnCount++;
     }
 

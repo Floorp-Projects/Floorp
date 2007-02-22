@@ -874,7 +874,6 @@ nsTextBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState)
     DISPLAY_PREF_SIZE(this, size);
 
     AddBorderAndPadding(size);
-    AddInset(size);
     nsIBox::AddCSSPrefSize(aBoxLayoutState, this, size);
 
     return size;
@@ -896,26 +895,23 @@ nsTextBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
         size.width = 0;
 
     AddBorderAndPadding(size);
-    AddInset(size);
     nsIBox::AddCSSMinSize(aBoxLayoutState, this, size);
 
     return size;
 }
 
-NS_IMETHODIMP
-nsTextBoxFrame::GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent)
+nscoord
+nsTextBoxFrame::GetBoxAscent(nsBoxLayoutState& aBoxLayoutState)
 {
     CalcTextSize(aBoxLayoutState);
 
-    aAscent = mAscent;
+    nscoord ascent = mAscent;
 
     nsMargin m(0,0,0,0);
     GetBorderAndPadding(m);
-    aAscent += m.top;
-    GetInset(m);
-    aAscent += m.top;
+    ascent += m.top;
 
-    return NS_OK;
+    return ascent;
 }
 
 #ifdef DEBUG

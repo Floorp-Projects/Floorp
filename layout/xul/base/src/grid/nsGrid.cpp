@@ -285,7 +285,7 @@ nsGrid::FindRowsAndColumns(nsIBox** aRows, nsIBox** aColumns)
   nsIBox* child = nsnull;
   // if we have <grid></grid> then mBox will be null (bug 125689)
   if (mBox)
-    mBox->GetChildBox(&child);
+    child = mBox->GetChildBox();
 
   while(child)
   {
@@ -322,7 +322,7 @@ nsGrid::FindRowsAndColumns(nsIBox** aRows, nsIBox** aColumns)
       child = oldBox;
     }
 
-    child->GetNextBox(&child);
+    child = child->GetNextBox();
   }
 }
 
@@ -460,7 +460,7 @@ nsGrid::PopulateCellMap(nsGridRow* aRows, nsGridRow* aColumns, PRInt32 aRowCount
 
      child = row->mBox;
      if (child) {
-       child->GetChildBox(&child);
+       child = child->GetChildBox();
 
        j = 0;
 
@@ -479,7 +479,7 @@ nsGrid::PopulateCellMap(nsGridRow* aRows, nsGridRow* aColumns, PRInt32 aRowCount
          else
            GetCellAt(i,j)->SetBoxInColumn(child);
 
-         child->GetNextBox(&child);
+         child = child->GetNextBox();
 
          j++;
        }
@@ -739,27 +739,23 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
 
   // add up all the padding
   nsMargin margin(0,0,0,0);
-  nsMargin inset(0,0,0,0);
   nsMargin border(0,0,0,0);
   nsMargin padding(0,0,0,0);
   nsMargin totalBorderPadding(0,0,0,0);
   nsMargin totalMargin(0,0,0,0);
 
   // if there is a box and it's not bogus take its
-  // borders padding and insets into account
+  // borders padding into account
   if (box && !row->mIsBogus)
   {
     if (!box->IsCollapsed(aState))
     {
-       box->GetInset(inset);
-
        // get real border and padding. GetBorderAndPadding
        // is redefined on nsGridRowLeafFrame. If we called it here
        // we would be in finite recurson.
        box->GetBorder(border);
        box->GetPadding(padding);
 
-       totalBorderPadding += inset; 
        totalBorderPadding += border;
        totalBorderPadding += padding;
      }
@@ -823,13 +819,11 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
            // at this point border/padding and margins all added
            // up to more needed space.
            margin = GetBoxTotalMargin(box, !aIsHorizontal);
-           box->GetInset(inset);
            // get real border and padding. GetBorderAndPadding
            // is redefined on nsGridRowLeafFrame. If we called it here
            // we would be in finite recurson.
            box->GetBorder(border);
            box->GetPadding(padding);
-           totalChildBorderPadding += inset; 
            totalChildBorderPadding += border;
            totalChildBorderPadding += padding;
            totalChildBorderPadding += margin;
@@ -1198,16 +1192,14 @@ nsGrid::GetRowFlex(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsHorizonta
     // someone who is not flexible and they aren't the rows immediately in
     // the grid. 3) Then we are not flexible
 
-    nsIBox* parent=nsnull;
+    box = GetScrollBox(box);
+    nsIBox* parent = box->GetParentBox();
     nsIBox* parentsParent=nsnull;
 
-    box = GetScrollBox(box);
-    box->GetParentBox(&parent);
-    
     while(parent)
     {
       parent = GetScrollBox(parent);
-      parent->GetParentBox(&parentsParent);
+      parentsParent = parent->GetParentBox();
 
       // if our parents parent is not a grid
       // the get its flex. If its 0 then we are
@@ -1334,11 +1326,9 @@ nsGrid::GetScrollBox(nsIBox* aChild)
     return nsnull;
 
   // get parent
-  nsIBox* parent = nsnull;
+  nsIBox* parent = aChild->GetParentBox();
   nsCOMPtr<nsIBoxLayout> layout;
   nsCOMPtr<nsIGridPart> parentGridRow;
-
-  aChild->GetParentBox(&parent);
 
   // walk up until we find a scrollframe or a part
   // if it's a scrollframe return it.
@@ -1356,7 +1346,7 @@ nsGrid::GetScrollBox(nsIBox* aChild)
     if (parentGridRow) 
       break;
 
-    parent->GetParentBox(&parent);
+    parent = parent->GetParentBox();
   }
 
   return aChild;

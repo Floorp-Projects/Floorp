@@ -67,8 +67,8 @@ public:
 
   virtual PRBool IsCollapsed(nsBoxLayoutState& aBoxLayoutState);
 
-  NS_IMETHOD SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
-                       PRBool aRemoveOverflowArea = PR_FALSE);
+  virtual void SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
+                         PRBool aRemoveOverflowArea = PR_FALSE);
 
   NS_IMETHOD GetBorder(nsMargin& aBorderAndPadding);
   NS_IMETHOD GetPadding(nsMargin& aBorderAndPadding);
@@ -77,8 +77,8 @@ public:
   NS_IMETHOD SetLayoutManager(nsIBoxLayout* aLayout);
   NS_IMETHOD GetLayoutManager(nsIBoxLayout** aLayout);
 
-  NS_IMETHOD GetVAlign(Valignment& aAlign);
-  NS_IMETHOD GetHAlign(Halignment& aAlign);
+  virtual Valignment GetVAlign() const { return vAlign_Top; }
+  virtual Halignment GetHAlign() const { return hAlign_Left; }
 
 
   NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild);
@@ -86,7 +86,6 @@ public:
   virtual PRBool GetMouseThrough() const;
 
 #ifdef DEBUG_LAYOUT
-  NS_IMETHOD GetInset(nsMargin& aInset);
   NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIBox** aBox);
   NS_IMETHOD GetDebug(PRBool& aDebug);
   NS_IMETHOD SetDebug(nsBoxLayoutState& aState, PRBool aDebug);
@@ -113,15 +112,9 @@ rollbox.
   void CoordNeedsRecalc(nscoord& aCoord);
 
   void AddBorderAndPadding(nsSize& aSize);
-  void AddInset(nsSize& aSize) { AddInset(this, aSize); }
   void AddMargin(nsSize& aSize);
 
   static void AddBorderAndPadding(nsIBox* aBox, nsSize& aSize);
-#ifdef DEBUG_LAYOUT
-  static void AddInset(nsIBox* aBox, nsSize& aSize);
-#else
-  static void AddInset(nsIBox* aBox, nsSize& aSize) {}
-#endif
   static void AddMargin(nsIBox* aChild, nsSize& aSize);
   static void AddMargin(nsSize& aSize, const nsMargin& aMargin);
 

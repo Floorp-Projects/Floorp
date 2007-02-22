@@ -296,8 +296,7 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                            const nsDisplayListSet& aLists)
 {
   // if we are too small to have a thumb don't paint it.
-  nsIBox* thumb;
-  GetChildBox(&thumb);
+  nsIBox* thumb = GetChildBox();
 
   if (thumb) {
     nsRect thumbRect(thumb->GetRect());
@@ -319,8 +318,7 @@ NS_IMETHODIMP
 nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
 {
   // get the thumb should be our only child
-  nsIBox* thumbBox = nsnull;
-  GetChildBox(&thumbBox);
+  nsIBox* thumbBox = GetChildBox();
 
   if (!thumbBox) {
     SyncLayout(aState);

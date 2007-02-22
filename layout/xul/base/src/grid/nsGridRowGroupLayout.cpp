@@ -191,8 +191,7 @@ nsGridRowGroupLayout::DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState)
     // XXXldb We probably don't want to walk up the ancestor chain
     // calling MarkIntrinsicWidthsDirty for every row group.
     aState.PresShell()->FrameNeedsReflow(aBox, nsIPresShell::eTreeChange);
-    nsIBox* child = nsnull;
-    aBox->GetChildBox(&child); 
+    nsIBox* child = aBox->GetChildBox();
 
     while(child) {
 
@@ -208,7 +207,7 @@ nsGridRowGroupLayout::DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState)
           monument->DirtyRows(deepChild, aState);
       }
 
-      child->GetNextBox(&child);
+      child = child->GetNextBox();
     }
   }
 }
@@ -220,8 +219,7 @@ nsGridRowGroupLayout::CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32
   if (aBox) {
     PRInt32 startCount = aRowCount;
 
-    nsIBox* child = nsnull;
-    aBox->GetChildBox(&child); 
+    nsIBox* child = aBox->GetChildBox();
 
     while(child) {
       
@@ -234,13 +232,13 @@ nsGridRowGroupLayout::CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32
         nsCOMPtr<nsIGridPart> monument( do_QueryInterface(layout) );
         if (monument) {
           monument->CountRowsColumns(deepChild, aRowCount, aComputedColumnCount);
-          child->GetNextBox(&child);
+          child = child->GetNextBox();
           deepChild = child;
           continue;
         }
       }
 
-      child->GetNextBox(&child);
+      child = child->GetNextBox();
 
       // if not a monument. Then count it. It will be a bogus row
       aRowCount++;
@@ -260,8 +258,7 @@ nsGridRowGroupLayout::BuildRows(nsIBox* aBox, nsGridRow* aRows)
   PRInt32 rowCount = 0;
 
   if (aBox) {
-    nsIBox* child = nsnull;
-    aBox->GetChildBox(&child); 
+    nsIBox* child = aBox->GetChildBox();
 
     while(child) {
       
@@ -274,7 +271,7 @@ nsGridRowGroupLayout::BuildRows(nsIBox* aBox, nsGridRow* aRows)
         nsCOMPtr<nsIGridPart> monument( do_QueryInterface(layout) );
         if (monument) {
           rowCount += monument->BuildRows(deepChild, &aRows[rowCount]);
-          child->GetNextBox(&child);
+          child = child->GetNextBox();
           deepChild = child;
           continue;
         }
@@ -282,7 +279,7 @@ nsGridRowGroupLayout::BuildRows(nsIBox* aBox, nsGridRow* aRows)
 
       aRows[rowCount].Init(child, PR_TRUE);
 
-      child->GetNextBox(&child);
+      child = child->GetNextBox();
 
       // if not a monument. Then count it. It will be a bogus row
       rowCount++;
@@ -306,9 +303,6 @@ nsGridRowGroupLayout::GetTotalMargin(nsIBox* aBox, PRBool aIsHorizontal)
   // add our border/padding to it
   nsMargin borderPadding(0,0,0,0);
   aBox->GetBorderAndPadding(borderPadding);
-  margin += borderPadding;
-
-  aBox->GetInset(borderPadding);
   margin += borderPadding;
 
   return margin;

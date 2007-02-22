@@ -472,7 +472,6 @@ nsImageBoxFrame::GetPrefSize(nsBoxLayoutState& aState)
   else
     size = mImageSize;
   AddBorderAndPadding(size);
-  AddInset(size);
   nsIBox::AddCSSPrefSize(aState, this, size);
 
   nsSize minSize = GetMinSize(aState);
@@ -489,16 +488,14 @@ nsImageBoxFrame::GetMinSize(nsBoxLayoutState& aState)
   nsSize size(0,0);
   DISPLAY_MIN_SIZE(this, size);
   AddBorderAndPadding(size);
-  AddInset(size);
   nsIBox::AddCSSMinSize(aState, this, size);
   return size;
 }
 
-NS_IMETHODIMP
-nsImageBoxFrame::GetAscent(nsBoxLayoutState& aState, nscoord& aCoord)
+nscoord
+nsImageBoxFrame::GetBoxAscent(nsBoxLayoutState& aState)
 {
-  aCoord = GetPrefSize(aState).height;
-  return NS_OK;
+  return GetPrefSize(aState).height;
 }
 
 nsIAtom*
