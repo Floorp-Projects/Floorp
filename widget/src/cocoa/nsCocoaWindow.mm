@@ -42,6 +42,7 @@
 #include "nsWidgetsCID.h"
 #include "nsGUIEvent.h"
 #include "nsIRollupListener.h"
+#include "nsCocoaUtils.h"
 #include "nsChildView.h"
 #include "nsIAppShell.h"
 #include "nsIAppShellService.h"
@@ -60,55 +61,6 @@ extern BOOL                gSomeMenuBarPainted;
 #define NS_APPSHELLSERVICE_CONTRACTID "@mozilla.org/appshell/appShellService;1"
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsCocoaWindow, Inherited, nsPIWidgetCocoa)
-
-
-// get the highest point on any screen
-static float HighestPointOnAnyScreen()
-{
-  float highestScreenPoint = 0.0;
-  NSArray* allScreens = [NSScreen screens];
-  for (unsigned int i = 0; i < [allScreens count]; i++) {
-    NSRect currScreenFrame = [[allScreens objectAtIndex:i] frame];
-    float currScreenHighestPoint = currScreenFrame.origin.y + currScreenFrame.size.height;
-    if (currScreenHighestPoint > highestScreenPoint)
-      highestScreenPoint = currScreenHighestPoint;
-  }
-  return highestScreenPoint;
-}
-
-
-/*
- * Gecko rects (nsRect) contain an origin (x,y) in a coordinate
- * system with (0,0) in the top-left of the screen. Cocoa rects
- * (NSRect) contain an origin (x,y) in a coordinate system with
- * (0,0) in the bottom-left of the screen. Both nsRect and NSRect
- * contain width/height info, with no difference in their use.
- */
-static NSRect geckoRectToCocoaRect(const nsRect &geckoRect)
-{
-  // We only need to change the Y coordinate by starting with the screen
-  // height, subtracting the gecko Y coordinate, and subtracting the
-  // height.
-  return NSMakeRect(geckoRect.x,
-                    HighestPointOnAnyScreen() - geckoRect.y - geckoRect.height,
-                    geckoRect.width,
-                    geckoRect.height);
-}
-
-
-//
-// See explanation for geckoRectToCocoaRect, guess what this does...
-//
-static nsRect cocoaRectToGeckoRect(const NSRect &cocoaRect)
-{
-  // We only need to change the Y coordinate by starting with the screen
-  // height, subtracting the gecko Y coordinate, and subtracting the
-  // height.
-  return nsRect((nscoord)cocoaRect.origin.x,
-                (nscoord)(HighestPointOnAnyScreen() - (cocoaRect.origin.y + cocoaRect.size.height)),
-                (nscoord)cocoaRect.size.width,
-                (nscoord)cocoaRect.size.height);
-}
 
 
 // returns the height of the title bar for a given cocoa NSWindow
@@ -687,13 +639,10 @@ NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
       }
     }
     
-    NSPoint coord = {aX, aY};
- 
-    // the point we have assumes that the screen origin is the top-left. Well,
-    // it's not. Use the screen object to convert.
-    //FIXME -- doesn't work on monitors other than primary
-    NSRect screenRect = [[NSScreen mainScreen] frame];
-    coord.y = (screenRect.origin.y + screenRect.size.height) - coord.y;
+    // the point we have is in Gecko coordinates (origin top-left). Convert
+    // it to Cocoa ones (origin bottom-left).
+    NSPoint coord = {aX, HighestPointOnAnyScreen() - aY};
+
     //printf("final coords %f %f\n", coord.x, coord.y);
     //printf("- window coords before %f %f\n", [mWindow frame].origin.x, [mWindow frame].origin.y);
     [mWindow setFrameTopLeftPoint:coord];

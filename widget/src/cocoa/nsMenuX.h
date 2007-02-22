@@ -159,8 +159,8 @@ protected:
     PRPackedBool                mDestroyHandlerCalled;
     PRPackedBool                mNeedsRebuild;
     PRPackedBool                mConstructed;
-    PRPackedBool                mXBLAttached;
     PRPackedBool                mVisible;               // are we visible to the user?
+    PRPackedBool                mXBLAttached;
 };
 
 #endif // nsMenuX_h_
