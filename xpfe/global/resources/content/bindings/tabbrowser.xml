@@ -67,7 +67,8 @@
                   ondragover="nsDragAndDrop.dragOver(event, this.parentNode.parentNode); event.stopPropagation();"
                   ondragdrop="nsDragAndDrop.drop(event, this.parentNode.parentNode); event.stopPropagation();"
                   ondragexit="nsDragAndDrop.dragExit(event, this.parentNode.parentNode); event.stopPropagation();">
-          <xul:tooltip onpopupshowing="event.stopPropagation(); return this.parentNode.parentNode.parentNode.doPreview(this);" orient="vertical">
+          <xul:tooltip onpopupshowing="event.stopPropagation(); return this.parentNode.parentNode.parentNode.doPreview(this);"
+                       onpopuphiding="this.parentNode.parentNode.parentNode.resetPreview(this);" orient="vertical">
             <xul:label class="tooltip-label" crop="right"/>
             <xul:label class="tooltip-label" hidden="true"><html:canvas class="tab-tooltip-canvas"/></xul:label>
           </xul:tooltip>
@@ -229,8 +230,6 @@
           if (!this.mPrefs.getBoolPref("browser.tabs.tooltippreview.enable") ||
               tab == this.mCurrentTab ||
               h == 0) {
-            label.removeAttribute("width");
-            aPopup.removeAttribute("tabpreview");
             return true;
           }
 
@@ -275,6 +274,24 @@
             ctx.restore();
           }
           return true;
+        ]]>
+        </body>
+      </method>
+
+      <!-- XXXcst This should not be needed, but it seems that the tooltip
+           sizing is happening too early when we want to stop showing the
+           preview.  This clears the label's width early (i.e. when the
+           previous preview disappears) so that when the next tooltip appears,
+           it doesn't start with a bad size.  For now, I blame Gecko. -->
+      <method name="resetPreview">
+        <parameter name="aPopup"/>
+        <body>
+        <![CDATA[
+          var label = aPopup.firstChild;
+          // if this function is removed, these two lines need to be restored
+          // to the non-preview codepath above
+          label.removeAttribute("width");
+          aPopup.removeAttribute("tabpreview");
         ]]>
         </body>
       </method>
