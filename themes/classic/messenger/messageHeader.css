@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Manuel Reimer (Manuel.Reimer@gmx.de)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -53,7 +54,7 @@
 #expandedAttachmentBox {
   width: 20em;
   height: 0;
-  list-style-image: url("chrome://messenger/skin/icons/attach.gif");
+  list-style-image: url("chrome://messenger/skin/icons/attach.png");
 }
 
 #attachmentTree {
@@ -191,6 +192,6 @@
 }
 
 .collapsedAttachmentButton {
-  list-style-image: url("chrome://messenger/skin/icons/message-mail-attach.gif");
+  list-style-image: url("chrome://messenger/skin/icons/message-mail-attach.png");
   margin-right: .5em;
 }

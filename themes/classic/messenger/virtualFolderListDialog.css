@@ -9,9 +9,9 @@
 
 treechildren::-moz-tree-image(selectedColumn) {
   margin-right: 2px;
-  list-style-image: url("chrome://messenger/skin/icons/dot.gif");
+  list-style-image: url("chrome://messenger/skin/icons/dot.png");
 }
 
 treechildren::-moz-tree-image(selectedColumn, inVFEditSearchScope-true) {
-  list-style-image: url("chrome://messenger/skin/icons/check.gif");
+  list-style-image: url("chrome://messenger/skin/icons/check.png");
 }

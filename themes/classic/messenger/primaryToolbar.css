@@ -258,12 +258,12 @@
 }
 
 #junkBarImage {
-  list-style-image: url("chrome://messenger/skin/icons/junkBar.gif");
+  list-style-image: url("chrome://messenger/skin/icons/junkBar.png");
 }
 
 #junkIcon {
   margin-left: 0.5ex;
-  list-style-image: url("chrome://messenger/skin/icons/folder-junk.gif");
+  list-style-image: url("chrome://messenger/skin/icons/folder-junk.png");
 }
 
 #remoteContentImage {

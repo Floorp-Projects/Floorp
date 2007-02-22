@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Manuel Reimer (Manuel.Reimer@gmx.de)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -65,6 +66,7 @@ separator.thin {
 }
 
 .acctCentralRow {
+  -moz-binding: url("chrome://communicator/skin/communicatorBindings.xml#row-iconic");
   margin-left: 10px;
   font-size: 125%;
   color: #000000;
@@ -76,10 +78,10 @@ separator.thin {
 }
 
 .acctCentralRowTitleBox {
-  background-color: #C7D0D9;
+  background-color: -moz-dialog;
   font-size: 150%;
   font-weight: bold;
-  color: #000000;
+  color: -moz-fieldtext;
 }
 
 /* ::::: links ::::: */
@@ -96,4 +98,50 @@ separator.thin {
 
 .acctCentralLinkText:hover:active {
   color: #000000;
+}
+
+/* ::::: row icons ::::: */
+
+#ReadMessages {
+  list-style-image: url("chrome://messenger/skin/icons/acct-read.png");
+}
+
+#ComposeMessage {
+  list-style-image: url("chrome://messenger/skin/icons/acct-compose.png");
+}
+
+#SubscribeNewsgroups {
+  list-style-image: url("chrome://messenger/skin/icons/acct-subscribe.png");
+}
+
+#SubscribeImapFolders {
+  list-style-image: url("chrome://messenger/skin/icons/acct-subscribe.png");
+}
+
+#SearchMessages {
+  list-style-image: url("chrome://messenger/skin/icons/acct-search.png");
+}
+
+#AccountSettings {
+  list-style-image: url("chrome://messenger/skin/icons/acct-prefs.png");
+}
+
+#CreateAccount {
+  list-style-image: url("chrome://messenger/skin/icons/acct-newaccount.png");
+}
+
+#CreateFilters {
+  list-style-image: url("chrome://messenger/skin/icons/acct-filters.png");
+}
+
+#OfflineSettings {
+  list-style-image: url("chrome://messenger/skin/icons/acct-prefs.png");
+}
+
+#JunkSettingsMail {
+  list-style-image: url("chrome://messenger/skin/icons/acct-filters.png");
+}
+
+#JunkSettingsNews {
+  list-style-image: url("chrome://messenger/skin/icons/acct-filters.png");
 }

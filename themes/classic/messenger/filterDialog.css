@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Manuel Reimer (Manuel.Reimer@gmx.de)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -46,11 +47,11 @@
 /* ::::: columns :::::: */
 
 treechildren::-moz-tree-image(activeColumn) {
-  list-style-image: url("chrome://messenger/skin/icons/dot.gif");
+  list-style-image: url("chrome://messenger/skin/icons/dot.png");
 }
 
 treechildren::-moz-tree-image(activeColumn, Enabled-true) {
- list-style-image: url("chrome://messenger/skin/icons/check.gif");
+ list-style-image: url("chrome://messenger/skin/icons/check.png");
 }
 
 .small-button {
