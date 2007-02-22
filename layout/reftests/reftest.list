@@ -214,6 +214,9 @@ fails == object/svg-with-type.html object/svg-with-type-ref.html
 #
 == object/malformed-uri.html object/malformed-uri-ref.html
 
+# pixel-rounding/
+include pixel-rounding/reftest.list
+
 # table-dom/
 == table-dom/appendCells1.html table-dom/appendCells1-ref.html
 == table-dom/appendCellsRebuild1.html table-dom/appendCellsRebuild1-ref.html
