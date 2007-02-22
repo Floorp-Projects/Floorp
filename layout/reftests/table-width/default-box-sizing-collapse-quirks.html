@@ -1,0 +1,47 @@
+<html>
+<head>
+<title>default box sizing (border-collapse: separate, standards mode)</title>
+<style type="text/css">
+
+body > div { float: left; clear: left; background: fuchsia; margin: 2px 0; padding: 10px; }
+
+table {
+  border-collapse: collapse;
+  border-spacing: 5px 3px;
+  padding: 2px 3px 4px 5px;
+  border: medium solid blue;
+  border-width: 2px 4px 6px 8px;
+}
+
+td {
+  border: medium solid aqua;
+  border-width: 2px 4px 6px 8px;
+  padding: 5px 7px 9px 11px;
+}
+
+td > div {
+  background: yellow;
+}
+
+</style>
+</head>
+<body>
+
+<div>
+  <table width="200">
+    <tr>
+      <td><div>x</div></td>
+    </tr>
+  </table>
+</div>
+
+<div>
+  <table>
+    <tr>
+      <td width="200"><div>x</div></td>
+    </tr>
+  </table>
+</div>
+
+</body>
+</html>
