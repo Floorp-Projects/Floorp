@@ -1811,7 +1811,7 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
            : isFunction
            ? js_function_str
            : js_var_str;
-    name = js_AtomToPrintableString(cx, JSID_TO_ATOM(id));
+    name = js_ValueToPrintableString(cx, ID_TO_VALUE(id));
     if (!name)
         goto bad;
     return JS_ReportErrorFlagsAndNumber(cx, report,
