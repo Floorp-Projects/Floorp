@@ -33,12 +33,12 @@
 == border-height-6.html border-height-10-ref.html
 != border-base-ref.html border-width-10-ref.html
 == border-width-4.html border-base-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == border-width-5.html border-width-10-ref.html # bug 363220 (gtk2)
-fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == border-width-6.html border-width-10-ref.html # bug 363220 (gtk2)
+fails == border-width-5.html border-width-10-ref.html # bug 363220
+fails == border-width-6.html border-width-10-ref.html # bug 363220
 != border-base-ref.html border-left-10-ref.html
 == border-left-4.html border-base-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == border-left-5.html border-left-10-ref.html # bug 363220 (gtk2)
-fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == border-left-6.html border-left-10-ref.html # bug 363220 (gtk2)
+fails == border-left-5.html border-left-10-ref.html # bug 363220
+fails == border-left-6.html border-left-10-ref.html # bug 363220
 != border-base-ref.html border-top-10-ref.html
 == border-top-4.html border-base-ref.html
 == border-top-5.html border-top-10-ref.html
@@ -53,21 +53,24 @@ fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == border-left-6.html border-left-10-ref.ht
 == background-image-top-6.html background-image-top-10-ref.html
 != background-image-base.html background-image-width-10-ref.html
 == background-image-width-4.html background-image-base.html
-== background-image-width-5.html background-image-width-10-ref.html
+fails == background-image-width-5.html background-image-width-10-ref.html # bug 371225
 == background-image-width-6.html background-image-width-10-ref.html
 != background-image-base.html background-image-left-10-ref.html
 == background-image-left-4.html background-image-base.html
 == background-image-left-5.html background-image-left-10-ref.html
 == background-image-left-6.html background-image-left-10-ref.html
-== background-image-top-height-4.html background-image-height-4.html
-== background-image-top-height-5.html background-image-height-5.html
-== background-image-top-height-6.html background-image-height-6.html
-== background-image-left-width-4.html background-image-width-4.html
-== background-image-left-width-5.html background-image-width-5.html
-== background-image-left-width-6.html background-image-width-6.html
-== background-image-height-top-4.html background-image-height-4.html
-== background-image-height-top-5.html background-image-height-5.html
-== background-image-height-top-6.html background-image-height-6.html
-== background-image-width-left-4.html background-image-width-4.html
-== background-image-width-left-5.html background-image-width-5.html
-== background-image-width-left-6.html background-image-width-6.html
+# These tests have different patterns of failures on different
+# platforms.  It doesn't make sense yet, but once bug 371225 is fixed
+# they might make more sense.
+random == background-image-top-height-4.html background-image-height-4.html
+random == background-image-top-height-5.html background-image-height-5.html
+random == background-image-top-height-6.html background-image-height-6.html
+random == background-image-left-width-4.html background-image-width-4.html
+random == background-image-left-width-5.html background-image-width-5.html
+random == background-image-left-width-6.html background-image-width-6.html
+random == background-image-height-top-4.html background-image-height-4.html
+random == background-image-height-top-5.html background-image-height-5.html
+random == background-image-height-top-6.html background-image-height-6.html
+random == background-image-width-left-4.html background-image-width-4.html
+random == background-image-width-left-5.html background-image-width-5.html
+random == background-image-width-left-6.html background-image-width-6.html
