@@ -1387,6 +1387,7 @@ GK_ATOM(textInputFrame,"TextInputFrame")
 GK_ATOM(textFrame, "TextFrame")
 GK_ATOM(viewportFrame, "ViewportFrame")
 #ifdef MOZ_SVG
+GK_ATOM(svgAFrame, "SVGAFrame")
 GK_ATOM(svgClipPathFrame, "SVGClipPathFrame")
 GK_ATOM(svgDefsFrame, "SVGDefsFrame")
 GK_ATOM(svgFilterFrame, "SVGFilterFrame")
