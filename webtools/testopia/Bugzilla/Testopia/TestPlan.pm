@@ -798,7 +798,7 @@ sub update_tester {
     my $self = shift;
     my ($userid, $perms) = @_;
     my $dbh = Bugzilla->dbh;
-    
+
     $dbh->do("UPDATE test_plan_permissions SET permissions = ? 
           WHERE userid = ? AND plan_id = ? AND grant_type = ?", 
           undef, ($perms, $userid, $self->id, GRANT_DIRECT)); 
@@ -994,10 +994,10 @@ sub tester_regexp_permissions {
           WHERE plan_id = ?", undef, $self->id);
     my $p;
     
-    $p->{'read'}   = 1 & $perms;
-    $p->{'write'}  = 2 & $perms;
-    $p->{'delete'} = 4 & $perms;
-    $p->{'admin'}  = 8 & $perms;
+    $p->{'read'}   = $perms >= TR_READ;
+    $p->{'write'}  = $perms >= TR_WRITE;
+    $p->{'delete'} = $perms >= TR_DELETE;
+    $p->{'admin'}  = $perms >= TR_ADMIN;
   
     return $p;
 }
@@ -1015,10 +1015,10 @@ sub access_list {
     my @rows;
     foreach my $row (@$ref){
         push @rows, {'user'   => Bugzilla::User->new($row->{'userid'}),
-                     'read'   => 1 & $row->{'permissions'},
-                     'write'  => 2 & $row->{'permissions'},
-                     'delete' => 4 & $row->{'permissions'},
-                     'admin'  => 8 & $row->{'permissions'},
+                     'read'   => $row->{'permissions'} >= TR_READ,
+                     'write'  => $row->{'permissions'} >= TR_WRITE,
+                     'delete' => $row->{'permissions'} >= TR_DELETE,
+                     'admin'  => $row->{'permissions'} >= TR_ADMIN,
                     };
     }
     $self->{'access_list'} = \@rows;

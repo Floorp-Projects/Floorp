@@ -46,7 +46,7 @@ use strict;
 use Bugzilla::Util;
 use Bugzilla::User;
 use Bugzilla::Constants;
-use Bugzilla::Testopia::Constants
+use Bugzilla::Testopia::Constants;
 use Bugzilla::Config;
 use Bugzilla::Testopia::Environment;
 use Bugzilla::Bug;

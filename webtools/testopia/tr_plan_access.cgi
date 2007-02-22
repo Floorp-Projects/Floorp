@@ -24,6 +24,7 @@ use lib ".";
 
 use Bugzilla;
 use Bugzilla::Constants;
+use Bugzilla::Testopia::Constants;
 use Bugzilla::Error;
 use Bugzilla::Util;
 use Bugzilla::Testopia::Util;
@@ -74,7 +75,8 @@ elsif ($action eq 'Add User'){
     $perms |= TR_WRITE  if $cgi->param("nw");
     $perms |= TR_DELETE if $cgi->param("nd");
     $perms |= TR_ADMIN  if $cgi->param("na");
-
+    
+    detaint_natural($perms);
     $plan->add_tester($userid, $perms); 
 
     display();
@@ -109,6 +111,7 @@ sub do_update {
     $regexp_perms |= TR_DELETE if $cgi->param('pd');
     $regexp_perms |= TR_ADMIN  if $cgi->param('pa');
     
+    detaint_natural($regexp_perms);
     $plan->set_tester_regexp($tester_regexp, $regexp_perms);
     
     foreach my $row (@{$plan->access_list}){
@@ -121,6 +124,7 @@ sub do_update {
         $perms |= TR_DELETE if $cgi->param('d'.$row->{'user'}->id);
         $perms |= TR_ADMIN  if $cgi->param('a'.$row->{'user'}->id);
         
+        detaint_natural($perms);
         $plan->update_tester($row->{'user'}->id, $perms);
     }
 }

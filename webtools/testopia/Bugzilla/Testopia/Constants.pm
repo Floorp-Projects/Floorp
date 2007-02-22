@@ -95,10 +95,10 @@ use constant PAUSED  => 5;
 use constant BLOCKED => 6;
 
 # Test Plan Permissions (bit flags)
-use constant READ    => 1;
-use constant WRITE   => 2;
-use constant DELETE  => 4;
-use constant ADMIN   => 8;
+use constant TR_READ    => 1;
+use constant TR_WRITE   => 2;
+use constant TR_DELETE  => 4;
+use constant TR_ADMIN   => 8;
 
 use constant REL_AUTHOR             => 0;
 use constant REL_EDITOR             => 1;

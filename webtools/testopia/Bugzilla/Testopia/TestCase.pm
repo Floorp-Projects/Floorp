@@ -1280,7 +1280,7 @@ sub can_unlink_plan {
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
     return 1 if Bugzilla->user->in_group('admin');
     return 1 if Bugzilla->user->in_group('Testers') && Param("testopia-allow-group-member-deletes");
-    return 1 if $plan->get_user_rights(Bugzilla->user->id) & DELETE;
+    return 1 if $plan->get_user_rights(Bugzilla->user->id) & TR_DELETE;
     return 0;
 }
 

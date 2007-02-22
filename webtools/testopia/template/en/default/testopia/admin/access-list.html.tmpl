@@ -27,7 +27,9 @@ This page allows plan managers to permit access to a test plan. By default, memb
 <b>Testers</b> group in Bugzilla will have read and write access. Beyond this, users login names 
 (email addresses) that match a given regular expression will be granted the level of permissions
 specified. Lastly, individuals can be granted additional permissions by adding them
-explicitly. 
+explicitly. In other words, you cannot remove permissions from a user explicitily that has those rights 
+by virtue of membership in the Testers group or that matches the regular expression, although you can add
+additional rights.
 </p>
 <p>
 Delete and Admin rights are always handled by the access control list, unless the 
