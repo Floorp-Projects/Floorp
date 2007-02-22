@@ -37,6 +37,7 @@
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cr = Components.results;
 
 const PERMS_FILE    = 0644;
 const MODE_WRONLY   = 0x02;
@@ -205,7 +206,7 @@ MicrosummaryService.prototype = {
         !iid.equals(Ci.nsIObserver) &&
         !iid.equals(Ci.nsISupportsWeakReference) &&
         !iid.equals(Ci.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+      throw Cr.NS_ERROR_NO_INTERFACE;
     return this;
   },
 
@@ -1099,7 +1100,7 @@ Microsummary.prototype = {
     //if (!this.interfaces.some( function(v) { return iid.equals(v) } ))
     if (!iid.equals(Ci.nsIMicrosummary) &&
         !iid.equals(Ci.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+      throw Cr.NS_ERROR_NO_INTERFACE;
     return this;
   },
 
@@ -1389,7 +1390,7 @@ MicrosummaryGenerator.prototype = {
     //if (!this.interfaces.some( function(v) { return iid.equals(v) } ))
     if (!iid.equals(Ci.nsIMicrosummaryGenerator) &&
         !iid.equals(Ci.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+      throw Cr.NS_ERROR_NO_INTERFACE;
     return this;
   },
 
@@ -1503,7 +1504,7 @@ MicrosummaryGenerator.prototype = {
     // it's the root element.  Should it matter?
     var generatorNode = xmlDocument.getElementsByTagNameNS(MICSUM_NS, "generator")[0];
     if (!generatorNode)
-      throw Components.results.NS_ERROR_FAILURE;
+      throw Cr.NS_ERROR_FAILURE;
 
     this.name = generatorNode.getAttribute("name");
 
@@ -1678,7 +1679,7 @@ MicrosummarySet.prototype = {
     if (!iid.equals(Ci.nsIMicrosummarySet) &&
         !iid.equals(Ci.nsIMicrosummaryObserver) &&
         !iid.equals(Ci.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+      throw Cr.NS_ERROR_NO_INTERFACE;
     return this;
   },
 
@@ -1821,7 +1822,7 @@ ArrayEnumerator.prototype = {
     //if (!this.interfaces.some( function(v) { return iid.equals(v) } ))
     if (!iid.equals(Ci.nsISimpleEnumerator) &&
         !iid.equals(Ci.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+      throw Cr.NS_ERROR_NO_INTERFACE;
     return this;
   },
 
@@ -1928,6 +1929,7 @@ MicrosummaryResource.prototype = {
   interfaces: [Ci.nsIBadCertListener,
                Ci.nsIAuthPromptProvider,
                Ci.nsIAuthPrompt,
+               Ci.nsIPrompt,
                Ci.nsIProgressEventSink,
                Ci.nsIInterfaceRequestor,
                Ci.nsISupports],
@@ -1936,9 +1938,19 @@ MicrosummaryResource.prototype = {
 
   QueryInterface: function MSR_QueryInterface(iid) {
     if (!this.interfaces.some( function(v) { return iid.equals(v) } ))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+      throw Cr.NS_ERROR_NO_INTERFACE;
 
-    return this;
+    // nsIAuthPrompt and nsIPrompt need separate implementations because
+    // their method signatures conflict.  The other interfaces we implement
+    // within MicrosummaryResource itself.
+    switch(iid) {
+    case Ci.nsIAuthPrompt:
+      return this.authPrompt;
+    case Ci.nsIPrompt:
+      return this.prompt;
+    default:
+      return this;
+    }
   },
 
   // nsIInterfaceRequestor
@@ -1966,49 +1978,100 @@ MicrosummaryResource.prototype = {
   notifyCrlNextupdate: function MSR_notifyCrlNextupdate(socketInfo, targetURL, cert) {
   },
 
-  // nsIAuthPromptProvider
-  
-  // Suppress UI and abort loads for files secured by HTTP authentication.
+  // Suppress UI and abort loads for files secured by authentication.
 
-  // HTTP auth requests appear to succeed when we cancel them (since the server
+  // Auth requests appear to succeed when we cancel them (since the server
   // redirects us to a "you're not authorized" page), so we have to set a flag
   // to let the load handler know to treat the load as a failure.
-  __httpAuthFailed: false,
-  get _httpAuthFailed()         { return this.__httpAuthFailed },
-  set _httpAuthFailed(newValue) { this.__httpAuthFailed = newValue },
+  __authFailed: false,
+  get _authFailed()         { return this.__authFailed },
+  set _authFailed(newValue) { this.__authFailed = newValue },
 
+  // nsIAuthPromptProvider
+  
   getAuthPrompt: function(aPromptReason, aIID) {
-    this._httpAuthFailed = true;
-    throw Components.results.NS_ERROR_NOT_AVAILABLE;
+    this._authFailed = true;
+    throw Cr.NS_ERROR_NOT_AVAILABLE;
   },
+
+  // HTTP always requests nsIAuthPromptProvider first, so it never needs
+  // nsIAuthPrompt, but not all channels use nsIAuthPromptProvider, so we
+  // implement nsIAuthPrompt too.
 
   // nsIAuthPrompt
 
-  // XXX If necko always requests nsIAuthPromptProvider before requesting
-  // nsIAuthPrompt, then we probably only have to implement the provider.
-
-  prompt: function(dialogTitle, text, passwordRealm, savePassword, defaultText, result) {
-    this._httpAuthFailed = true;
-    return false;
+  get authPrompt() {
+    var resource = this;
+    return {
+      interfaces = [Ci.nsIPrompt, Ci.nsISupports],
+      QueryInterface: function(iid) {
+        if (!this.interfaces.some( function(v) { return iid.equals(v) } ))
+          throw Cr.NS_ERROR_NO_INTERFACE;
+        return this;
+      },
+      prompt: function(dialogTitle, text, passwordRealm, savePassword, defaultText, result) {
+        resource._authFailed = true;
+        return false;
+      },
+      promptUsernameAndPassword: function(dialogTitle, text, passwordRealm, savePassword, user, pwd) {
+        resource._authFailed = true;
+        return false;
+      },
+      promptPassword: function(dialogTitle, text, passwordRealm, savePassword, pwd) {
+        resource._authFailed = true;
+        return false;
+      }
+    };
   },
 
-  promptUsernameAndPassword: function(dialogTitle, text, passwordRealm, savePassword, user, pwd) {
-    this._httpAuthFailed = true;
-    return false;
-  },
+  // nsIPrompt
 
-  promptPassword: function(dialogTitle, text, passwordRealm, savePassword, pwd) {
-    this._httpAuthFailed = true;
-    return false;
+  get prompt() {
+    var resource = this;
+    return {
+      interfaces = [Ci.nsIPrompt, Ci.nsISupports],
+      QueryInterface: function(iid) {
+        if (!this.interfaces.some( function(v) { return iid.equals(v) } ))
+          throw Cr.NS_ERROR_NO_INTERFACE;
+        return this;
+      },
+      alert: function(dialogTitle, text) {
+        throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+      },
+      alertCheck: function(dialogTitle, text, checkMessage, checkValue) {
+        throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+      },
+      confirm: function(dialogTitle, text) {
+        throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+      },
+      confirmCheck: function(dialogTitle, text, checkMessage, checkValue) {
+        throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+      },
+      confirmEx: function(dialogTitle, text, buttonFlags, button0Title, button1Title, button2Title, checkMsg, checkValue) {
+        throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+      },
+      prompt: function(dialogTitle, text, value, checkMsg, checkValue) {
+        throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+      },
+      promptPassword: function(dialogTitle, text, password, checkMsg, checkValue) {
+        resource._authFailed = true;
+        return false;
+      },
+      promptUsernameAndPassword: function(dialogTitle, text, username, password, checkMsg, checkValue) {
+        resource._authFailed = true;
+        return false;
+      },
+      select: function(dialogTitle, text, count, selectList, outSelection) {
+        throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+      }
+    };
   },
 
   // XXX We implement nsIProgressEventSink because otherwise bug 253127
   // would cause too many extraneous errors to get reported to the console.
   // Fortunately this doesn't screw up XMLHttpRequest, because it ensures
   // that its implementation of nsIProgressEventSink will always get called
-  // in addition to whatever notification callbacks we set on the channel
-  // (this is not true for most other interfaces, so we should be conservative
-  // about what we implement/override, even in the face of bug 253127).
+  // in addition to whatever notification callbacks we set on the channel.
 
   // nsIProgressEventSink
 
@@ -2046,7 +2109,7 @@ MicrosummaryResource.prototype = {
     this._loadCallback = null;
     this._errorCallback = null;
     this._loadTimer = null;
-    this._httpAuthFailed = false;
+    this._authFailed = false;
     if (this._iframe) {
       if (this._iframe && this._iframe.parentNode)
         this._iframe.parentNode.removeChild(this._iframe);
@@ -2077,7 +2140,7 @@ MicrosummaryResource.prototype = {
         if (this._self._loadTimer)
           this._self._loadTimer.cancel();
 
-        if (this._self._httpAuthFailed) {
+        if (this._self._authFailed) {
           // Technically the request succeeded, but we treat it as a failure,
           // since we aren't able to handle HTTP authentication.
           LOG(this._self.uri.spec + " load failed; HTTP auth required");
@@ -2417,14 +2480,14 @@ var gModule = {
 
   getClassObject: function(componentManager, cid, iid) {
     if (!iid.equals(Components.interfaces.nsIFactory))
-      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   
     for (var key in this._objects) {
       if (cid.equals(this._objects[key].CID))
       return this._objects[key].factory;
     }
     
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
   
   _objects: {
@@ -2435,7 +2498,7 @@ var gModule = {
       factory    : MicrosummaryServiceFactory = {
                      createInstance: function(aOuter, aIID) {
                        if (aOuter != null)
-                         throw Components.results.NS_ERROR_NO_AGGREGATION;
+                         throw Cr.NS_ERROR_NO_AGGREGATION;
                        var svc = new MicrosummaryService();
                        svc._init();
                       return svc.QueryInterface(aIID);
