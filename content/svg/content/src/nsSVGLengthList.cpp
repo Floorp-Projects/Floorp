@@ -224,7 +224,7 @@ NS_IMETHODIMP nsSVGLengthList::Initialize(nsIDOMSVGLength *newItem,
 /* nsIDOMSVGLength getItem (in unsigned long index); */
 NS_IMETHODIMP nsSVGLengthList::GetItem(PRUint32 index, nsIDOMSVGLength **_retval)
 {
-  if ((PRInt32)index >= mLengths.Count()) {
+  if (index >= NS_STATIC_CAST(PRUint32, mLengths.Count())) {
     *_retval = nsnull;
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
@@ -265,7 +265,7 @@ nsSVGLengthList::ReplaceItem(nsIDOMSVGLength *newItem,
 /* nsIDOMSVGLengthList removeItem (in unsigned long index); */
 NS_IMETHODIMP nsSVGLengthList::RemoveItem(PRUint32 index, nsIDOMSVGLength **_retval)
 {
-  if ((PRInt32)index >= mLengths.Count()) {
+  if (index >= NS_STATIC_CAST(PRUint32, mLengths.Count())) {
     *_retval = nsnull;
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
