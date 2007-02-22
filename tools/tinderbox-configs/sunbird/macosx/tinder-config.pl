@@ -84,7 +84,7 @@ $VendorName               = "";
   "other-licenses/branding/sunbird",
 );
 
-#$TestsPhoneHome           = 0;  # Should test report back to server?
+$TestsPhoneHome           = 1;  # Should test report back to server?
 
 # $results_server
 #----------------------------------------------------------------------------

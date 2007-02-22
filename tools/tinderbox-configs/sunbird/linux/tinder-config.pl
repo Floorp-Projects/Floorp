@@ -83,7 +83,7 @@ $VendorName               = 'Mozilla';
 #$CompareLocalesAviary     = 0;  # Should the compare-locales commands use the
                                 # aviary directory structure?
 
-#$TestsPhoneHome           = 0;  # Should test report back to server?
+$TestsPhoneHome           = 1;  # Should test report back to server?
 
 # $results_server
 #----------------------------------------------------------------------------
