@@ -2003,7 +2003,7 @@ MicrosummaryResource.prototype = {
   get authPrompt() {
     var resource = this;
     return {
-      interfaces = [Ci.nsIPrompt, Ci.nsISupports],
+      interfaces: [Ci.nsIPrompt, Ci.nsISupports],
       QueryInterface: function(iid) {
         if (!this.interfaces.some( function(v) { return iid.equals(v) } ))
           throw Cr.NS_ERROR_NO_INTERFACE;
@@ -2029,7 +2029,7 @@ MicrosummaryResource.prototype = {
   get prompt() {
     var resource = this;
     return {
-      interfaces = [Ci.nsIPrompt, Ci.nsISupports],
+      interfaces: [Ci.nsIPrompt, Ci.nsISupports],
       QueryInterface: function(iid) {
         if (!this.interfaces.some( function(v) { return iid.equals(v) } ))
           throw Cr.NS_ERROR_NO_INTERFACE;
