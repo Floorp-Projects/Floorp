@@ -1873,7 +1873,7 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
             {"selected", "false", STATE_SELECTABLE},
             {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
   {"group", ROLE_GROUPING, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"link", ROLE_LINK, eNameLabelOrTitle, eNoValue, STATE_LINKED, END_ENTRY},
+  {"link", ROLE_LINK, eNameOkFromChildren, eNoValue, STATE_LINKED, END_ENTRY},
   {"option", ROLE_LISTITEM, eNameOkFromChildren, eNoValue, eNoReqStates,
             {"selected", BOOL_STATE, STATE_SELECTED | STATE_SELECTABLE},
             {"selected", "false", STATE_SELECTABLE},
