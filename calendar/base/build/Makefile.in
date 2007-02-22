@@ -66,9 +66,9 @@ LOCAL_INCLUDES = \
 	-I$(srcdir)/../src
 
 SHARED_LIBRARY_LIBS = \
-	$(DIST)/lib/$(LIB_PREFIX)calbase_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)mozical.$(LIB_SUFFIX) \
-	$(NULL)
+    $(DEPTH)/calendar/base/src/$(LIB_PREFIX)calbase_s.$(LIB_SUFFIX) \
+    $(DEPTH)/calendar/libical/src/libical/$(LIB_PREFIX)mozical.$(LIB_SUFFIX) \
+    $(NULL)
 
 EXTRA_DSO_LDOPTS += \
 	$(LIBS_DIR) \
