@@ -4539,6 +4539,21 @@ nsDocShell::CancelRefreshURITimers()
 }
 
 NS_IMETHODIMP
+nsDocShell::GetRefreshPending(PRBool* _retval)
+{
+    if (!mRefreshURIList) {
+        *_retval = PR_FALSE;
+        return NS_OK;
+    }
+
+    PRUint32 count;
+    nsresult rv = mRefreshURIList->Count(&count);
+    if (NS_SUCCEEDED(rv))
+        *_retval = (count != 0);
+    return rv;
+}
+
+NS_IMETHODIMP
 nsDocShell::SuspendRefreshURIs()
 {
     if (mRefreshURIList) {

@@ -41,7 +41,7 @@
 #include "nsIURI.idl"
 interface nsIChannel;
 
-[scriptable, uuid(c25b6df0-e4e0-11da-8ad9-0800200c9a66)]
+[scriptable, uuid(cb0ad623-6b46-4c09-a473-c1d6ca63d3c7)]
 interface nsIRefreshURI : nsISupports {
     /**
       * Load a uri after waiting for aMillis milliseconds. If the docshell
@@ -96,6 +96,11 @@ interface nsIRefreshURI : nsISupports {
       * Cancels all timer loads.
       */
     void cancelRefreshURITimers();
+
+   /**
+     * True when there are pending refreshes, false otherwise.
+     */
+   readonly attribute boolean refreshPending;
 };
 
 
