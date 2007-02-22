@@ -644,8 +644,8 @@ function getFindData(e)
 {
     var findData = new nsFindInstData();
     findData.browser = e.sourceObject.frame;
-    findData.rootSearchWindow = e.sourceObject.frame.contentWindow;
-    findData.currentSearchWindow = e.sourceObject.frame.contentWindow;
+    findData.rootSearchWindow = getContentWindow(e.sourceObject.frame);
+    findData.currentSearchWindow = getContentWindow(e.sourceObject.frame);
 
     /* Yay, evil hacks! findData.init doesn't care about the findService, it
      * gets option settings from webBrowserFind. As we want the wrap option *on*
@@ -2876,12 +2876,11 @@ function setCurrentObject (obj)
     // Input area should have the same direction as the output area
     if (("frame" in client.currentObject) &&
         client.currentObject.frame &&
-        ("contentDocument" in client.currentObject.frame) &&
-        client.currentObject.frame.contentDocument &&
-        ("body" in client.currentObject.frame.contentDocument) &&
-        client.currentObject.frame.contentDocument.body)
+        getContentDocument(client.currentObject.frame) &&
+        ("body" in getContentDocument(client.currentObject.frame)) &&
+        getContentDocument(client.currentObject.frame).body)
     {
-        var contentArea = client.currentObject.frame.contentDocument.body;
+        var contentArea = getContentDocument(client.currentObject.frame).body;
         client.input.setAttribute("dir", contentArea.getAttribute("dir"));
     }
     client.input.focus();
@@ -3255,7 +3254,7 @@ function syncOutputFrame(obj, nesting)
 
     try
     {
-        if (("contentDocument" in iframe) && ("webProgress" in iframe))
+        if (getContentDocument(iframe) && ("webProgress" in iframe))
         {
             var url = obj.prefs["outputWindowURL"];
             iframe.addProgressListener(client.progressListener, ALL);

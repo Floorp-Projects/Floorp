@@ -610,11 +610,33 @@ function getContentWindow(frame)
         if (!frame || !("contentWindow" in frame))
             return false;
 
+        // The "in" operator does not detect wrappedJSObject, so don't bother.
+        if (frame.contentWindow.wrappedJSObject)
+            return frame.contentWindow.wrappedJSObject;
         return frame.contentWindow;
     }
     catch (ex)
     {
         // throws exception is contentWindow is gone
+        return null;
+    }
+}
+
+function getContentDocument(frame)
+{
+    try
+    {
+        if (!frame || !("contentDocument" in frame))
+            return false;
+
+        // The "in" operator does not detect wrappedJSObject, so don't bother.
+        if (frame.contentDocument.wrappedJSObject)
+            return frame.contentDocument.wrappedJSObject;
+        return frame.contentDocument;
+    }
+    catch (ex)
+    {
+        // throws exception is contentDocument is gone
         return null;
     }
 }

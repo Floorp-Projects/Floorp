@@ -1144,7 +1144,7 @@ function cmdSync(e)
     var view = e.sourceObject;
     var window;
     if (("frame" in view) && view.frame)
-        window = view.frame.contentWindow;
+        window = getContentWindow(view.frame);
 
     try
     {
@@ -2212,7 +2212,7 @@ function cmdGotoURL(e)
     if (e.url.search(/^x-cz-command:/i) == 0)
     {
         var ary = e.url.match(/^x-cz-command:(.*)$/i);
-        e.sourceObject.frame.contentWindow.location.href = 
+        getContentWindow(e.sourceObject.frame).location.href = 
             "javascript:void(view.dispatch('" + decodeURI(ary[1]) + "', null, true))";
         return;
     }
@@ -3025,10 +3025,9 @@ function cmdPref (e)
 function cmdPrint(e)
 {
     if (("frame" in e.sourceObject) && e.sourceObject.frame &&
-        ("contentWindow" in e.sourceObject.frame) &&
-        e.sourceObject.frame.contentWindow)
+        getContentWindow(e.sourceObject.frame))
     {
-        e.sourceObject.frame.contentWindow.print();
+        getContentWindow(e.sourceObject.frame).print();
     }
     else
     {
@@ -3504,7 +3503,7 @@ function cmdSave(e)
                         | nsIWBP.PERSIST_FLAGS_DONT_CHANGE_FILENAMES;
 
     // Set the document from the current view, and set a usable title
-    docToBeSaved = e.sourceObject.frame.contentDocument;
+    docToBeSaved = getContentDocument(e.sourceObject.frame);
     var headElement = docToBeSaved.getElementsByTagName("HEAD")[0];
     var titleElements = docToBeSaved.getElementsByTagName("title");
     // Remove an existing title, there shouldn't be more than one.
@@ -4225,7 +4224,7 @@ function cmdDCCDecline(e)
 function cmdTextDirection(e)
 {
     var direction;
-    var sourceObject = e.sourceObject.frame.contentDocument.body;
+    var sourceObject = getContentDocument(e.sourceObject.frame).body;
 
     switch (e.dir)
     {
