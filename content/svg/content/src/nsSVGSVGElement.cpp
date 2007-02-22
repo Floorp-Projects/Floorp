@@ -1171,7 +1171,7 @@ nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable,
 {
   nsIDocument* doc = GetCurrentDoc();
   if (!doc) return NS_ERROR_FAILURE;
-  nsIPresShell* presShell = doc->GetShellAt(0);
+  nsCOMPtr<nsIPresShell> presShell = doc->GetShellAt(0);
   NS_ASSERTION(presShell, "no presShell");
   if (!presShell) return NS_ERROR_FAILURE;
 
