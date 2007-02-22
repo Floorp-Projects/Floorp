@@ -70,6 +70,7 @@
 
 - (void)dealloc
 {
+  [self removeTrackingRect];
   [mImage release];
   [mHoverImage release];
   
