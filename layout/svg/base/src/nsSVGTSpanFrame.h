@@ -96,7 +96,7 @@ public:
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetNextGlyphFragment();
   NS_IMETHOD_(void) SetWhitespaceHandling(PRUint8 aWhitespaceHandling);
 
-private:
+protected:
   nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;
   PRPackedBool mPropagateTransform;
 };

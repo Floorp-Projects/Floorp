@@ -171,6 +171,8 @@ nsIFrame*
 NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 #endif
 nsIFrame*
+NS_NewSVGAFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+nsIFrame*
 NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parent, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
@@ -7127,6 +7129,9 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     newFrame = NS_NewSVGForeignObjectFrame(mPresShell, aContent, aStyleContext);
   }
 #endif
+  else if (aTag == nsGkAtoms::a) {
+    newFrame = NS_NewSVGAFrame(mPresShell, aContent, aStyleContext);
+  }
   else if (aTag == nsGkAtoms::text) {
     newFrame = NS_NewSVGTextFrame(mPresShell, aContent, aStyleContext);
   }
