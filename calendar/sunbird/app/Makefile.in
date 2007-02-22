@@ -245,7 +245,7 @@ LDFLAGS += /HEAP:0x40000
 endif
 endif
 
-$(PROGRAM): $(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
+$(PROGRAM): $(DEPTH)/toolkit/xre/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
 
 ifeq ($(OS_ARCH),OS2)
 ifdef BUILD_STATIC_LIBS
