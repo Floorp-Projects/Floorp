@@ -102,7 +102,7 @@ typedef class nsIFrame nsIBox;
 // IID for the nsIFrame interface 
 // 902aaa17-6433-4d96-86b3-fe1f4af41159
 #define NS_IFRAME_IID \
-{ 0x902aaa17, 0x6433, 0x4d96, \ 
+{ 0x902aaa17, 0x6433, 0x4d96, \
   { 0x86, 0xb3, 0xfe, 0x1f, 0x4a, 0xf4, 0x11, 0x59 } }
 
 /**
