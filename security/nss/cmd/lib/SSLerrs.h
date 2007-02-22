@@ -238,7 +238,7 @@ ER3(SSL_ERROR_HANDSHAKE_UNEXPECTED_ALERT    , (SSL_ERROR_BASE + 59),
 "SSL peer was not expecting a handshake message it received.")
 
 ER3(SSL_ERROR_DECOMPRESSION_FAILURE_ALERT   , (SSL_ERROR_BASE + 60),
-"SSL peer was unable to succesfully decompress an SSL record it received.")
+"SSL peer was unable to successfully decompress an SSL record it received.")
 
 ER3(SSL_ERROR_HANDSHAKE_FAILURE_ALERT       , (SSL_ERROR_BASE + 61),
 "SSL peer was unable to negotiate an acceptable set of security parameters.")
