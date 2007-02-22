@@ -637,7 +637,8 @@ nsXULPDGlobalObject::SetScriptContext(PRUint32 lang_id, nsIScriptContext *aScrip
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  NS_ASSERTION(!aScriptContext, "Bad call to SetContext()!");
+  NS_ASSERTION(!aScriptContext || !mScriptContexts[lang_ndx],
+               "Bad call to SetContext()!");
 
   void *script_glob = nsnull;
 
