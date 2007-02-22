@@ -1,5 +1,7 @@
 random == check-image.html check-image-ref.html # bug 371232
 == check-image-blue.html check-image-blue-ref.html
+
+
 != background-color-base.html background-color-height-10.html
 == background-color-height-4.html background-color-base.html
 == background-color-height-5.html background-color-height-10.html
@@ -28,6 +30,8 @@ random == check-image.html check-image-ref.html # bug 371232
 == background-color-width-left-4.html background-color-width-4.html
 == background-color-width-left-5.html background-color-width-5.html
 == background-color-width-left-6.html background-color-width-6.html
+
+
 != border-base-ref.html border-height-10-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-height-4.html border-base-ref.html # bug 361523
 == border-height-5.html border-height-10-ref.html
@@ -44,6 +48,8 @@ fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") == border-left-6.html border-left-10-ref.h
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-top-4.html border-base-ref.html # bug 361523
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-top-5.html border-top-10-ref.html # bug 361523
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-top-6.html border-top-10-ref.html # bug 361523
+
+
 != background-image-base.html background-image-height-10-ref.html
 == background-image-height-4.html background-image-base.html
 fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") == background-image-height-5.html background-image-height-10-ref.html # bug 371225
@@ -75,3 +81,51 @@ random == background-image-height-top-6.html background-image-height-6.html
 random == background-image-width-left-4.html background-image-width-4.html
 random == background-image-width-left-5.html background-image-width-5.html
 random == background-image-width-left-6.html background-image-width-6.html
+
+
+# These all fail due to any of bug 371182, bug 155955, and maybe also
+# bug 371180, plus a bunch of other bugs that ought to be filed.
+fails == collapsed-border-height-4.html border-base-ref.html
+fails == collapsed-border-height-5.html border-height-10-ref.html
+fails == collapsed-border-height-6.html border-height-10-ref.html
+fails == collapsed-border-width-4.html border-base-ref.html
+fails == collapsed-border-width-5.html border-width-10-ref.html
+fails == collapsed-border-width-6.html border-width-10-ref.html
+fails == collapsed-border-left-4.html border-base-ref.html
+fails == collapsed-border-left-5.html border-left-10-ref.html
+fails == collapsed-border-left-6.html border-left-10-ref.html
+fails == collapsed-border-top-4.html border-base-ref.html
+fails == collapsed-border-top-5.html border-top-10-ref.html
+fails == collapsed-border-top-6.html border-top-10-ref.html
+
+
+# These failures are all a bug related to the image scaling code that
+# needs to be filed.
+# != image-base-ref.html image-height-10-ref.html
+# == image-height-4.html image-base-ref.html
+# fails == image-height-5.html image-height-10-ref.html
+# == image-height-6.html image-height-10-ref.html
+# != image-base-ref.html image-top-10-ref.html
+# fails == image-top-4.html image-base-ref.html
+# fails == image-top-5.html image-top-10-ref.html
+# == image-top-6.html image-top-10-ref.html
+# != image-base-ref.html image-width-10-ref.html
+# == image-width-4.html image-base-ref.html
+# fails == image-width-5.html image-width-10-ref.html
+# == image-width-6.html image-width-10-ref.html
+# != image-base-ref.html image-left-10-ref.html
+# fails == image-left-4.html image-base-ref.html
+# fails == image-left-5.html image-left-10-ref.html
+# == image-left-6.html image-left-10-ref.html
+# fails == image-top-height-4.html image-height-4.html
+# fails == image-top-height-5.html image-height-5.html
+# fails == image-top-height-6.html image-height-6.html
+# fails == image-left-width-4.html image-width-4.html
+# fails == image-left-width-5.html image-width-5.html
+# fails == image-left-width-6.html image-width-6.html
+# fails == image-height-top-4.html image-height-4.html
+# fails == image-height-top-5.html image-height-5.html
+# fails == image-height-top-6.html image-height-6.html
+# fails == image-width-left-4.html image-width-4.html
+# fails == image-width-left-5.html image-width-5.html
+# fails == image-width-left-6.html image-width-6.html
