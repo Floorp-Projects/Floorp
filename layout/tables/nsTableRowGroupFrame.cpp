@@ -601,10 +601,10 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*          aPresContext,
     if (!rowFrame->GetPrevInFlow()) {
       if (rowFrame->HasPctHeight()) {
         rowInfo[rowIndex].hasPctHeight = PR_TRUE;
-        rowInfo[rowIndex].pctHeight = nsTableFrame::RoundToPixel(rowFrame->GetHeight(pctHeightBasis));
+        rowInfo[rowIndex].pctHeight = rowFrame->GetHeight(pctHeightBasis);
       }
       rowInfo[rowIndex].hasStyleHeight = rowFrame->HasStyleHeight();
-      nonPctHeight = nsTableFrame::RoundToPixel(PR_MAX(nonPctHeight, rowFrame->GetFixedHeight()));
+      nonPctHeight = PR_MAX(nonPctHeight, rowFrame->GetFixedHeight());
     }
     UpdateHeights(rowInfo[rowIndex], nonPctHeight, heightOfRows, heightOfUnStyledRows);
 
@@ -699,7 +699,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*          aPresContext,
                       // give rows their percentage, except for the first row which gets the remainder
                       nscoord extraForRow = (0 == spanX) ? extra - extraUsed  
                                                          : NSToCoordRound(((float)(extra)) * percent);
-                      extraForRow = PR_MIN(nsTableFrame::RoundToPixel(extraForRow), extra - extraUsed);
+                      extraForRow = PR_MIN(extraForRow, extra - extraUsed);
                       // update the row height
                       UpdateHeights(rowInfo[rowIndex + spanX], extraForRow, heightOfRows, heightOfUnStyledRows);
                       extraUsed += extraForRow;
@@ -727,7 +727,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*          aPresContext,
                     nscoord extraForRow = (numSpecialRowsSpanned - 1 == numSpecialRowsAllocated) 
                                           ? extra - extraUsed  
                                           : NSToCoordRound(((float)(extra)) * percent);
-                    extraForRow = PR_MIN(nsTableFrame::RoundToPixel(extraForRow), extra - extraUsed);
+                    extraForRow = PR_MIN(extraForRow, extra - extraUsed);
                     // update the row height
                     UpdateHeights(rowInfo[rowIndex + spanX], extraForRow, heightOfRows, heightOfUnStyledRows);
                     extraUsed += extraForRow;
@@ -780,7 +780,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*          aPresContext,
           nscoord extraForRow = (numRows - 1 == rowIndex) 
                                 ? extraComputedHeight - extraUsed  
                                 : NSToCoordRound(((float)extraComputedHeight) * percent);
-          extraForRow = PR_MIN(nsTableFrame::RoundToPixel(extraForRow), extraComputedHeight - extraUsed);
+          extraForRow = PR_MIN(extraForRow, extraComputedHeight - extraUsed);
           // update the row height
           UpdateHeights(rowInfo[rowIndex], extraForRow, heightOfRows, heightOfUnStyledRows);
           extraUsed += extraForRow;
@@ -1040,12 +1040,8 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*          aPresContext,
   nsTableRowFrame* prevRowFrame = nsnull;
   aDesiredSize.height = 0;
 
-  nscoord availWidth  = (NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) ?
-                        NS_UNCONSTRAINEDSIZE :
-                        nsTableFrame::RoundToPixel(aReflowState.availableWidth);
-  nscoord availHeight = (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) ?
-                        NS_UNCONSTRAINEDSIZE :
-                        nsTableFrame::RoundToPixel(aReflowState.availableHeight);
+  nscoord availWidth  = aReflowState.availableWidth;
+  nscoord availHeight = aReflowState.availableHeight;
   
   PRBool  borderCollapse = ((nsTableFrame*)aTableFrame->GetFirstInFlow())->IsBorderCollapse();
   nscoord cellSpacingY   = aTableFrame->GetCellSpacingY();
