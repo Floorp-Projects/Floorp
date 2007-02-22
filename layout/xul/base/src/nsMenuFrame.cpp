@@ -705,8 +705,7 @@ nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
 
       // make sure the scrolled window is at 0,0
       if (mLastPref.height <= rect.height) {
-        nsIBox* child;
-        menuPopup->GetChildBox(&child);
+        nsIBox* child = menuPopup->GetChildBox();
 
         nsCOMPtr<nsIScrollableFrame> scrollframe(do_QueryInterface(child));
         if (scrollframe) {
@@ -1061,8 +1060,7 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
     }
 
     // is the new size too small? Make sure we handle scrollbars correctly
-    nsIBox* child;
-    popupChild->GetChildBox(&child);
+    nsIBox* child = popupChild->GetChildBox();
 
     nsRect bounds(popupChild->GetRect());
 

@@ -164,20 +164,6 @@ nsBoxFrame::~nsBoxFrame()
 }
 
 NS_IMETHODIMP
-nsBoxFrame::GetVAlign(Valignment& aAlign)
-{
-   aAlign = mValign;
-   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBoxFrame::GetHAlign(Halignment& aAlign)
-{
-   aAlign = mHalign;
-   return NS_OK;
-}
-
-NS_IMETHODIMP
 nsBoxFrame::SetInitialChildList(nsIAtom*        aListName,
                                 nsIFrame*       aChildList)
 {
@@ -1228,8 +1214,7 @@ nsBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
       NS_ASSERTION(frameToMove, "Out of flow without placeholder?");
     }
     
-    nsIBox* parent;
-    frameToMove->GetParentBox(&parent);
+    nsIBox* parent = frameToMove->GetParentBox();
     // If our parent is not a box, there's not much we can do... but in that
     // case our ordinal doesn't matter anyway, so that's ok.
     if (parent) {
@@ -1439,7 +1424,7 @@ nsBoxFrame::PaintXULDebugOverlay(nsIRenderingContext& aRenderingContext,
 
   nscoord onePixel = GetPresContext()->IntScaledPixelsToTwips(1);
 
-  GetChildBox(&kid);
+  kid = GetChildBox();
   while (nsnull != kid) {
     PRBool isHorizontal = IsHorizontal();
 
@@ -1477,7 +1462,7 @@ nsBoxFrame::PaintXULDebugOverlay(nsIRenderingContext& aRenderingContext,
       DrawSpacer(GetPresContext(), aRenderingContext, isHorizontal, flex, x, y, borderSize, spacerSize);
     }
 
-    kid->GetNextBox(&kid);
+    kid = kid->GetNextBox();
   }
 }
 #endif
@@ -1674,30 +1659,6 @@ nsBoxFrame::GetDebugPadding(nsMargin& aPadding)
 {
     aPadding.SizeTo(2,2,2,2);
 }
-
-NS_IMETHODIMP 
-nsBoxFrame::GetInset(nsMargin& margin)
-{
-  margin.SizeTo(0,0,0,0);
-
-  if (mState & NS_STATE_CURRENTLY_IN_DEBUG) {
-    nsPresContext* presContext = GetPresContext();
-    nsMargin debugMargin(0,0,0,0);
-    nsMargin debugBorder(0,0,0,0);
-    nsMargin debugPadding(0,0,0,0);
-    GetDebugBorder(debugBorder);
-    PixelMarginToTwips(presContext, debugBorder);
-    GetDebugMargin(debugMargin);
-    PixelMarginToTwips(presContext, debugMargin);
-    GetDebugMargin(debugPadding);
-    PixelMarginToTwips(presContext, debugPadding);
-    margin += debugBorder;
-    margin += debugMargin;
-    margin += debugPadding;
-  }
-
-  return NS_OK;
-}
 #endif
 
 void 
@@ -1769,8 +1730,7 @@ nsBoxFrame::DisplayDebugInfoFor(nsIBox*  aBox,
     //printf("%%%%%% inside box %%%%%%%\n");
 
     int count = 0;
-    nsIBox* child = nsnull;
-    aBox->GetChildBox(&child);
+    nsIBox* child = aBox->GetChildBox();
 
     nsMargin m;
     nsMargin m2;
@@ -1858,7 +1818,7 @@ nsBoxFrame::DisplayDebugInfoFor(nsIBox*  aBox,
                     return NS_OK;   
             }
 
-          child->GetNextBox(&child);
+          child = child->GetNextBox();
           count++;
         }
     } else {
@@ -1872,12 +1832,11 @@ nsBoxFrame::DisplayDebugInfoFor(nsIBox*  aBox,
 void
 nsBoxFrame::SetDebugOnChildList(nsBoxLayoutState& aState, nsIBox* aChild, PRBool aDebug)
 {
-    nsIBox* child = nsnull;
-     GetChildBox(&child);
+    nsIBox* child = GetChildBox();
      while (child)
      {
         child->SetDebug(aState, aDebug);
-        child->GetNextBox(&child);
+        child = child->GetNextBox();
      }
 }
 #endif
@@ -2208,7 +2167,7 @@ nsBoxFrame::RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)
     else if (!foundNewPrevSib && child != aChild)
       newPrevSib = child;
 
-    child->GetNextBox(&child);
+    child = child->GetNextBox();
   }
 
   NS_ASSERTION(foundPrevSib, "aChild not in frame list?");

@@ -59,8 +59,7 @@ nsBoxLayout::nsBoxLayout()
 void
 nsBoxLayout::GetParentLayout(nsIBox* aBox, nsIBoxLayout** aParent)
 {
-  nsIBox* parent = nsnull;
-  aBox->GetParentBox(&parent);
+  nsIBox* parent = aBox->GetParentBox();
   if (parent)
   {
     parent->GetLayoutManager(aParent);
@@ -88,12 +87,6 @@ nsBoxLayout::AddMargin(nsSize& aSize, const nsMargin& aMargin)
   nsBox::AddMargin(aSize, aMargin);
 }
 
-void
-nsBoxLayout::AddInset(nsIBox* aBox, nsSize& aSize)
-{
-  nsBox::AddInset(aBox, aSize);
-}
-
 NS_IMETHODIMP
 nsBoxLayout::GetFlex(nsIBox* aBox, nsBoxLayoutState& aState, nscoord& aFlex)
 {
@@ -115,7 +108,6 @@ nsBoxLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize
   aSize.width = 0;
   aSize.height = 0;
   AddBorderAndPadding(aBox, aSize);
-  AddInset(aBox, aSize);
 
   return NS_OK;
 }
@@ -126,7 +118,6 @@ nsBoxLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize&
   aSize.width = 0;
   aSize.height = 0;
   AddBorderAndPadding(aBox, aSize);
-  AddInset(aBox, aSize);
   return NS_OK;
 }
 
@@ -136,7 +127,6 @@ nsBoxLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize&
   aSize.width = NS_INTRINSICSIZE;
   aSize.height = NS_INTRINSICSIZE;
   AddBorderAndPadding(aBox, aSize);
-  AddInset(aBox, aSize);
   return NS_OK;
 }
 

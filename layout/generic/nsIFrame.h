@@ -100,10 +100,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface 
-// 4ea7876f-1550-40d4-a764-739a0e4289a1
+// 902aaa17-6433-4d96-86b3-fe1f4af41159
 #define NS_IFRAME_IID \
-{ 0x4ea7876f, 0x1550, 0x40d4, \
-  { 0xa7, 0x64, 0x73, 0x9a, 0x0e, 0x42, 0x89, 0xa1 } }
+{ 0x902aaa17, 0x6433, 0x4d96, \ 
+  { 0x86, 0xb3, 0xfe, 0x1f, 0x4a, 0xf4, 0x11, 0x59 } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -1862,38 +1862,36 @@ NS_PTR_TO_INT32(frame->GetProperty(nsGkAtoms::embeddingLevel))
   // area. It's enough to just call Layout or SyncLayout on the
   // box. You can pass PR_TRUE to aRemoveOverflowArea as a
   // convenience.
-  NS_IMETHOD SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
-                       PRBool aRemoveOverflowArea = PR_FALSE)=0;
+  virtual void SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
+                         PRBool aRemoveOverflowArea = PR_FALSE)=0;
   NS_HIDDEN_(nsresult) Layout(nsBoxLayoutState& aBoxLayoutState);
-  nsresult GetChildBox(nsIBox** aBox)
+  nsIBox* GetChildBox() const
   {
     // box layout ends at box-wrapped frames, so don't allow these frames
     // to report child boxes.
-    *aBox = IsBoxFrame() ? GetFirstChild(nsnull) : nsnull;
-    return NS_OK;
+    return IsBoxFrame() ? GetFirstChild(nsnull) : nsnull;
   }
-  nsresult GetNextBox(nsIBox** aBox)
+  nsIBox* GetNextBox() const
   {
-    *aBox = (mParent && mParent->IsBoxFrame()) ? mNextSibling : nsnull;
-    return NS_OK;
+    return (mParent && mParent->IsBoxFrame()) ? mNextSibling : nsnull;
   }
-  NS_HIDDEN_(nsresult) GetParentBox(nsIBox** aParent);
+  nsIBox* GetParentBox() const
+  {
+    return (mParent && mParent->IsBoxFrame()) ? mParent : nsnull;
+  }
   // Box methods.  Note that these do NOT just get the CSS border, padding,
   // etc.  They also talk to nsITheme.
   NS_IMETHOD GetBorderAndPadding(nsMargin& aBorderAndPadding);
   NS_IMETHOD GetBorder(nsMargin& aBorder)=0;
   NS_IMETHOD GetPadding(nsMargin& aBorderAndPadding)=0;
-#ifdef DEBUG_LAYOUT
-  NS_IMETHOD GetInset(nsMargin& aInset)=0;
-#else
-  nsresult GetInset(nsMargin& aInset) { aInset.SizeTo(0, 0, 0, 0); return NS_OK; }
-#endif
   NS_IMETHOD GetMargin(nsMargin& aMargin)=0;
   NS_IMETHOD SetLayoutManager(nsIBoxLayout* aLayout)=0;
   NS_IMETHOD GetLayoutManager(nsIBoxLayout** aLayout)=0;
   NS_HIDDEN_(nsresult) GetClientRect(nsRect& aContentRect);
-  NS_IMETHOD GetVAlign(Valignment& aAlign) = 0;
-  NS_IMETHOD GetHAlign(Halignment& aAlign) = 0;
+
+  // For nsSprocketLayout
+  virtual Valignment GetVAlign() const = 0;
+  virtual Halignment GetHAlign() const = 0;
 
   PRBool IsHorizontal() const { return (mState & NS_STATE_IS_HORIZONTAL) != 0; }
   PRBool IsNormalDirection() const { return (mState & NS_STATE_IS_DIRECTION_NORMAL) != 0; }

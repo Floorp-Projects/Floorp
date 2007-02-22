@@ -94,7 +94,7 @@ nsGridRowLayout::GetParentGridPart(nsIBox* aBox, nsIBox** aParentBox, nsIGridPar
 
   // get the parent
   if (aBox)
-    aBox->GetParentBox(&aBox);
+    aBox = aBox->GetParentBox();
 
   if (aBox)
   {
@@ -126,8 +126,7 @@ nsGridRowLayout::GetGrid(nsIBox* aBox, PRInt32* aIndex, nsGridRowLayout* aReques
    nsresult rv = NS_OK;
 
    PRInt32 index = -1;
-   nsIBox* child = nsnull;
-   aBox->GetChildBox(&child);
+   nsIBox* child = aBox->GetChildBox();
    PRInt32 count = 0;
    while(child)
    {
@@ -149,7 +148,7 @@ nsGridRowLayout::GetGrid(nsIBox* aBox, PRInt32* aIndex, nsGridRowLayout* aReques
      } else 
        count++;
 
-     child->GetNextBox(&child);
+     child = child->GetNextBox();
    }
 
    // if we didn't find ourselves then the tree isn't properly formed yet
@@ -184,17 +183,14 @@ nsGridRowLayout::GetTotalMargin(nsIBox* aBox, PRBool aIsHorizontal)
   if (part && parent) {
     // if we are the first or last child walk upward and add margins.
 
-    nsIBox* next = nsnull;
-    nsIBox* child = nsnull;
-
     // make sure we check for a scrollbox
     aBox = nsGrid::GetScrollBox(aBox);
 
     // see if we have a next to see if we are last
-    aBox->GetNextBox(&next);
+    nsIBox* next = aBox->GetNextBox();
 
     // get the parent first child to see if we are first
-    parent->GetChildBox(&child);
+    nsIBox* child = parent->GetChildBox();
 
     margin = part->GetTotalMargin(parent, aIsHorizontal);
 

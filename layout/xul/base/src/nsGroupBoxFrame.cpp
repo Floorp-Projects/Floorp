@@ -233,23 +233,21 @@ nsIBox*
 nsGroupBoxFrame::GetCaptionBox(nsPresContext* aPresContext, nsRect& aCaptionRect)
 {
     // first child is our grouped area
-    nsIBox* box;
-    GetChildBox(&box);
+    nsIBox* box = GetChildBox();
 
     // no area fail.
     if (!box)
       return nsnull;
 
     // get the first child in the grouped area, that is the caption
-    box->GetChildBox(&box);
+    box = box->GetChildBox();
 
     // nothing in the area? fail
     if (!box)
       return nsnull;
 
     // now get the caption itself. It is in the caption frame.
-    nsIBox* child = nsnull;
-    box->GetChildBox(&child);
+    nsIBox* child = box->GetChildBox();
 
     if (child) {
        // convert to our coordinates.

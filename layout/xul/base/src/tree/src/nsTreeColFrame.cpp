@@ -184,21 +184,19 @@ nsTreeColFrame::AttributeChanged(PRInt32 aNameSpaceID,
   return rv;
 }
 
-NS_IMETHODIMP
+void
 nsTreeColFrame::SetBounds(nsBoxLayoutState& aBoxLayoutState,
                           const nsRect& aRect,
                           PRBool aRemoveOverflowArea) {
   nscoord oldWidth = mRect.width;
 
-  nsresult rv = nsBoxFrame::SetBounds(aBoxLayoutState, aRect,
-                                      aRemoveOverflowArea);
+  nsBoxFrame::SetBounds(aBoxLayoutState, aRect, aRemoveOverflowArea);
   if (mRect.width != oldWidth) {
     nsITreeBoxObject* treeBoxObject = GetTreeBoxObject();
     if (treeBoxObject) {
       treeBoxObject->Invalidate();
     }
   }
-  return rv;
 }
 
 nsITreeBoxObject*

@@ -1056,8 +1056,6 @@ nsXULScrollFrame::GetBoxAscent(nsBoxLayoutState& aState)
   ascent += m.top;
   GetMargin(m);
   ascent += m.top;
-  GetInset(m);
-  ascent += m.top;
 
   return ascent;
 }
@@ -1090,7 +1088,6 @@ nsXULScrollFrame::GetPrefSize(nsBoxLayoutState& aState)
   }
 
   AddBorderAndPadding(pref);
-  AddInset(pref);
   nsIBox::AddCSSPrefSize(aState, this, pref);
   return pref;
 }
@@ -1125,7 +1122,6 @@ nsXULScrollFrame::GetMinSize(nsBoxLayoutState& aState)
   }
 
   AddBorderAndPadding(min);
-  AddInset(min);
   nsIBox::AddCSSMinSize(aState, this, min);
   return min;
 }
@@ -1140,7 +1136,6 @@ nsXULScrollFrame::GetMaxSize(nsBoxLayoutState& aState)
   nsSize max(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
 
   AddBorderAndPadding(max);
-  AddInset(max);
   nsIBox::AddCSSMaxSize(aState, this, max);
   return max;
 }

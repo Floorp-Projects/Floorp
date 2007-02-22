@@ -107,11 +107,9 @@ public:
 #ifdef DEBUG_LAYOUT
   NS_IMETHOD SetDebug(nsBoxLayoutState& aBoxLayoutState, PRBool aDebug);
   NS_IMETHOD GetDebug(PRBool& aDebug);
-
-  NS_IMETHOD GetInset(nsMargin& aInset);
 #endif
-  NS_IMETHOD GetVAlign(Valignment& aAlign);
-  NS_IMETHOD GetHAlign(Halignment& aAlign);
+  virtual Valignment GetVAlign() const { return mValign; }
+  virtual Halignment GetHAlign() const { return mHalign; }
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
 
   virtual PRBool GetMouseThrough() const;

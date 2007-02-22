@@ -271,8 +271,7 @@ nsPopupSetFrame::DoLayout(nsBoxLayoutState& aState)
      // }
 
       // is the new size too small? Make sure we handle scrollbars correctly
-      nsIBox* child;
-      popupChild->GetChildBox(&child);
+      nsIBox* child = popupChild->GetChildBox();
 
       nsRect bounds(popupChild->GetRect());
 

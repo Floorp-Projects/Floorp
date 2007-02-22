@@ -84,9 +84,8 @@ nsStackLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize
 
   // we are as wide as the widest child plus its left offset
   // we are tall as the tallest child plus its top offset
-  nsIBox* child = nsnull;
-  aBox->GetChildBox(&child);
- 
+
+  nsIBox* child = aBox->GetChildBox();
   while (child) {  
     nsSize pref = child->GetPrefSize(aState);
 
@@ -94,12 +93,11 @@ nsStackLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize
     AddOffset(aState, child, pref);
     AddLargestSize(aSize, pref);
 
-    child->GetNextBox(&child);
+    child = child->GetNextBox();
   }
 
-  // now add our border and padding and insets
+  // now add our border and padding
   AddBorderAndPadding(aBox, aSize);
-  AddInset(aBox, aSize);
 
   return NS_OK;
 }
@@ -109,24 +107,21 @@ nsStackLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
 {
   aSize.width = 0;
   aSize.height = 0;
-
-  // run through all the children and get their min, max, and preferred sizes
-  
-  nsIBox* child = nsnull;
-  aBox->GetChildBox(&child);
    
+  // run through all the children and get their min, max, and preferred sizes
+
+  nsIBox* child = aBox->GetChildBox();
   while (child) {  
     nsSize min = child->GetMinSize(aState);
     AddMargin(child, min);
     AddOffset(aState, child, min);
     AddLargestSize(aSize, min);
 
-    child->GetNextBox(&child);
+    child = child->GetNextBox();
   }
 
-  // now add our border and padding and insets
+  // now add our border and padding
   AddBorderAndPadding(aBox, aSize);
-  AddInset(aBox,aSize);
 
   return NS_OK;
 }
@@ -138,10 +133,8 @@ nsStackLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
   aSize.height = NS_INTRINSICSIZE;
 
   // run through all the children and get their min, max, and preferred sizes
- 
-  nsIBox* child = nsnull;
-  aBox->GetChildBox(&child);
-   
+
+  nsIBox* child = aBox->GetChildBox();
   while (child) {  
     nsSize max = child->GetMaxSize(aState);
     nsSize min = child->GetMinSize(aState);
@@ -151,12 +144,11 @@ nsStackLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
     AddOffset(aState, child, max);
     AddSmallestSize(aSize, max);
 
-    child->GetNextBox(&child);
+    child = child->GetNextBox();
   }
 
-  // now add our border and padding and insets
+  // now add our border and padding
   AddBorderAndPadding(aBox, aSize);
-  AddInset(aBox, aSize);
 
   return NS_OK;
 }
@@ -166,9 +158,8 @@ NS_IMETHODIMP
 nsStackLayout::GetAscent(nsIBox* aBox, nsBoxLayoutState& aState, nscoord& aAscent)
 {
   aAscent = 0;
-  nsIBox* child = nsnull;
-  aBox->GetChildBox(&child);
-   
+
+  nsIBox* child = aBox->GetChildBox();
   while (child) {  
     nscoord ascent = child->GetBoxAscent(aState);
     nsMargin margin;
@@ -176,7 +167,8 @@ nsStackLayout::GetAscent(nsIBox* aBox, nsBoxLayoutState& aState, nscoord& aAscen
     ascent += margin.top + margin.bottom;
     if (ascent > aAscent)
       aAscent = ascent;
-    child->GetNextBox(&child);
+
+    child = child->GetNextBox();
   }
 
   return NS_OK;
@@ -254,8 +246,7 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
   PRBool grow;
 
   do {
-    nsIBox* child = nsnull;
-    aBox->GetChildBox(&child);
+    nsIBox* child = aBox->GetChildBox();
     grow = PR_FALSE;
 
     while (child) 
@@ -337,7 +328,7 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
           }
        }
 
-       child->GetNextBox(&child);
+       child = child->GetNextBox();
      }
    } while (grow);
    
@@ -346,8 +337,6 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
    nsRect bounds(aBox->GetRect());
    nsMargin bp;
    aBox->GetBorderAndPadding(bp);
-   clientRect.Inflate(bp);
-   aBox->GetInset(bp);
    clientRect.Inflate(bp);
 
    if (clientRect.width > bounds.width || clientRect.height > bounds.height)
