@@ -100,7 +100,7 @@ EXTRA_DSO_LIBS  = msgbaseutil
 endif
 
 else
-SHARED_LIBRARY_LIBS = $(DIST)/lib/$(LIB_PREFIX)msgbsutl_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS = ../../../base/util/$(LIB_PREFIX)msgbsutl_s.$(LIB_SUFFIX)
 endif
 
 EXTRA_DSO_LIBS  += addrbook_s
