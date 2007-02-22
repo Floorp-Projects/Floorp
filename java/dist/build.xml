@@ -154,6 +154,8 @@
     <copy todir="${dist.home}/samples/automated/src/main/java">
       <fileset dir="${source.home}/webclient/test/automated/src/classes">
         <exclude name="**/*Bookmark*.java" />
+        <exclude name="**/*Preferences*.java" />
+        <exclude name="**/*Profile*.java" />
       </fileset>
     </copy>
     <copy todir="${dist.home}/samples/automated/src/main/resources">

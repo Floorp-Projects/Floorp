@@ -201,7 +201,7 @@ ${so.prefix}xul.${so.extension}.
         </copy>
     </target>
     
-    <target name="run">
+    <target name="run" depends="-init-check">
         
         <java classname="org.mozilla.webclient.test.TestBrowser" fork="true">
             <jvmarg value="-DNSPR_LOG_MODULES=webclient:4,webclientstub:4,pluglets:4"/>
@@ -210,8 +210,12 @@ ${so.prefix}xul.${so.extension}.
             <jvmarg value="-DBROWSER_BIN_DIR=${browser.bin.dir}"/>
             <jvmarg line="${debug.jvm.args}"/>
             <jvmarg line="-Djava.util.logging.config.file=${basedir}${FILE_PATH_SEP}logging.properties"/>
+            <jvmarg line="-Djava.library.path=${browser.bin.dir}${PATH_SEP}${browser.bin.dir}${FILE_PATH_SEP}components" />
             
-            <classpath refid="run.classpath"/>
+                    <classpath>
+                        <path path="${run.test.classpath}"/>
+                    </classpath>
+
         </java>
     </target>
     
@@ -260,6 +264,7 @@ ${so.prefix}xul.${so.extension}.
                     <jvmarg value="-DBROWSER_BIN_DIR=${browser.bin.dir}"/>
                     <jvmarg line="${debug.jvm.args}"/>
                     <jvmarg line="-Djava.util.logging.config.file=${basedir}${FILE_PATH_SEP}logging.properties"/>
+                    <jvmarg line="-Djava.library.path=${browser.bin.dir}${PATH_SEP}${browser.bin.dir}${FILE_PATH_SEP}components" />
                     
                     <batchtest todir="${build.test.results.dir}">
                         <fileset dir="${test.src.dir}" includes="@{includes}"/>
