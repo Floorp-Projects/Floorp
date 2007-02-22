@@ -95,9 +95,15 @@ function addSidebar() {
 <div id="page-index">
   <div class="intro"></div>
 
-  <p>This is where we put in lots of nifty words explaining all about [% terms.Bugzilla %].</p>
+  <p>Welcome to [% terms.Bugzilla %]. To see what's new in this version
+    of [% terms.Bugzilla %], see the 
+    <a href="page.cgi?id=release-notes.html">release notes</a>!
+    You may also want to read the 
+    <a href="[% Param('docs_urlbase') FILTER html %]using.html">
+    [%- terms.Bugzilla %] User's Guide</a> to find out more about 
+    [%+ terms.Bugzilla %] and how to use it.</p>
 
-  <p>But it all boils down to a choice of:</p>
+  <p>Most common actions:</p>
   <ul>
     <li id="query"><a href="query.cgi">Search existing [% terms.bug %] reports</a></li>
     <li id="enter-bug"><a href="enter_bug.cgi">Enter a new [% terms.bug %] report</a></li>

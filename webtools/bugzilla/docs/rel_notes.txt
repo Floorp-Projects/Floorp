@@ -1,3 +1,11 @@
+Release Notes for Bugzilla version 3.0 and higher are available in HTML
+format, either on the bugzilla.org website, or in your current installation,
+linked from the index page.
+
+bugzilla.org links for release notes
+------------------------------------
+3.0: http://www.bugzilla.org/releases/3.0/release-notes.html
+
 ***************************************
 *** The Bugzilla 2.22 Release Notes ***
 ***************************************
