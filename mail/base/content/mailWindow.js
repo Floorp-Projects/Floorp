@@ -450,27 +450,31 @@ function StopUrls()
 }
 
 /** 
- * Every time the application version changes, we should load the welcome url for that version
- * instead of the usual start page. 
- * @return true if we should use the welcome url
+ * @returns the pref name to use for fetching the start page url. Every time the application version changes, 
+ * return "mailnews.start_page.override_url". If this is the first time the application has been 
+ * launched, return "mailnews.start_page.welcome_url". Otherwise return "mailnews.start_page.url".
  */
-function useWelcomeUrl()
+function startPageUrlPref()
 {
+  var prefForStartPageUrl = "mailnews.start_page.url";
   var savedVersion = null;
   try {
     savedVersion = pref.getCharPref("mailnews.start_page_override.mstone");
   } catch (ex) {}
   
-  // ability to always bypass the welcome url
-  if (savedVersion == "ignore")
-    return false;
-    
-  // look up the current version. Firefox uses the platform version it extracts from nsIHttpProtocolHandler.
-  // Can we use an application version instead? For now, also use the platform version.
-  var currentPlatformVersion = Components.classes["@mozilla.org/xre/app-info;1"].
-              getService(Components.interfaces.nsIXULAppInfo).platformVersion;
-  pref.setCharPref("mailnews.start_page_override.mstone", currentPlatformVersion);
-  return currentPlatformVersion != savedVersion;
+  if (savedVersion != "ignore")
+  {
+    var currentPlatformVersion = Components.classes["@mozilla.org/xre/app-info;1"].
+                                            getService(Components.interfaces.nsIXULAppInfo).platformVersion;
+    pref.setCharPref("mailnews.start_page_override.mstone", currentPlatformVersion);
+    // Use the welcome URL the first time we run
+    if (!savedVersion)
+      prefForStartPageUrl = "mailnews.start_page.welcome_url";
+    else if (currentPlatformVersion != savedVersion)
+      prefForStartPageUrl = "mailnews.start_page.override_url";
+  }
+  
+  return prefForStartPageUrl;
 }
 
 function loadStartPage() 
@@ -483,8 +487,7 @@ function loadStartPage()
     // only load the start page if we are online
     if (startpageenabled && MailOfflineMgr.isOnline())
     {
-      var startpage = getFormattedRegionURL(useWelcomeUrl() ? "mailnews.start_page.welcome_url" :
-                                            "mailnews.start_page.url");
+      var startpage = getFormattedRegionURL(startPageUrlPref());
       if (startpage)
       {
         GetMessagePaneFrame().location.href = startpage;
