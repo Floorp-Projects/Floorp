@@ -99,33 +99,35 @@ fails == collapsed-border-top-5.html border-top-10-ref.html
 fails == collapsed-border-top-6.html border-top-10-ref.html
 
 
-# These failures are all a bug related to the image scaling code that
-# needs to be filed.
-# != image-base-ref.html image-height-10-ref.html
-# == image-height-4.html image-base-ref.html
-# fails == image-height-5.html image-height-10-ref.html
-# == image-height-6.html image-height-10-ref.html
-# != image-base-ref.html image-top-10-ref.html
-# fails == image-top-4.html image-base-ref.html
-# fails == image-top-5.html image-top-10-ref.html
-# == image-top-6.html image-top-10-ref.html
-# != image-base-ref.html image-width-10-ref.html
-# == image-width-4.html image-base-ref.html
-# fails == image-width-5.html image-width-10-ref.html
-# == image-width-6.html image-width-10-ref.html
-# != image-base-ref.html image-left-10-ref.html
-# fails == image-left-4.html image-base-ref.html
-# fails == image-left-5.html image-left-10-ref.html
-# == image-left-6.html image-left-10-ref.html
-# fails == image-top-height-4.html image-height-4.html
-# fails == image-top-height-5.html image-height-5.html
-# fails == image-top-height-6.html image-height-6.html
-# fails == image-left-width-4.html image-width-4.html
-# fails == image-left-width-5.html image-width-5.html
-# fails == image-left-width-6.html image-width-6.html
-# fails == image-height-top-4.html image-height-4.html
-# fails == image-height-top-5.html image-height-5.html
-# fails == image-height-top-6.html image-height-6.html
-# fails == image-width-left-4.html image-width-4.html
-# fails == image-width-left-5.html image-width-5.html
-# fails == image-width-left-6.html image-width-6.html
+# The Linux and Windows failures are bugs related to the image scaling
+# code that need to be filed (doing antialising around the edges of a
+# solid-color image).  The Mac failures are probably the same, but the
+# difference isn't visible.
+!= image-base-ref.html image-height-10-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == image-height-4.html image-base-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") fails-if(MOZ_WIDGET_TOOLKIT=="windows") fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == image-height-5.html image-height-10-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") fails-if(MOZ_WIDGET_TOOLKIT=="windows") == image-height-6.html image-height-10-ref.html
+!= image-base-ref.html image-top-10-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == image-top-4.html image-base-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == image-top-5.html image-top-10-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == image-top-6.html image-top-10-ref.html
+!= image-base-ref.html image-width-10-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == image-width-4.html image-base-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") fails-if(MOZ_WIDGET_TOOLKIT=="windows") fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == image-width-5.html image-width-10-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") fails-if(MOZ_WIDGET_TOOLKIT=="windows") == image-width-6.html image-width-10-ref.html
+!= image-base-ref.html image-left-10-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == image-left-4.html image-base-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == image-left-5.html image-left-10-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == image-left-6.html image-left-10-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") fails-if(MOZ_WIDGET_TOOLKIT=="windows") fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == image-top-height-4.html image-height-4.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == image-top-height-5.html image-height-5.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == image-top-height-6.html image-height-6.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") fails-if(MOZ_WIDGET_TOOLKIT=="windows") fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == image-left-width-4.html image-width-4.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == image-left-width-5.html image-width-5.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == image-left-width-6.html image-width-6.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") fails-if(MOZ_WIDGET_TOOLKIT=="windows") fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == image-height-top-4.html image-height-4.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == image-height-top-5.html image-height-5.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == image-height-top-6.html image-height-6.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") fails-if(MOZ_WIDGET_TOOLKIT=="windows") fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == image-width-left-4.html image-width-4.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == image-width-left-5.html image-width-5.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == image-width-left-6.html image-width-6.html
