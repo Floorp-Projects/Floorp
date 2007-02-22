@@ -68,3 +68,6 @@ ifndef MOZ_DEBUG_SYMBOLS
 endif
 endif
 DEFINES += -DWIN95
+
+# WINNT uses the lib prefix, Win95 and WinCE don't
+NSPR31_LIB_PREFIX = $(NULL)

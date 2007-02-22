@@ -104,4 +104,4 @@ DLLBASE += -align:"4096"
 #DEFINES += -DWINNT
 
 # WINNT uses the lib prefix, Win95 and WinCE don't
-#NSPR31_LIB_PREFIX = lib
+NSPR31_LIB_PREFIX = $(NULL)
