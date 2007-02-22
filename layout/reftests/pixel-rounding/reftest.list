@@ -1,4 +1,4 @@
-== check-image.html check-image-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == check-image.html check-image-ref.html # bug 371232
 != background-color-base.html background-color-height-10.html
 == background-color-height-4.html background-color-base.html
 == background-color-height-5.html background-color-height-10.html
@@ -44,21 +44,21 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-top-4.html border-base-ref.html 
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-top-5.html border-top-10-ref.html # bug 361523
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-top-6.html border-top-10-ref.html # bug 361523
 != background-image-base.html background-image-height-10-ref.html
-== background-image-height-4.html background-image-base.html
-fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") == background-image-height-5.html background-image-height-10-ref.html # bug 371225
-== background-image-height-6.html background-image-height-10-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == background-image-height-4.html background-image-base.html # bug 371232
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") == background-image-height-5.html background-image-height-10-ref.html # bug 371225 # bug 371232
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == background-image-height-6.html background-image-height-10-ref.html # bug 371232
 != background-image-base.html background-image-top-10-ref.html
-== background-image-top-4.html background-image-base.html
-== background-image-top-5.html background-image-top-10-ref.html
-== background-image-top-6.html background-image-top-10-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == background-image-top-4.html background-image-base.html # bug 371232
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == background-image-top-5.html background-image-top-10-ref.html # bug 371232
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == background-image-top-6.html background-image-top-10-ref.html # bug 371232
 != background-image-base.html background-image-width-10-ref.html
-== background-image-width-4.html background-image-base.html
-fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") == background-image-width-5.html background-image-width-10-ref.html # bug 371225
-== background-image-width-6.html background-image-width-10-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == background-image-width-4.html background-image-base.html # bug 371232
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") == background-image-width-5.html background-image-width-10-ref.html # bug 371225 # bug 371232
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == background-image-width-6.html background-image-width-10-ref.html # bug 371232
 != background-image-base.html background-image-left-10-ref.html
-== background-image-left-4.html background-image-base.html
-== background-image-left-5.html background-image-left-10-ref.html
-== background-image-left-6.html background-image-left-10-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == background-image-left-4.html background-image-base.html # bug 371232
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == background-image-left-5.html background-image-left-10-ref.html # bug 371232
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == background-image-left-6.html background-image-left-10-ref.html # bug 371232
 # These tests have different patterns of failures on different
 # platforms.  It doesn't make sense yet, but once bug 371225 is fixed
 # they might make more sense.
