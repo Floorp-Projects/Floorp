@@ -45,7 +45,7 @@ fails == border-left-6.html border-left-10-ref.html # bug 363220
 == border-top-6.html border-top-10-ref.html
 != background-image-base.html background-image-height-10-ref.html
 == background-image-height-4.html background-image-base.html
-== background-image-height-5.html background-image-height-10-ref.html
+fails == background-image-height-5.html background-image-height-10-ref.html # bug 371225
 == background-image-height-6.html background-image-height-10-ref.html
 != background-image-base.html background-image-top-10-ref.html
 == background-image-top-4.html background-image-base.html
