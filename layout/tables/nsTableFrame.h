@@ -59,8 +59,6 @@ class nsStyleContext;
 struct nsTableReflowState;
 struct nsStylePosition;
 
-enum nsPixelRound {eAlwaysRoundUp=0, eAlwaysRoundDown, eRoundUpIfHalfOrMore};
-
 /**
  * Child list name indices
  * @see #GetAdditionalChildListName()
@@ -116,9 +114,6 @@ public:
                            PRBool               aCreateIfNecessary = PR_FALSE);
 
   static float GetTwipsToPixels(nsPresContext* aPresContext);
-
-  static nscoord RoundToPixel(nscoord      aValue,
-                              nsPixelRound aRound= eAlwaysRoundUp);
 
   // See if a special height reflow will occur due to having a pct height when
   // the pct height basis may not yet be valid.

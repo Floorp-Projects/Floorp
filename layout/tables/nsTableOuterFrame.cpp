@@ -453,7 +453,7 @@ nscoord CalcAutoMargin(nscoord aAutoMargin,
 {
   nscoord margin;
   if (NS_AUTOMARGIN == aOppositeMargin) 
-    margin = nsTableFrame::RoundToPixel((aContainBlockSize - aFrameSize) / 2);
+    margin = (aContainBlockSize - aFrameSize) / 2;
   else {
     margin = aContainBlockSize - aFrameSize - aOppositeMargin;
   }
@@ -804,8 +804,6 @@ nsTableOuterFrame::BalanceLeftRightCaption(PRUint8         aCaptionSide,
   else {
     aCaptionWidth = (nscoord) ((capPercent / innerPercent) * aInnerWidth);
   }
-  aCaptionWidth = nsTableFrame::RoundToPixel(aCaptionWidth,
-                                             eAlwaysRoundDown);
 }
 
 nsresult 
@@ -1079,9 +1077,6 @@ nsTableOuterFrame::OuterReflowChild(nsPresContext*             aPresContext,
     
     NS_ASSERTION(NS_UNCONSTRAINEDSIZE != margin.bottom, "No unconstrainedsize arithmetic, please");
     availHeight -= margin.bottom;
-    
-    availHeight = nsTableFrame::RoundToPixel(availHeight,
-                                             eAlwaysRoundDown);
   }
   nsSize availSize(aAvailWidth, availHeight);
   // create and init the child reflow state, using placement new on
