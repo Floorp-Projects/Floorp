@@ -74,18 +74,18 @@ sub Verify {
 
     # Download current release
     $this->Shell(
-      cmd => 'echo',
-      cmdArgs => ['-av', 
-                    '-e', 'ssh', 
-                    '--include="*.dmg"',
-                    '--include="*.exe"',
-                    '--include="*.tar.gz"',
-                    '--exclude=\'*\'',
-                    'stage.mozilla.org:/home/ftp/pub/' . $product
-                     . '/nightly/' . $version . '-candidates/rc' . $rc . '/',
-                    $product . '-' . $version . '-rc' . $rc . '/',
-                   ],
-      dir => $verifyDir,
+      cmd => 'rsync',
+      cmdArgs => ['-v', 
+                  '-e', 'ssh', 
+                  '--include=*.dmg',
+                  '--include=*.exe',
+                  '--include=*.tar.gz',
+                  '--exclude=*',
+                  'stage.mozilla.org:/home/ftp/pub/' . $product
+                  . '/nightly/' . $version . '-candidates/rc' . $rc . '/*',
+                  $product . '-' . $version . '-rc' . $rc . '/',
+                 ],
+      dir => catfile($verifyDirVersion, 'l10n'),
       logFile => 
         catfile($logDir, 'repack_verify-download_' . $version . '.log'),
       timeout => 3600
@@ -93,26 +93,26 @@ sub Verify {
 
     # Download previous release
     $this->Shell(
-      cmd => 'echo',
-      cmdArgs => ['-av', 
-                    '-e', 'ssh', 
-                    '--include="*.dmg"',
-                    '--include="*.exe"',
-                    '--include="*.tar.gz"',
-                    '--exclude=\'*\'',
-                    'stage.mozilla.org:/home/ftp/pub/' . $product
-                     . '/nightly/' . $oldVersion . '-candidates/rc' 
-                     . $oldRc . '/',
-                    $product . '-' . $oldVersion . '-rc' . $oldRc . '/',
-                   ],
-      dir => $verifyDir,
+      cmd => 'rsync',
+      cmdArgs => ['-v', 
+                  '-e', 'ssh', 
+                  '--include=*.dmg',
+                  '--include=*.exe',
+                  '--include=*.tar.gz',
+                  '--exclude=*',
+                  'stage.mozilla.org:/home/ftp/pub/' . $product
+                  . '/nightly/' . $oldVersion . '-candidates/rc' 
+                  . $oldRc . '/*',
+                  $product . '-' . $oldVersion . '-rc' . $oldRc . '/',
+                 ],
+      dir => catfile($verifyDirVersion, 'l10n'),
       logFile => 
         catfile($logDir, 'repack_verify-download_' . $oldVersion . '.log'),
       timeout => 3600
     );
 
     my $newProduct = $product . '-' . $version . '-' . 'rc' . $rc;
-    my $oldProduct = $product . '-' . $oldVersion . '-' . 'rc' . $rc;
+    my $oldProduct = $product . '-' . $oldVersion . '-' . 'rc' . $oldRc;
 
     foreach my $product ($newProduct, $oldProduct) {
         MkdirWithPath(dir => catfile($verifyDirVersion, 'l10n', $product))
@@ -127,23 +127,34 @@ sub Verify {
         );
 
 
-        foreach my $rule ('^Only', '^Binary') {
-            $this->CheckLog(
-                log => $logDir . 
-                       '/repack_' . $product . '-l10n_verification.log',
-                notAllowed => $rule,
-            );
+        foreach my $rule ('^FAIL', '^Binary') {
+            eval {
+                $this->CheckLog(
+                    log => $logDir . 
+                           '/repack_' . $product . '-l10n_verification.log',
+                    notAllowed => $rule,
+                );
+            };
+            if ($@) {
+                $this->Log('msg' => 
+                           "WARN: $rule found in l10n metadiff output!");
+            }
         }
+
+        $this->CheckLog(
+            log => $logDir . '/repack_' . $product . '-l10n_verification.log',
+            notAllowed => '^Only',
+        );
     }
 
     # generate metadiff
     $this->Shell(
       cmd => 'diff',
       cmdArgs => ['-r', 
-                    catfile($logDir, 
-                            'repack_' . $newProduct . '-l10n_verification.log'),
-                    catfile($logDir, 
-                            'repack_' . $oldProduct . '-l10n_verification.log')],
+                  catfile($newProduct, 'diffs'),
+                  catfile($oldProduct, 'diffs'),
+                 ],
+      ignoreExitValue => 1,
       dir => catfile($verifyDirVersion, 'l10n'),
       logFile => catfile($logDir, 'repack_metadiff-l10n_verification.log'),
     );
