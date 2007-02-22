@@ -119,7 +119,3 @@ tab[busy] {
     position: relative;
     list-style-image: url('chrome://global/skin/icons/tab-drag-indicator.gif');
 }
-
-tooltip[tabpreview="true"] {
-  max-width: none;
-}
