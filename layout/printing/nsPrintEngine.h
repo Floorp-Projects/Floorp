@@ -231,6 +231,13 @@ public:
   }
 
 protected:
+
+  nsresult CommonPrint(PRBool aIsPrintPreview, nsIPrintSettings* aPrintSettings,
+              nsIWebProgressListener* aWebProgressListener);
+
+  nsresult DoCommonPrint(PRBool aIsPrintPreview, nsIPrintSettings* aPrintSettings,
+                         nsIWebProgressListener* aWebProgressListener);
+
   void FirePrintCompletionEvent();
   static nsresult GetSeqFrameAndCountPagesInternal(nsPrintObject*  aPO,
                                                    nsIFrame*&      aSeqFrame,
@@ -274,8 +281,10 @@ protected:
   static void SetPrintAsIs(nsPrintObject* aPO, PRBool aAsIs = PR_TRUE);
 
   // Static member variables
-  PRBool mIsCreatingPrintPreview;
-  PRBool mIsDoingPrinting;
+  PRPackedBool mIsCreatingPrintPreview;
+  PRPackedBool mIsDoingPrinting;
+  PRPackedBool mIsDoingPrintPreview; // per DocumentViewer
+  PRPackedBool mProgressDialogIsShown;
 
   nsIDocumentViewerPrint* mDocViewerPrint; // [WEAK] it owns me!
   nsISupports*            mContainer;      // [WEAK] it owns me!
@@ -286,7 +295,6 @@ protected:
   nsIPageSequenceFrame*   mPageSeqFrame;
 
   // Print Preview
-  PRBool                  mIsDoingPrintPreview; // per DocumentViewer
   nsCOMPtr<nsIWidget>     mParentWidget;        
   nsPrintData*            mPrtPreview;
   nsPrintData*            mOldPrtPreview;
