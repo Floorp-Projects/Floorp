@@ -119,7 +119,7 @@ pref("app.update.nagTimer.download", 86400);
 //           download (in seconds) default=30 minutes
 pref("app.update.nagTimer.restart", 1800);
 // Interval: When all registered timers should be checked (in milliseconds)
-//           default=5 seconds
+//           default=10 minutes
 pref("app.update.timer", 600000);
 
 // Whether or not we show a dialog box informing the user that the update was
