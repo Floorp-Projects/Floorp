@@ -75,21 +75,24 @@ nsScreenManagerCocoa::ScreenForRect (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRI
 {
     NSEnumerator *screenEnum = [[NSScreen screens] objectEnumerator];
     NSRect inRect = geckoRectToCocoaRect(nsRect(aX, aY, aWidth, aHeight));
+    NSScreen *screenWindowIsOn = [NSScreen mainScreen];
+    float greatestArea = 0;
 
     while (NSScreen *screen = [screenEnum nextObject]) {
         NSDictionary *desc = [screen deviceDescription];
         if ([desc objectForKey:NSDeviceIsScreen] == nil)
             continue;
 
-        if (NSContainsRect ([screen frame], inRect)) {
-            nsScreenCocoa *sc = ScreenForCocoaScreen (screen);
-            *outScreen = sc;
-            NS_ADDREF(*outScreen);
-            return NS_OK;
+        NSRect r = NSIntersectionRect([screen frame], inRect);
+        float area = r.size.width * r.size.height;
+        if (area > greatestArea) {
+            greatestArea = area;
+            screenWindowIsOn = screen;
         }
     }
 
-    *outScreen = nsnull;
+    *outScreen = ScreenForCocoaScreen(screenWindowIsOn);
+    NS_ADDREF(*outScreen);
     return NS_OK;
 }
 
