@@ -109,7 +109,6 @@ public:
   PRPackedBool                mIsAborted;           // tells us the document is being aborted
   PRPackedBool                mPreparingForPrint;   // see comments above
   PRPackedBool                mDocWasToBeDestroyed; // see comments above
-  PRPackedBool                mProgressDialogIsShown; // it is being shown
   PRBool                      mShrinkToFit;
   PRInt16                     mPrintFrameType;
   PRInt32                     mNumPrintablePages;
