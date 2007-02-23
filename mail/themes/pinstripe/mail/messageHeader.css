@@ -115,7 +115,7 @@ description[selectable="true"]:focus > descriptionitem[selected="true"]
   -moz-border-radius: 7px;
   margin: 0px 6px 6px 6px;
   padding: 4px;  
-  min-height: 55px;
+  min-height: 60px;
 }
 
 #attachmentView[attachmentOverflow="true"] {
@@ -132,28 +132,28 @@ description[selectable="true"]:focus > descriptionitem[selected="true"]
 #msgHeaderView {
   background-color: #FFFFFF;
   border: none;
+  font-family: Arial;
+  font-size: 12px;
 }
 
 #msgHeaderView > deck {
-  background-color: #E6E6E6;
-  border: 1px solid #C8C8C8;
-  -moz-border-radius: 7px;
+  border-bottom: 1px solid #dedede;
   margin: 6px;
-  padding: 6px 6px 4px 4px;
+  padding: 6px 6px 10px 4px;
 }
 
 .headerNameBox {
-  width: 7.7em;
+  width: 8em;
   background-color: transparent;
-  color: #505050;
+  color: #8f8f8f;
 }
 
 .headerName {
-  margin: 0 .5em .5em 0;
   font-weight: bold;
   text-align: right;
   background-color: transparent;
   padding: 0px;
+  margin-top: 0;
 }
 
 .headerValue {
@@ -165,7 +165,6 @@ description[selectable="true"]:focus > descriptionitem[selected="true"]
 }
 
 .headerValueBox {
-  margin: 0 0 .5em 0; 
 }
 
 .headerValueUrl {
@@ -196,101 +195,50 @@ description[selectable="true"]:focus > descriptionitem[selected="true"]
 
 .emailDisplayButton {
   margin: 0;
+  padding: 0 10px 0 0 !important;
   background-color: transparent;
+  background: url("chrome://messenger/skin/icons/arrow-dn-7.png") no-repeat center right;
 }
 
 .emailDisplayButton:hover {
-  margin: 0px;
-  padding: 0px;
   cursor: pointer;
   text-decoration: underline;
   color: blue;
-}
-
-
-.emailDisplayImage {
-  padding-left: 4px;
-  list-style-image: url("chrome://messenger/skin/addressbook/icons/silhouette.png");
-  max-height: 16px !important;
-  cursor: pointer;
-}
-
-.emailDisplayImage:hover, .emailDisplayImage[open] {
-  list-style-image: url("chrome://messenger/skin/addressbook/icons/silhouette-hover.png");
 }
  
 /* ::::: email address twisty ::::: */
 
 .addresstwisty {
-  padding-right: 5px;
-  padding-top: 3px;
-  list-style-image:url("chrome://global/skin/tree/treetwisty.png");
-  height: 9px !important;
-  width: 9px !important;
-  margin: 3px;
+  list-style-image:url("chrome://messenger/skin/icons/twisty-closed.gif");
 }
 
 .addresstwisty[open] {
-  list-style-image:url("chrome://global/skin/tree/treetwisty-open.png");
-  height: 9px !important;
-  width: 9px !important;
-  margin: 3px;
+  list-style-image:url("chrome://messenger/skin/icons/twisty-open.gif");
 }
 
 /* ::::: view expand and collapse twisties  ::::: */
 
 .expandHeaderViewButton,
 .collapsedHeaderViewButton  {
-  margin: 4px .5em 0 .5em;
-  width: 10px !important;
-  height: 10px !important;
+
 }
 
 .expandHeaderViewButton {
-  list-style-image:url("chrome://global/skin/tree/treetwisty-open.png");
-  height: 9px !important;
-  width: 9px !important;
-  margin: 3px;
+  list-style-image:url("chrome://messenger/skin/icons/twisty-open.gif");
 }
 
 .collapsedHeaderViewButton  {
-  list-style-image:url("chrome://global/skin/tree/treetwisty.png");
-  height: 9px !important;
-  width: 9px !important;  
-  margin:  3px;
+  list-style-image:url("chrome://messenger/skin/icons/twisty-closed.gif");
 }
 
 /* ::::: collapsed view styles ::::: */
 
 #collapseddateValue {
-  margin: 0 .5em;
   text-align: right;
-  background-color: transparent;
 }
 
-#collapseddateValue > .textbox-input-box menupopup { 
-  text-align: left;
-}
-
-#collapsedfromBox {
-  width: 18em;
-  background-color: transparent;
-}
-
-#collapseddateBox {
-  width: 12em;
-  background-color: transparent;
-}
-
-.collapsedHeaderDisplayName { 
-  margin: 0 .5em 0 .8em;
-  min-height: 16px;
-  font-weight: bold;
-  background-color: transparent;
-  color: #505050;
-}
-
-.collapsedHeaderValue {
+mail-multi-emailHeaderField,
+mail-headerfield {
   margin: 0;
-  background-color: transparent;
+  padding: 0;
 }

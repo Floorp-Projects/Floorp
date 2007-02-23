@@ -1,6 +1,4 @@
 classic.jar:
-     skin/classic/global/tree/treetwisty.png                        (icons/treetwisty.png) 
-     skin/classic/global/tree/treetwisty-open.png                   (icons/treetwisty-open.png) 
 % skin messenger classic/1.0 %skin/classic/messenger/
      skin/classic/messenger/dialogs.css 
      skin/classic/messenger/messenger.css
@@ -40,8 +38,6 @@ classic.jar:
      skin/classic/messenger/addressbook/icons/remote-addrbook-error.png      (addrbook/remote-addrbook-error.png)
      skin/classic/messenger/addressbook/icons/remote-addrbook.png   (addrbook/remote-addrbook.png)
      skin/classic/messenger/addressbook/icons/secure-remote-addrbook.png     (addrbook/secure-remote-addrbook.png)
-     skin/classic/messenger/addressbook/icons/silhouette-hover.png  (addrbook/silhouette-hover.png)
-     skin/classic/messenger/addressbook/icons/silhouette.png        (addrbook/silhouette.png)
      skin/classic/messenger/messengercompose/messengercompose.css    (compose/messengercompose.css)
      skin/classic/messenger/messengercompose/compose-toolbar.png     (compose/compose-toolbar.png)
      skin/classic/messenger/messengercompose/compose-toolbar-small.png        (compose/compose-toolbar-small.png)
@@ -101,6 +97,11 @@ classic.jar:
      skin/classic/messenger/smime/icons/hdrSignNotOk.gif            (smime/hdrSignNotOk.gif)
      skin/classic/messenger/smime/icons/hdrCryptoOk.gif             (smime/hdrCryptoOk.gif)
      skin/classic/messenger/smime/icons/hdrCryptoNotOk.gif          (smime/hdrCryptoNotOk.gif)
+     skin/classic/messenger/icons/twisty-open.gif                   (icons/twisty-open.gif)
+     skin/classic/messenger/icons/twisty-closed.gif                 (icons/twisty-closed.gif)
+     skin/classic/messenger/icons/spin-buttons-active.png           (icons/spin-buttons-active.png)
+     skin/classic/messenger/icons/spin-buttons.png                  (icons/spin-buttons.png)
+     skin/classic/messenger/icons/tree-selected-overlay.png         (icons/tree-selected-overlay.png)
      skin/classic/messenger/icons/SearchBarLeft.png                 (icons/SearchBarLeft.png)
      skin/classic/messenger/icons/SearchBarMiddle.png               (icons/SearchBarMiddle.png)
      skin/classic/messenger/icons/SearchBarRight.png                (icons/SearchBarRight.png)
@@ -192,6 +193,8 @@ classic.jar:
      skin/classic/messenger/icons/unthreadcol.png                   (icons/unthreadcol.png)
      skin/classic/messenger/icons/online.png                        (icons/online.png)
      skin/classic/messenger/icons/offline.png                       (icons/offline.png)     
+     skin/classic/messenger/icons/arrow-dn-7.png                    (icons/arrow-dn-7.png)
+     skin/classic/messenger/icons/top-toolbar-background.gif        (icons/top-toolbar-background.gif)	 
      skin/classic/messenger/accountcentral/accountsettings.png      (accountcentral/accountsettings.png)
      skin/classic/messenger/accountcentral/folder.png               (accountcentral/folder.png)
      skin/classic/messenger/accountcentral/getmail.png              (accountcentral/getmail.png)

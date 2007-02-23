@@ -42,7 +42,12 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 #mail-bar2 {
-	border-bottom: 1px solid #9F9F9F;
+	background-image: url("chrome://messenger/skin/icons/top-toolbar-background.gif");
+	background-repeat: repeat-x;
+	background-position: top right;
+	background-color: #e1e1e1;
+	border-top: none;
+    border-bottom: 1px solid #a0a0a0;
 }
 
 /* ::::: primary toolbar buttons ::::: */
@@ -51,6 +56,10 @@
   -moz-box-orient: vertical;
   min-width: 0px;
   list-style-image: url("chrome://messenger/skin/icons/mail-toolbar.png");
+}
+
+.toolbarbutton-1[type="menu"] {
+  -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#menu-vertical");
 }
 
 toolbarbutton[type="menu-button"] {
@@ -265,16 +274,16 @@ toolbarbutton[type="menu-button"] > toolbarbutton {
 /* temporarily re-use the mark button for tags */
 
 #button-tag {
-  -moz-image-region: rect(0px 448px 32px 416px);
+  -moz-image-region: rect(0px 480px 32px 448px);
 }
 
 #button-tag:hover:active,
 #button-tag[open="true"] {
-  -moz-image-region: rect(32px 448px 64px 416px);
+  -moz-image-region: rect(32px 480px 64px 448px);
 }
 
 #button-tag[disabled] {
-  -moz-image-region: rect(64px 448px 96px 416px) !important;
+  -moz-image-region: rect(64px 480px 96px 448px) !important;
 }
 
 /* ::::: small primary toolbar buttons ::::: */
@@ -468,6 +477,30 @@ toolbar[iconsize="small"] #button-next:hover:active {
 toolbar[iconsize="small"] #button-next[disabled] {
   -moz-image-region: rect(48px 340px 72px 314px) !important;
 } 
+
+toolbar[iconsize="small"] #button-goback {
+  -moz-image-region: rect(0px 314px 24px 288px);
+}
+
+toolbar[iconsize="small"] #button-goback:hover:active {
+  -moz-image-region: rect(24px 314px 48px 288px);
+}
+
+toolbar[iconsize="small"] #button-goback[disabled] {
+  -moz-image-region: rect(48px 314px 72px 288px) !important;
+}
+
+toolbar[iconsize="small"] #button-goforward {
+  -moz-image-region: rect(0px 340px 24px 314px);
+}
+
+toolbar[iconsize="small"] #button-goforward:hover:active {
+  -moz-image-region: rect(24px 340px 48px 314px);
+} 
+
+toolbar[iconsize="small"] #button-goforward[disabled] {
+  -moz-image-region: rect(48px 340px 72px 314px) !important;
+}
 
 /* ::::: end small primary toolbar buttons ::::: */
 
