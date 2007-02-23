@@ -51,16 +51,35 @@
   <target name="release">
 
     <antcall target="prepare" />
-    <antcall target="uptodate.core.java.classes" />
+    <antcall target="uptodate" />
     <antcall target="compile.all" />
     <antcall target="build.dist.jar" />
     <antcall target="copy.binaries" />
     <antcall target="copy.test.src" />
     <antcall target="copy.build.support" />
+    <antcall target="build.javadocs" />
+    <antcall target="build.zip" />
+  </target>
 
+  <target name="build.zip">
+    <condition property="platform" value="win32">
+      <and>
+        <os family="windows" />
+      </and>
+    </condition>
+
+    <condition property="platform" value="linux">
+      <and>
+        <os family="unix" />
+      </and>
+    </condition>
+
+    <zip destfile="${objdir}/${name}_${version}_${platform}.zip" 
+         basedir="${dist.home}" />
   </target>
 
   <target name="clean">
+    <delete file="${objdir}/${name}_${version}_${platform}.zip"  />
     <delete dir="${dist.home}" />
   </target>
 
@@ -110,12 +129,23 @@
   </target>
 
 
-  <target name="uptodate.core.java.classes">
+  <target name="uptodate">
     <uptodate property="core.java.classes.uptodate" 
               targetfile="${dist.jar}">
       <srcfiles dir="${dist.classes}" />
     </uptodate>
     <echo message="java classes up to date: ${core.java.classes.uptodate}" />
+
+    <uptodate property="javadocs.uptodate" 
+              targetfile="${dist.javadocs}/index.html" >
+        <srcfiles dir= "${source.home}">
+          <include name="**/webclient/classes_spec/**/*.java" />
+          <include name="**/util/classes/**/*.java" />
+          <include name="**/dom/classes/**/*.java" />
+        </srcfiles>
+    </uptodate>
+    <echo message="javadoc up to date: ${javadocs.uptodate}" />
+
   </target>
 
   <target name="build.dist.jar">
@@ -136,7 +166,7 @@
   </target>
 
   <target name="compile.all" unless="core.java.classes.uptodate" 
-          depends="uptodate.core.java.classes">
+          depends="uptodate">
     <ant inheritAll="false" dir="${source.home}" />
   </target>
 
@@ -175,6 +205,35 @@
     <copy todir="${dist.home}/netbeans">
       <fileset dir="${basedir}/netbeans" />
     </copy>
+  </target>
+
+  <target name="build.javadocs" depends="prepare,uptodate"
+          unless="javadocs.uptodate"
+          description="Create the JavaDoc API documentation">
+    <javadoc packagenames="org.mozilla.*"
+             destdir="${dist.javadocs}"
+             Overview="${source.home}/webclient/classes_spec/org/mozilla/webclient/overview.html"
+             private="${javadoc.private}"
+             protected="${javadoc.protected}"
+             windowtitle="${Name} (${version})"
+             doctitle="${Name} (${version})"
+             bottom="Copyright &#169; 2002-2005 Mozilla.org All Rights Reserved.">
+       <fileset dir="${source.home}">
+         <include name="**/*.java"/>
+         <exclude name="**/impl/**/*.java" />
+         <exclude name="**/wrapper_nonnative/**/*.java" />
+         <exclude name="**/*Impl.java" />
+         <exclude name="**/test*/**/*.java" />
+         <exclude name="plugins/**/*.*" />
+         <exclude name="xpcom/**/*.*" />
+         <exclude name="dom/blackconnect/**/*.*" />
+         <exclude name="pluggable-jvm/**/*.*" />
+         <exclude name="**/*Bookmark*.java" />
+         <exclude name="**/*Preferences*.java" />
+         <exclude name="**/*Profile*.java" />
+       </fileset>
+      <classpath location="${dist.jar}"/>
+    </javadoc>
   </target>
   
 
