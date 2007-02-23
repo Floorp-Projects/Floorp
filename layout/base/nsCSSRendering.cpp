@@ -1719,6 +1719,7 @@ void nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
 
 #ifdef MOZ_CAIRO_GFX
   gfxContext *ctx = (gfxContext*) aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+  gfxContext::AntialiasMode oldMode = ctx->CurrentAntialiasMode();
   ctx->SetAntialiasMode(gfxContext::MODE_ALIASED);
 #endif
 
@@ -1752,7 +1753,7 @@ void nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
   }
 
 #ifdef MOZ_CAIRO_GFX
-  ctx->SetAntialiasMode(gfxContext::MODE_COVERAGE);
+  ctx->SetAntialiasMode(oldMode);
 #endif
 }
 
@@ -4181,7 +4182,7 @@ nsCSSRendering::DrawTableBorderSegment(nsIRenderingContext&     aContext,
                                        nscolor                  aBorderColor,
                                        const nsStyleBackground* aBGColor,
                                        const nsRect&            aBorder,
-                                       float                    aPixelsToTwips,
+                                       PRInt32                  aAppUnitsPerCSSPixel,
                                        PRUint8                  aStartBevelSide,
                                        nscoord                  aStartBevelOffset,
                                        PRUint8                  aEndBevelSide,
@@ -4190,7 +4191,7 @@ nsCSSRendering::DrawTableBorderSegment(nsIRenderingContext&     aContext,
   aContext.SetColor (aBorderColor); 
 
   PRBool horizontal = ((NS_SIDE_TOP == aStartBevelSide) || (NS_SIDE_BOTTOM == aStartBevelSide));
-  nscoord twipsPerPixel = NSIntPixelsToAppUnits(1, aPixelsToTwips);
+  nscoord twipsPerPixel = NSIntPixelsToAppUnits(1, aAppUnitsPerCSSPixel);
   PRBool ridgeGroove = NS_STYLE_BORDER_STYLE_RIDGE;
 
   if ((twipsPerPixel >= aBorder.width) || (twipsPerPixel >= aBorder.height) ||
@@ -4199,6 +4200,12 @@ nsCSSRendering::DrawTableBorderSegment(nsIRenderingContext&     aContext,
     aStartBevelOffset = 0;
     aEndBevelOffset = 0;
   }
+
+#ifdef MOZ_CAIRO_GFX
+  gfxContext *ctx = (gfxContext*) aContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+  gfxContext::AntialiasMode oldMode = ctx->CurrentAntialiasMode();
+  ctx->SetAntialiasMode(gfxContext::MODE_ALIASED);
+#endif
 
   switch (aBorderStyle) {
   case NS_STYLE_BORDER_STYLE_NONE:
@@ -4393,6 +4400,10 @@ nsCSSRendering::DrawTableBorderSegment(nsIRenderingContext&     aContext,
     NS_ASSERTION(PR_FALSE, "Unexpected 'auto' table border");
     break;
   }
+
+#ifdef MOZ_CAIRO_GFX
+  ctx->SetAntialiasMode(oldMode);
+#endif
 }
 
 // End table border-collapsing section
