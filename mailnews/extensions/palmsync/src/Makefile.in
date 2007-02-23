@@ -98,14 +98,12 @@ EXTRA_DSO_LIBS  = msgbsutl
 else
 EXTRA_DSO_LIBS  = msgbaseutil
 endif
-EXTRA_DSO_LIBS  += addrbook_s
 
 else
-SHARED_LIBRARY_LIBS = \
-        ../../../base/util/$(LIB_PREFIX)msgbsutl_s.$(LIB_SUFFIX) \
-        ../../../addrbook/src/$(LIB_PREFIX)addrbook_s.$(LIB_SUFFIX) \
-        $(NULL)
+SHARED_LIBRARY_LIBS = ../../../base/util/$(LIB_PREFIX)msgbsutl_s.$(LIB_SUFFIX)
 endif
+
+EXTRA_DSO_LIBS += ../../../addrbook/src/$(LIB_PREFIX)addrbook_s.$(LIB_SUFFIX)
 
 EXTRA_DSO_LDOPTS= \
         $(EXTRA_DSO_LIBS) \
