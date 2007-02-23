@@ -939,7 +939,7 @@ PRBool nsTableCellMap::ColIsSpannedInto(PRInt32 aColIndex) const
 
   PRInt32 colCount = mCols.Count();
   if ((aColIndex >= 0) && (aColIndex < colCount)) {
-    result = (PRBool) ((nsColInfo *)mCols.ElementAt(aColIndex))->mNumCellsSpan;
+    result = ((nsColInfo *)mCols.ElementAt(aColIndex))->mNumCellsSpan != 0;
   }
   return result;
 }
@@ -1885,8 +1885,8 @@ void nsCellMap::ExpandWithCells(nsTableCellMap& aMap,
         if (data->IsOrig()) {
           // the old originating col of a moved cell needs adjustment
           colInfo2->mNumCellsOrig--;
-        }
-        else {
+        } 
+        if (data->IsColSpan()) {
           colInfo2->mNumCellsSpan--;
         }
       }
