@@ -34,16 +34,16 @@ random == check-image.html check-image-ref.html # bug 371232
 
 != border-base-ref.html border-height-10-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-height-4.html border-base-ref.html # bug 361523
-== border-height-5.html border-height-10-ref.html
-== border-height-6.html border-height-10-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-height-5.html border-height-10-ref.html # bug 361523
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-height-6.html border-height-10-ref.html # bug 361523
 != border-base-ref.html border-width-10-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-width-4.html border-base-ref.html # bug 361523
-fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") == border-width-5.html border-width-10-ref.html # bug 363220, covered by bug 361523 on Mac
-fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") == border-width-6.html border-width-10-ref.html # bug 363220, covered by bug 361523 on Mac
+fails == border-width-5.html border-width-10-ref.html # bug 363220; bug 361523 on Mac
+fails == border-width-6.html border-width-10-ref.html # bug 363220; bug 361523 on Mac
 != border-base-ref.html border-left-10-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-left-4.html border-base-ref.html # bug 361523
-fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") == border-left-5.html border-left-10-ref.html # bug 363220, covered by bug 361523 on Mac
-fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") == border-left-6.html border-left-10-ref.html # bug 363220, covered by bug 361523 on Mac
+fails == border-left-5.html border-left-10-ref.html # bug 363220; bug 361523 on Mac
+fails == border-left-6.html border-left-10-ref.html # bug 363220; bug 361523 on Mac
 != border-base-ref.html border-top-10-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-top-4.html border-base-ref.html # bug 361523
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-top-5.html border-top-10-ref.html # bug 361523
