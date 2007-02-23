@@ -263,6 +263,8 @@ ${so.prefix}xul.${so.extension}.
     </target>
     
     <target name="-init-macrodef-junit">
+        <property name="debug.jvm.args" value="" />
+
         <macrodef name="junit" uri="http://www.netbeans.org/ns/j2se-project/3">
             <attribute name="includes" default="**/*Test.java"/>
             <sequential>
