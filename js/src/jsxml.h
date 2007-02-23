@@ -293,17 +293,14 @@ js_ValueToXMLString(JSContext *cx, jsval v);
 extern JSBool
 js_GetAnyName(JSContext *cx, jsval *vp);
 
+/*
+ * Note: nameval must be either QName, AttributeNmae or AnyName.
+ */
 extern JSBool
-js_FindXMLProperty(JSContext *cx, jsval name, JSObject **objp, jsval *namep);
-
-extern JSBool
-js_GetXMLProperty(JSContext *cx, JSObject *obj, jsval name, jsval *vp);
+js_FindXMLProperty(JSContext *cx, jsval nameval, JSObject **objp, jsid *idp);
 
 extern JSBool
 js_GetXMLFunction(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
-
-extern JSBool
-js_SetXMLProperty(JSContext *cx, JSObject *obj, jsval name, jsval *vp);
 
 extern JSBool
 js_GetXMLDescendants(JSContext *cx, JSObject *obj, jsval id, jsval *vp);

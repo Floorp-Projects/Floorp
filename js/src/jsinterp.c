@@ -5601,19 +5601,19 @@ interrupt:
           BEGIN_CASE(JSOP_BINDXMLNAME)
             lval = FETCH_OPND(-1);
             SAVE_SP_AND_PC(fp);
-            ok = js_FindXMLProperty(cx, lval, &obj, &rval);
+            ok = js_FindXMLProperty(cx, lval, &obj, &id);
             if (!ok)
                 goto out;
             STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
-            PUSH_OPND(rval);
+            PUSH_OPND(ID_TO_VALUE(id));
           END_CASE(JSOP_BINDXMLNAME)
 
           BEGIN_CASE(JSOP_SETXMLNAME)
             obj = JSVAL_TO_OBJECT(FETCH_OPND(-3));
-            lval = FETCH_OPND(-2);
+            FETCH_ELEMENT_ID(-2, id);
             rval = FETCH_OPND(-1);
             SAVE_SP_AND_PC(fp);
-            ok = js_SetXMLProperty(cx, obj, lval, &rval);
+            ok = OBJ_SET_PROPERTY(cx, obj, id, &rval);
             if (!ok)
                 goto out;
             sp -= 2;
@@ -5624,10 +5624,10 @@ interrupt:
           BEGIN_CASE(JSOP_XMLNAME)
             lval = FETCH_OPND(-1);
             SAVE_SP_AND_PC(fp);
-            ok = js_FindXMLProperty(cx, lval, &obj, &rval);
+            ok = js_FindXMLProperty(cx, lval, &obj, &id);
             if (!ok)
                 goto out;
-            ok = js_GetXMLProperty(cx, obj, rval, &rval);
+            ok = OBJ_GET_PROPERTY(cx, obj, id, &rval);
             if (!ok)
                 goto out;
             STORE_OPND(-1, rval);
