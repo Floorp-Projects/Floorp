@@ -309,7 +309,7 @@ class DocumentViewerImpl : public nsIDocumentViewer,
   friend class nsPrintEngine;
 
 public:
-  DocumentViewerImpl(nsPresContext* aPresContext);
+  DocumentViewerImpl();
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -324,8 +324,6 @@ public:
   NS_IMETHOD GetDocument(nsIDocument** aResult);
   NS_IMETHOD GetPresShell(nsIPresShell** aResult);
   NS_IMETHOD GetPresContext(nsPresContext** aResult);
-  NS_IMETHOD CreateDocumentViewerUsing(nsPresContext* aPresContext,
-                                       nsIDocumentViewer** aResult);
 
   // nsIContentViewerEdit
   NS_DECL_NSICONTENTVIEWEREDIT
@@ -468,7 +466,7 @@ static NS_DEFINE_CID(kWidgetCID,            NS_CHILD_CID);
 nsresult
 NS_NewDocumentViewer(nsIDocumentViewer** aResult)
 {
-  *aResult = new DocumentViewerImpl(nsnull);
+  *aResult = new DocumentViewerImpl();
   if (!*aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -508,9 +506,8 @@ void DocumentViewerImpl::PrepareToStartLoad()
 }
 
 // Note: operator new zeros our memory, so no need to init things to null.
-DocumentViewerImpl::DocumentViewerImpl(nsPresContext* aPresContext)
-  : mPresContext(aPresContext),
-    mTextZoom(1.0),
+DocumentViewerImpl::DocumentViewerImpl()
+  : mTextZoom(1.0),
     mIsSticky(PR_TRUE),
     mHintCharsetSource(kCharsetUninitialized)
 {
@@ -2387,41 +2384,6 @@ nsresult DocumentViewerImpl::GetDocumentSelection(nsISelection **aSelection)
                                 aSelection);
   return NS_ERROR_FAILURE;
 }
-
-NS_IMETHODIMP
-DocumentViewerImpl::CreateDocumentViewerUsing(nsPresContext* aPresContext,
-                                              nsIDocumentViewer** aResult)
-{
-  if (!mDocument) {
-    // XXX better error
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (!aPresContext) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  // Create new viewer
-  DocumentViewerImpl* viewer = new DocumentViewerImpl(aPresContext);
-  if (!viewer) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_ADDREF(viewer);
-
-  // XXX make sure the ua style sheet is used (for now; need to be
-  // able to specify an alternate)
-  viewer->SetUAStyleSheet(mUAStyleSheet);
-
-  // Bind the new viewer to the old document
-  nsresult rv = viewer->LoadStart(mDocument);
-
-  *aResult = viewer;
-
-  return rv;
-}
-
-#ifdef XP_MAC
-#pragma mark -
-#endif
 
 /* ========================================================================================
  * nsIContentViewerEdit
