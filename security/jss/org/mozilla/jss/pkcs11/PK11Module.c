@@ -136,21 +136,22 @@ JNIEXPORT void JNICALL Java_org_mozilla_jss_pkcs11_PK11Module_putTokensInVector
      **************************/
     for(i=0; i < module->slotCount; i++) {
 
-        char *tokenname;
-        tokenname = PK11_GetTokenName(module->slots[i]);
+        if (PK11_IsPresent(module->slots[i])) {
+            char *tokenname;
+            tokenname = PK11_GetTokenName(module->slots[i]);
 
-        /* ignore if the token has no name */
-        if( tokenname!=NULL && tokenname[0]!='\0' ) {
+            /* ignore if the token has no name */
+            if( tokenname!=NULL && tokenname[0]!='\0' ) {
 
-            /* turn the slot into a PK11Token */
-            slot = PK11_ReferenceSlot(module->slots[i]);
-            PR_ASSERT(slot!=NULL);
-            token = JSS_PK11_wrapPK11Token(env, &slot);
+                /* turn the slot into a PK11Token */
+                slot = PK11_ReferenceSlot(module->slots[i]);
+                PR_ASSERT(slot!=NULL);
+                token = JSS_PK11_wrapPK11Token(env, &slot);
 
-            /* stick the PK11Token in the Vector */
-            (*env)->CallVoidMethod(env, vector, addElement, token);
+                /* stick the PK11Token in the Vector */
+                (*env)->CallVoidMethod(env, vector, addElement, token);
+            }
         }
-
     }
 
 finish:
