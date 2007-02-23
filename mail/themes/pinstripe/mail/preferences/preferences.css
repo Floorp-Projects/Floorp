@@ -194,10 +194,17 @@ caption {
   padding: 0 4px;
 }
 
-
 tabpanels {
   padding: 18px 10px 10px 10px;
   margin: 0 6px 6px 6px;
 }
 
+/* override the color style for tag items when they 
+   have selection */
+#tagList listitem[selected="true"] {
+  color: -moz-DialogText !important;
+}
 
+#tagList:focus > listitem[selected="true"] {
+  color: HighlightText !important;
+}

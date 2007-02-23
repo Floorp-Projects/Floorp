@@ -48,49 +48,49 @@
 treechildren::-moz-tree-cell-text(lc-FFFFFF), .lc-FFFFFF:not([_moz-menuactive]) {
   color: #FFFFFF
 }
-treechildren::-moz-tree-row(lc-FFFFFF, selected, focus), .lc-FFFFFF[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-FFFFFF, selected, focus) {
   background-color: #FFFFFF;
 }
 
 treechildren::-moz-tree-cell-text(lc-CCCCCC), .lc-CCCCCC:not([_moz-menuactive]) {
   color: #CCCCCC
 }
-treechildren::-moz-tree-row(lc-CCCCCC, selected, focus), .lc-CCCCCC[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-CCCCCC, selected, focus) {
   background-color: #CCCCCC;
 }
 
 treechildren::-moz-tree-cell-text(lc-C0C0C0), .lc-C0C0C0:not([_moz-menuactive]) {
   color: #C0C0C0
 }
-treechildren::-moz-tree-row(lc-C0C0C0, selected, focus), .lc-C0C0C0[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-C0C0C0, selected, focus) {
   background-color: #C0C0C0;
 }
 
 treechildren::-moz-tree-cell-text(lc-999999), .lc-999999:not([_moz-menuactive]) {
   color: #999999
 }
-treechildren::-moz-tree-row(lc-999999, selected, focus), .lc-999999[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-999999, selected, focus) {
   background-color: #999999;
 }
 
 treechildren::-moz-tree-cell-text(lc-666666), .lc-666666:not([_moz-menuactive]) {
   color: #666666
 }
-treechildren::-moz-tree-row(lc-666666, selected, focus), .lc-666666[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-666666, selected, focus) {
   background-color: #666666;
 }
 
 treechildren::-moz-tree-cell-text(lc-333333), .lc-333333:not([_moz-menuactive]) {
   color: #333333
 }
-treechildren::-moz-tree-row(lc-333333, selected, focus), .lc-333333[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-333333, selected, focus) {
   background-color: #333333;
 }
 
 treechildren::-moz-tree-cell-text(lc-000000), .lc-000000:not([_moz-menuactive]) {
   color: #000000
 }
-treechildren::-moz-tree-row(lc-000000, selected, focus), .lc-000000[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-000000, selected, focus) {
   background-color: #000000;
 }
 
@@ -98,49 +98,49 @@ treechildren::-moz-tree-row(lc-000000, selected, focus), .lc-000000[_moz-menuact
 treechildren::-moz-tree-cell-text(lc-FFCCCC), .lc-FFCCCC:not([_moz-menuactive]) {
   color: #FFCCCC
 }
-treechildren::-moz-tree-row(lc-FFCCCC, selected, focus), .lc-FFCCCC[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-FFCCCC, selected, focus) {
   background-color: #FFCCCC;
 }
 
 treechildren::-moz-tree-cell-text(lc-FF6666), .lc-FF6666:not([_moz-menuactive]) {
   color: #FF6666
 }
-treechildren::-moz-tree-row(lc-FF6666, selected, focus), .lc-FF6666[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-FF6666, selected, focus) {
   background-color: #FF6666;
 }
 
 treechildren::-moz-tree-cell-text(lc-FF0000), .lc-FF0000:not([_moz-menuactive]) {
   color: #FF0000
 }
-treechildren::-moz-tree-row(lc-FF0000, selected, focus), .lc-FF0000[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-FF0000, selected, focus) {
   background-color: #FF0000;
 }
 
 treechildren::-moz-tree-cell-text(lc-CC0000), .lc-CC0000:not([_moz-menuactive]) {
   color: #CC0000
 }
-treechildren::-moz-tree-row(lc-CC0000, selected, focus), .lc-CC0000[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-CC0000, selected, focus) {
   background-color: #CC0000;
 }
 
 treechildren::-moz-tree-cell-text(lc-990000), .lc-990000:not([_moz-menuactive]) {
   color: #990000
 }
-treechildren::-moz-tree-row(lc-990000, selected, focus), .lc-990000[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-990000, selected, focus) {
   background-color: #990000;
 }
 
 treechildren::-moz-tree-cell-text(lc-660000), .lc-660000:not([_moz-menuactive]) {
   color: #660000
 }
-treechildren::-moz-tree-row(lc-660000, selected, focus), .lc-660000[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-660000, selected, focus) {
   background-color: #660000;
 }
 
 treechildren::-moz-tree-cell-text(lc-330000), .lc-330000:not([_moz-menuactive]) {
   color: #330000
 }
-treechildren::-moz-tree-row(lc-330000, selected, focus), .lc-330000[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-330000, selected, focus) {
   background-color: #330000;
 }
 
@@ -148,49 +148,49 @@ treechildren::-moz-tree-row(lc-330000, selected, focus), .lc-330000[_moz-menuact
 treechildren::-moz-tree-cell-text(lc-FFCC99), .lc-FFCC99:not([_moz-menuactive]) {
   color: #FFCC99
 }
-treechildren::-moz-tree-row(lc-FFCC99, selected, focus), .lc-FFCC99[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-FFCC99, selected, focus) {
   background-color: #FFCC99;
 }
 
 treechildren::-moz-tree-cell-text(lc-FF9966), .lc-FF9966:not([_moz-menuactive]) {
   color: #FF9966
 }
-treechildren::-moz-tree-row(lc-FF9966, selected, focus), .lc-FF9966[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-FF9966, selected, focus) {
   background-color: #FF9966;
 }
 
 treechildren::-moz-tree-cell-text(lc-FF9900), .lc-FF9900:not([_moz-menuactive]) {
   color: #FF9900
 }
-treechildren::-moz-tree-row(lc-FF9900, selected, focus), .lc-FF9900[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-FF9900, selected, focus) {
   background-color: #FF9900;
 }
 
 treechildren::-moz-tree-cell-text(lc-FF6600), .lc-FF6600:not([_moz-menuactive]) {
   color: #FF6600
 }
-treechildren::-moz-tree-row(lc-FF6600, selected, focus), .lc-FF6600[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-FF6600, selected, focus) {
   background-color: #FF6600;
 }
 
 treechildren::-moz-tree-cell-text(lc-CC6600), .lc-CC6600:not([_moz-menuactive]) {
   color: #CC6600
 }
-treechildren::-moz-tree-row(lc-CC6600, selected, focus), .lc-CC6600[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-CC6600, selected, focus) {
   background-color: #CC6600;
 }
 
 treechildren::-moz-tree-cell-text(lc-993300), .lc-993300:not([_moz-menuactive]) {
   color: #993300
 }
-treechildren::-moz-tree-row(lc-993300, selected, focus), .lc-993300[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-993300, selected, focus) {
   background-color: #993300;
 }
 
 treechildren::-moz-tree-cell-text(lc-663300), .lc-663300:not([_moz-menuactive]) {
   color: #663300
 }
-treechildren::-moz-tree-row(lc-663300, selected, focus), .lc-663300[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-663300, selected, focus) {
   background-color: #663300;
 }
 
@@ -198,49 +198,49 @@ treechildren::-moz-tree-row(lc-663300, selected, focus), .lc-663300[_moz-menuact
 treechildren::-moz-tree-cell-text(lc-FFFF99), .lc-FFFF99:not([_moz-menuactive]) {
   color: #FFFF99
 }
-treechildren::-moz-tree-row(lc-FFFF99, selected, focus), .lc-FFFF99[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-FFFF99, selected, focus) {
   background-color: #FFFF99;
 }
 
 treechildren::-moz-tree-cell-text(lc-FFFF66), .lc-FFFF66:not([_moz-menuactive]) {
   color: #FFFF66
 }
-treechildren::-moz-tree-row(lc-FFFF66, selected, focus), .lc-FFFF66[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-FFFF66, selected, focus) {
   background-color: #FFFF66;
 }
 
 treechildren::-moz-tree-cell-text(lc-FFCC66), .lc-FFCC66:not([_moz-menuactive]) {
   color: #FFCC66
 }
-treechildren::-moz-tree-row(lc-FFCC66, selected, focus), .lc-FFCC66[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-FFCC66, selected, focus) {
   background-color: #FFCC66;
 }
 
 treechildren::-moz-tree-cell-text(lc-FFCC33), .lc-FFCC33:not([_moz-menuactive]) {
   color: #FFCC33
 }
-treechildren::-moz-tree-row(lc-FFCC33, selected, focus), .lc-FFCC33[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-FFCC33, selected, focus) {
   background-color: #FFCC33;
 }
 
 treechildren::-moz-tree-cell-text(lc-CC9933), .lc-CC9933:not([_moz-menuactive]) {
   color: #CC9933
 }
-treechildren::-moz-tree-row(lc-CC9933, selected, focus), .lc-CC9933[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-CC9933, selected, focus) {
   background-color: #CC9933;
 }
 
 treechildren::-moz-tree-cell-text(lc-996633), .lc-996633:not([_moz-menuactive]) {
   color: #996633
 }
-treechildren::-moz-tree-row(lc-996633, selected, focus), .lc-996633[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-996633, selected, focus) {
   background-color: #996633;
 }
 
 treechildren::-moz-tree-cell-text(lc-663333), .lc-663333:not([_moz-menuactive]) {
   color: #663333
 }
-treechildren::-moz-tree-row(lc-663333, selected, focus), .lc-663333[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-663333, selected, focus) {
   background-color: #663333;
 }
 
@@ -248,49 +248,49 @@ treechildren::-moz-tree-row(lc-663333, selected, focus), .lc-663333[_moz-menuact
 treechildren::-moz-tree-cell-text(lc-FFFFCC), .lc-FFFFCC:not([_moz-menuactive]) {
   color: #FFFFCC
 }
-treechildren::-moz-tree-row(lc-FFFFCC, selected, focus), .lc-FFFFCC[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-FFFFCC, selected, focus) {
   background-color: #FFFFCC;
 }
 
 treechildren::-moz-tree-cell-text(lc-FFFF33), .lc-FFFF33:not([_moz-menuactive]) {
   color: #FFFF33
 }
-treechildren::-moz-tree-row(lc-FFFF33, selected, focus), .lc-FFFF33[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-FFFF33, selected, focus) {
   background-color: #FFFF33;
 }
 
 treechildren::-moz-tree-cell-text(lc-FFFF00), .lc-FFFF00:not([_moz-menuactive]) {
   color: #FFFF00
 }
-treechildren::-moz-tree-row(lc-FFFF00, selected, focus), .lc-FFFF00[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-FFFF00, selected, focus) {
   background-color: #FFFF00;
 }
 
 treechildren::-moz-tree-cell-text(lc-FFCC00), .lc-FFCC00:not([_moz-menuactive]) {
   color: #FFCC00
 }
-treechildren::-moz-tree-row(lc-FFCC00, selected, focus), .lc-FFCC00[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-FFCC00, selected, focus) {
   background-color: #FFCC00;
 }
 
 treechildren::-moz-tree-cell-text(lc-999900), .lc-999900:not([_moz-menuactive]) {
   color: #999900
 }
-treechildren::-moz-tree-row(lc-999900, selected, focus), .lc-999900[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-999900, selected, focus) {
   background-color: #999900;
 }
 
 treechildren::-moz-tree-cell-text(lc-666600), .lc-666600:not([_moz-menuactive]) {
   color: #666600
 }
-treechildren::-moz-tree-row(lc-666600, selected, focus), .lc-666600[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-666600, selected, focus) {
   background-color: #666600;
 }
 
 treechildren::-moz-tree-cell-text(lc-333300), .lc-333300:not([_moz-menuactive]) {
   color: #333300
 }
-treechildren::-moz-tree-row(lc-333300, selected, focus), .lc-333300[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-333300, selected, focus) {
   background-color: #333300;
 }
 
@@ -298,49 +298,49 @@ treechildren::-moz-tree-row(lc-333300, selected, focus), .lc-333300[_moz-menuact
 treechildren::-moz-tree-cell-text(lc-99FF99), .lc-99FF99:not([_moz-menuactive]) {
   color: #99FF99
 }
-treechildren::-moz-tree-row(lc-99FF99, selected, focus), .lc-99FF99[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-99FF99, selected, focus) {
   background-color: #99FF99;
 }
 
 treechildren::-moz-tree-cell-text(lc-66FF99), .lc-66FF99:not([_moz-menuactive]) {
   color: #66FF99
 }
-treechildren::-moz-tree-row(lc-66FF99, selected, focus), .lc-66FF99[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-66FF99, selected, focus) {
   background-color: #66FF99;
 }
 
 treechildren::-moz-tree-cell-text(lc-33FF33), .lc-33FF33:not([_moz-menuactive]) {
   color: #33FF33
 }
-treechildren::-moz-tree-row(lc-33FF33, selected, focus), .lc-33FF33[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-33FF33, selected, focus) {
   background-color: #33FF33;
 }
 
 treechildren::-moz-tree-cell-text(lc-33CC00), .lc-33CC00:not([_moz-menuactive]) {
   color: #33CC00
 }
-treechildren::-moz-tree-row(lc-33CC00, selected, focus), .lc-33CC00[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-33CC00, selected, focus) {
   background-color: #33CC00;
 }
 
 treechildren::-moz-tree-cell-text(lc-009900), .lc-009900:not([_moz-menuactive]) {
   color: #009900
 }
-treechildren::-moz-tree-row(lc-009900, selected, focus), .lc-009900[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-009900, selected, focus) {
   background-color: #009900;
 }
 
 treechildren::-moz-tree-cell-text(lc-006600), .lc-006600:not([_moz-menuactive]) {
   color: #006600
 }
-treechildren::-moz-tree-row(lc-006600, selected, focus), .lc-006600[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-006600, selected, focus) {
   background-color: #006600;
 }
 
 treechildren::-moz-tree-cell-text(lc-003300), .lc-003300:not([_moz-menuactive]) {
   color: #003300
 }
-treechildren::-moz-tree-row(lc-003300, selected, focus), .lc-003300[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-003300, selected, focus) {
   background-color: #003300;
 }
 
@@ -348,49 +348,49 @@ treechildren::-moz-tree-row(lc-003300, selected, focus), .lc-003300[_moz-menuact
 treechildren::-moz-tree-cell-text(lc-99FFFF), .lc-99FFFF:not([_moz-menuactive]) {
   color: #99FFFF
 }
-treechildren::-moz-tree-row(lc-99FFFF, selected, focus), .lc-99FFFF[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-99FFFF, selected, focus) {
   background-color: #99FFFF;
 }
 
 treechildren::-moz-tree-cell-text(lc-33FFFF), .lc-33FFFF:not([_moz-menuactive]) {
   color: #33FFFF
 }
-treechildren::-moz-tree-row(lc-33FFFF, selected, focus), .lc-33FFFF[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-33FFFF, selected, focus){
   background-color: #33FFFF;
 }
 
 treechildren::-moz-tree-cell-text(lc-66CCCC), .lc-66CCCC:not([_moz-menuactive]) {
   color: #66CCCC
 }
-treechildren::-moz-tree-row(lc-66CCCC, selected, focus), .lc-66CCCC[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-66CCCC, selected, focus) {
   background-color: #66CCCC;
 }
 
 treechildren::-moz-tree-cell-text(lc-00CCCC), .lc-00CCCC:not([_moz-menuactive]) {
   color: #00CCCC
 }
-treechildren::-moz-tree-row(lc-00CCCC, selected, focus), .lc-00CCCC[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-00CCCC, selected, focus) {
   background-color: #00CCCC;
 }
 
 treechildren::-moz-tree-cell-text(lc-339999), .lc-339999:not([_moz-menuactive]) {
   color: #339999
 }
-treechildren::-moz-tree-row(lc-339999, selected, focus), .lc-339999[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-339999, selected, focus) {
   background-color: #339999;
 }
 
 treechildren::-moz-tree-cell-text(lc-336666), .lc-336666:not([_moz-menuactive]) {
   color: #336666
 }
-treechildren::-moz-tree-row(lc-336666, selected, focus), .lc-336666[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-336666, selected, focus) {
   background-color: #336666;
 }
 
 treechildren::-moz-tree-cell-text(lc-003333), .lc-003333:not([_moz-menuactive]) {
   color: #003333
 }
-treechildren::-moz-tree-row(lc-003333, selected, focus), .lc-003333[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-003333, selected, focus) {
   background-color: #003333;
 }
 
@@ -398,49 +398,49 @@ treechildren::-moz-tree-row(lc-003333, selected, focus), .lc-003333[_moz-menuact
 treechildren::-moz-tree-cell-text(lc-CCFFFF), .lc-CCFFFF:not([_moz-menuactive]) {
   color: #CCFFFF
 }
-treechildren::-moz-tree-row(lc-CCFFFF, selected, focus), .lc-CCFFFF[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-CCFFFF, selected, focus) {
   background-color: #CCFFFF;
 }
 
 treechildren::-moz-tree-cell-text(lc-66FFFF), .lc-66FFFF:not([_moz-menuactive]) {
   color: #66FFFF
 }
-treechildren::-moz-tree-row(lc-66FFFF, selected, focus), .lc-66FFFF[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-66FFFF, selected, focus) {
   background-color: #66FFFF;
 }
 
 treechildren::-moz-tree-cell-text(lc-33CCFF), .lc-33CCFF:not([_moz-menuactive]) {
   color: #33CCFF
 }
-treechildren::-moz-tree-row(lc-33CCFF, selected, focus), .lc-33CCFF[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-33CCFF, selected, focus){
   background-color: #33CCFF;
 }
 
 treechildren::-moz-tree-cell-text(lc-3366FF), .lc-3366FF:not([_moz-menuactive]) {
   color: #3366FF
 }
-treechildren::-moz-tree-row(lc-3366FF, selected, focus), .lc-3366FF[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-3366FF, selected, focus) {
   background-color: #3366FF;
 }
 
 treechildren::-moz-tree-cell-text(lc-3333FF), .lc-3333FF:not([_moz-menuactive]) {
   color: #3333FF
 }
-treechildren::-moz-tree-row(lc-3333FF, selected, focus), .lc-3333FF[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-3333FF, selected, focus) {
   background-color: #3333FF;
 }
 
 treechildren::-moz-tree-cell-text(lc-000099), .lc-000099:not([_moz-menuactive]) {
   color: #000099
 }
-treechildren::-moz-tree-row(lc-000099, selected, focus), .lc-000099[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-000099, selected, focus) {
   background-color: #000099;
 }
 
 treechildren::-moz-tree-cell-text(lc-000066), .lc-000066:not([_moz-menuactive]) {
   color: #000066
 }
-treechildren::-moz-tree-row(lc-000066, selected, focus), .lc-000066[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-000066, selected, focus) {
   background-color: #000066;
 }
 
@@ -448,49 +448,49 @@ treechildren::-moz-tree-row(lc-000066, selected, focus), .lc-000066[_moz-menuact
 treechildren::-moz-tree-cell-text(lc-CCCCFF), .lc-CCCCFF:not([_moz-menuactive]) {
   color: #CCCCFF
 }
-treechildren::-moz-tree-row(lc-CCCCFF, selected, focus), .lc-CCCCFF[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-CCCCFF, selected, focus) {
   background-color: #CCCCFF;
 }
 
 treechildren::-moz-tree-cell-text(lc-9999FF), .lc-9999FF:not([_moz-menuactive]) {
   color: #9999FF
 }
-treechildren::-moz-tree-row(lc-9999FF, selected, focus), .lc-9999FF[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-9999FF, selected, focus) {
   background-color: #9999FF;
 }
 
 treechildren::-moz-tree-cell-text(lc-6666CC), .lc-6666CC:not([_moz-menuactive]) {
   color: #6666CC
 }
-treechildren::-moz-tree-row(lc-6666CC, selected, focus), .lc-6666CC[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-6666CC, selected, focus) {
   background-color: #6666CC;
 }
 
 treechildren::-moz-tree-cell-text(lc-6633FF), .lc-6633FF:not([_moz-menuactive]) {
   color: #6633FF
 }
-treechildren::-moz-tree-row(lc-6633FF, selected, focus), .lc-6633FF[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-6633FF, selected, focus) {
   background-color: #6633FF;
 }
 
 treechildren::-moz-tree-cell-text(lc-6600CC), .lc-6600CC:not([_moz-menuactive]) {
   color: #6600CC
 }
-treechildren::-moz-tree-row(lc-6600CC, selected, focus), .lc-6600CC[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-6600CC, selected, focus) {
   background-color: #6600CC;
 }
 
 treechildren::-moz-tree-cell-text(lc-333399), .lc-333399:not([_moz-menuactive]) {
   color: #333399
 }
-treechildren::-moz-tree-row(lc-333399, selected, focus), .lc-333399[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-333399, selected, focus) {
   background-color: #333399;
 }
 
 treechildren::-moz-tree-cell-text(lc-330099), .lc-330099:not([_moz-menuactive]) {
   color: #330099
 }
-treechildren::-moz-tree-row(lc-330099, selected, focus), .lc-330099[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-330099, selected, focus) {
   background-color: #330099;
 }
 
@@ -498,49 +498,49 @@ treechildren::-moz-tree-row(lc-330099, selected, focus), .lc-330099[_moz-menuact
 treechildren::-moz-tree-cell-text(lc-FFCCFF), .lc-FFCCFF:not([_moz-menuactive]) {
   color: #FFCCFF
 }
-treechildren::-moz-tree-row(lc-FFCCFF, selected, focus), .lc-FFCCFF[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-FFCCFF, selected, focus) {
   background-color: #FFCCFF;
 }
 
 treechildren::-moz-tree-cell-text(lc-FF99FF), .lc-FF99FF:not([_moz-menuactive]) {
   color: #FF99FF
 }
-treechildren::-moz-tree-row(lc-FF99FF, selected, focus), .lc-FF99FF[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-FF99FF, selected, focus) {
   background-color: #FF99FF;
 }
 
 treechildren::-moz-tree-cell-text(lc-CC66CC), .lc-CC66CC:not([_moz-menuactive]) {
   color: #CC66CC
 }
-treechildren::-moz-tree-row(lc-CC66CC, selected, focus), .lc-CC66CC[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-CC66CC, selected, focus) {
   background-color: #CC66CC;
 }
 
 treechildren::-moz-tree-cell-text(lc-CC33CC), .lc-CC33CC:not([_moz-menuactive]) {
   color: #CC33CC
 }
-treechildren::-moz-tree-row(lc-CC33CC, selected, focus), .lc-CC33CC[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-CC33CC, selected, focus) {
   background-color: #CC33CC;
 }
 
 treechildren::-moz-tree-cell-text(lc-993399), .lc-993399:not([_moz-menuactive]) {
   color: #993399
 }
-treechildren::-moz-tree-row(lc-993399, selected, focus), .lc-993399[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-993399, selected, focus) {
   background-color: #993399;
 }
 
 treechildren::-moz-tree-cell-text(lc-663366), .lc-663366:not([_moz-menuactive]) {
   color: #663366
 }
-treechildren::-moz-tree-row(lc-663366, selected, focus), .lc-663366[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-663366, selected, focus){
   background-color: #663366;
 }
 
 treechildren::-moz-tree-cell-text(lc-330033), .lc-330033:not([_moz-menuactive]) {
   color: #330033
 }
-treechildren::-moz-tree-row(lc-330033, selected, focus), .lc-330033[_moz-menuactive] {
+treechildren::-moz-tree-row(lc-330033, selected, focus) {
   background-color: #330033;
 }
 
