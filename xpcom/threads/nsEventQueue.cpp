@@ -58,6 +58,15 @@ nsEventQueue::nsEventQueue()
 
 nsEventQueue::~nsEventQueue()
 {
+  {
+    nsAutoMonitor mon(mMonitor);
+
+    NS_ASSERTION(IsEmpty(), "Non-empty event queue being destroyed; events being leaked.");
+
+    if (mHead)
+      FreePage(mHead);
+  }
+
   if (mMonitor)
     nsAutoMonitor::DestroyMonitor(mMonitor);
 }
