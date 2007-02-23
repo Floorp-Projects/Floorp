@@ -2725,7 +2725,16 @@ public:
   nsCOMPtr<nsIMsgWindow> mMsgWindow;                // our UI window
   PRUint32 mNewMessageKey;                          // new message key
   PRUint32 mOrigMsgFlags;
-  // temp
+
+  
+   enum {
+      eStarting,
+      eCopyingNewMsg,
+      eUpdatingFolder, // for IMAP
+      eDeletingOldMessage,
+      eSelectingNewMessage
+    } m_state;
+   // temp
   PRBool mWrittenExtra;
   PRBool mDetaching;
   nsCStringArray mDetachedFileUris;
@@ -2774,6 +2783,7 @@ nsDelAttachListener::OnStopRequest(nsIRequest * aRequest, nsISupports * aContext
   mMsgFileStream = nsnull;
   mNewMessageKey = PR_UINT32_MAX;
   nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID);
+  m_state = eCopyingNewMsg;
   if (copyService) 
   {
     nsCOMPtr<nsIFileSpec> fileSpec;
@@ -2823,6 +2833,7 @@ nsresult nsDelAttachListener::DeleteOriginalMessage()
   QueryInterface( NS_GET_IID(nsIMsgCopyServiceListener), getter_AddRefs(listenerCopyService) );
 
   mOriginalMessage = nsnull;
+  m_state = eDeletingOldMessage;
   return mMessageFolder->DeleteMessages( 
     messageArray,         // messages
     mMsgWindow,           // msgWindow
@@ -2856,13 +2867,14 @@ NS_IMETHODIMP
 nsDelAttachListener::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 {
   nsresult rv = NS_OK;
-  // the imap code gets here, since the delete triggers an OnStopRunningUrl.
-  // the local msg code doesn't get here.
   const char * messageUri = mAttach->mAttachmentArray[0].mMessageUri;
   if (mOriginalMessage && !strncmp(messageUri, "imap-message:", 13))
-    rv = DeleteOriginalMessage();
+  {
+    if (m_state == eUpdatingFolder)
+      rv = DeleteOriginalMessage();
+  }
   // check if we've deleted the original message, and we know the new msg id.
-  else if (!mOriginalMessage && mNewMessageKey != PR_UINT32_MAX && mMsgWindow)
+  else if (m_state == eDeletingOldMessage && mMsgWindow)
     SelectNewMessage();
 
   return rv;
@@ -2913,7 +2925,7 @@ nsDelAttachListener::OnStopCopy(nsresult aStatus)
     return aStatus;
 
   // check if we've deleted the original message, and we know the new msg id.
-  if (!mOriginalMessage && mNewMessageKey != PR_UINT32_MAX && mMsgWindow)
+  if (m_state == eDeletingOldMessage && mMsgWindow)
     SelectNewMessage();
   // do this for non-imap messages - for imap, we'll do the delete in
   // OnStopRunningUrl. For local messages, we won't get an OnStopRunningUrl
@@ -2926,6 +2938,8 @@ nsDelAttachListener::OnStopCopy(nsresult aStatus)
   const char * messageUri = mAttach->mAttachmentArray[0].mMessageUri;
   if (mOriginalMessage && strncmp(messageUri, "imap-message:", 13))
     return DeleteOriginalMessage();
+  else
+    m_state = eUpdatingFolder;
   return NS_OK;
 }
 
@@ -2939,6 +2953,7 @@ nsDelAttachListener::nsDelAttachListener()
   mSaveFirst = PR_FALSE;
   mWrittenExtra = PR_FALSE;
   mNewMessageKey = PR_UINT32_MAX;
+  m_state = eStarting;
 }
 
 nsDelAttachListener::~nsDelAttachListener()

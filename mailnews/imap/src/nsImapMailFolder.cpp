@@ -4999,7 +4999,16 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                 if (m_copyState->m_curIndex >= m_copyState->m_totalCount)
                 {
                   if (folderOpen)
+                  {
+                    // This gives a way for the caller to get notified 
+                    // when the UpdateFolder url is done.
+                    nsCOMPtr <nsIUrlListener> saveUrlListener = m_urlListener;
+                    if (m_copyState->m_listener)
+                      m_urlListener = do_QueryInterface(m_copyState->m_listener);
+
                     UpdateFolder(msgWindow);
+                    m_urlListener = saveUrlListener;
+                  }
                   if (m_copyState->m_msgWindow && m_copyState->m_undoMsgTxn)
                   {
                     nsCOMPtr<nsITransactionManager> txnMgr;
