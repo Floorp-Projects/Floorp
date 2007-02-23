@@ -317,9 +317,10 @@ sub validate {
         # Don't bother validating types the user didn't touch.
         next if $status eq 'X';
 
-        # Make sure the flag type exists.
+        # Make sure the flag type exists. If it doesn't, FormToNewFlags()
+        # will ignore it, so it's safe to ignore it here.
         my $flag_type = new Bugzilla::FlagType($id);
-        $flag_type || ThrowCodeError('flag_type_nonexistent', { id => $id });
+        next unless $flag_type;
 
         # Make sure the flag type is active.
         unless ($flag_type->is_active) {
@@ -336,9 +337,10 @@ sub validate {
         my @requestees = $cgi->param("requestee-$id");
         my $private_attachment = $cgi->param('isprivate') ? 1 : 0;
 
-        # Make sure the flag exists.
+        # Make sure the flag exists. If it doesn't, process() will ignore it,
+        # so it's safe to ignore it here.
         my $flag = new Bugzilla::Flag($id);
-        $flag || ThrowCodeError("flag_nonexistent", { id => $id });
+        next unless $flag;
 
         _validate($flag, $flag->type, $status, undef, \@requestees, $private_attachment,
                   undef, undef, $skip_requestee_on_error);
