@@ -67,17 +67,17 @@ fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") == background-image-width-5.html backgroun
 == background-image-left-5.html background-image-left-10-ref.html
 == background-image-left-6.html background-image-left-10-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == background-image-top-height-4.html background-image-height-4.html # bug 371316
-fails-if(MOZ_WIDGET_TOOLKIT=="windows") == background-image-top-height-5.html background-image-height-5.html # bug 371316
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") fails-if(MOZ_WIDGET_TOOLKIT=="windows") == background-image-top-height-5.html background-image-height-5.html # bug 371316
 == background-image-top-height-6.html background-image-height-6.html
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == background-image-left-width-4.html background-image-width-4.html # bug 371316
-fails-if(MOZ_WIDGET_TOOLKIT=="windows") == background-image-left-width-5.html background-image-width-5.html # bug 371316
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") fails-if(MOZ_WIDGET_TOOLKIT=="windows") == background-image-left-width-5.html background-image-width-5.html # bug 371316
 == background-image-left-width-6.html background-image-width-6.html
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == background-image-height-top-4.html background-image-height-4.html # bug 371316
-fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == background-image-height-top-5.html background-image-height-5.html # bug 371316
-fails-if(MOZ_WIDGET_TOOLKIT=="windows") == background-image-height-top-6.html background-image-height-6.html # bug 371316
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == background-image-height-top-5.html background-image-height-5.html # bug 371316
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") fails-if(MOZ_WIDGET_TOOLKIT=="windows") == background-image-height-top-6.html background-image-height-6.html # bug 371316
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == background-image-width-left-4.html background-image-width-4.html # bug 371316
-fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == background-image-width-left-5.html background-image-width-5.html # bug 371316
-fails-if(MOZ_WIDGET_TOOLKIT=="windows") == background-image-width-left-6.html background-image-width-6.html # bug 371316
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == background-image-width-left-5.html background-image-width-5.html # bug 371316
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") fails-if(MOZ_WIDGET_TOOLKIT=="windows") == background-image-width-left-6.html background-image-width-6.html # bug 371316
 
 
 # These all fail due to bug 155955, and maybe also bug 371180, plus a
