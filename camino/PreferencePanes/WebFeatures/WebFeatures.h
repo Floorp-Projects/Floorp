@@ -62,6 +62,7 @@ class nsISupportsArray;
 
   IBOutlet id mWhitelistPanel;
   IBOutlet ExtendedTableView*   mWhitelistTable;
+  IBOutlet NSTableColumn*       mPolicyColumn;
   IBOutlet NSTextField*         mAddField;
   IBOutlet NSButton*            mAddButton;
 

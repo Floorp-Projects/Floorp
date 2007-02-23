@@ -156,6 +156,13 @@ const int kAnnoyancePrefSome = 3;
     [mEnableFlashBlock setState:(enableFlashBlock ? NSOnState : NSOffState)];
   }
 
+  // Set up policy popups
+  NSPopUpButtonCell *popupButtonCell = [mPolicyColumn dataCell];
+  [popupButtonCell setEditable:YES];
+  [popupButtonCell addItemsWithTitles:[NSArray arrayWithObjects:[self getLocalizedString:@"Allow"],
+                                                                [self getLocalizedString:@"Deny"],
+                                                                nil]];
+
   // Set inital values for tabfocus pref.  Internally, it's a bitwise additive pref:
   // bit 0 adds focus for text fields (not exposed in the UI, so not given a constant)
   // bit 1 adds focus for other form elements (kFocusForms)
@@ -407,19 +414,61 @@ const int kAnnoyancePrefSome = 3;
 
 - (id)tableView:(NSTableView *)aTableView objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(int)rowIndex
 {
-  NSString* retVal = nil;
+  id retVal = nil;
   if ( mCachedPermissions ) {
     nsCOMPtr<nsISupports> rowItem = dont_AddRef(mCachedPermissions->ElementAt(rowIndex));
     nsCOMPtr<nsIPermission> perm ( do_QueryInterface(rowItem) );
     if ( perm ) {
-      // only 1 column and it's the website url column
-      nsCAutoString host;
-      perm->GetHost(host);
-      retVal = [NSString stringWithCString:host.get()];
+      if (aTableColumn == mPolicyColumn) {
+        PRUint32 capability;
+        perm->GetCapability(&capability);
+        retVal = [NSNumber numberWithInt:((capability == nsIPermissionManager::ALLOW_ACTION) ? 0 : 1)]; 
+      }
+      else { // website column
+        nsCAutoString host;
+        perm->GetHost(host);
+        retVal = [NSString stringWithCString:host.get()];
+      }
     }
   }
 
   return retVal;
+}
+
+// currently, this only applies to the site allow/deny, since that's the only editable column
+-(void) tableView:(NSTableView *)aTableView
+   setObjectValue:anObject
+   forTableColumn:(NSTableColumn *)aTableColumn
+              row:(int)rowIndex
+{
+  if (aTableColumn == mPolicyColumn) {
+    if (!(mCachedPermissions && mManager))
+      return;
+    nsCOMPtr<nsISupports> rowItem = dont_AddRef(mCachedPermissions->ElementAt(rowIndex));
+    nsCOMPtr<nsIPermission> perm (do_QueryInterface(rowItem));
+    if (!perm)
+      return;
+    // create a URI from the hostname of the changed site
+    nsCAutoString host;
+    perm->GetHost(host);
+    NSString* url = [NSString stringWithFormat:@"http://%s", host.get()];
+    const char* siteURL = [url UTF8String];
+    nsCOMPtr<nsIURI> newURI;
+    NS_NewURI(getter_AddRefs(newURI), siteURL);
+    if (!newURI)
+      return;
+    // nsIPermissions are immutable, and there's no API to change the action,
+    // so instead we have to replace the previous policy entirely.
+    mManager->Add(newURI, "popup", ([anObject intValue] == 0) ? nsIPermissionManager::ALLOW_ACTION
+                                                              : nsIPermissionManager::DENY_ACTION);
+    // there really should be a better way to keep the cache up-to-date than rebuilding
+    // it, but the nsIPermissionManager interface doesn't have a way to get a pointer
+    // to a site's nsIPermission. It's this, use a custom class that duplicates the
+    // information (wasting a lot of memory), or find a way to tie in to
+    // PERM_CHANGE_NOTIFICATION to get the new nsIPermission that way.
+    mCachedPermissions->Clear();
+    [self populatePermissionCache:mCachedPermissions];
+  }
 }
 
 - (void)controlTextDidChange:(NSNotification*)notification

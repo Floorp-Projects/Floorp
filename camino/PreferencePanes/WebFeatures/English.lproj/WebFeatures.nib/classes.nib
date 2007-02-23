@@ -44,6 +44,7 @@
                 mEnablePlugins = NSButton; 
                 mEnablePopupBlocking = NSButton; 
                 mImageResize = NSButton; 
+                mPolicyColumn = NSTableColumn; 
                 mPreventAnimation = NSButton; 
                 mTabToFormElements = NSButton; 
                 mTabToLinks = NSButton; 
