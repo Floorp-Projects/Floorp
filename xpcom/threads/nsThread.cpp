@@ -587,6 +587,8 @@ nsThread::PopEventQueue()
   nsCOMPtr<nsIRunnable> event;
   while (queue->GetEvent(PR_FALSE, getter_AddRefs(event)))
     mEvents->PutEvent(event);
+
+  delete queue;
   
   return NS_OK;
 }
