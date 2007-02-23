@@ -546,6 +546,9 @@ function ShowingThreadPane()
   var threadPaneSplitter = document.getElementById("threadpane-splitter");
   threadPaneSplitter.collapsed = false;
   GetMessagePane().collapsed = (threadPaneSplitter.getAttribute("state") == "collapsed");
+  // XXX We need to force the tree to refresh its new height
+  // so that it will correctly scroll to the newest message
+  GetThreadTree().boxObject.height;  
   document.getElementById("key_toggleMessagePane").removeAttribute("disabled");
 }
 
