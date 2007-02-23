@@ -994,18 +994,19 @@ nsThebesRenderingContext::DrawImage(imgIContainer *aImage,
     // and has nothing to do with the current transform (it's a region
     // of the image)
     double p2a = nsIDeviceContext::AppUnitsPerCSSPixel();
-    nsIntRect pxSr(NSAppUnitsToIntPixels(twSrcRect.x, p2a),
-                   NSAppUnitsToIntPixels(twSrcRect.y, p2a),
-                   NSAppUnitsToIntPixels(twSrcRect.width, p2a),
-                   NSAppUnitsToIntPixels(twSrcRect.height, p2a));
+    nsIntRect pxSr;
+    pxSr.x = NSAppUnitsToIntPixels(twSrcRect.x, p2a);
+    pxSr.y = NSAppUnitsToIntPixels(twSrcRect.y, p2a);
+    pxSr.width = NSAppUnitsToIntPixels(twSrcRect.XMost(), p2a) - pxSr.x;
+    pxSr.height = NSAppUnitsToIntPixels(twSrcRect.YMost(), p2a) - pxSr.y;
 
     // the dest rect is affected by the current transform; that'll be
     // handled by Image::Draw(), when we actually set up the rectangle.
     nsIntRect pxDr;
-    pxDr.x = NSToIntRound(FROM_TWIPS(twDestRect.x));
-    pxDr.y = NSToIntRound(FROM_TWIPS(twDestRect.y));
-    pxDr.width = NSToIntRound(FROM_TWIPS(twDestRect.width));
-    pxDr.height = NSToIntRound(FROM_TWIPS(twDestRect.height));
+    pxDr.x = FROM_TWIPS_INT(twDestRect.x);
+    pxDr.y = FROM_TWIPS_INT(twDestRect.y);
+    pxDr.width = FROM_TWIPS_INT(twDestRect.XMost()) - pxDr.x;
+    pxDr.height = FROM_TWIPS_INT(twDestRect.YMost()) - pxDr.y;
 
     // If we were asked to draw a 0-width or 0-height image,
     // as either the src or dst, just bail; we can't do anything
