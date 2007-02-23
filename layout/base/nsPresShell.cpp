@@ -3375,7 +3375,11 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty)
         !f->GetParent()) {
       // we've hit a reflow root or the root frame
       if (!wasDirty) {
-        NS_ASSERTION(mDirtyRoots.IndexOf(f) == -1, "wasDirty lied");
+        // Remove existing entries so we don't get duplicates,
+        // NotifyDestroyingFrame() only removes one entry, bug 366320.
+        while (NS_UNLIKELY(mDirtyRoots.RemoveElement(f))) {
+          NS_ERROR("wasDirty lied");
+        }
         mDirtyRoots.AppendElement(f);
       }
       break;
