@@ -160,6 +160,7 @@
             <jvmarg value="-DNSPR_LOG_FILE=${myenv.NSPR_LOG_FILE}"/>
             <jvmarg value="-DMOZ_SRC=${myenv.MOZ_SRC}"/>
             <jvmarg value="-DBROWSER_BIN_DIR=${myenv.MOZILLA_FIVE_HOME}"/>
+            <jvmarg value="-Dbuild.test.results.dir=${build.test}"/>
             <sysproperty key="native.waitForDebugger" 
                          value="${native.waitForDebugger}"/>
             <jvmarg line="${debug.jvm.args}"/>

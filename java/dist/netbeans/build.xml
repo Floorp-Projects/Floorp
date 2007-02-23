@@ -210,7 +210,7 @@ ${so.prefix}xul.${so.extension}.
             <jvmarg value="-DBROWSER_BIN_DIR=${browser.bin.dir}"/>
             <jvmarg line="${debug.jvm.args}"/>
             <jvmarg line="-Djava.util.logging.config.file=${basedir}${FILE_PATH_SEP}logging.properties"/>
-            <jvmarg line="-Djava.library.path=${browser.bin.dir}${PATH_SEP}${browser.bin.dir}${FILE_PATH_SEP}components" />
+            <jvmarg line="-Djava.library.path=${browser.bin.dir}" />
             
                     <classpath>
                         <path path="${run.test.classpath}"/>
