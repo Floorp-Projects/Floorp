@@ -60,12 +60,19 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_SJOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
                     JSObject **objp);
 
+JS_STATIC_DLL_CALLBACK(JSBool)
+XPC_SJOW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp);
+
 JS_STATIC_DLL_CALLBACK(void)
 XPC_SJOW_Finalize(JSContext *cx, JSObject *obj);
 
 JS_STATIC_DLL_CALLBACK(JSBool)
-XPC_SJOW_CheckAccess(JSContext *cx, JSObject *obj, jsval id,
-                     JSAccessMode mode, jsval *vp);
+XPC_SJOW_CheckAccess(JSContext *cx, JSObject *obj, jsval id, JSAccessMode mode,
+                     jsval *vp);
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+XPC_SJOW_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+              jsval *rval);
 
 JSBool
 XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
@@ -73,10 +80,6 @@ XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_SJOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
-
-JS_STATIC_DLL_CALLBACK(JSBool)
-XPC_SJOW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                         jsval *rval);
 
 static JSNative sEvalNative;
 
@@ -187,9 +190,9 @@ JSExtendedClass sXPC_SJOW_JSClass = {
     XPC_SJOW_AddProperty, XPC_SJOW_DelProperty,
     XPC_SJOW_GetProperty, XPC_SJOW_SetProperty,
     XPC_SJOW_Enumerate,   (JSResolveOp)XPC_SJOW_NewResolve,
-    JS_ConvertStub,       XPC_SJOW_Finalize,
+    XPC_SJOW_Convert,     XPC_SJOW_Finalize,
     nsnull,               XPC_SJOW_CheckAccess,
-    nsnull,               XPC_SJOW_Construct,
+    XPC_SJOW_Call,        XPC_SJOW_Construct,
     nsnull,               nsnull,
     nsnull,               nsnull
   },
@@ -242,51 +245,6 @@ GetGlobalObject(JSContext *cx, JSObject *obj)
   return obj;
 }
 
-static JSBool
-WrapFunction(JSContext* cx, JSObject* funobj, jsval *rval)
-{
-  JSFunction *fun = ::JS_ValueToFunction(cx, OBJECT_TO_JSVAL(funobj));
-
-  JSNative native =
-    ::JS_GetFunctionNative(cx, fun);
-
-  // Prevent eval() from ever being used through a
-  // XPCSafeJSObjectWrapper.
-  if (native == sEvalNative) {
-    return ThrowException(NS_ERROR_INVALID_ARG, cx);
-  }
-
-  // Check that the caller can access the function it's about to call.
-  if (!CanCallerAccess(cx, funobj)) {
-    // CanCallerAccess() already threw for us.
-    return JS_FALSE;
-  }
-
-  // If funobj is already a wrapped function, just return it. No
-  // need to wrap it again or create a new function wrapper.
-  if (native == XPC_SJOW_FunctionWrapper) {
-    *rval = OBJECT_TO_JSVAL(funobj);
-
-    return JS_TRUE;
-  }
-
-  // Create a new function that'll call our given function.  This new
-  // function's parent will be the original function and that's how we
-  // get the right thing to call when this function is called.
-  JSFunction *funWrapper =
-    ::JS_NewFunction(cx, XPC_SJOW_FunctionWrapper, ::JS_GetFunctionArity(fun),
-                     0, funobj, "XPCSafeJSObjectWrapper function wrapper");
-  if (!funWrapper) {
-    return JS_FALSE;
-  }
-
-  JSObject *newFunobj = ::JS_GetFunctionObject(funWrapper);
-
-  *rval = OBJECT_TO_JSVAL(newFunobj);
-
-  return JS_TRUE;
-}
-
 // Wrap a JS value in a safe wrapper of a function wrapper if
 // needed. Note that rval must point to something rooted when calling
 // this function.
@@ -297,8 +255,6 @@ WrapJSValue(JSContext *cx, JSObject *obj, jsval val, jsval *rval)
 
   if (JSVAL_IS_PRIMITIVE(val)) {
     *rval = val;
-  } else if (::JS_ObjectIsFunction(cx, JSVAL_TO_OBJECT(val))) {
-    ok = WrapFunction(cx, JSVAL_TO_OBJECT(val), rval);
   } else {
     // Construct a new safe wrapper. Note that it doesn't matter what
     // parent we pass in here, the construct hook will ensure we get
@@ -427,17 +383,9 @@ UnwrapJSValue(JSContext *cx, jsval val)
     return val;
   }
 
-  if (::JS_ObjectIsFunction(cx, JSVAL_TO_OBJECT(val))) {
-    if (::JS_GetFunctionNative(cx, ::JS_ValueToFunction(cx, val)) ==
-        XPC_SJOW_FunctionWrapper) {
-      return OBJECT_TO_JSVAL(::JS_GetParent(cx, JSVAL_TO_OBJECT(val)));
-    }
-  } else {
-    JSObject *unsafeObj = GetUnsafeObject(cx, JSVAL_TO_OBJECT(val));
-
-    if (unsafeObj) {
-      return OBJECT_TO_JSVAL(unsafeObj);
-    }
+  JSObject *unsafeObj = GetUnsafeObject(cx, JSVAL_TO_OBJECT(val));
+  if (unsafeObj) {
+    return OBJECT_TO_JSVAL(unsafeObj);
   }
 
   return val;
@@ -593,81 +541,15 @@ XPC_SJOW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   return ::JS_DeleteElement2(cx, unsafeObj, JSVAL_TO_INT(id), vp);
 }
 
+// Call wrapper to help with wrapping calls to functions or callable
+// objects in a scripted function (see XPC_SJOW_Call()). The first
+// argument passed to this method is the unsafe function to call, the
+// rest are the arguments to pass to the function we're calling.
 JS_STATIC_DLL_CALLBACK(JSBool)
-XPC_SJOW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                         jsval *rval)
+XPC_SJOW_CallWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                     jsval *rval)
 {
-  obj = FindSafeObject(cx, obj);
-  if (!obj) {
-    return ThrowException(NS_ERROR_INVALID_ARG, cx);
-  }
-
-  JSObject *funObj = JSVAL_TO_OBJECT(argv[-2]);
-  if (!::JS_ObjectIsFunction(cx, funObj)) {
-    return ThrowException(NS_ERROR_UNEXPECTED, cx);
-  }
-
-  JSObject *unsafeObj = GetUnsafeObject(cx, obj);
-  if (!unsafeObj) {
-    return ThrowException(NS_ERROR_UNEXPECTED, cx);
-  }
-
-  // Check that the caller can access the unsafe object.
-  if (!CanCallerAccess(cx, unsafeObj)) {
-    // CanCallerAccess() already threw for us.
-    return JS_FALSE;
-  }
-
-  // The real function being called is the parent of this function's
-  // JSObject.
-  JSObject *functionToCallObj = ::JS_GetParent(cx, funObj);
-
-  if (!::JS_ObjectIsFunction(cx, functionToCallObj)) {
-    return ThrowException(NS_ERROR_UNEXPECTED, cx);
-  }
-
-  // Function body for wrapping function calls in a scripted
-  // caller. This scripted function's first argument is the function
-  // to call, the rest of the arguments are the argument to pass in to
-  // the function being called.
-  NS_NAMED_LITERAL_CSTRING(funScript,
-                           "var args = [];"
-                           "for (var i = 1; i < arguments.length; i++)"
-                           "args.push(arguments[i]);"
-                           "return arguments[0].apply(this, args);");
-
-  jsval scriptedFunVal;
-  if (!GetScriptedFunction(cx, obj, unsafeObj, XPC_SJOW_SLOT_SCRIPTED_FUN,
-                           funScript, &scriptedFunVal)) {
-    return JS_FALSE;
-  }
-
-  // Build up our argument array per comment above.
-  jsval argsBuf[8];
-  jsval *args = argsBuf;
-
-  if (argc > 7) {
-    args = (jsval *)nsMemory::Alloc((argc + 1) * sizeof(jsval *));
-    if (!args) {
-      return ThrowException(NS_ERROR_OUT_OF_MEMORY, cx);
-    }
-  }
-
-  args[0] = OBJECT_TO_JSVAL(functionToCallObj);
-
-  for (uintN i = 0; i < argc; ++i) {
-    args[i + 1] = UnwrapJSValue(cx, argv[i]);
-  }
-
-  jsval val;
-  JSBool ok = ::JS_CallFunctionValue(cx, unsafeObj, scriptedFunVal, argc + 1,
-                                     args, &val);
-
-  if (args != argsBuf) {
-    nsMemory::Free(args);
-  }
-
-  return ok && WrapJSValue(cx, obj, val, rval);
+  return ::JS_CallFunctionValue(cx, obj, argv[0], argc - 1, argv + 1, rval);
 }
 
 static JSBool
@@ -868,6 +750,12 @@ XPC_SJOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
   return ok;
 }
 
+JS_STATIC_DLL_CALLBACK(JSBool)
+XPC_SJOW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
+{
+  return JS_TRUE;
+}
+
 JS_STATIC_DLL_CALLBACK(void)
 XPC_SJOW_Finalize(JSContext *cx, JSObject *obj)
 {
@@ -913,6 +801,117 @@ XPC_SJOW_CheckAccess(JSContext *cx, JSObject *obj, jsval id,
     clazz->checkAccess(cx, unsafeObj, id, mode, vp);
 }
 
+JS_STATIC_DLL_CALLBACK(JSBool)
+XPC_SJOW_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+              jsval *rval)
+{
+  obj = FindSafeObject(cx, obj);
+  if (!obj) {
+    return ThrowException(NS_ERROR_INVALID_ARG, cx);
+  }
+
+  JSObject *unsafeObj = GetUnsafeObject(cx, obj);
+  if (!unsafeObj) {
+    return ThrowException(NS_ERROR_UNEXPECTED, cx);
+  }
+
+  JSObject *funToCall = GetUnsafeObject(cx, JSVAL_TO_OBJECT(argv[-2]));
+
+  // Check that the caller can access the unsafe object on which the
+  // call is being made, and the actual function we're about to call.
+  if (!CanCallerAccess(cx, unsafeObj) || !CanCallerAccess(cx, funToCall)) {
+    // CanCallerAccess() already threw for us.
+    return JS_FALSE;
+  }
+
+  // Function body for wrapping calls to functions or callable objects
+  // in a scripted caller. This scripted function's first argument is
+  // a native call wrapper, and the second argument is the unsafe
+  // function to call. All but the first argument are passed to the
+  // call wrapper.
+  NS_NAMED_LITERAL_CSTRING(funScript,
+                           "var args = [];"
+                           "for (var i = 1; i < arguments.length; i++)"
+                           "args.push(arguments[i]);"
+                           "return arguments[0].apply(this, args);");
+
+  // Get the scripted function.
+  jsval scriptedFunVal;
+  if (!GetScriptedFunction(cx, obj, unsafeObj, XPC_SJOW_SLOT_SCRIPTED_FUN,
+                           funScript, &scriptedFunVal)) {
+    return JS_FALSE;
+  }
+
+  JSFunction *callWrapper;
+  jsval cwval;
+
+  // Check if we've cached the call wrapper on the scripted function
+  // already. If so, use the cached call wrapper.
+  if (!::JS_GetReservedSlot(cx, JSVAL_TO_OBJECT(scriptedFunVal), 0, &cwval)) {
+    return JS_FALSE;
+  }
+
+  if (JSVAL_IS_PRIMITIVE(cwval)) {
+    // No cached call wrapper found.
+    callWrapper =
+      ::JS_NewFunction(cx, XPC_SJOW_CallWrapper, 0, 0, unsafeObj,
+                       "XPC_SJOW_CallWrapper");
+    if (!callWrapper) {
+      return JS_FALSE;
+    }
+
+    // Cache the call wrapper function, this will also ensure it
+    // doesn't get collected early. We piggy-back on one of the
+    // reserved slots in JS functions here, and that's ok since we
+    // know the scripted function we're storing it on is a function
+    // compiled by the JS engine and the reserved slots are unused.
+    JSObject *callWrapperObj = ::JS_GetFunctionObject(callWrapper);
+    if (!::JS_SetReservedSlot(cx, JSVAL_TO_OBJECT(scriptedFunVal), 0,
+                              OBJECT_TO_JSVAL(callWrapperObj))) {
+      return JS_FALSE;
+    }
+  } else {
+    // Found a cached call wrapper, extract the function.
+    callWrapper = ::JS_ValueToFunction(cx, cwval);
+
+    if (!callWrapper) {
+      return ThrowException(NS_ERROR_UNEXPECTED, cx);
+    }
+  }
+
+  // Build up our argument array per earlier comment.
+  jsval argsBuf[8];
+  jsval *args = argsBuf;
+
+  if (argc > 7) {
+    args = (jsval *)nsMemory::Alloc((argc + 2) * sizeof(jsval *));
+    if (!args) {
+      return ThrowException(NS_ERROR_OUT_OF_MEMORY, cx);
+    }
+  }
+
+  args[0] = OBJECT_TO_JSVAL(::JS_GetFunctionObject(callWrapper));
+  args[1] = OBJECT_TO_JSVAL(funToCall);
+
+  if (args[0] == JSVAL_NULL) {
+    return JS_FALSE;
+  }
+
+  for (uintN i = 0; i < argc; ++i) {
+    args[i + 2] = UnwrapJSValue(cx, argv[i]);
+  }
+
+  jsval val;
+  JSBool ok = ::JS_CallFunctionValue(cx, unsafeObj, scriptedFunVal, argc + 2,
+                                     args, &val);
+
+  if (args != argsBuf) {
+    nsMemory::Free(args);
+  }
+
+  return ok && WrapJSValue(cx, obj, val, rval);
+}
+
 JSBool
 XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                    jsval *rval)
@@ -932,10 +931,13 @@ XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   JSObject *objToWrap = JSVAL_TO_OBJECT(argv[0]);
 
   // Prevent script created Script objects from ever being wrapped
-  // with XPCSafeJSObjectWrapper, and never let a function object be
-  // directly wrapped.
+  // with XPCSafeJSObjectWrapper, and never let the eval function
+  // object be directly wrapped.
+
   if (JS_GET_CLASS(cx, objToWrap) == &js_ScriptClass ||
-      ::JS_ObjectIsFunction(cx, objToWrap)) {
+      (::JS_ObjectIsFunction(cx, objToWrap) &&
+       ::JS_GetFunctionNative(cx, ::JS_ValueToFunction(cx, argv[0])) ==
+       sEvalNative)) {
     return ThrowException(NS_ERROR_INVALID_ARG, cx);
   }
 
