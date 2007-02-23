@@ -1959,7 +1959,7 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
         nsCOMPtr<nsISupportsArray> messageArray;
         NS_NewISupportsArray(getter_AddRefs(messageArray));
         messageArray->AppendElement(msgHdr);
-        m_downloadFolder->AddKeywordToMessages(messageArray, keyword.get());
+        m_downloadFolder->AddKeywordsToMessages(messageArray, keyword.get());
         break;
       }
       case nsMsgFilterAction::Label:

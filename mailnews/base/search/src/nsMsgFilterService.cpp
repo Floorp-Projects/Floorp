@@ -651,7 +651,7 @@ nsresult nsMsgFilterAfterTheFact::ApplyFilter()
         {
             nsXPIDLCString keyword;
             filterAction->GetStrValue(getter_Copies(keyword));
-            m_curFolder->AddKeywordToMessages(m_searchHitHdrs, keyword.get());
+            m_curFolder->AddKeywordsToMessages(m_searchHitHdrs, keyword.get());
         }
         break;
       case nsMsgFilterAction::JunkScore:

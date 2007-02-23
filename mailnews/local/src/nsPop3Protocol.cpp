@@ -402,6 +402,12 @@ net_pop3_write_state(Pop3UidlHost* host, nsIFileSpec *mailDirectory)
   nsFileSpec fileSpec;
   mailDirectory->GetFileSpec(&fileSpec);
   fileSpec += "popstate.dat";
+#ifdef DEBUG_David_Bienvenu
+  PRUint32 fileSize = fileSpec.GetFileSize();
+  // check if popstate.dat is getting emptied out.
+  if (!host || (hash_empty(host->hash) && fileSize > 80))
+    NS_ASSERTION(PR_FALSE, "bad/empty pop3 uidl hash table");
+#endif
   
   nsOutputFileStream outFileStream(fileSpec, PR_WRONLY | PR_CREATE_FILE |
     PR_TRUNCATE);

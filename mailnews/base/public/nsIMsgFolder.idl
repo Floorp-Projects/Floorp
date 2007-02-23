@@ -71,7 +71,7 @@ typedef long nsMsgBiffState;
 // enumerated type for determining if a message has been replied to, forwarded, etc.
 typedef long nsMsgDispositionState;
 
-[scriptable, uuid(913D683A-206F-4c91-9B10-3FC4CAEA644E)]
+[scriptable, uuid(83d2454c-632e-4d6e-900a-7236a6d2aa9a)]
 interface nsIMsgFolder : nsICollection {
 
 const nsMsgBiffState nsMsgBiffState_NewMail = 0; // User has new mail waiting.
@@ -495,9 +495,9 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
 
   // used to set/clear tags - we could have a single method to setKeywords which
   // would figure out the diffs, but these methods might be more convenient.
-  void addKeywordToMessages(in nsISupportsArray aMessages, in string aKeyword);
-  void removeKeywordFromMessages(in nsISupportsArray aMessages, in string aKeyword);
-
+  // keywords are space delimited, in the case of multiple keywords
+  void addKeywordsToMessages(in nsISupportsArray aMessages, in string aKeywords);
+  void removeKeywordsFromMessages(in nsISupportsArray aMessages, in string aKeywords);
   /**
    * Extract the message preview text from aStream, storing it as a string property
    * on aMsgHdr.

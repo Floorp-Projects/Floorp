@@ -197,8 +197,8 @@ public:
   NS_IMETHOD FetchMsgPreviewText(nsMsgKey *aKeysToFetch, PRUint32 aNumKeys,
                                                  PRBool aLocalOnly, nsIUrlListener *aUrlListener, 
                                                  PRBool *aAsyncResults);
-  NS_IMETHOD AddKeywordToMessages(nsISupportsArray *aMessages, const char *aKeyword);
-  NS_IMETHOD RemoveKeywordFromMessages(nsISupportsArray *aMessages, const char *aKeyword);
+  NS_IMETHOD AddKeywordsToMessages(nsISupportsArray *aMessages, const char *aKeywords);
+  NS_IMETHOD RemoveKeywordsFromMessages(nsISupportsArray *aMessages, const char *aKeywords);
 
 protected:
   nsresult CopyFolderAcrossServer(nsIMsgFolder *srcFolder, nsIMsgWindow *msgWindow,nsIMsgCopyServiceListener* listener);

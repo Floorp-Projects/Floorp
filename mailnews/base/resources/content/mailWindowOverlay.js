@@ -473,16 +473,44 @@ function RemoveAllMessageTags()
   var selectedMsgUris = GetSelectedMessages();
   if (!selectedMsgUris.length)
     return;
-    
+
+  var messages = Components.classes["@mozilla.org/supports-array;1"]
+                           .createInstance(Components.interfaces.nsISupportsArray);
+  var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
+                             .getService(Components.interfaces.nsIMsgTagService);
+  var tagArray = tagService.getAllTags({});
+
+  var allKeys = "";
+  for (j = 0; j < tagArray.length; ++j)
+  {
+    if (j)
+      allKeys += " ";
+    allKeys += tagArray[j].key;
+  }
+
+  var prevHdrFolder = null;
+  // this crudely handles cross-folder virtual folders with selected messages
+  // that spans folders, by coalescing consecutive messages in the selection
+  // that happen to be in the same folder. nsMsgSearchDBView does this better,
+  // but nsIMsgDBView doesn't handle commands with arguments, and untag takes a
+  // key argument. Furthermore, we only delete legacy labels and known tags,
+  // keeping other keywords like (non)junk intact.
+  var j;
   for (var i = 0; i < selectedMsgUris.length; ++i)
   {
-    // remove all tags by removing all their tag keys at once
-    // (using a msgHdr's setStringProperty won't notify the threadPane!)
     var msgHdr = messenger.msgHdrFromURI(selectedMsgUris[i]);
     msgHdr.label = 0; // remove legacy label
-    msgHdr.folder.getMsgDatabase(msgWindow)
-          .setStringProperty(msgHdr.messageKey, "keywords", "");
+    if (prevHdrFolder != msgHdr.folder)
+    {
+      if (prevHdrFolder)
+        prevHdrFolder.removeKeywordsFromMessages(messages, allKeys);
+      messages.Clear();
+      prevHdrFolder = msgHdr.folder;
+    }
+    messages.AppendElement(msgHdr);
   }
+  if (prevHdrFolder)
+    prevHdrFolder.removeKeywordsFromMessages(messages, allKeys);
   OnTagsChange();
 }
 
@@ -547,7 +575,7 @@ function ToggleMessageTag(key, addKey)
   var msg = Components.classes["@mozilla.org/supports-array;1"]
                           .createInstance(Components.interfaces.nsISupportsArray);
   var selectedMsgUris = GetSelectedMessages();
-  var toggler = addKey ? "addKeywordToMessages" : "removeKeywordFromMessages";
+  var toggler = addKey ? "addKeywordsToMessages" : "removeKeywordsFromMessages";
   var prevHdrFolder = null;
   // this crudely handles cross-folder virtual folders with selected messages
   // that spans folders, by coalescing consecutive msgs in the selection
@@ -564,7 +592,7 @@ function ToggleMessageTag(key, addKey)
       // because resetting a label doesn't update the tree anymore...
       msg.Clear();
       msg.AppendElement(msgHdr);
-      msgHdr.folder.addKeywordToMessages(msg, "$label" + msgHdr.label);
+      msgHdr.folder.addKeywordsToMessages(msg, "$label" + msgHdr.label);
       msgHdr.label = 0; // remove legacy label
     }
     if (prevHdrFolder != msgHdr.folder)

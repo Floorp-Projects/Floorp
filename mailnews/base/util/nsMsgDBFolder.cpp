@@ -5469,7 +5469,7 @@ void nsMsgDBFolder::SetMRUTime()
 }
 
 
-NS_IMETHODIMP nsMsgDBFolder::AddKeywordToMessages(nsISupportsArray *aMessages, const char *aKeyword)
+NS_IMETHODIMP nsMsgDBFolder::AddKeywordsToMessages(nsISupportsArray *aMessages, const char *aKeywords)
 {
   nsresult rv = NS_OK;
   GetDatabase(nsnull);
@@ -5489,20 +5489,25 @@ NS_IMETHODIMP nsMsgDBFolder::AddKeywordToMessages(nsISupportsArray *aMessages, c
       (void) message->GetMessageKey(&msgKey);
 
       message->GetStringProperty("keywords", getter_Copies(keywords));
-      nsACString::const_iterator start, end;
-      if (!MsgFindKeyword(nsDependentCString(aKeyword), keywords, start, end))
+      nsCStringArray keywordArray;
+      keywordArray.ParseString(aKeywords, " ");
+      for (PRInt32 j = 0; j < keywordArray.Count(); j++)
       {
-        if (!keywords.IsEmpty())
-          keywords.Append(' ');
-        keywords.Append(aKeyword);
-        mDatabase->SetStringProperty(msgKey, "keywords", keywords);
+        nsACString::const_iterator start, end;
+        if (!MsgFindKeyword(*(keywordArray[j]), keywords, start, end))
+        {
+          if (!keywords.IsEmpty())
+            keywords.Append(' ');
+          keywords.Append(keywordArray[j]->get());
+        }
       }
+      mDatabase->SetStringProperty(msgKey, "keywords", keywords);
     }
   }
   return rv;
 }
 
-NS_IMETHODIMP nsMsgDBFolder::RemoveKeywordFromMessages(nsISupportsArray *aMessages, const char *aKeyword)
+NS_IMETHODIMP nsMsgDBFolder::RemoveKeywordsFromMessages(nsISupportsArray *aMessages, const char *aKeywords)
 {
   nsresult rv = NS_OK;
   GetDatabase(nsnull);
@@ -5514,7 +5519,6 @@ NS_IMETHODIMP nsMsgDBFolder::RemoveKeywordFromMessages(nsISupportsArray *aMessag
     NS_ENSURE_SUCCESS(rv, rv);
     nsXPIDLCString keywords;
     // If the tag is also a label, we should remove the label too...
-    PRBool keywordIsLabel = (!PL_strncasecmp(aKeyword, "$label", 6)  && aKeyword[6] >= '1' && aKeyword[6] <= '5');
 
     for(PRUint32 i = 0; i < count; i++)
     {
@@ -5522,31 +5526,38 @@ NS_IMETHODIMP nsMsgDBFolder::RemoveKeywordFromMessages(nsISupportsArray *aMessag
       nsCOMPtr<nsIMsgDBHdr> message = do_QueryElementAt(aMessages, i, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
       (void) message->GetMessageKey(&msgKey);
-      if (keywordIsLabel)
-      {
-        nsMsgLabelValue labelValue;
-        message->GetLabel(&labelValue);
-        // if we're removing the keyword that corresponds to a pre 2.0 label,
-        // we need to clear the old label attribute on the messsage.
-        if (labelValue == (nsMsgLabelValue) (aKeyword[6] - '0'))
-          message->SetLabel((nsMsgLabelValue) 0);
-      }
-
       rv = message->GetStringProperty("keywords", getter_Copies(keywords));
-      nsACString::const_iterator start, end;
-      nsACString::const_iterator saveStart;
-      keywords.BeginReading(saveStart);
-      if (MsgFindKeyword(nsDependentCString(aKeyword), keywords, start, end))
+      nsCStringArray keywordArray;
+      keywordArray.ParseString(aKeywords, " ");
+      for (PRInt32 j = 0; j < keywordArray.Count(); j++)
       {
-        keywords.Cut(Distance(saveStart, start), Distance(start, end));
-        mDatabase->SetStringProperty(msgKey, "keywords", keywords);
+        PRBool keywordIsLabel = (StringBeginsWith(*(keywordArray[j]), NS_LITERAL_CSTRING("$label"))  
+          && keywordArray[j]->CharAt(6) >= '1' && keywordArray[j]->CharAt(6) <= '5');
+        if (keywordIsLabel)
+        {
+          nsMsgLabelValue labelValue;
+          message->GetLabel(&labelValue);
+          // if we're removing the keyword that corresponds to a pre 2.0 label,
+          // we need to clear the old label attribute on the messsage.
+          if (labelValue == (nsMsgLabelValue) (keywordArray[j]->CharAt(6) - '0'))
+            message->SetLabel((nsMsgLabelValue) 0);
+        }
+
+        nsACString::const_iterator start, end;
+        nsACString::const_iterator saveStart;
+        keywords.BeginReading(saveStart);
+        if (MsgFindKeyword(*(keywordArray[j]), keywords, start, end))
+        {
+          keywords.Cut(Distance(saveStart, start), Distance(start, end));
+          NS_ASSERTION(keywords.IsEmpty() || keywords.CharAt(0) != ' ', "space only keyword");
+        }
       }
+      mDatabase->SetStringProperty(msgKey, "keywords", keywords);
     }
   }
   return rv;
 }
 
- 
 NS_IMETHODIMP nsMsgDBFolder::GetCustomIdentity(nsIMsgIdentity **aIdentity)
 {
   NS_ENSURE_ARG_POINTER(aIdentity);

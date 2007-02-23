@@ -3478,7 +3478,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
           nsCOMPtr<nsISupportsArray> messageArray;
           NS_NewISupportsArray(getter_AddRefs(messageArray));
           messageArray->AppendElement(msgHdr);
-          AddKeywordToMessages(messageArray, keyword.get());
+          AddKeywordsToMessages(messageArray, keyword.get());
           break;
         }
         case nsMsgFilterAction::JunkScore:
@@ -8601,32 +8601,32 @@ NS_IMETHODIMP nsImapMailFolder::FetchMsgPreviewText(nsMsgKey *aKeysToFetch, PRUi
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImapMailFolder::AddKeywordToMessages(nsISupportsArray *aMessages, const char *aKeyword)
+NS_IMETHODIMP nsImapMailFolder::AddKeywordsToMessages(nsISupportsArray *aMessages, const char *aKeywords)
 {
-  nsresult rv = nsMsgDBFolder::AddKeywordToMessages(aMessages, aKeyword);
+  nsresult rv = nsMsgDBFolder::AddKeywordsToMessages(aMessages, aKeywords);
   if (NS_SUCCEEDED(rv))
   {
     nsCAutoString messageIds;
     nsMsgKeyArray keys;
     rv = BuildIdsAndKeyArray(aMessages, messageIds, keys);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = StoreCustomKeywords(nsnull, aKeyword, nsnull, keys.GetArray(), keys.GetSize(), nsnull);
+    rv = StoreCustomKeywords(nsnull, aKeywords, nsnull, keys.GetArray(), keys.GetSize(), nsnull);
     if (mDatabase)
       mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
   }
   return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::RemoveKeywordFromMessages(nsISupportsArray *aMessages, const char *aKeyword)
+NS_IMETHODIMP nsImapMailFolder::RemoveKeywordsFromMessages(nsISupportsArray *aMessages, const char *aKeywords)
 {
-  nsresult rv = nsMsgDBFolder::RemoveKeywordFromMessages(aMessages, aKeyword);
+  nsresult rv = nsMsgDBFolder::RemoveKeywordsFromMessages(aMessages, aKeywords);
   if (NS_SUCCEEDED(rv))
   {
     nsCAutoString messageIds;
     nsMsgKeyArray keys;
     nsresult rv = BuildIdsAndKeyArray(aMessages, messageIds, keys);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = StoreCustomKeywords(nsnull, nsnull, aKeyword, keys.GetArray(), keys.GetSize(), nsnull);
+    rv = StoreCustomKeywords(nsnull, nsnull, aKeywords, keys.GetArray(), keys.GetSize(), nsnull);
     if (mDatabase)
       mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
   }
