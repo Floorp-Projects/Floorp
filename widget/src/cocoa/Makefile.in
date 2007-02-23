@@ -135,6 +135,7 @@ EXTRA_DSO_LDOPTS += \
 		$(call EXPAND_LIBNAME_PATH,gkgfx,$(DEPTH)/gfx/src) \
 		$(MOZ_COMPONENT_LIBS) \
 		-lthebes \
+		$(MOZ_FIX_LINK_PATHS) \
 		$(NULL)
 
 GARBAGE		+= $(GFX_LCPPSRCS)
