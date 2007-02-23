@@ -57,6 +57,7 @@
 - (IBAction)defaultFeedViewerChange:(id)sender;
 - (IBAction)warningCheckboxClicked:(id)sender;
 - (IBAction)rememberWindowStateCheckboxClicked:(id)sender;
+- (IBAction)checkDefaultBrowserOnLaunchClicked:(id)sender;
 
 // method to be called so that when the default feed viewer is modified
 // in FeedServiceController, we can rebuild the list here as well.

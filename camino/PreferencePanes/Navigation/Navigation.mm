@@ -155,6 +155,12 @@ const int kDefaultExpireDays = 9;
     [self setPref:"camino.remember_window_state" toBoolean:([sender state] == NSOnState)];
 }
 
+- (IBAction)checkDefaultBrowserOnLaunchClicked:(id)sender
+{
+  if (sender == checkboxCheckDefaultBrowserOnLaunch)
+    [self setPref:"camino.check_default_browser" toBoolean:([sender state] == NSOnState)];
+}
+
 - (NSString*)getCurrentHomePage
 {
   BOOL gotPref;
