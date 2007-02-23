@@ -55,7 +55,7 @@
     <antcall target="compile.all" />
     <antcall target="build.dist.jar" />
     <antcall target="copy.binaries" />
-    <antcall target="copy.samples.src" />
+    <antcall target="copy.test.src" />
     <antcall target="copy.build.support" />
 
   </target>
@@ -69,7 +69,7 @@
     <mkdir dir="${dist.home}/lib" />
     <mkdir dir="${dist.home}/bin" />
     <mkdir dir="${dist.home}/javadocs" />
-    <mkdir dir="${dist.home}/samples" />
+    <mkdir dir="${dist.home}/test" />
 
     <condition property="so.prefix" value="">
       <and>
@@ -150,21 +150,21 @@
 
   </target>
 
-  <target name="copy.samples.src" depends="prepare">
-    <copy todir="${dist.home}/samples/automated/src/main/java">
+  <target name="copy.test.src" depends="prepare">
+    <copy todir="${dist.home}/test/automated/src/main/java">
       <fileset dir="${source.home}/webclient/test/automated/src/classes">
         <exclude name="**/*Bookmark*.java" />
         <exclude name="**/*Preferences*.java" />
         <exclude name="**/*Profile*.java" />
       </fileset>
     </copy>
-    <copy todir="${dist.home}/samples/automated/src/main/resources">
+    <copy todir="${dist.home}/test/automated/src/main/resources">
       <fileset dir="${source.home}/webclient/test/automated/src/test">
          <exclude name="*basic*/" />
       </fileset>
     </copy>
 
-    <copy todir="${dist.home}/samples/manual/src/main/java">
+    <copy todir="${dist.home}/test/manual/src/main/java">
       <fileset dir="${source.home}/webclient/test/manual/src/classes" />
     </copy>
 

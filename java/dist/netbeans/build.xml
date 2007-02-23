@@ -202,7 +202,7 @@ ${so.prefix}xul.${so.extension}.
 
     <target name="copy.test.data">
         <copy todir="${build.test.results.dir}">
-            <fileset dir="${basedir}/../samples/automated/src/main/resources" />
+            <fileset dir="${basedir}/../test/automated/src/main/resources" />
         </copy>
     </target>
     
