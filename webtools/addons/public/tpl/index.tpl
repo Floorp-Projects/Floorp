@@ -9,7 +9,7 @@
 
 <div class="corner-box">
 <h3 style="font-weight: bold; color: #f7941d;">Hey, where's the new site?</h3>
-<p>The new add-ons site is a little behind, but it's coming soon.  <a href="http://blog.mozilla.com/webdev/2007/02/12/amo-v3-remora-launch-delayed-24-hours/">See our announcement</a> for more information.</p>
+<p>The new add-ons site is a little behind, but it's coming soon.  <a href="http://blog.mozilla.com/webdev/category/amo/">See our blog</a> for updates.</p>
 </div>
 
 <div class="addon-feature clearfix">
