@@ -70,8 +70,6 @@
     
     <target name="-pre-init">
         
-        <property name="debug.jvm.args" value="" />
-        
         <condition property="so.prefix" value="">
             <and>
                 <os family="windows" />
@@ -186,6 +184,7 @@ ${so.prefix}xul.${so.extension}.
     
     <target name="-post-init">
         <antcall target="copy.binaries" />
+        <antcall target="copy.test.data" />
     </target>
     
     <target name="-post-clean">
@@ -200,17 +199,26 @@ ${so.prefix}xul.${so.extension}.
             <fileset dir="${basedir}/../bin" />
         </copy>
     </target>
+
+    <target name="copy.test.data">
+        <copy todir="${build.test.results.dir}">
+            <fileset dir="${basedir}/../samples/automated/src/main/resources" />
+        </copy>
+    </target>
     
     <target name="run" depends="-init-check">
+
+        <property name="debug.jvm.args" value="" />
         
         <java classname="org.mozilla.webclient.test.TestBrowser" fork="true">
             <jvmarg value="-DNSPR_LOG_MODULES=webclient:4,webclientstub:4,pluglets:4"/>
-            <jvmarg value="-DNSPR_LOG_FILE=${build.dir}/webclient.log"/>
-            <jvmarg value="-Dbuild.test.results.dir=${build.test.results.dir}" />
+            <jvmarg value="-DNSPR_LOG_FILE=${basedir}${FILE_PATH_SEP}${build.dir}${FILE_PATH_SEP}webclient.log"/>
+            <jvmarg value="-Dbuild.test.results.dir=${basedir}${FILE_PATH_SEP}${build.test.results.dir}" />
             <jvmarg value="-DBROWSER_BIN_DIR=${browser.bin.dir}"/>
             <jvmarg line="${debug.jvm.args}"/>
             <jvmarg line="-Djava.util.logging.config.file=${basedir}${FILE_PATH_SEP}logging.properties"/>
             <jvmarg line="-Djava.library.path=${browser.bin.dir}" />
+
             
                     <classpath>
                         <path path="${run.test.classpath}"/>
@@ -233,6 +241,7 @@ ${so.prefix}xul.${so.extension}.
                     </classpath>
                     <compilerarg line="${javac.compilerargs}"/>
                     <customize/>
+
                     <patternset>
                         <exclude name="**/*Win32*.java" if="build.unix.classes"/>
                         <exclude name="**/*Cocoa*.java" if="build.unix.classes"/>
@@ -259,12 +268,12 @@ ${so.prefix}xul.${so.extension}.
             <sequential>
                 <junit showoutput="true" fork="true" dir="${basedir}" failureproperty="tests.failed" errorproperty="tests.failed">
                     <jvmarg value="-DNSPR_LOG_MODULES=webclient:4,webclientstub:4,pluglets:4"/>
-                    <jvmarg value="-DNSPR_LOG_FILE=${build.dir}/webclient.log"/>
-                    <jvmarg value="-Dbuild.test.results.dir=${build.test.results.dir}" />
+                    <jvmarg value="-DNSPR_LOG_FILE=${basedir}${FILE_PATH_SEP}${build.dir}${FILE_PATH_SEP}webclient.log"/>
+                    <jvmarg value="-Dbuild.test.results.dir=${basedir}${FILE_PATH_SEP}${build.test.results.dir}" />
                     <jvmarg value="-DBROWSER_BIN_DIR=${browser.bin.dir}"/>
                     <jvmarg line="${debug.jvm.args}"/>
                     <jvmarg line="-Djava.util.logging.config.file=${basedir}${FILE_PATH_SEP}logging.properties"/>
-                    <jvmarg line="-Djava.library.path=${browser.bin.dir}${PATH_SEP}${browser.bin.dir}${FILE_PATH_SEP}components" />
+                    <jvmarg line="-Djava.library.path=${browser.bin.dir}" />
                     
                     <batchtest todir="${build.test.results.dir}">
                         <fileset dir="${test.src.dir}" includes="@{includes}"/>
