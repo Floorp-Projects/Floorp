@@ -102,7 +102,7 @@ fails == collapsed-border-top-6.html border-top-10-ref.html
 # The Linux and Windows failures are bugs related to the image scaling
 # code that need to be filed (doing antialising around the edges of a
 # solid-color image).  The Mac failures are probably the same, but the
-# difference isn't visible.
+# difference isn't visible.  All covered by bug 371316.
 != image-base-ref.html image-height-10-ref.html
 random == image-height-4.html image-base-ref.html
 random == image-height-5.html image-height-10-ref.html
