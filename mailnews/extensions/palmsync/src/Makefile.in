@@ -103,9 +103,8 @@ else
 SHARED_LIBRARY_LIBS = ../../../base/util/$(LIB_PREFIX)msgbsutl_s.$(LIB_SUFFIX)
 endif
 
-EXTRA_DSO_LIBS += ../../../addrbook/src/$(LIB_PREFIX)addrbook_s.$(LIB_SUFFIX)
-
 EXTRA_DSO_LDOPTS= \
+        ../../../addrbook/src/$(LIB_PREFIX)addrbook_s.$(LIB_SUFFIX) \
         $(EXTRA_DSO_LIBS) \
         $(MOZ_XPCOM_OBSOLETE_LIBS) \
         $(XPCOM_LIBS) \
