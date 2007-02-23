@@ -483,6 +483,17 @@ nsPrintEngine::DoCommonPrint(PRBool                  aIsPrintPreview,
     SetIsPrinting(PR_TRUE);
   }
 
+  // Create a print session and let the print settings know about it.
+  // The print settings hold an nsWeakPtr to the session so it does not
+  // need to be cleared from the settings at the end of the job.
+  // XXX What lifetime does the printSession need to have?
+  nsCOMPtr<nsIPrintSession> printSession;
+  if (!aIsPrintPreview) {
+    printSession = do_CreateInstance("@mozilla.org/gfx/printsession;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    mPrt->mPrintSettings->SetPrintSession(printSession);
+  }
+
   if (aWebProgressListener != nsnull) {
     mPrt->mPrintProgressListeners.AppendObject(aWebProgressListener);
   }
