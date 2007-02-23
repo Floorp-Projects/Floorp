@@ -369,7 +369,12 @@ pref("alerts.totalOpenTime", 3000);
 // 2 and other values, no download manager, no progress dialog. 
 pref("browser.downloadmanager.behavior", 1);
 
-pref("mail.phishing.detection.enabled", true); // enable / disable phishing detection for link clicks
+// analyze urls in mail messages for scams
+pref("mail.phishing.detection.enabled", true);
+// If phishing detection is enabled, allow fine grained control
+// of the local, static tests
+pref("mail.phishing.detection.ipaddresses", true); 
+pref("mail.phishing.detection.mismatched_hosts", true);
 
 pref("browser.safebrowsing.enabled", false);
 

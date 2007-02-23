@@ -45,6 +45,8 @@ const kPhishingWithIPAddress = 1;
 const kPhishingWithMismatchedHosts = 2;
 
 var gPhishingDetector = {
+  mCheckForIPAddresses: true,
+  mCheckForMismatchedHosts: true,
   mPhishingWarden: null,
   /**
    * initialize the phishing warden. 
@@ -54,23 +56,26 @@ var gPhishingDetector = {
   init: function() 
   {
     try {
-    // set up the anti phishing service
-    var appContext = Components.classes["@mozilla.org/phishingprotection/application;1"]
-                       .getService().wrappedJSObject;
+      // set up the anti phishing service
+      var appContext = Components.classes["@mozilla.org/phishingprotection/application;1"]
+                         .getService().wrappedJSObject;
 
-    this.mPhishingWarden  = new appContext.PROT_PhishingWarden();
+      this.mPhishingWarden  = new appContext.PROT_PhishingWarden();
 
-    // Register tables
-    // XXX: move table names to a pref that we originally will download
-    // from the provider (need to workout protocol details)
-    this.mPhishingWarden.registerWhiteTable("goog-white-domain");
-    this.mPhishingWarden.registerWhiteTable("goog-white-url");
-    this.mPhishingWarden.registerBlackTable("goog-black-url");
-    this.mPhishingWarden.registerBlackTable("goog-black-enchash");
+      // Register tables
+      // XXX: move table names to a pref that we originally will download
+      // from the provider (need to workout protocol details)
+      this.mPhishingWarden.registerWhiteTable("goog-white-domain");
+      this.mPhishingWarden.registerWhiteTable("goog-white-url");
+      this.mPhishingWarden.registerBlackTable("goog-black-url");
+      this.mPhishingWarden.registerBlackTable("goog-black-enchash");
 
-    // Download/update lists if we're in non-enhanced mode
-    this.mPhishingWarden.maybeToggleUpdateChecking();  
-    } catch (ex) { dump('unable to create the phishing warde: ' + ex + '\n');}
+      // Download/update lists if we're in non-enhanced mode
+      this.mPhishingWarden.maybeToggleUpdateChecking();  
+    } catch (ex) { dump('unable to create the phishing warden: ' + ex + '\n');}
+    
+    this.mCheckForIPAddresses = gPrefBranch.getBoolPref("mail.phishing.detection.ipaddresses");
+    this.mCheckForMismatchedHosts = gPrefBranch.getBoolPref("mail.phishing.detection.mismatched_hosts");
   },
   
   /**
@@ -142,15 +147,15 @@ var gPhishingDetector = {
        var unobscuredHostName = {};
        unobscuredHostName.value = hrefURL.host;
        
-       if (this.hostNameIsIPAddress(hrefURL.host, unobscuredHostName) && !this.isLocalIPAddress(unobscuredHostName))
+       if (this.mCheckForIPAddresses && this.hostNameIsIPAddress(hrefURL.host, unobscuredHostName) && !this.isLocalIPAddress(unobscuredHostName))
          failsStaticTests = true;
-       else if (aLinkText && this.misMatchedHostWithLinkText(hrefURL, aLinkText, linkTextURL))
+       else if (this.mCheckForMismatchedHosts && aLinkText && this.misMatchedHostWithLinkText(hrefURL, aLinkText, linkTextURL))
          failsStaticTests = true;
        
        // Lookup the url against our local list. We want to do this even if the url fails our static
        // test checks because the url might be in the white list.
        if (this.mPhishingWarden)
-       this.mPhishingWarden.isEvilURL(GetLoadedMessage(), failsStaticTests, aUrl, this.localListCallback);
+        this.mPhishingWarden.isEvilURL(GetLoadedMessage(), failsStaticTests, aUrl, this.localListCallback);
        else
          this.localListCallback(GetLoadedMessage(), failsStaticTests, aUrl, 2 /* not found */);
     }
