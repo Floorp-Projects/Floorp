@@ -123,7 +123,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="windows") == bugs/300691-1f.html bugs/300691-1-re
 == bugs/367612-1f.html bugs/367612-1-ref.html
 != bugs/367612-1g.html bugs/367612-1-ref.html
 fails == bugs/368020-1.html bugs/368020-1-ref.html # bug 368079
-fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == bugs/368020-2.html bugs/368020-2-ref.html # bug 368157
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == bugs/368020-2.html bugs/368020-2-ref.html # bug 368157 (gtk), bug 371188 (cocoa)
 fails == bugs/368020-3.html bugs/368020-3-ref.html # bug 368085
 fails == bugs/368020-4.html bugs/368020-4-ref.html # bug 368085
 == bugs/368020-5.html bugs/368020-5-ref.html
