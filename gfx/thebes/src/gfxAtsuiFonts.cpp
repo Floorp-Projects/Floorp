@@ -606,7 +606,7 @@ struct CairoGlyphBuffer {
     void EnsureSize(PRUint32 numGlyphs) {
         if (size < numGlyphs) {
             if (glyphs != staticGlyphBuf)
-                PR_Free (staticGlyphBuf);
+                PR_Free(glyphs);
             glyphs = (cairo_glyph_t*) PR_Malloc(sizeof(cairo_glyph_t) * numGlyphs);
             size = numGlyphs;
         }
