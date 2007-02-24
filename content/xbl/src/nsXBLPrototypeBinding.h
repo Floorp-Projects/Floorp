@@ -65,10 +65,9 @@ class nsXBLBinding;
 // *********************************************************************/
 // The XBLPrototypeBinding class
 
-// References to the prototype binding are held by each nsXBLBinding instance
-// that uses this prototype binding, and also by the XBLDocumentInfo's
-// binding table (with the XUL cache disabled).
-
+// Instances of this class are owned by the nsXBLDocumentInfo object returned
+// by XBLDocumentInfo().  Consumers who want to refcount things should refcount
+// that.
 class nsXBLPrototypeBinding
 {
 public:
@@ -258,8 +257,6 @@ protected:
 
   PRInt32 mBaseNameSpaceID;    // If we extend a tagname/namespace, then that information will
   nsCOMPtr<nsIAtom> mBaseTag;  // be stored in here.
-
-  nsAutoRefCnt mRefCnt;
 
   nsCOMArray<nsXBLKeyEventHandler> mKeyHandlers;
 };
