@@ -1647,7 +1647,6 @@
 				3F44ACE805BDFB9F00CB4B08,
 				3F44ACE905BDFB9F00CB4B08,
 				3F44ACEA05BDFB9F00CB4B08,
-				3F44ACEB05BDFB9F00CB4B08,
 				3F44ACEC05BDFB9F00CB4B08,
 				3F44ACEE05BDFB9F00CB4B08,
 				3F44ACEF05BDFB9F00CB4B08,
@@ -1843,7 +1842,6 @@
 				F6BD63A701B3131201A962F7,
 				F6BD63A801B3131201A962F7,
 				F6BD63A901B3131201A962F7,
-				F6BD63AA01B3131201A962F7,
 				F6BD63AB01B3131201A962F7,
 				008115470B1811F0001CB3F0,
 				F6BD63B101B3131201A962F7,
@@ -5912,12 +5910,6 @@
 		};
 		3F44ACEA05BDFB9F00CB4B08 = {
 			fileRef = F6BD63A901B3131201A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44ACEB05BDFB9F00CB4B08 = {
-			fileRef = F6BD63AA01B3131201A962F7;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -18170,14 +18162,6 @@
 			lastKnownFileType = "compiled.mach-o.bundle";
 			name = libdocshell.dylib;
 			path = ../dist/Embed/components/libdocshell.dylib;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		F6BD63AA01B3131201A962F7 = {
-			isa = PBXFileReference;
-			lastKnownFileType = "compiled.mach-o.bundle";
-			name = libeditor.dylib;
-			path = ../dist/Embed/components/libeditor.dylib;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
