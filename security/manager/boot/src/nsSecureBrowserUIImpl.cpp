@@ -861,6 +861,14 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     }
   }
 
+  if (loadFlags & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
+  {
+    // The original consumer (this) is no longer the target of the load.
+    // Ignore any events with this flag, do not allow them to update
+    // our secure UI state.
+    return NS_OK;
+  }
+
   if (aProgressStateFlags & STATE_START
       &&
       aProgressStateFlags & STATE_IS_REQUEST
