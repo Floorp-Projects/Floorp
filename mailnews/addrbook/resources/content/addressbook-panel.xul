@@ -129,7 +129,7 @@
       hiddenbydefault="true"
       flex="1" label="&PrimaryEmail.label;"/>
   </treecols>
-  <treechildren/>
+  <treechildren ondraggesture="nsDragAndDrop.startDrag(event, abResultsPaneObserver);"/>
 </tree>
 
   </vbox>
