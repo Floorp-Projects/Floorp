@@ -47,7 +47,7 @@ DIRS = files
 
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES	= \
+_TEST_FILES_A	= \
 		DOMTestCase.js \
 		exclusions.js \
 		test_attrcreatedocumentfragment.html \
@@ -184,6 +184,9 @@ _TEST_FILES	= \
 		test_entitygetentityname.html \
 		test_entitygetpublicid.html \
 		test_entitygetpublicidnull.html \
+		$(NULL)
+
+_TEST_FILES_B	= \
 		test_hc_attrappendchild1.html \
 		test_hc_attrappendchild2.html \
 		test_hc_attrappendchild3.html \
@@ -417,6 +420,9 @@ _TEST_FILES	= \
 		test_hc_textsplittextthree.html \
 		test_hc_textsplittexttwo.html \
 		test_hc_textwithnomarkup.html \
+		$(NULL)
+
+_TEST_FILES_C	= \
 		test_namednodemapchildnoderange.html \
 		test_namednodemapgetnameditem.html \
 		test_namednodemapinuseattributeerr.html \
@@ -579,5 +585,12 @@ _TEST_FILES	= \
 		test_textwithnomarkup.html \
 		$(NULL)
 
-libs:: $(_TEST_FILES)
+# work around nsinstall limits on windows by splitting into groups
+libs:: 	$(_TEST_FILES_A)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs::	$(_TEST_FILES_B)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs::	$(_TEST_FILES_C)
 	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
