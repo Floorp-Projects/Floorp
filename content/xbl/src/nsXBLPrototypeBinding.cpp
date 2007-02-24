@@ -263,16 +263,15 @@ nsXBLPrototypeBinding::Init(const nsACString& aID,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri),
-                          NS_LITERAL_CSTRING("#") + aID,
-                          nsnull,
-                          aInfo->DocumentURI());
+  nsresult rv = aInfo->DocumentURI()->Clone(getter_AddRefs(mBindingURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mBindingURI = do_QueryInterface(uri, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
+  // The binding URI might not be a nsIURL (e.g. for data: URIs). In that case,
+  // we always use the first binding, so we don't need to keep track of the ID.
+  nsCOMPtr<nsIURL> bindingURL = do_QueryInterface(mBindingURI);
+  if (bindingURL)
+    bindingURL->SetRef(aID);
+
   mXBLDocInfoWeak = aInfo;
 
   SetBindingElement(aElement);

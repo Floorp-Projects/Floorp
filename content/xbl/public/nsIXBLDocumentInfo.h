@@ -54,9 +54,9 @@ class nsXBLPrototypeBinding;
 class nsIURI;
 class nsACString;
 
-// 3eedb7ff-d51d-4461-8162-a192b93216de
+// 2d8334b0-e0b8-4a23-9153-dc89ac275894
 #define NS_IXBLDOCUMENTINFO_IID \
-{ 0x3eedb7ff, 0xd51d, 0x4461, { 0x81, 0x62, 0xa1, 0x92, 0xb9, 0x32, 0x16, 0xde } }
+{ 0x2d8334b0, 0xe0b8, 0x4a23, { 0x91, 0x52, 0xdc, 0x89, 0xac, 0x27, 0x58, 0x94 } }
 
 class nsIXBLDocumentInfo : public nsISupports
 {
@@ -72,6 +72,8 @@ public:
 
   NS_IMETHOD GetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBinding** aResult)=0;
   NS_IMETHOD SetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBinding* aBinding)=0;
+
+  NS_IMETHOD SetFirstPrototypeBinding(nsXBLPrototypeBinding* aBinding)=0;
 
   NS_IMETHOD FlushSkinStylesheets()=0;
 

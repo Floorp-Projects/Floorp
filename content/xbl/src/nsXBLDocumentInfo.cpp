@@ -444,7 +444,8 @@ nsXBLDocumentInfo::nsXBLDocumentInfo(nsIDocument* aDocument)
   : mDocument(aDocument),
     mScriptAccess(PR_TRUE),
     mIsChrome(PR_FALSE),
-    mBindingTable(nsnull)
+    mBindingTable(nsnull),
+    mFirstBinding(nsnull)
 {
   nsIURI* uri = aDocument->GetDocumentURI();
   if (IsChromeURI(uri)) {
@@ -477,6 +478,12 @@ nsXBLDocumentInfo::GetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBin
   if (!mBindingTable)
     return NS_OK;
 
+  if (aRef.IsEmpty()) {
+    // Return our first binding
+    *aResult = mFirstBinding;
+    return NS_OK;
+  }
+
   const nsPromiseFlatCString& flat = PromiseFlatCString(aRef);
   nsCStringKey key(flat.get());
   *aResult = NS_STATIC_CAST(nsXBLPrototypeBinding*, mBindingTable->Get(&key));
@@ -501,6 +508,14 @@ nsXBLDocumentInfo::SetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBin
   const nsPromiseFlatCString& flat = PromiseFlatCString(aRef);
   nsCStringKey key(flat.get());
   mBindingTable->Put(&key, aBinding);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLDocumentInfo::SetFirstPrototypeBinding(nsXBLPrototypeBinding* aBinding)
+{
+  mFirstBinding = aBinding;
 
   return NS_OK;
 }

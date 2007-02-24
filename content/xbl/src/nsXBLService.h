@@ -55,7 +55,6 @@ class nsIDocument;
 class nsIAtom;
 class nsString;
 class nsIURI;
-class nsIURL;
 class nsSupportsHashtable;
 class nsHashtable;
 class nsIXULPrototypeCache;
@@ -100,7 +99,7 @@ protected:
   
   // This method synchronously loads and parses an XBL file.
   nsresult FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoundDocument,
-                                nsIURI* aDocumentURI, nsIURL* aBindingURL, 
+                                nsIURI* aDocumentURI, nsIURI* aBindingURI, 
                                 PRBool aForceSyncLoad, nsIDocument** aResult);
 
   nsresult GetXBLDocumentInfo(nsIURI* aURI, nsIContent* aBoundElement, nsIXBLDocumentInfo** aResult);

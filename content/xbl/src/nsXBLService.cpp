@@ -144,13 +144,13 @@ IsAncestorBinding(nsIDocument* aDocument,
 class nsXBLBindingRequest
 {
 public:
-  nsCOMPtr<nsIURL> mBindingURL;
+  nsCOMPtr<nsIURI> mBindingURI;
   nsCOMPtr<nsIContent> mBoundElement;
 
   static nsXBLBindingRequest*
-  Create(nsFixedSizeAllocator& aPool, nsIURL* aURL, nsIContent* aBoundElement) {
+  Create(nsFixedSizeAllocator& aPool, nsIURI* aURI, nsIContent* aBoundElement) {
     void* place = aPool.Alloc(sizeof(nsXBLBindingRequest));
-    return place ? ::new (place) nsXBLBindingRequest(aURL, aBoundElement) : nsnull;
+    return place ? ::new (place) nsXBLBindingRequest(aURI, aBoundElement) : nsnull;
   }
 
   static void
@@ -169,7 +169,7 @@ public:
 
     // Get the binding.
     PRBool ready = PR_FALSE;
-    gXBLService->BindingReady(mBoundElement, mBindingURL, &ready);
+    gXBLService->BindingReady(mBoundElement, mBindingURI, &ready);
 
     if (!ready)
       return;
@@ -202,8 +202,8 @@ public:
   static int gRefCnt;
 
 protected:
-  nsXBLBindingRequest(nsIURL* aURL, nsIContent* aBoundElement)
-    : mBindingURL(aURL),
+  nsXBLBindingRequest(nsIURI* aURI, nsIContent* aBoundElement)
+    : mBindingURI(aURI),
       mBoundElement(aBoundElement)
   {
     gRefCnt++;
@@ -375,7 +375,7 @@ nsXBLStreamListener::HasRequest(nsIURI* aURI, nsIContent* aElt)
     nsXBLBindingRequest* req = (nsXBLBindingRequest*)mBindingRequests.ElementAt(i);
     PRBool eq;
     if (req->mBoundElement == aElt &&
-        NS_SUCCEEDED(req->mBindingURL->Equals(aURI, &eq)) && eq)
+        NS_SUCCEEDED(req->mBindingURI->Equals(aURI, &eq)) && eq)
       return PR_TRUE;
   }
 
@@ -854,23 +854,11 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
 
   NS_ENSURE_TRUE(aDontExtendURIs.AppendElement(aURI), NS_ERROR_OUT_OF_MEMORY);
 
-  nsCOMPtr<nsIURL> url(do_QueryInterface(aURI));
-  if (!url) {
-#ifdef DEBUG
-    NS_ERROR("Binding load from a non-URL URI not allowed.");
-    nsCAutoString spec;
-    aURI->GetSpec(spec);
-    fprintf(stderr, "Spec of non-URL URI is: '%s'\n", spec.get());
-#endif
-    return NS_ERROR_FAILURE;
-  }
-
   nsCAutoString ref;
-  url->GetRef(ref);
-  NS_ASSERTION(!ref.IsEmpty(), "Incorrect syntax for an XBL binding");
-  if (ref.IsEmpty())
-    return NS_ERROR_FAILURE;
-  
+  nsCOMPtr<nsIURL> url(do_QueryInterface(aURI));
+  if (url)
+    url->GetRef(ref);
+
   nsCOMPtr<nsIDocument> boundDocument = aBoundElement->GetOwnerDoc();
 
   nsCOMPtr<nsIXBLDocumentInfo> docInfo;
@@ -1048,14 +1036,13 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
   *aResult = nsnull;
   nsCOMPtr<nsIXBLDocumentInfo> info;
 
-  nsCOMPtr<nsIURI> uriClone;
-  rv = aBindingURI->Clone(getter_AddRefs(uriClone));
+  nsCOMPtr<nsIURI> documentURI;
+  rv = aBindingURI->Clone(getter_AddRefs(documentURI));
   NS_ENSURE_SUCCESS(rv, rv);
   
-  nsCOMPtr<nsIURL> documentURI(do_QueryInterface(uriClone, &rv));
-  NS_ENSURE_TRUE(documentURI, rv);
-
-  documentURI->SetRef(EmptyCString());
+  nsCOMPtr<nsIURL> documentURL(do_QueryInterface(documentURI));
+  if (documentURL)
+    documentURL->SetRef(EmptyCString());
 
 #ifdef MOZ_XUL
   // We've got a file.  Check our XBL document cache.
@@ -1073,9 +1060,6 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
   if (!info) {
     // The second line of defense is the binding manager's document table.
     nsBindingManager *bindingManager = nsnull;
-
-    nsCOMPtr<nsIURL> bindingURL(do_QueryInterface(aBindingURI, &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
 
     if (aBoundDocument) {
       bindingManager = aBoundDocument->BindingManager();
@@ -1105,7 +1089,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
         nsXBLStreamListener* xblListener = NS_STATIC_CAST(nsXBLStreamListener*, ilist);
         // Create a new load observer.
         if (!xblListener->HasRequest(aBindingURI, aBoundElement)) {
-          nsXBLBindingRequest* req = nsXBLBindingRequest::Create(mPool, bindingURL, aBoundElement);
+          nsXBLBindingRequest* req = nsXBLBindingRequest::Create(mPool, aBindingURI, aBoundElement);
           xblListener->AddRequest(req);
         }
         return NS_OK;
@@ -1123,7 +1107,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
 
       nsCOMPtr<nsIDocument> document;
       FetchBindingDocument(aBoundElement, aBoundDocument, documentURI,
-                           bindingURL, aForceSyncLoad, getter_AddRefs(document));
+                           aBindingURI, aForceSyncLoad, getter_AddRefs(document));
    
       if (document) {
         nsBindingManager *xblDocBindingManager = document->BindingManager();
@@ -1161,7 +1145,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
 
 nsresult
 nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoundDocument,
-                                   nsIURI* aDocumentURI, nsIURL* aBindingURL, 
+                                   nsIURI* aDocumentURI, nsIURI* aBindingURI, 
                                    PRBool aForceSyncLoad, nsIDocument** aResult)
 {
   nsresult rv = NS_OK;
@@ -1223,7 +1207,7 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
 
     // Add our request.
     nsXBLBindingRequest* req = nsXBLBindingRequest::Create(mPool,
-                                                           aBindingURL,
+                                                           aBindingURI,
                                                            aBoundElement);
     xblListener->AddRequest(req);
 

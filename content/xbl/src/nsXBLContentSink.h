@@ -162,7 +162,8 @@ protected:
   XBLPrimaryState mState;
   XBLSecondaryState mSecondaryState;
   nsIXBLDocumentInfo* mDocInfo;
-  PRBool mIsChromeOrResource; // For bug #45989
+  PRPackedBool mIsChromeOrResource; // For bug #45989
+  PRPackedBool mFoundFirstBinding;
 
   nsXBLPrototypeBinding* mBinding;
   nsXBLPrototypeHandler* mHandler; // current handler, owned by its PrototypeBinding

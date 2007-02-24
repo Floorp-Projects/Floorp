@@ -83,6 +83,7 @@ nsXBLContentSink::nsXBLContentSink()
   : mState(eXBL_InDocument),
     mSecondaryState(eXBL_None),
     mDocInfo(nsnull),
+    mFoundFirstBinding(PR_FALSE),    
     mIsChromeOrResource(PR_FALSE),
     mBinding(nsnull),
     mHandler(nsnull),
@@ -563,6 +564,10 @@ nsXBLContentSink::ConstructBinding()
       
     rv = mBinding->Init(cid, mDocInfo, binding);
     if (NS_SUCCEEDED(rv)) {
+      if (!mFoundFirstBinding) {
+        mFoundFirstBinding = PR_TRUE;
+        mDocInfo->SetFirstPrototypeBinding(mBinding);
+      }
       mDocInfo->SetPrototypeBinding(cid, mBinding);
       binding->UnsetAttr(kNameSpaceID_None, nsGkAtoms::id, PR_FALSE);
     } else {

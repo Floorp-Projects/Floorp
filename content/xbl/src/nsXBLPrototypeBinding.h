@@ -50,7 +50,6 @@
 #include "nsHashtable.h"
 #include "nsIXBLDocumentInfo.h"
 #include "nsCOMArray.h"
-#include "nsIURL.h"
 
 class nsIAtom;
 class nsIDocument;
@@ -76,7 +75,6 @@ public:
 
   nsIURI* BindingURI() const { return mBindingURI; }
   nsIURI* DocURI() const { return mXBLDocInfoWeak->DocumentURI(); }
-  nsresult GetID(nsACString& aResult) const { return mBindingURI->GetRef(aResult); }
 
   nsresult GetAllowScripts(PRBool* aResult);
 
@@ -230,7 +228,7 @@ protected:
 
 // MEMBER VARIABLES
 protected:
-  nsCOMPtr<nsIURL> mBindingURI;
+  nsCOMPtr<nsIURI> mBindingURI;
   nsCOMPtr<nsIContent> mBinding; // Strong. We own a ref to our content element in the binding doc.
   nsAutoPtr<nsXBLPrototypeHandler> mPrototypeHandler; // Strong. DocInfo owns us, and we own the handlers.
   
