@@ -1506,8 +1506,19 @@ nsMenuFrame::BuildAcceleratorText()
 
   nsCOMPtr<nsIDOMElement> keyDOMElement;
   domDocument->GetElementById(keyValue, getter_AddRefs(keyDOMElement));
-  if (!keyDOMElement)
+  if (!keyDOMElement) {
+#ifdef DEBUG
+    nsAutoString label;
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::label, label);
+    nsAutoString msg = NS_LITERAL_STRING("Key '") +
+                       keyValue +
+                       NS_LITERAL_STRING("' of menu item '") +
+                       label +
+                       NS_LITERAL_STRING("' could not be found");
+    NS_WARNING(NS_ConvertUTF16toUTF8(msg).get());
+#endif
     return;
+  }
 
   nsCOMPtr<nsIContent> keyElement(do_QueryInterface(keyDOMElement));
   if (!keyElement)
