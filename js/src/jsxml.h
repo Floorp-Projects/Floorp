@@ -226,7 +226,8 @@ extern JS_FRIEND_DATA(JSClass)          js_AnyNameClass;
 
 /*
  * Macros to test whether an object or a value is of type "xml" (per typeof).
- * NB: jsapi.h must be included before any call to VALUE_IS_XML.
+ * NB: jsobj.h must be included before any call to OBJECT_IS_XML, and jsapi.h
+ * and jsobj.h must be included before any call to VALUE_IS_XML.
  */
 #define OBJECT_IS_XML(cx,obj)   ((obj)->map->ops == &js_XMLObjectOps.base)
 #define VALUE_IS_XML(cx,v)      (!JSVAL_IS_PRIMITIVE(v) &&                    \
@@ -294,7 +295,7 @@ extern JSBool
 js_GetAnyName(JSContext *cx, jsval *vp);
 
 /*
- * Note: nameval must be either QName, AttributeNmae or AnyName.
+ * Note: nameval must be either QName, AttributeName, or AnyName.
  */
 extern JSBool
 js_FindXMLProperty(JSContext *cx, jsval nameval, JSObject **objp, jsid *idp);
