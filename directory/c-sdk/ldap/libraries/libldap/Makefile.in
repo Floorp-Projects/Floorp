@@ -203,19 +203,18 @@ EXTRA_LIBS = -L$(dist_libdir) -l$(LBER_LIBNAME) $(OS_LIBS) -lc
 endif
 
 ifeq ($(OS_ARCH), Linux)
-EXTRA_LIBS = -L$(dist_libdir) -l$(LBER_LIBNAME) $(SASL_LINK)
+EXTRA_LIBS = -L$(dist_libdir) -l$(LBER_LIBNAME)
 endif
 
 ifeq ($(OS_ARCH), WINNT)
 ifdef NS_USE_GCC
-EXTRA_DLL_LIBS=-L$(dist_libdir) -l$(LBER_LIBNAME) $(SASL_LINK)
+EXTRA_DLL_LIBS=-L$(dist_libdir) -l$(LBER_LIBNAME)
 else
 EXTRA_LIBS =wsock32.lib kernel32.lib user32.lib gdi32.lib winspool.lib \
             comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib \
             rpcrt4.lib uuid.lib winmm.lib
 EXTRA_LIBS += $(dist_libdir)/$(LDIF_LIBNAME).lib
 EXTRA_LIBS += $(dist_libdir)/$(LBER_LIBNAME).lib
-EXTRA_LIBS += $(SASL_LINK)
 endif
 endif
 
@@ -266,6 +265,10 @@ endif
 
 ifeq ($(OS_ARCH), OpenBSD)
 EXTRA_LIBS = -L$(dist_libdir) -l$(LBER_LIBNAME) -pthread
+endif
+
+ifeq ($(HAVE_SASL), 1)
+EXTRA_LIBS += $(SASL_LINK)
 endif
 
 ###########################################################################

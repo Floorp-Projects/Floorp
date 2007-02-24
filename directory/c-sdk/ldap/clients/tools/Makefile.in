@@ -204,7 +204,7 @@ PLATFORMLIBS = -ldld -lm -lpthread -lrt
 endif
 
 ifeq ($(OS_ARCH), AIX)
-PLATFORMLIBS=-ldl -brtl -lpthreads -lc_r -lm
+PLATFORMLIBS=-ldl -brtl -lpthreads -lc_r -lm -liconv
 endif
 
 ifeq ($(OS_ARCH), Darwin)
