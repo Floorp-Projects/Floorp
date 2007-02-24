@@ -85,6 +85,7 @@ REQUIRES	= xpcom \
 		  dom \
 		  storage \
 		  editor \
+		  txmgr \
 		  webshell \
 		  docshell \
 		  htmlparser \
@@ -150,6 +151,8 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/dom/src/events/$(LIB_PREFIX)jsdomevents_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/jsurl/$(LIB_PREFIX)jsurl_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/storage/$(LIB_PREFIX)jsdomstorage_s.$(LIB_SUFFIX) \
+	$(DEPTH)/editor/libeditor/text/$(LIB_PREFIX)texteditor_s.$(LIB_SUFFIX) \
+	$(DEPTH)/editor/libeditor/base/$(LIB_PREFIX)editorbase_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 ifdef NS_PRINTING
@@ -192,6 +195,19 @@ SHARED_LIBRARY_LIBS += \
 		$(DEPTH)/content/svg/document/src/$(LIB_PREFIX)gkconsvgdoc_s.$(LIB_SUFFIX) \
 		$(DEPTH)/content/svg/content/src/$(LIB_PREFIX)gkcontentsvg_s.$(LIB_SUFFIX) \
                 $(NULL)
+endif
+
+ifdef MOZ_PLAINTEXT_EDITOR_ONLY
+DEFINES += -DMOZILLA_PLAINTEXT_EDITOR_ONLY
+else
+SHARED_LIBRARY_LIBS += \
+	$(DEPTH)/editor/libeditor/html/$(LIB_PREFIX)htmleditor_s.$(LIB_SUFFIX) \
+	$(DEPTH)/editor/txtsvc/src/$(LIB_PREFIX)txtsvc_s.$(LIB_SUFFIX) \
+	$(NULL)
+endif
+
+ifdef ENABLE_EDITOR_API_LOG
+DEFINES += -DENABLE_EDITOR_API_LOG
 endif
 
 EXTRA_DSO_LDOPTS = \
@@ -267,6 +283,11 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(topsrcdir)/dom/src/jsurl \
 		   -I$(topsrcdir)/dom/src/storage \
 		   -I. \
+		   -I$(topsrcdir)/editor/libeditor/base \
+		   -I$(topsrcdir)/editor/libeditor/text \
+		   -I$(topsrcdir)/editor/libeditor/html \
+		   -I$(topsrcdir)/editor/txtsvc/src \
+		   -I$(topsrcdir)/editor/composer/src \
 		   $(NULL)
 
 ifdef MOZ_MATHML

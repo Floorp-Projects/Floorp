@@ -48,7 +48,7 @@ else
 HTML_DIR	= html
 endif
 
-DIRS		= base text $(HTML_DIR) build
+DIRS		= base text $(HTML_DIR)
 
 
 include $(topsrcdir)/config/rules.mk

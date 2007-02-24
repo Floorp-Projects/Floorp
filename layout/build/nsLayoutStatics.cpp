@@ -100,6 +100,11 @@ PRBool NS_SVGEnabled();
 #include "gfxTextRunCache.h"
 #endif
 
+#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
+#include "nsHTMLEditor.h"
+#include "nsTextServicesDocument.h"
+#endif
+
 #include "nsError.h"
 #include "nsTraceRefcnt.h"
 
@@ -173,6 +178,11 @@ nsLayoutStatics::Initialize()
 #ifdef MOZ_SVG
   if (NS_SVGEnabled())
     nsContentDLF::RegisterSVG();
+#endif
+
+#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
+  nsEditProperty::RegisterAtoms();
+  nsTextServicesDocument::RegisterAtoms();
 #endif
 
 #ifdef DEBUG
@@ -269,6 +279,11 @@ nsLayoutStatics::Shutdown()
   nsTextControlFrame::ShutDown();
   nsXBLWindowKeyHandler::ShutDown();
   nsAutoCopyListener::Shutdown();
+
+#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
+  nsHTMLEditor::Shutdown();
+  nsTextServicesDocument::Shutdown();
+#endif
 
 #ifdef MOZ_CAIRO_GFX
   if (initedGfxTextRunCache) {
