@@ -77,12 +77,6 @@ nsGfxRadioControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return nsFormControlFrame::QueryInterface(aIID, aInstancePtr);
 }
 
-PRBool
-nsGfxRadioControlFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~(eReplaced | eReplacedContainsBlock));
-}
-
 #ifdef ACCESSIBILITY
 NS_IMETHODIMP nsGfxRadioControlFrame::GetAccessible(nsIAccessible** aAccessible)
 {

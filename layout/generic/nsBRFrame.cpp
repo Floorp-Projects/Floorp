@@ -81,7 +81,11 @@ public:
   virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
   virtual nsIAtom* GetType() const;
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return nsFrame::IsFrameOfType(aFlags & ~(nsIFrame::eReplaced));
+  }
 
 #ifdef ACCESSIBILITY  
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
@@ -220,12 +224,6 @@ nsIAtom*
 BRFrame::GetType() const
 {
   return nsGkAtoms::brFrame;
-}
-
-PRBool
-BRFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~(eReplaced));
 }
 
 nsIFrame::ContentOffsets BRFrame::CalcContentOffsetsFromFramePoint(nsPoint aPoint)

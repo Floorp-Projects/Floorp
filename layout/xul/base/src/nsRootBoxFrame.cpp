@@ -118,7 +118,14 @@ public:
    * @see nsGkAtoms::rootFrame
    */
   virtual nsIAtom* GetType() const;
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    // Override bogus IsFrameOfType in nsBoxFrame.
+    if (aFlags & (nsIFrame::eReplacedContainsBlock | nsIFrame::eReplaced))
+      return PR_FALSE;
+    return nsBoxFrame::IsFrameOfType(aFlags);
+  }
   
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
@@ -266,13 +273,6 @@ nsIAtom*
 nsRootBoxFrame::GetType() const
 {
   return nsGkAtoms::rootFrame;
-}
-
-PRBool
-nsRootBoxFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  // Override the bogus thing nsBoxFrame does.
-  return !aFlags;
 }
 
 nsIFrame*

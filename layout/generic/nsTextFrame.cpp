@@ -317,7 +317,12 @@ public:
    */
   virtual nsIAtom* GetType() const;
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    // Set the frame state bit for text frames to mark them as replaced.
+    // XXX kipp: temporary
+    return nsFrame::IsFrameOfType(aFlags & ~(nsIFrame::eReplaced));
+  }
   
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
@@ -6341,14 +6346,6 @@ nsIAtom*
 nsTextFrame::GetType() const
 {
   return nsGkAtoms::textFrame;
-}
-
-PRBool
-nsTextFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  // Set the frame state bit for text frames to mark them as replaced.
-  // XXX kipp: temporary
-  return !(aFlags & ~(eReplaced));
 }
 
 /* virtual */ PRBool

@@ -363,13 +363,6 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   return NS_OK;
 }
 
-PRBool
-nsLeafBoxFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  // This is bogus, but it's what we've always done.
-  return !(aFlags & ~(eReplaced | eReplacedContainsBlock));
-}
-
 #ifdef DEBUG
 NS_IMETHODIMP
 nsLeafBoxFrame::GetFrameName(nsAString& aResult) const

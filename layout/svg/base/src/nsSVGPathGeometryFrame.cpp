@@ -140,12 +140,6 @@ nsSVGPathGeometryFrame::GetType() const
   return nsGkAtoms::svgPathGeometryFrame;
 }
 
-PRBool
-nsSVGPathGeometryFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~nsIFrame::eSVG);
-}
-
 // marker helper
 static void
 RemoveMarkerObserver(nsSVGMarkerProperty *property,

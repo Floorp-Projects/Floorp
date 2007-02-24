@@ -53,12 +53,6 @@ NS_NewSVGContainerFrame(nsIPresShell* aPresShell,
   return new (aPresShell) nsSVGContainerFrame(aContext);
 }
 
-PRBool
-nsSVGContainerFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~nsIFrame::eSVG);
-}
-
 NS_IMETHODIMP
 nsSVGContainerFrame::AppendFrames(nsIAtom* aListName,
                                   nsIFrame* aFrameList)

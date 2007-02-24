@@ -63,7 +63,12 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
   virtual nsIAtom* GetType() const;
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return nsFirstLetterFrameSuper::IsFrameOfType(aFlags &
+      ~(nsIFrame::eBidiInlineContainer));
+  }
 
   virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
@@ -110,12 +115,6 @@ nsIAtom*
 nsFirstLetterFrame::GetType() const
 {
   return nsGkAtoms::letterFrame;
-}
-
-PRBool
-nsFirstLetterFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~nsIFrame::eBidiInlineContainer);
 }
 
 PRIntn

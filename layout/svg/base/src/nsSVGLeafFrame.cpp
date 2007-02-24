@@ -38,7 +38,10 @@
 
 class nsSVGLeafFrame : public nsFrame
 {
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return nsFrame::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
+  }
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
@@ -55,10 +58,4 @@ nsIFrame*
 NS_NewSVGLeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsSVGLeafFrame(aContext);
-}
-
-PRBool
-nsSVGLeafFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~nsIFrame::eSVG);
 }

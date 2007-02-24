@@ -554,6 +554,10 @@ nsFrame::Init(nsIContent*      aContent,
               nsIFrame*        aParent,
               nsIFrame*        aPrevInFlow)
 {
+  NS_ASSERTION(IsFrameOfType(eDEBUGAllFrames) &&
+               !IsFrameOfType(eDEBUGNoFrames),
+               "IsFrameOfType implementation that doesn't call base class");
+
   mContent = aContent;
   mParent = aParent;
 

@@ -130,7 +130,14 @@ public:
   PRBool IsValidItem(nsIContent* aContent);
   PRBool IsDisabled(nsIContent* aContent);
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    // Override bogus IsFrameOfType in nsBoxFrame.
+    if (aFlags & (nsIFrame::eReplacedContainsBlock | nsIFrame::eReplaced))
+      return PR_FALSE;
+    return nsBoxFrame::IsFrameOfType(aFlags);
+  }
+
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
   {

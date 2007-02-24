@@ -126,7 +126,11 @@ public:
     return GetFirstChild(nsnull)->GetContentInsertionFrame();
   }
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return nsHTMLContainerFrame::IsFrameOfType(aFlags &
+      ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
+  }
 
 protected:
   virtual PRBool IsReset(PRInt32 type);

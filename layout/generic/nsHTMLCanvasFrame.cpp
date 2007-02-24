@@ -254,12 +254,6 @@ nsHTMLCanvasFrame::GetType() const
   return nsGkAtoms::HTMLCanvasFrame;
 }
 
-PRBool
-nsHTMLCanvasFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~(eReplaced));
-}
-
 // get the offset into the content area of the image where aImg starts if it is a continuation.
 // from nsImageFrame
 nscoord 

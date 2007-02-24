@@ -174,15 +174,6 @@ nsSVGGlyphFrame::GetType() const
   return nsGkAtoms::svgGlyphFrame;
 }
 
-PRBool
-nsSVGGlyphFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  // Set the frame state bit for text frames to mark them as replaced.
-  // XXX kipp: temporary
-
-  return !(aFlags & ~(eSVG | eReplaced));
-}
-
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods
 

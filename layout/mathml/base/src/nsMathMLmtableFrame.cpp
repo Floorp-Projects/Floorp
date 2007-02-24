@@ -650,12 +650,6 @@ nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
   return rv;
 }
 
-PRBool
-nsMathMLmtableOuterFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~nsIFrame::eMathML);
-}
-
 // --------
 // implementation of nsMathMLmtableFrame
 
@@ -671,12 +665,6 @@ NS_NewMathMLmtableFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 nsMathMLmtableFrame::~nsMathMLmtableFrame()
 {
-}
-
-PRBool
-nsMathMLmtableFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~nsIFrame::eMathML);
 }
 
 NS_IMETHODIMP
@@ -725,12 +713,6 @@ nsMathMLmtrFrame::Init(nsIContent* aContent,
   nsresult rv = nsTableRowFrame::Init(aContent, aParent, aPrevInFlow);
   nsMathMLFrame::MapCommonAttributesIntoCSS(GetPresContext(), aContent);
   return rv;
-}
-
-PRBool
-nsMathMLmtrFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~nsIFrame::eMathML);
 }
 
 NS_IMETHODIMP
@@ -846,12 +828,6 @@ nsMathMLmtdFrame::GetColSpan()
   return colspan;
 }
 
-PRBool
-nsMathMLmtdFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~nsIFrame::eMathML);
-}
-
 NS_IMETHODIMP
 nsMathMLmtdFrame::AttributeChanged(PRInt32  aNameSpaceID,
                                    nsIAtom* aAttribute,
@@ -929,10 +905,3 @@ nsMathMLmtdInnerFrame::Reflow(nsPresContext*          aPresContext,
   // ...
   return rv;
 }
-
-PRBool
-nsMathMLmtdInnerFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~nsIFrame::eMathML);
-}
-

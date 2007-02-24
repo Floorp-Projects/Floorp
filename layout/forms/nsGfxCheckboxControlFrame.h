@@ -55,8 +55,6 @@ public:
   nsGfxCheckboxControlFrame(nsStyleContext* aContext);
   virtual ~nsGfxCheckboxControlFrame();
   
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
-
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const {
     return MakeFrameName(NS_LITERAL_STRING("CheckboxControl"), aResult);

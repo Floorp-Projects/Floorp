@@ -1097,12 +1097,6 @@ nsMathMLContainerFrame::Reflow(nsPresContext*          aPresContext,
   return NS_OK;
 }
 
-PRBool
-nsMathMLContainerFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~nsIFrame::eMathML);
-}
-
 // see spacing table in Chapter 18, TeXBook (p.170)
 // Our table isn't quite identical to TeX because operators have 
 // built-in values for lspace & rspace in the Operator Dictionary.

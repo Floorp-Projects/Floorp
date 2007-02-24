@@ -1432,16 +1432,30 @@ public:
     eReplaced =                         1 << 4,
     // Frame that contains a block but looks like a replaced element
     // from the outside
-    eReplacedContainsBlock =            1 << 5
+    eReplacedContainsBlock =            1 << 5,
+
+
+    // These are to allow nsFrame::Init to assert that IsFrameOfType
+    // implementations all call the base class method.  They are only
+    // meaningful in DEBUG builds.
+    eDEBUGAllFrames =                   1 << 30,
+    eDEBUGNoFrames =                    1 << 31
   };
 
   /**
    * API for doing a quick check if a frame is of a given
    * type. Returns true if the frame matches ALL flags passed in.
+   *
+   * Implementations should always override with inline virtual
+   * functions that call the base class's IsFrameOfType method.
    */
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
+#ifdef DEBUG
+    return !(aFlags & ~(nsIFrame::eDEBUGAllFrames));
+#else
     return !aFlags;
+#endif
   }
 
   /**

@@ -66,7 +66,11 @@ public:
    * @see nsGkAtoms::svgStopFrame
    */
   virtual nsIAtom* GetType() const;
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return nsSVGStopFrameBase::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
+  }
 
 #ifdef DEBUG
   // nsIFrameDebug interface:
@@ -101,12 +105,6 @@ nsIAtom *
 nsSVGStopFrame::GetType() const
 {
   return nsGkAtoms::svgStopFrame;
-}
-
-PRBool
-nsSVGStopFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~nsIFrame::eSVG);
 }
 
 NS_IMETHODIMP

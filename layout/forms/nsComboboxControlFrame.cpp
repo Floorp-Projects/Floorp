@@ -688,12 +688,6 @@ nsComboboxControlFrame::GetType() const
   return nsGkAtoms::comboboxControlFrame; 
 }
 
-PRBool
-nsComboboxControlFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~(eReplaced | eReplacedContainsBlock));
-}
-
 #ifdef NS_DEBUG
 NS_IMETHODIMP
 nsComboboxControlFrame::GetFrameName(nsAString& aResult) const
@@ -1047,7 +1041,11 @@ public:
       mComboBox(aComboBox)
   {}
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return nsBlockFrame::IsFrameOfType(aFlags &
+      ~(nsIFrame::eReplacedContainsBlock));
+  }
 
   NS_IMETHOD Reflow(nsPresContext*           aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -1057,12 +1055,6 @@ public:
 protected:
   nsComboboxControlFrame* mComboBox;
 };
-
-PRBool
-nsComboboxDisplayFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~(eReplacedContainsBlock));
-}
 
 NS_IMETHODIMP
 nsComboboxDisplayFrame::Reflow(nsPresContext*           aPresContext,
