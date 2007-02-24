@@ -58,9 +58,10 @@ enum nsViewVisibility {
 };
 
 // IID for the nsIView interface
+// 6610ae89-3909-422f-a227-ede67b97bcd1
 #define NS_IVIEW_IID    \
-{ 0x658f72ee, 0x32ef, 0x4e93, \
-{ 0xb8, 0x4e, 0x5f, 0x0f, 0x8f, 0x77, 0xe4, 0x22 } }
+{ 0x6610ae89, 0x3909, 0x422f, \
+{ 0xa2, 0x27, 0xed, 0xe6, 0x7b, 0x97, 0xbc, 0xd1 } }
 
 // Public view flags are defined in this file
 #define NS_VIEW_FLAGS_PUBLIC              0x00FF
@@ -69,13 +70,6 @@ enum nsViewVisibility {
 #define NS_VIEW_FLAGS_PRIVATE             0xFF00
 
 // Public view flags
-
-// The view is transparent
-#define NS_VIEW_FLAG_TRANSPARENT          0x0001
-
-// The view is always painted onto a background consisting
-// of a uniform field of opaque pixels.
-#define NS_VIEW_FLAG_UNIFORM_BACKGROUND   0x0002
 
 // Indicates that the view is using auto z-indexing
 #define NS_VIEW_FLAG_AUTO_ZINDEX          0x0004
@@ -243,43 +237,6 @@ public:
    * @result view's next sibling
    */
   nsIView* GetNextSibling() const { return NS_REINTERPRET_CAST(nsIView*, mNextSibling); }
-
-  /**
-   * Note: This didn't exist in 4.0. Called to get the opacity of a view. 
-   * A value of 0.0 means completely transparent. A value of 1.0 means
-   * completely opaque.
-   * @result view's opacity value
-   */
-  float GetOpacity() const { return mOpacity; }
-
-  /**
-   * Used to ask a view if it has any areas within its bounding box
-   * that are transparent. This is not the same as opacity - opacity can
-   * be set externally, transparency is a quality of the view itself.
-   * @result Returns PR_TRUE if there are transparent areas, PR_FALSE otherwise.
-   */
-  PRBool IsTransparent() const { return (mVFlags & NS_VIEW_FLAG_TRANSPARENT) != 0; }
-
-  /**
-   * Indicate that this view is always painted onto a uniform field of
-   * pixels. Thus, even if the view is transparent, it may still be
-   * bitblit scrollable because the background that shines through
-   * does not vary with position.  Caller must ensure that the pixel
-   * field belongs to the same element as this view or some ancestor
-   * element, so that if the pixel field is in some opacity group, then
-   * this view is also in the opacity group (or some subgroup).
-   */
-  void SetHasUniformBackground(PRBool aUniform) {
-    if (aUniform) {
-      mVFlags |= NS_VIEW_FLAG_UNIFORM_BACKGROUND;
-    } else {
-      mVFlags &= ~NS_VIEW_FLAG_UNIFORM_BACKGROUND;
-    }
-  }
-
-  PRBool HasUniformBackground() {
-    return mVFlags & NS_VIEW_FLAG_UNIFORM_BACKGROUND;
-  }
 
   /**
    * Set the view's link to client owned data.

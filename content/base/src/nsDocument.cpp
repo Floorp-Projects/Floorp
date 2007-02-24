@@ -88,7 +88,6 @@
 
 #include "nsContentCID.h"
 #include "nsDOMError.h"
-#include "nsIScrollableView.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsContentUtils.h"

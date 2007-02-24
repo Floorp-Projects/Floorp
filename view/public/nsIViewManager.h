@@ -62,10 +62,10 @@ enum nsRectVisibility {
   nsRectVisibility_kZeroAreaRect
 }; 
 
-
+// 88946f17-d4a7-410f-bb42-cc71dcd0a330
 #define NS_IVIEWMANAGER_IID   \
-{ 0xd9af8f22, 0xc64d, 0x4036, \
-  { 0x9e, 0x8b, 0x69, 0x5a, 0x63, 0x69, 0x3f, 0xd3 } }
+{ 0x88946f17, 0xd4a7, 0x410f, \
+  { 0xbb, 0x42, 0xcc, 0x71, 0xdc, 0xd0, 0xa3, 0x30 } }
 
 class nsIViewManager : public nsISupports
 {
@@ -194,25 +194,10 @@ public:
   NS_IMETHOD  GrabMouseEvents(nsIView *aView, PRBool& aResult) = 0;
 
   /**
-   * Used to grab/capture all keyboard events for a specific view,
-   * irrespective of the cursor position at which the
-   * event occurred.
-   * @param aView view to capture keyboard events
-   * @result event handling status
-   */
-  NS_IMETHOD  GrabKeyEvents(nsIView *aView, PRBool& aResult) = 0;
-
-  /**
    * Get the current view, if any, that's capturing mouse events.
    * @result view that is capturing mouse events or nsnull
    */
   NS_IMETHOD  GetMouseEventGrabber(nsIView *&aView) = 0;
-
-  /**
-   * Get the current view, if any, that's capturing keyboard events.
-   * @result view that is capturing keyboard events or nsnull
-   */
-  NS_IMETHOD  GetKeyEventGrabber(nsIView *&aView) = 0;
 
   /**
    * Given a parent view, insert another view as its child.
@@ -337,29 +322,9 @@ public:
   NS_IMETHOD  SetViewFloating(nsIView *aView, PRBool aFloatingView) = 0;
 
   /**
-   * Set whether the view can be bitblitted during scrolling.
-   */
-  NS_IMETHOD  SetViewBitBltEnabled(nsIView *aView, PRBool aEnable) = 0;
-
-  /**
    * Set whether the view's children should be searched during event processing.
    */
   NS_IMETHOD  SetViewCheckChildEvents(nsIView *aView, PRBool aEnable) = 0;
-
-  /**
-   * Used set the transparency status of the content in a view. see
-   * nsIView.HasTransparency().
-   * @param aTransparent PR_TRUE if there are transparent areas, PR_FALSE otherwise.
-   */
-  NS_IMETHOD  SetViewContentTransparency(nsIView *aView, PRBool aTransparent) = 0;
-
-  /**
-   * Note: This didn't exist in 4.0. Called to set the opacity of a view. 
-   * A value of 0.0 means completely transparent. A value of 1.0 means
-   * completely opaque.
-   * @param opacity new opacity value
-   */
-  NS_IMETHOD  SetViewOpacity(nsIView *aView, float aOpacity) = 0;
 
   /**
    * Set the view observer associated with this manager

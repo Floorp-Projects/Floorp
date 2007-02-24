@@ -2690,16 +2690,6 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
 
   vm->SetDefaultBackgroundColor(canvasColor.mBackgroundColor);
 
-  // Since nsHTMLContainerFrame::CreateViewForFrame might have created
-  // the view before we knew about the child with the fixed background
-  // attachment (root or BODY) or the stylesheet specifying that
-  // attachment, set the BitBlt flag here as well.
-  if (canvasColor.mBackgroundAttachment == NS_STYLE_BG_ATTACHMENT_FIXED) {
-    nsIView *view = aForFrame->GetView();
-    if (view)
-      vm->SetViewBitBltEnabled(view, PR_FALSE);
-  }
-
   PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
                         aDirtyRect, aBorderArea, canvasColor,
                         aBorder, aPadding, aUsePrintSettings, aBGClipRect);

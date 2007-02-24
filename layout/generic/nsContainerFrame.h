@@ -108,16 +108,6 @@ public:
                                        const nsRect*   aCombinedArea,
                                        PRUint32        aFlags = 0);
   
-  // Sets view attributes from the frame style that depend on the view's size
-  // (clip, transparency). This needs to be called if you change the size of
-  // a view and the view's frame could have clipping set on it.
-  // @param aStyleContext can be null, in which case the frame's style context is used
-  static void SyncFrameViewAfterSizeChange(nsPresContext*  aPresContext,
-                                           nsIFrame*        aFrame,
-                                           nsStyleContext*  aStyleContext,
-                                           nsIView*         aView,
-                                           PRUint32         aFlags = 0);
-  
   // Sets the view's attributes from the frame style.
   // - opacity
   // - visibility

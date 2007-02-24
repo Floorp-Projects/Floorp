@@ -3363,12 +3363,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 
         if (view) {
           mWidget = view->GetWidget();
-          PRBool fTransparent = PR_FALSE;
-          mInstance->GetValue(nsPluginInstanceVariable_TransparentBool,
-                              (void *)&fTransparent);
-          
-          view->GetViewManager()->SetViewContentTransparency(view,
-                                                             fTransparent);
         }
 
         if (PR_TRUE == windowless) {

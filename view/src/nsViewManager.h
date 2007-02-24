@@ -180,10 +180,8 @@ public:
   NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent, nsEventStatus* aStatus);
 
   NS_IMETHOD  GrabMouseEvents(nsIView *aView, PRBool &aResult);
-  NS_IMETHOD  GrabKeyEvents(nsIView *aView, PRBool &aresult);
 
   NS_IMETHOD  GetMouseEventGrabber(nsIView *&aView);
-  NS_IMETHOD  GetKeyEventGrabber(nsIView *&aView);
 
   NS_IMETHOD  InsertChild(nsIView *parent, nsIView *child, nsIView *sibling,
                           PRBool above);
@@ -204,8 +202,6 @@ public:
 
   NS_IMETHOD  SetViewChildClipRegion(nsIView *aView, const nsRegion *aRegion);
 
-  NS_IMETHOD  SetViewBitBltEnabled(nsIView *aView, PRBool aEnable);
-
   NS_IMETHOD  SetViewCheckChildEvents(nsIView *aView, PRBool aEnable);
 
   NS_IMETHOD  SetViewFloating(nsIView *aView, PRBool aFloating);
@@ -213,8 +209,6 @@ public:
   NS_IMETHOD  SetViewVisibility(nsIView *aView, nsViewVisibility aVisible);
 
   NS_IMETHOD  SetViewZIndex(nsIView *aView, PRBool aAuto, PRInt32 aZIndex, PRBool aTopMost=PR_FALSE);
-  NS_IMETHOD  SetViewContentTransparency(nsIView *aView, PRBool aTransparent);
-  NS_IMETHOD  SetViewOpacity(nsIView *aView, float aOpacity);
 
   NS_IMETHOD  SetViewObserver(nsIViewObserver *aObserver);
   NS_IMETHOD  GetViewObserver(nsIViewObserver *&aObserver);
@@ -416,7 +410,6 @@ public: // NOT in nsIViewManager, so private to the view module
   nsView* GetMouseEventGrabber() const {
     return RootViewManager()->mMouseGrabber;
   }
-  nsView* GetKeyEventGrabber() const { return mKeyGrabber; }
   nsViewManager* RootViewManager() const { return mRootViewManager; }
   PRBool IsRootVM() const { return this == RootViewManager(); }
 
@@ -482,7 +475,6 @@ public: // NOT in nsIViewManager, so private to the view module
 private:
   nsIDeviceContext  *mContext;
   nsIViewObserver   *mObserver;
-  nsView            *mKeyGrabber;
   nsIScrollableView *mRootScrollable;
   nscolor           mDefaultBackgroundColor;
   nsPoint           mMouseLocation; // device units, relative to mRootView

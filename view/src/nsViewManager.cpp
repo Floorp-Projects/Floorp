@@ -289,7 +289,6 @@ NS_IMETHODIMP nsViewManager::Init(nsIDeviceContext* aContext)
   mRefreshEnabled = PR_TRUE;
 
   mMouseGrabber = nsnull;
-  mKeyGrabber = nsnull;
 
   return NS_OK;
 }
@@ -1508,7 +1507,6 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
         if (aEvent->message == NS_DEACTIVATE) {
           PRBool result;
           GrabMouseEvents(nsnull, result);
-          mKeyGrabber = nsnull;
         }
 
         //Find the view whose coordinates system we're in.
@@ -1529,12 +1527,6 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
           nsView* mouseGrabber = GetMouseEventGrabber();
           if (mouseGrabber) {
             view = mouseGrabber;
-            capturedEvent = PR_TRUE;
-          }
-        }
-        else if (NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent)) {
-          if (mKeyGrabber) {
-            view = mKeyGrabber;
             capturedEvent = PR_TRUE;
           }
         }
@@ -1682,22 +1674,9 @@ NS_IMETHODIMP nsViewManager::GrabMouseEvents(nsIView *aView, PRBool &aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::GrabKeyEvents(nsIView *aView, PRBool &aResult)
-{
-  mKeyGrabber = NS_STATIC_CAST(nsView*, aView);
-  aResult = PR_TRUE;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsViewManager::GetMouseEventGrabber(nsIView *&aView)
 {
   aView = GetMouseEventGrabber();
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsViewManager::GetKeyEventGrabber(nsIView *&aView)
-{
-  aView = mKeyGrabber;
   return NS_OK;
 }
 
@@ -2056,21 +2035,6 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView, nsPoint aDelta,
   return PR_TRUE;
 }                                            
 
-NS_IMETHODIMP nsViewManager::SetViewBitBltEnabled(nsIView *aView, PRBool aEnable)
-{
-  nsView* view = NS_STATIC_CAST(nsView*, aView);
-
-  NS_ASSERTION(!(nsnull == view), "no view");
-
-  if (aEnable) {
-    view->SetViewFlags(view->GetViewFlags() & ~NS_VIEW_FLAG_DONT_BITBLT);
-  } else {
-    view->SetViewFlags(view->GetViewFlags() | NS_VIEW_FLAG_DONT_BITBLT);
-  }
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsViewManager::SetViewCheckChildEvents(nsIView *aView, PRBool aEnable)
 {
   nsView* view = NS_STATIC_CAST(nsView*, aView);
@@ -2198,37 +2162,6 @@ NS_IMETHODIMP nsViewManager::SetViewZIndex(nsIView *aView, PRBool aAutoZIndex, P
   }
 
   return rv;
-}
-
-NS_IMETHODIMP nsViewManager::SetViewContentTransparency(nsIView *aView, PRBool aTransparent)
-{
-  nsView* view = NS_STATIC_CAST(nsView*, aView);
-
-  if (view->IsTransparent() != aTransparent) {
-    view->SetContentTransparency(aTransparent);
-
-    if (IsViewInserted(view)) {
-      UpdateView(view, NS_VMREFRESH_NO_SYNC);
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsViewManager::SetViewOpacity(nsIView *aView, float aOpacity)
-{
-  nsView* view = NS_STATIC_CAST(nsView*, aView);
-
-  if (view->GetOpacity() != aOpacity)
-    {
-      view->SetOpacity(aOpacity);
-
-      if (IsViewInserted(view)) {
-        UpdateView(view, NS_VMREFRESH_NO_SYNC);
-      }
-    }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager::SetViewObserver(nsIViewObserver *aObserver)

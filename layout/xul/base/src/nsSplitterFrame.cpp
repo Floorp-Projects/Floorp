@@ -362,9 +362,6 @@ nsSplitterFrame::Init(nsIContent*      aContent,
   nsHTMLContainerFrame::CreateViewForFrame(this, nsnull, PR_TRUE);
   nsIView* view = GetView();
 
-  nsIViewManager* viewManager = view->GetViewManager();
-  viewManager->SetViewContentTransparency(view, PR_TRUE);
-
   if (!realTimeDrag) {
     // currently this only works on win32 and mac
     static NS_DEFINE_CID(kCChildCID, NS_CHILD_CID);

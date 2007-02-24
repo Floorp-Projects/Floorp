@@ -1862,39 +1862,11 @@ nsBoxFrame::CreateViewForFrame(nsPresContext*  aPresContext,
                                nsStyleContext*  aStyleContext,
                                PRBool           aForce)
 {
+  NS_ASSERTION(aForce, "We only get called to force view creation now");
   // If we don't yet have a view, see if we need a view
   if (!aFrame->HasView()) {
     PRInt32 zIndex = 0;
     PRBool  autoZIndex = PR_FALSE;
-    PRBool  fixedBackgroundAttachment = PR_FALSE;
-
-    const nsStyleBackground* bg;
-    PRBool isCanvas;
-    PRBool hasBG =
-        nsCSSRendering::FindBackground(aPresContext, aFrame, &bg, &isCanvas);
-    const nsStyleDisplay* disp = aStyleContext->GetStyleDisplay();
-
-    if (disp->mOpacity != 1.0f) {
-      NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-        ("nsBoxFrame::CreateViewForFrame: frame=%p opacity=%g",
-         aFrame, disp->mOpacity));
-      aForce = PR_TRUE;
-    }
-
-    // See if the frame has a fixed background attachment
-    if (hasBG && bg->HasFixedBackground()) {
-      aForce = PR_TRUE;
-      fixedBackgroundAttachment = PR_TRUE;
-    }
-    
-    // See if the frame is a scrolled frame
-    if (!aForce) {
-      if (aStyleContext->GetPseudoType() == nsCSSAnonBoxes::scrolledContent) {
-        NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-          ("nsBoxFrame::CreateViewForFrame: scrolled frame=%p", aFrame));
-        aForce = PR_TRUE;
-      }
-    }
 
     if (aForce) {
       // Create a view
@@ -1908,12 +1880,6 @@ nsBoxFrame::CreateViewForFrame(nsPresContext*  aPresContext,
       // Create a view
       nsIView *view = viewManager->CreateView(aFrame->GetRect(), parentView);
       if (view) {
-        // If the frame has a fixed background attachment, then indicate that the
-        // view's contents should be repainted and not bitblt'd
-        if (fixedBackgroundAttachment) {
-          viewManager->SetViewBitBltEnabled(view, PR_FALSE);
-        }
-        
         // Insert the view into the view hierarchy. If the parent view is a
         // scrolling view we need to do this differently
         nsIScrollableView*  scrollingView = parentView->ToScrollableView();
@@ -1924,55 +1890,6 @@ nsBoxFrame::CreateViewForFrame(nsPresContext*  aPresContext,
           // XXX put view last in document order until we can do better
           viewManager->InsertChild(parentView, view, nsnull, PR_TRUE);
         }
-
-        // See if the view should be hidden
-        PRBool  viewIsVisible = PR_TRUE;
-        PRBool  viewHasTransparentContent =
-            !isCanvas &&
-            (!hasBG ||
-             (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT));
-
-        const nsStyleVisibility* vis = aStyleContext->GetStyleVisibility();
-        if (NS_STYLE_VISIBILITY_COLLAPSE == vis->mVisible) {
-          viewIsVisible = PR_FALSE;
-        }
-        else if (NS_STYLE_VISIBILITY_HIDDEN == vis->mVisible) {
-          // If it has a widget, hide the view because the widget can't deal with it
-          if (view->HasWidget()) {
-            viewIsVisible = PR_FALSE;
-          }
-          else {
-            // If it's a container element, then leave the view visible, but
-            // mark it as having transparent content. The reason we need to
-            // do this is that child elements can override their parent's
-            // hidden visibility and be visible anyway.
-            //
-            // Because this function is called before processing the content
-            // object's child elements, we can't tell if it's a leaf by looking
-            // at whether the frame has any child frames
-            nsIContent* content = aFrame->GetContent();
-
-            if (content && content->IsNodeOfType(nsINode::eELEMENT)) {
-              // The view needs to be visible, but marked as having transparent
-              // content
-              viewHasTransparentContent = PR_TRUE;
-            } else {
-              // Go ahead and hide the view
-              viewIsVisible = PR_FALSE;
-            }
-          }
-        }
-
-        if (viewIsVisible) {
-          if (viewHasTransparentContent) {
-            viewManager->SetViewContentTransparency(view, PR_TRUE);
-          }
-
-        } else {
-          viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
-        }
-
-        viewManager->SetViewOpacity(view, disp->mOpacity);
       }
 
       // Remember our view
