@@ -119,9 +119,12 @@ public class NativeJavaArray extends NativeJavaObject
     public void put(int index, Scriptable start, Object value) {
         if (0 <= index && index < length) {
             Array.set(array, index, Context.jsToJava(value, cls));
-            return;
         }
-        super.put(index, start, value);
+        else {
+            throw Context.reportRuntimeError2(
+                "msg.java.array.index.out.of.bounds", String.valueOf(index),
+                String.valueOf(length - 1));
+        }
     }
 
     public Object getDefaultValue(Class hint) {
