@@ -698,11 +698,11 @@
           if (index == -1)
             return;
 
-          var nativeElm = this.nodeList[index];
+          var nativeElm = this.nodeList[index].nativeElm;
           nativeElm.parentNode.removeChild(nativeElm);
 
           var childCount = 1;
-          var level = this.nodeList[index];
+          var level = this.nodeList[index].level;
           for (var i = index + 1; i < this.nodeList.length; ++i) {
             var childLevel = this.nodeList[i].level;
             if (childLevel <= level)
@@ -711,7 +711,7 @@
             childCount++;
           }
 
-          this.nodeList.splice(index - 1, childCount);
+          this.nodeList.splice(index, childCount);
         ]]>
         </body>
       </method>

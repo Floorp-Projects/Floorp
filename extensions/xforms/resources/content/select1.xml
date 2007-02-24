@@ -1241,16 +1241,29 @@
 
       <method name="refreshParentControl">
         <parameter name="aTarget"/>
+        <parameter name="aInsert"/>
         <body>
         <![CDATA[
-          if (!this.parentControl)
+          var parentControl = this.parentControl;
+          if (!parentControl)
             return;
+
+          // if the currently selected item is going away (i.e. due to an
+          // itemset rebuilding) then the select1 needs to forget about it
+          if (!aInsert) {
+            if (aTarget.namespaceURI == this.XFORMS_NS &&
+                aTarget.localName == "item") {
+              if (aTarget == parentControl._selected) {
+                parentControl._selected = null;
+              }
+            }
+          }
 
           var parent = aTarget.parentNode;
           for (; parent; parent = parent.parentNode) {
             if (parent.namespaceURI == this.XFORMS_NS &&
                 parent.localName == "label") {
-              this.parentControl.refreshWidth();
+              parentControl.refreshWidth();
               return;
             }
           }
@@ -1264,9 +1277,9 @@
 
     <handlers>
       <handler event="DOMNodeInserted"
-               action="refreshParentControl(event.originalTarget);"/>
+               action="refreshParentControl(event.originalTarget, true);"/>
       <handler event="DOMNodeRemoved"
-               action="refreshParentControl(event.originalTarget);"/>
+               action="refreshParentControl(event.originalTarget, false);"/>
     </handlers>
   </binding>
 </bindings>
