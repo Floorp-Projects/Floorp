@@ -56,21 +56,6 @@ NS_NewSelectsAreaFrame(nsIPresShell* aShell, nsStyleContext* aContext, PRUint32 
   return it;
 }
 
-/*NS_IMETHODIMP
-nsSelectsAreaFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kAreaFrameIID)) {
-    nsIAreaFrame* tmp = (nsIAreaFrame*)this;
-    *aInstancePtr = (void*)tmp;
-    return NS_OK;
-  }
-  return nsAreaFrame::QueryInterface(aIID, aInstancePtr);
-}
-*/
-
 //---------------------------------------------------------
 PRBool 
 nsSelectsAreaFrame::IsOptionElement(nsIContent* aContent)

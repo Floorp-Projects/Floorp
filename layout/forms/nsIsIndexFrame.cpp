@@ -240,20 +240,23 @@ nsIsIndexFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 NS_IMETHODIMP
 nsIsIndexFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
-  if (NULL == aInstancePtr) {
+  NS_PRECONDITION(aInstancePtr, "null ptr");
+  if (NS_UNLIKELY(!aInstancePtr)) {
     return NS_ERROR_NULL_POINTER;
-  } else if (aIID.Equals(NS_GET_IID(nsIAnonymousContentCreator))) {
-    *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;
-    return NS_OK;
-  } else  if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
-    *aInstancePtr = (void*)(nsIStatefulFrame*) this;
-    return NS_OK;
-  } else  if (aIID.Equals(NS_GET_IID(nsIDOMKeyListener))) {
-    *aInstancePtr = (void*)(nsIDOMKeyListener*) this;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIAnonymousContentCreator))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIAnonymousContentCreator*, this);
     return NS_OK;
   }
-  return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
+  if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIStatefulFrame*, this);
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIDOMKeyListener))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIDOMKeyListener*, this);
+    return NS_OK;
+  }
+  return nsAreaFrame::QueryInterface(aIID, aInstancePtr);
 }
 
 nscoord
