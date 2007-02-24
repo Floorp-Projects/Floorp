@@ -51,9 +51,6 @@ class nsSelectsAreaFrame : public nsAreaFrame
 public:
   friend nsIFrame* NS_NewSelectsAreaFrame(nsIPresShell* aShell, nsStyleContext* aContext, PRUint32 aFlags);
 
-  // nsISupports
-  //NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-  
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);

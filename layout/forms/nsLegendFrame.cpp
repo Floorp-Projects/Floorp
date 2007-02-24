@@ -81,15 +81,15 @@ nsLegendFrame::Destroy()
 NS_IMETHODIMP
 nsLegendFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
+  NS_PRECONDITION(aInstancePtrResult, "null pointer");
+  if (NS_UNLIKELY(!aInstancePtrResult)) {
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(kLegendFrameCID)) {
-    *aInstancePtrResult = (void*) ((nsLegendFrame*)this);
+    *aInstancePtrResult = this;
     return NS_OK;
   }
-  return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtrResult);
+  return nsAreaFrame::QueryInterface(aIID, aInstancePtrResult);
 }
 
 NS_IMETHODIMP 
