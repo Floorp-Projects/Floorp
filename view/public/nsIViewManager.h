@@ -62,10 +62,10 @@ enum nsRectVisibility {
   nsRectVisibility_kZeroAreaRect
 }; 
 
-// 88946f17-d4a7-410f-bb42-cc71dcd0a330
+// 38439490-51d4-416a-a12f-20535d9d8119
 #define NS_IVIEWMANAGER_IID   \
-{ 0x88946f17, 0xd4a7, 0x410f, \
-  { 0xbb, 0x42, 0xcc, 0x71, 0xdc, 0xd0, 0xa3, 0x30 } }
+{ 0x38439490, 0x51d4, 0x416a, \
+  { 0xa1, 0x2f, 0x20, 0x53, 0x5d, 0x9d, 0x81, 0x19 } }
 
 class nsIViewManager : public nsISupports
 {
@@ -263,28 +263,6 @@ public:
    */
   NS_IMETHOD  ResizeView(nsIView *aView, const nsRect &aRect,
                          PRBool aRepaintExposedAreaOnly = PR_FALSE) = 0;
-
-  /**
-   * Set the region to which a view's descendants are clipped.  The view
-   * itself is not clipped to this region; this allows for effects
-   * where part of the view is drawn outside the clip region (e.g.,
-   * its borders and background).  The view manager generates the
-   * appropriate dirty regions.
-   * 
-   * @param aView view to set clipping for
-   * @param aRegion
-   *     if null then no clipping is required. In this case all descendant
-   * views (but not descendants through placeholder edges) must have their
-   * bounds inside the bounds of this view
-   *     if non-null, then we will clip this view's descendant views
-   * --- including descendants through placeholder edges ---
-   * to the region. The region's bounds must be within the bounds of
-   * this view. The descendant views' bounds need not be inside the bounds
-   * of this view (because we're going to clip them anyway).
-   *
-   * XXX Currently we only support regions consisting of a single rectangle.
-   */
-  NS_IMETHOD  SetViewChildClipRegion(nsIView *aView, const nsRegion *aRegion) = 0;
 
   /**
    * Set the visibility of a view.

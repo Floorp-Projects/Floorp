@@ -553,8 +553,6 @@ nsSimplePageSequenceFrame::StartPrint(nsPresContext*   aPresContext,
         // sure the child views don't get asked to print
         // but my guess is that there won't be any
         vm->SetViewVisibility(view, nsViewVisibility_kHide);
-        nsRegion emptyRegion;
-        vm->SetViewChildClipRegion(view, &emptyRegion);
       } else {
         nsRect rect = page->GetRect();
         rect.y = y;

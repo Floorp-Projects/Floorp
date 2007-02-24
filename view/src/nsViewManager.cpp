@@ -1023,8 +1023,7 @@ AccumulateIntersectionsIntoDirtyRegion(nsView* aTargetView,
     // commonly we have dirty rects on the root view.
     nsPoint offset = aTargetView->GetOffsetTo(aSourceView);
     nsRegion intersection;
-    intersection.And(*aSourceView->GetDirtyRegion(),
-                     aTargetView->GetClippedRect() + offset);
+    intersection = *aSourceView->GetDirtyRegion();
     if (!intersection.IsEmpty()) {
       nsRegion* targetRegion = aTargetView->GetDirtyRegion();
       if (targetRegion) {
@@ -1073,22 +1072,7 @@ nsViewManager::UpdateViewAfterScroll(nsView *aView, const nsRegion& aUpdateRegio
 {
   NS_ASSERTION(RootViewManager()->mScrollCnt > 0,
                "Someone forgot to call WillBitBlit()");
-  // Look at the view's clipped rect. It may be that part of the view is clipped out
-  // in which case we don't need to worry about invalidating the clipped-out part.
-  nsRect damageRect = aView->GetClippedRect();
-  if (damageRect.IsEmpty()) {
-    return;
-  }
   nsPoint offset = ComputeViewOffset(aView);
-  damageRect.MoveBy(offset);
-
-  // if this is a floating view, it isn't covered by any widgets other than
-  // its children, which are handled by the widget scroller.
-  if (aView->GetFloating()) {
-    return;
-  }
-
-  UpdateWidgetArea(RootViewManager()->GetRootView(), nsRegion(damageRect), aView);
   if (!aUpdateRegion.IsEmpty()) {
     // XXX We should update the region, not the bounds rect, but that requires
     // a little more work. Fix this when we reshuffle this code.
@@ -1209,14 +1193,7 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
 
   nsView* view = NS_STATIC_CAST(nsView*, aView);
 
-  // Only Update the rectangle region of the rect that intersects the view's non clipped rectangle
-  nsRect clippedRect = view->GetClippedRect();
-  if (clippedRect.IsEmpty()) {
-    return NS_OK;
-  }
-
-  nsRect damagedRect;
-  damagedRect.IntersectRect(aRect, clippedRect);
+  nsRect damagedRect(aRect);
 
    // If the rectangle is not visible then abort
    // without invalidating. This is a performance 
@@ -1968,47 +1945,6 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, const nsRect &aRect, PRB
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::SetViewChildClipRegion(nsIView *aView, const nsRegion *aRegion)
-{
-  nsView* view = NS_STATIC_CAST(nsView*, aView);
- 
-  NS_ASSERTION(!(nsnull == view), "no view");
-
-  const nsRect* oldClipRect = view->GetClipChildrenToRect();
-
-  nsRect newClipRectStorage = view->GetDimensions();
-  nsRect* newClipRect = nsnull;
-  if (aRegion) {
-    newClipRectStorage = aRegion->GetBounds();
-    newClipRect = &newClipRectStorage;
-  }
-
-  if ((oldClipRect != nsnull) == (newClipRect != nsnull)
-      && (!newClipRect || *newClipRect == *oldClipRect)) {
-    return NS_OK;
-  }
-  nsRect oldClipRectStorage =
-    oldClipRect ? *oldClipRect : view->GetDimensions();
- 
-  // Update the view properties
-  view->SetClipChildrenToRect(newClipRect);
-
-  if (IsViewInserted(view)) {
-    // Invalidate changed areas
-    // Paint (new - old) in the current view
-    InvalidateRectDifference(view, newClipRectStorage, oldClipRectStorage, NS_VMREFRESH_NO_SYNC);
-    // Paint (old - new) in the parent view, since it'll be clipped out of the current view
-    nsView* parent = view->GetParent();
-    if (parent) {
-      oldClipRectStorage += view->GetPosition();
-      newClipRectStorage += view->GetPosition();
-      InvalidateRectDifference(parent, oldClipRectStorage, newClipRectStorage, NS_VMREFRESH_NO_SYNC);
-    }
-  }
-
-  return NS_OK;
-}
-
 PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView, nsPoint aDelta,
                                           nsRegion* aUpdateRegion)
 {
@@ -2351,15 +2287,7 @@ NS_IMETHODIMP nsViewManager::EndUpdateViewBatch(PRUint32 aUpdateFlags)
 
 NS_IMETHODIMP nsViewManager::SetRootScrollableView(nsIScrollableView *aScrollable)
 {
-  if (mRootScrollable) {
-    NS_STATIC_CAST(nsScrollPortView*, mRootScrollable)->
-      SetClipPlaceholdersToBounds(PR_FALSE);
-  }
   mRootScrollable = aScrollable;
-  if (mRootScrollable) {
-    NS_STATIC_CAST(nsScrollPortView*, mRootScrollable)->
-      SetClipPlaceholdersToBounds(PR_TRUE);
-  }
   return NS_OK;
 }
 

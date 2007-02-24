@@ -46,8 +46,6 @@
 #include "nsScrollbarButtonFrame.h"
 #include "nsGkAtoms.h"
 #include "nsIScrollableFrame.h"
-#include "nsIView.h"
-#include "nsIViewManager.h"
 #include "nsIScrollbarMediator.h"
 
 //
