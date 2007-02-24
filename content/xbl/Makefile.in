@@ -44,9 +44,5 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= public src builtin
 
-ifdef MOZ_MOCHITEST
-DIRS		+= test
-endif
-
 include $(topsrcdir)/config/rules.mk
 
