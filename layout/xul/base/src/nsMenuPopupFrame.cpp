@@ -190,11 +190,6 @@ nsMenuPopupFrame::Init(nsIContent*      aContent,
   // about that constraint.
   viewManager->SetViewFloating(ourView, PR_TRUE);
 
-  // XXX Hack. Change our transparency to be non-transparent
-  // until the bug related to update of transparency on show/hide
-  // is fixed.
-  viewManager->SetViewContentTransparency(ourView, PR_FALSE);
-
   // XXX make sure we are hidden (shouldn't this be done automatically?)
   viewManager->SetViewVisibility(ourView, nsViewVisibility_kHide);
   if (!ourView->HasWidget()) {

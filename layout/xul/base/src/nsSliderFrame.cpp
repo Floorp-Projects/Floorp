@@ -125,8 +125,6 @@ nsSliderFrame::Init(nsIContent*      aContent,
   }
 
   CreateViewForFrame(GetPresContext(), this, GetStyleContext(), PR_TRUE);
-  nsIView* view = GetView();
-  view->GetViewManager()->SetViewContentTransparency(view, PR_TRUE);
   return rv;
 }
 

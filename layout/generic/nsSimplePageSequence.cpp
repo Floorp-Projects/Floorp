@@ -700,8 +700,6 @@ nsSimplePageSequenceFrame::PrintNextPage()
 
       PR_PL(("SeqFr::Paint -> %p PageNo: %d  View: %p", pf, mPageNum, view));
 
-      vm->SetViewContentTransparency(view, PR_FALSE);
-
       vm->Display(view, 0, 0, clipRect);
 
       if (mSelectionHeight > -1 && selectionY < mSelectionHeight) {

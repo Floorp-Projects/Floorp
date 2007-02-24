@@ -61,7 +61,6 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIViewManager.h"
-#include "nsIScrollableView.h"
 #include "nsIContentViewer.h"
 #include "nsIAtom.h"
 #include "nsGkAtoms.h"

@@ -213,8 +213,4 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScrollableView, NS_ISCROLLABLEVIEW_IID)
 //for this view, it can always be scrolled via a blit
 #define NS_SCROLL_PROPERTY_ALWAYS_BLIT    0x0001
 
-//regardless of the transparency or opacity settings
-//for this view, it can never be scrolled via a blit
-#define NS_SCROLL_PROPERTY_NEVER_BLIT     0x0002
-
 #endif

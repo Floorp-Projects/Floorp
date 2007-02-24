@@ -541,9 +541,7 @@ void nsScrollPortView::Scroll(nsView *aScrolledView, nsPoint aTwipsDelta, nsPoin
     } else {
       PRUint32 scrolledViewFlags = aScrolledView->GetViewFlags();
 
-      if ((mScrollProperties & NS_SCROLL_PROPERTY_NEVER_BLIT) ||
-          (scrolledViewFlags & NS_VIEW_FLAG_DONT_BITBLT) ||
-          (!(mScrollProperties & NS_SCROLL_PROPERTY_ALWAYS_BLIT) && 
+      if ((!(mScrollProperties & NS_SCROLL_PROPERTY_ALWAYS_BLIT) && 
            !mViewManager->CanScrollWithBitBlt(aScrolledView, aTwipsDelta, &updateRegion))) {
         canBitBlit = PR_FALSE;
       }

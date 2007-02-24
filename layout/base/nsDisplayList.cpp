@@ -542,11 +542,13 @@ nsDisplayBackground::IsVaryingRelativeToFrame(nsDisplayListBuilder* aBuilder,
   if (!bg->HasFixedBackground())
     return PR_FALSE;
 
-  // aAncestorFrame is an ancestor of this frame ... if it's in our document
-  // then we'll be moving relative to the viewport, so we will change our
-  // display. If it's in some ancestor document then we won't be moving
-  // relative to the viewport so we won't change our display.
-  for (nsIFrame* f = mFrame->GetParent(); f; f = f->GetParent()) {
+  // aAncestorFrame is the frame that is going to be moved.
+  // Check if mFrame is equal to aAncestorFrame or aAncestorFrame is an
+  // ancestor of mFrame in the same document. If this is true, mFrame
+  // will move relative to its viewport, which means this display item will
+  // change when it is moved.  If they are in different documents, we do not
+  // want to return true because mFrame won't move relative to its viewport.
+  for (nsIFrame* f = mFrame; f; f = f->GetParent()) {
     if (f == aAncestorFrame)
       return PR_TRUE;
   }

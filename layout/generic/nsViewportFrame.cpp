@@ -44,11 +44,7 @@
 #include "nsViewportFrame.h"
 #include "nsHTMLParts.h"
 #include "nsGkAtoms.h"
-#include "nsIViewManager.h"
 #include "nsIScrollableFrame.h"
-#include "nsIDeviceContext.h"
-#include "nsPresContext.h"
-#include "nsIPresShell.h"
 #include "nsDisplayList.h"
 
 nsIFrame*

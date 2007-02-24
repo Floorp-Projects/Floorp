@@ -183,8 +183,7 @@ nsView::nsView(nsViewManager* aViewManager, nsViewVisibility aVisibility)
   // a promise that the view will paint all its pixels opaquely. Views
   // should make this promise explicitly by calling
   // SetViewContentTransparency.
-  mVFlags = NS_VIEW_FLAG_TRANSPARENT;
-  mOpacity = 1.0f;
+  mVFlags = 0;
   mViewManager = aViewManager;
   mChildRemoved = PR_FALSE;
   mDirtyRegion = nsnull;
@@ -566,22 +565,6 @@ void nsView::RemoveChild(nsView *child)
   }
 }
 
-NS_IMETHODIMP nsView::SetOpacity(float opacity)
-{
-  mOpacity = opacity;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsView::SetContentTransparency(PRBool aTransparent)
-{
-  if (aTransparent == PR_TRUE)
-    mVFlags |= NS_VIEW_FLAG_TRANSPARENT;
-  else
-    mVFlags &= ~NS_VIEW_FLAG_TRANSPARENT;
-
-  return NS_OK;
-}
-
 // Native widgets ultimately just can't deal with the awesome power of
 // CSS2 z-index. However, we set the z-index on the widget anyway
 // because in many simple common cases the widgets do end up in the
@@ -799,8 +782,8 @@ void nsIView::List(FILE* out, PRInt32 aIndent) const
   if (v->GetZParent()) {
     fprintf(out, " zparent=%p", (void*)v->GetZParent());
   }
-  fprintf(out, " z=%d vis=%d opc=%1.3f tran=%d clientData=%p <\n",
-          mZIndex, mVis, mOpacity, IsTransparent(), mClientData);
+  fprintf(out, " z=%d vis=%d clientData=%p <\n",
+          mZIndex, mVis, mClientData);
   for (nsView* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
     NS_ASSERTION(kid->GetParent() == this, "incorrect parent");
     kid->List(out, aIndent + 1);

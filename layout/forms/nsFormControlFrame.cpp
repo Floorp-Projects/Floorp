@@ -39,7 +39,6 @@
 #include "nsGkAtoms.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIEventStateManager.h"
-#include "nsIScrollableView.h"
 #include "nsILookAndFeel.h"
 
 //#define FCF_NOISY

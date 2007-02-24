@@ -65,10 +65,6 @@ class nsZPlaceholderView;
 // by its children or just handle the events itself
 #define NS_VIEW_FLAG_DONT_CHECK_CHILDREN  0x0200
 
-// indicates that the view should not be bitblt'd when moved
-// or scrolled and instead must be repainted
-#define NS_VIEW_FLAG_DONT_BITBLT          0x0400
-
 // set if this view is clipping its normal descendants
 // to its bounds. When this flag is set, child views
 // bounds need not be inside this view's bounds.
@@ -176,19 +172,6 @@ public:
    * @result PR_TRUE if the view floats, PR_FALSE otherwise.
    */
   NS_IMETHOD  SetFloating(PRBool aFloatingView);
-  /**
-   * Note: This didn't exist in 4.0. Called to set the opacity of a view. 
-   * A value of 0.0 means completely transparent. A value of 1.0 means
-   * completely opaque.
-   * @param opacity new opacity value
-   */
-  NS_IMETHOD  SetOpacity(float opacity);
-  /**
-   * Used set the transparency status of the content in a view. see
-   * HasTransparency().
-   * @param aTransparent PR_TRUE if there are transparent areas, PR_FALSE otherwise.
-   */
-  NS_IMETHOD  SetContentTransparency(PRBool aTransparent);
   /**
    * Set the widget associated with this view.
    * @param aWidget widget to associate with view. It is an error

@@ -1157,10 +1157,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
       || mDisplay != aOther.mDisplay
       || (mFloats == NS_STYLE_FLOAT_NONE) != (aOther.mFloats == NS_STYLE_FLOAT_NONE)
       || mOverflowX != aOther.mOverflowX
-      || mOverflowY != aOther.mOverflowY
-      // might need to create a view to handle change from 1.0 to partial opacity
-      || (mOpacity != aOther.mOpacity
-          && ((mOpacity < 1.0) != (aOther.mOpacity < 1.0))))
+      || mOverflowY != aOther.mOverflowY)
     NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
 
   if (mFloats != aOther.mFloats)
@@ -1177,7 +1174,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
   if (mClipFlags != aOther.mClipFlags
       || mClip != aOther.mClip
       || mOpacity != aOther.mOpacity)
-    NS_UpdateHint(hint, nsChangeHint_SyncFrameView);
+    NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
 
   return hint;
 }
