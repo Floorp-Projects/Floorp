@@ -444,6 +444,7 @@ static const char kDOMStringBundleURL[] =
   nsIXPCScriptable::WANT_ADDPROPERTY |                                        \
   nsIXPCScriptable::WANT_DELPROPERTY |                                        \
   nsIXPCScriptable::WANT_NEWENUMERATE |                                       \
+  nsIXPCScriptable::WANT_FINALIZE |                                           \
   nsIXPCScriptable::WANT_EQUALITY |                                           \
   nsIXPCScriptable::WANT_OUTER_OBJECT |                                       \
   nsIXPCScriptable::WANT_INNER_OBJECT |                                       \
@@ -6060,7 +6061,7 @@ nsWindowSH::Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   sgo->OnFinalize(nsIProgrammingLanguage::JAVASCRIPT, obj);
 
-  return nsEventReceiverSH::Finalize(wrapper, cx, obj);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
