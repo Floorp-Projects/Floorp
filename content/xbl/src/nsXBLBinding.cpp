@@ -460,13 +460,9 @@ nsXBLBinding::GenerateAnonymousContent()
   // See if there's an includes attribute.
   if (nsContentUtils::HasNonEmptyAttr(content, kNameSpaceID_None,
                                       nsGkAtoms::includes)) {
-    nsCAutoString id;
-    mPrototypeBinding->GetID(id);
-    nsCAutoString message("An XBL Binding with an id of ");
-    message += id;
-    message += " and found in the file ";
+    nsCAutoString message("An XBL Binding with URI ");
     nsCAutoString uri;
-    mPrototypeBinding->DocURI()->GetSpec(uri);
+    mPrototypeBinding->BindingURI()->GetSpec(uri);
     message += uri;
     message += " is still using the deprecated\n<content includes=\"\"> syntax! Use <children> instead!\n"; 
     NS_WARNING(message.get());

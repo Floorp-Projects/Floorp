@@ -61,6 +61,8 @@ public:
   NS_IMETHOD GetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBinding** aResult);
   NS_IMETHOD SetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBinding* aBinding);
 
+  NS_IMETHOD SetFirstPrototypeBinding(nsXBLPrototypeBinding* aBinding);
+  
   NS_IMETHOD FlushSkinStylesheets();
 
   NS_IMETHOD_(PRBool) IsChrome() { return mIsChrome; }
@@ -77,6 +79,8 @@ private:
   PRPackedBool mIsChrome;
   // the binding table owns each nsXBLPrototypeBinding
   nsObjectHashtable* mBindingTable;
+  // non-owning pointer to the first binding in the table
+  nsXBLPrototypeBinding* mFirstBinding;
 
   nsCOMPtr<nsIScriptGlobalObject> mGlobalObject;
 };
