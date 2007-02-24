@@ -105,7 +105,6 @@ COMPONENT_LIBS += \
 	docshell \
 	embedcomponents \
 	webbrwsr \
-	editor \
 	nsappshell \
 	txmgr \
 	chrome \

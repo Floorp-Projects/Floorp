@@ -290,7 +290,6 @@
     MODULE(docshell_provider)                \
     MODULE(embedcomponents)                  \
     MODULE(Browser_Embedding_Module)         \
-    MODULE(nsEditorModule)                   \
     OJI_MODULES                              \
     ACCESS_MODULES                           \
     MODULE(appshell)                         \

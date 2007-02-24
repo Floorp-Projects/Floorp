@@ -137,11 +137,11 @@ tier_gecko_dirs	+= \
 		view \
 		widget \
 		content \
+		editor \
 		layout \
 		docshell \
 		webshell \
 		embedding \
-		editor \
 		xpfe/appshell \
 		$(NULL)
 

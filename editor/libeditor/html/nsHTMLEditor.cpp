@@ -88,6 +88,7 @@
 #include "nsIDOMNSRange.h"
 #include "nsIRangeUtils.h"
 #include "nsISupportsArray.h"
+#include "nsContentUtils.h"
 #include "nsVoidArray.h"
 #include "nsIURL.h"
 #include "nsIComponentManager.h"
@@ -136,9 +137,6 @@ static char anchorTxt[] = "anchor";
 static char namedanchorText[] = "namedanchor";
 
 nsIRangeUtils* nsHTMLEditor::sRangeHelper;
-
-// Defined in nsEditorRegistration.cpp
-extern nsIParserService *sParserService;
 
 // some prototypes for rules creation shortcuts
 nsresult NS_NewTextEditRules(nsIEditRules** aInstancePtrResult);
@@ -572,8 +570,9 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock)
     return NS_OK;
   }
 
-  rv = sParserService->IsBlock(sParserService->HTMLAtomTagToId(tagAtom),
-                               *aIsBlock);
+  rv = nsContentUtils::GetParserService()->
+    IsBlock(nsContentUtils::GetParserService()->HTMLAtomTagToId(tagAtom),
+            *aIsBlock);
 
 #ifdef DEBUG
   // Check this against what we would have said with the old code:
@@ -4139,16 +4138,18 @@ nsHTMLEditor::EndOperation()
 PRBool 
 nsHTMLEditor::TagCanContainTag(const nsAString& aParentTag, const nsAString& aChildTag)  
 {
+  nsIParserService* parserService = nsContentUtils::GetParserService();
+
   PRInt32 childTagEnum;
   // XXX Should this handle #cdata-section too?
   if (aChildTag.EqualsLiteral("#text")) {
     childTagEnum = eHTMLTag_text;
   }
   else {
-    childTagEnum = sParserService->HTMLStringTagToId(aChildTag);
+    childTagEnum = parserService->HTMLStringTagToId(aChildTag);
   }
 
-  PRInt32 parentTagEnum = sParserService->HTMLStringTagToId(aParentTag);
+  PRInt32 parentTagEnum = parserService->HTMLStringTagToId(aParentTag);
   NS_ASSERTION(parentTagEnum < NS_HTML_TAG_MAX,
                "Fix the caller, this type of node can never contain children.");
 
@@ -4173,7 +4174,7 @@ nsHTMLEditor::IsContainer(nsIDOMNode *aNode)
     tagEnum = eHTMLTag_text;
   }
   else {
-    tagEnum = sParserService->HTMLStringTagToId(stringTag);
+    tagEnum = nsContentUtils::GetParserService()->HTMLStringTagToId(stringTag);
   }
 
   return nsHTMLEditUtils::IsContainer(tagEnum);
