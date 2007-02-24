@@ -153,7 +153,17 @@ public:
   NS_IMETHOD DidSetStyleContext();
 
   virtual nsIAtom* GetType() const;
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    // This is bogus, but it's what we've always done.
+    // (Given that we're replaced, we need to say we're a replaced element
+    // that contains a block so nsHTMLReflowState doesn't tell us to be
+    // NS_INTRINSICSIZE wide.)
+    return nsContainerFrame::IsFrameOfType(aFlags &
+      ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
+  }
+
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif

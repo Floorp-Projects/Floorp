@@ -99,7 +99,12 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
   virtual nsIAtom* GetType() const;
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return nsInlineFrameSuper::IsFrameOfType(aFlags &
+      ~(nsIFrame::eBidiInlineContainer));
+  }
 
   virtual PRBool IsEmpty();
   virtual PRBool IsSelfEmpty();

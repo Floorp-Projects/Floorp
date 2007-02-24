@@ -111,14 +111,6 @@ nsLeafFrame::Reflow(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-PRBool
-nsLeafFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  // We don't actually contain a block, but we do always want a
-  // computed width, so tell a little white lie here.
-  return !(aFlags & ~nsIFrame::eReplacedContainsBlock);
-}
-
 nscoord
 nsLeafFrame::GetIntrinsicHeight()
 {

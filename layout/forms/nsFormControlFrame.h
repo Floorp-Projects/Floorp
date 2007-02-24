@@ -58,6 +58,12 @@ public:
     */
   nsFormControlFrame(nsStyleContext*);
 
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return nsLeafFrame::IsFrameOfType(aFlags &
+      ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
+  }
+
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   /** 

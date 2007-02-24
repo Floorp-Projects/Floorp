@@ -107,12 +107,6 @@ nsSVGForeignObjectFrame::GetType() const
   return nsGkAtoms::svgForeignObjectFrame;
 }
 
-PRBool
-nsSVGForeignObjectFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~(nsIFrame::eSVG | nsIFrame::eSVGForeignObject));
-}
-
 NS_IMETHODIMP
 nsSVGForeignObjectFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                           nsIAtom*        aAttribute,

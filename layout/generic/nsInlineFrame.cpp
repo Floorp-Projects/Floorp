@@ -122,12 +122,6 @@ nsInlineFrame::GetType() const
   return nsGkAtoms::inlineFrame;
 }
 
-PRBool
-nsInlineFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~nsIFrame::eBidiInlineContainer);
-}
-
 inline PRBool
 IsPaddingZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
 {

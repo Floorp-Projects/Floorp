@@ -475,9 +475,3 @@ nsHTMLButtonControlFrame::RemoveFrame(nsIAtom*        aListName,
   NS_NOTREACHED("unsupported operation");
   return NS_ERROR_UNEXPECTED;
 }
-
-PRBool
-nsHTMLButtonControlFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~(eReplaced | eReplacedContainsBlock));
-}

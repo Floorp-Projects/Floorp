@@ -73,12 +73,17 @@ public:
    * borderpadding for the desired height.  Ascent will be set to the height,
    * and descent will be set to 0.
    */
-NS_IMETHOD Reflow(nsPresContext*      aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*      aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    // We don't actually contain a block, but we do always want a
+    // computed width, so tell a little white lie here.
+    return nsFrame::IsFrameOfType(aFlags & ~(nsIFrame::eReplacedContainsBlock));
+  }
 
 protected:
   nsLeafFrame(nsStyleContext* aContext) : nsFrame(aContext) {}

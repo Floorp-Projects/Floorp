@@ -60,8 +60,6 @@ public:
   nsGfxRadioControlFrame(nsStyleContext* aContext);
   ~nsGfxRadioControlFrame();
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
-
    //nsIRadioControlFrame methods
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD SetRadioButtonFaceStyleContext(nsStyleContext *aRadioButtonFaceStyleContext);

@@ -1501,16 +1501,6 @@ nsBoxFrame::GetType() const
   return nsGkAtoms::boxFrame;
 }
 
-PRBool
-nsBoxFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  // This is bogus, but it's what we've always done.
-  // (Given that we're replaced, we need to say we're a replaced element
-  // that contains a block so nsHTMLReflowState doesn't tell us to be
-  // NS_INTRINSICSIZE wide.)
-  return !(aFlags & ~(eReplaced | eReplacedContainsBlock));
-}
-
 #ifdef DEBUG_LAYOUT
 NS_IMETHODIMP
 nsBoxFrame::GetDebug(PRBool& aDebug)

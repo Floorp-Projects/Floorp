@@ -505,12 +505,6 @@ nsObjectFrame::GetType() const
   return nsGkAtoms::objectFrame; 
 }
 
-PRBool
-nsObjectFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~(eReplaced));
-}
-
 #ifdef DEBUG
 NS_IMETHODIMP
 nsObjectFrame::GetFrameName(nsAString& aResult) const

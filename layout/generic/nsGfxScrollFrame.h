@@ -545,7 +545,14 @@ public:
    */
   virtual nsIAtom* GetType() const;
   
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    // Override bogus IsFrameOfType in nsBoxFrame.
+    if (aFlags & (nsIFrame::eReplacedContainsBlock | nsIFrame::eReplaced))
+      return PR_FALSE;
+    return nsBoxFrame::IsFrameOfType(aFlags);
+  }
+
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif

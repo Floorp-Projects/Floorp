@@ -65,6 +65,11 @@ public:
                   nsIFrame* aPrevInFlow);
   NS_IMETHOD DidSetStyleContext();
 
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return nsSVGGeometryFrameBase::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
+  }
+
   // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 

@@ -107,7 +107,13 @@ public:
   }
 #endif
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    // nsStackFrame is already both of these, but that's somewhat bogus,
+    // and we really mean it.
+    return nsStackFrame::IsFrameOfType(aFlags &
+      ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
+  }
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements);

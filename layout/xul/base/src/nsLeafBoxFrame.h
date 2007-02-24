@@ -58,7 +58,14 @@ public:
   virtual nscoord GetFlex(nsBoxLayoutState& aState);
   virtual nscoord GetBoxAscent(nsBoxLayoutState& aState);
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    // This is bogus, but it's what we've always done.
+    // Note that nsLeafFrame is also eReplacedContainsBlock.
+    return nsLeafFrame::IsFrameOfType(aFlags &
+      ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
+  }
+
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif

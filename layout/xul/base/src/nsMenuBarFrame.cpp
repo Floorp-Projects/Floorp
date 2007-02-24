@@ -155,13 +155,6 @@ nsMenuBarFrame::Init(nsIContent*      aContent,
   return rv;
 }
 
-PRBool
-nsMenuBarFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  // Override bogus IsFrameOfType in base class.
-  return !aFlags;
-}
-
 NS_IMETHODIMP
 nsMenuBarFrame::IsOpen()
 {

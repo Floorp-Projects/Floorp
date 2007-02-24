@@ -95,7 +95,10 @@ public:
                    nsIAtom* aAttribute,
                    PRInt32  aModType);
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return nsTableOuterFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
+  }
 
 protected:
   nsMathMLmtableOuterFrame(nsStyleContext* aContext) : nsTableOuterFrame(aContext) {}
@@ -152,7 +155,10 @@ public:
     return rv;
   }
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return nsTableFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
+  }
 
   // helper to restyle and reflow the table when a row is changed -- since MathML
   // attributes are inter-dependent and row/colspan can affect the table, it is
@@ -213,7 +219,10 @@ public:
     return rv;
   }
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return nsTableRowFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
+  }
 
   // helper to restyle and reflow the table -- @see nsMathMLmtableFrame.
   void RestyleTable()
@@ -253,7 +262,10 @@ public:
 
   virtual PRInt32 GetRowSpan();
   virtual PRInt32 GetColSpan();
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return nsTableCellFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
+  }
 
 protected:
   nsMathMLmtdFrame(nsStyleContext* aContext) : nsTableCellFrame(aContext) {}
@@ -302,7 +314,11 @@ public:
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return nsBlockFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
+  }
 
 protected:
   nsMathMLmtdInnerFrame(nsStyleContext* aContext) : nsBlockFrame(aContext) {}

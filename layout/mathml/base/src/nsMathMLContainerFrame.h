@@ -116,7 +116,10 @@ public:
   // --------------------------------------------------------------------------
   // Overloaded nsHTMLContainerFrame methods -- see documentation in nsIFrame.h
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return nsHTMLContainerFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
+  }
 
   NS_IMETHOD
   Init(nsIContent*      aContent,
@@ -375,7 +378,7 @@ public:
   }
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const {
-    return !(aFlags & ~nsIFrame::eMathML);
+    return nsBlockFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
   }
 
 protected:
@@ -458,7 +461,10 @@ public:
   }
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const {
-    return !(aFlags & ~nsIFrame::eMathML);
+    // Override nsInlineFrame.   XXX Should we really?
+    if (aFlags & (nsIFrame::eBidiInlineContainer))
+      return PR_FALSE;
+    return nsInlineFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
   }
 
 protected:

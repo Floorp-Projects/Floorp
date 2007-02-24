@@ -51,7 +51,11 @@ class nsSVGContainerFrame : public nsSVGContainerFrameBase
                                            nsStyleContext* aContext);
 
 protected:
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return nsSVGContainerFrameBase::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
+  }
+
   NS_IMETHOD InitSVG();
   
 private:

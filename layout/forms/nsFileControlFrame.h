@@ -124,7 +124,11 @@ protected:
   
   nsresult MouseClick(nsIDOMEvent* aMouseEvent);
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return nsAreaFrame::IsFrameOfType(aFlags &
+      ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
+  }
 
   virtual PRIntn GetSkipSides() const;
 

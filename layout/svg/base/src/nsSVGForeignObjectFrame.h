@@ -87,7 +87,12 @@ public:
    * @see nsGkAtoms::svgForeignObjectFrame
    */
   virtual nsIAtom* GetType() const;
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return nsSVGForeignObjectFrameBase::IsFrameOfType(aFlags &
+      ~(nsIFrame::eSVG | nsIFrame::eSVGForeignObject));
+  }
 
   virtual void InvalidateInternal(const nsRect& aDamageRect,
                                   nscoord aX, nscoord aY, nsIFrame* aForChild,
