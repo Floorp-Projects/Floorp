@@ -633,3 +633,25 @@ function getImplementation() {
     return builder.getImplementation();
 }
 
+//sayrer override the SimpleTest logger
+SimpleTest._logResult = function(test, passString, failString) {
+  var msg = test.result ? passString : failString;
+  msg += " | " + test.name;
+  if (test.result) {
+      if (test.todo)
+          parentRunner.logger.error(msg)
+      else
+          parentRunner.logger.log(msg);
+  } else {
+      msg += " | " + test.diag;
+      if (test.todo) {
+        parentRunner.logger.log(msg)
+      } else {
+        if (todoTests[docName]) {
+          parentRunner.logger.log("expected error in todo testcase | " + test.name);
+        } else {
+          parentRunner.logger.error(msg);
+        }
+      } 
+  }
+}
