@@ -43,7 +43,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 
-DIRS		+= dom-level1-core
+#DIRS		+= dom-level1-core
 
 include $(topsrcdir)/config/rules.mk
 
