@@ -111,41 +111,6 @@ public:
   virtual PRBool IsZPlaceholderView() const { return PR_FALSE; }
 
   /**
-   * Called to set the clip of the children of this view.
-   * The clip is relative to the origin of the view.
-   * All of the children of this view will be clipped using
-   * the specified rectangle
-   */
-  void SetClipChildrenToRect(const nsRect* aRect) {
-    if (!aRect) {
-      delete mClipRect;
-      mClipRect = nsnull;
-    } else {
-      if (mClipRect) {
-        *mClipRect = *aRect;
-      } else {
-        mClipRect = new nsRect(*aRect);
-      }
-    }
-  }
-  void SetClipChildrenToBounds(PRBool aDoClip) {
-    mVFlags = (mVFlags & ~NS_VIEW_FLAG_CLIP_CHILDREN_TO_BOUNDS)
-      | (aDoClip ? NS_VIEW_FLAG_CLIP_CHILDREN_TO_BOUNDS : 0);
-  }
-  void SetClipPlaceholdersToBounds(PRBool aDoClip) {
-    mVFlags = (mVFlags & ~NS_VIEW_FLAG_CLIP_PLACEHOLDERS_TO_BOUNDS)
-      | (aDoClip ? NS_VIEW_FLAG_CLIP_PLACEHOLDERS_TO_BOUNDS : 0);
-  }
-
-  /**
-   * Called to get the dimensions and position of the clip for the children of this view.
-   */
-  const nsRect* GetClipChildrenToRect() const
-  { return mClipRect; }
-  PRBool GetClipChildrenToBounds(PRBool aPlaceholders) const
-  { return (mVFlags & (aPlaceholders ? NS_VIEW_FLAG_CLIP_PLACEHOLDERS_TO_BOUNDS : NS_VIEW_FLAG_CLIP_CHILDREN_TO_BOUNDS)) != 0; }
-
-  /**
    * Called to indicate that the visibility of a view has been
    * changed.
    * @param visibility new visibility state
@@ -182,14 +147,6 @@ public:
    * @return error status
    */
   NS_IMETHOD  SetWidget(nsIWidget *aWidget);
-
-  /**
-   * @return the view's dimensions after clipping by ancestors is applied
-   * (the rect is relative to the view's origin)
-   * @param aStopAtView do not consider clipping imposed by views above this view
-   * on the ancestor chain
-   */
-  nsRect GetClippedRect(nsIView* aStopAtView = nsnull);
 
   // Helper function to get the view that's associated with a widget
   static nsView* GetViewFor(nsIWidget* aWidget) {

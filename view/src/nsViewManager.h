@@ -200,8 +200,6 @@ public:
 
   NS_IMETHOD  ResizeView(nsIView *aView, const nsRect &aRect, PRBool aRepaintExposedAreaOnly = PR_FALSE);
 
-  NS_IMETHOD  SetViewChildClipRegion(nsIView *aView, const nsRegion *aRegion);
-
   NS_IMETHOD  SetViewCheckChildEvents(nsIView *aView, PRBool aEnable);
 
   NS_IMETHOD  SetViewFloating(nsIView *aView, PRBool aFloating);

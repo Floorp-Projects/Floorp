@@ -48,7 +48,6 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIWebNavigation.h"
 #include "nsIPresShell.h"
-#include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsPresContext.h"
 
