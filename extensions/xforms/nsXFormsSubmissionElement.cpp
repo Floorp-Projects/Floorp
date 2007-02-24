@@ -2175,60 +2175,93 @@ nsXFormsSubmissionElement::SendData(const nsCString &uriSpec,
     return NS_ERROR_ABORT;
   }
 
-  // wrap the entire upload stream in a buffered input stream, so that
-  // it can be read in large chunks.
-  // XXX necko should probably do this (or something like this) for us.
-  nsCOMPtr<nsIInputStream> bufferedStream;
-  if (stream)
-  {
-    NS_NewBufferedInputStream(getter_AddRefs(bufferedStream), stream, 4096);
-    NS_ENSURE_STATE(bufferedStream);
-  }
-
   nsCOMPtr<nsIChannel> channel;
   ios->NewChannelFromURI(uri, getter_AddRefs(channel));
   NS_ENSURE_STATE(channel);
 
-  if (bufferedStream)
+  PRBool ignoreStream = PR_FALSE;
+
+  if (mFormat & METHOD_POST) {
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
+    if (!httpChannel) {
+      // The spec doesn't really say how to handle post with anything other
+      // than http.  So we are free to make up our own rules.
+      // The only other protocols we quasi support are file and mailto.  Mailto
+      // has already been handled by this point.  For file we'll still do the
+      // post, but we won't bother to 'send any data' since that really has
+      // no meaning.  This will cause Mozilla to get the local file.
+      // Since this is a kludgy kind of behavior to begin with (the user
+      // really shouldn't use POST with file:/// to begin with) we'll
+      // behave like formsPlayer and only allow this for replace="all" and
+      // replace="none".  If replace="instance", we'll throw an
+      // xforms-submit-error.  Again, this is for compliance with formsPlayer.
+      // A good form author should never cause us to reach here!
+      nsCAutoString scheme;
+      rv = uri->GetScheme(scheme);
+      NS_ENSURE_SUCCESS(rv, rv);
+  
+      PRBool allowSubmission = scheme.EqualsLiteral("file");
+      if (allowSubmission) {
+        if (!mIsReplaceInstance) {
+          ignoreStream = PR_TRUE;
+        } else {
+          allowSubmission = PR_FALSE;
+        }
+      }
+
+      if (!allowSubmission) {
+        nsAutoString schemeTemp = NS_ConvertASCIItoUTF16(scheme);
+        const PRUnichar *strings[] = { schemeTemp.get() };
+        nsXFormsUtils::ReportError(NS_LITERAL_STRING("warnSubmitProtocolPost"),
+                                   strings, 1, mElement, mElement,
+                                   nsIScriptError::warningFlag);
+        return NS_ERROR_UNEXPECTED;
+      }
+    } else {
+
+      rv = httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
+      NS_ENSURE_SUCCESS(rv, rv);
+  
+      if (mIsSOAPRequest) {
+        nsCOMPtr<nsIMIMEHeaderParam> mimeHdrParser =
+          do_GetService("@mozilla.org/network/mime-hdrparam;1");
+        NS_ENSURE_STATE(mimeHdrParser);
+  
+        nsAutoString mediatype, action;
+        mElement->GetAttribute(NS_LITERAL_STRING("mediatype"),
+                               mediatype);
+        if (!mediatype.IsEmpty()) {
+          
+          rv = mimeHdrParser->GetParameter(NS_ConvertUTF16toUTF8(mediatype),
+                                           "action", EmptyCString(), PR_FALSE,
+                                           nsnull, action);
+        }
+        if (action.IsEmpty()) {
+          action.AssignLiteral(" ");
+        }
+        rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("SOAPAction"),
+                                           NS_ConvertUTF16toUTF8(action),
+                                           PR_FALSE);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
+  }
+
+  // wrap the entire upload stream in a buffered input stream, so that
+  // it can be read in large chunks.
+  // XXX necko should probably do this (or something like this) for us.
+  nsCOMPtr<nsIInputStream> bufferedStream;
+  if (stream && !ignoreStream)
   {
+    NS_NewBufferedInputStream(getter_AddRefs(bufferedStream), stream, 4096);
+    NS_ENSURE_STATE(bufferedStream);
+
     nsCOMPtr<nsIUploadChannel> uploadChannel = do_QueryInterface(channel);
     NS_ENSURE_STATE(uploadChannel);
 
     // this in effect sets the request method of the channel to 'PUT'
     rv = uploadChannel->SetUploadStream(bufferedStream, contentType, -1);
     NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  if (mFormat & METHOD_POST)
-  {
-    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
-    NS_ENSURE_STATE(httpChannel);
-
-    rv = httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (mIsSOAPRequest) {
-      nsCOMPtr<nsIMIMEHeaderParam> mimeHdrParser =
-        do_GetService("@mozilla.org/network/mime-hdrparam;1");
-      NS_ENSURE_STATE(mimeHdrParser);
-
-      nsAutoString mediatype, action;
-      mElement->GetAttribute(NS_LITERAL_STRING("mediatype"),
-                             mediatype);
-      if (!mediatype.IsEmpty()) {
-        
-        rv = mimeHdrParser->GetParameter(NS_ConvertUTF16toUTF8(mediatype),
-                                         "action", EmptyCString(), PR_FALSE,
-                                         nsnull, action);
-      }
-      if (action.IsEmpty()) {
-        action.AssignLiteral(" ");
-      }
-      rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("SOAPAction"),
-                                         NS_ConvertUTF16toUTF8(action),
-                                         PR_FALSE);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
   }
 
   // set loadGroup and notificationCallbacks
