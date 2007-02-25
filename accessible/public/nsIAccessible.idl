@@ -56,7 +56,7 @@ interface nsIPersistentProperties;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(c711b078-e76a-4136-9d51-e38b6c3a4cec)]
+[scriptable, uuid(813fbabc-5307-4b76-9ac9-3036df0cf58e)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -252,6 +252,11 @@ interface nsIAccessible : nsISupports
    * The name of the accessible action at the given zero-based index
    */
   AString getActionName(in PRUint8 index);
+
+  /**
+   * The description of the accessible action at the given zero-based index
+   */
+  AString getActionDescription(in PRUint8 aIndex);
 
   /**
    * Perform the accessible action at the given zero-based index

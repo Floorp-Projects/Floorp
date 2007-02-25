@@ -2228,6 +2228,17 @@ NS_IMETHODIMP nsAccessible::GetActionName(PRUint8 index, nsAString& aName)
   return NS_ERROR_FAILURE;
 }
 
+/* DOMString getActionDescription (in PRUint8 index); */
+NS_IMETHODIMP nsAccessible::GetActionDescription(PRUint8 aIndex, nsAString& aDescription)
+{
+  // default to localized action name.
+  nsAutoString name;
+  nsresult rv = GetActionName(aIndex, name);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return GetTranslatedString(name, aDescription);
+}
+
 /* void doAction (in PRUint8 index); */
 NS_IMETHODIMP nsAccessible::DoAction(PRUint8 index)
 {

@@ -78,7 +78,7 @@ public:
   nsLinkableAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_DECL_ISUPPORTS_INHERITED
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
   NS_IMETHOD GetState(PRUint32 *_retval);
   NS_IMETHOD GetValue(nsAString& _retval);

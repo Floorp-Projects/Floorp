@@ -637,30 +637,30 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetNumActions(PRUint8 *_retval)
 }
 
 // Return the name of our actions
-NS_IMETHODIMP nsXULTreeitemAccessible::GetActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsXULTreeitemAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
   NS_ENSURE_TRUE(mColumn && mTree && mTreeView, NS_ERROR_FAILURE);
 
-  if (index == eAction_Click) {
+  if (aIndex == eAction_Click) {
     PRBool isCycler;
     mColumn->GetCycler(&isCycler);
     if (isCycler) {
-      nsAccessible::GetTranslatedString(NS_LITERAL_STRING("cycle"), _retval);
+      aName.AssignLiteral("cycle");
     }
     else {
-      nsAccessible::GetTranslatedString(NS_LITERAL_STRING("activate"), _retval);
+      aName.AssignLiteral("activate");
     }
     return NS_OK;
   }
-  else if (index == eAction_Expand) {
+  else if (aIndex == eAction_Expand) {
     PRBool isContainer, isContainerOpen;
     mTreeView->IsContainer(mRow, &isContainer);
     if (isContainer) {
       mTreeView->IsContainerOpen(mRow, &isContainerOpen);
       if (isContainerOpen)
-        nsAccessible::GetTranslatedString(NS_LITERAL_STRING("collapse"), _retval);
+        aName.AssignLiteral("collapse");
       else
-        nsAccessible::GetTranslatedString(NS_LITERAL_STRING("expand"), _retval);
+        aName.AssignLiteral("expand");
     }
 
     return NS_OK;
@@ -934,10 +934,10 @@ NS_IMETHODIMP nsXULTreeColumnsAccessible::GetNumActions(PRUint8 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULTreeColumnsAccessible::GetActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsXULTreeColumnsAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
-  if (index == eAction_Click) {
-    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("click"), _retval);
+  if (aIndex == eAction_Click) {
+    aName.AssignLiteral("click");
     return NS_OK;
   }
 
@@ -1016,10 +1016,10 @@ NS_IMETHODIMP nsXULTreeColumnitemAccessible::GetNumActions(PRUint8 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULTreeColumnitemAccessible::GetActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsXULTreeColumnitemAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
-  if (index == eAction_Click) {
-    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("click"), _retval);
+  if (aIndex == eAction_Click) {
+    aName.AssignLiteral("click");
     return NS_OK;
   }
 

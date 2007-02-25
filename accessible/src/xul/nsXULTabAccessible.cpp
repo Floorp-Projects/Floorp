@@ -62,10 +62,10 @@ NS_IMETHODIMP nsXULTabAccessible::GetNumActions(PRUint8 *_retval)
 }
 
 /** Return the name of our only action  */
-NS_IMETHODIMP nsXULTabAccessible::GetActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsXULTabAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
-  if (index == eAction_Switch) {
-    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("switch"), _retval); 
+  if (aIndex == eAction_Switch) {
+    aName.AssignLiteral("switch"); 
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;

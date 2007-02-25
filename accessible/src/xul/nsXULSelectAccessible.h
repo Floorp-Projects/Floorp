@@ -95,7 +95,7 @@ public:
   NS_IMETHOD GetName(nsAString& _retval);
   NS_IMETHOD GetRole(PRUint32 *_retval);
   NS_IMETHOD GetState(PRUint32 *_retval);
-  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetActionName(PRUint8 index, nsAString& aName);
   // Don't use XUL menuitems's description attribute
   NS_IMETHOD GetDescription(nsAString& aDesc) { return nsAccessibleWrap::GetDescription(aDesc); }
 
@@ -129,7 +129,7 @@ public:
   NS_IMETHOD GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren);
   NS_IMETHOD DoAction(PRUint8 index);
   NS_IMETHOD GetNumActions(PRUint8 *aNumActions);
-  NS_IMETHOD GetActionName(PRUint8 index, nsAString& aActionName);
+  NS_IMETHOD GetActionName(PRUint8 index, nsAString& aName);
 };
 
 #endif

@@ -159,7 +159,7 @@ public:
 
   /* ----- nsIAccessible ----- */
   NS_IMETHOD DoAction(PRUint8 index);
-  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetState(PRUint32 *_retval);
   NS_IMETHOD GetRole(PRUint32 *aRole);
@@ -182,7 +182,7 @@ public:
   /* ----- nsIAccessible ----- */
   NS_IMETHOD GetState(PRUint32 *_retval);
   NS_IMETHOD DoAction(PRUint8 index);  
-  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
 };
 
@@ -208,7 +208,7 @@ public:
   NS_IMETHOD GetDescription(nsAString& aDescription);
   NS_IMETHOD DoAction(PRUint8 index);
   NS_IMETHOD GetNumActions(PRUint8 *aNumActions);
-  NS_IMETHOD GetActionName(PRUint8 index, nsAString& aActionName);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
 
   void CacheChildren();
 
@@ -252,7 +252,7 @@ public:
   /* ----- nsIAccessible ----- */
   NS_IMETHOD DoAction(PRUint8 index);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD GetParent(nsIAccessible **_retval);
   NS_IMETHOD GetName(nsAString& _retval);
   NS_IMETHOD GetRole(PRUint32 *_retval);
