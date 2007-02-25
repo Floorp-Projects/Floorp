@@ -30,6 +30,7 @@ use strict;
 
 use Apache::DBI ();
 use Apache2::ServerUtil;
+use Apache2::SizeLimit;
 use ModPerl::RegistryLoader ();
 use CGI ();
 CGI->compile(qw(:cgi -no_xhtml -oldstyle_urls :private_tempfiles
@@ -44,6 +45,10 @@ use Bugzilla::Mailer ();
 use Bugzilla::Template ();
 use Bugzilla::Util ();
 
+# This means that every httpd child will die after processing
+# a CGI if it is taking up more than 70MB of RAM all by itself.
+$Apache2::SizeLimit::MAX_UNSHARED_SIZE = 70000;
+
 my $cgi_path = Bugzilla::Constants::bz_locations()->{'cgi_path'};
 
 # Set up the configuration for the web server
@@ -54,6 +59,7 @@ my $conf = <<EOT;
     # No need to PerlModule these because they're already defined in mod_perl.pl
     PerlResponseHandler Bugzilla::ModPerl::ResponseHandler
     PerlCleanupHandler  Bugzilla::ModPerl::CleanupHandler
+    PerlCleanupHandler  Apache2::SizeLimit
     PerlOptions +ParseHeaders
     Options +ExecCGI
     AllowOverride Limit
