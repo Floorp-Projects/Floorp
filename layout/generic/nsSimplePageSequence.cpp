@@ -628,8 +628,9 @@ nsSimplePageSequenceFrame::PrintNextPage()
       GetPresContext()->PresShell()->
               CreateRenderingContext(mCurrentPageFrame,
                                      getter_AddRefs(renderingContext));
-      nsRegion drawingRegion(nsRect(nsPoint(0, 0),
-                                    mCurrentPageFrame->GetSize()));
+      nsRect drawingRect(nsPoint(0, 0),
+                         mCurrentPageFrame->GetSize());
+      nsRegion drawingRegion(drawingRect);
       nsLayoutUtils::PaintFrame(renderingContext, mCurrentPageFrame,
                                 drawingRegion, NS_RGBA(0,0,0,0));
 
