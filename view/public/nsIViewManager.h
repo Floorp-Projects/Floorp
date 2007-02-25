@@ -62,10 +62,10 @@ enum nsRectVisibility {
   nsRectVisibility_kZeroAreaRect
 }; 
 
-// 38439490-51d4-416a-a12f-20535d9d8119
+// 143945d0-0a20-4bf0-a04d-ad212ab9acc2
 #define NS_IVIEWMANAGER_IID   \
-{ 0x38439490, 0x51d4, 0x416a, \
-  { 0xa1, 0x2f, 0x20, 0x53, 0x5d, 0x9d, 0x81, 0x19 } }
+{ 0x143945d0, 0x0a20, 0x4bf0, \
+  { 0xa0, 0x4d, 0xad, 0x21, 0x2a, 0xb9, 0xac, 0xc2 } }
 
 class nsIViewManager : public nsISupports
 {
@@ -388,12 +388,6 @@ public:
    * @return error status
    */
   NS_IMETHOD GetRootScrollableView(nsIScrollableView **aScrollable) = 0;
-
-  /**
-   * Display the specified view. Used when printing.
-   */
-   //XXXbz how is this different from UpdateView(NS_VMREFRESH_IMMEDIATE)?
-  NS_IMETHOD Display(nsIView *aView, nscoord aX, nscoord aY, const nsRect& aClipRect) = 0;
 
   /**
    * Dump the specified view into a new offscreen rendering context.

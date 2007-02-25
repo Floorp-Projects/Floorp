@@ -561,6 +561,11 @@ nsPageFrame::PaintPageContent(nsIRenderingContext& aRenderingContext,
   nsRect rect = aDirtyRect;
   float scale = GetPresContext()->GetPageScale();
   aRenderingContext.PushState();
+  // Make sure we don't draw where we aren't supposed to draw, especially
+  // when printing selection
+  nsRect clipRect(nsPoint(0, 0), GetSize());
+  clipRect.Deflate(mPD->mReflowMargin);
+  aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
   // aPt translates to coords relative to this, then margins translate to
   // pageContentFrame's coords
   nsPoint framePos = aPt + pageContentFrame->GetOffsetTo(this);
