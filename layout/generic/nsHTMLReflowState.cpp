@@ -1471,9 +1471,13 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
     mComputedWidth = availableWidth - mComputedBorderPadding.LeftRight();
     if (mComputedWidth < 0)
       mComputedWidth = 0;
-    mComputedHeight = availableHeight - mComputedBorderPadding.TopBottom();
-    if (mComputedHeight < 0)
-      mComputedHeight = 0;
+    if (availableHeight != NS_UNCONSTRAINEDSIZE) {
+      mComputedHeight = availableHeight - mComputedBorderPadding.TopBottom();
+      if (mComputedHeight < 0)
+        mComputedHeight = 0;
+    } else {
+      mComputedHeight = NS_UNCONSTRAINEDSIZE;
+    }
 
     mComputedMinWidth = mComputedMinHeight = 0;
     mComputedMaxWidth = mComputedMaxHeight = NS_UNCONSTRAINEDSIZE;
