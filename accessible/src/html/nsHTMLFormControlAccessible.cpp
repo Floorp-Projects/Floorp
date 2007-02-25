@@ -70,17 +70,17 @@ NS_IMETHODIMP nsHTMLCheckboxAccessible::GetNumActions(PRUint8 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLCheckboxAccessible::GetActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsHTMLCheckboxAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
-  if (index == eAction_Click) {    // 0 is the magic value for default action
+  if (aIndex == eAction_Click) {    // 0 is the magic value for default action
     // check or uncheck
     PRUint32 state;
     GetState(&state);
 
     if (state & STATE_CHECKED)
-      nsAccessible::GetTranslatedString(NS_LITERAL_STRING("uncheck"), _retval); 
+      aName.AssignLiteral("uncheck"); 
     else
-      nsAccessible::GetTranslatedString(NS_LITERAL_STRING("check"), _retval); 
+      aName.AssignLiteral("check"); 
 
     return NS_OK;
   }
@@ -145,10 +145,10 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetNumActions(PRUint8 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLButtonAccessible::GetActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsHTMLButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
-  if (index == eAction_Click) {
-    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("press"), _retval); 
+  if (aIndex == eAction_Click) {
+    aName.AssignLiteral("press"); 
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;
@@ -239,10 +239,10 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetNumActions(PRUint8 *_retval)
   return NS_OK;;
 }
 
-NS_IMETHODIMP nsHTML4ButtonAccessible::GetActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsHTML4ButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
-  if (index == eAction_Click) {
-    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("press"), _retval); 
+  if (aIndex == eAction_Click) {
+    aName.AssignLiteral("press"); 
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;
@@ -419,10 +419,10 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetNumActions(PRUint8 *_retval)
   return NS_OK;;
 }
 
-NS_IMETHODIMP nsHTMLTextFieldAccessible::GetActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsHTMLTextFieldAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
-  if (index == eAction_Click) {
-    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("activate"), _retval);
+  if (aIndex == eAction_Click) {
+    aName.AssignLiteral("activate");
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;

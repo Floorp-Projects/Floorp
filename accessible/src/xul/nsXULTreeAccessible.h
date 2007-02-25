@@ -109,7 +109,7 @@ public:
   NS_IMETHOD GetRole(PRUint32 *_retval);
   NS_IMETHOD GetState(PRUint32 *_retval);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
 
   NS_IMETHOD GetParent(nsIAccessible **_retval);
   NS_IMETHOD GetNextSibling(nsIAccessible **_retval);
@@ -145,7 +145,7 @@ public:
   NS_IMETHOD GetRole(PRUint32 *_retval);
   NS_IMETHOD GetState(PRUint32 *_retval);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
 
   NS_IMETHOD GetNextSibling(nsIAccessible **_retval); 
   NS_IMETHOD GetPreviousSibling(nsIAccessible **_retval); 
@@ -168,7 +168,7 @@ public:
   NS_IMETHOD GetRole(PRUint32 *_retval);
   NS_IMETHOD GetState(PRUint32 *_retval);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
 
   NS_IMETHOD DoAction(PRUint8 index);
 };

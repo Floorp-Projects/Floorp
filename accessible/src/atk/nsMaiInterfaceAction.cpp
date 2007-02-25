@@ -79,8 +79,13 @@ getActionCountCB(AtkAction *aAction)
 const gchar *
 getActionDescriptionCB(AtkAction *aAction, gint aActionIndex)
 {
-    // use getActionName as default description
-    return getActionNameCB(aAction, aActionIndex);
+    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
+    NS_ENSURE_TRUE(accWrap, nsnull);
+
+    nsAutoString description;
+    nsresult rv = accWrap->GetActionDescription(aActionIndex, description);
+    NS_ENSURE_SUCCESS(rv, nsnull);
+    return nsAccessibleWrap::ReturnString(description);
 }
 
 const gchar *

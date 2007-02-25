@@ -84,7 +84,7 @@ public:
   NS_IMETHOD GetState(PRUint32 *_retval); 
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD DoAction(PRUint8 index);
-  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren);
 };
@@ -97,7 +97,7 @@ public:
   NS_IMETHOD GetState(PRUint32 *_retval); 
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD DoAction(PRUint8 index);
-  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
 };
 

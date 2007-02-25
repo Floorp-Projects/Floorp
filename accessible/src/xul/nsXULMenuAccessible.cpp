@@ -449,10 +449,10 @@ NS_IMETHODIMP nsXULMenuitemAccessible::DoAction(PRUint8 index)
 }
 
 /** select us! close combo box if necessary*/
-NS_IMETHODIMP nsXULMenuitemAccessible::GetActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsXULMenuitemAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
-  if (index == eAction_Click) {
-    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("click"), _retval); 
+  if (aIndex == eAction_Click) {
+    aName.AssignLiteral("click"); 
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;
@@ -498,7 +498,7 @@ NS_IMETHODIMP nsXULMenuSeparatorAccessible::DoAction(PRUint8 index)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

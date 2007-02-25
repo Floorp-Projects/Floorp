@@ -178,17 +178,19 @@ NS_IMETHODIMP nsLinkableAccessible::GetNumActions(PRUint8 *aNumActions)
   return NS_OK;
 }
 
-/* wstring getAccActionName (in PRUint8 index); */
-NS_IMETHODIMP nsLinkableAccessible::GetActionName(PRUint8 index, nsAString& aActionName)
+/* nsAString GetActionName (in PRUint8 Aindex); */
+NS_IMETHODIMP nsLinkableAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
   // Action 0 (default action): Jump to link
-  aActionName.Truncate();
-  if (index == eAction_Jump) {   
+  aName.Truncate();
+  if (aIndex == eAction_Jump) {   
     if (mIsLink) {
-      return nsAccessible::GetTranslatedString(NS_LITERAL_STRING("jump"), aActionName); 
+      aName.AssignLiteral("jump");
+      return NS_OK;
     }
     else if (mIsOnclick) {
-      return nsAccessible::GetTranslatedString(NS_LITERAL_STRING("click"), aActionName); 
+      aName.AssignLiteral("click");
+      return NS_OK;
     }
     return NS_ERROR_NOT_IMPLEMENTED;
   }

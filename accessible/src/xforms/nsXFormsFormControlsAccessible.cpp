@@ -128,7 +128,7 @@ NS_IMETHODIMP
 nsXFormsTriggerAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
   if (aIndex == eAction_Click) {
-    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("press"), aName);
+    aName.AssignLiteral("press");
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;
@@ -175,7 +175,7 @@ nsXFormsInputAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
   if (aIndex != eAction_Click)
     return NS_ERROR_INVALID_ARG;
 
-  nsAccessible::GetTranslatedString(NS_LITERAL_STRING("activate"), aName);
+  aName.AssignLiteral("activate");
   return NS_OK;
 }
 
@@ -241,9 +241,9 @@ nsXFormsInputBooleanAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (value.EqualsLiteral("true"))
-    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("uncheck"), aName);
+    aName.AssignLiteral("uncheck");
   else
-    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("check"), aName);
+    aName.AssignLiteral("check");
 
   return NS_OK;
 }
@@ -515,9 +515,9 @@ nsXFormsItemCheckgroupAccessible::GetActionName(PRUint8 aIndex, nsAString& aName
     return NS_ERROR_INVALID_ARG;
 
   if (IsItemSelected())
-    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("uncheck"), aName);
+    aName.AssignLiteral("uncheck");
   else
-    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("check"), aName);
+    aName.AssignLiteral("check");
 
   return NS_OK;
 }
@@ -558,7 +558,7 @@ nsXFormsItemRadiogroupAccessible::GetActionName(PRUint8 aIndex, nsAString& aName
   if (aIndex != eAction_Click)
     return NS_ERROR_INVALID_ARG;
 
-  nsAccessible::GetTranslatedString(NS_LITERAL_STRING("select"), aName);
+  aName.AssignLiteral("select");
   return NS_OK;
 }
 
@@ -648,7 +648,7 @@ nsXFormsItemComboboxAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
   if (aIndex != eAction_Click)
     return NS_ERROR_INVALID_ARG;
 
-  nsAccessible::GetTranslatedString(NS_LITERAL_STRING("select"), aName);
+  aName.AssignLiteral("select");
   return NS_OK;
 }
 

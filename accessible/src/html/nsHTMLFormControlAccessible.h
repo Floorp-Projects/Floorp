@@ -51,7 +51,7 @@ public:
   nsHTMLCheckboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
   NS_IMETHOD GetState(PRUint32 *aState); 
 };
@@ -75,7 +75,7 @@ public:
   NS_IMETHOD GetState(PRUint32 *_retval); 
   NS_IMETHOD GetName(nsAString& _retval); 
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
 };
 
@@ -90,7 +90,7 @@ public:
   NS_IMETHOD GetState(PRUint32 *_retval);
   NS_IMETHOD GetName(nsAString& aName) { aName.Truncate(); return GetHTMLName(aName, PR_TRUE); }
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
 };
 
@@ -110,7 +110,7 @@ public:
   NS_IMETHOD GetValue(nsAString& _retval); 
   NS_IMETHOD GetState(PRUint32 *_retval);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
   NS_IMETHOD GetExtState(PRUint32 *aExtState); 
 

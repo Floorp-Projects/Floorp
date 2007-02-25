@@ -595,10 +595,10 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetState(PRUint32 *_retval)
 }
 
 /** select us! close combo box if necessary*/
-NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
-  if (index == eAction_Select) {
-    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("select"), _retval); 
+  if (aIndex == eAction_Select) {
+    aName.AssignLiteral("select"); 
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;
@@ -784,7 +784,7 @@ NS_IMETHODIMP nsHTMLSelectOptGroupAccessible::DoAction(PRUint8 index)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsHTMLSelectOptGroupAccessible::GetActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsHTMLSelectOptGroupAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -990,7 +990,7 @@ NS_IMETHODIMP nsHTMLComboboxAccessible::DoAction(PRUint8 aIndex)
   *     if we are open -> closed is our name.
   * Uses the frame to get the state, updated on every click
   */
-NS_IMETHODIMP nsHTMLComboboxAccessible::GetActionName(PRUint8 aIndex, nsAString& aActionName)
+NS_IMETHODIMP nsHTMLComboboxAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
   if (aIndex != nsHTMLComboboxAccessible::eAction_Click) {
     return NS_ERROR_INVALID_ARG;
@@ -1005,9 +1005,9 @@ NS_IMETHODIMP nsHTMLComboboxAccessible::GetActionName(PRUint8 aIndex, nsAString&
     return NS_ERROR_FAILURE;
   }
   if (comboFrame->IsDroppedDown())
-    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("close"), aActionName); 
+    aName.AssignLiteral("close"); 
   else
-    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("open"), aActionName); 
+    aName.AssignLiteral("open"); 
 
   return NS_OK;
 }
@@ -1128,7 +1128,7 @@ NS_IMETHODIMP nsHTMLComboboxButtonAccessible::DoAction(PRUint8 aIndex)
   *     if we are open -> closed is our name.
   * Uses the frame to get the state, updated on every click
   */
-NS_IMETHODIMP nsHTMLComboboxButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& _retval)
+NS_IMETHODIMP nsHTMLComboboxButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
   nsIFrame *boundsFrame = GetBoundsFrame();
   nsIComboboxControlFrame* comboFrame;
@@ -1137,9 +1137,9 @@ NS_IMETHODIMP nsHTMLComboboxButtonAccessible::GetActionName(PRUint8 aIndex, nsAS
     return NS_ERROR_FAILURE;
 
   if (comboFrame->IsDroppedDown())
-    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("close"), _retval); 
+    aName.AssignLiteral("close"); 
   else
-    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("open"), _retval); 
+    aName.AssignLiteral("open");
 
   return NS_OK;
 }
@@ -1186,9 +1186,9 @@ NS_IMETHODIMP nsHTMLComboboxButtonAccessible::GetParent(nsIAccessible **aParent)
 /** 
   * Gets the name from GetActionName()
   */
-NS_IMETHODIMP nsHTMLComboboxButtonAccessible::GetName(nsAString& _retval)
+NS_IMETHODIMP nsHTMLComboboxButtonAccessible::GetName(nsAString& aName)
 {
-  return GetActionName(eAction_Click, _retval);
+  return GetActionName(eAction_Click, aName);
 }
 
 /**

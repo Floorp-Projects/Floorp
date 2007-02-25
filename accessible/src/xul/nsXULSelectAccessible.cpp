@@ -196,17 +196,17 @@ NS_IMETHODIMP nsXULListitemAccessible::GetState(PRUint32 *aState)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULListitemAccessible::GetActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsXULListitemAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
-  if (index == eAction_Click && mIsCheckbox) {
+  if (aIndex == eAction_Click && mIsCheckbox) {
     // check or uncheck
     PRUint32 state;
     GetState(&state);
 
     if (state & STATE_CHECKED)
-      _retval = NS_LITERAL_STRING("uncheck");
+      aName.AssignLiteral("uncheck");
     else
-      _retval = NS_LITERAL_STRING("check");
+      aName.AssignLiteral("check");
 
     return NS_OK;
   }
@@ -368,7 +368,7 @@ NS_IMETHODIMP nsXULComboboxAccessible::DoAction(PRUint8 aIndex)
   *     if we are open -> closed is our name.
   * Uses the frame to get the state, updated on every click
   */
-NS_IMETHODIMP nsXULComboboxAccessible::GetActionName(PRUint8 aIndex, nsAString& aActionName)
+NS_IMETHODIMP nsXULComboboxAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
   if (aIndex != nsXULComboboxAccessible::eAction_Click) {
     return NS_ERROR_INVALID_ARG;
@@ -381,9 +381,9 @@ NS_IMETHODIMP nsXULComboboxAccessible::GetActionName(PRUint8 aIndex, nsAString& 
   PRBool isDroppedDown;
   menuList->GetOpen(&isDroppedDown);
   if (isDroppedDown)
-    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("close"), aActionName); 
+    aName.AssignLiteral("close"); 
   else
-    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("open"), aActionName); 
+    aName.AssignLiteral("open"); 
 
   return NS_OK;
 }

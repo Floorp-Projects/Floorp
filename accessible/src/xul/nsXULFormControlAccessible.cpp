@@ -81,10 +81,10 @@ NS_IMETHODIMP nsXULButtonAccessible::GetNumActions(PRUint8 *_retval)
 /**
   * Return the name of our only action
   */
-NS_IMETHODIMP nsXULButtonAccessible::GetActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsXULButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
-  if (index == eAction_Click) {
-    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("press"), _retval); 
+  if (aIndex == eAction_Click) {
+    aName.AssignLiteral("press"); 
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;
@@ -245,13 +245,13 @@ PRBool nsXULDropmarkerAccessible::DropmarkerOpen(PRBool aToggleOpen)
 /**
   * Return the name of our only action
   */
-NS_IMETHODIMP nsXULDropmarkerAccessible::GetActionName(PRUint8 index, nsAString& aResult)
+NS_IMETHODIMP nsXULDropmarkerAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
-  if (index == eAction_Click) {
+  if (aIndex == eAction_Click) {
     if (DropmarkerOpen(PR_FALSE))
-      aResult.AssignLiteral("close");
+      aName.AssignLiteral("close");
     else
-      aResult.AssignLiteral("open");
+      aName.AssignLiteral("open");
     return NS_OK;
   }
 
@@ -322,17 +322,17 @@ NS_IMETHODIMP nsXULCheckboxAccessible::GetNumActions(PRUint8 *_retval)
 /**
   * Return the name of our only action
   */
-NS_IMETHODIMP nsXULCheckboxAccessible::GetActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsXULCheckboxAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
-  if (index == eAction_Click) {
+  if (aIndex == eAction_Click) {
     // check or uncheck
     PRUint32 state;
     GetState(&state);
 
     if (state & STATE_CHECKED)
-      _retval.AssignLiteral("uncheck");
+      aName.AssignLiteral("uncheck");
     else
-      _retval.AssignLiteral("check");
+      aName.AssignLiteral("check");
 
     return NS_OK;
   }
@@ -779,10 +779,10 @@ NS_IMETHODIMP nsXULTextFieldAccessible::GetNumActions(PRUint8 *_retval)
 /**
   * Return the name of our only action
   */
-NS_IMETHODIMP nsXULTextFieldAccessible::GetActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsXULTextFieldAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
-  if (index == eAction_Click) {
-    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("activate"), _retval); 
+  if (aIndex == eAction_Click) {
+    aName.AssignLiteral("activate"); 
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;
