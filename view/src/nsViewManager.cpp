@@ -72,9 +72,6 @@ static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
 static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 
-#define ARENA_ALLOCATE(var, pool, type) \
-    {void *_tmp_; PL_ARENA_ALLOCATE(_tmp_, pool, sizeof(type)); \
-    var = NS_REINTERPRET_CAST(type*, _tmp_); }
 /**
    XXX TODO XXX
 
@@ -2325,41 +2322,6 @@ NS_IMETHODIMP nsViewManager::RenderOffscreen(nsIView* aView, nsRect aRect,
 
   return mObserver->RenderOffscreen(aRect, aUntrusted, aIgnoreViewportScrolling,
                                     aBackgroundColor, aRenderedContext);
-}
-
-NS_IMETHODIMP nsViewManager::Display(nsIView* aView, nscoord aX, nscoord aY, const nsRect& aClipRect)
-{
-  nsView              *view = NS_STATIC_CAST(nsView*, aView);
-  nsCOMPtr<nsIRenderingContext> localcx;
-
-  if (! IsRefreshEnabled() || !mObserver)
-    return NS_OK;
-
-  NS_ASSERTION(!IsPainting(), "recursive painting not permitted");
-
-  SetPainting(PR_TRUE);
-
-  mContext->CreateRenderingContext(*getter_AddRefs(localcx));
-
-  //couldn't get rendering context. this is ok if at startup
-  if (nsnull == localcx)
-    {
-      SetPainting(PR_FALSE);
-      return NS_ERROR_FAILURE;
-    }
-
-  nsRect trect = view->GetBounds();
-  view->ConvertFromParentCoords(&trect.x, &trect.y);
-
-  localcx->Translate(aX, aY);
-
-  localcx->SetClipRect(aClipRect, nsClipCombine_kReplace);
-
-  nsresult rv = mObserver->Paint(view, localcx, nsRegion(trect));
-
-  SetPainting(PR_FALSE);
-
-  return rv;
 }
 
 NS_IMETHODIMP nsViewManager::AddCompositeListener(nsICompositeListener* aListener)

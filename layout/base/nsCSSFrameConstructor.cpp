@@ -4602,10 +4602,6 @@ nsCSSFrameConstructor::ConstructPageFrame(nsIPresShell*   aPresShell,
   // Initialize the page frame and force it to have a view. This makes printing of
   // the pages easier and faster.
   aPageFrame->Init(nsnull, aParentFrame, aPrevPageFrame);
-  // XXXbz should we be passing in a non-null aContentParentFrame?
-  nsresult rv = nsHTMLContainerFrame::CreateViewForFrame(aPageFrame, nsnull, PR_TRUE);
-  if (NS_FAILED(rv))
-    return NS_ERROR_NULL_POINTER;
 
   nsRefPtr<nsStyleContext> pageContentPseudoStyle;
   pageContentPseudoStyle = styleSet->ResolvePseudoStyleFor(nsnull,
@@ -4619,17 +4615,13 @@ nsCSSFrameConstructor::ConstructPageFrame(nsIPresShell*   aPresShell,
   // Initialize the page content frame and force it to have a view. Also make it the
   // containing block for fixed elements which are repeated on every page.
   aPageContentFrame->Init(nsnull, aPageFrame, nsnull);
-  // XXXbz should we be passing in a non-null aContentParentFrame?
-  nsHTMLContainerFrame::CreateViewForFrame(aPageContentFrame, nsnull, PR_TRUE);
-  if (NS_FAILED(rv))
-    return NS_ERROR_NULL_POINTER;
   mFixedContainingBlock = aPageContentFrame;
 
   aPageFrame->SetInitialChildList(nsnull, aPageContentFrame);
 
   // Fixed pos kids are taken care of directly in CreateContinuingFrame()
-  
-  return rv;
+
+  return NS_OK;
 }
 
 /* static */

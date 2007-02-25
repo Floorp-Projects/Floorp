@@ -41,7 +41,6 @@
 #include "nsIRenderingContext.h"
 #include "nsGkAtoms.h"
 #include "nsIDeviceContext.h"
-#include "nsIViewManager.h"
 #include "nsIPresShell.h"
 #include "nsIFontMetrics.h"
 #include "nsIPrintSettings.h"
@@ -275,8 +274,6 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   const nscoord x = deadSpaceGap;
   nscoord y = deadSpaceGap;// Running y-offset for each page
 
-  nsSize reflowPageSize(0,0);
-
   nsSize availSize(pageSize.width + shadowSize.width + extraMargin.LeftRight(),
                    pageSize.height + shadowSize.height +
                    extraMargin.TopBottom());
@@ -300,8 +297,6 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
     // Place and size the page. If the page is narrower than our
     // max width then center it horizontally
     ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, x, y, 0, status);
-
-    reflowPageSize.SizeTo(kidSize.width, kidSize.height);
 
     FinishReflowChild(kidFrame, aPresContext, nsnull, kidSize, x, y, 0);
     y += kidSize.height;
@@ -497,35 +492,6 @@ nsSimplePageSequenceFrame::StartPrint(nsPresContext*   aPresContext,
   // Begin printing of the document
   nsresult rv = NS_OK;
 
-#if defined(DEBUG_rods) || defined(DEBUG_dcone)
-  {
-    nsIView* seqView = GetView();
-    nsRect rect = GetRect();
-    PR_PL(("Seq Frame: %p - [%5d,%5d,%5d,%5d] ", this, rect.x, rect.y, rect.width, rect.height));
-    PR_PL(("view: %p ", seqView));
-    if (seqView) {
-      nsRect viewRect = seqView->GetBounds();
-      PR_PL((" [%5d,%5d,%5d,%5d]", viewRect.x, viewRect.y, viewRect.width, viewRect.height));
-    }
-    PR_PL(("\n"));
-  }
-
-  {
-    PRInt32 pageNum = 1;
-    for (nsIFrame* page = mFrames.FirstChild(); page;
-         page = page->GetNextSibling()) {
-      nsIView* view = page->GetView();
-      NS_ASSERTION(view, "no page view");
-      nsRect rect = page->GetRect();
-      nsRect viewRect = view->GetBounds();
-      PR_PL((" Page: %p  No: %d - [%5d,%5d,%5d,%5d] ", page, pageNum, rect.x, rect.y, rect.width, rect.height));
-      PR_PL((" [%5d,%5d,%5d,%5d]\n", viewRect.x, viewRect.y, viewRect.width, viewRect.height));
-      pageNum++;
-    }
-  }
-  //printf("***** Setting aPresContext %p is painting selection %d\n", aPresContext, nsIPrintSettings::kRangeSelection == mPrintRangeType);
-#endif
-
   // Determine if we are rendering only the selection
   aPresContext->SetIsRenderingOnlySelection(nsIPrintSettings::kRangeSelection == mPrintRangeType);
 
@@ -541,31 +507,11 @@ nsSimplePageSequenceFrame::StartPrint(nsPresContext*   aPresContext,
 
     for (nsIFrame* page = mFrames.FirstChild(); page;
          page = page->GetNextSibling()) {
-      nsIView* view = page->GetView();
-      NS_ASSERTION(view, "no page view");
-
-      nsIViewManager* vm = view->GetViewManager();
-      NS_ASSERTION(vm, "no view manager");
-
-      if (pageNum < mFromPageNum || pageNum > mToPageNum) {
-        // Hide the pages that won't be printed to the Viewmanager
-        // doesn't put them in the display list. Also, makde
-        // sure the child views don't get asked to print
-        // but my guess is that there won't be any
-        vm->SetViewVisibility(view, nsViewVisibility_kHide);
-      } else {
+      if (pageNum >= mFromPageNum && pageNum <= mToPageNum) {
         nsRect rect = page->GetRect();
         rect.y = y;
         rect.height = height;
         page->SetRect(rect);
-
-        nsRect viewRect = view->GetBounds();
-        viewRect.y = y;
-        viewRect.height = height;
-        vm->MoveViewTo(view, viewRect.x, viewRect.y);
-        viewRect.x = 0;
-        viewRect.y = 0;
-        vm->ResizeView(view, viewRect);
         y += rect.height + mMargin.top + mMargin.bottom;
       }
       pageNum++;
@@ -612,8 +558,6 @@ nsSimplePageSequenceFrame::PrintNextPage()
   // Begin printing of the document
   nsIDeviceContext *dc = GetPresContext()->DeviceContext();
 
-  nsIViewManager* vm = GetPresContext()->GetViewManager();
-
   nsresult rv = NS_OK;
 
   // See whether we should print this page
@@ -656,24 +600,12 @@ nsSimplePageSequenceFrame::PrintNextPage()
     PRBool  continuePrinting = PR_TRUE;
     PRInt32 width, height;
     dc->GetDeviceSurfaceDimensions(width, height);
-    nsRect clipRect(0, 0, width, height);
     height -= mMargin.top + mMargin.bottom;
     width  -= mMargin.left + mMargin.right;
     nscoord selectionY = height;
-    nsIView* containerView = nsnull;
-    nsRect   containerRect;
+    nsIFrame* conFrame = mCurrentPageFrame->GetFirstChild(nsnull);
     if (mSelectionHeight > -1) {
-      nsIFrame* childFrame = mFrames.FirstChild();
-      nsIFrame* conFrame = childFrame->GetFirstChild(nsnull);
-      containerView = conFrame->GetView();
-      NS_ASSERTION(containerView, "Container view can't be null!");
-      containerRect = containerView->GetBounds();
-      containerRect.y -= mYSelOffset;
-
-      vm->MoveViewTo(containerView, containerRect.x, containerRect.y);
-      nsRect r(0, 0, containerRect.width, containerRect.height);
-      vm->ResizeView(containerView, r, PR_FALSE);
-      clipRect.SetRect(mMargin.left, mMargin.right, width, height);
+      conFrame->SetPosition(conFrame->GetPosition() + nsPoint(0, -mYSelOffset));
     }
 
     // cast the frame to be a page frame
@@ -690,26 +622,22 @@ nsSimplePageSequenceFrame::PrintNextPage()
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
+      PR_PL(("SeqFr::Paint -> %p PageNo: %d", pf, mPageNum));
 
-      // Print the page
-      nsIView* view = mCurrentPageFrame->GetView();
-
-      NS_ASSERTION(view, "no page view");
-
-      PR_PL(("SeqFr::Paint -> %p PageNo: %d  View: %p", pf, mPageNum, view));
-
-      vm->Display(view, 0, 0, clipRect);
+      nsCOMPtr<nsIRenderingContext> renderingContext;
+      GetPresContext()->PresShell()->
+              CreateRenderingContext(mCurrentPageFrame,
+                                     getter_AddRefs(renderingContext));
+      nsRegion drawingRegion(nsRect(nsPoint(0, 0),
+                                    mCurrentPageFrame->GetSize()));
+      nsLayoutUtils::PaintFrame(renderingContext, mCurrentPageFrame,
+                                drawingRegion, NS_RGBA(0,0,0,0));
 
       if (mSelectionHeight > -1 && selectionY < mSelectionHeight) {
         selectionY += height;
-
         printedPageNum++;
         pf->SetPageNumInfo(printedPageNum, mTotalPages);
-        containerRect.y -= height;
-        containerRect.height += height;
-        vm->MoveViewTo(containerView, containerRect.x, containerRect.y);
-        nsRect r(0, 0, containerRect.width, containerRect.height);
-        vm->ResizeView(containerView, r, PR_FALSE);
+        conFrame->SetPosition(conFrame->GetPosition() + nsPoint(0, -height));
 
         PR_PL(("***************** End Page (PrintNextPage) *****************\n"));
         rv = dc->EndPage();

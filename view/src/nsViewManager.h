@@ -222,8 +222,6 @@ public:
   NS_IMETHOD  SetRootScrollableView(nsIScrollableView *aScrollable);
   NS_IMETHOD  GetRootScrollableView(nsIScrollableView **aScrollable);
 
-  NS_IMETHOD Display(nsIView *aView, nscoord aX, nscoord aY, const nsRect& aClipRect);
-
   NS_IMETHOD RenderOffscreen(nsIView* aView, nsRect aRect, PRBool aUntrusted,
                              PRBool aIgnoreViewportScrolling,
                              nscolor aBackgroundColor,
