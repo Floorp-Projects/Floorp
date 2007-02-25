@@ -106,9 +106,7 @@
                 onget="return this.tabs ? this.tabs.selectedItem : null;">
         <setter>
         <![CDATA[
-          if (!val)
-            return val;
-          if (this.tabs)
+          if (val && this.tabs)
             this.tabs.selectedItem = val;
           return val;
         ]]>
@@ -119,9 +117,7 @@
                 onget="return this.tabpanels ? this.tabpanels.selectedPanel : null;">
         <setter>
         <![CDATA[
-          if (!val)
-            return val;
-          if (this.tabpanels)
+          if (val && this.tabpanels)
             this.tabpanels.selectedPanel = val;
           return val;
         ]]>
@@ -627,7 +623,7 @@
       </property>
 
       <property name="selected" readonly="true"
-                onget="return (this.getAttribute('selected') == 'true')"/>
+                onget="return this.getAttribute('selected') == 'true';"/>
 
       <property name="_selected">
         <setter>
