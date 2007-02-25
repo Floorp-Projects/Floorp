@@ -1245,6 +1245,9 @@ function displayAttachmentsForExpandedView()
     // the attachment view and we end up with a box that is too tall.
     expandedAttachmentBox.collapsed = false;
     attachmentSplitter.collapsed = false;
+    
+    if (gShowLargeAttachmentView)
+      expandedAttachmentBox.setAttribute("largeView", "true");
 
     // Remove height attribute, or the attachments box could be drawn badly:
     expandedAttachmentBox.removeAttribute("height");
@@ -1260,10 +1263,7 @@ function displayAttachmentsForExpandedView()
       attachmentView.setAttribute("class", "descriptionitem-iconic"); 
 
       if (gShowLargeAttachmentView)
-      {
         attachmentView.setAttribute("largeView", "true");
-        attachmentView.setAttribute("orient", "vertical");
-      }
 
       setApplicationIconForAttachment(attachment, attachmentView, gShowLargeAttachmentView);
       attachmentView.setAttribute("tooltip", "attachmentListTooltip");

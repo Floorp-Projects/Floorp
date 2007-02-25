@@ -100,13 +100,17 @@ description[selectable="true"]:focus > descriptionitem[selected="true"]
   width: 15em;
 }
 
-.attachmentBox[largeView="true"]
+#attachmentView[largeView="true"] .attachmentBox
 {
-  -moz-box-align: center;
-  -moz-box-pack: center;
+  -moz-box-orient: vertical;
 }
 
 #attachmentView
+{
+  min-height: 30px;
+}
+
+#attachmentView[largeView="true"]
 {
   min-height: 55px;
 }
