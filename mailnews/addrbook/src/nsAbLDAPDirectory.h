@@ -90,22 +90,15 @@ public:
     NS_DECL_NSIABLDAPDIRECTORY
 
 protected:
-
-    // historically, these classes weren't always friends, but since they
-    // are now (and should be), code and interface contortions that are used
-    // can probably go away.
-    friend class nsAbLDAPDirectoryQuery;
-    friend class nsAbQueryLDAPMessageListener;
-
-    nsresult Initiate ();
-    nsresult InitiateConnection ();
+    nsresult Initiate();
+    nsresult InitiateConnection();
 
     PRPackedBool mInitialized;
     PRPackedBool mInitializedConnection;
     PRPackedBool mPerformingQuery;
     PRInt32 mContext;
     PRInt32 mMaxHits;
-    nsCOMPtr<nsILDAPURL> mURL ;
+    nsCOMPtr<nsILDAPURL> mURL;
     nsCOMPtr<nsILDAPConnection> mConnection;
 
     nsCOMPtr<nsIAbBooleanExpression> mExpression;

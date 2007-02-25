@@ -270,17 +270,21 @@ nsresult nsAbQueryLDAPMessageListener::DoTask()
   // I don't _think_ it's ever actually possible to get here without having
   // an nsAbLDAPDirectory object, but, just in case, I'll do a QI instead
   // of just static casts...
-  nsCOMPtr<nsIAbLDAPDirectory> nsIAbDir =
+  nsCOMPtr<nsIAbLDAPDirectory> abLDAPDir =
     do_QueryInterface(mDirectoryQuery, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsAbLDAPDirectory *dir =
-    NS_STATIC_CAST(nsAbLDAPDirectory *,
-                   NS_STATIC_CAST(nsIAbLDAPDirectory *, nsIAbDir.get()));
 
-  rv = mSearchOperation->SetServerControls(dir->mSearchServerControls.get());
+  nsCOMPtr<nsIMutableArray> searchControls;
+  rv = abLDAPDir->GetSearchServerControls(getter_AddRefs(searchControls));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mSearchOperation->SetClientControls(dir->mSearchClientControls.get());
+  rv = mSearchOperation->SetServerControls(searchControls);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = abLDAPDir->GetSearchClientControls(getter_AddRefs(searchControls));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mSearchOperation->SetClientControls(searchControls);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return mSearchOperation->SearchExt(dn, scope, filter, attributes.GetSize(),
@@ -411,8 +415,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbLDAPDirectoryQuery, nsIAbDirectoryQuery)
 
 nsAbLDAPDirectoryQuery::nsAbLDAPDirectoryQuery() :
     mProtocolVersion (nsILDAPConnection::VERSION3),
-    mInitialized(PR_FALSE),
-    mLock (nsnull)
+    mInitialized(PR_FALSE)
 {
 }
 
@@ -426,23 +429,6 @@ nsAbLDAPDirectoryQuery::~nsAbLDAPDirectoryQuery()
        msgListener->mDirectoryQuery = nsnull;
        msgListener->mQueryListener = nsnull;
      }
-     if(mLock)
-        PR_DestroyLock (mLock);
-}
-nsresult nsAbLDAPDirectoryQuery::Initiate ()
-{
-    if (mInitialized)
-        return NS_OK;
-
-    mLock = PR_NewLock ();
-    if(!mLock)
-    {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    mInitialized = PR_TRUE;
-
-    return NS_OK;
 }
 
 NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* arguments,
@@ -452,13 +438,12 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
         PRInt32* _retval)
 {
     PRBool alreadyInitialized = mInitialized;
-    nsresult rv = Initiate ();
-    NS_ENSURE_SUCCESS(rv, rv);
+    mInitialized = PR_TRUE;
 
     // Get the scope
     nsCAutoString scope;
     PRBool doSubDirectories;
-    rv = arguments->GetQuerySubDirectories (&doSubDirectories);
+    nsresult rv = arguments->GetQuerySubDirectories (&doSubDirectories);
     NS_ENSURE_SUCCESS(rv, rv);
     scope = (doSubDirectories) ? "sub" : "one";
 
@@ -507,7 +492,7 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
     }
 
     // Set up the search ldap url
-    rv = GetLDAPURL (getter_AddRefs (mDirectoryUrl));
+    rv = GetLDAPURL(getter_AddRefs(mDirectoryUrl));
     NS_ENSURE_SUCCESS(rv, rv);
     
     nsCAutoString host;
@@ -524,7 +509,7 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
 
     PRUint32 options;
     rv = mDirectoryUrl->GetOptions(&options);
-    NS_ENSURE_SUCCESS(rv,rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // get the directoryFilter from the directory url and merge it with the user's
     // search filter
@@ -622,18 +607,18 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
 /* void stopQuery (in long contextID); */
 NS_IMETHODIMP nsAbLDAPDirectoryQuery::StopQuery(PRInt32 contextID)
 {
-    nsresult rv = Initiate ();
-    NS_ENSURE_SUCCESS(rv, rv);
+  mInitialized = PR_TRUE;
 
-    if (!mListener)
-            return NS_OK;
+  if (!mListener)
+    return NS_OK;
 
-    nsAbQueryLDAPMessageListener *listener = 
-      NS_STATIC_CAST(nsAbQueryLDAPMessageListener *, 
-      NS_STATIC_CAST(nsILDAPMessageListener *, mListener.get()));
-    if (listener)
-      rv = listener->Cancel ();
-    return rv;
+  nsAbQueryLDAPMessageListener *listener = 
+    NS_STATIC_CAST(nsAbQueryLDAPMessageListener *, 
+                   NS_STATIC_CAST(nsILDAPMessageListener *, mListener.get()));
+  if (listener)
+    return listener->Cancel();
+
+  return NS_OK;
 }
 
 
