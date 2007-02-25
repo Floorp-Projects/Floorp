@@ -10525,7 +10525,6 @@
 				3F44AFA005BDFBA000CB4B08,
 				3F44AFA105BDFBA000CB4B08,
 				3F44AFA205BDFBA000CB4B08,
-				3F44AFA305BDFBA000CB4B08,
 				3F44AFA405BDFBA000CB4B08,
 				3F44AFA505BDFBA000CB4B08,
 				3F44AFA605BDFBA000CB4B08,
@@ -10658,12 +10657,6 @@
 		};
 		3F44AFA205BDFBA000CB4B08 = {
 			fileRef = F56F246002AC723001A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AFA305BDFBA000CB4B08 = {
-			fileRef = F56F246102AC723001A967F3;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -16545,7 +16538,6 @@
 				F56F245002AC714601A967F3,
 				F56F245102AC714601A967F3,
 				F56F246002AC723001A967F3,
-				F56F246102AC723001A967F3,
 				F56F246202AC723001A967F3,
 				F56F246402AC723001A967F3,
 				F56F246502AC723001A967F3,
@@ -16664,14 +16656,6 @@
 			lastKnownFileType = archive.ar;
 			name = libdocshell.a;
 			path = ../docshell/build/libdocshell.a;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		F56F246102AC723001A967F3 = {
-			isa = PBXFileReference;
-			lastKnownFileType = archive.ar;
-			name = libeditor.a;
-			path = ../editor/libeditor/build/libeditor.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};

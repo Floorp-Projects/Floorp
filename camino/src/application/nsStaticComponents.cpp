@@ -75,7 +75,6 @@
     MODULE(docshell_provider) \
     MODULE(embedcomponents) \
     MODULE(Browser_Embedding_Module) \
-    MODULE(nsEditorModule) \
     MODULE(nsTransactionManagerModule) \
     MODULE(application) \
     MODULE(nsCookieModule) \
