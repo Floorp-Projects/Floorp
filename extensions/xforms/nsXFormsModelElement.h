@@ -224,10 +224,10 @@ public:
   {
   private:
     /** The control the iterator is currently pointing at */
-    nsXFormsControlListItem  *mCur;
+    nsRefPtr<nsXFormsControlListItem> mCur;
 
     /** A stack of non-visited nodes */
-    nsVoidArray               mStack;
+    nsVoidArray                       mStack;
 
   public:
     iterator();
