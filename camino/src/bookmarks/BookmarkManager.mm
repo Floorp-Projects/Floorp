@@ -2075,7 +2075,6 @@ static BookmarkManager* gBookmarkManager = nil;
   }
 
   NSString* stdPath = [pathToFile stringByStandardizingPath];
-  NSString* backupFile = [NSString stringWithFormat:@"%@.new", stdPath];
   // Use the more roundabout NSPropertyListSerialization/NSData method when possible
   // for now to try to get useful error data for bug 337750
   BOOL success;
@@ -2090,29 +2089,15 @@ static BookmarkManager* gBookmarkManager = nil;
       return;
     }
     NSError* error = nil;
-    success = [bookmarkData writeToFile:backupFile options:NSAtomicWrite error:&error];
+    success = [bookmarkData writeToFile:stdPath options:NSAtomicWrite error:&error];
     if (!success)
       NSLog(@"writePropertyListFile: %@ (%@)",
             [error localizedDescription], [error localizedFailureReason]);
   }
   else {
-    success = [dict writeToFile:backupFile atomically:YES];
+    success = [dict writeToFile:stdPath atomically:YES];
   }
-  if (success) {
-    NSFileManager* fm = [NSFileManager defaultManager];
-    long long bmFileSize = [fm sizeOfFileAtPath:backupFile traverseLink:YES];
-    if (bmFileSize > 0) {
-      BOOL removedOld = [fm removeFileAtPath:stdPath handler:self];               // out with the old...
-      BOOL movedNew   = [fm movePath:backupFile toPath:stdPath handler:self];     //  ... in with the new
-      if (!removedOld || !movedNew)
-        NSLog(@"writePropertyList: move failed (removed old file at %@ (OK %d), moved new file from %@ (OK %d)",
-                      stdPath, removedOld,
-                      backupFile, movedNew);
-    }
-    else
-      NSLog(@"writePropertyList: saved bookmarks file was empty (%qi bytes))", bmFileSize);
-  }
-  else
+  if (!success)
     NSLog(@"writePropertyList: Failed to write file %@", pathToFile);
 }
 
