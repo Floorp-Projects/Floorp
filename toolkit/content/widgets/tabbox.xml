@@ -163,7 +163,7 @@
                 }
               break;
             case event.DOM_VK_LEFT:
-              if (event.metaKey &&  event.altKey && !event.shiftKey && !event.ctrlKey)
+              if (event.metaKey && event.altKey && !event.shiftKey && !event.ctrlKey)
                 if (this.tabbox.tabs && this.tabbox._handleMetaAltArrows) {
                   var offset = window.getComputedStyle(this.tabbox, "")
                                      .direction == "ltr" ? -1 : 1;
@@ -173,7 +173,7 @@
                 }
               break;
             case event.DOM_VK_RIGHT:
-              if (event.metaKey &&  event.altKey && !event.shiftKey && !event.ctrlKey)
+              if (event.metaKey && event.altKey && !event.shiftKey && !event.ctrlKey)
                 if (this.tabbox.tabs && this.tabbox._handleMetaAltArrows) {
                   var offset = window.getComputedStyle(this.tabbox, "")
                                      .direction == "ltr" ? 1 : -1;
@@ -413,12 +413,12 @@
             if (aNewTab == requestedTab)
               return;
           }
-          
+
+          var isTabFocused = false;
           try {
-            var isTabFocused = document.commandDispatcher.focusedElement == this.selectedItem;
-          } catch (e) {
-            isTabFocused = false;
-          }
+            isTabFocused =
+              (document.commandDispatcher.focusedElement == this.selectedItem);
+          } catch (e) {}
           this.selectedItem = aNewTab;
           if (isTabFocused) {
             aNewTab.focus();
@@ -444,7 +444,6 @@
         ]]>
         </body>
       </method>
-
 
       <method name="advanceSelectedTab">
         <parameter name="aDir"/>
