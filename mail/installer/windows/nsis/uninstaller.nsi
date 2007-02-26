@@ -192,7 +192,7 @@ Section "Uninstall"
   ; will always replace the keys when installing even if there is another 
   ; install of Thunderbird that is set as the
   ; default app. Now the keys are always updated on install but are only
-  ; removed if they refers to this install location.
+  ; removed if they refer to this install location.
   ${If} "$INSTDIR" == "$R1"
     ; XXXrstrong - if there is another installation of the same app ideally we
     ; would just modify these values. The GetSecondInstallPath macro could be
