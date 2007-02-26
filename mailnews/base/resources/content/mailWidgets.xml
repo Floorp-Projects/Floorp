@@ -2037,6 +2037,8 @@
             // skip servers, Trash and Junk folders
             if (!aFolder || aFolder.isServer || aFolder.getFlag(kMsgPopupFolderFlagJunk) || aFolder.getFlag(kMsgPopupFolderFlagTrash))
               return false;
+            var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);         
+            var showPreviewText = pref.getBoolPref("mail.biff.alert.show_preview");
             var folderArray = new Array;
             if (aFolder.flags  & MSG_FOLDER_FLAG_VIRTUAL)
             {
@@ -2069,20 +2071,23 @@
               if (!numMsgKeys.value)
                 continue;
 
-              // fetchMsgPreviewText forces the previewText property to get generated
-              // for each of the message keys.
-              try {
-                aFolder.fetchMsgPreviewText(msgKeys.value, numMsgKeys.value, false, aUrlListener, aOutAsync);
-                aFolder.setMsgDatabase(null);
-              }
-              catch (ex)
-              {
-                // fetchMsgPreviewText throws an error when we call it on a news folder, we should just not show
-                // the tooltip if this method returns an error.
-                aFolder.setMsgDatabase(null);
-                continue; 
-              }
 
+              if (showPreviewText)
+              {
+                // fetchMsgPreviewText forces the previewText property to get generated
+                // for each of the message keys.
+                try {
+                  aFolder.fetchMsgPreviewText(msgKeys.value, numMsgKeys.value, false, aUrlListener, aOutAsync);
+                  aFolder.setMsgDatabase(null);
+                }
+                catch (ex)
+                {
+                  // fetchMsgPreviewText throws an error when we call it on a news folder, we should just not show
+                  // the tooltip if this method returns an error.
+                  aFolder.setMsgDatabase(null);
+                  continue; 
+                }
+              }
               // if fetching the preview text is going to be an asynch operation and the caller
               // is set up to handle that fact, then don't bother filling in any of the fields since 
               // we'll have to do this all over again when the fetch for the preview text completes.
