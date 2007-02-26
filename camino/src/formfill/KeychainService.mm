@@ -96,6 +96,9 @@ GetNSWindow(nsIDOMWindow* inWindow);
 
 @interface KeychainService(Private)
 - (KeychainItem*)findLegacyKeychainEntryForHost:(NSString*)host port:(PRInt32)port;
+- (void)upgradeLegacyKeychainEntry:(KeychainItem*)keychainItem
+                        withScheme:(NSString*)scheme
+                            isForm:(BOOL)isFrom;
 @end
 
 @implementation KeychainService
@@ -294,18 +297,16 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
                      scheme:(NSString*)scheme
                      isForm:(BOOL)isForm
 {
+  // If this is one of our old items, upgrade it to the new format. We do this here instead of when
+  // we first find the item so that users trying out 1.1 previews won't be missing the passwords of
+  // all the sites they visit if/when they go back to 1.0.x, as well as to prevent passwords from accidentally
+  // being associated with the wrong type (e.g., if a user has a password stored for a site's web form,
+  // but hits the http auth dialog first).
+  if ([keychainItem authenticationType] == kSecAuthenticationTypeHTTPDigest)
+    [self upgradeLegacyKeychainEntry:keychainItem withScheme:scheme isForm:isForm];
+  
   if ([username isEqualToString:[keychainItem username]] || [keychainItem creator] == kCaminoKeychainCreatorCode) {
     [keychainItem setUsername:username password:password];
-    // If this is one of our old items, upgrade it to the new format. We do this here instead of when
-    // we first find the item so that users trying out 1.1 previews won't be missing the passwords of
-    // all the sites they visit if/when they go back to 1.0.x, as well as to prevent passwords from accidentally
-    // being associated with the wrong type (e.g., if a user has a password stored for a site's web form,
-    // but hits the http auth dialog first).
-    if ([keychainItem authenticationType] == kSecAuthenticationTypeHTTPDigest) {
-      [keychainItem setProtocol:([scheme isEqualToString:@"https"] ? kSecProtocolTypeHTTPS : kSecProtocolTypeHTTP)];
-      [keychainItem setAuthenticationType:(isForm ? kSecAuthenticationTypeHTMLForm : kSecAuthenticationTypeDefault)];
-      [keychainItem setCreator:kCaminoKeychainCreatorCode];
-    }
   }
   else {
     KeychainItem* newItem = [KeychainItem addKeychainItemForHost:[keychainItem host]
@@ -316,6 +317,17 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
                                                         password:password];
     [newItem setCreator:kCaminoKeychainCreatorCode];
   }
+}
+
+- (void)upgradeLegacyKeychainEntry:(KeychainItem*)keychainItem
+                        withScheme:(NSString*)scheme
+                            isForm:(BOOL)isForm
+{
+  [keychainItem setProtocol:([scheme isEqualToString:@"https"] ? kSecProtocolTypeHTTPS
+                                                               : kSecProtocolTypeHTTP)];
+  [keychainItem setAuthenticationType:(isForm ? kSecAuthenticationTypeHTMLForm
+                                              : kSecAuthenticationTypeDefault)];
+  [keychainItem setCreator:kCaminoKeychainCreatorCode];
 }
 
 // Removes all Camino-created keychain entries. This will only remove new-style entries,
