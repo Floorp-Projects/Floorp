@@ -526,36 +526,24 @@ NS_IMETHODIMP nsMailboxService::NewURI(const nsACString &aSpec,
                                        nsIURI *aBaseURI,
                                        nsIURI **_retval)
 {
-    nsresult rv = NS_OK;
-    nsACString::const_iterator b, e;
-    if (FindInReadable(NS_LITERAL_CSTRING("?uidl="), aSpec.BeginReading(b), aSpec.EndReading(e)) ||
-        FindInReadable(NS_LITERAL_CSTRING("&uidl="), aSpec.BeginReading(b), aSpec.EndReading(e)))
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIURI> aMsgUri = do_CreateInstance(kCMailboxUrl, &rv);
+      
+  if (NS_SUCCEEDED(rv))
   {
-    nsCOMPtr<nsIProtocolHandler> handler = 
-             do_GetService(kCPop3ServiceCID, &rv);
-    if (NS_SUCCEEDED(rv))
-        rv = handler->NewURI(aSpec, aOriginCharset, aBaseURI, _retval);
-  }
-  else
-  {
-    nsCOMPtr<nsIURI> aMsgUri = do_CreateInstance(kCMailboxUrl, &rv);
-        
-    if (NS_SUCCEEDED(rv))
+    if (aBaseURI) 
     {
-      if (aBaseURI) 
-      {
-        nsCAutoString newSpec;
-        rv = aBaseURI->Resolve(aSpec, newSpec);
-        if (NS_FAILED(rv))
-          return rv;
-        aMsgUri->SetSpec(newSpec);
-      } 
-      else 
-      {
-        aMsgUri->SetSpec(aSpec);
-      }
-      NS_ADDREF(*_retval = aMsgUri);
+      nsCAutoString newSpec;
+      rv = aBaseURI->Resolve(aSpec, newSpec);
+      if (NS_FAILED(rv))
+        return rv;
+      aMsgUri->SetSpec(newSpec);
+    } 
+    else 
+    {
+      aMsgUri->SetSpec(aSpec);
     }
+    NS_ADDREF(*_retval = aMsgUri);
   }
 
   return rv;
@@ -565,6 +553,24 @@ NS_IMETHODIMP nsMailboxService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
   NS_ENSURE_ARG_POINTER(aURI);
   nsresult rv = NS_OK;
+  nsCAutoString spec;
+  aURI->GetSpec(spec);
+
+  nsACString::const_iterator b, e;
+  if (FindInReadable(NS_LITERAL_CSTRING("?uidl="), spec.BeginReading(b), spec.EndReading(e)) ||
+      FindInReadable(NS_LITERAL_CSTRING("&uidl="), spec.BeginReading(b), spec.EndReading(e)))
+  {
+    nsCOMPtr<nsIProtocolHandler> handler = 
+             do_GetService(kCPop3ServiceCID, &rv);
+    if (NS_SUCCEEDED(rv))
+    {
+      nsCOMPtr <nsIURI> pop3Uri;
+
+      rv = handler->NewURI(spec, "" /* ignored */, aURI, getter_AddRefs(pop3Uri));
+      NS_ENSURE_SUCCESS(rv, rv);
+      return handler->NewChannel(pop3Uri, _retval);
+    }
+  }
   nsMailboxProtocol * protocol = new nsMailboxProtocol(aURI);
   if (protocol)
   {
