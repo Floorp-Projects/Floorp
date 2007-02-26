@@ -1,7 +1,5 @@
 /pub/mozilla.org/thunderbird/nightly/latest-trunk/thunderbird-3.0a1.en-US.mac.complete.mar
 /pub/mozilla.org/thunderbird/nightly/latest-trunk/thunderbird-3.0a1.en-US.mac.dmg
-/pub/mozilla.org/thunderbird/nightly/latest-trunk/thunderbird-3.0a1.en-US.linux-i686.complete.mar
-/pub/mozilla.org/thunderbird/nightly/latest-trunk/thunderbird-3.0a1.en-US.linux-i686.tar.bz2
 /pub/mozilla.org/thunderbird/nightly/latest-trunk/thunderbird-3.0a1.en-US.win32.zip
 /pub/mozilla.org/thunderbird/nightly/latest-trunk/thunderbird-3.0a1.en-US.win32.complete.mar
 /pub/mozilla.org/thunderbird/nightly/latest-trunk/thunderbird-3.0a1.en-US.win32.installer.exe
