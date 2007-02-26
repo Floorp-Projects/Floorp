@@ -333,7 +333,7 @@ sub do_edit_category{
     
     trick_taint($name);
     detaint_natural($product_id);
-    bugzilla->batch(1);
+    Bugzilla->batch(1);
     eval{
         validate_selection($product_id, 'id', 'products');
     };

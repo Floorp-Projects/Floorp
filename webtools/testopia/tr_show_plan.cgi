@@ -366,7 +366,7 @@ sub do_update {
     
     validate_selection($type, 'type_id', 'test_plan_types');
     
-    my $version = Bugzilla::Version::check_version($prodver, $product->id);
+    my $version = Bugzilla::Version::check_version($product, $prodver);
        
     if($plan->diff_plan_doc($newdoc) ne ''){
         $plan->store_text($plan->id, Bugzilla->user->id, $newdoc);

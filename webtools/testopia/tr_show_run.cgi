@@ -26,7 +26,8 @@ use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::Util;
-use Bubzilla::User;
+use Bugzilla::User;
+use Bugzilla::Version;
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::TestRun;
 use Bugzilla::Testopia::TestCaseRun;
@@ -364,7 +365,7 @@ sub do_update {
     $timestamp = get_time_stamp() if !$cgi->param('status') && !$run->stop_date;
     
     my $summary = $cgi->param('summary') || '';
-    my $prodver = Bugzilla::Version::check_version($cgi->param('product_version'), $run->plan->product_id);
+    my $prodver = Bugzilla::Version::check_version($run->plan->product, $cgi->param('product_version'));
     my $planver = $cgi->param('plan_version');
     my $build   = $cgi->param('build');
     my $env     = $cgi->param('environment');
@@ -375,7 +376,6 @@ sub do_update {
     ThrowUserError('testopia-missing-required-field', {'field' => 'environment'}) if ($env eq '');
     
     trick_taint($summary);
-    trick_taint($prodver);
     trick_taint($planver);
     trick_taint($notes);
     
