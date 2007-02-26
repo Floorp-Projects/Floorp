@@ -133,6 +133,22 @@ NS_IMETHODIMP nsUnicodeToHZ::ConvertNoBuff(
   *aSrcLength = i;
   return NS_OK;
 }
+
+NS_IMETHODIMP nsUnicodeToHZ::FinishNoBuff(char * aDest, PRInt32 * aDestLength)
+{
+  if ( mHZState == HZ_STATE_GB )
+  {
+    // if we are in HZ mode, end it by adding a '~}' ESC sequence
+    mHZState = HZ_STATE_ASCII;
+    aDest[0] = '~';
+    aDest[1] = '}';
+    *aDestLength = 2;
+  } else {
+    *aDestLength = 0;
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsUnicodeToHZ::FillInfo(PRUint32 *aInfo)
 {
   mUtil.FillGB2312Info(aInfo);
