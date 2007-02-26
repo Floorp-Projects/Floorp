@@ -772,8 +772,12 @@ if ($format->{'extension'} eq 'atom') {
       'priority',
       'bug_severity',
       'assigned_to_realname',
-      'bug_status'
+      'bug_status',
+      'product',
+      'component',
+      'resolution'
     );
+    push(@required_atom_columns, 'target_milestone') if Bugzilla->params->{'usetargetmilestone'};
 
     foreach my $required (@required_atom_columns) {
         push(@selectcolumns, $required) if !grep($_ eq $required,@selectcolumns);
