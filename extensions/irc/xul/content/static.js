@@ -397,15 +397,8 @@ function initStatic()
 
 function initApplicationCompatibility()
 {
-    // This routine does nothing more than tweak the UI based on the host
+    // This function does nothing more than tweak the UI based on the host
     // application.
-
-    /* client.hostCompat.typeChromeBrowser indicates whether we should use
-     * type="chrome" <browser> elements for the output window documents.
-     * Using these is necessary to work properly with xpcnativewrappers, but
-     * broke selection in older builds.
-     */
-    client.hostCompat.typeChromeBrowser = false;
 
     // Set up simple host and platform information.
     client.host = "Unknown";
@@ -417,21 +410,16 @@ function initApplicationCompatibility()
         {
             case "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}":
                 client.host = "Firefox";
-                if (compareVersions(app.version, "1.4") <= 0)
-                    client.hostCompat.typeChromeBrowser = true;
                 break;
             case "{" + __cz_guid + "}":
                 // We ARE the app, in other words, we're running in XULrunner.
                 client.host = "XULrunner";
-                client.hostCompat.typeChromeBrowser = true;
                 break;
             case "{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}": // SeaMonkey
                 client.host = "Mozilla";
-                client.hostCompat.typeChromeBrowser = true;
                 break;
             case "{a463f10c-3994-11da-9945-000d60ca027b}": // Flock
                 client.host = "Flock";
-                client.hostCompat.typeChromeBrowser = true;
                 break;
             default:
                 client.unknownUID = app.ID;
@@ -2774,6 +2762,15 @@ function client_statechange (webProgress, request, stateFlags, status)
                     dd("Exception removing progress listener (done): " + ex);
                 }
             }
+            // XXX: For about:blank it won't find initOutputWindow. Cope.
+            else if (!cwin || !cwin.location ||
+                     (cwin.location.href != "about:blank"))
+            {
+                // This should totally never ever happen. It will if we get in a
+                // fight with xpcnativewrappers, though. Oops:
+                dd("Couldn't find a content window or its initOutputWindow " + 
+                   "function. This is BAD!");
+            }
         }
     }
 }
@@ -2926,11 +2923,7 @@ function getTabForObject (source, create)
 
         var browser = document.createElement ("browser");
         browser.setAttribute("class", "output-container");
-        // Only use type="chrome" if the host app supports it properly:
-        if (client.hostCompat.typeChromeBrowser)
-            browser.setAttribute("type", "chrome");
-        else
-            browser.setAttribute("type", "content");
+        browser.setAttribute("type", "content");
         browser.setAttribute("flex", "1");
         browser.setAttribute("tooltip", "html-tooltip-node");
         browser.setAttribute("context", "context:messages");
