@@ -3800,7 +3800,10 @@ nsMsgComposeAndSend::DoDeliveryExitProcessing(nsIURI * aUri, nsresult aExitCode,
   //
   // Tell the listeners that we are done with the sending operation...
   //
-  NotifyListenerOnStopSending(nsnull, aExitCode, nsnull, nsnull);
+  NotifyListenerOnStopSending(mCompFields->GetMessageId(),
+                              aExitCode,
+                              nsnull,
+                              nsnull);
 
   // If we hit here, we are done with delivery!
   //

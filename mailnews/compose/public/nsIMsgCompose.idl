@@ -130,7 +130,7 @@ interface nsIMsgComposeRecyclingListener : nsISupports {
   void onReopen(in nsIMsgComposeParams params);
 };
 
-[scriptable, uuid(41A7933D-DAC3-4a42-AA88-373A7DEA9F12)]
+[scriptable, uuid(69A74559-7397-489a-9596-142773F8E59C)]
 interface nsIMsgCompose : nsISupports {
 
   /* ... */
@@ -258,9 +258,6 @@ interface nsIMsgCompose : nsISupports {
   /* Retreive the progress object */
   readonly attribute nsIMsgProgress progress;
   
-  /* Retreive the external send listener */
-  nsIMsgSendListener getExternalSendListener();
-  
 	/* ... */
   [noscript] void buildBodyMessageAndSignature();
   
@@ -284,6 +281,13 @@ interface nsIMsgCompose : nsISupports {
      (i.e. via reply, forward inline or a quoting operation) into the document 
    */
   attribute boolean insertingQuotedContent;
+
+  /* for easier use of nsIMsgSendListener */
+  void addMsgSendListener(in nsIMsgSendListener sendListener);
+
+  /* for easier use of nsIMsgSendListener */
+  void removeMsgSendListener(in nsIMsgSendListener sendListener);
+
 };
 
 /* send listener interface */

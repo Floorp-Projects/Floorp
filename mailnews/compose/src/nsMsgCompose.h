@@ -38,6 +38,7 @@
 #ifndef _nsMsgCompose_H_
 #define _nsMsgCompose_H_
 
+#include "nsCOMArray.h"
 #include "nsIMsgCompose.h"
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
@@ -66,7 +67,7 @@ class nsMsgComposeSendListener;
 class nsIAddrDatabase;
 class nsIEditorMailSupport;
 
-class nsMsgCompose : public nsIMsgCompose, public nsSupportsWeakReference
+class nsMsgCompose : public nsIMsgCompose, public nsSupportsWeakReference, public nsIMsgSendListener
 {
  public: 
 
@@ -78,6 +79,9 @@ class nsMsgCompose : public nsIMsgCompose, public nsSupportsWeakReference
 
 	/*** nsIMsgCompose pure virtual functions */
 	NS_DECL_NSIMSGCOMPOSE
+
+  /* nsIMsgSendListener interface */
+  NS_DECL_NSIMSGSENDLISTENER
 
 private:
 
@@ -158,8 +162,9 @@ private:
   nsMsgDispositionState                     mDraftDisposition;
   nsCOMPtr <nsIMsgDBHdr>                    mOrigMsgHdr;
 
-  nsCOMPtr<nsIMsgSendListener>              mExternalSendListener;
   nsCString                                 mSmtpPassword;
+
+  nsCOMArray<nsIMsgSendListener>            mExternalSendListeners;
     
   PRBool                                    mInsertingQuotedContent;
     
