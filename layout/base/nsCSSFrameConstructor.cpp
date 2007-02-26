@@ -9609,12 +9609,17 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
     UpdateViewsForTree(aFrame, aViewManager, aFrameManager, invalidRect,
                        aChange);
 
+    // if frame has view, will already be invalidated
     if (!aFrame->HasView()
         && (aChange & nsChangeHint_RepaintFrame)) {
-      // if frame has view, will already be invalidated
-      invalidRect -= aFrame->GetPosition();
-
-      aFrame->Invalidate(invalidRect, PR_FALSE);
+      if (aFrame->GetParent()) {
+        // Tell the parent to invalidate instead of the frame itself in case
+        // the child is clipping invalidates
+        aFrame->GetParent()->Invalidate(invalidRect);
+      } else {
+        invalidRect -= aFrame->GetPosition();
+        aFrame->Invalidate(invalidRect, PR_FALSE);
+      }
     }
   }
 }

@@ -630,15 +630,7 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
 PRBool
 nsContainerFrame::FrameNeedsView(nsIFrame* aFrame)
 {
-  if (aFrame->NeedsView()) {
-    return PR_TRUE;
-  }
-    
-  if (aFrame->GetStyleContext()->GetStyleDisplay()->IsPositioned()) {
-    return PR_TRUE;
-  }
-
-  return PR_FALSE;
+  return aFrame->NeedsView();
 }
 
 static nscoord GetCoord(const nsStyleCoord& aCoord, nscoord aIfNotCoord)
