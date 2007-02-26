@@ -243,7 +243,11 @@ var tests =
    "123", "0173", 1, true,
    "9", "09", 1, false,
    "", "0x120x34", 2, true,
-   "18.252", "0x12fc", 2, true];
+   "18.252", "0x12fc", 2, true,
+   "89", "0x0000059", 1, true,
+   "89", "0x00000059", 1, true,
+   "103", "0x0000067", 1, true
+   ];
 for (var i = 0; i < tests.length; i+= 4) {
   ok(tests[i] === l.canonicalNum_(tests[i + 1], tests[i + 2], tests[i + 3]),
      "canonicalNum broken on: " + tests[i + 1]);
@@ -261,6 +265,11 @@ testing["413960661"] = "24.172.137.213";
 testing["03053104725"] = "24.172.137.213";
 testing["030.0254.0x89d5"] = "24.172.137.213";
 testing["1.234.4.0377"] = "1.234.4.255";
+testing["1.2.3.00x0"] = "";
+testing["10.192.95.89 xy"] = "10.192.95.89";
+testing["10.192.95.89 xyz"] = "";
+testing["1.2.3.0x0"] = "1.2.3.0";
+testing["1.2.3.4"] = "1.2.3.4";
 
 for (var key in testing) {
   ok(l.parseIPAddress_(key) === testing[key],
