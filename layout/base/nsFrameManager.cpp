@@ -703,7 +703,9 @@ nsFrameManager::RemoveFrame(nsIFrame*       aParentFrame,
   // a gap where the old frame was, we invalidate it here.  (This is
   // reasonably likely to happen when removing a last child in a way
   // that doesn't change the size of the parent.)
-  aOldFrame->Invalidate(nsRect(nsPoint(0, 0), aOldFrame->GetSize()));
+  // This has to sure to invalidate the entire overflow rect; this
+  // is important in the presence of absolute positioning
+  aOldFrame->Invalidate(aOldFrame->GetOverflowRect());
 
   return aParentFrame->RemoveFrame(aListName, aOldFrame);
 }

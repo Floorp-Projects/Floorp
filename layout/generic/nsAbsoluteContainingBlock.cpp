@@ -339,6 +339,12 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   AutoNoisyIndenter indent(nsBlockFrame::gNoisy);
 #endif // DEBUG
 
+  // Store position and overflow rect so taht we can invalidate the correct
+  // area if the position changes
+  nsRect oldOverflowRect(aKidFrame->GetOverflowRect() +
+                         aKidFrame->GetPosition());
+  nsRect oldRect = aKidFrame->GetRect();
+
   nsresult  rv;
   // Get the border values
   const nsMargin& border = aReflowState.mStyleBorder->GetBorder();
@@ -372,12 +378,6 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   aKidFrame->SetPosition(nsPoint(x, border.top +
                                     kidReflowState.mComputedOffsets.top +
                                     kidReflowState.mComputedMargin.top));
-
-  // Position its view, but don't bother it doing it now if we haven't
-  // yet determined the left offset
-  if (NS_AUTOOFFSET != kidReflowState.mComputedOffsets.left) {
-    nsContainerFrame::PositionFrameView(aKidFrame);
-  }
 
   // Do the reflow
   rv = aKidFrame->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
@@ -416,7 +416,6 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   nsRect  rect(border.left + kidReflowState.mComputedOffsets.left + kidReflowState.mComputedMargin.left,
                border.top + kidReflowState.mComputedOffsets.top + kidReflowState.mComputedMargin.top,
                kidDesiredSize.width, kidDesiredSize.height);
-  nsRect oldRect = aKidFrame->GetRect();
   aKidFrame->SetRect(rect);
 
   // Size and position the view and set its opacity, visibility, content
@@ -424,15 +423,18 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aKidFrame,
                                              aKidFrame->GetView(),
                                              &kidDesiredSize.mOverflowArea);
-  // if the frame moved, then the view would have invalidated everything so
-  // we don't need to do any invalidation here.
-  if (oldRect.TopLeft() == rect.TopLeft() &&
-      !(aDelegatingFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
-      oldRect.Size() != rect.Size()) {
-    // Invalidate the area where the frame changed size. We can't
-    // rely on the view to do this ... the view size might not change even
-    // though the frame size changed (and besides, views will go away).
-    // Invalidate the vertical strip
+
+  if (oldRect.TopLeft() != rect.TopLeft() || 
+      (aDelegatingFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+    // The frame moved; we have to invalidate the whole frame
+    // because the children may have moved after they were reflowed
+    // XXX This could be optimized in some cases, like repositioning and
+    // clipping
+    aKidFrame->GetParent()->Invalidate(oldOverflowRect);
+    aKidFrame->GetParent()->Invalidate(kidDesiredSize.mOverflowArea +
+                                       rect.TopLeft());
+  } else if (oldRect.Size() != rect.Size()) {
+    // Invalidate the area where the frame changed size.
     nscoord innerWidth = PR_MIN(oldRect.width, rect.width);
     nscoord innerHeight = PR_MIN(oldRect.height, rect.height);
     nscoord outerWidth = PR_MAX(oldRect.width, rect.width);
