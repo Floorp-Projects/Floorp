@@ -407,7 +407,7 @@ PROT_PhishingWarden.prototype.onTRFetchComplete = function(url,
 /**
  * One of our Check* methods found a problem with a request. Why do we
  * need to keep the nsIRequest (instead of just passing in the URL)? 
- * Because we need to know when to stop looking for the URL its
+ * Because we need to know when to stop looking for the URL it's
  * fetching, and to know this we need the nsIRequest.isPending flag.
  *
  * @param request nsIRequest that is problematic
