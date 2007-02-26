@@ -2818,10 +2818,7 @@ function setCurrentObject (obj)
         tb = getTabForObject(co);
     }
     if (tb)
-    {
-        tb.selected = false;
-        tb.setAttribute ("state", "normal");
-    }
+        tb.setAttribute("state", "normal");
 
     /* Unselect currently selected users.
      * If the splitter's collapsed, the userlist *isn't* visible, but we'll not
@@ -2856,8 +2853,8 @@ function setCurrentObject (obj)
     tb = dispatch("create-tab-for-view", { view: obj });
     if (tb)
     {
-        tb.selected = true;
-        tb.setAttribute ("state", "current");
+        tb.parentNode.selectedItem = tb;
+        tb.setAttribute("state", "current");
     }
 
     var vk = Number(tb.getAttribute("viewKey"));
