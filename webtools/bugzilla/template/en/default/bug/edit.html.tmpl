@@ -673,8 +673,7 @@
         <b>Reporter</b>:
       </td>
       <td>
-        <a href="mailto:[% bug.reporter.email FILTER html %]">
-          [% bug.reporter.identity FILTER html %]</a>
+        [% INCLUDE user_identity user => bug.reporter %]
       </td>
     </tr>
 
@@ -683,8 +682,7 @@
         <b><a href="page.cgi?id=fields.html#assigned_to">Assigned&nbsp;To</a></b>:
       </td>
       <td>
-        <a href="mailto:[% bug.assigned_to.email FILTER html %]">
-           [% bug.assigned_to.identity FILTER html %]</a>
+        [% INCLUDE user_identity user => bug.assigned_to %]
       </td>
     </tr>
 
@@ -705,15 +703,7 @@
         [% ELSE %]
           <input type="hidden" name="qa_contact" id="qa_contact"
                  value="[% bug.qa_contact.login FILTER html %]">
-          <a href="mailto:[% bug.qa_contact.email FILTER html %]">
-            [% IF bug.qa_contact.login && bug.qa_contact.login.length > 30 %]
-              <span title="[% bug.qa_contact.login FILTER html %]">
-                [% bug.qa_contact.identity FILTER truncate(30) FILTER html %]
-              </span>
-            [% ELSE %]
-              [% bug.qa_contact.identity FILTER html %]
-            [% END %]
-          </a>
+          [% INCLUDE user_identity user => bug.qa_contact %]
         [% END %]
       </td>
     </tr>
@@ -836,4 +826,23 @@
   [% colspan = 0 %]
   [% size = 0 %]
   [% value = undef %]
+[% END %]
+
+[%############################################################################%]
+[%# Block for user identities. Wraps the information inside of an hCard.     #%]
+[%############################################################################%]
+
+[% BLOCK user_identity %]
+  <span class="vcard">
+    [% IF user.name %]
+      <a class="email" href="mailto:[% user.email FILTER html %]">
+        <span class="fn">[% user.name FILTER html %]</span>
+        &lt;[% user.email FILTER html %]&gt;
+      </a>
+    [% ELSE %]
+      <a class="fn email" href="mailto:[% user.email FILTER html %]">
+        [% user.email FILTER html %]
+      </a>
+    [% END %]
+  </span>
 [% END %]

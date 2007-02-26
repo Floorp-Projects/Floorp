@@ -1475,7 +1475,6 @@ sub GetComments {
         my %comment = %$comment_ref;
 
         $comment{'email'} .= Bugzilla->params->{'emailsuffix'};
-        $comment{'name'} = $comment{'name'} || $comment{'email'};
 
         # If raw data is requested, do not format 'special' comments.
         $comment{'body'} = format_comment(\%comment) unless $raw;

@@ -704,11 +704,11 @@ sub prepare_comments {
     foreach my $comment (@$raw_comments) {
         if ($count) {
             $result .= "\n\n--- Comment #$count from ";
-            if ($comment->{'name'} eq $comment->{'email'}) {
-                $result .= $comment->{'email'} . Bugzilla->params->{'emailsuffix'};
-            } else {
+            if ($comment->{'name'}) {
                 $result .= $comment->{'name'} . " <" . $comment->{'email'} .
                            Bugzilla->params->{'emailsuffix'} . ">";
+            } else {
+                $result .= $comment->{'email'} . Bugzilla->params->{'emailsuffix'};
             }
             $result .= "  " . format_time($comment->{'time'}) . " ---\n";
         }

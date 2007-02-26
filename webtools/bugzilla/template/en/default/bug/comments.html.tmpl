@@ -113,8 +113,11 @@
           <span class="comment_rule">-------</span> <i>Comment
           <a name="c[% count %]" href="show_bug.cgi?id=[% bug.bug_id %]#c[% count %]">
             #[% count %]</a> From 
-          <a href="mailto:[% comment.email FILTER html %]">
-            [% comment.name FILTER html %]</a>
+          <span class="vcard">
+            <a class="fn email" href="mailto:[% comment.email FILTER html %]">
+              [% (comment.name || comment.email) FILTER html %]
+            </a>
+          </span>
           [%+ comment.time FILTER time %] 
           </i>
           [% IF mode == "edit" %]
