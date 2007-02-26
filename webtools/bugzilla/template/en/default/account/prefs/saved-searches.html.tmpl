@@ -45,15 +45,10 @@
         Show in
         Footer
       </th>
-      [% querysharegroup_regexp = '^' _ Param('querysharegroup') _ '$' %]
-      [% may_share = user.groups.keys.grep($querysharegroup_regexp).size %]
+      [% may_share = user.in_group(Param('querysharegroup')) && queryshare_groups.size %]
       [% IF may_share %]
         <th>
-          Share With
-          a Group
-          [% UNLESS queryshare_groups.size %]
-            (there are no groups you may share queries with)
-          [% END %]
+          Share With a Group
         </th>
       [% END %]
     </tr>
@@ -75,9 +70,11 @@
                value="1"
                [% " checked" IF user.showmybugslink %]>
       </td>
-      <td>
-        &mdash;
-      </td>
+      [% IF may_share %]
+        <td>
+          &mdash;
+        </td>
+      [% END %]
     </tr>
     [% FOREACH q = user.queries %]
       <tr>
@@ -104,8 +101,8 @@
                  alt="[% q.name FILTER html %]"
                  [% " checked" IF q.link_in_footer %]>
         </td>
-        <td>
-          [% IF queryshare_groups.size %]
+        [% IF may_share %]
+          <td>
             <select name="share_[% q.id FILTER html %]">
               <option value="">Don't share</option>
               [% FOREACH group = queryshare_groups %]
@@ -115,10 +112,8 @@
                 >[% group.name FILTER html %]</option>
               [% END %]
             </select>
-          [% ELSE %]
-            &mdash;
-          [% END %]
-        </td>
+          </td>
+        [% END %]
       </tr>
     [% END %]
   </table>
