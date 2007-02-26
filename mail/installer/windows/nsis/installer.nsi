@@ -62,7 +62,6 @@ Var AddQuickLaunchSC
 Var AddDesktopSC
 Var fhInstallLog
 Var fhUninstallLog
-Var ShortPathNameToExe
 
 ; Other included files may depend upon these includes!
 ; The following includes are provided by NSIS.
@@ -85,6 +84,11 @@ Var ShortPathNameToExe
 !insertmacro GetRoot
 !insertmacro DriveSpace
 
+; NSIS provided macros that we have overridden
+!include overrides.nsh
+!insertmacro LocateNoDetails
+!insertmacro TextCompareNoDetails
+
 ; The following includes are custom.
 !include branding.nsi
 !include defines.nsi
@@ -101,15 +105,16 @@ VIAddVersionKey "FileDescription" "${BrandShortName} Installer"
 !insertmacro WriteRegDWORD2
 !insertmacro CanWriteToInstallDir
 !insertmacro CheckDiskSpace
+!insertmacro GetPathFromString
+!insertmacro AddHandlerValues
+!insertmacro DisplayCopyErrMsg
 
-!include overrides.nsh
-!insertmacro LocateNoDetails
-!insertmacro TextCompareNoDetails
+!include shared.nsh
 
 Name "${BrandFullName}"
 OutFile "setup.exe"
 InstallDirRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullNameInternal} (${AppVersion})" "InstallLocation"
-InstallDir "$PROGRAMFILES\${BrandFullName}"
+InstallDir "$PROGRAMFILES\${BrandFullName}\"
 ShowInstDetails nevershow
 
 ReserveFile options.ini
@@ -190,8 +195,9 @@ Section "-Application" Section1
   SetDetailsPrint none
   SetOutPath $INSTDIR
 
-  ; Try to delete the app executable and if we can't delete it try to close the
-  ; app. This allows running an instance that is located in another directory.
+  ; Try to delete the app's main executable and if we can't delete it try to
+  ; close the app. This allows running an instance that is located in another
+  ; directory and prevents the launching of the app during the installation.
   ClearErrors
   ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
     ${DeleteFile} "$INSTDIR\${FileMainEXE}"
@@ -201,9 +207,30 @@ Section "-Application" Section1
     ${CloseApp} "true" $(WARN_APP_RUNNING_INSTALL)
     ; Try to delete it again to prevent launching the app while we are
     ; installing.
-    ${DeleteFile} "$INSTDIR\${FileMainEXE}"
     ClearErrors
+    ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+    ${If} ${Errors}
+      ClearErrors
+      ; Try closing the app a second time
+      ${CloseApp} "true" $(WARN_APP_RUNNING_INSTALL)
+      retry:
+      ClearErrors
+      ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+      ${If} ${Errors}
+        ; Fallback to the FileError_NoIgnore error with retry/cancel options
+        ${DisplayCopyErrMsg} "${FileMainEXE}"
+        GoTo retry
+      ${EndIf}
+    ${EndIf}
   ${EndIf}
+
+  ; During an install Vista checks if a new entry is added under the uninstall
+  ; registry key (e.g. ARP). When the same version of the app is installed on
+  ; top of an existing install the key is deleted / added and the Program
+  ; Compatibility Assistant doesn't see this as a new entry and displays an
+  ; error to the user. See Bug 354000.
+  StrCpy $0 "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullNameInternal} (${AppVersion})"
+  DeleteRegKey HKLM "$0"
 
   ; For a "Standard" upgrade without talkback installed add the InstallDisabled
   ; file to the talkback source files so it will be disabled by the extension
@@ -312,19 +339,6 @@ Section "-Application" Section1
     ${LogUninstall} "DLLReg: \AccessibleMarshal.dll"
     ${LogMsg} "Registered: $INSTDIR\AccessibleMarshal.dll"
   ${EndIf}
-  
-  ; MapiProxy.dll can be used by multiple applications but
-  ; is only registered for the last application installed. When the last
-  ; application installed is uninstalled MapiProxy.dll will no longer be
-  ; registered. 
-  ClearErrors
-  RegDLL "$INSTDIR\MapiProxy.dll"
-  ${If} ${Errors}
-    ${LogMsg} "** ERROR Registering: $INSTDIR\MapiProxy.dll **"
-  ${Else}
-    ${LogUninstall} "DLLReg: \MapiProxy.dll"
-    ${LogMsg} "Registered: $INSTDIR\MapiProxy.dll"
-  ${EndIf}    
 
   ; Write extra files created by the application to the uninstall.log so they
   ; will be removed when the application is uninstalled. To remove an empty
@@ -400,150 +414,40 @@ Section "-Application" Section1
   ; MUST add children first so they will be removed first on uninstall so they
   ; will be empty when the key is deleted. This allows the uninstaller to
   ; specify that only empty keys will be deleted.
+  ${SetAppKeys}
 
-  StrCpy $0 "Software\Mozilla\${BrandFullNameInternal}\${AppVersion} (${AB_CD})\Main"
-  ${WriteRegStr2} $TmpVal "$0" "Install Directory" "$INSTDIR" 0
-  ${WriteRegStr2} $TmpVal "$0" "PathToExe" "$INSTDIR\${FileMainEXE}" 0
-  ${WriteRegStr2} $TmpVal "$0" "Program Folder Path" "$SMPROGRAMS\$StartMenuDir" 0
-  ${WriteRegDWORD2} $TmpVal "$0" "Create Quick Launch Shortcut" $AddQuickLaunchSC 0
-  ${WriteRegDWORD2} $TmpVal "$0" "Create Desktop Shortcut" $AddDesktopSC 0
+  ; XXXrstrong - this should be set in shared.nsh along with "Create Quick
+  ; Launch Shortcut" and Create Desktop Shortcut.
+  StrCpy $0 "Software\Mozilla\${BrandFullNameInternal}\${AppVersion} (${AB_CD})\Uninstall"
   ${WriteRegDWORD2} $TmpVal "$0" "Create Start Menu Shortcut" $AddStartMenuSC 0
 
-  StrCpy $0 "Software\Mozilla\${BrandFullNameInternal}\${AppVersion} (${AB_CD})\Uninstall"
-  ${WriteRegStr2} $TmpVal "$0" "Uninstall Log Folder" "$INSTDIR\uninstall" 0
-  ${WriteRegStr2} $TmpVal "$0" "Description" "${BrandFullNameInternal} (${AppVersion})" 0
+  ${FixClassKeys}
 
-  StrCpy $0 "Software\Mozilla\${BrandFullNameInternal}\${AppVersion} (${AB_CD})"
-  ${WriteRegStr2} $TmpVal  "$0" "" "${AppVersion} (${AB_CD})" 0
+  ; The following keys should only be set if we can write to HKLM
+  ${If} $TmpVal == "HKLM"
+    ; Uninstall keys can only exist under HKLM on some versions of windows.
+    ${SetUninstallKeys}
 
-  StrCpy $0 "Software\Mozilla\${BrandFullNameInternal} ${AppVersion}\bin"
-  ${WriteRegStr2} $TmpVal "$0" "PathToExe" "$INSTDIR\${FileMainEXE}" 0
+    ; Set the Start Menu Internet and Vista Registered App HKLM registry keys.
+    ${SetClientsMail}
 
-  StrCpy $0 "Software\Mozilla\${BrandFullNameInternal} ${AppVersion}\extensions"
-  ${WriteRegStr2} $TmpVal "$0" "Components" "$INSTDIR\components" 0
-  ${WriteRegStr2} $TmpVal "$0" "Plugins" "$INSTDIR\plugins" 0
+    ; If we are writing to HKLM and create the quick launch and the desktop
+    ; shortcuts set IconsVisible to 1 otherwise to 0.
+    ${If} $AddQuickLaunchSC == 1
+    ${OrIf} $AddDesktopSC == 1
+      StrCpy $0 "Software\Clients\Mail\${BrandFullNameInternal}\InstallInfo"
+      WriteRegDWORD HKLM "$0" "IconsVisible" 1
+    ${Else}
+      WriteRegDWORD HKLM "$0" "IconsVisible" 0
+    ${EndIf}
+  ${EndIf}
 
-  StrCpy $0 "Software\Mozilla\${BrandFullNameInternal} ${AppVersion}"
-  ${WriteRegStr2} $TmpVal "$0" "GeckoVer" "${GREVersion}" 0
-
-  StrCpy $0 "Software\Mozilla\${BrandFullNameInternal}"
-  ${WriteRegStr2} $TmpVal "$0" "" "${GREVersion}" 0
-  ${WriteRegStr2} $TmpVal "$0" "CurrentVersion" "${AppVersion} (${AB_CD})" 0
- 
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ; Add the Mail registry keys
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  GetFullPathName /SHORT $ShortPathNameToExe "$INSTDIR\${FileMainEXE}"    
-  
-  StrCpy $0 "Software\Clients\Mail\${BrandFullNameInternal}"
-  ${WriteRegStr2} $TmpVal "$0" "" "${BrandFullNameInternal}" 0
-  GetFullPathName /SHORT $1 "$INSTDIR\mozMapi32.dll"
-  ${WriteRegStr2} $TmpVal "$0" "DLLPath" "$1" 0
-    
-  StrCpy $0 "Software\Clients\Mail\${BrandFullNameInternal}\DefaultIcon"
-  StrCpy $1 "$\"$INSTDIR\${FileMainEXE}$\",0"
-  ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
-
-  ; The Reinstall Command is defined at
-  ; http://msdn.microsoft.com/library/default.asp?url=/library/en-us/shellcc/platform/shell/programmersguide/shell_adv/registeringapps.asp
-  StrCpy $0 "Software\Clients\Mail\${BrandFullNameInternal}\InstallInfo"
-  ; the old installer didn't pass in 'mail' here...
-  StrCpy $1 "$\"$INSTDIR\uninstall\uninst.exe$\" /ua $\"${AppVersion} (${AB_CD})$\" /hs mail"
-  ${WriteRegStr2} $TmpVal "$0" "HideIconsCommand" "$1" 0
-  ${WriteRegDWORD2} $TmpVal "$0" "IconsVisible" 1 0
-  StrCpy $1 "$\"$INSTDIR\${FileMainEXE}$\" -silent -setDefaultMail"
-  ${WriteRegStr2} $TmpVal "$0" "ReinstallCommand" "$1" 0
-  StrCpy $1 "$\"$INSTDIR\uninstall\uninst.exe$\" /ua $\"${AppVersion} (${AB_CD})$\" /ss mail"
-  ${WriteRegStr2} $TmpVal "$0" "ShowIconsCommand" "$1" 0
-
-  ; shell/open/command
-  StrCpy $0 "Software\Clients\Mail\${BrandFullNameInternal}\shell\open\command"
-  ${WriteRegStr2} $TmpVal "$0" "" "$ShortPathNameToExe" 0
-  
-  ; shell/properties/command
-  StrCpy $0 "Software\Clients\Mail\${BrandFullNameInternal}\shell\properties"
-  ${WriteRegStr2} $TmpVal "$0" "" "$(OPTIONS)" 0  
-  StrCpy $0 "Software\Clients\Mail\${BrandFullNameInternal}\shell\properties\command"
-  ${WriteRegStr2} $TmpVal "$0" "" "$ShortPathNameToExe -options" 0
-  
-  ; protocols/mailto
-  StrCpy $0 "Software\Clients\Mail\${BrandFullNameInternal}\protocols\mailto"
-  ${WriteRegStr2} $TmpVal "$0" "" "URL:MailTo Protocol" 0
-  ${WriteRegStr2} $TmpVal "$0" "URL Protocol" "" 0
-  StrCpy $0 "Software\Clients\Mail\${BrandFullNameInternal}\protocols\mailto\DefaultIcon"
-  StrCpy $1 "$\"$ShortPathNameToExe$\",0"
-  ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
-  StrCpy $0 "Software\Clients\Mail\${BrandFullNameInternal}\protocols\mailto\shell\open\command"
-  StrCpy $1 "$ShortPathNameToExe -compose $\"%1$\""
-  ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
-       
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ; Add the News registry keys
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-  StrCpy $0 "Software\Clients\News\${BrandFullNameInternal}"
-  ${WriteRegStr2} $TmpVal "$0" "" "${BrandFullNameInternal}" 0
-
-  StrCpy $0 "Software\Clients\News\${BrandFullNameInternal}\DefaultIcon"
-  StrCpy $1 "$\"$INSTDIR\${FileMainEXE}$\",0"
-  ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
-  
-  ; shell/open/command
-  StrCpy $0 "Software\Clients\News\${BrandFullNameInternal}\shell\open\command"
+  ; These need special handling on uninstall since they may be overwritten by
+  ; an install into a different location.
+  StrCpy $0 "Software\Microsoft\Windows\CurrentVersion\App Paths\${FileMainEXE}"
   ${WriteRegStr2} $TmpVal "$0" "" "$INSTDIR\${FileMainEXE}" 0
-  
-  ; protocols/news
-  StrCpy $0 "Software\Clients\News\${BrandFullNameInternal}\protocols\news"
-  ${WriteRegStr2} $TmpVal "$0" "" "URL:News Protocol" 0
-  ${WriteRegStr2} $TmpVal "$0" "URL Protocol" "" 0
-  StrCpy $0 "Software\Clients\News\${BrandFullNameInternal}\protocols\news\DefaultIcon"
-  StrCpy $1 "$\"$INSTDIR\${FileMainEXE}$\",0"
-  ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
-  StrCpy $0 "Software\Clients\News\${BrandFullNameInternal}\protocols\news\shell\open\command"
-  StrCpy $1 "$INSTDIR\${FileMainEXE} -mail $\"%1$\""
-  ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
+  ${WriteRegStr2} $TmpVal "$0" "Path" "$INSTDIR" 0
 
-  ; protocols/nntp
-  StrCpy $0 "Software\Clients\News\${BrandFullNameInternal}\protocols\nntp"
-  ${WriteRegStr2} $TmpVal "$0" "" "URL:NNTP Protocol" 0
-  ${WriteRegStr2} $TmpVal "$0" "URL Protocol" "" 0
-  StrCpy $0 "Software\Clients\News\${BrandFullNameInternal}\protocols\nntp\DefaultIcon"
-  StrCpy $1 "$\"$INSTDIR\${FileMainEXE}$\",0"
-  ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
-  StrCpy $0 "Software\Clients\News\${BrandFullNameInternal}\protocols\nntp\shell\open\command"
-  StrCpy $1 "$INSTDIR\${FileMainEXE} -mail $\"%1$\""
-  ${WriteRegStr2} $TmpVal "$0" "" "$1" 0 
-  
-  ; protocols/nntp
-  StrCpy $0 "Software\Clients\News\${BrandFullNameInternal}\protocols\snews"
-  ${WriteRegStr2} $TmpVal "$0" "" "URL:Snews Protocol" 0
-  ${WriteRegStr2} $TmpVal "$0" "URL Protocol" "" 0
-  StrCpy $0 "Software\Clients\News\${BrandFullNameInternal}\protocols\snews\DefaultIcon"
-  StrCpy $1 "$\"$INSTDIR\${FileMainEXE}$\",0"
-  ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
-  StrCpy $0 "Software\Clients\News\${BrandFullNameInternal}\protocols\snews\shell\open\command"
-  StrCpy $1 "$INSTDIR\${FileMainEXE} -mail $\"%1$\""
-  ${WriteRegStr2} $TmpVal "$0" "" "$1" 0 
-  
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ; End of protocol registration
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-  ; Write the uninstall registry keys
-  StrCpy $0 "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullNameInternal} (${AppVersion})"
-  StrCpy $1 "$INSTDIR\uninstall\uninst.exe"
-
-  ${WriteRegStr2} $TmpVal "$0" "Comments" "${BrandFullNameInternal}" 0
-  ${WriteRegStr2} $TmpVal "$0" "DisplayIcon" "$INSTDIR\${FileMainEXE},0" 0
-  ${WriteRegStr2} $TmpVal "$0" "DisplayName" "${BrandFullNameInternal} (${AppVersion})" 0
-  ${WriteRegStr2} $TmpVal "$0" "DisplayVersion" "${AppVersion} (${AB_CD})" 0
-  ${WriteRegStr2} $TmpVal "$0" "InstallLocation" "$INSTDIR" 0
-  ${WriteRegStr2} $TmpVal "$0" "Publisher" "Mozilla" 0
-  ${WriteRegStr2} $TmpVal "$0" "UninstallString" "$1" 0
-  ${WriteRegStr2} $TmpVal "$0" "URLInfoAbout" "${URLInfoAbout}" 0
-  ${WriteRegStr2} $TmpVal "$0" "URLUpdateInfo" "${URLUpdateInfo}" 0
-  ${WriteRegDWORD2} $TmpVal "$0" "NoModify" 1 0
-  ${WriteRegDWORD2} $TmpVal "$0" "NoRepair" 1 0
   !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
 
   ; Create Start Menu shortcuts
@@ -709,12 +613,16 @@ FunctionEnd
 
 Function CopyFile
   StrCpy $R3 $R8 "" $R2
+  retry:
+  ClearErrors
   ${If} $R6 ==  ""
     ${Unless} ${FileExists} "$R1$R3\$R7"
       ClearErrors
       CreateDirectory "$R1$R3\$R7"
       ${If} ${Errors}
         ${LogMsg}  "** ERROR Creating Directory: $R1$R3\$R7 **"
+        ${DisplayCopyErrMsg} "$R7"
+        GoTo retry
       ${Else}
         ${LogMsg}  "Created Directory: $R1$R3\$R7"
       ${EndIf}
@@ -725,25 +633,32 @@ Function CopyFile
       CreateDirectory "$R1$R3"
       ${If} ${Errors}
         ${LogMsg}  "** ERROR Creating Directory: $R1$R3 **"
+        ${DisplayCopyErrMsg} "$R3"
+        GoTo retry
       ${Else}
         ${LogMsg}  "Created Directory: $R1$R3"
       ${EndIf}
     ${EndUnless}
     ${If} ${FileExists} "$R1$R3\$R7"
       Delete "$R1$R3\$R7"
+      ${If} ${Errors}
+        ${DisplayCopyErrMsg} "$R7"
+        GoTo retry
+      ${EndIf}
     ${EndIf}
     ClearErrors
     CopyFiles /SILENT $R9 "$R1$R3"
     ${If} ${Errors}
-      ; XXXrstrong - what should we do if there is an error installing a file?
       ${LogMsg} "** ERROR Installing File: $R1$R3\$R7 **"
+      ${DisplayCopyErrMsg} "$R7"
+      GoTo retry
     ${Else}
       ${LogMsg} "Installed File: $R1$R3\$R7"
     ${EndIf}
     ; If the file is installed into the installation directory remove the
     ; installation directory's path from the file path when writing to the
     ; uninstall.log so it will be a relative path. This allows the same
-    ; uninst.exe to be used with zip builds if we supply an uninstall.log.
+    ; helper.exe to be used with zip builds if we supply an uninstall.log.
     ${WordReplace} "$R1$R3\$R7" "$INSTDIR" "" "+" $R3
     ${LogUninstall} "File: $R3"
   ${EndIf}
@@ -1049,6 +964,7 @@ Function .onInit
 
           ReadINIStr $0 $R1 "Install" "CloseAppNoPrompt"
           ${If} $0 == "true"
+            ; Try to close the app if the exe is in use.
             ClearErrors
             ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
               ${DeleteFile} "$INSTDIR\${FileMainEXE}"
@@ -1056,7 +972,18 @@ Function .onInit
             ${If} ${Errors}
               ClearErrors
               ${CloseApp} "false" ""
+              ClearErrors
               ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+              ; If unsuccessful try one more time and if it still fails Quit
+              ${If} ${Errors}
+                ClearErrors
+                ${CloseApp} "false" ""
+                ClearErrors
+                ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+                ${If} ${Errors}
+                  Quit
+                ${EndIf}
+              ${EndIf}
             ${EndIf}
           ${EndIf}
 

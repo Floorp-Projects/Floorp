@@ -132,7 +132,7 @@ endif
 	$(MAKE) -C ../installer/windows CONFIG_DIR=l10ngen l10ngen/setup.exe l10ngen/7zSD.sfx
 	cp ../installer/windows/l10ngen/setup.exe l10n-stage
 	$(NSINSTALL) -D l10n-stage/localized/uninstall
-	cp ../installer/windows/l10ngen/uninst.exe l10n-stage/localized/uninstall
+	cp ../installer/windows/l10ngen/helper.exe l10n-stage/localized/uninstall
 	rm -f app.7z
 	cd l10n-stage && \
 	  $(CYGWIN_WRAPPER) 7z a -r -t7z ../app.7z -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3
@@ -169,7 +169,7 @@ repackage-zip: $(ZIP_IN)
 ifeq (WINNT,$(OS_ARCH))
 	$(RM) -r $(STAGEDIST)/uninstall
 	$(NSINSTALL) -D $(STAGEDIST)/uninstall
-	cp ../installer/windows/l10ngen/uninst.exe $(STAGEDIST)/uninstall
+	cp ../installer/windows/l10ngen/helper.exe $(STAGEDIST)/uninstall
 endif
 	$(RM) -r $(DIST)/xpi-stage/locale-$(AB_CD)/chrome/$(AB_CD)
 	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \

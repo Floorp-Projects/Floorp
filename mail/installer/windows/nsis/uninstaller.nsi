@@ -49,6 +49,9 @@ CRCCheck on
 
 !addplugindir ./
 
+; prevents compiling of the reg write logging.
+!define NO_LOG
+
 Var TmpVal
 
 ; Other included files may depend upon these includes!
@@ -60,7 +63,11 @@ Var TmpVal
 !include WordFunc.nsh
 !include MUI.nsh
 
+!insertmacro GetOptions
 !insertmacro GetParameters
+!insertmacro WordFind
+!insertmacro WordReplace
+
 !insertmacro un.LineFind
 !insertmacro un.TrimNewLines
 
@@ -75,13 +82,21 @@ Var TmpVal
 ; post update cleanup.
 VIAddVersionKey "FileDescription" "${BrandShortName} Helper"
 
+!insertmacro GetPathFromString
+!insertmacro AddHandlerValues
+!insertmacro RegCleanMain
+!insertmacro RegCleanUninstall
+!insertmacro WriteRegStr2
+!insertmacro WriteRegDWORD2
 !insertmacro un.RegCleanMain
 !insertmacro un.RegCleanUninstall
 !insertmacro un.CloseApp
 !insertmacro un.GetSecondInstallPath
 
+!include shared.nsh
+
 Name "${BrandFullName}"
-OutFile "uninst.exe"
+OutFile "helper.exe"
 InstallDirRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullNameInternal} (${AppVersion})" "InstallLocation"
 InstallDir "$PROGRAMFILES\${BrandFullName}"
 ShowUnInstDetails nevershow
@@ -170,18 +185,22 @@ Section "Uninstall"
   ${GetParentDir}
   Pop $R1
 
-  ; Only remove the Clients\Mail key if it refers to this install location.
-  ; The Clients\Mail registry key is independent of the default app for the OS
-  ; settings. The XPInstall base un-installer always removes this key if it is
-  ; uninstalling the default app and it will always replace the keys when
-  ; installing even if there is another install of Firefox that is set as the
-  ; default app. Now the key is always updated on install but it is only
-  ; removed if it refers to this install location.
-  ${If} $INSTDIR == $R1
+  ; Only remove the Clients\Mail and Clients\News key if it refers to this 
+  ; install location. The Clients\Mail & Clients\News keys are independent 
+  ; of the default app for the OS settings. The XPInstall base un-installer 
+  ; always removes these keys if it is uninstalling the default app and it 
+  ; will always replace the keys when installing even if there is another 
+  ; install of Thunderbird that is set as the
+  ; default app. Now the keys are always updated on install but are only
+  ; removed if they refers to this install location.
+  ${If} "$INSTDIR" == "$R1"
     ; XXXrstrong - if there is another installation of the same app ideally we
     ; would just modify these values. The GetSecondInstallPath macro could be
     ; made to provide enough information to do this.
     DeleteRegKey HKLM "Software\Clients\Mail\${BrandFullNameInternal}"
+    DeleteRegKey HKLM "Software\Clients\News\${BrandFullNameInternal}"
+    DeleteRegValue HKLM "Software\RegisteredApplications" "${AppRegNameMail}"
+    DeleteRegValue HKLM "Software\RegisteredApplications" "${AppRegNameNews}"
   ${EndIf}
 
   StrCpy $0 "Software\Microsoft\Windows\CurrentVersion\App Paths\${FileMainEXE}"
@@ -196,7 +215,7 @@ Section "Uninstall"
     Push $R0
     ${GetParentDir}
     Pop $R1
-    ${If} $INSTDIR == $R1
+    ${If} "$INSTDIR" == "$R1"
       WriteRegStr HKLM "$0" "" "$R9"
       Push $R9
       ${GetParentDir}
@@ -368,8 +387,14 @@ Function un.preInstFiles
     ClearErrors
     ${un.CloseApp} "true" $(WARN_APP_RUNNING_UNINSTALL)
     ; Delete the app exe to prevent launching the app while we are uninstalling.
-    ${DeleteFile} "$INSTDIR\${FileMainEXE}"
     ClearErrors
+    ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+    ${If} ${Errors}
+      ClearErrors
+      ${un.CloseApp} "true" $(WARN_APP_RUNNING_UNINSTALL)
+      ClearErrors
+      ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+    ${EndIf}
   ${EndIf}
 FunctionEnd
 
@@ -395,61 +420,57 @@ Function .onInit
   ${EndUnless}
   ${GetParameters} $R0
 
-  StrCpy $R1 "Software\Clients\Mail\${BrandFullNameInternal}\InstallInfo"
-  SetShellVarContext all  ; Set $DESKTOP to All Users
-
-  ; Hide icons - initiated from Set Program Access and Defaults
-  ${If} $R0 == '/ua "${AppVersion} (${AB_CD})" /hs mail'
-    WriteRegDWORD HKLM $R1 "IconsVisible" 0
-    ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
-      SetShellVarContext current  ; Set $DESKTOP to the current user's desktop
-    ${EndUnless}
-
-    ${If} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
-      ShellLink::GetShortCutArgs "$DESKTOP\${BrandFullName}.lnk"
-      Pop $0
-      ${If} $0 == ""
-        ShellLink::GetShortCutTarget "$DESKTOP\${BrandFullName}.lnk"
-        Pop $0
-        ${If} $0 == "$INSTDIR\${FileMainEXE}"
-          Delete "$DESKTOP\${BrandFullName}.lnk"
-        ${EndIf}
-      ${EndIf}
-    ${EndIf}
-
-    ${If} ${FileExists} "$QUICKLAUNCH\${BrandFullName}.lnk"
-      ShellLink::GetShortCutArgs "$QUICKLAUNCH\${BrandFullName}.lnk"
-      Pop $0
-      ${If} $0 == ""
-        ShellLink::GetShortCutTarget "$QUICKLAUNCH\${BrandFullName}.lnk"
-        Pop $0
-        ${If} $0 == "$INSTDIR\${FileMainEXE}"
-          Delete "$QUICKLAUNCH\${BrandFullName}.lnk"
-        ${EndIf}
-      ${EndIf}
-    ${EndIf}
-    Abort
-  ${EndIf}
-
-  ; Show icons - initiated from Set Program Access and Defaults
-  ${If} $R0 == '/ua "${AppVersion} (${AB_CD})" /ss mail'
-    WriteRegDWORD HKLM $R1 "IconsVisible" 1
-    ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
-      CreateShortCut "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
-      ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR"
-      ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
-        SetShellVarContext current  ; Set $DESKTOP to the current user's desktop
-        ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
-          CreateShortCut "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
-          ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR"
+  ${Switch} $R0
+    ${Case} "/HideShortcuts"
+      ${HideShortcuts}
+      StrCpy $R1 "true"
+      ${Break}
+    ${Case} "/ShowShortcuts"
+      ${ShowShortcuts}
+      StrCpy $R1 "true"
+      ${Break}
+    ${Case} "/SetAsDefaultAppUser"
+      ${SetAsDefaultAppUser}
+      StrCpy $R1 "true"
+      ${Break}
+    ${Case} "/SetAsDefaultAppGlobal"
+      ${SetAsDefaultAppGlobal}
+      StrCpy $R1 "true"
+      ${Break}
+    ${Default}
+      ClearErrors
+      ${Unless} "$R0" == ""
+        ${WordReplace} "$R0" "$\"" "" "+" $R0
+        ClearErrors
+        ${GetOptions} "$R0" "/PostUpdate" $R2
+        ${Unless} ${Errors}
+          ${PostUpdate}
+          ClearErrors
+          ${GetOptions} "$R0" "/UninstallLog=" $R2
+          ${Unless} ${Errors}
+            ${Unless} "$R2" == ""
+              GetFullPathName $R3 "$R2"
+              ${If} ${FileExists} "$R3"
+                Delete "$INSTDIR\uninstall\*wizard*"
+                Delete "$INSTDIR\uninstall\uninstall.log"
+                CopyFiles /SILENT "$R3" "$INSTDIR\uninstall\"
+                Push $R3
+                ${GetParentDir}
+                Pop $R4
+                Delete "$R3"
+                RmDir "$R4"
+              ${EndIf}
+            ${EndUnless}
+          ${EndUnless}
+          StrCpy $R1 "true"
         ${EndUnless}
       ${EndUnless}
-    ${EndUnless}
-    ${Unless} ${FileExists} "$QUICKLAUNCH\${BrandFullName}.lnk"
-      CreateShortCut "$QUICKLAUNCH\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
-      ShellLink::SetShortCutWorkingDirectory "$QUICKLAUNCH\${BrandFullName}.lnk" "$INSTDIR"
-    ${EndUnless}
-    Abort
+      ${Break}
+  ${EndSwitch}
+
+  ${If} $R1 == "true"
+    System::Call "shell32::SHChangeNotify(i, i, i, i) v (0x08000000, 0, 0, 0)"
+    Quit
   ${EndIf}
 
   ; If we made it this far then this installer is being used as an uninstaller.

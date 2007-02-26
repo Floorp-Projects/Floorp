@@ -35,7 +35,7 @@
 # ***** END LICENSE BLOCK *****
 
 # NSIS defines for nightly builds.
-# The release build branding.nsi is located in other-license/branding/firefox/
+# The release build branding.nsi is located in other-license/branding/thunderbird/
 !define BrandShortName        "Thunderbird"
 !define BrandFullName         "Mozilla Thunderbird"
 # BrandFullNameInternal is used for some registry and file system values that

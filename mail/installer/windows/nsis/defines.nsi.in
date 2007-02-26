@@ -8,3 +8,6 @@
 
 !define FileMainEXE           "thunderbird.exe"
 !define WindowClass           "ThunderbirdMessageWindow"
+
+!define AppRegNameMail        "Thunderbird"
+!define AppRegNameNews        "Thunderbird (News)"
