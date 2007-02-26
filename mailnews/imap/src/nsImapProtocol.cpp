@@ -5400,6 +5400,13 @@ void nsImapProtocol::OnAppendMsgFromFile()
       // convert msg flag label (0xE000000) to imap flag label (0x0E00)
       if (msgFlags & MSG_FLAG_LABELS)
         flagsToSet |= (msgFlags & MSG_FLAG_LABELS) >> 16;
+      if (msgFlags & MSG_FLAG_MARKED)
+        flagsToSet |= kImapMsgFlaggedFlag;
+      if (msgFlags & MSG_FLAG_REPLIED)
+        flagsToSet |= kImapMsgAnsweredFlag;
+      if (msgFlags & MSG_FLAG_FORWARDED)
+        flagsToSet |= kImapMsgForwardedFlag;
+
       // If the message copied was a draft, flag it as such
       nsImapAction imapAction;
       rv = m_runningUrl->GetImapAction(&imapAction);
