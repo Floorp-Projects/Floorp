@@ -107,7 +107,7 @@
     <command id="Browser:AddBookmarkAs" oncommand="addBookmarkAs(document.getElementById('content'), false);"/>
 #endif
     <!-- The command is disabled for the hidden window. Otherwise its enabled
-         state is handler by the BookmarkAllTabsHandler object. -->
+         state is handled by the BookmarkAllTabsHandler object. -->
     <command id="Browser:BookmarkAllTabs"
              oncommand="gBookmarkAllTabsHandler.doCommand();"
              disabled="true"/>

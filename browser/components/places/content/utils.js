@@ -190,11 +190,7 @@ var PlacesUtils = {
    */
   nodeIsBookmark: function PU_nodeIsBookmark(aNode) {
     NS_ASSERT(aNode, "null node");
-
-    if (!this.nodeIsURI(aNode))
-      return false;
-    var uri = this._uri(aNode.uri);
-    return this.bookmarks.isBookmarked(uri);
+    return aNode.bookmarkId > 0;
   },
 
   /**
@@ -625,13 +621,10 @@ var PlacesUtils = {
   },
 
   /**
-   * This method changes the URI of a bookmark.  Because of the URI-based
-   * identity model, it accomplishes this by replacing instances of the old
-   * URI with the new URI in each applicable folder, then copies the
-   * metadata from the old URI to the new URI.
+   * This method changes the URI of a bookmark.
    */
-  changeBookmarkURI: function PU_changeBookmarkProperties(oldURI, newURI) {
-    this.bookmarks.changeBookmarkURI(oldURI, newURI);
+  changeBookmarkURI: function PU_changeBookmarkProperties(bookmarkId, newURI) {
+    this.bookmarks.changeBookmarkURI(bookmarkId, newURI);
   },
 
   /**
@@ -660,10 +653,10 @@ var PlacesUtils = {
   /**
    * Opens the bookmark properties panel for a given URI.
    *
-   * @param   uri an nsIURI object for which the properties are to be shown
+   * @param   id bookmark id for which the properties are to be shown
    */
-  showBookmarkProperties: function PU_showBookmarkProperties(uri) {
-    this._showBookmarkDialog("edit", uri);
+  showBookmarkProperties: function PU_showBookmarkProperties(id) {
+    this._showBookmarkDialog("edititem", id);
   },
 
   /**
@@ -675,7 +668,7 @@ var PlacesUtils = {
   showFolderProperties: function PU_showFolderProperties(folderId) {
     NS_ASSERT(typeof(folderId)=="number",
               "showFolderProperties received a non-numerical value for its folderId parameter");
-    this._showBookmarkDialog("edit", folderId);
+    this._showBookmarkDialog("editfolder", folderId);
   },
 
   /**
@@ -683,8 +676,8 @@ var PlacesUtils = {
    * This is an implementation function, and shouldn't be called directly;
    * rather, use the specific variant above that corresponds to your situation.
    *
-   * @param identifier   the URI or folder ID or URI list to show
-   *                     properties for
+   * @param identifier   the URI or bookmark ID or folder ID or URI list
+   *                     to show properties for
    * @param action "add" or "edit", see _determineVariant in
    *               bookmarkProperties.js
    */
@@ -739,5 +732,77 @@ var PlacesUtils = {
       }
     }
     return true;
+  },
+
+  /**
+   * Fetch all annotations for a URI, including all properties of each
+   * annotation which would be required to recreate it.
+   * @param aURI  The URI for which annotations are to be retrieved.
+   * @return Array of objects, each containing the following properties:
+   *         name, flags, expires, mimeType, type, value
+   */
+  getAnnotationsForURI: function PU_getAnnotationsForURI(aURI) {
+    var annosvc = this.annotations;
+    var sv = Ci.mozIStorageValueArray;
+    var annos = [], val = null;
+    var annoNames = annosvc.getPageAnnotationNames(aURI, {});
+    for (var i = 0; i < annoNames.length; i++) {
+      var flags = {}, exp = {}, mimeType = {}, storageType = {};
+      annosvc.getAnnotationInfo(aURI, annoNames[i], flags, exp, mimeType, storageType);
+      switch (storageType.value) {
+        case sv.VALUE_TYPE_INTEGER:
+          val = annosvc.getAnnotationInt64(aURI, annoNames[i]);
+          break;
+        case sv.VALUE_TYPE_FLOAT:
+          val = annosvc.getAnnotationDouble(aURI, annoNames[i]);
+          break;
+        case sv.VALUE_TYPE_TEXT:
+          val = annosvc.getAnnotationString(aURI, annoNames[i]);
+          break;
+        case sv.VALUE_TYPE_BLOB:
+          val = annosvc.getAnnotationBinary(aURI, annoNames[i]);
+          break;
+      }
+      annos.push({name: annoNames[i],
+                  flags: flags.value,
+                  expires: exp.value,
+                  mimeType: mimeType.value,
+                  type: storageType.value,
+                  value: val});
+    }
+    return annos;
+  },
+
+  /**
+   * Annotate a URI with a batch of annotations.
+   * @param aURI  The URI for which annotations are to be retrieved.
+   * @param aAnnotations Array of objects, each containing the following properties:
+   *         name, flags, expires, mimeType, type, value
+   * @return void
+   */
+  setAnnotationsForURI: function PU_setAnnotationsForURI(aURI, aAnnos) {
+    var annosvc = this.annotations;
+    var sv = Ci["mozIStorageValueArray"];
+    aAnnos.forEach(function(anno) {
+      switch (anno.type) {
+        case sv.VALUE_TYPE_INTEGER:
+          annosvc.setAnnotationInt64(aURI, anno.name, anno.value,
+                                                     anno.flags, anno.expires);
+          break;
+        case sv.VALUE_TYPE_FLOAT:
+          annosvc.setAnnotationDouble(aURI, anno.name, anno.value,
+                                                      anno.flags, anno.expires);
+          break;
+        case sv.VALUE_TYPE_TEXT:
+          annosvc.setAnnotationString(aURI, anno.name, anno.value,
+                                                      anno.flags, anno.expires);
+          break;
+        case sv.VALUE_TYPE_BLOB:
+          annosvc.setAnnotationBinary(aURI, anno.name, anno.value,
+                                                      anno.value.length, anno.mimeType,
+                                                      anno.flags, anno.expires);
+          break;
+      }
+    });
   }
 };

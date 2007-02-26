@@ -577,42 +577,7 @@ PlacesController.prototype = {
       var nodes = PlacesUtils.unwrapNodes(data, type.value);
 
       var ip = this._view.insertionPoint;
-      if (!ip)
-        return false;
-      var contents = PlacesUtils.getFolderContents(ip.folderId);
-      var cc = contents.childCount;
-
-      /**
-       * Determines whether or not a node is a first-level child of a folder. 
-       * @param   node
-       *          The node to check
-       * @returns true if the node is a child of the container at the top level, false 
-       *          otherwise
-       */
-      function nodeIsInList(node) {
-        // Anything that isn't a URI is paste-able many times (folders, 
-        // separators)
-        if (!PlacesUtils.nodeIsURI(node))
-          return false;
-        for (var i = 0; i < cc; ++i) {
-          if (contents.getChild(i).uri == node.uri.spec)
-            return true;
-        }
-        return false;
-      }
-
-      // Since the bookmarks data model enforces only one instance of a URI per
-      // folder, it is not possible to paste a selection into a folder where 
-      // all of the URIs already exist. Thus we need to return false to disable
-      // the command for this case. If only some of the URIs are present, we 
-      // can still paste the non-present URIs, so it's ok to enable the command. 
-      var nodesInList = 0;
-      // Sadly, this is O(N^2). 
-      for (var i = 0; i < nodes.length; ++i) {
-        if (nodeIsInList(nodes[i]))
-          ++nodesInList;
-      }
-      return (nodesInList != nodes.length);
+      return ip != null;
     }
     catch (e) {
       // Unwrap nodes failed, possibly because a field that should have 
@@ -885,8 +850,8 @@ PlacesController.prototype = {
 
     if (PlacesUtils.nodeIsFolder(node))
       PlacesUtils.showFolderProperties(asFolder(node).folderId);
-    else if (node.uri)
-      PlacesUtils.showBookmarkProperties(PlacesUtils._uri(node.uri));
+    else if (PlacesUtils.nodeIsBookmark(node))
+      PlacesUtils.showBookmarkProperties(node.bookmarkId);
   },
 
   /**
@@ -1185,7 +1150,7 @@ PlacesController.prototype = {
       }
       else if (PlacesUtils.nodeIsFolder(node.parent)) {
         // A Bookmark in a Bookmark Folder.
-        transactions.push(new PlacesRemoveItemTransaction(
+        transactions.push(new PlacesRemoveItemTransaction(node.bookmarkId,
           PlacesUtils._uri(node.uri), asFolder(node.parent).folderId, index));
       }
     }
@@ -1596,6 +1561,8 @@ var PlacesControllerDragHelper = {
 function PlacesBaseTransaction() {
 }
 PlacesBaseTransaction.prototype = {
+  utils: PlacesUtils,
+
   bookmarks: Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
              getService(Ci.nsINavBookmarksService),
   _livemarks: null,
@@ -1706,10 +1673,13 @@ PlacesCreateFolderTransaction.prototype = {
  * Create a new Item
  */
 function PlacesCreateItemTransaction(uri, container, index) {
+  this.LOG("PlacesCreateItemTransaction(" + uri.spec + ", " + container + ", " + index + ")");
   NS_ASSERT(index >= -1, "invalid insertion index");
+  this._id = null;
   this._uri = uri;
   this.container = container;
   this._index = index;
+  this.childTransactions = [];
   this.redoTransaction = this.doTransaction;
 }
 PlacesCreateItemTransaction.prototype = {
@@ -1717,12 +1687,21 @@ PlacesCreateItemTransaction.prototype = {
 
   doTransaction: function PCIT_doTransaction() {
     this.LOG("Create Item: " + this._uri.spec + " in: " + this.container + "," + this._index);
-    this.bookmarks.insertItem(this.container, this._uri, this._index);
+    this._id = this.bookmarks.insertItem(this.container, this._uri, this._index);
+    for (var i = 0; i < this.childTransactions.length; ++i) {
+      var txn = this.childTransactions[i];
+      txn.id = this._id;
+      txn.doTransaction();
+    }
   },
 
   undoTransaction: function PCIT_undoTransaction() {
-    this.LOG("UNCreate Item: " + this._uri.spec + " from: " + this.container + "," + this._index);
-    this.bookmarks.removeItem(this.container, this._uri);
+    this.LOG("UNCreate Item: bookmark " + this._id + " for uri " + this._uri.spec + " from: " + this.container + "," + this._index);
+    this.bookmarks.removeItem(this._id);
+    for (var i = 0; i < this.childTransactions.length; ++i) {
+      var txn = this.childTransactions[i];
+      txn.undoTransaction();
+    }
   }
 };
 
@@ -1779,7 +1758,8 @@ PlacesMoveFolderTransaction.prototype = {
 /**
  * Move an Item
  */
-function PlacesMoveItemTransaction(uri, oldContainer, oldIndex, newContainer, newIndex) {
+function PlacesMoveItemTransaction(id, uri, oldContainer, oldIndex, newContainer, newIndex) {
+  this._id = id;
   this._uri = uri;
   this._oldContainer = oldContainer;
   this._oldIndex = oldIndex;
@@ -1792,14 +1772,27 @@ PlacesMoveItemTransaction.prototype = {
 
   doTransaction: function PMIT_doTransaction() {
     this.LOG("Move Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex + " to: " + this._newContainer + "," + this._newIndex);
-    this.bookmarks.removeItem(this._oldContainer, this._uri);
-    this.bookmarks.insertItem(this._newContainer, this._uri, this._newIndex);
+    var title = this.bookmarks.getItemTitle(this._id);
+    var placeURI = this.bookmarks.getItemURI(this._id);
+    var annotations = this.utils.getAnnotationsForURI(placeURI);
+    this.bookmarks.removeItem(this._id);
+    this._id = this.bookmarks.insertItem(this._newContainer, this._uri, this._newIndex);
+    this.bookmarks.setItemTitle(this._id, title);
+    this.utils.setAnnotationsForURI(this.bookmarks.getItemURI(this._id),
+                         annotations);
   },
 
   undoTransaction: function PMIT_undoTransaction() {
     this.LOG("UNMove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex + " to: " + this._newContainer + "," + this._newIndex);
-    this.bookmarks.removeItem(this._newContainer, this._uri);
-    this.bookmarks.insertItem(this._oldContainer, this._uri, this._oldIndex);
+    var title = this.bookmarks.getItemTitle(this._id);
+    var placeURI = this.bookmarks.getItemURI(this._id);
+    var annotations = this.utils.getAnnotationsForURI(placeURI);
+    this.bookmarks.removeItem(this._id);
+    this._id = this.bookmarks.insertItem(this._oldContainer, this._uri, this._oldIndex);
+    this.bookmarks.setItemTitle(this._id, title);
+    placeURI = this.bookmarks.getItemURI(this._id);
+    this.utils.setAnnotationsForURI(this.bookmarks.getItemURI(this._id),
+                         annotations);
   }
 };
 
@@ -1845,7 +1838,8 @@ PlacesRemoveFolderTransaction.prototype = {
         txn = new PlacesRemoveSeparatorTransaction(this._id, i);
       }
       else {
-        txn = new PlacesRemoveItemTransaction(ios.newURI(child.uri, null, null),
+        txn = new PlacesRemoveItemTransaction(child.bookmarkId,
+                                              ios.newURI(child.uri, null, null),
                                               this._id, i);
       }
       this._transactions.push(txn);
@@ -1881,10 +1875,12 @@ PlacesRemoveFolderTransaction.prototype = {
 /**
  * Remove an Item
  */
-function PlacesRemoveItemTransaction(uri, oldContainer, oldIndex) {
+function PlacesRemoveItemTransaction(id, uri, oldContainer, oldIndex) {
+  this._id = id;
   this._uri = uri;
   this._oldContainer = oldContainer;
   this._oldIndex = oldIndex;
+  this._annotations = [];
   this.redoTransaction = this.doTransaction;
 }
 PlacesRemoveItemTransaction.prototype = {
@@ -1892,12 +1888,19 @@ PlacesRemoveItemTransaction.prototype = {
   
   doTransaction: function PRIT_doTransaction() {
     this.LOG("Remove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex);
-    this.bookmarks.removeItem(this._oldContainer, this._uri);
+    this._title = this.bookmarks.getItemTitle(this._id);
+    this._placeURI = this.bookmarks.getItemURI(this._id);
+    this._annotations = this.utils.getAnnotationsForURI(this._placeURI);
+    PlacesUtils.annotations.removePageAnnotations(this._placeURI);
+    this.bookmarks.removeItem(this._id);
   },
   
   undoTransaction: function PRIT_undoTransaction() {
     this.LOG("UNRemove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex);
-    this.bookmarks.insertItem(this._oldContainer, this._uri, this._oldIndex);
+    this._id = this.bookmarks.insertItem(this._oldContainer, this._uri, this._oldIndex);
+    this.bookmarks.setItemTitle(this._id, this._title);
+    this._placeURI = this.bookmarks.getItemURI(this._id);
+    this.utils.setAnnotationsForURI(this._placeURI, this._annotations);
   }
 };
 
@@ -1926,8 +1929,8 @@ PlacesRemoveSeparatorTransaction.prototype = {
 /**
  * Edit a bookmark's title.
  */
-function PlacesEditItemTitleTransaction(uri, newTitle) {
-  this._uri = uri;
+function PlacesEditItemTitleTransaction(id, newTitle) {
+  this.id = id;
   this._newTitle = newTitle;
   this._oldTitle = "";
   this.redoTransaction = this.doTransaction;
@@ -1936,12 +1939,12 @@ PlacesEditItemTitleTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
 
   doTransaction: function PEITT_doTransaction() {
-    this._oldTitle = this.bookmarks.getItemTitle(this._uri);
-    this.bookmarks.setItemTitle(this._uri, this._newTitle);
+    this._oldTitle = this.bookmarks.getItemTitle(this.id);
+    this.bookmarks.setItemTitle(this.id, this._newTitle);
   },
 
   undoTransaction: function PEITT_undoTransaction() {
-    this.bookmarks.setItemTitle(this._uri, this._oldTitle);
+    this.bookmarks.setItemTitle(this.id, this._oldTitle);
   }
 };
 
@@ -1970,8 +1973,8 @@ PlacesEditFolderTitleTransaction.prototype = {
 /**
  * Edit a bookmark's keyword.
  */
-function PlacesEditBookmarkKeywordTransaction(uri, newKeyword) {
-  this._uri = uri;
+function PlacesEditBookmarkKeywordTransaction(id, newKeyword) {
+  this._id = id;
   this._newKeyword = newKeyword;
   this._oldKeyword = "";
   this.redoTransaction = this.doTransaction;
@@ -1980,12 +1983,12 @@ PlacesEditBookmarkKeywordTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
 
   doTransaction: function PEBKT_doTransaction() {
-    this._oldKeyword = this.bookmarks.getKeywordForURI(this._uri);
-    this.bookmarks.setKeywordForURI(this._uri, this._newKeyword);
+    this._oldKeyword = this.bookmarks.getKeywordForBookmark(this._id);
+    this.bookmarks.setKeywordForBookmark(this._id, this._newKeyword);
   },
 
   undoTransaction: function PEBKT_undoTransaction() {
-    this.bookmarks.setKeywordForURI(this._uri, this._oldKeyword);
+    this.bookmarks.setKeywordForBookmark(this._id, this._oldKeyword);
   }
 };
 
@@ -2038,8 +2041,8 @@ PlacesEditLivemarkFeedURITransaction.prototype = {
 /**
  * Edit a bookmark's microsummary.
  */
-function PlacesEditBookmarkMicrosummaryTransaction(uri, newMicrosummary) {
-  this._uri = uri;
+function PlacesEditBookmarkMicrosummaryTransaction(aURI, newMicrosummary) {
+  this._uri = aURI;
   this._newMicrosummary = newMicrosummary;
   this._oldMicrosummary = null;
   this.redoTransaction = this.doTransaction;

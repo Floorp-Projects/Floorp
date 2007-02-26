@@ -83,9 +83,9 @@ var gMoveBookmarksDialog = {
       }
       else if (PlacesUtils.nodeIsBookmark(this._nodes[i])) {
         transactions.push(new
-          PlacesMoveItemTransaction(PlacesUtils._uri(this._nodes[i].uri),
-                                    parentId, nodeIndex,
-                                    selectedFolderID, -1));
+          PlacesMoveItemTransaction(this._nodes[i].bookmarkId,
+                                    PlacesUtils._uri(this._nodes[i].uri),
+                                    parentId, nodeIndex, selectedFolderID, -1));
       }
       else if (PlacesUtils.nodeIsSeparator(this._nodes[i])) { 
         // See makeTransaction in utils.js

@@ -137,4 +137,22 @@ function run_test() {
 
   // by default, browser.history_expire_days is 9
   do_check_true(!histsvc.historyDisabled);
+
+  // test getPageTitle
+  var title = histsvc.getPageTitle(uri("http://mozilla.com"));
+  do_check_eq(title, "mozilla.com");
+
+  // XXXTest nsIBrowserHistory impl
+
+  // query for the visit
+  var options = histsvc.getNewQueryOptions();
+  options.maxResults = 1;
+  options.resultType = options.RESULTS_AS_URI
+  var query = histsvc.getNewQuery();
+  query.uri = testURI;
+  var result = histsvc.executeQuery(query, options);
+  var root = result.root;
+  root.containerOpen = true;
+  do_check_eq(root.childCount, 1);
+  root.containerOpen = false;
 }

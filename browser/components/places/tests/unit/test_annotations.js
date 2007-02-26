@@ -74,4 +74,25 @@ function run_test() {
     annosvc.getAnnotationString(testURI, "blah");
     do_throw("fetching annotation that doesn't exist, should've thrown");
   } catch(ex) {}
+
+  // get annotation info
+  var flags = {}, exp = {}, mimeType = {}, storageType = {};
+  annosvc.getAnnotationInfo(testURI, testAnnoName, flags, exp, mimeType, storageType);
+  do_check_eq(flags.value, 0);
+  do_check_eq(exp.value, 0);
+  do_check_eq(mimeType.value, null);
+  do_check_eq(storageType.value, Ci.mozIStorageValueArray.VALUE_TYPE_TEXT);
+
+  // get annotation names for a uri
+  var annoNames = annosvc.getPageAnnotationNames(testURI, {});
+  do_check_eq(annoNames.length, 1);
+  do_check_eq(annoNames[0], "moz-test-places/annotations");
+
+  /* copy annotations to another uri
+  var newURI = uri("http://mozilla.org");
+  var oldAnnoNames = annosvc.getPageAnnotationNames(testURI, {});
+  annosvc.copyAnnotations(testURI, newURI, false);
+  var newAnnoNames = annosvc.getPageAnnotationNames(newURI, {});
+  do_check_eq(oldAnnoNames.length, newAnnoNames.length);
+  */
 }

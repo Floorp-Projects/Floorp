@@ -42,6 +42,13 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
 
+function LOG(aMsg) {
+  aMsg = ("*** PLACES TESTS: " + aMsg);
+  Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).
+                                      logStringMessage(aMsg);
+  print(aMsg);
+}
+
 // If there's no location registered for the profile direcotry, register one now.
 var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
 var profileDir = null;

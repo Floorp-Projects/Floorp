@@ -202,6 +202,10 @@ public:
     *aContainerType = mLastContainerType;
     mPreviousText.Truncate(0);
   }
+
+  // Contains the id of a newly created bookmark.
+  // XXXDietrich - may also be a pre-existing bookmark once we support importing Places-exported bookmarks.html files.
+  PRInt64 mPreviousId;
 };
 
 
@@ -689,21 +693,10 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   if (frame.mPreviousFeed)
     return;
 
-  // create the bookmark, but only if it is not in the folder already. If it
-  // is already in the folder, we'll override the titles and favicons, but we
-  // won't want to put it at the end again
-  nsTArray<PRInt64> currentFolders;
-  mBookmarksService->GetBookmarkFoldersTArray(frame.mPreviousLink,
-                                              &currentFolders);
-  PRBool hasBookmark = PR_FALSE;
-  for (PRUint32 curFolder = 0; curFolder < currentFolders.Length(); curFolder ++) {
-    if (currentFolders[curFolder] == frame.mContainerID) {
-      hasBookmark = PR_TRUE;
-      break;
-    }
-  }
-  if (! hasBookmark)
-    mBookmarksService->InsertItem(frame.mContainerID, frame.mPreviousLink, -1);
+  // create the bookmark
+  nsresult rv = mBookmarksService->InsertItem(frame.mContainerID, frame.mPreviousLink,
+                                     mBookmarksService->DEFAULT_INDEX, &frame.mPreviousId);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "InsertItem failed");
 
   // save the favicon, ignore errors
   if (! icon.IsEmpty() || ! iconUri.IsEmpty()) {
@@ -716,7 +709,7 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
 
   // save the keyword, ignore errors
   if (! keyword.IsEmpty())
-    mBookmarksService->SetKeywordForURI(frame.mPreviousLink, keyword);
+    mBookmarksService->SetKeywordForBookmark(frame.mPreviousId, keyword);
 
   // FIXME bug 334408: save the last charset
 }
@@ -767,8 +760,7 @@ BookmarkContentSink::HandleLinkEnd()
     printf("Creating bookmark '%s'\n",
            NS_ConvertUTF16toUTF8(frame.mPreviousText).get());
 #endif
-    mHistoryService->SetPageUserTitle(frame.mPreviousLink,
-                                      frame.mPreviousText);
+    mBookmarksService->SetItemTitle(frame.mPreviousId, frame.mPreviousText);
   }
   frame.mPreviousText.Truncate(0);
 }
@@ -791,7 +783,8 @@ BookmarkContentSink::HandleSeparator()
     PrintNesting();
     printf("--------\n");
 #endif
-    mBookmarksService->InsertSeparator(frame.mContainerID, -1);
+    mBookmarksService->InsertSeparator(frame.mContainerID,
+                                       mBookmarksService->DEFAULT_INDEX);
   }
 }
 
@@ -821,7 +814,8 @@ BookmarkContentSink::NewFrame()
       if (! ourID) {
         // need to append a new folder
         rv = mBookmarksService->CreateFolder(CurFrame().mContainerID,
-                                            containerName, -1, &ourID);
+                                            containerName,
+                                            mBookmarksService->DEFAULT_INDEX, &ourID);
         NS_ENSURE_SUCCESS(rv, rv);
       }
       break;

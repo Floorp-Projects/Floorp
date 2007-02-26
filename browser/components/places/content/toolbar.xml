@@ -471,27 +471,23 @@
           if (!--this._numBatches && this._batchedOperation)
             this.doRebuild();
         },
-        onItemAdded: function TB_O_onItemAdded(bookmark, folder, index) {
+        onItemAdded: function TB_O_onItemAdded(id, bookmark, folder, index) {
           if (folder == PlacesUtils.bookmarks.toolbarRoot) {
             this._self._currentURIs[bookmark.spec] = true;
             this._numBatches ? this._batchedOperation = true : this.doRebuild();
           }
         },
-        onItemRemoved: function TB_O_onItemRemoved(bookmark, folder, index) {
+        onItemRemoved: function TB_O_onItemRemoved(id, bookmark, folder, index) {
           if (folder == PlacesUtils.bookmarks.toolbarRoot) {
             delete this._self._currentURIs[bookmark.spec];
             this._numBatches ? this._batchedOperation = true : this.doRebuild();
           }
         },
-        onItemChanged: function TB_O_onItemChanged(bookmark, property, value) {
+        onItemChanged: function TB_O_onItemChanged(id, bookmark, property, value) {
           this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
         onItemVisited: function TB_0_onItemVisited(bookmark, visitId, time) {
           //this._self._init();
-        },
-        onItemReplaced: function TB_0_onItemReplaced(folder, item, newItem) {
-          if (folder == PlacesUtils.bookmarks.toolbarRoot)
-            this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
         onFolderAdded: function TB_O_onFolderAdded(folder, parent, index) {
           if (parent == PlacesUtils.bookmarks.toolbarRoot)

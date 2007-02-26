@@ -1297,7 +1297,7 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
             continue;
           }
 #ifdef MOZ_PLACES_BOOKMARKS
-          bms->InsertItem(keywordsFolder, uri, -1);
+          bms->InsertItem(keywordsFolder, uri, nsINavBookmarksService::DEFAULT_INDEX);
           bms->SetItemTitle(uri, keyName);
 #else
           nsCAutoString hostCStr;
@@ -1506,7 +1506,7 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
 #ifdef MOZ_PLACES_BOOKMARKS
         rv = aBookmarksService->CreateFolder(aParentFolder,
                                              bookmarkName,
-                                             -1,
+                                             nsINavBookmarksService::DEFAULT_INDEX,
                                              &folder);
 #else
         rv = aBookmarksService->CreateFolderInContainer(bookmarkName.get(), 

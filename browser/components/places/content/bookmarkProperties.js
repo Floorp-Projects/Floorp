@@ -71,6 +71,7 @@ var BookmarkPropertiesPanel = {
     return this.__mss;
   },
 
+  _bookmarkId: null,
   _bookmarkURI: null,
   _bookmarkTitle: undefined,
   _microsummaries: null,
@@ -90,23 +91,6 @@ var BookmarkPropertiesPanel = {
    * The possibilities are enumerated by the constants above.
    */
   _variant: null,
-
-  /**
-   * Returns true if this variant of the dialog uses a URI as a primary
-   * identifier for the item being edited.
-   */
-
-  _identifierIsURI: function BPP__identifierIsURI() {
-    switch(this._variant) {
-    case this.EDIT_FOLDER_VARIANT:
-    case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
-    case this.ADD_LIVEMARK_VARIANT:
-    case this.EDIT_LIVEMARK_VARIANT:
-      return false;
-    default:
-      return true;
-    }
-  },
 
   /**
    * Returns true if this variant of the dialog uses a folder ID  as a primary
@@ -291,39 +275,29 @@ var BookmarkPropertiesPanel = {
    *
    * @param identifier the URI or folder ID to display the properties for
    * @param action -- "add" if this is being triggered from an "add bookmark"
-   *                  UI action; or "edit" if this is being triggered from
-   *                  a "properties" UI action; or "addmulti" if we're
-   *                  trying to create multiple bookmarks
+   *                  UI action; or "editfolder" or "edititem" if this is being
+   *                  triggered from a "properties" UI action; or "addmulti" if
+   *                  we're trying to create multiple bookmarks.
    *
    * @returns one of the *_VARIANT constants
    */
   _determineVariant: function BPP__determineVariant(identifier, action) {
     if (action == "add") {
       this._assertURINotString(identifier);
-      if (PlacesUtils.bookmarks.isBookmarked(identifier)) {
-        return this.EDIT_BOOKMARK_VARIANT;
-      }
-      else {
-        return this.ADD_BOOKMARK_VARIANT;
-      }
+      return this.ADD_BOOKMARK_VARIANT;
     }
     else if (action == "addmulti") {
       return this.ADD_MULTIPLE_BOOKMARKS_VARIANT;
     }
-    else { /* Assume "edit" */
-      if (typeof(identifier) == "number") {
-        if (PlacesUtils.livemarks.isLivemark(identifier)) {
-          return this.EDIT_LIVEMARK_VARIANT;
-        }
-        else {
-          return this.EDIT_FOLDER_VARIANT;
-        }
+    else if (typeof(identifier) == "number") {
+      if (action == "edititem") {
+        return this.EDIT_BOOKMARK_VARIANT;
       }
-
-      NS_ASSERT(PlacesUtils.bookmarks.isBookmarked(identifier),
-                "Bookmark Properties dialog instantiated with " +
-                "non-bookmarked URI: \"" + identifier + "\"");
-      return this.EDIT_BOOKMARK_VARIANT;
+      else if (action == "editfolder") {
+        if (PlacesUtils.livemarks.isLivemark(identifier))
+          return this.EDIT_LIVEMARK_VARIANT;
+        return this.EDIT_FOLDER_VARIANT;
+      }
     }
   },
 
@@ -338,20 +312,11 @@ var BookmarkPropertiesPanel = {
    * @returns a title string
    */
 
-  _getURITitle: function BPP__getURITitle(uri) {
+  _getURITitleFromHistory: function BPP__getURITitleFromHistory(uri) {
     this._assertURINotString(uri);
 
-    var title = PlacesUtils.bookmarks.getItemTitle(uri);
-
-    /* If we can't get a title for a new bookmark, let's set it to
-       be the first 100 characters of the URI. */
-    if (title == null) {
-      title = uri.spec;
-      if (title.length > 100) {
-        title = title.substr(0, 100);
-      }
-    }
-    return title;
+    // get the title from History
+    return PlacesUtils.history.getPageTitle(uri);
   },
 
   /**
@@ -370,7 +335,12 @@ var BookmarkPropertiesPanel = {
   init: function BPP_init(dialogWindow, tm, action, identifier, title) {
     this._variant = this._determineVariant(identifier, action);
 
-    if (this._identifierIsURI()) {
+    if (this._variant == this.EDIT_BOOKMARK_VARIANT) {
+      this._bookmarkId = identifier;
+      this._bookmarkURI = PlacesUtils.bookmarks.getBookmarkURI(this._bookmarkId);
+      this._folderId = PlacesUtils.bookmarks.getFolderIdForItem(identifier);
+    }
+    else if (this._variant == this.ADD_BOOKMARK_VARIANT) {
       this._assertURINotString(identifier);
       this._bookmarkURI = identifier;
     }
@@ -465,8 +435,11 @@ var BookmarkPropertiesPanel = {
     /* The explicit comparison against undefined here allows creators to pass
      * "" to init() if they wish to have no title. */
     if (this._bookmarkTitle === undefined) {
-      if (this._identifierIsURI()) {
-        this._bookmarkTitle = this._getURITitle(this._bookmarkURI);
+      if (this._variant == this.EDIT_BOOKMARK_VARIANT) {
+        this._bookmarkTitle = PlacesUtils.bookmarks.getItemTitle(this._bookmarkId);
+      }
+      else if (this._variant == this.ADD_BOOKMARK_VARIANT) {
+        this._bookmarkTitle = this._getURITitleFromHistory(this._bookmarkURI);
       }
       else if (this._identifierIsFolderID()) {
         this._bookmarkTitle = PlacesUtils.bookmarks.getFolderTitle(this._folderId);
@@ -515,7 +488,7 @@ var BookmarkPropertiesPanel = {
 
     if (this._isShortcutVisible()) {
       var shortcutbox = this._element("editShortcutBox");
-      shortcutbox.value = PlacesUtils.bookmarks.getKeywordForURI(this._bookmarkURI);
+      shortcutbox.value = PlacesUtils.bookmarks.getKeywordForBookmark(this._bookmarkId);
     }
     else {
       this._hide("shortcutRow");
@@ -536,6 +509,7 @@ var BookmarkPropertiesPanel = {
     }
   },
 
+  //XXXDietrich - bug 370215 - update to use bookmark id once 360133 is fixed.
   _rebuildMicrosummaryPicker: function BPP__rebuildMicrosummaryPicker() {
     var microsummaryMenuList = document.getElementById("microsummaryMenuList");
     var microsummaryMenuPopup = document.getElementById("microsummaryMenuPopup");
@@ -625,7 +599,7 @@ var BookmarkPropertiesPanel = {
   * in the Bookmark Properties dialog.
   */
   dialogDeleteBookmark: function BPP_dialogDeleteBookmark() {
-    this.deleteBookmark(this._bookmarkURI);
+    this.deleteItem();
     this._hideBookmarkProperties();
   },
 
@@ -647,25 +621,18 @@ var BookmarkPropertiesPanel = {
   },
 
   /**
-   * This method deletes the bookmark corresponding to the URI stored
-   * in bookmarkURI.
+   * This method deletes the currently loaded item in this dialog.
    */
-  deleteBookmark: function BPP_deleteBookmark(bookmarkURI) {
-    this._assertURINotString(bookmarkURI);
+  deleteItem: function BPP_deleteItem() {
     var transactions = [];
 
-    if (this._identifierIsURI()) {
-      var folders = PlacesUtils.bookmarks.getBookmarkFolders(bookmarkURI, {});
-      if (folders.length == 0)
-        return;
-
-      for (var i = 0; i < folders.length; i++) {
-        var index = PlacesUtils.bookmarks.indexOfItem(folders[i], bookmarkURI);
-        var transaction = new PlacesRemoveItemTransaction(bookmarkURI,
-                                                          folders[i], index)
-        transactions.push(transaction);
-      }
-    } else { // This is a folder Id
+    if (this._variant == this.EDIT_BOOKMARK_VARIANT) {
+      var index = PlacesUtils.bookmarks.getItemIndex(this._bookmarkId);
+      var transaction = new PlacesRemoveItemTransaction(
+        this._bookmarkId, this._bookmarkURI, this._folderId, index);
+      transactions.push(transaction);
+    }
+    else { // This is a folder Id
       var transaction = new PlacesRemoveFolderTransaction(this._folderId);
       transactions.push(transaction);
     }
@@ -741,24 +708,31 @@ var BookmarkPropertiesPanel = {
     var urlbox = this._element("editURLBar");
     var titlebox = this._element("editTitleBox");
     var newURI = this._bookmarkURI;
-    if (this._identifierIsURI() && this._isURIEditable())
+    if (this._variant == this.ADD_BOOKMARK_VARIANT || this._isURIEditable())
       newURI = this._uri(urlbox.value);
 
+    // adding one or more bookmarks
     if (this._isFolderEditable()) {
+      var folder = PlacesUtils.bookmarks.bookmarksRoot;
       var selected =  this._folderTree.getSelectionNodes();
 
-      if (this._identifierIsURI()) {
-        for (var i = 0; i < selected.length; i++) {
-          var node = selected[i];
+      // add single bookmark
+      if (this._variant == this.ADD_BOOKMARK_VARIANT) {
+        // get folder id
+        if (selected.length > 0) {
+          var node = selected[0];
           if (node.type == node.RESULT_TYPE_FOLDER) {
-            var folder = node.QueryInterface(Ci.nsINavHistoryFolderResultNode);
-            if (!folder.childrenReadOnly) {
-              transactions.push(
-                new PlacesCreateItemTransaction(newURI, folder.folderId, -1));
-            }
+            var folderNode = node.QueryInterface(Ci.nsINavHistoryFolderResultNode);
+            if (!folderNode.childrenReadOnly)
+              folder = folderNode.folderId;
           }
         }
+        var txnCreateItem = new PlacesCreateItemTransaction(newURI, folder, -1);
+        txnCreateItem.childTransactions.push(
+          new PlacesEditItemTitleTransaction(-1, titlebox.value));
+        transactions.push(txnCreateItem);
       }
+      // bookmark multiple URIs
       else if (this._variant == this.ADD_MULTIPLE_BOOKMARKS_VARIANT) {
         var node = selected[0];
         var folder = node.QueryInterface(Ci.nsINavHistoryFolderResultNode);
@@ -766,25 +740,24 @@ var BookmarkPropertiesPanel = {
         var newFolderTrans = new PlacesCreateFolderTransaction(
             titlebox.value, folder.folderId, -1);
 
-        var childTransactions = [];
         for (var i = 0; i < this._URIList.length; ++i) {
           var uri = this._URIList[i];
-          childTransactions.push(
-              new PlacesCreateItemTransaction(uri, -1, -1));
-          childTransactions.push(
-              new PlacesEditItemTitleTransaction(uri,
-                                                 this._getURITitle(uri)));
+          var txn = new PlacesCreateItemTransaction(uri, -1, -1);
+          txn.childTransactions.push(
+            new PlacesEditItemTitleTransaction(uri, this._getURITitleFromHistory(uri)));
+          newFolderTrans.childTransactions.push(txn);
         }
-        newFolderTrans.childTransactions = childTransactions;
 
         transactions.push(newFolderTrans);
       }
     }
 
-
-    if (this._identifierIsURI())
+    // editing a bookmark
+    if (this._variant == this.EDIT_BOOKMARK_VARIANT) {
       transactions.push(
-        new PlacesEditItemTitleTransaction(newURI, titlebox.value));
+        new PlacesEditItemTitleTransaction(this._bookmarkId, titlebox.value));
+    }
+    // editing a folder or livemark
     else if (this._identifierIsFolderID()) {
       if (this._areLivemarkURIsVisible()) {
         if (this._identifierIsFolderID()) {
@@ -805,24 +778,28 @@ var BookmarkPropertiesPanel = {
         }
       }
 
-
       transactions.push(
         new PlacesEditFolderTitleTransaction(this._folderId, titlebox.value));
     }
 
+    // keyword
     if (this._isShortcutVisible()) {
       var shortcutbox =
         this._element("editShortcutBox");
-      transactions.push(
-        new PlacesEditBookmarkKeywordTransaction(this._bookmarkURI,
-                                                 shortcutbox.value));
+      if (shortcutbox.value.length > 0)
+        transactions.push(
+          new PlacesEditBookmarkKeywordTransaction(this._bookmarkId,
+                                                   shortcutbox.value));
     }
 
+    // change bookmark URI
     if (this._variant == this.EDIT_BOOKMARK_VARIANT &&
         (newURI.spec != this._bookmarkURI.spec)) {
-         PlacesUtils.changeBookmarkURI(this._bookmarkURI, newURI);
+      // XXXDietrich - needs to be transactionalized
+      PlacesUtils.changeBookmarkURI(this._bookmarkId, newURI);
     }
 
+    // microsummaries
     if (this._isMicrosummaryVisible()) {
       var menuList = document.getElementById("microsummaryMenuList");
 
@@ -840,6 +817,7 @@ var BookmarkPropertiesPanel = {
       // has actually changed, i.e. the user selected no microsummary,
       // but the bookmark previously had one, or the user selected a microsummary
       // which is not the one the bookmark previously had.
+      // XXXDietrich - bug 370215 - update to use bookmark id once 360133 is fixed.
       if ((newMicrosummary == null &&
            this._mss.hasMicrosummary(this._bookmarkURI)) ||
           (newMicrosummary != null &&
