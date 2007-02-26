@@ -573,21 +573,14 @@ var PlacesUtils = {
         new PlacesCreateSeparatorTransaction(container, index);
       return new PlacesAggregateTransaction("SeparatorMove", [removeTxn, createTxn]);
     case TYPE_X_MOZ_URL:
-      // Creating and Setting the title is a two step process, so create
-      // a transaction for each then aggregate them.
-      var createTxn =
-        new PlacesCreateItemTransaction(data.uri, container, index);
-      var editTxn =
-        new PlacesEditItemTitleTransaction(data.uri, data.title);
-      return new PlacesAggregateTransaction("DropMozURLItem", [createTxn, editTxn]);
     case TYPE_UNICODE:
-      // Creating and Setting the title is a two step process, so create
-      // a transaction for each then aggregate them.
+      // Creating and Setting the title is a two step process
       var createTxn =
         new PlacesCreateItemTransaction(data.uri, container, index);
-      var editTxn =
-        new PlacesEditItemTitleTransaction(data.uri, data.uri);
-      return new PlacesAggregateTransaction("DropItem", [createTxn, editTxn]);
+      var title = type == TYPE_X_MOZ_URL ? data.title : data.uri;
+      createTxn.childTransactions.push(
+          new PlacesEditItemTitleTransaction(-1, title));
+      return createTxn;
     }
     return null;
   },
