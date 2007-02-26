@@ -372,7 +372,7 @@ sub page_size    {
     my $self = shift;
     my $cgi = $self->{'cgi'};
     return $cgi->param('pagesize') if $cgi->param('pagesize');
-    return 25;  #TODO: make this a user setting
+    return 25;  
 }
 
 =head2 get_order_url

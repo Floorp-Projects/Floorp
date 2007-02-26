@@ -11,13 +11,13 @@
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
 #
-# The Original Code is the Bugzilla Test Runner System.
+# The Original Code is the Bugzilla Testopia System.
 #
-# The Initial Developer of the Original Code is Maciej Maczynski.
-# Portions created by Maciej Maczynski are Copyright (C) 2001
-# Maciej Maczynski. All Rights Reserved.
+# The Initial Developer of the Original Code is Greg Hendricks.
+# Portions created by Greg Hendricks are Copyright (C) 2006
+# Novell. All Rights Reserved.
 #
-# Contributor(s):  Greg Hendricks <ghendricks@novell.com>
+# Contributor(s): Greg Hendricks <ghendricks@novell.com>
 
 use strict;
 use lib ".";
@@ -31,15 +31,13 @@ use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::Search;
 use Bugzilla::Testopia::Table;
 
-use vars qw($vars $template);
+use vars qw($vars);
 
-require "globals.pl";
-my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
 my $query_limit = 5000;
 
-Bugzilla->login();
+Bugzilla->login(LOGIN_REQUIRED);
 my $serverpush = support_server_push($cgi);
 if ($serverpush) {
     print $cgi->multipart_init;
@@ -57,7 +55,6 @@ $::SIG{PIPE} = 'DEFAULT';
 
 my $action = $cgi->param('action') || '';
 if ($action eq 'Commit'){
-    Bugzilla->login(LOGIN_REQUIRED);
     # Get the list of checked items. This way we don't have to cycle through 
     # every test case, only the ones that are checked.
     my $reg = qr/p_([\d]+)/;
@@ -71,7 +68,7 @@ if ($action eq 'Commit'){
     my $progress_interval = 250;
     my $i = 0;
     my $total = scalar @params;
-
+    my @uneditable;
     foreach my $p ($cgi->param()){
         my $plan = Bugzilla::Testopia::TestPlan->new($1) if $p =~ $reg;
         next unless $plan;
@@ -87,8 +84,8 @@ if ($action eq 'Commit'){
         }
         
         unless ($plan->canedit){
-            print $cgi->multipart_end if $serverpush;
-            ThrowUserError("testopia-read-only", {'object' => 'plan', 'id' => $plan->id});
+            push @uneditable, $p;
+            next;
         }
         my $plan_type = $cgi->param('plan_type')    == -1 ? $plan->type_id : $cgi->param('plan_type');
         my $product   = $cgi->param('product_id')   == -1 ? $plan->product_id : $cgi->param('product_id');
@@ -154,7 +151,7 @@ else {
     $vars->{'type_list'} = $type_list;
     
     $vars->{'fullwidth'} = 1; #novellonly
-    $vars->{'dotweak'} = UserInGroup('Testers');
+    $vars->{'dotweak'} = Bugzilla->user->in_group('Testers');
     $vars->{'table'} = $table;
     if ($serverpush && !$cgi->param('debug')) {
         print $cgi->multipart_end;

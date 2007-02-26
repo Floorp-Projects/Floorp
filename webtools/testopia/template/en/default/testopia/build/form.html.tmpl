@@ -9,21 +9,28 @@
   # implied. See the License for the specific language governing
   # rights and limitations under the License.
   #
-  # The Original Code is the Bugzilla Test Runner System.
+  # The Original Code is the Bugzilla Testopia System.
   #
-  # The Initial Developer of the Original Code is Maciej Maczynski.
-  # Portions created by Maciej Maczynski are Copyright (C) 2001
-  # Maciej Maczynski. All Rights Reserved.
+  # The Initial Developer of the Original Code is Greg Hendricks.
+  # Portions created by Greg Hendricks are Copyright (C) 2006
+  # Novell. All Rights Reserved.
   #
-  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
-  #                 Greg Hendricks <ghendricks@novell.com>
+  # Contributor(s): Greg Hendricks <ghendricks@novell.com>
   #%]
+
+[% IF action == 'do_add' %]
+  [% title = "Create a New Build for $product.name" %]
+[% ELSE %]
+  [% title = "Edit Build $build.name for $product.name" %]
+[% END %]
+
 [% PROCESS global/header.html.tmpl %]
 [% PROCESS testopia/blocks.html.tmpl %]
 
 <form method="POST" action="tr_builds.cgi" name="form">
-  <input type="HIDDEN" name="action" value="[% action FILTER none %]"/>
-  <input type="HIDDEN" name="plan_id" value="[% plan.id FILTER none %]"/>
+  <input type="hidden" name="action" value="[% action FILTER none %]"/>
+  <input type="hidden" name="product_id" value="[% product.id FILTER none %]"/>
+  <input type="hidden" name="plan_id" value="[% plan_id FILTER url_quote %]"/>
   <input type="hidden" name="build_id" value="[% build.id FILTER none %]"/>
   <table border="0" cellpadding="2" cellspacing="0">
     <tr>
@@ -34,7 +41,7 @@
       <th align="right" valign="top">Milestone: </th>
       <td>[% PROCESS select sel = { name      => 'milestone',
                                     accesskey => 'm', 
-                                    list      => plan.product.milestones
+                                    list      => product.milestones
                                     default   => build.milestone } %]</td>
       <th align="right">Active:</th>
       <td width="20"><input type="checkbox" name="isactive" value="1" [% 'checked="checked"' IF build.isactive OR action == 'do_add'%]</td>
@@ -47,8 +54,10 @@
   <input type="submit" value="Submit">
 </form>
 <p>
-<a href="tr_show_plan.cgi?plan_id=[% plan.id FILTER none %]">Back</a> to test plan or
-<a href="tr_builds.cgi?plan_id=[% plan.id FILTER none %]">edit</a> builds
+[% IF plan_id %]
+<a href="tr_show_plan.cgi?plan_id=[% plan_id FILTER url_quote %]">Back</a> to test plan or
+[% END %]
+<a href="tr_builds.cgi?product_id=[% product.id FILTER none %]&plan_id=[% plan_id FILTER url_quote %]">edit</a> builds
 </p>
 
 [% PROCESS global/footer.html.tmpl %]

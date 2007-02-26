@@ -37,14 +37,14 @@ use Bugzilla::Testopia::Environment::Property;
 use JSON;
 
 use vars qw($vars $template);
-require "globals.pl";
+
 my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
 
 push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
 
-Bugzilla->login();
+Bugzilla->login(LOGIN_REQUIRED);
 
 sub get_searchable_objects{
     my $object = shift;
@@ -239,7 +239,7 @@ elsif ($action eq 'get_valid_exp'){
 	print $ret;
 }
 elsif ($action eq 'save_query'){
-    Bugzilla->login(LOGIN_REQUIRED);
+    ;
     my $query = $cgi->param('query_part');
     my $qname = $cgi->param('query_name');
     

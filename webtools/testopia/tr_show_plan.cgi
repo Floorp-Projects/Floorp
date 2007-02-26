@@ -29,6 +29,7 @@ use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::Util;
 use Bugzilla::Testopia::Util;
+use Bugzilla::Testopia::Constants;
 use Bugzilla::Testopia::Table;
 use Bugzilla::Testopia::TestPlan;
 use Bugzilla::Testopia::TestTag;
@@ -38,14 +39,14 @@ use Bugzilla::Testopia::Search;
 use Bugzilla::Testopia::Table;
 use JSON;
 
-require "globals.pl";
+require 'globals.pl';
 
-use vars qw($template $vars);
+use vars qw($vars);
 my $template = Bugzilla->template;
 my $run_query_limit = 5000;
 my $case_query_limit = 10000;
 
-Bugzilla->login();
+Bugzilla->login(LOGIN_REQUIRED);
 
 my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
@@ -75,7 +76,6 @@ $vars->{'form_action'} = "tr_show_plan.cgi";
 ### Archive or Unarchive ###
 if ($action eq 'Archive' || $action eq 'Unarchive'){
     print $cgi->header;
-    Bugzilla->login(LOGIN_REQUIRED);
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
     ThrowUserError("testopia-read-only", {'object' => 'plan'}) unless $plan->canedit;
     do_update($plan);
@@ -92,9 +92,8 @@ if ($action eq 'Archive' || $action eq 'Unarchive'){
 #############
 elsif ($action eq 'Clone'){
     print $cgi->header;
-    Bugzilla->login(LOGIN_REQUIRED);
+    ThrowUserError("testopia-permission-denied", {'object' => 'plan'}) unless Bugzilla->user->in_group('Testers');
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
-    ThrowUserError("testopia-read-only", {'object' => 'plan'}) unless ($plan->canedit);
     do_update($plan);
     $vars->{'plan'} = $plan;
     $template->process("testopia/plan/clone.html.tmpl", $vars) 
@@ -102,8 +101,11 @@ elsif ($action eq 'Clone'){
     
 }
 elsif ($action eq 'do_clone'){
-    Bugzilla->login(LOGIN_REQUIRED);
-    my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
+    unless (Bugzilla->user->in_group('Testers')){
+        print $cgi->header;
+        ThrowUserError("testopia-permission-denied", {'object' => 'plan'});
+    }
+
     if ($serverpush) {
         print $cgi->multipart_init();
         print $cgi->multipart_start();
@@ -112,10 +114,8 @@ elsif ($action eq 'do_clone'){
           || ThrowTemplateError($template->error());
 
     }
-    unless ($plan->canview){
-        print $cgi->multipart_end if $serverpush;
-        ThrowUserError("testopia-permission-denied", {'object' => 'plan'});
-    }
+    my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
+
     my $plan_name = $cgi->param('plan_name');
 
     # All DB actions use place holders so we are OK doing this
@@ -149,7 +149,7 @@ elsif ($action eq 'do_clone'){
     }
     else {
         # Give the author admin rights
-        $newplan->add_tester($author, 15);
+        $newplan->add_tester($author, TR_READ | TR_WRITE | TR_DELETE | TR_ADMIN );
         $newplan->set_tester_regexp( Param('testopia-default-plan-testers-regexp'), 3)
             if Param('testopia-default-plan-testers-regexp');
         $newplan->derive_regexp_testers(Param('testopia-default-plan-testers-regexp'))
@@ -222,7 +222,6 @@ elsif ($action eq 'do_clone'){
 ### Changes to Plan Attributes or Doc ###
 elsif ($action eq 'Commit'){
     print $cgi->header;
-    Bugzilla->login(LOGIN_REQUIRED);
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
     ThrowUserError("testopia-read-only", {'object' => 'plan'}) unless $plan->canedit;
     do_update($plan);
@@ -259,7 +258,6 @@ elsif ($action eq 'History'){
 #######################
 elsif ($action eq 'Attach'){
     print $cgi->header;
-    Bugzilla->login(LOGIN_REQUIRED);
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
     ThrowUserError("testopia-read-only", {'object' => 'plan'}) unless $plan->canedit;
     defined $cgi->upload('data')
@@ -293,26 +291,20 @@ elsif ($action eq 'Attach'){
     do_update($plan);
     display(Bugzilla::Testopia::TestPlan->new($plan_id));
 }
-#TODO: Import plans
-elsif ($action eq 'import'){
-    
-}
 elsif ($action eq 'Delete'){
     print $cgi->header;
-    Bugzilla->login(LOGIN_REQUIRED);
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
-    ThrowUserError("testopia-read-only", {'object' => 'plan'}) unless $plan->candelete;
+    ThrowUserError("testopia-no-delete", {'object' => 'plan'}) unless $plan->candelete;
     $vars->{'plan'} = $plan;
     $template->process("testopia/plan/delete.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());
     
 }
 elsif ($action eq 'do_delete'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
     unless ($plan->candelete){
         print $cgi->header;
-        ThrowUserError("testopia-read-only", {'object' => 'plan'});
+        ThrowUserError("testopia-no-delete", {'object' => 'plan'});
     }
     if ($serverpush) {
         print $cgi->multipart_init();
@@ -341,20 +333,6 @@ elsif ($action eq 'do_delete'){
     print $cgi->multipart_final if $serverpush;
 }
 ####################
-### Ajax Actions ###
-####################
-elsif ($action eq 'caselist'){
-    print $cgi->header;
-    my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
-    ThrowUserError("testopia-permission-denied", {'object' => 'plan'}) unless $plan->canview;
-    my $table = Bugzilla::Testopia::Table->new('case', 'tr_list_cases.cgi', $cgi, $plan->test_cases);
-    $table->{'ajax'} = 1;
-    $vars->{'table'} = $table;
-    $template->process("testopia/case/table.html.tmpl", $vars)
-        || ThrowTemplateError($template->error()); 
-        
-}
-####################
 ### Just show it ###
 ####################
 else{
@@ -370,41 +348,34 @@ sub do_update {
 
     my $newdoc = $cgi->param("plandoc");
     my $plan_name = trim($cgi->param('plan_name')) || '';
-    my $product = $cgi->param('product_id') || '';
+    my $product = Bugzilla::Testopia::Product->new($cgi->param('product_id'));
     my $prodver = $cgi->param('prod_version') || '';
     my $type = $cgi->param('type');
 
     ThrowUserError('testopia-missing-required-field', 
-        {'field' => 'name'}) if ($plan_name eq '');
+        {'field' => 'product'}) unless $product;
     ThrowUserError('testopia-missing-required-field', 
-        {'field' => 'product'}) if ($product eq '');
+        {'field' => 'name'}) if ($plan_name eq '');
     ThrowUserError('testopia-missing-required-field', 
         {'field' => 'product version'}) if ($prodver eq '');
 
     trick_taint($plan_name);
     trick_taint($prodver);
 
-    detaint_natural($product);
     detaint_natural($type);
     
     validate_selection($type, 'type_id', 'test_plan_types');
-    #TODO: 2.22 use Bugzilla::Product
-    validate_selection($product, 'id', 'products');
-
-    my $check = validate_version($prodver, $plan->product_id);
-    if ($check ne '1'){
-        $vars->{'tr_error'} = "Version mismatch. Please update the product version";
-        $prodver = $check;
-    }
     
+    my $version = Bugzilla::Version::check_version($prodver, $product->id);
+       
     if($plan->diff_plan_doc($newdoc) ne ''){
         $plan->store_text($plan->id, Bugzilla->user->id, $newdoc);
     }
     
     my %newvalues = ( 
         'name'       => $plan_name,
-        'product_id' => $product,
-        'default_product_version' => $prodver,
+        'product_id' => $product->id,
+        'default_product_version' => $version->name,
         'type_id'    => $type
     );
     
@@ -507,5 +478,3 @@ sub display {
         ThrowTemplateError($template->error());
 
 }
-
-

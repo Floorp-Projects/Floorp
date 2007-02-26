@@ -14,8 +14,8 @@
 # The Original Code is the Bugzilla Testopia System.
 #
 # The Initial Developer of the Original Code is Greg Hendricks.
-# Portions created by Greg Hendricks are Copyright (C) 2001
-# Greg Hendricks. All Rights Reserved.
+# Portions created by Greg Hendricks are Copyright (C) 2006
+# Novell. All Rights Reserved.
 #
 # Contributor(s): Greg Hendricks <ghendricks@novell.com>
 #                 Michael Hight <mjhight@gmail.com>
@@ -44,12 +44,11 @@ use JSON;
 use Data::Dumper;
 
 Bugzilla->login(LOGIN_REQUIRED);
-Bugzilla->batch(1);
 
 my $cgi = Bugzilla->cgi;
-
-use vars qw($vars $template);
 my $template = Bugzilla->template;
+
+use vars qw($vars);
 
 print $cgi->header;
 
@@ -334,7 +333,7 @@ sub do_edit_category{
     
     trick_taint($name);
     detaint_natural($product_id);
-    
+    bugzilla->batch(1);
     eval{
         validate_selection($product_id, 'id', 'products');
     };
@@ -409,7 +408,7 @@ sub do_edit_property{
     
     trick_taint($name);
     detaint_natural($element_id);
-   
+    bugzilla->batch(1);
     eval{
         validate_selection($element_id, 'element_id', 'test_environment_element');
     };

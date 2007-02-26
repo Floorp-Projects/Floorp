@@ -425,7 +425,13 @@ Returns true if the logged in user has rights to view this attachment
 
 sub canview {
     my $self = shift;
-# TODO: Check for private attachments
+    return 1 if Bugzilla->user->in_group('Testers');
+    foreach my $i (@{$self->cases}){
+        return 0 unless $i->canview;
+    }
+    foreach my $i (@{$self->plans}){
+        return 0 unless $i->canview;
+    }
     return 1;
 }
 
@@ -437,15 +443,14 @@ Returns true if the logged in user has rights to edit this attachment
 
 sub canedit {
     my $self = shift;
-    my $obj;
-    if ($self->plan_id){
-        $obj = Bugzilla::Testopia::TestPlan->new($self->plan_id);
+    return 1 if Bugzilla->user->in_group('Testers');
+    foreach my $i (@{$self->cases}){
+        return 0 unless $i->canedit;
     }
-    else {
-        $obj = Bugzilla::Testopia::TestCase->new($self->case_id);
+    foreach my $i (@{$self->plans}){
+        return 0 unless $i->canedit;
     }
-
-    return $obj->canedit && $self->canview; $obj->canedit;
+    return 1;
 }
 
 =head2 candelete
@@ -459,7 +464,13 @@ sub candelete {
     return 1 if Bugzilla->user->in_group("admin");
     return 0 unless $self->canedit && Param("allow-test-deletion");
     return 1 if Bugzilla->user->id == $self->submitter->id;
-    return 0;
+    foreach my $i (@{$self->cases}){
+        return 0 unless $i->canedit;
+    }
+    foreach my $i (@{$self->plans}){
+        return 0 unless $i->canedit;
+    }
+    return 1;
 }
 
 ###############################
@@ -467,8 +478,6 @@ sub candelete {
 ###############################
 
 sub id             { return $_[0]->{'attachment_id'};    }
-sub plan_id        { return $_[0]->{'plan_id'};          }
-sub case_id        { return $_[0]->{'case_id'};          }
 sub submitter      { return Bugzilla::User->new($_[0]->{'submitter_id'});      }
 sub description    { return $_[0]->{'description'};      }
 sub filename       { return $_[0]->{'filename'};         }
@@ -510,6 +519,54 @@ sub datasize {
                                            undef, $self->{'attachment_id'});
     $self->{'datasize'} = $datasize;
     return $self->{'datasize'};
+}
+
+=head2 cases
+
+Returns a reference to a list of Testopia::TestCase objects linked
+to this attachment
+
+=cut
+
+sub cases {
+    my ($self) = @_;
+    my $dbh = Bugzilla->dbh;
+    return $self->{'cases'} if exists $self->{'cases'};
+    my $caseids = $dbh->selectcol_arrayref(
+            "SELECT case_id FROM test_case_attachments
+              WHERE attachment_id = ?", 
+             undef, $self->id);
+    my @cases;
+    foreach my $id (@{$caseids}){
+        push @cases, Bugzilla::Testopia::TestCase->new($id);
+    }
+
+    $self->{'cases'} = \@cases;
+    return $self->{'cases'};
+}
+
+=head2 plans
+
+Returns a reference to a list of Testopia::TestCase objects linked
+to this plan
+
+=cut
+
+sub plans {
+    my ($self) = @_;
+    my $dbh = Bugzilla->dbh;
+    return $self->{'plans'} if exists $self->{'plans'};
+    my $planids = $dbh->selectcol_arrayref(
+            "SELECT plan_id FROM test_plan_attachments
+              WHERE attachment_id = ?", 
+             undef, $self->id);
+    my @plans;
+    foreach my $id (@{$planids}){
+        push @plans, Bugzilla::Testopia::TestPlan->new($id);
+    }
+
+    $self->{'plans'} = \@plans;
+    return $self->{'plans'};
 }
 
 =head1 SEE ALSO

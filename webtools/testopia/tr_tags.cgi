@@ -11,11 +11,11 @@
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
 #
-# The Original Code is the Bugzilla Test Runner System.
+# The Original Code is the Bugzilla Testopia System.
 #
-# The Initial Developer of the Original Code is Maciej Maczynski.
-# Portions created by Maciej Maczynski are Copyright (C) 2001
-# Maciej Maczynski. All Rights Reserved.
+# The Initial Developer of the Original Code is Greg Hendricks.
+# Portions created by Greg Hendricks are Copyright (C) 2006
+# Novell. All Rights Reserved.
 #
 # Contributor(s): Greg Hendricks <ghendricks@novell.com>
 
@@ -36,7 +36,6 @@ use Bugzilla::Testopia::TestCase;
 
 Bugzilla->login(LOGIN_REQUIRED);
 
-require "globals.pl";
 my $cgi = Bugzilla->cgi;
 
 use vars qw($vars $template);
@@ -146,6 +145,8 @@ else {
 sub display {
     my $dbh = Bugzilla->dbh;
     my @tags;
+    my $user = login_to_id($cgi->param('user')) if $cgi->param('user');
+    
     if ($cgi->param('action') eq 'show_all' && Bugzilla->user->in_group('admin')){
         my $tags = $dbh->selectcol_arrayref(
                 "SELECT tag_id FROM test_tags 
@@ -156,8 +157,8 @@ sub display {
         $vars->{'viewall'} = 1;
     }
     else {
-        my $userid = $cgi->param('user') ? DBNameToIdAndCheck($cgi->param('user')) : Bugzilla->user->id;
-        
+        my $userid = $user ? $user : Bugzilla->user->id;
+        ThrowUserError("invalid_username", { name => $cgi->param('user') }) unless $userid;        
         my $user_tags = $dbh->selectcol_arrayref(
                  "(SELECT test_tags.tag_id, test_tags.tag_name AS name FROM test_case_tags
               INNER JOIN test_tags ON test_case_tags.tag_id = test_tags.tag_id 

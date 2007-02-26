@@ -14,7 +14,7 @@
 # The Original Code is the Bugzilla Testopia System.
 #
 # The Initial Developer of the Original Code is Greg Hendricks.
-# Portions created by Greg Hendricks are Copyright (C) 2007
+# Portions created by Greg Hendricks are Copyright (C) 2006
 # Novell. All Rights Reserved.
 #
 # Contributor(s): Greg Hendricks <ghendricks@novell.com>
@@ -63,18 +63,16 @@ if ($action eq 'Apply Changes'){
 elsif ($action eq 'Add User'){
     do_update();
 
-    my $userid = DBNameToIdAndCheck(trim($cgi->param('adduser')));
+    my $userid = Bugzilla->user->login_to_id(trim($cgi->param('adduser'))) || ThrowUserError("invalid_username", { name => $cgi->param('adduser')});
     ThrowUserError('testopia-tester-already-on-list', {'login' => $cgi->param('adduser')}) 
         if ($plan->check_tester($userid));
         
     my $perms = 0;
     
-    # The order we check these is important since each permission 
-    # implies the prior ones.
     $perms |= TR_READ   if $cgi->param("nr");
-    $perms |= TR_WRITE  if $cgi->param("nw");
-    $perms |= TR_DELETE if $cgi->param("nd");
-    $perms |= TR_ADMIN  if $cgi->param("na");
+    $perms |= TR_READ | TR_WRITE  if $cgi->param("nw");
+    $perms |= TR_READ | TR_WRITE | TR_DELETE if $cgi->param("nd");
+    $perms |= TR_READ | TR_WRITE | TR_DELETE | TR_ADMIN  if $cgi->param("na");
     
     detaint_natural($perms);
     $plan->add_tester($userid, $perms); 
@@ -104,12 +102,11 @@ sub do_update {
     
     my $regexp_perms = 0;
 
-    # The order we check these is important since each permission 
-    # implies the prior ones.
+    # Each permission implies the prior ones.
     $regexp_perms |= TR_READ   if $cgi->param('pr');
-    $regexp_perms |= TR_WRITE  if $cgi->param('pw');
-    $regexp_perms |= TR_DELETE if $cgi->param('pd');
-    $regexp_perms |= TR_ADMIN  if $cgi->param('pa');
+    $regexp_perms |= TR_READ | TR_WRITE  if $cgi->param('pw');
+    $regexp_perms |= TR_READ | TR_WRITE | TR_DELETE if $cgi->param('pd');
+    $regexp_perms |= TR_READ | TR_WRITE | TR_DELETE | TR_ADMIN  if $cgi->param('pa');
     
     detaint_natural($regexp_perms);
     $plan->set_tester_regexp($tester_regexp, $regexp_perms);
@@ -117,12 +114,10 @@ sub do_update {
     foreach my $row (@{$plan->access_list}){
         my $perms = 0;
 
-        # The order we check these is important since each permission 
-        # implies the prior ones.
         $perms |= TR_READ   if $cgi->param('r'.$row->{'user'}->id);
-        $perms |= TR_WRITE  if $cgi->param('w'.$row->{'user'}->id);
-        $perms |= TR_DELETE if $cgi->param('d'.$row->{'user'}->id);
-        $perms |= TR_ADMIN  if $cgi->param('a'.$row->{'user'}->id);
+        $perms |= TR_READ | TR_WRITE  if $cgi->param('w'.$row->{'user'}->id);
+        $perms |= TR_READ | TR_WRITE | TR_DELETE if $cgi->param('d'.$row->{'user'}->id);
+        $perms |= TR_READ | TR_WRITE | TR_DELETE | TR_ADMIN  if $cgi->param('a'.$row->{'user'}->id);
         
         detaint_natural($perms);
         $plan->update_tester($row->{'user'}->id, $perms);

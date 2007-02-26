@@ -11,13 +11,16 @@
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
 #
-# The Original Code is the Bugzilla Test Runner System.
+# The Original Code is the Bugzilla Testopia System.
 #
-# The Initial Developer of the Original Code is Maciej Maczynski.
-# Portions created by Maciej Maczynski are Copyright (C) 2001
-# Maciej Maczynski. All Rights Reserved.
+# The Initial Developer of the Original Code is Greg Hendricks.
+# Portions created by Greg Hendricks are Copyright (C) 2006
+# Novell. All Rights Reserved.
 #
 # Contributor(s): Greg Hendricks <ghendricks@novell.com>
+#                 Brian Kramer <bkramer@novell.com>
+#                 Michael Hight <mjhight@gmail.com>
+#                 Garrett Braden <gbraden@novell.com>
 
 use strict;
 use lib ".";
@@ -40,11 +43,13 @@ use Bugzilla::Testopia::Environment::Property;
 use Data::Dumper;
 use JSON;
 
+require 'globals.pl';
+
 Bugzilla->login(LOGIN_REQUIRED);
 
 my $cgi = Bugzilla->cgi;
 
-use vars qw($vars $template);
+use vars qw($vars);
 my $template = Bugzilla->template;
 
 print $cgi->header;
@@ -270,8 +275,10 @@ sub get_products{
 
 sub get_categories{
     my ($product_id) = (@_);
-    my $product = Bugzilla::Testopia::Product->new($product_id);
-    return unless Bugzilla->user->can_see_product($product->name);
+    if ($product_id){
+        my $product = Bugzilla::Testopia::Product->new($product_id);
+        return unless Bugzilla->user->can_see_product($product->name);
+    }
     my $category = Bugzilla::Testopia::Environment::Category->new({});
     print $category->product_categories_to_json($product_id,1);
 }

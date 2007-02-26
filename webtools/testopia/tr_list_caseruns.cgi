@@ -11,13 +11,13 @@
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
 #
-# The Original Code is the Bugzilla Test Runner System.
+# The Original Code is the Bugzilla Testopia System.
 #
-# The Initial Developer of the Original Code is Maciej Maczynski.
-# Portions created by Maciej Maczynski are Copyright (C) 2001
-# Maciej Maczynski. All Rights Reserved.
+# The Initial Developer of the Original Code is Greg Hendricks.
+# Portions created by Greg Hendricks are Copyright (C) 2006
+# Novell. All Rights Reserved.
 #
-# Contributor(s):  Greg Hendricks <ghendricks@novell.com>
+# Contributor(s): Greg Hendricks <ghendricks@novell.com>
 
 use strict;
 use lib ".";
@@ -25,6 +25,7 @@ use lib ".";
 use Bugzilla;
 use Bugzilla::Bug;
 use Bugzilla::Util;
+use Bugzilla::User;
 use Bugzilla::Error;
 use Bugzilla::Constants;
 use Bugzilla::Testopia::Search;
@@ -33,10 +34,9 @@ use Bugzilla::Testopia::TestCaseRun;
 use Bugzilla::Testopia::Table;
 use Bugzilla::Testopia::Constants;
 
-use vars qw($vars $template);
+use vars qw($vars);
 require 'globals.pl';
 
-my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
 my $query_limit = 15000;
@@ -46,7 +46,8 @@ push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
 $cgi->send_cookie(-name => "TEST_LAST_ORDER",
                   -value => $cgi->param('order'),
                   -expires => "Fri, 01-Jan-2038 00:00:00 GMT");
-Bugzilla->login();
+
+Bugzilla->login(LOGIN_REQUIRED);
 
 $vars->{'fullwidth'} = 1;
 
@@ -68,7 +69,6 @@ $::SIG{PIPE} = 'DEFAULT';
 my $action = $cgi->param('action') || '';
 
 if ($action eq 'Commit'){
-    Bugzilla->login(LOGIN_REQUIRED);
     # Get the list of checked items. This way we don't have to cycle through 
     # every test case, only the ones that are checked.
     my $reg = qr/r_([\d]+)/;
@@ -87,7 +87,8 @@ if ($action eq 'Commit'){
     my $progress_interval = 250;
     my $i = 0;
     my $total = scalar @params;
-
+    my @uneditable;
+    
     foreach my $p ($cgi->param()){
         my $caserun = Bugzilla::Testopia::TestCaseRun->new($1) if $p =~ $reg;
         next unless $caserun;
@@ -115,8 +116,8 @@ if ($action eq 'Commit'){
         trick_taint($notes);
         
         unless ($caserun->canedit){
-            print $cgi->multipart_end if $serverpush;
-            ThrowUserError("testopia-read-only", {'object' => 'Case Run', 'id' => $caserun->id});
+            push @uneditable, $caserun;
+            next;
         }
         
         # Switch to the record representing this build and environment combo.
@@ -124,8 +125,11 @@ if ($action eq 'Commit'){
         $caserun = $caserun->switch($build,$env);
         
         my $status   = $cgi->param('status') == -1 ? $caserun->status_id : $cgi->param('status');
-        my $assignee = $cgi->param('assignee') eq '--Do Not Change--' ? $caserun->assignee->id : DBNameToIdAndCheck(trim($cgi->param('assignee')));       
-        
+        my $assignee = $cgi->param('assignee') eq '--Do Not Change--' ? $caserun->assignee->id : login_to_id(trim($cgi->param('assignee')));       
+        unless ($assignee){
+           print $cgi->multipart_end if $serverpush;
+           ThrowUserError("invalid_username", { name => $cgi->param('assignee') });
+        }
         detaint_natural($status);
         
         $caserun->set_status($status)     if ($caserun->status_id != $status);
@@ -184,7 +188,6 @@ if ($action eq 'Commit'){
     exit;
 }
 elsif ($action eq 'Delete Selected'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $reg = qr/r_([\d]+)/;
     my @caseruns;
     foreach my $p ($cgi->param()){
@@ -214,12 +217,11 @@ elsif ($action eq 'Delete Selected'){
     exit;
 }
 elsif ($action eq 'do_delete'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my @caseruns;
     foreach my $id ($cgi->param('caserun_id')){
         my $caserun = Bugzilla::Testopia::TestCaseRun->new($id);
         push @caseruns, $caserun;
-        if (!$caserun->candelete){
+        unless ($caserun->candelete){
             print $cgi->multipart_end if $serverpush;
             ThrowUserError("testopia-read-only", {'object' => 'case run'});
         }
@@ -288,7 +290,7 @@ if ($cgi->param('run_id')){
 my $case = Bugzilla::Testopia::TestCase->new({'case_id' => 0});
 $vars->{'expand_report'} = $cgi->param('expand_report') || 0;
 $vars->{'expand_filter'} = $cgi->param('expand_filter') || 0;
-$vars->{'dotweak'} = UserInGroup('Testers');
+$vars->{'dotweak'} = Bugzilla->user->in_group('Testers');
 $vars->{'table'} = $table;
 $vars->{'action'} = 'tr_list_caserun.cgi';
 $vars->{'caserun'} = Bugzilla::Testopia::TestCaseRun->new({});

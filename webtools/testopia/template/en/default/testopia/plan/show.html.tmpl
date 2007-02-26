@@ -81,24 +81,6 @@
          document.getElementById("remCat").disabled = false;
 
     }
-    function removeCatBuild(id,item){
-        if (id == 0)
-          return;
-        var choice = confirm("You are about to delete this " + item + ". Continue?");
-        if (choice == 0)
-          return;
-        var myURL = (item == 'category' ? 'tr_categories.cgi' : 'tr_builds.cgi');
-        document.getElementById("remBuild").disabled = true;
-        document.getElementById("remCat").disabled = true;
-        dojo.io.bind({
-            url:     myURL,
-            content: {  category_id: id, build_id: id, plan_id: [% plan.id FILTER none %], action: 'do_delete', ajax: 1 },
-            load:    function(type, data, evt){ fillSelects(data, item);},
-            error:   function(type, error){ alert("ERROR Removing Category or Build " + String(error));},
-            mimetype: "text/xml"
-            });
-    }
-
     function updateCaseList(order, direction){
         dojo.io.bind({
             url:     'tr_show_plan.cgi',
@@ -162,7 +144,9 @@
         <input type="submit" name="action" value="Commit" style="visibility:hidden;">
         <input type="submit" name="action" value="[% plan.isactive ? "Archive" : "Unarchive" %]">
         <input type="submit" name="action" value="History">
+      [% IF user.in_group('Testers'); %]
         <input type="submit" name="action" value="Clone">
+      [% END %]
         <input type="submit" name="action" value="Print">
       [% IF plan.candelete %]
         <input type="submit" name="action" value="Delete">
@@ -178,9 +162,9 @@
 <div id="plan_categories">
 <table width="100%" border="0">
   <tr class="bz_row_header">
-    <th><a href="tr_categories.cgi?plan_id=[% plan.id FILTER none %]" target="_blank">Categories</a></th>
+    <th><a href="tr_categories.cgi?plan_id=[% plan.id FILTER none %]&product_id=[% plan.product.id FILTER none %]">Categories</a></th>
     <th><a href="tr_tags.cgi?plan_id=[% plan.id FILTER none %]">Tags</a></th>
-    <th><a href="tr_builds.cgi?plan_id=[% plan.id FILTER none %]" target="_blank">Builds</a></th>
+    <th><a href="tr_builds.cgi?product_id=[% plan.product.id FILTER none %]&plan_id=[% plan.id FILTER none %]">Builds</a></th>
   </tr>
   <tr>
     <td align="left">
@@ -189,9 +173,6 @@
                               accesskey => 'c'
                               elements  => 7 } %]
     <br>
-    [% IF plan.candelete %]
-    <input type="button" value="Remove" id="remCat" onClick='removeCatBuild(document.getElementById("category").value, "category")'>
-    [% END %]
     </td>
     <td valign="top" align="center" rowspan="2">
 
@@ -208,15 +189,12 @@
                               accesskey => 'b'
                               elements  => 7 } %]
     <br>
-    [% IF plan.candelete %]
-    <input type="button" value="Remove" id="remBuild" onClick='removeCatBuild(document.getElementById("build").value, "build")'>
-    [% END %]
     </td>
     
   </tr>
   <tr>
-    <td align="left"><a href="tr_categories.cgi?plan_id=[% plan.id FILTER none %]&action=add" target="_blank">Add</a></p></td>
-    <td align="right"><a href="tr_builds.cgi?plan_id=[% plan.id FILTER none %]&action=add" target="_blank">Add</a></p></td>
+    <td align="left"><a href="tr_categories.cgi?product_id=[% plan.product.id FILTER none %]&plan_id=[% plan.id FILTER none %]&action=add">Add</a></p></td>
+    <td align="right"><a href="tr_builds.cgi?product_id=[% plan.product.id FILTER none %]&plan_id=[% plan.id FILTER none %]&action=add">Add</a></p></td>
   </tr>
 </table>
 </div>

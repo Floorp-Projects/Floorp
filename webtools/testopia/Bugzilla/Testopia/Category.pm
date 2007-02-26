@@ -10,11 +10,11 @@
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
 #
-# The Original Code is the Bugzilla Test Runner System.
+# The Original Code is the Bugzilla Testopia System.
 #
-# The Initial Developer of the Original Code is Maciej Maczynski.
-# Portions created by Maciej Maczynski are Copyright (C) 2001
-# Maciej Maczynski. All Rights Reserved.
+# The Initial Developer of the Original Code is Greg Hendricks.
+# Portions created by Maciej Maczynski are Copyright (C) 2006
+# Novell. All Rights Reserved.
 #
 # Contributor(s): Greg Hendricks <ghendricks@novell.com>
 
@@ -39,11 +39,8 @@ package Bugzilla::Testopia::Category;
 use strict;
 
 use Bugzilla::Util;
-use Bugzilla::Error;
 use Bugzilla::Testopia::TestPlan;
 use Bugzilla::Testopia::TestCase;
-
-use base qw(Exporter);
 
 ###############################
 ####    Initialization     ####
@@ -59,14 +56,13 @@ use base qw(Exporter);
 =cut
 
 use constant DB_COLUMNS => qw(
-    test_case_categories.category_id
-    test_case_categories.product_id
-    test_case_categories.name
-    test_case_categories.description
+    category_id
+    product_id
+    name
+    description
 );
 
 our $columns = join(", ", DB_COLUMNS);
-
 
 ###############################
 ####       Methods         ####
@@ -149,9 +145,6 @@ Removes this category from the specified product
 
 sub remove {
     my $self = shift;
-    my ($plan) = @_;
-    ThrowUserError("testopia-incorrect-plan") if ($self->{'product_id'} != $plan->product_id);
-    ThrowUserError("testopia-non-zero-case-count") if ($self->{'case_count'});
     my $dbh = Bugzilla->dbh;
     $dbh->do("DELETE FROM test_case_categories
               WHERE category_id = ?", undef,
@@ -194,6 +187,12 @@ sub update {
               ($name, $desc, $self->{'category_id'}));
 }
 
+sub candelete {
+  my $self = shift;
+  return 0 unless Bugzilla->user->in_group('Testers');
+  return 0 if ($self->case_count);
+  return 1;   
+}
     
 ###############################
 ####      Accessors        ####
@@ -217,9 +216,9 @@ Returns the description of this object
 
 =cut
 
-sub id              { return $_[0]->{'category_id'};          }
-sub product_id      { return $_[0]->{'product_id'};    }
-sub name            { return $_[0]->{'name'};    }
+sub id              { return $_[0]->{'category_id'};  }
+sub product_id      { return $_[0]->{'product_id'};   }
+sub name            { return $_[0]->{'name'};         }
 sub description     { return $_[0]->{'description'};  }
 
 =head2 case_count

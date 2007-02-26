@@ -14,8 +14,8 @@
 # The Original Code is the Bugzilla Testopia System.
 #
 # The Initial Developer of the Original Code is Greg Hendricks.
-# Portions created by Greg Hendricks are Copyright (C) 2001
-# Greg Hendricks. All Rights Reserved.
+# Portions created by Greg Hendricks are Copyright (C) 2006
+# Novell. All Rights Reserved.
 #
 # Contributor(s): Greg Hendricks <ghendricks@novell.com>
 
@@ -30,11 +30,11 @@ use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::Constants;
 use Bugzilla::Testopia::Report;
 
-use vars qw($template $vars);
+use vars qw($vars);
 my $template = Bugzilla->template;
 my $cgi = Bugzilla->cgi;
 
-Bugzilla->login();
+Bugzilla->login(LOGIN_REQUIRED);
 
 my $type = $cgi->param('type') || '';
 

@@ -11,15 +11,15 @@
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
 #
-# The Original Code is the Bugzilla Test Runner System.
+# The Original Code is the Bugzilla Testopia System.
 #
-# The Initial Developer of the Original Code is Maciej Maczynski.
-# Portions created by Maciej Maczynski are Copyright (C) 2001
-# Maciej Maczynski. All Rights Reserved.
+# The Initial Developer of the Original Code is Greg Hendricks.
+# Portions created by Maciej Maczynski are Copyright (C) 2006
+# Novell. All Rights Reserved.
 #
-# Contributor(s): Maciej Maczynski <macmac@xdsnet.pl>
-#                 Ed Fuentetaja <efuentetaja@acm.org>
-#                 Greg Hendricks <ghendricks@novell.com>
+# Contributor(s): Greg Hendricks <ghendricks@novell.com>
+
+# Portions taken from Bugzilla reports by Gervase Markham <gerv@gerv.net>
 
 use strict;
 use lib ".";
@@ -32,11 +32,11 @@ use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::Constants;
 use Bugzilla::Testopia::Report;
 
-use vars qw($template $vars);
+use vars qw($vars);
 my $template = Bugzilla->template;
 my $cgi = Bugzilla->cgi;
 
-Bugzilla->login();
+Bugzilla->login(LOGIN_REQUIRED);
 
 my $type = $cgi->param('type') || '';
 
@@ -53,6 +53,7 @@ if ($type eq 'status-breakdown'){
     push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
     
     my $case = Bugzilla::Testopia::TestCase->new($case_id);
+    exit unless $case->canview;
     
     my @data;
     my $caserun = Bugzilla::Testopia::TestCaseRun->new({});

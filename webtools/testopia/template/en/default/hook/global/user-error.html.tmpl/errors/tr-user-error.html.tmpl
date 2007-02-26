@@ -49,9 +49,6 @@
     [% title = "Build Has Case Runs" %]
     You have attempted to delete a build that still has test case runs 
     associated with it. This is historical data and should not be removed.
-  [% ELSIF error == "testopia-incorrect-plan" %]
-    [% title = "Plan mismatch" %]
-    You have attempted to modify a category that does not belong to this plan.
   [% ELSIF error == "testopia-missing-attachment-key" %]
     [% title = "Missing Key" %]
     You have requested to save an attachment, but I didn't see which test plan 
@@ -91,7 +88,8 @@
     You can create environments <a href="tr_new_environment.cgi">here</a>.
   [% ELSIF error == "testopia-missing-required-field" %]
     [% title = "Missing Required Field" %]
-    It seems there was no value entered for [% field FILTER none %].
+    It seems there was either no value entered for [% field FILTER none %], or the value entered
+    did not match any known values.
   [% ELSIF error == "testopia-missing-plans-list" %]
     [% title = "Plan list missing" %]
     Somehow the list of plans associated with the test case to be cloned is missing. 

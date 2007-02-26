@@ -26,22 +26,21 @@ use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::Util;
-
+use Bugzilla::User;
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::TestCase;
 use JSON;
 
+use vars qw($vars);
+
 require "globals.pl";
 
-use vars qw($template $vars);
+Bugzilla->login(LOGIN_REQUIRED);
+   
+my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
 
-Bugzilla->login(LOGIN_REQUIRED);
-
-print Bugzilla->cgi->header();
-   
-my $dbh = Bugzilla->dbh;
-my $cgi = Bugzilla->cgi;
+print $cgi->header;
 
 push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
 
@@ -96,7 +95,8 @@ if ($action eq 'Add'){
     my $est_time    = $cgi->param("estimated_time") || '';
     my @comps       = $cgi->param("components");
     if ($tester){
-        $tester = DBNameToIdAndCheck($cgi->param('tester'));
+        $tester = login_to_id(trim($cgi->param('tester')))
+          || ThrowUserError("invalid_username", { name => $cgi->param('tester') });
     }
     
     ThrowUserError('testopia-missing-required-field', {'field' => 'summary'})  if $summary  eq '';

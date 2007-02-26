@@ -27,6 +27,7 @@ use Bugzilla::Bug;
 use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::Util;
+use Bugzilla::User;
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::Search;
 use Bugzilla::Testopia::Table;
@@ -34,13 +35,13 @@ use Bugzilla::Testopia::TestRun;
 use Bugzilla::Testopia::TestCase;
 use Bugzilla::Testopia::TestCaseRun;
 
-use vars qw($template $vars);
+require 'globals.pl';
+
+use vars qw($vars);
 my $template = Bugzilla->template;
 my $query_limit = 15000;
-# These are going away after 2.22
-require "globals.pl";
 
-Bugzilla->login();
+Bugzilla->login(LOGIN_REQUIRED);
    
 my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
@@ -58,12 +59,11 @@ my $action = $cgi->param('action') || '';
 # For use on the classic form
 
 if ($action eq 'Commit'){
-    Bugzilla->login(LOGIN_REQUIRED);
+    ;
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
     display(do_update($caserun));
 }
 elsif ($action eq 'Attach'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $caserun = do_update(Bugzilla::Testopia::TestCaseRun->new($caserun_id));
 
     defined $cgi->upload('data')
@@ -98,7 +98,6 @@ elsif ($action eq 'Attach'){
 }
 
 elsif ($action eq 'delete'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
     ThrowUserError("testopia-read-only", {'object' => 'case run'}) if !$caserun->candelete;
     $vars->{'title'} = 'Remove Test Case '. $caserun->case->id .' from Run: ' . $caserun->run->summary;
@@ -109,7 +108,6 @@ elsif ($action eq 'delete'){
         ThrowTemplateError($template->error());
 }
 elsif ($action eq 'do_delete'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
     ThrowUserError("testopia-read-only", {'object' => 'case run'}) if !$caserun->candelete;
     $caserun->obliterate;
@@ -152,7 +150,6 @@ elsif ($action eq 'do_delete'){
 ### Ajax Actions ###
 ####################
 elsif ($action eq 'update_build'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
     if (!$caserun->canedit) { 
         print "Error - You don't have permission";
@@ -178,7 +175,6 @@ elsif ($action eq 'update_build'){
     print $head_data . "|~+" . $body_data;
 }
 elsif ($action eq 'update_environment'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
     if (!$caserun->canedit) { 
         print "Error - You don't have permission";
@@ -201,7 +197,6 @@ elsif ($action eq 'update_environment'){
     print $head_data . "|~+" . $body_data;
 }
 elsif ($action eq 'update_status'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
     if (!$caserun->canedit){
         print "Error - You don't have permission";
@@ -218,7 +213,6 @@ elsif ($action eq 'update_status'){
     }
 }
 elsif ($action eq 'update_note'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
     if (!$caserun->canedit){
         print "Error - You don't have permission";
@@ -229,7 +223,6 @@ elsif ($action eq 'update_note'){
     $caserun->append_note($note);    
 }
 elsif ($action eq 'update_assignee'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
     if (!$caserun->canedit){
         print "Error - You don't have permission";
@@ -243,7 +236,6 @@ elsif ($action eq 'update_assignee'){
     $caserun->set_assignee($assignee_id);
 }
 elsif ($action eq 'update_sortkey'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
     if (!$caserun->canedit){
         print "Error - You don't have permission";
@@ -257,7 +249,6 @@ elsif ($action eq 'update_sortkey'){
     $caserun->set_sortkey($sortkey);
 }
 elsif ($action eq 'get_notes'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
     if (!$caserun->canedit){
         print "Error - You don't have permission";
@@ -266,7 +257,6 @@ elsif ($action eq 'get_notes'){
     print '<pre>' .  $caserun->notes . '</pre>';
 }
 elsif ($action eq 'attach_bug'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
     if (!$caserun->canedit){
         print "Error - You don't have permission";
@@ -291,7 +281,6 @@ elsif ($action eq 'attach_bug'){
     }
 }
 elsif ($action eq 'detach_bug'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
     if (!$caserun->canedit){
         print "Error - You don't have permission";
@@ -320,7 +309,11 @@ sub do_update {
     my $notes    = $cgi->param('notes');
     my $build    = $cgi->param('caserun_build');
     my $env      = $cgi->param('caserun_env');
-    my $assignee = DBNameToIdAndCheck(trim($cgi->param('assignee'))) if $cgi->param('assignee');
+    my $assignee = login_to_id(trim($cgi->param('assignee'))) || ThrowUserError("invalid_username", { name => $cgi->param('assignee') }) if $cgi->param('assignee');
+    
+    ThrowUserError('testopia-missing-required-field', {field => 'Status'}) unless defined $status;
+    ThrowUserError('testopia-missing-required-field', {field => 'build'}) unless defined $build;
+    ThrowUserError('testopia-missing-required-field', {field => 'environment'}) unless defined $env;
     
     validate_test_id($build, 'build');
     validate_test_id($env, 'environment');
@@ -360,6 +353,7 @@ sub display {
     $vars->{'table'} = $table;
     $vars->{'caserun'} = $caserun;
     $vars->{'action'} = 'tr_show_caserun.cgi';
+    $vars->{'run'} = $caserun->run;
     $template->process("testopia/caserun/show.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());
 }

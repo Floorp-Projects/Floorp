@@ -9,45 +9,35 @@
   # implied. See the License for the specific language governing
   # rights and limitations under the License.
   #
-  # The Original Code is the Bugzilla Test Runner System.
+  # The Original Code is the Bugzilla Testopia System.
   #
-  # The Initial Developer of the Original Code is Maciej Maczynski.
-  # Portions created by Maciej Maczynski are Copyright (C) 2001
-  # Maciej Maczynski. All Rights Reserved.
+  # The Initial Developer of the Original Code is Greg Hendricks.
+  # Portions created by Greg Hendricks are Copyright (C) 2006
+  # Novell. All Rights Reserved.
   #
-  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
-  #                 Greg Hendricks <ghendricks@novell.com>
+  # Contributor(s): Greg Hendricks <ghendricks@novell.com> 
   #%]
 
 [% PROCESS global/header.html.tmpl
-  title = "Delete Category $category.name From Product $plan.product.name"
+  title = "Delete Category $category.name From Product $product.name"
 %]
 
 <form method="POST" action="tr_categories.cgi">
-<input type="HIDDEN" name="action" value="do_delete">
-<input type="HIDDEN" name="category_id" value="[% category.id FILTER none %]">
+<input type="hidden" name="action" value="do_delete">
+<input type="hidden" name="category_id" value="[% category.id FILTER none %]">
 <input type="hidden" name="plan_id" value="[% plan.id FILTER none %]">
-  
-[% IF category.case_count %]
-  <table style="border-collapse:collapse;" border="1" bordercolor="red" width="100%" cellspacing="0" cellpadding="6"><tr><td>
-  <font color="red">
+<input type="hidden" name="product_id" value="[% product.id FILTER none %]"/>
 
-    This category is used by [% category.casecount FILTER html %] test cases.<br>
-    Please move all test cases to other categories first.
-  [% tr_error %]</font>
-  </td></tr></table>
-[% ELSE %]
-You are about to delete category '[% category.name FILTER html %]' from test plan 
-[% plan.name FILTER html %]. <br>
-<p>
-<b>Are you sure?</b>
-</p>
+You are about to delete category '[% category.name FILTER html %]' from product
+ [% product.name FILTER html %]. <br>
+<p><b>Are you sure?</b></p>
 <input type="SUBMIT" value="Delete"/>
-[% END %]    
 </form>  
 <p>
-<a href="tr_show_plan.cgi?plan_id=[% plan.id FILTER none %]">Back</a> to test plan or
-<a href="tr_categories.cgi?plan_id=[% plan.id FILTER none %]">edit</a> categories
+[% IF plan_id %]
+<a href="tr_show_plan.cgi?plan_id=[% plan_id FILTER none %]">Back</a> to test plan or
+[% END %]
+<a href="tr_categories.cgi?plan_id=[% plan_id FILTER none %]&amp;product_id=[% product.id FILTER none %]">edit</a> categories
 </p>
 
 [% PROCESS global/footer.html.tmpl %]

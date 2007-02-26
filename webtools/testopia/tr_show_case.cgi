@@ -26,6 +26,7 @@ use lib ".";
 use Bugzilla;
 use Bugzilla::Bug;
 use Bugzilla::Util;
+use Bugzilla::User;
 use Bugzilla::Error;
 use Bugzilla::Constants;
 use Bugzilla::Testopia::Util;
@@ -37,12 +38,14 @@ use Bugzilla::Testopia::Search;
 use Bugzilla::Testopia::Table;
 use JSON;
 
-use vars qw($template $vars);
+require 'globals.pl';
+
+use vars qw($vars);
 my $template = Bugzilla->template;
 my $query_limit = 15000;
-require "globals.pl";
 
-Bugzilla->login();
+
+Bugzilla->login(LOGIN_REQUIRED);
 
 my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
@@ -80,9 +83,8 @@ $vars->{'action'} = "Commit";
 $vars->{'form_action'} = "tr_show_case.cgi";
 
 if ($action eq 'Clone'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $case = Bugzilla::Testopia::TestCase->new($case_id);
-    ThrowUserError("testopia-create-denied", {'object' => 'Test Case'}) unless $case->canedit;
+    ThrowUserError("testopia-create-denied", {'object' => 'Test Case'}) unless $case->canview;
     do_update($case);
     $vars->{'case'} = $case;
     $template->process("testopia/case/clone.html.tmpl", $vars) ||
@@ -91,9 +93,7 @@ if ($action eq 'Clone'){
 }
 
 elsif ($action eq 'do_clone'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $case = Bugzilla::Testopia::TestCase->new($case_id);
-    ThrowUserError("testopia-create-denied", {'object' => 'Test Case'}) unless $case->canedit;
     my $count = 0;
     my $method;
     if ($cgi->param('copymethod') eq 'copy'){
@@ -114,6 +114,8 @@ elsif ($action eq 'do_clone'){
         my $newcase;
         foreach my $pid (@planids){
             $count++;
+            my $plan = Bugzilla::Testopia::TestPlan->new($pid);
+            next unless $plan->canedit;
             my $newcaseid = $case->copy($pid, $author, $cgi->param('copy_doc'));
             $case->link_plan($pid, $newcaseid);
             $newcase = Bugzilla::Testopia::TestCase->new($newcaseid);
@@ -154,6 +156,8 @@ elsif ($action eq 'do_clone'){
         }
         foreach my $p (keys %seen){
             $count++;
+            my $plan = Bugzilla::Testopia::TestPlan->new($p);
+            next unless $plan->canedit;
             $case->link_plan($p);
         }
         delete $case->{'plans'};
@@ -166,7 +170,6 @@ elsif ($action eq 'do_clone'){
 }
 
 elsif ($action eq 'Attach'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $case = Bugzilla::Testopia::TestCase->new($case_id);
     ThrowUserError("testopia-read-only", {'object' => 'case'}) unless $case->canedit;
 
@@ -202,7 +205,6 @@ elsif ($action eq 'Attach'){
 }
 
 elsif ($action eq 'Commit'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $case = Bugzilla::Testopia::TestCase->new($case_id);
     ThrowUserError("testopia-read-only", {'object' => 'case'}) unless $case->canedit;
     do_update($case);
@@ -224,7 +226,6 @@ elsif ($action eq 'History'){
 }
 
 elsif ($action eq 'unlink'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $plan_id = $cgi->param('plan_id');
     validate_test_id($plan_id, 'plan');
     my $case = Bugzilla::Testopia::TestCase->new($case_id);
@@ -248,7 +249,6 @@ elsif ($action eq 'unlink'){
 }
 
 elsif ($action eq 'do_unlink'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $plan_id = $cgi->param('plan_id');
     validate_test_id($plan_id, 'plan');
     my $case = Bugzilla::Testopia::TestCase->new($case_id);
@@ -264,7 +264,6 @@ elsif ($action eq 'do_unlink'){
 }
 
 elsif ($action eq 'detach_bug'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $case = Bugzilla::Testopia::TestCase->new($case_id);
     ThrowUserError("testopia-read-only", {'object' => 'case'}) unless $case->canedit;
     my @buglist;
@@ -278,7 +277,6 @@ elsif ($action eq 'detach_bug'){
     display(Bugzilla::Testopia::TestCase->new($case_id));
 }
 elsif ($action eq 'Delete'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $case = Bugzilla::Testopia::TestCase->new($case_id);
     ThrowUserError("testopia-read-only", {'object' => 'case'}) unless $case->candelete;
     $vars->{'case'} = $case;
@@ -290,7 +288,6 @@ elsif ($action eq 'Delete'){
     
 }
 elsif ($action eq 'do_delete'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $case = Bugzilla::Testopia::TestCase->new($case_id);
     ThrowUserError("testopia-read-only", {'object' => 'case'}) unless $case->candelete;
     $case->obliterate;
@@ -302,7 +299,6 @@ elsif ($action eq 'do_delete'){
 ### Ajax Actions ###
 ####################
 elsif ($action eq 'addcomponent' || $action eq 'removecomponent'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $case = Bugzilla::Testopia::TestCase->new($case_id);
     ThrowUserError("testopia-read-only", {'object' => 'case'}) unless $case->canedit;
     my $comp = $cgi->param('component_id');
@@ -360,7 +356,7 @@ sub do_update{
     my $tester      = $cgi->param("tester") || '';
     my $est_time    = $cgi->param("estimated_time") || '';
     if ($tester){
-        $tester = DBNameToIdAndCheck($cgi->param('tester'));
+        $tester = login_to_id(trim($cgi->param('tester'))) || ThrowUserError("invalid_username", { name => $cgi->param('tester') });
     }
 
     ThrowUserError('testopia-missing-required-field', {'field' => 'summary'})  if $summary  eq '';

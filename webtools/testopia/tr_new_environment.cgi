@@ -14,8 +14,8 @@
 # The Original Code is the Bugzilla Testopia System.
 #
 # The Initial Developer of the Original Code is Greg Hendricks.
-# Portions created by Greg Hendricks are Copyright (C) 2001
-# Greg Hendricks. All Rights Reserved.
+# Portions created by Greg Hendricks are Copyright (C) 2006
+# Novell. All Rights Reserved.
 #
 # Contributor(s): Greg Hendricks <ghendricks@novell.com>
 #                 Michael Hight <mjhight@gmail.com>

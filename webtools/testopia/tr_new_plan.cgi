@@ -32,33 +32,29 @@ use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::TestPlan;
 use Bugzilla::Testopia::Product;
 
-require "globals.pl";
-
-use vars qw($template $vars);
+use vars qw($vars);
 my $template = Bugzilla->template;
 
 Bugzilla->login(LOGIN_REQUIRED);
-ThrowUserError("testopia-create-denied", {'object' => 'Test Plan'}) unless UserInGroup('Testers');
 
-print Bugzilla->cgi->header();
-   
 my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
 
+print $cgi->header;
+
 push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
 
-my $action = $cgi->param('action');
-my $product = $cgi->param('product_id');
+my $action = $cgi->param('action') || '';
 
-detaint_natural($product);
-
-    
 if ($action eq 'Add'){
+    my $product_id = $cgi->param('product_id');
+    my $product = Bugzilla::Testopia::Product->new($product_id);
+    
+    ThrowUserError("testopia-create-denied", {'object' => 'Test Plan'}) unless Bugzilla->user->in_group('Testers');
     my $name = $cgi->param('plan_name');
     my $prodver = $cgi->param('prod_version');
     my $type = $cgi->param('type');
     my $text = $cgi->param("plandoc");
-    validate_selection($product, 'id', 'products');
     ThrowUserError('testopia-missing-required-field', {'field' => 'name'}) if $name  eq '';
 
     # All inserts are done with placeholders so this is OK
@@ -68,13 +64,12 @@ if ($action eq 'Add'){
     detaint_natural($type);
     
     validate_selection($type, 'type_id', 'test_plan_types');
-    #TODO: 2.22 use Bugzilla::Product
-    validate_selection($prodver, 'value', 'versions');
+    my $version = Bugzilla::Version::check_version($product, $prodver);
     
     my $plan = Bugzilla::Testopia::TestPlan->new({
             'name'       => $name || '',
-            'product_id' => $product,
-            'default_product_version' => $prodver,
+            'product_id' => $product->id,
+            'default_product_version' => $version->name,
             'type_id'    => $type,
             'text'       => $text,
             'author_id'  => Bugzilla->user->id,
@@ -122,7 +117,6 @@ elsif ($action eq 'getversions'){
 }
 # For use in new_case and show_case since new_plan does not require an id
 elsif ($action eq 'getcomps'){
-    Bugzilla->login;
     my $plan = Bugzilla::Testopia::TestPlan->new({});
     my $product_id = $cgi->param('product_id');
 
@@ -143,12 +137,11 @@ elsif ($action eq 'getcomps'){
     exit;
 }
 elsif ($action eq 'getenvs'){
-    Bugzilla->login;
     my $product_id = $cgi->param('product_id');
 
     detaint_natural($product_id);
     my $product = Bugzilla::Testopia::Product->new($product_id);
-    
+    exit unless Bugzilla->user->can_see_product($product->name);
     my @envs;
     foreach my $e (@{$product->environments}){
         push @envs, {'id' => $e->id, 'name' => $e->name};
@@ -161,11 +154,12 @@ elsif ($action eq 'getenvs'){
 ### Display Form ###
 ####################
 else {
+    ThrowUserError("testopia-create-denied", {'object' => 'Test Plan'}) unless Bugzilla->user->in_group('Testers');
     $vars->{'action'} = "Add";
     $vars->{'form_action'} = "tr_new_plan.cgi";
     $vars->{'plan'} = Bugzilla::Testopia::TestPlan->new(
         {'plan_id'    => 0, 
-         'product_id' => $product});
+         'product_id' => $cgi->param('product_id')});
     $template->process("testopia/plan/add.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());
 }

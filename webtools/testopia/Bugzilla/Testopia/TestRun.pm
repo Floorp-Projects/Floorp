@@ -691,7 +691,7 @@ sub get_distinct_builds {
         $query .= "AND group_id NOT IN(" . 
               join(',', values(%{Bugzilla->user->groups})) . ") ";
     }
-    $query .= "WHERE group_id IS NULL AND test_builds.isactive = 1 ORDER BY build.name";
+    $query .= "WHERE group_id IS NULL AND build.isactive = 1 ORDER BY build.name";
     
     my $ref = $dbh->selectall_arrayref($query, {'Slice'=>{}});
 

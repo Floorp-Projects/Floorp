@@ -14,13 +14,10 @@
 # The Original Code is the Bugzilla Testopia System.
 #
 # The Initial Developer of the Original Code is Greg Hendricks.
-# Portions created by Greg Hendricks are Copyright (C) 2001
-# Greg Hendricks. All Rights Reserved.
+# Portions created by Greg Hendricks are Copyright (C) 2006
+# Novell. All Rights Reserved.
 #
 # Contributor(s): Greg Hendricks <ghendricks@novell.com>
-
-use strict;
-use lib ".";
 
 use strict;
 use lib ".";
@@ -32,18 +29,18 @@ use Bugzilla::Util;
 use Bugzilla::Testopia::TestPlan;
 use Bugzilla::Testopia::Util;
 
-use vars qw($vars);
 my $template = Bugzilla->template;
-
-Bugzilla->login(LOGIN_REQUIRED);
-
-print Bugzilla->cgi->header();
-ThrowUserError("testopia-read-only", {'object' => 'plan type'}) unless Bugzilla->user->in_group('admin');   
-
 my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
 
-my $plan = Bugzilla::Testopia::TestPlan->new({'plan_id' => 0});
+use vars qw($vars);
+
+Bugzilla->login(LOGIN_REQUIRED);
+
+print $cgi->header;
+ThrowUserError("testopia-read-only", {'object' => 'admin pages'}) unless Bugzilla->user->in_group('admin');   
+
+my $plan = Bugzilla::Testopia::TestPlan->new({});
 my $action = $cgi->param('action') || '';
 my $item = $cgi->param('item') || '';
 

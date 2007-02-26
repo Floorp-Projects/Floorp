@@ -11,11 +11,11 @@
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
 #
-# The Original Code is the Bugzilla Test Runner System.
+# The Original Code is the Bugzilla Testopia System.
 #
-# The Initial Developer of the Original Code is Maciej Maczynski.
-# Portions created by Maciej Maczynski are Copyright (C) 2001
-# Maciej Maczynski. All Rights Reserved.
+# The Initial Developer of the Original Code is Greg Hendricks.
+# Portions created by Greg Hendricks are Copyright (C) 2006
+# Novell. All Rights Reserved.
 #
 # Contributor(s): Greg Hendricks <ghendricks@novell.com>
 
@@ -35,12 +35,12 @@ use Bugzilla::Testopia::Environment::Element;
 use Bugzilla::Testopia::Environment::Category;
 use Bugzilla::Testopia::Environment::Property;
 
-Bugzilla->login();
+Bugzilla->login(LOGIN_REQUIRED);
 
-my $cgi = Bugzilla->cgi;
 
 use vars qw($vars);
 my $template = Bugzilla->template;
+my $cgi = Bugzilla->cgi;
 
 print $cgi->header;
 

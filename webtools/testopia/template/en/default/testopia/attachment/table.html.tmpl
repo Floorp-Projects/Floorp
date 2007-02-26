@@ -39,7 +39,7 @@
     <td>[% a.creation_ts FILTER time %]</td>
     <td>[% a.datasize FILTER unitconvert %]</td>
     <td><a href="tr_attachment.cgi?attach_id=[% a.id FILTER none %]&action=edit&[% item.type FILTER none %]_id=[% item.id FILTER none %]">Edit</a> 
-         [% IF Param("allow-test-deletion") %]<a href="tr_attachment.cgi?attach_id=[% a.id FILTER none %]&action=delete&[% item.type FILTER none %]_id=[% item.id FILTER none %]">Delete</a>[% END %]</td>
+         [% IF Param("allow-test-deletion") %]<a href="tr_attachment.cgi?attach_id=[% a.id FILTER none %]&action=remove&[% item.type FILTER none %]_id=[% item.id FILTER none %]">Remove</a>[% END %]</td>
   </tr>
 [% END %]
 

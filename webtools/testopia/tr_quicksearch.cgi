@@ -35,7 +35,7 @@ use JSON;
 
 use vars qw($vars);
 
-Bugzilla->login();
+Bugzilla->login(LOGIN_REQUIRED);
 
 my $template = Bugzilla->template;
 my $cgi = Bugzilla->cgi;

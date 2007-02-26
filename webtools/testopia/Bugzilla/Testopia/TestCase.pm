@@ -448,7 +448,12 @@ sub add_component {
     my $self = shift;
     my ($comp_id) = @_;
     my $dbh = Bugzilla->dbh;
-    #TODO: Check for existing component
+    my ($is) = $dbh->selectrow_array(
+        "SELECT case_id FROM test_case_components
+         WHERE case_id = ? AND component_id = ?",
+         undef, ($self->id, $comp_id));
+    return 0 if $is;
+    
     $dbh->do("INSERT INTO test_case_components (case_id, component_id)
               VALUES (?,?)",undef,  $self->{'case_id'}, $comp_id);
     delete $self->{'components'};          
@@ -1482,7 +1487,6 @@ sub components {
     my $self = shift;
     my $dbh = Bugzilla->dbh;
     return $self->{'components'} if exists $self->{'components'};
-    #TODO: 2.22 use Bugzilla::Component
     my $comps = $dbh->selectcol_arrayref(
         "SELECT comp.id 
            FROM components AS comp

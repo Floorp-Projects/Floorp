@@ -11,19 +11,20 @@
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
 #
-# The Original Code is the Bugzilla Test Runner System.
+# The Original Code is the Bugzilla Testopia System.
 #
-# The Initial Developer of the Original Code is Maciej Maczynski.
-# Portions created by Maciej Maczynski are Copyright (C) 2001
-# Maciej Maczynski. All Rights Reserved.
+# The Initial Developer of the Original Code is Greg Hendricks.
+# Portions created by Greg Hendricks are Copyright (C) 2006
+# Novell. All Rights Reserved.
 #
-# Contributor(s):  Greg Hendricks <ghendricks@novell.com>
+# Contributor(s): Greg Hendricks <ghendricks@novell.com>
 
 use strict;
 use lib ".";
 
 use Bugzilla;
 use Bugzilla::Util;
+use Bugzilla::User;
 use Bugzilla::Error;
 use Bugzilla::Constants;
 use Bugzilla::Testopia::Search;
@@ -34,10 +35,10 @@ use Bugzilla::Testopia::TestPlan;
 use Bugzilla::Testopia::TestTag;
 use Bugzilla::Testopia::Table;
 
-use vars qw($vars $template);
+use vars qw($vars);
+
 require "globals.pl";
 
-my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
 my $query_limit = 10000;
@@ -47,7 +48,8 @@ push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
 $cgi->send_cookie(-name => "TEST_LAST_ORDER",
                   -value => $cgi->param('order'),
                   -expires => "Fri, 01-Jan-2038 00:00:00 GMT");
-Bugzilla->login();
+
+Bugzilla->login(LOGIN_REQUIRED);
 
 # Determine the format in which the user would like to receive the output.
 # Uses the default format if the user did not specify an output format;
@@ -73,7 +75,6 @@ $::SIG{PIPE} = 'DEFAULT';
 ### Actions ###
 ###############
 if ($action eq 'Commit'){
-    Bugzilla->login(LOGIN_REQUIRED);
 
     # Match the list of checked items. 
     my $reg = qr/c_([\d]+)/;
@@ -88,14 +89,15 @@ if ($action eq 'Commit'){
     my $progress_interval = 250;
     my $i = 0;
     my $total = scalar @params;
-
+    my @uneditable;
+    
     foreach my $p ($cgi->param()){
         my $case = Bugzilla::Testopia::TestCase->new($1) if $p =~ $reg;
         next unless $case;
         
         unless ($case->canedit){
-            print $cgi->multipart_end if $serverpush;
-            ThrowUserError("testopia-read-only", {'object' => 'case', 'id' => $case->id});
+            push @uneditable, $case;
+            next;
         }
         
         $i++;
@@ -118,7 +120,8 @@ if ($action eq 'Commit'){
         my @comps       = $cgi->param("components");
         my $tester = $cgi->param('tester') || ''; 
         if ($tester && $tester ne '--Do Not Change--'){
-            $tester = DBNameToIdAndCheck(trim($cgi->param('tester')));
+            $tester = login_to_id(trim($cgi->param('tester')))
+                || ThrowUserError("invalid_username", { name => $cgi->param('tester') });
         }
         else {
             $tester = $case->default_tester->id;
@@ -230,7 +233,7 @@ if ($action eq 'Commit'){
             || ThrowTemplateError($template->error());
         exit;
     } 
-    my $case = Bugzilla::Testopia::TestCase->new({ 'case_id' => 0 });
+    my $case = Bugzilla::Testopia::TestCase->new({});
     $vars->{'case'} = $case;
     $vars->{'title'} = "Update Successful";
     $vars->{'tr_message'} = "$i Test Cases Updated";
@@ -243,8 +246,6 @@ if ($action eq 'Commit'){
 
 }
 elsif ($action eq 'Delete Selected'){
-    Bugzilla->login(LOGIN_REQUIRED);
-
     # Match the list of checked items. 
     my $reg = qr/c_([\d]+)/;
     my $params = join(" ", $cgi->param());
@@ -254,6 +255,10 @@ elsif ($action eq 'Delete Selected'){
         print $cgi->multipart_end if $serverpush;
         ThrowUserError('testopia-none-selected', {'object' => 'case'});
     }
+    # You must have rights to delete from all the plans this case
+    # is linked to in order to delete.
+    # We separate them here so that users can still remove the ones
+    # they have rights to.
     my @deletable;
     my @undeletable;
     foreach my $p ($cgi->param()){
@@ -278,7 +283,6 @@ elsif ($action eq 'Delete Selected'){
 }
 
 elsif ($action eq 'do_delete'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my @case_ids = split(",", $cgi->param('case_list'));
     my $progress_interval = 250;
     my $i = 0;
@@ -358,7 +362,7 @@ if ($table->list_count > 0 && !$cgi->param('addrun')){
     }
 }
 # create an empty case to use for getting status and priority lists
-my $c = Bugzilla::Testopia::TestCase->new({'case_id' => 0 });
+my $c = Bugzilla::Testopia::TestCase->new({});
 my $status_list   = $c->get_status_list;
 my $priority_list = $c->get_priority_list;
 
@@ -380,7 +384,7 @@ $vars->{'fullwidth'} = 1; #novellonly
 $vars->{'case'} = $c;
 $vars->{'status_list'} = $status_list;
 $vars->{'priority_list'} = $priority_list;
-$vars->{'dotweak'} = UserInGroup('Testers');
+$vars->{'dotweak'} = Bugzilla->user->in_group('Testers');
 $vars->{'table'} = $table;
 $vars->{'urlquerypart'} = $cgi->canonicalise_query('cmdtype');
 

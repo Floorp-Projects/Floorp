@@ -26,26 +26,27 @@ use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::Util;
+use Bugzilla::User;
 
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::TestRun;
 use Bugzilla::Testopia::Search;
 use Bugzilla::Testopia::Table;
 
-require "globals.pl";
+require 'globals.pl';
 
-use vars qw($template $vars);
+use vars qw($vars);
 my $template = Bugzilla->template;
 my $query_limit = 10000;
 
 Bugzilla->login(LOGIN_REQUIRED);
-my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
 
 push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
 
 my $action = $cgi->param('action') || '';
 my $plan_id = $cgi->param('plan_id');
+
 unless ($plan_id){
   $vars->{'form_action'} = 'tr_new_run.cgi';
   print $cgi->header;
@@ -64,7 +65,7 @@ unless ($plan->canedit){
     ThrowUserError("testopia-create-denied", {'object' => 'Test Run'});
 }
 
-unless (scalar @{$plan->product->builds(1)} >0){
+unless (scalar @{$plan->product->builds(1)} > 0){
     print $cgi->header;
     ThrowUserError('testopia-create-build', {'plan' => $plan});
 }
@@ -79,7 +80,7 @@ if ($action eq 'Add'){
           || ThrowTemplateError($template->error());
     }
 
-    my $manager  = DBNameToIdAndCheck($cgi->param('manager'));
+    my $manager  = login_to_id(trim($cgi->param('manager')));
     my $status   = $cgi->param('status');
     my $prodver  = $cgi->param('product_version');
     my $pversion = $cgi->param('plan_version');
@@ -94,6 +95,10 @@ if ($action eq 'Add'){
     if ($env  eq ''){
         print $cgi->multipart_end if $serverpush;
         ThrowUserError('testopia-missing-required-field', {'field' => 'environment'});
+    }
+    unless ($manager){
+       print $cgi->multipart_end if $serverpush;
+       ThrowUserError("invalid_username", { name => $cgi->param('assignee') });
     }
     
     validate_test_id($env, 'environment');
@@ -179,7 +184,7 @@ if ($action eq 'Add'){
     $vars->{'table'} = $table;
     $vars->{'action'} = 'Commit';
     $vars->{'form_action'} = 'tr_show_run.cgi';
-    $vars->{'tr_message'} = "Test Case: \"". $run->summary ."\" created successfully.";
+    $vars->{'tr_message'} = "Test Run: \"". $run->summary ."\" created successfully.";
     $vars->{'backlink'} = $run;
     $template->process("testopia/run/show.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());

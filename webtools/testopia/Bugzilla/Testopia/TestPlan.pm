@@ -738,6 +738,8 @@ sub set_tester_regexp {
     $self->derive_regexp_testers($regexp);
     
 }
+#TODO: Check on what I was thinking here
+
 sub derive_regexp_testers {
     my $self = shift;
     my $regexp = shift;
@@ -747,11 +749,7 @@ sub derive_regexp_testers {
         "SELECT permissions 
            FROM test_plan_permissions_regexp 
          WHERE plan_id = ?", undef, $self->id);
-    # If something has changed, it is easier to delete everyone and add tham back in
-    $dbh->do("DELETE FROM test_plan_permissions 
-               WHERE plan_id = ? AND grant_type = ?", 
-               undef, ($self->id, GRANT_REGEXP));
-                
+               
     my $sth = $dbh->prepare("SELECT profiles.userid, profiles.login_name, plan_id
                                FROM profiles
                           LEFT JOIN test_plan_permissions
@@ -768,7 +766,10 @@ sub derive_regexp_testers {
     while (my ($userid, $login, $present) = $sth->fetchrow_array()) {
         if (($regexp =~ /\S+/) && ($login =~ m/$regexp/i)){
             $plan_add->execute($userid, $self->id, $permissions, GRANT_REGEXP) unless $present;
-        } 
+        }
+        else {
+            $plan_del->execute($userid, $self->id, $permissions, GRANT_REGEXP) if $present;
+        }
     }
 
 }

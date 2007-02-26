@@ -26,6 +26,7 @@ use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::Util;
+use Bubzilla::User;
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::TestRun;
 use Bugzilla::Testopia::TestCaseRun;
@@ -35,13 +36,11 @@ use Bugzilla::Testopia::Search;
 use Bugzilla::Testopia::Table;
 use Bugzilla::Testopia::Product;
 
-use vars qw($template $vars);
+use vars qw($vars);
 my $template = Bugzilla->template;
 my $query_limit = 15000;
 
-require "globals.pl";
-
-Bugzilla->login();
+Bugzilla->login(LOGIN_REQUIRED);
    
 my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
@@ -66,7 +65,6 @@ my $action = $cgi->param('action') || '';
 ####################
 if ($action eq 'Commit'){
     print $cgi->header;
-    Bugzilla->login(LOGIN_REQUIRED);
     my $run = Bugzilla::Testopia::TestRun->new($run_id);
     ThrowUserError("testopia-read-only", {'object' => 'run'}) unless $run->canedit;
     do_update($run);
@@ -89,7 +87,6 @@ elsif ($action eq 'History'){
 #############
 elsif ($action =~ /^Clone/){
     print $cgi->header;
-    Bugzilla->login(LOGIN_REQUIRED);
     my $run = Bugzilla::Testopia::TestRun->new($run_id);
     ThrowUserError("testopia-read-only", {'object' => 'run'}) unless $run->canedit;
     my $case_list = $cgi->param('case_list');
@@ -118,7 +115,6 @@ elsif ($action =~ /^Clone/){
     
 }
 elsif ($action eq 'do_clone'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $run = Bugzilla::Testopia::TestRun->new($run_id);
     if ($serverpush) {
         print $cgi->multipart_init();
@@ -267,13 +263,12 @@ elsif ($action eq 'clear_filter'){
 ### Ajax Actions ###
 ####################
 elsif ($action eq 'addcc'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $run = Bugzilla::Testopia::TestRun->new($run_id);
     ThrowUserError("testopia-read-only", {'object' => 'run'}) unless $run->canedit;
     my @cclist = split(/[\s,]+/, $cgi->param('cc'));
     my %ccids;
     foreach my $email (@cclist){
-        my $ccid = DBNameToIdAndCheck($email);
+        my $ccid = login_to_id($email) || ThrowUserError("invalid_username", { name => $email });
         if ($ccid && !$ccids{$ccid}) {
            $ccids{$ccid} = 1;
         }
@@ -285,7 +280,6 @@ elsif ($action eq 'addcc'){
     print $cc;
 }
 elsif ($action eq 'removecc'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $run = Bugzilla::Testopia::TestRun->new($run_id);
     ThrowUserError('insufficient-case-perms') unless $run->canedit;
     foreach my $ccid (split(",", $cgi->param('cc'))){
@@ -297,7 +291,6 @@ elsif ($action eq 'removecc'){
 }
 elsif ($action eq 'Delete'){
     print $cgi->header;
-    Bugzilla->login(LOGIN_REQUIRED);
     my $run = Bugzilla::Testopia::TestRun->new($run_id);
     ThrowUserError("testopia-read-only", {'object' => 'run'}) unless $run->candelete;
     $vars->{'run'} = $run;
@@ -307,7 +300,6 @@ elsif ($action eq 'Delete'){
     
 }
 elsif ($action eq 'do_delete'){
-    Bugzilla->login(LOGIN_REQUIRED);
     my $run = Bugzilla::Testopia::TestRun->new($run_id);
     unless ($run->candelete){
         print $cgi->header;
@@ -349,6 +341,7 @@ else {
 ###################
 ### Helper Subs ###
 ###################
+#TODO: Replace this with json
 sub get_cc_xml {
     my ($run) = @_;
     my $ret = "<cclist>";
@@ -371,11 +364,11 @@ sub do_update {
     $timestamp = get_time_stamp() if !$cgi->param('status') && !$run->stop_date;
     
     my $summary = $cgi->param('summary') || '';
-    my $prodver = $cgi->param('product_version');
+    my $prodver = Bugzilla::Version::check_version($cgi->param('product_version'), $run->plan->product_id);
     my $planver = $cgi->param('plan_version');
     my $build   = $cgi->param('build');
     my $env     = $cgi->param('environment');
-    my $manager = DBNameToIdAndCheck(trim($cgi->param('manager')));
+    my $manager = login_to_id(trim($cgi->param('manager'))) ||ThrowUserError("invalid_username", { name => $cgi->param('manager') });
     my $notes   = trim($cgi->param('notes'));
 
     ThrowUserError('testopia-missing-required-field', {'field' => 'summary'}) if ($cgi->param('summary') eq '');
@@ -392,17 +385,12 @@ sub do_update {
     validate_test_id($build, 'build');
     validate_test_id($env, 'environment');
 
-    my $check = validate_version($prodver, $run->plan->product_id);
-    if ($check ne '1'){
-        $vars->{'tr_error'} = "Version mismatch. Please update the product version";
-        $prodver = $check;
-    }
     #TODO: Are notes something we want in the history?
     #$run->update_notes($notes);
     
     my %newvalues = ( 
         'summary'           => $summary,
-        'product_version'   => $prodver,
+        'product_version'   => $prodver->name,
         'plan_text_version' => $planver,
         'build_id'          => $build,
         'environment_id'    => $env,

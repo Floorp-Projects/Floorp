@@ -36,16 +36,28 @@
   [% title = "Attachment Deleted" %]
   [% PROCESS global/header.html.tmpl %]
   [% PROCESS testopia/messages.html.tmpl %]
-[% ELSE %]
-  [% title = "Delete Attachment '$attachment.description' from $obj.type $obj.id" %]
+[% ELSIF removed %]
+  [% title = "Attachment Removed from $obj.type $obj.id" %]
   [% PROCESS global/header.html.tmpl %]
-You are about to permanantly delete this attachment.
+  [% PROCESS testopia/messages.html.tmpl %]
+[% ELSE %]
+  [% title = "Delete Attachment '$attachment.description'" %]
+  [% PROCESS global/header.html.tmpl %]
 
+[% IF action == 'do_delete' %]
+You are about to permanantly delete this attachment.
+<p>This attachment is found in [% attachment.cases.size FILTER none %] cases and [% attachment.plans.size FILTER none %] plans.</p>
+[% ELSE %]
+You are about to remove this attachment from this [% obj.type %]
+[% END %]
+<p><span style="font-size:12pt; font-weight:bold; color:#cc0000;">Warning: This action cannot be undone</span></p>
 <form method="POST" action="tr_attachment.cgi">
-  <input type="hidden" name="action" value="do_delete" />
+  <input type="hidden" name="action" value="[% action %]" />
   <input type="hidden" name="attach_id" value="[% attachment.id FILTER none %]" />
   <input type="hidden" name="[% obj.type FILTER none %]_id" value="[% obj.id FILTER none %]" />
   <input type="submit" value="Continue" />
 </form>  
-[% END %]  
+<a href="tr_attachment.cgi?attach_id=[% attachment.id FILTER none %]">view attachment</a>
+[% END %]
+  
 [% PROCESS global/footer.html.tmpl %]

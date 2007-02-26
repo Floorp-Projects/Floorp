@@ -11,46 +11,46 @@
   #
   # The Original Code is the Bugzilla Test Runner System.
   #
-  # The Initial Developer of the Original Code is Maciej Maczynski.
-  # Portions created by Maciej Maczynski are Copyright (C) 2001
-  # Maciej Maczynski. All Rights Reserved.
+  # The Initial Developer of the Original Code is Greg Hendricks.
+  # Portions created by Greg Hendricks are Copyright (C) 2006
+  # Novell. All Rights Reserved.
   #
-  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
-  #                 Greg Hendricks <ghendricks@novell.com> 
+  # Contributor(s): Greg Hendricks <ghendricks@novell.com> 
   #%]
 
 [% PROCESS global/header.html.tmpl
-  title = "Product Builds for $plan.product.name"
+  title = "Product Builds for $product.name"
 %]
 
 <table>
-  <tr>
-    <th class="bz_row_header" align="right">Name</th>
-    <th class="bz_row_header" align="right">Milestone</th>
-    <th class="bz_row_header" align="right">Description</th>
-    <th class="bz_row_header" align="right">Actions</th>
+  <tr class="bz_row_header">
+    <th>Name</th>
+    <th>Milestone</th>
+    <th>Description</th>
+    <th>Visible</th>
+    <th>Actions</th>
   </tr>
   
-[% FOREACH cat = plan.product.builds %]
+[% FOREACH b = product.builds %]
 <tr>
-  <td valign="top">[% cat.name FILTER html %]</td>
-  <td valign="top">[% cat.milestone FILTER html %]</td>
-  <td valign="top">[% cat.description FILTER html %]</td>
+  <td valign="top">[% b.name FILTER html %]</td>
+  <td valign="top">[% b.milestone FILTER html %]</td>
+  <td valign="top">[% b.description FILTER html %]</td>
+  <td valign="top">[% b.isactive ? "Yes" : "No" %]</td>
   <td valign="top">
-  <a href="tr_builds.cgi?action=edit&amp;build_id=[% cat.id FILTER none %]&amp;plan_id=[% plan.id FILTER none %]">Edit</a>
-    [% IF plan.candelete %]
-    &nbsp;|&nbsp;
-    <a href="tr_builds.cgi?action=delete&amp;build_id=[% cat.id FILTER none %]&amp;plan_id=[% plan.id FILTER none %]">Delete</a>
-    [% END %]
+  <a href="tr_builds.cgi?action=edit&amp;build_id=[% b.id FILTER none %]&amp;product_id=[% product.id FILTER none %]&plan_id=[% plan_id FILTER url_quote %]">Edit</a>
+  <a href="tr_builds.cgi?action=hide&amp;build_id=[% b.id FILTER none %]&amp;product_id=[% product.id FILTER none %]&plan_id=[% plan_id FILTER url_quote %]">[% b.isactive ? "Hide" : "Unhide" %]</a>
   </td>
 </tr>
 [% END %]
 </table>
 <br>
-  [% IF plan.canedit %]
-  <a href="tr_builds.cgi?action=add&amp;plan_id=[% plan.id FILTER none %]">Add new</a>
+  [% IF user.in_group('Testers') %]
+  <a href="tr_builds.cgi?action=add&amp;product_id=[% product_id FILTER html %]&plan_id=[% plan_id FILTER url_quote %]">Add new</a>
   [% END %]
+[% IF plan_id %]
 <p>  
-<a href="tr_show_plan.cgi?plan_id=[% plan.id FILTER none %]">Back</a> to test plan
+<a href="tr_show_plan.cgi?plan_id=[% plan_id FILTER html %]">Back</a> to test plan
 </p>
+[% END %]
 [% PROCESS global/footer.html.tmpl %]

@@ -9,44 +9,45 @@
   # implied. See the License for the specific language governing
   # rights and limitations under the License.
   #
-  # The Original Code is the Bugzilla Test Runner System.
+  # The Original Code is the Bugzilla Testopia System.
   #
-  # The Initial Developer of the Original Code is Maciej Maczynski.
-  # Portions created by Maciej Maczynski are Copyright (C) 2001
-  # Maciej Maczynski. All Rights Reserved.
+  # The Initial Developer of the Original Code is Greg Hendricks.
+  # Portions created by Greg Hendricks are Copyright (C) 2006
+  # Novell. All Rights Reserved.
   #
-  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
-  #                 Greg Hendricks <ghendricks@novell.com> 
+  # Contributor(s): Greg Hendricks <ghendricks@novell.com> 
   #%]
 
 [% PROCESS global/header.html.tmpl
-  title = "Test Categories for $plan.product.name"
+  title = "Test Categories for $product.name"
 %]
 <table>
-  <tr>
-    <th class="bz_row_header" align="right">Name</th>  
-    <th class="bz_row_header" align="right">Description</th>
-    <th class="bz_row_header" align="right">Actions</th>
+  <tr class="bz_row_header">
+    <th>Name</th>  
+    <th>Description</th>
+    <th>Actions</th>
   </tr>    
-[% FOREACH cat = plan.product.categories %]
+[% FOREACH cat = product.categories %]
   <tr>
     <td valign="top">[% cat.name FILTER html %]</td>
     <td valign="top">[% cat.description FILTER html %]</td>
     <td valign="top">
-    <a href="tr_categories.cgi?action=edit&amp;category_id=[% cat.id FILTER none %]&amp;plan_id=[% plan.id FILTER none %]">Edit</a>  
-      [% IF plan.candelete %]
+    <a href="tr_categories.cgi?action=edit&amp;category_id=[% cat.id FILTER none %]&amp;plan_id=[% plan_id FILTER none %]&amp;product_id=[% product.id FILTER none %]">Edit</a>  
+      [% IF cat.candelete %]
       &nbsp;|&nbsp;
-      <a href="tr_categories.cgi?action=delete&amp;category_id=[% cat.id FILTER none %]&amp;plan_id=[% plan.id FILTER none %]">Delete</a>
+      <a href="tr_categories.cgi?action=delete&amp;category_id=[% cat.id FILTER none %]&amp;plan_id=[% plan_id FILTER none %]&amp;product_id=[% product.id FILTER none %]">Delete</a>
       [% END %]
     </td>
   </tr>
 [% END %]
 </table>
 <br>
-  [% IF plan.canedit %]
-  <a href="tr_categories.cgi?action=add&amp;plan_id=[% plan.id FILTER none %]">Add new</a>
+  [% IF user.in_group('Testers') %]
+  <a href="tr_categories.cgi?action=add&amp;plan_id=[% plan_id FILTER none %]&amp;product_id=[% product.id FILTER none %]">Add new</a>
   [% END %]
+[% IF plan_id %]
 <p>  
-<a href="tr_show_plan.cgi?plan_id=[% plan.id FILTER none %]">Back</a> to test plan
+<a href="tr_show_plan.cgi?plan_id=[% plan_id FILTER none %]">Back</a> to test plan
 </p>
+[% END %]
 [% PROCESS global/footer.html.tmpl %]

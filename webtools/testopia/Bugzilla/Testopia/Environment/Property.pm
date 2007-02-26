@@ -133,7 +133,7 @@ sub check_property{
     my ($name, $element_id) = @_;
     my $dbh = Bugzilla->dbh;
 
-    if ($name eq undef || $name eq '' || $element_id eq undef) {
+    unless ($name && $element_id) {
         return "check_product must be passed a valid name and product_id";
     }
 
@@ -285,7 +285,7 @@ sub valid_exp_to_json {
     my ($disable_move, $env_id) = @_;
     my $env = Bugzilla::Testopia::Environment->new($env_id) if $env_id;
     
-    $disable_move = ',"addChild","move","remove"' if $disable_move;
+    $disable_move = $disable_move ? ',"addChild","move","remove"' : '';
     my $validexp = $self->get_validexp;
    
     my @validexpressions = split(/\|/, @$validexp[0]);

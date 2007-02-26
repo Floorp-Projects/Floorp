@@ -36,7 +36,23 @@
 
 [% PROCESS global/header.html.tmpl %]
 [% PROCESS testopia/messages.html.tmpl %]
-<p><a href="[% attachment.plan_id ? "tr_show_plan.cgi?plan_id=$attachment.plan_id" : "tr_show_case.cgi?case_id=$attachment.case_id" %]">Back</a> to  [% attachment.plan_id ? "test plan" : "test case" %]</p>
+
+[% IF attachment.cases.size > 0 %]
+Cases:
+  [% FOREACH c = attachment.cases %]
+    <a href="tr_show_case.cgi?case_id=[% c.id FILTER none %]">[% c.id FILTER none %]</a>
+  [% END %]
+<br>
+[% END %]
+
+[% IF attachment.plans.size > 0 %]
+Plans:
+  [% FOREACH p = attachment.plans %]
+    <a href="tr_show_plan.cgi?plan_id=[% p.id FILTER none %]">[% p.id FILTER none %]</a>
+  [% END %]
+<br>
+[% END %]
+
 <form method="POST" action="tr_attachment.cgi">
   <input type="hidden" name="action" value="do_edit" />
   <input type="hidden" name="attach_id" value="[% attachment.id FILTER none %]" />
@@ -46,7 +62,7 @@
     <th class="bz_row_header" align="right">Description:</th>
     <td colspan="3"><input name="description" value="[% attachment.description FILTER html %]" size="30" /></td>
   </tr>
-  <tr>
+  <tr class="bz_row_header">
     <th class="bz_row_header" align="right">Filename:</th>
     <td><input name="filename" value="[% attachment.filename FILTER html %]" size="30" /></td>
     <th class="bz_row_header" align="right">Mime Type:</th>
@@ -91,9 +107,8 @@
 </table>  
 <input type="submit" value="Submit">
 </form>
-[% IF Param("allow-test-deletion") %]
+[% IF attachment.candelete %]
 <p><a href="tr_attachment.cgi?attach_id=[% attachment.id FILTER none %]&action=delete&[% obj.type FILTER none %]_id=[% obj.id FILTER none %]">Delete Attachment</a></p>
-<p><a href="[% attachment.plan_id ? "tr_show_plan.cgi?plan_id=$attachment.plan_id" : "tr_show_case.cgi?case_id=$attachment.case_id" %]">Back</a> to  [% attachment.plan_id ? "test plan" : "test case" %]</p>
 [% END %]
 
 [% PROCESS global/footer.html.tmpl %]

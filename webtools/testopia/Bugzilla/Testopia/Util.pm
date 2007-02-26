@@ -38,7 +38,7 @@ use strict;
 use base qw(Exporter);
 @Bugzilla::Testopia::Util::EXPORT = qw(get_field_id get_time_stamp 
                                        validate_test_id validate_selection
-                                       validate_version support_server_push
+                                       support_server_push
                                        percentage);
 
 use Bugzilla;
@@ -153,31 +153,6 @@ sub validate_selection {
     $res
       || ThrowUserError("invalid-test-id-non-existent", 
                             {'id' => $id, 'type' => $table});
-    return $res;
-}
-
-sub validate_version {
-    my $dbh = Bugzilla->dbh;
-    my ($version, $product) = @_;
-    
-    # First check that the object exists. 
-    # Taint check should have been done before calling this function.
-    my ($res) = $dbh->selectrow_array(
-        "SELECT 1 
-           FROM versions
-          WHERE product_id = ?",
-          undef, $product);
-
-    # If the version does not match the product return the first one
-    # that does
-    unless ($res){
-        ($res) = $dbh->selectrow_array(
-        "SELECT value 
-           FROM versions
-          WHERE product_id = ?",
-          undef, $product);
-    }
-    
     return $res;
 }
 

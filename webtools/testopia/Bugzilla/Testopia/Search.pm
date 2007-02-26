@@ -55,6 +55,7 @@ package Bugzilla::Testopia::Search;
 use strict;
 
 use Bugzilla::Util;
+use Bugzilla::User;
 use Bugzilla::Config;
 use Bugzilla::Error;
 use Bugzilla::Testopia::Util;
@@ -1020,7 +1021,7 @@ sub init {
                 foreach my $name (split(',', $cgi->param($profile))) {
                     $name = trim($name);
                     if ($name) {
-                        &::DBNameToIdAndCheck($name);
+                        login_to_id($name);
                     }
                 }
             }

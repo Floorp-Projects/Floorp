@@ -10,11 +10,11 @@
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
 #
-# The Original Code is the Bugzilla Test Runner System.
+# The Original Code is the Bugzilla Testopia System.
 #
-# The Initial Developer of the Original Code is Maciej Maczynski.
-# Portions created by Maciej Maczynski are Copyright (C) 2001
-# Maciej Maczynski. All Rights Reserved.
+# The Initial Developer of the Original Code is Greg Hendricks.
+# Portions created by Maciej Maczynski are Copyright (C) 2006
+# Novell. All Rights Reserved.
 #
 # Contributor(s): Greg Hendricks <ghendricks@novell.com>
 
@@ -39,11 +39,8 @@ package Bugzilla::Testopia::Build;
 use strict;
 
 use Bugzilla::Util;
-use Bugzilla::Error;
 use Bugzilla::Testopia::TestPlan;
 use Bugzilla::Testopia::TestCase;
-
-use base qw(Exporter);
 
 ###############################
 ####    Initialization     ####
@@ -139,24 +136,6 @@ sub store {
     return $key;
 }
 
-=head2 remove
-
-Removes this build from the specified product
-
-=cut
-
-sub remove {
-    my $self = shift;
-    my ($plan) = @_;
-    ThrowUserError("testopia-incorrect-plan") if ($self->{'product_id'} != $plan->product_id);
-    ThrowUserError("testopia-non-zero-case-run-count") if ($self->{'case_run_count'});
-    ThrowUserError("testopia-non-zero-run-count", {'object' => 'Build'}) if ($self->{'run_count'});
-    my $dbh = Bugzilla->dbh;
-    $dbh->do("DELETE FROM test_builds
-              WHERE build_id = ?", undef,
-              $self->{'build_id'});
-}
-
 =head2 check_name
 
 Returns true if a build of the specified name exists in the database
@@ -208,6 +187,20 @@ sub update {
                  SET name = ?, description = ?, milestone = ?, isactive= ?
                WHERE build_id = ?", undef,
               ($name, $desc, $milestone, $isactive, $self->{'build_id'}));
+}
+
+=head2 toggle_hidden
+
+Toggles the archive bit on the build.
+
+=cut
+
+sub toggle_hidden {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+    $dbh->do("UPDATE test_builds SET isactive = ? 
+               WHERE build_id = ?", undef, $self->isactive ? 0 : 1, $self->id);
+    
 }
 
 ###############################
