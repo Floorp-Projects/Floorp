@@ -1671,10 +1671,14 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
       StrCmp $R3 "" 0 +3 ; Only add EditFlags if a value doesn't exist
       DeleteRegValue SHCTX "$R4" "EditFlags"
       WriteRegDWord SHCTX "$R4" "EditFlags" 0x00000002
-
-      StrCmp "$R9" "true" 0 +13
+      
+      StrCmp "$R6" "" +2 0
       WriteRegStr SHCTX "$R4\DefaultIcon" "" "$R6"
-      WriteRegStr SHCTX "$R4\shell\open\command" "" "$R5"
+      
+      StrCmp "$R5" "" +2 0
+      WriteRegStr SHCTX "$R4\shell\open\command" "" "$R5"      
+
+      StrCmp "$R9" "true" 0 +11
       WriteRegStr SHCTX "$R4\shell\open\ddeexec" "" "$\"%1$\",,0,0,,,,"
       WriteRegStr SHCTX "$R4\shell\open\ddeexec" "NoActivateHandler" ""
       WriteRegStr SHCTX "$R4\shell\open\ddeexec\Application" "" "${DDEApplication}"
@@ -1745,6 +1749,134 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
     !define _MOZFUNC_UN
     !verbose pop
   !endif
+!macroend
+
+/**
+* Returns the path found within a passed in string. The path is quoted or not
+* with the exception of an unquoted non 8dot3 path without arguments that is
+* also not a DefaultIcon path, is a 8dot3 path or not, has command line
+* arguments, or is a registry DefaultIcon path (e.g. <path to binary>,# where #
+* is the icon's resuorce id). The string does not need to be a valid path or
+* exist. It is up to the caller to pass in a string of one of the forms noted
+* above and to verify existence if necessary.
+*
+* IMPORTANT! $R9 will be overwritten by this macro with the return value so
+*            protect yourself!
+*
+* Examples:
+* In:  C:\PROGRA~1\MOZILL~1\FIREFOX.EXE -url "%1" -requestPending
+* In:  C:\PROGRA~1\MOZILL~1\FIREFOX.EXE,0
+* In:  C:\PROGRA~1\MOZILL~1\FIREFOX.EXE
+* In:  "C:\PROGRA~1\MOZILL~1\FIREFOX.EXE"
+* In:  "C:\PROGRA~1\MOZILL~1\FIREFOX.EXE" -url "%1" -requestPending
+* Out: C:\PROGRA~1\MOZILL~1\FIREFOX.EXE
+*
+* In:  "C:\Program Files\Mozilla Firefox\firefox.exe" -url "%1" -requestPending
+* In:  C:\Program Files\Mozilla Firefox\firefox.exe,0
+* In:  "C:\Program Files\Mozilla Firefox\firefox.exe"
+* Out: C:\Program Files\Mozilla Firefox\firefox.exe
+*
+* @param   _STRING
+*          The string containing the path
+* @param   _RESULT
+*          The register to store the path to.
+*
+* $R6 = counter for the outer loop's EnumRegKey
+* $R7 = value returned from ReadRegStr
+* $R8 = _STRING
+* $R9 = _RESULT
+*/
+!macro GetPathFromString
+
+ !ifndef ${_MOZFUNC_UN}GetPathFromString
+   !verbose push
+   !verbose ${_MOZFUNC_VERBOSE}
+   !define ${_MOZFUNC_UN}GetPathFromString "!insertmacro ${_MOZFUNC_UN}GetPathFromStringCall"
+
+   Function ${_MOZFUNC_UN}GetPathFromString
+     Exch $R8
+     Push $R7
+     Push $R6
+     ClearErrors
+
+     StrCpy $R9 $R8
+     StrCpy $R6 0          ; Set the counter to 0.
+
+     ClearErrors
+     ; Handle quoted paths with arguments.
+     StrCpy $R7 $R9 1      ; Copy the first char.
+     StrCmp $R7 '"' +2 +1  ; Is it a "?
+     StrCmp $R7 "'" +1 +9  ; Is it a '?
+     StrCpy $R9 $R9 "" 1   ; Remove the first char.
+     IntOp $R6 $R6 + 1     ; Increment the counter.
+     StrCpy $R7 $R9 1 $R6  ; Starting from the counter copy the next char.
+     StrCmp $R7 "" end     ; Are there no more chars?
+     StrCmp $R7 '"' +2 +1  ; Is it a " char?
+     StrCmp $R7 "'" +1 -4  ; Is it a ' char?
+     StrCpy $R9 $R9 $R6    ; Copy chars up to the counter.
+     GoTo end
+
+     ; Handle DefaultIcon paths. DefaultIcon paths are not quoted and end with
+     ; a , and a number.
+     IntOp $R6 $R6 - 1     ; Decrement the counter.
+     StrCpy $R7 $R9 1 $R6  ; Copy one char from the end minus the counter.
+     StrCmp $R7 '' +4      ; Are there no more chars?
+     StrCmp $R7 ',' +1 -3  ; Is it a , char?
+     StrCpy $R9 $R9 $R6    ; Copy chars up to the end minus the counter.
+     GoTo end
+
+     ; Handle unquoted paths with arguments. An unquoted path with arguments
+     ; must be an 8dot3 path.
+     StrCpy $R6 -1          ; Set the counter to -1 so it will start at 0.
+     IntOp $R6 $R6 + 1      ; Increment the counter.
+     StrCpy $R7 $R9 1 $R6   ; Starting from the counter copy the next char.
+     StrCmp $R7 "" end      ; Are there no more chars?
+     StrCmp $R7 " " +1 -3   ; Is it a space char?
+     StrCpy $R9 $R9 $R6     ; Copy chars up to the counter.
+
+     end:
+
+     Pop $R6
+     Pop $R7
+     Exch $R8
+     Push $R9
+   FunctionEnd
+
+   !verbose pop
+ !endif
+!macroend
+
+!macro GetPathFromStringCall _STRING _RESULT
+ !verbose push
+ !verbose ${_MOZFUNC_VERBOSE}
+ Push "${_STRING}"
+ Call GetPathFromString
+ Pop ${_RESULT}
+ !verbose pop
+!macroend
+
+!macro un.GetPathFromStringCall _STRING _RESULT
+ !verbose push
+ !verbose ${_MOZFUNC_VERBOSE}
+ Push "${_STRING}"
+ Call un.GetPathFromString
+ Pop ${_RESULT}
+ !verbose pop
+!macroend
+
+!macro un.GetPathFromString
+ !ifndef un.GetPathFromString
+   !verbose push
+   !verbose ${_MOZFUNC_VERBOSE}
+   !undef _MOZFUNC_UN
+   !define _MOZFUNC_UN "un."
+
+   !insertmacro GetPathFromString
+
+   !undef _MOZFUNC_UN
+   !define _MOZFUNC_UN
+   !verbose pop
+ !endif
 !macroend
 
 /**
