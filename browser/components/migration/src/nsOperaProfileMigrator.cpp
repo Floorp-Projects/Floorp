@@ -1078,7 +1078,8 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
                                  getter_Copies(importedOperaHotlistTitle));
 
 #ifdef MOZ_PLACES_BOOKMARKS
-    bms->CreateFolder(parentFolder, importedOperaHotlistTitle, -1, &parentFolder);
+    bms->CreateFolder(parentFolder, importedOperaHotlistTitle,
+                      nsINavBookmarksService::DEFAULT_INDEX, &parentFolder);
 #else
     bms->CreateFolderInContainer(importedOperaHotlistTitle.get(), 
                                  root, -1, getter_AddRefs(parentFolder));
@@ -1147,7 +1148,8 @@ nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS,
 
 #ifdef MOZ_PLACES_BOOKMARKS
   PRInt64 keywordsFolder;
-  rv = aBMS->CreateFolder(aParentFolder, importedSearchUrlsTitle, -1, &keywordsFolder);
+  rv = aBMS->CreateFolder(aParentFolder, importedSearchUrlsTitle,
+                          nsINavBookmarksService::DEFAULT_INDEX, &keywordsFolder);
   NS_ENSURE_SUCCESS(rv, rv);
 #else
   nsCOMPtr<nsIRDFResource> keywordsFolder;
@@ -1215,9 +1217,10 @@ nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS,
                                   descStrings, 2, getter_Copies(keywordDesc));
 
 #ifdef MOZ_PLACES_BOOKMARKS
-    rv = aBMS->InsertItem(keywordsFolder, uri, -1);
+    PRInt64 newId;
+    rv = aBMS->InsertItem(keywordsFolder, uri, nsINavBookmarksService::DEFAULT_INDEX, &newId);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = aBMS->SetItemTitle(uri, nameStr);
+    rv = aBMS->SetItemTitle(newId, nameStr);
     NS_ENSURE_SUCCESS(rv, rv);
     // TODO -- set bookmark keyword to keyword and description to keywordDesc.
 #else
@@ -1394,11 +1397,12 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
           rv = NS_NewURI(getter_AddRefs(uri), url);
           if (NS_FAILED(rv))
             continue;
+          PRInt64 id;
           rv = aBMS->InsertItem(onToolbar ? aToolbar : aParent,
-                                uri, -1);
+                                uri, nsINavBookmarksService::DEFAULT_INDEX, &id);
           if (NS_FAILED(rv))
             continue;
-          rv = aBMS->SetItemTitle(uri, name);
+          rv = aBMS->SetItemTitle(id, name);
           if (NS_FAILED(rv))
             continue;
 #else
@@ -1426,7 +1430,7 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
 #ifdef MOZ_PLACES_BOOKMARKS
           PRInt64 newFolder;
           rv = aBMS->CreateFolder(onToolbar ? aToolbar : aParent,
-                                  name, -1, &newFolder);
+                                  name, nsINavBookmarksService::DEFAULT_INDEX, &newFolder);
           if (NS_FAILED(rv)) 
             continue;
           rv = ParseBookmarksFolder(aStream, newFolder, aToolbar, aBMS);

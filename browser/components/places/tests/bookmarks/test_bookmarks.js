@@ -44,6 +44,13 @@ try {
   do_throw("Could not get nav-bookmarks-service\n");
 }
 
+// Get history service
+try {
+  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
+} catch(ex) {
+  do_throw("Could not get history service\n");
+} 
+
 // create and add bookmarks observer
 var observer = {
   onBeginUpdateBatch: function() {
@@ -52,25 +59,20 @@ var observer = {
   onEndUpdateBatch: function() {
     this._endUpdateBatch = true;
   },
-  onItemAdded: function(uri, folder, index) {
+  onItemAdded: function(id, uri, folder, index) {
     this._itemAdded = uri;
+    this._itemAddedId = id;
     this._itemAddedFolder = folder;
     this._itemAddedIndex = index;
   },
-  onItemRemoved: function(uri, folder, index) {
+  onItemRemoved: function(id, uri, folder, index) {
     this._itemRemoved = uri;
+    this._itemRemovedId = id;
     this._itemRemovedFolder = folder;
     this._itemRemovedIndex = index;
   },
-  /* XXXDietrich - vestigial? is not currently in nsINavBookmarksService
-  onItemMoved: function(uri, folder, oldIndex, newIndex) {
-    this._itemMoved = uri;
-    this._itemMovedFolder = folder;
-    this._itemMovedOldIndex = oldIndex;
-    this._itemMovedNewIndex = newIndex;
-  },
-  */
-  onItemChanged: function(uri, property, value) {
+  onItemChanged: function(id, uri, property, value) {
+    this._itemChangedId = id;
     this._itemChanged = uri;
     this._itemChangedProperty = property;
     this._itemChangedValue = value;
@@ -79,11 +81,6 @@ var observer = {
     this._itemVisited = uri;
     this._itemVisitedID = visitID;
     this._itemVisitedTime = time;
-  },
-  onItemReplaced: function(folder, oldItem, newItem) {
-    this._itemReplacedFolder = folder;
-    this._itemReplaced = oldItem;
-    this._itemReplacedNew = newItem;
   },
   onFolderAdded: function(folder, parent, index) {
     this._folderAdded = folder;
@@ -128,20 +125,42 @@ bmsvc.addObserver(observer, false);
 var root = bmsvc.bookmarksRoot;
 
 // index at which items should begin
-var bmStartIndex = 3
+var bmStartIndex = 3;
 
 // main
 function run_test() {
+  // test roots
+  do_check_true(bmsvc.placesRoot > 0);
+  do_check_true(bmsvc.bookmarksRoot > 0);
+  do_check_true(bmsvc.toolbarRoot > 0);
+
   // insert item
-  bmsvc.insertItem(root, uri("http://google.com/"), -1);
+  var newId = bmsvc.insertItem(root, uri("http://google.com/"), bmsvc.DEFAULT_INDEX);
+  do_check_eq(observer._itemAddedId, newId);
   do_check_eq(observer._itemAdded.spec, "http://google.com/");
   do_check_eq(observer._itemAddedFolder, root);
   do_check_eq(observer._itemAddedIndex, bmStartIndex);
 
-  // change item
-  bmsvc.setItemTitle(uri("http://google.com/"), "Google");
+  // set item title
+  bmsvc.setItemTitle(newId, "Google");
+  do_check_eq(observer._itemChangedId, newId);
   do_check_eq(observer._itemChanged.spec, "http://google.com/");
   do_check_eq(observer._itemChangedProperty, "title");
+  do_check_eq(observer._itemChangedValue, "Google");
+
+  // get item title
+  var title = bmsvc.getItemTitle(newId);
+  do_check_eq(title, "Google");
+
+  // get item title bad input
+  try {
+    var title = bmsvc.getItemTitle(-3);
+    do_throw("getItemTitle accepted bad input");
+  } catch(ex) {}
+
+  // test folder that the bm is in
+  var folderId = bmsvc.getFolderIdForItem(newId);
+  do_check_eq(folderId, root);
 
   // create folder
   var workFolder = bmsvc.createFolder(root, "Work", 3);
@@ -149,77 +168,78 @@ function run_test() {
   do_check_eq(observer._folderAddedParent, root);
   do_check_eq(observer._folderAddedIndex, 3);
 
+  //XXX - test setFolderTitle
+  //XXX - test getFolderTitle
+
   // insert item
-  bmsvc.insertItem(workFolder, uri("http://developer.mozilla.org/"), 0);
+  var newId2 = bmsvc.insertItem(workFolder, uri("http://developer.mozilla.org/"), 0);
+  do_check_eq(observer._itemAddedId, newId2);
   do_check_eq(observer._itemAdded.spec, "http://developer.mozilla.org/");
   do_check_eq(observer._itemAddedFolder, workFolder);
   do_check_eq(observer._itemAddedIndex, 0);
 
   // change item
-  bmsvc.setItemTitle(uri("http://developer.mozilla.org/"), "DevMo");
+  bmsvc.setItemTitle(newId2, "DevMo");
   do_check_eq(observer._itemChanged.spec, "http://developer.mozilla.org/");
   do_check_eq(observer._itemChangedProperty, "title");
 
   // insert item
-  bmsvc.insertItem(workFolder, uri("http://msdn.microsoft.com/"), -1);
+  var newId3 = bmsvc.insertItem(workFolder, uri("http://msdn.microsoft.com/"), bmsvc.DEFAULT_INDEX);
+  do_check_eq(observer._itemAddedId, newId3);
   do_check_eq(observer._itemAdded.spec, "http://msdn.microsoft.com/");
   do_check_eq(observer._itemAddedFolder, workFolder);
   do_check_eq(observer._itemAddedIndex, 1);
 
   // change item
-  bmsvc.setItemTitle(uri("http://msdn.microsoft.com/"), "MSDN");
+  bmsvc.setItemTitle(newId3, "MSDN");
   do_check_eq(observer._itemChanged.spec, "http://msdn.microsoft.com/");
   do_check_eq(observer._itemChangedProperty, "title");
 
   // remove item
-  bmsvc.removeItem(workFolder, uri("http://developer.mozilla.org/"));
+  bmsvc.removeItem(newId2);
+  do_check_eq(observer._itemRemovedId, newId2);
   do_check_eq(observer._itemRemoved.spec, "http://developer.mozilla.org/");
   do_check_eq(observer._itemRemovedFolder, workFolder);
   do_check_eq(observer._itemRemovedIndex, 0);
 
   // insert item
-  bmsvc.insertItem(workFolder, uri("http://developer.mozilla.org/"), -1);
+  var newId4 = bmsvc.insertItem(workFolder, uri("http://developer.mozilla.org/"), bmsvc.DEFAULT_INDEX);
+  do_check_eq(observer._itemAddedId, newId4);
   do_check_eq(observer._itemAdded.spec, "http://developer.mozilla.org/");
   do_check_eq(observer._itemAddedFolder, workFolder);
   do_check_eq(observer._itemAddedIndex, 1);
   
-  // replace item
-  bmsvc.replaceItem(workFolder, uri("http://developer.mozilla.org/"),
-    uri("http://developer.mozilla.org/devnews/"));
-  do_check_eq(observer._itemReplaced.spec, "http://developer.mozilla.org/");
-  do_check_eq(observer._itemReplacedNew.spec, "http://developer.mozilla.org/devnews/");
-  do_check_eq(observer._itemReplacedFolder, workFolder);
-
   // create folder
-  var homeFolder = bmsvc.createFolder(root, "Home", -1);
+  var homeFolder = bmsvc.createFolder(root, "Home", bmsvc.DEFAULT_INDEX);
   do_check_eq(observer._folderAdded, homeFolder);
   do_check_eq(observer._folderAddedParent, root);
   do_check_eq(observer._folderAddedIndex, 5);
 
   // insert item
-  bmsvc.insertItem(homeFolder, uri("http://espn.com/"), 0);
+  var newId5 = bmsvc.insertItem(homeFolder, uri("http://espn.com/"), 0);
+  do_check_eq(observer._itemAddedId, newId5);
   do_check_eq(observer._itemAdded.spec, "http://espn.com/");
   do_check_eq(observer._itemAddedFolder, homeFolder);
   do_check_eq(observer._itemAddedIndex, 0);
 
   // change item
-  bmsvc.setItemTitle(uri("http://espn.com/"), "ESPN");
+  bmsvc.setItemTitle(newId5, "ESPN");
   do_check_eq(observer._itemChanged.spec, "http://espn.com/");
   do_check_eq(observer._itemChangedProperty, "title");
 
   // insert item
-  bmsvc.insertItem(root, uri("place:domain=google.com&group=1"), -1);
+  var newId6 = bmsvc.insertItem(root, uri("place:domain=google.com&group=1"), bmsvc.DEFAULT_INDEX);
   do_check_eq(observer._itemAdded.spec, "place:domain=google.com&group=1");
   do_check_eq(observer._itemAddedFolder, root);
   do_check_eq(observer._itemAddedIndex, 6);
 
   // change item
-  bmsvc.setItemTitle(uri("place:domain=google.com&group=1"), "Google Sites");
+  bmsvc.setItemTitle(newId6, "Google Sites");
   do_check_eq(observer._itemChanged.spec, "place:domain=google.com&group=1");
   do_check_eq(observer._itemChangedProperty, "title");
 
   // move folder
-  bmsvc.moveFolder(workFolder, root, -1);
+  bmsvc.moveFolder(workFolder, root, bmsvc.DEFAULT_INDEX);
   do_check_eq(observer._folderMoved, workFolder);
   do_check_eq(observer._folderMovedOldParent, root);
   do_check_eq(observer._folderMovedOldIndex, 3);
@@ -228,14 +248,159 @@ function run_test() {
 
   // Test expected failure of moving a folder to be its own parent
   try {
-    bmsvc.moveFolder(workFolder, workFolder, -1);
+    bmsvc.moveFolder(workFolder, workFolder, bmsvc.DEFAULT_INDEX);
     do_throw("moveFolder() allowed moving a folder to be it's own parent.");
   } catch (e) {}
   do_check_eq(bmsvc.indexOfItem(root, uri("http://google.com/")), 3);
   do_check_eq(bmsvc.indexOfFolder(root, workFolder), 6);
+
+  // test insertSeparator
+  // XXX - this should also query bookmarks for the folder children
+  // and then test the node type at our index
+  try {
+    bmsvc.insertSeparator(root, 1);
+    bmsvc.removeChildAt(root, 1);
+  } catch(ex) {
+    do_throw("insertSeparator: " + ex);
+  }
+
+  // test indexOfItem
+  var newId7 = bmsvc.insertItem(root, uri("http://blah.com"), 2);
+  do_check_eq(bmsvc.indexOfItem(root, uri("http://blah.com/")), 2);
+  bmsvc.removeItem(newId7);
+
+  // test indexOfFolder
+  var tmpFolder = bmsvc.createFolder(root, "tmp", 2);
+  do_check_eq(bmsvc.indexOfFolder(root, tmpFolder), 2);
+
+  // test setKeywordForURI
+  var kwTestItemId = bmsvc.insertItem(root, uri("http://keywordtest.com"), bmsvc.DEFAULT_INDEX);
+  try {
+    var res = bmsvc.setKeywordForBookmark(kwTestItemId, "bar");
+  } catch(ex) {
+    do_throw("setKeywordForBookmark: " + ex);
+  }
+
+  // test getKeywordForBookmark
+  var k = bmsvc.getKeywordForBookmark(kwTestItemId);
+  do_check_eq("bar", k);
+
+  // test getKeywordForURI
+  var k = bmsvc.getKeywordForURI(uri("http://keywordtest.com/"));
+  do_check_eq("bar", k);
+
+  // test getURIForKeyword
+  var u = bmsvc.getURIForKeyword("bar");
+  do_check_eq("http://keywordtest.com/", u.spec);
+
+  // test getBookmarkIdsForURI
+  var newId8 = bmsvc.insertItem(root, uri("http://foo8.com/"), 2);
+  var b = bmsvc.getBookmarkIdsForURI(uri("http://foo8.com/"), {});
+  do_check_eq(b[0], newId8);
+
+  // test removeFolderChildren
+  // 1) add/remove each child type (bookmark, separator, folder)
+  var tmpFolder = bmsvc.createFolder(root, "removeFolderChildren", bmsvc.DEFAULT_INDEX);
+  bmsvc.insertItem(tmpFolder, uri("http://foo9.com/"), bmsvc.DEFAULT_INDEX);
+  bmsvc.createFolder(tmpFolder, "subfolder", bmsvc.DEFAULT_INDEX);
+  bmsvc.insertSeparator(tmpFolder, bmsvc.DEFAULT_INDEX);
+  // 2) confirm that folder has 3 children
+  try {
+    var options = histsvc.getNewQueryOptions();
+    options.maxResults = 1;
+    options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
+    var query = histsvc.getNewQuery();
+    query.setFolders([tmpFolder], 1);
+    var result = histsvc.executeQuery(query, options);
+    var rootNode = result.root;
+    rootNode.containerOpen = true;
+    do_check_eq(rootNode.childCount, 3);
+    rootNode.containerOpen = false;
+  } catch(ex) { do_throw("removeFolderChildren(): " + ex); }
+  // 3) remove all children
+  bmsvc.removeFolderChildren(tmpFolder);
+  // 4) confirm that folder has 0 children
+  try {
+    result = histsvc.executeQuery(query, options);
+    var rootNode = result.root;
+    rootNode.containerOpen = true;
+    do_check_eq(rootNode.childCount, 0);
+    rootNode.containerOpen = false;
+  } catch(ex) { do_throw("removeFolderChildren(): " + ex); }
+
+  // test getItemURI
+  var newId9 = bmsvc.insertItem(root, uri("http://foo9.com/"), bmsvc.DEFAULT_INDEX);
+  var placeURI = bmsvc.getItemURI(newId9);
+  do_check_eq(placeURI.spec, "place:moz_bookmarks.id=" + newId9 + "&group=3");
+
+  // XXX - test folderReadOnly
+
+  // test bookmark id in query output
+  try {
+    var options = histsvc.getNewQueryOptions();
+    options.maxResults = 1;
+    options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
+    var query = histsvc.getNewQuery();
+    query.setFolders([root], 1);
+    var result = histsvc.executeQuery(query, options);
+    var rootNode = result.root;
+    rootNode.containerOpen = true;
+    var cc = rootNode.childCount;
+    for (var i=0; i < cc; ++i) {
+      var node = rootNode.getChild(i);
+      do_check_true(node.bookmarkId > 0);
+    }
+    root.containerOpen = false;
+  }
+  catch(ex) {
+    do_throw("bookmarks query: " + ex);
+  }
+
+  /* test that multiple bookmarks with same URI show up in queries
+  try {
+    // test uri
+    var mURI = uri("http://multiple.uris.in.query");
+
+    // add 2 bookmarks
+    bmsvc.insertItem(root, mURI, bmsvc.DEFAULT_INDEX);
+    bmsvc.insertItem(root, mURI, bmsvc.DEFAULT_INDEX);
+
+    // query
+    var options = histsvc.getNewQueryOptions();
+    options.maxResults = 2;
+    options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
+    var query = histsvc.getNewQuery();
+    query.setFolders([root], 1);
+    query.uri = mURI;
+    var result = histsvc.executeQuery(query, options);
+    var rootNode = result.root;
+    rootNode.containerOpen = true;
+    var cc = rootNode.childCount;
+    do_check_eq(cc, 2);
+    root.containerOpen = false;
+  }
+  catch(ex) {
+    do_throw("bookmarks query: " + ex);
+  }
+  */
+
+  // test change bookmark uri
+  var newId10 = bmsvc.insertItem(root, uri("http://foo10.com/"), bmsvc.DEFAULT_INDEX);
+  bmsvc.changeBookmarkURI(newId10, uri("http://foo11.com/"));
+  do_check_eq(observer._itemChangedId, newId10);
+  do_check_eq(observer._itemChanged.spec, "http://foo11.com/");
+  do_check_eq(observer._itemChangedProperty, "uri");
+  do_check_eq(observer._itemChangedValue, "");
+
+  var newId11 = bmsvc.insertItem(root, uri("http://foo11.com/"), bmsvc.DEFAULT_INDEX);
+  var bmURI = bmsvc.getBookmarkURI(newId11);
+  do_check_eq("http://foo11.com/", bmURI.spec);
+
+  var newId12 = bmsvc.insertItem(root, uri("http://foo11.com/"), 1);
+  var bmIndex = bmsvc.getItemIndex(newId12);
+  do_check_eq(1, bmIndex);
 }
 
-// XXX test folderReadOnly
 // XXXDietrich - get this section up to date
 
 ///  EXPECTED TABLE RESULTS

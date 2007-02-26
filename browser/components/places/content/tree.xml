@@ -56,6 +56,12 @@
         this.place = this.place;
       ]]></constructor>
 
+      <destructor><![CDATA[ 
+        var resultview = this.getResultView();
+        if (resultview)
+          resultview.removeViewObserver(this._viewObserver);
+      ]]></destructor>
+
       <property name="controller"
                 readonly="true"
                 onget="return this._controller;"/>

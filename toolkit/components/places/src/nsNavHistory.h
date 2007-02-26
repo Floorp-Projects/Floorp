@@ -160,7 +160,7 @@ public:
 #endif
 
   /**
-   * Returns the database ID for the given URI, or 0 if not found an autoCreate
+   * Returns the database ID for the given URI, or 0 if not found and autoCreate
    * is false.
    */
   nsresult GetUrlIdFor(nsIURI* aURI, PRInt64* aEntryID,

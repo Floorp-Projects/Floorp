@@ -2777,6 +2777,29 @@ nsNavHistory::SetPageTitle(nsIURI *aURI,
 #endif
 }
 
+NS_IMETHODIMP
+nsNavHistory::GetPageTitle(nsIURI *aURI, nsAString &aTitle)
+{
+  aTitle.Truncate(0);
+
+  mozIStorageStatement *statement = DBGetURLPageInfo();
+  mozStorageStatementScoper scope(statement);
+  nsresult rv = BindStatementURI(statement, 0, aURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+
+  PRBool results;
+  rv = statement->ExecuteStep(&results);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!results) {
+    aTitle.SetIsVoid(PR_TRUE);
+    return NS_OK; // not found: return void string
+  }
+
+  return statement->GetString(nsNavHistory::kGetInfoIndex_Title, aTitle);
+}
+
 
 #ifndef MOZILLA_1_8_BRANCH
 // nsNavHistory::GetURIGeckoFlags

@@ -54,7 +54,7 @@ interface nsITransaction;
  * Observer for bookmark changes.
  */
 
-[scriptable, uuid(224f8162-4da8-45eb-8187-a8ba3a3db8e5)]
+[scriptable, uuid(d0f520f0-b08b-11db-abbd-0800200c9a66)]
 interface nsINavBookmarkObserver : nsISupports
 {
   /**
@@ -75,36 +75,41 @@ interface nsINavBookmarkObserver : nsISupports
    * add took place. The rest of the bookmarks will be shifted down, but no
    * additional notifications will be sent.
    *
-   * @param bookmark   The bookmark item that was added.
+   * @param bookmarkId The id of the bookmark that was added.
+   * @param bookmark   The URI that was bookmarked.
    * @param folder     The folder that the item was added to.
    * @param index      The item's index in the folder.
    */
-  void onItemAdded(in nsIURI bookmark, in PRInt64 folder, in PRInt32 index);
+  void onItemAdded(in PRInt64 bookmarkId, in nsIURI bookmark, in PRInt64 folder, in PRInt32 index);
 
   /**
    * Notify this observer that the bookmark was removed.  Called after the
    * actual remove took place. The bookmarks following the index will be
    * shifted up, but no additional notifications will be sent.
    *
-   * @param bookmark   The bookmark item will be removed.
+   * @param bookmarkId The id of the bookmark that was removed.
+   * @param bookmark   The URI of the bookmark that will be removed.
    * @param folder     The folder that the item was removed from.
    * @param index      The bookmark's index in the folder.
    */
-  void onItemRemoved(in nsIURI bookmark, in PRInt64 folder, in PRInt32 index);
+  void onItemRemoved(in PRInt64 bookmarkId, in nsIURI bookmark, in PRInt64 folder, in PRInt32 index);
 
   /**
    * Notify this observer that a bookmark's information has changed.  This
    * will be called whenever any attributes like "title" are changed.
-   *
-   * @param bookmark The bookmark which changed.
+   * 
+   * @param bookmarkId The id of the bookmark that was changed.
+   * @param bookmark The URI of the bookmark which changed.
    * @param property The property which changed.
    *
-   * property = "cleartime" (history was deleted, there is no last visit date):
-   *                        value = none
+   * property = "cleartime": (history was deleted, there is no last visit date):
+   *                         value = none
    * property = "title": value = new title
    * property = "favicon": value = new "moz-anno" URL of favicon image
+   * property = "uri": value = empty, get the value of the changed bookmark URI
+   *                           from the |bookmark| parameter.
    */
-  void onItemChanged(in nsIURI bookmark, in ACString property,
+  void onItemChanged(in PRInt64 bookmarkId, in nsIURI bookmark, in ACString property,
                      in AString value);
 
   /**
@@ -113,19 +118,11 @@ interface nsINavBookmarkObserver : nsISupports
    * recent, but this is not guaranteed. You should check to see if it's
    * actually more recent before using this new time.
    *
+   * @param bookmarkId The id of the bookmark that was visited.
    * @see onItemChanged properth = "cleartime" for when all visit dates are
    * deleted for the URI.
    */
-  void onItemVisited(in nsIURI bookmark, in PRInt64 aVisitID, in PRTime time);
-
-  /**
-   * Notify this observer that a bookmark has been replaced.
-   *
-   * @param folder   The folder in which the bookmark was replaced
-   * @param item     The item which was replaced
-   * @param newItem  The new item which replaced item
-   */
-  void onItemReplaced(in PRInt64 folder, in nsIURI item, in nsIURI newItem);
+  void onItemVisited(in PRInt64 bookmarkId, in nsIURI bookmark, in PRInt64 aVisitID, in PRTime time);
 
   /**
    * Notify this observer that a bookmark folder has been added.
@@ -211,28 +208,27 @@ interface nsINavBookmarksService : nsISupports
   readonly attribute PRInt64 tagRoot;
 
   /**
+   * This value should be used for APIs that allow passing in an index
+   * where an index is not known, or not required to be specified.
+   * e.g.: When appending an item to a folder.
+   */
+  const short DEFAULT_INDEX = -1;
+
+  /**
    * Inserts a child item into the given folder. If this item already exists in
    * the given folder, it will be moved to the new position.
    *  @param folder     The id of the parent folder
    *  @param item       The URI to insert
    *  @param index      The index to insert at, or -1 to append
+   *  @returns          The ID of the newly-created bookmark
    */
-  void insertItem(in PRInt64 folder, in nsIURI item, in PRInt32 index);
+  PRInt64 insertItem(in PRInt64 folder, in nsIURI item, in PRInt32 index);
 
   /**
-   * Removes a child item from the given folder.
-   *  @param folder     The folder to remove the child from
-   *  @param item       The child item to remove
+   * Removes a child item. Used to delete a bookmark or separator.
+   *  @param bookmarkId  The child item to remove
    */
-  void removeItem(in PRInt64 folder, in nsIURI child);
-
-  /**
-   * Replace an item with a different item.
-   *  @param folder     The folder which contains the item to replace
-   *  @param item       The item which should be replaced
-   *  @param newItem    The new item
-   */
-  void replaceItem(in PRInt64 folder, in nsIURI item, in nsIURI newItem);
+  void removeItem(in PRInt64 bookmarkId);
 
   /**
    * Creates a new child folder and inserts it under the given parent.
@@ -318,23 +314,31 @@ interface nsINavBookmarksService : nsISupports
   void removeChildAt(in PRInt64 folder, in PRInt32 index);
 
   /**
-   * Set the history/bookmark title for a URI.  The new title will be used
-   * anywhere the URI is shown in bookmarks or history.
-   *  @param uri   The URI whose name should be set
-   *  @param title The new title for the URI
+   * Set the title for a bookmark.
+   *  @param id    The id of the item whose title should be updated 
+   *  @param title The new title for the bookmark. 
    */
-  void setItemTitle(in nsIURI uri, in AString title);
+  void setItemTitle(in PRInt64 id, in AString title);
 
   /**
-   * Get the history/bookmark title for the URI.
+   * Get the title for the bookmark.
    *
-   * If no item title is available (for instance, if the URI doesn't appear 
-   * in the bookmarks or history), it will return a void string (null in JS).
+   * If no item title is available it will return a void string (null in JS).
    *
-   *  @param uri   The URI whose title should be retrieved
-   *  @returns     The title for the URI.
+   *  @param id    The id of the item whose title should be retrieved
+   *  @returns     The title of the item.
    */
-  AString getItemTitle(in nsIURI uri);
+  AString getItemTitle(in PRInt64 id);
+
+  /**
+   * Get the URI for a bookmark item.
+   */
+  nsIURI getBookmarkURI(in PRInt64 id);
+
+  /**
+   * Get the index for a bookmark item.
+   */
+  PRInt32 getItemIndex(in PRInt64 id);
 
   /**
    * Set the title for a bookmark folder.
@@ -365,6 +369,13 @@ interface nsINavBookmarksService : nsISupports
   nsIURI getFolderURI(in PRInt64 folder);
 
   /**
+   * Get the place: url for an item (bookmark, separator).
+   * This can be used for annotating bookmark items.
+   * NOTE: this is not currently supported in the query framework.
+   */
+  nsIURI getItemURI(in PRInt64 itemId);
+
+  /**
    * Checks whether a folder has read-only children.  This property is
    * defined by the nsIBookmarsContainer for the folder, if one exists.
    * If this is set to true, UI should not allow the user to add, remove,
@@ -391,29 +402,29 @@ interface nsINavBookmarksService : nsISupports
   nsIURI getBookmarkedURIFor(in nsIURI uri);
 
   /**
-   * "Changes" the URI of a bookmark.  Since URIs are the unique
-   * identifiers of bookmarks in this system, what this really means is
-   * that all the metadata attached to oldURI will be copied onto newURI,
-   * and oldURI will be deleted from the bookmark system.  If newURI
-   * is already bookmarked, the metadata from oldURI will overwrite
-   * the corresponding metadata on newURI.  Any annotations on oldURI
-   * will be copied to newURI (a copy will remain on oldURI).
+   * Change the bookmarked URI for a bookmark.
+   * This changes which "place" the bookmark points at,
+   * which means all annotations, etc are carried along.
    */
-
-  void changeBookmarkURI(in nsIURI oldURI, in nsIURI newURI);
+  void changeBookmarkURI(in PRInt64 id, in nsIURI newURI);
 
   /**
-   * Returns the list of folder ids that contain the given URI.
+   * Get the parent folder's id for an item.
    */
-  void getBookmarkFolders(in nsIURI uri, out PRUint32 count,
-                          [array, retval, size_is(count)] out PRInt64 folders);
+  PRInt64 getFolderIdForItem(in PRInt64 id);
 
   /**
-   * TArray version of getBookmarkFolders for ease of use in C++ code.
+   * Returns the list of bookmark ids that contain the given URI.
+   */
+  void getBookmarkIdsForURI(in nsIURI uri, out PRUint32 count,
+                          [array, retval, size_is(count)] out PRInt64 bookmarks);
+
+  /**
+   * TArray version of getBookmarksIdForURI for ease of use in C++ code.
    * Pass in a reference to a TArray; it will get cleared and filled with
    * the resulting list of folder IDs.
    */
-  [noscript] void getBookmarkFoldersTArray(in nsIURI aURI,
+  [noscript] void getBookmarkIdsForURITArray(in nsIURI aURI,
                                            in PRInt64Array aResult);
 
   /**
@@ -429,22 +440,24 @@ interface nsINavBookmarksService : nsISupports
   PRInt32 indexOfFolder(in PRInt64 parent, in PRInt64 folder);
 
   /**
-   * Associates the given keyword with the given URI.
+   * Associates the given keyword with the given bookmark.
    *
-   * Use an empty keyword to clear the keyword associated with the URI. Use an
-   * empty URI to clear the URI associated with that keyword. In both of these
-   * cases, succeeds but does nothing if the URL/keyword is not found.
-   *
-   * When setting a keyword (both URI and keyword are specified), the URI must
-   * be bookmarked for the keyword to be persistent.
+   * Use an empty keyword to clear the keyword associated with the URI.
+   * In both of these cases, succeeds but does nothing if the URL/keyword is not found.
    */
-  void setKeywordForURI(in nsIURI uri, in AString keyword);
+  void setKeywordForBookmark(in PRInt64 bookmarkId, in AString keyword);
 
   /**
    * Retrieves the keyword for the given URI. Will be void string
    * (null in JS) if no such keyword is found.
    */
   AString getKeywordForURI(in nsIURI uri);
+
+  /**
+   * Retrieves the keyword for the given bookmark. Will be void string
+   * (null in JS) if no such keyword is found.
+   */
+  AString getKeywordForBookmark(in PRInt64 bookmarkId);
 
   /**
    * Returns the URI associated with the given keyword. Empty if no such

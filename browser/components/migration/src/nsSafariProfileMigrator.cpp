@@ -934,7 +934,8 @@ nsSafariProfileMigrator::CopyBookmarks(PRBool aReplace)
                                  getter_Copies(importedSafariBookmarksTitle));
 
 #ifdef MOZ_PLACES_BOOKMARKS
-    bms->CreateFolder(root, importedSafariBookmarksTitle, -1, &folder);
+    bms->CreateFolder(root, importedSafariBookmarksTitle, nsINavBookmarksService::DEFAULT_INDEX,
+                      &folder);
 #else
     bms->CreateFolderInContainer(importedSafariBookmarksTitle.get(), root, -1,
                                  getter_AddRefs(folder));
@@ -1047,8 +1048,9 @@ nsSafariProfileMigrator::ParseBookmarksFolder(CFArrayRef aChildren,
         // parse the contents of the Safari one into it...
 #ifdef MOZ_PLACES_BOOKMARKS
         PRInt64 folder;
-        rv |= aBookmarksService->CreateFolder(aParentFolder,
-                                              title, -1, &folder);
+        rv |= aBookmarksService->CreateFolder(aParentFolder, title,
+                                              nsINavBookmarksService::DEFAULT_INDEX,
+                                              &folder);
 #else
         nsCOMPtr<nsIRDFResource> folder;
         rv |= aBookmarksService->CreateFolderInContainer(title.get(),
@@ -1071,9 +1073,11 @@ nsSafariProfileMigrator::ParseBookmarksFolder(CFArrayRef aChildren,
           GetDictionaryStringValue(entry, CFSTR("URLString"), url)) {
 #ifdef MOZ_PLACES_BOOKMARKS
         nsCOMPtr<nsIURI> uri;
+        PRInt64 id;
         rv |= NS_NewURI(getter_AddRefs(uri), url);
-        rv |= aBookmarksService->InsertItem(aParentFolder, uri, -1);
-        rv |= aBookmarksService->SetItemTitle(uri, title);
+        rv |= aBookmarksService->InsertItem(aParentFolder, uri,
+                                            nsINavBookmarksService::DEFAULT_INDEX, &id);
+        rv |= aBookmarksService->SetItemTitle(id, title);
 #else
         nsCOMPtr<nsIRDFResource> bookmark;
         rv |= aBookmarksService->CreateBookmarkInContainer(title.get(),

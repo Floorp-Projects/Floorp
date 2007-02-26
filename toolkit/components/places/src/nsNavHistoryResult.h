@@ -221,7 +221,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryResult, NS_NAVHISTORYRESULT_IID)
   NS_IMETHOD SetViewIndex(PRInt32 aViewIndex) \
     { mViewIndex = aViewIndex; return NS_OK; } \
   NS_IMETHOD GetBookmarkIndex(PRInt32* aIndex) \
-    { *aIndex = mBookmarkIndex; return NS_OK; }
+    { *aIndex = mBookmarkIndex; return NS_OK; } \
+  NS_IMETHOD GetBookmarkId(PRInt64* aId) \
+    { *aId= mBookmarkId; return NS_OK; }
 
 // This is used by the base classes instead of
 // NS_FORWARD_NSINAVHISTORYRESULTNODE(nsNavHistoryResultNode) because they
@@ -360,6 +362,7 @@ public:
   PRInt64 mTime;
   nsCString mFaviconURI;
   PRInt32 mBookmarkIndex;
+  PRInt64 mBookmarkId;
 
   // The indent level of this node. The root node will have a value of -1.  The
   // root's children will have a value of 0, and so on.
@@ -717,6 +720,9 @@ public:
 
   PRBool StartIncrementalUpdate();
   void ReindexRange(PRInt32 aStartIndex, PRInt32 aEndIndex, PRInt32 aDelta);
+
+  nsNavHistoryResultNode* FindChildURIById(PRInt64 aBookmarkId,
+                                           PRUint32* aNodeIndex);
 };
 
 // nsNavHistorySeparatorResultNode

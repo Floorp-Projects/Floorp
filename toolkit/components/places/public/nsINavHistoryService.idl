@@ -50,7 +50,7 @@ interface nsINavHistoryResult;
 interface nsITreeColumn;
 interface nsIWritablePropertyBag;
 
-[scriptable, uuid(acae2b2d-5fcd-4419-b1bc-b7dc92a1836c)]
+[scriptable, uuid(7c7f93e0-b174-11db-abbd-0800200c9a66)]
 interface nsINavHistoryResultNode : nsISupports
 {
   /**
@@ -156,6 +156,12 @@ interface nsINavHistoryResultNode : nsISupports
    * that are not in a bookmark folder, this value is -1.
    */
   readonly attribute PRInt32 bookmarkIndex;
+
+  /**
+   * If the node is a bookmark, this value is the row ID of that bookmark
+   * in the database. For items not in a bookmark folder, this value is -1.
+   */
+  readonly attribute PRInt64 bookmarkId;
 };
 
 
@@ -1175,6 +1181,12 @@ interface nsINavHistoryService : nsISupports
    * only use the "real" title as declared on the page.
    */
   void setPageUserTitle(in nsIURI aURI, in AString aUserTitle);
+
+  /**
+   * Gets the original title of the page.
+   */
+  AString getPageTitle(in nsIURI aURI);
+
 
   /**
    * This is just like markPageAsTyped (in nsIBrowserHistory, also implemented
