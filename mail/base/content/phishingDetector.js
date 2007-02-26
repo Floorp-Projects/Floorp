@@ -97,11 +97,10 @@ var gPhishingDetector = {
     var folder;
     try {
       folder = aUrl.folder;
+      if (folder.server.type == 'nntp' || folder.server.type == 'rss')
+        return;
     } catch (ex) {}
-    
-    if (folder.server.type == 'nntp' || folder.server.type == 'rss')
-      return;
-      
+
     // extract the link nodes in the message and analyze them, looking for suspicious URLs...
     var linkNodes = document.getElementById('messagepane').contentDocument.links;
     for (var index = 0; index < linkNodes.length; index++)
