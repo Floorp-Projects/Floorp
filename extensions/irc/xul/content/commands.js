@@ -1902,9 +1902,9 @@ function cmdMe(e)
     }
 
     var msg = filterOutput(e.action, "ACTION", e.sourceObject);
-    client.munger.entries[".mailto"].enabled = client.prefs["munger.mailto"];
+    client.munger.getRule(".mailto").enabled = client.prefs["munger.mailto"];
     e.sourceObject.display(msg, "ACTION", "ME!", e.sourceObject);
-    client.munger.entries[".mailto"].enabled = false;
+    client.munger.getRule(".mailto").enabled = false;
     e.sourceObject.act(msg);
 }
 
@@ -2111,9 +2111,9 @@ function cmdSay(e)
     }
 
     var msg = filterOutput(e.message, "PRIVMSG", e.sourceObject);
-    client.munger.entries[".mailto"].enabled = client.prefs["munger.mailto"];
+    client.munger.getRule(".mailto").enabled = client.prefs["munger.mailto"];
     e.sourceObject.display(msg, "PRIVMSG", "ME!", e.sourceObject);
-    client.munger.entries[".mailto"].enabled = false;
+    client.munger.getRule(".mailto").enabled = false;
     e.sourceObject.say(msg);
 }
 
@@ -2122,9 +2122,9 @@ function cmdMsg(e)
     var target = e.server.addTarget(e.nickname);
 
     var msg = filterOutput(e.message, "PRIVMSG", target);
-    client.munger.entries[".mailto"].enabled = client.prefs["munger.mailto"];
+    client.munger.getRule(".mailto").enabled = client.prefs["munger.mailto"];
     e.sourceObject.display(msg, "PRIVMSG", "ME!", target);
-    client.munger.entries[".mailto"].enabled = false;
+    client.munger.getRule(".mailto").enabled = false;
     target.say(msg);
 }
 
@@ -2157,9 +2157,9 @@ function cmdNotice(e)
     var target = e.server.addTarget(e.nickname);
 
     var msg = filterOutput(e.message, "NOTICE", target);
-    client.munger.entries[".mailto"].enabled = client.prefs["munger.mailto"];
+    client.munger.getRule(".mailto").enabled = client.prefs["munger.mailto"];
     e.sourceObject.display(msg, "NOTICE", "ME!", target);
-    client.munger.entries[".mailto"].enabled = false;
+    client.munger.getRule(".mailto").enabled = false;
     target.notice(msg);
 }
 
@@ -3045,9 +3045,9 @@ function cmdVersion(e)
 
 function cmdEcho(e)
 {
-    client.munger.entries[".mailto"].enabled = client.prefs["munger.mailto"];
+    client.munger.getRule(".mailto").enabled = client.prefs["munger.mailto"];
     display(e.message);
-    client.munger.entries[".mailto"].enabled = false;
+    client.munger.getRule(".mailto").enabled = false;
 }
 
 function cmdInvite(e)
@@ -3810,11 +3810,11 @@ function cmdDCCChat(e)
     var c = client.dcc.addChat(u, client.dcc.getNextPort());
     c.request();
 
-    client.munger.entries[".inline-buttons"].enabled = true;
+    client.munger.getRule(".inline-buttons").enabled = true;
     var cmd = getMsg(MSG_DCC_COMMAND_CANCEL, "dcc-close " + c.id);
     display(getMsg(MSG_DCCCHAT_SENT_REQUEST, c._getParams().concat(cmd)),
             "DCC-CHAT");
-    client.munger.entries[".inline-buttons"].enabled = false;
+    client.munger.getRule(".inline-buttons").enabled = false;
 
     return true;
 }
@@ -3929,13 +3929,13 @@ function cmdDCCSend(e)
     var c = client.dcc.addFileTransfer(u, client.dcc.getNextPort());
     c.request(file);
 
-    client.munger.entries[".inline-buttons"].enabled = true;
+    client.munger.getRule(".inline-buttons").enabled = true;
     var cmd = getMsg(MSG_DCC_COMMAND_CANCEL, "dcc-close " + c.id);
     display(getMsg(MSG_DCCFILE_SENT_REQUEST, [c.user.unicodeName, c.localIP,
                                               c.port, c.filename,
                                               getSISize(c.size), cmd]),
             "DCC-FILE");
-    client.munger.entries[".inline-buttons"].enabled = false;
+    client.munger.getRule(".inline-buttons").enabled = false;
 
     return true;
 }
@@ -4017,11 +4017,11 @@ function cmdDCCList(e) {
                 counts.failed++;
                 break;
         }
-        client.munger.entries[".inline-buttons"].enabled = true;
+        client.munger.getRule(".inline-buttons").enabled = true;
         display(getMsg(MSG_DCCLIST_LINE, [k + 1, state, dir, type, tf,
                                           c.unicodeName, c.remoteIP, c.port,
                                           cmds]));
-        client.munger.entries[".inline-buttons"].enabled = false;
+        client.munger.getRule(".inline-buttons").enabled = false;
     }
     display(getMsg(MSG_DCCLIST_SUMMARY, [counts.pending, counts.connected,
                                          counts.failed]));

@@ -951,9 +951,9 @@ function my_unknown (e)
             var args = [msg, e.channel.unicodeName,
                         "knock " + e.channel.unicodeName];
             msg = getMsg("msg.irc." + e.code + ".knock", args, "");
-            client.munger.entries[".inline-buttons"].enabled = true;
+            client.munger.getRule(".inline-buttons").enabled = true;
             targetDisplayObj.display(msg);
-            client.munger.entries[".inline-buttons"].enabled = false;
+            client.munger.getRule(".inline-buttons").enabled = false;
         }
         else
         {
@@ -1157,9 +1157,9 @@ function my_ctcprunk (e)
 CIRCNetwork.prototype.onNotice =
 function my_notice (e)
 {
-    client.munger.entries[".mailto"].enabled = client.prefs["munger.mailto"];
+    client.munger.getRule(".mailto").enabled = client.prefs["munger.mailto"];
     this.display(e.decodeParam(2), "NOTICE", this, e.server.me);
-    client.munger.entries[".mailto"].enabled = false;
+    client.munger.getRule(".mailto").enabled = false;
 }
 
 /* userhost reply */
@@ -2158,9 +2158,9 @@ function my_cprivmsg (e)
 {
     var msg = e.decodeParam(2);
 
-    client.munger.entries[".mailto"].enabled = client.prefs["munger.mailto"];
+    client.munger.getRule(".mailto").enabled = client.prefs["munger.mailto"];
     this.display (msg, "PRIVMSG", e.user, this);
-    client.munger.entries[".mailto"].enabled = false;
+    client.munger.getRule(".mailto").enabled = false;
 }
 
 /* end of names */
@@ -2201,7 +2201,7 @@ CIRCChannel.prototype.onTopic = /* user changed topic */
 CIRCChannel.prototype.on332 = /* TOPIC reply */
 function my_topic (e)
 {
-    client.munger.entries[".mailto"].enabled = client.prefs["munger.mailto"];
+    client.munger.getRule(".mailto").enabled = client.prefs["munger.mailto"];
     if (e.code == "TOPIC")
         this.display (getMsg(MSG_TOPIC_CHANGED, [this.topicBy, this.topic]),
                       "TOPIC");
@@ -2222,7 +2222,7 @@ function my_topic (e)
 
     this.updateHeader();
     updateTitle(this);
-    client.munger.entries[".mailto"].enabled = false;
+    client.munger.getRule(".mailto").enabled = false;
 }
 
 CIRCChannel.prototype.on333 = /* Topic setter information */
@@ -2253,9 +2253,9 @@ function my_bans(e)
     if (this.iAmHalfOp() || this.iAmOp())
         msg += " " + getMsg(MSG_BANLIST_BUTTON, "mode -b " + e.ban);
 
-    client.munger.entries[".inline-buttons"].enabled = true;
+    client.munger.getRule(".inline-buttons").enabled = true;
     this.display(msg, "BAN");
-    client.munger.entries[".inline-buttons"].enabled = false;
+    client.munger.getRule(".inline-buttons").enabled = false;
 }
 
 CIRCChannel.prototype.on368 =
@@ -2278,9 +2278,9 @@ function my_excepts(e)
     if (this.iAmHalfOp() || this.iAmOp())
         msg += " " + getMsg(MSG_EXCEPTLIST_BUTTON, "mode -e " + e.except);
 
-    client.munger.entries[".inline-buttons"].enabled = true;
+    client.munger.getRule(".inline-buttons").enabled = true;
     this.display(msg, "EXCEPT");
-    client.munger.entries[".inline-buttons"].enabled = false;
+    client.munger.getRule(".inline-buttons").enabled = false;
 }
 
 CIRCChannel.prototype.on349 =
@@ -2304,17 +2304,17 @@ function my_needops(e)
 CIRCChannel.prototype.onNotice =
 function my_notice (e)
 {
-    client.munger.entries[".mailto"].enabled = client.prefs["munger.mailto"];
+    client.munger.getRule(".mailto").enabled = client.prefs["munger.mailto"];
     this.display(e.decodeParam(2), "NOTICE", e.user, this);
-    client.munger.entries[".mailto"].enabled = false;
+    client.munger.getRule(".mailto").enabled = false;
 }
 
 CIRCChannel.prototype.onCTCPAction =
 function my_caction (e)
 {
-    client.munger.entries[".mailto"].enabled = client.prefs["munger.mailto"];
+    client.munger.getRule(".mailto").enabled = client.prefs["munger.mailto"];
     this.display (e.CTCPData, "ACTION", e.user, this);
-    client.munger.entries[".mailto"].enabled = false;
+    client.munger.getRule(".mailto").enabled = false;
 }
 
 CIRCChannel.prototype.onUnknownCTCP =
@@ -2605,9 +2605,9 @@ function my_cprivmsg(e)
             openQueryTab(e.server, e.user.unicodeName);
     }
 
-    client.munger.entries[".mailto"].enabled = client.prefs["munger.mailto"];
+    client.munger.getRule(".mailto").enabled = client.prefs["munger.mailto"];
     this.display(e.decodeParam(2), "PRIVMSG", e.user, e.server.me);
-    client.munger.entries[".mailto"].enabled = false;
+    client.munger.getRule(".mailto").enabled = false;
 }
 
 CIRCUser.prototype.onNick =
@@ -2642,16 +2642,16 @@ function my_notice (e)
         var channel = e.server.getChannel(ary[1]);
         if (channel)
         {
-            client.munger.entries[".mailto"].enabled = displayMailto;
+            client.munger.getRule(".mailto").enabled = displayMailto;
             channel.display(msg, "NOTICE", this, e.server.me);
-            client.munger.entries[".mailto"].enabled = false;
+            client.munger.getRule(".mailto").enabled = false;
             return;
         }
     }
 
-    client.munger.entries[".mailto"].enabled = displayMailto;
+    client.munger.getRule(".mailto").enabled = displayMailto;
     this.display(msg, "NOTICE", this, e.server.me);
-    client.munger.entries[".mailto"].enabled = false;
+    client.munger.getRule(".mailto").enabled = false;
 }
 
 CIRCUser.prototype.onCTCPAction =
@@ -2664,9 +2664,9 @@ function my_uaction(e)
             openQueryTab(e.server, e.user.unicodeName);
     }
 
-    client.munger.entries[".mailto"].enabled = client.prefs["munger.mailto"];
+    client.munger.getRule(".mailto").enabled = client.prefs["munger.mailto"];
     this.display(e.CTCPData, "ACTION", this, e.server.me);
-    client.munger.entries[".mailto"].enabled = false;
+    client.munger.getRule(".mailto").enabled = false;
 }
 
 CIRCUser.prototype.onUnknownCTCP =
@@ -2752,10 +2752,10 @@ function my_dccchat(e)
         }
     }
 
-    client.munger.entries[".inline-buttons"].enabled = true;
+    client.munger.getRule(".inline-buttons").enabled = true;
     this.parent.parent.display(getMsg(str, c._getParams().concat(cmds)),
                                "DCC-CHAT");
-    client.munger.entries[".inline-buttons"].enabled = false;
+    client.munger.getRule(".inline-buttons").enabled = false;
 
     // Pass the event over to the DCC Chat object.
     e.set = "dcc-chat";
@@ -2798,12 +2798,12 @@ function my_dccsend(e)
         }
     }
 
-    client.munger.entries[".inline-buttons"].enabled = true;
+    client.munger.getRule(".inline-buttons").enabled = true;
     this.parent.parent.display(getMsg(str,[e.user.unicodeName,
                                            e.host, e.port, e.file,
                                            getSISize(e.size)].concat(cmds)),
                                "DCC-FILE");
-    client.munger.entries[".inline-buttons"].enabled = false;
+    client.munger.getRule(".inline-buttons").enabled = false;
 
     // Pass the event over to the DCC File object.
     e.set = "dcc-file";
@@ -2839,17 +2839,17 @@ function my_dccgetparams()
 CIRCDCCChat.prototype.onPrivmsg =
 function my_dccprivmsg(e)
 {
-    client.munger.entries[".mailto"].enabled = client.prefs["munger.mailto"];
+    client.munger.getRule(".mailto").enabled = client.prefs["munger.mailto"];
     this.displayHere(toUnicode(e.line, this), "PRIVMSG", e.user, "ME!");
-    client.munger.entries[".mailto"].enabled = false;
+    client.munger.getRule(".mailto").enabled = false;
 }
 
 CIRCDCCChat.prototype.onCTCPAction =
 function my_uaction(e)
 {
-    client.munger.entries[".mailto"].enabled = client.prefs["munger.mailto"];
+    client.munger.getRule(".mailto").enabled = client.prefs["munger.mailto"];
     this.displayHere(e.CTCPData, "ACTION", e.user, "ME!");
-    client.munger.entries[".mailto"].enabled = false;
+    client.munger.getRule(".mailto").enabled = false;
 }
 
 CIRCDCCChat.prototype.onUnknownCTCP =

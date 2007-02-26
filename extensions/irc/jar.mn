@@ -30,6 +30,7 @@ chatzilla.jar:
 	content/chatzilla/prefs.js                   (xul/content/prefs.js) 
 	content/chatzilla/messages.js                (xul/content/messages.js) 
 	content/chatzilla/menus.js                   (xul/content/menus.js) 
+	content/chatzilla/mungers.js                 (xul/content/mungers.js) 
 	content/chatzilla/static.js                  (xul/content/static.js) 
 	content/chatzilla/rdf.js                     (xul/content/rdf.js)
 	content/chatzilla/networks.js                (xul/content/networks.js) 

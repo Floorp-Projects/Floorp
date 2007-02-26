@@ -445,9 +445,9 @@ function updateChannel()
             var data = getObjectDetails(view);
             data.dontLogURLs = true;
             var mailto = client.prefs["munger.mailto"];
-            client.munger.entries[".mailto"].enabled = mailto;
+            client.munger.getRule(".mailto").enabled = mailto;
             var nodes = client.munger.munge(view.topic, null, data);
-            client.munger.entries[".mailto"].enabled = false;
+            client.munger.getRule(".mailto").enabled = false;
             header["topicnodes"].appendChild(adoptNode(nodes));
         }
         else

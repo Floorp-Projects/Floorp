@@ -38,252 +38,284 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function initMunger()
-{
-    /* linkRE: the general URL linkifier regular expression:
-     *
-     * - start with whitespace, non-word, or begining-of-line
-     * - then match:
-     *   - EITHER scheme (word + hyphen), colon, then lots of non-whitespace
-     *   - OR "www" followed by at least 2 sets of:
-     *     - "." plus some non-whitespace, non-"." characters
-     * - must end match with a word-break
-     * - include a "/" or "=" beyond break if present
-     * - end with whitespace, non-word, or end-of-line
-     */
-    client.linkRE =
-        /(?:\s|\W|^)((?:(\w[\w-]+):[^\s]+|www(\.[^.\s]+){2,})\b[\/=]?)(?:\s|\W|$)/;
+/* Constructs a new munger entry, using a regexp or lambda match function, and
+ * a class name (to be applied by the munger itself) or lambda replace
+ * function, and the default enabled state and a start priority (used if two
+ * rules match at the same index), as well as a default tag (when the munger
+ * adds it based on the class name) name.
+ *
+ * Regular Expressions for matching should ensure that the first capturing
+ * group is the one that contains the matched text. Non-capturing groups, of
+ * zero-width or otherwise can be used before and after, to ensure the right
+ * things are matched (e.g. to ensure whitespace before something).
+ *
+ * Note that for RegExp matching, the munger will search for the matched text
+ * (from the first capturing group) from the leftmost point of the entire
+ * match. This means that if the text that matched the first group occurs in
+ * any part of the match before the group, the munger will apply to the wrong
+ * bit. This is not usually a problem, but if it is you should use a
+ * lambdaMatch function and be sure to return the new style return value,
+ * which specifically indicates the start.
+ *
+ * The lambda match and lambda replace functions have this signature:
+ *   lambdaMatch(text, containerTag, data, mungerEntry)
+ *   lambdaReplace(text, containerTag, data, mungerEntry)
+ *     - text is the entire text to find a match in/that has matched
+ *     - containerTag is the element containing the text (not useful?)
+ *     - data is a generic object containing properties kept throughout
+ *     - mungerEntry is the CMungerEntry object for the munger itself
+ *
+ *   The lambdaReplace function is expected to do everything needed to put
+ *   |text| into |containerTab| ready for display.
+ *
+ *   The return value for lambda match functions should be either:
+ *     - (old style) just the text that matched
+ *       (the munger will search for this text, and uses the first match)
+ *     - (new style) an object with properties:
+ *       - start (start index, 0 = first character)
+ *       - text  (matched text)
+ *       (note that |text| must start at index |start|)
+ *
+ *   The return value for lambda replace functions are not used.
+ *
+ */
 
-    var munger = client.munger = new CMunger();
-    // Special internal munger!
-    munger.addRule (".inline-buttons", /(\[\[.*?\]\])/, insertInlineButton, false);
-    munger.addRule ("quote", /(``|'')/, insertQuote);
-    munger.addRule ("bold", /(?:\s|^)(\*[^*()]*\*)(?:[\s.,]|$)/, 
-                    "chatzilla-bold");
-    munger.addRule ("underline", /(?:\s|^)(\_[^_()]*\_)(?:[\s.,]|$)/,
-                    "chatzilla-underline");
-    munger.addRule ("italic", /(?:\s|^)(\/[^\/()]*\/)(?:[\s.,]|$)/,
-                    "chatzilla-italic");
-    /* allow () chars inside |code()| blocks */
-    munger.addRule ("teletype", /(?:\s|^)(\|[^|]*\|)(?:[\s.,]|$)/,
-                    "chatzilla-teletype");
-    munger.addRule (".mirc-colors", /(\x03((\d{1,2})(,\d{1,2}|)|))/,
-                    mircChangeColor);
-    munger.addRule (".mirc-bold", /(\x02)/, mircToggleBold);
-    munger.addRule (".mirc-underline", /(\x1f)/, mircToggleUnder);
-    munger.addRule (".mirc-color-reset", /(\x0f)/, mircResetColor);
-    munger.addRule (".mirc-reverse", /(\x16)/, mircReverseColor);
-    munger.addRule ("ctrl-char", /([\x01-\x1f])/, showCtrlChar);
-    munger.addRule ("link", client.linkRE, insertLink);
-    munger.addRule (".mailto",
-       /(?:\s|\W|^)((mailto:)?[^<>\[\]()\'\"\s\u201d]+@[^.<>\[\]()\'\"\s\u201d]+\.[^<>\[\]()\'\"\s\u201d]+)/i,
-                    insertMailToLink, false);
-    munger.addRule ("bugzilla-link",
-                    /(?:\s|\W|^)(bug\s+(?:#?\d+|#[^\s,]{1,20}))/i,
-                    insertBugzillaLink);
-    munger.addRule ("channel-link",
-                /(?:\s|\W|^)[@+]?(#[^<>\[\](){}\"\s\u201d]*[^:,.<>\[\](){}\'\"\s\u201d])/i,
-                    insertChannelLink);
-    munger.addRule("talkback-link", /(?:\W|^)(TB\d{8,}[A-Z]?)(?:\W|$)/,
-                   insertTalkbackLink);
-    
-    munger.addRule ("face",
-         /((^|\s)(?:[>]?[B8=:;(xX][~']?[-^v"]?(?:[)|(PpSs0oO\?\[\]\/\\]|D+)|>[-^v]?\)|[oO9][._][oO9])(\s|$))/,
-         insertSmiley);
-    munger.addRule ("rheet", /(?:\s|\W|^)(rhee+t\!*)(?:\s|$)/i, insertRheet);
-    munger.addRule ("word-hyphenator",
-                    new RegExp ("(\\S{" + client.MAX_WORD_DISPLAY + ",})"),
-                    insertHyphenatedWord);
+const NS_XHTML = "http://www.w3.org/1999/xhtml";
 
-    client.enableColors = client.prefs["munger.colorCodes"];
-    for (var entry in client.munger.entries)
-    {
-        var branch = client.prefManager.prefBranch;
-        if (entry[0] != ".")
-        {
-            try
-            {
-                munger.entries[entry].enabled = 
-                    branch.getBoolPref("munger." + entry);
-            }
-            catch (ex)
-            {
-                // nada
-            }
-        }
-    }
-}
-
-function CMungerEntry (name, regex, className, enable, tagName)
+function CMungerEntry(name, regex, className, priority, startPriority,
+                      enable, tagName)
 {
     this.name = name;
     if (name[0] != ".")
         this.description = getMsg("munger." + name, null, null);
     this.enabled = (typeof enable == "undefined" ? true : enable);
     this.enabledDefault = this.enabled;
+    this.startPriority = (startPriority) ? startPriority : 0;
+    this.priority = priority;
     this.tagName = (tagName) ? tagName : "html:span";
 
     if (isinstance(regex, RegExp))
         this.regex = regex;
     else
         this.lambdaMatch = regex;
-    
+
     if (typeof className == "function")
         this.lambdaReplace = className;
-    else 
+    else
         this.className = className;
 }
 
-function CMunger () 
+function CMunger()
 {
-    this.entries = new Object();
+    this.entries = new Array();
     this.tagName = "html:span";
     this.enabled = true;
 }
 
 CMunger.prototype.enabled = true;
 
-CMunger.prototype.addRule =
-function mng_addrule (name, regex, className, enable)
+CMunger.prototype.getRule =
+function mng_getrule(name)
 {
-    this.entries[name] = new CMungerEntry (name, regex, className, enable);
+    for (var p in this.entries)
+    {
+        if (isinstance(this.entries[p], Object))
+        {
+            if (name in this.entries[p])
+                return this.entries[p][name];
+        }
+    }
+}
+
+CMunger.prototype.addRule =
+function mng_addrule(name, regex, className, priority, startPriority, enable)
+{
+    if (typeof this.entries[priority] != "object")
+        this.entries[priority] = new Object();
+    var entry = new CMungerEntry(name, regex, className, priority,
+                                 startPriority, enable);
+    this.entries[priority][name] = entry;
 }
 
 CMunger.prototype.delRule =
-function mng_delrule (name)
+function mng_delrule(name)
 {
-    delete this.entries[name];
+    for (var i in this.entries)
+    {
+        if (typeof this.entries[i] == "object")
+        {
+            if (name in this.entries[i])
+                delete this.entries[i][name];
+        }
+    }
 }
 
 CMunger.prototype.munge =
-function mng_munge (text, containerTag, data)
+function mng_munge(text, containerTag, data)
 {
-    var entry;
-    var ary;
-    var wbr, newClass;
-    
-    if (!containerTag)
-    {
-        containerTag =
-            document.createElementNS ("http://www.w3.org/1999/xhtml",
-                                      this.tagName);
-    }
 
+    if (!containerTag)
+        containerTag = document.createElementNS(NS_XHTML, this.tagName);
+
+    // Starting from the top, for each valid priority, check all the rules,
+    // return as soon as something matches.
     if (this.enabled)
     {
-        for (entry in this.entries)
+        for (var i = this.entries.length - 1; i >= 0; i--)
         {
-            if (this.entries[entry].enabled)
+            if (i in this.entries)
             {
-                if (typeof this.entries[entry].lambdaMatch == "function")
-                {
-                    var rval;
- 
-                    rval = this.entries[entry].lambdaMatch(text, containerTag,
-                                                           data,
-                                                           this.entries[entry]);
-                    if (rval)
-                        ary = [(void 0), rval];
-                    else
-                        ary = null;
-                }
-                else
-                    ary = text.match(this.entries[entry].regex);
- 
-                if ((ary != null) && (ary[1]))
-                {
-                    var startPos = text.indexOf(ary[1]);
- 
-                    if (typeof this.entries[entry].lambdaReplace == "function")
-                    {
-                        this.munge (text.substr(0,startPos), containerTag,
-                                    data);
-                        this.entries[entry].lambdaReplace (ary[1], containerTag,
-                                                           data,
-                                                           this.entries[entry]);
-                        this.munge (text.substr (startPos + ary[1].length,
-                                                 text.length), containerTag,
-                                    data);
- 
-                        return containerTag;
-                    }
-                    else
-                    {
-                        this.munge (text.substr(0,startPos), containerTag,
-                                    data);
- 
-                        var subTag = document.createElementNS
-                            ("http://www.w3.org/1999/xhtml",
-                             this.entries[entry].tagName);
-
-                        newClass = this.entries[entry].className;
-
-                        if ("hasColorInfo" in data)
-                        {
-                            if ("currFgColor" in data)
-                                newClass += " chatzilla-fg" + data.currFgColor;
-                            if ("currBgColor" in data)
-                                newClass += " chatzilla-bg" + data.currBgColor;
-                            if ("isBold" in data)
-                                newClass += " chatzilla-bold";
-                            if ("isUnderline" in data)
-                                newClass += " chatzilla-underline";
-                        }
-
-                        subTag.setAttribute ("class", newClass);
-
-                        /* don't let this rule match again */
-                        this.entries[entry].enabled = false;
-                        this.munge(ary[1], subTag, data);
-                        this.entries[entry].enabled = true;
- 
-                        containerTag.appendChild (subTag);
-
-                        this.munge (text.substr (startPos + ary[1].length,
-                                                 text.length), containerTag,
-                                                 data);
-
-                        return containerTag;
-                    }
-                }
+                if (this.mungePriority(i, text, containerTag, data))
+                    return containerTag;
             }
         }
     }
 
-    var textNode = document.createTextNode (text);
+    // If nothing matched, we don't have to do anything,
+    // just insert text (if any).
+    if (text)
+        insertText(text, containerTag, data);
+    return containerTag;
+}
+
+CMunger.prototype.mungePriority =
+function mng_mungePriority(priority, text, containerTag, data)
+{
+    var matches = new Object();
+    var entry;
+    // Find all the matches in this priority
+    for (entry in this.entries[priority])
+    {
+        var munger = this.entries[priority][entry];
+        if (!munger.enabled)
+            continue;
+
+        var match = null;
+        if (typeof munger.lambdaMatch == "function")
+        {
+            var rval = munger.lambdaMatch(text, containerTag, data, munger);
+            if (typeof rval == "string")
+                match = { start: text.indexOf(rval), text: rval };
+            else if (typeof rval == "object")
+                match = rval;
+        }
+        else
+        {
+            var ary = text.match(munger.regex);
+            if ((ary != null) && (ary[1]))
+                match = { start: text.indexOf(ary[1]), text: ary[1] };
+        }
+
+        if (match && (match.start >= 0))
+        {
+            match.munger = munger;
+            matches[entry] = match;
+        }
+    }
+
+    // Find the first matching entry...
+    var firstMatch = { start: text.length, munger: null };
+    var firstPriority = 0;
+    for (entry in matches)
+    {
+        // If it matches before the existing first, or at the same spot but
+        // with a higher start-priority, this is a better match.
+        if (matches[entry].start < firstMatch.start ||
+            ((matches[entry].start == firstMatch.start) &&
+             (this.entries[priority][entry].startPriority > firstPriority)))
+        {
+            firstMatch = matches[entry];
+            firstPriority = this.entries[priority][entry].startPriority;
+        }
+    }
+
+    // Replace it.
+    if (firstMatch.munger)
+    {
+        var munger = firstMatch.munger;
+        firstMatch.end = firstMatch.start + firstMatch.text.length;
+
+        // Insert the text before the match if there is any
+        if (firstMatch.start > 0)
+            insertText(text.substr(0, firstMatch.start), containerTag, data);
+
+        if (typeof munger.lambdaReplace == "function")
+        {
+            // There is no need to munge the "before" text, as we should
+            // have found the earliest matching entry by now.
+            // The munger rule itself should take care of munging the 'inside'
+            // of the match.
+            munger.lambdaReplace(firstMatch.text, containerTag, data, munger);
+            this.munge(text.substr(firstMatch.end), containerTag, data);
+
+            return containerTag;
+        }
+        else
+        {
+            var tag = document.createElementNS(NS_XHTML, munger.tagName);
+            tag.setAttribute("class", munger.className + calcClass(data));
+
+            // Don't let this rule match again when we recurse.
+            munger.enabled = false;
+            this.munge(firstMatch.text, tag, data);
+            munger.enabled = true;
+
+            containerTag.appendChild(tag);
+
+            this.munge(text.substr(firstMatch.end), containerTag, data);
+
+            return containerTag;
+        }
+    }
+    return null;
+}
+
+//XXXgijs: this depends on our own data-structures, which are in
+// content/mungers.js, but we can't move this function out cause insertText
+// depends on it, and the rest of the munger depends on that. Sigh.
+function calcClass(data)
+{
+    var className = "";
+    if ("hasColorInfo" in data)
+    {
+        if ("currFgColor" in data)
+            className += " chatzilla-fg" + data.currFgColor;
+        if ("currBgColor" in data)
+            className += " chatzilla-bg" + data.currBgColor;
+        if ("isBold" in data)
+            className += " chatzilla-bold";
+        if ("isUnderline" in data)
+            className += " chatzilla-underline";
+    }
+    return className;
+}
+
+function insertText(text, containerTag, data)
+{
+    var textNode = document.createTextNode(text);
 
     if ("hasColorInfo" in data)
     {
-
-        newClass = "";
-        if ("currFgColor" in data)
-            newClass = "chatzilla-fg" + data.currFgColor;
-        if ("currBgColor" in data)
-            newClass += " chatzilla-bg" + data.currBgColor;
-        if ("isBold" in data)
-            newClass += " chatzilla-bold";
-        if ("isUnderline" in data)
-            newClass += " chatzilla-underline";
-        if (newClass != "")
+        var newClass = calcClass(data);
+        if (newClass)
         {
-            var newTag = document.createElementNS
-                ("http://www.w3.org/1999/xhtml",
-                 "html:span");
-            newTag.setAttribute ("class", newClass);
-            newTag.appendChild (textNode);
-            containerTag.appendChild (newTag);
+            var newTag = document.createElementNS(NS_XHTML, "html:span");
+            newTag.setAttribute("class", newClass);
+            newTag.appendChild(textNode);
+            containerTag.appendChild(newTag);
         }
         else
         {
             delete data.hasColorInfo;
-            containerTag.appendChild (textNode);
+            containerTag.appendChild(textNode);
         }
-        wbr = document.createElementNS ("http://www.w3.org/1999/xhtml",
-                                        "html:wbr");
-        containerTag.appendChild (wbr);
+
+        var wbr = document.createElementNS(NS_XHTML, "html:wbr");
+        containerTag.appendChild(wbr);
     }
     else
-        containerTag.appendChild (textNode);
-
-    return containerTag;
+    {
+        containerTag.appendChild(textNode);
+    }
 }
+

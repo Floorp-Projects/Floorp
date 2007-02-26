@@ -79,6 +79,7 @@
     <script src="chrome://chatzilla/content/menus.js"/>
     <script src="chrome://chatzilla/content/prefs.js"/>
     <script src="chrome://chatzilla/content/messages.js"/>
+    <script src="chrome://chatzilla/content/mungers.js"/>
     <script src="chrome://chatzilla/content/handlers.js"/>
     <script src="chrome://chatzilla/content/rdf.js"/>
     <script src="chrome://chatzilla/content/networks.js"/>
