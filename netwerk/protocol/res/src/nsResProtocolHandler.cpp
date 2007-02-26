@@ -331,7 +331,8 @@ nsResProtocolHandler::ResolveURI(nsIURI *uri, nsACString &result)
     url->GetFilePath(filepath);
 
     // Don't misinterpret the filepath as an absolute URI.
-    if (filepath.FindChar(':') != -1)
+    if (filepath.FindChar(':') != -1 ||
+        filepath.FindChar('\\') != -1)
         return NS_ERROR_MALFORMED_URI;
 
     const char *p = path.get() + 1; // path always starts with a slash
