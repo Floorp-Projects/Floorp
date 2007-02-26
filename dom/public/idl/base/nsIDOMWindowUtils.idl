@@ -45,7 +45,7 @@
  * getInterface on a DOMWindow.
  */
 
-[scriptable, uuid(cc7f4216-ad89-4687-a793-980662bd10bd)]
+[scriptable, uuid(76cdfff8-6f13-43e8-9ed4-36066cd83742)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -81,4 +81,49 @@ interface nsIDOMWindowUtils : nsISupports {
    * Force an immediate redraw of this window.
    */
   void redraw();
+
+  /** Synthesize a mouse event for a window. The event types supported
+   *  are: 
+   *    mousedown, mouseup, mousemove, mouseover, mouseout, contextmenu
+   *
+   * Events are sent in coordinates offset by aX and aY from the window.
+   *
+   * Note that additional events may be fired as a result of this call. For
+   * instance, typically a click event will be fired as a result of a
+   * mousedown and mouseup in sequence.
+   *
+   * Normally at this level of events, the mouseover and mouseout events are
+   * only fired when the window is entered or exited. For inter-element
+   * mouseover and mouseout events, a movemove event fired on the new element
+   * should be sufficient to generate the correct over and out events as well.
+   *
+   * @param aType event type
+   * @param aX x offset
+   * @param aY y offset
+   * @param aButton button to synthesize
+   * @param aClickCount number of clicks that have been performed
+   * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
+   */
+  void sendMouseEvent(in AString aType,
+                      in long aX,
+                      in long aY,
+                      in long aButton,
+                      in long aClickCount,
+                      in long aModifiers);
+
+  /**
+   * Synthesize a key event to the window. The event types supported are:
+   *   keydown, keyup, keypress
+   *
+   * Key events generally end up being sent to the focused node.
+   *
+   * @param aType event type
+   * @param aKeyCode key code
+   * @param aCharCode character code
+   * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
+   */
+  void sendKeyEvent(in AString aType,
+                    in long aKeyCode,
+                    in long aCharCode,
+                    in long aModifiers);
 };
