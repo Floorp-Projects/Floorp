@@ -53,4 +53,6 @@ public:
 
 protected:
   nsRefPtr<nsGlobalWindow> mWindow;
+
+  nsIWidget* GetWidget();
 };
