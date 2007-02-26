@@ -69,6 +69,8 @@ protected:
                             char * aDest, 
                             PRInt32 * aDestLength);
 
+  NS_IMETHOD FinishNoBuff(char * aDest, PRInt32 * aDestLength);
+
   NS_IMETHOD FillInfo(PRUint32 *aInfo);
 
   NS_IMETHOD ConvertNoBuffNoErr(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
