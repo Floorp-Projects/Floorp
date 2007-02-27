@@ -148,13 +148,11 @@
   ${AddHandlerValues} "$0\Thunderbird.Url.mailto"  "$3" "$8,0" "${AppRegNameMail} URL" "true" ""
   ${AddHandlerValues} "$0\Thunderbird.Url.news" "$2" "$8,0" "${AppRegNameNews} URL" "true" ""
 
-  ; An empty string is used for the 4th & 5th params because the following
-  ; protocol handlers already have a display name and additional keys required
-  ; for a protocol handler.
   ${AddHandlerValues} "$0\mailto" "$3" "$8,0" "${AppRegNameMail} URL" "true" ""
-  ${AddHandlerValues} "$0\news"   "$2" "$8,0" "${AppRegNameMail} URL" "true" ""
-  ${AddHandlerValues} "$0\nntp"   "$2" "$8,0" "${AppRegNameMail} URL" "true" ""
-  ${AddHandlerValues} "$0\snews"  "$2" "$8,0" "${AppRegNameMail} URL" "true" ""
+
+  ${AddHandlerValues} "$0\news"   "$2" "$8,0" "${AppRegNameNews} URL" "true" ""
+  ${AddHandlerValues} "$0\nntp"   "$2" "$8,0" "${AppRegNameNews} URL" "true" ""
+  ${AddHandlerValues} "$0\snews"  "$2" "$8,0" "${AppRegNameNews} URL" "true" ""
 !macroend
 !define SetHandlers "!insertmacro SetHandlers"
 
