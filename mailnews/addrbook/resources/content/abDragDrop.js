@@ -176,9 +176,13 @@ var abDirTreeObserver = {
       var dataObj = new Object();
       var flavor = new Object();
       var len = new Object();
-      trans.getAnyTransferData(flavor, dataObj, len);
-      if (!dataObj)
-        continue;
+      try {
+        trans.getAnyTransferData(flavor, dataObj, len);
+      }
+      catch (ex) {
+        dragSession.canDrop = false;
+        return false;
+      }
 
       dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
 
@@ -233,12 +237,15 @@ var abDirTreeObserver = {
       var dataObj = new Object();
       var flavor = new Object();
       var len = new Object();
-      trans.getAnyTransferData(flavor, dataObj, len);
-      if (dataObj)
-        dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
-      else
+      try {
+        trans.getAnyTransferData(flavor, dataObj, len);
+        dataObj = 
+          dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
+      }
+      catch (ex) {
         continue;
-        
+      }
+
       var transData = dataObj.data.split("\n");
       var rows = transData[0].split(",");
       var numrows = rows.length;
@@ -344,13 +351,9 @@ function DragAddressOverTargetControl(event)
   if (!dragSession.isDataFlavorSupported("text/x-moz-address"))
      return;
 
-  try {
-    trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
-    trans.addDataFlavor("text/x-moz-address");
-  }
-  catch (ex) {
-    return;
-  }
+  var trans = Components.classes["@mozilla.org/widget/transferable;1"]
+                        .createInstance(Components.interfaces.nsITransferable);
+  trans.addDataFlavor("text/x-moz-address");
 
   var canDrop = true;
 
