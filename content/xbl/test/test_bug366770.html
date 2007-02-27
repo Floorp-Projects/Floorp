@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=366770
+-->
+<head>
+  <title>Test for Bug 366770</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=366770">Mozilla Bug 366770</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+
+  <!--
+    <?xml version="1.0"?>
+    <bindings id="xbltestBindings" xmlns="http://www.mozilla.org/xbl">
+      <binding id="xbltest">
+        <content>PASS</content>
+        <implementation>
+          <constructor>
+            document.bindingConstructorRan = true;
+          </constructor>
+        </implementation>
+      </binding>
+    </bindings>
+  -->
+  <span id="span" style="-moz-binding: url(data:text/xml;charset=utf-8,%3C%3Fxml%20version%3D%221.0%22%3F%3E%0A%3Cbindings%20id%3D%22xbltestBindings%22%20xmlns%3D%22http%3A//www.mozilla.org/xbl%22%3E%0A%20%20%3Cbinding%20id%3D%22xbltest%22%3E%0A%20%20%20%20%3Ccontent%3EPASS%3C/content%3E%0A%20%20%20%20%3Cimplementation%3E%0A%20%20%20%20%20%20%3Cconstructor%3E%0A%20%20%20%20%20%20%20%20document.bindingConstructorRan%20%3D%20true%3B%0A%20%20%20%20%20%20%3C/constructor%3E%0A%20%20%20%20%3C/implementation%3E%0A%20%20%3C/binding%3E%0A%3C/bindings%3E%0A);"></span>
+
+  <pre id="test">
+    <script class="testbody" type="text/javascript">
+      /** Test for Bug 366770 **/
+      SimpleTest.waitForExplicitFinish();
+      addLoadEvent(function () {
+        ok(document.bindingConstructorRan, "binding URI with no fragment didn't apply");
+      });
+      addLoadEvent(SimpleTest.finish);
+    </script>
+  </pre>
+</body>
+</html>
