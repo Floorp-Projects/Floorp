@@ -1,0 +1,29 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+             "http://www.w3.org/TR/html4/loose.dtd">
+
+<html lang="en">
+<head>
+<title>Testcase #1 for bug 98223</title>
+
+<style type="text/css">
+
+        .outer { position:relative; padding-left:25%; height:100px; width:50px; border:thin solid;}
+        .inner { position:absolute; height:50px; width:50px; background-color:lime; }
+        .red   { position:absolute; height:50px; width:50px; background-color:red; top:0;right:0}
+
+</style>
+
+
+</head>
+
+<body>
+
+ <div style="position:absolute; width:200px">
+  <div class="outer">
+   <div class="red"></div>
+   <div class="inner"></div>
+  </div>
+ </div>
+
+</body>
+</html>
