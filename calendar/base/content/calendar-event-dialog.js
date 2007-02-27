@@ -121,8 +121,6 @@ function onLoad()
     document.getElementById("item-title").focus();
 
     opener.setCursor("auto");
-
-    self.focus();
 }
 
 function dispose()
