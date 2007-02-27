@@ -164,11 +164,10 @@ sub BuildTools {
         die "ERROR: $codir/mozilla exists.  Please move it away before continuing!";
     }
 
-    { # Create and execute CVS checkout command.
-        printf("Checking out source code... \n");
+    { # Checkout 'client.mk'.
+        printf("Checking out 'client.mk'... \n");
         my $cvsroot = $ENV{'CVSROOT'} || $DEFAULT_CVSROOT;
-        my $checkoutArgs = ["-d$cvsroot",
-                            'co', 'mozilla/client.mk' ];
+        my $checkoutArgs = ["-d$cvsroot", 'co', 'mozilla/client.mk'];
         my $rv = RunShellCommand(command => 'cvs',
                                  args => $checkoutArgs, 
                                  output => 1);
@@ -176,21 +175,8 @@ sub BuildTools {
             print "checkout FAILED: $rv->{'output'}\n";
         }
 
-        # TODO - fix this to refer to the update-tools pull-target when
-        # bug 329686 gets fixed.
-
-        $ENV{'MOZ_CO_PROJECT'} = 'all';
-        my $makeArgs = ['-f', 'mozilla/client.mk', 'checkout'];
-        $rv = RunShellCommand(command => 'make',
-                              args => $makeArgs,
-                              output => 1);
-
-        if ($rv->{'exitValue'} != 0) {
-            print "make " . join(" ", $makeArgs) . " FAILED: $rv->{'output'}\n";
-        }
-
         printf("\n\nCheckout complete.\n");
-    } # Create and execute CVS checkout command.
+    } # Checkout 'client.mk'.
 
     my $mozDir = catfile($codir, 'mozilla');
     # The checkout directory should exist but doesn't.
@@ -198,10 +184,13 @@ sub BuildTools {
         die "ERROR: Couldn't create checkout directory $mozDir";
     }
 
-    { # Build mozilla dependencies and tools.
+    { # Checkout and build mozilla dependencies and tools.
         my $mozconfig;
 
-        $mozconfig = "mk_add_options MOZ_CO_PROJECT=tools/update-packaging\n";
+        # TODO - fix this to refer to the update-tools pull-target when
+        # bug 329686 gets fixed.
+        
+        $mozconfig = "mk_add_options MOZ_CO_PROJECT=all\n";
         $mozconfig .= "ac_add_options --enable-application=tools/update-packaging\n";
         # these aren't required and introduce more dependencies
         $mozconfig .= "ac_add_options --disable-dbus\n";
@@ -213,22 +202,18 @@ sub BuildTools {
         print MOZCFG $mozconfig;
         close(MOZCFG);
 
-        my $rv = RunShellCommand(command => './configure',
+        my $makeArgs = ['-f', './client.mk'];
+
+        my $rv = RunShellCommand(command => 'make',
+                                 args => $makeArgs,
                                  dir => $mozDir,
-                                 output => 1);
+                                 output => 1,
+                                 timeout => 0);
 
         if ($rv->{'exitValue'} != 0) {
-            print "./configure FAILED: $rv->{'output'}\n";
+            print "make " . join(" ", $makeArgs) . " FAILED: $rv->{'output'}\n";
         }
-
-        $rv = RunShellCommand(command => 'make',
-                              dir => $mozDir,
-                              output => 1);
-
-        if ($rv->{'exitValue'} != 0) {
-            print "make FAILED: $rv->{'output'}\n";
-        }
-    } # Build mozilla dependencies and tools.
+    } # Checkout and build mozilla dependencies and tools.
 
     if (not ValidateToolsDirectory(toolsDir => $codir)) {
         die "BuildTools(): Couldn't find the tools after a BuildTools() run; something's wrong... bailing...\n";
