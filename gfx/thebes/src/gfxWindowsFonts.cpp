@@ -447,7 +447,7 @@ gfxWindowsFont::GetUniqueName()
     // append the weight code
     if (mLogFont.lfWeight != 400) {
         uniqueName.AppendLiteral(":");
-        uniqueName.AppendInt(mLogFont.lfWeight);
+        uniqueName.AppendInt((PRInt32)mLogFont.lfWeight);
     }
 
     // append italic?
