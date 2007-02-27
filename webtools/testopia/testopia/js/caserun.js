@@ -121,9 +121,10 @@ function chStat(idx, sid, cid, osid){
 	    return;
     displayMsg('pp'+idx, 3, MSG_WAIT.blink());
 	disableAllButtons(true);
+	var upbug = dojo.byId('up_bugs' + idx).checked == true ? 1 : 0;
 	dojo.io.bind({
 		url:     "tr_show_caserun.cgi",
-		content: {  caserun_id: cid, index: idx, status_id: sid, action: 'update_status'},
+		content: {  caserun_id: cid, index: idx, status_id: sid, update_bug: upbug, action: 'update_status'},
 		load:    function(type, data, evt){ fillrow(data, idx);
 					var fields = data.split("|");
 					var status = fields[0];

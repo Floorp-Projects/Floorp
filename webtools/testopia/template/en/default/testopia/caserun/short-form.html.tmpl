@@ -84,11 +84,8 @@
       <td>
         <div style="font-weight:bold;">Add Note:</div>
         <textarea id="notes[% index %]" 
-        [% IF caserun.canedit %]
-          onkeypress="document.getElementById('no[% index %]').value=1;document.getElementById('bs[% index %]').disabled = false" 
-        [% END %]
         style="height:100px; width:400px;" rows=""></textarea>
-        <input id="bs[% index %]" type="button" disabled="true" onclick="chNote([% index %], [% caserun.id FILTER none %], document.getElementById('notes[% index %]').value);" value="Append Note">
+        <input id="bs[% index %]" type="button" [% 'disabled="true"' UNLESS caserun.canedit %] onclick="chNote([% index %], [% caserun.id FILTER none %], document.getElementById('notes[% index %]').value);" value="Append Note">
       </td>
     </tr>  
   </table>
@@ -112,11 +109,12 @@
   [%##### Bugs #####%]
     <div class="cc_xx">
       <div style="float:left;">
+        Update bug status <input type="checkbox" value="1" name="up_bugs[% index %]" id="up_bugs[% index %]">
         <div style="float:left;font-weight:bold;">[% terms.Bugs %] detected (all runs):</div>
         <div class="cc_i">
           [<span id="bgl[% index %]">
           [% FOREACH bug = caserun.case.bugs %]
-            [% bug.bug_id FILTER bug_link(bug.bug_id) %]
+            [% bug.bug_id FILTER bug_link(bug.bug_id) %]&nbsp;
           [% END %]
           </span>]
         </div>
@@ -124,9 +122,9 @@
           <a href="enter_bug.cgi?product=[% caserun.run.plan.product.name FILTER url_quote %]&caserun_id=[% caserun.id FILTER none %]&version=[% caserun.run.plan.product_version FILTER url_quote %]&component=[% caserun.case.components.0.name FILTER url_quote %]&short_desc=Test%20Case%20[% caserun.case.id FILTER none %]%20-%20[% caserun.case.summary FILTER url_quote %]&comment=STATUS:%20[% caserun.status %]%0D%0ABUILD:%20[% caserun.build.name FILTER url_quote %]%0D%0AENVIRONMENT:%20[% caserun.environment.name FILTER url_quote %]%0D%0ANOTES:%20[% caserun.notes FILTER url_quote %]%0D%0A&assigned_to=[% caserun.case.components.0.default_assignee.login FILTER url_quote %]&qa_contact=[% caserun.case.components.0.default_qa_contact.login FILTER url_quote %]" target="_blank"><img src="testopia/img/snew.gif" alt="Log a New Bug" title="Log a New Bug" style="vertical-align:text-bottom;" /></a>&nbsp;
         </div>
         <div style="float:left;"><input type="text" size="6" value="" id="mbg[% index %]" [% enabled %]/></div>
-        <div class="cc_i"><input type="button" value="Attach Bug" id="sk[% index %]" onclick="attch([% index %], [% caserun.id FILTER none %], document.getElementById('mbg[% index %]').value);"/></div>
+        <div class="cc_i"><input type="button" value="Attach Bug" id="sk[% index %]" [% 'disabled="true"' UNLESS caserun.canedit %] onclick="attch([% index %], [% caserun.id FILTER none %], document.getElementById('mbg[% index %]').value);"/></div>
   [%##### Assignee #####%]
-        <div class="cc_i"><input value="[% user.login FILTER html %]" id="assignee_[% index %]" /><input type="button" value="Assign" onclick="chNote([% index %], [% caserun.id FILTER none %], document.getElementById('notes[% index %]').value); chOwn([% index %], [% caserun.id FILTER none %], document.getElementById('assignee_[% index %]').value)">
+        <div class="cc_i"><input value="[% user.login FILTER html %]" id="assignee_[% index %]" /><input type="button" value="Assign" [% 'disabled="true"' UNLESS caserun.canedit %] onclick="chNote([% index %], [% caserun.id FILTER none %], document.getElementById('notes[% index %]').value); chOwn([% index %], [% caserun.id FILTER none %], document.getElementById('assignee_[% index %]').value)">
         <a href="javascript:userLookup('document.Create.assigned_to', document.Create.assigned_to.value);">
         <img src="images/users.png" border="0" alt="Lookup User" title="Lookup User"></a>
       </div>

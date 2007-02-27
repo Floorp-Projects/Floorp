@@ -37,16 +37,24 @@
       </table>
     </td>
     <td align="left"><a href="tr_show_case.cgi?case_id=[% caserun.case.id FILTER none %]" title="[% caserun.case.summary FILTER html %]">[% caserun.case.id FILTER html %]</a></td>
-    <td align="right"><input name="sortkey_[% index %]" id="sortkey_[% index %]" value="[% caserun.sortkey FILTER html %]" size="5"><input type="button" value="Change" onclick="chNote([% index %], [% caserun.id FILTER none %], document.getElementById('notes[% index %]').value); chSortKey([% index %], [% caserun.id FILTER none %], document.getElementById('sortkey_[% index %]').value)"></td>
+    <td align="right"><input name="sortkey_[% index %]" id="sortkey_[% index %]" value="[% caserun.sortkey FILTER html %]" size="5">
+                  [% IF caserun.canedit %]
+                      <input type="button" value="Change" onclick="chNote([% index %], [% caserun.id FILTER none %], document.getElementById('notes[% index %]').value); chSortKey([% index %], [% caserun.id FILTER none %], document.getElementById('sortkey_[% index %]').value)"></td>
+                  [% END %]
     <td align="right" valign="top">
+    [% IF caserun.canedit %]
     [% PROCESS select sel = { name => "caserun_build", 
                               list => caserun.run.plan.product.builds(1), 
                            default => caserun.build.name 
                            events  => "onChange='chBld($index, this.value, \"$caserun.status\", $caserun.id)'"}
      %]
+     [% ELSE %]
+       [% caserun.build.name FILTER html %]
+     [% END %]
     </td>
     <td align="left" valign="top">
       [% caserun.environment.name FILTER html %]
+    [% IF caserun.canedit %]
           <input dojoType="combobox" 
                  dataUrl="tr_quicksearch.cgi?action=getenv&product_id=[% caserun.run.plan.product_id FILTER none %]&search=%{searchString}" 
                  mode="remote"
@@ -54,6 +62,7 @@
                  id="env_[% index %]"
                  maxListLength="10"
                  onValueChanged='chEnv([% index %], this.comboBoxSelectionValue.value, "[% caserun.status %]", [% caserun.id %], [% caserun.environment_id %])'>
+    [% END %]
     </td>
 
     <td align="left" valign="top"><span id="own[% index %]"><a href="mailto:[% caserun.assignee.login %]">[% caserun.assignee.login %]</a></span></td>

@@ -93,25 +93,24 @@ if ($action eq 'Commit'){
             push @uneditable, $run;
             next;
         }
-        my $manager   = login_to_id(trim($cgi->param('manager')));
+        my $manager = login_to_id(trim($cgi->param('manager')));
         unless ($manager){
             print $cgi->multipart_end;
             ThrowUserError("invalid_username", { name => $cgi->param('manager') }) if $cgi->param('manager');
         }
         my $status;
         if ($cgi->param('run_status')){
-            if ($cgi->param('run_status') == -1){
+            if ($cgi->param('run_status') == -1 || $run->status){
                 $status = $run->stop_date;
             }
             else {
                 $status = get_time_stamp();
             }
         }
-        
+
         my $enviro    = $cgi->param('environment')   eq '--Do Not Change--' ? $run->environment->id : $cgi->param('environment');
         my $build     = $cgi->param('build') == -1 ? $run->build->id : $cgi->param('build');
 
-        detaint_natural($status);
         validate_test_id($enviro, 'environment');
         validate_test_id($build, 'build');
         my %newvalues = ( 
@@ -134,7 +133,7 @@ if ($action eq 'Commit'){
         print $cgi->multipart_end;
         print $cgi->multipart_start;
     }
-    my $run = Bugzilla::Testopia::TestRun->new({ 'run_id' => 0 });
+    my $run = Bugzilla::Testopia::TestRun->new({});
     $vars->{'run'} = $run;
     $vars->{'title'} = "Update Successful";
     $vars->{'tr_message'} = "$i Test Runs Updated";

@@ -41,6 +41,8 @@ use vars qw($vars);
 my $template = Bugzilla->template;
 my $query_limit = 15000;
 
+require "globals.pl";
+
 Bugzilla->login(LOGIN_REQUIRED);
    
 my $dbh = Bugzilla->dbh;

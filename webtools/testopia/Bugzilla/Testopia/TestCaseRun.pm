@@ -389,7 +389,7 @@ if the status is a closed status.
 
 sub set_status {
     my $self = shift;
-    my ($status_id) = @_;
+    my ($status_id, $update_bugs) = @_;
     return if $self->status_id == $status_id;
     my $oldstatus = $self->status;
     my $newstatus = $self->lookup_status($status_id);
@@ -413,8 +413,8 @@ sub set_status {
         $self->_update_fields({'testedby' => Bugzilla->user->id});
         $self->{'close_date'} = $timestamp;
         $self->{'testedby'} = Bugzilla->user->id;
-        $self->update_bugs('REOPENED') if ($status_id == FAILED);
-        $self->update_bugs('VERIFIED') if ($status_id == PASSED);
+        $self->update_bugs('REOPENED') if ($status_id == FAILED && $update_bugs);
+        $self->update_bugs('VERIFIED') if ($status_id == PASSED && $update_bugs);
     }
     
     my $note = "Status changed from $oldstatus to $newstatus by ". Bugzilla->user->login;

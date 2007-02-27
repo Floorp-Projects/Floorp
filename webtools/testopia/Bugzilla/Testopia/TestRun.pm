@@ -334,7 +334,7 @@ sub update {
     $dbh->bz_lock_tables('test_runs WRITE', 'test_run_activity WRITE',
         'test_fielddefs READ');
     foreach my $field (keys %{$newvalues}){
-        if ($self->{$field} ne $newvalues->{$field}){
+        if ($newvalues->{$field} && $self->{$field} ne $newvalues->{$field}){
             $dbh->do("UPDATE test_runs 
                       SET $field = ? WHERE run_id = ?",
                       undef, ($newvalues->{$field}, $self->{'run_id'}));

@@ -492,7 +492,7 @@ sub canedit {
     my $self = shift;
     return 1 if Bugzilla->user->in_group('Testers');
     my $product = Bugzilla::Testopia::Product->new($self->product_id);
-    return 1 if Bugzilla->user->can_see_product($product->name);
+    return 1 if $product && Bugzilla->user->can_see_product($product->name);
     return 0;
 }
 

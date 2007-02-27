@@ -205,7 +205,7 @@ elsif ($action eq 'update_status'){
     my $status_id = $cgi->param('status_id');
     detaint_natural($status_id);
     
-    $caserun->set_status($status_id);
+    $caserun->set_status($status_id, $cgi->param('update_bug'));
     
     print $caserun->status ."|". $caserun->close_date ."|". $caserun->testedby->login;
     if ($caserun->updated_deps) {
