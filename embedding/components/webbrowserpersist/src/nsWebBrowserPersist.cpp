@@ -3735,8 +3735,27 @@ nsWebBrowserPersist::MakeAndStoreLocalFilenameInURIMap(
     return NS_OK;
 }
 
-struct SpecialXHTMLTags {
-    PRUnichar name[sizeof(PRUnichar)*11]; // strlen("blockquote")==10
+// Ordered so that typical documents work fastest.
+//                                         strlen("blockquote")==10
+static const PRUnichar kSpecialXHTMLTags[][sizeof(PRUnichar)*11] = {
+    {'b','o','d','y',0},
+    {'h','e','a','d',0},
+    {'i','m','g',0},
+    {'s','c','r','i','p','t',0},
+    {'a',0},
+    {'a','r','e','a',0},
+    {'l','i','n','k',0},
+    {'i','n','p','u','t',0},
+    {'f','r','a','m','e',0},
+    {'i','f','r','a','m','e',0},
+    {'o','b','j','e','c','t',0},
+    {'a','p','p','l','e','t',0},
+    {'f','o','r','m',0},
+    {'b','l','o','c','k','q','u','o','t','e',0},
+    {'q',0},
+    {'d','e','l',0},
+    {'i','n','s',0},
+    {0}
 };
 
 static PRBool IsSpecialXHTMLTag(nsIDOMNode *aNode)
@@ -3746,32 +3765,11 @@ static PRBool IsSpecialXHTMLTag(nsIDOMNode *aNode)
     if (!ns.EqualsLiteral("http://www.w3.org/1999/xhtml"))
         return PR_FALSE;
 
-    // Ordered so that typical documents work fastest
-    static SpecialXHTMLTags tags[] = {
-        {'b','o','d','y',0},
-        {'h','e','a','d',0},
-        {'i','m','g',0},
-        {'s','c','r','i','p','t',0},
-        {'a',0},
-        {'a','r','e','a',0},
-        {'l','i','n','k',0},
-        {'i','n','p','u','t',0},
-        {'f','r','a','m','e',0},
-        {'i','f','r','a','m','e',0},
-        {'o','b','j','e','c','t',0},
-        {'a','p','p','l','e','t',0},
-        {'f','o','r','m',0},
-        {'b','l','o','c','k','q','u','o','t','e',0},
-        {'q',0},
-        {'d','e','l',0},
-        {'i','n','s',0},
-        {0}};
-
     nsAutoString localName;
     aNode->GetLocalName(localName);
     PRInt32 i;
-    for (i = 0; tags[i].name[0]; i++) {
-        if (localName.Equals(tags[i].name))
+    for (i = 0; kSpecialXHTMLTags[i][0]; i++) {
+        if (localName.Equals(kSpecialXHTMLTags[i]))
         {
             // XXX This element MAY have URI attributes, but
             //     we are not actually checking if they are present.
