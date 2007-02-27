@@ -170,6 +170,11 @@ var gPermissionManager = {
   
   init: function (aParams)
   {
+    if (this._type) {
+      // reusing an open dialog, clear the old observer
+      this.uninit();
+    }
+
     this._type = aParams.permissionType;
     
     var permissionsText = document.getElementById("permissionsText");
