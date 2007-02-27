@@ -392,9 +392,6 @@ var gComposePane = {
     // Now make sure the correct item in the menu list is selected.
     if (defaultItem)
       languageMenuList.selectedItem = defaultItem;
-    else
-      languageMenuList.selectedIndex = 0;
-      
   },
   
   populateFonts: function() 
