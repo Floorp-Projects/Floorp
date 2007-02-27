@@ -130,8 +130,11 @@ _ABS_TOPSRCDIR = $(shell cd $(topsrcdir) && pwd)
 ifdef UNIVERSAL_BINARY
 STAGEPATH = universal/
 endif
+ifndef PKG_DMG_SOURCE
+PKG_DMG_SOURCE = $(STAGEPATH)$(MOZ_PKG_APPNAME)
+endif
 MAKE_PACKAGE	= $(_ABS_TOPSRCDIR)/build/package/mac_osx/pkg-dmg \
-  --source "$(STAGEPATH)$(MOZ_PKG_APPNAME)" --target "$(PACKAGE)" \
+  --source "$(PKG_DMG_SOURCE)" --target "$(PACKAGE)" \
   --volname "$(MOZ_APP_DISPLAYNAME)" $(PKG_DMG_FLAGS)
 UNMAKE_PACKAGE	= \
   set -ex; \
