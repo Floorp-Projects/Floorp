@@ -1,7 +1,4 @@
 <!ENTITY brandMotto       "Rediscover the Web">
-<!ENTITY credit.leads     "Engineering Leads">
-<!ENTITY credit.core      "Core Development Posse">
-<!ENTITY credit.gecko     "Gecko Layout Engine">
 <!ENTITY credit.thanks    "Special Thanks To">
 
 <!ENTITY credit.thanks2      "Many thanks to our">
@@ -18,19 +15,5 @@
 -->
 <!ENTITY credit.translation "">
 
-<!ENTITY credit.visuals     "Visual Design Coordinator">
-<!ENTITY credit.theme       "Theme Design">
-<!ENTITY credit.brand       "Brand Identity">
-<!ENTITY credit.web         "Web Design">
-<!ENTITY credit.update      "Mozilla Update">
-<!ENTITY credit.qalead      "Quality Assurance Lead">
-<!ENTITY credit.qa          "Quality Assurance">
-<!ENTITY credit.build       "Build and Release">
-<!ENTITY credit.infra       "Infrastructure Support">
-<!ENTITY credit.support     "Support Resources">
-<!ENTITY credit.manage      "Project Management">
-<!ENTITY credit.marketleads "Marketing Leads">
-<!ENTITY credit.market      "Marketing">
-<!ENTITY credit.creators    "Created By">
 <!ENTITY credit.memory      "In Fond Memory Of">
 <!ENTITY credit.poweredByGecko "Powered by Gecko&trade;">
