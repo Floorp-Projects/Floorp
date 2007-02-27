@@ -62,6 +62,7 @@ DIRS += mac
 _APPNAME = $(PKG_BASENAME).pkg
 PKG_SKIP_STRIP = 1
 MOZ_PKG_SPECIAL = pkg
+PKG_DMG_SOURCE = $(STAGEPATH)xulrunner-pkg
 endif
 
 include $(topsrcdir)/config/rules.mk
