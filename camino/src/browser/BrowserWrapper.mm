@@ -109,6 +109,8 @@ enum {
 
 - (void)updateSiteIconImage:(NSImage*)inSiteIcon withURI:(NSString *)inSiteIconURI loadError:(BOOL)inLoadError;
 
+- (void)setPendingURI:(NSString*)inURI;
+
 - (NSString*)displayTitleForPageURL:(NSString*)inURL title:(NSString*)inTitle;
 
 - (void)updatePluginsEnabledState;
@@ -193,6 +195,7 @@ enum {
 
   [mToolTip release];
   [mDisplayTitle release];
+  [mPendingURI release];
   
   NS_IF_RELEASE(mBlockedPopups);
   
@@ -253,6 +256,11 @@ enum {
 -(NSTabViewItem*)tab
 {
   return mTabItem;
+}
+
+-(NSString*)pendingURI
+{
+  return mPendingURI;
 }
 
 -(NSString*)currentURI
@@ -371,6 +379,8 @@ enum {
   // trying to load, even if it doesn't work
   [mDelegate updateLocationFields:urlSpec ignoreTyping:YES];
   
+  [self setPendingURI:urlSpec];
+
   // if we're not the primary tab, make sure that the browser view is 
   // the correct size when loading a url so that if the url is a relative
   // anchor, which will cause a scroll to the anchor on load, the scroll
@@ -491,6 +501,7 @@ enum {
   [mDelegate loadingDone:mActivateOnLoad];
   mActivateOnLoad = NO;
   mIsBusy = NO;
+  [self setPendingURI:nil];
   
   [mDelegate setLoadingActive:NO];
 
@@ -962,6 +973,12 @@ enum {
     if (resetTabIcon || ![tabItem tabIcon])
       [tabItem setTabIcon:mSiteIconImage isDraggable:tabIconDraggable];
   }
+}
+
+- (void)setPendingURI:(NSString*)inURI
+{
+  [mPendingURI autorelease];
+  mPendingURI = [inURI retain];
 }
 
 - (void)registerNotificationListener

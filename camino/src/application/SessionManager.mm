@@ -115,7 +115,14 @@ const NSTimeInterval kPersistDelay = 60.0;
       NSEnumerator* tabEnumerator = [[tabView tabViewItems] objectEnumerator];
       BrowserTabViewItem* tab;
       while ((tab = [tabEnumerator nextObject])) {
-        NSString* foundWindowURL = [(BrowserWrapper*)[tab view] currentURI];
+        BrowserWrapper* browser = (BrowserWrapper*)[tab view];
+        NSString* foundWindowURL;
+        // if the user quits too quickly, the pages in the process of being restored will
+        // still be blank; in those cases, save the URI they are trying to load instead.
+        if ([browser isEmpty] && [browser pendingURI])
+          foundWindowURL = [browser pendingURI];
+        else
+          foundWindowURL = [browser currentURI];
         [storedTabs addObject:foundWindowURL];
       }
       int selectedTabIndex = [tabView indexOfTabViewItem:[tabView selectedTabViewItem]];

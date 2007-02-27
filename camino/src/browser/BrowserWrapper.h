@@ -131,6 +131,8 @@ class nsIArray;
 
   NSImage*                  mSiteIconImage;    // current proxy icon image, which may be a site icon (favicon).
   NSString*                 mSiteIconURI;      // uri from  which we loaded the site icon	
+
+  NSString*                 mPendingURI;       // strong
   
     // the secure state of this browser. We need to hold it so that we can set
     // the global lock icon whenever we become the primary. Value is one of
@@ -187,6 +189,7 @@ class nsIArray;
 - (BOOL)isInternalURI;
 - (BOOL)canReload;
 
+- (NSString*)pendingURI;
 - (NSString*)currentURI;
 - (NSString*)displayTitle;
 - (NSString*)pageTitle;
