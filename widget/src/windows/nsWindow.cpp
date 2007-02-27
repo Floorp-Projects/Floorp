@@ -4894,12 +4894,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       {
         nsWindow* topWindow = GetNSWindowPtr(::GetAncestor(mWnd, GA_ROOT));
 
+        result = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
+        
         if ((HWND)wParam == NULL || 
             (topWindow && topWindow->mWnd != ::GetAncestor((HWND)wParam, GA_ROOT))) {
           result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
-        }
-        else {
-          result = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
         }
       }  
 
