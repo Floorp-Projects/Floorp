@@ -753,16 +753,15 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   while (nsnull != childBox) 
   { 
     nsIContent* content = childBox->GetContent();
-    nsCOMPtr<nsIAtom> atom;
     nsresult rv;
-    nsCOMPtr<nsIXBLService> xblService = 
-             do_GetService("@mozilla.org/xbl;1", &rv);
-
-    if (NS_SUCCEEDED(rv) && xblService) {
+    nsIDocument* doc = content->GetOwnerDoc();
+    nsIAtom* atom;
+    if (doc) {
       PRInt32 dummy;
-      xblService->ResolveTag(content, &dummy, getter_AddRefs(atom));
-    } else
+      atom = doc->BindingManager()->ResolveTag(content, &dummy);
+    } else {
       atom = content->Tag();
+    }
 
     // skip over any splitters
     if (atom != nsGkAtoms::splitter) { 

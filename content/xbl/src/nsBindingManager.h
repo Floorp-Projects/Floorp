@@ -74,11 +74,8 @@ public:
   nsXBLBinding* GetBinding(nsIContent* aContent);
   nsresult SetBinding(nsIContent* aContent, nsXBLBinding* aBinding);
 
-  nsresult GetInsertionParent(nsIContent* aContent, nsIContent** aResult);
+  nsIContent* GetInsertionParent(nsIContent* aContent);
   nsresult SetInsertionParent(nsIContent* aContent, nsIContent* aResult);
-
-  nsresult GetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS** aResult);
-  nsresult SetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS* aResult);
 
   /**
    * Notify the binding manager that an element
@@ -98,7 +95,7 @@ public:
   nsresult ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocument,
                              nsIDocument* aNewDocument);
 
-  nsresult ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult);
+  nsIAtom* ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID);
 
   /**
    * Return a list of all explicit children, including any children
@@ -117,7 +114,7 @@ public:
    * Determine whether or not the explicit child list has been altered
    * by XBL insertion points.
    */
-  nsresult HasContentListFor(nsIContent* aContent, PRBool* aResult);
+  PRBool HasContentListFor(nsIContent* aContent);
 
   /**
    * For a given element, retrieve the anonymous child content.
@@ -145,17 +142,16 @@ public:
    * anonymous content tree. Specifically, aChild should be inserted
    * beneath aResult at the index specified by aIndex.
    */
-  virtual nsIContent* GetInsertionPoint(nsIContent* aParent,
-                                        nsIContent* aChild, PRUint32* aIndex);
+  nsIContent* GetInsertionPoint(nsIContent* aParent,
+                                nsIContent* aChild, PRUint32* aIndex);
 
   /**
    * Return the unfiltered insertion point for the specified parent
    * element. If other filtered insertion points exist,
    * aMultipleInsertionPoints will be set to true.
    */
-  virtual nsIContent* GetSingleInsertionPoint(nsIContent* aParent,
-                                              PRUint32* aIndex,  
-                                              PRBool* aMultipleInsertionPoints);
+  nsIContent* GetSingleInsertionPoint(nsIContent* aParent, PRUint32* aIndex,
+                                      PRBool* aMultipleInsertionPoints);
 
   nsresult AddLayeredBinding(nsIContent* aContent, nsIURI* aURL);
   nsresult RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL);
@@ -163,24 +159,23 @@ public:
                                nsIDocument** aResult);
 
   nsresult AddToAttachedQueue(nsXBLBinding* aBinding);
-  nsresult ClearAttachedQueue();
-  nsresult ProcessAttachedQueue();
+  void ProcessAttachedQueue();
 
-  nsresult ExecuteDetachedHandlers();
+  void ExecuteDetachedHandlers();
 
   nsresult PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo);
-  nsresult GetXBLDocumentInfo(nsIURI* aURI, nsIXBLDocumentInfo** aResult);
-  nsresult RemoveXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo);
+  nsIXBLDocumentInfo* GetXBLDocumentInfo(nsIURI* aURI);
+  void RemoveXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo);
 
   nsresult PutLoadingDocListener(nsIURI* aURL, nsIStreamListener* aListener);
-  nsresult GetLoadingDocListener(nsIURI* aURL, nsIStreamListener** aResult);
-  nsresult RemoveLoadingDocListener(nsIURI* aURL);
+  nsIStreamListener* GetLoadingDocListener(nsIURI* aURL);
+  void RemoveLoadingDocListener(nsIURI* aURL);
 
-  nsresult FlushSkinBindings();
+  void FlushSkinBindings();
 
   nsresult GetBindingImplementation(nsIContent* aContent, REFNSIID aIID, void** aResult);
 
-  nsresult ShouldBuildChildFrames(nsIContent* aContent, PRBool* aResult);
+  PRBool ShouldBuildChildFrames(nsIContent* aContent);
 
   /**
    * Add a new observer of document change notifications. Whenever content is
@@ -207,6 +202,9 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(nsBindingManager)
 
 protected:
+  nsIXPConnectWrappedJS* GetWrappedJS(nsIContent* aContent);
+  nsresult SetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS* aResult);
+
   nsresult GetXBLChildNodesInternal(nsIContent* aContent,
                                     nsIDOMNodeList** aResult,
                                     PRBool* aIsAnonymousContentList);
@@ -214,7 +212,7 @@ protected:
                                      nsIDOMNodeList** aResult,
                                      PRBool* aIsAnonymousContentList);
 
-  nsresult GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult);
+  nsIContent* GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChild);
 
 #define NS_BINDINGMANAGER_NOTIFY_OBSERVERS(func_, params_) \
   NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(mObservers, nsIMutationObserver, \

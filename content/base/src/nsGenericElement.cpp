@@ -1899,14 +1899,13 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
   // XXX XBL2/sXBL issue
   nsIDocument* ownerDoc = aContent->GetOwnerDoc();
   if (ownerDoc) {
-    nsCOMPtr<nsIContent> insertionParent;
-    ownerDoc->BindingManager()->
-      GetInsertionParent(aContent, getter_AddRefs(insertionParent));
+    nsIContent* insertionParent = ownerDoc->BindingManager()->
+      GetInsertionParent(aContent);
     NS_ASSERTION(!(aVisitor.mEventTargetAtParent && insertionParent &&
                    aVisitor.mEventTargetAtParent != insertionParent),
                  "Retargeting and having insertion parent!");
     if (insertionParent) {
-      parent.swap(insertionParent);
+      parent = insertionParent;
     }
   }
 
@@ -3661,6 +3660,8 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent,
   }
 
   fputs(">\n", out);
+  
+  nsGenericElement* nonConstThis = NS_CONST_CAST(nsGenericElement*, this);
 
   // XXX sXBL/XBL2 issue! Owner or current document?
   nsIDocument *document = GetOwnerDoc();
@@ -3669,7 +3670,7 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent,
 
     nsBindingManager* bindingManager = document->BindingManager();
     nsCOMPtr<nsIDOMNodeList> anonymousChildren;
-    bindingManager->GetAnonymousNodesFor(NS_CONST_CAST(nsGenericElement*, this),
+    bindingManager->GetAnonymousNodesFor(nonConstThis,
                                          getter_AddRefs(anonymousChildren));
 
     if (anonymousChildren) {
@@ -3690,13 +3691,9 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent,
       }
     }
 
-    PRBool hasContentList;
-    bindingManager->HasContentListFor(NS_CONST_CAST(nsGenericElement*, this),
-                                      &hasContentList);
-
-    if (hasContentList) {
+    if (bindingManager->HasContentListFor(nonConstThis)) {
       nsCOMPtr<nsIDOMNodeList> contentList;
-      bindingManager->GetContentListFor(NS_CONST_CAST(nsGenericElement*, this),
+      bindingManager->GetContentListFor(nonConstThis,
                                         getter_AddRefs(contentList));
 
       NS_ASSERTION(contentList != nsnull, "oops, binding manager lied");

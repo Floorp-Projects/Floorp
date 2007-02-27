@@ -419,9 +419,9 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     }
 
     // Put our doc info in the doc table.
-    nsCOMPtr<nsIXBLDocumentInfo> info;
     nsBindingManager *xblDocBindingManager = mBindingDocument->BindingManager();
-    xblDocBindingManager->GetXBLDocumentInfo(documentURI, getter_AddRefs(info));
+    nsCOMPtr<nsIXBLDocumentInfo> info =
+      xblDocBindingManager->GetXBLDocumentInfo(documentURI);
     xblDocBindingManager->RemoveXBLDocumentInfo(info); // Break the self-imposed cycle.
     if (!info) {
       NS_ERROR("An XBL file is malformed.  Did you forget the XBL namespace on the bindings tag?");
@@ -708,12 +708,13 @@ nsXBLService::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID,
 {
   nsIDocument* document = aContent->GetOwnerDoc();
   if (document) {
-    return document->BindingManager()->ResolveTag(aContent, aNameSpaceID,
-                                                  aResult);
+    *aResult = document->BindingManager()->ResolveTag(aContent, aNameSpaceID);
+    NS_IF_ADDREF(*aResult);
   }
-
-  *aNameSpaceID = aContent->GetNameSpaceID();
-  NS_ADDREF(*aResult = aContent->Tag());
+  else {
+    *aNameSpaceID = aContent->GetNameSpaceID();
+    NS_ADDREF(*aResult = aContent->Tag());
+  }
 
   return NS_OK;
 }
@@ -737,8 +738,10 @@ nsXBLService::GetXBLDocumentInfo(nsIURI* aURI, nsIContent* aBoundElement, nsIXBL
   if (!*aResult) {
     // The second line of defense is the binding manager's document table.
     nsIDocument* boundDocument = aBoundElement->GetOwnerDoc();
-    if (boundDocument)
-      boundDocument->BindingManager()->GetXBLDocumentInfo(aURI, aResult);
+    if (boundDocument) {
+      *aResult = boundDocument->BindingManager()->GetXBLDocumentInfo(aURI);
+      NS_IF_ADDREF(*aResult);
+    }
   }
   return NS_OK;
 }
@@ -1063,7 +1066,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
 
     if (aBoundDocument) {
       bindingManager = aBoundDocument->BindingManager();
-      bindingManager->GetXBLDocumentInfo(documentURI, getter_AddRefs(info));
+      info = bindingManager->GetXBLDocumentInfo(documentURI);
     }
 
     nsINodeInfo *ni = nsnull;
@@ -1083,10 +1086,10 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
       // processed whenever the doc does finish loading.
       nsCOMPtr<nsIStreamListener> listener;
       if (bindingManager)
-        bindingManager->GetLoadingDocListener(documentURI, getter_AddRefs(listener));
+        listener = bindingManager->GetLoadingDocListener(documentURI);
       if (listener) {
-        nsIStreamListener* ilist = listener.get();
-        nsXBLStreamListener* xblListener = NS_STATIC_CAST(nsXBLStreamListener*, ilist);
+        nsXBLStreamListener* xblListener =
+          NS_STATIC_CAST(nsXBLStreamListener*, listener.get());
         // Create a new load observer.
         if (!xblListener->HasRequest(aBindingURI, aBoundElement)) {
           nsXBLBindingRequest* req = nsXBLBindingRequest::Create(mPool, aBindingURI, aBoundElement);
@@ -1111,7 +1114,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
    
       if (document) {
         nsBindingManager *xblDocBindingManager = document->BindingManager();
-        xblDocBindingManager->GetXBLDocumentInfo(documentURI, getter_AddRefs(info));
+        info = xblDocBindingManager->GetXBLDocumentInfo(documentURI);
         if (!info) {
           NS_ERROR("An XBL file is malformed.  Did you forget the XBL namespace on the bindings tag?");
           return NS_ERROR_FAILURE;

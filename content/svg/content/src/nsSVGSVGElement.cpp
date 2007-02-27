@@ -731,9 +731,10 @@ nsSVGSVGElement::GetCTM(nsIDOMSVGMatrix **_retval)
   nsCOMPtr<nsIDOMSVGMatrix> ancestorCTM;
 
   while (1) {
+    ancestor = nsnull;
     if (bindingManager) {
       // check for an anonymous ancestor first
-      bindingManager->GetInsertionParent(element, getter_AddRefs(ancestor));
+      ancestor = bindingManager->GetInsertionParent(element);
     }
     if (!ancestor) {
       // if we didn't find an anonymous ancestor, use the explicit one
@@ -844,9 +845,10 @@ nsSVGSVGElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
   nsCOMPtr<nsIDOMSVGMatrix> ancestorScreenCTM;
 
   while (1) {
+    ancestor = nsnull;
     if (bindingManager) {
       // check for an anonymous ancestor first
-      bindingManager->GetInsertionParent(element, getter_AddRefs(ancestor));
+      ancestor = bindingManager->GetInsertionParent(element);
     }
     if (!ancestor) {
       // if we didn't find an anonymous ancestor, use the explicit one

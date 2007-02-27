@@ -558,11 +558,11 @@ nsSVGElement::GetOwnerSVGElement(nsIDOMSVGSVGElement * *aOwnerSVGElement)
     bindingManager = ownerDoc->BindingManager();
   }
 
-  nsCOMPtr<nsIContent> parent;
+  nsIContent* parent = nsnull;
   
   if (bindingManager) {
     // we have a binding manager -- do we have an anonymous parent?
-    bindingManager->GetInsertionParent(this, getter_AddRefs(parent));
+    parent = bindingManager->GetInsertionParent(this);
   }
 
   if (!parent) {
@@ -578,12 +578,11 @@ nsSVGElement::GetOwnerSVGElement(nsIDOMSVGSVGElement * *aOwnerSVGElement)
       NS_ADDREF(*aOwnerSVGElement);
       return NS_OK;
     }
-    nsCOMPtr<nsIContent> next;
+    nsIContent* next = nsnull;
 
     if (bindingManager) {
-      bindingManager->GetInsertionParent(parent, getter_AddRefs(next));
+      next = bindingManager->GetInsertionParent(parent);
     }
-
     if (!next) {
       // no anonymous parent, so use explicit one
       next = parent->GetParent();

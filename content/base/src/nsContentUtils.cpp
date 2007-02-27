@@ -1346,35 +1346,29 @@ nsContentUtils::FindFirstChildWithResolvedTag(nsIContent* aParent,
                                               PRInt32 aNamespace,
                                               nsIAtom* aTag)
 {
-  if (!aParent) {
+  nsIDocument* doc;
+  if (!aParent || !(doc = aParent->GetOwnerDoc())) {
     return nsnull;
   }
+  
+  nsBindingManager* bindingManager = doc->BindingManager();
 
-  nsresult rv;
-  nsCOMPtr<nsIXBLService> xblService = 
-           do_GetService("@mozilla.org/xbl;1", &rv);
   PRInt32 namespaceID;
   PRUint32 count = aParent->GetChildCount();
 
   PRUint32 i;
 
-  nsCOMPtr<nsIAtom> tag;
   for (i = 0; i < count; i++) {
     nsIContent *child = aParent->GetChildAt(i);
-    xblService->ResolveTag(child, &namespaceID, getter_AddRefs(tag));
+    nsIAtom* tag =  bindingManager->ResolveTag(child, &namespaceID);
     if (tag == aTag && namespaceID == aNamespace) {
       return child;
     }
   }
 
   // now look for children in XBL
-  nsIDocument* doc = aParent->GetDocument();
-  if (!doc) {
-    return nsnull;
-  }
-
   nsCOMPtr<nsIDOMNodeList> children;
-  doc->BindingManager()->GetXBLChildNodesFor(aParent, getter_AddRefs(children));
+  bindingManager->GetXBLChildNodesFor(aParent, getter_AddRefs(children));
   if (!children) {
     return nsnull;
   }
@@ -1385,7 +1379,7 @@ nsContentUtils::FindFirstChildWithResolvedTag(nsIContent* aParent,
     nsCOMPtr<nsIDOMNode> childNode;
     children->Item(i, getter_AddRefs(childNode));
     nsCOMPtr<nsIContent> childContent = do_QueryInterface(childNode);
-    xblService->ResolveTag(childContent, &namespaceID, getter_AddRefs(tag));
+    nsIAtom* tag = bindingManager->ResolveTag(childContent, &namespaceID);
     if (tag == aTag && namespaceID == aNamespace) {
       return childContent;
     }

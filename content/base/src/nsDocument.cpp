@@ -3593,10 +3593,7 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
   }
 
   PRInt32 namespaceID;
-  nsCOMPtr<nsIAtom> tag;
-  nsCOMPtr<nsIXBLService> xblService = do_GetService("@mozilla.org/xbl;1");
-  NS_ENSURE_TRUE(xblService, NS_ERROR_FAILURE);
-  xblService->ResolveTag(content, &namespaceID, getter_AddRefs(tag));
+  nsCOMPtr<nsIAtom> tag = mBindingManager->ResolveTag(content, &namespaceID);
 
   nsCAutoString contractID("@mozilla.org/layout/xul-boxobject");
   if (namespaceID == kNameSpaceID_XUL) {
@@ -3659,10 +3656,10 @@ nsDocument::GetContentListFor(nsIContent* aContent, nsIDOMNodeList** aResult)
   return mBindingManager->GetContentListFor(aContent, aResult);
 }
 
-nsresult
+void
 nsDocument::FlushSkinBindings()
 {
-  return mBindingManager->FlushSkinBindings();
+  mBindingManager->FlushSkinBindings();
 }
 
 struct DirTable {

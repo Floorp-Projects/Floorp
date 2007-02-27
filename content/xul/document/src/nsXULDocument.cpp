@@ -3612,24 +3612,19 @@ nsXULDocument::CheckTemplateBuilderHookup(nsIContent* aElement,
     return NS_OK;
 }
 
-nsresult
+/* static */ nsresult
 nsXULDocument::CreateTemplateBuilder(nsIContent* aElement)
 {
     // Check if need to construct a tree builder or content builder.
     PRBool isTreeBuilder = PR_FALSE;
 
-    PRInt32 nameSpaceID;
-    nsCOMPtr<nsIAtom> baseTag;
+    nsIDocument *document = aElement->GetOwnerDoc();
+    NS_ASSERTION(document, "no document");
+    NS_ENSURE_TRUE(document, NS_ERROR_UNEXPECTED);
 
-    nsCOMPtr<nsIXBLService> xblService = do_GetService("@mozilla.org/xbl;1");
-    if (xblService) {
-        xblService->ResolveTag(aElement, &nameSpaceID, getter_AddRefs(baseTag));
-    }
-    else {
-        nsINodeInfo *ni = aElement->NodeInfo();
-        nameSpaceID = ni->NamespaceID();
-        baseTag = ni->NameAtom();
-    }
+    PRInt32 nameSpaceID;
+    nsIAtom* baseTag = document->BindingManager()->
+      ResolveTag(aElement, &nameSpaceID);
 
     if ((nameSpaceID == kNameSpaceID_XUL) && (baseTag == nsGkAtoms::tree)) {
         // By default, we build content for a tree and then we attach
@@ -3662,12 +3657,6 @@ nsXULDocument::CreateTemplateBuilder(nsIContent* aElement)
                                           getter_AddRefs(bodyContent));
 
         if (! bodyContent) {
-            // Get the document.
-            nsIDocument *document = aElement->GetDocument();
-            NS_ASSERTION(document, "no document");
-            if (! document)
-                return NS_ERROR_UNEXPECTED;
-
             nsresult rv = document->CreateElem(nsGkAtoms::treechildren,
                                                nsnull, kNameSpaceID_XUL,
                                                PR_FALSE,
