@@ -397,9 +397,9 @@ function getWcapRequestStatusString( xml )
     return str;
 }
 
-function stringToIcal( data, expectedErrno )
+function stringToIcal(data, expectedErrno)
 {
-    if (!data || data == "") { // assuming time-out; WTF.
+    if (!data || data.length == 0) { // assuming time-out; WTF.
         throw new Components.Exception(
             "Login failed. Invalid session ID.",
             Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED);
@@ -416,9 +416,9 @@ function stringToIcal( data, expectedErrno )
     return icalRootComp;
 }
 
-function stringToXml( data, expectedErrno )
+function stringToXml(data, expectedErrno)
 {
-    if (!data || data == "") { // assuming time-out
+    if (!data || data.length == 0) { // assuming time-out
         throw new Components.Exception(
             "Login failed. Invalid session ID.",
             Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED);

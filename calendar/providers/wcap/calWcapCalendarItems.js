@@ -58,7 +58,7 @@ function calWcapCalendar_encodeAttendee(att)
         }
         return params;
     }
-    var params = "";//encodeAttr(att.rsvp, "RSVP", "");
+    var params = encodeAttr(att.rsvp ? "TRUE" : "FALSE", "RSVP", "");
     params = encodeAttr(att.participationStatus, "PARTSTAT", params);
     params = encodeAttr(att.role, "ROLE", params);
     params = encodeAttr(att.commonName, "CN", params);
@@ -257,7 +257,13 @@ function calWcapCalendar_getInvitedAttendee(item)
 };
 
 function equalDatetimes(one, two) {
-    return ((!one && !two) || (one && two && one.compare(two) == 0));
+    return ((!one && !two) ||
+            (one && two && (one.compare(two) == 0)));
+}
+
+function identicalDatetimes(one, two) {
+    return ((!one && !two) ||
+            (one && two && (one.compare(two) == 0) && (one.timezone == two.timezone)));
 }
 
 // @return null if nothing has changed else value to be written
@@ -317,8 +323,8 @@ function calWcapCalendar_storeItem(bAddItem, item, oldItem, request, netRespFunc
             var dtstart = item.startDate;
             var dtend = item.endDate;
             bIsAllDay = (dtstart.isDate && dtend.isDate);
-            if (!oldItem || !equalDatetimes(dtstart, oldItem.startDate)
-                         || !equalDatetimes(dtend, oldItem.endDate)) {
+            if (!oldItem || !identicalDatetimes(dtstart, oldItem.startDate)
+                         || !identicalDatetimes(dtend, oldItem.endDate)) {
                 params += ("&dtstart=" + getIcalUTC(dtstart));
                 params += ("&X-NSCP-DTSTART-TZID=" +
                            "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-REPLACE^" + 
@@ -339,8 +345,8 @@ function calWcapCalendar_storeItem(bAddItem, item, oldItem, request, netRespFunc
             var dtstart = item.entryDate;
             var dtend = item.dueDate;
             bIsAllDay = (dtstart && dtstart.isDate);
-            if (!oldItem || !equalDatetimes(dtstart, oldItem.entryDate)
-                         || !equalDatetimes(dtend, oldItem.dueDate)) {
+            if (!oldItem || !identicalDatetimes(dtstart, oldItem.entryDate)
+                         || !identicalDatetimes(dtend, oldItem.dueDate)) {
                 params += ("&dtstart=" + getIcalUTC(dtstart));
                 if (dtstart) {
                     params += ("&X-NSCP-DTSTART-TZID=" +
@@ -727,8 +733,15 @@ function calWcapCalendar_deleteItem(item, listener)
         var params = ("&uid=" + encodeURIComponent(item.id));
         if (isParent(item)) // delete THIS AND ALL:
             params += "&mod=4&rid=0";
-        else // delete THIS INSTANCE:
-            params += ("&mod=1&rid=" + getIcalUTC(item.recurrenceId));
+        else { // delete THIS INSTANCE:
+            var rid = item.recurrenceId;
+            if (rid.isDate) {
+                // cs does not accept DATE:
+                rid = rid.clone();
+                rid.isDate = false;
+            }
+            params += ("&mod=1&rid=" + getIcalUTC(rid));
+        }
         params += "&fmt-out=text%2Fxml";
         
         this.issueNetworkRequest(
@@ -1185,7 +1198,7 @@ function calWcapCalendar_getItems(itemFilter, maxResults, rangeStart, rangeEnd, 
                                         return;
                                     var now = (new Date()).getTime();
                                     // sort out old entries:
-                                    entries = [];
+                                    var entries = [];
                                     for (var i = 0; i < this_.m_cachedResults.length; ++i) {
                                         var entry = this_.m_cachedResults[i];
                                         if ((now - entry.stamp) <

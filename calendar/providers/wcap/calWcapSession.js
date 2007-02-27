@@ -140,7 +140,8 @@ calWcapSession.prototype = {
         }
         
         this.m_observers.forEach(
-            function notifyFunc(obj) {
+            function notifyFunc(entry) {
+                var obj = entry.obj;
                 try {
                     obj[func].apply(obj, args);
                 }
@@ -153,14 +154,26 @@ calWcapSession.prototype = {
     
     addObserver: function calWcapSession_addObserver(observer)
     {
-        if (this.m_observers.indexOf(observer) == -1)
-            this.m_observers.push(observer);
+        for each (var entry in this.m_observers) {
+            if (entry.obj == observer) {
+                ++entry.count;
+                return;
+            }
+        }
+        this.m_observers.push( { obj: observer, count: 1 } );
     },
     
     removeObserver: function calWcapSession_removeObserver(observer)
     {
-        this.m_observers = this.m_observers.filter(
-            function filterFunc(x) { return x != observer; } );
+        function filterFunc(entry) {
+            if (entry.obj == observer) {
+                --entry.count;
+                if (entry.count == 0)
+                    return false;
+            }
+            return true;
+        }
+        this.m_observers = this.m_observers.filter(filterFunc);
     },
     
     m_serverTimezones: null,
@@ -561,10 +574,31 @@ calWcapSession.prototype = {
                         function calprops_resp(err, data) {
                             if (err)
                                 throw err;
-                            this_.defaultCalendar.m_calProps = data;
-                            log("installed default cal props.", this_);
+                            // string to xml converter func without WCAP errno check:
+                            if (!data || data.length == 0) { // assuming time-out
+                                throw new Components.Exception(
+                                    "Login failed. Invalid session ID.",
+                                    calIWcapErrors.WCAP_LOGIN_FAILED);
+                            }
+                            var xml = getDomParser().parseFromString(data, "text/xml");
+                            var nodeList = xml.getElementsByTagName("iCal");
+                            for (var i = 0; i < nodeList.length; ++i) {
+                                var node = nodeList.item(i);
+                                var ar = filterXmlNodes("X-NSCP-CALPROPS-RELATIVE-CALID", node);
+                                if ((ar.length > 0) && (ar[0] == this_.defaultCalId)) {
+                                    checkWcapXmlErrno(node);
+                                    this_.defaultCalendar.m_calProps = node;
+                                    log("installed default cal props.", this_);
+                                    break;
+                                }
+                            }
+                            if (!this_.defaultCalendar.m_calProps) {
+                                throw new Components.Exception(
+                                    "Login failed. Invalid session ID.",
+                                    calIWcapErrors.WCAP_LOGIN_FAILED);
+                            }
                         },
-                        stringToXml, "search_calprops",
+                        null, "search_calprops",
                         "&fmt-out=text%2Fxml&searchOpts=3&calid=1&search-string=" +
                         encodeURIComponent(this_.defaultCalId),
                         sessionId);
@@ -773,7 +807,10 @@ calWcapSession.prototype = {
                 var data;
                 if (!err) {
                     try {
-                        data = dataConvFunc(str);
+                        if (dataConvFunc)
+                            data = dataConvFunc(str);
+                        else
+                            data = str;
                     }
                     catch (exc) {
                         err = exc;
@@ -941,8 +978,7 @@ calWcapSession.prototype = {
                     log("search done. number of found calendars: " + ret.length, this_);
                     request.execRespFunc(null, ret);
                 },
-                function identity(data) { return data; },
-                "search_calprops", params);
+                null, "search_calprops", params);
         }
         catch (exc) {
             request.execRespFunc(exc);
