@@ -80,6 +80,9 @@
 #define NS_URLCLASSIFIERSTREAMUPDATER_CONTRACTID \
     "@mozilla.org/url-classifier/streamupdater;1"
 
+#define NS_URLCLASSIFIERUTILS_CONTRACTID \
+    "@mozilla.org/url-classifier/utils;1"
+
 #define NS_SCRIPTABLEUNESCAPEHTML_CONTRACTID "@mozilla.org/feed-unescapehtml;1"
 
 #define NS_NAVHISTORYSERVICE_CONTRACTID \
@@ -151,6 +154,10 @@
 // {c2be6dc0-ef1e-4abd-86a2-4f864ddc57f6}
 #define NS_URLCLASSIFIERSTREAMUPDATER_CID \
 { 0xc2be6dc0, 0xef1e, 0x4abd, { 0x86, 0xa2, 0x4f, 0x86, 0x4d, 0xdc, 0x57, 0xf6} }
+
+// {b7b2ccec-7912-4ea6-a548-b038447004bd}
+#define NS_URLCLASSIFIERUTILS_CID \
+{ 0xb7b2ccec, 0x7912, 0x4ea6, { 0xa5, 0x48, 0xb0, 0x38, 0x44, 0x70, 0x04, 0xbd} }
 
 // {10f2f5f0-f103-4901-980f-ba11bd70d60d}
 #define NS_SCRIPTABLEUNESCAPEHTML_CID  \
