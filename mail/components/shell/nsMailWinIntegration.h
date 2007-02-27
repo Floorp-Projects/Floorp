@@ -43,6 +43,7 @@
 #include "nsIGenericFactory.h"
 #include "nsString.h"
 
+#include <ole2.h>
 #include <windows.h>
 
 #define NS_MAILWININTEGRATION_CID \
@@ -61,24 +62,32 @@ class nsWindowsShellService : public nsIShellService
 public:
   nsWindowsShellService();
   virtual ~nsWindowsShellService() {};
+  NS_HIDDEN_(nsresult) Init();
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHELLSERVICE
 
 protected:
   void SetRegKey(const char* aKeyName, const char* aValueName, 
-                 const char* aValue, 
-                 PRBool aReplaceExisting, PRBool aForAllUsers);
+                 const char* aValue, PRBool aHKLMOnly);
+  DWORD DeleteRegKey(HKEY baseKey, const char *keyName);
+  DWORD DeleteRegKeyDefaultValue(HKEY baseKey, const char *keyName);
 
   PRBool TestForDefault(SETTING aSettings[], PRInt32 aSize);
   void setKeysForSettings(SETTING aSettings[], PRInt32 aSize, 
-                          const char * aAppname, PRBool aForAllUsers);
-  nsresult setDefaultMail(PRBool aForAllUsers);
-  nsresult setDefaultNews(PRBool aForAllUsers);
+                          const char * aAppname);
+  nsresult setDefaultMail();
+  nsresult setDefaultNews();
+
+  PRBool IsDefaultClientVista(PRBool aStartupCheck, PRUint16 aApps, PRBool* aIsDefaultClient);
+  PRBool SetDefaultClientVista(PRUint16 aApps);
 
 private:
   PRBool mCheckedThisSession;
-  nsCString mAppPath;
+  nsCString mAppLongPath;
+  nsCString mAppShortPath;
   nsCString mMapiDLLPath;
+  nsCString mUninstallPath;
   nsXPIDLString mBrandFullName;
   nsXPIDLString mBrandShortName;
  };
