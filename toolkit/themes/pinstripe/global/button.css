@@ -47,11 +47,10 @@
 
 button {
   -moz-appearance: button;
+  /* The margin used here come from the Aqua Human Interface Guidelines,
+     there should be 12 pixels between two buttons. */
   margin: 6px;
-  min-width: 6.3em;
-  -moz-appearance: button;
-  padding: 0;
-  color: #000000;
+  color: ButtonText;
 }
 
 .button-text {
@@ -71,10 +70,6 @@ button[type="default"] {
 
 button[disabled="true"] {
   color: #777777 !important;
-  -moz-border-top-colors: #cccccc #eeeeee #fdfdfd;
-  -moz-border-right-colors: #cccccc #d9d9d9;
-  -moz-border-bottom-colors: #cccccc #eeeeee #fdfdfd;
-  -moz-border-left-colors: #cccccc #d9d9d9;
 }
 
 /* ::::: menu/menu-button buttons ::::: */

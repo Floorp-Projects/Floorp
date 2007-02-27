@@ -87,14 +87,11 @@ public:
 
 protected:
 
-    // Some widths and margins. You'd think there would be metrics for these, but no.
-  enum {
-    kAquaPushButtonEndcaps = 10,
-    kAquaPushButtonTopBottom = 2,
-
-    kAquaDropdownLeftEndcap = 9,
-    kAquaDropwdonRightEndcap = 20     // wider on right to encompass the button
-  };
+  // Some widths and margins. You'd think there would be metrics for these, but no.
+  static const int kAquaPushButtonEndcaps = 10;
+  static const int kAquaMinButtonWidth = 68;
+  static const int kAquaDropdownLeftEndcap = 9;
+  static const int kAquaDropwdonRightEndcap = 20; // wider on right to encompass the button
   
   nsresult GetSystemColor(PRUint8 aWidgetType, nsILookAndFeel::nsColorID& aColorID);
   nsresult GetSystemFont(PRUint8 aWidgetType, nsSystemFontID& aFont);
