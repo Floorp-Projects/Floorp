@@ -648,7 +648,7 @@ public:
                                                    nsIDOMNodeList** aResult);
   virtual NS_HIDDEN_(nsresult) GetContentListFor(nsIContent* aContent,
                                                  nsIDOMNodeList** aResult);
-  virtual NS_HIDDEN_(nsresult) FlushSkinBindings();
+  virtual NS_HIDDEN_(void) FlushSkinBindings();
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDocument, nsIDocument)
 

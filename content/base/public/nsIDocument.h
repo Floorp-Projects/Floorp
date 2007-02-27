@@ -844,7 +844,7 @@ public:
   /**
    * See FlushSkinBindings on nsBindingManager
    */
-  virtual nsresult FlushSkinBindings() = 0;
+  virtual void FlushSkinBindings() = 0;
 
 protected:
   ~nsIDocument()

@@ -129,10 +129,10 @@ inDOMUtils::GetParentForNode(nsIDOMNode* aNode,
   } else if (aShowingAnonymousContent) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
     if (content) {
-      nsCOMPtr<nsIContent> bparent;
+      nsIContent* bparent = nsnull;
       nsRefPtr<nsBindingManager> bindingManager = inLayoutUtils::GetBindingManagerFor(aNode);
       if (bindingManager) {
-        bindingManager->GetInsertionParent(content, getter_AddRefs(bparent));
+        bparent = bindingManager->GetInsertionParent(content);
       }
     
       parent = do_QueryInterface(bparent);

@@ -442,19 +442,15 @@ nsBindingManager::SetBinding(nsIContent* aContent, nsXBLBinding* aBinding)
   return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
-nsresult
-nsBindingManager::GetInsertionParent(nsIContent* aContent, nsIContent** aResult) 
+nsIContent*
+nsBindingManager::GetInsertionParent(nsIContent* aContent)
 { 
   if (mInsertionParentTable.ops) {
-    *aResult = NS_STATIC_CAST(nsIContent*,
-                              LookupObject(mInsertionParentTable, aContent));
-    NS_IF_ADDREF(*aResult);
-  }
-  else {
-    *aResult = nsnull;
+    return NS_STATIC_CAST(nsIContent*,
+                          LookupObject(mInsertionParentTable, aContent));
   }
 
-  return NS_OK;
+  return nsnull;
 }
 
 nsresult
@@ -463,18 +459,14 @@ nsBindingManager::SetInsertionParent(nsIContent* aContent, nsIContent* aParent)
   return SetOrRemoveObject(mInsertionParentTable, aContent, aParent);
 }
 
-nsresult
-nsBindingManager::GetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS** aResult) 
+nsIXPConnectWrappedJS*
+nsBindingManager::GetWrappedJS(nsIContent* aContent)
 { 
   if (mWrapperTable.ops) {
-    *aResult = NS_STATIC_CAST(nsIXPConnectWrappedJS*, LookupObject(mWrapperTable, aContent));
-    NS_IF_ADDREF(*aResult);
-  }
-  else {
-    *aResult = nsnull;
+    return NS_STATIC_CAST(nsIXPConnectWrappedJS*, LookupObject(mWrapperTable, aContent));
   }
 
-  return NS_OK;
+  return nsnull;
 }
 
 nsresult
@@ -497,7 +489,7 @@ nsBindingManager::ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocum
 
   // Hold a ref to the binding so it won't die when we remove it from our
   // table.
-  nsRefPtr<nsXBLBinding> binding = nsBindingManager::GetBinding(aContent);
+  nsRefPtr<nsXBLBinding> binding = GetBinding(aContent);
   if (binding) {
     binding->ChangeDocument(aOldDocument, aNewDocument);
     SetBinding(aContent, nsnull);
@@ -513,25 +505,21 @@ nsBindingManager::ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocum
   return NS_OK;
 }
 
-nsresult
-nsBindingManager::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID,
-                             nsIAtom** aResult)
+nsIAtom*
+nsBindingManager::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID)
 {
-  nsXBLBinding *binding = nsBindingManager::GetBinding(aContent);
+  nsXBLBinding *binding = GetBinding(aContent);
   
   if (binding) {
-    *aResult = binding->GetBaseTag(aNameSpaceID);
+    nsIAtom* base = binding->GetBaseTag(aNameSpaceID);
 
-    if (*aResult) {
-      NS_ADDREF(*aResult);
-      return NS_OK;
+    if (base) {
+      return base;
     }
   }
 
   *aNameSpaceID = aContent->GetNameSpaceID();
-  NS_ADDREF(*aResult = aContent->Tag());
-
-  return NS_OK;
+  return aContent->Tag();
 }
 
 nsresult
@@ -548,7 +536,7 @@ nsBindingManager::GetContentListFor(nsIContent* aContent, nsIDOMNodeList** aResu
   
   if (!*aResult) {
     nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aContent));
-    return node->GetChildNodes(aResult);
+    node->GetChildNodes(aResult);
   }
 
   return NS_OK;
@@ -570,16 +558,10 @@ nsBindingManager::SetContentListFor(nsIContent* aContent,
   return SetOrRemoveObject(mContentListTable, aContent, contentList);
 }
 
-nsresult
-nsBindingManager::HasContentListFor(nsIContent* aContent, PRBool* aResult)
+PRBool
+nsBindingManager::HasContentListFor(nsIContent* aContent)
 {
-  *aResult = PR_FALSE;
-  if (mContentListTable.ops) {
-    nsISupports* list = LookupObject(mContentListTable, aContent);
-    *aResult = (list != nsnull);
-  }
-
-  return NS_OK;
+  return mContentListTable.ops && LookupObject(mContentListTable, aContent);
 }
 
 nsresult
@@ -597,7 +579,7 @@ nsBindingManager::GetAnonymousNodesInternal(nsIContent* aContent,
 
   if (!*aResult) {
     *aIsAnonymousContentList = PR_FALSE;
-    nsXBLBinding *binding = nsBindingManager::GetBinding(aContent);
+    nsXBLBinding *binding = GetBinding(aContent);
     if (binding) {
       *aResult = binding->GetAnonymousNodes().get();
       return NS_OK;
@@ -700,7 +682,7 @@ nsIContent*
 nsBindingManager::GetInsertionPoint(nsIContent* aParent, nsIContent* aChild,
                                     PRUint32* aIndex)
 {
-  nsXBLBinding *binding = nsBindingManager::GetBinding(aParent);
+  nsXBLBinding *binding = GetBinding(aParent);
   return binding ? binding->GetInsertionPoint(aChild, aIndex) : nsnull;
 }
 
@@ -709,7 +691,7 @@ nsBindingManager::GetSingleInsertionPoint(nsIContent* aParent,
                                           PRUint32* aIndex,
                                           PRBool* aMultipleInsertionPoints)
 {
-  nsXBLBinding *binding = nsBindingManager::GetBinding(aParent);
+  nsXBLBinding *binding = GetBinding(aParent);
   if (binding)
     return binding->GetSingleInsertionPoint(aIndex, aMultipleInsertionPoints);
 
@@ -744,7 +726,7 @@ nsresult
 nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL)
 {
   // Hold a ref to the binding so it won't die when we remove it from our table
-  nsRefPtr<nsXBLBinding> binding = nsBindingManager::GetBinding(aContent);
+  nsRefPtr<nsXBLBinding> binding = GetBinding(aContent);
   
   if (!binding) {
     return NS_OK;
@@ -837,18 +819,11 @@ nsBindingManager::AddToAttachedQueue(nsXBLBinding* aBinding)
   return NS_OK;
 }
 
-nsresult
-nsBindingManager::ClearAttachedQueue()
-{
-  mAttachedStack.Clear();
-  return NS_OK;
-}
-
-nsresult
+void
 nsBindingManager::ProcessAttachedQueue()
 {
   if (mProcessingAttachedStack)
-    return NS_OK;
+    return;
 
   mProcessingAttachedStack = PR_TRUE;
 
@@ -862,8 +837,7 @@ nsBindingManager::ProcessAttachedQueue()
   }
 
   mProcessingAttachedStack = PR_FALSE;
-  ClearAttachedQueue();
-  return NS_OK;
+  mAttachedStack.Clear();
 }
 
 PR_STATIC_CALLBACK(PLDHashOperator)
@@ -888,7 +862,7 @@ ExecuteDetachedHandler(void* aBinding, void* aClosure)
   return PR_TRUE;
 }
 
-nsresult
+void
 nsBindingManager::ExecuteDetachedHandlers()
 {
   // Walk our hashtable of bindings.
@@ -897,7 +871,6 @@ nsBindingManager::ExecuteDetachedHandlers()
     mBindingTable.EnumerateRead(AccumulateBindingsToDetach, &bindingsToDetach);
     bindingsToDetach.EnumerateForwards(ExecuteDetachedHandler, nsnull);
   }
-  return NS_OK;
 }
 
 nsresult
@@ -915,25 +888,21 @@ nsBindingManager::PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
   return NS_OK;
 }
 
-nsresult
+void
 nsBindingManager::RemoveXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
 {
-  if (!mDocumentTable.IsInitialized())
-    return NS_OK;
-
-  mDocumentTable.Remove(aDocumentInfo->DocumentURI());
-  return NS_OK;
+  if (mDocumentTable.IsInitialized()) {
+    mDocumentTable.Remove(aDocumentInfo->DocumentURI());
+  }
 }
 
-nsresult
-nsBindingManager::GetXBLDocumentInfo(nsIURI* aURL, nsIXBLDocumentInfo** aResult)
+nsIXBLDocumentInfo*
+nsBindingManager::GetXBLDocumentInfo(nsIURI* aURL)
 {
-  *aResult = nsnull;
   if (!mDocumentTable.IsInitialized())
-    return NS_OK;
+    return nsnull;
 
-  mDocumentTable.Get(aURL, aResult);
-  return NS_OK;
+  return mDocumentTable.GetWeak(aURL);
 }
 
 nsresult
@@ -950,26 +919,21 @@ nsBindingManager::PutLoadingDocListener(nsIURI* aURL, nsIStreamListener* aListen
   return NS_OK;
 }
 
-nsresult
-nsBindingManager::GetLoadingDocListener(nsIURI* aURL, nsIStreamListener** aResult)
+nsIStreamListener*
+nsBindingManager::GetLoadingDocListener(nsIURI* aURL)
 {
-  *aResult = nsnull;
   if (!mLoadingDocTable.IsInitialized())
-    return NS_OK;
+    return nsnull;
 
-  mLoadingDocTable.Get(aURL, aResult);
-  return NS_OK;
+  return mLoadingDocTable.GetWeak(aURL);
 }
 
-nsresult
+void
 nsBindingManager::RemoveLoadingDocListener(nsIURI* aURL)
 {
-  if (!mLoadingDocTable.IsInitialized())
-    return NS_OK;
-
-  mLoadingDocTable.Remove(aURL);
-
-  return NS_OK;
+  if (mLoadingDocTable.IsInitialized()) {
+    mLoadingDocTable.Remove(aURL);
+  }
 }
 
 PR_STATIC_CALLBACK(PLDHashOperator)
@@ -987,12 +951,11 @@ MarkForDeath(nsISupports *aKey, nsXBLBinding *aBinding, void* aClosure)
   return PL_DHASH_NEXT;
 }
 
-nsresult
+void
 nsBindingManager::FlushSkinBindings()
 {
   if (mBindingTable.IsInitialized())
     mBindingTable.EnumerateRead(MarkForDeath, nsnull);
-  return NS_OK;
 }
 
 // Used below to protect from recurring in QI calls through XPConnect.
@@ -1012,13 +975,12 @@ nsBindingManager::GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
                                            void** aResult)
 {
   *aResult = nsnull;
-  nsXBLBinding *binding = nsBindingManager::GetBinding(aContent);
+  nsXBLBinding *binding = GetBinding(aContent);
   if (binding) {
     // The binding should not be asked for nsISupports
     NS_ASSERTION(!aIID.Equals(NS_GET_IID(nsISupports)), "Asking a binding for nsISupports");
     if (binding->ImplementsInterface(aIID)) {
-      nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS;
-      GetWrappedJS(aContent, getter_AddRefs(wrappedJS));
+      nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS = GetWrappedJS(aContent);
 
       if (wrappedJS) {
         // Protect from recurring in QI calls through XPConnect. 
@@ -1132,7 +1094,7 @@ nsBindingManager::WalkRules(nsStyleSet* aStyleSet,
   nsIContent *content = aData->mContent;
   
   do {
-    nsXBLBinding *binding = nsBindingManager::GetBinding(content);
+    nsXBLBinding *binding = GetBinding(content);
     if (binding) {
       aData->mScopedRoot = content;
       binding->WalkRules(aFunc, aData);
@@ -1166,42 +1128,32 @@ nsBindingManager::WalkRules(nsStyleSet* aStyleSet,
   return NS_OK;
 }
 
-nsresult
-nsBindingManager::ShouldBuildChildFrames(nsIContent* aContent, PRBool* aResult)
+PRBool
+nsBindingManager::ShouldBuildChildFrames(nsIContent* aContent)
 {
-  *aResult = PR_TRUE;
+  nsXBLBinding *binding = GetBinding(aContent);
 
-  nsXBLBinding *binding = nsBindingManager::GetBinding(aContent);
-
-  if (binding)
-    *aResult = binding->ShouldBuildChildFrames();
-
-  return NS_OK;
+  return !binding || binding->ShouldBuildChildFrames();
 }
 
-nsresult
-nsBindingManager::GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult)
+nsIContent*
+nsBindingManager::GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChild)
 {
-  *aResult = nsnull;
-
   // Check to see if the content is anonymous.
   if (aChild->GetBindingParent() == aParent)
-    return NS_OK; // It is anonymous. Don't use the insertion point, since that's only
-                  // for the explicit kids.
+    return nsnull; // It is anonymous. Don't use the insertion point, since that's only
+                   // for the explicit kids.
 
   PRUint32 index;
   nsIContent *insertionElement = GetInsertionPoint(aParent, aChild, &index);
   if (insertionElement != aParent) {
     // See if we nest even further in.
-    nsCOMPtr<nsIContent> nestedPoint;
-    GetNestedInsertionPoint(insertionElement, aChild, getter_AddRefs(nestedPoint));
+    nsIContent* nestedPoint = GetNestedInsertionPoint(insertionElement, aChild);
     if (nestedPoint)
       insertionElement = nestedPoint;
   }
 
-  *aResult = insertionElement;
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
+  return insertionElement;
 }
 
 // Note: We don't hold a reference to the document observer; we assume
@@ -1252,8 +1204,7 @@ nsBindingManager::ContentAppended(nsIDocument* aDocument,
 
     nsIContent *child = aContainer->GetChildAt(aNewIndexInContainer);
 
-    nsCOMPtr<nsIContent> ins;
-    GetNestedInsertionPoint(aContainer, child, getter_AddRefs(ins));
+    nsCOMPtr<nsIContent> ins = GetNestedInsertionPoint(aContainer, child);
 
     if (ins) {
       nsCOMPtr<nsIDOMNodeList> nodeList;
@@ -1300,8 +1251,7 @@ nsBindingManager::ContentInserted(nsIDocument* aDocument,
   // XXX This is hacked just to make menus work again.
   if (aIndexInContainer != -1 && mContentListTable.ops) {
     // It's not anonymous.
-    nsCOMPtr<nsIContent> ins;
-    GetNestedInsertionPoint(aContainer, aChild, getter_AddRefs(ins));
+    nsCOMPtr<nsIContent> ins = GetNestedInsertionPoint(aContainer, aChild);
 
     if (ins) {
       nsCOMPtr<nsIDOMNodeList> nodeList;
@@ -1377,8 +1327,7 @@ nsBindingManager::ContentRemoved(nsIDocument* aDocument,
     // It's anonymous.
     return;
 
-  nsCOMPtr<nsIContent> point;
-  GetNestedInsertionPoint(aContainer, aChild, getter_AddRefs(point));
+  nsCOMPtr<nsIContent> point = GetNestedInsertionPoint(aContainer, aChild);
 
   if (point) {
     nsCOMPtr<nsIDOMNodeList> nodeList;

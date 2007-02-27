@@ -152,12 +152,12 @@ NS_IMETHODIMP nsSVGGraphicElement::GetCTM(nsIDOMSVGMatrix **_retval)
     bindingManager = ownerDoc->BindingManager();
   }
 
-  nsCOMPtr<nsIContent> parent;
+  nsIContent* parent = nsnull;
   nsCOMPtr<nsIDOMSVGMatrix> parentCTM;
 
   if (bindingManager) {
     // check for an anonymous parent first
-    bindingManager->GetInsertionParent(this, getter_AddRefs(parent));
+    parent = bindingManager->GetInsertionParent(this);
   }
   if (!parent) {
     // if we didn't find an anonymous parent, use the explicit one
@@ -194,12 +194,12 @@ NS_IMETHODIMP nsSVGGraphicElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
     bindingManager = ownerDoc->BindingManager();
   }
 
-  nsCOMPtr<nsIContent> parent;
+  nsIContent* parent = nsnull;
   nsCOMPtr<nsIDOMSVGMatrix> parentScreenCTM;
 
   if (bindingManager) {
     // check for an anonymous parent first
-    bindingManager->GetInsertionParent(this, getter_AddRefs(parent));
+    parent = bindingManager->GetInsertionParent(this);
   }
   if (!parent) {
     // if we didn't find an anonymous parent, use the explicit one
