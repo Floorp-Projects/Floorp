@@ -2114,9 +2114,17 @@
                 msgPopup.setAttribute('subject', msgSubject);
 
                 var previewText = msgHdr.getStringProperty('preview');
-                // convert the preview text from utf-8 to unicode          
-                if (previewText)            
-                  msgPopup.setAttribute('previewText', unicodeConverter.ConvertToUnicode(previewText));
+                // convert the preview text from utf-8 to unicode
+                if (previewText)
+                {
+                  try
+                  {
+                    var text = unicodeConverter.ConvertToUnicode(previewText);
+                    if (text)
+                      msgPopup.setAttribute('previewText', text);
+                  }
+                  catch (ex) { }
+                }
 
                 var names = {};
                 var emails = {};
