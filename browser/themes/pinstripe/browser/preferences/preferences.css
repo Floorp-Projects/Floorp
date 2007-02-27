@@ -203,16 +203,11 @@ description {
   padding: 1px 0px 0px 0px;
 }
 
-prefpane button {
-  -moz-appearance: button-small;
-}
-
 prefpane .groupbox-body {
   border: none !important;
   -moz-border-radius: 0px !important;
   background-image: none !important;
   padding: 8px 4px 4px 4px;
-  
 }
 
 #paneTabs > groupbox {

@@ -594,17 +594,6 @@ input[disabled] {
   background-color: -moz-field;
 }
 
-textarea,
-textarea[disabled] {
-  -moz-appearance: none; /* we'll draw by hand, thanks */
-  font-size: 11px;
-  background-color: -moz-field;
-}
-
-textarea > .anonymous-div {
-  padding: 0px 0px 0px 2px;
-}
-
 select {
   margin: 1px 1px 1px 1px;
   background-color: transparent !important;
@@ -668,46 +657,12 @@ input[type="radio"] {
   margin: 1px 2px -3px 3px;
 }
 
-input[type="reset"],
-input[type="button"],
-input[type="submit"],
-input[type="reset"]:active:hover,
-input[type="button"]:active:hover,
-input[type="submit"]:active:hover {
-  -moz-appearance: button-small;
-  font-size: 11px;
-  margin: 1px 2px 4px 2px;
-  padding: 0;
-  border-width: 3px 8px 2px 8px;
-  color: -moz-FieldText !important;
-  min-width: 24px;
-}
-
-/* makes sure diabled buttons have the same style as enabled buttons */
-input[type="reset"][disabled]:active,
-input[type="reset"][disabled],
-input[type="button"][disabled]:active,
-input[type="button"][disabled],
-input[type="submit"][disabled]:active,
-input[type="submit"][disabled] {
-  margin: 2px 1px 2px 1px;
-  padding: 0;
-  border-width: 2px 8px 2px 8px;
-  min-width: 24px;
-  color: GrayText !important;
-}
-
 /* this draws the square button */
 button,
 button[disabled],
 button:active:hover,
 button[disabled]:active {
   -moz-appearance: none;
-}
-
-/* tweak position of button part of file selector */
-input[type="file"] > input[type="button"] {
-  margin: 0px 0px 2px 5px !important;
 }
 
 /* make sure disabled images have transparent background */
