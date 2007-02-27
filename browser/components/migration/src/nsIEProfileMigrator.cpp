@@ -1297,8 +1297,10 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
             continue;
           }
 #ifdef MOZ_PLACES_BOOKMARKS
-          bms->InsertItem(keywordsFolder, uri, nsINavBookmarksService::DEFAULT_INDEX);
-          bms->SetItemTitle(uri, keyName);
+          PRInt64 id;
+          bms->InsertItem(keywordsFolder, uri,
+                          nsINavBookmarksService::DEFAULT_INDEX, &id);
+          bms->SetItemTitle(id, keyName);
 #else
           nsCAutoString hostCStr;
           uri->GetHost(hostCStr);
@@ -1438,9 +1440,11 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
       nsCOMPtr<nsIURI> bookmarkURI;
       rv = NS_NewFileURI(getter_AddRefs(bookmarkURI), localFile);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = aBookmarksService->InsertItem(aParentFolder, bookmarkURI, -1);
+      PRInt64 id;
+      rv = aBookmarksService->InsertItem(aParentFolder, bookmarkURI,
+                                         nsINavBookmarksService::DEFAULT_INDEX, &id);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = aBookmarksService->SetItemTitle(bookmarkURI, bookmarkName);
+      rv = aBookmarksService->SetItemTitle(id, bookmarkName);
       NS_ENSURE_SUCCESS(rv, rv);
 #else
       nsCAutoString spec;
@@ -1541,9 +1545,11 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
       nsCOMPtr<nsIURI> resolvedURI;
       rv = NS_NewURI(getter_AddRefs(resolvedURI), resolvedURL);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = aBookmarksService->InsertItem(aParentFolder, resolvedURI, -1);
+      PRInt64 id;
+      rv = aBookmarksService->InsertItem(aParentFolder, resolvedURI,
+                                         nsINavBookmarksService::DEFAULT_INDEX, &id);
       if (NS_FAILED(rv)) continue;
-      rv = aBookmarksService->SetItemTitle(resolvedURI, name);
+      rv = aBookmarksService->SetItemTitle(id, name);
 #else
       nsCOMPtr<nsIRDFResource> bookmark;
       // As far as I can tell reading the MSDN API document,
