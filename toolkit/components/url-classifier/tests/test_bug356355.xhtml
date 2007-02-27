@@ -2,8 +2,8 @@
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=356355
 
-This is a port of all the existing URLCanonicalizer and EnchashDecryptor
-unittests to the mochitest framework.
+This is a port of all the existing EnchashDecryptor unittests to the
+mochitest framework.
 -->
 <head>
   <title>Test for Bug 356355</title>
@@ -29,106 +29,6 @@ var Ci = Components.interfaces;
 var table = Cc["@mozilla.org/url-classifier/table;1?type=url"].createInstance();
 var componentScope = table.wrappedJSObject.__parent__;
 ok(!!componentScope, "unable to get wrapped js object");
-
-////// Test PROT_URLCanonicalizer methods //////
-var PROT_URLCanonicalizer = componentScope.PROT_URLCanonicalizer;
-
-// Test hex gotcha
-var hexify = PROT_URLCanonicalizer.toHex_;
-var shouldHaveLeadingZeros = hexify(0) + hexify(1);
-ok(shouldHaveLeadingZeros == "0001",
-   "Need to append leading zeros to hex rep value <= 15 !");
-
-// Test url decoding
-var dec = PROT_URLCanonicalizer.fullyDecodeURLAsString_;
-
-// Test empty string
-ok(dec("") == "", "decoding empty string");
-
-// Test decoding of all characters
-var allCharsEncoded = "";
-var allCharsEncodedLowercase = "";
-var allCharsAsString = "";
-// Special case null
-allCharsEncoded += "%01";
-allCharsEncodedLowercase += "%01";
-allCharsAsString += String.fromCharCode(1);
-for (var i = 1; i < 256; i++) {
-  allCharsEncoded += "%" + PROT_URLCanonicalizer.toHex_(i);
-  allCharsEncodedLowercase += "%" +
-                           PROT_URLCanonicalizer.toHex_(i).toLowerCase();
-  allCharsAsString += String.fromCharCode(i);
-}
-ok(dec(allCharsEncoded) == allCharsAsString, "decoding escaped");
-ok(dec(allCharsEncodedLowercase) == allCharsAsString, "decoding lowercase");
-
-// Test %-related edge cases
-ok(dec("%") == "%", "1 percent");
-ok(dec("%xx") == "%xx", "1 percent, two non-hex");
-ok(dec("%%") == "%%", "2 percent");
-ok(dec("%%%") == "%%%", "3 percent");
-ok(dec("%%%%") == "%%%%", "4 percent");
-ok(dec("%1") == "%1", "1 percent, one nonhex");
-ok(dec("%1z") == "%1z", "1 percent, two nonhex");
-ok(dec("a%1z") == "a%1z", "nonhex, 1 percent, two nonhex");
-ok(dec("abc%d%e%fg%hij%klmno%") == "abc%d%e%fg%hij%klmno%",
-         "lots of percents, no hex");
-
-// Test repeated %-decoding. Note: %25 --> %, %32 --> 2, %35 --> 5
-ok(dec("%25") == "%", "single-encoded %");
-ok(dec("%25%32%35") == "%", "double-encoded %");
-ok(dec("asdf%25%32%35asd") == "asdf%asd", "double-encoded % 2");
-ok(dec("%%%25%32%35asd%%") == "%%%asd%%", "double-encoded % 3");
-ok(dec("%25%32%35%25%32%35%25%32%35") == "%%%",
-         "sequenctial double-encoded %");
-ok(dec("%2525252525252525") == "%", "many-encoded %");
-ok(dec("%257Ea%2521b%2540c%2523d%2524e%25f%255E00%252611%252A22%252833%252944_55%252B")
-   == "~a!b@c#d$e%f^00&11*22(33)44_55+", "4x-encoded string");
-
-// Test encoding methods
-var enc = PROT_URLCanonicalizer.specialEncodeURL_;
-
-// Test empty string
-ok(enc([]) == "", "encoding empty array");
-
-// Test that all characters we shouldn't encode ([33-36],[38,126]) are not.
-var no = [];
-var noAsString = "";
-for (var i = 33; i < 127; i++)
-  if (i != 37) {                      // skip %
-    no.push(i);
-    noAsString += String.fromCharCode(i);
-  }
-ok(enc(no) == noAsString, "chars to not encode");
-
-// Test that all the chars that we should encode [0,32],37,[127,255] are
-var yes = [];
-var yesAsString = "";
-var yesExpectedString = "";
-// Special case 0
-yes.push(0);
-yesAsString += String.fromCharCode(1);
-yesExpectedString += "%01";
-for (var i = 1; i < 256; i++)
-  if (i < 33 || i == 37 || i > 126) {
-    yes.push(i);
-    yesAsString += String.fromCharCode(i);
-    var hex = i.toString(16).toUpperCase();
-    yesExpectedString += "%" + ((i < 16) ? "0" : "") + hex;
-  }
-ok(enc(yes) == yesExpectedString, "chars to encode");
-// Can not use decodeURIComponent or encodeURIComponent to test b/c UTF-8
-
-// Test composition
-var c = PROT_URLCanonicalizer.canonicalizeURL_;
-
-ok(c("http://www.google.com") == "http://www.google.com",
-   "http://www.google.com");
-ok(c("http://%31%36%38%2e%31%38%38%2e%39%39%2e%32%36/%2E%73%65%63%75%72%65/%77%77%77%2E%65%62%61%79%2E%63%6F%6D/")
-   == "http://168.188.99.26/.secure/www.ebay.com/", "fully encoded ebay");
-ok(c("http://195.127.0.11/uploads/%20%20%20%20/.verify/.eBaysecure=updateuserdataxplimnbqmn-xplmvalidateinfoswqpcmlx=hgplmcx/")
-   == "http://195.127.0.11/uploads/%20%20%20%20/.verify/.eBaysecure=updateuserdataxplimnbqmn-xplmvalidateinfoswqpcmlx=hgplmcx/",
-   "long url with spaces that stays same");
 
 ////// Test PROT_EnchashDecrypter methods //////
 var PROT_EnchashDecrypter = componentScope.PROT_EnchashDecrypter;

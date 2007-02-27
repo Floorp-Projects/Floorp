@@ -42,7 +42,6 @@ const Ci = Components.interfaces;
 #include ../content/js/lang.js
 #include ../content/enchash-decrypter.js
 #include ../content/multi-querier.js
-#include ../content/url-canonicalizer.js
 #include ../content/trtable.js
 
 var modScope = this;

@@ -43,11 +43,46 @@ VPATH     = @srcdir@
 relativesrcdir  = toolkit/components/url-classifier/tests
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
+MODULE = test_url-classifier
+
+MOZILLA_INTERNAL_API = 1
+
+REQUIRES = \
+	string \
+	url-classifier \
+	xpcom \
+	$(NULL)
+
+# mochitests
 _TEST_FILES = test_bug356355.xhtml \
 	test_bug368998.xhtml \
 	$(NULL)
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+# simple c++ tests (no xpcom)
+CPPSRCS = \
+	TestUrlClassifierUtils.cpp \
+	$(NULL)
+
+SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=$(BIN_SUFFIX))
+
+LOCAL_INCLUDES = \
+	-I$(srcdir)/../src \
+	-I$(srcdir)/../public \
+	$(NULL)
+
+LIBS = \
+	../src/$(LIB_PREFIX)urlclassifier_s.$(LIB_SUFFIX) \
+	$(XPCOM_LIBS) \
+	$(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+check::
+	@echo Running tests...
+	@for f in $(SIMPLE_PROGRAMS); do \
+	  echo $$f; $(RUN_TEST_PROGRAM) $(DIST)/bin/$$f; \
+  done

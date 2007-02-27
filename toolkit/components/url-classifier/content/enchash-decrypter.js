@@ -204,7 +204,9 @@ PROT_EnchashDecrypter.prototype.parseRegExps = function(data) {
  *          with hostname normalized, then specially url-encoded)
  */
 PROT_EnchashDecrypter.prototype.getCanonicalUrl = function(url) {
-  var escapedUrl = PROT_URLCanonicalizer.canonicalizeURL_(url);
+  var urlUtils = Cc["@mozilla.org/url-classifier/utils;1"]
+                 .getService(Ci.nsIUrlClassifierUtils);
+  var escapedUrl = urlUtils.canonicalizeURL(url);
   // Normalize the host
   var host = this.getCanonicalHost(escapedUrl);
   if (!host) {
