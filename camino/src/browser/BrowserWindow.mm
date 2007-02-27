@@ -110,6 +110,8 @@ static const int kEscapeKeyCode = 53;
 {
   BrowserWindowController* windowController = (BrowserWindowController*)[self delegate];
   NSString* keyString = [theEvent charactersIgnoringModifiers];
+  if ([keyString length] < 1)
+    return NO;
   unichar keyChar = [keyString characterAtIndex:0];
 
   BOOL handled = NO;
@@ -134,6 +136,8 @@ static const int kEscapeKeyCode = 53;
   //completely different characters depending on whether or not you ignore the modifiers
   else {
     keyString = [theEvent characters];
+    if ([keyString length] < 1)
+      return NO;    
     keyChar = [keyString characterAtIndex:0];
     if (keyChar == 'd') {
       unsigned int standardModifierKeys = NSShiftKeyMask | NSControlKeyMask | NSAlternateKeyMask | NSCommandKeyMask;
