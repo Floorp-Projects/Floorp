@@ -199,7 +199,7 @@ else {
     $cgi->param('current_tab', 'case');
     my $search = Bugzilla::Testopia::Search->new($cgi);
     my $table = Bugzilla::Testopia::Table->new('case', 'tr_new_run.cgi', $cgi, undef, $search->query);
-    $vars->{'case'} = Bugzilla::Testopia::TestCase->new({'case_id' => 0});
+    $vars->{'case'} = Bugzilla::Testopia::TestCase->new({});
     $vars->{'table'} = $table;    
     $vars->{'dotweak'} = 1;
     $vars->{'fullwidth'} = 1; #novellonly
