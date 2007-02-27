@@ -67,6 +67,31 @@
 static const char js_script_exec[] = "Script.prototype.exec";
 static const char js_script_compile[] = "Script.prototype.compile";
 
+/*
+ * This routine requires that obj has been locked previously.
+ */
+static jsint
+GetScriptExecDepth(JSContext *cx, JSObject *obj)
+{
+    jsval v;
+
+    JS_ASSERT(JS_IS_OBJ_LOCKED(cx, obj));
+    v = LOCKED_OBJ_GET_SLOT(obj, JSSLOT_START(&js_ScriptClass));
+    return JSVAL_TO_INT(v);
+}
+
+static void
+AdjustScriptExecDepth(JSContext *cx, JSObject *obj, jsint delta)
+{
+    jsint execDepth;
+
+    JS_LOCK_OBJ(cx, obj);
+    execDepth = GetScriptExecDepth(cx, obj);
+    LOCKED_OBJ_SET_SLOT(obj, JSSLOT_START(&js_ScriptClass),
+                        INT_TO_JSVAL(execDepth + delta));
+    JS_UNLOCK_OBJ(cx, obj);
+}
+
 #if JS_HAS_TOSOURCE
 static JSBool
 script_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
@@ -165,11 +190,13 @@ script_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
     JSString *str;
     JSObject *scopeobj;
-    JSScript *oldscript, *script;
+    jsval v;
+    JSScript *script, *oldscript;
     JSStackFrame *fp, *caller;
     const char *file;
     uintN line;
     JSPrincipals *principals;
+    jsint execDepth;
 
     /* Make sure obj is a Script object. */
     if (!JS_InstanceOf(cx, obj, &js_ScriptClass, argv))
@@ -190,18 +217,6 @@ script_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         if (!js_ValueToObject(cx, argv[1], &scopeobj))
             return JS_FALSE;
         argv[1] = OBJECT_TO_JSVAL(scopeobj);
-    }
-
-    /* XXX thread safety was completely neglected in this function... */
-    oldscript = (JSScript *) JS_GetPrivate(cx, obj);
-    if (oldscript) {
-        for (fp = cx->fp; fp; fp = fp->down) {
-            if (fp->script == oldscript) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_SELF_MODIFYING_SCRIPT);
-                return JS_FALSE;
-            }
-        }
     }
 
     /* Compile using the caller's scope chain, which js_Invoke passes to fp. */
@@ -247,15 +262,32 @@ script_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (!script)
         return JS_FALSE;
 
-    /* Swap script for obj's old script, if any. */
-    if (!JS_SetPrivate(cx, obj, script)) {
-        js_DestroyScript(cx, script);
+    JS_LOCK_OBJ(cx, obj);
+    execDepth = GetScriptExecDepth(cx, obj);
+
+    /*
+     * execDepth must be 0 to allow compilation here, otherwise the JSScript
+     * struct can be released while running.
+     */
+    if (execDepth > 0) {
+        JS_UNLOCK_OBJ(cx, obj);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_COMPILE_EXECED_SCRIPT);
         return JS_FALSE;
     }
+
+    /* Swap script for obj's old script, if any. */
+    v = LOCKED_OBJ_GET_SLOT(obj, JSSLOT_PRIVATE);
+    oldscript = (JSScript *) JSVAL_TO_PRIVATE(v);
+    LOCKED_OBJ_SET_SLOT(obj, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(script));
+    JS_UNLOCK_OBJ(cx, obj);
+
     if (oldscript)
         js_DestroyScript(cx, oldscript);
 
     script->object = obj;
+    js_CallNewScriptHook(cx, script, NULL);
+
 out:
     /* Return the object. */
     *rval = OBJECT_TO_JSVAL(obj);
@@ -269,6 +301,7 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSStackFrame *fp, *caller;
     JSPrincipals *principals;
     JSScript *script;
+    JSBool ok;
 
     if (!JS_InstanceOf(cx, obj, &js_ScriptClass, argv))
         return JS_FALSE;
@@ -331,18 +364,28 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!scopeobj)
         return JS_FALSE;
 
+    /* Keep track of nesting depth for the script. */
+    AdjustScriptExecDepth(cx, obj, 1);
+
+    /* Must get to out label after this */
     script = (JSScript *) JS_GetPrivate(cx, obj);
-    if (!script)
-        return JS_TRUE;
+    if (!script) {
+        ok = JS_FALSE;
+        goto out;
+    }
 
     /* Belt-and-braces: check that this script object has access to scopeobj. */
     principals = script->principals;
-    if (!js_CheckPrincipalsAccess(cx, scopeobj, principals,
-                                  CLASS_ATOM(cx, Script))) {
-        return JS_FALSE;
-    }
+    ok = js_CheckPrincipalsAccess(cx, scopeobj, principals,
+                                  CLASS_ATOM(cx, Script));
+    if (!ok)
+        goto out;
 
-    return js_Execute(cx, scopeobj, script, caller, JSFRAME_EVAL, rval);
+    ok = js_Execute(cx, scopeobj, script, caller, JSFRAME_EVAL, rval);
+   
+out:
+    AdjustScriptExecDepth(cx, obj, -1); 
+    return ok;
 }
 
 #endif /* JS_HAS_SCRIPT_OBJECT */
@@ -750,6 +793,7 @@ script_thaw(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSString *str;
     void *buf;
     uint32 len;
+    jsval v;
     JSScript *script, *oldscript;
     JSBool ok, hasMagic;
 
@@ -799,13 +843,26 @@ script_thaw(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         goto out;
     }
 
-    /* Swap script for obj's old script, if any. */
-    oldscript = (JSScript *) JS_GetPrivate(cx, obj);
-    ok = JS_SetPrivate(cx, obj, script);
-    if (!ok) {
-        JS_free(cx, script);
+    JS_LOCK_OBJ(cx, obj);
+    execDepth = GetScriptExecDepth(cx, obj);
+
+    /*
+     * execDepth must be 0 to allow compilation here, otherwise the JSScript
+     * struct can be released while running.
+     */
+    if (execDepth > 0) {
+        JS_UNLOCK_OBJ(cx, obj);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_COMPILE_EXECED_SCRIPT);
         goto out;
     }
+
+    /* Swap script for obj's old script, if any. */
+    v = LOCKED_OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
+    oldscript = (JSScript *) JSVAL_TO_PRIVATE(v);
+    LOCKED_OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(script));
+    JS_UNLOCK_OBJ(cx, obj);
+
     if (oldscript)
         js_DestroyScript(cx, oldscript);
 
@@ -886,7 +943,8 @@ script_mark(JSContext *cx, JSObject *obj, void *arg)
 
 JS_FRIEND_DATA(JSClass) js_ScriptClass = {
     js_Script_str,
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Script),
+    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Script) |
+    JSCLASS_HAS_RESERVED_SLOTS(1),
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   script_finalize,
     NULL,             NULL,             script_call,      NULL,/*XXXbe xdr*/
@@ -910,6 +968,10 @@ Script(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
          */
         *rval = OBJECT_TO_JSVAL(obj);
     }
+
+    if (!JS_SetReservedSlot(cx, obj, 0, INT_TO_JSVAL(0)))
+        return JS_FALSE;
+
     return script_compile(cx, obj, argc, argv, rval);
 }
 
