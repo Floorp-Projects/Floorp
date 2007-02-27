@@ -113,7 +113,7 @@ sub ProcessCommandLineArgs
     Getopt::Long::GetOptions(\%args,
      'help|h|?', 'man', 'version', 'app=s', 'config=s', 'verbose',
      'dry-run', 'tools-dir=s', 'download-dir=s', 'deliverable-dir=s',
-     @RUN_MODES)
+     'tools-revision=s', @RUN_MODES)
      or return 0;
 
     $this->{'mConfigFilename'} = defined($args{'config'}) ? $args{'config'} :
@@ -142,6 +142,10 @@ sub ProcessCommandLineArgs
              $this->{$pathKey};
         }
     }
+
+    # the tag we would use for pulling the mozilla tree in BuildTools()
+    $this->{'mToolsRevision'} = defined($args{'tools-revision'}) ?
+     $args{'tools-revision'} : 'HEAD';
 
     $this->{'run'} = [];
 
@@ -751,6 +755,12 @@ sub IsDryRun
 {
     my $this = shift;
     return 1 == $this->{'dryRun'};
+}
+
+sub GetToolsRevision
+{
+    my $this = shift;
+    return $this->{'mToolsRevision'};
 }
 
 1;

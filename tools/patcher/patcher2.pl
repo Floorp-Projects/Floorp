@@ -146,6 +146,7 @@ sub BuildTools {
     my %args = @_;
     my $config = $args{'config'};
     my $codir = $config->GetToolsDir();
+    my $toolsRevision = $config->GetToolsRevision();
 
     my $startdir = getcwd();
 
@@ -165,9 +166,13 @@ sub BuildTools {
     }
 
     { # Checkout 'client.mk'.
-        printf("Checking out 'client.mk'... \n");
+        printf("Checking out 'client.mk' from $toolsRevision... \n");
         my $cvsroot = $ENV{'CVSROOT'} || $DEFAULT_CVSROOT;
-        my $checkoutArgs = ["-d$cvsroot", 'co', 'mozilla/client.mk'];
+
+        my $checkoutArgs = ["-d$cvsroot", 'co', 
+                            '-r' . $toolsRevision,
+                            'mozilla/client.mk'];
+
         my $rv = RunShellCommand(command => 'cvs',
                                  args => $checkoutArgs, 
                                  output => 1);
@@ -191,6 +196,7 @@ sub BuildTools {
         # bug 329686 gets fixed.
         
         $mozconfig = "mk_add_options MOZ_CO_PROJECT=all\n";
+        $mozconfig .= "mk_add_options MOZ_CO_TAG=$toolsRevision\n";
         $mozconfig .= "ac_add_options --enable-application=tools/update-packaging\n";
         # these aren't required and introduce more dependencies
         $mozconfig .= "ac_add_options --disable-dbus\n";
