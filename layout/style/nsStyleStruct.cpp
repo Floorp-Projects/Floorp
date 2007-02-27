@@ -1067,14 +1067,6 @@ nsStyleBackground::~nsStyleBackground()
 
 nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) const
 {
-  if (mBackgroundAttachment != aOther.mBackgroundAttachment
-    && ((NS_STYLE_BG_ATTACHMENT_FIXED == mBackgroundAttachment) ||
-        (NS_STYLE_BG_ATTACHMENT_FIXED == aOther.mBackgroundAttachment)))
-    // this might require creation of a view
-    // XXX This probably doesn't call ApplyRenderingChangeToTree, which
-    // means we might not invalidate the canvas if this is the body.
-    return NS_STYLE_HINT_FRAMECHANGE;
-
   if ((mBackgroundAttachment == aOther.mBackgroundAttachment) &&
       (mBackgroundFlags == aOther.mBackgroundFlags) &&
       (mBackgroundRepeat == aOther.mBackgroundRepeat) &&
@@ -1099,7 +1091,7 @@ nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) 
 /* static */
 nsChangeHint nsStyleBackground::MaxDifference()
 {
-  return NS_STYLE_HINT_FRAMECHANGE;
+  return NS_STYLE_HINT_VISUAL;
 }
 #endif
 
