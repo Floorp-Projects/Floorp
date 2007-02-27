@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="webclient" default="default" basedir=".">
+    <description>Non-IDE build file for Webclient project.</description>
+
+  <property file="project.properties" />
+
+
+  <target name="default" 
+          description="Compile, if necessary, and execute the test browser.">
+    <antcall target="prepare" />
+    <antcall target="-do-compile" />
+    <antcall target="run" />
+
+  </target>
+
+  <target name="test" 
+         description="Compile, if necessary, and execute the automated tests.">
+    <antcall target="prepare" />
+    <antcall target="-do-compile-test" />
+    <antcall target="run.test" />
+
+  </target>
+
+
+    <target name="clean" depends="prepare">
+        <delete>
+            <fileset dir="${browser.bin.dir}" 
+                     includes="${bin.artifacts.pattern}"/>
+        </delete>
+        <delete dir="${build.dir}" />
+    </target>
+
+  <target name="check.sources">
+        <condition property="have.tests">
+            <or>
+                <available file="${test.src.dir}"/>
+            </or>
+        </condition>
+        <condition property="have.sources">
+            <or>
+                <available file="${src.dir}"/>
+            </or>
+        </condition>
+   </target>
+
+  <target name="prepare" depends="verify.preconditions,copy.binaries,copy.test.data">
+
+
+  </target>
+
+  <target name="verify.preconditions">
+        <condition property="so.prefix" value="">
+            <and>
+                <os family="windows" />
+            </and>
+        </condition>
+
+        <condition property="so.prefix" value="lib">
+            <and>
+                <os family="unix" />
+            </and>
+        </condition>
+
+        <condition property="so.extension" value="dll">
+            <and>
+                <os family="windows" />
+            </and>
+        </condition>
+
+        <condition property="so.extension" value="so">
+            <and>
+                <os family="unix" />
+            </and>
+        </condition>
+
+        <condition property="platform" value="win32">
+            <and>
+                <os family="windows" />
+            </and>
+        </condition>
+
+        <condition property="platform" value="unix">
+            <and>
+                <os family="unix" />
+            </and>
+        </condition>
+        
+        <condition property="platform" value="mac">
+            <and>
+                <os family="mac" />
+            </and>
+        </condition>
+        
+        <condition property="build.unix.classes">
+            <and>
+                <isset property="platform" />
+                <equals arg1="${platform}" arg2="unix" />
+            </and>
+        </condition>
+
+        <condition property="build.win32.classes">
+            <and>
+                <isset property="platform" />
+                <equals arg1="${platform}" arg2="win32" />
+            </and>
+        </condition>
+        
+        <condition property="build.mac.classes">
+            <and>
+                <isset property="platform" />
+                <equals arg1="${platform}" arg2="mac" />
+            </and>
+        </condition>
+        
+        <condition property="PATH_SEP" value=";">
+            <and>
+                <os family="windows" />
+            </and>
+        </condition>
+
+        <condition property="PATH_SEP" value=":">
+            <and>
+                <os family="unix" />
+            </and>
+        </condition>
+
+        <condition property="FILE_PATH_SEP" value="\">
+            <and>
+                <os family="windows" />
+            </and>
+        </condition>
+
+        <condition property="FILE_PATH_SEP" value="/">
+            <and>
+                <os family="unix" />
+            </and>
+        </condition>
+
+        <property file="build.properties" />
+
+        <condition property="preconditions.met">
+            <and>
+                <available file="${browser.bin.dir}/${so.prefix}xul.${so.extension}" />
+            </and>
+        </condition>
+
+        <uptodate property="do.copy.binaries">
+            <srcfiles dir="${basedir}/../bin" includes="**/*.*" />
+            <mapper type="identity" to="${browser.bin.dir}/**/*.*" />
+        </uptodate>
+        
+                <fail unless="preconditions.met">
+                    
+Conditions for compilation have not been met.
+Have you verified that the property browser.bin.dir has been set
+to the binary directory of the host browser in the webclient.properties
+file?  The current value of this property is:
+${browser.bin.dir} and this directory must contain the file
+${so.prefix}xul.${so.extension}.
+    </fail>
+    <mkdir dir="${build.classes.dir}"/>
+    <mkdir dir="${build.test.classes.dir}"/>
+
+  </target>
+
+  <target name="copy.binaries" if="do.copy.binaries">
+      <copy todir="${browser.bin.dir}">
+          <fileset dir="${basedir}/../bin" />
+      </copy>
+  </target>
+
+  <target name="copy.test.data">
+      <copy todir="${build.test.results.dir}">
+          <fileset dir="${basedir}/../test/automated/src/main/resources" />
+      </copy>
+  </target>
+
+    <target name="-init-macrodef-javac">
+        <macrodef name="webclient.javac">
+            <attribute name="srcdir" default="${src.dir}"/>
+            <attribute name="destdir" default="${build.classes.dir}"/>
+            <attribute name="classpath" default="${javac.classpath}"/>
+            <attribute name="debug" default="${javac.debug}"/>
+            <element name="customize" optional="true"/>
+            <sequential>
+                <javac srcdir="@{srcdir}" destdir="@{destdir}" debug="@{debug}" deprecation="${javac.deprecation}" source="${javac.source}" target="${javac.target}" includeantruntime="false">
+                    <classpath>
+                        <path path="@{classpath}"/>
+                    </classpath>
+                    <compilerarg line="${javac.compilerargs}"/>
+                    <customize/>
+
+                    <patternset>
+                        <exclude name="**/*Win32*.java" if="build.unix.classes"/>
+                        <exclude name="**/*Cocoa*.java" if="build.unix.classes"/>
+                    </patternset>
+
+                    <patternset>
+                        <exclude name="**/*Gtk*.java" if="build.win32.classes"/>
+                        <exclude name="**/*Cocoa*.java" if="build.win32.classes"/>
+                    </patternset>
+
+                    <patternset>
+                        <exclude name="**/*Gtk*.java" if="build.mac.classes"/>
+                        <exclude name="**/*Win32*.java" if="build.mac.classes"/>
+                    </patternset>
+                    
+                </javac>
+            </sequential>
+        </macrodef>
+    </target>
+    
+    <target name="-init-macrodef-junit">
+        <property name="debug.jvm.args" value="" />
+
+        <macrodef name="webclient.junit">
+            <attribute name="includes" default="**/*Test.java"/>
+            <sequential>
+                <junit showoutput="true" fork="true" dir="${basedir}" failureproperty="tests.failed" errorproperty="tests.failed">
+                    <jvmarg value="-DNSPR_LOG_MODULES=webclient:4,webclientstub:4,pluglets:4"/>
+                    <jvmarg value="-DNSPR_LOG_FILE=${basedir}${FILE_PATH_SEP}${build.dir}${FILE_PATH_SEP}webclient.log"/>
+                    <jvmarg value="-Dbuild.test.results.dir=${basedir}${FILE_PATH_SEP}${build.test.results.dir}" />
+                    <jvmarg value="-DBROWSER_BIN_DIR=${browser.bin.dir}"/>
+                    <jvmarg line="${debug.jvm.args}"/>
+                    <jvmarg line="-Djava.util.logging.config.file=${basedir}${FILE_PATH_SEP}logging.properties"/>
+                    <jvmarg line="-Djava.library.path=${browser.bin.dir}" />
+                    
+                    <batchtest todir="${build.test.results.dir}">
+                        <fileset dir="${test.src.dir}" includes="@{includes}"/>
+                    </batchtest>
+                    <classpath>
+                        <path path="${run.test.classpath}"/>
+                    </classpath>
+                    <syspropertyset>
+                        <propertyref prefix="test-sys-prop."/>
+                        <mapper type="glob" from="test-sys-prop.*" to="*"/>
+                    </syspropertyset>
+                    <formatter type="brief" usefile="false"/>
+                    <formatter type="xml"/>
+                    <jvmarg line="${run.jvmargs}"/>
+                </junit>
+            </sequential>
+        </macrodef>
+    </target>
+
+    <target name="-do-compile" depends="check.sources,-init-macrodef-javac"
+            if="have.sources">
+        <webclient.javac/>
+        <copy todir="${build.classes.dir}">
+            <fileset dir="${src.dir}" excludes="${build.classes.excludes}"/>
+        </copy>
+    </target>
+
+    <target name="-do-compile-test" if="have.tests" depends="check.sources,prepare,-init-macrodef-javac">
+        <webclient.javac srcdir="${test.src.dir}" destdir="${build.test.classes.dir}" debug="true" classpath="${javac.test.classpath}"/>
+        <copy todir="${build.test.classes.dir}">
+            <fileset dir="${test.src.dir}" excludes="**/*.java"/>
+        </copy>
+    </target>
+
+
+    <target name="run" depends="prepare">
+
+        <property name="debug.jvm.args" value="" />
+        
+        <java classname="org.mozilla.webclient.test.TestBrowser" fork="true">
+            <jvmarg value="-DNSPR_LOG_MODULES=webclient:4,webclientstub:4,pluglets:4"/>
+            <jvmarg value="-DNSPR_LOG_FILE=${basedir}${FILE_PATH_SEP}${build.dir}${FILE_PATH_SEP}webclient.log"/>
+            <jvmarg value="-Dbuild.test.results.dir=${basedir}${FILE_PATH_SEP}${build.test.results.dir}" />
+            <jvmarg value="-DBROWSER_BIN_DIR=${browser.bin.dir}"/>
+            <jvmarg line="${debug.jvm.args}"/>
+            <jvmarg line="-Djava.util.logging.config.file=${basedir}${FILE_PATH_SEP}logging.properties"/>
+            <jvmarg line="-Djava.library.path=${browser.bin.dir}" />
+
+                    <classpath>
+                        <path path="${run.test.classpath}"/>
+                    </classpath>
+
+        </java>
+    </target>
+
+    <target name="run.test" depends="prepare,-init-macrodef-junit">
+       <webclient.junit />
+    </target>
+
+
+    
+</project>

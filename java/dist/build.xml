@@ -30,7 +30,13 @@
 
   <property name="Name" value="webclient"/>
   <property name="name" value="webclient"/>
-  <property name="version" value="2_0_a5"/>
+  <property name="major.version" value="2" />
+  <property name="minor.version" value="0" />
+  <property name="release.version" value="a5" />
+  <property name="release.version.full" value="alpha_5" />
+  <property name="version" 
+            value="${major.version}_${minor.version}_${release.version}"/>
+  <property name="full.version" value="${major.version}_${minor.version}_${release.version.full}"/>
 
 <!-- ************ Per user local properties ******************************* -->
 
@@ -205,6 +211,11 @@
     <copy todir="${dist.home}/netbeans">
       <fileset dir="${basedir}/netbeans" />
     </copy>
+    <copy todir="${dist.home}/non-ide">
+      <fileset dir="${basedir}/non-ide" />
+    </copy>
+    <copy file="${mozdocdir}/webclient/release-notes/${full.version}.html" todir="${dist.home}" />
+    <copy file="${mozdocdir}/webclient/release-notes/${full.version}-detail.html" todir="${dist.home}" />
   </target>
 
   <target name="build.javadocs" depends="prepare,uptodate"

@@ -1,0 +1,9 @@
+bin.artifacts.pattern=${so.prefix}webclient.${so.extension},${so.prefix}javadomjni.${so.extension},components/${so.prefix}javadom.${so.extension}
+#debug.jvm.args=-Xdebug -Xrunjdwp:transport=dt_shmem,address=jdbconn,server=y,suspend=y
+
+# Begin Editable Properties
+
+junit.jar=C:\\PROGRA~1\\netbeans-5.5\\ide7\\ant\\lib\\junit-3.8.1.jar 
+
+#Make this point to the bin directory of your XULRUNNER installation
+browser.bin.dir=C:\\Projects\\chaff\\webclient-alpha-5\\xulrunner

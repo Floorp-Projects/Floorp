@@ -1,0 +1,2 @@
+Copy build.properties.sample to build.properties.  Edit the junit.jar
+and browser.bin.dir properties to be valid on your system.
