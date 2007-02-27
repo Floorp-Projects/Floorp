@@ -630,6 +630,12 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
 PRBool
 nsContainerFrame::FrameNeedsView(nsIFrame* aFrame)
 {
+  // XXX Check needed because frame construction can't properly figure out when
+  // a frame is the child of a scrollframe
+  if (aFrame->GetStyleContext()->GetPseudoType() ==
+      nsCSSAnonBoxes::scrolledContent) {
+    return PR_TRUE;
+  }
   return aFrame->NeedsView();
 }
 
