@@ -373,7 +373,7 @@ CHROMEEND
   
   my($filename, $directories, $suffix) = fileparse($app_path);
   my $manifest = $directories . "chrome/mochikit.manifest";
-  open(MANIFEST, ">>$manifest") ||
+  open(MANIFEST, ">$manifest") ||
     die("Could not open manifest file $!");
   print MANIFEST ("content mochikit $chrometest_dir");
   close(MANIFEST);
