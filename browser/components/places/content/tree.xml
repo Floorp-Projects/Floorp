@@ -904,10 +904,12 @@
           var ip = this._self._getInsertionPoint(index, orientation);
           if (!ip)
             throw Cr.NS_ERROR_NOT_AVAILABLE;
-          if (sourceView == this._self) {
+          if (sourceView == this._self && ip.index > -1) {
             // We are moving nodes within the same view, we need to adjust the
             // insertion point to take into account the fact that rows may
             // disappear above it, causing its index to be incorrect. 
+            // Note that nodes with an index of -1 were dropped in the system area,
+            // and do not need adjustment.
             this._adjustInsertionPoint(ip);
           }
           PlacesControllerDragHelper.onDrop(sourceView, this._self, ip);

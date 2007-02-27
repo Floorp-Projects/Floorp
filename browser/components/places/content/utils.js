@@ -383,10 +383,13 @@ var PlacesUtils = {
       // Data is encoded like this:
       // bookmarks folder: <folderId>\n<>\n<parentId>\n<indexInParent>
       // uri:              0\n<uri>\n<parentId>\n<indexInParent>
+      // bookmark:         <bookmarkId>\n<uri>\n<parentId>\n<indexInParent>
       // separator:        0\n<>\n<parentId>\n<indexInParent>
       var wrapped = "";
       if (this.nodeIsFolder(aNode))
         wrapped += asFolder(aNode).folderId + NEWLINE;
+      else if (this.nodeIsBookmark(aNode))
+        wrapped += aNode.bookmarkId + NEWLINE;
       else
         wrapped += "0" + NEWLINE;
 
@@ -423,10 +426,11 @@ var PlacesUtils = {
    * @returns A nsITransaction object that performs the copy.
    */
   _getItemCopyTransaction: function (aURI, aContainer, aIndex) {
-    var itemTitle = this.bookmarks.getItemTitle(aURI);
+    var itemTitle = this.history.getPageTitle(aURI);
     var createTxn = new PlacesCreateItemTransaction(aURI, aContainer, aIndex);
-    var editTxn = new PlacesEditItemTitleTransaction(aURI, itemTitle);
-    return new PlacesAggregateTransaction("ItemCopy", [createTxn, editTxn]);
+    createTxn.childTransactions.push(
+      new PlacesEditItemTitleTransaction(aURI, itemTitle));
+    return new PlacesAggregateTransaction("ItemCopy", [createTxn]);
   },
 
   /**
@@ -468,11 +472,11 @@ var PlacesUtils = {
       return childTransactions;
     }
 
-    var title = this.bookmarks.getFolderTitle(aData.folderId);
+    var title = this.bookmarks.getFolderTitle(aData.id);
     var createTxn =
       new PlacesCreateFolderTransaction(title, aContainer, aIndex);
     createTxn.childTransactions =
-      getChildTransactions(aData.folderId, createTxn);
+      getChildTransactions(aData.id, createTxn);
     return createTxn;
   },
 
@@ -499,7 +503,7 @@ var PlacesUtils = {
         // remaining, the data blob is malformed and we should stop.
         if (i > (parts.length - 4))
           break;
-        nodes.push({  folderId: parseInt(parts[i++]),
+        nodes.push({  id: parseInt(parts[i++]),
                       uri: parts[i] ? this._uri(parts[i]) : null,
                       parent: parseInt(parts[++i]),
                       index: parseInt(parts[++i]) });
@@ -545,20 +549,20 @@ var PlacesUtils = {
                                                index, copy) {
     switch (type) {
     case TYPE_X_MOZ_PLACE_CONTAINER:
-    case TYPE_X_MOZ_PLACE:
-      if (data.folderId > 0) {
+      if (data.id > 0 && data.uri == null) {
         // Place is a folder.
         if (copy)
           return this._getFolderCopyTransaction(data, container, index);
-        return new PlacesMoveFolderTransaction(data.folderId, data.parent,
+        return new PlacesMoveFolderTransaction(data.id, data.parent,
                                                data.index, container,
                                                index);
       }
-      if (copy)
-        return this._getItemCopyTransaction(data.uri, container, index);
-      return new PlacesMoveItemTransaction(data.uri, data.parent,
-                                           data.index, container,
-                                           index);
+    case TYPE_X_MOZ_PLACE:
+      if (data.id > 0)
+        return new PlacesMoveItemTransaction(data.id, data.uri, data.parent,
+                                             data.index, container,
+                                             index);
+      return this._getItemCopyTransaction(data.uri, container, index);
     case TYPE_X_MOZ_PLACE_SEPARATOR:
       if (copy) {
         // There is no data in a separator, so copying it just amounts to
