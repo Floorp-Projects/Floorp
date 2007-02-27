@@ -7476,6 +7476,11 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsFrameConstructorState& aState,
   {
     styleContext->GetStyleVisibility();
   }
+  // Start background loads during frame construction. This is just
+  // a hint; the paint code will do the right thing in any case.
+  {
+    styleContext->GetStyleBackground();
+  }
 
   nsIFrame* lastChild = frameItems->lastChild;
 
