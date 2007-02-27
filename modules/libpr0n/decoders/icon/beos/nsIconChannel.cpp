@@ -314,11 +314,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
     return NS_ERROR_NOT_AVAILABLE;
 
   // Got a bitmap and color space info - convert data to mozilla's icon format
-#ifdef MOZ_CAIRO_GFX
   PRUint32 iconLength = 2 + iconSize * iconSize * 4;
-#else
-  PRUint32 iconLength = 3 + iconSize * (iconSize * 3 + alphaBytesPerRow);
-#endif
   uint8 *buffer = new uint8[iconLength];
   if (!buffer)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -326,9 +322,6 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
   uint8* destByte = buffer;
   *(destByte++) = iconSize;
   *(destByte++) = iconSize;
-#ifndef MOZ_CAIRO_GFX
-  *(destByte++) = 1; // alpha bits per pixel
-#endif
 
   // RGB data
   uint8* sourceByte = (uint8*)nativeIcon.Bits();
@@ -340,7 +333,6 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
       if (*sourceByte != B_TRANSPARENT_MAGIC_CMAP8)
       {
         rgb_color colorVal = mainScreen.ColorForIndex(*sourceByte);
-#ifdef MOZ_CAIRO_GFX
 #ifdef IS_LITTLE_ENDIAN
         *(destByte++) = colorVal.blue;
         *(destByte++) = colorVal.green;
@@ -352,20 +344,13 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
         *(destByte++) = colorVal.green;
         *(destByte++) = colorVal.blue;
 #endif
-#else
-        *(destByte++) = colorVal.blue;
-        *(destByte++) = colorVal.green;
-        *(destByte++) = colorVal.red;
-#endif
       }
       else
       {
         *destByte++ = 0;
         *destByte++ = 0;
         *destByte++ = 0;
-#ifdef MOZ_CAIRO_GFX
         *destByte++ = 0;
-#endif
       }
       // original code had a conditional here:
       // if (iconCol < iconSize - 1) 
@@ -373,30 +358,6 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
       sourceByte++;
     }
   }
-#ifndef MOZ_CAIRO_GFX
-  // Alpha data - bitmask, with rows aligned on 32-bit boundaries
-  for(PRUint32 iconRow = 0; iconRow < iconSize; iconRow++)
-  {
-    destByte = buffer + 3 + iconSize * iconSize * 3 + iconRow * alphaBytesPerRow;
-    sourceByte = (uint8*)nativeIcon.Bits() + nativeIcon.BytesPerRow() * iconRow;
-    int bitNo = 0;
-    for(PRUint32 iconCol = 0; iconCol < iconSize; iconCol++)
-    {
-      if (*sourceByte == B_TRANSPARENT_MAGIC_CMAP8)
-        (*destByte) &= (~(128 >> (bitNo % 8)));
-      else
-        (*destByte) |= (128 >> (bitNo % 8));
-      
-      //original code had a conditional here:
-      //if (iconCol < iconSize - 1) 
-      //Leaving this comment in case complications arise later
-      bitNo++;
-      sourceByte++;
-      if ((bitNo%8) == 0)
-        destByte++;
-    }
-  }
-#endif
 
   NS_ASSERTION(buffer + iconLength == destByte, "size miscalculation");
   

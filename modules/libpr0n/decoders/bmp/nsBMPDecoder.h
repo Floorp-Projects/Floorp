@@ -116,20 +116,10 @@ struct bitFields {
 #define LITTLE_TO_NATIVE32(x) x
 #endif
 
-#if !defined(MOZ_CAIRO_GFX) && (defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON))
-#define BMP_GFXFORMAT gfxIFormats::BGR
-#define RLE_GFXFORMAT_ALPHA gfxIFormats::BGR_A1
-#else
 #define USE_RGB
 #define BMP_GFXFORMAT gfxIFormats::RGB
 #define RLE_GFXFORMAT_ALPHA gfxIFormats::RGB_A1
-#endif
-
-#if defined(MOZ_CAIRO_GFX) || defined(XP_MAC) || defined(XP_MACOSX)
 #define GFXBYTESPERPIXEL 4
-#else
-#define GFXBYTESPERPIXEL 3
-#endif
 
 // BMPINFOHEADER.compression defines
 #define BI_RLE8 1
@@ -232,24 +222,8 @@ private:
  * The variable passed in as aDecoded will be moved on 3 or 4 bytes! */
 inline void SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue, PRUint8 aAlpha = 0xFF)
 {
-#if defined(MOZ_CAIRO_GFX)
     *(PRUint32*)aDecoded = (aAlpha << 24) | (aRed << 16) | (aGreen << 8) | aBlue;
     aDecoded += 4;
-#else // MOZ_CAIRO_GFX
-
-#if defined(XP_MAC) || defined(XP_MACOSX)
-    *aDecoded++ = 0; // Mac needs this padding byte
-#endif
-#ifdef USE_RGB
-    *aDecoded++ = aRed;
-    *aDecoded++ = aGreen;
-    *aDecoded++ = aBlue;
-#else
-    *aDecoded++ = aBlue;
-    *aDecoded++ = aGreen;
-    *aDecoded++ = aRed;
-#endif
-#endif // MOZ_CAIRO_GFX
 }
 
 inline void SetPixel(PRUint8*& aDecoded, PRUint8 idx, colorTable* aColors)

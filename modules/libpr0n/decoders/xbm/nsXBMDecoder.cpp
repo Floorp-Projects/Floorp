@@ -256,31 +256,17 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
                 hiByte = !hiByte;
             }
 
-#ifdef MOZ_CAIRO_GFX
             PRUint32 *ar = ((PRUint32*)mAlphaRow) + mCurCol;
             const int alphas = PR_MIN(8, mWidth - mCurCol);
             for (int i = 0; i < alphas; i++) {
                 const PRUint8 val = ((pixel & (1 << i)) >> i) ? 255 : 0;
                 *ar++ = (val << 24) | 0;
             }
-#else // MOZ_CAIRO_GFX
-            mAlphaRow[mCurCol/8] = 0;
-            for (int i = 0; i < 8; i++) {
-                PRUint8 val = (pixel & (1 << i)) >> i;
-                mAlphaRow[mCurCol/8] |= val << (7 - i);
-            }
-#endif
+
             mCurCol = PR_MIN(mCurCol + 8, mWidth);
             if (mCurCol == mWidth || mState == RECV_DONE) {
-#ifdef MOZ_CAIRO_GFX
                 mFrame->SetImageData(mAlphaRow, abpr, mCurRow * abpr);
-#else
-                // Row finished. Set Data.
-                mFrame->SetAlphaData(mAlphaRow, abpr, mCurRow * abpr);
-                // nsnull gets interpreted as all-zeroes, which is what we
-                // want
-                mFrame->SetImageData(nsnull, bpr, mCurRow * bpr);
-#endif
+
                 nsIntRect r(0, mCurRow, mWidth, 1);
                 mObserver->OnDataAvailable(nsnull, mFrame, &r);
 

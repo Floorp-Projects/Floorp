@@ -83,35 +83,21 @@ moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI *aURI,
                  NS_ERROR_UNEXPECTED);
 
   const int n_channels = 4;
-#ifdef MOZ_CAIRO_GFX
   gsize buf_size = 2 + n_channels * height * width;
-#else
-  gsize buf_size = 3 + n_channels * height * width;
-#endif
   PRUint8 * const buf = (PRUint8*)NS_Alloc(buf_size);
   NS_ENSURE_TRUE(buf, NS_ERROR_OUT_OF_MEMORY);
   PRUint8 *out = buf;
 
   *(out++) = width;
   *(out++) = height;
-#ifndef MOZ_CAIRO_GFX
-  *(out++) = 8; // bits of alpha per pixel
-#endif
-  
+
   const guchar * const pixels = gdk_pixbuf_get_pixels(aPixbuf);
   int rowextra = gdk_pixbuf_get_rowstride(aPixbuf) - width * n_channels;
 
   // encode the RGB data and the A data
   const guchar * in = pixels;
-#ifndef MOZ_CAIRO_GFX
-  PRUint8 *alpha_out = out + height * width * 3;
-#ifdef DEBUG
-  PRUint8 * const alpha_start = alpha_out;
-#endif
-#endif
   for (int y = 0; y < height; ++y, in += rowextra) {
     for (int x = 0; x < width; ++x) {
-#ifdef MOZ_CAIRO_GFX
       PRUint8 r = *(in++);
       PRUint8 g = *(in++);
       PRUint8 b = *(in++);
@@ -129,21 +115,10 @@ moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI *aURI,
       *(out++) = DO_PREMULTIPLY(b);
 #endif
 #undef DO_PREMULTIPLY
-#else
-      *(out++) = *(in++); // R
-      *(out++) = *(in++); // G
-      *(out++) = *(in++); // B
-      *(alpha_out++) = *(in++); // A
-#endif
     }
   }
 
-#ifdef MOZ_CAIRO_GFX
   NS_ASSERTION(out == buf + buf_size, "size miscalculation");
-#else
-  NS_ASSERTION(out == alpha_start && alpha_out == buf + buf_size,
-               "size miscalculation");
-#endif
 
   nsresult rv;
   nsCOMPtr<nsIStringInputStream> stream =

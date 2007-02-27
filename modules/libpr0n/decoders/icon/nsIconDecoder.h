@@ -68,23 +68,10 @@
 //     support multiple ODA calls yet.
 // (2) the format of the incoming data is as follows:
 //     The first two bytes contain the width and the height of the icon. 
-#ifdef MOZ_CAIRO_GFX
 //     The remaining bytes contain the icon data, 4 bytes per pixel, in
 //       ARGB order (platform endianness, A in highest bits, B in lowest
 //       bits), row-primary, top-to-bottom, left-to-right, with
 //       premultiplied alpha.
-#else
-//     The third byte contains the number of bits per pixel in the alpha
-//       channel (either 1 or 8).
-//     Followed by 3 bytes per pixel for the color bitmap row after row,
-//       from top to bottom, with pixels left to right within rows, and
-//       RGB order within pixels, in platform endianness.  Alpha is
-//       *not* premultiplied.
-//       XXXldb This isn't quite right -- we're just using
-//       platform-native format.
-//     Followed by alpha data (1 or 8 bits per pixel, see above) in the
-//       same order as the RGB data, and also in platform endianness.
-#endif
 //
 //
 //////////////////////////////////////////////////////////////////////////////////////////////

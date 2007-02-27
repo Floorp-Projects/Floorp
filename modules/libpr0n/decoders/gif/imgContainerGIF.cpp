@@ -47,10 +47,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsMemory.h"
-
-#ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
-#endif
 
 NS_IMPL_ISUPPORTS2(imgContainerGIF, imgIContainer, nsITimerCallback)
 
@@ -862,7 +859,6 @@ void imgContainerGIF::SetMaskVisibility(gfxIImageFrame *aFrame,
     return;
   }
 
-#ifdef MOZ_CAIRO_GFX
   PRUint8* alphaData;
   PRUint32 alphaDataLength;
   const PRUint8 setMaskTo = aVisible ? 0xFF : 0x00;
@@ -883,93 +879,6 @@ void imgContainerGIF::SetMaskVisibility(gfxIImageFrame *aFrame,
     }
   }
   aFrame->UnlockImageData();
-
-#else
-  PRUint8* alphaData;
-  PRUint32 alphaDataLength;
-  aFrame->LockAlphaData();
-  nsresult res = aFrame->GetAlphaData(&alphaData, &alphaDataLength);
-  if (!alphaData || !alphaDataLength || NS_FAILED(res)) {
-    aFrame->UnlockAlphaData();
-    return;
-  }
-
-  gfx_format format;
-  aFrame->GetFormat(&format);
-  if (format != gfxIFormats::RGB_A1 && format != gfxIFormats::BGR_A1) {
-    NS_NOTREACHED("GIFs only support 1 bit alpha");
-    aFrame->UnlockAlphaData();
-    return;
-  }
-
-  PRUint32 abpr;
-  aFrame->GetAlphaBytesPerRow(&abpr);
-
-#ifdef MOZ_PLATFORM_IMAGES_BOTTOM_TO_TOP
-  // Account for bottom-up storage.
-  // Start at the bottom (top in memory), go to the top (bottom in memory)
-  PRUint8* alphaLine = alphaData + ((frameHeight - aY - height) * abpr) +
-                       (aX >> 3);
-#else
-  PRUint8* alphaLine = alphaData + (aY * abpr) + (aX >> 3);
-#endif
-  PRUint8 maskShiftStartBy = aX & 0x7;
-  PRUint8 numReplacingStart = 8U - maskShiftStartBy;
-  PRUint32 rowBytes;
-  PRUint8 maskStart = 0; // Init to shutup compiler; Only used if
-                         // maskShiftStartBy != 0
-  PRUint8 maskEnd;
-
-  if (width <= numReplacingStart) {
-    maskEnd = (0xFF >> (8U - width)) << (numReplacingStart - width);
-    // Don't write start bits, only end bits (which contain both start & end)
-    maskShiftStartBy = 0;
-    rowBytes = 0;
-  } else {
-    if (maskShiftStartBy == 0)
-      numReplacingStart = 0;
-    else
-      maskStart = 0xFF >> maskShiftStartBy;
-
-    PRUint8 maskShiftEndBy = (width - numReplacingStart) & 0x7;
-    maskEnd = ~(0xFF >> maskShiftEndBy);
-    rowBytes = (width - numReplacingStart - maskShiftEndBy) >> 3;
-  }
-
-  if (aVisible) {
-    for (PRInt32 i = 0; i < height; i++) {
-      PRUint8 *localAlpha = alphaLine;
-
-      if (maskShiftStartBy != 0)
-        *localAlpha++ |= maskStart;
-
-      if (rowBytes > 0)
-        memset(localAlpha, 0xFF, rowBytes);
-
-      if (maskEnd != 0)
-        localAlpha[rowBytes] |= maskEnd;
-
-      alphaLine += abpr;
-    }
-  } else {
-    for (PRInt32 i = 0; i < height; i++) {
-      PRUint8 *localAlpha = alphaLine;
-
-      if (maskShiftStartBy != 0)
-        *localAlpha++ &= ~maskStart;
-
-      if (rowBytes > 0)
-        memset(localAlpha, 0x00, rowBytes);
-
-      if (maskEnd != 0)
-        localAlpha[rowBytes] &= ~maskEnd;
-
-      alphaLine += abpr;
-    } // for
-  } // if aVisible
-
-  aFrame->UnlockAlphaData();
-#endif
 }
 
 //******************************************************************************
@@ -982,7 +891,6 @@ void imgContainerGIF::SetMaskVisibility(gfxIImageFrame *aFrame, PRBool aVisible)
   PRUint32 alphaDataLength;
   const PRUint8 setMaskTo = aVisible ? 0xFF : 0x00;
 
-#ifdef MOZ_CAIRO_GFX
   aFrame->LockImageData();
   nsresult res = aFrame->GetImageData(&alphaData, &alphaDataLength);
   if (NS_SUCCEEDED(res)) {
@@ -995,15 +903,6 @@ void imgContainerGIF::SetMaskVisibility(gfxIImageFrame *aFrame, PRBool aVisible)
     }
   }
   aFrame->UnlockImageData();
-
-#else  
-
-  aFrame->LockAlphaData();
-  nsresult res = aFrame->GetAlphaData(&alphaData, &alphaDataLength);
-  if (NS_SUCCEEDED(res) && alphaData && alphaDataLength)
-    memset(alphaData, setMaskTo, alphaDataLength);
-  aFrame->UnlockAlphaData();
-#endif
 }
 
 //******************************************************************************
@@ -1012,20 +911,13 @@ void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame)
 {
   if (!aFrame)
     return;
-#ifdef MOZ_CAIRO_GFX
+
   PRInt32 widthFrame;
   PRInt32 heightFrame;
   aFrame->GetWidth(&widthFrame);
   aFrame->GetHeight(&heightFrame);
 
   BlackenFrame(aFrame, 0, 0, widthFrame, heightFrame);
-
-#else
-  PRUint32 aDataLength;
-
-  aFrame->GetImageDataLength(&aDataLength);
-  aFrame->SetImageData(nsnull, aDataLength, 0);
-#endif
 }
 
 //******************************************************************************
@@ -1036,7 +928,6 @@ void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame,
   if (!aFrame)
     return;
 
-#ifdef MOZ_CAIRO_GFX
   nsCOMPtr<nsIImage> img(do_GetInterface(aFrame));
   if (!img)
     return;
@@ -1051,36 +942,6 @@ void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame,
 
   nsIntRect r(aX, aY, aWidth, aHeight);
   img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
-
-#else // MOZ_CAIRO_GFX
-
-  PRInt32 widthFrame;
-  PRInt32 heightFrame;
-  aFrame->GetWidth(&widthFrame);
-  aFrame->GetHeight(&heightFrame);
-
-  const PRInt32 width  = PR_MIN(aWidth, (widthFrame - aX));
-  const PRInt32 height = PR_MIN(aHeight, (heightFrame - aY));
-
-  if (width <= 0 || height <= 0) {
-    return;
-  }
-
-  PRUint32 bpr; // Bytes Per Row
-  aFrame->GetImageBytesPerRow(&bpr);
-
-#if defined(XP_MAC) || defined(XP_MACOSX)
-  const PRUint8 bpp = 4;
-#else
-  const PRUint8 bpp = 3;
-#endif
-  const PRUint32 bprToWrite = width * bpp;
-  const PRUint32 xOffset = aX * bpp; // offset into row to start writing
-
-  for (PRInt32 y = 0; y < height; y++) {
-    aFrame->SetImageData(nsnull, bprToWrite, ((y + aY) * bpr) + xOffset);
-  }
-#endif // MOZ_CAIRO_GFX
 }
 
 
@@ -1110,21 +971,6 @@ PRBool imgContainerGIF::CopyFrameImage(gfxIImageFrame *aSrcFrame,
   }
   memcpy(aDataDest, aDataSrc, aDataLengthSrc);
   aDstFrame->UnlockImageData();
-
-#ifndef MOZ_CAIRO_GFX
-  // Copy Alpha/Mask Over
-  // If no mask, lockAlpha will tell us
-  if (NS_SUCCEEDED(aDstFrame->LockAlphaData())) {
-    aSrcFrame->GetAlphaData(&aDataSrc, &aDataLengthSrc);
-    aDstFrame->GetAlphaData(&aDataDest, &aDataLengthDest);
-    if (aDataDest && aDataSrc && aDataLengthDest == aDataLengthSrc)
-      memcpy(aDataDest, aDataSrc, aDataLengthSrc);
-    else
-      memset(aDataDest, 0xFF, aDataLengthDest);
-
-    aDstFrame->UnlockAlphaData();
-  }
-#endif
 
   // Tell the image that it's data has been updated
   nsCOMPtr<nsIInterfaceRequestor> ireq(do_QueryInterface(aDstFrame));
