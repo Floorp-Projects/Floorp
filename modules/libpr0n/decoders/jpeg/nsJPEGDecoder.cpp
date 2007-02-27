@@ -77,9 +77,6 @@ nsJPEGDecoder::nsJPEGDecoder()
   mReading = PR_TRUE;
 
   mSamples = nsnull;
-#ifndef MOZ_CAIRO_GFX
-  mRGBRow = nsnull;
-#endif
 
   mBytesToSkip = 0;
   memset(&mInfo, 0, sizeof(jpeg_decompress_struct));
@@ -97,9 +94,6 @@ nsJPEGDecoder::~nsJPEGDecoder()
 {
   PR_FREEIF(mBuffer);
   PR_FREEIF(mBackBuffer);
-#ifndef MOZ_CAIRO_GFX
-  PR_FREEIF(mRGBRow);
-#endif
 }
 
 
@@ -325,18 +319,6 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
                                           JPOOL_IMAGE,
                                           mInfo.output_width * 3, 1);
 
-#ifndef MOZ_CAIRO_GFX
-#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(XP_MAC) || defined(XP_MACOSX) || defined(MOZ_WIDGET_PHOTON)
-#if defined(XP_MAC) || defined(XP_MACOSX)
-    const int row_stride = mInfo.output_width * 4;
-#else
-    const int row_stride = mInfo.output_width * 3;
-#endif
-    // allocate buffer to do byte flipping / padding
-    mRGBRow = (PRUint8*) PR_MALLOC(row_stride);
-#endif
-#endif
-
     mState = JPEG_START_DECOMPRESS;
   }
 
@@ -475,34 +457,19 @@ nsJPEGDecoder::OutputScanlines()
   const PRUint32 top = mInfo.output_scanline;
   PRBool rv = PR_TRUE;
 
-#if defined(MOZ_CAIRO_GFX)
   // we're thebes. we can write stuff directly to the data
   PRUint8 *imageData;
   PRUint32 imageDataLength;
   mFrame->GetImageData(&imageData, &imageDataLength);
   nsCOMPtr<nsIImage> img(do_GetInterface(mFrame));
-#else
-  // Note! row_stride here must match the row_stride in
-  // nsJPEGDecoder::WriteFrom
-#if defined(XP_MAC) || defined(XP_MACOSX)
-  const int row_stride = mInfo.output_width * 4;
-#else
-  const int row_stride = mInfo.output_width * 3;
-#endif
-  PRUint32 bpr;
-  mFrame->GetImageBytesPerRow(&bpr);
-  JSAMPROW samples;
-#endif
 
   while ((mInfo.output_scanline < mInfo.output_height)) {
-
       /* Request one scanline.  Returns 0 or 1 scanlines. */    
       if (jpeg_read_scanlines(&mInfo, mSamples, 1) != 1) {
         rv = PR_FALSE; /* suspend */
         break;
       }
 
-#if defined(MOZ_CAIRO_GFX)
       // offset is in Cairo pixels (PRUint32)
       PRUint32 offset = (mInfo.output_scanline - 1) * mInfo.output_width;
       PRUint32 *ptrOutputBuf = ((PRUint32*)imageData) + offset;
@@ -513,49 +480,11 @@ nsJPEGDecoder::OutputScanlines()
         PRUint8 b = *j1++;
         *ptrOutputBuf++ = (0xFF << 24) | (r << 16) | (g << 8) | b;
       }
-#else
-
-#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
-      PRUint8 *ptrOutputBuf = mRGBRow;
-
-      JSAMPLE *j1 = mSamples[0];
-      for (PRUint32 i=0;i<mInfo.output_width;++i) {
-        ptrOutputBuf[2] = *j1++;
-        ptrOutputBuf[1] = *j1++;
-        ptrOutputBuf[0] = *j1++;
-        ptrOutputBuf += 3;
-      }
-
-      samples = mRGBRow;
-#elif defined(XP_MAC) || defined(XP_MACOSX)
-      PRUint8 *ptrOutputBuf = mRGBRow;
-
-      JSAMPLE *j1 = mSamples[0];
-      for (PRUint32 i=0;i<mInfo.output_width;++i) {
-        ptrOutputBuf[0] = 0;
-        ptrOutputBuf[1] = *j1++;
-        ptrOutputBuf[2] = *j1++;
-        ptrOutputBuf[3] = *j1++;
-        ptrOutputBuf += 4;
-      }
-
-      samples = mRGBRow;
-#else
-      samples = mSamples[0];
-#endif
-
-      mFrame->SetImageData(
-        samples,             // data
-        row_stride,          // length
-        (mInfo.output_scanline-1) * bpr); // offset
-#endif
   }
 
   if (top != mInfo.output_scanline) {
       nsIntRect r(0, top, mInfo.output_width, mInfo.output_scanline-top);
-#if defined(MOZ_CAIRO_GFX)
       img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
-#endif
       mObserver->OnDataAvailable(nsnull, mFrame, &r);
   }
 

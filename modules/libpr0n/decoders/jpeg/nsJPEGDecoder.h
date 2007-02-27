@@ -106,9 +106,6 @@ public:
   jstate mState;
 
   JSAMPARRAY mSamples;
-#ifndef MOZ_CAIRO_GFX
-  PRUint8*   mRGBRow;
-#endif
 
   PRUint32 mBytesToSkip;
 

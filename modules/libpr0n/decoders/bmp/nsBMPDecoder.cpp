@@ -155,32 +155,26 @@ nsresult nsBMPDecoder::WriteRLERows(PRUint32 rows)
     // First pack the alpha data
     nsresult rv = mFrame->GetAlphaBytesPerRow(&abpr);
     NS_ENSURE_SUCCESS(rv, rv);
-#ifdef MOZ_CAIRO_GFX
+
     gfx_format format;
     mFrame->GetFormat(&format);
     if (format == RLE_GFXFORMAT_ALPHA)
         abpr >>= 2;
-#endif
+
     for (cnt = 0; cnt < abpr; cnt++) {
         PRUint8 byte = 0;
         for (bit = 128; bit; bit >>= 1)
             byte |= *pos++ & bit;
         mAlpha[cnt] = byte;
-#ifdef MOZ_CAIRO_GFX
 #ifdef IS_LITTLE_ENDIAN
         mDecoded[(cnt << 2) + 3] = byte ? 0 : 255;
 #else
         mDecoded[(cnt << 2)] = byte ? 0 : 255;
 #endif
-#endif
     }
 
     for (cnt = 0; cnt < rows; cnt++) {
         line = (mBIH.height < 0) ? (-mBIH.height - mCurLine--) : --mCurLine;
-#ifndef MOZ_CAIRO_GFX
-        rv = mFrame->SetAlphaData(mAlpha, abpr, line * abpr);
-        NS_ENSURE_SUCCESS(rv, rv);
-#endif
         rv = mFrame->SetImageData(mDecoded, mBpr, line * mBpr);
         NS_ENSURE_SUCCESS(rv, rv);
         if (cnt == 0) {

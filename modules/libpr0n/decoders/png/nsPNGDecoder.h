@@ -77,9 +77,6 @@ public:
 
   png_structp mPNG;
   png_infop mInfo;
-#ifndef MOZ_CAIRO_GFX
-  PRUint8 *colorLine, *alphaLine;
-#endif
   PRUint8 *interlacebuf;
   PRUint32 ibpr;
   PRPackedBool mError;
