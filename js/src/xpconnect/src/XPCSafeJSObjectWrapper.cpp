@@ -549,6 +549,12 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_SJOW_CallWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                      jsval *rval)
 {
+  // Make sure we've got at least one argument (which may not be the
+  // case if someone's monkeying with this function directly from JS).
+  if (argc < 1) {
+    return ThrowException(NS_ERROR_INVALID_ARG, cx);
+  }
+
   return ::JS_CallFunctionValue(cx, obj, argv[0], argc - 1, argv + 1, rval);
 }
 
