@@ -136,7 +136,7 @@ function ReadManifest(aURL)
                 stat = item;
                 cond = true;
             } else {
-                throw "Error in manifest file " + aURL + " line " + lineNo;
+                throw "Error in manifest file " + aURL.spec + " line " + lineNo;
             }
 
             if (cond) {
@@ -150,17 +150,17 @@ function ReadManifest(aURL)
 
         if (items[0] == "include") {
             if (items.length != 2)
-                throw "Error in manifest file " + aURL + " line " + lineNo;
+                throw "Error in manifest file " + aURL.spec + " line " + lineNo;
             ReadManifest(ios.newURI(items[1], null, listURL));
         } else if (items[0] == "==" || items[0] == "!=") {
             if (items.length != 3)
-                throw "Error in manifest file " + aURL + " line " + lineNo;
+                throw "Error in manifest file " + aURL.spec + " line " + lineNo;
             gURLs.push( { equal: (items[0] == "=="),
                           expected: expected_status,
                           url1: ios.newURI(items[1], null, listURL),
                           url2: ios.newURI(items[2], null, listURL)} );
         } else {
-            throw "Error in manifest file " + aURL + " line " + lineNo;
+            throw "Error in manifest file " + aURL.spec + " line " + lineNo;
         }
     } while (more);
 }
