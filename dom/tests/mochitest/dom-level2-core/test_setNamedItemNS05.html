@@ -1,0 +1,133 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN""http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>http://www.w3.org/2001/DOM-Test-Suite/level2/core/setNamedItemNS05</title>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<script type="text/javascript" src="/MochiKit/packed.js"></script><script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script><script type="text/javascript" src="DOMTestCase.js"></script><script type="text/javascript" src="exclusions.js"></script><script type="text/javascript">
+// expose test function names
+function exposeTestFunctionNames()
+{
+return ['setNamedItemNS05'];
+}
+
+var docsLoaded = -1000000;
+var builder = null;
+
+//
+//   This function is called by the testing framework before
+//      running the test suite.
+//
+//   If there are no configuration exceptions, asynchronous
+//        document loading is started.  Otherwise, the status
+//        is set to complete and the exception is immediately
+//        raised when entering the body of the test.
+//
+function setUpPage() {
+   setUpPageStatus = 'running';
+   try {
+     //
+     //   creates test document builder, may throw exception
+     //
+     builder = createConfiguredBuilder();
+
+      docsLoaded = 0;
+      
+      var docRef = null;
+      if (typeof(this.doc) != 'undefined') {
+        docRef = this.doc;
+      }
+      docsLoaded += preload(docRef, "doc", "staffNS");
+        
+       if (docsLoaded == 1) {
+          setUpPage = 'complete';
+       }
+    } catch(ex) {
+    	catchInitializationError(builder, ex);
+        setUpPage = 'complete';
+    }
+}
+
+//
+//   This method is called on the completion of 
+//      each asychronous load started in setUpTests.
+//
+//   When every synchronous loaded document has completed,
+//      the page status is changed which allows the
+//      body of the test to be executed.
+function loadComplete() {
+  if (++docsLoaded == 1) {
+    setUpPageStatus = 'complete';
+    runJSUnitTests();
+    markTodos();
+    SimpleTest.finish();
+  }
+}
+
+var docName = 'setNamedItemNS05';
+
+
+/**
+* 
+    The "setNamedItemNS(arg)" method for a 
+   NamedNodeMap should replace an existing node n1 found in the map with arg if n1
+   has the same namespaceURI and localName as arg and return n1.
+   
+   Create an attribute node in with namespaceURI "http://www.usa.com"
+   and qualifiedName "dmstc:domestic" whose value is "newVal".
+   Invoke method setNamedItemNS(arg) on the map of the first "address"
+   element. Method should return the old attribute node identified
+   by namespaceURI and qualifiedName from above,whose value is "Yes".
+
+* @author NIST
+* @author Mary Brady
+* @see http://www.w3.org/TR/DOM-Level-2-Core/core#ID-ElSetAtNodeNS
+*/
+function setNamedItemNS05() {
+   var success;
+    if(checkInitialization(builder, "setNamedItemNS05") != null) return;
+    var namespaceURI = "http://www.usa.com";
+      var qualifiedName = "dmstc:domestic";
+      var doc;
+      var arg;
+      var elementList;
+      var testAddress;
+      var attributes;
+      var retnode;
+      var value;
+      
+      var docRef = null;
+      if (typeof(this.doc) != 'undefined') {
+        docRef = this.doc;
+      }
+      doc = load(docRef, "doc", "staffNS");
+      arg = doc.createAttributeNS(namespaceURI,qualifiedName);
+      arg.nodeValue = "newValue";
+
+      elementList = doc.getElementsByTagName("address");
+      testAddress = elementList.item(0);
+      attributes = testAddress.attributes;
+
+      retnode = attributes.setNamedItemNS(arg);
+      value = retnode.nodeValue;
+
+      assertEquals("throw_Equals","Yes",value);
+       
+}
+
+</script>
+</head>
+<body>
+<h2>Test http://www.w3.org/2001/DOM-Test-Suite/level2/core/setNamedItemNS05</h2>
+<p></p>
+<p>
+Copyright (c) 2001-2004 World Wide Web Consortium, 
+(Massachusetts Institute of Technology, European Research Consortium 
+for Informatics and Mathematics, Keio University). All 
+Rights Reserved. This work is distributed under the <a href="http://www.w3.org/Consortium/Legal/2002/copyright-software-20021231">W3C(r) Software License</a> in the 
+hope that it will be useful, but WITHOUT ANY WARRANTY; without even 
+the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+</p>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN""http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>http://www.w3.org/2001/DOM-Test-Suite/level2/core/nodeissupported01</title>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<script type="text/javascript" src="/MochiKit/packed.js"></script><script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script><script type="text/javascript" src="DOMTestCase.js"></script><script type="text/javascript" src="exclusions.js"></script><script type="text/javascript">
+// expose test function names
+function exposeTestFunctionNames()
+{
+return ['nodeissupported01'];
+}
+
+var docsLoaded = -1000000;
+var builder = null;
+
+//
+//   This function is called by the testing framework before
+//      running the test suite.
+//
+//   If there are no configuration exceptions, asynchronous
+//        document loading is started.  Otherwise, the status
+//        is set to complete and the exception is immediately
+//        raised when entering the body of the test.
+//
+function setUpPage() {
+   setUpPageStatus = 'running';
+   try {
+     //
+     //   creates test document builder, may throw exception
+     //
+     builder = createConfiguredBuilder();
+
+      docsLoaded = 0;
+      
+      var docRef = null;
+      if (typeof(this.doc) != 'undefined') {
+        docRef = this.doc;
+      }
+      docsLoaded += preload(docRef, "doc", "staffNS");
+        
+       if (docsLoaded == 1) {
+          setUpPage = 'complete';
+       }
+    } catch(ex) {
+    	catchInitializationError(builder, ex);
+        setUpPage = 'complete';
+    }
+}
+
+//
+//   This method is called on the completion of 
+//      each asychronous load started in setUpTests.
+//
+//   When every synchronous loaded document has completed,
+//      the page status is changed which allows the
+//      body of the test to be executed.
+function loadComplete() {
+  if (++docsLoaded == 1) {
+    setUpPageStatus = 'complete';
+    runJSUnitTests();
+    markTodos();
+    SimpleTest.finish();
+  }
+}
+
+var docName = 'nodeissupported01';
+
+
+/**
+* 
+	The method "isSupported(feature,version)" Tests whether the DOM implementation 
+	implements a specific feature and that feature is supported by this node. 
+	
+	Call the isSupported method on the document element node with a combination of features 
+	versions and versions as below.  Valid feature names are case insensitive and versions
+	"2.0", "1.0" and if the version is not specified, supporting any version of the feature
+	should return true.  Check if the value returned value was true.
+
+* @author IBM
+* @author Neil Delima
+* @see http://www.w3.org/TR/DOM-Level-2-Core/core#Level-2-Core-Node-supports
+*/
+function nodeissupported01() {
+   var success;
+    if(checkInitialization(builder, "nodeissupported01") != null) return;
+    var doc;
+      var element;
+      var version = "";
+      var version1 = "1.0";
+      var version2 = "2.0";
+      var featureCore;
+      var featureXML;
+      var success;
+      featuresXML = new Array();
+      featuresXML[0] = "XML";
+      featuresXML[1] = "xmL";
+
+      featuresCore = new Array();
+      featuresCore[0] = "Core";
+      featuresCore[1] = "CORE";
+
+      
+      var docRef = null;
+      if (typeof(this.doc) != 'undefined') {
+        docRef = this.doc;
+      }
+      doc = load(docRef, "doc", "staffNS");
+      element = doc.documentElement;
+
+      for(var indexN65635 = 0;indexN65635 < featuresXML.length; indexN65635++) {
+      featureXML = featuresXML[indexN65635];
+      success = element.isSupported(featureXML,version);
+      assertTrue("nodeissupported01_XML1",success);
+success = element.isSupported(featureXML,version1);
+      assertTrue("nodeissupported01_XML2",success);
+
+	}
+   for(var indexN65660 = 0;indexN65660 < featuresCore.length; indexN65660++) {
+      featureCore = featuresCore[indexN65660];
+      success = element.isSupported(featureCore,version);
+      assertTrue("nodeissupported01_Core1",success);
+success = element.isSupported(featureCore,version1);
+      success = element.isSupported(featureCore,version2);
+      assertTrue("nodeissupported01_Core3",success);
+
+	}
+   
+}
+
+</script>
+</head>
+<body>
+<h2>Test http://www.w3.org/2001/DOM-Test-Suite/level2/core/nodeissupported01</h2>
+<p></p>
+<p>
+Copyright (c) 2001-2004 World Wide Web Consortium, 
+(Massachusetts Institute of Technology, European Research Consortium 
+for Informatics and Mathematics, Keio University). All 
+Rights Reserved. This work is distributed under the <a href="http://www.w3.org/Consortium/Legal/2002/copyright-software-20021231">W3C(r) Software License</a> in the 
+hope that it will be useful, but WITHOUT ANY WARRANTY; without even 
+the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+</p>
+</body>
+</html>

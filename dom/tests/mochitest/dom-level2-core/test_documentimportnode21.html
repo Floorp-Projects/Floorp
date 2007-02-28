@@ -1,0 +1,175 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN""http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>http://www.w3.org/2001/DOM-Test-Suite/level2/core/documentimportnode21</title>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<script type="text/javascript" src="/MochiKit/packed.js"></script><script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script><script type="text/javascript" src="DOMTestCase.js"></script><script type="text/javascript" src="exclusions.js"></script><script type="text/javascript">
+// expose test function names
+function exposeTestFunctionNames()
+{
+return ['documentimportnode21'];
+}
+
+var docsLoaded = -1000000;
+var builder = null;
+
+//
+//   This function is called by the testing framework before
+//      running the test suite.
+//
+//   If there are no configuration exceptions, asynchronous
+//        document loading is started.  Otherwise, the status
+//        is set to complete and the exception is immediately
+//        raised when entering the body of the test.
+//
+function setUpPage() {
+   setUpPageStatus = 'running';
+   try {
+     //
+     //   creates test document builder, may throw exception
+     //
+     builder = createConfiguredBuilder();
+       setImplementationAttribute("namespaceAware", true);
+       setImplementationAttribute("expandEntityReferences", false);
+
+      docsLoaded = 0;
+      
+      var docRef = null;
+      if (typeof(this.doc) != 'undefined') {
+        docRef = this.doc;
+      }
+      docsLoaded += preload(docRef, "doc", "staffNS");
+        
+       if (docsLoaded == 1) {
+          setUpPage = 'complete';
+       }
+    } catch(ex) {
+    	catchInitializationError(builder, ex);
+        setUpPage = 'complete';
+    }
+}
+
+//
+//   This method is called on the completion of 
+//      each asychronous load started in setUpTests.
+//
+//   When every synchronous loaded document has completed,
+//      the page status is changed which allows the
+//      body of the test to be executed.
+function loadComplete() {
+  if (++docsLoaded == 1) {
+    setUpPageStatus = 'complete';
+    runJSUnitTests();
+    markTodos();
+    SimpleTest.finish();
+  }
+}
+
+var docName = 'documentimportnode21';
+
+
+/**
+* 
+	The importNode method imports a node from another document to this document. 
+	The returned node has no parent; (parentNode is null). The source node is not 
+	altered or removed from the original document but a new copy of the source node
+	is created.
+	
+	Using the method importNode with deep=true, retreive the entity refs present in the 
+	second element node whose tagName is address and import these nodes into another document. 
+	Verify if the nodes have been imported correctly by checking the nodeNames of the 
+	imported nodes, since they are imported into a new document which doesnot have thes defined,
+	the imported nodes should not have any children.
+	Now import the entityRef nodes into the same document and verify if the nodes have been 
+	imported correctly by checking the nodeNames of the imported nodes, and by checking the 
+	value of the replacement text of the imported nodes.
+
+* @author IBM
+* @author Neil Delima
+* @see http://www.w3.org/TR/DOM-Level-2-Core/core
+* @see http://www.w3.org/TR/DOM-Level-2-Core/core#Core-Document-importNode
+*/
+function documentimportnode21() {
+   var success;
+    if(checkInitialization(builder, "documentimportnode21") != null) return;
+    var doc;
+      var docTypeNull = null;
+
+      var docImp;
+      var domImpl;
+      var addressList;
+      var addressChildList;
+      var element;
+      var entRef2;
+      var entRefImp2;
+      var entRef3;
+      var entRefImp3;
+      var nodeName2;
+      var nodeName3;
+      var nodeNameImp2;
+      var nodeNameImp3;
+      var nodes;
+      var nodeImp3;
+      var nodeImp2;
+      var nodeValueImp2;
+      var nodeValueImp3;
+      
+      var docRef = null;
+      if (typeof(this.doc) != 'undefined') {
+        docRef = this.doc;
+      }
+      doc = load(docRef, "doc", "staffNS");
+      domImpl = doc.implementation;
+docImp = domImpl.createDocument("http://www.w3.org/DOM/Test","a:b",docTypeNull);
+      addressList = doc.getElementsByTagName("address");
+      element = addressList.item(1);
+      addressChildList = element.childNodes;
+
+      entRef2 = addressChildList.item(0);
+      entRef3 = addressChildList.item(2);
+      entRefImp2 = docImp.importNode(entRef2,true);
+      entRefImp3 = docImp.importNode(entRef3,false);
+      nodeName2 = entRef2.nodeName;
+
+      nodeName3 = entRef3.nodeName;
+
+      nodeNameImp2 = entRefImp2.nodeName;
+
+      nodeNameImp3 = entRefImp3.nodeName;
+
+      assertEquals("documentimportnode21_Ent2NodeName",nodeName2,nodeNameImp2);
+       assertEquals("documentimportnode21_Ent3NodeName",nodeName3,nodeNameImp3);
+       entRefImp2 = doc.importNode(entRef2,true);
+      entRefImp3 = doc.importNode(entRef3,false);
+      nodes = entRefImp2.childNodes;
+
+      nodeImp2 = nodes.item(0);
+      nodeValueImp2 = nodeImp2.nodeValue;
+
+      nodes = entRefImp3.childNodes;
+
+      nodeImp3 = nodes.item(0);
+      nodeValueImp3 = nodeImp3.nodeValue;
+
+      assertEquals("documentimportnode21_Ent2NodeValue","1900 Dallas Road",nodeValueImp2);
+       assertEquals("documentimportnode21_Ent3Nodevalue","Texas",nodeValueImp3);
+       
+}
+
+</script>
+</head>
+<body>
+<h2>Test http://www.w3.org/2001/DOM-Test-Suite/level2/core/documentimportnode21</h2>
+<p></p>
+<p>
+Copyright (c) 2001-2004 World Wide Web Consortium, 
+(Massachusetts Institute of Technology, European Research Consortium 
+for Informatics and Mathematics, Keio University). All 
+Rights Reserved. This work is distributed under the <a href="http://www.w3.org/Consortium/Legal/2002/copyright-software-20021231">W3C(r) Software License</a> in the 
+hope that it will be useful, but WITHOUT ANY WARRANTY; without even 
+the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+</p>
+</body>
+</html>
