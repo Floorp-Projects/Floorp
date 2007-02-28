@@ -113,6 +113,7 @@ static const int kEscapeKeyCode = 53;
   if ([keyString length] < 1)
     return NO;
   unichar keyChar = [keyString characterAtIndex:0];
+  unsigned int standardModifierKeys = NSShiftKeyMask | NSControlKeyMask | NSAlternateKeyMask | NSCommandKeyMask;
 
   BOOL handled = NO;
   if (keyChar == NSCarriageReturnCharacter) {
@@ -125,8 +126,7 @@ static const int kEscapeKeyCode = 53;
       NSBeep();
     handled = YES;
   } else if (keyChar >= '1' && keyChar <= '9') {
-    BOOL cmdKeyIsDown = (([theEvent modifierFlags] & NSCommandKeyMask) != 0);
-    if (cmdKeyIsDown) {
+    if (([theEvent modifierFlags] & standardModifierKeys) == NSCommandKeyMask) {
       // use |forceReuse| to disable looking at the modifier keys since we know the command
       // key is down right now.
       handled = [windowController loadBookmarkBarIndex:(keyChar - '1') openBehavior:eBookmarkOpenBehavior_ForceReuse];
@@ -140,7 +140,6 @@ static const int kEscapeKeyCode = 53;
       return NO;    
     keyChar = [keyString characterAtIndex:0];
     if (keyChar == 'd') {
-      unsigned int standardModifierKeys = NSShiftKeyMask | NSControlKeyMask | NSAlternateKeyMask | NSCommandKeyMask;
       if ((([theEvent modifierFlags] & standardModifierKeys) == NSCommandKeyMask) &&
           [windowController validateActionBySelector:@selector(addBookmark:)])
       {
