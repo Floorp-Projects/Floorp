@@ -74,6 +74,12 @@ if (defined($searchstring)) {
     # as if this had been a normal query from the beginning.
 }
 
+# Reject empty searches from the simple search form, including
+# words being a single or several consecutive whitespaces only.
+if (defined($cgi->param('content')) && $cgi->param('content') =~ /^\s*$/) {
+    ThrowUserError("buglist_parameters_required");
+}
+
 ################################################################################
 # Data and Security Validation
 ################################################################################

@@ -109,8 +109,12 @@ for "crash secure SSL flash".
   <tr>
     <td></td>
     <td>
-      <input type="submit" id="search" value="Search">
-    </td>
+      <input type="submit" id="search" value="Search"
+             onclick="if (this.form.content.value == '')
+                      {alert('The Words field cannot be empty. You have to ' +
+                             'enter at least one word in your search criteria.');
+                       return false;} return true;">
+     </td>
   </tr>
 </table>
 </form>
