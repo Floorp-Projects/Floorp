@@ -1,16 +1,16 @@
 # Rhino skip list
-# These tests are skipped by Rhino either because a bug with a regression 
+# These tests are skipped by Rhino either because a bug with a regression
 # test has yet to be fixed, or because the test is not applicable to Rhino.
-# 
+#
 # Unfixed bugs:
 #
 # bug 152646 Will not fix this in Rhino; too much of a corner case
 js1_5/Regress/regress-152646.js
 # bug 59861
 ecma/Date/15.9.4.3.js
-#See bug number 94506 
+#See bug number 94506
 ecma_3/Function/regress-94506.js
-#Verify error for bad branch 
+#Verify error for bad branch
 js1_5/Regress/regress-96526-001.js
 js1_5/Regress/regress-96526-002.js
 js1_5/Regress/regress-96526-003.js
@@ -60,7 +60,7 @@ js1_5/Regress/regress-80981.js
 js1_5/Regress/regress-89443.js
 js1_5/Regress/regress-90445.js
 js1_5/Regress/regress-111557.js
-#Rhino relies on JVM to throw StackOverflow exception and does not 
+#Rhino relies on JVM to throw StackOverflow exception and does not
 #detect too deep recursion explicitly.
 js1_5/extensions/regress-192465.js
 #Skip these two; see http://bugzilla.mozilla.org/show_bug.cgi?id=81086
@@ -99,14 +99,14 @@ js1_5/Regress/regress-240317.js
 # watch is not implemented in Rhino
 #
 js1_5/Regress/regress-240577.js
-# 
+#
 # import, export not implemented in rhino
 #
 js1_5/Regress/regress-249211.js
 #
 # Spidermonkey now defaults lineNumber and fileName
 # to the location and file where the exception occured.
-# exclude new test  which assumes the defaults are 
+# exclude new test  which assumes the defaults are
 # set according to Spidermonkey.
 #
 js1_5/extensions/regress-50447-1.js
