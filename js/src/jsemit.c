@@ -4155,32 +4155,52 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         break;
 
       case TOK_WHILE:
+        /*
+         * Minimize bytecodes issued for one or more iterations by jumping to
+         * the condition below the body and closing the loop if the condition
+         * is true with a backward branch. For iteration count i:
+         *
+         *  i    test at the top                 test at the bottom
+         *  =    ===============                 ==================
+         *  0    ifeq-pass                       goto; ifne-fail
+         *  1    ifeq-fail; goto; ifne-pass      goto; ifne-pass; ifne-fail
+         *  2    2*(ifeq-fail; goto); ifeq-pass  goto; 2*ifne-pass; ifne-fail
+         *  . . .
+         *  N    N*(ifeq-fail; goto); ifeq-pass  goto; N*ifne-pass; ifne-fail
+         *
+         * SpiderMonkey, pre-mozilla.org, emitted while parsing and so used
+         * test at the top. When JSParseNode trees were added during the ES3
+         * work (1998-9), the code generation scheme was not optimized, and
+         * the decompiler continued to take advantage of the branch and jump
+         * that bracketed the body. But given the SRC_WHILE note, it is easy
+         * to support the more efficient scheme.
+         */
         js_PushStatement(&cg->treeContext, &stmtInfo, STMT_WHILE_LOOP, top);
-        if (!js_EmitTree(cx, cg, pn->pn_left))
-            return JS_FALSE;
         noteIndex = js_NewSrcNote(cx, cg, SRC_WHILE);
         if (noteIndex < 0)
             return JS_FALSE;
-        beq = EmitJump(cx, cg, JSOP_IFEQ, 0);
-        if (beq < 0)
-            return JS_FALSE;
-        if (!js_EmitTree(cx, cg, pn->pn_right))
-            return JS_FALSE;
-        jmp = EmitJump(cx, cg, JSOP_GOTO, top - CG_OFFSET(cg));
+        jmp = EmitJump(cx, cg, JSOP_GOTO, 0);
         if (jmp < 0)
             return JS_FALSE;
-        CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, beq);
-        if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 0, jmp - beq))
+        top = CG_OFFSET(cg);
+        if (!js_EmitTree(cx, cg, pn->pn_right))
+            return JS_FALSE;
+        CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, jmp);
+        if (!js_EmitTree(cx, cg, pn->pn_left))
+            return JS_FALSE;
+        beq = EmitJump(cx, cg, JSOP_IFNE, top - CG_OFFSET(cg));
+        if (beq < 0)
+            return JS_FALSE;
+        if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 0, beq - jmp))
             return JS_FALSE;
         ok = js_PopStatementCG(cx, cg);
         break;
 
       case TOK_DO:
         /* Emit an annotated nop so we know to decompile a 'do' keyword. */
-        if (js_NewSrcNote(cx, cg, SRC_WHILE) < 0 ||
-            js_Emit1(cx, cg, JSOP_NOP) < 0) {
+        noteIndex = js_NewSrcNote(cx, cg, SRC_WHILE);
+        if (noteIndex < 0 || js_Emit1(cx, cg, JSOP_NOP) < 0)
             return JS_FALSE;
-        }
 
         /* Compile the loop body. */
         top = CG_OFFSET(cg);
@@ -4199,12 +4219,14 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_FALSE;
 
         /*
-         * No source note needed, because JSOP_IFNE is used only for do-while.
-         * If we ever use JSOP_IFNE for other purposes, we can still avoid yet
-         * another note here, by storing (jmp - top) in the SRC_WHILE note's
-         * offset, and fetching that delta in order to decompile recursively.
+         * Since we use JSOP_IFNE for other purposes as well as for do-while
+         * loops, we must store 1 + (beq - top) in the SRC_WHILE note offset,
+         * and the decompiler must get that delta and decompile recursively.
          */
-        if (EmitJump(cx, cg, JSOP_IFNE, top - CG_OFFSET(cg)) < 0)
+        beq = EmitJump(cx, cg, JSOP_IFNE, top - CG_OFFSET(cg));
+        if (beq < 0)
+            return JS_FALSE;
+        if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 0, 1 + (beq - top)))
             return JS_FALSE;
         ok = js_PopStatementCG(cx, cg);
         break;
