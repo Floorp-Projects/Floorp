@@ -399,7 +399,13 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
                     if(!p)
                         return JS_FALSE;
 
-                    JSString* jsString = JS_NewUCString(cx, p, len);
+                    if(sXPCOMUCStringFinalizerIndex == -1 && 
+                       !AddXPCOMUCStringFinalizer())
+                        return JS_FALSE;
+
+                    JSString* jsString =
+                        JS_NewExternalString(cx, p, len,
+                                             sXPCOMUCStringFinalizerIndex);
 
                     if(!jsString) {
                         nsMemory::Free(p); 
