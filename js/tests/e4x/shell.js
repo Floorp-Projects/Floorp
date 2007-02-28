@@ -231,7 +231,7 @@ function JavaScriptOptions()
       }
     }
   }
-  else if (typeof netscape != 'undefined' && 'security' in netscape)
+  else if (typeof document != 'undefined')
   {
     // browser
     netscape.security.PrivilegeManager.enablePrivilege(this.privileges);
@@ -288,7 +288,7 @@ function (optionName, optionValue)
       options(optionName);
     }
   }
-  else if (typeof netscape != 'undefined' && 'security' in netscape)
+  else if (typeof document != 'undefined')
   {
     // browser
     netscape.security.PrivilegeManager.enablePrivilege(this.privileges);
