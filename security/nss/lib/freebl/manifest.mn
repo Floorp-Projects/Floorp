@@ -135,6 +135,7 @@ CSRCS = \
 	des.c \
 	rijndael.c \
 	aeskeywrap.c \
+	camellia.c \
 	dh.c \
 	ec.c \
 	pqg.c \
@@ -157,6 +158,7 @@ ALL_HDRS =  \
 	ec.h \
 	loader.h \
 	rijndael.h \
+	camellia.h \
 	secmpi.h \
 	sha.h \
 	sha_fast.h \

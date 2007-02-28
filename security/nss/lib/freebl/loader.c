@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.c,v 1.31 2006/10/02 21:15:46 julien.pierre.bugs%sun.com Exp $ */
+/* $Id: loader.c,v 1.32 2007/02/28 19:47:37 rrelyea%redhat.com Exp $ */
 
 #include "loader.h"
 #include "prmem.h"
@@ -1644,4 +1644,65 @@ FIPS186Change_ReduceModQForDSA(const unsigned char *w,
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return SECFailure;
   return (vector->p_FIPS186Change_ReduceModQForDSA)(w, q, xj);
+}
+
+/* === new for Camellia === */
+SECStatus 
+Camellia_InitContext(CamelliaContext *cx, const unsigned char *key, 
+		unsigned int keylen, const unsigned char *iv, int mode,
+		unsigned int encrypt, unsigned int unused)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_Camellia_InitContext)(cx, key, keylen, iv, mode, encrypt,
+					  unused);
+}
+
+CamelliaContext *
+Camellia_AllocateContext(void)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return NULL;
+  return (vector->p_Camellia_AllocateContext)();
+}
+
+
+CamelliaContext *
+Camellia_CreateContext(const unsigned char *key, const unsigned char *iv, 
+		       int mode, int encrypt,
+		       unsigned int keylen)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+	return NULL;
+    return (vector->p_Camellia_CreateContext)(key, iv, mode, encrypt, keylen);
+}
+
+void 
+Camellia_DestroyContext(CamelliaContext *cx, PRBool freeit)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+	return ;
+    (vector->p_Camellia_DestroyContext)(cx, freeit);
+}
+
+SECStatus 
+Camellia_Encrypt(CamelliaContext *cx, unsigned char *output,
+		 unsigned int *outputLen, unsigned int maxOutputLen,
+		 const unsigned char *input, unsigned int inputLen)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+	return SECFailure;
+    return (vector->p_Camellia_Encrypt)(cx, output, outputLen, maxOutputLen, 
+					input, inputLen);
+}
+
+SECStatus 
+Camellia_Decrypt(CamelliaContext *cx, unsigned char *output,
+		 unsigned int *outputLen, unsigned int maxOutputLen,
+		 const unsigned char *input, unsigned int inputLen)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+	return SECFailure;
+    return (vector->p_Camellia_Decrypt)(cx, output, outputLen, maxOutputLen, 
+					input, inputLen);
 }

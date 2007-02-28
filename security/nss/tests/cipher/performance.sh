@@ -37,7 +37,7 @@ do
     if [ $mode != "#" ]; then
 	echo "bltest -N -m $mode -b $bufsize -g $keysize -u $cxreps"
 	bltest -N -m $mode -b $bufsize -g $keysize -u $cxreps >> ${SKPERFOUT}
-	mv "tmp.in" "$mode.in"
+	mv "tmp.in.0" "$mode.in"
 	mv tmp.key $mode.key
 	if [ -f tmp.iv ]; then
 	    mv tmp.iv $mode.iv
@@ -66,7 +66,7 @@ do
     if [ $mode != "#" ]; then
 	echo "bltest -N -m $mode -b $bufsize -e $exp -g $keysize -u $cxreps"
 	bltest -N -m $mode -b $bufsize -e $exp -g $keysize -u $cxreps >> ${RSAPERFOUT}
-	mv "tmp.in" "$mode.in"
+	mv "tmp.in.0" "$mode.in"
 	mv tmp.key $mode.key
 	echo "bltest -E -m $mode -i ${CIPHERDIR}/$mode.in -k ${CIPHERDIR}/$mode.key -p $reps -o ${CIPHERDIR}/$mode.out"
 	bltest -E -m $mode -i ${CIPHERDIR}/$mode.in -k ${CIPHERDIR}/$mode.key -p $reps -o ${CIPHERDIR}/$mode.out >> ${RSAPERFOUT}
@@ -95,7 +95,7 @@ do
     if [ $mode != "#" ]; then
 	echo "bltest -N -m $mode -b $bufsize -g $keysize -u $cxreps"
 	bltest -N -m $mode -b $bufsize -g $keysize -u $cxreps >> ${DSAPERFOUT}
-	mv "tmp.in" "$mode.in"
+	mv "tmp.in.0" "$mode.in"
 	mv tmp.key $mode.key
 	echo "bltest -S -m $mode -i ${CIPHERDIR}/$mode.in -k ${CIPHERDIR}/$mode.key -p $reps -o ${CIPHERDIR}/$mode.out"
 	bltest -S -m $mode -i ${CIPHERDIR}/$mode.in -k ${CIPHERDIR}/$mode.key -p $reps -o ${CIPHERDIR}/$mode.out >> ${DSAPERFOUT}
@@ -123,7 +123,7 @@ do
     if [ $mode != "#" ]; then
 	echo "bltest -N -m $mode -b $bufsize"
 	bltest -N -m $mode -b $bufsize
-	mv "tmp.in" "$mode.in"
+	mv "tmp.in.0" "$mode.in"
 	echo "bltest -H -m $mode -i ${CIPHERDIR}/$mode.in -p $reps -o ${CIPHERDIR}/$mode.out"
 	bltest -H -m $mode -i ${CIPHERDIR}/$mode.in -p $reps -o ${CIPHERDIR}/$mode.out >> ${HASHPERFOUT}
     fi

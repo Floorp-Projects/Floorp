@@ -749,7 +749,7 @@ usage()
 "---------------------------------------------------------------------------\n"
 "\n"
 "Mechanism lists are colon-separated.  The following mechanisms are recognized:\n"
-"RSA, DSA, DH, RC2, RC4, RC5, AES, DES, MD2, MD5, SHA1, SHA256, SHA512,\n"
+"RSA, DSA, DH, RC2, RC4, RC5, AES, CAMELLIA, DES, MD2, MD5, SHA1, SHA256, SHA512,\n"
 "SSL, TLS, RANDOM, and FRIENDLY\n"
 "\n"
 "Cipher lists are colon-separated.  The following ciphers are recognized:\n"

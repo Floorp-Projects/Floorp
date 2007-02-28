@@ -771,8 +771,9 @@ ssl_run()
 
 #this script may be sourced from the distributed stress test - in this case do nothing...
 
-CSHORT="-c ABCDEFcdefgijklmnvyz"
-CLONG="-c ABCDEF:C001:C002:C003:C004:C005:C006:C007:C008:C009:C00A:C00B:C00C:C00D:C00E:C00F:C010:C011:C012:C013:C014cdefgijklmnvyz"
+CSHORT="-c ABCDEF:0041:0084cdefgijklmnvyz"
+CLONG="-c ABCDEF:C001:C002:C003:C004:C005:C006:C007:C008:C009:C00A:C00B:C00C:C00D:C00E:C00F:C010:C011:C012:C013:C014:0041:0084cdefgijklmnvyz"
+
 
 if [ -z  "$DO_REM_ST" -a -z  "$DO_DIST_ST" ] ; then
 

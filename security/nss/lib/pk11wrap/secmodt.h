@@ -182,6 +182,7 @@ struct PK11DefaultArrayEntryStr {
 #define SECMOD_AES_FLAG 	0x00002000L
 #define SECMOD_SHA256_FLAG	0x00004000L
 #define SECMOD_SHA512_FLAG	0x00008000L	/* also for SHA384 */
+#define SECMOD_CAMELLIA_FLAG 	0x00010000L /* = PUBLIC_MECH_CAMELLIA_FLAG */
 /* reserved bit for future, do not use */
 #define SECMOD_RESERVED_FLAG    0X08000000L
 #define SECMOD_FRIENDLY_FLAG	0x10000000L
@@ -339,7 +340,7 @@ typedef PRUint32 PK11AttrFlags;
 #define SECMOD_FIPS	2	/* internal fips module */
 
 /* default module configuration strings */
-#define SECMOD_SLOT_FLAGS "slotFlags=[RSA,DSA,DH,RC2,RC4,DES,RANDOM,SHA1,MD5,MD2,SSL,TLS,AES,SHA256,SHA512]"
+#define SECMOD_SLOT_FLAGS "slotFlags=[RSA,DSA,DH,RC2,RC4,DES,RANDOM,SHA1,MD5,MD2,SSL,TLS,AES,Camellia,SHA256,SHA512]"
 
 #define SECMOD_MAKE_NSS_FLAGS(fips,slot) \
 "Flags=internal,critical"fips" slotparams=("#slot"={"SECMOD_SLOT_FLAGS"})"

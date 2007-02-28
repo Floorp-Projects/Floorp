@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapi.h,v 1.25 2006/10/02 21:15:46 julien.pierre.bugs%sun.com Exp $ */
+/* $Id: blapi.h,v 1.26 2007/02/28 19:47:37 rrelyea%redhat.com Exp $ */
 
 #ifndef _BLAPI_H_
 #define _BLAPI_H_
@@ -645,6 +645,68 @@ extern SECStatus
 AESKeyWrap_Decrypt(AESKeyWrapContext *cx, unsigned char *output,
             unsigned int *outputLen, unsigned int maxOutputLen,
             const unsigned char *input, unsigned int inputLen);
+
+ /******************************************/
+/*
+** Camellia symmetric block cypher
+*/
+
+/*
+** Create a new Camellia context suitable for Camellia encryption/decryption.
+** 	"key" raw key data
+** 	"keylen" the number of bytes of key data (16, 24, or 32)
+*/
+extern CamelliaContext *
+Camellia_CreateContext(const unsigned char *key, const unsigned char *iv, 
+		       int mode, int encrypt, unsigned int keylen);
+
+extern CamelliaContext *Camellia_AllocateContext(void);
+extern SECStatus   Camellia_InitContext(CamelliaContext *cx,
+					const unsigned char *key, 
+					unsigned int keylen, 
+					const unsigned char *iv, 
+					int mode, 
+					unsigned int encrypt,
+					unsigned int unused);
+/*
+** Destroy a Camellia encryption/decryption context.
+**	"cx" the context
+**	"freeit" if PR_TRUE then free the object as well as its sub-objects
+*/
+extern void 
+Camellia_DestroyContext(CamelliaContext *cx, PRBool freeit);
+
+/*
+** Perform Camellia encryption.
+**	"cx" the context
+**	"output" the output buffer to store the encrypted data.
+**	"outputLen" how much data is stored in "output". Set by the routine
+**	   after some data is stored in output.
+**	"maxOutputLen" the maximum amount of data that can ever be
+**	   stored in "output"
+**	"input" the input data
+**	"inputLen" the amount of input data
+*/
+extern SECStatus 
+Camellia_Encrypt(CamelliaContext *cx, unsigned char *output,
+		 unsigned int *outputLen, unsigned int maxOutputLen,
+		 const unsigned char *input, unsigned int inputLen);
+
+/*
+** Perform Camellia decryption.
+**	"cx" the context
+**	"output" the output buffer to store the decrypted data.
+**	"outputLen" how much data is stored in "output". Set by the routine
+**	   after some data is stored in output.
+**	"maxOutputLen" the maximum amount of data that can ever be
+**	   stored in "output"
+**	"input" the input data
+**	"inputLen" the amount of input data
+*/
+extern SECStatus 
+Camellia_Decrypt(CamelliaContext *cx, unsigned char *output,
+		 unsigned int *outputLen, unsigned int maxOutputLen,
+		 const unsigned char *input, unsigned int inputLen);
 
 
 /******************************************/
