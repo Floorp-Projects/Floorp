@@ -2568,13 +2568,13 @@ nsEventStateManager::SetCursor(PRInt32 aCursor, imgIContainer* aContainer,
       aContainer->GetWidth(&imgWidth);
       aContainer->GetHeight(&imgHeight);
 
-      // XXX NSToUintRound?
+      // XXX PR_MAX(NS_lround(x), 0)?
       hotspotX = aHotspotX > 0.0f
-                   ? PRUint32(aHotspotX + ROUND_CONST_FLOAT) : PRUint32(0);
+                   ? PRUint32(aHotspotX + 0.5f) : PRUint32(0);
       if (hotspotX >= PRUint32(imgWidth))
         hotspotX = imgWidth - 1;
       hotspotY = aHotspotY > 0.0f
-                   ? PRUint32(aHotspotY + ROUND_CONST_FLOAT) : PRUint32(0);
+                   ? PRUint32(aHotspotY + 0.5f) : PRUint32(0);
       if (hotspotY >= PRUint32(imgHeight))
         hotspotY = imgHeight - 1;
     } else {
