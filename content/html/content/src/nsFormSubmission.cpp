@@ -427,8 +427,8 @@ HandleMailtoSubject(nsCString& aPath) {
     }
 
     if (nameEnd != kNotFound) {
-      if (Substring(aPath, paramSep+1, nameEnd-(paramSep+1)) ==
-          NS_LITERAL_CSTRING("subject")) {
+      if (Substring(aPath, paramSep+1, nameEnd-(paramSep+1)).
+          LowerCaseEqualsLiteral("subject")) {
         hasSubject = PR_TRUE;
         break;
       }
