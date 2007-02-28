@@ -420,7 +420,8 @@ var PlacesUtils = {
   },
 
   /**
-   * Get a transaction for copying a leaf item from one container to another.
+   * Get a transaction for copying a uri item from one container to another
+   * as a bookmark.
    * @param   aURI
    *          The URI of the item being copied
    * @param   aContainer
@@ -429,11 +430,31 @@ var PlacesUtils = {
    *          The index within the container the item is copied to
    * @returns A nsITransaction object that performs the copy.
    */
-  _getItemCopyTransaction: function (aURI, aContainer, aIndex) {
+  _getURIItemCopyTransaction: function (aURI, aContainer, aIndex) {
     var itemTitle = this.history.getPageTitle(aURI);
     var createTxn = new PlacesCreateItemTransaction(aURI, aContainer, aIndex);
     createTxn.childTransactions.push(
-      new PlacesEditItemTitleTransaction(aURI, itemTitle));
+      new PlacesEditItemTitleTransaction(-1, itemTitle));
+    return new PlacesAggregateTransaction("ItemCopy", [createTxn]);
+  },
+
+  /**
+   * Get a transaction for copying a bookmark item from one container to
+   * another.
+   * @param   aID
+   *          The identifier of the bookmark item being copied
+   * @param   aContainer
+   *          The container being copied into
+   * @param   aIndex
+   *          The index within the container the item is copied to
+   * @returns A nsITransaction object that performs the copy.
+   */
+  _getBookmarkItemCopyTransaction: function (aID, aContainer, aIndex) {
+    var itemURL = this.bookmarks.getBookmarkURI(aID);
+    var itemTitle = this.bookmarks.getItemTitle(aID);
+    var createTxn = new PlacesCreateItemTransaction(itemURL, aContainer, aIndex);
+    createTxn.childTransactions.push(
+      new PlacesEditItemTitleTransaction(-1, itemTitle));
     return new PlacesAggregateTransaction("ItemCopy", [createTxn]);
   },
 
@@ -464,9 +485,13 @@ var PlacesUtils = {
           txn = new PlacesCreateFolderTransaction(title, -1, aIndex);
           txn.childTransactions = getChildTransactions(nodeFolderId);
         }
+        else if (self.nodeIsBookmark(node)) {
+          txn = self._getBookmarkItemCopyTransaction(self._uri(node.uri), -1,
+                                                     aIndex);
+        }
         else if (self.nodeIsURI(node) || self.nodeIsQuery(node)) {
-          txn = self._getItemCopyTransaction(self._uri(node.uri), -1,
-                                             aIndex);
+          txn = self._getURIItemCopyTransaction(self._uri(node.uri), -1,
+                                                aIndex);
         }
         else if (self.nodeIsSeparator(node)) {
           txn = new PlacesCreateSeparatorTransaction(-1, aIndex);
@@ -562,11 +587,15 @@ var PlacesUtils = {
                                                index);
       }
     case TYPE_X_MOZ_PLACE:
-      if (data.id > 0)
+      if (data.id > 0) {
+        if (copy)
+          return this._getBookmarkItemCopyTransaction(data.id, container, index);
+
         return new PlacesMoveItemTransaction(data.id, data.uri, data.parent,
                                              data.index, container,
                                              index);
-      return this._getItemCopyTransaction(data.uri, container, index);
+      }
+      return this._getURIItemCopyTransaction(data.uri, container, index);
     case TYPE_X_MOZ_PLACE_SEPARATOR:
       if (copy) {
         // There is no data in a separator, so copying it just amounts to
