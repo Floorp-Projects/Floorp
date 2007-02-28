@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslenum.c,v 1.13 2005/12/14 01:49:39 wtchang%redhat.com Exp $ */
+/* $Id: sslenum.c,v 1.14 2007/02/28 19:47:38 rrelyea%redhat.com Exp $ */
 
 #include "ssl.h"
 #include "sslproto.h"
@@ -51,12 +51,15 @@ const PRUint16 SSL_ImplementedCiphers[] = {
     TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
     TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
 #endif /* NSS_ENABLE_ECC */
+    TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA,
+    TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA,
     TLS_DHE_RSA_WITH_AES_256_CBC_SHA,
     TLS_DHE_DSS_WITH_AES_256_CBC_SHA,
 #ifdef NSS_ENABLE_ECC
     TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,
     TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA,
 #endif /* NSS_ENABLE_ECC */
+    TLS_RSA_WITH_CAMELLIA_256_CBC_SHA,
     TLS_RSA_WITH_AES_256_CBC_SHA,
 
     /* 128-bit */
@@ -66,6 +69,8 @@ const PRUint16 SSL_ImplementedCiphers[] = {
     TLS_ECDHE_RSA_WITH_RC4_128_SHA,
     TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
 #endif /* NSS_ENABLE_ECC */
+    TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA,
+    TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA,
     TLS_DHE_DSS_WITH_RC4_128_SHA,
     TLS_DHE_RSA_WITH_AES_128_CBC_SHA,
     TLS_DHE_DSS_WITH_AES_128_CBC_SHA,
@@ -75,6 +80,7 @@ const PRUint16 SSL_ImplementedCiphers[] = {
     TLS_ECDH_ECDSA_WITH_RC4_128_SHA,
     TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,
 #endif /* NSS_ENABLE_ECC */
+    TLS_RSA_WITH_CAMELLIA_128_CBC_SHA,
     SSL_RSA_WITH_RC4_128_MD5,
     SSL_RSA_WITH_RC4_128_SHA,
     TLS_RSA_WITH_AES_128_CBC_SHA,

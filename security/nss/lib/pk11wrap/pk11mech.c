@@ -79,6 +79,7 @@ CK_MECHANISM_TYPE wrapMechanismList[] = {
     CKM_DES3_ECB,
     CKM_CAST5_ECB,
     CKM_AES_ECB,
+    CKM_CAMELLIA_ECB,
     CKM_CAST5_ECB,
     CKM_DES_ECB,
     CKM_KEY_WRAP_LYNKS,
@@ -175,6 +176,8 @@ CK_MECHANISM_TYPE
 PK11_GetKeyMechanism(CK_KEY_TYPE type)
 {
     switch (type) {
+    case CKK_CAMELLIA:
+	return CKM_CAMELLIA_CBC;
     case CKK_AES:
 	return CKM_AES_CBC;
     case CKK_DES:
@@ -228,6 +231,13 @@ CK_MECHANISM_TYPE
 PK11_GetKeyType(CK_MECHANISM_TYPE type,unsigned long len)
 {
     switch (type) {
+    case CKM_CAMELLIA_ECB:
+    case CKM_CAMELLIA_CBC:
+    case CKM_CAMELLIA_MAC:
+    case CKM_CAMELLIA_MAC_GENERAL:
+    case CKM_CAMELLIA_CBC_PAD:
+    case CKM_CAMELLIA_KEY_GEN:
+	return CKK_CAMELLIA;
     case CKM_AES_ECB:
     case CKM_AES_CBC:
     case CKM_AES_MAC:
@@ -413,6 +423,13 @@ CK_MECHANISM_TYPE
 PK11_GetKeyGenWithSize(CK_MECHANISM_TYPE type, int size)
 {
     switch (type) {
+    case CKM_CAMELLIA_ECB:
+    case CKM_CAMELLIA_CBC:
+    case CKM_CAMELLIA_MAC:
+    case CKM_CAMELLIA_MAC_GENERAL:
+    case CKM_CAMELLIA_CBC_PAD:
+    case CKM_CAMELLIA_KEY_GEN:
+	return CKM_CAMELLIA_KEY_GEN;
     case CKM_AES_ECB:
     case CKM_AES_CBC:
     case CKM_AES_MAC:
@@ -655,6 +672,9 @@ PK11_GetBlockSize(CK_MECHANISM_TYPE type,SECItem *params)
     case CKM_SKIPJACK_CFB16:
     case CKM_SKIPJACK_CFB8:
 	return 4;
+    case CKM_CAMELLIA_ECB:
+    case CKM_CAMELLIA_CBC:
+    case CKM_CAMELLIA_CBC_PAD:
     case CKM_AES_ECB:
     case CKM_AES_CBC:
     case CKM_AES_CBC_PAD:
@@ -692,6 +712,7 @@ int
 PK11_GetIVLength(CK_MECHANISM_TYPE type)
 {
     switch (type) {
+    case CKM_CAMELLIA_ECB:
     case CKM_AES_ECB:
     case CKM_DES_ECB:
     case CKM_DES3_ECB:
@@ -732,6 +753,8 @@ PK11_GetIVLength(CK_MECHANISM_TYPE type)
     case CKM_CAST3_CBC_PAD:
     case CKM_CAST5_CBC_PAD:
 	return 8;
+    case CKM_CAMELLIA_CBC:
+    case CKM_CAMELLIA_CBC_PAD:
     case CKM_AES_CBC:
     case CKM_AES_CBC_PAD:
 	return 16;
@@ -786,6 +809,7 @@ PK11_ParamFromIV(CK_MECHANISM_TYPE type,SECItem *iv)
     param->len = 0;
     param->type = 0;
     switch (type) {
+    case CKM_CAMELLIA_ECB:
     case CKM_AES_ECB:
     case CKM_DES_ECB:
     case CKM_DES3_ECB:
@@ -850,6 +874,7 @@ PK11_ParamFromIV(CK_MECHANISM_TYPE type,SECItem *iv)
 	param->data = (unsigned char *) rc5_params;
 	param->len = sizeof(CK_RC5_PARAMS);
 	break;
+    case CKM_CAMELLIA_CBC:
     case CKM_AES_CBC:
     case CKM_DES_CBC:
     case CKM_DES3_CBC:
@@ -858,6 +883,7 @@ PK11_ParamFromIV(CK_MECHANISM_TYPE type,SECItem *iv)
     case CKM_CAST_CBC:
     case CKM_CAST3_CBC:
     case CKM_CAST5_CBC:
+    case CKM_CAMELLIA_CBC_PAD:
     case CKM_AES_CBC_PAD:
     case CKM_DES_CBC_PAD:
     case CKM_DES3_CBC_PAD:
@@ -915,6 +941,7 @@ PK11_IVFromParam(CK_MECHANISM_TYPE type,SECItem *param,int *len)
 
     *len = 0;
     switch (type) {
+    case CKM_CAMELLIA_ECB:
     case CKM_AES_ECB:
     case CKM_DES_ECB:
     case CKM_DES3_ECB:
@@ -940,6 +967,7 @@ PK11_IVFromParam(CK_MECHANISM_TYPE type,SECItem *param,int *len)
 	rc5_cbc_params = (CK_RC5_CBC_PARAMS *) param->data;
 	*len = rc5_cbc_params->ulIvLen;
 	return rc5_cbc_params->pIv;
+    case CKM_CAMELLIA_CBC:
     case CKM_AES_CBC:
     case CKM_DES_CBC:
     case CKM_DES3_CBC:
@@ -1195,6 +1223,7 @@ PK11_ParamFromAlgid(SECAlgorithmID *algid)
 	}
 	break;
     case CKM_RC4:
+    case CKM_CAMELLIA_ECB:
     case CKM_AES_ECB:
     case CKM_DES_ECB:
     case CKM_DES3_ECB:
@@ -1210,6 +1239,7 @@ PK11_ParamFromAlgid(SECAlgorithmID *algid)
 	    break;
 	}
 	/* FALL THROUGH */
+    case CKM_CAMELLIA_CBC:
     case CKM_AES_CBC:
     case CKM_DES_CBC:
     case CKM_DES3_CBC:
@@ -1218,6 +1248,7 @@ PK11_ParamFromAlgid(SECAlgorithmID *algid)
     case CKM_CAST_CBC:
     case CKM_CAST3_CBC:
     case CKM_CAST5_CBC:
+    case CKM_CAMELLIA_CBC_PAD:
     case CKM_AES_CBC_PAD:
     case CKM_DES_CBC_PAD:
     case CKM_DES3_CBC_PAD:
@@ -1317,6 +1348,7 @@ PK11_GenerateNewParam(CK_MECHANISM_TYPE type, PK11SymKey *key) {
     mech->type = siBuffer;
     switch (type) {
     case CKM_RC4:
+    case CKM_CAMELLIA_ECB:
     case CKM_AES_ECB:
     case CKM_DES_ECB:
     case CKM_DES3_ECB:
@@ -1378,6 +1410,7 @@ PK11_GenerateNewParam(CK_MECHANISM_TYPE type, PK11SymKey *key) {
 	    mech->len = 0;
 	    break;
 	}
+    case CKM_CAMELLIA_CBC:
     case CKM_AES_CBC:
     case CKM_DES_CBC:
     case CKM_DES3_CBC:
@@ -1450,6 +1483,7 @@ PK11_ParamToAlgid(SECOidTag algTag, SECItem *param,
     rv = SECSuccess;
     switch (type) {
     case CKM_RC4:
+    case CKM_CAMELLIA_ECB:
     case CKM_AES_ECB:
     case CKM_DES_ECB:
     case CKM_DES3_ECB:
@@ -1531,6 +1565,7 @@ PK11_ParamToAlgid(SECOidTag algTag, SECItem *param,
 	    newParams = NULL;
 	    break;
 	}
+    case CKM_CAMELLIA_CBC:
     case CKM_AES_CBC:
     case CKM_DES_CBC:
     case CKM_DES3_CBC:
@@ -1605,6 +1640,8 @@ PK11_MechanismToAlgtag(CK_MECHANISM_TYPE type) {
 CK_MECHANISM_TYPE
 PK11_GetPadMechanism(CK_MECHANISM_TYPE type) {
     switch(type) {
+	case CKM_CAMELLIA_CBC:
+	    return CKM_CAMELLIA_CBC_PAD;
 	case CKM_AES_CBC:
 	    return CKM_AES_CBC_PAD;
 	case CKM_DES_CBC:

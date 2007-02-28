@@ -69,6 +69,7 @@ PK11DefaultArrayEntry PK11_DefaultArray[] = {
 	{ "RC4", SECMOD_RC4_FLAG, CKM_RC4 },
 	{ "DES", SECMOD_DES_FLAG, CKM_DES_CBC },
 	{ "AES", SECMOD_AES_FLAG, CKM_AES_CBC },
+	{ "Camellia", SECMOD_CAMELLIA_FLAG, CKM_CAMELLIA_CBC },
 	{ "RC5", SECMOD_RC5_FLAG, CKM_RC5_CBC },
 	{ "SHA-1", SECMOD_SHA1_FLAG, CKM_SHA_1 },
 	{ "SHA256", SECMOD_SHA256_FLAG, CKM_SHA256 },
@@ -98,7 +99,8 @@ PK11_GetDefaultArray(int *size)
  * These  slotlists are lists of modules which provide default support for
  *  a given algorithm or mechanism.
  */
-static PK11SlotList pk11_aesSlotList,
+static PK11SlotList pk11_camelliaSlotList,
+    pk11_aesSlotList,
     pk11_desSlotList,
     pk11_rc4SlotList,
     pk11_rc2SlotList,
@@ -752,6 +754,7 @@ pk11_InitSlotListStatic(PK11SlotList *list)
 SECStatus
 PK11_InitSlotLists(void)
 {
+    pk11_InitSlotListStatic(&pk11_camelliaSlotList);
     pk11_InitSlotListStatic(&pk11_aesSlotList);
     pk11_InitSlotListStatic(&pk11_desSlotList);
     pk11_InitSlotListStatic(&pk11_rc4SlotList);
@@ -776,6 +779,7 @@ PK11_InitSlotLists(void)
 void
 PK11_DestroySlotLists(void)
 {
+    pk11_FreeSlotListStatic(&pk11_camelliaSlotList);
     pk11_FreeSlotListStatic(&pk11_aesSlotList);
     pk11_FreeSlotListStatic(&pk11_desSlotList);
     pk11_FreeSlotListStatic(&pk11_rc4SlotList);
@@ -807,6 +811,9 @@ PK11_GetSlotList(CK_MECHANISM_TYPE type)
         return NULL;
 #endif
     switch (type) {
+    case CKM_CAMELLIA_CBC:
+    case CKM_CAMELLIA_ECB:
+	return &pk11_camelliaSlotList;
     case CKM_AES_CBC:
     case CKM_AES_ECB:
 	return &pk11_aesSlotList;

@@ -188,6 +188,7 @@ const Constant _consts[] = {
 	mkEntry(CKK_JUNIPER, KeyType),
 	mkEntry(CKK_CDMF, KeyType),
 	mkEntry(CKK_AES, KeyType),
+	mkEntry(CKK_CAMELLIA, KeyType),
 	mkEntry(CKK_NETSCAPE_PKCS8, KeyType),
 
 	mkEntry(CKC_X_509, CertType),
@@ -476,6 +477,12 @@ const Constant _consts[] = {
 	mkEntry(CKM_AES_MAC, Mechanism),
 	mkEntry(CKM_AES_MAC_GENERAL, Mechanism),
 	mkEntry(CKM_AES_CBC_PAD, Mechanism),
+	mkEntry(CKM_CAMELLIA_KEY_GEN, Mechanism),
+	mkEntry(CKM_CAMELLIA_ECB, Mechanism),
+	mkEntry(CKM_CAMELLIA_CBC, Mechanism),
+	mkEntry(CKM_CAMELLIA_MAC, Mechanism),
+	mkEntry(CKM_CAMELLIA_MAC_GENERAL, Mechanism),
+	mkEntry(CKM_CAMELLIA_CBC_PAD, Mechanism),
 	mkEntry(CKM_DSA_PARAMETER_GEN, Mechanism),
 	mkEntry(CKM_DH_PKCS_PARAMETER_GEN, Mechanism),
 	mkEntry(CKM_NETSCAPE_AES_KEY_WRAP, Mechanism),
@@ -1222,9 +1229,10 @@ const Commands _commands[] = {
 	{ArgVar|ArgNew, ArgVar, ArgULong, ArgNone, ArgNone, 
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"NewInitArg", F_NewInitializeArgs,
-"NewInitArg varName string\n\n"
+"NewInitArg varName flags string\n\n"
 "Creates a new init variable.\n"
 " varName     variable name of the new initArg\n"
+" flags       value to set the flags field\n"
 " string      string parameter for init arg\n",
 	{ArgVar|ArgNew, ArgULong, ArgVar|ArgNew, ArgNone, ArgNone, 
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},

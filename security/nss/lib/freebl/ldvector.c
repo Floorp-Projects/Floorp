@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ldvector.c,v 1.14 2006/02/01 21:18:44 wtchang%redhat.com Exp $ */
+/* $Id: ldvector.c,v 1.15 2007/02/28 19:47:37 rrelyea%redhat.com Exp $ */
 
 #include "loader.h"
 #include "alghmac.h"
@@ -227,6 +227,13 @@ static const struct FREEBLVectorStr vector =
     FIPS186Change_ReduceModQForDSA,
 
     /* End of Version 3.009. */
+    Camellia_InitContext,
+    Camellia_AllocateContext,
+    Camellia_CreateContext,
+    Camellia_DestroyContext,
+    Camellia_Encrypt,
+    Camellia_Decrypt,
+
 };
 
 const FREEBLVector * 

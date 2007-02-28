@@ -257,11 +257,11 @@ static const struct mechanismList mechanisms[] = {
       * The second argument is Mechanism info structure. It includes:
       *    The minimum key size,
       *       in bits for RSA, DSA, DH, EC*, KEA, RC2 and RC4 * algs.
-      *       in bytes for RC5, AES, and CAST*
+      *       in bytes for RC5, AES, Camellia, and CAST*
       *       ignored for DES*, IDEA and FORTEZZA based
       *    The maximum key size,
       *       in bits for RSA, DSA, DH, EC*, KEA, RC2 and RC4 * algs.
-      *       in bytes for RC5, AES, and CAST*
+      *       in bytes for RC5, AES, Camellia, and CAST*
       *       ignored for DES*, IDEA and FORTEZZA based
       *     Flags
       *	      What operations are supported by this mechanism.
@@ -352,6 +352,13 @@ static const struct mechanismList mechanisms[] = {
      {CKM_AES_MAC,		{16, 32, CKF_SN_VR},		PR_TRUE},
      {CKM_AES_MAC_GENERAL,	{16, 32, CKF_SN_VR},		PR_TRUE},
      {CKM_AES_CBC_PAD,		{16, 32, CKF_EN_DE_WR_UN},	PR_TRUE},
+     /* ------------------------- Camellia Operations --------------------- */
+     {CKM_CAMELLIA_KEY_GEN,	{16, 32, CKF_GENERATE},		PR_TRUE},
+     {CKM_CAMELLIA_ECB,		{16, 32, CKF_EN_DE_WR_UN},	PR_TRUE},
+     {CKM_CAMELLIA_CBC,		{16, 32, CKF_EN_DE_WR_UN},	PR_TRUE},
+     {CKM_CAMELLIA_MAC,		{16, 32, CKF_SN_VR},		PR_TRUE},
+     {CKM_CAMELLIA_MAC_GENERAL,	{16, 32, CKF_SN_VR},		PR_TRUE},
+     {CKM_CAMELLIA_CBC_PAD,	{16, 32, CKF_EN_DE_WR_UN},	PR_TRUE},
      /* ------------------------- Hashing Operations ----------------------- */
      {CKM_MD2,			{0,   0, CKF_DIGEST},		PR_FALSE},
      {CKM_MD2_HMAC,		{1, 128, CKF_SN_VR},		PR_TRUE},
