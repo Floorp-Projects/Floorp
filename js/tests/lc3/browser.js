@@ -215,9 +215,10 @@ function version(v)
 function gc()
 {
   // Thanks to igor.bukanov@gmail.com
-  for (var i = 0; i != 100000; ++i)
+  var tmp = Math.PI * 1e500, tmp2;
+  for (var i = 0; i != 1 << 15; ++i) 
   {
-    var tmp = new Object();
+    tmp2 = tmp * 1.5;
   }
 }
 

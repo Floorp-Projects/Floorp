@@ -13,7 +13,7 @@ js1_5/Regress/regress-119719.js
 #
 # Spidermonkey now defaults lineNumber and fileName
 # to the location and file where the exception occured.
-# exclude original test which assumes the defaults are
+# exclude original test which assumes the defaults are 
 # 0 and ''
 #
 js1_5/extensions/regress-50447.js
@@ -32,7 +32,7 @@ js1_5/Regress/regress-173067.js
 #
 ecma_3/Statements/regress-121744.js
 #
-# remove version dependent tests
+# remove version dependent tests 
 # see bug 325921
 #
 js1_2/Array/array_split_1.js
@@ -84,9 +84,4 @@ ecma_2/String/replace-001.js
 #
 # pre ecma warnings are doa
 #
-js1_5/Regress/regress-106244.js
-#
-# do not ignore unicode formatting chars/trunk - bug 274152
-#
-ecma_3/Unicode/uc-001.js
-
+js1_5/Regress/regerss-106244.js
