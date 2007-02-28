@@ -352,6 +352,22 @@ nsAccessNode::GetInnerHTML(nsAString& aInnerHTML)
   return domNSElement->GetInnerHTML(aInnerHTML);
 }
 
+NS_IMETHODIMP
+nsAccessNode::ScrollTo(PRBool aTopLeft)
+{
+  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIPresShell> shell(GetPresShell());
+  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+
+  nsIFrame *frame = GetFrame();
+  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
+
+  PRInt32 percent = aTopLeft ? NS_PRESSHELL_SCROLL_TOP :
+    NS_PRESSHELL_SCROLL_ANYWHERE;
+  return shell->ScrollFrameIntoView(frame, percent, percent);
+}
+
 nsresult
 nsAccessNode::MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode)
 {
