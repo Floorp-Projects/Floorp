@@ -324,7 +324,11 @@ var PlacesUtils = {
   nodeIsLivemarkItem: function PU_nodeIsLivemarkItem(aNode) {
     NS_ASSERT(aNode, "null node");
 
-    return this.annotations.hasAnnotation(this._uri(aNode.uri),
+    var uri = aNode.uri;
+    if (!uri)
+      return false;
+
+    return this.annotations.hasAnnotation(this._uri(uri),
                                           "livemark/bookmarkFeedURI");
   },
 
