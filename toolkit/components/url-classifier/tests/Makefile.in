@@ -77,6 +77,7 @@ LOCAL_INCLUDES = \
 LIBS = \
 	../src/$(LIB_PREFIX)urlclassifier_s.$(LIB_SUFFIX) \
 	$(XPCOM_LIBS) \
+	$(NSPR_LIBS) \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
