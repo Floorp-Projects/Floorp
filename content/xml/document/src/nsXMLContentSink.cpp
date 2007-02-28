@@ -1099,18 +1099,6 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
     mState = eXMLContentSinkState_InEpilog;
   }
 
-#ifdef MOZ_SVG
-  if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
-      content->HasAttr(kNameSpaceID_None, nsGkAtoms::onload)) {
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent event(PR_TRUE, NS_SVG_LOAD);
-    event.eventStructType = NS_SVG_EVENT;
-    nsIPresShell *presShell = mDocument->GetShellAt(0);
-    if (presShell)
-      presShell->HandleDOMEventWithTarget(content, &event, &status);
-  }
-#endif
-
   PRInt32 stackLen = mContentStack.Length();
   if (mNotifyLevel >= stackLen) {
     if (numFlushed < content->GetChildCount()) {
@@ -1119,6 +1107,20 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
     mNotifyLevel = stackLen - 1;
   }
   DidAddContent();
+
+#ifdef MOZ_SVG
+  if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
+      content->HasAttr(kNameSpaceID_None, nsGkAtoms::onload)) {
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsEvent event(PR_TRUE, NS_SVG_LOAD);
+    event.eventStructType = NS_SVG_EVENT;
+    nsIPresShell *presShell = mDocument->GetShellAt(0);
+    if (presShell) {
+      FlushTags();
+      presShell->HandleDOMEventWithTarget(content, &event, &status);
+    }
+  }
+#endif
 
   return NS_SUCCEEDED(result) ? DidProcessATokenImpl() : result;
 }
