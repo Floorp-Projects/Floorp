@@ -314,19 +314,9 @@ STDMETHODIMP nsAccessNodeWrap::get_computedStyleForProperties(
 
 STDMETHODIMP nsAccessNodeWrap::scrollTo(/* [in] */ boolean aScrollTopLeft)
 {
-  nsCOMPtr<nsIPresShell> shell(GetPresShell());
-  if (!mDOMNode || !shell) {
-    return E_FAIL;
-  }
-
-  nsIFrame *frame = GetFrame();
-
-  if (frame) {
-    PRInt32 percent = NS_PRESSHELL_SCROLL_ANYWHERE;
-    if (aScrollTopLeft)
-      percent = 0;
-    return shell->ScrollFrameIntoView(frame, percent, percent);
-  }
+  nsresult rv = ScrollTo(aScrollTopLeft);
+  if (NS_SUCCEEDED(rv))
+    return S_OK;
 
   return E_FAIL;
 }

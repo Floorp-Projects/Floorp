@@ -55,7 +55,7 @@ interface nsIAccessibleDocument;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(46820F9B-3088-4046-AB0F-56FDACDC7A82)]
+[scriptable, uuid(0bd7ccde-486d-483c-a6df-79869cb6647d)]
 interface nsIAccessNode : nsISupports
 {
   /**
@@ -114,6 +114,14 @@ interface nsIAccessNode : nsISupports
    * node, not including the start and end tag for the node.
    */
   readonly attribute DOMString innerHTML;
+
+  /**
+   * Makes an object visible on screen.
+   *
+   * @param topLeft - if false then it will scroll the shortest distance it
+   *                  needs to put the element on-screen.
+   */
+  void scrollTo(in boolean aTopLeft);
 
   /**
    * The OS window handle for the window this node
