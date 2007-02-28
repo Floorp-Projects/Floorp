@@ -160,8 +160,7 @@ void TestCanonicalizeHelper(const char* in, const char* expected)
   nsCString out, strIn(in), strExp(expected);
   nsUrlClassifierUtils utils;
   
-  nsresult rv = utils.CanonicalizeURL(strIn, out);
-  NS_ASSERTION(rv == NS_OK, "com didn't return NS_OK");
+  utils.CanonicalizeURL(strIn, out);
   CheckEquals(strExp, out);
 }
 
