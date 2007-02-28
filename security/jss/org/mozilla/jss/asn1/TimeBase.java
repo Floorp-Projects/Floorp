@@ -256,13 +256,13 @@ public abstract class TimeBase implements ASN1Value {
                     hourOff += chars[i+2] - '0';
                     minOff = (chars[i+3] - '0') * 10;
                     minOff += chars[i+4] - '0';
-                    i += 5;
                     checkRange(hourOff, 0, 23, "hour offset");
                     checkRange(minOff, 0, 59, "minute offset");
                     if( chars[i] == '-' ) {
                         hourOff = -hourOff;
                         minOff = -minOff;
                     }
+		    i += 5;
                     tz = (TimeZone) TimeZone.getTimeZone("GMT").clone();
                     tz.setRawOffset( ((hourOff*60)+minOff)*60*1000 );
                 } else if( chars[i] == 'Z' ) {
