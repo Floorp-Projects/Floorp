@@ -35,6 +35,9 @@
 #
 # ***** END LICENSE BLOCK *****
 
+# don't build the static library
+LIBRARY =
+
 ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 
 # don't want the 32 in the shared library name
