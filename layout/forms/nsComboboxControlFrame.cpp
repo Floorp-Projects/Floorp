@@ -1041,6 +1041,10 @@ public:
       mComboBox(aComboBox)
   {}
 
+  // Need this so that line layout knows that this block's width
+  // depends on the available width.
+  virtual nsIAtom* GetType() const;
+
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsBlockFrame::IsFrameOfType(aFlags &
@@ -1055,6 +1059,12 @@ public:
 protected:
   nsComboboxControlFrame* mComboBox;
 };
+
+nsIAtom*
+nsComboboxDisplayFrame::GetType() const
+{
+  return nsGkAtoms::comboboxDisplayFrame;
+}
 
 NS_IMETHODIMP
 nsComboboxDisplayFrame::Reflow(nsPresContext*           aPresContext,

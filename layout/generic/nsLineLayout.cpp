@@ -748,7 +748,8 @@ IsPercentageAware(const nsIFrame* aFrame)
         disp->mDisplay == NS_STYLE_DISPLAY_INLINE_TABLE ||
         fType == nsGkAtoms::HTMLButtonControlFrame ||
         fType == nsGkAtoms::gfxButtonControlFrame ||
-        fType == nsGkAtoms::fieldSetFrame) {
+        fType == nsGkAtoms::fieldSetFrame ||
+        fType == nsGkAtoms::comboboxDisplayFrame) {
       return PR_TRUE;
     }
   }
