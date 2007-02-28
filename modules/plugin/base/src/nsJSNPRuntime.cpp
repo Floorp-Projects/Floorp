@@ -297,12 +297,12 @@ NPVariantToJSVal(NPP npp, JSContext *cx, const NPVariant *variant)
   case NPVariantType_String :
     {
       const NPString *s = &NPVARIANT_TO_STRING(*variant);
-      PRUint32 len;
-      PRUnichar *p =
-        UTF8ToNewUnicode(nsDependentCString(s->utf8characters, s->utf8length),
-                         &len);
+      NS_ConvertUTF8toUTF16 utf16String(s->utf8characters, s->utf8length);
 
-      JSString *str = ::JS_NewUCString(cx, (jschar *)p, len);
+      JSString *str =
+        ::JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*,
+                                                      utf16String.get()),
+                              utf16String.Length());
 
       if (str) {
         return STRING_TO_JSVAL(str);
