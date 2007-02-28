@@ -1791,8 +1791,18 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 todo = -2;
                 switch (sn ? SN_TYPE(sn) : SRC_NULL) {
                   case SRC_WHILE:
+                    ++pc;
+                    tail = js_GetSrcNoteOffset(sn, 0) - 1;
+                    LOCAL_ASSERT(pc[tail] == JSOP_IFNE ||
+                                 pc[tail] == JSOP_IFNEX);
                     js_printf(SET_MAYBE_BRACE(jp), "\tdo {\n");
                     jp->indent += 4;
+                    DECOMPILE_CODE(pc, tail);
+                    jp->indent -= 4;
+                    js_printf(jp, "\t} while (%s);\n", POP_STR());
+                    pc += tail;
+                    len = js_CodeSpec[*pc].length;
+                    todo = -2;
                     break;
 
                   case SRC_FOR:
@@ -2571,6 +2581,22 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               case JSOP_GOTOX:
                 sn = js_GetSrcNote(jp->script, pc);
                 switch (sn ? SN_TYPE(sn) : SRC_NULL) {
+                  case SRC_WHILE:
+                    cond = GetJumpOffset(pc, pc);
+                    tail = js_GetSrcNoteOffset(sn, 0);
+                    DECOMPILE_CODE(pc + cond, tail - cond);
+                    rval = POP_STR();
+                    js_printf(SET_MAYBE_BRACE(jp), "\twhile (%s) {\n", rval);
+                    jp->indent += 4;
+                    DECOMPILE_CODE(pc + oplen, cond - oplen);
+                    jp->indent -= 4;
+                    js_printf(jp, "\t}\n");
+                    pc += tail;
+                    LOCAL_ASSERT(*pc == JSOP_IFNE || *pc == JSOP_IFNEX);
+                    len = js_CodeSpec[*pc].length;
+                    todo = -2;
+                    break;
+
                   case SRC_CONT2LABEL:
                     atom = js_GetAtom(cx, &jp->script->atomMap,
                                       (jsatomid) js_GetSrcNoteOffset(sn, 0));
@@ -2580,9 +2606,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     RETRACT(&ss->sprinter, rval);
                     js_printf(jp, "\tcontinue %s;\n", rval);
                     break;
+
                   case SRC_CONTINUE:
                     js_printf(jp, "\tcontinue;\n");
                     break;
+
                   case SRC_BREAK2LABEL:
                     atom = js_GetAtom(cx, &jp->script->atomMap,
                                       (jsatomid) js_GetSrcNoteOffset(sn, 0));
@@ -2592,8 +2620,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     RETRACT(&ss->sprinter, rval);
                     js_printf(jp, "\tbreak %s;\n", rval);
                     break;
+
                   case SRC_HIDDEN:
                     break;
+
                   default:
                     js_printf(jp, "\tbreak;\n");
                     break;
@@ -2667,17 +2697,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     todo = -2;
                     break;
 
-                  case SRC_WHILE:
-                    rval = POP_STR();
-                    js_printf(SET_MAYBE_BRACE(jp), "\twhile (%s) {\n", rval);
-                    jp->indent += 4;
-                    tail = js_GetSrcNoteOffset(sn, 0);
-                    DECOMPILE_CODE(pc + oplen, tail - oplen);
-                    jp->indent -= 4;
-                    js_printf(jp, "\t}\n");
-                    todo = -2;
-                    break;
-
                   case SRC_COND:
                     xval = JS_strdup(cx, POP_STR());
                     if (!xval)
@@ -2709,10 +2728,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case JSOP_IFNE:
               case JSOP_IFNEX:
-                /* Currently, this must be a do-while loop's upward branch. */
-                jp->indent -= 4;
-                js_printf(jp, "\t} while (%s);\n", POP_STR());
-                todo = -2;
+                LOCAL_ASSERT(0);
                 break;
 
               case JSOP_OR:
