@@ -1,0 +1,364 @@
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2007
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+relativesrcdir	= dom/tests/mochitest/dom-level2-core
+
+include $(DEPTH)/config/autoconf.mk
+
+DIRS = files
+
+include $(topsrcdir)/config/rules.mk
+
+_TEST_FILES_A	= \
+		DOMTestCase.js \
+		exclusions.js \
+		test_attrgetownerelement01.html \
+		test_attrgetownerelement02.html \
+		test_attrgetownerelement03.html \
+		test_attrgetownerelement04.html \
+		test_attrgetownerelement05.html \
+		test_createAttributeNS01.html \
+		test_createAttributeNS02.html \
+		test_createAttributeNS03.html \
+		test_createAttributeNS04.html \
+		test_createAttributeNS05.html \
+		test_createAttributeNS06.html \
+		test_createDocument01.html \
+		test_createDocument02.html \
+		test_createDocument03.html \
+		test_createDocument04.html \
+		test_createDocument05.html \
+		test_createDocument06.html \
+		test_createDocument07.html \
+		test_createDocumentType01.html \
+		test_createDocumentType02.html \
+		test_createDocumentType03.html \
+		test_createElementNS01.html \
+		test_createElementNS02.html \
+		test_createElementNS03.html \
+		test_createElementNS04.html \
+		test_createElementNS05.html \
+		test_createElementNS06.html \
+		test_documentcreateattributeNS01.html \
+		test_documentcreateattributeNS02.html \
+		test_documentcreateattributeNS03.html \
+		test_documentcreateattributeNS04.html \
+		test_documentcreateattributeNS05.html \
+		test_documentcreateattributeNS06.html \
+		test_documentcreateattributeNS07.html \
+		test_documentcreateelementNS01.html \
+		test_documentcreateelementNS02.html \
+		test_documentcreateelementNS05.html \
+		test_documentcreateelementNS06.html \
+		test_documentgetelementbyid01.html \
+		test_documentgetelementsbytagnameNS01.html \
+		test_documentgetelementsbytagnameNS02.html \
+		test_documentgetelementsbytagnameNS03.html \
+		test_documentgetelementsbytagnameNS04.html \
+		test_documentgetelementsbytagnameNS05.html \
+		$(NULL)
+
+_TEST_FILES_B	= \
+		test_documentimportnode01.html \
+		test_documentimportnode02.html \
+		test_documentimportnode03.html \
+		test_documentimportnode04.html \
+		test_documentimportnode05.html \
+		test_documentimportnode06.html \
+		test_documentimportnode07.html \
+		test_documentimportnode08.html \
+		test_documentimportnode09.html \
+		test_documentimportnode10.html \
+		test_documentimportnode11.html \
+		test_documentimportnode12.html \
+		test_documentimportnode13.html \
+		test_documentimportnode14.html \
+		test_documentimportnode15.html \
+		test_documentimportnode17.html \
+		test_documentimportnode18.html \
+		test_documentimportnode19.html \
+		test_documentimportnode20.html \
+		test_documentimportnode21.html \
+		test_documentimportnode22.html \
+		test_documenttypeinternalSubset01.html \
+		test_documenttypepublicid01.html \
+		test_documenttypesystemid01.html \
+		test_domimplementationcreatedocument03.html \
+		test_domimplementationcreatedocument04.html \
+		test_domimplementationcreatedocument05.html \
+		test_domimplementationcreatedocument07.html \
+		test_domimplementationcreatedocumenttype01.html \
+		test_domimplementationcreatedocumenttype02.html \
+		test_domimplementationcreatedocumenttype04.html \
+		test_domimplementationfeaturecore.html \
+		test_domimplementationfeaturexmlversion2.html \
+		test_domimplementationhasfeature01.html \
+		test_domimplementationhasfeature02.html \
+		$(NULL)
+
+_TEST_FILES_C	= \
+		test_elementgetattributenodens01.html \
+		test_elementgetattributenodens02.html \
+		test_elementgetattributenodens03.html \
+		test_elementgetattributens02.html \
+		test_elementgetelementsbytagnamens02.html \
+		test_elementgetelementsbytagnamens04.html \
+		test_elementgetelementsbytagnamens05.html \
+		test_elementhasattribute01.html \
+		test_elementhasattribute02.html \
+		test_elementhasattribute03.html \
+		test_elementhasattribute04.html \
+		test_elementhasattributens01.html \
+		test_elementhasattributens02.html \
+		test_elementhasattributens03.html \
+		test_elementremoveattributens01.html \
+		test_elementsetattributenodens01.html \
+		test_elementsetattributenodens02.html \
+		test_elementsetattributenodens03.html \
+		test_elementsetattributenodens04.html \
+		test_elementsetattributenodens05.html \
+		test_elementsetattributenodens06.html \
+		test_elementsetattributens01.html \
+		test_elementsetattributens02.html \
+		test_elementsetattributens03.html \
+		test_elementsetattributens04.html \
+		test_elementsetattributens05.html \
+		test_elementsetattributens08.html \
+		test_elementsetattributensurinull.html \
+		test_getAttributeNS01.html \
+		test_getAttributeNS02.html \
+		test_getAttributeNS03.html \
+		test_getAttributeNS04.html \
+		test_getAttributeNS05.html \
+		test_getAttributeNodeNS01.html \
+		test_getAttributeNodeNS02.html \
+		test_getElementById01.html \
+		test_getElementById02.html \
+		test_getElementsByTagNameNS01.html \
+		test_getElementsByTagNameNS02.html \
+		test_getElementsByTagNameNS03.html \
+		test_getElementsByTagNameNS04.html \
+		test_getElementsByTagNameNS05.html \
+		test_getElementsByTagNameNS06.html \
+		test_getElementsByTagNameNS07.html \
+		$(NULL)
+
+_TEST_FILES_D	= \
+		test_getElementsByTagNameNS08.html \
+		test_getElementsByTagNameNS09.html \
+		test_getElementsByTagNameNS10.html \
+		test_getElementsByTagNameNS11.html \
+		test_getElementsByTagNameNS12.html \
+		test_getElementsByTagNameNS13.html \
+		test_getElementsByTagNameNS14.html \
+		test_getNamedItemNS01.html \
+		test_getNamedItemNS02.html \
+		test_getNamedItemNS03.html \
+		test_getNamedItemNS04.html \
+		test_hasAttribute01.html \
+		test_hasAttribute02.html \
+		test_hasAttribute03.html \
+		test_hasAttribute04.html \
+		test_hasAttributeNS01.html \
+		test_hasAttributeNS02.html \
+		test_hasAttributeNS03.html \
+		test_hasAttributeNS04.html \
+		test_hasAttributeNS05.html \
+		test_hasAttributes01.html \
+		test_hasAttributes02.html \
+		test_hc_namednodemapinvalidtype1.html \
+		test_hc_nodedocumentfragmentnormalize1.html \
+		test_hc_nodedocumentfragmentnormalize2.html \
+		test_importNode01.html \
+		test_importNode02.html \
+		test_importNode03.html \
+		test_importNode04.html \
+		test_importNode05.html \
+		test_importNode06.html \
+		test_importNode07.html \
+		test_importNode08.html \
+		test_importNode09.html \
+		test_importNode10.html \
+		test_importNode11.html \
+		test_importNode12.html \
+		test_importNode13.html \
+		test_importNode14.html \
+		test_importNode15.html \
+		test_importNode16.html \
+		test_importNode17.html \
+		test_internalSubset01.html \
+		test_isSupported01.html \
+		test_isSupported02.html \
+		test_isSupported04.html \
+		test_isSupported05.html \
+		test_isSupported06.html \
+		test_isSupported07.html \
+		test_isSupported09.html \
+		test_isSupported10.html \
+		test_isSupported11.html \
+		test_isSupported12.html \
+		test_isSupported13.html \
+		test_isSupported14.html \
+		$(NULL)
+
+_TEST_FILES_E	= \
+		test_localName01.html \
+		test_localName02.html \
+		test_localName03.html \
+		test_localName04.html \
+		test_namednodemapgetnameditemns01.html \
+		test_namednodemapgetnameditemns02.html \
+		test_namednodemapgetnameditemns03.html \
+		test_namednodemapgetnameditemns04.html \
+		test_namednodemapgetnameditemns05.html \
+		test_namednodemapgetnameditemns06.html \
+		test_namednodemapremovenameditemns01.html \
+		test_namednodemapremovenameditemns02.html \
+		test_namednodemapremovenameditemns03.html \
+		test_namednodemapremovenameditemns04.html \
+		test_namednodemapremovenameditemns05.html \
+		test_namednodemapremovenameditemns06.html \
+		test_namednodemapremovenameditemns07.html \
+		test_namednodemapremovenameditemns08.html \
+		test_namednodemapremovenameditemns09.html \
+		test_namednodemapsetnameditemns01.html \
+		test_namednodemapsetnameditemns02.html \
+		test_namednodemapsetnameditemns03.html \
+		test_namednodemapsetnameditemns04.html \
+		test_namednodemapsetnameditemns05.html \
+		test_namednodemapsetnameditemns06.html \
+		test_namednodemapsetnameditemns07.html \
+		test_namednodemapsetnameditemns08.html \
+		test_namednodemapsetnameditemns09.html \
+		test_namednodemapsetnameditemns10.html \
+		test_namednodemapsetnameditemns11.html \
+		test_namespaceURI01.html \
+		test_namespaceURI02.html \
+		test_namespaceURI03.html \
+		test_namespaceURI04.html \
+		test_nodegetlocalname03.html \
+		test_nodegetnamespaceuri03.html \
+		test_nodegetownerdocument01.html \
+		test_nodegetownerdocument02.html \
+		test_nodegetprefix03.html \
+		test_nodehasattributes01.html \
+		test_nodehasattributes02.html \
+		test_nodehasattributes03.html \
+		test_nodehasattributes04.html \
+		test_nodeissupported01.html \
+		test_nodeissupported02.html \
+		test_nodeissupported03.html \
+		test_nodeissupported04.html \
+		test_nodeissupported05.html \
+		$(NULL)
+
+_TEST_FILES_F	= \
+		test_nodenormalize01.html \
+		test_nodesetprefix01.html \
+		test_nodesetprefix02.html \
+		test_nodesetprefix03.html \
+		test_nodesetprefix04.html \
+		test_nodesetprefix05.html \
+		test_nodesetprefix06.html \
+		test_nodesetprefix07.html \
+		test_nodesetprefix08.html \
+		test_nodesetprefix09.html \
+		test_normalize01.html \
+		test_ownerDocument01.html \
+		test_ownerElement01.html \
+		test_ownerElement02.html \
+		test_prefix01.html \
+		test_prefix02.html \
+		test_prefix03.html \
+		test_prefix04.html \
+		test_prefix05.html \
+		test_prefix06.html \
+		test_prefix07.html \
+		test_prefix08.html \
+		test_prefix09.html \
+		test_prefix10.html \
+		test_prefix11.html \
+		test_publicId01.html \
+		test_removeAttributeNS01.html \
+		test_removeAttributeNS02.html \
+		test_removeNamedItemNS01.html \
+		test_removeNamedItemNS02.html \
+		test_removeNamedItemNS03.html \
+		test_setAttributeNS01.html \
+		test_setAttributeNS02.html \
+		test_setAttributeNS03.html \
+		test_setAttributeNS04.html \
+		test_setAttributeNS05.html \
+		test_setAttributeNS06.html \
+		test_setAttributeNS07.html \
+		test_setAttributeNS09.html \
+		test_setAttributeNS10.html \
+		test_setAttributeNodeNS01.html \
+		test_setAttributeNodeNS02.html \
+		test_setAttributeNodeNS03.html \
+		test_setAttributeNodeNS04.html \
+		test_setAttributeNodeNS05.html \
+		test_setNamedItemNS01.html \
+		test_setNamedItemNS02.html \
+		test_setNamedItemNS03.html \
+		test_setNamedItemNS04.html \
+		test_setNamedItemNS05.html \
+		test_systemId01.html \
+		$(NULL)
+
+# work around nsinstall limits on windows by splitting into groups
+libs:: 	$(_TEST_FILES_A)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs::	$(_TEST_FILES_B)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs::	$(_TEST_FILES_C)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs:: 	$(_TEST_FILES_D)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs::	$(_TEST_FILES_E)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs::	$(_TEST_FILES_F)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
