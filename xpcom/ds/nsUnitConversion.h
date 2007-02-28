@@ -39,34 +39,30 @@
 
 #include "nscore.h"
 #include "nsCoord.h"
+#include "nsMathUtils.h"
 #include <math.h>
 #include <float.h>
 
 /// handy constants
 #define TWIPS_PER_POINT_INT           20
 #define TWIPS_PER_POINT_FLOAT         20.0f
-#define ROUND_CONST_FLOAT             0.5f
 
 /*
  * Coord Rounding Functions
  */
 inline nscoord NSToCoordFloor(float aValue)
 {
-  return nscoord(floor(aValue));
+  return nscoord(NS_floorf(aValue));
 }
 
 inline nscoord NSToCoordCeil(float aValue)
 {
-  return nscoord(ceil(aValue));
+  return nscoord(NS_ceilf(aValue));
 }
 
 inline nscoord NSToCoordRound(float aValue)
 {
-#ifdef NS_COORD_IS_FLOAT
-  return float(floor(aValue + ROUND_CONST_FLOAT));
-#else
-  return ((0.0f <= aValue) ? nscoord(aValue + ROUND_CONST_FLOAT) : nscoord(aValue - ROUND_CONST_FLOAT));
-#endif
+  return nscoord(NS_roundf(aValue));
 }
 
 /*
@@ -74,17 +70,17 @@ inline nscoord NSToCoordRound(float aValue)
  */
 inline PRInt32 NSToIntFloor(float aValue)
 {
-  return PRInt32(floor(aValue));
+  return PRInt32(NS_floorf(aValue));
 }
 
 inline PRInt32 NSToIntCeil(float aValue)
 {
-  return PRInt32(ceil(aValue));
+  return PRInt32(NS_ceilf(aValue));
 }
 
 inline PRInt32 NSToIntRound(float aValue)
 {
-  return ((0.0f <= aValue) ? PRInt32(aValue + ROUND_CONST_FLOAT) : PRInt32(aValue - ROUND_CONST_FLOAT));
+  return NS_lroundf(aValue);
 }
 
 /* 

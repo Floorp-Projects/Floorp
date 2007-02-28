@@ -95,6 +95,7 @@ EXPORTS		= \
 		nsIByteBuffer.h \
 		nsIUnicharBuffer.h \
 		nsInt64.h \
+		nsMathUtils.h \
 		nsObserverService.h \
 		nsRecyclingAllocator.h \
 		nsStaticNameTable.h \
