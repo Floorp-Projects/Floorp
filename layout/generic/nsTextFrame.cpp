@@ -1360,6 +1360,8 @@ nsTextFrame::Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow)
 {
+  NS_PRECONDITION(aContent->IsNodeOfType(nsINode::eTEXT),
+                  "Bogus content!");
   nsresult rv = nsFrame::Init(aContent, aParent, aPrevInFlow);
   if (NS_SUCCEEDED(rv) && !aPrevInFlow &&
       GetStyleText()->WhiteSpaceIsSignificant()) {
@@ -6421,6 +6423,7 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
       fprintf(out, " [state=%08x]", mState);
     }
   }
+  fprintf(out, " [content=%p]", NS_STATIC_CAST(void*, mContent));
   fprintf(out, " sc=%p", NS_STATIC_CAST(void*, mStyleContext));
   nsIAtom* pseudoTag = mStyleContext->GetPseudoType();
   if (pseudoTag) {

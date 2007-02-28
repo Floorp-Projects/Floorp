@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>function setTextContent(n, t) { n.textContent = t; }
+
+var stylesheets = [];
+function initFuzzerSpecific()
+{
+  var myStylesheetHolder = document.getElementsByTagName("head")[0];
+
+  for (var i = 0; i < 25; ++i) {
+    var s = document.createElementNS("http://www.w3.org/1999/xhtml", 'style');
+    s.style.display = "none";
+    myStylesheetHolder.appendChild(s);
+    stylesheets.push(s);
+  }
+}
+</script>
+<style>
+  span:before { content: open-quote; }
+  span:after { content: close-quote; }
+  span { quotes: '"' '"'; }
+</style>
+</head>
+<body>
+
+<p><span>Foo</span></p>
+
+<p id="p2"><span id="q2"></span></p>
+
+<script>
+  document.body.offsetWidth;
+  initFuzzerSpecific();
+  setTextContent(stylesheets[1], "*:after { border: 3px solid green; } :first-letter { color: green; }");
+  setTextContent(stylesheets[2], "*:before { counter-reset: chicken; }");
+</script>
+
+</body>
+</html>
