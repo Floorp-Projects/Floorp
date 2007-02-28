@@ -128,3 +128,17 @@ random == image-height-top-6.html image-height-6.html
 random == image-width-left-4.html image-width-4.html
 random == image-width-left-5.html image-width-5.html
 random == image-width-left-6.html image-width-6.html
+
+!= offscreen-0-ref.html offscreen-10-ref.html
+== offscreen-background-color-pos-4.html offscreen-0-ref.html
+== offscreen-background-color-pos-5.html offscreen-10-ref.html
+== offscreen-background-color-pos-6.html offscreen-10-ref.html
+== offscreen-background-color-size-4.html offscreen-0-ref.html
+== offscreen-background-color-size-5.html offscreen-10-ref.html
+== offscreen-background-color-size-6.html offscreen-10-ref.html
+== offscreen-image-pos-4.html offscreen-0-ref.html
+fails == offscreen-image-pos-5.html offscreen-10-ref.html # bug 368280
+== offscreen-image-pos-6.html offscreen-10-ref.html
+random == offscreen-image-size-4.html offscreen-0-ref.html # bug 371316
+random == offscreen-image-size-5.html offscreen-10-ref.html # bug 371316
+random == offscreen-image-size-6.html offscreen-10-ref.html # bug 371316
