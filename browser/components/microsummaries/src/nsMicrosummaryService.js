@@ -41,6 +41,7 @@ const Cr = Components.results;
 
 const PERMS_FILE    = 0644;
 const MODE_WRONLY   = 0x02;
+const MODE_CREATE   = 0x08;
 const MODE_TRUNCATE = 0x20;
 
 const NS_ERROR_MODULE_DOM = 2152923136;
@@ -514,7 +515,8 @@ MicrosummaryService.prototype = {
     var outputStream = Cc["@mozilla.org/network/safe-file-output-stream;1"].
                        createInstance(Ci.nsIFileOutputStream);
     var localFile = file.QueryInterface(Ci.nsILocalFile);
-    outputStream.init(localFile, (MODE_WRONLY | MODE_TRUNCATE), PERMS_FILE, 0);
+    outputStream.init(localFile, (MODE_WRONLY | MODE_TRUNCATE | MODE_CREATE),
+                      PERMS_FILE, 0);
     var serializer = Cc["@mozilla.org/xmlextras/xmlserializer;1"].
                      createInstance(Ci.nsIDOMSerializer);
     serializer.serializeToStream(xmlDefinition, outputStream, null);
