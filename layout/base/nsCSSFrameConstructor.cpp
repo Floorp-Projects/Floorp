@@ -1747,9 +1747,25 @@ GetChildListNameFor(nsIFrame*       aChildFrame)
     listName = nsnull;
   }
 
-  // Verify that the frame is actually in that child list
-  NS_POSTCONDITION(nsFrameList(aChildFrame->GetParent()->GetFirstChild(listName))
-                   .ContainsFrame(aChildFrame), "not in child list");
+#ifdef NS_DEBUG
+  // Verify that the frame is actually in that child list or in the
+  // corresponding overflow list.
+  nsIFrame* parent = aChildFrame->GetParent();
+  PRBool found = nsFrameList(parent->GetFirstChild(listName))
+                   .ContainsFrame(aChildFrame);
+  if (!found) {
+    if (!(aChildFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
+      found = nsFrameList(parent->GetFirstChild(nsGkAtoms::overflowList))
+                .ContainsFrame(aChildFrame);
+    }
+    else if (aChildFrame->GetStyleDisplay()->IsFloating()) {
+      found = nsFrameList(parent->GetFirstChild(nsGkAtoms::overflowOutOfFlowList))
+                .ContainsFrame(aChildFrame);
+    }
+    // else it's positioned and should have been on the 'listName' child list.
+    NS_POSTCONDITION(found, "not in child list");
+  }
+#endif
 
   return listName;
 }
