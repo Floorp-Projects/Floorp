@@ -58,10 +58,10 @@ random-if(MOZ_WIDGET_TOOLKIT=="windows") == 142233-1.html 142233-1-ref.html # bu
 == 144004-1.html 144004-1-ref.html
 == 144004-2.html 144004-2-ref.html
 != 144004-3.html 144004-3-ref.html
-== 163504-1a.html 163504-1-ref.html
-== 163504-1b.html 163504-1-ref.html
-== 163504-2a.html 163504-2-ref.html
-== 163504-2b.html 163504-2-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="windows") == 163504-1a.html 163504-1-ref.html # bug 369040
+random-if(MOZ_WIDGET_TOOLKIT=="windows") == 163504-1b.html 163504-1-ref.html # bug 369040
+random-if(MOZ_WIDGET_TOOLKIT=="windows") == 163504-2a.html 163504-2-ref.html # bug 369040
+random-if(MOZ_WIDGET_TOOLKIT=="windows") == 163504-2b.html 163504-2-ref.html # bug 369040
 random-if(MOZ_WIDGET_TOOLKIT=="windows") == 273681-1.html 273681-1-ref.html # bug 369040
 random-if(MOZ_WIDGET_TOOLKIT=="windows") == 300691-1a.html 300691-1-ref.html # bug 369040
 random-if(MOZ_WIDGET_TOOLKIT=="windows") == 300691-1b.html 300691-1-ref.html # bug 369040
