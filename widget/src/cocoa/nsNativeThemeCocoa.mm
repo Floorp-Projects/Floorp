@@ -364,11 +364,12 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
                                              mat.x0, mat.y0));
   } else {
     // Otherwise, we round the x0/y0, because otherwise things get rendered badly
+    // XXX how should we be rounding the x0/y0?
     CGContextConcatCTM(cgContext,
                        CGAffineTransformMake(mat.xx, mat.xy,
                                              mat.yx, mat.yy,
-                                             floor(mat.x0 + ROUND_CONST_FLOAT),
-                                             floor(mat.y0 + ROUND_CONST_FLOAT)));
+                                             floor(mat.x0 + 0.5),
+                                             floor(mat.y0 + 0.5)));
   }
 
 #if 0
