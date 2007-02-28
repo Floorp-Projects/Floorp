@@ -3827,6 +3827,25 @@ nsGlobalWindow::Home()
     CopyASCIItoUTF16(DEFAULT_HOME_PAGE, homeURL);
   }
 
+#ifdef MOZ_PHOENIX
+  {
+    // Firefox lets the user specify multiple home pages to open in
+    // individual tabs by separating them with '|'. Since we don't
+    // have the machinery in place to easily open new tabs from here,
+    // simply truncate the homeURL at the first '|' character to
+    // prevent any possibilities of leaking the users list of home
+    // pages to the first home page.
+    //
+    // Once bug https://bugzilla.mozilla.org/show_bug.cgi?id=221445 is
+    // fixed we can revisit this.
+    PRInt32 firstPipe = homeURL.FindChar('|');
+
+    if (firstPipe > 0) {
+      homeURL.Truncate(firstPipe);
+    }
+  }
+#endif
+
   nsresult rv;
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
@@ -5289,7 +5308,7 @@ nsGlobalWindow::Atob(const nsAString& aAsciiBase64String,
     return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
   }
 
-  PRInt32 dataLen = aAsciiBase64String.Length();
+  PRUint32 dataLen = aAsciiBase64String.Length();
 
   NS_LossyConvertUTF16toASCII base64(aAsciiBase64String);
   if (base64.Length() != dataLen) {
