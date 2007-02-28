@@ -11,7 +11,7 @@ fails == quote-1b.html quote-1-ref.html
 fails == quote-1c.html quote-1-ref.html
 == quote-1c.html quote-1b.html
 fails == quote-1d.html quote-1-ref.html
-== quote-1d.html quote-1b.html
+random == quote-1d.html quote-1b.html
 == dynamic-1.html dynamic-1-ref.html
 == dynamic-2.html dynamic-2-ref.html
 == dynamic-3a.html dynamic-3-ref.html
