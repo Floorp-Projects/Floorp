@@ -58,14 +58,12 @@ nsEventQueue::nsEventQueue()
 
 nsEventQueue::~nsEventQueue()
 {
-  {
-    nsAutoMonitor mon(mMonitor);
+  // It'd be nice to be able to assert that no one else is holding the monitor,
+  // but NSPR doesn't really expose APIs for it.
+  NS_ASSERTION(IsEmpty(), "Non-empty event queue being destroyed; events being leaked.");
 
-    NS_ASSERTION(IsEmpty(), "Non-empty event queue being destroyed; events being leaked.");
-
-    if (mHead)
-      FreePage(mHead);
-  }
+  if (mHead)
+    FreePage(mHead);
 
   if (mMonitor)
     nsAutoMonitor::DestroyMonitor(mMonitor);
