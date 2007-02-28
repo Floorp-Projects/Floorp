@@ -152,6 +152,7 @@ fails == 368020-4.html 368020-4-ref.html # bug 368085
 == 368020-5.html 368020-5-ref.html
 == 368622-1.html 368622-1-ref.html
 == 368622-1.html 368622-1-ref.html
+== 370422-1.html 370422-1-ref.html
 == 370586-1.xhtml 370586-1-ref.xhtml
 == 370629-1.html 370629-1-ref.html
 == 370629-2.html 370629-2-ref.html
