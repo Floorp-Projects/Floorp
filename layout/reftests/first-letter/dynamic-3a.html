@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    div#x::first-letter { color: blue; float: left; }
+  </style>
+</head>
+<body onload="setTimeout(test, 300)">
+<div id="x">Need at least two letters here</div>
+<script>
+  document.body.offsetWidth;
+  var div = document.getElementById("x");
+  div.id = "y";
+  div.firstChild.data = "Text";
+</script>
+</body>
+</html>
+
