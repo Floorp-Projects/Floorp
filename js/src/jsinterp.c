@@ -1773,6 +1773,9 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
     }
 
     if (attrs == JSPROP_INITIALIZER) {
+        /* Allow the new object to override properties. */
+        if (obj2 != obj)
+            return JS_TRUE;
         report = JSREPORT_WARNING | JSREPORT_STRICT;
     } else {
         /* We allow redeclaring some non-readonly properties. */
