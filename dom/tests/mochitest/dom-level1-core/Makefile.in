@@ -111,6 +111,9 @@ _TEST_FILES_A	= \
 		test_characterdatasetnodevalue.html \
 		test_characterdatasubstringexceedsvalue.html \
 		test_characterdatasubstringvalue.html \
+		$(NULL)
+
+_TEST_FILES_B	= \
 		test_commentgetcomment.html \
 		test_documentcreateattribute.html \
 		test_documentcreatecdatasection.html \
@@ -186,7 +189,7 @@ _TEST_FILES_A	= \
 		test_entitygetpublicidnull.html \
 		$(NULL)
 
-_TEST_FILES_B	= \
+_TEST_FILES_C	= \
 		test_hc_attrappendchild1.html \
 		test_hc_attrappendchild2.html \
 		test_hc_attrappendchild3.html \
@@ -225,6 +228,9 @@ _TEST_FILES_B	= \
 		test_hc_attrsetvalue2.html \
 		test_hc_attrspecifiedvalue.html \
 		test_hc_attrspecifiedvaluechanged.html \
+		$(NULL)
+
+_TEST_FILES_D	= \
 		test_hc_characterdataappenddata.html \
 		test_hc_characterdataappenddatagetdata.html \
 		test_hc_characterdatadeletedatabegining.html \
@@ -305,6 +311,9 @@ _TEST_FILES_B	= \
 		test_hc_elementretrievetagname.html \
 		test_hc_elementsetattributenodenull.html \
 		test_hc_elementwrongdocumenterr.html \
+		$(NULL)
+
+_TEST_FILES_E	= \
 		test_hc_entitiesremovenameditem1.html \
 		test_hc_entitiessetnameditem1.html \
 		test_hc_namednodemapchildnoderange.html \
@@ -422,7 +431,7 @@ _TEST_FILES_B	= \
 		test_hc_textwithnomarkup.html \
 		$(NULL)
 
-_TEST_FILES_C	= \
+_TEST_FILES_F	= \
 		test_namednodemapchildnoderange.html \
 		test_namednodemapgetnameditem.html \
 		test_namednodemapinuseattributeerr.html \
@@ -523,6 +532,9 @@ _TEST_FILES_C	= \
 		test_nodelistreturnfirstitem.html \
 		test_nodelistreturnlastitem.html \
 		test_nodelisttraverselist.html \
+		$(NULL)
+
+_TEST_FILES_G	= \
 		test_nodenotationnodeattributes.html \
 		test_nodenotationnodename.html \
 		test_nodenotationnodetype.html \
@@ -572,7 +584,7 @@ _TEST_FILES_C	= \
 		test_processinginstructiongetdata.html \
 		test_processinginstructiongettarget.html \
 		test_processinginstructionsetdatanomodificationallowederr.html \
-		test_processinginstructionsetdatanomodificationallowederrEE.html \
+		test_PIsetdatanomodificationallowederrEE.html \
 		test_textindexsizeerrnegativeoffset.html \
 		test_textindexsizeerroffsetoutofbounds.html \
 		test_textparseintolistofelements.html \
@@ -585,12 +597,16 @@ _TEST_FILES_C	= \
 		test_textwithnomarkup.html \
 		$(NULL)
 
-# work around nsinstall limits on windows by splitting into groups
+# test_PIsetdatanomodificationallowederrEE.html was originally
+# test_processinginstructionsetdatanomodificationallowederrEE.html, but that
+# name is too long for Windows little brain.
+
+# work around command-line length limits by splitting into groups
 libs:: 	$(_TEST_FILES_A)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-
 libs::	$(_TEST_FILES_B)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-
 libs::	$(_TEST_FILES_C)
+libs::	$(_TEST_FILES_D)
+libs::	$(_TEST_FILES_E)
+libs::	$(_TEST_FILES_F)
+libs::	$(_TEST_FILES_G)
 	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
