@@ -672,11 +672,14 @@ function importFromFrame(method)
 
         try
         {
-            var window = getContentWindow(this.frame)
+            var window = getContentWindow(this.frame);
             if (window && "initialized" in window && window.initialized &&
                 method in window)
             {
-                return window[method];
+                return function import_wrapper_apply()
+                {
+                    window[method].apply(this, arguments);
+                };
             }
         }
         catch (ex)
