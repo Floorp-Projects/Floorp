@@ -4,7 +4,7 @@
 <?xml-stylesheet href="chrome://browser/skin/places/bookmarkProperties.css"?>
 <?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
 <?xml-stylesheet href="chrome://browser/content/places/places.css"?>
-
+<?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
 
 <!DOCTYPE window [
   <!ENTITY % propertiesDTD SYSTEM "chrome://browser/locale/places/bookmarkProperties.dtd">
@@ -13,24 +13,19 @@
   %placesDTD;
 ]>
 
-<dialog id="bookmarkproperties" title="&bookmark.property.panel.title;"
-        buttons="accept, cancel, extra1"
-        buttonlabelextra1="&cmd.delete_bookmark.label;"
-        ondialogaccept="BookmarkPropertiesPanel.dialogDone();"
-        ondialogcancel="BookmarkPropertiesPanel.dialogCancel();"
-        ondialogextra1="BookmarkPropertiesPanel.dialogDeleteBookmark();"
+<dialog id="bookmarkproperties"
+        title="&bookmark.property.panel.title;"
+        buttons="accept, cancel"
+        ondialogaccept="BookmarkPropertiesPanel.onDialogAccept();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="BookmarkPropertiesPanel.init(window, window.arguments[0], window.arguments[1], window.arguments[2], window.arguments[3]);">
+        onload="BookmarkPropertiesPanel.onDialogLoad();"
+        onunload="BookmarkPropertiesPanel.onDialogUnload();">
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="stringBundle"
                   src="chrome://browser/locale/places/bookmarkProperties.properties"/>
   </stringbundleset>
 
-  <script type="application/x-javascript" 
-          src="chrome://browser/content/places/utils.js"/>
-  <script type="application/x-javascript" 
-          src="chrome://browser/content/places/controller.js"/>
   <script type="application/x-javascript"
           src="chrome://browser/content/places/bookmarkProperties.js"/>
 
@@ -107,8 +102,8 @@
                 <tree id="folderTree"
                       class="placesTree"
                       flex="1"
-                      type="places" 
-                      place="place:&amp;folder=1&amp;group=3&amp;excludeItems=1" 
+                      type="places"
+                      place="place:&amp;folder=1&amp;group=3&amp;excludeItems=1&amp;excludeQueries=1&amp;excludeReadOnlyFolders=1"
                       hidecolumnpicker="true"
                       seltype="multiple"
                       onselect="BookmarkPropertiesPanel.validateChanges()">
