@@ -2,6 +2,10 @@
   padding: 0px 0px 10px 0px;
 }
 
+#modes {
+  min-height: 380px;
+}
+
 #clientBox {
   background-color: #FFFFFF;
   background-image: url("about:logo");

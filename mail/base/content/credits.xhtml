@@ -191,6 +191,22 @@
         }
       }
 
+      function openLicense()
+      {
+        var fileLocator = 
+            Components.classes["@mozilla.org/file/directory_service;1"].
+            getService(Components.interfaces.nsIProperties);
+        var appDir = fileLocator.get("XCurProcD", Components.interfaces.nsIFile);
+        appDir.append("license.html");
+        var protocolSvc =
+            Components.classes["@mozilla.org/uriloader/external-protocol-service;1"].
+            getService(Components.interfaces.nsIExternalProtocolService);
+        var ioService = Components.classes["@mozilla.org/network/io-service;1"].
+                        getService(Components.interfaces.nsIIOService);
+        var uri = ioService.newFileURI(appDir);
+        protocolSvc.loadUrl(uri);
+      }
+
     ]]>
     </script>
   </head>
@@ -330,9 +346,9 @@
 
         <p class="footnote">
           &brandFullName;&trade; &license.part0; &copy;1998-2007 &license.part1;
-          <a href="" link="about:credits" onclick="visitLink(event);">&license.contrib;</a>,
+          <a href="" link="http://www.mozilla.org/credits/" onclick="visitLink(event); event.preventDefault();">&license.contrib;</a>,
           &license.part2;
-          <a href="" link="about:license" onclick="visitLink(event);">about:license</a>
+          <a href="" onclick="openLicense(); event.preventDefault();">license</a>
           &license.part3;</p>
 
         <p class="footnote">

@@ -334,8 +334,13 @@ clean clobber::
 	rm -rf $(DIST)/$(APP_NAME).app
 endif
 
-libs::
-	$(INSTALL) $(topsrcdir)/mail/LICENSE.txt $(DIST)/bin
+LICENSE_FILES = \
+	LICENSE.txt \
+	license.html \
+	$(NULL)
+
+libs:: $(addprefix $(topsrcdir)/mail/,$(LICENSE_FILES))
+	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
 
 libs:: $(srcdir)/profile/prefs.js
 	$(INSTALL) $^ $(DIST)/bin/defaults/profile
