@@ -394,7 +394,8 @@ trigger[appearance="minimal"]:hover, submit[appearance="minimal"]:hover {
 }
 
 /* Most of the trigger[appearance="minimal"] specific CSS is copied from toolbarbutton.css */
-xul|*:root trigger[appearance="minimal"] {
+xul|*:root trigger[appearance="minimal"],
+xul|*:root submit[appearance="minimal"] {
   -moz-appearance: toolbarbutton;
   -moz-box-align: center;
   -moz-box-pack: center;
@@ -405,15 +406,18 @@ xul|*:root trigger[appearance="minimal"] {
   color: -moz-DialogText;
   cursor: default;
 }
-xul|*:root trigger[appearance="minimal"]:focus {
+xul|*:root trigger[appearance="minimal"]:focus,
+xul|*:root submit[appearance="minimal"]:focus {
   -moz-appearance: toolbarbutton;
   outline: 1px dotted -moz-DialogText;
   -moz-outline-offset: -2px;
 }
-xul|*:root trigger[appearance="minimal"]:hover {
+xul|*:root trigger[appearance="minimal"]:hover,
+xul|*:root submit[appearance="minimal"]:hover {
   border-color: ThreeDHighlight ThreeDShadow ThreeDShadow ThreeDHighlight;
 }
-xul|*:root trigger[appearance="minimal"]:hover:active {
+xul|*:root trigger[appearance="minimal"]:hover:active,
+xul|*:root submit[appearance="minimal"]:hover:active {
   border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
   padding-top: 4px;
   padding-bottom: 2px;
@@ -422,7 +426,10 @@ xul|*:root trigger[appearance="minimal"]:hover:active {
 }
 xul|*:root trigger[appearance="minimal"][disabled],
 xul|*:root trigger[appearance="minimal"][disabled]:hover,
-xul|*:root trigger[appearance="minimal"][disabled]:hover:active {
+xul|*:root trigger[appearance="minimal"][disabled]:hover:active,
+xul|*:root submit[appearance="minimal"][disabled],
+xul|*:root submit[appearance="minimal"][disabled]:hover,
+xul|*:root submit[appearance="minimal"][disabled]:hover:active {
   border-color: transparent;
   padding: 3px;
   color: GrayText !important;
