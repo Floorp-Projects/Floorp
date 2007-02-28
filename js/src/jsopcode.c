@@ -3762,9 +3762,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
               case JSOP_NEWINIT:
+              {
+                JSBool isArray;
+
                 LOCAL_ASSERT(ss->top >= 2);
                 (void) PopOff(ss, op);
                 lval = POP_STR();
+                isArray = (*lval == 'A');
                 todo = ss->sprinter.offset;
 #if JS_HAS_SHARP_VARS
                 op = (JSOp)pc[len];
@@ -3777,7 +3781,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                         return NULL;
                 }
 #endif /* JS_HAS_SHARP_VARS */
-                if (*lval == 'A') {
+                if (isArray) {
                     ++ss->inArrayInit;
                     if (SprintCString(&ss->sprinter, "[") < 0)
                         return NULL;
@@ -3786,17 +3790,22 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                         return NULL;
                 }
                 break;
+              }
 
               case JSOP_ENDINIT:
                 op = JSOP_NOP;           /* turn off parens */
                 rval = POP_STR();
                 sn = js_GetSrcNote(jp->script, pc);
-                if (*rval == '[')
+
+                /* Skip any #n= prefix to find the opening bracket. */
+                for (xval = rval; *xval != '[' && *xval != '{'; xval++)
+                    continue;
+                if (*xval == '[')
                     --ss->inArrayInit;
                 todo = Sprint(&ss->sprinter, "%s%s%c",
                               rval,
                               (sn && SN_TYPE(sn) == SRC_CONTINUE) ? ", " : "",
-                              (*rval == '[') ? ']' : '}');
+                              (*xval == '[') ? ']' : '}');
                 break;
 
               case JSOP_INITPROP:

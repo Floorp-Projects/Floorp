@@ -3509,6 +3509,7 @@ EmitGroupAssignment(JSContext *cx, JSCodeGenerator *cg, JSOp declOp,
             if (js_Emit1(cx, cg, JSOP_PUSH) < 0)
                 return JS_FALSE;
         } else {
+            JS_ASSERT(pn->pn_type != TOK_DEFSHARP);
             if (!js_EmitTree(cx, cg, pn))
                 return JS_FALSE;
         }
@@ -3557,7 +3558,9 @@ MaybeEmitGroupAssignment(JSContext *cx, JSCodeGenerator *cg, JSOp declOp,
     lhs = pn->pn_left;
     rhs = pn->pn_right;
     if (lhs->pn_type == TOK_RB && rhs->pn_type == TOK_RB &&
-        lhs->pn_count <= rhs->pn_count) {
+        lhs->pn_count <= rhs->pn_count &&
+        (rhs->pn_count == 0 ||
+         rhs->pn_head->pn_type != TOK_DEFSHARP)) {
         if (!EmitGroupAssignment(cx, cg, declOp, lhs, rhs))
             return JS_FALSE;
         *pop = JSOP_NOP;
