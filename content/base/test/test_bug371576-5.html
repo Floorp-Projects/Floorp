@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=371576
+-->
+<head id="head">
+  <title>Test for Bug 371576</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script>
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(
+  function doe(){
+    var x=document.createElement('script');
+    x.src='data:text/html,var scr=document.createElement("script");\
+           scr.innerHTML = "function doe3(){$(\'display\').innerHTML = \'You should see this text\';}";\
+           $("head").appendChild(scr);';
+    x.onload= function (){
+       doe3(); 
+       ok(true,"function doe3 is defined, and the body content has been replaced.");
+       is($("display").textContent, "You should see this text", "text set properly");
+       SimpleTest.finish();
+    };
+    $('head').appendChild(x);
+  }
+);
+</script>
+
+</head>
+<body>
+<p id="display">You shouldn't see this</p>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=371576">Mozilla Bug 371576</a>
+</body>
+</html>
