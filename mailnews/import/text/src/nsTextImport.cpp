@@ -392,14 +392,9 @@ NS_IMETHODIMP ImportAddressImpl::FindAddressBooks(nsIFileSpec *pLoc, nsISupports
 	if (NS_SUCCEEDED( rv)) {
 		PRUint32 sz = 0;
 		pLoc->GetFileSize( &sz);	
-		desc->SetPreferredName( name.get());
+    desc->SetPreferredName(name);
 		desc->SetSize( sz);
-		nsIFileSpec *pSpec = nsnull;
-		desc->GetFileSpec( &pSpec);
-		if (pSpec) {
-			pSpec->FromFileSpec( pLoc);
-			NS_RELEASE( pSpec);
-		}
+    desc->SetAbFile(m_fileLoc);
 		rv = desc->QueryInterface( kISupportsIID, (void **) &pInterface);
 		array->AppendElement( pInterface);
 		pInterface->Release();
@@ -483,13 +478,9 @@ NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *pSour
    
 	ClearSampleFile();
 
-    PRBool		addrAbort = PR_FALSE;
-    nsString	name;
-    PRUnichar *	pName;
-    if (NS_SUCCEEDED( pSource->GetPreferredName( &pName))) {
-    	name = pName;
-    	nsCRT::free( pName);
-    }
+  PRBool addrAbort = PR_FALSE;
+  nsString name;
+  pSource->GetPreferredName(name);
     
 	PRUint32 addressSize = 0;
 	pSource->GetSize( &addressSize);
@@ -497,31 +488,18 @@ NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *pSour
 		IMPORT_LOG0( "Address book size is 0, skipping import.\n");
 		ReportSuccess( name, &success);
 		SetLogs( success, error, pErrorLog, pSuccessLog);
-		return( NS_OK);
+		return NS_OK;
 	}
 
-    
-  nsIFileSpec * inFileSpec;
-  if (NS_FAILED( pSource->GetFileSpec( &inFileSpec))) {
+  nsCOMPtr<nsIFile> inFile;
+  if (NS_FAILED(pSource->GetAbFile(getter_AddRefs(inFile)))) {
 		ReportError( TEXTIMPORT_ADDRESS_BADSOURCEFILE, name, &error);
 		SetLogs( success, error, pErrorLog, pSuccessLog);		
-    	return( NS_ERROR_FAILURE);
-    }
-
-  nsXPIDLCString pPath; 
-  inFileSpec->GetNativePath(getter_Copies(pPath));
-	IMPORT_LOG1( "Importing address book: %s\n", pPath.get());
-
-  inFileSpec->Release();
-
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsILocalFile> inFile;
-  rv = NS_NewNativeLocalFile(pPath, PR_TRUE, getter_AddRefs(inFile));
-  NS_ENSURE_SUCCESS(rv, rv);
+    return NS_ERROR_FAILURE;
+  }
 
 	PRBool	isLDIF = PR_FALSE;
-
+  nsresult rv;
     nsCOMPtr<nsIAbLDIFService> ldifService = do_GetService(NS_ABLDIFSERVICE_CONTRACTID, &rv);
 
     if (NS_SUCCEEDED(rv)) {

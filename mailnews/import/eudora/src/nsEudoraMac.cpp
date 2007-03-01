@@ -1269,6 +1269,15 @@ nsresult nsEudoraMac::FindAddressBooks( nsIFileSpec *pRoot, nsISupportsArray **p
 	if (NS_SUCCEEDED( rv) && exists)
 		rv = spec->IsFile( &isFile);
 
+    // XXX this should be fixed by implementing bug 323211
+    nsFileSpec fileSpec;
+    rv = spec->GetFileSpec(&fileSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsILocalFile> fileLoc;
+    rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(fileLoc));
+    NS_ENSURE_SUCCESS(rv, rv);
+
 	nsCOMPtr<nsIImportABDescriptor>	desc;
 	nsISupports *					pInterface;
 	
@@ -1277,14 +1286,9 @@ nsresult nsEudoraMac::FindAddressBooks( nsIFileSpec *pRoot, nsISupportsArray **p
 		if (NS_SUCCEEDED( rv)) {
 			sz = 0;
 			spec->GetFileSize( &sz);	
-			desc->SetPreferredName( displayName.get());
+			desc->SetPreferredName(displayName);
 			desc->SetSize( sz);
-			nsIFileSpec *pSpec = nsnull;
-			desc->GetFileSpec( &pSpec);
-			if (pSpec) {
-				pSpec->FromFileSpec( spec);
-				NS_RELEASE( pSpec);
-			}
+            desc->SetAbFile(fileLoc);
 			rv = desc->QueryInterface( kISupportsIID, (void **) &pInterface);
 			(*ppArray)->AppendElement( pInterface);
 			pInterface->Release();
@@ -1359,18 +1363,22 @@ nsresult nsEudoraMac::FindAddressBooks( nsIFileSpec *pRoot, nsISupportsArray **p
 					fSpec.GetFileTypeAndCreator( &type, &creator);
 #endif
 					if (type == 'TEXT') {
+
+                        // XXX this should be fixed by implementing bug 323211
+                        rv = spec->GetFileSpec(&fileSpec);
+                        NS_ENSURE_SUCCESS(rv, rv);
+
+                        rv = NS_FileSpecToIFile(&fileSpec,
+                                                getter_AddRefs(fileLoc));
+                        NS_ENSURE_SUCCESS(rv, rv);
+
 						rv = impSvc->CreateNewABDescriptor( getter_AddRefs( desc));
 						if (NS_SUCCEEDED( rv)) {
 							sz = 0;
 							spec->GetFileSize( &sz);	
-							desc->SetPreferredName( displayName.get());
+							desc->SetPreferredName(displayName);
 							desc->SetSize( sz);
-							nsIFileSpec *pSpec = nsnull;
-							desc->GetFileSpec( &pSpec);
-							if (pSpec) {
-								pSpec->FromFileSpec( spec);
-								NS_RELEASE( pSpec);
-							}
+                            desc->SetAbFile(fileLoc);
 							rv = desc->QueryInterface( kISupportsIID, (void **) &pInterface);
 							(*ppArray)->AppendElement( pInterface);
 							pInterface->Release();

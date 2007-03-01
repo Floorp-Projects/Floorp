@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mark Banner <bugzilla@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -42,51 +43,92 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsIImportABDescriptor.h"
-#include "nsIFileSpec.h"
+#include "nsIFile.h"
 
 ////////////////////////////////////////////////////////////////////////
-
 
 class nsImportABDescriptor : public nsIImportABDescriptor
 {
 public: 
-	NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
-	NS_IMETHOD	GetIdentifier( PRUint32 *pIdentifier) { *pIdentifier = m_id; return( NS_OK);}
-	NS_IMETHOD	SetIdentifier( PRUint32 ident) { m_id = ident; return( NS_OK);}
-	
-	/* attribute unsigned long ref; */
-	NS_IMETHOD	GetRef( PRUint32 *pRef) { *pRef = m_ref; return( NS_OK);}
-	NS_IMETHOD	SetRef( PRUint32 ref) { m_ref = ref; return( NS_OK);}
+  NS_IMETHOD GetIdentifier(PRUint32 *pIdentifier) {
+    *pIdentifier = mId;
+    return NS_OK;
+  }
+  NS_IMETHOD SetIdentifier(PRUint32 ident) {
+    mId = ident;
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetRef(PRUint32 *pRef) {
+    *pRef = mRef;
+    return NS_OK;
+  }
+  NS_IMETHOD SetRef(PRUint32 ref) {
+    mRef = ref;
+    return NS_OK;
+  }
 	
 	/* attribute unsigned long size; */
-	NS_IMETHOD	GetSize( PRUint32 *pSize) { *pSize = m_size; return( NS_OK);}
-	NS_IMETHOD	SetSize( PRUint32 theSize) { m_size = theSize; return( NS_OK);}
+  NS_IMETHOD GetSize(PRUint32 *pSize) {
+    *pSize = mSize;
+    return NS_OK;
+  }
+  NS_IMETHOD SetSize(PRUint32 theSize) {
+    mSize = theSize;
+    return NS_OK;
+  }
 	
-	/* attribute wstring displayName; */
-	NS_IMETHOD	GetPreferredName( PRUnichar **pName) { *pName = ToNewUnicode(m_displayName); return( NS_OK);}
-	NS_IMETHOD	SetPreferredName( const PRUnichar * pName) { m_displayName = pName; return( NS_OK);}
-	
-	/* readonly attribute nsIFileSpec fileSpec; */
-	NS_IMETHOD GetFileSpec(nsIFileSpec * *aFileSpec) { if (m_pFileSpec) { m_pFileSpec->AddRef(); *aFileSpec = m_pFileSpec; return( NS_OK);} else return( NS_ERROR_FAILURE); }
-	
-	/* attribute boolean import; */
-	NS_IMETHOD	GetImport( PRBool *pImport) { *pImport = m_import; return( NS_OK);}
-	NS_IMETHOD	SetImport( PRBool doImport) { m_import = doImport; return( NS_OK);}
-	
+	/* attribute AString displayName; */
+  NS_IMETHOD GetPreferredName(nsAString &aName) {
+    aName = mDisplayName;
+    return NS_OK;
+  }
+  NS_IMETHOD SetPreferredName(const nsAString &aName) {
+    mDisplayName = aName;
+    return NS_OK;
+  }
+
+  /* readonly attribute nsIFile fileSpec; */
+	NS_IMETHOD GetAbFile(nsIFile **aFile) {
+    if (!mFile)
+      return NS_ERROR_NULL_POINTER;
+
+    return mFile->Clone(aFile);
+  }
+
+  NS_IMETHOD SetAbFile(nsIFile *aFile) {
+    if (!aFile) {
+      mFile = nsnull;
+      return NS_OK;
+    }
+    
+    return aFile->Clone(getter_AddRefs(mFile));
+  }
+
+  /* attribute boolean import; */
+  NS_IMETHOD GetImport(PRBool *pImport) {
+    *pImport = mImport;
+    return NS_OK;
+  }
+  NS_IMETHOD SetImport(PRBool doImport) {
+    mImport = doImport;
+    return NS_OK;
+  }
 
 	nsImportABDescriptor();
-	virtual ~nsImportABDescriptor() { if (m_pFileSpec) m_pFileSpec->Release();}
+	virtual ~nsImportABDescriptor() {}
 
- 	static NS_METHOD Create( nsISupports *aOuter, REFNSIID aIID, void **aResult);
-			
+  static NS_METHOD Create( nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
 private:
-	PRUint32		m_id;			// used by creator of the structure
-	PRUint32		m_ref;			// depth in the heirarchy
-	nsString		m_displayName;	// name of this mailbox
-	nsIFileSpec	*	m_pFileSpec;	// source file (if applicable)
-	PRUint32		m_size;			// size
-	PRBool			m_import;		// import it or not?	
+  PRUint32 mId; // used by creator of the structure
+  PRUint32 mRef; // depth in the heirarchy
+  nsString mDisplayName; // name of this mailbox
+  nsCOMPtr<nsIFile> mFile; // source file (if applicable)
+  PRUint32 mSize; // size
+  PRBool mImport; // import it or not?	
 };
 
 

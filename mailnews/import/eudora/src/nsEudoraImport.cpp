@@ -708,11 +708,7 @@ NS_IMETHODIMP ImportEudoraAddressImpl::ImportAddressBook(	nsIImportABDescriptor 
       
     PRBool		abort = PR_FALSE;
     nsString	name;
-    PRUnichar *	pName;
-    if (NS_SUCCEEDED( pSource->GetPreferredName( &pName))) {
-    	name = pName;
-    	nsCRT::free( pName);
-    }
+    pSource->GetPreferredName(name);
     
 	PRUint32 addressSize = 0;
 	pSource->GetSize( &addressSize);
@@ -724,16 +720,24 @@ NS_IMETHODIMP ImportEudoraAddressImpl::ImportAddressBook(	nsIImportABDescriptor 
 	}
 
     
-	nsIFileSpec	*	inFile;
-    if (NS_FAILED( pSource->GetFileSpec( &inFile))) {
+    nsCOMPtr<nsIFile> inFile;
+    if (NS_FAILED(pSource->GetAbFile(getter_AddRefs(inFile)))) {
 		ImportEudoraMailImpl::ReportError( EUDORAIMPORT_ADDRESS_BADSOURCEFILE, name, &error);
 		ImportEudoraMailImpl::SetLogs( success, error, pErrorLog, pSuccessLog);		
     	return( NS_ERROR_FAILURE);
     }
 
+    nsIFileSpec *inFileSpec;
+    if (NS_FAILED(NS_NewFileSpecFromIFile(inFile, &inFileSpec))) {
+		ImportEudoraMailImpl::ReportError( EUDORAIMPORT_ADDRESS_BADSOURCEFILE, name, &error);
+		ImportEudoraMailImpl::SetLogs( success, error, pErrorLog, pSuccessLog);		
+    	return( NS_ERROR_FAILURE);
+    }
+
+
 #ifdef IMPORT_DEBUG
 	char *pPath;
-	inFile->GetNativePath( &pPath);    
+	inFile->GetNativePath(&pPath);
 	IMPORT_LOG1( "Import address book: %s\n", pPath);
 	nsCRT::free( pPath);
 #endif
@@ -742,9 +746,9 @@ NS_IMETHODIMP ImportEudoraAddressImpl::ImportAddressBook(	nsIImportABDescriptor 
     nsresult rv = NS_OK;
 	
 	m_bytes = 0;
-	rv = m_eudora.ImportAddresses( &m_bytes, &abort, name.get(), inFile, pDestination, error);
+	rv = m_eudora.ImportAddresses( &m_bytes, &abort, name.get(), inFileSpec, pDestination, error);
 
-    inFile->Release();
+    inFileSpec->Release();
 
 	    
     

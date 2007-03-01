@@ -1394,18 +1394,22 @@ nsresult nsEudoraWin32::FoundAddressBook( nsIFileSpec *spec, const PRUnichar *pN
 		}
 	}
 
+    // XXX this should be fixed by implementing bug 323211
+    nsFileSpec fileSpec;
+    rv = spec->GetFileSpec(&fileSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsILocalFile> fileLoc;
+    rv = NS_FileSpecToIFile(fileSpec, getter_AddRefs(fileLoc));
+    NS_ENSURE_SUCCESS(rv, rv);
+
 	rv = impSvc->CreateNewABDescriptor( getter_AddRefs( desc));
 	if (NS_SUCCEEDED( rv)) {
 		PRUint32 sz = 0;
 		spec->GetFileSize( &sz);	
-		desc->SetPreferredName( name.get());
+		desc->SetPreferredName(name);
 		desc->SetSize( sz);
-		nsIFileSpec *pSpec = nsnull;
-		desc->GetFileSpec( &pSpec);
-		if (pSpec) {
-			pSpec->FromFileSpec( spec);
-			NS_RELEASE( pSpec);
-		}
+		desc->SetAbFile(fileLoc);
 		rv = desc->QueryInterface( kISupportsIID, (void **) &pInterface);
 		pArray->AppendElement( pInterface);
 		pInterface->Release();

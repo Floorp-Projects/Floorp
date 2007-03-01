@@ -627,7 +627,7 @@ NS_IMETHODIMP ImportOEAddressImpl::FindAddressBooks(nsIFileSpec *location, nsISu
 				pID->SetIdentifier( 0x4F453334);
 				pID->SetRef( 1);
 				pID->SetSize( 100);
-				pID->SetPreferredName( str.get());
+				pID->SetPreferredName(str);
 				rv = pID->QueryInterface( kISupportsIID, (void **) &pInterface);
 				(*_retval)->AppendElement( pInterface);
 				pInterface->Release();
@@ -690,10 +690,8 @@ NS_IMETHODIMP ImportOEAddressImpl::ImportAddressBook(	nsIImportABDescriptor *sou
   nsString	name;
   if (SUCCEEDED(hr))
   {
-    nsXPIDLString pName;
-    if (NS_SUCCEEDED( source->GetPreferredName(getter_Copies(pName))))
+    if (NS_SUCCEEDED(source->GetPreferredName(name)))
     {
-      name = pName;
       ReportSuccess( name, &success);
     }
   }

@@ -115,7 +115,8 @@ private:
 
 public:
 	static void	SetLogs( nsString& success, nsString& error, nsISupportsString *pSuccess, nsISupportsString *pError);
-  static void ReportError(PRUnichar *pName, nsString *pStream, nsIStringBundle *aBundle);
+  static void ReportError(const PRUnichar *pName, nsString *pStream,
+                          nsIStringBundle *aBundle);
 
 private:
 	nsIImportAddressBooks *		m_pInterface;
@@ -862,7 +863,9 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 	return( pDatabase);
 }
 
-void nsImportGenericAddressBooks::ReportError( PRUnichar *pName, nsString *pStream, nsIStringBundle* aBundle)
+void nsImportGenericAddressBooks::ReportError(const PRUnichar *pName,
+                                              nsString *pStream,
+                                              nsIStringBundle* aBundle)
 {
 	if (!pStream)
 		return;
@@ -911,13 +914,13 @@ PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff)
 				rv = book->GetSize( &size);
 			
 			if (size && import) {
-				PRUnichar *pName;
-				book->GetPreferredName( &pName);
+				nsXPIDLString name;
+				book->GetPreferredName(name);
 				if (destDB) {
 					pDestDB = destDB;
 				}
 				else {
-					pDestDB = GetAddressBook( pName, PR_TRUE);
+					pDestDB = GetAddressBook(name, PR_TRUE);
 				}
 
 				nsCOMPtr<nsIAddrDatabase> proxyAddrDatabase;
@@ -967,10 +970,8 @@ PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff)
 					}
 				}
 				else {
-          nsImportGenericAddressBooks::ReportError(pName, &error, pBundle);
+          nsImportGenericAddressBooks::ReportError(name, &error, pBundle);
 				}
-
-				nsCRT::free( pName);
 
 				pData->currentSize = 0;
 				pData->currentTotal += size;

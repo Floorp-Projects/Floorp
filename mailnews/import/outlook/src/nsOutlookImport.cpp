@@ -619,14 +619,9 @@ NS_IMETHODIMP ImportOutlookAddressImpl::ImportAddressBook(	nsIImportABDescriptor
 	    return NS_ERROR_NULL_POINTER;
 	}
       
-    nsString	name;
-    PRUnichar *	pName;
-    if (NS_SUCCEEDED( source->GetPreferredName( &pName))) {
-    	name = pName;
-    	nsCRT::free( pName);
-    }
-    
-    
+    nsString name;
+    source->GetPreferredName(name);
+
 	PRUint32	id;
     if (NS_FAILED( source->GetIdentifier( &id))) {
 		ImportOutlookMailImpl::ReportError( OUTLOOKIMPORT_ADDRESS_BADSOURCEFILE, name, &error);

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mark Banner <bugzilla@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -47,63 +48,56 @@
 
 #include "nsISupports.idl"
 
-interface nsIFileSpec;
+interface nsIFile;
 
-[scriptable, uuid(9c1774e0-3538-11d3-a206-00a0cc26da63)]
+/**
+ * Implementation Note:
+ *
+ * The default implementation can be obtained from
+ * nsIImportService::CreateNewABDescriptor();
+ *
+ * You should only be interested in using this class if you implement
+ * the nsIImportAddressBooks interface in which case, just using the service to
+ * create new ones should work fine for you.  If not, implement your
+ * own.
+ */
+[scriptable, uuid(2d8983b2-cea6-4ae2-9145-eb772481fa18)]
 interface nsIImportABDescriptor : nsISupports
 {	
-	/*
-		use the following 2 attributes however you'd like to
-		refer to a specific address book
-	*/
-	attribute unsigned long 		identifier;
-	attribute unsigned long			ref;
+  /**
+   *  use the following 2 attributes however you'd like to
+   * refer to a specific address book
+   */
+  attribute unsigned long identifier;
+  attribute unsigned long ref;
+
+	/**
+   * Doesn't have to be accurate, this is merely used to report progress.
+   * If you're importing a file, using file size and reporting progress
+   * as the number of bytes processed so far makes sense.  For other formats
+   * returning the number of records may make more sense.  
+   */
+  attribute unsigned long size;
 	
-	/*
-		Doesn't have to be accurate, this is merely used to report progress.
-		If you're importing a file, using file size and reporting progress
-		as the number of bytes processed so far makes sense.  For other formats
-		returning the number of records may make more sense.  
-	*/
-	attribute unsigned long			size;
+  /**
+   * The preferred name for this address book.  Depending upon how the 
+   * user selected import, the caller of the nsIImportAddressBooks interface
+   * may use this name to create the destination address book or it may
+   * ignore it.  However, this must be provided in all cases as it is
+   * also displayed in the UI to the user.
+   */
+  attribute AString preferredName;
 	
-	/*
-		The preferred name for this address book.  Depending upon how the 
-		user selected import, the caller of the nsIImportAddressBooks interface
-		may use this name to create the destination address book or it may
-		ignore it.  However, this must be provided in all cases as it is
-		also displayed in the UI to the user.
-	*/
-	wstring	GetPreferredName();
-	void	SetPreferredName( [const] in wstring name);
-	
-	/*
-		For address books that want a file descriptor to locate the address book.
-		For formats that do not, use identifier & ref to refer to the address book
-		OR implement your own nsIImportABDescriptor that contains additional data
-		necessary to identify specific address books,
-	*/
-	
-	readonly attribute nsIFileSpec	fileSpec;
-	
-	/*
-		Set by the UI to indicate whether or not this address book should be imported.
-	*/
-	attribute boolean				import;
+  /**
+   * For address books that want a file descriptor to locate the address book.
+   * For formats that do not, use identifier & ref to refer to the address book
+   * OR implement your own nsIImportABDescriptor that contains additional data
+   * necessary to identify specific address books,
+   */
+  attribute nsIFile abFile;
+
+  /**
+   * Set by the UI to indicate whether or not this address book should be imported.
+   */
+   attribute boolean import;
 };
-	
-
-
-%{ C++
-
-/*
-	The default implementation can be obtained from
-	nsIImportService::CreateNewABDescriptor();
-	
-	You should only be interested in using this class if you implement
-	the nsIImportAddressBooks interface in which case, just using the service to
-	create new ones should work fine for you.  If not, implement your
-	own.
-*/
-
-%}

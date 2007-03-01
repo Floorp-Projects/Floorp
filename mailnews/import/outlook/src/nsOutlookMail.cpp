@@ -305,7 +305,7 @@ nsresult nsOutlookMail::GetAddressBooks( nsISupportsArray **pArray)
 				pID->SetIdentifier( i);
 				pFolder->GetDisplayName( name);
 				MakeAddressBookNameUnique( name, list);
-				pID->SetPreferredName(name.get());
+				pID->SetPreferredName(name);
 				pID->SetSize( 100);
 				rv = pID->QueryInterface( kISupportsIID, (void **) &pInterface);
 				(*pArray)->AppendElement( pInterface);

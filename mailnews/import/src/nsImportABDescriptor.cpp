@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Mark Banner <bugzilla@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -42,8 +43,6 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-
-
 NS_METHOD nsImportABDescriptor::Create( nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
   if (aOuter)
@@ -61,12 +60,7 @@ NS_METHOD nsImportABDescriptor::Create( nsISupports *aOuter, REFNSIID aIID, void
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsImportABDescriptor, nsIImportABDescriptor)
 
-nsImportABDescriptor::nsImportABDescriptor() 
-{ 
-	m_ref = 0;
-	m_id = 0;
-	m_size = 0;
-	m_import = PR_TRUE;
-	m_pFileSpec = nsnull;
-	NS_NewFileSpec( &m_pFileSpec);
+nsImportABDescriptor::nsImportABDescriptor()
+  : mId(0), mRef(0), mSize(0), mImport(PR_TRUE)
+{
 }
