@@ -53,7 +53,7 @@
     class="plain focusring" disableKeyNavigation="true" lastfoldersent="false" noattachcol="true"
     onkeypress="ThreadPaneKeyPress(event);"
     onselect="ThreadPaneSelectionChanged();">
-  <treecols pickertooltiptext="&columnChooser.tooltip;">
+  <treecols id="threadCols" pickertooltiptext="&columnChooser.tooltip;">
     <treecol id="threadCol" persist="hidden ordinal" fixed="true" cycler="true" class="treecol-image threadColumnHeader" currentView="unthreaded"
              label="&threadColumn.label;" tooltiptext="&threadColumn.tooltip;"/>
     <splitter class="tree-splitter"/>
