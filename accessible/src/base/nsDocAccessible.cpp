@@ -495,6 +495,9 @@ NS_IMETHODIMP nsDocAccessible::Shutdown()
     return NS_OK;  // Already shutdown
   }
 
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = GetDocShellTreeItemFor(mDOMNode);
+  ShutdownChildDocuments(treeItem);
+
   if (mEditor) {
     mEditor->RemoveEditActionListener(this);
     mEditor = nsnull;
@@ -520,6 +523,28 @@ NS_IMETHODIMP nsDocAccessible::Shutdown()
   mDocument = nsnull;
 
   return nsHyperTextAccessible::Shutdown();
+}
+
+void nsDocAccessible::ShutdownChildDocuments(nsIDocShellTreeItem *aStart)
+{
+  nsCOMPtr<nsIDocShellTreeNode> treeNode(do_QueryInterface(aStart));
+  if (treeNode) {
+    PRInt32 subDocuments;
+    treeNode->GetChildCount(&subDocuments);
+    for (PRInt32 count = 0; count < subDocuments; count ++) {
+      nsCOMPtr<nsIDocShellTreeItem> treeItemChild;
+      treeNode->GetChildAt(count, getter_AddRefs(treeItemChild));
+      NS_ASSERTION(treeItemChild, "No tree item when there should be");
+      if (!treeItemChild) {
+        continue;
+      }
+      ShutdownChildDocuments(treeItemChild);
+      nsCOMPtr<nsIAccessibleDocument> docAccessible =
+        GetDocAccessibleFor(treeItemChild);
+      nsCOMPtr<nsPIAccessNode> accessNode = do_QueryInterface(docAccessible);
+      accessNode->Shutdown();
+    }
+  }
 }
 
 nsIFrame* nsDocAccessible::GetFrame()
