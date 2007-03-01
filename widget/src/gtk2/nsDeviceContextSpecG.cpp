@@ -442,7 +442,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
   printf("\"%s\", %d, %d\n", path, width, height);
 
   nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1");
-  nsresult rv = file->InitWithPath(NS_ConvertUTF8toUTF16(filename));
+  nsresult rv = file->InitWithPath(NS_ConvertUTF8toUTF16(path));
   if (NS_FAILED(rv))
     return rv;
 
