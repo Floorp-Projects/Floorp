@@ -160,7 +160,7 @@ OPDEF(JSOP_GETPROP,   53, "getprop",    NULL,         3,  1,  1, 18,  JOF_CONST|
 OPDEF(JSOP_SETPROP,   54, "setprop",    NULL,         3,  2,  1,  3,  JOF_CONST|JOF_PROP|JOF_SET|JOF_ASSIGNING|JOF_DETECTING)
 OPDEF(JSOP_GETELEM,   55, "getelem",    NULL,         1,  2,  1, 18,  JOF_BYTE |JOF_ELEM|JOF_LEFTASSOC)
 OPDEF(JSOP_SETELEM,   56, "setelem",    NULL,         1,  3,  1,  3,  JOF_BYTE |JOF_ELEM|JOF_SET|JOF_ASSIGNING|JOF_DETECTING)
-OPDEF(JSOP_PUSHOBJ,   57, "pushobj",    NULL,         1,  0,  1,  0,  JOF_BYTE)
+OPDEF(JSOP_CALLNAME,  57, "callname",   NULL,         3,  0,  2, 19,  JOF_CONST|JOF_NAME|JOF_CALLOP)
 OPDEF(JSOP_CALL,      58, "call",       NULL,         3, -1,  1, 18,  JOF_UINT16)
 OPDEF(JSOP_NAME,      59, "name",       NULL,         3,  0,  1, 19,  JOF_CONST|JOF_NAME)
 OPDEF(JSOP_NUMBER,    60, "number",     NULL,         3,  0,  1, 16,  JOF_CONST)
@@ -401,7 +401,7 @@ OPDEF(JSOP_XMLOBJECT,     180,"xmlobject",  NULL,     3,  0,  1, 19,  JOF_CONST)
 OPDEF(JSOP_XMLCDATA,      181,"xmlcdata",   NULL,     3,  0,  1, 19,  JOF_CONST)
 OPDEF(JSOP_XMLCOMMENT,    182,"xmlcomment", NULL,     3,  0,  1, 19,  JOF_CONST)
 OPDEF(JSOP_XMLPI,         183,"xmlpi",      NULL,     3,  1,  1, 19,  JOF_CONST)
-OPDEF(JSOP_CALLPROP,      184,"callprop",   NULL,     3,  1,  1, 18,  JOF_CONST|JOF_PROP)
+OPDEF(JSOP_CALLPROP,      184,"callprop",   NULL,     3,  1,  2, 18,  JOF_CONST|JOF_PROP|JOF_CALLOP)
 OPDEF(JSOP_GETFUNNS,      185,"getfunns",   NULL,     1,  0,  1, 19,  JOF_BYTE)
 OPDEF(JSOP_FOREACH,       186,"foreach",    NULL,     1,  1,  1,  0,  JOF_BYTE)
 OPDEF(JSOP_DELDESC,       187,"deldesc",    NULL,     1,  2,  1, 17,  JOF_BYTE |JOF_ELEM|JOF_DEL)
@@ -426,7 +426,8 @@ OPDEF(JSOP_RESETBASE0,    191,"resetbase0", NULL,     1,  0,  0,  0,  JOF_BYTE)
  */
 OPDEF(JSOP_STARTXML,      192,"startxml",    NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_STARTXMLEXPR,  193,"startxmlexpr",NULL,    1,  0,  0,  0,  JOF_BYTE)
-OPDEF(JSOP_UNUSED194,     194,"",            NULL,    1,  0,  0,  0,  0)
+
+OPDEF(JSOP_CALLELEM,      194, "callelem",   NULL,  1,  2,  2, 18,  JOF_BYTE |JOF_ELEM|JOF_LEFTASSOC|JOF_CALLOP)
 
 /*
  * Stop interpretation, emitted at end of script to save the threaded bytecode
@@ -440,7 +441,7 @@ OPDEF(JSOP_STOP,          195,"stop",        NULL,    1,  0,  0,  0,  JOF_BYTE)
  */
 OPDEF(JSOP_GETXPROP,      196,"getxprop",    NULL,    3,  1,  1, 18,  JOF_CONST|JOF_PROP)
 
-OPDEF(JSOP_UNUSED197,     197,"",            NULL,    1,  0,  0, 0,   0)
+OPDEF(JSOP_CALLXMLNAME,   197, "callxmlname",  NULL,  1,  1,  2, 19,  JOF_BYTE|JOF_CALLOP)
 
 /*
  * Specialized JSOP_TYPEOF to avoid reporting undefined for typeof(0, undef).
@@ -497,3 +498,8 @@ OPDEF(JSOP_GETLOCALPROP,  219,"getlocalprop",  NULL,  5,  0,  1, 18,  JOF_INDEXC
 OPDEF(JSOP_ATOMBASE1,     220,"atombase1",     NULL,  1,  0,  0,  0,  JOF_BYTE |JOF_ATOMBASE)
 OPDEF(JSOP_ATOMBASE2,     221,"atombase2",     NULL,  1,  0,  0,  0,  JOF_BYTE |JOF_ATOMBASE)
 OPDEF(JSOP_ATOMBASE3,     222,"atombase3",     NULL,  1,  0,  0,  0,  JOF_BYTE |JOF_ATOMBASE)
+
+OPDEF(JSOP_CALLGVAR,      223, "callgvar",     NULL,  3,  0,  2, 19,  JOF_CONST|JOF_NAME|JOF_CALLOP)
+OPDEF(JSOP_CALLVAR,       224, "callvar",      NULL,  3,  0,  2, 19,  JOF_QVAR |JOF_NAME|JOF_CALLOP)
+OPDEF(JSOP_CALLARG,       225, "callarg",      NULL,  3,  0,  2, 19,  JOF_QARG |JOF_NAME|JOF_CALLOP)
+OPDEF(JSOP_CALLLOCAL,     226, "calllocal",    NULL,  3,  0,  2, 19,  JOF_LOCAL|JOF_NAME|JOF_CALLOP)

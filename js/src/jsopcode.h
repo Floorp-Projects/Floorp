@@ -109,6 +109,7 @@ typedef enum JSOpLength {
 #define JOF_LEFTASSOC    0x10000  /* left-associative operator */
 #define JOF_DECLARING    0x20000  /* var, const, or function declaration op */
 #define JOF_ATOMBASE     0x40000  /* atom segment base setting prefix op */
+#define JOF_CALLOP       0x80000  /* call operation pushing function and this */
 
 #define JOF_TYPE_IS_EXTENDED_JUMP(t) \
     ((unsigned)((t) - JOF_JUMPX) <= (unsigned)(JOF_LOOKUPSWITCHX - JOF_JUMPX))
