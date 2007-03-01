@@ -57,7 +57,7 @@ function initMunger()
      * - end with whitespace, non-word, or end-of-line
      */
     client.linkRE =
-        /(?:\s|\W|^)((?:(\w[\w-]+):[^\s]+|www(\.[^.\s]+){2,})\b[\/=]?)(?:\s|\W|$)/;
+        /(?:\s|\W|^)((?:(\w[\w-]+):[^\s]+|www(\.[^.\s]+){2,})\b[\/=]?)(?=\s|\W|$)/;
 
     const LOW_PRIORITY = 5;
     const NORMAL_PRIORITY = 10;
