@@ -278,7 +278,7 @@ script_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     /* Swap script for obj's old script, if any. */
     v = LOCKED_OBJ_GET_SLOT(obj, JSSLOT_PRIVATE);
-    oldscript = (JSScript *) JSVAL_TO_PRIVATE(v);
+    oldscript = !JSVAL_IS_VOID(v) ? JSVAL_TO_PRIVATE(v) : NULL;
     LOCKED_OBJ_SET_SLOT(obj, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(script));
     JS_UNLOCK_OBJ(cx, obj);
 
@@ -858,8 +858,8 @@ script_thaw(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
     /* Swap script for obj's old script, if any. */
-    v = LOCKED_OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
-    oldscript = (JSScript *) JSVAL_TO_PRIVATE(v);
+    v = LOCKED_OBJ_GET_SLOT(obj, JSSLOT_PRIVATE);
+    oldscript = !JSVAL_IS_VOID(v) ? JSVAL_TO_PRIVATE(v) : NULL;
     LOCKED_OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(script));
     JS_UNLOCK_OBJ(cx, obj);
 
