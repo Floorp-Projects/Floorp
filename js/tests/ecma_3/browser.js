@@ -191,10 +191,9 @@ window.onerror = reportFailure;
 function gc()
 {
   // Thanks to igor.bukanov@gmail.com
-  var tmp = Math.PI * 1e500, tmp2;
-  for (var i = 0; i != 1 << 15; ++i) 
+  for (var i = 0; i != 100000; ++i)
   {
-    tmp2 = tmp * 1.5;
+    var tmp = new Object();
   }
 }
 
