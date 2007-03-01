@@ -85,7 +85,6 @@
 #include "nsFrameSelection.h"
 #include "nsISelection.h"
 #include "nsIDOMRange.h"
-#include "nsIRange.h"
 #include "nsILookAndFeel.h"
 #include "nsCSSRendering.h"
 #include "nsContentUtils.h"
@@ -348,9 +347,6 @@ public:
                          nsIDOMRange *aRange,
                          PRBool aSelected,
                          nsSpread aSpread);
-
-  // Only called when actually inside the right range, etc.
-  void DoSetSelected(PRBool aSelected, PRBool aSelectionEmpty);
   
   virtual PRBool PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset);
   virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset);
@@ -4235,6 +4231,9 @@ nsTextFrame::GetPositionHelper(const nsPoint&  aPoint,
   return NS_OK;
 }
 
+// [HACK] Foward Declarations
+void ForceDrawFrame(nsFrame * aFrame);
+
 //null range means the whole thing
 NS_IMETHODIMP
 nsTextFrame::SetSelected(nsPresContext* aPresContext,
@@ -4251,69 +4250,67 @@ nsTextFrame::SetSelected(nsPresContext* aPresContext,
   if (aSelected && ParentDisablesSelection())
     return NS_OK;
 
+#if 0
+  PRBool isSelected = ((GetStateBits() & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT);
+  if (!aSelected && !isSelected) //already set thanks
+  {
+    return NS_OK;
+  }
+#endif
+
   // check whether style allows selection
   PRBool selectable;
   IsSelectable(&selectable, nsnull);
   if (!selectable)
     return NS_OK;//do not continue no selection for this frame.
 
-  // The offsets within our node spanned by the range
-  PRInt32 startOffset;
-  PRInt32 endOffset;
-  nsCOMPtr<nsIRange> range(do_QueryInterface(aRange));
-  if (range) {
-    if (GetContent() == range->GetStartParent()) {
-      startOffset = range->StartOffset();
-    } else {
-      startOffset = 0;
-    }
-    
-    if (GetContent() == range->GetEndParent()) {
-      endOffset = range->EndOffset();
-    } else {
-      endOffset = PR_INT32_MAX;
-    }
-  } else {
-    startOffset = 0;
-    endOffset = PR_INT32_MAX;
-  }
+  PRBool found = PR_FALSE;
+  if (aRange) {
+    //lets see if the range contains us, if so we must redraw!
+    nsCOMPtr<nsIDOMNode> endNode;
+    PRInt32 endOffset;
+    nsCOMPtr<nsIDOMNode> startNode;
+    PRInt32 startOffset;
+    aRange->GetEndContainer(getter_AddRefs(endNode));
+    aRange->GetEndOffset(&endOffset);
+    aRange->GetStartContainer(getter_AddRefs(startNode));
+    aRange->GetStartOffset(&startOffset);
+    nsCOMPtr<nsIDOMNode> thisNode = do_QueryInterface(GetContent());
 
-  PRBool empty = (startOffset == endOffset);
+    if (thisNode == startNode)
+    {
+      if ((mContentOffset + mContentLength) >= startOffset)
+      {
+        found = PR_TRUE;
+        if (thisNode == endNode)
+        { //special case
+          if (endOffset == startOffset) //no need to redraw since drawing takes place with cursor
+            found = PR_FALSE;
 
-  nsTextFrame* start = this;
-  nsTextFrame* cur;
-  for (cur = start; cur;
-       cur = NS_STATIC_CAST(nsTextFrame*, cur->GetNextContinuation())) {
-    if (cur->mContentOffset >= endOffset) {
-      break;
+          if (mContentOffset > endOffset)
+            found = PR_FALSE;
+        }
+      }
     }
-
-    if (cur->mContentOffset + cur->mContentLength > startOffset) {
-      cur->DoSetSelected(aSelected, empty);
+    else if (thisNode == endNode)
+    {
+      if (mContentOffset < endOffset)
+        found = PR_TRUE;
+      else
+      {
+        found = PR_FALSE;
+      }
     }
-  }
-  for (cur = NS_STATIC_CAST(nsTextFrame*, start->GetPrevContinuation());
-       cur;
-       cur = NS_STATIC_CAST(nsTextFrame*, cur->GetPrevContinuation())) {
-    // XXXbz is it cheaper to just always call DoSetSelected on our immediate
-    // prev continuation and then not have to do additions when comparing to
-    // startOffset?  Not like it matters, since this is always getting called
-    // on mContent's primary frame as far as I can tell...
-    if (cur->mContentOffset + cur->mContentLength <= startOffset) {
-      break;
-    }
-
-    if (cur->mContentOffset < endOffset) {
-      cur->DoSetSelected(aSelected, empty);
+    else
+    {
+      found = PR_TRUE;
     }
   }
+  else {
+    // null range means the whole thing
+    found = PR_TRUE;
+  }
 
-  return NS_OK;
-}
-
-void
-nsTextFrame::DoSetSelected(PRBool aSelected, PRBool aSelectionEmpty)
-{  
   if ( aSelected )
     AddStateBits(NS_FRAME_SELECTED_CONTENT);
   else
@@ -4323,7 +4320,7 @@ nsTextFrame::DoSetSelected(PRBool aSelected, PRBool aSelectionEmpty)
     PRInt32 offset;
     PRInt32 length;
 
-    nsresult rv = GetContentAndOffsetsForSelection(GetPresContext(),
+    nsresult rv = GetContentAndOffsetsForSelection(aPresContext,
                                                    getter_AddRefs(content),
                                                    &offset, &length);
     if (NS_SUCCEEDED(rv) && content) {
@@ -4343,13 +4340,26 @@ nsTextFrame::DoSetSelected(PRBool aSelected, PRBool aSelectionEmpty)
       delete details;
     }
   }
-  if (!aSelectionEmpty){ // Otherwise, this is the caret, which will repaint
-                         // itself.
+  if (found){ //if range contains this frame...
     // Selection might change our border, content and outline appearance
     // But textframes can't have an outline. So just use the simple
     // bounds
     Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
   }
+  if (aSpread == eSpreadDown)
+  {
+    nsIFrame* frame = GetPrevContinuation();
+    while(frame){
+      frame->SetSelected(aPresContext, aRange,aSelected,eSpreadNone);
+      frame = frame->GetPrevContinuation();
+    }
+    frame = GetNextContinuation();
+    while (frame){
+      frame->SetSelected(aPresContext, aRange,aSelected,eSpreadNone);
+      frame = frame->GetNextContinuation();
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
