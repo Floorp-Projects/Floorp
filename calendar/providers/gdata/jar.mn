@@ -1,0 +1,13 @@
+#filter substitution
+
+gdata-provider.jar:
+% content gdata-provider %content/
+% skin gdata-provider classic/1.0 %skin/
+% overlay chrome://calendar/content/calendarCreation.xul chrome://gdata-provider/content/calendarCreation.xul
+    content/calendarCreation.xul                 (content/calendarCreation.xul)
+    skin/calendar.png                            (skin/calendar.png)
+
+gdata-provider-@AB_CD@.jar:
+% locale gdata-provider @AB_CD@ %locale/@AB_CD@/
+    locale/@AB_CD@/gdata.properties              (/calendar/locales/@AB_CD@/chrome/calendar/providers/gdata/gdata.properties)
+    locale/@AB_CD@/gdata.dtd                     (/calendar/locales/@AB_CD@/chrome/calendar/providers/gdata/gdata.dtd)

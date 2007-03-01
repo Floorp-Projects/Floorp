@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Google Calendar Provider code.
+   -
+   - The Initial Developer of the Original Code is
+   -   Philipp Kewisch (mozilla@kewis.ch)
+   - Portions created by the Initial Developer are Copyright (C) 2006
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <description about="urn:mozilla:install-manifest">
+    <em:id>{a62ef8ec-5fdc-40c2-873c-223b8a6925cc}</em:id>
+    <em:version>0.1</em:version>
+    <em:type>2</em:type>
+
+    <!-- Target Application this extension can install into,
+         with minimum and maximum supported versions. -->
+    <em:targetApplication>
+      <Description>
+        <!-- sunbird -->
+        <em:id>{718e30fb-e89b-41dd-9da7-e25a45638b28}</em:id>
+        <em:minVersion>0.5pre</em:minVersion>
+        <em:maxVersion>0.6a*</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+    <em:targetApplication>
+      <Description>
+        <!-- Thunderbird -->
+        <em:id>{3550f703-e582-4d05-9a08-453d09bdfdc6}</em:id>
+        <em:minVersion>2.0b*</em:minVersion>
+        <em:maxVersion>3.0a1</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+
+    <!-- Front End MetaData -->
+    <!-- When localizing the following, please keep in mind that these strings
+         had to be approved by the Google Brand Features Team. Be sure to make
+         clear that this extension is *FOR* Google Calendar and not *BY* Google.
+
+         Also, it was explicitly stated, that the phrase "Google Calendar"
+         should be localized just as it is on the localized versions of the
+         Google Calendar UI.
+     -->
+    <em:name>Provider for Google Calendar</em:name>
+    <em:description>Allows bidirectional access to Google Calendar</em:description>
+    <em:creator>Philipp Kewisch</em:creator>
+    <em:homepageURL>http://mozilla.kewis.ch/</em:homepageURL>
+    <em:iconURL>chrome://gdata-provider/skin/calendar.png</em:iconURL>
+  </description>
+</RDF>
