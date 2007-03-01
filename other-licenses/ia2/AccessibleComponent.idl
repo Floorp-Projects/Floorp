@@ -1,0 +1,95 @@
+/*************************************************************************
+ *
+ *  File Name (AccessibleComponent.idl)
+ *
+ *  IAccessible2 IDL Specification
+ *
+ *  Copyright (c) IBM Corp. 2006
+ *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License version 2.1, as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02110-1301  USA
+ *
+ ************************************************************************/
+
+import "objidl.idl";
+import "oaidl.idl";
+import "oleacc.idl";
+import "Accessible2.idl";
+
+typedef long IA2Color;
+
+/// A structure containing an x and y value.
+typedef struct {
+  long x;  ///< x coordinate
+  long y;  ///< y corrdinate
+} IA2Point;
+
+/** @brief This interface is implemented by any object that can be rendered 
+ on the screen.
+
+ This interface provides the standard mechanism for an assistive technology
+  to retrieve information concerning the graphical representation of an object. 
+  Coordinates used by the functions of this interface are specified in
+  different coordinate systems.  Their scale is the same and is equal to
+  that of the screen coordiante system.  In other words all coordinates
+  are measured in pixels.  They differ in their respective origin:
+  <ul>
+   <li>The screen coordinate system has its origin in the upper left
+    corner of the current screen.</li>
+   <li>The origin of the parent coordinate system is the upper left corner
+    of the parent's bounding box.  With no parent the screen coordinate
+    system is used instead.</li>
+  </ul>
+*/
+[object, uuid(1546D4B0-4C98-4bda-89AE-9A64748BDDE4)]
+interface IAccessibleComponent : IUnknown
+{
+
+  /** @brief Returns the location of the upper left corner of the object's
+    bounding box relative to the parent.
+	
+	The coordinates of the bounding box are given relative to the parent's 
+	coordinate system. The coordinates of the returned position are relative 
+	to this object's parent or relative to the screen on which this object
+    is rendered if it has no parent. If the object is not on any screen
+    the returned position is (0,0).
+   
+   @param [out] locationInParent
+  */
+  [propget] HRESULT locationInParent
+    (
+     [out, retval] IA2Point *locationInParent
+    );
+
+  /** @brief Returns the foreground color of this object.
+   @param [out] foreground
+    The returned color is the foreground color of this object or, if
+    that is not supported, the default foreground color.
+  */ 
+  [propget] HRESULT foreground
+    (
+     [out, retval] IA2Color *foreground
+    );
+
+   /** @brief Returns the background color of this object.
+    @param [out] background
+     The returned color is the background color of this object or, if
+     that is not supported, the default background color.
+   */ 
+  [propget] HRESULT background
+    (
+     [out, retval] IA2Color *background
+    );
+}

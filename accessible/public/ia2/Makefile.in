@@ -1,0 +1,214 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code
+#
+# The Initial Developer of the Original Code is
+# Mozilla Foundation
+# Portions created by the Initial Developer are Copyright (C) 2007
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Alexander Surkov <surkov.alexander@gmail.com> (original author)
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH     = ../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
+
+LIBRARY_NAME  = IA2Marshal
+MODULE        = accessibility
+GRE_MODULE    = 1
+DEFFILE       = $(win_srcdir)/IA2Marshal.def
+
+IA2DIR        = $(topsrcdir)/other-licenses/ia2
+IA2RELDIR     = $(DEPTH)/other-licenses/ia2
+
+include $(DEPTH)/config/autoconf.mk
+
+DEFINES       += -DREGISTER_PROXY_DLL -D_WIN32_WINNT=0x400
+
+GARBAGE       += $(MIDL_GENERATED_FILES) done_gen dlldata.c
+
+FORCE_SHARED_LIB = 1
+
+SRCS_IN_OBJDIR   = 1
+
+CSRCS	= \
+  dlldata.c \
+  Accessible2_p.c \
+  Accessible2_i.c \
+  AccessibleAction_p.c \
+  AccessibleAction_i.c \
+  AccessibleApplication_p.c \
+  AccessibleApplication_i.c \
+  AccessibleComponent_p.c \
+  AccessibleComponent_i.c \
+  AccessibleEditableText_p.c \
+  AccessibleEditableText_i.c \
+  AccessibleHyperlink_p.c \
+  AccessibleHyperlink_i.c \
+  AccessibleHypertext_p.c \
+  AccessibleHypertext_i.c \
+  AccessibleImage_p.c \
+  AccessibleImage_i.c \
+  AccessibleRelation_p.c \
+  AccessibleRelation_i.c \
+  AccessibleTable_p.c \
+  AccessibleTable_i.c \
+  AccessibleText_p.c \
+  AccessibleText_i.c \
+  AccessibleValue_p.c \
+  AccessibleValue_i.c \
+  $(NULL)
+
+MIDL_GENERATED_FILES = \
+  Accessible2.h \
+  Accessible2_p.c \
+  Accessible2_i.c \
+  AccessibleAction.h \
+  AccessibleAction_p.c \
+  AccessibleAction_i.c \
+  AccessibleApplication.h \
+  AccessibleApplication_p.c \
+  AccessibleApplication_i.c \
+  AccessibleComponent.h \
+  AccessibleComponent_p.c \
+  AccessibleComponent_i.c \
+  AccessibleEditableText.h \
+  AccessibleEditableText_p.c \
+  AccessibleEditableText_i.c \
+  AccessibleEventId.h \
+  AccessibleEventId_p.c \
+  AccessibleHyperlink.h \
+  AccessibleHyperlink_p.c \
+  AccessibleHyperlink_i.c \
+  AccessibleHypertext.h \
+  AccessibleHypertext_p.c \
+  AccessibleHypertext_i.c \
+  AccessibleImage.h \
+  AccessibleImage_p.c \
+  AccessibleImage_i.c \
+  AccessibleRelation.h \
+  AccessibleRelation_p.c \
+  AccessibleRelation_i.c \
+  AccessibleRole.h \
+  AccessibleStates.h \
+  AccessibleTable.h \
+  AccessibleTable_p.c \
+  AccessibleTable_i.c \
+  AccessibleText.h \
+  AccessibleText_p.c \
+  AccessibleText_i.c \
+  AccessibleValue.h \
+  AccessibleValue_p.c \
+  AccessibleValue_i.c \
+  $(NULL)
+
+SRCDIR_CSRCS  = $(addprefix $(srcdir)/,$(CSRCS))
+
+OS_LIBS = \
+  kernel32.lib \
+  rpcndr.lib \
+  rpcns4.lib \
+  rpcrt4.lib \
+  oleaut32.lib \
+  $(NULL)
+
+$(MIDL_GENERATED_FILES): done_gen
+
+done_gen: $(IA2RELDIR)/Accessible2.idl \
+          $(IA2RELDIR)/AccessibleAction.idl \
+          $(IA2RELDIR)/AccessibleApplication.idl \
+          $(IA2RELDIR)/AccessibleComponent.idl \
+          $(IA2RELDIR)/AccessibleEditableText.idl \
+          $(IA2RELDIR)/AccessibleEventId.idl \
+          $(IA2RELDIR)/AccessibleHyperlink.idl \
+          $(IA2RELDIR)/AccessibleHypertext.idl \
+          $(IA2RELDIR)/AccessibleImage.idl \
+          $(IA2RELDIR)/AccessibleRelation.idl \
+          $(IA2RELDIR)/AccessibleRole.idl \
+          $(IA2RELDIR)/AccessibleStates.idl \
+          $(IA2RELDIR)/AccessibleTable.idl \
+          $(IA2RELDIR)/AccessibleText.idl \
+          $(IA2RELDIR)/AccessibleValue.idl
+
+	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/Accessible2.idl
+	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleAction.idl
+	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleApplication.idl
+	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleComponent.idl
+	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleEditableText.idl
+	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleEventId.idl
+	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleHyperlink.idl
+	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleHypertext.idl
+	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleImage.idl
+	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleRelation.idl
+	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleRole.idl
+	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleStates.idl
+	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleTable.idl
+	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleText.idl
+	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleValue.idl
+	touch $@
+
+EXPORTS = \
+  Accessible2.h \
+  Accessible2_i.c \
+  AccessibleAction.h \
+  AccessibleAction_i.c \
+  AccessibleApplication.h \
+  AccessibleApplication_i.c \
+  AccessibleComponent.h \
+  AccessibleComponent_i.c \
+  AccessibleEditableText.h \
+  AccessibleEditableText_i.c \
+  AccessibleEventId.h \
+  AccessibleHyperlink.h \
+  AccessibleHyperlink_i.c \
+  AccessibleImage.h \
+  AccessibleImage_i.c \
+  AccessibleRelation.h \
+  AccessibleRelation_i.c \
+  AccessibleRole.h \
+  AccessibleStates.h \
+  AccessibleTable.h \
+  AccessibleTable_i.c \
+  AccessibleText.h \
+  AccessibleText_i.c \
+  AccessibleValue.h \
+  AccessibleValue_i.c \
+  $(NULL)
+
+export:: done_gen
+
+# This marshall dll is also registered in the installer
+register::
+	regsvr32 -s $(DIST)/bin/$(SHARED_LIBRARY)
+
+EMBED_MANIFEST_AT = 2
+
+include $(topsrcdir)/config/rules.mk
+

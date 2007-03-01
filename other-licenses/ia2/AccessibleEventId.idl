@@ -1,0 +1,180 @@
+/*************************************************************************
+ *
+ *  File Name (AccessibleEventID.idl)
+ *
+ *  IAccessible2 IDL Specification
+ *
+ *  Copyright (c) IBM Corp. 2007
+ *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License version 2.1, as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02110-1301  USA
+ *
+ ************************************************************************/
+
+/// These constants identify the event IDs fired by IAccessible2 objects.
+enum IA2EventID {
+
+  /** The change of the number or attributes of actions of an accessible
+    object is signaled by events of this type. 
+  */
+  IA2_EVENT_ACTION_CHANGED = 0x101,
+
+  /** The active descendant of a component has changed.  The active descendant 
+    is used in objects with transient children.
+  */
+  IA2_EVENT_ACTIVE_DECENDENT_CHANGED,
+
+  /** The document wide attributes of the document object have changed.
+  */
+  IA2_EVENT_DOCUMENT_ATTRIBUTE_CHANGED,
+
+  /** The contents of the document have changed.
+  */
+  IA2_EVENT_DOCUMENT_CONTENT_CHANGED,
+
+  /** The loading of the document has completed.
+  */
+  IA2_EVENT_DOCUMENT_LOAD_COMPLETE,
+
+  /** The loading of the document was interrupted.
+  */
+  IA2_EVENT_DOCUMENT_LOAD_STOPPED,
+
+  /** The document contents are being reloaded.
+  */
+  IA2_EVENT_DOCUMENT_RELOAD,
+
+  /** The ending index of this link within the containing string has changed.
+  */
+  IA2_EVENT_HYPERLINK_END_INDEX_CHANGED,
+
+  /** The number of anchors assoicated with this hyperlink object has changed.
+  */
+  IA2_EVENT_HYPERLINK_NUMBER_OF_ANCHORS_CHANGED,
+
+  /** The hyperlink selected state changed from selected to unselected or
+    from unselected to selected.
+  */
+  IA2_EVENT_HYPERLINK_SELECTED_LINK_CHANGED,
+
+  /** One of the links associated with the hypertext object has been activated.
+  */
+  IA2_EVENT_HYPERTEXT_LINK_ACTIVATED,
+
+  /** One of the links associated with the hypertext object has been selected.
+  */
+  IA2_EVENT_HYPERTEXT_LINK_SELECTED,
+
+  /** The starting index of this link within the containing string has changed.
+  */
+  IA2_EVENT_HYPERLINK_START_INDEX_CHANGED,
+
+  /** Focus has changed from one hypertext object to another, or focus moved
+   from a non-hypertext object to a hypertext object, or focus moved from a
+   hypertext object to a non-hypertext object.
+  */
+  IA2_EVENT_HYPERTEXT_CHANGED,
+
+  /** The number of hyperlinks associated with a hypertext object changed
+  */
+  IA2_EVENT_HYPERTEXT_NLINKS_CHANGED,
+
+  /** An object's attributes changed.
+  Also see ::IA2_EVENT_TEXT_ATTRIBUTE_CHANGED.
+  */
+  IA2_EVENT_OBJECT_ATTRIBUTE_CHANGED,
+
+  /** A slide changed in a presentation document or a page boundary was 
+   crossed in a word processing document.
+  */
+  IA2_EVENT_PAGE_CHANGED,  
+
+  /** An object's role changed.
+  */
+  IA2_EVENT_ROLE_CHANGED,
+
+  /** A table caption changed.
+  */
+  IA2_EVENT_TABLE_CAPTION_CHANGED,
+
+  /** A table's column description changed.
+  */
+  IA2_EVENT_TABLE_COLUMN_DESCRIPTION_CHANGED,
+
+  /** A table's column header changed.
+  */
+  IA2_EVENT_TABLE_COLUMN_HEADER_CHANGED,
+
+  /** A table's data changed.
+  */
+  IA2_EVENT_TABLE_MODEL_CHANGED,
+
+  /** A table's row description changed.
+  */
+  IA2_EVENT_TABLE_ROW_DESCRIPTION_CHANGED,
+
+  /** A table's row header changed.
+  */
+  IA2_EVENT_TABLE_ROW_HEADER_CHANGED,
+
+  /** A table's summary changed.
+  */
+  IA2_EVENT_TABLE_SUMMARY_CHANGED,
+
+  /** A text object's attributes changed.
+  Also see ::IA2_EVENT_OBJECT_ATTRIBUTE_CHANGED.
+  */
+  IA2_EVENT_TEXT_ATTRIBUTE_CHANGED,
+
+  /** The caret has moved to a new position.
+  */
+  IA2_EVENT_TEXT_CARET_MOVED,
+
+  /** This event indicates general text changes, i.e. changes to text that is 
+    exposed through the IAccessibleText and IAccessibleEditableText interfaces.
+  */
+  IA2_EVENT_TEXT_CHANGED,
+
+  /** Text was inserted.
+  */
+  IA2_EVENT_TEXT_INSERTED,
+
+  /** Text was removed.
+  */
+  IA2_EVENT_TEXT_REMOVED,
+
+  /** Text was updated.
+  */
+  IA2_EVENT_TEXT_UPDATED,
+
+  /** The text selection changed.
+  */
+  IA2_EVENT_TEXT_SELECTION_CHANGED,
+
+  /** A visibile data event indicates the change of the visual appearance
+    of an accessible object.  This includes for example most of the
+    attributes available via the IAccessibleComponent interface.
+  */
+  IA2_EVENT_VISIBLE_DATA_CHANGED,
+
+  /** The caret moved from one column to the next.
+  */
+  IA2_EVENT_COLUMN_CHANGED,
+
+  /** The caret moved from one section to the next.
+  */
+  IA2_EVENT_SECTION_CHANGED
+
+};

@@ -1,0 +1,355 @@
+/*************************************************************************
+ *
+ *  File Name (Accessible2.idl)
+ *
+ *  IAccessible2 IDL Specification
+ *
+ *  Copyright (c) IBM Corp. 2007
+ *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License version 2.1, as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02110-1301  USA
+ *
+ ************************************************************************/
+
+/** @mainpage
+ 
+ @section _interfaces Interfaces
+  IAccessible2\n
+  IAccessibleAction\n
+  IAccessibleApplication\n
+  IAccessibleComponent\n
+  IAccessibleHypertext\n
+  IAccessibleHyperlink\n
+  IAccessibleImage\n
+  IAccessibleRelation\n
+  IAccessibleTable\n
+  IAccessibleText\n
+  IAccessibleEditableText\n
+  IAccessibleValue
+
+ @section _structs Structs
+  IA2Point\n
+  IA2Locale\n
+  IA2TableModelChange\n
+  IA2TextSegment
+
+ @section _enums Enums
+  ::IA2EventID values identify events.\n
+  ::IA2Role values define roles.\n
+  ::IA2TableModelChangeType values describe the kinds of changes made to a table (insert, delete, update).\n
+  ::IA2TextBoundaryType values define the requested text unit (character, word, sentence, line, paragraph).\n
+  ::IA2TextCoordinateType values define the requested coordinate type (screen or parent window).
+
+ @section _constants Constants
+  @ref grpIAccessibleApplication\n
+  @ref grpRelations\n
+  @ref grpStates\n
+
+ @section _license License
+  @ref _licensePage "LGPL"
+
+ @page _licensePage License
+  IAccessible2 IDL Specification
+
+  Copyright (c) IBM Corp. 2006\n
+  Copyright (c) Sun Microsystems, Inc. 2000, 2006
+
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License version 2.1, as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
+
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public
+  License along with this library; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02110-1301  USA
+
+  You may also refer to http://www.gnu.org/licenses/lgpl.html
+
+**/
+
+import "objidl.idl";
+import "oaidl.idl";
+import "ocidl.idl";
+import "oleacc.idl";
+import "AccessibleRelation.idl";
+import "AccessibleStates.idl";
+
+/// A structure defining the locale of an accessible object.
+typedef struct {
+  BSTR language; ///< ISO 639-1 Alpha-2 two character language code
+  BSTR country;  ///< ISO 3166-1 Alpha-2 two character country code
+  BSTR variant;  ///< Application specific variant of the locale
+} IA2Locale;
+
+/** This interface must always be provided for objects that support some
+ portion of the collection of the IAccessible2 interfaces.
+ 
+ IAccessible2 is a subclass of MSAA's IAccessible.  This is a matter of 
+ convenience, i.e. an IAccessible2 is an IAccessible so MSAA methods can be 
+ easily accessed. None of MSAA's IAccessible methods are overridden or extended.
+ */
+[object, uuid(E89F726E-C4F4-4c19-BB19-B647D7FA8478)]
+interface IAccessible2 : IAccessible
+{
+
+  /** @brief Returns the number of accessible relations for this object.
+   @param [out] nRelations
+  */
+  [propget] HRESULT nRelations
+    (
+     [out, retval] long *nRelations
+    );
+
+  /** @brief Returns one accessible relation for this object.
+   @param [in] relationIndex
+     0-based
+   @param [out] relation
+  */
+  [propget] HRESULT relation
+    (
+     [in] long relationIndex,
+     [out, retval] IAccessibleRelation **relation
+    );
+
+  /** @brief Returns multiple accessible relations for this object.
+   @param [in] maxRelations
+    maximum number of relations to get
+   @param [out] relation
+    array of accessible relation objects
+   @param [out] nRelations 
+    length of array (not more than maxRelations)
+  */
+  [propget] HRESULT relations
+    (
+     [in] long maxRelations, 
+     [out, size_is(maxRelations), length_is(*nRelations)]
+       IAccessibleRelation **relation, 
+     [out, retval] long *nRelations 
+    );
+
+  /** @brief Returns the role of an IAccessible2 object.
+   @param [out] role
+    The role of an IAccessible2 object.  
+  */
+  HRESULT role
+    (
+     [out, retval] long *role
+    );
+
+  /** @brief Makes an object visible on screen.
+   @param [in] topLeft
+    If false then it will scroll the shortest distance it needs to put
+    the element on-screen.  
+  */
+  HRESULT scrollTo
+    (
+     [in] boolean topLeft 
+    );
+
+  /** @brief Returns grouping information.
+   
+   Used for tree items, list items, tab panel labels, radio buttons, etc.
+   Also used for collectons of non-text objects.
+
+   @param [out] groupLevel
+    0-based
+   @param [out] similarItemsInGroup
+    1-based
+   @param [out] positionInGroup
+    0-based
+  */
+  [propget] HRESULT groupPosition
+    (
+     [out] long *groupLevel,
+     [out] long *similarItemsInGroup,
+     [out, retval] long *positionInGroup 
+    );
+
+  /** @brief Returns the localized role name.
+
+   Valid if the role is an IAccessible2 role; not to be used for MSAA roles.
+
+   @param [out] localizedRoleName
+  */
+  [propget] HRESULT localizedRoleName
+    (
+	 [out, retval] BSTR *localizedRoleName
+    );
+
+  /** @brief Returns the bit strip containing any IAccessible2 states.
+   @param [out] states
+  */
+  [propget] HRESULT states
+    (
+	 [out, retval] AccessibleStates *states
+    );
+
+  /** @brief Returns localized state names (array of strings).
+   @param [in] maxLocalizedStateNames
+   @param [out] localizedStateNames
+   @param [out] nLocalizedStateNames
+  */
+  [propget] HRESULT localizedStateNames
+    (
+     [in] long maxLocalizedStateNames,
+     [out, size_is(,maxLocalizedStateNames), length_is(,*nLocalizedStateNames)] BSTR **localizedStateNames,
+     [out, retval] long *nLocalizedStateNames
+    );
+
+  /** @brief Returns the extended role.
+   
+   An extended role is a role which is dynamically generated by the application.
+   It is not predefined by the IAccessible2 specification.
+   
+   @param [out] extendedRole
+  */
+  [propget] HRESULT extendedRole
+    (
+	 [out, retval] BSTR *extendedRole
+    );
+
+  /** @brief Returns the localized extended role.
+   @param [out] localizedExtendedRole
+  */
+  [propget] HRESULT localizedExtendedRole
+    (
+	 [out, retval] BSTR *localizedExtendedRole
+    );
+
+  /** @brief Returns the number of extended states.
+   @param [out] nExtendedStates
+  */
+  [propget] HRESULT nExtendedStates
+    (
+     [out, retval] long *nExtendedStates
+    );
+
+  /** @brief Returns the extended states (array of strings).
+
+   An extended state is a state which is dynamically generated by the application.
+   It is not predefined by the IAccessible2 specification.
+
+   @param [in] maxExtendedStates
+   @param [out] extendedStates
+   @param [out] nExtendedStates
+  */
+  [propget] HRESULT extendedStates
+    (
+     [in] long maxExtendedStates,
+     [out, size_is(,maxExtendedStates), length_is(,*nExtendedStates)] BSTR **extendedStates,
+     [out, retval] long *nExtendedStates
+    );
+
+  /** @brief Returns the localized extended states (array of strings).
+   @param [in] maxLocalizedExtendedStates
+   @param [out] localizedExtendedStates
+   @param [out] nLocalizedExtendedStates
+  */
+  [propget] HRESULT localizedExtendedStates
+    (
+     [in] long maxLocalizedExtendedStates,
+     [out, size_is(,maxLocalizedExtendedStates), length_is(,*nLocalizedExtendedStates)] BSTR **localizedExtendedStates,
+     [out, retval] long *nLocalizedExtendedStates
+    );
+
+  /** @brief Returns the unique ID.
+   
+   The uniqueID is an identifier for this object, is unique within the
+   current window, and remains the same for the lifetime of the accessible
+   object. This is the same value that is passed in the idChild parameter of 
+   the WinEventProc callback function for any events that occur on the object, 
+   and is typically a negative number. Using negative numbers prevents the ID 
+   from conflicting with the use of positive numbers that might possibly be 
+   used to indicate a direct child N of the window's root accessible object,
+   and thus the implementation of get_accChild() can differentiate between 
+   requests for direct child N vs. a descendant lower in the hierarchy with a 
+   given uniqueID.  This is important because get_accChild() is used by 
+   AccessibleObjectFromEvent() to retrieve the accessible object which fired 
+   the event by starting from the window's root accessible object.
+
+   This value is provided so the AT can have access to it even when not 
+   handling an event for the object.
+   
+   An example of when this value is useful if the AT wants to build a cache. 
+   The AT could cache the uniqueIDs in addition to other data being cached. 
+   When an event is fired the AT could map that to its internal model.  Thus, 
+   if there's a REORDER/SHOW/HIDE event the AT knows which part of the internal 
+   structure has been invalidated and can refetch just that part.
+
+   This value can also be used by and AT to determine when the current control
+   has changed. If the role is the same for two controls that are adjacent in 
+   the tab order, this can be used to detect the new control.
+
+   Another use of this value by an AT is to identify when a grouping object has 
+   changed, e.g. when moving from a radio button in one group to a radio button in a 
+   different group.
+
+   @param [out] uniqueID
+  */
+  [propget] HRESULT uniqueID
+    (
+     [out, retval] long *uniqueID
+    );
+
+  /** @brief Returns the window handle for the parent window which contains this object.
+
+   This is the same window handle which will be passed for any events that occur on the 
+   object, but is cached in the accessible object for use when it would be helpful to 
+   access the window handle in cases where an event isn't fired on this object.
+
+   A use case is when a screen reader is grabbing an entire web page on a page load. 
+   Without the availability of windowHandle, the AT would have to get the window handle
+   by using WindowFromAccessibleObject on each IAccessible, which is slow because it's 
+   implemented by oleacc.dll as a loop which crawls up the ancestor chain and looks for 
+   a ROLE_WINDOW object, mapping that back to a window handle.
+   
+   @param [out] windowHandle
+  */
+  [propget] HRESULT windowHandle
+    (
+     [out, retval] OLE_HANDLE *windowHandle
+    );
+ 
+  /** @brief Returns the index of this object in its parent object.
+   @param [out] indexInParent
+  */
+  [propget] HRESULT indexInParent
+    (
+     [out, retval] long *indexInParent
+    );
+
+  /** @brief Returns the IA2Locale of the accessible object. 
+   @param [out] locale
+  */
+  [propget] HRESULT locale
+    (
+     [out, retval] IA2Locale *locale
+    );
+
+  /** @brief Returns the attributes specific to this IAccessible2 object, such as a cell's formula.
+   @param [out] attributes
+  */
+  [propget] HRESULT attributes
+    (
+     [out, retval] BSTR *attributes
+    );
+
+}
+

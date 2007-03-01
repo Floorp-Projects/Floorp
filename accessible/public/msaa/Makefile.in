@@ -61,7 +61,7 @@ FORCE_SHARED_LIB = 1
 SRCS_IN_OBJDIR	= 1
 
 CSRCS	= \
-	AccessibleMarshal.c \
+	dlldata.c \
 	ISimpleDOMNode_p.c \
 	ISimpleDOMNode_i.c \
 	ISimpleDOMDocument_p.c \
@@ -94,7 +94,10 @@ OS_LIBS = \
 
 $(MIDL_GENERATED_FILES): done_gen
 
-done_gen: ISimpleDOMNode.idl ISimpleDOMDocument.idl ISimpleDOMText.idl
+done_gen: ISimpleDOMNode.idl \
+          ISimpleDOMDocument.idl \
+          ISimpleDOMText.idl
+
 	$(MIDL) $(MIDL_FLAGS) -Oicf $(srcdir)/ISimpleDOMNode.idl
 	$(MIDL) $(MIDL_FLAGS) -Oicf $(srcdir)/ISimpleDOMDocument.idl
 	$(MIDL) $(MIDL_FLAGS) -Oicf $(srcdir)/ISimpleDOMText.idl

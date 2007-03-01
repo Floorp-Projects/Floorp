@@ -13,4 +13,5 @@ dist/bin/components/@SHARED_LIBRARY@
 [xpfe-browser browser]
 #if MOZ_WIDGET_TOOLKIT==windows
 dist/bin/AccessibleMarshal.dll
+dist/bin/IA2Marshal.dll
 #endif

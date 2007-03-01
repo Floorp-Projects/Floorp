@@ -1,0 +1,239 @@
+/*************************************************************************
+ *
+ *  File Name (AccessibleRole.idl)
+ *
+ *  IAccessible2 IDL Specification
+ *
+ *  Copyright (c) IBM Corp. 2007
+ *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License version 2.1, as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02110-1301  USA
+ *
+ ************************************************************************/
+
+import "objidl.idl";
+
+/** Collection of roles.
+
+  This enumerator defines the set of possible roles of objects implementing the
+  IAccessible2 interface. The role of an object describes its generic function
+  like 'button', 'menu', or 'text'. You can obtain an object's role by calling
+  the get_accRole method of the IAccessible interface.
+*/
+enum IA2Role {
+
+  /** Unknown role. The object contains some Accessible information, but its 
+   role is not known.
+  */
+  IA2_ROLE_UNKNOWN = 0,
+
+  /// A caption describing another object.
+  IA2_ROLE_CAPTION = 0x401,
+
+  /// Used for check buttons that are menu items.
+  IA2_ROLE_CHECK_MENU_ITEM,
+
+  /// A specialized dialog that lets the user choose a color.
+  IA2_ROLE_COLOR_CHOOSER,
+
+  /// A date editor.
+  IA2_ROLE_DATE_EDITOR,
+
+  /** An iconified internal frame in an ::IA2_ROLE_DESKTOP_PANE. 
+   Also refer to ::IA2_ROLE_INTERNAL_FRAME.
+  */
+  IA2_ROLE_DESKTOP_ICON,
+
+  /** A desktop pane. A pane that supports internal frames and iconified 
+   versions of those internal frames.
+  */
+  IA2_ROLE_DESKTOP_PANE,
+
+  /** A directory pane. A pane that allows the user to navigate through 
+   and select the contents of a directory. May be used by a file chooser.   
+   Also refer to ::IA2_ROLE_FILE_CHOOSER.
+  */
+  IA2_ROLE_DIRECTORY_PANE,
+
+  /// An editable text object in a toolbar.
+  IA2_ROLE_EDITBAR,
+
+  /// Embeded (OLE) object.
+  IA2_ROLE_EMBEDDED_OBJECT,
+
+  /// Text that is used as an endnote (footnote at the end of a chapter or section).
+  IA2_ROLE_ENDNOTE,
+
+  /** A file chooser. A specialized dialog that displays the files in the 
+   directory and lets the user select a file, browse a different directory, 
+   or specify a filename. May use the directory pane to show the contents of 
+   a directory.  
+   Also refer to ::IA2_ROLE_DIRECTORY_PANE.
+  */
+  IA2_ROLE_FILE_CHOOSER,
+
+  /** A font chooser. A font chooser is a component that lets the user pick 
+   various attributes for fonts.
+  */
+  IA2_ROLE_FONT_CHOOSER,
+
+  /** Footer of a document page.
+   Also refer to ::IA2_ROLE_HEADER.
+  */
+  IA2_ROLE_FOOTER,
+
+  /// Text that is used as a footnote.  Also refer to ::IA2_ROLE_ENDNOTE.
+  IA2_ROLE_FOOTNOTE,
+
+  /** A container of form controls.  An example of the use of this role is to
+   represent an HTML FORM tag.
+  */
+  IA2_ROLE_FORM,
+
+  /** Frame role. A top level window with a title bar, border, menu bar, etc.  
+   It is often used as the primary window for an application.  Also refer to 
+   the MSAA roles of dialog, canvas, and window.
+  */
+  IA2_ROLE_FRAME,
+
+  /** A glass pane. A pane that is guaranteed to be painted on top of all 
+   panes beneath it.  
+   Also refer to ::IA2_ROLE_ROOT_PANE and MSAA's canvas role.
+  */
+  IA2_ROLE_GLASS_PANE,
+
+  /** Header of a document page.
+   Also refer to ::IA2_ROLE_FOOTER.
+  */
+  IA2_ROLE_HEADER,
+
+  /// Heading.  Use the IAccessible2::attributes heading-level attribute to determine the heading level.
+  IA2_ROLE_HEADING,
+
+  /// A small fixed size picture, typically used to decorate components.
+  IA2_ROLE_ICON,
+
+  /** An image map object.  Usually a graphic with multiple hotspots, where 
+   each hotspot can be activated resulting in the loading of another document
+   or section of a document.
+  */
+  IA2_ROLE_IMAGE_MAP,
+
+  /** An object which is used to allow input of characters not found on a keyboard,
+   such as the input of Chinese characters on a Western keyboard.
+  */
+  IA2_ROLE_INPUT_METHOD_WINDOW,
+
+  /** An internal frame. A frame-like object that is clipped by a desktop pane.  
+   The desktop pane, internal frame, and desktop icon objects are often used to 
+   create multiple document interfaces within an application.
+   Also refer to ::IA2_ROLE_DESKTOP_ICON, ::IA2_ROLE_DESKTOP_PANE, and ::IA2_ROLE_FRAME
+  */
+  IA2_ROLE_INTERNAL_FRAME,
+
+  /// An object used to present an icon or short string in an interface.
+  IA2_ROLE_LABEL,
+
+  /** A layered pane. A specialized pane that allows its children to be drawn 
+   in layers, providing a form of stacking order. This is usually the pane that 
+   holds the menu bar as  well as the pane that contains most of the visual 
+   components in a window.
+   Also refer to ::IA2_ROLE_GLASS_PANE and ::IA2_ROLE_ROOT_PANE.
+  */
+  IA2_ROLE_LAYERED_PANE,
+
+  /// An embedded note which is not visible until activated.
+  IA2_ROLE_NOTE,
+
+ /** A specialized pane whose primary use is inside a DIALOG.
+   Also refer to MSAA's dialog role.
+  */
+  IA2_ROLE_OPTION_PANE,
+
+  /** An object representing a page of document content.  It is used in documents
+   which are accessed by the user on a page by page basis.
+  */
+  IA2_ROLE_PAGE,
+
+  /// A paragraph of text.
+  IA2_ROLE_PARAGRAPH,
+
+  /** A radio button that is a menu item.
+   Also refer to MSAA's button and menu item roles.
+  */
+  IA2_ROLE_RADIO_MENU_ITEM,
+
+  /** An object which is redundant with another object in the accessible hierarchy.
+   ATs typically ignore objects with this role.
+  */
+  IA2_ROLE_REDUNDANT_OBJECT,
+
+  /** A root pane. A specialized pane that has a glass pane and a layered pane 
+   as its children.
+   Also refer to ::IA2_ROLE_GLASS_PANE and ::IA2_ROLE_LAYERED_PANE
+  */
+  IA2_ROLE_ROOT_PANE,
+
+  /** A ruler such as those used in word processors.
+  */
+  IA2_ROLE_RULER,
+
+  /** A scroll pane. An object that allows a user to incrementally view a large 
+   amount of information.  Its children can include scroll bars and a viewport.
+   Also refer to ::IA2_ROLE_VIEW_PORT and MSAA's scroll bar role.
+  */
+  IA2_ROLE_SCROLL_PANE,
+
+  /** A container of document content.  An example of the use of this role is to
+   represent an HTML DIV tag.
+
+   A section may be used as a region.  A region is a group of elements that 
+   together form a perceivable unit.  A region does not necessarily follow the 
+   logical structure of the content, but follows the perceivable structure of 
+   the page.  A region may have an attribute in the set of 
+   IAccessible2::attributes which indicates that it is "live".  A live region 
+   is content that is likely to change in response to a timed change, a user 
+   event, or some other programmed logic or event.
+  */
+  IA2_ROLE_SECTION,
+
+  /// Object with graphical representation used to represent content on draw pages.
+  IA2_ROLE_SHAPE,
+
+  /** A split pane. A specialized panel that presents two other panels at the 
+   same time. Between the two panels is a divider the user can manipulate to make 
+   one panel larger and the other panel smaller.
+  */
+  IA2_ROLE_SPLIT_PANE,
+
+  /// Collection of objects that constitute a logical text entity.
+  IA2_ROLE_TEXT_FRAME,
+
+  /** A toggle button. A specialized push button that can be checked or unchecked, 
+   but does not provide a separate indicator for the current state.
+   Also refer to MSAA's roles of push button, check box, and radio button.
+   <BR><B>Note:</B> IA2_ROLE_TOGGLE_BUTTON should not be used.  Instead, use MSAA's 
+   ROLE_SYSTEM_PUSHBUTTON and STATE_SYSTEM_PRESSED.
+  */
+  IA2_ROLE_TOGGLE_BUTTON,
+
+  /** A viewport. An object usually used in a scroll pane. It represents the 
+   portion of the entire data that the user can see. As the user manipulates 
+   the scroll bars, the contents of the viewport can change.
+   Also refer to ::IA2_ROLE_SCROLL_PANE.
+  */
+  IA2_ROLE_VIEW_PORT
+  
+};

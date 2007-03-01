@@ -43,7 +43,7 @@ VPATH   = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-DIRS = msaa
+DIRS = msaa ia2
 endif
 
 MODULE    = accessibility

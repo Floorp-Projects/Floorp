@@ -1,0 +1,89 @@
+/*************************************************************************
+ *
+ *  File Name (AccessibleHypertext.idl)
+ *
+ *  IAccessible2 IDL Specification
+ *
+ *  Copyright (c) IBM Corp. 2006
+ *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License version 2.1, as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02110-1301  USA
+ *
+ ************************************************************************/
+
+import "objidl.idl";
+import "oaidl.idl";
+import "oleacc.idl";
+import "AccessibleText.idl";
+import "AccessibleHyperlink.idl";
+
+/** @brief This interface exposes information about hypertext in a document.
+
+ The IAccessibleHypertext interface is the main interface to expose
+  hyperlinks in a document, typically a text document, that are used 
+  to reference other documents.  A typical implementation is to implement 
+  this interface the smallest text object such as a paragraph of text.
+*/
+[object, uuid(6B4F8BBF-F1F2-418a-B35E-A195BC4103B9)]
+interface IAccessibleHypertext : IAccessibleText
+{
+
+  /** @brief Returns the number of links and link groups contained within this hypertext 
+    paragraph.
+   @param [out] hyperlinkCount
+    The number of links and link groups within this hypertext paragraph.  
+    Returns 0 if there is no link.
+  */
+  [propget] HRESULT nHyperlinks
+    (
+     [out, retval] long *hyperlinkCount
+    );
+
+  /** @brief Returns the specified link.
+    
+   The returned IAccessibleHyperlink object encapsulates the hyperlink and 
+    provides several kinds of information describing it.
+   @param [in] index
+    This 0 based index specifies the hyperlink to return.
+   @param [out] hyperlink
+    If the given index is valid, i.e. lies in the interval from 0 to the number 
+    of links minus one, a reference to the specified hyperlink object is returned.  
+    If the index is invalid then a NULL pointer is returned.
+  */
+  [propget] HRESULT hyperlink
+    (
+     [in] long index,
+     [out, retval] IAccessibleHyperlink **hyperlink
+    );
+
+  /** @brief Returns the index of the hyperlink that is associated with this character index.
+        
+   This is the case when a link spans the given character index.
+   @param [in] charIndex
+    A 0 based index of the character for which to return the link index.  If 
+	IAccessibleText is used to represent the text containing the link, then the 
+	character index is only  valid if it is greater than or equal to zero and 
+	lower than the number of characters in the text.
+   @param [out] hyperlinkIndex
+    Returns the 0 based index of the hyperlink that is associated with this 
+	character index, or -1 if charIndex is not on a link.
+  */
+  [propget] HRESULT hyperlinkIndex
+    (
+     [in] long charIndex,
+     [out, retval] long *hyperlinkIndex
+    );
+
+}
