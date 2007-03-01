@@ -216,35 +216,38 @@ function DocumentLoaded()
     var key = IFrameToKey();
     switch (gState) {
         case 1:
+            // First document has been loaded. Save its key and
+            // proceed to load the second document.
             gPart1Key = key;
 
             StartCurrentURI(2);
             break;
         case 2:
+            // Both documents have been loaded. Compare the renderings and see
+            // if the comparison result matches the expected result specified
+            // in the manifest.
+            
+            // whether the two renderings match:
             var equal = (key == gPart1Key);
-            var result = "REFTEST ";
+            // whether the comparison result matches what is in the manifest
             var test_passed = (equal == gURLs[0].equal);
+            // what is expected on this platform (PASS, FAIL, or RANDOM)
             var expected = gURLs[0].expected;
-            switch (expected) {
-                case EXPECTED_PASS:
-                    if (!test_passed) result += "UNEXPECTED ";
-                    break;
-                case EXPECTED_FAIL:
-                    if (test_passed) result += "UNEXPECTED ";
-                    break;
-                case EXPECTED_RANDOM:
-                    result += "(RESULT EXPECTED TO BE RANDOM) "
-                    break;
-            }
-            if (test_passed) {
-                result += "PASS: ";
-            } else {
-                result += "FAIL: ";
-            }
+            
+            var outputs = {};
+            const randomMsg = " (RESULT EXPECTED TO BE RANDOM)";
+            outputs[EXPECTED_PASS] = {true: "PASS",
+                                      false: "UNEXPECTED FAIL"};
+            outputs[EXPECTED_FAIL] = {true: "UNEXPECTED PASS",
+                                      false: "KNOWN FAIL"};
+            outputs[EXPECTED_RANDOM] = {true: "PASS" + randomMsg,
+                                        false: "KNOWN FAIL" + randomMsg};
+            
+            var result = "REFTEST " + outputs[expected][test_passed] + ": ";
             if (!gURLs[0].equal) {
                 result += "(!=) ";
             }
-            result += gURLs[0].url1.spec;
+            result += gURLs[0].url1.spec; // the URL being tested
             dump(result + "\n");
             if (!test_passed && expected == EXPECTED_PASS) {
                 dump("REFTEST   IMAGE 1 (TEST): " + gPart1Key + "\n");
