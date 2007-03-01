@@ -36,7 +36,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.34 2006/02/16 00:06:23 julien.pierre.bugs%sun.com Exp $
+ * $Id: certt.h,v 1.35 2007/03/01 00:30:18 alexei.volkov.bugs%sun.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -493,6 +493,7 @@ typedef enum SECCertUsageEnum {
 
 typedef PRInt64 SECCertificateUsage;
 
+#define certificateUsageCheckAllUsages         (0x0000)
 #define certificateUsageSSLClient              (0x0001)
 #define certificateUsageSSLServer              (0x0002)
 #define certificateUsageSSLServerWithStepUp    (0x0004)
