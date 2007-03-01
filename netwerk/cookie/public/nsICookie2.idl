@@ -71,4 +71,10 @@ interface nsICookie2 : nsICookie
      */
     readonly attribute PRInt64 expiry;
 
+    /**
+     * true if the cookie is an http only cookie
+     */
+    readonly attribute boolean httpOnly;
+
+
 };
