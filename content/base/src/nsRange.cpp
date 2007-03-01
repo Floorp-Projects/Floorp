@@ -408,6 +408,12 @@ nsRange::DoSetRange(nsINode* aStartN, PRInt32 aStartOffset,
                    aRoot == IsValidBoundary(aEndN)),
                   "Wrong root");
   NS_PRECONDITION(!aRoot ||
+                  (aStartN->IsNodeOfType(nsINode::eCONTENT) &&
+                   aEndN->IsNodeOfType(nsINode::eCONTENT) &&
+                   aRoot ==
+                    NS_STATIC_CAST(nsIContent*, aStartN)->GetBindingParent() &&
+                   aRoot ==
+                    NS_STATIC_CAST(nsIContent*, aEndN)->GetBindingParent()) ||
                   (!aRoot->GetNodeParent() &&
                    (aRoot->IsNodeOfType(nsINode::eDOCUMENT) ||
                     aRoot->IsNodeOfType(nsINode::eATTRIBUTE) ||
