@@ -1413,7 +1413,7 @@ nsMessenger::MsgHdrFromURI(const char *aUri, nsIMsgDBHdr **aMsgHdr)
   nsCOMPtr <nsIMsgMessageService> msgService;
   nsresult rv;
  
-  if (!strncmp(aUri, "file:", 5) || PL_strstr(aUri, "type=application/x-message-display"))
+  if (mMsgWindow && (!strncmp(aUri, "file:", 5) || PL_strstr(aUri, "type=application/x-message-display")))
   {
     nsCOMPtr <nsIMsgHeaderSink> headerSink;
     mMsgWindow->GetMsgHeaderSink(getter_AddRefs(headerSink));
