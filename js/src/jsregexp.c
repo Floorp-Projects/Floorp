@@ -2806,6 +2806,13 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                * Occurs at (successful) end of REOP_ALT,
                */
               case REOP_JUMP:
+                /*
+                 * If we have not gotten a result here, it is because of an
+                 * empty match.  Do the same thing REOP_EMPTY would do.
+                 */
+                if (!result)
+                    result = x;
+
                 --gData->stateStackTop;
                 pc += GET_OFFSET(pc);
                 op = (REOp) *pc++;
@@ -2815,6 +2822,13 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                * Occurs at last (successful) end of REOP_ALT,
                */
               case REOP_ENDALT:
+                /*
+                 * If we have not gotten a result here, it is because of an
+                 * empty match.  Do the same thing REOP_EMPTY would do.
+                 */
+                if (!result)
+                    result = x;
+
                 --gData->stateStackTop;
                 op = (REOp) *pc++;
                 continue;
