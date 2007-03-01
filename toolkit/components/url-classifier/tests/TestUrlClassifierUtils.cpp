@@ -190,5 +190,6 @@ int main(int argc, char **argv)
   TestEnc();
   TestCanonicalize();
   printf("%d of %d tests passed\n", gPassedTests, gTotalTests);
-  return 0;
+  // Non-zero return status signals test failure to build system.
+  return (gPassedTests != gTotalTests);
 }
