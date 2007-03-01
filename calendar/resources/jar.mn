@@ -16,7 +16,7 @@ calendar.jar:
     content/calendar/goToDateDialog.xul (content/goToDateDialog.xul)
     content/calendar/outlookImportDialog.xul (content/outlookImportDialog.xul)
     content/calendar/outlookImportDialog.js (content/outlookImportDialog.js)
-    content/calendar/printDialog.js  (content/printDialog.js)    
+*   content/calendar/printDialog.js  (content/printDialog.js)    
     content/calendar/printDialog.xul  (content/printDialog.xul)
     content/calendar/publish.js  (content/publish.js)
     content/calendar/publishDialog.js  (content/publishDialog.js)    

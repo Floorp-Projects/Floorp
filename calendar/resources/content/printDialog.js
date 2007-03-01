@@ -221,7 +221,17 @@ function printAndClose()
     refreshHtml(
         function finish() {
             PrintUtils.print();
-            document.getElementById("calendar-new-printwindow").cancelDialog();
+            var closeDialog = true;
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+            closeDialog = false;
+#endif
+#endif
+            // XXX: printing fails "printing failed while in preview"
+            //      if dialog is closed too early on Unix
+            if (closeDialog) {
+                document.getElementById("calendar-new-printwindow").cancelDialog();
+            }
         });
     return false; // leave open
 }

@@ -41,7 +41,7 @@ calendar.jar:
   content/calendar/datetimepickers/datetimepickers.xml (/calendar/resources/content/datetimepickers/datetimepickers.xml)
   content/calendar/datetimepickers/minimonth.css (/calendar/resources/content/datetimepickers/minimonth.css)
   content/calendar/datetimepickers/minimonth.xml (/calendar/resources/content/datetimepickers/minimonth.xml)
-  content/calendar/printDialog.js                (/calendar/resources/content/printDialog.js)
+* content/calendar/printDialog.js                (/calendar/resources/content/printDialog.js)
   content/calendar/printDialog.xul               (/calendar/resources/content/printDialog.xul)
   content/calendar/publish.js                   (/calendar/resources/content/publish.js)
   content/calendar/publishDialog.js             (/calendar/resources/content/publishDialog.js)    
