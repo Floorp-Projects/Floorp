@@ -2277,13 +2277,94 @@ CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
 }
 
 static JSBool
-EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
+EmitNameOp(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
+           JSBool callContext)
+{
+    JSOp op;
+
+    if (!BindNameToSlot(cx, &cg->treeContext, pn, JS_FALSE))
+        return JS_FALSE;
+    op = pn->pn_op;
+
+    if (callContext) {
+        switch (op) {
+          case JSOP_NAME:
+            op = JSOP_CALLNAME;
+            break;
+          case JSOP_GETVAR:
+            op = JSOP_CALLVAR;
+            break;
+          case JSOP_GETGVAR:
+            op = JSOP_CALLGVAR;
+            break;
+          case JSOP_GETARG:
+            op = JSOP_CALLARG;
+            break;
+          case JSOP_GETLOCAL:
+            op = JSOP_CALLLOCAL;
+            break;
+          default:
+            JS_ASSERT(op == JSOP_ARGUMENTS);
+            break;
+        }
+    }
+
+    if (op == JSOP_ARGUMENTS) {
+        if (js_Emit1(cx, cg, op) < 0)
+            return JS_FALSE;
+        if (callContext && js_Emit1(cx, cg, JSOP_NULL) < 0)
+            return JS_FALSE;
+    } else {
+        if (pn->pn_slot >= 0) {
+            EMIT_UINT16_IMM_OP(op, pn->pn_slot);
+        } else {
+            if (!EmitAtomOp(cx, pn, op, cg))
+                return JS_FALSE;
+        }
+    }
+
+    return JS_TRUE;
+}
+
+#if JS_HAS_XML_SUPPORT
+static JSBool
+EmitXMLName(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
+{
+    JSParseNode *pn2;
+    uintN oldflags;
+
+    JS_ASSERT(pn->pn_type == TOK_UNARYOP);
+    JS_ASSERT(pn->pn_op == JSOP_XMLNAME);
+    JS_ASSERT(op == JSOP_XMLNAME || op == JSOP_CALLXMLNAME);
+
+    pn2 = pn->pn_kid;
+    oldflags = cg->treeContext.flags;
+    cg->treeContext.flags &= ~TCF_IN_FOR_INIT;
+    if (!js_EmitTree(cx, cg, pn2))
+        return JS_FALSE;
+    cg->treeContext.flags |= oldflags & TCF_IN_FOR_INIT;
+    if (js_NewSrcNote2(cx, cg, SRC_PCBASE,
+                       CG_OFFSET(cg) - pn2->pn_offset) < 0) {
+        return JS_FALSE;
+    }
+
+    return js_Emit1(cx, cg, op) >= 0;
+}
+#endif
+
+static JSBool
+EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg,
+           JSBool callContext)
 {
     JSParseNode *pn2, *pndot, *pnup, *pndown;
     ptrdiff_t top;
 
     pn2 = pn->pn_expr;
-    if (op == JSOP_GETPROP && pn->pn_type == TOK_DOT) {
+    if (callContext) {
+        JS_ASSERT(pn->pn_type == TOK_DOT);
+        JS_ASSERT(op == JSOP_GETPROP);
+        op = JSOP_CALLPROP;
+    } else if (op == JSOP_GETPROP && pn->pn_type == TOK_DOT) {
         if (pn2->pn_op == JSOP_THIS) {
             /* Fast path for gets of |this.foo|. */
             return EmitAtomOp(cx, pn, JSOP_GETTHISPROP, cg);
@@ -2414,6 +2495,11 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
             if (left->pn_op == JSOP_ARGUMENTS &&
                 JSDOUBLE_IS_INT(next->pn_dval, slot) &&
                 (jsuint)slot < JS_BIT(16)) {
+                /*
+                 * arguments[i]() requires arguments object as "this".
+                 * Check that we never generates list for that usage.
+                 */
+                JS_ASSERT(op != JSOP_CALLELEM || next->pn_next);
                 left->pn_offset = next->pn_offset = top;
                 EMIT_UINT16_IMM_OP(JSOP_ARGSUB, (jsatomid)slot);
                 left = next;
@@ -4394,7 +4480,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     return JS_FALSE;
                 }
                 if (!useful) {
-                    if (!EmitPropOp(cx, pn3, JSOP_FORPROP, cg))
+                    if (!EmitPropOp(cx, pn3, JSOP_FORPROP, cg, JS_FALSE))
                         return JS_FALSE;
                     break;
                 }
@@ -5601,8 +5687,15 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         uintN oldflags;
 
         /* Unary op, including unary +/-. */
-        pn2 = pn->pn_kid;
         op = pn->pn_op;
+#if JS_HAS_XML_SUPPORT
+        if (op == JSOP_XMLNAME) {
+            if (!EmitXMLName(cx, pn, op, cg))
+                return JS_FALSE;
+            break;
+        }
+#endif
+        pn2 = pn->pn_kid;
         if (op == JSOP_TYPEOF) {
             for (pn3 = pn2; pn3->pn_type == TOK_RP; pn3 = pn3->pn_kid)
                 continue;
@@ -5614,13 +5707,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (!js_EmitTree(cx, cg, pn2))
             return JS_FALSE;
         cg->treeContext.flags |= oldflags & TCF_IN_FOR_INIT;
-#if JS_HAS_XML_SUPPORT
-        if (op == JSOP_XMLNAME &&
-            js_NewSrcNote2(cx, cg, SRC_PCBASE,
-                           CG_OFFSET(cg) - pn2->pn_offset) < 0) {
-            return JS_FALSE;
-        }
-#endif
         if (js_Emit1(cx, cg, op) < 0)
             return JS_FALSE;
         break;
@@ -5657,7 +5743,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             }
             break;
           case TOK_DOT:
-            if (!EmitPropOp(cx, pn2, op, cg))
+            if (!EmitPropOp(cx, pn2, op, cg, JS_FALSE))
                 return JS_FALSE;
             ++depth;
             break;
@@ -5731,7 +5817,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             }
             break;
           case TOK_DOT:
-            if (!EmitPropOp(cx, pn2, JSOP_DELPROP, cg))
+            if (!EmitPropOp(cx, pn2, JSOP_DELPROP, cg, JS_FALSE))
                 return JS_FALSE;
             break;
 #if JS_HAS_XML_SUPPORT
@@ -5806,11 +5892,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         /*
          * Pop a stack operand, convert it to object, get a property named by
          * this bytecode's immediate-indexed atom operand, and push its value
-         * (not a reference to it).  This bytecode sets the virtual machine's
-         * "obj" register to the left operand's ToObject conversion result,
-         * for use by JSOP_PUSHOBJ.
+         * (not a reference to it).
          */
-        ok = EmitPropOp(cx, pn, pn->pn_op, cg);
+        ok = EmitPropOp(cx, pn, pn->pn_op, cg, JS_FALSE);
         break;
 
       case TOK_LB:
@@ -5835,28 +5919,41 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * Emit function call or operator new (constructor call) code.
          * First, emit code for the left operand to evaluate the callable or
          * constructable object expression.
-         *
-         * For E4X, if this expression is a dotted member reference, select
-         * JSOP_CALLPROP instead of JSOP_GETPROP.  ECMA-357 separates XML
-         * method lookup from the normal property id lookup done for native
-         * objects.
          */
         pn2 = pn->pn_head;
+        switch (pn2->pn_type) {
+          case TOK_NAME:
+            if (!EmitNameOp(cx, cg, pn2, JS_TRUE))
+                return JS_FALSE;
+            break;
+          case TOK_DOT:
+            if (!EmitPropOp(cx, pn2, pn2->pn_op, cg, JS_TRUE))
+                return JS_FALSE;
+            break;
+          case TOK_LB:
+            JS_ASSERT(pn2->pn_op == JSOP_GETELEM);
+            if (!EmitElemOp(cx, pn2, JSOP_CALLELEM, cg))
+                return JS_FALSE;
+            break;
+          case TOK_UNARYOP:
 #if JS_HAS_XML_SUPPORT
-        if (pn2->pn_type == TOK_DOT) {
-            JS_ASSERT(pn2->pn_op == JSOP_GETPROP);
-            pn2->pn_op = JSOP_CALLPROP;
-        }
+            if (pn2->pn_op == JSOP_XMLNAME) {
+                if (!EmitXMLName(cx, pn2, JSOP_CALLXMLNAME, cg))
+                    return JS_FALSE;
+                break;
+            }
 #endif
-        if (!js_EmitTree(cx, cg, pn2))
-            return JS_FALSE;
-
-        /*
-         * Push the virtual machine's "obj" register, which was set by a
-         * name, property, or element get (or set) bytecode.
-         */
-        if (js_Emit1(cx, cg, JSOP_PUSHOBJ) < 0)
-            return JS_FALSE;
+            /* FALL THROUGH */
+          default:
+            /*
+             * Push null after the expression as this object for the function
+             * call. js_ComputeThis replaces null by a proper object.
+             */
+            if (!js_EmitTree(cx, cg, pn2) ||
+                !js_Emit1(cx, cg, JSOP_NULL) < 0) {
+                return JS_FALSE;
+            }
+        }
 
         /* Remember start of callable-object bytecode for decompilation hint. */
         off = top;
@@ -6005,9 +6102,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         ale = js_IndexAtom(cx, CLASS_ATOM(cx, Array), &cg->atomList);
         if (!ale)
             return JS_FALSE;
-        EMIT_ATOM_INDEX_OP(JSOP_NAME, ALE_INDEX(ale));
-        if (js_Emit1(cx, cg, JSOP_PUSHOBJ) < 0)
-            return JS_FALSE;
+        EMIT_ATOM_INDEX_OP(JSOP_CALLNAME, ALE_INDEX(ale));
         if (js_Emit1(cx, cg, JSOP_NEWINIT) < 0)
             return JS_FALSE;
 
@@ -6080,10 +6175,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         ale = js_IndexAtom(cx, CLASS_ATOM(cx, Object), &cg->atomList);
         if (!ale)
             return JS_FALSE;
-        EMIT_ATOM_INDEX_OP(JSOP_NAME, ALE_INDEX(ale));
-
-        if (js_Emit1(cx, cg, JSOP_PUSHOBJ) < 0)
-            return JS_FALSE;
+        EMIT_ATOM_INDEX_OP(JSOP_CALLNAME, ALE_INDEX(ale));
         if (js_Emit1(cx, cg, JSOP_NEWINIT) < 0)
             return JS_FALSE;
 
@@ -6172,20 +6264,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       }
 
       case TOK_NAME:
-        if (!BindNameToSlot(cx, &cg->treeContext, pn, JS_FALSE))
+        if (!EmitNameOp(cx, cg, pn, JS_FALSE))
             return JS_FALSE;
-        op = pn->pn_op;
-        if (op == JSOP_ARGUMENTS) {
-            if (js_Emit1(cx, cg, op) < 0)
-                return JS_FALSE;
-            break;
-        }
-        if (pn->pn_slot >= 0) {
-            atomIndex = (jsatomid) pn->pn_slot;
-            EMIT_UINT16_IMM_OP(op, atomIndex);
-            break;
-        }
-        /* FALL THROUGH */
+        break;
 
 #if JS_HAS_XML_SUPPORT
       case TOK_XMLATTR:
@@ -6196,17 +6277,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #endif
       case TOK_STRING:
       case TOK_OBJECT:
-        /*
-         * The scanner and parser associate JSOP_NAME with TOK_NAME, although
-         * other bytecodes may result instead (JSOP_BINDNAME/JSOP_SETNAME,
-         * JSOP_FORNAME, etc.).  Among JSOP_*NAME* variants, only JSOP_NAME
-         * may generate the first operand of a call or new expression, so only
-         * it sets the "obj" virtual machine register to the object along the
-         * scope chain in which the name was found.
-         *
-         * Token types for STRING and OBJECT have corresponding bytecode ops
-         * in pn_op and emit the same format as NAME, so they share this code.
-         */
         ok = EmitAtomOp(cx, pn, pn->pn_op, cg);
         break;
 

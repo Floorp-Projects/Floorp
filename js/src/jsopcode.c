@@ -1377,6 +1377,7 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
             }
             break;
 
+          case JSOP_CALLPROP:
           case JSOP_GETPROP:
             *OFF2STR(&ss->sprinter, head) = '{';
             atom = js_GetAtomFromBytecode(jp->script, pc, 0);
@@ -1921,7 +1922,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 cs = &js_CodeSpec[lastop];
                 if ((cs->prec != 0 &&
                      cs->prec == js_CodeSpec[pc[JSOP_GROUP_LENGTH]].prec) ||
-                    pc[JSOP_GROUP_LENGTH] == JSOP_PUSHOBJ ||
+                    pc[JSOP_GROUP_LENGTH] == JSOP_NULL ||
                     pc[JSOP_GROUP_LENGTH] == JSOP_DUP) {
                     /*
                      * Force parens if this JSOP_GROUP forced re-association
@@ -1969,7 +1970,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 #endif
                 /* FALL THROUGH */
 
-              case JSOP_PUSHOBJ:
               case JSOP_BINDNAME:
                 todo = Sprint(&ss->sprinter, "");
                 break;
@@ -2452,6 +2452,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
               }
 
+              case JSOP_CALLLOCAL:
               case JSOP_GETLOCAL:
                 i = GET_UINT16(pc);
                 LOCAL_ASSERT((uintN)i < ss->top);
@@ -3357,6 +3358,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 (void) PopOff(ss, lastop);
                 /* FALL THROUGH */
 
+              case JSOP_CALLELEM:
               case JSOP_GETELEM:
                 op = JSOP_NOP;          /* turn off parens */
                 xval = POP_STR();
@@ -3410,6 +3412,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                               js_arguments_str, js_length_str);
                 break;
 
+              case JSOP_CALLARG:
               case JSOP_GETARG:
                 i = GET_ARGNO(pc);
                 atom = GetSlotAtom(jp, js_GetArgument, i);
@@ -3423,13 +3426,16 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 #endif
                 goto do_name;
 
+              case JSOP_CALLVAR:
               case JSOP_GETVAR:
                 atom = GetSlotAtom(jp, js_GetLocalVariable, GET_VARNO(pc));
                 LOCAL_ASSERT(atom);
                 goto do_name;
 
+              case JSOP_CALLNAME:
               case JSOP_NAME:
               case JSOP_GETGVAR:
+              case JSOP_CALLGVAR:
                 LOAD_ATOM(0);
               do_name:
                 lval = "";
@@ -4022,6 +4028,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 inXML = JS_FALSE;
                 /* FALL THROUGH */
 
+              case JSOP_CALLXMLNAME:
               case JSOP_XMLNAME:
               case JSOP_FILTER:
                 /* Conversion and prefix ops do nothing in the decompiler. */
@@ -4097,6 +4104,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
         } else {
             if (!PushOff(ss, todo, saveop))
                 return NULL;
+            if (cs->format & JOF_CALLOP) {
+                todo = Sprint(&ss->sprinter, "");
+                if (todo < 0 || !PushOff(ss, todo, saveop))
+                    return NULL;
+            }
         }
         pc += len;
     }

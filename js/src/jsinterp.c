@@ -2165,6 +2165,17 @@ js_DumpOpMeters()
 
 #endif /* JS_OPSMETER */
 
+/*
+ * Ensure that the intrepreter switch can close call-bytecode cases in the
+ * same way as non-call bytecodes.
+ */
+JS_STATIC_ASSERT(JSOP_NAME_LENGTH == JSOP_CALLNAME_LENGTH);
+JS_STATIC_ASSERT(JSOP_GETGVAR_LENGTH == JSOP_CALLGVAR_LENGTH);
+JS_STATIC_ASSERT(JSOP_GETVAR_LENGTH == JSOP_CALLVAR_LENGTH);
+JS_STATIC_ASSERT(JSOP_GETARG_LENGTH == JSOP_CALLARG_LENGTH);
+JS_STATIC_ASSERT(JSOP_GETLOCAL_LENGTH == JSOP_CALLLOCAL_LENGTH);
+JS_STATIC_ASSERT(JSOP_XMLNAME_LENGTH == JSOP_CALLXMLNAME_LENGTH);
+
 JSBool
 js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 {
@@ -2228,9 +2239,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 
     static void *interruptJumpTable[] = {
 # define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)              \
-        ((op != JSOP_PUSHOBJ)                                                 \
-         ? JS_EXTENSION &&interrupt                                           \
-         : JS_EXTENSION &&L_JSOP_PUSHOBJ),
+        JS_EXTENSION &&interrupt,
 # include "jsopcode.tbl"
 # undef OPDEF
     };
@@ -2372,7 +2381,6 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 #endif
         goto out;
     }
-    obj = NULL;
 
 #if JS_THREADED_INTERP
 
@@ -2449,7 +2457,7 @@ interrupt:
         }
 #endif /* DEBUG */
 
-        if (interruptHandler && op != JSOP_PUSHOBJ) {
+        if (interruptHandler) {
             SAVE_SP_AND_PC(fp);
             switch (interruptHandler(cx, script, pc, &rval,
                                      rt->interruptHandlerData)) {
@@ -2480,9 +2488,7 @@ interrupt:
 
           EMPTY_CASE(JSOP_NOP)
 
-          BEGIN_CASE(JSOP_GROUP)
-            obj = NULL;
-          END_CASE(JSOP_GROUP)
+          EMPTY_CASE(JSOP_GROUP)
 
           BEGIN_CASE(JSOP_PUSH)
             PUSH_OPND(JSVAL_VOID);
@@ -3033,7 +3039,6 @@ interrupt:
                 goto out;
             sp--;
             STORE_OPND(-1, rval);
-            obj = NULL;
           END_CASE(JSOP_SETNAME)
 
 #define INTEGER_OP(OP, EXTRA_CODE)                                            \
@@ -3795,7 +3800,6 @@ interrupt:
             if (JSVAL_IS_STRING(lval) && atom == rt->atomState.lengthAtom) {
                 str = JSVAL_TO_STRING(lval);
                 rval = INT_TO_JSVAL(JSSTRING_LENGTH(str));
-                obj = NULL;
             } else {
                 id = ATOM_TO_JSID(atom);
                 VALUE_TO_OBJECT(cx, lval, obj);
@@ -3818,7 +3822,6 @@ interrupt:
             PROPERTY_OP(-2, ok = OBJ_SET_PROPERTY(cx, obj, id, &rval));
             sp--;
             STORE_OPND(-1, rval);
-            obj = NULL;
           END_CASE(JSOP_SETPROP)
 
           BEGIN_CASE(JSOP_GETELEM)
@@ -3827,12 +3830,21 @@ interrupt:
             STORE_OPND(-1, rval);
           END_CASE(JSOP_GETELEM)
 
+          BEGIN_CASE(JSOP_CALLELEM)
+            /*
+             * XXX callelem should call getMethod on XML objects as CALLPROP
+             * does. See bug 362910.
+             */
+            ELEMENT_OP(-1, ok = OBJ_GET_PROPERTY(cx, obj, id, &rval));
+            STORE_OPND(-2, rval);
+            STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
+          END_CASE(JSOP_CALLELEM)
+
           BEGIN_CASE(JSOP_SETELEM)
             rval = FETCH_OPND(-1);
             ELEMENT_OP(-2, ok = OBJ_SET_PROPERTY(cx, obj, id, &rval));
             sp -= 2;
             STORE_OPND(-1, rval);
-            obj = NULL;
           END_CASE(JSOP_SETELEM)
 
           BEGIN_CASE(JSOP_ENUMELEM)
@@ -3847,24 +3859,6 @@ interrupt:
                 goto out;
             sp -= 3;
           END_CASE(JSOP_ENUMELEM)
-
-/*
- * LAZY_ARGS_THISP allows the JSOP_ARGSUB bytecode to defer creation of the
- * arguments object until it is truly needed.  JSOP_ARGSUB optimizes away
- * arguments objects when the only uses of the 'arguments' parameter are to
- * fetch individual actual parameters.  But if such a use were then invoked,
- * e.g., arguments[i](), the 'this' parameter would and must bind to the
- * caller's arguments object.  So JSOP_ARGSUB sets obj to LAZY_ARGS_THISP.
- */
-#define LAZY_ARGS_THISP ((JSObject *) JSVAL_VOID)
-
-          BEGIN_CASE(JSOP_PUSHOBJ)
-            if (obj == LAZY_ARGS_THISP && !(obj = js_GetArgsObject(cx, fp))) {
-                ok = JS_FALSE;
-                goto out;
-            }
-            PUSH_OPND(OBJECT_TO_JSVAL(obj));
-          END_CASE(JSOP_PUSHOBJ)
 
           BEGIN_CASE(JSOP_CALL)
           BEGIN_CASE(JSOP_EVAL)
@@ -4095,7 +4089,6 @@ interrupt:
                 cx->rval2set = JS_FALSE;
             }
 #endif /* JS_HAS_LVALUE_RETURN */
-            obj = NULL;
           END_CASE(JSOP_CALL)
 
 #if JS_HAS_LVALUE_RETURN
@@ -4116,11 +4109,11 @@ interrupt:
             }
             PUSH_OPND(cx->rval2);
             cx->rval2set = JS_FALSE;
-            obj = NULL;
           END_CASE(JSOP_SETCALL)
 #endif
 
           BEGIN_CASE(JSOP_NAME)
+          BEGIN_CASE(JSOP_CALLNAME)
             LOAD_ATOM(0);
             id = ATOM_TO_JSID(atom);
 
@@ -4156,13 +4149,14 @@ interrupt:
                 OBJ_DROP_PROPERTY(cx, obj2, prop);
             }
             PUSH_OPND(rval);
+            if (op == JSOP_CALLNAME)
+                PUSH_OPND(OBJECT_TO_JSVAL(obj));
           END_CASE(JSOP_NAME)
 
           BEGIN_CASE(JSOP_UINT16)
             i = (jsint) GET_UINT16(pc);
             rval = INT_TO_JSVAL(i);
             PUSH_OPND(rval);
-            obj = NULL;
           END_CASE(JSOP_UINT16)
 
           BEGIN_CASE(JSOP_UINT24)
@@ -4193,7 +4187,6 @@ interrupt:
           BEGIN_CASE(JSOP_OBJECT)
             LOAD_ATOM(0);
             PUSH_OPND(ATOM_KEY(atom));
-            obj = NULL;
           END_CASE(JSOP_NUMBER)
 
           BEGIN_CASE(JSOP_REGEXP)
@@ -4316,23 +4309,19 @@ interrupt:
             }
 
             PUSH_OPND(rval);
-            obj = NULL;
           }
           END_CASE(JSOP_REGEXP)
 
           BEGIN_CASE(JSOP_ZERO)
             PUSH_OPND(JSVAL_ZERO);
-            obj = NULL;
           END_CASE(JSOP_ZERO)
 
           BEGIN_CASE(JSOP_ONE)
             PUSH_OPND(JSVAL_ONE);
-            obj = NULL;
           END_CASE(JSOP_ONE)
 
           BEGIN_CASE(JSOP_NULL)
             PUSH_OPND(JSVAL_NULL);
-            obj = NULL;
           END_CASE(JSOP_NULL)
 
           BEGIN_CASE(JSOP_THIS)
@@ -4352,17 +4341,14 @@ interrupt:
             }
 
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
-            obj = NULL;
           END_CASE(JSOP_THIS)
 
           BEGIN_CASE(JSOP_FALSE)
             PUSH_OPND(JSVAL_FALSE);
-            obj = NULL;
           END_CASE(JSOP_FALSE)
 
           BEGIN_CASE(JSOP_TRUE)
             PUSH_OPND(JSVAL_TRUE);
-            obj = NULL;
           END_CASE(JSOP_TRUE)
 
           BEGIN_CASE(JSOP_TABLESWITCH)
@@ -4587,7 +4573,6 @@ interrupt:
             if (!ok)
                 goto out;
             PUSH_OPND(rval);
-            obj = NULL;
           END_CASE(JSOP_ARGUMENTS)
 
           BEGIN_CASE(JSOP_ARGSUB)
@@ -4596,21 +4581,8 @@ interrupt:
             ok = js_GetArgsProperty(cx, fp, id, &obj, &rval);
             if (!ok)
                 goto out;
-            if (!obj) {
-                /*
-                 * If arguments was not overridden by eval('arguments = ...'),
-                 * set obj to the magic cookie respected by JSOP_PUSHOBJ, just
-                 * in case this bytecode is part of an 'arguments[i](j, k)' or
-                 * similar such invocation sequence, where the function that
-                 * is invoked expects its 'this' parameter to be the caller's
-                 * arguments object.
-                 */
-                obj = LAZY_ARGS_THISP;
-            }
             PUSH_OPND(rval);
           END_CASE(JSOP_ARGSUB)
-
-#undef LAZY_ARGS_THISP
 
           BEGIN_CASE(JSOP_ARGCNT)
             id = ATOM_TO_JSID(rt->atomState.lengthAtom);
@@ -4622,11 +4594,13 @@ interrupt:
           END_CASE(JSOP_ARGCNT)
 
           BEGIN_CASE(JSOP_GETARG)
+          BEGIN_CASE(JSOP_CALLARG)
             slot = GET_ARGNO(pc);
             JS_ASSERT(slot < fp->fun->nargs);
             METER_SLOT_OP(op, slot);
             PUSH_OPND(fp->argv[slot]);
-            obj = NULL;
+            if (op == JSOP_CALLARG)
+                PUSH_OPND(JSVAL_NULL);
           END_CASE(JSOP_GETARG)
 
           BEGIN_CASE(JSOP_SETARG)
@@ -4636,15 +4610,16 @@ interrupt:
             vp = &fp->argv[slot];
             GC_POKE(cx, *vp);
             *vp = FETCH_OPND(-1);
-            obj = NULL;
           END_CASE(JSOP_SETARG)
 
           BEGIN_CASE(JSOP_GETVAR)
+          BEGIN_CASE(JSOP_CALLVAR)
             slot = GET_VARNO(pc);
             JS_ASSERT(slot < fp->fun->u.i.nvars);
             METER_SLOT_OP(op, slot);
             PUSH_OPND(fp->vars[slot]);
-            obj = NULL;
+            if (op == JSOP_CALLVAR)
+                PUSH_OPND(JSVAL_NULL);
           END_CASE(JSOP_GETVAR)
 
           BEGIN_CASE(JSOP_SETVAR)
@@ -4654,22 +4629,24 @@ interrupt:
             vp = &fp->vars[slot];
             GC_POKE(cx, *vp);
             *vp = FETCH_OPND(-1);
-            obj = NULL;
           END_CASE(JSOP_SETVAR)
 
           BEGIN_CASE(JSOP_GETGVAR)
+          BEGIN_CASE(JSOP_CALLGVAR)
             slot = GET_VARNO(pc);
             JS_ASSERT(slot < fp->nvars);
             METER_SLOT_OP(op, slot);
             lval = fp->vars[slot];
             if (JSVAL_IS_NULL(lval)) {
-                op = JSOP_NAME;
+                op = (op == JSOP_GETGVAR) ? JSOP_NAME : JSOP_CALLNAME;
                 DO_OP();
             }
             slot = JSVAL_TO_INT(lval);
             obj = fp->varobj;
             rval = OBJ_GET_SLOT(cx, obj, slot);
             PUSH_OPND(rval);
+            if (op == JSOP_CALLGVAR)
+                PUSH_OPND(OBJECT_TO_JSVAL(obj));
           END_CASE(JSOP_GETGVAR)
 
           BEGIN_CASE(JSOP_SETGVAR)
@@ -4697,7 +4674,6 @@ interrupt:
                 GC_POKE(cx, STOBJ_GET_SLOT(obj, slot));
                 OBJ_SET_SLOT(cx, obj, slot, rval);
             }
-            obj = NULL;
           END_CASE(JSOP_SETGVAR)
 
           BEGIN_CASE(JSOP_DEFCONST)
@@ -4953,7 +4929,6 @@ interrupt:
                 }
             }
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
-            obj = NULL;
           END_CASE(JSOP_ANONFUNOBJ)
 
           BEGIN_CASE(JSOP_NAMEDFUNOBJ)
@@ -5046,7 +5021,6 @@ interrupt:
              * 6. Return Result(3).
              */
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
-            obj = NULL;
           END_CASE(JSOP_NAMEDFUNOBJ)
 
           BEGIN_CASE(JSOP_CLOSURE)
@@ -5235,7 +5209,6 @@ interrupt:
             if (!ok)
                 goto out;
 
-            obj = NULL;
             sp += i;
             if (js_CodeSpec[op2].ndefs)
                 STORE_OPND(-1, rval);
@@ -5621,9 +5594,9 @@ interrupt:
                 goto out;
             sp -= 2;
             STORE_OPND(-1, rval);
-            obj = NULL;
           END_CASE(JSOP_SETXMLNAME)
 
+          BEGIN_CASE(JSOP_CALLXMLNAME)
           BEGIN_CASE(JSOP_XMLNAME)
             lval = FETCH_OPND(-1);
             SAVE_SP_AND_PC(fp);
@@ -5634,6 +5607,8 @@ interrupt:
             if (!ok)
                 goto out;
             STORE_OPND(-1, rval);
+            if (op == JSOP_CALLXMLNAME)
+                PUSH_OPND(OBJECT_TO_JSVAL(obj));
           END_CASE(JSOP_XMLNAME)
 
           BEGIN_CASE(JSOP_DESCENDANTS)
@@ -5734,7 +5709,6 @@ interrupt:
                 goto out;
             }
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
-            obj = NULL;
           END_CASE(JSOP_XMLOBJECT)
 
           BEGIN_CASE(JSOP_XMLCDATA)
@@ -5821,6 +5795,7 @@ interrupt:
             if (!ok)
                 goto out;
             STORE_OPND(-1, rval);
+            PUSH_OPND(OBJECT_TO_JSVAL(obj));
           END_CASE(JSOP_CALLPROP)
 
           BEGIN_CASE(JSOP_GETFUNNS)
@@ -5923,10 +5898,12 @@ interrupt:
           END_CASE(JSOP_LEAVEBLOCK)
 
           BEGIN_CASE(JSOP_GETLOCAL)
+          BEGIN_CASE(JSOP_CALLLOCAL)
             slot = GET_UINT16(pc);
             JS_ASSERT(slot < (uintN)depth);
             PUSH_OPND(fp->spbase[slot]);
-            obj = NULL;
+            if (op == JSOP_CALLLOCAL)
+                PUSH_OPND(JSVAL_NULL);
           END_CASE(JSOP_GETLOCAL)
 
           BEGIN_CASE(JSOP_SETLOCAL)
@@ -5935,7 +5912,6 @@ interrupt:
             vp = &fp->spbase[slot];
             GC_POKE(cx, *vp);
             *vp = FETCH_OPND(-1);
-            obj = NULL;
           END_CASE(JSOP_SETLOCAL)
 
 /* NB: This macro doesn't use JS_BEGIN_MACRO/JS_END_MACRO around its body. */
@@ -6054,8 +6030,6 @@ interrupt:
 #if JS_THREADED_INTERP
           L_JSOP_BACKPATCH:
           L_JSOP_BACKPATCH_POP:
-          L_JSOP_UNUSED194:
-          L_JSOP_UNUSED197:
 #else
           default:
 #endif
