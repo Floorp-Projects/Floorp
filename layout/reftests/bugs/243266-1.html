@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<body>
+<table style="width: 6em; background: yellow">
+    <tr>
+        <td id="big">mmmmmmmmmmmmmmmm</td>
+    </tr>
+</table>
+<script>
+  document.body.offsetWidth;
+  var big = document.getElementById("big");
+  var r = big.firstChild.splitText(8);
+  big.insertBefore(document.createElement("WBR"), r);
+</script>
+</body>
+</html>
