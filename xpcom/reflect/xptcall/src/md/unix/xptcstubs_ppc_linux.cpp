@@ -41,6 +41,7 @@
 // Implement shared vtbl methods.
 
 #include "xptcprivate.h"
+#include "xptiprivate.h"
 
 // The Linux/PPC ABI (aka PPC/SYSV ABI) passes the first 8 integral
 // parameters and the first 8 floating point parameters in registers
@@ -71,20 +72,14 @@ PrepareAndDispatch(nsXPTCStubBase* self,
 {
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
     nsXPTCMiniVariant* dispatchParams = NULL;
-    nsIInterfaceInfo* iface_info = NULL;
-    const nsXPTMethodInfo* info;
+    const nsXPTMethodInfo* info = NULL;
     PRUint32 paramCount;
     PRUint32 i;
     nsresult result = NS_ERROR_FAILURE;
 
     NS_ASSERTION(self,"no self");
 
-    self->GetInterfaceInfo(&iface_info);
-    NS_ASSERTION(iface_info,"no interface info");
-    if (! iface_info)
-        return NS_ERROR_UNEXPECTED;
-
-    iface_info->GetMethodInfo(PRUint16(methodIndex), &info);
+    self->mEntry->GetMethodInfo(PRUint16(methodIndex), &info);
     NS_ASSERTION(info,"no method info");
     if (! info)
         return NS_ERROR_UNEXPECTED;
@@ -173,9 +168,9 @@ PrepareAndDispatch(nsXPTCStubBase* self,
         }
     }
 
-    result = self->CallMethod((PRUint16) methodIndex, info, dispatchParams);
-
-    NS_RELEASE(iface_info);
+    result = self->mOuter->CallMethod((PRUint16)methodIndex,
+                                      info,
+                                      dispatchParams);
 
     if (dispatchParams != paramBuffer)
         delete [] dispatchParams;

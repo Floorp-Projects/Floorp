@@ -56,15 +56,15 @@
 		      
         .section ".text"
 	.align 2
-	.globl XPTC_InvokeByIndex
-	.type  XPTC_InvokeByIndex,@function
+	.globl NS_InvokeByIndex
+	.type  NS_InvokeByIndex,@function
 
 //
-// XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
-//                    PRUint32 paramCount, nsXPTCVariant* params)
+// NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
+//                  PRUint32 paramCount, nsXPTCVariant* params)
 //
 
-XPTC_InvokeByIndex:
+NS_InvokeByIndex:
 	stwu    sp,-32(sp)			// setup standard stack frame
 	mflr    r0				// save LR
 	stw     r3,8(sp)			// r3 <= that

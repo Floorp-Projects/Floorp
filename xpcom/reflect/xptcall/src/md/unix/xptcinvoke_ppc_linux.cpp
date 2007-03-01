@@ -40,9 +40,9 @@
 
 // Platform specific code to invoke XPCOM methods on native objects
 
-// The purpose of XPTC_InvokeByIndex() is to map a platform
+// The purpose of NS_InvokeByIndex() is to map a platform
 // indepenpent call to the platform ABI. To do that,
-// XPTC_InvokeByIndex() has to determine the method to call via vtable
+// NS_InvokeByIndex() has to determine the method to call via vtable
 // access. The parameters for the method are read from the
 // nsXPTCVariant* and prepared for th native ABI.  For the Linux/PPC
 // ABI this means that the first 8 integral and floating point
@@ -136,6 +136,6 @@ invoke_copy_to_stack(PRUint32* d,
 }
 
 extern "C"
-XPTC_PUBLIC_API(nsresult)
-XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
-                   PRUint32 paramCount, nsXPTCVariant* params);
+EXPORT_XPCOM_API(nsresult)
+NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
+                 PRUint32 paramCount, nsXPTCVariant* params);
