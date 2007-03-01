@@ -1,0 +1,750 @@
+
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998-2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ===== messengercompose.css ===========================================
+  == Styles for the main Messenger Compose window.
+  ======================================================================= */
+
+@import url("chrome://messenger/skin/");
+@import url("chrome://global/skin/toolbar.css");
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: primary toolbar buttons ::::: */
+ 
+.toolbarbutton-1 {
+  -moz-box-orient: vertical;
+  min-width: 0px;
+  list-style-image: url("chrome://penelope/skin/icons/tbar32.png");
+}
+
+/* penelope specific resources */
+
+#button-send {
+  list-style-image: url("chrome://penelope/skin/icons/tbar32.png");
+  -moz-image-region: rect(0px 480px 32px 448px);
+}
+
+#button-send:hover {
+  -moz-image-region: rect(0px 480px 32px 448px);
+} 
+
+#button-send[disabled="true"] {
+  list-style-image: url("chrome://penelope/skin/icons/tbar32-disabled.png");
+  -moz-image-region: rect(0px 480px 32px 448px) !important;
+} 
+
+#button-address {
+  list-style-image: url("chrome://penelope/skin/icons/tbar32.png");
+  -moz-image-region: rect(0px 672px 32px 640px) !important;
+}
+
+#button-address:hover {
+  -moz-image-region: rect(0px 672px 32px 640px) !important;
+} 
+
+#button-address[disabled="true"] {
+  list-style-image: url("chrome://penelope/skin/icons/tbar32-disabled.png");
+  -moz-image-region: rect(0px 672px 32px 640px) !important;
+} 
+
+#spellingButton {
+  list-style-image: url("chrome://penelope/skin/icons/tbar32.png");
+  -moz-image-region: rect(0px 640px 32px 608px);
+}
+
+#spellingButton:hover {
+  -moz-image-region: rect(0px 640px 32px 608px);
+}
+
+#spellingButton[disabled="true"] {
+  list-style-image: url("chrome://penelope/skin/icons/tbar32-disabled.png");
+  -moz-image-region: rect(0px 640px 32px 608px) !important;
+}
+
+#button-attach {
+  list-style-image: url("chrome://penelope/skin/icons/tbar32.png");
+  -moz-image-region: rect(0px 608px 32px 576px);
+}
+
+#button-attach:hover {
+  -moz-image-region: rect(0px 608px 32px 576px);
+} 
+
+#button-attach[disabled="true"] {
+  list-style-image: url("chrome://penelope/skin/icons/tbar32-disabled.png");
+  -moz-image-region: rect(0px 608px 32px 576px) !important;
+} 
+
+#button-save {
+  list-style-image: url("chrome://penelope/skin/icons/tbar32.png");
+  -moz-image-region: rect(0px 896px 32px 864px);
+}
+
+#button-save:hover {
+  -moz-image-region: rect(0px 896px 32px 864px);
+} 
+
+#button-save[disabled="true"] {
+  list-style-image: url("chrome://penelope/skin/icons/tbar32-disabled.png");
+  -moz-image-region: rect(0px 896px 32px 864px) !important;
+} 
+
+#button-saveas {
+  list-style-image: url("chrome://penelope/skin/icons/tbar32.png");
+  -moz-image-region: rect(0px 928px 32px 896px);
+}
+
+#button-saveas:hover {
+  -moz-image-region: rect(0px 928px 32px 896px);
+} 
+
+#button-saveas[disabled="true"] {
+  list-style-image: url("chrome://penelope/skin/icons/tbar32-disabled.png");
+  -moz-image-region: rect(0px 928px 32px 896px) !important;
+} 
+
+#quoteButton {
+  list-style-image: url("chrome://penelope/skin/icons/tbar32.png");
+  -moz-image-region: rect(0px 1184px 32px 1152px);
+}
+
+#quoteButton:hover {
+  -moz-image-region: rect(0px 1184px 32px 1152px);
+}
+
+#quoteButton[disabled="true"] {
+  list-style-image: url("chrome://penelope/skin/icons/tbar32-disabled.png");
+  -moz-image-region: rect(0px 1184px 32px 1152px) !important;
+}
+
+#undo-button {
+  list-style-image: url("chrome://penelope/skin/icons/tbar32.png");
+  -moz-image-region: rect(0px 1056px 32px 1024px);
+}
+
+#undo-button:hover {
+  -moz-image-region: rect(0px 1056px 32px 1024px);
+}
+
+#undo-button[disabled="true"] {
+  list-style-image: url("chrome://penelope/skin/icons/tbar32-disabled.png");
+  -moz-image-region: rect(0px 1056px 32px 1024px) !important;
+}
+
+#redo-button {
+  list-style-image: url("chrome://penelope/skin/icons/tbar32b.png");
+  -moz-image-region: rect(0px 1246px 32px 1214px);
+}
+
+#redo-button:hover {
+  -moz-image-region: rect(0px 1246px 32px 1214px);
+}
+
+#redo-button[disabled="true"] {
+  list-style-image: url("chrome://penelope/skin/icons/tbar32b-disabled.png");
+  -moz-image-region: rect(0px 1246px 32px 1214px) !important;
+}
+
+#cut-button {
+  list-style-image: url("chrome://penelope/skin/icons/tbar32.png");
+  -moz-image-region: rect(0px 1088px 32px 1056px);
+}
+
+#cut-button:hover {
+  -moz-image-region: rect(0px 1088px 32px 1056px);
+}
+
+#cut-button[disabled="true"] {
+  list-style-image: url("chrome://penelope/skin/icons/tbar32-disabled.png");
+  -moz-image-region: rect(0px 1088px 32px 1056px) !important;
+}
+
+#copy-button {
+  list-style-image: url("chrome://penelope/skin/icons/tbar32.png");
+  -moz-image-region: rect(0px 1120px 32px 1088px);
+}
+
+#copy-button:hover {
+  -moz-image-region: rect(0px 1120px 32px 1088px);
+}
+
+#copy-button[disabled="true"] {
+  list-style-image: url("chrome://penelope/skin/icons/tbar32-disabled.png");
+  -moz-image-region: rect(0px 1120px 32px 1088px) !important;
+}
+
+#paste-button {
+  list-style-image: url("chrome://penelope/skin/icons/tbar32.png");
+  -moz-image-region: rect(0px 1152px 32px 1120px);
+}
+
+#paste-button:hover {
+  -moz-image-region: rect(0px 1152px 32px 1120px);
+}
+
+#paste-button[disabled="true"] {
+  list-style-image: url("chrome://penelope/skin/icons/tbar32-disabled.png");
+  -moz-image-region: rect(0px 1152px 32px 1120px) !important;
+}
+
+
+/* ::::: small primary toolbar buttons ::::: */
+
+toolbar[iconsize="small"] .toolbarbutton-1 {
+  list-style-image: url("chrome://penelope/skin/icons/tbar16.png");
+}
+
+toolbar[iconsize="small"] #button-send {
+  list-style-image: url("chrome://penelope/skin/icons/tbar16.png");
+  -moz-image-region: rect(0px 480px 16px 464px);
+}
+
+toolbar[iconsize="small"] #button-send:hover {
+  -moz-image-region: rect(0px 480px 16px 464px);
+} 
+
+toolbar[iconsize="small"] #button-send[disabled] {
+  list-style-image: url("chrome://penelope/skin/icons/tbar16-disabled.png");
+  -moz-image-region: rect(0px 480px 16px 464px) !important;
+} 
+
+toolbar[iconsize="small"] #button-address {
+  list-style-image: url("chrome://penelope/skin/icons/tbar16.png");
+  -moz-image-region: rect(0px 336px 16px 320px) !important;
+}
+
+toolbar[iconsize="small"] #button-address:hover {
+  -moz-image-region: rect(0px 336px 16px 320px) !important;
+} 
+
+toolbar[iconsize="small"] #button-address[disabled] {
+  list-style-image: url("chrome://penelope/skin/icons/tbar16-disabled.png");
+  -moz-image-region: rect(0px 336px 16px 320px) !important;
+} 
+
+toolbar[iconsize="small"] #spellingButton {
+  list-style-image: url("chrome://penelope/skin/icons/tbar16.png");
+  -moz-image-region: rect(0px 320px 16px 304px);
+}
+
+toolbar[iconsize="small"] #spellingButton:hover {
+  -moz-image-region: rect(0px 320px 16px 304px);
+} 
+
+toolbar[iconsize="small"] #spellingButton[disabled="true"] {
+  list-style-image: url("chrome://penelope/skin/icons/tbar16-disabled.png");
+  -moz-image-region: rect(0px 320px 16px 304px) !important;
+} 
+
+toolbar[iconsize="small"] #button-attach {
+  list-style-image: url("chrome://penelope/skin/icons/tbar16.png");
+  -moz-image-region: rect(0px 304px 16px 288px);
+}
+
+toolbar[iconsize="small"] #button-attach:hover {
+  -moz-image-region: rect(0px 304px 16px 288px);
+} 
+
+toolbar[iconsize="small"] #button-attach[disabled] {
+  list-style-image: url("chrome://penelope/skin/icons/tbar16-disabled.png");
+  -moz-image-region: rect(0px 304px 16px 288px) !important;
+} 
+
+toolbar[iconsize="small"] #button-save {
+  list-style-image: url("chrome://penelope/skin/icons/tbar16.png");
+  -moz-image-region: rect(0px 448px 16px 432px);
+}
+
+toolbar[iconsize="small"] #button-save:hover {
+  -moz-image-region: rect(0px 448px 16px 432px);
+} 
+
+toolbar[iconsize="small"] #button-save[disabled] {
+  list-style-image: url("chrome://penelope/skin/icons/tbar16-disabled.png");
+  -moz-image-region: rect(0px 448px 16px 432px) !important;
+} 
+
+toolbar[iconsize="small"] #quoteButton {
+  list-style-image: url("chrome://penelope/skin/icons/tbar16.png");
+  -moz-image-region: rect(0px 592px 16px 576px);
+}
+
+toolbar[iconsize="small"] #quoteButton:hover {
+  -moz-image-region: rect(0px 592px 16px 576px);
+} 
+
+toolbar[iconsize="small"] #quoteButton[disabled="true"] {
+  list-style-image: url("chrome://penelope/skin/icons/tbar16-disabled.png");
+  -moz-image-region: rect(0px 592px 16px 576px) !important;
+}
+
+toolbar[iconsize="small"] #cut-button {
+  list-style-image: url("chrome://penelope/skin/icons/tbar16.png");
+  -moz-image-region: rect(0px 544px 16px 528px);
+}
+
+toolbar[iconsize="small"] #cut-button:hover {
+  -moz-image-region: rect(0px 544px 16px 528px);
+} 
+
+toolbar[iconsize="small"] #cut-button[disabled="true"] {
+  list-style-image: url("chrome://penelope/skin/icons/tbar16-disabled.png");
+  -moz-image-region: rect(0px 544px 16px 528px) !important;
+}
+
+toolbar[iconsize="small"] #copy-button {
+  list-style-image: url("chrome://penelope/skin/icons/tbar16.png");
+  -moz-image-region: rect(0px 560px 16px 544px);
+}
+
+toolbar[iconsize="small"] #copy-button:hover {
+  -moz-image-region: rect(0px 560px 16px 544px);
+} 
+
+toolbar[iconsize="small"] #copy-button[disabled="true"] {
+  list-style-image: url("chrome://penelope/skin/icons/tbar16-disabled.png");
+  -moz-image-region: rect(0px 560px 16px 544px) !important;
+}
+toolbar[iconsize="small"] #paste-button {
+  list-style-image: url("chrome://penelope/skin/icons/tbar16.png");
+  -moz-image-region: rect(0px 576px 16px 560px);
+}
+
+toolbar[iconsize="small"] #paste-button:hover {
+  -moz-image-region: rect(0px 576px 16px 560px);
+} 
+
+toolbar[iconsize="small"] #paste-button[disabled="true"] {
+  list-style-image: url("chrome://penelope/skin/icons/tbar16-disabled.png");
+  -moz-image-region: rect(0px 576px 16px 560px) !important;
+}
+
+/* ::::: special toolbar colors ::::: */
+
+#content-frame {
+  border-left: 1px solid ThreeDDarkShadow;
+  border-right: 1px solid ThreeDLightShadow;
+}
+
+#appcontent {
+  border-left: 1px solid ThreeDShadow;
+  border-right: 1px solid ThreeDHighlight;
+}
+
+#attachmentbucket-sizer {
+  border-top: none;
+  border-bottom: none;
+}
+
+/* XXX I should really have a selector rule here to select just .listcell-icon objects underneath the attachmentList listbox */
+
+.listcell-icon
+{
+  -moz-margin-start: 2px;
+  margin-top: 2px;
+}
+
+#compose-toolbar-sizer {
+  border-top-width: 1px;
+  border-left: none;
+  border-right: none;
+  -moz-border-top-colors: ThreeDHighlight;
+}
+
+#msgSubject {
+  margin-top: 0px;
+  margin-bottom: 4px;
+}
+
+/* ::::: addressing widget ::::: */
+
+.autocomplete-treebody::-moz-tree-cell-text(comment) {
+  color: #555566;
+}
+  
+#addressingWidget {
+  -moz-user-focus: none;
+  width: 0;
+}  
+
+.textbox-addressingWidget[noMatchesFound="true"] {
+  color: red;
+}
+
+#typecol-addressingWidget {
+  min-width: 9em;
+  border-right: 1px solid #CACAFF;
+}
+
+.addressingWidgetItem,
+.dummy-row {
+  border: none !important;
+  background-color: inherit !important;
+  color: inherit !important;
+}
+
+.addressingWidgetCell {
+  border-bottom: 1px solid #CACAFF;
+  padding: 0px;
+}
+
+.addressingWidgetCell:first-child {
+  border-top: none;
+}
+
+.dummy-row-cell:first-child {
+  border-top: none;
+  border-bottom: 1px solid #CACAFF;
+}
+
+.person-icon {
+  margin: 0 3px;
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/abcard.png");
+}
+
+.aw-menulist > dropmarker {
+  height: 11px; 
+}
+
+#MsgHeadersToolbar {
+  min-height: 132px;
+}
+
+/* ::::: format toolbar ::::: */
+
+#FormatToolbar > toolbarbutton {
+  list-style-image: url("chrome://messenger/skin/messengercompose/format-buttons.png");
+}
+ 
+#FormatToolbar > toolbarbutton > .toolbarbutton-text {
+  display: none;
+}
+
+#DecreaseFontSizeButton {
+  -moz-image-region: rect(0px 16px 16px 0px);
+}
+#DecreaseFontSizeButton[disabled="true"] {
+  -moz-image-region: rect(32px 16px 48px 0px) !important;
+}
+
+#IncreaseFontSizeButton {
+  -moz-image-region: rect(0px 32px 16px 16px);
+}
+#IncreaseFontSizeButton[disabled="true"] {
+  -moz-image-region: rect(32px 32px 48px 16px) !important;
+}
+
+#boldButton {
+  -moz-image-region: rect(0px 48px 16px 32px);
+}
+#boldButton[disabled="true"] {
+  -moz-image-region: rect(32px 48px 48px 32px) !important;
+}
+
+#italicButton {
+  -moz-image-region: rect(0px 64px 16px 48px);
+}
+#italicButton[disabled="true"] {
+  -moz-image-region: rect(32px 64px 48px 48px) !important;
+}
+
+#underlineButton {
+  -moz-image-region: rect(0px 80px 16px 64px);
+}
+#underlineButton[disabled="true"] {
+  -moz-image-region: rect(32px 80px 48px 64px) !important;
+}
+
+#ulButton {
+  -moz-image-region: rect(0px 96px 16px 80px);
+}
+#ulButton[disabled="true"] {
+  -moz-image-region: rect(32px 96px 48px 80px) !important;
+}
+
+#olButton {
+  -moz-image-region: rect(0px 112px 16px 96px);
+}
+#olButton[disabled="true"] {
+  -moz-image-region: rect(32px 112px 48px 96px) !important;
+}
+
+#outdentButton {
+  -moz-image-region: rect(0px 128px 16px 112px);
+}
+#outdentButton[disabled="true"] {
+  -moz-image-region: rect(32px 128px 48px 112px) !important;
+}
+
+#indentButton {
+  -moz-image-region: rect(0px 144px 16px 128px);
+}
+#indentButton[disabled="true"] {
+  -moz-image-region: rect(32px 144px 48px 128px) !important;
+}
+
+#AlignPopupButton {
+  -moz-image-region: rect(0px 176px 16px 160px);
+}
+#AlignPopupButton[disabled="true"] {
+  -moz-image-region: rect(32px 176px 48px 160px) !important;
+}
+
+#InsertPopupButton {
+  -moz-image-region: rect(0px 256px 16px 240px);
+}
+#InsertPopupButton[disabled="true"] {
+  -moz-image-region: rect(32px 256px 48px 240px) !important;
+}
+
+#smileButtonMenu {
+  -moz-image-region: rect(0px 304px 16px 288px);
+}
+#smileButtonMenu[disabled="true"] {
+  -moz-image-region: rect(32px 304px 48px 288px) !important;
+}
+
+/* ..... align menu ..... */
+
+#AlignPopup > menuitem {
+  list-style-image: url("chrome://messenger/skin/messengercompose/format-buttons.png");
+}
+
+#AlignLeftItem {
+  -moz-image-region: rect(0px 160px 16px 144px);
+}
+
+#AlignCenterItem {
+  -moz-image-region: rect(0px 176px 16px 160px);
+}
+
+#AlignRightItem {
+  -moz-image-region: rect(0px 192px 16px 176px);
+}
+
+#AlignJustifyItem {
+  -moz-image-region: rect(0px 208px 16px 192px);
+}
+
+/* ..... insert menu ..... */
+
+#InsertPopup > menuitem {
+  list-style-image: url("chrome://messenger/skin/messengercompose/format-buttons.png");
+}
+
+#InsertLinkItem {
+  -moz-image-region: rect(0px 224px 16px 208px);
+}
+
+#InsertAnchorItem {
+  -moz-image-region: rect(0px 240px 16px 224px);
+}
+
+#InsertImageItem {
+  -moz-image-region: rect(0px 256px 16px 240px);
+}
+
+#InsertHRuleItem {
+  -moz-image-region: rect(0px 272px 16px 256px);
+}
+
+#InsertTableItem {
+  -moz-image-region: rect(0px 288px 16px 272px);
+}
+
+/* ..... smiley menu ..... */
+
+#smileySmile > .menu-iconic-left {
+  list-style-image: url("chrome://communicator/skin/icons/smileys/smiley-smile.png");
+  -moz-image-region: auto; /* cut off inheritance */
+}
+
+#smileyFrown > .menu-iconic-left {
+  list-style-image: url("chrome://communicator/skin/icons/smileys/smiley-frown.png"); 
+  -moz-image-region: auto; /* cut off inheritance */
+}
+
+#smileyWink > .menu-iconic-left {
+  list-style-image: url("chrome://communicator/skin/icons/smileys/smiley-wink.png");
+  -moz-image-region: auto; /* cut off inheritance */
+}
+
+#smileyTongue > .menu-iconic-left {
+  list-style-image: url("chrome://communicator/skin/icons/smileys/smiley-tongue-out.png");
+  -moz-image-region: auto; /* cut off inheritance */
+}
+
+#smileyLaughing > .menu-iconic-left {
+  list-style-image: url("chrome://communicator/skin/icons/smileys/smiley-laughing.png"); 
+  -moz-image-region: auto; /* cut off inheritance */
+}
+
+#smileyEmbarassed > .menu-iconic-left {
+  list-style-image: url("chrome://communicator/skin/icons/smileys/smiley-embarassed.png");
+  -moz-image-region: auto; /* cut off inheritance */
+}
+
+#smileyUndecided > .menu-iconic-left {
+  list-style-image: url("chrome://communicator/skin/icons/smileys/smiley-undecided.png"); 
+  -moz-image-region: auto; /* cut off inheritance */
+}
+
+#smileySurprise > .menu-iconic-left {
+  list-style-image: url("chrome://communicator/skin/icons/smileys/smiley-surprised.png"); 
+  -moz-image-region: auto; /* cut off inheritance */
+}
+
+#smileyKiss > .menu-iconic-left {
+  list-style-image: url("chrome://communicator/skin/icons/smileys/smiley-kiss.png"); 
+  -moz-image-region: auto; /* cut off inheritance */
+}
+
+#smileyYell > .menu-iconic-left {
+  list-style-image: url("chrome://communicator/skin/icons/smileys/smiley-yell.png"); 
+  -moz-image-region: auto; /* cut off inheritance */
+}
+
+#smileyCool > .menu-iconic-left {
+  list-style-image: url("chrome://communicator/skin/icons/smileys/smiley-cool.png"); 
+  -moz-image-region: auto; /* cut off inheritance */
+}
+
+#smileyMoney > .menu-iconic-left {
+  list-style-image: url("chrome://communicator/skin/icons/smileys/smiley-money-mouth.png"); 
+  -moz-image-region: auto; /* cut off inheritance */
+}
+
+#smileyFoot > .menu-iconic-left {
+  list-style-image: url("chrome://communicator/skin/icons/smileys/smiley-foot-in-mouth.png"); 
+  -moz-image-region: auto; /* cut off inheritance */
+}
+
+#smileyInnocent > .menu-iconic-left {
+  list-style-image: url("chrome://communicator/skin/icons/smileys/smiley-innocent.png"); 
+  -moz-image-region: auto; /* cut off inheritance */
+}
+
+#smileyCry > .menu-iconic-left {
+  list-style-image: url("chrome://communicator/skin/icons/smileys/smiley-cry.png"); 
+  -moz-image-region: auto; /* cut off inheritance */
+}
+
+#smileySealed > .menu-iconic-left {
+  list-style-image: url("chrome://communicator/skin/icons/smileys/smiley-sealed.png"); 
+  -moz-image-region: auto; /* cut off inheritance */
+}
+
+/* ..... fg/bg color picker ..... */
+
+.ColorPickerLabel {
+  border: 1px inset ThreeDFace;
+  margin: 0px;
+  padding: 2px;
+}
+
+.color-button {
+  border: 1px inset ThreeDFace;
+  padding: 0px;
+  width: 14px;
+  height: 12px;
+  margin: 2px;
+}
+
+.color-button:hover {
+  border: 1px solid ThreeDDarkShadow;
+}
+
+#TextColorButton {
+  margin-top: 2px;
+  margin-bottom: 9px;
+  -moz-margin-start: 2px;
+  -moz-margin-end: 9px;
+}
+
+#BackgroundColorButton {
+  margin-top: 9px;
+  margin-bottom: 2px;
+  -moz-margin-start: 9px;
+  -moz-margin-end: 2px;
+}
+
+#HighlightColorButton {
+  -moz-image-region: rect(260px 16px 272px 0px);
+  background-color: transparent;
+}
+
+#HighlightColorButton:hover {
+  -moz-image-region: rect(260px 32px 272px 16px);
+}
+
+#HighlightColorButton:hover:active {
+  -moz-image-region: rect(260px 48px 272px 32px);
+}
+
+#HighlightColorButton[disabled="true"],
+#HighlightColorButton[disabled="true"]:hover,
+#HighlightColorButton[disabled="true"]:hover:active {
+  -moz-image-region: rect(260px 64px 272px 48px);
+}
+
+/* ::::: address book sidebar ::::: */
+.ab-closebutton {
+  list-style-image: url("chrome://messenger/skin/icons/close-button.png");
+  -moz-image-region: rect(0 16px 16px 0);
+  -moz-appearance: none;
+  border: none !important;
+  padding: 2px;
+}
+
+.ab-closebutton:hover {
+  -moz-image-region: rect(0 32px 16px 16px);
+}
+
+.ab-closebutton:hover:active {
+  -moz-image-region: rect(0 48px 16px 32px);
+}
+
+.ab-closebutton > .toolbarbutton-icon {
+  -moz-margin-end: 0px; /* override toolkit's default value */
+}
+
+#sidebar {
+  background-color: Window;
+}

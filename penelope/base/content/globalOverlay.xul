@@ -1,0 +1,173 @@
+<?xml version="1.0"?>
+<!--
+   -
+   - ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Penelope Extension.
+   -
+   - The Initial Developer of the Original Code is
+   - Qualcomm Inc.
+   - Portions created by the Initial Developer are Copyright (C) 2006
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Mark Charlebois, <mcharleb@qualcomm.com>, original author
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+
+<!DOCTYPE overlay [
+<!ENTITY % penelopeOverlayDTD SYSTEM "chrome://penelope/locale/penelope.dtd" >
+%penelopeOverlayDTD;
+]>
+<overlay id="penelopeGlobalOverlay"
+xmlns:nc="http://home.netscape.com/NC-rdf#"
+xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/x-javascript" src="globalOverlay.js" />
+
+  <stringbundleset id="stringbundleset">
+      <stringbundle id="penelopeMacKeys"
+                    src="chrome://penelope/locale/keysMac.properties" />
+      <stringbundle id="penelopeWindowsKeys"
+                    src="chrome://penelope/locale/keysWindows.properties" />
+      <stringbundle id="penelopeThunderbirdKeys"
+                    src="chrome://penelope/locale/keysThunderbird.properties" />
+  </stringbundleset>
+
+  <menupopup id="taskPopup">
+      <menuitem hidden="true" key="key_mail"/>
+      <menuitem id="penelopeDoSelectedTextUrl1" 
+                label="Url1" 
+                key="key_penelopeSelectedTextUrl1" 
+                command="cmd_penelopeDoSelectedTextUrl1" 
+                insertbefore="menu_findTypeLinks"/>
+      <menuitem id="penelopeDoSelectedTextUrl2" 
+                label="Url2" 
+                key="key_penelopeSelectedTextUrl2" 
+                command="cmd_penelopeDoSelectedTextUrl2"/>
+      <menuitem id="penelopeDoSelectedTextUrl3" 
+                label="Url3" 
+                key="key_penelopeSelectedTextUrl3" 
+                command="cmd_penelopeDoSelectedTextUrl3"/>
+      <menuitem id="penelopeDoSelectedTextUrl4" 
+                label="Url4" 
+                key="key_penelopeSelectedTextUrl4" 
+                command="cmd_penelopeDoSelectedTextUrl4"/>
+      <menuitem id="penelopeDoSelectedTextUrl5" 
+                label="Url5"
+                key="key_penelopeSelectedTextUrl5" 
+                command="cmd_penelopeDoSelectedTextUrl5"/>
+      <menuitem id="penelopeDoSelectedTextUrl6" 
+                label="Url6"
+                key="key_penelopeSelectedTextUrl6" 
+                command="cmd_penelopeDoSelectedTextUrl6"/>
+  </menupopup>
+  <menupopup id="menu_ToolsPopup">
+      <menuitem id="penelopeDoSelectedTextUrl1" 
+                label="Url1" 
+                key="key_penelopeSelectedTextUrl1" 
+                command="cmd_penelopeDoSelectedTextUrl1" 
+                insertbefore="menu_findTypeLinks"/>
+      <menuitem id="penelopeDoSelectedTextUrl2" 
+                label="Url2" 
+                key="key_penelopeSelectedTextUrl2" 
+                command="cmd_penelopeDoSelectedTextUrl2"/>
+      <menuitem id="penelopeDoSelectedTextUrl3" 
+                label="Url3" 
+                key="key_penelopeSelectedTextUrl3" 
+                command="cmd_penelopeDoSelectedTextUrl3"/>
+      <menuitem id="penelopeDoSelectedTextUrl4" 
+                label="Url4" 
+                key="key_penelopeSelectedTextUrl4" 
+                command="cmd_penelopeDoSelectedTextUrl4"/>
+      <menuitem id="penelopeDoSelectedTextUrl5" 
+                label="Url5"
+                key="key_penelopeSelectedTextUrl5" 
+                command="cmd_penelopeDoSelectedTextUrl5"/>
+      <menuitem id="penelopeDoSelectedTextUrl6" 
+                label="Url6"
+                key="key_penelopeSelectedTextUrl6" 
+                command="cmd_penelopeDoSelectedTextUrl6"/>
+  </menupopup>
+
+  <keyset id="mainKeyset">
+    <keyset id="globalKeyset" />
+  </keyset>
+  <keyset id="editMenuKeys">
+    <keyset id="globalKeyset" />
+  </keyset>
+  <keyset id="tasksKeys">
+    <keyset id="globalKeyset" />
+  </keyset>
+  <keyset id="globalKeyset">
+    <!-- Keybindings unique to Penelope -->
+    <!-- CTRL-Y cannot be used for DirectoryServices -->
+    <!-- because it is mapped to redo -->
+    <key id="key_penelopeSend" 
+         command="cmd_sendNow" />
+    <key id="key_penelopeSendUnsentMsgs" 
+         command="cmd_sendUnsentMsgs" />
+    <key id="key_penelopeSelectedTextUrl1" 
+         command="cmd_penelopeDoSelectedTextUrl1" />
+    <key id="key_penelopeSelectedTextUrl2" 
+         command="cmd_penelopeDoSelectedTextUrl2" />
+    <key id="key_penelopeSelectedTextUrl3" 
+         command="cmd_penelopeDoSelectedTextUrl3" />
+    <key id="key_penelopeSelectedTextUrl4" 
+         command="cmd_penelopeDoSelectedTextUrl4" />
+    <key id="key_penelopeSelectedTextUrl5" 
+         command="cmd_penelopeDoSelectedTextUrl5" />
+    <key id="key_penelopeSelectedTextUrl6" 
+         command="cmd_penelopeDoSelectedTextUrl6" />
+  </keyset>
+  <commandset id="mailCommands">
+    <commandset id="penelopeGlobalCommandset" />
+  </commandset>
+  <commandset id="mainCommandSet">
+    <commandset id="penelopeGlobalCommandset" />
+  </commandset>
+  <commandset id="editMenuCommands">
+    <commandset id="penelopeGlobalCommandset" />
+  </commandset>
+  <commandset id="composeCommands">
+    <commandset id="penelopeGlobalCommandset" />
+  </commandset>
+  <commandset id="tasksCommands">
+    <commandset id="penelopeGlobalCommandset" />
+  </commandset>
+  <commandset id="commands">
+    <commandset id="penelopeGlobalCommandset" />
+  </commandset>
+  <commandset id="penelopeGlobalCommandset">
+    <command id="cmd_penelopeDoSelectedTextUrl1" oncommand="doSelectedTextUrl('1');" />
+    <command id="cmd_penelopeDoSelectedTextUrl2" oncommand="doSelectedTextUrl('2');" />
+    <command id="cmd_penelopeDoSelectedTextUrl3" oncommand="doSelectedTextUrl('3');" />
+    <command id="cmd_penelopeDoSelectedTextUrl4" oncommand="doSelectedTextUrl('4');" />
+    <command id="cmd_penelopeDoSelectedTextUrl5" oncommand="doSelectedTextUrl('5');" />
+    <command id="cmd_penelopeDoSelectedTextUrl6" oncommand="doSelectedTextUrl('6');" />
+  </commandset>
+</overlay>

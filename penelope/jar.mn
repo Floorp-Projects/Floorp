@@ -1,0 +1,75 @@
+penelope.jar:
+% content penelope %content/penelope/ xpcnativewrappers=yes
+% overlay	chrome://global/content/globalOverlay.xul	                        chrome://penelope/content/globalOverlay.xul
+% overlay	chrome://messenger/content/mailTasksOverlay.xul	                    chrome://penelope/content/globalOverlay.xul
+% overlay	chrome://messenger/content/mailWindowOverlay.xul	                chrome://penelope/content/globalOverlay.xul
+% overlay	chrome://messenger/content/messageWindow.xul	                    chrome://penelope/content/globalOverlay.xul
+% overlay	chrome://messenger/content/messengercompose/messengercompose.xul	chrome://penelope/content/globalOverlay.xul
+% overlay	chrome://messenger/content/messengercompose/messengercompose.xul	chrome://penelope/content/composeOverlay.xul
+% overlay	chrome://editor/content/editorOverlay.xul	                        chrome://penelope/content/editorOverlay.xul
+% overlay	chrome://messenger/content/messenger.xul	                        chrome://penelope/content/globalOverlay.xul
+% overlay	chrome://messenger/content/messenger.xul	                        chrome://penelope/content/messengerOverlay.xul
+% overlay	chrome://messenger/content/mailWindowOverlay.xul	                chrome://penelope/content/toolbarOverlay.xul
+% overlay	chrome://messenger/content/preferences/preferences.xul	            chrome://penelope/content/preferencesOverlay.xul
+% override	chrome://global/content/customizeToolbar.xul	                    chrome://penelope/content/customizeToolbar.xul
+  content/penelope/globalOverlay.xul                                 (base/content/globalOverlay.xul)
+  content/penelope/globalOverlay.js                                  (base/content/globalOverlay.js)
+  content/penelope/messengerOverlay.xul                              (base/content/messengerOverlay.xul)
+  content/penelope/messengerOverlay.js                               (base/content/messengerOverlay.js)
+  content/penelope/toolbarOverlay.xul                                (base/content/toolbarOverlay.xul)
+  content/penelope/customizeToolbar.xul                              (base/content/customizeToolbar.xul)
+  content/penelope/customizeToolbar.js                               (base/content/customizeToolbar.js)
+  content/penelope/toolbarbuttons.js                                 (base/content/toolbarbuttons.js)
+  content/penelope/toolbar.js                                        (base/content/toolbar.js)
+  content/penelope/quotes.js                                         (base/content/quotes.js)
+  content/penelope/composeOverlay.js                                 (components/compose/content/composeOverlay.js)
+  content/penelope/composeOverlay.xul                                (components/compose/content/composeOverlay.xul)
+  content/penelope/editorOverlay.xul                                 (components/compose/content/editorOverlay.xul)
+  content/penelope/preferencesOverlay.xul                            (components/preferences/content/preferencesOverlay.xul)
+  content/penelope/preferencesOverlay.js                             (components/preferences/content/preferencesOverlay.js)
+% locale penelope en-US %locale/en-US/penelope/
+  locale/en-US/penelope/penelope.dtd                                 (locales/en-US/penelope.dtd)
+  locale/en-US/penelope/penelope.properties                          (locales/en-US/penelope.properties)
+  locale/en-US/penelope/keysMac.properties                           (locales/en-US/keysMac.properties)
+  locale/en-US/penelope/keysWindows.properties                       (locales/en-US/keysWindows.properties)
+  locale/en-US/penelope/keysThunderbird.properties                   (locales/en-US/keysThunderbird.properties)
+% skin penelope modern/1.0 %skin/modern/penelope/
+* skin/modern/penelope/contents.rdf                                  (themes/pinstripe/mail/contents.rdf)
+  skin/modern/penelope/messengercompose.css                          (themes/pinstripe/mail/compose/messengercompose.css)
+  skin/modern/penelope/primaryToolbar.css                            (themes/pinstripe/mail/primaryToolbar.css)
+  skin/modern/penelope/penelope.css                                  (themes/pinstripe/mail/penelope.css)
+  skin/modern/penelope/icons/tbar32.png                              (themes/pinstripe/mail/icons/tbar32.png) 
+  skin/modern/penelope/icons/tbar32-active.png                       (themes/pinstripe/mail/icons/tbar32-active.png) 
+  skin/modern/penelope/icons/tbar32-disabled.png                     (themes/pinstripe/mail/icons/tbar32-disabled.png) 
+  skin/modern/penelope/icons/tbar32a.png                             (themes/pinstripe/mail/icons/tbar32a.png) 
+  skin/modern/penelope/icons/tbar32a-active.png                      (themes/pinstripe/mail/icons/tbar32a-active.png) 
+  skin/modern/penelope/icons/tbar32a-disabled.png                    (themes/pinstripe/mail/icons/tbar32a-disabled.png) 
+  skin/modern/penelope/icons/tbar32b.png                             (themes/pinstripe/mail/icons/tbar32b.png) 
+  skin/modern/penelope/icons/tbar32b-active.png                      (themes/pinstripe/mail/icons/tbar32b-active.png) 
+  skin/modern/penelope/icons/tbar32b-disabled.png                    (themes/pinstripe/mail/icons/tbar32b-disabled.png) 
+  skin/modern/penelope/icons/tbar32c.png                             (themes/pinstripe/mail/icons/tbar32c.png) 
+  skin/modern/penelope/icons/tbar32c-active.png                      (themes/pinstripe/mail/icons/tbar32c-active.png) 
+  skin/modern/penelope/icons/tbar32c-disabled.png                    (themes/pinstripe/mail/icons/tbar32c-disabled.png) 
+  skin/modern/penelope/icons/tbar16.png                              (themes/pinstripe/mail/icons/tbar16.png) 
+  skin/modern/penelope/icons/tbar16-active.png                       (themes/pinstripe/mail/icons/tbar16-active.png) 
+  skin/modern/penelope/icons/tbar16-disabled.png                     (themes/pinstripe/mail/icons/tbar16-disabled.png) 
+  skin/modern/penelope/icons/tbar16a.png                             (themes/pinstripe/mail/icons/tbar16a.png) 
+  skin/modern/penelope/icons/tbar16a-active.png                      (themes/pinstripe/mail/icons/tbar16a-active.png) 
+  skin/modern/penelope/icons/tbar16a-disabled.png                    (themes/pinstripe/mail/icons/tbar16a-disabled.png) 
+  skin/modern/penelope/icons/tbar16b.png                             (themes/pinstripe/mail/icons/tbar16b.png) 
+  skin/modern/penelope/icons/tbar16b-active.png                      (themes/pinstripe/mail/icons/tbar16b-active.png) 
+  skin/modern/penelope/icons/tbar16b-disabled.png                    (themes/pinstripe/mail/icons/tbar16b-disabled.png) 
+  skin/modern/penelope/icons/tbar16c.png                             (themes/pinstripe/mail/icons/tbar16c.png) 
+  skin/modern/penelope/icons/tbar16c-active.png                      (themes/pinstripe/mail/icons/tbar16c-active.png) 
+  skin/modern/penelope/icons/tbar16c-disabled.png                    (themes/pinstripe/mail/icons/tbar16c-disabled.png) 
+  skin/modern/penelope/icons/penelope32.png                          (themes/pinstripe/mail/icons/penelope32.png)
+  skin/modern/penelope/icons/SortByPriority.png                      (themes/pinstripe/mail/icons/SortByPriority.png)
+  skin/modern/penelope/icons/SortByStatus.png                        (themes/pinstripe/mail/icons/SortByStatus.png)
+  skin/modern/penelope/icons/SortByJunk.png                          (themes/pinstripe/mail/icons/SortByJunk.png)
+  skin/modern/penelope/icons/SortByLabel.png                         (themes/pinstripe/mail/icons/SortByLabel.png)
+  skin/modern/penelope/icons/SortByAttachment.png                    (themes/pinstripe/mail/icons/SortByAttachment.png)
+  skin/modern/penelope/icons/SortByDate.png                          (themes/pinstripe/mail/icons/SortByDate.png)
+  skin/modern/penelope/icons/SortBySubject.png                       (themes/pinstripe/mail/icons/SortBySubject.png)
+  skin/modern/penelope/icons/SortBySize.png                          (themes/pinstripe/mail/icons/SortBySize.png)
+  skin/modern/penelope/icons/SortBySender.png                        (themes/pinstripe/mail/icons/SortBySender.png)
+  

@@ -1,0 +1,198 @@
+<?xml version="1.0"?>
+<!--
+   -
+   - ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Penelope Extension.
+   -
+   - The Initial Developer of the Original Code is
+   - Qualcomm Inc.
+   - Portions created by the Initial Developer are Copyright (C) 2006
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Mark Charlebois, <mcharleb@qualcomm.com>, original author
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://penelope/skin/messengercompose.css" type="text/css"?>
+
+<!DOCTYPE overlay [
+<!ENTITY % penelopeOverlayDTD SYSTEM "chrome://penelope/locale/penelope.dtd" >
+<!ENTITY % messengerDTD SYSTEM "chrome://messenger/locale/messenger.dtd">
+%penelopeOverlayDTD;
+%messengerDTD;
+]>
+<overlay id="penelopeComposeOverlay"
+xmlns:nc="http://home.netscape.com/NC-rdf#"
+xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <!-- Depends on
+    <script type="application/x-javascript" src="chrome://messenger/content/messengercompose/MsgComposeCommands.js"/>
+  -->
+  <script type="application/x-javascript" src="chrome://penelope/content/composeOverlay.js" />
+  <script type="application/x-javascript" src="chrome://penelope/content/quotes.js" />
+
+  <menuitem id="menu_newmsg"
+            toolbaritem="button-newmsg"/>
+  <menuitem id="menu_newAbCard"
+            toolbaritem="button-address"/>
+  <menuitem id="menu_attachFile"
+            toolbaritem="button-attach"/>
+  <menuitem id="menu_attachPage"
+            toolbaritem="not-supported"/>
+  <menuitem id="menu_attachVCard"
+            toolbaritem="not-supported"/>
+  <menuitem id="menu_close"
+            toolbaritem="button-close"/>
+  <menuitem id="menu_save"
+            toolbaritem="button-save"/>
+  <menuitem id="menu_saveAsFile"
+            toolbaritem="button-save"/>
+  <menuitem id="menu_saveAsTemplate"
+            toolbaritem="button-save"/>
+  <menuitem id="menu-item-send-now"
+            toolbaritem="button-send"/>
+  <menuitem id="menu-item-send-later"
+            toolbaritem="button-sendlater"/>
+  <menuitem id="printSetupMenuItem"
+            toolbaritem="button-printsetup"/>
+  <menuitem id="printMenuItem"
+            toolbaritem="button-print"/>
+  <menuitem id="menu_FileQuitItem"
+            toolbaritem="button-exit"/>
+  <menuitem id="edit-menu_undo"
+            toolbaritem="undo-button"/>
+  <menuitem id="edit-menu_redo"
+            toolbaritem="redo-button"/>
+  <menuitem id="edit-menu_cut"
+            toolbaritem="cut-button"/>
+  <menuitem id="edit-menu_copy"
+            toolbaritem="copy-button"/>
+  <menuitem id="edit-menu_paste"
+            toolbaritem="paste-button"/>
+  <menuitem id="edit-menu_pasteNoFormatting"
+            toolbaritem="button-pastenoformatting"/>
+  <menuitem id="edit-menu_pasteQuote"
+            toolbaritem="quoteButton"/>
+  <menuitem id="edit-menu_rewrap"
+            toolbaritem="button-rewrap"/>
+  <menuitem id="edit-menu_delete"
+            toolbaritem="delete-button"/>
+  <menuitem id="edit-menu_selectAll"
+            toolbaritem="selectall-button"/>
+  <menuitem id="edit-menu_find"
+            toolbaritem="button-find"/>
+  <menuitem id="edit-menu_findNext"
+            toolbaritem="button-findnext"/>
+  <menuitem id="edit-menu_findPrev"
+            toolbaritem="button-findprev"/>
+  <menuitem id="menu_View"
+            toolbaritem="not-supported"/>
+  <menuitem id="insertMenu"
+            toolbaritem="not-supported"/>
+  <menuitem id="formatMenu"
+            toolbaritem="not-supported"/>
+  <menuitem id="menu_checkspelling"
+            toolbaritem="spellingButton"/>
+  <menuitem id="menu_inlineSpellCheck"
+            toolbaritem="not-supported"/>
+  <menuitem id="outputFormatMenu"
+            toolbaritem="not-supported"/>
+  <menuitem id="priorityMenu"
+            toolbaritem="priority-button"/>
+  <menuitem id="tasksMenuMail"
+            toolbaritem="not-supported"/>
+  <menuitem id="tasksMenuAddressBook"
+            toolbaritem="button-address"/>
+  <menuitem id="menu_preferences"
+            toolbaritem="not-supported"/>
+  <menuitem id="menu_HelpPopup"
+            toolbaritem="not-supported"/>
+
+  <menupopup id="taskPopup">
+      <menuitem hidden="true" key="key_mail"/>
+  </menupopup>
+
+  <keyset id="tasksKeys">
+    <key id="key_penelopeAttachment" command="cmd_attachFile" />
+    <key id="key_penelopeNextMisspelling" command="cmd_penelopeNextMisspelling" />
+    <key id="key_penelopeAddQuoteLevel" command="cmd_penelopeAddQuoteLevel"/>
+    <key id="key_penelopeRemoveQuoteLevel" command="cmd_penelopeRemoveQuoteLevel"/>
+    <key id="key_penelopeIncMsgPriority" command="cmd_penelopeIncMsgPrio"/>
+    <key id="key_penelopeDecMsgPriority" command="cmd_penelopeDecMsgPrio"/>
+  </keyset>
+  <commandset id="mainCommandSet">
+    <commandset id="penelopeComposeCommandset" />
+  </commandset>
+  <commandset id="editMenuCommands">
+    <commandset id="penelopeComposeCommandset" />
+  </commandset>
+  <commandset id="composeCommands">
+    <commandset id="penelopeComposeCommandset" />
+  </commandset>
+  <commandset id="tasksCommands">
+    <commandset id="penelopeComposeCommandset" />
+  </commandset>
+  <commandset id="commands">
+    <commandset id="penelopeComposeCommandset" />
+  </commandset>
+  <commandset id="penelopeComposeCommandset">
+    <command id="cmd_penelopeAddToDictionary" oncommand="InlineSpellChecker.addToDictionary(null,null);"/>
+    <command id="cmd_penelopeNextMisspelling" oncommand="penelopeNextMisspelling();"/>
+    <command id="cmd_penelopeAddQuoteLevel" oncommand="addQuoteLevel();" />
+    <command id="cmd_penelopeRemoveQuoteLevel" oncommand="removeQuoteLevel();" />
+    <command id="cmd_penelopeDecMsgPrio" oncommand="decreaseMsgPriority();" />
+    <command id="cmd_penelopeIncMsgPrio" oncommand="increaseMsgPriority();" />
+    <command id="cmd_penelopeRemoveFormatting" oncommand="removeFormatting();" />
+  </commandset>
+
+  <toolbarpalette id="MsgComposeToolbarPalette">
+        <toolbarbutton id="button-send" width="150" align="left"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-printsetup" label="Print Setup" tooltiptext="Set up printer" command="cmd_printSetup"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-sendlater" label="Send Later" tooltiptext="Queue the message to be sent later" command="cmd_printSetup"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-saveas" label="Save As" tooltiptext="Save As"/>
+        <toolbarbutton id="button-newmsg" class="toolbarbutton-1" label="&newMsgButton.label;" tooltiptext="&newMsgButton.tooltip;" oncommand="MsgNewMessage(event);"/>
+        <toolbarbutton id="button-print"  class="toolbarbutton-1" label="&printButton.label;"
+                  observes="button_print" oncommand="goDoCommand('cmd_print');" tooltiptext="&printButton.tooltip;"/>
+        <toolbarbutton id="button-exit" class="toolbarbutton-1" label="Quit" tooltiptext="Quit the application" oncommand="goQuitApplication();"/>
+        <toolbarbutton id="button-close" class="toolbarbutton-1" label="Close" tooltiptext="Close" command="cmd_close"/>
+        <toolbarbutton id="button-rewrap" class="toolbarbutton-1" label="Rewrap" tooltiptext="Rewrap" oncommand="goDoCommand('cmd_rewrap');"/>
+        <toolbarbutton id="button-find" class="toolbarbutton-1" label="Find" tooltiptext="Find" command="cmd_find"/>
+        <toolbarbutton id="button-findnext" class="toolbarbutton-1" label="Find Next" tooltiptext="Find next occurance" command="cmd_findNext"/>
+        <toolbarbutton id="button-findprev" class="toolbarbutton-1" label="Find" tooltiptext="Find previous occurance" command="cmd_findPrev"/>
+        <toolbarbutton id="undo-button" class="toolbarbutton-1" label="Undo" tooltiptext="Undo" command="cmd_undo"/>
+        <toolbarbutton id="redo-button" class="toolbarbutton-1" label="Redo" tooltiptext="Redo" command="cmd_redo"/>
+        <toolbarbutton id="delete-button" class="toolbarbutton-1" label="Delete" tooltiptext="Delete" command="cmd_delete"/>
+        <toolbarbutton id="selectall-button" class="toolbarbutton-1" label="Select All" tooltiptext="Select all" command="cmd_selectAll"/>
+
+  </toolbarpalette>
+  <toolbar id="composeToolbar2" 
+           mode="icons"
+           defaultset="priority-button,separator,quoteButton,separator,button-attach,separator,button-address,separator,spellingButton,separator,button-send,separator,spring">
+  </toolbar>
+  
+</overlay>

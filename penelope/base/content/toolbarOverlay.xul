@@ -1,0 +1,624 @@
+<?xml version="1.0"?>
+<!--
+   -
+   - ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Penelope Extension.
+   -
+   - The Initial Developer of the Original Code is
+   - Qualcomm Inc.
+   - Portions created by the Initial Developer are Copyright (C) 2006
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Mark Charlebois, <mcharleb@qualcomm.com>, original author
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://penelope/skin/penelope.css" type="text/css"?>
+<?xml-stylesheet href="chrome://penelope/skin/primaryToolbar.css" type="text/css"?>
+
+<!DOCTYPE overlay [
+<!ENTITY % penelopeOverlayDTD SYSTEM "chrome://penelope/locale/penelope.dtd" >
+<!ENTITY % messengerDTD SYSTEM "chrome://messenger/locale/messenger.dtd">
+<!ENTITY % messengercomposeDTD SYSTEM "chrome://messenger/locale/messengercompose/messengercompose.dtd" >
+%penelopeOverlayDTD;
+%messengerDTD;
+%messengercomposeDTD;
+]>
+<overlay id="penelopeMessengerOverlay"
+xmlns:nc="http://home.netscape.com/NC-rdf#"
+xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/x-javascript" src="chrome://penelope/content/toolbarbuttons.js" />
+  <script type="application/x-javascript" src="chrome://penelope/content/toolbar.js" />
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="penelopeStrings"
+                  src="chrome://penelope/locale/penelope.properties" />
+  </stringbundleset>
+
+  <keyset id="mainKeyset">
+    <keyset id="penelopeMessengerKeyset" />
+  </keyset>
+  <keyset id="editMenuKeys">
+    <keyset id="penelopeMessengerKeyset" />
+  </keyset>
+  <keyset id="tasksKeys">
+    <keyset id="penelopeMessengerKeyset" />
+  </keyset>
+  <keyset id="penelopeMessengerKeyset">
+    <!-- Keybindings unique to Penelope -->
+    <!-- CTRL-Y cannot be used for DirectoryServices -->
+    <!-- because it is mapped to redo -->
+    <key id="key_penelopeOpenInbox" command="cmd_penelopeOpenInbox" />
+    <key id="key_penelopeOpenOutbox" command="cmd_penelopeOpenOutbox" />
+    <key id="key_penelopeAddToAddrBook" command="cmd_penelopeAddToAddrBook" />
+    <key id="key_penelopeDelete" command="cmd_delete" />
+  </keyset>
+  <commandset id="mainCommandSet">
+    <commandset id="penelopeMessengerCommandset" />
+  </commandset>
+  <commandset id="editMenuCommands">
+    <commandset id="penelopeMessengerCommandset" />
+  </commandset>
+  <commandset id="composeCommands">
+    <commandset id="penelopeMessengerCommandset" />
+  </commandset>
+  <commandset id="tasksCommands">
+    <commandset id="penelopeMessengerCommandset" />
+  </commandset>
+  <commandset id="commands">
+    <commandset id="penelopeMessengerCommandset" />
+  </commandset>
+  <commandset id="penelopeMessengerCommandset">
+    <command id="cmd_penelopeOpenInbox" oncommand="openInbox();" />
+    <command id="cmd_penelopeOpenOutbox" oncommand="openOutbox();" />
+    <command id="cmd_penelopeAddToAddrBook" oncommand="addEmail();" observes="cmd_tag" />
+    <command id="cmd_penelopeHelp" oncommand="openRegionURL('mailnews.hints_and_tips.url');"/>
+  </commandset>
+
+  <menu id="menu_MessagePaneLayout" hidden="true"/>
+
+  <toolbox id="mail-toolbox">
+  <toolbarpalette id="MailToolbarPalette">
+        <toolbarbutton class="toolbarbutton-1" id="button-in" label="In" tooltiptext="Open In mailbox" command="cmd_penelopeOpenInbox"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-out" label="Out" tooltiptext="Open Out mailbox" command="cmd_penelopeOpenOutbox"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-help" label="Help" tooltiptext="Help" command="cmd_penelopeHelp"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-close" label="Close" tooltiptext="Close" oncommand="goDoCommand('cmd_close')"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-saveas" label="Save As" tooltiptext="Save As"/>
+        <toolbarbutton class="toolbarbutton-1" id="cut-button" label="Cut" tooltiptext="Cut" oncommand="goDoCommand('cmd_cut')"/>
+        <toolbarbutton class="toolbarbutton-1" id="copy-button" label="Copy" tooltiptext="Copy" oncommand="goDoCommand('cmd_copy')"/>
+        <toolbarbutton class="toolbarbutton-1" id="paste-button" label="Paste" tooltiptext="Paste" oncommand="goDoCommand('cmd_paste')"/>
+        <toolbarbutton class="toolbarbutton-1" id="undo-button" label="Undo" tooltiptext="Undo" oncommand="Undo()"/>
+        <toolbarbutton class="toolbarbutton-1" id="redo-button" label="Redo" tooltiptext="Redo" oncommand="Redo()"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-redirect" label="Redirect" tooltiptext="Redirect" oncommand="penelopeRedirect();"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-resend" label="Resend" tooltiptext="Resend" oncommand="MsgEditMessageAsNew();"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-sendunsent" label="Send Unsent" tooltiptext="Send unsent messages" oncommand="goDoCommand('cmd_sendUnsentMsgs')"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-subscribe" label="Subscribe" tooltiptext="Subscribe" oncommand="MsgSubscribe();"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-emptytrash" label="Empty Trash" tooltiptext="Empty trash" oncommand="goDoCommand('cmd_emptyTrash')"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-offline" label="Offline" tooltiptext="Toggle offline status" oncommand="MailOfflineMgr.toggleOfflineStatus();"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-printsetup" label="Print Setup" tooltiptext="Set up printer" command="cmd_printSetup"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-next" label="Next Message" tooltiptext="Go to the next message" command="cmd_nextMsg"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-nextunread" label="Next Unread" tooltiptext="Go to the next unread message" command="cmd_nextUnreadMsg"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-nextstarred" label="Next Starred" tooltiptext="Go to the next starred message" command="cmd_nextFlaggedMsg"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-nextunreadthread" label="Next Unread Thread" tooltiptext="Go to the next unread thread" command="cmd_nextUnreadThread"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-previous" label="Prev Message" tooltiptext="Go to the previous message" command="cmd_previousMsg"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-prevunread" label="Prev Unread" tooltiptext="Go to the previous unread message" command="cmd_previousUnreadMsg"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-prevstarred" label="Prev Starred" tooltiptext="Go to the previous starred message" command="cmd_previousFlaggedMsg"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-prefs" label="Preferences" tooltiptext="Open the preferences window" oncommand="openOptionsDialog()"/>
+        <toolbaritem id="priority-button" align="center" pack="center">
+          <label value="&priorityButton.label;"/>
+          <menulist id="priorityMenu-button" value="Normal" oncommand="penelopePriorityMenuSelect(event.target);">
+            <menupopup>
+              <menuitem name="priority" label="&highestPriorityCmd.label;" value="Highest"  id="list_priotity_highest"/>
+              <menuitem name="priority" label="&highPriorityCmd.label;"    value="High"     id="list_priority_high"/>
+              <menuitem name="priority" label="&normalPriorityCmd.label;"  value="Normal"   id="list_priority_normal"/>
+              <menuitem name="priority" label="&lowPriorityCmd.label;"     value="Low"      id="list_priority_low"/>
+              <menuitem name="priority" label="&lowestPriorityCmd.label;"  value="Lowest"   id="list_priority_lowest"/>
+            </menupopup>
+          </menulist>
+        </toolbaritem>
+        <toolbaritem id="button-status" align="center" pack="center">
+          <label value="Status"/>
+          <menulist id="statusMenu-button"  value="Unread" oncommand="penelopeStatusMenuSelect(event.target);">
+            <menupopup id="penelopeStatusMenu-popup" onpopupshowing="penelopeInitStatusTags(this);">
+              <menuitem id="statusUnreadToolbarItem" label="Unread" accesskey="U" observes="cmd_markAsRead" />
+              <menuitem id="statusReadToolbarItem" label="Read" accesskey="E" observes="cmd_markAsRead" />
+              <menuitem id="statusRepliedToolbarItem" label="Replied" accesskey="R" observes="cmd_markAsRead" />
+              <menuitem id="statusForwardedToolbarItem" label="Forwarded" accesskey="F" observes="cmd_markAsRead" />
+              <menuitem id="statusRedirectedToolbarItem" label="Redirected" accesskey="D" observes="cmd_markAsRead" />
+              <menuitem id="statusSentToolbarItem" label="Sent" accesskey="T" observes="cmd_markAsRead" />
+              <menuitem id="statusUnsentToolbarItem" label="Unsent" accesskey="N" observes="cmd_markAsRead" />
+              </menupopup>
+          </menulist>
+        </toolbaritem>
+  </toolbarpalette>
+  <toolbar id="mail-bar2" 
+           mode="icons"
+           defaultset="button-delete,separator,button-in,button-out,separator,button-getmsg,separator,button-newmsg,button-reply,button-replyall,button-forward,separator,button-previous,button-next,separator,button-address,separator,button-print,separator,button-help,spring,search-container">
+  </toolbar>
+  </toolbox>
+
+  <!-- Add toolbaritem attribute to existing menu items -->
+  <menuitem id="newNewMsgCmd" 
+            toolbaritem="button-newmsg"/>
+  <menuitem id="menu_newFolder" 
+            toolbaritem="not-supported"/>
+  <menuitem id="menu_newVirtualFolder" 
+            toolbaritem="not-supported"/>
+  <menuitem id="newAccountMenuItem"
+            toolbaritem="not-supported"/>
+  <menuitem id="menu_newCard"
+            toolbaritem="button-address"/>
+  <menuitem id="openMessageFileMenuitem" 
+            toolbaritem="button-file"/>
+  <menuitem id="fileAttachmentMenu" 
+            toolbaritem="not-supported"/>
+  <menuitem id="menu_close"
+            toolbaritem="button-close"/>
+  <menuitem id="menu_saveAsFile"
+            toolbaritem="button-saveas"/>
+  <menuitem id="menu_getnextnmsg"
+            toolbaritem="button-next"/>
+  <menuitem id="menu_sendunsentmsgs"
+            toolbaritem="button-sendunsent"/>
+  <menuitem id="menu_subscribe"
+            toolbaritem="button-subscribe"/>
+  <menuitem id="menu_renameFolder"
+            toolbaritem="not-supported"/>
+  <menuitem id="menu_compactFolder"
+            toolbaritem="not-supported"/>
+  <menuitem id="menu_emptyTrash"
+            toolbaritem="button-emptytrash"/>
+  <menuitem id="goOfflineMenuItem"
+            toolbaritem="button-offline"/>
+  <menuitem id="printSetupMenuItem"
+            toolbaritem="button-printsetup"/>
+  <menuitem id="printMenuItem"
+            toolbaritem="button-print"/>
+  <menuitem id="menu_undo"
+            toolbaritem="undo-button"/>
+  <menuitem id="menu_redo"
+            toolbaritem="redo-button"/>
+  <menuitem id="menu_cut"
+            toolbaritem="cut-button"/>
+  <menuitem id="menu_copy"
+            toolbaritem="copy-button"/>
+  <menuitem id="menu_paste"
+            toolbaritem="paste-button"/>
+  <menuitem id="menu_delete"
+            toolbaritem="button-delete"/>
+  <menuitem id="menu_select"
+            toolbaritem="not-supported"/>
+  <menuitem id="menu_select"
+            toolbaritem="not-supported"/>
+  <menuitem id="menu_find"
+            toolbaritem="not-supported"/>
+  <menuitem id="menu_favoriteFolder"
+            toolbaritem="not-supported"/>
+  <menuitem id="menu_properties"
+            toolbaritem="not-supported"/>
+  <menuitem id="menu_accountmgr"
+            toolbaritem="not-supported"/>
+  <menuitem id="menu_preferences"
+            toolbaritem="button-prefs"/>
+  <menuitem id="menu_View"
+            toolbaritem="not-supported"/>
+  <menuitem id="menu_nextMsg"
+            toolbaritem="button-next"/>
+  <menuitem id="menu_nextUnreadMsg"
+            toolbaritem="button-nextunread"/>
+  <menuitem id="menu_nextStarredMsg"
+            toolbaritem="button-nextstarred"/>
+  <menuitem id="menu_nextUnreadThread"
+            toolbaritem="button-nextunreadthread"/>
+  <menuitem id="menu_prevMsg"
+            toolbaritem="button-previous"/>
+  <menuitem id="menu_prevUnreadMsg"
+            toolbaritem="button-prevunread"/>
+  <menuitem id="menu_prevStarredMsg"
+            toolbaritem="button-prevstarred"/>
+  <menuitem id="menu_goForward"
+            toolbaritem="button-goforward"/>
+  <menuitem id="menu_goBack"
+            toolbaritem="button-goback"/>
+  <menuitem id="goStartPage"
+            toolbaritem="not-supported"/>
+  <menuitem id="newMsgCmd"
+            toolbaritem="button-newmsg"/>
+  <menuitem id="replyMainMenu"
+            toolbaritem="button-reply"/>
+  <menuitem id="replySenderMainMenu"
+            toolbaritem="not-supported"/>
+  <menuitem id="replyNewsgroupMainMenu"
+            toolbaritem="not-supported"/>
+  <menuitem id="menu_replyToAll"
+            toolbaritem="button-replyall"/>
+  <menuitem id="menu_forwardMsg"
+            toolbaritem="button-forward"/>
+  <menuitem id="forwardAsMenu"
+            toolbaritem="not-supported"/>
+  <menuitem id="menu_editMsgAsNew"
+            toolbaritem="button-resend"/>
+  <menuitem id="openMessageWindowMenuitem"
+            toolbaritem="not-supported"/>
+  <menuitem id="openMessageWindowMenuitem"
+            toolbaritem="not-supported"/>
+  <menuitem id="moveToFolderAgain"
+            toolbaritem="not-supported"/>
+  <menuitem id="markMenu"
+            toolbaritem="button-mark"/>
+  <menuitem id="createFilter"
+            toolbaritem="not-supported"/>
+  <menuitem id="killThread"
+            toolbaritem="not-supported"/>
+  <menuitem id="watchThread"
+            toolbaritem="not-supported"/>
+
+  
+  <!-- Tools menu -->
+  <menupopup id="taskPopup">
+    <menuitem id="key_mail"
+              toolbaritem="not-supported"/>
+    <menuitem id="addressBook"
+              toolbaritem="button-address"/>
+    <menuitem id="addonsManager"
+              toolbaritem="button-addons"/>
+    <menuitem id="filtersCmd"
+              toolbaritem="button-filters"/>
+    <menuitem id="applyFilters"
+              toolbaritem="button-applyfilters"/>
+    <menuitem id="runJunkControls"
+              toolbaritem="not-supported"/>
+    <menuitem id="deleteJunk"
+              toolbaritem="not-supported"/>
+    <menuitem id="menu_import"
+              toolbaritem="not-supported"/>
+    <menuitem id="javaScriptConsole"
+              toolbaritem="not-supported"/>
+    <menuitem id="penelopeAddToAddrBook" 
+              command="cmd_penelopeAddToAddrBook"
+              insertafter="addressBook" 
+              key="key_penelopeAddToAddrBook" 
+              observes="cmd_penelopeAddtoAddrBook"
+              label="&penelope.AddToAddrBook.label;" 
+              accesskey="&penelope.AddToAddrBook.accesskey;"
+              toolbaritem="button-address"/>
+  </menupopup>
+
+  <menupopup id="menu_HelpPopup"
+             toolbaritem="not-supported"/>
+  <menupopup id="messageMenuPopup">
+    <menuseparator/>
+    <menuitem id="menu_editMsgAsNew" 
+              label="&penelope.sendAgain.label;" 
+              accesskey="&penelope.sendAgain.accesskey;"
+              toolbaritem="button-resend"/>
+    <menuitem id="penelopeRedirect" 
+              label="&penelope.redirect.label;" 
+              insertafter="forwardAsMenu" 
+              observes="cmd_tag" 
+              oncommand="penelopeRedirect();"
+              toolbaritem="button-redirect"/>
+
+    <menu id="penelopeNewMessageTo" 
+          insertbefore="moveMenu" 
+          label="&penelope.newMessageTo.label;">
+      <menupopup id="penelopeNewMessageToMenu-popup">
+        <menuitem label="No Quick Recipients" disabled="true"/>
+      </menupopup>
+    </menu>
+    <menu id="penelopeForwardTo" 
+          insertafter="moveMenu" 
+          label="&penelope.forwardMessageTo.label;">
+      <menupopup id="penelopeForwardToMenu-popup">
+        <menuitem label="No Quick Recipients" disabled="true"/>
+      </menupopup>
+    </menu>
+    <menu id="penelopeRedirectTo" 
+          insertbefore="moveMenu" 
+          label="&penelope.redirectMessageTo.label;">
+      <menupopup id="penelopeRedirectToMenu-popup">
+        <menuitem label="No Quick Recipients" disabled="true"/>
+      </menupopup>
+    </menu> 
+    <menu id="moveMenu" hidden="true"/>
+    <menuitem id="moveToFolderAgain" hidden="true"/>
+    <menu id="markMenu" hidden="true"/>
+    <menu id="copyMenu" hidden="true"/>
+    <menu id="tagMenu" hidden="true"/>
+    <menu id="openMessageWindowMenuitem" hidden="true"/>
+    <menu id="penelopeChange" label="&penelope.change.label;">
+      <menupopup id="penelopeChangeMenu-popup">
+         <menu id="penelopeStatus" 
+               label="&penelope.status.label;" 
+               observes="cmd_tag" 
+               oncommand="penelopeStatusMenuSelect(event.target);" 
+               toolbaritem="button-status">
+           <menupopup id="penelopeStatusMenu-popup" onpopupshowing="penelopeInitStatusTags(this);">
+             <menuitem type="radio" name="status" label="&penelope.statusUnread.label;" value="Unread"/>
+             <menuitem type="radio" name="status" label="&penelope.statusRead.label;" value="Read"/>
+             <menuitem type="radio" name="status" label="&penelope.statusReplied.label;" value="Replied"/>
+             <menuitem type="radio" name="status" label="&penelope.statusForwarded.label;" value="Forwarded"/>
+             <menuitem type="radio" name="status" label="&penelope.statusRedirected.label;" value="Redirected"/>
+             <menuseparator/>
+             <menuitem type="radio" name="status" label="&penelope.statusSent.label;" value="Sent"/>
+             <menuitem type="radio" name="status" label="&penelope.statusUnsent.label;" value="Unsent"/>
+           </menupopup>
+         </menu>
+         <menu id="penelopePriorityMenu" 
+               label="&priorityMenu.label;" 
+               accesskey="&priorityMenu.accesskey;" 
+               onpopupshowing="penelopeUpdatePriorityMenu();" 
+               oncommand="penelopePriorityMenuSelect(event.target);" 
+               observes="cmd_tag" 
+               toolbaritem="priority-button">
+            <menupopup>
+              <menuitem type="radio" name="priority" label="&highestPriorityCmd.label;" 
+                        accesskey="&highestPriorityCmd.accesskey;" value="Highest" id="priority_highest"/>
+              <menuitem type="radio" name="priority" label="&highPriorityCmd.label;" 
+                        accesskey="&highPriorityCmd.accesskey;" value="High" id="priority_high"/>
+              <menuitem type="radio" name="priority" label="&normalPriorityCmd.label;" 
+                        accesskey="&normalPriorityCmd.accesskey;" value="Normal" id="priority_normal" checked="true"/>
+              <menuitem type="radio" name="priority" label="&lowPriorityCmd.label;" 
+                        accesskey="&lowPriorityCmd.accesskey;" value="Low" id="priority_low"/>
+              <menuitem type="radio" name="priority" label="&lowestPriorityCmd.label;" 
+                        accesskey="&lowestPriorityCmd.accesskey;" value="Lowest"  id="priority_lowest"/>
+            </menupopup>
+          </menu>
+
+         <menu id="penelopeLabelMenu" 
+               label="&penelope.labelMenu.label;" 
+               accesskey="&penelope.labelMenu.accesskey;" 
+               observes="cmd_tag"
+               toolbaritem="button-tag">
+           <menupopup id="tagMenu-tagpopup" onpopupshowing="InitMessageTags(this)">
+              <menuitem id="tagMenu-tagRemoveAll" oncommand="RemoveAllMessageTags();"/>
+              <menuseparator/>
+              <menuseparator/>
+              <menuitem id="addNewTag" label="&addNewTag.label;" accesskey="&addNewTag.accesskey;"
+                          oncommand="AddTag();"/>
+           </menupopup>
+         </menu>
+
+      </menupopup>
+    </menu>
+    <menuseparator/>
+    <menuitem id="penelopeMarkAsJunk" label="&markAsJunkCmd.label;" 
+              accesskey="&markAsJunkCmd.accesskey;" 
+              key="key_markJunk" 
+              observes="cmd_tag"
+              toolbaritem="button-junk"/>
+    <menuitem id="penelopeMarkAsNotJunk" label="&markAsNotJunkCmd.label;"
+              key="key_markNotJunk" 
+              accesskey="&markAsNotJunkCmd.accesskey;" 
+              observes="cmd_tag"
+              toolbaritem="button-junk"/>
+    <menuseparator/>
+    <menuitem id="penelopeDelete" 
+              label="&penelope.delete.label;" 
+              key="key_penelopeDelete" 
+              observes="cmd_tag"
+              toolbaritem="button-delete"/>/>
+  </menupopup>
+  
+  <menubar id="mail-menubar">
+    <menu id="penelopeMailboxMenu"
+          label="&penelope.mailboxmenu.label;"
+          accesskey="&penelope.mailboxmenu.accesskey;"
+          insertbefore="messageMenu"
+          sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
+          sortDirection="ascending" datasources="rdf:msgaccountmanager rdf:mailnewsfolders" ref="msgaccounts:/">
+      <menupopup />
+      <template>
+        <rule nc:ServerType="pop3">
+        </rule>
+        <rule nc:NoSelect="true" iscontainer="true"
+              isempty="false">
+          <menupopup>
+            <menu uri="rdf:*" class="folderMenuItem menu-iconic"
+                  label="rdf:http://home.netscape.com/NC-rdf#Name">
+              <menupopup>
+                <menuitem label="&penelope.fileHereMenu.label;"
+                          disabled="true" />
+                <menuseparator />
+              </menupopup>
+            </menu>
+          </menupopup>
+        </rule>
+        <rule nc:NoSelect="true">
+          <menupopup>
+            <menuitem uri="rdf:*" class="folderMenuItem menu-iconic"
+                      label="rdf:http://home.netscape.com/NC-rdf#Name"
+                      disabled="true" />
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="true" iscontainer="true"
+              isempty="false">
+          <menupopup>
+            <menu uri="rdf:*" class="folderMenuItem menu-iconic"
+                  label="rdf:http://home.netscape.com/NC-rdf#Name"
+                  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                  IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+                  ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+              <menupopup>
+                <menuitem label="&penelope.fileHereMenu.label;"
+                          oncommand="goMailbox(event.target.parentNode.parentNode.id)" />
+                <menuseparator />
+              </menupopup>
+            </menu>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessagesOnServer="false" iscontainer="true" isempty="false">
+          <menupopup>
+            <menu uri="rdf:*" class="folderMenuItem menu-iconic"
+                  label="rdf:http://home.netscape.com/NC-rdf#Name"
+                  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                  IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+                  ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+              <menupopup>
+                <menuitem label="This Folder"
+                          oncommand="goMailbox(event.target.parentNode.parentNode.id)" />
+                <menuseparator />
+              </menupopup>
+            </menu>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessagesOnServer="false" iscontainer="true" isempty="false">
+          <!-- Don't show pop accounts -->
+        </rule>
+        <rule nc:CanFileMessagesOnServer="false">
+          <menupopup>
+            <menuitem uri="rdf:*"
+                      class="folderMenuItem menuitem-iconic"
+                      label="rdf:http://home.netscape.com/NC-rdf#Name"
+                      oncommand="goMailbox(event.target.id)"
+                      SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                      BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                      IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                      IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+                      ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" />
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="false" iscontainer="true"
+        isempty="false">
+          <!-- note, there is no "file here" -->
+          <menupopup>
+            <menu uri="rdf:*" class="folderMenuItem menu-iconic"
+                  label="rdf:http://home.netscape.com/NC-rdf#Name"
+                  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                  IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+                  ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+              <menupopup />
+            </menu>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="true">
+          <menupopup>
+            <menuitem uri="rdf:*"
+                      class="folderMenuItem menuitem-iconic"
+                      label="rdf:http://home.netscape.com/NC-rdf#Name"
+                      oncommand="goMailbox(event.target.id)"
+                      SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                      BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                      IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                      IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+                      ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" />
+          </menupopup>
+        </rule>
+      </template>
+    </menu>
+    <menu id="penelopeTransferMenu"
+          label="&penelope.transfermenu.label;"
+          accesskey="&penelope.transfermenu.accesskey;"
+          observes="button_mark"
+          insertbefore="tasksMenu"
+          sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
+          sortDirection="ascending" datasources="rdf:msgaccountmanager rdf:mailnewsfolders" ref="msgaccounts:/">
+      <menupopup />
+      <template>
+        <rule nc:NoSelect="true" iscontainer="true"
+              isempty="false">
+          <menupopup>
+            <menu uri="rdf:*" class="folderMenuItem menu-iconic"
+                  label="rdf:http://home.netscape.com/NC-rdf#Name">
+              <menupopup>
+                <menuitem label="&penelope.fileHereMenu.label;"
+                          disabled="true" />
+                <menuseparator />
+              </menupopup>
+            </menu>
+          </menupopup>
+        </rule>
+        <rule nc:NoSelect="true">
+          <menupopup>
+            <menuitem uri="rdf:*" class="folderMenuItem menu-iconic"
+                      label="rdf:http://home.netscape.com/NC-rdf#Name"
+                      disabled="true" />
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="true" iscontainer="true"
+              isempty="false">
+          <menupopup>
+            <menu uri="rdf:*" class="folderMenuItem menu-iconic"
+                  label="rdf:http://home.netscape.com/NC-rdf#Name"
+                  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                  IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+                  ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+              <menupopup>
+                <menuitem label="&penelope.fileHereMenu.label;"
+                          oncommand="MsgMoveMessage(event.target.parentNode.parentNode.id)" />
+                <menuseparator />
+              </menupopup>
+            </menu>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessagesOnServer="false">
+          <!-- don't show servers (nntp & any others) which does not allow message filing -->
+          <!-- File, Move & Copy menus -->
+        </rule>
+        <rule nc:CanFileMessages="false" iscontainer="true"
+              isempty="false">
+          <!-- note, there is no "file here" -->
+          <menupopup>
+            <menu uri="rdf:*" class="folderMenuItem menu-iconic"
+                  label="rdf:http://home.netscape.com/NC-rdf#Name"
+                  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                  IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+                  ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+              <menupopup />
+            </menu>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="true">
+          <menupopup>
+            <menuitem uri="rdf:*"
+                      class="folderMenuItem menuitem-iconic"
+                      label="rdf:http://home.netscape.com/NC-rdf#Name"
+                      oncommand="MsgMoveMessage(event.target.id)"
+                      SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                      BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                      IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                      IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+                      ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" />
+          </menupopup>
+        </rule>
+      </template>
+    </menu>
+  </menubar>
+
+</overlay>

@@ -1,0 +1,53 @@
+<!ENTITY penelope.mailboxmenu.label "Mailbox">
+<!ENTITY penelope.mailboxmenu.accesskey "x">
+<!ENTITY penelope.mailboxmenu.in.label "In">
+<!ENTITY penelope.mailboxmenu.in.accesskey "i">
+<!ENTITY penelope.mailboxmenu.out.label "Out">
+<!ENTITY penelope.mailboxmenu.out.accesskey "o">
+<!ENTITY penelope.mailboxmenu.junk.label "Junk">
+<!ENTITY penelope.mailboxmenu.junk.accesskey "j">
+<!ENTITY penelope.mailboxmenu.trash.label "Trash">
+<!ENTITY penelope.mailboxmenu.trash.accesskey "t">
+<!ENTITY penelope.mailboxmenu.new.label "New...">
+<!ENTITY penelope.mailboxmenu.new.accesskey "n">
+
+<!ENTITY penelope.transfermenu.label "Transfer">
+<!ENTITY penelope.transfermenu.accesskey "r">
+<!ENTITY penelope.fileHereMenu.label "This Mailbox">
+
+<!ENTITY penelope.AddToAddrBook.label "Make Address Book Entry...">
+<!ENTITY penelope.AddToAddrBook.accesskey "k">
+
+<!ENTITY penelope.tags.label "Label">
+<!ENTITY penelope.who.label "Who">
+<!ENTITY penelope.who.accesskey "w">
+
+<!ENTITY penelope.useShortcuts.label "Use Shortcuts">
+<!ENTITY penelope.shortcutsRadio0.label "From Penelope">
+<!ENTITY penelope.shortcutsRadio0.accesskey "P">
+<!ENTITY penelope.shortcutsRadio1.label "From Thunderbird">
+<!ENTITY penelope.shortcutsRadio1.accesskey "T">
+<!ENTITY penelope.uiStyle.label "UI Style">
+<!ENTITY penelope.uiStyleRadio0.label "3-Pane (MDI like)">
+<!ENTITY penelope.uiStyleRadio0.accesskey "3">
+<!ENTITY penelope.uiStyleRadio1.label "2-Pane (Mac like)">
+<!ENTITY penelope.uiStyleRadio1.accesskey "2">
+<!ENTITY penelope.prefpane.label "Penelope">
+<!ENTITY penelope.change.label "Change">
+<!ENTITY penelope.status.label "Status">
+<!ENTITY penelope.labelMenu.label "Label">
+<!ENTITY penelope.labelMenu.accesskey "l">
+<!ENTITY penelope.delete.label "Delete">
+<!ENTITY penelope.redirect.label "Redirect">
+<!ENTITY penelope.sendAgain.label "Send Again">
+<!ENTITY penelope.sendAgain.accesskey "s">
+<!ENTITY penelope.newMessageTo.label "New Message To">
+<!ENTITY penelope.forwardMessageTo.label "Forward Message To">
+<!ENTITY penelope.redirectMessageTo.label "Redirect Message To">
+<!ENTITY penelope.statusUnread.label "Unread">
+<!ENTITY penelope.statusRead.label "Read">
+<!ENTITY penelope.statusReplied.label "Replied">
+<!ENTITY penelope.statusForwarded.label "Forwarded">
+<!ENTITY penelope.statusRedirected.label "Redirected">
+<!ENTITY penelope.statusSent.label "Sent">
+<!ENTITY penelope.statusUnsent.label "Unsent">

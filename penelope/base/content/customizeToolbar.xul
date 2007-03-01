@@ -1,0 +1,422 @@
+<?xml version="1.0"?> 
+
+<!--**** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Mozilla Communicator client code, released
+# March 31, 1998.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 1998-1999
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   David Hyatt (hyatt@apple.com)
+#   Blake Ross (blaker@netscape.com)
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****-->
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/content/customizeToolbar.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/customizeToolbar.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/addressbook/addressbook.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://penelope/skin/messengercompose.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/smime/msgCompSMIMEOverlay.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://penelope/skin/primaryToolbar.css" type="text/css"?>
+
+<!DOCTYPE dialog [
+<!ENTITY % customizeToolbarDTD SYSTEM "chrome://global/locale/customizeToolbar.dtd">
+  %customizeToolbarDTD;
+<!ENTITY % abMainWindowDTD SYSTEM "chrome://messenger/locale/addressbook/abMainWindow.dtd" >
+%abMainWindowDTD;
+]>
+
+<dialog 
+        id="CustomizeToolbarWindow"
+        xmlns:nc="http://home.netscape.com/NC-rdf#"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&dialog.title;"
+        onload="onLoad();"
+        onunload="onUnload();"
+        buttons="accept,cancel"
+        ondialogaccept="return onAccept();"
+        ondialogcancel="return onCancel();">
+
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/mailWindowOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/commandglue.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/mailWindow.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCommon.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/addressbook.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/msgMail3PaneWindow.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/msgSynchronize.js"/>
+  <script type="application/x-javascript" src="chrome://penelope/content/toolbarbuttons.js" />
+  <script type="application/x-javascript" src="chrome://penelope/content/customizeToolbar.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+
+<stringbundle id="stringBundle" src="chrome://global/locale/customizeToolbar.properties"/>
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
+    <stringbundle id="bundle_search" src="chrome://messenger/locale/search.properties"/>
+    <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+    <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
+  </stringbundleset>
+
+<keyset>
+  <key id="cmd_close_sheet" keycode="VK_ESCAPE" oncommand="onCancel();" />
+  <key id="cmd_close_sheet" keycode="VK_RETURN" oncommand="onAccept();" />
+  <key id="cmd_close_sheet" keycode="VK_ENTER" oncommand="onAccept();" />
+</keyset>
+
+<tabbox id="customizetabs">
+  <tabs>
+    <tab label="Menus"/>
+    <tab label="Mailboxes"/>
+    <tab label="Recipients"/>
+    <tab label="Formatting"/>
+    <tab label="Extras"/>
+  </tabs>
+  <tabpanels>
+    <tabpanel id="generaltab">
+      <vbox flex="1">
+        <hbox flex="1">
+        <vbox>
+          <hbox>
+              <label value="Categories"/>
+          </hbox>
+          <hbox>
+            <tree id="menubartree" width="300" height="200" hidecolumnpicker="true" seltype="single"
+                  onselect="onMenuItemSelect();">
+              <treechildren>
+              </treechildren>
+              <treecols>
+                <treecol id="menuNameCol" flex="1" label="" primary="true"/>
+              </treecols>
+            </tree>
+          </hbox>
+        </vbox>
+        <vbox flex="1">
+          <groupbox flex="1">
+            <caption>
+              <label value="Buttons"/>
+            </caption>
+            <vbox flex="1" id="general-palette"
+                  ondraggesture="nsDragAndDrop.startDrag(event, dragStartObserver);"
+                  ondragover="nsDragAndDrop.dragOver(event, paletteDNDObserver);"
+                  ondragdrop="nsDragAndDrop.drop(event, paletteDNDObserver);"/>
+          </groupbox>
+        </vbox>
+        </hbox>
+        <spacer style="height: 20px;"/>
+        <hbox>
+              <description>
+                Select a category to see the toolbar button(s) and the description. Drag the button to any toolbar.
+              </description>
+        </hbox>
+        <spacer style="height: 20px;"/>
+        <groupbox flex="1">
+            <caption>
+              <label value="Description"/>
+            </caption>
+            <description id="menuItemDescription"></description>
+            <spacer flex="1" style="height: 3em;"/>
+        </groupbox>
+      </vbox>
+    </tabpanel>
+    <tabpanel id="mailboxestab">
+      <vbox flex="1">
+        <hbox flex="1">
+        <vbox>
+          <hbox>
+              <label value="Categories"/>
+          </hbox>
+          <hbox>
+            <tree id="mailboxtree" width="300" height="200" hidecolumnpicker="true" seltype="single"
+                  datasources="rdf:msgaccountmanager rdf:mailnewsfolders" ref="msgaccounts:/"
+                  sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
+                  sortDirection="ascending"
+                  onselect="onMboxSelect();">
+              <template>
+                  <rule nc:ServerType="pop3">
+                  </rule>
+                  <rule>
+                    <conditions>
+                      <content uri="?container"/>
+                      <member container="?container" child="?member"/>
+                    </conditions>
+
+                    <bindings>
+                      <binding subject="?member"
+                               predicate="http://home.netscape.com/NC-rdf#FolderTreeName"
+                               object="?folderTreeName"/>
+                      <binding subject="?member"
+                               predicate="http://home.netscape.com/NC-rdf#Name"
+                               object="?name"/>
+                      <binding subject="?member"
+                               predicate="http://home.netscape.com/NC-rdf#FolderTreeName?sort=true"
+                               object="?folderTreeNameSort"/>
+                      <binding subject="?member"
+                               predicate="http://home.netscape.com/NC-rdf#SpecialFolder"
+                               object="?specialFolder"/>
+                      <binding subject="?member"
+                               predicate="http://home.netscape.com/NC-rdf#ServerType"
+                               object="?serverType"/>
+                      <binding subject="?member"
+                               predicate="http://home.netscape.com/NC-rdf#CanFileMessagesOnServer"
+                               object="?canFileMessagesOnServer"/>
+                      <binding subject="?member"
+                               predicate="http://home.netscape.com/NC-rdf#CanFileMessages"
+                               object="?canFileMessages"/>
+                    </bindings>
+                         
+                    <action>
+                      <treechildren>
+                        <treeitem uri="?member">
+                          <treerow>
+                            <treecell label="?name"
+                                      allowFileOnServer="?canFileMessagesOnServer"
+                                      allowFile="?canFileMessages"
+                                      properties="specialFolder-?specialFolder serverType-?serverType"/>
+                          </treerow>
+                        </treeitem>
+                      </treechildren>
+                    </action>
+                  </rule>
+              </template>
+              <treecols>
+                <treecol id="folderNameCol" flex="5" label="" primary="true"/>
+              </treecols>
+             </tree>
+          </hbox>
+        </vbox>
+        <vbox flex="1">
+          <groupbox flex="1">
+            <caption>
+              <label value="Buttons"/>
+            </caption>
+            <vbox flex="1" id="mailbox-palette"
+                  ondraggesture="nsDragAndDrop.startDrag(event, dragStartObserver);"
+                  ondragover="nsDragAndDrop.dragOver(event, paletteDNDObserver);"
+                  ondragdrop="nsDragAndDrop.drop(event, paletteDNDObserver);"/>
+          </groupbox>
+        </vbox>
+        </hbox>
+        <spacer style="height: 20px;"/>
+        <hbox flex="1">
+              <description>
+                Select a category to see the toolbar button(s) and the description. Drag the button to any toolbar.
+              </description>
+        </hbox>
+        <spacer style="height: 20px;"/>
+        <groupbox flex="1">
+            <caption>
+              <label value="Description"/>
+            </caption>
+            <description id="mailboxDescription"></description>
+            <spacer flex="1" style="height: 3em;"/>
+        </groupbox>
+      </vbox>
+    </tabpanel>
+    <tabpanel id="recipientstab">
+      <vbox flex="1">
+        <hbox flex="1">
+          <vbox id="searchResults">
+            <hbox>
+              <label value="Recipients"/>
+            </hbox>
+            <vbox id="searchResultListBox">
+              <tree id="abResultsTree" width="300" height="200" hidecolumnpicker="true" seltype="single" 
+                    context="threadPaneContext"
+                    onkeypress="AbResultsPaneKeyPress(event);"
+                    onselect="onRecipientSelect();"
+                    sortCol="GeneratedName">
+
+                <treecols id="abResultsTreeCols">
+                  <!-- these column ids must match up to the mork column names, except for GeneratedName, see nsIAddrDatabase.idl -->
+                  <treecol id="GeneratedName" class="sortDirectionIndicator" 
+                           persist="hidden ordinal width sortDirection" flex="1" 
+                           label="&GeneratedName.label;" primary="true"/>
+                </treecols>
+                <treechildren/>
+              </tree>
+            </vbox>
+          </vbox>
+          <vbox flex="1">
+            <groupbox flex="1">
+              <caption>
+                <label value="Buttons"/>
+              </caption>
+              <vbox flex="1" id="recipient-palette"
+                    ondraggesture="nsDragAndDrop.startDrag(event, dragStartObserver);"
+                    ondragover="nsDragAndDrop.dragOver(event, paletteDNDObserver);"
+                    ondragdrop="nsDragAndDrop.drop(event, paletteDNDObserver);"/>
+            </groupbox>
+            <spacer style="height: 1em;"/>
+            <vbox align="center">
+              <tree id="dirTree" class="abDirectory plain" seltype="single" minwidth="150" rows="2" flex="1"
+                    datasources="rdf:addressdirectory" ref="moz-abdirectory://"
+                    flags="dont-build-content"
+                    hidecolumnpicker="true"
+                    context="dirTreeContext"
+                    onselect="DirPaneSelectionChange(); document.commandDispatcher.updateCommands('addrbook-select');"
+                    ondblclick="DirPaneDoubleClick(event);">
+         
+                <treecols>
+                  <treecol id="DirCol" flex="1" primary="true" 
+                           crop="center" persist="width" ignoreincolumnpicker="true" hideheader="true"
+                           sort="?DirTreeNameSort" sortActive="true" sortDirection="ascending"/>
+                </treecols>
+             
+                <template>
+                  <rule>
+                    <conditions>
+                      <content uri="?container"/> 
+                      <member container="?container" child="?member"/>
+                    </conditions>
+         
+                    <bindings>
+                      <binding subject="?member"
+                               predicate="http://home.netscape.com/NC-rdf#DirName"
+                               object="?DirName"/>
+                      <binding subject="?member"
+                               predicate="http://home.netscape.com/NC-rdf#DirTreeNameSort"
+                               object="?DirTreeNameSort"/>
+                      <binding subject="?member"
+                               predicate="http://home.netscape.com/NC-rdf#IsMailList"
+                               object="?IsMailList"/>
+                      <binding subject="?member"
+                               predicate="http://home.netscape.com/NC-rdf#IsRemote"
+                               object="?IsRemote"/>
+                      <binding subject="?member"
+                               predicate="http://home.netscape.com/NC-rdf#IsSecure"
+                               object="?IsSecure"/>
+                    </bindings>
+
+                    <action>
+                      <treechildren>
+                        <treeitem uri="?member" persist="sortDirection sortColumn open">
+                          <treerow>
+                            <treecell label="?DirName" properties="IsMailList-?IsMailList IsRemote-?IsRemote IsSecure-?IsSecure"/>
+                          </treerow>
+                        </treeitem>
+                      </treechildren>
+                    </action>
+                  </rule>
+                </template>
+              </tree>
+              <spacer style="height: 1em;"/>
+              <textbox id="searchInput" flex="1" onfocus="onSearchInputFocus(event);" onblur="onSearchInputBlur(event);"
+                       onclick="this.select();" oninput="onAbSearchInput(false);"
+                       onkeypress="onAbSearchKeyPress(event);">
+                <button id="quick-search-button" type="menu">
+                  <menupopup id="quick-search-menupopup" value="0" persist="value" popupalign="topleft" popupanchor="bottomleft">
+                    <menuitem value="0" label="&SearchNameOrEmail.label;" type="radio"/>
+                  </menupopup>
+                </button>
+              </textbox>
+            </vbox>
+          </vbox>
+        </hbox>
+        <spacer style="height: 20px;"/>
+        <hbox>
+              <description>
+                Drag the button to any toolbar.
+              </description>
+        </hbox>
+        <spacer style="height: 20px;"/>
+        <groupbox flex="1">
+            <caption>
+              <label value="Description"/>
+            </caption>
+            <description id="recipientDescription"></description>
+            <spacer flex="1" style="height: 3em;"/>
+        </groupbox>
+      </vbox>
+    </tabpanel>
+    <tabpanel id="formattab">
+      <vbox flex="1">
+        <hbox flex="1">
+        <vbox flex="1">
+          <groupbox flex="1">
+            <caption>
+              <label value="Buttons"/>
+            </caption>
+            <vbox flex="1" id="format-palette"
+                  ondraggesture="nsDragAndDrop.startDrag(event, dragStartObserver);"
+                  ondragover="nsDragAndDrop.dragOver(event, paletteDNDObserver);"
+                  ondragdrop="nsDragAndDrop.drop(event, paletteDNDObserver);"/>
+          </groupbox>
+        </vbox>
+        </hbox>
+        <spacer style="height: 20px;"/>
+        <hbox>
+              <description>
+                Drag the button to any toolbar.
+              </description>
+        </hbox>
+        <spacer style="height: 20px;"/>
+        <groupbox flex="1">
+            <caption>
+              <label value="Description"/>
+            </caption>
+            <description id="formatItemDescription"></description>
+            <spacer flex="1" style="height: 3em;"/>
+        </groupbox>
+        <spacer style="height: 20px;"/>
+        <hbox>
+            <label value="Show toolbar as"/>
+            <menulist id="modelist" value="icons" oncommand="updateToolbarMode(this.value);">
+              <menupopup>
+                <menuitem value="full" label="&iconsAndText.label;"/>
+                <menuitem value="icons" label="&icons.label;"/>
+                <menuitem value="text" label="&text.label;"/>
+              </menupopup>
+            </menulist>
+            
+            <spacer/>
+            <checkbox id="smallicons" oncommand="updateIconSize(this.checked);" label="Use small icons"/>
+        </hbox>
+      </vbox>
+    </tabpanel>
+    <tabpanel id="extrastab">
+      <vbox flex="1">
+        <groupbox height="350" >
+          <caption>
+            <label value="Buttons"/>
+          </caption>
+          <vbox flex="1" style="overflow: auto;" id="extras-palette"
+                ondraggesture="nsDragAndDrop.startDrag(event, dragStartObserver);"
+                ondragover="nsDragAndDrop.dragOver(event, paletteDNDObserver);"
+                ondragdrop="nsDragAndDrop.drop(event, paletteDNDObserver);"/>
+        </groupbox>
+      </vbox>
+    </tabpanel>
+  </tabpanels>
+</tabbox>
+</dialog>
