@@ -84,6 +84,7 @@ include $(topsrcdir)/config/rules.mk
 
 check::
 	@echo Running tests...
-	@for f in $(SIMPLE_PROGRAMS); do \
-	  echo $$f; $(RUN_TEST_PROGRAM) $(DIST)/bin/$$f; \
+	@$(EXIT_ON_ERROR) \
+	for f in $(SIMPLE_PROGRAMS); do \
+	  $(RUN_TEST_PROGRAM) $(DIST)/bin/$$f; \
   done
