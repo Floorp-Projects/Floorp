@@ -89,7 +89,8 @@ sub Execute {
     $this->Shell(
       cmd => 'rsync',
       cmdArgs => ['-Lav', catfile('/home', 'ftp', 'pub', $product, 'nightly',
-                                    $version . '-candidates', 'rc' . $rc . '/'),
+                                    $version . '-candidates', 'rc' . $rc ) . 
+                                 '/',
                     './'],
       logFile => catfile($logDir, 'stage_collect.log'),
       dir => catfile($stageDir, 'batch1', 'prestage'),
@@ -105,7 +106,7 @@ sub Execute {
 
     # Remove unshipped files and set proper mode on dirs
     find(sub { return $this->TrimCallback(); },
-     $stageDir . catfile('batch1', 'prestage-trimmed'));
+     catfile($stageDir, 'batch1', 'prestage-trimmed'));
     
     $this->Shell(
       cmd => 'rsync',
@@ -125,11 +126,22 @@ sub Execute {
     );
 
     # fix xpi dir names
-    my $fromFile = catfile($stageDir, 'batch1', 'stage', 'windows');
-    my $toFile = catfile($stageDir, 'batch1', 'stage', 'win32');
-    move($fromFile, $toFile)
-      or die(msg => "Cannot rename $fromFile $toFile: $!");
-    $this->Log(msg => "Moved $fromFile $toFile");
+
+    my %xpiDirs = ('windows-xpi' => 'win32',
+                   'linux-xpi' => 'linux-i686',
+                   'mac-xpi' => 'mac');
+
+    foreach my $xpiDir (keys(%xpiDirs)) {
+        my $fromDir = catfile($stageDir, 'batch1', 'stage', $xpiDir);
+        my $toDir = catfile($stageDir, 'batch1', 'stage', $xpiDirs{$xpiDir},
+         'xpi');
+
+        if (-e $fromDir) {
+           move($fromDir, $toDir)
+            or die(msg => "Cannot rename $fromDir $toDir: $!");
+           $this->Log(msg => "Moved $fromDir $toDir");
+        }
+    }
 }
 
 sub Verify {
