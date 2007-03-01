@@ -469,7 +469,7 @@ Java_org_mozilla_jss_CryptoManager_buildCertificateChainNative
     PR_ASSERT(env!=NULL && this!=NULL && leafCert!=NULL);
 
     if( JSS_PK11_getCertPtr(env, leafCert, &leaf) != PR_SUCCESS) {
-        JSS_throwMsg(env, CERTIFICATE_EXCEPTION,
+        JSS_throwMsgPrErr(env, CERTIFICATE_EXCEPTION,
             "Could not extract pointer from PK11Cert");
         goto finish;
     }
@@ -478,7 +478,7 @@ Java_org_mozilla_jss_CryptoManager_buildCertificateChainNative
     certdb = CERT_GetDefaultCertDB();
     if(certdb == NULL) {
         PR_ASSERT(PR_FALSE);
-        JSS_throwMsg(env, TOKEN_EXCEPTION,
+        JSS_throwMsgPrErr(env, TOKEN_EXCEPTION,
             "No default certificate database has been registered");
         goto finish;
     }
@@ -583,7 +583,7 @@ Java_org_mozilla_jss_CryptoManager_importCertToPermNative
             1, derCertArray, &certArray, PR_TRUE /*keepCerts*/,
             PR_FALSE /*caOnly*/, nickname);
     if( rv != SECSuccess || certArray == NULL || certArray[0] == NULL) {
-        JSS_throwMsg(env, TOKEN_EXCEPTION, "Unable to insert certificate"
+        JSS_throwMsgPrErr(env, TOKEN_EXCEPTION, "Unable to insert certificate"
                 " into permanent database");
         goto finish;
     }
@@ -859,7 +859,7 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
                                     (void*) &collection);
     if( status != SECSuccess  || collection.numCerts < 1 ) {
         if( (*env)->ExceptionOccurred(env) == NULL) {
-            JSS_throwMsg(env, CERTIFICATE_ENCODING_EXCEPTION,
+            JSS_throwMsgPrErr(env, CERTIFICATE_ENCODING_EXCEPTION,
                 "Security library failed to decode certificate package");
         }
         goto finish;
@@ -904,7 +904,7 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
             if (!find_leaf_cert(certdb, derCerts,
                     numCerts, &theDerCert))
             {
-                JSS_throwMsg(env, CERTIFICATE_ENCODING_EXCEPTION,
+                JSS_throwMsgPrErr(env, CERTIFICATE_ENCODING_EXCEPTION,
                     "Failed to locate leaf certificate in chain");
                 goto finish;
             }
@@ -923,7 +923,7 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
     decodeStatus = getCertFields(&theDerCert, &issuerAndSN.derIssuer,
         &issuerAndSN.serialNumber, &leafSubject);
     if( decodeStatus != PR_SUCCESS ) {
-        JSS_throwMsg(env, CERTIFICATE_ENCODING_EXCEPTION,
+        JSS_throwMsgPrErr(env, CERTIFICATE_ENCODING_EXCEPTION,
             "Failed to extract issuer and serial number from certificate");
         goto finish;
     }
@@ -943,7 +943,8 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
              * key, so it's supposed to be a user cert but it has failed
              * miserably at its calling.
              *****************************************/
-            JSS_throw(env, NO_SUCH_ITEM_ON_TOKEN_EXCEPTION);
+            JSS_throwMsgPrErr(env, NO_SUCH_ITEM_ON_TOKEN_EXCEPTION,
+                    "Expected user cert but no matching key?");             
             goto finish;
         }
     } else {
@@ -969,9 +970,12 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
             /* We already checked for this, shouldn't fail here */
             if(PR_GetError() == SEC_ERROR_ADDING_CERT) {
                 PR_ASSERT(PR_FALSE);
-                JSS_throw(env, NO_SUCH_ITEM_ON_TOKEN_EXCEPTION);
+                JSS_throwMsgPrErr(env, NO_SUCH_ITEM_ON_TOKEN_EXCEPTION, 
+                     "PK11_ImportDERCertForKey SEC_ERROR_ADDING_CERT");
             } else {
-                JSS_throw(env, TOKEN_EXCEPTION);
+                JSS_throwMsgPrErr(env, TOKEN_EXCEPTION,
+                        "PK11_ImportDERCertForKey Unable to "
+                        "import certificate to its token");
             }
             goto finish;
         }
@@ -1269,7 +1273,7 @@ Java_org_mozilla_jss_CryptoManager_exportCertsToPKCS7
                                          PR_FALSE, /* don't include chain */
                                          NULL /* cert db */ );
             if(cinfo == NULL) {
-                JSS_throwMsg(env, CERTIFICATE_ENCODING_EXCEPTION,
+                JSS_throwMsgPrErr(env, CERTIFICATE_ENCODING_EXCEPTION,
                     "Failed to create PKCS #7 encoding context");
                 goto finish;
             }
@@ -1280,7 +1284,7 @@ Java_org_mozilla_jss_CryptoManager_exportCertsToPKCS7
             PR_ASSERT(cinfo != NULL);
 
             if( SEC_PKCS7AddCertificate(cinfo, cert) != SECSuccess ) {
-                JSS_throwMsg(env, CERTIFICATE_ENCODING_EXCEPTION,
+                JSS_throwMsgPrErr(env, CERTIFICATE_ENCODING_EXCEPTION,
                     "Failed to add certificate to PKCS #7 encoding context");
                 goto finish;
             }
@@ -1305,7 +1309,7 @@ Java_org_mozilla_jss_CryptoManager_exportCertsToPKCS7
                              NULL /* password function */,
                              NULL /* password function arg */ );
     if( status != SECSuccess ) {
-        JSS_throwMsg(env, CERTIFICATE_ENCODING_EXCEPTION,
+        JSS_throwMsgPrErr(env, CERTIFICATE_ENCODING_EXCEPTION,
             "Failed to encode PKCS #7 context");
     }
     /* Make sure we got at least some data from the encoder */
@@ -1383,7 +1387,7 @@ getCerts(JNIEnv *env, PK11CertListType type)
 
     certList = PK11_ListCerts(type, NULL);
     if( certList == NULL ) {
-        JSS_throwMsg(env, TOKEN_EXCEPTION, "Unable to list certificates");
+        JSS_throwMsgPrErr(env, TOKEN_EXCEPTION, "Unable to list certificates");
         goto finish;
     }
 
@@ -1551,7 +1555,7 @@ Java_org_mozilla_jss_CryptoManager_importCRLNative
                 errmsg = "Failed to import Revocation List";
             }
         if (errmsg) {
-            JSS_throwMsg(env, CRL_IMPORT_EXCEPTION, errmsg);
+            JSS_throwMsgPrErr(env, CRL_IMPORT_EXCEPTION, errmsg);
         }
     }
 
@@ -1648,7 +1652,7 @@ Java_org_mozilla_jss_CryptoManager_verifyCertTempNative(JNIEnv *env,
                           PR_FALSE /*caOnly*/, NULL);
 
     if ( rv != SECSuccess || certArray == NULL || certArray[0] == NULL) {
-        JSS_throwMsg(env, TOKEN_EXCEPTION, "Unable to insert certificate"
+        JSS_throwMsgPrErr(env, TOKEN_EXCEPTION, "Unable to insert certificate"
                      " into temporary database");
         goto finish;
     }
