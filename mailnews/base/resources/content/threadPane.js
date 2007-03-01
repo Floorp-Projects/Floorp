@@ -418,7 +418,7 @@ function UpdateSortIndicators(sortType, sortOrder)
   // Remove the sort indicator from all the columns
   var treeColumns = document.getElementById('threadCols').childNodes;
   for (var i = 0; i < treeColumns.length; i++)
-    treeColumns(i).removeAttribute('sortDirection');
+    treeColumns[i].removeAttribute('sortDirection');
 
   // show the twisties if the view is threaded
   var threadCol = document.getElementById("threadCol");
