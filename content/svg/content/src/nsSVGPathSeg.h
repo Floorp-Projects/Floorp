@@ -44,6 +44,20 @@
 #include "nsSVGUtils.h"
 #include "nsSVGPathDataParser.h"
 
+// 0dfd1b3c-5638-4813-a6f8-5a325a35d06e
+#define NS_SVGPATHSEG_IID \
+  { 0x0dfd1b3c, 0x5638, 0x4813, \
+    { 0xa6, 0xf8, 0x5a, 0x32, 0x5a, 0x35, 0xd0, 0x6e } }
+
+#define NS_ENSURE_NATIVE_PATH_SEG(obj, retval)                 \
+  {                                                            \
+    nsresult rv;                                               \
+    if (retval)                                                \
+      *retval = nsnull;                                        \
+    nsCOMPtr<nsSVGPathSeg> path = do_QueryInterface(obj, &rv); \
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);    \
+  }
+
 class nsSVGPathSegList;
 class nsISVGValue;
 
@@ -60,6 +74,8 @@ struct nsSVGPathSegTraversalState {
 class nsSVGPathSeg : public nsIDOMSVGPathSeg
 {
 public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_SVGPATHSEG_IID)
+
   nsSVGPathSeg() : mCurrentList(nsnull) {}
   nsresult SetCurrentList(nsISVGValue* aList);
   nsQueryReferent GetCurrentList() const;
@@ -82,6 +98,8 @@ private:
   static char mTypeLetters[];
   nsCOMPtr<nsIWeakReference> mCurrentList;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsSVGPathSeg, NS_SVGPATHSEG_IID)
 
 nsIDOMSVGPathSeg*
 NS_NewSVGPathSegClosePath();
