@@ -1,0 +1,182 @@
+/*************************************************************************
+ *
+ *  File Name (AccessibleEditableText.idl)
+ *
+ *  IAccessible2 IDL Specification
+ *
+ *  Copyright (c) IBM Corp. 2006
+ *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License version 2.1, as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02110-1301  USA
+ *
+ ************************************************************************/
+
+import "objidl.idl";
+import "oaidl.idl";
+import "oleacc.idl";
+        
+/** @brief This interface gives write access to a text representation.
+
+ This interface is typically used in conjunction with the IAccessibleText 
+  interface and complements that interface with the additional ability to 
+  modify text.
+
+ The substrings used with this interface are specified as follows:
+  If startOffset is less than endOffset, the substring starts with the 
+  character at startOffset and ends with the character just before endOffset.
+  If endOffset is lower than startOffset,  the result is the same as a call 
+  with the two arguments exchanged. The whole text can be defined by passing 
+  the indices zero and IAccessibleText::nCharacters. If both indices have the 
+  same value, an empty string is defined. 
+*/
+[object, uuid(A59AA09A-7011-4b65-939D-32B1FB5547E3)]
+interface IAccessibleEditableText : IUnknown
+{
+
+  /** @brief Copies the text range into the clipboard.
+    
+   The specified text between the two given indices is copied into the
+    system clipboard.  
+        
+   @param [in] startOffset
+    Start index of the text to moved into the clipboard.
+    The valid range is 0..length.
+   @param [in] endOffset
+    End index of the text to moved into the clipboard.
+    The valid range is 0..length.
+  */
+  HRESULT copyText
+    (
+     [in] long startOffset, 
+     [in] long endOffset 
+    );
+
+  /** @brief Deletes a range of text.
+    
+   The text between and including the two given indices is deleted
+    from the text represented by this object.
+
+   @param [in] startOffset
+    Start index of the text to be deleted.
+    The valid range is 0..length.
+   @param [in] endOffset
+    End index of the text to be deleted.
+    The valid range is 0..length.
+  */
+  HRESULT deleteText
+    (
+     [in] long startOffset, 
+     [in] long endOffset 
+    );
+  
+  /** @brief Inserts text at the specified position.
+    
+   The specified string is inserted at the given index into the text
+    represented by this object.
+
+   @param [in] offset
+    Index at which to insert the text.
+    The valid range is 0..length.
+   @param [in] text
+    Text that is inserted.
+  */
+  HRESULT insertText
+    (
+     [in] long offset,
+     [in] BSTR *text
+    );
+  
+  /** @brief Deletes a range of text and copies it to the clipboard.
+    
+   The text between the two given indices is deleted from the text
+    represented by this object and copied to the clipboard.
+
+   @param [in] startOffset
+    Start index of the text to be deleted.
+    The valid range is 0..length.
+   @param [in] endOffset 	
+    End index of the text to be deleted.
+    The valid range is 0..length.
+  */
+  HRESULT cutText
+    (
+     [in] long startOffset,
+     [in] long endOffset
+    );
+
+  /** @brief Pastes text from the clipboard.
+    
+   The text in the system clipboard is pasted into the text represented
+    by this object at the given index.  This method is similar to the 
+	IAccessibleEditableText::insertText method. If the index is not valid 
+	the system clipboard text is not inserted.
+   
+   @param [in] offset
+    Index at which to insert the text from the system clipboard into
+    the text represented by this object.
+    The valid range is 0..length.
+  */
+  HRESULT pasteText
+    (
+     [in] long offset
+    );
+
+  /** @brief Replaces text.
+    
+   The text between the two given indices is replaced by the specified 
+    replacement string. This method is equivalent to calling first
+    IAccessibleEditableText::deleteText with the two indices and then 
+    calling IAccessibleEditableText::insertText with the replacement text
+	at the start index.
+       
+   @param [in] startOffset
+    Start index of the text to be replaced.
+    The valid range is 0..length.
+   @param [in] endOffset
+    Start index of the text to be replaced.
+    The valid range is 0..length.
+   @param [in] text
+    The Text that replaces the text between the given indices.
+  */
+  HRESULT replaceText
+    (
+     [in] long startOffset,
+     [in] long endOffset,
+     [in] BSTR *text
+    );
+
+  /** @brief Replaces the attributes of a text range by the given set of attributes.
+    
+   Sets the attributes for the text between the two given indices. The old
+    attributes are replaced by the new list of attributes.
+        
+   @param [in] startOffset
+    Start index of the text whose attributes are modified.
+    The valid range is 0..length.
+   @param [in] endOffset
+    Start index of the text whose attributes are modified.
+    The valid range is 0..length.
+   @param [in] attributes
+    Set of attributes that replaces the old list of attributes of
+    the specified text portion.
+  */
+  HRESULT setAttributes
+    (
+     [in] long startOffset,
+     [in] long endOffset,
+     [in] BSTR *attributes
+    );
+}
+

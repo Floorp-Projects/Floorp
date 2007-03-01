@@ -1,5 +1,4 @@
-LIBRARY        AccessibleMarshal.dll
-
+LIBRARY        IA2Marshal.dll
 EXPORTS        DllGetClassObject      PRIVATE
                DllCanUnloadNow        PRIVATE
                DllRegisterServer      PRIVATE

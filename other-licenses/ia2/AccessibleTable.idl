@@ -1,0 +1,439 @@
+/*************************************************************************
+ *
+ *  File Name (AccessibleTable.idl)
+ *
+ *  IAccessible2 IDL Specification
+ *
+ *  Copyright (c) IBM Corp. 2007
+ *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License version 2.1, as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02110-1301  USA
+ *
+ ************************************************************************/
+
+import "objidl.idl";
+import "oaidl.idl";
+import "oleacc.idl";
+import "Accessible2.idl";
+
+/// Defines values which specify the kind of change made to a table
+enum IA2TableModelChangeType {
+  IA2_TABLE_MODEL_CHANGE_INSERT,  // = 0;
+  IA2_TABLE_MODEL_CHANGE_DELETE,
+  IA2_TABLE_MODEL_CHANGE_UPDATE
+};
+
+/// A structure defining the type of and extents of changes made to a table
+typedef struct {
+  enum IA2TableModelChangeType type;	// insert, delete, update
+  long firstRow;
+  long lastRow;
+  long firstColumn;
+  long lastColumn;
+} IA2TableModelChange;
+
+/** @brief This interface gives access to a two-dimensional table. 
+       
+ All accessible objects that represent cells or cell-clusters of a table have 
+  to be at the same time children of the table.  This is necessary to be able 
+  to convert row and column indices into child indices and vice versa with the 
+  methods IAccessibleTable::childIndex, IAccessibleTable::rowIndex, and
+  IAccessibleTable::columnIndex.
+              
+ The range of valid coordinates for this interface are implementation dependent.  
+  However, that range includes at least the intervals from the from the first row 
+  or column with the index 0 up to the last (but not including) used row or column 
+  as returned by IAccessibleTable::nRows and IAccessibleTable::nColumns.
+*/
+[object, uuid(35AD8070-C20C-4fb4-B094-F4F7275DD469)]
+interface IAccessibleTable : IUnknown
+{
+
+  /** @brief Returns the IAccessible2 object at the specified row and column in 
+    the table.
+   @param [in] row
+    The row index for which to retrieve the cell.
+   @param [in] column
+    The column index for which to retrieve the cell.
+   @param [out] accessible
+    If both row and column index are valid then the corresponding accessible 
+    object is returned that represents the requested cell regardless of whether 
+    the cell is currently  visible (on the screen).
+  */
+  [propget] HRESULT accessibleAt
+    (
+     [in] long row, 
+     [in] long column,
+     [out, retval] IAccessible2 **accessible 
+    );
+
+  /** @brief Returns the caption for the table.
+   @param [out] accessible
+    If the table has a caption then a reference to it is returned, else a NULL 
+    pointer is returned.
+  */
+  [propget] HRESULT caption
+    (
+     [out, retval] IAccessible2 **accessible 
+    );
+	  
+  /** @brief Translates the given row and column indices into the corresponding child index.
+   @param [in] rowIndex
+    Index of the child of the table for which to return the row index.
+   @param [in] columnIndex
+    Index of the child of the table for which to return the column index.
+   @param [out] childIndex
+    Returns the row index of the cell of the specified child or the index of 
+    the first row if the child spans multiple rows.
+  */
+  [propget] HRESULT childIndex
+	(
+	 [in] long rowIndex,
+	 [in] long columnIndex,
+	 [out, retval] long *childIndex
+	);
+
+  /** @brief Returns the description text of the specified column in the table.
+   @param [in] column
+    The index of the column for which to retrieve the description.
+   @param [out] description
+    Returns the description text of the specified row in the table if such a 
+    description exists.  Otherwise a NULL pointer is returned.
+  */
+  [propget] HRESULT columnDescription
+    (
+     [in] long column,
+     [out, retval] BSTR *description
+    );
+
+  /** @brief Returns the number of columns occupied by the accessible object 
+    at the specified row and column in the table.
+        
+   The result differs from 1 if the specified cell spans multiple columns.
+   @param [in] row
+    Row index of the accessible for which to return the column extent.
+   @param [in] column
+    Column index of the accessible for which to return the column extent.
+   @param [out] nColumnsSpanned
+    Returns the column extent of the specified cell.
+  */
+  [propget] HRESULT columnExtentAt
+    (
+     [in] long row,
+     [in] long column,
+     [out, retval] long *nColumnsSpanned 
+    );
+
+  /** @brief Returns the column headers as an IAccessibleTable object.
+        
+   Content and size of the returned table are implementation dependent.
+   @param [out] accessibleTable
+    The column header
+   @param [out] startingRowIndex
+    The row index where the header starts, usually 0.
+  */
+  [propget] HRESULT columnHeader
+    (
+     [out] IAccessibleTable **accessibleTable,
+	 [out, retval] long *startingRowIndex
+    );
+
+  /** @brief Translates the given child index into the corresponding column index.
+   @param [in] childIndex
+    Index of the child of the table for which to return the column index.
+   @param [out] columnIndex
+    Returns the column index of the cell of the specified child or the index of 
+    the first column if the child spans multiple columns.
+  */
+  [propget] HRESULT columnIndex
+    (
+	 [in] long childIndex,
+	 [out, retval] long *columnIndex
+	);
+
+  /** @brief Returns the total number of columns in table
+   @param [out] columnCount
+    Number of columns in table (including columns outside the current viewport)
+  */
+  [propget] HRESULT nColumns
+    (
+     [out, retval] long *columnCount 
+    );
+
+  /** @brief Returns the total number of rows in table
+   @param [out] rowCount
+    Number of rows in table (including rows outside the current viewport)
+  */
+  [propget] HRESULT nRows
+    (
+     [out, retval] long *rowCount 
+    );
+
+  /** @brief Returns the total number of selected children
+   @param [out] childCount
+    Number of children currently selected
+  */
+  [propget] HRESULT nSelectedChildren
+    (
+	 [out, retval] long *childCount
+	);
+
+  /** @brief Returns the total number of selected columns
+   @param [out] columnCount
+    Number of columns currently selected
+  */
+  [propget] HRESULT nSelectedColumns
+    (
+     [out, retval] long *columnCount 
+    );
+
+  /** @brief Returns the total number of selected rows
+   @param [out] rowCount
+    Number of rows currently selected
+  */
+  [propget] HRESULT nSelectedRows
+    (
+     [out, retval] long *rowCount 
+    );
+
+  /** @brief Returns the description text of the specified row in the table.
+   @param [in] row
+    The index of the row for which to retrieve the description.
+   @param [out] description
+    Returns the description text of the specified row in the table if such a 
+    description exists.  Otherwise a NULL pointer is returned.
+  */
+  [propget] HRESULT rowDescription
+    (
+     [in] long row, 
+     [out, retval] BSTR *description
+    );
+
+  /** @brief Returns the number of rows occupied by the accessible oject 
+    at the specified row and column in the table.
+        
+   The result differs from 1 if the specified cell spans multiple rows.
+   @param [in] row
+    Row index of the accessible for which to return the column extent.
+   @param [in] column
+    Column index of the accessible for which to return the column extent.
+   @param [out] nRowsSpanned
+    Returns the row extent of the specified cell.
+  */
+  [propget] HRESULT rowExtentAt
+    (
+     [in] long row,
+     [in] long column,
+     [out, retval] long *nRowsSpanned
+    );
+
+  /** @brief Returns the row headers as an IAccessibleTable object.
+        
+   Content and size of the returned table are implementation dependent.
+   @param [out] accessibleTable
+    The row header.
+   @param [out] startingColumnIndex
+    The column index where the header starts, usually 0.
+  */
+  [propget] HRESULT rowHeader
+    (
+     [out] IAccessibleTable **accessibleTable,
+	 [out, retval] long *startingColumnIndex
+    );
+
+  /** @brief Translates the given child index into a row index.
+   @param [in] childIndex
+    Index in parent (0 based)
+   @param [out] rowIndex
+    Row index (0 based)
+  */
+  [propget] HRESULT rowIndex
+    (
+	 [in] long childIndex,
+	 [out, retval] long *rowIndex 
+	);
+
+  /** @brief Returns a list of child indexes currently selected (0-based).
+   @param [in] maxChildren
+    Max children requested (possibly from IAccessibleTable::nSelectedChildren)
+   @param [out] children
+    array of indexes of selected children (each index is 0-based)
+   @param [out] nChildren
+    Length of array (not more than maxChildren)
+  */
+  [propget] HRESULT selectedChildren
+    (
+     [in] long maxChildren,
+     [out, size_is(,maxChildren), length_is(,*nChildren)] long **children,
+     [out, retval] long *nChildren
+    );
+
+  /** @brief Returns a list of column indexes currently selected (0-based).
+   @param [in] maxColumns
+    Max rows requested (possibly from IAccessibleTable::nSelectedColumns)
+   @param [out] columns
+    array of indexes of selected columns (each index is 0-based)
+   @param [out] nColumns
+    Length of array (not more than maxColumns)
+  */
+  [propget] HRESULT selectedColumns
+    (
+     [in] long maxColumns,
+     [out, size_is(,maxColumns), length_is(,*nColumns)] long **columns,
+     [out, retval] long *nColumns
+    );
+
+  /** @brief Returns a list of row indexes currently selected (0-based).
+   @param [in] maxRows
+    Max rows requested (possibly from IAccessibleTable::nSelectedRows)
+   @param [out] rows
+    array of indexes of selected rows (each index is 0-based)
+   @param [out] nRows
+    Length of array (not more than maxRows)
+  */
+  [propget] HRESULT selectedRows
+    (
+     [in] long maxRows, 
+     [out, size_is(,maxRows), length_is(,*nRows)] long **rows, 
+     [out, retval] long *nRows 
+    );
+
+  /** @brief Returns the summary description of the table.
+   @param [out] accessible
+    Returns a reference to an implementation dependent accessible object 
+    representing the table's summary or a NULL pointer if the table 
+    does not support a summary.
+  */
+  [propget] HRESULT summary
+    (
+     [out, retval] IAccessible2 **accessible 
+    );
+
+  /** @brief Returns a boolean value indicating whether the specified column is 
+    completely selected.
+   @param [in] column
+    Index of the column for which to determine whether it is selected.
+   @param [out] isSelected
+    Returns TRUE if the specified column is selected completely and FALSE otherwise.
+  */
+  [propget] HRESULT isColumnSelected
+    (
+     [in] long column,
+     [out, retval] boolean *isSelected
+    );
+
+  /** @brief Returns a boolean value indicating whether the specified row is completely 
+    selected.
+   @param [in] row
+    Index of the row for which to determine whether it is selected.
+   @param [out] isSelected
+    Returns TRUE if the specified row is selected completely and FALSE otherwise.
+  */
+  [propget] HRESULT isRowSelected
+    (
+     [in] long row,
+     [out, retval] boolean *isSelected
+    );
+
+  /** @brief Returns a boolean value indicating whether the specified cell is selected.
+   @param [in] row
+    Index of the row for the cell to determine whether it is selected.
+   @param [in] column
+    Index of the column for the cell to determine whether it is selected.
+   @param [out] isSelected
+    Returns TRUE if the specified cell is selected and FALSE otherwise.
+  */
+  [propget] HRESULT isSelected
+    (
+     [in] long row,
+     [in] long column,
+     [out, retval] boolean *isSelected 
+    );
+
+  /** @brief Selects a row and unselects all previously selected rows.
+   @param [in] row
+    Index of the row to be selected.
+  */
+  HRESULT selectRow
+    (
+     [in] long row 
+    );
+
+  /** @brief Selects a column and unselects all previously selected columns.
+   @param [in] column
+    Index of the column to be selected.
+  */
+  HRESULT selectColumn
+    (
+     [in] long column
+    );
+
+  /** @brief Unselects one row, leaving other selected rows selected (if any).
+   @param [in] row
+    Index of the row to be selected.
+  */
+  HRESULT unselectRow
+    (
+     [in] long row
+    );
+
+  /** @brief Unselects one column, leaving other selected columns selected (if any).
+   @param [in] column
+    Index of the column to be selected.
+  */
+  HRESULT unselectColumn
+    (
+     [in] long column
+    );
+  
+  /** @brief Given a child index, gets the row and column indexes and extents of a cell 
+    and whether or not it is selected.
+
+   This is a convenience function.  It is not mandatory to implement it.
+   @param [in] index
+    Index of this child in the parent.
+   @param [out] row
+    Row index.
+   @param [out] column
+    Column index.
+   @param [out] rowExtents
+    Number of cells spanned by this cell in this row.
+   @param [out] columnExtents
+    Number of cells spanned by this cell in this column.
+   @param [out] isSelected
+    Indicates if the specified cell is selected.
+  */
+  [propget] HRESULT rowColumnExtentsAtIndex
+    (
+	 [in] long index, 
+	 [out] long *row,  
+	 [out] long *column,
+	 [out] long *rowExtents,
+	 [out] long *columnExtents,
+	 [out, retval] boolean *isSelected
+	);
+
+  /** @brief Returns the type and extents describing how a table changed.
+  
+    Provided for use by the IA2_EVENT_TABLE_MODEL_CHANGED event handler.
+   @param [out] modelChange
+    A struct of (type(insert, delete, update), firstRow, lastRow, firstColumn, lastColumn).
+  */
+  [propget] HRESULT modelChange
+    (
+	 [out, retval] IA2TableModelChange *modelChange
+    );
+
+}
