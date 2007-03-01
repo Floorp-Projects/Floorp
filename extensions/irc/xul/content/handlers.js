@@ -24,6 +24,7 @@
  *   Robert Ginda, rginda@netscape.com, original author
  *   Samuel Sieb, samuel@sieb.net
  *   Chiaki Koufugata chiaki@mozilla.gr.jp UI i18n
+ *   Shawn Wilsher <me@shawnwilsher.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -545,27 +546,6 @@ function onWindowKeyPress (e)
             }
             break;
 
-        case 112: /* F1 */
-        case 113: /* ... */
-        case 114:
-        case 115:
-        case 116:
-        case 117:
-        case 118:
-        case 119:
-        case 120:
-        case 121: /* F10 */
-            if (e.ctrlKey || e.shiftKey || e.Altkey || e.metaKey)
-                break;
-            var idx = code - 112;
-            if ((idx in client.viewsArray) && client.viewsArray[idx].source)
-            {
-                var newView = client.viewsArray[idx].source;
-                dispatch("set-current-view", { view: newView });
-            }
-            e.preventDefault();
-            break;
-
         case 33: /* pgup */
             if (e.ctrlKey)
             {
@@ -605,6 +585,59 @@ function onWindowKeyPress (e)
                 w.scrollTo (w.pageXOffset, (w.innerHeight + w.pageYOffset));
             e.preventDefault();
             break;
+    }
+
+    // Code is zero if we have an alphanumeric being given to us in the event.
+    if (code != 0)
+      return;
+
+    // The following code is copied from:
+    //   /mozilla/browser/base/content/browser.js
+    //   Revision: 1.748
+    //   Lines: 1397-1421
+
+    // \d in a RegExp will find any Unicode character with the "decimal digit"
+    // property (Nd)
+    var regExp = /\d/;
+    if (!regExp.test(String.fromCharCode(e.charCode)))
+        return;
+
+    // Some Unicode decimal digits are in the range U+xxx0 - U+xxx9 and some are
+    // in the range U+xxx6 - U+xxxF. Find the digit 1 corresponding to our
+    // character.
+    var digit1 = (e.charCode & 0xFFF0) | 1;
+    if (!regExp.test(String.fromCharCode(digit1)))
+      digit1 += 6;
+
+    var idx = e.charCode - digit1;
+
+    const isMac     = client.platform == "Mac";
+    const isLinux   = client.platform == "Linux";
+    const isWindows = client.platform == "Windows";
+    const isOS2     = client.platform == "OS/2";
+    const isUnknown = !(isMac || isLinux || isWindows || isOS2);
+    const isSuite   = client.host == "Mozilla";
+
+    if ((0 <= idx) && (idx <= 8))
+    {
+        if ((!isSuite && isMac && e.metaKey) ||
+            (!isSuite && (isLinux || isOS2) && e.altKey) ||
+            (!isSuite && (isWindows || isUnknown) && e.ctrlKey) ||
+            (isSuite && e.altKey))
+        {
+            // Pressing 1-8 takes you to that tab, while pressing 9 takes you
+            // to the last tab always.
+            if (idx == 8)
+                idx = client.viewsArray.length - 1;
+
+            if ((idx in client.viewsArray) && client.viewsArray[idx].source)
+            {
+                var newView = client.viewsArray[idx].source;
+                dispatch("set-current-view", { view: newView });
+            }
+            e.preventDefault();
+            return;
+        }
     }
 }
 
