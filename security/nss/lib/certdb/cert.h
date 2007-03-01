@@ -37,7 +37,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.54 2006/08/07 19:09:41 julien.pierre.bugs%sun.com Exp $
+ * $Id: cert.h,v 1.55 2007/03/01 00:30:18 alexei.volkov.bugs%sun.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -1511,8 +1511,8 @@ CERT_UnlockCertTrust(CERTCertificate *cert);
  * results in a NULL being returned (and an appropriate error set).
  */ 
 extern SECItem *
-CERT_SPKDigestValueForCert(PRArenaPool *arena, CERTCertificate *cert,
-			   SECOidTag digestAlg, SECItem *fill);
+CERT_GetSPKIDigest(PRArenaPool *arena, const CERTCertificate *cert,
+                   SECOidTag digestAlg, SECItem *fill);
 
 /*
  * fill in nsCertType field of the cert based on the cert extension

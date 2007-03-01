@@ -37,7 +37,7 @@
 /*
  * Test program for client-side OCSP.
  *
- * $Id: ocspclnt.c,v 1.8 2007/01/04 20:07:33 alexei.volkov.bugs%sun.com Exp $
+ * $Id: ocspclnt.c,v 1.9 2007/03/01 00:30:18 alexei.volkov.bugs%sun.com Exp $
  */
 
 #include "secutil.h"
@@ -259,13 +259,18 @@ create_request (FILE *out_file, CERTCertDBHandle *handle, CERTCertificate *cert,
 		PRBool add_service_locator, PRBool add_acceptable_responses)
 {
     CERTCertList *certs = NULL;
+    CERTCertificate *myCert = NULL;
     CERTOCSPRequest *request = NULL;
     int64 now = PR_Now();
     SECItem *encoding = NULL;
     SECStatus rv = SECFailure;
 
     if (handle == NULL || cert == NULL)
-	goto loser;
+	return rv;
+
+    myCert = CERT_DupCertificate(cert);
+    if (myCert == NULL)
+        goto loser;
 
     /*
      * We need to create a list of one.
@@ -274,14 +279,14 @@ create_request (FILE *out_file, CERTCertDBHandle *handle, CERTCertificate *cert,
     if (certs == NULL)
 	goto loser;
 
-    if (CERT_AddCertToListTail (certs, cert) != SECSuccess)
+    if (CERT_AddCertToListTail (certs, myCert) != SECSuccess)
 	goto loser;
 
     /*
      * Now that cert is included in the list, we need to be careful
      * that we do not try to destroy it twice.  This will prevent that.
      */
-    cert = NULL;
+    myCert = NULL;
 
     request = CERT_CreateOCSPRequest (certs, now, add_service_locator, NULL);
     if (request == NULL)
@@ -310,6 +315,8 @@ loser:
 	CERT_DestroyOCSPRequest(request);
     if (certs != NULL)
 	CERT_DestroyCertList (certs);
+    if (myCert != NULL)
+	CERT_DestroyCertificate(myCert);
 
     return rv;
 }
@@ -326,6 +333,7 @@ dump_response (FILE *out_file, CERTCertDBHandle *handle, CERTCertificate *cert,
 	       const char *responder_url)
 {
     CERTCertList *certs = NULL;
+    CERTCertificate *myCert = NULL;
     char *loc = NULL;
     int64 now = PR_Now();
     SECItem *response = NULL;
@@ -333,7 +341,11 @@ dump_response (FILE *out_file, CERTCertDBHandle *handle, CERTCertificate *cert,
     PRBool includeServiceLocator;
 
     if (handle == NULL || cert == NULL)
-	goto loser;
+	return rv;
+
+    myCert = CERT_DupCertificate(cert);
+    if (myCert == NULL)
+        goto loser;
 
     if (responder_url != NULL) {
 	loc = (char *) responder_url;
@@ -352,14 +364,14 @@ dump_response (FILE *out_file, CERTCertDBHandle *handle, CERTCertificate *cert,
     if (certs == NULL)
 	goto loser;
 
-    if (CERT_AddCertToListTail (certs, cert) != SECSuccess)
+    if (CERT_AddCertToListTail (certs, myCert) != SECSuccess)
 	goto loser;
 
     /*
      * Now that cert is included in the list, we need to be careful
      * that we do not try to destroy it twice.  This will prevent that.
      */
-    cert = NULL;
+    myCert = NULL;
 
     response = CERT_GetEncodedOCSPResponse (NULL, certs, loc, now,
 					    includeServiceLocator,
@@ -377,6 +389,8 @@ loser:
 	SECITEM_FreeItem (response, PR_TRUE);
     if (certs != NULL)
 	CERT_DestroyCertList (certs);
+    if (myCert != NULL)
+	CERT_DestroyCertificate(myCert);
     if (loc != NULL && loc != responder_url)
 	PORT_Free (loc);
 
