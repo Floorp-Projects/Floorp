@@ -876,7 +876,7 @@ calStorageCalendar.prototype = {
         this.mDB.executeSimpleSQL("INSERT INTO cal_calendar_schema_version VALUES(" + this.DB_SCHEMA_VERSION + ")");
     },
 
-    DB_SCHEMA_VERSION: 6,
+    DB_SCHEMA_VERSION: 7,
 
     /** 
      * @return      db schema version
@@ -1145,7 +1145,82 @@ calStorageCalendar.prototype = {
             }
         }
 
-        if (oldVersion != 6) {
+        if (oldVersion == 6 && this.DB_SCHEMA_VERSION >= 7) {
+            dump ("**** Upgrading schema from 6 -> 7\n");
+
+            var getTzIds;
+            this.mDB.beginTransaction();
+            try {
+                // Schema changes between v6 and v7:
+                //
+                // - Migrate all stored mozilla.org timezones from 20050126_1
+                //   to 20070129_1.  Note that there are some exceptions where
+                //   timezones were deleted and/or renamed.
+
+                // Get a list of the /mozilla.org/* timezones used in the db
+                var tzId;
+                getTzIds = createStatement(this.mDB,
+                    "SELECT DISTINCT(zone) FROM ("+
+                        "SELECT recurrence_id_tz AS zone FROM cal_attendees WHERE recurrence_id_tz LIKE '/mozilla.org%' UNION " +
+                        "SELECT recurrence_id_tz AS zone FROM cal_events WHERE recurrence_id_tz LIKE '/mozilla.org%' UNION " +
+                        "SELECT event_start_tz AS zone FROM cal_events WHERE event_start_tz LIKE '/mozilla.org%' UNION " +
+                        "SELECT event_end_tz AS zone FROM cal_events WHERE event_end_tz LIKE '/mozilla.org%' UNION " +
+                        "SELECT alarm_time_tz AS zone FROM cal_events WHERE alarm_time_tz LIKE '/mozilla.org%' UNION " +
+                        "SELECT recurrence_id_tz AS zone FROM cal_properties WHERE recurrence_id_tz LIKE '/mozilla.org%' UNION " +
+                        "SELECT recurrence_id_tz AS zone FROM cal_todos WHERE recurrence_id_tz LIKE '/mozilla.org%' UNION " +
+                        "SELECT todo_entry_tz AS zone FROM cal_todos WHERE todo_entry_tz LIKE '/mozilla.org%' UNION " +
+                        "SELECT todo_due_tz AS zone FROM cal_todos WHERE todo_due_tz LIKE '/mozilla.org%' UNION " +
+                        "SELECT alarm_time_tz AS zone FROM cal_todos WHERE alarm_time_tz LIKE '/mozilla.org%'" +
+                    ");");
+
+                var tzIdsToUpdate = [];
+                var updateTzIds = false; // Perform the SQL UPDATE, or not.
+                while (getTzIds.step()) {
+                    tzId = getTzIds.row.zone;
+
+                    // Send the timezones off to the ICS service to attempt
+                    // conversion.
+                    icsSvc = Components.classes["@mozilla.org/calendar/ics-service;1"]
+                                       .getService(Components.interfaces.calIICSService);
+                    var latestTzId = icsSvc.latestTzId(tzId);
+                    if (tzId != latestTzId) {
+                        tzIdsToUpdate.push({oldTzId: tzId, newTzId: latestTzId});
+                        updateTzIds = true;
+                    }
+                }
+                getTzIds.reset();
+
+                if (updateTzIds) {
+                    // We've got stuff to update!
+                    for each (var update in tzIdsToUpdate) {
+                        this.mDB.executeSimpleSQL(
+                            "UPDATE cal_attendees  SET recurrence_id_tz = '" + update.newTzId + "' WHERE recurrence_id_tz = '" + update.oldTzId + "'; " +
+                            "UPDATE cal_events     SET recurrence_id_tz = '" + update.newTzId + "' WHERE recurrence_id_tz = '" + update.oldTzId + "'; " +
+                            "UPDATE cal_events     SET event_start_tz   = '" + update.newTzId + "' WHERE event_start_tz   = '" + update.oldTzId + "'; " +
+                            "UPDATE cal_events     SET event_end_tz     = '" + update.newTzId + "' WHERE event_end_tz     = '" + update.oldTzId + "'; " +
+                            "UPDATE cal_events     SET alarm_time_tz    = '" + update.newTzId + "' WHERE alarm_time_tz    = '" + update.oldTzId + "'; " +
+                            "UPDATE cal_properties SET recurrence_id_tz = '" + update.newTzId + "' WHERE recurrence_id_tz = '" + update.oldTzId + "'; " +
+                            "UPDATE cal_todos      SET recurrence_id_tz = '" + update.newTzId + "' WHERE recurrence_id_tz = '" + update.oldTzId + "'; " +
+                            "UPDATE cal_todos      SET todo_entry_tz    = '" + update.newTzId + "' WHERE todo_entry_tz    = '" + update.oldTzId + "'; " +
+                            "UPDATE cal_todos      SET todo_due_tz      = '" + update.newTzId + "' WHERE todo_due_tz      = '" + update.oldTzId + "'; " +
+                            "UPDATE cal_todos      SET alarm_time_tz    = '" + update.newTzId + "' WHERE recurrence_id_tz = '" + update.oldTzId + "';");
+                    }
+                }
+
+                // Update the version stamp, and commit.
+                this.mDB.executeSimpleSQL("UPDATE cal_calendar_schema_version SET version = 7;");
+                this.mDB.commitTransaction();
+                oldVersion = 7;
+            } catch (e) {
+                dump ("+++++++++++++++++ DB Error: " + this.mDB.lastErrorString + "\n");
+                Components.utils.reportError("Upgrade failed! DB Error: " +
+                                             this.mDB.lastErrorString);
+                this.mDB.rollbackTransaction();
+                throw e;
+            }
+        }
+
+        if (oldVersion != 7) {
             dump ("#######!!!!! calStorageCalendar Schema Update failed -- db version: " + oldVersion + " this version: " + this.DB_SCHEMA_VERSION + "\n");
             throw Components.results.NS_ERROR_FAILURE;
         }

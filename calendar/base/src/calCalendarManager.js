@@ -175,7 +175,7 @@ calCalendarManager.prototype = {
         }
     },
     
-    DB_SCHEMA_VERSION: 6,
+    DB_SCHEMA_VERSION: 7,
 
     upgradeDB: function (oldVersion) {
         // some common helpers
