@@ -597,3 +597,13 @@ calGoogleSession.prototype = {
      *
      * @param aRequest          The Request Object. This is an instance of
      *                          calGoogleRequest
+     */
+    asyncRawRequest: function cGS_asyncRawRequest(aRequest) {
+        // Request is handled by an instance of the calGoogleRequest
+        // We don't need to keep track of these requests, they
+        // pass to a listener or just die
+
+        ASSERT(aRequest);
+        aRequest.commit(this);
+    }
+};

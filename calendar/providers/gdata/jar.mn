@@ -5,7 +5,7 @@ gdata-provider.jar:
 % skin gdata-provider classic/1.0 %skin/
 % overlay chrome://calendar/content/calendarCreation.xul chrome://gdata-provider/content/calendarCreation.xul
     content/calendarCreation.xul                 (content/calendarCreation.xul)
-    skin/calendar.png                            (skin/calendar.png)
+    content/gcal.png                             (content/gcal.png)
 
 gdata-provider-@AB_CD@.jar:
 % locale gdata-provider @AB_CD@ %locale/@AB_CD@/
