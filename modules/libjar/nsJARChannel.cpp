@@ -663,6 +663,7 @@ nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
 {
     LOG(("nsJARChannel::AsyncOpen [this=%x]\n", this));
 
+    NS_ENSURE_ARG_POINTER(listener);
     NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
 
     // Initialize mProgressSink
