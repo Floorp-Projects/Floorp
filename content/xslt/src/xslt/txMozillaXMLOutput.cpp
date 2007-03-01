@@ -1020,7 +1020,6 @@ NS_IMETHODIMP
 txTransformNotifier::ScriptAvailable(nsresult aResult, 
                                      nsIScriptElement *aElement, 
                                      PRBool aIsInline,
-                                     PRBool aWasPending,
                                      nsIURI *aURI, 
                                      PRInt32 aLineNo)
 {
@@ -1035,8 +1034,7 @@ txTransformNotifier::ScriptAvailable(nsresult aResult,
 NS_IMETHODIMP 
 txTransformNotifier::ScriptEvaluated(nsresult aResult, 
                                      nsIScriptElement *aElement,
-                                     PRBool aIsInline,
-                                     PRBool aWasPending)
+                                     PRBool aIsInline)
 {
     if (mScriptElements.RemoveObject(aElement)) {
         SignalTransformEnd();

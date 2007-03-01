@@ -151,12 +151,25 @@ public:
    */
   void AddExecuteBlocker()
   {
-    ++mBlockerCount;
+    if (!mBlockerCount++) {
+      mHadPendingScripts = mPendingRequests.Count() != 0;
+    }
   }
   void RemoveExecuteBlocker()
   {
     if (!--mBlockerCount) {
-      ProcessPendingRequestsAsync();
+      // If there were pending scripts then the newly added scripts will
+      // execute once whatever event triggers the pending scripts fires.
+      // However, due to syncronous loads and pushed event queues it's
+      // possible that the requests that were there have already been processed
+      // if so we need to process any new requests asyncronously.
+      // Ideally that should be fixed such that it can't happen.
+      if (mHadPendingScripts) {
+        ProcessPendingRequestsAsync();
+      }
+      else {
+        ProcessPendingRequests();
+      }
     }
   }
 
@@ -214,6 +227,7 @@ protected:
   nsCOMPtr<nsIScriptElement> mCurrentScript;
   PRUint32 mBlockerCount;
   PRPackedBool mEnabled;
+  PRPackedBool mHadPendingScripts;
 };
 
 #endif //__nsScriptLoader_h__

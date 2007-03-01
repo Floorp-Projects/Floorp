@@ -121,7 +121,7 @@ public:
   nsScriptLoadRequest(nsIScriptElement* aElement,
                       PRUint32 aVersion)
     : mElement(aElement),
-      mLoading(PR_TRUE), mWasPending(PR_FALSE),
+      mLoading(PR_TRUE),
       mIsInline(PR_TRUE),
       mJSVersion(aVersion), mLineNo(1)
   {
@@ -131,17 +131,15 @@ public:
 
   void FireScriptAvailable(nsresult aResult)
   {
-    mElement->ScriptAvailable(aResult, mElement, mIsInline, mWasPending,
-                              mURI, mLineNo);
+    mElement->ScriptAvailable(aResult, mElement, mIsInline, mURI, mLineNo);
   }
   void FireScriptEvaluated(nsresult aResult)
   {
-    mElement->ScriptEvaluated(aResult, mElement, mIsInline, mWasPending);
+    mElement->ScriptEvaluated(aResult, mElement, mIsInline);
   }
 
   nsCOMPtr<nsIScriptElement> mElement;
   PRPackedBool mLoading;             // Are we still waiting for a load to complete?
-  PRPackedBool mWasPending;          // Processed immediately or pending
   PRPackedBool mIsInline;            // Is the script inline or loaded?
   nsString mScriptText;              // Holds script for loaded scripts
   PRUint32 mJSVersion;
@@ -161,7 +159,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS0(nsScriptLoadRequest)
 nsScriptLoader::nsScriptLoader(nsIDocument *aDocument)
   : mDocument(aDocument),
     mBlockerCount(0),
-    mEnabled(PR_TRUE)
+    mEnabled(PR_TRUE),
+    mHadPendingScripts(PR_FALSE)
 {
 }
 
@@ -226,7 +225,6 @@ IsScriptEventHandler(nsIScriptElement *aScriptElement)
   return PR_FALSE;
 }
 
-/* void processScriptElement (in nsIScriptElement aElement, in nsIScriptLoaderObserver aObserver); */
 nsresult
 nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 {
@@ -445,7 +443,6 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 
       request->mURI = scriptURI;
       request->mIsInline = PR_FALSE;
-      request->mWasPending = PR_TRUE;
       request->mLoading = PR_TRUE;
 
       nsCOMPtr<nsILoadGroup> loadGroup = mDocument->GetDocumentLoadGroup();
@@ -487,11 +484,8 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
     // If we've got existing pending requests, add ourselves
     // to this list.
     if (ReadyToExecuteScripts() && mPendingRequests.Count() == 0) {
-      NS_ASSERTION(!request->mWasPending, "should not be pending");
       return ProcessRequest(request);
     }
-
-    request->mWasPending = PR_TRUE;
   }
 
   // Add the request to our pending requests list
@@ -538,8 +532,8 @@ nsScriptLoader::FireScriptAvailable(nsresult aResult,
   for (PRInt32 i = 0; i < mObservers.Count(); i++) {
     nsCOMPtr<nsIScriptLoaderObserver> obs = mObservers[i];
     obs->ScriptAvailable(aResult, aRequest->mElement,
-                         aRequest->mIsInline, aRequest->mWasPending,
-                         aRequest->mURI, aRequest->mLineNo);
+                         aRequest->mIsInline, aRequest->mURI,
+                         aRequest->mLineNo);
   }
 
   aRequest->FireScriptAvailable(aResult);
@@ -552,7 +546,7 @@ nsScriptLoader::FireScriptEvaluated(nsresult aResult,
   for (PRInt32 i = 0; i < mObservers.Count(); i++) {
     nsCOMPtr<nsIScriptLoaderObserver> obs = mObservers[i];
     obs->ScriptEvaluated(aResult, aRequest->mElement,
-                         aRequest->mIsInline, aRequest->mWasPending);
+                         aRequest->mIsInline);
   }
 
   aRequest->FireScriptEvaluated(aResult);

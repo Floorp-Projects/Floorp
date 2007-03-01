@@ -85,6 +85,7 @@
 #include "nsIRequest.h"
 #include "nsNodeUtils.h"
 #include "nsIDOMNode.h"
+#include "nsThreadUtils.h"
 
 PRLogModuleInfo* gContentSinkLogModuleInfo;
 
@@ -117,15 +118,14 @@ NS_IMETHODIMP
 nsScriptLoaderObserverProxy::ScriptAvailable(nsresult aResult,
                                              nsIScriptElement *aElement,
                                              PRBool aIsInline,
-                                             PRBool aWasPending,
                                              nsIURI *aURI,
                                              PRInt32 aLineNo)
 {
   nsCOMPtr<nsIScriptLoaderObserver> inner = do_QueryReferent(mInner);
 
   if (inner) {
-    return inner->ScriptAvailable(aResult, aElement, aIsInline, aWasPending,
-                                  aURI, aLineNo);
+    return inner->ScriptAvailable(aResult, aElement, aIsInline, aURI,
+                                  aLineNo);
   }
 
   return NS_OK;
@@ -134,13 +134,12 @@ nsScriptLoaderObserverProxy::ScriptAvailable(nsresult aResult,
 NS_IMETHODIMP
 nsScriptLoaderObserverProxy::ScriptEvaluated(nsresult aResult,
                                              nsIScriptElement *aElement,
-                                             PRBool aIsInline,
-                                             PRBool aWasPending)
+                                             PRBool aIsInline)
 {
   nsCOMPtr<nsIScriptLoaderObserver> inner = do_QueryReferent(mInner);
 
   if (inner) {
-    return inner->ScriptEvaluated(aResult, aElement, aIsInline, aWasPending);
+    return inner->ScriptEvaluated(aResult, aElement, aIsInline);
   }
 
   return NS_OK;
@@ -273,7 +272,6 @@ NS_IMETHODIMP
 nsContentSink::ScriptAvailable(nsresult aResult,
                                nsIScriptElement *aElement,
                                PRBool aIsInline,
-                               PRBool aWasPending,
                                nsIURI *aURI,
                                PRInt32 aLineNo)
 {
@@ -308,7 +306,7 @@ nsContentSink::ScriptAvailable(nsresult aResult,
   } else {
     mScriptElements.RemoveObjectAt(count - 1);
 
-    if (mParser && aWasPending && aResult != NS_BINDING_ABORTED) {
+    if (mParser && aResult != NS_BINDING_ABORTED) {
       // Loading external script failed!. So, resume parsing since the parser
       // got blocked when loading external script. See
       // http://bugzilla.mozilla.org/show_bug.cgi?id=94903.
@@ -317,7 +315,7 @@ nsContentSink::ScriptAvailable(nsresult aResult,
       //     script load, assuming that that error code means that the user
       //     stopped the load through some action (like clicking a link). See
       //     http://bugzilla.mozilla.org/show_bug.cgi?id=243392.
-      mParser->ContinueInterruptedParsing();
+      ContinueInterruptedParsingAsync();
     }
   }
 
@@ -327,8 +325,7 @@ nsContentSink::ScriptAvailable(nsresult aResult,
 NS_IMETHODIMP
 nsContentSink::ScriptEvaluated(nsresult aResult,
                                nsIScriptElement *aElement,
-                               PRBool aIsInline,
-                               PRBool aWasPending)
+                               PRBool aIsInline)
 {
   // Check if this is the element we were waiting for
   PRInt32 count = mScriptElements.Count();
@@ -347,8 +344,8 @@ nsContentSink::ScriptEvaluated(nsresult aResult,
     PostEvaluateScript(aElement);
   }
 
-  if (mParser && mParser->IsParserEnabled() && aWasPending) {
-    mParser->ContinueInterruptedParsing();
+  if (mParser && mParser->IsParserEnabled()) {
+    ContinueInterruptedParsingAsync();
   }
 
   return NS_OK;
@@ -1349,4 +1346,21 @@ nsContentSink::WillBuildModelImpl()
   }
 
   mScrolledToRefAlready = PR_FALSE;
+}
+
+void
+nsContentSink::ContinueInterruptedParsing()
+{
+  if (mParser) {
+    mParser->ContinueInterruptedParsing();
+  }
+}
+
+void
+nsContentSink::ContinueInterruptedParsingAsync()
+{
+  nsCOMPtr<nsIRunnable> ev = new nsRunnableMethod<nsContentSink>(this,
+    &nsContentSink::ContinueInterruptedParsing);
+
+  NS_DispatchToCurrentThread(ev);
 }
