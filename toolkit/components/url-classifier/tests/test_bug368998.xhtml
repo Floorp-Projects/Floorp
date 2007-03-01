@@ -20,44 +20,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=368998
 
 /** Test for Bug 368998 - hostname canonicalization **/
 
-// test charmap
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var table = Cc["@mozilla.org/url-classifier/table;1?type=url"].createInstance();
-var componentScope = table.wrappedJSObject.__parent__;
-ok(!!componentScope, "unable to get wrapped js object");
-
-var PROT_EnchashDecrypter = componentScope.PROT_EnchashDecrypter;
-var enchash = new PROT_EnchashDecrypter();
-
-// escapeCharmap_ should be true for non-alphanumeric, non-hyphen, and
-// non-dot chars
-for (var i = 0; i < 256; ++i) {
-  var chr = String.fromCharCode(i);
-  if ( (chr.toLowerCase() >= 'a' && chr.toLowerCase() <= 'z') ||
-       (chr >= '0' && chr <= '9') ||
-       '.' == chr || '-' == chr) {
-    ok(!enchash.escapeCharmap_.contains(chr), 'failed on ' + i);
-  } else {
-    ok(enchash.escapeCharmap_.contains(chr), 'failed on ' + i);
-  }
-}
-
-// Test canonicalizeHost
-var tests = {
-  'http://www.mozilla.org/foo': 'www.mozilla.org',
-  'http://,=.mozilla.org/foo': '%2c%3d.mozilla.org',
-  'http://f00.b4r.mozi=lla.org/': 'f00.b4r.mozi%3dlla.org',
-  'http://a-_b.mozilla.org/': 'a-%5fb.mozilla.org',
-  'http://z%38bl%61h%%2F.com/': 'z8blah%25%2f.com',
-  'http://moZilla.Org/': 'mozilla.org'
-}
-
-for (var url in tests) {
-  ok(enchash.getCanonicalHost(url) == tests[url],
-     'expected ' + tests[url] + ' but got ' + enchash.getCanonicalHost(url));
-}
+// These have been moved to test_enchash_decrypter.xhtml
+// We have this placeholder because mochitest tinderbox don't clobber
+// so removed files still try to run.
+ok(true, 'tests moved to test_enchash_decrypter.xhtml');
 
 ]]>
 </script>

@@ -1,0 +1,372 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+This is a port of all the existing EnchashDecrypter unittests to the
+mochitest framework.
+-->
+<head>
+  <title>Test for enchash-decrypter.js</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var table = Cc["@mozilla.org/url-classifier/table;1?type=url"].createInstance();
+var componentScope = table.wrappedJSObject.__parent__;
+ok(!!componentScope, "unable to get wrapped js object");
+
+////// Test PROT_EnchashDecrypter methods //////
+var PROT_EnchashDecrypter = componentScope.PROT_EnchashDecrypter;
+var l = new PROT_EnchashDecrypter();
+
+// Test our regular expressions.  Make sure they are handled the same as on
+// the server that handles remote look ups.
+// Yes this defies our naming convention, but we copy verbatim from
+// the C++ unittest, so lets just keep things clear.
+var no_dots = "abcd123;[]";
+var one_dot = "abc.123";
+var two_dots = "two..dots";
+var lots_o_dots = "I have a lovely .... bunch of dots";
+var multi_dots = "dots ... and ... more .... dots";
+var leading_dot = ".leading";
+var trailing_dot = "trailing.";
+var trailing_dots = "I love trailing dots....";
+var end_dots = ".dots.";
+
+var decimal = "1234567890";
+var hex = "0x123452FAf";
+var bad_hex = "0xFF0xGG";
+var octal = "012034056";
+var bad_octal = "012034089";
+var garbage = "lk,.:asdfa-=";
+var mixed = "1230x78034";
+var spaces = "123 0xFA 045";
+
+var r = PROT_EnchashDecrypter.REs;
+// Test regular expressions matches
+function testRE(re, inputValPairs) {
+  for (var i = 0; i < inputValPairs.length; i += 2)
+    ok(re.test(inputValPairs[i]) == inputValPairs[i + 1],
+       "RegExp broken: " + re + " (input: " + inputValPairs[i] + ")");
+};
+
+// Test regular expression replacement
+function testReplaceRE(re, replaceStr, inputValPairs) {
+  for (var i = 0; i < inputValPairs.length; i += 2) {
+    var inStr = inputValPairs[i];
+    var outStr = inputValPairs[i + 1];
+    ok(inStr.replace(re, replaceStr) == outStr,
+       uneval(inStr) + ".replace(" + uneval(re) + "," + uneval(replaceStr) + ") == " + uneval(outStr) + ")");
+  }
+};
+
+var tests = [
+  "", "",
+  "normal chars;!@#$%^&*&(", "normal chars;!@#$%^&*&(",
+  "MORE NORMAL ,./<>?;':{}", "MORE NORMAL ,./<>?;':{}",
+  "Slightly less\2 normal", "Slightly less normal",
+  "\245 stuff \4\5foo", " stuff foo",
+];
+testReplaceRE(PROT_EnchashDecrypter.REs.FIND_DODGY_CHARS_GLOBAL, "", tests);
+
+tests = [
+  "", "",
+  no_dots, no_dots,
+  one_dot, one_dot,
+  two_dots, two_dots,
+  trailing_dot, "trailing",
+  trailing_dots, "I love trailing dots",
+  leading_dot, "leading",
+  "..leading", "leading",
+  end_dots, "dots",
+  ".both.", "both",
+  ".both..", "both",
+  "..both.", "both",
+  "..both..", "both",
+  "..a.b.c.d..", "a.b.c.d",
+  "..127.0.0.1..", "127.0.0.1",
+];
+testReplaceRE(PROT_EnchashDecrypter.REs.FIND_END_DOTS_GLOBAL, "", tests);
+
+tests = [
+  "", "",
+  no_dots, no_dots,
+  one_dot, one_dot,
+  two_dots, "two.dots",
+  lots_o_dots, "I have a lovely . bunch of dots",
+  multi_dots, "dots . and . more . dots",
+  "127.0.0.1", "127.0.0.1",
+  ".127.0.0.1.", ".127.0.0.1.",
+  "127..0.0.1", "127.0.0.1",
+  "127.0..0.1", "127.0.0.1",
+  "127..0..0..1", "127.0.0.1",
+];
+testReplaceRE(PROT_EnchashDecrypter.REs.FIND_MULTIPLE_DOTS_GLOBAL, ".", tests);
+
+tests = [
+  no_dots, false,
+  one_dot, false,
+  two_dots, true,
+  lots_o_dots, true,
+  multi_dots, true
+];
+testRE(r.FIND_MULTIPLE_DOTS_GLOBAL, tests);
+
+tests = [
+  "random junk", false,
+  "123.45.6-7.89", false,
+  "012.12.123", true,
+  "0x12.0xff.123", true,
+  "225.0.0.1", true
+];
+testRE(r.POSSIBLE_IP, tests);
+
+tests = [
+  decimal, false,
+  hex, false,
+  octal, false,
+  bad_octal, true
+];
+testRE(r.FIND_BAD_OCTAL, tests);
+
+tests = [
+  decimal, false,
+  hex, false,
+  bad_octal, false,
+  garbage, false,
+  mixed, false,
+  spaces, false,
+  octal, true
+];
+testRE(r.IS_OCTAL, tests);
+
+tests = [
+  hex, false,
+  garbage, false,
+  mixed, false,
+  spaces, false,
+  octal, true,
+  bad_octal, true,
+  decimal, true
+];
+testRE(r.IS_DECIMAL, tests);
+
+tests = [
+  decimal, false,
+  octal, false,
+  bad_octal, false,
+  garbage, false,
+  mixed, false,
+  spaces, false,
+  bad_hex, false,
+  hex, true
+];
+testRE(r.IS_HEX, tests);
+
+// Test find last N
+var longstr = "";
+for(var k = 0; k < 100; k++) {
+  longstr += "a";
+}
+var shortstr = "short";
+
+var val = l.lastNChars_(longstr, 8);
+ok(val.length == 8, "find last eight broken on long str");
+val = l.lastNChars_(shortstr, 8);
+ok(val.length == 5, "find last eight broken on short str");
+
+// Test canonical num
+var tests = [
+  "", "", 1, true,
+  "", "10", 0, true,
+  "", "0x45", -1, true,
+  "45", "45", 1, true,
+  "16", "0x10", 1, true,
+  "1.111", "367", 2, true,
+  "0.20.229", "012345", 3, true,
+  "123", "0173", 1, true,
+  "9", "09", 1, false,
+  "", "0x120x34", 2, true,
+  "18.252", "0x12fc", 2, true,
+  "195.127.0.11", "3279880203", 4, true,
+  "89", "0x0000059", 1, true,
+  "89", "0x00000059", 1, true,
+  "103", "0x0000067", 1, true
+];
+for (var i = 0; i < tests.length; i+= 4) {
+  ok(tests[i] === l.canonicalNum_(tests[i + 1], tests[i + 2], tests[i + 3]),
+     "canonicalNum broken on: " + tests[i + 1]);
+}
+
+// Test parseIPAddress (these are all verifiable using ping)
+var testing = {
+  "fake ip": "",
+  "123.123.0.0.1": "",
+  "255.0.0.1": "255.0.0.1",
+  "12.0x12.01234": "12.18.2.156",
+  "276.2.3": "20.2.0.3",
+  "012.034.01.055": "10.28.1.45",
+  "0x12.0x43.0x44.0x01": "18.67.68.1",
+  "167838211": "10.1.2.3",
+  "3279880203": "195.127.0.11",
+  "0x12434401": "18.67.68.1",
+  "413960661": "24.172.137.213",
+  "03053104725": "24.172.137.213",
+  "030.0254.0x89d5": "24.172.137.213",
+  "1.234.4.0377": "1.234.4.255",
+  "1.2.3.00x0": "",
+  "10.192.95.89 xy": "10.192.95.89",
+  "10.192.95.89 xyz": "",
+  "1.2.3.0x0": "1.2.3.0",
+  "1.2.3.4": "1.2.3.4"
+};
+for (var key in testing) {
+  ok(l.parseIPAddress_(key) === testing[key],
+     "parseIPAddress broken on " + key + "(got: " + l.parseIPAddress_(key));
+}
+
+// Test escapeString (bug 368998)
+testing = {
+  "asdf!@#$a": "asdf%21%40%23%24a",
+  "AB CD 12354": "AB%20CD%2012354",
+  "\1\2\3\4\112\177": "%01%02%03%04J%7f",
+  "<>.AS/-+": "%3c%3e.AS%2f-%2b"
+};
+for (var key in testing) {
+  var out = l.escapeString_(key);
+  ok(out === testing[key],
+     "escapeString broken on " + key + " (got: " + out + ")");
+}
+
+// escapeCharmap_ should be true for non-alphanumeric, non-hyphen, and
+// non-dot chars
+for (var i = 0; i < 256; ++i) {
+  var chr = String.fromCharCode(i);
+  if ( (chr.toLowerCase() >= 'a' && chr.toLowerCase() <= 'z') ||
+       (chr >= '0' && chr <= '9') ||
+       '.' == chr || '-' == chr) {
+    ok(!l.escapeCharmap_.contains(chr), 'failed on ' + i);
+  } else {
+    ok(l.escapeCharmap_.contains(chr), 'failed on ' + i);
+  }
+}
+
+// Test getCanonicalHost
+testing = {
+  "http://completely.bogus.url.with.a.whole.lot.of.dots":
+      "with.a.whole.lot.of.dots",
+  "http://poseidon.marinet.gr/~elani": "poseidon.marinet.gr",
+  "http://www.google.com..": "www.google.com",
+  "https://www.yaho%6F.com": "www.yahoo.com",
+  "http://012.034.01.0xa": "10.28.1.10",
+  "ftp://wierd..chars...%0f,%fa": "wierd.chars.%2c",
+  "http://0x18ac89d5/http.www.paypal.com/": "24.172.137.213",
+  "http://413960661/http.www.paypal.com/": "24.172.137.213",
+  "http://03053104725/http.www.paypal.com/": "24.172.137.213",
+  "http://www.barclays.co.uk.brccontrol.assruspede.org.bz/detailsconfirm":
+      "co.uk.brccontrol.assruspede.org.bz",
+  "http://www.mozilla.org/foo": "www.mozilla.org",
+  "http://,=.mozilla.org/foo": "%2c%3d.mozilla.org",
+  "http://f00.b4r.mozi=lla.org/": "f00.b4r.mozi%3dlla.org",
+  "http://a-_b.mozilla.org/": "a-%5fb.mozilla.org",
+  "http://z%38bl%61h%%2F.com/": "z8blah%25%2f.com",
+  "http://moZilla.Org/": "mozilla.org"
+}
+for (var key in testing) {
+  var out = l.getCanonicalHost(key, PROT_EnchashDecrypter.MAX_DOTS);
+  ok(out == testing[key],
+     "getCanonicalHost broken on: " + key + "(got: " + out + ")");
+}
+
+
+// Test getCanonicalUrl 
+testing = {
+  // For bug 356355.
+  "http://0x18.0xac.0x89.0xd5/http.www.paypal.com/":
+      "http://24.172.137.213/http.www.paypal.com/",
+  "http://0x18ac89d5/http.www.paypal.com/":
+      "http://24.172.137.213/http.www.paypal.com/",
+  "http://413960661/http.www.paypal.com/":
+      "http://24.172.137.213/http.www.paypal.com/",
+  "http://03053104725/http.www.paypal.com/":
+      "http://24.172.137.213/http.www.paypal.com/",
+  "http://03053104725/%68t%74p.www.paypal.c%6fm/":
+      "http://24.172.137.213/http.www.paypal.com/",
+  "http://www.barclays.co.uk.brccontrol.assruspede.org.bz/detailsconfirm":
+      "http://www.barclays.co.uk.brccontrol.assruspede.org.bz/detailsconfirm",
+
+  // For bug 366645
+  "http://030.0254.0x89d5./": "http://24.172.137.213/",
+  "http://030.0254.0x89d5.../": "http://24.172.137.213/",
+  "http://...030.0254.0x89d5.../": "http://24.172.137.213/",
+  "http://127.0.0.1./": "http://127.0.0.1/",
+  "http://127.0.0.1/": "http://127.0.0.1/",
+  "http://a.b.c.d.e.f.g/path": "http://a.b.c.d.e.f.g/path",
+  "http://a.b.c.d.e.f.g...../path": "http://a.b.c.d.e.f.g/path",
+  "http://a.b.c.d.e.f.g./path": "http://a.b.c.d.e.f.g/path"
+}
+for (var key in testing) {
+  ok(l.getCanonicalUrl(key) == testing[key],
+     "getCanonicalUrl broken on: " + key + "(got: " + l.getCanonicalUrl(key) + ")");
+}
+
+// Test getlookupkey
+var testing = {};
+testing["www.google.com"] = "AF5638A09FDDDAFF5B7A6013B1BE69A9";
+testing["poseidon.marinet.gr"] = "01844755C8143C4579BB28DD59C23747";
+testing["80.53.164.26"] = "B775DDC22DEBF8BEBFEAC24CE40A1FBF";
+
+for (var key in testing)
+  ok(l.getLookupKey(key) === testing[key],
+           "getlookupkey broken on " + key + " (got: " +
+           l.getLookupKey(key) + ", expected: " +
+           testing[key] + ")");
+// Test decryptdata
+var tests =
+  [ "bGtEQWJuMl/z2ZxSBB2hsuWI8geMAwfSh3YBfYPejQ1O+wyRAJeJ1UW3V56zm" +
+    "EpUvnaEiECN1pndxW5rEMNzE+gppPeel7PvH+OuabL3NXlspcP0xnpK8rzNgB1" +
+    "JT1KcajQ9K3CCl24T9r8VGb0M3w==",
+    "80.53.164.26",
+    "^(?i)http\\:\\/\\/80\\.53\\.164\\.26(?:\\:80)?\\/\\.PayPal" +
+    "\\.com\\/webscr\\-id\\/secure\\-SSL\\/cmd\\-run\\=\\/login\\.htm$",
+
+    "ZTMzZjVnb3WW1Yc2ABorgQGAwYfcaCb/BG3sMFLTMDvOQxH8LkdGGWqp2tI5SK" +
+    "uNrXIHNf2cyzcVocTqUIUkt1Ud1GKieINcp4tWcU53I0VZ0ZZHCjGObDCbv9Wb" +
+    "CPSx1eS8vMREDv8Jj+UVL1yaZQ==",
+    "80.53.164.26",
+    "^(?i)http\\:\\/\\/80\\.53\\.164\\.26(?:\\:80)?\\/\\.PayPal\\.com" +
+    "\\/webscr\\-id\\/secure\\-SSL\\/cmd\\-run\\=\\/login\\.htm$",
+
+    "ZTMzZjVnb3WVb6VqoJ44hVo4V77XjDRcXTxOc2Zpn4yIHcpS0AQ0nn1TVlX4MY" +
+    "IeNL/6ggzCmcJSWOOkj06Mpo56LNLrbxNxTBuoy9GF+xcm",
+    "poseidon.marinet.gr",
+    "^(?i)http\\:\\/\\/poseidon\\.marinet\\.gr(?:\\:80)?\\/\\~eleni" +
+    "\\/eBay\\/index\\.php$",
+
+    "bGtEQWJuMl9FA3Kl5RiXMpgFU8nDJl9J0hXjUck9+mMUQwAN6llf0gJeY5DIPP" +
+    "c2f+a8MSBFJN17ANGJZl5oZVsQfSW4i12rlScsx4tweZAE",
+    "poseidon.marinet.gr",
+    "^(?i)http\\:\\/\\/poseidon\\.marinet\\.gr(?:\\:80)?\\/\\~eleni" +
+    "\\/eBay\\/index\\.php$"];
+
+for (var i = 0; i < tests.length; i += 3) {
+  var dec = l.decryptData(tests[i], tests[i + 1]);
+  ok(dec === tests[i + 2],
+     "decryptdata broken on " + tests[i] + " (got: " + dec + ", expected: "
+     + tests[i + 2] + ")");
+}
+]]>
+</script>
+</pre>
+</body>
+</html>
