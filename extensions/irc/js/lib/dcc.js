@@ -869,7 +869,7 @@ CIRCDCCChat.prototype.onCTCP =
 function serv_ctcp(e)
 {
     // The \x0D? is a BIG HACK to make this work with X-Chat.
-    var ary = e.line.match(/^\x01(\S+) ?(.*)\x01\x0D?$/i);
+    var ary = e.line.match(/^\x01([^ ]+) ?(.*)\x01\x0D?$/i);
     if (ary == null)
         return false;
 

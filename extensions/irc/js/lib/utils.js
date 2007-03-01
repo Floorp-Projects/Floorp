@@ -1148,9 +1148,9 @@ function getHostmaskParts(hostmask)
     var rv;
     // A bit cheeky this, we try the matches here, and then branch
     // according to the ones we like.
-    var ary1 = hostmask.match(/(\S*)!(\S*)@(.*)/);
-    var ary2 = hostmask.match(/(\S*)@(.*)/);
-    var ary3 = hostmask.match(/(\S*)!(.*)/);
+    var ary1 = hostmask.match(/([^ ]*)!([^ ]*)@(.*)/);
+    var ary2 = hostmask.match(/([^ ]*)@(.*)/);
+    var ary3 = hostmask.match(/([^ ]*)!(.*)/);
     if (ary1)
         rv = { nick: ary1[1],  user: ary1[2], host: ary1[3] };
     else if (ary2)

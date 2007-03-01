@@ -356,10 +356,10 @@ function onInputKeyPress (e)
         case 13: /* CR */
             e.line = e.target.value;
             e.target.value = "";
-            if (e.ctrlKey)
-                e.line = client.COMMAND_CHAR + "say " + e.line;
             if (e.line.search(/\S/) == -1)
                 return;
+            if (e.ctrlKey)
+                e.line = client.COMMAND_CHAR + "say " + e.line;
             onInputCompleteLine (e);
             break;
 
@@ -2669,7 +2669,7 @@ function my_notice (e)
     var msg = e.decodeParam(2);
     var displayMailto = client.prefs["munger.mailto"];
 
-    var ary = msg.match(/^\[(\S+)\]\s+/);
+    var ary = msg.match(/^\[([^ ]+)\]\s+/);
     if (ary)
     {
         var channel = e.server.getChannel(ary[1]);

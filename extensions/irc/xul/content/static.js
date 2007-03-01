@@ -1034,7 +1034,7 @@ function getMessagesContext(cx, element)
                     break;
 
                 // strip out  a potential ME! suffix
-                var ary = nickname.match(/(\S+)/);
+                var ary = nickname.match(/([^ ]+)/);
                 nickname = ary[1];
 
                 if (!cx.network)

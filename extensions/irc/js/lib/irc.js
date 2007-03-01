@@ -1233,24 +1233,24 @@ function serv_onRawData(e)
     if (l[0] == ":")
     {
         // Must split only on a REAL space here, not just any old whitespace.
-        ary = l.match(/:(\S+) (.*)/);
+        ary = l.match(/:([^ ]+) (.*)/);
         e.source = ary[1];
         l = ary[2];
-        ary = e.source.match(/(\S+)!(\S+)@(.*)/);
+        ary = e.source.match(/([^ ]+)!([^ ]+)@(.*)/);
         if (ary)
         {
             e.user = new CIRCUser(this, null, ary[1], ary[2], ary[3]);
         }
         else
         {
-            ary = e.source.match(/(\S+)@(.*)/);
+            ary = e.source.match(/([^ ]+)@(.*)/);
             if (ary)
             {
                 e.user = new CIRCUser(this, null, ary[1], null, ary[2]);
             }
             else
             {
-                ary = e.source.match(/(\S+)!(.*)/);
+                ary = e.source.match(/([^ ]+)!(.*)/);
                 if (ary)
                     e.user = new CIRCUser(this, null, ary[1], ary[2], null);
             }
@@ -2404,7 +2404,7 @@ function serv_privmsg (e)
 CIRCServer.prototype.onCTCPReply =
 function serv_ctcpr (e)
 {
-    var ary = e.params[2].match (/^\x01(\S+) ?(.*)\x01$/i);
+    var ary = e.params[2].match (/^\x01([^ ]+) ?(.*)\x01$/i);
 
     if (ary == null)
         return false;
@@ -2446,7 +2446,7 @@ function serv_ctcpr (e)
 CIRCServer.prototype.onCTCP =
 function serv_ctcp (e)
 {
-    var ary = e.params[2].match (/^\x01(\S+) ?(.*)\x01$/i);
+    var ary = e.params[2].match (/^\x01([^ ]+) ?(.*)\x01$/i);
 
     if (ary == null)
         return false;
@@ -2610,7 +2610,7 @@ function serv_cping (e)
 CIRCServer.prototype.onCTCPDcc =
 function serv_dcc (e)
 {
-    var ary = e.CTCPData.match (/(\S+)? ?(.*)/);
+    var ary = e.CTCPData.match (/([^ ]+)? ?(.*)/);
 
     e.DCCData = ary[2];
     e.type = "dcc-" + ary[1].toLowerCase();
@@ -2653,7 +2653,7 @@ function serv_dccchat (e)
 CIRCServer.prototype.onDCCSend =
 function serv_dccsend (e)
 {
-    var ary = e.DCCData.match(/(\S+) (\d+) (\d+) (\d+)/);
+    var ary = e.DCCData.match(/([^ ]+) (\d+) (\d+) (\d+)/);
 
     /* Just for mIRC: filenames with spaces may be enclosed in double-quotes.
      * (though by default it replaces spaces with underscores, but we might as
