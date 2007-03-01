@@ -2867,7 +2867,7 @@ function cmdOper(e)
 {
     // Password is optional, if it is not given, we use a safe prompt.
     if (!e.password)
-        e.password = promptPassword(getMsg(MSG_NEED_OPER_PASSWORD), "");
+        e.password = promptPassword(MSG_NEED_OPER_PASSWORD, "");
 
     if (!e.password)
         return;
