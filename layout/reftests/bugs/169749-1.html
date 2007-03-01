@@ -1,0 +1,35 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html><head>
+  <style type="text/css">
+	p { margin: 0px; }
+        ul { border: 2px solid blue; }
+	li { border: 5px solid transparent } /* prevent margin collapsing */
+        .test1
+          p
+           { margin-bottom: 30px; }
+        .test2
+          p
+           { margin-top: 30px; }
+        .test3
+          p
+           { margin-top: 30px; margin-bottom: 30px; }
+        .test4
+          p
+           { margin-top: 20px; margin-bottom: 10px; }
+        .test5
+          p
+            { margin-top: -10px; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+<ul class="test1"><li><p>P (30px bottom margin)</p></li></ul>
+
+<ul class="test2"><li><p>P (30px top margin)</p></li></ul>
+
+<ul class="test3"><li><p>P (30px top+bottom margin)</p></li></ul>
+
+<ul class="test4"><li><p>P (20px top and 10px bottom margin)</p></li></ul>
+
+<ul class="test5"><li><p>P (-10px top and 10px bottom margin)</p></li></ul>
+</body>
+</html>
