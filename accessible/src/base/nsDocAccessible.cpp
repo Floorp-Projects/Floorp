@@ -542,7 +542,9 @@ void nsDocAccessible::ShutdownChildDocuments(nsIDocShellTreeItem *aStart)
       nsCOMPtr<nsIAccessibleDocument> docAccessible =
         GetDocAccessibleFor(treeItemChild);
       nsCOMPtr<nsPIAccessNode> accessNode = do_QueryInterface(docAccessible);
-      accessNode->Shutdown();
+      if (accessNode) {
+        accessNode->Shutdown();
+      }
     }
   }
 }
