@@ -94,6 +94,7 @@ function PROT_EnchashDecrypter() {
   this.base64_ = new G_Base64();
   this.streamCipher_ = Cc["@mozilla.org/security/streamcipher;1"]
                        .createInstance(Ci.nsIStreamCipher);
+  // Everything but alpha numerics, - and .
   this.escapeCharmap_ = new Charmap(
     0xffffffff, 0xfc009fff, 0xf8000001, 0xf8000001,
     0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff);
@@ -247,14 +248,7 @@ PROT_EnchashDecrypter.prototype.getCanonicalHost = function(str, opt_maxDots) {
     unescaped = temp;
 
   // Escape everything that's not alphanumeric, hyphen, or dot.
-  var escaped = '';
-  for (var i = 0; i < unescaped.length; ++i) {
-    if (this.escapeCharmap_.contains(unescaped[i])) {
-      escaped += '%' + unescaped.charCodeAt(i).toString(16);
-    } else {
-      escaped += unescaped[i];
-    }
-  }
+  var escaped = this.escapeString_(unescaped);
 
   if (opt_maxDots) {
     // Limit the number of dots
@@ -275,6 +269,27 @@ PROT_EnchashDecrypter.prototype.getCanonicalHost = function(str, opt_maxDots) {
   }
 
   escaped = escaped.toLowerCase();
+  return escaped;
+}
+
+/**
+ * URL escapes everything except alphanumerics, - and . (dot).  Specifically,
+ * escape everything in the escapeCharmap_ defined in the constructor.  This
+ * is a little different than escape, encodeURIComponent, and encodeURI.
+ */
+PROT_EnchashDecrypter.prototype.escapeString_ = function(unescaped) {
+  var escaped = '';
+  for (var i = 0; i < unescaped.length; ++i) {
+    if (this.escapeCharmap_.contains(unescaped[i])) {
+      var c = unescaped.charCodeAt(i).toString(16);
+      if (c.length == 1) {
+        c = '0' + c;
+      }
+      escaped += '%' + c;
+    } else {
+      escaped += unescaped[i];
+    }
+  }
   return escaped;
 }
 

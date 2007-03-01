@@ -55,8 +55,8 @@ REQUIRES = \
 	$(NULL)
 
 # mochitests
-_TEST_FILES = test_bug356355.xhtml \
-	test_bug368998.xhtml \
+_TEST_FILES = \
+	test_enchash-decrypter.xhtml \
 	$(NULL)
 
 libs:: $(_TEST_FILES)
