@@ -174,7 +174,7 @@
             row.setAttribute("hideSource", "true");
           }
           if (aObject.sourceLine) {
-            row.setAttribute("code", aObject.sourceLine.replace("\n", "", "g"));
+            row.setAttribute("code", aObject.sourceLine.replace(/\s/g, " "));
             if (aObject.columnNumber) {
               row.setAttribute("col", aObject.columnNumber);
               row.setAttribute("errorDots", this.repeatChar(" ", aObject.columnNumber));
