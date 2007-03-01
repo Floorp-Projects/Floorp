@@ -132,7 +132,6 @@ install::
 		echo "(nsBuildID.h is missing.)"; \
 		exit 1; \
 	fi;
-	$(SYSINSTALL) $(IFLAGS1) nsBuildID.h $(DESTDIR)$(includedir)
 	$(SYSINSTALL) $(IFLAGS1) $(DEPTH)/mozilla-config.h $(DESTDIR)$(includedir)
 
 GARBAGE += build_number nsBuildID \
