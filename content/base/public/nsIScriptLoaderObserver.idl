@@ -41,7 +41,7 @@
 interface nsIScriptElement;
 interface nsIURI;
 
-[scriptable, uuid(501209d3-7edf-437d-9948-3c6d1c08ef7f)]
+[scriptable, uuid(7b787204-76fb-4764-96f1-fb7a666db4f4)]
 interface nsIScriptLoaderObserver : nsISupports {
   
   /**
@@ -54,10 +54,6 @@ interface nsIScriptLoaderObserver : nsISupports {
    *        will not occur.
    * @param aElement The element being processed.
    * @param aIsInline Is this an inline script or externally loaded?
-   * @param aWasPending Did script processing have to be delayed,
-   *                    either for loading of an external script or
-   *                    because processing of an earlier scheduled
-   *                    script was delayed?
    * @param aURI What is the URI of the script (the document URI if
    *        it is inline).
    * @param aLineNo At what line does the script appear (generally 1
@@ -66,7 +62,6 @@ interface nsIScriptLoaderObserver : nsISupports {
   void scriptAvailable(in nsresult aResult, 
                        in nsIScriptElement aElement,
                        in boolean aIsInline,
-                       in boolean aWasPending,
                        in nsIURI aURI,
                        in PRInt32 aLineNo);
 
@@ -77,14 +72,9 @@ interface nsIScriptLoaderObserver : nsISupports {
    *        the script evaluation.
    * @param aElement The element being processed.
    * @param aIsInline Is this an inline script or externally loaded?
-   * @param aWasPending Did script processing have to be delayed,
-   *                    either for loading of an external script or
-   *                    because processing of an earlier scheduled
-   *                    script was delayed?
    */
   void scriptEvaluated(in nsresult aResult, 
                        in nsIScriptElement aElement,
-                       in boolean aIsInline,
-                       in boolean aWasPending);
+                       in boolean aIsInline);
 		       
 };

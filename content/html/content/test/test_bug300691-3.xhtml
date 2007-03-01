@@ -30,7 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=300691
 <![CDATA[
   /** Test for Bug 300691 **/
   $("test2").appendChild(document.createCDATASection("test2Ran = true"));
-  is(test2Ran, false, "Not yet 2!");
+  is(test2Ran, true, "Should be 2!");
 
   $("test3").appendChild(document.createCDATASection(""));
 ]]>
@@ -38,12 +38,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=300691
 <script type="text/javascript">
   // Follow up on some of those
   $("test3").firstChild.data = "test3Ran = true";
-  is(test3Ran, false, "Not yet 3!");
+  is(test3Ran, true, "Should be 3!");
 </script>
 <script type="text/javascript">
   is(test1Ran, true, "Should have run!");
-  is(test2Ran, true, "Should execute empty script on child append");
-  is(test3Ran, true, "Should execute empty script if child gets some text");
 </script>
 </pre>
 </body>

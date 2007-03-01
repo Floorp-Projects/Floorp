@@ -209,6 +209,9 @@ private:
 
 protected:
 
+  void ContinueInterruptedParsingAsync();
+  void ContinueInterruptedParsing();
+
   nsCOMPtr<nsIDocument>         mDocument;
   nsCOMPtr<nsIParser>           mParser;
   nsCOMPtr<nsIURI>              mDocumentURI;

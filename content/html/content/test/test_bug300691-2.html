@@ -18,8 +18,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=300691
 <pre id="test">
 <script type="text/javascript">
   // First, setup.  We'll be toggling these variables as we go.
-  // Note that scripts don't execute immediately when you put text in them --
-  // they wait for the currently-running script to finish.
   var test1Ran = false;
   var test2Ran = false;
   var test3Ran = false;
@@ -61,17 +59,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=300691
 <script class="testbody" type="text/javascript">
   /** Test for Bug 300691 **/
   $("test2").appendChild(document.createTextNode("test2Ran = true"));
-  is(test2Ran, false, "Not yet 2!");
+  is(test2Ran, true, "Should be 2!");
 
   $("test3").appendChild(document.createTextNode("test3Ran = true"));
-  is(test3Ran, false, "Not yet 3!");
+  is(test3Ran, false, "Should have run already 3!");
 
   $("test4").appendChild(document.createTextNode("test4Ran = true"));
-  is(test4Ran, false, "Not yet 4!");
+  is(test4Ran, false, "Should have run already 4!");
 
   $("test5").appendChild(document.createTextNode(" "));
   $("test5").appendChild(document.createTextNode("test5Ran = true"));
-  is(test5Ran, false, "Not yet 5!");
+  is(test5Ran, false, "Should have run already 5!");
 
   $("test6").appendChild(document.createTextNode(" "));
 
@@ -101,31 +99,27 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=300691
 <script type="text/javascript">
   // Follow up on some of those
   $("test6").appendChild(document.createTextNode("test6Ran = true"));
-  is(test6Ran, false, "Not yet 6!");
+  is(test6Ran, false, "Should have run already 6!");
 
   $("test7").appendChild(document.createTextNode("test7Ran = true"));
-  is(test7Ran, false, "Not yet 7!");
+  is(test7Ran, true, "Should be 7!");
 
   $("test8").insertBefore(document.createTextNode("test8Ran = true"),
                           $("test8").firstChild);
-  is(test8Ran, false, "Not yet 8!");
+  is(test8Ran, true, "Should be 8!");
 
   $("test9").firstChild.data = "test9Ran = true";
-  is(test9Ran, false, "Not yet 9!");
+  is(test9Ran, true, "Should be 9!");
 </script>
 <script type="text/javascript">
   is(test1Ran, true, "Should have run!");
-  is(test2Ran, true, "Should execute empty script on child append");
   is(test3Ran, false, "Already executed test3 script once");
   is(test4Ran, false,
-     "Shouldn't execute whitespace-only script on child append; should have executed it before");
-  is(test5Ran, true,
-     "By the time it tries to execute, it's got both textnodes");
+     "Should have executed whitespace-only script already");
+  is(test5Ran, false,
+     "Should have executed once the whitespace node was added");
   is(test6Ran, false,
-     "Shouldn't execute whitespace-only script on child append 2; should have executed it when it became nonempty");
-  is(test7Ran, true, "Should execute empty script on child append 2");
-  is(test8Ran, true, "Should execute empty script on child insert");
-  is(test9Ran, true, "Should execute empty script if child gets some text");
+     "Should have executed once the whitespace node was added 2");
   is(test10Ran, false, "Has an src; inline part shouldn't run");
   is(test11Ran, true, "Script with src should have run");
   is(test12Ran, true, "Setting src should execute script");
