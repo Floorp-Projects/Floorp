@@ -106,7 +106,7 @@ static nsresult OpenKeyForWriting(HKEY aStartKey, const char* aKeyName, HKEY* aK
       return OpenKeyForWriting(HKEY_CURRENT_USER, aKeyName, aKey, aHKLMOnly);
     case ERROR_FILE_NOT_FOUND:
       rv = ::RegCreateKey(aStartKey, aKeyName, aKey);
-      if (rv != ERROR_SUCCESS) 
+      if (rv != ERROR_SUCCESS)
       {
         if (aHKLMOnly || aStartKey == HKEY_CURRENT_USER) 
         {
@@ -253,7 +253,7 @@ static SETTING gFeedSettings[] = {
 nsresult nsWindowsShellService::Init()
 {
   nsresult rv;
-  
+
   nsCOMPtr<nsIStringBundleService> bundleService(do_GetService("@mozilla.org/intl/stringbundle;1", &rv));
   NS_ENSURE_SUCCESS(rv, rv);
   
