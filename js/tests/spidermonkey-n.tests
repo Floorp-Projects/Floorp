@@ -89,4 +89,3 @@ js1_5/Regress/regress-106244.js
 # do not ignore unicode formatting chars/trunk - bug 274152
 #
 ecma_3/Unicode/uc-001.js
-
