@@ -182,6 +182,7 @@ MODULES_core :=                                 \
   mozilla/modules/libbz2                        \
   mozilla/accessible                            \
   mozilla/other-licenses/atk-1.0                \
+  mozilla/other-licenses/ia2                    \
   mozilla/security/manager                      \
   mozilla/tools/elf-dynstr-gc                   \
   mozilla/uriloader                             \
