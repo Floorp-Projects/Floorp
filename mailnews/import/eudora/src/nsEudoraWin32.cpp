@@ -1400,7 +1400,7 @@ nsresult nsEudoraWin32::FoundAddressBook( nsIFileSpec *spec, const PRUnichar *pN
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsILocalFile> fileLoc;
-    rv = NS_FileSpecToIFile(fileSpec, getter_AddRefs(fileLoc));
+    rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(fileLoc));
     NS_ENSURE_SUCCESS(rv, rv);
 
 	rv = impSvc->CreateNewABDescriptor( getter_AddRefs( desc));
