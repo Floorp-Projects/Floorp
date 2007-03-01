@@ -1855,12 +1855,13 @@ PR_IMPLEMENT(PRUint64) PR_htonll(PRUint64 n)
 typedef struct addrinfo PRADDRINFO;
 #define GETADDRINFO getaddrinfo
 #define FREEADDRINFO freeaddrinfo
+#define GETNAMEINFO getnameinfo
 
 #elif defined(_PR_INET6_PROBE)
 
 typedef struct addrinfo PRADDRINFO;
 
-/* getaddrinfo/freeaddrinfo prototypes */ 
+/* getaddrinfo/freeaddrinfo/getnameinfo prototypes */ 
 #if defined(WIN32)
 #define FUNC_MODIFIER __stdcall
 #else
@@ -1873,17 +1874,24 @@ typedef int (FUNC_MODIFIER * FN_GETADDRINFO)
      PRADDRINFO **res);
 typedef int (FUNC_MODIFIER * FN_FREEADDRINFO)
     (PRADDRINFO *ai);
+typedef int (FUNC_MODIFIER * FN_GETNAMEINFO)
+    (const struct sockaddr *addr, int addrlen,
+     char *host, int hostlen,
+     char *serv, int servlen, int flags);
 
 /* global state */
 static FN_GETADDRINFO   _pr_getaddrinfo   = NULL;
 static FN_FREEADDRINFO  _pr_freeaddrinfo  = NULL;
+static FN_GETNAMEINFO   _pr_getnameinfo   = NULL;
 
 #if defined(VMS)
 #define GETADDRINFO_SYMBOL getenv("GETADDRINFO")
 #define FREEADDRINFO_SYMBOL getenv("FREEADDRINFO")
+#define GETNAMEINFO_SYMBOL getenv("GETNAMEINFO")
 #else
 #define GETADDRINFO_SYMBOL "getaddrinfo"
 #define FREEADDRINFO_SYMBOL "freeaddrinfo"
+#define GETNAMEINFO_SYMBOL "getnameinfo"
 #endif
 
 PRStatus
@@ -1913,7 +1921,12 @@ _pr_find_getaddrinfo(void)
         }
         _pr_freeaddrinfo = (FN_FREEADDRINFO)
             PR_FindFunctionSymbol(lib, FREEADDRINFO_SYMBOL);
-        PR_ASSERT(_pr_freeaddrinfo);
+        _pr_getnameinfo = (FN_GETNAMEINFO)
+            PR_FindFunctionSymbol(lib, GETNAMEINFO_SYMBOL);
+        if (!_pr_freeaddrinfo || !_pr_getnameinfo) {
+            PR_UnloadLibrary(lib);
+            continue;
+        }
         /* Keep the library loaded. */
         return PR_SUCCESS;
     }
@@ -1930,8 +1943,10 @@ _pr_find_getaddrinfo(void)
     }
     _pr_freeaddrinfo = (FN_FREEADDRINFO)
         PR_FindFunctionSymbol(lib, FREEADDRINFO_SYMBOL);
+    _pr_getnameinfo = (FN_GETNAMEINFO)
+        PR_FindFunctionSymbol(lib, GETNAMEINFO_SYMBOL);
     PR_UnloadLibrary(lib);
-    if (!_pr_freeaddrinfo) {
+    if (!_pr_freeaddrinfo || !_pr_getnameinfo) {
         return PR_FAILURE;
     }
     return PR_SUCCESS;
@@ -1940,6 +1955,7 @@ _pr_find_getaddrinfo(void)
 
 #define GETADDRINFO (*_pr_getaddrinfo)
 #define FREEADDRINFO (*_pr_freeaddrinfo)
+#define GETNAMEINFO (*_pr_getnameinfo)
 
 #endif /* _PR_INET6 */
 
@@ -2110,7 +2126,58 @@ PR_IMPLEMENT(const char *) PR_GetCanonNameFromAddrInfo(const PRAddrInfo *ai)
 #endif
 }
 
-PR_IMPLEMENT(PRStatus) PR_StringToNetAddr(const char *string, PRNetAddr *addr)
+#if defined(_PR_HAVE_GETADDRINFO)
+static PRStatus pr_StringToNetAddrGAI(const char *string, PRNetAddr *addr)
+{
+    PRADDRINFO *res, hints;
+    int rv;  /* 0 for success, or the error code EAI_xxx */
+    PRNetAddr laddr;
+    PRStatus status = PR_SUCCESS;
+
+    if (NULL == addr)
+    {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return PR_FAILURE;
+    }
+
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_flags = AI_NUMERICHOST;
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+
+    rv = GETADDRINFO(string, NULL, &hints, &res);
+    if (rv != 0)
+    {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, rv);
+        return PR_FAILURE;
+    }
+
+    /* pick up the first addr */
+    memcpy(&laddr, res->ai_addr, res->ai_addrlen);
+    if (AF_INET6 == res->ai_addr->sa_family)
+    {
+        addr->ipv6.family = PR_AF_INET6;
+        addr->ipv6.ip = laddr.ipv6.ip;
+        addr->ipv6.scope_id = laddr.ipv6.scope_id;
+    }
+    else if (AF_INET == res->ai_addr->sa_family)
+    {
+        addr->inet.family = PR_AF_INET;
+        addr->inet.ip = laddr.inet.ip;
+    }
+    else
+    {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        status = PR_FAILURE;
+    }
+
+    FREEADDRINFO(res);
+    return status;
+}
+#endif  /* _PR_HAVE_GETADDRINFO */
+
+#if !defined(_PR_HAVE_GETADDRINFO) || defined(_PR_INET6_PROBE)
+static PRStatus pr_StringToNetAddrFB(const char *string, PRNetAddr *addr)
 {
     PRStatus status = PR_SUCCESS;
     PRIntn rv;
@@ -2166,8 +2233,44 @@ PR_IMPLEMENT(PRStatus) PR_StringToNetAddr(const char *string, PRNetAddr *addr)
 
     return status;
 }
+#endif /* !_PR_HAVE_GETADDRINFO || _PR_INET6_PROBE */
 
-PR_IMPLEMENT(PRStatus) PR_NetAddrToString(
+PR_IMPLEMENT(PRStatus) PR_StringToNetAddr(const char *string, PRNetAddr *addr)
+{
+    if (!_pr_initialized) _PR_ImplicitInitialization();
+
+#if !defined(_PR_HAVE_GETADDRINFO)
+    return pr_StringToNetAddrFB(string, addr);
+#else
+#if defined(_PR_INET6_PROBE)
+    if (!_pr_ipv6_is_present)
+        return pr_StringToNetAddrFB(string, addr);
+#endif
+    return pr_StringToNetAddrGAI(string, addr);
+#endif
+}
+
+#if defined(_PR_HAVE_GETADDRINFO)
+static PRStatus pr_NetAddrToStringGNI(
+    const PRNetAddr *addr, char *string, PRUint32 size)
+{
+    int addrlen;
+    int rv;  /* 0 for success, or the error code EAI_xxx */
+
+    addrlen = PR_NETADDR_SIZE(addr);
+    rv = GETNAMEINFO((const struct sockaddr *)addr, addrlen,
+        string, size, NULL, 0, NI_NUMERICHOST);
+    if (rv != 0)
+    {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, rv);
+        return PR_FAILURE;
+    }
+    return PR_SUCCESS;
+}
+#endif  /* _PR_HAVE_GETADDRINFO */
+
+#if !defined(_PR_HAVE_GETADDRINFO) || defined(_PR_INET6_PROBE)
+static PRStatus pr_NetAddrToStringFB(
     const PRNetAddr *addr, char *string, PRUint32 size)
 {
     if (PR_AF_INET6 == addr->raw.family)
@@ -2201,4 +2304,21 @@ failed:
     PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
     return PR_FAILURE;
 
+}  /* pr_NetAddrToStringFB */
+#endif  /* !_PR_HAVE_GETADDRINFO || _PR_INET6_PROBE */
+
+PR_IMPLEMENT(PRStatus) PR_NetAddrToString(
+    const PRNetAddr *addr, char *string, PRUint32 size)
+{
+    if (!_pr_initialized) _PR_ImplicitInitialization();
+
+#if !defined(_PR_HAVE_GETADDRINFO)
+    return pr_NetAddrToStringFB(addr, string, size);
+#else
+#if defined(_PR_INET6_PROBE)
+    if (!_pr_ipv6_is_present)
+        return pr_NetAddrToStringFB(addr, string, size);
+#endif
+    return pr_NetAddrToStringGNI(addr, string, size);
+#endif
 }  /* PR_NetAddrToString */
