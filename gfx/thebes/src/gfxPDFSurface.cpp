@@ -40,10 +40,24 @@
 #include "cairo.h"
 #include "cairo-pdf.h"
 
-gfxPDFSurface::gfxPDFSurface(const char *filename, const gfxSize& aSizeInPoints)
-    : mXDPI(-1), mYDPI(-1), mSize(aSizeInPoints)
+static cairo_status_t
+write_func(void *closure, const unsigned char *data, unsigned int length)
 {
-    Init(cairo_pdf_surface_create(filename, mSize.width, mSize.height));
+    nsCOMPtr<nsIOutputStream> out = reinterpret_cast<nsIOutputStream*>(closure);
+    do {
+        PRUint32 wrote = 0;
+        if (NS_FAILED(out->Write((const char*)data, length, &wrote)))
+            break;
+        data += wrote; length -= wrote;
+    } while (length > 0);
+    NS_ASSERTION(length == 0, "not everything was written to the file");
+    return CAIRO_STATUS_SUCCESS;
+}
+
+gfxPDFSurface::gfxPDFSurface(nsIOutputStream *aStream, const gfxSize& aSizeInPoints)
+    : mStream(aStream), mXDPI(-1), mYDPI(-1), mSize(aSizeInPoints)
+{
+    Init(cairo_pdf_surface_create_for_stream(write_func, (void*)mStream, mSize.width, mSize.height));
 }
 
 gfxPDFSurface::~gfxPDFSurface()
@@ -81,6 +95,13 @@ gfxPDFSurface::EndPage()
     cairo_show_page(cx);
     cairo_destroy(cx);
     return NS_OK;
+}
+
+void
+gfxPDFSurface::Finish()
+{
+    gfxASurface::Finish();
+    mStream->Close();
 }
 
 void

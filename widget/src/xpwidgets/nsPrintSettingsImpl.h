@@ -128,6 +128,7 @@ protected:
   nsXPIDLString mPrinter;
   PRBool        mPrintToFile;
   nsString      mToFileName;
+  PRInt16       mOutputFormat;
   PRPackedBool  mIsInitedFromPrinter;
   PRPackedBool  mIsInitedFromPrefs;
 

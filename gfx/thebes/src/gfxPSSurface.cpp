@@ -37,31 +37,28 @@
 
 #include "gfxPSSurface.h"
 
-#include <cairo-ps.h>
+#include "cairo.h"
+#include "cairo-ps.h"
 
-#ifdef UNTESTED_CODE
 static cairo_status_t
-write_func(void *closure,
-           const unsigned char *data,
-           unsigned int length)
+write_func(void *closure, const unsigned char *data, unsigned int length)
 {
-    fwrite(data, 1, length, (FILE*)closure);
+    nsCOMPtr<nsIOutputStream> out = reinterpret_cast<nsIOutputStream*>(closure);
+    do {
+        PRUint32 wrote = 0;
+        if (NS_FAILED(out->Write((const char*)data, length, &wrote)))
+            break;
+        data += wrote; length -= wrote;
+    } while (length > 0);
+    NS_ASSERTION(length == 0, "not everything was written to the file");
+    return CAIRO_STATUS_SUCCESS;
 }
-#endif
 
-gfxPSSurface::gfxPSSurface(const char *filename, const gfxSize& aSizeInPoints)
-    : mXDPI(-1), mYDPI(-1), mSize(aSizeInPoints)
+gfxPSSurface::gfxPSSurface(nsIOutputStream *aStream, const gfxSize& aSizeInPoints)
+    : mStream(aStream), mXDPI(-1), mYDPI(-1), mSize(aSizeInPoints)
 {
-    Init(cairo_ps_surface_create(filename, mSize.width, mSize.height));
+    Init(cairo_ps_surface_create_for_stream(write_func, (void*)mStream, mSize.width, mSize.height));
 }
-
-#ifdef UNTESTED_CODE
-gfxPSSurface::gfxPSSurface(FILE *file, gfxSize aSizeInPoints)
-    : mXDPI(-1), mYDPI(-1), mSize(aSizeInPoints)
-{
-    Init(cairo_ps_surface_create_for_stream(write_func, file, mSize.width, mSize.height));
-}
-#endif
 
 gfxPSSurface::~gfxPSSurface()
 {
@@ -98,6 +95,13 @@ gfxPSSurface::EndPage()
     cairo_show_page(cx);
     cairo_destroy(cx);
     return NS_OK;
+}
+
+void
+gfxPSSurface::Finish()
+{
+    gfxASurface::Finish();
+    mStream->Close();
 }
 
 void

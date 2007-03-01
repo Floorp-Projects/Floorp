@@ -113,6 +113,12 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CSRCS   += cairo-win32-font.c \
            cairo-win32-surface.c
 EXPORTS += cairo-win32.h
+CSRCS   += cairo-base85-stream.c \
+           cairo-pdf-surface.c \
+	   cairo-type1-fallback.c \
+	   cairo-truetype-subset.c \
+	   cairo-cff-subset.c
+EXPORTS += cairo-pdf.h
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
