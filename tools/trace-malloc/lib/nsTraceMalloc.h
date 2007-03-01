@@ -126,15 +126,18 @@ typedef struct nsTMStats {
  *   'F' site serial, address, free size
  *
  * Event Operands (magic TMLog06)
- *   'M' site serial, interval, address, malloc size
- *   'C' site serial, interval, address, calloc size
- *   'R' site serial, interval, address, realloc size, old site serial,
- *         old address, old size
- *   'F' site serial, interval, address, free size
+ *   'M' site serial, interval time (end), address, malloc size
+ *   'C' site serial, interval time (end), address, calloc size
+ *   'R' site serial, interval time (end), address, realloc size,
+ *         old site serial, old address, old size
+ *   'F' site serial, interval time (end), address, free size
  *
  * Event Operands (magic TMLog07)
- *   no one documented their changes.
- *   best of luck....
+ *   'M' site serial, interval time (start), duration, address, malloc size
+ *   'C' site serial, interval time (start), duration, address, calloc size
+ *   'R' site serial, interval time (start), duration, address, realloc size,
+ *         old site serial, old address, old size
+ *   'F' site serial, interval time (start), duration, address, free size
  *
  * Event Operands (magic TMLog08)
  *   'G' filename serial, source filename string.
