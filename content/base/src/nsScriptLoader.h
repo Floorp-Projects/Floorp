@@ -160,9 +160,9 @@ public:
     if (!--mBlockerCount) {
       // If there were pending scripts then the newly added scripts will
       // execute once whatever event triggers the pending scripts fires.
-      // However, due to syncronous loads and pushed event queues it's
+      // However, due to synchronous loads and pushed event queues it's
       // possible that the requests that were there have already been processed
-      // if so we need to process any new requests asyncronously.
+      // if so we need to process any new requests asynchronously.
       // Ideally that should be fixed such that it can't happen.
       if (mHadPendingScripts) {
         ProcessPendingRequestsAsync();

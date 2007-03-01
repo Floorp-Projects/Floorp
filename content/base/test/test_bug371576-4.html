@@ -1,0 +1,22 @@
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=371576
+-->
+<head>
+  <title>Test2 for Bug 371576</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script>
+
+var _bShouldbeThere = false;
+var oScript = document.createElement('script');
+oScript.innerHTML = '_bShouldbeThere = true';
+document.getElementsByTagName('head')[0].appendChild(oScript);
+ok(_bShouldbeThere,"_bShouldbeThere is true, script has executed on time");
+
+</script>
+
+</head>
+</html>

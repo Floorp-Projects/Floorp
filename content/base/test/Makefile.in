@@ -70,6 +70,11 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug357509.html \
 		test_bug358660.html \
 		test_bug366946.html \
+		test_bug371576-1.html \
+		test_bug371576-2.html \
+		test_bug371576-3.html \
+		test_bug371576-4.html \
+		test_bug371576-5.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

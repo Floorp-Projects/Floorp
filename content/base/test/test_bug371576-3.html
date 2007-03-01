@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=371576
+-->
+<head id="head">
+  <title>Test for Bug 371576</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=371576">Mozilla Bug 371576</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script src='data:text/javascript,
+  var result = "A";
+  var scrElem= document.createElement("script");
+  scrElem.textContent = "result+=\"B\";$(\"content\").innerHTML=\"--\";result+=\"C\";";
+  $("head").appendChild(scrElem);
+  result += "D";'></script>
+<script>result += "E"</script>
+<script>result += "F"</script>
+<script>is(result, "ABCDEF", "Wrong order of execution");</script>
+</pre>
+</body>
+</html>
