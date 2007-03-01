@@ -85,7 +85,7 @@ window {
 }
 
 #view-tabs {
-    overflow-x: hidden;
+    overflow: hidden;
 }
 
 #views-tbar-spacer {
