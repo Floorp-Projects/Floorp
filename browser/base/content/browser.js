@@ -319,16 +319,9 @@ const gSessionHistoryObserver = {
     var fwdCommand = document.getElementById("Browser:Forward");
     fwdCommand.setAttribute("disabled", "true");
 
-    //Clear undo history of all URL Bars
-    var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-    var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
-    var windows = windowManagerInterface.getEnumerator("navigator:browser");
-    while (windows.hasMoreElements()) {
-      var urlBar = windows.getNext().gURLBar;
-      if (urlBar) {
-        urlBar.editor.enableUndo(false);
-        urlBar.editor.enableUndo(true);
-      }
+    if (gURLBar) {
+      // Clear undo history of the URL bar
+      gURLBar.editor.transactionManager.clear()
     }
   }
 };
