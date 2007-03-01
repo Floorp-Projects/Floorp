@@ -75,6 +75,6 @@
     <em:description>Allows bidirectional access to Google Calendar</em:description>
     <em:creator>Philipp Kewisch</em:creator>
     <em:homepageURL>http://mozilla.kewis.ch/</em:homepageURL>
-    <em:iconURL>chrome://gdata-provider/content/calendar.png</em:iconURL>
+    <em:iconURL>chrome://gdata-provider/content/gcal.png</em:iconURL>
   </description>
 </RDF>
