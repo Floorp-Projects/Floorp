@@ -102,7 +102,7 @@ function initMunger()
                    /(?:\s|\W|^)(bug\s+(?:#?\d+|#[^\s,]{1,20}))/i,
                    insertBugzillaLink, NORMAL_PRIORITY, NORMAL_PRIORITY);
     munger.addRule("channel-link",
-                /(?:\s|\W|^)[@+]?(#[^<>\[\](){}\"\s\u201d]*[^:,.<>\[\](){}\'\"\s\u201d])/i,
+                /(?:\s|\W|^)[@%+]?(#[^<>,\[\](){}\"\s\u201d]*[^:,.<>\[\](){}\'\"\s\u201d])/i,
                    insertChannelLink, NORMAL_PRIORITY, NORMAL_PRIORITY);
     munger.addRule("talkback-link", /(?:\W|^)(TB\d{8,}[A-Z]?)(?:\W|$)/,
                    insertTalkbackLink, NORMAL_PRIORITY, NORMAL_PRIORITY);
