@@ -324,7 +324,6 @@ nsresult nsRootAccessible::AddEventListeners()
   GetChromeEventHandler(getter_AddRefs(target));
   if (target) {
     target->AddEventListener(NS_LITERAL_STRING("pagehide"), this, PR_TRUE);
-    target->AddEventListener(NS_LITERAL_STRING("unload"), this, PR_TRUE);
   }
 
   if (!mCaretAccessible) {
@@ -361,7 +360,6 @@ nsresult nsRootAccessible::RemoveEventListeners()
   GetChromeEventHandler(getter_AddRefs(target));
   if (target) {
     target->RemoveEventListener(NS_LITERAL_STRING("pagehide"), this, PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("unload"), this, PR_TRUE);
   }
 
   if (mCaretAccessible) {
@@ -593,8 +591,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   nsIAccessibilityService *accService = GetAccService();
   NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
 
-  if (eventType.LowerCaseEqualsLiteral("pagehide") ||
-      eventType.LowerCaseEqualsLiteral("unload")) {
+  if (eventType.LowerCaseEqualsLiteral("pagehide")) {
     // pagehide event can be fired under several conditions, such as HTML
     // document going away, closing a window/dialog, and wizard page changing.
     // We only destroy the accessible object when it's a document accessible,

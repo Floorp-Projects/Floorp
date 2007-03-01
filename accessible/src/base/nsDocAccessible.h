@@ -52,6 +52,7 @@
 #include "nsITimer.h"
 #include "nsIWeakReference.h"
 #include "nsCOMArray.h"
+#include "nsIDocShellTreeNode.h"
 
 class nsIScrollableView;
 
@@ -102,6 +103,7 @@ class nsDocAccessible : public nsHyperTextAccessible,
     // Non-virtual
     nsresult FireDelayedToolkitEvent(PRUint32 aEvent, nsIDOMNode *aDOMNode,
                                      void *aData, PRBool aAllowDupes = PR_FALSE);
+    void ShutdownChildDocuments(nsIDocShellTreeItem *aStart);
 
   protected:
     virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
