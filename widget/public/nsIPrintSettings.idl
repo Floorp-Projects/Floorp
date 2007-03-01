@@ -156,6 +156,13 @@ interface nsIPrintSettings : nsISupports
   const short kFrameEnableAsIsAndEach = 2;
 
   /**
+   * Output file format
+   */
+  const short kOutputFormatNative = 0;
+  const short kOutputFormatPS     = 1;
+  const short kOutputFormatPDF    = 2;
+
+  /**
    * Set PrintOptions 
    */
   void SetPrintOptions(in PRInt32 aType, in PRBool aTurnOnOff);
@@ -251,6 +258,7 @@ interface nsIPrintSettings : nsISupports
 
   attribute boolean printToFile;
   attribute wstring toFileName;
+  attribute short   outputFormat;
 
   attribute long    printPageDelay; /* in milliseconds */
   

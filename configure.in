@@ -7249,6 +7249,7 @@ if test "$MOZ_SVG" -o "$MOZ_ENABLE_CANVAS" -o "$MOZ_ENABLE_CAIRO_GFX" ; then
        if test "$MOZ_WIDGET_TOOLKIT" = "windows"; then
            WIN32_SURFACE_FEATURE="#define CAIRO_HAS_WIN32_SURFACE 1"
            WIN32_FONT_FEATURE="#define CAIRO_HAS_WIN32_FONT 1"
+           PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
        fi
        if test "$MOZ_WIDGET_TOOLKIT" = "os2"; then
            OS2_SURFACE_FEATURE="#define CAIRO_HAS_OS2_SURFACE 1"

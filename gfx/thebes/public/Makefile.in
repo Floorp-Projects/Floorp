@@ -36,6 +36,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 EXPORTS	+=	gfxWindowsFonts.h \
 		gfxWindowsPlatform.h \
 		gfxWindowsSurface.h
+EXPORTS +=	gfxPDFSurface.h
 
 ifdef MOZ_ENABLE_GLITZ
 REQUIRES += glitzwgl

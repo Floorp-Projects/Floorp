@@ -51,9 +51,11 @@
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
 #ifdef MOZ_CAIRO_GFX
+#include "gfxPDFSurface.h"
 #include "gfxWindowsSurface.h"
 #endif
 
+#include "nsIFileStreams.h"
 #include "nsUnitConversion.h"
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindow.h"
@@ -517,19 +519,49 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
 {
   NS_ASSERTION(mDevMode, "DevMode can't be NULL here");
 
-  if (mDevMode) {
-    HDC dc = ::CreateDC(mDriverName, mDeviceName, NULL, mDevMode);
+  nsRefPtr<gfxASurface> newSurface;
 
-    // have this surface take over ownership of this DC
-    nsRefPtr<gfxASurface> newSurface = new gfxWindowsSurface(dc, PR_TRUE);
+  PRInt16 outputFormat;
+  mPrintSettings->GetOutputFormat(&outputFormat);
+
+  if (outputFormat == nsIPrintSettings::kOutputFormatPDF) {
+    nsXPIDLString filename;
+    mPrintSettings->GetToFileName(getter_Copies(filename));
+
+    PRInt32 width, height;
+    mPrintSettings->GetPageSizeInTwips(&width, &height);
+    double w, h;
+    // convert twips to points
+    w = width/20;
+    h = height/20;
+
+    nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1");
+    nsresult rv = file->InitWithPath(filename);
+    if (NS_FAILED(rv))
+      return rv;
+
+    nsCOMPtr<nsIFileOutputStream> stream = do_CreateInstance("@mozilla.org/network/file-output-stream;1");
+    rv = stream->Init(file, -1, -1, 0);
+    if (NS_FAILED(rv))
+      return rv;
+
+    newSurface = new gfxPDFSurface(stream, gfxSize(w, h));
+  } else {
+    if (mDevMode) {
+      HDC dc = ::CreateDC(mDriverName, mDeviceName, NULL, mDevMode);
+
+      // have this surface take over ownership of this DC
+      newSurface = new gfxWindowsSurface(dc, PR_TRUE);
+    }
+  }
+
+  if (newSurface) {
     *surface = newSurface;
     NS_ADDREF(*surface);
-
     return NS_OK;
   }
 
   *surface = nsnull;
-
   return NS_ERROR_FAILURE;
 }
 

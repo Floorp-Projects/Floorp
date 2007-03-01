@@ -71,6 +71,9 @@
 
 #include "nsPrintJobFactoryGTK.h"
 
+#include "nsIFileStreams.h"
+#include "nsILocalFile.h"
+
 /* Ensure that the result is always equal to either PR_TRUE or PR_FALSE */
 #define MAKE_PR_BOOL(val) ((val)?(PR_TRUE):(PR_FALSE))
 
@@ -438,11 +441,21 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
 
   printf("\"%s\", %d, %d\n", path, width, height);
 
+  nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1");
+  nsresult rv = file->InitWithPath(NS_ConvertUTF8toUTF16(filename));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIFileOutputStream> stream = do_CreateInstance("@mozilla.org/network/file-output-stream;1");
+  rv = stream->Init(file, -1, -1, 0);
+  if (NS_FAILED(rv))
+    return rv;
+
   nsPrintJobFactoryGTK::CreatePrintJob((this), mPrintJob);
 #ifdef USE_PDF
-  gfxPDFSurface *surface = new gfxPDFSurface(path, gfxSize(w, h));
+  gfxPDFSurface *surface = new gfxPDFSurface(stream, gfxSize(w, h));
 #else
-  gfxPSSurface *surface = new gfxPSSurface(path, gfxSize(w, h));
+  gfxPSSurface *surface = new gfxPSSurface(stream, gfxSize(w, h));
 #endif
 //  surface->SetDPI(600, 600);
   
