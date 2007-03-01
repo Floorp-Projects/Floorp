@@ -18,6 +18,7 @@ REQUIRES = \
 	pref \
 	xpcom \
 	unicharutil \
+	gfx \
 	$(NULL)
 
 CPPSRCS	= \
