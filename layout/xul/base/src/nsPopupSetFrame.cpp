@@ -538,6 +538,7 @@ nsPopupSetFrame::OpenPopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
   nsWeakFrame weakFrame(this);
   nsIFrame* activeChild = aEntry->mPopupFrame;
   nsWeakFrame weakPopupFrame(activeChild);
+  nsRefPtr<nsPresContext> presContext = GetPresContext();
   nsCOMPtr<nsIContent> popupContent = aEntry->mPopupContent;
   PRBool createHandlerSucceeded = aEntry->mCreateHandlerSucceeded;
   nsAutoString popupType = aEntry->mPopupType;
@@ -564,7 +565,7 @@ nsPopupSetFrame::OpenPopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
     }
   }
   else {
-    if (createHandlerSucceeded && !OnDestroy(aEntry->mPopupContent))
+    if (createHandlerSucceeded && !OnDestroy(popupContent))
       return;
 
     // Unregister, but not if we're a tooltip
@@ -579,11 +580,10 @@ nsPopupSetFrame::OpenPopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
     if (childPopup)
       childPopup->RemoveKeyboardNavigator();
 
-    nsRefPtr<nsPresContext> presContext = GetPresContext();
-    nsCOMPtr<nsIContent> content = aEntry->mPopupContent;
-    ActivatePopup(aEntry, PR_FALSE);
+    if (weakPopupFrame.IsAlive())
+      ActivatePopup(aEntry, PR_FALSE);
 
-    OnDestroyed(presContext, content);
+    OnDestroyed(presContext, popupContent);
   }
 
   if (weakFrame.IsAlive()) {
@@ -742,11 +742,10 @@ nsPopupSetFrame::OnDestroy(nsIContent* aPopupContent)
                      nsMouseEvent::eReal);
 
   if (aPopupContent) {
-    nsIPresShell *shell = GetPresContext()->GetPresShell();
+    nsCOMPtr<nsIPresShell> shell = GetPresContext()->GetPresShell();
     if (shell) {
       nsresult rv = shell->HandleDOMEventWithTarget(aPopupContent, &event,
                                                     &status);
-      // shell may no longer be alive, don't use it here unless you keep a ref
       if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
         return PR_FALSE;
     }
@@ -763,11 +762,10 @@ nsPopupSetFrame::OnDestroyed(nsPresContext* aPresContext,
                      nsMouseEvent::eReal);
 
   if (aPopupContent && aPresContext) {
-    nsIPresShell *shell = aPresContext->GetPresShell();
+    nsCOMPtr<nsIPresShell> shell = aPresContext->GetPresShell();
     if (shell) {
       nsresult rv = shell->HandleDOMEventWithTarget(aPopupContent, &event,
                                                     &status);
-      // shell may no longer be alive, don't use it here unless you keep a ref
       if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
         return PR_FALSE;
     }
