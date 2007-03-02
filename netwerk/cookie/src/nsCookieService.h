@@ -175,8 +175,7 @@ class nsCookieService : public nsICookieServiceInternal
     void                          PrefChanged(nsIPrefBranch *aPrefBranch);
     nsresult                      Read();
     nsresult                      Write();
-    void                          GetCookieList(nsIURI *aHostURI, nsIURI *aFirstURI, nsIChannel *aChannel, const nsACString *aName, PRBool isHttpBound, nsAutoVoidArray &aResult);
-    char*                         CookieStringFromArray(const nsAutoVoidArray& aCookieList, nsIURI *aHostURI);
+    void                          GetCookieList(nsIURI *aHostURI, nsIURI *aFirstURI, nsIChannel *aChannel, const nsACString *aName, nsAutoVoidArray &aResult);
     PRBool                        SetCookieInternal(nsIURI *aHostURI, nsIChannel *aChannel, nsDependentCString &aCookieHeader, nsInt64 aServerTime, nsCookieStatus aStatus, nsCookiePolicy aPolicy);
     void                          CheckAndAdd(nsIURI *aHostURI, nsIChannel *aChannel, nsCookieAttributes &aAttributes, nsCookieStatus aStatus, nsCookiePolicy aPolicy, const nsAFlatCString &aCookieHeader);
     void                          AddInternal(nsCookie *aCookie, nsInt64 aCurrentTime, nsIURI *aHostURI, const char *aCookieHeader);
