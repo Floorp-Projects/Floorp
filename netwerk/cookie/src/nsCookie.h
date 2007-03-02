@@ -80,7 +80,6 @@ class nsCookie : public nsICookie2
              PRUint32        aCreationTime,
              PRBool          aIsSession,
              PRBool          aIsSecure,
-             PRBool          aIsHttpOnly,
              nsCookieStatus  aStatus,
              nsCookiePolicy  aPolicy)
      : mNext(nsnull)
@@ -95,7 +94,6 @@ class nsCookie : public nsICookie2
      , mRefCnt(0)
      , mIsSession(aIsSession != PR_FALSE)
      , mIsSecure(aIsSecure != PR_FALSE)
-     , mIsHttpOnly(aIsHttpOnly != PR_FALSE)
      , mStatus(aStatus)
      , mPolicy(aPolicy)
     {
@@ -112,7 +110,6 @@ class nsCookie : public nsICookie2
                              nsInt64           aLastAccessed,
                              PRBool            aIsSession,
                              PRBool            aIsSecure,
-                             PRBool            aIsHttpOnly,
                              nsCookieStatus    aStatus,
                              nsCookiePolicy    aPolicy);
 
@@ -130,7 +127,6 @@ class nsCookie : public nsICookie2
     inline PRBool IsSession()               const { return mIsSession; }
     inline PRBool IsDomain()                const { return *mHost == '.'; }
     inline PRBool IsSecure()                const { return mIsSecure; }
-    inline PRBool IsHttpOnly()              const { return mIsHttpOnly; }
     inline nsCookieStatus Status()          const { return mStatus; }
     inline nsCookiePolicy Policy()          const { return mPolicy; }
 
@@ -162,7 +158,6 @@ class nsCookie : public nsICookie2
     PRUint32    mRefCnt    : 16;
     PRUint32    mIsSession : 1;
     PRUint32    mIsSecure  : 1;
-    PRUint32    mIsHttpOnly: 1;
     PRUint32    mStatus    : 3;
     PRUint32    mPolicy    : 3;
 };
