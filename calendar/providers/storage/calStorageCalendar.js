@@ -1161,16 +1161,16 @@ calStorageCalendar.prototype = {
                 var tzId;
                 getTzIds = createStatement(this.mDB,
                     "SELECT DISTINCT(zone) FROM ("+
-                        "SELECT recurrence_id_tz AS zone FROM cal_attendees WHERE recurrence_id_tz LIKE '/mozilla.org%' UNION " +
-                        "SELECT recurrence_id_tz AS zone FROM cal_events WHERE recurrence_id_tz LIKE '/mozilla.org%' UNION " +
-                        "SELECT event_start_tz AS zone FROM cal_events WHERE event_start_tz LIKE '/mozilla.org%' UNION " +
-                        "SELECT event_end_tz AS zone FROM cal_events WHERE event_end_tz LIKE '/mozilla.org%' UNION " +
-                        "SELECT alarm_time_tz AS zone FROM cal_events WHERE alarm_time_tz LIKE '/mozilla.org%' UNION " +
+                        "SELECT recurrence_id_tz AS zone FROM cal_attendees  WHERE recurrence_id_tz LIKE '/mozilla.org%' UNION " +
+                        "SELECT recurrence_id_tz AS zone FROM cal_events     WHERE recurrence_id_tz LIKE '/mozilla.org%' UNION " +
+                        "SELECT event_start_tz   AS zone FROM cal_events     WHERE event_start_tz   LIKE '/mozilla.org%' UNION " +
+                        "SELECT event_end_tz     AS zone FROM cal_events     WHERE event_end_tz     LIKE '/mozilla.org%' UNION " +
+                        "SELECT alarm_time_tz    AS zone FROM cal_events     WHERE alarm_time_tz    LIKE '/mozilla.org%' UNION " +
                         "SELECT recurrence_id_tz AS zone FROM cal_properties WHERE recurrence_id_tz LIKE '/mozilla.org%' UNION " +
-                        "SELECT recurrence_id_tz AS zone FROM cal_todos WHERE recurrence_id_tz LIKE '/mozilla.org%' UNION " +
-                        "SELECT todo_entry_tz AS zone FROM cal_todos WHERE todo_entry_tz LIKE '/mozilla.org%' UNION " +
-                        "SELECT todo_due_tz AS zone FROM cal_todos WHERE todo_due_tz LIKE '/mozilla.org%' UNION " +
-                        "SELECT alarm_time_tz AS zone FROM cal_todos WHERE alarm_time_tz LIKE '/mozilla.org%'" +
+                        "SELECT recurrence_id_tz AS zone FROM cal_todos      WHERE recurrence_id_tz LIKE '/mozilla.org%' UNION " +
+                        "SELECT todo_entry_tz    AS zone FROM cal_todos      WHERE todo_entry_tz    LIKE '/mozilla.org%' UNION " +
+                        "SELECT todo_due_tz      AS zone FROM cal_todos      WHERE todo_due_tz      LIKE '/mozilla.org%' UNION " +
+                        "SELECT alarm_time_tz    AS zone FROM cal_todos      WHERE alarm_time_tz    LIKE '/mozilla.org%'" +
                     ");");
 
                 var tzIdsToUpdate = [];
