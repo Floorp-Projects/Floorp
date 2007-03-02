@@ -52,6 +52,8 @@ random-if(MOZ_WIDGET_TOOLKIT=="windows") == 28811-2b.html 28811-2-ref.html # bug
 != 40596-1h.html 40596-1-ref.html
 == 40596-1i.html 40596-1-ref.html
 != 40596-1j.html 40596-1-ref.html
+== 97777-1.html 97777-1-ref.html
+== 97777-2.html 97777-2-ref.html
 == 98223-1.html 98223-1-ref.html
 == 98223-2.html 98223-2-ref.html
 random-if(MOZ_WIDGET_TOOLKIT=="windows") == 142233-1.html 142233-1-ref.html # bug 369040
