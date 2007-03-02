@@ -5603,10 +5603,11 @@ if test -n "${MOZ_JAVAXPCOM}"; then
     JAVA_PATH="$JAVA_HOME/bin:$PATH"
   fi
 
+  AC_PATH_PROG(JAVA, java, :, [$JAVA_PATH])
   AC_PATH_PROG(JAVAC, javac, :, [$JAVA_PATH])
   AC_PATH_PROG(JAR, jar, :, [$JAVA_PATH])
-  if test -z "$JAVAC" || test "$JAVAC" = ":" || test -z "$JAR" || test "$JAR" = ":"; then
-    AC_MSG_ERROR([The programs javac and jar were not found.  Set \$JAVA_HOME to your java sdk directory, use --with-java-bin-path={java-bin-dir}, or reconfigure with --disable-javaxpcom.])
+  if test -z "$JAVA" || test "$JAVA" = ":" || test -z "$JAVAC" || test "$JAVAC" = ":" || test -z "$JAR" || test "$JAR" = ":"; then
+    AC_MSG_ERROR([The programs java, javac and jar were not found.  Set \$JAVA_HOME to your java sdk directory, use --with-java-bin-path={java-bin-dir}, or reconfigure with --disable-javaxpcom.])
   fi
 fi
 
@@ -7714,6 +7715,7 @@ AC_SUBST(NS_PRINTING)
 
 AC_SUBST(MOZ_JAVAXPCOM)
 AC_SUBST(JAVA_INCLUDE_PATH)
+AC_SUBST(JAVA)
 AC_SUBST(JAVAC)
 AC_SUBST(JAR)
 

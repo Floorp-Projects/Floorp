@@ -69,9 +69,8 @@ tier_app_dirs += embedding/tests
 endif
 endif
 
-tier_app_dirs += xulrunner
-
-# This should be built last, after all IDL files in the tree have been processed
 ifdef MOZ_JAVAXPCOM
-tier_app_dirs += extensions/java/xpcom/interfaces
+tier_app_dirs += extensions/java
 endif
+
+tier_app_dirs += xulrunner

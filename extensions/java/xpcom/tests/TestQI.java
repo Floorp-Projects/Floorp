@@ -13,9 +13,8 @@
  *
  * The Original Code is Java XPCOM Bindings.
  *
- * The Initial Developer of the Original Code is
- * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,9 +34,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-import org.mozilla.xpcom.*;
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+
+import org.mozilla.xpcom.Mozilla;
+import org.mozilla.interfaces.nsIFile;
+import org.mozilla.interfaces.nsIFileURL;
+import org.mozilla.interfaces.nsIServiceManager;
+import org.mozilla.interfaces.nsISupports;
+import org.mozilla.interfaces.nsIURI;
+import org.mozilla.interfaces.nsIURL;
 
 
 /**
@@ -50,45 +57,129 @@ import java.util.*;
 
 public class TestQI {
 
-  public static void main(String [] args) throws Exception {
-    System.loadLibrary("javaxpcom");
+	private static File grePath;
 
-    String mozillaPath = System.getProperty("MOZILLA_FIVE_HOME");
-    if (mozillaPath == null) {
-      throw new RuntimeException("MOZILLA_FIVE_HOME system property not set.");
-    }
+	/**
+	 * @param args	0 - full path to XULRunner binary directory
+	 */
+	public static void main(String[] args) {
+		try {
+			checkArgs(args);
+		} catch (IllegalArgumentException e) {
+			System.exit(-1);
+		}
 
-    File localFile = new File(mozillaPath);
-    XPCOM.initXPCOM(localFile, null);
+		Mozilla mozilla = Mozilla.getInstance();
+		mozilla.initialize(grePath);
 
-    FooFile foo = new FooFile();
+		File profile = null;
+		nsIServiceManager servMgr = null;
+		try {
+			profile = createTempProfileDir();
+			LocationProvider locProvider = new LocationProvider(grePath,
+					profile);
+			servMgr = mozilla.initXPCOM(grePath, locProvider);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
 
-    nsIFileURL fileURL = (nsIFileURL) foo.queryInterface(nsIFileURL.NS_IFILEURL_IID);
-    if (fileURL == null) {
-      throw new RuntimeException("Failed to QI to nsIFileURL.");
-    }
+		try {
+			runTest();
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
 
-    nsIURL url = (nsIURL) foo.queryInterface(nsIURL.NS_IURL_IID);
-    if (url == null) {
-      throw new RuntimeException("Failed to QI to nsIURL.");
-    }
+		System.out.println("Test Passed.");
 
-    nsIURI uri = (nsIURI) foo.queryInterface(nsIURI.NS_IURI_IID);
-    if (uri == null) {
-      throw new RuntimeException("Failed to QI to nsIURI.");
-    }
+		// cleanup
+		mozilla.shutdownXPCOM(servMgr);
+		deleteDir(profile);
+	}
 
-    nsISupports supp = (nsISupports) foo.queryInterface(nsISupports.NS_ISUPPORTS_IID);
-    if (supp == null) {
-      throw new RuntimeException("Failed to QI to nsISupports.");
-    }
+	private static void runTest() {
+		FooFile foo = new FooFile();
 
-    XPCOM.shutdownXPCOM(null);
+		nsIFileURL fileURL = (nsIFileURL) foo
+				.queryInterface(nsIFileURL.NS_IFILEURL_IID);
+		if (fileURL == null) {
+			throw new RuntimeException("Failed to QI to nsIFileURL.");
+		}
 
-    System.out.println("Test Passed.");
-  }
+		nsIURL url = (nsIURL) foo.queryInterface(nsIURL.NS_IURL_IID);
+		if (url == null) {
+			throw new RuntimeException("Failed to QI to nsIURL.");
+		}
+
+		nsIURI uri = (nsIURI) foo.queryInterface(nsIURI.NS_IURI_IID);
+		if (uri == null) {
+			throw new RuntimeException("Failed to QI to nsIURI.");
+		}
+
+		nsISupports supp = (nsISupports) foo
+				.queryInterface(nsISupports.NS_ISUPPORTS_IID);
+		if (supp == null) {
+			throw new RuntimeException("Failed to QI to nsISupports.");
+		}
+	}
+
+	private static void checkArgs(String[] args) {
+		if (args.length != 1) {
+			printUsage();
+			throw new IllegalArgumentException();
+		}
+
+		grePath = new File(args[0]);
+		if (!grePath.exists() || !grePath.isDirectory()) {
+			System.err.println("ERROR: given path doesn't exist");
+			printUsage();
+			throw new IllegalArgumentException();
+		}
+	}
+
+	private static void printUsage() {
+		// TODO Auto-generated method stub
+	}
+
+	private static File createTempProfileDir() throws IOException {
+		// Get name of temporary profile directory
+		File profile = File.createTempFile("mozilla-test-", null);
+		profile.delete();
+
+		// On some operating systems (particularly Windows), the previous
+		// temporary profile may not have been deleted. Delete them now.
+		File[] files = profile.getParentFile()
+				.listFiles(new FileFilter() {
+					public boolean accept(File file) {
+						if (file.getName().startsWith("mozilla-test-")) {
+							return true;
+						}
+						return false;
+					}
+				});
+		for (int i = 0; i < files.length; i++) {
+			deleteDir(files[i]);
+		}
+
+		// Create temporary profile directory
+		profile.mkdir();
+
+		return profile;
+	}
+
+	private static void deleteDir(File dir) {
+		File[] files = dir.listFiles();
+		for (int i = 0; i < files.length; i++) {
+			if (files[i].isDirectory()) {
+				deleteDir(files[i]);
+			}
+			files[i].delete();
+		}
+		dir.delete();
+	}	
+
 }
-
 
 /**
  * Dummy class that implements nsIFileUrl.  The inheritance chain for
@@ -105,9 +196,9 @@ public class TestQI {
  */
 class FooFile implements nsIFileURL {
 
-  public nsISupports queryInterface(String aIID) {
-      return XPCOM.queryInterface(this, aIID);
-  }
+	public nsISupports queryInterface(String aIID) {
+		return Mozilla.queryInterface(this, aIID);
+	}
 
 	public nsIFile getFile() {
 		return null;
@@ -247,7 +338,7 @@ class FooFile implements nsIFileURL {
 	public void setPath(String aPath) {
 	}
 
-	public boolean equals(nsIURI other) {
+	public boolean _equals(nsIURI other) {
 		return false;
 	}
 
@@ -255,7 +346,7 @@ class FooFile implements nsIFileURL {
 		return false;
 	}
 
-	public nsIURI clone_() {
+	public nsIURI _clone() {
 		return null;
 	}
 
@@ -275,4 +366,3 @@ class FooFile implements nsIFileURL {
 		return null;
 	}
 }
-

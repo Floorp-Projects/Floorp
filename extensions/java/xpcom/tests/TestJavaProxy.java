@@ -14,7 +14,7 @@
  * The Original Code is Java XPCOM Bindings.
  *
  * The Initial Developer of the Original Code is IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -40,10 +40,10 @@ import java.util.Properties;
 
 import org.mozilla.xpcom.GREVersionRange;
 import org.mozilla.xpcom.Mozilla;
-import org.mozilla.xpcom.nsIFile;
-import org.mozilla.xpcom.nsILocalFile;
-import org.mozilla.xpcom.nsISimpleEnumerator;
-import org.mozilla.xpcom.nsISupports;
+import org.mozilla.interfaces.nsIFile;
+import org.mozilla.interfaces.nsILocalFile;
+import org.mozilla.interfaces.nsISimpleEnumerator;
+import org.mozilla.interfaces.nsISupports;
 
 
 /**

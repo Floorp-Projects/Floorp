@@ -13,9 +13,8 @@
 #
 # The Original Code is Java XPCOM Bindings.
 #
-# The Initial Developer of the Original Code is
-# IBM Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2005
+# The Initial Developer of the Original Code is IBM Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2007
 # IBM Corporation. All Rights Reserved.
 #
 # Contributor(s):
@@ -42,27 +41,42 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= testparams
-LIBRARY_NAME	= testparams
-MOZILLA_INTERNAL_API = 1
+MODULE = test_jxtestparams
 
-IS_COMPONENT = 1
-MODULE_NAME = TestParamsFactory
+# This module makes use of the interfaces from the XPConnect tests.
+# Make sure they have been built.
+DIRS = $(DEPTH)/js/src/xpconnect/tests/idl
 
-REQUIRES	=	xpcom \
-		  			string \
-					$(NULL)
+XPIDLSRCS = \
+	nsIJXTestParams.idl \
+	$(NULL)
 
-CPPSRCS		= \
-		TestParams.cpp \
-		$(NULL)
+EXTRA_COMPONENTS = \
+	nsJXTestParams.js \
+	xpctests.js \
+	$(NULL)
 
-EXTRA_DSO_LDOPTS = \
-                $(LIBS_DIR) \
-                $(XPCOM_LIBS) \
-                $(MOZ_XPCOM_OBSOLETE_LIBS) \
-                $(NSPR_LIBS) \
-                $(NULL)
+JAVA_LIBRARY_NAME = test_jxtestparams
+
+JAVA_SRCS = \
+	TestParams.java \
+	$(NULL)
+
+JAVA_CLASSPATH = \
+	../../interfaces/MozillaInterfaces.jar \
+	../../interfaces/MozillaGlue.jar \
+	$(NULL)
+
+JAVA_SOURCEPATH = $(srcdir)/..	# to pick up LocationProvider.java
 
 include $(topsrcdir)/config/rules.mk
 
+ifeq ($(OS_ARCH),Darwin)
+DIST_BIN = $(PWD)/$(DIST)/XUL.framework/Versions/Current
+else
+DIST_BIN = $(PWD)/$(DIST)/bin
+endif
+
+check::
+	$(CYGWIN_WRAPPER) $(JAVA) -classpath $(_JAVA_CLASSPATH)$(SEP)$(JAVA_LIBRARY) \
+			TestParams $(DIST_BIN)

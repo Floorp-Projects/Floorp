@@ -13,9 +13,8 @@
  *
  * The Original Code is Java XPCOM Bindings.
  *
- * The Initial Developer of the Original Code is
- * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,9 +34,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-import org.mozilla.xpcom.*;
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.util.NoSuchElementException;
+import java.util.Vector;
+
+import org.mozilla.xpcom.Mozilla;
+import org.mozilla.interfaces.nsIComponentManager;
+import org.mozilla.interfaces.nsILocalFile;
+import org.mozilla.interfaces.nsIProperties;
+import org.mozilla.interfaces.nsIServiceManager;
 
 
 /**
@@ -47,83 +54,174 @@ import java.util.*;
  */
 
 public class TestProps {
-  public static final String NS_PROPERTIES_CONTRACTID = "@mozilla.org/properties;1";
 
-  public static void main(String [] args) throws Exception {
-    System.loadLibrary("javaxpcom");
+	public static final String NS_PROPERTIES_CONTRACTID =
+			"@mozilla.org/properties;1";
 
-    String mozillaPath = System.getProperty("MOZILLA_FIVE_HOME");
-    if (mozillaPath == null) {
-      throw new RuntimeException("MOZILLA_FIVE_HOME system property not set.");
-    }
+	private static File grePath;
 
-    File localFile = new File(mozillaPath);
-    XPCOM.initXPCOM(localFile, null);
-    // XPCOM.initXPCOM() only initializes XPCOM.  If you want to initialize
-    // Gecko, you would do the following instead:
-    //    GeckoEmbed.initEmbedding(localFile, null);
+	/**
+	 * @param args	0 - full path to XULRunner binary directory
+	 */
+	public static void main(String[] args) {
+		try {
+			checkArgs(args);
+		} catch (IllegalArgumentException e) {
+			System.exit(-1);
+		}
 
-    nsIComponentManager componentManager = XPCOM.getComponentManager();
-    nsIProperties props = (nsIProperties)
-      componentManager.createInstanceByContractID(NS_PROPERTIES_CONTRACTID, null,
-                                                  nsIProperties.NS_IPROPERTIES_IID);
-    if (props == null) {
-      throw new RuntimeException("Failed to create nsIProperties.");
-    }
+		Mozilla mozilla = Mozilla.getInstance();
+		mozilla.initialize(grePath);
 
-    // create the nsISupports objects we will use
-    nsILocalFile localFile1 = XPCOM.newLocalFile("/user/local/share", false);
-    nsILocalFile localFile2 = XPCOM.newLocalFile("/home/foo", false);
-    nsILocalFile localFile3 = XPCOM.newLocalFile("/home/foo/bar", false);
+		File profile = null;
+		nsIServiceManager servMgr = null;
+		try {
+			profile = createTempProfileDir();
+			LocationProvider locProvider = new LocationProvider(grePath,
+					profile);
+			servMgr = mozilla.initXPCOM(grePath, locProvider);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
 
-    // set the properties and associate with the created objects
-    props.set("File One", localFile1);
-    props.set("File Two", localFile2);
-    props.set("File One Repeated", localFile1);
-    props.set("File Three", localFile3);
+		try {
+			runTest();
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
 
-    // test the "has" method
-    boolean hasProp = props.has("File One");
-    if (hasProp == false)
-      throw new NoSuchElementException("Could not find property 'File One'.");
-    hasProp = props.has("File One Repeated");
-    if (hasProp == false)
-      throw new NoSuchElementException("Could not find property 'File One Repeated'.");
-    hasProp = props.has("Nonexistant Property");
-    if (hasProp == true)
-      throw new Exception("Found property that doesn't exist.");
+		System.out.println("Test Passed.");
 
-    // test the "get" method
-    nsILocalFile tempLocalFile = (nsILocalFile) props.get("File One Repeated",
-                                                          nsILocalFile.NS_ILOCALFILE_IID);
-    if (tempLocalFile == null)
-      throw new NoSuchElementException("Property 'File One Repeated' not found.");
-    if (tempLocalFile != localFile1)
-      throw new Exception("Object returned by 'get' not the same as object passed to 'set'.");
+		// cleanup
+		mozilla.shutdownXPCOM(servMgr);
+		deleteDir(profile);
+	}
 
-    // test the "undefine" method
-    hasProp = props.has("File Two");
-    if (hasProp == false)
-      throw new NoSuchElementException();
-    props.undefine("File Two");
-    hasProp = props.has("File Two");
-    if (hasProp == true)
-      throw new NoSuchElementException();
+	private static void checkArgs(String[] args) {
+		if (args.length != 1) {
+			printUsage();
+			throw new IllegalArgumentException();
+		}
 
-    // test the "getKeys" method
-    long[] count = new long[1];
-    String[] keys = props.getKeys(count);
-    if (keys == null || keys.length != 3) {
-      System.out.println("getKeys returned incorrect array.");
-    }
-    for (int i = 0; i < keys.length; i++) {
-      System.out.println("key " + i + ": " + keys[i]);
-    }
+		grePath = new File(args[0]);
+		if (!grePath.exists() || !grePath.isDirectory()) {
+			System.err.println("ERROR: given path doesn't exist");
+			printUsage();
+			throw new IllegalArgumentException();
+		}
+	}
 
-    XPCOM.shutdownXPCOM(null);
-    //    GeckoEmbed.termEmbedding();
+	private static void printUsage() {
+		// TODO Auto-generated method stub
+	}
 
-    System.out.println("Test Passed.");
-  }
+	private static File createTempProfileDir() throws IOException {
+		// Get name of temporary profile directory
+		File profile = File.createTempFile("mozilla-test-", null);
+		profile.delete();
+
+		// On some operating systems (particularly Windows), the previous
+		// temporary profile may not have been deleted. Delete them now.
+		File[] files = profile.getParentFile()
+				.listFiles(new FileFilter() {
+					public boolean accept(File file) {
+						if (file.getName().startsWith("mozilla-test-")) {
+							return true;
+						}
+						return false;
+					}
+				});
+		for (int i = 0; i < files.length; i++) {
+			deleteDir(files[i]);
+		}
+
+		// Create temporary profile directory
+		profile.mkdir();
+
+		return profile;
+	}
+
+	private static void deleteDir(File dir) {
+		File[] files = dir.listFiles();
+		for (int i = 0; i < files.length; i++) {
+			if (files[i].isDirectory()) {
+				deleteDir(files[i]);
+			}
+			files[i].delete();
+		}
+		dir.delete();
+	}	
+
+	private static void runTest() throws Exception {
+		Mozilla mozilla = Mozilla.getInstance();
+		nsIComponentManager componentManager = mozilla.getComponentManager();
+		nsIProperties props = (nsIProperties) componentManager
+				.createInstanceByContractID(NS_PROPERTIES_CONTRACTID, null,
+						nsIProperties.NS_IPROPERTIES_IID);
+		if (props == null) {
+			throw new RuntimeException("Failed to create nsIProperties.");
+		}
+
+		// create the nsISupports objects we will use
+		nsILocalFile localFile1 = mozilla.newLocalFile("/user/local/share",
+				false);
+		nsILocalFile localFile2 = mozilla.newLocalFile("/home/foo", false);
+		nsILocalFile localFile3 = mozilla.newLocalFile("/home/foo/bar", false);
+
+		// set the properties and associate with the created objects
+		props.set("File One", localFile1);
+		props.set("File Two", localFile2);
+		props.set("File One Repeated", localFile1);
+		props.set("File Three", localFile3);
+
+		// test the "has" method
+		boolean hasProp = props.has("File One");
+		if (hasProp == false)
+			throw new NoSuchElementException("Could not find property " +
+					"'File One'.");
+		hasProp = props.has("File One Repeated");
+		if (hasProp == false)
+			throw new NoSuchElementException("Could not find property " +
+					"'File One Repeated'.");
+		hasProp = props.has("Nonexistant Property");
+		if (hasProp == true)
+			throw new Exception("Found property that doesn't exist.");
+
+		// test the "get" method
+		nsILocalFile tempLocalFile = (nsILocalFile) props
+				.get("File One Repeated", nsILocalFile.NS_ILOCALFILE_IID);
+		if (tempLocalFile == null)
+			throw new NoSuchElementException("Property 'File One Repeated' " +
+					"not found.");
+		if (tempLocalFile != localFile1)
+			throw new Exception("Object returned by 'get' not the same as " +
+					"object passed to 'set'.");
+
+		// test the "undefine" method
+		hasProp = props.has("File Two");
+		if (hasProp == false)
+			throw new NoSuchElementException();
+		props.undefine("File Two");
+		hasProp = props.has("File Two");
+		if (hasProp == true)
+			throw new NoSuchElementException();
+
+		// test the "getKeys" method
+		long[] count = new long[1];
+		String[] propKeys = props.getKeys(count);
+		if (propKeys == null || propKeys.length != 3) {
+			System.out.println("getKeys returned incorrect array.");
+		}
+		Vector activeKeys = new Vector(3);
+		activeKeys.add("File One");
+		activeKeys.add("File One Repeated");
+		activeKeys.add("File Three");
+		for (int i = 0; i < propKeys.length; i++) {
+			if (!activeKeys.remove(propKeys[i])) {
+				throw new RuntimeException("Found unknown key.");
+			}
+		}
+	}
 }
-

@@ -44,7 +44,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(318d6f6a-5411-11d3-82ef-0060b0eb596f)]
+[scriptable, uuid(a3cab49d-ae83-4e63-a735-009b9a759204)]
 interface nsIXPCTestIn : nsISupports {
 	long    EchoLong( in long l);
 	short   EchoShort( in short a );
@@ -57,7 +57,7 @@ interface nsIXPCTestIn : nsISupports {
 	float  EchoFloat( in float f );
 	double EchoDouble( in double d );
 	wchar  EchoWchar ( in wchar wc );
-	string EchoString( in wstring ws );
+	wstring EchoString( in wstring ws );
 
 	PRBool  EchoPRBool( in PRBool b );
 	PRInt32 EchoPRInt32( in PRInt32 l );
