@@ -56,7 +56,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsServiceManagerUtils.h"
-#include "nsUnitConversion.h"
+#include "nsMathUtils.h"
 
 #include "nsVoidArray.h"
 #include "nsPromiseFlatString.h"
@@ -93,7 +93,6 @@
 #include <math.h>
 
 #define FLOAT_PANGO_SCALE ((gfxFloat)PANGO_SCALE)
-#define NSToCoordRound(x) (floor((x) + 0.5))
 
 static PangoLanguage *GetPangoLanguage(const nsACString& aLangGroup);
 static void GetMozLanguage(const PangoLanguage *aLang, nsACString &aMozLang);
@@ -351,7 +350,7 @@ gfxPangoFont::RealizeFont(PRBool force)
     GetSize("x", 1, isz, lsz);
     gfxFloat aspect = isz.height / mStyle->size;
     mAdjustedSize =
-        PR_MAX(NSToCoordRound(mStyle->size*(mStyle->sizeAdjust/aspect)), 1.0f);
+        PR_MAX(NS_round(mStyle->size*(mStyle->sizeAdjust/aspect)), 1.0);
     RealizeFont(PR_TRUE);
 }
 
@@ -1163,8 +1162,8 @@ gfxPangoTextRun::Draw(gfxContext *aContext, gfxPoint aPt,
     CompressedGlyph *charGlyphs = mCharacterGlyphs;
     gfxFloat direction = GetDirection();
 
-    gfxPoint pt(NSToCoordRound(aPt.x*appUnitsToPixels),
-                NSToCoordRound(aPt.y*appUnitsToPixels));
+    gfxPoint pt(NS_round(aPt.x*appUnitsToPixels),
+                NS_round(aPt.y*appUnitsToPixels));
     gfxFloat startX = pt.x;
 
     GlyphRunIterator iter(this, aStart, aLength);
@@ -1210,8 +1209,8 @@ gfxPangoTextRun::DrawToPath(gfxContext *aContext, gfxPoint aPt,
     CompressedGlyph *charGlyphs = mCharacterGlyphs;
     gfxFloat direction = GetDirection();
 
-    gfxPoint pt(NSToCoordRound(aPt.x*appUnitsToPixels),
-                NSToCoordRound(aPt.y*appUnitsToPixels));
+    gfxPoint pt(NS_round(aPt.x*appUnitsToPixels),
+                NS_round(aPt.y*appUnitsToPixels));
     gfxFloat startX = pt.x;
 
     GlyphRunIterator iter(this, aStart, aLength);
@@ -1284,9 +1283,9 @@ gfxPangoFont::Measure(gfxPangoTextRun *aTextRun,
         if (aSpacing) {
             gfxTextRun::PropertyProvider::Spacing *space = &aSpacing[i];
             leftSpacePango =
-                NSToIntRound((isRTL ? space->mAfter : space->mBefore)*appUnitsToPango);
+                NS_lround((isRTL ? space->mAfter : space->mBefore)*appUnitsToPango);
             rightSpacePango =
-                NSToIntRound((isRTL ? space->mBefore : space->mAfter)*appUnitsToPango);
+                NS_lround((isRTL ? space->mBefore : space->mAfter)*appUnitsToPango);
         }
         const gfxPangoTextRun::CompressedGlyph *glyphData = &charGlyphs[i];
         if (glyphData->IsSimpleGlyph()) {
@@ -1308,14 +1307,14 @@ gfxPangoFont::Measure(gfxPangoTextRun *aTextRun,
                     return gfxTextRun::Metrics();
                 glyphInfo->attr.is_cluster_start = 0;
                 glyphInfo->glyph = details->mGlyphID;
-                glyphInfo->geometry.width = NSToIntRound(details->mAdvance*PANGO_SCALE);
-                glyphInfo->geometry.x_offset = NSToIntRound(details->mXOffset*PANGO_SCALE);
+                glyphInfo->geometry.width = NS_lround(details->mAdvance*PANGO_SCALE);
+                glyphInfo->geometry.x_offset = NS_lround(details->mXOffset*PANGO_SCALE);
                 if (firstGlyph) {
                     glyphInfo->geometry.width += leftSpacePango;
                     glyphInfo->geometry.x_offset += leftSpacePango;
                     firstGlyph = PR_FALSE;
                 }
-                glyphInfo->geometry.y_offset = NSToIntRound(details->mYOffset*PANGO_SCALE);
+                glyphInfo->geometry.y_offset = NS_lround(details->mYOffset*PANGO_SCALE);
                 if (details->mIsLastGlyph) {
                     glyphInfo->geometry.width += rightSpacePango;
                     break;
@@ -2159,7 +2158,7 @@ public:
     {
         for (PRUint32 i = 0; i < mGroup->FontListLength(); ++i)
             mFonts.AppendElement(mGroup->GetFontAt(i));
-        mSpaceWidth = NSToIntRound(mGroup->GetFontAt(0)->GetMetrics().spaceWidth * FLOAT_PANGO_SCALE);
+        mSpaceWidth = NS_lround(mGroup->GetFontAt(0)->GetMetrics().spaceWidth * FLOAT_PANGO_SCALE);
     }
     
     void Run()

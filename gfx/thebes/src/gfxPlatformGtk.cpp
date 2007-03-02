@@ -63,7 +63,7 @@
 
 #include <pango/pango-font.h>
 
-#include "nsUnitConversion.h"
+#include "nsMathUtils.h"
 
 PRInt32 gfxPlatformGtk::sDPI = -1;
 gfxFontconfigUtils *gfxPlatformGtk::sFontconfigUtils = nsnull;
@@ -255,7 +255,7 @@ GetXftDPI()
     double d = strtod(val, &e);
 
     if (e != val)
-      return NSToCoordRound(d);
+      return NS_lround(d);
   }
 
   return -1;
@@ -319,7 +319,7 @@ GetDPIFromPangoFont()
     if (ctx)
         g_object_unref(ctx);
 
-    return NSToCoordRound(dblDPI);
+    return NS_lround(dblDPI);
 }
 
 /* static */
