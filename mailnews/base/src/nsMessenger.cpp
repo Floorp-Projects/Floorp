@@ -832,30 +832,29 @@ NS_IMETHODIMP
 nsMessenger::SaveAttachmentToFolder(const char * contentType, const char * url, const char * displayName, 
                                     const char * messageUri, nsILocalFile * aDestFolder, nsILocalFile ** aOutFile)
 {
-  nsresult rv = NS_OK;
+  NS_ENSURE_ARG_POINTER(aDestFolder);
+  nsresult rv;
+
+  nsCOMPtr<nsIFile> clone;
+  rv = aDestFolder->Clone(getter_AddRefs(clone));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsILocalFile> attachmentDestination = do_QueryInterface(clone);
+
   nsXPIDLCString unescapedFileName;
-  
   rv = ConvertAndSanitizeFileName(displayName, nsnull, getter_Copies(unescapedFileName));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIFileSpec> fileSpec;
-
-  rv = NS_NewFileSpecFromIFile(aDestFolder, getter_AddRefs(fileSpec));
+  rv = attachmentDestination->AppendNative(unescapedFileName);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  fileSpec->SetLeafName(unescapedFileName);
+  nsCOMPtr<nsIFileSpec> fileSpec;
+  rv = NS_NewFileSpecFromIFile(attachmentDestination, getter_AddRefs(fileSpec));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  // ok now we have a file spec for the destination
   rv = SaveAttachment(fileSpec, url, messageUri, contentType, nsnull);
 
-  // before we return, we need to convert our file spec back to a nsIFile to return to the caller
-  nsCOMPtr<nsILocalFile> outputFile;
-  nsFileSpec actualSpec;
-  fileSpec->GetFileSpec(&actualSpec);
-  NS_FileSpecToIFile(&actualSpec, getter_AddRefs(outputFile));
-
-  NS_IF_ADDREF(*aOutFile = outputFile);
-
+  attachmentDestination.swap(*aOutFile);
   return rv;
 }
 
