@@ -64,7 +64,7 @@ public:
                     nsIRenderingContext& aRenderingContext,
                     PRBool               aPlaceOrigin,
                     nsHTMLReflowMetrics& aDesiredSize,
-                    nsIFrame*            aForFrame,
+                    nsMathMLContainerFrame* aForFrame,
                     nscoord              aUserSubScriptShift,
                     nscoord              aUserSupScriptShift,
                     nscoord              aScriptSpace);

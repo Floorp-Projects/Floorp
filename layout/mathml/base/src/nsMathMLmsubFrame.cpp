@@ -117,15 +117,10 @@ nsMathMLmsubFrame::PlaceSubScript (nsPresContext*      aPresContext,
                                    nsIRenderingContext& aRenderingContext,
                                    PRBool               aPlaceOrigin,
                                    nsHTMLReflowMetrics& aDesiredSize,
-                                   nsIFrame*            aFrame,
+                                   nsMathMLContainerFrame* aFrame,
                                    nscoord              aUserSubScriptShift,
                                    nscoord              aScriptSpace)
 {
-  // the caller better be a mathml frame
-  nsIMathMLFrame* mathMLFrame;
-  aFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-  if (!mathMLFrame) return NS_ERROR_INVALID_ARG;
-
   // force the scriptSpace to be atleast 1 pixel 
   aScriptSpace = PR_MAX(nsPresContext::CSSPixelsToAppUnits(1), aScriptSpace);
 
@@ -195,7 +190,7 @@ nsMathMLmsubFrame::PlaceSubScript (nsPresContext*      aPresContext,
   boundingMetrics.leftBearing = bmBase.leftBearing;
   boundingMetrics.rightBearing = PR_MAX(bmBase.rightBearing, bmBase.width +
     PR_MAX(bmSubScript.width + aScriptSpace, bmSubScript.rightBearing));
-  mathMLFrame->SetBoundingMetrics (boundingMetrics);
+  aFrame->SetBoundingMetrics (boundingMetrics);
 
   // reflow metrics
   aDesiredSize.ascent = 
@@ -206,7 +201,7 @@ nsMathMLmsubFrame::PlaceSubScript (nsPresContext*      aPresContext,
   aDesiredSize.width = boundingMetrics.width;
   aDesiredSize.mBoundingMetrics = boundingMetrics;
 
-  mathMLFrame->SetReference(nsPoint(0, aDesiredSize.ascent));
+  aFrame->SetReference(nsPoint(0, aDesiredSize.ascent));
 
   if (aPlaceOrigin) {
     nscoord dx, dy;

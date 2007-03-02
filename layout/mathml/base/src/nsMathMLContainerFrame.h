@@ -75,6 +75,7 @@
 
 class nsMathMLContainerFrame : public nsHTMLContainerFrame,
                                public nsMathMLFrame {
+  friend class nsMathMLmfencedFrame;
 public:
   nsMathMLContainerFrame(nsStyleContext* aContext) : nsHTMLContainerFrame(aContext) {}
 
@@ -305,6 +306,13 @@ public:
 
 protected:
   virtual PRIntn GetSkipSides() const { return 0; }
+
+  /**
+   * Call DidReflow() if the NS_FRAME_IN_REFLOW frame bit is set on aFirst and
+   * all its next siblings up to, but not including, aStop.
+   * aStop == nsnull meaning all next siblings with the bit set.
+   */
+  void DidReflowChildren(nsIFrame* aFirst, nsIFrame* aStop = nsnull);
 };
 
 
