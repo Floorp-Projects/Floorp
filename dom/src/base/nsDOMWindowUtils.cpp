@@ -261,8 +261,11 @@ nsDOMWindowUtils::GetWidget()
     if (docShell) {
       nsCOMPtr<nsIPresShell> presShell;
       docShell->GetPresShell(getter_AddRefs(presShell));
-      if (presShell)
-        return presShell->GetRootFrame()->GetWindow();
+      if (presShell) {
+        nsIFrame* frame = presShell->GetRootFrame();
+        if (frame)
+          return frame->GetWindow();
+      }
     }
   }
 
