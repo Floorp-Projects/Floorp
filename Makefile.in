@@ -49,6 +49,7 @@ include $(topsrcdir)/config/config.mk
 default alldep all::
 	$(RM) -rf $(DIST)/sdk
 	$(RM) -rf $(DIST)/include
+	$(RM) -rf _tests
 	$(MAKE) -C config export
 
 TIERS += base
