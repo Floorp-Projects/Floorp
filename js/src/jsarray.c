@@ -1989,14 +1989,19 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
 JSObject *
 js_NewArrayObject(JSContext *cx, jsuint length, jsval *vector)
 {
+    JSTempValueRooter tvr;
     JSObject *obj;
 
     obj = js_NewObject(cx, &js_ArrayClass, NULL, NULL);
     if (!obj)
         return NULL;
-    if (!InitArrayObject(cx, obj, length, vector)) {
-        cx->weakRoots.newborn[GCX_OBJECT] = NULL;
-        return NULL;
-    }
+
+    JS_PUSH_TEMP_ROOT_OBJECT(cx, obj, &tvr);
+    if (!InitArrayObject(cx, obj, length, vector))
+        obj = NULL;
+    JS_POP_TEMP_ROOT(cx, &tvr);
+
+    /* Set/clear newborn root, in case we lost it.  */
+    cx->weakRoots.newborn[GCX_OBJECT] = (JSGCThing *) obj;
     return obj;
 }
