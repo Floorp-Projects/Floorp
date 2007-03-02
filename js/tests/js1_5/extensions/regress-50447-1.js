@@ -125,7 +125,7 @@ function test2()
        is a subdirectory of the directory containing jsDriver.pl
     */
     var expectedLine = 139;
-    var expectedFileName = 'js1_5/Exceptions/regress-50447-1.js';
+    var expectedFileName = 'js1_5/extensions/regress-50447-1.js';
     if (typeof document == "undefined")
     {
         expectedFileName = './' + expectedFileName;
@@ -161,7 +161,7 @@ function test3()
 
     enterFunc ("test3");
 
-    var expectedFileName = 'js1_5/Exceptions/regress-50447-1.js';
+    var expectedFileName = 'js1_5/extensions/regress-50447-1.js';
     if (typeof document == "undefined")
     {
         expectedFileName = './' + expectedFileName;
