@@ -1325,7 +1325,7 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
     aRenderingContext.SetTextRunRTL(PR_FALSE);
     aRenderingContext.GetWidth(ELLIPSIS, ellipsisWidth);
 
-    nscoord width = aTextRect.width;
+    width = maxWidth;
     if (ellipsisWidth > width)
       aText.SetLength(0);
     else if (ellipsisWidth == width)
