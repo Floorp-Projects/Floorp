@@ -17,7 +17,7 @@ unpack_build () {
             cd $dir_name
             ;;
         win32|WINNT_x86-msvc)
-            /usr/local/bin/7za x ../"$pkg_file" > /dev/null
+            7z x ../"$pkg_file" > /dev/null
             if [ -d localized ]
             then
               mkdir bin/
