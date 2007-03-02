@@ -39,47 +39,8 @@
 #ifndef nsDOMScriptObjectHolder_h__
 #define nsDOMScriptObjectHolder_h__
 
-#include "nsIScriptRuntime.h"
+#include "nsIScriptContext.h"
 #include "nsIDOMScriptObjectFactory.h"
-
-class nsIScriptContext;
-
-// Drop a reference to a script object when all you have is the script
-// language ID.
-inline nsresult NS_DropScriptObject(PRUint32 aLangID, void *aThing)
-{
-  nsresult rv;
-  nsCOMPtr<nsIScriptRuntime> scriptRT;
-  NS_DEFINE_CID(cid, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
-
-  nsCOMPtr<nsIDOMScriptObjectFactory> factory = do_GetService(cid, &rv);
-  if (NS_SUCCEEDED(rv))
-    rv = factory->GetScriptRuntimeByID(aLangID, getter_AddRefs(scriptRT));
-  if (NS_SUCCEEDED(rv))
-    rv = scriptRT->DropScriptObject(aThing);
-  if (NS_FAILED(rv))
-    NS_ERROR("Failed to drop the script object");
-  return rv;
-}
-
-// Hold a reference to a script object when all you have is the script
-// language ID, and you need to take a copy of the void script object.
-// Must be matched by an NS_DropScriptObject
-inline nsresult NS_HoldScriptObject(PRUint32 aLangID, void *aThing)
-{
-  nsresult rv;
-  nsCOMPtr<nsIScriptRuntime> scriptRT;
-  NS_DEFINE_CID(cid, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
-
-  nsCOMPtr<nsIDOMScriptObjectFactory> factory = do_GetService(cid, &rv);
-  if (NS_SUCCEEDED(rv))
-    rv = factory->GetScriptRuntimeByID(aLangID, getter_AddRefs(scriptRT));
-  if (NS_SUCCEEDED(rv))
-      rv = scriptRT->HoldScriptObject(aThing);
-  if (NS_FAILED(rv))
-      NS_ERROR("Failed to hold the script object");
-  return rv;
-}
 
 // A thin class used to help with script object memory management.  No virtual
 // functions and a fully inline implementation should keep the cost down.
@@ -90,59 +51,23 @@ public:
   // A constructor that will cause a reference to |ctx| to be stored in
   // the object.  Only use for short-lived object holders.
   nsScriptObjectHolder(nsIScriptContext *ctx, void *aObject = nsnull) :
-      mObject(aObject), mContextOrLangID(NS_REINTERPRET_CAST(PtrBits, ctx)) {
+      mObject(aObject), mContext(ctx) {
     NS_ASSERTION(ctx, "Must provide a valid context");
-    NS_ADDREF(ctx);
-  }
-
-  // A constructor that stores only the integer language ID - freeing the
-  // script object is slower in this case, but is safe for long-lived
-  // object holders.
-  nsScriptObjectHolder(PRUint32 aLangID, void *aObject = nsnull) :
-      mObject(aObject),
-      mContextOrLangID((aLangID << 1) | SOH_HAS_LANGID_BIT) {
-    NS_ASSERTION(aLangID != nsIProgrammingLanguage::UNKNOWN,
-                 "Please supply a valid language ID");
   }
 
   // copy constructor
   nsScriptObjectHolder(const nsScriptObjectHolder& other) :
       mObject(other.mObject),
-      mContextOrLangID(other.mContextOrLangID)
+      mContext(other.mContext)
   {
-    if (mContextOrLangID & SOH_HAS_LANGID_BIT) {
-      if (mObject) {
-        NS_HoldScriptObject(getScriptTypeIDFromBits(), mObject);
-      }
-    } else {
-      // New hold the script object and new reference on the script context.
-      nsIScriptContext *ctx = NS_REINTERPRET_CAST(nsIScriptContext *,
-                                                  mContextOrLangID);
-      NS_ASSERTION(ctx, "Lost context pointer?");
-      NS_ADDREF(ctx);
-      if (mObject)
-        ctx->HoldScriptObject(mObject);
-    }
+    // New hold the script object and new reference on the script context.
+    if (mObject)
+      mContext->HoldScriptObject(mObject);
   }
 
   ~nsScriptObjectHolder() {
-    // If we have a language ID, then we only need to NS_DropScriptObject if
-    // we are holding a script object.
-    // If we have a script context, we must always release our reference to it,
-    // even if we are not holding a script object.
-    if (mContextOrLangID & SOH_HAS_LANGID_BIT) {
-      if (mObject) {
-        NS_DropScriptObject(getScriptTypeIDFromBits(), mObject);
-      }
-    } else {
-      nsIScriptContext *ctx = NS_REINTERPRET_CAST(nsIScriptContext *,
-                                                  mContextOrLangID);
-      NS_ASSERTION(ctx, "Lost context pointer?");
-      if (mObject) {
-        ctx->DropScriptObject(mObject);
-      }
-      NS_IF_RELEASE(ctx);
-    }
+    if (mObject)
+      mContext->DropScriptObject(mObject);
   }
 
   // misc operators
@@ -157,19 +82,11 @@ public:
     return mObject;
   }
 
-  // Drop the script object - but *not* the nsIScriptContext nor the language
-  // ID.
+  // Drop the script object - but *not* the nsIScriptContext.
   nsresult drop() {
     nsresult rv = NS_OK;
     if (mObject) {
-      if (mContextOrLangID & SOH_HAS_LANGID_BIT) {
-        rv = NS_DropScriptObject(getScriptTypeIDFromBits(), mObject);
-      } else {
-        nsIScriptContext *ctx = NS_REINTERPRET_CAST(nsIScriptContext *,
-                                                    mContextOrLangID);
-        NS_ASSERTION(ctx, "Lost ctx pointer!");
-        rv = ctx->DropScriptObject(mObject);
-      }
+      rv = mContext->DropScriptObject(mObject);
       mObject = nsnull;
     }
     return rv;
@@ -181,13 +98,7 @@ public:
     if (NS_FAILED(rv))
       return rv;
     if (object) {
-      if (mContextOrLangID & SOH_HAS_LANGID_BIT) {
-        rv = NS_HoldScriptObject(getScriptTypeIDFromBits(), object);
-      } else {
-        nsIScriptContext *ctx = NS_REINTERPRET_CAST(nsIScriptContext *,
-                                                    mContextOrLangID);
-        rv = ctx->HoldScriptObject(object);
-      }
+      rv = mContext->HoldScriptObject(object);
       // don't store the pointer if we failed to lock it.
       if (NS_SUCCEEDED(rv)) {
         mObject = object;
@@ -205,27 +116,11 @@ public:
   }
   // Get the language ID.
   PRUint32 getScriptTypeID() const {
-    if (mContextOrLangID & SOH_HAS_LANGID_BIT) {
-      return getScriptTypeIDFromBits();
-    }
-    nsIScriptContext *ctx = NS_REINTERPRET_CAST(nsIScriptContext *,
-                                                mContextOrLangID);
-    NS_ASSERTION(ctx, "How did I lose my pointer?");
-    return ctx->GetScriptTypeID();
+    return mContext->GetScriptTypeID();
   }
 protected:
-  PRUint32 getScriptTypeIDFromBits() const {
-    NS_ASSERTION(mContextOrLangID & SOH_HAS_LANGID_BIT, "Not in the bits!");
-    return (mContextOrLangID & ~SOH_HAS_LANGID_BIT) >> 1;
-  }
   void *mObject;
-  // We store either an nsIScriptContext* if this bit is clear,
-  // else the language ID (specifically, ((lang_id << 1) | SOH_HAS_LANGID_BIT)
-  // when set.
-  typedef PRWord PtrBits;
-  enum { SOH_HAS_LANGID_BIT = 0x1 };
-
-  PtrBits mContextOrLangID;
+  nsCOMPtr<nsIScriptContext> mContext;
 };
 
 #endif // nsDOMScriptObjectHolder_h__

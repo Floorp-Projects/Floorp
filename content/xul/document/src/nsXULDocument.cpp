@@ -2916,7 +2916,7 @@ nsXULDocument::ResumeWalk()
                     if (NS_SUCCEEDED(rv) && blocked)
                         return NS_OK;
                 }
-                else if (scriptproto->mScriptObject) {
+                else if (scriptproto->mScriptObject.mObject) {
                     // An inline script
                     rv = ExecuteScript(scriptproto);
                     if (NS_FAILED(rv)) return rv;
@@ -3198,7 +3198,7 @@ nsXULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, PRBool* aBlock)
     // Load a transcluded script
     nsresult rv;
 
-    if (aScriptProto->mScriptObject) {
+    if (aScriptProto->mScriptObject.mObject) {
         rv = ExecuteScript(aScriptProto);
 
         // Ignore return value from execution, and don't block
@@ -3221,14 +3221,14 @@ nsXULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, PRBool* aBlock)
         if (newScriptObject) {
             // The script language for a proto must remain constant - we
             // can't just change it for this unexpected language.
-            if (aScriptProto->mScriptObject.getScriptTypeID() != fetchedLang) {
+            if (aScriptProto->mScriptObject.mLangID != fetchedLang) {
                 NS_ERROR("XUL cache gave me an incorrect script language");
                 return NS_ERROR_UNEXPECTED;
             }
             aScriptProto->mScriptObject.set(newScriptObject);
         }
 
-        if (aScriptProto->mScriptObject) {
+        if (aScriptProto->mScriptObject.mObject) {
             rv = ExecuteScript(aScriptProto);
 
             // Ignore return value from execution, and don't block
@@ -3366,8 +3366,8 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
 
             if (useXULCache && IsChromeURI(mDocumentURI)) {
                 gXULCache->PutScript(scriptProto->mSrcURI,
-                                     scriptProto->mScriptObject.getScriptTypeID(),
-                                     scriptProto->mScriptObject);
+                                     scriptProto->mScriptObject.mLangID,
+                                     scriptProto->mScriptObject.mObject);
             }
 
             if (mIsWritingFastLoad && mCurrentPrototype != mMasterPrototype) {
@@ -3387,7 +3387,7 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
 
                 NS_ASSERTION(global != nsnull, "master prototype w/o global?!");
                 if (global) {
-                    PRUint32 stid = scriptProto->mScriptObject.getScriptTypeID();
+                    PRUint32 stid = scriptProto->mScriptObject.mLangID;
                     nsIScriptContext *scriptContext = \
                           global->GetScriptContext(stid);
                     NS_ASSERTION(scriptContext != nsnull,
@@ -3419,7 +3419,7 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
         doc->mNextSrcLoadWaiter = nsnull;
 
         // Execute only if we loaded and compiled successfully, then resume
-        if (NS_SUCCEEDED(aStatus) && scriptProto->mScriptObject) {
+        if (NS_SUCCEEDED(aStatus) && scriptProto->mScriptObject.mObject) {
             doc->ExecuteScript(scriptProto);
         }
         doc->ResumeWalk();
@@ -3456,7 +3456,7 @@ nsXULDocument::ExecuteScript(nsXULPrototypeScript *aScript)
     NS_PRECONDITION(aScript != nsnull, "null ptr");
     NS_ENSURE_TRUE(aScript, NS_ERROR_NULL_POINTER);
     NS_ENSURE_TRUE(mScriptGlobalObject, NS_ERROR_NOT_INITIALIZED);
-    PRUint32 stid = aScript->mScriptObject.getScriptTypeID();
+    PRUint32 stid = aScript->mScriptObject.mLangID;
 
     nsresult rv;
     rv = mScriptGlobalObject->EnsureScriptEnvironment(stid);
@@ -3467,8 +3467,8 @@ nsXULDocument::ExecuteScript(nsXULPrototypeScript *aScript)
     // failure getting a script context is fatal.
     NS_ENSURE_TRUE(context != nsnull, NS_ERROR_UNEXPECTED);
 
-    if (aScript->mScriptObject)
-        rv = ExecuteScript(context, aScript->mScriptObject);
+    if (aScript->mScriptObject.mObject)
+        rv = ExecuteScript(context, aScript->mScriptObject.mObject);
     else
         rv = NS_ERROR_UNEXPECTED;
     return rv;

@@ -52,6 +52,8 @@
 #include "nsDOMClassInfoID.h"
 #include "nsIClassInfo.h"
 #include "nsIDOM3Node.h"
+#include "nsIScriptRuntime.h"
+#include "nsIScriptGlobalObject.h"
 
 class nsIDOMScriptObjectFactory;
 class nsIXPConnect;
@@ -84,7 +86,6 @@ class nsIWordBreaker;
 class nsIJSRuntimeService;
 class nsIEventListenerManager;
 class nsIScriptContext;
-class nsIScriptGlobalObject;
 template<class E> class nsCOMArray;
 class nsIPref;
 class nsVoidArray;
@@ -955,6 +956,32 @@ public:
    */
   static void DestroyAnonymousContent(nsCOMPtr<nsIContent>* aContent);
 
+  static nsresult HoldScriptObject(PRUint32 aLangID, void *aObject);
+  static nsresult DropScriptObject(PRUint32 aLangID, void *aObject);
+
+  class ScriptObjectHolder
+  {
+  public:
+    ScriptObjectHolder(PRUint32 aLangID) : mLangID(aLangID),
+                                           mObject(nsnull)
+    {
+    }
+    ~ScriptObjectHolder()
+    {
+      DropScriptObject(mLangID, mObject);
+    }
+    nsresult set(void *aObject)
+    {
+      nsresult rv = HoldScriptObject(mLangID, aObject);
+      if (NS_SUCCEEDED(rv)) {
+        mObject = aObject;
+      }
+      return rv;
+    }
+    PRUint32 mLangID;
+    void *mObject;
+  };
+
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
                                            JSContext *cx,
@@ -964,6 +991,8 @@ private:
                                            nsIDocument *aNewDocument);
 
   static nsresult EnsureStringBundle(PropertiesFile aFile);
+
+  static nsIDOMScriptObjectFactory *GetDOMScriptObjectFactory();
 
   static nsIDOMScriptObjectFactory *sDOMScriptObjectFactory;
 
@@ -1006,8 +1035,11 @@ private:
   // For now, we don't want to automatically clean this up in Shutdown(), since
   // consumers might unfortunately end up wanting to use it after that
   static nsIJSRuntimeService* sJSRuntimeService;
-  static JSRuntime* sScriptRuntime;
-  static PRInt32 sScriptRootCount;
+  static JSRuntime* sJSScriptRuntime;
+  static PRInt32 sJSScriptRootCount;
+
+  static nsIScriptRuntime* sScriptRuntimes[NS_STID_ARRAY_UBOUND];
+  static PRInt32 sScriptRootCount[NS_STID_ARRAY_UBOUND];
 
 #ifdef IBMBIDI
   static nsIBidiKeyboard* sBidiKeyboard;
