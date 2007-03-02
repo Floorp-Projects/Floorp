@@ -524,7 +524,7 @@
     <content>
       <xul:tree anonid="tree" class="autocomplete-tree plain" hidecolumnpicker="true" flex="1">
         <xul:treecols anonid="treecols">
-          <xul:treecol id="treecolAutoCompleteValue" class="autocomplete-treecol" flex="1"/>
+          <xul:treecol id="treecolAutoCompleteValue" class="autocomplete-treecol" flex="1" overflow="true"/>
         </xul:treecols>
         <xul:treechildren class="autocomplete-treebody"/>
       </xul:tree>
