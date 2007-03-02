@@ -7,3 +7,4 @@ Edit this file and include an explanation of why you're respinning. - #build
 2007-02-02 05:29 - Respinning to build l10n
 2006-02-09 05:37 UTC - Respin to build SUNBIRD_0_3_1_RC1
 2007-02-21 17:48 UTC - Respinning to go back to trunk
+2007-03-02 16:56 UTC - Respin to pick up fix for bug 372366
