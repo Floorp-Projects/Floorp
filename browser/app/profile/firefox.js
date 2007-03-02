@@ -216,12 +216,6 @@ pref("browser.search.log", false);
 // Ordering of Search Engines in the Engine list. 
 pref("browser.search.order.1",                "chrome://browser-region/locale/region.properties");
 pref("browser.search.order.2",                "chrome://browser-region/locale/region.properties");
- 
-pref("browser.search.param.Google.1.default", "chrome://branding/content/searchconfig.properties");
-pref("browser.search.param.Google.1.custom",  "chrome://branding/content/searchconfig.properties");
-pref("browser.search.order.Yahoo.1",          "chrome://branding/content/searchconfig.properties");
-pref("browser.search.order.Yahoo.2",          "chrome://branding/content/searchconfig.properties");
-pref("browser.search.order.Yahoo",            "chrome://branding/content/searchconfig.properties");
 
 // search bar results always open in a new tab
 pref("browser.search.openintab", false);
