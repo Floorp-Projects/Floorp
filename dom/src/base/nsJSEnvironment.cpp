@@ -286,9 +286,9 @@ NS_ScriptErrorReporter(JSContext *cx,
   ::JS_ClearPendingException(cx);
 
   if (context) {
-    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(context->GetGlobalObject()));
+    nsIScriptGlobalObject *globalObject = context->GetGlobalObject();
 
-    if (win) {
+    if (globalObject) {
       nsAutoString fileName, msg;
 
       if (report) {
@@ -313,31 +313,37 @@ NS_ScriptErrorReporter(JSContext *cx,
        * then we'd need to generate a new OOM event for that
        * new OOM instance -- this isn't pretty.
        */
-      nsIDocShell *docShell = win->GetDocShell();
-      if (docShell &&
-          (!report ||
-           (report->errorNumber != JSMSG_OUT_OF_MEMORY &&
-            !JSREPORT_IS_WARNING(report->flags)))) {
-        static PRInt32 errorDepth; // Recursion prevention
-        ++errorDepth;
+      {
+        // Scope to make sure we're not using |win| in the rest of
+        // this function when we should be using |globalObject|.  We
+        // only need |win| for the event dispatch.
+        nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(globalObject));
+        nsIDocShell *docShell = win ? win->GetDocShell() : nsnull;
+        if (docShell &&
+            (!report ||
+             (report->errorNumber != JSMSG_OUT_OF_MEMORY &&
+              !JSREPORT_IS_WARNING(report->flags)))) {
+          static PRInt32 errorDepth; // Recursion prevention
+          ++errorDepth;
 
-        nsCOMPtr<nsPresContext> presContext;
-        docShell->GetPresContext(getter_AddRefs(presContext));
+          nsCOMPtr<nsPresContext> presContext;
+          docShell->GetPresContext(getter_AddRefs(presContext));
 
-        if (presContext && errorDepth < 2) {
-          nsScriptErrorEvent errorevent(PR_TRUE, NS_LOAD_ERROR);
+          if (presContext && errorDepth < 2) {
+            nsScriptErrorEvent errorevent(PR_TRUE, NS_LOAD_ERROR);
 
-          errorevent.fileName = fileName.get();
-          errorevent.errorMsg = msg.get();
-          errorevent.lineNr = report ? report->lineno : 0;
+            errorevent.fileName = fileName.get();
+            errorevent.errorMsg = msg.get();
+            errorevent.lineNr = report ? report->lineno : 0;
 
-          // Dispatch() must be synchronous for the recursion block
-          // (errorDepth) to work.
-          nsEventDispatcher::Dispatch(win, presContext, &errorevent, nsnull,
-                                      &status);
+            // Dispatch() must be synchronous for the recursion block
+            // (errorDepth) to work.
+            nsEventDispatcher::Dispatch(win, presContext, &errorevent, nsnull,
+                                        &status);
+          }
+
+          --errorDepth;
         }
-
-        --errorDepth;
       }
 
       if (status != nsEventStatus_eConsumeNoDefault) {
@@ -351,7 +357,7 @@ NS_ScriptErrorReporter(JSContext *cx,
 
           // Set category to chrome or content
           nsCOMPtr<nsIScriptObjectPrincipal> scriptPrincipal =
-            do_QueryInterface(win);
+            do_QueryInterface(globalObject);
           NS_ASSERTION(scriptPrincipal, "Global objects must implement "
                        "nsIScriptObjectPrincipal");
           nsCOMPtr<nsIPrincipal> systemPrincipal;
