@@ -188,6 +188,7 @@ nsIMEStateManager::IsActive(nsPresContext* aPresContext)
     // This root window is not active.
     return PR_FALSE;
   }
+  NS_ENSURE_TRUE(aPresContext->GetPresShell(), PR_FALSE);
   nsIViewManager* vm = aPresContext->GetViewManager();
   NS_ENSURE_TRUE(vm, PR_FALSE);
   nsCOMPtr<nsIViewObserver> observer;
