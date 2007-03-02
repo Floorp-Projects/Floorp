@@ -161,6 +161,7 @@
 <!ENTITY calendar.search.options.searchfor " contain">
 
 <!ENTITY calendar.menu.numberofweeks.label     "Number of Weeks" >
+<!ENTITY calendar.menu.numberofweeks.accesskey "N" >
 <!ENTITY calendar.menu.numberofweeks.2      "2 Weeks" >
 <!ENTITY calendar.menu.numberofweeks.3      "3 Weeks" >
 <!ENTITY calendar.menu.numberofweeks.4      "4 Weeks" >
