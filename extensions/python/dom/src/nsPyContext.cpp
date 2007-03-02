@@ -109,7 +109,6 @@ NS_IMPL_RELEASE(nsPyObjectHolder)
 
 nsPythonContext::nsPythonContext() :
     mIsInitialized(PR_FALSE),
-    mOwner(nsnull),
     mScriptGlobal(nsnull),
     mScriptsEnabled(PR_TRUE),
     mProcessingScriptTag(PR_FALSE),
