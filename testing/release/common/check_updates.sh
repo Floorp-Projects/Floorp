@@ -10,24 +10,27 @@ check_updates () {
 
   unpack_build $update_platform source "$source_package" 
   if [ "$?" != "0" ]; then
-    echo "FAILED: cannot unpack_build $update_platform source $source_package" |tee /dev/stderr
+    echo "FAILED: cannot unpack_build $update_platform source $source_package"
     return 1
   fi
   unpack_build $update_platform target "$target_package" 
   if [ "$?" != "0" ]; then
-    echo "FAILED: cannot unpack_build $update_platform target $target_package" |tee /dev/stderr
+    echo "FAILED: cannot unpack_build $update_platform target $target_package"
     return 1
   fi
   
   case $update_platform in
       Darwin_ppc-gcc | Darwin_Universal-gcc3) 
           platform_dirname="*.app"
+          updater="Contents/MacOS/updater.app/Contents/MacOS/updater"
           ;;
       WINNT_x86-msvc) 
           platform_dirname="bin"
+          updater="updater.exe"
           ;;
       Linux_x86-gcc | Linux_x86-gcc3) 
           platform_dirname=`echo $product | tr '[A-Z]' '[a-z]'`
+          updater="updater"
           ;;
   esac
 
@@ -36,10 +39,11 @@ check_updates () {
 
   if [ -d source/$platform_dirname ]; then
     cd source/$platform_dirname;
-    $HOME/bin/updater ../../update 0
+    cp $updater ../../update
+    ../../update/updater ../../update 0
     cd ../..
   else
-    echo "FAIL: no dir in source/$platform_dirname" |tee /dev/stderr
+    echo "FAIL: no dir in source/$platform_dirname"
     return 1
   fi
 
