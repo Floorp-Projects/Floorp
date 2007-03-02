@@ -352,7 +352,7 @@ public:
     PRPackedBool             mOutOfLine;
     nsXULDocument*           mSrcLoadWaiters;   // [OWNER] but not COMPtr
     PRUint32                 mLangVersion;
-    nsScriptObjectHolder     mScriptObject;
+    nsContentUtils::ScriptObjectHolder mScriptObject;
 
     static void ReleaseGlobals()
     {

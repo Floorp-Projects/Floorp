@@ -324,7 +324,7 @@ XULContentSinkImpl::ContextStack::GetTopNodeScriptType(PRUint32 *aScriptType)
         case nsXULPrototypeNode::eType_Script: {
             nsXULPrototypeScript *parent = \
                 NS_REINTERPRET_CAST(nsXULPrototypeScript*, node);
-            *aScriptType = parent->mScriptObject.getScriptTypeID();
+            *aScriptType = parent->mScriptObject.mLangID;
             break;
         }
         default: {
@@ -782,7 +782,7 @@ XULContentSinkImpl::HandleEndElement(const PRUnichar *aName)
             NS_STATIC_CAST(nsXULPrototypeScript*, node);
 
         // If given a src= attribute, we must ignore script tag content.
-        if (! script->mSrcURI && ! script->mScriptObject) {
+        if (! script->mSrcURI && ! script->mScriptObject.mObject) {
             nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
 
             script->mOutOfLine = PR_FALSE;

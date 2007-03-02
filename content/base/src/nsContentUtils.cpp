@@ -173,8 +173,10 @@ nsILineBreaker *nsContentUtils::sLineBreaker;
 nsIWordBreaker *nsContentUtils::sWordBreaker;
 nsVoidArray *nsContentUtils::sPtrsToPtrsToRelease;
 nsIJSRuntimeService *nsContentUtils::sJSRuntimeService;
-JSRuntime *nsContentUtils::sScriptRuntime;
-PRInt32 nsContentUtils::sScriptRootCount = 0;
+JSRuntime *nsContentUtils::sJSScriptRuntime;
+PRInt32 nsContentUtils::sJSScriptRootCount = 0;
+nsIScriptRuntime *nsContentUtils::sScriptRuntimes[NS_STID_ARRAY_UBOUND];
+PRInt32 nsContentUtils::sScriptRootCount[NS_STID_ARRAY_UBOUND];
 #ifdef IBMBIDI
 nsIBidiKeyboard *nsContentUtils::sBidiKeyboard = nsnull;
 #endif
@@ -221,12 +223,6 @@ EventListenerManagerHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 
   // Let the EventListenerManagerMapEntry clean itself up...
   lm->~EventListenerManagerMapEntry();
-}
-
-PR_STATIC_CALLBACK(void)
-NopClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
-{
-  // Do nothing
 }
 
 // static
@@ -596,18 +592,9 @@ nsContentUtils::Shutdown()
 nsISupports *
 nsContentUtils::GetClassInfoInstance(nsDOMClassInfoID aID)
 {
-  if (!sDOMScriptObjectFactory) {
-    static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
-                         NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
+  nsIDOMScriptObjectFactory *factory = GetDOMScriptObjectFactory();
 
-    CallGetService(kDOMScriptObjectFactoryCID, &sDOMScriptObjectFactory);
-
-    if (!sDOMScriptObjectFactory) {
-      return nsnull;
-    }
-  }
-
-  return sDOMScriptObjectFactory->GetClassInfoInstance(aID);
+  return factory ? factory->GetClassInfoInstance(aID) : nsnull;
 }
 
 /**
@@ -2544,13 +2531,13 @@ nsContentUtils::GetContentPolicy()
 nsresult
 nsContentUtils::AddJSGCRoot(void* aPtr, const char* aName)
 {
-  if (!sScriptRuntime) {
+  if (!sJSScriptRuntime) {
     nsresult rv = CallGetService("@mozilla.org/js/xpc/RuntimeService;1",
                                  &sJSRuntimeService);
     NS_ENSURE_TRUE(sJSRuntimeService, rv);
 
-    sJSRuntimeService->GetRuntime(&sScriptRuntime);
-    if (!sScriptRuntime) {
+    sJSRuntimeService->GetRuntime(&sJSScriptRuntime);
+    if (!sJSScriptRuntime) {
       NS_RELEASE(sJSRuntimeService);
       NS_WARNING("Unable to get JS runtime from JS runtime service");
       return NS_ERROR_FAILURE;
@@ -2558,20 +2545,20 @@ nsContentUtils::AddJSGCRoot(void* aPtr, const char* aName)
   }
 
   PRBool ok;
-  ok = ::JS_AddNamedRootRT(sScriptRuntime, aPtr, aName);
+  ok = ::JS_AddNamedRootRT(sJSScriptRuntime, aPtr, aName);
   if (!ok) {
-    if (sScriptRootCount == 0) {
+    if (sJSScriptRootCount == 0) {
       // We just got the runtime... Just null things out, since no
       // one's expecting us to have a runtime yet
       NS_RELEASE(sJSRuntimeService);
-      sScriptRuntime = nsnull;
+      sJSScriptRuntime = nsnull;
     }
     NS_WARNING("JS_AddNamedRootRT failed");
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   // We now have one more root we added to the runtime
-  ++sScriptRootCount;
+  ++sJSScriptRootCount;
 
   return NS_OK;
 }
@@ -2580,16 +2567,16 @@ nsContentUtils::AddJSGCRoot(void* aPtr, const char* aName)
 nsresult
 nsContentUtils::RemoveJSGCRoot(void* aPtr)
 {
-  if (!sScriptRuntime) {
+  if (!sJSScriptRuntime) {
     NS_NOTREACHED("Trying to remove a JS GC root when none were added");
     return NS_ERROR_UNEXPECTED;
   }
 
-  ::JS_RemoveRootRT(sScriptRuntime, aPtr);
+  ::JS_RemoveRootRT(sJSScriptRuntime, aPtr);
 
-  if (--sScriptRootCount == 0) {
+  if (--sJSScriptRootCount == 0) {
     NS_RELEASE(sJSRuntimeService);
-    sScriptRuntime = nsnull;
+    sJSScriptRuntime = nsnull;
   }
 
   return NS_OK;
@@ -3392,4 +3379,57 @@ nsContentUtils::DestroyAnonymousContent(nsCOMPtr<nsIContent>* aContent)
     (*aContent)->UnbindFromTree();
     *aContent = nsnull;
   }
+}
+
+/* static */
+nsIDOMScriptObjectFactory*
+nsContentUtils::GetDOMScriptObjectFactory()
+{
+  if (!sDOMScriptObjectFactory) {
+    static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
+                         NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
+
+    CallGetService(kDOMScriptObjectFactoryCID, &sDOMScriptObjectFactory);
+  }
+
+  return sDOMScriptObjectFactory;
+}
+
+/* static */
+nsresult
+nsContentUtils::HoldScriptObject(PRUint32 aLangID, void *aObject)
+{
+  nsresult rv;
+
+  PRUint32 langIndex = NS_STID_INDEX(aLangID);
+  nsIScriptRuntime *runtime = sScriptRuntimes[langIndex];
+  if (!runtime) {
+    nsIDOMScriptObjectFactory *factory = GetDOMScriptObjectFactory();
+    NS_ENSURE_TRUE(factory, NS_ERROR_FAILURE);
+
+    rv = factory->GetScriptRuntimeByID(aLangID, &runtime);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // This makes sScriptRuntimes hold a strong ref.
+    sScriptRuntimes[langIndex] = runtime;
+  }
+
+  rv = runtime->HoldScriptObject(aObject);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  ++sScriptRootCount[langIndex];
+
+  return NS_OK;
+}
+
+/* static */
+nsresult
+nsContentUtils::DropScriptObject(PRUint32 aLangID, void *aObject)
+{
+  PRUint32 langIndex = NS_STID_INDEX(aLangID);
+  nsresult rv = sScriptRuntimes[langIndex]->DropScriptObject(aObject);
+  if (--sScriptRootCount[langIndex] == 0) {
+    NS_RELEASE(sScriptRuntimes[langIndex]);
+  }
+  return rv;
 }
