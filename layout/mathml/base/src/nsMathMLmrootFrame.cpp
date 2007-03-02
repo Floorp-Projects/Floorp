@@ -186,7 +186,11 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
     rv = ReflowChild(childFrame, aPresContext,
                      childDesiredSize, childReflowState, childStatus);
     //NS_ASSERTION(NS_FRAME_IS_COMPLETE(childStatus), "bad status");
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+      // Call DidReflow() for the child frames we successfully did reflow.
+      DidReflowChildren(mFrames.FirstChild(), childFrame);
+      return rv;
+    }
     if (0 == count) {
       // base 
       baseFrame = childFrame;

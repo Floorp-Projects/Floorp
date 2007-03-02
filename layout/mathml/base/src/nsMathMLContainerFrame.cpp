@@ -399,7 +399,11 @@ nsMathMLContainerFrame::Stretch(nsIRenderingContext& aRenderingContext,
         }
 
         // re-position all our children
-        Place(aRenderingContext, PR_TRUE, aDesiredStretchSize);
+        nsresult rv = Place(aRenderingContext, PR_TRUE, aDesiredStretchSize);
+        if (NS_MATHML_HAS_ERROR(mPresentationData.flags) || NS_FAILED(rv)) {
+          // Make sure the child frames get their DidReflow() calls.
+          DidReflowChildren(mFrames.FirstChild());
+        }
 
         // If our parent is not embellished, it means we are the outermost embellished
         // container and so we put the spacing, otherwise we don't include the spacing,
@@ -469,11 +473,17 @@ nsMathMLContainerFrame::FinalizeReflow(nsIRenderingContext& aRenderingContext,
   PRBool placeOrigin = !NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags) ||
                        (mEmbellishData.coreFrame != this && !mPresentationData.baseFrame &&
                         mEmbellishData.direction == NS_STRETCH_DIRECTION_UNSUPPORTED);
-  Place(aRenderingContext, placeOrigin, aDesiredSize);
+  nsresult rv = Place(aRenderingContext, placeOrigin, aDesiredSize);
 
-  // exit now if the frame was flagged as having invalid markup
-  if (NS_MATHML_HAS_ERROR(mPresentationData.flags)) {
-    return NS_OK;
+  // Place() will call FinishReflowChild() when placeOrigin is true but if
+  // it returns before reaching FinishReflowChild() due to errors we need
+  // to fulfill the reflow protocol by calling DidReflow for the child frames
+  // that still needs it here (or we may crash - bug 366012).
+  // If placeOrigin is false we should reach Place() with aPlaceOrigin == true
+  // through Stretch() eventually.
+  if (NS_MATHML_HAS_ERROR(mPresentationData.flags) || NS_FAILED(rv)) {
+    DidReflowChildren(GetFirstChild(nsnull));
+    return rv;
   }
 
   if (!placeOrigin) {
@@ -516,6 +526,17 @@ nsMathMLContainerFrame::FinalizeReflow(nsIRenderingContext& aRenderingContext,
       }
       Stretch(aRenderingContext, NS_STRETCH_DIRECTION_DEFAULT, defaultSize,
               aDesiredSize);
+#ifdef NS_DEBUG
+      {
+        // The Place() call above didn't request FinishReflowChild(),
+        // so let's check that we eventually did through Stretch().
+        nsIFrame* childFrame = GetFirstChild(nsnull);
+        for ( ; childFrame; childFrame = childFrame->GetNextSibling()) {
+          NS_ASSERTION(!(childFrame->GetStateBits() & NS_FRAME_IN_REFLOW),
+                       "DidReflow() was never called");
+        }
+      }
+#endif
     }
   }
   // Also return our bounding metrics
@@ -1033,7 +1054,11 @@ nsMathMLContainerFrame::Reflow(nsPresContext*          aPresContext,
     rv = ReflowChild(childFrame, aPresContext, childDesiredSize,
                      childReflowState, childStatus);
     //NS_ASSERTION(NS_FRAME_IS_COMPLETE(childStatus), "bad status");
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+      // Call DidReflow() for the child frames we successfully did reflow.
+      DidReflowChildren(mFrames.FirstChild(), childFrame);
+      return rv;
+    }
 
     // At this stage, the origin points of the children have no use, so we will use the
     // origins as placeholders to store the child's ascent and descent. Later on,
@@ -1388,7 +1413,22 @@ nsMathMLContainerFrame::FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
   return gap;
 }
 
+void
+nsMathMLContainerFrame::DidReflowChildren(nsIFrame* aFirst, nsIFrame* aStop)
 
+{
+  NS_PRECONDITION(aFirst, "expected a frame");
+
+  for (nsIFrame* frame = aFirst;
+       frame != aStop;
+       frame = frame->GetNextSibling()) {
+    NS_ASSERTION(frame, "aStop isn't a sibling");
+    if (frame->GetStateBits() & NS_FRAME_IN_REFLOW) {
+      frame->DidReflow(frame->GetPresContext(), nsnull,
+                       NS_FRAME_REFLOW_FINISHED);
+    }
+  }
+}
 
 //==========================
 

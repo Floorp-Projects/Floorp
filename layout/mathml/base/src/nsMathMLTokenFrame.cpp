@@ -142,7 +142,11 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
     rv = ReflowChild(childFrame, aPresContext, childDesiredSize,
                      childReflowState, aStatus);
     //NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+      // Call DidReflow() for the child frames we successfully did reflow.
+      DidReflowChildren(GetFirstChild(nsnull), childFrame);
+      return rv;
+    }
 
     // origins are used as placeholders to store the child's ascent and descent.
     childFrame->SetRect(nsRect(0, childDesiredSize.ascent,

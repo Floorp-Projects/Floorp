@@ -788,7 +788,11 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
 
   // Place our children using the default method
   // This will allow our child text frame to get its DidReflow()
-  Place(aRenderingContext, PR_TRUE, aDesiredStretchSize);
+  nsresult rv = Place(aRenderingContext, PR_TRUE, aDesiredStretchSize);
+  if (NS_MATHML_HAS_ERROR(mPresentationData.flags) || NS_FAILED(rv)) {
+    // Make sure the child frames get their DidReflow() calls.
+    DidReflowChildren(mFrames.FirstChild());
+  }
 
   // Fixup for the final height.
   // On one hand, our stretchy height can sometimes be shorter than surrounding

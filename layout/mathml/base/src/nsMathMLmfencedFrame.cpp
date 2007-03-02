@@ -303,7 +303,11 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
     rv = mathMLFrame->ReflowChild(childFrame, aPresContext, childDesiredSize,
                                   childReflowState, childStatus);
     //NS_ASSERTION(NS_FRAME_IS_COMPLETE(childStatus), "bad status");
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+      // Call DidReflow() for the child frames we successfully did reflow.
+      mathMLFrame->DidReflowChildren(firstChild, childFrame);
+      return rv;
+    }
 
     // At this stage, the origin points of the children have no use, so we will use the
     // origins as placeholders to store the child's ascent and descent. Later on,

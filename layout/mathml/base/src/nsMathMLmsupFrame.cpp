@@ -117,15 +117,10 @@ nsMathMLmsupFrame::PlaceSuperScript(nsPresContext*      aPresContext,
                                     nsIRenderingContext& aRenderingContext,
                                     PRBool               aPlaceOrigin,
                                     nsHTMLReflowMetrics& aDesiredSize,
-                                    nsIFrame*            aFrame,
+                                    nsMathMLContainerFrame* aFrame,
                                     nscoord              aUserSupScriptShift,
                                     nscoord              aScriptSpace)
 {
-  // the caller better be a mathml frame
-  nsIMathMLFrame* mathMLFrame;
-  aFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-  if (!mathMLFrame) return NS_ERROR_INVALID_ARG;
-
   // force the scriptSpace to be at least 1 pixel 
   nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
   aScriptSpace = PR_MAX(onePixel, aScriptSpace);
@@ -195,7 +190,7 @@ nsMathMLmsupFrame::PlaceSuperScript(nsPresContext*      aPresContext,
   // Rule 18c, App. G, TeXbook
   nscoord supScriptShift;
   nsPresentationData presentationData;
-  mathMLFrame->GetPresentationData (presentationData);
+  aFrame->GetPresentationData (presentationData);
   if ( presentationData.scriptLevel == 0 && 
        NS_MATHML_IS_DISPLAYSTYLE(presentationData.flags) &&
       !NS_MATHML_IS_COMPRESSED(presentationData.flags)) {
@@ -233,7 +228,7 @@ nsMathMLmsupFrame::PlaceSuperScript(nsPresContext*      aPresContext,
   boundingMetrics.leftBearing = bmBase.leftBearing;
   boundingMetrics.rightBearing = bmBase.width + italicCorrection +
                                  bmSupScript.rightBearing;
-  mathMLFrame->SetBoundingMetrics(boundingMetrics);
+  aFrame->SetBoundingMetrics(boundingMetrics);
 
   // reflow metrics
   aDesiredSize.ascent =
@@ -244,7 +239,7 @@ nsMathMLmsupFrame::PlaceSuperScript(nsPresContext*      aPresContext,
   aDesiredSize.width = boundingMetrics.width;
   aDesiredSize.mBoundingMetrics = boundingMetrics;
 
-  mathMLFrame->SetReference(nsPoint(0, aDesiredSize.ascent));
+  aFrame->SetReference(nsPoint(0, aDesiredSize.ascent));
 
   if (aPlaceOrigin) {
     nscoord dx, dy;
