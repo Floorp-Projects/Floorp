@@ -1,0 +1,39 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=232004
+-->
+<head>
+  <title>Test for Bug 232004</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"/>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=232004">Mozilla Bug 232004</a>
+<p id="display">
+  <input id="one" type="text" />
+  <input style="display: none" id="two" type="text" />
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+/** Test for Bug 232004 **/
+
+$("one").focus();
+is(document.activeElement, $("one"), "node one should be focused");
+
+$("two").focus();
+isnot(document.activeElement, $("two"),
+      "node two has display:none and should not take focus");
+
+]]>
+</script>
+</pre>
+</body>
+</html>
+

@@ -44,7 +44,8 @@ relativesrcdir  = content/xml/document/test
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = 	test_bug355213.xhtml \
+_TEST_FILES = 	test_bug232004.xhtml \
+		test_bug355213.xhtml \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
