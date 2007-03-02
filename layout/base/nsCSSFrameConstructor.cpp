@@ -1089,7 +1089,14 @@ public:
   nsIPresShell             *mPresShell;
   nsFrameManager           *mFrameManager;
 
-  // Containing block information for out-of-flow frammes
+#ifdef MOZ_XUL
+  // The root box, if any.
+  nsIRootBox*               mRootBox;
+  // Frames destined for the nsGkAtoms::popupList.
+  nsAbsoluteItems           mPopupItems;
+#endif
+
+  // Containing block information for out-of-flow frames.
   nsAbsoluteItems           mFixedItems;
   nsAbsoluteItems           mAbsoluteItems;
   nsAbsoluteItems           mFloatedItems;
@@ -1097,11 +1104,6 @@ public:
   PRBool                    mFirstLineStyle;
   nsCOMPtr<nsILayoutHistoryState> mFrameState;
   nsPseudoFrames            mPseudoFrames;
-
-#ifdef MOZ_XUL
-  // The root box, if any.
-  nsIRootBox* mRootBox;
-#endif
 
   // Constructor
   // Use the passed-in history state.
@@ -1198,6 +1200,10 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShe
   : mPresContext(aPresShell->GetPresContext()),
     mPresShell(aPresShell),
     mFrameManager(aPresShell->FrameManager()),
+#ifdef MOZ_XUL    
+    mRootBox(nsIRootBox::GetRootBox(aPresShell)),
+    mPopupItems(mRootBox ? mRootBox->GetPopupSetFrame() : nsnull),
+#endif
     mFixedItems(aFixedContainingBlock),
     mAbsoluteItems(aAbsoluteContainingBlock),
     mFloatedItems(aFloatContainingBlock),
@@ -1205,9 +1211,6 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShe
     mFirstLineStyle(PR_FALSE),
     mFrameState(aHistoryState),
     mPseudoFrames()
-#ifdef MOZ_XUL    
-    , mRootBox(nsIRootBox::GetRootBox(aPresShell))
-#endif
 {
 }
 
@@ -1218,15 +1221,16 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
   : mPresContext(aPresShell->GetPresContext()),
     mPresShell(aPresShell),
     mFrameManager(aPresShell->FrameManager()),
+#ifdef MOZ_XUL    
+    mRootBox(nsIRootBox::GetRootBox(aPresShell)),
+    mPopupItems(mRootBox ? mRootBox->GetPopupSetFrame() : nsnull),
+#endif
     mFixedItems(aFixedContainingBlock),
     mAbsoluteItems(aAbsoluteContainingBlock),
     mFloatedItems(aFloatContainingBlock),
     mFirstLetterStyle(PR_FALSE),
     mFirstLineStyle(PR_FALSE),
     mPseudoFrames()
-#ifdef MOZ_XUL
-    , mRootBox(nsIRootBox::GetRootBox(aPresShell))
-#endif
 {
   mFrameState = aPresShell->GetDocument()->GetLayoutHistoryState();
 }
@@ -1244,6 +1248,9 @@ nsFrameConstructorState::~nsFrameConstructorState()
   ProcessFrameInsertions(mFloatedItems, nsGkAtoms::floatList);
   ProcessFrameInsertions(mAbsoluteItems, nsGkAtoms::absoluteList);
   ProcessFrameInsertions(mFixedItems, nsGkAtoms::fixedList);
+#ifdef MOZ_XUL
+  ProcessFrameInsertions(mPopupItems, nsGkAtoms::popupList);
+#endif
 }
 
 static nsIFrame*
@@ -1356,13 +1363,24 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
 
   PRBool needPlaceholder = PR_FALSE;
   nsFrameItems* frameItems = &aFrameItems;
+#ifdef MOZ_XUL
+  if (NS_UNLIKELY(aIsOutOfFlowPopup)) {
+      NS_ASSERTION(aNewFrame->GetParent() == mPopupItems.containingBlock,
+                   "Popup whose parent is not the popup containing block?");
+      NS_ASSERTION(mPopupItems.containingBlock, "Must have a popup set frame!");
+      needPlaceholder = PR_TRUE;
+      frameItems = &mPopupItems;
+  }
+  else
+#endif // MOZ_XUL
   if (aCanBeFloated && aStyleDisplay->IsFloating() &&
       mFloatedItems.containingBlock) {
     NS_ASSERTION(aNewFrame->GetParent() == mFloatedItems.containingBlock,
                  "Float whose parent is not the float containing block?");
     needPlaceholder = PR_TRUE;
     frameItems = &mFloatedItems;
-  } else if (aCanBePositioned) {
+  }
+  else if (aCanBePositioned) {
     if (aStyleDisplay->mPosition == NS_STYLE_POSITION_ABSOLUTE &&
         mAbsoluteItems.containingBlock) {
       NS_ASSERTION(aNewFrame->GetParent() == mAbsoluteItems.containingBlock,
@@ -1379,8 +1397,8 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
     }
   }
 
-  if (needPlaceholder || aIsOutOfFlowPopup) {
-    NS_ASSERTION(frameItems != &aFrameItems || aIsOutOfFlowPopup,
+  if (needPlaceholder) {
+    NS_ASSERTION(frameItems != &aFrameItems,
                  "Putting frame in-flow _and_ want a placeholder?");
     nsIFrame* placeholderFrame;
     nsresult rv =
@@ -1412,16 +1430,6 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
   }
 #endif
 
-#ifdef MOZ_XUL
-  if (NS_UNLIKELY(aIsOutOfFlowPopup)) {
-    NS_ASSERTION(mRootBox && mRootBox->GetPopupSetFrame(),
-                 "Must have a popup set frame!");
-    return mRootBox->GetPopupSetFrame()->AppendFrames(nsGkAtoms::popupList,
-                                                      aNewFrame);
-
-  }
-#endif
-
   if (aInsertAfter) {
     frameItems->InsertChildAfter(aNewFrame, aInsertAfterFrame);
   } else {
@@ -1446,13 +1454,21 @@ void
 nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
                                                 nsIAtom* aChildListName)
 {
-  NS_PRECONDITION((&aFrameItems == &mFloatedItems &&
-                   aChildListName == nsGkAtoms::floatList) ||
-                  (&aFrameItems == &mAbsoluteItems &&
-                   aChildListName == nsGkAtoms::absoluteList) ||
-                  (&aFrameItems == &mFixedItems &&
-                   aChildListName == nsGkAtoms::fixedList),
+#define NS_NONXUL_LIST_TEST (&aFrameItems == &mFloatedItems &&             \
+                             aChildListName == nsGkAtoms::floatList)    || \
+                            (&aFrameItems == &mAbsoluteItems &&            \
+                             aChildListName == nsGkAtoms::absoluteList) || \
+                            (&aFrameItems == &mFixedItems &&               \
+                             aChildListName == nsGkAtoms::fixedList)
+#ifdef MOZ_XUL
+  NS_PRECONDITION(NS_NONXUL_LIST_TEST ||
+                  (&aFrameItems == &mPopupItems &&
+                   aChildListName == nsGkAtoms::popupList), 
                   "Unexpected aFrameItems/aChildListName combination");
+#else
+  NS_PRECONDITION(NS_NONXUL_LIST_TEST,
+                  "Unexpected aFrameItems/aChildListName combination");
+#endif
 
   nsIFrame* firstNewFrame = aFrameItems.childList;
   
@@ -5969,17 +5985,18 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
         nsIMenuFrame* menuFrame;
         CallQueryInterface(aParentFrame, &menuFrame);
         if (!menuFrame) {
-          if (!aState.mRootBox || !aState.mRootBox->GetPopupSetFrame()) {
+          if (!aState.mPopupItems.containingBlock) {
             // Just don't create a frame for this popup; we can't do
             // anything with it, since there is no root popup set.
             *aHaltProcessing = PR_TRUE;
+            NS_ERROR("Popup containing block is missing");
             return NS_OK;
           }
 
-#ifdef DEBUG
+#ifdef NS_DEBUG
           nsIPopupSetFrame* popupSet;
-          CallQueryInterface(aState.mRootBox->GetPopupSetFrame(), &popupSet);
-          NS_ASSERTION(popupSet, "Unexpected return from GetPopupSetFrame()");
+          CallQueryInterface(aState.mPopupItems.containingBlock, &popupSet);
+          NS_ASSERTION(popupSet, "Popup containing block isn't a nsIPopupSetFrame");
 #endif
           isPopup = PR_TRUE;
         }
@@ -6035,9 +6052,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
     nsIFrame* geometricParent;
 #ifdef MOZ_XUL
     if (isPopup) {
-      NS_ASSERTION(aState.mRootBox && aState.mRootBox->GetPopupSetFrame(),
-                   "How did we get here?");
-      geometricParent = aState.mRootBox->GetPopupSetFrame();
+      NS_ASSERTION(aState.mPopupItems.containingBlock, "How did we get here?");
+      geometricParent = aState.mPopupItems.containingBlock;
     }
     else
 #endif
@@ -6088,6 +6104,17 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
     if (NS_FAILED(rv)) {
       return rv;
     }
+
+#ifdef MOZ_XUL
+    if (aTag == nsGkAtoms::popupgroup) {
+      nsIRootBox* rootBox = nsIRootBox::GetRootBox(mPresShell);
+      if (rootBox) {
+        NS_ASSERTION(rootBox->GetPopupSetFrame() == newFrame,
+                     "Unexpected PopupSetFrame");
+        aState.mPopupItems.containingBlock = rootBox->GetPopupSetFrame();
+      }      
+    }
+#endif
 
     // Process the child content if requested
     nsFrameItems childItems;
@@ -12618,6 +12645,11 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
   if (aState.mFloatedItems.childList) {
     CleanupFrameReferences(frameManager, aState.mFloatedItems.childList);
   }
+#ifdef MOZ_XUL
+  if (aState.mPopupItems.childList) {
+    CleanupFrameReferences(frameManager, aState.mPopupItems.childList);
+  }
+#endif
   nsFrameList tmp(aFrameList);
   tmp.DestroyFrames();
 
@@ -12632,6 +12664,12 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
   tmp.SetFrames(aState.mFloatedItems.childList);
   tmp.DestroyFrames();
   aState.mFloatedItems.childList = nsnull;
+
+#ifdef MOZ_XUL
+  tmp.SetFrames(aState.mPopupItems.childList);
+  tmp.DestroyFrames();
+  aState.mPopupItems.childList = nsnull;
+#endif
 
   // If we don't have a containing block, start with aFrame and look for one.
   if (!aContainingBlock) {

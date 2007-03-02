@@ -95,14 +95,11 @@ public:
                           nsIFrame*       aFrameList);
   NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
-#ifdef DEBUG
-  // Only need these for asserts
   NS_IMETHOD InsertFrames(nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
   NS_IMETHOD  SetInitialChildList(nsIAtom*        aListName,
                                   nsIFrame*       aChildList);
-#endif
   
     // nsIBox
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
@@ -148,6 +145,7 @@ public:
 
 protected:
 
+  nsresult AddPopupFrameList(nsIFrame* aPopupFrameList);
   nsresult AddPopupFrame(nsIFrame* aPopup);
   nsresult RemovePopupFrame(nsIFrame* aPopup);
   
