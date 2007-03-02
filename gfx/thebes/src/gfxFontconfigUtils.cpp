@@ -40,8 +40,6 @@
 
 #include <fontconfig/fontconfig.h>
 
-#include "nsUnitConversion.h"
-
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsServiceManagerUtils.h"
