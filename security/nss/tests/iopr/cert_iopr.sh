@@ -179,16 +179,19 @@ importFile() {
 #      $2 - directory at which CA cert will be installed and used for
 #           signing a server cert.
 #      $3 - path to a config file in webserver context.
-#      $4 - server db location
-#      $5 - client db location
+#      $4 - ssl server db location
+#      $5 - ssl client db location
+#      $5 - ocsp client db location
+#
 # Returns 0 upon success, otherwise, failed command error code.
 #
 download_install_certs() {
     host=$1
     caDir=$2
     confPath=$3
-    serverDir=$4
-    clientDir=$5
+    sslServerDir=$4
+    sslClientDir=$5
+    ocspClientDir=$6
 
     [ ! -d "$caDir" ] && mkdir -p $caDir;
 
@@ -239,88 +242,133 @@ download_install_certs() {
         Exit 7 "Fatal - failed to export $caCertName cert"
     fi
 
-
-    if [ "$reverseRunCGIScript" ]; then
-        [ ! -d "$serverDir" ] && mkdir -p $serverDir;
-       #=======================================================
-       # Import CA cert to server DB
-       #
-        importFile $serverDir $caDir/$caCertName.cert server-client-CA "TC,C,C"
-        RET=$?
-        if [ $RET -ne 0 ]; then
-            html_failed "<TR><TD>Fail to import server-client-CA cert to server DB(ws: $host)" 
-            return $RET
-        fi
-
-        #=======================================================
-        # Creating server cert
-        #
-        CERTNAME=$HOSTADDR
-        
-        CU_ACTION="Generate Cert Request for $CERTNAME (ws: $host)"
-        CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
-        certu -R -d "${serverDir}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o $serverDir/req 2>&1
-        tmpFiles="$tmpFiles $serverDir/req"
-        
-        
-        CU_ACTION="Sign ${CERTNAME}'s Request (ws: $host)"
-        certu -C -c "$caCertName" -m `date +"%s"` -v 60 -d "${caDir}" \
-            -i  ${serverDir}/req -o $caDir/${CERTNAME}.cert -f "${R_PWFILE}" 2>&1
-        
-        importFile $serverDir $caDir/$CERTNAME.cert $CERTNAME ",,"
-        RET=$?
-        if [ $RET -ne 0 ]; then
-            html_failed "<TR><TD>Fail to import $CERTNAME cert to server DB(ws: $host)" 
-            return $RET
-        fi
-        tmpFiles="$tmpFiles $caDir/$CERTNAME.cert"
-
-        #=======================================================
-        # Download and import CA crl to server DB
-        #
-        download_file $host "$certDir/$caCrlName.crl" $serverDir
-        RET=$?
-        if [ $? -ne 0 ]; then
-            html_failed "<TR><TD>Fail to download $caCertName crl(ws: $host)" 
-            return $RET
-        fi
-        tmpFiles="$tmpFiles $serverDir/$caCrlName.crl"
-        
-        importFile $serverDir $serverDir/TestCA.crl
-        RET=$?
-        if [ $RET -ne 0 ]; then
-            html_failed "<TR><TD>Fail to import TestCA crt to server DB(ws: $host)" 
-            return $RET
-        fi
-    fi # if [ "$reverseRunCGIScript" ]
-
-    [ ! -d "$clientDir" ] && mkdir -p $clientDir;
     #=======================================================
-    # Import CA cert to client DB
+    # Check what tests we want to run
     #
-    importFile $clientDir $caDir/$caCertName.cert server-client-CA "TC,C,C"
-    RET=$?
-    if [ $RET -ne 0 ]; then
-        html_failed "<TR><TD>Fail to import server-client-CA cert to server DB(ws: $host)" 
-        return $RET
+    doSslTests=0; doOcspTests=0
+    # XXX remove "_new" from variables below
+    [ -n "`echo ${supportedTests_new} | grep -i ssl`" ] && doSslTests=1
+    [ -n "`echo ${supportedTests_new} | grep -i ocsp`" ] && doOcspTests=1
+
+    if [ $doSslTests -eq 1 ]; then
+        if [ "$reverseRunCGIScript" ]; then
+            [ ! -d "$sslServerDir" ] && mkdir -p $sslServerDir;
+            #=======================================================
+            # Import CA cert to server DB
+            #
+            importFile $sslServerDir $caDir/$caCertName.cert server-client-CA \
+                        "TC,C,C"
+            RET=$?
+            if [ $RET -ne 0 ]; then
+                html_failed "<TR><TD>Fail to import server-client-CA cert to \
+                             server DB(ws: $host)" 
+                return $RET
+            fi
+            
+            #=======================================================
+            # Creating server cert
+            #
+            CERTNAME=$HOSTADDR
+            
+            CU_ACTION="Generate Cert Request for $CERTNAME (ws: $host)"
+            CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, \
+                        L=Mountain View, ST=California, C=US"
+            certu -R -d "${sslServerDir}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}"\
+                -o $sslServerDir/req 2>&1
+            tmpFiles="$tmpFiles $sslServerDir/req"
+            
+            
+            CU_ACTION="Sign ${CERTNAME}'s Request (ws: $host)"
+            certu -C -c "$caCertName" -m `date +"%s"` -v 60 -d "${caDir}" \
+                -i  ${sslServerDir}/req -o $caDir/${CERTNAME}.cert \
+                -f "${R_PWFILE}" 2>&1
+            
+            importFile $sslServerDir $caDir/$CERTNAME.cert $CERTNAME ",,"
+            RET=$?
+            if [ $RET -ne 0 ]; then
+                html_failed "<TR><TD>Fail to import $CERTNAME cert to server\
+                             DB(ws: $host)" 
+                return $RET
+            fi
+            tmpFiles="$tmpFiles $caDir/$CERTNAME.cert"
+            
+            #=======================================================
+            # Download and import CA crl to server DB
+            #
+            download_file $host "$certDir/$caCrlName.crl" $sslServerDir
+            RET=$?
+            if [ $? -ne 0 ]; then
+                html_failed "<TR><TD>Fail to download $caCertName crl\
+                             (ws: $host)" 
+                return $RET
+            fi
+            tmpFiles="$tmpFiles $sslServerDir/$caCrlName.crl"
+            
+            importFile $sslServerDir $sslServerDir/TestCA.crl
+            RET=$?
+            if [ $RET -ne 0 ]; then
+                html_failed "<TR><TD>Fail to import TestCA crt to server\
+                             DB(ws: $host)" 
+                return $RET
+            fi
+        fi # if [ "$reverseRunCGIScript" ]
+        
+        [ ! -d "$sslClientDir" ] && mkdir -p $sslClientDir;
+        #=======================================================
+        # Import CA cert to ssl client DB
+        #
+        importFile $sslClientDir $caDir/$caCertName.cert server-client-CA \
+                   "TC,C,C"
+        RET=$?
+        if [ $RET -ne 0 ]; then
+            html_failed "<TR><TD>Fail to import server-client-CA cert to \
+                         server DB(ws: $host)" 
+            return $RET
+        fi
+    fi
+
+    if [ $doOcspTests -eq 1 ]; then
+        [ ! -d "$ocspClientDir" ] && mkdir -p $ocspClientDir;
+        #=======================================================
+        # Import CA cert to ocsp client DB
+        #
+        importFile $ocspClientDir $caDir/$caCertName.cert server-client-CA \
+                   "TC,C,C"
+        RET=$?
+        if [ $RET -ne 0 ]; then
+            html_failed "<TR><TD>Fail to import server-client-CA cert to \
+                         server DB(ws: $host)" 
+            return $RET
+        fi
     fi
 
     #=======================================================
     # Import client certs to client DB
     #
-    for certName in $userCertNames; do
-        download_file $host "$certDir/$certName.p12" $clientDir
+    for fileName in $downloadFiles; do
+        certName=`echo $fileName | sed 's/\..*//'`
+
+        if [ -n "`echo $certName | grep ocsp`" -a $doOcspTests -eq 1 ]; then
+            clientDir=$ocspClientDir
+        elif [ $doSslTests -eq 1 ]; then
+            clientDir=$sslClientDir
+        else
+            continue
+        fi
+
+        download_file $host "$certDir/$fileName" $clientDir
         RET=$?
-        if [ $RET -ne 0 -o ! -f $clientDir/$certName.p12 ]; then
+        if [ $RET -ne 0 -o ! -f $clientDir/$fileName ]; then
             html_failed "<TR><TD>Fail to download $certName cert(ws: $host)" 
             return $RET
         fi
-        tmpFiles="$tmpFiles $clientDir/$certName.p12"
+        tmpFiles="$tmpFiles $clientDir/$fileName"
         
-        importFile $clientDir $clientDir/$certName.p12 $certName ",,"
+        importFile $clientDir $clientDir/$fileName $certName ",,"
         RET=$?
         if [ $RET -ne 0 ]; then
-            html_failed "<TR><TD>Fail to import $certName cert to client DB(ws: $host)" 
+            html_failed "<TR><TD>Fail to import $certName cert to client DB\
+                        (ws: $host)" 
             return $RET
         fi
     done
@@ -353,11 +401,13 @@ cert_iopr_setup() {
         IOPR_CONF_PATH=`echo "$IOPR_HOST_PARAM:" | cut -f 3 -d':'`
         [ -z "$IOPR_CONF_PATH" ] && IOPR_CONF_PATH="/iopr"
         
-        echo "Installing certs for $IOPR_HOSTADDR:$IOPR_DOWNLOAD_PORT:$IOPR_CONF_PATH"
+        echo "Installing certs for $IOPR_HOSTADDR:$IOPR_DOWNLOAD_PORT:\
+              $IOPR_CONF_PATH"
         
         download_install_certs ${IOPR_HOSTADDR} ${IOPR_CADIR}_${IOPR_HOSTADDR} \
-            ${IOPR_CONF_PATH} ${IOPR_SERVERDIR}_${IOPR_HOSTADDR} \
-            ${IOPR_CLIENTDIR}_${IOPR_HOSTADDR}
+            ${IOPR_CONF_PATH} ${IOPR_SSL_SERVERDIR}_${IOPR_HOSTADDR} \
+            ${IOPR_SSL_CLIENTDIR}_${IOPR_HOSTADDR} \
+            ${IOPR_OCSP_CLIENTDIR}_${IOPR_HOSTADDR}
         if [ $? -ne 0 ]; then
             echo "wsFlags=\"NOIOPR $wsParam\"" >> \
                 ${IOPR_CADIR}_${IOPR_HOSTADDR}/iopr_server.cfg

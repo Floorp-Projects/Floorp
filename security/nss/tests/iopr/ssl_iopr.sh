@@ -55,19 +55,14 @@ IOPR_SSL_SOURCED=1
 # The functions works with variables defined in interoperability 
 # configuration file that was downloaded from a webserver.
 # It tries to find unrevoked cert based on value of variable
-# "userRevokedCertNames" defined in the configuration file.
+# "SslClntValidCertName" defined in the configuration file.
 # Params NONE.
 # Returns 0 if found, 1 otherwise.
 #
 setValidCert() {
-    testUser=
-    for user in $userCertNames; do
-        if [ "`echo $userRevokedCertNames | grep -v $user`" != "" ]; then
-            testUser=$user
-            return 0
-        fi
-    done
-    return 1
+    testUser=$SslClntValidCertName
+    [ -z "$testUser" ] && return 1
+    return 0
 }
 
 ########################################################################
@@ -253,12 +248,6 @@ ssl_iopr_crl_ext_server()
 
   html_head "CRL SSL Client Tests of WebServer($IOPR_HOSTADDR $BYPASS_STRING $NORM_EXT): $testDescription"
   
-  setValidCert; ret=$?
-  if [ $ret -ne 0 ]; then
-      html_failed "<TR><TD>Fail to find valid test cert(ws: $host)" 
-      return $ret
-  fi
-
   SSL_REQ_FILE=${TMP}/sslreq.dat.$$
   echo "GET $sslUrl HTTP/1.0" > $SSL_REQ_FILE
   echo >> $SSL_REQ_FILE
@@ -271,7 +260,7 @@ ssl_iopr_crl_ext_server()
       [ -z "$ecc" -o "$ecc" = "#" -o "$ecc" = "ECC" ] && continue;
 
       rev_modvalue=254
-      for testUser in $userCertNames; do
+      for testUser in $SslClntValidCertName $SslClntRevokedCertName; do
           cparam=`echo $_cparam | sed -e 's;_; ;g' -e "s/TestUser/$testUser/g" `
 	  
           echo "tstclnt -p ${sslPort} -h ${host} ${CLIEN_OPTIONS} \\"
@@ -289,7 +278,7 @@ ssl_iopr_crl_ext_server()
           [ $ret -ne 0 ] && cat $resFile
           rm -f $resFile 2>/dev/null
 
-          if [ "`echo $userRevokedCertNames | grep $testUser`" != "" ]; then
+          if [ "`echo $SslClntRevokedCertName | grep $testUser`" != "" ]; then
               modvalue=$rev_modvalue
               testAddMsg="revoked"
           else
@@ -539,7 +528,7 @@ ssl_iopr_crl_ext_client()
       sparam="$sparam  -vvvc ABCDEFcdefgijklmnvyz"
       start_selfserv
 
-      for testUser in $userCertNames; do
+      for testUser in $SslClntValidCertName $SslClntRevokedCertName; do
 	  
           is_selfserv_alive
           
@@ -580,7 +569,7 @@ ssl_iopr_crl_ext_client()
               ret=11
           fi
           
-          if [ "`echo $userRevokedCertNames | grep $testUser`" != "" ]; then
+          if [ "`echo $SslClntRevokedCertName | grep $testUser`" != "" ]; then
               modvalue=1
               testAddMsg="revoked"
           else
@@ -633,19 +622,26 @@ ssl_iopr_run() {
             continue
         fi
         
+        #=======================================================
+        # Check if server is capable to run ssl tests
+        #
+        [ -z "`echo ${supportedTests_new} | grep -i ssl`" ] && continue;
 
         # Testing directories defined by webserver.
         echo "Testing ssl interoperability.
                 Client: local(tstclnt).
                 Server: remote($IOPR_HOSTADDR:$IOPR_OPEN_PORT)"
         
-        for sslTestType in $supportedTests; do
+        for sslTestType in ${supportedTests_new}; do
+            if [ -z "`echo $sslTestType | grep -i ssl`" ]; then
+                continue
+            fi
             ssl_iopr_cov_ext_server $sslTestType ${IOPR_HOSTADDR} \
-                ${IOPR_CLIENTDIR}_${IOPR_HOSTADDR}
+                ${IOPR_SSL_CLIENTDIR}_${IOPR_HOSTADDR}
             ssl_iopr_auth_ext_server $sslTestType ${IOPR_HOSTADDR} \
-                ${IOPR_CLIENTDIR}_${IOPR_HOSTADDR}
+                ${IOPR_SSL_CLIENTDIR}_${IOPR_HOSTADDR}
             ssl_iopr_crl_ext_server $sslTestType ${IOPR_HOSTADDR} \
-                ${IOPR_CLIENTDIR}_${IOPR_HOSTADDR}
+                ${IOPR_SSL_CLIENTDIR}_${IOPR_HOSTADDR}
         done
         
         
@@ -654,17 +650,17 @@ ssl_iopr_run() {
                 Client: remote($IOPR_HOSTADDR:$PORT)
                 Server: local(selfserv)"
         ssl_iopr_cov_ext_client ${IOPR_HOSTADDR} ${IOPR_OPEN_PORT} \
-            ${HOSTADDR} ${PORT} ${R_IOPR_SERVERDIR}_${IOPR_HOSTADDR}
+            ${HOSTADDR} ${PORT} ${R_IOPR_SSL_SERVERDIR}_${IOPR_HOSTADDR}
         ssl_iopr_auth_ext_client ${IOPR_HOSTADDR} ${IOPR_OPEN_PORT} \
-            ${HOSTADDR} ${PORT} ${R_IOPR_SERVERDIR}_${IOPR_HOSTADDR}
+            ${HOSTADDR} ${PORT} ${R_IOPR_SSL_SERVERDIR}_${IOPR_HOSTADDR}
         ssl_iopr_crl_ext_client ${IOPR_HOSTADDR} ${IOPR_OPEN_PORT} \
-            ${HOSTADDR} ${PORT} ${R_IOPR_SERVERDIR}_${IOPR_HOSTADDR}
+            ${HOSTADDR} ${PORT} ${R_IOPR_SSL_SERVERDIR}_${IOPR_HOSTADDR}
         echo "================================================"
         echo "Done testing interoperability with $IOPR_HOSTADDR"
         num=`expr $num + 1`
         IOPR_HOST_PARAM=`echo "${IOPR_HOSTADDR_LIST} " | cut -f $num -d' '`
     done
-    NO_ECC_CERTS=0 #disable ECC for interoperability 
+    NO_ECC_CERTS=0
     return 0
 }
 
