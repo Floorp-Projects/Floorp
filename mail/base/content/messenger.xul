@@ -174,7 +174,7 @@
     
       <label id="folderColumnLabel" hidden="true" value="&folderColumn.label;"/>
       <sidebarheader id="folderPaneHeader" align="center">
-        <label id="folderpane-title" onclick="CycleFolderView(true);"/>
+        <label id="folderpane-title"/>
         <spacer flex="1"/>
         <toolbarbutton id="folderview-cycler-left"  class="folderview-cycler" 
                        onclick="CycleFolderView(false);"/>
