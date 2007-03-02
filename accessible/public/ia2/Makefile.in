@@ -156,22 +156,21 @@ done_gen: $(IA2RELDIR)/Accessible2.idl \
           $(IA2RELDIR)/AccessibleTable.idl \
           $(IA2RELDIR)/AccessibleText.idl \
           $(IA2RELDIR)/AccessibleValue.idl
-
-	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/Accessible2.idl
-	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleAction.idl
-	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleApplication.idl
-	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleComponent.idl
-	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleEditableText.idl
-	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleEventId.idl
-	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleHyperlink.idl
-	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleHypertext.idl
-	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleImage.idl
-	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleRelation.idl
-	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleRole.idl
-	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleStates.idl
-	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleTable.idl
-	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleText.idl
-	$(MIDL) $(MIDL_FLAGS) /ms_ext /app_config /c_ext /I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleValue.idl
+	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/Accessible2.idl
+	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleAction.idl
+	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleApplication.idl
+	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleComponent.idl
+	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleEditableText.idl
+	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleEventId.idl
+	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleHyperlink.idl
+	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleHypertext.idl
+	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleImage.idl
+	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleRelation.idl
+	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleRole.idl
+	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleStates.idl
+	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleTable.idl
+	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleText.idl
+	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleValue.idl
 	touch $@
 
 EXPORTS = \
