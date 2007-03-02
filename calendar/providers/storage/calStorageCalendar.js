@@ -1183,7 +1183,7 @@ calStorageCalendar.prototype = {
                     icsSvc = Components.classes["@mozilla.org/calendar/ics-service;1"]
                                        .getService(Components.interfaces.calIICSService);
                     var latestTzId = icsSvc.latestTzId(tzId);
-                    if (tzId != latestTzId) {
+                    if ((latestTzId) && (tzId != latestTzId)) {
                         tzIdsToUpdate.push({oldTzId: tzId, newTzId: latestTzId});
                         updateTzIds = true;
                     }
