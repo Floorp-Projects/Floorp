@@ -3,7 +3,6 @@ browser.jar:
   content/branding/about.png                     (about.png)
   content/branding/aboutCredits.png              (aboutCredits.png)
   content/branding/aboutFooter.png               (aboutFooter.png)
-  content/branding/searchconfig.properties       (searchconfig.properties)
   content/branding/icon48.png                    (icon48.png)
   content/branding/icon64.png                    (icon64.png)
 #ifdef XP_WIN
