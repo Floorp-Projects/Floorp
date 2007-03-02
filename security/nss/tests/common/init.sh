@@ -388,8 +388,9 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     EXT_CLIENTDIR=${HOSTDIR}/ext_client
 
     IOPR_CADIR=${HOSTDIR}/CA_iopr
-    IOPR_SERVERDIR=${HOSTDIR}/server_iopr
-    IOPR_CLIENTDIR=${HOSTDIR}/client_iopr
+    IOPR_SSL_SERVERDIR=${HOSTDIR}/server_ssl_iopr
+    IOPR_SSL_CLIENTDIR=${HOSTDIR}/client_ssl_iopr
+    IOPR_OCSP_CLIENTDIR=${HOSTDIR}/client_ocsp_iopr
 
     CERT_EXTENSIONS_DIR=${HOSTDIR}/cert_extensions
 
@@ -425,8 +426,9 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     R_SERVERDIR=../server
     R_CLIENTDIR=../client
     R_IOPR_CADIR=../CA_iopr
-    R_IOPR_SERVERDIR=../server_iopr
-    R_IOPR_CLIENTDIR=../client_iopr
+    R_IOPR_SSL_SERVERDIR=../server_ssl_iopr
+    R_IOPR_SSL_CLIENTDIR=../client_ssl_iopr
+    R_IOPR_OCSP_CLIENTDIR=../client_ocsp_iopr
     R_ALICEDIR=../alicedir
     R_BOBDIR=../bobdir
     R_DAVEDIR=../dave
