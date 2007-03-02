@@ -13,9 +13,8 @@
 #
 # The Original Code is Java XPCOM Bindings.
 #
-# The Initial Developer of the Original Code is
-# IBM Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2005
+# The Initial Developer of the Original Code is IBM Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2007
 # IBM Corporation. All Rights Reserved.
 #
 # Contributor(s):
@@ -42,40 +41,42 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-XPIDL_MODULE = javaxpcomtest
-
-# In order for XPCOM to reference these interfaces, they need to be compiled
-# into XPT files.
-XPIDLSRCS = \
-	ITestParams.idl \
+DIRS = \
+	testparams \
 	$(NULL)
+
+JAVA_LIBRARY_NAME = test_javaxpcom
 
 JAVA_SRCS = \
-	Foo.java \
+	LocationProvider.java \
+	TestINIParser.java \
+	TestQI.java \
+	TestVersionComparator.java \
 	TestArray.java \
-	TestJavaProxy.java \
+	TestProps.java \
 	$(NULL)
-#	TestProps.java \
-#	TestQI.java \
-#	TestParams.java \
 
-DIRS += dll
-
-ifneq (,$(filter WINNT OS2,$(OS_ARCH)))
-SEP = \;
-else
-SEP = :
-endif
-
-_JAVA_CLASSPATH = .$(SEP)./../interfaces/MozillaInterfaces.jar$(SEP)$(XPIDL_GEN_DIR)
-
-GARBAGE += *.class $(REBUILD_JAR)
+JAVA_CLASSPATH = \
+	../interfaces/MozillaInterfaces.jar \
+	../interfaces/MozillaGlue.jar \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-%.class: %.java Makefile Makefile.in
-	$(REPORT_BUILD)
-	$(ELOG) $(CYGWIN_WRAPPER) $(JAVAC) $(JAVAC_FLAGS) \
-			-classpath $(_JAVA_CLASSPATH) -d . $(_VPATH_SRCS)
+ifeq ($(OS_ARCH),Darwin)
+DIST_BIN = $(PWD)/$(DIST)/XUL.framework/Versions/Current
+else
+DIST_BIN = $(PWD)/$(DIST)/bin
+endif
 
-libs:: $(JAVA_SRCS:.java=.class)
+check::
+	$(CYGWIN_WRAPPER) $(JAVA) -classpath $(_JAVA_CLASSPATH)$(SEP)$(JAVA_LIBRARY) \
+			TestINIParser
+	$(CYGWIN_WRAPPER) $(JAVA) -classpath $(_JAVA_CLASSPATH)$(SEP)$(JAVA_LIBRARY) \
+			TestQI $(DIST_BIN)
+	$(CYGWIN_WRAPPER) $(JAVA) -classpath $(_JAVA_CLASSPATH)$(SEP)$(JAVA_LIBRARY) \
+			TestVersionComparator
+	$(CYGWIN_WRAPPER) $(JAVA) -classpath $(_JAVA_CLASSPATH)$(SEP)$(JAVA_LIBRARY) \
+			TestArray $(DIST_BIN)
+	$(CYGWIN_WRAPPER) $(JAVA) -classpath $(_JAVA_CLASSPATH)$(SEP)$(JAVA_LIBRARY) \
+			TestProps $(DIST_BIN)

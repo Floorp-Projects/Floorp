@@ -1377,7 +1377,6 @@ if [ "$MOZ_JAVAXPCOM" ]; then
         extensions/java/xpcom/interfaces/Makefile
         extensions/java/xpcom/src/Makefile
         extensions/java/xpcom/glue/Makefile
-        extensions/java/xpcom/tools/genifaces/Makefile
 "
 fi
 

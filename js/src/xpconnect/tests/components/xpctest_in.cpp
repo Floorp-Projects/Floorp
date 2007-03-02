@@ -42,8 +42,8 @@
 #include "xpctest_in.h"
 #include "nsISupports.h"
 #define NS_IXPCTESTIN_IID \
-  {0x318d6f6a, 0x5411, 0x11d3, \
-    { 0x82, 0xef, 0x00, 0x60, 0xb0, 0xeb, 0x59, 0x6f }}
+  {0xa3cab49d, 0xae83, 0x4e63, \
+    { 0xa7, 0x35, 0x00, 0x9b, 0x9a, 0x75, 0x92, 0x04 }}
 
 
 class xpcTestIn : public nsIXPCTestIn {
@@ -104,7 +104,7 @@ NS_IMETHODIMP xpcTestIn :: EchoWchar(PRUnichar wc, PRUnichar *_retval) {
     *_retval = wc;
     return NS_OK;
 }
-NS_IMETHODIMP xpcTestIn :: EchoString(const PRUnichar *ws, char **_retval) {
+NS_IMETHODIMP xpcTestIn :: EchoString(const PRUnichar *ws, PRUnichar **_retval) {
 /*  const char s[] = *ws;
     **_retval= (char*) nsMemory::Clone(s, 
                                     sizeof(char)*(strlen(s)+1));

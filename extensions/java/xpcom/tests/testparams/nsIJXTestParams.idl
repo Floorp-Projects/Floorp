@@ -14,7 +14,7 @@
  * The Original Code is Java XPCOM Bindings.
  *
  * The Initial Developer of the Original Code is IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -34,39 +34,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-import org.mozilla.xpcom.Mozilla;
-import org.mozilla.xpcom.nsISupports;
+#include "nsISupports.idl"
 
-public class Foo implements nsISupports {
-
-  static int gCount;
-  int mID;
-
-  public Foo(int aID)
-  {
-    mID = aID;
-    ++gCount;
-    System.out.println("init: " + mID + " (" +
-                       Integer.toHexString(this.hashCode()) + "), " +
-                       gCount +" total");
-  }
-
-  // nsISupports implementation
-  public nsISupports queryInterface(String aIID)
-  {
-    return Mozilla.queryInterface(this, aIID);
-  }
-
-  public int getId()
-  {
-    return mID;
-  }
-
-  protected void finalize() throws Throwable
-  {
-    --gCount;
-    System.out.println("destruct: " + mID + " (" +
-                       Integer.toHexString(this.hashCode()) + "), " +
-                       gCount +" remain");
-  }
-}
+[scriptable, uuid(529d2d15-028e-438f-9007-b3d7ebbe132f)]
+interface nsIJXTestParams : nsISupports
+{
+  void runTests(in nsISupports tests);
+};

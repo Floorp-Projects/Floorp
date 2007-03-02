@@ -237,8 +237,9 @@ ifdef MOZ_PREF_EXTENSIONS
 tier_toolkit_dirs += extensions/pref
 endif
 
+# JavaXPCOM JNI code is compiled into libXUL
 ifdef MOZ_JAVAXPCOM
-tier_toolkit_dirs += extensions/java
+tier_toolkit_dirs += extensions/java/xpcom/src
 endif
 
 ifndef BUILD_STATIC_LIBS

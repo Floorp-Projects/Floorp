@@ -45,6 +45,7 @@ JAVA_LIBRARY_NAME = MozillaGlue
 
 # Don't install MozillaGlue.jar in $(DIST)/bin
 NO_DIST_INSTALL=1
+NO_INSTALL=1
 
 PACKAGE_DIR = org/mozilla/xpcom
 
@@ -116,8 +117,7 @@ $(IFACES_DIR)/$(JAVA_IFACES_PKG_NAME)/nsISupports.class: $(IFACES_DIR) Makefile 
 	@echo Compiling Java interfaces
 	find $(JAVA_DIST_DIR)/default -name "*.java" $(IGNORE_IFACES) > java.files
 	$(CYGWIN_WRAPPER) $(JAVAC) $(JAVAC_FLAGS) -classpath $(IFACES_DIR) 		\
-		-d $(IFACES_DIR) -sourcepath $(JAVA_DIST_DIR) 						\
-		-sourcepath $(JAVA_DIST_DIR)/default @java.files
+		-d $(IFACES_DIR) -sourcepath $(JAVA_DIST_DIR)/default @java.files
 
 $(IFACES_JAR): $(IFACES_DIR)/$(JAVA_IFACES_PKG_NAME)/nsISupports.class Makefile
 	$(JAR) cf $@ -C $(IFACES_DIR) org
@@ -125,12 +125,6 @@ $(IFACES_JAR): $(IFACES_DIR)/$(JAVA_IFACES_PKG_NAME)/nsISupports.class Makefile
 $(IFACES_JAR_SRC): $(IFACES_JAR)
 	$(JAR) cf $@ -C $(JAVA_DIST_DIR)/default org
 	$(ZIP) -d $@ $(patsubst %, $(JAVA_IFACES_PKG_NAME)/%.java, $(IGNORE_IFACES_NAMES))
-
-##
-# Build the implementation Java classes, which depend on these interfaces
-##
-export:: $(IFACES_JAR) $(IFACES_JAR_SRC) $(JAVA_LIBRARY)
-	$(MAKE) -C ../src jarfile
 
 # Since we set NO_DIST_INSTALL above, the jars don't get copied into the SDK.
 # Handle that here.

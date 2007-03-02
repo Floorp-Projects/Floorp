@@ -112,5 +112,8 @@ include $(topsrcdir)/config/rules.mk
 $(JARFILE): $(addprefix $(_JAVA_DIR)/,$(JAVA_SRCS:.java=.class)) Makefile Makefile.in
 	$(JAR) cf $@ -C $(_JAVA_DIR) .
 
-jarfile:: $(JARFILE) $(JARFILE_SRC)
-	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin
+jar-libs:: $(JARFILE)
+	$(INSTALL) $(IFLAGS1) $(JARFILE) $(FINAL_TARGET)
+
+jar-install:: $(JARFILE)
+	$(SYSINSTALL) $(IFLAGS2) $(JARFILE) $(DESTDIR)$(mozappdir)
