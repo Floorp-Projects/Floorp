@@ -199,7 +199,7 @@ function networksSyncToList()
             // ...and add a new one if it isn't found.
             if (listServ == null)
             {
-                listServ = { name: serv.hostname, port: serv.port,
+                listServ = { hostname: serv.hostname, port: serv.port,
                              isSecure: serv.isSecure, password: null };
                 listNet.servers.push(listServ);
             }
