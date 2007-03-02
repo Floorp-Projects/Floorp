@@ -159,10 +159,8 @@ nsPopupSetFrame::AppendFrames(nsIAtom*        aListName,
                               nsIFrame*       aFrameList)
 {
   if (aListName == nsGkAtoms::popupList) {
-    NS_ASSERTION(!aFrameList->GetNextSibling(), "Append one popup at a time!");
-    return AddPopupFrame(aFrameList);
+    return AddPopupFrameList(aFrameList);
   }
-
   return nsBoxFrame::AppendFrames(aListName, aFrameList);
 }
 
@@ -173,19 +171,17 @@ nsPopupSetFrame::RemoveFrame(nsIAtom*        aListName,
   if (aListName == nsGkAtoms::popupList) {
     return RemovePopupFrame(aOldFrame);
   }
-
   return nsBoxFrame::RemoveFrame(aListName, aOldFrame);
 }
 
-#ifdef DEBUG
 NS_IMETHODIMP
 nsPopupSetFrame::InsertFrames(nsIAtom*        aListName,
                               nsIFrame*       aPrevFrame,
                               nsIFrame*       aFrameList)
 {
-  NS_PRECONDITION(aListName != nsGkAtoms::popupList,
-               "Shouldn't be inserting popups");
-
+  if (aListName == nsGkAtoms::popupList) {
+    return AddPopupFrameList(aFrameList);
+  }
   return nsBoxFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
 }
 
@@ -193,14 +189,11 @@ NS_IMETHODIMP
 nsPopupSetFrame::SetInitialChildList(nsIAtom*        aListName,
                                      nsIFrame*       aChildList)
 {
-  NS_PRECONDITION(aListName != nsGkAtoms::popupList,
-                  "Shouldn't be setting initial popup child list");
-
+  if (aListName == nsGkAtoms::popupList) {
+    return AddPopupFrameList(aChildList);
+  }
   return nsBoxFrame::SetInitialChildList(aListName, aChildList);
-
 }
-#endif
-
 
 void
 nsPopupSetFrame::Destroy()
@@ -807,6 +800,16 @@ nsPopupSetFrame::RemovePopupFrame(nsIFrame* aPopup)
 }
 
 nsresult
+nsPopupSetFrame::AddPopupFrameList(nsIFrame* aPopupFrameList)
+{
+  for (nsIFrame* kid = aPopupFrameList; kid; kid = kid->GetNextSibling()) {
+    nsresult rv = AddPopupFrame(kid);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
+
+nsresult
 nsPopupSetFrame::AddPopupFrame(nsIFrame* aPopup)
 {
   // The entry should already exist, but might not (if someone decided to make their
@@ -823,7 +826,10 @@ nsPopupSetFrame::AddPopupFrame(nsIFrame* aPopup)
       return NS_ERROR_OUT_OF_MEMORY;
     mPopupList = entry;
   }
-  
+  else {
+    NS_ASSERTION(!entry->mPopupFrame, "Leaking a popup frame");
+  }
+
   // Set the frame connection.
   entry->mPopupFrame = aPopup;
   
