@@ -736,10 +736,9 @@ NS_IMETHODIMP ImportEudoraAddressImpl::ImportAddressBook(	nsIImportABDescriptor 
 
 
 #ifdef IMPORT_DEBUG
-	char *pPath;
-	inFile->GetNativePath(&pPath);
-	IMPORT_LOG1( "Import address book: %s\n", pPath);
-	nsCRT::free( pPath);
+	nsCString path;
+	inFile->GetNativePath(path);
+	IMPORT_LOG1( "Import address book: %s\n", path.get());
 #endif
 	
 	    
