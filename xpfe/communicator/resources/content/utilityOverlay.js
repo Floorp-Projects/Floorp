@@ -451,11 +451,10 @@ function gatherTextUnder ( root )
       // Add this text to our collection.
       text += " " + node.data;
     } else if ( node instanceof HTMLImageElement ) {
-      // If it has an alt= attribute, use that.
+      // If it has an alt= attribute, add that.
       var altText = node.getAttribute( "alt" );
       if ( altText && altText != "" ) {
-        text = altText;
-        break;
+        text += " " + altText;
       }
     }
     // Find next node to test.
@@ -469,9 +468,15 @@ function gatherTextUnder ( root )
       if ( node.nextSibling ) {
         node = node.nextSibling;
       } else {
-        // Last resort is our next oldest uncle/aunt.
-        node = node.parentNode.nextSibling;
-        depth--;
+        // Last resort is a sibling of an ancestor
+        while ( node && depth > 0 ) {
+          node = node.parentNode;
+          depth--;
+          if ( node.nextSibling ) {
+            node = node.nextSibling;
+            break;
+          }
+        }
       }
     }
   }
