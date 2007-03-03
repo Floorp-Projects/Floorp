@@ -187,11 +187,17 @@
   </target>
 
   <target name="copy.test.src" depends="prepare">
+
+    <!-- Populate the netbeans Test Packages -->
+
     <copy todir="${dist.home}/test/automated/src/main/java">
       <fileset dir="${source.home}/webclient/test/automated/src/classes">
         <exclude name="**/*Bookmark*.java" />
         <exclude name="**/*Preferences*.java" />
         <exclude name="**/*Profile*.java" />
+      </fileset>
+      <fileset dir="${basedir}/mcp-test/src/test/java">
+        <include name="**/*.java" />
       </fileset>
     </copy>
     <copy todir="${dist.home}/test/automated/src/main/resources">
@@ -200,8 +206,13 @@
       </fileset>
     </copy>
 
+    <!-- Populate the netbeans Source Packages -->
+
     <copy todir="${dist.home}/test/manual/src/main/java">
       <fileset dir="${source.home}/webclient/test/manual/src/classes" />
+      <fileset dir="${basedir}/mcp-test/src/main/java">
+        <include name="**/*.java" />
+      </fileset>
     </copy>
 
 
