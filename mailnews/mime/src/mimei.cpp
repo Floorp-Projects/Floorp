@@ -514,6 +514,27 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
   */
   if ((tempClass = mime_locate_external_content_handler(content_type, &ctHandlerInfo)) != NULL)
   {
+#ifdef MOZ_THUNDERBIRD
+      // This is a case where we only want to add this property if we are a thunderbird build AND
+      // we have found an external mime content handler for text/calendar 
+      // This will enable iMIP support in Lightning
+      if ( hdrs && (!nsCRT::strncasecmp(content_type, "text/calendar", 13)))
+      {                    
+          char *full_content_type = MimeHeaders_get(hdrs, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);          
+          if (full_content_type) 
+          {
+              char *imip_method = MimeHeaders_get_parameter(full_content_type, "method", NULL, NULL);
+              nsCOMPtr<nsIMsgDBHdr> msgHdr;
+              getMsgHdrForCurrentURL(opts, getter_AddRefs(msgHdr));
+              if (msgHdr)
+                msgHdr->SetStringProperty("imip_method", (imip_method) ? imip_method : "nomethod");
+              // PR_Free checks for null
+              PR_Free(imip_method);                                    
+              PR_Free(full_content_type);
+          }          
+      }
+#endif
+
     if (types_of_classes_to_disallow > 0
         && (!nsCRT::strncasecmp(content_type, "text/x-vcard", 12))
        )
