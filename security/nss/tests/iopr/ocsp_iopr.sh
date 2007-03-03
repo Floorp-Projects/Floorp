@@ -97,14 +97,15 @@ ocsp_get_cert_status() {
     fi
 
     outFile=$dbDir/ocsptest.out.$$
+    echo "ocspclnt -d $dbDir -S $cert $clntParam"
     ocspclnt -d $dbDir -S $cert $clntParam &> $outFile
-    res=$?
+    ret=$?
     echo "ocspclnt output:"
     cat $outFile
-    [ -z "`grep succeeded $outFile`" ] && res=1
+    [ -z "`grep succeeded $outFile`" ] && ret=1
     
     rm -f $outFile
-    return $res
+    return $ret
 }
 
 ########################################################################
@@ -140,19 +141,19 @@ ocsp_iopr() {
     for certName in $testValidCertNames; do
         ocsp_get_cert_status $dbDir $certName "$responderUrl" "$testResponder"
         html_msg $? 0 "Getting status of a valid cert ($certName)" \
-            "produced a returncode of $ret, expected is $value"
+            "produced a returncode of $ret, expected is $0."
     done
 
     for certName in $testRevokedCertNames; do
         ocsp_get_cert_status $dbDir $certName "$responderUrl" "$testResponder"
         html_msg $? 1 "Getting status of a unvalid cert ($certName)" \
-            "produced a returncode of $ret, expected is $value" 
+            "produced a returncode of $ret, expected is 1." 
     done
 
     for certName in $testStatUnknownCertNames; do
         ocsp_get_cert_status $dbDir $certName "$responderUrl" "$testResponder"
-        html_msg $? 1 "Getting status of a cert with unknown status ($certName)" \
-                    "produced a returncode of $ret, expected is $value"
+        html_msg $? 1 "Getting status of a cert with unknown status " \
+                    "($certName) produced a returncode of $ret, expected is 1."
     done
 }
 
