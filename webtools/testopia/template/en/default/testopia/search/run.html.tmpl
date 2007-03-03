@@ -50,7 +50,11 @@
                               list      => user.get_selectable_products,
                               elements  => 5,
                               mult      => 1  
-                              events    => 'onChange="onProductSelection()"' } %]
+                              events    => 'onChange="document.getElementById(\'version\').disabled=true;
+                                                      document.getElementById(\'milestone\').disabled=true;
+                                                      document.getElementById(\'build\').disabled=true;
+                                                      document.getElementById(\'environment\').disabled=true;
+                                                      onProductSelection()"' } %]
     </td>
     <td style="padding-right: 30px;">
     [% PROCESS select sel = { name  => 'version',
@@ -174,5 +178,5 @@
   <br/><br/>
 </p>
 
-<input type="submit" value="Submit">
+<input type="submit" value="Submit" id="search_submit">
 </form>  

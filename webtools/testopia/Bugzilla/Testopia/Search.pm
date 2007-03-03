@@ -978,6 +978,9 @@ sub init {
         elsif ($obj eq 'run'){
             $field = 'product_version';
         }
+        elsif ($obj eq 'plan'){
+            $field = 'default_product_version';
+        }
         push(@specialchart, [$field, "anyexact", join(',', $cgi->param('version'))]);
     }
     if (defined $cgi->param('run_status')){

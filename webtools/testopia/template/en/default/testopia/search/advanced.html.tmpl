@@ -56,14 +56,18 @@
             var newOption = new Option(data[data.selectTypes[i]][j],data[data.selectTypes[i]][j]);
             addOption(document.getElementById(data.selectTypes[i]),newOption);
           }
+          dojo.byId(data.selectTypes[i]).disabled = false;
         }
         catch(err){}
       }
+      dojo.byId('search_submit').disabled = false;
+      
     }
 
   function onProductSelection(){
     var prod = document.getElementById("product_id");
     var ids = new Array;
+    dojo.byId( "search_submit").disabled = true;
     for (var i=0; i<prod.options.length; i++){
       if (prod.options[i].selected == true)
         ids.push(prod.options[i].value);

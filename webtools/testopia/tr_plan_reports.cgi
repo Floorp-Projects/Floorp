@@ -29,6 +29,8 @@ use Bugzilla::Util;
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::Report;
 
+require "globals.pl";
+
 use vars qw($vars);
 my $template = Bugzilla->template;
 my $cgi = Bugzilla->cgi;

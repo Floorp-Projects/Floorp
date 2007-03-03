@@ -75,7 +75,9 @@
                   list      => user.get_selectable_products,
                   elements  => 5,
                   mult      => 1  
-                  events    => 'onChange="onProductSelection()"' } %]
+                  events    => 'onChange="document.getElementById(\'component\').disabled=true;
+                                          document.getElementById(\'category\').disabled=true;
+                                          onProductSelection()"' } %]
     </td>
     <td style="padding-right: 30px;">
     [% PROCESS select sel = { name  => 'component',
@@ -222,5 +224,5 @@
   </tr>  
 </table>
 </fieldset>
-<input type="submit" value="Submit">
+<input type="submit" value="Submit" id="search_submit">
 </form>  

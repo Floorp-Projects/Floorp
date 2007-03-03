@@ -23,6 +23,7 @@ use strict;
 use lib ".";
 
 use Bugzilla;
+use Bugzilla::Constants;
 
 Bugzilla->login(LOGIN_REQUIRED);
 use vars qw($vars);

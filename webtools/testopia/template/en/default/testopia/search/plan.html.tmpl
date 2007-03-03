@@ -42,10 +42,11 @@
                   list      => user.get_selectable_products,
                   elements  => 5,
                   mult      => 1  
-                  events    => 'onChange="onProductSelection()"'  } %]
+                  events    => 'onChange="document.getElementById(\'version\').disabled=true; 
+                                          onProductSelection()"'  } %]
     </td>
     <td style="padding-right: 30px;">
-    [% PROCESS select sel = { name  => 'default_product_version',
+    [% PROCESS select sel = { name  => 'version',
                   accesskey => 'v', 
                   list      => versions,
                   elements  => 5,
@@ -134,5 +135,5 @@
   <input type="checkbox" name="isactive" id="isactive" value="1" />
 </p>
 
-<input type="submit" value="Submit">
+<input type="submit" value="Submit" id="search_submit">
 </form>  
