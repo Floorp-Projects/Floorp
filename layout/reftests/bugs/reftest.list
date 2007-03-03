@@ -38,10 +38,10 @@ fails == 25888-2l.html 25888-2l-ref.html # bug 25888
 fails == 25888-2r.html 25888-2r-ref.html # bug 25888
 fails == 25888-3l.html 25888-3l-ref.html # bug 25888
 fails == 25888-3r.html 25888-3r-ref.html # bug 25888
-random-if(MOZ_WIDGET_TOOLKIT=="windows") == 28811-1a.html 28811-1-ref.html # bug 369040
-random-if(MOZ_WIDGET_TOOLKIT=="windows") == 28811-1b.html 28811-1-ref.html # bug 369040
-random-if(MOZ_WIDGET_TOOLKIT=="windows") == 28811-2a.html 28811-2-ref.html # bug 369040
-random-if(MOZ_WIDGET_TOOLKIT=="windows") == 28811-2b.html 28811-2-ref.html # bug 369040
+== 28811-1a.html 28811-1-ref.html
+== 28811-1b.html 28811-1-ref.html
+== 28811-2a.html 28811-2-ref.html
+== 28811-2b.html 28811-2-ref.html
 == 40596-1a.html 40596-1-ref.html
 != 40596-1b.html 40596-1-ref.html
 == 40596-1c.html 40596-1-ref.html
@@ -56,24 +56,24 @@ random-if(MOZ_WIDGET_TOOLKIT=="windows") == 28811-2b.html 28811-2-ref.html # bug
 == 97777-2.html 97777-2-ref.html
 == 98223-1.html 98223-1-ref.html
 == 98223-2.html 98223-2-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="windows") == 142233-1.html 142233-1-ref.html # bug 369040
+== 142233-1.html 142233-1-ref.html
 == 144004-1.html 144004-1-ref.html
 == 144004-2.html 144004-2-ref.html
 != 144004-3.html 144004-3-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="windows") == 163504-1a.html 163504-1-ref.html # bug 369040
-random-if(MOZ_WIDGET_TOOLKIT=="windows") == 163504-1b.html 163504-1-ref.html # bug 369040
-random-if(MOZ_WIDGET_TOOLKIT=="windows") == 163504-2a.html 163504-2-ref.html # bug 369040
-random-if(MOZ_WIDGET_TOOLKIT=="windows") == 163504-2b.html 163504-2-ref.html # bug 369040
+== 163504-1a.html 163504-1-ref.html
+== 163504-1b.html 163504-1-ref.html
+== 163504-2a.html 163504-2-ref.html
+== 163504-2b.html 163504-2-ref.html
 == 169749-1.html 169749-1-ref.html
 == 172073-1.html 172073-1-ref.html
 == 243266-1.html 243266-1-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="windows") == 273681-1.html 273681-1-ref.html # bug 369040
-random-if(MOZ_WIDGET_TOOLKIT=="windows") == 300691-1a.html 300691-1-ref.html # bug 369040
-random-if(MOZ_WIDGET_TOOLKIT=="windows") == 300691-1b.html 300691-1-ref.html # bug 369040
-random-if(MOZ_WIDGET_TOOLKIT=="windows") == 300691-1c.html 300691-1-ref.html # bug 369040
-random-if(MOZ_WIDGET_TOOLKIT=="windows") == 300691-1d.html 300691-1-ref.html # bug 369040
-random-if(MOZ_WIDGET_TOOLKIT=="windows") == 300691-1e.html 300691-1-ref.html # bug 369040
-random-if(MOZ_WIDGET_TOOLKIT=="windows") == 300691-1f.html 300691-1-ref.html # bug 369040
+== 273681-1.html 273681-1-ref.html
+== 300691-1a.html 300691-1-ref.html
+== 300691-1b.html 300691-1-ref.html
+== 300691-1c.html 300691-1-ref.html
+== 300691-1d.html 300691-1-ref.html
+== 300691-1e.html 300691-1-ref.html
+== 300691-1f.html 300691-1-ref.html
 == 315620-1a.html 315620-1-ref.html
 != 315620-1b.html 315620-1-ref.html
 == 315620-2a.xhtml 315620-2-ref.xhtml
@@ -85,9 +85,9 @@ random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
 == 335628-1.html 335628-1-ref.html
 != 335628-2.xul 335628-2-ref.xul
 == 339289-1.html 339289-1-ref.html
-random == 346774-1a.html 346774-1-ref.html # bug 369040
-random-if(MOZ_WIDGET_TOOLKIT=="windows") == 346774-1b.html 346774-1-ref.html # bug 369040
-random-if(MOZ_WIDGET_TOOLKIT=="windows") == 346774-1c.html 346774-1-ref.html # bug 369040
+== 346774-1a.html 346774-1-ref.html
+== 346774-1b.html 346774-1-ref.html
+== 346774-1c.html 346774-1-ref.html
 == 347912-1.html 347912-1-ref.html
 == 348809-1a.html 348809-1-ref.html
 == 348809-1b.html 348809-1-ref.html
@@ -107,7 +107,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="windows") == 346774-1c.html 346774-1-ref.html # b
 == 351641-1b.html 351641-1-ref.html
 == 351641-2a.html 351641-2-ref.html
 fails == 351641-2b.html 351641-2-ref.html # bug 358433 (2006-10-19)
-random-if(MOZ_WIDGET_TOOLKIT=="windows") == 359903-1.html 359903-1-ref.html # bug 369040
+== 359903-1.html 359903-1-ref.html
 == 359903-2.html 359903-2-ref.html
 == 360065-1.html 360065-1-ref.html
 == 360757-1a.html 360757-1-ref.html
@@ -130,10 +130,10 @@ random-if(MOZ_WIDGET_TOOLKIT=="windows") == 359903-1.html 359903-1-ref.html # bu
 == 365173-1.html 365173-1-ref.html
 == 367247-s-visible.html 367247-s-hidden.html
 == 367247-s-hidden.html 367247-s-auto.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") random-if(MOZ_WIDGET_TOOLKIT=="windows") != 367247-s-auto.html 367247-s-scroll.html # bug 369293 (mac), bug 369040 (windows)
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") != 367247-s-auto.html 367247-s-scroll.html # bug 369293
 != 367247-l-visible.html 367247-l-hidden.html
-random-if(MOZ_WIDGET_TOOLKIT=="windows") != 367247-l-hidden.html 367247-l-scroll.html # bug 369040
-random-if(MOZ_WIDGET_TOOLKIT=="windows") == 367247-l-scroll.html 367247-l-auto.html # bug 369040
+!= 367247-l-hidden.html 367247-l-scroll.html
+== 367247-l-scroll.html 367247-l-auto.html
 == 367332-1a.html 367332-1-ref.html
 == 367332-1b.html 367332-1-ref.html
 == 367332-1c.html 367332-1-ref.html
