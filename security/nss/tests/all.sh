@@ -78,7 +78,7 @@
 #
 ########################################################################
 
-tests="cipher perf cert dbtests tools fips sdr crmf smime ssl ocsp"
+tests="cipher perf cert dbtests tools fips sdr crmf smime ssl"
 TESTS=${TESTS:-$tests}
 SCRIPTNAME=all.sh
 CLEANUP="${SCRIPTNAME}"
