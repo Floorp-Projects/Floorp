@@ -95,9 +95,11 @@
  * homes in fp, when calling out of the interpreter loop or threaded code.
  * RESTORE_SP_AND_PC copies the other way, to update registers after a call
  * to a subroutine that interprets a piece of the current script.
+ * ASSERT_SAVED_SP_AND_PC checks that SAVE_SP_AND_PC was called.
  */
 #define SAVE_SP_AND_PC(fp)      (SAVE_SP(fp), (fp)->pc = pc)
 #define RESTORE_SP_AND_PC(fp)   (RESTORE_SP(fp), pc = (fp)->pc)
+#define ASSERT_SAVED_SP_AND_PC(fp) JS_ASSERT((fp)->sp == sp && (fp)->pc == pc);
 
 /*
  * Push the generating bytecode's pc onto the parallel pc stack that runs
@@ -247,37 +249,39 @@
         }                                                                     \
     JS_END_MACRO
 
-#define VALUE_TO_OBJECT(cx, v, obj)                                           \
+/* SAVE_SP_AND_PC must be already called. */
+#define VALUE_TO_OBJECT(cx, n, v, obj)                                        \
     JS_BEGIN_MACRO                                                            \
+        ASSERT_SAVED_SP_AND_PC(fp);                                           \
         if (!JSVAL_IS_PRIMITIVE(v)) {                                         \
             obj = JSVAL_TO_OBJECT(v);                                         \
         } else {                                                              \
-            SAVE_SP_AND_PC(fp);                                               \
             obj = js_ValueToNonNullObject(cx, v);                             \
             if (!obj) {                                                       \
                 ok = JS_FALSE;                                                \
                 goto out;                                                     \
             }                                                                 \
+            STORE_OPND(n, OBJECT_TO_JSVAL(obj));                              \
         }                                                                     \
     JS_END_MACRO
 
+/* SAVE_SP_AND_PC must be already called. */
 #define FETCH_OBJECT(cx, n, v, obj)                                           \
     JS_BEGIN_MACRO                                                            \
+        ASSERT_SAVED_SP_AND_PC(fp);                                           \
         v = FETCH_OPND(n);                                                    \
-        VALUE_TO_OBJECT(cx, v, obj);                                          \
-        STORE_OPND(n, OBJECT_TO_JSVAL(obj));                                  \
+        VALUE_TO_OBJECT(cx, n, v, obj);                                       \
     JS_END_MACRO
 
-#define VALUE_TO_PRIMITIVE(cx, v, hint, vp)                                   \
+#define DEFAULT_VALUE(cx, n, hint, v)                                         \
     JS_BEGIN_MACRO                                                            \
-        if (JSVAL_IS_PRIMITIVE(v)) {                                          \
-            *vp = v;                                                          \
-        } else {                                                              \
-            SAVE_SP_AND_PC(fp);                                               \
-            ok = OBJ_DEFAULT_VALUE(cx, JSVAL_TO_OBJECT(v), hint, vp);         \
-            if (!ok)                                                          \
-                goto out;                                                     \
-        }                                                                     \
+        JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));                                    \
+        JS_ASSERT(v == sp[n]);                                                \
+        SAVE_SP_AND_PC(fp);                                                   \
+        ok = OBJ_DEFAULT_VALUE(cx, JSVAL_TO_OBJECT(v), hint, &sp[n]);         \
+        if (!ok)                                                              \
+            goto out;                                                         \
+        v = sp[n];                                                            \
     JS_END_MACRO
 
 JS_FRIEND_API(jsval *)
@@ -1941,9 +1945,24 @@ js_InvokeConstructor(JSContext *cx, jsval *vp, uintN argc)
 }
 
 static JSBool
-InternStringElementId(JSContext *cx, jsval idval, jsid *idp)
+InternNonIntElementId(JSContext *cx, JSObject *obj, jsval idval, jsid *idp)
 {
     JSAtom *atom;
+
+    JS_ASSERT(!JSVAL_IS_INT(idval));
+
+#if JS_HAS_XML_SUPPORT
+    if (!JSVAL_IS_PRIMITIVE(idval)) {
+        if (OBJECT_IS_XML(cx, obj)) {
+            *idp = OBJECT_JSVAL_TO_JSID(idval);
+            return JS_TRUE;
+        }
+        if (!js_IsFunctionQName(cx, JSVAL_TO_OBJECT(idval), idp))
+            return JS_FALSE;
+        if (*idp != 0)
+            return JS_TRUE;
+    }
+#endif
 
     atom = js_ValueToStringAtom(cx, idval);
     if (!atom)
@@ -1951,48 +1970,6 @@ InternStringElementId(JSContext *cx, jsval idval, jsid *idp)
     *idp = ATOM_TO_JSID(atom);
     return JS_TRUE;
 }
-
-static JSBool
-InternNonIntElementId(JSContext *cx, jsval idval, jsid *idp)
-{
-    JS_ASSERT(!JSVAL_IS_INT(idval));
-
-#if JS_HAS_XML_SUPPORT
-    if (JSVAL_IS_OBJECT(idval)) {
-        *idp = OBJECT_JSVAL_TO_JSID(idval);
-        return JS_TRUE;
-    }
-#endif
-
-    return InternStringElementId(cx, idval, idp);
-}
-
-#if JS_HAS_XML_SUPPORT
-static JSBool
-InternNonXmlObjectId(JSContext *cx, JSObject *obj, jsid *idp)
-{
-    if (obj) {
-        if (!js_IsFunctionQName(cx, obj, idp))
-            return JS_FALSE;
-        if (*idp != 0)
-            return JS_TRUE;
-    }
-    return InternStringElementId(cx, OBJECT_TO_JSVAL(obj), idp);
-}
-
-#define CHECK_ELEMENT_ID(obj, id)                                             \
-    JS_BEGIN_MACRO                                                            \
-        if (JSID_IS_OBJECT(id) && !OBJECT_IS_XML(cx, obj)) {                  \
-            SAVE_SP_AND_PC(fp);                                               \
-            ok = InternNonXmlObjectId(cx, JSID_TO_OBJECT(id), &id);           \
-            if (!ok)                                                          \
-                goto out;                                                     \
-        }                                                                     \
-    JS_END_MACRO
-
-#else
-#define CHECK_ELEMENT_ID(obj, id)       JS_ASSERT(!JSID_IS_OBJECT(id))
-#endif
 
 #ifndef MAX_INTERP_LEVEL
 #if defined(XP_OS2)
@@ -2517,8 +2494,8 @@ interrupt:
           END_CASE(JSOP_POPV)
 
           BEGIN_CASE(JSOP_ENTERWITH)
-            FETCH_OBJECT(cx, -1, rval, obj);
             SAVE_SP_AND_PC(fp);
+            FETCH_OBJECT(cx, -1, rval, obj);
             OBJ_TO_INNER_OBJECT(cx, obj);
             if (!obj || !(obj2 = js_GetScopeChain(cx, fp))) {
                 ok = JS_FALSE;
@@ -2731,31 +2708,31 @@ interrupt:
  * be an object (an XML QName, AttributeName, or AnyName), but only if we are
  * compiling with JS_HAS_XML_SUPPORT.  Otherwise convert the index value to a
  * string atom id.
+ *
+ * SAVE_SP_AND_PC must be already called.
  */
-#define FETCH_ELEMENT_ID(n, id)                                               \
+#define FETCH_ELEMENT_ID(obj, n, id)                                          \
     JS_BEGIN_MACRO                                                            \
         jsval idval_ = FETCH_OPND(n);                                         \
         if (JSVAL_IS_INT(idval_)) {                                           \
             id = INT_JSVAL_TO_JSID(idval_);                                   \
         } else {                                                              \
-            SAVE_SP_AND_PC(fp);                                               \
-            ok = InternNonIntElementId(cx, idval_, &id);                      \
+            ok = InternNonIntElementId(cx, obj, idval_, &id);                 \
             if (!ok)                                                          \
                 goto out;                                                     \
         }                                                                     \
     JS_END_MACRO
 
           BEGIN_CASE(JSOP_IN)
-            SAVE_SP_AND_PC(fp);
             rval = FETCH_OPND(-1);
+            SAVE_SP_AND_PC(fp);
             if (JSVAL_IS_PRIMITIVE(rval)) {
                 js_ReportValueError(cx, JSMSG_IN_NOT_OBJECT, -1, rval, NULL);
                 ok = JS_FALSE;
                 goto out;
             }
             obj = JSVAL_TO_OBJECT(rval);
-            FETCH_ELEMENT_ID(-2, id);
-            CHECK_ELEMENT_ID(obj, id);
+            FETCH_ELEMENT_ID(obj, -2, id);
             ok = OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop);
             if (!ok)
                 goto out;
@@ -2801,29 +2778,12 @@ interrupt:
              */
             LOAD_ATOM(0);
             id = ATOM_TO_JSID(atom);
-            lval = FETCH_OPND(-1);
             i = -2;
             goto do_forinloop;
 
           BEGIN_CASE(JSOP_FORNAME)
             LOAD_ATOM(0);
             id = ATOM_TO_JSID(atom);
-
-            /*
-             * ECMA 12.6.3 says to eval the LHS after looking for properties
-             * to enumerate, and bail without LHS eval if there are no props.
-             * We do Find here to share the most code at label do_forinloop.
-             * If looking for enumerable properties could have side effects,
-             * then we'd have to move this into the common code and condition
-             * it on op == JSOP_FORNAME.
-             */
-            SAVE_SP_AND_PC(fp);
-            ok = js_FindProperty(cx, id, &obj, &obj2, &prop);
-            if (!ok)
-                goto out;
-            if (prop)
-                OBJ_DROP_PROPERTY(cx, obj2, prop);
-            lval = OBJECT_TO_JSVAL(obj);
             /* FALL THROUGH */
 
           BEGIN_CASE(JSOP_FORARG)
@@ -2889,20 +2849,39 @@ interrupt:
                 PUSH_OPND(rval);
                 break;
 
-              default:
-                JS_ASSERT(op == JSOP_FORPROP || op == JSOP_FORNAME);
+              case JSOP_FORPROP:
+                /*
+                 * We fetch object here to ensure that the iterator is called
+                 * even if lval is null or undefined that throws in
+                 * FETCH_OBJECT. See bug 372331.
+                 */
+                FETCH_OBJECT(cx, -1, lval, obj);
+                goto set_for_property;
 
-                /* Convert lval to a non-null object containing id. */
-                VALUE_TO_OBJECT(cx, lval, obj);
-                if (op == JSOP_FORPROP)
-                    STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
+              case JSOP_FORNAME:
+                /*
+                 * We find property here after the iterator call to ensure
+                 * that we take into account side effects of the iterator
+                 * call. See bug 372331.
+                 */
 
+                ok = js_FindProperty(cx, id, &obj, &obj2, &prop);
+                if (!ok)
+                    goto out;
+                if (prop)
+                    OBJ_DROP_PROPERTY(cx, obj2, prop);
+
+              set_for_property:
                 /* Set the variable obj[id] to refer to rval. */
                 fp->flags |= JSFRAME_ASSIGNING;
                 ok = OBJ_SET_PROPERTY(cx, obj, id, &rval);
                 fp->flags &= ~JSFRAME_ASSIGNING;
                 if (!ok)
                     goto out;
+                break;
+
+              default:
+                JS_ASSERT(0);
                 break;
             }
 
@@ -2938,10 +2917,10 @@ interrupt:
 #define PROPERTY_OP(n, call)                                                  \
     JS_BEGIN_MACRO                                                            \
         /* Fetch the left part and resolve it to a non-null object. */        \
+        SAVE_SP_AND_PC(fp);                                                   \
         FETCH_OBJECT(cx, n, lval, obj);                                       \
                                                                               \
         /* Get or set the property, set ok false if error, true if success. */\
-        SAVE_SP_AND_PC(fp);                                                   \
         call;                                                                 \
         if (!ok)                                                              \
             goto out;                                                         \
@@ -2949,17 +2928,14 @@ interrupt:
 
 #define ELEMENT_OP(n, call)                                                   \
     JS_BEGIN_MACRO                                                            \
-        /* Fetch the right part and resolve it to an internal id. */          \
-        FETCH_ELEMENT_ID(n, id);                                              \
-                                                                              \
         /* Fetch the left part and resolve it to a non-null object. */        \
+        SAVE_SP_AND_PC(fp);                                                   \
         FETCH_OBJECT(cx, n - 1, lval, obj);                                   \
                                                                               \
-        /* Ensure that id has a type suitable for use with obj. */            \
-        CHECK_ELEMENT_ID(obj, id);                                            \
+        /* Fetch index and convert it to id suitable for use with obj. */     \
+        FETCH_ELEMENT_ID(obj, n, id);                                         \
                                                                               \
         /* Get or set the element, set ok false if error, true if success. */ \
-        SAVE_SP_AND_PC(fp);                                                   \
         call;                                                                 \
         if (!ok)                                                              \
             goto out;                                                         \
@@ -2999,11 +2975,10 @@ interrupt:
 
 #if JS_HAS_DESTRUCTURING
           BEGIN_CASE(JSOP_ENUMCONSTELEM)
-            FETCH_ELEMENT_ID(-1, id);
-            FETCH_OBJECT(cx, -2, lval, obj);
-            CHECK_ELEMENT_ID(obj, id);
             rval = FETCH_OPND(-3);
             SAVE_SP_AND_PC(fp);
+            FETCH_OBJECT(cx, -2, lval, obj);
+            FETCH_ELEMENT_ID(obj, -1, id);
             ok = OBJ_DEFINE_PROPERTY(cx, obj, id, rval, NULL, NULL,
                                      JSPROP_ENUMERATE | JSPROP_PERMANENT |
                                      JSPROP_READONLY,
@@ -3082,9 +3057,10 @@ interrupt:
                 cond = JSDOUBLE_COMPARE(d, OP, d2, JS_FALSE);                 \
             }                                                                 \
         } else {                                                              \
-            VALUE_TO_PRIMITIVE(cx, lval, JSTYPE_NUMBER, &lval);               \
-            sp[-2] = lval;                                                    \
-            VALUE_TO_PRIMITIVE(cx, rval, JSTYPE_NUMBER, &rval);               \
+            if (!JSVAL_IS_PRIMITIVE(lval))                                    \
+                DEFAULT_VALUE(cx, -2, JSTYPE_NUMBER, lval);                   \
+            if (!JSVAL_IS_PRIMITIVE(rval))                                    \
+                DEFAULT_VALUE(cx, -1, JSTYPE_NUMBER, rval);                   \
             if (JSVAL_IS_STRING(lval) && JSVAL_IS_STRING(rval)) {             \
                 str  = JSVAL_TO_STRING(lval);                                 \
                 str2 = JSVAL_TO_STRING(rval);                                 \
@@ -3170,12 +3146,10 @@ interrupt:
                 cond = 1 OP 0;                                                \
             } else {                                                          \
                 if (ltmp == JSVAL_OBJECT) {                                   \
-                    VALUE_TO_PRIMITIVE(cx, lval, JSTYPE_VOID, &sp[-2]);       \
-                    lval = sp[-2];                                            \
+                    DEFAULT_VALUE(cx, -2, JSTYPE_VOID, lval);                 \
                     ltmp = JSVAL_TAG(lval);                                   \
                 } else if (rtmp == JSVAL_OBJECT) {                            \
-                    VALUE_TO_PRIMITIVE(cx, rval, JSTYPE_VOID, &sp[-1]);       \
-                    rval = sp[-1];                                            \
+                    DEFAULT_VALUE(cx, -1, JSTYPE_VOID, rval);                 \
                     rtmp = JSVAL_TAG(rval);                                   \
                 }                                                             \
                 if (ltmp == JSVAL_STRING && rtmp == JSVAL_STRING) {           \
@@ -3306,10 +3280,10 @@ interrupt:
             } else
 #endif
             {
-                VALUE_TO_PRIMITIVE(cx, lval, JSTYPE_VOID, &sp[-2]);
-                lval = sp[-2];
-                VALUE_TO_PRIMITIVE(cx, rval, JSTYPE_VOID, &sp[-1]);
-                rval = sp[-1];
+                if (!JSVAL_IS_PRIMITIVE(lval))
+                    DEFAULT_VALUE(cx, -2, JSTYPE_VOID, lval);
+                if (!JSVAL_IS_PRIMITIVE(rval))
+                    DEFAULT_VALUE(cx, -1, JSTYPE_VOID, rval);
                 if ((cond = JSVAL_IS_STRING(lval)) || JSVAL_IS_STRING(rval)) {
                     SAVE_SP_AND_PC(fp);
                     if (cond) {
@@ -3528,6 +3502,34 @@ interrupt:
             PUSH_OPND(JSVAL_VOID);
           END_CASE(JSOP_VOID)
 
+          BEGIN_CASE(JSOP_INCELEM)
+          BEGIN_CASE(JSOP_DECELEM)
+          BEGIN_CASE(JSOP_ELEMINC)
+          BEGIN_CASE(JSOP_ELEMDEC)
+            /*
+             * Delay fetching of id until we have the object to ensure
+             * the proper evaluation oder. See bug 372331.
+             */
+            id = 0;
+            i = -2;
+            goto fetch_incop_obj;
+
+          BEGIN_CASE(JSOP_INCPROP)
+          BEGIN_CASE(JSOP_DECPROP)
+          BEGIN_CASE(JSOP_PROPINC)
+          BEGIN_CASE(JSOP_PROPDEC)
+            LOAD_ATOM(0);
+            id = ATOM_TO_JSID(atom);
+            i = -1;
+
+          fetch_incop_obj:
+            SAVE_SP_AND_PC(fp);
+            FETCH_OBJECT(cx, i, lval, obj);
+            STORE_OPND(i, OBJECT_TO_JSVAL(obj));
+            if (id == 0)
+                FETCH_ELEMENT_ID(obj, -1, id);
+            goto do_incop;
+
           BEGIN_CASE(JSOP_INCNAME)
           BEGIN_CASE(JSOP_DECNAME)
           BEGIN_CASE(JSOP_NAMEINC)
@@ -3545,37 +3547,12 @@ interrupt:
             OBJ_DROP_PROPERTY(cx, obj2, prop);
             lval = OBJECT_TO_JSVAL(obj);
             i = 0;
-            goto do_incop;
-
-          BEGIN_CASE(JSOP_INCPROP)
-          BEGIN_CASE(JSOP_DECPROP)
-          BEGIN_CASE(JSOP_PROPINC)
-          BEGIN_CASE(JSOP_PROPDEC)
-            LOAD_ATOM(0);
-            id = ATOM_TO_JSID(atom);
-            lval = FETCH_OPND(-1);
-            i = -1;
-            goto do_incop;
-
-          BEGIN_CASE(JSOP_INCELEM)
-          BEGIN_CASE(JSOP_DECELEM)
-          BEGIN_CASE(JSOP_ELEMINC)
-          BEGIN_CASE(JSOP_ELEMDEC)
-            FETCH_ELEMENT_ID(-1, id);
-            lval = FETCH_OPND(-2);
-            i = -2;
 
           do_incop:
           {
             const JSCodeSpec *cs;
 
-            VALUE_TO_OBJECT(cx, lval, obj);
-            if (i < 0)
-                STORE_OPND(i, OBJECT_TO_JSVAL(obj));
-            CHECK_ELEMENT_ID(obj, id);
-
             /* The operand must contain a number. */
-            SAVE_SP_AND_PC(fp);
             ok = OBJ_GET_PROPERTY(cx, obj, id, &rval);
             if (!ok)
                 goto out;
@@ -3802,9 +3779,8 @@ interrupt:
                 rval = INT_TO_JSVAL(JSSTRING_LENGTH(str));
             } else {
                 id = ATOM_TO_JSID(atom);
-                VALUE_TO_OBJECT(cx, lval, obj);
-                STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
                 SAVE_SP_AND_PC(fp);
+                VALUE_TO_OBJECT(cx, -1, lval, obj);
                 ok = OBJ_GET_PROPERTY(cx, obj, id, &rval);
                 if (!ok)
                     goto out;
@@ -3849,11 +3825,10 @@ interrupt:
 
           BEGIN_CASE(JSOP_ENUMELEM)
             /* Funky: the value to set is under the [obj, id] pair. */
-            FETCH_ELEMENT_ID(-1, id);
-            FETCH_OBJECT(cx, -2, lval, obj);
-            CHECK_ELEMENT_ID(obj, id);
             rval = FETCH_OPND(-3);
             SAVE_SP_AND_PC(fp);
+            FETCH_OBJECT(cx, -2, lval, obj);
+            FETCH_ELEMENT_ID(obj, -1, id);
             ok = OBJ_SET_PROPERTY(cx, obj, id, &rval);
             if (!ok)
                 goto out;
@@ -5137,9 +5112,10 @@ interrupt:
 
               case JSOP_SETELEM:
                 rval = FETCH_OPND(-1);
-                FETCH_ELEMENT_ID(-2, id);
+                id = 0;
                 i = -2;
               gs_pop_lval:
+                SAVE_SP_AND_PC(fp);
                 FETCH_OBJECT(cx, i - 1, lval, obj);
                 break;
 
@@ -5154,12 +5130,13 @@ interrupt:
               case JSOP_INITELEM:
                 JS_ASSERT(sp - fp->spbase >= 3);
                 rval = FETCH_OPND(-1);
-                FETCH_ELEMENT_ID(-2, id);
+                id = 0;
                 i = -2;
               gs_get_lval:
                 lval = FETCH_OPND(i-1);
                 JS_ASSERT(JSVAL_IS_OBJECT(lval));
                 obj = JSVAL_TO_OBJECT(lval);
+                SAVE_SP_AND_PC(fp);
                 break;
 
               default:
@@ -5167,9 +5144,9 @@ interrupt:
             }
 
             /* Ensure that id has a type suitable for use with obj. */
-            CHECK_ELEMENT_ID(obj, id);
+            if (id == 0)
+                FETCH_ELEMENT_ID(obj, i, id);
 
-            SAVE_SP_AND_PC(fp);
             if (JS_TypeOfValue(cx, rval) != JSTYPE_FUNCTION) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_BAD_GETTER_OR_SETTER,
@@ -5239,18 +5216,17 @@ interrupt:
             /* Pop the property's value into rval. */
             JS_ASSERT(sp - fp->spbase >= 2);
             rval = FETCH_OPND(-1);
-
             i = -1;
+            SAVE_SP_AND_PC(fp);
             goto do_init;
 
           BEGIN_CASE(JSOP_INITELEM)
             /* Pop the element's value into rval. */
             JS_ASSERT(sp - fp->spbase >= 3);
             rval = FETCH_OPND(-1);
-
-            /* Pop and conditionally atomize the element id. */
-            FETCH_ELEMENT_ID(-2, id);
             i = -2;
+            SAVE_SP_AND_PC(fp);
+            FETCH_ELEMENT_ID(obj, -2, id);
 
           do_init:
             /* Find the object being initialized at top of stack. */
@@ -5258,11 +5234,7 @@ interrupt:
             JS_ASSERT(JSVAL_IS_OBJECT(lval));
             obj = JSVAL_TO_OBJECT(lval);
 
-            /* Ensure that id has a type suitable for use with obj. */
-            CHECK_ELEMENT_ID(obj, id);
-
             /* Set the property named by obj[id] to rval. */
-            SAVE_SP_AND_PC(fp);
             ok = js_CheckRedeclaration(cx, obj, id, JSPROP_INITIALIZER, NULL,
                                        NULL);
             if (!ok)
@@ -5586,9 +5558,9 @@ interrupt:
 
           BEGIN_CASE(JSOP_SETXMLNAME)
             obj = JSVAL_TO_OBJECT(FETCH_OPND(-3));
-            FETCH_ELEMENT_ID(-2, id);
             rval = FETCH_OPND(-1);
             SAVE_SP_AND_PC(fp);
+            FETCH_ELEMENT_ID(obj, -2, id);
             ok = OBJ_SET_PROPERTY(cx, obj, id, &rval);
             if (!ok)
                 goto out;
@@ -5613,9 +5585,9 @@ interrupt:
 
           BEGIN_CASE(JSOP_DESCENDANTS)
           BEGIN_CASE(JSOP_DELDESC)
+            SAVE_SP_AND_PC(fp);
             FETCH_OBJECT(cx, -2, lval, obj);
             rval = FETCH_OPND(-1);
-            SAVE_SP_AND_PC(fp);
             ok = js_GetXMLDescendants(cx, obj, rval, &rval);
             if (!ok)
                 goto out;
@@ -5633,9 +5605,9 @@ interrupt:
           END_CASE(JSOP_DESCENDANTS)
 
           BEGIN_CASE(JSOP_FILTER)
-            FETCH_OBJECT(cx, -1, lval, obj);
             len = GET_JUMP_OFFSET(pc);
             SAVE_SP_AND_PC(fp);
+            FETCH_OBJECT(cx, -1, lval, obj);
             ok = js_FilterXMLList(cx, obj, pc + js_CodeSpec[op].length, &rval);
             if (!ok)
                 goto out;
