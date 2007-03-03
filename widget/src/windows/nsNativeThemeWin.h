@@ -116,6 +116,8 @@ protected:
   void DrawCheckedRect(HDC hdc, const RECT& rc, PRInt32 fore, PRInt32 back,
                        HBRUSH defaultBack);
 
+  PRUint32 GetWidgetNativeDrawingFlags(PRUint8 aWidgetType);
+
 private:
   HMODULE mThemeDLL;
   HANDLE mButtonTheme;

@@ -11,6 +11,7 @@ MODULE		= thebes
 REQUIRES	= cairo
 
 EXPORTS		= 	gfxASurface.h \
+			gfxAlphaRecovery.h \
 			gfxColor.h \
 			gfxContext.h \
 			gfxFont.h \
@@ -35,7 +36,9 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 EXPORTS	+=	gfxWindowsFonts.h \
 		gfxWindowsPlatform.h \
-		gfxWindowsSurface.h
+		gfxWindowsSurface.h \
+		gfxWindowsNativeDrawing.h \
+		$(NULL)
 EXPORTS +=	gfxPDFSurface.h
 
 ifdef MOZ_ENABLE_GLITZ

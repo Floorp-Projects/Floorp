@@ -12,14 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Oracle Corporation code.
+ * The Original Code is Thebes gfx.
  *
- * The Initial Developer of the Original Code is Oracle Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * The Initial Developer of the Original Code is Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Stuart Parmenter <stuart@mozilla.com>
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,59 +35,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFX_PATTERN_H
-#define GFX_PATTERN_H
+#ifndef _GFXALPHARECOVERY_H_
+#define _GFXALPHARECOVERY_H_
 
-#include "gfxTypes.h"
+#include "gfxContext.h"
+#include "gfxImageSurface.h"
 
-#include "gfxColor.h"
-#include "gfxMatrix.h"
-
-class gfxContext;
-class gfxASurface;
-typedef struct _cairo_pattern cairo_pattern_t;
-
-
-class THEBES_API gfxPattern {
-    THEBES_INLINE_DECL_REFCOUNTING(gfxPattern)
-
+class THEBES_API gfxAlphaRecovery {
 public:
-    gfxPattern(cairo_pattern_t *aPattern);
-    gfxPattern(const gfxRGBA& aColor);
-    gfxPattern(gfxASurface *surface); // from another surface
-    // linear
-    gfxPattern(gfxFloat x0, gfxFloat y0, gfxFloat x1, gfxFloat y1); // linear
-    gfxPattern(gfxFloat cx0, gfxFloat cy0, gfxFloat radius0,
-               gfxFloat cx1, gfxFloat cy1, gfxFloat radius1); // radial
-    virtual ~gfxPattern();
-
-    cairo_pattern_t *CairoPattern();
-    void AddColorStop(gfxFloat offset, const gfxRGBA& c);
-
-    void SetMatrix(const gfxMatrix& matrix);
-    gfxMatrix GetMatrix() const;
-
-    enum GraphicsExtend {
-        EXTEND_NONE,
-        EXTEND_REPEAT,
-        EXTEND_REFLECT,
-        EXTEND_PAD
-    };
-
-    // none, repeat, reflect
-    void SetExtend(GraphicsExtend extend);
-    GraphicsExtend Extend() const;
-
-    void SetFilter(int filter);
-    int Filter() const;
-
-    /* returns TRUE if it succeeded */
-    PRBool GetSolidColor(gfxRGBA& aColor);
-
-    already_AddRefed<gfxASurface> GetSurface();
-
-protected:
-    cairo_pattern_t *mPattern;
+    /* Given two RGB24 surfaces with the same rendering, one on a black
+     * background and the other on white, return a new surface
+     * that contains the contents with recovered alpha.
+     */
+    static already_AddRefed<gfxImageSurface> RecoverAlpha (gfxImageSurface *blackSurface,
+                                                           gfxImageSurface *whiteSurface,
+                                                           gfxIntSize dimensions);
 };
 
-#endif /* GFX_PATTERN_H */
+#endif /* _GFXALPHARECOVERY_H_ */
