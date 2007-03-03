@@ -1836,8 +1836,12 @@ ifdef CYGWIN_WRAPPER
 NATIVE_TOPSRCDIR   := `cygpath -wa $(topsrcdir)`
 FWDSLASH_TOPSRCDIR := `cygpath -ma $(topsrcdir)`
 else
-NATIVE_TOPSRCDIR   := $(topsrcdir)
 FWDSLASH_TOPSRCDIR := $(topsrcdir)
+ifeq ($(HOST_OS_ARCH),WINNT)
+NATIVE_TOPSRCDIR   := $(subst /,\\,$(WIN_TOP_SRC))
+else 
+NATIVE_TOPSRCDIR   := $(topsrcdir)
+endif
 endif # CYGWIN_WRAPPER
 
 # Test execution
