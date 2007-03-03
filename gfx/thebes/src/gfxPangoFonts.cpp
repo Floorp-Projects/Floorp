@@ -193,6 +193,14 @@ static void InitPangoLib()
         PR_FindFunctionSymbol(lib, "pango_font_description_set_absolute_size");
 
     // leak lib deliberately
+
+    lib = nsnull;
+    int *xft_max_freetype_files_ptr = nsnull;
+    xft_max_freetype_files_ptr = (int*) PR_FindSymbolAndLibrary("XftMaxFreeTypeFiles", &lib);
+    if (xft_max_freetype_files_ptr)
+        *xft_max_freetype_files_ptr = 50;
+    if (lib)
+        PR_UnloadLibrary(lib);
 }
 
 static void
