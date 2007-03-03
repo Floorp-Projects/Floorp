@@ -183,9 +183,60 @@ public:
                 (xy != 0.0) || (yx != 0.0));
     }
 
+    /**
+     * Returns true if the matrix has any transform other
+     * than a translation or a -1 y scale (y axis flip)
+     */
     bool HasNonTranslationOrFlip() const {
         return ((xx != 1.0) || ((yy != 1.0) && (yy != -1.0)) ||
                 (xy != 0.0) || (yx != 0.0));
+    }
+
+    /**
+     * Returns true if the matrix has any transform other
+     * than a translation or scale; this is, if there is
+     * no rotation.
+     */
+    bool HasNonAxisAlignedTransform() const {
+        return ((xy != 0.0) || (yx != 0.0));
+    }
+
+    /**
+     * Computes the determinant of this matrix.
+     */
+    double Determinant() const {
+        return xx*yy - yx*xy;
+    }
+
+    /* Computes the scale factors of this matrix; that is,
+     * the amounts each basis vector is scaled by.
+     * The xMajor parameter indicates if the larger scale is
+     * to be assumed to be in the X direction or not.
+     */
+    gfxSize ScaleFactors(PRBool xMajor) const {
+        double det = Determinant();
+
+        if (det == 0.0)
+            return gfxSize(0.0, 0.0);
+
+        gfxSize sz((xMajor != 0 ? 1.0 : 0.0),
+                        (xMajor != 0 ? 0.0 : 1.0));
+        sz = Transform(sz);
+
+        double major = sqrt(sz.width * sz.width + sz.height * sz.height);
+        double minor = 0.0;
+
+        // ignore mirroring
+        if (det < 0.0)
+            det = - det;
+
+        if (major)
+            minor = det / major;
+
+        if (xMajor)
+            return gfxSize(major, minor);
+
+        return gfxSize(minor, major);
     }
 };
 

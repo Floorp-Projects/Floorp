@@ -96,7 +96,7 @@ gfxPattern::SetMatrix(const gfxMatrix& matrix)
 }
 
 gfxMatrix
-gfxPattern::CurrentMatrix() const
+gfxPattern::GetMatrix() const
 {
     cairo_matrix_t mat;
     cairo_pattern_get_matrix(mPattern, &mat);
@@ -135,4 +135,16 @@ gfxPattern::GetSolidColor(gfxRGBA& aColor)
                                   &aColor.g,
                                   &aColor.b,
                                   &aColor.a) == CAIRO_STATUS_SUCCESS;
+}
+
+already_AddRefed<gfxASurface>
+gfxPattern::GetSurface()
+{
+    cairo_surface_t *surf = nsnull;
+
+    if (cairo_pattern_get_surface (mPattern, &surf) != CAIRO_STATUS_SUCCESS)
+        return nsnull;
+
+
+    return gfxASurface::Wrap(surf);
 }

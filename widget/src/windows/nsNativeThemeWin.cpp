@@ -59,11 +59,11 @@
 #include "nsWidgetAtoms.h"
 #include <malloc.h>
 
-#ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
 #include "gfxMatrix.h"
 #include "gfxWindowsSurface.h"
-#endif
+#include "gfxWindowsNativeDrawing.h"
+
 /* 
  * The following constants are used to determine how a widget is drawn using
  * Windows' Theme API. For more information on theme parts and states see
@@ -821,97 +821,36 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
   PRInt32 p2a = dc->AppUnitsPerDevPixel();
   RECT widgetRect;
   RECT clipRect;
-  nsRect tr(aRect);
-  nsRect cr(aClipRect);
+  gfxRect tr, cr;
 
-#ifdef MOZ_CAIRO_GFX
-  tr.x = NSAppUnitsToIntPixels(tr.x, p2a);
-  tr.y = NSAppUnitsToIntPixels(tr.y, p2a);
-  tr.width  = NSAppUnitsToIntPixels(tr.width, p2a);
-  tr.height = NSAppUnitsToIntPixels(tr.height, p2a);
+  tr.pos.x = NSAppUnitsToIntPixels(aRect.x, p2a);
+  tr.pos.y = NSAppUnitsToIntPixels(aRect.y, p2a);
+  tr.size.width  = NSAppUnitsToIntPixels(aRect.width, p2a);
+  tr.size.height = NSAppUnitsToIntPixels(aRect.height, p2a);
 
-  cr.x = NSAppUnitsToIntPixels(cr.x, p2a);
-  cr.y = NSAppUnitsToIntPixels(cr.y, p2a);
-  cr.width  = NSAppUnitsToIntPixels(cr.width, p2a);
-  cr.height = NSAppUnitsToIntPixels(cr.height, p2a);
+  cr.pos.x = NSAppUnitsToIntPixels(aClipRect.x, p2a);
+  cr.pos.y = NSAppUnitsToIntPixels(aClipRect.y, p2a);
+  cr.size.width  = NSAppUnitsToIntPixels(aClipRect.width, p2a);
+  cr.size.height = NSAppUnitsToIntPixels(aClipRect.height, p2a);
 
   nsRefPtr<gfxContext> ctx = (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
 
-  gfxPoint offset;
-  nsRefPtr<gfxASurface> surf = ctx->CurrentSurface(&offset.x, &offset.y);
+  gfxWindowsNativeDrawing nativeDrawing(ctx, cr, GetWidgetNativeDrawingFlags(aWidgetType));
 
-  HDC hdc = NS_STATIC_CAST(gfxWindowsSurface*, NS_STATIC_CAST(gfxASurface*, surf.get()))->GetDC();
+RENDER_AGAIN:
 
-  /* Need to force the clip to be set */
-  ctx->UpdateSurfaceClip();
+  HDC hdc = nativeDrawing.BeginNativeDrawing();
 
-  /* Covert the current transform to a world transform */
-  XFORM oldWorldTransform;
-  gfxMatrix m = ctx->CurrentMatrix();
-  if (m.HasNonTranslation()) {
-    GetWorldTransform(hdc, &oldWorldTransform);
-
-    SetGraphicsMode(hdc, GM_ADVANCED);
-    XFORM xform;
-    xform.eM11 = (FLOAT) m.xx;
-    xform.eM12 = (FLOAT) m.yx;
-    xform.eM21 = (FLOAT) m.xy;
-    xform.eM22 = (FLOAT) m.yy;
-    xform.eDx  = (FLOAT) m.x0;
-    xform.eDy  = (FLOAT) m.y0;
-    SetWorldTransform (hdc, &xform);
-  } else {
-    gfxPoint pos(m.GetTranslation());
-
-    tr.x += NSToCoordRound(pos.x);
-    tr.y += NSToCoordRound(pos.y);
-    cr.x += NSToCoordRound(pos.x);
-    cr.y += NSToCoordRound(pos.y);
-  }
+  nativeDrawing.TransformToNativeRect(tr, widgetRect);
+  nativeDrawing.TransformToNativeRect(cr, clipRect);
 
 #if 0
   {
-  double dm[6];
-  m.ToValues(&dm[0], &dm[1], &dm[2], &dm[3], &dm[4], &dm[5]);
-  fprintf (stderr, "xform: %f %f %f %f [%f %f]\n", dm[0], dm[1], dm[2], dm[3], dm[4], dm[5]);
-  fprintf (stderr, "tr: [%d %d %d %d]\ncr: [%d %d %d %d]\noff: [%f %f]\n",
-           tr.x, tr.y, tr.width, tr.height, cr.x, cr.y, cr.width, cr.height,
-           offset.x, offset.y);
-  fflush (stderr);
+    fprintf (stderr, "xform: %f %f %f %f [%f %f]\n", m.xx, m.yx, m.xy, m.yy, m.x0, m.y0);
+    fprintf (stderr, "tr: [%d %d %d %d]\ncr: [%d %d %d %d]\noff: [%f %f]\n",
+             tr.x, tr.y, tr.width, tr.height, cr.x, cr.y, cr.width, cr.height,
+             offset.x, offset.y);
   }
-#endif
-
-  /* Set the device offsets as appropriate */
-  POINT origViewportOrigin, origBrushOrigin;
-  GetViewportOrgEx(hdc, &origViewportOrigin);
-  SetViewportOrgEx(hdc, origViewportOrigin.x + (int)offset.x, origViewportOrigin.y + (int)offset.y, NULL);
-
-#else /* non-MOZ_CAIRO_GFX */
-
-  nsTransform2D* transformMatrix;
-  aContext->GetCurrentTransform(transformMatrix);
-
-  transformMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
-  transformMatrix->TransformCoord(&cr.x,&cr.y,&cr.width,&cr.height);
-
-  HDC hdc = (HDC)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
-  if (!hdc)
-    return NS_ERROR_FAILURE;
-
-#ifndef WINCE
-  SetGraphicsMode(hdc, GM_ADVANCED);
-#endif
-
-#endif /* MOZ_CAIRO_GFX */
-
-  GetNativeRect(tr, widgetRect);
-  GetNativeRect(cr, clipRect);
-
-#if 0
-  fprintf (stderr, "widget: [%d %d %d %d]\nclip: [%d %d %d %d]\n",
-           widgetRect.left, widgetRect.top, widgetRect.right, widgetRect.bottom,
-           clipRect.left, clipRect.top, clipRect.right, clipRect.bottom);
-  fflush (stderr);
 #endif
 
   // For left edge and right edge tabs, we need to adjust the widget
@@ -1003,14 +942,12 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
     }
   }
 
-#ifdef MOZ_CAIRO_GFX
-  SetViewportOrgEx(hdc, origViewportOrigin.x, origViewportOrigin.y, NULL);
+  nativeDrawing.EndNativeDrawing();
 
-  if (m.HasNonTranslation())
-    SetWorldTransform(hdc, &oldWorldTransform);
+  if (nativeDrawing.ShouldRenderAgain())
+    goto RENDER_AGAIN;
 
-  surf->MarkDirty();
-#endif
+  nativeDrawing.PaintToContext();
 
   return NS_OK;
 }
@@ -2000,7 +1937,7 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
                                   PRUint8 aWidgetType,
                                   const nsRect& aRect,
                                   const nsRect& aClipRect)
-{         
+{
   PRInt32 part, state;
   PRBool focused;
   nsresult rv;
@@ -2012,61 +1949,27 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
   aContext->GetDeviceContext(*getter_AddRefs(dc));
   PRInt32 p2a = dc->AppUnitsPerDevPixel();
   RECT widgetRect;
-  nsRect tr(aRect);
+  gfxRect tr, cr;
 
-#ifdef MOZ_CAIRO_GFX
-  tr.x = NSAppUnitsToIntPixels(tr.x, p2a);
-  tr.y = NSAppUnitsToIntPixels(tr.y, p2a);
-  tr.width  = NSAppUnitsToIntPixels(tr.width, p2a);
-  tr.height = NSAppUnitsToIntPixels(tr.height, p2a);
+  tr.pos.x = NSAppUnitsToIntPixels(aRect.x, p2a);
+  tr.pos.y = NSAppUnitsToIntPixels(aRect.y, p2a);
+  tr.size.width  = NSAppUnitsToIntPixels(aRect.width, p2a);
+  tr.size.height = NSAppUnitsToIntPixels(aRect.height, p2a);
+
+  cr.pos.x = NSAppUnitsToIntPixels(aClipRect.x, p2a);
+  cr.pos.y = NSAppUnitsToIntPixels(aClipRect.y, p2a);
+  cr.size.width  = NSAppUnitsToIntPixels(aClipRect.width, p2a);
+  cr.size.height = NSAppUnitsToIntPixels(aClipRect.height, p2a);
 
   nsRefPtr<gfxContext> ctx = (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
 
-  gfxPoint offset;
-  nsRefPtr<gfxASurface> surf = ctx->CurrentSurface(&offset.x, &offset.y);
-  HDC hdc = NS_STATIC_CAST(gfxWindowsSurface*, NS_STATIC_CAST(gfxASurface*, surf.get()))->GetDC();
+  gfxWindowsNativeDrawing nativeDrawing(ctx, cr, GetWidgetNativeDrawingFlags(aWidgetType));
 
-  /* Need to force the clip to be set */
-  ctx->UpdateSurfaceClip();
+RENDER_AGAIN:
 
-  /* Covert the current transform to a world transform */
-  XFORM oldWorldTransform;
-  gfxMatrix m = ctx->CurrentMatrix();
-  if (m.HasNonTranslation()) {
-    GetWorldTransform(hdc, &oldWorldTransform);
+  HDC hdc = nativeDrawing.BeginNativeDrawing();
 
-    SetGraphicsMode(hdc, GM_ADVANCED);
-    XFORM xform;
-    xform.eM11 = (FLOAT) m.xx;
-    xform.eM12 = (FLOAT) m.yx;
-    xform.eM21 = (FLOAT) m.xy;
-    xform.eM22 = (FLOAT) m.yy;
-    xform.eDx  = (FLOAT) m.x0;
-    xform.eDy  = (FLOAT) m.y0;
-    SetWorldTransform (hdc, &xform);
-  } else {
-    gfxPoint pos(m.GetTranslation());
-
-    tr.x += NSToCoordRound(pos.x);
-    tr.y += NSToCoordRound(pos.y);
-  }
-
-  /* Set the device offsets as appropriate */
-  POINT origViewportOrigin;
-  GetViewportOrgEx(hdc, &origViewportOrigin);
-  SetViewportOrgEx(hdc, origViewportOrigin.x + (int)offset.x, origViewportOrigin.y + (int)offset.y, NULL);
-
-#else /* non-MOZ_CAIRO_GFX */
-
-  nsTransform2D* transformMatrix;
-  aContext->GetCurrentTransform(transformMatrix);
-  transformMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
-
-  HDC hdc = (HDC)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
-
-#endif /* MOZ_CAIRO_GFX */
-
-  GetNativeRect(tr, widgetRect); 
+  nativeDrawing.TransformToNativeRect(tr, widgetRect);
 
   rv = NS_OK;
   switch (aWidgetType) { 
@@ -2336,18 +2239,89 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
       break;
   }
 
-#ifdef MOZ_CAIRO_GFX
-  SetViewportOrgEx(hdc, origViewportOrigin.x, origViewportOrigin.y, NULL);
+  nativeDrawing.EndNativeDrawing();
 
-  if (m.HasNonTranslation())
-    SetWorldTransform(hdc, &oldWorldTransform);
+  if (NS_FAILED(rv))
+    return rv;
 
-  surf->MarkDirty();
-#endif
+  if (nativeDrawing.ShouldRenderAgain())
+    goto RENDER_AGAIN;
+
+  nativeDrawing.PaintToContext();
 
   return rv;
 }
 
+PRUint32
+nsNativeThemeWin::GetWidgetNativeDrawingFlags(PRUint8 aWidgetType)
+{
+  switch (aWidgetType) {
+    case NS_THEME_BUTTON:
+    case NS_THEME_TEXTFIELD:
+
+    case NS_THEME_DROPDOWN:
+    case NS_THEME_DROPDOWN_TEXTFIELD:
+      return
+        gfxWindowsNativeDrawing::CANNOT_DRAW_TO_COLOR_ALPHA |
+        gfxWindowsNativeDrawing::CAN_AXIS_ALIGNED_SCALE |
+        gfxWindowsNativeDrawing::CANNOT_COMPLEX_TRANSFORM;
+
+    // need to check these others
+    case NS_THEME_SCROLLBAR_BUTTON_UP:
+    case NS_THEME_SCROLLBAR_BUTTON_DOWN:
+    case NS_THEME_SCROLLBAR_BUTTON_LEFT:
+    case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
+    case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
+    case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
+    case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
+    case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
+    case NS_THEME_SCALE_HORIZONTAL:
+    case NS_THEME_SCALE_VERTICAL:
+    case NS_THEME_SCALE_THUMB_HORIZONTAL:
+    case NS_THEME_SCALE_THUMB_VERTICAL:
+    case NS_THEME_SPINNER_UP_BUTTON:
+    case NS_THEME_SPINNER_DOWN_BUTTON:
+    case NS_THEME_LISTBOX:
+    case NS_THEME_TREEVIEW:
+    case NS_THEME_TOOLTIP:
+    case NS_THEME_STATUSBAR:
+    case NS_THEME_STATUSBAR_PANEL:
+    case NS_THEME_STATUSBAR_RESIZER_PANEL:
+    case NS_THEME_RESIZER:
+    case NS_THEME_PROGRESSBAR:
+    case NS_THEME_PROGRESSBAR_VERTICAL:
+    case NS_THEME_PROGRESSBAR_CHUNK:
+    case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
+    case NS_THEME_TAB:
+    case NS_THEME_TAB_LEFT_EDGE:
+    case NS_THEME_TAB_RIGHT_EDGE:
+    case NS_THEME_TAB_PANEL:
+    case NS_THEME_TAB_PANELS:
+    case NS_THEME_MENUBAR:
+    case NS_THEME_MENUPOPUP:
+    case NS_THEME_MENUITEM:
+      break;
+
+    // the dropdown button /almost/ renders correctly with scaling,
+    // except that the graphic in the dropdown button (the downward arrow)
+    // doesn't get scaled up.
+    case NS_THEME_DROPDOWN_BUTTON:
+    // these are definitely no; they're all graphics that don't get scaled up
+    case NS_THEME_CHECKBOX:
+    case NS_THEME_RADIO:
+    case NS_THEME_CHECKMENUITEM:
+    case NS_THEME_RADIOMENUITEM:
+      return
+        gfxWindowsNativeDrawing::CANNOT_DRAW_TO_COLOR_ALPHA |
+        gfxWindowsNativeDrawing::CANNOT_AXIS_ALIGNED_SCALE |
+        gfxWindowsNativeDrawing::CANNOT_COMPLEX_TRANSFORM;
+  }
+
+  return
+    gfxWindowsNativeDrawing::CANNOT_DRAW_TO_COLOR_ALPHA |
+    gfxWindowsNativeDrawing::CANNOT_AXIS_ALIGNED_SCALE |
+    gfxWindowsNativeDrawing::CANNOT_COMPLEX_TRANSFORM;
+}
 
 ///////////////////////////////////////////
 // Creation Routine
