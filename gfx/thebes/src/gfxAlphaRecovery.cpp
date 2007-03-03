@@ -82,7 +82,7 @@ gfxAlphaRecovery::RecoverAlpha (gfxImageSurface *blackSurf,
     // XX use result, maybe return pattern, etc.
 
     NS_ADDREF(resultSurf.get());
-    return resultSurf;
+    return resultSurf.get();
 }
 
 /** from cairo-xlib-utils.c, modified */
