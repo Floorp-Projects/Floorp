@@ -42,18 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MOZILLA_INTERNAL_API = 1
-
-CPPSRCS		= \
-		LocaleSelfTest.cpp \
-		nsLocaleTest.cpp \
-		$(NULL)
-
-SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
-
-LOCAL_INCLUDES	= -I$(srcdir)/../src
-
-LIBS		= $(XPCOM_LIBS) $(NSPR_LIBS)
+MODULE          = test_intl_locale
+XPCSHELL_TESTS  = unit
 
 include $(topsrcdir)/config/rules.mk
-

@@ -103,6 +103,11 @@ NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
                             PRInt32 second, 
                             PRUnichar **dateTimeString)
 {
+  // We can't have a valid date with the year, month or day
+  // being lower than 1.
+  if (year < 1 || month < 1 || day < 1)
+    return NS_ERROR_INVALID_ARG;
+
   nsresult rv;
   nsAutoString localeName(aLocale);
   *dateTimeString = nsnull;
@@ -145,7 +150,7 @@ NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
     char string[32];
     sprintf(string, "%.2d/%.2d/%d %.2d:%.2d:%.2d", month, day, year, hour, minute, second);
     if (PR_SUCCESS != PR_ParseTimeString(string, PR_FALSE, &prtime))
-      return NS_ERROR_ILLEGAL_VALUE; // invalid arg value
+      return NS_ERROR_INVALID_ARG;
 
     rv = dateTimeFormat->FormatPRTime(locale, dateFormatSelector, timeFormatSelector, 
                                       prtime, mStringOut);
