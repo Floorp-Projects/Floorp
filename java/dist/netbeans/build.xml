@@ -268,6 +268,7 @@ ${so.prefix}xul.${so.extension}.
         <macrodef name="junit" uri="http://www.netbeans.org/ns/j2se-project/3">
             <attribute name="includes" default="**/*Test.java"/>
             <sequential>
+                <echo message="overridden JUnit" />
                 <junit showoutput="true" fork="true" dir="${basedir}" failureproperty="tests.failed" errorproperty="tests.failed">
                     <jvmarg value="-DNSPR_LOG_MODULES=webclient:4,webclientstub:4,pluglets:4"/>
                     <jvmarg value="-DNSPR_LOG_FILE=${basedir}${FILE_PATH_SEP}${build.dir}${FILE_PATH_SEP}webclient.log"/>
@@ -291,6 +292,38 @@ ${so.prefix}xul.${so.extension}.
                     <formatter type="xml"/>
                     <jvmarg line="${run.jvmargs}"/>
                 </junit>
+            </sequential>
+        </macrodef>
+    </target>
+    
+    <target name="-init-macrodef-debug">
+        <macrodef name="debug" uri="http://www.netbeans.org/ns/j2se-project/3">
+            <attribute name="classname" default="${main.class}"/>
+            <attribute name="classpath" default="${debug.classpath}"/>
+            <element name="customize" optional="true"/>
+            <sequential>
+                <echo message="overridden Debug" />
+                <java fork="true" classname="@{classname}" dir="${work.dir}">
+                    <jvmarg value="-Xdebug"/>
+                    <jvmarg value="-Xnoagent"/>
+                    <jvmarg value="-Djava.compiler=none"/>
+                    <jvmarg value="-Xrunjdwp:transport=dt_socket,address=${jpda.address}"/>
+                    <jvmarg value="-DNSPR_LOG_MODULES=webclient:4,webclientstub:4,pluglets:4"/>
+                    <jvmarg value="-DNSPR_LOG_FILE=${basedir}${FILE_PATH_SEP}${build.dir}${FILE_PATH_SEP}webclient.log"/>
+                    <jvmarg value="-Dbuild.test.results.dir=${basedir}${FILE_PATH_SEP}${build.test.results.dir}" />
+                    <jvmarg value="-DBROWSER_BIN_DIR=${browser.bin.dir}"/>
+                    <jvmarg line="-Djava.util.logging.config.file=${basedir}${FILE_PATH_SEP}logging.properties"/>
+                    <jvmarg line="-Djava.library.path=${browser.bin.dir}" />
+                    <jvmarg line="${run.jvmargs}"/>
+                    <classpath>
+                        <path path="@{classpath}"/>
+                    </classpath>
+                    <syspropertyset>
+                        <propertyref prefix="run-sys-prop."/>
+                        <mapper type="glob" from="run-sys-prop.*" to="*"/>
+                    </syspropertyset>
+                    <customize/>
+                </java>
             </sequential>
         </macrodef>
     </target>

@@ -1,5 +1,5 @@
 /*
- * $Id: WebclientTestCase.java,v 1.14 2007/02/23 14:38:55 edburns%acm.org Exp $
+ * $Id: WebclientTestCase.java,v 1.15 2007/03/03 20:35:14 edburns%acm.org Exp $
  */
 
 /* 
@@ -47,7 +47,7 @@ import org.mozilla.util.THTTPD;
  *
  * <B>Lifetime And Scope</B> <P>
  *
- * @version $Id: WebclientTestCase.java,v 1.14 2007/02/23 14:38:55 edburns%acm.org Exp $
+ * @version $Id: WebclientTestCase.java,v 1.15 2007/03/03 20:35:14 edburns%acm.org Exp $
  * 
  * @see	Blah
  * @see	Bloo
@@ -188,6 +188,11 @@ protected static void verifyBinDirSet()
 protected static String getBrowserBinDir() {
     return System.getProperty("BROWSER_BIN_DIR");
 }
+
+protected static String getOutputFileRoot() {
+    return OUTPUT_FILE_ROOT;
+}
+
 
 /**
 

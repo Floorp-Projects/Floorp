@@ -124,10 +124,17 @@
            HotJava, etc -->
 
       <include name="org/mozilla/webclient/*"/>
+      <include name="org/mozilla/mcp/**/*.*"/>
       <include name="org/mozilla/webclient/impl/wrapper_native/*"/>
       <include name="org/mozilla/webclient/impl/*"/>
       <exclude name="org/mozilla/webclient/test/**/*.*"/>
     </javac>
+
+        <copy todir="${build.home}">
+          <fileset dir="${source.home}">
+            <include name="**/*.properties" />
+          </fileset>
+        </copy>
 
     <mkdir dir="${build.home}/META-INF/services"/>
     <echo file="${build.home}/META-INF/services/org.mozilla.webclient.WebclientFactory">org.mozilla.webclient.impl.WebclientFactoryImpl</echo>
