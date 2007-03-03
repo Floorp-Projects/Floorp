@@ -197,7 +197,7 @@ static void InitPangoLib()
     lib = nsnull;
     int *xft_max_freetype_files_ptr = nsnull;
     xft_max_freetype_files_ptr = (int*) PR_FindSymbolAndLibrary("XftMaxFreeTypeFiles", &lib);
-    if (xft_max_freetype_files_ptr)
+    if (xft_max_freetype_files_ptr && *xft_max_freetype_files_ptr < 50)
         *xft_max_freetype_files_ptr = 50;
     if (lib)
         PR_UnloadLibrary(lib);
