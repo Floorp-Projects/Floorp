@@ -65,6 +65,12 @@ function createRecurrenceInfo() {
            createInstance(Ci.calIRecurrenceInfo);
 }
 
+/* Returns a clean new calIRecurrenceRule */
+function createRecurrenceRule() {
+    return Cc["@mozilla.org/calendar/recurrence-rule;1"].
+           createInstance(Ci.calIRecurrenceRule);
+}
+
 /* Returns a clean new calIAttendee */
 function createAttendee() {
     return Cc["@mozilla.org/calendar/attendee;1"].

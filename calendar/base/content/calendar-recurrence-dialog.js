@@ -131,7 +131,7 @@ function loadDialog()
     if (rules.length > 0) {
         // we only handle 1 rule currently
         var rule = rules[0];
-        if (rule instanceof calIRecurrenceRule) {
+        if (rule instanceof Ci.calIRecurrenceRule) {
 
             switch(rule.type) {
             case "DAILY":
@@ -232,7 +232,7 @@ function saveDialog()
         recurrenceInfo.item = window.calendarEvent;
     }
 
-    var recRule = new calRecurrenceRule();
+    var recRule = createRecurrenceRule();
     switch (deckNumber) {
     case 0:
         recRule.type = "DAILY";
