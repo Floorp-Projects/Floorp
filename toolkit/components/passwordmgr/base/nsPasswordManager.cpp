@@ -2136,10 +2136,11 @@ nsPasswordManager::FillPassword(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIForm> form = do_QueryInterface(formEl);
   nsCAutoString formActionOrigin;
   GetActionRealm(form, formActionOrigin);
-  if (NS_FAILED(GetActionRealm(form, formActionOrigin)) ||
-      !foundEntry->actionOrigin.Equals(formActionOrigin))
+  if (NS_FAILED(GetActionRealm(form, formActionOrigin)))
     return NS_OK;
-  
+  if (!foundEntry->actionOrigin.IsEmpty() && !foundEntry->actionOrigin.Equals(formActionOrigin))
+    return NS_OK;
+
   nsCOMPtr<nsISupports> foundNode;
   form->ResolveName(foundEntry->passField, getter_AddRefs(foundNode));
   nsCOMPtr<nsIDOMHTMLInputElement> passField = do_QueryInterface(foundNode);
