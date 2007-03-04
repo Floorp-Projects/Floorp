@@ -9352,6 +9352,13 @@ DeletingFrameSubtree(nsFrameManager* aFrameManager,
 nsresult
 nsCSSFrameConstructor::RemoveMappingsForFrameSubtree(nsIFrame* aRemovedFrame)
 {
+  if (NS_UNLIKELY(mPresShell->IsDestroying())) {
+    // The frame tree might not be in a consistent state if the pres shell
+    // is being destroyed. Most likely the frame manager has cleared all
+    // mappings and is destroying the frame hierarchy right now, bug 372576.
+    return NS_OK;
+  }
+
   // Save the frame tree's state before deleting it
   CaptureStateFor(aRemovedFrame, mTempFrameTreeState);
 
