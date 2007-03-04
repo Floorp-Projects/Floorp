@@ -226,6 +226,7 @@ pref("intl.menuitems.insertseparatorbeforeaccesskeys","chrome://global/locale/in
 pref("signon.rememberSignons",              true);
 pref("signon.expireMasterPassword",         false);
 pref("signon.SignonFileName",               "signons.txt");
+pref("signon.SignonFileName2",              "signons2.txt");
 
 pref("browser.hiddenWindowChromeURL", "chrome://messenger/content/hiddenWindow.xul");
 pref("network.search.url","http://cgi.netscape.com/cgi-bin/url_search.cgi?search=");

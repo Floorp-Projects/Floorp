@@ -672,6 +672,7 @@ pref("browser.cache.disk.parent_directory","\\Storage Card");
 pref("browser.cache.disk.enable",false);
 
 pref("signon.rememberSignons", true);
-pref("signon.SignonFileName", "signons.txt");
+pref("signon.SignonFileName",  "signons.txt");
+pref("signon.SignonFileName2", "signons2.txt");
 
 
