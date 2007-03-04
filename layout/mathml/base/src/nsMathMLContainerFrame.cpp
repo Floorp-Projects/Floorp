@@ -1417,7 +1417,8 @@ void
 nsMathMLContainerFrame::DidReflowChildren(nsIFrame* aFirst, nsIFrame* aStop)
 
 {
-  NS_PRECONDITION(aFirst, "expected a frame");
+  if (NS_UNLIKELY(!aFirst))
+    return;
 
   for (nsIFrame* frame = aFirst;
        frame != aStop;
