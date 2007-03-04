@@ -339,145 +339,96 @@ gfxAtsuiFontGroup::~gfxAtsuiFontGroup()
     ATSUDisposeFontFallbacks(mFallbacks);
 }
 
-class gfxWrapperTextRun : public gfxTextRun {
-public:
-    gfxWrapperTextRun(gfxAtsuiFontGroup *aGroup,
-                      const PRUint8* aString, PRUint32 aLength,
-                      gfxTextRunFactory::Parameters* aParams)
-        : gfxTextRun(aParams),
-          mContext(aParams->mContext),
-          mInner(NS_ConvertASCIItoUTF16(nsDependentCSubstring(reinterpret_cast<const char*>(aString),
-                                        reinterpret_cast<const char*>(aString + aLength))),
-                 aGroup),
-          mLength(aLength)
-    {
-        mInner.SetRightToLeft(IsRightToLeft());
-    }
-    gfxWrapperTextRun(gfxAtsuiFontGroup *aGroup,
-                      const PRUnichar* aString, PRUint32 aLength,
-                      gfxTextRunFactory::Parameters* aParams)
-        : gfxTextRun(aParams), mContext(aParams->mContext),
-          mInner(nsDependentSubstring(aString, aString + aLength), aGroup),
-          mLength(aLength)
-    {
-        mInner.SetRightToLeft(IsRightToLeft());
-    }
-    ~gfxWrapperTextRun() {}
-
-    virtual void GetCharFlags(PRUint32 aStart, PRUint32 aLength,
-                              PRUint8* aFlags)
-    { NS_ERROR("NOT IMPLEMENTED"); }
-    virtual PRUint8 GetCharFlags(PRUint32 aOffset)
-    { NS_ERROR("NOT IMPLEMENTED"); return 0; }
-    virtual PRUint32 GetLength()
-    { NS_ERROR("NOT IMPLEMENTED"); return 0; }
-    virtual PRBool SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
-                                          PRPackedBool* aBreakBefore)
-    { NS_ERROR("NOT IMPLEMENTED"); return PR_FALSE; }
-    virtual void DrawToPath(gfxContext *aContext, gfxPoint aPt,
-                            PRUint32 aStart, PRUint32 aLength,
-                            PropertyProvider* aBreakProvider,
-                            gfxFloat* aAdvanceWidth)
-    { NS_ERROR("NOT IMPLEMENTED"); }
-    virtual Metrics MeasureText(PRUint32 aStart, PRUint32 aLength,
-                                PRBool aTightBoundingBox,
-                                PropertyProvider* aBreakProvider)
-    { NS_ERROR("NOT IMPLEMENTED"); return Metrics(); }
-    virtual void SetLineBreaks(PRUint32 aStart, PRUint32 aLength,
-                               PRBool aLineBreakBefore, PRBool aLineBreakAfter,
-                               TextProvider* aProvider,
-                               gfxFloat* aAdvanceWidthDelta)
-    { NS_ERROR("NOT IMPLEMENTED"); }
-    virtual PRUint32 BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
-                                         PRBool aLineBreakBefore, gfxFloat aWidth,
-                                         PropertyProvider* aProvider,
-                                         PRBool aSuppressInitialBreak,
-                                         Metrics* aMetrics, PRBool aTightBoundingBox,
-                                         PRBool* aUsedHyphenation,
-                                         PRUint32* aLastBreak)
-    { NS_ERROR("NOT IMPLEMENTED"); return 0; }
-
-    virtual void Draw(gfxContext *aContext, gfxPoint aPt,
-                      PRUint32 aStart, PRUint32 aLength,
-                      const gfxRect* aDirtyRect,
-                      PropertyProvider* aBreakProvider,
-                      gfxFloat* aAdvanceWidth);
-    virtual gfxFloat GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
-                                     PropertyProvider* aBreakProvider);
-
-    virtual void SetContext(gfxContext* aContext) { mContext = aContext; }
-
-private:
-    gfxContext*     mContext;
-    gfxAtsuiTextRun mInner;
-    PRUint32        mLength;
-    
-    void SetupSpacingFromProvider(PropertyProvider* aProvider);
-};
-
-#define ROUND(x) floor((x) + 0.5)
-
-void
-gfxWrapperTextRun::SetupSpacingFromProvider(PropertyProvider* aProvider)
+static void
+SetupClusterBoundaries(gfxTextRun *aTextRun, const PRUnichar *aString, PRUint32 aLength)
 {
-    if (!(mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING))
+    TextBreakLocatorRef locator;
+    OSStatus status = UCCreateTextBreakLocator(NULL, 0, kUCTextBreakClusterMask,
+                                               &locator);
+    if (status != noErr)
         return;
-
-    NS_ASSERTION(mFlags & gfxTextRunFactory::TEXT_ABSOLUTE_SPACING,
-                 "Can't handle relative spacing");
-
-    nsAutoTArray<PropertyProvider::Spacing,200> spacing;
-    spacing.AppendElements(mLength);
-    aProvider->GetSpacing(0, mLength, spacing.Elements());
-
-    nsTArray<gfxFloat> spaceArray;
-    PRUint32 i;
-    gfxFloat offset = 0; // in device pixels
-    for (i = 0; i < mLength; ++i) {
-        NS_ASSERTION(spacing.Elements()[i].mBefore == 0,
-                     "Can't handle before-spacing!");
-        gfxFloat nextOffset = offset + spacing.Elements()[i].mAfter/mAppUnitsPerDevUnit;
-        spaceArray.AppendElement(ROUND(nextOffset) - ROUND(offset));
-        offset = nextOffset;
+    UniCharArrayOffset breakOffset;
+    status = UCFindTextBreak(locator, kUCTextBreakClusterMask, 0, aString, aLength,
+                             0, &breakOffset);
+    if (status != noErr) {
+        UCDisposeTextBreakLocator(&locator);
+        return;
     }
-    mInner.SetSpacing(spaceArray);
-}
-
-void
-gfxWrapperTextRun::Draw(gfxContext *aContext, gfxPoint aPt,
-                        PRUint32 aStart, PRUint32 aLength,
-                        const gfxRect* aDirtyRect,
-                        PropertyProvider* aBreakProvider,
-                        gfxFloat* aAdvanceWidth)
-{
-    NS_ASSERTION(aStart == 0 && aLength == mLength, "Can't handle substrings");
-    SetupSpacingFromProvider(aBreakProvider);
-    gfxPoint pt(aPt.x/mAppUnitsPerDevUnit, aPt.y/mAppUnitsPerDevUnit);
-    return mInner.Draw(mContext, pt);
-}
-
-gfxFloat
-gfxWrapperTextRun::GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
-                                   PropertyProvider* aBreakProvider)
-{
-    NS_ASSERTION(aStart == 0 && aLength == mLength, "Can't handle substrings");
-    SetupSpacingFromProvider(aBreakProvider);
-    return mInner.Measure(mContext)*mAppUnitsPerDevUnit;
+    NS_ASSERTION(breakOffset == 0, "Cluster should start at offset zero");
+    gfxTextRun::CompressedGlyph g;
+    while (breakOffset < aLength) {
+        PRUint32 curOffset = breakOffset;
+        status = UCFindTextBreak(locator, kUCTextBreakClusterMask,
+                                 kUCTextBreakIterateMask,
+                                 aString, aLength, curOffset, &breakOffset);
+        if (status != noErr) {
+            UCDisposeTextBreakLocator(&locator);
+            return;
+        }
+        PRUint32 j;
+        for (j = curOffset + 1; j < breakOffset; ++j) {
+            aTextRun->SetCharacterGlyph(j, g.SetClusterContinuation());
+        }
+    }
+    NS_ASSERTION(breakOffset == aLength, "Should have found a final break");
+    UCDisposeTextBreakLocator(&locator);
 }
 
 gfxTextRun *
-gfxAtsuiFontGroup::MakeTextRun(const PRUnichar* aString, PRUint32 aLength,
-                               Parameters* aParams)
+gfxAtsuiFontGroup::MakeTextRunInternal(const PRUnichar *aString, PRUint32 aLength,
+                                       Parameters *aParams)
 {
-    return new gfxWrapperTextRun(this, aString, aLength, aParams);
+    // NS_ASSERTION(!(aParams->mFlags & TEXT_NEED_BOUNDING_BOX),
+    //              "Glyph extents not yet supported");
+
+    gfxTextRun *textRun = new gfxTextRun(aParams, aLength);
+    if (!textRun)
+        return nsnull;
+
+    // There's a one-char header in the string and a one-char trailer
+    textRun->RecordSurrogates(aString + 1);
+    if (!(aParams->mFlags & TEXT_IS_8BIT)) {
+        SetupClusterBoundaries(textRun, aString + 1, aLength);
+    }
+
+    InitTextRun(textRun, aString, aLength);
+    return textRun;
+}
+
+#define UNICODE_LRO 0x202d
+#define UNICODE_RLO 0x202e
+#define UNICODE_PDF 0x202c
+
+static void
+AppendDirectionalIndicator(PRUint32 aFlags, nsAString& aString)
+{
+    static const PRUnichar overrides[2] = { UNICODE_LRO, UNICODE_RLO };
+    aString.Append(overrides[(aFlags & gfxTextRunFactory::TEXT_IS_RTL) != 0]);
 }
 
 gfxTextRun *
-gfxAtsuiFontGroup::MakeTextRun(const PRUint8* aString, PRUint32 aLength,
-                               Parameters* aParams)
+gfxAtsuiFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
+                               Parameters *aParams)
+{
+    nsAutoString utf16;
+    AppendDirectionalIndicator(aParams->mFlags, utf16);
+    utf16.Append(aString, aLength);
+    utf16.Append(UNICODE_PDF);
+    return MakeTextRunInternal(utf16.get(), aLength, aParams);
+}
+
+gfxTextRun *
+gfxAtsuiFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
+                               Parameters *aParams)
 {
     aParams->mFlags |= TEXT_IS_8BIT;
-    return new gfxWrapperTextRun(this, aString, aLength, aParams);
+    nsDependentCSubstring cString(reinterpret_cast<const char*>(aString),
+                                  reinterpret_cast<const char*>(aString + aLength));
+    nsAutoString utf16;
+    AppendDirectionalIndicator(aParams->mFlags, utf16);
+    AppendASCIItoUTF16(cString, utf16);
+    utf16.Append(UNICODE_PDF);
+    return MakeTextRunInternal(utf16.get(), aLength, aParams);
 }
 
 gfxAtsuiFont*
@@ -488,7 +439,7 @@ gfxAtsuiFontGroup::FindFontFor(ATSUFontID fid)
     // In most cases, this will just be 1 -- maybe a
     // small number, so no need for any more complex
     // lookup
-    for (int i = 0; i < FontListLength(); i++) {
+    for (PRUint32 i = 0; i < FontListLength(); i++) {
         font = GetFontAt(i);
         if (font->GetATSUFontID() == fid)
             return font;
@@ -501,43 +452,325 @@ gfxAtsuiFontGroup::FindFontFor(ATSUFontID fid)
 }
 
 /**
- ** gfxAtsuiTextRun
- **/
+ * Simple wrapper for ATSU "direct data arrays"
+ */
+class AutoLayoutDataArrayPtr {
+public:
+    AutoLayoutDataArrayPtr(ATSULineRef aLineRef,
+                           ATSUDirectDataSelector aSelector)
+        : mLineRef(aLineRef), mSelector(aSelector)
+    {
+        OSStatus status =
+            ATSUDirectGetLayoutDataArrayPtrFromLineRef(aLineRef,
+                aSelector, PR_FALSE, &mArray, &mItemCount);
+        if (status != noErr) {
+            mArray = NULL;
+            mItemCount = 0;
+        }
+    }
+    ~AutoLayoutDataArrayPtr() {
+        if (mArray) {
+            ATSUDirectReleaseLayoutDataArrayPtr(mLineRef, mSelector, &mArray);
+        }
+    }
 
-gfxAtsuiTextRun::gfxAtsuiTextRun(const nsAString& aString, gfxAtsuiFontGroup *aGroup)
-    : mString(aString), mGroup(aGroup)
+    void     *mArray;
+    ItemCount mItemCount;
+
+private:
+    ATSULineRef            mLineRef;
+    ATSUDirectDataSelector mSelector;
+};
+
+/**
+ * Abstraction to iterate through an array in strange order. It just remaps
+ * array indices. Tragically we mainly need this because of ATSUI bugs.
+ * There are four cases we need to handle. Note that 0 <= i < L in all cases.
+ * 1) f(i) = i (LTR, no bug, most common)
+ * 2) f(i) = L - 1 - i (RTL, no bug, next most common)
+ * 3) f(i) = i < N ? N - 1 - i : i; (compensate for ATSUI bug in RTL mode)
+ * 4) f(i) = i < N ? i + L - N : L - 1 - i (compensate for ATSUI bug in LTR mode)
+ * We collapse 2) into 3) by setting N=L.
+ * We collapse 1) into 4) by setting N=L.
+ */
+class GlyphMapper {
+public:
+    GlyphMapper(PRBool aIsRTL, PRUint32 aL, PRUint32 aN)
+        : mL(aL), mN(aN), mRTL(aIsRTL) {}
+    PRUint32 MapIndex(PRUint32 aIndex)
+    {
+        if (mRTL) {
+            return aIndex < mN ? mN - 1 - aIndex : aIndex;
+        } else {
+            return aIndex < mN ? aIndex + mL - mN : mL - 1 - aIndex;
+        }
+    }
+private:
+    PRUint32 mL, mN;
+    PRBool   mRTL;
+};
+
+static void
+PostLayoutCallback(ATSULineRef aLine, gfxTextRun *aRun,
+                   const PRUnichar *aString)
+{
+    AutoLayoutDataArrayPtr advanceDeltasArray(aLine, kATSUDirectDataAdvanceDeltaFixedArray);
+    AutoLayoutDataArrayPtr baselineDeltasArray(aLine, kATSUDirectDataBaselineDeltaFixedArray);
+    AutoLayoutDataArrayPtr deviceDeltasArray(aLine, kATSUDirectDataDeviceDeltaSInt16Array);
+    AutoLayoutDataArrayPtr glyphRecordsArray(aLine, kATSUDirectDataLayoutRecordATSLayoutRecordCurrent);
+
+    PRUint32 numGlyphs = glyphRecordsArray.mItemCount;
+    if (numGlyphs == 0 || !glyphRecordsArray.mArray) {
+        NS_WARNING("Failed to retrieve key glyph data");
+        return;
+    }
+    Fixed *advanceDeltas = NS_STATIC_CAST(Fixed *, advanceDeltasArray.mArray);
+    Fixed *baselineDeltas = NS_STATIC_CAST(Fixed *, baselineDeltasArray.mArray);
+    ATSLayoutRecord *glyphRecords = NS_STATIC_CAST(ATSLayoutRecord *, glyphRecordsArray.mArray);
+    NS_ASSERTION((!advanceDeltas || advanceDeltasArray.mItemCount == numGlyphs) &&
+                 (!baselineDeltas || baselineDeltasArray.mItemCount == numGlyphs),
+                 "Mismatched glyph counts");
+    NS_ASSERTION(glyphRecords[numGlyphs - 1].flags & kATSGlyphInfoTerminatorGlyph,
+                 "Last glyph should be a terminator glyph");
+    --numGlyphs;
+    if (numGlyphs == 0)
+        return;
+
+    PRUint32 index = 0;
+    ItemCount k = 0;
+    PRUint32 length = aRun->GetLength();
+    // ATSUI seems to have a bug where trailing whitespace in a run,
+    // even after we've forced the direction with LRO/RLO/PDF, does not
+    // necessarily get the required direction.
+    // A specific testcase is "RLO space space PDF"; we get
+    // glyphRecords[0] = { originalOffset:0, realPos:0; }
+    // glyphRecords[1] = { originalOffset:2, realPos:>0 }
+    // We count the number of glyphs that appear to be this sort of erroneous
+    // whitespace.
+    // In RTL situations, the bug manifests as the trailing whitespace characters
+    // being rendered in LTR order at the end of the glyph array.
+    // In LTR situations, the bug manifests as the trailing whitespace characters
+    // being rendered in RTL order at the start of the glyph array.
+    PRUint32 incorrectDirectionGlyphCount = 0;
+    PRUint32 stringTailOffset = length - 1;
+    while (glyphRecords[aRun->IsRightToLeft() ? numGlyphs - 1 - incorrectDirectionGlyphCount
+                                              : incorrectDirectionGlyphCount].originalOffset == stringTailOffset*2 &&
+           aString[stringTailOffset] == ' ') {
+        ++incorrectDirectionGlyphCount;
+        stringTailOffset--;
+        if (incorrectDirectionGlyphCount == numGlyphs)
+            break;
+    }
+    GlyphMapper mapper(aRun->IsRightToLeft(), numGlyphs, 
+                       numGlyphs - incorrectDirectionGlyphCount);
+    gfxTextRun::CompressedGlyph g;
+    nsAutoTArray<gfxTextRun::DetailedGlyph,1> detailedGlyphs;
+    PRBool gotRealCharacter = PR_FALSE;
+    while (index < length) {
+        ATSLayoutRecord *glyph = nsnull;
+        // ATSUI sometimes moves glyphs around in visual order to handle
+        // situations such as DEVANAGARI VOWEL I appearing before its base
+        // character (even though it follows the base character in the text).
+        // To handle this we make the reordered glyph(s) and the characters
+        // they're reordered around into a single cluster.
+        PRUint32 forceClusterGlyphs = 0;
+        PRUint32 nextIndex = index + 1;
+        if (k < numGlyphs) {
+            glyph = &glyphRecords[mapper.MapIndex(k)];
+            // originalOffset is in bytes, so we need to adjust index by 2 for comparisons
+            if (glyph->originalOffset > 2*index) {
+                // Detect the situation above. We assume that at most
+                // two glyphs have been moved from after a run of characters
+                // to visually before the run of characters, so the following glyph
+                // or the next glyph is a glyph for the current character.
+                // We can tweak this up if necessary...
+                const PRUint32 MAX_GLYPHS_REORDERED = 10;
+                PRUint32 reorderedGlyphs = 0;
+                PRUint32 i;
+                PRUint32 maxOffset = glyph->originalOffset;
+                for (i = 1; k + i < numGlyphs; ++i) {
+                    ATSLayoutRecord *nextGlyph = &glyphRecords[mapper.MapIndex(k + i)];
+                    if (i == MAX_GLYPHS_REORDERED || nextGlyph->originalOffset == 2*index) {
+                        reorderedGlyphs = i;
+                        break;
+                    }
+                    maxOffset = PR_MAX(maxOffset, nextGlyph->originalOffset);
+                }
+                if (reorderedGlyphs > 0) {
+                    forceClusterGlyphs = reorderedGlyphs;
+                    while (k + forceClusterGlyphs < numGlyphs) {
+                        ATSLayoutRecord *nextGlyph = &glyphRecords[mapper.MapIndex(k + forceClusterGlyphs)];
+                        if (nextGlyph->originalOffset > maxOffset)
+                            break;
+                        ++forceClusterGlyphs;
+                    }
+                    nextIndex = maxOffset/2 + 1;
+                }
+            }
+        }
+
+        if (k == numGlyphs ||
+            (glyph->originalOffset > 2*index && !forceClusterGlyphs)) {
+            NS_ASSERTION(index > 0, "Continuation at the start of a run??");
+            if (!aRun->GetCharacterGlyphs()[index].IsClusterContinuation()) {
+                if (gotRealCharacter) {
+                    // No glyphs for character 'index', it must be a ligature continuation
+                    aRun->SetCharacterGlyph(index, g.SetLigatureContinuation());
+                } else {
+                    // Don't allow ligature continuations until we've actually
+                    // got something for them to be a continuation of
+                    aRun->SetCharacterGlyph(index, g.SetMissing());
+                }
+            }
+        } else {
+            NS_ASSERTION(glyph->originalOffset >= 2*index, "Lost some glyphs");
+            PRUint32 glyphCount = 1;
+            if (forceClusterGlyphs) {
+                glyphCount = forceClusterGlyphs;
+                PRUint32 i;
+                // Mark all the characters that we forced to cluster, other
+                // than this leading character, as cluster continuations.
+                for (i = 0; i < forceClusterGlyphs; ++i) {
+                    PRUint32 offset = glyphRecords[mapper.MapIndex(k + i)].originalOffset;
+                    if (offset != 2*index) {
+                        aRun->SetCharacterGlyph(offset/2, g.SetClusterContinuation());
+                    }
+                }
+            } else {
+                // Find all the glyphs associated with this character
+                while (k + glyphCount < numGlyphs &&
+                       glyphRecords[mapper.MapIndex(k + glyphCount)].originalOffset == 2*index) {
+                    ++glyphCount;
+                }
+            }
+            Fixed advance = glyph[1].realPos - glyph->realPos;
+            PRUint32 advancePixels = advance >> 16;
+            // "Fixed" values have their fraction in the low 16 bits
+            if (glyphCount == 1 && advance >= 0 && (advance & 0xFFFF) == 0 &&
+                (!baselineDeltas || baselineDeltas[mapper.MapIndex(k)] == 0) &&
+                gfxTextRun::CompressedGlyph::IsSimpleAdvancePixels(advancePixels) &&
+                gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyph->glyphID)) {
+                aRun->SetCharacterGlyph(index, g.SetSimpleGlyph(advancePixels, glyph->glyphID));
+            } else {
+                if (detailedGlyphs.Length() < glyphCount) {
+                    if (!detailedGlyphs.AppendElements(glyphCount - detailedGlyphs.Length()))
+                        return;
+                }
+                PRUint32 i;
+                float appUnitsPerDevUnit = aRun->GetAppUnitsPerDevUnit();
+                for (i = 0; i < glyphCount; ++i) {
+                    gfxTextRun::DetailedGlyph *details = &detailedGlyphs[i];
+                    glyph = &glyphRecords[mapper.MapIndex(k + i)];
+                    details->mIsLastGlyph = i == glyphCount - 1;
+                    details->mGlyphID = glyph->glyphID;
+                    float advanceAppUnits =
+                      FixedToFloat(glyph[1].realPos - glyph->realPos)*appUnitsPerDevUnit;
+                    details->mAdvance = ceilf(advanceAppUnits)/appUnitsPerDevUnit;
+                    details->mXOffset = 0;
+                    details->mYOffset = !baselineDeltas ? 0.0f
+                        : FixedToFloat(baselineDeltas[mapper.MapIndex(k + i)]);
+                }
+                aRun->SetDetailedGlyphs(index, detailedGlyphs.Elements(), glyphCount);
+            }
+            gotRealCharacter = PR_TRUE;
+            k += glyphCount;
+        }
+        
+        index = nextIndex;
+        if (index + 1 < length && NS_IS_HIGH_SURROGATE(aString[index])) {
+            ++index;
+        }
+    }
+}
+
+struct PostLayoutCallbackClosure {
+    gfxTextRun      *mTextRun;
+    const PRUnichar *mString;
+};
+
+// This is really disgusting, but the ATSUI refCon thing is also disgusting
+static PostLayoutCallbackClosure *gCallbackClosure = nsnull;
+
+static OSStatus
+PostLayoutOperationCallback(ATSULayoutOperationSelector iCurrentOperation, 
+                            ATSULineRef iLineRef, 
+                            UInt32 iRefCon, 
+                            void *iOperationCallbackParameterPtr, 
+                            ATSULayoutOperationCallbackStatus *oCallbackStatus)
+{
+    PostLayoutCallback(iLineRef, gCallbackClosure->mTextRun,
+                       gCallbackClosure->mString);
+    *oCallbackStatus = kATSULayoutOperationCallbackStatusContinue;
+    return noErr;
+}
+
+void
+gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
+                               const PRUnichar *aString, PRUint32 aLength)
 {
     OSStatus status;
-    gfxAtsuiFont *atsuiFont = mGroup->GetFontAt(0);
+    gfxAtsuiFont *atsuiFont = GetFontAt(0);
     ATSUStyle mainStyle = atsuiFont->GetATSUStyle();
+    nsTArray<ATSUStyle> stylesToDispose;
 
-    UniCharCount runLengths = mString.Length();
+    UniCharCount runLengths = aLength;
+    ATSUTextLayout layout;
+    // The string is actually aLength + 2 chars, with a header char to set
+    // the direction and a trailer char to pop it. So create the text layout
+    // giving the whole string as context, although we only want glyphs for
+    // the inner substring.
     status = ATSUCreateTextLayoutWithTextPtr
-        (nsPromiseFlatString(mString).get(),
-         0,
-         mString.Length(),
-         mString.Length(),
+        (aString,
+         1,
+         aLength,
+         aLength + 2,
          1,
          &runLengths,
          &mainStyle,
-         &mATSULayout);
+         &layout);
+    // XXX error check here?
+
+    PostLayoutCallbackClosure closure;
+    closure.mTextRun = aRun;
+    // Pass the real string to the closure, ignoring the header
+    closure.mString = aString + 1;
+    NS_ASSERTION(!gCallbackClosure, "Reentering InitTextRun? Expect disaster!");
+    gCallbackClosure = &closure;
+
+    ATSULayoutOperationOverrideSpecifier override;
+    override.operationSelector = kATSULayoutOperationPostLayoutAdjustment;
+    override.overrideUPP = PostLayoutOperationCallback;
 
     // Set up our layout attributes
     ATSLineLayoutOptions lineLayoutOptions = kATSLineKeepSpacesOutOfMargin | kATSLineHasNoHangers;
-    ATSUAttributeTag layoutTags[] = { kATSULineLayoutOptionsTag, kATSULineFontFallbacksTag };
-    ByteCount layoutArgSizes[] = { sizeof(ATSLineLayoutOptions), sizeof(ATSUFontFallbacks) };
-    ATSUAttributeValuePtr layoutArgs[] = { &lineLayoutOptions, mGroup->GetATSUFontFallbacksPtr() };
-    ATSUSetLayoutControls(mATSULayout,
-                          sizeof(layoutTags) / sizeof(ATSUAttributeTag),
+
+    static ATSUAttributeTag layoutTags[] = {
+        kATSULineLayoutOptionsTag,
+        kATSULineFontFallbacksTag,
+        kATSULayoutOperationOverrideTag
+    };
+    static ByteCount layoutArgSizes[] = {
+        sizeof(ATSLineLayoutOptions),
+        sizeof(ATSUFontFallbacks),
+        sizeof(ATSULayoutOperationOverrideSpecifier)
+    };
+
+    ATSUAttributeValuePtr layoutArgs[] = {
+        &lineLayoutOptions,
+        GetATSUFontFallbacksPtr(),
+        &override
+    };
+    ATSUSetLayoutControls(layout,
+                          NS_ARRAY_LENGTH(layoutTags),
                           layoutTags,
                           layoutArgSizes,
                           layoutArgs);
 
     /* Now go through and update the styles for the text, based on font matching. */
 
-    UniCharArrayOffset runStart = 0;
-    UniCharCount totalLength = mString.Length();
-    UniCharCount runLength = totalLength;
+    UniCharArrayOffset runStart = 1;
+    UniCharCount totalLength = aLength + 1;
+    UniCharCount runLength = aLength;
 
     //fprintf (stderr, "==== Starting font maching [string length: %d]\n", totalLength);
     while (runStart < totalLength) {
@@ -545,11 +778,12 @@ gfxAtsuiTextRun::gfxAtsuiTextRun(const nsAString& aString, gfxAtsuiFontGroup *aG
         UniCharArrayOffset changedOffset;
         UniCharCount changedLength;
 
-        OSStatus status = ATSUMatchFontsToText (mATSULayout, runStart, runLength,
+        OSStatus status = ATSUMatchFontsToText (layout, runStart, runLength,
                                                 &substituteFontID, &changedOffset, &changedLength);
         if (status == noErr) {
             //fprintf (stderr, "ATSUMatchFontsToText returned noErr\n");
             // everything's good, finish up
+            aRun->AddGlyphRun(atsuiFont, runStart - 1);
             break;
         } else if (status == kATSUFontsMatched) {
             //fprintf (stderr, "ATSUMatchFontsToText returned kATSUFontsMatched: FID %d\n", substituteFontID);
@@ -564,188 +798,43 @@ gfxAtsuiTextRun::gfxAtsuiTextRun(const nsAString& aString, gfxAtsuiFontGroup *aG
 
             ATSUSetAttributes (subStyle, 1, fontTags, fontArgSizes, fontArgs);
 
-            ATSUSetRunStyle (mATSULayout, subStyle, changedOffset, changedLength);
+            if (changedOffset > runStart) {
+                aRun->AddGlyphRun(atsuiFont, runStart - 1);
+            }
 
-            mStylesToDispose.AppendElement(subStyle);
+            ATSUSetRunStyle (layout, subStyle, changedOffset, changedLength);
+
+            gfxAtsuiFont *font = FindFontFor(substituteFontID);
+            if (font) {
+                aRun->AddGlyphRun(font, changedOffset - 1);
+            }
+            
+            stylesToDispose.AppendElement(subStyle);
         } else if (status == kATSUFontsNotMatched) {
             //fprintf (stderr, "ATSUMatchFontsToText returned kATSUFontsNotMatched\n");
             /* I need to select the last resort font; how the heck do I do that? */
+            // Record which font is associated with these glyphs, anyway
+            aRun->AddGlyphRun(atsuiFont, runStart - 1);
         }
 
-        //fprintf (stderr, "total length: %d changedOffset: %d changedLength: %d\n",  runLength, changedOffset, changedLength);
+        //fprintf (stderr, "total length: %d changedOffset: %d changedLength: %d\p=n",  runLength, changedOffset, changedLength);
 
         runStart = changedOffset + changedLength;
         runLength = totalLength - runStart;
     }
 
-    //fprintf (stderr, "==== End font matching\n");
-}
-
-gfxAtsuiTextRun::~gfxAtsuiTextRun()
-{
-    if (mATSULayout)
-        ATSUDisposeTextLayout(mATSULayout);
-
-    for (PRUint32 i = 0; i < mStylesToDispose.Length(); i++) {
-        ATSUStyle s = mStylesToDispose[i];
-        ATSUDisposeStyle(s);
-    }
-}
-
-struct CairoGlyphBuffer {
-    CairoGlyphBuffer() {
-        size = 128;
-        glyphs = staticGlyphBuf;
-    }
-
-    ~CairoGlyphBuffer() {
-        if (glyphs != staticGlyphBuf)
-            PR_Free(glyphs);
-    }
-
-    void EnsureSize(PRUint32 numGlyphs) {
-        if (size < numGlyphs) {
-            if (glyphs != staticGlyphBuf)
-                PR_Free(glyphs);
-            glyphs = (cairo_glyph_t*) PR_Malloc(sizeof(cairo_glyph_t) * numGlyphs);
-            size = numGlyphs;
-        }
-    }
-
-    PRUint32 size;
-    cairo_glyph_t *glyphs;
-private:
-    cairo_glyph_t staticGlyphBuf[128];
-};
-
-void
-gfxAtsuiTextRun::Draw(gfxContext *aContext, gfxPoint pt)
-{
-    gfxFloat offsetX, offsetY;
-    nsRefPtr<gfxASurface> surf = aContext->CurrentSurface (&offsetX, &offsetY);
-
-    cairo_t *cr = aContext->GetCairo();
-    double fontSize = mGroup->GetStyle()->size;
-
-    cairo_save (cr);
-    cairo_translate (cr, pt.x, pt.y);
-
-    OSStatus status;
-
-    ByteCount bufferSize = 4096;
-    ATSUGlyphInfoArray *glyphInfo = (ATSUGlyphInfoArray*) PR_Malloc (bufferSize);
-    status = ATSUGetGlyphInfo (mATSULayout, kATSUFromTextBeginning, kATSUToTextEnd, &bufferSize, glyphInfo);
-    if (status == buffersTooSmall) {
-        ATSUGetGlyphInfo (mATSULayout, kATSUFromTextBeginning, kATSUToTextEnd, &bufferSize, NULL);
-        PR_Free(glyphInfo);
-        glyphInfo = (ATSUGlyphInfoArray*) PR_Malloc (bufferSize);
-
-        status = ATSUGetGlyphInfo (mATSULayout, kATSUFromTextBeginning, kATSUToTextEnd, &bufferSize, glyphInfo);
-    }
-
-    if (status != noErr) {
-        fprintf (stderr, "ATSUGetGlyphInfo returned error %d\n", (int) status);
-        PR_Free (glyphInfo);
-        return;
-    }
-
-    CairoGlyphBuffer cairoGlyphs;
-
-    ItemCount i = 0;
-    while (i < glyphInfo->numGlyphs) {
-        ATSUStyle runStyle = glyphInfo->glyphs[i].style;
-
-        ItemCount lastRunGlyph;
-        for (lastRunGlyph = i+1; lastRunGlyph < glyphInfo->numGlyphs; lastRunGlyph++) {
-            if (glyphInfo->glyphs[lastRunGlyph].style != runStyle)
-                break;
-        }
-
-        ItemCount numGlyphs = lastRunGlyph-i;
-        ATSUFontID runFontID;
-        ByteCount unused;
-        status = ATSUGetAttribute (runStyle, kATSUFontTag, sizeof(ATSUFontID), &runFontID, &unused);
-        if (status != noErr || runFontID == kATSUInvalidFontID) {
-            i += numGlyphs;
-            continue;
-        }
-
-        cairoGlyphs.EnsureSize(numGlyphs);
-        cairo_glyph_t *runGlyphs = cairoGlyphs.glyphs;
-
-        for (ItemCount k = i; k < lastRunGlyph; k++) {
-            runGlyphs->index = glyphInfo->glyphs[k].glyphID;
-            runGlyphs->x = glyphInfo->glyphs[k].idealX; /* screenX */
-            runGlyphs->y = glyphInfo->glyphs[k].deltaY;
-
-            runGlyphs++;
-        }
-
-        gfxAtsuiFont *font = mGroup->FindFontFor(runFontID);
-
-        if (gfxFontTestStore::CurrentStore()) {
-            gfxFontTestStore::CurrentStore()->AddItem(font->GetUniqueName(),
-                                                      cairoGlyphs.glyphs, numGlyphs);
-        }
-
-        cairo_set_scaled_font (cr, font->CairoScaledFont());
-        cairo_show_glyphs (cr, cairoGlyphs.glyphs, numGlyphs);
-
-        i += numGlyphs;
-    }
-
-    PR_Free (glyphInfo);
-    
-    cairo_restore (cr);
-}
-
-gfxFloat
-gfxAtsuiTextRun::Measure(gfxContext *aContext)
-{
-    OSStatus status;
+    // Trigger layout so that our callback fires. We don't actually care about
+    // the result of this call.
     ATSTrapezoid trap;
-    ItemCount numBounds;
+    ItemCount trapCount;
+    ATSUGetGlyphBounds(layout, 0, 0, 1, aLength, kATSUseDeviceOrigins, 1, &trap, &trapCount); 
 
-    status = ATSUGetGlyphBounds(mATSULayout,
-                                FloatToFixed(0.0),
-                                FloatToFixed(0.0),
-                                kATSUFromTextBeginning,
-                                kATSUToTextEnd,
-                                kATSUseFractionalOrigins,
-                                1,
-                                &trap,
-                                &numBounds);
-    if (status != noErr) {
-        fprintf(stderr, "ATSUGetGlyphBounds returned error %d!\n", (int) status);
-        return 0.0;
+    ATSUDisposeTextLayout(layout);
+
+    //fprintf (stderr, "==== End font matching\n");
+    PRUint32 i;
+    for (i = 0; i < stylesToDispose.Length(); ++i) {
+        ATSUDisposeStyle(stylesToDispose[i]);
     }
-
-#if 0
-    printf ("Measure: '%s' trap: %f %f %f %f\n",
-            NS_ConvertUTF16toUTF8(mString).get(),
-            FixedToFloat(trap.upperLeft.x), FixedToFloat(trap.lowerLeft.x),
-            FixedToFloat(trap.upperRight.x), FixedToFloat(trap.lowerRight.x));
-#endif
-
-    float f =
-        FixedToFloat(PR_MAX(trap.upperRight.x, trap.lowerRight.x)) -
-        FixedToFloat(PR_MIN(trap.upperLeft.x, trap.lowerLeft.x));
-
-    return f;
+    gCallbackClosure = nsnull;
 }
-
-void
-gfxAtsuiTextRun::SetSpacing(const nsTArray<gfxFloat> &spacingArray)
-{
-    // We can implement this, but there's really a mismatch between
-    // the spacings given here and cluster spacings.  So we're
-    // going to do nothing until we figure out what the layout API
-    // will look like for this.
-}
-
-const nsTArray<gfxFloat> *const
-gfxAtsuiTextRun::GetSpacing() const
-{
-    return nsnull;
-}
-

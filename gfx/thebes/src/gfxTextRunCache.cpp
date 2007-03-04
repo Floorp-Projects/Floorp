@@ -37,6 +37,42 @@
 
 #include "gfxTextRunCache.h"
 
+static inline PRBool
+IsAscii(const char *aString, PRUint32 aLength)
+{
+    const char *end = aString + aLength;
+    while (aString < end) {
+        if (0x80 & *aString)
+            return PR_FALSE;
+        ++aString;
+    }
+    return PR_TRUE;
+}
+
+static inline PRBool
+IsAscii(const PRUnichar *aString, PRUint32 aLength)
+{
+    const PRUnichar *end = aString + aLength;
+    while (aString < end) {
+        if (0x0080 <= *aString)
+            return PR_FALSE;
+        ++aString;
+    }
+    return PR_TRUE;
+}
+
+static inline PRBool
+Is8Bit(const PRUnichar *aString, PRUint32 aLength)
+{
+    const PRUnichar *end = aString + aLength;
+    while (aString < end) {
+        if (0x0100 <= *aString)
+            return PR_FALSE;
+        ++aString;
+    }
+    return PR_TRUE;
+}
+
 gfxTextRunCache* gfxTextRunCache::mGlobalCache = nsnull;
 PRInt32 gfxTextRunCache::mGlobalCacheRefCount = 0;
 
@@ -85,7 +121,8 @@ gfxTextRunCache::Shutdown()
     }
 }    
 
-static PRUint32 ComputeFlags(PRBool aIsRTL, PRBool aEnableSpacing)
+static PRUint32
+ComputeFlags(PRBool aIsRTL, PRBool aEnableSpacing)
 {
     PRUint32 flags = gfxTextRunFactory::TEXT_HAS_SURROGATES;
     if (aIsRTL) {
@@ -100,18 +137,23 @@ static PRUint32 ComputeFlags(PRBool aIsRTL, PRBool aEnableSpacing)
 }
 
 gfxTextRun*
-gfxTextRunCache::GetOrMakeTextRun (gfxContext* aContext, gfxFontGroup *aFontGroup,
-                                   const PRUnichar *aString, PRUint32 aLength,
-                                   PRUint32 aAppUnitsPerDevUnit, PRBool aIsRTL,
-                                   PRBool aEnableSpacing, PRBool *aCallerOwns)
+gfxTextRunCache::GetOrMakeTextRun(gfxContext *aContext, gfxFontGroup *aFontGroup,
+                                  const PRUnichar *aString, PRUint32 aLength,
+                                  PRUint32 aAppUnitsPerDevUnit, PRBool aIsRTL,
+                                  PRBool aEnableSpacing, PRBool *aCallerOwns)
 {
     gfxSkipChars skipChars;
     // Choose pessimistic flags since we don't want to bother analyzing the string
-    gfxTextRunFactory::Parameters params =
-        { aContext, nsnull, nsnull, &skipChars, nsnull, 0, aAppUnitsPerDevUnit,
-              ComputeFlags(aIsRTL, aEnableSpacing) };
+    gfxTextRunFactory::Parameters params = {
+        aContext, nsnull, nsnull, &skipChars, nsnull, 0, aAppUnitsPerDevUnit,
+        ComputeFlags(aIsRTL, aEnableSpacing)
+    };
+    if (IsAscii(aString, aLength))
+        params.mFlags |= gfxTextRunFactory::TEXT_IS_ASCII;
+    //    else if (Is8Bit(aString, aLength))
+    //        params.mFlags |= gfxTextRunFactory::TEXT_IS_8BIT;
 
-    gfxTextRun* tr = nsnull;
+    gfxTextRun *tr = nsnull;
     // Don't cache textruns that use spacing
     if (!gDisableCache && !aEnableSpacing) {
         // Evict first, to make sure that the textrun we return is live.
@@ -156,19 +198,25 @@ gfxTextRunCache::GetOrMakeTextRun (gfxContext* aContext, gfxFontGroup *aFontGrou
 }
 
 gfxTextRun*
-gfxTextRunCache::GetOrMakeTextRun (gfxContext* aContext, gfxFontGroup *aFontGroup,
-                                   const char *aString, PRUint32 aLength,
-                                   PRUint32 aAppUnitsPerDevUnit, PRBool aIsRTL,
-                                   PRBool aEnableSpacing, PRBool *aCallerOwns)
+gfxTextRunCache::GetOrMakeTextRun(gfxContext *aContext, gfxFontGroup *aFontGroup,
+                                  const char *aString, PRUint32 aLength,
+                                  PRUint32 aAppUnitsPerDevUnit, PRBool aIsRTL,
+                                  PRBool aEnableSpacing, PRBool *aCallerOwns)
 {
     gfxSkipChars skipChars;
     // Choose pessimistic flags since we don't want to bother analyzing the string
-    gfxTextRunFactory::Parameters params =
-        { aContext, nsnull, nsnull, &skipChars, nsnull, 0, aAppUnitsPerDevUnit,
-              ComputeFlags(aIsRTL, aEnableSpacing) };
-    const PRUint8* str = NS_REINTERPRET_CAST(const PRUint8*, aString);
+    gfxTextRunFactory::Parameters params = { 
+        aContext, nsnull, nsnull, &skipChars, nsnull, 0, aAppUnitsPerDevUnit,
+        ComputeFlags(aIsRTL, aEnableSpacing)
+    };
+    if (IsAscii(aString, aLength))
+        params.mFlags |= gfxTextRunFactory::TEXT_IS_ASCII;
+    else
+        params.mFlags |= gfxTextRunFactory::TEXT_IS_8BIT;
 
-    gfxTextRun* tr = nsnull;
+    const PRUint8 *str = reinterpret_cast<const PRUint8*>(aString);
+
+    gfxTextRun *tr = nsnull;
     // Don't cache textruns that use spacing
     if (!gDisableCache && !aEnableSpacing) {
         // Evict first, to make sure that the textrun we return is live.

@@ -382,6 +382,10 @@ public:
 
     virtual nsString GetUniqueName();
 
+    virtual void Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
+                      gfxContext *aContext, PRBool aDrawToPath, gfxPoint *aBaselineOrigin,
+                      Spacing *aSpacing);
+
 protected:
     HFONT MakeHFONT();
     cairo_font_face_t *MakeCairoFontFace();
@@ -406,6 +410,8 @@ private:
     LOGFONTW mLogFont;
 
     nsRefPtr<WeightTable> mWeightTable;
+    
+    virtual void SetupCairoFont(cairo_t *aCR);
 };
 
 /**********************************************************************
@@ -469,55 +475,17 @@ protected:
                            const nsACString& genericName,
                            void *closure);
 
+    void InitTextRunGDI(gfxContext *aContext, gfxTextRun *aRun, const char *aString, PRUint32 aLength);
+    void InitTextRunGDI(gfxContext *aContext, gfxTextRun *aRun, const PRUnichar *aString, PRUint32 aLength);
+
+    void InitTextRunUniscribe(gfxContext *aContext, gfxTextRun *aRun, const PRUnichar *aString, PRUint32 aLength);
+
 private:
     friend class gfxWindowsTextRun;
 
     nsCString mGenericFamily;
 
     nsDataHashtable<nsStringHashKey, nsRefPtr<gfxWindowsFont> > mFontCache;
-};
-
-
-/**********************************************************************
- *
- * class gfxWindowsTextRun
- *
- **********************************************************************/
-
-class THEBES_API gfxWindowsTextRun {
-public:
-    gfxWindowsTextRun(const nsAString& aString, gfxWindowsFontGroup *aFontGroup);
-    gfxWindowsTextRun(const nsACString& aString, gfxWindowsFontGroup *aFontGroup);
-    ~gfxWindowsTextRun();
-
-    virtual void Draw(gfxContext *aContext, gfxPoint pt);
-    virtual gfxFloat Measure(gfxContext *aContext);
-
-    virtual void SetSpacing(const nsTArray<gfxFloat>& spacingArray);
-    virtual const nsTArray<gfxFloat> *const GetSpacing() const;
-    
-    void SetRightToLeft(PRBool aIsRTL) { mIsRTL = aIsRTL; }
-    PRBool IsRightToLeft() { return mIsRTL; }
-
-private:
-    double MeasureOrDrawFast(gfxContext *aContext, PRBool aDraw, gfxPoint pt);
-    double MeasureOrDrawReallyFast(gfxContext *aContext, PRBool aDraw, gfxPoint pt, gfxRGBA color);
-    double MeasureOrDrawUniscribe(gfxContext *aContext, PRBool aDraw, gfxPoint pt);
-
-    gfxWindowsFontGroup *mGroup;
-    nsTArray<gfxFloat> mSpacing;
-
-    // These should probably be in a union
-    nsString mString;
-    nsCString mCString;
-
-    const PRPackedBool mIsASCII;
-    PRPackedBool mIsRTL;
-    
-    nsRefPtr<gfxWindowsFont> mFallbackFont;
-
-    /* cached values */
-    double mLength;
 };
 
 #endif /* GFX_WINDOWSFONTS_H */

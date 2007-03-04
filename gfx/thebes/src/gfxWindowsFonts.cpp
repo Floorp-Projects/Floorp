@@ -39,6 +39,7 @@
 #define DEBUG_pavlov
 #endif
 
+// #define FORCE_UNISCRIBE 1
 #define FORCE_PR_LOG
 
 #include "prtypes.h"
@@ -78,7 +79,7 @@ static PRLogModuleInfo *gFontLog = PR_NewLogModule("winfonts");
 
 inline HDC GetDCFromSurface(gfxASurface *aSurface) {
     if (aSurface->GetType() != gfxASurface::SurfaceTypeWin32) {
-        NS_ERROR("gfxWindowsTextRun::MeasureOrDrawFast: Context target is not win32!");
+        NS_ERROR("GetDCFromSurface: Context target is not win32!");
         return nsnull;
     }
     return NS_STATIC_CAST(gfxWindowsSurface*, aSurface)->GetDC();
@@ -463,6 +464,22 @@ gfxWindowsFont::GetUniqueName()
     return uniqueName;
 }
 
+void
+gfxWindowsFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
+                     gfxContext *aContext, PRBool aDrawToPath, gfxPoint *aBaselineOrigin,
+                     Spacing *aSpacing)
+{
+    // XXX stuart may want us to do something faster here
+    gfxFont::Draw(aTextRun, aStart, aEnd, aContext, aDrawToPath, aBaselineOrigin,
+                  aSpacing);
+}
+
+void
+gfxWindowsFont::SetupCairoFont(cairo_t *aCR)
+{
+    cairo_set_scaled_font(aCR, CairoScaledFont());
+}
+
 /**********************************************************************
  *
  * class gfxWindowsFontGroup
@@ -517,488 +534,169 @@ gfxWindowsFontGroup::gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFo
 
 gfxWindowsFontGroup::~gfxWindowsFontGroup()
 {
-
 }
 
-class gfxWrapperTextRun : public gfxTextRun {
-public:
-    gfxWrapperTextRun(gfxWindowsFontGroup *aGroup,
-                      const PRUint8* aString, PRUint32 aLength,
-                      gfxTextRunFactory::Parameters* aParams)
-        : gfxTextRun(aParams), mContext(aParams->mContext),
-          mInner(nsDependentCSubstring(reinterpret_cast<const char*>(aString),
-                                       reinterpret_cast<const char*>(aString + aLength)),
-                 aGroup),
-          mLength(aLength)
-    {
-        mInner.SetRightToLeft(IsRightToLeft());
-    }
-    gfxWrapperTextRun(gfxWindowsFontGroup *aGroup,
-                      const PRUnichar* aString, PRUint32 aLength,
-                      gfxTextRunFactory::Parameters* aParams)
-        : gfxTextRun(aParams), mContext(aParams->mContext),
-          mInner(nsDependentSubstring(aString, aString + aLength), aGroup),
-          mLength(aLength)
-    {
-        mInner.SetRightToLeft(IsRightToLeft());
-    }
-    ~gfxWrapperTextRun() {}
+gfxTextRun *
+gfxWindowsFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
+                                 Parameters *aParams)
+{
+    NS_ASSERTION(!(aParams->mFlags & TEXT_NEED_BOUNDING_BOX),
+                 "Glyph extents not yet supported");
 
-    virtual void GetCharFlags(PRUint32 aStart, PRUint32 aLength,
-                              PRUint8* aFlags)
-    { NS_ERROR("NOT IMPLEMENTED"); }
-    virtual PRUint8 GetCharFlags(PRUint32 aOffset)
-    { NS_ERROR("NOT IMPLEMENTED"); for (;;) ; }
-    virtual PRUint32 GetLength()
-    { NS_ERROR("NOT IMPLEMENTED"); for (;;) ; }
-    virtual PRBool SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
-                                          PRPackedBool* aBreakBefore)
-    { NS_ERROR("NOT IMPLEMENTED"); for (;;) ; }
-    virtual void DrawToPath(gfxContext *aContext, gfxPoint aPt,
-                            PRUint32 aStart, PRUint32 aLength,
-                            PropertyProvider* aBreakProvider,
-                            gfxFloat* aAdvanceWidth)
-    { NS_ERROR("NOT IMPLEMENTED"); }
-    virtual Metrics MeasureText(PRUint32 aStart, PRUint32 aLength,
-                                PRBool aTightBoundingBox,
-                                PropertyProvider* aBreakProvider)
-    { NS_ERROR("NOT IMPLEMENTED"); for (;;) ; }
-    virtual void SetLineBreaks(PRUint32 aStart, PRUint32 aLength,
-                               PRBool aLineBreakBefore, PRBool aLineBreakAfter,
-                               TextProvider* aProvider,
-                               gfxFloat* aAdvanceWidthDelta)
-    { NS_ERROR("NOT IMPLEMENTED"); }
-    virtual PRUint32 BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
-                                         PRBool aLineBreakBefore, gfxFloat aWidth,
-                                         PropertyProvider* aProvider,
-                                         PRBool aSuppressInitialBreak,
-                                         Metrics* aMetrics, PRBool aTightBoundingBox,
-                                         PRBool* aUsedHyphenation,
-                                         PRUint32* aLastBreak)
-    { NS_ERROR("NOT IMPLEMENTED"); for (;;) ; }
+    gfxTextRun *textRun = new gfxTextRun(aParams, aLength);
+    if (!textRun)
+        return nsnull;
 
-    virtual void Draw(gfxContext *aContext, gfxPoint aPt,
-                      PRUint32 aStart, PRUint32 aLength,
-                      const gfxRect* aDirtyRect,
-                      PropertyProvider* aBreakProvider,
-                      gfxFloat* aAdvanceWidth);
-    virtual gfxFloat GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
-                                     PropertyProvider* aBreakProvider);
-
-    virtual void SetContext(gfxContext* aContext) { mContext = aContext; }
-
-private:
-    gfxContext*       mContext;
-    gfxWindowsTextRun mInner;
-    PRUint32          mLength;
+    textRun->RecordSurrogates(aString);
     
-    void SetupSpacingFromProvider(PropertyProvider* aProvider);
-};
+#ifdef FORCE_UNISCRIBE
+    const PRBool isComplex = PR_TRUE;
+#else
+    const PRBool isComplex = ScriptIsComplex(aString, aLength, SIC_COMPLEX) == S_OK ||
+                             textRun->IsRightToLeft();
+#endif
+    if (isComplex)
+        InitTextRunUniscribe(aParams->mContext, textRun, aString, aLength);
+    else
+        InitTextRunGDI(aParams->mContext, textRun, aString, aLength);
 
-void
-gfxWrapperTextRun::SetupSpacingFromProvider(PropertyProvider* aProvider)
+    return textRun;
+}
+
+gfxTextRun *
+gfxWindowsFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
+                                 Parameters *aParams)
 {
-    if (!(mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING))
-        return;
+    NS_ASSERTION((aParams->mFlags & TEXT_IS_ASCII || aParams->mFlags & TEXT_IS_8BIT),
+                 "unknown text type");
+    gfxTextRun *textRun = new gfxTextRun(aParams, aLength);
+    if (!textRun)
+        return nsnull;
 
-    NS_ASSERTION(mFlags & gfxTextRunFactory::TEXT_ABSOLUTE_SPACING,
-                 "Can't handle relative spacing");
+#ifdef FORCE_UNISCRIBE
+    const PRBool isComplex = PR_TRUE;
+#else
+    const PRBool isComplex = textRun->IsRightToLeft();
+#endif
 
-    nsAutoTArray<PropertyProvider::Spacing,200> spacing;
-    spacing.AppendElements(mLength);
-    aProvider->GetSpacing(0, mLength, spacing.Elements());
+    if (isComplex) {
+        nsDependentCSubstring cString(reinterpret_cast<const char*>(aString),
+                                  reinterpret_cast<const char*>(aString + aLength));
+        nsAutoString utf16;
+        AppendASCIItoUTF16(cString, utf16);
+        InitTextRunUniscribe(aParams->mContext, textRun, utf16.get(), aLength);
+    } else {
+        InitTextRunGDI(aParams->mContext, textRun,
+                       reinterpret_cast<const char*>(aString), aLength);
+    }
 
-    nsTArray<gfxFloat> spaceArray;
+    return textRun;
+}
+
+static HDC
+SetupContextFont(gfxContext *aContext, gfxWindowsFont *aFont,
+                 double *aCairoToPixels)
+{
+    nsRefPtr<gfxASurface> surf = aContext->CurrentSurface();
+    HDC dc = GetDCFromSurface(surf);
+    NS_ASSERTION(dc, "No DC");
+
+    // Set the font to have the identity matrix
+    aFont->UpdateCTM(gfxMatrix());
+    cairo_scaled_font_t *scaledFont = aFont->CairoScaledFont();
+    cairo_win32_scaled_font_select_font(scaledFont, dc);
+
+    double cairofontfactor = cairo_win32_scaled_font_get_metrics_factor(scaledFont);
+    *aCairoToPixels = cairofontfactor * aFont->GetAdjustedSize();
+    return dc;
+}
+
+static void
+SetupTextRunFromCharacterPlacement(gfxTextRun *aRun, double aCairoToPixels,
+                                   int *aDXs, WCHAR *aGlyphs, gfxFont *aFont)
+{
+    gfxTextRun::CompressedGlyph g;
     PRUint32 i;
-    gfxFloat offset = 0;
-    for (i = 0; i < mLength; ++i) {
-        NS_ASSERTION(spacing.Elements()[i].mBefore == 0,
-                     "Can't handle before-spacing!");
-        gfxFloat nextOffset = offset + spacing.Elements()[i].mAfter/mAppUnitsPerDevUnit;
-        spaceArray.AppendElement(ROUND(nextOffset) - ROUND(offset));
-        offset = nextOffset;
-    }
-    mInner.SetSpacing(spaceArray);
-}
-
-void
-gfxWrapperTextRun::Draw(gfxContext *aContext, gfxPoint aPt,
-                        PRUint32 aStart, PRUint32 aLength,
-                        const gfxRect* aDirtyRect,
-                        PropertyProvider* aBreakProvider,
-                        gfxFloat* aAdvanceWidth)
-{
-    NS_ASSERTION(aStart == 0 && aLength == mLength, "Can't handle substrings");
-    SetupSpacingFromProvider(aBreakProvider);
-    gfxPoint pt(aPt.x/mAppUnitsPerDevUnit, aPt.y/mAppUnitsPerDevUnit);
-    return mInner.Draw(mContext, pt);
-}
-
-gfxFloat
-gfxWrapperTextRun::GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
-                                   PropertyProvider* aBreakProvider)
-{
-    NS_ASSERTION(aStart == 0 && aLength == mLength, "Can't handle substrings");
-    SetupSpacingFromProvider(aBreakProvider);
-    return mInner.Measure(mContext)*mAppUnitsPerDevUnit;
-}
-
-gfxTextRun *
-gfxWindowsFontGroup::MakeTextRun(const PRUnichar* aString, PRUint32 aLength,
-                                 Parameters* aParams)
-{
-    return new gfxWrapperTextRun(this, aString, aLength, aParams);
-}
-
-gfxTextRun *
-gfxWindowsFontGroup::MakeTextRun(const PRUint8* aString, PRUint32 aLength,
-                                 Parameters* aParams)
-{
-    aParams->mFlags |= TEXT_IS_8BIT;
-    return new gfxWrapperTextRun(this, aString, aLength, aParams);
-}
-
-/**********************************************************************
- *
- * class gfxWindowsTextRun
- *
- **********************************************************************/
-
-gfxWindowsTextRun::gfxWindowsTextRun(const nsAString& aString, gfxWindowsFontGroup *aFontGroup)
-    : mGroup(aFontGroup), mString(aString), mIsASCII(PR_FALSE), mLength(-1.0)
-{
-}
-
-gfxWindowsTextRun::gfxWindowsTextRun(const nsACString& aString, gfxWindowsFontGroup *aFontGroup)
-    : mGroup(aFontGroup), mCString(aString), mIsASCII(PR_TRUE), mLength(-1.0)
-{
-}
-
-gfxWindowsTextRun::~gfxWindowsTextRun()
-{
-}
-
-void
-gfxWindowsTextRun::Draw(gfxContext *aContext, gfxPoint pt)
-{
-    double ret = MeasureOrDrawFast(aContext, PR_TRUE, pt);
-    if (ret >= 0) {
-        return;
-    }
-
-    MeasureOrDrawUniscribe(aContext, PR_TRUE, pt);
-}
-
-gfxFloat
-gfxWindowsTextRun::Measure(gfxContext *aContext)
-{
-    static const gfxPoint kZeroZero(0, 0);
-
-    if (mLength < 0.0) {
-        mLength = MeasureOrDrawFast(aContext, PR_FALSE, kZeroZero);
-
-        if (mLength >= 0.0) {
-            return mLength;
-        }
-
-        mLength = MeasureOrDrawUniscribe(aContext, PR_FALSE, kZeroZero);
-    }
-
-    return mLength;
-}
-
-void
-gfxWindowsTextRun::SetSpacing(const nsTArray<gfxFloat>& spacingArray)
-{
-    mSpacing = spacingArray;
-}
-
-const nsTArray<gfxFloat> *const
-gfxWindowsTextRun::GetSpacing() const
-{
-    return &mSpacing;
-}
-
-double
-gfxWindowsTextRun::MeasureOrDrawReallyFast(gfxContext *aContext,
-                                           PRBool aDraw,
-                                           gfxPoint pt,
-                                           gfxRGBA color)
-{
-    double length = 0;
-
-    /* this function doesn't handle RTL text. */
-    if (IsRightToLeft()) {
-        return -1;
-    }
-
-    const char *aCString;
-    const PRUnichar *aWString;
-    PRUint32 aLength;
-
-    if (mIsASCII) {
-        aCString = mCString.BeginReading();
-        aLength = mCString.Length();
-    } else {
-        aWString = mString.BeginReading();
-        aLength = mString.Length();
-        if (ScriptIsComplex(aWString, aLength, SIC_COMPLEX) == S_OK)
-            return -1; // try uniscribe instead
-    }
-
-    nsRefPtr<gfxASurface> surf = aContext->CurrentSurface();
-    HDC aDC = GetDCFromSurface(surf);
-    NS_ASSERTION(aDC, "No DC");
-
-    nsRefPtr<gfxWindowsFont> currentFont = mGroup->GetFontAt(0);
-    currentFont->UpdateCTM(aContext->CurrentMatrix());
-
-    HFONT hfont = currentFont->GetHFONT();
-    SelectObject(aDC, hfont);
-
-    /* GetGlyphIndices is buggy for bitmap and vector fonts,
-       so send them to uniscribe */
-    if (!mIsASCII) {
-        TEXTMETRIC metrics;
-        GetTextMetrics(aDC, &metrics);
-        if ((metrics.tmPitchAndFamily & (TMPF_TRUETYPE)) == 0)
-            return -1;
-    }
-
-    /* check to see if all the glyphs are in this font or not */
-    WORD glyphBuf[512];
-    LPWORD glyphs = glyphBuf;
-    if (aLength > sizeof(glyphBuf) / sizeof(WORD))
-        glyphs = (LPWORD)malloc(aLength * sizeof(WORD));
-
-    DWORD ret;
-    if (mIsASCII)
-        ret = GetGlyphIndicesA(aDC, aCString, aLength, glyphs, GGI_MARK_NONEXISTING_GLYPHS);
-    else
-        ret = GetGlyphIndicesW(aDC, aWString, aLength, glyphs, GGI_MARK_NONEXISTING_GLYPHS);
-
-    if (ret == GDI_ERROR) {
-        NS_WARNING("GetGlyphIndicies failed\n");
-        if (glyphs != glyphBuf)
-            free(glyphs);
-        return 0; // return 0 length
-    }
-
-    for (DWORD i = 0; i < ret; ++i) {
-        if (glyphs[i] == 0xffff) {
-            if (glyphs != glyphBuf)
-                free(glyphs);
-            return -1; // try uniscribe instead
-        }
-    }
-
-    if (glyphs != glyphBuf)
-        free(glyphs);
-
-    if (!aDraw) {
-        /* measure */
-        SIZE len;
-        if (mIsASCII)
-            GetTextExtentPoint32A(aDC, aCString, aLength, &len);
-        else
-            GetTextExtentPoint32W(aDC, aWString, aLength, &len);
-        length = len.cx;
-    } else {
-        /* draw */
-        SetTextAlign(aDC, TA_BASELINE | TA_LEFT);
-        SetBkMode(aDC, TRANSPARENT);
-        SetTextColor(aDC, RGB(color.r * 255.0, color.g * 255.0, color.b * 255.0));
-
-        aContext->UpdateSurfaceClip();
-
-        gfxPoint offset;
-        nsRefPtr<gfxASurface> surf = aContext->CurrentSurface(&offset.x, &offset.y);
-        gfxPoint p = aContext->CurrentMatrix().Transform(pt) + offset;
-
-        /* add support for spacing */
-        if (mIsASCII)
-            ExtTextOutA(aDC, (int)p.x, (int)p.y, 0, nsnull, aCString, aLength, nsnull);
-        else
-            ExtTextOutW(aDC, (int)p.x, (int)p.y, 0, nsnull, aWString, aLength, nsnull);
-    }
-
-    if (aDraw)
-        surf->MarkDirty();
-
-    return length;
-}
-
-double
-gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
-                                     PRBool aDraw,
-                                     gfxPoint pt)
-{
-    double length = 0;
-
-    if (!aContext->CurrentMatrix().HasNonTranslation()) {
-        /* need to not call this if the color isn't solid
-           or the pattern isn't a color
-           or the destination has alpha
-        */
-        if (mSpacing.IsEmpty()) { // XXX remove this once we make MeasureOrDrawReallyFast handle spacing
-            gfxRGBA color;
-            if (aContext->GetColor(color) && color.a == 1.0) {
-                // we can measure with 32bpp surfaces, but we can't draw to them using this API
-                nsRefPtr<gfxASurface> currentSurface = aContext->CurrentSurface();
-                if (!aDraw || currentSurface->GetContentType() == gfxASurface::CONTENT_COLOR)
-                    return MeasureOrDrawReallyFast(aContext, aDraw, pt, color);
-            }
-        }
-    }
-
-    /* this function doesn't handle RTL text. */
-    if (IsRightToLeft()) {
-        return -1;
-    }
-
-    const char *aCString;
-    const PRUnichar *aWString;
-    PRUint32 aLength;
-
-    if (mIsASCII) {
-        aCString = mCString.BeginReading();
-        aLength = mCString.Length();
-    } else {
-        aWString = mString.BeginReading();
-        aLength = mString.Length();
-        if (ScriptIsComplex(aWString, aLength, SIC_COMPLEX) == S_OK)
-            return -1; // try uniscribe instead
-    }
-
-    nsRefPtr<gfxASurface> surf = aContext->CurrentSurface();
-    HDC aDC = GetDCFromSurface(surf);
-    NS_ASSERTION(aDC, "No DC");
-
-    XFORM savedxform;
-    // cairo munges it underneath us
-    GetWorldTransform(aDC, &savedxform);
-
-    cairo_t *cr = aContext->GetCairo();
-
-    nsRefPtr<gfxWindowsFont> currentFont = mGroup->GetFontAt(0);
-    currentFont->UpdateCTM(aContext->CurrentMatrix());
-    cairo_font_face_t *fontFace = currentFont->CairoFontFace();
-    cairo_scaled_font_t *scaledFont = currentFont->CairoScaledFont();
-
-    cairo_set_font_face(cr, fontFace);
-    cairo_set_font_size(cr, currentFont->GetAdjustedSize());
-
-    SaveDC(aDC);
-
-    cairo_win32_scaled_font_select_font(scaledFont, aDC);
-
-    const double cairofontfactor = cairo_win32_scaled_font_get_metrics_factor(scaledFont);
-    const double cairoToPixels = cairofontfactor * currentFont->GetAdjustedSize();
-
-    LPWORD glyphs = (LPWORD)malloc(aLength * sizeof(WORD));
-    DWORD ret;
-    if (mIsASCII)
-        ret = GetGlyphIndicesA(aDC, aCString, aLength, glyphs, GGI_MARK_NONEXISTING_GLYPHS);
-    else
-        ret = GetGlyphIndicesW(aDC, aWString, aLength, glyphs, GGI_MARK_NONEXISTING_GLYPHS);
-
-    if (ret == GDI_ERROR) {
-        NS_WARNING("GetGlyphIndicies failed\n");
-        free(glyphs);
-        cairo_win32_scaled_font_done_font(scaledFont);
-        RestoreDC(aDC, -1);
-        return 0; // return 0 length
-    }
-
-    for (DWORD i = 0; i < ret; ++i) {
-        if (glyphs[i] == 0xffff) {
-            free(glyphs);
-            cairo_win32_scaled_font_done_font(scaledFont);
-            RestoreDC(aDC, -1);
-            return -1; // try uniscribe instead
-        }
-    }
-
-    if (!aDraw) {
-        SIZE len;
-        if (mIsASCII)
-            GetTextExtentPoint32A(aDC, aCString, aLength, &len);
-        else
-            GetTextExtentPoint32W(aDC, aWString, aLength, &len);
-        length = ((double)len.cx * cairoToPixels);
-    } else {
-        PRInt32 numGlyphs;
-        int stackBuf[1024];
-        int *dxBuf = stackBuf;
-        if (aLength > sizeof(stackBuf) / sizeof(int))
-            dxBuf = (int *)malloc(aLength * sizeof(int));
-
-        if (mIsASCII) {
-            GCP_RESULTSA results;
-            memset(&results, 0, sizeof(GCP_RESULTSA));
-            results.lStructSize = sizeof(GCP_RESULTSA);
-
-            results.nGlyphs = aLength;
-            results.lpDx = dxBuf;
-
-            length = GetCharacterPlacementA(aDC, aCString, aLength, 0, &results, GCP_USEKERNING);
-
-            numGlyphs = results.nGlyphs;
+    PRUint32 length = aRun->GetLength();
+    for (i = 0; i < length; ++i) {
+        double advance = aDXs[i]*aCairoToPixels;
+        PRInt32 advancePixels = PRInt32(advance);
+        WCHAR glyph = aGlyphs[i];
+        if (advance >= 0 && advance == advancePixels &&
+            gfxTextRun::CompressedGlyph::IsSimpleAdvancePixels(advancePixels) &&
+            gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyph)) {
+            aRun->SetCharacterGlyph(i, g.SetSimpleGlyph(advancePixels, glyph));
         } else {
-            GCP_RESULTSW results;
-            memset(&results, 0, sizeof(GCP_RESULTSW));
-            results.lStructSize = sizeof(GCP_RESULTSW);
-
-            results.nGlyphs = aLength;
-            results.lpDx = dxBuf;
-
-            length = GetCharacterPlacementW(aDC, aWString, aLength, 0, &results, GCP_USEKERNING);
-
-            numGlyphs = results.nGlyphs;
+            gfxTextRun::DetailedGlyph details;
+            details.mIsLastGlyph = PR_TRUE;
+            details.mGlyphID = glyph;
+            details.mAdvance = float(advance);
+            details.mXOffset = 0;
+            details.mYOffset = 0;
+            aRun->SetDetailedGlyphs(i, &details, 1);
         }
-
-        cairo_glyph_t *cglyphs = (cairo_glyph_t*)malloc(numGlyphs*sizeof(cairo_glyph_t));
-        double offset = 0;
-
-        const PRBool hasSpacing = !mSpacing.IsEmpty();
-
-        // XXX we'll get rid of this case once the new textframe lands
-        NS_ASSERTION(!(hasSpacing && mSpacing.Length() != numGlyphs), "different number of glyphs/spacing");
-
-        for (PRInt32 k = 0; k < numGlyphs; k++) {
-            cglyphs[k].index = glyphs[k];
-            cglyphs[k].x = pt.x + offset;
-            cglyphs[k].y = pt.y;
-
-            if (hasSpacing && mSpacing.Length() >= numGlyphs) {
-                offset += mSpacing[k];
-            } else {
-                offset += dxBuf[k] * cairoToPixels;
-            }
-        }
-
-        SetWorldTransform(aDC, &savedxform);
-
-        cairo_show_glyphs(cr, cglyphs, numGlyphs);
-
-        free(cglyphs);
-
-        if (dxBuf != stackBuf)
-            free(dxBuf);
     }
-
-    free(glyphs);
-
-    cairo_win32_scaled_font_done_font(scaledFont);
-
-    RestoreDC(aDC, -1);
-
-    if (aDraw)
-        surf->MarkDirty();
-
-    return length;
+    
+    aRun->AddGlyphRun(aFont, 0);
 }
 
+void
+gfxWindowsFontGroup::InitTextRunGDI(gfxContext *aContext, gfxTextRun *aRun, const char *aString,
+                                    PRUint32 aLength)
+{
+    double cairoToPixels;
+    gfxWindowsFont *font = GetFontAt(0);
+    HDC dc = SetupContextFont(aContext, font, &cairoToPixels);
+
+    nsAutoTArray<int,500> dxArray;
+    if (!dxArray.AppendElements(aLength))
+        return;
+    nsAutoTArray<WCHAR,500> glyphArray;
+    if (!glyphArray.AppendElements(aLength))
+        return;
+
+    GCP_RESULTSA results;
+    memset(&results, 0, sizeof(GCP_RESULTSA));
+    results.lStructSize = sizeof(GCP_RESULTSA);
+    results.nGlyphs = aLength;
+    results.lpDx = dxArray.Elements();
+    results.lpGlyphs = glyphArray.Elements();
+    GetCharacterPlacementA(dc, aString, aLength, 0, &results, GCP_USEKERNING);
+
+    SetupTextRunFromCharacterPlacement(aRun, cairoToPixels, dxArray.Elements(),
+                                       glyphArray.Elements(), font);
+}
+
+void
+gfxWindowsFontGroup::InitTextRunGDI(gfxContext *aContext, gfxTextRun *aRun, const PRUnichar *aString,
+                                    PRUint32 aLength)
+{
+    double cairoToPixels;
+    gfxWindowsFont *font = GetFontAt(0);
+    HDC dc = SetupContextFont(aContext, font, &cairoToPixels);
+
+    nsAutoTArray<int,500> dxArray;
+    if (!dxArray.AppendElements(aLength))
+        return;
+    nsAutoTArray<WCHAR,500> glyphArray;
+    if (!glyphArray.AppendElements(aLength))
+        return;
+
+    GCP_RESULTSW results;
+    memset(&results, 0, sizeof(GCP_RESULTSW));
+    results.lStructSize = sizeof(GCP_RESULTSW);
+    results.nGlyphs = aLength;
+    results.lpDx = dxArray.Elements();
+    results.lpGlyphs = glyphArray.Elements();
+    GetCharacterPlacementW(dc, aString, aLength, 0, &results, GCP_USEKERNING);
+
+    SetupTextRunFromCharacterPlacement(aRun, cairoToPixels, dxArray.Elements(),
+                                       glyphArray.Elements(), font);
+}
+
+/*******************
+ * Uniscribe
+ *******************/
 
 /* we map primary language id's to this to look up language codes */
 struct ScriptPropertyEntry {
@@ -1127,6 +825,12 @@ static const char *sCJKLangGroup[] = {
 #define CJK_LANG_ZH_HK sCJKLangGroup[3]
 #define CJK_LANG_ZH_TW sCJKLangGroup[4]
 
+#define STATIC_STRING_LENGTH 100
+
+/**
+ * XXX We could use a bunch of nsAutoTArrays to avoid memory allocation
+ * for non-huge strings.
+ */
 class UniscribeItem
 {
 public:
@@ -1139,7 +843,7 @@ public:
         mScript(aItem->a.eScript), mGroup(aGroup),
         mGlyphs(nsnull), mClusters(nsnull), mAttr(nsnull),
         mNumGlyphs(0), mMaxGlyphs((int)(1.5 * aLength) + 16),
-        mOffsets(nsnull), mAdvances(nsnull), mSpacing(nsnull),
+        mOffsets(nsnull), mAdvances(nsnull),
         mFontIndex(0), mTriedPrefFonts(PR_FALSE),
         mTriedOtherFonts(PR_FALSE), mAppendedCJKFonts(PR_FALSE),
         mFontSelected(PR_FALSE)
@@ -1151,8 +855,6 @@ public:
         /* copy in the fonts from the group in to the item */
         for (PRUint32 i = 0; i < mGroup->FontListLength(); ++i)
             mFonts.AppendElement(mGroup->GetFontAt(i));
-
-        memset(&mABC, 0, sizeof(ABC));
     }
 
     ~UniscribeItem() {
@@ -1231,6 +933,7 @@ public:
         while (PR_TRUE) {
             const PRUnichar *str =
                 mAlternativeString ? mAlternativeString : mString;
+            mScriptItem->a.fLogicalOrder = PR_TRUE;
             rv = ScriptShape(shapeDC, mCurrentFont->ScriptCache(),
                              str, mLength,
                              mMaxGlyphs, &mScriptItem->a,
@@ -1271,6 +974,22 @@ public:
         GenerateAlternativeString();
     }
 
+    PRBool IsGlyphMissing(SCRIPT_FONTPROPERTIES *aSFP, PRUint32 aIndex) {
+        WORD glyph = mGlyphs[aIndex];
+        if (glyph == aSFP->wgDefault ||
+            (glyph == aSFP->wgInvalid && glyph != aSFP->wgBlank))
+            return PR_TRUE;
+        // I'm not sure that claiming glyphs are missing if they're zero width is valid
+        // but we're seeing cases where some fonts return glyphs such as 0x03 and 0x04
+        // which are zero width and non-invalidGlyph.
+        // At any rate, only make this check for non-complex scripts.
+        if (mAttr[aIndex].fZeroWidth && !ScriptProperties()->fComplex) {
+            PR_LOG(gFontLog, PR_LOG_WARNING, ("crappy font? glyph %04x is zero-width"));
+            return PR_TRUE;
+        }
+        return PR_FALSE;
+    }
+
     /* 
      * Fonts are hopelessly inconsistent about how they handle characters that
      * they don't have glyphs for.
@@ -1287,24 +1006,12 @@ public:
         SCRIPT_FONTPROPERTIES sfp;
         ScriptFontProperties(&sfp);
         for (int i = 0; i < mNumGlyphs; ++i) {
-            if (mGlyphs[i] == sfp.wgDefault ||
-                (mGlyphs[i] == sfp.wgInvalid && mGlyphs[i] != sfp.wgBlank))
+            if (IsGlyphMissing(&sfp, i))
                 return PR_TRUE;
-            // I'm not sure that claiming glyphs are missing if they're zero width is valid
-            // but we're seeing cases where some fonts return glyphs such as 0x03 and 0x04
-            // which are zero width and non-invalidGlyph.
-            // At any rate, only make this check for non-complex scripts.
-            else if (mAttr[i].fZeroWidth == PR_TRUE &&
-                     ScriptProperties()->fComplex == PR_FALSE) {
-                PR_LOG(gFontLog, PR_LOG_WARNING, ("crappy font? glyph %04x is zero-width"));
-                return PR_TRUE;
-            }
 #ifdef DEBUG_pavlov // excess debugging code
-            else {
-                PR_LOG(gFontLog, PR_LOG_DEBUG, ("%04x %04x %04x", sfp.wgBlank, sfp.wgDefault, sfp.wgInvalid));
-                PR_LOG(gFontLog, PR_LOG_DEBUG, ("glyph%d - 0x%04x", i, mGlyphs[i]));
-                PR_LOG(gFontLog, PR_LOG_DEBUG, ("%04x  --  %04x -- %04x", ScriptProperties()->fInvalidGlyph, mScriptItem->a.fNoGlyphIndex, mAttr[i].fZeroWidth));
-            }
+            PR_LOG(gFontLog, PR_LOG_DEBUG, ("%04x %04x %04x", sfp.wgBlank, sfp.wgDefault, sfp.wgInvalid));
+            PR_LOG(gFontLog, PR_LOG_DEBUG, ("glyph%d - 0x%04x", i, mGlyphs[i]));
+            PR_LOG(gFontLog, PR_LOG_DEBUG, ("%04x  --  %04x -- %04x", ScriptProperties()->fInvalidGlyph, mScriptItem->a.fNoGlyphIndex, mAttr[i].fZeroWidth));
 #endif
         }
         return PR_FALSE;
@@ -1322,7 +1029,7 @@ public:
             rv = ScriptPlace(placeDC, mCurrentFont->ScriptCache(),
                              mGlyphs, mNumGlyphs,
                              mAttr, &mScriptItem->a,
-                             mAdvances, mOffsets, &mABC);
+                             mAdvances, mOffsets, NULL);
 
             if (rv == E_PENDING) {
                 SelectFont();
@@ -1334,14 +1041,6 @@ public:
         }
 
         return rv;
-    }
-
-    int ABCLength() {
-        return (mABC.abcA + mABC.abcB + mABC.abcC);
-    }
-
-    void SetSpacing(nsTArray<gfxFloat> *aSpacing) {
-        mSpacing = aSpacing;
     }
 
     const SCRIPT_PROPERTIES *ScriptProperties() {
@@ -1369,38 +1068,90 @@ public:
         }
     }
 
-    cairo_glyph_t *GetCairoGlyphs(const gfxPoint& pt, gfxFloat &offset, PRUint32 *nglyphs) {
-        const double cairoToPixels = 1.0;
+    void SetupClusterBoundaries(gfxTextRun *aRun, PRUint32 aOffsetInRun) {
+        if (aRun->GetFlags() & gfxTextRunFactory::TEXT_IS_8BIT)
+            return;
 
-        cairo_glyph_t *cglyphs = (cairo_glyph_t*)malloc(mNumGlyphs * sizeof(cairo_glyph_t));
-
-        offset = 0;
-
-        const int isRTL = mScriptItem->a.s.uBidiLevel == 1;
-
-        // XXX we'll get rid of this case once the new textframe lands
-        NS_ASSERTION(!(!mSpacing->IsEmpty() && mSpacing->Length() != mNumGlyphs), "different number of glyphs/spacing");
-
-        PRInt32 m = mScriptItem->iCharPos;
-        if (isRTL)
-            m += mNumGlyphs - 1;
-        for (PRInt32 k = 0; k < mNumGlyphs; k++) {
-            cglyphs[k].index = mGlyphs[k];
-            cglyphs[k].x = pt.x + offset + (mOffsets[k].du * cairoToPixels);
-            cglyphs[k].y = pt.y + (mOffsets[k].dv * cairoToPixels);
-
-            if (!mSpacing->IsEmpty() && mSpacing->Length() >= mNumGlyphs) {
-                // XXX We need to convert char index to cluster index.
-                // But we cannot do it until nsTextFrame is refactored.
-                offset += mSpacing->ElementAt(isRTL ? m-- : m++);
-            } else {
-                offset += mAdvances[k] * cairoToPixels;
+        nsAutoTArray<SCRIPT_LOGATTR,STATIC_STRING_LENGTH> logAttr;
+        if (!logAttr.AppendElements(mLength))
+            return;
+        HRESULT rv = ScriptBreak(mString, mLength, &mScriptItem->a, logAttr.Elements());
+        if (FAILED(rv))
+            return;
+        gfxTextRun::CompressedGlyph g;
+        for (PRUint32 i = 0; i < mLength; ++i) {
+            if (!logAttr[i].fCharStop) {
+                aRun->SetCharacterGlyph(i + aOffsetInRun, g.SetClusterContinuation());
             }
         }
+    }
 
-        *nglyphs = mNumGlyphs;
+    void SaveGlyphs(gfxTextRun *aRun) {
+        PRUint32 offsetInRun = mScriptItem->iCharPos;
+        SetupClusterBoundaries(aRun, offsetInRun);
 
-        return cglyphs;
+        // XXX We should store this in the item and only fetch it once
+        SCRIPT_FONTPROPERTIES sfp;
+        ScriptFontProperties(&sfp);
+
+        PRUint32 offset = 0;
+        nsAutoTArray<gfxTextRun::DetailedGlyph,1> detailedGlyphs;
+        gfxTextRun::CompressedGlyph g;
+        while (offset < mLength) {
+            PRUint32 runOffset = offsetInRun + offset;
+            if (offset > 0 && mClusters[offset] == mClusters[offset - 1]) {
+                if (!aRun->GetCharacterGlyphs()[runOffset].IsClusterContinuation()) {
+                    // No glyphs for character 'index', it must be a ligature continuation
+                    aRun->SetCharacterGlyph(runOffset, g.SetLigatureContinuation());
+                }
+            } else {
+                // Count glyphs for this character
+                PRUint32 k = mClusters[offset];
+                PRUint32 glyphCount = mNumGlyphs - k;
+                PRUint32 nextClusterOffset;
+                PRBool missing = IsGlyphMissing(&sfp, k);
+                for (nextClusterOffset = offset + 1; nextClusterOffset < mLength; ++nextClusterOffset) {
+                    if (mClusters[nextClusterOffset] > k) {
+                        glyphCount = mClusters[nextClusterOffset] - k;
+                        break;
+                    }
+                }
+                PRUint32 j;
+                for (j = 1; j < glyphCount; ++j) {
+                    if (IsGlyphMissing(&sfp, k + j)) {
+                        missing = PR_TRUE;
+                    }
+                }
+                int advance = mAdvances[k];
+                WORD glyph = mGlyphs[k];
+                if (missing) {
+                    aRun->SetCharacterGlyph(runOffset, g.SetMissing());
+                } else if (glyphCount == 1 && advance >= 0 &&
+                    mOffsets[k].dv == 0 && mOffsets[k].du == 0 &&
+                    gfxTextRun::CompressedGlyph::IsSimpleAdvancePixels(advance) &&
+                    gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyph)) {
+                    aRun->SetCharacterGlyph(runOffset, g.SetSimpleGlyph(advance, glyph));
+                } else {
+                    if (detailedGlyphs.Length() < glyphCount) {
+                        if (!detailedGlyphs.AppendElements(glyphCount - detailedGlyphs.Length()))
+                            return;
+                    }
+                    PRUint32 i;
+                    for (i = 0; i < glyphCount; ++i) {
+                        gfxTextRun::DetailedGlyph *details = &detailedGlyphs[i];
+                        details->mIsLastGlyph = i == glyphCount - 1;
+                        details->mGlyphID = mGlyphs[k + i];
+                        details->mAdvance = float(mAdvances[k + i]);
+                        details->mXOffset = float(mOffsets[k + i].du);
+                        details->mYOffset = float(mOffsets[k + i].dv);
+                    }
+                    aRun->SetDetailedGlyphs(runOffset, detailedGlyphs.Elements(), glyphCount);
+                }
+            }
+            ++offset;
+        }
+        
+        aRun->AddGlyphRun(GetCurrentFont(), offsetInRun);
     }
 
     gfxWindowsFont *GetNextFont() {
@@ -1631,11 +1382,8 @@ private:
     int mMaxGlyphs;
     int mNumGlyphs;
 
-    ABC mABC;
     GOFFSET *mOffsets;
     int *mAdvances;
-
-    nsTArray<gfxFloat> *mSpacing;
 
     nsTArray< nsRefPtr<gfxWindowsFont> > mFonts;
 
@@ -1654,18 +1402,16 @@ public:
     Uniscribe(gfxContext *aContext, HDC aDC, const PRUnichar *aString, PRUint32 aLength, PRBool aIsRTL) :
         mContext(aContext), mDC(aDC), mString(aString), mLength(aLength), mIsRTL(aIsRTL),
         mIsComplex(ScriptIsComplex(aString, aLength, SIC_COMPLEX) == S_OK),
-        mControl(nsnull), mState(nsnull), mItems(nsnull) {
+        mItems(nsnull) {
     }
 
     void Init() {
-        if (mIsRTL) {
-            mControl = (SCRIPT_CONTROL *)malloc(sizeof(SCRIPT_CONTROL));
-            mState = (SCRIPT_STATE *)malloc(sizeof(SCRIPT_STATE));
-            memset(mControl, 0, sizeof(SCRIPT_CONTROL));
-            memset(mState, 0, sizeof(SCRIPT_STATE));
-            mControl->fNeutralOverride = 1;
-            mState->uBidiLevel = 1;
-        }
+        memset(&mControl, 0, sizeof(SCRIPT_CONTROL));
+        memset(&mState, 0, sizeof(SCRIPT_STATE));
+        // Lock the direction. Don't allow the itemizer to change directions
+        // based on character type.
+        mState.uBidiLevel = mIsRTL;
+        mState.fOverrideDirection = PR_TRUE;
     }
 
     int Itemize() {
@@ -1673,11 +1419,13 @@ public:
 
         int maxItems = 5;
 
+        Init();
         mItems = (SCRIPT_ITEM *)malloc(maxItems * sizeof(SCRIPT_ITEM));
-        while ((rv = ScriptItemize(mString, mLength, maxItems, mControl, mState,
+        while ((rv = ScriptItemize(mString, mLength, maxItems, &mControl, &mState,
                                    mItems, &mNumItems)) == E_OUTOFMEMORY) {
             maxItems *= 2;
             mItems = (SCRIPT_ITEM *)realloc(mItems, maxItems * sizeof(SCRIPT_ITEM));
+            Init();
         }
 
         return mNumItems;
@@ -1687,6 +1435,8 @@ public:
         return mNumItems;
     }
 
+    // XXX Why do we dynamically allocate this? We could just fill in an object
+    // on the stack.
     UniscribeItem *GetItem(PRUint32 i, gfxWindowsFontGroup *aGroup) {
         NS_ASSERTION(i < (PRUint32)mNumItems, "Trying to get out of bounds item");
 
@@ -1705,63 +1455,43 @@ private:
     const PRUnichar *mString;
     const PRUint32 mLength;
     const PRBool mIsRTL;
+    // XXX not used
     const PRBool mIsComplex;
 
-    SCRIPT_CONTROL *mControl;
-    SCRIPT_STATE *mState;
-    SCRIPT_ITEM *mItems;
+    SCRIPT_CONTROL mControl;
+    SCRIPT_STATE   mState;
+    SCRIPT_ITEM   *mItems;
     int mNumItems;
 };
 
 
-double
-gfxWindowsTextRun::MeasureOrDrawUniscribe(gfxContext *aContext,
-                                          PRBool aDraw,
-                                          gfxPoint pt)
+void
+gfxWindowsFontGroup::InitTextRunUniscribe(gfxContext *aContext, gfxTextRun *aRun, const PRUnichar *aString,
+                                         PRUint32 aLength)
 {
     nsRefPtr<gfxASurface> surf = aContext->CurrentSurface();
     HDC aDC = GetDCFromSurface(surf);
     NS_ASSERTION(aDC, "No DC");
-
-    /* we aren't going to change this. i swear */
-    nsAString *str = &mString;
-    nsString buf;
-    if (mIsASCII) {
-        CopyASCIItoUTF16(mCString, buf);
-        str = &buf;
-    }
  
-    const PRUnichar *aString = str->BeginReading();
-    const PRUint32 aLength = str->Length();
-    const PRBool isRTL = IsRightToLeft();
+    const PRBool isRTL = aRun->IsRightToLeft();
 
-    // save the xform so that we can restore to it while cairo
-    // munges it underneath us
-    XFORM savedxform;
-    GetWorldTransform(aDC, &savedxform);
-
-    cairo_t *cr = aContext->GetCairo();
-
-    double length = 0.0;
     HRESULT rv;
 
     Uniscribe us(aContext, aDC, aString, aLength, isRTL);
-    us.Init();
 
     /* itemize the string */
     int numItems = us.Itemize();
 
-    for (int h=0; h < numItems; h++) {
-        int i = (isRTL) ? numItems - h - 1 : h;
-
+    for (int i=0; i < numItems; ++i) {
         PRUint32 fontIndex = 0;
 
         SaveDC(aDC);
 
-        UniscribeItem *item = us.GetItem(i, mGroup);
+        UniscribeItem *item = us.GetItem(i, this);
 
         int giveUp = PR_FALSE;
 
+        // Perform font substitution
         while (PR_TRUE) {
             nsRefPtr<gfxWindowsFont> font = item->GetNextFont();
 
@@ -1820,59 +1550,9 @@ SCRIPT_PLACE:
             break;
         }
 
-
-        if (!aDraw) {
-            length += item->ABCLength();
-        } else {
-            /* we have to select the font when we draw */
-            item->SelectFont();
-
-            item->SetSpacing(&mSpacing);
-            gfxFloat offset = 0;
-            PRUint32 nglyphs = 0;
-            cairo_glyph_t *cglyphs = item->GetCairoGlyphs(pt, offset, &nglyphs);
-
-            /* Draw using cairo */
-
-            /* XXX cairo sets a world transform in order to get subpixel accuracy in some cases;
-             * this breaks it there's a surface fallback that happens with clipping, because
-             * the clip gets applied with the world transform and the world breaks.
-             * We restore the transform to the start of this function while we're drawing.
-             * Need to investigate this further.
-             */
-
-            XFORM currentxform;
-            GetWorldTransform(aDC, &currentxform);
-            SetWorldTransform(aDC, &savedxform);
-
-            if (gfxFontTestStore::CurrentStore()) {
-                gfxFontTestStore::CurrentStore()->AddItem(item->GetCurrentFont()->GetUniqueName(),
-                                                          cglyphs, nglyphs);
-            }
-
-            cairo_show_glyphs(cr, cglyphs, nglyphs);
-
-            SetWorldTransform(aDC, &currentxform);
-
-            free(cglyphs);
-
-            pt.x += offset;
-        }
-
+        item->SaveGlyphs(aRun);
         delete item;
 
         RestoreDC(aDC, -1);
-
-        /* There's a (good) chance that something set a new clip
-         * region while inside the SaveDC/RestoreDC; cairo will get
-         * very confused, because its clip caching will tell it
-         * that the clip is up to date, when in fact it will have
-         * been reset.  MarkDirty resets a surface's clip serial,
-         * such that it will be reset the next time clipping is
-         * necessary. */
-        if (aDraw)
-            surf->MarkDirty();
     }
-
-    return length;
 }

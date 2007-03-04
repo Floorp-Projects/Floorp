@@ -148,11 +148,7 @@ public:
     virtual gfxFontGroup* GetThebesFontGroup() { return mFontGroup; }
     
     PRBool GetRightToLeftTextRunMode() {
-#ifdef MOZ_X11
         return mTextRunRTL;
-#else
-        return mIsRightToLeft;
-#endif
     }
 
 protected:
