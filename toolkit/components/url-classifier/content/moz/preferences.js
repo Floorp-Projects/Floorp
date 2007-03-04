@@ -299,7 +299,7 @@ G_PreferenceObserver.prototype.observe = function(subject, topic, data) {
 G_PreferenceObserver.prototype.QueryInterface = function(iid) {
   var Ci = Ci;
   if (iid.equals(Ci.nsISupports) || 
-      iid.equals(Ci.nsIObserves) ||
+      iid.equals(Ci.nsIObserver) ||
       iid.equals(Ci.nsISupportsWeakReference))
     return this;
   throw Components.results.NS_ERROR_NO_INTERFACE;
