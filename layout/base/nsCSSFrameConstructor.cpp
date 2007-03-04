@@ -5989,7 +5989,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
             // Just don't create a frame for this popup; we can't do
             // anything with it, since there is no root popup set.
             *aHaltProcessing = PR_TRUE;
-            NS_ERROR("Popup containing block is missing");
+            NS_ASSERTION(!aState.mRootBox, "Popup containing block is missing");
             return NS_OK;
           }
 
