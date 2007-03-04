@@ -811,11 +811,10 @@ PRBool IsPartiallyVisible(nsIPresShell* shell, nsIFrame* frame)
      relFrameRect.y = frameOffset.y;
    }
  
-   float p2t;
-   p2t = presContext->PixelsToTwips();
+   PRUint16 minPixels = PRUint16(nsPresContext::CSSPixelsToAppUnits(kMinPixels));
    nsRectVisibility rectVisibility;
    viewManager->GetRectVisibility(containingView, relFrameRect, 
-                                  NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)), 
+                                  minPixels, 
                                   &rectVisibility);
  
    if (rectVisibility == nsRectVisibility_kVisible ||
