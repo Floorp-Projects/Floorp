@@ -381,6 +381,7 @@ pref("browser.xul.error_pages.enabled", true);
 pref("signon.rememberSignons",              true);
 pref("signon.expireMasterPassword",         false);
 pref("signon.SignonFileName",               "signons.txt");
+pref("signon.SignonFileName2",              "signons2.txt");
 pref("signon.autofillForms",                true);
 
 // We want to make sure mail URLs are handled externally...
