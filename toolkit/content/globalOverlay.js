@@ -135,7 +135,7 @@ function goSetAccessKey(aCommand, aValueAttribute)
 // this function is used to inform all the controllers attached to a node that an event has occurred
 // (e.g. the tree controllers need to be informed of blur events so that they can change some of the
 // menu items back to their default values)
-function goOnEvent(node, aEvent)
+function goOnEvent(aNode, aEvent)
 {
   var numControllers = aNode.controllers.getControllerCount();
   var controller;
