@@ -247,11 +247,8 @@ nsThebesRenderingContext::GetHints(PRUint32& aResult)
 
     aResult |= (NS_RENDERING_HINT_BIDI_REORDERING |
                 NS_RENDERING_HINT_ARABIC_SHAPING |
-                NS_RENDERING_HINT_REORDER_SPACED_TEXT);
-
-#ifdef MOZ_X11
-    aResult |= NS_RENDERING_HINT_NEW_TEXT_RUNS;
-#endif
+                NS_RENDERING_HINT_REORDER_SPACED_TEXT |
+                NS_RENDERING_HINT_NEW_TEXT_RUNS);
 
     return NS_OK;
 }

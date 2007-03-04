@@ -82,6 +82,11 @@ protected:
 
     gfxFloat mAdjustedSize;
     void InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef);
+
+    virtual void SetupCairoFont(cairo_t *aCR)
+    {
+        cairo_set_scaled_font (aCR, CairoScaledFont());
+    }
 };
 
 class THEBES_API gfxAtsuiFontGroup : public gfxFontGroup {
@@ -98,6 +103,11 @@ public:
                                     Parameters* aParams);
     virtual gfxTextRun *MakeTextRun(const PRUint8* aString, PRUint32 aLength,
                                     Parameters* aParams);
+    // Here, aString is actually aLength + 1 chars long; the first char
+    // is an LRO or RLO bidi control character to force setting the direction
+    // for all characters
+    gfxTextRun *MakeTextRunInternal(const PRUnichar *aString, PRUint32 aLength,
+                                    Parameters *aParams);
 
     ATSUFontFallbacks *GetATSUFontFallbacksPtr() { return &mFallbacks; }
     
@@ -112,32 +122,8 @@ protected:
                                const nsACString& aGenericName,
                                void *closure);
 
+    void InitTextRun(gfxTextRun *aRun, const PRUnichar *aString, PRUint32 aLength);
+
     ATSUFontFallbacks mFallbacks;
 };
-
-class THEBES_API gfxAtsuiTextRun {
-public:
-    gfxAtsuiTextRun(const nsAString& aString, gfxAtsuiFontGroup *aFontGroup);
-    ~gfxAtsuiTextRun();
-
-    virtual void Draw(gfxContext *aContext, gfxPoint pt);
-    virtual gfxFloat Measure(gfxContext *aContext);
-
-    virtual void SetSpacing(const nsTArray<gfxFloat>& spacingArray);
-    virtual const nsTArray<gfxFloat> *const GetSpacing() const;
-
-    void SetRightToLeft(PRBool aIsRTL) { mIsRTL = aIsRTL; }
-    PRBool IsRightToLeft() { return mIsRTL; }
-
-private:
-    nsString mString;
-    gfxAtsuiFontGroup *mGroup;
-
-    ATSUTextLayout mATSULayout;
-
-    nsTArray<ATSUStyle> mStylesToDispose;
-    
-    PRPackedBool mIsRTL;
-};
-
 #endif /* GFX_ATSUIFONTS_H */
