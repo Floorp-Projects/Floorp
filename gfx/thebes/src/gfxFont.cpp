@@ -46,7 +46,6 @@
 #include "prtypes.h"
 #include "gfxTypes.h"
 #include "gfxContext.h"
-#include "nsUnitConversion.h"
 
 #include "cairo.h"
 #include "gfxFontTest.h"
