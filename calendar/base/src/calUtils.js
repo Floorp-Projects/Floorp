@@ -550,6 +550,25 @@ function compareObjects(aObject, aOtherObject, aIID) {
     return sip1.data == sip2.data;
 }
 
+/**
+ * Many computations want to work only with date-times, not with dates.  This
+ * method will return a proper datetime (set to midnight) for a date object.  If
+ * the object is already a datetime, it will simply be returned.
+ *
+ * @param aDate  the date or datetime to check
+ */
+function ensureDateTime(aDate) {
+    if (!aDate.isDate) {
+        return aDate;
+    }
+    var newDate = aDate.clone();
+    newDate.hour = 0;
+    newDate.minute = 0;
+    newDate.second = 0;
+    newDate.isDate = false;
+    return newDate;
+}
+
 /****
  **** debug code
  ****/

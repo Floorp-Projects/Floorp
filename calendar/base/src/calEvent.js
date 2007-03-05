@@ -249,27 +249,11 @@ calEvent.prototype = {
             return this.recurrenceInfo.getOccurrences(aStartDate, aEndDate, 0, aCount);
         }
 
-        // We need to convert dates to regular datetime-objects
-        // here in order to correctly handle allday-events that
-        // don't match day borders.
-        function convertDate(date) {
-          if (date.isDate) {
-            var newDate = date.clone();
-            newDate.hour = 0;
-            newDate.minute = 0;
-            newDate.second = 0;
-            newDate.isDate = false;
-            return newDate;
-          } else {
-            return date;
-          }
-        }
-
-        var start = convertDate(this.startDate);
-        var end = convertDate(this.endDate);
+        var start = ensureDateTime(this.startDate);
+        var end = ensureDateTime(this.endDate);
         
-        var queryStart = convertDate(aStartDate);
-        var queryEnd = convertDate(aEndDate);
+        var queryStart = ensureDateTime(aStartDate);
+        var queryEnd = ensureDateTime(aEndDate);
 
         var isZeroLength = !start.compare(end);
         if ((isZeroLength &&
