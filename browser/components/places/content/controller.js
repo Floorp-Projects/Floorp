@@ -1247,7 +1247,7 @@ PlacesController.prototype = {
 
         // Allow dropping the feed uri of live-bookmark folders
         if (PlacesUtils.nodeIsLivemarkContainer(node)) {
-          var uri = PlacesUtils.livemarks.getSiteURI(asFolder(node).folderId);
+          var uri = PlacesUtils.livemarks.getFeedURI(asFolder(node).folderId);
           addURIData(uri.spec);
         }
 
@@ -1295,7 +1295,7 @@ PlacesController.prototype = {
 
         // Also copy the feed URI for live-bookmark folders
         if (PlacesUtils.nodeIsLivemarkContainer(node)) {
-          var uri = PlacesUtils.livemarks.getSiteURI(asFolder(node).folderId);
+          var uri = PlacesUtils.livemarks.getFeedURI(asFolder(node).folderId);
           generateURIChunks(uri.spec);
         }
       }
