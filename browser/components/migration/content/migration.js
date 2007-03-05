@@ -301,8 +301,17 @@ var MigrationWizard = {
     }
 
     var bundle = document.getElementById("brandBundle");
-    var pageTitle = bundle.getString("homePageMigrationPageTitle");
-    var pageDesc = bundle.getString("homePageMigrationDescription");
+    // These strings don't exist when not using official branding. If that's
+    // the case, just skip this page.
+    try {
+      var pageTitle = bundle.getString("homePageMigrationPageTitle");
+      var pageDesc = bundle.getString("homePageMigrationDescription");
+      var mainStr = bundle.getString("homePageSingleStartMain");
+    }
+    catch (e) {
+      this._wiz.advance();
+      return;
+    }
 
     document.getElementById("homePageImport").setAttribute("label", pageTitle);
     document.getElementById("homePageImportDesc").setAttribute("value", pageDesc);
@@ -310,8 +319,6 @@ var MigrationWizard = {
     this._wiz._adjustWizardHeader();
 
     var singleStart = document.getElementById("homePageSingleStart");
-
-    var mainStr = bundle.getString("homePageSingleStartMain");
     singleStart.setAttribute("label", mainStr);
     singleStart.setAttribute("value", "DEFAULT");
 
