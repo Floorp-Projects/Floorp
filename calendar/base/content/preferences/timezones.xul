@@ -54,8 +54,6 @@
     <prefpane id="paneTimezones" onpaneload="gTimezonesPane.init();">
         <script type="application/x-javascript"
                 src="chrome://calendar/content/preferences/timezones.js"/>
-        <script type="application/x-javascript"
-                src="chrome://calendar/content/calUtils.js"/>
 
         <preferences>
             <preference id="calendar.timezone.local"

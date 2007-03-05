@@ -94,4 +94,7 @@
               label="&paneAdvanced.title;"
               src="chrome://calendar/content/preferences/advanced.xul"/>
 
+    <script type="application/x-javascript"
+            src="chrome://calendar/content/calUtils.js"/>
+
 </prefwindow>

@@ -54,8 +54,6 @@
         <script type="application/x-javascript"
                 src="chrome://calendar/content/preferences/general.js"/>
         <script type="application/x-javascript"
-                src="chrome://calendar/content/calUtils.js"/>
-        <script type="application/x-javascript"
                 src="chrome://calendar/content/calendar-dialog-utils.js"/>
 
         <!-- Get the localized text for use in the .js -->
