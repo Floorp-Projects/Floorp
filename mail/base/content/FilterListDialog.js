@@ -352,19 +352,28 @@ function onNewFilter(emailAddress)
 
 function onDeleteFilter()
 {
-    var filter = currentFilter();
-    if (!filter) return;
-    var filterList = currentFilterList();
-    if (!filterList) return;
+  var filterList = currentFilterList();
+  if (!filterList)
+    return;
 
-    if (gPromptService) {
-      if (!gPromptService.confirm(window, null,
-                                  gFilterBundle.getString("deleteFilterConfirmation")))
-        return;
+  var sel = gFilterTree.view.selection, selCount = sel.getRangeCount();
+  if (!selCount || 
+      gPromptService.confirmEx(window, null, 
+                        gFilterBundle.getString("deleteFilterConfirmation"),
+                        gPromptService.STD_YES_NO_BUTTONS,
+                        '', '', '', '', {}))
+    return;
+
+  for (var i = selCount - 1; i >= 0; --i) {
+    var start = {}, end = {};
+    sel.getRangeAt(i, start, end);
+    for (var j = end.value; j >= start.value; --j) {
+      var curFilter = getFilter(j);
+      if (curFilter)
+        filterList.removeFilter(curFilter);
     }
-
-    filterList.removeFilter(filter);
-    refresh();
+  }
+  refresh();
 }
 
 function onUp(event)
@@ -507,8 +516,8 @@ function updateButtons()
     // "edit" only enabled when one filter selected or if we couldn't parse the filter
     gEditButton.disabled = !oneFilterSelected || filter.unparseable;
     
-    // "delete" only enabled when one filter selected
-    gDeleteButton.disabled = !oneFilterSelected;
+    // "delete" only disabled when no filters are selected
+    gDeleteButton.disabled = !numFiltersSelected;
 
     // we can run multiple filters on a folder
     // so only disable this UI if no filters are selected
