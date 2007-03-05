@@ -268,7 +268,7 @@ sub init {
         if (grep(/map_caserun_run_tags/, @$fields)) {
             push @supptables, "INNER JOIN test_run_tags " .
                               "ON test_case_runs.run_id = test_run_tags.run_id";
-            push @supptables, "INNER JOIN test_tags AS map_run_tags " .
+            push @supptables, "INNER JOIN test_tags AS map_caserun_run_tags " .
                               "ON test_run_tags.tag_id = map_caserun_run_tags.tag_id";
         }
         if (grep(/map_caserun_cases/, @$fields)) {
@@ -279,7 +279,7 @@ sub init {
             push @supptables, "INNER JOIN test_cases AS map_caserun_cases " .
                               "ON test_case_runs.case_id = map_caserun_cases.case_id";
             push @supptables, "INNER JOIN priority AS map_caserun_priority " .
-                              "ON map_caserun_cases.priority_id = map_caserun_priority.case_id";
+                              "ON map_caserun_cases.priority_id = map_caserun_priority.id";
         }
         if (grep(/map_caserun_default_tester/, @$fields)) {
             push @supptables, "INNER JOIN test_cases AS map_caserun_cases " .
