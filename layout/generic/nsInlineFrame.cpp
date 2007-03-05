@@ -429,7 +429,10 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
     while (!done) {
       PRBool reflowingFirstLetter = lineLayout->GetFirstLetterStyleOK();
       PRBool isComplete;
-      frame = PullOneFrame(aPresContext, irs, &isComplete);
+      if (!frame) { // Could be non-null if we pulled a first-letter frame and
+                    // it created a continuation, since we don't push those.
+        frame = PullOneFrame(aPresContext, irs, &isComplete);
+      }
 #ifdef NOISY_PUSHING
       printf("%p pulled up %p\n", this, frame);
 #endif
@@ -450,6 +453,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
         break;
       }
       irs.mPrevFrame = frame;
+      frame = frame->GetNextSibling();
     }
   }
 #ifdef DEBUG
