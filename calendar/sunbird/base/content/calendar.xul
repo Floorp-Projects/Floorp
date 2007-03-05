@@ -506,6 +506,7 @@
             <splitter class="tree-splitter"/>
             <treecol id="unifinder-todo-tree-col-priority" 
                      persist="hidden ordinal width sortDirection sortActive" width="18" 
+                     sortActive="true"
                      label="&calendar.unifinder.tree.priority.label;">
               <image id="priorityimg"/>
             </treecol>

@@ -444,10 +444,8 @@ function compareTasks( taskA, taskB )
    switch(toDoTreeView.selectedColumn)
    {
       case "unifinder-todo-tree-col-priority":  // 0-9
-         //0=none, but 1=high.  Intuitively, none should be after low
-         var aFix = taskA.priority == 0 ? 10 : taskA.priority;
-         var bFix = taskB.priority == 0 ? 10 : taskB.priority;
-         return compareNumber(aFix, bFix) * modifier;
+         // No priority set (0) sorts before high priority (1).
+         return compareNumber(taskA.priority, taskB.priority) * modifier;
    
       case "unifinder-todo-tree-col-title":
          return compareString(taskA.title, taskB.title) * modifier;
