@@ -392,6 +392,8 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
     }
     nsIContent *child = mContent->GetChildAt(childX);
 
+    // IMPORTANT: This must match the conditions in
+    // nsCSSFrameConstructor::ContentAppended/Inserted/Removed    
     if (!child->IsNodeOfType(nsINode::eHTML))
       continue;
 

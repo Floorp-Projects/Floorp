@@ -8222,6 +8222,15 @@ GetAdjustedParentFrame(nsIFrame*       aParentFrame,
 static void
 InvalidateCanvasIfNeeded(nsIFrame* aFrame);
 
+static PRBool
+IsSpecialFramesetChild(nsIContent* aContent)
+{
+  // IMPORTANT: This must match the conditions in nsHTMLFramesetFrame::Init.
+  return aContent->IsNodeOfType(nsINode::eHTML) &&
+    (aContent->Tag() == nsGkAtoms::frameset ||
+     aContent->Tag() == nsGkAtoms::frame);
+}
+
 nsresult
 nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
                                        PRInt32         aNewIndexInContainer)
@@ -8345,8 +8354,14 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   parentFrame = insertionPoint;
 
   if (parentFrame->GetType() == nsGkAtoms::frameSetFrame) {
-    // Just reframe the parent, since framesets are weird like that.
-    return RecreateFramesForContent(parentFrame->GetContent());
+    // Check whether we have any kids we care about.
+    PRUint32 count = aContainer->GetChildCount();
+    for (PRUint32 i = aNewIndexInContainer; i < count; ++i) {
+      if (IsSpecialFramesetChild(aContainer->GetChildAt(i))) {
+        // Just reframe the parent, since framesets are weird like that.
+        return RecreateFramesForContent(parentFrame->GetContent());
+      }
+    }
   }
   
   if (parentFrame->IsLeaf()) {
@@ -8914,7 +8929,8 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
                                           &appendAfterFrame);
   }
 
-  if (parentFrame->GetType() == nsGkAtoms::frameSetFrame) {
+  if (parentFrame->GetType() == nsGkAtoms::frameSetFrame &&
+      IsSpecialFramesetChild(aChild)) {
     // Just reframe the parent, since framesets are weird like that.
     return RecreateFramesForContent(parentFrame->GetContent());
   }
@@ -9434,7 +9450,8 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
     // Get the childFrame's parent frame
     nsIFrame* parentFrame = childFrame->GetParent();
 
-    if (parentFrame->GetType() == nsGkAtoms::frameSetFrame) {
+    if (parentFrame->GetType() == nsGkAtoms::frameSetFrame &&
+        IsSpecialFramesetChild(aChild)) {
       // Just reframe the parent, since framesets are weird like that.
       return RecreateFramesForContent(parentFrame->GetContent());
     }
