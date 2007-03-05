@@ -134,6 +134,7 @@
 #include "prprf.h"
 #include "plstr.h"
 #include "prtime.h"
+#include "nsPrintfCString.h"
 
 #include <stdio.h>
 #ifdef WIN32
@@ -590,6 +591,10 @@ Fault(const char *msg, const void *ptr=nsnull)
         exit(1);
 
     } 
+
+    NS_NOTREACHED(nsPrintfCString(256,
+                  "Fault in cycle collector: %s (ptr: %p)\n",
+                  msg, ptr).get());
 
     // When faults are not fatal, we assume we're running in a
     // production environment and we therefore want to disable the
@@ -1396,7 +1401,7 @@ nsCycleCollector::RegisterRuntime(PRUint32 langID,
         Fault("unknown language runtime in registration");
 
     if (mRuntimes[langID])
-        Fault("multiple registrations of langauge runtime", rt);
+        Fault("multiple registrations of language runtime", rt);
 
     mRuntimes[langID] = rt;
 }
