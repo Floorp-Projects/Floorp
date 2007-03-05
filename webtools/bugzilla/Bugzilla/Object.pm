@@ -173,15 +173,23 @@ sub update {
     
     my (@update_columns, @values, %changes);
     foreach my $column ($self->UPDATE_COLUMNS) {
-        if ($old_self->{$column} ne $self->{$column}) {
-            my $value = $self->{$column};
-            trick_taint($value) if defined $value;
-            push(@values, $value);
-            push(@update_columns, $column);
-            # We don't use $value because we don't want to detaint this for
-            # the caller.
-            $changes{$column} = [$old_self->{$column}, $self->{$column}];
+        my ($old, $new) = ($old_self->{$column}, $self->{$column});
+        # This has to be written this way in order to allow us to set a field
+        # from undef or to undef, and avoid warnings about comparing an undef
+        # with the "eq" operator.
+        if (!defined $new || !defined $old) {
+            next if !defined $new && !defined $old;
         }
+        elsif ($old eq $new) {
+            next;
+        }
+
+        trick_taint($new) if defined $new;
+        push(@values, $new);
+        push(@update_columns, $column);
+        # We don't use $new because we don't want to detaint this for
+        # the caller.
+        $changes{$column} = [$old, $self->{$column}];
     }
 
     my $columns = join(', ', map {"$_ = ?"} @update_columns);
