@@ -158,11 +158,10 @@ var PlacesCommandHook = {
       description = BookmarksUtils.getDescriptionFromDocument(doc);
 #endif
 
-    // TODO: add dialog for filing/confirmation
-    var bms = PlacesUtils.bookmarks;
-    var livemarks = PlacesUtils.livemarks;
-    livemarks.createLivemark(bms.toolbarRoot, title, browser.currentURI, 
-                             feedURI, -1);
+    var toolbarRootIP =
+      new InsertionPoint(PlacesUtils.bookmarks.toolbarRoot, -1);
+    PlacesUtils.showAddLivemarkUI(feedURI, browser.currentURI,
+                                  title, toolbarRootIP, true);
   },
 
   /**

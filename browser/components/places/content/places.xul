@@ -162,6 +162,10 @@
                     command="placesCmd_new:bookmark"
                     label="&cmd.new_bookmark.label;"
                     accesskey="&cmd.new_bookmark.accesskey;"/>
+          <menuitem id="fileNewLivemark"
+                    command="placesCmd_new:livemark"
+                    label="&cmd.new_livemark.label;"
+                    accesskey="&cmd.new_livemark.accesskey;"/>
           <menuitem id="fileNewFolder"
                     command="placesCmd_new:folder"
                     label="&cmd.new_folder.label;"

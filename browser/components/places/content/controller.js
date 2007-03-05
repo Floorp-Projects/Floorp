@@ -236,6 +236,7 @@ PlacesController.prototype = {
       return false;
 #ifdef MOZ_PLACES_BOOKMARKS
     case "placesCmd_new:folder":
+    case "placesCmd_new:livemark":
       // New Folder - don't check selectionOverlapsSystemArea since we should
       // be able to create folders in the left list even when elements at the
       // top are selected.
@@ -344,11 +345,13 @@ PlacesController.prototype = {
       break;
 #ifdef MOZ_PLACES_BOOKMARKS
     case "placesCmd_new:folder":
-      this.newFolder();
+      this.newItem("folder");
       break;
     case "placesCmd_new:bookmark":
-      // XXX: not yet implemented
-      // this.newBookmark();
+      this.newItem("bookmark");
+      break;
+    case "placesCmd_new:livemark":
+      this.newItem("livemark");
       break;
     case "placesCmd_new:separator":
       this.newSeparator();
@@ -1042,25 +1045,43 @@ PlacesController.prototype = {
   },
 
   /**
+   * Shows the Add Bookmark UI for the current insertion point.
+   *
+   * @param aType
+   *        the type of the new item (bookmark/livemark/folder)
+   */
+  newItem: function PC_newItem(aType) {
+    var ip = this._view.insertionPoint;
+    if (!ip)
+      throw Cr.NS_ERROR_NOT_AVAILABLE;
+
+    this._view.saveSelection(this._view.SAVE_SELECTION_INSERT);
+    
+    var performed = false;
+    if (aType == "bookmark")
+      performed = PlacesUtils.showAddBookmarkUI(null, null, ip);
+    else if (aType == "livemark")
+      performed = PlacesUtils.showAddLivemarkUI(null, null, null, ip);
+    else // folder
+      performed = PlacesUtils.showAddFolderUI(null, ip);
+
+    if (performed)
+      this._view.restoreSelection();
+  },
+
+
+  /**
    * Create a new Bookmark folder somewhere. Prompts the user for the name
    * of the folder. 
    */
   newFolder: function PC_newFolder() {
+    var ip = this._view.insertionPoint;
+    if (!ip)
+      throw Cr.NS_ERROR_NOT_AVAILABLE;
+
     this._view.saveSelection(this._view.SAVE_SELECTION_INSERT);
-    var ps = Cc["@mozilla.org/embedcomp/prompt-service;1"].
-             getService(Ci.nsIPromptService);
-    var title = PlacesUtils.getString("newFolderTitle");
-    var text = PlacesUtils.getString("newFolderMessage");
-    var value = { value: PlacesUtils.getString("newFolderDefault") };
-    if (ps.prompt(window, title, text, value, null, { })) {
-      var ip = this._view.insertionPoint;
-      if (!ip)
-        throw Cr.NS_ERROR_NOT_AVAILABLE;
-      var txn = new PlacesCreateFolderTransaction(value.value, ip.folderId, 
-                                                  ip.index);
-      PlacesUtils.tm.doTransaction(txn);
+    if (PlacesUtils.showAddFolderUI(null, ip))
       this._view.restoreSelection();
-    }
   },
 
   /**
@@ -1641,6 +1662,7 @@ function PlacesCreateFolderTransaction(name, container, index) {
   this.container = container;
   this._index = index;
   this._id = null;
+  this.childItemsTransactions = [];
   this.childTransactions = [];
   this.redoTransaction = this.doTransaction;
 }
@@ -1650,9 +1672,14 @@ PlacesCreateFolderTransaction.prototype = {
   doTransaction: function PCFT_doTransaction() {
     this.LOG("Create Folder: " + this._name + " in: " + this.container + "," + this._index);
     this._id = this.bookmarks.createFolder(this.container, this._name, this._index);
+    for (var i = 0; i < this.childItemsTransactions.length; ++i) {
+      var txn = this.childItemsTransactions[i];
+      txn.container = this._id;
+      txn.doTransaction();
+    }
     for (var i = 0; i < this.childTransactions.length; ++i) {
       var txn = this.childTransactions[i];
-      txn.container = this._id;
+      txn.id = this._id;
       txn.doTransaction();
     }
   },
@@ -1660,9 +1687,12 @@ PlacesCreateFolderTransaction.prototype = {
   undoTransaction: function PCFT_undoTransaction() {
     this.LOG("UNCreate Folder: " + this._name + " from: " + this.container + "," + this._index);
     this.bookmarks.removeFolder(this._id);
+    for (var i = 0; i < this.childItemsTransactions.length; ++i) {
+      var txn = this.childItemsTransactions[i];
+      txn.undoTransaction();
+    }
     for (var i = 0; i < this.childTransactions.length; ++i) {
       var txn = this.childTransactions[i];
-      txn.container = this._id;
       txn.undoTransaction();
     }
   }
@@ -1724,6 +1754,44 @@ PlacesCreateSeparatorTransaction.prototype = {
   undoTransaction: function PIST_undoTransaction() {
     this.LOG("UNCreate separator from: " + this.container + "," + this._index);
     this.bookmarks.removeChildAt(this.container, this._index);
+  }
+};
+
+/**
+ * Create a new live bookmark
+ */
+function PlacesCreateLivemarkTransaction(aFeedURI, aSiteURI, aName,
+                                         aContainer, aIndexInContainer) {
+  this._feedURI = aFeedURI;
+  this._siteURI = aSiteURI;
+  this._name = aName;
+  this._container = aContainer;
+  this._indexInContainer = aIndexInContainer;
+  this.childTransactions = [];
+}
+PlacesCreateLivemarkTransaction.prototype = {
+  __proto__: PlacesBaseTransaction.prototype,
+
+  doTransaction: function PCLT_doTransaction() {
+    this._id = this.livemarks.createLivemark(this._container,
+                                             this._name,
+                                             this._siteURI,
+                                             this._feedURI,
+                                             this._indexInContainer);
+    for (var i = 0; i < this.childTransactions.length; ++i) {
+      var txn = this.childTransactions[i];
+      txn.id = this._id;
+      txn.doTransaction();
+    }
+  },
+
+  undoTransaction: function PCLT_undoTransaction() {
+    this.bookmarks.removeFolder(this._id);
+
+    for (var i = 0; i < this.childTransactions.length; ++i) {
+      var txn = this.childTransactions[i];
+      txn.undoTransaction();
+    }
   }
 };
 
@@ -1948,10 +2016,31 @@ PlacesEditItemTitleTransaction.prototype = {
 };
 
 /**
+ * Edit a bookmark's uri.
+ */
+function PlacesEditBookmarkURITransaction(aBookmarkId, aNewURI) {
+  this.id = aBookmarkId;
+  this._newURI = aNewURI;
+  this.redoTransaction = this.doTransaction;
+}
+PlacesEditBookmarkURITransaction.prototype = {
+  __proto__: PlacesBaseTransaction.prototype,
+
+  doTransaction: function PEBUT_doTransaction() {
+    this._oldURI = this.bookmarks.getBookmarkURI(this.id);
+    this.bookmarks.changeBookmarkURI(this.id, this._newURI);
+  },
+
+  undoTransaction: function PEBUT_undoTransaction() {
+    this.bookmarks.changeBookmarkURI(this.id, this._oldURI);
+  }
+};
+
+/**
  * Edit a folder's title.
  */
 function PlacesEditFolderTitleTransaction(id, newTitle) {
-  this._id = id;
+  this.id = id;
   this._newTitle = newTitle;
   this._oldTitle = "";
   this.redoTransaction = this.doTransaction;
@@ -1960,12 +2049,12 @@ PlacesEditFolderTitleTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
 
   doTransaction: function PEFTT_doTransaction() {
-    this._oldTitle = this.bookmarks.getFolderTitle(this._id);
-    this.bookmarks.setFolderTitle(this._id, this._newTitle);
+    this._oldTitle = this.bookmarks.getFolderTitle(this.id);
+    this.bookmarks.setFolderTitle(this.id, this._newTitle);
   },
 
   undoTransaction: function PEFTT_undoTransaction() {
-    this.bookmarks.setFolderTitle(this._id, this._oldTitle);
+    this.bookmarks.setFolderTitle(this.id, this._oldTitle);
   }
 };
 
@@ -1973,7 +2062,7 @@ PlacesEditFolderTitleTransaction.prototype = {
  * Edit a bookmark's keyword.
  */
 function PlacesEditBookmarkKeywordTransaction(id, newKeyword) {
-  this._id = id;
+  this.id = id;
   this._newKeyword = newKeyword;
   this._oldKeyword = "";
   this.redoTransaction = this.doTransaction;
@@ -1982,12 +2071,12 @@ PlacesEditBookmarkKeywordTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
 
   doTransaction: function PEBKT_doTransaction() {
-    this._oldKeyword = this.bookmarks.getKeywordForBookmark(this._id);
-    this.bookmarks.setKeywordForBookmark(this._id, this._newKeyword);
+    this._oldKeyword = this.bookmarks.getKeywordForBookmark(this.id);
+    this.bookmarks.setKeywordForBookmark(this.id, this._newKeyword);
   },
 
   undoTransaction: function PEBKT_undoTransaction() {
-    this.bookmarks.setKeywordForBookmark(this._id, this._oldKeyword);
+    this.bookmarks.setKeywordForBookmark(this.id, this._oldKeyword);
   }
 };
 
@@ -2040,8 +2129,9 @@ PlacesEditLivemarkFeedURITransaction.prototype = {
 /**
  * Edit a bookmark's microsummary.
  */
-function PlacesEditBookmarkMicrosummaryTransaction(aURI, newMicrosummary) {
-  this._uri = aURI;
+// XXXDietrich - bug 370215 - update to use bookmark id once 360133 is fixed.
+function PlacesEditBookmarkMicrosummaryTransaction(aID, newMicrosummary) {
+  this.id = aID;
   this._newMicrosummary = newMicrosummary;
   this._oldMicrosummary = null;
   this.redoTransaction = this.doTransaction;
@@ -2053,18 +2143,20 @@ PlacesEditBookmarkMicrosummaryTransaction.prototype = {
        getService(Ci.nsIMicrosummaryService),
 
   doTransaction: function PEBMT_doTransaction() {
-    this._oldMicrosummary = this.mss.getMicrosummary(this._uri);
+    var uri = this.bookmarks.getBookmarkURI(this.id);
+    this._oldMicrosummary = this.mss.getMicrosummary(uri);
     if (this._newMicrosummary)
-      this.mss.setMicrosummary(this._uri, this._newMicrosummary);
+      this.mss.setMicrosummary(uri, this._newMicrosummary);
     else
-      this.mss.removeMicrosummary(this._uri);
+      this.mss.removeMicrosummary(uri);
   },
 
   undoTransaction: function PEBMT_undoTransaction() {
+    var uri = this.bookmarks.getBookmarkURI(this.id);
     if (this._oldMicrosummary)
-      this.mss.setMicrosummary(this._uri, this._oldMicrosummary);
+      this.mss.setMicrosummary(uri, this._oldMicrosummary);
     else
-      this.mss.removeMicrosummary(this._uri);
+      this.mss.removeMicrosummary(uri);
   }
 };
 
@@ -2076,6 +2168,7 @@ function goUpdatePlacesCommands() {
 #ifdef MOZ_PLACES_BOOKMARKS
   goUpdateCommand("placesCmd_new:folder");
   goUpdateCommand("placesCmd_new:bookmark");
+  goUpdateCommand("placesCmd_new:livemark");
   goUpdateCommand("placesCmd_new:separator");
   goUpdateCommand("placesCmd_show:info");
   goUpdateCommand("placesCmd_moveBookmarks");

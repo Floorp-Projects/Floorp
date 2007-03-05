@@ -147,6 +147,10 @@
   "New Bookmark...">
 <!ENTITY cmd.new_bookmark.accesskey
   "B">
+<!ENTITY cmd.new_livemark.label
+  "New Live Bookmark...">
+<!ENTITY cmd.new_livemark.accesskey
+  "L">
 <!ENTITY cmd.new_folder.label
   "New Folder...">
 <!ENTITY cmd.new_folder.accesskey
