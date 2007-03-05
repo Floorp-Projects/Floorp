@@ -136,7 +136,7 @@ nsSpatialNavigation::KeyDown(nsIDOMEvent* aEvent)
         }
       }
   }
-  else if (!mService->mIgnoreTextFields && targetContent->IsNodeOfType(nsINode::eHTML)) 
+  else if (mService->mIgnoreTextFields && targetContent->IsNodeOfType(nsINode::eHTML)) 
   {
     // Test for isindex, a deprecated kind of text field. We're using a string 
     // compare because <isindex> is not considered a form control, so it does 
@@ -195,14 +195,71 @@ nsSpatialNavigation::KeyDown(nsIDOMEvent* aEvent)
   
   if (keyCode == mService->mKeyCodeLeft)
   {
+  
+   // ************************************************************************************
+    // NS_FORM_TEXTAREA cases:
+
+    // ************************************************************************************
+    // NS_FORM_INPUT_TEXT | NS_FORM_INPUT_PASSWORD | NS_FORM_INPUT_FILE cases
+
+
+    if (formControlType == NS_FORM_INPUT_TEXT || 
+        formControlType == NS_FORM_INPUT_PASSWORD)
+    {
+      PRInt32 selectionStart, textLength;
+      nsCOMPtr<nsIDOMNSHTMLInputElement> input = do_QueryInterface(targetContent);
+      if (input) {
+        input->GetSelectionStart (&selectionStart);
+        input->GetTextLength (&textLength);
+      } else {
+        nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textArea = do_QueryInterface(targetContent);
+        if (textArea) {
+          textArea->GetSelectionStart (&selectionStart);
+          textArea->GetTextLength (&textLength);
+        }
+      }
+	  
+      if (textLength != 0 && selectionStart != 0)
+        return NS_OK;
+    }
+
     // We're using this key, no one else should
     aEvent->StopPropagation();
 	aEvent->PreventDefault();
+	
     return Left();
   }
   
   if (keyCode == mService->mKeyCodeRight)
   {
+    // ************************************************************************************
+    // NS_FORM_TEXTAREA cases:
+
+    // ************************************************************************************
+    // NS_FORM_INPUT_TEXT | NS_FORM_INPUT_PASSWORD | NS_FORM_INPUT_FILE cases
+
+    if (formControlType == NS_FORM_INPUT_TEXT || 
+        formControlType == NS_FORM_INPUT_PASSWORD)
+    {
+      PRInt32 selectionEnd, textLength;
+      nsCOMPtr<nsIDOMNSHTMLInputElement> input = do_QueryInterface(targetContent);
+      if (input) {
+        input->GetSelectionEnd (&selectionEnd);
+        input->GetTextLength (&textLength);
+      } else {
+        nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textArea = do_QueryInterface(targetContent);
+        if (textArea) {
+          textArea->GetSelectionEnd (&selectionEnd);
+          textArea->GetTextLength (&textLength);
+        }
+      }
+      
+      // going down.
+
+      if (textLength  != selectionEnd)
+        return NS_OK;
+    }
+	
     aEvent->StopPropagation();
 	aEvent->PreventDefault();
     return Right();
@@ -227,12 +284,6 @@ nsSpatialNavigation::KeyDown(nsIDOMEvent* aEvent)
     // if (formControlType == NS_FORM_SELECT)
     //   return NS_OK;
 
-    // ************************************************************************************
-    // NS_FORM_TEXTAREA cases:
-
-    // ************************************************************************************
-    // NS_FORM_INPUT_TEXT | NS_FORM_INPUT_PASSWORD | NS_FORM_INPUT_FILE cases
-
     aEvent->StopPropagation();
     aEvent->PreventDefault();
     return Up();
@@ -255,12 +306,6 @@ nsSpatialNavigation::KeyDown(nsIDOMEvent* aEvent)
     // * if it is a select form of 'size' attr == than '1', snav can take care of it.
     // if (formControlType == NS_FORM_SELECT)
     //   return NS_OK;
-
-    // ************************************************************************************
-    // NS_FORM_TEXTAREA cases:
-
-    // ************************************************************************************
-    // NS_FORM_INPUT_TEXT | NS_FORM_INPUT_PASSWORD | NS_FORM_INPUT_FILE cases
 
     aEvent->StopPropagation();  // We're using this key, no one else should
     aEvent->PreventDefault();
