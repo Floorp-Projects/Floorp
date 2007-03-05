@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Aaron Schulman <aschulm@umd.edu>
+ *   Stuart Morgan <stuart.morgan@alumni.case.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -79,12 +80,6 @@
   [super dealloc];
 }
 
-- (void)removeFromSuperview
-{
-  [self removeTrackingRect];
-  [super removeFromSuperview];
-}
-
 - (void)setEnabled:(BOOL)inStatus
 {
   [super setEnabled:inStatus];
@@ -105,13 +100,19 @@
     [self removeTrackingRect];
 }
 
+- (void)viewWillMoveToWindow:(NSWindow*)window
+{
+  [self removeTrackingRect];
+  // unregister the button from observering the current window
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+  [super viewWillMoveToWindow:window];
+}
+
 - (void)viewDidMoveToWindow
 {
   [self updateTrackingRect];
-  NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
-  // unregister the button from observering the current window just in case a tab moves from one window to another
-  [nc removeObserver:self];
   if ([self window]) {
+    NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
     [nc addObserver:self selector:@selector(handleWindowIsKey:)
           name:NSWindowDidBecomeKeyNotification object:[self window]];
     [nc addObserver:self selector:@selector(handleWindowResignKey:)
@@ -119,11 +120,18 @@
   }
 }
 
+- (void)setBounds:(NSRect)inBounds
+{
+  [super setBounds:inBounds];
+  [self updateTrackingRect];
+}
+
 - (void)setFrame:(NSRect)inFrame
 {
   NSRect oldFrame = [self frame];
-  // setFrame: is implemented in terms of setFrameOrigin: and setFrameSize:, so
-  // track when it's being called to avoid updating the tracking rect three times
+  // setFrame: is implemented in terms of setFrameOrigin: and setFrameSize:.
+  // We can't rely on it, since it's undocumented, but while it's true we don't
+  // want to do three times as much work for every frame update, so check.
   mSettingFrame = YES;
   [super setFrame:inFrame];
   mSettingFrame = NO;
@@ -220,14 +228,14 @@
 - (BOOL)isMouseInside
 {
   NSPoint mousePointInWindow = [[self window] convertScreenToBase:[NSEvent mouseLocation]];
-  NSPoint mousePointInView = [[self superview] convertPoint:mousePointInWindow fromView:nil];
-  return NSMouseInRect(mousePointInView, [self frame], NO);
+  NSPoint mousePointInView = [self convertPoint:mousePointInWindow fromView:nil];
+  return NSMouseInRect(mousePointInView, [self bounds], NO);
 }
 
 - (void)removeTrackingRect
 {
   if (mTrackingTag != -1) {
-    [[self superview] removeTrackingRect:mTrackingTag];
+    [self removeTrackingRect:mTrackingTag];
     mTrackingTag = -1;
   }
 }
@@ -238,7 +246,7 @@
     return;
   [self removeTrackingRect];
   BOOL mouseInside = [self isMouseInside];
-  mTrackingTag = [[self superview] addTrackingRect:[self frame] owner:self userData:nil assumeInside:mouseInside];
+  mTrackingTag = [self addTrackingRect:[self bounds] owner:self userData:nil assumeInside:mouseInside];
   [self updateImage:mouseInside];
 }
 
