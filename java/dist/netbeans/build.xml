@@ -327,6 +327,13 @@ ${so.prefix}xul.${so.extension}.
             </sequential>
         </macrodef>
     </target>
+
+    <target name="compile.core.src" description="Builds the core webclient java sources.  These sources are shipped precompiled in lib/webclient.jar.  This target is included for convenience only, should you wish to modify and re-compile the webclient core library.">
+      <antcall target="compile">
+        <param name="src.dir" value="${basedir}/../src/main/java" />
+      </antcall>
+
+    </target>
     
     
     
