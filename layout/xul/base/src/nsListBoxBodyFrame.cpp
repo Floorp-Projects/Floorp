@@ -226,7 +226,6 @@ nsListBoxBodyFrame::Release(void)
 NS_INTERFACE_MAP_BEGIN(nsListBoxBodyFrame)
   NS_INTERFACE_MAP_ENTRY(nsIListBoxObject)
   NS_INTERFACE_MAP_ENTRY(nsIScrollbarMediator)
-  NS_INTERFACE_MAP_ENTRY(nsIReflowCallback)
 NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 
@@ -487,8 +486,8 @@ nsListBoxBodyFrame::ScrollbarButtonPressed(nsISupports* aScrollbar, PRInt32 aOld
 
 ///////////// nsIReflowCallback ///////////////
 
-NS_IMETHODIMP
-nsListBoxBodyFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag)
+PRBool
+nsListBoxBodyFrame::ReflowFinished()
 {
   // now create or destroy any rows as needed
   CreateRows();
@@ -512,9 +511,7 @@ nsListBoxBodyFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag)
   }
 
   mReflowCallbackPosted = PR_FALSE;
-  *aFlushFlag = PR_TRUE;
-
-  return NS_OK;
+  return PR_TRUE;
 }
 
 ///////// nsIListBoxObject ///////////////

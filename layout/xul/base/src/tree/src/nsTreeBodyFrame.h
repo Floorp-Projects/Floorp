@@ -91,7 +91,7 @@ public:
                          PRBool aRemoveOverflowArea = PR_FALSE);
 
   // nsIReflowCallback
-  NS_IMETHOD ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag);
+  virtual PRBool ReflowFinished();
 
   // nsICSSPseudoComparator
   NS_IMETHOD PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBool* aResult);

@@ -98,10 +98,10 @@ class nsIScrollableFrame;
 
 typedef short SelectionType;
 
-// e94790d4-e93d-45a9-ab2f-a0c86081abc0
+// 7C398278-8523-4E5C-8268-4E4BC8B0C5CA
 #define NS_IPRESSHELL_IID \
-{ 0xe94790d4, 0xe93d, 0x45a9, \
-  { 0xab, 0x2f, 0xa0, 0xc8, 0x60, 0x81, 0xab, 0xc0 } }
+{ 0x7C398278, 0x8523, 0x4E5C, \
+  { 0x82, 0x68, 0x4E, 0x4B, 0xC8, 0xB0, 0xC5, 0xCA } }
 
 // Constants uses for ScrollFrameIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -121,12 +121,6 @@ typedef short SelectionType;
 #define VERIFY_REFLOW_REALLY_NOISY_RC 0x20
 #define VERIFY_REFLOW_INCLUDE_SPACE_MANAGER 0x40
 #define VERIFY_REFLOW_DURING_RESIZE_REFLOW  0x80
-
-// for PostAttributeChanged
-enum nsAttributeChangeType {
-  eChangeType_Set = 0,       // Set attribute
-  eChangeType_Remove = 1     // Remove attribute
-};
 
 /**
  * Presentation shell interface. Presentation shells are the
@@ -388,16 +382,6 @@ public:
    * @param aType the type of notifications to flush
    */
   NS_IMETHOD FlushPendingNotifications(mozFlushType aType) = 0;
-
-  /**
-   * Post a request to set and attribute after reflow has finished.
-   */
-  NS_IMETHOD PostAttributeChange(nsIContent* aContent,
-                                 PRInt32 aNameSpaceID, 
-                                 nsIAtom* aName,
-                                 const nsString& aValue,
-                                 PRBool aNotify,
-                                 nsAttributeChangeType aType) = 0;
 
   NS_IMETHOD PostReflowCallback(nsIReflowCallback* aCallback) = 0;
   NS_IMETHOD CancelReflowCallback(nsIReflowCallback* aCallback) = 0;

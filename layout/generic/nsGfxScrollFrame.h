@@ -50,6 +50,7 @@
 #include "nsThreadUtils.h"
 #include "nsIScrollableView.h"
 #include "nsIView.h"
+#include "nsIReflowCallback.h"
 
 class nsPresContext;
 class nsIPresShell;
@@ -60,7 +61,8 @@ class nsIScrollFrameInternal;
 class nsPresState;
 struct ScrollReflowState;
 
-class nsGfxScrollFrameInner : public nsIScrollPositionListener {
+class nsGfxScrollFrameInner : public nsIScrollPositionListener,
+                              public nsIReflowCallback {
 public:
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef(void);
@@ -92,6 +94,9 @@ public:
   virtual void InvalidateInternal(const nsRect& aDamageRect, nscoord aX, nscoord aY,
                                   nsIFrame* aForChild, PRBool aImmediate);
 
+  // nsIReflowCallback
+  virtual PRBool ReflowFinished();
+
   // nsIScrollPositionListener
 
   NS_IMETHOD ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
@@ -120,8 +125,8 @@ public:
     nsGfxScrollFrameInner *mInner;
   };
 
-  void SetScrollbarEnabled(nsIBox* aBox, nscoord aMaxPos, PRBool aReflow=PR_TRUE);
-  PRBool SetCoordAttribute(nsIBox* aBox, nsIAtom* aAtom, nscoord aSize, PRBool aReflow=PR_TRUE);
+  void SetScrollbarEnabled(nsIBox* aBox, nscoord aMaxPos);
+  void SetCoordAttribute(nsIBox* aBox, nsIAtom* aAtom, nscoord aSize);
   nscoord GetCoordAttribute(nsIBox* aFrame, nsIAtom* atom, nscoord defaultValue);
 
   // Like ScrollPositionDidChange, but initiated by this frame rather than from the
@@ -218,6 +223,7 @@ public:
   // which overflow states have changed.
   PRPackedBool mHorizontalOverflow:1;
   PRPackedBool mVerticalOverflow:1;
+  PRPackedBool mPostedReflowCallback:1;
 };
 
 /**

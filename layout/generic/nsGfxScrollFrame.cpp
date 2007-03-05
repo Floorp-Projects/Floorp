@@ -153,12 +153,6 @@ nsHTMLScrollFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 void
 nsHTMLScrollFrame::Destroy()
 {
-  mInner.mScrollEvent.Revoke();
-  mInner.mAsyncScrollPortEvent.Revoke();
-  nsIScrollableView *view = mInner.GetScrollableView();
-  NS_ASSERTION(view, "unexpected null pointer");
-  if (view)
-    view->RemoveScrollPositionListener(&mInner);
   mInner.Destroy();
   nsHTMLContainerFrame::Destroy();
 }
@@ -965,12 +959,6 @@ nsXULScrollFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 void
 nsXULScrollFrame::Destroy()
 {
-  mInner.mScrollEvent.Revoke();
-  mInner.mAsyncScrollPortEvent.Revoke();
-  nsIScrollableView *view = mInner.GetScrollableView();
-  NS_ASSERTION(view, "unexpected null pointer");
-  if (view)
-    view->RemoveScrollPositionListener(&mInner);
   mInner.Destroy();
   nsBoxFrame::Destroy();
 }
@@ -1248,7 +1236,8 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter,
     mHistoryVScrollbarHint(PR_FALSE),
     mHadNonInitialReflow(PR_FALSE),
     mHorizontalOverflow(PR_FALSE),
-    mVerticalOverflow(PR_FALSE)
+    mVerticalOverflow(PR_FALSE),
+    mPostedReflowCallback(PR_FALSE)
 {
 }
 
@@ -1718,6 +1707,17 @@ nsGfxScrollFrameInner::Destroy()
   nsContentUtils::DestroyAnonymousContent(&mHScrollbarContent);
   nsContentUtils::DestroyAnonymousContent(&mVScrollbarContent);
   nsContentUtils::DestroyAnonymousContent(&mScrollCornerContent);
+
+  mScrollEvent.Revoke();
+  mAsyncScrollPortEvent.Revoke();
+  if (mPostedReflowCallback) {
+    mOuter->GetPresContext()->PresShell()->CancelReflowCallback(this);
+    mPostedReflowCallback = PR_FALSE;
+  }
+  nsIScrollableView *view = GetScrollableView();
+  NS_ASSERTION(view, "unexpected null pointer");
+  if (view)
+    view->RemoveScrollPositionListener(this);
 }
 
 NS_IMETHODIMP
@@ -2302,16 +2302,17 @@ nsXULScrollFrame::Layout(nsBoxLayoutState& aState)
   return NS_OK;
 }
 
-void
-nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
-                                        const nsRect& aContentArea,
-                                        const nsRect& aOldScrollArea,
-                                        const nsRect& aScrollArea)
+PRBool
+nsGfxScrollFrameInner::ReflowFinished()
 {
-  NS_ASSERTION(!mSupppressScrollbarUpdate,
-               "This should have been suppressed");
-    
-  nsPresContext* presContext = aState.PresContext();
+  mPostedReflowCallback = PR_FALSE;
+
+  // Update scrollbar attributes.
+  nsPresContext* presContext = mOuter->GetPresContext();
+
+  nsIScrollableView* scrollable = GetScrollableView();
+  nsRect scrollArea = scrollable->View()->GetBounds();
+
   const nsStyleFont* font = mOuter->GetStyleFont();
   const nsFont& f = font->mFont;
   nsCOMPtr<nsIFontMetrics> fm = presContext->GetMetricsFor(f);
@@ -2319,20 +2320,16 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
   NS_ASSERTION(fm,"FontMetrics is null assuming fontHeight == 1");
   if (fm)
     fm->GetHeight(fontHeight);
-
-  nsRect scrolledContentRect = GetScrolledRect(aScrollArea.Size());
-
-  nscoord minX = scrolledContentRect.x;
-  nscoord maxX = scrolledContentRect.XMost() - aScrollArea.width;
-
-  nscoord minY = scrolledContentRect.y;
-  nscoord maxY = scrolledContentRect.YMost() - aScrollArea.height;
-
-  nsIScrollableView* scrollable = GetScrollableView();
   scrollable->SetLineHeight(fontHeight);
 
+  nsRect scrolledContentRect = GetScrolledRect(scrollArea.Size());
+  nscoord minX = scrolledContentRect.x;
+  nscoord maxX = scrolledContentRect.XMost() - scrollArea.width;
+  nscoord minY = scrolledContentRect.y;
+  nscoord maxY = scrolledContentRect.YMost() - scrollArea.height;
+
   // Suppress handling of the curpos attribute changes we make here.
-  PRBool oldFrameInitiatedScroll = mFrameInitiatedScroll;
+  NS_ASSERTION(!mFrameInitiatedScroll, "We shouldn't be reentering here");
   mFrameInitiatedScroll = PR_TRUE;
 
   if (mVScrollbarBox) {
@@ -2343,18 +2340,10 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     SetCoordAttribute(mVScrollbarBox, nsGkAtoms::curpos, curPosY - minY);
     SetScrollbarEnabled(mVScrollbarBox, maxY - minY);
     SetCoordAttribute(mVScrollbarBox, nsGkAtoms::maxpos, maxY - minY);
-    SetCoordAttribute(mVScrollbarBox, nsGkAtoms::pageincrement, nscoord(aScrollArea.height - fontHeight));
+    SetCoordAttribute(mVScrollbarBox, nsGkAtoms::pageincrement, nscoord(scrollArea.height - fontHeight));
     SetCoordAttribute(mVScrollbarBox, nsGkAtoms::increment, fontHeight);
-
-    nsRect vRect(aScrollArea);
-    vRect.width = aContentArea.width - aScrollArea.width;
-    vRect.x = IsScrollbarOnRight() ? aScrollArea.XMost() : aContentArea.x;
-    nsMargin margin;
-    mVScrollbarBox->GetMargin(margin);
-    vRect.Deflate(margin);
-    nsBoxFrame::LayoutChildAt(aState, mVScrollbarBox, vRect);
   }
-    
+
   if (mHScrollbarBox) {
     NS_PRECONDITION(mHScrollbarBox->IsBoxFrame(), "Must be a box frame!");
     nscoord curPosX, curPosY;
@@ -2363,19 +2352,11 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     SetCoordAttribute(mHScrollbarBox, nsGkAtoms::curpos, curPosX - minX);
     SetScrollbarEnabled(mHScrollbarBox, maxX - minX);
     SetCoordAttribute(mHScrollbarBox, nsGkAtoms::maxpos, maxX - minX);
-    SetCoordAttribute(mHScrollbarBox, nsGkAtoms::pageincrement, nscoord(float(aScrollArea.width)*0.8));
+    SetCoordAttribute(mHScrollbarBox, nsGkAtoms::pageincrement, nscoord(float(scrollArea.width)*0.8));
     SetCoordAttribute(mHScrollbarBox, nsGkAtoms::increment, nsPresContext::CSSPixelsToAppUnits(10));
-
-    nsRect hRect(aScrollArea);
-    hRect.height = aContentArea.height - aScrollArea.height;
-    hRect.y = PR_TRUE ? aScrollArea.YMost() : aContentArea.y;
-    nsMargin margin;
-    mHScrollbarBox->GetMargin(margin);
-    hRect.Deflate(margin);
-    nsBoxFrame::LayoutChildAt(aState, mHScrollbarBox, hRect);
   }
 
-  mFrameInitiatedScroll = oldFrameInitiatedScroll;
+  mFrameInitiatedScroll = PR_FALSE;
   // We used to rely on the curpos attribute changes above to scroll the
   // view.  However, for scrolling to the left of the viewport, we
   // rescale the curpos attribute, which means that operations like
@@ -2387,9 +2368,43 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
   // nsSliderFrame::AttributeChanged's handling of maxpos, but not when
   // we hide the scrollbar on a large size change, such as
   // maximization.)
-  if (mHScrollbarBox || mVScrollbarBox)
-    CurPosAttributeChanged(mVScrollbarBox ? mVScrollbarBox->GetContent()
-                                          : mHScrollbarBox->GetContent());
+  if (!mHScrollbarBox && !mVScrollbarBox)
+    return PR_FALSE;
+  CurPosAttributeChanged(mVScrollbarBox ? mVScrollbarBox->GetContent()
+                                        : mHScrollbarBox->GetContent());
+  return PR_TRUE;
+}
+
+void
+nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
+                                        const nsRect& aContentArea,
+                                        const nsRect& aOldScrollArea,
+                                        const nsRect& aScrollArea)
+{
+  NS_ASSERTION(!mSupppressScrollbarUpdate,
+               "This should have been suppressed");
+    
+  if (mVScrollbarBox) {
+    NS_PRECONDITION(mVScrollbarBox->IsBoxFrame(), "Must be a box frame!");
+    nsRect vRect(aScrollArea);
+    vRect.width = aContentArea.width - aScrollArea.width;
+    vRect.x = IsScrollbarOnRight() ? aScrollArea.XMost() : aContentArea.x;
+    nsMargin margin;
+    mVScrollbarBox->GetMargin(margin);
+    vRect.Deflate(margin);
+    nsBoxFrame::LayoutChildAt(aState, mVScrollbarBox, vRect);
+  }
+
+  if (mHScrollbarBox) {
+    NS_PRECONDITION(mHScrollbarBox->IsBoxFrame(), "Must be a box frame!");
+    nsRect hRect(aScrollArea);
+    hRect.height = aContentArea.height - aScrollArea.height;
+    hRect.y = PR_TRUE ? aScrollArea.YMost() : aContentArea.y;
+    nsMargin margin;
+    mHScrollbarBox->GetMargin(margin);
+    hRect.Deflate(margin);
+    nsBoxFrame::LayoutChildAt(aState, mHScrollbarBox, hRect);
+  }
 
   // place the scrollcorner
   if (mScrollCornerBox) {
@@ -2434,9 +2449,15 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
       // force a reflow of the fixed child
       fixedChild->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
       // XXX Will this work given where we currently are in reflow?
-      mOuter->GetPresContext()->PresShell()->
+      aState.PresContext()->PresShell()->
         FrameNeedsReflow(fixedChild, nsIPresShell::eResize);
     }
+  }
+  
+  // post reflow callback to modify scrollbar attributes
+  if (!mPostedReflowCallback) {
+    aState.PresContext()->PresShell()->PostReflowCallback(this);
+    mPostedReflowCallback = PR_TRUE;
   }
 }
 
@@ -2449,38 +2470,34 @@ nsGfxScrollFrameInner::ScrollbarChanged(nsPresContext* aPresContext, nscoord aX,
 }
 
 void
-nsGfxScrollFrameInner::SetScrollbarEnabled(nsIBox* aBox, nscoord aMaxPos, PRBool aReflow)
+nsGfxScrollFrameInner::SetScrollbarEnabled(nsIBox* aBox, nscoord aMaxPos)
 {
-  mOuter->GetPresContext()->PresShell()->PostAttributeChange(
-    aBox->GetContent(),
-    kNameSpaceID_None,
-    nsGkAtoms::disabled,
-    NS_LITERAL_STRING("true"),
-    aReflow,
-    aMaxPos ? eChangeType_Remove : eChangeType_Set);
+  nsIContent* content = aBox->GetContent();
+  if (aMaxPos) {
+    content->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, PR_TRUE);
+  } else {
+    content->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled,
+      NS_LITERAL_STRING("true"), PR_TRUE);
+  }
 }
 
-/**
- * Returns whether it actually needed to change the attribute
- */
-PRBool
-nsGfxScrollFrameInner::SetCoordAttribute(nsIBox* aBox, nsIAtom* aAtom, nscoord aSize, PRBool aReflow)
+void
+nsGfxScrollFrameInner::SetCoordAttribute(nsIBox* aBox, nsIAtom* aAtom,
+                                         nscoord aSize)
 {
   // convert to pixels
   aSize = nsPresContext::AppUnitsToIntCSSPixels(aSize);
 
   // only set the attribute if it changed.
 
-  nsIContent *content = aBox->GetContent();
-
   nsAutoString newValue;
   newValue.AppendInt(aSize);
 
+  nsIContent* content = aBox->GetContent();
   if (content->AttrValueIs(kNameSpaceID_None, aAtom, newValue, eCaseMatters))
-    return PR_FALSE;
+    return;
 
-  content->SetAttr(kNameSpaceID_None, aAtom, newValue, aReflow);
-  return PR_TRUE;
+  content->SetAttr(kNameSpaceID_None, aAtom, newValue, PR_TRUE);
 }
 
 nsRect
