@@ -345,9 +345,9 @@ NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                                 \
 {                                                                             \
   NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");                   \
   NS_ASSERT_OWNINGTHREAD(_class);                                             \
-  mRefCnt.incr(NS_STATIC_CAST(_basetype *, this));                            \
-  NS_LOG_ADDREF(this, mRefCnt, #_class, sizeof(*this));                       \
-  return mRefCnt;                                                             \
+  nsrefcnt count = mRefCnt.incr(NS_STATIC_CAST(_basetype *, this));           \
+  NS_LOG_ADDREF(this, count, #_class, sizeof(*this));                         \
+  return count;                                                               \
 }
 
 #define NS_IMPL_CYCLE_COLLECTING_ADDREF(_class)      \
@@ -358,14 +358,14 @@ NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                \
 {                                                                             \
   NS_PRECONDITION(0 != mRefCnt, "dup release");                               \
   NS_ASSERT_OWNINGTHREAD(_class);                                             \
-  mRefCnt.decr(NS_STATIC_CAST(_basetype *, this));		              \
-  NS_LOG_RELEASE(this, mRefCnt, #_class);                                     \
-  if (mRefCnt == 0) {                                                         \
+  nsrefcnt count = mRefCnt.decr(NS_STATIC_CAST(_basetype *, this));           \
+  NS_LOG_RELEASE(this, count, #_class);                                       \
+  if (count == 0) {                                                           \
     mRefCnt.stabilizeForDeletion(NS_STATIC_CAST(_basetype *, this));          \
     _destroy;                                                                 \
     return 0;                                                                 \
   }                                                                           \
-  return mRefCnt;                                                             \
+  return count;                                                               \
 }
 
 #define NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(_class, _destroy)       \
