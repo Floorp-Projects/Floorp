@@ -1,0 +1,26 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Bug 105030</title>
+</head>
+<body>
+<table style="border: solid 1px">
+  <tr><td>
+    <table align="left">
+      <tr><td id="cell">Inner Table </td></tr>
+    </table>
+  </td></tr>
+</table>
+<script type="text/javascript">
+  function loadImage() {
+    document.body.offsetWidth
+    var img = document.createElement("img");
+    img.src = "solidblue.png";
+    img.alt = "";
+    targetCell = document.getElementById("cell");
+    targetCell.appendChild(img);
+  }
+  loadImage();
+</script>
+</body>
+</html>
