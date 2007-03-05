@@ -217,11 +217,11 @@
 <h3>Test Runs</h3>
 <div id="plan_runs">
 [% IF run_table.list_count >0 %]
-<a href="tr_new_run.cgi?plan_id=[% plan.id FILTER none %]&case_status_id=2">Create a New Test Run</a><br />
+<a href="tr_new_run.cgi?plan_id=[% plan.id FILTER none %]&case_status=CONFIRMED">Create a New Test Run</a><br />
 [% END %]
 [% PROCESS testopia/run/table.html.tmpl
    table = run_table %]
-  <a href="tr_new_run.cgi?plan_id=[% plan.id FILTER none %]&case_status_id=2">Create a New Test Run</a>
+  <a href="tr_new_run.cgi?plan_id=[% plan.id FILTER none %]&case_status=CONFIRMED">Create a New Test Run</a>
   &nbsp|&nbsp;<a href="tr_list_runs.cgi?plan_id=[% plan.id FILTER none %]">List Runs</a>
 </div>
 [%##### Attachments #####%]
