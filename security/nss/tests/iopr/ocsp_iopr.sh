@@ -98,7 +98,7 @@ ocsp_get_cert_status() {
 
     outFile=$dbDir/ocsptest.out.$$
     echo "ocspclnt -d $dbDir -S $cert $clntParam"
-    ocspclnt -d $dbDir -S $cert $clntParam &> $outFile
+    ocspclnt -d $dbDir -S $cert $clntParam >$outFile 2>&1
     ret=$?
     echo "ocspclnt output:"
     cat $outFile
@@ -141,7 +141,7 @@ ocsp_iopr() {
     for certName in $testValidCertNames; do
         ocsp_get_cert_status $dbDir $certName "$responderUrl" "$testResponder"
         html_msg $? 0 "Getting status of a valid cert ($certName)" \
-            "produced a returncode of $ret, expected is $0."
+            "produced a returncode of $ret, expected is 0."
     done
 
     for certName in $testRevokedCertNames; do
