@@ -21,7 +21,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Slavomir Katuscak <slavomir.katuscak@sun.com>, Sun Microsystems Laboratories
+#   Slavomir Katuscak <slavomir.katuscak@sun.com>, Sun Microsystems
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -588,6 +588,8 @@ parse_logfile_valgrind()
 ########################################################################
 log_compare()
 {
+	BUG_ID=""
+
 	while read line
 	do
 		LINE="${line}"
@@ -598,6 +600,12 @@ log_compare()
 		fi
 		
 		NEXT=0
+
+		echo "${LINE}" | grep '^#' > /dev/null
+		if [ $? -eq 0 ] ; then
+			BUG_ID="${LINE}"
+			NEXT=1
+		fi
 		
 		echo "${LINE}" | grep '*' > /dev/null
 		if [ $? -ne 0 ] ; then
@@ -650,7 +658,11 @@ check_ignored()
 	do
 		log_compare < ${IGNORED_STACKS}
 		if [ $? -eq 0 ] ; then
-			echo "IGNORED STACK: ${stack}"
+			if [ ${BUG_ID} != "" ] ; then
+				echo "IGNORED STACK (${BUG_ID}): ${stack}"
+			else
+				echo "IGNORED STACK: ${stack}"
+			fi
 		else
 			ret=1
 			echo "NEW STACK: ${stack}"
@@ -666,8 +678,10 @@ check_ignored()
 log_parse()
 {
 	echo "${SCRIPTNAME}: Processing log ${LOGNAME}:"
-	${PARSE_LOGFILE} < ${LOGFILE} | sort -u | check_ignored
+	${PARSE_LOGFILE} < ${LOGFILE} > ${TMP_STACKS}
+	cat ${TMP_STACKS} | sort -u | check_ignored
 	ret=$?
+	rm ${TMP_STACKS}
 	echo ""
 
 	return ${ret}
