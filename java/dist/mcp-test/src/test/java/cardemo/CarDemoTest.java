@@ -38,6 +38,7 @@ public class CarDemoTest extends WebclientTestCase  {
     public void testCardemo() throws Exception {
         mcp.getRealizedVisibleBrowserWindow();
         mcp.blockingLoad("http://webdev1.sun.com/jsf-ajax-cardemo/faces/chooseLocale.jsp");
+        Thread.currentThread().sleep(10000);
     }
     
 }

@@ -227,9 +227,6 @@
 
     <copy todir="${dist.home}/src/main/java" includeEmptyDirs="false">
       <fileset dir="${source.home}/webclient/classes_spec">
-        <exclude name="**/*Bookmark*.java" />
-        <exclude name="**/*Preferences*.java" />
-        <exclude name="**/*Profile*.java" />
         <exclude name="**/test/*" />
         <exclude name="**/test_nonnative/*" />
         <exclude name="**/wrapper_nonnative/*" />

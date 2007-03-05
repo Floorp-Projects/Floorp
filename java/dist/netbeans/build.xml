@@ -328,10 +328,17 @@ ${so.prefix}xul.${so.extension}.
         </macrodef>
     </target>
 
-    <target name="compile.core.src" description="Builds the core webclient java sources.  These sources are shipped precompiled in lib/webclient.jar.  This target is included for convenience only, should you wish to modify and re-compile the webclient core library.">
+    <target name="compile.core.src" depends="-init-check">
       <antcall target="compile">
         <param name="src.dir" value="${basedir}/../src/main/java" />
       </antcall>
+      <!-- set up the interface to implementation mapings -->
+      <mkdir dir="${build.classes.dir}/META-INF/services"/>
+      <echo file="${build.classes.dir}/META-INF/services/org.mozilla.webclient.WebclientFactory">org.mozilla.webclient.impl.WebclientFactoryImpl</echo>
+      <echo file="${build.classes.dir}/META-INF/services/org.mozilla.webclient.impl.WrapperFactory">org.mozilla.webclient.impl.wrapper_native.WrapperFactoryImpl</echo>
+
+      <move failonerror="false" file="${file.reference.webclient-2_0_a5.jar}"
+            tofile="${basedir}/../lib/outofdate-webclient_jar" />
 
     </target>
     

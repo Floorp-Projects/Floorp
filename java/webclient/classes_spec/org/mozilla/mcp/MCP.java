@@ -166,6 +166,13 @@ public class MCP {
         Navigation2 nav = getNavigation();
         synchronized (this) {
             nav.loadURL(url);
+            try {
+                this.wait();
+            } catch (InterruptedException ex) {
+                LOGGER.throwing(this.getClass().getName(), "blockingLoad",
+                        ex);
+                ex.printStackTrace();
+            }
         }
     }
     
@@ -182,7 +189,9 @@ public class MCP {
             
             switch ((int)type) {
                 case ((int) DocumentLoadEvent.END_DOCUMENT_LOAD_EVENT_MASK):
-                    owner.notifyAll();
+                    synchronized (owner) {
+                        owner.notifyAll();
+                    }
                     break;
                 default:
                     break;
