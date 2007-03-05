@@ -231,8 +231,12 @@
             onpopupshowing="ViewMenu.populate(event);"
             oncommand="ViewMenu.setSortColumn(event.target.getAttribute('column'), null);">
         <menupopup>
-          <menuitem id="viewToolbar" type="checkbox"
-                    label="&view.toolbar.label;" accesskey="&view.toolbar.accesskey;"/>
+          <menuitem id="viewToolbar"
+                    type="checkbox"
+                    label="&view.toolbar.label;"
+                    accesskey="&view.toolbar.accesskey;"
+                    oncommand="goToggleToolbar('mainToolbar', 'viewToolbar'); event.stopPropagation();"
+                    checked="true"/>/>
           <menu id="viewColumns" 
                 label="&view.columns.label;" accesskey="&view.columns.accesskey;">
             <menupopup onpopupshowing="ViewMenu.fillWithColumns(event, null, null, 'checkbox', null);"
