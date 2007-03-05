@@ -235,29 +235,43 @@ for (var key in testing) {
      "parseIPAddress broken on " + key + "(got: " + l.parseIPAddress_(key));
 }
 
-// Test escapeString (bug 368998)
+// Test escapeHostname (bug 368998)
 testing = {
   "asdf!@#$a": "asdf%21%40%23%24a",
   "AB CD 12354": "AB%20CD%2012354",
-  "\1\2\3\4\112\177": "%01%02%03%04J%7f",
-  "<>.AS/-+": "%3c%3e.AS%2f-%2b"
+  "\1\2\3\4\112\177": "%01%02%03%04J%7F",
+  "<>.AS/-+": "%3C%3E.AS%2F-%2B"
 };
+var urlUtils = Cc["@mozilla.org/url-classifier/utils;1"]
+               .getService(Ci.nsIUrlClassifierUtils);
 for (var key in testing) {
-  var out = l.escapeString_(key);
+  var out = urlUtils.escapeHostname(key);
   ok(out === testing[key],
      "escapeString broken on " + key + " (got: " + out + ")");
 }
 
-// escapeCharmap_ should be true for non-alphanumeric, non-hyphen, and
-// non-dot chars
+// Test a really long url (~130k).  getCanonicalHost takes about 55ms
+// on my 2.8ghz machine.
+var long_string = "x";
+for (var i = 0; i < 17; ++i) {
+  long_string += long_string;
+}
+var long_hostname_url = "http://" + long_string + "/foo";
+var startTime = Date.now();
+var out = l.getCanonicalHost(long_hostname_url);
+var endTime = Date.now();
+ok(out == long_string, "getCanonicalHost on long string (" +
+                       (endTime - startTime) + "ms)");
+
+// Verify that each character is escaped properly.
 for (var i = 0; i < 256; ++i) {
   var chr = String.fromCharCode(i);
   if ( (chr.toLowerCase() >= 'a' && chr.toLowerCase() <= 'z') ||
        (chr >= '0' && chr <= '9') ||
        '.' == chr || '-' == chr) {
-    ok(!l.escapeCharmap_.contains(chr), 'failed on ' + i);
+    ok(urlUtils.escapeHostname(chr).length == 1, 'failed on ' + i);
   } else {
-    ok(l.escapeCharmap_.contains(chr), 'failed on ' + i);
+    ok(urlUtils.escapeHostname(chr).length == 3, 'failed on ' + i);
   }
 }
 
@@ -319,6 +333,14 @@ for (var key in testing) {
   ok(l.getCanonicalUrl(key) == testing[key],
      "getCanonicalUrl broken on: " + key + "(got: " + l.getCanonicalUrl(key) + ")");
 }
+
+// Test for a really long url.  This 130k url takes about 80ms
+// on my 2.8ghz machine.
+startTime = Date.now();
+out = l.getCanonicalUrl(long_hostname_url);
+endTime = Date.now();
+ok(out == long_hostname_url, "getCanonicalUrl on long string (" +
+                       (endTime - startTime) + "ms)");
 
 // Test getlookupkey
 var testing = {};

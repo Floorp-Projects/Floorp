@@ -91,7 +91,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsTypeAheadFind)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsUrlClassifierDBService,
                                          nsUrlClassifierDBService::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlClassifierStreamUpdater)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlClassifierUtils)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlClassifierUtils, Init)
 #endif
 
 #ifdef MOZ_FEEDS

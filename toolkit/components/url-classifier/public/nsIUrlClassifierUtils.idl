@@ -39,7 +39,7 @@
  * Some utility methods used by the url classifier.
  */
 
-[scriptable, uuid(9afd3add-eadc-409f-a187-e3bf60e47290)]
+[scriptable, uuid(89ea43b0-a23f-4db2-8d23-6d90dc55f67a)]
 interface nsIUrlClassifierUtils : nsISupports
 {
   /**
@@ -54,4 +54,12 @@ interface nsIUrlClassifierUtils : nsISupports
    *          then specially url-encoded)
    */
   ACString canonicalizeURL(in ACString url);
+
+  /**
+   * When canonicalizing hostnames, the final step is to url escape everything that
+   * is not alphanumeric or hyphen or dot.  The existing methods (escape,
+   * encodeURIComponent and encodeURI are close, but not exactly what we want
+   * so we write our own function to do this.
+   */
+  ACString escapeHostname(in ACString hostname);
 };

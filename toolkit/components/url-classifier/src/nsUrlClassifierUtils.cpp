@@ -44,12 +44,25 @@ static char int_to_hex_digit(PRInt32 i)
   return NS_STATIC_CAST(char, ((i < 10) ? (i + '0') : ((i - 10) + 'A')));
 }
 
-
-nsUrlClassifierUtils::nsUrlClassifierUtils()
+nsUrlClassifierUtils::nsUrlClassifierUtils() : mEscapeCharmap(nsnull)
 {
 }
 
+nsresult
+nsUrlClassifierUtils::Init()
+{
+  // Everything but alpha numerics, - and .
+  mEscapeCharmap = new Charmap(0xffffffff, 0xfc009fff, 0xf8000001, 0xf8000001,
+                               0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff);
+  if (!mEscapeCharmap)
+    return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
+}
+
 NS_IMPL_ISUPPORTS1(nsUrlClassifierUtils, nsIUrlClassifierUtils)
+
+/////////////////////////////////////////////////////////////////////////////
+// nsIUrlClassifierUtils
 
 /* ACString canonicalizeURL (in ACString url); */
 NS_IMETHODIMP
@@ -64,6 +77,30 @@ nsUrlClassifierUtils::CanonicalizeURL(const nsACString & url, nsACString & _retv
   SpecialEncode(decodedUrl, _retval);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsUrlClassifierUtils::EscapeHostname(const nsACString & hostname,
+                                     nsACString & _retval)
+{
+  const char* curChar = hostname.BeginReading();
+  const char* end = hostname.EndReading();
+  while (curChar != end) {
+    unsigned char c = NS_STATIC_CAST(unsigned char, *curChar);
+    if (mEscapeCharmap->Contains(c)) {
+      _retval.Append('%');
+      _retval.Append(int_to_hex_digit(c / 16));
+      _retval.Append(int_to_hex_digit(c % 16));
+    } else {
+      _retval.Append(*curChar);
+    }
+    ++curChar;
+  }
+  
+  return NS_OK;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// non-interface methods
 
 // This function will encode all "special" characters in typical url
 // encoding, that is %hh where h is a valid hex digit.  See the comment in

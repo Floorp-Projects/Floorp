@@ -54,36 +54,6 @@
 // TODO: accommodate other kinds of perl-but-not-javascript qualifiers
 
 /**
- * A fast, bit-vector map for ascii characters.
- *
- * Internally stores 256 bits in an array of 8 ints.
- * Does quick bit-flicking to lookup needed characters.
- */
-
-/**
- * @param Takes 8 ints to initialize the character map
- */
-function Charmap() {
-  if (arguments.length != 8) {
-    throw G_Error("charmap ctor requires 8 int args");
-  }
-  this.map_ = [];
-  for (var i = 0; i < 8; ++i) {
-    this.map_.push(arguments[i]);
-  }
-}
-
-/**
- * Do a quick lookup to see if the letter is in the map.
- * @param chr String of length 1 (ascii)
- * @return Boolean true if the letter is in the map
- */
-Charmap.prototype.contains = function(chr) {
-  var val = chr.charCodeAt(0);
-  return !!(this.map_[val >> 5] & (1 << (val & 31)));
-}
-
-/**
  * This thing knows how to generate lookup keys and decrypt values found in
  * a table of type enchash.
  */
@@ -94,10 +64,6 @@ function PROT_EnchashDecrypter() {
   this.base64_ = new G_Base64();
   this.streamCipher_ = Cc["@mozilla.org/security/streamcipher;1"]
                        .createInstance(Ci.nsIStreamCipher);
-  // Everything but alpha numerics, - and .
-  this.escapeCharmap_ = new Charmap(
-    0xffffffff, 0xfc009fff, 0xf8000001, 0xf8000001,
-    0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff);
 }
 
 PROT_EnchashDecrypter.DATABASE_SALT = "oU3q.72p";
@@ -139,38 +105,6 @@ PROT_EnchashDecrypter.REs.CASE_INSENSITIVE = /\(\?i\)/g;
 PROT_EnchashDecrypter.prototype.lastNChars_ = function(str, n) {
   n = -n;
   return str.substr(n);
-}
-
-/**
- * We have to have our own hex-decoder because decodeURIComponent
- * expects UTF-8 (so it will barf on invalid UTF-8 sequences).
- *
- * @param str String to decode
- * 
- * @returns The decoded string
- */
-PROT_EnchashDecrypter.prototype.hexDecode_ = function(str) {
-  var output = [];
-
-  var i = 0;
-  while (i < str.length) {
-    var c = str.charAt(i);
-  
-    if (c == "%" && i + 2 < str.length) {
-
-      var asciiVal = Number("0x" + str.charAt(i + 1) + str.charAt(i + 2));
-      
-      if (!isNaN(asciiVal)) {
-        i += 2;
-        c = String.fromCharCode(asciiVal);
-      }
-    }
-    
-    output[output.length] = c;
-    ++i;
-  }
-  
-  return output.join("");
 }
 
 /**
@@ -237,7 +171,7 @@ PROT_EnchashDecrypter.prototype.getCanonicalHost = function(str, opt_maxDots) {
     return "";
   }
 
-  var unescaped = this.hexDecode_(asciiHost);
+  var unescaped = unescape(asciiHost);
 
   unescaped = unescaped.replace(this.REs_.FIND_DODGY_CHARS_GLOBAL, "")
               .replace(this.REs_.FIND_END_DOTS_GLOBAL, "")
@@ -248,7 +182,9 @@ PROT_EnchashDecrypter.prototype.getCanonicalHost = function(str, opt_maxDots) {
     unescaped = temp;
 
   // Escape everything that's not alphanumeric, hyphen, or dot.
-  var escaped = this.escapeString_(unescaped);
+  var urlUtils = Cc["@mozilla.org/url-classifier/utils;1"]
+                 .getService(Ci.nsIUrlClassifierUtils);
+  var escaped = urlUtils.escapeHostname(unescaped);
 
   if (opt_maxDots) {
     // Limit the number of dots
@@ -269,27 +205,6 @@ PROT_EnchashDecrypter.prototype.getCanonicalHost = function(str, opt_maxDots) {
   }
 
   escaped = escaped.toLowerCase();
-  return escaped;
-}
-
-/**
- * URL escapes everything except alphanumerics, - and . (dot).  Specifically,
- * escape everything in the escapeCharmap_ defined in the constructor.  This
- * is a little different than escape, encodeURIComponent, and encodeURI.
- */
-PROT_EnchashDecrypter.prototype.escapeString_ = function(unescaped) {
-  var escaped = '';
-  for (var i = 0; i < unescaped.length; ++i) {
-    if (this.escapeCharmap_.contains(unescaped[i])) {
-      var c = unescaped.charCodeAt(i).toString(16);
-      if (c.length == 1) {
-        c = '0' + c;
-      }
-      escaped += '%' + c;
-    } else {
-      escaped += unescaped[i];
-    }
-  }
   return escaped;
 }
 
