@@ -21,6 +21,7 @@
    - Contributor(s):
    -  Doron Rosenberg <doronr@us.ibm.com>
    -  Alexander Surkov <surkov@dc.baikal.ru>
+   -  Merle Sterling <msterlin@us.ibm.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -501,6 +502,620 @@
         this.month--;
       </handler>
     </handlers>
+  </binding>
+
+  <!-- RANGE
+       Interface for range widgets that use one or more spinbuttons/numberbox
+       combinations to represent a type. The widget assumes that successor
+       widgets have the following interface:
+       updateLabels() - Update range start and end labels.
+       updateValue() - Update the value by putting together the individual
+                       values from each spinbutton.
+       updateFields() - Update the value of each individual spinbutton.
+                        This method is called when a new value is set.
+       setSpinButtonMinMax() - Set the min and max attributes of the
+                               spinbuttons.
+  -->
+  <binding id="range">
+    <implementation>
+    <!-- interface -->
+      <!-- Get/set lower bound of values. -->
+      <property name="start"
+                onget="return this.getAttribute('start');"
+                onset="this.setAttribute('start', val);"/>
+
+      <!-- Get/set upper bound of values. -->
+      <property name="end"
+                onget="return this.getAttribute('end');"
+                onset="this.setAttribute('end', val);"/>
+
+      <!-- Get/set step of values. -->
+      <property name="step"
+                onget="return this.getAttribute('step');"
+                onset="this.setAttribute('step', val);"/>
+
+      <!-- Get/set value. -->
+      <property name="value">
+        <getter>
+          return this.getAttribute('value');
+        </getter>
+        <setter>
+        <![CDATA[
+          var value = val;
+          if (!value)
+            value = this.start;
+
+          this.setAttribute("value", value);
+          this.updateFields();
+          this.setSpinbuttonMinMax();
+          this.fireValueChange();
+        ]]>
+        </setter>
+      </property>
+
+      <!-- Set start/end/step/value -->
+      <method name="set">
+        <parameter name="aStart"/>
+        <parameter name="aEnd"/>
+        <parameter name="aStep"/>
+        <parameter name="aValue"/>
+        <body>
+          this.start = aStart;
+          this.end = aEnd;
+          this.step = aStep;
+          this.value = aValue;
+
+          this.updateLabels();
+        </body>
+      </method>
+
+      <!-- Format a value to the given number of digits by padding with
+           leading zeros.
+      -->
+      <method name="formatValue">
+        <parameter name="aValue"/>
+        <parameter name="aDigits"/>
+        <body>
+        <![CDATA[
+          var formattedValue = aValue;
+          while (formattedValue.length < aDigits) {
+            formattedValue = "0" + formattedValue;
+          }
+          return formattedValue;
+        ]]>
+        </body>
+      </method>
+
+      <!-- Update the text content of range widget labels.
+           For example, a range widget may want to have labels
+           for the start and end values of the range.
+      -->
+      <method name="updateLabels">
+        <body>
+          return true;
+        </body>
+      </method>
+
+      <!-- Update the widget's value attribute by putting together the
+           individual spinbutton values in the correct format for the type.
+      -->
+      <method name="updateValue">
+        <body>
+          return true;
+        </body>
+      </method>
+
+
+      <!-- Parse the widget's value attribute and update the value of
+           of each individual spinbutton.
+      -->
+      <method name="updateFields">
+        <body>
+          return true;
+        </body>
+      </method>
+
+      <!-- Set the min and max attributes for the spinbuttons.
+           If any one of the spinbuttons/numberboxes changes value,
+           the valid min and max for one or more of the others may
+           have to change too.
+
+           Example: In a dateTime range, if the current date is 2007-02-28
+           and the year is changed to 2008 (a leap year), the max day for
+           the month of February will change from 28 to 29. Likewise, if
+           the current date were 2007-03-31 and the month is changed to 04,
+           the max day will have to change from 31 to 30.
+      -->
+      <method name="setSpinbuttonMinMax">
+        <body>
+          return true;
+        </body>
+      </method>
+
+      <!-- Increment value -->
+      <method name="increment">
+        <body>
+          this.updateSpinbuttons();
+        </body>
+      </method>
+
+      <!-- Decrement value -->
+      <method name="decrement">
+        <body>
+          this.updateSpinbuttons();
+        </body>
+      </method>
+
+      <!-- Update the spinbutton min and max attributes and the range
+           value when an increment or decrement event occurs.
+      -->
+      <method name="updateSpinbuttons">
+        <body>
+          this.setSpinbuttonMinMax();
+          this.updateValue();
+          this.fireValueChange();
+        </body>
+      </method>
+
+      <!-- Fire the 'ValueChange' event.
+           Range widgets must fire their own change event because the act of
+           incrementing/decrementing one spinbutton may change one or more
+           of the others at the same time as SetSpinbuttonMinMax will change
+           the min and max attributes on the fly.
+
+           The range widget updates its value on each 'change' event from the
+           spinbuttons and then fires ValueChange after they have all been
+           updated so that the range binding can update the instance data.
+      -->
+      <method name="fireValueChange">
+        <body>
+          var event = this.ownerDocument.createEvent("Events");
+          event.initEvent("ValueChange", true, false);
+          this.dispatchEvent(event);
+        </body>
+      </method>
+
+      <constructor>
+        // Spinup events are generated by the numberbox widget
+        // defined in "widgets-xul.xml".
+        var upHandler = {
+          range: this,
+          handleEvent: function(aEvent) {
+            this.range.increment();
+          }
+        };
+        // Spindown events are generated by the numberbox widgets
+        // defined in "widgets-xul.xml".
+        var downHandler = {
+          range: this,
+          handleEvent: function(aEvent) {
+            this.range.decrement();
+          }
+        };
+        // Change events are generated by the numberbox widget
+        // defined in "widgets-xul.xml".
+        var changeHandler = {
+          range: this,
+          handleEvent: function(aEvent) {
+            this.range.updateValue();
+          }
+        };
+        this.addEventListener("spinup", upHandler, false);
+        this.addEventListener("spindown", downHandler, false);
+        this.addEventListener("change", changeHandler, false);
+      </constructor>
+    </implementation>
+  </binding>
+
+  <!-- DATE -->
+  <binding id="date" extends="#range">
+    <implementation>
+    <!-- interface -->
+      <!-- date format: yyyy-mm-dd -->
+
+      <!-- Extract the year from a date or dateTime -->
+      <method name="getYear">
+        <parameter name="aDate"/>
+        <body>
+          return parseFloat(aDate.substr(0,4));
+        </body>
+      </method>
+
+      <!-- Extract the month from a date or dateTime -->
+      <method name="getMonth">
+        <parameter name="aDate"/>
+        <body>
+          return parseFloat(aDate.substr(5,2));
+        </body>
+      </method>
+
+      <!-- Extract the day from a date or dateTime -->
+      <method name="getDay">
+        <parameter name="aDate"/>
+        <body>
+          return parseFloat(aDate.substr(8,2));
+        </body>
+      </method>
+
+      <!-- Get the minimum Year value. -->
+      <method name="getYearMin">
+        <body>
+        <![CDATA[
+          // The min value for the year spinbutton will always
+          // be the year of the start date.
+          return this.getYear(this.start);
+        ]]>
+        </body>
+      </method>
+
+      <!-- Get the maximum Year value. -->
+      <method name="getYearMax">
+        <body>
+        <![CDATA[
+          // The max value for the year spinbutton will always
+          // be the year of the end date.
+          return this.getYear(this.end);
+        ]]>
+        </body>
+      </method>
+
+      <!-- Get the minimum Month value. -->
+      <method name="getMonthMin">
+        <body>
+        <![CDATA[
+          // The min value for the month spinbutton depends on the year
+          // range and the current value of the year.
+          var startYear = this.getYear(this.start);
+          var endYear = this.getYear(this.end);
+          var currentYear = this.getYear(this.value);
+          var minMonth = 0;
+
+          if (startYear == endYear || currentYear == startYear) {
+            // Min month is the month of the start date.
+            minMonth = this.getMonth(this.start);
+          } else {
+            // Current year falls between the start and end dates so
+            // the minimum month is the first month of the year.
+            minMonth = 1;
+          }
+          return minMonth;
+        ]]>
+        </body>
+      </method>
+
+      <!-- Get the maximum Month value. -->
+      <method name="getMonthMax">
+        <body>
+        <![CDATA[
+          // The max value for the month spinbutton depends on the year
+          // range and the current value of the year.
+          var startYear = this.getYear(this.start);
+          var endYear = this.getYear(this.end);
+          var currentYear = this.getYear(this.value);
+          var maxMonth = 0;
+
+          if (startYear == endYear || currentYear == endYear) {
+            // Max month is the month of the end date.
+            maxMonth = this.getMonth(this.end);
+          } else {
+            // Current year falls between the start and end dates so
+            // the maximum month is the last month of the year.
+            maxMonth = 12;
+          }
+          return maxMonth;
+         ]]>
+        </body>
+      </method>
+
+      <!-- Get the minimum Day value. -->
+      <method name="getDayMin">
+        <body>
+        <![CDATA[
+          // The min value for the day spinbutton depends on the current
+          // month and year but may also be constrained by the day of the
+          // start date.
+          var startYear = this.getYear(this.start);
+          var endYear = this.getYear(this.end);
+          var currentYear = this.getYear(this.value);
+          var startMonth = this.getMonth(this.start);
+          var endMonth = this.getMonth(this.end);
+          var currentMonth = this.getMonth(this.value);
+          var minDay = 0;
+
+          if (startYear == endYear) {
+            if (startMonth == endMonth || currentMonth == startMonth) {
+              // Start and end month are the same month of the same year or
+              // the current month is the start month. Min day is the day of
+              // the start date.
+              minDay = this.getDay(this.start);
+            } else {
+              // Current month is between the start and end months.
+              // Min day is the first day of the month.
+              minDay = 1;
+            }
+          } else {
+            // Start and End year span 1 or more years.
+            if (currentYear == startYear) {
+              if (currentMonth == startMonth) {
+                // Current month is the start month of the start year.
+                // Min day is the day of the start date.
+                minDay = this.getDay(this.start);
+              } else {
+                // Current month is between the start month and the last
+                // month of the current year.
+                // Min day is the first day of the month.
+                minDay = 1;
+              }
+            } else {
+              // Current year is between the start and end years.
+              // Min day is the first day of the month.
+              minDay = 1;
+            }
+          }
+          return minDay;
+         ]]>
+        </body>
+      </method>
+
+      <!-- Get the maximum Day value. -->
+      <method name="getDayMax">
+        <body>
+        <![CDATA[
+          // The max value for the day spinbutton depends on the current
+          // month and year but may also be constrained by the day of the
+          // end date.
+          var startYear = this.getYear(this.start);
+          var endYear = this.getYear(this.end);
+          var currentYear = this.getYear(this.value);
+          var startMonth = this.getMonth(this.start);
+          var endMonth = this.getMonth(this.end);
+          var currentMonth = this.getMonth(this.value);
+          var currentDay = this.getDay(this.value);
+          var daysCount = this.getDaysCount(currentMonth, currentYear);
+          var maxDay = 0;
+
+          if (startYear == endYear) {
+            if (startMonth == endMonth || currentMonth == endMonth) {
+              // Start and end month are the same month of the same year or
+              // the current month is the end month. Max day is the day of
+              // the end month.
+              maxDay = this.getDay(this.end);
+            } else {
+              // Current month is between the start and end months.
+              // Max day is the number of days in the month.
+              maxDay = daysCount;
+            }
+          } else {
+            // Start and End year span 1 or more years.
+            if (currentYear == endYear) {
+              if (currentMonth == endMonth) {
+                // Current month is the end month of the end year.
+                // Max day is the day of the end month;
+                maxDay = this.getDay(this.end);
+              } else {
+                // Current month falls between the first month of the
+                // current (end) year and the month of the end date.
+                // May day is the number of days in the month.
+                maxDay = daysCount;
+              }
+            } else {
+              // Current year is between the start and end years.
+              // Max day is the number of days in the month.
+              maxDay = daysCount;
+            }
+          }
+          return maxDay;
+         ]]>
+        </body>
+      </method>
+
+      <!-- Get the number of days in the month for a given year. -->
+      <method name="getDaysCount">
+        <parameter name="aMonth"/>
+        <parameter name="aYear"/>
+        <body>
+        <![CDATA[
+          switch (aMonth) {
+            case 1: case 3: case 5: case 7: case 8: case 10: case 12:
+              return 31;
+
+            case 2:
+              if (aYear % 4 == 0 && aYear % 100 != 0 || aYear % 400 == 0)
+                return 29; // leap-year
+              return 28;
+
+            case 4: case 6: case 9: case 11:
+              return 30;
+          }
+          return 0;
+        ]]>
+        </body>
+      </method>
+
+      <!-- Get a Javacript Date object initialized to the value of aDate.
+      -->
+      <method name="getDate">
+        <parameter name="aDate"/>
+        <body>
+          var date = new Date();
+          date.setFullYear(this.getYear(aDate));
+          date.setMonth(this.getMonth(aDate));
+          date.setDate(this.getDay(aDate));
+          return date;
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <!-- DATETIME -->
+  <binding id="datetime" extends="#date">
+    <implementation>
+    <!-- interface -->
+      <!-- dateTime format: yyyy-mm-ddThh:mm:ss[.s+] -->
+
+      <!-- Extract the hours from a dateTime -->
+      <method name="getHours">
+        <parameter name="aDateTime"/>
+        <body>
+          return parseFloat(aDateTime.substr(11,2));
+        </body>
+      </method>
+
+      <!-- Extract the minutes from a dateTime -->
+      <method name="getMinutes">
+        <parameter name="aDateTime"/>
+        <body>
+          return parseFloat(aDateTime.substr(14,2));
+        </body>
+      </method>
+
+      <!-- Extract the seconds from a dateTime -->
+      <method name="getSeconds">
+        <parameter name="aDateTime"/>
+        <body>
+          return parseFloat(aDateTime.substr(17,2));
+        </body>
+      </method>
+
+      <!-- Get the minimum Hours value. -->
+      <method name="getHoursMin">
+        <body>
+        <![CDATA[
+          // The min value for the hours spinbutton will always be the
+          // hours of the start time.
+          return this.getHours(this.start);
+        ]]>
+        </body>
+      </method>
+
+      <!-- Get the maximum Hours value. -->
+      <method name="getHoursMax">
+        <body>
+        <![CDATA[
+          // The max value for the hours spinbutton will always be the
+          // hours of the end time.
+          return this.getHours(this.end);
+        ]]>
+        </body>
+      </method>
+
+      <!-- Get the minimum Minutes value. -->
+      <method name="getMinutesMin">
+        <body>
+        <![CDATA[
+          // The min value for the minutes spinbutton depends on the hours
+          // range and the current value of the hours.
+          var startHours = this.getHours(this.start);
+          var endHours = this.getHours(this.end);
+          var currentHours = this.getHours(this.value);
+          var startMinutes = this.getMinutes(this.start);
+          var minMinutes = 0;
+
+          if (startHours == endHours || currentHours == startHours) {
+            // Min minutes is the minutes of the start time.
+            minMinutes = startMinutes;
+
+          } else {
+            // Current hours falls between the start and end hours.
+            // Min minutes is the first minute of the hour.
+            minMinutes = 0;
+          }
+          return minMinutes;
+        ]]>
+        </body>
+      </method>
+
+      <!-- Get the maximum Minutes value. -->
+      <method name="getMinutesMax">
+        <body>
+        <![CDATA[
+          // The max value for the minutes spinbutton depends on the hours
+          // range and the current value of the hours.
+          var startHours = this.getHours(this.start);
+          var endHours = this.getHours(this.end);
+          var currentHours = this.getHours(this.value);
+          var endMinutes = this.getMinutes(this.end);
+          var maxMinutes = 0;
+
+          if (startHours == endHours || currentHours == endHours) {
+            // Max minutes is the minutes of the end time.
+            maxMinutes = endMinutes;
+
+          } else {
+            // Current hours falls between start hours and end hours.
+            // Max minutes is the last minute of the hour.
+            maxMinutes = 59;
+          }
+          return maxMinutes;
+        ]]>
+        </body>
+      </method>
+
+      <!-- Get the minimum Seconds value. -->
+      <method name="getSecondsMin">
+        <body>
+        <![CDATA[
+          // The min value for the seconds spinbutton depends on the current
+          // minutes but may also be constrained by the seconds of the start
+          // time.
+          var startMinutes = this.getMinutes(this.start);
+          var endMinutes = this.getMinutes(this.end);
+          var currentMinutes = this.getMinutes(this.value);
+          var startSeconds = this.getSeconds(this.start);
+          var minSeconds = 0;
+
+          if (startMinutes == endMinutes || currentMinutes == startMinutes) {
+            // Min seconds is the seconds of the start time.
+            minSeconds = startSeconds;
+          } else {
+            // Current minutes falls between the start and end minutes.
+            // Min seconds is the first second of a minute.
+            minSeconds = 0;
+          }
+          return minSeconds;
+        ]]>
+        </body>
+      </method>
+
+      <!-- Get the maximum Seconds value. -->
+      <method name="getSecondsMax">
+        <body>
+        <![CDATA[
+          // The max value for the seconds spinbutton depends on the current
+          // minutes but may also be constrained by the seconds of the end
+          // time.
+          var startMinutes = this.getMinutes(this.start);
+          var endMinutes = this.getMinutes(this.end);
+          var currentMinutes = this.getMinutes(this.value);
+          var endSeconds = this.getSeconds(this.end);
+          var maxSeconds = 0;
+
+          if (startMinutes == endMinutes || currentMinutes == endMinutes) {
+            // Max seconds is the seconds of the end time.
+            maxSeconds = endSeconds;
+          } else {
+            // Current minutes falls between the start and end minutes.
+            // Max seconds is the last second of a minute.
+            maxSeconds = 59;
+          }
+          return maxSeconds;
+        ]]>
+        </body>
+      </method>
+
+      <!-- Get a Javacript Date object initialized to the value of aDateTime.
+       -->
+      <method name="getDateTime">
+        <parameter name="aDateTime"/>
+        <body>
+          var date = this.getDate(aDateTime);
+          date.setHours(this.getHours(aDateTime));
+          date.setMinutes(this.getMinutes(aDateTime));
+          date.setSeconds(this.getSeconds(aDateTime));
+          return date;
+        </body>
+      </method>
+    </implementation>
   </binding>
 
 </bindings>

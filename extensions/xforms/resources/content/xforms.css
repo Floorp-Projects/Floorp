@@ -244,6 +244,22 @@ html|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#double"] h
   -moz-binding: url('chrome://xforms/content/widgets-xhtml.xml#slider');
 }
 
+  /* range type="xsd:dateTime" */
+xul|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#dateTime"],
+html|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#dateTime"] {
+  -moz-binding: url('chrome://xforms/content/range-xul.xml#xformswidget-range-datetime');
+}
+
+xul|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#dateTime"] > xul|box,
+html|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#dateTime"] > xul|box {
+  -moz-binding: url('chrome://xforms/content/widgets-xul.xml#range-datetime');
+}
+
+xul|box.xf-value {
+  -moz-box-align: end;
+  -moz-box-orient: horizontal;
+}
+
 /* input widgets */
 
   /* input */

@@ -23,6 +23,7 @@ xforms.jar:
   content/xforms/select1.xml                   (resources/content/select1.xml)
   content/xforms/range.xml                     (resources/content/range.xml)
   content/xforms/range-xhtml.xml               (resources/content/range-xhtml.xml)
+  content/xforms/range-xul.xml                 (resources/content/range-xul.xml)
   content/xforms/selects.xml                   (resources/content/selects.xml)
   content/xforms/selects-xhtml.xml             (resources/content/selects-xhtml.xml)
   content/xforms/selects-xul.xml               (resources/content/selects-xul.xml)

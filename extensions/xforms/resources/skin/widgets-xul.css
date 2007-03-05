@@ -169,3 +169,10 @@ spinbuttons {
 .spinbuttons-down[disabled="true"] {
   background-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
 }
+
+/* range widgets */
+
+.range-box {
+  -moz-box-align: end;
+  -moz-box-orient: horizontal;
+}

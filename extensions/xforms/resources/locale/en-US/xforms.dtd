@@ -67,3 +67,10 @@
 <!ENTITY xforms.datepicker.nextMonth.title "Next Month">
 <!ENTITY xforms.datepicker.prevYear.title "Previous Year">
 <!ENTITY xforms.datepicker.nextYear.title "Next Year">
+
+<!ENTITY xforms.date.year.label        "Year">
+<!ENTITY xforms.date.month.label       "Month">
+<!ENTITY xforms.date.day.label         "Day">
+<!ENTITY xforms.datetime.hours.label   "Hours">
+<!ENTITY xforms.datetime.minutes.label "Minutes">
+<!ENTITY xforms.datetime.seconds.label "Seconds">
