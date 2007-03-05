@@ -388,6 +388,8 @@ nsresult nsMsgCompose::ResetUrisForEmbeddedObjects()
   PRUint32 i;
 
   nsCOMPtr<nsIEditorMailSupport> mailEditor (do_QueryInterface(m_editor));
+  if (!mailEditor)
+    return NS_ERROR_FAILURE;
 
   nsresult rv = mailEditor->GetEmbeddedObjects(getter_AddRefs(aNodeList));
   if ((NS_FAILED(rv) || (!aNodeList)))
