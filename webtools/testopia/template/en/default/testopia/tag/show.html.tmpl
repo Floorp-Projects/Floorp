@@ -24,7 +24,7 @@
 [% PROCESS testopia/messages.html.tmpl %]
 [% PROCESS testopia/blocks.html.tmpl %]
 
-[% IF viewall %]
+[% IF viewall OR tags %]
   [% PROCESS testopia/tag/list.html.tmpl %]
 [% ELSE %]
 

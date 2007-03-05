@@ -131,7 +131,7 @@ var OK_TIMEOUT=3000;
 
 var MSG_WAIT='Please wait...';
 var MSG_TIMEOUT='Request timed out. Please try again.';
-var MSG_REQUEST_FAILED='Error, request failed. Please, try again or use the classic interface.';
+var MSG_REQUEST_FAILED='Error, request failed. You either do not have permission to perform this action or an internal error occurred.';
 var MSG_COMM_PROBLEM='Error, communication problem. Please try again.';
 var MSG_BAD_BROWSER="Your browser doesn't support client HTTP requests (XMLHttp). Please, use the classic interface.";
 
