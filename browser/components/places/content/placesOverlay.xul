@@ -74,6 +74,8 @@
 #ifdef MOZ_PLACES_BOOKMARKS
     <command id="placesCmd_new:bookmark"
              oncommand="goDoCommand('placesCmd_new:bookmark');"/>
+    <command id="placesCmd_new:livemark"
+             oncommand="goDoCommand('placesCmd_new:livemark');"/>
     <command id="placesCmd_new:folder"
              oncommand="goDoCommand('placesCmd_new:folder');"/>
     <command id="placesCmd_new:separator"
@@ -130,6 +132,11 @@
               selectiontype="multiple"
               selection="link"/>
     <menuseparator id="placesContext_openSeparator"/>
+    <menuitem id="placesContext_new:bookmark"
+              command="placesCmd_new:bookmark"
+              label="&cmd.new_bookmark.label;"
+              accesskey="&cmd.new_bookmark.accesskey;"
+              selection="mutable"/>
     <menuitem id="placesContext_new:folder"
               command="placesCmd_new:folder"
               label="&cmd.new_folder.label;"

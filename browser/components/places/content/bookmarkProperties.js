@@ -1,4 +1,4 @@
-//* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,6 +36,53 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/**
+ * The panel is initialized based on data given in the js object passed
+ * as window.arguments[0]. The object must have the following fields set:
+ *   @ action (String). Possible values:
+ *     - "add" - for adding a new item.
+ *       @ type (String). Possible values:
+ *         - "bookmark"
+ *         - "folder"
+ *         - "folder with items"
+ *           @ URIList (Array of nsIURI objects)- list of uris to be bookmarked
+ *             under the new folder.
+ *         - "livemark"
+ *       @ uri (nsIURI object) - optional, the default uri for the new item.
+ *         The property is not used for the "folder with items" type.
+ *       @ title (String) - optional, the defualt title for the new item.
+ *       @ defaultInsertionPoint (InsertionPoint JS object) - optional, the
+ *         default insertion point for the new item.
+ *      Notes:
+ *        1) If |uri| is set for a bookmark/livemark item and |title| isn't,
+ *           the dialog will query the history tables for the title associated
+ *           with the given uri. For "folder with items" folder, a default
+ *           static title is used ("[Folder Name]").
+ *        2) The index field of the the default insertion point is ignored if
+ *           the folder picker is shown.
+ *     - "edit" - for editing a bookmark item or a folder.
+ *       @ type (String). Possible values:
+ *         - "bookmark"
+ *           @ bookmarkId (Integer) - the id of the bookmark item.
+ *         - "folder" (also applies to livemarks)
+ *           @ folderId (Integer) - the id of the folder.
+ *   @ hiddenRows (Strings array) - optional, list of rows to be hidden
+ *     regardless of the item edited or added by the dialog.
+ *     Possible values:
+ *     - "title"
+ *     - "location"
+ *     - "description" (XXXmano: not yet implemented)
+ *     - "keyword"
+ *     - "microsummary"
+ *     - "show in sidebar" (XXXmano: not yet implemented)
+ *     - "feedURI"
+ *     - "siteURI"
+ *     - "folder picker" - hides both the tree and the menu.
+ *
+ * window.arguments[0].performed is set to true if any transaction has
+ * been performed by the dialog.
+ */
 
 const BOOKMARK_ITEM = 0;
 const BOOKMARK_FOLDER = 1;
@@ -76,21 +123,11 @@ var BookmarkPropertiesPanel = {
 
   _action: null,
   _itemType: null,
+  _folderId: null,
   _bookmarkId: null,
   _bookmarkURI: null,
-  _bookmarkTitle: undefined,
+  _itemTitle: "",
   _microsummaries: null,
-
-  /**
-   * Returns true if the microsummary field is visible in this variant
-   * of the dialog.
-   */
-  _isMicrosummaryVisible: function BPP__isMicrosummaryVisible() {
-    if (!("_microsummaryVisible" in this))
-      this._microsummaryVisible = this._itemType == BOOKMARK_ITEM;
-
-    return this._microsummaryVisible;
-  },
 
   /**
    * This method returns the correct label for the dialog's "accept"
@@ -99,7 +136,7 @@ var BookmarkPropertiesPanel = {
   _getAcceptLabel: function BPP__getAcceptLabel() {
     if (this._action == ACTION_ADD)
       return this._strings.getString("dialogAcceptLabelAdd");
-    else if (this._action == ACTION_ADD_WITH_ITEMS)
+    if (this._action == ACTION_ADD_WITH_ITEMS)
       return this._strings.getString("dialogAcceptLabelAddMulti");
 
     return this._strings.getString("dialogAcceptLabelEdit");
@@ -112,66 +149,123 @@ var BookmarkPropertiesPanel = {
   _getDialogTitle: function BPP__getDialogTitle() {
     if (this._action == ACTION_ADD) {
       if (this._itemType == BOOKMARK_ITEM)
-        return this._strings.getString("dialogTitleAdd");
-      // Not yet supported, but the string exists
-      else if (this._itemType == LIVEMARK_CONTAINER)
+        return this._strings.getString("dialogTitleAddBookmark");
+      if (this._itemType == LIVEMARK_CONTAINER)
         return this._strings.getString("dialogTitleAddLivemark");
+
+      // folder
+      NS_ASSERT(this._itemType == BOOKMARK_FOLDER, "bogus item type");
+      return this._strings.getString("dialogTitleAddFolder");
     }
-    else if (this._action == ACTION_EDIT && this._itemType == BOOKMARK_FOLDER)
-      return this._strings.getString("dialogTitleFolderEdit");
-    else if (this._action == ACTION_ADD_WITH_ITEMS)
+    if (this._action == ACTION_ADD_WITH_ITEMS)
       return this._strings.getString("dialogTitleAddMulti");
-
-    return this._strings.getString("dialogTitleBookmarkEdit");
+    if (this._action == ACTION_EDIT) {
+      return this._strings
+                 .getFormattedString("dialogTitleEdit", [this._itemTitle]);
+    }
   },
 
   /**
-   * This method can be run on a URI parameter to ensure that it didn't
-   * receive a string instead of an nsIURI object.
+   * Determines the initial data for the item edited or added by this dialog
    */
-  _assertURINotString: function BPP__assertURINotString(value) {
-    NS_ASSERT((typeof(value) == "object") && !(value instanceof String),
-    "This method should be passed a URI as a nsIURI object, not as a string.");
-  },
+  _determineItemInfo: function BPP__determineItemInfo() {
+    var dialogInfo = window.arguments[0];
+    NS_ASSERT("action" in dialogInfo, "missing action property");
+    var action = dialogInfo.action;
 
-  /**
-   * Determines the correct variant of the dialog to display depending
-   * on which action is passed in and the properties of the identifier value
-   * (a URI, a bookmark ID or a folder ID).
-   *
-   * NOTE: It's currently not possible to create the dialog with a folder
-   *       id and "add" mode.
-   *
-   * @param aIdentifier
-   *        the URI or folder ID to display the properties for
-   * @param aAction
-   *        "add" if this is being triggered from an "add bookmark"
-   *        UI action; or "editfolder" or "edititem" if this is being
-   *        triggered from a "properties" UI action; or "addmulti" if
-   *        we're trying to create multiple bookmarks.
-   *
-   */
-  _determineVariant: function BPP__determineVariant(aIdentifier, aAction) {
-    if (aAction == "add") {
-      this._assertURINotString(aIdentifier);
-      this._action = ACTION_ADD;
-      this._itemType = BOOKMARK_ITEM;
-    }
-    else if (aAction == "addmulti") {
-      this._action = ACTION_ADD_WITH_ITEMS
-      this._itemType = BOOKMARK_FOLDER;
-    }
-    else if (typeof(aIdentifier) == "number") {
-      if (aAction == "edititem") {
-        this._action = ACTION_EDIT;
-        this._itemType = BOOKMARK_ITEM;
-      }
-      if (aAction == "editfolder") {
-        this._action = ACTION_EDIT;
-        if (PlacesUtils.livemarks.isLivemark(aIdentifier))
-          this._itemType = LIVEMARK_CONTAINER;
-        else
+    if (action == "add") {
+      NS_ASSERT("type" in dialogInfo, "missing type property for add action");
+
+      if ("title" in dialogInfo)
+        this._itemTitle = dialogInfo.title;
+      if ("defaultInsertionPoint" in dialogInfo)
+        this._defaultInsertionPoint = dialogInfo.defaultInsertionPoint;
+
+      switch(dialogInfo.type) {
+        case "bookmark":
+          this._action = ACTION_ADD;
+          this._itemType = BOOKMARK_ITEM;
+          if ("uri" in dialogInfo) {
+            NS_ASSERT(dialogInfo.uri instanceof Ci.nsIURI,
+                      "uri property should be a uri object");
+            this._bookmarkURI = dialogInfo.uri;
+          }
+          if (!this._itemTitle) {
+            if (this._bookmarkURI) {
+              this._itemTitle =
+                this._getURITitleFromHistory(this._bookmarkURI);
+              if (!this._itemTitle)
+                this._itemTitle = this._bookmarkURI.spec;
+            }
+            else
+              this._itemTitle = this._strings.getString("newBookmarkDefault");
+          }
+          break;
+        case "folder":
+          this._action = ACTION_ADD;
           this._itemType = BOOKMARK_FOLDER;
+          if (!this._itemTitle)
+            this._itemTitle = this._strings.getString("newFolderDefault");
+          break;
+        case "folder with items":
+          NS_ASSERT("URIList" in dialogInfo,
+                    "missing URLList property for 'folder with items' action");
+          this._action = ACTION_ADD_WITH_ITEMS
+          this._itemType = BOOKMARK_FOLDER;
+          this._URIList = dialogInfo.URIList;
+          if (!this._itemTitle) {
+            this._itemTitle =
+              this._strings.getString("bookmarkAllTabsDefault");
+          }
+          break;
+        case "livemark":
+          this._action = ACTION_ADD;
+          this._itemType = LIVEMARK_CONTAINER;
+          if ("feedURI" in dialogInfo)
+            this._feedURI = dialogInfo.feedURI;
+          if ("siteURI" in dialogInfo)
+            this._siteURI = dialogInfo.siteURI;
+
+          if (!this._itemTitle) {
+            if (this._feedURI) {
+              this._itemTitle =
+                this._getURITitleFromHistory(this._feedURI);
+              if (!this._itemTitle)
+                this._itemTitle = this._feedURI.spec;
+            }
+            else
+              this._itemTitle = this._strings.getString("newLivemarkDefault");
+          }
+      }
+    }
+    else { // edit
+      switch (dialogInfo.type) {
+        case "bookmark":
+          NS_ASSERT("bookmarkId" in dialogInfo);
+          this._action = ACTION_EDIT;
+          this._itemType = BOOKMARK_ITEM;
+          this._bookmarkId = dialogInfo.bookmarkId;
+          this._bookmarkURI =
+            PlacesUtils.bookmarks.getBookmarkURI(this._bookmarkId);
+          this._itemTitle = PlacesUtils.bookmarks
+                                           .getItemTitle(this._bookmarkId);
+          this._bookmarkKeyword =
+            PlacesUtils.bookmarks.getKeywordForBookmark(this._bookmarkId);
+          break;
+        case "folder":
+          NS_ASSERT("folderId" in dialogInfo);
+          this._action = ACTION_EDIT;
+          this._folderId = dialogInfo.folderId;
+          if (PlacesUtils.livemarks.isLivemark(this._folderId)) {
+            this._itemType = LIVEMARK_CONTAINER;
+            this._feedURI = PlacesUtils.livemarks.getFeedURI(this._folderId);
+            this._siteURI = PlacesUtils.livemarks.getSiteURI(this._folderId);
+          }
+          else
+            this._itemType = BOOKMARK_FOLDER;
+          this._itemTitle =
+            PlacesUtils.bookmarks.getFolderTitle(this._folderId);
+          break;
       }
     }
   },
@@ -189,7 +283,7 @@ var BookmarkPropertiesPanel = {
    */
 
   _getURITitleFromHistory: function BPP__getURITitleFromHistory(aURI) {
-    this._assertURINotString(aURI);
+    NS_ASSERT(aURI instanceof Ci.nsIURI);
 
     // get the title from History
     return PlacesUtils.history.getPageTitle(aURI);
@@ -200,38 +294,15 @@ var BookmarkPropertiesPanel = {
    * dialog to initialize the state of the panel.
    */
   onDialogLoad: function BPP_onDialogLoad() {
-    this._tm = window.arguments[0];
-    var action = window.arguments[1];
-    var identifier = window.arguments[2];
-    this._bookmarkTitle = window.arguments[3];
+    this._tm = window.opener.PlacesUtils.tm;
 
-    this._determineVariant(identifier, action);
-
-    if (this._action == ACTION_ADD) {
-      // todo: livemark container support
-      if (this._itemType == BOOKMARK_ITEM) {
-        this._assertURINotString(identifier);
-        this._bookmarkURI = identifier;
-      }
-    }
-    else if (this._action == ACTION_ADD_WITH_ITEMS)
-      this._URIList = identifier;
-    else { // ACTION_EDIT
-      if (this._itemType == BOOKMARK_ITEM) {
-        this._bookmarkId = identifier;
-        this._bookmarkURI =
-          PlacesUtils.bookmarks.getBookmarkURI(this._bookmarkId);
-        this._folderId = PlacesUtils.bookmarks.getFolderIdForItem(identifier);
-      }
-      else // bookmarks folder or a livemark container
-        this._folderId = identifier;
-    }
-
+    this._determineItemInfo();
     this._initFolderTree();
     this._populateProperties();
+    this._forceHideRows();
+    this.validateChanges();
     this._updateSize();
   },
-
 
   /**
    * This method initializes the folder tree.
@@ -240,6 +311,12 @@ var BookmarkPropertiesPanel = {
     this._folderTree = this._element("folderTree");
     this._folderTree.peerDropTypes = [];
     this._folderTree.childDropTypes = [];
+    if (isElementVisible(this._folderTree)) {
+      if (this._defaultInsertionPoint)
+        this._folderTree.selectFolders([this._defaultInsertionPoint.folderId]);
+      else
+        this._folderTree.selectFolders([PlacesUtils.bookmarks.bookmarksRoot]);
+    }
   },
 
   _initMicrosummaryPicker: function BPP__initMicrosummaryPicker() {
@@ -256,7 +333,6 @@ var BookmarkPropertiesPanel = {
       //    https, and file);
       // 2. the page to which the URI refers isn't HTML or XML (the only two
       //    content types the service knows how to summarize).
-      this._microsummaryVisible = false;
       this._element("microsummaryRow").hidden = true;
       return;
     }
@@ -269,37 +345,45 @@ var BookmarkPropertiesPanel = {
   },
 
   /**
+   * Hides fields which were explicitly set hidden by the the dialog opener
+   * (see documentation at the top of this file).
+   */
+  _forceHideRows: function BPP__forceHideRows() {
+    var hiddenRows = window.arguments[0].hiddenRows;
+    if (!hiddenRows)
+      return;
+
+    if (hiddenRows.indexOf("title")!= -1)
+      this._element("titleTextfield").hidden = true;
+    if (hiddenRows.indexOf("location")!= -1)
+      this._element("locationRow").hidden = true;
+    if (hiddenRows.indexOf("keyword")!= -1)
+      this._element("shortcutRow").hidden = true;
+    if (hiddenRows.indexOf("folder picker") != -1)
+      this._element("folderRow").hidden = true;
+    if (hiddenRows.indexOf("feedURI") != -1)
+      this._element("livemarkFeedLocationRow").hidden = true;
+    if (hiddenRows.indexOf("siteURI") != -1)
+      this._element("livemarkSiteLocationRow").hidden = true;
+    if (hiddenRows.indexOf("microsummary") != -1)
+      this._element("microsummaryRow").hidden = true;
+  },
+
+  /**
    * This method fills in the data values for the fields in the dialog.
    */
   _populateProperties: function BPP__populateProperties() {
-    /* The explicit comparison against undefined here allows creators to pass
-     * "" to init() if they wish to have no title. */
-    if (this._bookmarkTitle === undefined) {
-      if (this._action == ACTION_ADD)
-        this._bookmarkTitle = this._getURITitleFromHistory(this._bookmarkURI);
-      else if (this._action == ACTION_ADD_WITH_ITEMS)
-        this._bookmarkTitle = this._strings.getString("bookmarkAllTabsDefault");
-      else { // ACTION_EDIT
-        if (this._itemType == BOOKMARK_ITEM) {
-          this._bookmarkTitle = PlacesUtils.bookmarks
-                                           .getItemTitle(this._bookmarkId);
-        }
-        else  { // bookmarks folder or a livemark container
-          this._bookmarkTitle =
-            PlacesUtils.bookmarks.getFolderTitle(this._folderId);
-        }
-      }
-    }
-
     document.title = this._getDialogTitle();
     document.documentElement.getButton("accept").label = this._getAcceptLabel();
-    this._element("editTitleBox").value = this._bookmarkTitle;
+    if (this._itemTitle)
+      this._element("titleTextfield").value = this._itemTitle;
 
     if (this._itemType == BOOKMARK_ITEM) {
-      this._element("editURLBar").value = this._bookmarkURI.spec;
-      var shortcutbox = this._element("editShortcutBox");
-      shortcutbox.value =
-        PlacesUtils.bookmarks.getKeywordForBookmark(this._bookmarkId);
+      if (this._bookmarkURI)
+        this._element("editURLBar").value = this._bookmarkURI.spec;
+
+      if (this._bookmarkKeyword)
+        this._element("keywordTextfield").value = this._bookmarkKeyword;
     }
     else {
       this._element("locationRow").hidden = true;
@@ -307,26 +391,24 @@ var BookmarkPropertiesPanel = {
     }
 
     if (this._itemType == LIVEMARK_CONTAINER) {
-      var feedURI = PlacesUtils.livemarks.getFeedURI(this._folderId);
-      if (feedURI)
-        this._element("editLivemarkFeedLocationBox").value = feedURI.spec;
-      var siteURI = PlacesUtils.livemarks.getSiteURI(this._folderId);
-      if (siteURI)
-        this._element("editLivemarkSiteLocationBox").value = siteURI.spec;
+      if (this._feedURI)
+        this._element("feedLocationTextfield").value = this._feedURI.spec;
+      if (this._siteURI)
+        this._element("feedSiteLocationTextfield").value = this._siteURI.spec;
     }
     else {
       this._element("livemarkFeedLocationRow").hidden = true;
       this._element("livemarkSiteLocationRow").hidden = true;
     }
 
-    if (this._isMicrosummaryVisible())
+    if (this._itemType == BOOKMARK_ITEM && this._bookmarkURI) {
+      // _initMicrosummaryPicker may also hide the row
       this._initMicrosummaryPicker();
+    }
     else
       this._element("microsummaryRow").hidden = true;
 
-    if (this._action != ACTION_EDIT)
-      this._folderTree.selectFolders([PlacesUtils.bookmarks.bookmarksRoot]);
-    else
+    if (this._action == ACTION_EDIT)
       this._element("folderRow").hidden = true;
   },
 
@@ -378,8 +460,6 @@ var BookmarkPropertiesPanel = {
   },
 
   _microsummaryObserver: {
-    _owner: this,
-
     QueryInterface: function (aIID) {
       if (!aIID.equals(Ci.nsIMicrosummaryObserver) &&
           !aIID.equals(Ci.nsISupports))
@@ -388,11 +468,11 @@ var BookmarkPropertiesPanel = {
     },
 
     onContentLoaded: function(aMicrosummary) {
-      this._owner._rebuildMicrosummaryPicker();
+      BookmarkPropertiesPanel._rebuildMicrosummaryPicker();
     },
 
     onElementAppended: function(aMicrosummary) {
-      this._owner._rebuildMicrosummaryPicker();
+      BookmarkPropertiesPanel._rebuildMicrosummaryPicker();
     }
   },
 
@@ -406,7 +486,7 @@ var BookmarkPropertiesPanel = {
   },
 
   onDialogUnload: function BPP_onDialogUnload() {
-    if (this._isMicrosummaryVisible() && this._microsummaries)
+    if (this._microsummaries)
       this._microsummaries.removeObserver(this._microsummaryObserver);
   },
 
@@ -430,22 +510,16 @@ var BookmarkPropertiesPanel = {
    * @returns  true if the input is valid, false otherwise
    */
   _inputIsValid: function BPP__inputIsValid() {
-    // When in multiple select mode, it's possible to deselect all rows,
-    // but you have to file your bookmark in at least one folder.
-    if (this._action != ACTION_EDIT &&
-        this._folderTree.getSelectionNodes().length == 0)
-      return false;
-
     if (this._itemType == BOOKMARK_ITEM && !this._containsValidURI("editURLBar"))
       return false;
 
     // Feed Location has to be a valid URI;
     // Site Location has to be a valid URI or empty
     if (this._itemType == LIVEMARK_CONTAINER) {
-      if (!this._containsValidURI("editLivemarkFeedLocationBox"))
+      if (!this._containsValidURI("feedLocationTextfield"))
         return false;
-      if (!this._containsValidURI("editLivemarkSiteLocationBox") &&
-          (this._element("editLivemarkSiteLocationBox").value.length > 0))
+      if (!this._containsValidURI("feedSiteLocationTextfield") &&
+          (this._element("feedSiteLocationTextfield").value.length > 0))
         return false;
     }
 
@@ -463,11 +537,71 @@ var BookmarkPropertiesPanel = {
    */
   _containsValidURI: function BPP__containsValidURI(aTextboxID) {
     try {
-      var uri = PlacesUtils._uri(this._element(aTextboxID).value);
-    } catch (e) {
-      return false;
+      var value = this._element(aTextboxID).value;
+      if (value) {
+        var uri = PlacesUtils._uri(value);
+        return true;
+      }
+    } catch (e) { }
+    return false;
+  },
+
+  /**
+   * Get an edit title transaction for the item edit/added in the dialog
+   */
+  _getEditTitleTransaction:
+  function BPP__getEditTitleTransaction(aItemId, aNewTitle) {
+    // XXXmano: remove this once bug 372508 is fixed
+    if (this._itemType == BOOKMARK_ITEM)
+      return new PlacesEditItemTitleTransaction(aItemId, aNewTitle);
+
+    // folder or livemark container
+    return new PlacesEditFolderTitleTransaction(aItemId, aNewTitle);
+  },
+
+  /**
+   * Get a create-item transaction for the item added in the dialog
+   */
+  _getCreateItemTransaction: function() {
+    NS_ASSERT(this._action != ACTION_EDIT,
+              "_getCreateItemTransaction called when editing an item");
+
+    var containerId, indexInContainer = -1;
+    if (isElementVisible(this._folderTree))
+      containerId =  asFolder(this._folderTree.selectedNode).folderId;
+    else if (this._defaultInsertionPoint) {
+      containerId = this._defaultInsertionPoint.folderId;
+      indexInContainer = this._defaultInsertionPoint.index;
     }
-    return true;
+    else
+      containerId = PlacesUtils.bookmarks.bookmarksRoot;
+
+    if (this._itemType == BOOKMARK_ITEM) {
+      var uri = PlacesUtils._uri(this._element("editURLBar").value);
+      NS_ASSERT(uri, "cannot create an item without a uri");
+      return new
+        PlacesCreateItemTransaction(uri, containerId, indexInContainer);
+    }
+    else if (this._itemType == LIVEMARK_CONTAINER) {
+      var feedURIString = this._element("feedLocationTextfield").value;
+      var feedURI = PlacesUtils._uri(feedURIString);
+
+      var siteURIString = this._element("feedSiteLocationTextfield").value;
+      var siteURI = null;
+      if (siteURIString)
+        siteURI = PlacesUtils._uri(siteURIString);
+
+      var name = this._element("titleTextfield").value;
+
+      return new PlacesCreateLivemarkTransaction(feedURI, siteURI,
+                                                 name, containerId,
+                                                 indexInContainer);
+    }
+    else if (this._itemType == BOOKMARK_FOLDER) { // folder
+      var name = this._element("titleTextfield").value;
+      return new PlacesCreateFolderTransaction(name, containerId,
+                                               indexInContainer);
+    }
   },
 
   /**
@@ -476,101 +610,77 @@ var BookmarkPropertiesPanel = {
    */
   _saveChanges: function BPP__saveChanges() {
     var transactions = [];
-    var urlbox = this._element("editURLBar");
-    var titlebox = this._element("editTitleBox");
-    var newURI = this._bookmarkURI;
-    if (this._itemType == BOOKMARK_ITEM)
-      newURI = PlacesUtils._uri(urlbox.value);
+    var childItemsTransactions = [];
 
-    // adding one or more bookmarks
-    if (this._action == ACTION_ADD || this._action == ACTION_ADD_WITH_ITEMS) {
-      var folder = PlacesUtils.bookmarks.bookmarksRoot;
-      var selected =  this._folderTree.getSelectionNodes();
-
-      // add single bookmark
-      if (this._action == ACTION_ADD) {
-        // get folder id
-        if (selected.length > 0) {
-          var node = selected[0];
-          if (PlacesUtils.nodeIsFolder(node) &&
-              !PlacesUtils.nodeIsReadOnly(node))
-            folder = asFolder(node).folderId;
-        }
-        var txnCreateItem = new PlacesCreateItemTransaction(newURI, folder, -1);
-        txnCreateItem.childTransactions.push(
-          new PlacesEditItemTitleTransaction(-1, titlebox.value));
-        transactions.push(txnCreateItem);
-      }
-      // bookmark multiple URIs
-      else {
-        var folder = asFolder(selected[0]);
-
-        var newFolderTrans = new
-          PlacesCreateFolderTransaction(titlebox.value, folder.folderId, -1);
-
-        for (var i = 0; i < this._URIList.length; ++i) {
-          var uri = this._URIList[i];
-          var txn = new PlacesCreateItemTransaction(uri, -1, -1);
-          txn.childTransactions.push(
-            new PlacesEditItemTitleTransaction(uri, this._getURITitleFromHistory(uri)));
-          newFolderTrans.childTransactions.push(txn);
-        }
-
-        transactions.push(newFolderTrans);
-      }
-    }
-
-
+    // -1 is used when creating a new item (for child transactions).
+    var itemId = -1;
     if (this._action == ACTION_EDIT) {
-      // editing a bookmark
-      if (this._itemType == BOOKMARK_ITEM) {
-        transactions.push(
-          new PlacesEditItemTitleTransaction(this._bookmarkId, titlebox.value));
-      }
-      // editing a livemark container or a folder
-      else {
-        transactions.push(
-          new PlacesEditFolderTitleTransaction(this._folderId, titlebox.value));
+      if (this._itemType == BOOKMARK_ITEM)
+        itemId = this._bookmarkId;
+      else
+        itemId = this._folderId;
+    }
 
-        // editing a livemark container
-        if (this._itemType == LIVEMARK_CONTAINER) {
-          var feedURIString = this._element("editLivemarkFeedLocationBox").value;
-          var feedURI = PlacesUtils._uri(feedURIString);
-          transactions.push(
-            new PlacesEditLivemarkFeedURITransaction(this._folderId, feedURI));
+    // for ACTION_ADD, the uri is set via insertItem
+    if (this._action == ACTION_EDIT && this._itemType == BOOKMARK_ITEM) {
+      var url = PlacesUtils._uri(this._element("editURLBar").value);
+      if (!this._bookmarkURI.equals(url))
+        transactions.push(new PlacesEditBookmarkURITransaction(itemId, url));
+    }
 
-          // Site Location is empty, we can set its URI to null
-          var siteURIString = this._element("editLivemarkSiteLocationBox").value;
-          if (siteURIString) {
-            siteURI = PlacesUtils._uri(siteURIString);
-            transactions.push(
-            new PlacesEditLivemarkSiteURITransaction(this._folderId,
-                                                     PlacesUtils._uri(siteURIString)));
-          }
-        }
+    // title transaction
+    // XXXmano: this isn't necessary for new folders. We should probably
+    // make insertItem take a title too (like insertFolder)
+    var newTitle = this._element("titleTextfield").value;
+    if (this._action != ACTION_EDIT || newTitle != this._itemTitle)
+      transactions.push(this._getEditTitleTransaction(itemId, newTitle));
+
+    // keyword transactions
+    if (this._itemType == BOOKMARK_ITEM) {
+      var newKeyword = this._element("keywordTextfield").value;
+      if (this._action != ACTION_EDIT || newKeyword != this._bookmarkKeyword) {
+        transactions.push(
+          new PlacesEditBookmarkKeywordTransaction(itemId, newKeyword));
       }
     }
 
-    if (this._itemType == BOOKMARK_ITEM) {
-      // keyword
-      var shortcutboxValue = this._element("editShortcutBox").value;
-      if (shortcutboxValue) {
+    // items under a new folder
+    if (this._action == ACTION_ADD_WITH_ITEMS) {
+      for (var i = 0; i < this._URIList.length; ++i) {
+        var uri = this._URIList[i];
+        var title = this._getURITitleFromHistory(uri);
+        var txn = new PlacesCreateItemTransaction(uri, -1, -1);
+        txn.childTransactions.push(
+          new PlacesEditItemTitleTransaction(-1, title));
+        childItemsTransactions.push(txn);
+      }
+    }
+
+    // See _getCreateItemTransaction for the add action case
+    if (this._action == ACTION_EDIT && this._itemType == LIVEMARK_CONTAINER) {
+      var feedURIString = this._element("feedLocationTextfield").value;
+      var feedURI = PlacesUtils._uri(feedURIString);
+      if (!this._feedURI.equals(feedURI)) {
         transactions.push(
-          new PlacesEditBookmarkKeywordTransaction(this._bookmarkId,
-                                                   shortcutboxValue));
+          new PlacesEditLivemarkFeedURITransaction(this._folderId, feedURI));
       }
 
-      if (this._action == ACTION_EDIT &&
-          (newURI.spec != this._bookmarkURI.spec)) {
-        // XXXDietrich - needs to be transactionalized
-        PlacesUtils.changeBookmarkURI(this._bookmarkId, newURI);
+      // Site Location is empty, we can set its URI to null
+      var siteURIString = this._element("feedSiteLocationTextfield").value;
+      var siteURI = null;
+      if (siteURIString)
+        siteURI = PlacesUtils._uri(siteURIString);
+
+      if ((!siteURI && this._siteURI)  ||
+          (siteURI && !this._siteURI.equals(siteURI))) {
+        transactions.push(
+          new PlacesEditLivemarkSiteURITransaction(this._folderId, siteURI));
       }
     }
 
     // microsummaries
-    // XXXmano: iconCount mess is here until we make the microsummary UI 2.0-like
     var menuList = this._element("microsummaryMenuList");
-    if (this._isMicrosummaryVisible() && menuList.itemCount > 0) {
+    if (isElementVisible(menuList)) {
       // Something should always be selected in the microsummary menu,
       // but if nothing is selected, then conservatively assume we should
       // just display the bookmark title.
@@ -585,23 +695,42 @@ var BookmarkPropertiesPanel = {
       // has actually changed, i.e. the user selected no microsummary,
       // but the bookmark previously had one, or the user selected a microsummary
       // which is not the one the bookmark previously had.
-      // XXXDietrich - bug 370215 - update to use bookmark id once 360133 is fixed.
       if ((newMicrosummary == null &&
            this._mss.hasMicrosummary(this._bookmarkURI)) ||
           (newMicrosummary != null &&
            !this._mss.isMicrosummary(this._bookmarkURI, newMicrosummary))) {
         transactions.push(
-          new PlacesEditBookmarkMicrosummaryTransaction(this._bookmarkURI,
+          new PlacesEditBookmarkMicrosummaryTransaction(itemId,
                                                         newMicrosummary));
       }
     }
 
     // If we have any changes to perform, do them via the
-    // transaction manager in the PlacesController so they can be undone.
+    // transaction manager passed by the opener so they can be undone.
     if (transactions.length > 0) {
-      var aggregate =
-        new PlacesAggregateTransaction(this._getDialogTitle(), transactions);
-      this._tm.doTransaction(aggregate);
+      window.arguments[0].performed = true;
+
+      if (this._action != ACTION_EDIT) {
+        var createTxn = this._getCreateItemTransaction();
+        NS_ASSERT(createTxn, "failed to get a create-item transaction");
+
+        // use child transactions if we're creating a new item
+        createTxn.childTransactions =
+          createTxn.childTransactions.concat(transactions);
+
+        if (this._action == ACTION_ADD_WITH_ITEMS) {
+          // use child-items transactions for creating items under the root item
+          createTxn.childItemsTransactions =
+            createTxn.childItemsTransactions.concat(childItemsTransactions);
+        }
+        this._tm.doTransaction(createTxn);
+      }
+      else {
+        // just aggregate otherwise
+        var aggregate =
+          new PlacesAggregateTransaction(this._getDialogTitle(), transactions);
+        this._tm.doTransaction(aggregate);
+      }
     }
   }
 };

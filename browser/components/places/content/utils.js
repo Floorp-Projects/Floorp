@@ -651,20 +651,104 @@ var PlacesUtils = {
   },
 
   /**
-   * This method changes the URI of a bookmark.
+   * Shows the "Add Bookmark" dialog.
+   *
+   * @param [optional] aURI
+   *        An nsIURI object for which the "add bookmark" dialog is
+   *        to be shown.
+   * @param [optional] aTitle
+   *        The default title for the new bookmark.
+   * @param [optional] aDefaultInsertionPoint
+   *        The default insertion point for the new item. If set, the folder
+   *        picker would be hidden unless aShowPicker is set to true, in which
+   *        case the dialog only uses the folder identifier from the insertion
+   *        point as the initially selected item in the folder picker.
+   * @param [optional] aShowPicker
+   *        see above
+   * @return true if any transaction has been performed.
+   *
+   * Notes:
+   *  - the location, description, keyword and Show In Sidebar fields are
+   *    visible only if there is no initial URI (aURI is null).
+   *  - When aDefaultInsertionPoint is not set, the dialog defaults to the
+   *    bookmarks root folder.
    */
-  changeBookmarkURI: function PU_changeBookmarkProperties(bookmarkId, newURI) {
-    this.bookmarks.changeBookmarkURI(bookmarkId, newURI);
+  showAddBookmarkUI: function PU_showAddBookmarkUI(aURI, aTitle,
+                                                   aDefaultInsertionPoint,
+                                                   aShowPicker) {
+    var info = {
+      action: "add",
+      type: "bookmark",
+      hiddenRows: []
+    };
+
+    if (aURI) {
+      info.uri = aURI;
+      info.hiddenRows = ["location", "keyword", "description",
+                         "show in sidebar"];
+    }
+
+    // allow default empty title
+    if (typeof(aTitle) == "string")
+      info.title = aTitle;
+
+    if (aDefaultInsertionPoint) {
+      info.defaultInsertionPoint = aDefaultInsertionPoint;
+      if (!aShowPicker)
+        info.hiddenRows.push("folder picker");
+    }
+    return this._showBookmarkDialog(info);
   },
 
   /**
-   * Show an "Add Bookmark" dialog for the specified URI.
+   * Shows the "Add Live Bookmark" dialog.
    *
-   * @param uri an nsIURI object for which the "add bookmark" dialog is
-   *            to be shown.
+   * @param [optional] aFeedURI
+   *        The feed URI for which the dialog is to be shown (nsIURI).
+   * @param [optional] aSiteURI
+   *        The site URI for the new live-bookmark (nsIURI).
+   * @param [optional] aDefaultInsertionPoint
+   *        The default insertion point for the new item. If set, the folder
+   *        picker would be hidden unless aShowPicker is set to true, in which
+   *        case the dialog only uses the folder identifier from the insertion
+   *        point as the initially selected item in the folder picker.
+   * @param [optional] aShowPicker
+   *        see above
+   * @return true if any transaction has been performed.
+   * 
+   * Notes:
+   *  - the feedURI and description fields are visible only if there is no
+   *    initial feed URI (aFeedURI is null).
+   *  - When aDefaultInsertionPoint is not set, the dialog defaults to the
+   *    bookmarks root folder.
    */
-  showAddBookmarkUI: function PU_showAddBookmarkUI(uri, title) {
-    this._showBookmarkDialog("add", uri, title);
+  showAddLivemarkUI: function PU_showAddLivemarkURI(aFeedURI, aSiteURI,
+                                                    aTitle,
+                                                    aDefaultInsertionPoint,
+                                                    aShowPicker) {
+    var info = {
+      action: "add",
+      type: "livemark",
+      hiddenRows: []
+    };
+
+    if (aFeedURI) {
+      info.feedURI = aFeedURI;
+      info.hiddenRows = ["description"];
+    }
+    if (aSiteURI)
+      info.siteURI = aSiteURI;
+
+    // allow default empty title
+    if (typeof(aTitle) == "string")
+      info.title = aTitle;
+
+    if (aDefaultInsertionPoint) {
+      info.defaultInsertionPoint = aDefaultInsertionPoint;
+      if (!aShowPicker)
+        info.hiddenRows.push("folder picker");
+    }
+    return this._showBookmarkDialog(info);
   },
 
   /**
@@ -672,49 +756,101 @@ var PlacesUtils = {
    * of bookmarks corresponding to the objects in the uriList.  This will
    * be called most often as the result of a "Bookmark All Tabs..." command.
    *
-   * @param uriList  List of nsIURI objects representing the locations
-   *                 to be bookmarked.
+   * @param aURIList  List of nsIURI objects representing the locations
+   *                  to be bookmarked.
+   * @return true if any transaction has been performed.
    */
-  showAddMultiBookmarkUI: function PU_showAddMultiBookmarkUI(uriList) {
-    NS_ASSERT(uriList.length, "showAddMultiBookmarkUI expects a list of nsIURI objects");
-    this._showBookmarkDialog("addmulti", uriList);
+  showAddMultiBookmarkUI: function PU_showAddMultiBookmarkUI(aURIList) {
+    NS_ASSERT(aURIList.length,
+              "showAddMultiBookmarkUI expects a list of nsIURI objects");
+    var info = {
+      action: "add",
+      type: "folder with items",
+      hiddenRows: ["description"],
+      URIList: aURIList
+    };
+    return this._showBookmarkDialog(info);
   },
 
   /**
-   * Opens the bookmark properties panel for a given URI.
+   * Opens the bookmark properties panel for a given bookmark idnetifier.
    *
-   * @param   id bookmark id for which the properties are to be shown
+   * @param aId
+   *        bookmark identifier for which the properties are to be shown
+   * @return true if any transaction has been performed.
    */
-  showBookmarkProperties: function PU_showBookmarkProperties(id) {
-    this._showBookmarkDialog("edititem", id);
+  showBookmarkProperties: function PU_showBookmarkProperties(aId) {
+    var info = {
+      action: "edit",
+      type: "bookmark",
+      bookmarkId: aId
+    };
+    return this._showBookmarkDialog(info);
   },
 
   /**
    * Opens the folder properties panel for a given folder ID.
    *
-   * @param folderid   an integer representing the ID of the folder to edit
-   * @returns none
+   * @param aId
+   *        an integer representing the ID of the folder to edit
+   * @return true if any transaction has been performed.
    */
-  showFolderProperties: function PU_showFolderProperties(folderId) {
-    NS_ASSERT(typeof(folderId)=="number",
-              "showFolderProperties received a non-numerical value for its folderId parameter");
-    this._showBookmarkDialog("editfolder", folderId);
+  showFolderProperties: function PU_showFolderProperties(aId) {
+    var info = {
+      action: "edit",
+      type: "folder",
+      folderId: aId
+    };
+    return this._showBookmarkDialog(info);
   },
 
   /**
-   * Shows the bookmark dialog corresponding to the specified user action.
-   * This is an implementation function, and shouldn't be called directly;
-   * rather, use the specific variant above that corresponds to your situation.
+   * Shows the "New Folder" dialog.
    *
-   * @param identifier   the URI or bookmark ID or folder ID or URI list
-   *                     to show properties for
-   * @param action "add" or "edit", see _determineVariant in
-   *               bookmarkProperties.js
+   * @param [optional] aTitle
+   *        The default title for the new bookmark.
+   * @param [optional] aDefaultInsertionPoint
+   *        The default insertion point for the new item. If set, the folder
+   *        picker would be hidden unless aShowPicker is set to true, in which
+   *        case the dialog only uses the folder identifier from the insertion
+   *        point as the initially selected item in the folder picker.
+   * @param [optional] aShowPicker
+   *        see above
+   * @return true if any transaction has been performed.
+   */        
+  showAddFolderUI:
+  function PU_showAddFolderUI(aTitle, aDefaultInsertionPoint, aShowPicker) {
+    var info = {
+      action: "add",
+      type: "folder",
+      hiddenRows: []
+    };
+
+    // allow default empty title
+    if (typeof(aTitle) == "string")
+      info.title = aTitle;
+
+    if (aDefaultInsertionPoint) {
+      info.defaultInsertionPoint = aDefaultInsertionPoint;
+      if (!aShowPicker)
+        info.hiddenRows.push("folder picker");
+    }
+    return this._showBookmarkDialog(info);
+  },
+
+  /**
+   * Shows the bookmark dialog corresponding to the specified info
+   *
+   * @param aInfo
+   *        Describes the item to be edited/added in the dialog.
+   *        See documentation at the top of bookmarkProperties.js
+   * @return true if any transaction has been performed.
    */
-  _showBookmarkDialog: function PU__showBookmarkDialog(action, identifier, title) {
+  _showBookmarkDialog: function PU__showBookmarkDialog(aInfo) {
     window.openDialog("chrome://browser/content/places/bookmarkProperties.xul",
                       "", "width=600,height=400,chrome,dependent,modal,resizable",
-                      this.tm, action, identifier, title);
+                      aInfo);
+    return ("performed" in aInfo && aInfo.performed);
   },
 
   /**
