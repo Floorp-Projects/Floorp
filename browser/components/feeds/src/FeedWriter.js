@@ -330,7 +330,7 @@ FeedWriter.prototype = {
         }
       }
 
-      var body = this._document.createElementNS(HTML_NS, "p");
+      var body = this._document.createElementNS(HTML_NS, "div");
       var summary = entry.summary || entry.content;
       var docFragment = null;
       if (summary) {
@@ -356,6 +356,9 @@ FeedWriter.prototype = {
       body.className = "feedEntryContent";
       entryContainer.appendChild(body);
       feedContent.appendChild(entryContainer);
+      var clearDiv = this._document.createElementNS(HTML_NS, "div");
+      clearDiv.style.clear = "both";
+      feedContent.appendChild(clearDiv);
     }
   },
   
