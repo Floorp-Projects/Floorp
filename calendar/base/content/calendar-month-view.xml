@@ -475,9 +475,14 @@
               dropbox.setAttribute("dropbox", "true");
               dropbox.setAttribute("flex", "1");
 
-              var box = this.monthView.findBoxForDate(shadowStart);              if (!box) {                  // Dragging to the end of a view
+              var box = this.monthView.findBoxForDate(shadowStart);
+              if (!box) {
+                  // Dragging to the end of a view
                   shadowStart.day += 1;
-                  shadowStart.normalize();                  continue;              }              box.box.dayitems.insertBefore(dropbox, box.box.dayitems.firstChild);
+                  shadowStart.normalize();
+                  continue;
+              }
+              box.box.dayitems.insertBefore(dropbox, box.box.dayitems.firstChild);
               this.monthView.mDropShadows.push(dropbox);
 
               shadowStart.day += 1;
