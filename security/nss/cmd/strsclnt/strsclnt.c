@@ -1410,6 +1410,8 @@ main(int argc, char **argv)
 
 	}
     }
+    PL_DestroyOptState(optstate);
+
     if (!hostName || status == PL_OPT_BAD)
     	Usage(progName);
 
