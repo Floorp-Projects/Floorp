@@ -870,9 +870,11 @@ sub tags {
     my ($self) = @_;
     my $dbh = Bugzilla->dbh;
     return $self->{'tags'} if exists $self->{'tags'};
-    my $tagids = $dbh->selectcol_arrayref("SELECT tag_id 
+    my $tagids = $dbh->selectcol_arrayref("SELECT test_run_tags.tag_id 
                                           FROM test_run_tags
-                                          WHERE run_id = ?", 
+                                          INNER JOIN test_tags ON test_run_tags.tag_id = test_tags.tag_id
+                                          WHERE run_id = ?
+                                          ORDER BY test_tags.tag_name", 
                                           undef, $self->{'run_id'});
     my @tags;
     foreach my $t (@{$tagids}){

@@ -163,7 +163,7 @@ sub store {
     my $self = shift;
     my $dbh = Bugzilla->dbh;
     my $key;
-
+    $self->{'tag_name'} = trim($self->{'tag_name'});
     $dbh->bz_lock_tables('test_tags WRITE');
     ($key) = $dbh->selectrow_array("SELECT tag_id FROM test_tags 
                                     WHERE LOWER(tag_name) = ?", 
