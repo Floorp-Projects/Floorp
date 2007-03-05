@@ -383,6 +383,10 @@ public:
    */
   NS_IMETHOD FlushPendingNotifications(mozFlushType aType) = 0;
 
+  /**
+   * Callbacks will be called even if reflow itself fails for
+   * some reason.
+   */
   NS_IMETHOD PostReflowCallback(nsIReflowCallback* aCallback) = 0;
   NS_IMETHOD CancelReflowCallback(nsIReflowCallback* aCallback) = 0;
 
