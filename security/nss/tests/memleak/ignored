@@ -1,26 +1,33 @@
 #129218
-/main/PL_CreateOptState/PR_Calloc/calloc
-/main/PL_CreateOptState/PR_Malloc/malloc
-/main/PL_CreateOptState/PR_Malloc
-/main/PL_strdup/malloc
-/main/PL_strdup
+/main/PL_CreateOptState/**
+/main/PL_strdup/**
 /main/PR_NewLock/PR_Calloc/calloc
 
 #291225
 /main/NSS_Initialize/*/SECMOD_LoadModule/**
+/SECMOD_LoadModule/**
+/SECMOD_LoadPKCS11Module/**
+/*/SECMOD_LoadModule/**
+
+#361089
+/secmod_ModuleInit/FC_Initialize/sftk_fipsPowerUpSelfTest/sftk_fips_ECDSA_PowerUpSelfTest/sftk_fips_ECDSA_Test/ECDSA_VerifyDigest/**
+/sftk_fips_ECDSA_PowerUpSelfTest/sftk_fips_ECDSA_Test/EC_NewKeyFromSeed/**
+/sftk_fipsPowerUpSelfTest/sftk_fips_ECDSA_PowerUpSelfTest/sftk_fips_ECDSA_Test/ECDSA_SignDigestWithSeed/**
+/sftk_fipsPowerUpSelfTest/sftk_fips_ECDSA_PowerUpSelfTest/sftk_fips_ECDSA_Test/ECDSA_VerifyDigest/**
 
 #366553
 /main/server_main/SSL_ConfigSecureServer/CERT_GetSSLCACerts/**
 
 #366557
 /main/_strdup
-/main/strdup/malloc
+/main/strdup/**
 
 #367133
 /main/NSS_Initialize/*/STAN_LoadDefaultNSS3TrustDomain/**
 
 #367374
 /main/PR_Init/_PR_ImplicitInitialization/_PR_InitStuff/**
+/main/PR_Init/_PR_InitStuff/**
 
 #367376
 /main/launch_threads/PR_CreateThread/_PR_CreateThread/pthread_create@@GLIBC_2.1/**
@@ -29,3 +36,7 @@
 #367384
 /main/NSS_Initialize/nss_Init/SECMOD_LoadModule/SECMOD_LoadModule/SECMOD_LoadPKCS11Module/secmod_ModuleInit/NSC_Initialize/nsc_CommonInitialize/RNG_RNGInit/freebl_RunLoaderOnce/PR_CallOnce/freebl_LoadDSO/bl_LoadLibrary/bl_LoadFreeblLibInSoftokenDir/PR_LoadLibraryWithFlags/pr_LoadLibraryByPathname/dlopen@@GLIBC_2.1/**
 /main/NSS_Initialize/nss_Init/nss_FindExternalRoot/SECMOD_AddNewModule/SECMOD_AddNewModuleEx/SECMOD_AddModule/SECMOD_LoadPKCS11Module/PR_LoadLibrary/PR_LoadLibraryWithFlags/pr_LoadLibraryByPathname/DLLErrorInternal/**
+
+#370536
+/main/NSS_Shutdown/STAN_Shutdown/NSSTrustDomain_Destroy/nssListIterator_Destroy/nssList_Destroy/NSSArena_Destroy/nssArena_Destroy/arena_remove_pointer/nssPointerTracker_remove/PL_HashTableRemove/PL_HashTableRawRemove/DefaultAllocTable/PR_Malloc/malloc
+
