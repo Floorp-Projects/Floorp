@@ -46,90 +46,61 @@ GRE_MODULE    = 1
 DEFFILE       = $(win_srcdir)/IA2Marshal.def
 
 IA2DIR        = $(topsrcdir)/other-licenses/ia2
-IA2RELDIR     = $(DEPTH)/other-licenses/ia2
 
 include $(DEPTH)/config/autoconf.mk
 
 DEFINES       += -DREGISTER_PROXY_DLL -D_WIN32_WINNT=0x400
 
-GARBAGE       += $(MIDL_GENERATED_FILES) done_gen dlldata.c
+GARBAGE       += $(MIDL_GENERATED_FILES)
 
 FORCE_SHARED_LIB = 1
 
 SRCS_IN_OBJDIR   = 1
 
+MIDL_INTERFACES = \
+  Accessible2.idl \
+  AccessibleAction.idl \
+  AccessibleApplication.idl \
+  AccessibleComponent.idl \
+  AccessibleEditableText.idl \
+  AccessibleHyperlink.idl \
+  AccessibleHypertext.idl \
+  AccessibleImage.idl \
+  AccessibleRelation.idl \
+  AccessibleTable.idl \
+  AccessibleText.idl \
+  AccessibleValue.idl \
+  $(NULL)
+
+MIDL_ENUMS = \
+  AccessibleEventId.idl \
+  AccessibleRole.idl \
+  AccessibleStates.idl \
+  $(NULL)
+
+EXPORTS = \
+  $(MIDL_INTERFACES:%.idl=%.h) \
+  $(MIDL_INTERFACES:%.idl=%_i.c) \
+  $(MIDL_ENUMS:%.idl=%.h) \
+  $(NULL)
+
 CSRCS	= \
   dlldata.c \
-  Accessible2_p.c \
-  Accessible2_i.c \
-  AccessibleAction_p.c \
-  AccessibleAction_i.c \
-  AccessibleApplication_p.c \
-  AccessibleApplication_i.c \
-  AccessibleComponent_p.c \
-  AccessibleComponent_i.c \
-  AccessibleEditableText_p.c \
-  AccessibleEditableText_i.c \
-  AccessibleHyperlink_p.c \
-  AccessibleHyperlink_i.c \
-  AccessibleHypertext_p.c \
-  AccessibleHypertext_i.c \
-  AccessibleImage_p.c \
-  AccessibleImage_i.c \
-  AccessibleRelation_p.c \
-  AccessibleRelation_i.c \
-  AccessibleTable_p.c \
-  AccessibleTable_i.c \
-  AccessibleText_p.c \
-  AccessibleText_i.c \
-  AccessibleValue_p.c \
-  AccessibleValue_i.c \
+  $(MIDL_INTERFACES:%.idl=%_p.c) \
+  $(MIDL_INTERFACES:%.idl=%_i.c) \
   $(NULL)
 
 MIDL_GENERATED_FILES = \
-  Accessible2.h \
-  Accessible2_p.c \
-  Accessible2_i.c \
-  AccessibleAction.h \
-  AccessibleAction_p.c \
-  AccessibleAction_i.c \
-  AccessibleApplication.h \
-  AccessibleApplication_p.c \
-  AccessibleApplication_i.c \
-  AccessibleComponent.h \
-  AccessibleComponent_p.c \
-  AccessibleComponent_i.c \
-  AccessibleEditableText.h \
-  AccessibleEditableText_p.c \
-  AccessibleEditableText_i.c \
-  AccessibleEventId.h \
-  AccessibleEventId_p.c \
-  AccessibleHyperlink.h \
-  AccessibleHyperlink_p.c \
-  AccessibleHyperlink_i.c \
-  AccessibleHypertext.h \
-  AccessibleHypertext_p.c \
-  AccessibleHypertext_i.c \
-  AccessibleImage.h \
-  AccessibleImage_p.c \
-  AccessibleImage_i.c \
-  AccessibleRelation.h \
-  AccessibleRelation_p.c \
-  AccessibleRelation_i.c \
-  AccessibleRole.h \
-  AccessibleStates.h \
-  AccessibleTable.h \
-  AccessibleTable_p.c \
-  AccessibleTable_i.c \
-  AccessibleText.h \
-  AccessibleText_p.c \
-  AccessibleText_i.c \
-  AccessibleValue.h \
-  AccessibleValue_p.c \
-  AccessibleValue_i.c \
+  dlldata.c \
+  $(MIDL_INTERFACES:%.idl=%_p.c) \
+  $(MIDL_INTERFACES:%.idl=%_i.c) \
+  $(MIDL_INTERFACES:%.idl=%.h) \
+  $(MIDL_ENUMS:%.idl=%.h) \
   $(NULL)
 
-SRCDIR_CSRCS  = $(addprefix $(srcdir)/,$(CSRCS))
+EMBED_MANIFEST_AT = 2
+
+include $(topsrcdir)/config/rules.mk
 
 OS_LIBS = \
   kernel32.lib \
@@ -139,75 +110,12 @@ OS_LIBS = \
   oleaut32.lib \
   $(NULL)
 
-$(MIDL_GENERATED_FILES): done_gen
-
-done_gen: $(IA2RELDIR)/Accessible2.idl \
-          $(IA2RELDIR)/AccessibleAction.idl \
-          $(IA2RELDIR)/AccessibleApplication.idl \
-          $(IA2RELDIR)/AccessibleComponent.idl \
-          $(IA2RELDIR)/AccessibleEditableText.idl \
-          $(IA2RELDIR)/AccessibleEventId.idl \
-          $(IA2RELDIR)/AccessibleHyperlink.idl \
-          $(IA2RELDIR)/AccessibleHypertext.idl \
-          $(IA2RELDIR)/AccessibleImage.idl \
-          $(IA2RELDIR)/AccessibleRelation.idl \
-          $(IA2RELDIR)/AccessibleRole.idl \
-          $(IA2RELDIR)/AccessibleStates.idl \
-          $(IA2RELDIR)/AccessibleTable.idl \
-          $(IA2RELDIR)/AccessibleText.idl \
-          $(IA2RELDIR)/AccessibleValue.idl
-	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/Accessible2.idl
-	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleAction.idl
-	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleApplication.idl
-	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleComponent.idl
-	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleEditableText.idl
-	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleEventId.idl
-	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleHyperlink.idl
-	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleHypertext.idl
-	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleImage.idl
-	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleRelation.idl
-	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleRole.idl
-	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleStates.idl
-	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleTable.idl
-	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleText.idl
-	$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $(IA2DIR)/AccessibleValue.idl
-	touch $@
-
-EXPORTS = \
-  Accessible2.h \
-  Accessible2_i.c \
-  AccessibleAction.h \
-  AccessibleAction_i.c \
-  AccessibleApplication.h \
-  AccessibleApplication_i.c \
-  AccessibleComponent.h \
-  AccessibleComponent_i.c \
-  AccessibleEditableText.h \
-  AccessibleEditableText_i.c \
-  AccessibleEventId.h \
-  AccessibleHyperlink.h \
-  AccessibleHyperlink_i.c \
-  AccessibleImage.h \
-  AccessibleImage_i.c \
-  AccessibleRelation.h \
-  AccessibleRelation_i.c \
-  AccessibleRole.h \
-  AccessibleStates.h \
-  AccessibleTable.h \
-  AccessibleTable_i.c \
-  AccessibleText.h \
-  AccessibleText_i.c \
-  AccessibleValue.h \
-  AccessibleValue_i.c \
-  $(NULL)
-
-export:: done_gen
+$(MIDL_GENERATED_FILES): $(addprefix $(IA2DIR)/,$(MIDL_INTERFACES) $(MIDL_ENUMS))
+	for idl in $^; do \
+	  $(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $$idl; \
+	done
 
 # This marshall dll is also registered in the installer
 register::
 	regsvr32 -s $(DIST)/bin/$(SHARED_LIBRARY)
-
-EMBED_MANIFEST_AT = 2
-
-include $(topsrcdir)/config/rules.mk
 
