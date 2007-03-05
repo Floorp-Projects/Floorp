@@ -295,19 +295,14 @@ var MigrationWizard = {
   onHomePageMigrationPageShow: function ()
   {
     // only want this on the first run
-    if (!this._autoMigrate)
+    if (!this._autoMigrate) {
       this._wiz.advance();
+      return;
+    }
 
-    var numberOfChoices = 0;
-    try {
-      var bundle = document.getElementById("brandBundle");
-      var pageTitle = bundle.getString("homePageMigrationPageTitle");
-      var pageDesc = bundle.getString("homePageMigrationDescription");
-      var startPages = bundle.getString("homePageOptionCount");
-    } catch(ex) {}
-
-    if (!pageTitle || !pageDesc || !startPages || startPages < 1)
-      this._wiz.advance();
+    var bundle = document.getElementById("brandBundle");
+    var pageTitle = bundle.getString("homePageMigrationPageTitle");
+    var pageDesc = bundle.getString("homePageMigrationDescription");
 
     document.getElementById("homePageImport").setAttribute("label", pageTitle);
     document.getElementById("homePageImportDesc").setAttribute("value", pageDesc);
@@ -315,36 +310,10 @@ var MigrationWizard = {
     this._wiz._adjustWizardHeader();
 
     var singleStart = document.getElementById("homePageSingleStart");
-    var i, mainStr, radioItem, radioItemId, radioItemLabel, radioItemValue;
-    if (startPages > 1) {
-      numberOfChoices += startPages;
 
-      this._multipleStartOptions = true;
-      mainStr = bundle.getString("homePageMultipleStartMain");
-      var multipleStart = document.getElementById("homePageMultipleStartMain");
-      multipleStart.setAttribute("label", mainStr);
-      multipleStart.hidden = false;
-      multipleStart.setAttribute("selected", true);
-      singleStart.hidden = true;
-
-      for (i = 1; i <= startPages; i++) {
-        radioItemId = "homePageMultipleStart" + i;
-        radioItemLabel = bundle.getString(radioItemId + "Label");
-        radioItemValue = bundle.getString(radioItemId + "URL");
-        radioItem = document.getElementById(radioItemId);
-        radioItem.hidden = false;
-        radioItem.setAttribute("label", radioItemLabel);
-        radioItem.setAttribute("value", radioItemValue);
-      }
-    }
-    else {
-      numberOfChoices++;
-      mainStr = bundle.getString("homePageSingleStartMain");
-      radioItemValue = bundle.getString("homePageSingleStartMainURL");
-      singleStart.setAttribute("label", mainStr);
-      singleStart.setAttribute("value", radioItemValue);
-      singleStart.setAttribute("selected", true);
-    }
+    var mainStr = bundle.getString("homePageSingleStartMain");
+    singleStart.setAttribute("label", mainStr);
+    singleStart.setAttribute("value", "DEFAULT");
 
     var source = null;
     switch (this._source) {
@@ -372,7 +341,6 @@ var MigrationWizard = {
     var oldHomePageURL = this._migrator.sourceHomePageURL;
 
     if (oldHomePageURL && source) {
-      numberOfChoices++;
       var bundle2 = document.getElementById("bundle");
       var appName = bundle2.getString(source);
       var oldHomePageLabel = bundle.getFormattedString("homePageImport",
@@ -382,10 +350,10 @@ var MigrationWizard = {
       oldHomePage.setAttribute("value", oldHomePageURL);
       oldHomePage.removeAttribute("hidden");
     }
-
-    // if we don't have at least two options, just advance
-    if (numberOfChoices < 2)
+    else {
+      // if we don't have at least two options, just advance
       this._wiz.advance();
+    }
   },
 
   onHomePageMigrationPageAdvanced: function ()
@@ -393,8 +361,6 @@ var MigrationWizard = {
     // we might not have a selectedItem if we're in fallback mode
     try {
       var radioGroup = document.getElementById("homePageRadiogroup");
-      if (radioGroup.selectedItem.id == "homePageMultipleStartMain")
-        radioGroup = document.getElementById("multipleStartRadiogroup");
 
       this._newHomePage = radioGroup.selectedItem.value;
     } catch(ex) {}
@@ -474,12 +440,21 @@ var MigrationWizard = {
             var prefSvc = Components.classes["@mozilla.org/preferences-service;1"]
                                     .getService(Components.interfaces.nsIPrefService);
             var prefBranch = prefSvc.getBranch(null);
-            var str = Components.classes["@mozilla.org/supports-string;1"]
+
+            if (this._newHomePage == "DEFAULT") {
+              try {
+                prefBranch.clearUserPref("browser.startup.homepage");
+              }
+              catch (e) { }
+            }
+            else {
+              var str = Components.classes["@mozilla.org/supports-string;1"]
                                 .createInstance(Components.interfaces.nsISupportsString);
-            str.data = this._newHomePage;
-            prefBranch.setComplexValue("browser.startup.homepage",
-                                       Components.interfaces.nsISupportsString,
-                                       str);
+              str.data = this._newHomePage;
+              prefBranch.setComplexValue("browser.startup.homepage",
+                                         Components.interfaces.nsISupportsString,
+                                         str);
+            }
 
             var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
                                    .getService(Components.interfaces.nsIProperties);

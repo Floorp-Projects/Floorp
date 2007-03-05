@@ -143,14 +143,8 @@
 
     <description id="homePageImportDesc" control="homePageRadioGroup"/>
     <radiogroup id="homePageRadiogroup">
-      <radio id="homePageSingleStart"/>
-      <radio id="homePageMultipleStartMain" hidden="true"/>
-      <radiogroup id="multipleStartRadiogroup" class="indent">
-        <radio id="homePageMultipleStart1" hidden="true" selected="true"/>
-        <radio id="homePageMultipleStart2" hidden="true"/>
-        <radio id="homePageMultipleStart3" hidden="true"/>
-      </radiogroup>
-      <radio id="oldHomePage" hidden="true"/>
+      <radio id="homePageSingleStart" selected="true" />
+      <radio id="oldHomePage" hidden="true" />
     </radiogroup>
   </wizardpage>
 
