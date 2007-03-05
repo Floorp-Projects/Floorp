@@ -38,22 +38,20 @@
 #ifndef nsIReflowCallback_h___
 #define nsIReflowCallback_h___
 
-// {03E6FD70-889C-44b1-8639-A7EF5A80ED5C}
-#define NS_IREFLOWCALLBACK_IID \
-{ 0x3e6fd70, 0x889c, 0x44b1, { 0x86, 0x39, 0xa7, 0xef, 0x5a, 0x80, 0xed, 0x5c } }
-
 class nsIPresShell;
 
 /**
- * Reflow callback interface
+ * Reflow callback interface.
+ * These are not refcounted. Objects must be removed from the presshell
+ * callback list before they die.
  */
-class nsIReflowCallback : public nsISupports {
+class nsIReflowCallback {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IREFLOWCALLBACK_IID)
-
-  NS_IMETHOD ReflowFinished(nsIPresShell* aShell, PRBool* aFlushFlag) = 0;
+  /**
+   * The presshell calls this when reflow has finished. Return PR_TRUE if
+   * you need a Flush_Layout to happen after this.
+   */
+  virtual PRBool ReflowFinished() = 0;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIReflowCallback, NS_IREFLOWCALLBACK_IID)
 
 #endif /* nsIFrameUtil_h___ */

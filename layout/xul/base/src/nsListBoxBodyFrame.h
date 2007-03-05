@@ -86,7 +86,7 @@ public:
   NS_IMETHOD VisibilityChanged(nsISupports* aScrollbar, PRBool aVisible);
 
   // nsIReflowCallback
-  NS_IMETHOD ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag);
+  virtual PRBool ReflowFinished();
 
   // nsIBox
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);

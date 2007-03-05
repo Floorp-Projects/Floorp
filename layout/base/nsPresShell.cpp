@@ -773,24 +773,6 @@ private:
   PRInt32       mCallCount;
 };
 
-struct nsDOMEventRequest 
-{
-  nsIContent* content;
-  nsEvent* event;
-  nsDOMEventRequest* next;
-};
-
-struct nsAttributeChangeRequest 
-{
-  nsIContent* content;
-  PRInt32 nameSpaceID;
-  nsIAtom* name;
-  nsAutoString value;
-  PRBool notify;
-  nsAttributeChangeType type;
-  nsAttributeChangeRequest* next;
-};
-
 struct nsCallbackEventRequest
 {
   nsIReflowCallback* callback;
@@ -861,16 +843,6 @@ public:
    * Recreates the frames for a node
    */
   NS_IMETHOD RecreateFramesFor(nsIContent* aContent);
-
-  /**
-   * Post a request to set and attribute after reflow has finished.
-   */
-  NS_IMETHOD PostAttributeChange(nsIContent* aContent,
-                                 PRInt32 aNameSpaceID, 
-                                 nsIAtom* aName,
-                                 const nsString& aValue,
-                                 PRBool aNotify,
-                                 nsAttributeChangeType aType);
 
   /**
    * Post a callback that should be handled after reflow has finished.
@@ -1042,8 +1014,6 @@ public:
 protected:
   virtual ~PresShell();
 
-  void HandlePostedDOMEvents();
-  void HandlePostedAttributeChanges();
   void HandlePostedReflowCallbacks();
 
   void UnsuppressAndInvalidate();
@@ -1146,9 +1116,6 @@ protected:
   
   nsRevocableEventPtr<ReflowEvent> mReflowEvent;
 
-  // used for list of posted attribute changes. To be done after reflow.
-  nsAttributeChangeRequest* mFirstAttributeRequest;
-  nsAttributeChangeRequest* mLastAttributeRequest;
   nsCallbackEventRequest* mFirstCallbackEventRequest;
   nsCallbackEventRequest* mLastCallbackEventRequest;
 
@@ -1410,9 +1377,7 @@ PresShell::~PresShell()
 
   NS_ASSERTION(mCurrentEventContentStack.Count() == 0,
                "Huh, event content left on the stack in pres shell dtor!");
-  NS_ASSERTION(mFirstAttributeRequest == nsnull &&
-               mLastAttributeRequest == nsnull &&
-               mFirstCallbackEventRequest == nsnull &&
+  NS_ASSERTION(mFirstCallbackEventRequest == nsnull &&
                mLastCallbackEventRequest == nsnull,
                "post-reflow queues not empty.  This means we're leaking");
  
@@ -4422,7 +4387,6 @@ PresShell::PostReflowCallback(nsIReflowCallback* aCallback)
   nsCallbackEventRequest* request = (nsCallbackEventRequest*)result;
 
   request->callback = aCallback;
-  NS_ADDREF(aCallback);
   request->next = nsnull;
 
   if (mLastCallbackEventRequest) {
@@ -4461,7 +4425,6 @@ PresShell::CancelReflowCallback(nsIReflowCallback* aCallback)
         }
 
         FreeFrame(sizeof(nsCallbackEventRequest), toFree);
-        NS_RELEASE(callback);
       } else {
         before = node;
         node = node->next;
@@ -4470,47 +4433,6 @@ PresShell::CancelReflowCallback(nsIReflowCallback* aCallback)
 
    return NS_OK;
 }
-
-/**
- * Post a request to set and attribute after reflow has finished.
- */
-NS_IMETHODIMP
-PresShell::PostAttributeChange(nsIContent* aContent,
-                               PRInt32 aNameSpaceID, 
-                               nsIAtom* aName,
-                               const nsString& aValue,
-                               PRBool aNotify,
-                               nsAttributeChangeType aType)
-{
- // ok we have a list of events to handle. Queue them up and handle them
- // after we finish reflow.
-
-  void* result = AllocateFrame(sizeof(nsAttributeChangeRequest));
-  if (NS_UNLIKELY(!result)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsAttributeChangeRequest* request = new (result) nsAttributeChangeRequest();
-
-  request->content = aContent;
-  NS_ADDREF(aContent);
-
-  request->nameSpaceID = aNameSpaceID;
-  request->name = aName;
-  request->value = aValue;
-  request->notify = aNotify;
-  request->type = aType;
-  request->next = nsnull;
-
-  if (mLastAttributeRequest) {
-    mLastAttributeRequest = mLastAttributeRequest->next = request;
-  } else {
-    mFirstAttributeRequest = request;
-    mLastAttributeRequest = request;
-  }
-
-  return NS_OK;
-}
-
 
 void
 PresShell::HandlePostedReflowCallbacks()
@@ -4525,38 +4447,15 @@ PresShell::HandlePostedReflowCallbacks()
      }
      nsIReflowCallback* callback = node->callback;
      FreeFrame(sizeof(nsCallbackEventRequest), node);
-     if (callback)
-       callback->ReflowFinished(this, &shouldFlush);
-     NS_IF_RELEASE(callback);
+     if (callback) {
+       if (callback->ReflowFinished()) {
+         shouldFlush = PR_TRUE;
+       }
+     }
    }
 
    if (shouldFlush)
      FlushPendingNotifications(Flush_Layout);
-}
-
-void
-PresShell::HandlePostedAttributeChanges()
-{
-   while(mFirstAttributeRequest)
-   {
-      /* pull the node from the request list. Be prepared for reentrant access to the list
-         from within SetAttribute/UnsetAttribute and its callees! */
-      nsAttributeChangeRequest* node = mFirstAttributeRequest;
-
-      mFirstAttributeRequest = node->next;
-      if (nsnull == mFirstAttributeRequest) {
-        mLastAttributeRequest = nsnull;
-      }
-
-      if (node->type == eChangeType_Set)
-         node->content->SetAttr(node->nameSpaceID, node->name, node->value, node->notify);   
-      else
-         node->content->UnsetAttr(node->nameSpaceID, node->name, node->notify);   
-
-      NS_RELEASE(node->content);
-      node->nsAttributeChangeRequest::~nsAttributeChangeRequest();
-      FreeFrame(sizeof(nsAttributeChangeRequest), node);
-   }
 }
 
 NS_IMETHODIMP 
@@ -5840,7 +5739,6 @@ PresShell::WillDoReflow()
 void
 PresShell::DidDoReflow()
 {
-  HandlePostedAttributeChanges();
   HandlePostedReflowCallbacks();
   // Null-check mViewManager in case this happens during Destroy.  See
   // bugs 244435 and 238546.

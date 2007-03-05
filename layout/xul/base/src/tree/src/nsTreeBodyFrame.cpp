@@ -138,7 +138,6 @@ NS_INTERFACE_MAP_BEGIN(nsTreeBodyFrame)
   NS_INTERFACE_MAP_ENTRY(nsITreeBoxObject)
   NS_INTERFACE_MAP_ENTRY(nsICSSPseudoComparator)
   NS_INTERFACE_MAP_ENTRY(nsIScrollbarMediator)
-  NS_INTERFACE_MAP_ENTRY(nsIReflowCallback)
 NS_INTERFACE_MAP_END_INHERITING(nsLeafBoxFrame)
 
 
@@ -418,8 +417,8 @@ nsTreeBodyFrame::SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRec
 }
 
 
-NS_IMETHODIMP
-nsTreeBodyFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag)
+PRBool
+nsTreeBodyFrame::ReflowFinished()
 {
   if (mView) {
     CalcInnerBox();
@@ -449,9 +448,7 @@ nsTreeBodyFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag)
   }
 
   mReflowCallbackPosted = PR_FALSE;
-  *aFlushFlag = PR_FALSE;
-
-  return NS_OK;
+  return PR_FALSE;
 }
 
 
