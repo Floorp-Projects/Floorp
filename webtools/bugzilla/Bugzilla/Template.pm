@@ -187,22 +187,6 @@ sub getTemplateIncludePath {
     return Bugzilla->request_cache->{"template_include_path_$lang"};
 }
 
-sub put_header {
-    my $self = shift;
-    my $vars = {};
-    ($vars->{'title'}, $vars->{'h1'}, $vars->{'h2'}) = (@_);
-     
-    $self->process("global/header.html.tmpl", $vars)
-      || ThrowTemplateError($self->error());
-    $vars->{'header_done'} = 1;
-}
-
-sub put_footer {
-    my $self = shift;
-    $self->process("global/footer.html.tmpl")
-      || ThrowTemplateError($self->error());
-}
-
 sub get_format {
     my $self = shift;
     my ($template, $format, $ctype) = @_;
@@ -924,10 +908,6 @@ Bugzilla::Template - Wrapper around the Template Toolkit C<Template> object
 =head1 SYNOPSIS
 
   my $template = Bugzilla::Template->create;
-
-  $template->put_header($title, $h1, $h2);
-  $template->put_footer();
-
   my $format = $template->get_format("foo/bar",
                                      scalar($cgi->param('format')),
                                      scalar($cgi->param('ctype')));
@@ -959,24 +939,6 @@ Returns:     nothing
 =head1 METHODS
 
 =over
-
-=item C<put_header($title, $h1, $h2)>
-
- Description: Display the header of the page for non yet templatized .cgi files.
-
- Params:      $title - Page title.
-              $h1    - Main page header.
-              $h2    - Page subheader.
-
- Returns:     nothing
-
-=item C<put_footer()>
-
- Description: Display the footer of the page for non yet templatized .cgi files.
-
- Params:      none
-
- Returns:     nothing
 
 =item C<get_format($file, $format, $ctype)>
 

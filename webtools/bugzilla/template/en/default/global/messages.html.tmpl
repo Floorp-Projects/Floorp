@@ -374,6 +374,11 @@
     set to zero automatically as part of marking this [% terms.bug %]
     as either RESOLVED or CLOSED.
 
+  [% ELSIF message_tag == "sanitycheck" %]
+    [%# We use this way to call sanitycheck-specific messages so that
+      # we can still use get_text(). %]
+    [% PROCESS "admin/sanitycheck/messages.html.tmpl" %]
+
   [% ELSIF message_tag == "sudo_started" %]
     [% title = "Sudo session started" %]
       The sudo session has been started.  For the next 6 hours, or until you 

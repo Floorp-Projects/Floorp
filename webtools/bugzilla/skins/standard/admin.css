@@ -29,6 +29,11 @@
     border-color: red;
 }
 
+.alert {
+    color: red;
+    background-color: inherit;
+}
+
 p.areyoureallyreallysure {
     color: red;
     font-size: 120%;
