@@ -80,6 +80,7 @@
 #include "nsIEventStateManager.h"
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
+#include "nsIReflowCallback.h"
 
 #define NS_MENU_POPUP_LIST_INDEX   0
 
@@ -165,7 +166,7 @@ nsMenuFrame::SetParent(const nsIFrame* aParent)
   return NS_OK;
 }
 
-class nsASyncMenuInitialization : public nsRunnable
+class nsASyncMenuInitialization : public nsIReflowCallback
 {
 public:
   nsASyncMenuInitialization(nsIFrame* aFrame)
@@ -173,16 +174,19 @@ public:
   {
   }
 
-  NS_IMETHOD Run() {
+  virtual PRBool ReflowFinished() {
+    PRBool shouldFlush = PR_FALSE;
     if (mWeakFrame.IsAlive()) {
       nsIMenuFrame* imenu = nsnull;
       CallQueryInterface(mWeakFrame.GetFrame(), &imenu);
       if (imenu) {
         nsMenuFrame* menu = NS_STATIC_CAST(nsMenuFrame*, imenu);
         menu->UpdateMenuType(menu->GetPresContext());
+        shouldFlush = PR_TRUE;
       }
     }
-    return NS_OK;
+    delete this;
+    return shouldFlush;
   }
 
   nsWeakFrame mWeakFrame;
@@ -243,9 +247,9 @@ nsMenuFrame::Init(nsIContent*      aContent,
   }
 
   BuildAcceleratorText();
-  nsCOMPtr<nsIRunnable> ev =
-    new nsASyncMenuInitialization(this);
-  NS_DispatchToCurrentThread(ev);
+  nsIReflowCallback* cb = new nsASyncMenuInitialization(this);
+  NS_ENSURE_TRUE(cb, NS_ERROR_OUT_OF_MEMORY);
+  GetPresContext()->PresShell()->PostReflowCallback(cb);
   return rv;
 }
 
@@ -1942,7 +1946,7 @@ nsMenuFrame::AppendFrames(nsIAtom*        aListName,
   return rv;
 }
 
-class nsASyncMenuGeneration : public nsRunnable
+class nsASyncMenuGeneration : public nsIReflowCallback
 {
 public:
   nsASyncMenuGeneration(nsIFrame* aFrame)
@@ -1955,7 +1959,8 @@ public:
     }
   }
 
-  NS_IMETHOD Run() {
+  virtual PRBool ReflowFinished() {
+    PRBool shouldFlush = PR_FALSE;
     nsIFrame* frame = mWeakFrame.GetFrame();
     if (frame) {
       nsBoxLayoutState state(frame->GetPresContext());
@@ -1964,13 +1969,15 @@ public:
         CallQueryInterface(frame, &imenu);
         if (imenu) {
           imenu->MarkAsGenerated();
+          shouldFlush = PR_TRUE;
         }
       }
     }
     if (mDocument) {
       mDocument->UnblockOnload(PR_FALSE);
     }
-    return NS_OK;
+    delete this;
+    return shouldFlush;
   }
 
   nsWeakFrame           mWeakFrame;
@@ -1991,9 +1998,10 @@ nsMenuFrame::SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize)
         if (child &&
             !nsContentUtils::HasNonEmptyAttr(child, kNameSpaceID_None,
                                              nsGkAtoms::menugenerated)) {
-          nsCOMPtr<nsIRunnable> ev =
-            new nsASyncMenuGeneration(this);
-          NS_DispatchToCurrentThread(ev);
+          nsIReflowCallback* cb = new nsASyncMenuGeneration(this);
+          if (cb) {
+            GetPresContext()->PresShell()->PostReflowCallback(cb);
+          }
         }
         return PR_FALSE;
       }

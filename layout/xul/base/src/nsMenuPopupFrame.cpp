@@ -75,6 +75,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsIBoxLayout.h"
 #include "nsIPopupBoxObject.h"
+#include "nsIReflowCallback.h"
 #ifdef XP_WIN
 #include "nsISound.h"
 #endif
@@ -619,7 +620,7 @@ nsMenuPopupFrame::MovePopupToOtherSideOfParent ( PRBool inFlushAboveBelow, PRInt
 
 } // MovePopupToOtherSideOfParent
 
-class nsASyncMenuActivation : public nsRunnable
+class nsASyncMenuActivation : public nsIReflowCallback
 {
 public:
   nsASyncMenuActivation(nsIContent* aContent)
@@ -627,7 +628,8 @@ public:
   {
   }
 
-  NS_IMETHOD Run() {
+  virtual PRBool ReflowFinished() {
+    PRBool shouldFlush = PR_FALSE;
     if (mContent &&
         !mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::menuactive,
                                nsGkAtoms::_true, eCaseMatters) &&
@@ -635,8 +637,11 @@ public:
                               nsGkAtoms::_true, eCaseMatters)) {
       mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::menuactive,
                         NS_LITERAL_STRING("true"), PR_TRUE);
+      shouldFlush = PR_TRUE;
     }
-    return NS_OK;
+
+    delete this;
+    return shouldFlush;
   }
 
   nsCOMPtr<nsIContent> mContent;
@@ -1000,9 +1005,9 @@ nsMenuPopupFrame::SyncViewWithFrame(nsPresContext* aPresContext,
                              nsGkAtoms::_true, eCaseMatters) &&
       mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::menutobedisplayed,
                             nsGkAtoms::_true, eCaseMatters)) {
-    nsCOMPtr<nsIRunnable> ev =
-      new nsASyncMenuActivation(mContent);
-    NS_DispatchToCurrentThread(ev);
+    nsIReflowCallback* cb = new nsASyncMenuActivation(mContent);
+    NS_ENSURE_TRUE(cb, NS_ERROR_OUT_OF_MEMORY);
+    GetPresContext()->PresShell()->PostReflowCallback(cb);
   }
 
   return NS_OK;
