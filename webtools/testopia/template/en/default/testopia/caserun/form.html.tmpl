@@ -84,9 +84,9 @@
 </table>
 
 <table>
+[% IF run %]
   <tr>
     <th align="right">Build</th>
-[% IF run %]
     <td>
   [% PROCESS select sel = { name => "caserun_build", 
                             list => build_list, 
@@ -106,17 +106,19 @@
                value="[% caserun.environment.id FILTER none %]" 
             [% END %]>
     </td>
+  </tr>
 [% END %]
+  <tr>
     <th align="right">Assignee</th>
     <td><input name="assignee" value="[% dotweak ? "--Do Not Change--" : caserun.assignee.login FILTER html %]"></td>
-    <th align="right" colspan="2">Attach [% terms.Bugs %]</th>
+    <th align="right">Attach [% terms.Bugs %]</th>
     <td><input name="bugs">&nbsp;<a href="enter_bug.cgi?product=[% caserun.run.plan.product.name FILTER url_quote %]&caserun_id=[% caserun.id FILTER none %]" target="_blank"><img src="testopia/img/snew.gif" alt="Log a New Bug" title="Log a New Bug" style="vertical-align:text-bottom;" /></a>
-    
+        <br><input type="checkbox" value="1" name="update_bug" id="update_bug">Update [% terms.bug %] status </td>
   </tr>
 </table>
 <table>
   <tr>  
-    <td colspan="2">
+    <td colspan="2" valign="top">
     <table>
       <tr>
         <th colspan="3" class="bz_row_header">Status</th>

@@ -332,7 +332,7 @@ sub do_update {
     # If there is not one, it will create it and switch to that.
     $caserun = $caserun->switch($build,$env);
     
-    $caserun->set_status($status)     if ($caserun->status_id != $status);
+    $caserun->set_status($status, $cgi->param('update_bug'))     if ($caserun->status_id != $status);
     $caserun->set_assignee($assignee) if ($caserun->assignee && $caserun->assignee->id != $assignee);
     $caserun->append_note($notes)     if ($notes && $caserun->notes !~ /$notes/);
 
