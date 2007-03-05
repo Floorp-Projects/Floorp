@@ -159,17 +159,17 @@ function loadDialog()
                 var days = rule.getComponent("BYMONTHDAY", {});
                 if (days.length > 0 && days[0]) {
                     if (days[0] == -1) {
-                        radioGroupSelectItem("monthly-type", "monthly-last-day");
+                        calRadioGroupSelectItem("monthly-type", "monthly-last-day");
                     } else {
-                        radioGroupSelectItem("monthly-type", "monthly-nth-day");
+                        calRadioGroupSelectItem("monthly-type", "monthly-nth-day");
                     }
                 }
                 days = rule.getComponent("BYDAY", {}) ;
                 if (days.length > 0 && days[0] > 0) {
-                    radioGroupSelectItem("monthly-type", "monthly-nth-week");
+                    calRadioGroupSelectItem("monthly-type", "monthly-nth-week");
                 }
                 if (days.length > 0 && days[0] < 0) {
-                    radioGroupSelectItem("monthly-type", "monthly-last-week");
+                    calRadioGroupSelectItem("monthly-type", "monthly-last-week");
                 }
                 break;
             case "YEARLY":

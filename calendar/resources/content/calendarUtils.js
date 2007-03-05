@@ -559,7 +559,7 @@ function calRadioGroupSelectItem(radioGroupId, id)
     if (index != -1) {
         radioGroup.selectedIndex = index;
     } else {
-        throw "radioGroupSelectItem: No such Element: "+id;
+        throw "calRadioGroupSelectItem: No such Element: " + id;
     }
 }
 

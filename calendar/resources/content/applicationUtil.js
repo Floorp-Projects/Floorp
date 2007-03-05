@@ -386,28 +386,6 @@ function menuListIndexOf(menuList, value)
     return -1; // not found
 }
 
-function radioGroupSelectItem(radioGroupId, id)
-{
-    var radioGroup = document.getElementById(radioGroupId);
-    var index = radioGroupIndexOf(radioGroup, id);
-    if (index != -1) {
-        radioGroup.selectedIndex = index;
-    } else {
-        throw "radioGroupSelectItem: No such Element: "+id;
-    }
-}
-
-function radioGroupIndexOf(radioGroup, id)
-{
-    var items = radioGroup.getElementsByTagName("radio");
-    var i;
-    for (i in items) {
-        if (items[i].getAttribute("id") == id)
-            return i;
-    }
-    return -1; // not found
-}
-
 function hasPositiveIntegerValue(elementId)
 {
     var value = document.getElementById(elementId).value;
