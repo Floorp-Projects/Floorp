@@ -640,19 +640,64 @@ SetupTextRunFromCharacterPlacement(gfxTextRun *aRun, double aCairoToPixels,
     aRun->AddGlyphRun(aFont, 0);
 }
 
+static inline PRBool
+IsMissingGlyphsGDI(HDC aDC, const char *aString, PRUint32 aLength, WCHAR *glyphBuffer)
+{
+    DWORD ret;
+    ret = GetGlyphIndicesA(aDC, aString, aLength, glyphBuffer, GGI_MARK_NONEXISTING_GLYPHS);
+    if (ret == GDI_ERROR) {
+        NS_WARNING("GetGlyphIndicies failed\n");
+        return PR_TRUE;
+    }
+    for (DWORD i = 0; i < ret; ++i) {
+        if (glyphBuffer[i] == 0xffff)
+            return PR_TRUE;
+    }
+
+    return PR_FALSE;
+}
+
+static inline PRBool
+IsMissingGlyphsGDI(HDC aDC, const PRUnichar *aString, PRUint32 aLength, WCHAR *glyphBuffer)
+{
+    DWORD ret;
+    ret = GetGlyphIndicesW(aDC, aString, aLength, glyphBuffer, GGI_MARK_NONEXISTING_GLYPHS);
+    if (ret == GDI_ERROR) {
+        NS_WARNING("GetGlyphIndicies failed\n");
+        return PR_TRUE;
+    }
+    for (DWORD i = 0; i < ret; ++i) {
+        if (glyphBuffer[i] == 0xffff)
+            return PR_TRUE;
+    }
+
+    return PR_FALSE;
+}
+
 void
-gfxWindowsFontGroup::InitTextRunGDI(gfxContext *aContext, gfxTextRun *aRun, const char *aString,
-                                    PRUint32 aLength)
+gfxWindowsFontGroup::InitTextRunGDI(gfxContext *aContext, gfxTextRun *aRun,
+                                    const char *aString, PRUint32 aLength)
 {
     double cairoToPixels;
     gfxWindowsFont *font = GetFontAt(0);
     HDC dc = SetupContextFont(aContext, font, &cairoToPixels);
 
-    nsAutoTArray<int,500> dxArray;
-    if (!dxArray.AppendElements(aLength))
-        return;
     nsAutoTArray<WCHAR,500> glyphArray;
     if (!glyphArray.AppendElements(aLength))
+        return;
+
+    /* our GDI path doesn't handle font missing glyphs so
+     * punt this off to uniscribe */
+    if (IsMissingGlyphsGDI(dc, aString, aLength, glyphArray.Elements())) {
+        nsDependentCSubstring cString(aString, aString + aLength);
+        nsAutoString utf16;
+        AppendASCIItoUTF16(cString, utf16);
+        InitTextRunUniscribe(aContext, aRun, utf16.get(), aLength);
+        return;
+    }
+
+    nsAutoTArray<int,500> dxArray;
+    if (!dxArray.AppendElements(aLength))
         return;
 
     GCP_RESULTSA results;
@@ -668,18 +713,24 @@ gfxWindowsFontGroup::InitTextRunGDI(gfxContext *aContext, gfxTextRun *aRun, cons
 }
 
 void
-gfxWindowsFontGroup::InitTextRunGDI(gfxContext *aContext, gfxTextRun *aRun, const PRUnichar *aString,
-                                    PRUint32 aLength)
+gfxWindowsFontGroup::InitTextRunGDI(gfxContext *aContext, gfxTextRun *aRun,
+                                    const PRUnichar *aString, PRUint32 aLength)
 {
     double cairoToPixels;
     gfxWindowsFont *font = GetFontAt(0);
     HDC dc = SetupContextFont(aContext, font, &cairoToPixels);
 
-    nsAutoTArray<int,500> dxArray;
-    if (!dxArray.AppendElements(aLength))
-        return;
     nsAutoTArray<WCHAR,500> glyphArray;
     if (!glyphArray.AppendElements(aLength))
+        return;
+
+    if (IsMissingGlyphsGDI(dc, aString, aLength, glyphArray.Elements())) {
+        InitTextRunUniscribe(aContext, aRun, aString, aLength);
+        return;
+    }
+
+    nsAutoTArray<int,500> dxArray;
+    if (!dxArray.AppendElements(aLength))
         return;
 
     GCP_RESULTSW results;
