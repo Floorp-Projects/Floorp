@@ -53,7 +53,7 @@ treechildren::-moz-tree-image(folderNameCol) {
 }
 
 treechildren::-moz-tree-image(folderNameCol, newMessages-true) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-new.gif");
+  list-style-image: url("chrome://messenger/skin/icons/folder-new.png");
 }
 
 /* ..... Inbox ..... */
