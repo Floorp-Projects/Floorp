@@ -53,7 +53,7 @@ public:
   nsSVGTextContainerFrame(nsStyleContext* aContext) :
     nsSVGDisplayContainerFrame(aContext) {}
 
-  NS_IMETHOD_(nsSVGTextFrame *) GetTextFrame();
+  void UpdateGraphic();
   NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetX();
   NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetY();
   NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetDx();
@@ -126,6 +126,12 @@ private:
   GetGlyphFragmentAtCharNum(nsISVGGlyphFragmentNode* node,
                             PRUint32 charnum,
                             PRUint32 *offset);
+
+  /*
+   * Returns the text frame ancestor of this frame (or the frame itself
+   * if this is a text frame)
+   */
+  nsSVGTextFrame * GetTextFrame();
 };
 
 #endif

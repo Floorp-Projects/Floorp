@@ -103,9 +103,9 @@ nsSVGMutationObserver::AttributeChanged(nsIDocument *aDocument,
     nsISVGTextContentMetrics* metrics;
     CallQueryInterface(frame, &metrics);
     if (metrics) {
-      nsSVGTextFrame* textFrame = NS_STATIC_CAST(nsSVGTextContainerFrame*,
-                                                 frame)->GetTextFrame();
-      textFrame->NotifyGlyphMetricsChange();
+      nsSVGTextContainerFrame *containerFrame =
+        NS_STATIC_CAST(nsSVGTextContainerFrame *, frame);
+      containerFrame->UpdateGraphic();
       continue;
     }
     // if not, are there text elements amongst its descendents
