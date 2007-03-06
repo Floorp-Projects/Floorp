@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const SUNBIRD_UID = "{718e30fb-e89b-41dd-9da7-e25a45638b28}";
 
 const kStorageServiceContractID = "@mozilla.org/storage/service;1";
 const kStorageServiceIID = Components.interfaces.mozIStorageService;
@@ -299,7 +300,19 @@ calCalendarManager.prototype = {
                 var brandSb = sbs.createBundle("chrome://branding/locale/brand.properties");
                 var calSb = sbs.createBundle("chrome://calendar/locale/calendar.properties");
 
-                var shortName = brandSb.GetStringFromName("brandShortName");
+                var hostAppName = brandSb.GetStringFromName("brandShortName");
+
+                // If we're Lightning, we want to include the extension name
+                // in the error message rather than blaming Thunderbird.
+                var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
+                                        .getService(Ci.nsIXULAppInfo);
+                var calAppName;
+                if (appInfo.ID == SUNBIRD_UID) {
+                    calAppName = hostAppName;
+                } else {
+                    lightningSb = sbs.createBundle("chrome://lightning/locale/lightning.properties");
+                    calAppName = lightningSb.GetStringFromName("brandShortName");
+                }
 
                 var promptSvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                           .getService(Components.interfaces.nsIPromptService);
@@ -310,13 +323,13 @@ calCalendarManager.prototype = {
 
                 var choice = promptSvc.confirmEx(
                                 null,
-                                calSb.formatStringFromName("tooNewSchemaErrorTitle",
-                                                           [shortName], 1),
-                                calSb.formatStringFromName("tooNewSchemaErrorText",
-                                                           [shortName], 1),
+                                calSb.formatStringFromName("tooNewSchemaErrorBoxTitle",
+                                                           [calAppName], 1),
+                                calSb.formatStringFromName("tooNewSchemaErrorBoxText",
+                                                           [calAppName, hostAppName], 2),
                                 buttonFlags,
                                 calSb.formatStringFromName("tooNewSchemaButtonQuit",
-                                                           [shortName], 1),
+                                                           [hostAppName], 1),
                                 null, // No second button text
                                 null, // No third button text
                                 null, // No checkbox
