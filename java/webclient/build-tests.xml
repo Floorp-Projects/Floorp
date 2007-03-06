@@ -66,6 +66,7 @@
     <!-- Source directory for tests -->
     <property name="src.test.dir" value="${basedir}/test/automated/src/classes"/>
     <property name="src.manual.test.dir" value="${basedir}/test/manual/src/classes"/>
+    <property name="src.mcp.test.dir" value="${basedir}/../dist/mcp-test/src/test/java"/>
 
     <!-- Output directory for tests -->
     <property name="out.test.dir" value="${build.home}/test"/>
@@ -103,6 +104,7 @@
 
 	      <src path="${src.test.dir}"/>
 	      <src path="${src.manual.test.dir}"/>
+	      <src path="${src.mcp.test.dir}"/>
 	      <patternset>
 		    <exclude name="**/*Win32*.java" if="build.unix.classes"/>
 		    <exclude name="**/*Cocoa*.java" if="build.unix.classes"/>

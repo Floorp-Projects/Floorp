@@ -20,6 +20,10 @@
 */
 
 #include "prlog.h"
+#include "nsCOMPtr.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMNSDocument.h"
+#include "nsIBoxObject.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMNodeList.h"
@@ -27,6 +31,11 @@
 #include "javaDOMGlobals.h"
 #include "org_mozilla_dom_ElementImpl.h"
 
+static PRBool isInterceptableAttr(nsString *attrName);
+static jstring handleInterceptableAttr(nsIDOMElement *element,
+				       nsString *attrName,
+				       JNIEnv *env,
+				       jobject jthis);
 
 /*
  * Class:     org_mozilla_dom_ElementImpl
@@ -36,6 +45,7 @@
 JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ElementImpl_getAttribute
   (JNIEnv *env, jobject jthis, jstring jname)
 {
+  jstring jattr = nsnull;
   nsIDOMElement* element = (nsIDOMElement*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!element || !jname) {
@@ -48,21 +58,28 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ElementImpl_getAttribute
   if (!cname)
     return NULL;
 
-  nsString attr;
-  nsresult rv = element->GetAttribute(*cname, attr);  
-  nsMemory::Free(cname);
-
-  if (NS_FAILED(rv)) {
-    JavaDOMGlobals::ThrowException(env,
-      "Element.getAttribute: failed", rv);
-    return NULL;
+  // Special case intercepts
+  if (isInterceptableAttr(cname)) {
+      jattr = handleInterceptableAttr(element, cname, env, jthis);
   }
-
-  jstring jattr = env->NewString((jchar*) attr.get(), attr.Length());
-  if (!jattr) {
-    JavaDOMGlobals::ThrowException(env,
-      "Element.getAttribute: NewString failed");
-    return NULL;
+  else {
+      nsString attr;
+      nsresult rv = element->GetAttribute(*cname, attr);  
+      nsMemory::Free(cname);
+      
+      if (NS_FAILED(rv)) {
+	  JavaDOMGlobals::ThrowException(env,
+					 "Element.getAttribute: failed", rv);
+	  jattr = NULL;
+      }
+      else {
+	  jattr = env->NewString((jchar*) attr.get(), attr.Length());
+	  if (!jattr) {
+	      JavaDOMGlobals::ThrowException(env,
+                "Element.getAttribute: NewString failed");
+	      jattr = NULL;
+	  }
+      }
   }
 
   return jattr;
@@ -767,4 +784,82 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_ElementImpl_hasAttributeNS
   }
 
   return (hasAttr == PR_TRUE) ? JNI_TRUE : JNI_FALSE;
+}
+
+static PRBool isInterceptableAttr(nsString *attrName)
+{
+    PRBool result = PR_FALSE;			
+    if (attrName->Equals(NS_LITERAL_STRING("clientX")) ||
+	attrName->Equals(NS_LITERAL_STRING("clientY")) ||
+	attrName->Equals(NS_LITERAL_STRING("screenX")) ||
+	attrName->Equals(NS_LITERAL_STRING("screenY"))
+	) {
+	result = PR_TRUE;
+    }
+    return result;
+}
+
+static jstring handleInterceptableAttr(nsIDOMElement *element,
+				       nsString *attrName,
+				       JNIEnv *env,
+				       jobject jthis)
+{
+    if (nsnull == element || 
+	nsnull == attrName ||
+	nsnull == env ||
+	nsnull == jthis) {
+	return nsnull;
+    }
+
+    jstring result = nsnull;
+    nsCOMPtr<nsIDOMDocument> ownerDocument = nsnull;
+    nsCOMPtr<nsIDOMNSDocument> nsDocument = nsnull;
+    nsCOMPtr<nsIBoxObject> boxObject = nsnull;
+    nsresult rv = NS_OK;
+    PRInt32 coord = 0;
+    PRBool hasValue = PR_FALSE;
+    const PRInt32 bufLen = 20;
+    char buf[bufLen];
+    memset(buf, 0, bufLen);
+
+    rv = element->GetOwnerDocument(getter_AddRefs(ownerDocument));
+    if (NS_SUCCEEDED(rv)){
+	nsDocument = do_QueryInterface(ownerDocument, &rv);
+	if (NS_SUCCEEDED(rv)) {
+	    rv = nsDocument->GetBoxObjectFor(element, 
+					     getter_AddRefs(boxObject));
+	    if (NS_SUCCEEDED(rv)) {
+		if (attrName->Equals(NS_LITERAL_STRING("clientX"))) {
+		    rv = boxObject->GetX(&coord);
+		    if (NS_SUCCEEDED(rv)) {
+			hasValue = PR_TRUE;
+		    }
+		}
+		else if (attrName->Equals(NS_LITERAL_STRING("clientY"))) {
+		    rv = boxObject->GetY(&coord);
+		    if (NS_SUCCEEDED(rv)) {
+			hasValue = PR_TRUE;
+		    }
+		}
+		else if (attrName->Equals(NS_LITERAL_STRING("screenX"))) {
+		    rv = boxObject->GetScreenX(&coord);
+		    if (NS_SUCCEEDED(rv)) {
+			hasValue = PR_TRUE;
+		    }
+		}
+		else if (attrName->Equals(NS_LITERAL_STRING("screenY"))) {
+		    rv = boxObject->GetScreenY(&coord);
+		    if (NS_SUCCEEDED(rv)) {
+			hasValue = PR_TRUE;
+		    }
+		}
+	    }
+	}
+    }
+    if (hasValue) {
+	DOM_ITOA(coord, buf, 10);
+	result = env->NewStringUTF(buf);
+    }
+
+    return result;
 }

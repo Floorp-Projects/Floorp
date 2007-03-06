@@ -107,5 +107,13 @@ class JavaDOMGlobals {
   static nsString* GetUnicode(JNIEnv *env,
 			      jstring str);
 };
+
+#if defined(XP_UNIX) || defined(XP_MAC) || defined(XP_BEOS)
+
+#define DOM_ITOA(intVal, buf, radix) sprintf(buf, "%d", intVal)
+#else
+#include <stdlib.h>
+#define DOM_ITOA(intVal, buf, radix) itoa(intVal, buf, radix)
+#endif
   
 #endif /* __JavaDOMGlobals_h__ */

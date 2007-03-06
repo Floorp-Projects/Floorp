@@ -28,6 +28,7 @@ REQUIRES	= xpcom \
  		  javadom \
  		  string \
  		  embed_base \
+ 		  layout \
  		  webBrowser_core \
  		  webshell \
  		  windowwatcher \

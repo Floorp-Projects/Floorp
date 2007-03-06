@@ -18,11 +18,14 @@ import java.util.logging.Logger;
 import org.mozilla.webclient.BrowserControl;
 import org.mozilla.webclient.BrowserControlCanvas;
 import org.mozilla.webclient.BrowserControlFactory;
+import org.mozilla.webclient.CurrentPage2;
 import org.mozilla.webclient.DocumentLoadEvent;
 import org.mozilla.webclient.EventRegistration2;
 import org.mozilla.webclient.Navigation2;
 import org.mozilla.webclient.PageInfoListener;
 import org.mozilla.webclient.WebclientEvent;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  *
@@ -47,6 +50,7 @@ public class MCP {
     private Navigation2 navigation = null;
     private EventRegistration2 eventRegistration = null;
     private PageInfoListener pageInfoListener = null;
+    private CurrentPage2 currentPage = null;
     private Frame frame = null;
     private int x = 0;
     private int y = 0;
@@ -101,6 +105,24 @@ public class MCP {
             
         }
         return eventRegistration;
+    }
+    
+    private CurrentPage2 getCurrentPage() {
+        if (null == currentPage) {
+            try {
+                currentPage = (CurrentPage2)
+                getBrowserControl().queryInterface(BrowserControl.CURRENT_PAGE_NAME);
+            }
+            catch (Throwable th) {
+                if (LOGGER.isLoggable(Level.SEVERE)) {
+                    LOGGER.throwing(this.getClass().getName(), "getCurrentPage", 
+                            th);
+                    LOGGER.severe("Unable to obtain CurrentPage2 reference from BrowserControl");
+                }
+            }
+            
+        }
+        return currentPage;
     }
     
     private PageInfoListener getPageInfoListener() {
@@ -160,6 +182,14 @@ public class MCP {
             }
         }
         return frame;
+    }
+    
+    public Element getElementInCurrentPageById(String id) {
+        Element result = null;
+        Document dom = getCurrentPage().getDOM();
+        result = dom.getElementById(id);
+        
+        return result;
     }
     
     public void blockingLoad(String url) {
