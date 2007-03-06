@@ -92,9 +92,6 @@ public:
     NS_IMETHOD Shutdown();
     NS_IMETHOD FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData);
     NS_IMETHOD FireAnchorJumpEvent();
-
-private:
-    already_AddRefed<nsIAccessible> GetFirstLeafAccessible(nsIDOMNode *aStartNode);
 };
 
 #endif

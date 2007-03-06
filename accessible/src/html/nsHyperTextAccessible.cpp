@@ -472,63 +472,75 @@ NS_IMETHODIMP nsHyperTextAccessible::GetCharacterAtOffset(PRInt32 aOffset, PRUni
   return NS_OK;
 }
 
-nsresult nsHyperTextAccessible::DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNodeOffset, PRInt32* aResult)
+nsresult nsHyperTextAccessible::DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNodeOffset, PRInt32* aResult,
+                                                 nsIAccessible **aFinalAccessible)
 {
+  // Turn a DOM Node and offset into an offset into this hypertext.
+  // On failure, return null. On success, return the DOM node which contains the offset.
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = 0;
   NS_ENSURE_ARG_POINTER(aNode);
   NS_ENSURE_TRUE(aNodeOffset >= 0, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_ARG_POINTER(aFinalAccessible);
+  if (aFinalAccessible) {
+    *aFinalAccessible = nsnull;
+  }
+
+  PRInt32 addTextOffset = 0;
+  nsCOMPtr<nsIDOMNode> findNode;
 
   unsigned short nodeType;
   aNode->GetNodeType(&nodeType);
-  if (nodeType != nsIDOMNode::TEXT_NODE) {
-    // If not text, aNodeOffset is a child
-    // aNode != mDOMNode for nsDocAccessible case, where 
-    // aNode is for <body> and mDOMNode is doc element
-    nsCOMPtr<nsINode> hyperTextNode(do_QueryInterface(aNode));
-    NS_ENSURE_TRUE(hyperTextNode, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIAccessible> childAccessible;
-    // Find first accessible child starting at aNodeOffset. We need to do this because
-    // the node at aNodeOffset might not be an accessible
-    while (!childAccessible) {
-      nsIContent *childContent = hyperTextNode->GetChildAt(aNodeOffset ++);
-      nsCOMPtr<nsIDOMNode> childNode(do_QueryInterface(childContent));
-      if (!childNode) {
-        break; // Caret at end of hyper text
-      }
-      GetAccService()->GetAccessibleFor(childNode, getter_AddRefs(childAccessible));
-    }
-    
-    // Loop through, adding offsets until we reach childAccessible
-    // If childAccessible is null we will end up adding up the entire length of
-    // the hypertext, which is good -- it just means our offset node
-    // came after the last accessible child's node
-    nsCOMPtr<nsIAccessible> accessible;
-    while (NextChild(accessible) && accessible != childAccessible) {
-      *aResult += TextLength(accessible);
-    }
-    return NS_OK;
+  if (nodeType == nsIDOMNode::TEXT_NODE) {
+    // For text nodes, aNodeOffset comes in as a character offset
+    // Text offset will be added at the end, if we find the offset in this hypertext
+    addTextOffset = aNodeOffset;
+    // Get the child node and 
+    findNode = aNode;
+  }
+  else {
+    // For non-text nodes, aNodeOffset comes in as a child node index
+    nsCOMPtr<nsIContent> parentContent(do_QueryInterface(aNode));
+    // Should not happen, but better to protect against crash if doc node is somehow passed in
+    NS_ENSURE_TRUE(parentContent, NS_ERROR_FAILURE);
+    // findNode could be null if aNodeOffset == # of child nodes, which means we're at the end of the children
+    findNode = do_QueryInterface(parentContent->GetChildAt(aNodeOffset));
   }
 
-  // This is text, and aNodeOffset is the nth character in the text
-  *aResult = aNodeOffset;
+#ifdef DEBUG
+    // aNode should be a descendant of mDOMNode (the DOM node for this accessible object)
+    // Corralary: the first accessible in the parent chain should be |this|
+    if (findNode) {
+      nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
+      nsCOMPtr<nsIAccessible> parentAccessible;
+      docAccessible->GetAccessibleInParentChain(findNode, getter_AddRefs(parentAccessible));
+      NS_ASSERTION(parentAccessible == this, "Accessible ancestor is not |this|");
+    }
+#endif
+  // Get accessible for this findNode, or if that node isn't accessible, use the
+  // accessible for the next DOM node which has one (based on forward depth first search)
+  nsCOMPtr<nsIAccessible> childAccessible;
+  if (findNode) {
+    childAccessible = GetFirstAvailableAccessible(findNode);
+  }
+
+  // Loop through, adding offsets until we reach childAccessible
+  // If childAccessible is null we will end up adding up the entire length of
+  // the hypertext, which is good -- it just means our offset node
+  // came after the last accessible child's node
   nsCOMPtr<nsIAccessible> accessible;
-
-  while (NextChild(accessible)) {
-    nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(accessible));
-    nsIFrame *frame = accessNode->GetFrame();
-    if (!frame) {
-      return NS_ERROR_FAILURE;
-    }
-
-    if (frame && SameCOMIdentity(frame->GetContent(), aNode)) {
-      return NS_OK;
-    }
-
+  while (NextChild(accessible) && accessible != childAccessible) {
     *aResult += TextLength(accessible);
   }
-
-  return NS_ERROR_FAILURE;
+  if (accessible) {
+    *aResult += addTextOffset;
+    NS_ASSERTION(accessible == childAccessible, "These should be equal whenever we exit loop and accessible != nsnull");
+    if (aFinalAccessible && (NextChild(accessible) || addTextOffset < TextLength(childAccessible))) {  
+      // If not at end of last text node, we will return the accessible we were in
+      NS_ADDREF(*aFinalAccessible = childAccessible);
+    }
+  }
+  return NS_OK;
 }
 
 PRInt32 nsHyperTextAccessible::GetRelativeOffset(nsIPresShell *aPresShell, nsIFrame *aFromFrame, PRInt32 aFromOffset,
@@ -538,33 +550,55 @@ PRInt32 nsHyperTextAccessible::GetRelativeOffset(nsIPresShell *aPresShell, nsIFr
   const PRBool kIsScrollViewAStop = PR_FALSE;     // do not stop at scroll views
   const PRBool kIsKeyboardSelect = PR_TRUE;       // is keyboard selection
   const PRBool kIsVisualBidi = PR_FALSE;          // use visual order for bidi text
-  const PRInt32 kDesiredX = aPresShell->GetRootFrame()->GetSize().width;
 
   EWordMovementType wordMovementType = aNeedsStart ? eStartWord : eEndWord;
-  if (aAmount == eSelectLine && aDirection == eDirNext) {
-    aAmount = eSelectEndLine; // Select forward to end of line
+  if (aAmount == eSelectLine) {
+    aAmount = (aDirection == eDirNext) ? eSelectEndLine : eSelectBeginLine;
   }
 
+  // Ask layout for the new node and offset, after moving the appropriate amount
   nsPeekOffsetStruct pos;
-  pos.SetData(aAmount, aDirection, aFromOffset, kDesiredX,
-              kIsJumpLinesOk,
+  pos.SetData(aAmount, aDirection, aFromOffset, 0, kIsJumpLinesOk,
               kIsScrollViewAStop, kIsKeyboardSelect, kIsVisualBidi,
               wordMovementType);
   nsresult rv = aFromFrame->PeekOffset(&pos);
+  NS_ENSURE_SUCCESS(rv, -1);
 
-  PRInt32 resultOffset = pos.mContentOffset;
-  nsIContent *resultContent = nsnull;
-  if (NS_SUCCEEDED(rv)) {
-    resultContent = pos.mResultContent;
-  }
-  nsCOMPtr<nsIDOMNode> resultNode = do_QueryInterface(resultContent);
+  // Turn the resulting node and offset into a hyperTextOffset
   PRInt32 hyperTextOffset;
-  if (!resultContent || NS_FAILED(DOMPointToOffset(resultNode, resultOffset, &hyperTextOffset))) {
-    if (aDirection == eDirNext) {
-      GetCharacterCount(&hyperTextOffset);
+  nsCOMPtr<nsIDOMNode> resultNode = do_QueryInterface(pos.mResultContent);
+  NS_ENSURE_TRUE(resultNode, -1);
+
+  nsCOMPtr<nsIAccessible> finalAccessible;
+  rv = DOMPointToOffset(resultNode, pos.mContentOffset, &hyperTextOffset, getter_AddRefs(finalAccessible));
+  // If finalAccessible == nsnull, then DOMPointToOffset() searched through the hypertext
+  // children without finding the node/offset position
+  NS_ENSURE_SUCCESS(rv, -1);
+
+  if (!finalAccessible && aDirection == eDirPrevious) {
+    // If we reached the end during search, this means we didn't find the DOM point
+    // and we're actually at the start of the paragraph
+    hyperTextOffset = 0;
+  }  
+  else if (aAmount == eSelectBeginLine) {
+    // For line selection with needsStart, set start of line exactly to line break
+    if (!aNeedsStart && hyperTextOffset > 0) {
+      -- hyperTextOffset;
     }
-    else {
-      hyperTextOffset = 0;
+  }
+  else if (aAmount == eSelectEndLine && finalAccessible) { 
+    // If not at very end of hypertext, we may need change the end of line offset by 1, 
+    // to make sure we are in the right place relative to the line ending
+    if (Role(finalAccessible) == ROLE_WHITESPACE) {  // Landed on <br> hard line break
+      // if aNeedsStart, set end of line exactly 1 character past line break
+      // XXX It would be cleaner if we did not have to have the hard line break check,
+      // and just got the correct results from PeekOffset() for the <br> case -- the returned offset should
+      // come after the new line, as it does in other cases.
+      ++ hyperTextOffset;  // Get past hard line break
+    }
+    // We are now 1 character past the line break
+    if (!aNeedsStart) {
+      -- hyperTextOffset;
     }
   }
 
@@ -629,6 +663,7 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
     // Newlines are considered at the end of a line,
     // Since getting the BOUNDARY_LINE_START gets the text from the line-start
     // to the next line-start, the newline is included at the end of the string
+    needsStart = PR_TRUE;
     amount = eSelectLine;
     break;
   case BOUNDARY_LINE_END:
@@ -659,21 +694,13 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
 
   // If aType == eGetAt we'll change both the start and end offset from
   // the original offset
-  PRInt32 startForwardSearchOffset;
   if (aType == eGetAfter) {
-    startForwardSearchOffset = startOffset = aOffset;
+    startOffset = aOffset;
   }
   else {
     startOffset = GetRelativeOffset(presShell, startFrame,  startOffset,
                                     amount, eDirPrevious, needsStart);
-    startForwardSearchOffset = startOffset;
-    if (amount == eSelectLine) {
-      ++ startForwardSearchOffset; // Avoid getting the previous line
-      if (aBoundaryType == BOUNDARY_LINE_START && startOffset > 0) {
-        // Start line fixup: don't include \n at start of string
-        ++ startOffset;
-      }
-    }
+    NS_ENSURE_TRUE(startOffset >= 0, NS_ERROR_FAILURE);
   }
 
   if (aType == eGetBefore) {
@@ -682,33 +709,14 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
   else {
     // Start moving forward from the start so that we don't get 
     // 2 words/lines if the offset occured on whitespace boundary    
-    endOffset = startForwardSearchOffset; // Passed by reference
-    nsIFrame *endFrame = GetPosAndText(startForwardSearchOffset, endOffset);
+    endOffset = startOffset; // Passed by reference to GetPosAndText()
+    nsIFrame *endFrame = GetPosAndText(startOffset, endOffset);
     if (!endFrame) {
       return NS_ERROR_FAILURE;
     }
     endOffset = GetRelativeOffset(presShell, endFrame, endOffset, amount,
                                   eDirNext, needsStart);
-    if (amount == eSelectLine &&
-        endFrame->GetType() == nsAccessibilityAtoms::textFrame) {
-      PRInt32 startFrameOffsetUnused, endFrameOffset;
-      if (NS_SUCCEEDED(endFrame->GetOffsets(startFrameOffsetUnused, endFrameOffset))) {
-        nsCOMPtr<nsIDOMNode> endNode = do_QueryInterface(endFrame->GetContent());
-        nsCOMPtr<nsIAccessible> endAccessible;
-        if (endNode) {
-          GetAccService()->GetAccessibleFor(endNode, getter_AddRefs(endAccessible));
-          if (endAccessible && NextChild(endAccessible) &&
-              Role(endAccessible) == ROLE_WHITESPACE) {
-            ++ endOffset; // Make sure endOffset comes after <br>
-          }
-        }
-        // End line fixup: include \n for <br> at end of string,
-        // only if aBoundaryType == BOUNDARY_LINE_START
-        if (aBoundaryType == BOUNDARY_LINE_END) {
-          -- endOffset;
-        }
-      }
-    }
+    NS_ENSURE_TRUE(endOffset >= 0, NS_ERROR_FAILURE);
   }
 
   // Fix word error for the first character in word: PeekOffset() will return the previous word when 

@@ -92,6 +92,9 @@
 #include "nsITimer.h"
 #include "nsIMutableArray.h"
 #include "nsIPersistentProperties2.h"
+#include "nsIDOMTreeWalker.h"
+#include "nsIDOMDocumentTraversal.h"
+#include "nsIDOMNodeFilter.h"
 
 #ifdef NS_DEBUG
 #include "nsIFrameDebug.h"
@@ -2896,3 +2899,39 @@ PRInt32 nsAccessible::TextLength(nsIAccessible *aAccessible)
   }
   return textLength;
 }
+
+already_AddRefed<nsIAccessible>
+nsAccessible::GetFirstAvailableAccessible(nsIDOMNode *aStartNode, PRBool aRequireLeaf)
+{
+  nsIAccessibilityService *accService = GetAccService();
+  nsCOMPtr<nsIAccessible> accessible;
+  nsCOMPtr<nsIDOMTreeWalker> walker; 
+  nsCOMPtr<nsIDOMNode> currentNode(aStartNode);
+
+  while (currentNode) {
+    accService->GetAccessibleInWeakShell(currentNode, mWeakShell, getter_AddRefs(accessible)); // AddRef'd
+    if (accessible && (!aRequireLeaf || IsLeaf(accessible))) {
+      nsIAccessible *retAccessible = accessible;
+      NS_ADDREF(retAccessible);
+      return retAccessible;
+    }
+    if (!walker) {
+      // Instantiate walker lazily since we won't need it in 90% of the cases
+      // where the first DOM node we're given provides an accessible
+      nsCOMPtr<nsIDOMDocument> document;
+      currentNode->GetOwnerDocument(getter_AddRefs(document));
+      nsCOMPtr<nsIDOMDocumentTraversal> trav = do_QueryInterface(document);
+      NS_ASSERTION(trav, "No DOM document traversal for document");
+      NS_ENSURE_TRUE(trav, nsnull);
+      trav->CreateTreeWalker(mDOMNode, nsIDOMNodeFilter::SHOW_ELEMENT | nsIDOMNodeFilter::SHOW_TEXT,
+                            nsnull, PR_FALSE, getter_AddRefs(walker));
+      NS_ENSURE_TRUE(walker, nsnull);
+      walker->SetCurrentNode(currentNode);
+    }
+
+    walker->NextNode(getter_AddRefs(currentNode));
+  }
+
+  return nsnull;
+}
+
