@@ -74,6 +74,7 @@ descriptionitem
   margin: 1px 1px 1px 1px;
   text-decoration: underline;
   color: blue;
+  border: none !important;
 }
 
 description[selectable="true"]:focus > descriptionitem[selected="true"][current="true"] 
