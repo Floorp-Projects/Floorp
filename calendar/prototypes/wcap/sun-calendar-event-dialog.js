@@ -753,7 +753,7 @@ function loadRepeat(item)
     }
     if (rules.length == 1) {
       var rule = rules[0];
-      if (rule instanceof calIRecurrenceRule) {
+      if (rule instanceof Ci.calIRecurrenceRule) {
         switch(rule.type) {
           case 'DAILY':
             if (rule.interval == 1) {
@@ -2715,7 +2715,7 @@ function updateRepeatDetails()
         var rrules = splitRecurrenceRules(recurrenceInfo);
         if (rrules[0].length == 1) {
           var rule = rrules[0][0];
-          if(rule instanceof calIRecurrenceRule) {
+          if(rule instanceof Ci.calIRecurrenceRule) {
 
             // currently we don't allow for any BYxxx-rules.
             if (!checkRecurrenceRule(rule,['BYSECOND',
