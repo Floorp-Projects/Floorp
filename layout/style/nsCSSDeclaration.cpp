@@ -594,14 +594,23 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       break;
     }
     case eCSSProperty_background: {
-      if (AppendValueToString(eCSSProperty_background_color, aValue))
+      PRBool appendedSomething = PR_FALSE;
+      if (AppendValueToString(eCSSProperty_background_color, aValue)) {
+        appendedSomething = PR_TRUE;
         aValue.Append(PRUnichar(' '));
-      if (AppendValueToString(eCSSProperty_background_image, aValue))
+      }
+      if (AppendValueToString(eCSSProperty_background_image, aValue)) {
         aValue.Append(PRUnichar(' '));
-      if (AppendValueToString(eCSSProperty_background_repeat, aValue))
+        appendedSomething = PR_TRUE;
+      }
+      if (AppendValueToString(eCSSProperty_background_repeat, aValue)) {
         aValue.Append(PRUnichar(' '));
-      if (AppendValueToString(eCSSProperty_background_attachment, aValue))
+        appendedSomething = PR_TRUE;
+      }
+      if (AppendValueToString(eCSSProperty_background_attachment, aValue)) {
         aValue.Append(PRUnichar(' '));
+        appendedSomething = PR_TRUE;
+      }
       if (AppendValueToString(eCSSProperty_background_x_position, aValue)) {
         aValue.Append(PRUnichar(' '));
 #ifdef DEBUG
@@ -609,6 +618,11 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
 #endif
           AppendValueToString(eCSSProperty_background_y_position, aValue);
         NS_ASSERTION(check, "we parsed half of background-position");
+      } else if (appendedSomething) {
+        NS_ASSERTION(!aValue.IsEmpty() && aValue.Last() == PRUnichar(' '),
+                     "We appended a space before!");
+        // We appended an extra space.  Let's get rid of it
+        aValue.Truncate(aValue.Length() - 1);
       }
       break;
     }

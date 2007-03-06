@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=372770
+-->
+<head>
+  <title>Test for Bug 372770</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style id="testStyle">
+    #content {}
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=372770">Mozilla Bug 372770</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 372770 **/
+var style1 = $("content").style;
+var style2 = $("testStyle").sheet.cssRules[0].style;
+
+var colors = [ "rgb(128, 128, 128)", "transparent" ]
+var i;
+
+for (i = 0; i < colors.length; ++i) {
+  var color = colors[i];
+  style1.color = color;
+  style2.color = color;
+  is(style1.color, color, "Inline style color roundtripping failed at color " + i);
+  is(style2.color, color, "Rule style color roundtripping failed at color " + i);
+}
+
+// This code is only here because of bug 372783.  Once that's fixed, this test
+// for "rgba(0, 0, 0, 0)" will fail.
+style1.color = "rgba(0, 0, 0, 0)";
+style2.color = "rgba(0, 0, 0, 0)";
+is(style1.color, "transparent",
+   "Inline style should give transparent for rgba(0,0,0,0)");
+is(style2.color, "transparent",
+   "Rule style should give transparent for rgba(0,0,0,0)");
+todo(style1.color == "rgba(0, 0, 0, 0)",
+     "Inline style should round-trip black transparent color correctly");
+todo(style2.color == "rgba(0, 0, 0, 0)",
+     "Rule style should round-trip black transparent color correctly");
+
+for (var i = 0; i <= 100; ++i) {
+  var color1 = "rgba(128, 128, 128, " + i/100 + ")";
+  var color2 = "rgba(175, 63, 27, " + i/100 + ")";
+  style1.color = color1;
+  style1.backgroundColor = color2;
+  style2.color = color2;
+  style2.background = color1;
+
+  if (i == 100) {
+    // Bug 372783 means this doesn't round-trip quite right
+    todo(style1.color == color1,
+       "Inline style color roundtripping failed at opacity " + i);
+    todo(style1.background == color2,
+       "Inline style background roundtripping failed at opacity " + i);
+    todo(style2.color == color2,
+       "Rule style color roundtripping failed at opacity " + i);
+    todo(style2.backgroundColor == color1,
+       "Rule style background roundtripping failed at opacity " + i);
+    color1 = "rgb(128, 128, 128)";
+    color2 = "rgb(175, 63, 27)";
+  }
+
+  is(style1.color, color1,
+     "Inline style color roundtripping failed at opacity " + i);
+  is(style1.background, color2,
+     "Inline style background roundtripping failed at opacity " + i);
+  is(style2.color, color2,
+     "Rule style color roundtripping failed at opacity " + i);
+  is(style2.backgroundColor, color1,
+     "Rule style background roundtripping failed at opacity " + i);
+
+}
+</script>
+</pre>
+</body>
+</html>
+
