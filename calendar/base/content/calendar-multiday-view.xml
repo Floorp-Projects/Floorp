@@ -1785,7 +1785,7 @@
                         this.calView.doDeleteEvent(occ);
                     }
                 }
-                if (isToDo(Ci.calITodo) &&
+                if (isToDo(aNewItem) &&
                     (!aNewItem.entryDate || !aNewItem.dueDate || !this.mTasksInView)) {
                     return;
                 }
@@ -1808,11 +1808,11 @@
                     return;
                 }
 
-                if (isToDo(Ci.calITodo) && !this.calView.mTasksInView) {
+                if (isToDo(aItem) && !this.calView.mTasksInView) {
                     return;
                 }
 
-                if (isToDo(Ci.calITodo) && (!aItem.entryDate || !aItem.dueDate)) {
+                if (isToDo(aItem) && (!aItem.entryDate || !aItem.dueDate)) {
                     return;
                 }
 
