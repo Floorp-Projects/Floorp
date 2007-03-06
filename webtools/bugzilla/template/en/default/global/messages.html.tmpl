@@ -209,6 +209,69 @@
     An error occured while validating flags:
     [%+ flag_creation_error FILTER none %]
 
+  [% ELSIF message_tag == "group_updated" %]
+    [% IF changes.keys.size %]
+      The following changes have been made to the '[% group.name FILTER html %]
+      group:
+      <ul>
+      [% FOREACH field = changes.keys.sort %]
+        [% SWITCH field %]
+          [% CASE 'name' %]
+            <li>The name was changed to '[% changes.name.1 FILTER html %]'</li>
+          [% CASE 'description' %]
+            <li>The description was updated.</li>
+          [% CASE 'userregexp' %]
+            <li>The regular expression was updated.</li>
+          [% CASE 'isactive' %]
+            [% IF changes.isactive.1 %]
+              <li>The group will now be used for [% terms.bugs %].</li>
+            [% ELSE %]
+              <li>The group will no longer be used for [% terms.bugs %].</li>
+            [% END %]
+          [% CASE 'members_add' %]
+            <li>The following groups are now members of this group:
+              [%+ changes.members_add.join(', ') FILTER html %]</li>
+          [% CASE 'members_remove' %]
+            <li>The following groups are no longer members of this group:
+              [%+ changes.members_remove.join(', ') FILTER html %]</li>
+          [% CASE 'member_of_add' %]
+            <li>This group is now a member of the following groups:
+              [%+ changes.member_of_add.join(', ') FILTER html %]</li>
+          [% CASE 'member_of_remove' %]
+            <li>This group is no longer a member of the following groups:
+              [%+ changes.member_of_remove.join(', ') FILTER html %]</li>
+          [% CASE 'bless_from_add' %]
+            <li>The following groups may now add users to this group:
+              [%+ changes.bless_from_add.join(', ') FILTER html %]</li>
+          [% CASE 'bless_from_remove' %]
+            <li>The following groups may no longer add users to this group:
+              [%+ changes.bless_from_remove.join(', ') FILTER html %]</li>
+          [% CASE 'bless_to_add' %]
+            <li>This group may now add users to the following groups:
+              [%+ changes.bless_to_add.join(', ') FILTER html %]</li>
+          [% CASE 'bless_to_remove' %]
+            <li>This group may no longer add users to the following groups:
+              [%+ changes.bless_to_remove.join(', ') FILTER html %]</li>
+          [% CASE 'visible_from_add' %]
+            <li>The following groups can now see users in this group:
+              [%+ changes.visible_from_add.join(', ') FILTER html %]</li>
+          [% CASE 'visible_from_remove' %]
+            <li>The following groups may no longer see users in this group:
+              [%+ changes.visible_from_remove.join(', ') FILTER html %]</li>
+          [% CASE 'visible_to_me_add' %]
+            <li>This group may now see users in the following groups:
+              [%+ changes.visible_to_me_add.join(', ') FILTER html %]</li>
+          [% CASE 'visible_to_me_remove' %]
+            <li>This group may no longer see users in the following groups:
+              [%+ changes.visible_to_me_remove.join(', ') FILTER html %]</li>
+        [% END %]
+      [% END %]
+      </ul>
+    [% ELSE %]
+      You didn't request any change for the '[% group.name FILTER html %]'
+      group.
+    [% END %]
+
   [% ELSIF message_tag == "logged_out" %]
     [% title = "Logged Out" %]
     [% url = "index.cgi?GoAheadAndLogIn=1" %]

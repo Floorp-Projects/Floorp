@@ -20,36 +20,21 @@
   #                 Joel Peshkin <bugreport@peshkin.net>
   #                 Jacob Steenhagen <jake@bugzilla.org>
   #                 Vlad Dascalu <jocuri@softhome.net>
+  #                 Max Kanat-Alexander <mkanat@bugzilla.org>
   #%]
 
 [%# INTERFACE:
-  # remove_all: boolean int. Is 1 if the action was remove_all,
-  #         and 0 if the action was remove_all_regexp.
-  # name: string. The place where removal is performed.
-  # regexp: string. The regexp according to which the removal is performed.
-  # users: array with group objects having the properties:
-  #   - login: string. The login which is removed.
+  # group: The Bugzilla::Group being modified.
+  # regexp: string. The regexp according to which the removal was performed.
+  # users: Array of Bugzilla::User objects who were removed from this group.
   #%]
 
 
-[% IF remove_all %]
-  [% title = BLOCK %]
-    Removing All Explicit Group Memberships from '[% name FILTER html %]'
-  [% END %]
-[% ELSE %]
-  [% title = BLOCK %]
-    Removing All Explicit Group Memberships Matching Group RegExp from '[% name FILTER html %]'
-  [% END %]
-[% END %]
+[% PROCESS global/header.html.tmpl
+           title = "Removing Explicit Group Membership" %]
 
-[% PROCESS global/header.html.tmpl %]
-
-[% IF remove_all %]
-  <p><b>Removing explicit membership</b></p>
-[% ELSE %]
-  <p><b>Removing explicit memberships of users matching
-  '[% regexp FILTER html %]'...</b></p>
-[% END %]
+<p><b>Removing explicit memberships[% IF regexp %] of users matching
+  '[% regexp FILTER html %]'[% END %]...</b></p>
     
 [% FOREACH user = users %]
   [% user.login FILTER html %] removed<br>
